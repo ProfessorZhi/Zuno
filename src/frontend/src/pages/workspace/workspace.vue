@@ -269,9 +269,10 @@ watch(
 
 <style lang="scss" scoped>
 .workspace-container {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.92), transparent 42%),
     linear-gradient(180deg, #f5efe4 0%, #efe8dc 100%);
@@ -347,6 +348,7 @@ watch(
   flex: 1;
   min-height: 0;
   display: flex;
+  overflow: hidden;
 }
 
 .sidebar {

@@ -1,10 +1,10 @@
-# AgentChat v2.2.0 迁移指南
+# Zuno v2.2.0 迁移指南
 
 > **从 LangChain 0.x 升级到 LangChain 1.0+ 的完整迁移指南**
 
 ## 📋 概述
 
-AgentChat v2.2.0 是一个重大版本更新，主要变更是将 LangChain 从 0.x 版本升级到 1.0+ 版本。LangChain 1.0 引入了**革命性的架构变更**：
+Zuno v2.2.0 是一个重大版本更新，主要变更是将 LangChain 从 0.x 版本升级到 1.0+ 版本。LangChain 1.0 引入了**革命性的架构变更**：
 
 - 🔄 **全新的 Agent 系统**: 从 `initialize_agent` 完全迁移到 `create_agent`
 - 🛠️ **工具系统重构**: 使用 `@tool` 装饰器和新的工具定义方式
@@ -341,7 +341,7 @@ for chunk in agent.stream({
 
 ---
 
-## 🛠️ AgentChat 特定变更
+## 🛠️ Zuno 特定变更
 
 ### 1. **MCP 集成更新**
 
@@ -705,8 +705,8 @@ result = agent.invoke({
 - [LangChain GitHub Issues](https://github.com/langchain-ai/langchain/issues)
 - [LangChain Discord 社区](https://discord.gg/langchain)
 
-### AgentChat 相关
-- [AgentChat 技术文档](agentchat.md)
+### Zuno 相关
+- [Zuno 技术文档](zuno.md)
 - [API 文档](api.md)
 - [核心功能文档](core.md)
 

@@ -745,6 +745,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 6px;
   padding: 8px 14px 6px;
+  overflow: hidden;
 }
 
 .hero-card {
@@ -797,7 +798,7 @@ onMounted(async () => {
 }
 
 .conversation-panel {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   display: flex;
@@ -942,10 +943,18 @@ onMounted(async () => {
   animation: spin 0.9s linear infinite;
 }
 
-.composer-dock.fixed {
+.composer-dock {
   position: sticky;
   bottom: 0;
-  padding-top: 2px;
+  flex-shrink: 0;
+  z-index: 6;
+  margin-top: auto;
+  padding-top: 4px;
+  background: linear-gradient(180deg, rgba(248, 243, 235, 0) 0%, rgba(248, 243, 235, 0.92) 24%, rgba(248, 243, 235, 0.98) 100%);
+}
+
+.composer-dock.fixed {
+  padding-top: 4px;
 }
 
 .composer-shell {
