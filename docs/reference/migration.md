@@ -346,7 +346,7 @@ for chunk in agent.stream({
 ### 1. **MCP 集成更新**
 
 #### 文件位置
-- `src/backend/agentchat/services/mcp_openai/mcp_langchain.py`
+- `src/backend/mcp_runtime/mcp_langchain.py`
 
 #### 变更前
 ```python
@@ -404,7 +404,7 @@ class MCPTool(BaseTool):
 ### 2. **Mars Agent 更新**
 
 #### 文件位置
-- `src/backend/agentchat/services/mars/mars_agent.py`
+- `src/backend/agents/mars_agent.py`
 
 #### 变更前
 ```python
@@ -490,7 +490,7 @@ class MarsAgent:
 ### 3. **RAG 系统更新**
 
 #### 文件位置
-- `src/backend/agentchat/services/rag/`
+- `src/backend/services/rag/`
 
 #### 变更前
 ```python
@@ -512,7 +512,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 ### 4. **工具系统统一更新**
 
 #### 文件位置
-- `src/backend/agentchat/tools/`
+- `src/backend/tools/`
 
 #### 变更前
 ```python
@@ -628,7 +628,7 @@ python -m pytest tests/test_tools.py
 ```bash
 # 启动服务
 cd src/backend
-uvicorn agentchat.main:app --port 7860
+python scripts/start.py
 
 # 测试 API 接口
 curl -X POST "http://localhost:7860/api/v1/chat" \

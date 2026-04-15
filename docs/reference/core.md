@@ -371,7 +371,7 @@ class UsageMetadataCallbackHandler(BaseCallbackHandler):
 
 **使用方式**
 ```python
-from agentchat.core.callbacks import usage_metadata_callback
+from core.callbacks import usage_metadata_callback
 
 # 在模型调用时添加回调
 response = await model.ainvoke(

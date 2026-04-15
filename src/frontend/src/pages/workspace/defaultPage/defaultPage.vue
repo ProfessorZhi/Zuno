@@ -671,8 +671,10 @@ onMounted(async () => {
 <template>
   <div class="workspace-chat" :class="{ active: messages.length > 0 }">
     <div class="workspace-shell">
-      <div v-if="messages.length === 0" class="hero-card"><img :src="robotIcon" alt="Zuno" class="hero-avatar" /><h1>{{ activeMode.label }}</h1><p>{{ activeMode.description }}</p></div>
-      <div v-if="messages.length === 0" class="mode-switcher"><button v-for="mode in modes" :key="mode.id" :class="['mode-pill', { active: selectedMode === mode.id }]" @click="selectedMode = mode.id">{{ mode.label }}</button></div>
+      <div v-if="messages.length === 0" class="intro-stack">
+        <div class="hero-card"><img :src="robotIcon" alt="Zuno" class="hero-avatar" /><h1>{{ activeMode.label }}</h1><p>{{ activeMode.description }}</p></div>
+        <div class="mode-switcher"><button v-for="mode in modes" :key="mode.id" :class="['mode-pill', { active: selectedMode === mode.id }]" @click="selectedMode = mode.id">{{ mode.label }}</button></div>
+      </div>
       <div v-if="messages.length > 0" ref="conversationRef" class="conversation-panel" @scroll="handleConversationScroll">
         <div v-for="(message, index) in messages" :key="index" class="message-row" :class="message.role">
           <img v-if="message.role === 'assistant'" :src="robotIcon" alt="Zuno" class="avatar" />
@@ -814,6 +816,7 @@ onMounted(async () => {
 
 <style scoped>
 .workspace-chat {
+  flex: 1;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -826,12 +829,18 @@ onMounted(async () => {
 
 .workspace-shell {
   flex: 1;
+  height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 8px 14px 6px;
   overflow: hidden;
+}
+
+.intro-stack {
+  display: grid;
+  gap: 10px;
 }
 
 .hero-card {
@@ -890,7 +899,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 0 0 62px;
+  padding: 0 0 10px;
 }
 
 .message-row {
@@ -1030,11 +1039,9 @@ onMounted(async () => {
 }
 
 .composer-dock {
-  position: sticky;
-  bottom: 0;
   flex-shrink: 0;
   z-index: 6;
-  margin-top: auto;
+  margin-top: 0;
   padding-top: 4px;
   background: linear-gradient(180deg, rgba(248, 243, 235, 0) 0%, rgba(248, 243, 235, 0.92) 24%, rgba(248, 243, 235, 0.98) 100%);
 }

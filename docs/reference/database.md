@@ -6,9 +6,9 @@
 
 ## 数据库配置
 
-- **数据库名称**: `agentchat`
-- **默认用户**: `agentchat_user`
-- **连接地址**: `mysql://agentchat_user:123456@mysql:3306/agentchat`
+- **数据库名称**: `zuno`
+- **默认用户**: `zuno_user`
+- **连接地址**: `mysql://zuno_user:123456@mysql:3306/zuno`
 
 ## 表结构详细说明
 

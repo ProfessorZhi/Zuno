@@ -1142,9 +1142,9 @@ def incr(self, key, expiration=3600)          # 递增计数
 Zuno 系统采用 MySQL 数据库，使用 SQLModel 作为 ORM 框架。数据库设计遵循规范化原则，支持用户管理、智能体配置、对话管理、知识库管理等核心功能。
 
 **数据库配置**
-- **数据库名称**: `agentchat`
-- **默认用户**: `agentchat_user`
-- **连接地址**: `mysql://agentchat_user:123456@mysql:3306/agentchat`
+- **数据库名称**: `zuno`
+- **默认用户**: `zuno_user`
+- **连接地址**: `mysql://zuno_user:123456@mysql:3306/zuno`
 
 ## 核心表结构
 
@@ -1511,8 +1511,8 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: agentchat
-      MYSQL_USER: agentchat_user
+      MYSQL_DATABASE: zuno
+      MYSQL_USER: zuno_user
       MYSQL_PASSWORD: 123456
 
   redis:
@@ -1538,7 +1538,7 @@ docker-compose -f docker/docker-compose.prod.yml up -d
 ### 环境变量配置
 ```bash
 # 数据库配置
-DATABASE_URL=mysql://agentchat_user:123456@mysql:3306/agentchat
+DATABASE_URL=mysql://zuno_user:123456@mysql:3306/zuno
 
 # Redis配置
 REDIS_URL=redis://redis:6379/0
