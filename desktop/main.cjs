@@ -1,10 +1,12 @@
-const { app, BrowserWindow, nativeImage, shell } = require('electron')
+const { app, BrowserWindow, nativeImage, shell, session } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
 const { startDesktopBridgeServer } = require('./bridge.cjs')
 
 const DEFAULT_DEV_FRONTEND_URL = 'http://localhost:8090'
 let desktopBridgeState = null
+
+app.commandLine.appendSwitch('disable-http-cache')
 
 function resolveDesktopIcon() {
   const candidates = [
@@ -40,7 +42,23 @@ function resolveFrontendTarget() {
   }
 }
 
-function createWindow() {
+function appendDesktopVersion(url) {
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}desktop_version=${app.getVersion()}`
+}
+
+async function resetDesktopSessionCache() {
+  try {
+    await session.defaultSession.clearCache()
+    await session.defaultSession.clearStorageData({
+      storages: ['appcache', 'shadercache', 'serviceworkers', 'cachestorage'],
+    })
+  } catch (error) {
+    console.warn('[desktop] Failed to clear session cache:', error)
+  }
+}
+
+async function createWindow() {
   const runtimeTarget = resolveFrontendTarget()
   const icon = resolveDesktopIcon()
 
@@ -65,15 +83,17 @@ function createWindow() {
     return { action: 'deny' }
   })
 
+  await resetDesktopSessionCache()
+
   if (runtimeTarget.type === 'file') {
     if (!fs.existsSync(runtimeTarget.target)) {
       console.warn(`[desktop] Frontend dist not found: ${runtimeTarget.target}`)
     }
-    mainWindow.loadFile(runtimeTarget.target)
+    await mainWindow.loadFile(runtimeTarget.target)
     return
   }
 
-  mainWindow.loadURL(runtimeTarget.target)
+  await mainWindow.loadURL(appendDesktopVersion(runtimeTarget.target))
 }
 
 app.whenReady().then(() => {
@@ -89,16 +109,16 @@ app.whenReady().then(() => {
       process.env.DESKTOP_BRIDGE_URL = bridgeState.bridgeUrlForBackend
       process.env.DESKTOP_BRIDGE_TOKEN = bridgeState.token
       process.env.DESKTOP_WORKSPACE_ROOT = bridgeState.workspaceRoot
-      createWindow()
+      void createWindow()
     })
     .catch((error) => {
       console.error('[desktop] Failed to start local bridge:', error)
-      createWindow()
+      void createWindow()
     })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+      void createWindow()
     }
   })
 })
