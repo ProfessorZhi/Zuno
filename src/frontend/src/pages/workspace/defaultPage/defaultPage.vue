@@ -103,7 +103,7 @@ const attachmentHint = computed(() => {
 const composerPlaceholder = computed(() => {
   if (!isAgentMode.value) return '输入你的问题，直接开始对话。'
   if (selectedExecutionMode.value === 'terminal') return '输入终端任务，或用 /terminal 明确要求访问本地文件与命令行。'
-  return '输入你的任务，或输入 / 选择 Skill。'
+  return '输入你的任务，或输入 / 直接选择 Skill。'
 })
 const modeFooterCopy = computed(() => {
   if (!isAgentMode.value) return '聊天模式 / 支持图片输入'
@@ -127,38 +127,20 @@ const slashSuggestions = computed<SlashSuggestion[]>(() => {
   const trimmed = text.trimStart()
   if (!trimmed.startsWith('/')) return []
 
-  const commandMatch = trimmed.match(/^\/([^\s]*)\s*(.*)$/)
-  const rawCommand = (commandMatch?.[1] || '').trim().toLowerCase()
-  const rawRest = (commandMatch?.[2] || '').trim()
-
-  const commandSuggestions: SlashSuggestion[] = [
-    { key: 'skill', label: '/skill', detail: '显式调用某个 Skill', insertValue: '/skill ' },
-  ]
-
-  if (!rawCommand) return commandSuggestions
-
-  if ('skill'.startsWith(rawCommand) && rawRest.length === 0 && rawCommand !== 'skill') {
-    return commandSuggestions.filter((item) => item.label.includes(rawCommand))
-  }
-
-  if (rawCommand === 'skill') {
-    const keyword = rawRest.toLowerCase()
-    return skillOptions.value
-      .filter((skill) => {
-        const name = (skill.name || '').toLowerCase()
-        const desc = (skill.description || '').toLowerCase()
-        return !keyword || name.includes(keyword) || desc.includes(keyword)
-      })
-      .slice(0, 8)
-      .map((skill) => ({
-        key: `skill-${skill.id}`,
-        label: skill.name,
-        detail: skill.description || 'Skill',
-        insertValue: `/skill ${skill.name} `,
-      }))
-  }
-
-  return commandSuggestions.filter((item) => item.label.includes(rawCommand))
+  const keyword = trimmed.slice(1).trim().toLowerCase()
+  return skillOptions.value
+    .filter((skill) => {
+      const name = (skill.name || '').toLowerCase()
+      const desc = (skill.description || '').toLowerCase()
+      return !keyword || name.includes(keyword) || desc.includes(keyword)
+    })
+    .slice(0, 8)
+    .map((skill) => ({
+      key: `skill-${skill.id}`,
+      label: `/${skill.name}`,
+      detail: skill.description || 'Skill',
+      insertValue: `/${skill.name} `,
+    }))
 })
 const progressStageIndex = computed(() => {
   if (!isAgentMode.value || (!isGenerating.value && executionEvents.value.length === 0)) return -1
