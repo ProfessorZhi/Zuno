@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="Session">
+  <rect x="128" y="128" width="768" height="768" rx="192" fill="#FFF7EE" stroke="#E5C7A4" stroke-width="32"/>
+  <rect x="252" y="292" width="520" height="404" rx="92" fill="#FFFDF9" stroke="#C8763E" stroke-width="40"/>
+  <path d="M332 384H692" stroke="#C8763E" stroke-width="40" stroke-linecap="round"/>
+  <circle cx="396" cy="484" r="32" fill="#F9E4D0" stroke="#C8763E" stroke-width="24"/>
+  <circle cx="512" cy="484" r="32" fill="#F9E4D0" stroke="#C8763E" stroke-width="24"/>
+  <circle cx="628" cy="484" r="32" fill="#F9E4D0" stroke="#C8763E" stroke-width="24"/>
+  <path d="M360 582H664" stroke="#C8763E" stroke-width="36" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,17 @@
+__pycache__/
+
+.idea/
+
+.vscode/
+
+chat.html
+
+.env
+docker/docker_config.local.yaml
+docker/data/
+
+chroma_db/
+memory_db/
+vector_db/
+
+node_modules/

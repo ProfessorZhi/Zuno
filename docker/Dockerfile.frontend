@@ -1,0 +1,31 @@
+# 🌐 Node.js 20+ 基础镜像
+# syntax=docker/dockerfile:1.7
+FROM node:20-alpine as frontend-base
+
+ARG NPM_REGISTRY=https://registry.npmjs.org/
+
+# 🔧 设置工作目录
+WORKDIR /app
+
+# 📦 设置npm镜像源（加速下载）
+RUN npm config set registry ${NPM_REGISTRY}
+
+# 📦 安装curl工具
+RUN apk add --no-cache curl
+
+# 📋 复制package文件
+COPY src/frontend/package*.json ./
+
+# 🚀 安装依赖
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm ci --registry=${NPM_REGISTRY} --prefer-offline
+
+# 📁 复制前端代码
+COPY src/frontend/ .
+
+
+# 🚀 暴露端口
+EXPOSE 8090
+
+# 🏃‍♂️ 启动开发服务器
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "8090"]

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Zuno avatar">
+  <defs>
+    <linearGradient id="zunoAvatarBg" x1="12" y1="10" x2="84" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff8ef" />
+      <stop offset="1" stop-color="#f4e2cc" />
+    </linearGradient>
+    <linearGradient id="zunoAvatarMark" x1="22" y1="18" x2="74" y2="76" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d58a50" />
+      <stop offset="1" stop-color="#b9632e" />
+    </linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="41" fill="url(#zunoAvatarBg)" stroke="#e5c39f" stroke-width="2.5" />
+  <rect x="22" y="22" width="52" height="52" rx="16" fill="url(#zunoAvatarMark)" />
+  <rect x="37" y="38" width="23" height="20" rx="7" fill="#fff8ef" />
+  <circle cx="45" cy="48" r="2.6" fill="#c87339" />
+  <circle cx="53" cy="48" r="2.6" fill="#c87339" />
+  <circle cx="60" cy="34" r="2.8" fill="#fff8ef" />
+  <path d="M64 28l1.7 3.8 3.8 1.7-3.8 1.7L64 39l-1.7-3.8-3.8-1.7 3.8-1.7L64 28z" fill="#fff8ef" opacity=".94" />
+</svg>

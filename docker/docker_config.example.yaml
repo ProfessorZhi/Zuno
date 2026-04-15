@@ -1,0 +1,113 @@
+# Copy this file to docker_config.local.yaml before starting Docker.
+# Leave model fields empty if you want the system to start first and add models later in the UI.
+
+server:
+  host: "127.0.0.1"
+  port: 7860
+  project_name: "Zuno"
+  version: "2.4.0"
+
+mysql:
+  endpoint: "mysql+pymysql://root:123456@mysql:3306/agentchat"
+  async_endpoint: "mysql+aiomysql://root:123456@mysql:3306/agentchat"
+
+redis:
+  endpoint: "redis://redis:6379"
+
+multi_models:
+  conversation_model:
+    api_key: ""
+    base_url: ""
+    model_name: ""
+  tool_call_model:
+    api_key: ""
+    base_url: ""
+    model_name: ""
+  reasoning_model:
+    api_key: ""
+    base_url: ""
+    model_name: ""
+  text2image:
+    api_key: ""
+    base_url: ""
+    model_name: ""
+  qwen_vl:
+    api_key: ""
+    base_url: ""
+    model_name: ""
+  embedding:
+    api_key: ""
+    base_url: ""
+    model_name: ""
+  rerank:
+    api_key: ""
+    base_url: ""
+    model_name: ""
+
+tools:
+  weather:
+    api_key: ""
+    endpoint: "https://restapi.amap.com/v3/weather/weatherInfo?parameters"
+  tavily:
+    api_key: ""
+  google:
+    api_key: ""
+  delivery:
+    api_key: ""
+    endpoint: "https://wuliu.market.alicloudapi.com/kdi"
+  bocha:
+    api_key: ""
+    endpoint: "https://api.bochaai.com/v1/web-search"
+
+rag:
+  enable_summary: false
+  enable_elasticsearch: false
+  retrival:
+    top_k: 5
+    min_score: 0.2
+  split:
+    chunk_size: 500
+    overlap_size: 100
+  elasticsearch:
+    hosts: "http://127.0.0.1:9200"
+  vector_db:
+    host: "127.0.0.1"
+    port: "19530"
+    mode: "chroma"
+
+storage:
+  mode: "minio"
+  oss:
+    access_key_id: ""
+    access_key_secret: ""
+    endpoint: "oss-cn-beijing.aliyuncs.com"
+    bucket_name: ""
+    base_url: ""
+  minio:
+    access_key_id: "minioadmin"
+    access_key_secret: "minioadmin"
+    endpoint: "minio:9000"
+    bucket_name: "agentchat"
+    base_url: "http://127.0.0.1:9000/agentchat"
+
+default_config:
+  mcp_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/mcp.png"
+  tool_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/default.png"
+  agent_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/bot.png"
+  mars_daily_url: "https://news.aibase.com/zh/news"
+  memory_collection_name: "memory"
+
+wechat_config:
+  token: ""
+  app_id: ""
+  secret: ""
+
+langfuse:
+  trace_name: "agentchat"
+  host: "https://cloud.langfuse.com"
+  public_key: ""
+  secret_key: ""
+  user_id: ""
+
+whitelist_paths:
+  - "/api/v1/login"

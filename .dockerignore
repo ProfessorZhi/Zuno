@@ -1,0 +1,9 @@
+# 在项目根目录（与 docker-compose.yml 同级）创建 .dockerignore
+src/frontend/node_modules/
+src/frontend/.pnpm/
+src/frontend/.npm/
+src/frontend/.yarn/
+src/frontend/pnpm-lock.yaml
+src/frontend/yarn.lock
+src/frontend/dist/
+src/frontend/.env*

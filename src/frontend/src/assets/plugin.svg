@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="Plugin">
+  <rect x="128" y="128" width="768" height="768" rx="192" fill="#FFF7EE" stroke="#E5C7A4" stroke-width="32"/>
+  <path d="M348 372c0-38 31-69 69-69h108a69 69 0 0 1 69 69v92h72a69 69 0 0 1 69 69v108a69 69 0 0 1-69 69h-92v72a69 69 0 0 1-69 69H395a69 69 0 0 1-69-69v-92h-72a69 69 0 0 1-69-69V416a69 69 0 0 1 69-69h94z" fill="#FFFDF9" stroke="#C8763E" stroke-width="40" stroke-linejoin="round"/>
+  <path d="M420 420h122a52 52 0 0 1 52 52v122" stroke="#C8763E" stroke-width="44" stroke-linecap="round"/>
+  <path d="M604 604H482a52 52 0 0 1-52-52V430" stroke="#C8763E" stroke-width="44" stroke-linecap="round"/>
+</svg>

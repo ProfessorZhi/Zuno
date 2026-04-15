@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="Workspace">
+  <rect x="128" y="128" width="768" height="768" rx="192" fill="#FFF7EE" stroke="#E5C7A4" stroke-width="32"/>
+  <rect x="248" y="272" width="528" height="432" rx="96" fill="#FFFDF9" stroke="#C8763E" stroke-width="44"/>
+  <path d="M320 376H704" stroke="#C8763E" stroke-width="44" stroke-linecap="round"/>
+  <path d="M340 456H476" stroke="#C8763E" stroke-width="44" stroke-linecap="round"/>
+  <path d="M340 520H648" stroke="#C8763E" stroke-width="44" stroke-linecap="round"/>
+  <rect x="340" y="588" width="174" height="84" rx="28" fill="#F9E4D0" stroke="#C8763E" stroke-width="28"/>
+</svg>

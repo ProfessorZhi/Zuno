@@ -1,0 +1,50 @@
+[
+  {
+    "name": "send_email",
+    "display_name": "发送邮件",
+    "description": "帮助用户发送邮件",
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/email.png"
+  },
+  {
+    "name": "tavily_search",
+    "display_name": "联网搜索",
+    "description": "帮助用户在互联网上搜索相关信息",
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/web_search.png"
+  },
+  {
+    "name": "get_arxiv",
+    "display_name": "论文检索",
+    "description": "帮助用户去查找论文",
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/arxiv.png"
+  },
+  {
+    "name": "get_weather",
+    "display_name": "天气预报",
+    "description": "通过高德天气接口查询城市天气和未来天气预报",
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/weather.png"
+  },
+  {
+    "name": "get_delivery",
+    "display_name": "快递物流查询",
+    "description": "通过阿里云市场快递接口查询运单轨迹，支持自动识别和手动指定快递公司",
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/delivery.png"
+  },
+  {
+    "name": "convert_to_pdf",
+    "display_name": "文件格式转换 (Docx -> PDF)",
+    "description": "帮助用户将上传的Docx文件转成PDF文件",
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/pdf.png"
+  },
+  {
+    "name": "convert_to_docx",
+    "display_name": "文件格式转换 (PDF -> Docx)",
+    "description": "帮助用户将上传的PDF文件转成Docx文件",
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/docx.png"
+  },
+  {
+    "name": "bocha_search",
+    "display_name": "博查搜索",
+    "description": "帮助用户使用bocha搜索相关信息",
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/bocha.png"
+  }
+]

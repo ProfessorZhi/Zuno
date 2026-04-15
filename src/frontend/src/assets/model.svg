@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="Model">
+  <rect x="128" y="128" width="768" height="768" rx="192" fill="#FFF7EE" stroke="#E5C7A4" stroke-width="32"/>
+  <path d="M512 272L700 374V650L512 752L324 650V374L512 272Z" fill="#FFFDF9" stroke="#C8763E" stroke-width="40" stroke-linejoin="round"/>
+  <path d="M512 272V512" stroke="#C8763E" stroke-width="40" stroke-linecap="round"/>
+  <path d="M324 374L512 512L700 374" stroke="#C8763E" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M324 650L512 512L700 650" stroke="#C8763E" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="512" cy="512" r="28" fill="#C8763E"/>
+</svg>

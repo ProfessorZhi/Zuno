@@ -1,0 +1,100 @@
+[
+  {
+    "server_name": "高德地图",
+    "url": "",
+    "type": "stdio",
+    "config": {},
+    "params": {},
+    "config_enabled": false,
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/map.png",
+    "imported_config": {
+      "mcpServers": {
+        "高德地图": {
+          "type": "stdio",
+          "command": "python",
+          "cwd": "/app",
+          "args": [
+            "agentchat/mcp_servers/remote_proxy/main.py",
+            "--server-name",
+            "高德地图",
+            "--transport",
+            "stdio",
+            "--target-transport",
+            "sse",
+            "--target-url",
+            "https://mcp.api-inference.modelscope.net/77df8a09751e4c/sse"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "server_name": "必应搜索",
+    "url": "",
+    "type": "stdio",
+    "config": {},
+    "params": {},
+    "config_enabled": false,
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/biying.png",
+    "imported_config": {
+      "mcpServers": {
+        "必应搜索": {
+          "type": "stdio",
+          "command": "python",
+          "cwd": "/app",
+          "args": [
+            "agentchat/mcp_servers/remote_proxy/main.py",
+            "--server-name",
+            "必应搜索",
+            "--transport",
+            "stdio",
+            "--target-transport",
+            "sse",
+            "--target-url",
+            "https://mcp.api-inference.modelscope.net/23311e898a7e4a/sse"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "server_name": "飞书",
+    "url": "",
+    "type": "stdio",
+    "config": [
+      {
+        "label": "APP_ID",
+        "key": "app_id",
+        "value": ""
+      },
+      {
+        "label": "APP_SECRET",
+        "key": "app_secret",
+        "value": ""
+      }
+    ],
+    "params": {},
+    "config_enabled": true,
+    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/feishu.png",
+    "imported_config": {
+      "mcpServers": {
+        "飞书": {
+          "type": "stdio",
+          "command": "python",
+          "cwd": "/app",
+          "args": [
+            "agentchat/mcp_servers/remote_proxy/main.py",
+            "--server-name",
+            "飞书",
+            "--transport",
+            "stdio",
+            "--target-transport",
+            "sse",
+            "--target-url",
+            "http://47.95.23.87:8000/sse"
+          ]
+        }
+      }
+    }
+  }
+]

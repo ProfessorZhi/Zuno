@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="Zuno">
+  <circle cx="512" cy="512" r="352" fill="#FFF7EE" stroke="#E5C7A4" stroke-width="28"/>
+  <circle cx="512" cy="444" r="168" fill="#FFFDF9" stroke="#D9B58E" stroke-width="28"/>
+  <path d="M430 470h164M410 378h204" stroke="#C8763E" stroke-width="42" stroke-linecap="round"/>
+  <path d="M438 474l102-96" stroke="#C8763E" stroke-width="42" stroke-linecap="round"/>
+  <path d="M380 706c38-72 96-108 132-108s94 36 132 108" stroke="#D9B58E" stroke-width="34" stroke-linecap="round"/>
+  <circle cx="460" cy="506" r="14" fill="#C8763E"/>
+  <circle cx="564" cy="506" r="14" fill="#C8763E"/>
+  <path d="M448 388l28-44h100l28 44" fill="none" stroke="#C8763E" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

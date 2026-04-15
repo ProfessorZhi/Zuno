@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="Skill">
+  <rect x="128" y="128" width="768" height="768" rx="192" fill="#FFF7EE" stroke="#E5C7A4" stroke-width="32"/>
+  <path d="M304 388L512 276L720 388" stroke="#C8763E" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M304 512L512 400L720 512" stroke="#C8763E" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M304 636L512 524L720 636" stroke="#C8763E" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M348 686H676" stroke="#D9A06D" stroke-width="28" stroke-linecap="round"/>
+</svg>

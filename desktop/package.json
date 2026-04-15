@@ -1,0 +1,14 @@
+{
+  "name": "agentchat-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "commonjs",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "dependencies": {
+    "electron": "^32.0.0"
+  }
+}

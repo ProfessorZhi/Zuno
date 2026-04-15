@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Zuno logo">
+  <defs>
+    <linearGradient id="zunoMarkBg" x1="20" y1="16" x2="76" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d58a50" />
+      <stop offset="1" stop-color="#b9632e" />
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="64" height="64" rx="18" fill="url(#zunoMarkBg)" />
+  <rect x="34" y="35" width="28" height="24" rx="8" fill="#fff8ef" />
+  <circle cx="44" cy="47" r="3" fill="#c87339" />
+  <circle cx="54" cy="47" r="3" fill="#c87339" />
+  <circle cx="62" cy="31" r="3.2" fill="#fff8ef" />
+  <path d="M66 24l2 4.4 4.4 2-4.4 2-2 4.4-2-4.4-4.4-2 4.4-2 2-4.4z" fill="#fff8ef" opacity=".94" />
+</svg>

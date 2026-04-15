@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" role="img" aria-label="Zuno wordmark">
+  <defs>
+    <linearGradient id="zunoWordmarkBg" x1="16" y1="10" x2="304" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff8ef" />
+      <stop offset="1" stop-color="#f7eadc" />
+    </linearGradient>
+    <linearGradient id="zunoWordmarkStroke" x1="18" y1="14" x2="302" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#efcba4" />
+      <stop offset="1" stop-color="#d9a978" />
+    </linearGradient>
+    <linearGradient id="zunoWordmarkMark" x1="22" y1="18" x2="78" y2="76" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d58a50" />
+      <stop offset="1" stop-color="#b9632e" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="304" height="80" rx="22" fill="url(#zunoWordmarkBg)" stroke="url(#zunoWordmarkStroke)" stroke-width="2" />
+  <g transform="translate(22 20)">
+    <rect x="0" y="0" width="56" height="56" rx="16" fill="url(#zunoWordmarkMark)" />
+    <rect x="16" y="16" width="24" height="24" rx="8" fill="#fff8ef" />
+    <circle cx="25.5" cy="28" r="2.7" fill="#c87339" />
+    <circle cx="33.5" cy="28" r="2.7" fill="#c87339" />
+    <circle cx="40.5" cy="14.5" r="3" fill="#fff8ef" />
+    <path d="M43.5 8.5l1.9 4.1 4.1 1.9-4.1 1.9-1.9 4.1-1.9-4.1-4.1-1.9 4.1-1.9 1.9-4.1z" fill="#fff8ef" opacity=".92" />
+  </g>
+  <text x="92" y="49" fill="#5c3e2d" font-size="35" font-weight="700" font-family="'Georgia', 'Times New Roman', serif">Zuno</text>
+  <text x="93" y="67" fill="#c07a45" font-size="10" letter-spacing="4" font-weight="700" font-family="'Segoe UI', Arial, sans-serif">WORKSPACE</text>
+</svg>
