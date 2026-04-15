@@ -103,13 +103,13 @@ const attachmentHint = computed(() => {
 const composerPlaceholder = computed(() => {
   if (!isAgentMode.value) return '输入你的问题，直接开始对话。'
   if (selectedExecutionMode.value === 'terminal') return '输入终端任务，或用 /terminal 明确要求访问本地文件与命令行。'
-  return '输入你的任务，或用 /mcp、/skill、/kb 明确指定能力。'
+  return '输入你的任务，或输入 / 选择 Skill。'
 })
 const modeFooterCopy = computed(() => {
   if (!isAgentMode.value) return '聊天模式 / 支持图片输入'
   const base = `${activeExecutionMode.value?.label || '工具模式'} / ${activeAccessScope.value?.label || '工作区限制'}`
   if (selectedExecutionMode.value === 'terminal') return `${base} · 支持 /terminal`
-  return `${base} · 支持 /mcp /skill /kb`
+  return `${base} · MCP 默认启用，输入 / 可快速选择 Skill`
 })
 const canPickTools = computed(() => isAgentMode.value && selectedExecutionMode.value === 'tool')
 const selectedToolCount = computed(() => (
@@ -132,9 +132,7 @@ const slashSuggestions = computed<SlashSuggestion[]>(() => {
   const rawRest = (commandMatch?.[2] || '').trim()
 
   const commandSuggestions: SlashSuggestion[] = [
-    { key: 'mcp', label: '/mcp', detail: '显式指定某个 MCP 能力', insertValue: '/mcp ' },
     { key: 'skill', label: '/skill', detail: '显式调用某个 Skill', insertValue: '/skill ' },
-    { key: 'kb', label: '/kb', detail: '优先按知识库检索', insertValue: '/kb ' },
   ]
 
   if (!rawCommand) return commandSuggestions
