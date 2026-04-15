@@ -79,6 +79,14 @@ const attachmentInputRef = ref<HTMLInputElement | null>(null)
 const pendingAttachments = ref<PendingAttachment[]>([])
 const attachmentsUploading = ref(false)
 const isAttachmentDragOver = ref(false)
+const activeSuggestionIndex = ref(0)
+
+type SlashSuggestion = {
+  key: string
+  label: string
+  detail: string
+  insertValue: string
+}
 
 const activeMode = computed(() => modes.find((mode) => mode.id === selectedMode.value) || modes[0])
 const activeExecutionMode = computed(() => executionModes.value.find((mode) => mode.id === selectedExecutionMode.value) || null)
@@ -112,6 +120,48 @@ const selectedToolCount = computed(() => (
 ))
 const compactPanel = computed(() => messages.value.length > 0)
 const traceVisible = computed(() => isAgentMode.value && showTracePanel.value)
+const slashSuggestions = computed<SlashSuggestion[]>(() => {
+  if (!isAgentMode.value || selectedExecutionMode.value === 'terminal') return []
+  const text = inputMessage.value || ''
+  if (!text.startsWith('/')) return []
+  const trimmed = text.trimStart()
+  if (!trimmed.startsWith('/')) return []
+
+  const commandMatch = trimmed.match(/^\/([^\s]*)\s*(.*)$/)
+  const rawCommand = (commandMatch?.[1] || '').trim().toLowerCase()
+  const rawRest = (commandMatch?.[2] || '').trim()
+
+  const commandSuggestions: SlashSuggestion[] = [
+    { key: 'mcp', label: '/mcp', detail: '显式指定某个 MCP 能力', insertValue: '/mcp ' },
+    { key: 'skill', label: '/skill', detail: '显式调用某个 Skill', insertValue: '/skill ' },
+    { key: 'kb', label: '/kb', detail: '优先按知识库检索', insertValue: '/kb ' },
+  ]
+
+  if (!rawCommand) return commandSuggestions
+
+  if ('skill'.startsWith(rawCommand) && rawRest.length === 0 && rawCommand !== 'skill') {
+    return commandSuggestions.filter((item) => item.label.includes(rawCommand))
+  }
+
+  if (rawCommand === 'skill') {
+    const keyword = rawRest.toLowerCase()
+    return skillOptions.value
+      .filter((skill) => {
+        const name = (skill.name || '').toLowerCase()
+        const desc = (skill.description || '').toLowerCase()
+        return !keyword || name.includes(keyword) || desc.includes(keyword)
+      })
+      .slice(0, 8)
+      .map((skill) => ({
+        key: `skill-${skill.id}`,
+        label: skill.name,
+        detail: skill.description || 'Skill',
+        insertValue: `/skill ${skill.name} `,
+      }))
+  }
+
+  return commandSuggestions.filter((item) => item.label.includes(rawCommand))
+})
 const progressStageIndex = computed(() => {
   if (!isAgentMode.value || (!isGenerating.value && executionEvents.value.length === 0)) return -1
   if (!isGenerating.value && executionEvents.value.length > 0) return 2
@@ -182,6 +232,10 @@ const buildLiveAssistantProgress = () => {
 }
 
 const buildFallbackAssistantMessage = () => [...executionEvents.value].reverse().find((event) => event.detail || event.title)?.detail || [...executionEvents.value].reverse().find((event) => event.detail || event.title)?.title || '这次请求没有返回可见内容，请稍后重试。'
+const applySlashSuggestion = (suggestion: SlashSuggestion) => {
+  inputMessage.value = suggestion.insertValue
+  activeSuggestionIndex.value = 0
+}
 
 const fetchModels = async () => {
   modelsLoading.value = true
@@ -281,13 +335,13 @@ const syncDefaultSelections = () => {
   }
 
   if (!skillsTouched.value) {
-    selectedSkillIds.value = [...availableSkillIds]
+    selectedSkillIds.value = []
   } else {
     selectedSkillIds.value = selectedSkillIds.value.filter((skillId) => availableSkillIds.includes(skillId))
   }
 
   if (!knowledgeTouched.value) {
-    selectedKnowledgeIds.value = [...availableKnowledgeIds]
+    selectedKnowledgeIds.value = []
   } else {
     selectedKnowledgeIds.value = selectedKnowledgeIds.value.filter((knowledgeId) => availableKnowledgeIds.includes(knowledgeId))
   }
@@ -522,7 +576,46 @@ const submitMessage = async () => {
   }
 }
 
-const handleKeydown = (event: KeyboardEvent) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (!isGenerating.value) void submitMessage() } }
+const handleKeydown = (event: KeyboardEvent) => {
+  if (slashSuggestions.value.length > 0) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      activeSuggestionIndex.value = (activeSuggestionIndex.value + 1) % slashSuggestions.value.length
+      return
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      activeSuggestionIndex.value = (activeSuggestionIndex.value - 1 + slashSuggestions.value.length) % slashSuggestions.value.length
+      return
+    }
+    if (event.key === 'Tab') {
+      event.preventDefault()
+      applySlashSuggestion(slashSuggestions.value[activeSuggestionIndex.value])
+      return
+    }
+    if (event.key === 'Enter' && !event.shiftKey) {
+      const trimmed = (inputMessage.value || '').trim()
+      if (trimmed.startsWith('/')) {
+        event.preventDefault()
+        applySlashSuggestion(slashSuggestions.value[activeSuggestionIndex.value])
+        return
+      }
+    }
+  }
+
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    if (!isGenerating.value) void submitMessage()
+  }
+}
+
+watch(slashSuggestions, (nextSuggestions) => {
+  if (!nextSuggestions.length) {
+    activeSuggestionIndex.value = 0
+    return
+  }
+  if (activeSuggestionIndex.value >= nextSuggestions.length) activeSuggestionIndex.value = 0
+})
 
 watch(() => route.query.session_id, async (newSessionId, oldSessionId) => {
   if (newSessionId && newSessionId !== oldSessionId) {
@@ -713,6 +806,19 @@ onMounted(async () => {
           <div v-if="isAttachmentDragOver" class="drop-hint">松开即可添加附件</div>
           <input ref="attachmentInputRef" class="attachment-input" type="file" multiple :accept="attachmentAccept" @change="handleAttachmentChange" />
           <textarea v-model="inputMessage" class="composer" :rows="compactPanel ? 1 : 2" :placeholder="composerPlaceholder" @keydown="handleKeydown" @paste="handleComposerPaste" />
+          <div v-if="slashSuggestions.length > 0" class="slash-suggestions">
+            <button
+              v-for="(suggestion, index) in slashSuggestions"
+              :key="suggestion.key"
+              type="button"
+              class="slash-suggestion"
+              :class="{ active: index === activeSuggestionIndex }"
+              @click="applySlashSuggestion(suggestion)"
+            >
+              <span class="slash-label">{{ suggestion.label }}</span>
+              <span class="slash-detail">{{ suggestion.detail }}</span>
+            </button>
+          </div>
           <div class="composer-footer">
             <div class="composer-footer-left">
               <button class="attach-btn" type="button" :disabled="attachmentsUploading || isGenerating" @click="triggerAttachmentSelect"><el-icon><Plus /></el-icon><span>{{ attachmentsUploading ? '上传中...' : '添加附件' }}</span></button>
@@ -984,6 +1090,47 @@ onMounted(async () => {
   color: #8a552e;
   font-size: 12px;
   text-align: center;
+}
+
+.slash-suggestions {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+
+.slash-suggestion {
+  width: 100%;
+  border: 1px solid rgba(225, 207, 189, 0.82);
+  background: rgba(255, 252, 248, 0.95);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.slash-suggestion.active,
+.slash-suggestion:hover {
+  border-color: rgba(201, 108, 45, 0.45);
+  background: rgba(255, 245, 235, 0.98);
+  box-shadow: 0 6px 14px rgba(90, 58, 29, 0.06);
+}
+
+.slash-label {
+  color: #5b3920;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.slash-detail {
+  color: #8c735d;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .composer-top,
