@@ -28,7 +28,6 @@ from agentchat.api.services.tool import ToolService
 from agentchat.api.services.usage_stats import UsageStatsService
 from agentchat.api.services.workspace_session import WorkSpaceSessionService
 from agentchat.core.callbacks import usage_metadata_callback
-from agentchat.core.agents.skill_agent import SkillAgent
 from agentchat.core.models.manager import ModelManager
 from agentchat.database import AgentSkill
 from agentchat.database.models.workspace_session import (
@@ -711,18 +710,16 @@ class WorkSpaceSimpleAgent:
 
         def create_skill_tool(skill: AgentSkill):
             @tool(skill.as_tool_name, description=skill.description or f"Use Skill: {skill.name}")
-            async def call_skill_agent(query: str) -> str:
-                """Call the selected Skill agent with the user task."""
-                skill_agent = SkillAgent(skill, self.user_id)
-                await skill_agent.init_skill_agent()
-                messages = await skill_agent.ainvoke([HumanMessage(content=query)])
-                if isinstance(messages, str):
-                    return messages
-                return "\n".join(
-                    [str(message.content) for message in messages if getattr(message, "content", "")]
+            async def load_skill_context(query: str) -> str:
+                """Load the selected Skill package so the current agent can use it directly."""
+                skill_context = AgentSkillService.build_skill_runtime_context(skill, query=query)
+                return (
+                    f"You selected Skill '{skill.name}'. Use the following skill package as guidance "
+                    f"for the current task in this same conversation. Do not claim the skill has "
+                    f"already executed unless you actually use other tools afterwards.\n\n{skill_context}"
                 )
 
-            return call_skill_agent
+            return load_skill_context
 
         self.skill_tools = []
         for skill in skills:

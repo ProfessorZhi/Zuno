@@ -1,42 +1,45 @@
+import asyncio
 import copy
 import time
-import asyncio
-from loguru import logger
-from pydantic import BaseModel
-from typing import List, Dict, Any, AsyncGenerator, Callable, NotRequired
+from typing import Any, AsyncGenerator, Callable, Dict, List, NotRequired
+
+from langchain.agents import AgentState, create_agent
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+from langchain.tools.tool_node import ToolCallRequest
+from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
+from langchain_core.tools import BaseTool, tool
+from langgraph.config import get_stream_writer
 from langgraph.runtime import Runtime
 from langgraph.types import Command
-from langchain_core.tools import BaseTool, tool, StructuredTool
-from langchain.tools.tool_node import ToolCallRequest
-from langchain.agents import create_agent, AgentState
-from langgraph.config import get_stream_writer
-from langchain_core.messages import BaseMessage, ToolMessage, HumanMessage, AIMessageChunk
-from langchain.agents.middleware import LLMToolSelectorMiddleware, ModelRequest, ModelResponse, AgentMiddleware
+from loguru import logger
+from pydantic import BaseModel
 
 from agentchat.api.services.agent_skill import AgentSkillService
-from agentchat.core.agents.skill_agent import SkillAgent
-from agentchat.core.callbacks import usage_metadata_callback
-from agentchat.database import AgentSkill
-from agentchat.tools import AgentToolsWithName
 from agentchat.api.services.llm import LLMService
-from agentchat.core.models.manager import ModelManager
-from agentchat.api.services.tool import ToolService
-from agentchat.services.user_defined_tool_runtime import build_user_defined_langchain_tools
-from agentchat.services.rag.handler import RagHandler
-from agentchat.core.agents.mcp_agent import MCPAgent, MCPConfig
 from agentchat.api.services.mcp_server import MCPService
+from agentchat.api.services.mcp_user_config import MCPUserConfigService
+from agentchat.api.services.tool import ToolService
+from agentchat.core.callbacks import usage_metadata_callback
+from agentchat.core.models.manager import ModelManager
+from agentchat.database import AgentSkill
+from agentchat.services.mcp.manager import MCPManager
+from agentchat.services.rag.handler import RagHandler
+from agentchat.services.user_defined_tool_runtime import build_user_defined_langchain_tools
+from agentchat.tools import AgentToolsWithName
+from agentchat.utils.convert import convert_mcp_config
 from agentchat.utils.helpers import parse_imported_config
-from agentchat.utils.model_output import extract_visible_text_from_stream, is_minimax_model, normalize_messages_for_model
+from agentchat.utils.model_output import (
+    extract_visible_text_from_stream,
+    is_minimax_model,
+    normalize_messages_for_model,
+)
 
 
 class StreamAgentState(AgentState):
     tool_call_count: NotRequired[int]
     model_call_count: NotRequired[int]
     user_id: NotRequired[str]
-    available_tools: NotRequired[List[BaseTool]]
 
-
-MAX_TOOLS_SIZE = 10
 
 class AgentConfig(BaseModel):
     user_id: str
@@ -47,28 +50,30 @@ class AgentConfig(BaseModel):
     agent_skill_ids: List[str]
     system_prompt: str
     enable_memory: bool = False
-    name: str = None
-
+    name: str | None = None
 
 
 class EmitEventAgentMiddleware(AgentMiddleware):
-    def __init__(self, name_resolver_func):
+    def __init__(
+        self,
+        name_resolver_func: Callable[[str], tuple[str, str]],
+        mcp_checker: Callable[[str], bool],
+        mcp_id_resolver: Callable[[str], str | None],
+        user_id: str,
+    ):
         super().__init__()
-
         self.name_resolver_func = name_resolver_func
+        self.mcp_checker = mcp_checker
+        self.mcp_id_resolver = mcp_id_resolver
+        self.user_id = user_id
 
     async def aafter_model(
         self, state: StreamAgentState, runtime: Runtime
     ) -> dict[str, Any] | None:
         last_message = state["messages"][-1]
-        if last_message.tool_calls:
-            return {
-                "model_call_count": state["model_call_count"] + 1
-            }
-
-        return {
-            "jump_to": "end"
-        }
+        if getattr(last_message, "tool_calls", None):
+            return {"model_call_count": state.get("model_call_count", 0) + 1}
+        return {"jump_to": "end"}
 
     async def awrap_model_call(
         self,
@@ -76,10 +81,7 @@ class EmitEventAgentMiddleware(AgentMiddleware):
         handler: Callable[[ModelRequest], ModelResponse],
     ) -> ModelResponse:
         try:
-            if available_tools := request.state.get("available_tools", []):
-                request.tools = available_tools
-            response = await handler(request)
-            return response
+            return await handler(request)
         except Exception as err:
             logger.error(f"Model call error: {err}")
             raise ValueError(err)
@@ -90,158 +92,137 @@ class EmitEventAgentMiddleware(AgentMiddleware):
         handler: Callable[[ToolCallRequest], ToolMessage | Command],
     ) -> ToolMessage | Command:
         writer = get_stream_writer()
-        tool_call_count = request.state.get("tool_call_count", 0)
-        # 发送工具分析开始事件
-        tool_type, display_tool_name = self.name_resolver_func(request.tool_call["name"])
-        writer({
-            "status": "START",
-            "title": f"执行可用{tool_type}: {display_tool_name}",
-            "message": f"正在调用插件工具 {display_tool_name}..."
-            })
-        request.state["tool_call_count"] = tool_call_count + 1
+        tool_name = request.tool_call["name"]
+        tool_type, display_name = self.name_resolver_func(tool_name)
+        writer(
+            {
+                "status": "START",
+                "title": f"执行{tool_type}: {display_name}",
+                "message": f"正在调用 {display_name}...",
+            }
+        )
+
+        if self.mcp_checker(tool_name):
+            try:
+                mcp_server_id = self.mcp_id_resolver(tool_name)
+                if mcp_server_id:
+                    mcp_config = await MCPUserConfigService.get_mcp_user_config(
+                        self.user_id,
+                        mcp_server_id,
+                    )
+                    request.tool_call["args"].update(mcp_config)
+            except Exception as err:
+                error_text = str(err)
+                writer(
+                    {
+                        "status": "ERROR",
+                        "title": f"执行{tool_type}: {display_name}",
+                        "message": error_text,
+                    }
+                )
+                return ToolMessage(
+                    content=error_text,
+                    name=tool_name,
+                    tool_call_id=request.tool_call["id"],
+                )
+
         try:
             tool_result = await handler(request)
-            writer({
-                "status": "END",
-                "title": f"执行可用{tool_type}: {display_tool_name}",
-                "message": tool_result.content
-                })
+            writer(
+                {
+                    "status": "END",
+                    "title": f"执行{tool_type}: {display_name}",
+                    "message": getattr(tool_result, "content", str(tool_result)),
+                }
+            )
             return tool_result
         except Exception as err:
-            writer({
-                "status": "ERROR",
-                "title": f"执行可用{tool_type}: {display_tool_name}",
-                "message": str(err)
-            })
-            return ToolMessage(content=str(err), name=request.tool_call["name"], tool_call_id=request.tool_call["id"])
+            error_text = str(err)
+            writer(
+                {
+                    "status": "ERROR",
+                    "title": f"执行{tool_type}: {display_name}",
+                    "message": error_text,
+                }
+            )
+            return ToolMessage(
+                content=error_text,
+                name=tool_name,
+                tool_call_id=request.tool_call["id"],
+            )
+
 
 class GeneralAgent:
     def __init__(self, agent_config: AgentConfig):
         self.agent_config = agent_config
-
         self.conversation_model = None
-        self.tool_invocation_model = None
         self.react_agent = None
 
-        self.tools = []
-        self.mcp_agent_as_tools = []
-        self.middlewares = []
-        self.skill_agent_as_tools = []
+        self.tools: list[BaseTool] = []
+        self.mcp_tools: list[BaseTool] = []
+        self.skill_tools: list[BaseTool] = []
+        self.middlewares: list[AgentMiddleware] = []
         self.tool_metadata_map: Dict[str, Dict[str, str]] = {}
+        self.mcp_tool_server_map: Dict[str, str] = {}
 
-        # 流式事件队列
         self.event_queue = asyncio.Queue()
         self.stop_streaming = False
 
     def wrap_event(self, data: Dict[Any, Any]):
-        """发送流式事件"""
-        event = {
+        return {
             "type": "event",
             "timestamp": time.time(),
-            "data": data
+            "data": data,
         }
-        return event
 
     async def init_agent(self):
-        self.mcp_agent_as_tools = await self.setup_mcp_agent_as_tools()
-
+        self.mcp_tools = await self.setup_mcp_tools()
         self.tools = await self.setup_tools()
-
-        self.skill_agent_as_tools = await self.setup_agent_skill_as_tools()
-
+        self.skill_tools = await self.setup_skill_tools()
         await self.setup_knowledge_tool()
         await self.setup_language_model()
-
-        self.search_tool = self.setup_search_tool()
         self.middlewares = await self.setup_agent_middleware()
         self.react_agent = self.setup_react_agent()
 
     async def setup_agent_middleware(self):
-        # 仅支持传入response_format为json object的模型
-        tool_selector_middleware = LLMToolSelectorMiddleware(
-            model=self.tool_invocation_model,
-            max_tools=3 # 限制每次选择最多 3个工具
-        )
-
-        emit_event_middleware = EmitEventAgentMiddleware(self.get_tool_display_name)
-
-        return [emit_event_middleware]
-
+        return [
+            EmitEventAgentMiddleware(
+                self.get_tool_display_name,
+                self.is_mcp_tool,
+                self.get_mcp_id_by_tool,
+                self.agent_config.user_id,
+            )
+        ]
 
     async def setup_language_model(self):
-        # 普通对话模型
         if self.agent_config.llm_id:
             model_config = await LLMService.get_llm_by_id(self.agent_config.llm_id)
             self.conversation_model = ModelManager.get_user_model(**model_config)
         else:
             self.conversation_model = ModelManager.get_conversation_model()
 
-        # 意图识别模型
-        self.tool_invocation_model = ModelManager.get_tool_invocation_model()
-
     def setup_react_agent(self):
+        runtime_system_prompt = "\n".join(
+            line
+            for line in [
+                self.agent_config.system_prompt.strip(),
+                "Use available tools directly. Do not invent tool results.",
+                "Skills are guidance assets. Read them when helpful, then continue solving the task in the same agent.",
+                "MCP servers are available as direct tools. If a matching MCP tool exists, call it instead of only describing capabilities.",
+                "When knowledge bases are enabled and the task asks for project资料、知识库、文档库或RAG信息, prefer search_knowledge_base.",
+            ]
+            if line
+        )
         return create_agent(
             model=self.conversation_model,
-            tools=self.tools + self.mcp_agent_as_tools + self.skill_agent_as_tools,
-            #tools=[self.search_tool] if len(self.tools + self.mcp_agent_as_tools) >= MAX_TOOLS_SIZE else self.tools + self.mcp_agent_as_tools,
+            tools=self.tools + self.mcp_tools + self.skill_tools,
             middleware=self.middlewares,
-            state_schema=StreamAgentState
+            state_schema=StreamAgentState,
+            system_prompt=runtime_system_prompt,
         )
 
-    def setup_search_tool(self):
-        """这里相当于也是一个探索阶段，当绑定的工具数量很多时，会极大的占用上下文的Token数量以及影响命中效果
-        所以在工具数量超过MaxToolsSize阈值后，会先只绑定一个搜索工具去搜索可用的工具，之后再拿着可用的工具进行对应的调用
-
-        不适用：
-            1.工具数量较少
-            2.一些工具在每次对话都能用到
-        """
-        @tool(parse_docstring=True)
-        def search_available_tools(query: str, tool_call_id):
-            """
-            搜索可用的工具，使用此工具查找是否包含相关的能力
-
-            Args:
-                query (str): 执行任务的关键词，例如 'github'、'search'、'天气'
-
-            Returns:
-                str: 返回本次任务可能能用到的接口
-            """
-            found_tools = []
-            available_tools = self.tools + self.mcp_agent_as_tools
-            for tool in available_tools:
-                if tool.name == "search_available_tools":
-                    continue
-                if query.lower() in tool.name or query.lower() in tool.description:
-                    found_tools.append(tool)
-
-            if not found_tools:
-                content_str = "未找到相关工具。请尝试其他关键词。"
-            else:
-                content_str = f"已找到并激活以下工具:\n" + "\n".join([tool.name for tool in found_tools]) + "\n\n现在你可以调用这些工具了。"
-
-            tool_msg = ToolMessage(
-                content=content_str,
-                tool_call_id=tool_call_id,
-                name="search_available_tools"
-            )
-
-            return Command(update={"available_tools": found_tools, "messages": [tool_msg]})
-        return search_available_tools
-
-
     async def setup_tools(self) -> List[BaseTool]:
-        def create_openapi_tool_executor(tool_adapter, tool_name):
-            """闭包创建一个执行OpenAPI Tool的方法"""
-            async def _execute_wrapper(**kwargs):
-                return await tool_adapter.execute(
-                    _tool_name=tool_name,
-                    **kwargs
-                )
-
-            return _execute_wrapper
-
-        tools = []
+        tools: list[BaseTool] = []
         db_tools = await ToolService.get_tools_from_id(self.agent_config.tool_ids)
         for db_tool in db_tools:
             if db_tool.is_user_defined:
@@ -252,34 +233,14 @@ class GeneralAgent:
                     )
                 )
                 continue
-            if db_tool.is_user_defined:
-                tool_adapter = OpenAPIToolAdapter(
-                    auth_config=db_tool.auth_config,
-                    openapi_schema=db_tool.openapi_schema
-                )
 
-                for openapi_tool in tool_adapter.tools:
-                    tools.append(
-                        StructuredTool(
-                            name=openapi_tool["function"].get("name", ""),
-                            description=openapi_tool["function"].get("description", ""),
-                            coroutine=create_openapi_tool_executor(tool_adapter, openapi_tool["function"].get("name")),
-                            args_schema=openapi_tool
-                        )
-                    )
-
-                    self.tool_metadata_map[openapi_tool["function"].get("name", "")] = {
-                        "name": db_tool.display_name,
-                        "type": "工具"
-                    }
-            else:
-                agent_tool = AgentToolsWithName.get(db_tool.name)
-                if agent_tool:
-                    tools.append(agent_tool)
-                self.tool_metadata_map[db_tool.name] = {
-                    "name": db_tool.display_name,
-                    "type": "工具"
-                }
+            agent_tool = AgentToolsWithName.get(db_tool.name)
+            if agent_tool:
+                tools.append(agent_tool)
+            self.tool_metadata_map[db_tool.name] = {
+                "name": db_tool.display_name,
+                "type": "工具",
+            }
 
         default_web_tools = {
             "web_search": "联网搜索",
@@ -290,139 +251,133 @@ class GeneralAgent:
             default_tool = AgentToolsWithName.get(tool_name)
             if default_tool and default_tool.name not in existing_tool_names:
                 tools.append(default_tool)
-                existing_tool_names.add(default_tool.name)
                 self.tool_metadata_map[default_tool.name] = {
                     "name": display_name,
-                    "type": "工具"
+                    "type": "工具",
                 }
 
         return tools
 
-    async def setup_agent_skill_as_tools(self) -> List[BaseTool]:
-        agent_skill_as_tools = []
+    async def setup_skill_tools(self) -> List[BaseTool]:
+        skill_tools: list[BaseTool] = []
         agent_skills = await AgentSkillService.get_agent_skills_by_ids(self.agent_config.agent_skill_ids)
 
-        def create_skill_agent_as_tool(agent_skill: AgentSkill):
-
+        def create_skill_tool(agent_skill: AgentSkill):
             @tool(agent_skill.as_tool_name, description=agent_skill.description)
-            async def call_skill_agent(query: str):
-                """调用技能Agent"""
-                skill_agent = SkillAgent(agent_skill, self.agent_config.user_id)
-                await skill_agent.init_skill_agent()
-                messages = await skill_agent.ainvoke([HumanMessage(content=query)])
-                return "\n".join([message.content for message in messages])
+            async def load_skill_context(query: str) -> str:
+                """加载 Skill 内容，由当前主 Agent 直接使用。"""
+                skill_context = AgentSkillService.build_skill_runtime_context(agent_skill, query=query)
+                return (
+                    f"You selected Skill '{agent_skill.name}'. Use the following skill package as guidance "
+                    f"for the current task in this same conversation. Do not claim the skill has already "
+                    f"executed unless you actually use other tools afterwards.\n\n{skill_context}"
+                )
 
-            return call_skill_agent
+            return load_skill_context
 
         for agent_skill in agent_skills:
             self.tool_metadata_map[agent_skill.as_tool_name] = {
-                "name": agent_skill.name,  # 技能的中文/友好名称
-                "type": "Skill"
+                "name": agent_skill.name,
+                "type": "Skill",
             }
-            agent_skill_as_tools.append(create_skill_agent_as_tool(agent_skill))
+            skill_tools.append(create_skill_tool(agent_skill))
 
-        return agent_skill_as_tools
+        return skill_tools
 
-
-    async def setup_mcp_agent_as_tools(self):
-        mcp_agent_as_tools = []
-
-        def create_mcp_agent_as_tool(mcp_agent, mcp_as_tool_name, description):
-            @tool(mcp_as_tool_name, description=description)
-            async def call_mcp_agent(query: str):
-                """
-                用户想要根据这些mcp工具来完成的一些任务
-                Args:
-                    query: 用户询问的问题
-                Returns:
-                    根据该MCP Agent来完成的一些任务
-                """
-
-                messages = await mcp_agent.ainvoke([HumanMessage(content=query)])
-                return "\n".join([message.content for message in messages])
-            return call_mcp_agent
-
+    async def setup_mcp_tools(self) -> List[BaseTool]:
+        mcp_servers = []
         for mcp_id in self.agent_config.mcp_ids:
             mcp_server = await MCPService.get_mcp_server_from_id(mcp_id)
             if not mcp_server:
                 continue
-            imported_info = None
+
             if mcp_server.get("imported_config"):
                 imported_info = parse_imported_config(mcp_server["imported_config"])
-            mcp_config = MCPConfig(
-                server_name=mcp_server.get("server_name", ""),
-                mcp_server_id=mcp_server.get("mcp_server_id", ""),
-                type=(imported_info.type if imported_info else mcp_server.get("type", "sse")),
-                url=(imported_info.url if imported_info else mcp_server.get("url", "")) or "",
-                tools=mcp_server.get("tools") or [],
-                headers=imported_info.headers if imported_info else None,
-                command=imported_info.command if imported_info else None,
-                args=(imported_info.args or []) if imported_info else [],
-                env=imported_info.env if imported_info else None,
-                env_passthrough=(imported_info.env_passthrough or []) if imported_info else [],
-                cwd=imported_info.cwd if imported_info else None,
-            )
+                server_info = {
+                    "server_name": imported_info.name or mcp_server.get("server_name", ""),
+                    "type": imported_info.type or mcp_server.get("type", "sse"),
+                    "url": imported_info.url or "",
+                    "headers": imported_info.headers,
+                    "command": imported_info.command,
+                    "args": imported_info.args or [],
+                    "env": imported_info.env,
+                    "env_passthrough": imported_info.env_passthrough or [],
+                    "cwd": imported_info.cwd,
+                }
+            else:
+                server_info = {
+                    "server_name": mcp_server.get("server_name", ""),
+                    "type": mcp_server.get("type", "sse"),
+                    "url": mcp_server.get("url", "") or "",
+                    "headers": None,
+                    "command": None,
+                    "args": [],
+                    "env": None,
+                    "env_passthrough": [],
+                    "cwd": None,
+                }
 
-            mcp_agent = MCPAgent(mcp_config, self.agent_config.user_id)
-            await mcp_agent.init_mcp_agent()
+            for tool_name in mcp_server.get("tools") or []:
+                self.mcp_tool_server_map[tool_name] = mcp_server.get("mcp_server_id", "")
 
-            tool_name = mcp_server.get("mcp_as_tool_name")
-            description = mcp_server.get("description")
+            mcp_servers.append(server_info)
 
-            # 更新元数据映射
-            self.tool_metadata_map[tool_name] = {
-                "name": mcp_config.server_name,
-                "type": "MCP"
+        if not mcp_servers:
+            return []
+
+        manager = MCPManager(convert_mcp_config(mcp_servers))
+        mcp_tools = await manager.get_mcp_tools()
+        for tool in mcp_tools:
+            self.tool_metadata_map[tool.name] = {
+                "name": tool.name,
+                "type": "MCP",
             }
-
-            # 创建并添加工具
-            mcp_agent_as_tools.append(
-                create_mcp_agent_as_tool(mcp_agent, tool_name, description)
-            )
-        return mcp_agent_as_tools
+        return mcp_tools
 
     async def setup_knowledge_tool(self):
         @tool(parse_docstring=True)
         async def retrival_knowledge(query: str) -> str:
             """
-            通过检索知识库来获取信息
+            通过检索知识库来获取信息。
 
             Args:
-                query (str): 用户问题
-
-            Returns:
-                str: 返回从知识库检索来的信息
+                query: 用户问题
             """
-            knowledge_message = await RagHandler.retrieve_ranked_documents(
+            return await RagHandler.retrieve_ranked_documents(
                 query, self.agent_config.knowledge_ids
             )
-            return knowledge_message
 
-        if self.agent_config.knowledge_ids: # 当绑定知识库ID后才 As Tool
+        if self.agent_config.knowledge_ids:
             self.tools.append(retrival_knowledge)
             self.tool_metadata_map[retrival_knowledge.name] = {
                 "name": "检索知识库",
-                "type": "工具"
+                "type": "工具",
             }
 
-
     async def astream(self, messages: List[BaseMessage]) -> AsyncGenerator[Dict[str, Any], None]:
-        """流式调用主方法"""
         response_content = ""
-        visible_messages = copy.deepcopy(normalize_messages_for_model(messages, model=self.conversation_model))
+        visible_messages = copy.deepcopy(
+            normalize_messages_for_model(messages, model=self.conversation_model)
+        )
         inside_think = False
         try:
             async for token, metadata in self.react_agent.astream(
-                    input={"messages": visible_messages, "model_call_count": 0, "user_id": self.agent_config.user_id},
-                    config={"callbacks": [usage_metadata_callback]},
-                    stream_mode=["messages", "custom"],
+                input={
+                    "messages": visible_messages,
+                    "model_call_count": 0,
+                    "user_id": self.agent_config.user_id,
+                },
+                config={"callbacks": [usage_metadata_callback]},
+                stream_mode=["messages", "custom"],
             ):
                 if token == "custom":
                     yield self.wrap_event(metadata)
                 elif isinstance(metadata[0], AIMessageChunk) and metadata[0].content:
                     visible_chunk = metadata[0].content
                     if is_minimax_model(model=self.conversation_model):
-                        visible_chunk, inside_think = extract_visible_text_from_stream(metadata[0].content, inside_think)
+                        visible_chunk, inside_think = extract_visible_text_from_stream(
+                            metadata[0].content, inside_think
+                        )
                     if not visible_chunk:
                         continue
 
@@ -432,40 +387,31 @@ class GeneralAgent:
                         "timestamp": time.time(),
                         "data": {
                             "chunk": visible_chunk,
-                            "accumulated": response_content
-                        }
+                            "accumulated": response_content,
+                        },
                     }
-
-        # 针对模型回复进行兜底操作，错误类型包括：敏感词，模型问题
         except Exception as err:
             logger.error(f"LLM Model Error: {err}")
             yield {
                 "type": "response_chunk",
                 "timestamp": time.time(),
                 "data": {
-                    "chunk": "您的问题触及到我的知识盲区，请换个问题吧✨",
-                    "accumulated": response_content
-                }
+                    "chunk": "对话生成失败，请稍后重试。",
+                    "accumulated": response_content,
+                },
             }
 
     def stop_streaming_callback(self):
         self.stop_streaming = True
 
     def get_tool_display_name(self, tool_name: str):
-        """
-        根据工具的原始名称，解析出带有类型后缀的展示名称
-        例如:
-        - "gaode_weather" -> "执行Skill：高德天气"
-        - "mcp_filesystem" -> "执行MCP：文件系统"
-        - "search" -> "执行工具：search"
-        """
         metadata = self.tool_metadata_map.get(tool_name)
-
         if not metadata:
-            # 如果没有记录元数据，直接返回原始名称
             return "工具", tool_name
+        return metadata.get("type", "工具"), metadata.get("name", tool_name)
 
-        friendly_name = metadata.get("name", tool_name)
-        tool_type = metadata.get("type", "工具")
+    def is_mcp_tool(self, tool_name: str) -> bool:
+        return tool_name in self.mcp_tool_server_map
 
-        return tool_type, friendly_name
+    def get_mcp_id_by_tool(self, tool_name: str) -> str | None:
+        return self.mcp_tool_server_map.get(tool_name)
