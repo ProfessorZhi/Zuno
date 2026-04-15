@@ -438,7 +438,7 @@ onMounted(fetchTools)
 
         <template v-else>
           <el-form-item label="工具目录">
-            <el-input v-model="form.cli_config.tool_dir" placeholder="例如：F:\\agent_project\\agent\\AgentChat\\Zuno\\tools\\my-cli" />
+            <el-input v-model="form.cli_config.tool_dir" placeholder="例如：F:\\projects\\Zuno\\tools\\my-cli" />
           </el-form-item>
           <el-form-item label="命令"><el-input v-model="form.cli_config.command" placeholder="例如：python main.py 或 mycli.exe" /></el-form-item>
           <el-form-item label="参数模板"><el-input v-model="form.cli_config.args_template" placeholder="例如：--input {input} --output {output}" /></el-form-item>
