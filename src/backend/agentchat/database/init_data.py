@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import httpx
 from loguru import logger
+from sqlalchemy import inspect, text
 from sqlmodel import SQLModel
 
 from agentchat.api.services.agent import AgentService
@@ -28,9 +29,30 @@ async def init_database():
     try:
         ensure_database()
         SQLModel.metadata.create_all(engine)
+        _ensure_knowledge_pipeline_schema()
         logger.success("PostgreSQL tables are ready")
     except Exception as err:
         logger.error(f"Create PostgreSQL Table Error: {err}")
+
+
+def _ensure_knowledge_pipeline_schema():
+    inspector = inspect(engine)
+    if "knowledge_file" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("knowledge_file")}
+    required_columns = {
+        "parse_status": "ALTER TABLE knowledge_file ADD COLUMN parse_status VARCHAR DEFAULT 'pending'",
+        "rag_index_status": "ALTER TABLE knowledge_file ADD COLUMN rag_index_status VARCHAR DEFAULT 'pending'",
+        "graph_index_status": "ALTER TABLE knowledge_file ADD COLUMN graph_index_status VARCHAR DEFAULT 'pending'",
+        "last_task_id": "ALTER TABLE knowledge_file ADD COLUMN last_task_id VARCHAR",
+        "last_error": "ALTER TABLE knowledge_file ADD COLUMN last_error VARCHAR(2048)",
+    }
+
+    with engine.begin() as connection:
+        for column_name, ddl in required_columns.items():
+            if column_name not in existing_columns:
+                connection.execute(text(ddl))
 
 
 async def init_default_agent():
