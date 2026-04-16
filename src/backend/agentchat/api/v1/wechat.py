@@ -9,6 +9,7 @@ from agentchat.api.services.workspace_session import WorkSpaceSessionService
 from agentchat.services.redis import redis_client
 from agentchat.services.workspace.wechat_agent import WeChatAgent
 from agentchat.settings import app_settings
+from agentchat.utils.runtime_observability import RedisKeys
 
 router = APIRouter(tags=["Wechat"])
 
@@ -103,7 +104,8 @@ async def handle_wechat_message(request: Request):
             media_type="text/xml; charset=utf-8",
         )
     # 用户问题重复则从Redis里面取出
-    if value := redis_client.get(f"{from_user}:{content}"):
+    wechat_reply_key = RedisKeys.wechat_reply(from_user, content)
+    if value := redis_client.get(wechat_reply_key):
         model_reply = value.get("content")
     else:
         workspace_session = await WorkSpaceSessionService.get_workspace_session_from_id(from_user, from_user)
@@ -135,9 +137,8 @@ async def handle_wechat_message(request: Request):
 
                 # 将信息保存到 Redis中
                 if timeout_event.is_set():
-                    redis_key = f"{from_user}:{content}"
                     redis_client.set(
-                        key=redis_key,
+                        key=wechat_reply_key,
                         value={
                             "user": from_user,
                             "content": response.content

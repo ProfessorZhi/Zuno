@@ -38,6 +38,7 @@ psycopg = {version = "^3.2.9", extras = ["binary"]}
 google-search-results = "^2.4.2"
 arxiv = "^2.3.0"
 anthropic = "^0.72.0"
+langsmith = "^0.4.8"
 html2image = "^2.0.7"
 lxml-html-clean = "^0.4.3"
 pyfiglet = "^1.0.4"

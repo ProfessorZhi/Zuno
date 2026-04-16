@@ -60,6 +60,11 @@ from agentchat.utils.model_output import (
     normalize_messages_for_model,
     strip_model_wrapper_from_user_input,
 )
+from agentchat.utils.runtime_observability import (
+    build_langchain_run_config,
+    build_langsmith_metadata,
+    get_active_trace_id,
+)
 
 tool = lc_tool
 
@@ -151,6 +156,37 @@ class WorkSpaceSimpleAgent:
             "timestamp": time.time(),
             "data": data,
         }
+
+    def _build_run_metadata(self, **extra: Any) -> Dict[str, Any]:
+        metadata = build_langsmith_metadata(
+            trace_id=get_active_trace_id(),
+            user_id=self.user_id,
+            session_id=self.session_id,
+            knowledge_ids=self.knowledge_ids,
+            agent_name=UsageStatsAgentType.simple_agent.value,
+            execution_mode=self.execution_mode,
+            access_scope=self.access_scope,
+            route_kind=self.route_hint.kind,
+            route_target=self.route_hint.target,
+        )
+        if extra:
+            metadata.update(build_langsmith_metadata(**extra))
+        return metadata
+
+    def _build_run_config(
+        self,
+        *,
+        run_name: str,
+        tags: List[str] | None = None,
+        metadata: Dict[str, Any] | None = None,
+        callbacks: List[Any] | None = None,
+    ) -> Dict[str, Any]:
+        return build_langchain_run_config(
+            callbacks=callbacks or [usage_metadata_callback],
+            run_name=run_name,
+            tags=tags or ["workspace", "simple-agent"],
+            metadata=self._build_run_metadata(**(metadata or {})),
+        )
 
     @staticmethod
     def _norm(text: str | None) -> str:
@@ -868,7 +904,13 @@ class WorkSpaceSimpleAgent:
             if not self.tools:
                 return []
 
-            results = await self.react_agent.ainvoke({"messages": normalized_messages})
+            results = await self.react_agent.ainvoke(
+                {"messages": normalized_messages},
+                config=self._build_run_config(
+                    run_name="workspace_simple_agent_invoke",
+                    metadata={"message_count": len(normalized_messages)},
+                ),
+            )
             result_messages = results["messages"][:-1]
             return [
                 msg
@@ -889,7 +931,11 @@ class WorkSpaceSimpleAgent:
         title_prompt = GenerateTitlePrompt.format(query=query)
         response = await self.model.ainvoke(
             title_prompt,
-            config={"callbacks": [usage_metadata_callback]},
+            config=self._build_run_config(
+                run_name="workspace_generate_title",
+                tags=["workspace", "title"],
+                metadata={"query": query},
+            ),
         )
         return WorkSpaceSessionService.normalize_session_title(
             response.content,
@@ -957,7 +1003,17 @@ class WorkSpaceSimpleAgent:
                 self.get_mcp_id_by_tool(tool.name),
             )
             call_args.update(mcp_config)
-        result = await tool.ainvoke(call_args)
+        result = await tool.ainvoke(
+            call_args,
+            config=self._build_run_config(
+                run_name="workspace_direct_tool_call",
+                tags=["workspace", "tool"],
+                metadata={
+                    "tool_name": tool.name,
+                    "tool_type": tool_type,
+                },
+            ),
+        )
         result_text = result if isinstance(result, str) else str(result)
         yield self._wrap_event(
             "tool_result",
@@ -1148,7 +1204,13 @@ class WorkSpaceSimpleAgent:
                     "model_call_count": 0,
                     "user_id": self.user_id,
                 },
-                config={"callbacks": [usage_metadata_callback]},
+                config=self._build_run_config(
+                    run_name="workspace_simple_agent_stream",
+                    metadata={
+                        "query": original_query,
+                        "knowledge_ids": self.knowledge_ids,
+                    },
+                ),
                 stream_mode=["messages", "custom"],
             ):
                 if mode == "custom":

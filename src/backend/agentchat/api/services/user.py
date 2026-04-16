@@ -19,6 +19,7 @@ from agentchat.database.dao.user import UserDao
 from agentchat.utils.constants import RSA_KEY
 from agentchat.schema.schemas import CreateUserReq
 from agentchat.utils.JWT import ACCESS_TOKEN_EXPIRE_TIME
+from agentchat.utils.runtime_observability import RedisKeys
 
 class UserPayload:
 
@@ -44,7 +45,7 @@ class UserService:
     # MD5算法加密
     @classmethod
     def decrypt_md5_password(cls, password: str):
-        if value := redis_client.get(RSA_KEY):
+        if value := redis_client.get(RedisKeys.rsa_private_key()) or redis_client.get(RSA_KEY):
             private_key = value[1]
             password = md5_hash(rsa.decrypt(b64decode(password), private_key).decode('utf-8'))
         else:

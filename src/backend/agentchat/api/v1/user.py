@@ -13,7 +13,7 @@ from agentchat.database.models.user import AdminUser
 from agentchat.schema.schemas import UnifiedResponseModel
 from loguru import logger
 from agentchat.api.services.user import get_user_jwt
-from agentchat.utils.constants import USER_CURRENT_SESSION
+from agentchat.utils.runtime_observability import RedisKeys
 
 router = APIRouter(tags=["User"])
 
@@ -72,7 +72,11 @@ async def login(user_name: str = Body(description='用户名'),
     Authorize.set_refresh_cookies(refresh_token)
 
     # 设置登录用户当前的cookie, 比jwt有效期多一个小时
-    redis_client.set(USER_CURRENT_SESSION.format(db_user.user_id), access_token, ACCESS_TOKEN_EXPIRE_TIME + 3600)
+    redis_client.set(
+        RedisKeys.auth_session(db_user.user_id),
+        access_token,
+        ACCESS_TOKEN_EXPIRE_TIME + 3600,
+    )
 
     return resp_200(data={'user_id': db_user.user_id, 'access_token': access_token})
 

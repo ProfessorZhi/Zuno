@@ -12,6 +12,7 @@ from agentchat.middleware.trace_id_middleware import TraceIDMiddleware
 from agentchat.middleware.white_list_middleware import WhitelistMiddleware
 from agentchat.settings import initialize_app_settings
 from agentchat.settings import app_settings
+from agentchat.utils.runtime_observability import configure_langsmith
 
 warnings.filterwarnings("ignore")
 logging.getLogger("chromadb").setLevel(logging.WARNING)
@@ -50,6 +51,7 @@ def register_middleware(app: FastAPI):
 
 async def init_config():
     await initialize_app_settings()
+    configure_langsmith()
 
     # 必须放到init settings 之后 import
     from agentchat.database.init_data import (

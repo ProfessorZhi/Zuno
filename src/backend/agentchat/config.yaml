@@ -147,4 +147,10 @@ langfuse:
   user_id: "LiangTian" # 用户 ID
 
 # 接口白名单路径
+langsmith:
+  enabled: false
+  project: "Zuno"
+  endpoint: "https://api.smith.langchain.com"
+  api_key: ""
+
 whitelist_paths: ["/api/v1/login"]

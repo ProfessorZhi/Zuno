@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     redis: dict = {}
     mysql: dict = {}
     server: dict = {}
+    langsmith: dict = {}
     langfuse: dict = {}
     whitelist_paths: list = []
     wechat_config: dict = {}
