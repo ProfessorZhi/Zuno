@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh, Delete, Edit, DocumentAdd } from '@element-plus/icons-vue'
+import { Delete, DocumentAdd, Edit, Plus, Refresh } from '@element-plus/icons-vue'
 import skillIcon from '../../assets/skill.svg'
 import {
-  getAgentSkillsAPI,
+  addAgentSkillFileAPI,
   createAgentSkillAPI,
   deleteAgentSkillAPI,
-  updateAgentSkillFileAPI,
-  addAgentSkillFileAPI,
   deleteAgentSkillFileAPI,
+  getAgentSkillsAPI,
+  updateAgentSkillFileAPI,
   type AgentSkill,
   type AgentSkillFile,
   type AgentSkillFolder,
@@ -41,12 +41,16 @@ const addFileForm = ref({ path: '', name: '' })
 
 const visibleSkills = computed(() => {
   const search = keyword.value.trim().toLowerCase()
-  const list = [...skills.value].sort(
-    (a, b) => new Date(b.update_time || b.create_time).getTime() - new Date(a.update_time || a.create_time).getTime()
-  )
+  const list = [...skills.value].sort((a, b) => {
+    const aTime = new Date(a.update_time || a.create_time).getTime()
+    const bTime = new Date(b.update_time || b.create_time).getTime()
+    return bTime - aTime
+  })
   if (!search) return list
   return list.filter((item) => [item.name, item.description || ''].join(' ').toLowerCase().includes(search))
 })
+
+const currentSkillReadonly = computed(() => Boolean(currentSkill.value?.is_system))
 
 const flattenFiles = (folder?: AgentSkillFolder): SkillFileEntry[] => {
   if (!folder?.folder) return []
@@ -76,10 +80,10 @@ const fetchSkills = async () => {
       skills.value = response.data.data || []
       return
     }
-    ElMessage.error(response.data.status_message || '加载 Skill 失败')
+    ElMessage.error(response.data.status_message || '加载 Skill 列表失败')
   } catch (error) {
-    console.error('加载 Skill 失败:', error)
-    ElMessage.error('加载 Skill 失败')
+    console.error('加载 Skill 列表失败:', error)
+    ElMessage.error('加载 Skill 列表失败')
   } finally {
     loading.value = false
   }
@@ -92,7 +96,7 @@ const openCreateDialog = () => {
 
 const handleCreateSkill = async () => {
   if (!createForm.value.name.trim() || !createForm.value.description.trim()) {
-    ElMessage.warning('请先填写完整的 Skill 信息')
+    ElMessage.warning('请先填写完整的 Skill 名称和描述')
     return
   }
 
@@ -118,8 +122,13 @@ const handleCreateSkill = async () => {
 }
 
 const handleDeleteSkill = async (skill: AgentSkill) => {
+  if (skill.is_system) {
+    ElMessage.info('系统 Skill 为只读内置能力，不能删除')
+    return
+  }
+
   try {
-    await ElMessageBox.confirm(`删除后，Skill “${skill.name}” 和其所有文件都会被清空。`, '确认删除 Skill', {
+    await ElMessageBox.confirm(`删除后，Skill “${skill.name}” 和其文件都会被清空。`, '确认删除 Skill', {
       confirmButtonText: '确认删除',
       cancelButtonText: '取消',
       type: 'warning',
@@ -181,6 +190,10 @@ const handleSaveFile = async () => {
     ElMessage.warning('请先选择一个文件')
     return
   }
+  if (currentSkill.value.is_system) {
+    ElMessage.info('系统 Skill 为只读内置能力，不能修改文件')
+    return
+  }
 
   savingFile.value = true
   try {
@@ -206,6 +219,10 @@ const handleSaveFile = async () => {
 const openAddFileDialog = () => {
   if (!currentSkill.value) {
     ElMessage.warning('请先打开一个 Skill')
+    return
+  }
+  if (currentSkill.value.is_system) {
+    ElMessage.info('系统 Skill 为只读内置能力，不能新增文件')
     return
   }
   addFileForm.value = { path: '', name: '' }
@@ -243,6 +260,11 @@ const handleAddFile = async () => {
 
 const handleDeleteFile = async (file: SkillFileEntry) => {
   if (!currentSkill.value) return
+  if (currentSkill.value.is_system) {
+    ElMessage.info('系统 Skill 为只读内置能力，不能删除文件')
+    return
+  }
+
   try {
     await ElMessageBox.confirm(`确认删除文件 “${file.path}” 吗？`, '删除文件', {
       type: 'warning',
@@ -254,7 +276,11 @@ const handleDeleteFile = async (file: SkillFileEntry) => {
   }
 
   try {
-    const response = await deleteAgentSkillFileAPI({ agent_skill_id: currentSkill.value.id, path: file.path })
+    const response = await deleteAgentSkillFileAPI({
+      agent_skill_id: currentSkill.value.id,
+      path: file.path.substring(0, file.path.lastIndexOf('/')),
+      name: file.name,
+    })
     if (response.data.status_code === 200) {
       ElMessage.success('文件已删除')
       await refreshCurrentSkill(currentSkill.value.id)
@@ -276,7 +302,7 @@ onMounted(fetchSkills)
       <div>
         <div class="eyebrow">SKILL LIBRARY</div>
         <h1>Skill 管理</h1>
-        <p>Skill 负责沉淀复用经验。这里可以创建 Skill、维护文件内容，并把执行套路沉成可复用资产。</p>
+        <p>Skill 用来沉淀可复用的方法、模板和工作流。系统 Skill 为内置只读能力，你创建的 Skill 可以继续编辑和扩展。</p>
       </div>
       <div class="hero-actions">
         <el-button :icon="Refresh" @click="fetchSkills">刷新</el-button>
@@ -285,22 +311,37 @@ onMounted(fetchSkills)
     </section>
 
     <section class="toolbar-card">
-      <el-input v-model="keyword" placeholder="搜索 Skill 名称或说明" clearable />
+      <el-input v-model="keyword" placeholder="搜索 Skill 名称或描述" clearable />
     </section>
 
     <section class="skill-grid" v-loading="loading">
       <article v-for="skill in visibleSkills" :key="skill.id" class="skill-card">
         <div class="skill-card-head">
           <div class="skill-title-wrap">
-            <div class="skill-icon-wrap"><img :src="skill.logo_url || skillIcon" :alt="skill.name" /></div>
+            <div class="skill-icon-wrap"><img :src="skillIcon" :alt="skill.name" /></div>
             <div>
-              <h3>{{ skill.name }}</h3>
+              <div class="skill-heading">
+                <h3>{{ skill.name }}</h3>
+                <el-tag size="small" :type="skill.is_system ? 'warning' : 'info'">
+                  {{ skill.is_system ? '系统' : '我的' }}
+                </el-tag>
+              </div>
               <p>{{ skill.description || '暂无说明' }}</p>
             </div>
           </div>
           <div class="skill-actions">
-            <el-button size="small" type="primary" :icon="Edit" @click="openDetailDialog(skill)">编辑文件</el-button>
-            <el-button size="small" type="danger" :icon="Delete" @click="handleDeleteSkill(skill)">删除</el-button>
+            <el-button size="small" type="primary" :icon="Edit" @click="openDetailDialog(skill)">
+              {{ skill.is_system ? '查看详情' : '编辑文件' }}
+            </el-button>
+            <el-button
+              v-if="!skill.is_system"
+              size="small"
+              type="danger"
+              :icon="Delete"
+              @click="handleDeleteSkill(skill)"
+            >
+              删除
+            </el-button>
           </div>
         </div>
         <div class="skill-meta">
@@ -313,9 +354,16 @@ onMounted(fetchSkills)
 
     <el-dialog v-model="createDialogVisible" title="新建 Skill" width="560px">
       <el-form label-position="top">
-        <el-form-item label="Skill 名称"><el-input v-model="createForm.name" placeholder="例如：发版检查助手" /></el-form-item>
+        <el-form-item label="Skill 名称">
+          <el-input v-model="createForm.name" placeholder="例如：发布检查助手" />
+        </el-form-item>
         <el-form-item label="Skill 描述">
-          <el-input v-model="createForm.description" type="textarea" :rows="4" placeholder="说明这个 Skill 解决什么问题、适合什么场景。" />
+          <el-input
+            v-model="createForm.description"
+            type="textarea"
+            :rows="4"
+            placeholder="说明这个 Skill 适合什么场景、能解决什么问题。"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -324,12 +372,23 @@ onMounted(fetchSkills)
       </template>
     </el-dialog>
 
-    <el-dialog v-model="detailDialogVisible" width="1120px" :title="currentSkill ? `${currentSkill.name} · 文件管理` : '文件管理'">
+    <el-dialog
+      v-model="detailDialogVisible"
+      width="1120px"
+      :title="currentSkill ? `${currentSkill.name} · 文件管理` : '文件管理'"
+    >
       <div class="detail-layout">
         <aside class="file-sidebar">
           <div class="file-sidebar-head">
             <strong>文件列表</strong>
-            <el-button size="small" :icon="DocumentAdd" @click="openAddFileDialog">新增文件</el-button>
+            <el-button
+              size="small"
+              :icon="DocumentAdd"
+              :disabled="currentSkillReadonly"
+              @click="openAddFileDialog"
+            >
+              新增文件
+            </el-button>
           </div>
 
           <div v-if="selectedFiles.length" class="file-list">
@@ -342,7 +401,9 @@ onMounted(fetchSkills)
               @click="selectFile(file)"
             >
               <span>{{ file.path }}</span>
-              <el-icon class="file-delete" @click.stop="handleDeleteFile(file)"><Delete /></el-icon>
+              <el-icon v-if="!currentSkillReadonly" class="file-delete" @click.stop="handleDeleteFile(file)">
+                <Delete />
+              </el-icon>
             </button>
           </div>
           <el-empty v-else description="当前 Skill 还没有文件" />
@@ -351,17 +412,42 @@ onMounted(fetchSkills)
         <section class="editor-pane">
           <div class="editor-head">
             <strong>{{ selectedFile?.path || '未选择文件' }}</strong>
-            <el-button type="primary" :loading="savingFile" @click="handleSaveFile">保存文件</el-button>
+            <el-button
+              type="primary"
+              :loading="savingFile"
+              :disabled="currentSkillReadonly || !selectedFile"
+              @click="handleSaveFile"
+            >
+              保存文件
+            </el-button>
           </div>
-          <el-input v-model="fileContent" type="textarea" :rows="24" resize="none" placeholder="在这里编辑 Skill 文件内容" />
+          <el-alert
+            v-if="currentSkillReadonly"
+            type="info"
+            :closable="false"
+            title="系统 Skill 为内置只读能力，可查看内容，但不能直接修改。"
+            class="readonly-alert"
+          />
+          <el-input
+            v-model="fileContent"
+            type="textarea"
+            :rows="24"
+            resize="none"
+            :readonly="currentSkillReadonly"
+            placeholder="在这里编辑 Skill 文件内容"
+          />
         </section>
       </div>
     </el-dialog>
 
     <el-dialog v-model="addFileDialogVisible" title="新增文件" width="560px">
       <el-form label-position="top">
-        <el-form-item label="目录"><el-input v-model="addFileForm.path" placeholder="例如：prompts 或 docs/examples" /></el-form-item>
-        <el-form-item label="文件名"><el-input v-model="addFileForm.name" placeholder="例如：SKILL.md" /></el-form-item>
+        <el-form-item label="目录">
+          <el-input v-model="addFileForm.path" placeholder="例如：/my-skill/reference" />
+        </el-form-item>
+        <el-form-item label="文件名">
+          <el-input v-model="addFileForm.name" placeholder="例如：README.md" />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="addFileDialogVisible = false">取消</el-button>
@@ -388,6 +474,7 @@ onMounted(fetchSkills)
 .skill-card { padding: 20px 22px; }
 .skill-card-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
 .skill-title-wrap { display: flex; gap: 14px; }
+.skill-heading { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .skill-icon-wrap {
   width: 56px; height: 56px; border-radius: 18px; overflow: hidden; background: #f8efe4;
   border: 1px solid rgba(214, 132, 70, 0.14);
@@ -412,6 +499,7 @@ onMounted(fetchSkills)
 }
 .file-item.active { border-color: rgba(198, 112, 52, 0.36); background: #fff5ea; }
 .file-delete { color: #c56f36; }
+.readonly-alert { margin-bottom: 12px; }
 
 @media (max-width: 960px) {
   .detail-layout { grid-template-columns: 1fr; }

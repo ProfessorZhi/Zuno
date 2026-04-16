@@ -23,6 +23,8 @@ export interface AgentSkill {
   folder: AgentSkillFolder
   create_time: string
   update_time: string
+  is_system?: boolean
+  source?: 'system' | 'user'
 }
 
 export interface ApiResponse<T> {

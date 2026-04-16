@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+from types import SimpleNamespace
+from datetime import datetime
+
 from agentchat.core.agents.structured_response_agent import StructuredResponseAgent
 from agentchat.database.dao.agent_skill import AgentSkillDao
 from agentchat.database.models.agent_skill import AgentSkill
@@ -25,6 +29,74 @@ description: {description}
 class AgentSkillService:
     MAX_SKILL_RUNTIME_CHARS = 12000
     MAX_SKILL_EXTRA_FILES = 6
+    SYSTEM_SKILL_ROOT = Path(__file__).resolve().parents[2] / "system_skills"
+    SYSTEM_SKILL_DEFINITIONS = (
+        {
+            "id": "system-skill-creator",
+            "name": "skill-creator",
+            "description": "根据需求生成符合 Zuno 规范的 Skill 包。",
+            "as_tool_name": "system_skill_creator",
+            "folder_name": "skill-creator",
+        },
+        {
+            "id": "system-skill-installer",
+            "name": "skill-installer",
+            "description": "把已有文件夹改装成 Zuno 可用的 Skill 包。",
+            "as_tool_name": "system_skill_installer",
+            "folder_name": "skill-installer",
+        },
+    )
+
+    @classmethod
+    def is_system_skill_id(cls, skill_id: str | None) -> bool:
+        return any(skill["id"] == skill_id for skill in cls.SYSTEM_SKILL_DEFINITIONS)
+
+    @classmethod
+    def _build_system_skill_folder(cls, skill_name: str, readme_content: str) -> dict:
+        root_path = f"/{skill_name}"
+        return AgentSkillFolder(
+            name=skill_name,
+            path=root_path,
+            folder=[
+                AgentSkillFile(name="SKILL.md", path=f"{root_path}/SKILL.md", content=readme_content),
+                AgentSkillFolder(name="reference", path=f"{root_path}/reference"),
+                AgentSkillFolder(name="scripts", path=f"{root_path}/scripts"),
+            ],
+        ).model_dump()
+
+    @classmethod
+    def _load_system_skill(cls, definition: dict):
+        readme_path = cls.SYSTEM_SKILL_ROOT / definition["folder_name"] / "SKILL.md"
+        readme_content = readme_path.read_text(encoding="utf-8").strip()
+        now = datetime.utcnow()
+        return SimpleNamespace(
+            id=definition["id"],
+            name=definition["name"],
+            description=definition["description"],
+            user_id="system",
+            as_tool_name=definition["as_tool_name"],
+            folder=cls._build_system_skill_folder(definition["name"], readme_content),
+            create_time=now,
+            update_time=now,
+            is_system=True,
+            source="system",
+        )
+
+    @classmethod
+    def list_system_skills(cls):
+        return [cls._load_system_skill(definition) for definition in cls.SYSTEM_SKILL_DEFINITIONS]
+
+    @classmethod
+    def _serialize_skill(cls, skill):
+        if hasattr(skill, "to_dict"):
+            data = skill.to_dict()
+        elif hasattr(skill, "model_dump"):
+            data = skill.model_dump()
+        else:
+            data = dict(skill)
+        data["is_system"] = bool(getattr(skill, "is_system", False))
+        data["source"] = getattr(skill, "source", "user")
+        return data
 
     @classmethod
     async def create_agent_skill(cls, agent_skill_req: AgentSkillCreateReq, user_id):
@@ -48,25 +120,45 @@ class AgentSkillService:
 
     @classmethod
     async def delete_agent_skill(cls, agent_skill_id):
+        if cls.is_system_skill_id(agent_skill_id):
+            raise ValueError("系统 Skill 为只读内置能力，不能删除。")
         return await AgentSkillDao.delete_agent_skill(agent_skill_id)
 
     @classmethod
     async def get_agent_skills(cls, user_id):
         results = await AgentSkillDao.get_agent_skills(user_id)
-        return [result.to_dict() for result in results]
+        return [cls._serialize_skill(skill) for skill in [*cls.list_system_skills(), *results]]
 
     @classmethod
     async def get_agent_skill_by_id(cls, agent_skill_id):
+        for skill in cls.list_system_skills():
+            if skill.id == agent_skill_id:
+                return cls._serialize_skill(skill)
         result = await AgentSkillDao.get_agent_skill_by_id(agent_skill_id)
-        return result.to_dict()
+        return cls._serialize_skill(result)
 
     @classmethod
     async def get_agent_skills_by_ids(cls, agent_skill_ids):
-        results = await AgentSkillDao.get_agent_skills_by_ids(agent_skill_ids)
-        return results
+        if not agent_skill_ids:
+            return []
+
+        system_skill_map = {skill.id: skill for skill in cls.list_system_skills()}
+        database_skill_ids = [skill_id for skill_id in agent_skill_ids if skill_id not in system_skill_map]
+        database_skills = await AgentSkillDao.get_agent_skills_by_ids(database_skill_ids)
+        database_skill_map = {skill.id: skill for skill in database_skills}
+
+        ordered_skills = []
+        for skill_id in agent_skill_ids:
+            if skill_id in system_skill_map:
+                ordered_skills.append(system_skill_map[skill_id])
+            elif skill_id in database_skill_map:
+                ordered_skills.append(database_skill_map[skill_id])
+        return ordered_skills
 
     @classmethod
     async def update_agent_skill_file(cls, agent_skill_id, target_path, new_content):
+        if cls.is_system_skill_id(agent_skill_id):
+            raise ValueError("系统 Skill 为只读内置能力，不能修改文件。")
         agent_skill = await AgentSkillDao.get_agent_skill_by_id(agent_skill_id)
         agent_skill_copy = agent_skill.folder.copy()
 
@@ -87,6 +179,8 @@ class AgentSkillService:
 
     @classmethod
     async def add_agent_skill_file(cls, agent_skill_id, path, name):
+        if cls.is_system_skill_id(agent_skill_id):
+            raise ValueError("系统 Skill 为只读内置能力，不能新增文件。")
         agent_skill = await AgentSkillDao.get_agent_skill_by_id(agent_skill_id)
         agent_skill_copy = agent_skill.folder.copy()
 
@@ -109,6 +203,8 @@ class AgentSkillService:
 
     @classmethod
     async def upload_agent_skill_file(cls, agent_skill_id, path, name, content):
+        if cls.is_system_skill_id(agent_skill_id):
+            raise ValueError("系统 Skill 为只读内置能力，不能上传文件。")
         agent_skill = await AgentSkillDao.get_agent_skill_by_id(agent_skill_id)
         agent_skill_copy = agent_skill.folder.copy()
 
@@ -131,6 +227,8 @@ class AgentSkillService:
 
     @classmethod
     async def delete_agent_skill_file(cls, agent_skill_id, path, name):
+        if cls.is_system_skill_id(agent_skill_id):
+            raise ValueError("系统 Skill 为只读内置能力，不能删除文件。")
         agent_skill = await AgentSkillDao.get_agent_skill_by_id(agent_skill_id)
         agent_skill_copy = agent_skill.folder.copy()
 
