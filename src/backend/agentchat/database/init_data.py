@@ -10,7 +10,7 @@ from agentchat.api.services.agent import AgentService
 from agentchat.api.services.llm import LLMService
 from agentchat.api.services.mcp_server import MCPService
 from agentchat.api.services.tool import ToolService
-from agentchat.database import AgentTable, SystemUser, ToolTable, engine, ensure_mysql_database
+from agentchat.database import AgentTable, SystemUser, ToolTable, engine, ensure_database
 from agentchat.database.dao.agent import AgentDao
 from agentchat.database.dao.dialog import DialogDao
 from agentchat.database.models.user import AdminUser
@@ -26,16 +26,16 @@ HIDDEN_SYSTEM_AGENT_NAMES = {"联网搜索助手", "博查搜索助手", "文生
 
 async def init_database():
     try:
-        ensure_mysql_database()
+        ensure_database()
         SQLModel.metadata.create_all(engine)
-        logger.success("MySQL tables are ready")
+        logger.success("PostgreSQL tables are ready")
     except Exception as err:
-        logger.error(f"Create MySQL Table Error: {err}")
+        logger.error(f"Create PostgreSQL Table Error: {err}")
 
 
 async def init_default_agent():
     try:
-        logger.info("Reconciling default tools and agents in MySQL")
+        logger.info("Reconciling default tools and agents in PostgreSQL")
         await cleanup_duplicate_system_data()
         await insert_tools_to_mysql()
         has_default_llm = await insert_llm_to_mysql()

@@ -1,97 +1,97 @@
+from pathlib import Path
+
+import yaml
 from loguru import logger
-from sqlmodel import SQLModel, create_engine, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlmodel import SQLModel, create_engine
 
 from agentchat.database.models.agent import AgentTable
+from agentchat.database.models.agent_skill import AgentSkill
+from agentchat.database.models.dialog import DialogTable
 from agentchat.database.models.history import HistoryTable
-from agentchat.database.models.memory_history import MemoryHistoryTable
-from agentchat.database.models.user import SystemUser
 from agentchat.database.models.knowledge import KnowledgeTable
 from agentchat.database.models.knowledge_file import KnowledgeFileTable
-from agentchat.database.models.tool import ToolTable
-from agentchat.database.models.dialog import DialogTable
-from agentchat.database.models.mcp_server import MCPServerTable, MCPServerStdioTable
-from agentchat.database.models.mcp_user_config import MCPUserConfigTable
-from agentchat.database.models.mcp_agent import MCPAgentTable
-from agentchat.database.models.user_role import UserRole
 from agentchat.database.models.llm import LLMTable
+from agentchat.database.models.mcp_agent import MCPAgentTable
+from agentchat.database.models.mcp_server import MCPServerStdioTable, MCPServerTable
+from agentchat.database.models.mcp_user_config import MCPUserConfigTable
+from agentchat.database.models.memory_history import MemoryHistoryTable
 from agentchat.database.models.message import MessageDownTable, MessageLikeTable
 from agentchat.database.models.role import Role
-from agentchat.database.models.workspace_session import WorkSpaceSession
+from agentchat.database.models.tool import ToolTable
 from agentchat.database.models.usage_stats import UsageStats
-from agentchat.database.models.agent_skill import AgentSkill
+from agentchat.database.models.user import SystemUser
+from agentchat.database.models.user_role import UserRole
+from agentchat.database.models.workspace_session import WorkSpaceSession
 from agentchat.settings import app_settings
 
 
+def _load_database_config() -> dict:
+    if app_settings.database:
+        return app_settings.database
+
+    config_path = Path(__file__).resolve().parents[1] / "config.yaml"
+    with config_path.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    return data.get("database") or {}
+
+
+database_config = _load_database_config()
+
+
 engine = create_engine(
-    url=app_settings.mysql.get('endpoint'),
-    pool_pre_ping=True, # 连接前检查其有效性
-    pool_recycle=3600, # 每隔1小时进行重连一次
-    connect_args={
-        "charset": "utf8mb4",
-        "use_unicode": True,
-        "init_command": "SET SESSION time_zone = '+08:00'"
-    }
+    url=database_config.get("sync_endpoint"),
+    pool_pre_ping=True,
+    pool_recycle=3600,
+    echo=database_config.get("echo", False),
 )
 
 async_engine = create_async_engine(
-    url=app_settings.mysql.get('async_endpoint'),
-    pool_pre_ping=True,  # 连接前检查其有效性
-    pool_recycle=3600,  # 每隔1小时进行重连一次
-    connect_args={
-        "charset": "utf8mb4",
-        "use_unicode": True,
-        "init_command": "SET SESSION time_zone = '+08:00'"
-    }
+    url=database_config.get("async_endpoint"),
+    pool_pre_ping=True,
+    pool_recycle=3600,
+    echo=database_config.get("echo", False),
 )
 
 
-def ensure_mysql_database(endpoint: str=None) -> None:
+def ensure_database(endpoint: str | None = None) -> None:
     """
-    Ensure MySQL database exists.
+    Ensure the target PostgreSQL database exists.
     This function is safe to call on every startup.
     """
-    from urllib.parse import urlparse, urlunparse
-
     if not endpoint:
-        endpoint = app_settings.mysql.get('endpoint')
-    parsed = urlparse(endpoint)
+        endpoint = _load_database_config().get("sync_endpoint")
+    if not endpoint:
+        raise ValueError("Database endpoint is not configured")
 
-    database = parsed.path.lstrip("/")
+    parsed = make_url(endpoint)
+    database = parsed.database
     if not database:
-        raise ValueError("MySQL endpoint must include database name")
+        raise ValueError("Database endpoint must include database name")
 
-    bootstrap_url = urlunparse((
-        "mysql+pymysql",
-        f"{parsed.username}:{parsed.password}@{parsed.hostname}:{parsed.port or 3306}",
-        "/",
-        "",
-        "",
-        ""
-    ))
-
-    logger.info(f"Checking MySQL database `{database}`")
-
-    engine = create_engine(
-        bootstrap_url,
-        isolation_level="AUTOCOMMIT",
-        connect_args={
-            "charset": "utf8mb4",
-            "init_command": "SET SESSION time_zone = '+08:00'"
-        }
-    )
+    logger.info(f"Checking PostgreSQL database `{database}`")
 
     try:
-        with engine.connect() as conn:
-            conn.execute(
-                text(
-                    f"""
-                    CREATE DATABASE IF NOT EXISTS `{database}`
-                    DEFAULT CHARACTER SET utf8mb4
-                    COLLATE utf8mb4_unicode_ci
-                    """
-                )
-            )
-        logger.success(f"MySQL database `{database}` is ready")
-    finally:
-        engine.dispose()
+        import psycopg
+        from psycopg import sql
+    except ImportError as exc:
+        raise ImportError("psycopg is required for PostgreSQL bootstrap") from exc
+
+    conninfo = (
+        f"host={parsed.host or 'localhost'} "
+        f"port={parsed.port or 5432} "
+        f"user={parsed.username or ''} "
+        f"password={parsed.password or ''} "
+        "connect_timeout=3 "
+        "dbname=postgres"
+    )
+
+    with psycopg.connect(conninfo=conninfo, autocommit=True) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (database,))
+            if not cursor.fetchone():
+                cursor.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database)))
+                logger.info(f"Created PostgreSQL database `{database}`")
+
+    logger.success(f"PostgreSQL database `{database}` is ready")

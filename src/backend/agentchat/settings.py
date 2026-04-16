@@ -8,6 +8,7 @@ from agentchat.schema.common import MultiModels, ModelConfig, Tools, Rag, Storag
 
 
 class Settings(BaseSettings):
+    database: dict = {}
     redis: dict = {}
     mysql: dict = {}
     server: dict = {}
@@ -47,6 +48,16 @@ async def initialize_app_settings(file_path: str = None):
 
             if "storage" in data:
                 data["storage"] = StorageConfig(**data["storage"])
+
+            if "database" not in data and "mysql" in data:
+                mysql_config = data.get("mysql") or {}
+                data["database"] = {
+                    "sync_endpoint": mysql_config.get("endpoint", ""),
+                    "async_endpoint": mysql_config.get("async_endpoint", ""),
+                    "echo": False,
+                    "pool_size": 10,
+                    "max_overflow": 20,
+                }
 
             for key, value in data.items():
                 setattr(app_settings, key, value)

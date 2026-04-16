@@ -218,7 +218,7 @@ You are a professional tool invocation expert, capable of executing tool invocat
 """
 
 Text2SQLGeneratePrompt = """
-你是一个 MySQL 专家。请根据以下数据库 Schema 编写 SQL 查询语句。
+你是一个 SQL 专家。请根据以下数据库 Schema 编写 SQL 查询语句。
 
 [Schema 信息]
 {schema}
