@@ -24,6 +24,10 @@ class RedisKeys:
         return f"stream:{session_id}:latest"
 
     @staticmethod
+    def task_progress(task_id: str) -> str:
+        return f"task_progress:{task_id}"
+
+    @staticmethod
     def wechat_reply(user_id: str, content: str) -> str:
         content_hash = hashlib.md5(content.encode("utf-8")).hexdigest()
         return f"wechat:{user_id}:reply:{content_hash}"

@@ -6,8 +6,12 @@ from agentchat.database.dao.knowledge_file import KnowledgeFileDao
 from agentchat.database.dao.knowledge_task import KnowledgeTaskDao
 from agentchat.database.models.user import AdminUser
 from agentchat.services.pipeline.manager import KnowledgePipelineManager
+from agentchat.services.pipeline.models import KnowledgeTaskStage
+from agentchat.services.queue.client import QueueClient, get_queue_names
+from agentchat.services.queue.messages import build_task_message
 from agentchat.settings import app_settings
 from agentchat.services.rag.handler import RagHandler
+from agentchat.utils.runtime_observability import get_active_trace_id
 
 
 class KnowledgeFileService:
@@ -56,13 +60,31 @@ class KnowledgeFileService:
         )
 
         try:
-            await KnowledgePipelineManager(
+            pipeline_manager = KnowledgePipelineManager(
                 enable_graph_indexing=True,
                 enable_elasticsearch=app_settings.rag.enable_elasticsearch,
-            ).run_sync(task_id, file_path=file_path)
+            )
+            if QueueClient.is_enabled():
+                await pipeline_manager.mark_queued(task_id)
+                queue_names = get_queue_names()
+                await QueueClient().publish(
+                    queue_names["parse"],
+                    build_task_message(
+                        task_id=task_id,
+                        knowledge_id=knowledge_id,
+                        knowledge_file_id=knowledge_file_id,
+                        stage=KnowledgeTaskStage.parsing,
+                        trace_id=get_active_trace_id(),
+                    ),
+                )
+                dispatch_mode = "rabbitmq"
+            else:
+                await pipeline_manager.run_sync(task_id, file_path=file_path)
+                dispatch_mode = "sync"
             return {
                 "knowledge_file_id": knowledge_file_id,
                 "task_id": task_id,
+                "dispatch_mode": dispatch_mode,
             }
         except Exception as err:
             logger.error(f"Create Knowledge File Error: {err}")

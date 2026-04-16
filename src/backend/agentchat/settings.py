@@ -10,6 +10,7 @@ from agentchat.schema.common import MultiModels, ModelConfig, Tools, Rag, Storag
 class Settings(BaseSettings):
     database: dict = {}
     redis: dict = {}
+    rabbitmq: dict = {}
     mysql: dict = {}
     server: dict = {}
     langsmith: dict = {}
