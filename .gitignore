@@ -15,3 +15,7 @@ memory_db/
 vector_db/
 
 node_modules/
+
+# local desktop startup scripts
+Zuno-*.local.cmd
+_Zuno-Desktop-Common.local.cmd
