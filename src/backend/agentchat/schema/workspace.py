@@ -1,10 +1,11 @@
 from enum import Enum
-from typing import Any, List, Literal, NotRequired, TypedDict
+from typing import Any, List, Literal, TypedDict
+
 from pydantic import BaseModel
+
 
 class WorkSpaceAgents(Enum):
     SimpleAgent: str = "simple"
-
     WeChatAgent: str = "wechat-agent"
 
 
@@ -17,6 +18,7 @@ class WorkSpaceSimpleTask(BaseModel):
     plugins: List[str] = []
     mcp_servers: List[str] = []
     knowledge_ids: List[str] = []
+    retrieval_mode: str = "default"
     agent_skill_ids: List[str] = []
     execution_mode: str = "tool"
     access_scope: str = "workspace"

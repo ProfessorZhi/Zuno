@@ -218,6 +218,7 @@ async def workspace_simple_chat(
         mcp_configs=servers_config,
         plugins=simple_task.plugins,
         knowledge_ids=simple_task.knowledge_ids,
+        retrieval_mode=simple_task.retrieval_mode,
         agent_skill_ids=simple_task.agent_skill_ids,
         enable_web_search=simple_task.web_search,
         user_id=login_user.user_id,

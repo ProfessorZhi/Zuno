@@ -5,6 +5,8 @@ from loguru import logger
 
 from agentchat.database.dao.knowledge_file import KnowledgeFileDao
 from agentchat.database.dao.knowledge_task import KnowledgeTaskDao
+from agentchat.services.graphrag.client import Neo4jClient
+from agentchat.services.graphrag.extractor import GraphExtractor
 from agentchat.services.pipeline.models import KnowledgeTaskStage, KnowledgeTaskStatus
 from agentchat.services.pipeline.stages import (
     build_failed_file_patch,
@@ -171,21 +173,41 @@ class KnowledgePipelineManager:
         task = await self._load_task(task_id)
         try:
             if self.enable_graph_indexing:
+                chunks = await self._parse_chunks(task)
+                await self._record_stage(
+                    task_id,
+                    KnowledgeTaskStage.graph_extracting,
+                    KnowledgeTaskStatus.running,
+                    "graph extracting",
+                    knowledge_file_id=task.knowledge_file_id,
+                    file_patch=build_running_file_patch(KnowledgeTaskStage.graph_extracting, task_id),
+                )
+                entity_count = 0
+                relation_count = 0
+                if Neo4jClient.is_enabled():
+                    extractor = GraphExtractor()
+                    client = Neo4jClient()
+                    for chunk in chunks:
+                        graph_data = await extractor.extract_from_chunk(chunk, task.knowledge_id)
+                        for entity in graph_data["entities"]:
+                            await client.upsert_entity(entity)
+                        for relation in graph_data["relations"]:
+                            await client.upsert_relation(relation)
+                        entity_count += len(graph_data["entities"])
+                        relation_count += len(graph_data["relations"])
                 await self._record_stage(
                     task_id,
                     KnowledgeTaskStage.graph_extracting,
                     KnowledgeTaskStatus.running,
                     "graph extraction completed",
-                    detail={"entity_count": 0, "relation_count": 0},
-                    knowledge_file_id=task.knowledge_file_id,
-                    file_patch=build_running_file_patch(KnowledgeTaskStage.graph_extracting, task_id),
+                    detail={"entity_count": entity_count, "relation_count": relation_count},
                 )
                 await self._record_stage(
                     task_id,
                     KnowledgeTaskStage.graph_indexing,
                     KnowledgeTaskStatus.running,
                     "graph indexing completed",
-                    detail={"entity_count": 0, "relation_count": 0},
+                    detail={"entity_count": entity_count, "relation_count": relation_count},
                     knowledge_file_id=task.knowledge_file_id,
                     file_patch=build_success_file_patch(KnowledgeTaskStage.graph_indexing, task_id),
                 )

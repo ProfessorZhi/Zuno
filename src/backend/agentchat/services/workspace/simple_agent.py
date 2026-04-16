@@ -106,6 +106,7 @@ class WorkSpaceSimpleAgent:
         plugins: List[str] | None = None,
         mcp_configs: List[MCPConfig] | None = None,
         knowledge_ids: List[str] | None = None,
+        retrieval_mode: str = "default",
         agent_skill_ids: List[str] | None = None,
         enable_web_search: bool = True,
         execution_mode: str = "tool",
@@ -134,6 +135,7 @@ class WorkSpaceSimpleAgent:
         self.plugins = plugins or []
         self.enable_web_search = enable_web_search
         self.knowledge_ids = knowledge_ids or []
+        self.retrieval_mode = retrieval_mode
         self.agent_skill_ids = agent_skill_ids or []
         self.session_id = session_id
         self.execution_mode = normalize_execution_mode(execution_mode).value
@@ -162,6 +164,7 @@ class WorkSpaceSimpleAgent:
             trace_id=get_active_trace_id(),
             user_id=self.user_id,
             session_id=self.session_id,
+            retrieval_mode=self.retrieval_mode,
             knowledge_ids=self.knowledge_ids,
             agent_name=UsageStatsAgentType.simple_agent.value,
             execution_mode=self.execution_mode,
@@ -724,6 +727,7 @@ class WorkSpaceSimpleAgent:
                 query,
                 self.knowledge_ids,
                 self.knowledge_ids,
+                retrieval_mode=self.retrieval_mode,
             )
 
         self.knowledge_tools = [search_knowledge_base]

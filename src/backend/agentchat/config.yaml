@@ -27,6 +27,13 @@ rabbitmq:
   index_queue: "knowledge.index"
   graph_queue: "knowledge.graph"
 
+neo4j:
+  enabled: false
+  uri: "bolt://localhost:7687"
+  username: "neo4j"
+  password: "neo4j12345"
+  database: "neo4j"
+
 # 多模型服务配置 (LLM、Embedding、Rerank)
 multi_models:
   # 对话模型配置

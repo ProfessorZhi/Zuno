@@ -7,10 +7,16 @@ from sqlmodel import Session, select, delete, update, and_
 class KnowledgeDao:
 
     @classmethod
-    async def create_knowledge(cls, knowledge_name, knowledge_desc, user_id):
+    async def create_knowledge(cls, knowledge_name, knowledge_desc, user_id, default_retrieval_mode="rag"):
         with session_getter() as session:
-            session.add(KnowledgeTable(name=knowledge_name, description=knowledge_desc,
-                                       user_id=user_id))
+            session.add(
+                KnowledgeTable(
+                    name=knowledge_name,
+                    description=knowledge_desc,
+                    user_id=user_id,
+                    default_retrieval_mode=default_retrieval_mode,
+                )
+            )
             session.commit()
 
     @classmethod
@@ -35,7 +41,7 @@ class KnowledgeDao:
             session.commit()
 
     @classmethod
-    async def update_knowledge_by_id(cls, knowledge_id, knowledge_desc, knowledge_name):
+    async def update_knowledge_by_id(cls, knowledge_id, knowledge_desc, knowledge_name, default_retrieval_mode=None):
         with session_getter() as session:
             update_values = {}
 
@@ -43,6 +49,8 @@ class KnowledgeDao:
                 update_values['name'] = knowledge_name
             if knowledge_desc:
                 update_values['description'] = knowledge_desc
+            if default_retrieval_mode:
+                update_values['default_retrieval_mode'] = default_retrieval_mode
             sql = update(KnowledgeTable).where(KnowledgeTable.id == knowledge_id).values(**update_values)
             session.exec(sql)
             session.commit()

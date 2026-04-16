@@ -54,6 +54,14 @@ def _ensure_knowledge_pipeline_schema():
             if column_name not in existing_columns:
                 connection.execute(text(ddl))
 
+    if "knowledge" in inspector.get_table_names():
+        knowledge_columns = {column["name"] for column in inspector.get_columns("knowledge")}
+        if "default_retrieval_mode" not in knowledge_columns:
+            with engine.begin() as connection:
+                connection.execute(
+                    text("ALTER TABLE knowledge ADD COLUMN default_retrieval_mode VARCHAR DEFAULT 'rag'")
+                )
+
 
 async def init_default_agent():
     try:

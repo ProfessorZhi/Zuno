@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     database: dict = {}
     redis: dict = {}
     rabbitmq: dict = {}
+    neo4j: dict = {}
     mysql: dict = {}
     server: dict = {}
     langsmith: dict = {}

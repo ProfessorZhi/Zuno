@@ -17,6 +17,7 @@ class KnowledgeTable(SQLModelSerializable, table=True):
     id: str = Field(default_factory=get_knowledge_id, primary_key=True)
     name: str = Field(index=True, unique=True, max_length=128)
     description: Optional[str] = Field(max_length=1024, default=None)
+    default_retrieval_mode: str = Field(default="rag", max_length=32)
     user_id: Optional[str] = Field(index=True, max_length=128, default=None)
     update_time: Optional[datetime] = Field(sa_column=Column(
         DateTime,

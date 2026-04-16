@@ -7,19 +7,21 @@ from agentchat.utils.file_utils import format_file_size
 
 
 class KnowledgeService:
-
     @classmethod
-    async def create_knowledge(cls, knowledge_name, knowledge_desc, user_id):
+    async def create_knowledge(cls, knowledge_name, knowledge_desc, user_id, default_retrieval_mode="rag"):
         try:
-            await KnowledgeDao.create_knowledge(knowledge_name, knowledge_desc, user_id)
+            await KnowledgeDao.create_knowledge(
+                knowledge_name,
+                knowledge_desc,
+                user_id,
+                default_retrieval_mode,
+            )
         except Exception as err:
-            raise ValueError(f'Create Knowledge Error: {err}')
-
+            raise ValueError(f"Create Knowledge Error: {err}")
 
     @classmethod
     async def select_knowledge(cls, user_id):
         try:
-            # 如果是admin用户，显示全部
             if user_id == AdminUser:
                 knowledges = await cls._select_all_knowledge()
             else:
@@ -33,9 +35,8 @@ class KnowledgeService:
                     file_sizes += file.file_size
                 knowledge["file_size"] = format_file_size(file_sizes)
             return knowledges
-
         except Exception as err:
-            raise ValueError(f'Select Knowledge By User Error: {err}')
+            raise ValueError(f"Select Knowledge By User Error: {err}")
 
     @classmethod
     async def _select_all_knowledge(cls):
@@ -43,27 +44,32 @@ class KnowledgeService:
             results = await KnowledgeDao.get_all_knowledge()
             return [res.to_dict() for res in results]
         except Exception as err:
-            raise ValueError(f'Delete Knowledge By ID Error: {err}')
+            raise ValueError(f"Delete Knowledge By ID Error: {err}")
 
     @classmethod
     async def delete_knowledge(cls, knowledge_id):
         try:
             await KnowledgeDao.delete_knowledge_by_id(knowledge_id)
         except Exception as err:
-            raise ValueError(f'Delete Knowledge By ID Error: {err}')
+            raise ValueError(f"Delete Knowledge By ID Error: {err}")
 
     @classmethod
     async def verify_user_permission(cls, knowledge_id, user_id):
         knowledge_user_id = await cls.select_user_by_id(knowledge_id)
         if user_id != knowledge_user_id and user_id != AdminUser:
-            raise ValueError(f'没有权限访问')
+            raise ValueError("娌℃湁鏉冮檺璁块棶")
 
     @classmethod
-    async def update_knowledge(cls, knowledge_id, knowledge_name, knowledge_desc):
+    async def update_knowledge(cls, knowledge_id, knowledge_name, knowledge_desc, default_retrieval_mode=None):
         try:
-            await KnowledgeDao.update_knowledge_by_id(knowledge_id, knowledge_desc, knowledge_name)
+            await KnowledgeDao.update_knowledge_by_id(
+                knowledge_id,
+                knowledge_desc,
+                knowledge_name,
+                default_retrieval_mode,
+            )
         except Exception as err:
-            raise ValueError(f'Update Knowledge Error: {err}')
+            raise ValueError(f"Update Knowledge Error: {err}")
 
     @classmethod
     async def select_user_by_id(cls, knowledge_id):
@@ -71,7 +77,7 @@ class KnowledgeService:
             knowledge = await KnowledgeDao.select_user_by_id(knowledge_id)
             return knowledge.user_id
         except Exception as err:
-            raise ValueError(f'Select user id error :{err}')
+            raise ValueError(f"Select user id error :{err}")
 
     @classmethod
     async def get_knowledge_ids_from_name(cls, knowledges_name: List[str], user_id):
@@ -80,4 +86,3 @@ class KnowledgeService:
             return [knowledge.id for knowledge in knowledges]
         except Exception as err:
             raise ValueError(f"Get knowledges id form name error:{err}")
-
