@@ -23,7 +23,16 @@ def test_scripts_start_does_not_install_dependencies_by_default():
 
 def test_desktop_stop_stops_backend_services_too():
     content = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
-    stop_block = re.search(r"^:stop\s*(.*?)^:rebuild\s*$", content, flags=re.MULTILINE | re.DOTALL)
+    stop_block = re.search(r"^:launcher_stop\s*(.*?)^:launcher_rebuild\s*$", content, flags=re.MULTILINE | re.DOTALL)
 
     assert stop_block is not None
-    assert "call :stop_backend" in stop_block.group(1)
+    assert "call :stopBackend" in stop_block.group(1)
+
+
+def test_desktop_start_uses_direct_vite_and_electron_runtime():
+    content = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
+
+    assert "node_modules\\.bin\\vite.cmd" in content
+    assert "node_modules\\electron\\dist\\electron.exe" in content
+    assert "Remove-Item Env:ELECTRON_RUN_AS_NODE" in content
+    assert "call :startSequence" in content

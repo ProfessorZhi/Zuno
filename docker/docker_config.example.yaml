@@ -7,9 +7,12 @@ server:
   project_name: "Zuno"
   version: "2.4.0"
 
-mysql:
-  endpoint: "mysql+pymysql://root:123456@mysql:3306/agentchat"
-  async_endpoint: "mysql+aiomysql://root:123456@mysql:3306/agentchat"
+database:
+  sync_endpoint: "postgresql+psycopg://postgres:postgres@postgres:5432/agentchat"
+  async_endpoint: "postgresql+asyncpg://postgres:postgres@postgres:5432/agentchat"
+  echo: false
+  pool_size: 10
+  max_overflow: 20
 
 redis:
   endpoint: "redis://redis:6379"

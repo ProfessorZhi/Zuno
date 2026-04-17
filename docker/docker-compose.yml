@@ -5,26 +5,22 @@ networks:
     driver: bridge
 
 services:
-  # MySQL数据库服务
-  mysql:
-    container_name: agentchat-mysql
-    image: mysql:8.0
+  # PostgreSQL 数据库服务
+  postgres:
+    container_name: agentchat-postgres
+    image: postgres:16
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: agentchat
-      MYSQL_USER: agentchat_user
-      MYSQL_PASSWORD: 123456
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agentchat
       TZ: Asia/Shanghai
-#    ports:
-#      - "3306:3306"  # 如果本机已经开放MySQL的端口号，就会docker的MySQL导致启动失败，直接注释即可， 下面redis 同理
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mysql/init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - agentchat-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agentchat"]
       timeout: 20s
       retries: 10
 
@@ -63,7 +59,7 @@ services:
 #      - ../data:/app/data
 #      - ../logs:/app/logs
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -132,7 +128,7 @@ services:
 
 # 数据卷配置
 volumes:
-  mysql_data:
+  postgres_data:
     driver: local
   redis_data:
     driver: local

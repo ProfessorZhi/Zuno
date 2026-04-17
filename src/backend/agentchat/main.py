@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import warnings
 from contextlib import asynccontextmanager
@@ -62,8 +63,15 @@ async def init_config():
     )
     await init_database()
     await init_default_agent()
-    await update_system_mcp_server()
-    await upload_user_avatars_storage()  # 初始化用户头像
+
+    async def run_optional_startup(name, coroutine, timeout_seconds: int = 20):
+        try:
+            await asyncio.wait_for(coroutine, timeout=timeout_seconds)
+        except Exception as err:
+            logging.getLogger(__name__).warning("Optional startup task %s skipped: %s", name, err)
+
+    await run_optional_startup("update_system_mcp_server", update_system_mcp_server())
+    await run_optional_startup("upload_user_avatars_storage", upload_user_avatars_storage())  # 初始化用户头像
 
 def print_logo():
     from pyfiglet import Figlet

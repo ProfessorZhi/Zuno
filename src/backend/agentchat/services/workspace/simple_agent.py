@@ -137,6 +137,7 @@ class WorkSpaceSimpleAgent:
         self.knowledge_ids = knowledge_ids or []
         self.retrieval_mode = retrieval_mode
         self.agent_skill_ids = agent_skill_ids or []
+        self.available_skills: list[Any] = []
         self.session_id = session_id
         self.execution_mode = normalize_execution_mode(execution_mode).value
         self.access_scope = normalize_access_scope(access_scope).value
@@ -240,6 +241,77 @@ class WorkSpaceSimpleAgent:
                 return tool
         return None
 
+    @staticmethod
+    def _skill_value(skill: Any, key: str, default: str = "") -> str:
+        if isinstance(skill, dict):
+            return str(skill.get(key) or default)
+        return str(getattr(skill, key, default) or default)
+
+    def _build_skill_catalog_text(self) -> str:
+        if self.execution_mode == "terminal" or not self.available_skills:
+            return ""
+
+        selected_ids = set(self.agent_skill_ids)
+        lines: list[str] = []
+        for skill in self.available_skills:
+            skill_id = self._skill_value(skill, "id")
+            name = self._skill_value(skill, "name")
+            description = self._skill_value(skill, "description", "暂无描述")
+            tool_name = self._skill_value(skill, "as_tool_name")
+            status = "已启用" if skill_id in selected_ids else "可按需启用"
+            lines.append(f"- /{name} ({tool_name}) [{status}]: {description}")
+
+        return (
+            "当前可用 Skill 目录:\n"
+            + "\n".join(lines)
+            + "\n使用规则: Skill 是当前单 Agent 的方法包，不是子 Agent。"
+            "未启用的 Skill 只作为目录供你推荐；用户输入 /SkillName 或已在设置中勾选后，"
+            "你才能调用对应 Skill 工具加载完整说明。"
+        )
+
+    def _match_available_skill(self, raw_name: str | None) -> Any | None:
+        target = self._norm(raw_name)
+        if not target:
+            return None
+        for skill in self.available_skills:
+            candidates = {
+                self._norm(self._skill_value(skill, "id")),
+                self._norm(self._skill_value(skill, "name")),
+                self._norm(self._skill_value(skill, "as_tool_name")),
+            }
+            if target in candidates:
+                return skill
+        return None
+
+    async def setup_available_skill_catalog(self):
+        if self.execution_mode == "terminal":
+            self.available_skills = []
+            return
+        try:
+            self.available_skills = await AgentSkillService.get_agent_skills(self.user_id)
+        except Exception as err:
+            logger.error(f"Failed to load skill catalog: {err}")
+            self.available_skills = []
+
+    def _enable_explicit_slash_skill(self):
+        text = (self.original_query or "").strip()
+        slash = re.match(r"^/([a-zA-Z_\-\u4e00-\u9fff]+)(?:\s+(.+))?$", text)
+        if not slash:
+            return
+
+        skill = self._match_available_skill(slash.group(1))
+        if not skill:
+            return
+
+        skill_id = self._skill_value(skill, "id")
+        skill_name = self._skill_value(skill, "name")
+        if skill_id and skill_id not in self.agent_skill_ids:
+            self.agent_skill_ids.append(skill_id)
+        self.route_hint = RouteHint(
+            kind="skill",
+            target=skill_name,
+            reason=f"用户显式输入 /{slash.group(1)}",
+        )
 
     def _build_enabled_capabilities_text(self) -> str:
         sections: list[str] = []

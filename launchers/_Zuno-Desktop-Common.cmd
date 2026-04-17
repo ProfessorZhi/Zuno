@@ -3,16 +3,17 @@ setlocal EnableExtensions EnableDelayedExpansion
 chcp 65001 >nul
 
 set "ACTION=%~1"
-if /I "%ACTION%"=="start" goto :start
-if /I "%ACTION%"=="stop" goto :stop
-if /I "%ACTION%"=="rebuild" goto :rebuild
-if /I "%ACTION%"=="full-rebuild" goto :full_rebuild
+if /I "%ACTION%"=="start" goto :launcher_start
+if /I "%ACTION%"=="stop" goto :launcher_stop
+if /I "%ACTION%"=="rebuild" goto :launcher_rebuild
+if /I "%ACTION%"=="full-rebuild" goto :launcher_full_rebuild
 
 echo Unsupported action: %ACTION%
 exit /b 1
 
 :config
-for %%I in ("%~dp0..") do set "PROJECT_ROOT=%%~fI"
+set "SCRIPT_DIR=%~dp0"
+for %%I in ("%SCRIPT_DIR%..") do set "PROJECT_ROOT=%%~fI"
 set "DOCKER_DIR=%PROJECT_ROOT%\docker"
 set "FRONTEND_DIR=%PROJECT_ROOT%\src\frontend"
 set "DESKTOP_DIR=%PROJECT_ROOT%\desktop"
@@ -50,19 +51,19 @@ for %%P in (8091 8090) do (
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$targets = Get-CimInstance Win32_Process | Where-Object {" ^
   "  ($_.Name -match 'node|electron|cmd') -and (" ^
-  "    ($_.CommandLine -like '*%PROJECT_ROOT%src\\frontend*') -or" ^
-  "    ($_.CommandLine -like '*%PROJECT_ROOT%desktop*')" ^
+  "    ($_.CommandLine -like '*%PROJECT_ROOT%\\src\\frontend*') -or" ^
+  "    ($_.CommandLine -like '*%PROJECT_ROOT%\\desktop*')" ^
   "  )" ^
   "};" ^
   "foreach ($proc in $targets) { try { Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop } catch {} }"
 exit /b 0
 
-:stop_backend
+:stopBackend
 cd /d "%DOCKER_DIR%"
-docker compose stop frontend backend mysql redis minio >nul 2>nul
+docker compose stop frontend backend postgres redis minio >nul 2>nul
 exit /b 0
 
-:wait_http
+:waitHttp
 set "WAIT_URL=%~1"
 set "WAIT_NAME=%~2"
 set "WAIT_SECONDS=%~3"
@@ -76,7 +77,7 @@ for /L %%I in (1,1,%WAIT_SECONDS%) do (
 echo %WAIT_NAME% did not become ready in time.
 exit /b 1
 
-:wait_container_healthy
+:waitContainerHealthy
 set "WAIT_CONTAINER=%~1"
 set "WAIT_NAME=%~2"
 set "WAIT_SECONDS=%~3"
@@ -97,7 +98,7 @@ for /L %%I in (1,1,%WAIT_SECONDS%) do (
 echo %WAIT_NAME% did not become healthy in time.
 exit /b 1
 
-:ensure_deps
+:ensureDeps
 cd /d "%FRONTEND_DIR%"
 if not exist node_modules (
   echo Installing frontend dependencies...
@@ -123,7 +124,7 @@ if not exist "%DESKTOP_DIR%\node_modules\.bin\electron.cmd" (
 )
 exit /b 0
 
-:ensure_docker
+:ensureDocker
 docker info >nul 2>nul
 if not errorlevel 1 exit /b 0
 
@@ -147,9 +148,8 @@ echo Docker Desktop did not become ready in time.
 echo Please open Docker Desktop manually and wait until it shows Running.
 exit /b 1
 
-:ensure_local_config
+:ensureLocalConfig
 cd /d "%DOCKER_DIR%"
-if not exist "mysql\init" mkdir "mysql\init"
 if exist "docker_config.local.yaml" exit /b 0
 if not exist "docker_config.example.yaml" (
   echo Missing docker_config.example.yaml
@@ -158,64 +158,63 @@ if not exist "docker_config.example.yaml" (
 copy /Y "docker_config.example.yaml" "docker_config.local.yaml" >nul
 exit /b 0
 
-:start_backend
+:startBackend
 cd /d "%DOCKER_DIR%"
-docker compose up -d mysql redis minio backend
+docker compose up -d postgres redis minio backend
 if errorlevel 1 exit /b 1
-call :wait_container_healthy "agentchat-backend" "Backend container" 120
-if errorlevel 1 exit /b 1
-call :wait_http "http://127.0.0.1:7860/health" "Backend API" 45
+call :waitHttp "http://127.0.0.1:7860/health" "Backend API" 90
 if errorlevel 1 exit /b 1
 exit /b 0
 
-:start_frontend
+:startFrontend
 cd /d "%FRONTEND_DIR%"
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$env:VITE_API_BASE_URL='http://127.0.0.1:7860';" ^
-  "$p = Start-Process -FilePath 'npm.cmd' -ArgumentList 'run','dev','--','--host','127.0.0.1','--port','%DESKTOP_FRONTEND_PORT%','--strictPort' -WorkingDirectory '%FRONTEND_DIR%' -WindowStyle Hidden -RedirectStandardOutput '%FRONTEND_LOG%' -RedirectStandardError '%FRONTEND_ERR_LOG%' -PassThru;" ^
+  "$p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','\"%FRONTEND_DIR%\node_modules\.bin\vite.cmd\" --host 127.0.0.1 --port %DESKTOP_FRONTEND_PORT% --strictPort' -WorkingDirectory '%FRONTEND_DIR%' -WindowStyle Hidden -RedirectStandardOutput '%FRONTEND_LOG%' -RedirectStandardError '%FRONTEND_ERR_LOG%' -PassThru;" ^
   "Set-Content -Path '%FRONTEND_PID_FILE%' -Value $p.Id"
 if errorlevel 1 exit /b 1
-call :wait_http "http://127.0.0.1:%DESKTOP_FRONTEND_PORT%" "Desktop frontend" 45
+call :waitHttp "http://127.0.0.1:%DESKTOP_FRONTEND_PORT%" "Desktop frontend" 45
 if errorlevel 1 exit /b 1
 exit /b 0
 
-:start_electron
+:startElectron
 cd /d "%DESKTOP_DIR%"
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue;" ^
   "$env:DESKTOP_FRONTEND_URL='http://127.0.0.1:%DESKTOP_FRONTEND_PORT%';" ^
   "$env:DESKTOP_API_BASE_URL='http://127.0.0.1:7860';" ^
-  "$p = Start-Process -FilePath 'npm.cmd' -ArgumentList 'run','dev' -WorkingDirectory '%DESKTOP_DIR%' -WindowStyle Hidden -RedirectStandardOutput '%DESKTOP_LOG%' -RedirectStandardError '%DESKTOP_ERR_LOG%' -PassThru;" ^
+  "$p = Start-Process -FilePath '%DESKTOP_DIR%\node_modules\electron\dist\electron.exe' -ArgumentList '.' -WorkingDirectory '%DESKTOP_DIR%' -WindowStyle Hidden -RedirectStandardOutput '%DESKTOP_LOG%' -RedirectStandardError '%DESKTOP_ERR_LOG%' -PassThru;" ^
   "Set-Content -Path '%DESKTOP_PID_FILE%' -Value $p.Id"
 if errorlevel 1 exit /b 1
 exit /b 0
 
-:start_sequence
+:startSequence
 echo [0/5] Cleaning old desktop background processes...
 call :cleanup_processes
 call :cleanup_logs
 
 echo [1/5] Ensuring Docker backend services are available...
-call :ensure_docker
+call :ensureDocker
 if errorlevel 1 exit /b 1
-call :ensure_local_config
+call :ensureLocalConfig
 if errorlevel 1 exit /b 1
 cd /d "%DOCKER_DIR%"
 docker compose stop frontend >nul 2>nul
 
 echo [2/5] Starting desktop backend services...
-call :start_backend
+call :startBackend
 if errorlevel 1 exit /b 1
 
 echo [3/5] Ensuring frontend and desktop dependencies...
-call :ensure_deps
+call :ensureDeps
 if errorlevel 1 exit /b 1
 
 echo [4/5] Starting desktop frontend dev server on port %DESKTOP_FRONTEND_PORT%...
-call :start_frontend
+call :startFrontend
 if errorlevel 1 exit /b 1
 
 echo [5/5] Launching Electron client...
-call :start_electron
+call :startElectron
 if errorlevel 1 exit /b 1
 
 echo.
@@ -231,9 +230,9 @@ echo.
 echo If the client does not appear, check desktop.err.log and frontend.err.log.
 exit /b 0
 
-:start
+:launcher_start
 call :config
-call :start_sequence
+call :startSequence
 if errorlevel 1 (
   echo.
   echo Zuno Desktop start failed.
@@ -242,39 +241,39 @@ echo.
 pause
 exit /b 0
 
-:stop
+:launcher_stop
 call :config
 echo Stopping Zuno Desktop client and backend services...
 call :cleanup_processes
-call :stop_backend
+call :stopBackend
 echo.
 echo Zuno Desktop stopped.
 echo.
 pause
 exit /b 0
 
-:rebuild
+:launcher_rebuild
 call :config
 echo Rebuilding desktop backend image and restarting Zuno Desktop...
 echo.
 call :cleanup_processes
 call :cleanup_logs
 cd /d "%DOCKER_DIR%"
-call :ensure_docker
+call :ensureDocker
 if errorlevel 1 (
   echo Docker is not ready, cannot rebuild desktop backend.
   echo.
   pause
   exit /b 1
 )
-call :ensure_local_config
+call :ensureLocalConfig
 if errorlevel 1 (
   echo Missing desktop Docker config.
   echo.
   pause
   exit /b 1
 )
-docker compose stop frontend backend mysql redis minio >nul 2>nul
+docker compose stop frontend backend postgres redis minio >nul 2>nul
 docker compose build backend
 if errorlevel 1 (
   echo Desktop backend rebuild failed.
@@ -282,7 +281,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-call :start_sequence
+call :startSequence
 if errorlevel 1 (
   echo.
   echo Zuno Desktop rebuild failed.
@@ -291,28 +290,28 @@ echo.
 pause
 exit /b 0
 
-:full_rebuild
+:launcher_full_rebuild
 call :config
 echo Running full rebuild for Zuno Desktop...
 echo.
 call :cleanup_processes
 call :cleanup_logs
 cd /d "%DOCKER_DIR%"
-call :ensure_docker
+call :ensureDocker
 if errorlevel 1 (
   echo Docker is not ready, cannot run full rebuild.
   echo.
   pause
   exit /b 1
 )
-call :ensure_local_config
+call :ensureLocalConfig
 if errorlevel 1 (
   echo Missing desktop Docker config.
   echo.
   pause
   exit /b 1
 )
-docker compose stop frontend backend mysql redis minio >nul 2>nul
+docker compose stop frontend backend postgres redis minio >nul 2>nul
 echo Removing desktop dependency folders and Vite cache...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$paths = @('%PROJECT_ROOT%\\src\\frontend\\node_modules','%PROJECT_ROOT%\\desktop\\node_modules','%PROJECT_ROOT%\\src\\frontend\\dist','%PROJECT_ROOT%\\src\\frontend\\node_modules\\.vite');" ^
@@ -330,7 +329,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-call :start_sequence
+call :startSequence
 if errorlevel 1 (
   echo.
   echo Zuno Desktop full rebuild failed.
