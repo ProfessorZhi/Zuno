@@ -183,7 +183,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue;" ^
   "$env:DESKTOP_FRONTEND_URL='http://127.0.0.1:%DESKTOP_FRONTEND_PORT%';" ^
   "$env:DESKTOP_API_BASE_URL='http://127.0.0.1:7860';" ^
-  "$p = Start-Process -FilePath '%DESKTOP_DIR%\node_modules\electron\dist\electron.exe' -ArgumentList '.' -WorkingDirectory '%DESKTOP_DIR%' -WindowStyle Hidden -RedirectStandardOutput '%DESKTOP_LOG%' -RedirectStandardError '%DESKTOP_ERR_LOG%' -PassThru;" ^
+  "$p = Start-Process -FilePath '%DESKTOP_DIR%\node_modules\electron\dist\electron.exe' -ArgumentList '.' -WorkingDirectory '%DESKTOP_DIR%' -WindowStyle Normal -RedirectStandardOutput '%DESKTOP_LOG%' -RedirectStandardError '%DESKTOP_ERR_LOG%' -PassThru;" ^
   "Set-Content -Path '%DESKTOP_PID_FILE%' -Value $p.Id"
 if errorlevel 1 exit /b 1
 exit /b 0

@@ -36,3 +36,4 @@ def test_desktop_start_uses_direct_vite_and_electron_runtime():
     assert "node_modules\\electron\\dist\\electron.exe" in content
     assert "Remove-Item Env:ELECTRON_RUN_AS_NODE" in content
     assert "call :startSequence" in content
+    assert "-WindowStyle Normal" in content
