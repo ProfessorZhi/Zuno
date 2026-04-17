@@ -91,6 +91,7 @@ export interface WorkSpaceSimpleTask {
   plugins: string[]
   mcp_servers: string[]
   knowledge_ids?: string[]
+  retrieval_mode?: string
   agent_skill_ids?: string[]
   session_id?: string
   execution_mode: string

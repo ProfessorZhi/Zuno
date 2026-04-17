@@ -11,6 +11,7 @@ import {
   deleteKnowledgeAPI,
   type KnowledgeResponse,
 } from '../../apis/knowledge'
+import { getRetrievalModeLabel, normalizeRetrievalMode, retrievalModeOptions } from '../../utils/retrieval'
 
 type KnowledgeItem = KnowledgeResponse
 
@@ -26,24 +27,31 @@ const saving = ref(false)
 const createForm = ref({
   knowledge_name: '',
   knowledge_desc: '',
+  default_retrieval_mode: 'rag',
 })
 
 const editForm = ref({
   knowledge_id: '',
   knowledge_name: '',
   knowledge_desc: '',
+  default_retrieval_mode: 'rag',
 })
 
 const filteredKnowledges = computed(() => {
   const search = keyword.value.trim().toLowerCase()
   const list = [...knowledges.value].sort((a, b) =>
-    new Date(b.update_time || b.create_time).getTime() - new Date(a.update_time || a.create_time).getTime()
+    new Date(b.update_time || b.create_time).getTime() - new Date(a.update_time || a.create_time).getTime(),
   )
 
   if (!search) return list
 
   return list.filter((item) => {
-    const haystack = [item.name, item.description || '', item.file_size || ''].join(' ').toLowerCase()
+    const haystack = [
+      item.name,
+      item.description || '',
+      item.file_size || '',
+      getRetrievalModeLabel(item.default_retrieval_mode),
+    ].join(' ').toLowerCase()
     return haystack.includes(search)
   })
 })
@@ -58,7 +66,7 @@ const fetchKnowledges = async () => {
     }
     ElMessage.error(response.data.status_message || '加载知识库失败')
   } catch (error) {
-    console.error('加载知识库失败:', error)
+    console.error('加载知识库失败', error)
     ElMessage.error('加载知识库失败')
   } finally {
     loading.value = false
@@ -69,6 +77,7 @@ const resetCreateForm = () => {
   createForm.value = {
     knowledge_name: '',
     knowledge_desc: '',
+    default_retrieval_mode: 'rag',
   }
 }
 
@@ -77,6 +86,7 @@ const resetEditForm = () => {
     knowledge_id: '',
     knowledge_name: '',
     knowledge_desc: '',
+    default_retrieval_mode: 'rag',
   }
 }
 
@@ -90,6 +100,7 @@ const openEditDialog = (item: KnowledgeItem) => {
     knowledge_id: item.id,
     knowledge_name: item.name,
     knowledge_desc: item.description || '',
+    default_retrieval_mode: normalizeRetrievalMode(item.default_retrieval_mode),
   }
   editDialogVisible.value = true
 }
@@ -117,7 +128,7 @@ const validateKnowledge = (name: string, description: string) => {
 }
 
 const handleCreate = async () => {
-  const { knowledge_name, knowledge_desc } = createForm.value
+  const { knowledge_name, knowledge_desc, default_retrieval_mode } = createForm.value
   if (!validateKnowledge(knowledge_name, knowledge_desc)) return
 
   saving.value = true
@@ -125,6 +136,7 @@ const handleCreate = async () => {
     const response = await createKnowledgeAPI({
       knowledge_name: knowledge_name.trim(),
       knowledge_desc: knowledge_desc.trim(),
+      default_retrieval_mode,
     })
     if (response.data.status_code === 200) {
       ElMessage.success('知识库已创建')
@@ -134,7 +146,7 @@ const handleCreate = async () => {
     }
     ElMessage.error(response.data.status_message || '创建知识库失败')
   } catch (error) {
-    console.error('创建知识库失败:', error)
+    console.error('创建知识库失败', error)
     ElMessage.error('创建知识库失败')
   } finally {
     saving.value = false
@@ -142,7 +154,7 @@ const handleCreate = async () => {
 }
 
 const handleEdit = async () => {
-  const { knowledge_id, knowledge_name, knowledge_desc } = editForm.value
+  const { knowledge_id, knowledge_name, knowledge_desc, default_retrieval_mode } = editForm.value
   if (!validateKnowledge(knowledge_name, knowledge_desc)) return
 
   saving.value = true
@@ -151,6 +163,7 @@ const handleEdit = async () => {
       knowledge_id,
       knowledge_name: knowledge_name.trim(),
       knowledge_desc: knowledge_desc.trim(),
+      default_retrieval_mode,
     })
     if (response.data.status_code === 200) {
       ElMessage.success('知识库已更新')
@@ -160,7 +173,7 @@ const handleEdit = async () => {
     }
     ElMessage.error(response.data.status_message || '更新知识库失败')
   } catch (error) {
-    console.error('更新知识库失败:', error)
+    console.error('更新知识库失败', error)
     ElMessage.error('更新知识库失败')
   } finally {
     saving.value = false
@@ -176,7 +189,7 @@ const handleDelete = async (item: KnowledgeItem) => {
         confirmButtonText: '确认删除',
         cancelButtonText: '取消',
         type: 'warning',
-      }
+      },
     )
   } catch {
     return
@@ -191,7 +204,7 @@ const handleDelete = async (item: KnowledgeItem) => {
     }
     ElMessage.error(response.data.status_message || '删除知识库失败')
   } catch (error) {
-    console.error('删除知识库失败:', error)
+    console.error('删除知识库失败', error)
     ElMessage.error('删除知识库失败')
   }
 }
@@ -200,7 +213,10 @@ const openFiles = (item: KnowledgeItem) => {
   router.push({
     name: 'knowledge-file',
     params: { knowledgeId: item.id },
-    query: { name: item.name },
+    query: {
+      name: item.name,
+      mode: normalizeRetrievalMode(item.default_retrieval_mode),
+    },
   })
 }
 
@@ -220,7 +236,7 @@ onMounted(fetchKnowledges)
           <img :src="knowledgeIcon" alt="知识库" class="page-icon" />
           <div>
             <h1>知识库管理</h1>
-            <p>管理知识库条目与文件入口，让 RAG 配置保持清晰可控。</p>
+            <p>管理知识库、默认检索模式与文件入口，让 RAG / GraphRAG 的行为保持清晰可控。</p>
           </div>
         </div>
       </div>
@@ -228,7 +244,7 @@ onMounted(fetchKnowledges)
       <div class="header-actions">
         <el-input
           v-model="keyword"
-          placeholder="搜索知识库名称或说明"
+          placeholder="搜索知识库名称、说明或检索模式"
           clearable
           class="search-input"
         >
@@ -251,19 +267,23 @@ onMounted(fetchKnowledges)
 
       <div v-if="filteredKnowledges.length === 0" class="empty-state">
         <h3>还没有可展示的知识库</h3>
-        <p>可以先创建一个知识库，再进入文件页上传材料。</p>
+        <p>可以先创建一个知识库，再进入文件页上传资料。</p>
       </div>
 
       <div v-else class="knowledge-grid">
         <article v-for="item in filteredKnowledges" :key="item.id" class="knowledge-card">
           <div class="knowledge-main">
-            <div>
-              <h3>{{ item.name }}</h3>
-              <p>{{ item.description || '这个知识库还没有补充说明。' }}</p>
+            <div class="title-row">
+              <div>
+                <h3>{{ item.name }}</h3>
+                <p>{{ item.description || '这个知识库还没有补充说明。' }}</p>
+              </div>
+              <el-tag effect="plain" class="mode-tag">{{ getRetrievalModeLabel(item.default_retrieval_mode) }}</el-tag>
             </div>
             <div class="meta-list">
               <span>文件数 {{ item.count }}</span>
               <span>体积 {{ item.file_size || '-' }}</span>
+              <span>默认模式 {{ getRetrievalModeLabel(item.default_retrieval_mode) }}</span>
               <span>更新于 {{ formatDate(item.update_time || item.create_time) }}</span>
             </div>
           </div>
@@ -292,6 +312,16 @@ onMounted(fetchKnowledges)
             placeholder="告诉团队这个知识库主要装什么内容。"
           />
         </el-form-item>
+        <el-form-item label="默认检索模式">
+          <el-select v-model="createForm.default_retrieval_mode" class="full-width">
+            <el-option
+              v-for="mode in retrievalModeOptions.filter((item) => item.value !== 'default')"
+              :key="mode.value"
+              :label="`${mode.label} · ${mode.description}`"
+              :value="mode.value"
+            />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="createDialogVisible = false">取消</el-button>
@@ -312,6 +342,16 @@ onMounted(fetchKnowledges)
             maxlength="200"
             show-word-limit
           />
+        </el-form-item>
+        <el-form-item label="默认检索模式">
+          <el-select v-model="editForm.default_retrieval_mode" class="full-width">
+            <el-option
+              v-for="mode in retrievalModeOptions.filter((item) => item.value !== 'default')"
+              :key="mode.value"
+              :label="`${mode.label} · ${mode.description}`"
+              :value="mode.value"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -346,53 +386,39 @@ onMounted(fetchKnowledges)
 
 .page-title-row {
   display: flex;
+  gap: 18px;
   align-items: center;
-  gap: 16px;
-
-  h1 {
-    margin: 0;
-    font-size: 32px;
-    color: #5e3518;
-  }
-
-  p {
-    margin: 8px 0 0;
-    color: #8f7a68;
-  }
 }
 
 .page-icon {
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
+}
+
+.header-copy h1,
+.section-head h2 {
+  margin: 0;
+  color: #5e3518;
+}
+
+.header-copy p,
+.section-head p {
+  margin: 8px 0 0;
+  color: #8f7a68;
 }
 
 .header-actions {
   display: flex;
-  align-items: flex-start;
   gap: 12px;
+  align-items: flex-start;
 }
 
 .search-input {
-  width: 300px;
+  width: 280px;
 }
 
 .content-card {
   padding: 24px;
-}
-
-.section-head {
-  margin-bottom: 16px;
-
-  h2 {
-    margin: 0;
-    font-size: 22px;
-    color: #5e3518;
-  }
-
-  p {
-    margin: 8px 0 0;
-    color: #8f7a68;
-  }
 }
 
 .knowledge-grid {
@@ -401,50 +427,62 @@ onMounted(fetchKnowledges)
 }
 
 .knowledge-card {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
+  display: grid;
+  gap: 16px;
   padding: 20px;
-  border-radius: 18px;
+  border-radius: 20px;
   border: 1px solid rgba(214, 132, 70, 0.12);
   background: rgba(255, 249, 243, 0.94);
 }
 
 .knowledge-main {
   display: grid;
-  gap: 12px;
+  gap: 14px;
+}
 
-  h3 {
-    margin: 0;
-    font-size: 20px;
-    color: #5e3518;
-  }
+.title-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
 
-  p {
-    margin: 8px 0 0;
-    color: #725a47;
-    line-height: 1.7;
-  }
+.title-row h3 {
+  margin: 0;
+  color: #4d2d15;
+}
+
+.title-row p {
+  margin: 8px 0 0;
+  color: #806957;
+}
+
+.mode-tag {
+  flex-shrink: 0;
+  border-color: rgba(201, 109, 49, 0.22);
+  color: #9d6136;
+  background: rgba(255, 244, 232, 0.92);
 }
 
 .meta-list {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  color: #7d6654;
+  font-size: 13px;
+}
 
-  span {
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgba(201, 108, 45, 0.1);
-    color: #99663d;
-    font-size: 13px;
-  }
+.meta-list span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 253, 249, 0.9);
+  border: 1px solid rgba(214, 132, 70, 0.1);
 }
 
 .card-actions {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .empty-state {
@@ -452,21 +490,24 @@ onMounted(fetchKnowledges)
   border-radius: 18px;
   background: rgba(255, 249, 243, 0.94);
   text-align: center;
+}
 
-  h3 {
-    margin: 0;
-    color: #5e3518;
-  }
+.empty-state h3 {
+  margin: 0;
+  color: #5e3518;
+}
 
-  p {
-    margin: 10px 0 0;
-    color: #8f7a68;
-  }
+.empty-state p {
+  margin: 10px 0 0;
+  color: #8f7a68;
+}
+
+.full-width {
+  width: 100%;
 }
 
 @media (max-width: 960px) {
-  .page-header,
-  .knowledge-card {
+  .page-header {
     flex-direction: column;
   }
 
@@ -477,6 +518,10 @@ onMounted(fetchKnowledges)
 
   .search-input {
     width: 100%;
+  }
+
+  .title-row {
+    flex-direction: column;
   }
 }
 </style>

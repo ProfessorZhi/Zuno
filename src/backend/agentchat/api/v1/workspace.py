@@ -252,6 +252,7 @@ async def workspace_simple_chat(
             session_id=simple_task.session_id,
         )
         try:
+            yield f"data: {json.dumps({'event': 'status', 'timestamp': time.time(), 'data': {'phase': 'start', 'status': 'START', 'message': '正在准备工作区请求', 'retrieval_mode': simple_task.retrieval_mode, 'selected_knowledge_ids': simple_task.knowledge_ids or []}}, ensure_ascii=False)}\n\n"
             async for chunk in simple_agent.astream(
                 [
                     SystemMessage(content=system_message),

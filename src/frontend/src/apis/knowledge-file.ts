@@ -17,11 +17,48 @@ export interface KnowledgeFileResponse {
   file_name: string
   knowledge_id: string
   status: string
+  parse_status?: string
+  rag_index_status?: string
+  graph_index_status?: string
+  last_task_id?: string | null
+  last_error?: string | null
   user_id: string
   oss_url: string
   file_size: number
   create_time: string
   update_time: string
+}
+
+export interface KnowledgeTaskResponse {
+  id: string
+  knowledge_id: string
+  knowledge_file_id: string
+  task_type: string
+  status: string
+  current_stage: string
+  retry_count: number
+  error_message?: string | null
+  payload?: Record<string, any>
+  result_summary?: Record<string, any>
+  started_at?: string | null
+  finished_at?: string | null
+  create_time: string
+  update_time: string
+}
+
+export interface KnowledgeTaskEventResponse {
+  id: string
+  task_id: string
+  stage: string
+  status: string
+  message: string
+  detail?: Record<string, any>
+  create_time: string
+}
+
+export interface KnowledgeTaskDetailResponse {
+  task: KnowledgeTaskResponse | null
+  events: KnowledgeTaskEventResponse[]
 }
 
 export interface KnowledgeFileCreateRequest {
@@ -31,6 +68,10 @@ export interface KnowledgeFileCreateRequest {
 
 export interface KnowledgeFileDeleteRequest {
   knowledge_file_id: string
+}
+
+export interface KnowledgeTaskRetryRequest {
+  task_id: string
 }
 
 export function createKnowledgeFileAPI(data: KnowledgeFileCreateRequest) {
@@ -57,6 +98,30 @@ export function deleteKnowledgeFileAPI(data: KnowledgeFileDeleteRequest) {
     data: {
       knowledge_file_id: data.knowledge_file_id,
     },
+  })
+}
+
+export function getKnowledgeTaskDetailAPI(task_id: string) {
+  return request<UnifiedResponse<KnowledgeTaskDetailResponse>>({
+    url: '/api/v1/knowledge_file/task',
+    method: 'GET',
+    params: { task_id },
+  })
+}
+
+export function getKnowledgeTaskListAPI(knowledge_id: string) {
+  return request<UnifiedResponse<KnowledgeTaskResponse[]>>({
+    url: '/api/v1/knowledge_file/tasks',
+    method: 'GET',
+    params: { knowledge_id },
+  })
+}
+
+export function retryKnowledgeTaskAPI(data: KnowledgeTaskRetryRequest) {
+  return request<UnifiedResponse<Record<string, any>>>({
+    url: '/api/v1/knowledge_file/task/retry',
+    method: 'POST',
+    data,
   })
 }
 

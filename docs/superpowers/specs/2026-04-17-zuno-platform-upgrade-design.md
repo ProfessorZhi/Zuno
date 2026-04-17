@@ -23,6 +23,14 @@ This design covers five implementation tracks:
 
 Multi-agent behavior is explicitly out of scope. The target is a stronger single-agent platform.
 
+## Future Optimization Targets
+
+The first delivery focus remains single-agent depth, but the platform should leave room for future upgrades:
+
+- subagent orchestration for bounded parallel research or execution
+- task decomposition only after the single-agent path, observability, and retrieval quality are stable
+- explicit governance so subagents remain auditable through trace, task, and result aggregation
+
 ## Core Principles
 
 ### Responsibility Boundaries

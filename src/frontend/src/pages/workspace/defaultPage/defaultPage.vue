@@ -22,6 +22,7 @@ import { getVisibleLLMsAPI, type LLMResponse } from '../../../apis/llm'
 import { getAgentSkillsAPI, type AgentSkill } from '../../../apis/agent-skill'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../../apis/knowledge'
 import { useUserStore } from '../../../store/user'
+import { getRetrievalModeLabel, normalizeRetrievalMode, retrievalModeOptions } from '../../../utils/retrieval'
 import { sanitizeWorkspaceContexts } from '../../../utils/workspace-history'
 import robotIcon from '../../../assets/robot.svg'
 import { isDesktopRuntime } from '../../../utils/api'
@@ -34,9 +35,9 @@ const AGENT_DOCUMENT_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'ppt', 'pptx', 
 type WorkspaceMode = 'normal' | 'agent'
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string }
-interface TraceRecord { id: string; title: string; detail: string; at: string }
+interface TraceRecord { id: string; title: string; detail: string; at: string; phase?: string; status?: string; accent?: 'default' | 'tool' | 'graph' | 'retrieval' | 'answer' | 'error' }
 interface PendingAttachment extends WorkspaceAttachment { id: string; preview_url?: string }
-interface ProgressStep { key: string; label: string; done: boolean; active: boolean }
+interface ProgressStep { key: string; label: string; done: boolean; active: boolean; accent?: 'default' | 'tool' | 'graph' | 'retrieval' | 'answer' | 'error' }
 
 const router = useRouter()
 const route = useRoute()
@@ -48,6 +49,7 @@ const modes = [
 
 const selectedMode = ref<WorkspaceMode>('normal')
 const inputMessage = ref('')
+const consumedInitialMessageKey = ref('')
 const messages = ref<ChatMessage[]>([])
 const executionEvents = ref<TraceRecord[]>([])
 const executionModes = ref<ExecutionModeDefinition[]>([])
@@ -62,6 +64,7 @@ const skillOptions = ref<AgentSkill[]>([])
 const selectedSkillIds = ref<string[]>([])
 const knowledgeOptions = ref<KnowledgeResponse[]>([])
 const selectedKnowledgeIds = ref<string[]>([])
+const selectedRetrievalMode = ref('default')
 const toolsTouched = ref(false)
 const mcpTouched = ref(false)
 const skillsTouched = ref(false)
@@ -118,6 +121,33 @@ const selectedToolCount = computed(() => (
   + selectedSkillIds.value.length
   + selectedKnowledgeIds.value.length
 ))
+const selectedKnowledgeDefaults = computed(() => (
+  knowledgeOptions.value
+    .filter((item) => selectedKnowledgeIds.value.includes(item.id))
+    .map((item) => normalizeRetrievalMode(item.default_retrieval_mode))
+))
+const effectiveKnowledgeDefaultMode = computed(() => {
+  const modes = Array.from(new Set(selectedKnowledgeDefaults.value))
+  if (modes.length === 1) return modes[0]
+  if (modes.length > 1) return 'hybrid'
+  return 'rag'
+})
+const effectiveRetrievalMode = computed(() => (
+  selectedRetrievalMode.value === 'default'
+    ? effectiveKnowledgeDefaultMode.value
+    : selectedRetrievalMode.value
+))
+const effectiveRetrievalModeLabel = computed(() => (
+  selectedRetrievalMode.value === 'default'
+    ? `${getRetrievalModeLabel(effectiveKnowledgeDefaultMode.value)}（知识库默认）`
+    : getRetrievalModeLabel(selectedRetrievalMode.value)
+))
+const retrievalModeHint = computed(() => {
+  if (!isAgentMode.value || !canPickTools.value || selectedKnowledgeIds.value.length === 0) {
+    return '选中知识库后，可切换 RAG / GraphRAG / Hybrid / Auto。'
+  }
+  return `当前将使用 ${effectiveRetrievalModeLabel.value}`
+})
 const compactPanel = computed(() => messages.value.length > 0)
 const traceVisible = computed(() => isAgentMode.value && showTracePanel.value)
 const slashSuggestions = computed<SlashSuggestion[]>(() => {
@@ -142,27 +172,36 @@ const slashSuggestions = computed<SlashSuggestion[]>(() => {
       insertValue: `/${skill.name} `,
     }))
 })
+const latestTraceRecord = computed(() => executionEvents.value[executionEvents.value.length - 1] || null)
 const progressStageIndex = computed(() => {
   if (!isAgentMode.value || (!isGenerating.value && executionEvents.value.length === 0)) return -1
-  if (!isGenerating.value && executionEvents.value.length > 0) return 2
-  if (executionEvents.value.length > 1) return 1
+  if (!isGenerating.value && executionEvents.value.length > 0) return 4
+  const last = latestTraceRecord.value
+  if (!last) return 0
+  if (last.phase === 'complete' || last.status === 'END') return 4
+  if (last.phase === 'model_call' || last.phase === 'answer') return 3
+  if (last.accent === 'tool') return 2
+  if (last.accent === 'graph') return 1
+  if (last.accent === 'retrieval') return 1
   return 0
 })
 const progressSteps = computed<ProgressStep[]>(() => {
   const activeIndex = progressStageIndex.value
   return [
-    { key: 'thinking', label: '理解任务', done: activeIndex > 0 || (!isGenerating.value && executionEvents.value.length > 0), active: activeIndex === 0 },
-    { key: 'tool', label: '调用能力', done: activeIndex > 1, active: activeIndex === 1 },
-    { key: 'answer', label: '生成回复', done: !isGenerating.value && executionEvents.value.length > 0, active: activeIndex === 2 },
+    { key: 'prepare', label: '准备请求', done: activeIndex > 0, active: activeIndex === 0, accent: 'default' },
+    { key: 'retrieve', label: '检索知识', done: activeIndex > 1, active: activeIndex === 1, accent: effectiveRetrievalMode.value === 'graphrag' ? 'graph' : 'retrieval' },
+    { key: 'tool', label: '调用能力', done: activeIndex > 2, active: activeIndex === 2, accent: 'tool' },
+    { key: 'answer', label: '整理答案', done: activeIndex > 3, active: activeIndex === 3, accent: 'answer' },
+    { key: 'done', label: '完成输出', done: !isGenerating.value && executionEvents.value.length > 0, active: activeIndex === 4, accent: 'default' },
   ]
 })
 const progressHeadline = computed(() => {
   if (!isAgentMode.value || (!isGenerating.value && executionEvents.value.length === 0)) return ''
-  return executionEvents.value[executionEvents.value.length - 1]?.title || '正在处理中'
+  return latestTraceRecord.value?.title || '正在处理中'
 })
 const progressDetail = computed(() => {
   if (!isAgentMode.value || (!isGenerating.value && executionEvents.value.length === 0)) return ''
-  return executionEvents.value[executionEvents.value.length - 1]?.detail || `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value}`
+  return latestTraceRecord.value?.detail || `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value}`
 })
 const liveProgressEvents = computed(() => executionEvents.value.slice(-3))
 
@@ -182,10 +221,34 @@ const syncRouteState = async () => {
 }
 const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
   const data = event.data || {}
-  if (event.type === 'tool_call') return { id: event.id || crypto.randomUUID(), title: '正在调用工具', detail: String(data.tool_name || data.message || '正在执行外部能力'), at: new Date().toLocaleTimeString() }
-  if (event.type === 'tool_result') return { id: event.id || crypto.randomUUID(), title: '工具已返回结果', detail: String(data.tool_name || data.message || '已收到工具结果'), at: new Date().toLocaleTimeString() }
-  if (event.type === 'final') return { id: event.id || crypto.randomUUID(), title: '正在整理最终回复', detail: '正在生成最终答案。', at: new Date().toLocaleTimeString() }
-  return { id: event.id || crypto.randomUUID(), title: String(data.message || event.title || '正在处理中'), detail: String(data.result || data.error || data.tool_name || event.detail || ''), at: new Date().toLocaleTimeString() }
+  const phase = String(data.phase || '')
+  const status = String(data.status || '')
+  const retrievalMode = String(data.retrieval_mode || effectiveRetrievalMode.value || '')
+  if (event.type === 'tool_call') {
+    return { id: event.id || crypto.randomUUID(), title: '正在调用工具', detail: String(data.tool_name || data.message || '正在执行外部能力'), at: new Date().toLocaleTimeString(), phase, status, accent: 'tool' }
+  }
+  if (event.type === 'tool_result') {
+    return { id: event.id || crypto.randomUUID(), title: '工具已返回结果', detail: String(data.tool_name || data.message || '已收到工具结果'), at: new Date().toLocaleTimeString(), phase, status, accent: data.ok === false ? 'error' : 'tool' }
+  }
+  if (event.type === 'final') {
+    return { id: event.id || crypto.randomUUID(), title: '正在整理最终回复', detail: `检索模式：${getRetrievalModeLabel(retrievalMode)} / 正在生成最终答案。`, at: new Date().toLocaleTimeString(), phase: phase || 'answer', status, accent: 'answer' }
+  }
+  const accent = phase.includes('error')
+    ? 'error'
+    : retrievalMode === 'graphrag'
+      ? 'graph'
+      : retrievalMode === 'hybrid' || retrievalMode === 'auto' || retrievalMode === 'rag'
+        ? 'retrieval'
+        : 'default'
+  return {
+    id: event.id || crypto.randomUUID(),
+    title: String(data.message || event.title || '正在处理中'),
+    detail: String(data.result || data.error || data.tool_name || event.detail || (retrievalMode ? `检索模式：${getRetrievalModeLabel(retrievalMode)}` : '')),
+    at: new Date().toLocaleTimeString(),
+    phase,
+    status,
+    accent,
+  }
 }
 const pushTraceEvent = (event: WorkspaceStreamEvent) => {
   const nextRecord = buildTraceRecord(event)
@@ -198,7 +261,7 @@ const pushTraceEvent = (event: WorkspaceStreamEvent) => {
 const buildLiveAssistantProgress = () => {
   const summary = [
     `**${progressHeadline.value || '正在处理中'}**`,
-    progressDetail.value || `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value}`,
+    progressDetail.value || `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value} / ${effectiveRetrievalModeLabel.value}`,
     '',
     ...progressSteps.value.map((step) => `- ${step.done ? 'x' : step.active ? '>' : '-'} ${step.label}`),
   ]
@@ -215,6 +278,21 @@ const buildFallbackAssistantMessage = () => [...executionEvents.value].reverse()
 const applySlashSuggestion = (suggestion: SlashSuggestion) => {
   inputMessage.value = suggestion.insertValue
   activeSuggestionIndex.value = 0
+}
+
+const consumeInitialRouteMessage = async () => {
+  const initialMessage = safeQueryValue(route.query.message, '').trim()
+  if (!initialMessage || isGenerating.value)
+    return
+
+  const routeSessionId = safeQueryValue(route.query.session_id, 'new')
+  const messageKey = `${routeSessionId}|${selectedMode.value}|${initialMessage}`
+  if (consumedInitialMessageKey.value === messageKey)
+    return
+
+  consumedInitialMessageKey.value = messageKey
+  inputMessage.value = initialMessage
+  await submitMessage()
 }
 
 const fetchModels = async () => {
@@ -481,6 +559,7 @@ const buildPayload = (query: string): WorkSpaceSimpleTask => ({
   plugins: canPickTools.value ? getValidSelectedToolIds() : [],
   mcp_servers: canPickTools.value ? getValidSelectedMcpIds() : [],
   knowledge_ids: canPickTools.value ? getValidSelectedKnowledgeIds() : [],
+  retrieval_mode: canPickTools.value ? selectedRetrievalMode.value : 'rag',
   agent_skill_ids: canPickTools.value ? getValidSelectedSkillIds() : [],
   session_id: currentSessionId.value,
   execution_mode: isAgentMode.value ? selectedExecutionMode.value : 'tool',
@@ -510,7 +589,7 @@ const submitMessage = async () => {
   messages.value.push({ role: 'assistant', content: isAgentMode.value ? buildLiveAssistantProgress() : '' })
   isPinnedToBottom.value = true
   await scrollToBottom(true)
-  if (isAgentMode.value) executionEvents.value.push({ id: crypto.randomUUID(), title: '开始执行', detail: `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value}`, at: new Date().toLocaleTimeString() })
+  if (isAgentMode.value) executionEvents.value.push({ id: crypto.randomUUID(), title: '开始执行', detail: `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value} / ${effectiveRetrievalModeLabel.value}`, at: new Date().toLocaleTimeString(), phase: 'start', status: 'START', accent: 'default' })
   let assistantHasRealContent = false
   const renderAgentProgress = async () => {
     if (!isAgentMode.value || assistantHasRealContent || !messages.value[assistantIndex]) return
@@ -612,6 +691,8 @@ watch(() => route.query.session_id, async (newSessionId, oldSessionId) => {
     syncDefaultSelections()
     await loadSessionHistory(String(newSessionId))
     showControlPanel.value = false
+    await nextTick()
+    await consumeInitialRouteMessage()
     return
   }
   if (!newSessionId && oldSessionId) {
@@ -631,7 +712,17 @@ watch(() => route.query.session_id, async (newSessionId, oldSessionId) => {
     selectedKnowledgeIds.value = []
     await Promise.all([fetchPlugins(), fetchSkills(), fetchKnowledges()])
     syncDefaultSelections()
+    await nextTick()
+    await consumeInitialRouteMessage()
   }
+})
+
+watch(() => route.query.message, async (newMessage, oldMessage) => {
+  if (!newMessage || newMessage === oldMessage)
+    return
+
+  await nextTick()
+  await consumeInitialRouteMessage()
 })
 
 watch([selectedExecutionMode, selectedAccessScope, selectedMode], async () => {
@@ -665,6 +756,8 @@ onMounted(async () => {
   await Promise.all([fetchPlugins(), fetchSkills(), fetchKnowledges()])
   const sessionId = safeQueryValue(route.query.session_id, '')
   if (sessionId) { currentSessionId.value = sessionId; await loadSessionHistory(sessionId) } else currentSessionId.value = generateSessionId()
+  await nextTick()
+  await consumeInitialRouteMessage()
 })
 </script>
 
@@ -672,8 +765,14 @@ onMounted(async () => {
   <div class="workspace-chat" :class="{ active: messages.length > 0 }">
     <div class="workspace-shell">
       <div v-if="messages.length === 0" class="intro-stack">
-        <div class="hero-card"><img :src="robotIcon" alt="Zuno" class="hero-avatar" /><h1>{{ activeMode.label }}</h1><p>{{ activeMode.description }}</p></div>
-        <div class="mode-switcher"><button v-for="mode in modes" :key="mode.id" :class="['mode-pill', { active: selectedMode === mode.id }]" @click="selectedMode = mode.id">{{ mode.label }}</button></div>
+        <div class="intro-mark">Zuno Workspace</div>
+        <h1>{{ selectedMode === 'agent' ? '把任务交给 Zuno。' : '今天想聊什么？' }}</h1>
+        <p>{{ activeMode.description }}</p>
+        <div class="mode-switcher">
+          <button v-for="mode in modes" :key="mode.id" :class="['mode-pill', { active: selectedMode === mode.id }]" @click="selectedMode = mode.id">
+            {{ mode.label }}
+          </button>
+        </div>
       </div>
       <div v-if="messages.length > 0" ref="conversationRef" class="conversation-panel" @scroll="handleConversationScroll">
         <div v-for="(message, index) in messages" :key="index" class="message-row" :class="message.role">
@@ -682,10 +781,14 @@ onMounted(async () => {
             <div v-if="message.role === 'assistant' && !message.content && isGenerating && index === messages.length - 1" class="loading-row" :class="{ agent: isAgentMode }">
               <template v-if="isAgentMode">
                 <div class="loading-head">
-                  <span class="spinner"></span>
+                  <span class="spinner orbit"></span>
                   <div class="loading-copy">
                     <strong>{{ progressHeadline }}</strong>
                     <span>{{ progressDetail }}</span>
+                  </div>
+                  <div class="phase-pill-group">
+                    <span class="phase-pill strong">{{ effectiveRetrievalModeLabel }}</span>
+                    <span class="phase-pill">{{ selectedKnowledgeIds.length > 0 ? `${selectedKnowledgeIds.length} 个知识库` : '未选知识库' }}</span>
                   </div>
                 </div>
                 <div class="loading-steps">
@@ -695,7 +798,7 @@ onMounted(async () => {
                   </div>
                 </div>
                 <div v-if="liveProgressEvents.length > 0" class="loading-events">
-                  <div v-for="event in liveProgressEvents" :key="event.id" class="loading-event">
+                  <div v-for="event in liveProgressEvents" :key="event.id" class="loading-event" :class="event.accent || 'default'">
                     <strong>{{ event.title }}</strong>
                     <span v-if="event.detail">{{ event.detail }}</span>
                   </div>
@@ -730,6 +833,13 @@ onMounted(async () => {
               <label class="field"><span>执行方式</span><select v-model="selectedExecutionMode"><option v-for="mode in executionModes" :key="mode.id" :value="mode.id">{{ mode.label }}</option></select></label>
               <label class="field"><span>访问范围</span><select v-model="selectedAccessScope"><option v-for="scope in accessScopes" :key="scope.id" :value="scope.id">{{ scope.label }}</option></select></label>
             </div>
+            <div v-if="isAgentMode && canPickTools" class="selector-grid agent-grid">
+              <label class="field">
+                <span>检索模式</span>
+                <select v-model="selectedRetrievalMode"><option v-for="mode in retrievalModeOptions" :key="mode.value" :value="mode.value">{{ mode.label }}</option></select>
+                <small class="field-hint">{{ retrievalModeHint }}</small>
+              </label>
+            </div>
             <div v-if="isAgentMode && canPickTools" class="tool-columns">
               <div class="picker-card">
                 <div class="picker-head"><strong>工具</strong><small>已选 {{ selectedTools.length }}</small></div>
@@ -744,7 +854,7 @@ onMounted(async () => {
               <div class="picker-card">
                 <div class="picker-head"><strong>知识库</strong><small>已选 {{ selectedKnowledgeIds.length }}</small></div>
                 <div v-if="knowledgeOptions.length === 0" class="empty-copy">暂无可用知识库</div>
-                <label v-for="knowledge in knowledgeOptions" :key="knowledge.id" class="picker-item"><input type="checkbox" :checked="selectedKnowledgeIds.includes(knowledge.id)" @change="toggleKnowledge(knowledge.id)" /><span>{{ knowledge.name }}<small>{{ knowledge.description || `共 ${knowledge.count} 个文件` }}</small></span></label>
+                <label v-for="knowledge in knowledgeOptions" :key="knowledge.id" class="picker-item"><input type="checkbox" :checked="selectedKnowledgeIds.includes(knowledge.id)" @change="toggleKnowledge(knowledge.id)" /><span>{{ knowledge.name }}<small>{{ knowledge.description || `共 ${knowledge.count} 个文件` }} · 默认 {{ getRetrievalModeLabel(knowledge.default_retrieval_mode) }}</small></span></label>
               </div>
               <div class="picker-card">
                 <div class="picker-head"><strong>Skill</strong><small>已选 {{ selectedSkillIds.length }}</small></div>
@@ -761,7 +871,10 @@ onMounted(async () => {
                   <strong>{{ progressHeadline }}</strong>
                   <small>{{ progressDetail }}</small>
                 </div>
-                <span class="progress-badge">处理中</span>
+                <div class="phase-pill-group">
+                  <span class="progress-badge">处理中</span>
+                  <span class="phase-pill strong">{{ effectiveRetrievalModeLabel }}</span>
+                </div>
               </div>
               <div class="progress-steps">
                 <div v-for="step in progressSteps" :key="step.key" class="progress-step" :class="{ active: step.active, done: step.done }">
@@ -772,7 +885,7 @@ onMounted(async () => {
             </div>
             <div class="picker-head"><div class="trace-head-copy"><strong>执行进展</strong><small>{{ selectedToolCount > 0 ? `已启用 ${selectedToolCount} 项能力` : '未启用额外工具' }}</small></div></div>
             <div v-if="executionEvents.length === 0" class="empty-copy">正在等待新的执行事件...</div>
-            <div v-else class="trace-list"><div v-for="event in executionEvents" :key="event.id" class="trace-item"><div class="trace-head"><strong>{{ event.title }}</strong><span>{{ event.at }}</span></div><div v-if="event.detail" class="trace-detail">{{ event.detail }}</div></div></div>
+            <div v-else class="trace-list"><div v-for="event in executionEvents" :key="event.id" class="trace-item" :class="event.accent || 'default'"><div class="trace-head"><strong>{{ event.title }}</strong><span>{{ event.at }}</span></div><div v-if="event.detail" class="trace-detail">{{ event.detail }}</div></div></div>
           </div>
 
           <div v-if="pendingAttachments.length > 0" class="attachment-strip">
@@ -804,7 +917,7 @@ onMounted(async () => {
           <div class="composer-footer">
             <div class="composer-footer-left">
               <button class="attach-btn" type="button" :disabled="attachmentsUploading || isGenerating" @click="triggerAttachmentSelect"><el-icon><Plus /></el-icon><span>{{ attachmentsUploading ? '上传中...' : '添加附件' }}</span></button>
-              <div class="composer-meta"><span class="composer-hint">{{ modeFooterCopy }}</span><span class="attachment-hint">{{ attachmentHint }}</span></div>
+              <div class="composer-meta"><span class="composer-hint">{{ modeFooterCopy }}</span><span class="attachment-hint">{{ attachmentHint }}</span><span v-if="isAgentMode && canPickTools" class="retrieval-hint">检索：{{ effectiveRetrievalModeLabel }}</span></div>
             </div>
             <button class="send-btn" :disabled="isGenerating || attachmentsUploading" @click="submitMessage">{{ isGenerating ? '处理中...' : '发送' }}</button>
           </div>
@@ -823,8 +936,8 @@ onMounted(async () => {
   flex-direction: column;
   overflow: hidden;
   background:
-    radial-gradient(circle at top center, rgba(224, 177, 134, 0.08), transparent 34%),
-    linear-gradient(180deg, #f8f3eb 0%, #faf7f2 100%);
+    radial-gradient(circle at 50% 12%, rgba(214, 142, 79, 0.08), transparent 30%),
+    linear-gradient(180deg, #f8f4ed 0%, #fcfaf6 100%);
 }
 
 .workspace-shell {
@@ -833,42 +946,62 @@ onMounted(async () => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px 14px 6px;
+  gap: 10px;
+  padding: 18px 20px 10px;
   overflow: hidden;
 }
 
-.intro-stack {
-  display: grid;
-  gap: 10px;
+.workspace-chat:not(.active) .workspace-shell {
+  justify-content: center;
 }
 
-.hero-card {
-  border: 1px solid rgba(225, 207, 189, 0.7);
-  border-radius: 24px;
-  background: rgba(255, 252, 248, 0.84);
-  box-shadow: 0 20px 40px rgba(90, 58, 29, 0.06);
+.workspace-chat:not(.active) .composer-dock {
+  background: transparent;
+}
+
+.workspace-chat:not(.active) .composer-shell {
+  width: min(760px, calc(100% - 24px));
+}
+
+.intro-stack {
+  flex: 0 0 auto;
+  min-height: 0;
   display: grid;
+  align-content: center;
   justify-items: center;
-  gap: 10px;
-  padding: 30px 20px 24px;
+  gap: 16px;
+  padding: 0 0 6px;
   text-align: center;
 }
 
-.hero-avatar {
-  width: 66px;
-  height: 66px;
+.intro-mark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: rgba(207, 128, 70, 0.1);
+  color: #a76234;
+  font-size: 12px;
+  letter-spacing: 0.08em;
 }
 
-.hero-card h1 {
+.intro-stack h1 {
   margin: 0;
-  color: #2f241b;
-  font-size: 26px;
+  color: #302820;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(34px, 4vw, 56px);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.05em;
 }
 
-.hero-card p {
+.intro-stack p {
   margin: 0;
-  color: #7f6a55;
+  max-width: 540px;
+  color: #76685b;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
 .mode-switcher {
@@ -960,6 +1093,36 @@ onMounted(async () => {
   gap: 8px;
 }
 
+.phase-pill-group {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.phase-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(255, 250, 245, 0.92);
+  border: 1px solid rgba(227, 205, 184, 0.9);
+  color: #866246;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.phase-pill.strong {
+  background: linear-gradient(135deg, rgba(255, 241, 227, 0.98), rgba(255, 248, 240, 0.96));
+  border-color: rgba(201, 108, 45, 0.34);
+  color: #9d5526;
+  font-weight: 600;
+  box-shadow: 0 8px 18px rgba(145, 92, 51, 0.08);
+}
+
 .loading-copy {
   display: grid;
   gap: 3px;
@@ -1029,6 +1192,50 @@ onMounted(async () => {
   line-height: 1.4;
 }
 
+.loading-event.retrieval,
+.loading-event.graph,
+.loading-event.tool,
+.loading-event.answer,
+.loading-event.error,
+.trace-item.retrieval,
+.trace-item.graph,
+.trace-item.tool,
+.trace-item.answer,
+.trace-item.error {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-event.retrieval,
+.trace-item.retrieval {
+  background: linear-gradient(135deg, rgba(255, 247, 239, 0.96), rgba(255, 252, 247, 0.92));
+  border-color: rgba(214, 153, 102, 0.42);
+}
+
+.loading-event.graph,
+.trace-item.graph {
+  background: linear-gradient(135deg, rgba(236, 247, 245, 0.96), rgba(247, 252, 251, 0.92));
+  border-color: rgba(74, 145, 133, 0.3);
+}
+
+.loading-event.tool,
+.trace-item.tool {
+  background: linear-gradient(135deg, rgba(246, 243, 255, 0.96), rgba(252, 250, 255, 0.92));
+  border-color: rgba(122, 112, 196, 0.28);
+}
+
+.loading-event.answer,
+.trace-item.answer {
+  background: linear-gradient(135deg, rgba(255, 246, 235, 0.96), rgba(255, 252, 248, 0.92));
+  border-color: rgba(201, 108, 45, 0.32);
+}
+
+.loading-event.error,
+.trace-item.error {
+  background: linear-gradient(135deg, rgba(255, 241, 239, 0.96), rgba(255, 250, 249, 0.92));
+  border-color: rgba(207, 92, 79, 0.34);
+}
+
 .spinner {
   width: 14px;
   height: 14px;
@@ -1038,26 +1245,50 @@ onMounted(async () => {
   animation: spin 0.9s linear infinite;
 }
 
+.spinner.orbit {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+  border-color: rgba(212, 138, 79, 0.18);
+  border-top-color: rgba(212, 138, 79, 0.85);
+  box-shadow: 0 0 0 4px rgba(212, 138, 79, 0.08);
+}
+
+.spinner.orbit::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #d48a4f;
+  box-shadow: 0 0 10px rgba(212, 138, 79, 0.45);
+}
+
 .composer-dock {
   flex-shrink: 0;
   z-index: 6;
   margin-top: 0;
-  padding-top: 4px;
-  background: linear-gradient(180deg, rgba(248, 243, 235, 0) 0%, rgba(248, 243, 235, 0.92) 24%, rgba(248, 243, 235, 0.98) 100%);
+  padding-top: 6px;
+  background: linear-gradient(180deg, rgba(248, 244, 237, 0) 0%, rgba(248, 244, 237, 0.92) 28%, rgba(248, 244, 237, 0.98) 100%);
 }
 
 .composer-dock.fixed {
-  padding-top: 4px;
+  position: sticky;
+  bottom: 0;
+  padding-top: 6px;
 }
 
 .composer-shell {
-  width: min(880px, calc(100% - 24px));
+  width: min(860px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 6px 8px 7px;
-  border-radius: 16px;
+  padding: 9px 10px 10px;
+  border-radius: 22px;
   border: 1px solid rgba(225, 207, 189, 0.78);
-  background: rgba(255, 252, 248, 0.94);
-  box-shadow: 0 8px 14px rgba(90, 58, 29, 0.06);
+  background: rgba(255, 253, 249, 0.94);
+  box-shadow: 0 18px 42px rgba(83, 57, 34, 0.08);
   backdrop-filter: blur(10px);
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
@@ -1229,6 +1460,12 @@ onMounted(async () => {
   color: #866a51;
 }
 
+.field-hint {
+  color: #8a6d54;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .field select,
 .composer {
   border: 1px solid rgba(225, 207, 189, 0.95);
@@ -1301,7 +1538,7 @@ onMounted(async () => {
 
 .progress-steps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1429,14 +1666,14 @@ onMounted(async () => {
 
 .composer {
   width: 100%;
-  min-height: 32px;
-  max-height: 72px;
-  padding: 6px 9px;
+  min-height: 42px;
+  max-height: 92px;
+  padding: 9px 10px;
   resize: none;
   outline: none;
   color: #2f241b;
-  line-height: 1.32;
-  font-size: 12px;
+  line-height: 1.42;
+  font-size: 13px;
 }
 
 .composer-footer {
@@ -1512,6 +1749,11 @@ onMounted(async () => {
   gap: 1px;
 }
 
+.retrieval-hint {
+  color: #a15a2a;
+  font-weight: 600;
+}
+
 .send-btn:disabled,
 .attach-btn:disabled {
   opacity: 0.65;
@@ -1566,6 +1808,11 @@ onMounted(async () => {
 
   .progress-steps {
     grid-template-columns: 1fr;
+  }
+
+  .phase-pill-group {
+    margin-left: 0;
+    justify-content: flex-start;
   }
 
   .message-bubble.assistant.loading {

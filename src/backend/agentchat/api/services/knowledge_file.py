@@ -16,6 +16,36 @@ from agentchat.utils.runtime_observability import get_active_trace_id
 
 class KnowledgeFileService:
     @classmethod
+    async def _dispatch_task(cls, task_id: str, knowledge_file_id: str, knowledge_id: str):
+        try:
+            pipeline_manager = KnowledgePipelineManager(
+                enable_graph_indexing=True,
+                enable_elasticsearch=app_settings.rag.enable_elasticsearch,
+            )
+            if QueueClient.is_enabled():
+                await pipeline_manager.mark_queued(task_id)
+                queue_names = get_queue_names()
+                await QueueClient().publish(
+                    queue_names["parse"],
+                    build_task_message(
+                        task_id=task_id,
+                        knowledge_id=knowledge_id,
+                        knowledge_file_id=knowledge_file_id,
+                        stage=KnowledgeTaskStage.parsing,
+                        trace_id=get_active_trace_id(),
+                    ),
+                )
+                return "rabbitmq"
+
+            task = await KnowledgeTaskDao.select_task_by_id(task_id)
+            file_path = (task.payload or {}).get("file_path") if task else None
+            await pipeline_manager.run_sync(task_id, file_path=file_path)
+            return "sync"
+        except Exception as err:
+            logger.error(f"Dispatch Knowledge Task Error: {err}")
+            raise ValueError(f"Dispatch Knowledge Task Error: {err}")
+
+    @classmethod
     def parse_knowledge_file(cls):
         pass
 
@@ -60,27 +90,7 @@ class KnowledgeFileService:
         )
 
         try:
-            pipeline_manager = KnowledgePipelineManager(
-                enable_graph_indexing=True,
-                enable_elasticsearch=app_settings.rag.enable_elasticsearch,
-            )
-            if QueueClient.is_enabled():
-                await pipeline_manager.mark_queued(task_id)
-                queue_names = get_queue_names()
-                await QueueClient().publish(
-                    queue_names["parse"],
-                    build_task_message(
-                        task_id=task_id,
-                        knowledge_id=knowledge_id,
-                        knowledge_file_id=knowledge_file_id,
-                        stage=KnowledgeTaskStage.parsing,
-                        trace_id=get_active_trace_id(),
-                    ),
-                )
-                dispatch_mode = "rabbitmq"
-            else:
-                await pipeline_manager.run_sync(task_id, file_path=file_path)
-                dispatch_mode = "sync"
+            dispatch_mode = await cls._dispatch_task(task_id, knowledge_file_id, knowledge_id)
             return {
                 "knowledge_file_id": knowledge_file_id,
                 "task_id": task_id,
@@ -116,6 +126,36 @@ class KnowledgeFileService:
             knowledge_id=knowledge_id,
         )
         return [task.to_dict() for task in tasks]
+
+    @classmethod
+    async def retry_task(cls, task_id: str):
+        task = await KnowledgeTaskDao.select_task_by_id(task_id)
+        if not task:
+            raise ValueError("knowledge task not found")
+
+        payload = dict(task.payload or {})
+        new_task_id = await KnowledgeTaskDao.create_task(
+            knowledge_id=task.knowledge_id,
+            knowledge_file_id=task.knowledge_file_id,
+            task_type=task.task_type,
+            payload=payload,
+        )
+        await KnowledgeFileDao.update_pipeline_fields(
+            task.knowledge_file_id,
+            last_task_id=new_task_id,
+            status="process",
+            parse_status="pending",
+            rag_index_status="pending",
+            graph_index_status="pending",
+            last_error=None,
+        )
+        dispatch_mode = await cls._dispatch_task(new_task_id, task.knowledge_file_id, task.knowledge_id)
+        return {
+            "task_id": new_task_id,
+            "previous_task_id": task_id,
+            "knowledge_file_id": task.knowledge_file_id,
+            "dispatch_mode": dispatch_mode,
+        }
 
     @classmethod
     async def verify_user_permission(cls, knowledge_file_id, user_id):

@@ -116,3 +116,20 @@ async def list_knowledge_file_tasks(
         return resp_200(data=result)
     except Exception as err:
         return resp_500(message=str(err))
+
+
+@router.post("/knowledge_file/task/retry", response_model=UnifiedResponseModel)
+async def retry_knowledge_file_task(
+    task_id: str = Body(..., embed=True),
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        detail = await KnowledgeFileService.get_task_detail(task_id)
+        task = detail.get("task")
+        if not task:
+            raise ValueError("knowledge task not found")
+        await KnowledgeFileService.verify_user_permission(task["knowledge_file_id"], login_user.user_id)
+        result = await KnowledgeFileService.retry_task(task_id)
+        return resp_200(data=result)
+    except Exception as err:
+        return resp_500(message=str(err))

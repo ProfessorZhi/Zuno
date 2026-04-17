@@ -12,6 +12,7 @@ export interface KnowledgeResponse {
   id: string
   name: string
   description: string | null
+  default_retrieval_mode?: string
   user_id: string | null
   create_time: string
   update_time: string
@@ -23,6 +24,7 @@ export interface KnowledgeResponse {
 export interface KnowledgeCreateRequest {
   knowledge_name: string
   knowledge_desc?: string
+  default_retrieval_mode?: string
 }
 
 // 知识库更新请求
@@ -30,6 +32,7 @@ export interface KnowledgeUpdateRequest {
   knowledge_id: string
   knowledge_name?: string
   knowledge_desc?: string
+  default_retrieval_mode?: string
 }
 
 // 知识库删除请求
@@ -42,6 +45,7 @@ export interface KnowledgeRetrievalRequest {
   query: string
   knowledge_id: string | string[]
   top_k?: number
+  retrieval_mode?: string
 }
 
 // 查询知识库列表

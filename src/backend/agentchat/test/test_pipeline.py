@@ -112,3 +112,73 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     assert any(update[1].get("parse_status") == "success" for update in file_updates)
     assert any(update[1].get("rag_index_status") == "success" for update in file_updates)
     assert any(update[1].get("graph_index_status") == "success" for update in file_updates)
+
+
+def test_retry_task_creates_new_task_and_redispatches(monkeypatch):
+    from agentchat.api.services.knowledge_file import KnowledgeFileService
+
+    original_task = SimpleNamespace(
+        id="task_old",
+        knowledge_id="knowledge_1",
+        knowledge_file_id="file_1",
+        task_type="ingest",
+        payload={"file_path": "demo.txt", "oss_url": "minio/demo.txt"},
+    )
+
+    create_calls = []
+    update_calls = []
+    dispatch_calls = []
+
+    async def fake_select_task_by_id(task_id):
+        assert task_id == "task_old"
+        return original_task
+
+    async def fake_create_task(**kwargs):
+        create_calls.append(kwargs)
+        return "task_new"
+
+    async def fake_update_pipeline_fields(knowledge_file_id, **kwargs):
+        update_calls.append((knowledge_file_id, kwargs))
+
+    async def fake_dispatch(task_id, knowledge_file_id, knowledge_id):
+        dispatch_calls.append((task_id, knowledge_file_id, knowledge_id))
+        return "sync"
+
+    monkeypatch.setattr(
+        "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
+        fake_select_task_by_id,
+    )
+    monkeypatch.setattr(
+        "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
+        fake_create_task,
+    )
+    monkeypatch.setattr(
+        "agentchat.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        fake_update_pipeline_fields,
+    )
+    monkeypatch.setattr(KnowledgeFileService, "_dispatch_task", fake_dispatch)
+
+    result = asyncio.run(KnowledgeFileService.retry_task("task_old"))
+
+    assert result["task_id"] == "task_new"
+    assert result["previous_task_id"] == "task_old"
+    assert result["knowledge_file_id"] == "file_1"
+    assert result["dispatch_mode"] == "sync"
+    assert create_calls == [{
+        "knowledge_id": "knowledge_1",
+        "knowledge_file_id": "file_1",
+        "task_type": "ingest",
+        "payload": {"file_path": "demo.txt", "oss_url": "minio/demo.txt"},
+    }]
+    assert update_calls == [(
+        "file_1",
+        {
+            "last_task_id": "task_new",
+            "status": "process",
+            "parse_status": "pending",
+            "rag_index_status": "pending",
+            "graph_index_status": "pending",
+            "last_error": None,
+        },
+    )]
+    assert dispatch_calls == [("task_new", "file_1", "knowledge_1")]
