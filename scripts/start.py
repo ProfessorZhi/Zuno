@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 import os
 import sys
@@ -116,10 +117,21 @@ def cleanup():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Start Zuno frontend and backend locally.")
+    parser.add_argument(
+        "--install-deps",
+        action="store_true",
+        help="Install Python dependencies from requirements.txt before starting services.",
+    )
+    args = parser.parse_args()
+
     # 简单检查
     if not os.path.exists(BASE_DIR):
         print(f"❌ 错误：找不到 src 文件夹 {BASE_DIR}")
         sys.exit(1)
 
-    install_dependencies()
+    if args.install_deps:
+        install_dependencies()
+    else:
+        print("⏭️ 跳过依赖安装；如需重新安装依赖，请使用 --install-deps")
     start_services()

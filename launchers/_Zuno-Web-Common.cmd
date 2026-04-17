@@ -60,11 +60,11 @@ if errorlevel 1 goto :fail
 call :ensure_local_config
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
-echo Starting Zuno Docker stack...
-docker compose up --build -d
+echo Starting Zuno Web stack...
+docker compose up -d
 if errorlevel 1 goto :fail
 echo.
-echo Zuno Docker stack started.
+echo Zuno Web stack started.
 echo Frontend: http://127.0.0.1:8090
 echo Backend:  http://127.0.0.1:7860
 echo Docs:     http://127.0.0.1:7860/docs
@@ -75,11 +75,11 @@ call :config
 call :ensure_docker
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
-echo Stopping Zuno Docker stack...
+echo Stopping Zuno Web stack...
 docker compose down
 if errorlevel 1 goto :fail
 echo.
-echo Zuno Docker stack stopped.
+echo Zuno Web stack stopped.
 goto :done
 
 :rebuild
@@ -89,11 +89,11 @@ if errorlevel 1 goto :fail
 call :ensure_local_config
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
-echo Rebuilding and restarting Zuno Docker stack...
+echo Rebuilding and restarting Zuno Web stack...
 docker compose up --build -d
 if errorlevel 1 goto :fail
 echo.
-echo Zuno Docker stack rebuilt.
+echo Zuno Web stack rebuilt.
 goto :done
 
 :full_rebuild
@@ -103,19 +103,19 @@ if errorlevel 1 goto :fail
 call :ensure_local_config
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
-echo Running full rebuild for Zuno Docker stack...
+echo Running full rebuild for Zuno Web stack...
 docker compose down
 docker compose build --no-cache
 if errorlevel 1 goto :fail
 docker compose up -d
 if errorlevel 1 goto :fail
 echo.
-echo Zuno Docker stack fully rebuilt.
+echo Zuno Web stack fully rebuilt.
 goto :done
 
 :fail
 echo.
-echo Zuno Docker action failed.
+echo Zuno Web action failed.
 
 :done
 echo.
