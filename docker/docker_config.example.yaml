@@ -17,6 +17,13 @@ database:
 redis:
   endpoint: "redis://redis:6379"
 
+neo4j:
+  enabled: true
+  uri: "bolt://neo4j:7687"
+  username: "neo4j"
+  password: "neo4j12345"
+  database: "neo4j"
+
 multi_models:
   conversation_model:
     api_key: ""

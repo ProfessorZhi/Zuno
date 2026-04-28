@@ -2,13 +2,26 @@ from loguru import logger
 from agentchat.database.dao.llm import LLMDao
 from agentchat.database.models.user import AdminUser, SystemUser
 
-LLM_Types = ['LLM', 'Embedding', 'Reranker']
+LLM_Types = ['LLM', 'Embedding', 'Rerank']
+MODEL_SLOTS = {
+    "conversation_model": {"llm_types": {"LLM"}, "label": "聊天模型"},
+    "embedding": {"llm_types": {"Embedding"}, "label": "文本 Embedding 模型"},
+    "vl_embedding": {"llm_types": {"Embedding"}, "label": "VL Embedding 模型"},
+    "rerank": {"llm_types": {"Rerank"}, "label": "Rerank 模型"},
+}
 
 
 class LLMService:
+    @staticmethod
+    def normalize_llm_type(llm_type: str | None) -> str:
+        if llm_type == "Reranker":
+            return "Rerank"
+        return llm_type or "LLM"
 
     @classmethod
     async def create_llm(cls, **kwargs):
+        if "llm_type" in kwargs:
+            kwargs["llm_type"] = cls.normalize_llm_type(kwargs["llm_type"])
         await LLMDao.create_llm(**kwargs)
 
     @classmethod
@@ -28,12 +41,35 @@ class LLMService:
 
     @classmethod
     async def update_llm(cls, **kwargs):
+        if "llm_type" in kwargs:
+            kwargs["llm_type"] = cls.normalize_llm_type(kwargs["llm_type"])
         await LLMDao.update_llm(**kwargs)
+
+    @classmethod
+    def validate_model_slot(cls, llm_type: str, model_slot: str):
+        slot_config = MODEL_SLOTS.get(model_slot)
+        if not slot_config:
+            raise ValueError("不支持的模型槽位")
+
+        normalized_type = cls.normalize_llm_type(llm_type)
+        if normalized_type not in slot_config["llm_types"]:
+            raise ValueError(f"{slot_config['label']} 只能绑定 {', '.join(slot_config['llm_types'])} 类型")
+
+    @classmethod
+    async def activate_model_slot(cls, llm_id: str, model_slot: str):
+        llm = await LLMDao.get_llm_by_id(llm_id)
+        if not llm:
+            raise ValueError("模型不存在")
+
+        cls.validate_model_slot(llm.llm_type, model_slot)
+        await LLMDao.clear_model_slot(model_slot)
+        await LLMDao.update_llm(llm_id=llm_id, model_slot=model_slot)
 
     @staticmethod
     def _group_by_type(llms: list, hide_api_key: bool = False):
         resp = {t: [] for t in LLM_Types}
         for item in llms:
+            item["llm_type"] = LLMService.normalize_llm_type(item.get("llm_type"))
             if hide_api_key:
                 item["api_key"] = "************"
             resp[item["llm_type"]].append(item)

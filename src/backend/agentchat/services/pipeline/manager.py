@@ -1,10 +1,12 @@
 import os
+from pathlib import Path
 from urllib.parse import urlparse
 
 from loguru import logger
 
 from agentchat.database.dao.knowledge_file import KnowledgeFileDao
 from agentchat.database.dao.knowledge_task import KnowledgeTaskDao
+from agentchat.api.services.knowledge import KnowledgeService
 from agentchat.services.graphrag.client import Neo4jClient
 from agentchat.services.graphrag.extractor import GraphExtractor
 from agentchat.services.pipeline.models import KnowledgeTaskStage, KnowledgeTaskStatus
@@ -17,7 +19,7 @@ from agentchat.services.rag.handler import RagHandler
 from agentchat.services.rag.parser import doc_parser
 from agentchat.services.redis import redis_client
 from agentchat.services.storage import storage_client
-from agentchat.utils.file_utils import get_save_tempfile
+from agentchat.utils.file_utils import get_object_key_from_public_url, get_save_tempfile
 from agentchat.utils.runtime_observability import RedisKeys
 
 
@@ -25,6 +27,20 @@ class KnowledgePipelineManager:
     def __init__(self, *, enable_graph_indexing: bool = True, enable_elasticsearch: bool = False):
         self.enable_graph_indexing = enable_graph_indexing
         self.enable_elasticsearch = enable_elasticsearch
+
+    def _resolve_local_reference_path(self, file_name: str) -> str | None:
+        if not file_name:
+            return None
+
+        candidate_roots = [
+            Path("/app/agentchat/fixtures/knowledge_reindex"),
+            Path(__file__).resolve().parents[2] / "fixtures" / "knowledge_reindex",
+        ]
+        for root in candidate_roots:
+            candidate = root / os.path.basename(file_name)
+            if candidate.exists():
+                return str(candidate)
+        return None
 
     async def _load_task(self, task_id: str):
         task = await KnowledgeTaskDao.select_task_by_id(task_id)
@@ -75,8 +91,18 @@ class KnowledgePipelineManager:
         if not oss_url:
             raise ValueError("knowledge task payload missing oss_url")
 
+        if oss_url.startswith("local://"):
+            file_name = payload.get("file_name") or oss_url.removeprefix("local://")
+            local_reference = self._resolve_local_reference_path(file_name)
+            if local_reference:
+                return local_reference, False
+            raise ValueError(
+                f"local source file not found for reindex: {file_name}. Please re-upload the file."
+            )
+
         parsed = urlparse(oss_url)
-        object_key = parsed.path.lstrip("/")
+        bucket_name = parsed.path.lstrip("/").split("/", 1)[0] if parsed.path else ""
+        object_key = get_object_key_from_public_url(oss_url, bucket_name=bucket_name)
         file_name = payload.get("file_name") or os.path.basename(parsed.path) or f"{task.knowledge_file_id}.txt"
         local_file_path = get_save_tempfile(file_name)
         storage_client.download_file(object_key, local_file_path)
@@ -85,10 +111,14 @@ class KnowledgePipelineManager:
     async def _parse_chunks(self, task):
         file_path, cleanup = await self._resolve_file_path(task)
         try:
+            payload = task.payload or {}
+            knowledge_config = await KnowledgeService.get_knowledge_config(task.knowledge_id)
             chunks = await doc_parser.parse_doc_into_chunks(
                 task.knowledge_file_id,
                 file_path,
                 task.knowledge_id,
+                source_url=payload.get("oss_url"),
+                knowledge_config=knowledge_config,
             )
             return chunks
         finally:
@@ -143,6 +173,7 @@ class KnowledgePipelineManager:
     async def run_rag_index_stage(self, task_id: str):
         task = await self._load_task(task_id)
         try:
+            runtime_settings = await KnowledgeService.get_runtime_settings(task.knowledge_id)
             await self._record_stage(
                 task_id,
                 KnowledgeTaskStage.rag_indexing,
@@ -152,7 +183,12 @@ class KnowledgePipelineManager:
                 file_patch=build_running_file_patch(KnowledgeTaskStage.rag_indexing, task_id),
             )
             chunks = await self._parse_chunks(task)
-            await RagHandler.index_milvus_documents(task.knowledge_id, chunks)
+            await RagHandler.index_milvus_documents(
+                task.knowledge_id,
+                chunks,
+                text_embedding_config=runtime_settings.get("text_embedding_config"),
+                vl_embedding_config=runtime_settings.get("vl_embedding_config"),
+            )
             if self.enable_elasticsearch:
                 await RagHandler.index_es_documents(task.knowledge_id, chunks)
             await KnowledgeTaskDao.update_task(task_id, result_summary={"chunk_count": len(chunks)})

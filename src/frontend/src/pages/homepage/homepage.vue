@@ -1,10 +1,18 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+const selectedMode = ref<'normal' | 'agent'>('normal')
+const draft = ref('')
+
+const modes = [
+  { id: 'normal' as const, label: '聊天模式', description: '轻量对话、图片理解和快速问答。' },
+  { id: 'agent' as const, label: 'Agent 模式', description: '调用工具、MCP、Skill 和附件分析。' },
+]
+
 const quickLinks = [
-  { key: 'workspace', label: '工作台', target: '/workspace' },
   { key: 'agent', label: '智能体', target: '/agent' },
   { key: 'mcp', label: 'MCP', target: '/mcp-server' },
   { key: 'tool', label: '工具', target: '/tool' },
@@ -14,8 +22,26 @@ const quickLinks = [
   { key: 'dashboard', label: '数据看板', target: '/dashboard' },
 ]
 
+const activeMode = computed(() => modes.find((mode) => mode.id === selectedMode.value) || modes[0])
+
 const openWorkspace = () => {
-  router.push('/workspace')
+  const query: Record<string, string> = {
+    mode: selectedMode.value,
+    execution_mode: 'tool',
+    access_scope: 'workspace',
+  }
+
+  const message = draft.value.trim()
+  if (message) query.message = message
+
+  router.push({ name: 'workspaceDefaultPage', query })
+}
+
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    openWorkspace()
+  }
 }
 
 const go = (target: string) => {
@@ -25,19 +51,37 @@ const go = (target: string) => {
 
 <template>
   <div class="homepage">
-    <section class="hero">
-      <div class="status-pill">Zuno Platform</div>
+    <section class="home-center">
+      <div class="brand-pill">Zuno Platform</div>
       <h1>准备开始什么？</h1>
-      <p>先在这里进入工作台，或快速打开需要配置的能力模块。</p>
+      <p class="subtitle">从这里进入工作台，或先配置智能体、MCP、工具、Skill、知识库和模型。</p>
 
-      <button type="button" class="composer-card" @click="openWorkspace">
-        <div class="composer-placeholder">进入工作台，开始对话或发起 Agent 任务</div>
+      <div class="composer-card">
+        <textarea
+          v-model="draft"
+          class="composer-input"
+          :placeholder="selectedMode === 'agent' ? '描述一个任务，Zuno 会进入 Agent 模式处理。' : '输入一个问题，开始聊天。'"
+          rows="3"
+          @keydown="handleKeydown"
+        />
+
         <div class="composer-footer">
-          <span class="composer-plus">+</span>
-          <span class="composer-hint">聊天、Agent、附件分析、工具调用</span>
-          <span class="composer-action">进入</span>
+          <div class="mode-switcher" aria-label="选择模式">
+            <button
+              v-for="mode in modes"
+              :key="mode.id"
+              type="button"
+              :class="['mode-pill', { active: selectedMode === mode.id }]"
+              @click="selectedMode = mode.id"
+            >
+              {{ mode.label }}
+            </button>
+          </div>
+          <button type="button" class="composer-action" @click="openWorkspace">进入</button>
         </div>
-      </button>
+      </div>
+
+      <div class="mode-copy">{{ activeMode.description }}</div>
 
       <div class="quick-links">
         <button
@@ -57,146 +101,161 @@ const go = (target: string) => {
 <style scoped lang="scss">
 .homepage {
   min-height: 100%;
-  padding: 40px 24px 56px;
+  display: grid;
+  place-items: center;
+  padding: 56px 24px 72px;
   background:
-    radial-gradient(circle at top, rgba(219, 171, 129, 0.1), transparent 28%),
-    linear-gradient(180deg, #f8f4ee 0%, #fcfaf7 100%);
+    radial-gradient(circle at 50% 16%, rgba(209, 140, 82, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8f4ed 0%, #fcfaf6 100%);
 }
 
-.hero {
-  width: min(860px, 100%);
-  margin: 0 auto;
-  padding-top: 56px;
+.home-center {
+  width: min(920px, 100%);
   text-align: center;
 }
 
-.status-pill {
+.brand-pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 34px;
+  min-height: 32px;
   padding: 0 14px;
   border-radius: 999px;
-  background: rgba(214, 132, 70, 0.1);
-  color: #bf6d37;
+  background: rgba(207, 128, 70, 0.1);
+  color: #a76234;
   font-size: 13px;
   letter-spacing: 0.08em;
 }
 
-.hero h1 {
-  margin: 22px 0 12px;
-  color: #2d241c;
-  font-size: clamp(34px, 4.6vw, 56px);
-  line-height: 1.14;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+h1 {
+  margin: 24px 0 10px;
+  color: #302820;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(42px, 5.6vw, 68px);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.055em;
 }
 
-.hero p {
-  margin: 0 auto;
-  max-width: 560px;
-  color: #766252;
-  font-size: 17px;
+.subtitle {
+  margin: 0 auto 32px;
+  max-width: 620px;
+  color: #76685b;
+  font-size: 16px;
   line-height: 1.7;
 }
 
 .composer-card {
-  width: min(840px, 100%);
-  margin: 34px auto 0;
-  padding: 26px 28px 18px;
-  border: 1px solid rgba(214, 132, 70, 0.12);
+  width: min(820px, 100%);
+  margin: 0 auto;
+  padding: 22px 24px 18px;
+  border: 1px solid rgba(219, 197, 177, 0.78);
   border-radius: 28px;
-  background: rgba(255, 252, 248, 0.92);
-  box-shadow: 0 18px 40px rgba(120, 80, 42, 0.06);
+  background: rgba(255, 253, 249, 0.92);
+  box-shadow: 0 24px 60px rgba(83, 57, 34, 0.07);
   text-align: left;
-  cursor: pointer;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
-.composer-card:hover {
-  border-color: rgba(201, 109, 49, 0.24);
-  box-shadow: 0 22px 44px rgba(120, 80, 42, 0.08);
-  transform: translateY(-1px);
-}
-
-.composer-placeholder {
-  color: rgba(70, 54, 43, 0.46);
+.composer-input {
+  width: 100%;
+  min-height: 112px;
+  border: none;
+  resize: none;
+  outline: none;
+  background: transparent;
+  color: #342920;
   font-size: 18px;
-  line-height: 1.5;
-  min-height: 92px;
+  line-height: 1.55;
+}
+
+.composer-input::placeholder {
+  color: rgba(72, 58, 47, 0.42);
 }
 
 .composer-footer {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: #7b6857;
-  font-size: 14px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.composer-plus {
-  width: 28px;
-  height: 28px;
-  display: inline-grid;
-  place-items: center;
+.mode-switcher {
+  display: inline-flex;
+  gap: 8px;
+  padding: 5px;
+  border: 1px solid rgba(219, 197, 177, 0.74);
   border-radius: 999px;
-  border: 1px solid rgba(214, 132, 70, 0.18);
-  color: #9d7757;
-  font-size: 18px;
-  flex: 0 0 auto;
+  background: rgba(250, 246, 239, 0.82);
 }
 
-.composer-hint {
-  flex: 1;
+.mode-pill {
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #756455;
+  padding: 9px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.mode-pill.active {
+  background: #c8753d;
+  color: #fffaf4;
+  box-shadow: 0 10px 22px rgba(172, 98, 47, 0.16);
 }
 
 .composer-action {
-  color: #3f3328;
-  font-weight: 500;
+  border: none;
+  border-radius: 999px;
+  background: #c8753d;
+  color: #fffaf4;
+  min-width: 82px;
+  height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(172, 98, 47, 0.18);
+}
+
+.mode-copy {
+  margin-top: 14px;
+  color: #8a7765;
+  font-size: 13px;
 }
 
 .quick-links {
-  margin-top: 20px;
+  margin-top: 24px;
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
 }
 
 .quick-chip {
-  border: 1px solid rgba(214, 132, 70, 0.14);
+  border: 1px solid rgba(219, 197, 177, 0.74);
   border-radius: 999px;
-  background: rgba(255, 252, 248, 0.88);
-  color: #4b3a2d;
+  background: rgba(255, 253, 249, 0.78);
+  color: #564639;
   padding: 10px 18px;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
 }
 
-.quick-chip:hover {
-  background: #fff7ef;
-  border-color: rgba(201, 109, 49, 0.24);
-  transform: translateY(-1px);
-}
-
-@media (max-width: 900px) {
+@media (max-width: 720px) {
   .homepage {
-    padding: 28px 18px 42px;
-  }
-
-  .hero {
-    padding-top: 28px;
+    padding: 36px 16px 48px;
   }
 
   .composer-card {
-    padding: 22px 20px 16px;
+    padding: 18px 18px 16px;
   }
 
-  .composer-placeholder {
-    min-height: 72px;
-    font-size: 16px;
+  .composer-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .composer-action {
+    width: 100%;
   }
 }
 </style>

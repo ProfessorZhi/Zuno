@@ -25,14 +25,20 @@ class MCPManager:
 
 
     async def get_mcp_tools(self) -> list[BaseTool]:
-        tools = await self.multi_server_client.get_tools()
+        tools = await asyncio.wait_for(
+            self.multi_server_client.get_tools(),
+            timeout=self.timeout,
+        )
         return tools
 
     async def show_mcp_tools(self) -> dict:
         result = {}
         try:
             for mcp_config in self.mcp_configs:
-                server_tools = await self.multi_server_client.get_tools(server_name=mcp_config.server_name)
+                server_tools = await asyncio.wait_for(
+                    self.multi_server_client.get_tools(server_name=mcp_config.server_name),
+                    timeout=self.timeout,
+                )
                 tool_list = []
                 for tool in server_tools:
                     input_schema = tool.args_schema
@@ -44,6 +50,11 @@ class MCPManager:
                     tool_list.append(tool_dict)
                 result[mcp_config.server_name] = tool_list
             return result
+        except asyncio.TimeoutError as err:
+            logger.info("Timeout while getting MCP service tool list")
+            raise TimeoutError(
+                f"MCP service tool discovery timed out after {self.timeout}s"
+            ) from err
         except Exception as err:
             logger.info(f"Error getting MCP service tool list: {err}")
             return {}

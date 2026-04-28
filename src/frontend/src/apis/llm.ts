@@ -9,6 +9,7 @@ export interface LLMResponse {
   base_url: string
   api_key: string
   user_id: string
+  model_slot?: string | null
   update_time: string
   create_time: string
 }
@@ -19,6 +20,7 @@ export interface CreateLLMRequest {
   base_url: string
   provider: string
   llm_type: string
+  model_slot?: string | null
 }
 
 export interface UpdateLLMRequest {
@@ -28,6 +30,7 @@ export interface UpdateLLMRequest {
   base_url?: string
   provider?: string
   llm_type?: string
+  model_slot?: string | null
 }
 
 export interface ApiResponse<T> {
@@ -91,6 +94,14 @@ export function updateLLMAPI(data: UpdateLLMRequest) {
   return request<ApiResponse<null>>({
     url: '/api/v1/llm/update',
     method: 'PUT',
+    data
+  })
+}
+
+export function activateLLMAPI(data: { llm_id: string; model_slot: string }) {
+  return request<ApiResponse<null>>({
+    url: '/api/v1/llm/activate',
+    method: 'POST',
     data
   })
 }

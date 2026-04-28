@@ -3,8 +3,9 @@ setlocal
 chcp 65001 >nul
 title Zuno Rebuild
 
-set "DESKTOP_BAT=C:\Users\Administrator\Desktop\bat\Zuno-Rebuild.cmd"
-echo This script now forwards to the desktop-mode rebuild to avoid stale web frontend conflicts.
+set "REPO_ROOT=%~dp0.."
+set "DESKTOP_BAT=%REPO_ROOT%\launchers\Zuno-Desktop-Rebuild.cmd"
+echo This script now forwards to the current desktop-mode rebuild launcher.
 echo.
 if exist "%DESKTOP_BAT%" (
   call "%DESKTOP_BAT%"

@@ -5,8 +5,7 @@ import { ElMessage } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { registerAPI } from '../../apis/auth'
 import type { RegisterForm } from '../../apis/auth'
-import zunoAvatar from '../../assets/zuno-avatar.svg'
-import zunoWordmark from '../../assets/zuno-wordmark.svg'
+import { zunoAgentAvatar, zunoBrandMark } from '../../utils/brand'
 
 const router = useRouter()
 
@@ -101,7 +100,7 @@ const goToLogin = () => {
     <section class="register-hero">
       <div class="hero-surface">
         <div class="hero-badge">Create your Zuno account</div>
-        <img :src="zunoAvatar" alt="Zuno" class="hero-avatar" />
+        <img :src="zunoAgentAvatar" alt="Zuno" class="hero-avatar" />
         <h1>让你的工作台从这里开始</h1>
         <p>创建账号后，你就能把对话、搜索、工具和执行流都收进同一套工作空间里，用更稳定的方式推进任务。</p>
         <div class="hero-points">
@@ -115,7 +114,7 @@ const goToLogin = () => {
     <section class="register-panel">
       <div class="panel-shell">
         <div class="brand-block">
-          <img :src="zunoWordmark" alt="Zuno" class="brand-wordmark" />
+          <img :src="zunoBrandMark" alt="Zuno" class="brand-wordmark" />
           <p>创建一个新的 Zuno 账号。</p>
         </div>
 

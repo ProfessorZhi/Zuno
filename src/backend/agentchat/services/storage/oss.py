@@ -52,6 +52,13 @@ class OSSClient:
         except oss2.exceptions.OssError as e:
             logger.error(f"Failed to download {object_name} to {local_file}: {e}")
 
+    def get_file_bytes(self, object_name):
+        try:
+            return self.bucket.get_object(object_name).read()
+        except oss2.exceptions.OssError as e:
+            logger.error(f"Failed to read {object_name}: {e}")
+            return b""
+
     def list_files_in_folder(self, folder_path):
         """
         列出指定文件夹下的所有文件（不递归，假设文件夹下没有子目录）

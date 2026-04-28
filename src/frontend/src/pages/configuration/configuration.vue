@@ -6,6 +6,7 @@
           <div>
             <h1>{{ toolConfig?.display_name || '系统工具配置' }}</h1>
             <p>{{ toolConfig?.description || '正在加载工具配置...' }}</p>
+            <div v-if="toolConfig" class="tool-kind-pill">{{ visibleToolKindLabel }}</div>
           </div>
         </header>
 
@@ -17,16 +18,32 @@
             <span>{{ toolStatus.detail }}</span>
           </div>
 
-          <div v-if="toolConfig.note" class="note-card">
-            {{ toolConfig.note }}
+          <div v-if="toolSummaryNote" class="note-card">
+            {{ toolSummaryNote }}
+          </div>
+
+          <div v-if="toolGuideSections.length > 0" class="guide-grid">
+            <section
+              v-for="section in toolGuideSections"
+              :key="section.key"
+              class="guide-card"
+              :class="`is-${section.tone}`"
+            >
+              <span class="guide-eyebrow">{{ section.eyebrow }}</span>
+              <h2>{{ section.title }}</h2>
+              <p v-if="section.summary">{{ section.summary }}</p>
+              <ul v-if="section.steps.length > 0">
+                <li v-for="step in section.steps" :key="step">{{ step }}</li>
+              </ul>
+            </section>
           </div>
 
           <template v-if="toolConfig.config_type === 'email_accounts'">
             <section class="panel-card">
               <div class="panel-head">
                 <div>
-                  <h2>邮箱槽位</h2>
-                  <p>给发送邮件工具预先配置多个邮箱槽位，Agent 就能直接按槽位调用。</p>
+                  <h2>{{ configPanel.title }}</h2>
+                  <p>{{ configPanel.description }}</p>
                 </div>
                 <div class="quick-actions">
                   <button class="secondary-btn" type="button" @click="addEmailAccount('qq')">新增 QQ</button>
@@ -100,8 +117,8 @@
             <section class="panel-card">
               <div class="panel-head">
                 <div>
-                  <h2>配置项</h2>
-                  <p>填写这个系统工具运行时所需的固定参数。</p>
+                  <h2>{{ configPanel.title }}</h2>
+                  <p>{{ configPanel.description }}</p>
                 </div>
               </div>
 
@@ -122,17 +139,20 @@
             </section>
           </template>
 
-          <div v-else class="empty-box">这个工具当前没有额外的固定配置项，可以直接使用。</div>
-
-          <section v-if="toolGuide.title" class="guide-card">
-            <h2>{{ toolGuide.title }}</h2>
-            <p v-if="toolGuide.summary">{{ toolGuide.summary }}</p>
-            <ol v-if="toolGuide.steps.length > 0">
-              <li v-for="step in toolGuide.steps" :key="step">{{ step }}</li>
-            </ol>
+          <section v-else class="panel-card">
+            <div class="panel-head">
+              <div>
+                <h2>{{ configPanel.title }}</h2>
+                <p>{{ configPanel.description }}</p>
+              </div>
+            </div>
+            <div class="empty-box">{{ configPanel.emptyHint }}</div>
           </section>
 
           <div class="footer-actions">
+            <button class="secondary-btn" type="button" :disabled="checkingStatus" @click="checkToolStatus">
+              {{ checkingStatus ? '检测中...' : '手动检测' }}
+            </button>
             <button class="secondary-btn" type="button" @click="reloadToolConfig">重置</button>
             <button class="primary-btn" type="button" :disabled="saving" @click="saveToolConfig">
               {{ saving ? '保存中...' : '保存配置' }}
@@ -172,6 +192,7 @@ import { ElMessage } from 'element-plus'
 import {
   getConfigAPI,
   getSystemToolConfigAPI,
+  getSystemToolStatusAPI,
   updateConfigAPI,
   updateSystemToolConfigAPI,
   type RuntimeConfigPayload,
@@ -180,12 +201,21 @@ import {
 
 type ToolStatus = RuntimeConfigPayload['system_tools'][number]['status']
 type EmailAccount = NonNullable<SystemToolConfigPayload['accounts']>[number]
-type ToolGuide = { title: string; summary: string; steps: string[] }
+type GuideTone = 'strategy' | 'install' | 'config'
+type ToolGuideSection = {
+  key: string
+  eyebrow: string
+  title: string
+  summary: string
+  steps: string[]
+  tone: GuideTone
+}
 
 const route = useRoute()
 const toolName = ref('')
 const loading = ref(false)
 const saving = ref(false)
+const checkingStatus = ref(false)
 const rawConfig = ref('')
 const rawConfigSnapshot = ref('')
 const toolConfig = ref<SystemToolConfigPayload | null>(null)
@@ -203,7 +233,13 @@ const providerTemplates: Record<string, Pick<EmailAccount, 'smtp_host' | 'smtp_p
 
 const toolStatus = computed<ToolStatus | null>(() => {
   if (!toolName.value) return null
-  return systemToolMetaMap.value[toolName.value]?.status || null
+  return toolConfig.value?.status || systemToolMetaMap.value[toolName.value]?.status || null
+})
+
+const toolKind = computed(() => toolConfig.value?.tool_kind || systemToolMetaMap.value[toolName.value]?.tool_kind || 'remote_api')
+
+const visibleToolKindLabel = computed(() => {
+  return toolKind.value === 'remote_api' ? 'API' : 'CLI'
 })
 
 const statusClass = computed(() => {
@@ -221,58 +257,183 @@ const statusClass = computed(() => {
   }
 })
 
-const toolGuideMap: Record<string, ToolGuide> = {
+const toolGuideOverrides: Record<string, Partial<Record<GuideTone, Omit<ToolGuideSection, 'key' | 'eyebrow' | 'tone'>>>> = {
   send_email: {
-    title: '邮箱配置说明',
-    summary: '建议把常用邮箱做成多个槽位，例如 qq-main、qq-backup、office-main。Agent 调用时只需要引用槽位名。',
-    steps: [
-      '每个槽位对应一个发件邮箱与授权码。',
-      'QQ、163、Gmail、Outlook 都支持配置多个槽位。',
-      '保存后，发送邮件工具会优先按槽位名匹配预设邮箱。',
-    ],
+    strategy: {
+      title: '把邮箱做成稳定槽位',
+      summary: '这个工具适合先把常用发件身份预置好，运行时只引用槽位名，不再重复填写 SMTP 参数。',
+      steps: ['建议按业务身份拆槽位，例如 qq-main、support-mail、office-backup。'],
+    },
+    install: {
+      title: '先准备授权码再保存',
+      summary: 'QQ、163、Gmail、Outlook 都能直接套预设 SMTP 参数，自定义服务商再改主机和端口。',
+      steps: ['每个槽位都需要发件邮箱和授权码，尽量不要直接使用登录密码。'],
+    },
+    config: {
+      title: '配置区保存邮箱槽位',
+      summary: '至少保存一个可用槽位后，发送邮件工具才能稳定复用发件身份。',
+      steps: ['如果团队有多个发件身份，可以在这里长期维护多组槽位。'],
+    },
   },
-  get_weather: {
-    title: '天气工具说明',
-    summary: '天气工具需要固定 API Key 和接口地址，保存后才会进入可用状态。',
-    steps: [
-      '准备天气服务提供方的 API Key。',
-      '填入 API Key 和接口地址。',
-      '保存后状态会切换为“已就绪”。',
-    ],
-  },
-  get_delivery: {
-    title: '物流工具说明',
-    summary: '物流工具依赖固定 APPCODE 或接口认证信息，保存后才能直接查快递。',
-    steps: [
-      '准备物流接口认证信息。',
-      '填入 APPCODE 或约定字段。',
-      '保存后状态会切换为“已就绪”。',
-    ],
-  },
-  tavily_search: {
-    title: '联网搜索说明',
-    summary: '这个工具只需要固定 Tavily API Key。',
-    steps: ['填入 Tavily API Key 后保存即可。'],
-  },
-  bocha_search: {
-    title: '博查搜索说明',
-    summary: '这个工具依赖博查搜索 API Key 与接口地址。',
-    steps: ['填入 API Key 和接口地址。', '保存后状态会切换为“已就绪”。'],
+  get_arxiv: {
+    strategy: {
+      title: '直接使用公开论文源',
+      summary: '这个工具走公开数据源，不需要额外密钥或本机依赖。',
+      steps: ['重点是运行时给出明确主题、作者或关键词，而不是在这里做预配置。'],
+    },
   },
   convert_to_pdf: {
-    title: 'Docx 转 PDF 说明',
-    summary: '这个工具依赖 LibreOffice 或兼容的命令行转换能力。',
-    steps: ['确认运行环境已安装 LibreOffice。', '确保 backend 能找到 libreoffice 命令。'],
+    install: {
+      title: '运行机器需要 LibreOffice',
+      summary: 'Docx 转 PDF 依赖本机文档转换能力，真正决定是否可用的是运行 Zuno 的那台机器。',
+      steps: ['安装 LibreOffice 后，确保后端进程能找到 libreoffice 或 soffice 命令。'],
+    },
   },
   convert_to_docx: {
-    title: 'PDF 转 Docx 说明',
-    summary: '这个工具依赖 Python 包 pdf2docx。',
-    steps: ['如果状态显示缺依赖，请在 backend 运行环境安装 pdf2docx。'],
+    install: {
+      title: '运行机器需要 pdf2docx',
+      summary: 'PDF 转 Docx 依赖 Python 包而不是远程接口，所以前端没有额外密钥可以填写。',
+      steps: ['如果状态仍显示缺依赖，请在后端运行环境安装 pdf2docx。'],
+    },
   },
 }
 
-const toolGuide = computed<ToolGuide>(() => {
-  return toolGuideMap[toolName.value] || { title: '', summary: '', steps: [] }
+const defaultGuideSectionMap: Record<NonNullable<SystemToolConfigPayload['tool_kind']>, Record<GuideTone, Omit<ToolGuideSection, 'key' | 'eyebrow' | 'tone'>>> = {
+  remote_api: {
+    strategy: {
+      title: '固定凭据，运行时直接复用',
+      summary: '这类工具靠预置 API 参数工作，配置完成后 Agent 调用时不需要再重复输入固定认证信息。',
+      steps: ['优先在这里保存长期稳定的 Key、Endpoint 或鉴权字段。'],
+    },
+    install: {
+      title: '先准备服务商凭据',
+      summary: '前端这里只负责保存参数，不会帮你申请或校验第三方服务账号。',
+      steps: ['先到对应服务商控制台拿到 Key 或接口地址，再回来保存。'],
+    },
+    config: {
+      title: '把固定参数填在配置区',
+      summary: '配置区只放持久化参数，运行时变化的查询词、城市、单号等内容不在这里填写。',
+      steps: [],
+    },
+  },
+  public_data_source: {
+    strategy: {
+      title: '公开数据源优先',
+      summary: '这类工具直接读取开放数据，不依赖远程私有 API，也不要求单独安装本机 CLI。',
+      steps: ['重点是运行时输入合适的查询条件，而不是在这里维护凭据。'],
+    },
+    install: {
+      title: '通常不需要额外安装',
+      summary: '如果状态正常，就代表前端没有需要你补的全局依赖或密钥。',
+      steps: ['除非后续工具实现变化，否则这里一般不需要额外准备。'],
+    },
+    config: {
+      title: '没有持久化配置项',
+      summary: '这类工具通常开箱可用，配置页更多是给你确认当前策略，而不是保存参数。',
+      steps: [],
+    },
+  },
+  smtp_protocol: {
+    strategy: {
+      title: '把发件能力做成可复用资产',
+      summary: 'SMTP 工具的核心不是一次性填参数，而是维护好长期可复用的发件槽位。',
+      steps: ['Agent 运行时优先引用槽位名，这样更稳定，也更适合多人协作。'],
+    },
+    install: {
+      title: '依赖邮箱服务商的 SMTP 能力',
+      summary: '是否可用取决于你的邮箱服务商是否开放 SMTP 以及授权码是否正确。',
+      steps: ['如果供应商限制 SMTP 或授权码无效，前端保存成功也无法真正发送。'],
+    },
+    config: {
+      title: '配置区维护邮箱槽位',
+      summary: '这里保存的是长期可复用的邮箱身份，不是一次性的收件信息。',
+      steps: [],
+    },
+  },
+  local_dependency: {
+    strategy: {
+      title: '走本机依赖，不走远程接口',
+      summary: '这类工具真正依赖的是运行环境里的可执行程序或 Python 包，因此前端没有太多可存字段。',
+      steps: ['状态是否可用主要由后端对本机依赖的检测结果决定。'],
+    },
+    install: {
+      title: '先保证运行环境具备依赖',
+      summary: '如果页面显示缺依赖，优先处理安装和 PATH，而不是反复刷新这个页面。',
+      steps: ['确认依赖装在运行 Zuno backend 的环境里，而不是只装在当前开发机的任意地方。'],
+    },
+    config: {
+      title: '配置区通常为空',
+      summary: '这类工具一般没有单独的持久化表单，能否使用主要取决于本机环境是否准备好。',
+      steps: [],
+    },
+  },
+}
+
+const toolSummaryNote = computed(() => {
+  return toolKind.value === 'remote_api' ? toolConfig.value?.note || '' : ''
+})
+
+const toolGuideSections = computed<ToolGuideSection[]>(() => {
+  if (!toolConfig.value) return []
+
+  const kindKey = toolKind.value as keyof typeof defaultGuideSectionMap
+  const defaults = defaultGuideSectionMap[kindKey] || defaultGuideSectionMap.remote_api
+  const overrides = toolGuideOverrides[toolName.value] || {}
+  const note = toolConfig.value.note?.trim()
+
+  return (['strategy', 'install', 'config'] as GuideTone[]).map((tone) => {
+    const base = defaults[tone]
+    const override = overrides[tone]
+    const steps = [...(base.steps || []), ...(override?.steps || [])]
+
+    if (tone === 'strategy' && note && toolKind.value !== 'remote_api') {
+      steps.push(note)
+    }
+
+    return {
+      key: `${toolName.value}-${tone}`,
+      eyebrow: tone === 'strategy' ? '使用策略' : tone === 'install' ? '安装依赖' : '配置范围',
+      title: override?.title || base.title,
+      summary: override?.summary || base.summary,
+      steps,
+      tone,
+    }
+  })
+})
+
+const configPanel = computed(() => {
+  switch (toolKind.value) {
+    case 'smtp_protocol':
+      return {
+        title: '邮箱槽位',
+        description: '把长期可复用的发件邮箱维护成槽位，Agent 才能按槽位稳定调用。',
+        emptyHint: '还没有邮箱槽位。至少保存一个可用槽位后，发送邮件工具才能直接发送邮件。',
+      }
+    case 'local_dependency':
+      return {
+        title: '本机配置',
+        description: '这类工具主要依赖运行环境，本页通常只负责展示状态和少量固定说明。',
+        emptyHint: '当前没有可保存的独立配置项。优先确认运行环境依赖是否已经安装并能被 backend 检测到。',
+      }
+    case 'public_data_source':
+      return {
+        title: '配置范围',
+        description: '公开数据源工具通常没有固定凭据，本页主要用于确认它是否需要额外配置。',
+        emptyHint: '当前没有需要持久化保存的配置项。直接在实际调用时给出查询条件即可。',
+      }
+    case 'remote_api':
+      return {
+        title: 'API 配置',
+        description: '填写这个工具访问远程服务所需的固定参数，保存后运行时会自动复用。',
+        emptyHint: '这个工具当前没有额外的远程配置项，可以直接使用。',
+      }
+    default:
+      return {
+        title: '配置项',
+        description: '这里展示这个工具当前支持持久化保存的配置内容。',
+        emptyHint: '当前没有可保存的配置项。',
+      }
+  }
 })
 
 const createEmailAccount = (provider: string = 'qq'): EmailAccount => {
@@ -364,6 +525,37 @@ const reloadToolConfig = async () => {
   await loadToolConfig()
 }
 
+const checkToolStatus = async () => {
+  if (!toolName.value) return
+  checkingStatus.value = true
+  try {
+    const response = await getSystemToolStatusAPI(toolName.value)
+    const payload = response.data.data
+    if (!payload?.status) throw new Error(response.data.status_message || '检测失败')
+
+    if (toolConfig.value) {
+      toolConfig.value = {
+        ...toolConfig.value,
+        status: payload.status,
+      }
+    }
+    if (systemToolMetaMap.value[toolName.value]) {
+      systemToolMetaMap.value = {
+        ...systemToolMetaMap.value,
+        [toolName.value]: {
+          ...systemToolMetaMap.value[toolName.value],
+          status: payload.status,
+        },
+      }
+    }
+    ElMessage.success(`${toolConfig.value?.display_name || toolName.value} 检测完成`)
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.detail || error?.message || '检测失败')
+  } finally {
+    checkingStatus.value = false
+  }
+}
+
 const saveRawConfig = async () => {
   saving.value = true
   try {
@@ -452,9 +644,28 @@ onMounted(async () => {
   }
 }
 
+.tool-kind-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(214, 132, 70, 0.12);
+  border: 1px solid rgba(214, 132, 70, 0.22);
+  color: #a45d28;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .content-stack {
   display: grid;
   gap: 18px;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .state-box,
@@ -478,6 +689,10 @@ onMounted(async () => {
   background: rgba(255, 249, 243, 0.94);
   color: #7e4b25;
   border: 1px solid rgba(214, 132, 70, 0.12);
+}
+
+.note-card {
+  padding: 14px 18px;
 }
 
 .status-banner {
@@ -533,6 +748,51 @@ onMounted(async () => {
     margin: 8px 0 0;
     color: #8f7a68;
   }
+}
+
+.guide-card {
+  display: grid;
+  gap: 10px;
+
+  h2 {
+    margin: 0;
+    color: #5e3518;
+    font-size: 18px;
+  }
+
+  p,
+  ul {
+    margin: 0;
+    color: #7a6554;
+  }
+
+  ul {
+    padding-left: 18px;
+  }
+}
+
+.guide-card.is-strategy {
+  background: rgba(255, 246, 235, 0.98);
+}
+
+.guide-card.is-install {
+  background: rgba(255, 249, 240, 0.98);
+}
+
+.guide-card.is-config {
+  background: rgba(255, 252, 247, 0.98);
+}
+
+.guide-eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(214, 132, 70, 0.1);
+  color: #a45d28;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .quick-actions {
@@ -599,23 +859,6 @@ onMounted(async () => {
   box-shadow: 0 0 0 3px rgba(201, 108, 45, 0.12);
 }
 
-.guide-card {
-  h2 {
-    margin: 0 0 8px;
-    color: #5e3518;
-    font-size: 20px;
-  }
-
-  p {
-    margin: 0 0 10px;
-  }
-
-  ol {
-    margin: 0;
-    padding-left: 20px;
-  }
-}
-
 .primary-btn,
 .secondary-btn,
 .danger-text-btn {
@@ -664,6 +907,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 900px) {
+  .guide-grid,
   .field-grid {
     grid-template-columns: 1fr;
   }

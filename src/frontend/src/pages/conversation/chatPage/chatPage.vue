@@ -12,7 +12,7 @@ import { apiUrl } from '../../../utils/api'
 
 // Import static assets
 import defaultUserAvatar from '../../../assets/user.svg';
-import defaultRobotAvatar from '../../../assets/zuno-avatar.svg';
+import { zunoAgentAvatar } from '../../../utils/brand';
 
 // 使用与ChatMessage接口中定义的eventInfo类型一致的接口
 interface EventInfo {
@@ -55,7 +55,7 @@ const eventDisplayOrder = ref<string[]>([])
 // Get user avatar from store or use default
 const userAvatar = computed(() => userStore.userInfo?.avatar || defaultUserAvatar)
 // Get AI avatar from store or use default
-const aiAvatar = computed(() => historyChatStore.logo || defaultRobotAvatar)
+const aiAvatar = computed(() => historyChatStore.logo || zunoAgentAvatar)
 
 // 计算显示的事件列表
 const displayEventList = computed(() => {

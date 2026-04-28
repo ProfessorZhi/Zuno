@@ -2,7 +2,6 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import zunoMark from '../assets/zuno-mark.svg'
 import {
   House,
   User,
@@ -15,11 +14,11 @@ import {
   CollectionTag,
   Box,
   DataAnalysis,
-  SuitcaseLine,
 } from '@element-plus/icons-vue'
 import { useAgentCardStore } from '../store/agent_card'
 import { useUserStore } from '../store/user'
 import { logoutAPI, getUserInfoAPI } from '../apis/auth'
+import { zunoBrandMark } from '../utils/brand'
 
 const agentCardStore = useAgentCardStore()
 const userStore = useUserStore()
@@ -31,7 +30,6 @@ const current = ref((route.meta.current as string) || 'homepage')
 
 const navMenuItems = [
   { index: 'homepage', label: '首页', icon: House, target: 'homepage' },
-  { index: 'workspace', label: '工作台', icon: SuitcaseLine, target: 'workspace' },
   { index: 'conversation', label: '历史', icon: ChatDotRound, target: 'conversation' },
   { index: 'agent', label: '智能体', icon: Cpu, target: 'agent' },
   { index: 'mcp-server', label: 'MCP', icon: Connection, target: 'mcp-server' },
@@ -69,7 +67,6 @@ const goDefault = () => {
 const goCurrent = (item: string) => {
   const routes: Record<string, string> = {
     homepage: '/homepage',
-    workspace: '/workspace',
     conversation: '/conversation',
     agent: '/agent',
     'mcp-server': '/mcp-server',
@@ -127,7 +124,7 @@ watch(
     <div class="ai-nav">
       <div class="left">
         <div class="brand-home" @click="goDefault">
-          <img :src="zunoMark" :alt="itemName" class="brand-logo-img" />
+          <img :src="zunoBrandMark" :alt="itemName" class="brand-logo-img" />
         </div>
       </div>
       <div class="right">
@@ -218,18 +215,22 @@ watch(
 }
 
 .ai-body {
+  --zuno-header-height: 88px;
+  --zuno-brand-logo-height: 54px;
+  --zuno-sidebar-width: 180px;
   overflow: hidden;
 
   .ai-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 72px;
+    min-height: var(--zuno-header-height);
     background: linear-gradient(180deg, #f7f2e9 0%, #efe7db 100%);
     padding: 0 24px;
     box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
     position: relative;
     z-index: 3000;
+    box-sizing: border-box;
 
     .left {
       display: flex;
@@ -246,7 +247,7 @@ watch(
       .brand-home {
         display: flex;
         align-items: center;
-        padding: 8px 14px;
+        padding: 8px 16px;
         border-radius: 18px;
         background: rgba(255, 251, 245, 0.92);
         border: 1px solid rgba(212, 176, 137, 0.42);
@@ -256,7 +257,8 @@ watch(
       }
 
       .brand-logo-img {
-        height: 72px;
+        height: var(--zuno-brand-logo-height);
+        max-width: min(220px, 100%);
         width: auto;
         display: block;
         filter: drop-shadow(0 4px 12px rgba(118, 86, 50, 0.12));
@@ -316,13 +318,14 @@ watch(
 
   .ai-main {
     display: flex;
-    height: calc(100vh - 64px);
+    height: calc(100vh - var(--zuno-header-height));
     background-color: var(--zuno-bg-canvas);
+    min-height: 0;
 
     :deep(.el-col-2) {
       display: flex;
-      width: 180px;
-      min-width: 180px;
+      width: var(--zuno-sidebar-width);
+      min-width: var(--zuno-sidebar-width);
     }
 
     .sidebar-content {
@@ -389,6 +392,8 @@ watch(
       background-color: var(--zuno-bg-content);
       border-radius: 20px 0 0 0;
       margin-left: 4px;
+      padding: 18px 20px 22px;
+      box-sizing: border-box;
       box-shadow: -4px 0 16px rgba(0, 0, 0, 0.05);
     }
   }
@@ -501,6 +506,14 @@ watch(
       transition: all 0.4s ease;
       font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
     }
+  }
+}
+
+@media (max-width: 960px) {
+  .ai-body {
+    --zuno-header-height: 76px;
+    --zuno-brand-logo-height: 44px;
+    --zuno-sidebar-width: 168px;
   }
 }
 </style>

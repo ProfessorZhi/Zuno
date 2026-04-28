@@ -2,9 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, SwitchButton, Fold, Expand } from '@element-plus/icons-vue'
-import zunoMark from '../../assets/zuno-mark.svg'
-import robotIcon from '../../assets/robot.svg'
+import { User, SwitchButton, Fold, Expand, Plus } from '@element-plus/icons-vue'
+import { zunoAgentAvatar, zunoBrandMark } from '../../utils/brand'
 import { useUserStore } from '../../store/user'
 import { logoutAPI, getUserInfoAPI } from '../../apis/auth'
 import { getWorkspaceSessionsAPI, deleteWorkspaceSessionAPI } from '../../apis/workspace'
@@ -17,10 +16,16 @@ const selectedSession = ref('')
 const sessions = ref<any[]>([])
 const loading = ref(false)
 const sidebarCollapsed = ref(false)
+const currentMode = computed(() => ((route.query.mode as string) === 'agent' ? 'agent' : 'normal'))
+let fetchSessionsRequestId = 0
 
 const syncSelectedSessionFromRoute = () => {
   const sessionId = route.query.session_id as string | undefined
   selectedSession.value = sessionId || ''
+}
+
+const startNewConversation = () => {
+  window.dispatchEvent(new CustomEvent('workspace-new-conversation'))
 }
 
 const handleWorkspaceSessionUpdated = async () => {
@@ -48,25 +53,33 @@ const formatTime = (timeStr: string) => {
 }
 
 const fetchSessions = async () => {
+  const requestId = ++fetchSessionsRequestId
   try {
     loading.value = true
-    const response = await getWorkspaceSessionsAPI()
+    const response = await getWorkspaceSessionsAPI(currentMode.value)
+    if (requestId !== fetchSessionsRequestId) return
     if (response.data.status_code === 200) {
-      sessions.value = response.data.data.map((session: any) => ({
-        sessionId: session.session_id || session.id,
-        title: session.title || '未命名会话',
-        createTime: session.create_time || session.created_at || new Date().toISOString(),
-        agent: session.agent || 'simple',
-      }))
+      sessions.value = (response.data.data || [])
+        .filter((session: any) => Array.isArray(session.contexts) && session.contexts.length > 0)
+        .map((session: any) => ({
+          sessionId: session.session_id || session.id,
+          title: session.title || '未命名会话',
+          createTime: session.create_time || session.created_at || new Date().toISOString(),
+          agent: session.agent || 'simple',
+          workspaceMode: session.workspace_mode || 'normal',
+        }))
       return
     }
 
     ElMessage.error('获取会话列表失败')
   } catch (error) {
+    if (requestId !== fetchSessionsRequestId) return
     console.error('获取会话列表失败:', error)
     ElMessage.error('获取会话列表失败')
   } finally {
-    loading.value = false
+    if (requestId === fetchSessionsRequestId) {
+      loading.value = false
+    }
   }
 }
 
@@ -137,7 +150,7 @@ const handleAvatarError = (event: Event) => {
   if (target) target.src = '/src/assets/user.svg'
 }
 
-const visibleSessions = computed(() => sessions.value)
+const visibleSessions = computed(() => sessions.value.filter((session) => session.workspaceMode === currentMode.value))
 
 onMounted(async () => {
   userStore.initUserState()
@@ -173,6 +186,11 @@ watch(
     await fetchSessions()
   }
 )
+
+watch(currentMode, async () => {
+  syncSelectedSessionFromRoute()
+  await fetchSessions()
+})
 </script>
 
 <template>
@@ -180,7 +198,7 @@ watch(
     <header class="workspace-nav">
       <div class="brand-side">
         <button class="brand-mark" type="button" @click="goWorkspaceHome" title="返回首页">
-          <img :src="zunoMark" alt="Zuno" class="brand-logo-img" />
+          <img :src="zunoBrandMark" alt="Zuno" class="brand-logo-img" />
         </button>
       </div>
 
@@ -222,11 +240,17 @@ watch(
           <div class="sidebar-head">
             <div class="sidebar-title-wrap">
               <strong>会话记录</strong>
-              <span>{{ sessions.length }} 条</span>
+              <span>{{ visibleSessions.length }} 条</span>
             </div>
-            <button class="rail-toggle desktop-only sidebar-toggle" type="button" @click="sidebarCollapsed = true">
-              <el-icon><Fold /></el-icon>
-            </button>
+            <div class="sidebar-actions">
+              <button class="new-session-btn" type="button" @click="startNewConversation">
+                <el-icon><Plus /></el-icon>
+                <span>新会话</span>
+              </button>
+              <button class="rail-toggle desktop-only sidebar-toggle" type="button" @click="sidebarCollapsed = true">
+                <el-icon><Fold /></el-icon>
+              </button>
+            </div>
           </div>
 
           <div class="session-list">
@@ -234,7 +258,7 @@ watch(
               <div class="loading-text">正在加载会话...</div>
             </div>
 
-            <div v-else-if="sessions.length === 0" class="empty-state">
+            <div v-else-if="visibleSessions.length === 0" class="empty-state">
               <div class="empty-mark">Z</div>
               <div class="empty-text">还没有会话记录</div>
             </div>
@@ -246,7 +270,7 @@ watch(
               @click="selectSession(session.sessionId)"
             >
               <div class="session-icon">
-                <img :src="robotIcon" width="22" height="22" alt="" />
+                <img :src="zunoAgentAvatar" width="22" height="22" alt="" />
               </div>
               <div class="session-info">
                 <div class="session-title">{{ session.title }}</div>
@@ -280,8 +304,8 @@ watch(
 }
 
 .workspace-nav {
-  height: 74px;
-  padding: 0 32px;
+  height: 62px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -303,7 +327,7 @@ watch(
 }
 
 .brand-logo-img {
-  height: 84px;
+  height: 54px;
   width: auto;
   display: block;
 }
@@ -315,8 +339,8 @@ watch(
 }
 
 .user-avatar-wrapper {
-  width: 54px;
-  height: 54px;
+  width: 46px;
+  height: 46px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -327,8 +351,8 @@ watch(
 }
 
 .user-avatar {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 1px solid rgba(216, 164, 120, 0.32);
   background: rgba(255, 251, 246, 0.92);
@@ -399,20 +423,22 @@ watch(
 .sidebar-head {
   padding: 16px 18px 12px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 10px;
 }
 
 .sidebar-title-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .sidebar-title-wrap strong {
   font-size: 18px;
   color: #34271f;
+  white-space: nowrap;
 }
 
 .sidebar-title-wrap span {
@@ -421,6 +447,37 @@ watch(
   background: rgba(212, 138, 79, 0.12);
   color: #9b6a42;
   font-size: 12px;
+}
+
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.new-session-btn {
+  border: 1px solid rgba(214, 188, 164, 0.8);
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.98) 0%, rgba(248, 240, 230, 0.92) 100%);
+  color: #7f5b39;
+  border-radius: 999px;
+  padding: 0 12px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(130, 71, 31, 0.06);
+}
+
+.new-session-btn span {
+  white-space: nowrap;
+}
+
+.new-session-btn:hover {
+  border-color: rgba(212, 138, 79, 0.45);
+  color: #a85f2d;
 }
 
 .sidebar-toggle {

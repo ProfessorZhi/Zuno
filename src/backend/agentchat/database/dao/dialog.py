@@ -45,7 +45,7 @@ class DialogDao:
     @classmethod
     async def update_dialog_time(cls, dialog_id: str):
         with session_getter() as session:
-            sql = update(DialogTable).where(DialogTable.dialog_id == dialog_id).values(create_time=datetime.utcnow())
+            sql = update(DialogTable).where(DialogTable.dialog_id == dialog_id).values(update_time=datetime.utcnow())
             session.exec(sql)
             session.commit()
 

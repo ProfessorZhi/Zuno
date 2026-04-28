@@ -1,5 +1,6 @@
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { apiUrl } from '../utils/api'
+import type { KnowledgeRetrievalResponse, UnifiedResponse } from './knowledge'
 
 export interface Chat {
   dialogId: string
@@ -97,5 +98,5 @@ export async function retrieveKnowledge(query: string, knowledgeIds: string | st
     throw new Error(`Knowledge retrieval failed: ${response.statusText}`)
   }
 
-  return await response.json()
+  return await response.json() as UnifiedResponse<KnowledgeRetrievalResponse>
 }

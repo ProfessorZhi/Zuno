@@ -9,6 +9,7 @@ import {
 } from '../../apis/agent'
 import { Agent } from '../../type'
 import AgentFormDialog from '../../components/dialog/create_agent/AgentFormDialog.vue'
+import { zunoAgentAvatar } from '../../utils/brand'
 
 const agents = ref<Agent[]>([])
 const loading = ref(false)
@@ -167,7 +168,7 @@ const handleAgentUpdate = () => {
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement
   if (target) {
-    target.src = '/src/assets/robot.svg'
+    target.src = zunoAgentAvatar
   }
 }
 
@@ -224,7 +225,7 @@ onMounted(() => {
         >
           <div class="agent-avatar">
             <img 
-              :src="agent.logo_url || '/src/assets/robot.svg'" 
+              :src="agent.logo_url || zunoAgentAvatar" 
               :alt="agent.name"
               @error="handleImageError"
             />

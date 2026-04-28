@@ -19,10 +19,14 @@ async def get_dialog(
         results = []
 
         for message in messages:
+            dialog_name = message.get("name")
             message_agent = await AgentService.select_agent_by_id(
                 agent_id=message["agent_id"]
             )
             message.update(message_agent)
+            message["dialog_name"] = dialog_name
+            message["name"] = dialog_name
+            message["agent_name"] = message_agent.get("name", "")
             results.append(message)
 
         return resp_200(data=results)

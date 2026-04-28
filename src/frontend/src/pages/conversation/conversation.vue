@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { ElMessage } from "element-plus"
-import { Plus, Search, Close } from "@element-plus/icons-vue"
+import { Close, Plus, Search } from "@element-plus/icons-vue"
 import { getAgentsAPI } from "../../apis/agent"
 import { createDialogAPI, deleteDialogAPI, getDialogListAPI } from "../../apis/history"
-import type { AgentResponse } from "../../apis/agent"
-import type { DialogCreateType, HistoryListType } from "../../type"
+import { deleteWorkspaceSessionAPI, getWorkspaceSessionsAPI } from "../../apis/workspace"
 import histortCard from "../../components/historyCard/histortCard.vue"
 import { useHistoryChatStore } from "../../store/history_chat_msg"
-import zunoAvatar from "../../assets/zuno-avatar.svg"
+import type { AgentResponse } from "../../apis/agent"
+import type { DialogCreateType, HistoryListType } from "../../type"
+import { zunoAgentAvatar } from "../../utils/brand"
 
 const router = useRouter()
 const route = useRoute()
@@ -26,6 +27,76 @@ const agents = ref<AgentResponse[]>([])
 const loading = ref(false)
 const agentsLoading = ref(false)
 
+const normalizeSessionKind = (value: string | undefined) => {
+  if (!value) return "dialog"
+  if (value === "simple") return "simple"
+  if (value === "wechat-agent") return "wechat-agent"
+  return value
+}
+
+const formatAbsoluteTime = (timeStr: string) => {
+  const date = new Date(timeStr)
+  if (Number.isNaN(date.getTime())) return "未知时间"
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+const formatRelativeTime = (timeStr: string) => {
+  const date = new Date(timeStr)
+  if (Number.isNaN(date.getTime())) return "未知时间"
+
+  const now = new Date()
+  const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+
+  if (diffInHours < 1) return "刚刚"
+  if (diffInHours < 24) return `${Math.floor(diffInHours)} 小时前`
+  if (diffInHours < 24 * 7) return `${Math.floor(diffInHours / 24)} 天前`
+  return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" })
+}
+
+const getSortTime = (item: Pick<HistoryListType, "updatedTime" | "createTime">) => {
+  const date = new Date(item.updatedTime || item.createTime)
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime()
+}
+
+const normalizeDialogItem = (dialog: any): HistoryListType => {
+  const updatedTime = dialog.update_time || dialog.create_time || new Date().toISOString()
+  const createTime = dialog.create_time || updatedTime
+  return {
+    dialogId: dialog.dialog_id,
+    sourceType: "dialog",
+    sessionKind: normalizeSessionKind(dialog.agent_type || "Agent"),
+    name: dialog.dialog_name || dialog.name || "未命名会话",
+    agent: dialog.agent_name || dialog.agent_type || "默认聊天 Agent",
+    createTime,
+    updatedTime,
+    absoluteTime: formatAbsoluteTime(updatedTime),
+    logo: dialog.logo_url || zunoAgentAvatar,
+  }
+}
+
+const normalizeWorkspaceItem = (session: any): HistoryListType => {
+  const updatedTime = session.update_time || session.create_time || new Date().toISOString()
+  const createTime = session.create_time || updatedTime
+  const sessionKind = normalizeSessionKind(session.agent)
+  return {
+    dialogId: session.session_id || session.id,
+    sourceType: "workspace",
+    sessionKind,
+    name: session.title || "未命名会话",
+    agent: sessionKind === "simple" ? "简化聊天模式" : "工作台会话",
+    createTime,
+    updatedTime,
+    absoluteTime: formatAbsoluteTime(updatedTime),
+    logo: zunoAgentAvatar,
+  }
+}
+
 const filteredDialogs = computed(() => {
   if (!searchKeyword.value.trim()) return dialogs.value
   const keyword = searchKeyword.value.trim().toLowerCase()
@@ -36,16 +107,6 @@ const filteredDialogs = computed(() => {
   })
 })
 
-const filteredAgents = computed(() => {
-  if (!agentSearchKeyword.value.trim()) return agents.value
-  const keyword = agentSearchKeyword.value.trim().toLowerCase()
-  return agents.value.filter((agent) => {
-    const name = agent.name?.toLowerCase?.() ?? ""
-    const description = agent.description?.toLowerCase?.() ?? ""
-    return name.includes(keyword) || description.includes(keyword)
-  })
-})
-
 const groupedDialogs = computed(() => {
   const today: HistoryListType[] = []
   const lastWeek: HistoryListType[] = []
@@ -53,14 +114,13 @@ const groupedDialogs = computed(() => {
   const now = new Date()
 
   filteredDialogs.value.forEach((dialog) => {
-    const date = new Date(dialog.createTime)
+    const date = new Date(dialog.updatedTime || dialog.createTime)
     if (Number.isNaN(date.getTime())) {
       earlier.push(dialog)
       return
     }
 
-    const diff = now.getTime() - date.getTime()
-    const diffInDays = diff / (1000 * 60 * 60 * 24)
+    const diffInDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
 
     if (diffInDays < 1) {
       today.push(dialog)
@@ -74,32 +134,27 @@ const groupedDialogs = computed(() => {
   return [
     { key: "today", label: "今天", items: today },
     { key: "last-week", label: "最近 7 天", items: lastWeek },
-    { key: "earlier", label: "更早", items: earlier }
+    { key: "earlier", label: "更早", items: earlier },
   ].filter((group) => group.items.length > 0)
 })
 
-const formatTime = (timeStr: string) => {
-  try {
-    if (!timeStr) return "未知时间"
-    const date = new Date(timeStr)
-    if (Number.isNaN(date.getTime())) return "未知时间"
+const filteredAgents = computed(() => {
+  if (!agentSearchKeyword.value.trim()) return agents.value
+  const keyword = agentSearchKeyword.value.trim().toLowerCase()
+  return agents.value.filter((agent) => {
+    const name = agent.name?.toLowerCase?.() ?? ""
+    const description = agent.description?.toLowerCase?.() ?? ""
+    return name.includes(keyword) || description.includes(keyword)
+  })
+})
 
-    const now = new Date()
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-
-    if (diffInHours < 1) return "刚刚"
-    if (diffInHours < 24) return `${Math.floor(diffInHours)} 小时前`
-    if (diffInHours < 24 * 7) return `${Math.floor(diffInHours / 24)} 天前`
-    return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" })
-  } catch (error) {
-    console.error("时间格式化失败:", error)
-    return "未知时间"
-  }
-}
+const selectedAgentName = computed(() => (
+  agents.value.find((item) => item.agent_id === selectedAgent.value || String((item as any).id) === String(selectedAgent.value))?.name
+    || "未选择"
+))
 
 const syncSelectedDialog = () => {
-  const dialogId = String(route.query.dialog_id || historyChatStore.dialogId || "")
-  selectedDialog.value = dialogId
+  selectedDialog.value = String(route.query.dialog_id || route.query.session_id || historyChatStore.dialogId || "")
 }
 
 const fetchAgents = async () => {
@@ -108,9 +163,9 @@ const fetchAgents = async () => {
     const response = await getAgentsAPI()
     if (response.data.status_code === 200) {
       agents.value = response.data.data
-    } else {
-      ElMessage.error(`获取智能体列表失败: ${response.data.status_message}`)
+      return
     }
+    ElMessage.error(`获取智能体列表失败: ${response.data.status_message}`)
   } catch (error) {
     console.error("获取智能体列表出错:", error)
     ElMessage.error("获取智能体列表失败，请检查网络连接")
@@ -122,53 +177,54 @@ const fetchAgents = async () => {
 const fetchDialogs = async () => {
   try {
     loading.value = true
-    const response = await getDialogListAPI()
-    if (response.data.status_code === 200) {
-      dialogs.value = response.data.data.map((dialog: any) => ({
-        dialogId: dialog.dialog_id,
-        name: dialog.name,
-        agent: dialog.name,
-        createTime: dialog.create_time || dialog.update_time || new Date().toISOString(),
-        logo: dialog.logo_url || zunoAvatar
-      }))
+    const [dialogResponse, workspaceResponse] = await Promise.all([
+      getDialogListAPI(),
+      getWorkspaceSessionsAPI(),
+    ])
+    const merged: HistoryListType[] = []
+    const failedSources: string[] = []
 
-      syncSelectedDialog()
-
-      if (dialogs.value.length > 0 && router.currentRoute.value.name === "defaultPage") {
-        const firstDialog = dialogs.value[0]
-        selectedDialog.value = firstDialog.dialogId
-        historyChatStore.dialogId = firstDialog.dialogId
-        historyChatStore.name = firstDialog.name
-        historyChatStore.logo = firstDialog.logo
-        router.push({
-          path: "/conversation/chatPage",
-          query: { dialog_id: firstDialog.dialogId }
-        })
-      }
+    if (dialogResponse.data.status_code === 200) {
+      merged.push(...(dialogResponse.data.data || []).map(normalizeDialogItem))
     } else {
-      ElMessage.error(`获取会话列表失败: ${response.data.status_message}`)
+      failedSources.push("Agent 会话")
+      console.warn("fetch dialog history failed:", dialogResponse.data.status_message)
     }
+
+    if (workspaceResponse.data.status_code === 200) {
+      merged.push(
+        ...(workspaceResponse.data.data || [])
+          .filter((session: any) => Array.isArray(session.contexts) && session.contexts.length > 0)
+          .map(normalizeWorkspaceItem)
+      )
+    } else {
+      failedSources.push("工作台会话")
+      console.warn("fetch workspace history failed:", workspaceResponse.data.status_message)
+    }
+
+    if (failedSources.length === 2) {
+      dialogs.value = []
+      ElMessage.error("获取历史列表失败，请检查网络连接")
+      return
+    }
+
+    if (failedSources.length === 1) {
+      ElMessage.warning(`${failedSources[0]} 暂时加载失败，已展示其余历史`)
+    }
+
+    dialogs.value = merged.sort((left, right) => getSortTime(right) - getSortTime(left))
+    syncSelectedDialog()
   } catch (error) {
-    console.error("获取会话列表出错:", error)
-    ElMessage.error("获取会话列表失败，请检查网络连接")
+    console.error("获取历史列表出错:", error)
+    ElMessage.error("获取历史列表失败，请检查网络连接")
   } finally {
     loading.value = false
   }
 }
 
-onMounted(async () => {
-  if (router.currentRoute.value.path === "/conversation") {
-    await fetchDialogs()
-    if (router.currentRoute.value.name === "defaultPage") {
-      await fetchAgents()
-    }
-  } else {
-    await Promise.all([fetchAgents(), fetchDialogs()])
-  }
-  syncSelectedDialog()
-})
-
-watch(() => route.query.dialog_id, syncSelectedDialog)
+const handleWorkspaceSessionUpdated = async () => {
+  await fetchDialogs()
+}
 
 const createDialog = async () => {
   if (!selectedAgent.value) {
@@ -189,70 +245,81 @@ const createDialog = async () => {
 
   try {
     const dialogData: DialogCreateType = {
-      name: `与${agent.name}的对话`,
+      name: `与 ${agent.name} 的对话`,
       agent_id: (agent as any).id || agent.agent_id,
-      agent_type: "Agent"
+      agent_type: "Agent",
     }
 
     const response = await createDialogAPI(dialogData)
-    if (response.data.status_code === 200) {
-      ElMessage.success("会话创建成功")
-
-      const dialogId = response.data.data.dialog_id
-      await fetchDialogs()
-      showCreateDialog.value = false
-      selectedAgent.value = ""
-      agentSearchKeyword.value = ""
-
-      if (dialogId) {
-        selectedDialog.value = dialogId
-        historyChatStore.dialogId = dialogId
-        historyChatStore.name = dialogData.name
-        historyChatStore.logo = agent.logo_url || zunoAvatar
-        router.push({
-          path: "/conversation/chatPage",
-          query: { dialog_id: dialogId }
-        })
-      }
-    } else {
+    if (response.data.status_code !== 200) {
       ElMessage.error(`创建会话失败: ${response.data.status_message}`)
+      return
     }
+
+    const dialogId = response.data.data.dialog_id
+    historyChatStore.dialogId = dialogId
+    historyChatStore.name = dialogData.name
+    historyChatStore.logo = agent.logo_url || zunoAgentAvatar
+
+    selectedAgent.value = ""
+    agentSearchKeyword.value = ""
+    showCreateDialog.value = false
+    await fetchDialogs()
+
+    router.push({
+      path: "/conversation/chatPage",
+      query: { dialog_id: dialogId },
+    })
   } catch (error) {
     console.error("创建会话出错:", error)
     ElMessage.error("创建会话失败，请检查网络连接")
   }
 }
 
-const deleteDialog = async (dialogId: string) => {
+const deleteHistoryItem = async (item: HistoryListType) => {
   try {
-    const response = await deleteDialogAPI(dialogId)
-    if (response.data.status_code === 200) {
-      ElMessage.success("会话已删除")
-      await fetchDialogs()
-      if (selectedDialog.value === dialogId) {
-        selectedDialog.value = ""
-      }
-    } else {
+    const response = item.sourceType === "workspace"
+      ? await deleteWorkspaceSessionAPI(item.dialogId)
+      : await deleteDialogAPI(item.dialogId)
+
+    if (response.data.status_code !== 200) {
       ElMessage.error(`删除会话失败: ${response.data.status_message}`)
+      return
     }
+
+    ElMessage.success("会话已删除")
+    if (selectedDialog.value === item.dialogId) {
+      selectedDialog.value = ""
+    }
+    await fetchDialogs()
   } catch (error) {
     console.error("删除会话出错:", error)
     ElMessage.error("删除会话失败，请检查网络连接")
   }
 }
 
-const selectDialog = (dialogId: string) => {
-  const dialog = dialogs.value.find((item) => item.dialogId === dialogId)
-  if (!dialog) return
-
-  selectedDialog.value = dialogId
-  historyChatStore.dialogId = dialogId
+const selectDialog = (dialog: HistoryListType) => {
+  selectedDialog.value = dialog.dialogId
+  historyChatStore.dialogId = dialog.dialogId
   historyChatStore.name = dialog.name
   historyChatStore.logo = dialog.logo
 
+  if (dialog.sourceType === "workspace") {
+    router.push({
+      name: "workspaceDefaultPage",
+      query: {
+        session_id: dialog.dialogId,
+        mode: dialog.sessionKind === "simple" ? "normal" : "agent",
+        execution_mode: "tool",
+        access_scope: "workspace",
+      },
+    })
+    return
+  }
+
   router.push({
     path: "/conversation/chatPage",
-    query: { dialog_id: dialogId }
+    query: { dialog_id: dialog.dialogId },
   })
 }
 
@@ -273,7 +340,7 @@ const selectAgent = (agentId: string) => {
   })
 
   if (agent) {
-    selectedAgent.value = (agent as any).id || agent.agent_id
+    selectedAgent.value = String((agent as any).id || agent.agent_id)
   }
 }
 
@@ -282,6 +349,19 @@ const closeCreateDialog = () => {
   selectedAgent.value = ""
   agentSearchKeyword.value = ""
 }
+
+onMounted(async () => {
+  await Promise.all([fetchAgents(), fetchDialogs()])
+  syncSelectedDialog()
+  window.addEventListener("workspace-session-updated", handleWorkspaceSessionUpdated)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener("workspace-session-updated", handleWorkspaceSessionUpdated)
+})
+
+watch(() => route.query.dialog_id, syncSelectedDialog)
+watch(() => route.query.session_id, syncSelectedDialog)
 </script>
 
 <template>
@@ -291,11 +371,11 @@ const closeCreateDialog = () => {
         <div class="sidebar-copy">
           <span class="eyebrow">Zuno</span>
           <h2>工作历史</h2>
-          <p>继续之前的对话，或开启一条新的思路。</p>
+          <p>这里统一展示 Agent 对话、默认聊天和简化模式的所有历史。</p>
         </div>
         <button class="create-btn-native" @click="openCreateDialog">
           <el-icon><Plus /></el-icon>
-          <span>新建对话</span>
+          <span>新建 Agent 对话</span>
         </button>
       </div>
 
@@ -306,7 +386,7 @@ const closeCreateDialog = () => {
             v-model="searchKeyword"
             class="search-input"
             type="text"
-            placeholder="搜索工作历史"
+            placeholder="搜索会话标题或模式"
           />
           <button
             v-if="searchKeyword"
@@ -328,14 +408,14 @@ const closeCreateDialog = () => {
       <div class="dialog-list">
         <div v-if="loading" class="feedback-state">
           <div class="state-dot"></div>
-          <div class="state-text">正在整理你的工作历史…</div>
+          <div class="state-text">正在整理你的工作历史...</div>
         </div>
 
         <div v-else-if="filteredDialogs.length === 0" class="feedback-state empty">
           <div class="empty-mark">Z</div>
           <div class="state-text">{{ searchKeyword ? "没有找到相关会话" : "还没有工作历史" }}</div>
           <div class="state-hint">
-            {{ searchKeyword ? "换个关键词再试试" : "从上方开始一条新的对话即可" }}
+            {{ searchKeyword ? "换个关键词再试试" : "从上方开始新的对话即可" }}
           </div>
         </div>
 
@@ -350,12 +430,12 @@ const closeCreateDialog = () => {
             </div>
             <histortCard
               v-for="dialog in group.items"
-              :key="dialog.dialogId"
+              :key="`${dialog.sourceType}-${dialog.dialogId}`"
               :item="dialog"
-              :time-label="formatTime(dialog.createTime)"
+              :time-label="formatRelativeTime(dialog.updatedTime || dialog.createTime)"
               :class="{ active: selectedDialog === dialog.dialogId }"
-              @select="selectDialog(dialog.dialogId)"
-              @delete="deleteDialog(dialog.dialogId)"
+              @select="selectDialog(dialog)"
+              @delete="deleteHistoryItem(dialog)"
             />
           </section>
         </template>
@@ -370,7 +450,7 @@ const closeCreateDialog = () => {
       <div class="create-dialog" @click.stop>
         <div class="dialog-header">
           <div>
-            <p class="dialog-eyebrow">新建对话</p>
+            <p class="dialog-eyebrow">新建 Agent 对话</p>
             <h3>选择一个智能体作为起点</h3>
           </div>
           <button class="close-btn" @click="closeCreateDialog" aria-label="关闭">
@@ -399,14 +479,14 @@ const closeCreateDialog = () => {
 
             <div v-if="agentsLoading" class="feedback-state modal-state">
               <div class="state-dot"></div>
-              <div class="state-text">正在加载智能体…</div>
+              <div class="state-text">正在加载智能体...</div>
             </div>
 
             <div v-else-if="filteredAgents.length === 0" class="feedback-state empty modal-state">
               <div class="empty-mark">Z</div>
               <div class="state-text">{{ agentSearchKeyword ? "没有找到相关智能体" : "暂无可用智能体" }}</div>
               <div class="state-hint">
-                {{ agentSearchKeyword ? "试试别的关键词" : "请先添加或发布一个智能体" }}
+                {{ agentSearchKeyword ? "试试别的关键词" : "请先创建或发布一个智能体" }}
               </div>
             </div>
 
@@ -415,18 +495,15 @@ const closeCreateDialog = () => {
                 v-for="agent in filteredAgents"
                 :key="(agent as any).id || agent.agent_id"
                 type="button"
-                :class="[
-                  'agent-card',
-                  selectedAgent === ((agent as any).id || agent.agent_id) ? 'active' : ''
-                ]"
-                @click="selectAgent((agent as any).id || agent.agent_id)"
+                :class="['agent-card', selectedAgent === String((agent as any).id || agent.agent_id) ? 'active' : '']"
+                @click="selectAgent(String((agent as any).id || agent.agent_id))"
               >
                 <div class="agent-avatar">
-                  <img :src="agent.logo_url || zunoAvatar" alt="" />
+                  <img :src="agent.logo_url || zunoAgentAvatar" alt="" />
                 </div>
                 <div class="agent-info">
                   <div class="agent-name">{{ agent.name }}</div>
-                  <div class="agent-description">{{ agent.description || "从这里开始新的工作流。" }}</div>
+                  <div class="agent-description">{{ agent.description || "从这里开始新的任务流。" }}</div>
                 </div>
               </button>
             </div>
@@ -436,11 +513,7 @@ const closeCreateDialog = () => {
         <div class="dialog-footer">
           <div class="selection-copy">
             当前选择：
-            <span>{{
-              selectedAgent
-                ? agents.find((item) => item.agent_id === selectedAgent || (item as any).id === selectedAgent)?.name || selectedAgent
-                : "未选择"
-            }}</span>
+            <span>{{ selectedAgentName }}</span>
           </div>
           <div class="footer-actions">
             <button class="btn-cancel" @click="closeCreateDialog">取消</button>
@@ -462,8 +535,8 @@ const closeCreateDialog = () => {
 }
 
 .sidebar {
-  width: 328px;
-  min-width: 328px;
+  width: 340px;
+  min-width: 340px;
   display: flex;
   flex-direction: column;
   background: var(--zuno-bg-sidebar);
@@ -480,57 +553,48 @@ const closeCreateDialog = () => {
 .sidebar-copy {
   .eyebrow {
     display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    padding: 0 10px;
+    min-height: 28px;
+    padding: 0 12px;
     border-radius: 999px;
-    background: var(--zuno-bg-muted);
-    color: var(--zuno-text-tertiary);
+    background: rgba(201, 117, 61, 0.08);
+    color: #ad6736;
     font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    align-items: center;
   }
 
   h2 {
-    margin: 14px 0 8px;
-    color: var(--zuno-text-primary);
+    margin: 14px 0 6px;
+    color: #2f261f;
     font-size: 22px;
     font-weight: 600;
-    line-height: 1.2;
   }
 
   p {
     margin: 0;
     color: var(--zuno-text-secondary);
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.7;
   }
 }
 
 .create-btn-native {
+  min-height: 52px;
+  border: 1px solid rgba(209, 179, 150, 0.5);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #453527;
+  font-size: 15px;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: 100%;
-  height: 46px;
-  border: 1px solid var(--zuno-border-strong);
-  border-radius: var(--zuno-radius-md);
-  background: var(--zuno-surface-raised);
-  color: var(--zuno-text-primary);
-  font-size: 14px;
-  font-weight: 600;
-  transition: var(--zuno-transition-base);
+  gap: 10px;
   cursor: pointer;
+  transition: var(--zuno-transition-base);
 
   &:hover {
-    background: var(--zuno-hover);
-    box-shadow: var(--zuno-shadow-soft);
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: var(--zuno-focus-ring);
+    transform: translateY(-1px);
+    box-shadow: 0 18px 30px rgba(91, 63, 32, 0.08);
   }
 }
 
@@ -542,202 +606,170 @@ const closeCreateDialog = () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
+  min-height: 48px;
   padding: 0 14px;
-  border: 1px solid var(--zuno-border-soft);
-  border-radius: var(--zuno-radius-md);
-  background: var(--zuno-surface-raised);
-  color: var(--zuno-text-tertiary);
-  transition: var(--zuno-transition-base);
-
-  &:focus-within {
-    border-color: var(--zuno-border-strong);
-    box-shadow: var(--zuno-focus-ring);
-    background: var(--zuno-bg-elevated);
-  }
+  border: 1px solid rgba(209, 179, 150, 0.42);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--zuno-text-secondary);
 }
 
 .search-input {
   flex: 1;
   border: none;
+  outline: none;
   background: transparent;
-  color: var(--zuno-text-primary);
+  color: #2f261f;
   font-size: 14px;
-
-  &:focus {
-    outline: none;
-  }
-
-  &::placeholder {
-    color: var(--zuno-text-muted);
-  }
 }
 
 .search-clear {
-  width: 24px;
-  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: var(--zuno-text-tertiary);
+  color: var(--zuno-text-muted);
   cursor: pointer;
-  transition: var(--zuno-transition-base);
-
-  &:hover {
-    background: var(--zuno-hover);
-    color: var(--zuno-text-primary);
-  }
 }
 
 .list-header,
 .section-header {
+  padding: 0 20px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px 12px;
-
-  .title {
-    color: var(--zuno-text-secondary);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
+  color: var(--zuno-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
 
   .count {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px;
-    height: 24px;
-    padding: 0 8px;
-    border-radius: 999px;
-    background: var(--zuno-bg-muted);
-    color: var(--zuno-text-tertiary);
-    font-size: 12px;
-    font-weight: 600;
+    background: rgba(201, 117, 61, 0.08);
+    color: #ad6736;
   }
 }
 
 .dialog-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0 14px 18px;
+  padding: 0 12px 16px 20px;
 }
 
 .dialog-group + .dialog-group {
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .group-header {
-  padding: 0 6px 8px;
+  margin-bottom: 10px;
   color: var(--zuno-text-muted);
   font-size: 12px;
   font-weight: 600;
 }
 
 .feedback-state {
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  min-height: 180px;
+  border: 1px dashed rgba(209, 179, 150, 0.4);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.58);
+  display: grid;
+  place-items: center;
   text-align: center;
-  gap: 10px;
   padding: 24px;
-  color: var(--zuno-text-secondary);
 }
 
 .state-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--zuno-accent);
-  box-shadow: 0 0 0 8px rgba(141, 123, 106, 0.12);
-  animation: pulse 1.6s ease-in-out infinite;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #c8753d;
+  animation: pulse 1.2s infinite ease-in-out;
 }
 
 .state-text {
-  color: var(--zuno-text-secondary);
-  font-size: 14px;
+  color: #413428;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .state-hint {
-  color: var(--zuno-text-muted);
-  font-size: 12px;
-}
-
-.feedback-state.empty {
-  margin-top: 32px;
-  border: 1px dashed var(--zuno-border-soft);
-  border-radius: var(--zuno-radius-lg);
-  background: rgba(255, 255, 255, 0.52);
+  color: var(--zuno-text-secondary);
+  font-size: 13px;
 }
 
 .empty-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  background: var(--zuno-bg-muted);
-  color: var(--zuno-text-primary);
-  font-size: 20px;
-  font-weight: 600;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: rgba(201, 117, 61, 0.12);
+  color: #ad6736;
+  font-size: 28px;
+  font-weight: 700;
 }
 
 .content {
   flex: 1;
-  overflow: hidden;
-  background: var(--zuno-bg-content);
+  min-width: 0;
+  background: linear-gradient(180deg, rgba(255, 251, 244, 0.96), rgba(252, 248, 241, 0.98));
 }
 
 .create-dialog-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(40, 35, 30, 0.18);
-  backdrop-filter: blur(10px);
+  background: rgba(50, 35, 24, 0.18);
+  display: grid;
+  place-items: center;
+  z-index: 40;
 }
 
 .create-dialog {
-  width: min(680px, 92vw);
-  max-height: 82vh;
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--zuno-border-soft);
-  border-radius: 24px;
-  background: var(--zuno-bg-elevated);
-  box-shadow: var(--zuno-shadow-strong);
+  border-radius: 28px;
+  background: #fffaf4;
+  box-shadow: 0 30px 80px rgba(53, 37, 26, 0.18);
 }
 
-.dialog-header {
+.dialog-header,
+.dialog-footer {
+  padding: 20px 24px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  padding: 24px 24px 18px;
-  border-bottom: 1px solid var(--zuno-border-soft);
+  gap: 16px;
+  border-bottom: 1px solid rgba(209, 179, 150, 0.26);
+}
 
-  h3 {
-    margin: 6px 0 0;
-    color: var(--zuno-text-primary);
-    font-size: 22px;
-    font-weight: 600;
-  }
+.dialog-footer {
+  border-top: 1px solid rgba(209, 179, 150, 0.26);
+  border-bottom: none;
 }
 
 .dialog-eyebrow {
-  margin: 0;
-  color: var(--zuno-text-tertiary);
+  margin: 0 0 4px;
+  color: #ad6736;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  color: #2f261f;
+  font-size: 22px;
 }
 
 .close-btn {
@@ -745,59 +777,42 @@ const closeCreateDialog = () => {
   height: 36px;
   border: none;
   border-radius: 999px;
-  background: transparent;
-  color: var(--zuno-text-tertiary);
+  background: rgba(201, 117, 61, 0.08);
+  color: #8b5431;
   cursor: pointer;
-  transition: var(--zuno-transition-base);
-
-  &:hover {
-    background: var(--zuno-hover);
-    color: var(--zuno-text-primary);
-  }
 }
 
 .dialog-body {
-  flex: 1;
   overflow-y: auto;
-  padding: 20px 24px 8px;
+  padding: 20px 24px;
 }
 
 .modal-search {
-  padding: 0 0 20px;
-}
-
-.modal-state {
-  min-height: 180px;
+  padding: 0 0 16px;
 }
 
 .agents-grid {
   display: grid;
   gap: 12px;
-  padding-bottom: 16px;
 }
 
 .agent-card {
+  width: 100%;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   gap: 14px;
-  width: 100%;
-  padding: 14px;
-  border: 1px solid var(--zuno-border-soft);
-  border-radius: var(--zuno-radius-lg);
-  background: var(--zuno-surface-raised);
+  border: 1px solid rgba(209, 179, 150, 0.42);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.72);
   text-align: left;
   cursor: pointer;
   transition: var(--zuno-transition-base);
 
-  &:hover {
-    background: var(--zuno-hover);
-    box-shadow: var(--zuno-shadow-soft);
-  }
-
+  &:hover,
   &.active {
-    border-color: var(--zuno-border-strong);
-    background: var(--zuno-selected);
-    box-shadow: 0 0 0 1px rgba(164, 149, 133, 0.36);
+    border-color: rgba(201, 117, 61, 0.4);
+    box-shadow: 0 16px 28px rgba(91, 63, 32, 0.08);
   }
 }
 
@@ -805,9 +820,8 @@ const closeCreateDialog = () => {
   width: 48px;
   height: 48px;
   overflow: hidden;
-  border: 1px solid var(--zuno-border-soft);
   border-radius: 16px;
-  background: var(--zuno-bg-muted);
+  background: rgba(201, 117, 61, 0.08);
   flex-shrink: 0;
 
   img {
@@ -817,12 +831,8 @@ const closeCreateDialog = () => {
   }
 }
 
-.agent-info {
-  min-width: 0;
-}
-
 .agent-name {
-  color: var(--zuno-text-primary);
+  color: #2f261f;
   font-size: 15px;
   font-weight: 600;
 }
@@ -831,105 +841,48 @@ const closeCreateDialog = () => {
   margin-top: 4px;
   color: var(--zuno-text-secondary);
   font-size: 13px;
-  line-height: 1.5;
-}
-
-.dialog-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 24px 24px;
-  border-top: 1px solid var(--zuno-border-soft);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(247, 243, 236, 0.72));
+  line-height: 1.6;
 }
 
 .selection-copy {
   color: var(--zuno-text-secondary);
-  font-size: 13px;
+  font-size: 14px;
 
   span {
-    color: var(--zuno-text-primary);
+    color: #2f261f;
     font-weight: 600;
   }
 }
 
 .footer-actions {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .btn-cancel,
 .btn-confirm {
-  min-width: 92px;
+  min-width: 104px;
   height: 42px;
-  padding: 0 16px;
-  border-radius: var(--zuno-radius-md);
+  border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--zuno-transition-base);
 }
 
 .btn-cancel {
-  border: 1px solid var(--zuno-border-soft);
-  background: var(--zuno-surface-raised);
-  color: var(--zuno-text-secondary);
-
-  &:hover {
-    background: var(--zuno-hover);
-  }
+  border: 1px solid rgba(209, 179, 150, 0.52);
+  background: transparent;
+  color: #594636;
 }
 
 .btn-confirm {
-  border: 1px solid transparent;
-  background: var(--zuno-button-primary);
-  color: #fffdf9;
-
-  &:hover:not(:disabled) {
-    background: var(--zuno-button-primary-hover);
-    box-shadow: var(--zuno-shadow-soft);
-  }
+  border: none;
+  background: #c8753d;
+  color: #fff8f2;
 
   &:disabled {
-    opacity: 0.5;
     cursor: not-allowed;
-  }
-}
-
-@media (max-width: 960px) {
-  .sidebar {
-    width: 300px;
-    min-width: 300px;
-  }
-}
-
-@media (max-width: 768px) {
-  .conversation-main {
-    flex-direction: column;
-    height: auto;
-    min-height: calc(100vh - 64px);
-  }
-
-  .sidebar {
-    width: 100%;
-    min-width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--zuno-border-soft);
-  }
-
-  .dialog-list {
-    max-height: 360px;
-  }
-
-  .dialog-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .footer-actions {
-    justify-content: flex-end;
+    opacity: 0.48;
   }
 }
 
@@ -942,7 +895,22 @@ const closeCreateDialog = () => {
 
   50% {
     transform: scale(0.88);
-    opacity: 0.72;
+    opacity: 0.7;
+  }
+}
+
+@media (max-width: 960px) {
+  .conversation-main {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 64px);
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--zuno-border-soft);
   }
 }
 </style>

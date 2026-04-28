@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, DocumentAdd, Edit, Plus, Refresh } from '@element-plus/icons-vue'
 import skillIcon from '../../assets/skill.svg'
+import { safeDisplayText } from '../../utils/display-text'
 import {
   addAgentSkillFileAPI,
   createAgentSkillAPI,
@@ -39,6 +40,21 @@ const addFileDialogVisible = ref(false)
 const addFileLoading = ref(false)
 const addFileForm = ref({ path: '', name: '' })
 
+const isReadonlySkill = (skill: AgentSkill | null | undefined) =>
+  Boolean(skill?.is_readonly || skill?.is_system)
+
+const getSkillSourceLabel = (skill: AgentSkill) => {
+  if (skill.source === 'system') return '系统'
+  if (skill.source === 'host') return '本地'
+  return '我的'
+}
+
+const getSkillSourceTagType = (skill: AgentSkill) => {
+  if (skill.source === 'system') return 'warning'
+  if (skill.source === 'host') return 'success'
+  return 'info'
+}
+
 const visibleSkills = computed(() => {
   const search = keyword.value.trim().toLowerCase()
   const list = [...skills.value].sort((a, b) => {
@@ -50,7 +66,11 @@ const visibleSkills = computed(() => {
   return list.filter((item) => [item.name, item.description || ''].join(' ').toLowerCase().includes(search))
 })
 
-const currentSkillReadonly = computed(() => Boolean(currentSkill.value?.is_system))
+const currentSkillReadonly = computed(() => isReadonlySkill(currentSkill.value))
+
+const getSkillDescription = (skill: AgentSkill) => (
+  safeDisplayText(skill.description, '\u6682\u65e0\u8bf4\u660e')
+)
 
 const flattenFiles = (folder?: AgentSkillFolder): SkillFileEntry[] => {
   if (!folder?.folder) return []
@@ -122,17 +142,21 @@ const handleCreateSkill = async () => {
 }
 
 const handleDeleteSkill = async (skill: AgentSkill) => {
-  if (skill.is_system) {
-    ElMessage.info('系统 Skill 为只读内置能力，不能删除')
+  if (isReadonlySkill(skill)) {
+    ElMessage.info('只读 Skill 不能删除')
     return
   }
 
   try {
-    await ElMessageBox.confirm(`删除后，Skill “${skill.name}” 和其文件都会被清空。`, '确认删除 Skill', {
-      confirmButtonText: '确认删除',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
+    await ElMessageBox.confirm(
+      `删除后，Skill “${skill.name}” 和其文件都会被清空。`,
+      '确认删除 Skill',
+      {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
   } catch {
     return
   }
@@ -190,8 +214,8 @@ const handleSaveFile = async () => {
     ElMessage.warning('请先选择一个文件')
     return
   }
-  if (currentSkill.value.is_system) {
-    ElMessage.info('系统 Skill 为只读内置能力，不能修改文件')
+  if (isReadonlySkill(currentSkill.value)) {
+    ElMessage.info('只读 Skill 不能修改文件')
     return
   }
 
@@ -221,8 +245,8 @@ const openAddFileDialog = () => {
     ElMessage.warning('请先打开一个 Skill')
     return
   }
-  if (currentSkill.value.is_system) {
-    ElMessage.info('系统 Skill 为只读内置能力，不能新增文件')
+  if (isReadonlySkill(currentSkill.value)) {
+    ElMessage.info('只读 Skill 不能新增文件')
     return
   }
   addFileForm.value = { path: '', name: '' }
@@ -260,8 +284,8 @@ const handleAddFile = async () => {
 
 const handleDeleteFile = async (file: SkillFileEntry) => {
   if (!currentSkill.value) return
-  if (currentSkill.value.is_system) {
-    ElMessage.info('系统 Skill 为只读内置能力，不能删除文件')
+  if (isReadonlySkill(currentSkill.value)) {
+    ElMessage.info('只读 Skill 不能删除文件')
     return
   }
 
@@ -302,7 +326,7 @@ onMounted(fetchSkills)
       <div>
         <div class="eyebrow">SKILL LIBRARY</div>
         <h1>Skill 管理</h1>
-        <p>Skill 用来沉淀可复用的方法、模板和工作流。系统 Skill 为内置只读能力，你创建的 Skill 可以继续编辑和扩展。</p>
+        <p>Skill 用来沉淀可复用的方法、模板和工作流。系统 Skill 与本地目录 Skill 为只读能力，你创建的 Skill 可以继续编辑和扩展。</p>
       </div>
       <div class="hero-actions">
         <el-button :icon="Refresh" @click="fetchSkills">刷新</el-button>
@@ -322,19 +346,19 @@ onMounted(fetchSkills)
             <div>
               <div class="skill-heading">
                 <h3>{{ skill.name }}</h3>
-                <el-tag size="small" :type="skill.is_system ? 'warning' : 'info'">
-                  {{ skill.is_system ? '系统' : '我的' }}
+                <el-tag size="small" :type="getSkillSourceTagType(skill)">
+                  {{ getSkillSourceLabel(skill) }}
                 </el-tag>
               </div>
-              <p>{{ skill.description || '暂无说明' }}</p>
+              <p>{{ getSkillDescription(skill) }}</p>
             </div>
           </div>
           <div class="skill-actions">
             <el-button size="small" type="primary" :icon="Edit" @click="openDetailDialog(skill)">
-              {{ skill.is_system ? '查看详情' : '编辑文件' }}
+              {{ isReadonlySkill(skill) ? '查看详情' : '编辑文件' }}
             </el-button>
             <el-button
-              v-if="!skill.is_system"
+              v-if="!isReadonlySkill(skill)"
               size="small"
               type="danger"
               :icon="Delete"
@@ -375,7 +399,7 @@ onMounted(fetchSkills)
     <el-dialog
       v-model="detailDialogVisible"
       width="1120px"
-      :title="currentSkill ? `${currentSkill.name} · 文件管理` : '文件管理'"
+      :title="currentSkill ? `${currentSkill.name} / 文件管理` : '文件管理'"
     >
       <div class="detail-layout">
         <aside class="file-sidebar">
@@ -425,7 +449,7 @@ onMounted(fetchSkills)
             v-if="currentSkillReadonly"
             type="info"
             :closable="false"
-            title="系统 Skill 为内置只读能力，可查看内容，但不能直接修改。"
+            title="这是只读 Skill，可以查看内容，但不能直接修改。"
             class="readonly-alert"
           />
           <el-input
@@ -443,7 +467,7 @@ onMounted(fetchSkills)
     <el-dialog v-model="addFileDialogVisible" title="新增文件" width="560px">
       <el-form label-position="top">
         <el-form-item label="目录">
-          <el-input v-model="addFileForm.path" placeholder="例如：/my-skill/reference" />
+          <el-input v-model="addFileForm.path" placeholder="例如：my-skill/reference" />
         </el-form-item>
         <el-form-item label="文件名">
           <el-input v-model="addFileForm.name" placeholder="例如：README.md" />

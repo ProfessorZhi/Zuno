@@ -43,12 +43,14 @@ const sortedModels = computed(() => {
         : 1
 
     if (officialDiff !== 0) return officialDiff
+
     return new Date(b.update_time || b.create_time).getTime() - new Date(a.update_time || a.create_time).getTime()
   })
 })
 
 const isOfficial = (item: LLMResponse) => item.user_id === '0'
 const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
+const canManageItem = (item: LLMResponse) => !isOfficial(item) || isAdmin.value
 
 const flattenModelMap = (value: Record<string, LLMResponse[]>) => {
   const result: LLMResponse[] = []
@@ -122,7 +124,7 @@ const openCreateDialog = () => {
 }
 
 const openEditDialog = (item: LLMResponse) => {
-  if (isOfficial(item) && !isAdmin.value) {
+  if (!canManageItem(item)) {
     ElMessage.warning('只有管理员可以编辑官方模型')
     return
   }
@@ -198,20 +200,20 @@ const handleSave = async () => {
 }
 
 const handleDelete = async (item: LLMResponse) => {
-  if (isOfficial(item) && !isAdmin.value) {
+  if (!canManageItem(item)) {
     ElMessage.warning('只有管理员可以删除官方模型')
     return
   }
 
   try {
     await ElMessageBox.confirm(
-      `删除后，模型“${item.model}”不会再出现在可用模型列表中。`,
+      `删除后，模型“${item.model}”将不再出现在模型资源池中。`,
       '确认删除模型',
       {
         confirmButtonText: '确认删除',
         cancelButtonText: '取消',
         type: 'warning',
-      }
+      },
     )
   } catch {
     return
@@ -246,7 +248,7 @@ onMounted(fetchModels)
         <img :src="modelIcon" alt="模型" class="page-icon" />
         <div>
           <h1>模型管理</h1>
-          <p>统一管理对话、嵌入和重排模型，把来源、地址和密钥信息收拢到同一页。</p>
+          <p>这里只维护系统可选模型资源池。真正决定某个知识库怎么建索引、怎么召回，在知识库参数页完成。</p>
         </div>
       </div>
 
@@ -264,14 +266,14 @@ onMounted(fetchModels)
     <section class="content-card" v-loading="loading">
       <div class="section-head">
         <div>
-          <h2>模型列表</h2>
-          <p>官方模型优先展示。普通用户只能管理自定义模型，管理员可以维护官方模型。</p>
+          <h2>模型资源池</h2>
+          <p>同类型模型可以配置多条。知识库页只会从这里挑选文本 Embedding、VL Embedding 和 Rerank。</p>
         </div>
       </div>
 
       <div v-if="sortedModels.length === 0" class="empty-state">
         <h3>还没有可展示的模型</h3>
-        <p>先创建一个模型配置，工作台才能稳定切换到它。</p>
+        <p>先创建一条模型配置，随后知识库参数页就可以引用它。</p>
       </div>
 
       <div v-else class="model-grid">
@@ -306,10 +308,10 @@ onMounted(fetchModels)
       <el-form label-position="top">
         <div class="dialog-grid">
           <el-form-item label="模型名称">
-            <el-input v-model="form.model" placeholder="例如 minimax-m1" />
+            <el-input v-model="form.model" placeholder="例如 qwen-plus / text-embedding-v4" />
           </el-form-item>
           <el-form-item label="供应商">
-            <el-input v-model="form.provider" placeholder="例如 MiniMax / OpenAI / SiliconFlow" />
+            <el-input v-model="form.provider" placeholder="例如 MiniMax / 通义千问 / OpenAI" />
           </el-form-item>
           <el-form-item label="模型类型">
             <el-select v-model="form.llm_type" class="full-width">

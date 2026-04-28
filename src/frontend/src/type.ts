@@ -48,7 +48,11 @@ export interface HistoryListType {
   dialogId: string
   name: string
   createTime: string
-  logo:string
+  updatedTime: string
+  absoluteTime: string
+  logo: string
+  sourceType: "dialog" | "workspace"
+  sessionKind?: string
 }
 
 export interface MessageType {

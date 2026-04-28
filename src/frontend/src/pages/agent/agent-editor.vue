@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ArrowLeft, Check, DocumentCopy, Management, PictureFilled, Cpu, Setting } from '@element-plus/icons-vue'
-import robotIcon from '../../assets/robot.svg'
 import { createAgentAPI, getAgentByIdAPI, updateAgentAPI, type AgentCreateRequest, type AgentUpdateRequest } from '../../apis/agent'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
 import { getVisibleToolsAPI, type ToolResponse } from '../../apis/tool'
@@ -14,6 +13,7 @@ import { getAgentSkillsAPI, type AgentSkill } from '../../apis/agent-skill'
 import { uploadFileAPI } from '../../apis/file'
 import type { AgentFormData } from '../../type'
 import { useUserStore } from '../../store/user'
+import { zunoAgentAvatar } from '../../utils/brand'
 
 interface SelectOption {
   id: string
@@ -320,7 +320,7 @@ onMounted(async () => {
           <div class="basic-grid">
             <div class="logo-panel">
               <div class="logo-preview">
-                <img :src="form.logo_url || robotIcon" alt="智能体头像" />
+<img :src="form.logo_url || zunoAgentAvatar" alt="智能体头像" />
               </div>
               <input ref="fileInputRef" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden-file-input" @change="handleFileChange" />
               <el-button :icon="PictureFilled" :loading="uploadLoading" @click="pickLogo">上传头像</el-button>
@@ -429,7 +429,7 @@ onMounted(async () => {
       <aside class="editor-side">
         <section class="side-card profile-card">
           <div class="side-avatar">
-            <img :src="form.logo_url || robotIcon" alt="头像预览" />
+<img :src="form.logo_url || zunoAgentAvatar" alt="头像预览" />
           </div>
           <h3>{{ form.name || '未命名智能体' }}</h3>
           <p>{{ form.description || '这里会展示你填写的智能体描述。' }}</p>

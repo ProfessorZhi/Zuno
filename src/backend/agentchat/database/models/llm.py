@@ -18,6 +18,7 @@ class LLMTable(SQLModelSerializable, table=True):
     api_key: str = Field(description='大模型的api key')
     provider: str = Field(description='大模型的提供商')
     user_id: str = Field(description='大模型创建者的ID')
+    model_slot: Optional[str] = Field(default=None)
     update_time: Optional[datetime] = Field(sa_column=Column(
         DateTime,
         nullable=False,

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from "vue"
 import type { HistoryListType } from "../../type"
-import zunoAvatar from "../../assets/zuno-avatar.svg"
+import { zunoAgentAvatar } from "../../utils/brand"
 
 const emits = defineEmits<{
   (event: "delete"): void
@@ -18,11 +18,11 @@ const props = withDefaults(
   }
 )
 
-const formattedTime = computed(() => {
+const relativeTime = computed(() => {
   if (props.timeLabel) return props.timeLabel
 
   try {
-    const date = new Date(props.item.createTime)
+    const date = new Date(props.item.updatedTime || props.item.createTime)
     if (Number.isNaN(date.getTime())) return "未知时间"
 
     const now = new Date()
@@ -40,6 +40,12 @@ const formattedTime = computed(() => {
     return "未知时间"
   }
 })
+
+const sourceLabel = computed(() => (
+  props.item.sourceType === "workspace"
+    ? "工作台"
+    : "Agent"
+))
 
 const deleteCard = (event: Event) => {
   event.stopPropagation()
@@ -63,7 +69,7 @@ const handleKeydown = (event: KeyboardEvent) => {
     <div class="card-main">
       <div class="card-left">
         <div class="avatar">
-          <img :src="props.item.logo || zunoAvatar" alt="" />
+          <img :src="props.item.logo || zunoAgentAvatar" alt="" />
         </div>
         <div class="content">
           <div class="title-row">
@@ -71,13 +77,16 @@ const handleKeydown = (event: KeyboardEvent) => {
               {{ props.item.name || "未命名会话" }}
             </div>
           </div>
-          <div class="subtitle">{{ props.item.agent || "智能助手" }}</div>
+          <div class="subtitle-row">
+            <div class="subtitle">{{ props.item.agent || "智能助手" }}</div>
+            <span class="source-badge">{{ sourceLabel }}</span>
+          </div>
         </div>
       </div>
 
       <div class="card-right">
-        <div class="time">{{ formattedTime }}</div>
-        <span class="active-chip">当前</span>
+        <div class="time">{{ props.item.absoluteTime }}</div>
+        <div class="time-secondary">{{ relativeTime }}</div>
         <button class="delete-btn" type="button" aria-label="删除会话" @click="deleteCard">
           ×
         </button>
@@ -163,8 +172,14 @@ const handleKeydown = (event: KeyboardEvent) => {
   line-height: 1.35;
 }
 
-.subtitle {
+.subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 4px;
+}
+
+.subtitle {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -173,30 +188,35 @@ const handleKeydown = (event: KeyboardEvent) => {
   line-height: 1.4;
 }
 
+.source-badge {
+  flex-shrink: 0;
+  min-height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(200, 117, 61, 0.08);
+  color: #9d5f34;
+  font-size: 11px;
+  line-height: 18px;
+}
+
 .card-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .time {
+  color: var(--zuno-text-secondary);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.time-secondary {
   color: var(--zuno-text-muted);
   font-size: 11px;
   line-height: 1;
-}
-
-.active-chip {
-  display: none;
-  min-height: 22px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.76);
-  color: var(--zuno-text-secondary);
-  font-size: 11px;
-  font-weight: 600;
-  align-items: center;
 }
 
 .delete-btn {
@@ -244,11 +264,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 
   .time {
-    color: var(--zuno-text-secondary);
-  }
-
-  .active-chip {
-    display: inline-flex;
+    color: var(--zuno-text-primary);
   }
 
   .delete-btn {

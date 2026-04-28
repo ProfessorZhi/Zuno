@@ -24,7 +24,8 @@ export interface AgentSkill {
   create_time: string
   update_time: string
   is_system?: boolean
-  source?: 'system' | 'user'
+  is_readonly?: boolean
+  source?: 'system' | 'host' | 'user'
 }
 
 export interface ApiResponse<T> {

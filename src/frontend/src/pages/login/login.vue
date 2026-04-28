@@ -4,8 +4,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { getUserInfoAPI, loginAPI } from '../../apis/auth'
-import zunoMark from '../../assets/zuno-mark.svg'
 import { useUserStore } from '../../store/user'
+import { zunoAgentAvatar, zunoBrandMark } from '../../utils/brand'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -92,7 +92,7 @@ const goToRegister = () => {
     <section class="intro-panel">
       <div class="intro-shell">
         <div class="brand-mark">
-          <img :src="zunoMark" alt="Zuno" />
+          <img :src="zunoBrandMark" alt="Zuno" />
         </div>
         <span class="eyebrow">Zuno Workspace</span>
         <h1>安静推进复杂任务</h1>
@@ -103,7 +103,7 @@ const goToRegister = () => {
     <section class="form-panel">
       <div class="panel-shell">
         <div class="panel-brand">
-          <img :src="zunoMark" alt="Zuno" class="panel-logo" />
+          <img :src="zunoAgentAvatar" alt="Zuno" class="panel-logo" />
           <div>
             <h2>Zuno</h2>
             <p>登录后回到你的工作台。</p>

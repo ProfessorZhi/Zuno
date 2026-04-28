@@ -68,8 +68,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # 🚀 安装Python依赖（使用pip镜像源加速）
-RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
-    pip install -r requirements.txt -i ${PIP_INDEX_URL}
+RUN pip install --no-cache-dir -r requirements.txt -i ${PIP_INDEX_URL}
 
 
 

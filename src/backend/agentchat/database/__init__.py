@@ -12,6 +12,7 @@ from agentchat.database.models.dialog import DialogTable
 from agentchat.database.models.history import HistoryTable
 from agentchat.database.models.knowledge import KnowledgeTable
 from agentchat.database.models.knowledge_file import KnowledgeFileTable
+from agentchat.database.models.knowledge_task import KnowledgeTaskEventTable, KnowledgeTaskTable
 from agentchat.database.models.llm import LLMTable
 from agentchat.database.models.mcp_agent import MCPAgentTable
 from agentchat.database.models.mcp_server import MCPServerStdioTable, MCPServerTable

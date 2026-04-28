@@ -58,3 +58,35 @@ A: 请检查是否安装了 Node.js，并将其添加到了系统环境变量中
 
 **Q: 依赖安装失败？**
 A: 请检查根目录下是否存在 `requestment.txt` 文件，且内容格式正确。
+
+## 端到端烟雾验收
+
+如果要跑当前 Zuno 的全量浏览器烟雾验收（新建并实际使用 API 工具、CLI 工具、知识库、Skill、MCP），可以在项目根目录执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-full-e2e-smoke.ps1
+```
+
+这个脚本会先做 4 件事：
+
+1. 检查 `tmp-qa-playwright/auth.json` 是否存在且带有登录 token
+2. 检查后端 `7860` 是否可达
+3. 如果前端 `8090` 没起来，会自动拉起本地 Vite dev server
+4. 如果本地 QA API `9101` 没起来，会自动拉起 `tmp-qa-playwright/qa_echo_api.py`
+
+然后执行：
+
+```bash
+npm run full-e2e
+```
+
+工作目录：
+
+```text
+tmp-qa-playwright
+```
+
+验收结果会输出在：
+
+- `tmp-qa-playwright/full-e2e-results-*.json`
+- `tmp-qa-playwright/*-e2e-*.png`

@@ -9,6 +9,7 @@ class LLMCreateReq(BaseModel):
     base_url: str
     llm_type: str = "LLM"
     provider: str = "OpenAI"
+    model_slot: str | None = None
 
 
 class LLMUpdateReq(BaseModel):
@@ -21,6 +22,7 @@ class LLMUpdateReq(BaseModel):
     base_url: str = None
     llm_type: str = None
     provider: str = None
+    model_slot: str | None = None
 
 class LLMDeleteReq(BaseModel):
     """
@@ -33,3 +35,8 @@ class LLMSearchReq(BaseModel):
     搜索模型的名称
     """
     llm_name: str
+
+
+class LLMActivateReq(BaseModel):
+    llm_id: str
+    model_slot: str

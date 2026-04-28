@@ -1,5 +1,8 @@
-import httpx
+import os
 from typing import Dict, Any, List, Optional
+from urllib.parse import urlparse, urlunparse
+
+import httpx
 
 
 class OpenAPIToolAdapter:
@@ -40,7 +43,23 @@ class OpenAPIToolAdapter:
         for k, v in variables.items():
             url = url.replace(f"{{{k}}}", v.get("default", ""))
 
-        return url.rstrip("/")
+        return self._normalize_localhost_url(url.rstrip("/"))
+
+    def _normalize_localhost_url(self, url: str) -> str:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if hostname not in {"127.0.0.1", "localhost"}:
+            return url
+
+        if not os.path.exists("/.dockerenv"):
+            return url
+
+        netloc = parsed.netloc
+        if hostname == "localhost":
+            netloc = netloc.replace("localhost", "host.docker.internal", 1)
+        else:
+            netloc = netloc.replace("127.0.0.1", "host.docker.internal", 1)
+        return urlunparse(parsed._replace(netloc=netloc))
 
 
     def _generate_tools(self) -> List[Dict[str, Any]]:
@@ -95,6 +114,18 @@ class OpenAPIToolAdapter:
                 }
 
         return tools
+
+    def get_primary_operation_id(self) -> Optional[str]:
+        if not self.tools:
+            return None
+        return self.tools[0].get("function", {}).get("name")
+
+    def get_tool_parameters_schema(self, tool_name: str) -> Dict[str, Any]:
+        for tool in self.tools:
+            function_schema = tool.get("function", {})
+            if function_schema.get("name") == tool_name:
+                return function_schema.get("parameters", {}) or {}
+        return {}
 
     def _build_parameters_schema(self, spec: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -201,14 +232,30 @@ class OpenAPIToolAdapter:
         if auth_type == "Basic":
             return {"Authorization": f"Basic {data}"}
 
-        if auth_type == "APIKey":
-            return {"X-API-Key": data}
+        if auth_type == "APIKey" and (self.auth_config.get("in") or "header").strip().lower() != "query":
+            key_name = (self.auth_config.get("name") or "X-API-Key").strip() or "X-API-Key"
+            return {key_name: data}
 
         if auth_type == "Header":
             # data 应该是 dict
             return data
 
         return {}
+
+    def _apply_auth(self, query_params: Dict[str, Any], headers: Dict[str, str]) -> None:
+        if not self.auth_config:
+            return
+
+        auth_type = self.auth_config.get("auth_type")
+        data = self.auth_config.get("data")
+        if auth_type == "APIKey" and data:
+            location = (self.auth_config.get("in") or "header").strip().lower()
+            key_name = (self.auth_config.get("name") or "X-API-Key").strip() or "X-API-Key"
+            if location == "query":
+                query_params[key_name] = data
+                return
+
+        headers.update(self._build_auth_headers())
 
     # 执行 tool
     async def execute(self, **kwargs) -> Any:
@@ -231,8 +278,6 @@ class OpenAPIToolAdapter:
         path = meta["path"]
         method = meta["method"]
 
-        url = f"{self.base_url}{path}"
-
         path_params = {}
         query_params = {}
         json_body = {}
@@ -245,6 +290,8 @@ class OpenAPIToolAdapter:
             else:
                 query_params[key] = value
 
+        url = f"{self.base_url}{path}"
+
         # body 支持（POST/PUT/PATCH）
         if method in ["POST", "PUT", "PATCH"]:
             json_body = kwargs
@@ -252,13 +299,14 @@ class OpenAPIToolAdapter:
         import httpx
 
         headers = {}
+        self._apply_auth(query_params, headers)
 
         # auth 处理
         if self.auth_config:
             if self.auth_config.get("auth_type") == "Bearer":
                 headers["Authorization"] = f"Bearer {self.auth_config['data']}"
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.request(
                 method,
                 url,
@@ -268,7 +316,76 @@ class OpenAPIToolAdapter:
             )
 
         response.raise_for_status()
-        return response.json()
+        content_type = (response.headers.get("content-type") or "").lower()
+        if "json" in content_type:
+            return response.json()
+        text = response.text.strip()
+        return text or {"status_code": response.status_code}
+
+    async def test_connectivity(
+        self,
+        test_args: Optional[Dict[str, Any]] = None,
+        *,
+        operation_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        operation_id = operation_id or self.get_primary_operation_id()
+        if not operation_id:
+            raise ValueError("OpenAPI schema does not contain any callable operation")
+
+        parameters_schema = self.get_tool_parameters_schema(operation_id)
+        required = list(parameters_schema.get("required") or [])
+        provided_args = dict(test_args or {})
+        missing_required = [name for name in required if name not in provided_args]
+
+        meta = self._tool_meta.get(operation_id) or {}
+        path = meta.get("path") or ""
+        tested_url = f"{self.base_url}{path}"
+
+        if missing_required:
+            return {
+                "ok": False,
+                "runtime_type": "remote_api",
+                "summary": "缺少必填测试参数，暂时无法发起真实请求",
+                "details": [f"默认测试接口：{operation_id}", f"目标地址：{tested_url}"],
+                "warnings": [f"还缺少这些必填参数：{', '.join(missing_required)}"],
+                "executed": False,
+                "operation_id": operation_id,
+                "tested_url": tested_url,
+            }
+
+        try:
+            result = await self.execute(_tool_name=operation_id, **provided_args)
+        except Exception as err:
+            return {
+                "ok": False,
+                "runtime_type": "remote_api",
+                "summary": "API real request failed",
+                "details": [f"operation: {operation_id}", f"target: {tested_url}", str(err)],
+                "warnings": [str(err)],
+                "executed": True,
+                "operation_id": operation_id,
+                "tested_url": tested_url,
+            }
+        result_type = type(result).__name__
+        result_hint = ""
+        if isinstance(result, dict):
+            preview_keys = ", ".join(list(result.keys())[:5])
+            result_hint = f"返回对象字段：{preview_keys}" if preview_keys else "返回对象为空"
+        elif isinstance(result, list):
+            result_hint = f"返回数组长度：{len(result)}"
+        else:
+            result_hint = f"返回类型：{result_type}"
+
+        return {
+            "ok": True,
+            "runtime_type": "remote_api",
+            "summary": "接口真实请求成功，连通性正常",
+            "details": [f"已测试接口：{operation_id}", f"目标地址：{tested_url}", result_hint],
+            "warnings": [],
+            "executed": True,
+            "operation_id": operation_id,
+            "tested_url": tested_url,
+        }
 
     @staticmethod
     def validate_openapi_schema(openapi_schema):

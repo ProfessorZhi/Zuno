@@ -4,6 +4,8 @@ from agentchat.database import SystemUser
 from agentchat.database.session import session_getter, async_session_getter
 from agentchat.database.models.llm import LLMTable
 
+UNSET = object()
+
 
 class LLMDao:
 
@@ -15,7 +17,8 @@ class LLMDao:
         llm_type: str,
         api_key: str,
         provider: str,
-        user_id: str
+        user_id: str,
+        model_slot: str = None
     ):
         with session_getter() as session:
             llm = LLMTable(
@@ -24,7 +27,8 @@ class LLMDao:
                 api_key=api_key,
                 provider=provider,
                 user_id=user_id,
-                llm_type=llm_type
+                llm_type=llm_type,
+                model_slot=model_slot,
             )
             session.add(llm)
             session.commit()
@@ -44,7 +48,8 @@ class LLMDao:
         base_url: str = None,
         api_key: str = None,
         provider: str = None,
-        llm_type: str = None
+        llm_type: str = None,
+        model_slot=UNSET,
     ):
         update_values = {
             k: v for k, v in {
@@ -56,6 +61,9 @@ class LLMDao:
             }.items() if v is not None
         }
 
+        if model_slot is not UNSET:
+            update_values["model_slot"] = model_slot
+
         if not update_values:
             return
 
@@ -64,6 +72,17 @@ class LLMDao:
                 update(LLMTable)
                 .where(LLMTable.llm_id == llm_id)
                 .values(**update_values)
+            )
+            session.exec(sql)
+            session.commit()
+
+    @classmethod
+    async def clear_model_slot(cls, model_slot: str):
+        with session_getter() as session:
+            sql = (
+                update(LLMTable)
+                .where(LLMTable.model_slot == model_slot)
+                .values(model_slot=None)
             )
             session.exec(sql)
             session.commit()
@@ -80,6 +99,13 @@ class LLMDao:
         with session_getter() as session:
             return session.exec(
                 select(LLMTable).where(LLMTable.llm_id == llm_id)
+            ).first()
+
+    @classmethod
+    def get_llm_by_slot(cls, model_slot: str):
+        with session_getter() as session:
+            return session.exec(
+                select(LLMTable).where(LLMTable.model_slot == model_slot)
             ).first()
 
     @classmethod

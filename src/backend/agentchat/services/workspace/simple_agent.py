@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import ast
 import asyncio
 import copy
+import json
 import re
 import time
 import uuid
+from datetime import date
+from types import SimpleNamespace
 from typing import Any, AsyncGenerator, Dict, List, NotRequired
 
 from langchain.agents import AgentState, create_agent
@@ -30,6 +34,12 @@ from agentchat.api.services.workspace_session import WorkSpaceSessionService
 from agentchat.core.callbacks import usage_metadata_callback
 from agentchat.core.models.manager import ModelManager
 from agentchat.database import AgentSkill
+from agentchat.schema.tool import (
+    CLIToolPreviewReq,
+    RemoteApiAssistReq,
+    SimpleApiConfig,
+    SimpleApiParamConfig,
+)
 from agentchat.database.models.workspace_session import (
     WorkSpaceSessionContext,
     WorkSpaceSessionCreate,
@@ -42,7 +52,15 @@ from agentchat.services.execution_policy import (
     normalize_execution_mode,
 )
 from agentchat.services.mcp.manager import MCPManager
+from agentchat.services.cli_tool_discovery import CliToolDiscoveryService
+from agentchat.services.capability_registry import CapabilityRegistryService
 from agentchat.services.rag.handler import RagHandler
+from agentchat.services.simple_api_tool import (
+    build_openapi_schema_from_simple_config,
+    build_remote_api_assist_draft,
+)
+from agentchat.services.structured_tool_result_formatter import format_structured_tool_result
+from agentchat.services.tool_creation_service import ToolCreationService
 from agentchat.services.user_defined_tool_runtime import (
     build_user_defined_langchain_tools,
     get_user_defined_runtime_type,
@@ -65,6 +83,7 @@ from agentchat.utils.runtime_observability import (
     build_langsmith_metadata,
     get_active_trace_id,
 )
+from agentchat.settings import app_settings
 
 tool = lc_tool
 
@@ -75,6 +94,8 @@ class MCPConfig(BaseModel):
     tools: List[str] = []
     server_name: str
     mcp_server_id: str
+    config_enabled: bool = False
+    config: List[dict] = []
     headers: dict[str, str] | None = None
     command: str | None = None
     args: List[str] | None = None
@@ -106,7 +127,7 @@ class WorkSpaceSimpleAgent:
         plugins: List[str] | None = None,
         mcp_configs: List[MCPConfig] | None = None,
         knowledge_ids: List[str] | None = None,
-        retrieval_mode: str = "default",
+        retrieval_mode: str = "auto",
         agent_skill_ids: List[str] | None = None,
         enable_web_search: bool = True,
         execution_mode: str = "tool",
@@ -193,8 +214,526 @@ class WorkSpaceSimpleAgent:
         )
 
     @staticmethod
+    def _summarize_retrieval_metadata(metadata: Dict[str, Any] | None) -> str:
+        if not metadata:
+            return "知识库检索已完成。"
+        final_mode = str(metadata.get("final_mode") or metadata.get("first_mode") or "rag")
+        round_count = int(metadata.get("round_count") or 1)
+        fallback_reason = metadata.get("fallback_reason")
+        second_pass_used = bool(metadata.get("second_pass_used"))
+        rewritten_query_used = bool(metadata.get("rewritten_query_used"))
+        parts = [f"知识库检索已完成，最终策略：{final_mode}，共 {round_count} 轮。"]
+        if second_pass_used and fallback_reason:
+            parts.append(f"首轮触发补检，原因：{fallback_reason}。")
+        if rewritten_query_used:
+            parts.append("本轮已启用改写后的问题再次补检。")
+        return "".join(parts)
+
+    def _build_retrieval_event_payload(self, result: Dict[str, Any], phase: str = "retrieval") -> Dict[str, Any]:
+        metadata = result.get("metadata") or {}
+        return {
+            "phase": phase,
+            "status": "END",
+            "message": self._summarize_retrieval_metadata(metadata),
+            "retrieval_mode": result.get("actual_mode") or metadata.get("final_mode") or self.retrieval_mode,
+            "first_mode": result.get("first_mode") or metadata.get("first_mode"),
+            "final_mode": result.get("final_mode") or metadata.get("final_mode"),
+            "fallback_reason": result.get("fallback_reason") or metadata.get("fallback_reason"),
+            "round_count": result.get("round_count") or metadata.get("round_count") or 1,
+            "second_pass_used": result.get("second_pass_used") or metadata.get("second_pass_used") or False,
+            "rewritten_query_used": metadata.get("rewritten_query_used") or False,
+            "query_variants": metadata.get("query_variants") or [],
+            "rounds": metadata.get("rounds") or [],
+            "knowledge_ids": self.knowledge_ids,
+        }
+
+    @staticmethod
     def _norm(text: str | None) -> str:
         return (text or "").strip().lower()
+
+    @staticmethod
+    def _extract_labeled_value(query: str, labels: list[str]) -> str:
+        for label in labels:
+            pattern = rf"{label}\s*[:：]\s*(.+)"
+            match = re.search(pattern, query, flags=re.IGNORECASE)
+            if match:
+                value = match.group(1).strip()
+                value = re.split(r"[\r\n]", value, maxsplit=1)[0].strip()
+                return value.strip(" 。；;")
+        return ""
+
+    @staticmethod
+    def _extract_tool_display_name(query: str) -> str:
+        patterns = [
+            r"(?:名称|名字)\s*(?:叫|是|为)?\s*([A-Za-z0-9_\-\u4e00-\u9fff]+)",
+            r"新增(?:一个)?\s*(?:API|CLI)?\s*工具[，, ]*(?:名称)?(?:叫|是|为)\s*([A-Za-z0-9_\-\u4e00-\u9fff]+)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, query, flags=re.IGNORECASE)
+            if match:
+                return match.group(1).strip(" 。；;,，")
+        return ""
+
+    @staticmethod
+    def _parse_auth_type(raw: str) -> str:
+        value = (raw or "").strip().lower()
+        if not value or any(token in value for token in ["无认证", "none", "no auth", "noauth"]):
+            return "none"
+        if "bearer" in value:
+            return "bearer"
+        if "basic" in value:
+            return "basic"
+        if "query" in value or "参数" in value:
+            return "api_key_query"
+        if "header" in value or "请求头" in value:
+            return "api_key_header"
+        return "none"
+
+    @staticmethod
+    def _build_simple_api_schema_json(
+        display_name: str,
+        description: str,
+        base_url: str,
+        path: str,
+        method: str,
+        query: str,
+    ) -> str:
+        params: list[dict[str, Any]] = []
+        path_tokens = re.findall(r"{([^{}]+)}", path or "")
+        for token in path_tokens:
+            name = token.strip()
+            if name:
+                params.append(
+                    {
+                        "name": name,
+                        "in": "path",
+                        "required": True,
+                        "description": f"Path parameter: {name}",
+                        "type": "string",
+                    }
+                )
+
+        query_param_patterns = [
+            r"必填\s*query\s*参数\s*([A-Za-z0-9_]+)",
+            r"需要(?:一个)?必填\s*query\s*参数\s*([A-Za-z0-9_]+)",
+            r"query\s*参数\s*([A-Za-z0-9_]+)",
+            r"参数\s*([A-Za-z0-9_]+)",
+        ]
+        seen_query_params = set()
+        for pattern in query_param_patterns:
+            for match in re.finditer(pattern, query, flags=re.IGNORECASE):
+                name = match.group(1).strip()
+                if not name or name in seen_query_params:
+                    continue
+                seen_query_params.add(name)
+                required = "必填" in query[max(0, match.start() - 8): match.end() + 8]
+                params.append(
+                    {
+                        "name": name,
+                        "in": "query",
+                        "required": required,
+                        "description": f"Query parameter: {name}",
+                        "type": "string",
+                    }
+                )
+
+        simple_api_config = SimpleApiConfig(
+            base_url=base_url,
+            path=path,
+            method=method,
+            operation_id=re.sub(r"[^a-zA-Z0-9_]+", "_", display_name).strip("_") or "call_api",
+            summary=display_name,
+            description=description or f"Call {path}",
+            params=[
+                SimpleApiParamConfig(
+                    name=param["name"],
+                    **{"in": param["in"]},
+                    required=param["required"],
+                    description=param["description"],
+                    type=param["type"],
+                )
+                for param in params
+            ],
+            body_schema=None,
+            response_schema=None,
+        )
+        return json.dumps(build_openapi_schema_from_simple_config(simple_api_config), ensure_ascii=False)
+
+    @staticmethod
+    def _extract_first_url(text: str) -> str:
+        match = re.search(r"https?://[^\s'\"<>]+", text or "")
+        return match.group(0).rstrip(".,);") if match else ""
+
+    @staticmethod
+    def _extract_all_urls(text: str) -> list[str]:
+        urls: list[str] = []
+        seen: set[str] = set()
+        for candidate in re.findall(r"https?://[^\s'\"<>]+", text or ""):
+            normalized = candidate.rstrip(".,);")
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                urls.append(normalized)
+        return urls
+
+    @staticmethod
+    def _extract_windows_path(text: str) -> str:
+        match = re.search(r"[A-Za-z]:\\[^\r\n]+", text or "")
+        return match.group(0).strip().rstrip("。；;,，") if match else ""
+
+    @staticmethod
+    def _merge_tool_creation_payload(base: dict[str, Any] | None, updates: dict[str, Any]) -> dict[str, Any]:
+        merged = dict(base or {})
+        for key, value in updates.items():
+            if value in (None, "", [], {}):
+                continue
+            if key == "docs_urls":
+                existing = [str(item).strip() for item in (merged.get(key) or []) if str(item).strip()]
+                incoming = [str(item).strip() for item in (value or []) if str(item).strip()]
+                seen: set[str] = set()
+                merged[key] = [item for item in [*existing, *incoming] if not (item in seen or seen.add(item))]
+                continue
+            if key == "docs_url" and str(merged.get("docs_url") or "").strip():
+                continue
+            merged[key] = value
+        if merged.get("docs_urls") and not merged.get("docs_url"):
+            merged["docs_url"] = merged["docs_urls"][0]
+        return merged
+
+    def _detect_tool_creation_kind(self, query: str, pending_kind: str = "") -> str:
+        lowered = (query or "").lower()
+        if any(token in lowered for token in ["api工具", "api 工具", "远程 api", "远程api", "openapi"]):
+            return "api"
+        if any(token in lowered for token in ["cli工具", "cli 工具", "命令行工具", "本地工具"]):
+            return "cli"
+        return pending_kind
+
+    def _extract_api_tool_creation_payload(
+        self,
+        query: str,
+        base_payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        text = (query or "").strip()
+        first_url = self._extract_first_url(text)
+        all_urls = self._extract_all_urls(text)
+        looks_like_docs = any(token in text.lower() for token in ["文档", "docs", "documentation", "swagger", "openapi", "postman"])
+        sample_curl = self._extract_labeled_value(text, ["curl", "curl 示例", "curl命令", "curl command"]) or (
+            text if "curl " in text.lower() else ""
+        )
+        labeled_docs = self._extract_labeled_value(text, ["文档地址", "docs", "docs url"])
+        docs_urls = []
+        if labeled_docs:
+            docs_urls = self._extract_all_urls(labeled_docs)
+        if looks_like_docs:
+            for url in all_urls:
+                if url not in docs_urls:
+                    docs_urls.append(url)
+        payload = {
+            "display_name": self._extract_tool_display_name(text),
+            "description": self._extract_labeled_value(text, ["用途", "描述", "说明"]) or "由 Agent 聊天创建的工具",
+            "base_url": self._extract_labeled_value(text, ["Base URL", "base url", "base_url", "服务器地址"]),
+            "endpoint_url": self._extract_labeled_value(text, ["Endpoint URL", "endpoint", "接口地址", "URL"]),
+            "path": self._extract_labeled_value(text, ["Path", "路径"]),
+            "method": (self._extract_labeled_value(text, ["Method", "请求方法"]) or "GET").upper(),
+            "auth_type": self._parse_auth_type(self._extract_labeled_value(text, ["认证", "认证方式", "auth", "auth type"])),
+            "api_key": self._extract_labeled_value(text, ["API Key", "api_key", "access_key", "token", "密钥"]),
+            "api_key_name": self._extract_labeled_value(text, ["API Key Name", "api key name", "密钥字段", "参数名", "header 名"]),
+            "docs_url": docs_urls[0] if docs_urls else labeled_docs,
+            "docs_urls": docs_urls,
+            "logo_url": self._extract_labeled_value(text, ["图标", "logo", "logo url", "icon"]),
+            "sample_curl": sample_curl,
+            "openapi_schema_json": "",
+        }
+        if first_url:
+            if looks_like_docs and not payload["docs_url"]:
+                payload["docs_url"] = first_url
+                payload["docs_urls"] = [first_url]
+            elif not payload["endpoint_url"]:
+                payload["endpoint_url"] = first_url
+        merged = self._merge_tool_creation_payload(base_payload, payload)
+        if merged.get("endpoint_url") and merged.get("docs_urls") and merged["endpoint_url"] in set(merged["docs_urls"]):
+            merged["endpoint_url"] = ""
+        if not merged.get("endpoint_url") and merged.get("base_url") and merged.get("path"):
+            merged["endpoint_url"] = f"{merged['base_url'].rstrip('/')}/{str(merged['path']).lstrip('/')}"
+        if merged.get("base_url") and merged.get("path"):
+            merged["openapi_schema_json"] = self._build_simple_api_schema_json(
+                display_name=merged.get("display_name") or "call_api",
+                description=merged.get("description") or "由 Agent 聊天创建的工具",
+                base_url=merged["base_url"],
+                path=merged["path"],
+                method=merged.get("method") or "GET",
+                query=text,
+            )
+        return merged
+
+    def _extract_cli_tool_creation_payload(
+        self,
+        query: str,
+        base_payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        text = (query or "").strip()
+        first_url = self._extract_first_url(text)
+        first_path = self._extract_windows_path(text)
+        payload = {
+            "display_name": self._extract_tool_display_name(text),
+            "description": self._extract_labeled_value(text, ["用途", "描述", "说明"]) or "由 Agent 聊天创建的工具",
+            "command": self._extract_labeled_value(text, ["命令", "command", "运行命令", "启动命令"]),
+            "tool_dir": self._extract_labeled_value(text, ["工具目录", "tool_dir", "tool dir"]),
+            "source_type": self._extract_labeled_value(text, ["来源类型", "source_type"]) or "",
+            "install_source": self._extract_labeled_value(text, ["安装来源", "install_source", "安装地址"]),
+            "install_command": self._extract_labeled_value(text, ["安装命令", "install command"]),
+            "healthcheck_command": self._extract_labeled_value(text, ["健康检查", "healthcheck", "healthcheck command"]),
+            "cwd": self._extract_labeled_value(text, ["工作目录", "cwd"]),
+            "local_path": self._extract_labeled_value(text, ["本地目录", "本地路径", "local path"]),
+            "github_url": self._extract_labeled_value(text, ["GitHub", "github", "仓库地址"]),
+            "docs_url": self._extract_labeled_value(text, ["文档地址", "docs", "docs url"]),
+            "logo_url": self._extract_labeled_value(text, ["图标", "logo", "logo url", "icon"]),
+            "args_template": "",
+            "credential_mode": "none",
+            "cwd_mode": "tool_dir",
+            "timeout_ms": 30000,
+            "notes": "",
+        }
+        if first_url:
+            if "github.com" in first_url.lower() and not payload["github_url"]:
+                payload["github_url"] = first_url
+            elif not payload["docs_url"]:
+                payload["docs_url"] = first_url
+        if first_path and not payload["local_path"]:
+            payload["local_path"] = first_path
+        merged = self._merge_tool_creation_payload(base_payload, payload)
+        if not merged.get("source_type"):
+            if merged.get("github_url"):
+                merged["source_type"] = "github_repo"
+            elif merged.get("local_path") or merged.get("tool_dir"):
+                merged["source_type"] = "local_directory"
+            else:
+                merged["source_type"] = "local_directory"
+        return merged
+
+    def _parse_direct_tool_creation_request(
+        self,
+        query: str,
+        *,
+        base_payload: dict[str, Any] | None = None,
+        pending_kind: str = "",
+    ) -> tuple[BaseTool | None, dict[str, Any], str]:
+        text = (query or "").strip()
+        kind = self._detect_tool_creation_kind(text, pending_kind=pending_kind)
+        is_explicit_creation = ("新增" in text and "工具" in text) or ("创建" in text and "工具" in text)
+        if not kind or (not is_explicit_creation and not pending_kind):
+            return None, {}, ""
+
+        if kind == "api":
+            tool = next((tool for tool in self.plugin_tools if tool.name == "create_remote_api_tool"), None)
+            return tool, self._extract_api_tool_creation_payload(text, base_payload=base_payload), kind
+
+        if kind == "cli":
+            tool = next((tool for tool in self.plugin_tools if tool.name == "create_cli_tool"), None)
+            return tool, self._extract_cli_tool_creation_payload(text, base_payload=base_payload), kind
+        return None, {}, ""
+
+    def _parse_direct_named_tool_invocation(self, query: str) -> tuple[BaseTool | None, dict[str, Any]]:
+        text = (query or "").strip()
+        if "调用名为" not in text or "工具" not in text:
+            return None, {}
+
+        target = ""
+        name_match = re.search(r"调用名为\s*([A-Za-z0-9_\-\u4e00-\u9fff]+)\s*的", text)
+        if name_match:
+            target = name_match.group(1).strip()
+        if not target:
+            return None, {}
+
+        matched_tool = None
+        for tool in self.plugin_tools:
+            tool_type, display_name = self._tool_display_info(tool.name)
+            if self._norm(display_name) == self._norm(target) or self._norm(tool.name) == self._norm(target):
+                matched_tool = tool
+                matched_tool_type = tool_type
+                break
+        if not matched_tool:
+            return None, {}
+
+        if "CLI" in text or matched_tool_type == "CLI 工具":
+            input_value = self._extract_labeled_value(text, ["输入", "input", "参数"]) or ""
+            if "=" in input_value:
+                input_value = input_value.split("=", 1)[1].strip()
+            input_value = input_value.strip(" 。；;,，")
+            return matched_tool, {"input": input_value or text}
+
+        args: dict[str, Any] = {}
+        for match in re.finditer(r"([A-Za-z_][A-Za-z0-9_]*)=([^\s，。；;]+)", text):
+            args[match.group(1)] = match.group(2).strip()
+        if not args:
+            input_value = self._extract_labeled_value(text, ["参数", "query", "输入", "text"])
+            if input_value:
+                args["text"] = input_value.split("=", 1)[-1].strip(" 。；;,，")
+        return matched_tool, args
+
+    @staticmethod
+    def _is_tool_creation_cancel(query: str) -> bool:
+        lowered = (query or "").strip().lower()
+        if not lowered:
+            return False
+        cancel_tokens = ["取消", "算了", "不用了", "不创建了", "放弃", "stop", "cancel", "never mind"]
+        return any(token in lowered for token in cancel_tokens)
+
+    async def _get_pending_tool_creation_state(self) -> dict[str, Any] | None:
+        try:
+            session = await WorkSpaceSessionService.get_workspace_session_from_id(self.session_id, self.user_id)
+        except Exception as err:
+            logger.warning(f"workspace tool creation state lookup failed: {err}")
+            return None
+        if not session:
+            return None
+        for context in reversed(session.get("contexts", []) or []):
+            metadata = context.get("metadata") or {}
+            if "tool_creation_state" in metadata:
+                state = metadata.get("tool_creation_state")
+                return state if isinstance(state, dict) else None
+        return None
+
+    def _build_tool_creation_missing_message(self, kind: str, payload: dict[str, Any]) -> str:
+        if kind == "api":
+            missing: list[str] = []
+            if not payload.get("display_name"):
+                missing.append("工具名称")
+            if not any([payload.get("endpoint_url"), payload.get("docs_url"), payload.get("sample_curl")]):
+                missing.append("接口地址、文档地址或 curl 示例")
+            if missing:
+                return "要继续创建 API 工具，我还缺这些信息：" + "、".join(missing) + "。"
+            return (
+                "我已经识别到这是一个 API 工具。"
+                "如果你还有 API Key、认证字段名或图标，也可以继续补给我；"
+                "如果没有，我会先按当前信息创建。"
+            )
+
+        missing = []
+        if not payload.get("display_name"):
+            missing.append("工具名称")
+        if not any([
+            payload.get("command"),
+            payload.get("tool_dir"),
+            payload.get("local_path"),
+            payload.get("github_url"),
+            payload.get("docs_url"),
+            payload.get("install_source"),
+        ]):
+            missing.append("本地目录、GitHub 地址、文档地址、安装来源或启动命令")
+        if missing:
+            return "要继续创建 CLI 工具，我还缺这些信息：" + "、".join(missing) + "。"
+        return (
+            "我已经识别到这是一个 CLI 工具。"
+            "如果你还有安装命令、健康检查命令、凭证或图标，也可以继续补给我；"
+            "如果没有，我会先按当前信息创建。"
+        )
+
+    async def _plan_tool_creation_flow(self, query: str) -> dict[str, Any] | None:
+        pending_state = await self._get_pending_tool_creation_state()
+        pending_kind = str((pending_state or {}).get("kind") or "").strip()
+        pending_payload = copy.deepcopy((pending_state or {}).get("payload") or {})
+        tool, payload, kind = self._parse_direct_tool_creation_request(
+            query,
+            base_payload=pending_payload,
+            pending_kind=pending_kind,
+        )
+        if not kind and any(token in (query or "") for token in ["新增工具", "新增 工具", "创建工具", "创建 工具"]):
+            return {
+                "mode": "ask",
+                "kind": "",
+                "payload": pending_payload,
+                "reply": "我可以帮你接成 API 工具或 CLI 工具。先告诉我这是 API 还是 CLI；如果是 API，给我接口地址或文档地址；如果是 CLI，给我本地目录、GitHub 地址或启动命令。",
+            }
+        if not kind:
+            return None
+
+        if pending_state and self._is_tool_creation_cancel(query):
+            return {
+                "mode": "cancel",
+                "reply": "好的，这次新增工具我先取消。后面你重新说“新增 API 工具”或“新增 CLI 工具”就会重新开始。",
+            }
+
+        if kind == "api":
+            if not payload.get("display_name") or not any([payload.get("endpoint_url"), payload.get("docs_url"), payload.get("sample_curl")]):
+                return {
+                    "mode": "ask",
+                    "kind": kind,
+                    "payload": payload,
+                    "reply": self._build_tool_creation_missing_message(kind, payload),
+                }
+            try:
+                assist_result = build_remote_api_assist_draft(
+                    RemoteApiAssistReq(
+                        endpoint_url=payload.get("endpoint_url") or "",
+                        docs_url=payload.get("docs_url") or "",
+                        docs_urls=payload.get("docs_urls") or [],
+                        sample_curl=payload.get("sample_curl") or "",
+                        api_key=payload.get("api_key") or "",
+                        api_key_name=payload.get("api_key_name") or "",
+                        auth_type=payload.get("auth_type") or "none",
+                        method=payload.get("method") or "GET",
+                        display_name=payload.get("display_name") or "",
+                        description=payload.get("description") or "",
+                    )
+                )
+                payload["base_url"] = assist_result.simple_api_config.base_url
+                payload["path"] = assist_result.simple_api_config.path
+                payload["endpoint_url"] = (
+                    f"{assist_result.simple_api_config.base_url.rstrip('/')}/{assist_result.simple_api_config.path.lstrip('/')}"
+                    if assist_result.simple_api_config.base_url and assist_result.simple_api_config.path
+                    else payload.get("endpoint_url", "")
+                )
+                payload["method"] = assist_result.simple_api_config.method
+                payload["display_name"] = payload.get("display_name") or assist_result.display_name
+                payload["description"] = payload.get("description") or assist_result.description
+                payload["openapi_schema_json"] = json.dumps(assist_result.openapi_schema, ensure_ascii=False)
+                if assist_result.auth_config.get("auth_type") == "APIKey":
+                    payload["auth_type"] = (
+                        "api_key_query" if assist_result.auth_config.get("in") == "query" else "api_key_header"
+                    )
+                    payload["api_key_name"] = assist_result.auth_config.get("name") or payload.get("api_key_name") or ""
+                elif assist_result.auth_config.get("auth_type") == "Bearer":
+                    payload["auth_type"] = "bearer"
+                elif assist_result.auth_config.get("auth_type") == "Basic":
+                    payload["auth_type"] = "basic"
+                if assist_result.auth_config.get("auth_type") == "APIKey" and not payload.get("api_key"):
+                    auth_name = assist_result.auth_config.get("name") or payload.get("api_key_name") or "API Key"
+                    payload["api_key_name"] = auth_name
+                    return {
+                        "mode": "ask",
+                        "kind": kind,
+                        "payload": payload,
+                        "reply": (
+                            f"我已经根据文档识别出了 API 结构，下一步还缺凭证。"
+                            f"请把 {auth_name} 发给我；如果还有图标，也可以一起给我。"
+                        ),
+                    }
+            except Exception as err:
+                return {
+                    "mode": "ask",
+                    "kind": kind,
+                    "payload": payload,
+                    "reply": f"我已经识别到这是 API 工具，但当前文档分析还不够完整：{err}。请继续补接口地址、curl 或更明确的文档链接。",
+                }
+        else:
+            if not payload.get("display_name") or not any([
+                payload.get("command"),
+                payload.get("tool_dir"),
+                payload.get("local_path"),
+                payload.get("github_url"),
+                payload.get("docs_url"),
+                payload.get("install_source"),
+            ]):
+                return {
+                    "mode": "ask",
+                    "kind": kind,
+                    "payload": payload,
+                    "reply": self._build_tool_creation_missing_message(kind, payload),
+                }
+
+        if not tool:
+            return None
+        return {"mode": "create", "kind": kind, "tool": tool, "payload": payload}
 
     def _tools_for_route(self) -> list[BaseTool] | None:
         if not self.route_hint.kind:
@@ -228,7 +767,7 @@ class WorkSpaceSimpleAgent:
 
     def _strip_route_command(self, query: str) -> str:
         text = (query or "").strip()
-        slash = re.match(r"^/([a-zA-Z_\-\u4e00-\u9fff]+)(?:\s+(.+))?$", text)
+        slash = re.match(r"^/([a-zA-Z0-9_\-\u4e00-\u9fff]+)(?:\s+(.+))?$", text)
         if not slash:
             return text
         return (slash.group(2) or "").strip()
@@ -295,7 +834,7 @@ class WorkSpaceSimpleAgent:
 
     def _enable_explicit_slash_skill(self):
         text = (self.original_query or "").strip()
-        slash = re.match(r"^/([a-zA-Z_\-\u4e00-\u9fff]+)(?:\s+(.+))?$", text)
+        slash = re.match(r"^/([a-zA-Z0-9_\-\u4e00-\u9fff]+)(?:\s+(.+))?$", text)
         if not slash:
             return
 
@@ -367,6 +906,8 @@ class WorkSpaceSimpleAgent:
         if self._initialized:
             return
 
+        await self.setup_available_skill_catalog()
+        self._enable_explicit_slash_skill()
         await self.setup_terminal_tools()
         await self.setup_mcp_tools()
         await self.setup_plugin_tools()
@@ -409,8 +950,9 @@ class WorkSpaceSimpleAgent:
         rules = [
             "You are working in Zuno Workspace Agent mode.",
             "Use enabled tools or MCP when external capability is needed. Never fake tool results.",
+            "When the user asks for a capability that may exist but is not obviously enabled, call search_available_capabilities before saying it is unavailable.",
             "If the user explicitly asks to use a Skill, a knowledge base, MCP, terminal, or a specific tool, prefer the matching capability instead of a generic answer.",
-            "If the user asks to search project资料、知识库、文档库、RAG, prefer search_knowledge_base when available.",
+            "If the user asks to search project materials, a knowledge base, a document library, or RAG content, prefer search_knowledge_base when available.",
             "Before sending email, if sender_slot is not specified, call list_email_accounts first.",
             "If a configuration cannot be found, say it cannot be found. Do not invent slot names or settings.",
             "If the user explicitly says to use Feishu, Lark, Amap, Gaode, Bing, or Bing MCP, prefer the matching enabled MCP tool instead of generic web search.",
@@ -461,7 +1003,11 @@ class WorkSpaceSimpleAgent:
                 writer = get_stream_writer()
                 model_call_count = request.state.get("model_call_count", 0) + 1
                 route_tools = agent._tools_for_route()
-                if route_tools:
+                explicit_slash_skill = (
+                    (agent.original_query or "").strip().startswith("/")
+                    and agent.route_hint.kind == "skill"
+                )
+                if route_tools and not explicit_slash_skill:
                     allowed_names = {tool.name for tool in route_tools}
                     include_support_tool = not (agent.original_query or "").strip().startswith("/")
                     support_tools = [tool for tool in agent.tools if include_support_tool and tool.name in {"list_enabled_capabilities"}]
@@ -536,7 +1082,7 @@ class WorkSpaceSimpleAgent:
                     )
                 )
 
-                if agent.is_mcp_tool(tool_name):
+                if agent.is_mcp_tool(tool_name) and agent.mcp_requires_user_config(tool_name):
                     try:
                         mcp_config = await MCPUserConfigService.get_mcp_user_config(
                             agent.user_id,
@@ -567,7 +1113,10 @@ class WorkSpaceSimpleAgent:
 
                 try:
                     tool_result = await handler(request)
-                    result_text = getattr(tool_result, "content", str(tool_result))
+                    raw_result = getattr(tool_result, "content", tool_result)
+                    result_text = agent._format_tool_result_for_model(raw_result)
+                    if isinstance(tool_result, ToolMessage) and result_text != tool_result.content:
+                        tool_result = tool_result.model_copy(update={"content": result_text})
                     writer(
                         agent._wrap_event(
                             "tool_result",
@@ -641,7 +1190,7 @@ class WorkSpaceSimpleAgent:
             for tool in self.mcp_tools:
                 self.tool_metadata_map[tool.name] = {
                     "name": tool.name,
-                    "type": "MCP工具",
+                    "type": "MCP 工具",
                 }
         except Exception as err:
             logger.error(f"Failed to initialize MCP tools: {err}")
@@ -710,11 +1259,214 @@ class WorkSpaceSimpleAgent:
                     )
                 return "\n\n".join(sections) if sections else "No enabled tools or MCP tools found in this session."
 
+            @tool(parse_docstring=True)
+            async def search_available_capabilities(query: str, kind: str = "", limit: int = 8) -> str:
+                """
+                Search all available tools, skills, and MCP capabilities visible to the current user.
+
+                Use this when the user mentions a tool, skill, MCP server, integration, or vague
+                capability name that may exist but is not already obvious in the enabled session.
+
+                Args:
+                    query: Natural language capability query, such as "飞书发消息" or "PDF 转 Word".
+                    kind: Optional capability kind filter: tool, skill, mcp_server, or mcp_tool.
+                    limit: Maximum number of results to return.
+                """
+                results = await CapabilityRegistryService.search(
+                    query,
+                    user_id=self.user_id,
+                    kind=kind,
+                    limit=limit,
+                )
+                if not results:
+                    return "没有找到匹配的能力。"
+                return json.dumps(results, ensure_ascii=False, indent=2)
+
+            @tool
+            async def create_remote_api_tool(
+                display_name: str,
+                description: str,
+                endpoint_url: str | None = None,
+                base_url: str | None = None,
+                path: str | None = None,
+                method: str | None = "GET",
+                auth_type: str | None = "none",
+                api_key: str | None = None,
+                api_key_name: str | None = None,
+                docs_url: str | None = None,
+                docs_urls: list[str] | None = None,
+                sample_curl: str | None = None,
+                logo_url: str | None = None,
+                openapi_schema_json: str | None = None,
+            ) -> str:
+                """Create a remote API tool for the current user."""
+                endpoint_url = (endpoint_url or "").strip()
+                base_url = (base_url or "").strip()
+                path = (path or "").strip()
+                docs_url = (docs_url or "").strip()
+                docs_urls = [str(item).strip() for item in (docs_urls or []) if str(item).strip()]
+                sample_curl = (sample_curl or "").strip()
+                api_key = (api_key or "").strip()
+                api_key_name = (api_key_name or "").strip()
+                openapi_schema_json = (openapi_schema_json or "").strip()
+                method_value = (method or "GET").strip().upper() or "GET"
+                auth_type_value = (auth_type or "none").strip().lower() or "none"
+                logo = (logo_url or "").strip() or app_settings.default_config.get("tool_logo_url") or ""
+
+                openapi_schema = None
+                assist_source_available = bool(
+                    endpoint_url
+                    or docs_url
+                    or sample_curl
+                    or (base_url and path)
+                )
+                if openapi_schema_json and not assist_source_available:
+                    try:
+                        openapi_schema = json.loads(openapi_schema_json)
+                    except Exception as err:
+                        raise ValueError(f"openapi_schema_json is not valid JSON: {err}") from err
+
+                simple_api_config = None
+                normalized_auth = {}
+                if not openapi_schema:
+                    endpoint = endpoint_url or (f"{base_url.rstrip('/')}/{path.lstrip('/')}" if base_url and path else "")
+                    assist_result = build_remote_api_assist_draft(
+                        RemoteApiAssistReq(
+                            endpoint_url=endpoint,
+                            docs_url=docs_url,
+                            docs_urls=docs_urls or [item for item in [docs_url] if item],
+                            sample_curl=sample_curl,
+                            api_key=api_key,
+                            api_key_name=api_key_name,
+                            auth_type=auth_type_value if auth_type_value in {"none", "bearer", "basic", "api_key_query", "api_key_header"} else "none",
+                            method=method_value if method_value in {"GET", "POST", "PUT", "PATCH", "DELETE"} else "",
+                            display_name=display_name,
+                            description=description,
+                        )
+                    )
+                    simple_api_config = assist_result.simple_api_config
+                    normalized_auth = assist_result.auth_config
+
+                created = await ToolCreationService.create_user_defined_tool(
+                    display_name=display_name,
+                    description=description,
+                    logo_url=logo,
+                    runtime_type="remote_api",
+                    user_id=self.user_id,
+                    auth_config=normalized_auth,
+                    openapi_schema=openapi_schema,
+                    simple_api_config=simple_api_config,
+                    source_metadata={
+                        "endpoint_url": endpoint or (
+                            f"{str(simple_api_config.base_url).rstrip('/')}/{str(simple_api_config.path).lstrip('/')}"
+                            if simple_api_config and simple_api_config.base_url and simple_api_config.path
+                            else ""
+                        ),
+                        "docs_url": docs_url,
+                        "docs_urls": docs_urls or [item for item in [docs_url] if item],
+                        "sample_curl": sample_curl,
+                    },
+                )
+                tool_id = created.get("tool_id") if isinstance(created, dict) else None
+                return (
+                    f"已创建 API 工具: {display_name}"
+                    + (f" (tool_id={tool_id})" if tool_id else "")
+                    + "。后续可以到工具页继续修改图标、参数或 OpenAPI 细节。"
+                )
+
+            @tool
+            async def create_cli_tool(
+                display_name: str,
+                description: str,
+                command: str | None = None,
+                tool_dir: str | None = None,
+                source_type: str | None = "local_directory",
+                args_template: str | None = None,
+                install_source: str | None = None,
+                install_command: str | None = None,
+                healthcheck_command: str | None = None,
+                credential_mode: str | None = "none",
+                cwd_mode: str | None = "tool_dir",
+                cwd: str | None = None,
+                timeout_ms: int = 30000,
+                github_url: str | None = None,
+                docs_url: str | None = None,
+                local_path: str | None = None,
+                notes: str | None = None,
+                logo_url: str | None = None,
+            ) -> str:
+                """Create a CLI tool for the current user."""
+                source_value = (source_type or "local_directory").strip()
+                logo = (logo_url or "").strip() or app_settings.default_config.get("tool_logo_url") or ""
+                cli_config = {
+                    "source_type": source_value,
+                    "tool_dir": (tool_dir or "").strip(),
+                    "local_path": (local_path or "").strip(),
+                    "command": (command or "").strip(),
+                    "args_template": (args_template or "").strip(),
+                    "cwd_mode": (cwd_mode or "tool_dir").strip() or "tool_dir",
+                    "cwd": (cwd or "").strip(),
+                    "timeout_ms": int(timeout_ms or 30000),
+                    "install_command": (install_command or "").strip(),
+                    "install_source": (install_source or "").strip(),
+                    "install_notes": (notes or "").strip(),
+                    "healthcheck_command": (healthcheck_command or "").strip(),
+                    "credential_mode": (credential_mode or "none").strip() or "none",
+                }
+
+                preview_needed = not cli_config["command"] or github_url or docs_url or local_path
+                if preview_needed:
+                    preview = CliToolDiscoveryService.preview(
+                        CLIToolPreviewReq(
+                            tool_dir=cli_config["tool_dir"] or (local_path or ""),
+                            source_type=source_value if source_value in {"local_directory", "executable", "npm_package", "python_package", "github_repo"} else "local_directory",
+                            install_source=cli_config["install_source"],
+                            command=cli_config["command"],
+                            doc_url=docs_url,
+                            docs_url=docs_url,
+                            github_url=github_url,
+                            local_path=local_path,
+                            notes=notes,
+                        )
+                    )
+                    if not cli_config["command"] and preview.recommended:
+                        cli_config["command"] = preview.recommended.command
+                        cli_config["args_template"] = " ".join(preview.recommended.args_template or [])
+                        cli_config["cwd_mode"] = preview.recommended.cwd_mode or cli_config["cwd_mode"]
+                        cli_config["cwd"] = preview.recommended.cwd or cli_config["cwd"]
+                    if not cli_config["install_command"] and preview.suggested_install_command:
+                        cli_config["install_command"] = preview.suggested_install_command
+                    if not cli_config["healthcheck_command"] and preview.suggested_healthcheck_command:
+                        cli_config["healthcheck_command"] = preview.suggested_healthcheck_command
+                    if not cli_config["tool_dir"] and preview.tool_dir:
+                        cli_config["tool_dir"] = preview.tool_dir
+
+                created = await ToolCreationService.create_user_defined_tool(
+                    display_name=display_name,
+                    description=description,
+                    logo_url=logo,
+                    runtime_type="cli",
+                    user_id=self.user_id,
+                    cli_config=cli_config,
+                    source_metadata={
+                        "github_url": (github_url or "").strip(),
+                        "docs_url": (docs_url or "").strip(),
+                        "local_path": (local_path or "").strip(),
+                        "notes": (notes or "").strip(),
+                    },
+                )
+                tool_id = created.get("tool_id") if isinstance(created, dict) else None
+                return (
+                    f"已创建 CLI 工具: {display_name}"
+                    + (f" (tool_id={tool_id})" if tool_id else "")
+                    + "。后续可以到工具页继续修改图标、命令或凭证模式。"
+                )
+
             db_tools = await ToolService.get_tools_from_id(self.plugins)
             for db_tool in db_tools:
                 if db_tool.is_user_defined:
                     runtime_type = get_user_defined_runtime_type(db_tool)
-                    runtime_label = "CLI工具" if runtime_type == "cli" else "远程API工具"
+                    runtime_label = "CLI 工具" if runtime_type == "cli" else "远程 API 工具"
                     langchain_tools = build_user_defined_langchain_tools(db_tool)
                     self.plugin_tools.extend(langchain_tools)
                     for langchain_tool in langchain_tools:
@@ -778,6 +1530,28 @@ class WorkSpaceSimpleAgent:
                     "name": "能力清单查询",
                     "type": "只读工具",
                 }
+                existing_names.add(list_enabled_capabilities.name)
+            if "search_available_capabilities" not in existing_names:
+                self.plugin_tools.append(search_available_capabilities)
+                self.tool_metadata_map[search_available_capabilities.name] = {
+                    "name": "能力模糊搜索",
+                    "type": "只读工具",
+                }
+                existing_names.add(search_available_capabilities.name)
+            if "create_remote_api_tool" not in existing_names:
+                self.plugin_tools.append(create_remote_api_tool)
+                self.tool_metadata_map[create_remote_api_tool.name] = {
+                    "name": "创建 API 工具",
+                    "type": "默认能力",
+                }
+                existing_names.add(create_remote_api_tool.name)
+            if "create_cli_tool" not in existing_names:
+                self.plugin_tools.append(create_cli_tool)
+                self.tool_metadata_map[create_cli_tool.name] = {
+                    "name": "创建 CLI 工具",
+                    "type": "默认能力",
+                }
+                existing_names.add(create_cli_tool.name)
         except Exception as err:
             logger.exception(f"Failed to initialize plugin tools: {err}")
             self.plugin_tools = []
@@ -795,12 +1569,18 @@ class WorkSpaceSimpleAgent:
             Args:
                 query: The question or keywords to retrieve from the selected knowledge bases.
             """
-            return await RagHandler.retrieve_ranked_documents(
+            result = await RagHandler.retrieve_ranked_documents_with_metadata(
                 query,
                 self.knowledge_ids,
                 self.knowledge_ids,
                 retrieval_mode=self.retrieval_mode,
             )
+            try:
+                writer = get_stream_writer()
+                writer(self._wrap_event("status", self._build_retrieval_event_payload(result)))
+            except Exception:
+                logger.debug("knowledge retrieval trace writer unavailable in current execution context")
+            return result["content"]
 
         self.knowledge_tools = [search_knowledge_base]
         self.tool_metadata_map[search_knowledge_base.name] = {
@@ -874,7 +1654,7 @@ class WorkSpaceSimpleAgent:
             {
                 "phase": "start",
                 "status": "START",
-                "message": "Agent 已识别为带参考图的生成任务，直接调用生图能力",
+                "message": "Agent 已识别为带参考图的生成任务，直接调用生图能力。",
                 "execution_mode": self.execution_mode,
                 "access_scope": self.access_scope,
             },
@@ -889,7 +1669,7 @@ class WorkSpaceSimpleAgent:
                     "user_prompt": query,
                     "reference_image_url": reference_image_url,
                 },
-                "message": "正在根据上传图片生成新图",
+                "message": "正在根据上传图片生成新图。",
             },
         )
         try:
@@ -1001,7 +1781,7 @@ class WorkSpaceSimpleAgent:
             self.session_id,
             self.user_id,
         )
-        if session:
+        if session and session.get("title") not in {"", "新对话", "未命名会话"}:
             return session.get("title")
 
         title_prompt = GenerateTitlePrompt.format(query=query)
@@ -1031,6 +1811,7 @@ class WorkSpaceSimpleAgent:
             await WorkSpaceSessionService.update_workspace_session_contexts(
                 session_id=self.session_id,
                 session_context=contexts.model_dump(),
+                title=normalized_title,
             )
             return
 
@@ -1044,21 +1825,171 @@ class WorkSpaceSimpleAgent:
             )
         )
 
+    @staticmethod
+    def _safe_parse_structured_result(result: Any) -> Any | None:
+        if isinstance(result, (dict, list)):
+            return result
+        if not isinstance(result, str):
+            return None
+
+        text = result.strip()
+        if not text:
+            return None
+
+        for parser in (json.loads, ast.literal_eval):
+            try:
+                parsed = parser(text)
+            except Exception:
+                continue
+            if isinstance(parsed, (dict, list)):
+                return parsed
+        return None
+
+    @staticmethod
+    def _format_weather_payload(payload: Any) -> str | None:
+        if not isinstance(payload, dict):
+            return None
+
+        lives = payload.get("lives")
+        if isinstance(lives, list) and lives:
+            live = lives[0] if isinstance(lives[0], dict) else None
+            if not live:
+                return None
+
+            city = live.get("city") or live.get("province") or "当前城市"
+            weather = live.get("weather") or "天气未知"
+            temperature = live.get("temperature")
+            humidity = live.get("humidity")
+            wind_direction = live.get("winddirection") or live.get("windDirection")
+            wind_power = live.get("windpower") or live.get("windPower")
+            report_time = live.get("reporttime") or live.get("reportTime")
+
+            parts = [f"{city}当前{weather}"]
+            if temperature:
+                parts.append(f"气温 {temperature}°C")
+            if humidity:
+                parts.append(f"湿度 {humidity}%")
+            if wind_direction or wind_power:
+                wind_text = f"{wind_direction or ''}{wind_power or ''}".strip()
+                if wind_text:
+                    parts.append(f"风力 {wind_text}")
+            summary = "，".join(parts) + "。"
+            if report_time:
+                summary += f" 数据时间：{report_time}。"
+            return summary
+
+        forecasts = payload.get("forecasts")
+        if isinstance(forecasts, list) and forecasts:
+            if all(isinstance(item, dict) and (item.get("dayweather") or item.get("nightweather")) for item in forecasts):
+                today = forecasts[0]
+                city = payload.get("city") or payload.get("province") or "当前城市"
+                date = today.get("date") or "今天"
+                day_weather = today.get("dayweather") or today.get("dayWeather") or "未知"
+                night_weather = today.get("nightweather") or today.get("nightWeather")
+                day_temp = today.get("daytemp") or today.get("dayTemp")
+                night_temp = today.get("nighttemp") or today.get("nightTemp")
+                day_wind = today.get("daywind") or today.get("dayWind")
+                day_power = today.get("daypower") or today.get("dayPower")
+
+                parts = [f"{city}{date}{day_weather}"]
+                if day_temp or night_temp:
+                    parts.append(f"预计气温 {night_temp or '?'}-{day_temp or '?'}°C")
+                if night_weather:
+                    parts.append(f"夜间 {night_weather}")
+                if day_wind or day_power:
+                    wind_text = f"{day_wind or ''}{day_power or ''}".strip()
+                    if wind_text:
+                        parts.append(f"白天风力 {wind_text}")
+                return "，".join(parts) + "。"
+
+            forecast = forecasts[0] if isinstance(forecasts[0], dict) else None
+            if not forecast:
+                return None
+
+            city = forecast.get("city") or forecast.get("province") or "当前城市"
+            casts = forecast.get("casts")
+            if not isinstance(casts, list) or not casts:
+                return None
+            today = casts[0] if isinstance(casts[0], dict) else None
+            if not today:
+                return None
+
+            date = today.get("date") or "今天"
+            day_weather = today.get("dayweather") or today.get("dayWeather") or "未知"
+            night_weather = today.get("nightweather") or today.get("nightWeather")
+            day_temp = today.get("daytemp") or today.get("dayTemp")
+            night_temp = today.get("nighttemp") or today.get("nightTemp")
+            day_wind = today.get("daywind") or today.get("dayWind")
+            day_power = today.get("daypower") or today.get("dayPower")
+
+            parts = [f"{city}{date}{day_weather}"]
+            if day_temp or night_temp:
+                parts.append(f"预计气温 {night_temp or '?'}-{day_temp or '?'}°C")
+            if night_weather:
+                parts.append(f"夜间 {night_weather}")
+            if day_wind or day_power:
+                wind_text = f"{day_wind or ''}{day_power or ''}".strip()
+                if wind_text:
+                    parts.append(f"白天风力 {wind_text}")
+            return "，".join(parts) + "。"
+
+        return None
+
+    def _format_direct_tool_final_answer(self, tool_name: str, result: Any, raw_text: str) -> str:
+        if tool_name == "maps_weather":
+            payload = self._safe_parse_structured_result(result)
+            weather_summary = self._format_weather_payload(payload)
+            if weather_summary:
+                return weather_summary
+        return self._normalize_weekday_labels(raw_text)
+
+    @staticmethod
+    def _format_tool_result_for_model(result: Any) -> str:
+        structured_summary = format_structured_tool_result(result)
+        if structured_summary:
+            return structured_summary
+        return result if isinstance(result, str) else str(result)
+
+    @staticmethod
+    def _normalize_weekday_labels(text: str) -> str:
+        if not isinstance(text, str) or not text:
+            return text
+
+        weekday_names = ["一", "二", "三", "四", "五", "六", "日"]
+
+        def replace(match: re.Match[str]) -> str:
+            year = int(match.group("year"))
+            month = int(match.group("month"))
+            day = int(match.group("day"))
+            try:
+                weekday = weekday_names[date(year, month, day).weekday()]
+            except ValueError:
+                return match.group(0)
+            return f"{year:04d}-{month:02d}-{day:02d}{match.group('open')}周{weekday}{match.group('close')}"
+
+        return re.sub(
+            r"(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})(?P<open>[（(])周[一二三四五六日天](?P<close>[）)])",
+            replace,
+            text,
+        )
+
     async def _run_direct_routed_tool(
         self,
         tool: BaseTool,
         args: dict[str, Any],
         original_query: str,
+        session_metadata: dict[str, Any] | None = None,
     ) -> AsyncGenerator[WorkspaceAgentStreamEvent, None]:
         tool_type, display_name = self._tool_display_info(tool.name)
         tool_call_id = f"direct-{tool.name}-{uuid.uuid4().hex[:8]}"
+        route_kind = self.route_hint.kind or "tool_creation"
         yield self._wrap_event(
             "status",
             {
                 "phase": "route",
                 "status": "START",
-                "message": f"已按显式命令直达 {self.route_hint.kind} 能力",
-                "route": self.route_hint.model_dump(),
+                "message": f"已按显式意图直达 {route_kind} 能力",
+                "route": {**self.route_hint.model_dump(), "kind": route_kind},
                 "tool_names": [tool.name],
             },
         )
@@ -1073,7 +2004,7 @@ class WorkSpaceSimpleAgent:
             },
         )
         call_args = dict(args)
-        if self.is_mcp_tool(tool.name):
+        if self.is_mcp_tool(tool.name) and self.mcp_requires_user_config(tool.name):
             mcp_config = await MCPUserConfigService.get_mcp_user_config(
                 self.user_id,
                 self.get_mcp_id_by_tool(tool.name),
@@ -1090,7 +2021,8 @@ class WorkSpaceSimpleAgent:
                 },
             ),
         )
-        result_text = result if isinstance(result, str) else str(result)
+        raw_result_text = result if isinstance(result, str) else str(result)
+        final_answer = self._format_direct_tool_final_answer(tool.name, result, raw_result_text)
         yield self._wrap_event(
             "tool_result",
             {
@@ -1098,24 +2030,171 @@ class WorkSpaceSimpleAgent:
                 "tool_type": tool_type,
                 "tool_call_id": tool_call_id,
                 "ok": True,
-                "result": result_text,
-                "message": f"{display_name} 已返回结果",
+                "result": raw_result_text,
+                                    "message": f"{display_name} 已返回结果",
             },
         )
         title = await self._generate_title(original_query)
         await self._add_workspace_session(
             title,
-            WorkSpaceSessionContext(query=original_query, answer=result_text),
+            WorkSpaceSessionContext(
+                query=original_query,
+                answer=final_answer,
+                metadata=session_metadata or {},
+            ),
         )
         yield self._wrap_event(
             "final",
             {
-                "chunk": result_text,
-                "message": result_text,
-                "accumulated": result_text,
+                "chunk": final_answer,
+                "message": final_answer,
+                "accumulated": final_answer,
                 "done": True,
             },
         )
+
+    def _get_active_skill_for_route(self) -> Any | None:
+        if self.route_hint.kind != "skill":
+            return None
+
+        target = self._norm(self.route_hint.target)
+        for skill in self.available_skills:
+            candidates = {
+                self._norm(self._skill_value(skill, "id")),
+                self._norm(self._skill_value(skill, "name")),
+                self._norm(self._skill_value(skill, "as_tool_name")),
+            }
+            if target and target in candidates:
+                return skill
+
+        selected_ids = set(self.agent_skill_ids)
+        for skill in self.available_skills:
+            if self._skill_value(skill, "id") in selected_ids:
+                return skill
+        return None
+
+    def _prepare_explicit_skill_messages(
+        self,
+        messages: List[BaseMessage],
+        cleaned_query: str,
+    ) -> List[BaseMessage]:
+        if not ((self.original_query or "").strip().startswith("/") and self.route_hint.kind == "skill"):
+            return messages
+
+        skill = self._get_active_skill_for_route()
+        if not skill:
+            return messages
+
+        runtime_skill = skill if not isinstance(skill, dict) else SimpleNamespace(**skill)
+        effective_query = cleaned_query.strip() or self._strip_route_command(self.original_query or "").strip()
+        skill_context = AgentSkillService.build_skill_runtime_context(runtime_skill, query=effective_query)
+        normalized_messages = copy.deepcopy(messages)
+        if normalized_messages and isinstance(normalized_messages[-1], HumanMessage):
+            normalized_messages[-1] = HumanMessage(
+                content=(
+                    "The user explicitly selected a Skill for this turn.\n"
+                    "Treat the following skill package as execution guidance for the current task.\n"
+                    "Do not output the skill package verbatim.\n"
+                    "Use it internally, then continue solving the user's task with normal tools and reasoning.\n\n"
+                    f"{skill_context}\n\n"
+                    f"[User Task]\n{effective_query}"
+                )
+            )
+        return normalized_messages
+
+    @staticmethod
+    def _looks_like_external_freshness_query(query: str) -> bool:
+        normalized = (query or "").lower()
+        keywords = [
+            "天气",
+            "今天",
+            "现在",
+            "实时",
+            "最新",
+            "联网",
+            "搜索",
+            "查一个",
+            "查一查",
+            "新闻",
+            "网页",
+            "bing",
+            "高德",
+            "地图",
+            "飞书",
+            "邮件",
+            "calendar",
+            "weather",
+            "today",
+            "current",
+            "latest",
+            "news",
+            "search",
+            "web",
+        ]
+        return any(keyword in normalized for keyword in keywords)
+
+    async def _prefetch_knowledge_context(self, query: str) -> Dict[str, Any] | None:
+        if self.execution_mode == "terminal" or not self.knowledge_ids:
+            return None
+        normalized_query = (query or "").strip()
+        if not normalized_query:
+            return None
+        try:
+            result = await RagHandler.retrieve_ranked_documents_with_metadata(
+                normalized_query,
+                self.knowledge_ids,
+                self.knowledge_ids,
+                retrieval_mode=self.retrieval_mode,
+            )
+        except Exception as err:
+            logger.warning(f"workspace knowledge prefetch failed: {err}")
+            return None
+        context = str(result.get("content") or "").strip()
+        if not context:
+            return None
+        return {"content": context, "result": result}
+
+    @staticmethod
+    def _inject_prefetched_knowledge_context(
+        messages: List[BaseMessage],
+        knowledge_context: str,
+        user_query: str,
+    ) -> List[BaseMessage]:
+        if not knowledge_context:
+            return messages
+
+        normalized_messages = copy.deepcopy(messages)
+        injected_content = (
+            "Use the following retrieved knowledge base context as your primary source for this turn.\n"
+            "Prefer answering from this context before using generic web search.\n"
+            "Only use external tools if the user explicitly requests real-time or external information, "
+            "or if the retrieved context is clearly insufficient.\n\n"
+            f"[Knowledge Context]\n{knowledge_context}\n\n"
+            f"[User Task]\n{user_query}"
+        )
+        if normalized_messages and isinstance(normalized_messages[-1], HumanMessage):
+            normalized_messages[-1] = HumanMessage(content=injected_content)
+            return normalized_messages
+
+        normalized_messages.append(HumanMessage(content=injected_content))
+        return normalized_messages
+
+    def _build_runtime_tools(
+        self,
+        query: str,
+        prefetched_knowledge_context: str,
+    ) -> List[BaseTool]:
+        if not prefetched_knowledge_context:
+            return self.tools
+        if self._looks_like_external_freshness_query(query):
+            return self.tools
+
+        filtered_tools = [
+            tool
+            for tool in self.tools
+            if tool.name not in {"web_search", "read_webpage"}
+        ]
+        return filtered_tools or self.tools
 
     async def astream(
         self,
@@ -1147,7 +2226,7 @@ class WorkSpaceSimpleAgent:
         if self.execution_mode == "terminal" and not self.desktop_bridge_config:
             terminal_notice = (
                 "当前已切换到终端模式，但这次会话没有拿到桌面 bridge 配置。"
-                "所以我还不能真正访问你 Windows 本机的文件系统或执行本地命令。"
+                "所以我还不能真正访问你的 Windows 本机文件系统或执行本地命令。"
                 "请从桌面客户端发起终端模式对话，再让我执行本地文件或命令操作。"
             )
             yield self._wrap_event(
@@ -1172,13 +2251,126 @@ class WorkSpaceSimpleAgent:
 
         explicit_command = original_query.strip().startswith("/")
         cleaned_route_query = self._strip_route_command(original_query)
+        if explicit_command and self.route_hint.kind == "skill":
+            user_messages = self._prepare_explicit_skill_messages(user_messages, cleaned_route_query)
+        prefetched_knowledge_context = ""
+        runtime_tools = self.tools
+        runtime_system_prompt = self._build_runtime_system_prompt()
+        if (
+            self.execution_mode == "tool"
+            and self.knowledge_ids
+            and self.route_hint.kind not in {"mcp"}
+        ):
+            prefetched_query = cleaned_route_query.strip() or original_query
+            prefetched_payload = await self._prefetch_knowledge_context(prefetched_query)
+            if prefetched_payload:
+                prefetched_knowledge_context = prefetched_payload["content"]
+                user_messages = self._inject_prefetched_knowledge_context(
+                    user_messages,
+                    prefetched_knowledge_context,
+                    prefetched_query,
+                )
+                runtime_tools = self._build_runtime_tools(
+                    prefetched_query,
+                    prefetched_knowledge_context,
+                )
+                runtime_system_prompt = (
+                    f"{runtime_system_prompt}\n"
+                    "Retrieved knowledge base context has already been injected for this turn. "
+                    "Treat it as the primary source unless the user explicitly needs external real-time information."
+                )
+                yield self._wrap_event("status", self._build_retrieval_event_payload(prefetched_payload["result"]))
         route_tools = self._tools_for_route() or []
+        direct_tool = None
+        direct_args: dict[str, Any] = {}
+        direct_creation_plan = await self._plan_tool_creation_flow(original_query)
+        direct_named_tool, direct_named_args = self._parse_direct_named_tool_invocation(original_query)
         logger.info(
             f"workspace direct route check: query={original_query!r} explicit={explicit_command} "
             f"route_hint={self.route_hint.model_dump()} "
             f"route_tools={[tool.name for tool in route_tools]} "
             f"cleaned={cleaned_route_query!r}"
         )
+        if direct_named_tool and direct_named_args:
+            async for event in self._run_direct_routed_tool(
+                direct_named_tool,
+                direct_named_args,
+                original_query,
+            ):
+                yield event
+            return
+        if direct_creation_plan and direct_creation_plan.get("mode") == "cancel":
+            reply = direct_creation_plan["reply"]
+            title = await self._generate_title(original_query)
+            await self._add_workspace_session(
+                title,
+                WorkSpaceSessionContext(
+                    query=original_query,
+                    answer=reply,
+                    metadata={"tool_creation_state": None},
+                ),
+            )
+            yield self._wrap_event(
+                "status",
+                {
+                    "phase": "tool_creation",
+                    "status": "END",
+                    "message": "已取消本轮工具创建",
+                },
+            )
+            yield self._wrap_event(
+                "final",
+                {
+                    "chunk": reply,
+                    "message": reply,
+                    "accumulated": reply,
+                    "done": True,
+                },
+            )
+            return
+        if direct_creation_plan and direct_creation_plan.get("mode") == "ask":
+            reply = direct_creation_plan["reply"]
+            title = await self._generate_title(original_query)
+            await self._add_workspace_session(
+                title,
+                WorkSpaceSessionContext(
+                    query=original_query,
+                    answer=reply,
+                    metadata={
+                        "tool_creation_state": {
+                            "kind": direct_creation_plan.get("kind"),
+                            "payload": direct_creation_plan.get("payload") or {},
+                        }
+                    },
+                ),
+            )
+            yield self._wrap_event(
+                "status",
+                {
+                    "phase": "tool_creation",
+                    "status": "WAITING",
+                    "message": "工具创建信息还不完整，已进入补参状态",
+                },
+            )
+            yield self._wrap_event(
+                "final",
+                {
+                    "chunk": reply,
+                    "message": reply,
+                    "accumulated": reply,
+                    "done": True,
+                },
+            )
+            return
+        if direct_creation_plan and direct_creation_plan.get("mode") == "create":
+            async for event in self._run_direct_routed_tool(
+                direct_creation_plan["tool"],
+                direct_creation_plan["payload"],
+                original_query,
+                session_metadata={"tool_creation_state": None},
+            ):
+                yield event
+            return
         if explicit_command and self.route_hint.kind == "knowledge" and route_tools:
             async for event in self._run_direct_routed_tool(
                 route_tools[0],
@@ -1187,16 +2379,9 @@ class WorkSpaceSimpleAgent:
             ):
                 yield event
             return
-        if explicit_command and self.route_hint.kind == "skill" and route_tools:
-            async for event in self._run_direct_routed_tool(
-                route_tools[0],
-                {"query": cleaned_route_query or original_query},
-                original_query,
-            ):
-                yield event
-            return
-        if explicit_command and self.route_hint.kind == "mcp":
+        if self.route_hint.kind == "mcp":
             direct_tool, direct_args = self._guess_direct_mcp_call(original_query)
+        if explicit_command and self.route_hint.kind == "mcp":
             if not direct_tool and route_tools:
                 route_tool_names = {tool.name for tool in route_tools}
                 route_query = cleaned_route_query or original_query
@@ -1250,16 +2435,25 @@ class WorkSpaceSimpleAgent:
                     )
                     direct_tool = None
                     direct_args = {}
-            if direct_tool:
-                async for event in self._run_direct_routed_tool(direct_tool, direct_args, original_query):
-                    yield event
-                return
+        if direct_tool:
+            async for event in self._run_direct_routed_tool(direct_tool, direct_args, original_query):
+                yield event
+            return
 
         generate_title_task = asyncio.create_task(self._generate_title(original_query))
         response_content = ""
         has_activity = False
         has_visible_output = False
         inside_think = False
+        runtime_agent = self.react_agent
+        if runtime_tools != self.tools or prefetched_knowledge_context:
+            runtime_agent = create_agent(
+                model=self.model,
+                tools=runtime_tools,
+                system_prompt=runtime_system_prompt,
+                middleware=self.middlewares,
+                state_schema=StreamAgentState,
+            )
 
         yield self._wrap_event(
             "status",
@@ -1273,7 +2467,7 @@ class WorkSpaceSimpleAgent:
         )
 
         try:
-            async for mode, payload in self.react_agent.astream(
+            async for mode, payload in runtime_agent.astream(
                 input={
                     "messages": user_messages,
                     "tool_call_count": 0,
@@ -1319,6 +2513,8 @@ class WorkSpaceSimpleAgent:
                     )
 
                 if not visible_chunk:
+                    continue
+                if isinstance(visible_chunk, str) and not has_visible_output and not visible_chunk.strip():
                     continue
 
                 has_activity = True
@@ -1387,6 +2583,19 @@ class WorkSpaceSimpleAgent:
             )
             response_content = empty_text
 
+        normalized_response_content = self._normalize_weekday_labels(response_content)
+        if normalized_response_content != response_content:
+            response_content = normalized_response_content
+            yield self._wrap_event(
+                "final",
+                {
+                    "chunk": "",
+                    "message": response_content,
+                    "accumulated": response_content,
+                    "done": True,
+                },
+            )
+
         try:
             title = await generate_title_task
         except Exception:
@@ -1428,7 +2637,10 @@ class WorkSpaceSimpleAgent:
         for server_name in self.server_dict.keys():
             server_norm = self._norm(server_name)
             if normalized and (normalized in server_norm or server_norm in normalized):
-                return self._canonical_mcp_target(server_name)
+                # Custom MCP names are already normalized here. Recursing back into
+                # _canonical_mcp_target(server_name) can loop forever when the
+                # normalized query equals the normalized server name.
+                return server_norm
         return normalized
 
     def _tool_display_info(self, tool_name: str) -> tuple[str, str]:
@@ -1454,7 +2666,7 @@ class WorkSpaceSimpleAgent:
             return RouteHint()
 
         lowered = text.lower()
-        slash = re.match(r"^/([a-zA-Z_\-一-鿿]+)(?:\s+(.+))?$", text)
+        slash = re.match(r"^/([a-zA-Z0-9_\-\u4e00-\u9fff]+)(?:\s+(.+))?$", text)
         if slash:
             raw_command = (slash.group(1) or "").strip()
             command = raw_command.lower()
@@ -1491,6 +2703,7 @@ class WorkSpaceSimpleAgent:
                     if not target and len(self.mcp_configs) == 1:
                         target = self._canonical_mcp_target(self.mcp_configs[0].server_name)
                 return RouteHint(kind=kind, target=target, reason=f"显式命令 /{raw_command}")
+            return RouteHint(kind="skill", target=raw_command, reason=f"显式 Skill /{raw_command}")
 
         if any(word in text for word in ["飞书", "Feishu", "Lark", "lark"]):
             return RouteHint(kind="mcp", target="feishu", reason="用户明确提到飞书")
@@ -1527,6 +2740,30 @@ class WorkSpaceSimpleAgent:
                 if normalized_cleaned.startswith(candidate_norm + " "):
                     return cleaned[len(candidate):].strip()
         return cleaned
+
+    def _extract_gaode_weather_city(self, query: str) -> str:
+        cleaned = self._extract_route_payload_query(query)
+        normalized = cleaned
+        prefix_patterns = [
+            r"^(?:请|麻烦|帮我|请帮我)?(?:用|通过)?(?:高德地图|高德|gaode|amap)?(?:查询|查一个|查一查|查看|搜索)?",
+        ]
+        suffix_patterns = [
+            r"(?:并且).*$",
+            r"(?:并).*$",
+            r"(?:请|麻烦).*$",
+        ]
+        for pattern in prefix_patterns:
+            normalized = re.sub(pattern, "", normalized, flags=re.IGNORECASE).strip()
+        for pattern in suffix_patterns:
+            normalized = re.sub(pattern, "", normalized, flags=re.IGNORECASE).strip()
+        normalized = re.sub(
+            r"(?:今天|今日)?天气(?:情况|怎么样|如何)?",
+            "",
+            normalized,
+            flags=re.IGNORECASE,
+        )
+        normalized = re.sub(r"(今天|今日)$", "", normalized).strip(" ，。？!、")
+        return normalized or "杭州"
 
     def _guess_direct_mcp_call(self, query: str) -> tuple[BaseTool | None, dict[str, Any]]:
         cleaned = self._extract_route_payload_query(query)
@@ -1567,7 +2804,7 @@ class WorkSpaceSimpleAgent:
                 return self._find_route_tool("maps_direction_driving"), {"origin": origin, "destination": destination}
 
             if "天气" in cleaned:
-                city = cleaned.replace("天气", "").strip(" ，。？?") or "杭州"
+                city = self._extract_gaode_weather_city(query)
                 return self._find_route_tool("maps_weather"), {"city": city}
 
         return None, {}
@@ -1607,3 +2844,18 @@ class WorkSpaceSimpleAgent:
                     if server_name == config.server_name:
                         return config.mcp_server_id
         return None
+
+    def mcp_requires_user_config(self, tool_name: str) -> bool:
+        mcp_server_id = self.get_mcp_id_by_tool(tool_name)
+        if not mcp_server_id:
+            return False
+
+        for config in self.mcp_configs:
+            if config.mcp_server_id != mcp_server_id:
+                continue
+            if config.config_enabled:
+                return True
+            if config.config:
+                return True
+            return False
+        return False

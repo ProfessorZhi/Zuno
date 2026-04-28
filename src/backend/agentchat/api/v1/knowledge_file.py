@@ -8,22 +8,25 @@ from agentchat.api.services.knowledge_file import KnowledgeFileService
 from agentchat.api.services.user import UserPayload, get_login_user
 from agentchat.schema.schemas import UnifiedResponseModel, resp_200, resp_500
 from agentchat.services.storage import storage_client
-from agentchat.utils.file_utils import get_save_tempfile
+from agentchat.utils.file_utils import get_object_key_from_public_url, get_save_tempfile
 
 router = APIRouter(tags=["Knowledge-File"])
 
 
 @router.post("/knowledge_file/create", response_model=UnifiedResponseModel)
 async def upload_file(
-    knowledge_id: str = Body(..., description="鐭ヨ瘑搴撶殑ID"),
-    file_url: str = Body(..., description="鏂囦欢涓婁紶鍚庤繑鍥炵殑URL"),
+    knowledge_id: str = Body(..., description="知识库 ID"),
+    file_url: str = Body(..., description="文件上传后返回的 URL"),
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
         file_name = file_url.split("/")[-1]
         local_file_path = get_save_tempfile(file_name)
         parsed = urlparse(file_url)
-        object_key = parsed.path.lstrip("/")
+        object_key = get_object_key_from_public_url(
+            file_url,
+            bucket_name=(parsed.path.lstrip("/").split("/", 1)[0] if parsed.path else ""),
+        )
         storage_client.download_file(object_key, local_file_path)
         file_size_bytes = os.path.getsize(local_file_path)
 
@@ -130,6 +133,19 @@ async def retry_knowledge_file_task(
             raise ValueError("knowledge task not found")
         await KnowledgeFileService.verify_user_permission(task["knowledge_file_id"], login_user.user_id)
         result = await KnowledgeFileService.retry_task(task_id)
+        return resp_200(data=result)
+    except Exception as err:
+        return resp_500(message=str(err))
+
+
+@router.post("/knowledge_file/reindex", response_model=UnifiedResponseModel)
+async def reindex_knowledge_files(
+    knowledge_id: str = Body(..., embed=True),
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id)
+        result = await KnowledgeFileService.reindex_knowledge_files(knowledge_id)
         return resp_200(data=result)
     except Exception as err:
         return resp_500(message=str(err))

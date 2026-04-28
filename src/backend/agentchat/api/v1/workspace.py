@@ -3,6 +3,7 @@ import time
 import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from loguru import logger
 from langchain_core.messages import HumanMessage, SystemMessage
 from starlette.responses import StreamingResponse
@@ -28,8 +29,17 @@ from agentchat.services.workspace.simple_agent import MCPConfig, WorkSpaceSimple
 from agentchat.tools.text2image.action import _text_to_image
 from agentchat.utils.helpers import parse_imported_config
 from agentchat.utils.contexts import set_agent_name_context, set_user_id_context
+from agentchat.database.models.workspace_session import WorkSpaceSessionCreate
 
 router = APIRouter(prefix="/workspace", tags=["WorkSpace"])
+
+
+class WorkSpaceSessionCreateBody(BaseModel):
+    title: str = ""
+    session_id: str | None = None
+    agent: str = Field(default="simple")
+    workspace_mode: str = Field(default="normal")
+    contexts: list[dict] = Field(default_factory=list)
 
 
 IMAGE_REGEN_KEYWORDS = [
@@ -94,20 +104,33 @@ async def get_workspace_execution_modes(
 
 
 @router.get("/session", summary="Get workspace session list")
-async def get_workspace_sessions(login_user: UserPayload = Depends(get_login_user)):
-    results = await WorkSpaceSessionService.get_workspace_sessions(login_user.user_id)
+async def get_workspace_sessions(
+    workspace_mode: str | None = None,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    results = await WorkSpaceSessionService.get_workspace_sessions(
+        login_user.user_id,
+        workspace_mode=workspace_mode,
+    )
     return resp_200(data=results)
 
 
 @router.post("/session", summary="Create workspace session")
 async def create_workspace_session(
-    *,
-    title: str = "",
-    contexts: dict = {},
+    payload: WorkSpaceSessionCreateBody,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = title, contexts, login_user
-    return resp_200()
+    session = await WorkSpaceSessionService.create_workspace_session(
+        WorkSpaceSessionCreate(
+            title=(payload.title or "新对话").strip() or "新对话",
+            agent=payload.agent or "simple",
+            user_id=login_user.user_id,
+            session_id=payload.session_id,
+            workspace_mode=payload.workspace_mode,
+            contexts=payload.contexts or [],
+        )
+    )
+    return resp_200(data=WorkSpaceSessionService.serialize_session(session))
 
 
 @router.post("/session/{session_id}", summary="Get workspace session info")
@@ -191,6 +214,8 @@ async def workspace_simple_chat(
                 type=(imported_info.type if imported_info else mcp_server.get("type", "sse")),
                 url=(imported_info.url if imported_info else mcp_server.get("url", "")) or "",
                 tools=mcp_server.get("tools") or [],
+                config_enabled=bool(mcp_server.get("config_enabled")),
+                config=mcp_server.get("config") or [],
                 headers=imported_info.headers if imported_info else None,
                 command=imported_info.command if imported_info else None,
                 args=(imported_info.args or []) if imported_info else [],

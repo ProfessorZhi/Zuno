@@ -23,7 +23,11 @@ async def upload_knowledge(
             knowledge_name=knowledge_req.knowledge_name,
             knowledge_desc=knowledge_req.knowledge_desc,
             user_id=login_user.user_id,
-            default_retrieval_mode=knowledge_req.default_retrieval_mode,
+            knowledge_config=(
+                knowledge_req.knowledge_config.model_dump()
+                if knowledge_req.knowledge_config is not None
+                else None
+            ),
         )
         return resp_200()
     except Exception as err:
@@ -54,7 +58,11 @@ async def update_knowledge(
             knowledge_req.knowledge_id,
             knowledge_req.knowledge_name,
             knowledge_req.knowledge_desc,
-            knowledge_req.default_retrieval_mode,
+            (
+                knowledge_req.knowledge_config.model_dump(exclude_unset=True)
+                if knowledge_req.knowledge_config is not None
+                else None
+            ),
         )
         return resp_200()
     except Exception as err:
@@ -81,20 +89,20 @@ async def retrieval_knowledge(
     *,
     query: str = Body(..., description="query"),
     knowledge_id: Union[str, List[str]] = Body(..., description="knowledge id"),
-    retrieval_mode: str = Body("rag", description="retrieval mode"),
+    retrieval_mode: str = Body("auto", description="retrieval mode"),
 ):
     if isinstance(knowledge_id, str):
-        content = await RagHandler.retrieve_ranked_documents(
+        result = await RagHandler.retrieve_ranked_documents_with_metadata(
             query,
             [knowledge_id],
             [knowledge_id],
             retrieval_mode=retrieval_mode,
         )
     else:
-        content = await RagHandler.retrieve_ranked_documents(
+        result = await RagHandler.retrieve_ranked_documents_with_metadata(
             query,
             knowledge_id,
             knowledge_id,
             retrieval_mode=retrieval_mode,
         )
-    return resp_200(content)
+    return resp_200(data=result)

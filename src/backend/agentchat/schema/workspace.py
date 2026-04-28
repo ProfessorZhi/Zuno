@@ -18,7 +18,7 @@ class WorkSpaceSimpleTask(BaseModel):
     plugins: List[str] = []
     mcp_servers: List[str] = []
     knowledge_ids: List[str] = []
-    retrieval_mode: str = "default"
+    retrieval_mode: str = "auto"
     agent_skill_ids: List[str] = []
     execution_mode: str = "tool"
     access_scope: str = "workspace"
@@ -47,6 +47,15 @@ class WorkspaceAgentEventData(TypedDict, total=False):
     accumulated: str
     error: str
     done: bool
+    retrieval_mode: str
+    first_mode: str
+    final_mode: str
+    fallback_reason: str
+    round_count: int
+    second_pass_used: bool
+    rewritten_query_used: bool
+    query_variants: list[str]
+    rounds: list[dict[str, Any]]
 
 
 class WorkspaceAgentStreamEvent(TypedDict):

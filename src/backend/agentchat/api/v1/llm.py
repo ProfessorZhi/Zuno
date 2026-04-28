@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from agentchat.api.services.user import get_login_user, UserPayload
-from agentchat.schema.llm import LLMUpdateReq, LLMCreateReq, LLMDeleteReq, LLMSearchReq
+from agentchat.schema.llm import LLMUpdateReq, LLMCreateReq, LLMDeleteReq, LLMSearchReq, LLMActivateReq
 from agentchat.schema.schemas import resp_200, resp_500
 from agentchat.api.services.llm import LLMService, LLM_Types
 
@@ -49,7 +49,23 @@ async def update_llm(
             llm_id=req.llm_id,
             user_id=login_user.user_id
         )
-        await LLMService.update_llm(**req.model_dump())
+        await LLMService.update_llm(**req.model_dump(exclude_unset=True))
+        return resp_200()
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+@router.post("/activate", summary="设置当前启用模型槽位")
+async def activate_llm(
+    req: LLMActivateReq,
+    login_user: UserPayload = Depends(get_login_user)
+):
+    try:
+        await LLMService.verify_user_permission(
+            llm_id=req.llm_id,
+            user_id=login_user.user_id
+        )
+        await LLMService.activate_model_slot(req.llm_id, req.model_slot)
         return resp_200()
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))

@@ -74,6 +74,28 @@ export interface KnowledgeTaskRetryRequest {
   task_id: string
 }
 
+export interface KnowledgeBulkReindexRequest {
+  knowledge_id: string
+}
+
+export interface KnowledgeBulkReindexResponse {
+  knowledge_id: string
+  total_files: number
+  queued_files: number
+  failed_files: number
+  tasks: Array<{
+    task_id: string
+    knowledge_file_id: string
+    dispatch_mode: string
+    previous_task_id?: string | null
+  }>
+  failures?: Array<{
+    knowledge_file_id: string
+    file_name: string
+    error: string
+  }>
+}
+
 export function createKnowledgeFileAPI(data: KnowledgeFileCreateRequest) {
   return request<UnifiedResponse<null>>({
     url: '/api/v1/knowledge_file/create',
@@ -122,6 +144,15 @@ export function retryKnowledgeTaskAPI(data: KnowledgeTaskRetryRequest) {
     url: '/api/v1/knowledge_file/task/retry',
     method: 'POST',
     data,
+  })
+}
+
+export function reindexKnowledgeFilesAPI(data: KnowledgeBulkReindexRequest) {
+  return request<UnifiedResponse<KnowledgeBulkReindexResponse>>({
+    url: '/api/v1/knowledge_file/reindex',
+    method: 'POST',
+    data,
+    timeout: 60000,
   })
 }
 

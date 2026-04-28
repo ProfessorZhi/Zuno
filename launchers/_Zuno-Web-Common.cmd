@@ -53,6 +53,20 @@ echo Created docker\docker_config.local.yaml from template.
 echo Please review it before using the Docker stack.
 exit /b 0
 
+:wait_http
+set "WAIT_URL=%~1"
+set "WAIT_NAME=%~2"
+set "WAIT_SECONDS=%~3"
+if "%WAIT_SECONDS%"=="" set "WAIT_SECONDS=30"
+for /L %%I in (1,1,%WAIT_SECONDS%) do (
+  powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "try { $r = Invoke-WebRequest -UseBasicParsing '%WAIT_URL%'; if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) { exit 0 } else { exit 1 } } catch { exit 1 }"
+  if not errorlevel 1 exit /b 0
+  timeout /t 1 /nobreak >nul
+)
+echo %WAIT_NAME% did not become ready in time.
+exit /b 1
+
 :start
 call :config
 call :ensure_docker
@@ -61,7 +75,11 @@ call :ensure_local_config
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Starting Zuno Web stack...
-docker compose up -d
+docker compose up -d --remove-orphans
+if errorlevel 1 goto :fail
+call :wait_http "http://127.0.0.1:7860/health" "Backend API" 90
+if errorlevel 1 goto :fail
+call :wait_http "http://127.0.0.1:8090" "Web frontend" 90
 if errorlevel 1 goto :fail
 echo.
 echo Zuno Web stack started.
@@ -76,7 +94,7 @@ call :ensure_docker
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Stopping Zuno Web stack...
-docker compose down
+docker compose down --remove-orphans
 if errorlevel 1 goto :fail
 echo.
 echo Zuno Web stack stopped.
@@ -90,7 +108,11 @@ call :ensure_local_config
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Rebuilding and restarting Zuno Web stack...
-docker compose up --build -d
+docker compose up --build -d --remove-orphans
+if errorlevel 1 goto :fail
+call :wait_http "http://127.0.0.1:7860/health" "Backend API" 90
+if errorlevel 1 goto :fail
+call :wait_http "http://127.0.0.1:8090" "Web frontend" 90
 if errorlevel 1 goto :fail
 echo.
 echo Zuno Web stack rebuilt.
@@ -104,10 +126,14 @@ call :ensure_local_config
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Running full rebuild for Zuno Web stack...
-docker compose down
+docker compose down --remove-orphans
 docker compose build --no-cache
 if errorlevel 1 goto :fail
-docker compose up -d
+docker compose up -d --remove-orphans
+if errorlevel 1 goto :fail
+call :wait_http "http://127.0.0.1:7860/health" "Backend API" 90
+if errorlevel 1 goto :fail
+call :wait_http "http://127.0.0.1:8090" "Web frontend" 90
 if errorlevel 1 goto :fail
 echo.
 echo Zuno Web stack fully rebuilt.
@@ -116,8 +142,9 @@ goto :done
 :fail
 echo.
 echo Zuno Web action failed.
-
-:done
 echo.
 pause
+exit /b 1
+
+:done
 exit /b 0

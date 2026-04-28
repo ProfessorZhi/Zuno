@@ -3,13 +3,13 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
-import robotIcon from '../../assets/robot.svg'
 import pluginIcon from '../../assets/plugin.svg'
 import knowledgeIcon from '../../assets/knowledge.svg'
 import mcpIcon from '../../assets/mcp.svg'
 import { deleteAgentAPI, getAgentsAPI, searchAgentsAPI, type AgentResponse } from '../../apis/agent'
 import type { Agent } from '../../type'
 import { useUserStore } from '../../store/user'
+import { zunoAgentAvatar } from '../../utils/brand'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -22,7 +22,7 @@ const normalizeAgent = (item: AgentResponse): Agent => ({
   agent_id: item.agent_id || item.id || '',
   name: item.name || '未命名智能体',
   description: item.description || '暂无描述',
-  logo_url: item.logo_url || robotIcon,
+  logo_url: item.logo_url || zunoAgentAvatar,
   tool_ids: item.tool_ids || [],
   llm_id: item.llm_id || '',
   mcp_ids: item.mcp_ids || [],
@@ -208,11 +208,13 @@ onMounted(fetchAgents)
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
 }
 
 .agent-hero {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 24px;
   padding: 28px 32px;
   border-radius: 28px;
@@ -250,10 +252,13 @@ onMounted(fetchAgents)
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 0 1 520px;
 }
 
 .search-input {
-  width: 260px;
+  width: min(100%, 320px);
 }
 
 .agent-grid {
@@ -293,6 +298,12 @@ onMounted(fetchAgents)
 .card-top {
   display: flex;
   gap: 16px;
+  align-items: flex-start;
+}
+
+.card-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .avatar-wrap {
@@ -317,12 +328,23 @@ onMounted(fetchAgents)
   margin: 0;
   font-size: 22px;
   color: #2f241d;
+  padding-right: 74px;
+  line-height: 1.28;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .card-main p {
   margin: 10px 0 0;
   line-height: 1.7;
   color: #6f6050;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .meta-row {
@@ -350,8 +372,9 @@ onMounted(fetchAgents)
 .card-footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .scope-text {
@@ -362,6 +385,9 @@ onMounted(fetchAgents)
 .card-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
 .empty-state {
@@ -403,7 +429,8 @@ onMounted(fetchAgents)
   }
 
   .hero-actions {
-    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .search-input {

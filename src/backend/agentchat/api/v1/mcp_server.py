@@ -17,6 +17,21 @@ from agentchat.utils.helpers import parse_imported_config
 router = APIRouter(tags=["MCP-Server"])
 
 
+def _build_mcp_summary(server_name: str, tools_params: dict) -> MCPResponseFormat:
+    tool_defs = tools_params.get(server_name) or []
+    tool_names = [tool.get("name", "") for tool in tool_defs if tool.get("name")]
+    preview = "、".join(tool_names[:3]) if tool_names else "MCP tool"
+    description = (
+        f"{server_name} MCP 服务，当前提供 {len(tool_defs)} 个工具。优先可用工具：{preview}。"
+        if tool_defs
+        else f"{server_name} MCP 服务。"
+    )
+    return MCPResponseFormat(
+        mcp_as_tool_name=server_name,
+        description=description,
+    )
+
+
 @router.post("/mcp_server")
 async def create_mcp_server(
     req: MCPServerImportedReq,
@@ -40,12 +55,17 @@ async def create_mcp_server(
 
         mcp_manager = MCPManager([convert_mcp_config(server_info)])
         tools_params = await mcp_manager.show_mcp_tools()
-        tool_names = [tool["name"] for tools in tools_params.values() for tool in tools]
+        tool_defs = MCPService.ensure_tools_available(server_name, tools_params)
+        tool_names = [tool["name"] for tool in tool_defs]
 
-        structured_agent = StructuredResponseAgent(MCPResponseFormat)
-        structured_response = structured_agent.get_structured_response(
-            McpAsToolPrompt.format(tools_info=json.dumps(tools_params, indent=4, ensure_ascii=False))
-        )
+        try:
+            structured_agent = StructuredResponseAgent(MCPResponseFormat)
+            structured_response = structured_agent.get_structured_response(
+                McpAsToolPrompt.format(tools_info=json.dumps(tools_params, indent=4, ensure_ascii=False))
+            )
+        except Exception as err:
+            logger.warning(f"build MCP summary via LLM failed, fallback to deterministic summary: {err}")
+            structured_response = _build_mcp_summary(server_name, tools_params)
 
         await MCPService.create_mcp_server(
             tools=tool_names,
@@ -148,13 +168,18 @@ async def update_mcp_server(
                 ]
             )
             tools_params = await mcp_manager.show_mcp_tools()
-            update_data["tools"] = [tool["name"] for tools in tools_params.values() for tool in tools]
-            update_data["params"] = tools_params.get(imported_info.name)
+            tool_defs = MCPService.ensure_tools_available(imported_info.name, tools_params)
+            update_data["tools"] = [tool["name"] for tool in tool_defs]
+            update_data["params"] = tool_defs
 
-            structured_agent = StructuredResponseAgent(MCPResponseFormat)
-            structured_response = structured_agent.get_structured_response(
-                McpAsToolPrompt.format(tools_info=json.dumps(tools_params, indent=4, ensure_ascii=False))
-            )
+            try:
+                structured_agent = StructuredResponseAgent(MCPResponseFormat)
+                structured_response = structured_agent.get_structured_response(
+                    McpAsToolPrompt.format(tools_info=json.dumps(tools_params, indent=4, ensure_ascii=False))
+                )
+            except Exception as err:
+                logger.warning(f"build MCP summary via LLM failed, fallback to deterministic summary: {err}")
+                structured_response = _build_mcp_summary(imported_info.name, tools_params)
             update_data["mcp_as_tool_name"] = structured_response.mcp_as_tool_name
             update_data["description"] = structured_response.description
         else:

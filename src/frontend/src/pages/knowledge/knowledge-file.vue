@@ -2,7 +2,17 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Delete, Refresh, Upload, View, RefreshRight, Warning } from '@element-plus/icons-vue'
+import {
+  ArrowLeft,
+  Delete,
+  FolderOpened,
+  Refresh,
+  RefreshRight,
+  Setting,
+  Upload,
+  View,
+  Warning,
+} from '@element-plus/icons-vue'
 import {
   createKnowledgeFileAPI,
   deleteKnowledgeFileAPI,
@@ -14,16 +24,24 @@ import {
   type KnowledgeFileResponse,
   type KnowledgeTaskDetailResponse,
 } from '../../apis/knowledge-file'
+import { getKnowledgeListAPI, type KnowledgeResponse } from '../../apis/knowledge'
 import { apiUrl } from '../../utils/api'
-import { buildStageTimeline, getPipelineStageLabel, getPipelineStatusTagType } from '../../utils/knowledge-task'
-import { getRetrievalModeLabel, normalizeRetrievalMode } from '../../utils/retrieval'
+import {
+  buildStageTimeline,
+  getFileProgressSummary,
+  getPipelineStageLabel,
+  getPipelineStatusTagType,
+  getStatusLabel,
+  summarizeKnowledgeProgress,
+} from '../../utils/knowledge-task'
+import { describeKnowledgeConfig, findBindingById } from '../../utils/knowledge-config'
+import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
 
 const route = useRoute()
 const router = useRouter()
 
 const knowledgeId = computed(() => String(route.params.knowledgeId || ''))
-const knowledgeName = computed(() => String(route.query.name || '未命名知识库'))
-const retrievalModeLabel = computed(() => getRetrievalModeLabel(String(route.query.mode || 'rag')))
+const knowledgeName = computed(() => String(route.query.name || '知识库'))
 
 const loading = ref(false)
 const uploading = ref(false)
@@ -34,8 +52,21 @@ const taskDrawerVisible = ref(false)
 const taskDetailLoading = ref(false)
 const taskDetail = ref<KnowledgeTaskDetailResponse | null>(null)
 const activeFileName = ref('')
+const knowledge = ref<KnowledgeResponse | null>(null)
+const modelOptions = ref<LLMResponse[]>([])
 
 let pollingTimer: ReturnType<typeof setInterval> | null = null
+
+const configSummary = computed(() => describeKnowledgeConfig(
+  knowledge.value?.knowledge_config,
+  {
+    textEmbedding: findBindingById(knowledge.value?.knowledge_config?.model_refs.text_embedding_model_id, modelOptions.value),
+    vlEmbedding: findBindingById(knowledge.value?.knowledge_config?.model_refs.vl_embedding_model_id, modelOptions.value),
+    rerank: findBindingById(knowledge.value?.knowledge_config?.model_refs.rerank_model_id, modelOptions.value),
+  },
+))
+
+const knowledgeProgressSummary = computed(() => summarizeKnowledgeProgress(files.value))
 
 const isPendingStatus = (status?: string | number | null) => {
   const normalized = String(status || '').toLowerCase()
@@ -58,10 +89,9 @@ const sortedFiles = computed(() => {
 })
 
 const stopPolling = () => {
-  if (pollingTimer) {
-    clearInterval(pollingTimer)
-    pollingTimer = null
-  }
+  if (!pollingTimer) return
+  clearInterval(pollingTimer)
+  pollingTimer = null
 }
 
 const startPolling = () => {
@@ -70,6 +100,24 @@ const startPolling = () => {
     await fetchFiles(false)
     if (!hasProcessingFiles.value) stopPolling()
   }, 10000)
+}
+
+const fetchKnowledgeContext = async () => {
+  if (!knowledgeId.value) return
+  try {
+    const [knowledgeResponse, llmResponse] = await Promise.all([
+      getKnowledgeListAPI(),
+      getVisibleLLMsAPI(),
+    ])
+    if (knowledgeResponse.data.status_code === 200) {
+      knowledge.value = (knowledgeResponse.data.data || []).find((item) => item.id === knowledgeId.value) || null
+    }
+    if (llmResponse.data.status_code === 200) {
+      modelOptions.value = Object.values(llmResponse.data.data || {}).flat().filter(Boolean) as LLMResponse[]
+    }
+  } catch (error) {
+    console.error('加载知识库摘要失败', error)
+  }
 }
 
 const fetchFiles = async (showLoading = true) => {
@@ -89,7 +137,7 @@ const fetchFiles = async (showLoading = true) => {
     }
     ElMessage.error(response.data.status_message || '加载文件列表失败')
   } catch (error) {
-    console.error('加载知识库文件失败', error)
+    console.error('加载文件列表失败', error)
     ElMessage.error('加载文件列表失败')
   } finally {
     if (showLoading) loading.value = false
@@ -127,11 +175,11 @@ const handleUpload = async (event: Event) => {
 
       const uploadResult = await uploadResponse.json()
       const uploadedPath =
-        uploadResult?.data?.path ||
-        uploadResult?.data?.url ||
-        uploadResult?.data ||
-        uploadResult?.path ||
-        uploadResult?.url
+        uploadResult?.data?.path
+        || uploadResult?.data?.url
+        || uploadResult?.data
+        || uploadResult?.path
+        || uploadResult?.url
 
       if (!uploadedPath) {
         throw new Error(`文件 ${file.name} 没有返回可用地址`)
@@ -161,7 +209,7 @@ const handleUpload = async (event: Event) => {
 const handleDelete = async (file: KnowledgeFileResponse) => {
   try {
     await ElMessageBox.confirm(
-      `删除后，文件“${file.file_name}”及其索引都会被移除。`,
+      `删除后，文件“${file.file_name}”和它的索引都会被移除。`,
       '确认删除文件',
       {
         confirmButtonText: '确认删除',
@@ -182,7 +230,7 @@ const handleDelete = async (file: KnowledgeFileResponse) => {
     }
     ElMessage.error(response.data.status_message || '删除文件失败')
   } catch (error) {
-    console.error('删除知识库文件失败', error)
+    console.error('删除文件失败', error)
     ElMessage.error('删除文件失败')
   }
 }
@@ -223,7 +271,9 @@ const retryTask = async (file: KnowledgeFileResponse) => {
     if (response.data.status_code === 200) {
       ElMessage.success('重试任务已提交')
       await fetchFiles()
-      if (taskDrawerVisible.value) await openTaskDetail({ ...file, last_task_id: response.data.data?.task_id || file.last_task_id })
+      if (taskDrawerVisible.value) {
+        await openTaskDetail({ ...file, last_task_id: response.data.data?.task_id || file.last_task_id })
+      }
       return
     }
     ElMessage.error(response.data.status_message || '重试任务失败')
@@ -238,7 +288,12 @@ const retryTask = async (file: KnowledgeFileResponse) => {
 const fileSummaryStatus = (file: KnowledgeFileResponse) => {
   if (file.last_error) return { label: '失败', type: 'danger' as const }
   if (file.graph_index_status === 'success') return { label: '已完成', type: 'success' as const }
-  if (isPendingStatus(file.status) || isPendingStatus(file.parse_status) || isPendingStatus(file.rag_index_status) || isPendingStatus(file.graph_index_status)) {
+  if (
+    isPendingStatus(file.status)
+    || isPendingStatus(file.parse_status)
+    || isPendingStatus(file.rag_index_status)
+    || isPendingStatus(file.graph_index_status)
+  ) {
     return { label: '处理中', type: 'warning' as const }
   }
   return { label: '待处理', type: 'info' as const }
@@ -250,15 +305,25 @@ const taskTimeline = computed(() => {
   return buildStageTimeline(task.current_stage, task.status === 'failed')
 })
 
+const fileProgressSummary = (file: KnowledgeFileResponse) => getFileProgressSummary(file)
+
 const goBack = () => {
   router.push('/knowledge')
 }
 
-onMounted(fetchFiles)
+const openConfig = () => {
+  router.push({
+    name: 'knowledge-config',
+    params: { knowledgeId: knowledgeId.value },
+    query: { name: knowledgeName.value },
+  })
+}
 
-onUnmounted(() => {
-  stopPolling()
+onMounted(async () => {
+  await Promise.all([fetchKnowledgeContext(), fetchFiles()])
 })
+
+onUnmounted(stopPolling)
 </script>
 
 <template>
@@ -267,26 +332,78 @@ onUnmounted(() => {
       <div class="title-wrap">
         <el-button :icon="ArrowLeft" @click="goBack">返回知识库</el-button>
         <div>
-          <h1>{{ knowledgeName }}</h1>
-          <p>上传文件、查看阶段状态、跟踪任务事件，并在失败时直接重试。</p>
-          <div class="header-meta">
-            <el-tag effect="plain">{{ retrievalModeLabel }}</el-tag>
-            <span>默认检索模式</span>
-          </div>
+          <h1>{{ knowledge?.name || knowledgeName }}</h1>
+          <p>
+            文件上传页现在只负责导入资料和查看处理进度。
+            索引、检索策略、模型选择都收口到这个知识库自己的参数中心。
+          </p>
         </div>
       </div>
 
       <div class="header-actions">
         <input ref="fileInputRef" type="file" multiple hidden @change="handleUpload" />
         <el-button :icon="Refresh" @click="fetchFiles">刷新</el-button>
+        <el-button :icon="Setting" @click="openConfig">参数中心</el-button>
         <el-button type="primary" :icon="Upload" :loading="uploading" @click="triggerUpload">上传文件</el-button>
       </div>
+    </section>
+
+    <section class="config-strip">
+      <article class="config-summary-card">
+        <div class="summary-head">
+          <div>
+            <h2>当前知识库参数</h2>
+            <p>这里显示这个知识库自己的索引与检索策略，首轮结果不够强时会自动补检一轮，聊天页不会再单独覆盖这些配置。</p>
+          </div>
+          <el-button :icon="FolderOpened" @click="openConfig">去调整参数</el-button>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <strong>索引策略</strong>
+            <span>{{ configSummary.chunkModeLabel }} / {{ configSummary.imageStrategyLabel }}</span>
+          </div>
+          <div class="summary-item">
+            <strong>检索策略</strong>
+            <span>{{ configSummary.retrievalModeLabel }} / {{ configSummary.rerankLabel }}</span>
+          </div>
+          <div class="summary-item">
+            <strong>索引模型</strong>
+            <span>{{ configSummary.textEmbeddingLabel }}</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="config-summary-card progress-summary-card">
+        <div class="summary-head">
+          <div>
+            <h2>索引进度</h2>
+            <p>{{ knowledgeProgressSummary.label }}</p>
+          </div>
+          <el-tag :type="knowledgeProgressSummary.failed > 0 ? 'danger' : knowledgeProgressSummary.processing > 0 ? 'warning' : knowledgeProgressSummary.pending > 0 ? 'info' : 'success'">
+            {{ getStatusLabel(knowledgeProgressSummary.processing > 0 ? 'process' : knowledgeProgressSummary.failed > 0 ? 'fail' : knowledgeProgressSummary.pending > 0 ? 'pending' : 'success') }}
+          </el-tag>
+        </div>
+        <div class="summary-grid progress-grid">
+          <div class="summary-item">
+            <strong>{{ knowledgeProgressSummary.total }}</strong>
+            <span>文件总数</span>
+          </div>
+          <div class="summary-item">
+            <strong>{{ knowledgeProgressSummary.completed }}</strong>
+            <span>已完成</span>
+          </div>
+          <div class="summary-item">
+            <strong>{{ knowledgeProgressSummary.processing }}</strong>
+            <span>处理中 / 待处理</span>
+          </div>
+        </div>
+      </article>
     </section>
 
     <section class="content-card" v-loading="loading">
       <div v-if="sortedFiles.length === 0" class="empty-state">
         <h3>这个知识库还没有文件</h3>
-        <p>上传 PDF、Word、Markdown 或图片后，这里会显示处理阶段和最终状态。</p>
+        <p>上传 PDF、Word、Markdown 或图片后，这里会显示解析阶段、检索策略和图谱索引状态。</p>
       </div>
 
       <div v-else class="file-grid">
@@ -294,7 +411,7 @@ onUnmounted(() => {
           <div class="file-head">
             <div>
               <h3>{{ file.file_name }}</h3>
-              <p>{{ getFileType(file.file_name) }} · {{ formatFileSize(file.file_size) }} · {{ new Date(file.update_time || file.create_time).toLocaleString('zh-CN') }}</p>
+              <p>{{ getFileType(file.file_name) }} / {{ formatFileSize(file.file_size) }} / {{ new Date(file.update_time || file.create_time).toLocaleString('zh-CN') }}</p>
             </div>
             <el-tag :type="fileSummaryStatus(file).type">{{ fileSummaryStatus(file).label }}</el-tag>
           </div>
@@ -302,16 +419,21 @@ onUnmounted(() => {
           <div class="status-pills">
             <span class="status-pill">
               <strong>解析</strong>
-              <el-tag size="small" :type="getPipelineStatusTagType(file.parse_status)">{{ getPipelineStageLabel(file.parse_status) }}</el-tag>
+              <el-tag size="small" :type="getPipelineStatusTagType(file.parse_status)">{{ getStatusLabel(file.parse_status) }}</el-tag>
             </span>
             <span class="status-pill">
-              <strong>RAG</strong>
-              <el-tag size="small" :type="getPipelineStatusTagType(file.rag_index_status)">{{ getPipelineStageLabel(file.rag_index_status) }}</el-tag>
+              <strong>检索策略</strong>
+              <el-tag size="small" :type="getPipelineStatusTagType(file.rag_index_status)">{{ getStatusLabel(file.rag_index_status) }}</el-tag>
             </span>
             <span class="status-pill">
-              <strong>GraphRAG</strong>
-              <el-tag size="small" :type="getPipelineStatusTagType(file.graph_index_status)">{{ getPipelineStageLabel(file.graph_index_status) }}</el-tag>
+              <strong>图谱</strong>
+              <el-tag size="small" :type="getPipelineStatusTagType(file.graph_index_status)">{{ getStatusLabel(file.graph_index_status) }}</el-tag>
             </span>
+          </div>
+
+          <div class="file-progress-copy">
+            <span>进度</span>
+            <strong>{{ fileProgressSummary(file).label }}</strong>
           </div>
 
           <div v-if="file.last_error" class="error-banner">
@@ -340,7 +462,7 @@ onUnmounted(() => {
       </div>
     </section>
 
-    <el-drawer v-model="taskDrawerVisible" :title="`任务详情 · ${activeFileName}`" size="560px">
+    <el-drawer v-model="taskDrawerVisible" :title="`任务详情 / ${activeFileName}`" size="560px">
       <div v-loading="taskDetailLoading" class="task-drawer">
         <template v-if="taskDetail?.task">
           <div class="task-summary">
@@ -350,7 +472,7 @@ onUnmounted(() => {
             </div>
             <div class="summary-row">
               <span>主状态</span>
-              <el-tag :type="getPipelineStatusTagType(taskDetail.task.status)">{{ taskDetail.task.status }}</el-tag>
+              <el-tag :type="getPipelineStatusTagType(taskDetail.task.status)">{{ getStatusLabel(taskDetail.task.status) }}</el-tag>
             </div>
             <div class="summary-row">
               <span>当前阶段</span>
@@ -359,7 +481,12 @@ onUnmounted(() => {
           </div>
 
           <div class="timeline-strip">
-            <div v-for="step in taskTimeline" :key="step.key" class="timeline-step" :class="{ done: step.done, active: step.active, failed: step.failed }">
+            <div
+              v-for="step in taskTimeline"
+              :key="step.key"
+              class="timeline-step"
+              :class="{ done: step.done, active: step.active, failed: step.failed }"
+            >
               <span class="timeline-dot"></span>
               <span>{{ step.label }}</span>
             </div>
@@ -378,7 +505,7 @@ onUnmounted(() => {
         </template>
         <div v-else class="empty-state compact">
           <h3>暂无任务详情</h3>
-          <p>这个文件还没有返回可显示的任务事件。</p>
+          <p>这个文件还没有返回可展示的任务事件。</p>
         </div>
       </div>
     </el-drawer>
@@ -393,7 +520,8 @@ onUnmounted(() => {
 }
 
 .page-header,
-.content-card {
+.content-card,
+.config-summary-card {
   border-radius: 24px;
   border: 1px solid rgba(214, 132, 70, 0.14);
   background: rgba(255, 252, 247, 0.96);
@@ -411,31 +539,76 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-
-  h1 {
-    margin: 0;
-    font-size: 30px;
-    color: #5e3518;
-  }
-
-  p {
-    margin: 8px 0 0;
-    color: #8f7a68;
-  }
 }
 
-.header-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
+.title-wrap h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #5e3518;
+}
+
+.title-wrap p {
+  margin: 8px 0 0;
   color: #8f7a68;
-  font-size: 13px;
+  line-height: 1.7;
 }
 
 .header-actions {
   display: flex;
   gap: 12px;
+}
+
+.summary-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.summary-head h2 {
+  margin: 0;
+  color: #5e3518;
+}
+
+.summary-head p {
+  margin: 8px 0 0;
+  color: #8f7a68;
+  line-height: 1.7;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.config-strip {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.progress-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-item {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 249, 243, 0.94);
+  border: 1px solid rgba(214, 132, 70, 0.12);
+}
+
+.summary-item strong {
+  color: #5a3115;
+}
+
+.summary-item span {
+  color: #826b59;
+  line-height: 1.6;
 }
 
 .content-card {
@@ -456,21 +629,35 @@ onUnmounted(() => {
   background: rgba(255, 249, 243, 0.94);
 }
 
+.file-progress-copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #7a6151;
+}
+
+.file-progress-copy strong {
+  color: #4f2d16;
+}
+
 .file-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
+}
 
-  h3 {
-    margin: 0;
-    color: #4d2d15;
-  }
+.file-head h3 {
+  margin: 0;
+  color: #4d2d15;
+}
 
-  p {
-    margin: 8px 0 0;
-    color: #806957;
-  }
+.file-head p {
+  margin: 8px 0 0;
+  color: #806957;
 }
 
 .status-pills {
@@ -611,20 +798,30 @@ onUnmounted(() => {
   border-radius: 18px;
   background: rgba(255, 249, 243, 0.94);
   text-align: center;
+}
 
-  h3 {
-    margin: 0;
-    color: #5e3518;
-  }
+.empty-state h3 {
+  margin: 0;
+  color: #5e3518;
+}
 
-  p {
-    margin: 10px 0 0;
-    color: #8f7a68;
-  }
+.empty-state p {
+  margin: 10px 0 0;
+  color: #8f7a68;
 }
 
 .empty-state.compact {
   padding: 24px;
+}
+
+@media (max-width: 1080px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .config-strip {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 960px) {
@@ -638,7 +835,8 @@ onUnmounted(() => {
     flex-wrap: wrap;
   }
 
-  .file-head {
+  .file-head,
+  .summary-head {
     flex-direction: column;
   }
 }

@@ -1,10 +1,10 @@
 import asyncio
 
 from agentchat.api.services.history import HistoryService
-from agentchat.api.services.mcp_stdio_server import MCPServerService
-from agentchat.services.mcp_openai.mcp_manager import MCPManager
-from agentchat.core.models.anthropic import DeepAsyncAnthropic
 from agentchat.api.services.llm import LLMService
+from agentchat.api.services.mcp_stdio_server import MCPServerService
+from agentchat.core.models.anthropic import DeepAsyncAnthropic
+from agentchat.services.mcp_openai.mcp_manager import MCPManager
 from agentchat.services.rag.handler import RagHandler
 
 
@@ -28,57 +28,60 @@ class MCPChatAgent:
     async def init_MCP_Server(self):
         for server_id in self.mcp_servers_id:
             mcp_server = MCPServerService.get_mcp_server_user(server_id)
-            await self.mcp_manager.enter_mcp_server(mcp_server.mcp_server_path, mcp_server.mcp_server_env)
+            await self.mcp_manager.enter_mcp_server(
+                mcp_server.mcp_server_path,
+                mcp_server.mcp_server_env,
+            )
 
         await self.mcp_manager.connect_client()
 
-
-    async def ainvoke(self, user_input: str, dialog_id: str, stream: bool=False):
-        # 并发获取History 和 RAG Message
+    async def ainvoke(self, user_input: str, dialog_id: str, stream: bool = False):
         history_messages, recall_knowledge_data = await asyncio.gather(
             self.get_history_message(user_input, dialog_id),
-            RagHandler.rag_query(user_input, self.knowledges_id)
+            self._get_knowledge_context(user_input),
         )
-        # mcp_tool_query = MCP_TOOL_TEMPLATE.format(query=user_input, history=history_message)
         mcp_tool_messages = history_messages.copy()
         mcp_response = await self.mcp_manager.process_query(mcp_tool_messages)
 
-        # 合并Tool Message 和 RAG Message
         mcp_response.append({"role": "user", "content": recall_knowledge_data})
         if stream:
             return self._stream_response(mcp_response)
-        else:
-            return await self._normal_response(mcp_response)
+        return await self._normal_response(mcp_response)
 
-    async def get_history_message(self, user_input: str, dialog_id: str, top_k: int = 5) :
-        # 如果开启Embedding，默认走RAG检索聊天记录
+    async def get_history_message(self, user_input: str, dialog_id: str, top_k: int = 5):
         if self.enable_memory:
-            messages = await self._retrieval_history(user_input, dialog_id, top_k)
-            return messages
-        else:
-            messages = await self._direct_history(dialog_id, top_k)
+            return await self._retrieval_history(user_input, dialog_id, top_k)
 
-            result = []
-            for message in messages:
-                result.append(message.to_json())
-            return result
+        messages = await self._direct_history(dialog_id, top_k)
+        return [message.to_json() for message in messages]
 
     async def _stream_response(self, messages):
         async for text in self.deep_anthropic.ainvoke_stream(messages):
             yield text
 
     async def _normal_response(self, messages):
-        response = self.deep_anthropic.ainvoke(messages)
-        return response
-
+        return await self.deep_anthropic.ainvoke(messages)
 
     async def _direct_history(self, dialog_id: str, top_k: int):
-        messages = HistoryService.select_history(dialog_id, top_k)
-        return messages
+        return await HistoryService.select_history(dialog_id, top_k)
 
     async def _retrieval_history(self, user_input: str, dialog_id: str, top_k: int):
-        messages = await RagHandler.rag_query(user_input, dialog_id, 0.6, top_k, False)
-        return messages
+        # The old memory-RAG hook was removed from RagHandler.
+        # Falling back to stored dialog history avoids runtime crashes.
+        _ = user_input
+        return await self._direct_history(dialog_id, top_k)
 
+    async def _get_knowledge_context(self, user_input: str):
+        if not self.knowledges_id:
+            return ""
 
+        if isinstance(self.knowledges_id, str):
+            collection_names = [self.knowledges_id]
+        else:
+            collection_names = list(self.knowledges_id)
 
+        return await RagHandler.retrieve_ranked_documents(
+            user_input,
+            collection_names,
+            collection_names,
+        )

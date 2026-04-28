@@ -10,6 +10,31 @@ WRAPPED_HISTORY_HINTS = ("<chat_history>", "web_search", "read_webpage", "tool_c
 
 class WorkSpaceSessionService:
     @staticmethod
+    def normalize_workspace_mode(raw_mode: str | None) -> str:
+        return "agent" if str(raw_mode or "").strip().lower() == "agent" else "normal"
+
+    @classmethod
+    def serialize_session(cls, session: WorkSpaceSession | dict | None) -> dict | None:
+        if session is None:
+            return None
+
+        payload = session if isinstance(session, dict) else session.to_dict()
+        payload["contexts"] = cls.sanitize_contexts(payload.get("contexts", []))
+        payload["workspace_mode"] = cls.normalize_workspace_mode(payload.get("agent"))
+        return payload
+
+    @classmethod
+    async def prune_empty_workspace_sessions(cls, user_id: str, workspace_mode: str) -> None:
+        sessions = await WorkSpaceSessionDao.get_workspace_sessions(user_id, workspace_mode=workspace_mode)
+        empty_session_ids = [
+            session.session_id
+            for session in sessions
+            if not (session.contexts or [])
+        ]
+        if empty_session_ids:
+            await WorkSpaceSessionDao.delete_workspace_session(empty_session_ids, user_id)
+
+    @staticmethod
     def _looks_like_system_wrapper(content: str | None) -> bool:
         if not content:
             return False
@@ -52,7 +77,7 @@ class WorkSpaceSessionService:
             candidates = []
             for line in title.splitlines():
                 normalized_line = line.strip().lstrip("-*#>\"'` ").strip()
-                normalized_line = re.sub(r"[。！？：:;,，；]+$", "", normalized_line)
+                normalized_line = re.sub(r"[。！？，：:;,，；]+$", "", normalized_line)
                 if normalized_line:
                     candidates.append(normalized_line)
 
@@ -72,30 +97,31 @@ class WorkSpaceSessionService:
     @classmethod
     async def create_workspace_session(cls, session_create: WorkSpaceSessionCreate):
         payload = session_create.model_dump()
+        workspace_mode = cls.normalize_workspace_mode(payload.pop("workspace_mode", "normal"))
         payload["contexts"] = cls.sanitize_contexts(payload.get("contexts", []))
+        payload["agent"] = workspace_mode
+        await cls.prune_empty_workspace_sessions(payload["user_id"], workspace_mode)
         workspace_session = WorkSpaceSession(**payload)
         return await WorkSpaceSessionDao.create_workspace_session(workspace_session)
 
     @classmethod
-    async def get_workspace_sessions(cls, user_id):
-        results = await WorkSpaceSessionDao.get_workspace_sessions(user_id)
+    async def get_workspace_sessions(cls, user_id, workspace_mode: str | None = None):
+        normalized_mode = cls.normalize_workspace_mode(workspace_mode) if workspace_mode else None
+        results = await WorkSpaceSessionDao.get_workspace_sessions(user_id, workspace_mode=normalized_mode)
+        results = [result for result in results if result.contexts or []]
         results.sort(key=lambda x: x.update_time, reverse=True)
-        cleaned_results = []
-        for result in results:
-            payload = result.to_dict()
-            payload["contexts"] = cls.sanitize_contexts(payload.get("contexts", []))
-            cleaned_results.append(payload)
-        return cleaned_results
+        return [cls.serialize_session(result) for result in results]
 
     @classmethod
     async def delete_workspace_session(cls, session_ids, user_id):
         await WorkSpaceSessionDao.delete_workspace_session(session_ids, user_id)
 
     @classmethod
-    async def update_workspace_session_contexts(cls, session_id, session_context):
+    async def update_workspace_session_contexts(cls, session_id, session_context, title: str | None = None):
         return await WorkSpaceSessionDao.update_workspace_session_contexts(
             session_id,
-            cls.sanitize_context(session_context)
+            cls.sanitize_context(session_context),
+            cls.normalize_session_title(title or "", fallback_query=session_context.get("query", "")) if title else None,
         )
 
     @classmethod
@@ -104,12 +130,8 @@ class WorkSpaceSessionService:
 
     @classmethod
     async def get_workspace_session_from_id(cls, session_id, user_id):
-        result = await WorkSpaceSessionDao.get_workspace_session_from_id(session_id)
-        if result is None:
-            return None
-        payload = result.to_dict()
-        payload["contexts"] = cls.sanitize_contexts(payload.get("contexts", []))
-        return payload
+        result = await WorkSpaceSessionDao.get_workspace_session_from_id(session_id, user_id=user_id)
+        return cls.serialize_session(result)
 
     @classmethod
     async def generate_session_title(cls, user_query):

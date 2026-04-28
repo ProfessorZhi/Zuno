@@ -1,16 +1,22 @@
 from typing import List
 
-from sqlmodel import select, update, and_, delete
-from agentchat.database.session import session_getter, async_session_getter
+from sqlmodel import select, and_, delete, or_
+from agentchat.database.session import async_session_getter
 from agentchat.database.models.workspace_session import WorkSpaceSession
 
 
 class WorkSpaceSessionDao:
 
     @classmethod
-    async def get_workspace_sessions(cls, user_id):
+    async def get_workspace_sessions(cls, user_id, workspace_mode: str | None = None):
         async with async_session_getter() as session:
             statement = select(WorkSpaceSession).where(WorkSpaceSession.user_id == user_id)
+            if workspace_mode == "agent":
+                statement = statement.where(WorkSpaceSession.agent == "agent")
+            elif workspace_mode == "normal":
+                statement = statement.where(
+                    or_(WorkSpaceSession.agent == "normal", WorkSpaceSession.agent == "simple")
+                )
             result = await session.exec(statement)
             return result.all()
 
@@ -35,12 +41,17 @@ class WorkSpaceSessionDao:
             await session.commit()
 
     @classmethod
-    async def update_workspace_session_contexts(cls, session_id, session_context):
+    async def update_workspace_session_contexts(cls, session_id, session_context, title: str | None = None):
         async with async_session_getter() as session:
             workspace_session = await session.get(WorkSpaceSession, session_id)
+            if workspace_session is None:
+                return None
             new_contexts = workspace_session.contexts.copy()
+            had_contexts = bool(new_contexts)
             new_contexts.append(session_context)
             workspace_session.contexts = new_contexts  # 重新赋值
+            if title and (not had_contexts or workspace_session.title in {"", "新对话", "未命名会话"}):
+                workspace_session.title = title
 
             await session.commit()
             await session.refresh(workspace_session)
@@ -48,10 +59,19 @@ class WorkSpaceSessionDao:
         return workspace_session
 
     @classmethod
-    async def get_workspace_session_from_id(cls, session_id):
+    async def get_workspace_session_from_id(cls, session_id, user_id: str | None = None):
         async with async_session_getter() as session:
-            workspace_session = await session.get(WorkSpaceSession, session_id)
-            return workspace_session
+            if user_id is None:
+                return await session.get(WorkSpaceSession, session_id)
+
+            statement = select(WorkSpaceSession).where(
+                and_(
+                    WorkSpaceSession.session_id == session_id,
+                    WorkSpaceSession.user_id == user_id,
+                )
+            )
+            result = await session.exec(statement)
+            return result.first()
 
     @classmethod
     async def clear_workspace_session_contexts(cls, session_id):

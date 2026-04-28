@@ -51,14 +51,25 @@ export const getWorkspacePluginsByModeAPI = async (executionMode: string, access
   })
 }
 
-export const getWorkspaceSessionsAPI = async () => {
+export const getWorkspaceSessionsAPI = async (workspaceMode?: string) => {
   return request({
     url: '/api/v1/workspace/session',
     method: 'get',
+    params: workspaceMode
+      ? {
+          workspace_mode: workspaceMode,
+        }
+      : undefined,
   })
 }
 
-export const createWorkspaceSessionAPI = async (data: { title?: string; contexts?: any }) => {
+export const createWorkspaceSessionAPI = async (data: {
+  title?: string
+  contexts?: any[]
+  session_id?: string
+  agent?: string
+  workspace_mode?: 'normal' | 'agent'
+}) => {
   return request({
     url: '/api/v1/workspace/session',
     method: 'post',
@@ -131,6 +142,7 @@ export const workspaceSimpleChatStreamAPI = async (
   data: WorkSpaceSimpleTask,
   handlers: {
     onMessage?: (chunk: string) => void
+    onFinalMessage?: (message: string) => void
     onEvent?: (event: WorkspaceStreamEvent) => void
     onError?: (err: any) => void
     onClose?: () => void
@@ -139,10 +151,6 @@ export const workspaceSimpleChatStreamAPI = async (
   const token = localStorage.getItem('token')
   const ctrl = new AbortController()
   const streamUrl = apiUrl('/api/v1/workspace/simple/chat')
-
-  console.log('=== workspaceSimpleChatStreamAPI ===')
-  console.log('Request payload:', data)
-  console.log('Request URL:', streamUrl)
 
   try {
     await fetchEventSource(streamUrl, {
@@ -185,6 +193,10 @@ export const workspaceSimpleChatStreamAPI = async (
           }
 
           if (parsed?.event === 'final') {
+            if (parsed?.data?.done === true && typeof parsed?.data?.accumulated === 'string' && parsed.data.accumulated !== '') {
+              handlers.onFinalMessage?.(parsed.data.accumulated)
+              return
+            }
             if (parsed?.data?.chunk !== undefined && parsed.data.chunk !== '') {
               handlers.onMessage?.(parsed.data.chunk)
               return
@@ -206,17 +218,14 @@ export const workspaceSimpleChatStreamAPI = async (
         }
       },
       onerror(err) {
-        console.error('Workspace SSE error:', err)
         handlers.onError?.(err)
         ctrl.abort()
       },
       onclose() {
-        console.log('Workspace SSE connection closed')
         handlers.onClose?.()
       },
     })
   } catch (error: any) {
-    console.error('Workspace SSE exception:', error)
     if (error?.name !== 'AbortError') {
       handlers.onError?.(error)
     }

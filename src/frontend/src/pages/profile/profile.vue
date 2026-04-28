@@ -4,15 +4,12 @@ import { ElMessage } from 'element-plus'
 import { Check, Close, Edit } from '@element-plus/icons-vue'
 import { getUserIconsAPI, getUserInfoAPI, updateUserInfoAPI } from '../../apis/auth'
 import defaultAvatar from '../../assets/user.svg'
-import robotAvatar from '../../assets/robot.svg'
-import robotAvatarAlt from '../../assets/robot1.svg'
-import robotAvatarAlt2 from '../../assets/robot2.svg'
-import zunoAvatar from '../../assets/zuno-avatar.svg'
 import { useUserStore } from '../../store/user'
 import { apiUrl } from '../../utils/api'
+import { zunoAgentAvatar } from '../../utils/brand'
 
 const DEFAULT_DESCRIPTION = '这个用户很懒，还没有留下任何描述'
-const PRESET_AVATARS = [defaultAvatar, zunoAvatar, robotAvatar, robotAvatarAlt, robotAvatarAlt2]
+const PRESET_AVATARS = [defaultAvatar, zunoAgentAvatar]
 
 const userStore = useUserStore()
 
@@ -158,7 +155,7 @@ const handleImageError = (event: Event) => {
 
 const handlePresetImageError = (event: Event) => {
   const target = event.target as HTMLImageElement
-  target.src = zunoAvatar
+  target.src = zunoAgentAvatar
 }
 
 const handleCustomUpload = async (event: Event) => {

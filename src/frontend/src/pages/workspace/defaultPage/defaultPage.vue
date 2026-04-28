@@ -1,14 +1,16 @@
 ﻿<script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowDown, ArrowUp, Plus } from '@element-plus/icons-vue'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import {
+  createWorkspaceSessionAPI,
+  deleteWorkspaceSessionAPI,
   getWorkspaceExecutionModesAPI,
   getWorkspacePluginsByModeAPI,
-  getWorkspaceSessionsAPI,
+  getWorkspaceSessionInfoAPI,
   workspaceSimpleChatStreamAPI,
   type AccessScopeDefinition,
   type ExecutionModeDefinition,
@@ -22,9 +24,11 @@ import { getVisibleLLMsAPI, type LLMResponse } from '../../../apis/llm'
 import { getAgentSkillsAPI, type AgentSkill } from '../../../apis/agent-skill'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../../apis/knowledge'
 import { useUserStore } from '../../../store/user'
-import { getRetrievalModeLabel, normalizeRetrievalMode, retrievalModeOptions } from '../../../utils/retrieval'
+import { getRetrievalModeLabel, normalizeRetrievalMode } from '../../../utils/retrieval'
+import { describeKnowledgeConfig, normalizeKnowledgeConfig } from '../../../utils/knowledge-config'
+import { safeDisplayText } from '../../../utils/display-text'
 import { sanitizeWorkspaceContexts } from '../../../utils/workspace-history'
-import robotIcon from '../../../assets/robot.svg'
+import { zunoAgentAvatar } from '../../../utils/brand'
 import { isDesktopRuntime } from '../../../utils/api'
 
 const ALWAYS_WEB_SEARCH = true
@@ -34,8 +38,29 @@ const CHAT_IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp
 const AGENT_DOCUMENT_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 'md', 'csv', 'xls', 'xlsx'])
 type WorkspaceMode = 'normal' | 'agent'
 
+const fallbackDescription = '\u6682\u65e0\u63cf\u8ff0'
+const fallbackKnowledgeDescription = (count?: number) => `\u5171 ${count || 0} \u4e2a\u6587\u4ef6`
+
 interface ChatMessage { role: 'user' | 'assistant'; content: string }
-interface TraceRecord { id: string; title: string; detail: string; at: string; phase?: string; status?: string; accent?: 'default' | 'tool' | 'graph' | 'retrieval' | 'answer' | 'error' }
+interface RetrievalRoundTrace { round: number; mode: string; trigger?: string; qualityReason?: string; query?: string }
+interface RetrievalTraceSummary {
+  firstMode: string
+  finalMode: string
+  roundCount: number
+  fallbackReason: string
+  rewrittenQueryUsed: boolean
+  rounds: RetrievalRoundTrace[]
+}
+interface TraceRecord {
+  id: string
+  title: string
+  detail: string
+  at: string
+  phase?: string
+  status?: string
+  accent?: 'default' | 'tool' | 'graph' | 'retrieval' | 'answer' | 'error'
+  retrieval?: RetrievalTraceSummary | null
+}
 interface PendingAttachment extends WorkspaceAttachment { id: string; preview_url?: string }
 interface ProgressStep { key: string; label: string; done: boolean; active: boolean; accent?: 'default' | 'tool' | 'graph' | 'retrieval' | 'answer' | 'error' }
 
@@ -50,6 +75,7 @@ const modes = [
 const selectedMode = ref<WorkspaceMode>('normal')
 const inputMessage = ref('')
 const consumedInitialMessageKey = ref('')
+const initialRouteMessageInFlightKey = ref('')
 const messages = ref<ChatMessage[]>([])
 const executionEvents = ref<TraceRecord[]>([])
 const executionModes = ref<ExecutionModeDefinition[]>([])
@@ -64,7 +90,6 @@ const skillOptions = ref<AgentSkill[]>([])
 const selectedSkillIds = ref<string[]>([])
 const knowledgeOptions = ref<KnowledgeResponse[]>([])
 const selectedKnowledgeIds = ref<string[]>([])
-const selectedRetrievalMode = ref('default')
 const toolsTouched = ref(false)
 const mcpTouched = ref(false)
 const skillsTouched = ref(false)
@@ -78,6 +103,7 @@ const conversationRef = ref<HTMLElement | null>(null)
 const showControlPanel = ref(false)
 const showTracePanel = ref(false)
 const isPinnedToBottom = ref(true)
+const workspaceHydrated = ref(false)
 const attachmentInputRef = ref<HTMLInputElement | null>(null)
 const pendingAttachments = ref<PendingAttachment[]>([])
 const attachmentsUploading = ref(false)
@@ -90,6 +116,8 @@ type SlashSuggestion = {
   detail: string
   insertValue: string
 }
+
+type ToolCreationKind = 'general' | 'api' | 'cli'
 
 const activeMode = computed(() => modes.find((mode) => mode.id === selectedMode.value) || modes[0])
 const activeExecutionMode = computed(() => executionModes.value.find((mode) => mode.id === selectedExecutionMode.value) || null)
@@ -115,41 +143,85 @@ const modeFooterCopy = computed(() => {
   return `${base} · MCP 默认启用，输入 / 可快速选择 Skill`
 })
 const canPickTools = computed(() => isAgentMode.value && selectedExecutionMode.value === 'tool')
+const autoAvailableMcpIds = computed(() => (
+  mcpServers.value
+    .filter((server: any) => !server?.config_enabled && (!Array.isArray(server?.config) || server.config.length === 0))
+    .map((server: any) => server.mcp_server_id)
+    .filter(Boolean)
+))
 const selectedToolCount = computed(() => (
   selectedTools.value.length
   + selectedMcpServers.value.length
   + selectedSkillIds.value.length
   + selectedKnowledgeIds.value.length
 ))
-const selectedKnowledgeDefaults = computed(() => (
-  knowledgeOptions.value
-    .filter((item) => selectedKnowledgeIds.value.includes(item.id))
-    .map((item) => normalizeRetrievalMode(item.default_retrieval_mode))
-))
-const effectiveKnowledgeDefaultMode = computed(() => {
-  const modes = Array.from(new Set(selectedKnowledgeDefaults.value))
-  if (modes.length === 1) return modes[0]
-  if (modes.length > 1) return 'hybrid'
-  return 'rag'
+const selectedKnowledge = computed(() => {
+  const currentId = selectedKnowledgeIds.value[0]
+  return knowledgeOptions.value.find((item) => item.id === currentId) || null
 })
-const effectiveRetrievalMode = computed(() => (
-  selectedRetrievalMode.value === 'default'
-    ? effectiveKnowledgeDefaultMode.value
-    : selectedRetrievalMode.value
-))
-const effectiveRetrievalModeLabel = computed(() => (
-  selectedRetrievalMode.value === 'default'
-    ? `${getRetrievalModeLabel(effectiveKnowledgeDefaultMode.value)}（知识库默认）`
-    : getRetrievalModeLabel(selectedRetrievalMode.value)
-))
+const selectedKnowledgeConfig = computed(() => normalizeKnowledgeConfig(selectedKnowledge.value?.knowledge_config))
+const effectiveRetrievalMode = computed(() => normalizeRetrievalMode(selectedKnowledgeConfig.value.retrieval_settings.default_mode))
+const effectiveRetrievalModeLabel = computed(() => getRetrievalModeLabel(effectiveRetrievalMode.value))
+const selectedKnowledgeSummary = computed(() => describeKnowledgeConfig(selectedKnowledgeConfig.value))
+const buildToolCreationPrompt = (kind: ToolCreationKind = 'general') => {
+  if (kind === 'api') {
+    return [
+      '请帮我新增一个 API 工具。',
+      '你先判断我提供的信息是否足够；如果不够，请继续追问。',
+      '我会继续给你：接口文档或文档地址、Base URL、路径、认证方式、API Key、图标。',
+      '信息足够后，请直接创建工具，并告诉我创建结果、工具名称和下一步如何测试。',
+    ].join('\n')
+  }
+  if (kind === 'cli') {
+    return [
+      '请帮我新增一个 CLI 工具。',
+      '你先判断我提供的信息是否足够；如果不够，请继续追问。',
+      '我会继续给你：本地目录、可执行命令、GitHub 地址、README、安装方法、所需凭证、图标。',
+      '信息足够后，请直接创建工具，并告诉我创建结果、工具名称和下一步如何测试。',
+    ].join('\n')
+  }
+  return [
+    '请帮我新增一个工具。',
+    '你先判断它应该接成 API 还是 CLI；如果信息不够，请继续追问。',
+    '我会继续给你：文档地址、URL、API Key、本地目录、安装方法、图标等。',
+    '信息足够后，请直接创建工具，并告诉我创建结果、工具名称和下一步如何测试。',
+  ].join('\n')
+}
+
+const openToolCreationPrompt = (kind: ToolCreationKind = 'general') => {
+  inputMessage.value = buildToolCreationPrompt(kind)
+  activeSuggestionIndex.value = 0
+}
+
 const retrievalModeHint = computed(() => {
   if (!isAgentMode.value || !canPickTools.value || selectedKnowledgeIds.value.length === 0) {
-    return '选中知识库后，可切换 RAG / GraphRAG / Hybrid / Auto。'
+    return '选中知识库后，会自动使用这个知识库自己的默认检索策略。首轮不足时会自动补检一轮。'
   }
-  return `当前将使用 ${effectiveRetrievalModeLabel.value}`
+  return `当前跟随知识库：${effectiveRetrievalModeLabel.value}`
 })
 const compactPanel = computed(() => messages.value.length > 0)
 const traceVisible = computed(() => isAgentMode.value && showTracePanel.value)
+const toolCreationSuggestions: SlashSuggestion[] = [
+  {
+    key: 'create-tool-general',
+    label: '/新增工具',
+    detail: '让 Agent 判断是 API 还是 CLI，并继续追问缺失信息。',
+    insertValue: buildToolCreationPrompt('general'),
+  },
+  {
+    key: 'create-tool-api',
+    label: '/新增API工具',
+    detail: '适合你已经有文档、URL、认证方式或 API Key 的接口能力。',
+    insertValue: buildToolCreationPrompt('api'),
+  },
+  {
+    key: 'create-tool-cli',
+    label: '/新增CLI工具',
+    detail: '适合本地目录、可执行命令、README、GitHub 仓库一类能力。',
+    insertValue: buildToolCreationPrompt('cli'),
+  },
+]
+
 const slashSuggestions = computed<SlashSuggestion[]>(() => {
   if (!isAgentMode.value || selectedExecutionMode.value === 'terminal') return []
   const text = inputMessage.value || ''
@@ -158,7 +230,11 @@ const slashSuggestions = computed<SlashSuggestion[]>(() => {
   if (!trimmed.startsWith('/')) return []
 
   const keyword = trimmed.slice(1).trim().toLowerCase()
-  return skillOptions.value
+  const builtIns = toolCreationSuggestions.filter((item) => {
+    const haystack = `${item.label} ${item.detail}`.toLowerCase()
+    return !keyword || haystack.includes(keyword)
+  })
+  const skillSuggestions = skillOptions.value
     .filter((skill) => {
       const name = (skill.name || '').toLowerCase()
       const desc = (skill.description || '').toLowerCase()
@@ -171,6 +247,7 @@ const slashSuggestions = computed<SlashSuggestion[]>(() => {
       detail: skill.description || 'Skill',
       insertValue: `/${skill.name} `,
     }))
+  return [...builtIns, ...skillSuggestions].slice(0, 8)
 })
 const latestTraceRecord = computed(() => executionEvents.value[executionEvents.value.length - 1] || null)
 const progressStageIndex = computed(() => {
@@ -205,33 +282,184 @@ const progressDetail = computed(() => {
 })
 const liveProgressEvents = computed(() => executionEvents.value.slice(-3))
 
-const generateSessionId = () => crypto.randomUUID().replace(/-/g, '')
 const safeQueryValue = (value: unknown, fallback: string) => Array.isArray(value) ? String(value[0] || fallback) : (typeof value === 'string' && value.trim() ? value : fallback)
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || ''
 
-const sanitizeAssistantChunk = (chunk: string) => isAgentMode.value ? chunk : chunk.replace(/ReAct\s*Agent[^\n]*\n?/gi, '').replace(/ReAct\s*鎺ㄧ悊[^\n]*\n?/gi, '').replace(/鎬濊€冭繃绋媅^\n]*\n?/gi, '').replace(/^\s+/, '')
+const sanitizeAssistantChunk = (chunk: string) => isAgentMode.value ? chunk : chunk.replace(/ReAct\s*Agent[^\n]*\n?/gi, '').replace(/^\s+/, '')
 const handleAvatarError = (event: Event) => { const target = event.target as HTMLImageElement; if (target) target.src = '/src/assets/user.svg' }
 const scrollToBottom = async (force = false) => { await nextTick(); if (conversationRef.value && (force || isPinnedToBottom.value)) conversationRef.value.scrollTop = conversationRef.value.scrollHeight }
 const handleConversationScroll = () => { const panel = conversationRef.value; if (!panel) return; isPinnedToBottom.value = panel.scrollHeight - (panel.scrollTop + panel.clientHeight) < 24 }
 const emitSessionUpdated = () => window.dispatchEvent(new CustomEvent('workspace-session-updated', { detail: { sessionId: currentSessionId.value } }))
+const clearConversationState = () => {
+  inputMessage.value = ''
+  messages.value = []
+  executionEvents.value = []
+  pendingAttachments.value = []
+  attachmentsUploading.value = false
+  isGenerating.value = false
+  showControlPanel.value = false
+  showTracePanel.value = false
+  isPinnedToBottom.value = true
+  consumedInitialMessageKey.value = ''
+  initialRouteMessageInFlightKey.value = ''
+}
+const isCurrentSessionDisposable = () => (
+  Boolean(currentSessionId.value)
+  && messages.value.length === 0
+  && executionEvents.value.length === 0
+  && pendingAttachments.value.length === 0
+)
+
+const buildWorkspaceQuery = () => ({
+  ...(currentSessionId.value ? { session_id: currentSessionId.value } : {}),
+  mode: selectedMode.value,
+  execution_mode: selectedExecutionMode.value,
+  access_scope: selectedAccessScope.value,
+})
 
 const syncRouteState = async () => {
-  if (!currentSessionId.value) return
-  await router.replace({ name: 'workspaceDefaultPage', query: { session_id: currentSessionId.value, mode: selectedMode.value, execution_mode: selectedExecutionMode.value, access_scope: selectedAccessScope.value } })
+  await router.replace({ name: 'workspaceDefaultPage', query: buildWorkspaceQuery() })
 }
+
+const resetToDraftSession = async (mode: WorkspaceMode, options?: { pruneCurrent?: boolean }) => {
+  const pruneCurrent = options?.pruneCurrent !== false
+  const disposableSessionId = pruneCurrent && isCurrentSessionDisposable() ? currentSessionId.value : ''
+  clearConversationState()
+  selectedMode.value = mode
+  currentSessionId.value = ''
+  try {
+    if (disposableSessionId) {
+      await deleteWorkspaceSessionAPI(disposableSessionId)
+    }
+  } catch (error) {
+    console.warn('清理空会话失败', error)
+  }
+  await syncRouteState()
+  emitSessionUpdated()
+}
+
+const createPersistedSession = async (mode: WorkspaceMode) => {
+  selectedMode.value = mode
+  const response = await createWorkspaceSessionAPI({
+    title: '新对话',
+    workspace_mode: mode,
+    agent: mode,
+    contexts: [],
+  })
+  if (response.data?.status_code !== 200 || !response.data?.data?.session_id) {
+    throw new Error('create_session_failed')
+  }
+  currentSessionId.value = String(response.data.data.session_id)
+  await syncRouteState()
+  emitSessionUpdated()
+}
+
+const startFreshConversation = async () => {
+  await resetToDraftSession(selectedMode.value)
+}
+const handleNewConversationRequest = async () => {
+  if (isGenerating.value) {
+    ElMessage.warning('请等待当前回复完成后再新建会话。')
+    return
+  }
+  try {
+    await startFreshConversation()
+  } catch (error) {
+    console.error('新建会话失败', error)
+    ElMessage.error('新建会话失败')
+  }
+}
+const getRetrievalTriggerLabel = (trigger: string) => {
+  if (trigger === 'route_broadening') return '自动扩路补检'
+  if (trigger === 'query_rewrite_retry') return '改写后重试'
+  if (trigger === 'initial') return '首轮检索'
+  return trigger || '检索'
+}
+const getQualityReasonLabel = (reason: string) => {
+  if (reason === 'empty_result') return '结果为空'
+  if (reason === 'graph_result_empty') return '图谱结果为空'
+  if (reason === 'too_few_documents') return '召回片段过少'
+  if (reason === 'low_rerank_score') return '重排分数过低'
+  if (reason === 'no_relevant_documents') return '没有相关文档'
+  return reason || ''
+}
+const buildRetrievalTrace = (data: Record<string, any>, retrievalMode: string): RetrievalTraceSummary | null => {
+  const rounds = Array.isArray(data.rounds) ? data.rounds : []
+  const firstMode = String(data.first_mode || retrievalMode || '').trim()
+  const finalMode = String(data.final_mode || retrievalMode || '').trim()
+  const fallbackReason = String(data.fallback_reason || '').trim()
+  const roundCount = Number(data.round_count || rounds.length || 0)
+  const rewrittenQueryUsed = Boolean(data.rewritten_query_used)
+  if (!firstMode && !finalMode && !roundCount && !fallbackReason && rounds.length === 0)
+    return null
+  return {
+    firstMode: firstMode || finalMode || retrievalMode || 'rag',
+    finalMode: finalMode || firstMode || retrievalMode || 'rag',
+    roundCount: roundCount || Math.max(rounds.length, 1),
+    fallbackReason,
+    rewrittenQueryUsed,
+    rounds: rounds.map((item: any, index: number) => ({
+      round: Number(item?.round || index + 1),
+      mode: String(item?.mode || finalMode || retrievalMode || 'rag'),
+      trigger: String(item?.trigger || ''),
+      qualityReason: String(item?.quality_reason || ''),
+      query: String(item?.query || ''),
+    })),
+  }
+}
+const buildRetrievalTraceDetail = (data: Record<string, any>, retrievalMode: string) => {
+  const retrieval = buildRetrievalTrace(data, retrievalMode)
+  if (!retrieval) return ''
+  const routeSummary = retrieval.firstMode && retrieval.finalMode && retrieval.firstMode !== retrieval.finalMode
+    ? `首轮 ${getRetrievalModeLabel(retrieval.firstMode)}，最终切到 ${getRetrievalModeLabel(retrieval.finalMode)}`
+    : `检索策略：${getRetrievalModeLabel(retrieval.finalMode || retrievalMode)}`
+  const parts = [`${routeSummary}，共 ${retrieval.roundCount} 轮。`]
+  if (retrieval.fallbackReason) parts.push(`补检原因：${retrieval.fallbackReason}。`)
+  if (retrieval.rewrittenQueryUsed) parts.push('已启用改写后的问题再次检索。')
+  const lastRound = retrieval.rounds[retrieval.rounds.length - 1]
+  if (lastRound?.trigger === 'query_rewrite_retry') {
+    parts.push('最后一轮来自改写后重试。')
+  } else if (lastRound?.trigger === 'route_broadening') {
+    parts.push('最后一轮来自自动扩路补检。')
+  }
+  return parts.join('')
+}
+
 const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
   const data = event.data || {}
   const phase = String(data.phase || '')
   const status = String(data.status || '')
   const retrievalMode = String(data.retrieval_mode || effectiveRetrievalMode.value || '')
+  const retrieval = buildRetrievalTrace(data, retrievalMode)
+  const toolName = String(data.tool_name || '')
+  const toolResult = String(data.result || data.message || '')
+  const isToolCreation = event.type === 'tool_result' && ['create_remote_api_tool', 'create_cli_tool'].includes(toolName)
   if (event.type === 'tool_call') {
-    return { id: event.id || crypto.randomUUID(), title: '正在调用工具', detail: String(data.tool_name || data.message || '正在执行外部能力'), at: new Date().toLocaleTimeString(), phase, status, accent: 'tool' }
+    return { id: event.id || crypto.randomUUID(), title: '正在调用工具', detail: String(data.tool_name || data.message || '正在执行外部能力'), at: new Date().toLocaleTimeString(), phase, status, accent: 'tool', retrieval }
   }
   if (event.type === 'tool_result') {
-    return { id: event.id || crypto.randomUUID(), title: '工具已返回结果', detail: String(data.tool_name || data.message || '已收到工具结果'), at: new Date().toLocaleTimeString(), phase, status, accent: data.ok === false ? 'error' : 'tool' }
+    const failed = data.ok === false
+    return {
+      id: event.id || crypto.randomUUID(),
+      title: isToolCreation
+        ? (
+            failed
+              ? (toolName === 'create_remote_api_tool' ? '创建 API 工具失败' : '创建 CLI 工具失败')
+              : (toolName === 'create_remote_api_tool' ? '已创建 API 工具' : '已创建 CLI 工具')
+          )
+        : '工具已返回结果',
+      detail: isToolCreation
+        ? toolResult
+        : String(data.tool_name || data.message || '已收到工具结果'),
+      at: new Date().toLocaleTimeString(),
+      phase,
+      status,
+      accent: data.ok === false ? 'error' : 'tool',
+      retrieval,
+    }
   }
   if (event.type === 'final') {
-    return { id: event.id || crypto.randomUUID(), title: '正在整理最终回复', detail: `检索模式：${getRetrievalModeLabel(retrievalMode)} / 正在生成最终答案。`, at: new Date().toLocaleTimeString(), phase: phase || 'answer', status, accent: 'answer' }
+    return { id: event.id || crypto.randomUUID(), title: '正在整理最终回复', detail: `${buildRetrievalTraceDetail(data, retrievalMode)} 正在生成最终答案。`, at: new Date().toLocaleTimeString(), phase: phase || 'answer', status, accent: 'answer', retrieval }
   }
   const accent = phase.includes('error')
     ? 'error'
@@ -243,11 +471,22 @@ const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
   return {
     id: event.id || crypto.randomUUID(),
     title: String(data.message || event.title || '正在处理中'),
-    detail: String(data.result || data.error || data.tool_name || event.detail || (retrievalMode ? `检索模式：${getRetrievalModeLabel(retrievalMode)}` : '')),
+    detail: String(
+      data.result
+      || data.error
+      || data.tool_name
+      || event.detail
+      || (
+        retrievalMode
+          ? buildRetrievalTraceDetail(data, retrievalMode)
+          : ''
+      )
+    ),
     at: new Date().toLocaleTimeString(),
     phase,
     status,
     accent,
+    retrieval,
   }
 }
 const pushTraceEvent = (event: WorkspaceStreamEvent) => {
@@ -256,6 +495,23 @@ const pushTraceEvent = (event: WorkspaceStreamEvent) => {
   if (lastRecord && lastRecord.title === nextRecord.title && lastRecord.detail === nextRecord.detail) return
   executionEvents.value.push(nextRecord)
   if (executionEvents.value.length > 24) executionEvents.value.splice(0, executionEvents.value.length - 24)
+}
+
+const parseCreatedToolId = (text: string) => {
+  const matched = text.match(/\(tool_id=([^)]+)\)/)
+  return matched?.[1] || ''
+}
+
+const refreshToolSelectionsAfterCreation = async (event: WorkspaceStreamEvent) => {
+  const data = event.data || {}
+  const toolName = String(data.tool_name || '')
+  if (event.type !== 'tool_result' || data.ok === false) return
+  if (!['create_remote_api_tool', 'create_cli_tool'].includes(toolName)) return
+  if (!canPickTools.value) return
+  await fetchPlugins()
+  const createdToolId = parseCreatedToolId(String(data.result || data.message || ''))
+  if (createdToolId && !selectedTools.value.includes(createdToolId)) selectedTools.value.push(createdToolId)
+  ElMessage.success(toolName === 'create_remote_api_tool' ? 'API 工具已创建并刷新到当前工具列表。' : 'CLI 工具已创建并刷新到当前工具列表。')
 }
 
 const buildLiveAssistantProgress = () => {
@@ -280,19 +536,68 @@ const applySlashSuggestion = (suggestion: SlashSuggestion) => {
   activeSuggestionIndex.value = 0
 }
 
+const waitForRetry = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms))
+
+const ensureInitialRouteDependencies = async () => {
+  const initialMessage = safeQueryValue(route.query.message, '').trim()
+  if (!initialMessage)
+    return true
+
+  let attempt = 0
+  while (attempt < 4) {
+    attempt += 1
+
+    if (!selectedModelId.value) {
+      await fetchModels()
+    }
+    if (executionModes.value.length === 0 || accessScopes.value.length === 0) {
+      await fetchExecutionConfig()
+    }
+    if (mcpServers.value.length === 0) {
+      await fetchMcpServers()
+    }
+
+    const ready = Boolean(selectedModelId.value)
+      && executionModes.value.length > 0
+      && accessScopes.value.length > 0
+      && mcpServers.value.length > 0
+    if (ready)
+      return true
+
+    await waitForRetry(300 * attempt)
+  }
+
+  return false
+}
+
 const consumeInitialRouteMessage = async () => {
   const initialMessage = safeQueryValue(route.query.message, '').trim()
   if (!initialMessage || isGenerating.value)
+    return
+
+  const dependenciesReady = await ensureInitialRouteDependencies()
+  if (!dependenciesReady || !selectedModelId.value)
     return
 
   const routeSessionId = safeQueryValue(route.query.session_id, 'new')
   const messageKey = `${routeSessionId}|${selectedMode.value}|${initialMessage}`
   if (consumedInitialMessageKey.value === messageKey)
     return
+  if (initialRouteMessageInFlightKey.value === messageKey)
+    return
 
-  consumedInitialMessageKey.value = messageKey
-  inputMessage.value = initialMessage
-  await submitMessage()
+  initialRouteMessageInFlightKey.value = messageKey
+  try {
+    inputMessage.value = initialMessage
+    const submitted = await submitMessage()
+    if (!submitted) return
+    consumedInitialMessageKey.value = messageKey
+    inputMessage.value = ''
+  } finally {
+    if (initialRouteMessageInFlightKey.value === messageKey) {
+      initialRouteMessageInFlightKey.value = ''
+    }
+  }
 }
 
 const fetchModels = async () => {
@@ -361,9 +666,10 @@ const fetchKnowledges = async () => {
 
 const loadSessionHistory = async (sessionId: string) => {
   try {
-    const response = await getWorkspaceSessionsAPI()
+    clearConversationState()
+    const response = await getWorkspaceSessionInfoAPI(sessionId)
     if (response.data.status_code !== 200) return
-    const session = response.data.data.find((item: any) => item.session_id === sessionId)
+    const session = response.data.data
     if (!session?.contexts || !Array.isArray(session.contexts)) return
     const contexts = sanitizeWorkspaceContexts(session.contexts)
     messages.value = contexts.map((context: any) => [{ role: 'user' as const, content: context.query || '' }, { role: 'assistant' as const, content: context.answer || '' }]).flat().filter((message: ChatMessage) => message.content)
@@ -401,7 +707,9 @@ const syncDefaultSelections = () => {
   if (!knowledgeTouched.value) {
     selectedKnowledgeIds.value = []
   } else {
-    selectedKnowledgeIds.value = selectedKnowledgeIds.value.filter((knowledgeId) => availableKnowledgeIds.includes(knowledgeId))
+    selectedKnowledgeIds.value = selectedKnowledgeIds.value
+      .filter((knowledgeId) => availableKnowledgeIds.includes(knowledgeId))
+      .slice(0, 1)
   }
 }
 
@@ -425,8 +733,7 @@ const toggleSkill = (skillId: string) => {
 
 const toggleKnowledge = (knowledgeId: string) => {
   knowledgeTouched.value = true
-  const index = selectedKnowledgeIds.value.indexOf(knowledgeId)
-  index >= 0 ? selectedKnowledgeIds.value.splice(index, 1) : selectedKnowledgeIds.value.push(knowledgeId)
+  selectedKnowledgeIds.value = selectedKnowledgeIds.value[0] === knowledgeId ? [] : [knowledgeId]
 }
 
 const getValidSelectedToolIds = () => {
@@ -439,6 +746,11 @@ const getValidSelectedMcpIds = () => {
   return selectedMcpServers.value.filter((serverId) => availableMcpIds.has(serverId))
 }
 
+const getValidAutoMcpIds = () => {
+  const availableMcpIds = new Set(mcpServers.value.map((item: any) => item.mcp_server_id).filter(Boolean))
+  return autoAvailableMcpIds.value.filter((serverId) => availableMcpIds.has(serverId))
+}
+
 const getValidSelectedSkillIds = () => {
   const availableSkillIds = new Set(skillOptions.value.map((item) => item.id).filter(Boolean))
   return selectedSkillIds.value.filter((skillId) => availableSkillIds.has(skillId))
@@ -446,7 +758,7 @@ const getValidSelectedSkillIds = () => {
 
 const getValidSelectedKnowledgeIds = () => {
   const availableKnowledgeIds = new Set(knowledgeOptions.value.map((item) => item.id).filter(Boolean))
-  return selectedKnowledgeIds.value.filter((knowledgeId) => availableKnowledgeIds.has(knowledgeId))
+  return selectedKnowledgeIds.value.filter((knowledgeId) => availableKnowledgeIds.has(knowledgeId)).slice(0, 1)
 }
 
 const classifySelectedFile = (file: File) => {
@@ -557,9 +869,9 @@ const buildPayload = (query: string): WorkSpaceSimpleTask => ({
   workspace_mode: selectedMode.value,
   web_search: ALWAYS_WEB_SEARCH,
   plugins: canPickTools.value ? getValidSelectedToolIds() : [],
-  mcp_servers: canPickTools.value ? getValidSelectedMcpIds() : [],
+  mcp_servers: canPickTools.value ? getValidSelectedMcpIds() : getValidAutoMcpIds(),
   knowledge_ids: canPickTools.value ? getValidSelectedKnowledgeIds() : [],
-  retrieval_mode: canPickTools.value ? selectedRetrievalMode.value : 'rag',
+  retrieval_mode: canPickTools.value ? effectiveRetrievalMode.value : 'rag',
   agent_skill_ids: canPickTools.value ? getValidSelectedSkillIds() : [],
   session_id: currentSessionId.value,
   execution_mode: isAgentMode.value ? selectedExecutionMode.value : 'tool',
@@ -571,10 +883,21 @@ const buildPayload = (query: string): WorkSpaceSimpleTask => ({
 
 const submitMessage = async () => {
   const query = inputMessage.value.trim() || (pendingAttachments.value.length > 0 ? '请分析我上传的附件。' : '')
-  if (!query) return ElMessage.warning('请输入内容。')
-  if (isGenerating.value) return ElMessage.warning('请等待当前回复完成。')
-  if (!selectedModelId.value) return ElMessage.warning('请先选择模型')
-  if (!currentSessionId.value) currentSessionId.value = generateSessionId()
+  if (!query) { ElMessage.warning('请输入内容。'); return false }
+  if (isGenerating.value) { ElMessage.warning('请等待当前回复完成。'); return false }
+  if (!selectedModelId.value) {
+    await fetchModels()
+  }
+  if (!selectedModelId.value) { ElMessage.warning('请先选择模型'); return false }
+  if (!currentSessionId.value) {
+    try {
+      await createPersistedSession(selectedMode.value)
+    } catch (error) {
+      console.error('补建会话失败', error)
+      ElMessage.error('新建会话失败')
+      return false
+    }
+  }
   await syncRouteState()
   inputMessage.value = ''
   isGenerating.value = true
@@ -613,9 +936,17 @@ const submitMessage = async () => {
         messages.value[assistantIndex].content += safeChunk
         await scrollToBottom()
       },
+      onFinalMessage: async (message) => {
+        const safeMessage = sanitizeAssistantChunk(message)
+        if (!safeMessage || !messages.value[assistantIndex]) return
+        messages.value[assistantIndex].content = safeMessage
+        assistantHasRealContent = true
+        await scrollToBottom()
+      },
       onEvent: async (event) => {
         if (!isAgentMode.value) return
         pushTraceEvent(event)
+        await refreshToolSelectionsAfterCreation(event)
         await renderAgentProgress()
       },
       onError: (error) => { console.error('对话失败', error); pendingAttachments.value = attachmentsForRequest; applyFallback(); ElMessage.error('对话失败，请稍后重试'); isGenerating.value = false },
@@ -626,12 +957,14 @@ const submitMessage = async () => {
         emitSessionUpdated()
       },
     })
+    return true
   } catch (error) {
     console.error('对话异常', error)
     pendingAttachments.value = attachmentsForRequest
     applyFallback()
     ElMessage.error('对话异常')
     isGenerating.value = false
+    return false
   }
 }
 
@@ -676,8 +1009,14 @@ watch(slashSuggestions, (nextSuggestions) => {
   if (activeSuggestionIndex.value >= nextSuggestions.length) activeSuggestionIndex.value = 0
 })
 
+watch(selectedModelId, async (newModelId, oldModelId) => {
+  if (!newModelId || newModelId === oldModelId) return
+  await consumeInitialRouteMessage()
+})
+
 watch(() => route.query.session_id, async (newSessionId, oldSessionId) => {
   if (newSessionId && newSessionId !== oldSessionId) {
+    clearConversationState()
     currentSessionId.value = String(newSessionId)
     toolsTouched.value = false
     mcpTouched.value = false
@@ -696,24 +1035,12 @@ watch(() => route.query.session_id, async (newSessionId, oldSessionId) => {
     return
   }
   if (!newSessionId && oldSessionId) {
-    currentSessionId.value = generateSessionId()
-    messages.value = []
-    executionEvents.value = []
-    showControlPanel.value = false
-    showTracePanel.value = false
-    pendingAttachments.value = []
-    toolsTouched.value = false
-    mcpTouched.value = false
-    skillsTouched.value = false
-    knowledgeTouched.value = false
-    selectedTools.value = []
-    selectedMcpServers.value = []
-    selectedSkillIds.value = []
-    selectedKnowledgeIds.value = []
-    await Promise.all([fetchPlugins(), fetchSkills(), fetchKnowledges()])
-    syncDefaultSelections()
-    await nextTick()
-    await consumeInitialRouteMessage()
+    try {
+      await resetToDraftSession(selectedMode.value, { pruneCurrent: false })
+    } catch (error) {
+      console.error('补建会话失败', error)
+      ElMessage.error('新建会话失败')
+    }
   }
 })
 
@@ -744,9 +1071,18 @@ watch([selectedExecutionMode, selectedAccessScope, selectedMode], async () => {
   syncDefaultSelections()
 })
 
-watch(selectedMode, async () => { if (currentSessionId.value) await syncRouteState() })
+watch(selectedMode, async (newMode, oldMode) => {
+  if (!workspaceHydrated.value || newMode === oldMode) return
+  try {
+    await resetToDraftSession(newMode)
+  } catch (error) {
+    console.error('切换模式失败', error)
+    ElMessage.error('切换模式失败')
+  }
+})
 
 onMounted(async () => {
+  window.addEventListener('workspace-new-conversation', handleNewConversationRequest)
   await Promise.all([fetchExecutionConfig(), fetchModels(), fetchMcpServers()])
   selectedMode.value = safeQueryValue(route.query.mode, 'normal') === 'agent' ? 'agent' : 'normal'
   selectedExecutionMode.value = safeQueryValue(route.query.execution_mode, 'tool')
@@ -755,9 +1091,19 @@ onMounted(async () => {
   selectedAccessScope.value = accessScopes.value.some((item) => item.id === selectedAccessScope.value) ? selectedAccessScope.value : 'workspace'
   await Promise.all([fetchPlugins(), fetchSkills(), fetchKnowledges()])
   const sessionId = safeQueryValue(route.query.session_id, '')
-  if (sessionId) { currentSessionId.value = sessionId; await loadSessionHistory(sessionId) } else currentSessionId.value = generateSessionId()
+  if (sessionId) {
+    currentSessionId.value = sessionId
+    await loadSessionHistory(sessionId)
+  } else {
+    currentSessionId.value = ''
+  }
   await nextTick()
   await consumeInitialRouteMessage()
+  workspaceHydrated.value = true
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('workspace-new-conversation', handleNewConversationRequest)
 })
 </script>
 
@@ -769,14 +1115,14 @@ onMounted(async () => {
         <h1>{{ selectedMode === 'agent' ? '把任务交给 Zuno。' : '今天想聊什么？' }}</h1>
         <p>{{ activeMode.description }}</p>
         <div class="mode-switcher">
-          <button v-for="mode in modes" :key="mode.id" :class="['mode-pill', { active: selectedMode === mode.id }]" @click="selectedMode = mode.id">
+          <button v-for="mode in modes" :key="mode.id" :class="['mode-pill', { active: selectedMode === mode.id }]" :disabled="isGenerating" @click="selectedMode = mode.id">
             {{ mode.label }}
           </button>
         </div>
       </div>
       <div v-if="messages.length > 0" ref="conversationRef" class="conversation-panel" @scroll="handleConversationScroll">
         <div v-for="(message, index) in messages" :key="index" class="message-row" :class="message.role">
-          <img v-if="message.role === 'assistant'" :src="robotIcon" alt="Zuno" class="avatar" />
+                  <img v-if="message.role === 'assistant'" :src="zunoAgentAvatar" alt="Zuno" class="avatar" />
           <div class="message-bubble" :class="{ assistant: message.role === 'assistant', loading: message.role === 'assistant' && !message.content && isGenerating && index === messages.length - 1 }">
             <div v-if="message.role === 'assistant' && !message.content && isGenerating && index === messages.length - 1" class="loading-row" :class="{ agent: isAgentMode }">
               <template v-if="isAgentMode">
@@ -826,40 +1172,39 @@ onMounted(async () => {
 
           <div v-if="showControlPanel" class="settings-panel">
             <div class="selector-grid">
-              <label class="field"><span>模式</span><select v-model="selectedMode"><option v-for="mode in modes" :key="mode.id" :value="mode.id">{{ mode.label }}</option></select></label>
-              <label class="field"><span>模型</span><select v-model="selectedModelId"><option v-if="modelsLoading" value="">加载中...</option><option v-for="model in modelOptions" :key="model.llm_id" :value="model.llm_id">{{ model.model }}</option></select></label>
+              <label class="field"><span>模式</span><select v-model="selectedMode" :disabled="isGenerating"><option v-for="mode in modes" :key="mode.id" :value="mode.id">{{ mode.label }}</option></select></label>
+              <label class="field"><span>聊天模型</span><select v-model="selectedModelId" disabled><option v-if="modelsLoading" value="">加载中...</option><option v-for="model in modelOptions" :key="model.llm_id" :value="model.llm_id">{{ model.model }}</option></select><small class="field-hint">聊天页不再切换模型，这里自动使用当前可用 LLM。</small></label>
             </div>
             <div v-if="isAgentMode" class="selector-grid agent-grid">
               <label class="field"><span>执行方式</span><select v-model="selectedExecutionMode"><option v-for="mode in executionModes" :key="mode.id" :value="mode.id">{{ mode.label }}</option></select></label>
               <label class="field"><span>访问范围</span><select v-model="selectedAccessScope"><option v-for="scope in accessScopes" :key="scope.id" :value="scope.id">{{ scope.label }}</option></select></label>
             </div>
-            <div v-if="isAgentMode && canPickTools" class="selector-grid agent-grid">
-              <label class="field">
-                <span>检索模式</span>
-                <select v-model="selectedRetrievalMode"><option v-for="mode in retrievalModeOptions" :key="mode.value" :value="mode.value">{{ mode.label }}</option></select>
-                <small class="field-hint">{{ retrievalModeHint }}</small>
-              </label>
-            </div>
             <div v-if="isAgentMode && canPickTools" class="tool-columns">
               <div class="picker-card">
-                <div class="picker-head"><strong>工具</strong><small>已选 {{ selectedTools.length }}</small></div>
+                <div class="picker-head"><strong>工具</strong><small>已选 {{ selectedTools.length }}</small><button type="button" class="picker-inline-action" @click="openToolCreationPrompt('general')">新增工具</button></div>
                 <div v-if="plugins.length === 0" class="empty-copy">暂无可用工具</div>
-                <label v-for="tool in plugins" :key="tool.id || tool.tool_id" class="picker-item"><input type="checkbox" :checked="selectedTools.includes(tool.id || tool.tool_id)" @change="toggleTool(tool.id || tool.tool_id)" /><span>{{ tool.display_name || tool.name }}<small>{{ tool.description || '暂无描述' }}</small></span></label>
+                <label v-for="tool in plugins" :key="tool.id || tool.tool_id" class="picker-item"><input type="checkbox" :checked="selectedTools.includes(tool.id || tool.tool_id)" @change="toggleTool(tool.id || tool.tool_id)" /><span>{{ tool.display_name || tool.name }}<small>{{ safeDisplayText(tool.description, fallbackDescription) }}</small></span></label>
               </div>
               <div class="picker-card">
                 <div class="picker-head"><strong>MCP</strong><small>已选 {{ selectedMcpServers.length }}</small></div>
                 <div v-if="mcpServers.length === 0" class="empty-copy">暂无可用 MCP 服务</div>
-                <label v-for="server in mcpServers" :key="server.mcp_server_id" class="picker-item"><input type="checkbox" :checked="selectedMcpServers.includes(server.mcp_server_id)" @change="toggleMcp(server.mcp_server_id)" /><span>{{ server.name || server.server_name }}<small>{{ server.description || '暂无描述' }}</small></span></label>
+                <label v-for="server in mcpServers" :key="server.mcp_server_id" class="picker-item"><input type="checkbox" :checked="selectedMcpServers.includes(server.mcp_server_id)" @change="toggleMcp(server.mcp_server_id)" /><span>{{ server.name || server.server_name }}<small>{{ safeDisplayText(server.description, fallbackDescription) }}</small></span></label>
               </div>
               <div class="picker-card">
-                <div class="picker-head"><strong>知识库</strong><small>已选 {{ selectedKnowledgeIds.length }}</small></div>
+                <div class="picker-head"><strong>知识库</strong><small>限选 1 个</small></div>
                 <div v-if="knowledgeOptions.length === 0" class="empty-copy">暂无可用知识库</div>
-                <label v-for="knowledge in knowledgeOptions" :key="knowledge.id" class="picker-item"><input type="checkbox" :checked="selectedKnowledgeIds.includes(knowledge.id)" @change="toggleKnowledge(knowledge.id)" /><span>{{ knowledge.name }}<small>{{ knowledge.description || `共 ${knowledge.count} 个文件` }} · 默认 {{ getRetrievalModeLabel(knowledge.default_retrieval_mode) }}</small></span></label>
+                <label v-for="knowledge in knowledgeOptions" :key="knowledge.id" class="picker-item"><input type="radio" name="workspace-knowledge" :checked="selectedKnowledgeIds.includes(knowledge.id)" @change="toggleKnowledge(knowledge.id)" /><span>{{ knowledge.name }}<small>{{ safeDisplayText(knowledge.description, fallbackKnowledgeDescription(knowledge.count)) }}</small></span></label>
+                <div v-if="selectedKnowledge" class="picker-summary">
+                  <strong>{{ selectedKnowledge.name }}</strong>
+                  <small>{{ retrievalModeHint }}</small>
+                  <small>索引：{{ selectedKnowledgeSummary.chunkModeLabel }} / {{ selectedKnowledgeSummary.imageStrategyLabel }}</small>
+                  <small>召回：{{ selectedKnowledgeSummary.retrievalModeLabel }} / {{ selectedKnowledgeSummary.rerankLabel }}</small>
+                </div>
               </div>
               <div class="picker-card">
                 <div class="picker-head"><strong>Skill</strong><small>已选 {{ selectedSkillIds.length }}</small></div>
                 <div v-if="skillOptions.length === 0" class="empty-copy">暂无可用 Skill</div>
-                <label v-for="skill in skillOptions" :key="skill.id" class="picker-item"><input type="checkbox" :checked="selectedSkillIds.includes(skill.id)" @change="toggleSkill(skill.id)" /><span>{{ skill.name }}<small>{{ skill.description || '暂无描述' }}</small></span></label>
+                <label v-for="skill in skillOptions" :key="skill.id" class="picker-item"><input type="checkbox" :checked="selectedSkillIds.includes(skill.id)" @change="toggleSkill(skill.id)" /><span>{{ skill.name }}<small>{{ safeDisplayText(skill.description, fallbackDescription) }}</small></span></label>
               </div>
             </div>
           </div>
@@ -885,7 +1230,38 @@ onMounted(async () => {
             </div>
             <div class="picker-head"><div class="trace-head-copy"><strong>执行进展</strong><small>{{ selectedToolCount > 0 ? `已启用 ${selectedToolCount} 项能力` : '未启用额外工具' }}</small></div></div>
             <div v-if="executionEvents.length === 0" class="empty-copy">正在等待新的执行事件...</div>
-            <div v-else class="trace-list"><div v-for="event in executionEvents" :key="event.id" class="trace-item" :class="event.accent || 'default'"><div class="trace-head"><strong>{{ event.title }}</strong><span>{{ event.at }}</span></div><div v-if="event.detail" class="trace-detail">{{ event.detail }}</div></div></div>
+            <div v-else class="trace-list">
+              <div v-for="event in executionEvents" :key="event.id" class="trace-item" :class="event.accent || 'default'">
+                <div class="trace-head">
+                  <strong>{{ event.title }}</strong>
+                  <span>{{ event.at }}</span>
+                </div>
+                <div v-if="event.detail" class="trace-detail">{{ event.detail }}</div>
+                <div v-if="event.retrieval" class="retrieval-trace">
+                  <div class="retrieval-meta">
+                    <span class="trace-pill strong">首轮 {{ getRetrievalModeLabel(event.retrieval.firstMode) }}</span>
+                    <span class="trace-pill strong">最终 {{ getRetrievalModeLabel(event.retrieval.finalMode) }}</span>
+                    <span class="trace-pill">{{ event.retrieval.roundCount }} 轮</span>
+                    <span v-if="event.retrieval.rewrittenQueryUsed" class="trace-pill">改写重试</span>
+                  </div>
+                  <div v-if="event.retrieval.fallbackReason" class="trace-reason">
+                    补检原因：{{ event.retrieval.fallbackReason }}
+                  </div>
+                  <div v-if="event.retrieval.rounds.length > 0" class="trace-round-list">
+                    <div v-for="round in event.retrieval.rounds" :key="`${event.id}-${round.round}`" class="trace-round-item">
+                      <div class="trace-round-head">
+                        <strong>第 {{ round.round }} 轮</strong>
+                        <span>{{ getRetrievalModeLabel(round.mode) }}</span>
+                      </div>
+                      <div class="trace-round-body">
+                        <span>{{ getRetrievalTriggerLabel(round.trigger || '') }}</span>
+                        <span v-if="round.qualityReason">{{ getQualityReasonLabel(round.qualityReason) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div v-if="pendingAttachments.length > 0" class="attachment-strip">
@@ -917,6 +1293,7 @@ onMounted(async () => {
           <div class="composer-footer">
             <div class="composer-footer-left">
               <button class="attach-btn" type="button" :disabled="attachmentsUploading || isGenerating" @click="triggerAttachmentSelect"><el-icon><Plus /></el-icon><span>{{ attachmentsUploading ? '上传中...' : '添加附件' }}</span></button>
+              <button v-if="isAgentMode && canPickTools" class="attach-btn tool-create-btn" type="button" :disabled="attachmentsUploading || isGenerating" @click="openToolCreationPrompt('general')"><el-icon><Plus /></el-icon><span>新增工具</span></button>
               <div class="composer-meta"><span class="composer-hint">{{ modeFooterCopy }}</span><span class="attachment-hint">{{ attachmentHint }}</span><span v-if="isAgentMode && canPickTools" class="retrieval-hint">检索：{{ effectiveRetrievalModeLabel }}</span></div>
             </div>
             <button class="send-btn" :disabled="isGenerating || attachmentsUploading" @click="submitMessage">{{ isGenerating ? '处理中...' : '发送' }}</button>
@@ -1389,6 +1766,7 @@ onMounted(async () => {
 .composer-footer-left {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -1410,6 +1788,39 @@ onMounted(async () => {
   padding: 4px 9px;
   background: rgba(255, 251, 246, 0.65);
   border-color: rgba(223, 203, 182, 0.68);
+}
+
+.picker-head {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.picker-inline-action {
+  border: none;
+  background: rgba(212, 133, 71, 0.12);
+  color: #c5722f;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.picker-inline-action:hover {
+  background: rgba(212, 133, 71, 0.2);
+  color: #ad5f22;
+}
+
+.tool-create-btn {
+  background: rgba(212, 133, 71, 0.12);
+  border-color: rgba(212, 133, 71, 0.2);
+  color: #c5722f;
+}
+
+.tool-create-btn:hover:not(:disabled) {
+  background: rgba(212, 133, 71, 0.2);
+  color: #ad5f22;
 }
 
 .settings-panel,
@@ -1501,6 +1912,21 @@ onMounted(async () => {
 .attachment-copy {
   display: grid;
   gap: 3px;
+}
+
+.picker-summary {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 248, 240, 0.92);
+  border: 1px solid rgba(226, 206, 187, 0.9);
+  color: #6f543d;
+}
+
+.picker-summary strong {
+  color: #5b3920;
 }
 
 .picker-item small,
@@ -1608,6 +2034,77 @@ onMounted(async () => {
   color: #584434;
   line-height: 1.45;
   font-size: 12px;
+}
+
+.retrieval-trace {
+  display: grid;
+  gap: 7px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(232, 216, 198, 0.76);
+}
+
+.retrieval-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.trace-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 248, 240, 0.92);
+  border: 1px solid rgba(228, 206, 182, 0.88);
+  color: #815f43;
+  font-size: 11px;
+}
+
+.trace-pill.strong {
+  background: rgba(251, 239, 227, 0.96);
+  color: #6b421c;
+}
+
+.trace-reason {
+  color: #73563b;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.trace-round-list {
+  display: grid;
+  gap: 6px;
+}
+
+.trace-round-item {
+  display: grid;
+  gap: 3px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: rgba(255, 252, 248, 0.86);
+  border: 1px solid rgba(236, 222, 207, 0.9);
+}
+
+.trace-round-head,
+.trace-round-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.trace-round-head strong {
+  color: #5a3a1e;
+  font-size: 11px;
+}
+
+.trace-round-head span,
+.trace-round-body span {
+  color: #83664c;
+  font-size: 11px;
 }
 
 .attachment-strip {

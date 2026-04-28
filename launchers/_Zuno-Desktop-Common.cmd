@@ -17,6 +17,8 @@ for %%I in ("%SCRIPT_DIR%..") do set "PROJECT_ROOT=%%~fI"
 set "DOCKER_DIR=%PROJECT_ROOT%\docker"
 set "FRONTEND_DIR=%PROJECT_ROOT%\src\frontend"
 set "DESKTOP_DIR=%PROJECT_ROOT%\desktop"
+set "DESKTOP_ELECTRON_EXE=%DESKTOP_DIR%\node_modules\electron\dist\electron.exe"
+set "LAUNCHER_DIR=%PROJECT_ROOT%\launchers"
 set "RUNTIME_DIR=%TEMP%\zuno-desktop-runtime"
 set "FRONTEND_LOG=%RUNTIME_DIR%\frontend.log"
 set "FRONTEND_ERR_LOG=%RUNTIME_DIR%\frontend.err.log"
@@ -24,6 +26,8 @@ set "DESKTOP_LOG=%RUNTIME_DIR%\desktop.log"
 set "DESKTOP_ERR_LOG=%RUNTIME_DIR%\desktop.err.log"
 set "FRONTEND_PID_FILE=%RUNTIME_DIR%\frontend.pid"
 set "DESKTOP_PID_FILE=%RUNTIME_DIR%\desktop.pid"
+set "START_ELECTRON_HELPER=%LAUNCHER_DIR%\_Zuno-Desktop-StartElectron.ps1"
+set "CLEANUP_HELPER=%LAUNCHER_DIR%\_Zuno-Desktop-Cleanup.ps1"
 set "DESKTOP_FRONTEND_PORT=8091"
 exit /b 0
 
@@ -33,34 +37,22 @@ del /q "%FRONTEND_LOG%" "%FRONTEND_ERR_LOG%" "%DESKTOP_LOG%" "%DESKTOP_ERR_LOG%"
 exit /b 0
 
 :cleanup_processes
-if exist "%DESKTOP_PID_FILE%" (
-  set /p DESKTOP_PID=<"%DESKTOP_PID_FILE%"
-  if not "!DESKTOP_PID!"=="" taskkill /PID !DESKTOP_PID! /T /F >nul 2>nul
-  del /q "%DESKTOP_PID_FILE%" >nul 2>nul
+if not exist "%CLEANUP_HELPER%" (
+  echo Missing cleanup helper:
+  echo %CLEANUP_HELPER%
+  exit /b 1
 )
-if exist "%FRONTEND_PID_FILE%" (
-  set /p FRONTEND_PID=<"%FRONTEND_PID_FILE%"
-  if not "!FRONTEND_PID!"=="" taskkill /PID !FRONTEND_PID! /T /F >nul 2>nul
-  del /q "%FRONTEND_PID_FILE%" >nul 2>nul
-)
-for %%P in (8091 8090) do (
-  for /f "tokens=5" %%I in ('netstat -ano ^| findstr /R /C:":%%P .*LISTENING"') do (
-    taskkill /PID %%I /T /F >nul 2>nul
-  )
-)
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$targets = Get-CimInstance Win32_Process | Where-Object {" ^
-  "  ($_.Name -match 'node|electron|cmd') -and (" ^
-  "    ($_.CommandLine -like '*%PROJECT_ROOT%\\src\\frontend*') -or" ^
-  "    ($_.CommandLine -like '*%PROJECT_ROOT%\\desktop*')" ^
-  "  )" ^
-  "};" ^
-  "foreach ($proc in $targets) { try { Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop } catch {} }"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%CLEANUP_HELPER%" ^
+  -ProjectRoot "%PROJECT_ROOT%" ^
+  -FrontendRoot "%FRONTEND_DIR%" ^
+  -DesktopRoot "%DESKTOP_DIR%" ^
+  -FrontendPidFile "%FRONTEND_PID_FILE%" ^
+  -DesktopPidFile "%DESKTOP_PID_FILE%"
 exit /b 0
 
 :stopBackend
 cd /d "%DOCKER_DIR%"
-docker compose stop frontend backend postgres redis minio >nul 2>nul
+docker compose down --remove-orphans >nul 2>nul
 exit /b 0
 
 :waitHttp
@@ -75,6 +67,25 @@ for /L %%I in (1,1,%WAIT_SECONDS%) do (
   timeout /t 1 /nobreak >nul
 )
 echo %WAIT_NAME% did not become ready in time.
+exit /b 1
+
+:recordListeningPid
+set "LISTEN_PORT=%~1"
+set "LISTEN_PID_FILE=%~2"
+set "LISTEN_PID="
+for /L %%I in (1,1,10) do (
+  set "LISTEN_PID="
+  for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$listener = Get-NetTCPConnection -LocalPort %LISTEN_PORT% -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess; if ($listener) { Write-Output $listener }"`) do (
+    set "LISTEN_PID=%%P"
+  )
+  if not "!LISTEN_PID!"=="" (
+    >"%LISTEN_PID_FILE%" echo !LISTEN_PID!
+    exit /b 0
+  )
+  timeout /t 1 /nobreak >nul
+)
+echo Could not determine the listening process for port %LISTEN_PORT%.
 exit /b 1
 
 :waitContainerHealthy
@@ -160,7 +171,7 @@ exit /b 0
 
 :startBackend
 cd /d "%DOCKER_DIR%"
-docker compose up -d postgres redis minio backend
+docker compose up -d --remove-orphans postgres redis neo4j minio backend
 if errorlevel 1 exit /b 1
 call :waitHttp "http://127.0.0.1:7860/health" "Backend API" 90
 if errorlevel 1 exit /b 1
@@ -175,16 +186,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
 if errorlevel 1 exit /b 1
 call :waitHttp "http://127.0.0.1:%DESKTOP_FRONTEND_PORT%" "Desktop frontend" 45
 if errorlevel 1 exit /b 1
-exit /b 0
-
-:startElectron
-cd /d "%DESKTOP_DIR%"
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue;" ^
-  "$env:DESKTOP_FRONTEND_URL='http://127.0.0.1:%DESKTOP_FRONTEND_PORT%';" ^
-  "$env:DESKTOP_API_BASE_URL='http://127.0.0.1:7860';" ^
-  "$p = Start-Process -FilePath '%DESKTOP_DIR%\node_modules\electron\dist\electron.exe' -ArgumentList '.' -WorkingDirectory '%DESKTOP_DIR%' -WindowStyle Normal -RedirectStandardOutput '%DESKTOP_LOG%' -RedirectStandardError '%DESKTOP_ERR_LOG%' -PassThru;" ^
-  "Set-Content -Path '%DESKTOP_PID_FILE%' -Value $p.Id"
+call :recordListeningPid "%DESKTOP_FRONTEND_PORT%" "%FRONTEND_PID_FILE%"
 if errorlevel 1 exit /b 1
 exit /b 0
 
@@ -198,8 +200,6 @@ call :ensureDocker
 if errorlevel 1 exit /b 1
 call :ensureLocalConfig
 if errorlevel 1 exit /b 1
-cd /d "%DOCKER_DIR%"
-docker compose stop frontend >nul 2>nul
 
 echo [2/5] Starting desktop backend services...
 call :startBackend
@@ -214,7 +214,17 @@ call :startFrontend
 if errorlevel 1 exit /b 1
 
 echo [5/5] Launching Electron client...
-call :startElectron
+if not exist "%START_ELECTRON_HELPER%" (
+  echo Missing Electron launcher helper:
+  echo %START_ELECTRON_HELPER%
+  exit /b 1
+)
+powershell -NoProfile -ExecutionPolicy Bypass -File "%START_ELECTRON_HELPER%" ^
+  -DesktopDir "%DESKTOP_DIR%" ^
+  -DesktopFrontendPort "%DESKTOP_FRONTEND_PORT%" ^
+  -DesktopLog "%DESKTOP_LOG%" ^
+  -DesktopErrLog "%DESKTOP_ERR_LOG%" ^
+  -DesktopPidFile "%DESKTOP_PID_FILE%"
 if errorlevel 1 exit /b 1
 
 echo.
@@ -236,20 +246,33 @@ call :startSequence
 if errorlevel 1 (
   echo.
   echo Zuno Desktop start failed.
+  echo.
+  pause
+  exit /b 1
 )
-echo.
-pause
 exit /b 0
 
 :launcher_stop
 call :config
 echo Stopping Zuno Desktop client and backend services...
 call :cleanup_processes
+if errorlevel 1 (
+  echo.
+  echo Zuno Desktop stop failed.
+  echo.
+  pause
+  exit /b 1
+)
 call :stopBackend
+if errorlevel 1 (
+  echo.
+  echo Zuno Desktop stop failed.
+  echo.
+  pause
+  exit /b 1
+)
 echo.
 echo Zuno Desktop stopped.
-echo.
-pause
 exit /b 0
 
 :launcher_rebuild
@@ -273,7 +296,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-docker compose stop frontend backend postgres redis minio >nul 2>nul
+docker compose down --remove-orphans >nul 2>nul
 docker compose build backend
 if errorlevel 1 (
   echo Desktop backend rebuild failed.
@@ -285,9 +308,10 @@ call :startSequence
 if errorlevel 1 (
   echo.
   echo Zuno Desktop rebuild failed.
+  echo.
+  pause
+  exit /b 1
 )
-echo.
-pause
 exit /b 0
 
 :launcher_full_rebuild
@@ -311,7 +335,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-docker compose stop frontend backend postgres redis minio >nul 2>nul
+docker compose down --remove-orphans >nul 2>nul
 echo Removing desktop dependency folders and Vite cache...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$paths = @('%PROJECT_ROOT%\\src\\frontend\\node_modules','%PROJECT_ROOT%\\desktop\\node_modules','%PROJECT_ROOT%\\src\\frontend\\dist','%PROJECT_ROOT%\\src\\frontend\\node_modules\\.vite');" ^
@@ -333,7 +357,8 @@ call :startSequence
 if errorlevel 1 (
   echo.
   echo Zuno Desktop full rebuild failed.
+  echo.
+  pause
+  exit /b 1
 )
-echo.
-pause
 exit /b 0

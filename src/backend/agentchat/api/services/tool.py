@@ -4,11 +4,26 @@ from typing import List, Union
 from agentchat.database import SystemUser, ToolTable
 from agentchat.database.models.user import AdminUser
 from agentchat.database.dao.tool import ToolDao
+from agentchat.services.user_defined_tool_runtime import get_user_defined_runtime_type
 
 HIDDEN_SYSTEM_TOOL_NAMES = {"tavily_search", "bocha_search", "text_to_image"}
 
 
 class ToolService:
+    @staticmethod
+    def _serialize_tool(tool: ToolTable | dict):
+        payload = tool.to_dict() if hasattr(tool, "to_dict") else dict(tool)
+        if payload.get("is_user_defined"):
+            auth_config = payload.get("auth_config") or {}
+            payload["runtime_type"] = get_user_defined_runtime_type(
+                ToolTable(**{**payload, "auth_config": auth_config})
+            )
+        return payload
+
+    @classmethod
+    def _serialize_tools(cls, tools: list[ToolTable | dict]):
+        return [cls._serialize_tool(tool) for tool in tools]
+
     @staticmethod
     def _dedupe_tools(tools: list[dict]):
         deduped = []
@@ -77,7 +92,7 @@ class ToolService:
         try:
             personal_results = await ToolDao.get_tool_by_user_id(user_id=user_id)
             return cls._filter_hidden_system_tools(
-                cls._dedupe_tools([res.to_dict() for res in personal_results])
+                cls._dedupe_tools(cls._serialize_tools(personal_results))
             )
         except Exception as err:
             raise ValueError(f'Get Tool By User Id Appear Error: {err}')
@@ -91,7 +106,7 @@ class ToolService:
             personal_results = await ToolDao.get_tool_by_user_id(user_id=user_id)
             system_results = await ToolDao.get_tool_by_user_id(user_id=SystemUser)
             return cls._filter_hidden_system_tools(
-                cls._dedupe_tools([res.to_dict() for res in personal_results + system_results])
+                cls._dedupe_tools(cls._serialize_tools(personal_results + system_results))
             )
         except Exception as err:
             raise ValueError(f'Get All Tool By User Appear Error: {err}')
@@ -105,7 +120,7 @@ class ToolService:
         if user_id == SystemUser:
             tools = await ToolDao.get_all_tools(SystemUser)
             return cls._filter_hidden_system_tools(
-                cls._dedupe_tools([tool.to_dict() for tool in tools])
+                cls._dedupe_tools(cls._serialize_tools(tools))
             )
 
         tools, default_tools = await asyncio.gather(
@@ -115,7 +130,7 @@ class ToolService:
 
         # 转成 list 再合并
         return cls._filter_hidden_system_tools(
-            cls._dedupe_tools([tool.to_dict() for tool in [*tools, *default_tools]])
+            cls._dedupe_tools(cls._serialize_tools([*tools, *default_tools]))
         )
 
     @classmethod
@@ -156,7 +171,7 @@ class ToolService:
         try:
             tools = await ToolDao.get_all_tools(SystemUser)
             return cls._filter_hidden_system_tools(
-                cls._dedupe_tools([tool.to_dict() for tool in tools])
+                cls._dedupe_tools(cls._serialize_tools(tools))
             )
         except Exception as err:
             raise ValueError(f'Get tools data appear Error: {err}')
@@ -191,7 +206,7 @@ class ToolService:
     @classmethod
     async def get_user_defined_tools(cls, user_id):
         tools = await ToolDao.get_user_defined_tools(user_id)
-        return [tool.to_dict() for tool in tools]
+        return cls._serialize_tools(tools)
 
     @classmethod
     async def update_user_defined_tool(cls, tool_id, update_values):
@@ -201,6 +216,11 @@ class ToolService:
     async def get_tool_by_name_and_user_id(cls, name: str, user_id: str):
         tools = await ToolDao.get_tool_by_name_and_user_id(name, user_id)
         return [tool.to_dict() for tool in tools]
+
+    @classmethod
+    async def get_tool_by_id(cls, tool_id: str):
+        tool = await ToolDao.get_tool_by_id(tool_id)
+        return tool
 
     @classmethod
     async def delete_tool_by_id(cls, tool_id: str):

@@ -5,6 +5,9 @@ class GraphExtractor:
     ENTITY_PATTERN = re.compile(r"\b[A-Z][a-zA-Z0-9_-]{1,}\b")
 
     async def extract_from_chunk(self, chunk: dict, knowledge_id: str) -> dict:
+        if hasattr(chunk, "to_dict"):
+            chunk = chunk.to_dict()
+
         content = (chunk.get("content") or "").strip()
         chunk_id = chunk.get("chunk_id", "")
         entities = []

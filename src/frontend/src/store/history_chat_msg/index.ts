@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { ChatMessage } from '../../type';
 import { getHistoryMsgAPI } from '../../apis/history';
 import { ElMessage } from 'element-plus';
-import zunoMark from '../../assets/zuno-mark.svg'
+import { zunoAgentAvatar } from '../../utils/brand'
 
 // 定义事件数据接口
 interface EventData {
@@ -118,7 +118,7 @@ export const useHistoryChatStore = defineStore('history_chat_msg', () => {
         const dialogMeta = messages.find((message: any) => message.dialog_name)
         if (dialogMeta) {
           name.value = dialogMeta.dialog_name || '新对话'
-          logo.value = dialogMeta.logo_url || zunoMark
+          logo.value = dialogMeta.logo_url || zunoAgentAvatar
         }
         
         let currentChat: ChatMessage | null = null

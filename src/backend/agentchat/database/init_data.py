@@ -14,6 +14,7 @@ from agentchat.api.services.tool import ToolService
 from agentchat.database import AgentTable, SystemUser, ToolTable, engine, ensure_database
 from agentchat.database.dao.agent import AgentDao
 from agentchat.database.dao.dialog import DialogDao
+from agentchat.database.dao.llm import LLMDao
 from agentchat.database.models.user import AdminUser
 from agentchat.services.mcp.manager import MCPManager
 from agentchat.services.storage import storage_client
@@ -61,6 +62,17 @@ def _ensure_knowledge_pipeline_schema():
                 connection.execute(
                     text("ALTER TABLE knowledge ADD COLUMN default_retrieval_mode VARCHAR DEFAULT 'rag'")
                 )
+        if "knowledge_config" not in knowledge_columns:
+            with engine.begin() as connection:
+                connection.execute(
+                    text("ALTER TABLE knowledge ADD COLUMN knowledge_config JSON DEFAULT '{}'::json")
+                )
+
+    if "llm" in inspector.get_table_names():
+        llm_columns = {column["name"] for column in inspector.get_columns("llm")}
+        if "model_slot" not in llm_columns:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE llm ADD COLUMN model_slot VARCHAR"))
 
 
 async def init_default_agent():
@@ -232,26 +244,67 @@ async def insert_agent_to_mysql():
 
 
 async def insert_llm_to_mysql():
-    api_key = app_settings.multi_models.conversation_model.api_key
-    base_url = app_settings.multi_models.conversation_model.base_url
-    model = app_settings.multi_models.conversation_model.model_name
-    if not all([model.strip(), api_key.strip(), base_url.strip()]):
+    model_specs = [
+        ("LLM", "conversation_model", app_settings.multi_models.conversation_model),
+        ("Embedding", "embedding", app_settings.multi_models.embedding),
+        ("Embedding", "vl_embedding", app_settings.multi_models.vl_embedding),
+        ("Rerank", "rerank", app_settings.multi_models.rerank),
+    ]
+
+    existing_system_llms = await LLMDao.get_llm_by_user(SystemUser)
+    existing_by_key = {
+        (LLMService.normalize_llm_type(llm.llm_type), llm.model): llm
+        for llm in existing_system_llms
+    }
+
+    has_default_llm = False
+    for llm_type, model_slot, config in model_specs:
+        if not config.is_configured():
+            continue
+
+        provider = _resolve_provider_from_config(config.model_name, config.base_url)
+        payload = {
+            "model": config.model_name,
+            "llm_type": llm_type,
+            "api_key": config.api_key,
+            "base_url": config.base_url,
+            "provider": provider,
+            "model_slot": model_slot,
+        }
+
+        existing_llm = existing_by_key.get((llm_type, config.model_name))
+        if existing_llm:
+            await LLMService.update_llm(llm_id=existing_llm.llm_id, **payload)
+        else:
+            await LLMService.create_llm(
+                user_id=SystemUser,
+                **payload,
+            )
+            existing_by_key[(llm_type, config.model_name)] = True
+
+        if llm_type == "LLM":
+            has_default_llm = True
+
+    if not has_default_llm:
         logger.warning("No default conversation model configured, skipping default LLM initialization")
-        return False
+    return has_default_llm
 
-    if await LLMService.get_llm_id_from_name(model, SystemUser):
-        return True
 
-    provider = get_provider_from_model(model)
-    await LLMService.create_llm(
-        user_id=SystemUser,
-        model=model,
-        llm_type="LLM",
-        api_key=api_key,
-        base_url=base_url,
-        provider=provider,
-    )
-    return True
+def _resolve_provider_from_config(model_name: str, base_url: str) -> str:
+    provider = get_provider_from_model(model_name)
+    if provider != "未知服务商":
+        return provider
+
+    base_url_lower = (base_url or "").lower()
+    if "dashscope.aliyuncs.com" in base_url_lower:
+        return "通义千问"
+    if "minimax" in base_url_lower:
+        return "MiniMax"
+    if "deepseek.com" in base_url_lower:
+        return "深度求索"
+    if "openai.com" in base_url_lower:
+        return "OpenAI"
+    return provider
 
 
 async def insert_tools_to_mysql():

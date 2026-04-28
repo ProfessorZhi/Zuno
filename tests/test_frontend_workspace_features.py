@@ -13,6 +13,8 @@ def test_workspace_and_knowledge_pages_expose_retrieval_modes():
     assert "retrievalModeOptions" in workspace_page
     assert "selectedRetrievalMode" in workspace_page
     assert "跟随知识库默认" in retrieval_utils
+    assert "autoAvailableMcpIds" in workspace_page
+    assert "getValidAutoMcpIds()" in workspace_page
 
 
 def test_knowledge_file_page_includes_task_status_and_retry_hooks():
@@ -21,3 +23,16 @@ def test_knowledge_file_page_includes_task_status_and_retry_hooks():
     assert "retryKnowledgeTaskAPI" in knowledge_file_page
     assert "taskDrawerVisible" in knowledge_file_page
     assert "last_task_id" in knowledge_file_page
+
+
+def test_workspace_initial_route_message_waits_for_success_before_consuming():
+    workspace_page = (REPO_ROOT / "src/frontend/src/pages/workspace/defaultPage/defaultPage.vue").read_text(encoding="utf-8")
+
+    assert "initialRouteMessageInFlightKey" in workspace_page
+    assert "ensureInitialRouteDependencies" in workspace_page
+    assert "attempt < 4" in workspace_page
+    assert "const submitted = await submitMessage()" in workspace_page
+    assert "if (!submitted) return" in workspace_page
+    assert "watch(selectedModelId" in workspace_page
+    assert "if (mcpServers.value.length === 0)" in workspace_page
+    assert "await fetchMcpServers()" in workspace_page

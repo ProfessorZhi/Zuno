@@ -14,6 +14,7 @@ import AgentEditor from '../pages/agent/agent-editor.vue'
 import McpServer from '../pages/mcp-server'
 import Knowledge from '../pages/knowledge'
 import KnowledgeFile from '../pages/knowledge/knowledge-file.vue'
+import KnowledgeConfig from '../pages/knowledge/knowledge-config.vue'
 import Tool from '../pages/tool'
 import AgentSkill from '../pages/agent-skill'
 import Model from '../pages/model'
@@ -123,6 +124,12 @@ const routes: RouteRecordRaw[] = [
         name: 'knowledge-file',
         meta: { current: 'knowledge' },
         component: KnowledgeFile,
+      },
+      {
+        path: '/knowledge/:knowledgeId/config',
+        name: 'knowledge-config',
+        meta: { current: 'knowledge' },
+        component: KnowledgeConfig,
       },
       {
         path: '/tool',

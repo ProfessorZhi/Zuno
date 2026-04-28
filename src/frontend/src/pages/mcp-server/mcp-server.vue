@@ -89,7 +89,7 @@ const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
 function buildStatus(input?: MCPServer['test_status'] | null): TestStatusView {
   const code = input?.code || 'untested'
   const rawDetail = input?.detail || ''
-  const detailLooksBroken = /^[?？\s]+$/.test(rawDetail) || rawDetail.includes('���')
+  const detailLooksBroken = /^[?？\s]+$/.test(rawDetail) || rawDetail.includes(String.fromCharCode(0xfffd))
   const safeDetail = detailLooksBroken ? '' : rawDetail
   if (code === 'success') {
     return {
@@ -759,6 +759,10 @@ onMounted(async () => {
   box-shadow: 0 18px 40px rgba(140, 100, 62, 0.08);
 }
 
+.table-card {
+  overflow-x: auto;
+}
+
 .hero-card {
   display: flex;
   justify-content: space-between;
@@ -797,6 +801,7 @@ onMounted(async () => {
 
 .server-table {
   width: 100%;
+  min-width: 980px;
   border-collapse: collapse;
 }
 

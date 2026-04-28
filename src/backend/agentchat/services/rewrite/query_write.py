@@ -24,7 +24,15 @@ class QueryRewrite:
 
         try:
             result = json.loads(cleaned_response)
-            return result
+            if isinstance(result, list):
+                normalized = [item for item in result if isinstance(item, str) and item.strip()]
+                return normalized or [user_input]
+            if isinstance(result, dict):
+                variations = result.get("variations")
+                if isinstance(variations, list):
+                    normalized = [item for item in variations if isinstance(item, str) and item.strip()]
+                    return normalized or [user_input]
+            return [user_input]
         except Exception as e:
             logger.info(f"json loads error: {e}")
             return [user_input]

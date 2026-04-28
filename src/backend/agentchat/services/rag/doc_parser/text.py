@@ -56,13 +56,9 @@ class TextParser:
         """
         读取指定文件并解析Markdown内容
         """
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                text = f.read()
-            return text
-        finally:
-            if os.path.exists(file_path):
-                os.remove(file_path)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            text = f.read()
+        return text
 
     async def parse_into_chunks(self, file_id, file_path, knowledge_id):
         file_content = await self.parse_file(file_path)

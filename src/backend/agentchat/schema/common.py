@@ -28,6 +28,7 @@ class MultiModels(BaseModel):
     qwen_vl: ModelConfig = Field(default_factory=ModelConfig)
     text2image: ModelConfig = Field(default_factory=ModelConfig)
     embedding: ModelConfig = Field(default_factory=ModelConfig)
+    vl_embedding: ModelConfig = Field(default_factory=ModelConfig)
     rerank: ModelConfig = Field(default_factory=ModelConfig)
 
 class Tools(BaseModel):

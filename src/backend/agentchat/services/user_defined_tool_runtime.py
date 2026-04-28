@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, create_model
 from langchain_core.tools import BaseTool, StructuredTool
 
 from agentchat.database import ToolTable
+from agentchat.services.simple_api_tool import normalize_remote_api_auth_config
 from agentchat.tools.cli_tool.adapter import CLIToolAdapter
 from agentchat.tools.openapi_tool.adapter import OpenAPIToolAdapter
 
@@ -13,22 +14,6 @@ def get_user_defined_runtime_type(db_tool: ToolTable) -> str:
     auth_config = db_tool.auth_config or {}
     runtime_type = (auth_config.get("mode") or "remote_api").strip()
     return runtime_type if runtime_type in {"remote_api", "cli"} else "remote_api"
-
-
-def normalize_remote_api_auth_config(auth_config: Optional[dict]) -> dict:
-    if not auth_config:
-        return {}
-
-    if auth_config.get("auth_type"):
-        return auth_config
-
-    auth_type = (auth_config.get("type") or "").strip().lower()
-    token = auth_config.get("token")
-    if auth_type == "bearer" and token:
-        return {"auth_type": "Bearer", "data": token}
-    if auth_type == "basic" and token:
-        return {"auth_type": "Basic", "data": token}
-    return auth_config
 
 
 def get_cli_config_from_auth_config(auth_config: Optional[dict]) -> dict:
@@ -40,20 +25,58 @@ def build_stored_tool_auth_config(
     runtime_type: str,
     auth_config: Optional[dict],
     cli_config: Optional[dict],
+    simple_api_config: Optional[dict] = None,
+    source_metadata: Optional[dict] = None,
 ) -> dict:
+    normalized_source_metadata = _normalize_source_metadata(source_metadata)
     if runtime_type == "cli":
-        return {
+        payload = {
             "mode": "cli",
             "cli_config": cli_config or {},
         }
+        if normalized_source_metadata:
+            payload["source_metadata"] = normalized_source_metadata
+        return payload
 
     normalized = normalize_remote_api_auth_config(auth_config)
     if not normalized:
-        return {"mode": "remote_api"}
-    return {
+        payload = {
+            "mode": "remote_api",
+            "simple_api_config": simple_api_config or None,
+        }
+        if normalized_source_metadata:
+            payload["source_metadata"] = normalized_source_metadata
+        return payload
+    payload = {
         "mode": "remote_api",
+        "simple_api_config": simple_api_config or None,
         **normalized,
     }
+    if normalized_source_metadata:
+        payload["source_metadata"] = normalized_source_metadata
+    return payload
+
+
+def _normalize_source_metadata(source_metadata: Optional[dict]) -> Optional[dict]:
+    if not isinstance(source_metadata, dict):
+        return None
+
+    def _clean(value):
+        if isinstance(value, dict):
+            cleaned = {str(key): _clean(item) for key, item in value.items()}
+            cleaned = {key: item for key, item in cleaned.items() if item not in (None, "", [], {})}
+            return cleaned or None
+        if isinstance(value, list):
+            cleaned = [_clean(item) for item in value]
+            cleaned = [item for item in cleaned if item not in (None, "", [], {})]
+            return cleaned or None
+        if isinstance(value, str):
+            stripped = value.strip()
+            return stripped or None
+        return value
+
+    cleaned = _clean(source_metadata)
+    return cleaned if isinstance(cleaned, dict) else None
 
 
 def build_user_defined_langchain_tools(

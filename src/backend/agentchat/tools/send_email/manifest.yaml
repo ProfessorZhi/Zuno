@@ -1,0 +1,43 @@
+name: send_email
+display_name: 发送邮件
+type: cli
+description: 通过预配置邮箱槽位或显式 SMTP 凭证发送邮件。
+entry:
+  module: agentchat.tools.send_email.cli
+  command: python src/backend/agentchat/tools/send_email/cli.py
+credentials:
+  mode: profiles
+  schema:
+    - key: slot_name
+      label: 槽位名
+      type: string
+      required: true
+    - key: provider
+      label: 邮箱类型
+      type: enum
+      options: [qq, gmail, outlook, custom]
+      required: true
+    - key: sender_email
+      label: 发件邮箱
+      type: string
+      required: true
+    - key: auth_code
+      label: 授权码
+      type: secret
+      required: true
+    - key: smtp_host
+      label: SMTP 主机
+      type: string
+      required: true
+    - key: smtp_port
+      label: SMTP 端口
+      type: integer
+      required: true
+    - key: use_ssl
+      label: SSL
+      type: boolean
+      required: true
+    - key: display_name
+      label: 显示名称
+      type: string
+      required: false

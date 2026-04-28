@@ -13,6 +13,13 @@ from agentchat.utils.helpers import parse_imported_config
 
 class MCPService:
     @classmethod
+    def ensure_tools_available(cls, server_name: str, tools_params: dict | None):
+        tool_defs = (tools_params or {}).get(server_name) or []
+        if not tool_defs:
+            raise ValueError(f"MCP `{server_name}` 连接成功，但没有获取到可用工具。")
+        return tool_defs
+
+    @classmethod
     async def create_mcp_server(
         cls,
         url: str,
@@ -189,7 +196,7 @@ class MCPService:
         server = await MCPServerDao.get_mcp_server_from_id(server_id)
         server = server.to_dict()
         tools_info = []
-        for param in server["params"]:
+        for param in server.get("params") or []:
             tool_schema = []
             properties = param["input_schema"]["properties"]
             required = param["input_schema"].get("required", [])

@@ -43,6 +43,27 @@ services:
       timeout: 10s
       retries: 3
 
+  neo4j:
+    image: neo4j:5-community
+    container_name: agentchat-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/neo4j12345
+      TZ: Asia/Shanghai
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    networks:
+      - agentchat-network
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p neo4j12345 'RETURN 1;'"]
+      interval: 30s
+      timeout: 15s
+      retries: 10
+
   # 后端API服务
   backend:
     build:
@@ -54,6 +75,7 @@ services:
       - "7860:7860"
     environment:
       TZ: Asia/Shanghai
+      ZUNO_SKILLS_DIR: /app/host_skills
 #    volumes:
 #      - ../src/backend:/app:cached
 #      - ../data:/app/data
@@ -63,11 +85,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      neo4j:
+        condition: service_healthy
       minio:
         condition: service_healthy
     volumes:
       - ./docker_config.local.yaml:/app/agentchat/config.yaml
       - ../cli_tools:/app/cli_tools
+      - F:/funnyskills/zuno-skills:/app/host_skills:ro
+      - backend_vector_db:/app/vector_db
     networks:
       - agentchat-network
     healthcheck:
@@ -131,4 +157,10 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  backend_vector_db:
     driver: local

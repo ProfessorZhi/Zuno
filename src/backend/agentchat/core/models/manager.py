@@ -3,16 +3,30 @@ from langchain_openai import ChatOpenAI
 
 from agentchat.core.models.embedding import EmbeddingModel
 from agentchat.core.models.reason_model import ReasoningModel
+from agentchat.database.dao.llm import LLMDao
+from agentchat.schema.common import ModelConfig
 from agentchat.settings import app_settings
 
 
 class ModelManager:
-
     @staticmethod
     def _require_model_config(model_config, label: str):
         if not model_config.is_configured():
             raise ValueError(f"{label} 未配置，请先在系统中新增模型配置")
         return model_config
+
+    @classmethod
+    def get_model_config(cls, model_slot: str, label: str) -> ModelConfig:
+        slot_model = LLMDao.get_llm_by_slot(model_slot)
+        if slot_model:
+            return ModelConfig(
+                model_name=slot_model.model,
+                api_key=slot_model.api_key,
+                base_url=slot_model.base_url,
+            )
+
+        fallback_config = getattr(app_settings.multi_models, model_slot, ModelConfig())
+        return cls._require_model_config(fallback_config, label)
 
     @classmethod
     def get_tool_invocation_model(cls, **kwargs) -> BaseChatModel:
@@ -30,10 +44,7 @@ class ModelManager:
 
     @classmethod
     def get_conversation_model(cls, **kwargs) -> BaseChatModel:
-        conversation_model = cls._require_model_config(
-            app_settings.multi_models.conversation_model,
-            "对话模型",
-        )
+        conversation_model = cls.get_model_config("conversation_model", "对话模型")
 
         return ChatOpenAI(
             stream_usage=True,
@@ -82,10 +93,7 @@ class ModelManager:
 
     @classmethod
     def get_embedding_model(cls) -> EmbeddingModel:
-        embedding_model = cls._require_model_config(
-            app_settings.multi_models.embedding,
-            "Embedding 模型",
-        )
+        embedding_model = cls.get_model_config("embedding", "Embedding 模型")
 
         return EmbeddingModel(
             model=embedding_model.model_name,

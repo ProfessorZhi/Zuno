@@ -1,6 +1,5 @@
-import pytz
-from sqlmodel import Field, SQLModel
-from typing import Literal, Optional, List
+from sqlmodel import Field
+from typing import Optional
 from datetime import datetime
 from uuid import uuid4
 from sqlalchemy import JSON, Column, DateTime, text
@@ -18,6 +17,10 @@ class KnowledgeTable(SQLModelSerializable, table=True):
     name: str = Field(index=True, unique=True, max_length=128)
     description: Optional[str] = Field(max_length=1024, default=None)
     default_retrieval_mode: str = Field(default="rag", max_length=32)
+    knowledge_config: dict = Field(
+        default_factory=dict,
+        sa_column=Column(JSON, nullable=False),
+    )
     user_id: Optional[str] = Field(index=True, max_length=128, default=None)
     update_time: Optional[datetime] = Field(sa_column=Column(
         DateTime,

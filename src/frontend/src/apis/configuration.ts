@@ -12,6 +12,24 @@ export interface RuntimeConfigPayload {
     tool_name: string
     display_name: string
     description: string
+    tool_kind: 'remote_api' | 'public_data_source' | 'smtp_protocol' | 'local_dependency'
+    tool_kind_label: string
+    strategy_code?: 'builtin_internal' | 'config_fields' | 'profile_credentials' | 'system_dependency_command' | 'python_dependency_package'
+    strategy_label?: string
+    strategy_summary?: string
+    install_requirement?: {
+      code: string
+      label: string
+      required: boolean
+      subject?: string | null
+      detail: string
+    }
+    config_requirement?: {
+      code: string
+      label: string
+      required: boolean
+      detail: string
+    }
     has_fields: boolean
     status: {
       code: 'ready' | 'needs_config' | 'runtime_input' | 'missing_dependency'
@@ -34,12 +52,54 @@ export interface SystemToolConfigPayload {
   tool_name: string
   display_name: string
   description: string
+  tool_kind?: 'remote_api' | 'public_data_source' | 'smtp_protocol' | 'local_dependency'
+  tool_kind_label?: string
+  strategy_code?: 'builtin_internal' | 'config_fields' | 'profile_credentials' | 'system_dependency_command' | 'python_dependency_package'
+  strategy_label?: string
+  strategy_summary?: string
+  install_requirement?: {
+    code: string
+    label: string
+    required: boolean
+    subject?: string | null
+    detail: string
+  }
+  config_requirement?: {
+    code: string
+    label: string
+    required: boolean
+    detail: string
+  }
+  strategy?: {
+    code: string
+    label: string
+    summary: string
+    install_requirement: {
+      code: string
+      label: string
+      required: boolean
+      subject?: string | null
+      detail: string
+    }
+    config_requirement: {
+      code: string
+      label: string
+      required: boolean
+      detail: string
+    }
+  }
   root?: string | null
   section?: string | null
   config_type?: 'fields' | 'email_accounts'
   fields: SystemToolField[]
   values: Record<string, string>
   note?: string
+  status?: {
+    code: 'ready' | 'needs_config' | 'runtime_input' | 'missing_dependency'
+    label: string
+    detail: string
+    configurable: boolean
+  }
   accounts?: Array<{
     slot_name: string
     provider: string
@@ -50,6 +110,18 @@ export interface SystemToolConfigPayload {
     use_ssl: boolean
     display_name?: string
   }>
+}
+
+export interface SystemToolStatusPayload {
+  tool_name: string
+  tool_kind: 'remote_api' | 'public_data_source' | 'smtp_protocol' | 'local_dependency'
+  tool_kind_label: string
+  status: {
+    code: 'ready' | 'needs_config' | 'runtime_input' | 'missing_dependency'
+    label: string
+    detail: string
+    configurable: boolean
+  }
 }
 
 export function getConfigAPI() {
@@ -94,5 +166,12 @@ export function updateSystemToolConfigAPI(
     url: `/api/v1/config/system-tool/${toolName}`,
     method: "POST",
     data: payload,
+  })
+}
+
+export function getSystemToolStatusAPI(toolName: string) {
+  return request<ConfigResponse<SystemToolStatusPayload>>({
+    url: `/api/v1/config/system-tool/${toolName}/status`,
+    method: "GET",
   })
 }

@@ -2,6 +2,7 @@ from uuid import uuid4
 
 from loguru import logger
 
+from agentchat.api.services.knowledge import KnowledgeService
 from agentchat.database.dao.knowledge_file import KnowledgeFileDao
 from agentchat.database.dao.knowledge_task import KnowledgeTaskDao
 from agentchat.database.models.user import AdminUser
@@ -15,6 +16,43 @@ from agentchat.utils.runtime_observability import get_active_trace_id
 
 
 class KnowledgeFileService:
+    @classmethod
+    async def _queue_file_task(
+        cls,
+        *,
+        knowledge_id: str,
+        knowledge_file_id: str,
+        file_name: str,
+        oss_url: str,
+        task_type: str,
+        previous_task_id: str | None = None,
+    ):
+        task_id = await KnowledgeTaskDao.create_task(
+            knowledge_id=knowledge_id,
+            knowledge_file_id=knowledge_file_id,
+            task_type=task_type,
+            payload={
+                "file_name": file_name,
+                "oss_url": oss_url,
+            },
+        )
+        await KnowledgeFileDao.update_pipeline_fields(
+            knowledge_file_id,
+            last_task_id=task_id,
+            status="process",
+            parse_status="pending",
+            rag_index_status="pending",
+            graph_index_status="pending",
+            last_error=None,
+        )
+        dispatch_mode = await cls._dispatch_task(task_id, knowledge_file_id, knowledge_id)
+        return {
+            "task_id": task_id,
+            "knowledge_file_id": knowledge_file_id,
+            "dispatch_mode": dispatch_mode,
+            "previous_task_id": previous_task_id,
+        }
+
     @classmethod
     async def _dispatch_task(cls, task_id: str, knowledge_file_id: str, knowledge_id: str):
         try:
@@ -134,28 +172,75 @@ class KnowledgeFileService:
             raise ValueError("knowledge task not found")
 
         payload = dict(task.payload or {})
-        new_task_id = await KnowledgeTaskDao.create_task(
+        queued = await cls._queue_file_task(
             knowledge_id=task.knowledge_id,
             knowledge_file_id=task.knowledge_file_id,
+            file_name=payload.get("file_name", ""),
+            oss_url=payload.get("oss_url", ""),
             task_type=task.task_type,
-            payload=payload,
+            previous_task_id=task_id,
         )
-        await KnowledgeFileDao.update_pipeline_fields(
-            task.knowledge_file_id,
-            last_task_id=new_task_id,
-            status="process",
-            parse_status="pending",
-            rag_index_status="pending",
-            graph_index_status="pending",
-            last_error=None,
-        )
-        dispatch_mode = await cls._dispatch_task(new_task_id, task.knowledge_file_id, task.knowledge_id)
         return {
-            "task_id": new_task_id,
+            **queued,
             "previous_task_id": task_id,
-            "knowledge_file_id": task.knowledge_file_id,
-            "dispatch_mode": dispatch_mode,
         }
+
+    @classmethod
+    async def reindex_knowledge_files(cls, knowledge_id: str):
+        knowledge_files = await KnowledgeFileDao.select_knowledge_file(knowledge_id)
+        summary = {
+            "knowledge_id": knowledge_id,
+            "total_files": len(knowledge_files),
+            "created_tasks": 0,
+            "dispatched_tasks": 0,
+            "failed_tasks": 0,
+        }
+        task_ids: list[str] = []
+        file_ids: list[str] = []
+
+        for knowledge_file in knowledge_files:
+            try:
+                task_id = await KnowledgeTaskDao.create_task(
+                    knowledge_id=knowledge_id,
+                    knowledge_file_id=knowledge_file.id,
+                    task_type="reindex",
+                    payload={
+                        "file_name": knowledge_file.file_name,
+                        "oss_url": knowledge_file.oss_url,
+                    },
+                )
+                summary["created_tasks"] += 1
+                task_ids.append(task_id)
+                file_ids.append(knowledge_file.id)
+                await KnowledgeFileDao.update_pipeline_fields(
+                    knowledge_file.id,
+                    last_task_id=task_id,
+                    status="process",
+                    parse_status="pending",
+                    rag_index_status="pending",
+                    graph_index_status="pending",
+                    last_error=None,
+                )
+                await cls._dispatch_task(task_id, knowledge_file.id, knowledge_id)
+                summary["dispatched_tasks"] += 1
+            except Exception as err:
+                logger.error(
+                    "Reindex Knowledge File Error: file_id={} error={}",
+                    getattr(knowledge_file, "id", None),
+                    err,
+                )
+                summary["failed_tasks"] += 1
+
+        return {
+            "summary": summary,
+            "task_ids": task_ids,
+            "file_ids": file_ids,
+        }
+
+    @classmethod
+    async def bulk_reindex_knowledge_files(cls, knowledge_id: str, user_id: str):
+        await KnowledgeService.verify_user_permission(knowledge_id, user_id)
+        return await cls.reindex_knowledge_files(knowledge_id)
 
     @classmethod
     async def verify_user_permission(cls, knowledge_file_id, user_id):

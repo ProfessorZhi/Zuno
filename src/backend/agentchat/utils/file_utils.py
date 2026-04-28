@@ -61,6 +61,15 @@ def get_object_name_from_aliyun_url(url: str) -> str:
     # 去除开头的斜杠，获取完整object name
     return parsed_url.path.lstrip('/')
 
+def get_object_key_from_public_url(url: str, bucket_name: str = "") -> str:
+    parsed_url = urlparse(url)
+    object_key = parsed_url.path.lstrip("/") if parsed_url.scheme else url.lstrip("/")
+    if bucket_name:
+        bucket_prefix = f"{bucket_name.strip('/')}/"
+        if object_key.startswith(bucket_prefix):
+            object_key = object_key[len(bucket_prefix):]
+    return object_key
+
 def get_save_tempfile(file_name):
     # 创建临时文件夹
     temp = tempfile.mkdtemp()

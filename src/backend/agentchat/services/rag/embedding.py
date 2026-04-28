@@ -3,24 +3,30 @@ from typing import List, Union
 
 from openai import AsyncOpenAI
 
-from agentchat.settings import app_settings, initialize_app_settings
+from agentchat.core.models.manager import ModelManager
+from agentchat.settings import initialize_app_settings
 
 
-def _get_embedding_config():
-    config = app_settings.multi_models.embedding
-    if not config.is_configured():
-        raise ValueError("Embedding 模型未配置，请先在系统中新增模型配置")
-    return config
+def _normalize_model_config(config_override):
+    if not config_override:
+        return None
+    if hasattr(config_override, "model_name"):
+        return config_override
+    return type("EmbeddingConfig", (), config_override)()
 
 
-def _get_embedding_client() -> tuple[AsyncOpenAI, str]:
-    config = _get_embedding_config()
+def _get_embedding_config(config_override=None):
+    return _normalize_model_config(config_override) or ModelManager.get_model_config("embedding", "Embedding 模型")
+
+
+def _get_embedding_client(config_override=None) -> tuple[AsyncOpenAI, str]:
+    config = _get_embedding_config(config_override)
     client = AsyncOpenAI(base_url=config.base_url, api_key=config.api_key)
     return client, config.model_name
 
 
-async def get_embedding(query: Union[str, List[str]]):
-    client, embedding_model = _get_embedding_client()
+async def get_embedding(query: Union[str, List[str]], config_override=None):
+    client, embedding_model = _get_embedding_client(config_override)
 
     if isinstance(query, str) or (isinstance(query, list) and len(query) <= 10):
         responses = await client.embeddings.create(
