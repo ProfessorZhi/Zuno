@@ -169,7 +169,10 @@ class AgentService:
             name=name,
             user_id=user_id,
         )
-        return cls._to_dict_list(results)
+        return [
+            agent for agent in cls._to_dict_list(results)
+            if agent.get("user_id") == user_id
+        ]
 
     @classmethod
     async def check_repeat_name(
@@ -222,17 +225,14 @@ class AgentService:
         user_id: str,
     ):
         """
-        查询指定用户和系统 Agent
+        查询指定用户 Agent
         返回字典列表
         """
-        system_results = await AgentDao.get_agent_by_user_id(
-            user_id=SystemUser,
-        )
         user_results = await AgentDao.get_agent_by_user_id(
             user_id=user_id,
         )
         return cls._filter_hidden_system_agents(
-            cls._dedupe_agents(cls._to_dict_list(system_results + user_results))
+            cls._dedupe_agents(cls._to_dict_list(user_results))
         )
 
     @classmethod

@@ -77,17 +77,14 @@ def _ensure_knowledge_pipeline_schema():
 
 async def init_default_agent():
     try:
-        logger.info("Reconciling default tools and agents in PostgreSQL")
+        logger.info("Reconciling default tools in PostgreSQL")
         await cleanup_duplicate_system_data()
         await insert_tools_to_mysql()
-        has_default_llm = await insert_llm_to_mysql()
-        if has_default_llm:
-            await insert_agent_to_mysql()
-        else:
-            logger.warning("Skip default agent initialization because no model config is provided")
-        logger.success("Default tools and agents are ready")
+        await insert_llm_to_mysql()
+        logger.info("Skip default agent seeding; users create agents explicitly")
+        logger.success("Default tools are ready")
     except Exception as err:
-        logger.error(f"Failed to initialize default agents: {err}")
+        logger.error(f"Failed to initialize default tools: {err}")
 
 
 async def update_system_mcp_server():
@@ -116,6 +113,7 @@ def _sort_records(records: list[dict], id_key: str):
 
 async def cleanup_duplicate_system_data():
     await cleanup_hidden_system_data()
+    await cleanup_legacy_seeded_system_agents()
     tool_id_map = await cleanup_duplicate_system_tools()
     await cleanup_duplicate_system_agents(tool_id_map)
 
@@ -210,6 +208,19 @@ async def cleanup_duplicate_system_agents(tool_id_map: dict[str, str] | None = N
 
     if duplicate_count:
         logger.warning(f"Removed {duplicate_count} duplicate system agents")
+
+
+async def cleanup_legacy_seeded_system_agents():
+    system_agents = await AgentService.get_personal_agent_by_user_id(SystemUser)
+    deleted_count = 0
+    for agent in system_agents:
+        if agent.get("is_custom") is False:
+            await AgentDao.delete_agent_by_id(agent["id"])
+            deleted_count += 1
+
+    if deleted_count:
+        logger.warning(f"Removed {deleted_count} legacy seeded system agents")
+    return deleted_count
 
 
 async def insert_agent_to_mysql():
