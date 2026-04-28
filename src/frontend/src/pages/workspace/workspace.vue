@@ -7,16 +7,31 @@ import { zunoAgentAvatar, zunoBrandMark } from '../../utils/brand'
 import { useUserStore } from '../../store/user'
 import { logoutAPI, getUserInfoAPI } from '../../apis/auth'
 import { getWorkspaceSessionsAPI, deleteWorkspaceSessionAPI } from '../../apis/workspace'
+import {
+  loadWorkspaceDefaults,
+  loadWorkspaceSessionModes,
+  removeWorkspaceSessionMode,
+  type WorkspaceMode,
+} from '../../utils/workspace-defaults'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
+interface WorkspaceSessionItem {
+  sessionId: string
+  title: string
+  createTime: string
+  agent: string
+  workspaceMode: WorkspaceMode
+}
+
 const selectedSession = ref('')
-const sessions = ref<any[]>([])
+const sessions = ref<WorkspaceSessionItem[]>([])
 const loading = ref(false)
 const sidebarCollapsed = ref(false)
-const currentMode = computed(() => ((route.query.mode as string) === 'agent' ? 'agent' : 'normal'))
+const settingsCenterVisible = ref(false)
+const activeSettingsSection = ref('model')
 let fetchSessionsRequestId = 0
 
 const syncSelectedSessionFromRoute = () => {
@@ -52,21 +67,65 @@ const formatTime = (timeStr: string) => {
   }
 }
 
+const normalizeWorkspaceMode = (value: unknown): WorkspaceMode => String(value || '').toLowerCase() === 'agent' ? 'agent' : 'normal'
+
+const normalizeAgentName = (value: unknown) => {
+  const raw = String(value || '').trim()
+  if (!raw || raw === 'simple' || raw === 'normal' || raw === 'agent') return '默认助手'
+  return raw
+}
+
+const workspaceModeLabel = (mode: WorkspaceMode) => mode === 'agent' ? 'Agent' : 'Chat'
+const settingsSections = [
+  { key: 'model', label: '模型', path: '/model' },
+  { key: 'mcp', label: 'MCP', path: '/mcp-server' },
+  { key: 'skill', label: 'Skill', path: '/agent-skill' },
+  { key: 'tool', label: '工具', path: '/tool' },
+  { key: 'knowledge', label: '知识库', path: '/knowledge' },
+  { key: 'agent', label: '智能体', path: '/agent' },
+  { key: 'dashboard', label: '数据看板', path: '/dashboard' },
+]
+const activeSettings = computed(() => settingsSections.find((section) => section.key === activeSettingsSection.value) || settingsSections[0])
+const activeSettingsUrl = computed(() => activeSettings.value.path)
+
+const openSettingsCenter = (section = 'model') => {
+  activeSettingsSection.value = settingsSections.some((item) => item.key === section) ? section : 'model'
+  settingsCenterVisible.value = true
+}
+
+const handleOpenSettingsCenter = (event: Event) => {
+  const section = (event as CustomEvent<{ section?: string }>).detail?.section || 'model'
+  openSettingsCenter(section)
+}
+
+const defaultWorkspaceRoute = () => {
+  const defaults = loadWorkspaceDefaults()
+  return {
+    name: 'workspaceDefaultPage',
+    query: {
+      mode: defaults.mode,
+      execution_mode: defaults.executionMode || 'tool',
+      access_scope: defaults.accessScope || 'workspace',
+    },
+  }
+}
+
 const fetchSessions = async () => {
   const requestId = ++fetchSessionsRequestId
   try {
     loading.value = true
-    const response = await getWorkspaceSessionsAPI(currentMode.value)
+    const response = await getWorkspaceSessionsAPI()
     if (requestId !== fetchSessionsRequestId) return
     if (response.data.status_code === 200) {
+      const sessionModeOverrides = loadWorkspaceSessionModes()
       sessions.value = (response.data.data || [])
         .filter((session: any) => Array.isArray(session.contexts) && session.contexts.length > 0)
         .map((session: any) => ({
           sessionId: session.session_id || session.id,
           title: session.title || '未命名会话',
           createTime: session.create_time || session.created_at || new Date().toISOString(),
-          agent: session.agent || 'simple',
-          workspaceMode: session.workspace_mode || 'normal',
+          agent: normalizeAgentName(session.agent || session.workspace_mode || 'simple'),
+          workspaceMode: sessionModeOverrides[session.session_id || session.id] || normalizeWorkspaceMode(session.workspace_mode || session.agent),
         }))
       return
     }
@@ -90,10 +149,11 @@ const deleteSession = async (sessionId: string, event: Event) => {
     const response = await deleteWorkspaceSessionAPI(sessionId)
     if (response.data.status_code === 200) {
       ElMessage.success('会话已删除')
+      removeWorkspaceSessionMode(sessionId)
       await fetchSessions()
       if (selectedSession.value === sessionId) {
         selectedSession.value = ''
-        router.push('/workspace')
+        router.push(defaultWorkspaceRoute())
       }
       return
     }
@@ -105,13 +165,13 @@ const deleteSession = async (sessionId: string, event: Event) => {
   }
 }
 
-const selectSession = (sessionId: string) => {
-  selectedSession.value = sessionId
+const selectSession = (session: WorkspaceSessionItem) => {
+  selectedSession.value = session.sessionId
   router.push({
     name: 'workspaceDefaultPage',
     query: {
-      session_id: sessionId,
-      mode: route.query.mode || 'normal',
+      session_id: session.sessionId,
+      mode: session.workspaceMode,
       execution_mode: route.query.execution_mode || 'tool',
       access_scope: route.query.access_scope || 'workspace',
     },
@@ -119,10 +179,20 @@ const selectSession = (sessionId: string) => {
 }
 
 const goWorkspaceHome = () => {
-  router.push('/homepage')
+  router.push(defaultWorkspaceRoute())
 }
 
 const handleUserCommand = async (command: string) => {
+  if (command === 'settings') {
+    openSettingsCenter('model')
+    return
+  }
+
+  if (settingsSections.some((section) => section.key === command)) {
+    openSettingsCenter(command)
+    return
+  }
+
   if (command === 'profile') {
     router.push('/profile')
     return
@@ -150,7 +220,15 @@ const handleAvatarError = (event: Event) => {
   if (target) target.src = '/src/assets/user.svg'
 }
 
-const visibleSessions = computed(() => sessions.value.filter((session) => session.workspaceMode === currentMode.value))
+const groupedSessions = computed(() => {
+  const groups = new Map<string, WorkspaceSessionItem[]>()
+  sessions.value.forEach((session) => {
+    const groupName = session.agent || '默认助手'
+    if (!groups.has(groupName)) groups.set(groupName, [])
+    groups.get(groupName)?.push(session)
+  })
+  return Array.from(groups.entries()).map(([agent, items]) => ({ agent, items }))
+})
 
 onMounted(async () => {
   userStore.initUserState()
@@ -173,10 +251,14 @@ onMounted(async () => {
   syncSelectedSessionFromRoute()
   await fetchSessions()
   window.addEventListener('workspace-session-updated', handleWorkspaceSessionUpdated)
+  window.addEventListener('workspace-session-mode-updated', handleWorkspaceSessionUpdated)
+  window.addEventListener('workspace-open-settings', handleOpenSettingsCenter)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('workspace-session-updated', handleWorkspaceSessionUpdated)
+  window.removeEventListener('workspace-session-mode-updated', handleWorkspaceSessionUpdated)
+  window.removeEventListener('workspace-open-settings', handleOpenSettingsCenter)
 })
 
 watch(
@@ -187,10 +269,6 @@ watch(
   }
 )
 
-watch(currentMode, async () => {
-  syncSelectedSessionFromRoute()
-  await fetchSessions()
-})
 </script>
 
 <template>
@@ -220,6 +298,14 @@ watch(currentMode, async () => {
           </div>
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item command="settings">设置</el-dropdown-item>
+              <el-dropdown-item divided command="agent">智能体</el-dropdown-item>
+              <el-dropdown-item command="mcp">MCP</el-dropdown-item>
+              <el-dropdown-item command="tool">工具</el-dropdown-item>
+              <el-dropdown-item command="skill">Skill</el-dropdown-item>
+              <el-dropdown-item command="knowledge">知识库</el-dropdown-item>
+              <el-dropdown-item command="model">模型</el-dropdown-item>
+              <el-dropdown-item command="dashboard">数据看板</el-dropdown-item>
               <el-dropdown-item command="profile" :icon="User">个人资料</el-dropdown-item>
               <el-dropdown-item divided command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -240,7 +326,7 @@ watch(currentMode, async () => {
           <div class="sidebar-head">
             <div class="sidebar-title-wrap">
               <strong>会话记录</strong>
-              <span>{{ visibleSessions.length }} 条</span>
+              <span>{{ sessions.length }} 条</span>
             </div>
             <div class="sidebar-actions">
               <button class="new-session-btn" type="button" @click="startNewConversation">
@@ -258,27 +344,37 @@ watch(currentMode, async () => {
               <div class="loading-text">正在加载会话...</div>
             </div>
 
-            <div v-else-if="visibleSessions.length === 0" class="empty-state">
+            <div v-else-if="sessions.length === 0" class="empty-state">
               <div class="empty-mark">Z</div>
               <div class="empty-text">还没有会话记录</div>
             </div>
 
-            <div
-              v-for="session in visibleSessions"
-              :key="session.sessionId"
-              :class="['session-card', { active: selectedSession === session.sessionId }]"
-              @click="selectSession(session.sessionId)"
-            >
-              <div class="session-icon">
-                <img :src="zunoAgentAvatar" width="22" height="22" alt="" />
+            <div v-for="group in groupedSessions" :key="group.agent" class="session-group">
+              <div class="group-head">
+                <span>{{ group.agent }}</span>
+                <small>{{ group.items.length }}</small>
               </div>
-              <div class="session-info">
-                <div class="session-title">{{ session.title }}</div>
-                <div class="session-time">{{ formatTime(session.createTime) }}</div>
+
+              <div
+                v-for="session in group.items"
+                :key="session.sessionId"
+                :class="['session-card', { active: selectedSession === session.sessionId }]"
+                @click="selectSession(session)"
+              >
+                <div class="session-icon">
+                  <img :src="zunoAgentAvatar" width="22" height="22" alt="" />
+                </div>
+                <div class="session-info">
+                  <div class="session-title-row">
+                    <span class="session-title">{{ session.title }}</span>
+                    <span class="mode-tag" :class="session.workspaceMode">{{ workspaceModeLabel(session.workspaceMode) }}</span>
+                  </div>
+                  <div class="session-time">{{ formatTime(session.createTime) }}</div>
+                </div>
+                <button class="delete-btn" @click="deleteSession(session.sessionId, $event)" title="删除会话">
+                  ×
+                </button>
               </div>
-              <button class="delete-btn" @click="deleteSession(session.sessionId, $event)" title="删除会话">
-                ×
-              </button>
             </div>
           </div>
         </div>
@@ -288,6 +384,36 @@ watch(currentMode, async () => {
         <router-view />
       </main>
     </div>
+
+    <Teleport to="body">
+      <div v-if="settingsCenterVisible" class="settings-center-backdrop" @click.self="settingsCenterVisible = false">
+        <section class="settings-center" role="dialog" aria-modal="true" aria-label="设置">
+          <header class="settings-center-head">
+            <div>
+              <span class="settings-center-kicker">设置</span>
+              <strong>{{ activeSettings.label }}</strong>
+            </div>
+            <button class="settings-center-close" type="button" aria-label="关闭设置" @click="settingsCenterVisible = false">×</button>
+          </header>
+
+          <div class="settings-center-body">
+            <nav class="settings-center-tabs" aria-label="设置分类">
+              <button
+                v-for="section in settingsSections"
+                :key="section.key"
+                type="button"
+                :class="['settings-tab', { active: activeSettingsSection === section.key }]"
+                @click="activeSettingsSection = section.key"
+              >
+                {{ section.label }}
+              </button>
+            </nav>
+
+            <iframe class="settings-frame" :src="activeSettingsUrl" :title="activeSettings.label"></iframe>
+          </div>
+        </section>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -491,7 +617,7 @@ watch(currentMode, async () => {
   padding: 4px 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .loading-state,
@@ -506,6 +632,37 @@ watch(currentMode, async () => {
 .empty-mark {
   font-size: 22px;
   opacity: 0.55;
+}
+
+.session-group {
+  display: grid;
+  gap: 8px;
+}
+
+.group-head {
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #8b6d53;
+  font-size: 12px;
+}
+
+.group-head span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-head small {
+  min-width: 22px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(212, 138, 79, 0.1);
+  color: #9b6a42;
 }
 
 .session-card {
@@ -548,13 +705,42 @@ watch(currentMode, async () => {
   gap: 4px;
 }
 
+.session-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .session-title {
+  flex: 1;
+  min-width: 0;
   font-size: 15px;
   font-weight: 600;
   color: #3c2f25;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mode-tag {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(217, 190, 166, 0.7);
+  color: #7e644c;
+  background: rgba(255, 251, 246, 0.8);
+}
+
+.mode-tag.agent {
+  color: #a85f2d;
+  border-color: rgba(201, 108, 45, 0.28);
+  background: rgba(212, 138, 79, 0.12);
 }
 
 .session-time {
@@ -590,6 +776,110 @@ watch(currentMode, async () => {
 .content :deep(.workspace-chat) {
   flex: 1;
   min-height: 0;
+}
+
+.settings-center-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(40, 31, 24, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.settings-center {
+  width: min(90vw, 1480px);
+  height: min(90vh, 920px);
+  min-width: min(960px, calc(100vw - 32px));
+  min-height: min(620px, calc(100vh - 32px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  border: 1px solid rgba(222, 204, 184, 0.92);
+  background: rgba(255, 253, 250, 0.98);
+  box-shadow: 0 28px 80px rgba(53, 36, 22, 0.22);
+}
+
+.settings-center-head {
+  height: 58px;
+  flex: 0 0 auto;
+  padding: 0 18px 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(229, 212, 194, 0.82);
+}
+
+.settings-center-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: #9a7658;
+  font-size: 11px;
+}
+
+.settings-center-head strong {
+  color: #302820;
+  font-size: 18px;
+}
+
+.settings-center-close {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(247, 239, 230, 0.92);
+  color: #7b624a;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settings-center-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: rgba(250, 246, 240, 0.95);
+}
+
+.settings-center-tabs {
+  width: 148px;
+  flex: 0 0 148px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-right: 1px solid rgba(229, 212, 194, 0.82);
+  background: rgba(245, 237, 226, 0.88);
+}
+
+.settings-tab {
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #735d48;
+  text-align: left;
+  padding: 0 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.settings-tab:hover,
+.settings-tab.active {
+  background: rgba(255, 251, 246, 0.94);
+  color: #b76332;
+}
+
+.settings-frame {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: #fffaf4;
 }
 
 .mobile-only {

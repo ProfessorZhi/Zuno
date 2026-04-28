@@ -30,13 +30,17 @@ import { safeDisplayText } from '../../../utils/display-text'
 import { sanitizeWorkspaceContexts } from '../../../utils/workspace-history'
 import { zunoAgentAvatar } from '../../../utils/brand'
 import { isDesktopRuntime } from '../../../utils/api'
+import {
+  loadWorkspaceDefaults,
+  saveWorkspaceSessionMode,
+  type WorkspaceMode,
+} from '../../../utils/workspace-defaults'
 
 const ALWAYS_WEB_SEARCH = true
 const MAX_ATTACHMENTS = 5
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024
 const CHAT_IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])
 const AGENT_DOCUMENT_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 'md', 'csv', 'xls', 'xlsx'])
-type WorkspaceMode = 'normal' | 'agent'
 
 const fallbackDescription = '\u6682\u65e0\u63cf\u8ff0'
 const fallbackKnowledgeDescription = (count?: number) => `\u5171 ${count || 0} \u4e2a\u6587\u4ef6`
@@ -100,7 +104,6 @@ const isGenerating = ref(false)
 const modelsLoading = ref(false)
 const currentSessionId = ref('')
 const conversationRef = ref<HTMLElement | null>(null)
-const showControlPanel = ref(false)
 const showTracePanel = ref(false)
 const isPinnedToBottom = ref(true)
 const workspaceHydrated = ref(false)
@@ -290,6 +293,7 @@ const handleAvatarError = (event: Event) => { const target = event.target as HTM
 const scrollToBottom = async (force = false) => { await nextTick(); if (conversationRef.value && (force || isPinnedToBottom.value)) conversationRef.value.scrollTop = conversationRef.value.scrollHeight }
 const handleConversationScroll = () => { const panel = conversationRef.value; if (!panel) return; isPinnedToBottom.value = panel.scrollHeight - (panel.scrollTop + panel.clientHeight) < 24 }
 const emitSessionUpdated = () => window.dispatchEvent(new CustomEvent('workspace-session-updated', { detail: { sessionId: currentSessionId.value } }))
+const emitSessionModeUpdated = () => window.dispatchEvent(new CustomEvent('workspace-session-mode-updated', { detail: { sessionId: currentSessionId.value, mode: selectedMode.value } }))
 const clearConversationState = () => {
   inputMessage.value = ''
   messages.value = []
@@ -297,7 +301,6 @@ const clearConversationState = () => {
   pendingAttachments.value = []
   attachmentsUploading.value = false
   isGenerating.value = false
-  showControlPanel.value = false
   showTracePanel.value = false
   isPinnedToBottom.value = true
   consumedInitialMessageKey.value = ''
@@ -350,12 +353,20 @@ const createPersistedSession = async (mode: WorkspaceMode) => {
     throw new Error('create_session_failed')
   }
   currentSessionId.value = String(response.data.data.session_id)
+  saveWorkspaceSessionMode(currentSessionId.value, mode)
   await syncRouteState()
   emitSessionUpdated()
+  emitSessionModeUpdated()
 }
 
 const startFreshConversation = async () => {
-  await resetToDraftSession(selectedMode.value)
+  const defaults = loadWorkspaceDefaults()
+  selectedExecutionMode.value = defaults.executionMode || selectedExecutionMode.value
+  selectedAccessScope.value = defaults.accessScope || selectedAccessScope.value
+  if (defaults.modelId && modelOptions.value.some((model) => model.llm_id === defaults.modelId)) selectedModelId.value = defaults.modelId
+  await resetToDraftSession(defaults.mode || selectedMode.value)
+  await Promise.all([fetchPlugins(), fetchSkills(), fetchKnowledges()])
+  applySavedWorkspaceDefaults()
 }
 const handleNewConversationRequest = async () => {
   if (isGenerating.value) {
@@ -681,10 +692,26 @@ const loadSessionHistory = async (sessionId: string) => {
 const syncDefaultSelections = () => {
   if (!isAgentMode.value || !canPickTools.value) return
 
+  const defaults = loadWorkspaceDefaults()
+  const hasSavedDefaults = Boolean(defaults.updatedAt)
   const availableToolIds = plugins.value.map((item: any) => item.id || item.tool_id).filter(Boolean)
   const availableMcpIds = mcpServers.value.map((item: any) => item.mcp_server_id).filter(Boolean)
   const availableSkillIds = skillOptions.value.map((item) => item.id).filter(Boolean)
   const availableKnowledgeIds = knowledgeOptions.value.map((item) => item.id).filter(Boolean)
+
+  if (hasSavedDefaults) {
+    selectedTools.value = defaults.toolIds.filter((toolId) => availableToolIds.includes(toolId))
+    selectedMcpServers.value = defaults.mcpServerIds.filter((serverId) => availableMcpIds.includes(serverId))
+    selectedSkillIds.value = defaults.skillIds.filter((skillId) => availableSkillIds.includes(skillId))
+    selectedKnowledgeIds.value = defaults.knowledgeIds
+      .filter((knowledgeId) => availableKnowledgeIds.includes(knowledgeId))
+      .slice(0, 1)
+    toolsTouched.value = true
+    mcpTouched.value = true
+    skillsTouched.value = true
+    knowledgeTouched.value = true
+    return
+  }
 
   if (!toolsTouched.value) {
     selectedTools.value = [...availableToolIds]
@@ -711,6 +738,27 @@ const syncDefaultSelections = () => {
       .filter((knowledgeId) => availableKnowledgeIds.includes(knowledgeId))
       .slice(0, 1)
   }
+}
+
+const applySavedWorkspaceDefaults = () => {
+  const defaults = loadWorkspaceDefaults()
+  if (!defaults.updatedAt) return
+
+  if (!route.query.mode) {
+    selectedMode.value = defaults.mode
+  }
+
+  if (defaults.modelId && modelOptions.value.some((model) => model.llm_id === defaults.modelId)) {
+    selectedModelId.value = defaults.modelId
+  }
+  if (defaults.executionMode && executionModes.value.some((mode) => mode.id === defaults.executionMode)) {
+    selectedExecutionMode.value = defaults.executionMode
+  }
+  if (defaults.accessScope && accessScopes.value.some((scope) => scope.id === defaults.accessScope)) {
+    selectedAccessScope.value = defaults.accessScope
+  }
+
+  syncDefaultSelections()
 }
 
 const toggleTool = (toolId: string) => {
@@ -902,7 +950,6 @@ const submitMessage = async () => {
   inputMessage.value = ''
   isGenerating.value = true
   executionEvents.value = []
-  showControlPanel.value = false
   showTracePanel.value = false
   const attachmentsForRequest = [...pendingAttachments.value]
   pendingAttachments.value = []
@@ -1018,6 +1065,7 @@ watch(() => route.query.session_id, async (newSessionId, oldSessionId) => {
   if (newSessionId && newSessionId !== oldSessionId) {
     clearConversationState()
     currentSessionId.value = String(newSessionId)
+    selectedMode.value = safeQueryValue(route.query.mode, selectedMode.value) === 'agent' ? 'agent' : 'normal'
     toolsTouched.value = false
     mcpTouched.value = false
     skillsTouched.value = false
@@ -1029,7 +1077,6 @@ watch(() => route.query.session_id, async (newSessionId, oldSessionId) => {
     await Promise.all([fetchPlugins(), fetchSkills(), fetchKnowledges()])
     syncDefaultSelections()
     await loadSessionHistory(String(newSessionId))
-    showControlPanel.value = false
     await nextTick()
     await consumeInitialRouteMessage()
     return
@@ -1074,7 +1121,11 @@ watch([selectedExecutionMode, selectedAccessScope, selectedMode], async () => {
 watch(selectedMode, async (newMode, oldMode) => {
   if (!workspaceHydrated.value || newMode === oldMode) return
   try {
-    await resetToDraftSession(newMode)
+    if (currentSessionId.value) {
+      saveWorkspaceSessionMode(currentSessionId.value, newMode)
+      emitSessionModeUpdated()
+    }
+    await syncRouteState()
   } catch (error) {
     console.error('切换模式失败', error)
     ElMessage.error('切换模式失败')
@@ -1084,12 +1135,15 @@ watch(selectedMode, async (newMode, oldMode) => {
 onMounted(async () => {
   window.addEventListener('workspace-new-conversation', handleNewConversationRequest)
   await Promise.all([fetchExecutionConfig(), fetchModels(), fetchMcpServers()])
-  selectedMode.value = safeQueryValue(route.query.mode, 'normal') === 'agent' ? 'agent' : 'normal'
-  selectedExecutionMode.value = safeQueryValue(route.query.execution_mode, 'tool')
-  selectedAccessScope.value = safeQueryValue(route.query.access_scope, 'workspace')
+  const savedDefaults = loadWorkspaceDefaults()
+  selectedMode.value = safeQueryValue(route.query.mode, savedDefaults.mode || 'normal') === 'agent' ? 'agent' : 'normal'
+  selectedExecutionMode.value = safeQueryValue(route.query.execution_mode, savedDefaults.executionMode || 'tool')
+  selectedAccessScope.value = safeQueryValue(route.query.access_scope, savedDefaults.accessScope || 'workspace')
   selectedExecutionMode.value = executionModes.value.some((item) => item.id === selectedExecutionMode.value) ? selectedExecutionMode.value : 'tool'
   selectedAccessScope.value = accessScopes.value.some((item) => item.id === selectedAccessScope.value) ? selectedAccessScope.value : 'workspace'
+  if (savedDefaults.modelId && modelOptions.value.some((model) => model.llm_id === savedDefaults.modelId)) selectedModelId.value = savedDefaults.modelId
   await Promise.all([fetchPlugins(), fetchSkills(), fetchKnowledges()])
+  applySavedWorkspaceDefaults()
   const sessionId = safeQueryValue(route.query.session_id, '')
   if (sessionId) {
     currentSessionId.value = sessionId
@@ -1166,46 +1220,7 @@ onBeforeUnmount(() => {
             <div v-if="!compactPanel" class="mode-badge"><span class="label">当前模式</span><strong>{{ activeMode.label }}</strong></div>
             <div class="composer-actions">
               <button v-if="isAgentMode && compactPanel" class="ghost-pill subtle" type="button" @click="showTracePanel = !showTracePanel"><el-icon><ArrowDown v-if="showTracePanel" /><ArrowUp v-else /></el-icon>{{ showTracePanel ? '收起进展' : '查看进展' }}</button>
-              <button class="ghost-pill subtle" type="button" @click="showControlPanel = !showControlPanel"><el-icon><ArrowDown v-if="showControlPanel" /><ArrowUp v-else /></el-icon>{{ showControlPanel ? '收起设置' : '更多设置' }}</button>
-            </div>
-          </div>
-
-          <div v-if="showControlPanel" class="settings-panel">
-            <div class="selector-grid">
-              <label class="field"><span>模式</span><select v-model="selectedMode" :disabled="isGenerating"><option v-for="mode in modes" :key="mode.id" :value="mode.id">{{ mode.label }}</option></select></label>
-              <label class="field"><span>聊天模型</span><select v-model="selectedModelId" disabled><option v-if="modelsLoading" value="">加载中...</option><option v-for="model in modelOptions" :key="model.llm_id" :value="model.llm_id">{{ model.model }}</option></select><small class="field-hint">聊天页不再切换模型，这里自动使用当前可用 LLM。</small></label>
-            </div>
-            <div v-if="isAgentMode" class="selector-grid agent-grid">
-              <label class="field"><span>执行方式</span><select v-model="selectedExecutionMode"><option v-for="mode in executionModes" :key="mode.id" :value="mode.id">{{ mode.label }}</option></select></label>
-              <label class="field"><span>访问范围</span><select v-model="selectedAccessScope"><option v-for="scope in accessScopes" :key="scope.id" :value="scope.id">{{ scope.label }}</option></select></label>
-            </div>
-            <div v-if="isAgentMode && canPickTools" class="tool-columns">
-              <div class="picker-card">
-                <div class="picker-head"><strong>工具</strong><small>已选 {{ selectedTools.length }}</small><button type="button" class="picker-inline-action" @click="openToolCreationPrompt('general')">新增工具</button></div>
-                <div v-if="plugins.length === 0" class="empty-copy">暂无可用工具</div>
-                <label v-for="tool in plugins" :key="tool.id || tool.tool_id" class="picker-item"><input type="checkbox" :checked="selectedTools.includes(tool.id || tool.tool_id)" @change="toggleTool(tool.id || tool.tool_id)" /><span>{{ tool.display_name || tool.name }}<small>{{ safeDisplayText(tool.description, fallbackDescription) }}</small></span></label>
-              </div>
-              <div class="picker-card">
-                <div class="picker-head"><strong>MCP</strong><small>已选 {{ selectedMcpServers.length }}</small></div>
-                <div v-if="mcpServers.length === 0" class="empty-copy">暂无可用 MCP 服务</div>
-                <label v-for="server in mcpServers" :key="server.mcp_server_id" class="picker-item"><input type="checkbox" :checked="selectedMcpServers.includes(server.mcp_server_id)" @change="toggleMcp(server.mcp_server_id)" /><span>{{ server.name || server.server_name }}<small>{{ safeDisplayText(server.description, fallbackDescription) }}</small></span></label>
-              </div>
-              <div class="picker-card">
-                <div class="picker-head"><strong>知识库</strong><small>限选 1 个</small></div>
-                <div v-if="knowledgeOptions.length === 0" class="empty-copy">暂无可用知识库</div>
-                <label v-for="knowledge in knowledgeOptions" :key="knowledge.id" class="picker-item"><input type="radio" name="workspace-knowledge" :checked="selectedKnowledgeIds.includes(knowledge.id)" @change="toggleKnowledge(knowledge.id)" /><span>{{ knowledge.name }}<small>{{ safeDisplayText(knowledge.description, fallbackKnowledgeDescription(knowledge.count)) }}</small></span></label>
-                <div v-if="selectedKnowledge" class="picker-summary">
-                  <strong>{{ selectedKnowledge.name }}</strong>
-                  <small>{{ retrievalModeHint }}</small>
-                  <small>索引：{{ selectedKnowledgeSummary.chunkModeLabel }} / {{ selectedKnowledgeSummary.imageStrategyLabel }}</small>
-                  <small>召回：{{ selectedKnowledgeSummary.retrievalModeLabel }} / {{ selectedKnowledgeSummary.rerankLabel }}</small>
-                </div>
-              </div>
-              <div class="picker-card">
-                <div class="picker-head"><strong>Skill</strong><small>已选 {{ selectedSkillIds.length }}</small></div>
-                <div v-if="skillOptions.length === 0" class="empty-copy">暂无可用 Skill</div>
-                <label v-for="skill in skillOptions" :key="skill.id" class="picker-item"><input type="checkbox" :checked="selectedSkillIds.includes(skill.id)" @change="toggleSkill(skill.id)" /><span>{{ skill.name }}<small>{{ safeDisplayText(skill.description, fallbackDescription) }}</small></span></label>
-              </div>
+              <button class="ghost-pill subtle" type="button" @click="window.dispatchEvent(new CustomEvent('workspace-open-settings', { detail: { section: 'model' } }))">设置</button>
             </div>
           </div>
 
@@ -1823,7 +1838,6 @@ onBeforeUnmount(() => {
   color: #ad5f22;
 }
 
-.settings-panel,
 .trace-card {
   margin-bottom: 4px;
   padding: 6px;

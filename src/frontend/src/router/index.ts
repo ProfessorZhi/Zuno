@@ -20,7 +20,6 @@ import AgentSkill from '../pages/agent-skill'
 import Model from '../pages/model'
 import ModelEditor from '../pages/model/model-editor.vue'
 import Profile from '../pages/profile'
-import Homepage from '../pages/homepage'
 import Workspace from '../pages/workspace/workspace.vue'
 import WorkspaceDefaultPage from '../pages/workspace/defaultPage/defaultPage.vue'
 import Dashboard from '../pages/dashboard'
@@ -54,7 +53,14 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/',
-    redirect: '/homepage',
+    redirect: {
+      name: 'workspaceDefaultPage',
+      query: {
+        mode: 'normal',
+        execution_mode: 'tool',
+        access_scope: 'workspace',
+      },
+    },
     name: 'index',
     component: Index,
     meta: { requiresAuth: true },
@@ -62,7 +68,14 @@ const routes: RouteRecordRaw[] = [
       {
         path: '/homepage',
         name: 'homepage',
-        component: Homepage,
+        redirect: {
+          name: 'workspaceDefaultPage',
+          query: {
+            mode: 'normal',
+            execution_mode: 'tool',
+            access_scope: 'workspace',
+          },
+        },
         meta: { current: 'homepage' },
       },
       {
