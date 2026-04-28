@@ -7,6 +7,7 @@ import { getAgentsAPI } from "../../apis/agent"
 import { createDialogAPI, deleteDialogAPI, getDialogListAPI } from "../../apis/history"
 import { deleteWorkspaceSessionAPI, getWorkspaceSessionsAPI } from "../../apis/workspace"
 import histortCard from "../../components/historyCard/histortCard.vue"
+import { useResizablePanel } from "../../composables/useResizablePanel"
 import { useHistoryChatStore } from "../../store/history_chat_msg"
 import type { AgentResponse } from "../../apis/agent"
 import type { DialogCreateType, HistoryListType } from "../../type"
@@ -26,6 +27,17 @@ const dialogs = ref<HistoryListType[]>([])
 const agents = ref<AgentResponse[]>([])
 const loading = ref(false)
 const agentsLoading = ref(false)
+const {
+  panelStyle: historyPanelStyle,
+  startResize: startHistoryResize,
+  handleSeparatorKeydown: handleHistorySeparatorKeydown,
+} = useResizablePanel({
+  storageKey: "zuno.layout.historyWidth",
+  cssVariable: "--zuno-history-sidebar-width",
+  defaultWidth: 340,
+  minWidth: 260,
+  maxWidth: 460,
+})
 
 const normalizeSessionKind = (value: string | undefined) => {
   if (!value) return "dialog"
@@ -365,7 +377,7 @@ watch(() => route.query.session_id, syncSelectedDialog)
 </script>
 
 <template>
-  <div class="conversation-main">
+  <div class="conversation-main" :style="historyPanelStyle">
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-copy">
@@ -440,6 +452,15 @@ watch(() => route.query.session_id, syncSelectedDialog)
           </section>
         </template>
       </div>
+      <div
+        class="resize-handle history-resize-handle"
+        role="separator"
+        aria-label="调整会话历史栏宽度"
+        aria-orientation="vertical"
+        tabindex="0"
+        @pointerdown="startHistoryResize"
+        @keydown="handleHistorySeparatorKeydown"
+      />
     </aside>
 
     <main class="content">
@@ -529,18 +550,62 @@ watch(() => route.query.session_id, syncSelectedDialog)
 
 <style lang="scss" scoped>
 .conversation-main {
+  --zuno-history-sidebar-width: 340px;
   display: flex;
-  height: calc(100vh - 64px);
+  height: 100%;
+  min-height: 0;
+  min-width: calc(var(--zuno-history-sidebar-width) + 520px);
   background: var(--zuno-bg-canvas);
 }
 
 .sidebar {
-  width: 340px;
-  min-width: 340px;
+  position: relative;
+  width: var(--zuno-history-sidebar-width);
+  min-width: var(--zuno-history-sidebar-width);
+  max-width: var(--zuno-history-sidebar-width);
+  flex: 0 0 var(--zuno-history-sidebar-width);
   display: flex;
   flex-direction: column;
   background: var(--zuno-bg-sidebar);
   border-right: 1px solid var(--zuno-border-soft);
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  z-index: 12;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 14px;
+    bottom: 14px;
+    left: 4px;
+    width: 2px;
+    border-radius: 999px;
+    background: transparent;
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    background: rgba(201, 108, 45, 0.42);
+    box-shadow: 0 0 0 3px rgba(201, 108, 45, 0.1);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+:global(body.zuno-is-resizing) {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .sidebar-header {
@@ -719,8 +784,10 @@ watch(() => route.query.session_id, syncSelectedDialog)
 }
 
 .content {
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 520px;
+  min-width: 520px;
+  min-height: 0;
+  overflow: hidden;
   background: linear-gradient(180deg, rgba(255, 251, 244, 0.96), rgba(252, 248, 241, 0.98));
 }
 
@@ -900,17 +967,8 @@ watch(() => route.query.session_id, syncSelectedDialog)
 }
 
 @media (max-width: 960px) {
-  .conversation-main {
-    flex-direction: column;
-    height: auto;
-    min-height: calc(100vh - 64px);
-  }
-
   .sidebar {
-    width: 100%;
-    min-width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--zuno-border-soft);
+    border-right: 1px solid var(--zuno-border-soft);
   }
 }
 </style>

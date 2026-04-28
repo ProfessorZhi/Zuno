@@ -18,6 +18,7 @@ import {
 import { useAgentCardStore } from '../store/agent_card'
 import { useUserStore } from '../store/user'
 import { logoutAPI, getUserInfoAPI } from '../apis/auth'
+import { useResizablePanel } from '../composables/useResizablePanel'
 import { zunoBrandMark } from '../utils/brand'
 
 const agentCardStore = useAgentCardStore()
@@ -27,6 +28,17 @@ const router = useRouter()
 
 const itemName = ref('Zuno')
 const current = ref((route.meta.current as string) || 'homepage')
+const {
+  panelStyle: navPanelStyle,
+  startResize: startNavResize,
+  handleSeparatorKeydown: handleNavSeparatorKeydown,
+} = useResizablePanel({
+  storageKey: 'zuno.layout.navWidth',
+  cssVariable: '--zuno-sidebar-width',
+  defaultWidth: 180,
+  minWidth: 88,
+  maxWidth: 260,
+})
 
 const navMenuItems = [
   { index: 'homepage', label: '首页', icon: House, target: 'homepage' },
@@ -120,7 +132,7 @@ watch(
 </script>
 
 <template>
-  <div class="ai-body">
+  <div class="ai-body" :style="navPanelStyle">
     <div class="ai-nav">
       <div class="left">
         <div class="brand-home" @click="goDefault">
@@ -200,6 +212,15 @@ watch(
             </div>
           </div>
         </div>
+        <div
+          class="resize-handle nav-resize-handle"
+          role="separator"
+          aria-label="调整主导航宽度"
+          aria-orientation="vertical"
+          tabindex="0"
+          @pointerdown="startNavResize"
+          @keydown="handleNavSeparatorKeydown"
+        />
       </el-col>
 
       <div class="content">
@@ -321,11 +342,16 @@ watch(
     height: calc(100vh - var(--zuno-header-height));
     background-color: var(--zuno-bg-canvas);
     min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
 
     :deep(.el-col-2) {
       display: flex;
       width: var(--zuno-sidebar-width);
       min-width: var(--zuno-sidebar-width);
+      position: relative;
+      flex: 0 0 var(--zuno-sidebar-width);
+      max-width: var(--zuno-sidebar-width);
     }
 
     .sidebar-content {
@@ -387,8 +413,10 @@ watch(
     }
 
     .content {
-      flex: 1;
-      overflow-y: auto;
+      flex: 1 0 520px;
+      min-width: 520px;
+      min-height: 0;
+      overflow: auto;
       background-color: var(--zuno-bg-content);
       border-radius: 20px 0 0 0;
       margin-left: 4px;
@@ -397,6 +425,44 @@ watch(
       box-shadow: -4px 0 16px rgba(0, 0, 0, 0.05);
     }
   }
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  z-index: 20;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 14px;
+    bottom: 14px;
+    left: 4px;
+    width: 2px;
+    border-radius: 999px;
+    background: transparent;
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    background: rgba(201, 108, 45, 0.42);
+    box-shadow: 0 0 0 3px rgba(201, 108, 45, 0.1);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+:global(body.zuno-is-resizing) {
+  cursor: col-resize;
+  user-select: none;
 }
 
 :deep(.el-dropdown-menu) {
@@ -513,7 +579,6 @@ watch(
   .ai-body {
     --zuno-header-height: 76px;
     --zuno-brand-logo-height: 44px;
-    --zuno-sidebar-width: 168px;
   }
 }
 </style>
