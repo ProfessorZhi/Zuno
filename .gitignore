@@ -11,6 +11,8 @@ chat.html
 !.env.example
 docker/docker_config.local.yaml
 docker/data/
+src/backend/agentchat/config.yaml
+src/backend/agentchat/config.local.yaml
 
 chroma_db/
 memory_db/

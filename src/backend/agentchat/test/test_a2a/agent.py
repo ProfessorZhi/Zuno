@@ -1,17 +1,18 @@
 import json
+import os
 
 from util import function_to_args_schema
 from tavily import TavilyClient
 from openai import OpenAI, AsyncOpenAI
 
-tavily_client = TavilyClient("tvly-dev-****************")
+tavily_client = TavilyClient(os.getenv("TAVILY_API_KEY", ""))
 
 
 class SearchAgent:
     def __init__(self):
         self.client = AsyncOpenAI(
             base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
-            api_key="sk-fc40dd0604f04142************"
+            api_key=os.getenv("OPENAI_API_KEY", "")
         )
 
     async def asteam(self, query):

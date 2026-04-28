@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from agentchat.api.services.user import UserPayload, get_login_user
 from agentchat.schema.schemas import UnifiedResponseModel, resp_200
-from agentchat.settings import initialize_app_settings
+from agentchat.settings import initialize_app_settings, resolve_app_config_path
 
 router = APIRouter(tags=["Config"])
 
@@ -32,6 +32,7 @@ class SystemToolConfigUpdateReq(BaseModel):
 
 SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
     "send_email": {
+        "tool_kind": "smtp_protocol",
         "display_name": "发送邮件",
         "description": "配置多个发件邮箱槽位，支持多个 QQ 邮箱，也支持其他 SMTP 邮箱。",
         "root": "tools",
@@ -41,6 +42,7 @@ SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
         "note": "建议把常用邮箱都存成预设槽位。Agent 调用时优先用槽位名，不必每次重复输入邮箱地址和授权码。",
     },
     "get_arxiv": {
+        "tool_kind": "public_data_source",
         "display_name": "论文检索",
         "description": "当前通过公开论文源检索，不依赖额外全局配置。",
         "root": None,
@@ -50,6 +52,7 @@ SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
         "note": "这个工具当前可直接使用，无需额外配置。",
     },
     "get_weather": {
+        "tool_kind": "remote_api",
         "display_name": "天气预报",
         "description": "配置高德天气查询所需的 API Key 和接口地址。",
         "root": "tools",
@@ -74,6 +77,7 @@ SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
         "note": "这是高德天气接口配置。你需要在高德开放平台创建 Web 服务 Key，然后填写 Key 和 weatherInfo 接口地址。",
     },
     "get_delivery": {
+        "tool_kind": "remote_api",
         "display_name": "快递物流查询",
         "description": "配置阿里云市场“全国快递物流查询-快递查询接口”的 APPCODE 和接口地址。",
         "root": "tools",
@@ -98,6 +102,7 @@ SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
         "note": "这是你当前购买的阿里云物流商品专用配置。鉴权方式用 APPCODE，请填写商品详情页里的 AppCode；接口地址固定为 https://wuliu.market.alicloudapi.com/kdi。查询时默认自动识别快递公司，识别失败时可补充公司代码，如 zto、yto、sfexpress。",
     },
     "tavily_search": {
+        "tool_kind": "remote_api",
         "display_name": "联网搜索",
         "description": "配置 Tavily 搜索 API Key。",
         "root": "tools",
@@ -114,6 +119,7 @@ SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
         ],
     },
     "bocha_search": {
+        "tool_kind": "remote_api",
         "display_name": "博查搜索",
         "description": "配置博查搜索的 API Key 和接口地址。",
         "root": "tools",
@@ -137,6 +143,7 @@ SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
         ],
     },
     "convert_to_pdf": {
+        "tool_kind": "local_dependency",
         "display_name": "文件格式转换 (Docx -> PDF)",
         "description": "当前通过系统依赖完成转换，无需额外全局配置。",
         "root": None,
@@ -146,6 +153,7 @@ SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
         "note": "如果状态显示缺依赖，请先安装 LibreOffice。",
     },
     "convert_to_docx": {
+        "tool_kind": "local_dependency",
         "display_name": "文件格式转换 (PDF -> Docx)",
         "description": "当前通过系统依赖完成转换，无需额外全局配置。",
         "root": None,
@@ -157,15 +165,143 @@ SYSTEM_TOOL_CONFIG_META: dict[str, dict[str, Any]] = {
 }
 
 
+TOOL_KIND_LABELS: dict[str, str] = {
+    "remote_api": "API",
+    "public_data_source": "CLI",
+    "smtp_protocol": "CLI",
+    "local_dependency": "CLI",
+}
+
+
+STRATEGY_LABELS: dict[str, str] = {
+    "builtin_internal": "内置逻辑",
+    "config_fields": "运行配置字段",
+    "profile_credentials": "凭证槽位",
+    "system_dependency_command": "系统命令依赖",
+    "python_dependency_package": "Python 依赖包",
+}
+
+
+def _build_install_requirement(tool_name: str, meta: dict[str, Any]) -> dict[str, Any]:
+    if tool_name == "convert_to_pdf":
+        return {
+            "code": "system_command",
+            "label": "系统命令",
+            "required": True,
+            "subject": "libreoffice",
+            "detail": "运行环境中必须存在 LibreOffice 或 soffice 命令。",
+        }
+
+    if tool_name == "convert_to_docx":
+        return {
+            "code": "python_package",
+            "label": "Python 依赖包",
+            "required": True,
+            "subject": "pdf2docx",
+            "detail": "后端运行环境中必须安装 pdf2docx 包。",
+        }
+
+    detail = (
+        "使用内置 SMTP 逻辑，无需额外安装本地程序。"
+        if meta.get("config_type") == "email_accounts"
+        else "无需额外安装。"
+    )
+    return {
+        "code": "none",
+        "label": "无需额外安装",
+        "required": False,
+        "subject": None,
+        "detail": detail,
+    }
+
+
+def _build_config_requirement(meta: dict[str, Any]) -> dict[str, Any]:
+    if meta.get("config_type") == "email_accounts":
+        return {
+            "code": "credential_profiles",
+            "label": "凭证槽位",
+            "required": True,
+            "detail": "在运行配置中保存一个或多个可复用的凭证槽位。",
+        }
+
+    if meta.get("fields"):
+        return {
+            "code": "fields",
+            "label": "配置字段",
+            "required": True,
+            "detail": "补齐必填运行配置后，工具才能正常运行。",
+        }
+
+    return {
+        "code": "none",
+        "label": "无需额外配置",
+        "required": False,
+        "detail": "无需额外运行配置。",
+    }
+
+
+def _build_tool_strategy(tool_name: str, meta: dict[str, Any]) -> dict[str, Any]:
+    if tool_name == "convert_to_pdf":
+        strategy_code = "system_dependency_command"
+        summary = "通过宿主机已安装的系统命令完成处理。"
+    elif tool_name == "convert_to_docx":
+        strategy_code = "python_dependency_package"
+        summary = "通过后端运行环境中的 Python 依赖包完成处理。"
+    elif meta.get("config_type") == "email_accounts":
+        strategy_code = "profile_credentials"
+        summary = "通过预设凭证槽位运行，不需要每次调用时重复输入密钥。"
+    elif meta.get("fields"):
+        strategy_code = "config_fields"
+        summary = "依赖运行配置中保存的字段值。"
+    else:
+        strategy_code = "builtin_internal"
+        summary = "使用后端内置逻辑，不依赖额外安装或配置。"
+
+    return {
+        "code": strategy_code,
+        "label": STRATEGY_LABELS[strategy_code],
+        "summary": summary,
+        "install_requirement": _build_install_requirement(tool_name, meta),
+        "config_requirement": _build_config_requirement(meta),
+    }
+
+
+def _build_system_tool_meta_payload(tool_name: str, meta: dict[str, Any]) -> dict[str, Any]:
+    strategy = _build_tool_strategy(tool_name, meta)
+    return {
+        "tool_name": tool_name,
+        "display_name": meta["display_name"],
+        "description": meta["description"],
+        "tool_kind": _get_tool_kind(meta),
+        "tool_kind_label": _get_tool_kind_label(meta),
+        "strategy_code": strategy["code"],
+        "strategy_label": strategy["label"],
+        "strategy_summary": strategy["summary"],
+        "install_requirement": strategy["install_requirement"],
+        "config_requirement": strategy["config_requirement"],
+        "strategy": strategy,
+    }
+
+
+def _get_tool_kind(meta: dict[str, Any]) -> str:
+    return str(meta.get("tool_kind") or "remote_api")
+
+
+def _get_tool_kind_label(meta: dict[str, Any]) -> str:
+    return TOOL_KIND_LABELS.get(_get_tool_kind(meta), "API")
+
+
 def _get_runtime_config_path() -> Path:
-    candidates = [
-        Path("/app/agentchat/config.yaml"),
-        Path(__file__).resolve().parents[2] / "config.yaml",
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    raise FileNotFoundError("Runtime config.yaml not found")
+    path = resolve_app_config_path(writable=True)
+    if path.exists():
+        return path
+
+    example_path = resolve_app_config_path()
+    if example_path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(example_path.read_text(encoding="utf-8"), encoding="utf-8")
+        return path
+    raise FileNotFoundError("Runtime config file not found")
 
 
 def _load_runtime_config() -> tuple[Path, dict[str, Any]]:
@@ -173,7 +309,7 @@ def _load_runtime_config() -> tuple[Path, dict[str, Any]]:
     with path.open("r", encoding="utf-8") as file:
         data = yaml.safe_load(file) or {}
     if not isinstance(data, dict):
-        raise ValueError("config.yaml must contain a YAML object")
+        raise ValueError("runtime config must contain a YAML object")
     return path, data
 
 
@@ -221,15 +357,14 @@ def _build_system_tool_payload(tool_name: str, config_data: dict[str, Any]) -> d
         scoped_values = ((config_data.get(root) or {}).get(section) or {}).copy()
 
     payload = {
-        "tool_name": tool_name,
-        "display_name": meta["display_name"],
-        "description": meta["description"],
+        **_build_system_tool_meta_payload(tool_name, meta),
         "root": root,
         "section": section,
         "config_type": meta.get("config_type", "fields"),
         "fields": meta["fields"],
         "values": scoped_values,
         "note": meta.get("note", ""),
+        "status": _build_system_tool_status(tool_name, meta, config_data),
     }
 
     if meta.get("config_type") == "email_accounts":
@@ -345,9 +480,7 @@ async def get_runtime_config(
             "content": yaml.safe_dump(data, allow_unicode=True, sort_keys=False),
             "system_tools": [
                 {
-                    "tool_name": tool_name,
-                    "display_name": meta["display_name"],
-                    "description": meta["description"],
+                    **_build_system_tool_meta_payload(tool_name, meta),
                     "has_fields": bool(meta.get("fields")) or meta.get("config_type") == "email_accounts",
                     "status": _build_system_tool_status(tool_name, meta, data),
                 }
@@ -382,6 +515,29 @@ async def get_system_tool_config(
     try:
         _, data = _load_runtime_config()
         return resp_200(data=_build_system_tool_payload(tool_name, data))
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Unsupported system tool")
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+@router.get("/config/system-tool/{tool_name}/status", response_model=UnifiedResponseModel)
+async def get_system_tool_status(
+    tool_name: str,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    try:
+        _, data = _load_runtime_config()
+        meta = SYSTEM_TOOL_CONFIG_META[tool_name]
+        return resp_200(
+            data={
+                "tool_name": tool_name,
+                "tool_kind": _get_tool_kind(meta),
+                "tool_kind_label": _get_tool_kind_label(meta),
+                "status": _build_system_tool_status(tool_name, meta, data),
+            }
+        )
     except KeyError:
         raise HTTPException(status_code=404, detail="Unsupported system tool")
     except Exception as err:

@@ -7,3 +7,5 @@ src/frontend/pnpm-lock.yaml
 src/frontend/yarn.lock
 src/frontend/dist/
 src/frontend/.env*
+src/backend/agentchat/config.yaml
+src/backend/agentchat/config.local.yaml

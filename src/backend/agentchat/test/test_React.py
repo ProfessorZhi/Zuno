@@ -1,12 +1,13 @@
 import json
+import os
 
 from langchain_core.output_parsers import JsonOutputParser
 from openai import OpenAI
 from langchain_openai import ChatOpenAI
 
-# client = ChatOpenAI(api_key="sk-ChtJNYJD1sm5FqwA7bE8EfFa3eE847Fa9758E5626d64Cc9a", base_url="http://70.182.56.16:11000/v1/", model="Qwen2-72B-Instruct")
+# client = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY", ""), base_url=os.getenv("OPENAI_BASE_URL", ""), model="Qwen2-72B-Instruct")
 
-client = OpenAI(base_url='http://70.182.56.16:11000/v1/', api_key='sk-ChtJNYJD1sm5FqwA7bE8EfFa3eE847Fa9758E5626d64Cc9a')
+client = OpenAI(base_url=os.getenv("OPENAI_BASE_URL", "http://127.0.0.1:8000/v1"), api_key=os.getenv("OPENAI_API_KEY", ""))
 tools = [
     {
         "schema": "function",

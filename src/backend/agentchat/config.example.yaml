@@ -1,0 +1,152 @@
+server:
+  host: "127.0.0.1"
+  port: 7860
+  project_name: "Zuno"
+  version: "2.4.0"
+
+database:
+  sync_endpoint: "postgresql+psycopg://postgres:postgres@localhost:5432/agentchat"
+  async_endpoint: "postgresql+asyncpg://postgres:postgres@localhost:5432/agentchat"
+  echo: false
+  pool_size: 10
+  max_overflow: 20
+
+redis:
+  endpoint: "redis://localhost:6379"
+
+rabbitmq:
+  enabled: false
+  url: "amqp://guest:guest@localhost:5672/"
+  parse_queue: "knowledge.parse"
+  index_queue: "knowledge.index"
+  graph_queue: "knowledge.graph"
+
+neo4j:
+  enabled: false
+  uri: "bolt://localhost:7687"
+  username: "neo4j"
+  password: ""
+  database: "neo4j"
+
+multi_models:
+  conversation_model:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model_name: "qwen-plus"
+
+  tool_call_model:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model_name: "qwen-plus"
+
+  reasoning_model:
+    api_key: ""
+    base_url: "https://api.deepseek.com/v1"
+    model_name: "deepseek-reasoner"
+
+  text2image:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis"
+    model_name: "wanx2.0-t2i-turbo"
+
+  qwen_vl:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model_name: "qwen-vl-plus"
+
+  embedding:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model_name: "text-embedding-v4"
+
+  vl_embedding:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model_name: "qwen3-vl-embedding"
+
+  rerank:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank"
+    model_name: "gte-rerank-v2"
+
+tools:
+  weather:
+    api_key: ""
+    endpoint: "https://restapi.amap.com/v3/weather/weatherInfo?parameters"
+
+  tavily:
+    api_key: ""
+
+  google:
+    api_key: ""
+
+  delivery:
+    api_key: ""
+    endpoint: "https://qyexpress.market.alicloudapi.com/composite/queryexpress"
+
+  bocha:
+    api_key: ""
+    endpoint: "https://api.bochaai.com/v1/web-search"
+
+rag:
+  enable_summary: false
+  enable_elasticsearch: false
+
+  retrival:
+    top_k: 5
+    min_score: 0.2
+
+  split:
+    chunk_size: 500
+    overlap_size: 100
+
+  elasticsearch:
+    hosts: "http://127.0.0.1:9200"
+
+  vector_db:
+    host: "127.0.0.1"
+    port: "19530"
+    mode: "chroma"
+
+storage:
+  mode: "minio"
+
+  oss:
+    access_key_id: ""
+    access_key_secret: ""
+    endpoint: "oss-cn-beijing.aliyuncs.com"
+    bucket_name: "agentchat"
+    base_url: "https://agentchat.oss-cn-beijing.aliyuncs.com"
+
+  minio:
+    access_key_id: ""
+    access_key_secret: ""
+    endpoint: "127.0.0.1:9000"
+    bucket_name: "agentchat"
+    base_url: "http://127.0.0.1:9000/agentchat"
+
+default_config:
+  mcp_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/mcp.png"
+  tool_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/default.png"
+  agent_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/bot.png"
+  memory_collection_name: "memory"
+
+wechat_config:
+  token: ""
+  app_id: ""
+  secret: ""
+
+langfuse:
+  trace_name: "agentchat"
+  host: "https://cloud.langfuse.com"
+  public_key: ""
+  secret_key: ""
+  user_id: ""
+
+langsmith:
+  enabled: false
+  project: "Zuno"
+  endpoint: "https://api.smith.langchain.com"
+  api_key: ""
+
+whitelist_paths: ["/api/v1/login"]

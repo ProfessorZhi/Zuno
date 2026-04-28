@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import yaml
 from typing import Literal, Optional
 from loguru import logger
@@ -28,12 +31,49 @@ class Settings(BaseSettings):
 
 app_settings = Settings()
 
+def resolve_app_config_path(file_path: str | None = None, *, writable: bool = False) -> Path:
+    if file_path:
+        return Path(file_path)
+
+    env_path = os.getenv("AGENTCHAT_CONFIG") or os.getenv("ZUNO_CONFIG")
+    if env_path:
+        return Path(env_path)
+
+    package_root = Path(__file__).resolve().parent
+    candidates = [
+        package_root / "config.local.yaml",
+        package_root / "config.yaml",
+        package_root / "config.example.yaml",
+        Path("agentchat/config.local.yaml"),
+        Path("agentchat/config.yaml"),
+        Path("agentchat/config.example.yaml"),
+        Path("/app/agentchat/config.local.yaml"),
+        Path("/app/agentchat/config.yaml"),
+        Path("/app/agentchat/config.example.yaml"),
+    ]
+    if writable:
+        writable_candidates = [
+            package_root / "config.local.yaml",
+            Path("agentchat/config.local.yaml"),
+            Path("/app/agentchat/config.local.yaml"),
+        ]
+        for candidate in writable_candidates:
+            if candidate.exists():
+                return candidate
+        return writable_candidates[0]
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return package_root / "config.example.yaml"
+
+
 async def initialize_app_settings(file_path: str = None):
     global app_settings
 
-    file_path = file_path or "agentchat/config.yaml"
+    config_path = resolve_app_config_path(file_path)
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with config_path.open('r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
             if data is None:
                 logger.error("YAML 文件解析为空")
