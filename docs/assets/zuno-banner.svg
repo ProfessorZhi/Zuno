@@ -1,0 +1,21 @@
+<svg width="1280" height="280" viewBox="0 0 1280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="280" fill="#111318"/>
+  <rect x="24" y="24" width="1232" height="232" rx="20" fill="#171A21" stroke="#2F3645" stroke-width="2"/>
+  <path d="M0 220 C180 120 300 300 500 190 C700 80 860 250 1280 120 L1280 280 L0 280 Z" fill="#2563EB" opacity="0.22"/>
+  <path d="M0 246 C210 160 330 310 560 214 C780 122 900 270 1280 164 L1280 280 L0 280 Z" fill="#F97316" opacity="0.28"/>
+  <circle cx="1050" cy="72" r="110" fill="#22C55E" opacity="0.13"/>
+  <circle cx="190" cy="210" r="130" fill="#FACC15" opacity="0.10"/>
+  <g transform="translate(85 72)">
+    <text x="6" y="98" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="112" font-weight="900" letter-spacing="8" fill="#0B0F19" opacity="0.95">ZUNO</text>
+    <text x="0" y="88" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="112" font-weight="900" letter-spacing="8" fill="#FACC15">ZUNO</text>
+    <text x="0" y="142" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="28" font-weight="800" letter-spacing="5" fill="#E5E7EB">AGENT WORKSPACE</text>
+  </g>
+  <g transform="translate(735 78)">
+    <rect x="0" y="0" width="390" height="42" rx="8" fill="#2563EB"/>
+    <text x="20" y="28" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="1.5" fill="white">TOOLS · MCP · RAG · SKILLS</text>
+    <rect x="0" y="58" width="300" height="42" rx="8" fill="#16A34A"/>
+    <text x="20" y="86" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="1.5" fill="white">WEB + DESKTOP</text>
+    <rect x="0" y="116" width="360" height="42" rx="8" fill="#EA580C"/>
+    <text x="20" y="144" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="1.5" fill="white">BUILD CONFIGURABLE AGENTS</text>
+  </g>
+</svg>
