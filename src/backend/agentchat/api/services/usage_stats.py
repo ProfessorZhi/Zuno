@@ -5,6 +5,12 @@ from typing import Dict, List, Optional, DefaultDict
 from agentchat.database.dao.usage_stats import UsageStatsDao, UsageStats
 
 class UsageStatsService:
+    @staticmethod
+    def _normalize_filter(value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
 
     @classmethod
     async def create_usage_stats(cls, agent, model, user_id, input_tokens=0, output_tokens=0):
@@ -48,6 +54,8 @@ class UsageStatsService:
         model: Optional[str] = None,
         delta_days: int = 10000  # 默认值可视为所有数据
     ):
+        agent = cls._normalize_filter(agent)
+        model = cls._normalize_filter(model)
         results = await UsageStatsDao.get_agent_model_time_usage(
             user_id, agent, model, delta_days
         )
@@ -103,6 +111,8 @@ class UsageStatsService:
             model: Optional[str] = None,
             delta_days: int = 10000  # 默认值可视为所有数据
     ):
+        agent = cls._normalize_filter(agent)
+        model = cls._normalize_filter(model)
         results = await UsageStatsDao.get_agent_model_time_usage(
             user_id, agent, model, delta_days
         )
