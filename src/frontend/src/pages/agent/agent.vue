@@ -131,7 +131,7 @@ const handleDelete = async (agent: Agent) => {
 
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement | null
-  if (target) target.src = robotIcon
+  if (target) target.src = zunoAgentAvatar
 }
 
 onMounted(fetchAgents)
@@ -165,7 +165,7 @@ onMounted(fetchAgents)
         <div v-if="agent.is_custom === false" class="official-badge">官方</div>
         <div class="card-top">
           <div class="avatar-wrap">
-            <img :src="agent.logo_url || robotIcon" :alt="agent.name" @error="handleImageError" />
+            <img :src="agent.logo_url || zunoAgentAvatar" :alt="agent.name" @error="handleImageError" />
           </div>
           <div class="card-main">
             <h3>{{ agent.name }}</h3>
@@ -191,12 +191,33 @@ onMounted(fetchAgents)
       </article>
 
       <div v-if="!loading && sortedAgents.length === 0" class="empty-state">
-        <img :src="robotIcon" alt="空状态" />
-        <h3>还没有可展示的智能体</h3>
-        <p>{{ searchKeyword ? '没有匹配当前关键词的结果。' : '先创建一个智能体，或刷新列表重新拉取。' }}</p>
+        <div class="empty-visual" aria-hidden="true">
+          <div class="empty-orbit empty-orbit-one"></div>
+          <div class="empty-orbit empty-orbit-two"></div>
+          <div class="empty-core">
+            <div class="empty-face">
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="empty-chip chip-tools">Tools</div>
+          <div class="empty-chip chip-knowledge">Docs</div>
+          <div class="empty-chip chip-model">LLM</div>
+        </div>
+        <div class="empty-copy">
+          <div class="empty-kicker">{{ searchKeyword ? 'NO MATCH' : 'START FROM ZERO' }}</div>
+          <h3>{{ searchKeyword ? '没有找到匹配的智能体' : '还没有智能体，先创建你的第一个工作伙伴' }}</h3>
+          <p>
+            {{
+              searchKeyword
+                ? '换个关键词，或返回完整列表继续查看。'
+                : '新工作区默认不塞示例智能体。你可以按真实任务绑定模型、工具、MCP 和知识库。'
+            }}
+          </p>
+        </div>
         <div class="empty-actions">
           <el-button v-if="searchKeyword" @click="clearSearch">查看全部</el-button>
-          <el-button v-else type="primary" @click="goCreate">创建智能体</el-button>
+          <el-button v-else type="primary" :icon="Plus" @click="goCreate">创建智能体</el-button>
         </div>
       </div>
     </section>
@@ -392,35 +413,155 @@ onMounted(fetchAgents)
 
 .empty-state {
   grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: 210px minmax(0, 560px);
   justify-content: center;
-  gap: 12px;
-  padding: 52px 20px;
-  border-radius: 24px;
-  border: 1px dashed rgba(214, 132, 70, 0.24);
-  background: rgba(255, 252, 247, 0.8);
+  place-items: center;
+  align-content: center;
+  align-items: center;
+  column-gap: 30px;
+  row-gap: 14px;
+  padding: 34px 24px;
+  border-radius: 28px;
+  border: 1px solid rgba(214, 132, 70, 0.14);
+  background:
+    radial-gradient(circle at 50% 10%, rgba(214, 132, 70, 0.13), transparent 34%),
+    linear-gradient(180deg, rgba(255, 252, 248, 0.98) 0%, rgba(255, 248, 239, 0.9) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 18px 42px rgba(120, 80, 42, 0.06);
   color: #6f6050;
+  text-align: left;
+  overflow: hidden;
 }
 
-.empty-state img {
-  width: 64px;
-  height: 64px;
+.empty-visual {
+  position: relative;
+  width: 188px;
+  height: 118px;
+}
+
+.empty-orbit {
+  position: absolute;
+  inset: 22px 28px;
+  border: 1px solid rgba(214, 132, 70, 0.18);
+  border-radius: 999px;
+}
+
+.empty-orbit-one {
+  transform: rotate(-10deg);
+}
+
+.empty-orbit-two {
+  transform: rotate(18deg) scale(0.84);
+  border-style: dashed;
+}
+
+.empty-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 72px;
+  height: 72px;
+  transform: translate(-50%, -50%);
+  border-radius: 24px;
+  background: linear-gradient(145deg, #fff9f1 0%, #f0b173 100%);
+  border: 1px solid rgba(177, 96, 39, 0.16);
+  box-shadow: 0 18px 32px rgba(177, 96, 39, 0.18);
+  display: grid;
+  place-items: center;
+}
+
+.empty-core::before {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 7px;
+  top: 14px;
+  border-radius: 999px;
+  background: rgba(139, 78, 37, 0.28);
+}
+
+.empty-face {
+  width: 42px;
+  height: 30px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.empty-face span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9d5a2d;
+}
+
+.empty-chip {
+  position: absolute;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(214, 132, 70, 0.16);
+  color: #9a6237;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(120, 80, 42, 0.08);
+}
+
+.chip-tools {
+  left: 4px;
+  top: 30px;
+}
+
+.chip-knowledge {
+  right: 0;
+  top: 26px;
+}
+
+.chip-model {
+  left: 68px;
+  bottom: 2px;
+}
+
+.empty-copy {
+  max-width: 560px;
+  display: grid;
+  gap: 10px;
+}
+
+.empty-kicker {
+  justify-self: start;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(214, 132, 70, 0.1);
+  color: #b86c33;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
 }
 
 .empty-state h3 {
   margin: 0;
+  font-size: 22px;
+  line-height: 1.35;
   color: #342820;
 }
 
 .empty-state p {
   margin: 0;
+  color: #786657;
+  line-height: 1.8;
 }
 
 .empty-actions {
+  grid-column: 2;
   display: flex;
   gap: 12px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 960px) {
@@ -435,6 +576,20 @@ onMounted(fetchAgents)
 
   .search-input {
     width: 100%;
+  }
+
+  .empty-state {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .empty-kicker {
+    justify-self: center;
+  }
+
+  .empty-actions {
+    grid-column: auto;
+    justify-content: center;
   }
 }
 </style>
