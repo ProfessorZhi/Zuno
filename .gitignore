@@ -7,6 +7,8 @@ __pycache__/
 chat.html
 
 .env
+.env.*
+!.env.example
 docker/docker_config.local.yaml
 docker/data/
 
@@ -14,8 +16,39 @@ chroma_db/
 memory_db/
 vector_db/
 
+study_hub/
+interview_hub/
+
+.astrid-memory/
+.playwright-mcp/
+.pytest_cache/
+.tmp_qa_playwright/
+tmp/
+tmp-qa-playwright/
+_ui_audit/
+qa_2026-04-18_full_validation/
+
+tmp-*.png
+tmp-*.json
+tmp-*.cjs
+$null
+&1
+
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.backup
+*.secret
+*.pem
+*.key
+*.p12
+*.pfx
+
 node_modules/
 
 # local desktop startup scripts
 Zuno-*.local.cmd
 _Zuno-Desktop-Common.local.cmd
+*.local.*
