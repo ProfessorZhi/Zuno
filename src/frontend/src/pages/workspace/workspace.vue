@@ -49,9 +49,12 @@ const {
   storageKey: 'zuno.layout.workspaceHistoryWidth',
   cssVariable: '--workspace-sidebar-width',
   defaultWidth: 300,
-  minWidth: 220,
+  minWidth: 200,
   maxWidth: 460,
-  minAvailableContentWidth: 340,
+  minAvailableContentWidth: 420,
+  narrowBreakpoint: 900,
+  narrowMinWidth: 148,
+  narrowMinAvailableContentWidth: 300,
 })
 
 const normalizeAvatarUrl = (avatar?: string) => {
@@ -967,25 +970,86 @@ watch(sidebarCollapsed, (collapsed) => {
 
 @media (max-width: 900px) {
   .workspace-container {
-    --workspace-sidebar-width: 220px;
+    --workspace-sidebar-width: 180px;
   }
 
   .sidebar-head {
-    padding-inline: 10px;
+    padding-inline: 8px;
   }
 
   .session-list {
-    padding-inline: 6px;
+    padding-inline: 5px;
   }
 
   .session-card {
     gap: 7px;
-    padding: 7px 6px;
+    padding: 7px 5px;
+  }
+
+  .session-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .session-title-row {
+    gap: 4px;
+  }
+
+  .session-title {
+    font-size: 12px;
   }
 
   .mode-tag {
     font-size: 10px;
-    padding-inline: 5px;
+    padding-inline: 4px;
+  }
+
+  .delete-btn {
+    width: 18px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace-container {
+    --workspace-sidebar-width: 160px;
+  }
+
+  .workspace-nav {
+    padding-inline: 14px;
+  }
+
+  .brand-logo-img {
+    height: 48px;
+  }
+
+  .sidebar-title-wrap span,
+  .group-head small,
+  .mode-tag,
+  .delete-btn {
+    display: none;
+  }
+
+  .sidebar-actions {
+    gap: 5px;
+  }
+
+  .new-session-btn {
+    height: 28px;
+    padding-inline: 7px;
+    font-size: 12px;
+  }
+
+  .sidebar-toggle {
+    width: 28px;
+  }
+
+  .session-card {
+    gap: 6px;
+  }
+
+  .session-time {
+    font-size: 11px;
   }
 }
 
