@@ -3,7 +3,13 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { MoreFilled, Plus, Refresh, Search, Upload } from '@element-plus/icons-vue'
-import pluginIcon from '../../assets/plugin.svg'
+import toolArxivIcon from '../../assets/tools/tool-arxiv.svg'
+import toolDefaultIcon from '../../assets/tools/tool-default.svg'
+import toolDeliveryIcon from '../../assets/tools/tool-delivery.svg'
+import toolDocxIcon from '../../assets/tools/tool-docx.svg'
+import toolEmailIcon from '../../assets/tools/tool-email.svg'
+import toolPdfIcon from '../../assets/tools/tool-pdf.svg'
+import toolWeatherIcon from '../../assets/tools/tool-weather.svg'
 import {
   assistRemoteApiToolAPI,
   createToolAPI,
@@ -178,11 +184,25 @@ const getToolSummary = (tool: ToolItem) => safeDisplayText(tool.description) || 
 const getToolHints = (tool: ToolItem) => (isSystemTool(tool) ? tool.system_tool_kind === 'smtp_protocol' ? ['多凭证'] : tool.system_tool_kind === 'remote_api' ? ['远程配置'] : ['本地运行'] : [])
 const getPrimaryActionLabel = (tool: ToolItem) => (!isSystemTool(tool) ? '编辑' : tool.system_tool_kind === 'local_dependency' || tool.system_tool_kind === 'public_data_source' ? '查看' : '配置')
 const isStatusRefreshing = (tool: ToolItem) => !!statusRefreshing.value[tool.tool_id]
-const getToolLogo = (tool: ToolItem) => String(tool.logo_url || '').trim() || pluginIcon
+const systemToolIconMap: Record<string, string> = {
+  send_email: toolEmailIcon,
+  get_weather: toolWeatherIcon,
+  get_delivery: toolDeliveryIcon,
+  get_arxiv: toolArxivIcon,
+  convert_to_pdf: toolPdfIcon,
+  convert_to_docx: toolDocxIcon,
+}
+const isRemoteDefaultToolLogo = (value: string) => value.includes('agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/default.png')
+const getToolLogo = (tool: ToolItem) => {
+  if (isSystemTool(tool)) return systemToolIconMap[tool.name] || toolDefaultIcon
+  const logoUrl = String(tool.logo_url || '').trim()
+  return logoUrl && !isRemoteDefaultToolLogo(logoUrl) ? logoUrl : toolDefaultIcon
+}
 const handleToolLogoError = (event: Event) => {
   const target = event.target as HTMLImageElement | null
-  if (!target || target.src === pluginIcon) return
-  target.src = pluginIcon
+  if (!target || target.dataset.fallbackApplied === 'true') return
+  target.dataset.fallbackApplied = 'true'
+  target.src = toolDefaultIcon
 }
 
 const cliPathLabel = computed(() => currentSourceType.value === 'github_repo' ? '本地仓库目录' : currentSourceType.value === 'npm_package' ? '可选本地目录' : currentSourceType.value === 'python_package' ? '可选工具目录' : '工具目录')
