@@ -107,6 +107,7 @@ const conversationRef = ref<HTMLElement | null>(null)
 const showTracePanel = ref(false)
 const isPinnedToBottom = ref(true)
 const workspaceHydrated = ref(false)
+const preserveConversationOnRouteSync = ref(false)
 const attachmentInputRef = ref<HTMLInputElement | null>(null)
 const pendingAttachments = ref<PendingAttachment[]>([])
 const attachmentsUploading = ref(false)
@@ -320,8 +321,14 @@ const buildWorkspaceQuery = () => ({
   access_scope: selectedAccessScope.value,
 })
 
-const syncRouteState = async () => {
-  await router.replace({ name: 'workspaceDefaultPage', query: buildWorkspaceQuery() })
+const syncRouteState = async (options?: { preserveConversation?: boolean }) => {
+  if (options?.preserveConversation) preserveConversationOnRouteSync.value = true
+  try {
+    await router.replace({ name: 'workspaceDefaultPage', query: buildWorkspaceQuery() })
+    await nextTick()
+  } finally {
+    if (options?.preserveConversation) preserveConversationOnRouteSync.value = false
+  }
 }
 
 const resetToDraftSession = async (mode: WorkspaceMode, options?: { pruneCurrent?: boolean }) => {
@@ -354,7 +361,6 @@ const createPersistedSession = async (mode: WorkspaceMode) => {
   }
   currentSessionId.value = String(response.data.data.session_id)
   saveWorkspaceSessionMode(currentSessionId.value, mode)
-  await syncRouteState()
   emitSessionUpdated()
   emitSessionModeUpdated()
 }
@@ -946,7 +952,6 @@ const submitMessage = async () => {
       return false
     }
   }
-  await syncRouteState()
   inputMessage.value = ''
   isGenerating.value = true
   executionEvents.value = []
@@ -959,6 +964,7 @@ const submitMessage = async () => {
   messages.value.push({ role: 'assistant', content: isAgentMode.value ? buildLiveAssistantProgress() : '' })
   isPinnedToBottom.value = true
   await scrollToBottom(true)
+  await syncRouteState({ preserveConversation: true })
   if (isAgentMode.value) executionEvents.value.push({ id: crypto.randomUUID(), title: '开始执行', detail: `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value} / ${effectiveRetrievalModeLabel.value}`, at: new Date().toLocaleTimeString(), phase: 'start', status: 'START', accent: 'default' })
   let assistantHasRealContent = false
   const renderAgentProgress = async () => {
@@ -1063,6 +1069,10 @@ watch(selectedModelId, async (newModelId, oldModelId) => {
 
 watch(() => route.query.session_id, async (newSessionId, oldSessionId) => {
   if (newSessionId && newSessionId !== oldSessionId) {
+    if (preserveConversationOnRouteSync.value && String(newSessionId) === currentSessionId.value) {
+      selectedMode.value = safeQueryValue(route.query.mode, selectedMode.value) === 'agent' ? 'agent' : 'normal'
+      return
+    }
     clearConversationState()
     currentSessionId.value = String(newSessionId)
     selectedMode.value = safeQueryValue(route.query.mode, selectedMode.value) === 'agent' ? 'agent' : 'normal'
@@ -1165,10 +1175,8 @@ onBeforeUnmount(() => {
   <div class="workspace-chat" :class="{ active: messages.length > 0 }">
     <div class="workspace-shell">
       <div v-if="messages.length === 0" class="intro-stack">
-        <div class="intro-mark">Zuno Workspace</div>
-        <h1>{{ selectedMode === 'agent' ? '把任务交给 Zuno。' : '今天想聊什么？' }}</h1>
-        <p>{{ activeMode.description }}</p>
-        <div class="mode-switcher">
+        <h1>{{ selectedMode === 'agent' ? '今天有什么计划？' : '今天想聊什么？' }}</h1>
+        <div class="mode-switcher" aria-label="会话模式">
           <button v-for="mode in modes" :key="mode.id" :class="['mode-pill', { active: selectedMode === mode.id }]" :disabled="isGenerating" @click="selectedMode = mode.id">
             {{ mode.label }}
           </button>
@@ -1217,7 +1225,6 @@ onBeforeUnmount(() => {
       <div class="composer-dock" :class="{ fixed: messages.length > 0 }">
         <div class="composer-shell" :class="{ 'drag-active': isAttachmentDragOver }" @dragover.prevent="handleAttachmentDragOver" @dragleave="handleAttachmentDragLeave" @drop.prevent="handleAttachmentDrop">
           <div class="composer-top" :class="{ compact: compactPanel }">
-            <div v-if="!compactPanel" class="mode-badge"><span class="label">当前模式</span><strong>{{ activeMode.label }}</strong></div>
             <div class="composer-actions">
               <button v-if="isAgentMode && compactPanel" class="ghost-pill subtle" type="button" @click="showTracePanel = !showTracePanel"><el-icon><ArrowDown v-if="showTracePanel" /><ArrowUp v-else /></el-icon>{{ showTracePanel ? '收起进展' : '查看进展' }}</button>
               <button class="ghost-pill subtle" type="button" @click="window.dispatchEvent(new CustomEvent('workspace-open-settings', { detail: { section: 'model' } }))">设置</button>
@@ -1327,9 +1334,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 12%, rgba(214, 142, 79, 0.08), transparent 30%),
-    linear-gradient(180deg, #f8f4ed 0%, #fcfaf6 100%);
+  background: #fffdf9;
 }
 
 .workspace-shell {
@@ -1338,21 +1343,24 @@ onBeforeUnmount(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 18px 20px 10px;
+  gap: 0;
+  padding: 0 18px 24px;
   overflow: hidden;
+  align-items: stretch;
 }
 
 .workspace-chat:not(.active) .workspace-shell {
   justify-content: center;
+  align-items: center;
 }
 
 .workspace-chat:not(.active) .composer-dock {
   background: transparent;
+  width: 100%;
 }
 
 .workspace-chat:not(.active) .composer-shell {
-  width: min(760px, calc(100% - 24px));
+  width: min(720px, calc(100% - 24px));
 }
 
 .intro-stack {
@@ -1362,69 +1370,59 @@ onBeforeUnmount(() => {
   align-content: center;
   justify-items: center;
   gap: 16px;
-  padding: 0 0 6px;
+  padding: 0 0 22px;
   text-align: center;
-}
-
-.intro-mark {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0 13px;
-  border-radius: 999px;
-  background: rgba(207, 128, 70, 0.1);
-  color: #a76234;
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .intro-stack h1 {
   margin: 0;
-  color: #302820;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(34px, 4vw, 56px);
-  font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: -0.05em;
-}
-
-.intro-stack p {
-  margin: 0;
-  max-width: 540px;
-  color: #76685b;
-  font-size: 15px;
-  line-height: 1.65;
+  color: #171717;
+  font-family: inherit;
+  max-width: 100%;
+  font-size: 32px;
+  font-weight: 520;
+  line-height: 1.2;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 .mode-switcher {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .mode-pill {
-  border: 1px solid rgba(220, 198, 176, 0.8);
-  background: rgba(255, 251, 246, 0.85);
-  color: #7f654d;
+  border: 1px solid rgba(214, 214, 214, 0.9);
+  background: #fff;
+  color: #404040;
   border-radius: 999px;
-  padding: 8px 16px;
+  padding: 6px 13px;
   cursor: pointer;
+  font-size: 13px;
 }
 
 .mode-pill.active {
-  background: linear-gradient(135deg, #d58a4d 0%, #bc6733 100%);
-  border-color: transparent;
+  background: #171717;
+  border-color: #171717;
   color: #fff;
 }
 
 .conversation-panel {
   flex: 1 1 auto;
+  width: min(860px, calc(100% - 24px));
+  margin: 0 auto;
   min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 0 0 10px;
+  gap: 8px;
+  padding: 24px 0 10px;
 }
 
 .message-row {
@@ -1445,17 +1443,20 @@ onBeforeUnmount(() => {
 }
 
 .message-bubble {
-  max-width: min(820px, 76vw);
-  padding: 8px 10px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #d48a4f 0%, #bb6631 100%);
-  color: #fff;
+  max-width: min(720px, 76vw);
+  padding: 9px 12px;
+  border-radius: 18px;
+  background: #f1f1f1;
+  color: #171717;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .message-bubble.assistant {
-  background: rgba(255, 252, 248, 0.9);
-  color: #2f241b;
-  border: 1px solid rgba(229, 211, 194, 0.7);
+  background: transparent;
+  color: #171717;
+  border: none;
+  padding-left: 2px;
 }
 
 .message-bubble.assistant.loading {
@@ -1664,7 +1665,7 @@ onBeforeUnmount(() => {
   z-index: 6;
   margin-top: 0;
   padding-top: 6px;
-  background: linear-gradient(180deg, rgba(248, 244, 237, 0) 0%, rgba(248, 244, 237, 0.92) 28%, rgba(248, 244, 237, 0.98) 100%);
+  background: linear-gradient(180deg, rgba(255, 250, 244, 0) 0%, rgba(255, 250, 244, 0.9) 28%, rgba(255, 250, 244, 0.98) 100%);
 }
 
 .composer-dock.fixed {
@@ -1674,15 +1675,20 @@ onBeforeUnmount(() => {
 }
 
 .composer-shell {
-  width: min(860px, calc(100% - 24px));
+  width: min(780px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 9px 10px 10px;
+  padding: 10px 12px 11px;
   border-radius: 22px;
-  border: 1px solid rgba(225, 207, 189, 0.78);
-  background: rgba(255, 253, 249, 0.94);
-  box-shadow: 0 18px 42px rgba(83, 57, 34, 0.08);
+  border: 1px solid rgba(215, 215, 215, 0.95);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(10px);
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.composer-shell:focus-within {
+  border-color: rgba(23, 23, 23, 0.24);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.12);
 }
 
 .composer-shell.drag-active {
@@ -1754,12 +1760,18 @@ onBeforeUnmount(() => {
 }
 
 .composer-top {
-  margin-bottom: 2px;
+  margin-bottom: 0;
+  justify-content: flex-end;
+  min-height: 0;
 }
 
 .composer-top.compact {
   justify-content: flex-end;
   margin-bottom: 2px;
+}
+
+.workspace-chat:not(.active) .composer-top {
+  display: none;
 }
 
 .mode-badge {
@@ -1780,18 +1792,18 @@ onBeforeUnmount(() => {
 .composer-actions,
 .composer-footer-left {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .ghost-pill,
 .attach-btn {
-  border: 1px solid rgba(218, 192, 168, 0.78);
-  background: rgba(255, 251, 246, 0.84);
-  color: #7b644d;
+  border: none;
+  background: transparent;
+  color: #4a4a4a;
   border-radius: 999px;
-  padding: 4px 8px;
+  padding: 4px 7px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -2177,26 +2189,28 @@ onBeforeUnmount(() => {
 
 .composer {
   width: 100%;
-  min-height: 42px;
+  min-height: 36px;
   max-height: 92px;
-  padding: 9px 10px;
+  padding: 8px 4px;
   resize: none;
   outline: none;
-  color: #2f241b;
-  line-height: 1.42;
-  font-size: 13px;
+  color: #171717;
+  line-height: 1.45;
+  font-size: 15px;
+  border: none;
+  background: transparent;
 }
 
 .composer-footer {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .send-btn {
-  min-width: 74px;
-  height: 30px;
+  min-width: 48px;
+  height: 32px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #d58a4d 0%, #bc6733 100%);
+  background: #171717;
   color: #fff;
   font-size: 12px;
   cursor: pointer;
@@ -2290,6 +2304,15 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .workspace-shell {
     padding: 8px 6px 6px;
+  }
+
+  .intro-stack h1 {
+    font-size: 28px;
+  }
+
+  .conversation-panel {
+    width: 100%;
+    padding-top: 14px;
   }
 
   .composer-shell {

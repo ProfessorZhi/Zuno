@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
-chcp 65001 >nul
+chcp 65001 >nul 2>nul
 
 set "ACTION=%~1"
 if /I "%ACTION%"=="start" goto :start
@@ -34,7 +34,7 @@ if exist "C:\Program Files\Docker\Docker\Docker Desktop.exe" (
 for /L %%I in (1,1,90) do (
   docker info >nul 2>nul
   if not errorlevel 1 exit /b 0
-  timeout /t 2 /nobreak >nul
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 2"
 )
 
 echo Docker Desktop did not become ready in time.
@@ -62,10 +62,14 @@ for /L %%I in (1,1,%WAIT_SECONDS%) do (
   powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "try { $r = Invoke-WebRequest -UseBasicParsing '%WAIT_URL%'; if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) { exit 0 } else { exit 1 } } catch { exit 1 }"
   if not errorlevel 1 exit /b 0
-  timeout /t 1 /nobreak >nul
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 1"
 )
 echo %WAIT_NAME% did not become ready in time.
 exit /b 1
+
+:open_frontend
+start "" "http://127.0.0.1:8090"
+exit /b 0
 
 :start
 call :config
@@ -86,6 +90,7 @@ echo Zuno Web stack started.
 echo Frontend: http://127.0.0.1:8090
 echo Backend:  http://127.0.0.1:7860
 echo Docs:     http://127.0.0.1:7860/docs
+call :open_frontend
 goto :done
 
 :stop
@@ -116,6 +121,7 @@ call :wait_http "http://127.0.0.1:8090" "Web frontend" 90
 if errorlevel 1 goto :fail
 echo.
 echo Zuno Web stack rebuilt.
+call :open_frontend
 goto :done
 
 :full_rebuild
@@ -137,6 +143,7 @@ call :wait_http "http://127.0.0.1:8090" "Web frontend" 90
 if errorlevel 1 goto :fail
 echo.
 echo Zuno Web stack fully rebuilt.
+call :open_frontend
 goto :done
 
 :fail

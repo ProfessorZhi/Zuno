@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
@@ -28,6 +28,7 @@ const router = useRouter()
 
 const itemName = ref('Zuno')
 const current = ref((route.meta.current as string) || 'homepage')
+const isEmbedded = computed(() => route.query.embed === '1')
 const {
   panelStyle: navPanelStyle,
   startResize: startNavResize,
@@ -132,8 +133,8 @@ watch(
 </script>
 
 <template>
-  <div class="ai-body" :style="navPanelStyle">
-    <div class="ai-nav">
+  <div class="ai-body" :class="{ embedded: isEmbedded }" :style="navPanelStyle">
+    <div v-if="!isEmbedded" class="ai-nav">
       <div class="left">
         <div class="brand-home" @click="goDefault">
           <img :src="zunoBrandMark" :alt="itemName" class="brand-logo-img" />
@@ -165,7 +166,7 @@ watch(
     </div>
 
     <div class="ai-main">
-      <el-col :span="2">
+      <el-col v-if="!isEmbedded" :span="2">
         <div class="sidebar-content">
           <el-menu
             active-text-color="#63584d"
@@ -423,6 +424,26 @@ watch(
       padding: 18px 20px 22px;
       box-sizing: border-box;
       box-shadow: -4px 0 16px rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+.ai-body.embedded {
+  height: 100vh;
+  overflow: hidden;
+
+  .ai-main {
+    height: 100vh;
+    overflow: hidden;
+
+    .content {
+      flex: 1 1 auto;
+      min-width: 0;
+      border-radius: 0;
+      margin-left: 0;
+      padding: 0;
+      box-shadow: none;
+      overflow: auto;
     }
   }
 }

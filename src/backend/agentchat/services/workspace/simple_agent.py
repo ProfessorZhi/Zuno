@@ -1776,15 +1776,18 @@ class WorkSpaceSimpleAgent:
         except Exception:
             return []
 
-    async def _generate_title(self, query: str):
+    async def _generate_title(self, query: str, answer: str | None = None):
         session = await WorkSpaceSessionService.get_workspace_session_from_id(
             self.session_id,
             self.user_id,
         )
-        if session and session.get("title") not in {"", "新对话", "未命名会话"}:
+        if session and not WorkSpaceSessionService.is_placeholder_title(session.get("title")):
             return session.get("title")
 
-        title_prompt = GenerateTitlePrompt.format(query=query)
+        title_source = query
+        if answer:
+            title_source = f"用户问题：{query}\n\nAI回复：{answer[:1200]}"
+        title_prompt = GenerateTitlePrompt.format(query=title_source)
         response = await self.model.ainvoke(
             title_prompt,
             config=self._build_run_config(
@@ -2440,7 +2443,6 @@ class WorkSpaceSimpleAgent:
                 yield event
             return
 
-        generate_title_task = asyncio.create_task(self._generate_title(original_query))
         response_content = ""
         has_activity = False
         has_visible_output = False
@@ -2531,8 +2533,6 @@ class WorkSpaceSimpleAgent:
                 )
         except Exception as err:
             logger.error(f"Workspace Simple Agent streaming failed: {err}")
-            if not generate_title_task.done():
-                generate_title_task.cancel()
             error_text = (
                 "这次执行没有成功完成。"
                 f"后端返回的错误是：{err}。"
@@ -2597,7 +2597,7 @@ class WorkSpaceSimpleAgent:
             )
 
         try:
-            title = await generate_title_task
+            title = await self._generate_title(original_query, response_content)
         except Exception:
             title = original_query
 

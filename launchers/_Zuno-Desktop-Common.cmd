@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
-chcp 65001 >nul
+chcp 65001 >nul 2>nul
 
 set "ACTION=%~1"
 if /I "%ACTION%"=="start" goto :launcher_start
@@ -64,7 +64,7 @@ for /L %%I in (1,1,%WAIT_SECONDS%) do (
   powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "try { $r = Invoke-WebRequest -UseBasicParsing '%WAIT_URL%'; if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) { exit 0 } else { exit 1 } } catch { exit 1 }"
   if not errorlevel 1 exit /b 0
-  timeout /t 1 /nobreak >nul
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 1"
 )
 echo %WAIT_NAME% did not become ready in time.
 exit /b 1
@@ -83,7 +83,7 @@ for /L %%I in (1,1,10) do (
     >"%LISTEN_PID_FILE%" echo !LISTEN_PID!
     exit /b 0
   )
-  timeout /t 1 /nobreak >nul
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 1"
 )
 echo Could not determine the listening process for port %LISTEN_PORT%.
 exit /b 1
@@ -104,7 +104,7 @@ for /L %%I in (1,1,%WAIT_SECONDS%) do (
     echo %WAIT_NAME% became unhealthy while waiting to start.
     exit /b 1
   )
-  timeout /t 1 /nobreak >nul
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 1"
 )
 echo %WAIT_NAME% did not become healthy in time.
 exit /b 1
@@ -152,7 +152,7 @@ if exist "C:\Program Files\Docker\Docker\Docker Desktop.exe" (
 for /L %%I in (1,1,90) do (
   docker info >nul 2>nul
   if not errorlevel 1 exit /b 0
-  timeout /t 2 /nobreak >nul
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 2"
 )
 
 echo Docker Desktop did not become ready in time.

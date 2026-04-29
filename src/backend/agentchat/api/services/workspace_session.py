@@ -8,7 +8,14 @@ from agentchat.utils.model_output import strip_model_wrapper_from_user_input, st
 WRAPPED_HISTORY_HINTS = ("<chat_history>", "web_search", "read_webpage", "tool_code", "对话历史")
 
 
+PLACEHOLDER_SESSION_TITLES = {"", "新对话", "未命名会话", "你好", "您好", "hi", "hello"}
+
+
 class WorkSpaceSessionService:
+    @staticmethod
+    def is_placeholder_title(title: str | None) -> bool:
+        return str(title or "").strip().lower() in PLACEHOLDER_SESSION_TITLES
+
     @staticmethod
     def normalize_workspace_mode(raw_mode: str | None) -> str:
         return "agent" if str(raw_mode or "").strip().lower() == "agent" else "normal"

@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Refresh, Setting } from '@element-plus/icons-vue'
+import defaultMcpLogo from '../../assets/mcp.svg'
 import {
   createMCPServerAPI,
   deleteMCPServerAPI,
@@ -66,7 +67,7 @@ const toolsDialogTitle = ref('')
 const currentTools = ref<any[]>([])
 
 const servers = ref<MCPServerView[]>([])
-const defaultLogoUrl = ref('')
+const defaultLogoUrl = ref(defaultMcpLogo)
 
 const serverForm = reactive<StructuredServerForm>({
   server_name: '',
@@ -238,10 +239,18 @@ async function loadDefaultLogo() {
   try {
     const response = await getDefaultMCPLogoAPI()
     if (response.data.status_code === 200) {
-      defaultLogoUrl.value = response.data.data.logo_url || ''
+      defaultLogoUrl.value = response.data.data.logo_url || defaultMcpLogo
     }
   } catch (error) {
     console.warn('加载默认 MCP 图标失败', error)
+    defaultLogoUrl.value = defaultMcpLogo
+  }
+}
+
+function handleLogoError(event: Event) {
+  const target = event.target as HTMLImageElement
+  if (target && target.src !== defaultMcpLogo) {
+    target.src = defaultMcpLogo
   }
 }
 
@@ -525,7 +534,12 @@ onMounted(async () => {
           <tr v-for="server in servers" :key="server.mcp_server_id">
             <td>
               <div class="server-cell">
-                <img class="server-logo" :src="server.logo_url || defaultLogoUrl" :alt="server.server_name" />
+                <img
+                  class="server-logo"
+                  :src="server.logo_url || defaultLogoUrl"
+                  :alt="server.server_name"
+                  @error="handleLogoError"
+                />
                 <div>
                   <div class="server-title">
                     <span>{{ server.server_name }}</span>

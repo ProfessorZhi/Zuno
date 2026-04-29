@@ -29,7 +29,13 @@ interface WorkspaceSessionItem {
 const selectedSession = ref('')
 const sessions = ref<WorkspaceSessionItem[]>([])
 const loading = ref(false)
-const sidebarCollapsed = ref(false)
+const SIDEBAR_COLLAPSED_KEY = 'zuno.workspace.sidebarCollapsed'
+const getInitialSidebarCollapsed = () => {
+  if (typeof window === 'undefined') return false
+  if (window.innerWidth > 520) return false
+  return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
+}
+const sidebarCollapsed = ref(getInitialSidebarCollapsed())
 const settingsCenterVisible = ref(false)
 const activeSettingsSection = ref('model')
 let fetchSessionsRequestId = 0
@@ -86,7 +92,7 @@ const settingsSections = [
   { key: 'dashboard', label: '数据看板', path: '/dashboard' },
 ]
 const activeSettings = computed(() => settingsSections.find((section) => section.key === activeSettingsSection.value) || settingsSections[0])
-const activeSettingsUrl = computed(() => activeSettings.value.path)
+const activeSettingsUrl = computed(() => `${activeSettings.value.path}?embed=1`)
 
 const openSettingsCenter = (section = 'model') => {
   activeSettingsSection.value = settingsSections.some((item) => item.key === section) ? section : 'model'
@@ -188,11 +194,6 @@ const handleUserCommand = async (command: string) => {
     return
   }
 
-  if (settingsSections.some((section) => section.key === command)) {
-    openSettingsCenter(command)
-    return
-  }
-
   if (command === 'profile') {
     router.push('/profile')
     return
@@ -269,6 +270,10 @@ watch(
   }
 )
 
+watch(sidebarCollapsed, (collapsed) => {
+  window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed))
+})
+
 </script>
 
 <template>
@@ -299,13 +304,6 @@ watch(
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="settings">设置</el-dropdown-item>
-              <el-dropdown-item divided command="agent">智能体</el-dropdown-item>
-              <el-dropdown-item command="mcp">MCP</el-dropdown-item>
-              <el-dropdown-item command="tool">工具</el-dropdown-item>
-              <el-dropdown-item command="skill">Skill</el-dropdown-item>
-              <el-dropdown-item command="knowledge">知识库</el-dropdown-item>
-              <el-dropdown-item command="model">模型</el-dropdown-item>
-              <el-dropdown-item command="dashboard">数据看板</el-dropdown-item>
               <el-dropdown-item command="profile" :icon="User">个人资料</el-dropdown-item>
               <el-dropdown-item divided command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -499,15 +497,16 @@ watch(
   min-height: 0;
   display: flex;
   overflow: hidden;
+  background: #fffaf4;
 }
 
 .sidebar {
-  width: 282px;
-  flex: 0 0 282px;
+  width: 288px;
+  flex: 0 0 288px;
   display: flex;
   flex-direction: column;
-  background: rgba(248, 241, 231, 0.72);
-  border-right: 1px solid rgba(204, 185, 162, 0.32);
+  background: #f7f1e8;
+  border-right: 1px solid rgba(214, 198, 178, 0.58);
   transition: width 0.22s ease, flex-basis 0.22s ease;
 }
 
@@ -530,7 +529,6 @@ watch(
   min-width: 0;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .rail-toggle {
@@ -547,11 +545,11 @@ watch(
 }
 
 .sidebar-head {
-  padding: 16px 18px 12px;
+  padding: 12px 14px 10px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 8px;
 }
 
 .sidebar-title-wrap {
@@ -562,39 +560,41 @@ watch(
 }
 
 .sidebar-title-wrap strong {
-  font-size: 18px;
+  font-size: 14px;
+  font-weight: 650;
   color: #34271f;
   white-space: nowrap;
 }
 
 .sidebar-title-wrap span {
-  padding: 4px 8px;
+  padding: 3px 7px;
   border-radius: 999px;
   background: rgba(212, 138, 79, 0.12);
   color: #9b6a42;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .sidebar-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
 }
 
 .new-session-btn {
-  border: 1px solid rgba(214, 188, 164, 0.8);
-  background: linear-gradient(180deg, rgba(255, 252, 248, 0.98) 0%, rgba(248, 240, 230, 0.92) 100%);
-  color: #7f5b39;
-  border-radius: 999px;
-  padding: 0 12px;
-  height: 28px;
+  border: none;
+  background: rgba(255, 251, 246, 0.72);
+  color: #5f4e40;
+  border-radius: 8px;
+  padding: 0 9px;
+  height: 30px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   cursor: pointer;
-  box-shadow: 0 8px 16px rgba(130, 71, 31, 0.06);
+  font-size: 13px;
+  justify-content: flex-start;
 }
 
 .new-session-btn span {
@@ -614,10 +614,10 @@ watch(
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 4px 14px 14px;
+  padding: 4px 8px 14px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .loading-state,
@@ -636,17 +636,18 @@ watch(
 
 .session-group {
   display: grid;
-  gap: 8px;
+  gap: 2px;
 }
 
 .group-head {
-  padding: 0 4px;
+  padding: 8px 8px 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  color: #8b6d53;
+  color: #8d8074;
   font-size: 12px;
+  font-weight: 500;
 }
 
 .group-head span {
@@ -656,46 +657,51 @@ watch(
 }
 
 .group-head small {
-  min-width: 22px;
-  height: 20px;
+  min-width: 18px;
+  height: 18px;
   display: inline-grid;
   place-items: center;
   border-radius: 999px;
-  background: rgba(212, 138, 79, 0.1);
-  color: #9b6a42;
+  background: rgba(80, 72, 64, 0.06);
+  color: #8d8074;
+  font-size: 11px;
 }
 
 .session-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 18px;
-  border: 1px solid rgba(228, 210, 190, 0.72);
-  background: rgba(255, 252, 248, 0.88);
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: background 0.16s ease, border-color 0.16s ease;
 }
 
 .session-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(117, 79, 40, 0.06);
+  background: rgba(255, 251, 246, 0.68);
 }
 
 .session-card.active {
-  border-color: rgba(212, 138, 79, 0.5);
-  background: linear-gradient(180deg, #fff8f0 0%, #fff4e9 100%);
+  border-color: transparent;
+  background: rgba(226, 218, 208, 0.72);
 }
 
 .session-icon {
-  width: 36px;
-  height: 36px;
+  width: 26px;
+  height: 26px;
   flex: 0 0 auto;
-  border-radius: 12px;
-  background: rgba(255, 247, 240, 0.96);
-  border: 1px solid rgba(226, 201, 178, 0.8);
+  border-radius: 7px;
+  background: rgba(255, 251, 246, 0.84);
+  border: 1px solid rgba(226, 210, 192, 0.72);
   display: grid;
   place-items: center;
+}
+
+.session-icon img {
+  width: 18px;
+  height: 18px;
 }
 
 .session-info {
@@ -708,15 +714,15 @@ watch(
 .session-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
 .session-title {
   flex: 1;
   min-width: 0;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   color: #3c2f25;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -727,11 +733,11 @@ watch(
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  min-height: 20px;
-  padding: 0 7px;
+  min-height: 17px;
+  padding: 0 5px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 500;
   border: 1px solid rgba(217, 190, 166, 0.7);
   color: #7e644c;
   background: rgba(255, 251, 246, 0.8);
@@ -745,18 +751,25 @@ watch(
 
 .session-time {
   font-size: 12px;
-  color: #8d7258;
+  color: #8d8074;
 }
 
 .delete-btn {
   border: none;
   background: transparent;
-  color: #b08b6a;
-  font-size: 18px;
+  color: #9f8b78;
+  font-size: 15px;
   cursor: pointer;
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  opacity: 0;
+  transition: opacity 0.16s ease, background 0.16s ease;
+}
+
+.session-card:hover .delete-btn,
+.session-card.active .delete-btn {
+  opacity: 1;
 }
 
 .delete-btn:hover {
@@ -771,6 +784,7 @@ watch(
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: #fffaf4;
 }
 
 .content :deep(.workspace-chat) {
@@ -886,7 +900,7 @@ watch(
   display: none;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 520px) {
   .workspace-nav {
     padding: 0 12px;
   }
@@ -905,8 +919,8 @@ watch(
     top: 58px;
     bottom: 0;
     z-index: 20;
-    width: 282px;
-    flex-basis: 282px;
+    width: min(288px, calc(100vw - 56px));
+    flex-basis: min(288px, calc(100vw - 56px));
     box-shadow: 10px 0 30px rgba(62, 44, 28, 0.12);
   }
 

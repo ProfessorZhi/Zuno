@@ -50,7 +50,11 @@ class WorkSpaceSessionDao:
             had_contexts = bool(new_contexts)
             new_contexts.append(session_context)
             workspace_session.contexts = new_contexts  # 重新赋值
-            if title and (not had_contexts or workspace_session.title in {"", "新对话", "未命名会话"}):
+            if title and (
+                not had_contexts
+                or str(workspace_session.title or "").strip().lower()
+                in {"", "新对话", "未命名会话", "你好", "您好", "hi", "hello"}
+            ):
                 workspace_session.title = title
 
             await session.commit()

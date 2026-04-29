@@ -178,8 +178,7 @@ copy docker\docker_config.example.yaml docker\docker_config.local.yaml
 适合第一次体验完整栈。
 
 ```bash
-cd docker
-docker compose up -d
+docker compose -f docker/docker-compose.yml up --build -d
 ```
 
 默认服务：
@@ -192,8 +191,16 @@ docker compose up -d
 停止：
 
 ```bash
-docker compose down
+docker compose -f docker/docker-compose.yml down
 ```
+
+开发热更新模式：
+
+```bash
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up --build -d
+```
+
+更完整的 Docker 运行、配置、重置和镜像构建说明见 [docker/README.md](./docker/README.md)。
 
 ### 4. Windows 启动器方式
 
