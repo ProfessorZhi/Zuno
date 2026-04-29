@@ -178,6 +178,12 @@ const getToolSummary = (tool: ToolItem) => safeDisplayText(tool.description) || 
 const getToolHints = (tool: ToolItem) => (isSystemTool(tool) ? tool.system_tool_kind === 'smtp_protocol' ? ['多凭证'] : tool.system_tool_kind === 'remote_api' ? ['远程配置'] : ['本地运行'] : [])
 const getPrimaryActionLabel = (tool: ToolItem) => (!isSystemTool(tool) ? '编辑' : tool.system_tool_kind === 'local_dependency' || tool.system_tool_kind === 'public_data_source' ? '查看' : '配置')
 const isStatusRefreshing = (tool: ToolItem) => !!statusRefreshing.value[tool.tool_id]
+const getToolLogo = (tool: ToolItem) => String(tool.logo_url || '').trim() || pluginIcon
+const handleToolLogoError = (event: Event) => {
+  const target = event.target as HTMLImageElement | null
+  if (!target || target.src === pluginIcon) return
+  target.src = pluginIcon
+}
 
 const cliPathLabel = computed(() => currentSourceType.value === 'github_repo' ? '本地仓库目录' : currentSourceType.value === 'npm_package' ? '可选本地目录' : currentSourceType.value === 'python_package' ? '可选工具目录' : '工具目录')
 const cliPathPlaceholder = computed(() => currentSourceType.value === 'github_repo' ? '例如：tools/cli/my-github-cli' : currentSourceType.value === 'npm_package' ? '例如：tools/cli/playwright-cli（可选）' : currentSourceType.value === 'python_package' ? '例如：tools/cli/obsidian-cli（可选）' : '例如：tools/cli/my-cli')
@@ -508,7 +514,7 @@ onMounted(fetchTools)
     <section class="list-card" v-loading="loading">
       <div v-if="!visibleTools.length" class="empty-state">暂无工具</div>
       <article v-for="row in visibleTools" :key="row.tool_id" class="tool-row">
-        <div class="logo-wrap"><img :src="row.logo_url || pluginIcon" :alt="row.display_name" /></div>
+        <div class="logo-wrap"><img :src="getToolLogo(row)" :alt="row.display_name" @error="handleToolLogoError" /></div>
         <div class="tool-main">
           <div class="tool-name-line">
             <span class="tool-name" :title="row.display_name">{{ row.display_name }}</span>
@@ -547,7 +553,7 @@ onMounted(fetchTools)
       <el-form label-position="top" class="tool-form">
         <el-form-item label="工具图标">
           <div class="logo-upload-row">
-            <div class="logo-preview"><img :src="form.logo_url || pluginIcon" alt="工具图标预览" /></div>
+            <div class="logo-preview"><img :src="form.logo_url || pluginIcon" alt="工具图标预览" @error="handleToolLogoError" /></div>
             <el-upload :show-file-list="false" :auto-upload="false" accept="image/*" :on-change="handleLogoUpload">
               <el-button :loading="logoUploading" :icon="Upload">上传图标</el-button>
             </el-upload>
