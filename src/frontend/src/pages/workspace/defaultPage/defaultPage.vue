@@ -204,6 +204,10 @@ const openToolCreationPrompt = (kind: ToolCreationKind = 'general') => {
   activeSuggestionIndex.value = 0
 }
 
+const openWorkspaceSettings = (section = 'model') => {
+  window.dispatchEvent(new CustomEvent('workspace-open-settings', { detail: { section } }))
+}
+
 const retrievalModeHint = computed(() => {
   if (!isAgentMode.value || !canPickTools.value || selectedKnowledgeIds.value.length === 0) {
     return '选中知识库后，会自动使用这个知识库自己的默认检索策略。首轮不足时会自动补检一轮。'
@@ -1234,7 +1238,7 @@ onBeforeUnmount(() => {
           <div class="composer-top" :class="{ compact: compactPanel }">
             <div class="composer-actions">
               <button v-if="isAgentMode && compactPanel" class="ghost-pill subtle" type="button" @click="showTracePanel = !showTracePanel"><el-icon><ArrowDown v-if="showTracePanel" /><ArrowUp v-else /></el-icon>{{ showTracePanel ? '收起进展' : '查看进展' }}</button>
-              <button class="ghost-pill subtle" type="button" @click="window.dispatchEvent(new CustomEvent('workspace-open-settings', { detail: { section: 'model' } }))">设置</button>
+              <button class="ghost-pill subtle" type="button" @click="openWorkspaceSettings('model')">设置</button>
             </div>
           </div>
 
