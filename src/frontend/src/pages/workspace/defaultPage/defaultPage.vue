@@ -106,6 +106,7 @@ const modelsLoading = ref(false)
 const currentSessionId = ref('')
 const conversationRef = ref<HTMLElement | null>(null)
 const showTracePanel = ref(false)
+const agentSettingsVisible = ref(false)
 const isPinnedToBottom = ref(true)
 const workspaceHydrated = ref(false)
 const preserveConversationOnRouteSync = ref(false)
@@ -204,7 +205,20 @@ const openToolCreationPrompt = (kind: ToolCreationKind = 'general') => {
   activeSuggestionIndex.value = 0
 }
 
-const openWorkspaceSettings = (section = 'model') => {
+const openAgentRuntimeSettings = async () => {
+  agentSettingsVisible.value = true
+  await Promise.all([fetchExecutionConfig(), fetchMcpServers(), fetchPlugins(), fetchSkills(), fetchKnowledges()])
+}
+
+const closeAgentRuntimeSettings = () => {
+  agentSettingsVisible.value = false
+}
+
+const openWorkspaceSettings = async (section = 'model') => {
+  if (isAgentMode.value) {
+    await openAgentRuntimeSettings()
+    return
+  }
   window.dispatchEvent(new CustomEvent('workspace-open-settings', { detail: { section } }))
 }
 
@@ -801,6 +815,22 @@ const toggleKnowledge = (knowledgeId: string) => {
   selectedKnowledgeIds.value = selectedKnowledgeIds.value[0] === knowledgeId ? [] : [knowledgeId]
 }
 
+const setExecutionMode = async (modeId: string) => {
+  if (selectedExecutionMode.value === modeId) return
+  selectedExecutionMode.value = modeId
+  toolsTouched.value = false
+  mcpTouched.value = false
+  skillsTouched.value = false
+  knowledgeTouched.value = false
+  await syncRouteState({ preserveConversation: true })
+}
+
+const setAccessScope = async (scopeId: string) => {
+  if (selectedAccessScope.value === scopeId) return
+  selectedAccessScope.value = scopeId
+  await syncRouteState({ preserveConversation: true })
+}
+
 const getValidSelectedToolIds = () => {
   const availableToolIds = new Set(plugins.value.map((item: any) => item.id || item.tool_id).filter(Boolean))
   return selectedTools.value.filter((toolId) => availableToolIds.has(toolId))
@@ -1334,6 +1364,144 @@ onBeforeUnmount(() => {
       </div>
     </div>
   </div>
+  <Teleport to="body">
+    <div v-if="agentSettingsVisible" class="agent-settings-backdrop" @click.self="closeAgentRuntimeSettings">
+      <section class="agent-settings-panel" role="dialog" aria-modal="true" aria-label="Agent 运行设置">
+        <header class="agent-settings-head">
+          <div>
+            <span>当前会话</span>
+            <strong>Agent 运行设置</strong>
+          </div>
+          <button type="button" class="agent-settings-close" aria-label="关闭" @click="closeAgentRuntimeSettings">×</button>
+        </header>
+
+        <div class="agent-settings-body">
+          <section class="settings-section">
+            <div class="settings-section-head">
+              <strong>执行方式</strong>
+              <small>{{ activeExecutionMode?.summary || '选择本次 Agent 可使用的执行能力。' }}</small>
+            </div>
+            <div class="segmented-row">
+              <button
+                v-for="mode in executionModes"
+                :key="mode.id"
+                type="button"
+                :class="['segment-option', { active: selectedExecutionMode === mode.id }]"
+                @click="setExecutionMode(mode.id)"
+              >
+                <span>{{ mode.label }}</span>
+                <small>{{ mode.summary }}</small>
+              </button>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <div class="settings-section-head">
+              <strong>工作区域</strong>
+              <small>{{ activeAccessScope?.summary || '控制桌面端文件和命令能力的访问范围。' }}</small>
+            </div>
+            <div class="segmented-row">
+              <button
+                v-for="scope in accessScopes"
+                :key="scope.id"
+                type="button"
+                :class="['segment-option', { active: selectedAccessScope === scope.id, danger: scope.risk_level === 'high' }]"
+                @click="setAccessScope(scope.id)"
+              >
+                <span>{{ scope.label }}</span>
+                <small>{{ scope.summary }}</small>
+              </button>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <div class="settings-section-head">
+              <strong>工具</strong>
+              <small>{{ canPickTools ? `已选 ${selectedTools.length} 个` : '终端模式下不使用普通工具' }}</small>
+            </div>
+            <div v-if="canPickTools && plugins.length > 0" class="capability-list">
+              <button
+                v-for="tool in plugins"
+                :key="tool.id || tool.tool_id"
+                type="button"
+                :class="['capability-item', { active: selectedTools.includes(tool.id || tool.tool_id) }]"
+                @click="toggleTool(tool.id || tool.tool_id)"
+              >
+                <span>{{ tool.display_name || tool.name }}</span>
+                <small>{{ tool.description || tool.runtime_type || '工具' }}</small>
+              </button>
+            </div>
+            <div v-else class="empty-copy">没有可选工具。</div>
+          </section>
+
+          <section class="settings-section">
+            <div class="settings-section-head">
+              <strong>MCP</strong>
+              <small>{{ canPickTools ? `已选 ${selectedMcpServers.length} 个` : '终端模式下不使用 MCP' }}</small>
+            </div>
+            <div v-if="canPickTools && mcpServers.length > 0" class="capability-list">
+              <button
+                v-for="server in mcpServers"
+                :key="server.mcp_server_id"
+                type="button"
+                :class="['capability-item', { active: selectedMcpServers.includes(server.mcp_server_id) }]"
+                @click="toggleMcp(server.mcp_server_id)"
+              >
+                <span>{{ server.server_name || server.name }}</span>
+                <small>{{ Array.isArray(server.tools) ? `${server.tools.length} 个工具` : server.type || 'MCP' }}</small>
+              </button>
+            </div>
+            <div v-else class="empty-copy">没有可选 MCP。</div>
+          </section>
+
+          <section class="settings-section">
+            <div class="settings-section-head">
+              <strong>Skill</strong>
+              <small>{{ canPickTools ? `已选 ${selectedSkillIds.length} 个` : '终端模式下不使用 Skill' }}</small>
+            </div>
+            <div v-if="canPickTools && skillOptions.length > 0" class="capability-list">
+              <button
+                v-for="skill in skillOptions"
+                :key="skill.id"
+                type="button"
+                :class="['capability-item', { active: selectedSkillIds.includes(skill.id) }]"
+                @click="toggleSkill(skill.id)"
+              >
+                <span>{{ skill.name }}</span>
+                <small>{{ skill.description || 'Skill' }}</small>
+              </button>
+            </div>
+            <div v-else class="empty-copy">没有可选 Skill。</div>
+          </section>
+
+          <section class="settings-section">
+            <div class="settings-section-head">
+              <strong>知识库</strong>
+              <small>{{ selectedKnowledgeIds.length > 0 ? '已选 1 个' : '未选择' }}</small>
+            </div>
+            <div v-if="canPickTools && knowledgeOptions.length > 0" class="capability-list">
+              <button
+                v-for="knowledge in knowledgeOptions"
+                :key="knowledge.id"
+                type="button"
+                :class="['capability-item', { active: selectedKnowledgeIds.includes(knowledge.id) }]"
+                @click="toggleKnowledge(knowledge.id)"
+              >
+                <span>{{ knowledge.name }}</span>
+                <small>{{ knowledge.description || '知识库' }}</small>
+              </button>
+            </div>
+            <div v-else class="empty-copy">没有可选知识库。</div>
+          </section>
+        </div>
+
+        <footer class="agent-settings-footer">
+          <span>下一条消息生效</span>
+          <button type="button" class="send-btn" @click="closeAgentRuntimeSettings">完成</button>
+        </footer>
+      </section>
+    </div>
+  </Teleport>
 </div>
 </template>
 
@@ -1882,6 +2050,167 @@ onBeforeUnmount(() => {
 .trace-card.generating {
   max-height: none;
   overflow: visible;
+}
+
+.agent-settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(35, 28, 22, 0.24);
+  backdrop-filter: blur(8px);
+}
+
+.agent-settings-panel {
+  width: min(860px, calc(100vw - 32px));
+  max-height: min(82vh, 760px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(226, 206, 187, 0.92);
+  background: rgba(255, 253, 250, 0.98);
+  box-shadow: 0 24px 70px rgba(53, 36, 22, 0.22);
+}
+
+.agent-settings-head,
+.agent-settings-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(229, 212, 194, 0.82);
+}
+
+.agent-settings-head div {
+  display: grid;
+  gap: 3px;
+}
+
+.agent-settings-head span,
+.agent-settings-footer span {
+  color: #9a7658;
+  font-size: 12px;
+}
+
+.agent-settings-head strong {
+  color: #211b16;
+  font-size: 18px;
+}
+
+.agent-settings-close {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(247, 239, 230, 0.92);
+  color: #7b624a;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.agent-settings-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.settings-section {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(236, 222, 207, 0.9);
+  background: rgba(255, 252, 248, 0.82);
+}
+
+.settings-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-section-head strong {
+  color: #2f241b;
+  font-size: 14px;
+}
+
+.settings-section-head small {
+  max-width: 60%;
+  color: #8a745f;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.segmented-row,
+.capability-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.segment-option,
+.capability-item {
+  min-width: 0;
+  border: 1px solid rgba(225, 207, 189, 0.86);
+  background: rgba(255, 255, 255, 0.74);
+  border-radius: 12px;
+  padding: 9px 10px;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.segment-option span,
+.capability-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #3b2b20;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.segment-option small,
+.capability-item small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #8a745f;
+  font-size: 11px;
+}
+
+.segment-option:hover,
+.capability-item:hover,
+.segment-option.active,
+.capability-item.active {
+  border-color: rgba(201, 108, 45, 0.48);
+  background: rgba(255, 244, 232, 0.95);
+  box-shadow: 0 8px 18px rgba(145, 92, 51, 0.08);
+}
+
+.segment-option.danger.active {
+  border-color: rgba(190, 72, 55, 0.46);
+  background: rgba(255, 239, 235, 0.94);
+}
+
+.agent-settings-footer {
+  border-top: 1px solid rgba(229, 212, 194, 0.82);
+  border-bottom: none;
 }
 
 .selector-grid,
