@@ -27,12 +27,12 @@ def test_build_stored_tool_auth_config_preserves_source_metadata_for_cli():
     result = build_stored_tool_auth_config(
         "cli",
         None,
-        {"command": "uvx my-cli", "tool_dir": "cli_tools/my-cli"},
+        {"command": "uvx my-cli", "tool_dir": "tools/cli/my-cli"},
         None,
         {
             "github_url": "https://github.com/example/my-cli",
             "docs_url": "https://example.com/docs",
-            "local_path": "cli_tools/my-cli",
+            "local_path": "tools/cli/my-cli",
             "notes": "install with uvx",
         },
     )

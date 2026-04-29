@@ -20,6 +20,7 @@ import { useUserStore } from '../store/user'
 import { logoutAPI, getUserInfoAPI } from '../apis/auth'
 import { useResizablePanel } from '../composables/useResizablePanel'
 import { zunoBrandMark } from '../utils/brand'
+import defaultUserAvatar from '../assets/user.svg'
 
 const agentCardStore = useAgentCardStore()
 const userStore = useUserStore()
@@ -62,7 +63,7 @@ onMounted(async () => {
       if (response.data.status_code === 200 && response.data.data) {
         const userData = response.data.data
         userStore.updateUserInfo({
-          avatar: userData.user_avatar || userData.avatar || '/src/assets/user.svg',
+          avatar: userData.user_avatar || userData.avatar || defaultUserAvatar,
           description: userData.user_description || userData.description,
         })
       }
@@ -119,7 +120,7 @@ const handleLogout = async () => {
 const handleAvatarError = (event: Event) => {
   const target = event.target as HTMLImageElement
   if (target) {
-    target.src = '/src/assets/user.svg'
+    target.src = defaultUserAvatar
   }
 }
 
@@ -146,7 +147,7 @@ watch(
             <div class="user-avatar-wrapper">
               <div class="user-avatar">
                 <img
-                  :src="userStore.userInfo?.avatar || '/src/assets/user.svg'"
+                  :src="userStore.userInfo?.avatar || defaultUserAvatar"
                   alt="用户头像"
                   style="width: 40px; height: 40px; border-radius: 50%"
                   @error="handleAvatarError"
@@ -233,7 +234,6 @@ watch(
 
 <style lang="scss" scoped>
 .ai-body {
-  @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Zhi+Mang+Xing&family=Ma+Shan+Zheng&display=swap');
 }
 
 .ai-body {

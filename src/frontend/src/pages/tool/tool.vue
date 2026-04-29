@@ -180,7 +180,7 @@ const getPrimaryActionLabel = (tool: ToolItem) => (!isSystemTool(tool) ? '编辑
 const isStatusRefreshing = (tool: ToolItem) => !!statusRefreshing.value[tool.tool_id]
 
 const cliPathLabel = computed(() => currentSourceType.value === 'github_repo' ? '本地仓库目录' : currentSourceType.value === 'npm_package' ? '可选本地目录' : currentSourceType.value === 'python_package' ? '可选工具目录' : '工具目录')
-const cliPathPlaceholder = computed(() => currentSourceType.value === 'github_repo' ? '例如：cli_tools/my-github-cli' : currentSourceType.value === 'npm_package' ? '例如：cli_tools/playwright-cli（可选）' : currentSourceType.value === 'python_package' ? '例如：cli_tools/obsidian-cli（可选）' : '例如：cli_tools/my-cli')
+const cliPathPlaceholder = computed(() => currentSourceType.value === 'github_repo' ? '例如：tools/cli/my-github-cli' : currentSourceType.value === 'npm_package' ? '例如：tools/cli/playwright-cli（可选）' : currentSourceType.value === 'python_package' ? '例如：tools/cli/obsidian-cli（可选）' : '例如：tools/cli/my-cli')
 const commandPlaceholder = computed(() => currentSourceType.value === 'executable' ? '例如：F:\\tools\\mycli\\mycli.exe' : currentSourceType.value === 'npm_package' ? '例如：npx @scope/my-cli' : currentSourceType.value === 'python_package' ? '例如：uvx my-cli 或 python -m my_cli' : '例如：python main.py 或 ./bin/cli')
 const installSourceLabel = computed(() => currentSourceType.value === 'github_repo' ? 'GitHub 仓库 / 安装来源' : currentSourceType.value === 'npm_package' ? 'npm 包名 / 文档来源' : currentSourceType.value === 'python_package' ? 'Python 包名 / 文档来源' : '安装来源 / 文档')
 const installSourcePlaceholder = computed(() => currentSourceType.value === 'github_repo' ? '例如：https://github.com/org/repo' : currentSourceType.value === 'npm_package' ? '例如：@playwright/cli 或其文档链接' : currentSourceType.value === 'python_package' ? '例如：obsidian-cli 或其文档链接' : '可填包名、文档链接或留空')
@@ -681,7 +681,7 @@ onMounted(fetchTools)
               <div class="field-grid">
                 <el-form-item label="GitHub 链接"><el-input v-model="assistForm.github_url" placeholder="例如：https://github.com/org/repo" /></el-form-item>
                 <el-form-item label="文档链接"><el-input v-model="assistForm.docs_url" placeholder="例如：https://tool.docs.dev/get-started" /></el-form-item>
-                <el-form-item label="本地路径"><el-input v-model="assistForm.local_path" placeholder="例如：F:\tools\repo 或 cli_tools\my-cli" /></el-form-item>
+                <el-form-item label="本地路径"><el-input v-model="assistForm.local_path" placeholder="例如：F:\tools\repo 或 tools\cli\my-cli" /></el-form-item>
                 <el-form-item label="补充说明" class="span-2"><el-input v-model="assistForm.notes" type="textarea" :rows="3" placeholder="例如：希望优先推荐 uvx，只做只读扫描，不假设全局安装。" /></el-form-item>
               </div>
               <el-alert v-if="cliPreviewError" :title="cliPreviewError" type="warning" :closable="false" />

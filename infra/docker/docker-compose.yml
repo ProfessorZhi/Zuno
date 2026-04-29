@@ -88,8 +88,8 @@ services:
   backend:
     container_name: agentchat-backend
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
     restart: unless-stopped
     ports:
       - "7860:7860"
@@ -120,8 +120,8 @@ services:
   frontend:
     container_name: agentchat-frontend
     build:
-      context: ..
-      dockerfile: docker/Dockerfile.frontend
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.frontend
     restart: unless-stopped
     ports:
       - "8090:8090"

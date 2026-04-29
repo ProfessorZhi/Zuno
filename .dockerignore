@@ -16,8 +16,11 @@ src/frontend/.env*
 src/backend/agentchat/config.yaml
 src/backend/agentchat/config.local.yaml
 
-docker/docker_config.local.yaml
-docker/data
+infra/docker/docker_config.local.yaml
+infra/docker/data
+.local
+apps/desktop/node_modules
+src/frontend/*.tsbuildinfo
 
 node_modules
 tmp

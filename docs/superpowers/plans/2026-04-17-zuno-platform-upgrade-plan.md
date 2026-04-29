@@ -192,7 +192,7 @@ Expected: PASS
 
 - [ ] **Step 10: 启动后端进行工程验证**
 
-Run: `python scripts/start.py`  
+Run: `python tools/scripts/start.py`
 Expected:
 - 后端启动成功
 - 不再依赖 MySQL 驱动
@@ -296,7 +296,7 @@ Expected: PASS
 
 - [ ] **Step 8: 做工程验证**
 
-Run: `python scripts/start.py`  
+Run: `python tools/scripts/start.py`
 Expected:
 - 服务启动正常
 - Redis 连接可用
@@ -420,7 +420,7 @@ Expected: PASS
 
 - [ ] **Step 8: 做工程验证**
 
-Run: `python scripts/start.py`  
+Run: `python tools/scripts/start.py`
 Expected:
 - 服务启动正常
 - 上传文件流程不报错

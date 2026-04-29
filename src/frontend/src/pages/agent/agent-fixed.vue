@@ -10,6 +10,7 @@ import {
 import { Agent } from '../../type'
 import AgentFormDialog from '../../components/dialog/create_agent/AgentFormDialog.vue'
 import { zunoAgentAvatar } from '../../utils/brand'
+import emptyStateImage from '../../assets/404.gif'
 
 const agents = ref<Agent[]>([])
 const loading = ref(false)
@@ -291,7 +292,7 @@ onMounted(() => {
       </div>
       
       <div v-else-if="!loading" class="empty-state">
-        <img src="/src/assets/404.gif" alt="暂无数据" width="300" />
+        <img :src="emptyStateImage" alt="暂无数据" width="300" />
         <p v-if="searchKeyword">
           未找到包含 "{{ searchKeyword }}" 的智能体
         </p>

@@ -3,7 +3,7 @@ setlocal
 chcp 65001 >nul
 title Zuno Full Rebuild
 
-set "REPO_ROOT=%~dp0.."
+for %%I in ("%~dp0..\..") do set "REPO_ROOT=%%~fI"
 set "DESKTOP_BAT=%REPO_ROOT%\launchers\Zuno-Desktop-Full-Rebuild.cmd"
 echo This script now forwards to the current desktop-mode full rebuild launcher.
 echo.

@@ -628,7 +628,7 @@ python -m pytest tests/test_tools.py
 ```bash
 # 启动服务
 cd src/backend
-python scripts/start.py
+python tools/scripts/start.py
 
 # 测试 API 接口
 curl -X POST "http://localhost:7860/api/v1/chat" \

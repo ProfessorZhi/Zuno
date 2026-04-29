@@ -8,7 +8,7 @@ def test_cli_preview_local_directory_returns_recommended_candidate(monkeypatch, 
     from agentchat.services.cli_tool_discovery import CliToolDiscoveryService
 
     repo_root = tmp_path / "repo"
-    tool_dir = repo_root / "cli_tools" / "demo_cli"
+    tool_dir = repo_root / "tools" / "cli" / "demo_cli"
     tool_dir.mkdir(parents=True)
     (tool_dir / "README.md").write_text("# Demo CLI\n\nA demo tool.\n\n```bash\npython cli.py --help\n```", encoding="utf-8")
     (tool_dir / "cli.py").write_text("print('ok')", encoding="utf-8")

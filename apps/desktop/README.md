@@ -11,7 +11,7 @@ This directory contains the Electron shell for Zuno.
 npm run dev
 ```
 
-3. Start Electron from `desktop`:
+3. Start Electron from `apps/desktop`:
 
 ```bash
 npm install
@@ -31,7 +31,7 @@ npm run dev
 npm run build
 ```
 
-2. Start Electron from `desktop`:
+2. Start Electron from `apps/desktop`:
 
 ```bash
 npm run start

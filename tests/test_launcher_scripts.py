@@ -17,7 +17,7 @@ def test_web_start_launcher_does_not_rebuild_on_plain_start():
 
 
 def test_scripts_start_does_not_install_dependencies_by_default():
-    content = (REPO_ROOT / "scripts" / "start.py").read_text(encoding="utf-8")
+    content = (REPO_ROOT / "tools" / "scripts" / "start.py").read_text(encoding="utf-8")
 
     assert "args.install_deps" in content
     assert "if args.install_deps:" in content
@@ -70,10 +70,10 @@ def test_desktop_cleanup_uses_external_helper_and_targets_launcher_processes():
 
 
 def test_legacy_desktop_forwarders_target_current_launcher_names():
-    start_bat = (REPO_ROOT / "scripts" / "zuno-start.bat").read_text(encoding="utf-8")
-    stop_bat = (REPO_ROOT / "scripts" / "zuno-stop.bat").read_text(encoding="utf-8")
-    rebuild_bat = (REPO_ROOT / "scripts" / "zuno-rebuild-start.bat").read_text(encoding="utf-8")
-    full_rebuild_bat = (REPO_ROOT / "scripts" / "zuno-clean-rebuild-start.bat").read_text(encoding="utf-8")
+    start_bat = (REPO_ROOT / "tools" / "scripts" / "zuno-start.bat").read_text(encoding="utf-8")
+    stop_bat = (REPO_ROOT / "tools" / "scripts" / "zuno-stop.bat").read_text(encoding="utf-8")
+    rebuild_bat = (REPO_ROOT / "tools" / "scripts" / "zuno-rebuild-start.bat").read_text(encoding="utf-8")
+    full_rebuild_bat = (REPO_ROOT / "tools" / "scripts" / "zuno-clean-rebuild-start.bat").read_text(encoding="utf-8")
 
     assert "Zuno-Desktop-Start.cmd" in start_bat
     assert "Zuno-Desktop-Stop.cmd" in stop_bat
@@ -108,8 +108,8 @@ def test_web_shortcuts_only_pause_on_failure():
 
 
 def test_docker_stack_includes_neo4j_runtime():
-    compose = (REPO_ROOT / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
-    local_config = (REPO_ROOT / "docker" / "docker_config.local.yaml").read_text(encoding="utf-8")
+    compose = (REPO_ROOT / "infra" / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
+    local_config = (REPO_ROOT / "infra" / "docker" / "docker_config.example.yaml").read_text(encoding="utf-8")
 
     assert "\n  neo4j:\n" in compose
     assert "image: neo4j:5-community" in compose

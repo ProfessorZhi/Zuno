@@ -14,9 +14,9 @@ exit /b 1
 :config
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "PROJECT_ROOT=%%~fI"
-set "DOCKER_DIR=%PROJECT_ROOT%\docker"
+set "DOCKER_DIR=%PROJECT_ROOT%\infra\docker"
 set "FRONTEND_DIR=%PROJECT_ROOT%\src\frontend"
-set "DESKTOP_DIR=%PROJECT_ROOT%\desktop"
+set "DESKTOP_DIR=%PROJECT_ROOT%\apps\desktop"
 set "DESKTOP_ELECTRON_EXE=%DESKTOP_DIR%\node_modules\electron\dist\electron.exe"
 set "LAUNCHER_DIR=%PROJECT_ROOT%\launchers"
 set "RUNTIME_DIR=%TEMP%\zuno-desktop-runtime"
@@ -338,7 +338,7 @@ if errorlevel 1 (
 docker compose down --remove-orphans >nul 2>nul
 echo Removing desktop dependency folders and Vite cache...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$paths = @('%PROJECT_ROOT%\\src\\frontend\\node_modules','%PROJECT_ROOT%\\desktop\\node_modules','%PROJECT_ROOT%\\src\\frontend\\dist','%PROJECT_ROOT%\\src\\frontend\\node_modules\\.vite');" ^
+  "$paths = @('%PROJECT_ROOT%\\src\\frontend\\node_modules','%PROJECT_ROOT%\\apps\\desktop\\node_modules','%PROJECT_ROOT%\\src\\frontend\\dist','%PROJECT_ROOT%\\src\\frontend\\node_modules\\.vite');" ^
   "foreach ($path in $paths) { if (Test-Path $path) { Remove-Item -LiteralPath $path -Recurse -Force } }"
 if errorlevel 1 (
   echo Failed to clean desktop dependency folders.

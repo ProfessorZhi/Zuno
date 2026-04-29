@@ -1,73 +1,36 @@
 # Zuno 项目参考
 
-Zuno 是一个面向复杂任务执行场景的 Agent 平台，提供统一的工作台来管理和使用：
+Zuno 是一个本地优先的个人 Agent 工作台，用 Web、桌面端和 Docker 运行栈统一承载聊天、Agent 执行、MCP、Skills、知识库、工具和模型配置。
 
-- 智能体
-- MCP 服务
-- Skill
-- 知识库
-- 工具
-- 模型
+## 核心入口
 
-项目同时支持 Web 与桌面端运行。
+- `src/backend/`：FastAPI 后端、Agent runtime、RAG、MCP 和工具执行。
+- `src/frontend/`：Vue 3 + Vite Web 工作台。
+- `apps/desktop/`：Electron 桌面端壳层。
+- `infra/docker/`：Dockerfile、Compose、nginx 和容器运行配置模板。
+- `launchers/`：Windows Web/Desktop 稳定启动入口。
+- `tools/cli/`：可被 Agent 调用的本地 CLI 工具。
+- `tools/scripts/`：本地维护脚本。
+- `tools/migrations/`：一次性迁移脚本。
 
-## 核心能力
+## 运行入口
 
-### 工作台
+- Web UI：`http://127.0.0.1:8090`
+- 后端健康检查：`http://127.0.0.1:7860/health`
+- API 文档：`http://127.0.0.1:7860/docs`
+- 桌面本地前端：`http://127.0.0.1:8091`
 
-工作台是 Zuno 的主使用入口，支持聊天模式与 Agent 模式。用户可以在同一套界面中：
+## 本地资料与配置
 
-- 发起任务
-- 查看进展
-- 选择能力
-- 回看历史会话
-
-### MCP 管理
-
-Zuno 支持统一管理外部 MCP 服务，包括：
-
-- 平台预置服务
-- 用户自定义服务
-
-当前新增 MCP 主要围绕两种接入方式：
-
-- `STDIO`
-- `流式 HTTP`
-
-### Skill 管理
-
-Skill 用于沉淀可复用的工作方法、模板和执行说明。系统支持：
-
-- 查看 Skill
-- 绑定到会话或智能体
-- 通过输入 `/` 快速选择 Skill
-
-### 知识库
-
-知识库用于文档检索和增强问答，适合：
-
-- 产品资料
-- 项目文档
-- 私有知识沉淀
-
-### 工具与终端
-
-工具用于执行具体能力；终端能力则面向本地文件和命令执行，两者在权限与使用方式上分开建模。
-
-## 当前架构
-
-当前版本以 **单 Agent 运行时** 为主，不把 MCP、Skill、知识库再拆成一层层子 Agent。  
-目标是先把单 Agent 的能力治理做稳定，再考虑更复杂的协作式架构。
-
-## 目录说明
-
-- `src/backend/`：后端服务与运行时
-- `src/frontend/`：前端界面
-- `desktop/`：桌面端包装
-- `docker/`：容器化运行配置
-- `docs/reference/`：参考文档
+- `.local/` 放个人资料、学习材料和历史运行数据，不提交。
+- `infra/docker/docker_config.local.yaml` 放 Docker 本地模型配置和密钥，不提交。
+- `src/backend/agentchat/config.local.yaml` 放本地后端覆盖配置，不提交。
+- Docker named volumes 保存 PostgreSQL、Redis、Neo4j、MinIO 和后端向量库数据。
 
 ## 相关文档
 
+- [README](../../README.md)
 - [核心架构](./core.md)
 - [数据库结构](./database.md)
+- [API 参考](./api.md)
+- [Docker 运行](../../infra/docker/README.md)

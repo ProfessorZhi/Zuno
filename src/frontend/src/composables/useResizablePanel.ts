@@ -7,6 +7,7 @@ interface ResizablePanelOptions {
   minWidth: number
   maxWidth: number
   keyboardStep?: number
+  minAvailableContentWidth?: number
 }
 
 const canUseStorage = () => typeof window !== "undefined" && !!window.localStorage
@@ -27,11 +28,22 @@ const readStoredWidth = (storageKey: string) => {
 
 export const useResizablePanel = (options: ResizablePanelOptions) => {
   const keyboardStep = options.keyboardStep ?? 8
+  const getEffectiveMaxWidth = () => {
+    if (typeof window === "undefined" || !options.minAvailableContentWidth) {
+      return options.maxWidth
+    }
+
+    const availableWidth = window.innerWidth - options.minAvailableContentWidth
+    return Math.max(options.minWidth, Math.min(options.maxWidth, availableWidth))
+  }
+
+  const getClampedWidth = (value: number) => {
+    return clamp(value, options.minWidth, getEffectiveMaxWidth())
+  }
+
   const width = ref(
-    clamp(
+    getClampedWidth(
       readStoredWidth(options.storageKey) ?? options.defaultWidth,
-      options.minWidth,
-      options.maxWidth
     )
   )
 
@@ -43,7 +55,11 @@ export const useResizablePanel = (options: ResizablePanelOptions) => {
   } as CSSProperties))
 
   const setWidth = (nextWidth: number) => {
-    width.value = clamp(nextWidth, options.minWidth, options.maxWidth)
+    width.value = getClampedWidth(nextWidth)
+  }
+
+  const handleWindowResize = () => {
+    setWidth(width.value)
   }
 
   const stopResize = () => {
@@ -95,6 +111,12 @@ export const useResizablePanel = (options: ResizablePanelOptions) => {
   watch(
     width,
     (nextWidth) => {
+      const clampedWidth = getClampedWidth(nextWidth)
+      if (clampedWidth !== nextWidth) {
+        width.value = clampedWidth
+        return
+      }
+
       if (canUseStorage()) {
         window.localStorage.setItem(options.storageKey, String(nextWidth))
       }
@@ -102,7 +124,16 @@ export const useResizablePanel = (options: ResizablePanelOptions) => {
     { immediate: true }
   )
 
-  onBeforeUnmount(stopResize)
+  if (typeof window !== "undefined") {
+    window.addEventListener("resize", handleWindowResize)
+  }
+
+  onBeforeUnmount(() => {
+    stopResize()
+    if (typeof window !== "undefined") {
+      window.removeEventListener("resize", handleWindowResize)
+    }
+  })
 
   return {
     width,

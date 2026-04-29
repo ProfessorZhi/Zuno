@@ -3,10 +3,10 @@ services:
     environment:
       AGENTCHAT_CONFIG: /app/agentchat/config.yaml
     volumes:
-      - ../src/backend:/app:cached
+      - ../../src/backend:/app:cached
       - ./docker_config.local.yaml:/app/agentchat/config.yaml
-      - ../cli_tools:/app/cli_tools:cached
-      - ../scripts:/app/scripts:cached
+      - ../../tools/cli:/app/cli_tools:cached
+      - ../../tools/scripts:/app/scripts:cached
 
   frontend:
     build:
@@ -15,7 +15,7 @@ services:
       NODE_ENV: development
       VITE_API_BASE_URL: http://backend:7860
     volumes:
-      - ../src/frontend:/app:cached
+      - ../../src/frontend:/app:cached
       - /app/node_modules
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8090"]

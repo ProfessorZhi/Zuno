@@ -54,9 +54,13 @@ class CLIToolAdapter:
         if env_root:
             return Path(env_root).resolve()
 
-        cwd_candidate = (Path.cwd() / "cli_tools").resolve()
-        if cwd_candidate.exists():
-            return cwd_candidate
+        cwd_tools_candidate = (Path.cwd() / "tools" / "cli").resolve()
+        if cwd_tools_candidate.exists():
+            return cwd_tools_candidate
+
+        cwd_legacy_candidate = (Path.cwd() / "cli_tools").resolve()
+        if cwd_legacy_candidate.exists():
+            return cwd_legacy_candidate
 
         app_root = Path("/app/cli_tools")
         if app_root.exists():
@@ -64,11 +68,11 @@ class CLIToolAdapter:
 
         current = Path(__file__).resolve()
         for parent in current.parents:
-            candidate = parent / "cli_tools"
-            if candidate.exists():
-                return candidate.resolve()
+            for candidate in (parent / "tools" / "cli", parent / "cli_tools"):
+                if candidate.exists():
+                    return candidate.resolve()
 
-        return cwd_candidate
+        return cwd_tools_candidate
 
     @staticmethod
     def validate_cli_config(cli_config: Dict[str, Any] | None):
@@ -107,6 +111,12 @@ class CLIToolAdapter:
             if not resolved.exists():
                 raise ValueError(f"CLI tool directory does not exist: {resolved}")
             return resolved
+
+        parts = candidate.parts
+        if parts[:2] == ("tools", "cli"):
+            candidate = Path(*parts[2:]) if len(parts) > 2 else Path(".")
+        elif parts[:1] == ("cli_tools",):
+            candidate = Path(*parts[1:]) if len(parts) > 1 else Path(".")
 
         resolved = (cli_root / candidate).resolve()
         if cli_root not in resolved.parents and resolved != cli_root:

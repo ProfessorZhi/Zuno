@@ -649,9 +649,13 @@ class CliToolDiscoveryService:
         if env_root:
             return Path(env_root).resolve()
 
-        cwd_candidate = (Path.cwd() / "cli_tools").resolve()
-        if cwd_candidate.exists():
-            return cwd_candidate
+        cwd_tools_candidate = (Path.cwd() / "tools" / "cli").resolve()
+        if cwd_tools_candidate.exists():
+            return cwd_tools_candidate
+
+        cwd_legacy_candidate = (Path.cwd() / "cli_tools").resolve()
+        if cwd_legacy_candidate.exists():
+            return cwd_legacy_candidate
 
         app_root = Path("/app/cli_tools")
         if app_root.exists():
@@ -659,18 +663,25 @@ class CliToolDiscoveryService:
 
         current = Path(__file__).resolve()
         for parent in current.parents:
-            candidate = parent / "cli_tools"
-            if candidate.exists():
-                return candidate.resolve()
+            for candidate in (parent / "tools" / "cli", parent / "cli_tools"):
+                if candidate.exists():
+                    return candidate.resolve()
 
-        return cwd_candidate
+        return cwd_tools_candidate
 
     @classmethod
     def _resolve_tool_dir(cls, cli_root: Path, tool_dir: str) -> Path:
         if not tool_dir or not tool_dir.strip():
             raise ValueError("tool_dir is required")
 
-        candidate = (cli_root / Path(tool_dir)).resolve()
+        relative = Path(tool_dir)
+        parts = relative.parts
+        if parts[:2] == ("tools", "cli"):
+            relative = Path(*parts[2:]) if len(parts) > 2 else Path(".")
+        elif parts[:1] == ("cli_tools",):
+            relative = Path(*parts[1:]) if len(parts) > 1 else Path(".")
+
+        candidate = (cli_root / relative).resolve()
         if candidate != cli_root and cli_root not in candidate.parents:
             raise ValueError("tool_dir escapes cli_tools root")
         return candidate

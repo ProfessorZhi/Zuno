@@ -7,6 +7,8 @@ import { zunoAgentAvatar, zunoBrandMark } from '../../utils/brand'
 import { useUserStore } from '../../store/user'
 import { logoutAPI, getUserInfoAPI } from '../../apis/auth'
 import { getWorkspaceSessionsAPI, deleteWorkspaceSessionAPI } from '../../apis/workspace'
+import defaultUserAvatar from '../../assets/user.svg'
+import { useResizablePanel } from '../../composables/useResizablePanel'
 import {
   loadWorkspaceDefaults,
   loadWorkspaceSessionModes,
@@ -39,6 +41,26 @@ const sidebarCollapsed = ref(getInitialSidebarCollapsed())
 const settingsCenterVisible = ref(false)
 const activeSettingsSection = ref('model')
 let fetchSessionsRequestId = 0
+const {
+  panelStyle: historyPanelStyle,
+  startResize: startHistoryResize,
+  handleSeparatorKeydown: handleHistorySeparatorKeydown,
+} = useResizablePanel({
+  storageKey: 'zuno.layout.workspaceHistoryWidth',
+  cssVariable: '--workspace-sidebar-width',
+  defaultWidth: 300,
+  minWidth: 220,
+  maxWidth: 460,
+  minAvailableContentWidth: 340,
+})
+
+const normalizeAvatarUrl = (avatar?: string) => {
+  const raw = String(avatar || '').trim()
+  if (!raw || raw.startsWith('/src/assets/')) return defaultUserAvatar
+  return raw
+}
+
+const userAvatarSrc = computed(() => normalizeAvatarUrl(userStore.userInfo?.avatar))
 
 const syncSelectedSessionFromRoute = () => {
   const sessionId = route.query.session_id as string | undefined
@@ -218,7 +240,7 @@ const handleLogout = async () => {
 
 const handleAvatarError = (event: Event) => {
   const target = event.target as HTMLImageElement
-  if (target) target.src = '/src/assets/user.svg'
+  if (target) target.src = defaultUserAvatar
 }
 
 const groupedSessions = computed(() => {
@@ -240,7 +262,7 @@ onMounted(async () => {
       if (response.data.status_code === 200 && response.data.data) {
         const userData = response.data.data
         userStore.updateUserInfo({
-          avatar: userData.user_avatar || userData.avatar || '/src/assets/user.svg',
+          avatar: normalizeAvatarUrl(userData.user_avatar || userData.avatar),
           description: userData.user_description || userData.description,
         })
       }
@@ -294,7 +316,7 @@ watch(sidebarCollapsed, (collapsed) => {
           <div class="user-avatar-wrapper">
             <div class="user-avatar">
               <img
-                :src="userStore.userInfo?.avatar || '/src/assets/user.svg'"
+                :src="userAvatarSrc"
                 alt="用户头像"
                 @error="handleAvatarError"
                 referrerpolicy="no-referrer"
@@ -313,7 +335,7 @@ watch(sidebarCollapsed, (collapsed) => {
     </header>
 
     <div class="workspace-main">
-      <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+      <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }" :style="historyPanelStyle">
         <div v-if="sidebarCollapsed" class="sidebar-rail">
           <button class="rail-toggle desktop-only" type="button" @click="sidebarCollapsed = false">
             <el-icon><Expand /></el-icon>
@@ -376,6 +398,16 @@ watch(sidebarCollapsed, (collapsed) => {
             </div>
           </div>
         </div>
+        <div
+          v-if="!sidebarCollapsed"
+          class="sidebar-resize-handle"
+          role="separator"
+          aria-label="调整会话栏宽度"
+          aria-orientation="vertical"
+          tabindex="0"
+          @pointerdown="startHistoryResize"
+          @keydown="handleHistorySeparatorKeydown"
+        />
       </aside>
 
       <main class="content">
@@ -417,6 +449,7 @@ watch(sidebarCollapsed, (collapsed) => {
 
 <style lang="scss" scoped>
 .workspace-container {
+  --workspace-sidebar-width: 300px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -501,18 +534,50 @@ watch(sidebarCollapsed, (collapsed) => {
 }
 
 .sidebar {
-  width: 288px;
-  flex: 0 0 288px;
+  position: relative;
+  width: var(--workspace-sidebar-width);
+  flex: 0 0 var(--workspace-sidebar-width);
   display: flex;
   flex-direction: column;
   background: #f7f1e8;
   border-right: 1px solid rgba(214, 198, 178, 0.58);
   transition: width 0.22s ease, flex-basis 0.22s ease;
+  min-width: 0;
 }
 
 .sidebar.collapsed {
   width: 52px;
   flex-basis: 52px;
+}
+
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -7px;
+  z-index: 5;
+  width: 14px;
+  height: 100%;
+  cursor: col-resize;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.sidebar-resize-handle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 6px;
+  width: 1px;
+  background: rgba(214, 198, 178, 0.72);
+  transition: background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.sidebar-resize-handle:hover::before,
+.sidebar-resize-handle:focus-visible::before {
+  background: rgba(198, 108, 50, 0.7);
+  box-shadow: 0 0 0 3px rgba(198, 108, 50, 0.12);
 }
 
 .sidebar-rail {
@@ -900,7 +965,36 @@ watch(sidebarCollapsed, (collapsed) => {
   display: none;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 900px) {
+  .workspace-container {
+    --workspace-sidebar-width: 220px;
+  }
+
+  .sidebar-head {
+    padding-inline: 10px;
+  }
+
+  .session-list {
+    padding-inline: 6px;
+  }
+
+  .session-card {
+    gap: 7px;
+    padding: 7px 6px;
+  }
+
+  .mode-tag {
+    font-size: 10px;
+    padding-inline: 5px;
+  }
+}
+
+:global(body.zuno-is-resizing) {
+  cursor: col-resize;
+  user-select: none;
+}
+
+@media (max-width: 480px) {
   .workspace-nav {
     padding: 0 12px;
   }
@@ -919,9 +1013,13 @@ watch(sidebarCollapsed, (collapsed) => {
     top: 58px;
     bottom: 0;
     z-index: 20;
-    width: min(288px, calc(100vw - 56px));
-    flex-basis: min(288px, calc(100vw - 56px));
+    width: min(280px, calc(100vw - 56px));
+    flex-basis: min(280px, calc(100vw - 56px));
     box-shadow: 10px 0 30px rgba(62, 44, 28, 0.12);
+  }
+
+  .sidebar-resize-handle {
+    display: none;
   }
 
   .sidebar.collapsed {

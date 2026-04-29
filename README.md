@@ -1,385 +1,245 @@
 # Zuno
 
-<p align="center">
-  <img src="./docs/assets/zuno-banner.svg" alt="Zuno Agent Workspace" width="100%" />
-</p>
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.121-009688?logo=fastapi&logoColor=white)
+![Vue](https://img.shields.io/badge/Vue-3-42B883?logo=vuedotjs&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+![Electron](https://img.shields.io/badge/Electron-32-47848F?logo=electron&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 
-<p align="center">
-  <a href="https://github.com/ProfessorZhi/Zuno"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-ProfessorZhi%2FZuno-111827?style=for-the-badge&logo=github" /></a>
-  <img alt="License" src="https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge" />
-  <img alt="Backend" src="https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi" />
-  <img alt="Frontend" src="https://img.shields.io/badge/Frontend-Vue%203-42b883?style=for-the-badge&logo=vue.js" />
-  <img alt="Desktop" src="https://img.shields.io/badge/Desktop-Electron-47848f?style=for-the-badge&logo=electron" />
-</p>
+Zuno 是一个个人 Agent 工作台，把聊天、Agent 执行、MCP 服务、Skills、知识库检索、本地工具和桌面自动化放进同一个可运行环境里。
 
-<p align="center">
-  <b>Agent Workspace for tools, MCP, RAG, Skills, API integration and desktop automation.</b>
-</p>
+它的目标不是做一个只有聊天框的前端，而是提供一套本地优先的 Agent 操作台：Web 可访问、桌面可启动、Docker 可一键跑全套依赖，配置和数据能在本机稳定保留。
 
-Zuno 是一个面向 Agent 应用开发、调试和日常使用的工作台。它把对话、工具调用、MCP 服务、知识库、Skill、自定义 API/CLI 工具和桌面端运行能力整合到同一套界面中，适合用来搭建可配置、可观察、可扩展的本地 Agent 系统。
+## 功能
 
-项目仓库：<https://github.com/ProfessorZhi/Zuno>
-
-## 项目定位
-
-Zuno 不是单纯的聊天 UI，也不是只封装一个模型接口。它的目标是提供一个可以持续扩展的 Agent Workspace：
-
-- 让用户在一个工作台里管理模型、知识库、工具、Skill 和 MCP 服务。
-- 让 Agent 可以根据任务自动选择工具、检索知识库、读取文档、调用远程 API 或本地 CLI。
-- 让开发者可以验证工具连通性、观察执行过程、调试 RAG 和工具调用链路。
-- 让同一套能力同时服务 Web 控制台和 Electron 桌面端。
-
-## 主要功能
-
-### Agent 工作台
-
-- 支持普通聊天和 Agent 工作区两种使用方式。
-- 支持流式输出、执行状态、工具调用事件和最终答案展示。
-- 支持图片、PDF、Word、PPT、TXT、Markdown、Excel 等资料输入和解析。
-- 支持基于 ReAct 的工具调用链路。
-- 对确定性信息做运行时校验和整理，例如日期星期、行情表格、涨跌幅等不交给模型自由猜。
-
-### 工具系统
-
-- 支持系统内置工具和用户自定义工具。
-- 支持远程 API 工具接入，包含文档读取、OpenAPI/Swagger、API Key 认证、测试参数和真实连通性检测。
-- 支持 CLI 工具接入，包含命令、工作目录、参数模板和 healthcheck。
-- 支持工具列表状态、检测结果、运行方式和配置元数据展示。
-- 支持 Agent 辅助填表：给出文档链接和 API Key 后，由 Agent 推断接口地址、认证方式、参数和描述。
-
-### MCP
-
-- 支持内置和自定义 MCP 服务管理。
-- 支持 STDIO 和流式 HTTP 接入。
-- 支持工具发现、连接测试、用户级参数配置和状态检查。
-- 支持在工作区中按显式命令或语义路由调用 MCP 能力。
-
-### 知识库与 RAG
-
-- 支持知识库创建、文件上传、解析、分块、索引和检索。
-- 支持多格式文档解析和任务进度展示。
-- 支持向量检索、重排、查询改写和 GraphRAG 相关链路。
-- 支持 PostgreSQL、Redis、Neo4j、MinIO 等基础设施配合运行。
-
-### Skill 与能力管理
-
-- 支持 Skill 管理、绑定和工作区快速调用。
-- 支持能力注册与检索，让 Agent 更容易发现当前可用能力。
-- 支持将工具、MCP、知识库和 Skill 纳入统一执行入口。
-
-### 桌面端
-
-- 提供 Electron 客户端。
-- 支持桌面启动、停止、重建和本地前端运行。
-- 支持桌面 bridge 与本地文件、终端、运行环境联动。
-- 提供 Windows 启动器脚本，降低本地运行门槛。
+- 多模型 Agent 对话与工具调用。
+- MCP 服务、Skills 和本地 CLI 工具接入。
+- 知识库检索、向量库和 GraphRAG 相关能力。
+- Web 工作台，基于 Vue 3 + Vite。
+- Electron 桌面壳，复用后端和本地桌面前端。
+- Docker Compose 一键启动 PostgreSQL、Redis、Neo4j、MinIO、后端和前端。
+- Windows 启动器固定入口，方便做桌面快捷方式。
 
 ## 技术栈
 
-### 后端
-
-- Python 3.12+
-- FastAPI
-- SQLModel
-- LangChain
-- LangGraph
-- PostgreSQL
-- Redis
-- Neo4j
-- MinIO
-- Docker / Docker Compose
-
-### 前端
-
-- Vue 3
-- TypeScript
-- Vite
-- Element Plus
-- Pinia
-- ECharts
-- Monaco Editor
-
-### 桌面端
-
-- Electron
-- Node.js
-- 本地 Vite 开发服务
+| 层 | 技术 |
+| --- | --- |
+| 后端 | Python 3.12, FastAPI, LangChain, LangGraph, SQLModel |
+| 前端 | Vue 3, Vite, TypeScript, Pinia, Element Plus |
+| 桌面端 | Electron |
+| 数据与缓存 | PostgreSQL, Redis, Neo4j, MinIO, Chroma/vector DB |
+| 运行与部署 | Docker Compose, nginx, Windows CMD/PowerShell launchers |
+| Agent 扩展 | MCP, Skills, local CLI tools |
 
 ## 目录结构
 
 ```text
 Zuno/
 ├─ src/
-│  ├─ backend/          # FastAPI 后端、Agent runtime、RAG、MCP、工具系统
-│  └─ frontend/         # Vue 3 前端控制台和工作台界面
-├─ desktop/             # Electron 桌面端
-├─ docker/              # Dockerfile、Compose、示例运行配置
-├─ launchers/           # Windows Web/Desktop 启动器
-├─ scripts/             # 启动、迁移、验证和维护脚本
-├─ cli_tools/           # 本地 CLI 工具目录
-├─ docs/                # 设计文档、开发计划和参考资料
-├─ tests/               # 顶层端到端/集成测试
-├─ README.md
-└─ LICENSE
+│  ├─ backend/          # FastAPI 后端、Agent runtime、RAG、MCP、工具执行
+│  └─ frontend/         # Vue 3 Web 工作台
+├─ apps/
+│  └─ desktop/          # Electron 桌面端
+├─ infra/
+│  └─ docker/           # Dockerfile、Compose、nginx、运行配置模板
+├─ launchers/           # Windows Web/Desktop 稳定启动入口
+├─ tools/
+│  ├─ cli/              # 可被 Agent 调用的本地 CLI 工具
+│  ├─ scripts/          # 本地维护脚本
+│  └─ migrations/       # 一次性迁移脚本
+├─ docs/                # 架构、API、数据库和运行参考
+├─ tests/               # 仓库级测试
+└─ .local/              # 本地资料和历史运行数据，不提交
 ```
 
-本地私有目录不会上传到 GitHub，例如：
+## 端口
 
-- `study_hub/`
-- `interview_hub/`
-- `docker/data/`
-- `src/backend/agentchat/config.yaml`
-- `src/backend/agentchat/config.local.yaml`
-- `node_modules/`
-- `tmp/`
+| 服务 | 地址 |
+| --- | --- |
+| Web UI | <http://127.0.0.1:8090> |
+| Backend API | <http://127.0.0.1:7860> |
+| Backend health | <http://127.0.0.1:7860/health> |
+| API docs | <http://127.0.0.1:7860/docs> |
+| Desktop local frontend | <http://127.0.0.1:8091> |
+| Redis | `127.0.0.1:6379` |
+| Neo4j Browser | <http://127.0.0.1:7474> |
+| Neo4j Bolt | `127.0.0.1:7687` |
+| MinIO API | <http://127.0.0.1:9000> |
+| MinIO Console | <http://127.0.0.1:9001> |
 
-## 快速上手
+## Docker 一键运行
 
-### 1. 克隆项目
+要求：
 
-```bash
-git clone https://github.com/ProfessorZhi/Zuno.git
-cd Zuno
+- Docker Desktop 或 Docker Engine + Compose v2。
+- 至少 6 GB 可用内存。
+- 第一次运行前复制本地配置文件。
+
+在仓库根目录执行：
+
+```powershell
+copy infra\docker\docker_config.example.yaml infra\docker\docker_config.local.yaml
+docker compose -f infra/docker/docker-compose.yml up --build -d
 ```
 
-### 2. 准备配置文件
+启动后打开：
 
-Zuno 不会把真实 API Key 上传到仓库。仓库中只提供示例配置。
+- Web UI：<http://127.0.0.1:8090>
+- 健康检查：<http://127.0.0.1:7860/health>
+- API 文档：<http://127.0.0.1:7860/docs>
 
-后端本地配置：
+停止但保留数据：
 
-```bash
-copy src\backend\agentchat\config.example.yaml src\backend\agentchat\config.local.yaml
+```powershell
+docker compose -f infra/docker/docker-compose.yml down
 ```
 
-Docker 配置：
+删除容器和 Docker volumes：
 
-```bash
-copy docker\docker_config.example.yaml docker\docker_config.local.yaml
+```powershell
+docker compose -f infra/docker/docker-compose.yml down -v
 ```
 
-然后根据需要填写：
+`down -v` 会清掉 PostgreSQL、Redis、Neo4j、MinIO 和后端向量库数据。只有在需要重置本地运行状态时再用。
 
-- 模型 API Key、Base URL、模型名
-- 搜索、天气、物流等系统工具 Key
-- MinIO / OSS 配置
-- LangSmith / Langfuse 可观测性配置
-- 邮箱、MCP 或其它工具凭证
+更多 Docker 细节见 [infra/docker/README.md](./infra/docker/README.md)。
 
-配置加载优先级：
+## Windows Launchers
 
-1. `AGENTCHAT_CONFIG` 或 `ZUNO_CONFIG` 环境变量
-2. `src/backend/agentchat/config.local.yaml`
-3. `src/backend/agentchat/config.yaml`
-4. `src/backend/agentchat/config.example.yaml`
-
-### 3. Docker 方式启动
-
-适合第一次体验完整栈。
-
-```bash
-docker compose -f docker/docker-compose.yml up --build -d
-```
-
-默认服务：
-
-- 后端 API：<http://127.0.0.1:7860>
-- 前端 Web：<http://127.0.0.1:8090>
-- MinIO Console：<http://127.0.0.1:9001>
-- Neo4j Browser：<http://127.0.0.1:7474>
-
-停止：
-
-```bash
-docker compose -f docker/docker-compose.yml down
-```
-
-开发热更新模式：
-
-```bash
-docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up --build -d
-```
-
-更完整的 Docker 运行、配置、重置和镜像构建说明见 [docker/README.md](./docker/README.md)。
-
-### 4. Windows 启动器方式
-
-如果你在 Windows 上使用，推荐直接运行 `launchers/` 下的脚本。
-
-Web 模式：
+Windows 稳定入口在 `launchers/`，适合绑定桌面快捷方式：
 
 ```powershell
 .\launchers\Zuno-Web-Start.cmd
+.\launchers\Zuno-Web-Stop.cmd
+.\launchers\Zuno-Web-Rebuild.cmd
+.\launchers\Zuno-Web-Full-Rebuild.cmd
 ```
-
-桌面模式：
 
 ```powershell
 .\launchers\Zuno-Desktop-Start.cmd
+.\launchers\Zuno-Desktop-Stop.cmd
+.\launchers\Zuno-Desktop-Rebuild.cmd
+.\launchers\Zuno-Desktop-Full-Rebuild.cmd
 ```
 
-常用脚本：
+Web 启动器负责 Docker Web 栈，等待 `7860` 和 `8090` 可用。Desktop 启动器会启动后端容器、本地桌面前端和 Electron，等待 `7860` 和 `8091` 可用。
 
-- `Zuno-Web-Start.cmd`
-- `Zuno-Web-Stop.cmd`
-- `Zuno-Web-Rebuild.cmd`
-- `Zuno-Web-Full-Rebuild.cmd`
-- `Zuno-Desktop-Start.cmd`
-- `Zuno-Desktop-Stop.cmd`
-- `Zuno-Desktop-Rebuild.cmd`
-- `Zuno-Desktop-Full-Rebuild.cmd`
+桌面运行日志在 `%TEMP%\zuno-desktop-runtime`，优先看 `desktop.err.log`、`frontend.err.log`。更多说明见 [launchers/README.md](./launchers/README.md)。
 
-更多说明见 [launchers/README.md](./launchers/README.md)。
-
-### 5. 本地开发方式
+## 开发运行
 
 后端：
 
-```bash
+```powershell
 pip install -r requirements.txt
-cd src/backend
-uvicorn agentchat.main:app --host 0.0.0.0 --port 7860 --reload
+cd src\backend
+uvicorn agentchat.main:app --host 0.0.0.0 --port 7860
 ```
 
 前端：
 
-```bash
-cd src/frontend
+```powershell
+cd src\frontend
 npm install
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 8090
 ```
 
 桌面端：
 
-```bash
-cd desktop
+```powershell
+cd apps\desktop
 npm install
-npm run dev
+npm start
 ```
 
-前端开发服务默认使用 Vite。Web 模式通常使用 `8090`，桌面模式本地前端通常使用 `8091`。
-
-## 常用操作
-
-### 配置模型
-
-进入系统配置或模型页面，填写：
-
-- Provider
-- Model Name
-- Base URL
-- API Key
-- 模型用途，例如对话模型、工具调用模型、推理模型、Embedding、Rerank、视觉模型等
-
-建议至少配置：
-
-- 对话模型
-- 工具调用模型
-- Embedding 模型
-
-### 接入远程 API 工具
-
-在工具页面新建远程 API 工具，可以提供：
-
-- API 文档链接
-- OpenAPI / Swagger 链接
-- API Key
-- curl 示例
-
-Agent 会尝试自动推断：
-
-- 工具名称和描述
-- Base URL 和路径
-- 请求方法
-- 认证方式
-- 参数字段
-- 测试参数
-
-检测语义采用真实检测：只有实际发起请求并成功，才显示连通性正常。
-
-### 接入 CLI 工具
-
-CLI 工具需要提供：
-
-- 命令
-- 参数模板
-- 工作目录
-- 健康检查命令
-
-仅命令存在不代表工具可用。Zuno 会优先执行 healthcheck 来判断 CLI 工具是否真正就绪。
-
-### 使用知识库
-
-知识库支持上传文档并建立索引。常见流程：
-
-1. 创建知识库
-2. 上传文件
-3. 等待解析和索引任务完成
-4. 在工作区提问
-5. Agent 根据检索结果回答
-
-## 安全与隐私
-
-仓库不会提交真实运行密钥。以下文件和目录默认忽略：
-
-- `.env`
-- `.env.*`
-- `src/backend/agentchat/config.yaml`
-- `src/backend/agentchat/config.local.yaml`
-- `docker/docker_config.local.yaml`
-- `docker/data/`
-- `study_hub/`
-- `interview_hub/`
-- `tmp/`
-- `node_modules/`
-- `*.log`
-- `*.sqlite`
-- `*.db`
-- `*.pem`
-- `*.key`
-
-如果你要公开 fork 或推送到 GitHub，请先检查：
-
-```bash
-git status --ignored
-git grep -n -I -E "sk-|gho_|tvly-|LTAI|api_key|secret|password|token"
-```
-
-真实 API Key 应该放在本地配置、环境变量或部署平台的 Secret 管理中，不应该写入可提交源码。
-
-## 验证与测试
-
-后端测试示例：
-
-```bash
-python -m pytest src/backend/agentchat/test -q
-```
-
-前端类型检查：
-
-```bash
-cd src/frontend
-npm run lint
-```
-
-端到端烟雾测试脚本：
+Docker 热更新开发模式：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run-full-e2e-smoke.ps1
+docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up --build -d
 ```
 
-## 当前状态
+## 数据与配置持久化
 
-Zuno 仍在快速迭代中，重点方向包括：
+- `infra/docker/docker_config.local.yaml`：本机 Docker 运行配置，放真实模型配置和 API keys，不提交。
+- `src/backend/agentchat/config.yaml`：本地后端配置文件，按需要维护，不建议提交真实密钥。
+- `src/backend/agentchat/config.local.yaml`：本地覆盖配置，不提交。
+- `.local/`：个人资料、学习材料、历史运行数据，不提交。
+- Docker volumes：`postgres_data`、`redis_data`、`neo4j_data`、`neo4j_logs`、`minio_data`、`backend_vector_db`。
+- Docker 后端会把 `infra/docker/docker_config.local.yaml` 挂载到容器内 `/app/agentchat/config.yaml`。
 
-- 更稳定的 Agent 工具编排
-- 更可靠的远程 API / CLI 接入体验
-- 更完整的 RAG 和 GraphRAG 工作流
-- 更清晰的系统工具检测语义
-- 更强的桌面端本地执行能力
-- 更丰富的结构化结果渲染，例如表格和图表组件
-- 后期将加入多 Agent 协作能力，支持多个智能体围绕同一任务分工、协同和汇总结果
+## 常见问题
 
-## License
+### Web 能打开但聊天失败
 
-MIT
+先看后端健康检查：
+
+```powershell
+curl http://127.0.0.1:7860/health
+docker logs --tail 200 agentchat-backend
+```
+
+如果后端正常但 Agent 不回答，检查 `infra/docker/docker_config.local.yaml` 里的模型和 key。
+
+### Docker Compose 配置报错
+
+确认正在使用 Compose v2：
+
+```powershell
+docker compose version
+docker compose -f infra/docker/docker-compose.yml config
+```
+
+### 旧 MCP 或工具记录导致启动异常
+
+优先在 UI 里清理失效记录。确认要重置本地数据时再执行：
+
+```powershell
+docker compose -f infra/docker/docker-compose.yml down -v
+```
+
+### Docker 拉取或构建很慢
+
+可以给 npm、PyPI、Debian 传镜像源：
+
+```powershell
+docker compose -f infra/docker/docker-compose.yml build `
+  --build-arg NPM_REGISTRY=https://registry.npmmirror.com `
+  --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple `
+  --build-arg DEBIAN_MIRROR=mirrors.tuna.tsinghua.edu.cn
+```
+
+### Electron 没出现但服务可用
+
+检查：
+
+```powershell
+curl http://127.0.0.1:8091
+notepad $env:TEMP\zuno-desktop-runtime\desktop.err.log
+```
+
+## 验证
+
+```powershell
+cd src\frontend
+npm run lint
+npm run build
+```
+
+```powershell
+pytest tests/test_launcher_scripts.py
+```
+
+```powershell
+docker compose -f infra/docker/docker-compose.yml config
+docker compose -f infra/docker/docker-compose.yml build frontend backend
+```
+
+## 参考文档
+
+- [Zuno 项目参考](./docs/reference/zuno.md)
+- [核心架构](./docs/reference/core.md)
+- [数据库结构](./docs/reference/database.md)
+- [API 参考](./docs/reference/api.md)
+- [Docker 运行](./infra/docker/README.md)
+- [Windows Launchers](./launchers/README.md)

@@ -9,8 +9,8 @@ chat.html
 .env
 .env.*
 !.env.example
-docker/docker_config.local.yaml
-docker/data/
+infra/docker/docker_config.local.yaml
+infra/docker/data/
 src/backend/agentchat/config.yaml
 src/backend/agentchat/config.local.yaml
 
@@ -18,8 +18,7 @@ chroma_db/
 memory_db/
 vector_db/
 
-study_hub/
-interview_hub/
+.local/
 
 .astrid-memory/
 .playwright-mcp/
@@ -49,6 +48,7 @@ $null
 *.pfx
 
 node_modules/
+src/frontend/*.tsbuildinfo
 
 # local desktop startup scripts
 Zuno-*.local.cmd

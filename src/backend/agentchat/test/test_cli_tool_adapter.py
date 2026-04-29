@@ -5,7 +5,7 @@ def test_cli_tool_adapter_resolves_repo_local_cli_tools_root(monkeypatch, tmp_pa
     from agentchat.tools.cli_tool.adapter import CLIToolAdapter
 
     repo_root = tmp_path / "repo"
-    tool_dir = repo_root / "cli_tools" / "echo_tool"
+    tool_dir = repo_root / "tools" / "cli" / "echo_tool"
     tool_dir.mkdir(parents=True)
     (tool_dir / "main.py").write_text("print('ok')", encoding="utf-8")
 
@@ -25,7 +25,7 @@ def test_cli_tool_adapter_executes_from_repo_local_cli_tools(monkeypatch, tmp_pa
     from agentchat.tools.cli_tool.adapter import CLIToolAdapter
 
     repo_root = tmp_path / "repo"
-    tool_dir = repo_root / "cli_tools" / "echo_tool"
+    tool_dir = repo_root / "tools" / "cli" / "echo_tool"
     tool_dir.mkdir(parents=True)
     script_path = tool_dir / "main.py"
     script_path.write_text(
@@ -57,7 +57,7 @@ def test_cli_tool_adapter_runs_healthcheck_command(monkeypatch, tmp_path):
     from agentchat.tools.cli_tool.adapter import CLIToolAdapter
 
     repo_root = tmp_path / "repo"
-    tool_dir = repo_root / "cli_tools" / "echo_tool"
+    tool_dir = repo_root / "tools" / "cli" / "echo_tool"
     tool_dir.mkdir(parents=True)
     script_path = tool_dir / "health.py"
     script_path.write_text("print('CLI_OK')\n", encoding="utf-8")
@@ -89,7 +89,7 @@ def test_cli_tool_adapter_connectivity_without_healthcheck_is_not_ready(monkeypa
     from agentchat.tools.cli_tool.adapter import CLIToolAdapter
 
     repo_root = tmp_path / "repo"
-    tool_dir = repo_root / "cli_tools" / "echo_tool"
+    tool_dir = repo_root / "tools" / "cli" / "echo_tool"
     tool_dir.mkdir(parents=True)
     script_path = tool_dir / "main.py"
     script_path.write_text("print('ok')\n", encoding="utf-8")

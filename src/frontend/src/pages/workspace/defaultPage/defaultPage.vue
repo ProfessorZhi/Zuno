@@ -30,6 +30,7 @@ import { safeDisplayText } from '../../../utils/display-text'
 import { sanitizeWorkspaceContexts } from '../../../utils/workspace-history'
 import { zunoAgentAvatar } from '../../../utils/brand'
 import { isDesktopRuntime } from '../../../utils/api'
+import defaultUserAvatar from '../../../assets/user.svg'
 import {
   loadWorkspaceDefaults,
   saveWorkspaceSessionMode,
@@ -124,6 +125,12 @@ type SlashSuggestion = {
 type ToolCreationKind = 'general' | 'api' | 'cli'
 
 const activeMode = computed(() => modes.find((mode) => mode.id === selectedMode.value) || modes[0])
+const normalizeAvatarUrl = (avatar?: string) => {
+  const raw = String(avatar || '').trim()
+  if (!raw || raw.startsWith('/src/assets/')) return defaultUserAvatar
+  return raw
+}
+const userAvatarSrc = computed(() => normalizeAvatarUrl(userStore.userInfo?.avatar))
 const activeExecutionMode = computed(() => executionModes.value.find((mode) => mode.id === selectedExecutionMode.value) || null)
 const activeAccessScope = computed(() => accessScopes.value.find((scope) => scope.id === selectedAccessScope.value) || null)
 const isAgentMode = computed(() => selectedMode.value === 'agent')
@@ -290,7 +297,7 @@ const safeQueryValue = (value: unknown, fallback: string) => Array.isArray(value
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || ''
 
 const sanitizeAssistantChunk = (chunk: string) => isAgentMode.value ? chunk : chunk.replace(/ReAct\s*Agent[^\n]*\n?/gi, '').replace(/^\s+/, '')
-const handleAvatarError = (event: Event) => { const target = event.target as HTMLImageElement; if (target) target.src = '/src/assets/user.svg' }
+const handleAvatarError = (event: Event) => { const target = event.target as HTMLImageElement; if (target) target.src = defaultUserAvatar }
 const scrollToBottom = async (force = false) => { await nextTick(); if (conversationRef.value && (force || isPinnedToBottom.value)) conversationRef.value.scrollTop = conversationRef.value.scrollHeight }
 const handleConversationScroll = () => { const panel = conversationRef.value; if (!panel) return; isPinnedToBottom.value = panel.scrollHeight - (panel.scrollTop + panel.clientHeight) < 24 }
 const emitSessionUpdated = () => window.dispatchEvent(new CustomEvent('workspace-session-updated', { detail: { sessionId: currentSessionId.value } }))
@@ -1219,7 +1226,7 @@ onBeforeUnmount(() => {
             </div>
             <MdPreview v-else-if="message.content" :editorId="`workspace-message-${index}`" :modelValue="message.content" />
           </div>
-          <img v-if="message.role === 'user'" :src="userStore.userInfo?.avatar || '/src/assets/user.svg'" alt="User" class="avatar" @error="handleAvatarError" />
+          <img v-if="message.role === 'user'" :src="userAvatarSrc" alt="User" class="avatar" @error="handleAvatarError" />
         </div>
       </div>
       <div class="composer-dock" :class="{ fixed: messages.length > 0 }">
@@ -1331,6 +1338,7 @@ onBeforeUnmount(() => {
   flex: 1;
   height: 100%;
   min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1341,6 +1349,7 @@ onBeforeUnmount(() => {
   flex: 1;
   height: 100%;
   min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1418,7 +1427,9 @@ onBeforeUnmount(() => {
   width: min(860px, calc(100% - 24px));
   margin: 0 auto;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1429,6 +1440,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .message-row.user {
@@ -1443,7 +1456,8 @@ onBeforeUnmount(() => {
 }
 
 .message-bubble {
-  max-width: min(720px, 76vw);
+  min-width: 0;
+  max-width: min(720px, calc(100% - 44px));
   padding: 9px 12px;
   border-radius: 18px;
   background: #f1f1f1;
@@ -1460,7 +1474,7 @@ onBeforeUnmount(() => {
 }
 
 .message-bubble.assistant.loading {
-  min-width: 320px;
+  min-width: min(320px, calc(100% - 44px));
 }
 
 .loading-row {
@@ -1676,6 +1690,7 @@ onBeforeUnmount(() => {
 
 .composer-shell {
   width: min(780px, calc(100% - 24px));
+  min-width: 0;
   margin: 0 auto;
   padding: 10px 12px 11px;
   border-radius: 22px;
@@ -2292,7 +2307,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 1100px) {
   .message-bubble {
-    max-width: min(100%, 74vw);
+    max-width: min(100%, calc(100% - 44px));
   }
 
   .selector-grid,
@@ -2322,7 +2337,7 @@ onBeforeUnmount(() => {
   }
 
   .message-bubble {
-    max-width: calc(100vw - 120px);
+    max-width: min(100%, calc(100% - 44px));
   }
 
   .composer-top,
@@ -2350,7 +2365,7 @@ onBeforeUnmount(() => {
   }
 
   .message-bubble.assistant.loading {
-    min-width: min(260px, calc(100vw - 120px));
+    min-width: min(260px, calc(100% - 44px));
   }
 }
 </style>

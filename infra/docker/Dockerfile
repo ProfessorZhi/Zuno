@@ -58,8 +58,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -i "${PIP_INDEX_URL}"
 
 COPY src/backend/ .
-COPY cli_tools/ /app/cli_tools/
-COPY scripts/ /app/scripts/
+COPY tools/cli/ /app/cli_tools/
+COPY tools/scripts/ /app/scripts/
+COPY tools/migrations/ /app/migrations/
 
 EXPOSE 7860
 
