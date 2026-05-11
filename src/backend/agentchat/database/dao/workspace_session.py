@@ -1,4 +1,5 @@
 from typing import List
+import re
 
 from sqlmodel import select, and_, delete, or_
 from agentchat.database.session import async_session_getter
@@ -6,16 +7,30 @@ from agentchat.database.models.workspace_session import WorkSpaceSession
 
 
 class WorkSpaceSessionDao:
+    @staticmethod
+    def is_placeholder_title(title: str | None) -> bool:
+        normalized = str(title or "").strip().lower()
+        compact = re.sub(r"\s+", "", normalized)
+        return (
+            normalized in {"", "新对话", "未命名会话", "你好", "您好", "hi", "hello"}
+            or bool(re.fullmatch(r".+的新(对话|会话)", compact))
+        )
 
     @classmethod
     async def get_workspace_sessions(cls, user_id, workspace_mode: str | None = None):
         async with async_session_getter() as session:
             statement = select(WorkSpaceSession).where(WorkSpaceSession.user_id == user_id)
             if workspace_mode == "agent":
-                statement = statement.where(WorkSpaceSession.agent == "agent")
+                statement = statement.where(
+                    WorkSpaceSession.agent.notin_(["normal", "simple", "agent"])
+                )
             elif workspace_mode == "normal":
                 statement = statement.where(
-                    or_(WorkSpaceSession.agent == "normal", WorkSpaceSession.agent == "simple")
+                    or_(
+                        WorkSpaceSession.agent == "normal",
+                        WorkSpaceSession.agent == "simple",
+                        WorkSpaceSession.agent == "agent",
+                    )
                 )
             result = await session.exec(statement)
             return result.all()
@@ -52,8 +67,7 @@ class WorkSpaceSessionDao:
             workspace_session.contexts = new_contexts  # 重新赋值
             if title and (
                 not had_contexts
-                or str(workspace_session.title or "").strip().lower()
-                in {"", "新对话", "未命名会话", "你好", "您好", "hi", "hello"}
+                or cls.is_placeholder_title(workspace_session.title)
             ):
                 workspace_session.title = title
 

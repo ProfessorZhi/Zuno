@@ -1,6 +1,7 @@
 from loguru import logger
 from agentchat.database.dao.llm import LLMDao
 from agentchat.database.models.user import AdminUser, SystemUser
+from agentchat.utils.model_output import normalize_model_id_for_provider
 
 LLM_Types = ['LLM', 'Embedding', 'Rerank']
 MODEL_SLOTS = {
@@ -22,6 +23,12 @@ class LLMService:
     async def create_llm(cls, **kwargs):
         if "llm_type" in kwargs:
             kwargs["llm_type"] = cls.normalize_llm_type(kwargs["llm_type"])
+        if "model" in kwargs:
+            kwargs["model"] = normalize_model_id_for_provider(
+                kwargs.get("model"),
+                provider=kwargs.get("provider"),
+                base_url=kwargs.get("base_url"),
+            )
         await LLMDao.create_llm(**kwargs)
 
     @classmethod
@@ -43,6 +50,12 @@ class LLMService:
     async def update_llm(cls, **kwargs):
         if "llm_type" in kwargs:
             kwargs["llm_type"] = cls.normalize_llm_type(kwargs["llm_type"])
+        if "model" in kwargs:
+            kwargs["model"] = normalize_model_id_for_provider(
+                kwargs.get("model"),
+                provider=kwargs.get("provider"),
+                base_url=kwargs.get("base_url"),
+            )
         await LLMDao.update_llm(**kwargs)
 
     @classmethod

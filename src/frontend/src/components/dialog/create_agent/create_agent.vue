@@ -409,7 +409,7 @@ defineExpose({ open, close })
       }
       .prompt-textarea {
         :deep(.el-textarea__inner) {
-          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-family: var(--zuno-font-mono);
           font-size: 14px;
           line-height: 1.5;
           border-radius: 6px;

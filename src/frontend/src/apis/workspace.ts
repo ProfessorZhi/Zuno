@@ -98,6 +98,8 @@ export interface WorkSpaceSimpleTask {
   query: string
   model_id: string
   workspace_mode?: string
+  agent_name?: string
+  agent_id?: string
   web_search?: boolean
   plugins: string[]
   mcp_servers: string[]

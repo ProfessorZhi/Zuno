@@ -1,8 +1,8 @@
 <template>
-  <div class="config-page">
+  <div :class="['config-page', { 'is-embedded': embedded }]">
     <section class="config-card">
       <template v-if="toolName">
-        <header class="card-header">
+        <header v-if="!embedded" class="card-header">
           <div>
             <h1>{{ toolConfig?.display_name || '系统工具配置' }}</h1>
             <p>{{ toolConfig?.description || '正在加载工具配置...' }}</p>
@@ -13,16 +13,16 @@
         <div v-if="loading" class="state-box">正在加载配置...</div>
 
         <div v-else-if="toolConfig" class="content-stack">
-          <div v-if="toolStatus" class="status-banner" :class="statusClass">
+          <div v-if="showIntro && toolStatus" class="status-banner" :class="statusClass">
             <strong>{{ toolStatus.label }}</strong>
             <span>{{ toolStatus.detail }}</span>
           </div>
 
-          <div v-if="toolSummaryNote" class="note-card">
+          <div v-if="showIntro && toolSummaryNote" class="note-card">
             {{ toolSummaryNote }}
           </div>
 
-          <div v-if="toolGuideSections.length > 0" class="guide-grid">
+          <div v-if="showIntro && toolGuideSections.length > 0" class="guide-grid">
             <section
               v-for="section in toolGuideSections"
               :key="section.key"
@@ -39,29 +39,33 @@
           </div>
 
           <template v-if="toolConfig.config_type === 'email_accounts'">
-            <section class="panel-card">
+            <section class="panel-card email-config-panel">
               <div class="panel-head">
-                <div>
+                <div v-if="!embedded">
                   <h2>{{ configPanel.title }}</h2>
-                  <p>{{ configPanel.description }}</p>
+                  <p v-if="showIntro">{{ configPanel.description }}</p>
                 </div>
                 <div class="quick-actions">
-                  <button class="secondary-btn" type="button" @click="addEmailAccount('qq')">新增 QQ</button>
-                  <button class="secondary-btn" type="button" @click="addEmailAccount('163')">新增 163</button>
-                  <button class="secondary-btn" type="button" @click="addEmailAccount('gmail')">新增 Gmail</button>
-                  <button class="secondary-btn" type="button" @click="addEmailAccount('outlook')">新增 Outlook</button>
-                  <button class="secondary-btn" type="button" @click="addEmailAccount('custom')">新增自定义 SMTP</button>
+                  <span class="quick-label">新增槽位</span>
+                  <button class="secondary-btn provider-btn" type="button" @click="addEmailAccount('qq')">QQ</button>
+                  <button class="secondary-btn provider-btn" type="button" @click="addEmailAccount('163')">163</button>
+                  <button class="secondary-btn provider-btn" type="button" @click="addEmailAccount('gmail')">Gmail</button>
+                  <button class="secondary-btn provider-btn" type="button" @click="addEmailAccount('outlook')">Outlook</button>
+                  <button class="secondary-btn provider-btn" type="button" @click="addEmailAccount('custom')">自定义 SMTP</button>
                 </div>
               </div>
 
-              <div v-if="emailAccounts.length === 0" class="empty-box">
-                还没有邮箱槽位。至少配置一个可用槽位后，Agent 才能直接发信。
+              <div v-if="emailAccounts.length === 0" class="empty-box email-empty-box">
+                还没有邮箱槽位，点上方服务商模板创建第一个发件身份。
               </div>
 
               <div v-else class="account-list">
                 <article v-for="(account, index) in emailAccounts" :key="index" class="account-card">
                   <div class="account-head">
-                    <strong>槽位 {{ index + 1 }}</strong>
+                    <div class="account-title">
+                      <strong>{{ account.slot_name || `槽位 ${index + 1}` }}</strong>
+                      <span>{{ account.provider === 'custom' ? 'SMTP' : account.provider }}</span>
+                    </div>
                     <button class="danger-text-btn" type="button" @click="removeEmailAccount(index)">删除</button>
                   </div>
 
@@ -115,10 +119,10 @@
 
           <template v-else-if="toolConfig.fields.length > 0">
             <section class="panel-card">
-              <div class="panel-head">
+              <div v-if="!embedded" class="panel-head">
                 <div>
                   <h2>{{ configPanel.title }}</h2>
-                  <p>{{ configPanel.description }}</p>
+                  <p v-if="showIntro">{{ configPanel.description }}</p>
                 </div>
               </div>
 
@@ -140,16 +144,16 @@
           </template>
 
           <section v-else class="panel-card">
-            <div class="panel-head">
+            <div v-if="!embedded" class="panel-head">
               <div>
                 <h2>{{ configPanel.title }}</h2>
-                <p>{{ configPanel.description }}</p>
+                <p v-if="showIntro">{{ configPanel.description }}</p>
               </div>
             </div>
             <div class="empty-box">{{ configPanel.emptyHint }}</div>
           </section>
 
-          <div class="footer-actions">
+          <div v-if="!embedded" class="footer-actions">
             <button class="secondary-btn" type="button" :disabled="checkingStatus" @click="checkToolStatus">
               {{ checkingStatus ? '检测中...' : '手动检测' }}
             </button>
@@ -173,7 +177,7 @@
 
         <div v-else class="content-stack">
           <textarea v-model="rawConfig" class="config-editor"></textarea>
-          <div class="footer-actions">
+          <div v-if="!embedded" class="footer-actions">
             <button class="secondary-btn" type="button" @click="reloadRawConfig">重置</button>
             <button class="primary-btn" type="button" :disabled="saving" @click="saveRawConfig">
               {{ saving ? '保存中...' : '保存配置' }}
@@ -212,6 +216,11 @@ type ToolGuideSection = {
 }
 
 const route = useRoute()
+const props = defineProps<{
+  tool?: string
+  embedded?: boolean
+  showIntro?: boolean
+}>()
 const toolName = ref('')
 const loading = ref(false)
 const saving = ref(false)
@@ -222,6 +231,7 @@ const toolConfig = ref<SystemToolConfigPayload | null>(null)
 const toolValues = ref<Record<string, string>>({})
 const emailAccounts = ref<EmailAccount[]>([])
 const systemToolMetaMap = ref<Record<string, RuntimeConfigPayload['system_tools'][number]>>({})
+const showIntro = computed(() => props.showIntro !== false)
 
 const providerTemplates: Record<string, Pick<EmailAccount, 'smtp_host' | 'smtp_port' | 'use_ssl'>> = {
   qq: { smtp_host: 'smtp.qq.com', smtp_port: 465, use_ssl: true },
@@ -451,7 +461,7 @@ const createEmailAccount = (provider: string = 'qq'): EmailAccount => {
 }
 
 const applyRoute = () => {
-  toolName.value = typeof route.query.tool === 'string' ? route.query.tool : ''
+  toolName.value = props.tool || (typeof route.query.tool === 'string' ? route.query.tool : '')
 }
 
 const handleProviderChange = (account: EmailAccount) => {
@@ -600,7 +610,7 @@ const initializePage = async () => {
 }
 
 watch(
-  () => route.query.tool,
+  () => [route.query.tool, props.tool],
   async () => {
     await initializePage()
   }
@@ -608,6 +618,12 @@ watch(
 
 onMounted(async () => {
   await initializePage()
+})
+
+defineExpose({
+  checkToolStatus,
+  reloadToolConfig,
+  saveToolConfig,
 })
 </script>
 
@@ -618,6 +634,12 @@ onMounted(async () => {
   background: linear-gradient(180deg, rgba(252, 246, 238, 0.9) 0%, rgba(255, 251, 245, 0.96) 100%);
 }
 
+.config-page.is-embedded {
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+
 .config-card {
   max-width: 1020px;
   margin: 0 auto;
@@ -626,6 +648,169 @@ onMounted(async () => {
   background: rgba(255, 252, 247, 0.96);
   border: 1px solid rgba(214, 132, 70, 0.14);
   box-shadow: 0 14px 36px rgba(154, 91, 39, 0.08);
+}
+
+.config-page.is-embedded .config-card {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.config-page.is-embedded .panel-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.config-page.is-embedded .panel-head {
+  margin-bottom: 6px;
+}
+
+.config-page.is-embedded .panel-head h2 {
+  font-size: 16px;
+}
+
+.config-page.is-embedded .content-stack {
+  gap: 10px;
+}
+
+.config-page.is-embedded .quick-actions {
+  width: 100%;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 2px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.58);
+}
+
+.config-page.is-embedded .quick-actions .secondary-btn {
+  height: 26px;
+  padding: 0 2px 3px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.42), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
+  box-shadow: none;
+  color: #8a6a45;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.config-page.is-embedded .field-stack,
+.config-page.is-embedded .account-list {
+  gap: 8px;
+}
+
+.config-page.is-embedded .field-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 8px 18px;
+  margin-top: 6px;
+}
+
+.config-page.is-embedded .field-item {
+  grid-template-columns: minmax(64px, max-content) minmax(0, 1fr);
+  align-items: end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.config-page.is-embedded .field-item > span {
+  padding-bottom: 6px;
+  color: #7b8797;
+  font-size: 11px;
+  font-weight: 620;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.config-page.is-embedded .field-input {
+  min-height: 30px;
+  padding: 0 3px 3px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.34) 16%, rgba(148, 163, 184, 0.42) 72%, rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.04));
+  box-shadow: none;
+  color: #334155;
+  font-size: 12px;
+}
+
+.config-page.is-embedded .account-card {
+  padding: 9px 0 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.68);
+  border-radius: 0;
+  background: transparent;
+}
+
+.config-page.is-embedded .account-card:last-child {
+  border-bottom: none;
+}
+
+.config-page.is-embedded .account-head {
+  margin-bottom: 5px;
+}
+
+.config-page.is-embedded .account-head strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.config-page.is-embedded .empty-box {
+  padding: 18px 8px 20px;
+  border: 0;
+  background: transparent;
+  color: #a7b1c1;
+  text-align: center;
+}
+
+.config-page.is-embedded .email-config-panel {
+  display: grid;
+  gap: 6px;
+}
+
+.config-page.is-embedded .quick-label {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.config-page.is-embedded .provider-btn:hover,
+.config-page.is-embedded .provider-btn:focus-visible {
+  color: #b45309;
+  outline: 0;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.68), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
+}
+
+.config-page.is-embedded .email-empty-box {
+  min-height: 68px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+
+.config-page.is-embedded .account-title {
+  display: inline-flex;
+  align-items: baseline;
+  min-width: 0;
+  gap: 8px;
+}
+
+.config-page.is-embedded .account-title span {
+  color: #b78345;
+  font-size: 10.5px;
+  font-weight: 650;
+  text-transform: uppercase;
 }
 
 .card-header {
@@ -849,7 +1034,7 @@ onMounted(async () => {
   min-height: 520px;
   padding: 18px;
   resize: vertical;
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-family: var(--zuno-font-mono);
   line-height: 1.6;
 }
 
@@ -857,6 +1042,21 @@ onMounted(async () => {
 .config-editor:focus {
   border-color: #c96c2d;
   box-shadow: 0 0 0 3px rgba(201, 108, 45, 0.12);
+}
+
+.config-page.is-embedded .field-input:hover {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.28) 18%, rgba(148, 163, 184, 0.36) 76%, rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 251, 247, 0.38), rgba(255, 255, 255, 0.04));
+}
+
+.config-page.is-embedded .field-input:focus {
+  border: 0;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.88) 18%, rgba(217, 119, 6, 0.86) 62%, rgba(245, 158, 11, 0)) left bottom / 100% 2px no-repeat,
+    radial-gradient(85% 120% at 48% 100%, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0) 58%),
+    linear-gradient(180deg, rgba(255, 251, 247, 0.48), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 10px 22px -22px rgba(180, 83, 9, 0.42);
 }
 
 .primary-btn,
@@ -904,6 +1104,112 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   color: #6f5a47;
+}
+
+.config-page.is-embedded .checkbox-inline {
+  min-height: 30px;
+  color: #8a6a45;
+  font-size: 12px;
+}
+
+.config-page.is-embedded .checkbox-inline input {
+  accent-color: #f59e0b;
+}
+
+/* Embedded tool configuration follows the workspace ink-line form language. */
+.config-page.is-embedded .config-card,
+.config-page.is-embedded .panel-card,
+.config-page.is-embedded .email-config-panel {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.config-page.is-embedded .content-stack,
+.config-page.is-embedded .field-stack,
+.config-page.is-embedded .account-list {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.config-page.is-embedded .field-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) !important;
+  gap: 8px 18px !important;
+  margin-top: 4px !important;
+}
+
+.config-page.is-embedded .field-item {
+  display: grid !important;
+  grid-template-columns: minmax(92px, max-content) minmax(0, 1fr) !important;
+  align-items: end !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.config-page.is-embedded .field-item > span {
+  min-width: 0 !important;
+  padding: 0 0 7px !important;
+  color: #7b8797 !important;
+  font-size: 11px !important;
+  font-weight: 620 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.config-page.is-embedded .field-input,
+.config-page.is-embedded .config-editor {
+  width: 100% !important;
+  min-height: 30px !important;
+  padding: 0 3px 4px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.34) 16%, rgba(148, 163, 184, 0.42) 72%, rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.04)) !important;
+  box-shadow: none !important;
+  color: #334155 !important;
+  font-size: 12px !important;
+  outline: none !important;
+}
+
+.config-page.is-embedded .field-input:hover,
+.config-page.is-embedded .config-editor:hover {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.28) 18%, rgba(148, 163, 184, 0.36) 76%, rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 251, 247, 0.34), rgba(255, 255, 255, 0.04)) !important;
+}
+
+.config-page.is-embedded .field-input:focus,
+.config-page.is-embedded .config-editor:focus {
+  border: 0 !important;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.88) 18%, rgba(217, 119, 6, 0.86) 62%, rgba(245, 158, 11, 0)) left bottom / 100% 2px no-repeat,
+    radial-gradient(85% 120% at 48% 100%, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0) 58%),
+    linear-gradient(180deg, rgba(255, 251, 247, 0.46), rgba(255, 255, 255, 0.04)) !important;
+  box-shadow: 0 10px 22px -22px rgba(180, 83, 9, 0.42) !important;
+}
+
+.config-page.is-embedded .empty-box {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.config-page.is-embedded .account-card {
+  padding: 9px 0 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.62) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 @media (max-width: 900px) {

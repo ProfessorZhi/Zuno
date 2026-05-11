@@ -129,3 +129,15 @@ def test_get_workspace_sessions_endpoint_passes_mode_filter(monkeypatch):
         "user_id": "u_scope",
         "workspace_mode": "agent",
     }
+
+
+def test_agent_draft_titles_are_treated_as_placeholders():
+    from agentchat.api.services.workspace_session import WorkSpaceSessionService
+    from agentchat.database.dao.workspace_session import WorkSpaceSessionDao
+
+    for title in ["小志的新对话", "小志 的新对话", "智子 的新会话", "新对话"]:
+        assert WorkSpaceSessionService.is_placeholder_title(title)
+        assert WorkSpaceSessionDao.is_placeholder_title(title)
+
+    assert not WorkSpaceSessionService.is_placeholder_title("帮我回复邮件")
+    assert not WorkSpaceSessionDao.is_placeholder_title("帮我回复邮件")

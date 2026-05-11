@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, onActivated, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
+  Check,
   Delete,
   Edit,
   FolderOpened,
   Plus,
-  Refresh,
   Search,
   Setting,
 } from '@element-plus/icons-vue'
 import knowledgeIcon from '../../assets/knowledge.svg'
+import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   createKnowledgeAPI,
   deleteKnowledgeAPI,
@@ -25,6 +26,7 @@ import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
 import { safeDisplayText } from '../../utils/display-text'
 import { describeKnowledgeConfig, findBindingById, normalizeKnowledgeConfig } from '../../utils/knowledge-config'
 import { summarizeKnowledgeProgress, type KnowledgeProgressSummary } from '../../utils/knowledge-task'
+import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
 
 type KnowledgeItem = KnowledgeResponse
 
@@ -34,6 +36,7 @@ const KNOWLEDGE_DESC_MIN = 10
 const KNOWLEDGE_DESC_MAX = 200
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
 const saving = ref(false)
 const keyword = ref('')
@@ -42,6 +45,8 @@ const modelOptions = ref<LLMResponse[]>([])
 const knowledgeProgressMap = ref<Record<string, KnowledgeProgressSummary>>({})
 const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
+const LIST_PAGE_SIZE = 6
+const listPage = ref(1)
 
 const createForm = ref({
   knowledge_name: '',
@@ -69,6 +74,10 @@ const filteredKnowledges = computed(() => {
       .includes(search)
   ))
 })
+const paginatedKnowledges = computed(() => filteredKnowledges.value.slice(
+  (listPage.value - 1) * LIST_PAGE_SIZE,
+  listPage.value * LIST_PAGE_SIZE,
+))
 
 const getKnowledgeProgress = (item: KnowledgeItem) => (
   knowledgeProgressMap.value[item.id] || summarizeKnowledgeProgress([])
@@ -152,18 +161,39 @@ const resetEditForm = () => {
   }
 }
 
-const openCreateDialog = () => {
+const closeInlineForm = () => {
+  createDialogVisible.value = false
+  editDialogVisible.value = false
   resetCreateForm()
+  resetEditForm()
+}
+
+const openCreateDialog = () => {
+  if (createDialogVisible.value) {
+    createDialogVisible.value = false
+    return
+  }
+  resetCreateForm()
+  editDialogVisible.value = false
   createDialogVisible.value = true
 }
 
 const openEditDialog = (item: KnowledgeItem) => {
+  createDialogVisible.value = false
   editForm.value = {
     knowledge_id: item.id,
     knowledge_name: item.name,
     knowledge_desc: item.description || '',
   }
   editDialogVisible.value = true
+}
+
+const submitInlineForm = () => {
+  if (editDialogVisible.value) {
+    handleEdit()
+    return
+  }
+  handleCreate()
 }
 
 const validateKnowledge = (name: string, description: string) => {
@@ -195,7 +225,10 @@ const validateKnowledge = (name: string, description: string) => {
 
 const handleCreate = async () => {
   const { knowledge_name, knowledge_desc } = createForm.value
-  if (!validateKnowledge(knowledge_name, knowledge_desc)) return
+  if (!validateKnowledge(knowledge_name, knowledge_desc)) {
+    closeInlineForm()
+    return
+  }
 
   saving.value = true
   try {
@@ -205,7 +238,7 @@ const handleCreate = async () => {
     })
     if (response.data.status_code === 200) {
       ElMessage.success('知识库已创建')
-      createDialogVisible.value = false
+      closeInlineForm()
       await fetchKnowledges()
       return
     }
@@ -220,7 +253,10 @@ const handleCreate = async () => {
 
 const handleEdit = async () => {
   const { knowledge_id, knowledge_name, knowledge_desc } = editForm.value
-  if (!validateKnowledge(knowledge_name, knowledge_desc)) return
+  if (!validateKnowledge(knowledge_name, knowledge_desc)) {
+    closeInlineForm()
+    return
+  }
 
   saving.value = true
   try {
@@ -231,7 +267,7 @@ const handleEdit = async () => {
     })
     if (response.data.status_code === 200) {
       ElMessage.success('知识库已更新')
-      editDialogVisible.value = false
+      closeInlineForm()
       await fetchKnowledges()
       return
     }
@@ -275,7 +311,7 @@ const handleDelete = async (item: KnowledgeItem) => {
 
 const openFiles = (item: KnowledgeItem) => {
   router.push({
-    name: 'knowledge-file',
+    name: route.name === 'workspaceSettingsKnowledge' ? 'workspaceSettingsKnowledgeFile' : 'knowledge-file',
     params: { knowledgeId: item.id },
     query: { name: item.name },
   })
@@ -283,7 +319,7 @@ const openFiles = (item: KnowledgeItem) => {
 
 const openConfig = (item: KnowledgeItem) => {
   router.push({
-    name: 'knowledge-config',
+    name: route.name === 'workspaceSettingsKnowledge' ? 'workspaceSettingsKnowledgeConfig' : 'knowledge-config',
     params: { knowledgeId: item.id },
     query: { name: item.name },
   })
@@ -316,121 +352,145 @@ onActivated(fetchKnowledges)
         <div class="page-title-row">
           <img :src="knowledgeIcon" alt="知识库" class="page-icon" />
           <div>
-            <h1>知识库管理</h1>
-            <p>知识库自己负责索引和检索策略。首轮结果不够强时，会自动补检一轮。聊天页只选知识库，模型页只维护资源池。</p>
+            <h1>知识库</h1>
           </div>
         </div>
       </div>
 
       <div class="header-actions">
+        <el-button
+          :class="['settings-icon-button', { 'is-create-open': createDialogVisible }]"
+          type="primary"
+          :icon="Plus"
+          circle
+          :title="createDialogVisible ? '收起新建知识库' : '新建知识库'"
+          :aria-label="createDialogVisible ? '收起新建知识库' : '新建知识库'"
+          @click="openCreateDialog"
+        />
+      </div>
+      <div class="settings-search-row">
         <el-input v-model="keyword" clearable placeholder="搜索知识库" class="search-input">
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        <el-button :icon="Refresh" @click="fetchKnowledges">刷新</el-button>
-        <el-button type="primary" :icon="Plus" @click="openCreateDialog">新建知识库</el-button>
       </div>
+    </section>
+
+    <section v-if="createDialogVisible || editDialogVisible" class="knowledge-form-panel">
+      <header class="inline-form-head">
+        <div>
+          <h2>{{ editDialogVisible ? '编辑知识库' : '新建知识库' }}</h2>
+        </div>
+        <div class="inline-form-actions">
+          <el-button
+            class="settings-icon-button save-action"
+            type="primary"
+            :icon="Check"
+            :loading="saving"
+            circle
+            title="保存"
+            aria-label="保存"
+            @click="submitInlineForm"
+          />
+        </div>
+      </header>
+
+      <el-form label-position="top" class="compact-knowledge-form">
+        <el-form-item label="名称">
+          <el-input
+            v-if="createDialogVisible"
+            v-model="createForm.knowledge_name"
+            maxlength="10"
+            show-word-limit
+            placeholder="2-10 个字"
+          />
+          <el-input
+            v-else
+            v-model="editForm.knowledge_name"
+            maxlength="10"
+            show-word-limit
+            placeholder="2-10 个字"
+          />
+        </el-form-item>
+        <el-form-item label="说明">
+          <el-input
+            v-if="createDialogVisible"
+            v-model="createForm.knowledge_desc"
+            type="textarea"
+            :autosize="{ minRows: 1, maxRows: 4 }"
+            maxlength="200"
+            show-word-limit
+            placeholder="一句话说明这个知识库收什么资料"
+          />
+          <el-input
+            v-else
+            v-model="editForm.knowledge_desc"
+            type="textarea"
+            :autosize="{ minRows: 1, maxRows: 4 }"
+            maxlength="200"
+            show-word-limit
+            placeholder="一句话说明这个知识库收什么资料"
+          />
+        </el-form-item>
+      </el-form>
     </section>
 
     <section class="content-card" v-loading="loading">
-      <div class="section-head">
-        <div>
-          <h2>知识库列表</h2>
-          <p>参数配置、索引模型和检索策略都绑定在知识库本身，不再分散在聊天页和模型页。</p>
-        </div>
-      </div>
-
-      <div v-if="filteredKnowledges.length === 0" class="empty-state">
-        <h3>还没有知识库</h3>
-        <p>先创建一个知识库，再去上传文件和配置参数。</p>
+      <div v-if="filteredKnowledges.length === 0 && !createDialogVisible && !editDialogVisible" class="empty-state settings-empty-hint">
+        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+        {{ keyword ? '没有匹配到知识库，换个关键词试试看吧 (´･_･`)' : '知识库还在等第一份资料，点右上角 + 开始投喂吧 (｡•̀ᴗ-)✧' }}
       </div>
 
       <div v-else class="knowledge-grid">
-        <article v-for="item in filteredKnowledges" :key="item.id" class="knowledge-card">
-          <div class="card-head">
-        <div class="card-copy">
-          <h3>{{ item.name }}</h3>
-          <p>{{ getKnowledgeDescription(item) }}</p>
-        </div>
-            <span class="config-badge" :class="{ active: hasCustomConfig(item) }">
-              {{ hasCustomConfig(item) ? '已配置参数' : '默认参数' }}
-            </span>
-          </div>
-
-          <div class="meta-row">
-            <span>文件数 {{ item.count }}</span>
-            <span>体积 {{ item.file_size }}</span>
-            <span>更新时间 {{ formatDate(item.update_time || item.create_time) }}</span>
-          </div>
-
-          <div class="summary-grid">
-            <div class="summary-item">
-              <strong>索引策略</strong>
-              <span>{{ getConfigSummary(item).chunkModeLabel }} / {{ getConfigSummary(item).imageStrategyLabel }}</span>
+        <article v-for="item in paginatedKnowledges" :key="item.id" class="knowledge-list-row">
+          <div class="knowledge-summary-row">
+            <div class="knowledge-main">
+              <div class="knowledge-title-line">
+                <h3>{{ item.name }}</h3>
+                <span class="knowledge-status-pill" :class="{ active: hasCustomConfig(item) }">
+                  {{ hasCustomConfig(item) ? '已配置' : '默认' }}
+                </span>
+              </div>
+              <p>{{ getKnowledgeDescription(item) }}</p>
             </div>
-            <div class="summary-item">
-              <strong>检索策略</strong>
-              <span>{{ getConfigSummary(item).retrievalModeLabel }} / {{ getConfigSummary(item).rerankLabel }}</span>
-            </div>
-            <div class="summary-item">
-              <strong>文本 Embedding</strong>
-              <span>{{ getConfigSummary(item).textEmbeddingLabel }}</span>
+
+            <div class="knowledge-progress-cell" :style="{ '--knowledge-progress': `${getKnowledgeProgress(item).completionRate}%` }">
+              <div class="progress-copy">
+                <strong>{{ getKnowledgeProgress(item).total > 0 ? `${getKnowledgeProgress(item).completionRate}%` : '空' }}</strong>
+                <span>{{ getKnowledgeProgress(item).label }}</span>
+              </div>
+              <div class="progress-track" :class="{ failed: getKnowledgeProgress(item).failed > 0, processing: getKnowledgeProgress(item).processing > 0 }"></div>
             </div>
           </div>
 
-          <div class="progress-row">
-            <div>
-              <strong>索引进度</strong>
-              <span>{{ getKnowledgeProgress(item).label }}</span>
+          <div class="knowledge-detail-row">
+            <div class="knowledge-status-line">
+              <div class="knowledge-config-line">
+                <span><strong>索引</strong>{{ getConfigSummary(item).chunkModeLabel }} / {{ getConfigSummary(item).imageStrategyLabel }}</span>
+                <span><strong>检索</strong>{{ getConfigSummary(item).retrievalModeLabel }} / {{ getConfigSummary(item).rerankLabel }}</span>
+                <span><strong>向量</strong>{{ getConfigSummary(item).textEmbeddingLabel }}</span>
+              </div>
             </div>
-            <el-tag
-              size="small"
-              :type="getKnowledgeProgress(item).failed > 0 ? 'danger' : getKnowledgeProgress(item).processing > 0 ? 'warning' : getKnowledgeProgress(item).pending > 0 ? 'info' : getKnowledgeProgress(item).total > 0 ? 'success' : 'info'"
-            >
-              {{ getKnowledgeProgress(item).total > 0 ? `${getKnowledgeProgress(item).completionRate}%` : '暂无文件' }}
-            </el-tag>
+
+            <div class="knowledge-actions">
+              <el-button class="knowledge-icon-button" :icon="Setting" circle title="参数配置" aria-label="参数配置" @click="openConfig(item)" />
+              <el-button class="knowledge-icon-button" :icon="FolderOpened" circle title="文件管理" aria-label="文件管理" @click="openFiles(item)" />
+              <el-button class="knowledge-icon-button" :icon="Edit" circle title="编辑" aria-label="编辑" @click="openEditDialog(item)" />
+              <el-button class="knowledge-icon-button danger" type="danger" plain :icon="Delete" circle title="删除" aria-label="删除" @click="handleDelete(item)" />
+            </div>
           </div>
 
-          <div class="card-actions">
-            <el-button :icon="Setting" @click="openConfig(item)">参数配置</el-button>
-            <el-button :icon="FolderOpened" @click="openFiles(item)">文件管理</el-button>
-            <el-button :icon="Edit" @click="openEditDialog(item)">编辑</el-button>
-            <el-button type="danger" plain :icon="Delete" @click="handleDelete(item)">删除</el-button>
+          <div class="knowledge-meta-line">
+            <span>{{ item.count || 0 }} 文件</span>
+            <span>{{ item.file_size || '0B' }}</span>
+            <span>{{ formatDate(item.update_time || item.create_time) }}</span>
           </div>
         </article>
       </div>
+      <ZunoMiniPager v-model:page="listPage" class="settings-list-pager" :total="filteredKnowledges.length" :page-size="LIST_PAGE_SIZE" />
     </section>
 
-    <el-dialog v-model="createDialogVisible" title="新建知识库" width="620px">
-      <el-form label-position="top">
-        <el-form-item label="名称">
-          <el-input v-model="createForm.knowledge_name" maxlength="10" show-word-limit />
-        </el-form-item>
-        <el-form-item label="说明">
-          <el-input v-model="createForm.knowledge_desc" type="textarea" :rows="5" maxlength="200" show-word-limit />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="createDialogVisible = false">取消</el-button>
-        <el-button type="primary" :disabled="!isCreateFormValid" :loading="saving" @click="handleCreate">创建</el-button>
-      </template>
-    </el-dialog>
-
-    <el-dialog v-model="editDialogVisible" title="编辑知识库" width="620px">
-      <el-form label-position="top">
-        <el-form-item label="名称">
-          <el-input v-model="editForm.knowledge_name" maxlength="10" show-word-limit />
-        </el-form-item>
-        <el-form-item label="说明">
-          <el-input v-model="editForm.knowledge_desc" type="textarea" :rows="5" maxlength="200" show-word-limit />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" :disabled="!isEditFormValid" :loading="saving" @click="handleEdit">保存</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -443,7 +503,8 @@ onActivated(fetchKnowledges)
 }
 
 .page-header,
-.content-card {
+.content-card,
+.knowledge-form-panel {
   border-radius: 24px;
   border: 1px solid rgba(214, 132, 70, 0.14);
   background: rgba(255, 252, 247, 0.96);
@@ -508,6 +569,100 @@ onActivated(fetchKnowledges)
   padding: 24px;
 }
 
+.knowledge-form-panel {
+  display: grid;
+  gap: 12px;
+  padding: 18px 22px 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 250, 0.96), rgba(255, 250, 245, 0.88)),
+    rgba(255, 255, 255, 0.84);
+  animation: knowledge-panel-rise 180ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.inline-form-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inline-form-head h2 {
+  margin: 0;
+  color: #2f241d;
+  font-size: 17px;
+}
+
+.inline-form-head p {
+  margin: 4px 0 0;
+  color: #8a7765;
+  font-size: 12px;
+}
+
+.inline-form-actions {
+  display: flex;
+  gap: 7px;
+  min-width: max-content;
+}
+
+.inline-form-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.knowledge-icon-button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(245, 158, 11, 0.08);
+  color: #b45309;
+}
+
+.knowledge-icon-button.active {
+  border-color: rgba(245, 158, 11, 0.38);
+  background: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.18);
+}
+
+.compact-knowledge-form :deep(.el-form-item) {
+  margin-bottom: 10px;
+}
+
+.compact-knowledge-form :deep(.el-form-item__label) {
+  color: #7b6b5c;
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.compact-knowledge-form :deep(.el-input__wrapper),
+.compact-knowledge-form :deep(.el-textarea__inner) {
+  min-height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(214, 132, 70, 0.12) inset;
+}
+
+.compact-knowledge-form :deep(.el-textarea__inner) {
+  padding-top: 7px;
+  resize: none;
+}
+
+@keyframes knowledge-panel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scaleY(0.99);
+    transform-origin: top;
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    transform-origin: top;
+  }
+}
+
 .section-head {
   margin-bottom: 18px;
 }
@@ -524,141 +679,240 @@ onActivated(fetchKnowledges)
 
 .knowledge-grid {
   display: grid;
-  gap: 16px;
+  gap: 0;
 }
 
-.knowledge-card {
+.knowledge-list-row {
   display: grid;
-  gap: 16px;
-  padding: 20px;
-  border-radius: 18px;
-  border: 1px solid rgba(214, 132, 70, 0.12);
-  background: rgba(255, 249, 243, 0.94);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 2px 13px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background: transparent;
+  transition: background 160ms ease, border-color 160ms ease;
 }
 
-.card-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
+.knowledge-list-row:last-child {
+  border-bottom: 0;
 }
 
-.card-copy {
-  flex: 1 1 auto;
+.knowledge-list-row:hover {
+  border-color: rgba(245, 158, 11, 0.16);
+  background: rgba(245, 158, 11, 0.025);
+}
+
+.knowledge-summary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.42fr);
+  align-items: end;
+  gap: 18px;
   min-width: 0;
 }
 
-.card-head h3 {
+.knowledge-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.knowledge-title-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.knowledge-title-line h3 {
   margin: 0;
-  color: #5e3518;
-  display: -webkit-box;
+  min-width: 0;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 760;
   line-height: 1.28;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowledge-main p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+  display: -webkit-box;
   overflow: hidden;
   word-break: break-word;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
-.card-head p {
-  margin: 8px 0 0;
-  color: #8f7a68;
-  line-height: 1.6;
-  display: -webkit-box;
-  overflow: hidden;
-  word-break: break-word;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
-
-.config-badge {
-  padding: 7px 12px;
+.knowledge-status-pill {
+  flex: 0 0 auto;
+  min-height: 18px;
+  padding: 0 7px;
   border-radius: 999px;
-  background: rgba(214, 132, 70, 0.1);
-  color: #99663d;
-  font-size: 13px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 650;
+  line-height: 18px;
   white-space: nowrap;
 }
 
-.config-badge.active {
-  background: rgba(34, 197, 94, 0.12);
-  color: #166534;
+.knowledge-status-pill.active {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
 }
 
-.meta-row {
+.knowledge-detail-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.meta-row span,
-.summary-item {
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(201, 108, 45, 0.08);
-  color: #7e4b25;
-  font-size: 13px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
-.summary-grid {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+.knowledge-status-line {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  gap: 8px 18px;
+  min-width: 0;
 }
 
-.summary-item {
+.knowledge-meta-line,
+.knowledge-config-line {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  color: #8a99ad;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.knowledge-meta-line {
+  flex: 1 1 100%;
+  gap: 6px 10px;
+  margin-top: -1px;
+  padding-top: 1px;
+  color: #94a3b8;
+}
+
+.knowledge-meta-line span {
+  position: relative;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.knowledge-meta-line span + span::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin: 0 8px 2px 0;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.knowledge-config-line {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: 5px 14px;
+  color: #64748b;
+  overflow: hidden;
+}
+
+.knowledge-config-line span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowledge-config-line strong {
+  flex: 0 0 auto;
+  color: #8a4b16;
+  font-size: 11px;
+}
+
+.knowledge-progress-cell {
   display: grid;
   gap: 6px;
-  border-radius: 16px;
-  padding: 14px;
+  min-width: 0;
+  align-self: center;
 }
 
-.summary-item strong {
-  color: #5a3115;
-}
-
-.summary-item span {
-  color: #7f6956;
-  line-height: 1.6;
-  word-break: break-word;
-}
-
-.progress-row {
+.progress-copy {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.68);
-  border: 1px solid rgba(214, 132, 70, 0.12);
+  gap: 8px;
+  min-width: 0;
 }
 
-.progress-row strong {
-  display: block;
-  color: #5a3115;
+.progress-copy strong {
+  color: #b45309;
+  font-size: 13px;
+  font-weight: 760;
 }
 
-.progress-row span {
-  display: block;
-  margin-top: 6px;
-  color: #7f6956;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+.progress-copy span {
+  min-width: 0;
+  color: #8a99ad;
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.progress-row :deep(.el-tag) {
-  flex-shrink: 0;
+.progress-track {
+  position: relative;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
 }
 
-.card-actions {
+.progress-track::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--knowledge-progress, 0%);
+  border-radius: inherit;
+  background: #f59e0b;
+  transition: width 220ms ease;
+}
+
+.progress-track.failed::after {
+  background: #ef4444;
+}
+
+.progress-track.processing::after {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.knowledge-actions {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: 7px;
+  min-width: max-content;
+}
+
+.knowledge-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.knowledge-icon-button.danger {
+  border-color: rgba(239, 68, 68, 0.16);
+  background: rgba(239, 68, 68, 0.06);
+  color: #b91c1c;
 }
 
 .empty-state {
@@ -685,28 +939,40 @@ onActivated(fetchKnowledges)
 }
 
 @media (max-width: 1080px) {
-  .summary-grid {
-    grid-template-columns: 1fr;
+  .knowledge-summary-row {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 0.48fr);
   }
 }
 
 @media (max-width: 1024px) {
-  .card-head,
-  .progress-row {
-    flex-direction: column;
+  .knowledge-detail-row,
+  .knowledge-status-line {
     align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .knowledge-config-line {
+    flex-basis: 100%;
   }
 }
 
 @media (max-width: 960px) {
-  .page-header,
-  .card-head {
+  .page-header {
     flex-direction: column;
   }
 
   .header-actions,
-  .card-actions {
+  .knowledge-actions {
     flex-wrap: wrap;
+  }
+
+  .knowledge-summary-row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .knowledge-actions {
+    justify-content: flex-start;
   }
 
   .search-input {

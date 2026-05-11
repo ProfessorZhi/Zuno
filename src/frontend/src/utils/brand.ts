@@ -1,7 +1,5 @@
-import brandMark from '../assets/zuno-wordmark.svg'
-import brandIcon from '../assets/zuno-mark.svg'
-import agentAvatar from '../assets/zuno-avatar.svg'
+import faviconAvatar from '../assets/zuno-favicon.svg'
 
-export const zunoBlinkLogo = brandIcon
-export const zunoBrandMark = brandMark
-export const zunoAgentAvatar = agentAvatar
+export const zunoBlinkLogo = faviconAvatar
+export const zunoBrandMark = faviconAvatar
+export const zunoAgentAvatar = faviconAvatar

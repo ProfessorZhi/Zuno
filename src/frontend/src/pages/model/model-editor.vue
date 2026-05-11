@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Check, Close, Setting, Cpu } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
+import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import { 
   getVisibleLLMsAPI, 
   updateLLMAPI, 
@@ -337,7 +338,7 @@ onMounted(() => {
     <!-- 空状态 -->
     <div v-else-if="!loading" class="empty-state">
       <div class="empty-icon">
-        <el-icon><Close /></el-icon>
+        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
       </div>
       <h3>未找到模型</h3>
       <p>请检查模型ID是否正确</p>
@@ -493,7 +494,7 @@ onMounted(() => {
               -webkit-background-clip: text;
               -webkit-text-fill-color: transparent;
               background-clip: text;
-              letter-spacing: -0.5px;
+              letter-spacing: 0;
             }
             
             p {

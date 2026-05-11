@@ -11,6 +11,7 @@ from starlette.responses import StreamingResponse
 from agentchat.api.services.llm import LLMService
 from agentchat.api.services.mcp_server import MCPService
 from agentchat.api.services.tool import ToolService
+from agentchat.api.services.agent import AgentService
 from agentchat.api.services.user import UserPayload, get_login_user
 from agentchat.api.services.workspace_session import WorkSpaceSessionService
 from agentchat.prompts.completion import SYSTEM_PROMPT
@@ -29,6 +30,7 @@ from agentchat.services.workspace.simple_agent import MCPConfig, WorkSpaceSimple
 from agentchat.tools.text2image.action import _text_to_image
 from agentchat.utils.helpers import parse_imported_config
 from agentchat.utils.contexts import set_agent_name_context, set_user_id_context
+from agentchat.utils.model_output import normalize_model_id_for_provider
 from agentchat.database.models.workspace_session import WorkSpaceSessionCreate
 
 router = APIRouter(prefix="/workspace", tags=["WorkSpace"])
@@ -82,6 +84,30 @@ def _should_run_direct_image_generation(simple_task: WorkSpaceSimpleTask) -> boo
 
     normalized_query = (simple_task.query or "").lower()
     return any(keyword in normalized_query for keyword in IMAGE_REGEN_KEYWORDS)
+
+
+async def _resolve_workspace_usage_agent_name(
+    simple_task: WorkSpaceSimpleTask,
+    user_id: str,
+    workspace_session: dict | None,
+) -> str:
+    if WorkSpaceSessionService.normalize_workspace_mode(simple_task.workspace_mode) != "agent":
+        return UsageStatsAgentType.simple_agent.value
+
+    for candidate in (simple_task.agent_name, (workspace_session or {}).get("agent")):
+        agent_name = str(candidate or "").strip()
+        if WorkSpaceSessionService.is_real_agent_name(agent_name):
+            return agent_name
+
+    agent_id = str(simple_task.agent_id or "").strip()
+    if agent_id:
+        agent = await AgentService.select_agent_by_id(agent_id)
+        if agent and agent.get("user_id") == user_id:
+            agent_name = str(agent.get("name") or "").strip()
+            if WorkSpaceSessionService.is_real_agent_name(agent_name):
+                return agent_name
+
+    return UsageStatsAgentType.simple_agent.value
 
 
 @router.get("/plugins", summary="Get workspace tools")
@@ -166,11 +192,23 @@ async def workspace_simple_chat(
     login_user: UserPayload = Depends(get_login_user),
 ):
     set_user_id_context(login_user.user_id)
-    set_agent_name_context(UsageStatsAgentType.simple_agent)
 
     execution_mode = normalize_execution_mode(simple_task.execution_mode)
     access_scope = normalize_access_scope(simple_task.access_scope)
     model_config = await LLMService.get_llm_by_id(simple_task.model_id)
+    if not model_config:
+        raise HTTPException(status_code=400, detail="所选模型不存在，请刷新模型列表后重新选择。")
+
+    workspace_session = await WorkSpaceSessionService.get_workspace_session_from_id(
+        simple_task.session_id,
+        login_user.user_id,
+    )
+    usage_agent_name = await _resolve_workspace_usage_agent_name(
+        simple_task,
+        login_user.user_id,
+        workspace_session,
+    )
+    set_agent_name_context(usage_agent_name)
 
     if _should_run_direct_image_generation(simple_task):
         reference_image_url = _pick_reference_image_url(simple_task)
@@ -235,9 +273,14 @@ async def workspace_simple_chat(
 
     simple_agent = WorkSpaceSimpleAgent(
         model_config={
-            "model": model_config["model"],
+            "model": normalize_model_id_for_provider(
+                model_config.get("model"),
+                provider=model_config.get("provider"),
+                base_url=model_config.get("base_url"),
+            ),
             "base_url": model_config["base_url"],
             "api_key": model_config["api_key"],
+            "provider": model_config.get("provider"),
             "user_id": login_user.user_id,
         },
         mcp_configs=servers_config,
@@ -253,11 +296,7 @@ async def workspace_simple_chat(
         desktop_bridge_url=simple_task.desktop_bridge_url,
         desktop_bridge_token=simple_task.desktop_bridge_token,
         original_query=simple_task.query,
-    )
-
-    workspace_session = await WorkSpaceSessionService.get_workspace_session_from_id(
-        simple_task.session_id,
-        login_user.user_id,
+        usage_agent_name=usage_agent_name,
     )
     if workspace_session:
         contexts = workspace_session.get("contexts", [])

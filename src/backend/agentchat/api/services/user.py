@@ -21,6 +21,14 @@ from agentchat.schema.schemas import CreateUserReq
 from agentchat.utils.JWT import ACCESS_TOKEN_EXPIRE_TIME
 from agentchat.utils.runtime_observability import RedisKeys
 
+USER_AVATAR_ASSET_VERSION = "20260511-clean3"
+
+LOCAL_USER_AVATAR_PRESETS = [
+    f"/avatars/user/zuno-user-{index:02d}.png?v={USER_AVATAR_ASSET_VERSION}"
+    for index in range(1, 21)
+]
+
+
 class UserPayload:
 
     def __init__(self, **kwargs):
@@ -86,6 +94,8 @@ class UserService:
 
     @classmethod
     def get_random_user_avatar(cls):
+        if LOCAL_USER_AVATAR_PRESETS:
+            return random.choice(LOCAL_USER_AVATAR_PRESETS)
         files_url = storage_client.list_files_in_folder("icons/user")
         avatars_url = []
         for file_url in files_url:
@@ -94,11 +104,7 @@ class UserService:
 
     @classmethod
     def get_available_avatars(cls):
-        files_url = storage_client.list_files_in_folder("icons/user")
-        avatars_url = []
-        for file_url in files_url:
-            avatars_url.append(f"{app_settings.storage.active.base_url}/{file_url}")
-        return avatars_url
+        return LOCAL_USER_AVATAR_PRESETS
 
     @classmethod
     def get_user_info_by_id(cls, user_id):

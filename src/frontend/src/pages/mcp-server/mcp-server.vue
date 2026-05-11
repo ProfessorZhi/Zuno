@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, Edit, Plus, Refresh, Setting } from '@element-plus/icons-vue'
+import { Check, Delete, Edit, Plus, Search, Setting } from '@element-plus/icons-vue'
 import defaultMcpLogo from '../../assets/mcp.svg'
+import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   createMCPServerAPI,
   deleteMCPServerAPI,
@@ -16,6 +17,7 @@ import {
   type MCPServer,
 } from '../../apis/mcp-server'
 import { useUserStore } from '../../store/user'
+import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
 
 type TransportType = 'stdio' | 'streamable_http'
 
@@ -56,6 +58,9 @@ const savingServer = ref(false)
 const savingConfig = ref(false)
 const testingConfig = ref(false)
 const toolsLoading = ref(false)
+const keyword = ref('')
+const LIST_PAGE_SIZE = 6
+const listPage = ref(1)
 
 const serverDialogVisible = ref(false)
 const configDialogVisible = ref(false)
@@ -68,18 +73,34 @@ const currentTools = ref<any[]>([])
 
 const servers = ref<MCPServerView[]>([])
 const defaultLogoUrl = ref(defaultMcpLogo)
+const visibleServers = computed(() => {
+  const search = keyword.value.trim().toLowerCase()
+  const list = [...servers.value]
+  if (!search) return list
+  return list.filter((server) => [
+    server.server_name,
+    server.transport,
+    connectionModeText(server),
+    connectionHint(server),
+    server.displayStatus.label,
+  ].join(' ').toLowerCase().includes(search))
+})
+const paginatedServers = computed(() => visibleServers.value.slice(
+  (listPage.value - 1) * LIST_PAGE_SIZE,
+  listPage.value * LIST_PAGE_SIZE,
+))
 
 const serverForm = reactive<StructuredServerForm>({
   server_name: '',
   logo_url: '',
   transport: 'stdio',
   command: '',
-  args: [''],
-  env: [{ key: '', value: '' }],
-  env_passthrough: [''],
+  args: [],
+  env: [],
+  env_passthrough: [],
   cwd: '',
   url: '',
-  headers: [{ key: '', value: '' }],
+  headers: [],
 })
 
 const personalConfigValues = ref<Record<string, string>>({})
@@ -132,12 +153,12 @@ function createDefaultServerForm(): StructuredServerForm {
     logo_url: defaultLogoUrl.value,
     transport: 'stdio',
     command: '',
-    args: [''],
-    env: [createEmptyKeyValue()],
-    env_passthrough: [''],
+    args: [],
+    env: [],
+    env_passthrough: [],
     cwd: '',
     url: '',
-    headers: [createEmptyKeyValue()],
+    headers: [],
   }
 }
 
@@ -176,21 +197,21 @@ function fillServerForm(server?: MCPServer | null) {
     next.logo_url = server.logo_url || defaultLogoUrl.value
     next.transport = config.type === 'streamable_http' ? 'streamable_http' : 'stdio'
     next.command = config.command || ''
-    next.args = Array.isArray(config.args) && config.args.length > 0 ? [...config.args] : ['']
+    next.args = Array.isArray(config.args) && config.args.length > 0 ? [...config.args] : []
     next.env =
       config.env && typeof config.env === 'object'
         ? Object.entries(config.env).map(([key, value]) => ({ key, value: String(value ?? '') }))
-        : [createEmptyKeyValue()]
+        : []
     next.env_passthrough =
       Array.isArray(config.env_passthrough) && config.env_passthrough.length > 0
         ? config.env_passthrough.map((item: unknown) => String(item))
-        : ['']
+        : []
     next.cwd = config.cwd || ''
     next.url = config.url || server.url || ''
     next.headers =
       config.headers && typeof config.headers === 'object'
         ? Object.entries(config.headers).map(([key, value]) => ({ key, value: String(value ?? '') }))
-        : [createEmptyKeyValue()]
+        : []
   }
   Object.assign(serverForm, next)
 }
@@ -274,6 +295,12 @@ async function fetchServers() {
 }
 
 function openCreateServerDialog() {
+  if (serverDialogVisible.value && !isEditMode.value) {
+    serverDialogVisible.value = false
+    return
+  }
+  configDialogVisible.value = false
+  toolsDialogVisible.value = false
   isEditMode.value = false
   currentServer.value = null
   resetServerForm()
@@ -285,16 +312,27 @@ function openEditServerDialog(server: MCPServerView) {
     ElMessage.warning('官方 MCP 连接定义仅管理员可编辑。')
     return
   }
+  configDialogVisible.value = false
+  toolsDialogVisible.value = false
   isEditMode.value = true
   currentServer.value = server
   fillServerForm(server)
   serverDialogVisible.value = true
 }
 
+function isServerDraftComplete() {
+  if (!serverForm.server_name.trim()) return false
+  if (serverForm.transport === 'stdio') return Boolean(serverForm.command.trim())
+  return Boolean(serverForm.url.trim())
+}
+
 async function submitServerDialog() {
+  if (!isServerDraftComplete()) {
+    serverDialogVisible.value = false
+    return
+  }
   savingServer.value = true
   try {
-    if (!serverForm.server_name.trim()) throw new Error('请填写 MCP 名称。')
     const imported_config = buildImportedConfigFromForm()
     const payload = {
       server_name: serverForm.server_name.trim(),
@@ -351,6 +389,15 @@ async function handleDelete(server: MCPServerView) {
 }
 
 async function openToolsDialog(server: MCPServerView) {
+  if (toolsDialogVisible.value && currentServer.value?.mcp_server_id === server.mcp_server_id) {
+    toolsDialogVisible.value = false
+    currentServer.value = null
+    currentTools.value = []
+    return
+  }
+  serverDialogVisible.value = false
+  configDialogVisible.value = false
+  currentServer.value = server
   toolsLoading.value = true
   toolsDialogVisible.value = true
   toolsDialogTitle.value = `${server.server_name} · 工具列表`
@@ -370,6 +417,13 @@ async function openToolsDialog(server: MCPServerView) {
 }
 
 async function openConfigDialog(server: MCPServerView) {
+  if (configDialogVisible.value && currentServer.value?.mcp_server_id === server.mcp_server_id) {
+    configDialogVisible.value = false
+    currentServer.value = null
+    return
+  }
+  serverDialogVisible.value = false
+  toolsDialogVisible.value = false
   currentServer.value = server
   fillServerForm(server)
   personalConfigValues.value = {}
@@ -509,92 +563,102 @@ onMounted(async () => {
   <div class="mcp-page">
     <section class="hero-card">
       <div>
-        <div class="eyebrow">MCP CENTER</div>
-        <h2>MCP 服务管理</h2>
-        <p>新增 MCP 只保留两种标准接入：STDIO 和流式 HTTP。官方预置服务也使用同一套结构化配置展示。</p>
+        <div class="settings-title-row">
+          <img :src="defaultMcpLogo" alt="MCP" class="page-icon" />
+          <h2>MCP</h2>
+        </div>
       </div>
       <div class="hero-actions">
-        <el-button :icon="Refresh" :loading="loading" @click="fetchServers">刷新</el-button>
-        <el-button type="primary" :icon="Plus" @click="openCreateServerDialog">添加服务器</el-button>
+        <el-button
+          :class="['settings-icon-button', { 'is-create-open': serverDialogVisible && !isEditMode }]"
+          type="primary"
+          :icon="Plus"
+          circle
+          :title="serverDialogVisible && !isEditMode ? '收起新增 MCP 服务' : '添加服务器'"
+          :aria-label="serverDialogVisible && !isEditMode ? '收起新增 MCP 服务' : '添加服务器'"
+          @click="openCreateServerDialog"
+        />
+      </div>
+      <div class="settings-search-row">
+        <el-input v-model="keyword" clearable placeholder="搜索 MCP 服务名称或连接方式" class="search-input">
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
       </div>
     </section>
 
     <section class="table-card" v-loading="loading">
-      <table class="server-table">
-        <thead>
-          <tr>
-            <th>服务</th>
-            <th>工具数</th>
-            <th>配置状态</th>
-            <th>创建时间</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="server in servers" :key="server.mcp_server_id">
-            <td>
-              <div class="server-cell">
-                <img
-                  class="server-logo"
-                  :src="server.logo_url || defaultLogoUrl"
-                  :alt="server.server_name"
-                  @error="handleLogoError"
-                />
-                <div>
-                  <div class="server-title">
-                    <span>{{ server.server_name }}</span>
-                    <span v-if="server.user_id === '0'" class="official-tag">官方</span>
-                  </div>
-                  <div class="server-subtitle">{{ connectionModeText(server) }}</div>
-                  <div class="server-hint">{{ connectionHint(server) }}</div>
-                </div>
-              </div>
-            </td>
-            <td>
-              <el-button link type="primary" @click="openToolsDialog(server)">{{ server.tools?.length || 0 }} 个工具</el-button>
-            </td>
-            <td>
-              <el-tag :type="server.displayStatus.type">{{ server.displayStatus.label }}</el-tag>
-              <div class="status-detail">{{ server.displayStatus.detail }}</div>
-            </td>
-            <td>{{ server.create_time }}</td>
-            <td>
-              <div class="row-actions">
-                <el-button size="small" type="success" :icon="Setting" @click="openConfigDialog(server)">配置</el-button>
-                <el-button
-                  v-if="canEditServer(server)"
-                  size="small"
-                  type="primary"
-                  :icon="Edit"
-                  @click="openEditServerDialog(server)"
-                >
-                  编辑
-                </el-button>
-                <el-button
-                  v-if="canEditServer(server)"
-                  size="small"
-                  type="danger"
-                  :icon="Delete"
-                  @click="handleDelete(server)"
-                >
-                  删除
-                </el-button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-if="!visibleServers.length && !serverDialogVisible" class="empty-state settings-empty-hint">
+        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+        {{ keyword ? '没有匹配到 MCP 服务，换个关键词试试看吧 (´･_･`)' : '还没有 MCP 服务，点右上角 + 接上第一条能力通道吧 (｀・ω・´)ゞ' }}
+      </div>
+      <div v-else class="server-list">
+        <article v-for="server in paginatedServers" :key="server.mcp_server_id" class="server-row">
+          <img
+            class="server-logo"
+            :src="server.logo_url || defaultLogoUrl"
+            :alt="server.server_name"
+            @error="handleLogoError"
+          />
+          <div class="server-main">
+            <div class="server-title">
+              <span>{{ server.server_name }}</span>
+              <span v-if="server.user_id === '0'" class="official-tag">官方</span>
+            </div>
+            <div class="server-subtitle">{{ connectionModeText(server) }}</div>
+            <div class="server-meta">
+              <button class="meta-pill as-button" type="button" @click="openToolsDialog(server)">
+                {{ server.tools?.length || 0 }} 个工具
+              </button>
+              <span class="meta-pill">{{ server.displayStatus.label }}</span>
+              <span class="meta-pill">{{ connectionHint(server) }}</span>
+            </div>
+          </div>
+          <div class="server-actions">
+            <el-button class="mcp-icon-button primary" :icon="Setting" circle title="配置" aria-label="配置" @click="openConfigDialog(server)" />
+            <el-button
+              v-if="canEditServer(server)"
+              class="mcp-icon-button"
+              :icon="Edit"
+              circle
+              title="编辑"
+              aria-label="编辑"
+              @click="openEditServerDialog(server)"
+            />
+            <el-button
+              v-if="canEditServer(server)"
+              class="mcp-icon-button danger"
+              :icon="Delete"
+              circle
+              title="删除"
+              aria-label="删除"
+              @click="handleDelete(server)"
+            />
+          </div>
+        </article>
+      </div>
+      <ZunoMiniPager v-model:page="listPage" class="settings-list-pager" :total="visibleServers.length" :page-size="LIST_PAGE_SIZE" />
     </section>
 
-    <el-dialog v-model="serverDialogVisible" :title="isEditMode ? '编辑 MCP 服务' : '新增 MCP 服务'" width="820px">
+    <section v-if="serverDialogVisible" class="mcp-workbench-panel">
+      <header class="inline-panel-head">
+        <div>
+          <h3>{{ isEditMode ? '编辑 MCP 服务' : '新增 MCP 服务' }}</h3>
+        </div>
+        <div class="inline-panel-actions">
+          <el-button class="settings-icon-button save-action" type="primary" :icon="Check" :loading="savingServer" circle title="保存" aria-label="保存" @click="submitServerDialog" />
+        </div>
+      </header>
+
       <div class="dialog-grid">
         <div class="field">
           <label>名称</label>
-          <el-input v-model="serverForm.server_name" placeholder="例如：我的 MCP Server" />
+          <input v-model="serverForm.server_name" class="mcp-line-input" placeholder="例如：我的 MCP Server" />
         </div>
         <div class="field">
           <label>Logo URL</label>
-          <el-input v-model="serverForm.logo_url" placeholder="留空则使用默认图标" />
+          <input v-model="serverForm.logo_url" class="mcp-line-input" placeholder="留空则使用默认图标" />
         </div>
       </div>
 
@@ -608,63 +672,76 @@ onMounted(async () => {
       <template v-if="serverForm.transport === 'stdio'">
         <div class="field">
           <label>启动命令</label>
-          <el-input v-model="serverForm.command" placeholder="例如：python 或 uvx" />
+          <input v-model="serverForm.command" class="mcp-line-input" placeholder="例如：python 或 uvx" />
         </div>
-        <div class="field">
+        <div class="field repeat-field">
           <label>参数</label>
-          <div v-for="(arg, index) in serverForm.args" :key="`arg-${index}`" class="inline-row">
-            <el-input v-model="serverForm.args[index]" placeholder="一项参数一行" />
-            <el-button text type="danger" @click="serverForm.args.splice(index, 1)">删除</el-button>
+          <div class="repeat-stack" :class="{ 'is-empty': serverForm.args.length === 0 }">
+            <div v-for="(arg, index) in serverForm.args" :key="`arg-${index}`" class="inline-row one-col">
+              <input v-model="serverForm.args[index]" class="mcp-line-input" placeholder="一项参数一行" />
+              <el-button class="repeat-remove" text type="danger" :icon="Delete" circle title="删除参数" aria-label="删除参数" @click="serverForm.args.splice(index, 1)" />
+            </div>
+            <button class="repeat-add" type="button" @click="serverForm.args.push('')">+ 参数</button>
           </div>
-          <el-button text @click="serverForm.args.push('')">添加参数</el-button>
         </div>
-        <div class="field">
+        <div class="field repeat-field">
           <label>环境变量</label>
-          <div v-for="(item, index) in serverForm.env" :key="`env-${index}`" class="inline-row">
-            <el-input v-model="item.key" placeholder="键" />
-            <el-input v-model="item.value" placeholder="值" />
-            <el-button text type="danger" @click="serverForm.env.splice(index, 1)">删除</el-button>
+          <div class="repeat-stack" :class="{ 'is-empty': serverForm.env.length === 0 }">
+            <div v-for="(item, index) in serverForm.env" :key="`env-${index}`" class="inline-row">
+              <input v-model="item.key" class="mcp-line-input" placeholder="键" />
+              <input v-model="item.value" class="mcp-line-input" placeholder="值" />
+              <el-button class="repeat-remove" text type="danger" :icon="Delete" circle title="删除环境变量" aria-label="删除环境变量" @click="serverForm.env.splice(index, 1)" />
+            </div>
+            <button class="repeat-add" type="button" @click="serverForm.env.push(createEmptyKeyValue())">+ 环境变量</button>
           </div>
-          <el-button text @click="serverForm.env.push(createEmptyKeyValue())">添加环境变量</el-button>
         </div>
-        <div class="field">
-          <label>环境变量传递</label>
-          <div v-for="(item, index) in serverForm.env_passthrough" :key="`passthrough-${index}`" class="inline-row">
-            <el-input v-model="serverForm.env_passthrough[index]" placeholder="例如：OPENAI_API_KEY" />
-            <el-button text type="danger" @click="serverForm.env_passthrough.splice(index, 1)">删除</el-button>
+        <div class="field repeat-field">
+          <label>变量传递</label>
+          <div class="repeat-stack" :class="{ 'is-empty': serverForm.env_passthrough.length === 0 }">
+            <div v-for="(item, index) in serverForm.env_passthrough" :key="`passthrough-${index}`" class="inline-row one-col">
+              <input v-model="serverForm.env_passthrough[index]" class="mcp-line-input" placeholder="例如：OPENAI_API_KEY" />
+              <el-button class="repeat-remove" text type="danger" :icon="Delete" circle title="删除传递变量" aria-label="删除传递变量" @click="serverForm.env_passthrough.splice(index, 1)" />
+            </div>
+            <button class="repeat-add" type="button" @click="serverForm.env_passthrough.push('')">+ 传递变量</button>
           </div>
-          <el-button text @click="serverForm.env_passthrough.push('')">添加变量</el-button>
         </div>
         <div class="field">
           <label>工作目录</label>
-          <el-input v-model="serverForm.cwd" placeholder="例如：/app 或 ~/code" />
+          <input v-model="serverForm.cwd" class="mcp-line-input" placeholder="例如：/app 或 ~/code" />
         </div>
       </template>
 
       <template v-else>
         <div class="field">
           <label>流式 HTTP 地址</label>
-          <el-input v-model="serverForm.url" placeholder="https://example.com/mcp" />
+          <input v-model="serverForm.url" class="mcp-line-input" placeholder="https://example.com/mcp" />
         </div>
-        <div class="field">
+        <div class="field repeat-field">
           <label>请求头</label>
-          <div v-for="(item, index) in serverForm.headers" :key="`header-${index}`" class="inline-row">
-            <el-input v-model="item.key" placeholder="Header 名称" />
-            <el-input v-model="item.value" placeholder="Header 值" />
-            <el-button text type="danger" @click="serverForm.headers.splice(index, 1)">删除</el-button>
+          <div class="repeat-stack" :class="{ 'is-empty': serverForm.headers.length === 0 }">
+            <div v-for="(item, index) in serverForm.headers" :key="`header-${index}`" class="inline-row">
+              <input v-model="item.key" class="mcp-line-input" placeholder="Header 名称" />
+              <input v-model="item.value" class="mcp-line-input" placeholder="Header 值" />
+              <el-button class="repeat-remove" text type="danger" :icon="Delete" circle title="删除请求头" aria-label="删除请求头" @click="serverForm.headers.splice(index, 1)" />
+            </div>
+            <button class="repeat-add" type="button" @click="serverForm.headers.push(createEmptyKeyValue())">+ 请求头</button>
           </div>
-          <el-button text @click="serverForm.headers.push(createEmptyKeyValue())">添加请求头</el-button>
         </div>
       </template>
+    </section>
 
-      <template #footer>
-        <el-button @click="serverDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="savingServer" @click="submitServerDialog">保存</el-button>
-      </template>
-    </el-dialog>
-
-    <el-dialog v-model="configDialogVisible" title="MCP 配置" width="860px">
+    <section v-if="configDialogVisible" class="mcp-workbench-panel">
       <template v-if="currentServer">
+        <header class="inline-panel-head">
+          <div>
+            <h3>{{ currentServer.server_name }} 配置</h3>
+            <p>连接信息只读展示，个人参数和测试结果在这里维护。</p>
+          </div>
+          <div class="inline-panel-actions">
+            <el-button class="mcp-icon-button primary" :icon="Check" :loading="testingConfig" circle title="测试" aria-label="测试" @click="testCurrentConfig" />
+          </div>
+        </header>
+
         <section class="config-section">
           <h3>连接配置</h3>
           <div class="config-summary">
@@ -676,7 +753,7 @@ onMounted(async () => {
           <template v-if="serverForm.transport === 'stdio'">
             <div class="field readonly-field">
               <label>启动命令</label>
-              <el-input :model-value="serverForm.command" readonly />
+              <span class="mcp-line-value">{{ serverForm.command || '未设置' }}</span>
             </div>
             <div class="field readonly-field">
               <label>参数</label>
@@ -687,13 +764,13 @@ onMounted(async () => {
             </div>
             <div class="field readonly-field">
               <label>工作目录</label>
-              <el-input :model-value="serverForm.cwd || '未设置'" readonly />
+              <span class="mcp-line-value">{{ serverForm.cwd || '未设置' }}</span>
             </div>
           </template>
           <template v-else>
             <div class="field readonly-field">
               <label>流式 HTTP 地址</label>
-              <el-input :model-value="serverForm.url" readonly />
+              <span class="mcp-line-value">{{ serverForm.url || '未设置' }}</span>
             </div>
           </template>
         </section>
@@ -703,10 +780,10 @@ onMounted(async () => {
           <template v-if="personalConfigFields.length > 0">
             <div v-for="item in personalConfigFields" :key="item.key" class="field">
               <label>{{ item.label || item.key }}</label>
-              <el-input
+              <input
                 v-model="personalConfigValues[item.key]"
+                class="mcp-line-input"
                 :type="/secret|token|key|password/i.test(item.key) ? 'password' : 'text'"
-                :show-password="/secret|token|key|password/i.test(item.key)"
                 :placeholder="`请输入 ${item.label || item.key}`"
               />
             </div>
@@ -735,9 +812,14 @@ onMounted(async () => {
           </div>
         </section>
       </template>
-    </el-dialog>
+    </section>
 
-    <el-dialog v-model="toolsDialogVisible" :title="toolsDialogTitle" width="760px">
+    <section v-if="toolsDialogVisible" class="mcp-workbench-panel">
+      <header class="inline-panel-head">
+        <div>
+          <h3>{{ toolsDialogTitle }}</h3>
+        </div>
+      </header>
       <div v-loading="toolsLoading">
         <div v-if="currentTools.length === 0 && !toolsLoading" class="empty-panel">当前没有可展示的工具。</div>
         <div v-for="tool in currentTools" :key="tool.tool_name" class="tool-card">
@@ -753,7 +835,7 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-    </el-dialog>
+    </section>
   </div>
 </template>
 
@@ -762,6 +844,18 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.hero-card {
+  order: 0;
+}
+
+.mcp-workbench-panel {
+  order: 1;
+}
+
+.table-card {
+  order: 2;
 }
 
 .hero-card,
@@ -774,24 +868,82 @@ onMounted(async () => {
 }
 
 .table-card {
-  overflow-x: auto;
+  overflow: hidden;
+}
+
+.mcp-workbench-panel {
+  display: grid;
+  gap: 12px;
+  padding: 18px 22px 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(214, 132, 70, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 250, 0.96), rgba(255, 250, 245, 0.88)),
+    rgba(255, 255, 255, 0.84);
+  box-shadow: 0 16px 36px rgba(160, 95, 42, 0.08);
+  animation: mcp-panel-rise 180ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.inline-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inline-panel-head h3 {
+  margin: 0;
+  color: #2f241d;
+  font-size: 17px;
+}
+
+.inline-panel-head p {
+  margin: 4px 0 0;
+  color: #8a7765;
+  font-size: 12px;
+}
+
+.inline-panel-actions {
+  display: flex;
+  gap: 7px;
+  min-width: max-content;
+}
+
+.inline-panel-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+@keyframes mcp-panel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scaleY(0.99);
+    transform-origin: top;
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    transform-origin: top;
+  }
 }
 
 .hero-card {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
 }
 
-.eyebrow {
-  display: inline-flex;
-  margin-bottom: 10px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(214, 132, 70, 0.1);
-  color: #b86c33;
-  font-size: 12px;
-  letter-spacing: 0.14em;
+.settings-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .hero-card h2 {
@@ -813,53 +965,66 @@ onMounted(async () => {
   gap: 12px;
 }
 
-.server-table {
-  width: 100%;
-  min-width: 980px;
-  border-collapse: collapse;
+.server-list {
+  display: grid;
+  gap: 0;
 }
 
-.server-table th,
-.server-table td {
-  padding: 20px 12px;
-  border-bottom: 1px solid rgba(214, 132, 70, 0.12);
-  text-align: left;
-  vertical-align: top;
+.server-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  transition: background 160ms ease;
 }
 
-.server-table th {
-  color: #6b5b4d;
-  font-weight: 700;
+.server-row:last-child {
+  border-bottom: 0;
 }
 
-.server-cell {
-  display: flex;
-  gap: 16px;
+.server-row:hover {
+  background: linear-gradient(90deg, rgba(255, 251, 247, 0.52), rgba(255, 255, 255, 0));
 }
 
 .server-logo {
-  width: 68px;
-  height: 68px;
-  border-radius: 20px;
-  object-fit: cover;
-  border: 1px solid rgba(214, 132, 70, 0.12);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  object-fit: contain;
+  border: 0;
+}
+
+.server-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
 .server-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
-  font-size: 18px;
+  min-width: 0;
+  font-size: 15px;
   font-weight: 700;
   color: #2f241d;
+}
+
+.server-title > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .official-tag {
   display: inline-flex;
   padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(214, 132, 70, 0.12);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.36), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
   color: #b86c33;
   font-size: 12px;
 }
@@ -869,18 +1034,73 @@ onMounted(async () => {
 .status-detail,
 .muted-text {
   color: #7b6a5a;
-  font-size: 14px;
+  font-size: 12px;
 }
 
-.status-detail {
-  margin-top: 8px;
-  max-width: 280px;
-  line-height: 1.6;
+.server-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 19px;
+  max-width: 100%;
+  padding: 0 2px 2px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.22), rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat;
+  color: #806b58;
+  font-size: 11px;
+  line-height: 19px;
+}
+
+.meta-pill.as-button {
+  cursor: pointer;
+}
+
+.meta-pill.as-button:hover {
+  color: #b45309;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.46), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
+}
+
+.server-actions,
 .row-actions {
   display: flex;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: max-content;
+}
+
+.server-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.mcp-icon-button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 132, 70, 0.12);
+  background: rgba(255, 255, 255, 0.62);
+  color: #6f6257;
+}
+
+.mcp-icon-button.primary {
+  border-color: rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+}
+
+.mcp-icon-button.danger {
+  color: #d05f5f;
+  border-color: rgba(239, 68, 68, 0.14);
+  background: rgba(255, 255, 255, 0.62);
 }
 
 .dialog-grid {
@@ -894,25 +1114,177 @@ onMounted(async () => {
 }
 
 .field {
-  margin-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(92px, 132px) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
 }
 
 .field label {
   display: block;
-  margin-bottom: 8px;
-  color: #4c3b2f;
-  font-weight: 600;
+  margin-bottom: 0;
+  color: #7b6b5c;
+  font-size: 12px;
+  font-weight: 620;
+  align-self: start;
+  padding-top: 7px;
+}
+
+.field > :not(label) {
+  grid-column: 2;
+}
+
+.mcp-line-input,
+.mcp-line-value {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 3px 3px;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.34) 14%, rgba(148, 163, 184, 0.44) 72%, rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.04));
+  color: #334155;
+  font: inherit;
+  font-size: 13px;
+  line-height: 32px;
+  box-shadow: none;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.mcp-line-input::placeholder {
+  color: #a8b1c0;
+}
+
+.mcp-line-input:hover {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.3) 16%, rgba(148, 163, 184, 0.36) 78%, rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 251, 247, 0.36), rgba(255, 255, 255, 0.04));
+}
+
+.mcp-line-input:focus {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.86) 18%, rgba(217, 119, 6, 0.88) 58%, rgba(245, 158, 11, 0)) left bottom / 100% 2px no-repeat,
+    radial-gradient(85% 120% at 48% 100%, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0) 58%),
+    linear-gradient(180deg, rgba(255, 251, 247, 0.46), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 10px 22px -22px rgba(180, 83, 9, 0.42);
+}
+
+.mcp-line-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #64748b;
+}
+
+.field :deep(.el-input__wrapper),
+.field :deep(.el-textarea__inner) {
+  min-height: 32px;
+  padding: 0 3px 3px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.34) 14%, rgba(148, 163, 184, 0.44) 72%, rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.04)) !important;
+  box-shadow: none !important;
+}
+
+.field :deep(.el-input:hover .el-input__wrapper),
+.field :deep(.el-input__wrapper:hover),
+.field :deep(.el-textarea__inner:hover) {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.3) 16%, rgba(148, 163, 184, 0.36) 78%, rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 251, 247, 0.36), rgba(255, 255, 255, 0.04)) !important;
+}
+
+.field :deep(.el-input.is-focus .el-input__wrapper),
+.field :deep(.el-input__wrapper:focus-within),
+.field :deep(.el-textarea__inner:focus) {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.86) 18%, rgba(217, 119, 6, 0.88) 58%, rgba(245, 158, 11, 0)) left bottom / 100% 2px no-repeat,
+    radial-gradient(85% 120% at 48% 100%, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0) 58%),
+    linear-gradient(180deg, rgba(255, 251, 247, 0.46), rgba(255, 255, 255, 0.04)) !important;
 }
 
 .inline-row {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
-  gap: 12px;
-  margin-bottom: 10px;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-row.one-col {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.repeat-field {
+  align-items: start;
+}
+
+.repeat-stack {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.repeat-stack.is-empty {
+  width: max-content;
+  max-width: 100%;
+}
+
+.field > .repeat-stack.is-empty {
+  width: max-content;
+}
+
+.repeat-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  width: max-content;
+  max-width: max-content;
+  min-height: 24px;
+  padding: 0 2px 2px;
+  border: 0;
+  border-radius: 0;
+  color: #b45309;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.34), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
+  box-shadow: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.repeat-add:hover {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.58), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
+}
+
+.repeat-add:focus-visible {
+  outline: 0;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.62), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
+}
+
+.repeat-remove {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0;
+  color: #b76b45;
+  background: transparent;
 }
 
 .readonly-field :deep(.el-input__wrapper) {
-  background: rgba(245, 239, 231, 0.6);
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.24), rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat,
+    transparent !important;
 }
 
 .readonly-list {
@@ -923,28 +1295,42 @@ onMounted(async () => {
 
 .readonly-chip {
   display: inline-flex;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(214, 132, 70, 0.1);
+  padding: 1px 2px 3px;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.34), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
   color: #8c582d;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .config-section + .config-section {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(214, 132, 70, 0.12);
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .config-section h3 {
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   color: #2f241d;
+  font-size: 14px;
 }
 
 .config-summary {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   color: #5b4a3d;
+}
+
+.config-summary div {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  padding: 0 2px 2px;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.2), rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat;
+  font-size: 12px;
 }
 
 .config-actions {
@@ -966,22 +1352,25 @@ onMounted(async () => {
 }
 
 .empty-panel {
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: rgba(245, 239, 231, 0.7);
+  padding: 8px 0;
+  border-radius: 0;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.42);
+  background: transparent;
   color: #6e5d4e;
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .tool-card {
-  padding: 18px;
-  border-radius: 18px;
-  background: rgba(250, 246, 240, 0.9);
-  border: 1px solid rgba(214, 132, 70, 0.12);
+  padding: 12px 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .tool-card + .tool-card {
-  margin-top: 14px;
+  margin-top: 0;
 }
 
 .tool-name {
@@ -1022,13 +1411,28 @@ onMounted(async () => {
   }
 
   .dialog-grid,
+  .field,
   .inline-row,
   .schema-row {
     grid-template-columns: 1fr;
   }
 
+  .field > :not(label) {
+    grid-column: 1;
+  }
+
   .row-actions {
     flex-wrap: wrap;
+  }
+
+  .server-row {
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: flex-start;
+  }
+
+  .server-actions {
+    grid-column: 2;
+    justify-content: flex-start;
   }
 }
 </style>

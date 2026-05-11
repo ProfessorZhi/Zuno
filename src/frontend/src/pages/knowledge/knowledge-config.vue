@@ -40,6 +40,8 @@ const route = useRoute()
 const router = useRouter()
 
 const knowledgeId = computed(() => String(route.params.knowledgeId || ''))
+const inWorkspaceSettings = computed(() => route.name === 'workspaceSettingsKnowledgeConfig')
+const knowledgeListRoute = computed(() => inWorkspaceSettings.value ? { name: 'workspaceSettingsKnowledge' } : '/knowledge')
 const loading = ref(false)
 const saving = ref(false)
 const reindexing = ref(false)
@@ -247,7 +249,7 @@ const handleSaveAndReindex = async () => {
     if (summaryResult.dispatched_tasks > 0) {
       ElMessage.success(`参数已保存，并开始重建 ${summaryResult.dispatched_tasks}/${summaryResult.total_files} 个文件索引`)
       router.push({
-        name: 'knowledge-file',
+        name: inWorkspaceSettings.value ? 'workspaceSettingsKnowledgeFile' : 'knowledge-file',
         params: { knowledgeId: knowledgeId.value },
         query: { name: knowledge.value?.name || route.query.name || '知识库' },
       })
@@ -279,14 +281,14 @@ const handleReset = () => {
 
 const openFiles = () => {
   router.push({
-    name: 'knowledge-file',
+    name: inWorkspaceSettings.value ? 'workspaceSettingsKnowledgeFile' : 'knowledge-file',
     params: { knowledgeId: knowledgeId.value },
     query: { name: knowledge.value?.name || route.query.name || '知识库' },
   })
 }
 
 const goBack = () => {
-  router.back()
+  router.push(knowledgeListRoute.value)
 }
 
 watch(textEmbeddingOptions, (options) => {
@@ -306,13 +308,10 @@ onActivated(fetchKnowledgeContext)
   <div class="knowledge-config-page" v-loading="loading">
     <section class="page-hero">
       <div class="hero-copy">
-        <el-button :icon="ArrowLeft" class="back-btn" @click="goBack">返回</el-button>
-        <div class="eyebrow">知识库参数中心</div>
-        <h1>{{ knowledge?.name || route.query.name || '知识库' }}</h1>
-        <p>
-          这里决定这个知识库怎么切片、怎么建索引、怎么做检索。
-          首轮结果不够强时，会自动补检一轮；聊天页只选知识库，不再在聊天时改 Embedding、Rerank 和 Top K。
-        </p>
+        <div class="hero-title-row">
+          <el-button :icon="ArrowLeft" class="back-btn settings-icon-button" circle title="返回知识库" aria-label="返回知识库" @click="goBack" />
+          <h1>{{ knowledge?.name || route.query.name || '知识库' }}</h1>
+        </div>
         <div class="hero-pills">
           <span class="hero-pill">{{ summary.chunkModeLabel }}</span>
           <span class="hero-pill">{{ summary.retrievalModeLabel }}</span>
@@ -327,9 +326,8 @@ onActivated(fetchKnowledgeContext)
             <el-icon><Check /></el-icon>
           </div>
           <strong>知识库按自己的检索策略运行，首轮不足时自动补检一轮</strong>
-          <p>模型页只提供可选资源池。聊天页只选知识库，不再在聊天时改 Embedding、Rerank 和 Top K。</p>
           <div class="status-actions">
-            <el-button :icon="FolderOpened" @click="openFiles">去看文件与进度</el-button>
+            <el-button class="settings-icon-button" :icon="FolderOpened" circle title="文件与进度" aria-label="文件与进度" @click="openFiles" />
           </div>
         </div>
       </div>
@@ -598,12 +596,11 @@ onActivated(fetchKnowledgeContext)
           </div>
 
           <div class="footer-actions">
-            <el-button @click="handleReset">恢复推荐默认值</el-button>
-            <el-button v-if="configImpact.requiresReindex" :loading="saving || reindexing" @click="handleSave">
-              仅保存参数
-            </el-button>
+            <el-button class="settings-icon-button" :icon="RefreshRight" circle title="恢复推荐默认值" aria-label="恢复推荐默认值" @click="handleReset" />
+            <el-button v-if="configImpact.requiresReindex" class="settings-icon-button" :icon="Check" circle :loading="saving || reindexing" title="仅保存参数" aria-label="仅保存参数" @click="handleSave" />
             <el-button
               v-if="configImpact.requiresReindex"
+              class="settings-save-button"
               type="primary"
               :icon="Check"
               :loading="saving || reindexing"
@@ -611,7 +608,7 @@ onActivated(fetchKnowledgeContext)
             >
               保存并重建索引
             </el-button>
-            <el-button v-else type="primary" :icon="Check" :loading="saving" @click="handleSave">
+            <el-button v-else class="settings-save-button" type="primary" :icon="Check" :loading="saving" @click="handleSave">
               保存知识库参数
             </el-button>
           </div>
@@ -624,7 +621,7 @@ onActivated(fetchKnowledgeContext)
 <style scoped lang="scss">
 .knowledge-config-page {
   display: grid;
-  gap: 20px;
+  gap: 14px;
   padding: 24px;
 }
 
@@ -638,32 +635,28 @@ onActivated(fetchKnowledgeContext)
 
 .page-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
-  gap: 18px;
-  padding: 28px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 22px 24px;
 }
 
-.back-btn {
-  margin-bottom: 14px;
-}
-
-.eyebrow {
-  margin-bottom: 8px;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  color: #ca7a35;
+.hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .hero-copy h1 {
   margin: 0;
-  font-size: 34px;
-  color: #5e3518;
+  font-size: 24px;
+  color: #0f172a;
 }
 
 .hero-copy p {
-  margin: 12px 0 0;
+  margin: 8px 0 0;
   color: #8f7a68;
-  line-height: 1.8;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .hero-pills {
@@ -674,21 +667,24 @@ onActivated(fetchKnowledgeContext)
 }
 
 .hero-pill {
-  padding: 8px 12px;
+  min-height: 20px;
+  padding: 0 9px;
   border-radius: 999px;
   background: rgba(255, 245, 236, 0.92);
   border: 1px solid rgba(214, 132, 70, 0.14);
   color: #7c5835;
+  font-size: 11px;
+  line-height: 20px;
 }
 
 .status-card {
   display: grid;
-  gap: 14px;
+  gap: 8px;
   height: 100%;
-  padding: 22px;
-  border-radius: 22px;
-  background: linear-gradient(145deg, rgba(255, 249, 243, 0.98), rgba(255, 243, 232, 0.92));
-  border: 1px solid rgba(214, 132, 70, 0.12);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
 }
 
 .status-head {
@@ -699,7 +695,7 @@ onActivated(fetchKnowledgeContext)
 }
 
 .status-card strong {
-  font-size: 28px;
+  font-size: 16px;
   line-height: 1.3;
   color: #5e3518;
 }
@@ -707,7 +703,8 @@ onActivated(fetchKnowledgeContext)
 .status-card p {
   margin: 0;
   color: #8f7a68;
-  line-height: 1.7;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .status-actions {
@@ -715,10 +712,36 @@ onActivated(fetchKnowledgeContext)
   justify-content: flex-start;
 }
 
+.settings-icon-button {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.74);
+  color: #64748b;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.settings-icon-button.el-button--primary {
+  border-color: rgba(245, 158, 11, 0.26);
+  background: #f59e0b;
+  color: #fff;
+}
+
+.settings-save-button {
+  height: 34px;
+  border-radius: 999px;
+  background: #f59e0b;
+  border-color: #f59e0b;
+  box-shadow: 0 12px 28px rgba(245, 158, 11, 0.2);
+}
+
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
   align-items: start;
 }
 
@@ -729,12 +752,11 @@ onActivated(fetchKnowledgeContext)
 }
 
 .sticky-card {
-  position: sticky;
-  top: 20px;
+  position: static;
 }
 
 .panel-card {
-  padding: 24px;
+  padding: 18px 20px;
 }
 
 .panel-head {
@@ -742,18 +764,20 @@ onActivated(fetchKnowledgeContext)
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .panel-head h2 {
   margin: 0;
   color: #5e3518;
+  font-size: 17px;
 }
 
 .panel-head p {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   color: #8f7a68;
-  line-height: 1.7;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .compact-head {
@@ -790,7 +814,7 @@ onActivated(fetchKnowledgeContext)
 }
 
 .option-grid {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 .form-grid {
@@ -810,8 +834,8 @@ onActivated(fetchKnowledgeContext)
 
 .mode-card {
   display: grid;
-  gap: 8px;
-  padding: 18px;
+  gap: 4px;
+  padding: 12px 14px;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -823,7 +847,8 @@ onActivated(fetchKnowledgeContext)
 
 .mode-card span {
   color: #826b59;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .mode-card.active {
@@ -834,8 +859,14 @@ onActivated(fetchKnowledgeContext)
 
 .field {
   display: grid;
-  gap: 12px;
-  padding: 18px;
+  grid-template-columns: minmax(104px, 140px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
 }
 
 .field span {
@@ -845,11 +876,12 @@ onActivated(fetchKnowledgeContext)
 
 .field small {
   color: #8f7a68;
+  font-size: 11px;
 }
 
 .switch-row {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 .switch-card {
@@ -857,7 +889,7 @@ onActivated(fetchKnowledgeContext)
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 18px;
+  padding: 12px 14px;
 }
 
 .switch-card strong {
@@ -865,13 +897,14 @@ onActivated(fetchKnowledgeContext)
 }
 
 .switch-card p {
-  margin: 6px 0 0;
+  margin: 3px 0 0;
   color: #8f7a68;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .subsection {
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
 .subsection-head {
@@ -884,9 +917,10 @@ onActivated(fetchKnowledgeContext)
 }
 
 .subsection-head p {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   color: #8f7a68;
-  line-height: 1.7;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .summary-title {
@@ -965,8 +999,14 @@ onActivated(fetchKnowledgeContext)
 .footer-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 8px;
   margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.footer-actions :deep(.el-button + .el-button),
+.status-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 @media (max-width: 1200px) {

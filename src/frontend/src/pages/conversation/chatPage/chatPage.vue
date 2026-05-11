@@ -9,9 +9,9 @@ import { useUserStore } from "../../../store/user"
 import { ElScrollbar, ElInput, ElButton, ElMessage, ElUpload, ElIcon } from "element-plus"
 import { UploadFilled, Promotion, Loading, VideoPause, Check, Close } from '@element-plus/icons-vue'
 import { apiUrl } from '../../../utils/api'
+import { DEFAULT_USER_AVATAR, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../../../utils/user-avatars'
 
 // Import static assets
-import defaultUserAvatar from '../../../assets/user.svg';
 import { zunoAgentAvatar } from '../../../utils/brand';
 
 // 使用与ChatMessage接口中定义的eventInfo类型一致的接口
@@ -52,8 +52,14 @@ const fileName = ref("")
 const eventStatusMap = ref<Map<string, EventStatus>>(new Map())
 const eventDisplayOrder = ref<string[]>([])
 
+const normalizeAvatarUrl = (avatar?: string) => {
+  const raw = String(avatar || '').trim()
+  if (!raw || raw.startsWith('/src/assets/') || isLegacyRemoteUserAvatar(raw)) return DEFAULT_USER_AVATAR
+  return withUserAvatarVersion(raw)
+}
+
 // Get user avatar from store or use default
-const userAvatar = computed(() => userStore.userInfo?.avatar || defaultUserAvatar)
+const userAvatar = computed(() => normalizeAvatarUrl(userStore.userInfo?.avatar))
 // Get AI avatar from store or use default
 const aiAvatar = computed(() => historyChatStore.logo || zunoAgentAvatar)
 

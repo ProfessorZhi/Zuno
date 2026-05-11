@@ -129,11 +129,11 @@ const go = (target: string) => {
 h1 {
   margin: 24px 0 10px;
   color: #302820;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--zuno-font-sans);
   font-size: clamp(42px, 5.6vw, 68px);
   font-weight: 400;
   line-height: 1.06;
-  letter-spacing: -0.055em;
+  letter-spacing: 0;
 }
 
 .subtitle {

@@ -149,7 +149,7 @@ onMounted(async () => {
             font-size: 18px;
             font-weight: 600;
             color: white;
-            font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            font-family: var(--zuno-font-sans);
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
           }
         }
@@ -160,7 +160,7 @@ onMounted(async () => {
           line-height: 1.5;
           color: rgba(255, 255, 255, 0.9);
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+          font-family: var(--zuno-font-sans);
         }
       }
     

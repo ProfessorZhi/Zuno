@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft,
+  Close,
   Delete,
   FolderOpened,
   Refresh,
@@ -13,6 +14,7 @@ import {
   View,
   Warning,
 } from '@element-plus/icons-vue'
+import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   createKnowledgeFileAPI,
   deleteKnowledgeFileAPI,
@@ -42,6 +44,7 @@ const router = useRouter()
 
 const knowledgeId = computed(() => String(route.params.knowledgeId || ''))
 const knowledgeName = computed(() => String(route.query.name || '知识库'))
+const knowledgeListRoute = computed(() => route.name === 'workspaceSettingsKnowledgeFile' ? { name: 'workspaceSettingsKnowledge' } : '/knowledge')
 
 const loading = ref(false)
 const uploading = ref(false)
@@ -308,12 +311,18 @@ const taskTimeline = computed(() => {
 const fileProgressSummary = (file: KnowledgeFileResponse) => getFileProgressSummary(file)
 
 const goBack = () => {
-  router.push('/knowledge')
+  router.push(knowledgeListRoute.value)
+}
+
+const closeTaskDetail = () => {
+  taskDrawerVisible.value = false
+  taskDetail.value = null
+  activeFileName.value = ''
 }
 
 const openConfig = () => {
   router.push({
-    name: 'knowledge-config',
+    name: route.name === 'workspaceSettingsKnowledgeFile' ? 'workspaceSettingsKnowledgeConfig' : 'knowledge-config',
     params: { knowledgeId: knowledgeId.value },
     query: { name: knowledgeName.value },
   })
@@ -330,21 +339,17 @@ onUnmounted(stopPolling)
   <div class="knowledge-file-page">
     <section class="page-header">
       <div class="title-wrap">
-        <el-button :icon="ArrowLeft" @click="goBack">返回知识库</el-button>
+        <el-button class="settings-icon-button" :icon="ArrowLeft" circle title="返回知识库" aria-label="返回知识库" @click="goBack" />
         <div>
           <h1>{{ knowledge?.name || knowledgeName }}</h1>
-          <p>
-            文件上传页现在只负责导入资料和查看处理进度。
-            索引、检索策略、模型选择都收口到这个知识库自己的参数中心。
-          </p>
         </div>
       </div>
 
       <div class="header-actions">
         <input ref="fileInputRef" type="file" multiple hidden @change="handleUpload" />
-        <el-button :icon="Refresh" @click="fetchFiles">刷新</el-button>
-        <el-button :icon="Setting" @click="openConfig">参数中心</el-button>
-        <el-button type="primary" :icon="Upload" :loading="uploading" @click="triggerUpload">上传文件</el-button>
+        <el-button class="settings-icon-button" :icon="Refresh" circle title="刷新" aria-label="刷新" @click="fetchFiles" />
+        <el-button class="settings-icon-button" :icon="Setting" circle title="参数中心" aria-label="参数中心" @click="openConfig" />
+        <el-button class="settings-icon-button" type="primary" :icon="Upload" circle :loading="uploading" title="上传文件" aria-label="上传文件" @click="triggerUpload" />
       </div>
     </section>
 
@@ -355,7 +360,7 @@ onUnmounted(stopPolling)
             <h2>当前知识库参数</h2>
             <p>这里显示这个知识库自己的索引与检索策略，首轮结果不够强时会自动补检一轮，聊天页不会再单独覆盖这些配置。</p>
           </div>
-          <el-button :icon="FolderOpened" @click="openConfig">去调整参数</el-button>
+          <el-button class="settings-icon-button" :icon="FolderOpened" circle title="调整参数" aria-label="调整参数" @click="openConfig" />
         </div>
         <div class="summary-grid">
           <div class="summary-item">
@@ -402,6 +407,7 @@ onUnmounted(stopPolling)
 
     <section class="content-card" v-loading="loading">
       <div v-if="sortedFiles.length === 0" class="empty-state">
+        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
         <h3>这个知识库还没有文件</h3>
         <p>上传 PDF、Word、Markdown 或图片后，这里会显示解析阶段、检索策略和图谱索引状态。</p>
       </div>
@@ -446,24 +452,33 @@ onUnmounted(stopPolling)
           </div>
 
           <div class="card-actions">
-            <el-button size="small" :icon="View" @click="openTaskDetail(file)">任务详情</el-button>
+            <el-button class="knowledge-icon-button" :icon="View" circle title="任务详情" aria-label="任务详情" @click="openTaskDetail(file)" />
             <el-button
               v-if="file.last_task_id"
-              size="small"
+              class="knowledge-icon-button"
               :icon="RefreshRight"
+              circle
               :loading="retryingTaskId === file.last_task_id"
+              title="重试"
+              aria-label="重试"
               @click="retryTask(file)"
-            >
-              重试
-            </el-button>
-            <el-button type="danger" plain size="small" :icon="Delete" @click="handleDelete(file)">删除</el-button>
+            />
+            <el-button class="knowledge-icon-button danger" type="danger" plain :icon="Delete" circle title="删除" aria-label="删除" @click="handleDelete(file)" />
           </div>
         </article>
       </div>
     </section>
 
-    <el-drawer v-model="taskDrawerVisible" :title="`任务详情 / ${activeFileName}`" size="560px">
-      <div v-loading="taskDetailLoading" class="task-drawer">
+    <Transition name="settings-panel">
+      <section v-if="taskDrawerVisible" class="task-detail-panel">
+        <div class="task-panel-head">
+          <div>
+            <h2>任务详情</h2>
+            <p>{{ activeFileName }}</p>
+          </div>
+          <el-button class="knowledge-icon-button" :icon="Close" circle title="收起" aria-label="收起" @click="closeTaskDetail" />
+        </div>
+        <div v-loading="taskDetailLoading" class="task-drawer">
         <template v-if="taskDetail?.task">
           <div class="task-summary">
             <div class="summary-row">
@@ -504,11 +519,13 @@ onUnmounted(stopPolling)
           </div>
         </template>
         <div v-else class="empty-state compact">
+          <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
           <h3>暂无任务详情</h3>
           <p>这个文件还没有返回可展示的任务事件。</p>
         </div>
       </div>
-    </el-drawer>
+      </section>
+    </Transition>
   </div>
 </template>
 
@@ -532,19 +549,19 @@ onUnmounted(stopPolling)
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  padding: 28px;
+  padding: 22px 24px;
 }
 
 .title-wrap {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
 }
 
 .title-wrap h1 {
   margin: 0;
-  font-size: 30px;
-  color: #5e3518;
+  font-size: 24px;
+  color: #0f172a;
 }
 
 .title-wrap p {
@@ -555,7 +572,38 @@ onUnmounted(stopPolling)
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  align-items: center;
+}
+
+.header-actions :deep(.el-button + .el-button),
+.card-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.settings-icon-button,
+.knowledge-icon-button {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.74);
+  color: #64748b;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.settings-icon-button.el-button--primary,
+.knowledge-icon-button.el-button--primary {
+  border-color: rgba(245, 158, 11, 0.26);
+  background: #f59e0b;
+  color: #fff;
+}
+
+.knowledge-icon-button.danger {
+  border-color: rgba(239, 68, 68, 0.18);
+  color: #dc2626;
 }
 
 .summary-head {
@@ -695,13 +743,44 @@ onUnmounted(stopPolling)
 
 .card-actions {
   display: flex;
-  gap: 10px;
+  gap: 7px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .task-drawer {
   display: grid;
-  gap: 18px;
+  gap: 12px;
+}
+
+.task-detail-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(22px);
+}
+
+.task-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.task-panel-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.task-panel-head p {
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
 }
 
 .task-summary,
@@ -812,6 +891,26 @@ onUnmounted(stopPolling)
 
 .empty-state.compact {
   padding: 24px;
+}
+
+.settings-panel-enter-active,
+.settings-panel-leave-active {
+  transition: opacity 0.2s ease, transform 0.22s ease, max-height 0.24s ease;
+  overflow: hidden;
+}
+
+.settings-panel-enter-from,
+.settings-panel-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0;
+}
+
+.settings-panel-enter-to,
+.settings-panel-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 780px;
 }
 
 @media (max-width: 1080px) {

@@ -6,6 +6,7 @@ from agentchat.core.models.reason_model import ReasoningModel
 from agentchat.database.dao.llm import LLMDao
 from agentchat.schema.common import ModelConfig
 from agentchat.settings import app_settings
+from agentchat.utils.model_output import normalize_model_id_for_provider
 
 
 class ModelManager:
@@ -20,7 +21,11 @@ class ModelManager:
         slot_model = LLMDao.get_llm_by_slot(model_slot)
         if slot_model:
             return ModelConfig(
-                model_name=slot_model.model,
+                model_name=normalize_model_id_for_provider(
+                    slot_model.model,
+                    provider=slot_model.provider,
+                    base_url=slot_model.base_url,
+                ),
                 api_key=slot_model.api_key,
                 base_url=slot_model.base_url,
             )
@@ -37,7 +42,10 @@ class ModelManager:
 
         return ChatOpenAI(
             stream_usage=True,
-            model=tool_call_model.model_name,
+            model=normalize_model_id_for_provider(
+                tool_call_model.model_name,
+                base_url=tool_call_model.base_url,
+            ),
             api_key=tool_call_model.api_key,
             base_url=tool_call_model.base_url,
         )
@@ -61,7 +69,10 @@ class ModelManager:
         )
 
         return ReasoningModel(
-            model_name=reasoning_model.model_name,
+            model_name=normalize_model_id_for_provider(
+                reasoning_model.model_name,
+                base_url=reasoning_model.base_url,
+            ),
             api_key=reasoning_model.api_key,
             base_url=reasoning_model.base_url,
         )
@@ -75,7 +86,10 @@ class ModelManager:
 
         return ChatOpenAI(
             stream_usage=True,
-            model=qwen_vl_model.model_name,
+            model=normalize_model_id_for_provider(
+                qwen_vl_model.model_name,
+                base_url=qwen_vl_model.base_url,
+            ),
             api_key=qwen_vl_model.api_key,
             base_url=qwen_vl_model.base_url,
         )
@@ -86,7 +100,11 @@ class ModelManager:
 
         return ChatOpenAI(
             stream_usage=True,
-            model=user_model.get("model"),
+            model=normalize_model_id_for_provider(
+                user_model.get("model"),
+                provider=user_model.get("provider"),
+                base_url=user_model.get("base_url"),
+            ),
             api_key=user_model.get("api_key"),
             base_url=user_model.get("base_url"),
         )
@@ -96,7 +114,10 @@ class ModelManager:
         embedding_model = cls.get_model_config("embedding", "Embedding 模型")
 
         return EmbeddingModel(
-            model=embedding_model.model_name,
+            model=normalize_model_id_for_provider(
+                embedding_model.model_name,
+                base_url=embedding_model.base_url,
+            ),
             base_url=embedding_model.base_url,
             api_key=embedding_model.api_key,
         )

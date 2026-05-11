@@ -1,15 +1,17 @@
 ﻿<script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { MoreFilled, Plus, Refresh, Search, Upload } from '@element-plus/icons-vue'
+import { Check, Connection, CopyDocument, Delete, EditPen, InfoFilled, Plus, Search, Setting, Upload } from '@element-plus/icons-vue'
+import ConfigurationPanel from '../configuration/configuration.vue'
 import toolArxivIcon from '../../assets/tools/tool-arxiv.svg'
 import toolDefaultIcon from '../../assets/tools/tool-default.svg'
 import toolDeliveryIcon from '../../assets/tools/tool-delivery.svg'
-import toolDocxIcon from '../../assets/tools/tool-docx.svg'
+import toolDocxIcon from '../../assets/tools/tool-convert-pdf-docx.svg'
 import toolEmailIcon from '../../assets/tools/tool-email.svg'
-import toolPdfIcon from '../../assets/tools/tool-pdf.svg'
+import toolPdfIcon from '../../assets/tools/tool-convert-docx-pdf.svg'
 import toolWeatherIcon from '../../assets/tools/tool-weather.svg'
+import settingsToolIcon from '../../assets/settings-icons/tool.svg'
+import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   assistRemoteApiToolAPI,
   createToolAPI,
@@ -38,15 +40,33 @@ import {
   type ToolConnectivityResponse,
   type ToolResponse,
 } from '../../apis/tool'
-import { getConfigAPI, type RuntimeConfigPayload } from '../../apis/configuration'
+import { getConfigAPI, getSystemToolConfigAPI, type RuntimeConfigPayload, type SystemToolConfigPayload } from '../../apis/configuration'
 import { safeDisplayText } from '../../utils/display-text'
 import { useUserStore } from '../../store/user'
+import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
 
 interface ToolItem extends ToolResponse {
   system_tool_kind?: RuntimeConfigPayload['system_tools'][number]['tool_kind']
   system_tool_kind_label?: RuntimeConfigPayload['system_tools'][number]['tool_kind_label']
+  strategy_code?: RuntimeConfigPayload['system_tools'][number]['strategy_code']
+  strategy_label?: string
+  strategy_summary?: string
+  install_requirement?: RuntimeConfigPayload['system_tools'][number]['install_requirement']
+  config_requirement?: RuntimeConfigPayload['system_tools'][number]['config_requirement']
+  has_fields?: boolean
   system_status?: RuntimeConfigPayload['system_tools'][number]['status']
   runtime_status?: ToolConnectivityResponse['status']
+}
+
+type SystemToolKind = NonNullable<SystemToolConfigPayload['tool_kind']>
+type GuideTone = 'strategy' | 'install' | 'config'
+interface ToolInfoCard {
+  key: string
+  eyebrow: string
+  title: string
+  summary: string
+  items: string[]
+  tone?: GuideTone | 'status'
 }
 
 interface ToolFormState {
@@ -89,13 +109,22 @@ interface AssistCard {
   payload: Partial<CliStructuredSuggestion>
 }
 
-const router = useRouter()
 const userStore = useUserStore()
+type ToolWorkbenchMode = 'list' | 'create' | 'edit' | 'config'
 const loading = ref(false)
 const statusRefreshing = ref<Record<string, boolean>>({})
 const keyword = ref('')
 const activeTab = ref<'all' | 'custom'>('all')
 const tools = ref<ToolItem[]>([])
+const LIST_PAGE_SIZE = 6
+const listPage = ref(1)
+const workbenchMode = ref<ToolWorkbenchMode>('list')
+const selectedTool = ref<ToolItem | null>(null)
+const configPanelRef = ref<InstanceType<typeof ConfigurationPanel> | null>(null)
+const expandedToolInfoId = ref('')
+const expandedConfigToolId = ref('')
+const toolInfoLoading = ref<Record<string, boolean>>({})
+const toolDetailCache = ref<Record<string, SystemToolConfigPayload>>({})
 const dialogVisible = ref(false)
 const dialogLoading = ref(false)
 const isEditMode = ref(false)
@@ -109,9 +138,15 @@ const toolConnectivityResult = ref<ToolConnectivityResponse | null>(null)
 const cliPreviewLoading = ref(false)
 const cliPreviewError = ref('')
 const cliPreviewResult = ref<CliPreviewResult | null>(null)
-const advancedSections = ref(['execution'])
+const advancedSections = ref<string[]>([])
 const apiAdvancedSections = ref<string[]>([])
 
+const isToolFormMode = computed(() => workbenchMode.value === 'create' || workbenchMode.value === 'edit')
+const workbenchTitle = computed(() => {
+  if (workbenchMode.value === 'create') return '新建工具'
+  if (workbenchMode.value === 'edit') return '编辑工具'
+  return '工具'
+})
 const createDefaultOpenApiSchema = () => JSON.stringify({ openapi: '3.1.0', info: { title: 'Untitled API', version: '1.0.0' }, servers: [{ url: '' }], paths: {} }, null, 2)
 const createDefaultCliConfig = (): CliConfig => ({ source_type: 'local_directory', tool_dir: '', command: '', args_template: '', cwd_mode: 'tool_dir', cwd: '', timeout_ms: 30000, install_command: '', install_source: '', install_notes: '', healthcheck_command: '', credential_mode: 'none' })
 const createDefaultSimpleApiConfig = (): SimpleApiConfig => ({ base_url: '', path: '/', method: 'GET', operation_id: '', summary: '', description: '', params: [], body_schema: null, response_schema: null })
@@ -173,6 +208,10 @@ const visibleTools = computed(() => {
     return a.display_name.localeCompare(b.display_name, 'zh-CN')
   })
 })
+const paginatedTools = computed(() => visibleTools.value.slice(
+  (listPage.value - 1) * LIST_PAGE_SIZE,
+  listPage.value * LIST_PAGE_SIZE,
+))
 
 const statusToneMap: Record<string, string> = { ready: 'is-ready', needs_config: 'is-warning', runtime_input: 'is-neutral', missing_dependency: 'is-danger' }
 const getResolvedStatus = (tool: ToolItem) => tool.runtime_status || tool.system_status || null
@@ -182,7 +221,206 @@ const getToolStatusLabel = (tool: ToolItem) => getResolvedStatus(tool)?.label ||
 const getToolStatusTone = (tool: ToolItem) => statusToneMap[getResolvedStatus(tool)?.code || ''] || 'is-neutral'
 const getToolSummary = (tool: ToolItem) => safeDisplayText(tool.description) || (isSystemTool(tool) ? (getToolRuntimeLabel(tool) === 'API' ? '通过远程接口提供能力。' : '通过本地命令、内置程序或系统依赖运行。') : '暂无说明')
 const getToolHints = (tool: ToolItem) => (isSystemTool(tool) ? tool.system_tool_kind === 'smtp_protocol' ? ['多凭证'] : tool.system_tool_kind === 'remote_api' ? ['远程配置'] : ['本地运行'] : [])
-const getPrimaryActionLabel = (tool: ToolItem) => (!isSystemTool(tool) ? '编辑' : tool.system_tool_kind === 'local_dependency' || tool.system_tool_kind === 'public_data_source' ? '查看' : '配置')
+const canConfigureSystemTool = (tool: ToolItem) => {
+  if (!isSystemTool(tool)) return false
+  const status = getResolvedStatus(tool)
+  return Boolean(status?.configurable || tool.has_fields)
+}
+const canOpenPrimaryAction = (tool: ToolItem) => !isSystemTool(tool) || canConfigureSystemTool(tool)
+const isEditingTool = (tool: ToolItem) => workbenchMode.value === 'edit' && selectedTool.value?.tool_id === tool.tool_id
+const getPrimaryActionLabel = (tool: ToolItem) => (!isSystemTool(tool) ? (isEditingTool(tool) ? '保存并收起' : '编辑') : '配置')
+const getPrimaryActionIcon = (tool: ToolItem) => (!isSystemTool(tool) ? (isEditingTool(tool) ? Check : EditPen) : Setting)
+const isToolConfigExpanded = (tool: ToolItem) => expandedConfigToolId.value === tool.tool_id
+const isToolInfoExpanded = (tool: ToolItem) => expandedToolInfoId.value === tool.tool_id
+const defaultToolInfoByKind: Record<SystemToolKind, Record<GuideTone, Omit<ToolInfoCard, 'key' | 'eyebrow' | 'tone'>>> = {
+  remote_api: {
+    strategy: {
+      title: '固定凭据，运行时直接复用',
+      summary: '这类工具靠预置 API 参数工作，配置完成后 Agent 调用时不需要再重复输入固定认证信息。',
+      items: ['优先在这里保存长期稳定的 Key、Endpoint 或鉴权字段。'],
+    },
+    install: {
+      title: '先准备服务商凭据',
+      summary: '前端这里只负责保存参数，不会帮你申请或校验第三方服务账号。',
+      items: ['先到对应服务商控制台拿到 Key 或接口地址，再回来保存。'],
+    },
+    config: {
+      title: '把固定参数填在配置区',
+      summary: '配置区只放持久化参数，运行时变化的查询词、城市、单号等内容不在这里填写。',
+      items: [],
+    },
+  },
+  public_data_source: {
+    strategy: {
+      title: '公开数据源优先',
+      summary: '这类工具直接读取开放数据，不依赖远程私有 API，也不要求单独安装本机 CLI。',
+      items: ['重点是运行时输入合适的查询条件，而不是在这里维护凭据。'],
+    },
+    install: {
+      title: '通常不需要额外安装',
+      summary: '如果状态正常，就代表前端没有需要你补的全局依赖或密钥。',
+      items: ['除非后续工具实现变化，否则这里一般不需要额外准备。'],
+    },
+    config: {
+      title: '没有持久化配置项',
+      summary: '这类工具通常开箱可用，配置页更多是给你确认当前策略，而不是保存参数。',
+      items: [],
+    },
+  },
+  smtp_protocol: {
+    strategy: {
+      title: '把发件能力做成可复用资产',
+      summary: 'SMTP 工具的核心不是一次性填参数，而是维护好长期可复用的发件槽位。',
+      items: ['Agent 运行时优先引用槽位名，这样更稳定，也更适合多人协作。'],
+    },
+    install: {
+      title: '依赖邮箱服务商的 SMTP 能力',
+      summary: '是否可用取决于你的邮箱服务商是否开放 SMTP 以及授权码是否正确。',
+      items: ['如果供应商限制 SMTP 或授权码无效，前端保存成功也无法真正发送。'],
+    },
+    config: {
+      title: '配置区维护邮箱槽位',
+      summary: '这里保存的是长期可复用的邮箱身份，不是一次性的收件信息。',
+      items: [],
+    },
+  },
+  local_dependency: {
+    strategy: {
+      title: '走本机依赖，不走远程接口',
+      summary: '这类工具真正依赖的是运行环境里的可执行程序或 Python 包，因此前端没有太多可存字段。',
+      items: ['状态是否可用主要由后端对本机依赖的检测结果决定。'],
+    },
+    install: {
+      title: '先保证运行环境具备依赖',
+      summary: '如果页面显示缺依赖，优先处理安装和 PATH，而不是反复刷新这个页面。',
+      items: ['确认依赖装在运行 Zuno backend 的环境里，而不是只装在当前开发机的任意地方。'],
+    },
+    config: {
+      title: '配置区通常为空',
+      summary: '这类工具一般没有单独的持久化表单，能否使用主要取决于本机环境是否准备好。',
+      items: [],
+    },
+  },
+}
+
+const toolInfoOverrides: Record<string, Partial<Record<GuideTone, Partial<Omit<ToolInfoCard, 'key' | 'eyebrow' | 'tone'>>>>> = {
+  send_email: {
+    strategy: { title: '把邮箱做成稳定槽位', summary: '这个工具适合先把常用发件身份预置好，运行时只引用槽位名，不再重复填写 SMTP 参数。', items: ['建议按业务身份拆槽位，例如 qq-main、support-mail、office-backup。'] },
+    install: { title: '先准备授权码再保存', summary: 'QQ、163、Gmail、Outlook 都能直接套预设 SMTP 参数，自定义服务商再改主机和端口。', items: ['每个槽位都需要发件邮箱和授权码，尽量不要直接使用登录密码。'] },
+    config: { title: '配置区保存邮箱槽位', summary: '至少保存一个可用槽位后，发送邮件工具才能稳定复用发件身份。', items: ['如果团队有多个发件身份，可以在这里长期维护多组槽位。'] },
+  },
+  get_arxiv: {
+    strategy: {
+      title: '直接使用公开论文源',
+      summary: '这个工具走公开数据源，不需要额外密钥或本机依赖。',
+      items: ['重点是运行时给出明确主题、作者或关键词，而不是在这里做预配置。'],
+    },
+  },
+  convert_to_pdf: {
+    install: {
+      title: '运行机器需要 LibreOffice',
+      summary: 'Docx 转 PDF 依赖本机文档转换能力，真正决定是否可用的是运行 Zuno 的那台机器。',
+      items: ['安装 LibreOffice 后，确保后端进程能找到 libreoffice 或 soffice 命令。'],
+    },
+  },
+  convert_to_docx: {
+    install: {
+      title: '运行机器需要 pdf2docx',
+      summary: 'PDF 转 Docx 依赖 Python 包而不是远程接口，所以前端没有额外密钥可以填写。',
+      items: ['如果状态仍显示缺依赖，请在后端运行环境安装 pdf2docx。'],
+    },
+  },
+}
+
+const loadToolDetail = async (tool: ToolItem) => {
+  if (!isSystemTool(tool) || toolDetailCache.value[tool.name] || toolInfoLoading.value[tool.tool_id]) return
+  toolInfoLoading.value[tool.tool_id] = true
+  try {
+    const response = await getSystemToolConfigAPI(tool.name)
+    toolDetailCache.value = { ...toolDetailCache.value, [tool.name]: response.data.data }
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.detail || '加载工具说明失败')
+  } finally {
+    toolInfoLoading.value[tool.tool_id] = false
+  }
+}
+
+const toggleToolInfo = async (tool: ToolItem) => {
+  if (expandedToolInfoId.value === tool.tool_id) {
+    expandedToolInfoId.value = ''
+    return
+  }
+  expandedConfigToolId.value = ''
+  expandedToolInfoId.value = tool.tool_id
+  await loadToolDetail(tool)
+}
+
+const getToolDetail = (tool: ToolItem) => toolDetailCache.value[tool.name] || null
+const getSystemToolKind = (tool: ToolItem): SystemToolKind => getToolDetail(tool)?.tool_kind || tool.system_tool_kind || 'remote_api'
+const getToolInfoCards = (tool: ToolItem): ToolInfoCard[] => {
+  if (!isSystemTool(tool)) {
+    const lines = [getToolSummary(tool), `自定义工具 · ${getToolRuntimeLabel(tool)}`]
+    const metadata = tool.source_metadata || {}
+    if (metadata.docs_url) lines.push(`文档：${metadata.docs_url}`)
+    if (metadata.endpoint_url) lines.push(`接口：${metadata.endpoint_url}`)
+    if (tool.runtime_type === 'cli' && tool.auth_config?.cli_config?.command) lines.push(`启动命令：${tool.auth_config.cli_config.command}`)
+    return [{
+      key: `${tool.tool_id}-custom`,
+      eyebrow: '工具信息',
+      title: tool.display_name,
+      summary: getToolSummary(tool),
+      items: Array.from(new Set(lines.filter(Boolean))),
+      tone: 'status',
+    }]
+  }
+
+  const detail = getToolDetail(tool)
+  const kind = getSystemToolKind(tool)
+  const defaults = defaultToolInfoByKind[kind]
+  const overrides = toolInfoOverrides[tool.name] || {}
+  const status = getResolvedStatus(tool) || detail?.status || null
+  const strategySummary = detail?.strategy?.summary || detail?.strategy_summary || tool.strategy_summary
+  const installRequirement = detail?.strategy?.install_requirement || detail?.install_requirement || tool.install_requirement
+  const configRequirement = detail?.strategy?.config_requirement || detail?.config_requirement || tool.config_requirement
+  const fieldLabels = (detail?.fields || []).map((field) => `${field.label}${field.required ? '（必填）' : ''}`)
+  const accountCount = detail?.accounts?.length || 0
+  const note = detail?.note?.trim()
+
+  const cards: ToolInfoCard[] = [
+    {
+      key: `${tool.tool_id}-status`,
+      eyebrow: '当前状态',
+      title: status?.label || '待检测',
+      summary: status?.detail || `${tool.system_tool_kind_label || getToolRuntimeLabel(tool)} · ${getToolRuntimeLabel(tool)}`,
+      items: [
+        strategySummary ? `接入策略：${strategySummary}` : '',
+        tool.has_fields || fieldLabels.length ? `配置字段：${fieldLabels.length ? fieldLabels.join('、') : '需要固定配置项'}` : '',
+        accountCount ? `已配置邮箱槽位：${accountCount} 个` : '',
+      ].filter(Boolean),
+      tone: 'status',
+    },
+  ]
+
+  for (const tone of ['strategy', 'install', 'config'] as GuideTone[]) {
+    const base = defaults[tone]
+    const override = overrides[tone]
+    const dynamic = tone === 'install' ? installRequirement : tone === 'config' ? configRequirement : null
+    cards.push({
+      key: `${tool.tool_id}-${tone}`,
+      eyebrow: tone === 'strategy' ? '使用策略' : tone === 'install' ? '安装依赖' : '配置范围',
+      title: override?.title || dynamic?.label || base.title,
+      summary: dynamic?.detail || override?.summary || base.summary,
+      items: Array.from(new Set([
+        ...(override?.items || base.items || []),
+        tone === 'config' && fieldLabels.length ? `可填写：${fieldLabels.join('、')}` : '',
+        tone === 'config' && note ? note : '',
+      ].filter(Boolean))),
+      tone,
+    })
+  }
+
+  return cards
+}
 const isStatusRefreshing = (tool: ToolItem) => !!statusRefreshing.value[tool.tool_id]
 const systemToolIconMap: Record<string, string> = {
   send_email: toolEmailIcon,
@@ -233,8 +471,25 @@ const formatArgsTemplate = (value?: string[] | string | null) => (Array.isArray(
 const formatConfidence = (value?: number) => (typeof value === 'number' && !Number.isNaN(value) ? `${Math.round(value * 100)}%` : '')
 
 const resetToolConnectivityState = () => { toolConnectivityError.value = ''; toolConnectivityResult.value = null }
+const setConfigPanelRef = (instance: InstanceType<typeof ConfigurationPanel> | null) => {
+  configPanelRef.value = instance
+}
 const addSimpleApiParam = () => simpleApiParams.value.push({ name: '', in: 'query', required: false, type: 'string', description: '' })
 const removeSimpleApiParam = (index: number) => simpleApiParams.value.splice(index, 1)
+const shouldAutoRefreshToolStatus = (tool: ToolItem) => {
+  if (isSystemTool(tool) || tool.runtime_status) return false
+  const metadata = tool.source_metadata || tool.auth_config?.source_metadata || {}
+  const cliConfig = tool.auth_config?.cli_config || {}
+  return Boolean(metadata.probe_args || cliConfig.healthcheck_command)
+}
+const refreshCustomToolStatuses = (items: ToolItem[]) => {
+  items
+    .filter(shouldAutoRefreshToolStatus)
+    .slice(0, 8)
+    .forEach((tool, index) => {
+      window.setTimeout(() => refreshToolStatus(tool, { silent: true }), 120 * index)
+    })
+}
 
 const fetchTools = async () => {
   loading.value = true
@@ -248,9 +503,16 @@ const fetchTools = async () => {
         runtime_type: tool.runtime_type || 'remote_api',
         system_tool_kind: meta?.tool_kind,
         system_tool_kind_label: meta?.tool_kind_label,
-        system_status: meta?.status?.code === 'ready' ? undefined : meta?.status,
+        strategy_code: meta?.strategy_code,
+        strategy_label: meta?.strategy_label,
+        strategy_summary: meta?.strategy_summary,
+        install_requirement: meta?.install_requirement,
+        config_requirement: meta?.config_requirement,
+        has_fields: meta?.has_fields,
+        system_status: meta?.status,
       }
     })
+    refreshCustomToolStatuses(tools.value)
   } catch (error: any) {
     ElMessage.error(getErrorMessage(error, '加载工具失败'))
   } finally {
@@ -272,7 +534,14 @@ const resetDialog = () => {
 }
 
 const openCreateDialog = async () => {
+  if (workbenchMode.value === 'create') {
+    closeWorkbench()
+    return
+  }
   resetDialog()
+  selectedTool.value = null
+  expandedConfigToolId.value = ''
+  workbenchMode.value = 'create'
   dialogVisible.value = true
   try {
     const response = await getDefaultToolLogoAPI()
@@ -280,9 +549,16 @@ const openCreateDialog = async () => {
   } catch {}
 }
 
-const openEditDialog = (tool: ToolItem) => {
+const openEditDialog = async (tool: ToolItem) => {
+  if (isEditingTool(tool)) {
+    await submitDialog()
+    return
+  }
   resetDialog()
   isEditMode.value = true
+  selectedTool.value = tool
+  expandedConfigToolId.value = ''
+  workbenchMode.value = 'edit'
   const auth = tool.auth_config || {}
   const simpleFromAuth = auth.simple_api_config || auth.source_metadata?.simple_api_config
   const storedAuthType = auth.type || (auth.auth_type === 'APIKey' && auth.in === 'query' ? 'api_key_query' : auth.auth_type === 'APIKey' && auth.in === 'header' ? 'api_key_header' : String(auth.auth_type || '').toLowerCase())
@@ -306,8 +582,52 @@ const openEditDialog = (tool: ToolItem) => {
   dialogVisible.value = true
 }
 
-const handlePrimaryAction = (tool: ToolItem) => isSystemTool(tool) ? router.push({ path: '/configuration', query: { tool: tool.name } }) : openEditDialog(tool)
-const handleToolCommand = (tool: ToolItem, command: 'edit' | 'delete' | 'config') => command === 'delete' ? handleDelete(tool) : command === 'config' ? router.push({ path: '/configuration', query: { tool: tool.name } }) : openEditDialog(tool)
+const openSystemToolConfig = (tool: ToolItem) => {
+  if (expandedConfigToolId.value === tool.tool_id) {
+    expandedConfigToolId.value = ''
+    selectedTool.value = null
+    return
+  }
+  selectedTool.value = tool
+  expandedToolInfoId.value = ''
+  expandedConfigToolId.value = tool.tool_id
+  dialogVisible.value = false
+  workbenchMode.value = 'list'
+}
+
+const closeWorkbench = () => {
+  workbenchMode.value = 'list'
+  selectedTool.value = null
+  expandedConfigToolId.value = ''
+  dialogVisible.value = false
+}
+
+const saveEmbeddedConfig = () => configPanelRef.value?.saveToolConfig()
+const toggleAdvancedTools = () => {
+  if (form.value.runtime_type === 'remote_api') {
+    apiAdvancedSections.value = apiAdvancedSections.value.length ? [] : ['api']
+  } else {
+    advancedSections.value = advancedSections.value.length ? [] : ['execution']
+  }
+}
+const resetInlineConfig = async (tool: ToolItem) => {
+  if (!isSystemTool(tool)) return
+  if (!isToolConfigExpanded(tool)) {
+    openSystemToolConfig(tool)
+    await nextTick()
+    return
+  }
+  configPanelRef.value?.reloadToolConfig()
+}
+const handlePrimaryAction = async (tool: ToolItem) => isSystemTool(tool) ? openSystemToolConfig(tool) : await openEditDialog(tool)
+const copyToolName = async (tool: ToolItem) => {
+  try {
+    await navigator.clipboard?.writeText(tool.name)
+    ElMessage.success('工具名已复制')
+  } catch {
+    ElMessage.info(tool.name)
+  }
+}
 
 const applyRemoteApiAssist = (result: RemoteApiAssistResponse) => {
   form.value.display_name = result.display_name || form.value.display_name
@@ -355,12 +675,16 @@ const ensureRemoteApiDraftReady = async () => {
   return previewRemoteApi({ silent: true })
 }
 
-const validateToolForm = () => {
+const validateToolForm = (options: { silent?: boolean } = {}) => {
+  const warn = (message: string) => {
+    if (!options.silent) ElMessage.warning(message)
+    return false
+  }
   if (!form.value.display_name.trim()) form.value.display_name = form.value.runtime_type === 'remote_api' ? guessDisplayNameFromEndpoint(remoteApiAssistForm.value.endpoint_url || extractUrls(remoteApiAssistForm.value.docs_urls_text)[0] || '') : ''
-  if (!form.value.display_name.trim()) return ElMessage.warning('请先填写工具名称'), false
-  if (!form.value.description.trim()) return ElMessage.warning('请先填写工具描述，或点击智能填表让 Agent 生成描述'), false
-  if (form.value.runtime_type === 'cli' && !form.value.cli_config.command?.trim()) return ElMessage.warning('CLI 工具至少需要一个启动命令'), false
-  if (form.value.runtime_type === 'cli' && requiresToolDir.value && !form.value.cli_config.tool_dir?.trim()) return ElMessage.warning('当前来源类型需要填写本地目录'), false
+  if (!form.value.display_name.trim()) return warn('请先填写工具名称')
+  if (!form.value.description.trim()) return warn('请先填写工具描述，或点击智能填表让 Agent 生成描述')
+  if (form.value.runtime_type === 'cli' && !form.value.cli_config.command?.trim()) return warn('CLI 工具至少需要一个启动命令')
+  if (form.value.runtime_type === 'cli' && requiresToolDir.value && !form.value.cli_config.tool_dir?.trim()) return warn('当前来源类型需要填写本地目录')
   return true
 }
 
@@ -408,14 +732,21 @@ const testToolConnectivity = async () => {
 }
 
 const submitDialog = async () => {
-  if (!(await ensureRemoteApiDraftReady()) || !validateToolForm()) return
+  if (!validateToolForm({ silent: true })) {
+    closeWorkbench()
+    return
+  }
+  if (!(await ensureRemoteApiDraftReady()) || !validateToolForm({ silent: true })) {
+    closeWorkbench()
+    return
+  }
   dialogLoading.value = true
   try {
     const payload = buildToolPayload()
     const response = isEditMode.value && form.value.tool_id ? await updateToolAPI({ tool_id: form.value.tool_id, ...payload }) : await createToolAPI(payload)
     if (response.data.status_code !== 200) throw new Error(response.data.status_message || '保存工具失败')
     ElMessage.success(isEditMode.value ? '工具已更新' : '工具已创建')
-    dialogVisible.value = false
+    closeWorkbench()
     await fetchTools()
   } catch (error: any) {
     ElMessage.error(getErrorMessage(error, '保存工具失败'))
@@ -425,6 +756,10 @@ const submitDialog = async () => {
 }
 
 const handleDelete = async (tool: ToolItem) => {
+  if (isSystemTool(tool)) {
+    ElMessage.info('系统工具由后端配置托管，不能在这里删除。')
+    return
+  }
   try { await ElMessageBox.confirm(`确认删除工具「${tool.display_name}」吗？`, '删除工具', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }) } catch { return }
   try {
     const response = await deleteToolAPI({ tool_id: tool.tool_id })
@@ -509,13 +844,21 @@ onMounted(fetchTools)
   <div class="tool-page">
     <section class="hero-card">
       <div>
-        <div class="eyebrow">TOOLS</div>
-        <h1>工具管理</h1>
-        <p>系统工具负责平台内置能力，自定义工具负责扩展能力。普通用户只管理自己的工具，管理员可以维护系统工具。</p>
+        <div class="settings-title-row">
+          <img :src="settingsToolIcon" alt="工具" class="page-icon" />
+          <h1>工具</h1>
+        </div>
       </div>
       <div class="hero-actions">
-        <el-button :icon="Refresh" @click="fetchTools">刷新</el-button>
-        <el-button type="primary" :icon="Plus" @click="openCreateDialog">新建工具</el-button>
+        <el-button
+          :class="['settings-icon-button', { 'is-create-open': dialogVisible && !isEditMode }]"
+          type="primary"
+          :icon="Plus"
+          circle
+          :title="dialogVisible && !isEditMode ? '收起新建工具' : '新建工具'"
+          :aria-label="dialogVisible && !isEditMode ? '收起新建工具' : '新建工具'"
+          @click="openCreateDialog"
+        />
       </div>
     </section>
 
@@ -524,230 +867,219 @@ onMounted(fetchTools)
         <el-tab-pane label="全部工具" name="all" />
         <el-tab-pane label="我的工具" name="custom" />
       </el-tabs>
-      <el-input v-model="keyword" placeholder="搜索工具名称、描述或运行方式" clearable class="search-box">
-        <template #prefix>
-          <el-icon><Search /></el-icon>
-        </template>
-      </el-input>
+      <div class="settings-search-row tool-search-row">
+        <el-input v-model="keyword" placeholder="搜索工具名称、描述或运行方式" clearable class="search-box search-input">
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+      </div>
     </section>
+
+    <Transition name="settings-panel">
+      <section v-if="isToolFormMode" class="tool-workbench-card tool-config-bubble">
+        <header class="workbench-head">
+          <div>
+            <h2>{{ workbenchTitle }}</h2>
+          </div>
+          <div class="workbench-actions">
+            <el-button class="settings-icon-button save-action" type="primary" :icon="Check" circle :loading="dialogLoading" title="保存" aria-label="保存" @click="submitDialog" />
+          </div>
+        </header>
+
+        <el-form label-position="top" class="tool-form">
+          <el-form-item label="工具图标">
+            <div class="logo-upload-row">
+              <div class="logo-preview"><img :src="form.logo_url || toolDefaultIcon" alt="工具图标预览" @error="handleToolLogoError" /></div>
+              <el-upload :show-file-list="false" :auto-upload="false" accept="image/*" :on-change="handleLogoUpload">
+                <el-button :loading="logoUploading" :icon="Upload">上传图标</el-button>
+              </el-upload>
+            </div>
+          </el-form-item>
+
+          <div class="field-grid">
+            <el-form-item label="名称"><el-input v-model="form.display_name" placeholder="例如：IP 地理位置查询" /></el-form-item>
+            <el-form-item label="运行方式">
+              <el-radio-group v-model="form.runtime_type">
+                <el-radio-button label="remote_api" value="remote_api">远程 API</el-radio-button>
+                <el-radio-button label="cli" value="cli">CLI</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="描述" class="span-2">
+              <el-input v-model="form.description" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" resize="none" placeholder="一句话说明这个工具负责什么能力，供 Agent 判断何时调用。" />
+            </el-form-item>
+          </div>
+
+          <div class="form-utility-row">
+            <el-button
+              v-if="form.runtime_type === 'remote_api'"
+              class="inline-utility-button"
+              :icon="EditPen"
+              :loading="remoteApiAssistLoading"
+              @click="() => previewRemoteApi()"
+            >
+              智能填表
+            </el-button>
+            <el-button
+              v-else
+              class="inline-utility-button"
+              :icon="EditPen"
+              :loading="cliPreviewLoading"
+              @click="previewCliAssist"
+            >
+              智能分析
+            </el-button>
+            <el-button class="inline-utility-button" :icon="Connection" :loading="toolConnectivityLoading" @click="testToolConnectivity">检测草稿</el-button>
+            <span v-if="toolConnectivityResult" class="utility-status" :class="{ warning: !toolConnectivityResult.ok }">{{ toolConnectivityResult.summary }}</span>
+            <span v-else-if="toolConnectivityError" class="utility-status warning">{{ toolConnectivityError }}</span>
+          </div>
+
+          <template v-if="form.runtime_type === 'remote_api'">
+            <section class="nested-panel">
+              <div class="panel-head api-assist-head">
+                <div>
+                  <h3>连接配置</h3>
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <el-form-item label="文档地址" class="span-2" required>
+                  <el-input v-model="remoteApiAssistForm.docs_urls_text" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" resize="none" placeholder="每行一个文档地址，例如：https://docs.apilayer.com/ipstack/docs/quickstart-guide" />
+                </el-form-item>
+                <el-form-item label="API Key" class="span-2" required>
+                  <el-input v-model="form.auth_token" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" resize="none" placeholder="只填服务商给你的 API Key。" />
+                </el-form-item>
+                <el-form-item label="接口地址" class="span-2">
+                  <el-input v-model="remoteApiAssistForm.endpoint_url" placeholder="例如：https://api.ipstack.com/check" />
+                </el-form-item>
+              </div>
+
+              <el-alert v-if="remoteApiAssistError" type="error" :closable="false" :title="remoteApiAssistError" />
+              <el-alert v-else-if="remoteApiAssistResult" type="success" :closable="false" :title="remoteApiAssistSummary || '已生成 API 草稿，可继续微调。'" />
+
+              <el-collapse v-model="apiAdvancedSections" class="advanced-block">
+                <el-collapse-item title="高级设置" name="api">
+                  <el-form-item label="接入方式">
+                    <el-radio-group v-model="form.remote_api_mode">
+                      <el-radio-button label="simple" value="simple">简单接入</el-radio-button>
+                      <el-radio-button label="openapi" value="openapi">原始 OpenAPI</el-radio-button>
+                    </el-radio-group>
+                  </el-form-item>
+                  <template v-if="form.remote_api_mode === 'simple'">
+                    <div class="field-grid">
+                      <el-form-item label="认证方式">
+                        <el-select v-model="form.auth_type" placeholder="由 Agent 自动识别">
+                          <el-option label="无认证" value="" />
+                          <el-option label="Bearer Token" value="bearer" />
+                          <el-option label="Basic Auth" value="basic" />
+                          <el-option label="API Key（Query）" value="api_key_query" />
+                          <el-option label="API Key（Header）" value="api_key_header" />
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item label="认证字段"><el-input v-model="form.auth_key_name" placeholder="例如：access_key / api_key / x-api-key" /></el-form-item>
+                      <el-form-item label="curl 示例" class="span-2"><el-input v-model="remoteApiAssistForm.sample_curl" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" resize="none" placeholder="可选。直接贴一段 curl。" /></el-form-item>
+                      <el-form-item label="Base URL"><el-input v-model="form.simple_api_config.base_url" placeholder="例如：https://api.ipstack.com" /></el-form-item>
+                      <el-form-item label="Path"><el-input v-model="form.simple_api_config.path" placeholder="/check" /></el-form-item>
+                      <el-form-item label="Method">
+                        <el-select v-model="form.simple_api_config.method">
+                          <el-option label="GET" value="GET" />
+                          <el-option label="POST" value="POST" />
+                          <el-option label="PUT" value="PUT" />
+                          <el-option label="DELETE" value="DELETE" />
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item label="Operation ID"><el-input v-model="form.simple_api_config.operation_id" /></el-form-item>
+                    </div>
+                  </template>
+                  <el-form-item v-else label="OpenAPI Schema">
+                    <el-input v-model="form.openapi_schema" type="textarea" :rows="8" />
+                  </el-form-item>
+                </el-collapse-item>
+              </el-collapse>
+            </section>
+          </template>
+
+          <template v-else>
+            <section class="nested-panel">
+              <div class="panel-head">
+                <div>
+                  <h3>CLI 配置</h3>
+                </div>
+              </div>
+              <div class="field-grid">
+                <el-form-item label="来源类型">
+                  <el-select v-model="form.cli_config.source_type">
+                    <el-option v-for="option in cliSourceOptions" :key="option.value" :label="option.label" :value="option.value" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item v-if="requiresToolDir" label="工具目录"><el-input v-model="form.cli_config.tool_dir" placeholder="本地目录或仓库目录" /></el-form-item>
+                <el-form-item label="命令" class="span-2"><el-input v-model="form.cli_config.command" placeholder="例如：python main.py" /></el-form-item>
+                <el-form-item label="参数模板" class="span-2"><el-input v-model="form.cli_config.args_template" placeholder="例如：--city {{city}}" /></el-form-item>
+              </div>
+            </section>
+          </template>
+        </el-form>
+      </section>
+    </Transition>
 
     <section class="list-card" v-loading="loading">
-      <div v-if="!visibleTools.length" class="empty-state">暂无工具</div>
-      <article v-for="row in visibleTools" :key="row.tool_id" class="tool-row">
-        <div class="logo-wrap"><img :src="getToolLogo(row)" :alt="row.display_name" @error="handleToolLogoError" /></div>
-        <div class="tool-main">
-          <div class="tool-name-line">
-            <span class="tool-name" :title="row.display_name">{{ row.display_name }}</span>
-            <span v-if="isSystemTool(row)" class="meta-badge">系统工具</span>
-          </div>
-          <div class="tool-description" :title="getToolSummary(row)">{{ getToolSummary(row) }}</div>
-          <div class="tool-hints">
-            <span class="hint-chip">{{ getToolRuntimeLabel(row) }}</span>
-            <span v-for="hint in getToolHints(row)" :key="hint" class="hint-chip">{{ hint }}</span>
-          </div>
-        </div>
-        <div class="tool-side">
-          <div class="status-pill" :class="getToolStatusTone(row)">
-            <span class="status-dot" />
-            <span>{{ getToolStatusLabel(row) }}</span>
-          </div>
-          <div class="action-row">
-            <el-button class="primary-action" @click="handlePrimaryAction(row)">{{ getPrimaryActionLabel(row) }}</el-button>
-            <el-button class="secondary-action" plain :loading="isStatusRefreshing(row)" @click="refreshToolStatus(row)">检测</el-button>
-            <el-dropdown trigger="click" @command="(command) => handleToolCommand(row, command as 'edit' | 'delete' | 'config')">
-              <el-button class="ghost-action" :icon="MoreFilled" circle />
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item v-if="isSystemTool(row)" command="config">配置</el-dropdown-item>
-                  <el-dropdown-item command="edit">编辑</el-dropdown-item>
-                  <el-dropdown-item command="delete">删除</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
-        </div>
-      </article>
-    </section>
-
-    <el-dialog v-model="dialogVisible" :title="isEditMode ? '编辑工具' : '新建工具'" width="min(940px, calc(100vw - 32px))">
-      <el-form label-position="top" class="tool-form">
-        <el-form-item label="工具图标">
-          <div class="logo-upload-row">
-            <div class="logo-preview"><img :src="form.logo_url || pluginIcon" alt="工具图标预览" @error="handleToolLogoError" /></div>
-            <el-upload :show-file-list="false" :auto-upload="false" accept="image/*" :on-change="handleLogoUpload">
-              <el-button :loading="logoUploading" :icon="Upload">上传图标</el-button>
-            </el-upload>
-          </div>
-        </el-form-item>
-
-        <div class="field-grid">
-          <el-form-item label="名称"><el-input v-model="form.display_name" placeholder="例如：IP 地理位置查询" /></el-form-item>
-          <el-form-item label="运行方式">
-            <el-radio-group v-model="form.runtime_type">
-              <el-radio-button label="remote_api" value="remote_api">远程 API</el-radio-button>
-              <el-radio-button label="cli" value="cli">CLI</el-radio-button>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item label="描述" class="span-2">
-            <el-input v-model="form.description" type="textarea" :rows="3" placeholder="一句话说明这个工具负责什么能力，供 Agent 判断何时调用。" />
-          </el-form-item>
-        </div>
-
-        <template v-if="form.runtime_type === 'remote_api'">
-          <section class="nested-panel">
-            <div class="panel-head api-assist-head">
-              <div>
-                <h3>远程 API 接入</h3>
-                <p>默认只填文档地址和 API Key；接口地址、认证方式、字段名和参数由 Agent 从文档里自动推断。</p>
-              </div>
-              <div class="panel-actions">
-                <el-button type="primary" plain :loading="remoteApiAssistLoading" @click="() => previewRemoteApi()">智能填表</el-button>
-                <el-button plain :loading="toolConnectivityLoading" @click="testToolConnectivity">测试连通性</el-button>
-              </div>
-            </div>
-
-            <div class="field-grid">
-              <el-form-item label="文档地址（必填，可多条）" class="span-2" required>
-                <el-input v-model="remoteApiAssistForm.docs_urls_text" type="textarea" :rows="3" placeholder="每行一个文档地址，例如：https://docs.apilayer.com/ipstack/docs/quickstart-guide" />
-              </el-form-item>
-              <el-form-item label="API Key（必填）" class="span-2" required>
-                <el-input v-model="form.auth_token" type="textarea" :rows="3" placeholder="只填服务商给你的 API Key，Agent 会判断它应放在 Query、Header 还是 Bearer 里。" />
-              </el-form-item>
-              <el-form-item label="接口地址（可选）" class="span-2">
-                <el-input v-model="remoteApiAssistForm.endpoint_url" placeholder="文档里找不到接口地址时再填，例如：https://api.ipstack.com/check" />
-              </el-form-item>
-            </div>
-
-            <el-alert v-if="remoteApiAssistError" type="error" :closable="false" :title="remoteApiAssistError" />
-            <el-alert v-else-if="remoteApiAssistResult" type="success" :closable="false" :title="remoteApiAssistSummary || '已生成 API 草稿，可继续微调。'" />
-            <el-alert v-if="remoteApiAssistResult && requiredSimpleApiParams.length && probeArgNames" type="info" :closable="false" :title="`Agent 已识别出必填业务参数：${requiredSimpleApiParamNames}，并生成测试参数：${probeArgNames}。连通性检测会带这些示例值发起真实请求。`" />
-            <el-alert v-else-if="remoteApiAssistResult && requiredSimpleApiParams.length" type="warning" :closable="false" :title="`Agent 已识别出必填业务参数：${missingProbeParamNames || requiredSimpleApiParamNames}，但没有找到可靠测试值。连通性检测会停在“缺少测试参数”，不会伪装成成功。`" />
-            <div v-if="remoteApiAssistResult?.warnings?.length" class="warning-stack api-warning-stack">
-              <span v-for="warning in remoteApiAssistResult.warnings" :key="warning">{{ warning }}</span>
-            </div>
-
-            <el-collapse v-model="apiAdvancedSections" class="advanced-block">
-              <el-collapse-item title="高级设置" name="api">
-                <el-form-item label="接入方式">
-                  <el-radio-group v-model="form.remote_api_mode">
-                    <el-radio-button label="simple" value="simple">简单接入</el-radio-button>
-                    <el-radio-button label="openapi" value="openapi">原始 OpenAPI</el-radio-button>
-                  </el-radio-group>
-                </el-form-item>
-                <template v-if="form.remote_api_mode === 'simple'">
-                  <div class="field-grid">
-                    <el-form-item label="认证方式（自动识别，可选）">
-                      <el-select v-model="form.auth_type" placeholder="由 Agent 自动识别">
-                        <el-option label="无认证" value="" />
-                        <el-option label="Bearer Token" value="bearer" />
-                        <el-option label="Basic Auth" value="basic" />
-                        <el-option label="API Key（Query）" value="api_key_query" />
-                        <el-option label="API Key（Header）" value="api_key_header" />
-                      </el-select>
-                    </el-form-item>
-                    <el-form-item label="认证字段名（自动识别，可选）"><el-input v-model="form.auth_key_name" placeholder="例如：access_key / api_key / x-api-key" /></el-form-item>
-                    <el-form-item label="curl 示例" class="span-2"><el-input v-model="remoteApiAssistForm.sample_curl" type="textarea" :rows="3" placeholder="可选。直接贴一段 curl，Agent 更容易识别认证方式和参数。" /></el-form-item>
-                    <el-form-item label="Base URL"><el-input v-model="form.simple_api_config.base_url" placeholder="例如：https://api.ipstack.com" /></el-form-item>
-                    <el-form-item label="路径"><el-input v-model="form.simple_api_config.path" placeholder="例如：/{ip} 或 /check" /></el-form-item>
-                    <el-form-item label="请求方法">
-                      <el-select v-model="form.simple_api_config.method">
-                        <el-option label="GET" value="GET" /><el-option label="POST" value="POST" /><el-option label="PUT" value="PUT" /><el-option label="PATCH" value="PATCH" /><el-option label="DELETE" value="DELETE" />
-                      </el-select>
-                    </el-form-item>
-                    <el-form-item label="operationId"><el-input v-model="form.simple_api_config.operation_id" placeholder="例如：lookupIpLocation" /></el-form-item>
-                    <el-form-item label="摘要" class="span-2"><el-input v-model="form.simple_api_config.summary" placeholder="一句话告诉 Agent 这个接口做什么。" /></el-form-item>
-                    <el-form-item label="接口说明" class="span-2"><el-input v-model="form.simple_api_config.description" type="textarea" :rows="3" placeholder="补充参数、返回值和适用场景，帮助 Agent 更准确调用。" /></el-form-item>
-                  </div>
-                  <section class="nested-panel">
-                    <div class="panel-head api-assist-head"><div><h3>请求参数</h3><p>列出模型运行时需要填写的 query、path、header 参数，后端会转换成 OpenAPI。</p></div><el-button plain @click="addSimpleApiParam">添加参数</el-button></div>
-                    <div v-if="simpleApiParams.length" class="param-list">
-                      <div v-for="(param, index) in simpleApiParams" :key="`param-${index}`" class="param-row">
-                        <el-input v-model="param.name" placeholder="参数名，例如 ip / city" />
-                        <el-select v-model="param.in"><el-option label="query" value="query" /><el-option label="path" value="path" /><el-option label="header" value="header" /></el-select>
-                        <el-select v-model="param.type"><el-option label="string" value="string" /><el-option label="number" value="number" /><el-option label="integer" value="integer" /><el-option label="boolean" value="boolean" /></el-select>
-                        <el-switch v-model="param.required" inline-prompt active-text="必填" inactive-text="可选" />
-                        <el-input v-model="param.description" placeholder="参数说明" />
-                        <el-button text type="danger" @click="removeSimpleApiParam(index)">删除</el-button>
-                      </div>
-                    </div>
-                    <div v-else class="empty-inline">还没有参数。纯 GET 检查接口可以先不填，需要路径或查询变量时再添加。</div>
-                  </section>
-                </template>
-                <template v-else><el-form-item label="OpenAPI Schema"><el-input v-model="form.openapi_schema" type="textarea" :rows="16" placeholder="粘贴完整 OpenAPI Schema。适合已有 Swagger/OpenAPI 文件时直接接入。" /></el-form-item></template>
-              </el-collapse-item>
-            </el-collapse>
-          </section>
-        </template>
-
-        <template v-else>
-          <div class="cli-shell">
-            <section class="cli-panel">
-              <div class="panel-head"><div><h3>来源</h3><p>先告诉 Zuno 这个 CLI 从哪里来，再决定安装和运行方式。</p></div><span class="source-pill">{{ currentCliSourceOption.label }}</span></div>
-              <div class="field-grid">
-                <el-form-item label="CLI 来源类型"><el-select v-model="form.cli_config.source_type"><el-option v-for="item in cliSourceOptions" :key="item.value" :label="item.label" :value="item.value" /></el-select></el-form-item>
-                <el-form-item v-if="currentSourceType !== 'executable'" :label="cliPathLabel"><el-input v-model="form.cli_config.tool_dir" :placeholder="cliPathPlaceholder" /></el-form-item>
-                <el-form-item v-if="currentSourceType === 'executable'" label="可执行文件路径"><el-input v-model="form.cli_config.command" :placeholder="commandPlaceholder" /></el-form-item>
-                <el-form-item v-if="['github_repo', 'npm_package', 'python_package'].includes(currentSourceType)" :label="installSourceLabel"><el-input v-model="form.cli_config.install_source" :placeholder="installSourcePlaceholder" /></el-form-item>
-              </div>
-              <div class="source-intro"><strong>{{ currentCliSourceOption.label }}</strong><p>{{ currentCliSourceOption.helper }}</p></div>
-            </section>
-
-            <section class="cli-panel">
-              <div class="panel-head"><div><h3>运行方式</h3><p>这里保留真正决定执行结果的核心字段，其他细节放到高级配置。</p></div></div>
-              <div class="field-grid">
-                <el-form-item v-if="currentSourceType !== 'executable'" label="启动命令"><el-input v-model="form.cli_config.command" :placeholder="commandPlaceholder" /></el-form-item>
-                <el-form-item label="参数模板"><el-input v-model="form.cli_config.args_template" placeholder="例如：--input {{input}} --format json" /></el-form-item>
-                <el-form-item label="安装命令"><el-input v-model="form.cli_config.install_command" placeholder="例如：npm dlx @playwright/cli@latest 或 uv tool install ..." /></el-form-item>
-              </div>
-            </section>
-
-            <section class="cli-panel assist-panel">
-              <div class="panel-head"><div><h3>Agent assist</h3><p>给 GitHub、文档或本地路径，Agent 帮你归纳安装方式、启动命令和 CLI 建议。</p></div><el-button type="primary" plain :loading="cliPreviewLoading" @click="previewCli">分析并给建议</el-button></div>
-              <div class="hint-row"><span v-for="hint in sourceAssistHints" :key="hint" class="hint-chip soft">{{ hint }}</span></div>
-              <div class="field-grid">
-                <el-form-item label="GitHub 链接"><el-input v-model="assistForm.github_url" placeholder="例如：https://github.com/org/repo" /></el-form-item>
-                <el-form-item label="文档链接"><el-input v-model="assistForm.docs_url" placeholder="例如：https://tool.docs.dev/get-started" /></el-form-item>
-                <el-form-item label="本地路径"><el-input v-model="assistForm.local_path" placeholder="例如：F:\tools\repo 或 tools\cli\my-cli" /></el-form-item>
-                <el-form-item label="补充说明" class="span-2"><el-input v-model="assistForm.notes" type="textarea" :rows="3" placeholder="例如：希望优先推荐 uvx，只做只读扫描，不假设全局安装。" /></el-form-item>
-              </div>
-              <el-alert v-if="cliPreviewError" :title="cliPreviewError" type="warning" :closable="false" />
-              <div v-if="cliPreviewResult" class="assist-result">
-                <div class="assist-summary"><div><strong>{{ cliPreviewResult.display_name || cliPreviewResult.suggested_name || 'Agent 已返回建议' }}</strong><p>{{ previewSummary || '已拿到结构化建议，可直接回填到表单。' }}</p></div><div class="summary-meta"><span v-if="cliPreviewResult.resolved_path" class="meta-chip">{{ cliPreviewResult.resolved_path }}</span><span v-if="cliPreviewResult.suggested_install_command" class="meta-chip">已识别安装命令</span><span v-if="cliPreviewResult.suggested_healthcheck_command" class="meta-chip">已识别健康检查</span></div></div>
-                <el-alert v-for="warning in cliPreviewResult.warnings || []" :key="warning" :title="warning" type="warning" :closable="false" class="warning-item" />
-                <div v-if="previewRecommended" class="recommend-card"><div class="recommend-copy"><div class="recommend-title"><strong>推荐方案</strong><span v-if="formatConfidence(previewRecommended.confidence)" class="confidence-chip">{{ formatConfidence(previewRecommended.confidence) }}</span></div><code>{{ previewRecommended.command }} {{ formatArgsTemplate(previewRecommended.args_template) }}</code><p>{{ previewRecommended.reason || previewRecommended.notes?.[0] || '后端给出了一条优先推荐的运行方式。' }}</p></div><el-button @click="applyCliSuggestion(previewRecommended)">一键回填</el-button></div>
-                <div v-if="previewStructuredCards.length" class="structured-grid"><article v-for="card in previewStructuredCards" :key="card.id" class="structured-card"><div class="structured-head"><strong>{{ card.title }}</strong><span v-if="formatConfidence(card.confidence)" class="confidence-chip">{{ formatConfidence(card.confidence) }}</span></div><p>{{ card.summary }}</p><div v-if="card.payload.command" class="structured-command"><code>{{ card.payload.command }} {{ formatArgsTemplate(card.payload.args_template) }}</code></div><div v-if="card.references.length" class="reference-row"><span v-for="reference in card.references" :key="reference" class="meta-chip">{{ reference }}</span></div><div v-if="card.notes.length" class="stack-copy"><span v-for="note in card.notes" :key="note">{{ note }}</span></div><div v-if="card.warnings.length" class="warning-stack"><span v-for="warning in card.warnings" :key="warning">{{ warning }}</span></div><el-button size="small" @click="applyCliSuggestion(card.payload)">应用这条建议</el-button></article></div>
-                <div v-if="previewCandidates.length > 1" class="candidate-list"><article v-for="item in previewCandidates.slice(1)" :key="`${item.command}-${formatArgsTemplate(item.args_template)}-${item.source || ''}`" class="candidate-item"><div><strong>{{ item.command }} {{ formatArgsTemplate(item.args_template) }}</strong><p>{{ item.reason || item.notes?.[0] || '备选命令候选。' }}</p></div><el-button size="small" @click="applyCliSuggestion(item)">采用</el-button></article></div>
-                <div v-if="detectedFiles.length" class="detected-files"><span class="detected-label">识别到的关键文件</span><span v-for="file in detectedFiles" :key="file" class="meta-chip">{{ file }}</span></div>
-              </div>
-            </section>
-
-            <el-collapse v-model="advancedSections" class="advanced-block">
-              <el-collapse-item title="高级配置" name="execution">
-                <div class="field-grid">
-                  <el-form-item label="健康检查命令"><div class="field-stack"><el-input v-model="form.cli_config.healthcheck_command" placeholder="例如：mycli --help 或 python main.py --version" /><el-button plain :loading="toolConnectivityLoading" @click="testToolConnectivity">测试连通性</el-button></div></el-form-item>
-                  <el-form-item label="凭证模式"><el-select v-model="form.cli_config.credential_mode"><el-option label="无需凭证" value="none" /><el-option label="单份凭证" value="single" /><el-option label="多份凭证 / 多 profile" value="profiles" /></el-select></el-form-item>
-                  <el-form-item label="工作目录"><div class="field-stack"><el-select v-model="form.cli_config.cwd_mode"><el-option label="使用工具目录" value="tool_dir" /><el-option label="工作区目录" value="workspace" /><el-option label="自定义目录" value="custom" /></el-select><el-input v-if="form.cli_config.cwd_mode === 'custom'" v-model="form.cli_config.cwd" placeholder="填写执行时的工作目录" /></div></el-form-item>
-                  <el-form-item label="超时时间（毫秒）"><el-input-number v-model="form.cli_config.timeout_ms" :min="1000" :step="1000" /></el-form-item>
-                  <el-form-item label="接入备注" class="span-2"><el-input v-model="form.cli_config.install_notes" type="textarea" :rows="3" placeholder="补充平台差异、依赖说明、凭证获取方式或运行约束。" /></el-form-item>
-                </div>
-              </el-collapse-item>
-            </el-collapse>
-          </div>
-        </template>
-      </el-form>
-
-      <el-alert v-if="toolConnectivityError" :title="toolConnectivityError" type="warning" :closable="false" class="dialog-inline-alert" />
-      <div v-if="toolConnectivityResult" class="connectivity-card" :class="{ 'is-warning': !toolConnectivityResult.ok }">
-        <div class="connectivity-head"><strong>{{ toolConnectivityResult.summary }}</strong><span class="meta-badge">{{ toolConnectivityResult.runtime_type === 'cli' ? 'CLI' : 'API' }}</span></div>
-        <div v-if="toolConnectivityResult.details?.length" class="stack-copy"><span v-for="detail in toolConnectivityResult.details" :key="detail">{{ detail }}</span></div>
-        <div v-if="toolConnectivityResult.warnings?.length" class="warning-stack"><span v-for="warning in toolConnectivityResult.warnings" :key="warning">{{ warning }}</span></div>
+      <div v-if="!visibleTools.length && !isToolFormMode" class="empty-state settings-empty-hint">
+        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+        {{ keyword ? '没有匹配到工具，换个关键词试试看吧 (´･_･`)' : '工具箱还是空的，点右上角 + 加一件趁手小工具吧 ( •̀ ω •́ )✧' }}
       </div>
-
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="dialogLoading" @click="submitDialog">{{ isEditMode ? '保存修改' : '创建工具' }}</el-button>
+      <template v-for="row in paginatedTools" :key="row.tool_id">
+        <article class="tool-row" :class="{ 'is-info-open': isToolInfoExpanded(row), 'is-config-open': isToolConfigExpanded(row) }">
+          <div class="logo-wrap"><img :src="getToolLogo(row)" :alt="row.display_name" @error="handleToolLogoError" /></div>
+          <div class="tool-main">
+            <div class="tool-title-row">
+              <span class="tool-name" :title="row.display_name">{{ row.display_name }}</span>
+              <span class="tool-description" :title="getToolSummary(row)">{{ getToolSummary(row) }}</span>
+            </div>
+            <div class="tool-meta-row">
+              <span v-if="isSystemTool(row)" class="meta-badge">系统</span>
+              <span class="hint-chip">{{ getToolRuntimeLabel(row) }}</span>
+              <span v-for="hint in getToolHints(row)" :key="hint" class="hint-chip">{{ hint }}</span>
+              <span class="status-pill" :class="getToolStatusTone(row)">
+                <span class="status-dot" />
+                <span>{{ getToolStatusLabel(row) }}</span>
+              </span>
+            </div>
+          </div>
+          <div class="tool-side">
+            <div class="action-row">
+              <el-button class="ghost-action icon-action" :class="{ active: isToolInfoExpanded(row) }" :icon="InfoFilled" circle title="信息" aria-label="信息" @click="toggleToolInfo(row)" />
+              <el-button v-if="canOpenPrimaryAction(row)" class="primary-action icon-action" :class="{ active: isToolConfigExpanded(row) || isEditingTool(row) }" :icon="getPrimaryActionIcon(row)" circle :loading="isEditingTool(row) && dialogLoading" :title="isToolConfigExpanded(row) ? '收起' : getPrimaryActionLabel(row)" :aria-label="isToolConfigExpanded(row) ? '收起' : getPrimaryActionLabel(row)" @click="handlePrimaryAction(row)" />
+              <el-button class="secondary-action icon-action" :icon="Connection" circle plain :loading="isStatusRefreshing(row)" title="检测" aria-label="检测" @click="refreshToolStatus(row)" />
+              <el-button class="ghost-action icon-action" :icon="CopyDocument" circle title="复制工具名" aria-label="复制工具名" @click="copyToolName(row)" />
+              <el-button v-if="!isSystemTool(row)" class="danger-action icon-action" :icon="Delete" circle title="删除" aria-label="删除" @click="handleDelete(row)" />
+            </div>
+          </div>
+        </article>
+        <section v-if="isToolInfoExpanded(row)" class="tool-row-info">
+          <div v-if="toolInfoLoading[row.tool_id]" class="tool-info-loading">正在整理工具信息...</div>
+          <template v-else>
+            <article v-for="card in getToolInfoCards(row)" :key="card.key" class="tool-info-card" :class="card.tone ? `is-${card.tone}` : ''">
+              <div class="tool-info-kicker">{{ card.eyebrow }}</div>
+              <div class="tool-info-body">
+                <strong>{{ card.title }}</strong>
+                <p>{{ card.summary }}</p>
+                <ul v-if="card.items.length">
+                  <li v-for="item in card.items" :key="item">{{ item }}</li>
+                </ul>
+              </div>
+            </article>
+          </template>
+        </section>
+        <section v-if="isToolConfigExpanded(row)" class="tool-inline-config">
+          <header class="inline-config-head">
+            <span>{{ row.display_name }}配置</span>
+            <el-button class="settings-icon-button save-action" type="primary" :icon="Check" circle title="保存" aria-label="保存" @click="saveEmbeddedConfig" />
+          </header>
+          <ConfigurationPanel :ref="setConfigPanelRef" :tool="row.name" embedded :show-intro="false" />
+        </section>
       </template>
-    </el-dialog>
+      <ZunoMiniPager v-model:page="listPage" class="settings-list-pager" :total="visibleTools.length" :page-size="LIST_PAGE_SIZE" />
+    </section>
   </div>
 </template>
 <style scoped lang="scss">
@@ -759,7 +1091,8 @@ onMounted(fetchTools)
 
 .hero-card,
 .toolbar-card,
-.list-card {
+.list-card,
+.tool-workbench-card {
   border-radius: 24px;
   border: 1px solid rgba(214, 132, 70, 0.1);
   background: rgba(255, 252, 248, 0.97);
@@ -782,14 +1115,20 @@ onMounted(fetchTools)
   min-width: 0;
 }
 
-.eyebrow {
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  color: #be6d38;
+.settings-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .hero-card h1 {
-  margin: 12px 0 10px;
+  margin: 0;
   font-size: 32px;
   color: #2f241b;
 }
@@ -808,15 +1147,24 @@ onMounted(fetchTools)
   flex-wrap: wrap;
 }
 
+.hero-actions .is-create-open :deep(.el-icon) {
+  transform: rotate(45deg);
+  transition: transform 180ms cubic-bezier(.2, .8, .2, 1);
+}
+
 .toolbar-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
-  gap: 18px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
 }
 
 .tool-tabs {
   min-width: 0;
+}
+
+.tool-search-row {
+  width: 100%;
 }
 
 .search-box {
@@ -824,8 +1172,144 @@ onMounted(fetchTools)
 }
 
 .list-card {
-  padding: 8px 0;
+  padding: 2px 0;
   overflow: hidden;
+}
+
+.tool-workbench-card {
+  padding: 18px 22px 20px;
+  overflow: visible;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 250, 0.96), rgba(255, 250, 245, 0.88)),
+    rgba(255, 255, 255, 0.84);
+  animation: tool-workbench-rise 220ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.workbench-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.workbench-head h2 {
+  margin: 0;
+  font-size: 17px;
+  color: #111827;
+  letter-spacing: 0;
+}
+
+.workbench-head p {
+  margin: 6px 0 0;
+  color: #718096;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.workbench-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.workbench-actions :deep(.el-button + .el-button),
+.workbench-actions :deep(.el-dropdown + .el-button),
+.workbench-actions :deep(.el-button + .el-dropdown) {
+  margin-left: 0;
+}
+
+.workbench-actions .is-active {
+  border-color: rgba(245, 158, 11, 0.34);
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.save-action {
+  box-shadow: 0 14px 26px rgba(245, 158, 11, 0.16);
+}
+
+.tool-form {
+  display: grid;
+  gap: 10px;
+}
+
+.tool-info-panel {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px 16px;
+  align-items: start;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 158, 11, 0.14);
+  background: linear-gradient(180deg, rgba(255, 251, 247, 0.96), rgba(255, 247, 236, 0.72));
+}
+
+.info-orb {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.tool-info-panel h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #111827;
+}
+
+.tool-info-panel p {
+  margin: 5px 0 0;
+  color: #718096;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tool-info-panel ul {
+  grid-column: 2;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  color: #526174;
+  font-size: 13px;
+  line-height: 1.6;
+  list-style: none;
+}
+
+.tool-info-panel li {
+  position: relative;
+  padding-left: 14px;
+}
+
+.tool-info-panel li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.76);
+}
+
+@keyframes tool-workbench-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.992);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 .empty-state {
@@ -836,12 +1320,12 @@ onMounted(fetchTools)
 
 .tool-row {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) minmax(132px, auto);
-  gap: 18px;
-  align-items: flex-start;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(214, 132, 70, 0.08);
-  transition: background 160ms ease, transform 160ms ease;
+  grid-template-columns: 32px minmax(0, 1fr) max-content;
+  gap: 16px;
+  align-items: center;
+  padding: 11px 4px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  transition: background 160ms ease;
 }
 
 .tool-row:last-child {
@@ -849,48 +1333,203 @@ onMounted(fetchTools)
 }
 
 .tool-row:hover {
-  background: rgba(255, 249, 241, 0.72);
+  background: linear-gradient(90deg, rgba(255, 251, 247, 0.5), rgba(255, 255, 255, 0));
+}
+
+.tool-row.is-info-open,
+.tool-row.is-config-open {
+  background: linear-gradient(90deg, rgba(255, 251, 247, 0.78), rgba(255, 255, 255, 0));
+}
+
+.tool-row-info {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: -2px 0 0 48px;
+  padding: 2px 4px 10px 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.5;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  animation: tool-info-unfold 160ms ease both;
+}
+
+.tool-info-loading {
+  grid-column: 1 / -1;
+  color: #8a7765;
+}
+
+.tool-info-card {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  background: transparent;
+}
+
+.tool-info-card:last-child {
+  border-bottom: none;
+}
+
+.tool-info-card strong {
+  color: #2f241b;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.tool-info-card p {
+  margin: 0;
+  color: #6f6257;
+  line-height: 1.5;
+}
+
+.tool-info-card ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tool-info-card li {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.06);
+  color: #7a6758;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.tool-info-card li::before {
+  content: none;
+}
+
+.tool-info-kicker {
+  display: inline-flex;
+  justify-content: flex-start;
+  color: #b78345;
+  font-size: 10px;
+  font-weight: 680;
+  line-height: 1.45;
+}
+
+.tool-info-body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tool-row-info span,
+.tool-info-card p,
+.tool-info-card li {
+  overflow-wrap: anywhere;
+}
+
+.tool-inline-config {
+  display: grid;
+  gap: 8px;
+  margin: 2px 0 16px 52px;
+  padding: 12px 14px 14px;
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid rgba(226, 232, 240, 0.72);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.48);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 250, 0.54), rgba(255, 255, 255, 0.14));
+  box-shadow: none;
+  animation: tool-config-unfold 190ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.inline-config-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 32px;
+}
+
+.inline-config-head span {
+  color: #2f241b;
+  font-size: 14px;
+  font-weight: 680;
+}
+
+@keyframes tool-info-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tool-config-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scaleY(0.985);
+    transform-origin: top;
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    transform-origin: top;
+  }
 }
 
 .logo-wrap {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   overflow: hidden;
-  background: linear-gradient(180deg, #fff, #f7f1e8);
-  border: 1px solid rgba(214, 132, 70, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .logo-wrap img,
 .logo-preview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .tool-main {
+  display: grid;
+  gap: 4px;
   min-width: 0;
 }
 
-.tool-name-line {
+.tool-name-line,
+.tool-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
 }
 
 .tool-name {
-  display: -webkit-box;
-  font-size: 18px;
-  font-weight: 700;
+  display: block;
+  flex: 0 0 auto;
+  max-width: min(34vw, 240px);
+  font-size: 15px;
+  font-weight: 680;
   color: #32261d;
-  line-height: 1.28;
+  line-height: 1.25;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: break-word;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .meta-badge,
@@ -927,35 +1566,44 @@ onMounted(fetchTools)
 }
 
 .tool-description {
-  display: -webkit-box;
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
   color: #615446;
-  line-height: 1.65;
-  font-size: 14px;
-  margin-bottom: 8px;
-  max-width: 640px;
+  line-height: 1.35;
+  font-size: 12px;
+  margin: 0;
+  max-width: none;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: break-word;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .tool-hints,
+.tool-meta-row,
 .hint-row,
 .reference-row,
 .detected-files {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 5px;
+}
+
+.tool-meta-row {
+  align-items: center;
 }
 
 .hint-chip {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  min-height: 18px;
+  padding: 0 7px;
   border-radius: 999px;
-  background: rgba(247, 241, 232, 0.8);
+  background: rgba(245, 158, 11, 0.06);
   color: #8a7765;
-  font-size: 12px;
+  font-size: 10.5px;
+  line-height: 18px;
 }
 
 .hint-chip.soft {
@@ -964,30 +1612,32 @@ onMounted(fetchTools)
 
 .tool-side {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   min-width: 0;
 }
 
 .status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 5px;
+  min-height: 18px;
+  padding: 0 7px;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 10.5px;
+  font-weight: 540;
   background: #f5f5f5;
   color: #666;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   background: currentColor;
-  opacity: 0.95;
+  opacity: 0.72;
 }
 
 .status-pill.is-ready {
@@ -1013,39 +1663,72 @@ onMounted(fetchTools)
 .action-row {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 7px;
+  flex-wrap: nowrap;
+  min-width: max-content;
+}
+
+.action-row :deep(.el-button + .el-button),
+.action-row :deep(.el-dropdown + .el-button),
+.action-row :deep(.el-button + .el-dropdown) {
+  margin-left: 0;
+}
+
+.icon-action {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border-radius: 999px;
+  flex-shrink: 0;
 }
 
 .primary-action {
-  min-width: 88px;
-  border-radius: 12px;
-  border: none;
-  background: #2a2622;
-  color: white;
-  flex-shrink: 0;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
 }
 
 .primary-action:hover {
-  background: #1f1c18;
-  color: white;
+  background: rgba(245, 158, 11, 0.18);
+  color: #92400e;
+}
+
+.primary-action.active {
+  background: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.92);
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(245, 158, 11, 0.18);
 }
 
 .secondary-action {
-  min-width: 78px;
-  border-radius: 12px;
   border-color: rgba(214, 132, 70, 0.2);
   color: #8b5a33;
-  background: rgba(255, 252, 247, 0.94);
-  flex-shrink: 0;
+  background: rgba(255, 252, 247, 0.62);
 }
 
 .ghost-action {
-  border-radius: 12px;
   border: 1px solid rgba(214, 132, 70, 0.12);
   color: #6f6257;
-  background: white;
-  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.ghost-action.active {
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.danger-action {
+  border: 1px solid rgba(239, 68, 68, 0.16);
+  background: rgba(239, 68, 68, 0.055);
+  color: #b91c1c;
+}
+
+.danger-action:hover {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.1);
+  color: #991b1b;
 }
 
 .logo-editor {
@@ -1055,12 +1738,19 @@ onMounted(fetchTools)
 }
 
 .logo-preview {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(214, 132, 70, 0.16);
   background: #f8efe4;
+}
+
+.logo-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
 .cli-shell {
@@ -1077,7 +1767,7 @@ onMounted(fetchTools)
 }
 
 .nested-panel {
-  margin-top: 16px;
+  margin-top: 6px;
   background: rgba(255, 255, 255, 0.82);
 }
 
@@ -1099,6 +1789,17 @@ onMounted(fetchTools)
   gap: 10px;
 }
 
+.mini-tool-button {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  background: rgba(255, 251, 247, 0.78);
+  color: #b45309;
+}
+
 .panel-head h3 {
   margin: 0 0 6px;
   font-size: 18px;
@@ -1116,6 +1817,49 @@ onMounted(fetchTools)
   line-height: 1.7;
 }
 
+.tool-workbench-card .panel-head {
+  margin-bottom: 10px;
+}
+
+.tool-workbench-card .panel-head h3 {
+  margin-bottom: 0;
+  font-size: 15px;
+}
+
+.tool-config-bubble :deep(.el-form-item) {
+  display: grid !important;
+  grid-template-columns: minmax(54px, max-content) minmax(0, 1fr) !important;
+  align-items: start;
+  column-gap: 8px;
+  row-gap: 2px;
+  min-width: 0;
+  margin: 0;
+}
+
+.tool-config-bubble :deep(.el-form-item__label) {
+  float: none !important;
+  display: flex !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 28px !important;
+  height: auto !important;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.2;
+  margin: 0;
+  padding: 7px 0 0;
+  text-align: left;
+  justify-content: flex-start !important;
+  white-space: nowrap;
+}
+
+.tool-config-bubble :deep(.el-form-item__content) {
+  display: block !important;
+  grid-column: 2;
+  margin-left: 0 !important;
+  min-width: 0;
+}
+
 .source-intro {
   margin-bottom: 16px;
   padding: 14px 16px;
@@ -1129,8 +1873,36 @@ onMounted(fetchTools)
 
 .field-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 16px;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 7px 14px;
+}
+
+.form-utility-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-top: -2px;
+}
+
+.inline-utility-button {
+  min-height: 30px;
+  border-radius: 999px;
+  border-color: rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.08);
+  color: #b45309;
+  font-size: 12px;
+}
+
+.utility-status {
+  min-width: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.utility-status.warning {
+  color: #b45309;
 }
 
 .assist-panel {
@@ -1300,7 +2072,7 @@ onMounted(fetchTools)
 }
 
 .span-2 {
-  grid-column: 1 / -1;
+  grid-column: span 2;
 }
 
 @media (max-width: 1180px) {
@@ -1309,13 +2081,14 @@ onMounted(fetchTools)
   }
 
   .tool-row {
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 32px minmax(0, 1fr) max-content;
   }
 
   .tool-side {
-    align-items: flex-start;
-    grid-column: 2;
-    width: 100%;
+    align-items: center;
+    grid-column: auto;
+    width: auto;
+    min-width: 100px;
   }
 }
 
@@ -1331,8 +2104,7 @@ onMounted(fetchTools)
   }
 
   .field-grid,
-  .cli-grid,
-  .tool-row {
+  .cli-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1341,15 +2113,17 @@ onMounted(fetchTools)
   }
 
   .tool-row {
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 32px minmax(0, 1fr) max-content;
+    gap: 12px;
   }
 
   .tool-side {
-    align-items: flex-start;
-    grid-column: 1 / -1;
+    align-items: center;
+    grid-column: auto;
+    justify-content: flex-end;
+    min-width: 100px;
   }
 
-  .action-row,
   .recommend-card,
   .candidate-item,
   .panel-head {
@@ -1358,8 +2132,73 @@ onMounted(fetchTools)
     flex-direction: column;
   }
 
+  .tool-side .action-row {
+    justify-content: flex-end;
+    align-items: center;
+    flex-direction: row;
+  }
+
   .span-2 {
     grid-column: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .tool-page {
+    padding: 16px;
+  }
+
+  .tool-workbench-card {
+    padding: 18px;
+  }
+
+  .workbench-head {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .workbench-actions {
+    justify-content: flex-end;
+  }
+
+  .tool-row {
+    grid-template-columns: 30px minmax(0, 1fr);
+    align-items: flex-start;
+    padding: 12px 0;
+  }
+
+  .tool-title-row {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .tool-name {
+    max-width: 100%;
+  }
+
+  .tool-description {
+    flex-basis: 100%;
+  }
+
+  .tool-side {
+    grid-column: 2;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .tool-row-info,
+  .tool-inline-config {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+
+  .tool-row-info {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-info-card {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
 </style>
