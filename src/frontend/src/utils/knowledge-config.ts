@@ -134,7 +134,7 @@ export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): Knowledg
   retrieval_settings: { ...config.retrieval_settings },
 })
 
-export const mapModelToBinding = (
+const mapModelToBinding = (
   model?: { llm_id: string; model: string; provider: string } | null,
 ): KnowledgeModelBinding | null => {
   if (!model) return null
@@ -152,14 +152,6 @@ export const findBindingById = (
   if (!modelId) return null
   const found = options.find((item) => item.llm_id === modelId)
   return mapModelToBinding(found)
-}
-
-export const bindingLabel = (
-  binding?: KnowledgeModelBindingPayload | KnowledgeModelBinding | null,
-  fallback = '未选择',
-) => {
-  if (!binding) return fallback
-  return binding.model
 }
 
 export const getChunkModeLabel = (mode: KnowledgeChunkMode) => (

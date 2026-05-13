@@ -15,7 +15,7 @@ export interface WorkspaceGlobalDefaults {
 const DEFAULTS_KEY = 'zuno.workspace.defaults'
 const SESSION_MODES_KEY = 'zuno.workspace.sessionModes'
 
-export const createEmptyWorkspaceDefaults = (): WorkspaceGlobalDefaults => ({
+const createEmptyWorkspaceDefaults = (): WorkspaceGlobalDefaults => ({
   mode: 'normal',
   modelId: '',
   executionMode: 'tool',
@@ -51,15 +51,6 @@ export const loadWorkspaceDefaults = (): WorkspaceGlobalDefaults => {
   } catch {
     return createEmptyWorkspaceDefaults()
   }
-}
-
-export const saveWorkspaceDefaults = (defaults: WorkspaceGlobalDefaults) => {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(DEFAULTS_KEY, JSON.stringify({
-    ...defaults,
-    knowledgeIds: defaults.knowledgeIds.slice(0, 1),
-    updatedAt: new Date().toISOString(),
-  }))
 }
 
 export const loadWorkspaceSessionModes = (): Record<string, WorkspaceMode> => {

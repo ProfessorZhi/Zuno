@@ -11,15 +11,30 @@ import { getMCPServersAPI, type MCPServer } from '../../apis/mcp-server'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../apis/knowledge'
 import { getAgentSkillsAPI, type AgentSkill } from '../../apis/agent-skill'
 import { uploadFileAPI } from '../../apis/file'
-import type { AgentFormData } from '../../type'
 import { useUserStore } from '../../store/user'
 import { zunoAgentAvatar } from '../../utils/brand'
 import { USER_AVATAR_PRESETS, withUserAvatarVersion } from '../../utils/user-avatars'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
+import ZunoLineInput from '../../components/zuno-settings/ZunoLineInput.vue'
+import ZunoLineSelect from '../../components/zuno-settings/ZunoLineSelect.vue'
 
 interface SelectOption {
   id: string
   name: string
   description?: string
+}
+
+interface AgentFormData {
+  name: string
+  description: string
+  logo_url: string
+  tool_ids: string[]
+  llm_id: string
+  mcp_ids: string[]
+  system_prompt: string
+  knowledge_ids: string[]
+  agent_skill_ids: string[]
+  enable_memory: boolean
 }
 
 const router = useRouter()
@@ -364,13 +379,13 @@ watch(() => props.embeddedAgentId, () => {
   <div class="agent-editor-page" :class="{ 'agent-inline-editor': isWorkspaceSettings || isEmbedded }" v-loading="pageLoading || optionLoading">
     <div class="page-header">
       <div class="header-left">
-        <el-button v-if="!isEmbedded" class="settings-icon-button" :icon="ArrowLeft" circle title="返回智能体" aria-label="返回智能体" @click="goBack($event)" />
+        <ZunoIconButton v-if="!isEmbedded" :icon="ArrowLeft" title="返回智能体" aria-label="返回智能体" @click="goBack($event)" />
         <div>
           <h2>{{ pageTitle }}</h2>
         </div>
       </div>
       <div class="header-actions">
-        <el-button class="settings-icon-button" type="primary" :icon="Check" circle :loading="saving" :title="isEditing ? '保存修改' : '创建智能体'" :aria-label="isEditing ? '保存修改' : '创建智能体'" @click="saveAgent($event)" />
+        <ZunoIconButton type="primary" :icon="Check" :loading="saving" :title="isEditing ? '保存修改' : '创建智能体'" :aria-label="isEditing ? '保存修改' : '创建智能体'" @click="saveAgent($event)" />
       </div>
     </div>
 
@@ -411,79 +426,116 @@ watch(() => props.embeddedAgentId, () => {
           <el-switch v-model="form.enable_memory" />
         </div>
 
-        <el-form-item class="agent-field field-name" label="名称" prop="name">
-          <el-input v-model="form.name" maxlength="50" show-word-limit placeholder="比如：产品需求助手" />
-        </el-form-item>
+        <ZunoLineInput v-model="form.name" class="agent-field field-name" label="名称" prop="name" maxlength="50" show-word-limit placeholder="比如：产品需求助手" />
 
-        <el-form-item class="agent-field field-description" label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" maxlength="200" show-word-limit placeholder="一句话说明它帮用户解决什么问题。" />
-        </el-form-item>
+        <ZunoLineInput
+          v-model="form.description"
+          class="agent-field field-description"
+          label="描述"
+          prop="description"
+          textarea
+          :autosize="{ minRows: 1, maxRows: 3 }"
+          maxlength="200"
+          show-word-limit
+          placeholder="一句话说明它帮用户解决什么问题。"
+        />
 
-        <el-form-item class="agent-field field-model" label="模型" prop="llm_id">
-          <el-select v-model="form.llm_id" filterable placeholder="选择一个可见模型" class="full-width" no-data-text="当前没有可用模型，请先去模型页配置。">
-            <el-option v-for="item in llmOptions" :key="item.id" :label="item.name" :value="item.id">
-              <div class="option-line">
-                <span>{{ item.name }}</span>
-                <small>{{ item.description }}</small>
-              </div>
-            </el-option>
-          </el-select>
-        </el-form-item>
+        <ZunoLineSelect v-model="form.llm_id" class="agent-field field-model" label="模型" prop="llm_id" filterable placeholder="选择一个可见模型" no-data-text="当前没有可用模型，请先去模型页配置。">
+          <el-option v-for="item in llmOptions" :key="item.id" :label="item.name" :value="item.id">
+            <div class="option-line">
+              <span>{{ item.name }}</span>
+              <small>{{ item.description }}</small>
+            </div>
+          </el-option>
+        </ZunoLineSelect>
 
-        <el-form-item class="agent-field field-prompt" label="提示词" prop="system_prompt">
-          <el-input
-            v-model="form.system_prompt"
-            type="textarea"
-            :autosize="{ minRows: 1, maxRows: 6 }"
-            maxlength="5000"
-            show-word-limit
-            placeholder="写清楚这个智能体是谁、负责什么、有什么边界、回答时要遵守什么规则。"
-          />
-        </el-form-item>
+        <ZunoLineInput
+          v-model="form.system_prompt"
+          class="agent-field field-prompt"
+          label="提示词"
+          prop="system_prompt"
+          textarea
+          :autosize="{ minRows: 1, maxRows: 6 }"
+          maxlength="5000"
+          show-word-limit
+          placeholder="写清楚这个智能体是谁、负责什么、有什么边界、回答时要遵守什么规则。"
+        />
 
-        <el-form-item class="agent-field field-tool" label="工具">
-          <el-select v-model="form.tool_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择工具" no-data-text="当前没有可用工具，请先去工具页配置。">
-            <el-option v-for="item in toolOptions" :key="item.id" :label="item.name" :value="item.id">
-              <div class="option-line">
-                <span>{{ item.name }}</span>
-                <small>{{ item.description }}</small>
-              </div>
-            </el-option>
-          </el-select>
-        </el-form-item>
+        <ZunoLineSelect
+          v-model="form.tool_ids"
+          class="agent-field field-tool"
+          label="工具"
+          multiple
+          filterable
+          collapse-tags
+          collapse-tags-tooltip
+          placeholder="选择工具"
+          no-data-text="当前没有可用工具，请先去工具页配置。"
+        >
+          <el-option v-for="item in toolOptions" :key="item.id" :label="item.name" :value="item.id">
+            <div class="option-line">
+              <span>{{ item.name }}</span>
+              <small>{{ item.description }}</small>
+            </div>
+          </el-option>
+        </ZunoLineSelect>
 
-        <el-form-item class="agent-field field-mcp" label="MCP">
-          <el-select v-model="form.mcp_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择 MCP 服务" no-data-text="当前没有可用 MCP，请先去 MCP 页配置。">
-            <el-option v-for="item in mcpOptions" :key="item.id" :label="item.name" :value="item.id">
-              <div class="option-line">
-                <span>{{ item.name }}</span>
-                <small>{{ item.description }}</small>
-              </div>
-            </el-option>
-          </el-select>
-        </el-form-item>
+        <ZunoLineSelect
+          v-model="form.mcp_ids"
+          class="agent-field field-mcp"
+          label="MCP"
+          multiple
+          filterable
+          collapse-tags
+          collapse-tags-tooltip
+          placeholder="选择 MCP 服务"
+          no-data-text="当前没有可用 MCP，请先去 MCP 页配置。"
+        >
+          <el-option v-for="item in mcpOptions" :key="item.id" :label="item.name" :value="item.id">
+            <div class="option-line">
+              <span>{{ item.name }}</span>
+              <small>{{ item.description }}</small>
+            </div>
+          </el-option>
+        </ZunoLineSelect>
 
-        <el-form-item class="agent-field field-knowledge" label="知识库">
-          <el-select v-model="form.knowledge_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择知识库" no-data-text="当前没有知识库，请先去知识库页创建。">
-            <el-option v-for="item in knowledgeOptions" :key="item.id" :label="item.name" :value="item.id">
-              <div class="option-line">
-                <span>{{ item.name }}</span>
-                <small>{{ item.description }}</small>
-              </div>
-            </el-option>
-          </el-select>
-        </el-form-item>
+        <ZunoLineSelect
+          v-model="form.knowledge_ids"
+          class="agent-field field-knowledge"
+          label="知识库"
+          multiple
+          filterable
+          collapse-tags
+          collapse-tags-tooltip
+          placeholder="选择知识库"
+          no-data-text="当前没有知识库，请先去知识库页创建。"
+        >
+          <el-option v-for="item in knowledgeOptions" :key="item.id" :label="item.name" :value="item.id">
+            <div class="option-line">
+              <span>{{ item.name }}</span>
+              <small>{{ item.description }}</small>
+            </div>
+          </el-option>
+        </ZunoLineSelect>
 
-        <el-form-item class="agent-field field-skill" label="Skill">
-          <el-select v-model="form.agent_skill_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择 Skill" no-data-text="当前没有 Skill，请先去 Skill 页创建。">
-            <el-option v-for="item in skillOptions" :key="item.id" :label="item.name" :value="item.id">
-              <div class="option-line">
-                <span>{{ item.name }}</span>
-                <small>{{ item.description }}</small>
-              </div>
-            </el-option>
-          </el-select>
-        </el-form-item>
+        <ZunoLineSelect
+          v-model="form.agent_skill_ids"
+          class="agent-field field-skill"
+          label="Skill"
+          multiple
+          filterable
+          collapse-tags
+          collapse-tags-tooltip
+          placeholder="选择 Skill"
+          no-data-text="当前没有 Skill，请先去 Skill 页创建。"
+        >
+          <el-option v-for="item in skillOptions" :key="item.id" :label="item.name" :value="item.id">
+            <div class="option-line">
+              <span>{{ item.name }}</span>
+              <small>{{ item.description }}</small>
+            </div>
+          </el-option>
+        </ZunoLineSelect>
 
         <div class="binding-summary">
           <div v-for="item in summaryItems" :key="item.label" class="summary-item">
@@ -555,24 +607,6 @@ watch(() => props.embeddedAgentId, () => {
 
 .header-actions :deep(.el-button + .el-button) {
   margin-left: 0;
-}
-
-.settings-icon-button {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  padding: 0;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.74);
-  color: #64748b;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-}
-
-.settings-icon-button.el-button--primary {
-  border-color: rgba(245, 158, 11, 0.26);
-  background: #f59e0b;
-  color: #fff;
 }
 
 .editor-layout {
@@ -993,5 +1027,80 @@ watch(() => props.embeddedAgentId, () => {
     width: 64px;
     height: 64px;
   }
+}
+
+/* Workspace bubble variant: keep forms to one visual underline per control. */
+.agent-editor-page.agent-inline-editor .page-header {
+  border-bottom: 0 !important;
+}
+
+.agent-editor-page.agent-inline-editor :deep(.el-form),
+.agent-editor-page.agent-inline-editor :deep(.el-form-item),
+.agent-editor-page.agent-inline-editor :deep(.el-form-item__label),
+.agent-editor-page.agent-inline-editor :deep(.el-form-item__content),
+.agent-editor-page.agent-inline-editor :deep(.agent-field),
+.agent-editor-page.agent-inline-editor :deep(.binding-summary),
+.agent-editor-page.agent-inline-editor :deep(.summary-item),
+.agent-editor-page.agent-inline-editor :deep(.summary-head),
+.agent-editor-page.agent-inline-editor :deep(.memory-toggle) {
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.agent-editor-page.agent-inline-editor :deep(.el-form-item::before),
+.agent-editor-page.agent-inline-editor :deep(.el-form-item::after),
+.agent-editor-page.agent-inline-editor :deep(.el-form-item__content::before),
+.agent-editor-page.agent-inline-editor :deep(.el-form-item__content::after),
+.agent-editor-page.agent-inline-editor :deep(.agent-field::before),
+.agent-editor-page.agent-inline-editor :deep(.agent-field::after),
+.agent-editor-page.agent-inline-editor :deep(.binding-summary::before),
+.agent-editor-page.agent-inline-editor :deep(.binding-summary::after),
+.agent-editor-page.agent-inline-editor :deep(.summary-item::before),
+.agent-editor-page.agent-inline-editor :deep(.summary-item::after) {
+  display: none !important;
+  content: none !important;
+}
+
+.agent-editor-page.agent-inline-editor :deep(.el-input__wrapper),
+.agent-editor-page.agent-inline-editor :deep(.el-select__wrapper),
+.agent-editor-page.agent-inline-editor :deep(.el-textarea__inner),
+.agent-editor-page.agent-inline-editor :deep(.el-cascader .el-input__wrapper) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.3) !important;
+}
+
+.agent-editor-page.agent-inline-editor :deep(.el-input.is-focus .el-input__wrapper),
+.agent-editor-page.agent-inline-editor :deep(.el-input__wrapper:focus-within),
+.agent-editor-page.agent-inline-editor :deep(.el-select__wrapper.is-focused),
+.agent-editor-page.agent-inline-editor :deep(.el-select__wrapper:focus-within),
+.agent-editor-page.agent-inline-editor :deep(.el-textarea__inner:focus) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.42) !important;
+}
+
+.agent-editor-page.agent-inline-editor :deep(.el-input__inner),
+.agent-editor-page.agent-inline-editor :deep(.el-select__selected-item),
+.agent-editor-page.agent-inline-editor :deep(.el-select__placeholder),
+.agent-editor-page.agent-inline-editor :deep(.el-textarea__inner) {
+  border: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.agent-editor-page.agent-inline-editor :deep(.el-input__count),
+.agent-editor-page.agent-inline-editor :deep(.el-textarea .el-input__count) {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 </style>

@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Check, Connection, CopyDocument, Delete, EditPen, InfoFilled, Plus, Search, Setting, Upload } from '@element-plus/icons-vue'
+import { Check, Connection, CopyDocument, Delete, EditPen, InfoFilled, Plus, Setting, Upload } from '@element-plus/icons-vue'
 import ConfigurationPanel from '../configuration/configuration.vue'
 import toolArxivIcon from '../../assets/tools/tool-arxiv.svg'
 import toolDefaultIcon from '../../assets/tools/tool-default.svg'
@@ -11,7 +11,6 @@ import toolEmailIcon from '../../assets/tools/tool-email.svg'
 import toolPdfIcon from '../../assets/tools/tool-convert-docx-pdf.svg'
 import toolWeatherIcon from '../../assets/tools/tool-weather.svg'
 import settingsToolIcon from '../../assets/settings-icons/tool.svg'
-import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   assistRemoteApiToolAPI,
   createToolAPI,
@@ -44,6 +43,11 @@ import { getConfigAPI, getSystemToolConfigAPI, type RuntimeConfigPayload, type S
 import { safeDisplayText } from '../../utils/display-text'
 import { useUserStore } from '../../store/user'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
+import ZunoEmptyState from '../../components/zuno-settings/ZunoEmptyState.vue'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
+import ZunoLineInput from '../../components/zuno-settings/ZunoLineInput.vue'
+import ZunoLineSelect from '../../components/zuno-settings/ZunoLineSelect.vue'
+import ZunoSearchInput from '../../components/zuno-settings/ZunoSearchInput.vue'
 
 interface ToolItem extends ToolResponse {
   system_tool_kind?: RuntimeConfigPayload['system_tools'][number]['tool_kind']
@@ -850,13 +854,11 @@ onMounted(fetchTools)
         </div>
       </div>
       <div class="hero-actions">
-        <el-button
-          :class="['settings-icon-button', { 'is-create-open': dialogVisible && !isEditMode }]"
+        <ZunoIconButton
           type="primary"
           :icon="Plus"
-          circle
+          :active="dialogVisible && !isEditMode"
           :title="dialogVisible && !isEditMode ? '收起新建工具' : '新建工具'"
-          :aria-label="dialogVisible && !isEditMode ? '收起新建工具' : '新建工具'"
           @click="openCreateDialog"
         />
       </div>
@@ -868,11 +870,7 @@ onMounted(fetchTools)
         <el-tab-pane label="我的工具" name="custom" />
       </el-tabs>
       <div class="settings-search-row tool-search-row">
-        <el-input v-model="keyword" placeholder="搜索工具名称、描述或运行方式" clearable class="search-box search-input">
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
+        <ZunoSearchInput v-model="keyword" placeholder="搜索工具名称、描述或运行方式" />
       </div>
     </section>
 
@@ -883,7 +881,7 @@ onMounted(fetchTools)
             <h2>{{ workbenchTitle }}</h2>
           </div>
           <div class="workbench-actions">
-            <el-button class="settings-icon-button save-action" type="primary" :icon="Check" circle :loading="dialogLoading" title="保存" aria-label="保存" @click="submitDialog" />
+            <ZunoIconButton class="save-action" type="primary" :icon="Check" :loading="dialogLoading" title="保存" @click="submitDialog" />
           </div>
         </header>
 
@@ -898,16 +896,22 @@ onMounted(fetchTools)
           </el-form-item>
 
           <div class="field-grid">
-            <el-form-item label="名称"><el-input v-model="form.display_name" placeholder="例如：IP 地理位置查询" /></el-form-item>
+            <ZunoLineInput v-model="form.display_name" label="名称" placeholder="例如：IP 地理位置查询" />
             <el-form-item label="运行方式">
               <el-radio-group v-model="form.runtime_type">
                 <el-radio-button label="remote_api" value="remote_api">远程 API</el-radio-button>
                 <el-radio-button label="cli" value="cli">CLI</el-radio-button>
               </el-radio-group>
             </el-form-item>
-            <el-form-item label="描述" class="span-2">
-              <el-input v-model="form.description" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" resize="none" placeholder="一句话说明这个工具负责什么能力，供 Agent 判断何时调用。" />
-            </el-form-item>
+            <ZunoLineInput
+              v-model="form.description"
+              class="span-2"
+              label="描述"
+              textarea
+              :autosize="{ minRows: 1, maxRows: 3 }"
+              resize="none"
+              placeholder="一句话说明这个工具负责什么能力，供 Agent 判断何时调用。"
+            />
           </div>
 
           <div class="form-utility-row">
@@ -943,15 +947,27 @@ onMounted(fetchTools)
               </div>
 
               <div class="field-grid">
-                <el-form-item label="文档地址" class="span-2" required>
-                  <el-input v-model="remoteApiAssistForm.docs_urls_text" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" resize="none" placeholder="每行一个文档地址，例如：https://docs.apilayer.com/ipstack/docs/quickstart-guide" />
-                </el-form-item>
-                <el-form-item label="API Key" class="span-2" required>
-                  <el-input v-model="form.auth_token" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" resize="none" placeholder="只填服务商给你的 API Key。" />
-                </el-form-item>
-                <el-form-item label="接口地址" class="span-2">
-                  <el-input v-model="remoteApiAssistForm.endpoint_url" placeholder="例如：https://api.ipstack.com/check" />
-                </el-form-item>
+                <ZunoLineInput
+                  v-model="remoteApiAssistForm.docs_urls_text"
+                  class="span-2"
+                  label="文档地址"
+                  required
+                  textarea
+                  :autosize="{ minRows: 1, maxRows: 3 }"
+                  resize="none"
+                  placeholder="每行一个文档地址，例如：https://docs.apilayer.com/ipstack/docs/quickstart-guide"
+                />
+                <ZunoLineInput
+                  v-model="form.auth_token"
+                  class="span-2"
+                  label="API Key"
+                  required
+                  textarea
+                  :autosize="{ minRows: 1, maxRows: 3 }"
+                  resize="none"
+                  placeholder="只填服务商给你的 API Key。"
+                />
+                <ZunoLineInput v-model="remoteApiAssistForm.endpoint_url" class="span-2" label="接口地址" placeholder="例如：https://api.ipstack.com/check" />
               </div>
 
               <el-alert v-if="remoteApiAssistError" type="error" :closable="false" :title="remoteApiAssistError" />
@@ -967,33 +983,35 @@ onMounted(fetchTools)
                   </el-form-item>
                   <template v-if="form.remote_api_mode === 'simple'">
                     <div class="field-grid">
-                      <el-form-item label="认证方式">
-                        <el-select v-model="form.auth_type" placeholder="由 Agent 自动识别">
+                      <ZunoLineSelect v-model="form.auth_type" label="认证方式" placeholder="由 Agent 自动识别">
                           <el-option label="无认证" value="" />
                           <el-option label="Bearer Token" value="bearer" />
                           <el-option label="Basic Auth" value="basic" />
                           <el-option label="API Key（Query）" value="api_key_query" />
                           <el-option label="API Key（Header）" value="api_key_header" />
-                        </el-select>
-                      </el-form-item>
-                      <el-form-item label="认证字段"><el-input v-model="form.auth_key_name" placeholder="例如：access_key / api_key / x-api-key" /></el-form-item>
-                      <el-form-item label="curl 示例" class="span-2"><el-input v-model="remoteApiAssistForm.sample_curl" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" resize="none" placeholder="可选。直接贴一段 curl。" /></el-form-item>
-                      <el-form-item label="Base URL"><el-input v-model="form.simple_api_config.base_url" placeholder="例如：https://api.ipstack.com" /></el-form-item>
-                      <el-form-item label="Path"><el-input v-model="form.simple_api_config.path" placeholder="/check" /></el-form-item>
-                      <el-form-item label="Method">
-                        <el-select v-model="form.simple_api_config.method">
+                      </ZunoLineSelect>
+                      <ZunoLineInput v-model="form.auth_key_name" label="认证字段" placeholder="例如：access_key / api_key / x-api-key" />
+                      <ZunoLineInput
+                        v-model="remoteApiAssistForm.sample_curl"
+                        class="span-2"
+                        label="curl 示例"
+                        textarea
+                        :autosize="{ minRows: 1, maxRows: 3 }"
+                        resize="none"
+                        placeholder="可选。直接贴一段 curl。"
+                      />
+                      <ZunoLineInput v-model="form.simple_api_config.base_url" label="Base URL" placeholder="例如：https://api.ipstack.com" />
+                      <ZunoLineInput v-model="form.simple_api_config.path" label="Path" placeholder="/check" />
+                      <ZunoLineSelect v-model="form.simple_api_config.method" label="Method">
                           <el-option label="GET" value="GET" />
                           <el-option label="POST" value="POST" />
                           <el-option label="PUT" value="PUT" />
                           <el-option label="DELETE" value="DELETE" />
-                        </el-select>
-                      </el-form-item>
-                      <el-form-item label="Operation ID"><el-input v-model="form.simple_api_config.operation_id" /></el-form-item>
+                      </ZunoLineSelect>
+                      <ZunoLineInput v-model="form.simple_api_config.operation_id" label="Operation ID" />
                     </div>
                   </template>
-                  <el-form-item v-else label="OpenAPI Schema">
-                    <el-input v-model="form.openapi_schema" type="textarea" :rows="8" />
-                  </el-form-item>
+                  <ZunoLineInput v-else v-model="form.openapi_schema" label="OpenAPI Schema" textarea :autosize="{ minRows: 8, maxRows: 12 }" />
                 </el-collapse-item>
               </el-collapse>
             </section>
@@ -1007,14 +1025,12 @@ onMounted(fetchTools)
                 </div>
               </div>
               <div class="field-grid">
-                <el-form-item label="来源类型">
-                  <el-select v-model="form.cli_config.source_type">
+                <ZunoLineSelect v-model="form.cli_config.source_type" label="来源类型">
                     <el-option v-for="option in cliSourceOptions" :key="option.value" :label="option.label" :value="option.value" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item v-if="requiresToolDir" label="工具目录"><el-input v-model="form.cli_config.tool_dir" placeholder="本地目录或仓库目录" /></el-form-item>
-                <el-form-item label="命令" class="span-2"><el-input v-model="form.cli_config.command" placeholder="例如：python main.py" /></el-form-item>
-                <el-form-item label="参数模板" class="span-2"><el-input v-model="form.cli_config.args_template" placeholder="例如：--city {{city}}" /></el-form-item>
+                </ZunoLineSelect>
+                <ZunoLineInput v-if="requiresToolDir" v-model="form.cli_config.tool_dir" label="工具目录" placeholder="本地目录或仓库目录" />
+                <ZunoLineInput v-model="form.cli_config.command" class="span-2" label="命令" placeholder="例如：python main.py" />
+                <ZunoLineInput v-model="form.cli_config.args_template" class="span-2" label="参数模板" placeholder="例如：--city {{city}}" />
               </div>
             </section>
           </template>
@@ -1023,10 +1039,9 @@ onMounted(fetchTools)
     </Transition>
 
     <section class="list-card" v-loading="loading">
-      <div v-if="!visibleTools.length && !isToolFormMode" class="empty-state settings-empty-hint">
-        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+      <ZunoEmptyState v-if="!visibleTools.length && !isToolFormMode">
         {{ keyword ? '没有匹配到工具，换个关键词试试看吧 (´･_･`)' : '工具箱还是空的，点右上角 + 加一件趁手小工具吧 ( •̀ ω •́ )✧' }}
-      </div>
+      </ZunoEmptyState>
       <template v-for="row in paginatedTools" :key="row.tool_id">
         <article class="tool-row" :class="{ 'is-info-open': isToolInfoExpanded(row), 'is-config-open': isToolConfigExpanded(row) }">
           <div class="logo-wrap"><img :src="getToolLogo(row)" :alt="row.display_name" @error="handleToolLogoError" /></div>
@@ -1073,7 +1088,7 @@ onMounted(fetchTools)
         <section v-if="isToolConfigExpanded(row)" class="tool-inline-config">
           <header class="inline-config-head">
             <span>{{ row.display_name }}配置</span>
-            <el-button class="settings-icon-button save-action" type="primary" :icon="Check" circle title="保存" aria-label="保存" @click="saveEmbeddedConfig" />
+            <ZunoIconButton class="save-action" type="primary" :icon="Check" title="保存" aria-label="保存" @click="saveEmbeddedConfig" />
           </header>
           <ConfigurationPanel :ref="setConfigPanelRef" :tool="row.name" embedded :show-intro="false" />
         </section>

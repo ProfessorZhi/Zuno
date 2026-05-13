@@ -14,7 +14,6 @@ import {
   View,
   Warning,
 } from '@element-plus/icons-vue'
-import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   createKnowledgeFileAPI,
   deleteKnowledgeFileAPI,
@@ -38,6 +37,8 @@ import {
 } from '../../utils/knowledge-task'
 import { describeKnowledgeConfig, findBindingById } from '../../utils/knowledge-config'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
+import ZunoEmptyState from '../../components/zuno-settings/ZunoEmptyState.vue'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -339,7 +340,7 @@ onUnmounted(stopPolling)
   <div class="knowledge-file-page">
     <section class="page-header">
       <div class="title-wrap">
-        <el-button class="settings-icon-button" :icon="ArrowLeft" circle title="返回知识库" aria-label="返回知识库" @click="goBack" />
+        <ZunoIconButton :icon="ArrowLeft" title="返回知识库" @click="goBack" />
         <div>
           <h1>{{ knowledge?.name || knowledgeName }}</h1>
         </div>
@@ -347,9 +348,9 @@ onUnmounted(stopPolling)
 
       <div class="header-actions">
         <input ref="fileInputRef" type="file" multiple hidden @change="handleUpload" />
-        <el-button class="settings-icon-button" :icon="Refresh" circle title="刷新" aria-label="刷新" @click="fetchFiles" />
-        <el-button class="settings-icon-button" :icon="Setting" circle title="参数中心" aria-label="参数中心" @click="openConfig" />
-        <el-button class="settings-icon-button" type="primary" :icon="Upload" circle :loading="uploading" title="上传文件" aria-label="上传文件" @click="triggerUpload" />
+        <ZunoIconButton :icon="Refresh" title="刷新" @click="fetchFiles" />
+        <ZunoIconButton :icon="Setting" title="参数中心" @click="openConfig" />
+        <ZunoIconButton type="primary" :icon="Upload" :loading="uploading" title="上传文件" @click="triggerUpload" />
       </div>
     </section>
 
@@ -360,7 +361,7 @@ onUnmounted(stopPolling)
             <h2>当前知识库参数</h2>
             <p>这里显示这个知识库自己的索引与检索策略，首轮结果不够强时会自动补检一轮，聊天页不会再单独覆盖这些配置。</p>
           </div>
-          <el-button class="settings-icon-button" :icon="FolderOpened" circle title="调整参数" aria-label="调整参数" @click="openConfig" />
+          <ZunoIconButton :icon="FolderOpened" title="调整参数" @click="openConfig" />
         </div>
         <div class="summary-grid">
           <div class="summary-item">
@@ -406,11 +407,10 @@ onUnmounted(stopPolling)
     </section>
 
     <section class="content-card" v-loading="loading">
-      <div v-if="sortedFiles.length === 0" class="empty-state">
-        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+      <ZunoEmptyState v-if="sortedFiles.length === 0">
         <h3>这个知识库还没有文件</h3>
         <p>上传 PDF、Word、Markdown 或图片后，这里会显示解析阶段、检索策略和图谱索引状态。</p>
-      </div>
+      </ZunoEmptyState>
 
       <div v-else class="file-grid">
         <article v-for="file in sortedFiles" :key="file.id" class="file-card">
@@ -518,11 +518,10 @@ onUnmounted(stopPolling)
             </article>
           </div>
         </template>
-        <div v-else class="empty-state compact">
-          <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+        <ZunoEmptyState v-else class="compact">
           <h3>暂无任务详情</h3>
           <p>这个文件还没有返回可展示的任务事件。</p>
-        </div>
+        </ZunoEmptyState>
       </div>
       </section>
     </Transition>
@@ -581,7 +580,6 @@ onUnmounted(stopPolling)
   margin-left: 0;
 }
 
-.settings-icon-button,
 .knowledge-icon-button {
   width: 34px;
   height: 34px;
@@ -594,7 +592,6 @@ onUnmounted(stopPolling)
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
 }
 
-.settings-icon-button.el-button--primary,
 .knowledge-icon-button.el-button--primary {
   border-color: rgba(245, 158, 11, 0.26);
   background: #f59e0b;

@@ -3,12 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 type MascotState = 'idle' | 'listening' | 'thinking' | 'typing' | 'success' | 'confused' | 'error' | 'hover' | 'click'
 
-const props = withDefaults(defineProps<{
-  showDemo?: boolean
-}>(), {
-  showDemo: false,
-})
-
 const currentState = ref<MascotState>('idle')
 const persistentState = ref<MascotState>('idle')
 const faceExpression = ref('')
@@ -23,18 +17,6 @@ const sequence = [
   { state: 'blink', duration: 150 },
   { state: 'happy', duration: 2500 },
   { state: 'blink', duration: 150 },
-]
-
-const demoStates: Array<{ state: MascotState; label: string }> = [
-  { state: 'idle', label: 'idle' },
-  { state: 'listening', label: 'listening' },
-  { state: 'thinking', label: 'thinking' },
-  { state: 'typing', label: 'typing' },
-  { state: 'success', label: 'success' },
-  { state: 'confused', label: 'confused' },
-  { state: 'error', label: 'error' },
-  { state: 'hover', label: 'hover' },
-  { state: 'click', label: 'click' },
 ]
 
 const petClass = computed(() => ['yu-pet', `state-${currentState.value}`])
@@ -155,18 +137,6 @@ defineExpose({
       <div class="yu-eye left"></div>
       <div class="yu-eye right"></div>
     </div>
-  </div>
-
-  <div v-if="props.showDemo" class="mascot-demo-controls" aria-label="吉祥物状态演示">
-    <button
-      v-for="item in demoStates"
-      :key="item.state"
-      type="button"
-      :class="{ active: currentState === item.state }"
-      @click="setMascotState(item.state)"
-    >
-      {{ item.label }}
-    </button>
   </div>
 </template>
 
@@ -294,37 +264,6 @@ defineExpose({
 
 .yu-star.state-click {
   animation: mascot-star-pop 0.42s cubic-bezier(0.16, 0.84, 0.18, 1.2) both;
-}
-
-.mascot-demo-controls {
-  width: min(100%, 236px);
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 18px;
-}
-
-.mascot-demo-controls button {
-  height: 24px;
-  padding: 0 8px;
-  border: 1px solid rgba(26, 26, 26, 0.12);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.66);
-  color: rgba(26, 26, 26, 0.62);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
-}
-
-.mascot-demo-controls button:hover,
-.mascot-demo-controls button.active {
-  border-color: rgba(26, 26, 26, 0.28);
-  background: rgba(26, 26, 26, 0.9);
-  color: white;
-  transform: translateY(-1px);
 }
 
 @keyframes mascot-eye-look {

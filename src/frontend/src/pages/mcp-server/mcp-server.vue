@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Check, Delete, Edit, Plus, Search, Setting } from '@element-plus/icons-vue'
+import { Check, Delete, Edit, Plus, Setting } from '@element-plus/icons-vue'
 import defaultMcpLogo from '../../assets/mcp.svg'
-import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   createMCPServerAPI,
   deleteMCPServerAPI,
@@ -18,6 +17,9 @@ import {
 } from '../../apis/mcp-server'
 import { useUserStore } from '../../store/user'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
+import ZunoEmptyState from '../../components/zuno-settings/ZunoEmptyState.vue'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
+import ZunoSearchInput from '../../components/zuno-settings/ZunoSearchInput.vue'
 
 type TransportType = 'stdio' | 'streamable_http'
 
@@ -569,30 +571,23 @@ onMounted(async () => {
         </div>
       </div>
       <div class="hero-actions">
-        <el-button
-          :class="['settings-icon-button', { 'is-create-open': serverDialogVisible && !isEditMode }]"
+        <ZunoIconButton
           type="primary"
           :icon="Plus"
-          circle
+          :active="serverDialogVisible && !isEditMode"
           :title="serverDialogVisible && !isEditMode ? '收起新增 MCP 服务' : '添加服务器'"
-          :aria-label="serverDialogVisible && !isEditMode ? '收起新增 MCP 服务' : '添加服务器'"
           @click="openCreateServerDialog"
         />
       </div>
       <div class="settings-search-row">
-        <el-input v-model="keyword" clearable placeholder="搜索 MCP 服务名称或连接方式" class="search-input">
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
+        <ZunoSearchInput v-model="keyword" placeholder="搜索 MCP 服务名称或连接方式" />
       </div>
     </section>
 
     <section class="table-card" v-loading="loading">
-      <div v-if="!visibleServers.length && !serverDialogVisible" class="empty-state settings-empty-hint">
-        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+      <ZunoEmptyState v-if="!visibleServers.length && !serverDialogVisible">
         {{ keyword ? '没有匹配到 MCP 服务，换个关键词试试看吧 (´･_･`)' : '还没有 MCP 服务，点右上角 + 接上第一条能力通道吧 (｀・ω・´)ゞ' }}
-      </div>
+      </ZunoEmptyState>
       <div v-else class="server-list">
         <article v-for="server in paginatedServers" :key="server.mcp_server_id" class="server-row">
           <img
@@ -647,7 +642,7 @@ onMounted(async () => {
           <h3>{{ isEditMode ? '编辑 MCP 服务' : '新增 MCP 服务' }}</h3>
         </div>
         <div class="inline-panel-actions">
-          <el-button class="settings-icon-button save-action" type="primary" :icon="Check" :loading="savingServer" circle title="保存" aria-label="保存" @click="submitServerDialog" />
+          <ZunoIconButton class="save-action" type="primary" :icon="Check" :loading="savingServer" title="保存" @click="submitServerDialog" />
         </div>
       </header>
 
@@ -730,12 +725,11 @@ onMounted(async () => {
       </template>
     </section>
 
-    <section v-if="configDialogVisible" class="mcp-workbench-panel">
+    <section v-if="configDialogVisible" class="mcp-workbench-panel mcp-config-panel">
       <template v-if="currentServer">
         <header class="inline-panel-head">
           <div>
             <h3>{{ currentServer.server_name }} 配置</h3>
-            <p>连接信息只读展示，个人参数和测试结果在这里维护。</p>
           </div>
           <div class="inline-panel-actions">
             <el-button class="mcp-icon-button primary" :icon="Check" :loading="testingConfig" circle title="测试" aria-label="测试" @click="testCurrentConfig" />
@@ -743,11 +737,11 @@ onMounted(async () => {
         </header>
 
         <section class="config-section">
-          <h3>连接配置</h3>
+          <h3>连接</h3>
           <div class="config-summary">
-            <div><strong>名称：</strong>{{ serverForm.server_name }}</div>
-            <div><strong>接入方式：</strong>{{ serverForm.transport === 'stdio' ? 'STDIO' : '流式 HTTP' }}</div>
-            <div><strong>连接来源：</strong>{{ currentServer.user_id === '0' ? '平台预置连接' : '自定义连接' }}</div>
+            <div><strong>名称</strong>{{ serverForm.server_name }}</div>
+            <div><strong>方式</strong>{{ serverForm.transport === 'stdio' ? 'STDIO' : '流式 HTTP' }}</div>
+            <div><strong>来源</strong>{{ currentServer.user_id === '0' ? '平台预置' : '自定义' }}</div>
           </div>
 
           <template v-if="serverForm.transport === 'stdio'">
@@ -776,7 +770,7 @@ onMounted(async () => {
         </section>
 
         <section class="config-section">
-          <h3>个人配置</h3>
+          <h3>个人参数</h3>
           <template v-if="personalConfigFields.length > 0">
             <div v-for="item in personalConfigFields" :key="item.key" class="field">
               <label>{{ item.label || item.key }}</label>
@@ -788,22 +782,19 @@ onMounted(async () => {
               />
             </div>
             <div class="config-actions">
-              <el-button :loading="savingConfig" @click="persistPersonalConfig()">保存我的配置</el-button>
-              <el-button type="primary" :loading="testingConfig" @click="testCurrentConfig()">测试我的配置</el-button>
+              <el-button class="mcp-icon-button primary" :icon="Check" :loading="savingConfig" circle title="保存个人参数" aria-label="保存个人参数" @click="persistPersonalConfig()" />
+              <el-button class="mcp-icon-button" :icon="Setting" :loading="testingConfig" circle title="测试连接" aria-label="测试连接" @click="testCurrentConfig()" />
             </div>
           </template>
           <template v-else>
-            <div class="empty-panel">当前没有需要填写的个人配置项。这是平台预置连接的正常情况，直接测试即可。</div>
-            <div class="config-actions">
-              <el-button type="primary" :loading="testingConfig" @click="testCurrentConfig()">测试连接</el-button>
-            </div>
+            <div class="empty-panel">没有需要填写的个人参数，右上角可直接测试。</div>
           </template>
         </section>
 
         <section class="config-section">
-          <h3>测试结果</h3>
+          <h3>测试</h3>
           <div class="status-row">
-            <el-tag :type="currentTestStatus.type">{{ currentTestStatus.label }}</el-tag>
+            <span :class="['mcp-status-pill', currentTestStatus.type]">{{ currentTestStatus.label }}</span>
             <span class="muted-text" v-if="currentTestStatus.testedAt">测试时间：{{ currentTestStatus.testedAt }}</span>
           </div>
           <p class="status-detail-block">{{ currentTestStatus.detail }}</p>
@@ -884,9 +875,27 @@ onMounted(async () => {
   animation: mcp-panel-rise 180ms cubic-bezier(.2, .8, .2, 1) both;
 }
 
+.mcp-config-panel {
+  gap: 12px;
+  padding: 10px 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.mcp-config-panel .inline-panel-head {
+  min-height: 32px;
+  padding: 0;
+}
+
+.mcp-config-panel .inline-panel-head h3 {
+  font-size: 16px;
+}
+
 .inline-panel-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
@@ -1303,22 +1312,34 @@ onMounted(async () => {
   font-size: 12px;
 }
 
+.config-section {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px 16px;
+}
+
 .config-section + .config-section {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 0;
 }
 
 .config-section h3 {
-  margin: 0 0 10px;
+  margin: 0;
+  padding-top: 5px;
   color: #2f241d;
-  font-size: 14px;
+  font-size: 13px;
+}
+
+.config-section > :not(h3) {
+  grid-column: 2;
 }
 
 .config-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px 18px;
   color: #5b4a3d;
 }
 
@@ -1326,39 +1347,68 @@ onMounted(async () => {
   display: inline-flex;
   min-height: 22px;
   align-items: center;
-  padding: 0 2px 2px;
-  border-radius: 0;
-  background:
-    linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.2), rgba(148, 163, 184, 0)) left bottom / 100% 1px no-repeat;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   font-size: 12px;
+}
+
+.config-summary strong {
+  color: #7b6b5c;
+  font-weight: 680;
 }
 
 .config-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 18px;
+  gap: 7px;
+  margin-top: 6px;
 }
 
 .status-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .status-detail-block {
-  margin: 14px 0;
+  margin: 2px 0;
   color: #5b4a3d;
   line-height: 1.7;
 }
 
+.mcp-status-pill {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  padding: 0;
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.34), rgba(245, 158, 11, 0)) left bottom / 100% 1px no-repeat;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.mcp-status-pill.success {
+  color: #15803d;
+  background:
+    linear-gradient(90deg, rgba(34, 197, 94, 0), rgba(34, 197, 94, 0.28), rgba(34, 197, 94, 0)) left bottom / 100% 1px no-repeat;
+}
+
+.mcp-status-pill.danger {
+  color: #dc2626;
+  background:
+    linear-gradient(90deg, rgba(239, 68, 68, 0), rgba(239, 68, 68, 0.28), rgba(239, 68, 68, 0)) left bottom / 100% 1px no-repeat;
+}
+
 .empty-panel {
-  padding: 8px 0;
+  padding: 2px 0 6px;
   border-radius: 0;
-  border-top: 1px solid rgba(226, 232, 240, 0.6);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.42);
+  border: 0;
   background: transparent;
-  color: #6e5d4e;
+  color: #94a3b8;
   line-height: 1.55;
+  font-size: 12px;
 }
 
 .tool-card {

@@ -1,4 +1,4 @@
-export const zunoPetMoods = [
+const zunoPetMoods = [
   'idle',
   'listening',
   'thinking',
@@ -9,7 +9,7 @@ export const zunoPetMoods = [
   'wake',
 ] as const
 
-export const zunoPetSizes = [
+const zunoPetSizes = [
   'hero',
   'beacon',
   'avatar',
@@ -17,4 +17,4 @@ export const zunoPetSizes = [
 ] as const
 
 export type ZunoPetMood = typeof zunoPetMoods[number]
-export type ZunoPetSize = typeof zunoPetSizes[number]
+type ZunoPetSize = typeof zunoPetSizes[number]

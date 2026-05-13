@@ -39,22 +39,6 @@ export interface ApiResponse<T> {
   data: T
 }
 
-// 获取所有大模型
-export function getAllLLMsAPI() {
-  return request<ApiResponse<Record<string, LLMResponse[]>>>({
-    url: '/api/v1/llm/all',
-    method: 'GET'
-  })
-}
-
-// 获取个人大模型
-export function getPersonalLLMsAPI() {
-  return request<ApiResponse<Record<string, LLMResponse[]>>>({
-    url: '/api/v1/llm/personal',
-    method: 'POST'
-  })
-}
-
 // 获取可见大模型
 export function getVisibleLLMsAPI() {
   return request<ApiResponse<Record<string, LLMResponse[]>>>({
@@ -63,22 +47,6 @@ export function getVisibleLLMsAPI() {
   })
 }
 
-
-// 获取智能体可用模型
-export function getAgentModelsAPI() {
-  return request<ApiResponse<LLMResponse[]>>({
-    url: '/api/v1/agent/models',
-    method: 'GET'
-  })
-}
-
-// 获取大模型类型
-export function getLLMSchemaAPI() {
-  return request<ApiResponse<string[]>>({
-    url: '/api/v1/llm/schema',
-    method: 'GET'
-  })
-}
 
 // 创建大模型
 export function createLLMAPI(data: CreateLLMRequest) {
@@ -94,14 +62,6 @@ export function updateLLMAPI(data: UpdateLLMRequest) {
   return request<ApiResponse<null>>({
     url: '/api/v1/llm/update',
     method: 'PUT',
-    data
-  })
-}
-
-export function activateLLMAPI(data: { llm_id: string; model_slot: string }) {
-  return request<ApiResponse<null>>({
-    url: '/api/v1/llm/activate',
-    method: 'POST',
     data
   })
 }

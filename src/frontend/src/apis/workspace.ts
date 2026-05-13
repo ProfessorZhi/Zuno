@@ -2,13 +2,6 @@ import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { request } from '../utils/request'
 import { apiUrl } from '../utils/api'
 
-export const getWorkspacePluginsAPI = async () => {
-  return request({
-    url: '/api/v1/workspace/plugins',
-    method: 'get',
-  })
-}
-
 export interface ExecutionModeDefinition {
   id: string
   label: string
@@ -119,15 +112,6 @@ export interface WorkspaceAttachment {
   url: string
   mime_type?: string
   size?: number
-}
-
-export const workspaceSimpleChatAPI = async (data: WorkSpaceSimpleTask) => {
-  return request({
-    url: '/api/v1/workspace/simple/chat',
-    method: 'post',
-    data,
-    responseType: 'stream',
-  })
 }
 
 export interface WorkspaceStreamEvent {

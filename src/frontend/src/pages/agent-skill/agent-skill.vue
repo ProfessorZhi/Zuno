@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Check, Delete, DocumentAdd, Edit, Plus, Search, View } from '@element-plus/icons-vue'
+import { Check, Delete, DocumentAdd, Edit, Plus, View } from '@element-plus/icons-vue'
 import skillIcon from '../../assets/skill.svg'
 import skillCreatorIcon from '../../assets/skills/skill-creator.svg'
 import skillInstallerIcon from '../../assets/skills/skill-installer.svg'
-import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import { safeDisplayText } from '../../utils/display-text'
 import {
   addAgentSkillFileAPI,
@@ -19,6 +18,10 @@ import {
   type AgentSkillFolder,
 } from '../../apis/agent-skill'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
+import ZunoEmptyState from '../../components/zuno-settings/ZunoEmptyState.vue'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
+import ZunoLineInput from '../../components/zuno-settings/ZunoLineInput.vue'
+import ZunoSearchInput from '../../components/zuno-settings/ZunoSearchInput.vue'
 
 type SkillFileEntry = {
   path: string
@@ -370,24 +373,18 @@ onMounted(fetchSkills)
         </div>
       </div>
       <div class="hero-actions">
-        <el-button
-          :class="['settings-icon-button', { 'is-create-open': createDialogVisible }]"
+        <ZunoIconButton
           type="primary"
           :icon="Plus"
-          circle
+          :active="createDialogVisible"
           :title="createDialogVisible ? '收起新建 Skill' : '新建 Skill'"
-          :aria-label="createDialogVisible ? '收起新建 Skill' : '新建 Skill'"
           @click="openCreateDialog"
         />
       </div>
     </section>
 
     <section class="toolbar-card">
-      <el-input v-model="keyword" placeholder="搜索 Skill 名称或描述" clearable>
-        <template #prefix>
-          <el-icon><Search /></el-icon>
-        </template>
-      </el-input>
+      <ZunoSearchInput v-model="keyword" placeholder="搜索 Skill 名称或描述" />
     </section>
 
     <section class="skill-grid" v-loading="loading">
@@ -430,10 +427,9 @@ onMounted(fetchSkills)
           </div>
         </div>
       </article>
-      <div v-if="!visibleSkills.length && !loading" class="empty-state settings-empty-hint">
-        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+      <ZunoEmptyState v-if="!visibleSkills.length && !loading">
         {{ keyword ? '没有匹配到 Skill，换个关键词试试看吧 (´･_･`)' : 'Skill 小书架还空着，点右上角 + 收纳第一招吧 (๑˃̵ᴗ˂̵)و' }}
-      </div>
+      </ZunoEmptyState>
       <ZunoMiniPager v-model:page="listPage" class="settings-list-pager" :total="visibleSkills.length" :page-size="LIST_PAGE_SIZE" />
     </section>
 
@@ -444,22 +440,19 @@ onMounted(fetchSkills)
             <h2>新建 Skill</h2>
           </div>
           <div class="panel-actions">
-            <el-button class="skill-icon-button" type="primary" :icon="Check" circle :loading="createLoading" title="创建" aria-label="创建" @click="handleCreateSkill" />
+            <ZunoIconButton type="primary" :icon="Check" :loading="createLoading" title="创建" @click="handleCreateSkill" />
           </div>
         </div>
         <el-form label-position="top" class="compact-form">
-          <el-form-item label="Skill 名称">
-            <el-input v-model="createForm.name" placeholder="例如：发布检查助手" />
-          </el-form-item>
-          <el-form-item label="Skill 描述">
-            <el-input
-              v-model="createForm.description"
-              type="textarea"
-              :autosize="{ minRows: 1, maxRows: 4 }"
-              resize="none"
-              placeholder="一句话说明它适合什么场景。"
-            />
-          </el-form-item>
+          <ZunoLineInput v-model="createForm.name" label="Skill 名称" placeholder="例如：发布检查助手" />
+          <ZunoLineInput
+            v-model="createForm.description"
+            label="Skill 描述"
+            textarea
+            :autosize="{ minRows: 1, maxRows: 4 }"
+            resize="none"
+            placeholder="一句话说明它适合什么场景。"
+          />
         </el-form>
       </section>
     </Transition>
@@ -475,24 +468,18 @@ onMounted(fetchSkills)
             <h2>{{ currentSkill?.name || '文件管理' }}</h2>
           </div>
           <div class="panel-actions">
-            <el-button
-              class="skill-icon-button ghost"
+            <ZunoIconButton
               :icon="DocumentAdd"
-              circle
               :disabled="currentSkillReadonly"
               :title="addFileDialogVisible ? '收起新增文件' : '新增文件'"
-              :aria-label="addFileDialogVisible ? '收起新增文件' : '新增文件'"
               @click="openAddFileDialog"
             />
-            <el-button
-              class="skill-icon-button"
+            <ZunoIconButton
               type="primary"
               :icon="Check"
-              circle
               :loading="savingFile"
               :disabled="currentSkillReadonly || !selectedFile"
               title="保存文件"
-              aria-label="保存文件"
               @click="handleSaveFile"
             />
           </div>
@@ -500,9 +487,9 @@ onMounted(fetchSkills)
 
         <Transition name="settings-panel">
           <div v-if="addFileDialogVisible" class="add-file-strip">
-            <el-input v-model="addFileForm.path" placeholder="目录，例如：my-skill/reference" />
-            <el-input v-model="addFileForm.name" placeholder="文件名，例如：README.md" />
-            <el-button class="skill-icon-button" type="primary" :icon="Check" circle :loading="addFileLoading" title="创建文件" aria-label="创建文件" @click="handleAddFile" />
+            <ZunoLineInput v-model="addFileForm.path" placeholder="目录，例如：my-skill/reference" />
+            <ZunoLineInput v-model="addFileForm.name" placeholder="文件名，例如：README.md" />
+            <ZunoIconButton type="primary" :icon="Check" :loading="addFileLoading" title="创建文件" @click="handleAddFile" />
           </div>
         </Transition>
 
@@ -644,6 +631,9 @@ onMounted(fetchSkills)
   background: rgba(248, 250, 252, 0.72);
   border: 1px solid rgba(148, 163, 184, 0.16);
 }
+.add-file-strip :deep(.el-form-item) {
+  margin-bottom: 0;
+}
 .skill-card {
   padding: 12px 4px;
   border: 0;
@@ -733,12 +723,6 @@ onMounted(fetchSkills)
   border-color: rgba(148, 163, 184, 0.22);
   background: rgba(255, 255, 255, 0.72);
   color: #64748b;
-}
-.settings-icon-button.is-create-open :deep(.el-icon) {
-  transform: rotate(45deg);
-}
-.settings-icon-button :deep(.el-icon) {
-  transition: transform 0.22s ease;
 }
 .skill-icon-button.danger {
   border-color: rgba(239, 68, 68, 0.16);

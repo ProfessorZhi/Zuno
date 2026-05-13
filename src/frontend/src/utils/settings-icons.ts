@@ -7,9 +7,9 @@ import skillIcon from '../assets/settings-icons/skill.svg'
 import toolIcon from '../assets/settings-icons/tool.svg'
 import profileIcon from '../assets/user.svg'
 
-export type SettingsSectionKey = 'agent' | 'model' | 'knowledge' | 'mcp' | 'tool' | 'skill' | 'dashboard' | 'profile'
+type SettingsSectionKey = 'agent' | 'model' | 'knowledge' | 'mcp' | 'tool' | 'skill' | 'dashboard' | 'profile'
 
-export const settingsIconBySection: Record<SettingsSectionKey, string> = {
+const settingsIconBySection: Record<SettingsSectionKey, string> = {
   agent: agentIcon,
   model: modelIcon,
   knowledge: knowledgeIcon,

@@ -1,7 +1,7 @@
 const USER_INPUT_PATTERN = /(?:用户输入|user\s*input)\s*[:：]/gi
 const WRAPPED_HISTORY_HINTS = ['<chat_history>', 'web_search', 'read_webpage', 'tool_code', '对话历史']
 
-export const stripWorkspaceWrapper = (content: string) => {
+const stripWorkspaceWrapper = (content: string) => {
   if (!content) return ''
 
   const cleaned = String(content).replace(/\r/g, '')
@@ -16,7 +16,7 @@ export const stripWorkspaceWrapper = (content: string) => {
   return cleaned.slice(matchIndex + matchText.length).trim()
 }
 
-export const looksLikeWrappedWorkspaceMessage = (content: string) => {
+const looksLikeWrappedWorkspaceMessage = (content: string) => {
   if (!content) return false
 
   const cleaned = String(content).trim()
@@ -27,7 +27,7 @@ export const looksLikeWrappedWorkspaceMessage = (content: string) => {
   )
 }
 
-export const sanitizeWorkspaceContext = <T extends { query?: string; answer?: string }>(context: T) => {
+const sanitizeWorkspaceContext = <T extends { query?: string; answer?: string }>(context: T) => {
   const nextContext = { ...context }
   const query = String(nextContext.query || '')
   if (query) {

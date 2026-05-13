@@ -536,8 +536,7 @@ onMounted(() => {
   transform: translate3d(-50%, -50%, 0) scale(1);
   transform-origin: center center;
   backface-visibility: hidden;
-  contain: layout paint;
-  will-change: transform, opacity;
+  contain: layout;
   transition: none;
 }
 
@@ -560,7 +559,7 @@ onMounted(() => {
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.08;
-  text-shadow: 0 18px 48px rgba(245, 158, 11, 0.12);
+  text-shadow: none;
   color: #0f172a;
   font-size: clamp(8px, 1vw, 15px);
 }
@@ -611,10 +610,9 @@ onMounted(() => {
   margin-bottom: 18px;
   opacity: 0;
   transform: translateY(12px);
-  contain: layout paint;
+  contain: layout;
   transform-origin: left top;
-  backface-visibility: hidden;
-  will-change: opacity, transform;
+  backface-visibility: visible;
   animation: auth-message-in 0.46s cubic-bezier(.2, .7, .16, 1) forwards;
 }
 
@@ -631,7 +629,7 @@ onMounted(() => {
   place-items: center;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 10px 22px rgba(120, 92, 46, 0.1);
+  box-shadow: none;
 }
 
 .auth-avatar img,
@@ -671,8 +669,10 @@ onMounted(() => {
   border-top-left-radius: 10px;
   padding: 18px 20px;
   background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(22px);
+  box-shadow: none;
+  backdrop-filter: none;
+  filter: none;
+  contain: layout;
 }
 
 .auth-message.user .auth-bubble {

@@ -40,7 +40,7 @@ export interface RuntimeConfigPayload {
   }>
 }
 
-export interface SystemToolField {
+interface SystemToolField {
   key: string
   label: string
   placeholder?: string

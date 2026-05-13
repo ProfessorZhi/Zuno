@@ -35,6 +35,7 @@ import {
   retrievalModeOptions,
   toKnowledgeConfigPatch,
 } from '../../utils/knowledge-config'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -309,7 +310,7 @@ onActivated(fetchKnowledgeContext)
     <section class="page-hero">
       <div class="hero-copy">
         <div class="hero-title-row">
-          <el-button :icon="ArrowLeft" class="back-btn settings-icon-button" circle title="返回知识库" aria-label="返回知识库" @click="goBack" />
+          <ZunoIconButton v-if="!inWorkspaceSettings" :icon="ArrowLeft" class="back-btn" title="返回知识库" @click="goBack" />
           <h1>{{ knowledge?.name || route.query.name || '知识库' }}</h1>
         </div>
         <div class="hero-pills">
@@ -327,7 +328,7 @@ onActivated(fetchKnowledgeContext)
           </div>
           <strong>知识库按自己的检索策略运行，首轮不足时自动补检一轮</strong>
           <div class="status-actions">
-            <el-button class="settings-icon-button" :icon="FolderOpened" circle title="文件与进度" aria-label="文件与进度" @click="openFiles" />
+            <ZunoIconButton :icon="FolderOpened" title="文件与进度" @click="openFiles" />
           </div>
         </div>
       </div>
@@ -596,8 +597,8 @@ onActivated(fetchKnowledgeContext)
           </div>
 
           <div class="footer-actions">
-            <el-button class="settings-icon-button" :icon="RefreshRight" circle title="恢复推荐默认值" aria-label="恢复推荐默认值" @click="handleReset" />
-            <el-button v-if="configImpact.requiresReindex" class="settings-icon-button" :icon="Check" circle :loading="saving || reindexing" title="仅保存参数" aria-label="仅保存参数" @click="handleSave" />
+            <ZunoIconButton :icon="RefreshRight" title="恢复推荐默认值" @click="handleReset" />
+            <ZunoIconButton v-if="configImpact.requiresReindex" :icon="Check" :loading="saving || reindexing" title="仅保存参数" @click="handleSave" />
             <el-button
               v-if="configImpact.requiresReindex"
               class="settings-save-button"
@@ -710,24 +711,6 @@ onActivated(fetchKnowledgeContext)
 .status-actions {
   display: flex;
   justify-content: flex-start;
-}
-
-.settings-icon-button {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  padding: 0;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.74);
-  color: #64748b;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-}
-
-.settings-icon-button.el-button--primary {
-  border-color: rgba(245, 158, 11, 0.26);
-  background: #f59e0b;
-  color: #fff;
 }
 
 .settings-save-button {

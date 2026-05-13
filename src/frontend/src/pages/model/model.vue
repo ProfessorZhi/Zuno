@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, Search, View, Hide, Check } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, View, Hide, Check } from '@element-plus/icons-vue'
 import modelIcon from '../../assets/model.svg'
-import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   getVisibleLLMsAPI,
   searchLLMsAPI,
@@ -15,6 +14,12 @@ import {
 } from '../../apis/llm'
 import { useUserStore } from '../../store/user'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
+import ZunoEmptyState from '../../components/zuno-settings/ZunoEmptyState.vue'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
+import ZunoLineInput from '../../components/zuno-settings/ZunoLineInput.vue'
+import ZunoLineSelect from '../../components/zuno-settings/ZunoLineSelect.vue'
+import ZunoSearchInput from '../../components/zuno-settings/ZunoSearchInput.vue'
+import ZunoSettingsHeader from '../../components/zuno-settings/ZunoSettingsHeader.vue'
 
 const loading = ref(false)
 const keyword = ref('')
@@ -281,33 +286,20 @@ onMounted(fetchModels)
 
 <template>
   <div class="model-page">
-    <section class="page-header">
-      <div class="title-block">
-        <img :src="modelIcon" alt="模型" class="page-icon" />
-        <div>
-          <h1>模型</h1>
-        </div>
-      </div>
-
-      <div class="header-actions">
-        <el-button
-          :class="['settings-icon-button', { 'is-create-open': dialogVisible && !isEditMode }]"
+    <ZunoSettingsHeader :icon="modelIcon" title="模型">
+      <template #actions>
+        <ZunoIconButton
           type="primary"
           :icon="Plus"
-          circle
+          :active="dialogVisible && !isEditMode"
           :title="dialogVisible && !isEditMode ? '收起新建模型' : '新建模型'"
-          :aria-label="dialogVisible && !isEditMode ? '收起新建模型' : '新建模型'"
           @click="openCreateDialog"
         />
-      </div>
-      <div class="settings-search-row">
-        <el-input v-model="keyword" clearable placeholder="搜索模型名称或供应商" class="search-input">
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
-      </div>
-    </section>
+      </template>
+      <template #search>
+        <ZunoSearchInput v-model="keyword" placeholder="搜索模型名称或供应商" />
+      </template>
+    </ZunoSettingsHeader>
 
     <section v-if="dialogVisible" class="model-form-panel">
       <header class="inline-form-head">
@@ -315,47 +307,36 @@ onMounted(fetchModels)
           <h2>{{ isEditMode ? '编辑模型' : '新建模型' }}</h2>
         </div>
         <div class="inline-form-actions">
-          <el-button class="settings-icon-button save-action" type="primary" :icon="Check" :loading="dialogLoading" circle title="保存" aria-label="保存" @click="handleSave" />
+          <ZunoIconButton class="save-action" type="primary" :icon="Check" :loading="dialogLoading" title="保存" @click="handleSave" />
         </div>
       </header>
 
       <el-form label-position="top" class="compact-model-form">
         <div class="dialog-grid">
-          <el-form-item label="模型名称">
-            <el-input v-model="form.model" placeholder="接口 model id，例如 qwen-plus / mimo-v2.5" />
-          </el-form-item>
-          <el-form-item label="供应商">
-            <el-input v-model="form.provider" placeholder="例如 MiniMax / 通义千问 / OpenAI" />
-          </el-form-item>
-          <el-form-item label="模型类型">
-            <el-select v-model="form.llm_type" class="full-width">
-              <el-option label="LLM" value="LLM" />
-              <el-option label="Embedding" value="Embedding" />
-              <el-option label="Rerank" value="Rerank" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="接口地址">
-            <el-input v-model="form.base_url" placeholder="https://api.example.com/v1" />
-          </el-form-item>
+          <ZunoLineInput v-model="form.model" label="模型名称" placeholder="接口 model id，例如 qwen-plus / mimo-v2.5" />
+          <ZunoLineInput v-model="form.provider" label="供应商" placeholder="例如 MiniMax / 通义千问 / OpenAI" />
+          <ZunoLineSelect v-model="form.llm_type" label="模型类型">
+            <el-option label="LLM" value="LLM" />
+            <el-option label="Embedding" value="Embedding" />
+            <el-option label="Rerank" value="Rerank" />
+          </ZunoLineSelect>
+          <ZunoLineInput v-model="form.base_url" label="接口地址" placeholder="https://api.example.com/v1" />
         </div>
-        <el-form-item label="API Key">
-          <el-input v-model="form.api_key" :type="showApiKey ? 'text' : 'password'" placeholder="输入模型密钥">
-            <template #suffix>
-              <el-icon class="toggle-icon" @click="showApiKey = !showApiKey">
-                <View v-if="!showApiKey" />
-                <Hide v-else />
-              </el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
+        <ZunoLineInput v-model="form.api_key" label="API Key" :type="showApiKey ? 'text' : 'password'" placeholder="输入模型密钥">
+          <template #suffix>
+            <el-icon class="toggle-icon" @click="showApiKey = !showApiKey">
+              <View v-if="!showApiKey" />
+              <Hide v-else />
+            </el-icon>
+          </template>
+        </ZunoLineInput>
       </el-form>
     </section>
 
     <section class="content-card" v-loading="loading">
-      <div v-if="sortedModels.length === 0" class="empty-state settings-empty-hint">
-        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+      <ZunoEmptyState v-if="sortedModels.length === 0">
         {{ keyword ? '没有匹配到模型，换个关键词试试看吧 (´･_･`)' : '模型池空空的，点右上角 + 放进第一颗引擎吧 (ง •̀_•́)ง' }}
-      </div>
+      </ZunoEmptyState>
 
       <div v-else class="model-grid">
         <article v-for="item in paginatedModels" :key="item.llm_id" class="model-card">
@@ -452,10 +433,6 @@ onMounted(fetchModels)
   display: flex;
   gap: 12px;
   align-items: flex-start;
-}
-
-.search-input {
-  width: 320px;
 }
 
 .content-card {
@@ -681,29 +658,8 @@ onMounted(fetchModels)
   gap: 12px;
 }
 
-.full-width {
-  width: 100%;
-}
-
 .toggle-icon {
   cursor: pointer;
-}
-
-.empty-state {
-  padding: 36px;
-  text-align: center;
-  border-radius: 18px;
-  background: rgba(255, 249, 243, 0.94);
-
-  h3 {
-    margin: 0;
-    color: #5e3518;
-  }
-
-  p {
-    margin: 10px 0 0;
-    color: #8f7a68;
-  }
 }
 
 @media (max-width: 960px) {
@@ -715,10 +671,6 @@ onMounted(fetchModels)
 
   .dialog-grid {
     grid-template-columns: 1fr;
-  }
-
-  .search-input {
-    width: 100%;
   }
 
   .header-actions,

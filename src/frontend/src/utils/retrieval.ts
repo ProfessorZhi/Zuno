@@ -1,4 +1,4 @@
-export const retrievalModeOptions = [
+const retrievalModeOptions = [
   {
     value: 'auto',
     label: '自动补检',
@@ -23,17 +23,7 @@ export const retrievalModeOptions = [
 
 export type RetrievalMode = typeof retrievalModeOptions[number]['value']
 
-export interface RetrievalTraceMetadata {
-  requestedMode?: string | null
-  actualMode?: string | null
-  firstMode?: string | null
-  finalMode?: string | null
-  secondPassUsed?: boolean | null
-  fallbackTriggered?: boolean | null
-  fallbackReason?: string | null
-}
-
-export const retrievalModeLabelMap = Object.fromEntries(
+const retrievalModeLabelMap = Object.fromEntries(
   retrievalModeOptions.map((item) => [item.value, item.label]),
 ) as Record<RetrievalMode, string>
 
@@ -51,30 +41,3 @@ export const normalizeRetrievalMode = (mode?: string | null): RetrievalMode => {
 export const getRetrievalModeLabel = (mode?: string | null) => (
   retrievalModeLabelMap[normalizeRetrievalMode(mode)]
 )
-
-export const getFallbackReasonLabel = (reason?: string | null) => {
-  const normalized = String(reason || '').trim().toLowerCase()
-  if (!normalized) return '首轮结果偏弱'
-  return fallbackReasonLabelMap[normalized] || normalized.replace(/_/g, ' ')
-}
-
-export const buildBoundedRetrievalCopy = (mode?: string | null) => (
-  `${getRetrievalModeLabel(mode)} / 首轮不足时最多自动补检一轮`
-)
-
-export const buildRetrievalTraceSummary = (metadata?: RetrievalTraceMetadata | null) => {
-  const requestedMode = metadata?.requestedMode || metadata?.actualMode || metadata?.finalMode || metadata?.firstMode
-  const firstMode = metadata?.firstMode || metadata?.actualMode || requestedMode
-  const finalMode = metadata?.finalMode || metadata?.actualMode || firstMode
-  const secondPassUsed = Boolean(metadata?.secondPassUsed || metadata?.fallbackTriggered)
-
-  if (!firstMode && !finalMode && !requestedMode) {
-    return '检索策略：按知识库默认路线执行，首轮不足时最多自动补检一轮。'
-  }
-
-  if (!secondPassUsed) {
-    return `检索策略：${getRetrievalModeLabel(finalMode || requestedMode)}，本次首轮已足够，无需补检。`
-  }
-
-  return `检索策略：先走 ${getRetrievalModeLabel(firstMode)}，因“${getFallbackReasonLabel(metadata?.fallbackReason)}”自动补检一轮，最终采用 ${getRetrievalModeLabel(finalMode)}。`
-}

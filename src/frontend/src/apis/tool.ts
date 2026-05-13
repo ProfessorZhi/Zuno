@@ -2,7 +2,7 @@ import { request } from "../utils/request"
 
 export type RuntimeType = 'remote_api' | 'cli'
 export type CliSourceType = 'local_directory' | 'executable' | 'npm_package' | 'python_package' | 'github_repo'
-export type CliCwdMode = 'tool_dir' | 'workspace' | 'custom'
+type CliCwdMode = 'tool_dir' | 'workspace' | 'custom'
 export type RemoteApiMode = 'simple' | 'openapi'
 export type RemoteApiAuthType = '' | 'bearer' | 'basic' | 'api_key_query' | 'api_key_header'
 
@@ -207,20 +207,6 @@ export interface ApiResponse<T> {
   status_code: number
   status_message: string
   data: T
-}
-
-export function getAllToolsAPI() {
-  return request<ApiResponse<ToolResponse[]>>({
-    url: '/api/v1/tool/all',
-    method: 'POST'
-  })
-}
-
-export function getOwnToolsAPI() {
-  return request<ApiResponse<ToolResponse[]>>({
-    url: '/api/v1/tool/user_defined',
-    method: 'POST'
-  })
 }
 
 export function getVisibleToolsAPI() {

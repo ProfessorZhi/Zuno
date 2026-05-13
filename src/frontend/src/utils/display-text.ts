@@ -1,7 +1,7 @@
 const QUESTION_CLUSTER_RE = /\?{5,}/
 const REPLACEMENT_CHAR_RE = /\ufffd/
 
-export const looksCorruptedText = (value: string | null | undefined) => {
+const looksCorruptedText = (value: string | null | undefined) => {
   if (!value) return false
   const text = String(value).trim()
   if (!text) return false

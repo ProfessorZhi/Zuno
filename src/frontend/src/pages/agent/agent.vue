@@ -2,17 +2,32 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, Edit, Plus, Search } from '@element-plus/icons-vue'
-import pluginIcon from '../../assets/plugin.svg'
-import knowledgeIcon from '../../assets/knowledge.svg'
-import mcpIcon from '../../assets/mcp.svg'
-import emptyDataIcon from '../../assets/dashboard/空数据.svg'
+import { Delete, Edit, Plus } from '@element-plus/icons-vue'
 import AgentEditor from './agent-editor.vue'
 import { deleteAgentAPI, getAgentsAPI, searchAgentsAPI, type AgentResponse } from '../../apis/agent'
-import type { Agent } from '../../type'
 import { useUserStore } from '../../store/user'
 import { zunoAgentAvatar } from '../../utils/brand'
+import { getSettingsIcon } from '../../utils/settings-icons'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
+import ZunoEmptyState from '../../components/zuno-settings/ZunoEmptyState.vue'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
+import ZunoSearchInput from '../../components/zuno-settings/ZunoSearchInput.vue'
+
+interface AgentCardItem {
+  agent_id: string
+  name: string
+  description: string
+  logo_url: string
+  tool_ids: string[]
+  llm_id: string
+  mcp_ids: string[]
+  system_prompt: string
+  knowledge_ids: string[]
+  agent_skill_ids: string[]
+  enable_memory: boolean
+  created_time?: string
+  is_custom?: boolean
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -20,13 +35,13 @@ const userStore = useUserStore()
 const loading = ref(false)
 const searchLoading = ref(false)
 const searchKeyword = ref('')
-const agents = ref<Agent[]>([])
+const agents = ref<AgentCardItem[]>([])
 const editorVisible = ref(false)
 const editingAgentId = ref<string | undefined>()
 const LIST_PAGE_SIZE = 6
 const listPage = ref(1)
 
-const normalizeAgent = (item: AgentResponse): Agent => ({
+const normalizeAgent = (item: AgentResponse): AgentCardItem => ({
   agent_id: item.agent_id || item.id || '',
   name: item.name || '未命名智能体',
   description: item.description || '暂无描述',
@@ -57,6 +72,9 @@ const paginatedAgents = computed(() => sortedAgents.value.slice(
 
 const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
 const isWorkspaceSettings = computed(() => String(route.name || '').startsWith('workspaceSettings'))
+const toolIcon = getSettingsIcon('tool')
+const mcpIcon = getSettingsIcon('mcp')
+const knowledgeIcon = getSettingsIcon('knowledge')
 
 const getSettingsThreadId = (event?: Event) => {
   const target = event?.currentTarget as HTMLElement | null
@@ -135,7 +153,7 @@ const goCreate = (event?: Event) => {
   router.push('/agent/editor')
 }
 
-const goEdit = (agent: Agent, event?: Event) => {
+const goEdit = (agent: AgentCardItem, event?: Event) => {
   if (agent.is_custom === false && !isAdmin.value) {
     ElMessage.warning('只有管理员可以编辑官方智能体')
     return
@@ -161,7 +179,7 @@ const handleEditorSaved = async () => {
   await fetchAgents()
 }
 
-const handleDelete = async (agent: Agent) => {
+const handleDelete = async (agent: AgentCardItem) => {
   if (agent.is_custom === false && !isAdmin.value) {
     ElMessage.warning('只有管理员可以删除官方智能体')
     return
@@ -204,21 +222,21 @@ onMounted(fetchAgents)
         <h2>智能体</h2>
       </div>
       <div class="hero-actions">
-        <el-button :class="['settings-icon-button', { 'is-create-open': editorVisible && !editingAgentId }]" type="primary" :icon="Plus" circle :title="editorVisible && !editingAgentId ? '收起创建智能体' : '创建智能体'" :aria-label="editorVisible && !editingAgentId ? '收起创建智能体' : '创建智能体'" @click="goCreate($event)" />
+        <ZunoIconButton
+          type="primary"
+          :icon="Plus"
+          :active="editorVisible && !editingAgentId"
+          :title="editorVisible && !editingAgentId ? '收起创建智能体' : '创建智能体'"
+          @click="goCreate($event)"
+        />
       </div>
       <div class="settings-search-row">
-        <el-input
+        <ZunoSearchInput
           v-model="searchKeyword"
-          class="search-input"
-          clearable
           placeholder="搜索智能体名称"
           @clear="clearSearch"
-          @keyup.enter="handleSearch"
-        >
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
+          @enter="handleSearch"
+        />
       </div>
     </section>
 
@@ -247,7 +265,7 @@ onMounted(fetchAgents)
         </div>
 
         <div class="meta-row">
-          <span class="meta-pill"><img :src="pluginIcon" alt="工具" />{{ agent.tool_ids?.length || 0 }} 工具</span>
+          <span class="meta-pill"><img :src="toolIcon" alt="工具" />{{ agent.tool_ids?.length || 0 }} 工具</span>
           <span class="meta-pill"><img :src="mcpIcon" alt="MCP" />{{ agent.mcp_ids?.length || 0 }} MCP</span>
           <span class="meta-pill"><img :src="knowledgeIcon" alt="知识库" />{{ agent.knowledge_ids?.length || 0 }} 知识库</span>
         </div>
@@ -261,10 +279,9 @@ onMounted(fetchAgents)
         </div>
       </article>
 
-      <div v-if="!loading && sortedAgents.length === 0" class="empty-state settings-empty-hint">
-        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+      <ZunoEmptyState v-if="!loading && sortedAgents.length === 0">
         {{ searchKeyword ? '没有匹配到智能体，换个关键词试试看吧 (´･_･`)' : '这里还空着，点右上角的小加号召唤第一位伙伴吧 (๑•̀ㅂ•́)و✧' }}
-      </div>
+      </ZunoEmptyState>
       <ZunoMiniPager v-model:page="listPage" class="settings-list-pager" :total="sortedAgents.length" :page-size="LIST_PAGE_SIZE" />
     </section>
   </div>
@@ -325,24 +342,6 @@ onMounted(fetchAgents)
   margin-left: 0;
 }
 
-.settings-icon-button {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  padding: 0;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.74);
-  color: #64748b;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-}
-
-.settings-icon-button.el-button--primary {
-  border-color: rgba(245, 158, 11, 0.26);
-  background: #f59e0b;
-  color: #fff;
-}
-
 .hero-actions .is-create-open :deep(.el-icon) {
   transform: rotate(45deg);
   transition: transform 180ms cubic-bezier(.2, .8, .2, 1);
@@ -356,10 +355,6 @@ onMounted(fetchAgents)
     rgba(255, 255, 255, 0.84);
   box-shadow: 0 16px 36px rgba(160, 95, 42, 0.08);
   padding: 18px 22px 20px;
-}
-
-.search-input {
-  width: min(100%, 320px);
 }
 
 .agent-grid {
@@ -462,19 +457,22 @@ onMounted(fetchAgents)
 .meta-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 0 7px;
+  gap: 4px;
+  padding: 0 6px;
   border-radius: 999px;
-  background: rgba(214, 132, 70, 0.08);
-  color: #8a643e;
+  background: rgba(245, 158, 11, 0.055);
+  color: #6b7a90;
   font-size: 10.5px;
+  font-weight: 650;
   min-height: 18px;
   line-height: 18px;
 }
 
 .meta-pill img {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  opacity: 0.86;
 }
 
 .card-footer {
@@ -518,159 +516,6 @@ onMounted(fetchAgents)
   color: #b91c1c;
 }
 
-.empty-state {
-  grid-column: 1 / -1;
-  min-height: 300px;
-  display: grid;
-  grid-template-columns: 210px minmax(0, 560px);
-  justify-content: center;
-  place-items: center;
-  align-content: center;
-  align-items: center;
-  column-gap: 30px;
-  row-gap: 14px;
-  padding: 34px 24px;
-  border-radius: 28px;
-  border: 1px solid rgba(214, 132, 70, 0.14);
-  background:
-    radial-gradient(circle at 50% 10%, rgba(214, 132, 70, 0.13), transparent 34%),
-    linear-gradient(180deg, rgba(255, 252, 248, 0.98) 0%, rgba(255, 248, 239, 0.9) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 18px 42px rgba(120, 80, 42, 0.06);
-  color: #6f6050;
-  text-align: left;
-  overflow: hidden;
-}
-
-.empty-visual {
-  position: relative;
-  width: 188px;
-  height: 118px;
-}
-
-.empty-orbit {
-  position: absolute;
-  inset: 22px 28px;
-  border: 1px solid rgba(214, 132, 70, 0.18);
-  border-radius: 999px;
-}
-
-.empty-orbit-one {
-  transform: rotate(-10deg);
-}
-
-.empty-orbit-two {
-  transform: rotate(18deg) scale(0.84);
-  border-style: dashed;
-}
-
-.empty-core {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 72px;
-  height: 72px;
-  transform: translate(-50%, -50%);
-  border-radius: 24px;
-  background: linear-gradient(145deg, #fff9f1 0%, #f0b173 100%);
-  border: 1px solid rgba(177, 96, 39, 0.16);
-  box-shadow: 0 18px 32px rgba(177, 96, 39, 0.18);
-  display: grid;
-  place-items: center;
-}
-
-.empty-core::before {
-  content: '';
-  position: absolute;
-  width: 26px;
-  height: 7px;
-  top: 14px;
-  border-radius: 999px;
-  background: rgba(139, 78, 37, 0.28);
-}
-
-.empty-face {
-  width: 42px;
-  height: 30px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.78);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.empty-face span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #9d5a2d;
-}
-
-.empty-chip {
-  position: absolute;
-  padding: 7px 11px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(214, 132, 70, 0.16);
-  color: #9a6237;
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 10px 24px rgba(120, 80, 42, 0.08);
-}
-
-.chip-tools {
-  left: 4px;
-  top: 30px;
-}
-
-.chip-knowledge {
-  right: 0;
-  top: 26px;
-}
-
-.chip-model {
-  left: 68px;
-  bottom: 2px;
-}
-
-.empty-copy {
-  max-width: 560px;
-  display: grid;
-  gap: 10px;
-}
-
-.empty-kicker {
-  justify-self: start;
-  padding: 5px 11px;
-  border-radius: 999px;
-  background: rgba(214, 132, 70, 0.1);
-  color: #b86c33;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-.empty-state h3 {
-  margin: 0;
-  font-size: 22px;
-  line-height: 1.35;
-  color: #342820;
-}
-
-.empty-state p {
-  margin: 0;
-  color: #786657;
-  line-height: 1.8;
-}
-
-.empty-actions {
-  grid-column: 2;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-
 @media (max-width: 960px) {
   .agent-hero {
     flex-direction: column;
@@ -681,22 +526,5 @@ onMounted(fetchAgents)
     justify-content: flex-start;
   }
 
-  .search-input {
-    width: 100%;
-  }
-
-  .empty-state {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .empty-kicker {
-    justify-self: center;
-  }
-
-  .empty-actions {
-    grid-column: auto;
-    justify-content: center;
-  }
 }
 </style>

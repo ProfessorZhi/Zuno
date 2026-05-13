@@ -8,11 +8,9 @@ import {
   Edit,
   FolderOpened,
   Plus,
-  Search,
   Setting,
 } from '@element-plus/icons-vue'
 import knowledgeIcon from '../../assets/knowledge.svg'
-import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import {
   createKnowledgeAPI,
   deleteKnowledgeAPI,
@@ -27,6 +25,10 @@ import { safeDisplayText } from '../../utils/display-text'
 import { describeKnowledgeConfig, findBindingById, normalizeKnowledgeConfig } from '../../utils/knowledge-config'
 import { summarizeKnowledgeProgress, type KnowledgeProgressSummary } from '../../utils/knowledge-task'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
+import ZunoEmptyState from '../../components/zuno-settings/ZunoEmptyState.vue'
+import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
+import ZunoLineInput from '../../components/zuno-settings/ZunoLineInput.vue'
+import ZunoSearchInput from '../../components/zuno-settings/ZunoSearchInput.vue'
 
 type KnowledgeItem = KnowledgeResponse
 
@@ -358,22 +360,16 @@ onActivated(fetchKnowledges)
       </div>
 
       <div class="header-actions">
-        <el-button
-          :class="['settings-icon-button', { 'is-create-open': createDialogVisible }]"
+        <ZunoIconButton
           type="primary"
           :icon="Plus"
-          circle
+          :active="createDialogVisible"
           :title="createDialogVisible ? '收起新建知识库' : '新建知识库'"
-          :aria-label="createDialogVisible ? '收起新建知识库' : '新建知识库'"
           @click="openCreateDialog"
         />
       </div>
       <div class="settings-search-row">
-        <el-input v-model="keyword" clearable placeholder="搜索知识库" class="search-input">
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
+        <ZunoSearchInput v-model="keyword" placeholder="搜索知识库" />
       </div>
     </section>
 
@@ -383,64 +379,61 @@ onActivated(fetchKnowledges)
           <h2>{{ editDialogVisible ? '编辑知识库' : '新建知识库' }}</h2>
         </div>
         <div class="inline-form-actions">
-          <el-button
-            class="settings-icon-button save-action"
+          <ZunoIconButton
+            class="save-action"
             type="primary"
             :icon="Check"
             :loading="saving"
-            circle
             title="保存"
-            aria-label="保存"
             @click="submitInlineForm"
           />
         </div>
       </header>
 
       <el-form label-position="top" class="compact-knowledge-form">
-        <el-form-item label="名称">
-          <el-input
-            v-if="createDialogVisible"
-            v-model="createForm.knowledge_name"
-            maxlength="10"
-            show-word-limit
-            placeholder="2-10 个字"
-          />
-          <el-input
-            v-else
-            v-model="editForm.knowledge_name"
-            maxlength="10"
-            show-word-limit
-            placeholder="2-10 个字"
-          />
-        </el-form-item>
-        <el-form-item label="说明">
-          <el-input
-            v-if="createDialogVisible"
-            v-model="createForm.knowledge_desc"
-            type="textarea"
-            :autosize="{ minRows: 1, maxRows: 4 }"
-            maxlength="200"
-            show-word-limit
-            placeholder="一句话说明这个知识库收什么资料"
-          />
-          <el-input
-            v-else
-            v-model="editForm.knowledge_desc"
-            type="textarea"
-            :autosize="{ minRows: 1, maxRows: 4 }"
-            maxlength="200"
-            show-word-limit
-            placeholder="一句话说明这个知识库收什么资料"
-          />
-        </el-form-item>
+        <ZunoLineInput
+          v-if="createDialogVisible"
+          v-model="createForm.knowledge_name"
+          label="名称"
+          maxlength="10"
+          show-word-limit
+          placeholder="2-10 个字"
+        />
+        <ZunoLineInput
+          v-else
+          v-model="editForm.knowledge_name"
+          label="名称"
+          maxlength="10"
+          show-word-limit
+          placeholder="2-10 个字"
+        />
+        <ZunoLineInput
+          v-if="createDialogVisible"
+          v-model="createForm.knowledge_desc"
+          label="说明"
+          textarea
+          :autosize="{ minRows: 1, maxRows: 4 }"
+          maxlength="200"
+          show-word-limit
+          placeholder="一句话说明这个知识库收什么资料"
+        />
+        <ZunoLineInput
+          v-else
+          v-model="editForm.knowledge_desc"
+          label="说明"
+          textarea
+          :autosize="{ minRows: 1, maxRows: 4 }"
+          maxlength="200"
+          show-word-limit
+          placeholder="一句话说明这个知识库收什么资料"
+        />
       </el-form>
     </section>
 
     <section class="content-card" v-loading="loading">
-      <div v-if="filteredKnowledges.length === 0 && !createDialogVisible && !editDialogVisible" class="empty-state settings-empty-hint">
-        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+      <ZunoEmptyState v-if="filteredKnowledges.length === 0 && !createDialogVisible && !editDialogVisible">
         {{ keyword ? '没有匹配到知识库，换个关键词试试看吧 (´･_･`)' : '知识库还在等第一份资料，点右上角 + 开始投喂吧 (｡•̀ᴗ-)✧' }}
-      </div>
+      </ZunoEmptyState>
 
       <div v-else class="knowledge-grid">
         <article v-for="item in paginatedKnowledges" :key="item.id" class="knowledge-list-row">
@@ -559,10 +552,6 @@ onActivated(fetchKnowledges)
   justify-content: flex-end;
   flex-wrap: wrap;
   flex: 0 1 520px;
-}
-
-.search-input {
-  width: min(320px, 100%);
 }
 
 .content-card {
@@ -915,23 +904,6 @@ onActivated(fetchKnowledges)
   color: #b91c1c;
 }
 
-.empty-state {
-  padding: 36px;
-  text-align: center;
-  border-radius: 18px;
-  background: rgba(255, 249, 243, 0.94);
-}
-
-.empty-state h3 {
-  margin: 0;
-  color: #5e3518;
-}
-
-.empty-state p {
-  margin: 10px 0 0;
-  color: #8f7a68;
-}
-
 @media (max-width: 1200px) {
   .page-header {
     flex-wrap: wrap;
@@ -975,8 +947,5 @@ onActivated(fetchKnowledges)
     justify-content: flex-start;
   }
 
-  .search-input {
-    width: 100%;
-  }
 }
 </style>

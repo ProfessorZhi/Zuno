@@ -110,18 +110,6 @@ export function addAgentSkillFileAPI(data: AddAgentSkillFileRequest) {
   })
 }
 
-// 上传 Agent Skill 文件
-export function uploadAgentSkillFileAPI(formData: FormData) {
-  return request<ApiResponse<AgentSkill>>({
-    url: '/api/v1/agent_skill/file/upload',
-    method: 'POST',
-    data: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
-}
-
 // 删除 Agent Skill 文件
 export function deleteAgentSkillFileAPI(data: DeleteAgentSkillFileRequest) {
   return request<ApiResponse<AgentSkill>>({

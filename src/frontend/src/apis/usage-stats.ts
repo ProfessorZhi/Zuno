@@ -8,7 +8,7 @@ export interface UsageStatsRequest {
 }
 
 // Token使用量数据结构
-export interface TokenUsageData {
+interface TokenUsageData {
   input_tokens: number
   output_tokens: number
   total_tokens: number

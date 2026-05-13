@@ -7,11 +7,6 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    AgentCard: typeof import('./src/components/agentCard/agentCard.vue')['default']
-    AgentFormDialog: typeof import('./src/components/dialog/create_agent/AgentFormDialog.vue')['default']
-    CommonCard: typeof import('./src/components/commonCard/commonCard.vue')['default']
-    Create_agent: typeof import('./src/components/dialog/create_agent/create_agent.vue')['default']
-    Drawer: typeof import('./src/components/drawer/drawer.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCol: typeof import('element-plus/es')['ElCol']
@@ -38,13 +33,17 @@ declare module 'vue' {
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTag: typeof import('element-plus/es')['ElTag']
     ElUpload: typeof import('element-plus/es')['ElUpload']
-    HistortCard: typeof import('./src/components/historyCard/histortCard.vue')['default']
     MascotPresence: typeof import('./src/components/MascotPresence.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SidebarMascot: typeof import('./src/components/SidebarMascot.vue')['default']
-    ZunoCodePet: typeof import('./src/components/ZunoCodePet.vue')['default']
+    ZunoEmptyState: typeof import('./src/components/zuno-settings/ZunoEmptyState.vue')['default']
+    ZunoIconButton: typeof import('./src/components/zuno-settings/ZunoIconButton.vue')['default']
+    ZunoLineInput: typeof import('./src/components/zuno-settings/ZunoLineInput.vue')['default']
+    ZunoLineSelect: typeof import('./src/components/zuno-settings/ZunoLineSelect.vue')['default']
     ZunoMiniPager: typeof import('./src/components/ZunoMiniPager.vue')['default']
+    ZunoSearchInput: typeof import('./src/components/zuno-settings/ZunoSearchInput.vue')['default']
+    ZunoSettingsHeader: typeof import('./src/components/zuno-settings/ZunoSettingsHeader.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

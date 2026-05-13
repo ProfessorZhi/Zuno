@@ -92,11 +92,3 @@ export const getUserIconsAPI = () => {
     method: 'GET'
   })
 }
-
-// 检查token是否有效
-export const checkTokenAPI = () => {
-  return request({
-    url: '/api/v1/auth/check',
-    method: 'GET'
-  })
-} 

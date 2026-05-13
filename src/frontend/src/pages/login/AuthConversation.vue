@@ -1610,10 +1610,9 @@ onMounted(async () => {
 .auth-code-pet {
   width: 120px;
   height: 120px;
-  transform: translateZ(0) scale(1.32);
+  transform: scale(1.32);
   transform-origin: center center;
   backface-visibility: hidden;
-  will-change: transform;
 }
 
 .auth-feature-card {
@@ -1926,14 +1925,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0,
-      transparent calc(100% - 58px),
-      rgba(255, 255, 255, 0.3) calc(100% - 58px),
-      rgba(255, 247, 237, 0.18) 100%
-    );
+  background: transparent;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(120, 113, 108, 0.22) transparent;
@@ -1971,7 +1963,7 @@ onMounted(async () => {
   align-items: flex-start;
   gap: 8px;
   margin: 0;
-  contain: layout paint;
+  contain: layout;
   transform-origin: left top;
   backface-visibility: hidden;
   will-change: opacity, transform;
@@ -2039,21 +2031,27 @@ onMounted(async () => {
   padding: 9px 12px;
   border-radius: 22px;
   border: 1px solid rgba(226, 232, 240, 0.74);
-  background: rgba(255, 255, 255, 0.76);
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.86);
+  background-clip: padding-box;
   color: #171717;
-  box-shadow: 0 14px 34px -28px rgba(15, 23, 42, 0.24);
+  box-shadow: none;
   font-size: 14px;
   line-height: 1.6;
-  backdrop-filter: blur(22px);
+  backdrop-filter: none;
+  transform: none;
+  contain: layout;
+  clip-path: none;
 }
 
 .auth-message.assistant.text .auth-bubble,
 .auth-message.assistant.status .auth-bubble {
-  background: transparent;
-  border-color: transparent;
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(226, 232, 240, 0.68);
   box-shadow: none;
   backdrop-filter: none;
-  padding-left: 2px;
+  padding-left: 12px;
 }
 
 .auth-message.user .auth-bubble {
@@ -2070,9 +2068,10 @@ onMounted(async () => {
   padding: 18px;
   border-radius: var(--zuno-radius-composer, 26px) var(--zuno-radius-composer, 26px) var(--zuno-radius-composer, 26px) 10px;
   border: 1px solid var(--zuno-glass-border, rgba(226, 232, 240, 0.84));
-  background: var(--zuno-glass-surface, rgba(255, 255, 255, 0.76));
-  box-shadow: var(--zuno-shadow-composer, 0 20px 60px -15px rgba(15, 23, 42, 0.11)), inset 0 1px 0 rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(28px);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: none;
+  backdrop-filter: none;
+  clip-path: none;
 }
 
 .auth-form {
@@ -2243,10 +2242,8 @@ onMounted(async () => {
   border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.78);
   background: rgba(255, 255, 255, 0.74);
-  box-shadow:
-    0 30px 80px rgba(15, 23, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(26px) saturate(1.2);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.04);
+  backdrop-filter: none;
 }
 
 .unlock-composer span {
@@ -2351,5 +2348,51 @@ onMounted(async () => {
     opacity: 0.88;
     transform: translateY(-3px);
   }
+}
+
+/* Paint-stability pass for the login surface.
+   The login page uses pale gradients, so backdrop-filter and paint containment
+   can leave rectangular repaint artifacts in Chromium while messages animate. */
+.workspace-container.auth-shell .auth-sidebar {
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.workspace-container.auth-shell .auth-conversation.conversation-panel {
+  background: transparent;
+  filter: none;
+}
+
+.workspace-container.auth-shell .auth-message.message-row {
+  contain: layout;
+  backface-visibility: visible;
+}
+
+.workspace-container.auth-shell .auth-bubble,
+.workspace-container.auth-shell .auth-message.choice .auth-bubble,
+.workspace-container.auth-shell .auth-message.login .auth-bubble,
+.workspace-container.auth-shell .auth-message.register .auth-bubble {
+  box-shadow: none;
+  backdrop-filter: none;
+  filter: none;
+  transform: none;
+  contain: layout;
+  clip-path: none;
+}
+
+.workspace-container.auth-shell .auth-message.assistant.text .auth-bubble,
+.workspace-container.auth-shell .auth-message.assistant.status .auth-bubble {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(226, 232, 240, 0.68);
+}
+
+.workspace-container.auth-shell .auth-code-pet,
+.workspace-container.auth-shell .auth-code-pet * {
+  filter: none;
+}
+
+.workspace-container.auth-shell .auth-feature-card {
+  box-shadow: none;
 }
 </style>

@@ -13,12 +13,12 @@ export interface UpdateMCPServerRequest {
   imported_config?: Record<string, any>
 }
 
-export interface MCPServerToolSchemaProperty {
+interface MCPServerToolSchemaProperty {
   description?: string
   type?: string
 }
 
-export interface MCPServerTool {
+interface MCPServerTool {
   name: string
   description: string
   input_schema: {
@@ -85,11 +85,6 @@ export interface MCPUserConfigTestRequest {
   server_id: string
 }
 
-export interface MCPUserConfigCreateRequest {
-  mcp_server_id: string
-  config: Array<Record<string, any>>
-}
-
 export const createMCPServerAPI = (data: CreateMCPServerRequest) =>
   request<MCPResponse<null>>({
     url: '/api/v1/mcp_server',
@@ -131,13 +126,6 @@ export const getMCPUserConfigAPI = (server_id: string) =>
     params: { server_id },
   })
 
-export const createMCPUserConfigAPI = (data: MCPUserConfigCreateRequest) =>
-  request<MCPResponse<MCPUserConfig | null>>({
-    url: '/api/v1/mcp_user_config/create',
-    method: 'POST',
-    data,
-  })
-
 export const updateMCPUserConfigAPI = (data: MCPUserConfigUpdateRequest) =>
   request<MCPResponse<null>>({
     url: '/api/v1/mcp_user_config/update',
@@ -155,13 +143,6 @@ export const testMCPUserConfigAPI = (data: MCPUserConfigTestRequest) =>
     method: 'POST',
     data,
     timeout: 45000,
-  })
-
-export const deleteMCPUserConfigAPI = (config_id: string) =>
-  request<MCPResponse<null>>({
-    url: '/api/v1/mcp_user_config/delete',
-    method: 'DELETE',
-    data: { config_id },
   })
 
 export const getDefaultMCPLogoAPI = () =>

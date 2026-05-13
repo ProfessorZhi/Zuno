@@ -1,4 +1,4 @@
-export const pipelineStageOrder = [
+const pipelineStageOrder = [
   'uploaded',
   'queued',
   'parsing',
@@ -41,22 +41,22 @@ export interface KnowledgeProgressSummary {
 
 const normalizeStatus = (status?: string | number | null) => String(status || '').trim().toLowerCase()
 
-export const isSuccessStatus = (status?: string | number | null) => {
+const isSuccessStatus = (status?: string | number | null) => {
   const value = normalizeStatus(status)
   return value.includes('success') || value.includes('completed') || value.includes('done')
 }
 
-export const isFailedStatus = (status?: string | number | null) => {
+const isFailedStatus = (status?: string | number | null) => {
   const value = normalizeStatus(status)
   return value.includes('fail') || value.includes('error') || value.includes('broken')
 }
 
-export const isPendingStatus = (status?: string | number | null) => {
+const isPendingStatus = (status?: string | number | null) => {
   const value = normalizeStatus(status)
   return value.includes('pending') || value.includes('queued')
 }
 
-export const isProcessingStatus = (status?: string | number | null) => {
+const isProcessingStatus = (status?: string | number | null) => {
   const value = normalizeStatus(status)
   return ['running', 'process', 'parsing', 'splitting', 'indexing', 'extracting']
     .some((keyword) => value.includes(keyword))

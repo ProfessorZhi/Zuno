@@ -6,7 +6,7 @@ export interface UnifiedResponse<T = any> {
   data?: T
 }
 
-export enum KnowledgeFileStatus {
+enum KnowledgeFileStatus {
   FAIL = 'FAIL',
   PROCESS = 'PROCESS',
   SUCCESS = 'SUCCESS',
@@ -29,7 +29,7 @@ export interface KnowledgeFileResponse {
   update_time: string
 }
 
-export interface KnowledgeTaskResponse {
+interface KnowledgeTaskResponse {
   id: string
   knowledge_id: string
   knowledge_file_id: string
@@ -46,7 +46,7 @@ export interface KnowledgeTaskResponse {
   update_time: string
 }
 
-export interface KnowledgeTaskEventResponse {
+interface KnowledgeTaskEventResponse {
   id: string
   task_id: string
   stage: string
@@ -131,14 +131,6 @@ export function getKnowledgeTaskDetailAPI(task_id: string) {
   })
 }
 
-export function getKnowledgeTaskListAPI(knowledge_id: string) {
-  return request<UnifiedResponse<KnowledgeTaskResponse[]>>({
-    url: '/api/v1/knowledge_file/tasks',
-    method: 'GET',
-    params: { knowledge_id },
-  })
-}
-
 export function retryKnowledgeTaskAPI(data: KnowledgeTaskRetryRequest) {
   return request<UnifiedResponse<Record<string, any>>>({
     url: '/api/v1/knowledge_file/task/retry',
@@ -165,7 +157,7 @@ export function formatFileSize(bytes: number): string {
   return `${value.toFixed(value >= 10 || index === 0 ? 0 : 2)} ${units[index]}`
 }
 
-export function getFileExtension(filename: string): string {
+function getFileExtension(filename: string): string {
   return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2)
 }
 

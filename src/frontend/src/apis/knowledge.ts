@@ -74,14 +74,14 @@ export interface KnowledgeModelBindingPayload {
   provider: string
 }
 
-export interface KnowledgeRetrievalRequest {
+interface KnowledgeRetrievalRequest {
   query: string
   knowledge_id: string | string[]
   top_k?: number
   retrieval_mode?: string
 }
 
-export interface KnowledgeRetrievalRound {
+interface KnowledgeRetrievalRound {
   round: number
   mode: string
   query: string
@@ -95,7 +95,7 @@ export interface KnowledgeRetrievalRound {
   content_found: boolean
 }
 
-export interface KnowledgeRetrievalResponse {
+interface KnowledgeRetrievalResponse {
   content: string
   actual_mode: string
   first_mode: string
@@ -145,14 +145,6 @@ export function deleteKnowledgeAPI(data: KnowledgeDeleteRequest) {
   return request<UnifiedResponse<null>>({
     url: '/api/v1/knowledge/delete',
     method: 'DELETE',
-    data,
-  })
-}
-
-export function knowledgeRetrievalAPI(data: KnowledgeRetrievalRequest) {
-  return request<UnifiedResponse<KnowledgeRetrievalResponse>>({
-    url: '/api/v1/knowledge/retrieval',
-    method: 'POST',
     data,
   })
 }

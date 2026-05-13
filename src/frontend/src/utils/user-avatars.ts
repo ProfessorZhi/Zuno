@@ -1,4 +1,4 @@
-export const USER_AVATAR_ASSET_VERSION = '20260511-clean3'
+const USER_AVATAR_ASSET_VERSION = '20260511-clean3'
 
 export const withUserAvatarVersion = (value: string) => {
   if (value.startsWith('/avatars/user/zuno-user-') && !value.includes('?')) {
