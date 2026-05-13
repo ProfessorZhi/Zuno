@@ -38,7 +38,7 @@ class WorkSpaceSessionService:
 
         payload = session if isinstance(session, dict) else session.to_dict()
         payload["contexts"] = cls.sanitize_contexts(payload.get("contexts", []))
-        payload["workspace_mode"] = "agent" if cls.is_real_agent_name(payload.get("agent")) else "normal"
+        payload["workspace_mode"] = cls.normalize_workspace_mode(payload.get("agent"))
         return payload
 
     @classmethod

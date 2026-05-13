@@ -8,6 +8,9 @@ interface ResizablePanelOptions {
   maxWidth: number
   keyboardStep?: number
   minAvailableContentWidth?: number
+  narrowBreakpoint?: number
+  narrowMinWidth?: number
+  narrowMinAvailableContentWidth?: number
 }
 
 const canUseStorage = () => typeof window !== "undefined" && !!window.localStorage
@@ -28,17 +31,40 @@ const readStoredWidth = (storageKey: string) => {
 
 export const useResizablePanel = (options: ResizablePanelOptions) => {
   const keyboardStep = options.keyboardStep ?? 8
+  const isNarrowViewport = () => typeof window !== "undefined"
+    && !!options.narrowBreakpoint
+    && window.innerWidth <= options.narrowBreakpoint
+
+  const getEffectiveMinWidth = () => {
+    if (isNarrowViewport() && options.narrowMinWidth) {
+      return options.narrowMinWidth
+    }
+
+    return options.minWidth
+  }
+
+  const getMinAvailableContentWidth = () => {
+    if (isNarrowViewport() && options.narrowMinAvailableContentWidth) {
+      return options.narrowMinAvailableContentWidth
+    }
+
+    return options.minAvailableContentWidth
+  }
+
   const getEffectiveMaxWidth = () => {
-    if (typeof window === "undefined" || !options.minAvailableContentWidth) {
+    const effectiveMinWidth = getEffectiveMinWidth()
+    const minAvailableContentWidth = getMinAvailableContentWidth()
+
+    if (typeof window === "undefined" || !minAvailableContentWidth) {
       return options.maxWidth
     }
 
-    const availableWidth = window.innerWidth - options.minAvailableContentWidth
-    return Math.max(options.minWidth, Math.min(options.maxWidth, availableWidth))
+    const availableWidth = window.innerWidth - minAvailableContentWidth
+    return Math.max(effectiveMinWidth, Math.min(options.maxWidth, availableWidth))
   }
 
   const getClampedWidth = (value: number) => {
-    return clamp(value, options.minWidth, getEffectiveMaxWidth())
+    return clamp(value, getEffectiveMinWidth(), getEffectiveMaxWidth())
   }
 
   const width = ref(
@@ -98,7 +124,7 @@ export const useResizablePanel = (options: ResizablePanelOptions) => {
 
     if (event.key === "Home") {
       event.preventDefault()
-      setWidth(options.minWidth)
+      setWidth(getEffectiveMinWidth())
       return
     }
 
