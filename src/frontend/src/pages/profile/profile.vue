@@ -1,15 +1,14 @@
 ﻿<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Check, Close, Edit } from '@element-plus/icons-vue'
+import { Check, Close, Edit, Refresh, Upload } from '@element-plus/icons-vue'
 import { getUserIconsAPI, getUserInfoAPI, updateUserInfoAPI } from '../../apis/auth'
-import defaultAvatar from '../../assets/user.svg'
 import { useUserStore } from '../../store/user'
 import { apiUrl } from '../../utils/api'
-import { zunoAgentAvatar } from '../../utils/brand'
+import { DEFAULT_USER_AVATAR, USER_AVATAR_PRESETS, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../../utils/user-avatars'
 
 const DEFAULT_DESCRIPTION = '这个用户很懒，还没有留下任何描述'
-const PRESET_AVATARS = [defaultAvatar, zunoAgentAvatar]
+const PRESET_AVATARS = USER_AVATAR_PRESETS
 
 const userStore = useUserStore()
 
@@ -21,12 +20,18 @@ const showAvatarDialog = ref(false)
 const uploading = ref(false)
 
 const formData = ref({
-  user_avatar: defaultAvatar,
+  user_avatar: DEFAULT_USER_AVATAR,
   user_description: DEFAULT_DESCRIPTION,
 })
 
 const remoteIcons = ref<string[]>([])
-const selectedAvatar = ref(defaultAvatar)
+const selectedAvatar = ref(DEFAULT_USER_AVATAR)
+
+const normalizeAvatarUrl = (avatar?: string) => {
+  const raw = String(avatar || '').trim()
+  if (!raw || raw.startsWith('/src/assets/') || isLegacyRemoteUserAvatar(raw)) return DEFAULT_USER_AVATAR
+  return withUserAvatarVersion(raw)
+}
 
 const availableIcons = computed(() => {
   const merged = [...PRESET_AVATARS, ...remoteIcons.value]
@@ -38,7 +43,7 @@ const loadUserInfo = async () => {
     const userId = userStore.userInfo?.id
     if (!userId) {
       formData.value = {
-        user_avatar: userStore.userInfo?.avatar || defaultAvatar,
+        user_avatar: normalizeAvatarUrl(userStore.userInfo?.avatar),
         user_description: userStore.userInfo?.description || DEFAULT_DESCRIPTION,
       }
       selectedAvatar.value = formData.value.user_avatar
@@ -53,7 +58,7 @@ const loadUserInfo = async () => {
       id: userInfo.user_id || userInfo.id,
       username: userInfo.user_name || userInfo.username,
       nickname: userInfo.user_name || userInfo.nickname || userInfo.username,
-      avatar: userInfo.user_avatar || userInfo.avatar || defaultAvatar,
+      avatar: normalizeAvatarUrl(userInfo.user_avatar || userInfo.avatar),
       description: userInfo.user_description || userInfo.description || DEFAULT_DESCRIPTION,
     }
 
@@ -66,7 +71,7 @@ const loadUserInfo = async () => {
   } catch (error) {
     console.error('获取用户信息失败:', error)
     formData.value = {
-      user_avatar: userStore.userInfo?.avatar || defaultAvatar,
+      user_avatar: normalizeAvatarUrl(userStore.userInfo?.avatar),
       user_description: userStore.userInfo?.description || DEFAULT_DESCRIPTION,
     }
     selectedAvatar.value = formData.value.user_avatar
@@ -78,7 +83,7 @@ const loadAvailableIcons = async () => {
   try {
     const response = await getUserIconsAPI()
     if (response.data.status_code === 200 && Array.isArray(response.data.data)) {
-      remoteIcons.value = response.data.data
+      remoteIcons.value = response.data.data.map(normalizeAvatarUrl)
     }
   } catch (error) {
     console.error('获取头像列表失败:', error)
@@ -150,12 +155,12 @@ const selectAvatar = (avatarUrl: string) => {
 
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement
-  target.src = defaultAvatar
+  target.src = DEFAULT_USER_AVATAR
 }
 
 const handlePresetImageError = (event: Event) => {
   const target = event.target as HTMLImageElement
-  target.src = zunoAgentAvatar
+  target.src = DEFAULT_USER_AVATAR
 }
 
 const handleCustomUpload = async (event: Event) => {
@@ -214,23 +219,32 @@ const handleCustomUpload = async (event: Event) => {
 }
 
 onMounted(async () => {
-  await Promise.all([loadUserInfo(), loadAvailableIcons()])
+  formData.value = {
+    user_avatar: normalizeAvatarUrl(userStore.userInfo?.avatar),
+    user_description: userStore.userInfo?.description || DEFAULT_DESCRIPTION,
+  }
+  selectedAvatar.value = formData.value.user_avatar
   pageLoading.value = false
+  await Promise.all([loadUserInfo(), loadAvailableIcons()])
 })
 </script>
 
 <template>
   <div class="profile-page" v-loading="pageLoading">
-    <div class="profile-header">
-      <div>
-        <h2>个人资料</h2>
-        <p>管理您的个人信息和偏好设置</p>
+    <header class="page-header">
+      <div class="title-block">
+        <img :src="formData.user_avatar" alt="" class="page-icon" @error="handleImageError" />
+        <div>
+          <h1>个人资料</h1>
+        </div>
       </div>
-      <el-button type="primary" @click="loadUserInfo" :loading="pageLoading">刷新信息</el-button>
-    </div>
+      <button class="profile-icon-button profile-refresh" type="button" :disabled="pageLoading" aria-label="刷新" @click="loadUserInfo">
+        <el-icon><Refresh /></el-icon>
+      </button>
+    </header>
 
     <div v-if="!pageLoading" class="profile-content">
-      <div class="profile-card profile-card--main">
+      <section class="profile-panel">
         <div class="avatar-section">
           <div class="avatar-wrapper">
             <img :src="formData.user_avatar" alt="用户头像" class="user-avatar" @error="handleImageError" />
@@ -239,15 +253,26 @@ onMounted(async () => {
             </button>
           </div>
           <div class="avatar-meta">
-            <h3>{{ userStore.userInfo?.nickname || userStore.userInfo?.username || '未命名用户' }}</h3>
-            <p class="user-id">ID: {{ userStore.userInfo?.id || '未知' }}</p>
+            <span>当前用户</span>
+            <strong>{{ userStore.userInfo?.nickname || userStore.userInfo?.username || '未命名用户' }}</strong>
+            <p>ID {{ userStore.userInfo?.id || '未知' }}</p>
           </div>
         </div>
 
         <div class="description-section">
           <div class="section-head">
             <h4>个人描述</h4>
-            <el-button v-if="!editingDescription" text @click="editingDescription = true">编辑</el-button>
+            <button
+              class="profile-icon-button section-toggle"
+              type="button"
+              :aria-label="editingDescription ? '收起编辑' : '编辑描述'"
+              @click="editingDescription ? cancelEditDescription() : (editingDescription = true)"
+            >
+              <el-icon>
+                <Close v-if="editingDescription" />
+                <Edit v-else />
+              </el-icon>
+            </button>
           </div>
 
           <div v-if="!editingDescription" class="description-preview">
@@ -258,32 +283,49 @@ onMounted(async () => {
             <el-input
               v-model="formData.user_description"
               type="textarea"
-              :rows="4"
+              :autosize="{ minRows: 1, maxRows: 4 }"
               placeholder="请输入个人描述"
               maxlength="200"
               show-word-limit
             />
             <div class="edit-actions">
-              <el-button size="small" @click="cancelEditDescription">
-                <el-icon><Close /></el-icon>
-                取消
-              </el-button>
-              <el-button type="primary" size="small" :loading="loading" @click="saveUserInfo">
+              <button class="profile-icon-button save-inline" type="button" :disabled="loading" aria-label="保存描述" @click="saveUserInfo">
                 <el-icon><Check /></el-icon>
-                保存
-              </el-button>
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
-    <el-dialog v-model="showAvatarDialog" title="头像设置" width="720px" destroy-on-close>
+    <el-dialog v-model="showAvatarDialog" class="profile-avatar-dialog" title="头像设置" width="720px" destroy-on-close>
       <div class="dialog-body">
         <div class="selected-section">
-          <h4>当前选择</h4>
-          <div class="selected-avatar">
-            <img :src="selectedAvatar" alt="选中的头像" @error="handleImageError" />
+          <div class="selected-current">
+            <h4>当前选择</h4>
+            <div class="selected-avatar">
+              <img :src="selectedAvatar" alt="选中的头像" @error="handleImageError" />
+            </div>
+          </div>
+
+          <div class="avatar-dialog-actions">
+            <label
+              class="avatar-action icon-only upload-action"
+              :class="{ disabled: uploading }"
+              :aria-label="uploading ? '头像上传中' : '上传自定义头像'"
+            >
+              <input type="file" accept="image/jpeg,image/png" :disabled="uploading" @change="handleCustomUpload" />
+              <el-icon><Upload /></el-icon>
+              <span class="sr-only">{{ uploading ? '上传中' : '自定义头像' }}</span>
+            </label>
+            <button class="avatar-action icon-only muted" type="button" aria-label="取消选择" @click="showAvatarDialog = false">
+              <el-icon><Close /></el-icon>
+              <span class="sr-only">取消</span>
+            </button>
+            <button class="avatar-action icon-only primary" type="button" :disabled="loading" aria-label="确定选择" @click="confirmAvatarSelection">
+              <el-icon><Check /></el-icon>
+              <span class="sr-only">确定选择</span>
+            </button>
           </div>
         </div>
 
@@ -306,115 +348,189 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="upload-section">
-          <h4>上传自定义头像</h4>
-          <label class="upload-button" :class="{ disabled: uploading }">
-            <input type="file" accept="image/jpeg,image/png" :disabled="uploading" @change="handleCustomUpload" />
-            <span>{{ uploading ? '上传中...' : '点击上传头像' }}</span>
-          </label>
-          <p class="upload-tip">支持 JPG、PNG 格式，文件大小不超过 2MB</p>
-        </div>
       </div>
-
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="showAvatarDialog = false">取消</el-button>
-          <el-button type="primary" :loading="loading" @click="confirmAvatarSelection">确定选择</el-button>
-        </div>
-      </template>
     </el-dialog>
   </div>
 </template>
 
 <style scoped lang="scss">
 .profile-page {
-  min-height: 100%;
-  padding: 24px;
-  background: linear-gradient(180deg, #f7f2ea 0%, #fbf8f3 100%);
+  display: grid;
+  gap: 16px;
+  min-height: 0;
+  color: #0f172a;
+  background: transparent;
 }
 
-.profile-header {
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 14px;
+  padding: 0;
 
-  h2 {
+  h1 {
     margin: 0;
-    font-size: 30px;
-    color: #2f241b;
+    font-size: 24px;
+    font-weight: 680;
+    letter-spacing: 0;
+    color: #0f172a;
   }
 
-  p {
-    margin: 8px 0 0;
-    color: #7a6a5a;
+}
+
+.title-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.page-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.profile-icon-button,
+.text-action {
+  border: 0;
+  background: transparent;
+  color: #b45309;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 620;
+  cursor: pointer;
+}
+
+.profile-icon-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  color: #94a3b8;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s cubic-bezier(0.2, 0.78, 0.22, 1);
+
+  &:hover {
+    color: #b45309;
+    background: rgba(245, 158, 11, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: progress;
   }
 }
 
-.profile-content {
-  max-width: 920px;
+.profile-refresh {
+  flex: 0 0 auto;
 }
 
-.profile-card {
-  border-radius: 28px;
-  border: 1px solid rgba(214, 132, 70, 0.12);
-  background: rgba(255, 252, 248, 0.92);
-  box-shadow: 0 18px 40px rgba(120, 80, 42, 0.08);
+.profile-content,
+.profile-panel {
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
-.profile-card--main {
-  padding: 28px;
+.profile-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(260px, 1.25fr);
+  align-items: start;
+  gap: 28px;
+  padding: 0;
 }
 
 .avatar-section {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(214, 132, 70, 0.1);
+  gap: 16px;
+  min-width: 0;
 }
 
 .avatar-wrapper {
   position: relative;
-  width: 120px;
-  height: 120px;
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
 }
 
 .user-avatar {
   width: 100%;
   height: 100%;
-  border-radius: 30px;
+  border-radius: 20px;
   object-fit: cover;
-  border: 1px solid rgba(214, 132, 70, 0.18);
+  background: rgba(245, 158, 11, 0.08);
 }
 
 .avatar-edit {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 36px;
-  height: 36px;
+  right: -4px;
+  bottom: -4px;
+  width: 28px;
+  height: 28px;
   border: 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #da8749 0%, #c96d31 100%);
+  border-radius: 999px;
+  background: #f59e0b;
   color: white;
   cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  box-shadow: 0 12px 24px rgba(245, 158, 11, 0.18);
 }
 
-.avatar-meta h3 {
+.avatar-meta {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.avatar-meta span {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.avatar-meta strong {
   margin: 0;
-  font-size: 24px;
-  color: #2f241b;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 680;
 }
 
-.user-id {
-  margin: 8px 0 0;
-  color: #8b7865;
+.avatar-meta p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
 }
 
 .description-section {
-  padding-top: 24px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
 }
 
 .section-head {
@@ -422,123 +538,293 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  min-height: 34px;
 
   h4 {
     margin: 0;
-    color: #433428;
-    font-size: 18px;
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 650;
   }
+}
+
+.section-toggle {
+  width: 28px;
+  height: 28px;
 }
 
 .description-preview,
 .description-edit,
 .dialog-body {
-  color: #5f5144;
+  color: #475569;
 }
 
 .description-preview {
-  min-height: 96px;
-  padding: 18px;
-  border-radius: 20px;
-  background: #fffaf5;
-  border: 1px solid rgba(214, 132, 70, 0.12);
+  min-height: 34px;
+  padding: 0 0 9px;
+  background: transparent;
+  box-shadow: none;
+
+  p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.7;
+  }
+}
+
+.description-edit :deep(.el-textarea__inner) {
+  min-height: 34px !important;
+  padding: 0 0 7px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.26) !important;
+  resize: vertical;
 }
 
 .edit-actions,
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 16px;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.save-inline {
+  width: 34px;
+  height: 34px;
+  color: #ffffff;
+  background: #f59e0b;
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.14);
+
+  &:hover {
+    color: #ffffff;
+    background: #e89105;
+  }
+}
+
+.text-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+
+  &.muted {
+    color: #94a3b8;
+  }
+
+  &.primary {
+    color: #b45309;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: progress;
+  }
 }
 
 .selected-section,
-.avatar-grid-section,
-.upload-section {
+.avatar-grid-section {
   & + & {
-    margin-top: 24px;
+    margin-top: 18px;
+  }
+}
+
+.selected-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.selected-current {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  h4 {
+    margin: 0;
+    min-width: 70px;
   }
 }
 
 .selected-avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 26px;
-  overflow: hidden;
-  border: 1px solid rgba(214, 132, 70, 0.14);
+  width: 86px;
+  height: 86px;
+  display: grid;
+  place-items: center;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
 
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
 }
 
-.avatar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-  gap: 12px;
+.avatar-dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.avatar-option {
-  border: 1px solid rgba(214, 132, 70, 0.14);
-  border-radius: 20px;
-  background: white;
-  padding: 8px;
+.avatar-action {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #64748b;
   cursor: pointer;
-
-  img {
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 16px;
-    object-fit: cover;
-  }
-
-  &.active {
-    border-color: #c96d31;
-    box-shadow: 0 0 0 3px rgba(201, 109, 49, 0.14);
-  }
-}
-
-.upload-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 14px;
-  background: #fff7ef;
-  border: 1px dashed rgba(201, 109, 49, 0.4);
-  color: #b76735;
-  cursor: pointer;
+  gap: 6px;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 620;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s cubic-bezier(0.2, 0.78, 0.22, 1);
 
   input {
     display: none;
   }
 
-  &.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  &:hover {
+    color: #b45309;
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.34);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &.primary {
+    color: #ffffff;
+    background: #f59e0b;
+    box-shadow: none;
+  }
+
+  &.primary:hover {
+    color: #ffffff;
+    background: #e89105;
+    box-shadow: none;
+  }
+
+  &.disabled,
+  &:disabled {
+    opacity: 0.55;
+    cursor: progress;
+  }
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: 14px 12px;
+}
+
+.avatar-option {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  min-height: 68px;
+  isolation: isolate;
+
+  img {
+    width: min(68px, 100%);
+    aspect-ratio: 1;
+    border-radius: 0;
+    object-fit: contain;
+    background: transparent;
+    box-shadow: none;
+    transition: transform 0.18s cubic-bezier(0.2, 0.78, 0.22, 1), filter 0.18s ease;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 13px;
+    right: 13px;
+    bottom: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: #f59e0b;
+    opacity: 0;
+    transform: scaleX(0.45);
+    transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.2, 0.78, 0.22, 1);
+  }
+
+  &:hover img {
+    transform: translateY(-1px);
+    filter: drop-shadow(0 8px 16px rgba(15, 23, 42, 0.08));
+  }
+
+  &.active {
+    &::after {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+
+    img {
+      filter: drop-shadow(0 10px 20px rgba(245, 158, 11, 0.18));
+    }
   }
 }
 
 .upload-tip,
 .section-tip {
   margin: 10px 0 0;
-  color: #8b7865;
+  color: #94a3b8;
   font-size: 13px;
 }
 
-@media (max-width: 768px) {
-  .profile-page {
-    padding: 16px;
-  }
+:deep(.profile-avatar-dialog) {
+  background: rgba(255, 255, 255, 0.34) !important;
+  border-color: rgba(226, 232, 240, 0.48) !important;
+  box-shadow: none !important;
+}
 
-  .profile-header,
-  .avatar-section {
-    flex-direction: column;
-    align-items: flex-start;
+:deep(.profile-avatar-dialog .el-dialog__header),
+:deep(.profile-avatar-dialog .el-dialog__body),
+:deep(.profile-avatar-dialog .el-dialog__footer) {
+  background: transparent !important;
+  border-color: rgba(226, 232, 240, 0.42) !important;
+}
+
+:deep(.profile-avatar-dialog .el-dialog__footer) {
+  display: none !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+:deep(.profile-avatar-dialog .el-dialog__title) {
+  font-size: 15px;
+  font-weight: 650;
+  color: #0f172a;
+}
+
+@media (max-width: 768px) {
+  .profile-panel {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
 
   .avatar-grid {

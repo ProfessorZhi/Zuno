@@ -1,28 +1,11 @@
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import ChatPage from '../pages/conversation/chatPage/chatPage.vue'
 import NotFound from '../pages/notFound/index'
 import Index from '../pages/index.vue'
-import Conversation from '../pages/conversation/conversation.vue'
-import DefaultPage from '../pages/conversation/defaultPage/defaultPage.vue'
-import Construct from '../pages/construct'
-import Configuration from '../pages/configuration'
 import Login from '../pages/login'
 import { Register } from '../pages/login'
-import Agent from '../pages/agent'
-import AgentEditor from '../pages/agent/agent-editor.vue'
-import McpServer from '../pages/mcp-server'
-import Knowledge from '../pages/knowledge'
-import KnowledgeFile from '../pages/knowledge/knowledge-file.vue'
-import KnowledgeConfig from '../pages/knowledge/knowledge-config.vue'
-import Tool from '../pages/tool'
-import AgentSkill from '../pages/agent-skill'
-import Model from '../pages/model'
-import ModelEditor from '../pages/model/model-editor.vue'
-import Profile from '../pages/profile'
 import Workspace from '../pages/workspace/workspace.vue'
 import WorkspaceDefaultPage from '../pages/workspace/defaultPage/defaultPage.vue'
-import Dashboard from '../pages/dashboard'
 import { isDesktopRuntime } from '../utils/api'
 
 const routes: RouteRecordRaw[] = [
@@ -42,12 +25,92 @@ const routes: RouteRecordRaw[] = [
     path: '/workspace',
     name: 'workspace',
     component: Workspace,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: false },
     children: [
       {
         path: '',
         name: 'workspaceDefaultPage',
         component: WorkspaceDefaultPage,
+      },
+      {
+        path: 'settings',
+        redirect: { name: 'workspaceSettingsAgent' },
+      },
+      {
+        path: 'settings/agent',
+        name: 'workspaceSettingsAgent',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'agent' },
+      },
+      {
+        path: 'settings/agent/editor',
+        name: 'workspaceSettingsAgentEditor',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'agent', settingsDetail: true },
+      },
+      {
+        path: 'settings/model',
+        name: 'workspaceSettingsModel',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'model' },
+      },
+      {
+        path: 'settings/knowledge',
+        name: 'workspaceSettingsKnowledge',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'knowledge' },
+      },
+      {
+        path: 'settings/knowledge/:knowledgeId/files',
+        name: 'workspaceSettingsKnowledgeFile',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'knowledge', settingsDetail: true },
+      },
+      {
+        path: 'settings/knowledge/:knowledgeId/config',
+        name: 'workspaceSettingsKnowledgeConfig',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'knowledge', settingsDetail: true },
+      },
+      {
+        path: 'settings/mcp',
+        name: 'workspaceSettingsMcp',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'mcp' },
+      },
+      {
+        path: 'settings/tool',
+        name: 'workspaceSettingsTool',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'tool' },
+      },
+      {
+        path: 'settings/skill',
+        name: 'workspaceSettingsSkill',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'skill' },
+      },
+      {
+        path: 'settings/dashboard',
+        name: 'workspaceSettingsDashboard',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'dashboard' },
+      },
+      {
+        path: 'settings/profile',
+        redirect: { name: 'workspaceAccountProfile' },
+      },
+      {
+        path: 'account/profile',
+        name: 'workspaceAccountProfile',
+        component: WorkspaceDefaultPage,
+        meta: { accountSection: 'profile' },
+      },
+      {
+        path: 'account/conversations',
+        name: 'workspaceAccountConversations',
+        component: WorkspaceDefaultPage,
+        meta: { accountSection: 'conversations' },
       },
     ],
   },
@@ -63,7 +126,7 @@ const routes: RouteRecordRaw[] = [
     },
     name: 'index',
     component: Index,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: false },
     children: [
       {
         path: '/homepage',
@@ -81,104 +144,112 @@ const routes: RouteRecordRaw[] = [
       {
         path: '/conversation',
         name: 'conversation',
-        component: Conversation,
+        redirect: { name: 'workspaceAccountConversations' },
         meta: { current: 'conversation' },
-        children: [
-          {
-            path: '/conversation/',
-            name: 'defaultPage',
-            component: DefaultPage,
-          },
-          {
-            path: '/conversation/chatPage',
-            name: 'chatPage',
-            component: ChatPage,
-          },
-        ],
+      },
+      {
+        path: '/conversation/',
+        name: 'defaultPage',
+        redirect: { name: 'workspaceAccountConversations' },
+        meta: { current: 'conversation' },
+      },
+      {
+        path: '/conversation/chatPage',
+        name: 'chatPage',
+        redirect: (to) => ({ name: 'workspaceDefaultPage', query: to.query }),
+        meta: { current: 'conversation' },
       },
       {
         path: '/construct',
         name: 'construct',
         meta: { current: 'construct' },
-        component: Construct,
+        redirect: { name: 'workspaceSettingsAgent' },
       },
       {
         path: '/configuration',
         name: 'configuration',
         meta: { current: 'configuration' },
-        component: Configuration,
+        redirect: (to) => ({ name: 'workspaceSettingsTool', query: to.query }),
       },
       {
         path: '/agent',
         name: 'agent',
         meta: { current: 'agent' },
-        component: Agent,
+        redirect: { name: 'workspaceSettingsAgent' },
       },
       {
         path: '/agent/editor',
         name: 'agent-editor',
         meta: { current: 'agent' },
-        component: AgentEditor,
+        redirect: (to) => ({ name: 'workspaceSettingsAgentEditor', query: to.query }),
       },
       {
         path: '/mcp-server',
         name: 'mcp-server',
         meta: { current: 'mcp-server' },
-        component: McpServer,
+        redirect: { name: 'workspaceSettingsMcp' },
       },
       {
         path: '/knowledge',
         name: 'knowledge',
         meta: { current: 'knowledge' },
-        component: Knowledge,
+        redirect: { name: 'workspaceSettingsKnowledge' },
       },
       {
         path: '/knowledge/:knowledgeId/files',
         name: 'knowledge-file',
         meta: { current: 'knowledge' },
-        component: KnowledgeFile,
+        redirect: (to) => ({
+          name: 'workspaceSettingsKnowledgeFile',
+          params: to.params,
+          query: to.query,
+        }),
       },
       {
         path: '/knowledge/:knowledgeId/config',
         name: 'knowledge-config',
         meta: { current: 'knowledge' },
-        component: KnowledgeConfig,
+        redirect: (to) => ({
+          name: 'workspaceSettingsKnowledgeConfig',
+          params: to.params,
+          query: to.query,
+        }),
       },
       {
         path: '/tool',
         name: 'tool',
         meta: { current: 'tool' },
-        component: Tool,
+        redirect: { name: 'workspaceSettingsTool' },
       },
       {
         path: '/agent-skill',
         name: 'agent-skill',
         meta: { current: 'agent-skill' },
-        component: AgentSkill,
+        redirect: { name: 'workspaceSettingsSkill' },
       },
       {
         path: '/model',
         name: 'model',
         meta: { current: 'model' },
-        component: Model,
+        redirect: { name: 'workspaceSettingsModel' },
       },
       {
         path: '/model/editor',
         name: 'model-editor',
         meta: { current: 'model' },
-        component: ModelEditor,
+        redirect: { name: 'workspaceSettingsModel' },
       },
       {
         path: '/profile',
         name: 'profile',
         meta: { current: 'profile' },
-        component: Profile,
+        redirect: { name: 'workspaceAccountProfile' },
       },
       {
         path: '/dashboard',
         name: 'dashboard',
         meta: { current: 'dashboard' },
-        component: Dashboard,
+        redirect: { name: 'workspaceSettingsDashboard' },
       },
     ],
   },
@@ -196,18 +267,42 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  const isWorkspaceRoute = to.path === '/workspace' || to.path.startsWith('/workspace/')
+
+  if (to.path === '/login' || to.path === '/register') {
+    next({
+      name: 'workspaceDefaultPage',
+      query: {
+        ...to.query,
+        auth: to.path === '/register' ? 'register' : 'login',
+      },
+    })
+    return
+  }
+
+  if (!token && !isWorkspaceRoute) {
+    next({
+      name: 'workspaceDefaultPage',
+      query: {
+        auth: 'login',
+        redirect: to.fullPath,
+      },
+    })
+    return
+  }
 
   if (to.meta.requiresAuth) {
     if (token) {
       next()
     } else {
-      next('/login')
+      next({
+        name: 'workspaceDefaultPage',
+        query: {
+          auth: 'login',
+          redirect: to.fullPath,
+        },
+      })
     }
-    return
-  }
-
-  if (to.path === '/login' && token) {
-    next('/')
     return
   }
 

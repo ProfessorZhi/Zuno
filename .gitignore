@@ -28,6 +28,13 @@ tmp/
 tmp-qa-playwright/
 _ui_audit/
 qa_2026-04-18_full_validation/
+.codex-screenshots/
+.playwright-cli/
+.stitch-preview/
+output/
+screenshots-original/
+screenshots-redesign/
+src/frontend/output/
 
 tmp-*.png
 tmp-*.json

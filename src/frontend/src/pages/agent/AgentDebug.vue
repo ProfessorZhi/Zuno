@@ -116,7 +116,7 @@ const testAPI = async () => {
       color: #00ff00;
       padding: 15px;
       border-radius: 4px;
-      font-family: 'Courier New', monospace;
+      font-family: var(--zuno-font-mono);
       font-size: 12px;
       white-space: pre-wrap;
       word-wrap: break-word;

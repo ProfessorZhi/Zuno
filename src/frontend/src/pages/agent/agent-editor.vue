@@ -1,9 +1,9 @@
 ﻿<script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { ArrowLeft, Check, DocumentCopy, Management, PictureFilled, Cpu, Setting } from '@element-plus/icons-vue'
+import { ArrowLeft, Check, PictureFilled } from '@element-plus/icons-vue'
 import { createAgentAPI, getAgentByIdAPI, updateAgentAPI, type AgentCreateRequest, type AgentUpdateRequest } from '../../apis/agent'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
 import { getVisibleToolsAPI, type ToolResponse } from '../../apis/tool'
@@ -14,6 +14,7 @@ import { uploadFileAPI } from '../../apis/file'
 import type { AgentFormData } from '../../type'
 import { useUserStore } from '../../store/user'
 import { zunoAgentAvatar } from '../../utils/brand'
+import { USER_AVATAR_PRESETS, withUserAvatarVersion } from '../../utils/user-avatars'
 
 interface SelectOption {
   id: string
@@ -24,6 +25,11 @@ interface SelectOption {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const props = defineProps<{ embedded?: boolean; embeddedAgentId?: string }>()
+const emit = defineEmits<{
+  (event: 'close'): void
+  (event: 'saved'): void
+}>()
 
 const formRef = ref<FormInstance>()
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -58,9 +64,39 @@ const rules: FormRules = {
   system_prompt: [{ required: true, message: '请输入系统提示词', trigger: 'blur' }],
 }
 
-const isEditing = computed(() => Boolean(route.query.id))
+const activeAgentId = computed(() => props.embeddedAgentId || String(route.query.id || ''))
+const isEmbedded = computed(() => Boolean(props.embedded))
+const isEditing = computed(() => Boolean(activeAgentId.value))
 const pageTitle = computed(() => (isEditing.value ? '编辑智能体' : '创建智能体'))
 const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
+const agentListRoute = computed(() => route.name === 'workspaceSettingsAgentEditor' ? { name: 'workspaceSettingsAgent' } : '/agent')
+const isWorkspaceSettings = computed(() => String(route.name || '').startsWith('workspaceSettings'))
+
+const getSettingsThreadId = (event?: Event) => {
+  const target = event?.currentTarget as HTMLElement | null
+  const fromEvent = target?.closest<HTMLElement>('.settings-bubble')?.dataset.settingsThreadId
+  if (fromEvent) return fromEvent
+  return document
+    .querySelector<HTMLElement>('.settings-bubble[data-settings-section="agent"][data-settings-detail="true"]')
+    ?.dataset.settingsThreadId || ''
+}
+
+const navigateInWorkspaceSettings = (location: any, event?: Event) => {
+  if (isEmbedded.value) {
+    emit('close')
+    return
+  }
+  if (!isWorkspaceSettings.value) {
+    router.push(location)
+    return
+  }
+  window.dispatchEvent(new CustomEvent('workspace-settings-navigate', {
+    detail: {
+      location,
+      threadId: getSettingsThreadId(event),
+    },
+  }))
+}
 
 const namesFromIds = (ids: string[], options: SelectOption[]) =>
   ids.map((id) => options.find((item) => item.id === id)?.name).filter(Boolean) as string[]
@@ -70,6 +106,7 @@ const selectedToolNames = computed(() => namesFromIds(form.tool_ids, toolOptions
 const selectedMCPNames = computed(() => namesFromIds(form.mcp_ids, mcpOptions.value))
 const selectedKnowledgeNames = computed(() => namesFromIds(form.knowledge_ids, knowledgeOptions.value))
 const selectedSkillNames = computed(() => namesFromIds(form.agent_skill_ids, skillOptions.value))
+const agentAvatarPresets = USER_AVATAR_PRESETS
 
 const summaryItems = computed(() => [
   { label: '工具', value: form.tool_ids.length, names: selectedToolNames.value },
@@ -77,6 +114,9 @@ const summaryItems = computed(() => [
   { label: '知识库', value: form.knowledge_ids.length, names: selectedKnowledgeNames.value },
   { label: 'Skill', value: form.agent_skill_ids.length, names: selectedSkillNames.value },
 ])
+
+const isAgentDraftComplete = () =>
+  Boolean(form.name.trim() && form.description.trim() && form.llm_id && form.system_prompt.trim())
 
 const resetForm = () => {
   Object.assign(form, {
@@ -167,14 +207,14 @@ const loadAgent = async (agentId: string) => {
     const agent = response.data.data
     if (agent.is_custom === false && !isAdmin.value) {
       ElMessage.warning('只有管理员可以编辑官方智能体')
-      router.push('/agent')
+      navigateInWorkspaceSettings(agentListRoute.value)
       return
     }
 
     Object.assign(form, {
       name: agent.name || '',
       description: agent.description || '',
-      logo_url: agent.logo_url || '',
+      logo_url: withUserAvatarVersion(agent.logo_url || ''),
       tool_ids: agent.tool_ids || [],
       llm_id: agent.llm_id || '',
       mcp_ids: agent.mcp_ids || [],
@@ -186,7 +226,7 @@ const loadAgent = async (agentId: string) => {
   } catch (error: any) {
     console.error('loadAgent failed', error)
     ElMessage.error(error.message || '加载智能体失败')
-    router.push('/agent')
+    navigateInWorkspaceSettings(agentListRoute.value)
   } finally {
     pageLoading.value = false
   }
@@ -194,6 +234,10 @@ const loadAgent = async (agentId: string) => {
 
 const pickLogo = () => {
   fileInputRef.value?.click()
+}
+
+const selectPresetLogo = (avatarUrl: string) => {
+  form.logo_url = withUserAvatarVersion(avatarUrl)
 }
 
 const handleFileChange = async (event: Event) => {
@@ -234,19 +278,28 @@ const handleFileChange = async (event: Event) => {
   }
 }
 
-const saveAgent = async () => {
+const saveAgent = async (event?: Event) => {
   if (!formRef.value) return
+  const threadId = getSettingsThreadId(event)
+
+  if (!isAgentDraftComplete()) {
+    formRef.value.clearValidate()
+    navigateInWorkspaceSettings(agentListRoute.value, event)
+    return
+  }
 
   try {
     await formRef.value.validate()
   } catch {
+    formRef.value.clearValidate()
+    navigateInWorkspaceSettings(agentListRoute.value, event)
     return
   }
 
   saving.value = true
   try {
     const payload: AgentCreateRequest | AgentUpdateRequest = {
-      ...(isEditing.value ? { agent_id: String(route.query.id) } : {}),
+      ...(isEditing.value ? { agent_id: activeAgentId.value } : {}),
       name: form.name.trim(),
       description: form.description.trim(),
       logo_url: form.logo_url,
@@ -266,7 +319,19 @@ const saveAgent = async () => {
     }
 
     ElMessage.success(isEditing.value ? '智能体已更新' : '智能体已创建')
-    router.push('/agent')
+    if (isEmbedded.value) {
+      emit('saved')
+      emit('close')
+    } else if (isWorkspaceSettings.value) {
+      window.dispatchEvent(new CustomEvent('workspace-settings-navigate', {
+        detail: {
+          location: agentListRoute.value,
+          threadId,
+        },
+      }))
+    } else {
+      router.push(agentListRoute.value)
+    }
   } catch (error: any) {
     console.error('saveAgent failed', error)
     ElMessage.error(error.message || (isEditing.value ? '更新智能体失败' : '创建智能体失败'))
@@ -275,201 +340,164 @@ const saveAgent = async () => {
   }
 }
 
-const goBack = () => {
-  router.push('/agent')
+const goBack = (event?: Event) => {
+  navigateInWorkspaceSettings(agentListRoute.value, event)
 }
 
-onMounted(async () => {
+const initializeEditor = async () => {
   resetForm()
   await loadOptions()
-  const agentId = route.query.id as string | undefined
+  const agentId = activeAgentId.value
   if (agentId) {
     await loadAgent(agentId)
   }
+}
+
+onMounted(initializeEditor)
+
+watch(() => props.embeddedAgentId, () => {
+  if (isEmbedded.value) initializeEditor()
 })
 </script>
 
 <template>
-  <div class="agent-editor-page" v-loading="pageLoading || optionLoading">
+  <div class="agent-editor-page" :class="{ 'agent-inline-editor': isWorkspaceSettings || isEmbedded }" v-loading="pageLoading || optionLoading">
     <div class="page-header">
       <div class="header-left">
-        <el-button :icon="ArrowLeft" circle @click="goBack" />
+        <el-button v-if="!isEmbedded" class="settings-icon-button" :icon="ArrowLeft" circle title="返回智能体" aria-label="返回智能体" @click="goBack($event)" />
         <div>
-          <div class="eyebrow">AGENT STUDIO</div>
           <h2>{{ pageTitle }}</h2>
-          <p>这里只展示真实可绑定的数据源，不再注入测试工具、测试 MCP 或测试知识库。</p>
         </div>
       </div>
       <div class="header-actions">
-        <el-button @click="goBack">取消</el-button>
-        <el-button type="primary" :icon="Check" :loading="saving" @click="saveAgent">{{ isEditing ? '保存修改' : '创建智能体' }}</el-button>
+        <el-button class="settings-icon-button" type="primary" :icon="Check" circle :loading="saving" :title="isEditing ? '保存修改' : '创建智能体'" :aria-label="isEditing ? '保存修改' : '创建智能体'" @click="saveAgent($event)" />
       </div>
     </div>
 
     <div class="editor-layout">
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="editor-main">
-        <section class="editor-card basic-card">
-          <div class="card-title-row">
-            <div>
-              <div class="card-title">基本信息</div>
-              <div class="card-subtitle">确定名字、头像和一句话定位，后续列表页就直接展示这里的内容。</div>
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="editor-main agent-config-grid">
+        <div class="logo-panel agent-logo-field">
+          <div class="logo-current">
+            <div class="logo-preview">
+              <img :src="form.logo_url || zunoAgentAvatar" alt="智能体头像" />
             </div>
-            <el-switch v-model="form.enable_memory" active-text="启用记忆" inactive-text="关闭记忆" />
+            <input ref="fileInputRef" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden-file-input" @change="handleFileChange" />
+            <button class="logo-upload-button" type="button" :disabled="uploadLoading" :aria-label="uploadLoading ? '头像上传中' : '上传头像'" @click="pickLogo">
+              <el-icon><PictureFilled /></el-icon>
+              <span class="sr-only">{{ uploadLoading ? '上传中' : '上传' }}</span>
+            </button>
           </div>
+          <div class="logo-presets">
+            <div class="logo-presets-head">
+              <span>预设头像</span>
+            </div>
+            <div class="preset-avatar-strip" aria-label="预设头像">
+              <button
+                v-for="avatar in agentAvatarPresets"
+                :key="avatar"
+                type="button"
+                class="preset-avatar-button"
+                :class="{ active: form.logo_url === avatar }"
+                @click="selectPresetLogo(avatar)"
+              >
+                <img :src="avatar" alt="" />
+              </button>
+            </div>
+          </div>
+        </div>
 
-          <div class="basic-grid">
-            <div class="logo-panel">
-              <div class="logo-preview">
-<img :src="form.logo_url || zunoAgentAvatar" alt="智能体头像" />
+        <div class="memory-toggle agent-memory-field">
+          <span>{{ form.enable_memory ? '记忆开启' : '记忆关闭' }}</span>
+          <el-switch v-model="form.enable_memory" />
+        </div>
+
+        <el-form-item class="agent-field field-name" label="名称" prop="name">
+          <el-input v-model="form.name" maxlength="50" show-word-limit placeholder="比如：产品需求助手" />
+        </el-form-item>
+
+        <el-form-item class="agent-field field-description" label="描述" prop="description">
+          <el-input v-model="form.description" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" maxlength="200" show-word-limit placeholder="一句话说明它帮用户解决什么问题。" />
+        </el-form-item>
+
+        <el-form-item class="agent-field field-model" label="模型" prop="llm_id">
+          <el-select v-model="form.llm_id" filterable placeholder="选择一个可见模型" class="full-width" no-data-text="当前没有可用模型，请先去模型页配置。">
+            <el-option v-for="item in llmOptions" :key="item.id" :label="item.name" :value="item.id">
+              <div class="option-line">
+                <span>{{ item.name }}</span>
+                <small>{{ item.description }}</small>
               </div>
-              <input ref="fileInputRef" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden-file-input" @change="handleFileChange" />
-              <el-button :icon="PictureFilled" :loading="uploadLoading" @click="pickLogo">上传头像</el-button>
-            </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
 
-            <div class="basic-fields">
-              <el-form-item label="智能体名称" prop="name">
-                <el-input v-model="form.name" maxlength="50" show-word-limit placeholder="比如：产品需求助手" />
-              </el-form-item>
-              <el-form-item label="智能体描述" prop="description">
-                <el-input v-model="form.description" type="textarea" :rows="4" maxlength="200" show-word-limit placeholder="一句话说明它帮用户解决什么问题。" />
-              </el-form-item>
+        <el-form-item class="agent-field field-prompt" label="提示词" prop="system_prompt">
+          <el-input
+            v-model="form.system_prompt"
+            type="textarea"
+            :autosize="{ minRows: 1, maxRows: 6 }"
+            maxlength="5000"
+            show-word-limit
+            placeholder="写清楚这个智能体是谁、负责什么、有什么边界、回答时要遵守什么规则。"
+          />
+        </el-form-item>
+
+        <el-form-item class="agent-field field-tool" label="工具">
+          <el-select v-model="form.tool_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择工具" no-data-text="当前没有可用工具，请先去工具页配置。">
+            <el-option v-for="item in toolOptions" :key="item.id" :label="item.name" :value="item.id">
+              <div class="option-line">
+                <span>{{ item.name }}</span>
+                <small>{{ item.description }}</small>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item class="agent-field field-mcp" label="MCP">
+          <el-select v-model="form.mcp_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择 MCP 服务" no-data-text="当前没有可用 MCP，请先去 MCP 页配置。">
+            <el-option v-for="item in mcpOptions" :key="item.id" :label="item.name" :value="item.id">
+              <div class="option-line">
+                <span>{{ item.name }}</span>
+                <small>{{ item.description }}</small>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item class="agent-field field-knowledge" label="知识库">
+          <el-select v-model="form.knowledge_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择知识库" no-data-text="当前没有知识库，请先去知识库页创建。">
+            <el-option v-for="item in knowledgeOptions" :key="item.id" :label="item.name" :value="item.id">
+              <div class="option-line">
+                <span>{{ item.name }}</span>
+                <small>{{ item.description }}</small>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item class="agent-field field-skill" label="Skill">
+          <el-select v-model="form.agent_skill_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择 Skill" no-data-text="当前没有 Skill，请先去 Skill 页创建。">
+            <el-option v-for="item in skillOptions" :key="item.id" :label="item.name" :value="item.id">
+              <div class="option-line">
+                <span>{{ item.name }}</span>
+                <small>{{ item.description }}</small>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <div class="binding-summary">
+          <div v-for="item in summaryItems" :key="item.label" class="summary-item">
+            <div class="summary-head">
+              <strong>{{ item.label }}</strong>
+              <span>{{ item.value }}</span>
+            </div>
+            <div class="summary-tags">
+              <el-tag v-for="name in item.names" :key="name" size="small" effect="plain">{{ name }}</el-tag>
+              <span v-if="item.names.length === 0" class="empty-text">未绑定</span>
             </div>
           </div>
-        </section>
-
-        <section class="editor-card">
-          <div class="card-title-row">
-            <div>
-              <div class="card-title">模型与系统提示词</div>
-              <div class="card-subtitle">这里决定智能体的思考底座和默认行为边界。</div>
-            </div>
-            <el-icon class="card-icon"><Cpu /></el-icon>
-          </div>
-
-          <el-form-item label="绑定模型" prop="llm_id">
-            <el-select v-model="form.llm_id" filterable placeholder="选择一个可见模型" class="full-width" no-data-text="当前没有可用模型，请先去模型页配置。">
-              <el-option v-for="item in llmOptions" :key="item.id" :label="item.name" :value="item.id">
-                <div class="option-line">
-                  <span>{{ item.name }}</span>
-                  <small>{{ item.description }}</small>
-                </div>
-              </el-option>
-            </el-select>
-          </el-form-item>
-
-          <el-form-item label="系统提示词" prop="system_prompt">
-            <el-input
-              v-model="form.system_prompt"
-              type="textarea"
-              :rows="14"
-              maxlength="5000"
-              show-word-limit
-              placeholder="写清楚这个智能体是谁、负责什么、有什么边界、回答时要遵守什么规则。"
-            />
-          </el-form-item>
-        </section>
-
-        <section class="editor-card">
-          <div class="card-title-row">
-            <div>
-              <div class="card-title">能力挂载</div>
-              <div class="card-subtitle">只绑定真正需要的能力，避免把所有东西一股脑塞给智能体。</div>
-            </div>
-            <el-icon class="card-icon"><Setting /></el-icon>
-          </div>
-
-          <div class="capability-grid">
-            <el-form-item label="工具">
-              <el-select v-model="form.tool_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择工具" no-data-text="当前没有可用工具，请先去工具页配置。">
-                <el-option v-for="item in toolOptions" :key="item.id" :label="item.name" :value="item.id">
-                  <div class="option-line">
-                    <span>{{ item.name }}</span>
-                    <small>{{ item.description }}</small>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
-
-            <el-form-item label="MCP">
-              <el-select v-model="form.mcp_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择 MCP 服务" no-data-text="当前没有可用 MCP，请先去 MCP 页配置。">
-                <el-option v-for="item in mcpOptions" :key="item.id" :label="item.name" :value="item.id">
-                  <div class="option-line">
-                    <span>{{ item.name }}</span>
-                    <small>{{ item.description }}</small>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
-
-            <el-form-item label="知识库">
-              <el-select v-model="form.knowledge_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择知识库" no-data-text="当前没有知识库，请先去知识库页创建。">
-                <el-option v-for="item in knowledgeOptions" :key="item.id" :label="item.name" :value="item.id">
-                  <div class="option-line">
-                    <span>{{ item.name }}</span>
-                    <small>{{ item.description }}</small>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
-
-            <el-form-item label="Skill">
-              <el-select v-model="form.agent_skill_ids" multiple filterable collapse-tags collapse-tags-tooltip class="full-width" placeholder="选择 Skill" no-data-text="当前没有 Skill，请先去 Skill 页创建。">
-                <el-option v-for="item in skillOptions" :key="item.id" :label="item.name" :value="item.id">
-                  <div class="option-line">
-                    <span>{{ item.name }}</span>
-                    <small>{{ item.description }}</small>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </div>
-        </section>
+        </div>
       </el-form>
-
-      <aside class="editor-side">
-        <section class="side-card profile-card">
-          <div class="side-avatar">
-<img :src="form.logo_url || zunoAgentAvatar" alt="头像预览" />
-          </div>
-          <h3>{{ form.name || '未命名智能体' }}</h3>
-          <p>{{ form.description || '这里会展示你填写的智能体描述。' }}</p>
-          <div class="profile-meta">
-            <span>{{ form.enable_memory ? '启用记忆' : '关闭记忆' }}</span>
-            <span>模型：{{ selectedLLMName }}</span>
-          </div>
-        </section>
-
-        <section class="side-card">
-          <div class="side-title-row">
-            <el-icon><Management /></el-icon>
-            <span>已绑定能力</span>
-          </div>
-          <div class="summary-list">
-            <div v-for="item in summaryItems" :key="item.label" class="summary-item">
-              <div class="summary-head">
-                <strong>{{ item.label }}</strong>
-                <span>{{ item.value }}</span>
-              </div>
-              <div class="summary-tags">
-                <el-tag v-for="name in item.names" :key="name" size="small" effect="plain">{{ name }}</el-tag>
-                <span v-if="item.names.length === 0" class="empty-text">未绑定</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="side-card prompt-card">
-          <div class="side-title-row">
-            <el-icon><DocumentCopy /></el-icon>
-            <span>提示词检查</span>
-          </div>
-          <ul>
-            <li>有没有写清楚角色和目标。</li>
-            <li>有没有写清楚不能做什么。</li>
-            <li>是否真的只绑定了需要的工具和 MCP。</li>
-          </ul>
-        </section>
-      </aside>
     </div>
   </div>
 </template>
@@ -481,38 +509,37 @@ onMounted(async () => {
   gap: 24px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 26px 30px;
-  border-radius: 28px;
-  border: 1px solid rgba(214, 132, 70, 0.14);
-  background: linear-gradient(180deg, rgba(255, 251, 245, 0.96) 0%, rgba(252, 246, 238, 0.94) 100%);
-  box-shadow: 0 18px 40px rgba(140, 100, 62, 0.08);
+  gap: 14px;
+  padding: 12px 4px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .header-left {
   display: flex;
-  gap: 16px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  margin-bottom: 10px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(214, 132, 70, 0.1);
-  color: #b86c33;
-  font-size: 12px;
-  letter-spacing: 0.14em;
+  align-items: center;
+  gap: 12px;
 }
 
 .page-header h2 {
   margin: 0;
-  font-size: 32px;
-  color: #2f241d;
+  font-size: 24px;
+  color: #0f172a;
 }
 
 .page-header p {
@@ -523,12 +550,34 @@ onMounted(async () => {
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+}
+
+.header-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.settings-icon-button {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.74);
+  color: #64748b;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.settings-icon-button.el-button--primary {
+  border-color: rgba(245, 158, 11, 0.26);
+  background: #f59e0b;
+  color: #fff;
 }
 
 .editor-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -537,6 +586,48 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.agent-config-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 16px;
+  align-items: start;
+}
+
+.agent-logo-field {
+  grid-column: 1 / -1;
+}
+
+.agent-memory-field {
+  align-self: center;
+}
+
+.field-name {
+  grid-column: span 2;
+}
+
+.field-description {
+  grid-column: span 2;
+}
+
+.field-model {
+  grid-column: span 2;
+}
+
+.field-prompt {
+  grid-column: span 3;
+}
+
+.field-tool,
+.field-mcp,
+.field-knowledge,
+.field-skill {
+  grid-column: span 2;
+}
+
+.binding-summary {
+  grid-column: 1 / -1;
 }
 
 .editor-card,
@@ -589,12 +680,29 @@ onMounted(async () => {
 
 .logo-panel {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
-.logo-preview,
+.logo-current {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  flex: 0 0 86px;
+}
+
+.logo-preview {
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+}
+
 .side-avatar {
   width: 140px;
   height: 140px;
@@ -610,11 +718,140 @@ onMounted(async () => {
 .side-avatar img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .hidden-file-input {
   display: none;
+}
+
+.logo-upload-button {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+  color: #64748b;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 620;
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.logo-upload-button:hover {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.32);
+}
+
+.logo-upload-button:active {
+  transform: scale(0.96);
+}
+
+.logo-upload-button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.logo-presets {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 8px;
+}
+
+.logo-presets-head {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.preset-avatar-strip {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+  scroll-snap-type: x proximity;
+}
+
+.preset-avatar-strip::-webkit-scrollbar {
+  height: 4px;
+}
+
+.preset-avatar-strip::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+}
+
+.preset-avatar-strip::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preset-avatar-button {
+  position: relative;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0.76;
+  scroll-snap-align: start;
+  transition: opacity 140ms ease, transform 140ms ease, filter 140ms ease;
+}
+
+.preset-avatar-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: transparent;
+}
+
+.preset-avatar-button::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: -3px;
+  height: 2px;
+  border-radius: 999px;
+  background: #f59e0b;
+  opacity: 0;
+  transform: scaleX(0.45);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.preset-avatar-button:hover,
+.preset-avatar-button.active {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.preset-avatar-button.active {
+  filter: drop-shadow(0 9px 18px rgba(245, 158, 11, 0.15));
+}
+
+.preset-avatar-button.active::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .basic-fields {
@@ -716,6 +953,23 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
+  .agent-config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-logo-field,
+  .field-name,
+  .field-description,
+  .field-model,
+  .field-prompt,
+  .field-tool,
+  .field-mcp,
+  .field-knowledge,
+  .field-skill,
+  .binding-summary {
+    grid-column: 1;
+  }
+
   .basic-grid,
   .capability-grid {
     grid-template-columns: 1fr;
@@ -728,6 +982,16 @@ onMounted(async () => {
   .header-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+
+  .logo-panel {
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .logo-preview {
+    width: 64px;
+    height: 64px;
   }
 }
 </style>

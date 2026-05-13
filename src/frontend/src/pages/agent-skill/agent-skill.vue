@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, DocumentAdd, Edit, Plus, Refresh } from '@element-plus/icons-vue'
+import { Check, Delete, DocumentAdd, Edit, Plus, Search, View } from '@element-plus/icons-vue'
 import skillIcon from '../../assets/skill.svg'
+import skillCreatorIcon from '../../assets/skills/skill-creator.svg'
+import skillInstallerIcon from '../../assets/skills/skill-installer.svg'
+import emptyDataIcon from '../../assets/dashboard/空数据.svg'
 import { safeDisplayText } from '../../utils/display-text'
 import {
   addAgentSkillFileAPI,
@@ -15,6 +18,7 @@ import {
   type AgentSkillFile,
   type AgentSkillFolder,
 } from '../../apis/agent-skill'
+import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
 
 type SkillFileEntry = {
   path: string
@@ -25,6 +29,8 @@ type SkillFileEntry = {
 const loading = ref(false)
 const keyword = ref('')
 const skills = ref<AgentSkill[]>([])
+const LIST_PAGE_SIZE = 6
+const listPage = ref(1)
 
 const createDialogVisible = ref(false)
 const createLoading = ref(false)
@@ -65,12 +71,32 @@ const visibleSkills = computed(() => {
   if (!search) return list
   return list.filter((item) => [item.name, item.description || ''].join(' ').toLowerCase().includes(search))
 })
+const paginatedSkills = computed(() => visibleSkills.value.slice(
+  (listPage.value - 1) * LIST_PAGE_SIZE,
+  listPage.value * LIST_PAGE_SIZE,
+))
 
 const currentSkillReadonly = computed(() => isReadonlySkill(currentSkill.value))
 
 const getSkillDescription = (skill: AgentSkill) => (
   safeDisplayText(skill.description, '\u6682\u65e0\u8bf4\u660e')
 )
+
+const getSkillIcon = (skill: AgentSkill) => {
+  const name = skill.name.toLowerCase()
+  if (name.includes('skill-creator') || name.includes('creator')) return skillCreatorIcon
+  if (name.includes('skill-installer') || name.includes('installer')) return skillInstallerIcon
+  return skillIcon
+}
+
+const formatSkillTime = (value?: string) => {
+  if (!value) return '--'
+  const normalized = value.includes('T') ? value : value.replace(' ', 'T')
+  const date = new Date(normalized)
+  if (Number.isNaN(date.getTime())) return value.replace('T', ' ').slice(0, 16)
+  const pad = (num: number) => String(num).padStart(2, '0')
+  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
 
 const flattenFiles = (folder?: AgentSkillFolder): SkillFileEntry[] => {
   if (!folder?.folder) return []
@@ -110,13 +136,17 @@ const fetchSkills = async () => {
 }
 
 const openCreateDialog = () => {
+  if (createDialogVisible.value) {
+    createDialogVisible.value = false
+    return
+  }
   createForm.value = { name: '', description: '' }
   createDialogVisible.value = true
 }
 
 const handleCreateSkill = async () => {
   if (!createForm.value.name.trim() || !createForm.value.description.trim()) {
-    ElMessage.warning('请先填写完整的 Skill 名称和描述')
+    createDialogVisible.value = false
     return
   }
 
@@ -176,11 +206,17 @@ const handleDeleteSkill = async (skill: AgentSkill) => {
 }
 
 const openDetailDialog = (skill: AgentSkill) => {
+  if (currentSkill.value?.id === skill.id && detailDialogVisible.value) {
+    detailDialogVisible.value = false
+    addFileDialogVisible.value = false
+    return
+  }
   currentSkill.value = skill
   const files = flattenFiles(skill.folder)
   selectedFile.value = files[0] || null
   fileContent.value = files[0]?.content || ''
   detailDialogVisible.value = true
+  addFileDialogVisible.value = false
 }
 
 const selectFile = (file: SkillFileEntry) => {
@@ -247,6 +283,10 @@ const openAddFileDialog = () => {
   }
   if (isReadonlySkill(currentSkill.value)) {
     ElMessage.info('只读 Skill 不能新增文件')
+    return
+  }
+  if (addFileDialogVisible.value) {
+    addFileDialogVisible.value = false
     return
   }
   addFileForm.value = { path: '', name: '' }
@@ -324,95 +364,152 @@ onMounted(fetchSkills)
   <div class="skill-page">
     <section class="hero-card">
       <div>
-        <div class="eyebrow">SKILL LIBRARY</div>
-        <h1>Skill 管理</h1>
-        <p>Skill 用来沉淀可复用的方法、模板和工作流。系统 Skill 与本地目录 Skill 为只读能力，你创建的 Skill 可以继续编辑和扩展。</p>
+        <div class="settings-title-row">
+          <img :src="skillIcon" alt="Skill" class="page-icon" />
+          <h1>Skill</h1>
+        </div>
       </div>
       <div class="hero-actions">
-        <el-button :icon="Refresh" @click="fetchSkills">刷新</el-button>
-        <el-button type="primary" :icon="Plus" @click="openCreateDialog">新建 Skill</el-button>
+        <el-button
+          :class="['settings-icon-button', { 'is-create-open': createDialogVisible }]"
+          type="primary"
+          :icon="Plus"
+          circle
+          :title="createDialogVisible ? '收起新建 Skill' : '新建 Skill'"
+          :aria-label="createDialogVisible ? '收起新建 Skill' : '新建 Skill'"
+          @click="openCreateDialog"
+        />
       </div>
     </section>
 
     <section class="toolbar-card">
-      <el-input v-model="keyword" placeholder="搜索 Skill 名称或描述" clearable />
+      <el-input v-model="keyword" placeholder="搜索 Skill 名称或描述" clearable>
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+      </el-input>
     </section>
 
     <section class="skill-grid" v-loading="loading">
-      <article v-for="skill in visibleSkills" :key="skill.id" class="skill-card">
+      <article v-for="skill in paginatedSkills" :key="skill.id" class="skill-card">
         <div class="skill-card-head">
           <div class="skill-title-wrap">
-            <div class="skill-icon-wrap"><img :src="skillIcon" :alt="skill.name" /></div>
-            <div>
+            <div class="skill-icon-wrap"><img :src="getSkillIcon(skill)" :alt="skill.name" /></div>
+            <div class="skill-main">
               <div class="skill-heading">
-                <h3>{{ skill.name }}</h3>
-                <el-tag size="small" :type="getSkillSourceTagType(skill)">
-                  {{ getSkillSourceLabel(skill) }}
-                </el-tag>
+                <h3 :title="skill.name">{{ skill.name }}</h3>
+                <p :title="getSkillDescription(skill)">{{ getSkillDescription(skill) }}</p>
               </div>
-              <p>{{ getSkillDescription(skill) }}</p>
+              <div class="skill-meta">
+                <span class="skill-pill">{{ getSkillSourceLabel(skill) }}</span>
+                <span class="skill-pill">创建 {{ formatSkillTime(skill.create_time) }}</span>
+                <span class="skill-pill">更新 {{ formatSkillTime(skill.update_time || skill.create_time) }}</span>
+              </div>
             </div>
           </div>
           <div class="skill-actions">
-            <el-button size="small" type="primary" :icon="Edit" @click="openDetailDialog(skill)">
-              {{ isReadonlySkill(skill) ? '查看详情' : '编辑文件' }}
-            </el-button>
+            <el-button
+              class="skill-icon-button"
+              type="primary"
+              :icon="isReadonlySkill(skill) ? View : Edit"
+              circle
+              :title="isReadonlySkill(skill) ? '查看详情' : '编辑文件'"
+              :aria-label="isReadonlySkill(skill) ? '查看详情' : '编辑文件'"
+              @click="openDetailDialog(skill)"
+            />
             <el-button
               v-if="!isReadonlySkill(skill)"
-              size="small"
+              class="skill-icon-button danger"
               type="danger"
               :icon="Delete"
+              circle
+              title="删除"
+              aria-label="删除"
               @click="handleDeleteSkill(skill)"
-            >
-              删除
-            </el-button>
+            />
           </div>
         </div>
-        <div class="skill-meta">
-          <span>创建时间：{{ skill.create_time || '--' }}</span>
-          <span>更新时间：{{ skill.update_time || skill.create_time || '--' }}</span>
-        </div>
       </article>
-      <el-empty v-if="!visibleSkills.length && !loading" description="暂无 Skill" />
+      <div v-if="!visibleSkills.length && !loading" class="empty-state settings-empty-hint">
+        <img :src="emptyDataIcon" alt="空数据" class="empty-state-icon" />
+        {{ keyword ? '没有匹配到 Skill，换个关键词试试看吧 (´･_･`)' : 'Skill 小书架还空着，点右上角 + 收纳第一招吧 (๑˃̵ᴗ˂̵)و' }}
+      </div>
+      <ZunoMiniPager v-model:page="listPage" class="settings-list-pager" :total="visibleSkills.length" :page-size="LIST_PAGE_SIZE" />
     </section>
 
-    <el-dialog v-model="createDialogVisible" title="新建 Skill" width="560px">
-      <el-form label-position="top">
-        <el-form-item label="Skill 名称">
-          <el-input v-model="createForm.name" placeholder="例如：发布检查助手" />
-        </el-form-item>
-        <el-form-item label="Skill 描述">
-          <el-input
-            v-model="createForm.description"
-            type="textarea"
-            :rows="4"
-            placeholder="说明这个 Skill 适合什么场景、能解决什么问题。"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="createDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="createLoading" @click="handleCreateSkill">创建</el-button>
-      </template>
-    </el-dialog>
+    <Transition name="settings-panel">
+      <section v-if="createDialogVisible" class="inline-panel create-panel">
+        <div class="inline-panel-head">
+          <div>
+            <h2>新建 Skill</h2>
+          </div>
+          <div class="panel-actions">
+            <el-button class="skill-icon-button" type="primary" :icon="Check" circle :loading="createLoading" title="创建" aria-label="创建" @click="handleCreateSkill" />
+          </div>
+        </div>
+        <el-form label-position="top" class="compact-form">
+          <el-form-item label="Skill 名称">
+            <el-input v-model="createForm.name" placeholder="例如：发布检查助手" />
+          </el-form-item>
+          <el-form-item label="Skill 描述">
+            <el-input
+              v-model="createForm.description"
+              type="textarea"
+              :autosize="{ minRows: 1, maxRows: 4 }"
+              resize="none"
+              placeholder="一句话说明它适合什么场景。"
+            />
+          </el-form-item>
+        </el-form>
+      </section>
+    </Transition>
 
-    <el-dialog
-      v-model="detailDialogVisible"
-      width="1120px"
-      :title="currentSkill ? `${currentSkill.name} / 文件管理` : '文件管理'"
-    >
+    <Transition name="settings-panel">
+      <section
+        v-if="detailDialogVisible"
+        class="inline-panel detail-panel"
+        :class="{ readonly: currentSkillReadonly }"
+      >
+        <div class="inline-panel-head">
+          <div>
+            <h2>{{ currentSkill?.name || '文件管理' }}</h2>
+          </div>
+          <div class="panel-actions">
+            <el-button
+              class="skill-icon-button ghost"
+              :icon="DocumentAdd"
+              circle
+              :disabled="currentSkillReadonly"
+              :title="addFileDialogVisible ? '收起新增文件' : '新增文件'"
+              :aria-label="addFileDialogVisible ? '收起新增文件' : '新增文件'"
+              @click="openAddFileDialog"
+            />
+            <el-button
+              class="skill-icon-button"
+              type="primary"
+              :icon="Check"
+              circle
+              :loading="savingFile"
+              :disabled="currentSkillReadonly || !selectedFile"
+              title="保存文件"
+              aria-label="保存文件"
+              @click="handleSaveFile"
+            />
+          </div>
+        </div>
+
+        <Transition name="settings-panel">
+          <div v-if="addFileDialogVisible" class="add-file-strip">
+            <el-input v-model="addFileForm.path" placeholder="目录，例如：my-skill/reference" />
+            <el-input v-model="addFileForm.name" placeholder="文件名，例如：README.md" />
+            <el-button class="skill-icon-button" type="primary" :icon="Check" circle :loading="addFileLoading" title="创建文件" aria-label="创建文件" @click="handleAddFile" />
+          </div>
+        </Transition>
+
       <div class="detail-layout">
         <aside class="file-sidebar">
           <div class="file-sidebar-head">
             <strong>文件列表</strong>
-            <el-button
-              size="small"
-              :icon="DocumentAdd"
-              :disabled="currentSkillReadonly"
-              @click="openAddFileDialog"
-            >
-              新增文件
-            </el-button>
           </div>
 
           <div v-if="selectedFiles.length" class="file-list">
@@ -436,14 +533,6 @@ onMounted(fetchSkills)
         <section class="editor-pane">
           <div class="editor-head">
             <strong>{{ selectedFile?.path || '未选择文件' }}</strong>
-            <el-button
-              type="primary"
-              :loading="savingFile"
-              :disabled="currentSkillReadonly || !selectedFile"
-              @click="handleSaveFile"
-            >
-              保存文件
-            </el-button>
           </div>
           <el-alert
             v-if="currentSkillReadonly"
@@ -462,27 +551,18 @@ onMounted(fetchSkills)
           />
         </section>
       </div>
-    </el-dialog>
-
-    <el-dialog v-model="addFileDialogVisible" title="新增文件" width="560px">
-      <el-form label-position="top">
-        <el-form-item label="目录">
-          <el-input v-model="addFileForm.path" placeholder="例如：my-skill/reference" />
-        </el-form-item>
-        <el-form-item label="文件名">
-          <el-input v-model="addFileForm.name" placeholder="例如：README.md" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="addFileDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="addFileLoading" @click="handleAddFile">创建</el-button>
-      </template>
-    </el-dialog>
+      </section>
+    </Transition>
   </div>
 </template>
 
 <style scoped lang="scss">
 .skill-page { display: grid; gap: 20px; padding: 24px; }
+.hero-card { order: 0; }
+.toolbar-card { order: 1; }
+.create-panel { order: 2; }
+.skill-grid { order: 3; }
+.detail-panel { order: 4; }
 .hero-card, .toolbar-card, .skill-card {
   border-radius: 24px;
   border: 1px solid rgba(214, 132, 70, 0.12);
@@ -491,42 +571,246 @@ onMounted(fetchSkills)
 }
 .hero-card, .toolbar-card { padding: 24px 26px; }
 .eyebrow { font-size: 12px; letter-spacing: 0.16em; color: #be6d38; }
-.hero-card h1 { margin: 12px 0 10px; font-size: 32px; color: #2f241b; }
+.settings-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.page-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+.hero-card h1 { margin: 0; font-size: 32px; color: #2f241b; }
 .hero-card p { margin: 0; color: #786656; line-height: 1.8; }
 .hero-actions { margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap; }
-.skill-grid { display: grid; gap: 16px; }
-.skill-card { padding: 20px 22px; }
-.skill-card-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
-.skill-title-wrap { display: flex; gap: 14px; }
-.skill-heading { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.skill-icon-wrap {
-  width: 56px; height: 56px; border-radius: 18px; overflow: hidden; background: #f8efe4;
-  border: 1px solid rgba(214, 132, 70, 0.14);
+.skill-grid { display: grid; gap: 0; }
+.inline-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 2px;
+  padding: 18px 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(22px);
 }
-.skill-icon-wrap img { width: 100%; height: 100%; object-fit: cover; }
-.skill-title-wrap h3 { margin: 0; color: #32261d; }
-.skill-title-wrap p, .skill-meta { color: #7b6859; }
-.skill-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.skill-meta { margin-top: 14px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; }
-.detail-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 18px; }
+.inline-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.inline-panel-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+  line-height: 1.25;
+}
+.inline-panel-head p {
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.panel-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  flex-wrap: nowrap;
+}
+.panel-actions :deep(.el-button + .el-button) { margin-left: 0; }
+.compact-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.compact-form :deep(.el-form-item) { margin-bottom: 0; }
+.compact-form :deep(.el-form-item__label) {
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 12px;
+}
+.add-file-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 240px) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+.skill-card {
+  padding: 12px 4px;
+  border: 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.skill-card:last-of-type { border-bottom: 0; }
+.skill-card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+.skill-title-wrap {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+}
+.skill-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.skill-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.skill-icon-wrap {
+  width: 27px;
+  height: 27px;
+  min-width: 27px;
+  min-height: 27px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.skill-icon-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.skill-title-wrap h3 {
+  flex: 0 1 auto;
+  max-width: min(34vw, 240px);
+  margin: 0;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 680;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.skill-title-wrap p {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.skill-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.skill-actions :deep(.el-button + .el-button) { margin-left: 0; }
+.skill-icon-button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+}
+.skill-icon-button.ghost {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  color: #64748b;
+}
+.settings-icon-button.is-create-open :deep(.el-icon) {
+  transform: rotate(45deg);
+}
+.settings-icon-button :deep(.el-icon) {
+  transition: transform 0.22s ease;
+}
+.skill-icon-button.danger {
+  border-color: rgba(239, 68, 68, 0.16);
+  background: rgba(239, 68, 68, 0.07);
+  color: #b91c1c;
+}
+.skill-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  color: #7b6859;
+  font-size: 11px;
+}
+.skill-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.06);
+  color: #8a6a45;
+  font-size: 10.5px;
+  line-height: 18px;
+}
+.detail-layout { display: grid; grid-template-columns: minmax(180px, 280px) minmax(0, 1fr); gap: 14px; }
 .file-sidebar, .editor-pane {
-  border-radius: 18px; border: 1px solid rgba(214, 132, 70, 0.12); background: #fffaf4; padding: 16px;
+  border-radius: 18px; border: 1px solid rgba(148, 163, 184, 0.16); background: rgba(255, 255, 255, 0.58); padding: 14px;
 }
 .file-sidebar-head, .editor-head {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;
 }
-.file-list { display: grid; gap: 8px; }
+.file-list { display: grid; gap: 6px; }
 .file-item {
   display: flex; justify-content: space-between; gap: 12px; width: 100%;
-  border: 1px solid rgba(214, 132, 70, 0.1); background: #fff; border-radius: 14px;
-  padding: 12px 14px; cursor: pointer; color: #4a392c;
+  border: 0; border-bottom: 1px solid rgba(148, 163, 184, 0.12); background: transparent; border-radius: 0;
+  padding: 9px 4px; cursor: pointer; color: #475569;
+  text-align: left;
 }
-.file-item.active { border-color: rgba(198, 112, 52, 0.36); background: #fff5ea; }
+.file-item.active { color: #b45309; background: rgba(245, 158, 11, 0.06); border-radius: 12px; padding-inline: 10px; }
 .file-delete { color: #c56f36; }
 .readonly-alert { margin-bottom: 12px; }
+.editor-pane :deep(.el-textarea__inner) {
+  min-height: 420px !important;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+.settings-panel-enter-active,
+.settings-panel-leave-active {
+  transition: opacity 0.2s ease, transform 0.22s ease, max-height 0.24s ease;
+  overflow: hidden;
+}
+.settings-panel-enter-from,
+.settings-panel-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0;
+}
+.settings-panel-enter-to,
+.settings-panel-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 720px;
+}
 
 @media (max-width: 960px) {
   .detail-layout { grid-template-columns: 1fr; }
   .skill-card-head { flex-direction: column; }
+  .compact-form,
+  .add-file-strip {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

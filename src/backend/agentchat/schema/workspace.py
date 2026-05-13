@@ -14,6 +14,8 @@ class WorkSpaceSimpleTask(BaseModel):
     model_id: str
     session_id: str
     workspace_mode: str = "normal"
+    agent_name: str | None = None
+    agent_id: str | None = None
     web_search: bool = True
     plugins: List[str] = []
     mcp_servers: List[str] = []

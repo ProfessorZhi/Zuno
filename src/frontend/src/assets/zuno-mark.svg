@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Zuno logo">
   <defs>
-    <linearGradient id="zunoMarkBg" x1="20" y1="16" x2="76" y2="80" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#d58a50" />
-      <stop offset="1" stop-color="#b9632e" />
+    <linearGradient id="zunoMarkBg" x1="18" y1="14" x2="78" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fbbf24" />
+      <stop offset="1" stop-color="#f59e0b" />
     </linearGradient>
   </defs>
-  <rect x="16" y="16" width="64" height="64" rx="18" fill="url(#zunoMarkBg)" />
-  <rect x="34" y="35" width="28" height="24" rx="8" fill="#fff8ef" />
-  <circle cx="44" cy="47" r="3" fill="#c87339" />
-  <circle cx="54" cy="47" r="3" fill="#c87339" />
-  <circle cx="62" cy="31" r="3.2" fill="#fff8ef" />
-  <path d="M66 24l2 4.4 4.4 2-4.4 2-2 4.4-2-4.4-4.4-2 4.4-2 2-4.4z" fill="#fff8ef" opacity=".94" />
+  <rect x="12" y="12" width="72" height="72" rx="20" fill="url(#zunoMarkBg)" />
+  <rect x="31" y="35" width="34" height="28" rx="10" fill="#fff7ed" />
+  <circle cx="42" cy="49" r="3.6" fill="#f59e0b" />
+  <circle cx="54" cy="49" r="3.6" fill="#f59e0b" />
+  <circle cx="62" cy="30" r="3.8" fill="#fff7ed" />
+  <path d="M68 22.5l2.6 5.8 5.8 2.6-5.8 2.6-2.6 5.8-2.6-5.8-5.8-2.6 5.8-2.6 2.6-5.8z" fill="#fff7ed" />
 </svg>

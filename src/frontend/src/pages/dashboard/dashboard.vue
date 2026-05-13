@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Refresh } from '@element-plus/icons-vue'
+import callsIcon from '../../assets/dashboard/调用次数.svg'
+import inputTokenIcon from '../../assets/dashboard/输入token.svg'
+import outputTokenIcon from '../../assets/dashboard/输出token.svg'
+import totalTokenIcon from '../../assets/dashboard/总token.svg'
+import detailIcon from '../../assets/dashboard/明细.svg'
+import trendIcon from '../../assets/dashboard/趋势.svg'
+import modelRankIcon from '../../assets/dashboard/模型排行.svg'
+import agentRankIcon from '../../assets/dashboard/智能体排行.svg'
+import filterIcon from '../../assets/dashboard/筛选.svg'
+import emptyIcon from '../../assets/dashboard/空数据.svg'
 import {
   getUsageStatsAPI,
   getUsageCountAPI,
@@ -11,10 +20,12 @@ import {
   type UsageDataByDate,
   type UsageCountByDate,
 } from '../../apis/usage-stats'
+import { getAgentsAPI } from '../../apis/agent'
 
 const loading = ref(false)
 const models = ref<string[]>([])
 const agents = ref<string[]>([])
+const createdAgentNames = ref<string[]>([])
 const tokenUsage = ref<UsageDataByDate>({})
 const usageCount = ref<UsageCountByDate>({})
 
@@ -55,6 +66,24 @@ const totalOutputTokens = computed(() =>
 )
 
 const totalTokens = computed(() => totalInputTokens.value + totalOutputTokens.value)
+const internalAgentNames = new Set(['simple-agent', 'wechat-agent', 'normal', 'simple', 'agent', '其他', '未指定agent'])
+const normalizeAgentName = (name: string) => name.trim().toLowerCase()
+const isRealDashboardAgent = (name: string) => {
+  const normalized = normalizeAgentName(name)
+  if (!normalized || internalAgentNames.has(normalized)) return false
+  const createdNames = new Set(createdAgentNames.value.map(normalizeAgentName))
+  return createdNames.size === 0 || createdNames.has(normalized)
+}
+const visibleAgents = computed(() => {
+  const names = new Set<string>()
+  createdAgentNames.value.forEach((name) => {
+    if (isRealDashboardAgent(name)) names.add(name)
+  })
+  agents.value.forEach((name) => {
+    if (isRealDashboardAgent(name)) names.add(name)
+  })
+  return [...names]
+})
 
 const usageRows = computed(() =>
   recentDates.value.map((date) => {
@@ -84,6 +113,7 @@ const topAgents = computed(() => {
   const map = new Map<string, number>()
   Object.values(usageCount.value || {}).forEach((day) => {
     Object.entries(day.agent || {}).forEach(([name, count]) => {
+      if (!isRealDashboardAgent(name)) return
       map.set(name, (map.get(name) || 0) + count)
     })
   })
@@ -105,11 +135,34 @@ const periodText = computed(() => {
 
 const formatNumber = (value: number) => new Intl.NumberFormat('zh-CN').format(value || 0)
 
+const maxDailyTotal = computed(() => Math.max(...usageRows.value.map((item) => item.total), 1))
+const maxDailyCalls = computed(() => Math.max(...usageRows.value.map((item) => item.calls), 1))
+const maxModelTotal = computed(() => Math.max(...topModels.value.map((item) => item.total), 1))
+const maxAgentTotal = computed(() => Math.max(...topAgents.value.map((item) => item.total), 1))
+
+const getPercent = (value: number, max: number) => `${Math.max(4, Math.round(((value || 0) / max) * 100))}%`
+
+const kpiCards = computed(() => [
+  { label: '调用次数', value: totalCalls.value, icon: callsIcon },
+  { label: '输入 Token', value: totalInputTokens.value, icon: inputTokenIcon },
+  { label: '输出 Token', value: totalOutputTokens.value, icon: outputTokenIcon },
+  { label: '总 Token', value: totalTokens.value, icon: totalTokenIcon },
+])
+
 const loadMeta = async () => {
   try {
-    const [modelResponse, agentResponse] = await Promise.all([getUsageModelsAPI(), getUsageAgentsAPI()])
+    const [modelResponse, agentResponse, createdAgentResponse] = await Promise.all([
+      getUsageModelsAPI(),
+      getUsageAgentsAPI(),
+      getAgentsAPI(),
+    ])
     if (modelResponse.data.status_code === 200) models.value = modelResponse.data.data || []
-    if (agentResponse.data.status_code === 200) agents.value = agentResponse.data.data || []
+    if (createdAgentResponse.data.status_code === 200) {
+      createdAgentNames.value = (createdAgentResponse.data.data || [])
+        .map((item: any) => String(item?.name || '').trim())
+        .filter(Boolean)
+    }
+    if (agentResponse.data.status_code === 200) agents.value = (agentResponse.data.data || []).filter(isRealDashboardAgent)
   } catch (error) {
     console.error('加载统计筛选项失败:', error)
   }
@@ -157,10 +210,10 @@ onMounted(refreshAll)
     <section class="page-header">
       <div>
         <h1>数据看板</h1>
-        <p>把模型调用量、Token 消耗和活跃智能体收拢到一页，方便你快速判断哪里在吃资源。</p>
       </div>
 
       <div class="filter-bar">
+        <img :src="filterIcon" alt="" class="filter-icon" />
         <el-select v-model="filters.model" clearable placeholder="全部模型" class="filter-item" @change="loadDashboard">
           <el-option label="全部模型" value="" />
           <el-option v-for="item in models" :key="item" :label="item" :value="item" />
@@ -168,7 +221,7 @@ onMounted(refreshAll)
 
         <el-select v-model="filters.agent" clearable placeholder="全部智能体" class="filter-item" @change="loadDashboard">
           <el-option label="全部智能体" value="" />
-          <el-option v-for="item in agents" :key="item" :label="item" :value="item" />
+          <el-option v-for="item in visibleAgents" :key="item" :label="item" :value="item" />
         </el-select>
 
         <el-select v-model="filters.delta_days" class="filter-item" @change="loadDashboard">
@@ -177,84 +230,128 @@ onMounted(refreshAll)
           <el-option label="最近 365 天" :value="365" />
           <el-option label="全部时间" :value="10000" />
         </el-select>
-
-        <el-button :icon="Refresh" @click="refreshAll">刷新</el-button>
       </div>
     </section>
 
     <section class="kpi-grid" v-loading="loading">
-      <article class="kpi-card">
-        <span class="kpi-label">调用次数</span>
-        <strong>{{ formatNumber(totalCalls) }}</strong>
-        <small>{{ periodText }}</small>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-label">输入 Token</span>
-        <strong>{{ formatNumber(totalInputTokens) }}</strong>
-        <small>{{ periodText }}</small>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-label">输出 Token</span>
-        <strong>{{ formatNumber(totalOutputTokens) }}</strong>
-        <small>{{ periodText }}</small>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-label">总 Token</span>
-        <strong>{{ formatNumber(totalTokens) }}</strong>
+      <article v-for="item in kpiCards" :key="item.label" class="kpi-card">
+        <img :src="item.icon" alt="" class="kpi-icon" />
+        <span class="kpi-label">{{ item.label }}</span>
+        <strong>{{ formatNumber(item.value) }}</strong>
         <small>{{ periodText }}</small>
       </article>
     </section>
 
     <section class="content-grid">
-      <article class="panel-card">
+      <article class="panel-card trend-panel">
         <div class="panel-head">
-          <h2>最近明细</h2>
-          <span>按日期汇总</span>
+          <div class="panel-title">
+            <img :src="trendIcon" alt="" class="panel-icon" />
+            <h2>趋势</h2>
+          </div>
+          <span>{{ periodText }}</span>
         </div>
-
-        <el-table :data="usageRows" empty-text="暂无统计数据">
-          <el-table-column prop="date" label="日期" min-width="140" />
-          <el-table-column prop="calls" label="调用次数" min-width="120">
-            <template #default="{ row }">{{ formatNumber(row.calls) }}</template>
-          </el-table-column>
-          <el-table-column prop="input" label="输入 Token" min-width="130">
-            <template #default="{ row }">{{ formatNumber(row.input) }}</template>
-          </el-table-column>
-          <el-table-column prop="output" label="输出 Token" min-width="130">
-            <template #default="{ row }">{{ formatNumber(row.output) }}</template>
-          </el-table-column>
-          <el-table-column prop="total" label="总 Token" min-width="130">
-            <template #default="{ row }">{{ formatNumber(row.total) }}</template>
-          </el-table-column>
-        </el-table>
+        <div v-if="usageRows.length" class="trend-list">
+          <div v-for="row in usageRows.slice().reverse()" :key="row.date" class="trend-row">
+            <span>{{ row.date.slice(5) }}</span>
+            <div class="trend-track">
+              <i :style="{ width: getPercent(row.total, maxDailyTotal) }" />
+            </div>
+            <strong>{{ formatNumber(row.total) }}</strong>
+          </div>
+        </div>
+        <div v-else class="empty-panel">
+          <img :src="emptyIcon" alt="" />
+          <span>暂无趋势数据</span>
+        </div>
       </article>
 
-      <article class="panel-card">
+      <article class="panel-card detail-panel">
         <div class="panel-head">
-          <h2>模型排行</h2>
+          <div class="panel-title">
+            <img :src="detailIcon" alt="" class="panel-icon" />
+            <h2>最近明细</h2>
+          </div>
+          <span>按日期汇总</span>
+        </div>
+        <div v-if="usageRows.length" class="detail-list">
+          <div v-for="row in usageRows" :key="row.date" class="detail-row">
+            <div class="date-cell">
+              <strong>{{ row.date.slice(5) }}</strong>
+              <span>{{ row.date.slice(0, 4) }}</span>
+            </div>
+            <div class="metric-cell">
+              <span>调用</span>
+              <strong>{{ formatNumber(row.calls) }}</strong>
+              <i :style="{ width: getPercent(row.calls, maxDailyCalls) }" />
+            </div>
+            <div class="metric-cell">
+              <span>输入</span>
+              <strong>{{ formatNumber(row.input) }}</strong>
+            </div>
+            <div class="metric-cell">
+              <span>输出</span>
+              <strong>{{ formatNumber(row.output) }}</strong>
+            </div>
+            <div class="metric-cell total">
+              <span>总量</span>
+              <strong>{{ formatNumber(row.total) }}</strong>
+              <i :style="{ width: getPercent(row.total, maxDailyTotal) }" />
+            </div>
+          </div>
+        </div>
+        <div v-else class="empty-panel">
+          <img :src="emptyIcon" alt="" />
+          <span>暂无明细数据</span>
+        </div>
+      </article>
+
+      <article class="panel-card model-rank-panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <img :src="modelRankIcon" alt="" class="panel-icon" />
+            <h2>模型排行</h2>
+          </div>
           <span>按总 Token</span>
         </div>
         <div v-if="topModels.length" class="rank-list">
-          <div v-for="item in topModels" :key="item.name" class="rank-item">
-            <span class="rank-name">{{ item.name }}</span>
-            <strong>{{ formatNumber(item.total) }}</strong>
+          <div v-for="(item, index) in topModels" :key="item.name" class="rank-item">
+            <div class="rank-line">
+              <span class="rank-index">{{ index + 1 }}</span>
+              <span class="rank-name">{{ item.name }}</span>
+              <strong>{{ formatNumber(item.total) }}</strong>
+            </div>
+            <i :style="{ width: getPercent(item.total, maxModelTotal) }" />
           </div>
         </div>
-        <el-empty v-else description="暂无模型数据" />
+        <div v-else class="empty-panel">
+          <img :src="emptyIcon" alt="" />
+          <span>暂无模型数据</span>
+        </div>
       </article>
 
-      <article class="panel-card">
+      <article class="panel-card agent-rank-panel">
         <div class="panel-head">
-          <h2>智能体排行</h2>
+          <div class="panel-title">
+            <img :src="agentRankIcon" alt="" class="panel-icon" />
+            <h2>智能体排行</h2>
+          </div>
           <span>按调用次数</span>
         </div>
         <div v-if="topAgents.length" class="rank-list">
-          <div v-for="item in topAgents" :key="item.name" class="rank-item">
-            <span class="rank-name">{{ item.name }}</span>
-            <strong>{{ formatNumber(item.total) }}</strong>
+          <div v-for="(item, index) in topAgents" :key="item.name" class="rank-item">
+            <div class="rank-line">
+              <span class="rank-index">{{ index + 1 }}</span>
+              <span class="rank-name">{{ item.name }}</span>
+              <strong>{{ formatNumber(item.total) }}</strong>
+            </div>
+            <i :style="{ width: getPercent(item.total, maxAgentTotal) }" />
           </div>
         </div>
-        <el-empty v-else description="暂无智能体数据" />
+        <div v-else class="empty-panel">
+          <img :src="emptyIcon" alt="" />
+          <span>暂无智能体数据</span>
+        </div>
       </article>
     </section>
   </div>
@@ -264,99 +361,321 @@ onMounted(refreshAll)
 .dashboard-page {
   min-height: 100%;
   display: grid;
-  gap: 20px;
+  gap: 14px;
   padding: 24px;
-  background: linear-gradient(180deg, #f7f2ea 0%, #fbf8f3 100%);
+  background: transparent;
 }
 
 .page-header,
 .panel-card,
 .kpi-card {
-  border-radius: 24px;
-  border: 1px solid rgba(214, 132, 70, 0.12);
-  background: rgba(255, 252, 248, 0.94);
-  box-shadow: 0 18px 36px rgba(120, 80, 42, 0.08);
+  border-radius: 18px;
+  border: 1px solid rgba(226, 232, 240, 0.78);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 16px 42px -34px rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(16px);
 }
 
 .page-header {
-  padding: 24px 26px;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
+  padding: 0 0 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .page-header h1,
 .panel-head h2 {
   margin: 0;
-  color: #2f241b;
+  color: #0f172a;
 }
 
 .page-header p,
 .panel-head span {
-  margin: 8px 0 0;
-  color: #786657;
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
 }
 
 .filter-bar {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 22px repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: center;
+  padding-top: 2px;
 }
 
-.filter-item { width: 180px; }
+.filter-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.filter-item { width: 100%; }
 
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 8px;
 }
 
 .kpi-card {
-  padding: 22px;
+  position: relative;
+  min-height: 86px;
+  padding: 12px 12px 10px 46px;
   display: grid;
-  gap: 10px;
+  gap: 4px;
+  align-content: center;
+  overflow: hidden;
 }
 
-.kpi-label { color: #8a7869; font-size: 14px; }
-.kpi-card strong { font-size: 32px; line-height: 1; color: #34261d; }
-.kpi-card small { color: #a08f81; }
+.kpi-icon {
+  position: absolute;
+  left: 13px;
+  top: 14px;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.kpi-label { color: #64748b; font-size: 11px; }
+.kpi-card strong { font-size: 21px; line-height: 1; color: #0f172a; letter-spacing: 0; }
+.kpi-card small { color: #94a3b8; font-size: 10px; }
 
 .content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr) minmax(320px, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.45fr);
+  grid-template-areas:
+    "trend detail"
+    "model detail"
+    "agent detail";
+  grid-auto-rows: minmax(116px, auto);
+  gap: 10px;
+  align-items: stretch;
 }
 
-.panel-card { padding: 20px; }
-.panel-head { margin-bottom: 16px; }
+.panel-card { padding: 12px; }
 
-.rank-list { display: grid; gap: 12px; }
+.trend-panel {
+  grid-area: trend;
+}
 
-.rank-item {
+.detail-panel {
+  grid-area: detail;
+  min-height: 100%;
+}
+
+.model-rank-panel {
+  grid-area: model;
+}
+
+.agent-rank-panel {
+  grid-area: agent;
+}
+
+.panel-head {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #fffdf9 0%, #fff8f0 100%);
-  border: 1px solid rgba(214, 132, 70, 0.1);
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-.rank-name { color: #4a392d; word-break: break-all; }
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.panel-icon {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+}
+
+.panel-head h2 {
+  font-size: 15px;
+  font-weight: 680;
+}
+
+.trend-list,
+.detail-list,
+.rank-list {
+  display: grid;
+  gap: 6px;
+}
+
+.trend-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 72px;
+  gap: 8px;
+  align-items: center;
+  min-height: 24px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.trend-row strong {
+  justify-self: end;
+  color: #334155;
+  font-size: 11px;
+}
+
+.trend-track,
+.metric-cell i,
+.rank-item i {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.trend-track i,
+.metric-cell i,
+.rank-item i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.86), rgba(217, 119, 6, 0.48));
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 64px repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.detail-row:last-child {
+  border-bottom: 0;
+}
+
+.date-cell,
+.metric-cell {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.date-cell strong,
+.metric-cell strong {
+  color: #0f172a;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.date-cell span,
+.metric-cell span {
+  color: #94a3b8;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.metric-cell i {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.rank-item {
+  display: grid;
+  gap: 5px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.rank-item:last-child {
+  border-bottom: 0;
+}
+
+.rank-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rank-index {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.08);
+  color: #b45309;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.rank-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #334155;
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-line strong {
+  flex: 0 0 auto;
+  color: #0f172a;
+  font-size: 11.5px;
+}
+
+.empty-panel {
+  min-height: 82px;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.empty-panel img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  opacity: 0.72;
+}
 
 @media (max-width: 1280px) {
-  .content-grid { grid-template-columns: 1fr; }
+  .content-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "trend"
+      "detail"
+      "model"
+      "agent";
+    grid-auto-rows: auto;
+  }
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
   .dashboard-page { padding: 16px; }
-  .page-header { flex-direction: column; }
-  .filter-bar { width: 100%; justify-content: stretch; }
+  .page-header { grid-template-columns: 1fr; }
+  .filter-bar { grid-template-columns: 1fr; }
+  .filter-icon { display: none; }
   .filter-item { width: 100%; }
   .kpi-grid { grid-template-columns: 1fr; }
+  .detail-row { grid-template-columns: 1fr 1fr; }
 }
 </style>

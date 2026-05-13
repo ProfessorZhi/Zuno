@@ -20,7 +20,7 @@ import { useUserStore } from '../store/user'
 import { logoutAPI, getUserInfoAPI } from '../apis/auth'
 import { useResizablePanel } from '../composables/useResizablePanel'
 import { zunoBrandMark } from '../utils/brand'
-import defaultUserAvatar from '../assets/user.svg'
+import { DEFAULT_USER_AVATAR, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../utils/user-avatars'
 
 const agentCardStore = useAgentCardStore()
 const userStore = useUserStore()
@@ -54,6 +54,12 @@ const navMenuItems = [
   { index: 'dashboard', label: '数据看板', icon: DataAnalysis, target: 'dashboard' },
 ]
 
+const normalizeAvatarUrl = (avatar?: string) => {
+  const raw = String(avatar || '').trim()
+  if (!raw || raw.startsWith('/src/assets/') || isLegacyRemoteUserAvatar(raw)) return DEFAULT_USER_AVATAR
+  return withUserAvatarVersion(raw)
+}
+
 onMounted(async () => {
   userStore.initUserState()
 
@@ -63,7 +69,7 @@ onMounted(async () => {
       if (response.data.status_code === 200 && response.data.data) {
         const userData = response.data.data
         userStore.updateUserInfo({
-          avatar: userData.user_avatar || userData.avatar || defaultUserAvatar,
+          avatar: normalizeAvatarUrl(userData.user_avatar || userData.avatar),
           description: userData.user_description || userData.description,
         })
       }
@@ -120,7 +126,7 @@ const handleLogout = async () => {
 const handleAvatarError = (event: Event) => {
   const target = event.target as HTMLImageElement
   if (target) {
-    target.src = defaultUserAvatar
+    target.src = DEFAULT_USER_AVATAR
   }
 }
 
@@ -147,7 +153,7 @@ watch(
             <div class="user-avatar-wrapper">
               <div class="user-avatar">
                 <img
-                  :src="userStore.userInfo?.avatar || defaultUserAvatar"
+                  :src="normalizeAvatarUrl(userStore.userInfo?.avatar)"
                   alt="用户头像"
                   style="width: 40px; height: 40px; border-radius: 50%"
                   @error="handleAvatarError"
@@ -510,7 +516,7 @@ watch(
 :deep(.el-menu-vertical-demo) {
   border-right: none;
   background: transparent;
-  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--zuno-font-sans);
 
   .el-menu-item {
     border-radius: 22px;
@@ -591,7 +597,7 @@ watch(
       position: relative;
       z-index: 1;
       transition: all 0.4s ease;
-      font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+      font-family: var(--zuno-font-sans);
     }
   }
 }

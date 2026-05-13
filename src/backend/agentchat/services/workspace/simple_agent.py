@@ -135,6 +135,7 @@ class WorkSpaceSimpleAgent:
         desktop_bridge_url: str | None = None,
         desktop_bridge_token: str | None = None,
         original_query: str | None = None,
+        usage_agent_name: str | None = None,
     ):
         self.model_name = model_config.get("model", "")
         self.base_url = model_config.get("base_url", "")
@@ -164,6 +165,7 @@ class WorkSpaceSimpleAgent:
         self.access_scope = normalize_access_scope(access_scope).value
         self.user_id = user_id
         self.original_query = original_query
+        self.usage_agent_name = (usage_agent_name or UsageStatsAgentType.simple_agent.value).strip()
         self.desktop_bridge_config = (
             DesktopBridgeConfig(url=desktop_bridge_url, token=desktop_bridge_token)
             if desktop_bridge_url and desktop_bridge_token
@@ -188,7 +190,7 @@ class WorkSpaceSimpleAgent:
             session_id=self.session_id,
             retrieval_mode=self.retrieval_mode,
             knowledge_ids=self.knowledge_ids,
-            agent_name=UsageStatsAgentType.simple_agent.value,
+            agent_name=self.usage_agent_name,
             execution_mode=self.execution_mode,
             access_scope=self.access_scope,
             route_kind=self.route_hint.kind,
@@ -2818,7 +2820,7 @@ class WorkSpaceSimpleAgent:
             await UsageStatsService.create_usage_stats(
                 model=model,
                 user_id=self.user_id,
-                agent=UsageStatsAgentType.simple_agent,
+                agent=self.usage_agent_name,
                 input_tokens=response.usage_metadata.get("input_tokens"),
                 output_tokens=response.usage_metadata.get("output_tokens"),
             )

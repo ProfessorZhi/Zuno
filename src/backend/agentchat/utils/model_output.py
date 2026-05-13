@@ -28,6 +28,40 @@ def is_minimax_model(model: Any = None, model_name: str = "", base_url: str = ""
     return "minimax" in model_name.lower() or "minimax" in base_url.lower()
 
 
+def normalize_model_id_for_provider(
+    model_name: str | None,
+    provider: str | None = "",
+    base_url: str | None = "",
+) -> str:
+    """Normalize known display-style model names into provider API ids."""
+    raw_model = str(model_name or "").strip()
+    if not raw_model:
+        return raw_model
+
+    provider_key = str(provider or "").lower()
+    base_key = str(base_url or "").lower()
+    is_official_xiaomi_endpoint = "xiaomimimo.com" in base_key or "token-plan" in base_key
+    looks_like_mimo_model = raw_model.lower().replace("_", "-").startswith(("mimo-", "xiaomi/mimo-", "xiaomimimo/mimo-"))
+    if not (is_official_xiaomi_endpoint or ("mimo" in provider_key and looks_like_mimo_model)):
+        return raw_model
+
+    if "/" in raw_model and not is_official_xiaomi_endpoint:
+        return raw_model
+
+    normalized = raw_model.replace("_", "-").strip()
+    lower_model = normalized.lower()
+    for prefix in ("xiaomi/", "xiaomimimo/"):
+        if lower_model.startswith(prefix):
+            normalized = normalized[len(prefix):]
+            lower_model = normalized.lower()
+            break
+
+    if lower_model.startswith("mimo-"):
+        return lower_model
+
+    return raw_model
+
+
 def normalize_messages_for_model(
     messages: List[BaseMessage],
     model: Any = None,

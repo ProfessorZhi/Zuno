@@ -35,11 +35,14 @@ request.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('userInfo')
+      window.dispatchEvent(new CustomEvent('zuno-auth-invalid'))
 
       if (isDesktopRuntime()) {
-        window.location.hash = '#/login'
-      } else {
-        window.location.href = '/login'
+        if (!window.location.hash.includes('/workspace') || !window.location.hash.includes('auth=login')) {
+          window.location.hash = '#/workspace?auth=login'
+        }
+      } else if (!window.location.pathname.startsWith('/workspace') || !window.location.search.includes('auth=login')) {
+        window.location.replace('/workspace?auth=login')
       }
     }
 

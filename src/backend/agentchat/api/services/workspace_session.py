@@ -14,11 +14,22 @@ PLACEHOLDER_SESSION_TITLES = {"", "新对话", "未命名会话", "你好", "您
 class WorkSpaceSessionService:
     @staticmethod
     def is_placeholder_title(title: str | None) -> bool:
-        return str(title or "").strip().lower() in PLACEHOLDER_SESSION_TITLES
+        normalized = str(title or "").strip().lower()
+        compact = re.sub(r"\s+", "", normalized)
+        return (
+            normalized in PLACEHOLDER_SESSION_TITLES
+            or bool(re.fullmatch(r".+的新(对话|会话)", compact))
+        )
 
     @staticmethod
     def normalize_workspace_mode(raw_mode: str | None) -> str:
-        return "agent" if str(raw_mode or "").strip().lower() == "agent" else "normal"
+        normalized = str(raw_mode or "").strip().lower()
+        return "normal" if normalized in {"", "normal", "simple"} else "agent"
+
+    @staticmethod
+    def is_real_agent_name(raw_agent: str | None) -> bool:
+        normalized = str(raw_agent or "").strip().lower()
+        return bool(normalized and normalized not in {"normal", "simple", "agent"})
 
     @classmethod
     def serialize_session(cls, session: WorkSpaceSession | dict | None) -> dict | None:
@@ -106,7 +117,8 @@ class WorkSpaceSessionService:
         payload = session_create.model_dump()
         workspace_mode = cls.normalize_workspace_mode(payload.pop("workspace_mode", "normal"))
         payload["contexts"] = cls.sanitize_contexts(payload.get("contexts", []))
-        payload["agent"] = workspace_mode
+        agent_name = str(payload.get("agent") or "").strip()
+        payload["agent"] = agent_name if workspace_mode == "agent" and cls.is_real_agent_name(agent_name) else workspace_mode
         await cls.prune_empty_workspace_sessions(payload["user_id"], workspace_mode)
         workspace_session = WorkSpaceSession(**payload)
         return await WorkSpaceSessionDao.create_workspace_session(workspace_session)

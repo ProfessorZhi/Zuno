@@ -147,7 +147,7 @@ const editAgent = () => {
           font-size: 15px;
           font-weight: 600;
           color: #1e293b;
-          font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+          font-family: var(--zuno-font-sans);
           line-height: 1.3;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -167,7 +167,7 @@ const editAgent = () => {
         color: #64748b;
         margin-bottom: 10px;
         flex: 1;
-        font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+        font-family: var(--zuno-font-sans);
             }
       
       .agent-stats {
