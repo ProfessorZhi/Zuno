@@ -135,7 +135,7 @@ def test_agent_draft_titles_are_treated_as_placeholders():
     from agentchat.api.services.workspace_session import WorkSpaceSessionService
     from agentchat.database.dao.workspace_session import WorkSpaceSessionDao
 
-    for title in ["小志的新对话", "小志 的新对话", "智子 的新会话", "新对话"]:
+    for title in ["Demo Agent的新对话", "Demo Agent 的新对话", "Agent Alpha 的新会话", "新对话"]:
         assert WorkSpaceSessionService.is_placeholder_title(title)
         assert WorkSpaceSessionDao.is_placeholder_title(title)
 

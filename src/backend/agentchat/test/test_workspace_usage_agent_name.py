@@ -19,9 +19,9 @@ def test_normal_workspace_usage_keeps_internal_simple_agent():
 
     result = asyncio.run(
         _resolve_workspace_usage_agent_name(
-            _task(workspace_mode="normal", agent_name="小志"),
+            _task(workspace_mode="normal", agent_name="Demo Agent"),
             "user_1",
-            {"agent": "小志"},
+            {"agent": "Demo Agent"},
         )
     )
 
@@ -35,11 +35,11 @@ def test_agent_workspace_usage_prefers_session_agent_name():
         _resolve_workspace_usage_agent_name(
             _task(workspace_mode="agent"),
             "user_1",
-            {"agent": "智智子"},
+            {"agent": "Agent Alpha"},
         )
     )
 
-    assert result == "智智子"
+    assert result == "Agent Alpha"
 
 
 def test_agent_workspace_usage_can_resolve_agent_id(monkeypatch):
@@ -47,7 +47,7 @@ def test_agent_workspace_usage_can_resolve_agent_id(monkeypatch):
 
     async def fake_select_agent_by_id(agent_id):
         assert agent_id == "agent_1"
-        return {"name": "小志", "user_id": "user_1"}
+        return {"name": "Agent Beta", "user_id": "user_1"}
 
     monkeypatch.setattr(workspace.AgentService, "select_agent_by_id", fake_select_agent_by_id)
 
@@ -59,4 +59,4 @@ def test_agent_workspace_usage_can_resolve_agent_id(monkeypatch):
         )
     )
 
-    assert result == "小志"
+    assert result == "Agent Beta"
