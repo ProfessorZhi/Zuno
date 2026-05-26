@@ -18,7 +18,7 @@ Zuno 是一个个人 Agent 工作台，把聊天、Agent 执行、MCP 服务、S
 - 知识库检索、向量库和 GraphRAG 相关能力。
 - Web 工作台，基于 Vue 3 + Vite。
 - Electron 桌面壳，复用后端和本地桌面前端。
-- Docker Compose 一键启动 PostgreSQL、Redis、Neo4j、MinIO、后端和前端。
+- Docker Compose 一键启动 PostgreSQL、Redis、RabbitMQ、Milvus、Neo4j、MinIO、后端、Worker 和前端。
 - Windows 启动器固定入口，方便做桌面快捷方式。
 
 ## 技术栈
@@ -28,7 +28,7 @@ Zuno 是一个个人 Agent 工作台，把聊天、Agent 执行、MCP 服务、S
 | 后端 | Python 3.12, FastAPI, LangChain, LangGraph, SQLModel |
 | 前端 | Vue 3, Vite, TypeScript, Pinia, Element Plus |
 | 桌面端 | Electron |
-| 数据与缓存 | PostgreSQL, Redis, Neo4j, MinIO, Chroma/vector DB |
+| 数据与缓存 | PostgreSQL, Redis, RabbitMQ, Milvus, Neo4j, MinIO |
 | 运行与部署 | Docker Compose, nginx, Windows CMD/PowerShell launchers |
 | Agent 扩展 | MCP, Skills, local CLI tools |
 
@@ -63,6 +63,9 @@ Zuno/
 | API docs | <http://127.0.0.1:7860/docs> |
 | Desktop local frontend | <http://127.0.0.1:8091> |
 | Redis | `127.0.0.1:6379` |
+| RabbitMQ | `127.0.0.1:5672` |
+| RabbitMQ Management | <http://127.0.0.1:15672> |
+| Milvus | `127.0.0.1:19530` |
 | Neo4j Browser | <http://127.0.0.1:7474> |
 | Neo4j Bolt | `127.0.0.1:7687` |
 | MinIO API | <http://127.0.0.1:9000> |
@@ -165,7 +168,7 @@ docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose
 - `src/backend/agentchat/config.yaml`：本地后端配置文件，按需要维护，不建议提交真实密钥。
 - `src/backend/agentchat/config.local.yaml`：本地覆盖配置，不提交。
 - `.local/`：个人资料、学习材料、历史运行数据，不提交。
-- Docker volumes：`postgres_data`、`redis_data`、`neo4j_data`、`neo4j_logs`、`minio_data`、`backend_vector_db`。
+- Docker volumes：`postgres_data`、`redis_data`、`rabbitmq_data`、`etcd_data`、`milvus_data`、`neo4j_data`、`neo4j_logs`、`minio_data`、`backend_vector_db`。
 - Docker 后端会把 `infra/docker/docker_config.local.yaml` 挂载到容器内 `/app/agentchat/config.yaml`。
 
 ## 常见问题

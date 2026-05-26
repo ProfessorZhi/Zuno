@@ -8,8 +8,12 @@
 - `backend`：FastAPI 后端，暴露在 `7860`。
 - `postgres`：主应用数据库。
 - `redis`：缓存。
+- `rabbitmq`：知识库文档处理异步队列。
+- `etcd`：Milvus standalone 元数据依赖。
+- `milvus`：知识库向量检索数据库。
 - `neo4j`：GraphRAG 相关图数据库。
 - `minio`：S3 兼容对象存储。
+- `worker`：消费 RabbitMQ 队列，执行文档解析、RAG 索引和 GraphRAG 索引阶段。
 
 ## 要求
 
@@ -40,10 +44,13 @@ docker compose -f infra/docker/docker-compose.yml up --build -d
 - API 文档：<http://127.0.0.1:7860/docs>
 - MinIO Console：<http://127.0.0.1:9001>
 - Neo4j Browser：<http://127.0.0.1:7474>
+- RabbitMQ Management：<http://127.0.0.1:15672>
+- Milvus：`127.0.0.1:19530`
 
 默认基础设施账号：
 
 - PostgreSQL：`postgres` / `postgres`，数据库 `agentchat`
+- RabbitMQ：`guest` / `guest`
 - Neo4j：`neo4j` / `neo4j12345`
 - MinIO：`minioadmin` / `minioadmin`
 
@@ -108,6 +115,9 @@ Compose 使用 named volumes 保存运行数据：
 
 - `postgres_data`：PostgreSQL 数据。
 - `redis_data`：Redis 数据。
+- `rabbitmq_data`：RabbitMQ 队列和元数据。
+- `etcd_data`：Milvus standalone 元数据。
+- `milvus_data`：Milvus 向量索引和对象元数据。
 - `neo4j_data`：Neo4j 数据。
 - `neo4j_logs`：Neo4j 日志。
 - `minio_data`：MinIO 对象存储数据。

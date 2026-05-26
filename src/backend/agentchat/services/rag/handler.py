@@ -53,6 +53,7 @@ class RagHandler:
         runtime_settings = runtime_settings or await cls._resolve_runtime_settings(knowledges_id)
         knowledge_config = runtime_settings["knowledge_config"]
         retrieval_settings = knowledge_config.get("retrieval_settings", {})
+        graph_index_settings = knowledge_config.get("graph_index_settings", {})
         index_settings = knowledge_config.get("index_settings", {})
         actual_top_k = top_k or retrieval_settings.get("top_k") or app_settings.rag.retrival.get("top_k") or 5
 
@@ -193,9 +194,11 @@ class RagHandler:
         min_score: Optional[float] = None,
         top_k: Optional[int] = None,
         needs_query_rewrite: bool = True,
+        retrieval_options: Optional[dict] = None,
     ):
         runtime_settings = await cls._resolve_runtime_settings(collection_names)
-        retrieval_settings = runtime_settings["knowledge_config"].get("retrieval_settings", {})
+        retrieval_settings = dict(runtime_settings["knowledge_config"].get("retrieval_settings", {}))
+        retrieval_settings.update(retrieval_options or {})
         if min_score is None:
             min_score = retrieval_settings.get("score_threshold")
         if top_k is None:
@@ -273,16 +276,32 @@ class RagHandler:
         top_k: Optional[int] = None,
         needs_query_rewrite: bool = True,
         retrieval_mode: str = "rag",
+        retrieval_options: Optional[dict] = None,
     ):
         runtime_settings = await cls._resolve_runtime_settings(collection_names)
-        default_mode = runtime_settings["knowledge_config"].get("retrieval_settings", {}).get("default_mode", "rag")
+        knowledge_config = runtime_settings["knowledge_config"]
+        retrieval_settings = knowledge_config.get("retrieval_settings", {})
+        graph_index_settings = knowledge_config.get("graph_index_settings", {})
+        default_mode = retrieval_settings.get("default_mode", "rag")
         normalized_mode = normalize_retrieval_mode(retrieval_mode or default_mode)
+        effective_options = {
+            "top_k": top_k if top_k is not None else retrieval_settings.get("top_k"),
+            "score_threshold": min_score if min_score is not None else retrieval_settings.get("score_threshold"),
+            "needs_query_rewrite": needs_query_rewrite,
+            "rerank_enabled": retrieval_settings.get("rerank_enabled"),
+            "rerank_top_k": retrieval_settings.get("rerank_top_k"),
+            "graph_hop_limit": retrieval_settings.get("graph_hop_limit", 2),
+            "max_paths_per_entity": retrieval_settings.get("max_paths_per_entity", 10),
+            "use_rag_entry_chunk": graph_index_settings.get("use_rag_entry_chunk", True),
+        }
+        effective_options.update(retrieval_options or {})
 
         orchestrator = RetrievalOrchestrator()
         return await orchestrator.run(
             mode=normalized_mode,
             query=query,
             knowledge_ids=collection_names,
+            retrieval_options=effective_options,
         )
 
     @classmethod

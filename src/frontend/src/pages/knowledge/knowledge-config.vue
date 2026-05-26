@@ -5,10 +5,10 @@ import { ElMessage } from 'element-plus'
 import {
   ArrowLeft,
   Check,
+  Connection,
   Document,
   FolderOpened,
   Histogram,
-  Promotion,
   RefreshRight,
   Setting,
 } from '@element-plus/icons-vue'
@@ -27,13 +27,18 @@ import {
   detectReindexImpact,
   describeKnowledgeConfig,
   findBindingById,
+  getAllowedRetrievalModeOptions,
   getChunkModeLabel,
   getImageStrategyLabel,
+  getIndexCapabilityLabel,
   getRetrievalModeLabel,
+  getVectorBackendLabel,
   imageStrategyOptions,
+  indexCapabilityOptions,
   normalizeKnowledgeConfig,
-  retrievalModeOptions,
+  refillPolicyOptions,
   toKnowledgeConfigPatch,
+  vectorBackendOptions,
 } from '../../utils/knowledge-config'
 import ZunoIconButton from '../../components/zuno-settings/ZunoIconButton.vue'
 
@@ -42,7 +47,10 @@ const router = useRouter()
 
 const knowledgeId = computed(() => String(route.params.knowledgeId || ''))
 const inWorkspaceSettings = computed(() => route.name === 'workspaceSettingsKnowledgeConfig')
-const knowledgeListRoute = computed(() => inWorkspaceSettings.value ? { name: 'workspaceSettingsKnowledge' } : '/knowledge')
+const knowledgeListRoute = computed(() => (
+  inWorkspaceSettings.value ? { name: 'workspaceSettingsKnowledge' } : '/knowledge'
+))
+
 const loading = ref(false)
 const saving = ref(false)
 const reindexing = ref(false)
@@ -80,6 +88,11 @@ const scoreThresholdEnabled = computed({
   },
 })
 
+const graphEnabled = computed(() => config.value.index_capability === 'rag_graph')
+const allowedRetrievalModeOptions = computed(() => (
+  getAllowedRetrievalModeOptions(config.value.index_capability)
+))
+
 const summary = computed(() => describeKnowledgeConfig(config.value, {
   textEmbedding: textEmbeddingBinding.value,
   vlEmbedding: vlEmbeddingBinding.value,
@@ -98,47 +111,51 @@ const impactCopy = computed(() => {
   if (configImpact.value.requiresReindex) {
     return {
       type: 'warning',
-      title: '这次改动会影响已有索引',
-      body: '分段、图片索引策略、文本 Embedding 和 VL Embedding 会改变切片或向量。保存参数后，需要重建已有文件索引才会完全生效。',
+      title: '索引结构已变化',
+      body: '建库模式、分段、Embedding、图片索引、向量库或图谱索引参数变更后，需要重建或补建索引才能完全生效。',
     }
   }
 
   if (configImpact.value.changedQueryFields.length > 0) {
     return {
       type: 'success',
-      title: '这次改动会直接影响检索策略',
-      body: '默认检索模式、Top K、Rerank 和阈值会在后续查询里立刻生效，不需要重建索引。',
+      title: '查询参数将即时生效',
+      body: '检索模式、补检策略、Top K、Rerank、Score 阈值和 GraphRAG 查询参数会影响下一次查询，不需要重建索引。',
     }
   }
 
   return {
     type: 'info',
-    title: '当前还没有参数变化',
-    body: '保存只会更新知识库配置。只有索引型参数变化时，后续才需要重建已有文件索引。',
+    title: '当前配置未变化',
+    body: '保存只会更新知识库参数。只有索引型参数变化时，才需要重新构建已有文件索引。',
   }
 })
 
 const pipelineSummary = computed(() => {
   const modeLabel = getRetrievalModeLabel(config.value.retrieval_settings.default_mode)
+  const vectorLabel = getVectorBackendLabel(config.value.index_settings.vector_backend)
   const rerankLabel = config.value.retrieval_settings.rerank_enabled
-    ? (rerankBinding.value?.model || '等待选择 Rerank 模型')
+    ? (rerankBinding.value?.model || '已启用 Rerank')
     : '未启用 Rerank'
+  const graphLabel = graphEnabled.value
+    ? `GraphRAG ${config.value.retrieval_settings.graph_hop_limit}-hop / 每实体最多 ${config.value.retrieval_settings.max_paths_per_entity} 条路径`
+    : '不构建图谱索引'
 
   return [
     {
       title: '建立索引时',
-      detail: `${getChunkModeLabel(config.value.index_settings.chunk_mode)} / 分块 ${config.value.index_settings.chunk_size} / 重叠 ${config.value.index_settings.overlap}`,
+      detail: `${getIndexCapabilityLabel(config.value.index_capability)} / ${getChunkModeLabel(config.value.index_settings.chunk_mode)} / 分块 ${config.value.index_settings.chunk_size} / 重叠 ${config.value.index_settings.overlap}`,
       icon: Document,
     },
     {
-      title: '图片处理',
-      detail: getImageStrategyLabel(config.value.index_settings.image_indexing_mode),
+      title: '存储与图片',
+      detail: `${vectorLabel} / ${getImageStrategyLabel(config.value.index_settings.image_indexing_mode)}`,
       icon: FolderOpened,
     },
     {
-      title: '检索策略',
-      detail: `${modeLabel} / 首轮不足时自动补检一轮 / Top K ${config.value.retrieval_settings.top_k} / ${rerankLabel}`,
-      icon: Promotion,
+      title: '查询时',
+      detail: `${modeLabel} / Top K ${config.value.retrieval_settings.top_k} / ${rerankLabel} / ${graphLabel}`,
+      icon: Histogram,
     },
   ]
 })
@@ -175,8 +192,8 @@ const fetchKnowledgeContext = async () => {
       modelOptions.value = Object.values(grouped).flat().filter(Boolean) as LLMResponse[]
     }
   } catch (error) {
-    console.error('加载知识库参数上下文失败', error)
-    ElMessage.error('加载知识库参数失败')
+    console.error('加载知识库配置失败', error)
+    ElMessage.error('加载知识库配置失败')
   } finally {
     loading.value = false
   }
@@ -189,7 +206,7 @@ const saveKnowledgeConfig = async () => {
   })
 
   if (response.data.status_code !== 200) {
-    throw new Error(response.data.status_message || '保存知识库参数失败')
+    throw new Error(response.data.status_message || '保存知识库配置失败')
   }
 
   await fetchKnowledgeContext()
@@ -219,14 +236,10 @@ const handleSave = async () => {
   saving.value = true
   try {
     await saveKnowledgeConfig()
-    ElMessage.success(
-      configImpact.value.requiresReindex
-        ? '参数已保存；已有文件索引还没重建'
-        : '知识库参数已保存',
-    )
+    ElMessage.success(configImpact.value.requiresReindex ? '配置已保存，已有文件索引尚未重建' : '知识库配置已保存')
   } catch (error) {
-    console.error('保存知识库参数失败', error)
-    ElMessage.error(error instanceof Error ? error.message : '保存知识库参数失败')
+    console.error('保存知识库配置失败', error)
+    ElMessage.error(error instanceof Error ? error.message : '保存知识库配置失败')
   } finally {
     saving.value = false
   }
@@ -248,7 +261,7 @@ const handleSaveAndReindex = async () => {
     }
 
     if (summaryResult.dispatched_tasks > 0) {
-      ElMessage.success(`参数已保存，并开始重建 ${summaryResult.dispatched_tasks}/${summaryResult.total_files} 个文件索引`)
+      ElMessage.success(`配置已保存，已开始重建 ${summaryResult.dispatched_tasks}/${summaryResult.total_files} 个文件索引`)
       router.push({
         name: inWorkspaceSettings.value ? 'workspaceSettingsKnowledgeFile' : 'knowledge-file',
         params: { knowledgeId: knowledgeId.value },
@@ -258,11 +271,11 @@ const handleSaveAndReindex = async () => {
     }
 
     if (summaryResult.failed_tasks > 0) {
-      ElMessage.warning(`参数已保存，但 ${summaryResult.failed_tasks} 个文件索引任务启动失败`)
+      ElMessage.warning(`配置已保存，但 ${summaryResult.failed_tasks} 个索引任务启动失败`)
       return
     }
 
-    ElMessage.success(`参数已保存，当前没有可重建的文件（共 ${summaryResult.total_files} 个）`)
+    ElMessage.success(`配置已保存，当前没有可重建的文件（共 ${summaryResult.total_files} 个）`)
   } catch (error) {
     console.error('保存并重建索引失败', error)
     ElMessage.error(error instanceof Error ? error.message : '保存并重建索引失败')
@@ -277,7 +290,7 @@ const handleReset = () => {
   ensureModelBinding('text_embedding_model_id', textEmbeddingOptions.value)
   ensureModelBinding('vl_embedding_model_id', textEmbeddingOptions.value)
   ensureModelBinding('rerank_model_id', rerankOptions.value)
-  ElMessage.success('已恢复为系统默认值，请记得保存')
+  ElMessage.success('已恢复推荐默认值，请记得保存')
 }
 
 const openFiles = () => {
@@ -291,6 +304,15 @@ const openFiles = () => {
 const goBack = () => {
   router.push(knowledgeListRoute.value)
 }
+
+watch(
+  () => config.value.index_capability,
+  (capability) => {
+    if (capability === 'rag') {
+      config.value.retrieval_settings.default_mode = 'rag'
+    }
+  },
+)
 
 watch(textEmbeddingOptions, (options) => {
   ensureModelBinding('text_embedding_model_id', options)
@@ -307,51 +329,65 @@ onActivated(fetchKnowledgeContext)
 
 <template>
   <div class="knowledge-config-page" v-loading="loading">
-    <section class="page-hero">
-      <div class="hero-copy">
-        <div class="hero-title-row">
-          <ZunoIconButton v-if="!inWorkspaceSettings" :icon="ArrowLeft" class="back-btn" title="返回知识库" @click="goBack" />
-          <h1>{{ knowledge?.name || route.query.name || '知识库' }}</h1>
+    <section class="page-head">
+      <div class="title-block">
+        <div class="title-row">
+          <ZunoIconButton v-if="!inWorkspaceSettings" :icon="ArrowLeft" title="返回知识库" @click="goBack" />
+          <div>
+            <p class="eyebrow">知识库配置</p>
+            <h1>{{ knowledge?.name || route.query.name || '知识库' }}</h1>
+          </div>
         </div>
-        <div class="hero-pills">
-          <span class="hero-pill">{{ summary.chunkModeLabel }}</span>
-          <span class="hero-pill">{{ summary.retrievalModeLabel }}</span>
-          <span class="hero-pill">{{ summary.imageStrategyLabel }}</span>
+        <div class="summary-tags">
+          <span>{{ summary.indexCapabilityLabel }}</span>
+          <span>{{ summary.chunkModeLabel }}</span>
+          <span>{{ summary.retrievalModeLabel }}</span>
+          <span>{{ summary.vectorBackendLabel }}</span>
         </div>
       </div>
-
-      <div class="hero-side">
-        <div class="status-card">
-          <div class="status-head">
-            <span>当前生效说明</span>
-            <el-icon><Check /></el-icon>
-          </div>
-          <strong>知识库按自己的检索策略运行，首轮不足时自动补检一轮</strong>
-          <div class="status-actions">
-            <ZunoIconButton :icon="FolderOpened" title="文件与进度" @click="openFiles" />
-          </div>
-        </div>
+      <div class="head-actions">
+        <ZunoIconButton :icon="FolderOpened" title="文件与索引进度" @click="openFiles" />
       </div>
     </section>
 
-    <div class="workspace">
-      <div class="config-column">
-        <section class="panel-card impact-panel" :class="`impact-${impactCopy.type}`">
-          <div class="panel-head compact-head">
+    <div class="layout">
+      <main class="main-column">
+        <section class="panel impact-panel" :class="`impact-${impactCopy.type}`">
+          <h2>{{ impactCopy.title }}</h2>
+          <p>{{ impactCopy.body }}</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
             <div>
-              <h2>{{ impactCopy.title }}</h2>
-              <p>{{ impactCopy.body }}</p>
+              <h2>建库方式</h2>
+              <p>建库方式决定要不要建立图谱索引；改动后通常需要重建或补建索引。</p>
             </div>
+            <el-icon><Connection /></el-icon>
+          </div>
+
+          <div class="option-grid">
+            <button
+              v-for="item in indexCapabilityOptions"
+              :key="item.value"
+              type="button"
+              class="option-card"
+              :class="{ active: config.index_capability === item.value }"
+              @click="config.index_capability = item.value"
+            >
+              <strong>{{ item.label }}</strong>
+              <span>{{ item.description }}</span>
+            </button>
           </div>
         </section>
 
-        <section class="panel-card">
-          <div class="panel-head">
+        <section class="panel">
+          <div class="panel-title">
             <div>
               <h2>索引设置</h2>
-              <p>决定这个知识库收什么资料、怎么切块、图片如何进入索引。</p>
+              <p>这些参数会影响切块、向量写入和图文索引方式，修改后需要重建索引。</p>
             </div>
-            <el-icon class="panel-icon"><Setting /></el-icon>
+            <el-icon><Setting /></el-icon>
           </div>
 
           <div class="option-grid">
@@ -359,7 +395,7 @@ onActivated(fetchKnowledgeContext)
               v-for="mode in chunkModeOptions"
               :key="mode.value"
               type="button"
-              class="mode-card"
+              class="option-card"
               :class="{ active: config.index_settings.chunk_mode === mode.value }"
               @click="config.index_settings.chunk_mode = mode.value"
             >
@@ -380,16 +416,26 @@ onActivated(fetchKnowledgeContext)
               <el-slider v-model="config.index_settings.overlap" :min="0" :max="400" :step="10" />
               <small>{{ config.index_settings.overlap }} characters</small>
             </label>
-          </div>
 
-          <div class="form-grid">
             <label class="field">
               <span>分段标识符</span>
               <el-input v-model="config.index_settings.separator" placeholder="\n\n" />
             </label>
+
+            <label class="field">
+              <span>向量库</span>
+              <el-select v-model="config.index_settings.vector_backend">
+                <el-option
+                  v-for="item in vectorBackendOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </label>
           </div>
 
-          <div class="switch-row">
+          <div class="switch-grid">
             <label class="switch-card">
               <div>
                 <strong>清理连续空格和换行</strong>
@@ -400,23 +446,20 @@ onActivated(fetchKnowledgeContext)
             <label class="switch-card">
               <div>
                 <strong>删除 URL 和邮箱地址</strong>
-                <p>适合客服和标准文档，减少噪声字段。</p>
+                <p>减少噪声字段，适合标准问答类文档。</p>
               </div>
               <el-switch v-model="config.index_settings.remove_urls_emails" />
             </label>
           </div>
 
-          <div class="subsection">
-            <div class="subsection-head">
-              <h3>图片处理策略</h3>
-              <p>决定图片在构建索引时，是转文字、走 VL 索引，还是图文双通道。</p>
-            </div>
+          <div class="section-block">
+            <h3>图片处理策略</h3>
             <div class="option-grid">
               <button
                 v-for="strategy in imageStrategyOptions"
                 :key="strategy.value"
                 type="button"
-                class="mode-card"
+                class="option-card"
                 :class="{ active: config.index_settings.image_indexing_mode === strategy.value }"
                 @click="config.index_settings.image_indexing_mode = strategy.value"
               >
@@ -425,55 +468,76 @@ onActivated(fetchKnowledgeContext)
               </button>
             </div>
           </div>
+        </section>
 
-          <div class="subsection">
-            <div class="subsection-head">
-              <h3>索引模型</h3>
-              <p>这些模型直接绑定到这个知识库自己的索引链路，不再依赖全局默认。</p>
+        <section class="panel" :class="{ disabled: !graphEnabled }">
+          <div class="panel-title">
+            <div>
+              <h2>GraphRAG 索引参数</h2>
+              <p>仅在建库方式为 RAG + GraphRAG 时生效，修改后需要重建或补建图谱索引。</p>
             </div>
-            <div class="form-grid">
-              <label class="field">
-                <span>文本 Embedding</span>
-                <el-select v-model="config.model_refs.text_embedding_model_id" placeholder="选择文本 Embedding">
-                  <el-option
-                    v-for="item in textEmbeddingOptions"
-                    :key="item.llm_id"
-                    :label="`${item.model} / ${item.provider}`"
-                    :value="item.llm_id"
-                  />
-                </el-select>
-              </label>
+            <el-icon><Connection /></el-icon>
+          </div>
 
-              <label class="field">
-                <span>VL Embedding</span>
-                <el-select v-model="config.model_refs.vl_embedding_model_id" placeholder="选择 VL Embedding">
-                  <el-option
-                    v-for="item in textEmbeddingOptions"
-                    :key="item.llm_id"
-                    :label="`${item.model} / ${item.provider}`"
-                    :value="item.llm_id"
-                  />
-                </el-select>
-              </label>
-            </div>
+          <div class="form-grid">
+            <label class="field">
+              <span>实体抽取方式</span>
+              <el-select v-model="config.graph_index_settings.entity_extraction_mode" :disabled="!graphEnabled">
+                <el-option label="规则" value="rule" />
+                <el-option label="LLM" value="llm" />
+                <el-option label="规则 + LLM 辅助" value="rule_llm" />
+              </el-select>
+            </label>
+
+            <label class="field">
+              <span>关系 Schema</span>
+              <el-select v-model="config.graph_index_settings.relation_schema" :disabled="!graphEnabled">
+                <el-option label="开放关系" value="open" />
+                <el-option label="类型约束关系" value="typed" />
+              </el-select>
+            </label>
+          </div>
+
+          <div class="switch-grid">
+            <label class="switch-card">
+              <div>
+                <strong>实体归一化</strong>
+                <p>合并同义实体，减少图谱中的重复节点。</p>
+              </div>
+              <el-switch v-model="config.graph_index_settings.entity_normalization" :disabled="!graphEnabled" />
+            </label>
+            <label class="switch-card">
+              <div>
+                <strong>建立 Chunk -> Entity 证据回链</strong>
+                <p>让图谱路径能够回到原始文本证据，方便引用和审计。</p>
+              </div>
+              <el-switch v-model="config.graph_index_settings.evidence_backlink" :disabled="!graphEnabled" />
+            </label>
+            <label class="switch-card">
+              <div>
+                <strong>查询时优先使用 RAG 命中 chunk 作为图谱入口</strong>
+                <p>先找可靠文本入口，再沿实体关系扩展，避免纯实体匹配漂移。</p>
+              </div>
+              <el-switch v-model="config.graph_index_settings.use_rag_entry_chunk" :disabled="!graphEnabled" />
+            </label>
           </div>
         </section>
 
-        <section class="panel-card">
-          <div class="panel-head">
+        <section class="panel">
+          <div class="panel-title">
             <div>
-              <h2>检索策略</h2>
-              <p>决定用户提问时，如何从这个知识库里召回内容、要不要重排，以及首轮不足时是否自动补检一轮。</p>
+              <h2>查询设置</h2>
+              <p>这些参数只影响提问时的召回、排序和补检，保存后即时生效。</p>
             </div>
-            <el-icon class="panel-icon"><Histogram /></el-icon>
+            <el-icon><Histogram /></el-icon>
           </div>
 
-          <div class="option-grid">
+          <div class="option-grid compact">
             <button
-              v-for="item in retrievalModeOptions"
+              v-for="item in allowedRetrievalModeOptions"
               :key="item.value"
               type="button"
-              class="mode-card"
+              class="option-card"
               :class="{ active: config.retrieval_settings.default_mode === item.value }"
               @click="config.retrieval_settings.default_mode = item.value"
             >
@@ -484,9 +548,21 @@ onActivated(fetchKnowledgeContext)
 
           <div class="form-grid">
             <label class="field">
+              <span>补检策略</span>
+              <el-select v-model="config.retrieval_settings.refill_policy">
+                <el-option
+                  v-for="item in refillPolicyOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </label>
+
+            <label class="field">
               <span>默认 Top K</span>
               <el-slider v-model="config.retrieval_settings.top_k" :min="1" :max="12" :step="1" />
-              <small>每次先召回 {{ config.retrieval_settings.top_k }} 个候选块</small>
+              <small>{{ config.retrieval_settings.top_k }}</small>
             </label>
 
             <label class="field">
@@ -498,22 +574,35 @@ onActivated(fetchKnowledgeContext)
                 :step="1"
                 :disabled="!config.retrieval_settings.rerank_enabled"
               />
-              <small>重排后优先保留 {{ config.retrieval_settings.rerank_top_k }} 条结果</small>
+              <small>{{ config.retrieval_settings.rerank_top_k }}</small>
+            </label>
+
+            <label class="field">
+              <span>Score 阈值</span>
+              <el-slider
+                :model-value="config.retrieval_settings.score_threshold ?? 0.7"
+                :min="0.1"
+                :max="1"
+                :step="0.05"
+                :disabled="config.retrieval_settings.score_threshold === null"
+                @update:model-value="(value) => config.retrieval_settings.score_threshold = value"
+              />
+              <small>{{ (config.retrieval_settings.score_threshold ?? 0.7).toFixed(2) }}</small>
             </label>
           </div>
 
-          <div class="switch-row">
+          <div class="switch-grid">
             <label class="switch-card">
               <div>
                 <strong>启用 Rerank</strong>
-                <p>先用 Embedding 召回，再用排序模型重新排优先级。</p>
+                <p>先用 Embedding 召回，再用排序模型重排优先级。</p>
               </div>
               <el-switch v-model="config.retrieval_settings.rerank_enabled" />
             </label>
             <label class="switch-card">
               <div>
                 <strong>启用 Score 阈值</strong>
-                <p>低于阈值的结果不继续送入答案链路。</p>
+                <p>低于阈值的结果不会进入最终上下文。</p>
               </div>
               <el-switch v-model="scoreThresholdEnabled" />
             </label>
@@ -537,71 +626,117 @@ onActivated(fetchKnowledgeContext)
             </label>
 
             <label class="field">
-              <span>Score 阈值</span>
-              <el-slider
-                :model-value="config.retrieval_settings.score_threshold ?? 0.7"
-                :min="0.1"
-                :max="1"
-                :step="0.05"
-                :disabled="config.retrieval_settings.score_threshold === null"
-                @update:model-value="(value) => config.retrieval_settings.score_threshold = value"
+              <span>GraphRAG 最大跳数</span>
+              <el-select v-model="config.retrieval_settings.graph_hop_limit" :disabled="!graphEnabled">
+                <el-option label="1-hop" :value="1" />
+                <el-option label="2-hop" :value="2" />
+                <el-option label="3-hop" :value="3" />
+              </el-select>
+            </label>
+
+            <label class="field">
+              <span>每实体最大路径数</span>
+              <el-input-number
+                v-model="config.retrieval_settings.max_paths_per_entity"
+                :min="1"
+                :max="20"
+                :disabled="!graphEnabled"
               />
-              <small>{{ (config.retrieval_settings.score_threshold ?? 0.7).toFixed(2) }}</small>
             </label>
           </div>
         </section>
-      </div>
 
-      <aside class="preview-column">
-        <section class="panel-card sticky-card">
-          <div class="panel-head">
+        <section class="panel">
+          <div class="panel-title">
             <div>
-              <h2>即时预览</h2>
-              <p>把“这套参数会怎样工作”直接翻译成可读摘要。</p>
+              <h2>索引模型</h2>
+              <p>Embedding 模型变化会影响向量空间，修改后需要重建索引。</p>
             </div>
-            <el-icon class="panel-icon"><RefreshRight /></el-icon>
+            <el-icon><Setting /></el-icon>
           </div>
 
-          <div class="summary-stack">
-            <article class="summary-card">
-              <div class="summary-title">当前模型</div>
-              <div class="summary-lines">
-                <span><strong>文本 Embedding</strong>{{ summary.textEmbeddingLabel }}</span>
-                <span><strong>VL Embedding</strong>{{ summary.vlEmbeddingLabel }}</span>
-                <span><strong>Rerank</strong>{{ summary.rerankLabel }}</span>
-              </div>
-            </article>
+          <div class="form-grid">
+            <label class="field">
+              <span>文本 Embedding</span>
+              <el-select v-model="config.model_refs.text_embedding_model_id" placeholder="选择文本 Embedding">
+                <el-option
+                  v-for="item in textEmbeddingOptions"
+                  :key="item.llm_id"
+                  :label="`${item.model} / ${item.provider}`"
+                  :value="item.llm_id"
+                />
+              </el-select>
+            </label>
 
-            <article class="summary-card">
-              <div class="summary-title">这套链路会怎么走</div>
-              <div class="pipeline-list">
-                <div v-for="item in pipelineSummary" :key="item.title" class="pipeline-item">
-                  <el-icon class="pipeline-icon"><component :is="item.icon" /></el-icon>
-                  <div>
-                    <strong>{{ item.title }}</strong>
-                    <p>{{ item.detail }}</p>
-                  </div>
+            <label class="field">
+              <span>VL Embedding</span>
+              <el-select v-model="config.model_refs.vl_embedding_model_id" placeholder="选择 VL Embedding">
+                <el-option
+                  v-for="item in textEmbeddingOptions"
+                  :key="item.llm_id"
+                  :label="`${item.model} / ${item.provider}`"
+                  :value="item.llm_id"
+                />
+              </el-select>
+            </label>
+          </div>
+        </section>
+      </main>
+
+      <aside class="side-column">
+        <section class="panel sticky-panel">
+          <div class="panel-title">
+            <div>
+              <h2>即时预览</h2>
+              <p>配置保存前先看链路会怎么走。</p>
+            </div>
+            <el-icon><RefreshRight /></el-icon>
+          </div>
+
+          <div class="summary-card">
+            <h3>当前模型</h3>
+            <dl>
+              <div><dt>文本 Embedding</dt><dd>{{ summary.textEmbeddingLabel }}</dd></div>
+              <div><dt>VL Embedding</dt><dd>{{ summary.vlEmbeddingLabel }}</dd></div>
+              <div><dt>Rerank</dt><dd>{{ summary.rerankLabel }}</dd></div>
+            </dl>
+          </div>
+
+          <div class="summary-card">
+            <h3>这套链路会怎么走</h3>
+            <div class="pipeline-list">
+              <div v-for="item in pipelineSummary" :key="item.title" class="pipeline-item">
+                <el-icon><component :is="item.icon" /></el-icon>
+                <div>
+                  <strong>{{ item.title }}</strong>
+                  <p>{{ item.detail }}</p>
                 </div>
               </div>
-            </article>
+            </div>
+          </div>
 
-            <article class="summary-card">
-              <div class="summary-title">示例切块</div>
-              <div class="preview-chunks">
-                <div v-for="(chunk, index) in chunkPreview" :key="index" class="preview-chunk">
-                  <span class="chunk-index">Chunk {{ index + 1 }}</span>
-                  <p>{{ chunk }}</p>
-                </div>
+          <div class="summary-card">
+            <h3>示例切块</h3>
+            <div class="preview-chunks">
+              <div v-for="(chunk, index) in chunkPreview" :key="index" class="preview-chunk">
+                <span>Chunk {{ index + 1 }}</span>
+                <p>{{ chunk }}</p>
               </div>
-            </article>
+            </div>
           </div>
 
           <div class="footer-actions">
             <ZunoIconButton :icon="RefreshRight" title="恢复推荐默认值" @click="handleReset" />
-            <ZunoIconButton v-if="configImpact.requiresReindex" :icon="Check" :loading="saving || reindexing" title="仅保存参数" @click="handleSave" />
+            <ZunoIconButton
+              v-if="configImpact.requiresReindex"
+              :icon="Check"
+              :loading="saving || reindexing"
+              title="仅保存配置"
+              @click="handleSave"
+            />
             <el-button
               v-if="configImpact.requiresReindex"
-              class="settings-save-button"
+              class="primary-action"
               type="primary"
               :icon="Check"
               :loading="saving || reindexing"
@@ -609,8 +744,15 @@ onActivated(fetchKnowledgeContext)
             >
               保存并重建索引
             </el-button>
-            <el-button v-else class="settings-save-button" type="primary" :icon="Check" :loading="saving" @click="handleSave">
-              保存知识库参数
+            <el-button
+              v-else
+              class="primary-action"
+              type="primary"
+              :icon="Check"
+              :loading="saving"
+              @click="handleSave"
+            >
+              保存配置
             </el-button>
           </div>
         </section>
@@ -623,385 +765,350 @@ onActivated(fetchKnowledgeContext)
 .knowledge-config-page {
   display: grid;
   gap: 14px;
-  padding: 24px;
+  padding: 20px;
+  color: #1f2937;
 }
 
-.page-hero,
-.panel-card {
-  border-radius: 24px;
+.page-head,
+.panel {
   border: 1px solid rgba(214, 132, 70, 0.14);
+  border-radius: 20px;
   background: rgba(255, 252, 247, 0.96);
-  box-shadow: 0 16px 36px rgba(160, 95, 42, 0.08);
+  box-shadow: 0 12px 28px rgba(160, 95, 42, 0.07);
 }
 
-.page-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  padding: 22px 24px;
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
 }
 
-.hero-title-row {
+.title-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.hero-copy h1 {
+.eyebrow {
+  margin: 0 0 4px;
+  color: #a16207;
+  font-size: 12px;
+}
+
+h1,
+h2,
+h3,
+p {
   margin: 0;
+}
+
+h1 {
+  color: #111827;
   font-size: 24px;
-  color: #0f172a;
 }
 
-.hero-copy p {
-  margin: 8px 0 0;
-  color: #8f7a68;
-  font-size: 13px;
-  line-height: 1.55;
+h2 {
+  color: #5e3518;
+  font-size: 17px;
 }
 
-.hero-pills {
+h3 {
+  color: #5e3518;
+  font-size: 14px;
+}
+
+.summary-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.hero-pill {
-  min-height: 20px;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: rgba(255, 245, 236, 0.92);
-  border: 1px solid rgba(214, 132, 70, 0.14);
-  color: #7c5835;
-  font-size: 11px;
-  line-height: 20px;
-}
-
-.status-card {
-  display: grid;
   gap: 8px;
-  height: 100%;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  border: 0;
+  margin-top: 12px;
 }
 
-.status-head {
+.summary-tags span {
+  padding: 3px 10px;
+  border: 1px solid rgba(214, 132, 70, 0.16);
+  border-radius: 999px;
+  color: #7c5835;
+  background: rgba(255, 245, 236, 0.9);
+  font-size: 12px;
+}
+
+.head-actions {
   display: flex;
   align-items: center;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: 14px;
+  align-items: start;
+}
+
+.main-column,
+.side-column {
+  display: grid;
+  gap: 14px;
+}
+
+.panel {
+  padding: 18px 20px;
+}
+
+.panel.disabled {
+  opacity: 0.72;
+}
+
+.panel-title {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  color: #aa6b33;
+  gap: 16px;
+  margin-bottom: 14px;
 }
 
-.status-card strong {
-  font-size: 16px;
-  line-height: 1.3;
-  color: #5e3518;
-}
-
-.status-card p {
-  margin: 0;
+.panel-title p,
+.impact-panel p,
+.section-block p {
+  margin-top: 4px;
   color: #8f7a68;
   font-size: 12px;
   line-height: 1.5;
 }
 
-.status-actions {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.settings-save-button {
-  height: 34px;
-  border-radius: 999px;
-  background: #f59e0b;
-  border-color: #f59e0b;
-  box-shadow: 0 12px 28px rgba(245, 158, 11, 0.2);
-}
-
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
-}
-
-.config-column,
-.preview-column {
-  display: grid;
-  gap: 20px;
-}
-
-.sticky-card {
-  position: static;
-}
-
-.panel-card {
-  padding: 18px 20px;
-}
-
-.panel-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.panel-head h2 {
-  margin: 0;
-  color: #5e3518;
-  font-size: 17px;
-}
-
-.panel-head p {
-  margin: 4px 0 0;
-  color: #8f7a68;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.compact-head {
-  margin-bottom: 0;
-}
-
-.panel-icon {
-  font-size: 20px;
+.panel-title :deep(.el-icon) {
   color: #c97835;
-}
-
-.impact-panel {
-  border-width: 1px;
+  font-size: 20px;
 }
 
 .impact-warning {
-  background: rgba(255, 248, 236, 0.98);
+  background: #fff8ec;
 }
 
 .impact-success {
-  background: rgba(242, 251, 244, 0.98);
+  background: #f2fbf4;
 }
 
 .impact-info {
-  background: rgba(250, 250, 250, 0.98);
-}
-
-.option-grid,
-.form-grid,
-.switch-row,
-.summary-stack {
-  display: grid;
-  gap: 14px;
+  background: #fafafa;
 }
 
 .option-grid {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
 }
 
-.form-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 16px;
+.option-grid.compact {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-.mode-card,
+.option-card,
 .switch-card,
 .summary-card,
-.preview-chunk,
-.field {
-  border-radius: 20px;
+.preview-chunk {
   border: 1px solid rgba(214, 132, 70, 0.12);
+  border-radius: 16px;
   background: rgba(255, 249, 243, 0.94);
 }
 
-.mode-card {
+.option-card {
   display: grid;
-  gap: 4px;
+  gap: 5px;
   padding: 12px 14px;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.mode-card strong {
+.option-card strong,
+.switch-card strong,
+.pipeline-item strong {
   color: #5a3115;
 }
 
-.mode-card span {
-  color: #826b59;
+.option-card span,
+.switch-card p,
+.pipeline-item p,
+.preview-chunk p {
+  color: #806957;
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.55;
 }
 
-.mode-card.active {
-  border-color: rgba(201, 120, 53, 0.55);
-  box-shadow: inset 0 0 0 1px rgba(201, 120, 53, 0.3);
+.option-card.active {
+  border-color: rgba(201, 120, 53, 0.6);
   background: linear-gradient(180deg, rgba(255, 246, 236, 0.96), rgba(255, 240, 227, 0.94));
+  box-shadow: inset 0 0 0 1px rgba(201, 120, 53, 0.24);
+}
+
+.form-grid,
+.switch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin-top: 16px;
 }
 
 .field {
   display: grid;
-  grid-template-columns: minmax(104px, 140px) minmax(0, 1fr) auto;
+  grid-template-columns: 128px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 10px 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  min-height: 42px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .field span {
-  font-weight: 600;
   color: #5a3115;
+  font-weight: 600;
 }
 
 .field small {
   color: #8f7a68;
-  font-size: 11px;
-}
-
-.switch-row {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 10px;
+  min-width: 58px;
+  text-align: right;
 }
 
 .switch-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   padding: 12px 14px;
 }
 
-.switch-card strong {
-  color: #5a3115;
-}
-
-.switch-card p {
-  margin: 3px 0 0;
-  color: #8f7a68;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.subsection {
-  margin-top: 16px;
-}
-
-.subsection-head {
-  margin-bottom: 14px;
-}
-
-.subsection-head h3 {
-  margin: 0;
-  color: #5a3115;
-}
-
-.subsection-head p {
-  margin: 4px 0 0;
-  color: #8f7a68;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.summary-title {
-  margin-bottom: 12px;
-  font-weight: 700;
-  color: #5a3115;
-}
-
-.summary-lines {
+.section-block {
   display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.sticky-panel {
+  position: sticky;
+  top: 16px;
+}
+
+.summary-card {
+  padding: 14px;
+}
+
+.summary-card + .summary-card {
+  margin-top: 12px;
+}
+
+dl {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+}
+
+dl div {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
   gap: 10px;
 }
 
-.summary-lines span {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: #6f543d;
+dt {
+  color: #806957;
+  font-weight: 600;
 }
 
-.summary-lines strong {
-  min-width: 120px;
+dd {
+  margin: 0;
+  color: #5a3115;
+  word-break: break-word;
 }
 
 .pipeline-list,
 .preview-chunks {
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .pipeline-item {
   display: grid;
-  grid-template-columns: 32px 1fr;
-  gap: 12px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
   align-items: start;
 }
 
-.pipeline-item strong {
-  color: #5a3115;
-}
-
-.pipeline-item p {
-  margin: 4px 0 0;
-  color: #806957;
-  line-height: 1.6;
-}
-
-.pipeline-icon {
+.pipeline-item :deep(.el-icon) {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
-  background: rgba(255, 243, 232, 0.96);
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
   color: #c97835;
+  background: rgba(255, 243, 232, 0.96);
 }
 
-.chunk-index {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.preview-chunk {
+  padding: 12px;
+}
+
+.preview-chunk span {
   color: #c97835;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .preview-chunk p {
-  margin: 8px 0 0;
-  color: #806957;
-  line-height: 1.7;
-}
-
-.summary-card,
-.preview-chunk {
-  padding: 18px;
+  margin-top: 6px;
 }
 
 .footer-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 18px;
-  flex-wrap: wrap;
+  margin-top: 14px;
 }
 
-.footer-actions :deep(.el-button + .el-button),
-.status-actions :deep(.el-button + .el-button) {
+.primary-action {
+  height: 34px;
+  border-radius: 999px;
+  border-color: #f59e0b;
+  background: #f59e0b;
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.18);
+}
+
+.footer-actions :deep(.el-button + .el-button) {
   margin-left: 0;
 }
 
-@media (max-width: 1200px) {
-  .workspace,
-  .page-hero,
+@media (max-width: 1180px) {
+  .layout,
   .form-grid,
-  .switch-row {
+  .switch-grid {
     grid-template-columns: 1fr;
   }
 
-  .sticky-card {
+  .sticky-panel {
     position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .knowledge-config-page {
+    padding: 12px;
+  }
+
+  .page-head {
+    flex-direction: column;
+  }
+
+  .field {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    padding-bottom: 10px;
+  }
+
+  .field small {
+    text-align: left;
   }
 }
 </style>

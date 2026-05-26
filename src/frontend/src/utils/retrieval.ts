@@ -1,27 +1,24 @@
 const retrievalModeOptions = [
   {
-    value: 'auto',
-    label: '自动补检',
-    description: '先走知识库默认路线，首轮结果偏弱时最多自动补检一轮更合适的路线。',
-  },
-  {
-    value: 'hybrid',
-    label: '混合检索',
-    description: '并行融合向量召回与图谱检索结果，适合信息分散或既要文档也要关系线索的场景。',
-  },
-  {
     value: 'rag',
-    label: '智能补检',
-    description: '先做向量召回，首轮不足时最多自动补检一轮并重排，适合普通文档型知识库。',
+    label: '纯 RAG',
+    description: '只使用文本/多模态向量召回、重排和阈值过滤，适合普通文档问答。',
   },
   {
-    value: 'graphrag',
-    label: '图谱检索',
-    description: '优先走图谱关系链路，适合结构化知识、关系追问和多跳查询。',
+    value: 'rag_graph',
+    label: 'RAG + GraphRAG',
+    description: '先用 RAG 找入口证据，再沿知识图谱扩展实体和关系路径，适合关系追问。',
   },
 ] as const
 
 export type RetrievalMode = typeof retrievalModeOptions[number]['value']
+
+const legacyModeMap: Record<string, RetrievalMode> = {
+  auto: 'rag',
+  default: 'rag',
+  hybrid: 'rag_graph',
+  graphrag: 'rag_graph',
+}
 
 const retrievalModeLabelMap = Object.fromEntries(
   retrievalModeOptions.map((item) => [item.value, item.label]),
@@ -30,14 +27,23 @@ const retrievalModeLabelMap = Object.fromEntries(
 const fallbackReasonLabelMap: Record<string, string> = {
   empty_result: '首轮没有命中有效内容',
   too_few_documents: '首轮命中文档过少',
-  low_rerank_score: '首轮结果强度偏弱',
+  low_rerank_score: '首轮结果相关性偏弱',
+  graph_result_empty: '图谱路径为空',
 }
 
 export const normalizeRetrievalMode = (mode?: string | null): RetrievalMode => {
-  const value = String(mode || 'auto').toLowerCase()
-  return value in retrievalModeLabelMap ? (value as RetrievalMode) : 'auto'
+  const value = String(mode || 'rag').toLowerCase()
+  const mapped = legacyModeMap[value] || value
+  return mapped in retrievalModeLabelMap ? (mapped as RetrievalMode) : 'rag'
 }
 
 export const getRetrievalModeLabel = (mode?: string | null) => (
   retrievalModeLabelMap[normalizeRetrievalMode(mode)]
 )
+
+export const getFallbackReasonLabel = (reason?: string | null) => {
+  if (!reason) return ''
+  return fallbackReasonLabelMap[reason] || reason
+}
+
+export { retrievalModeOptions }

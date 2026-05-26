@@ -171,7 +171,7 @@ exit /b 0
 
 :startBackend
 cd /d "%DOCKER_DIR%"
-docker compose up -d --remove-orphans postgres redis neo4j minio backend
+docker compose up -d --remove-orphans postgres redis rabbitmq neo4j minio backend worker
 if errorlevel 1 exit /b 1
 call :waitHttp "http://127.0.0.1:7860/health" "Backend API" 90
 if errorlevel 1 exit /b 1

@@ -7,6 +7,7 @@ export interface UnifiedResponse<T = any> {
 }
 
 export interface KnowledgeConfigPayload {
+  index_capability: 'rag' | 'rag_graph'
   model_refs: {
     text_embedding_model_id: string | null
     vl_embedding_model_id: string | null
@@ -20,13 +21,24 @@ export interface KnowledgeConfigPayload {
     replace_consecutive_spaces: boolean
     remove_urls_emails: boolean
     image_indexing_mode: 'text_only' | 'vl_only' | 'dual'
+    vector_backend: 'milvus' | 'chroma' | 'milvus_lite'
+  }
+  graph_index_settings: {
+    entity_extraction_mode: 'rule' | 'llm' | 'rule_llm'
+    relation_schema: 'open' | 'typed'
+    entity_normalization: boolean
+    evidence_backlink: boolean
+    use_rag_entry_chunk: boolean
   }
   retrieval_settings: {
-    default_mode: 'auto' | 'hybrid' | 'rag' | 'graphrag'
+    default_mode: 'auto' | 'hybrid' | 'rag' | 'graphrag' | 'rag_graph'
+    refill_policy: 'none' | 'auto' | 'smart'
     top_k: number
     rerank_enabled: boolean
     rerank_top_k: number
     score_threshold: number | null
+    graph_hop_limit: number
+    max_paths_per_entity: number
   }
 }
 

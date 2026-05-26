@@ -72,21 +72,30 @@ class Neo4jClient:
 
         await asyncio.to_thread(_run)
 
-    async def query_neighbors(self, entity_name: str, knowledge_id: str, hops: int = 1) -> list[dict]:
+    async def query_neighbors(
+        self,
+        entity_name: str,
+        knowledge_id: str,
+        hops: int = 1,
+        limit: int = 10,
+    ) -> list[dict]:
+        safe_hops = max(1, min(int(hops or 1), 3))
+        safe_limit = max(1, min(int(limit or 10), 50))
+
         def _run():
             driver = self._driver()
             try:
                 with driver.session(database=self.database) as session:
                     result = session.run(
-                        """
-                        MATCH (e:Entity {name: $name, knowledge_id: $knowledge_id})-[r:RELATES_TO*1..2]-(n:Entity {knowledge_id: $knowledge_id})
+                        f"""
+                        MATCH (e:Entity {{name: $name, knowledge_id: $knowledge_id}})-[r:RELATES_TO*1..{safe_hops}]-(n:Entity {{knowledge_id: $knowledge_id}})
                         RETURN e.name AS source, n.name AS target
-                        LIMIT 10
+                        LIMIT $limit
                         """,
                         {
                             "name": entity_name,
                             "knowledge_id": knowledge_id,
-                            "hops": hops,
+                            "limit": safe_limit,
                         },
                     )
                     return [record.data() for record in result]

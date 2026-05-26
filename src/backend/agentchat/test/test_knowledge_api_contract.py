@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 def _sample_knowledge_config():
     return {
+        "index_capability": "rag_graph",
         "model_refs": {
             "text_embedding_model_id": "llm_embed_text",
             "vl_embedding_model_id": "llm_embed_vl",
@@ -17,13 +18,24 @@ def _sample_knowledge_config():
             "replace_consecutive_spaces": True,
             "remove_urls_emails": True,
             "image_indexing_mode": "dual",
+            "vector_backend": "milvus",
+        },
+        "graph_index_settings": {
+            "entity_extraction_mode": "rule_llm",
+            "relation_schema": "open",
+            "entity_normalization": True,
+            "evidence_backlink": True,
+            "use_rag_entry_chunk": True,
         },
         "retrieval_settings": {
-            "default_mode": "hybrid",
+            "default_mode": "rag_graph",
+            "refill_policy": "smart",
             "top_k": 6,
             "rerank_enabled": True,
             "rerank_top_k": 4,
             "score_threshold": 0.42,
+            "graph_hop_limit": 2,
+            "max_paths_per_entity": 5,
         },
     }
 
@@ -42,7 +54,7 @@ def test_knowledge_create_request_accepts_knowledge_config_and_ignores_legacy_de
 
     assert dumped["knowledge_name"] == "PyIndex"
     assert dumped["knowledge_desc"] == "Python knowledge base for tests."
-    assert dumped["knowledge_config"]["retrieval_settings"]["default_mode"] == "hybrid"
+    assert dumped["knowledge_config"]["retrieval_settings"]["default_mode"] == "rag_graph"
     assert "default_retrieval_mode" not in dumped
 
 
@@ -171,7 +183,8 @@ def test_select_knowledge_exposes_normalized_knowledge_config(monkeypatch):
     assert len(results) == 1
     assert results[0]["name"] == "PyIndex"
     assert "default_retrieval_mode" not in results[0]
-    assert results[0]["knowledge_config"]["retrieval_settings"]["default_mode"] == "graphrag"
+    assert results[0]["knowledge_config"]["index_capability"] == "rag_graph"
+    assert results[0]["knowledge_config"]["retrieval_settings"]["default_mode"] == "rag_graph"
     assert results[0]["knowledge_config"]["retrieval_settings"]["top_k"] == 9
     assert results[0]["knowledge_config"]["index_settings"]["chunk_mode"] == "general"
 
@@ -230,9 +243,9 @@ def test_update_knowledge_service_merges_partial_knowledge_config(monkeypatch):
         )
     )
 
-    assert captured["update"][3] == "hybrid"
+    assert captured["update"][3] == "rag_graph"
     merged_config = captured["update"][4]
-    assert merged_config["retrieval_settings"]["default_mode"] == "hybrid"
+    assert merged_config["retrieval_settings"]["default_mode"] == "rag_graph"
     assert merged_config["retrieval_settings"]["top_k"] == 2
     assert merged_config["index_settings"]["chunk_size"] == 512
     assert merged_config["index_settings"]["overlap"] == 128

@@ -23,6 +23,7 @@ class KnowledgeIndexSettings(BaseModel):
     replace_consecutive_spaces: bool = Field(default=True)
     remove_urls_emails: bool = Field(default=False)
     image_indexing_mode: str = Field(default="dual", pattern="^(text_only|vl_only|dual)$")
+    vector_backend: str = Field(default="milvus", pattern="^(milvus|chroma|milvus_lite)$")
 
 
 class KnowledgeIndexSettingsPatch(BaseModel):
@@ -33,33 +34,60 @@ class KnowledgeIndexSettingsPatch(BaseModel):
     replace_consecutive_spaces: Optional[bool] = Field(default=None)
     remove_urls_emails: Optional[bool] = Field(default=None)
     image_indexing_mode: Optional[str] = Field(default=None, pattern="^(text_only|vl_only|dual)$")
+    vector_backend: Optional[str] = Field(default=None, pattern="^(milvus|chroma|milvus_lite)$")
+
+
+class KnowledgeGraphIndexSettings(BaseModel):
+    entity_extraction_mode: str = Field(default="rule_llm", pattern="^(rule|llm|rule_llm)$")
+    relation_schema: str = Field(default="open", pattern="^(open|typed)$")
+    entity_normalization: bool = Field(default=True)
+    evidence_backlink: bool = Field(default=True)
+    use_rag_entry_chunk: bool = Field(default=True)
+
+
+class KnowledgeGraphIndexSettingsPatch(BaseModel):
+    entity_extraction_mode: Optional[str] = Field(default=None, pattern="^(rule|llm|rule_llm)$")
+    relation_schema: Optional[str] = Field(default=None, pattern="^(open|typed)$")
+    entity_normalization: Optional[bool] = Field(default=None)
+    evidence_backlink: Optional[bool] = Field(default=None)
+    use_rag_entry_chunk: Optional[bool] = Field(default=None)
 
 
 class KnowledgeRetrievalSettings(BaseModel):
-    default_mode: str = Field(default="hybrid", pattern="^(auto|hybrid|rag|graphrag)$")
+    default_mode: str = Field(default="rag", pattern="^(auto|hybrid|rag|graphrag|rag_graph)$")
+    refill_policy: str = Field(default="smart", pattern="^(none|auto|smart)$")
     top_k: int = Field(default=5, ge=1, le=50)
     rerank_enabled: bool = Field(default=True)
     rerank_top_k: int = Field(default=4, ge=1, le=50)
     score_threshold: Optional[float] = Field(default=None, ge=0, le=1)
+    graph_hop_limit: int = Field(default=2, ge=1, le=3)
+    max_paths_per_entity: int = Field(default=5, ge=1, le=20)
 
 
 class KnowledgeRetrievalSettingsPatch(BaseModel):
-    default_mode: Optional[str] = Field(default=None, pattern="^(auto|hybrid|rag|graphrag)$")
+    default_mode: Optional[str] = Field(default=None, pattern="^(auto|hybrid|rag|graphrag|rag_graph)$")
+    refill_policy: Optional[str] = Field(default=None, pattern="^(none|auto|smart)$")
     top_k: Optional[int] = Field(default=None, ge=1, le=50)
     rerank_enabled: Optional[bool] = Field(default=None)
     rerank_top_k: Optional[int] = Field(default=None, ge=1, le=50)
     score_threshold: Optional[float] = Field(default=None, ge=0, le=1)
+    graph_hop_limit: Optional[int] = Field(default=None, ge=1, le=3)
+    max_paths_per_entity: Optional[int] = Field(default=None, ge=1, le=20)
 
 
 class KnowledgeConfig(BaseModel):
+    index_capability: str = Field(default="rag", pattern="^(rag|rag_graph)$")
     model_refs: KnowledgeModelRefs = Field(default_factory=KnowledgeModelRefs)
     index_settings: KnowledgeIndexSettings = Field(default_factory=KnowledgeIndexSettings)
+    graph_index_settings: KnowledgeGraphIndexSettings = Field(default_factory=KnowledgeGraphIndexSettings)
     retrieval_settings: KnowledgeRetrievalSettings = Field(default_factory=KnowledgeRetrievalSettings)
 
 
 class KnowledgeConfigPatch(BaseModel):
+    index_capability: Optional[str] = Field(default=None, pattern="^(rag|rag_graph)$")
     model_refs: Optional[KnowledgeModelRefsPatch] = Field(default=None)
     index_settings: Optional[KnowledgeIndexSettingsPatch] = Field(default=None)
+    graph_index_settings: Optional[KnowledgeGraphIndexSettingsPatch] = Field(default=None)
     retrieval_settings: Optional[KnowledgeRetrievalSettingsPatch] = Field(default=None)
 
 

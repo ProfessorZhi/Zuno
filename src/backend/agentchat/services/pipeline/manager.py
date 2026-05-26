@@ -208,7 +208,9 @@ class KnowledgePipelineManager:
     async def run_graph_stage(self, task_id: str):
         task = await self._load_task(task_id)
         try:
-            if self.enable_graph_indexing:
+            knowledge_config = await KnowledgeService.get_knowledge_config(task.knowledge_id)
+            index_capability = knowledge_config.get("index_capability", "rag")
+            if self.enable_graph_indexing and index_capability == "rag_graph":
                 chunks = await self._parse_chunks(task)
                 await self._record_stage(
                     task_id,
@@ -244,6 +246,16 @@ class KnowledgePipelineManager:
                     KnowledgeTaskStatus.running,
                     "graph indexing completed",
                     detail={"entity_count": entity_count, "relation_count": relation_count},
+                    knowledge_file_id=task.knowledge_file_id,
+                    file_patch=build_success_file_patch(KnowledgeTaskStage.graph_indexing, task_id),
+                )
+            else:
+                await self._record_stage(
+                    task_id,
+                    KnowledgeTaskStage.graph_indexing,
+                    KnowledgeTaskStatus.running,
+                    "graph indexing skipped for pure rag knowledge base",
+                    detail={"index_capability": index_capability},
                     knowledge_file_id=task.knowledge_file_id,
                     file_patch=build_success_file_patch(KnowledgeTaskStage.graph_indexing, task_id),
                 )

@@ -17,6 +17,13 @@ database:
 redis:
   endpoint: "redis://redis:6379"
 
+rabbitmq:
+  enabled: true
+  url: "amqp://guest:guest@rabbitmq:5672/"
+  parse_queue: "knowledge.parse"
+  index_queue: "knowledge.index"
+  graph_queue: "knowledge.graph"
+
 neo4j:
   enabled: true
   uri: "bolt://neo4j:7687"
@@ -81,9 +88,9 @@ rag:
   elasticsearch:
     hosts: "http://127.0.0.1:9200"
   vector_db:
-    host: "127.0.0.1"
+    host: "milvus"
     port: "19530"
-    mode: "chroma"
+    mode: "milvus"
 
 storage:
   mode: "minio"

@@ -36,6 +36,10 @@ screenshots-original/
 screenshots-redesign/
 src/frontend/output/
 
+# generated RAG evaluation artifacts
+src/backend/agentchat/evals/rag_eval/corpus/
+src/backend/agentchat/evals/rag_eval/runs/
+
 tmp-*.png
 tmp-*.json
 tmp-*.cjs

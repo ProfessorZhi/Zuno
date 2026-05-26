@@ -8,6 +8,7 @@ from agentchat.database.models.user import AdminUser
 from agentchat.utils.file_utils import format_file_size
 
 DEFAULT_KNOWLEDGE_CONFIG = {
+    "index_capability": "rag",
     "model_refs": {
         "text_embedding_model_id": None,
         "vl_embedding_model_id": None,
@@ -21,13 +22,24 @@ DEFAULT_KNOWLEDGE_CONFIG = {
         "replace_consecutive_spaces": True,
         "remove_urls_emails": False,
         "image_indexing_mode": "dual",
+        "vector_backend": "milvus",
+    },
+    "graph_index_settings": {
+        "entity_extraction_mode": "rule_llm",
+        "relation_schema": "open",
+        "entity_normalization": True,
+        "evidence_backlink": True,
+        "use_rag_entry_chunk": True,
     },
     "retrieval_settings": {
-        "default_mode": "hybrid",
+        "default_mode": "rag",
+        "refill_policy": "smart",
         "top_k": 5,
         "rerank_enabled": True,
         "rerank_top_k": 4,
         "score_threshold": None,
+        "graph_hop_limit": 2,
+        "max_paths_per_entity": 5,
     },
 }
 
@@ -70,6 +82,31 @@ class KnowledgeService:
                 merged[key] = value
         return merged
 
+    @staticmethod
+    def _normalize_retrieval_mode(mode: str | None, *, index_capability: str) -> str:
+        normalized = str(mode or "").strip().lower()
+        legacy_map = {
+            "hybrid": "rag_graph",
+            "graphrag": "rag_graph",
+            "auto": "rag",
+            "default": "rag",
+        }
+        normalized = legacy_map.get(normalized, normalized)
+        if normalized not in {"rag", "rag_graph"}:
+            normalized = "rag"
+        if index_capability != "rag_graph":
+            return "rag"
+        return normalized
+
+    @staticmethod
+    def _normalize_index_capability(value: str | None, retrieval_mode: str | None = None) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized in {"rag", "rag_graph"}:
+            return normalized
+        if str(retrieval_mode or "").strip().lower() in {"hybrid", "graphrag", "rag_graph"}:
+            return "rag_graph"
+        return "rag"
+
     @classmethod
     def _normalize_knowledge_config(
         cls,
@@ -83,6 +120,16 @@ class KnowledgeService:
             (knowledge_config or {}).get("retrieval_settings", {}).get("default_mode")
         ):
             normalized["retrieval_settings"]["default_mode"] = legacy_default_mode
+        retrieval_mode = normalized.get("retrieval_settings", {}).get("default_mode")
+        explicit_index_capability = (knowledge_config or {}).get("index_capability")
+        normalized["index_capability"] = cls._normalize_index_capability(
+            explicit_index_capability,
+            retrieval_mode,
+        )
+        normalized["retrieval_settings"]["default_mode"] = cls._normalize_retrieval_mode(
+            retrieval_mode,
+            index_capability=normalized["index_capability"],
+        )
         return normalized
 
     @classmethod

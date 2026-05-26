@@ -9,7 +9,7 @@ Behavior summary:
 
 - `Web-Start`: starts the browser stack without forcing rebuild
 - `Web-Rebuild`: rebuilds the Docker web stack and starts it
-- `Desktop-Start`: starts backend containers, local Vite desktop frontend, and Electron
+- `Desktop-Start`: starts backend containers, RabbitMQ worker, local Vite desktop frontend, and Electron
 - `Desktop-Stop`: closes Electron plus the backend containers used by desktop mode
 - `Desktop-Rebuild`: rebuilds the backend image used by desktop mode, then restarts the desktop runtime
 - `Full Rebuild`: rebuilds from scratch and clears caches where applicable
@@ -27,9 +27,13 @@ Runtime services included in the Docker-backed stack:
 
 - PostgreSQL
 - Redis
+- RabbitMQ
+- etcd
+- Milvus
 - Neo4j
 - MinIO
 - FastAPI backend
+- RabbitMQ worker
 - Vite frontend (web mode only)
 
 Recommended desktop shortcuts:

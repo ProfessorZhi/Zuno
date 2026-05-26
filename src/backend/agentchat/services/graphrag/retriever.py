@@ -9,11 +9,23 @@ class GraphRetriever:
     def __init__(self, client: Neo4jClient | None = None):
         self.client = client or Neo4jClient()
 
-    async def retrieve(self, query: str, knowledge_id: str) -> dict:
+    async def retrieve(
+        self,
+        query: str,
+        knowledge_id: str,
+        *,
+        graph_hop_limit: int = 2,
+        max_paths_per_entity: int = 10,
+    ) -> dict:
         entities = []
         paths = []
         for entity_name in self.ENTITY_PATTERN.findall(query):
-            neighbor_paths = await self.client.query_neighbors(entity_name, knowledge_id)
+            neighbor_paths = await self.client.query_neighbors(
+                entity_name,
+                knowledge_id,
+                hops=graph_hop_limit,
+                limit=max_paths_per_entity,
+            )
             if neighbor_paths:
                 entities.append(entity_name)
                 paths.extend(neighbor_paths)

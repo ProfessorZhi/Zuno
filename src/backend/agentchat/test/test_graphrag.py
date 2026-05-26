@@ -6,8 +6,8 @@ class _FakeRagRetriever:
         self._responses = list(responses)
         self.calls = []
 
-    async def retrieve(self, query: str, knowledge_ids: list[str]):
-        self.calls.append((query, tuple(knowledge_ids)))
+    async def retrieve(self, query: str, knowledge_ids: list[str], options=None):
+        self.calls.append((query, tuple(knowledge_ids), options or {}))
         if self._responses:
             return self._responses.pop(0)
         return {
@@ -26,8 +26,8 @@ class _FakeGraphRetriever:
         self._responses = list(responses)
         self.calls = []
 
-    async def retrieve(self, query: str, knowledge_id: str):
-        self.calls.append((query, knowledge_id))
+    async def retrieve(self, query: str, knowledge_id: str, **kwargs):
+        self.calls.append((query, knowledge_id, kwargs))
         if self._responses:
             return self._responses.pop(0)
         return {

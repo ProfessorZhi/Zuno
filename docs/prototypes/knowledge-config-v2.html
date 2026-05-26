@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zuno Knowledge Config v2 Prototype</title>
+  <style>
+    :root {
+      --bg: #fff8ef;
+      --panel: rgba(255, 252, 247, 0.96);
+      --panel-soft: rgba(255, 245, 236, 0.74);
+      --text: #0f172a;
+      --muted: #8f7a68;
+      --line: rgba(214, 132, 70, 0.14);
+      --line-strong: rgba(214, 132, 70, 0.24);
+      --blue: #b45309;
+      --blue-soft: rgba(245, 158, 11, 0.1);
+      --green: #12805c;
+      --green-soft: rgba(16, 185, 129, 0.1);
+      --amber: #9a5b0f;
+      --amber-soft: rgba(255, 245, 236, 0.92);
+      --danger: #b42318;
+      --shadow: 0 16px 36px rgba(160, 95, 42, 0.08);
+      --radius: 24px;
+      font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      height: 64px;
+      background: rgba(255, 252, 247, 0.9);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.62);
+      color: var(--text);
+      height: 34px;
+      padding: 0 13px;
+      border-radius: 7px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border-color: var(--blue);
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: white;
+      font-weight: 600;
+    }
+
+    main {
+      padding: 24px 28px 36px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 18px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .title-row {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 2px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--amber-soft);
+      color: var(--amber);
+      border: 1px solid #f2d38b;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .left, .right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .panel-desc {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tag {
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 9px;
+      font-size: 12px;
+      color: var(--blue);
+      background: rgba(255, 245, 236, 0.92);
+      border: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    .content {
+      padding: 14px 16px 16px;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .option-grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .option-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 13px 13px 12px;
+      background: rgba(255, 255, 255, 0.52);
+      cursor: pointer;
+      min-height: 104px;
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    .option-card:hover {
+      border-color: var(--line-strong);
+      box-shadow: 0 8px 24px rgba(20, 32, 55, 0.06);
+    }
+
+    .option-card.selected {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.28);
+    }
+
+    .option-card input {
+      position: absolute;
+      inset: 12px 12px auto auto;
+      accent-color: var(--blue);
+    }
+
+    .option-title {
+      margin: 0 22px 6px 0;
+      font-weight: 700;
+    }
+
+    .option-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .setting-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    input[type="text"], input[type="number"], select {
+      height: 36px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      padding: 0 10px;
+      background: rgba(255, 255, 255, 0.62);
+      color: var(--text);
+      font: inherit;
+      min-width: 0;
+    }
+
+    .switch-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px 11px;
+      background: var(--panel-soft);
+      color: var(--text);
+    }
+
+    .check input { accent-color: var(--blue); }
+
+    .notice {
+      margin-top: 14px;
+      border: 1px solid #f2d38b;
+      background: var(--amber-soft);
+      color: var(--amber);
+      border-radius: 7px;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .query-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .mini-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .flow-step {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 11px 12px;
+      background: var(--panel-soft);
+    }
+
+    .flow-step strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .flow-step span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .flow-step.graph {
+      border-color: #b7e0d0;
+      background: var(--green-soft);
+    }
+
+    .evidence {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+    }
+
+    .evidence-card {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px 11px;
+      background: rgba(255, 255, 255, 0.58);
+    }
+
+    .evidence-type {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .score {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .evidence-text {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .section-divider {
+      height: 1px;
+      background: var(--line);
+      margin: 15px 0;
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    @media (max-width: 1080px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .right {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        padding: 0 16px;
+      }
+
+      main {
+        padding: 18px 14px 28px;
+      }
+
+      .title-row,
+      .panel-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .option-grid,
+      .option-grid.three,
+      .setting-grid,
+      .query-grid,
+      .mini-row,
+      .switch-row,
+      .right {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark">Z</div>
+        <div>Zuno 知识库配置</div>
+      </div>
+      <div class="header-actions">
+        <button>预览检索</button>
+        <button class="primary">保存配置</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="title-row">
+        <div>
+          <h1>ZunoTestA</h1>
+      <p class="subtitle">把索引能力和查询检索拆开配置。索引能力可以中途升级或降级，但会触发重建/补建索引；查询模式只能使用当前已构建的能力。</p>
+        </div>
+        <div class="status-pill"><span class="dot"></span> 索引能力变更后需重建或补建</div>
+      </section>
+
+      <div class="left">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">知识库模式</h2>
+              <p class="panel-desc">决定当前知识库具备哪些索引能力。可以中途改，但需要重建或补建受影响索引。</p>
+            </div>
+            <span class="tag">建库时确定</span>
+          </div>
+          <div class="content">
+            <div class="option-grid" data-group="kb-mode">
+              <label class="option-card">
+                <input type="radio" name="kb-mode" value="rag" />
+                <p class="option-title">纯 RAG</p>
+              <p class="option-text">只构建文本/图片向量索引。查询模式只能使用纯 RAG。</p>
+              </label>
+              <label class="option-card selected">
+                <input type="radio" name="kb-mode" value="rag-graph" checked />
+                <p class="option-title">RAG + GraphRAG</p>
+              <p class="option-text">在向量索引外补建 Neo4j 图谱索引。查询时可选择纯 RAG 或 RAG + GraphRAG。</p>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">索引设置</h2>
+              <p class="panel-desc">这些设置改变文档入库方式，保存后需要重建受影响文件的索引。</p>
+            </div>
+            <span class="tag">需要重建索引</span>
+          </div>
+          <div class="content">
+            <div class="option-grid three" data-group="chunk-mode">
+              <label class="option-card selected">
+                <input type="radio" name="chunk-mode" value="general" checked />
+                <p class="option-title">通用分段</p>
+                <p class="option-text">按段落、标题和长度规则切 chunk，适合大多数文档。</p>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="chunk-mode" value="parent" />
+                <p class="option-title">父子分段</p>
+                <p class="option-text">子块精确召回，父块补充上下文，适合长文档和技术文档。</p>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="chunk-mode" value="qa" />
+                <p class="option-title">Q&A 分段</p>
+                <p class="option-text">保持问题和答案成对，适合 FAQ、客服知识库和题库。</p>
+              </label>
+            </div>
+
+            <div class="setting-grid">
+              <label class="field">
+                分段最大长度
+                <input type="number" value="1024" />
+              </label>
+              <label class="field">
+                分段重叠长度
+                <input type="number" value="50" />
+              </label>
+              <label class="field">
+                分段标识符
+                <input type="text" value="\n\n" />
+              </label>
+            </div>
+
+            <div class="switch-row">
+              <label class="check"><input type="checkbox" checked /> 清理连续空格和换行</label>
+              <label class="check"><input type="checkbox" /> 删除 URL 和邮箱地址</label>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="option-grid three" data-group="image-mode">
+              <label class="option-card">
+                <input type="radio" name="image-mode" value="text" />
+                <p class="option-title">图片转文本</p>
+                <p class="option-text">用视觉模型生成图片描述，只进入文本向量索引。</p>
+              </label>
+              <label class="option-card">
+                <input type="radio" name="image-mode" value="vl" />
+                <p class="option-title">仅 VL 索引</p>
+                <p class="option-text">图片只生成视觉向量，适合图片语义检索。</p>
+              </label>
+              <label class="option-card selected">
+                <input type="radio" name="image-mode" value="dual" checked />
+                <p class="option-title">图文双通道</p>
+                <p class="option-text">同时保存图片描述文本和图片向量，召回更全但成本更高。</p>
+              </label>
+            </div>
+
+            <div class="setting-grid">
+              <label class="field">
+                文本 Embedding
+                <select>
+                  <option>text-embedding-v4</option>
+                  <option>bge-m3</option>
+                </select>
+              </label>
+              <label class="field">
+                VL Embedding
+                <select>
+                  <option>qwen3-vl-embedding</option>
+                  <option>text-embedding-v4</option>
+                </select>
+              </label>
+              <label class="field">
+                向量数据库
+                <select>
+                  <option>Chroma</option>
+                  <option>Milvus</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="notice">修改 chunk、embedding、图片索引、向量库或 GraphRAG 模式后，需要重建索引。Top K、Rerank、补检策略不需要重建。</div>
+          </div>
+        </section>
+
+        <section class="panel" id="graphPanel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">GraphRAG 索引参数</h2>
+              <p class="panel-desc">仅在知识库模式为 RAG + GraphRAG 时生效，修改后需要重建图谱索引。</p>
+            </div>
+            <span class="tag">图谱索引</span>
+          </div>
+          <div class="content">
+            <div class="setting-grid">
+              <label class="field">
+                实体抽取方式
+                <select>
+                  <option selected>规则 + LLM 辅助</option>
+                  <option>仅规则抽取</option>
+                  <option>仅 LLM 抽取</option>
+                </select>
+              </label>
+              <label class="field">
+                关系 Schema
+                <select>
+                  <option selected>通用关系</option>
+                  <option>代码依赖关系</option>
+                  <option>文档概念关系</option>
+                </select>
+              </label>
+              <label class="field">
+                实体归一化
+                <select>
+                  <option selected>开启别名合并</option>
+                  <option>关闭别名合并</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="switch-row">
+              <label class="check"><input type="checkbox" checked /> 建立 Chunk -> Entity 证据回链</label>
+              <label class="check"><input type="checkbox" checked /> 查询时优先使用 RAG 命中 chunk 作为图谱入口</label>
+            </div>
+
+            <div class="notice">从纯 RAG 升级到 RAG + GraphRAG 时，不需要重做文本向量索引，但需要对已有 chunk 补建实体关系图谱。</div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="right">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">查询设置</h2>
+              <p class="panel-desc">这些设置只影响提问时的召回和排序，保存后即时生效。</p>
+            </div>
+            <span class="tag">即时生效</span>
+          </div>
+          <div class="content">
+            <div class="query-grid">
+              <label class="field">
+                检索模式
+                <select id="retrievalMode">
+                  <option value="rag">纯 RAG</option>
+                  <option value="rag-graph" selected>RAG + GraphRAG</option>
+                </select>
+              </label>
+              <label class="field">
+                补检策略
+                <select id="refillMode">
+                  <option>关闭</option>
+                  <option>自动补检</option>
+                  <option selected>智能补检</option>
+                </select>
+              </label>
+            </div>
+            <div class="notice" id="retrievalCapabilityNotice">当前知识库已构建图谱索引，查询时可以选择纯 RAG 或 RAG + GraphRAG。</div>
+
+            <div class="mini-row">
+              <label class="field">
+                Top K
+                <input type="number" value="5" />
+              </label>
+              <label class="field">
+                Rerank Top K
+                <input type="number" value="3" />
+              </label>
+            </div>
+
+            <div class="mini-row">
+              <label class="field">
+                Score 阈值
+                <input type="number" value="0.70" step="0.05" />
+              </label>
+              <label class="field">
+                Rerank 模型
+                <select>
+                  <option>gte-rerank-v2</option>
+                  <option>关闭</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="panel-desc">GraphRAG 查询参数</div>
+            <div class="mini-row" id="graphQuerySettings">
+              <label class="field">
+                关系扩展跳数
+                <select>
+                  <option>1-hop</option>
+                  <option selected>2-hop</option>
+                  <option>3-hop</option>
+                </select>
+              </label>
+              <label class="field">
+                每个实体最多路径
+                <input type="number" value="10" />
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">链路预览</h2>
+              <p class="panel-desc">展示当前配置下，一次查询会怎么走。</p>
+            </div>
+          </div>
+          <div class="content">
+            <div class="flow" id="flow">
+              <div class="flow-step">
+                <strong>1. 向量召回</strong>
+                <span>query embedding 后从向量库召回 Top K=5 个 chunk。</span>
+              </div>
+              <div class="flow-step graph">
+                <strong>2. 图谱扩展</strong>
+                <span>从 query 和命中 chunk 抽实体，到 Neo4j 扩展 1-hop / 2-hop 关系路径。</span>
+              </div>
+              <div class="flow-step">
+                <strong>3. Rerank 与过滤</strong>
+                <span>使用 gte-rerank-v2 重排，保留 Top 3，过滤低于 0.70 的结果。</span>
+              </div>
+              <div class="flow-step">
+                <strong>4. 上下文回填</strong>
+                <span>文本证据和关系路径一起交给 Agent 生成回答。</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">返回给 Agent 的证据</h2>
+              <p class="panel-desc">混合模式下不丢弃 RAG 结果，GraphRAG 作为关系补充。</p>
+            </div>
+          </div>
+          <div class="content">
+            <div class="evidence">
+              <div class="evidence-card">
+                <div class="evidence-type"><span>Text Evidence · chunk_01</span><span class="score">0.86</span></div>
+                <p class="evidence-text">RabbitMQ 将知识库解析、索引和图谱构建任务分发给 worker。</p>
+              </div>
+              <div class="evidence-card">
+                <div class="evidence-type"><span>Graph Evidence · path_01</span><span class="score">2-hop</span></div>
+                <p class="evidence-text">KnowledgeFile -> RabbitMQ -> Worker -> GraphExtractor</p>
+              </div>
+              <div class="evidence-card">
+                <div class="evidence-type"><span>Image Evidence · img_02</span><span class="score">0.78</span></div>
+                <p class="evidence-text">系统架构图：前端、后端、队列、向量库和 Neo4j 的连接关系。</p>
+              </div>
+            </div>
+          </div>
+          <div class="footer-actions">
+            <button>重建索引</button>
+            <button class="primary">运行测试查询</button>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    function syncCards(group) {
+      document.querySelectorAll(`[data-group="${group}"] .option-card`).forEach((card) => {
+        const input = card.querySelector("input");
+        card.classList.toggle("selected", input.checked);
+      });
+    }
+
+    document.querySelectorAll(".option-card input").forEach((input) => {
+      input.addEventListener("change", () => syncCards(input.name));
+    });
+
+    function updateKnowledgeMode() {
+      const kbMode = document.querySelector('input[name="kb-mode"]:checked')?.value || "rag-graph";
+      const graphPanel = document.getElementById("graphPanel");
+      const retrievalSelect = document.getElementById("retrievalMode");
+      const graphOption = retrievalSelect.querySelector('option[value="rag-graph"]');
+      const graphQuerySettings = document.getElementById("graphQuerySettings");
+
+      if (kbMode === "rag") {
+        graphPanel.style.opacity = "0.46";
+        graphPanel.style.pointerEvents = "none";
+        graphQuerySettings.style.opacity = "0.46";
+        graphQuerySettings.style.pointerEvents = "none";
+        graphOption.disabled = true;
+        retrievalSelect.value = "rag";
+        retrievalSelect.disabled = true;
+        document.getElementById("retrievalCapabilityNotice").textContent = "当前知识库只有向量索引，查询模式已锁定为纯 RAG；如需 RAG + GraphRAG，请先补建图谱索引。";
+      } else {
+        graphPanel.style.opacity = "1";
+        graphPanel.style.pointerEvents = "auto";
+        graphQuerySettings.style.opacity = "1";
+        graphQuerySettings.style.pointerEvents = "auto";
+        graphOption.disabled = false;
+        retrievalSelect.disabled = false;
+        document.getElementById("retrievalCapabilityNotice").textContent = "当前知识库已构建图谱索引，查询时可以选择纯 RAG 或 RAG + GraphRAG。";
+      }
+      updateFlow();
+    }
+
+    function updateFlow() {
+      const mode = document.getElementById("retrievalMode").value;
+      const flow = document.getElementById("flow");
+      if (mode === "rag") {
+        flow.innerHTML = `
+          <div class="flow-step"><strong>1. 向量召回</strong><span>query embedding 后从向量库召回 Top K=5 个 chunk。</span></div>
+          <div class="flow-step"><strong>2. 智能补检</strong><span>首轮不足时改写 query 或扩大召回范围，再补检一轮。</span></div>
+          <div class="flow-step"><strong>3. Rerank 与过滤</strong><span>使用 gte-rerank-v2 重排，保留 Top 3，过滤低于 0.70 的结果。</span></div>
+          <div class="flow-step"><strong>4. 上下文回填</strong><span>文本证据和图片描述交给 Agent 生成回答。</span></div>
+        `;
+      } else {
+        flow.innerHTML = `
+          <div class="flow-step"><strong>1. 向量召回</strong><span>query embedding 后从向量库召回 Top K=5 个 chunk。</span></div>
+          <div class="flow-step graph"><strong>2. 图谱扩展</strong><span>从 query 和命中 chunk 抽实体，到 Neo4j 扩展 1-hop / 2-hop 关系路径。</span></div>
+          <div class="flow-step"><strong>3. Rerank 与过滤</strong><span>使用 gte-rerank-v2 重排，保留 Top 3，过滤低于 0.70 的结果。</span></div>
+          <div class="flow-step"><strong>4. 上下文回填</strong><span>文本证据和关系路径一起交给 Agent 生成回答。</span></div>
+        `;
+      }
+    }
+
+    document.getElementById("retrievalMode").addEventListener("change", updateFlow);
+    document.querySelectorAll('input[name="kb-mode"]').forEach((input) => {
+      input.addEventListener("change", updateKnowledgeMode);
+    });
+    ["kb-mode", "chunk-mode", "image-mode"].forEach(syncCards);
+    updateKnowledgeMode();
+  </script>
+</body>
+</html>

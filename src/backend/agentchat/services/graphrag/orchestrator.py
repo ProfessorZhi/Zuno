@@ -3,13 +3,18 @@ from agentchat.services.graphrag.retriever import GraphRetriever
 
 
 class RagRetrieverAdapter:
-    async def retrieve(self, query: str, knowledge_ids: list[str]):
+    async def retrieve(self, query: str, knowledge_ids: list[str], options: dict | None = None):
         from agentchat.services.rag.handler import RagHandler
 
+        options = options or {}
         return await RagHandler._retrieve_ranked_documents_rag_detail(
             query,
             knowledge_ids,
             knowledge_ids,
+            min_score=options.get("score_threshold"),
+            top_k=options.get("top_k"),
+            needs_query_rewrite=options.get("needs_query_rewrite", True),
+            retrieval_options=options,
         )
 
 
@@ -145,15 +150,34 @@ class RetrievalOrchestrator:
 
         return attempts[: max(self.max_rounds - 1, 0)]
 
-    async def _run_single_pass(self, mode: str, query: str, knowledge_ids: list[str]) -> dict:
+    async def _run_single_pass(
+        self,
+        mode: str,
+        query: str,
+        knowledge_ids: list[str],
+        retrieval_options: dict | None = None,
+    ) -> dict:
+        retrieval_options = retrieval_options or {}
         rag_result = {"content": "", "raw_content": "", "documents": []}
         graph_result = {"content": "", "raw_content": "", "entities": [], "paths": []}
 
         if mode in {"rag", "hybrid"}:
-            rag_result = await self.rag_retriever.retrieve(query, knowledge_ids)
+            rag_result = await self.rag_retriever.retrieve(query, knowledge_ids, retrieval_options)
 
         if mode in {"graphrag", "hybrid"} and knowledge_ids:
-            graph_result = await self.graph_retriever.retrieve(query, knowledge_ids[0])
+            graph_query = query
+            if retrieval_options.get("use_rag_entry_chunk", True) and rag_result.get("documents"):
+                entry_text = "\n".join(
+                    str(document.get("content") or document.get("page_content") or "")
+                    for document in rag_result.get("documents", [])[:3]
+                )
+                graph_query = f"{query}\n{entry_text[:2000]}"
+            graph_result = await self.graph_retriever.retrieve(
+                graph_query,
+                knowledge_ids[0],
+                graph_hop_limit=retrieval_options.get("graph_hop_limit", 2),
+                max_paths_per_entity=retrieval_options.get("max_paths_per_entity", 10),
+            )
 
         graph_content = graph_result.get("content", "")
         rag_content = rag_result.get("content", "")
@@ -179,7 +203,14 @@ class RetrievalOrchestrator:
             "entities": graph_result.get("entities", []),
         }
 
-    async def run(self, mode: str, query: str, knowledge_ids: list[str]) -> dict:
+    async def run(
+        self,
+        mode: str,
+        query: str,
+        knowledge_ids: list[str],
+        retrieval_options: dict | None = None,
+    ) -> dict:
+        retrieval_options = retrieval_options or {}
         normalized_mode = normalize_retrieval_mode(mode)
         first_mode = self._resolve_auto_mode(query) if normalized_mode == "auto" else normalized_mode
         candidate_queries = await self.query_expander.expand(query)
@@ -194,7 +225,12 @@ class RetrievalOrchestrator:
             }
         ]
 
-        first_pass = await self._run_single_pass(first_mode, candidate_queries[0], knowledge_ids)
+        first_pass = await self._run_single_pass(
+            first_mode,
+            candidate_queries[0],
+            knowledge_ids,
+            retrieval_options,
+        )
         first_quality = self._quality_reason(first_mode, first_pass)
         rounds = [
             self._build_round_summary(
@@ -220,7 +256,12 @@ class RetrievalOrchestrator:
         for index, attempt in enumerate(attempts[1:], start=2):
             if final_quality is None:
                 break
-            current_pass = await self._run_single_pass(attempt["mode"], attempt["query"], knowledge_ids)
+            current_pass = await self._run_single_pass(
+                attempt["mode"],
+                attempt["query"],
+                knowledge_ids,
+                retrieval_options,
+            )
             current_quality = self._quality_reason(attempt["mode"], current_pass)
             rounds.append(
                 self._build_round_summary(
@@ -258,6 +299,7 @@ class RetrievalOrchestrator:
                 "path_count": len(first_pass.get("paths") or []),
                 "entity_count": len(first_pass.get("entities") or []),
             },
+            "retrieval_options": retrieval_options,
         }
 
         return {

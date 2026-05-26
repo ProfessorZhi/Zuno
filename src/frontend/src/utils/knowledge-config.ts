@@ -4,9 +4,15 @@ import type {
   KnowledgeModelBindingPayload,
 } from '../apis/knowledge'
 import type { RetrievalMode } from './retrieval'
+import { getRetrievalModeLabel, retrievalModeOptions } from './retrieval'
 
+export { getRetrievalModeLabel }
+
+export type KnowledgeIndexCapability = 'rag' | 'rag_graph'
 export type KnowledgeChunkMode = 'general' | 'parent_child' | 'qa'
 export type KnowledgeImageStrategy = 'text_only' | 'vl_only' | 'dual'
+export type KnowledgeVectorBackend = 'milvus' | 'chroma' | 'milvus_lite'
+export type KnowledgeRefillPolicy = 'none' | 'auto' | 'smart'
 
 export interface KnowledgeModelBinding {
   llm_id: string
@@ -15,15 +21,18 @@ export interface KnowledgeModelBinding {
 }
 
 export interface KnowledgeConfigSummary {
+  indexCapabilityLabel: string
   chunkModeLabel: string
   retrievalModeLabel: string
   imageStrategyLabel: string
+  vectorBackendLabel: string
   textEmbeddingLabel: string
   vlEmbeddingLabel: string
   rerankLabel: string
 }
 
 const REINDEX_FIELDS = {
+  root: ['index_capability'] as const,
   index_settings: [
     'chunk_mode',
     'chunk_size',
@@ -32,6 +41,14 @@ const REINDEX_FIELDS = {
     'replace_consecutive_spaces',
     'remove_urls_emails',
     'image_indexing_mode',
+    'vector_backend',
+  ] as const,
+  graph_index_settings: [
+    'entity_extraction_mode',
+    'relation_schema',
+    'entity_normalization',
+    'evidence_backlink',
+    'use_rag_entry_chunk',
   ] as const,
   model_refs: [
     'text_embedding_model_id',
@@ -39,21 +56,34 @@ const REINDEX_FIELDS = {
   ] as const,
 }
 
+export const indexCapabilityOptions = [
+  {
+    value: 'rag' as const,
+    label: '纯 RAG',
+    description: '只建立向量索引，查询时只能走 RAG，适合普通文档问答和低成本知识库。',
+  },
+  {
+    value: 'rag_graph' as const,
+    label: 'RAG + GraphRAG',
+    description: '建立向量索引和图谱索引，查询时可在纯 RAG 与 RAG + GraphRAG 间切换。',
+  },
+]
+
 export const chunkModeOptions = [
   {
     value: 'general' as const,
     label: '通用分段',
-    description: '适合大多数文档问答，检索块和回答块使用同一批内容。',
+    description: '按标题、段落、长度和重叠规则切块，适合大多数 Markdown、PDF 和说明文档。',
   },
   {
     value: 'parent_child' as const,
     label: '父子分段',
-    description: '小块负责检索，大块保留上下文，适合长文档和章节型内容。',
+    description: '小块负责召回，大块负责上下文，适合长章节、教程和需要完整语境的材料。',
   },
   {
     value: 'qa' as const,
     label: 'Q&A 分段',
-    description: '更偏向问答对结构，适合 FAQ、手册和标准流程。',
+    description: '保留显式问题和答案边界，适合 FAQ、操作手册和标准流程。',
   },
 ]
 
@@ -61,28 +91,34 @@ export const imageStrategyOptions = [
   {
     value: 'text_only' as const,
     label: '图片转文本',
-    description: '先做图片理解，再把描述文本写入普通索引。',
+    description: '先做 OCR/图片理解，再把描述文本写入普通文本索引。',
   },
   {
     value: 'vl_only' as const,
     label: '仅 VL 索引',
-    description: '图片优先走 VL Embedding，适合图库和视觉检索。',
+    description: '图片优先走视觉向量索引，适合图像检索场景。',
   },
   {
     value: 'dual' as const,
     label: '图文双通道',
-    description: '文本继续走普通向量，图片额外走 VL 向量，适合当前 Zuno。',
+    description: '同时保留图片描述文本索引和视觉向量索引，适合图文混合知识库。',
   },
 ]
 
-export const retrievalModeOptions = [
-  { value: 'auto' as const, label: '自动补检', description: '先走知识库默认路线，首轮结果偏弱时再自动补检一轮更合适的路线。' },
-  { value: 'hybrid' as const, label: '混合检索', description: '结合向量召回与图谱检索，适合作为默认策略。' },
-  { value: 'rag' as const, label: '智能补检', description: '先做向量召回，首轮不足时自动补检一轮并重排，适合普通文档型知识库。' },
-  { value: 'graphrag' as const, label: '图谱检索', description: '优先走图谱关系检索，适合结构化知识。' },
-] as const
+export const vectorBackendOptions = [
+  { value: 'milvus' as const, label: 'Milvus', description: '适合企业级 RAG，支持独立向量服务和较大规模索引。' },
+  { value: 'chroma' as const, label: 'Chroma', description: '适合本地轻量原型和小规模知识库。' },
+  { value: 'milvus_lite' as const, label: 'Milvus Lite', description: '适合单机开发验证，部署成本低于独立 Milvus。' },
+]
+
+export const refillPolicyOptions = [
+  { value: 'none' as const, label: '不补检', description: '只使用首轮召回结果。' },
+  { value: 'auto' as const, label: '自动补检', description: '首轮结果过少或低于阈值时补检一轮。' },
+  { value: 'smart' as const, label: '智能补检', description: '结合命中数量、分数和图谱路径质量决定是否补检。' },
+]
 
 const defaultConfig = (): KnowledgeConfigPayload => ({
+  index_capability: 'rag',
   model_refs: {
     text_embedding_model_id: null,
     vl_embedding_model_id: null,
@@ -96,15 +132,52 @@ const defaultConfig = (): KnowledgeConfigPayload => ({
     replace_consecutive_spaces: true,
     remove_urls_emails: false,
     image_indexing_mode: 'dual',
+    vector_backend: 'milvus',
+  },
+  graph_index_settings: {
+    entity_extraction_mode: 'rule_llm',
+    relation_schema: 'open',
+    entity_normalization: true,
+    evidence_backlink: true,
+    use_rag_entry_chunk: true,
   },
   retrieval_settings: {
-    default_mode: 'hybrid',
+    default_mode: 'rag',
+    refill_policy: 'smart',
     top_k: 5,
     rerank_enabled: true,
     rerank_top_k: 4,
     score_threshold: null,
+    graph_hop_limit: 2,
+    max_paths_per_entity: 5,
   },
 })
+
+const normalizeRetrievalModeForCapability = (
+  mode: string | null | undefined,
+  capability: KnowledgeIndexCapability,
+): RetrievalMode => {
+  const legacyMap: Record<string, RetrievalMode> = {
+    auto: 'rag',
+    default: 'rag',
+    hybrid: 'rag_graph',
+    graphrag: 'rag_graph',
+  }
+  const raw = String(mode || 'rag').toLowerCase()
+  const normalized = (legacyMap[raw] || raw) as RetrievalMode
+  if (capability === 'rag') return 'rag'
+  return normalized === 'rag_graph' ? 'rag_graph' : 'rag'
+}
+
+const normalizeIndexCapability = (
+  capability: string | null | undefined,
+  defaultMode?: string | null,
+): KnowledgeIndexCapability => {
+  if (capability === 'rag_graph' || capability === 'rag') return capability
+  return ['hybrid', 'graphrag', 'rag_graph'].includes(String(defaultMode || '').toLowerCase())
+    ? 'rag_graph'
+    : 'rag'
+}
 
 export const createDefaultKnowledgeConfig = defaultConfig
 
@@ -112,7 +185,11 @@ export const normalizeKnowledgeConfig = (
   config?: Partial<KnowledgeConfigPayload> | null,
 ): KnowledgeConfigPayload => {
   const base = defaultConfig()
-  return {
+  const merged = {
+    index_capability: normalizeIndexCapability(
+      config?.index_capability,
+      config?.retrieval_settings?.default_mode,
+    ),
     model_refs: {
       ...base.model_refs,
       ...(config?.model_refs || {}),
@@ -121,21 +198,32 @@ export const normalizeKnowledgeConfig = (
       ...base.index_settings,
       ...(config?.index_settings || {}),
     },
+    graph_index_settings: {
+      ...base.graph_index_settings,
+      ...(config?.graph_index_settings || {}),
+    },
     retrieval_settings: {
       ...base.retrieval_settings,
       ...(config?.retrieval_settings || {}),
     },
-  }
+  } as KnowledgeConfigPayload
+  merged.retrieval_settings.default_mode = normalizeRetrievalModeForCapability(
+    merged.retrieval_settings.default_mode,
+    merged.index_capability,
+  )
+  return merged
 }
 
 export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): KnowledgeConfigPatchPayload => ({
+  index_capability: config.index_capability,
   model_refs: { ...config.model_refs },
   index_settings: { ...config.index_settings },
+  graph_index_settings: { ...config.graph_index_settings },
   retrieval_settings: { ...config.retrieval_settings },
 })
 
 const mapModelToBinding = (
-  model?: { llm_id: string; model: string; provider: string } | null,
+  model?: KnowledgeModelBindingPayload | null,
 ): KnowledgeModelBinding | null => {
   if (!model) return null
   return {
@@ -147,12 +235,16 @@ const mapModelToBinding = (
 
 export const findBindingById = (
   modelId: string | null | undefined,
-  options: Array<{ llm_id: string; model: string; provider: string }>,
+  options: KnowledgeModelBindingPayload[],
 ): KnowledgeModelBinding | null => {
   if (!modelId) return null
   const found = options.find((item) => item.llm_id === modelId)
   return mapModelToBinding(found)
 }
+
+export const getIndexCapabilityLabel = (mode: KnowledgeIndexCapability) => (
+  indexCapabilityOptions.find((item) => item.value === mode)?.label || '纯 RAG'
+)
 
 export const getChunkModeLabel = (mode: KnowledgeChunkMode) => (
   chunkModeOptions.find((item) => item.value === mode)?.label || '通用分段'
@@ -162,8 +254,8 @@ export const getImageStrategyLabel = (strategy: KnowledgeImageStrategy) => (
   imageStrategyOptions.find((item) => item.value === strategy)?.label || '图文双通道'
 )
 
-export const getRetrievalModeLabel = (mode: RetrievalMode) => (
-  retrievalModeOptions.find((item) => item.value === mode)?.label || '混合检索'
+export const getVectorBackendLabel = (backend: KnowledgeVectorBackend) => (
+  vectorBackendOptions.find((item) => item.value === backend)?.label || 'Milvus'
 )
 
 export const describeKnowledgeConfig = (
@@ -176,9 +268,11 @@ export const describeKnowledgeConfig = (
 ): KnowledgeConfigSummary => {
   const config = normalizeKnowledgeConfig(configInput)
   return {
+    indexCapabilityLabel: getIndexCapabilityLabel(config.index_capability),
     chunkModeLabel: getChunkModeLabel(config.index_settings.chunk_mode),
-    retrievalModeLabel: getRetrievalModeLabel(config.retrieval_settings.default_mode as RetrievalMode),
+    retrievalModeLabel: getRetrievalModeLabel(config.retrieval_settings.default_mode),
     imageStrategyLabel: getImageStrategyLabel(config.index_settings.image_indexing_mode),
+    vectorBackendLabel: getVectorBackendLabel(config.index_settings.vector_backend),
     textEmbeddingLabel: bindings?.textEmbedding?.model || '未选择文本 Embedding',
     vlEmbeddingLabel: bindings?.vlEmbedding?.model || '未选择 VL Embedding',
     rerankLabel: config.retrieval_settings.rerank_enabled
@@ -195,20 +289,29 @@ export const buildKnowledgePreviewChunks = (
   const config = normalizeKnowledgeConfig(configInput)
   const title = knowledgeName || '当前知识库'
   const description = knowledgeDescription || '这里会收录项目资料、文档、PDF、图片和说明信息。'
+  const graphHint = config.index_capability === 'rag_graph'
+    ? `查询可走 RAG + GraphRAG，默认图谱扩展 ${config.retrieval_settings.graph_hop_limit}-hop。`
+    : '当前只建立向量索引，查询模式锁定为纯 RAG。'
   const imageHint = config.index_settings.image_indexing_mode === 'dual'
     ? '图片会同时保留描述文本索引和 VL 图像向量索引。'
     : config.index_settings.image_indexing_mode === 'vl_only'
       ? '图片会优先走 VL 向量索引。'
       : '图片会先转成描述文本，再进入普通文本索引。'
-  const retrievalHint = `默认检索模式是 ${getRetrievalModeLabel(config.retrieval_settings.default_mode as RetrievalMode)}，Top K=${config.retrieval_settings.top_k}。`
+  const retrievalHint = `默认检索模式是 ${getRetrievalModeLabel(config.retrieval_settings.default_mode)}，Top K=${config.retrieval_settings.top_k}。`
   const chunkHint = `分段长度 ${config.index_settings.chunk_size}，重叠 ${config.index_settings.overlap}，分段模式 ${getChunkModeLabel(config.index_settings.chunk_mode)}。`
 
   return [
     `${title}：${description}`,
     chunkHint,
-    `${imageHint} ${retrievalHint} 首轮不足时会自动补检一轮。`,
+    `${imageHint} ${retrievalHint} ${graphHint}`,
   ]
 }
+
+export const getAllowedRetrievalModeOptions = (capability: KnowledgeIndexCapability) => (
+  capability === 'rag'
+    ? retrievalModeOptions.filter((item) => item.value === 'rag')
+    : retrievalModeOptions
+)
 
 export const detectReindexImpact = (
   previousInput?: Partial<KnowledgeConfigPayload> | null,
@@ -219,9 +322,21 @@ export const detectReindexImpact = (
   const changedIndexFields: string[] = []
   const changedQueryFields: string[] = []
 
+  REINDEX_FIELDS.root.forEach((key) => {
+    if (previous[key] !== next[key]) {
+      changedIndexFields.push(key)
+    }
+  })
+
   REINDEX_FIELDS.index_settings.forEach((key) => {
     if (previous.index_settings[key] !== next.index_settings[key]) {
       changedIndexFields.push(`index_settings.${key}`)
+    }
+  })
+
+  REINDEX_FIELDS.graph_index_settings.forEach((key) => {
+    if (previous.graph_index_settings[key] !== next.graph_index_settings[key]) {
+      changedIndexFields.push(`graph_index_settings.${key}`)
     }
   })
 
@@ -231,7 +346,16 @@ export const detectReindexImpact = (
     }
   })
 
-  ;(['default_mode', 'top_k', 'rerank_enabled', 'rerank_top_k', 'score_threshold'] as const).forEach((key) => {
+  ;([
+    'default_mode',
+    'refill_policy',
+    'top_k',
+    'rerank_enabled',
+    'rerank_top_k',
+    'score_threshold',
+    'graph_hop_limit',
+    'max_paths_per_entity',
+  ] as const).forEach((key) => {
     if (previous.retrieval_settings[key] !== next.retrieval_settings[key]) {
       changedQueryFields.push(`retrieval_settings.${key}`)
     }
