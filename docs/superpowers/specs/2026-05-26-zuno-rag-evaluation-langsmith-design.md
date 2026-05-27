@@ -446,8 +446,11 @@ python -m agentchat.evals.rag_eval.run_eval \
   - `rag_rerank`: Recall@5 0.8125，Context Precision@5 0.5750，Citation Accuracy 0.6250。
   - `rag_graph`: Recall@5 0.8125，Context Precision@5 0.3500，Citation Accuracy 0.5833。
   - 结论：当前小样本下 baseline RAG 优于 rerank / GraphRAG profile，说明 rerank、query rewrite 和 GraphRAG 参数仍需继续调优；这组数字可以作为“已建立评测闭环”的证据，但不应包装成 GraphRAG 提升结论。
+- 2026-05-27 已补充 `--answer-mode llm` 与 `--judge-mode llm`，并在 Docker worker 中跑通 `smoke-llmjudge`：
+  - `baseline_rag`: Recall@5 0.8750，Context Precision@5 0.9500，Faithfulness 0.9500，Answer Correctness 0.9500，Citation Accuracy 0.9583。
+  - 本次命令同时打开了 `--trace-langsmith`，报告中 `trace_langsmith=true` 且 `langsmith_configured=false`，说明 trace 开关链路可执行，但当前环境尚未配置真实 LangSmith API key / project，因此没有验证云端可见 trace。
 
 尚未完成：
 
-- 当前 runner 使用检索上下文生成基线答案和启发式 judge；后续如要更严谨，应接入 LLM-as-judge 或 LangSmith Evaluation judge。
 - LangSmith trace 已接入 runner 开关，但尚未在真实 API key / LangSmith 项目中验证可见 trace。
+- 当前 LLM judge 使用 Zuno 已配置对话模型输出 JSON 分数；如果后续需要更规范的线上评测，可以继续接 LangSmith Evaluation judge 或固定的独立裁判模型。

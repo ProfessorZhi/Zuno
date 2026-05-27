@@ -45,3 +45,17 @@ python src/backend/agentchat/evals/rag_eval/run_eval.py `
 ```
 
 LangSmith is used for trace replay and profile comparison. The numeric metrics are computed locally from `retrieval_results.jsonl`, `answers.jsonl`, `judge_results.jsonl`, and `metrics.json`.
+
+For stricter answer quality metrics, run:
+
+```powershell
+python src/backend/agentchat/evals/rag_eval/run_eval.py `
+  --dataset src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl `
+  --knowledge-id <knowledge_id> `
+  --profiles baseline_rag `
+  --answer-mode llm `
+  --judge-mode llm `
+  --trace-langsmith
+```
+
+`--answer-mode llm` asks the configured conversation model to answer from retrieved evidence. `--judge-mode llm` asks the configured conversation model to score Faithfulness and Answer Correctness as JSON. If LangSmith is not configured, traces are skipped but local metrics still run.

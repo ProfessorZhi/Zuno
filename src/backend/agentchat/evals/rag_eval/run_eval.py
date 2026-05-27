@@ -19,6 +19,16 @@ from agentchat.settings import initialize_app_settings
 from agentchat.utils.runtime_observability import configure_langsmith
 
 NO_EVIDENCE_ANSWER = "NO_RELEVANT_EVIDENCE_FOUND"
+ANSWER_SYSTEM_PROMPT = (
+    "你是一个 RAG 评测回答器。只能依据给定证据回答问题；"
+    "如果证据不足，回答 NO_RELEVANT_EVIDENCE_FOUND。"
+    "回答中尽量用 [1]、[2] 这样的编号引用证据。"
+)
+JUDGE_SYSTEM_PROMPT = (
+    "你是一个严格的 RAG 评测裁判。只输出 JSON，不要输出 Markdown。"
+    "faithfulness 表示答案是否被证据支持，answer_correctness 表示答案是否覆盖参考答案且无明显错误。"
+    "两个分数都必须是 0 到 1 的数字。"
+)
 
 PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
     "baseline_rag": {
@@ -126,7 +136,7 @@ def _extract_contexts(retrieval_result: dict[str, Any]) -> list[dict[str, Any]]:
     return documents
 
 
-def _build_answer(sample: dict[str, Any], contexts: list[dict[str, Any]]) -> dict[str, Any]:
+def _build_extractive_answer(sample: dict[str, Any], contexts: list[dict[str, Any]]) -> dict[str, Any]:
     context_text = "\n".join(str(context.get("content", "")) for context in contexts[:3]).strip()
     if context_text:
         answer = context_text[:1200]
@@ -140,7 +150,88 @@ def _build_answer(sample: dict[str, Any], contexts: list[dict[str, Any]]) -> dic
     }
 
 
-def _judge_answer(sample: dict[str, Any], answer_row: dict[str, Any], contexts: list[dict[str, Any]]) -> dict[str, Any]:
+def _context_block(contexts: list[dict[str, Any]], limit: int = 5) -> str:
+    lines = []
+    for index, context in enumerate(contexts[:limit], start=1):
+        content = str(context.get("content") or context.get("text") or "").strip()
+        if content:
+            lines.append(f"[{index}] {content[:1500]}")
+    return "\n\n".join(lines)
+
+
+def _extract_json_object(text: str) -> dict[str, Any] | None:
+    cleaned = str(text or "").replace("```json", "").replace("```", "").strip()
+    try:
+        result = json.loads(cleaned)
+        return result if isinstance(result, dict) else None
+    except Exception:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start >= 0 and end > start:
+            try:
+                result = json.loads(cleaned[start : end + 1])
+                return result if isinstance(result, dict) else None
+            except Exception:
+                return None
+    return None
+
+
+def _clamp_score(value: Any, default: float = 0.0) -> float:
+    try:
+        return max(0.0, min(float(value), 1.0))
+    except Exception:
+        return default
+
+
+async def _build_llm_answer(sample: dict[str, Any], contexts: list[dict[str, Any]]) -> dict[str, Any]:
+    context_text = _context_block(contexts)
+    if not context_text:
+        return _build_extractive_answer(sample, contexts)
+
+    try:
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        from agentchat.core.models.manager import ModelManager
+
+        client = ModelManager.get_conversation_model()
+        prompt = (
+            f"问题：{sample['query']}\n\n"
+            f"证据：\n{context_text}\n\n"
+            "请基于证据给出简洁答案，并用 [编号] 标注支撑证据。"
+        )
+        response = await asyncio.to_thread(
+            client.invoke,
+            [SystemMessage(content=ANSWER_SYSTEM_PROMPT), HumanMessage(content=prompt)],
+        )
+        answer = str(getattr(response, "content", "") or "").strip() or NO_EVIDENCE_ANSWER
+        return {
+            "id": sample["id"],
+            "query": sample["query"],
+            "answer": answer,
+            "citations": contexts[:3],
+            "answer_mode": "llm",
+        }
+    except Exception as err:
+        fallback = _build_extractive_answer(sample, contexts)
+        fallback["answer_mode"] = "extractive_fallback"
+        fallback["answer_error"] = str(err)
+        return fallback
+
+
+async def _build_answer(
+    sample: dict[str, Any],
+    contexts: list[dict[str, Any]],
+    *,
+    answer_mode: str,
+) -> dict[str, Any]:
+    if answer_mode == "llm":
+        return await _build_llm_answer(sample, contexts)
+    answer = _build_extractive_answer(sample, contexts)
+    answer["answer_mode"] = "extractive"
+    return answer
+
+
+def _judge_answer_heuristic(sample: dict[str, Any], answer_row: dict[str, Any], contexts: list[dict[str, Any]]) -> dict[str, Any]:
     answer = str(answer_row.get("answer") or "")
     context_text = "\n".join(str(context.get("content", "")) for context in contexts)
     reference = str(sample.get("reference_answer") or "")
@@ -149,6 +240,67 @@ def _judge_answer(sample: dict[str, Any], answer_row: dict[str, Any], contexts: 
         "faithfulness": 1.0 if answer and answer != NO_EVIDENCE_ANSWER and answer in context_text else 0.0,
         "answer_correctness": _overlap_score(answer, reference),
     }
+
+
+async def _judge_answer_llm(
+    sample: dict[str, Any],
+    answer_row: dict[str, Any],
+    contexts: list[dict[str, Any]],
+) -> dict[str, Any]:
+    try:
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        from agentchat.core.models.manager import ModelManager
+
+        context_text = _context_block(contexts)
+        client = ModelManager.get_conversation_model()
+        prompt = {
+            "query": sample.get("query"),
+            "reference_answer": sample.get("reference_answer"),
+            "answer": answer_row.get("answer"),
+            "contexts": context_text,
+            "output_schema": {
+                "faithfulness": "0..1 number",
+                "answer_correctness": "0..1 number",
+                "rationale": "short Chinese reason",
+            },
+        }
+        response = await asyncio.to_thread(
+            client.invoke,
+            [
+                SystemMessage(content=JUDGE_SYSTEM_PROMPT),
+                HumanMessage(content=json.dumps(prompt, ensure_ascii=False)),
+            ],
+        )
+        parsed = _extract_json_object(str(getattr(response, "content", "") or ""))
+        if not parsed:
+            raise ValueError("judge response is not valid JSON")
+        return {
+            "id": sample["id"],
+            "faithfulness": _clamp_score(parsed.get("faithfulness")),
+            "answer_correctness": _clamp_score(parsed.get("answer_correctness")),
+            "judge_mode": "llm",
+            "rationale": str(parsed.get("rationale") or ""),
+        }
+    except Exception as err:
+        fallback = _judge_answer_heuristic(sample, answer_row, contexts)
+        fallback["judge_mode"] = "heuristic_fallback"
+        fallback["judge_error"] = str(err)
+        return fallback
+
+
+async def _judge_answer(
+    sample: dict[str, Any],
+    answer_row: dict[str, Any],
+    contexts: list[dict[str, Any]],
+    *,
+    judge_mode: str,
+) -> dict[str, Any]:
+    if judge_mode == "llm":
+        return await _judge_answer_llm(sample, answer_row, contexts)
+    result = _judge_answer_heuristic(sample, answer_row, contexts)
+    result["judge_mode"] = "heuristic"
+    return result
 
 
 def _fmt(value: Any) -> str:
@@ -202,10 +354,13 @@ async def run_eval(
     profiles: list[str],
     output_dir: Path,
     trace_langsmith: bool = False,
+    answer_mode: str = "extractive",
+    judge_mode: str = "heuristic",
 ) -> dict[str, Any]:
     await initialize_app_settings()
+    langsmith_configured = False
     if trace_langsmith:
-        configure_langsmith()
+        langsmith_configured = configure_langsmith()
 
     samples = _read_jsonl(dataset_path)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -221,6 +376,9 @@ async def run_eval(
                     for profile in profiles
                 },
                 "trace_langsmith": trace_langsmith,
+                "langsmith_configured": langsmith_configured,
+                "answer_mode": answer_mode,
+                "judge_mode": judge_mode,
             },
             ensure_ascii=False,
             indent=2,
@@ -288,9 +446,11 @@ async def run_eval(
                 }
             )
 
-            answer_row = _build_answer(sample, contexts)
+            answer_row = await _build_answer(sample, contexts, answer_mode=answer_mode)
             answer_rows.append(answer_row)
-            judge_rows.append(_judge_answer(sample, answer_row, contexts))
+            judge_rows.append(
+                await _judge_answer(sample, answer_row, contexts, judge_mode=judge_mode)
+            )
 
         retrieval_path = profile_dir / "retrieval_results.jsonl"
         answers_path = profile_dir / "answers.jsonl"
@@ -312,6 +472,10 @@ async def run_eval(
 
     report = {
         "output_dir": str(output_dir),
+        "answer_mode": answer_mode,
+        "judge_mode": judge_mode,
+        "trace_langsmith": trace_langsmith,
+        "langsmith_configured": langsmith_configured,
         "profiles": profile_reports,
     }
     (output_dir / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -326,6 +490,8 @@ def main() -> None:
     parser.add_argument("--profiles", default="baseline_rag,rag_rerank,rag_graph")
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--trace-langsmith", action="store_true")
+    parser.add_argument("--answer-mode", choices=["extractive", "llm"], default="extractive")
+    parser.add_argument("--judge-mode", choices=["heuristic", "llm"], default="heuristic")
     args = parser.parse_args()
 
     output_dir = args.output_dir or Path("src/backend/agentchat/evals/rag_eval/runs") / time.strftime("%Y%m%d-%H%M%S")
@@ -336,6 +502,8 @@ def main() -> None:
             profiles=[profile.strip() for profile in args.profiles.split(",") if profile.strip()],
             output_dir=output_dir,
             trace_langsmith=args.trace_langsmith,
+            answer_mode=args.answer_mode,
+            judge_mode=args.judge_mode,
         )
     )
     print(json.dumps(report, ensure_ascii=False))

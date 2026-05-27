@@ -1,6 +1,7 @@
 import json
 import tempfile
 import asyncio
+from types import SimpleNamespace
 from pathlib import Path
 
 
@@ -216,3 +217,83 @@ def test_run_eval_writes_profile_outputs(monkeypatch):
         assert calls[0]["retrieval_options"]["rerank_enabled"] is False
         assert calls[-1]["retrieval_mode"] == "rag_graph"
         assert calls[-1]["retrieval_options"]["graph_hop_limit"] == 2
+
+
+def test_run_eval_supports_llm_answer_and_judge_modes(monkeypatch):
+    from agentchat.core.models import manager as model_manager
+    from agentchat.evals.rag_eval import run_eval as run_eval_module
+
+    async def fake_retrieve(query, collection_names, index_names=None, **kwargs):
+        return {
+            "first_mode": kwargs.get("retrieval_mode", "rag"),
+            "final_mode": kwargs.get("retrieval_mode", "rag"),
+            "round_count": 1,
+            "rag_result": {
+                "documents": [
+                    {
+                        "content": "Python 关键字是语法保留词，不能作为普通标识符。",
+                        "source": "Python 关键字.md",
+                        "score": 0.92,
+                    }
+                ]
+            },
+            "graph_result": {"paths": []},
+            "metadata": {"rounds": []},
+        }
+
+    class FakeClient:
+        def invoke(self, messages):
+            human_content = str(messages[-1].content)
+            if "output_schema" in human_content:
+                return SimpleNamespace(
+                    content='{"faithfulness": 0.8, "answer_correctness": 0.7, "rationale": "ok"}'
+                )
+            return SimpleNamespace(content="Python 关键字是语法保留词，不能作为变量名。[1]")
+
+    monkeypatch.setattr(
+        run_eval_module.RagHandler,
+        "retrieve_ranked_documents_with_metadata",
+        staticmethod(fake_retrieve),
+    )
+    monkeypatch.setattr(
+        model_manager.ModelManager,
+        "get_conversation_model",
+        staticmethod(lambda: FakeClient()),
+    )
+
+    local_tmp_root = Path.cwd() / ".test-tmp"
+    local_tmp_root.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=local_tmp_root) as tmp_name:
+        tmp_path = Path(tmp_name)
+        dataset = tmp_path / "dataset.jsonl"
+        _write_jsonl(
+            dataset,
+            [
+                {
+                    "id": "q1",
+                    "query": "Python 关键字是什么？",
+                    "reference_answer": "Python 关键字是语法保留词，不能作为普通标识符。",
+                    "gold_evidence": [
+                        {"file_contains": "Python 关键字.md", "text_contains": "语法保留"}
+                    ],
+                    "required_citations": True,
+                }
+            ],
+        )
+
+        report = asyncio.run(
+            run_eval_module.run_eval(
+                dataset_path=dataset,
+                knowledge_ids=["k_eval"],
+                profiles=["baseline_rag"],
+                output_dir=tmp_path / "run",
+                answer_mode="llm",
+                judge_mode="llm",
+            )
+        )
+
+        metrics = report["profiles"]["baseline_rag"]
+        assert report["answer_mode"] == "llm"
+        assert report["judge_mode"] == "llm"
+        assert metrics["faithfulness"] == 0.8
+        assert metrics["answer_correctness"] == 0.7
