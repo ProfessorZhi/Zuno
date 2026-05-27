@@ -449,8 +449,11 @@ python -m agentchat.evals.rag_eval.run_eval \
 - 2026-05-27 已补充 `--answer-mode llm` 与 `--judge-mode llm`，并在 Docker worker 中跑通 `smoke-llmjudge`：
   - `baseline_rag`: Recall@5 0.8750，Context Precision@5 0.9500，Faithfulness 0.9500，Answer Correctness 0.9500，Citation Accuracy 0.9583。
   - 本次命令同时打开了 `--trace-langsmith`，报告中 `trace_langsmith=true` 且 `langsmith_configured=false`，说明 trace 开关链路可执行，但当前环境尚未配置真实 LangSmith API key / project，因此没有验证云端可见 trace。
+- 2026-05-27 已创建本地 LangSmith Personal Access Token，并只写入未提交的 `infra/docker/docker_config.local.yaml`。随后在 Docker worker 中跑通 `smoke-langsmith`：
+  - `baseline_rag`: Recall@5 0.8750，Context Precision@5 0.9500，Faithfulness 0.9438，Answer Correctness 0.9438，Citation Accuracy 0.9583。
+  - 本次报告中 `trace_langsmith=true` 且 `langsmith_configured=true`。
+  - LangSmith 云端项目 `zuno-rag-eval` 已出现 trace，项目页显示最近 7 天 trace count 为 24；run 列表可见 `eval_run_id=smoke-langsmith`、`eval_sample_id`、`knowledge_ids` 等 metadata。
 
 尚未完成：
 
-- LangSmith trace 已接入 runner 开关，但尚未在真实 API key / LangSmith 项目中验证可见 trace。
 - 当前 LLM judge 使用 Zuno 已配置对话模型输出 JSON 分数；如果后续需要更规范的线上评测，可以继续接 LangSmith Evaluation judge 或固定的独立裁判模型。
