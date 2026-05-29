@@ -246,6 +246,8 @@ class WorkSpaceSimpleAgent:
             "rewritten_query_used": metadata.get("rewritten_query_used") or False,
             "query_variants": metadata.get("query_variants") or [],
             "rounds": metadata.get("rounds") or [],
+            "plan": metadata.get("plan") or {},
+            "retriever_runs": metadata.get("retriever_runs") or [],
             "knowledge_ids": self.knowledge_ids,
         }
 

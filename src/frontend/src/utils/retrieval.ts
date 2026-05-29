@@ -1,13 +1,13 @@
 const retrievalModeOptions = [
   {
     value: 'rag',
-    label: '纯 RAG',
-    description: '只使用文本/多模态向量召回、重排和阈值过滤，适合普通文档问答。',
+    label: '标准检索',
+    description: '默认融合向量检索与 BM25 关键词检索，适合大多数文档问答与配置查找。',
   },
   {
     value: 'rag_graph',
-    label: 'RAG + GraphRAG',
-    description: '先用 RAG 找入口证据，再沿知识图谱扩展实体和关系路径，适合关系追问。',
+    label: '图谱增强检索',
+    description: '在标准检索上增加 GraphRAG 路径扩展，适合关系追问、依赖链路和结构化问题。',
   },
 ] as const
 

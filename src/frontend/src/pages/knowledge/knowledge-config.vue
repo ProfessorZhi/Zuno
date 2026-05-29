@@ -361,7 +361,7 @@ onActivated(fetchKnowledgeContext)
           <div class="panel-title">
             <div>
               <h2>建库方式</h2>
-              <p>建库方式决定要不要建立图谱索引；改动后通常需要重建或补建索引。</p>
+              <p>建库方式决定是否额外建立图谱索引；标准 RAG 索引会同时服务向量检索与 BM25 检索。</p>
             </div>
             <el-icon><Connection /></el-icon>
           </div>
@@ -527,7 +527,7 @@ onActivated(fetchKnowledgeContext)
           <div class="panel-title">
             <div>
               <h2>查询设置</h2>
-              <p>这些参数只影响提问时的召回、排序和补检，保存后即时生效。</p>
+              <p>这些参数只影响提问时的向量召回、BM25 检索、图谱扩展、排序和补检，保存后即时生效。</p>
             </div>
             <el-icon><Histogram /></el-icon>
           </div>
@@ -595,7 +595,7 @@ onActivated(fetchKnowledgeContext)
             <label class="switch-card">
               <div>
                 <strong>启用 Rerank</strong>
-                <p>先用 Embedding 召回，再用排序模型重排优先级。</p>
+                <p>先做向量/BM25 混合召回，再用排序模型重排优先级。</p>
               </div>
               <el-switch v-model="config.retrieval_settings.rerank_enabled" />
             </label>
