@@ -27,7 +27,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     "docs/architecture/README.md": [
         "`Phase 5`: completed",
         "`Phase 6`: completed",
-        "`Phase 7`: current serial phase",
+        "`Phase 7`: completed",
         "./specs/README.md",
         "./plans/README.md",
         "./plans/current-phase-audit.md",
@@ -35,7 +35,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     "docs/architecture/zuno_refactor_plan.md": [
         "`Phase 5`：已完成",
         "`Phase 6`：已完成",
-        "`Phase 7`：当前串行阶段",
+        "`Phase 7`：已完成",
         "每完成一个大阶段，都必须回看这些入口是否仍然对齐",
         "已经解决的问题，不再继续挂在主阅读路径里；",
     ],
@@ -48,8 +48,8 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "`Phase 4`: completed",
         "`Phase 5`: completed",
         "`Phase 6`: completed",
-        "`Phase 7`: current serial phase",
-        "Stay on `Phase 7`.",
+        "`Phase 7`: completed",
+        "No further serial phase remains.",
     ],
     "docs/architecture/plans/zuno-refactor-execution-plan.md": [
         "## Phase 3：文档与展示面硬收口",

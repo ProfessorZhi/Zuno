@@ -8,19 +8,19 @@
 - `Phase 4`: completed
 - `Phase 5`: completed
 - `Phase 6`: completed
-- `Phase 7`: current serial phase
+- `Phase 7`: completed
 
 ## Current Default Judgment
 
-Do not declare the final interview-facing closure complete yet.
+The new `Phase 1-7` serial ledger can now be treated as closed.
 
-The active serial problem is now `Phase 7`: align the final interview-facing runtime, docs, evaluation story, and GitHub showcase surface on top of the now-closed `Phase 1-6` mainline.
+There is no further serial phase to unlock after `Phase 7`. The current repository state should be read as the final interview-facing baseline of the finished `Phase 1-7` plan.
 
 This branch is using the current `main` line as the real base. That matters:
 
 - the clean `main` base already contains the new serial `Phase 1-5` line
 - the just-closed `Phase 6` delta was judged against `main`, not against an older local "foundation-first" branch story
-- the next serial decision can therefore move forward from a verified `Phase 6` bundle instead of carrying an unresolved proof gap
+- the final `Phase 7` gate can now inherit that verified `Phase 6` bundle instead of reopening its proof gap
 
 ## Phase 6 Closure Evidence
 
@@ -61,13 +61,16 @@ The current repo state now proves the following `Phase 6` runtime and proof-surf
 
 ## What Is Still Not Closed
 
-`Phase 6` is no longer the blocking serial phase.
+No further serial phase remains.
 
-What still needs to be closed now is the final `Phase 7` surface:
+The repository still has ordinary maintenance work in the future, but the `Phase 1-7` refactor ledger itself is no longer open.
 
-- the final interview-facing runtime / docs / showcase story still needs its own last cleanup pass
-- the final `Phase 7` prestage/ready notes still need to become the active closure checklist
-- the repository still needs the final `Phase 7` GitHub node after this `Phase 6` merge lands
+The final closed-state gate is anchored by:
+
+- `python tools/scripts/verify_phase7_readiness.py`
+- `python tools/scripts/verify_repo_structure.py`
+- `pytest tests/test_repo_structure_consistency.py`
+- `pytest tests/test_publish_boundary.py`
 
 ## Current Phase 6 Bundle Shape
 
@@ -143,11 +146,10 @@ These checks now answer three different questions:
 
 ## Next Exact Step
 
-Stay on `Phase 7`.
+No further serial phase remains.
 
 The next exact step is:
 
-- use `phase7-final-prestage.md` and `phase7-final-ready.md` as the live closure checklist
+- keep `python tools/scripts/verify_phase7_readiness.py` green before future public-facing changes
+- use `phase7-final-prestage.md` and `phase7-final-ready.md` as the retained record of how the final node was closed
 - keep the final runtime / docs / publish-boundary proof surface aligned
-- prepare the final interview-facing GitHub showcase node
-- only then close `Phase 7`
