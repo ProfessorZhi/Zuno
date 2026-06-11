@@ -22,6 +22,7 @@ class UserRoleBase(SQLModel):
 
 class UserRole(UserRoleBase, table=True):
     __tablename__ = "user_role"
+    __table_args__ = {"extend_existing": True}
     id: Optional[str] = Field(default=None, primary_key=True)
 
 

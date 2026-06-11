@@ -15,6 +15,7 @@ class ToolAuthType(str, Enum):
 
 class ToolTable(SQLModelSerializable, table=True):
     __tablename__ = "tool"
+    __table_args__ = {"extend_existing": True}
 
     tool_id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     name: Optional[str] = Field(description='工具的英文名称，大模型调用')

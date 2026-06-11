@@ -6,9 +6,25 @@
 - `Phase 2` completed on top of the updated `main`.
 - `Phase 3` is completed on top of the updated `main`.
 - `Phase 4` is completed on top of the updated `main`.
-- `Phase 5` is completed on this branch and ready to merge.
-- `Phase 6` is the next serial phase.
-- `Phase 7` remains pending under the new serial ledger.
+- `Phase 5` is completed and already merged to `main`.
+- `Phase 6` is completed under the new serial ledger.
+- `Phase 7` is the current serial phase.
+
+当前 `Phase 6` 的判断口径也已经更硬：
+
+- 不再沿用早期“foundation 节点已经单独落地”的假设
+- 直接以当前 `main` 基线为准
+- 凡是当前 `Phase 6` 入口在 `main` 上仍然实际依赖的 entrypoint / runtime foundation / verification test / node-op 文档脚本，都属于真实 `Phase 6` bundled node
+
+当前 `Phase 6` bundle 统一用下面这组命令观察和验收：
+
+- `python tools/scripts/preview_phase6_bundle_scope.py --groups`
+- `python tools/scripts/preview_phase6_bundle_scope.py --summary`
+- `python tools/scripts/preview_phase6_bundle_scope.py --group logical_phase6_delta`
+- `python tools/scripts/preview_phase6_bundle_scope.py --group runtime_foundations --stat`
+- `python tools/scripts/preview_phase6_bundle_scope.py --dry-run`
+- `python tools/scripts/preview_phase6_bundle_scope.py --stage-command`
+- `python tools/scripts/verify_phase6_bundle_ready.py`
 
 ## 这份文档的职责
 
@@ -194,19 +210,23 @@ GitHub 节点：
 目标：
 
 - 本地 embedding、本地评测、compare matrix、trace、citation 形成稳定证据链
+- 阶段文档、bundle 预览脚本、readiness verifier 和真实代码范围一致
+- 从当前 `main` 基线上形成一个可独立推 GitHub 的 `Phase 6` 节点
 
 建议最小测试：
 
-1. local eval
-2. compare matrix 生成
-3. 指标汇总脚本
+1. `pytest -q src/backend/agentchat/test/test_contract_eval_runner.py src/backend/agentchat/test/test_rag_eval_local_scheme.py src/backend/agentchat/test/test_stackless_compare_matrix.py src/backend/agentchat/test/test_rag_eval_local_launcher.py`
+2. `python tools/scripts/preview_phase6_bundle_scope.py --summary`
+3. `python tools/scripts/verify_phase6_bundle_ready.py`
 
 完成判定：
 
 1. 本地 embedding + 本地评测链路稳定
 2. compare matrix 可复现
-3. 自动化测试和展示证据一致
-4. 本阶段评测测试通过
+3. 自动化测试、README、`docs/architecture/`、bundle verifier 对同一套证据链说法一致
+4. 当前 `main` 基线下实际依赖的 eval entrypoints / runtime foundations / verification tests 已作为同一个节点收口
+5. 本阶段最小测试通过
+6. 该节点已独立推 GitHub 并合回 `main`
 
 GitHub 节点：
 

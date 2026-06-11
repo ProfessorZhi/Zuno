@@ -22,6 +22,7 @@ class WorkSpaceSessionBase(SQLModelSerializable):
 
 class WorkSpaceSession(WorkSpaceSessionBase, table=True):
     __tablename__ = "workspace_session"
+    __table_args__ = {"extend_existing": True}
 
     session_id: str = Field(
         default_factory=lambda: uuid4().hex,

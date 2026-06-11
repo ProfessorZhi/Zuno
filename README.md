@@ -284,6 +284,15 @@ python -c "import importlib, sys; sys.path.insert(0, 'src/backend'); importlib.i
 ```
 
 ```powershell
+pytest src/backend/agentchat/test/test_contract_eval_runner.py `
+  src/backend/agentchat/test/test_rag_eval_local_scheme.py `
+  src/backend/agentchat/test/test_stackless_compare_matrix.py `
+  src/backend/agentchat/test/test_rag_eval_local_launcher.py
+python tools/scripts/preview_phase6_bundle_scope.py --summary
+python tools/scripts/verify_phase6_bundle_ready.py
+```
+
+```powershell
 cd src\frontend
 npm run lint
 npm run build

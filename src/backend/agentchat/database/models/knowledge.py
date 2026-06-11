@@ -12,6 +12,7 @@ def get_knowledge_id():
 
 class KnowledgeTable(SQLModelSerializable, table=True):
     __tablename__ = "knowledge"
+    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=get_knowledge_id, primary_key=True)
     name: str = Field(index=True, unique=True, max_length=128)

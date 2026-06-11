@@ -7,6 +7,7 @@ class CompletionReq(BaseModel):
     user_input: str = Field(description="用户的问题")
     dialog_id: str = Field(description="对话的ID值")
     file_url: Optional[str] = Field(None, description="对话中上传的文件的oss链接")
+    multi_agent_enabled: bool = Field(False, description="是否启用多 agent 运行时")
 
 
 class ToolCall(BaseModel):

@@ -12,6 +12,7 @@ class MCPAgentTable(SQLModelSerializable, table=True):
     """历史兼容表：保存 MCP 服务集合配置。"""
 
     __tablename__ = "mcp_agent"
+    __table_args__ = {"extend_existing": True}
 
     mcp_agent_id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     mcp_server_id: str = Field(

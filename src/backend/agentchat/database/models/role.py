@@ -23,7 +23,10 @@ class RoleBase(SQLModel):
 
 
 class Role(RoleBase, table=True):
-    __table_args__ = (UniqueConstraint('role_name', name='group_role_name_uniq'),)
+    __table_args__ = (
+        UniqueConstraint('role_name', name='group_role_name_uniq'),
+        {"extend_existing": True},
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
 
 

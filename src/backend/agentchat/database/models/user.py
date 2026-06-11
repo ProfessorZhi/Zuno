@@ -17,6 +17,7 @@ AdminUser = '1'
 
 class UserTable(SQLModelSerializable, table=True):
     __tablename__ = "user"
+    __table_args__ = {"extend_existing": True}
 
     user_id: str = Field(primary_key=True)
     user_name: str = Field(index=True, unique=True)

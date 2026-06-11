@@ -25,7 +25,7 @@ DEFAULT_EVAL_CONFIG = {
         "separator": "\n\n",
         "replace_consecutive_spaces": True,
         "remove_urls_emails": False,
-        "image_indexing_mode": "dual",
+        "image_indexing_mode": "text_only",
         "vector_backend": "milvus",
     },
     "graph_index_settings": {
@@ -48,6 +48,24 @@ DEFAULT_EVAL_CONFIG = {
 }
 
 
+def build_eval_knowledge_config(
+    *,
+    text_embedding_model_id: str | None = None,
+    rerank_model_id: str | None = None,
+    index_capability: str = "rag_graph",
+    default_mode: str = "rag_graph",
+) -> dict:
+    config = json.loads(json.dumps(DEFAULT_EVAL_CONFIG, ensure_ascii=False))
+    config["index_capability"] = index_capability
+    config["retrieval_settings"]["default_mode"] = default_mode
+    model_refs = config.setdefault("model_refs", {})
+    if text_embedding_model_id:
+        model_refs["text_embedding_model_id"] = text_embedding_model_id
+    if rerank_model_id:
+        model_refs["rerank_model_id"] = rerank_model_id
+    return config
+
+
 def _resolve_prepared_path(manifest_path: Path, item: dict) -> Path:
     raw_path = str(item.get("prepared_path") or "")
     candidates = []
@@ -63,16 +81,23 @@ def _resolve_prepared_path(manifest_path: Path, item: dict) -> Path:
     raise FileNotFoundError(f"prepared file not found for manifest item: {item.get('file_name') or raw_path}")
 
 
-async def _resolve_or_create_knowledge(name: str, user_id: str) -> str:
+async def _resolve_or_create_knowledge(name: str, user_id: str, knowledge_config: dict) -> str:
     existing = await KnowledgeService.get_knowledge_ids_from_name([name], user_id)
     if existing:
-        return str(existing[0])
+        knowledge_id = str(existing[0])
+        await KnowledgeService.update_knowledge(
+            knowledge_id,
+            name,
+            "Python notes evaluation knowledge base for RAG and GraphRAG metrics.",
+            knowledge_config=knowledge_config,
+        )
+        return knowledge_id
 
     await KnowledgeService.create_knowledge(
         name,
         "Python notes evaluation knowledge base for RAG and GraphRAG metrics.",
         user_id,
-        DEFAULT_EVAL_CONFIG,
+        knowledge_config,
     )
     created = await KnowledgeService.get_knowledge_ids_from_name([name], user_id)
     if not created:
@@ -86,10 +111,20 @@ async def ingest_prepared_corpus(
     knowledge_name: str,
     user_id: str = AdminUser,
     dispatch: str = "sync",
+    text_embedding_model_id: str | None = None,
+    rerank_model_id: str | None = None,
+    index_capability: str = "rag_graph",
+    default_mode: str = "rag_graph",
 ) -> dict:
     await initialize_app_settings()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    knowledge_id = await _resolve_or_create_knowledge(knowledge_name, user_id)
+    knowledge_config = build_eval_knowledge_config(
+        text_embedding_model_id=text_embedding_model_id,
+        rerank_model_id=rerank_model_id,
+        index_capability=index_capability,
+        default_mode=default_mode,
+    )
+    knowledge_id = await _resolve_or_create_knowledge(knowledge_name, user_id, knowledge_config)
     previous_rabbitmq_enabled = bool((app_settings.rabbitmq or {}).get("enabled"))
     if dispatch == "sync":
         app_settings.rabbitmq["enabled"] = False
@@ -121,6 +156,7 @@ async def ingest_prepared_corpus(
         "knowledge_name": knowledge_name,
         "file_count": len(results),
         "dispatch": dispatch,
+        "knowledge_config": knowledge_config,
         "files": results,
     }
 
@@ -131,6 +167,10 @@ def main() -> None:
     parser.add_argument("--knowledge-name", default="ZunoPythonEval")
     parser.add_argument("--user-id", default=AdminUser)
     parser.add_argument("--dispatch", choices=["sync"], default="sync")
+    parser.add_argument("--text-embedding-model-id", default=None)
+    parser.add_argument("--rerank-model-id", default=None)
+    parser.add_argument("--index-capability", choices=["rag", "rag_graph"], default="rag_graph")
+    parser.add_argument("--default-mode", choices=["rag", "rag_graph"], default="rag_graph")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
@@ -140,6 +180,10 @@ def main() -> None:
             knowledge_name=args.knowledge_name,
             user_id=args.user_id,
             dispatch=args.dispatch,
+            text_embedding_model_id=args.text_embedding_model_id,
+            rerank_model_id=args.rerank_model_id,
+            index_capability=args.index_capability,
+            default_mode=args.default_mode,
         )
     )
     if args.output:

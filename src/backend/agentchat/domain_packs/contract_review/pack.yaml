@@ -1,0 +1,10 @@
+id: contract_review
+name: 合同审查
+version: 0.1.0
+description: 用于合同条款问答、风险识别、引用溯源的 GraphRAG 领域插件
+schema: schema.json
+extraction_prompt: extraction_prompt.md
+retrieval_policy: retrieval_policy.yaml
+answer_template: answer_template.md
+report_template: report_template.md
+eval_dataset: eval_dataset.jsonl

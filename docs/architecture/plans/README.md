@@ -8,9 +8,9 @@
 当前真正应该优先阅读的计划文档只有两份：
 
 - [Zuno Refactor Execution Plan](./zuno-refactor-execution-plan.md)
-  这是新的 `Phase 1-7` 串行执行真相来源。
+  这是新的 `Phase 1-7` 串行执行真相来源。当前默认已经完成 `Phase 1-6`，正在串行推进 `Phase 7`。
 - [Current Phase Audit](./current-phase-audit.md)
-  这是当前仓库状态的最小阶段判断入口。
+  这是当前仓库状态的最小阶段判断入口。它负责回答“为什么现在已经切到 `Phase 7`、但还不能宣称最终总收口已经完成”。
 
 ## 仍然保留，但不属于当前主阅读路径的计划文档
 
@@ -40,3 +40,15 @@
 5. `Phase 5` LangGraph + GraphRAG 主线深化
 6. `Phase 6` 评测与证据链固化
 7. `Phase 7` 面试前总收口
+
+## 当前默认关注点
+
+当前默认只做一件事：
+
+- 把 `Phase 7` 作为最终 GitHub 节点彻底收口
+
+这里的判断口径不再沿用早期“foundation 节点已经独立合并”的假设，而是直接按当前 `main` 基线上的真实 bundle 判断：
+
+- 本地 eval 主逻辑要成立
+- 它在当前 `main` 上实际依赖的 entrypoints / runtime foundations / verification tests 也要一起成立
+- bundle 预览脚本、readiness verifier、阶段文档要与这套真实范围一致

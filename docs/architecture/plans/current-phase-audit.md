@@ -7,139 +7,147 @@
 - `Phase 3`: completed
 - `Phase 4`: completed
 - `Phase 5`: completed
-- `Phase 6`: next serial phase
-- `Phase 7`: pending
+- `Phase 6`: completed
+- `Phase 7`: current serial phase
 
-## Phase 5 Closure Evidence
+## Current Default Judgment
 
-This branch closes the new serial `Phase 5` gate by making the LangGraph + GraphRAG mainline provable in code, recovering the missing vector-store runtime package, and adding dedicated tests for retrieval governance, graph updates, and runtime flow.
+Do not declare the final interview-facing closure complete yet.
 
-Current evidence from the repo state:
+The active serial problem is now `Phase 7`: align the final interview-facing runtime, docs, evaluation story, and GitHub showcase surface on top of the now-closed `Phase 1-6` mainline.
 
-- `src/backend/zuno/services/rag/vector_db/` now exists again as a real `zuno` runtime package, with `LazyVectorStoreClient`, `milvus_client`, `milvus_lite_client`, and `chroma_client`
-- `src/backend/zuno/core/graphs/domain_qa_graph.py` remains the LangGraph-driven domain QA runtime and now has dedicated proof coverage for retrieval trace propagation, citations, and graph-path carry-through
-- `src/backend/zuno/services/retrieval/planner.py` now has dedicated proof coverage for auto-to-hybrid routing, graph health downgrade, and stable profile resolution
-- `src/backend/zuno/services/pipeline/manager.py` already lands dynamic graph updates through `delete_by_source_chunk`, `upsert_entity`, and `upsert_relation`; `tests/test_phase5_langgraph_graphrag_mainline.py` now verifies that path with `document_hash`, `chunk_hash`, `domain_pack_id`, `index_version`, and `status`
-- `tests/test_zuno_public_entrypoints.py` is now aligned with the post-Phase-4 `zuno.services.application.*` boundary, so Phase 5 verification is not masked by stale pre-Phase-4 assertions
+This branch is using the current `main` line as the real base. That matters:
 
-## Phase 5 Minimum Verification
+- the clean `main` base already contains the new serial `Phase 1-5` line
+- the just-closed `Phase 6` delta was judged against `main`, not against an older local "foundation-first" branch story
+- the next serial decision can therefore move forward from a verified `Phase 6` bundle instead of carrying an unresolved proof gap
 
-The Phase 5 minimum gate now passes on this branch:
+## Phase 6 Closure Evidence
 
-1. `pytest -q tests/test_phase5_langgraph_graphrag_mainline.py`
-2. `pytest -q tests/test_zuno_runtime_chain_guard.py tests/test_zuno_public_entrypoints.py`
-3. `python -c "import importlib, sys; sys.path.insert(0, 'src/backend'); importlib.import_module('zuno.services.rag.vector_db'); importlib.import_module('zuno.core.graphs.domain_qa_graph'); print('phase5-smoke-ok')"`
+The current repo state now proves the following `Phase 6` runtime and proof-surface steps:
 
-These checks verify:
+- `run_eval.py` now exposes a stable profile contract for the local-eval chain again:
+  - `resolve_profiles()` exists again
+  - `local_compare` resolves to `baseline_rag`, `rag_rerank`, `rag_graph_chunk_backed`
+  - `graph_compare` resolves to `baseline_rag`, `rag_graph_chunk_backed`, `rag_graph_chunk_backed_3hop`
+  - old names (`rag_graph`, `rag_graph_3hop`) still resolve as compatibility aliases instead of breaking older callers
+- `run_stackless_compare_matrix.py` is present again as a real committed Phase 6 entrypoint instead of a missing file referenced only by tests and docs
+- the stackless / local-eval helper chain is now self-consistent on this branch:
+  - `run_local_embedding_eval.py`
+  - `run_stackless_local_eval.py`
+  - `run_stackless_compare_matrix.py`
+  - `summarize_eval_profiles.py`
+  - `local_embedding_server.py`
+  - `local_rerank_server.py`
+- the domain/runtime support required by that local-eval chain is also now restored on this branch:
+  - `services/runtime_registry.py`
+  - `services/domain_pack/`
+  - `services/graphrag/extractors/`
+  - `services/graphrag/retrievers/`
+  - `core/graphs/`
+  - `core/runtime/`
+- the current minimum verification surface for the restored Phase 6 chain is green:
+  - `pytest -q src/backend/agentchat/test/test_contract_eval_runner.py src/backend/agentchat/test/test_rag_eval_local_scheme.py src/backend/agentchat/test/test_stackless_compare_matrix.py src/backend/agentchat/test/test_rag_eval_local_launcher.py`
+  - latest result on this branch: `24 passed`
+- the restored domain-pack / runtime compatibility surface is also green:
+  - `pytest -q src/backend/agentchat/test/test_domain_pack_runtime_flow.py src/backend/agentchat/test/test_completion_domain_pack_runtime.py src/backend/agentchat/test/test_workspace_domain_pack_runtime.py src/backend/agentchat/test/test_general_agent_domain_pack_runtime.py`
+  - latest result on this branch: `12 passed`
+- the broader Phase 6 bundle verification now matches the current worktree truth:
+  - `python tools/scripts/verify_docs_surface.py`
+  - `python tools/scripts/preview_phase6_bundle_scope.py --summary`
+  - `python tools/scripts/verify_phase6_bundle_ready.py`
+  - `pytest -q tests/test_docs_surface_consistency.py tests/test_publish_boundary.py tests/test_phase6_bundle_scope.py src/backend/agentchat/test/test_contract_eval_runner.py src/backend/agentchat/test/test_rag_eval_local_scheme.py src/backend/agentchat/test/test_stackless_compare_matrix.py src/backend/agentchat/test/test_rag_eval_local_launcher.py src/backend/agentchat/test/test_domain_pack_runtime_flow.py src/backend/agentchat/test/test_completion_domain_pack_runtime.py src/backend/agentchat/test/test_workspace_domain_pack_runtime.py src/backend/agentchat/test/test_general_agent_domain_pack_runtime.py`
+  - latest combined result on this branch: `48 passed`
 
-- the LangGraph runtime still carries retrieval metadata, citations, and graph paths through the main domain QA flow
-- retrieval planning holds a stable `rag / hybrid / graphrag` decision surface and degrades safely when graph health is stale
-- GraphRAG dynamic update keeps its incremental delete-by-source-chunk path and preserves graph runtime metadata
-- the recovered `zuno.services.rag.vector_db` package is back on the runtime import path instead of remaining a broken hole in the mainline
+## What Is Still Not Closed
 
-## Phase 4 Closure Evidence
+`Phase 6` is no longer the blocking serial phase.
 
-This branch closes the new serial `Phase 4` gate by hardening stable service-layer imports for high-value runtime paths and adding dedicated layering guardrails.
+What still needs to be closed now is the final `Phase 7` surface:
 
-Current evidence from the repo state:
+- the final interview-facing runtime / docs / showcase story still needs its own last cleanup pass
+- the final `Phase 7` prestage/ready notes still need to become the active closure checklist
+- the repository still needs the final `Phase 7` GitHub node after this `Phase 6` merge lands
 
-- `src/backend/zuno/core/callbacks/usage_metadata.py` no longer reaches upward into `zuno.api.services.*`
-- `src/backend/zuno/database/init_data.py` now depends on stable application-service exports instead of controller-facing service paths
-- `src/backend/zuno/services/capability_registry.py`, `services/pipeline/manager.py`, `services/retrieval/retrievers.py`, `services/rag/handler.py`, and `services/tool_creation_service.py` no longer import `zuno.api.services.*` directly
-- `src/backend/zuno/services/application/` now exists as a stable lower-layer service export surface
-- `docs/development/backend-layering-guidelines.md` now documents the `zuno.services.application.*` boundary rule explicitly
-- `tools/scripts/verify_backend_layering.py` now verifies forbidden imports and required application-layer imports
-- `tests/test_backend_layering_boundaries.py` and `tests/test_phase4_runtime_boundary_smoke.py` now provide automated guardrails and runtime smoke coverage
+## Current Phase 6 Bundle Shape
 
-## Phase 4 Minimum Verification
+From the current clean branch tip, the realistic `Phase 6` bundled node is:
 
-The Phase 4 minimum gate now passes on this branch:
+- `docs_and_contract`
+  - `docs/architecture/plans/current-phase-audit.md`
+  - `docs/architecture/plans/zuno-refactor-execution-plan.md`
+  - `src/backend/agentchat/evals/rag_eval/README.md`
+- `logical_phase6_delta`
+  - `run_local_embedding_eval.py`
+  - `run_stackless_compare_matrix.py`
+  - `generate_contract_review_scale_corpus.py`
+  - `test_rag_eval_local_launcher.py`
+  - `test_stackless_compare_matrix.py`
+- `eval_entrypoints`
+  - `run_stackless_local_eval.py`
+  - `summarize_eval_profiles.py`
+  - `local_embedding_server.py`
+  - `local_rerank_server.py`
+- `runtime_foundations`
+  - `services/runtime_registry.py`
+  - `services/domain_pack/`
+  - `services/graphrag/extractors/`
+  - `services/graphrag/retrievers/`
+  - `core/graphs/`
+  - `core/runtime/`
+- `verification_tests`
+  - the associated `agentchat/test` proof surface for domain packs, local runtime, retrievers, and stackless eval
+- `phase6_node_ops`
+  - the grouped preview script
+  - the readiness verifier
+  - the bundle-scope test
+  - the plan notes that describe how to stage this node reproducibly
 
-1. `python tools/scripts/verify_backend_layering.py`
-2. `pytest -q tests/test_backend_layering_boundaries.py`
-3. `pytest -q tests/test_phase4_runtime_boundary_smoke.py`
-4. minimum `import zuno.main` smoke
+In the current worktree, that grouped bundle evaluates to:
 
-These checks verify:
+- `docs_and_contract = 3`
+- `logical_phase6_delta = 5`
+- `eval_entrypoints = 4`
+- `runtime_foundations = 6`
+- `verification_tests = 19`
+- `phase6_node_ops = 6`
+- `total_changed = 43`
 
-- lower runtime-oriented layers no longer import `zuno.api.services.*` directly
-- stable service-layer exports exist for high-value paths
-- the tightened boundary still preserves minimum runtime imports
-- the repo structure and publish-boundary checks remain stable underneath the Phase 4 change
+This is stricter than the older local note that assumed a separate foundation node had already landed. On the current `main` base, the broader bundled node is the honest contract.
 
-## Phase 3 Closure Evidence
+## Current Bundle Commands
 
-This branch closes the new serial `Phase 3` gate by hard-closing the public reading path, removing stale phase conflicts from public entry docs, and adding a dedicated docs-surface verifier.
+Use the grouped preview commands instead of manually guessing the bundle:
 
-Current evidence from the repo state:
+- `python tools/scripts/preview_phase6_bundle_scope.py --groups`
+- `python tools/scripts/preview_phase6_bundle_scope.py --summary`
+- `python tools/scripts/preview_phase6_bundle_scope.py --group logical_phase6_delta`
+- `python tools/scripts/preview_phase6_bundle_scope.py --group runtime_foundations --stat`
+- `python tools/scripts/preview_phase6_bundle_scope.py --dry-run`
+- `python tools/scripts/preview_phase6_bundle_scope.py --stage-command`
+- `python tools/scripts/verify_phase6_bundle_ready.py`
 
-- `README.md` now exposes a stable `First-Read Path`
-- `docs/README.md` now separates the first-read path from the maintainer path
-- `docs/architecture/README.md` now routes first readers through `specs/README.md`, `plans/README.md`, and `current-phase-audit.md`
-- `docs/architecture/zuno_refactor_plan.md` no longer mixes the new serial ledger with the old phase narrative
-- `docs/architecture/plans/zuno-refactor-execution-plan.md` now contains a single consistent `Phase 1-7` execution contract
-- `docs/architecture/plans/README.md` now distinguishes active plan entrypoints from retained future-phase prep docs
-- `tools/scripts/verify_docs_surface.py` now verifies the public docs surface and blocks stale phrases from re-entering the main reading path
-- `tests/test_docs_surface_consistency.py` now checks the docs-route contract directly
+## Phase 6 Verification Record
 
-## Phase 3 Minimum Verification
+The current minimum `Phase 6` branch checks include:
 
-The Phase 3 minimum gate now passes on this branch:
+1. `pytest -q src/backend/agentchat/test/test_contract_eval_runner.py src/backend/agentchat/test/test_rag_eval_local_scheme.py src/backend/agentchat/test/test_stackless_compare_matrix.py src/backend/agentchat/test/test_rag_eval_local_launcher.py`
+2. `python tools/scripts/preview_phase6_bundle_scope.py --summary`
+3. `python tools/scripts/verify_phase6_bundle_ready.py`
 
-1. `python tools/scripts/verify_docs_surface.py`
-2. `pytest -q tests/test_docs_surface_consistency.py`
-3. `pytest -q tests/test_publish_boundary.py`
+These checks now answer three different questions:
 
-These checks verify:
+- do the current Phase 6 eval entrypoints and profile contracts actually import and run
+- does the grouped bundle still describe the current branch reality
+- is the staged-node contract reproducible instead of being a one-off local guess
 
-- the public reading path is explicit
-- README / docs / plans / specs stay aligned
-- stale public-demo and old-phase routing no longer leak into the main reading path
-- publish-boundary docs still remain explicit
+## Next Exact Step
 
-## Phase 2 Closure Evidence
+Stay on `Phase 7`.
 
-This branch closes the new serial `Phase 2` gate by making repository structure, maintainer docs, and publish-boundary rules visible and testable from the updated `main` line.
+The next exact step is:
 
-Current evidence from the repo state:
-
-- `docs/README.md` now exists as the docs entry index
-- `docs/development/README.md` now exists as the maintainer-facing engineering-doc entrypoint
-- `docs/development/backend-layering-guidelines.md` now makes the `api / services / dao` structure explicit
-- `docs/development/github-publish-boundary.md` now separates public project surfaces from local/private/generated surfaces
-- `.gitignore` now clearly excludes `.agent/`, `.agentmd`, `.local/`, `docs/superpowers/`, and generated eval artifacts
-- `README.md` now has a dedicated `Repository Layout` section plus Phase 2 verification commands
-- `tools/scripts/verify_repo_structure.py` now provides a one-command structure verifier
-
-## Phase 2 Minimum Verification
-
-The Phase 2 minimum gate now passes on this branch:
-
-1. `python tools/scripts/verify_repo_structure.py`
-2. `pytest -q tests/test_repo_structure_consistency.py`
-3. `pytest -q tests/test_publish_boundary.py`
-
-These checks verify:
-
-- required repository paths exist
-- `src/backend` / `src/frontend` / `apps/desktop` / `docs` / `tools` / `infra` / `tests` roles are documented consistently
-- publish-boundary and ignore rules are explicit
-
-## Phase 1 Closure Evidence
-
-The earlier `Phase 1` runtime closure remains stable underneath this branch:
-
-- `src/backend/zuno/` remains the runtime-facing package root
-- `README.md` local backend start path still uses `uvicorn zuno.main:app`
-- Docker backend/worker startup and config mounts still point to the `zuno` path
-- `src/backend/agentchat/settings.py` still prefers `ZUNO_CONFIG` and `zuno/config.yaml`
-
-## Next Default Step
-
-Proceed to `Phase 6`: evaluation and evidence-chain hardening.
-
-The default next action is:
-
-- keep the new `Phase 1-5` repository surface stable
-- harden local eval, compare matrix, and evidence-chain reproducibility next
-- keep `Phase 7` as pending, not pre-claimed
+- use `phase7-final-prestage.md` and `phase7-final-ready.md` as the live closure checklist
+- keep the final runtime / docs / publish-boundary proof surface aligned
+- prepare the final interview-facing GitHub showcase node
+- only then close `Phase 7`

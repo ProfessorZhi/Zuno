@@ -1,0 +1,1 @@
+{"id":"contract_001_q1","query":"这份合同是否约定了违约责任？","reference_answer":"合同包含违约责任条款，应引用对应条款。","gold_evidence":[{"document":"loan_contract_001.md","text_contains":"违约责任"}]}
