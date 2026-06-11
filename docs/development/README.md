@@ -12,9 +12,10 @@ It is not part of the first-read public project path.
 
 Use this section when you are changing repo structure, release surface, publish boundary, or engineering workflow docs.
 
+It should explain maintenance rules, not replace the public architecture path.
+
 ## What Lives Here
 
 - backend layering rules
 - publish boundary rules
 - repository structure verification
-
