@@ -8,7 +8,7 @@
 - `Phase 4` is completed on top of the updated `main`.
 - `Phase 5` is completed and already merged to `main`.
 - `Phase 6` is completed under the new serial ledger.
-- `Phase 7` is the current serial phase.
+- `Phase 7` is completed under the new serial ledger.
 
 当前 `Phase 6` 的判断口径也已经更硬：
 

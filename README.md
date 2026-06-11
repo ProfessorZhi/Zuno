@@ -267,6 +267,10 @@ notepad $env:TEMP\zuno-desktop-runtime\desktop.err.log
 ## 验证
 
 ```powershell
+python tools/scripts/verify_phase7_readiness.py
+```
+
+```powershell
 python tools/scripts/verify_docs_surface.py
 pytest tests/test_docs_surface_consistency.py
 pytest tests/test_publish_boundary.py

@@ -60,9 +60,9 @@ docs/architecture/
 - `Phase 4`: completed
 - `Phase 5`: completed
 - `Phase 6`: completed
-- `Phase 7`: current serial phase
+- `Phase 7`: completed
 
-当前默认主线已经切到 `Phase 7`，但不要提前宣称最终总收口已经完成。
+新的 `Phase 1-7` 串行账本已经全部关闭，当前主线进入维护与展示稳定阶段。
 
 ## 推荐阅读顺序
 
