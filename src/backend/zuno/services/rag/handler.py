@@ -18,7 +18,7 @@ from zuno.services.retrieval.retrievers import (
     RagRetrieverAdapter,
 )
 
-from zuno.api.services.knowledge import KnowledgeService
+from zuno.services.application.knowledge import KnowledgeService
 from zuno.services.rag.es_client import client as es_client
 from zuno.services.rag.retrieval import MixRetrival
 from zuno.services.rag.vector_db import milvus_client

@@ -273,6 +273,12 @@ pytest tests/test_publish_boundary.py
 ```
 
 ```powershell
+python tools/scripts/verify_backend_layering.py
+pytest tests/test_backend_layering_boundaries.py
+pytest tests/test_phase4_runtime_boundary_smoke.py
+```
+
+```powershell
 cd src\frontend
 npm run lint
 npm run build

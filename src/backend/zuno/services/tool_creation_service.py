@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from zuno.api.services.tool import ToolService
+from zuno.services.application.tool import ToolService
 from zuno.database import ToolTable
 from zuno.schema.tool import SimpleApiConfig
 from zuno.services.simple_api_tool import build_openapi_schema_from_simple_config

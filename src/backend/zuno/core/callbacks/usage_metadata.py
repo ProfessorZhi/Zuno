@@ -8,7 +8,7 @@ from langchain_core.messages.ai import UsageMetadata, add_usage
 from langchain_core.outputs import ChatGeneration, LLMResult
 
 from zuno.database import SystemUser
-from zuno.api.services.usage_stats import UsageStatsService
+from zuno.services.application.usage_stats import UsageStatsService
 from zuno.utils.contexts import get_user_id_context, get_agent_name_context
 
 

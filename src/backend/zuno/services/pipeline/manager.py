@@ -4,9 +4,9 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from zuno.api.services.knowledge import KnowledgeService
 from zuno.database.dao.knowledge_file import KnowledgeFileDao
 from zuno.database.dao.knowledge_task import KnowledgeTaskDao
+from zuno.services.application.knowledge import KnowledgeService
 from zuno.services.pipeline.models import KnowledgeTaskStage, KnowledgeTaskStatus
 from zuno.services.pipeline.stages import (
     build_failed_file_patch,

@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from zuno.api.services.knowledge import KnowledgeService
+from zuno.services.application.knowledge import KnowledgeService
 from zuno.services.graphrag.retriever import GraphRetriever
 from zuno.services.rag.retrieval import MixRetrival
 from zuno.settings import app_settings
