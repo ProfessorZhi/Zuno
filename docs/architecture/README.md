@@ -58,11 +58,11 @@ docs/architecture/
 - `Phase 2`: completed
 - `Phase 3`: completed
 - `Phase 4`: completed
-- `Phase 5`: current serial phase
-- `Phase 6`: pending
+- `Phase 5`: completed
+- `Phase 6`: current serial phase
 - `Phase 7`: pending
 
-当前默认主线是进入 `Phase 5`，不要提前宣称更后面的 phase 已经完成。
+当前默认主线是进入 `Phase 6`，不要提前宣称 `Phase 7` 已经完成。
 
 ## 推荐阅读顺序
 

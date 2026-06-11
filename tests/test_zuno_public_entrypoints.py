@@ -357,7 +357,7 @@ def test_high_value_service_modules_prefer_local_zuno_contracts():
     assert "class FunctionTool:" in zuno_mcp_openai_schema
     assert "def ensure_strict_json_schema(" in zuno_mcp_openai_strict_schema
 
-    assert "from zuno.api.services.tool import ToolService" in zuno_tool_creation_service
+    assert "from zuno.services.application.tool import ToolService" in zuno_tool_creation_service
     assert "from zuno.database import ToolTable" in zuno_tool_creation_service
     assert "from zuno.schema.tool import SimpleApiConfig" in zuno_tool_creation_service
     assert "from zuno.services.tool_creation_service import *" not in zuno_tool_creation_service
@@ -369,9 +369,9 @@ def test_high_value_service_modules_prefer_local_zuno_contracts():
     assert "from zuno.tools.openapi_tool.adapter import OpenAPIToolAdapter" in zuno_tool_connectivity_service
     assert "from agentchat.services.tool_connectivity_service import *" not in zuno_tool_connectivity_service
 
-    assert "from zuno.api.services.agent_skill import AgentSkillService" in zuno_capability_registry
-    assert "from zuno.api.services.mcp_server import MCPService" in zuno_capability_registry
-    assert "from zuno.api.services.tool import ToolService" in zuno_capability_registry
+    assert "from zuno.services.application.agent_skill import AgentSkillService" in zuno_capability_registry
+    assert "from zuno.services.application.mcp_server import MCPService" in zuno_capability_registry
+    assert "from zuno.services.application.tool import ToolService" in zuno_capability_registry
     assert "class CapabilityRegistryService:" in zuno_capability_registry
     assert "from agentchat.services.capability_registry" not in zuno_capability_registry
     assert "from zuno.services.graphrag.models import normalize_retrieval_mode" in zuno_rag_handler
@@ -402,7 +402,7 @@ def test_high_value_service_modules_prefer_local_zuno_contracts():
     assert "from zuno.services.graphrag.models import normalize_retrieval_mode" in zuno_retrieval_planner
     assert "from zuno.services.retrieval.models import ProcessedQuery, RetrievalPlan, RetrievalRequest" in zuno_retrieval_planner
     assert "from zuno.services.retrieval.models import FusionResult, RetrievedDocument" in zuno_retrieval_fusion
-    assert "from zuno.api.services.knowledge import KnowledgeService" in zuno_retrieval_retrievers
+    assert "from zuno.services.application.knowledge import KnowledgeService" in zuno_retrieval_retrievers
     assert "from zuno.services.graphrag.retriever import GraphRetriever" in zuno_retrieval_retrievers
     assert "from zuno.services.rag.retrieval import MixRetrival" in zuno_retrieval_retrievers
     assert "from zuno.settings import app_settings" in zuno_retrieval_retrievers
@@ -944,7 +944,7 @@ def test_public_worker_entrypoints_and_manifest_prefer_zuno():
     assert "from zuno.services.queue.messages import build_task_message" in zuno_queue_workers
     assert "from zuno.settings import app_settings" in zuno_queue_client
     assert "from zuno.services.pipeline.models import KnowledgeTaskStage" in zuno_queue_messages
-    assert "from zuno.api.services.knowledge import KnowledgeService" in zuno_rag_handler
+    assert "from zuno.services.application.knowledge import KnowledgeService" in zuno_rag_handler
     assert "from zuno.settings import app_settings" in zuno_rag_handler
     assert "from zuno.services.rag.es_client import client as es_client" in zuno_rag_handler
     assert "from zuno.services.rag.vector_db import milvus_client" in zuno_rag_handler
@@ -1028,7 +1028,7 @@ def test_public_worker_entrypoints_and_manifest_prefer_zuno():
     assert "class OSSClient:" in zuno_storage_oss
     assert "from zuno.settings import app_settings" in zuno_storage_oss
     assert "from agentchat.services.storage.oss import OSSClient as AgentchatOSSClient" not in zuno_storage_oss
-    assert "from zuno.api.services.knowledge import KnowledgeService" in zuno_pipeline_manager
+    assert "from zuno.services.application.knowledge import KnowledgeService" in zuno_pipeline_manager
     assert "from zuno.database.dao.knowledge_file import KnowledgeFileDao" in zuno_pipeline_manager
     assert "from zuno.database.dao.knowledge_task import KnowledgeTaskDao" in zuno_pipeline_manager
     assert "from zuno.services.rag.handler import RagHandler" in zuno_pipeline_manager

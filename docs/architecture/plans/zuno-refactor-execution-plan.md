@@ -5,9 +5,10 @@
 - `Phase 1` completed on top of `origin/main`.
 - `Phase 2` completed on top of the updated `main`.
 - `Phase 3` is completed on top of the updated `main`.
-- `Phase 4` is completed on this branch and ready to merge.
-- `Phase 5` is the next serial phase.
-- `Phase 6-7` remain pending under the new serial ledger.
+- `Phase 4` is completed on top of the updated `main`.
+- `Phase 5` is completed on this branch and ready to merge.
+- `Phase 6` is the next serial phase.
+- `Phase 7` remains pending under the new serial ledger.
 
 ## 这份文档的职责
 

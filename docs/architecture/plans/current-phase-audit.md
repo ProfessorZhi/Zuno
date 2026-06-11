@@ -6,9 +6,36 @@
 - `Phase 2`: completed
 - `Phase 3`: completed
 - `Phase 4`: completed
-- `Phase 5`: next serial phase
-- `Phase 6`: pending
+- `Phase 5`: completed
+- `Phase 6`: next serial phase
 - `Phase 7`: pending
+
+## Phase 5 Closure Evidence
+
+This branch closes the new serial `Phase 5` gate by making the LangGraph + GraphRAG mainline provable in code, recovering the missing vector-store runtime package, and adding dedicated tests for retrieval governance, graph updates, and runtime flow.
+
+Current evidence from the repo state:
+
+- `src/backend/zuno/services/rag/vector_db/` now exists again as a real `zuno` runtime package, with `LazyVectorStoreClient`, `milvus_client`, `milvus_lite_client`, and `chroma_client`
+- `src/backend/zuno/core/graphs/domain_qa_graph.py` remains the LangGraph-driven domain QA runtime and now has dedicated proof coverage for retrieval trace propagation, citations, and graph-path carry-through
+- `src/backend/zuno/services/retrieval/planner.py` now has dedicated proof coverage for auto-to-hybrid routing, graph health downgrade, and stable profile resolution
+- `src/backend/zuno/services/pipeline/manager.py` already lands dynamic graph updates through `delete_by_source_chunk`, `upsert_entity`, and `upsert_relation`; `tests/test_phase5_langgraph_graphrag_mainline.py` now verifies that path with `document_hash`, `chunk_hash`, `domain_pack_id`, `index_version`, and `status`
+- `tests/test_zuno_public_entrypoints.py` is now aligned with the post-Phase-4 `zuno.services.application.*` boundary, so Phase 5 verification is not masked by stale pre-Phase-4 assertions
+
+## Phase 5 Minimum Verification
+
+The Phase 5 minimum gate now passes on this branch:
+
+1. `pytest -q tests/test_phase5_langgraph_graphrag_mainline.py`
+2. `pytest -q tests/test_zuno_runtime_chain_guard.py tests/test_zuno_public_entrypoints.py`
+3. `python -c "import importlib, sys; sys.path.insert(0, 'src/backend'); importlib.import_module('zuno.services.rag.vector_db'); importlib.import_module('zuno.core.graphs.domain_qa_graph'); print('phase5-smoke-ok')"`
+
+These checks verify:
+
+- the LangGraph runtime still carries retrieval metadata, citations, and graph paths through the main domain QA flow
+- retrieval planning holds a stable `rag / hybrid / graphrag` decision surface and degrades safely when graph health is stale
+- GraphRAG dynamic update keeps its incremental delete-by-source-chunk path and preserves graph runtime metadata
+- the recovered `zuno.services.rag.vector_db` package is back on the runtime import path instead of remaining a broken hole in the mainline
 
 ## Phase 4 Closure Evidence
 
@@ -109,10 +136,10 @@ The earlier `Phase 1` runtime closure remains stable underneath this branch:
 
 ## Next Default Step
 
-Proceed to `Phase 5`: LangGraph + GraphRAG mainline deepening.
+Proceed to `Phase 6`: evaluation and evidence-chain hardening.
 
 The default next action is:
 
-- keep the new `Phase 1-4` repository surface stable
-- deepen `LangGraph + GraphRAG` mainline next
-- keep later `Phase 6-7` goals as pending, not pre-claimed
+- keep the new `Phase 1-5` repository surface stable
+- harden local eval, compare matrix, and evidence-chain reproducibility next
+- keep `Phase 7` as pending, not pre-claimed
