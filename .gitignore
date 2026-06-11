@@ -15,9 +15,9 @@ src/backend/agentchat/config.yaml
 src/backend/agentchat/config.local.yaml
 src/backend/zuno/config.yaml
 
-chroma_db/
-memory_db/
-vector_db/
+/chroma_db/
+/memory_db/
+/vector_db/
 
 .local/
 .agent/
