@@ -6,7 +6,7 @@
 ## 当前仍然有效的计划文档
 
 - [Zuno Refactor Execution Plan](./zuno-refactor-execution-plan.md)
-  当前以新的 `Phase 1-7` 线性体系为准。新的串行记账现已真实完成 `Phase 1`，默认串行进入 `Phase 2`。
+  当前以新的 `Phase 1-7` 线性体系为准。新的串行记账现已真实完成 `Phase 1-2`，默认串行进入 `Phase 3`。
 - [Current Phase Audit](./current-phase-audit.md)
   当前阶段判断的稳定入口。这里不重复写长期架构 spec，只负责说明“现在在哪个 phase、为什么这样判断、下一步默认做什么”。
 - [Retrieval Governance Upgrade Plan](./retrieval-governance-upgrade-plan.md)

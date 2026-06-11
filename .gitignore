@@ -19,6 +19,10 @@ memory_db/
 vector_db/
 
 .local/
+.agent/
+.agentmd
+docs/superpowers/
+src/frontend/AGENTS.md
 
 .astrid-memory/
 .playwright-mcp/

@@ -3,31 +3,27 @@
 ## Current Status Update (2026-06-11)
 
 - `Phase 1` completed on top of `origin/main`.
-- `Phase 2`: next serial phase.
-- `Phase 3-7`: pending under the new serial ledger.
+- `Phase 2` completed on top of the updated `main`.
+- `Phase 3`: next serial phase.
+- `Phase 4-7`: pending under the new serial ledger.
 
-Latest `Phase 1` progress now verified in the repo state:
+Latest `Phase 2` progress now verified in the repo state:
 
-1. `src/backend/zuno/` is now present on the branch as the runtime-facing package root.
-2. the public backend entrypoints now prefer `zuno.main:app`:
-   - `README.md`
-   - `infra/docker/Dockerfile`
-   - `tools/scripts/start.py`
-   - backward-compatible `src/backend/agentchat/main.py` CLI forwarding
-3. Docker runtime/worker config now prefers the `zuno` path:
-   - `infra/docker/docker-compose.yml`
-   - `infra/docker/docker-compose.dev.yml`
-   - `infra/docker/README.md`
-4. runtime config discovery now prefers `ZUNO_CONFIG` and `zuno/config.yaml` while keeping fallback compatibility:
-   - `src/backend/agentchat/settings.py`
-5. the remaining high-value runtime manifests/configs now point to `zuno` entrypaths:
-   - `src/backend/agentchat/config/mcp_server.json`
-   - `src/backend/agentchat/tools/send_email/manifest.yaml`
-6. the Phase 1 minimum verification set is green:
-   - `pytest -q tests/test_zuno_public_entrypoints.py` -> `36 passed`
-   - `pytest -q src/backend/agentchat/test/test_zuno_alias_imports.py` -> `7 passed`
-   - `pytest -q tests/test_zuno_runtime_chain_guard.py` -> `2 passed`
-   - minimal `import zuno.main` smoke -> `module_ok True`, `app_attr True`
+1. the repository now has explicit docs entrypoints for public vs maintainer structure reading:
+   - `docs/README.md`
+   - `docs/development/README.md`
+2. repository structure roles are now stated directly instead of being implicit:
+   - `README.md` now has a dedicated `Repository Layout` section
+   - `docs/development/backend-layering-guidelines.md` makes `api / services / dao` directory semantics explicit
+3. publish-boundary and local/private/generated surfaces are now documented and ignored clearly:
+   - `docs/development/github-publish-boundary.md`
+   - `.gitignore` entries for `.agent/`, `.agentmd`, `.local/`, `docs/superpowers/`, and eval run artifacts
+4. a dedicated one-command repository structure verifier now exists:
+   - `python tools/scripts/verify_repo_structure.py`
+5. the minimum Phase 2 test surface is now green:
+   - `pytest -q tests/test_repo_structure_consistency.py`
+   - `pytest -q tests/test_publish_boundary.py`
+   - combined structure + publish-boundary verification is now reproducible from the repo state
 
 ## 目标
 

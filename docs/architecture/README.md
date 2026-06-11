@@ -204,30 +204,30 @@ Zuno/
 This section is the authoritative phase-status summary for the current repository state and supersedes older historical notes later in this file.
 
 - `Phase 1`: completed
-- `Phase 2`: not started under the new serial ledger
-- `Phase 3`: not started under the new serial ledger
+- `Phase 2`: completed
+- `Phase 3`: next serial phase
 - `Phase 4`: not started under the new serial ledger
 - `Phase 5`: not started under the new serial ledger
 - `Phase 6`: not started under the new serial ledger
 - `Phase 7`: not started under the new serial ledger
-- Current serial focus: `Phase 2` project-structure hard governance
+- Current serial focus: `Phase 3` documentation and presentation hard closure
 
 ## 当前阶段结论
 
 当前最准确的判断是：
 
 ```text
-新的线性执行体系现在只真实关闭了 `Phase 1`。
-当前默认主线应切到 `Phase 2`，
-继续把项目结构、分层边界、文档展示面、LangGraph + GraphRAG 主线、
+新的线性执行体系现在已经真实关闭了 `Phase 1` 和 `Phase 2`。
+当前默认主线应切到 `Phase 3`，
+继续把文档展示面、分层边界、LangGraph + GraphRAG 主线、
 评测证据链和最终展示面按 phase 逐个关闭。
 ```
 
 所以现在最重要的不是继续补 `Phase 5` 边角，而是：
 
-1. 保持 `Phase 1` 的运行时收口结果稳定
-2. 进入 `Phase 2` 做项目结构硬治理
-3. 继续按 `Phase 3-7` 串行推进到最终展示面
+1. 保持 `Phase 1-2` 的结构与运行时结果稳定
+2. 进入 `Phase 3` 做文档与展示面硬收口
+3. 继续按 `Phase 4-7` 串行推进到最终展示面
 
 ## 最终面试讲解路径
 
