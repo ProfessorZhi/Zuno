@@ -36,7 +36,9 @@ def test_auth_and_profile_pages_stop_using_legacy_zuno_assets():
 
 
 def test_dialog_updates_touch_update_time_instead_of_create_time():
-    dialog_dao = (REPO_ROOT / 'src/backend/agentchat/database/dao/dialog.py').read_text(encoding='utf-8')
+    dialog_dao = (
+        REPO_ROOT / 'src/backend/zuno/legacy/agentchat/database/dao/dialog.py'
+    ).read_text(encoding='utf-8')
 
     assert 'values(update_time=' in dialog_dao
     assert 'values(create_time=' not in dialog_dao

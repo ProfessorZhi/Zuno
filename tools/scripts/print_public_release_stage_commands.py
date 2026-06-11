@@ -24,19 +24,19 @@ STAGE_GROUPS = [
     (
         "backend_domain_runtime",
         [
-            "git add src/backend/agentchat/core/ src/backend/agentchat/domain_packs/ src/backend/agentchat/services/domain_pack/ src/backend/agentchat/services/runtime_registry.py src/backend/agentchat/services/workspace/simple_agent.py src/backend/agentchat/services/embedding/ src/backend/agentchat/services/llm/ src/backend/agentchat/evals/contract_review_eval/",
+            "git add src/backend/zuno/legacy/agentchat/core/ src/backend/zuno/legacy/agentchat/domain_packs/ src/backend/zuno/legacy/agentchat/services/domain_pack/ src/backend/zuno/legacy/agentchat/services/runtime_registry.py src/backend/zuno/legacy/agentchat/services/workspace/simple_agent.py src/backend/zuno/legacy/agentchat/services/embedding/ src/backend/zuno/legacy/agentchat/services/llm/ src/backend/agentchat/evals/contract_review_eval/",
         ],
     ),
     (
         "backend_rag_graphrag_eval",
         [
-            "git add src/backend/agentchat/evals/rag_eval/ src/backend/agentchat/services/graphrag/ src/backend/agentchat/services/pipeline/manager.py src/backend/agentchat/services/retrieval/ src/backend/agentchat/services/rag/",
+            "git add src/backend/agentchat/evals/rag_eval/ src/backend/zuno/legacy/agentchat/services/graphrag/ src/backend/zuno/legacy/agentchat/services/pipeline/manager.py src/backend/zuno/legacy/agentchat/services/retrieval/ src/backend/zuno/legacy/agentchat/services/rag/",
         ],
     ),
     (
         "backend_public_entrypoints",
         [
-            "git add src/backend/agentchat/main.py src/backend/agentchat/settings.py src/backend/agentchat/api/ src/backend/agentchat/database/ src/backend/agentchat/schema/ src/backend/agentchat/tools/ src/backend/agentchat/config/ src/backend/zuno/",
+            "git add src/backend/zuno/legacy/agentchat/main.py src/backend/zuno/legacy/agentchat/settings.py src/backend/zuno/legacy/agentchat/api/ src/backend/zuno/legacy/agentchat/database/ src/backend/zuno/legacy/agentchat/schema/ src/backend/zuno/legacy/agentchat/tools/ src/backend/zuno/legacy/agentchat/config/ src/backend/zuno/",
         ],
     ),
     (

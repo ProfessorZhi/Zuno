@@ -8,7 +8,9 @@ def test_public_backend_entrypoints_prefer_zuno():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     dockerfile = (REPO_ROOT / "infra/docker/Dockerfile").read_text(encoding="utf-8")
     start_script = (REPO_ROOT / "tools/scripts/start.py").read_text(encoding="utf-8")
-    main_module = (REPO_ROOT / "src/backend/agentchat/main.py").read_text(encoding="utf-8")
+    main_module = (
+        REPO_ROOT / "src/backend/zuno/legacy/agentchat/main.py"
+    ).read_text(encoding="utf-8")
     zuno_main = (REPO_ROOT / "src/backend/zuno/main.py").read_text(encoding="utf-8")
 
     assert "uvicorn zuno.main:app" in readme
@@ -845,11 +847,15 @@ def test_public_worker_entrypoints_and_manifest_prefer_zuno():
     compose = (REPO_ROOT / "infra/docker/docker-compose.yml").read_text(encoding="utf-8")
     compose_dev = (REPO_ROOT / "infra/docker/docker-compose.dev.yml").read_text(encoding="utf-8")
     docker_readme = (REPO_ROOT / "infra/docker/README.md").read_text(encoding="utf-8")
-    mcp_config = (REPO_ROOT / "src/backend/agentchat/config/mcp_server.json").read_text(encoding="utf-8")
-    manifest = (
-        REPO_ROOT / "src/backend/agentchat/tools/send_email/manifest.yaml"
+    mcp_config = (
+        REPO_ROOT / "src/backend/zuno/legacy/agentchat/config/mcp_server.json"
     ).read_text(encoding="utf-8")
-    settings_py = (REPO_ROOT / "src/backend/agentchat/settings.py").read_text(encoding="utf-8")
+    manifest = (
+        REPO_ROOT / "src/backend/zuno/legacy/agentchat/tools/send_email/manifest.yaml"
+    ).read_text(encoding="utf-8")
+    settings_py = (
+        REPO_ROOT / "src/backend/zuno/legacy/agentchat/settings.py"
+    ).read_text(encoding="utf-8")
     zuno_queue_runner = (REPO_ROOT / "src/backend/zuno/services/queue/runner.py").read_text(encoding="utf-8")
     zuno_queue_workers = (REPO_ROOT / "src/backend/zuno/services/queue/workers.py").read_text(encoding="utf-8")
     zuno_queue_client = (REPO_ROOT / "src/backend/zuno/services/queue/client.py").read_text(encoding="utf-8")

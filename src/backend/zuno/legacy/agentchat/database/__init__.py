@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import yaml
 from loguru import logger
 from sqlalchemy.engine import make_url
@@ -25,14 +23,14 @@ from agentchat.database.models.usage_stats import UsageStats
 from agentchat.database.models.user import SystemUser
 from agentchat.database.models.user_role import UserRole
 from agentchat.database.models.workspace_session import WorkSpaceSession
-from agentchat.settings import app_settings
+from agentchat.settings import app_settings, resolve_app_config_path
 
 
 def _load_database_config() -> dict:
     if app_settings.database:
         return app_settings.database
 
-    config_path = Path(__file__).resolve().parents[1] / "config.yaml"
+    config_path = resolve_app_config_path()
     with config_path.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
     return data.get("database") or {}

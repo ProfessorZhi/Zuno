@@ -40,12 +40,12 @@ PHASE6_BUNDLE_GROUPS: "OrderedDict[str, list[str]]" = OrderedDict(
         (
             "runtime_foundations",
             [
-                "src/backend/agentchat/services/runtime_registry.py",
-                "src/backend/agentchat/services/domain_pack/",
-                "src/backend/agentchat/services/graphrag/extractors/",
-                "src/backend/agentchat/services/graphrag/retrievers/",
-                "src/backend/agentchat/core/graphs/",
-                "src/backend/agentchat/core/runtime/",
+                "src/backend/zuno/legacy/agentchat/services/runtime_registry.py",
+                "src/backend/zuno/legacy/agentchat/services/domain_pack/",
+                "src/backend/zuno/legacy/agentchat/services/graphrag/extractors/",
+                "src/backend/zuno/legacy/agentchat/services/graphrag/retrievers/",
+                "src/backend/zuno/legacy/agentchat/core/graphs/",
+                "src/backend/zuno/legacy/agentchat/core/runtime/",
             ],
         ),
         (
