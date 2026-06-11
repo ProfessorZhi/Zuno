@@ -24,7 +24,10 @@ REQUIRED_RECOMMENDATIONS = [
     "keep verification_tests with the final bundled node, not as a separate proof story",
     "keep phase6_node_ops with the same node so the staging contract stays reproducible",
 ]
-EXPECTED_BUNDLE_SUBJECT = "phase6: rebuild evidence bundle on foundation base"
+EXPECTED_BUNDLE_SUBJECTS = {
+    "phase6: close eval evidence bundle",
+    "phase6: rebuild evidence bundle on foundation base",
+}
 RECENT_BUNDLE_SCAN_LIMIT = 8
 
 
@@ -54,7 +57,7 @@ def _find_matching_bundle_commit() -> tuple[str, str] | None:
         if not line.strip():
             continue
         commit_sha, _, subject = line.partition("\t")
-        if subject.strip() != EXPECTED_BUNDLE_SUBJECT:
+        if subject.strip() not in EXPECTED_BUNDLE_SUBJECTS:
             continue
 
         paths_proc = _run(["git", "show", "--name-only", "--format=", commit_sha])
@@ -109,14 +112,25 @@ def _load_preview_module():
 
 def _count_paths_against_groups(paths: list[str]) -> dict[str, int]:
     module = _load_preview_module()
-    counts = {group_name: 0 for group_name in EXPECTED_GROUP_COUNTS}
+    matched_prefixes = {group_name: set() for group_name in EXPECTED_GROUP_COUNTS}
     for path in paths:
         normalized = path.replace("\\", "/").strip()
         for group_name, prefixes in module.PHASE6_BUNDLE_GROUPS.items():
-            if any(normalized == prefix or normalized.startswith(prefix) for prefix in prefixes):
-                counts[group_name] += 1
+            matched_prefix = next(
+                (
+                    prefix
+                    for prefix in prefixes
+                    if normalized == prefix or normalized.startswith(prefix)
+                ),
+                None,
+            )
+            if matched_prefix is not None:
+                matched_prefixes[group_name].add(matched_prefix)
                 break
-    return counts
+    return {
+        group_name: len(prefixes)
+        for group_name, prefixes in matched_prefixes.items()
+    }
 
 
 def main() -> int:
