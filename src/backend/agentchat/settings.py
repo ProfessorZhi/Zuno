@@ -35,7 +35,7 @@ def resolve_app_config_path(file_path: str | None = None, *, writable: bool = Fa
     if file_path:
         return Path(file_path)
 
-    env_path = os.getenv("AGENTCHAT_CONFIG") or os.getenv("ZUNO_CONFIG")
+    env_path = os.getenv("ZUNO_CONFIG") or os.getenv("AGENTCHAT_CONFIG")
     if env_path:
         return Path(env_path)
 
@@ -44,9 +44,15 @@ def resolve_app_config_path(file_path: str | None = None, *, writable: bool = Fa
         package_root / "config.local.yaml",
         package_root / "config.yaml",
         package_root / "config.example.yaml",
+        Path("zuno/config.local.yaml"),
+        Path("zuno/config.yaml"),
+        Path("zuno/config.example.yaml"),
         Path("agentchat/config.local.yaml"),
         Path("agentchat/config.yaml"),
         Path("agentchat/config.example.yaml"),
+        Path("/app/zuno/config.local.yaml"),
+        Path("/app/zuno/config.yaml"),
+        Path("/app/zuno/config.example.yaml"),
         Path("/app/agentchat/config.local.yaml"),
         Path("/app/agentchat/config.yaml"),
         Path("/app/agentchat/config.example.yaml"),
@@ -54,6 +60,8 @@ def resolve_app_config_path(file_path: str | None = None, *, writable: bool = Fa
     if writable:
         writable_candidates = [
             package_root / "config.local.yaml",
+            Path("zuno/config.local.yaml"),
+            Path("/app/zuno/config.local.yaml"),
             Path("agentchat/config.local.yaml"),
             Path("/app/agentchat/config.local.yaml"),
         ]

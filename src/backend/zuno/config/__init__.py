@@ -1,0 +1,1 @@
+"""zuno config resource aliases."""

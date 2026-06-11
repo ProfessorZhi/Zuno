@@ -1,0 +1,10 @@
+id: contract_review
+name: 鍚堝悓瀹℃煡
+version: 0.1.0
+description: 鐢ㄤ簬鍚堝悓鏉℃闂瓟銆侀闄╄瘑鍒€佸紩鐢ㄦ函婧愮殑 GraphRAG 棰嗗煙鎻掍欢
+schema: schema.json
+extraction_prompt: extraction_prompt.md
+retrieval_policy: retrieval_policy.yaml
+answer_template: answer_template.md
+report_template: report_template.md
+eval_dataset: eval_dataset.jsonl

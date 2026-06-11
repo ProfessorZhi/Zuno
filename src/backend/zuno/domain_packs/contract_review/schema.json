@@ -1,0 +1,22 @@
+{
+  "entities": [
+    "Contract",
+    "Clause",
+    "Party",
+    "Obligation",
+    "Amount",
+    "Term",
+    "Risk",
+    "Regulation",
+    "Evidence"
+  ],
+  "relations": [
+    "CONTRACT_HAS_CLAUSE",
+    "PARTY_SIGNS_CONTRACT",
+    "CLAUSE_HAS_OBLIGATION",
+    "CLAUSE_HAS_RISK",
+    "CLAUSE_REFERENCES_REGULATION",
+    "RISK_SUPPORTED_BY_EVIDENCE",
+    "CLAUSE_CONFLICTS_WITH_CLAUSE"
+  ]
+}

@@ -1,0 +1,101 @@
+import asyncio
+import logging
+from typing import Any, Dict, List
+
+from langchain_core.tools import BaseTool
+
+from zuno.services.mcp.multi_client import MultiServerMCPClient
+from zuno.schema.mcp import MCPBaseConfig
+
+
+logger = logging.getLogger(__name__)
+
+HIDE_FIELDS = ["server_name", "personal_config"]
+
+
+class MCPManager:
+    def __init__(self, mcp_configs: List[MCPBaseConfig], timeout=10):
+        connection_info = {
+            mcp_config.server_name: mcp_config.model_dump(exclude={"server_name", "personal_config"})
+            for mcp_config in mcp_configs
+        }
+
+        self.multi_server_client = MultiServerMCPClient(connection_info)
+        self.mcp_configs = mcp_configs
+        self.timeout = timeout
+
+    async def get_mcp_tools(self) -> list[BaseTool]:
+        tools = await asyncio.wait_for(
+            self.multi_server_client.get_tools(),
+            timeout=self.timeout,
+        )
+        return tools
+
+    async def show_mcp_tools(self) -> dict:
+        result = {}
+        try:
+            for mcp_config in self.mcp_configs:
+                server_tools = await asyncio.wait_for(
+                    self.multi_server_client.get_tools(server_name=mcp_config.server_name),
+                    timeout=self.timeout,
+                )
+                tool_list = []
+                for tool in server_tools:
+                    input_schema = tool.args_schema
+                    tool_dict = {
+                        "name": tool.name,
+                        "description": tool.description,
+                        "input_schema": input_schema,
+                    }
+                    tool_list.append(tool_dict)
+                result[mcp_config.server_name] = tool_list
+            return result
+        except asyncio.TimeoutError as err:
+            logger.info("Timeout while getting MCP service tool list")
+            raise TimeoutError(
+                f"MCP service tool discovery timed out after {self.timeout}s"
+            ) from err
+        except Exception as err:
+            logger.info(f"Error getting MCP service tool list: {err}")
+            return {}
+
+    async def call_mcp_tools(self, tools_info: List[Dict[str, Any]]):
+        tools = await self.get_mcp_tools()
+        tool_dict = {tool.name: tool for tool in tools}
+
+        async def execute_tool(tool_name: str, args: Dict[str, Any]):
+            if tool_name not in tool_dict:
+                return f"Tool {tool_name} does not exist"
+
+            tool = tool_dict[tool_name]
+            try:
+                if asyncio.iscoroutinefunction(tool.coroutine):
+                    result = await tool.coroutine(**args)
+                else:
+                    result = await asyncio.to_thread(tool.coroutine, **args)
+                return result
+            except Exception as exc:
+                logger.error(f"Error executing tool: {exc}")
+                return f"Error executing tool {tool_name}: {exc}"
+
+        tasks = []
+        for tool in tools_info:
+            tool_name = tool.get("tool_name")
+            tool_args = tool.get("tool_args")
+            task = execute_tool(tool_name, tool_args)
+            tasks.append(task)
+
+        try:
+            tool_results = await asyncio.gather(*tasks, return_exceptions=True)
+            for index, result in enumerate(tool_results):
+                if isinstance(result, Exception):
+                    tool_name = tools_info[index].get("tool_name")
+                    tool_results[index] = f"Error executing tool {tool_name}: {result}"
+                    logger.error(f"Error executing tool {tool_name}: {result}")
+            return tool_results
+        except Exception as err:
+            logger.error(f"Error calling tools: {err}")
+            return []
+
+
+__all__ = ["HIDE_FIELDS", "MCPManager"]
