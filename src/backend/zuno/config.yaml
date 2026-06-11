@@ -1,0 +1,43 @@
+# Copy of config.example.yaml for zuno-first local startup.
+# Keep secrets out of git; prefer editing config.local.yaml locally.
+
+server:
+  host: "127.0.0.1"
+  port: 7860
+  project_name: "Zuno"
+  version: "2.4.0"
+
+database:
+  sync_endpoint: "postgresql+psycopg://postgres:postgres@localhost:5432/agentchat"
+  async_endpoint: "postgresql+asyncpg://postgres:postgres@localhost:5432/agentchat"
+  echo: false
+  pool_size: 10
+  max_overflow: 20
+
+redis:
+  endpoint: "redis://localhost:6379"
+
+rabbitmq:
+  enabled: false
+  url: "amqp://guest:guest@localhost:5672/"
+  parse_queue: "knowledge.parse"
+  index_queue: "knowledge.index"
+  graph_queue: "knowledge.graph"
+
+neo4j:
+  enabled: false
+  uri: "bolt://localhost:7687"
+  username: "neo4j"
+  password: ""
+  database: "neo4j"
+
+multi_models:
+  conversation_model:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model_name: "qwen-plus"
+
+  tool_call_model:
+    api_key: ""
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model_name: "qwen-plus"

@@ -68,13 +68,13 @@ docker compose -f infra/docker/docker-compose.yml up --build -d
 Compose 会把本地配置挂载给后端：
 
 ```yaml
-AGENTCHAT_CONFIG: /app/agentchat/config.yaml
+ZUNO_CONFIG: /app/zuno/config.yaml
 ```
 
 对应挂载：
 
 ```yaml
-./docker_config.local.yaml:/app/agentchat/config.yaml:ro
+./docker_config.local.yaml:/app/zuno/config.yaml:ro
 ```
 
 ## 生产镜像模式

@@ -41,7 +41,7 @@ def start_services() -> None:
         raise FileNotFoundError(f"Frontend directory not found: {FRONTEND_DIR}")
 
     backend = start_process(
-        ["uvicorn", "agentchat.main:app", "--host", "0.0.0.0", "--port", "7860"],
+        ["uvicorn", "zuno.main:app", "--host", "0.0.0.0", "--port", "7860"],
         BACKEND_DIR,
     )
 

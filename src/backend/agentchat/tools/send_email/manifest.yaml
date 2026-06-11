@@ -3,8 +3,8 @@ display_name: 发送邮件
 type: cli
 description: 通过预配置邮箱槽位或显式 SMTP 凭证发送邮件。
 entry:
-  module: agentchat.tools.send_email.cli
-  command: python src/backend/agentchat/tools/send_email/cli.py
+  module: zuno.tools.send_email.cli
+  command: python src/backend/zuno/tools/send_email/cli.py
 credentials:
   mode: profiles
   schema:

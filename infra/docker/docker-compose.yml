@@ -169,7 +169,7 @@ services:
       - "7860:7860"
     environment:
       TZ: Asia/Shanghai
-      AGENTCHAT_CONFIG: /app/agentchat/config.yaml
+      ZUNO_CONFIG: /app/zuno/config.yaml
       ZUNO_SKILLS_DIR: /app/host_skills
     depends_on:
       postgres:
@@ -185,7 +185,7 @@ services:
       milvus:
         condition: service_healthy
     volumes:
-      - ./docker_config.local.yaml:/app/agentchat/config.yaml:ro
+      - ./docker_config.local.yaml:/app/zuno/config.yaml:ro
       - backend_vector_db:/app/vector_db
     networks:
       - agentchat-network
@@ -202,10 +202,10 @@ services:
       context: ../..
       dockerfile: infra/docker/Dockerfile
     restart: unless-stopped
-    command: ["python", "-m", "agentchat.services.queue.runner"]
+    command: ["python", "-m", "zuno.services.queue.runner"]
     environment:
       TZ: Asia/Shanghai
-      AGENTCHAT_CONFIG: /app/agentchat/config.yaml
+      ZUNO_CONFIG: /app/zuno/config.yaml
       ZUNO_SKILLS_DIR: /app/host_skills
     depends_on:
       postgres:
@@ -222,7 +222,7 @@ services:
         condition: service_healthy
     volumes:
       - ../../src/backend:/app
-      - ./docker_config.local.yaml:/app/agentchat/config.yaml:ro
+      - ./docker_config.local.yaml:/app/zuno/config.yaml:ro
       - backend_vector_db:/app/vector_db
     networks:
       - agentchat-network

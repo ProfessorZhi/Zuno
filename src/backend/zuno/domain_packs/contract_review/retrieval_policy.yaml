@@ -1,0 +1,4 @@
+graph_hop_limit: 2
+max_paths_per_entity: 5
+citation_strictness: high
+risk_relation_preference: CLAUSE_HAS_RISK

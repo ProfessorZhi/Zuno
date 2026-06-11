@@ -1,10 +1,10 @@
 services:
   backend:
     environment:
-      AGENTCHAT_CONFIG: /app/agentchat/config.yaml
+      ZUNO_CONFIG: /app/zuno/config.yaml
     volumes:
       - ../../src/backend:/app:cached
-      - ./docker_config.local.yaml:/app/agentchat/config.yaml
+      - ./docker_config.local.yaml:/app/zuno/config.yaml
       - ../../tools/cli:/app/cli_tools:cached
       - ../../tools/scripts:/app/scripts:cached
 
