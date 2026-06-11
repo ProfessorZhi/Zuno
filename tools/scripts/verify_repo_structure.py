@@ -47,7 +47,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     ],
     "docs/architecture/plans/current-phase-audit.md": [
         "`Phase 2`: completed",
-        "`Phase 3`: next serial phase",
+        "`Phase 3`: completed",
         "verify_repo_structure.py",
         "tests/test_repo_structure_consistency.py",
         "tests/test_publish_boundary.py",

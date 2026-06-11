@@ -51,7 +51,7 @@ def test_current_phase_audit_matches_phase2_structure_governance_status() -> Non
     required_phrases = [
         "`Phase 1`: completed",
         "`Phase 2`: completed",
-        "`Phase 3`: next serial phase",
+        "`Phase 3`: completed",
         "verify_repo_structure.py",
         "tests/test_repo_structure_consistency.py",
         "tests/test_publish_boundary.py",

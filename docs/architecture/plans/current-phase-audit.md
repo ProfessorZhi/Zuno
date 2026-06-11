@@ -4,11 +4,41 @@
 
 - `Phase 1`: completed
 - `Phase 2`: completed
-- `Phase 3`: next serial phase
-- `Phase 4`: pending
+- `Phase 3`: completed
+- `Phase 4`: next serial phase
 - `Phase 5`: pending
 - `Phase 6`: pending
 - `Phase 7`: pending
+
+## Phase 3 Closure Evidence
+
+This branch closes the new serial `Phase 3` gate by hard-closing the public reading path, removing stale phase conflicts from public entry docs, and adding a dedicated docs-surface verifier.
+
+Current evidence from the repo state:
+
+- `README.md` now exposes a stable `First-Read Path`
+- `docs/README.md` now separates the first-read path from the maintainer path
+- `docs/architecture/README.md` now routes first readers through `specs/README.md`, `plans/README.md`, and `current-phase-audit.md`
+- `docs/architecture/zuno_refactor_plan.md` no longer mixes the new serial ledger with the old phase narrative
+- `docs/architecture/plans/zuno-refactor-execution-plan.md` now contains a single consistent `Phase 1-7` execution contract
+- `docs/architecture/plans/README.md` now distinguishes active plan entrypoints from retained future-phase prep docs
+- `tools/scripts/verify_docs_surface.py` now verifies the public docs surface and blocks stale phrases from re-entering the main reading path
+- `tests/test_docs_surface_consistency.py` now checks the docs-route contract directly
+
+## Phase 3 Minimum Verification
+
+The Phase 3 minimum gate now passes on this branch:
+
+1. `python tools/scripts/verify_docs_surface.py`
+2. `pytest -q tests/test_docs_surface_consistency.py`
+3. `pytest -q tests/test_publish_boundary.py`
+
+These checks verify:
+
+- the public reading path is explicit
+- README / docs / plans / specs stay aligned
+- stale public-demo and old-phase routing no longer leak into the main reading path
+- publish-boundary docs still remain explicit
 
 ## Phase 2 Closure Evidence
 
@@ -49,10 +79,10 @@ The earlier `Phase 1` runtime closure remains stable underneath this branch:
 
 ## Next Default Step
 
-Proceed to `Phase 3`: documentation and presentation hard closure.
+Proceed to `Phase 4`: layered architecture and runtime-boundary hardening.
 
 The default next action is:
 
-- keep the new `Phase 1-2` repository surface stable
-- hard-close public docs and presentation entrypoints next
-- keep later `Phase 4-7` goals as pending, not pre-claimed
+- keep the new `Phase 1-3` repository surface stable
+- harden layering and runtime boundaries next
+- keep later `Phase 5-7` goals as pending, not pre-claimed

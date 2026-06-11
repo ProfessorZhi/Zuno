@@ -84,6 +84,18 @@ pytest tests/test_publish_boundary.py
 - [Development Docs](./docs/development/README.md)
 - [GitHub Publish Boundary](./docs/development/github-publish-boundary.md)
 
+## First-Read Path
+
+如果你第一次看这个仓库，按下面顺序进入：
+
+1. [Docs Index](./docs/README.md)
+2. [Architecture Docs](./docs/architecture/README.md)
+3. [Architecture Specs](./docs/architecture/specs/README.md)
+4. [Architecture Plans](./docs/architecture/plans/README.md)
+5. [Current Phase Audit](./docs/architecture/plans/current-phase-audit.md)
+
+`docs/development/` 只面向维护者，不属于第一阅读路径。
+
 ## 端口
 
 | 服务 | 地址 |
@@ -253,6 +265,12 @@ notepad $env:TEMP\zuno-desktop-runtime\desktop.err.log
 ```
 
 ## 验证
+
+```powershell
+python tools/scripts/verify_docs_surface.py
+pytest tests/test_docs_surface_consistency.py
+pytest tests/test_publish_boundary.py
+```
 
 ```powershell
 cd src\frontend
