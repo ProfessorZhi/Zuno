@@ -27,12 +27,14 @@ from loguru import logger
 from pydantic import BaseModel
 
 from agentchat.api.services.mcp_user_config import MCPUserConfigService
+from agentchat.api.services.knowledge import KnowledgeService
 from agentchat.api.services.agent_skill import AgentSkillService
 from agentchat.api.services.tool import ToolService
 from agentchat.api.services.usage_stats import UsageStatsService
 from agentchat.api.services.workspace_session import WorkSpaceSessionService
 from agentchat.core.callbacks import usage_metadata_callback
 from agentchat.core.models.manager import ModelManager
+from agentchat.core.runtime.agent_runtime import AgentRuntime
 from agentchat.database import AgentSkill
 from agentchat.schema.tool import (
     CLIToolPreviewReq,
@@ -88,21 +90,6 @@ from agentchat.settings import app_settings
 tool = lc_tool
 
 
-class KnowledgeService:
-    @staticmethod
-    async def get_runtime_settings(knowledge_id: str):
-        from agentchat.api.services.knowledge import KnowledgeService as _KnowledgeService
-
-        return await _KnowledgeService.get_runtime_settings(knowledge_id)
-
-
-class AgentRuntime:
-    async def run_domain_qa(self, **kwargs):
-        from agentchat.core.runtime.agent_runtime import AgentRuntime as _AgentRuntime
-
-        return await _AgentRuntime().run_domain_qa(**kwargs)
-
-
 class MCPConfig(BaseModel):
     url: str = ""
     type: str = "sse"
@@ -151,6 +138,7 @@ class WorkSpaceSimpleAgent:
         desktop_bridge_token: str | None = None,
         original_query: str | None = None,
         usage_agent_name: str | None = None,
+        multi_agent_enabled: bool = False,
     ):
         self.model_name = model_config.get("model", "")
         self.base_url = model_config.get("base_url", "")
@@ -181,6 +169,7 @@ class WorkSpaceSimpleAgent:
         self.user_id = user_id
         self.original_query = original_query
         self.usage_agent_name = (usage_agent_name or UsageStatsAgentType.simple_agent.value).strip()
+        self.multi_agent_enabled = bool(multi_agent_enabled)
         self.desktop_bridge_config = (
             DesktopBridgeConfig(url=desktop_bridge_url, token=desktop_bridge_token)
             if desktop_bridge_url and desktop_bridge_token
@@ -189,6 +178,8 @@ class WorkSpaceSimpleAgent:
 
         self.server_dict: dict[str, Any] = {}
         self.route_hint = self._detect_route_hint(self.original_query)
+        self.domain_qa_runtime = AgentRuntime()
+        self._runtime_settings_cache: dict[str, dict] = {}
         self._initialized = False
 
     def _wrap_event(self, event: str, data: Dict[str, Any]) -> WorkspaceAgentStreamEvent:
@@ -248,13 +239,15 @@ class WorkSpaceSimpleAgent:
 
     def _build_retrieval_event_payload(self, result: Dict[str, Any], phase: str = "retrieval") -> Dict[str, Any]:
         metadata = result.get("metadata") or {}
-        domain_pack_failure = metadata.get("domain_pack_failure")
-        domain_pack_cost = metadata.get("domain_pack_cost")
+        domain_pack_cost = metadata.get("domain_pack_cost") or {}
+        domain_pack_failure = metadata.get("domain_pack_failure") or {}
+        failed = str(domain_pack_cost.get("status") or "").lower() == "failed" or bool(domain_pack_failure)
         return {
             "phase": phase,
-            "status": "ERROR" if domain_pack_failure or (domain_pack_cost or {}).get("status") == "failed" else "END",
+            "status": "ERROR" if failed else "END",
             "message": self._summarize_retrieval_metadata(metadata),
             "retrieval_mode": result.get("actual_mode") or metadata.get("final_mode") or self.retrieval_mode,
+            "domain_pack_id": result.get("domain_pack_id"),
             "first_mode": result.get("first_mode") or metadata.get("first_mode"),
             "final_mode": result.get("final_mode") or metadata.get("final_mode"),
             "fallback_reason": result.get("fallback_reason") or metadata.get("fallback_reason"),
@@ -263,9 +256,68 @@ class WorkSpaceSimpleAgent:
             "rewritten_query_used": metadata.get("rewritten_query_used") or False,
             "query_variants": metadata.get("query_variants") or [],
             "rounds": metadata.get("rounds") or [],
+            "plan": metadata.get("plan") or {},
+            "retriever_runs": metadata.get("retriever_runs") or [],
             "knowledge_ids": self.knowledge_ids,
-            "domain_pack_failure": domain_pack_failure,
+            "domain_pack_trace": metadata.get("domain_pack_trace") or {},
             "domain_pack_cost": domain_pack_cost,
+            "domain_pack_failure": domain_pack_failure,
+            "domain_pack_support_verdict": metadata.get("domain_pack_support_verdict") or {},
+            "domain_pack_evidence_bundle": metadata.get("domain_pack_evidence_bundle") or {},
+        }
+
+    async def _get_primary_runtime_settings(self) -> Dict[str, Any] | None:
+        if not self.knowledge_ids:
+            return None
+        primary_knowledge_id = self.knowledge_ids[0]
+        if primary_knowledge_id not in self._runtime_settings_cache:
+            self._runtime_settings_cache[primary_knowledge_id] = await KnowledgeService.get_runtime_settings(primary_knowledge_id)
+        return self._runtime_settings_cache[primary_knowledge_id]
+
+    async def _run_domain_pack_query(self, query: str) -> Dict[str, Any] | None:
+        runtime_settings = await self._get_primary_runtime_settings()
+        if not runtime_settings or not runtime_settings.get("domain_pack"):
+            return None
+        runtime_settings = copy.deepcopy(runtime_settings)
+        if self.multi_agent_enabled:
+            knowledge_config = dict(runtime_settings.get("knowledge_config") or {})
+            retrieval_settings = dict(knowledge_config.get("retrieval_settings") or {})
+            retrieval_settings["multi_agent_enabled"] = True
+            knowledge_config["retrieval_settings"] = retrieval_settings
+            runtime_settings["knowledge_config"] = knowledge_config
+
+        state = await self.domain_qa_runtime.run_domain_qa(
+            user_id=self.user_id,
+            agent_id="workspace_simple_agent",
+            dialog_id=self.session_id,
+            query=query,
+            knowledge_ids=self.knowledge_ids,
+            domain_pack_id=runtime_settings.get("domain_pack_id"),
+            runtime_settings=runtime_settings,
+            domain_pack=runtime_settings.get("domain_pack"),
+        )
+        retrieval_result = state.get("retrieval_result") or {}
+        metadata = dict(retrieval_result.get("metadata") or {})
+        metadata["domain_pack_trace"] = state.get("trace_metadata") or {}
+        metadata["domain_pack_cost"] = state.get("cost_metadata") or {}
+        metadata["domain_pack_failure"] = state.get("failure_metadata") or {}
+        metadata["domain_pack_support_verdict"] = state.get("support_verdict") or {}
+        metadata["domain_pack_evidence_bundle"] = state.get("evidence_bundle") or {}
+        return {
+            "content": state.get("final_answer") or retrieval_result.get("content") or "",
+            "actual_mode": retrieval_result.get("actual_mode"),
+            "first_mode": retrieval_result.get("first_mode"),
+            "final_mode": retrieval_result.get("final_mode"),
+            "fallback_reason": retrieval_result.get("fallback_reason"),
+            "round_count": retrieval_result.get("round_count") or metadata.get("round_count") or 1,
+            "second_pass_used": retrieval_result.get("second_pass_used"),
+            "domain_pack_id": state.get("domain_pack_id"),
+            "metadata": metadata,
+            "report_markdown": state.get("report_markdown"),
+            "final_pass_result": retrieval_result.get("final_pass_result") or {},
+            "graph_result": retrieval_result.get("graph_result") or {},
+            "support_verdict": state.get("support_verdict") or {},
+            "evidence_bundle": state.get("evidence_bundle") or {},
         }
 
     @staticmethod
@@ -1590,12 +1642,14 @@ class WorkSpaceSimpleAgent:
             Args:
                 query: The question or keywords to retrieve from the selected knowledge bases.
             """
-            result = await RagHandler.retrieve_ranked_documents_with_metadata(
-                query,
-                self.knowledge_ids,
-                self.knowledge_ids,
-                retrieval_mode=self.retrieval_mode,
-            )
+            result = await self._run_domain_pack_query(query)
+            if result is None:
+                result = await RagHandler.retrieve_ranked_documents_with_metadata(
+                    query,
+                    self.knowledge_ids,
+                    self.knowledge_ids,
+                    retrieval_mode=self.retrieval_mode,
+                )
             try:
                 writer = get_stream_writer()
                 writer(self._wrap_event("status", self._build_retrieval_event_payload(result)))
@@ -2157,38 +2211,6 @@ class WorkSpaceSimpleAgent:
         ]
         return any(keyword in normalized for keyword in keywords)
 
-    async def _run_domain_pack_query(self, query: str) -> Dict[str, Any] | None:
-        if not self.knowledge_ids:
-            return None
-        runtime_settings = await KnowledgeService.get_runtime_settings(self.knowledge_ids[0])
-        domain_pack_id = runtime_settings.get("domain_pack_id") or (
-            (runtime_settings.get("domain_pack") or {}).get("id")
-        )
-        if not domain_pack_id:
-            return None
-        result = await AgentRuntime().run_domain_qa(
-            query=query,
-            user_id=self.user_id,
-            agent_id=self.usage_agent_name or "workspace_simple_agent",
-            knowledge_ids=self.knowledge_ids,
-            dialog_id=self.session_id,
-            domain_pack_id=domain_pack_id,
-            runtime_settings=runtime_settings,
-        )
-        retrieval_result = dict(result.get("retrieval_result") or {})
-        metadata = dict(retrieval_result.get("metadata") or {})
-        metadata["domain_pack_trace"] = result.get("trace_metadata")
-        metadata["domain_pack_cost"] = result.get("cost_metadata")
-        metadata["domain_pack_failure"] = result.get("failure_metadata")
-        retrieval_result["metadata"] = metadata
-        return {
-            "domain_pack_id": result.get("domain_pack_id") or domain_pack_id,
-            "content": str(result.get("final_answer") or ""),
-            "metadata": metadata,
-            "result": result,
-            **retrieval_result,
-        }
-
     async def _prefetch_knowledge_context(self, query: str) -> Dict[str, Any] | None:
         if self.execution_mode == "terminal" or not self.knowledge_ids:
             return None
@@ -2196,18 +2218,14 @@ class WorkSpaceSimpleAgent:
         if not normalized_query:
             return None
         try:
-            domain_pack_result = await self._run_domain_pack_query(normalized_query)
-            if domain_pack_result:
-                context = str(domain_pack_result.get("content") or "").strip()
-                if not context:
-                    return None
-                return {"content": context, "result": domain_pack_result}
-            result = await RagHandler.retrieve_ranked_documents_with_metadata(
-                normalized_query,
-                self.knowledge_ids,
-                self.knowledge_ids,
-                retrieval_mode=self.retrieval_mode,
-            )
+            result = await self._run_domain_pack_query(normalized_query)
+            if result is None:
+                result = await RagHandler.retrieve_ranked_documents_with_metadata(
+                    normalized_query,
+                    self.knowledge_ids,
+                    self.knowledge_ids,
+                    retrieval_mode=self.retrieval_mode,
+                )
         except Exception as err:
             logger.warning(f"workspace knowledge prefetch failed: {err}")
             return None

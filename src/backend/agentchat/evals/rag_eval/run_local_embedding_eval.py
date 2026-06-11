@@ -401,6 +401,7 @@ async def run_local_embedding_eval(
     direct_local_embedding_api_key: str | None = None,
 ) -> dict[str, Any]:
     from agentchat.evals.rag_eval.ingest_prepared_corpus import ingest_prepared_corpus
+    from agentchat.evals.rag_eval.run_eval import resolve_profiles, run_eval
     from agentchat.evals.rag_eval.summarize_eval_profiles import summarize, write_markdown
 
     try:
@@ -426,8 +427,6 @@ async def run_local_embedding_eval(
             default_mode="rag_graph",
         )
         knowledge_id = str(ingest_result["knowledge_id"])
-        from agentchat.evals.rag_eval.run_eval import resolve_profiles, run_eval
-
         profiles = resolve_profiles(profile_set=profile_set)
         eval_report = await run_eval(
             dataset_path=dataset_path,

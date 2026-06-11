@@ -57,6 +57,18 @@ class PDFParser:
         await self.upload_file_to_oss(markdown_output_path)
         return markdown_output_path, file_upload_url_map, image_desc_dict
 
+    async def convert_markdown_text_only(self, file_path: str):
+        markdown_dir, _ = get_convert_markdown_images_dir()
+        md_text_words = pymupdf4llm.to_markdown(
+            doc=file_path,
+            write_images=False,
+        )
+        markdown_output_path = os.path.join(markdown_dir, generate_unique_filename(file_path, "md"))
+        output_markdown_file = pathlib.Path(markdown_output_path)
+        output_markdown_file.write_bytes(md_text_words.encode())
+        logger.info(f"PDF Convert MarkDown Successful (text_only), MarkDown Path: {output_markdown_file}")
+        return markdown_output_path, {}, {}
+
     def _strip_markdown_images(self, markdown_text: str) -> str:
         cleaned = re.sub(r"!\[[^\]]*]\([^)]+\)", "", markdown_text)
         cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
@@ -98,7 +110,10 @@ class PDFParser:
             temp_text.close()
 
     async def parse_into_chunks(self, file_id, file_path, knowledge_id, markdown_parser_instance=None, image_mode: str = "dual"):
-        markdown_file, image_url_map, image_desc_dict = await self.convert_markdown(file_path)
+        if image_mode == "text_only":
+            markdown_file, image_url_map, image_desc_dict = await self.convert_markdown_text_only(file_path)
+        else:
+            markdown_file, image_url_map, image_desc_dict = await self.convert_markdown(file_path)
         parser = markdown_parser_instance or markdown_parser
         text_markdown_file = await self._build_text_focused_markdown(markdown_file)
         text_chunks = await parser.parse_into_chunks(file_id, text_markdown_file, knowledge_id)

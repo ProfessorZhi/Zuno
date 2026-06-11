@@ -8,7 +8,7 @@ Zuno 是一个本地优先的个人 Agent 工作台，用 Web、桌面端和 Doc
 - `src/frontend/`：Vue 3 + Vite Web 工作台。
 - `apps/desktop/`：Electron 桌面端壳层。
 - `infra/docker/`：Dockerfile、Compose、nginx 和容器运行配置模板。
-- `launchers/`：Windows Web/Desktop 稳定启动入口。
+- `tools/launchers/windows/`：Windows Web/Desktop 稳定启动入口。
 - `tools/cli/`：可被 Agent 调用的本地 CLI 工具。
 - `tools/scripts/`：本地维护脚本。
 - `tools/migrations/`：一次性迁移脚本。

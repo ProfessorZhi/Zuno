@@ -7,7 +7,7 @@ This folder contains local helper scripts that are useful for development and ma
 - `start.py`: legacy local dev starter for backend/frontend.
 - `run-full-e2e-smoke.ps1`: browser smoke-test helper.
 - `fix_fastapi_jwt_auth.py`: local compatibility repair helper.
-- `zuno-*.bat`: legacy forwarders that now call the stable scripts in `launchers/`.
+- `zuno-*.bat`: legacy forwarders that now call the stable scripts in `tools/launchers/windows/`.
 
 One-off migrations live in `tools/migrations/`.
 
@@ -22,8 +22,8 @@ python tools/scripts/start.py
 For normal Windows usage, prefer the stable launchers:
 
 ```powershell
-.\launchers\Zuno-Web-Start.cmd
-.\launchers\Zuno-Desktop-Start.cmd
+.\tools\launchers\windows\Zuno-Web-Start.cmd
+.\tools\launchers\windows\Zuno-Desktop-Start.cmd
 ```
 
 ## Smoke Test

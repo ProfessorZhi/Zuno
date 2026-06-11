@@ -22,6 +22,7 @@ def test_build_retrieval_event_payload_includes_round_trace(monkeypatch):
             "actual_mode": "hybrid",
             "first_mode": "rag",
             "final_mode": "hybrid",
+            "domain_pack_id": "contract_review",
             "fallback_reason": "too_few_documents",
             "second_pass_used": True,
             "round_count": 3,
@@ -31,6 +32,14 @@ def test_build_retrieval_event_payload_includes_round_trace(monkeypatch):
                 "fallback_reason": "too_few_documents",
                 "second_pass_used": True,
                 "round_count": 3,
+                "plan": {
+                    "resolved_mode": "hybrid",
+                    "enabled_retrievers": ["vector", "bm25", "graph"],
+                },
+                "retriever_runs": [
+                    {"source": "vector", "result_count": 2},
+                    {"source": "graph", "result_count": 1},
+                ],
                 "rewritten_query_used": True,
                 "query_variants": ["original", "expanded"],
                 "rounds": [
@@ -43,11 +52,14 @@ def test_build_retrieval_event_payload_includes_round_trace(monkeypatch):
     )
 
     assert payload["retrieval_mode"] == "hybrid"
+    assert payload["domain_pack_id"] == "contract_review"
     assert payload["first_mode"] == "rag"
     assert payload["final_mode"] == "hybrid"
     assert payload["round_count"] == 3
     assert payload["second_pass_used"] is True
     assert payload["rewritten_query_used"] is True
+    assert payload["plan"]["enabled_retrievers"] == ["vector", "bm25", "graph"]
+    assert payload["retriever_runs"][1]["source"] == "graph"
     assert payload["rounds"][-1]["trigger"] == "query_rewrite_retry"
     assert "共 3 轮" in payload["message"]
     assert "改写后的问题再次补检" in payload["message"]

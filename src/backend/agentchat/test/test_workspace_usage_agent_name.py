@@ -60,3 +60,75 @@ def test_agent_workspace_usage_can_resolve_agent_id(monkeypatch):
     )
 
     assert result == "Agent Beta"
+
+
+def test_workspace_simple_chat_can_enable_multi_agent_runtime(monkeypatch):
+    from agentchat.api.v1.workspace import workspace_simple_chat
+    from agentchat.schema.workspace import WorkSpaceSimpleTask
+
+    captured = {}
+
+    class FakeSimpleAgent:
+        def __init__(self, **kwargs):
+            captured["multi_agent_enabled"] = kwargs["multi_agent_enabled"]
+
+        async def astream(self, messages):
+            yield {
+                "event": "final",
+                "timestamp": 0.0,
+                "data": {"chunk": "ok", "message": "ok", "accumulated": "ok", "done": True},
+            }
+
+    async def fake_get_llm_by_id(model_id):
+        assert model_id == "model_1"
+        return {
+            "model": "test-model",
+            "base_url": "https://example.com",
+            "api_key": "key",
+            "provider": "openai",
+        }
+
+    async def fake_get_workspace_session_from_id(session_id, user_id):
+        assert session_id == "session_1"
+        assert user_id == "user_1"
+        return {"agent": "simple", "contexts": []}
+
+    async def fake_get_tools_from_id(_plugin_ids):
+        return []
+
+    async def fake_build_workspace_attachment_prompt(**kwargs):
+        return kwargs["query"]
+
+    monkeypatch.setattr("agentchat.api.v1.workspace.LLMService.get_llm_by_id", fake_get_llm_by_id)
+    monkeypatch.setattr(
+        "agentchat.api.v1.workspace.WorkSpaceSessionService.get_workspace_session_from_id",
+        fake_get_workspace_session_from_id,
+    )
+    monkeypatch.setattr("agentchat.api.v1.workspace.ToolService.get_tools_from_id", fake_get_tools_from_id)
+    monkeypatch.setattr(
+        "agentchat.api.v1.workspace.build_workspace_attachment_prompt",
+        fake_build_workspace_attachment_prompt,
+    )
+    monkeypatch.setattr(
+        "agentchat.api.v1.workspace.validate_tools_for_mode",
+        lambda tools, execution_mode: None,
+    )
+    monkeypatch.setattr("agentchat.api.v1.workspace.WorkSpaceSimpleAgent", FakeSimpleAgent)
+
+    response = asyncio.run(
+        workspace_simple_chat(
+            simple_task=WorkSpaceSimpleTask(
+                query="请用多 agent 审查这份合同",
+                model_id="model_1",
+                session_id="session_1",
+                plugins=[],
+                mcp_servers=[],
+                knowledge_ids=["kb_1"],
+                multi_agent_enabled=True,
+            ),
+            login_user=type("User", (), {"user_id": "user_1"})(),
+        )
+    )
+
+    assert captured["multi_agent_enabled"] is True
+    assert response.media_type == "text/event-stream"

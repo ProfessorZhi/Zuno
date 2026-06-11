@@ -28,6 +28,5 @@ class UsageStatsBase(SQLModelSerializable):
 
 class UsageStats(UsageStatsBase, table=True):
     __tablename__ = "usage_stats"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True, description="智能体、模型的使用统计的ID")

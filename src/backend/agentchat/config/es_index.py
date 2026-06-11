@@ -11,15 +11,39 @@ class ESIndex:
       "size": 10,
       "timeout": "3s",
       "query": {{
-        "match": {{
-          "content": {{
-            "query": "{query}",
-            "analyzer": "ik_smart",
-            "operator": "and",
-            "minimum_should_match": "75%",
-            "fuzziness": "AUTO",
-            "boost": 2.0
-          }}
+        "bool": {{
+          "should": [
+            {{
+              "multi_match": {{
+                "query": "{query}",
+                "fields": ["content^3", "summary^1.5"],
+                "type": "best_fields",
+                "analyzer": "ik_smart",
+                "operator": "and",
+                "minimum_should_match": "70%",
+                "boost": 2.5
+              }}
+            }},
+            {{
+              "match_phrase": {{
+                "content": {{
+                  "query": "{query}",
+                  "slop": 1,
+                  "boost": 3.0
+                }}
+              }}
+            }},
+            {{
+              "match_phrase": {{
+                "summary": {{
+                  "query": "{query}",
+                  "slop": 1,
+                  "boost": 1.8
+                }}
+              }}
+            }}
+          ],
+          "minimum_should_match": 1
         }}
       }}
     }}"""
@@ -28,15 +52,30 @@ class ESIndex:
           "size": 10,
           "timeout": "3s",
           "query": {{
-            "match": {{
-              "content": {{
-                "query": "{query}",
-                "analyzer": "ik_smart",
-                "operator": "and",
-                "minimum_should_match": "75%",
-                "fuzziness": "AUTO",
-                "boost": 2.0
-              }}
+            "bool": {{
+              "should": [
+                {{
+                  "match": {{
+                    "summary": {{
+                      "query": "{query}",
+                      "analyzer": "ik_smart",
+                      "operator": "and",
+                      "minimum_should_match": "70%",
+                      "boost": 2.2
+                    }}
+                  }}
+                }},
+                {{
+                  "match_phrase": {{
+                    "summary": {{
+                      "query": "{query}",
+                      "slop": 1,
+                      "boost": 2.8
+                    }}
+                  }}
+                }}
+              ],
+              "minimum_should_match": 1
             }}
           }}
         }}"""

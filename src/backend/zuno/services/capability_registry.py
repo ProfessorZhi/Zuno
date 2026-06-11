@@ -57,9 +57,9 @@ class CapabilityRegistryService:
     async def list_capabilities(cls, user_id: str) -> list[dict[str, Any]]:
         # Delay service imports so the registry can be imported from route modules
         # without immediately recursing back through zuno.api package initialization.
-        from zuno.services.application.agent_skill import AgentSkillService
-        from zuno.services.application.mcp_server import MCPService
-        from zuno.services.application.tool import ToolService
+        from zuno.api.services.agent_skill import AgentSkillService
+        from zuno.api.services.mcp_server import MCPService
+        from zuno.api.services.tool import ToolService
 
         tools = await ToolService.get_visible_tool_by_user(user_id)
         skills = await AgentSkillService.get_agent_skills(user_id)

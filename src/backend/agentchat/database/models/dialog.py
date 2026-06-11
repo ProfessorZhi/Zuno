@@ -12,7 +12,6 @@ class DialogTable(SQLModelSerializable, table=True):
     """单条对话记录。"""
 
     __tablename__ = "dialog"
-    __table_args__ = {"extend_existing": True}
 
     dialog_id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     name: str = Field(description='对话名称')

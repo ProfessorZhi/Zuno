@@ -402,6 +402,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
   background: #fffaf4;
 }
 
@@ -411,9 +412,9 @@
 }
 
 .settings-center-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 80;
+  z-index: 120;
   display: grid;
   place-items: center;
   padding: 28px;
@@ -421,18 +422,23 @@
   backdrop-filter: blur(10px);
 }
 
-.settings-center {
-  width: min(90vw, 1480px);
-  height: min(90vh, 920px);
-  min-width: min(960px, calc(100vw - 32px));
-  min-height: min(620px, calc(100vh - 32px));
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  border-radius: 18px;
-  border: 1px solid rgba(222, 204, 184, 0.92);
-  background: rgba(255, 253, 250, 0.98);
-  box-shadow: 0 28px 80px rgba(53, 36, 22, 0.22);
+.settings-center-fade-enter-active,
+.settings-center-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.settings-center-fade-enter-from,
+.settings-center-fade-leave-to {
+  opacity: 0;
+}
+
+.settings-center-window {
+  width: min(1160px, calc(100% - 36px));
+  height: min(820px, calc(100% - 36px));
+  min-width: 920px;
+  min-height: 560px;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .settings-center-head {
@@ -534,6 +540,17 @@
   .session-card {
     gap: 7px;
     padding: 7px 6px;
+  }
+
+  .settings-center-backdrop {
+    padding: 16px;
+  }
+
+  .settings-center-window {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
   }
 
   .mode-tag {

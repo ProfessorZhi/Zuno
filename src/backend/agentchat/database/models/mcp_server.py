@@ -9,7 +9,6 @@ from agentchat.database.models.base import SQLModelSerializable
 
 class MCPServerTable(SQLModelSerializable, table=True):
     __tablename__ = "mcp_server"
-    __table_args__ = {"extend_existing": True}
 
     mcp_server_id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     server_name: str = Field(default="MCP Server", description="MCP Server名称")
@@ -51,7 +50,6 @@ class MCPServerTable(SQLModelSerializable, table=True):
 # 目前暂时用不上
 class MCPServerStdioTable(SQLModelSerializable, table=True):
     __tablename__ = "mcp_stdio_server"
-    __table_args__ = {"extend_existing": True}
 
     mcp_server_id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     mcp_server_path: str = Field(description="MCP Server脚本所在位置")

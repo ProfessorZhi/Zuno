@@ -2,6 +2,7 @@ import asyncio
 import json
 
 import aiohttp
+from loguru import logger
 
 from agentchat.core.models.manager import ModelManager
 from agentchat.schema.rerank import RerankResultModel
@@ -64,12 +65,23 @@ class Reranker:
             },
         }
 
+        last_error = None
         async with aiohttp.ClientSession() as session:
-            async with session.post(url=config.base_url, headers=headers, data=json.dumps(payload)) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    return result["output"]["results"]
-                response.raise_for_status()
+            for attempt in range(3):
+                try:
+                    async with session.post(url=config.base_url, headers=headers, data=json.dumps(payload)) as response:
+                        if response.status == 200:
+                            result = await response.json()
+                            return result["output"]["results"]
+                        response.raise_for_status()
+                except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+                    last_error = err
+                    if attempt == 2:
+                        break
+                    await asyncio.sleep(1 + attempt)
+        if last_error is not None:
+            raise last_error
+        return []
 
     @classmethod
     async def rerank_documents(cls, query, documents, *, config_override=None, top_n=None):
@@ -81,7 +93,11 @@ class Reranker:
         if not cls._is_configured(config_override):
             return cls._fallback_documents(query, documents)
 
-        results = await cls.request_rerank(query, documents, config_override=config_override, top_n=top_n)
+        try:
+            results = await cls.request_rerank(query, documents, config_override=config_override, top_n=top_n)
+        except Exception as err:
+            logger.warning(f"rerank request failed, fallback to local ordering: {err}")
+            return cls._fallback_documents(query, documents)
         if not results:
             return cls._fallback_documents(query, documents)
 

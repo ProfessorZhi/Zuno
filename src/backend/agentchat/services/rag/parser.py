@@ -1,10 +1,10 @@
 import asyncio
 import os
 from datetime import datetime, timedelta
-from uuid import uuid4
 
 from agentchat.core.models.manager import ModelManager
 from agentchat.schema.chunk import ChunkModel
+from agentchat.services.rag.doc_parser.chunk_ids import build_chunk_id
 from agentchat.services.rag.doc_parser.docx import docx_parser
 from agentchat.services.rag.doc_parser.excel import excel_to_txt
 from agentchat.services.rag.doc_parser.image import build_image_chunk, describe_image
@@ -16,11 +16,13 @@ from agentchat.services.rag.doc_parser.text import text_parser
 from agentchat.settings import app_settings
 
 IMAGE_SUFFIXES = {"jpg", "jpeg", "png", "bmp", "webp", "tiff"}
-TEXT_LIKE_SUFFIXES = {"txt", "json", "html", "htm", "csv"}
+TEXT_LIKE_SUFFIXES = {"txt", "json", "html", "htm", "csv", "yml", "yaml"}
 EXCEL_SUFFIXES = {"xls", "xlsx"}
 
 
 class DocParser:
+    MILVUS_CONTENT_LIMIT = 4000
+
     @staticmethod
     def _build_markdown_parser(config: dict | None):
         index_settings = (config or {}).get("index_settings", {})
@@ -42,6 +44,39 @@ class DocParser:
         return parser
 
     @classmethod
+    def _enforce_content_limit(cls, chunks: list[ChunkModel]) -> list[ChunkModel]:
+        limited_chunks: list[ChunkModel] = []
+        for chunk in chunks:
+            content = chunk.content or ""
+            if len(content) <= cls.MILVUS_CONTENT_LIMIT:
+                limited_chunks.append(chunk)
+                continue
+
+            start = 0
+            part_index = 1
+            overlap = 120
+            while start < len(content):
+                part = content[start : start + cls.MILVUS_CONTENT_LIMIT]
+                limited_chunks.append(
+                    ChunkModel(
+                        chunk_id=f"{chunk.chunk_id}_{part_index}"[:128],
+                        content=part,
+                        file_id=chunk.file_id,
+                        file_name=chunk.file_name,
+                        update_time=chunk.update_time,
+                        knowledge_id=chunk.knowledge_id,
+                        summary=chunk.summary,
+                        modality=chunk.modality,
+                        source_url=chunk.source_url,
+                    )
+                )
+                part_index += 1
+                if start + cls.MILVUS_CONTENT_LIMIT >= len(content):
+                    break
+                start += cls.MILVUS_CONTENT_LIMIT - overlap
+        return limited_chunks
+
+    @classmethod
     async def parse_doc_into_chunks(
         cls,
         file_id,
@@ -57,7 +92,7 @@ class DocParser:
         image_mode = index_settings.get("image_indexing_mode", "dual")
         markdown_parser_instance = cls._build_markdown_parser(knowledge_config)
         text_parser_instance = cls._build_text_parser(knowledge_config)
-        if file_suffix == "md":
+        if file_suffix in {"md", "mdx"}:
             chunks = await markdown_parser_instance.parse_into_chunks(file_id, file_path, knowledge_id)
         elif file_suffix == "txt":
             chunks = await text_parser_instance.parse_into_chunks(file_id, file_path, knowledge_id)
@@ -76,11 +111,16 @@ class DocParser:
         elif file_suffix in IMAGE_SUFFIXES:
             description = describe_image(file_path)
             if image_mode == "text_only":
-                chunk_id = f"{os.path.basename(file_path).split('_')[0]}_{uuid4().hex}"
+                chunk_id = build_chunk_id(
+                    file_id=file_id,
+                    file_name=os.path.basename(file_path),
+                    content=description,
+                    index=0,
+                )
                 update_time = datetime.utcnow() + timedelta(hours=8)
                 chunks = [
                     ChunkModel(
-                        chunk_id=chunk_id[:128] if len(chunk_id) > 128 else chunk_id,
+                        chunk_id=chunk_id,
                         content=description,
                         file_id=file_id,
                         file_name=os.path.basename(file_path),
@@ -100,11 +140,13 @@ class DocParser:
                     )
                 ]
         elif file_suffix in EXCEL_SUFFIXES:
-            new_file_path = excel_to_txt(file_path)
+            new_file_path = await excel_to_txt(file_path)
             chunks = await text_parser_instance.parse_into_chunks(file_id, new_file_path, knowledge_id)
         elif file_suffix in TEXT_LIKE_SUFFIXES:
-            new_file_path = other_file_to_txt(file_path)
+            new_file_path = await other_file_to_txt(file_path)
             chunks = await text_parser_instance.parse_into_chunks(file_id, new_file_path, knowledge_id)
+
+        chunks = cls._enforce_content_limit(chunks)
 
         if app_settings.rag.enable_summary:
             semaphore = asyncio.Semaphore(max_concurrent_tasks)

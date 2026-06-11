@@ -181,5 +181,5 @@ docker compose -f infra/docker/docker-compose.yml down -v
 ## 相关文档
 
 - [项目 README](../../README.md)
-- [Windows Launchers](../../launchers/README.md)
+- [Windows Launchers](../../tools/launchers/windows/README.md)
 - [Zuno 项目参考](../../docs/reference/zuno.md)

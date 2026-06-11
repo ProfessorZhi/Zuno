@@ -34,8 +34,6 @@ class AgentRuntime:
         return self.multi_agent_graph.build_initial_state(**kwargs)
 
     async def run_domain_qa(self, **kwargs):
-        kwargs.setdefault("user_id", "")
-        kwargs.setdefault("agent_id", "domain_qa_runtime")
         runtime_settings = kwargs.get("runtime_settings")
         domain_pack = kwargs.get("domain_pack")
         if self._use_multi_agent_runtime(runtime_settings, domain_pack):

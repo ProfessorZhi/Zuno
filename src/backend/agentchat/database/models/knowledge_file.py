@@ -16,7 +16,6 @@ class Status:
 
 class KnowledgeFileTable(SQLModelSerializable, table=True):
     __tablename__ = "knowledge_file"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     file_name: str = Field(index=True)

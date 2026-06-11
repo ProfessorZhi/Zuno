@@ -21,6 +21,7 @@ class WorkSpaceSimpleTask(BaseModel):
     mcp_servers: List[str] = []
     knowledge_ids: List[str] = []
     retrieval_mode: str = "auto"
+    multi_agent_enabled: bool = False
     agent_skill_ids: List[str] = []
     execution_mode: str = "tool"
     access_scope: str = "workspace"

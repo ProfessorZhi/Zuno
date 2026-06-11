@@ -12,7 +12,6 @@ class MCPUserConfigTable(SQLModelSerializable, table=True):
     MCP用户配置表，用于存储用户与MCP Server的绑定配置信息。
     """
     __tablename__ = "mcp_user_config"
-    __table_args__ = {"extend_existing": True}
 
     # 主键ID，使用UUID生成唯一标识
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True, description="主键ID")

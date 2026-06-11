@@ -1,9 +1,9 @@
 import os
-from uuid import uuid4
 from datetime import datetime, timedelta
 
 from agentchat.schema.chunk import ChunkModel
 from agentchat.settings import app_settings
+from agentchat.services.rag.doc_parser.chunk_ids import build_chunk_id
 
 class TextParser:
     def __init__(self):
@@ -65,10 +65,15 @@ class TextParser:
         contents = await self.split_text_into_chunks_by_lines(file_content)
         chunks = []
         update_time = datetime.utcnow() + timedelta(hours=8)
-        for content in contents:
-            chunk_id = f"{os.path.basename(file_path).split('_')[0]}_{uuid4().hex}"
+        for index, content in enumerate(contents):
+            chunk_id = build_chunk_id(
+                file_id=file_id,
+                file_name=os.path.basename(file_path),
+                content=content,
+                index=index,
+            )
             chunks.append(ChunkModel(
-                chunk_id=chunk_id[:128] if len(chunk_id) > 128 else chunk_id,
+                chunk_id=chunk_id,
                 content=content,
                 file_id=file_id,
                 file_name=os.path.basename(file_path),

@@ -135,6 +135,113 @@ class MilvusLiteClient:
             modality="image",
         )
 
+    async def get_documents_by_chunk_ids(self, collection_name: str, chunk_ids: list[str]) -> List[SearchModel]:
+        collection = self._get_collection_safe(collection_name)
+        if not collection or not chunk_ids:
+            return []
+
+        ordered_ids = []
+        seen = set()
+        for chunk_id in chunk_ids:
+            normalized = str(chunk_id or "").strip()
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                ordered_ids.append(normalized)
+        if not ordered_ids:
+            return []
+
+        safe_ids = [chunk_id.replace("\\", "\\\\").replace('"', '\\"') for chunk_id in ordered_ids]
+        expr = 'chunk_id in ["{}"]'.format('","'.join(safe_ids))
+        try:
+            rows = collection.query(
+                expr,
+                output_fields=[
+                    "content",
+                    "chunk_id",
+                    "summary",
+                    "file_id",
+                    "file_name",
+                    "knowledge_id",
+                    "update_time",
+                    "source_url",
+                ],
+            )
+        except Exception as err:
+            logger.error(f"Chunk lookup failed in collection '{collection_name}': {err}")
+            return []
+
+        rows_by_chunk_id = {row.get("chunk_id"): row for row in rows}
+        documents = []
+        for chunk_id in ordered_ids:
+            row = rows_by_chunk_id.get(chunk_id)
+            if not row:
+                continue
+            documents.append(
+                SearchModel(
+                    content=row.get("content", ""),
+                    chunk_id=row.get("chunk_id", ""),
+                    file_id=row.get("file_id", ""),
+                    file_name=row.get("file_name", ""),
+                    knowledge_id=row.get("knowledge_id", ""),
+                    update_time=row.get("update_time", ""),
+                    summary=row.get("summary", ""),
+                    score=0.0,
+                    modality="text",
+                    source_url=row.get("source_url", ""),
+                )
+            )
+        return documents
+
+    async def get_documents_by_file_id(
+        self,
+        collection_name: str,
+        file_id: str,
+        *,
+        limit: int | None = None,
+    ) -> List[SearchModel]:
+        collection = self._get_collection_safe(collection_name)
+        normalized_file_id = str(file_id or "").strip()
+        if not collection or not normalized_file_id:
+            return []
+
+        safe_file_id = normalized_file_id.replace("\\", "\\\\").replace('"', '\\"')
+        try:
+            rows = collection.query(
+                f'file_id == "{safe_file_id}"',
+                output_fields=[
+                    "content",
+                    "chunk_id",
+                    "summary",
+                    "file_id",
+                    "file_name",
+                    "knowledge_id",
+                    "update_time",
+                    "source_url",
+                ],
+            )
+        except Exception as err:
+            logger.error(f"File lookup failed in collection '{collection_name}': {err}")
+            return []
+
+        ordered_rows = sorted(rows, key=lambda row: str(row.get("chunk_id") or ""))
+        if limit:
+            ordered_rows = ordered_rows[: max(int(limit), 0)]
+        return [
+            SearchModel(
+                content=row.get("content", ""),
+                chunk_id=row.get("chunk_id", ""),
+                file_id=row.get("file_id", ""),
+                file_name=row.get("file_name", ""),
+                knowledge_id=row.get("knowledge_id", ""),
+                update_time=row.get("update_time", ""),
+                summary=row.get("summary", ""),
+                score=0.0,
+                modality="text",
+                source_url=row.get("source_url", ""),
+            )
+            for row in ordered_rows
+        ]
+
     async def _delete_by_file_id_from_collection(self, file_id: str, collection_name: str) -> bool:
         collection = self._get_collection_safe(collection_name)
         if not collection:

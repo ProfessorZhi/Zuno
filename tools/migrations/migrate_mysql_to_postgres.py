@@ -93,7 +93,7 @@ def main() -> None:
     parser.add_argument(
         "--postgres-url",
         default=load_postgres_url(),
-        help="目标 PostgreSQL 连接串，默认读取 src/backend/agentchat/config.yaml",
+        help="目标 PostgreSQL 连接串，默认读取当前后端配置文件（优先 ZUNO_CONFIG）。",
     )
     args = parser.parse_args()
 

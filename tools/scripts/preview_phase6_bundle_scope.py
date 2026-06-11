@@ -194,7 +194,7 @@ def _print_summary() -> int:
     print("[recommended_sequence]")
     print("  - review docs_and_contract first to keep the closure claim honest")
     print("  - then confirm logical_phase6_delta matches the direct Phase 6 behavior change")
-    print("  - on the current main base, keep eval_entrypoints and runtime_foundations together")
+    print("  - if branch base lacks earlier foundations, include eval_entrypoints and runtime_foundations together")
     print("  - keep verification_tests with the final bundled node, not as a separate proof story")
     print("  - keep phase6_node_ops with the same node so the staging contract stays reproducible")
     return 0

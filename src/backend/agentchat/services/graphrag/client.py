@@ -34,12 +34,14 @@ class Neo4jClient:
                     session.run(
                         """
                         MERGE (e:Entity {name: $name, knowledge_id: $knowledge_id})
-                        SET e.type = $type
+                        SET e.type = $type,
+                            e.domain_pack_id = $domain_pack_id
                         """,
                         {
                             "name": entity.get("name", ""),
                             "knowledge_id": entity.get("knowledge_id", ""),
                             "type": entity.get("type", "entity"),
+                            "domain_pack_id": entity.get("domain_pack_id"),
                         },
                     )
             finally:
@@ -57,7 +59,10 @@ class Neo4jClient:
                         MERGE (s:Entity {name: $source, knowledge_id: $knowledge_id})
                         MERGE (t:Entity {name: $target, knowledge_id: $knowledge_id})
                         MERGE (s)-[r:RELATES_TO {type: $relation_type}]->(t)
-                        SET r.chunk_id = $chunk_id
+                        SET r.chunk_id = $chunk_id,
+                            r.domain_pack_id = $domain_pack_id,
+                            s.domain_pack_id = COALESCE($domain_pack_id, s.domain_pack_id),
+                            t.domain_pack_id = COALESCE($domain_pack_id, t.domain_pack_id)
                         """,
                         {
                             "source": relation.get("source", ""),
@@ -65,6 +70,7 @@ class Neo4jClient:
                             "knowledge_id": relation.get("knowledge_id", ""),
                             "relation_type": relation.get("relation_type", "related_to"),
                             "chunk_id": relation.get("chunk_id", ""),
+                            "domain_pack_id": relation.get("domain_pack_id"),
                         },
                     )
             finally:
@@ -78,6 +84,7 @@ class Neo4jClient:
         knowledge_id: str,
         hops: int = 1,
         limit: int = 10,
+        domain_pack_id: str | None = None,
     ) -> list[dict]:
         safe_hops = max(1, min(int(hops or 1), 3))
         safe_limit = max(1, min(int(limit or 10), 50))
@@ -88,14 +95,23 @@ class Neo4jClient:
                 with driver.session(database=self.database) as session:
                     result = session.run(
                         f"""
-                        MATCH (e:Entity {{name: $name, knowledge_id: $knowledge_id}})-[r:RELATES_TO*1..{safe_hops}]-(n:Entity {{knowledge_id: $knowledge_id}})
-                        RETURN e.name AS source, n.name AS target
+                        MATCH p=(e:Entity {{name: $name, knowledge_id: $knowledge_id}})-[:RELATES_TO*1..{safe_hops}]-(n:Entity {{knowledge_id: $knowledge_id}})
+                        WHERE $domain_pack_id IS NULL OR (
+                          e.domain_pack_id = $domain_pack_id
+                          AND n.domain_pack_id = $domain_pack_id
+                        )
+                        WITH e, n, relationships(p) AS rels
+                        RETURN
+                          e.name AS source,
+                          n.name AS target,
+                          [rel IN rels WHERE rel.chunk_id IS NOT NULL AND rel.chunk_id <> "" | rel.chunk_id] AS chunk_ids
                         LIMIT $limit
                         """,
                         {
                             "name": entity_name,
                             "knowledge_id": knowledge_id,
                             "limit": safe_limit,
+                            "domain_pack_id": domain_pack_id,
                         },
                     )
                     return [record.data() for record in result]

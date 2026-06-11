@@ -1,6 +1,7 @@
 import json
 import re
 from collections import defaultdict
+from pathlib import Path
 
 import httpx
 from loguru import logger
@@ -24,6 +25,17 @@ from agentchat.utils.helpers import get_provider_from_model
 
 HIDDEN_SYSTEM_TOOL_NAMES = {"tavily_search", "bocha_search", "text_to_image"}
 HIDDEN_SYSTEM_AGENT_NAMES = {"联网搜索助手", "博查搜索助手", "文生图助手"}
+
+
+def _resolve_config_asset_path(file_name: str) -> str:
+    candidates = [
+        Path("./zuno/config") / file_name,
+        Path("./agentchat/config") / file_name,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    return str(candidates[-1])
 
 
 async def init_database():
@@ -67,6 +79,12 @@ def _ensure_knowledge_pipeline_schema():
                 connection.execute(
                     text("ALTER TABLE knowledge ADD COLUMN knowledge_config JSON DEFAULT '{}'::json")
                 )
+
+    if "agent" in inspector.get_table_names():
+        agent_columns = {column["name"] for column in inspector.get_columns("agent")}
+        if "domain_pack_id" not in agent_columns:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE agent ADD COLUMN domain_pack_id VARCHAR"))
 
     if "llm" in inspector.get_table_names():
         llm_columns = {column["name"] for column in inspector.get_columns("llm")}
@@ -426,13 +444,13 @@ async def upload_user_avatars_storage():
 
 
 async def load_default_tool():
-    with open("./agentchat/config/tool.json", "r", encoding="utf-8") as f:
+    with open(_resolve_config_asset_path("tool.json"), "r", encoding="utf-8") as f:
         result = json.load(f)
     return result
 
 
 async def load_system_mcp_server():
-    with open("./agentchat/config/mcp_server.json", "r", encoding="utf-8") as f:
+    with open(_resolve_config_asset_path("mcp_server.json"), "r", encoding="utf-8") as f:
         result = json.load(f)
     return result
 
@@ -480,6 +498,6 @@ def _fallback_mcp_description(server_name: str, tools_name: list[str]) -> str:
 
 
 async def load_user_avatars():
-    with open("./agentchat/config/avatars.json", "r", encoding="utf-8") as f:
+    with open(_resolve_config_asset_path("avatars.json"), "r", encoding="utf-8") as f:
         result = json.load(f)
     return result

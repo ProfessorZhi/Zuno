@@ -59,13 +59,13 @@ const REINDEX_FIELDS = {
 export const indexCapabilityOptions = [
   {
     value: 'rag' as const,
-    label: '纯 RAG',
-    description: '只建立向量索引，查询时只能走 RAG，适合普通文档问答和低成本知识库。',
+    label: 'RAG',
+    description: '建立向量与 BM25 所需的文本索引，不建立图谱索引，适合大多数文档问答知识库。',
   },
   {
     value: 'rag_graph' as const,
     label: 'RAG + GraphRAG',
-    description: '建立向量索引和图谱索引，查询时可在纯 RAG 与 RAG + GraphRAG 间切换。',
+    description: '建立标准 RAG 索引和图谱索引，查询时可在标准检索与图谱增强检索间切换。',
   },
 ]
 
@@ -243,7 +243,7 @@ export const findBindingById = (
 }
 
 export const getIndexCapabilityLabel = (mode: KnowledgeIndexCapability) => (
-  indexCapabilityOptions.find((item) => item.value === mode)?.label || '纯 RAG'
+  indexCapabilityOptions.find((item) => item.value === mode)?.label || 'RAG'
 )
 
 export const getChunkModeLabel = (mode: KnowledgeChunkMode) => (
@@ -290,8 +290,8 @@ export const buildKnowledgePreviewChunks = (
   const title = knowledgeName || '当前知识库'
   const description = knowledgeDescription || '这里会收录项目资料、文档、PDF、图片和说明信息。'
   const graphHint = config.index_capability === 'rag_graph'
-    ? `查询可走 RAG + GraphRAG，默认图谱扩展 ${config.retrieval_settings.graph_hop_limit}-hop。`
-    : '当前只建立向量索引，查询模式锁定为纯 RAG。'
+    ? `查询可走标准检索或图谱增强检索，图谱扩展默认 ${config.retrieval_settings.graph_hop_limit}-hop。`
+    : '当前不建立图谱索引，查询模式锁定为标准检索。'
   const imageHint = config.index_settings.image_indexing_mode === 'dual'
     ? '图片会同时保留描述文本索引和 VL 图像向量索引。'
     : config.index_settings.image_indexing_mode === 'vl_only'

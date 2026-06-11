@@ -8,7 +8,8 @@ from agentchat.database.dao.knowledge_file import KnowledgeFileDao
 from agentchat.database.dao.knowledge_task import KnowledgeTaskDao
 from agentchat.api.services.knowledge import KnowledgeService
 from agentchat.services.graphrag.client import Neo4jClient
-from agentchat.services.graphrag.extractor import GraphExtractor
+from agentchat.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
+from agentchat.services.graphrag.graph_store.graph_writer import GraphWriter
 from agentchat.services.pipeline.models import KnowledgeTaskStage, KnowledgeTaskStatus
 from agentchat.services.pipeline.stages import (
     build_failed_file_patch,
@@ -33,6 +34,7 @@ class KnowledgePipelineManager:
             return None
 
         candidate_roots = [
+            Path("/app/zuno/fixtures/knowledge_reindex"),
             Path("/app/agentchat/fixtures/knowledge_reindex"),
             Path(__file__).resolve().parents[2] / "fixtures" / "knowledge_reindex",
         ]
@@ -212,6 +214,9 @@ class KnowledgePipelineManager:
             index_capability = knowledge_config.get("index_capability", "rag")
             if self.enable_graph_indexing and index_capability == "rag_graph":
                 chunks = await self._parse_chunks(task)
+                runtime_settings = await KnowledgeService.get_runtime_settings(task.knowledge_id)
+                domain_pack = runtime_settings.get("domain_pack")
+                domain_pack_id = runtime_settings.get("domain_pack_id")
                 await self._record_stage(
                     task_id,
                     KnowledgeTaskStage.graph_extracting,
@@ -223,14 +228,23 @@ class KnowledgePipelineManager:
                 entity_count = 0
                 relation_count = 0
                 if Neo4jClient.is_enabled():
-                    extractor = GraphExtractor()
+                    extractor = CachedGraphExtractor()
+                    writer = GraphWriter()
                     client = Neo4jClient()
                     for chunk in chunks:
-                        graph_data = await extractor.extract_from_chunk(chunk, task.knowledge_id)
+                        graph_data = await extractor.extract_from_chunk(
+                            chunk,
+                            task.knowledge_id,
+                            domain_pack=domain_pack,
+                        )
                         for entity in graph_data["entities"]:
-                            await client.upsert_entity(entity)
+                            await client.upsert_entity(
+                                writer.build_entity_payload(entity, domain_pack_id=domain_pack_id)
+                            )
                         for relation in graph_data["relations"]:
-                            await client.upsert_relation(relation)
+                            await client.upsert_relation(
+                                writer.build_relation_payload(relation, domain_pack_id=domain_pack_id)
+                            )
                         entity_count += len(graph_data["entities"])
                         relation_count += len(graph_data["relations"])
                 await self._record_stage(

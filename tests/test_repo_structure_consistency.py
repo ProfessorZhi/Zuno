@@ -10,7 +10,6 @@ def test_phase2_required_paths_exist() -> None:
         "docs/architecture",
         "docs/development",
         "infra/docker",
-        "launchers",
         "src/backend",
         "src/backend/zuno/api",
         "src/backend/zuno/core",
@@ -20,6 +19,7 @@ def test_phase2_required_paths_exist() -> None:
         "src/frontend",
         "tests",
         "tools",
+        "tools/launchers/windows",
     ]
 
     for relative_path in required_paths:
@@ -49,9 +49,10 @@ def test_current_phase_audit_matches_phase2_structure_governance_status() -> Non
     ).read_text(encoding="utf-8")
 
     required_phrases = [
-        "`Phase 1`: completed",
-        "`Phase 2`: completed",
-        "`Phase 3`: completed",
+        "`Phase 1` 已完成",
+        "`Phase 2` 已完成",
+        "`Phase 6`: completed",
+        "`Phase 7`: current default phase",
         "verify_repo_structure.py",
         "tests/test_repo_structure_consistency.py",
         "tests/test_publish_boundary.py",
@@ -89,4 +90,3 @@ def test_repo_structure_verifier_covers_phase2_layout_contract() -> None:
 
     for phrase in required_phrases:
         assert phrase in content, f"missing repository structure verifier phrase: {phrase}"
-

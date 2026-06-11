@@ -3,15 +3,11 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from agentchat.api.services.knowledge import KnowledgeService
+from agentchat.services.graphrag.retriever import GraphRetriever
+from agentchat.services.rag.es_client import client as es_client
+from agentchat.services.rag.retrieval import MixRetrival
 from agentchat.settings import app_settings
-
-
-class KnowledgeService:
-    @staticmethod
-    async def get_runtime_settings(knowledge_id: str):
-        from agentchat.api.services.knowledge import KnowledgeService as _KnowledgeService
-
-        return await _KnowledgeService.get_runtime_settings(knowledge_id)
 
 
 def _guess_keyword_heavy(query: str) -> bool:
@@ -52,19 +48,17 @@ class VectorRetrieverAdapter:
         )
 
 
-class RagRetrieverAdapter(VectorRetrieverAdapter):
-    pass
-
-
 class BM25RetrieverAdapter:
     async def retrieve(self, query: str, knowledge_ids: list[str], options: dict | None = None) -> dict:
-        from agentchat.services.rag.retrieval import MixRetrival
-
         if not app_settings.rag.enable_elasticsearch:
             return {"content": "", "raw_content": "", "documents": []}
 
         options = options or {}
-        await KnowledgeService.get_runtime_settings(knowledge_ids[0]) if knowledge_ids else None
+        runtime_settings = await KnowledgeService.get_runtime_settings(knowledge_ids[0]) if knowledge_ids else {
+            "knowledge_config": {"index_settings": {"image_indexing_mode": "dual"}},
+            "text_embedding_config": None,
+            "vl_embedding_config": None,
+        }
         es_documents = await MixRetrival.retrival_es_documents(query, knowledge_ids, "content")
         documents = []
         for doc in es_documents[: options.get("top_k") or 5]:
@@ -78,14 +72,10 @@ KeywordRetrieverAdapter = BM25RetrieverAdapter
 
 
 class GraphRetrieverAdapter:
-    def __init__(self, retriever: Any | None = None):
-        self.retriever = retriever
+    def __init__(self, retriever: GraphRetriever | None = None):
+        self.retriever = retriever or GraphRetriever()
 
     def __getattr__(self, item):
-        if self.retriever is None:
-            from agentchat.services.graphrag.retriever import GraphRetriever
-
-            self.retriever = GraphRetriever()
         return getattr(self.retriever, item)
 
     async def retrieve(self, query: str, knowledge_ids: list[str], options: dict | None = None) -> dict:
@@ -94,30 +84,19 @@ class GraphRetrieverAdapter:
         runtime_settings = await KnowledgeService.get_runtime_settings(knowledge_id) if knowledge_id else {
             "domain_pack_id": None,
         }
-        scope_policy = dict(options.get("scope_policy") or {})
-        index_version = dict(options.get("index_version") or {})
         local_graph_retriever = runtime_settings.get("graph_retriever")
-        kwargs = {
-            "graph_hop_limit": options.get("graph_hop_limit", 2),
-            "max_paths_per_entity": options.get("max_paths_per_entity", 10),
-            "domain_pack_id": options.get("domain_pack_id") or runtime_settings.get("domain_pack_id"),
-            "index_version": index_version.get("graph"),
-            "status": scope_policy.get("status"),
-        }
-        if self.retriever is None:
-            from agentchat.services.graphrag.retriever import GraphRetriever
-
-            self.retriever = GraphRetriever()
         if local_graph_retriever:
-            return await local_graph_retriever.retrieve(query, knowledge_id, **kwargs)
-        return await self.retriever.retrieve(query, knowledge_id, **kwargs)
-
-
-__all__ = [
-    "BM25RetrieverAdapter",
-    "GraphRetrieverAdapter",
-    "KeywordRetrieverAdapter",
-    "QueryProcessor",
-    "RagRetrieverAdapter",
-    "VectorRetrieverAdapter",
-]
+            return await local_graph_retriever.retrieve(
+                query,
+                knowledge_id,
+                graph_hop_limit=options.get("graph_hop_limit", 2),
+                max_paths_per_entity=options.get("max_paths_per_entity", 10),
+                domain_pack_id=options.get("domain_pack_id") or runtime_settings.get("domain_pack_id"),
+            )
+        return await self.retriever.retrieve(
+            query,
+            knowledge_id,
+            graph_hop_limit=options.get("graph_hop_limit", 2),
+            max_paths_per_entity=options.get("max_paths_per_entity", 10),
+            domain_pack_id=options.get("domain_pack_id") or runtime_settings.get("domain_pack_id"),
+        )

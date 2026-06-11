@@ -24,6 +24,9 @@ class KnowledgeIndexSettings(BaseModel):
     remove_urls_emails: bool = Field(default=False)
     image_indexing_mode: str = Field(default="dual", pattern="^(text_only|vl_only|dual)$")
     vector_backend: str = Field(default="milvus", pattern="^(milvus|chroma|milvus_lite)$")
+    index_version: str = Field(default="v1", min_length=1, max_length=64)
+    status: str = Field(default="active", pattern="^(active|disabled|archived)$")
+    health_status: str = Field(default="ready", pattern="^(ready|degraded|stale|failed|unavailable)$")
 
 
 class KnowledgeIndexSettingsPatch(BaseModel):
@@ -35,6 +38,9 @@ class KnowledgeIndexSettingsPatch(BaseModel):
     remove_urls_emails: Optional[bool] = Field(default=None)
     image_indexing_mode: Optional[str] = Field(default=None, pattern="^(text_only|vl_only|dual)$")
     vector_backend: Optional[str] = Field(default=None, pattern="^(milvus|chroma|milvus_lite)$")
+    index_version: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    status: Optional[str] = Field(default=None, pattern="^(active|disabled|archived)$")
+    health_status: Optional[str] = Field(default=None, pattern="^(ready|degraded|stale|failed|unavailable)$")
 
 
 class KnowledgeGraphIndexSettings(BaseModel):
@@ -43,6 +49,8 @@ class KnowledgeGraphIndexSettings(BaseModel):
     entity_normalization: bool = Field(default=True)
     evidence_backlink: bool = Field(default=True)
     use_rag_entry_chunk: bool = Field(default=True)
+    index_version: str = Field(default="v1", min_length=1, max_length=64)
+    health_status: str = Field(default="ready", pattern="^(ready|degraded|stale|failed|unavailable)$")
 
 
 class KnowledgeGraphIndexSettingsPatch(BaseModel):
@@ -51,6 +59,8 @@ class KnowledgeGraphIndexSettingsPatch(BaseModel):
     entity_normalization: Optional[bool] = Field(default=None)
     evidence_backlink: Optional[bool] = Field(default=None)
     use_rag_entry_chunk: Optional[bool] = Field(default=None)
+    index_version: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    health_status: Optional[str] = Field(default=None, pattern="^(ready|degraded|stale|failed|unavailable)$")
 
 
 class KnowledgeRetrievalSettings(BaseModel):
@@ -77,6 +87,7 @@ class KnowledgeRetrievalSettingsPatch(BaseModel):
 
 class KnowledgeConfig(BaseModel):
     index_capability: str = Field(default="rag", pattern="^(rag|rag_graph)$")
+    domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: KnowledgeModelRefs = Field(default_factory=KnowledgeModelRefs)
     index_settings: KnowledgeIndexSettings = Field(default_factory=KnowledgeIndexSettings)
     graph_index_settings: KnowledgeGraphIndexSettings = Field(default_factory=KnowledgeGraphIndexSettings)
@@ -85,6 +96,7 @@ class KnowledgeConfig(BaseModel):
 
 class KnowledgeConfigPatch(BaseModel):
     index_capability: Optional[str] = Field(default=None, pattern="^(rag|rag_graph)$")
+    domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: Optional[KnowledgeModelRefsPatch] = Field(default=None)
     index_settings: Optional[KnowledgeIndexSettingsPatch] = Field(default=None)
     graph_index_settings: Optional[KnowledgeGraphIndexSettingsPatch] = Field(default=None)

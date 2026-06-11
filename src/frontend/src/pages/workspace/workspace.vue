@@ -14,6 +14,7 @@ import { DEFAULT_USER_AVATAR, isLegacyRemoteUserAvatar, withUserAvatarVersion } 
 import SidebarMascot from '../../components/SidebarMascot.vue'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
 import WorkspaceAuthGate from './WorkspaceAuthGate.vue'
+import WorkspaceSettingsShell from './components/WorkspaceSettingsShell.vue'
 import accountConversationIcon from '../../assets/account/conversation.svg'
 import accountProfileIcon from '../../assets/account/profile.svg'
 import accountLogoutIcon from '../../assets/account/logout.svg'
@@ -23,6 +24,7 @@ import {
   removeWorkspaceSessionMode,
   type WorkspaceMode,
 } from '../../utils/workspace-defaults'
+import { loadSettingsUiMode } from '../../utils/settings-preferences'
 
 const router = useRouter()
 const route = useRoute()
@@ -57,6 +59,7 @@ const getInitialSidebarCollapsed = () => {
   return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
 }
 const sidebarCollapsed = ref(getInitialSidebarCollapsed())
+const settingsUiMode = ref(loadSettingsUiMode())
 const selectedSettingsSection = ref('agent')
 const settingsMenuOpen = ref(false)
 const accountMenuOpen = ref(false)
@@ -306,6 +309,10 @@ const settingsRouteBySection: Record<string, string> = {
   dashboard: 'workspaceSettingsDashboard',
 }
 const settingsCenterVisible = computed(() => Boolean(route.meta.settingsSection))
+const traditionalSettingsWindowVisible = computed(() => (
+  settingsUiMode.value === 'traditional'
+  && Boolean(route.meta.settingsSection || route.meta.accountSection)
+))
 const activeSettingsSection = computed(() => String(route.meta.settingsSection || selectedSettingsSection.value || 'agent'))
 const activeSettingsLabel = computed(() => (
   settingsSections.find((section) => section.key === activeSettingsSection.value)?.label || '设置'
@@ -313,6 +320,14 @@ const activeSettingsLabel = computed(() => (
 
 const toggleSettingsMenu = () => {
   if (!authUnlocked.value) return
+  if (settingsUiMode.value === 'traditional') {
+    if (traditionalSettingsWindowVisible.value) {
+      void closeTraditionalSettingsWindow()
+      return
+    }
+    void openSettingsCenter(selectedSettingsSection.value || 'agent')
+    return
+  }
   accountMenuOpen.value = false
   settingsMenuOpen.value = !settingsMenuOpen.value
 }
@@ -340,6 +355,14 @@ const openSettingsCenter = (section = 'agent', overridePath = '') => {
   }
 
   router.push({ name: settingsRouteBySection[nextSection] || 'workspaceSettingsAgent', query })
+}
+
+const closeTraditionalSettingsWindow = async () => {
+  const { settings_turn: _settingsTurn, ...restQuery } = route.query
+  await router.push({
+    name: 'workspaceDefaultPage',
+    query: restQuery,
+  })
 }
 
 const openAgentCreator = () => {
@@ -859,6 +882,15 @@ watch(sidebarCollapsed, (collapsed) => {
           <component :is="Component" v-else />
         </Transition>
       </router-view>
+      <div
+        v-if="traditionalSettingsWindowVisible"
+        class="settings-center-backdrop"
+        @click.self="closeTraditionalSettingsWindow"
+      >
+        <div class="settings-center-window">
+          <WorkspaceSettingsShell @close="closeTraditionalSettingsWindow" />
+        </div>
+      </div>
     </main>
   </div>
 </template>

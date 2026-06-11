@@ -139,3 +139,23 @@ def test_retrieval_orchestrator_uses_rewritten_query_on_third_round_when_needed(
     ]
     assert result["metadata"]["rounds"][-1]["query"] == "invoice reimbursement policy"
     assert result["content"] == "rewritten query hit"
+
+
+def test_retrieval_orchestrator_returns_plan_and_retriever_run_metadata():
+    from agentchat.services.graphrag.orchestrator import RetrievalOrchestrator
+
+    rag = _FakeRagRetriever([_rag_result("redis persistence", 3, top_score=0.88)])
+    graph = _FakeGraphRetriever([_graph_result("redis -> postgresql", entities=[{"id": "e1"}], paths=[{"id": "p1"}])])
+    expander = _FakeQueryExpander(["redis persistence"])
+
+    orchestrator = RetrievalOrchestrator(
+        rag_retriever=rag,
+        graph_retriever=graph,
+        query_expander=expander,
+    )
+
+    result = asyncio.run(orchestrator.run("hybrid", "redis persistence", ["kb_1"]))
+
+    assert result["metadata"]["plan"]["resolved_mode"] == "hybrid"
+    assert result["metadata"]["plan"]["enabled_retrievers"] == ["vector", "graph"]
+    assert [item["source"] for item in result["metadata"]["retriever_runs"]] == ["vector", "graph"]

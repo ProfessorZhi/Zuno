@@ -2,10 +2,10 @@ import base64
 import os
 import tempfile
 from datetime import datetime, timedelta
-from uuid import uuid4
 
 from agentchat.core.models.manager import ModelManager
 from agentchat.schema.chunk import ChunkModel
+from agentchat.services.rag.doc_parser.chunk_ids import build_chunk_id
 
 
 def describe_image(image_path: str) -> str:
@@ -58,9 +58,15 @@ def build_image_chunk(
     description: str,
 ) -> ChunkModel:
     update_time = datetime.utcnow() + timedelta(hours=8)
-    chunk_id = f"{os.path.splitext(image_name)[0]}_{uuid4().hex}"
+    chunk_id = build_chunk_id(
+        file_id=file_id,
+        file_name=file_name,
+        content=description.strip(),
+        index=0,
+        prefix=os.path.splitext(image_name)[0],
+    )
     return ChunkModel(
-        chunk_id=chunk_id[:128] if len(chunk_id) > 128 else chunk_id,
+        chunk_id=chunk_id,
         content=description.strip(),
         file_id=file_id,
         file_name=file_name,

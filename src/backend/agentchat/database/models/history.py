@@ -11,7 +11,6 @@ from agentchat.database.models.base import SQLModelSerializable
 # 每条消息
 class HistoryTable(SQLModelSerializable, table=True):
     __tablename__ = "history"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     content: str = Field(sa_column=Column(Text))

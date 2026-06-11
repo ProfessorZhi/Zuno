@@ -4,7 +4,7 @@ chcp 65001 >nul
 title Zuno Start
 
 for %%I in ("%~dp0..\..") do set "REPO_ROOT=%%~fI"
-set "DESKTOP_BAT=%REPO_ROOT%\launchers\Zuno-Desktop-Start.cmd"
+set "DESKTOP_BAT=%REPO_ROOT%\tools\launchers\windows\Zuno-Desktop-Start.cmd"
 echo This script now forwards to the current desktop-mode launcher.
 echo.
 if exist "%DESKTOP_BAT%" (

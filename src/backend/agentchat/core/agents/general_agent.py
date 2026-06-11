@@ -6,7 +6,7 @@ from typing import Any, AsyncGenerator, Callable, Dict, List, NotRequired
 from langchain.agents import AgentState, create_agent
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
 from langchain.tools.tool_node import ToolCallRequest
-from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
+from langchain_core.messages import AIMessageChunk, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool, tool
 from langgraph.config import get_stream_writer
 from langgraph.runtime import Runtime
@@ -15,12 +15,14 @@ from loguru import logger
 from pydantic import BaseModel
 
 from agentchat.api.services.agent_skill import AgentSkillService
+from agentchat.api.services.knowledge import KnowledgeService
 from agentchat.api.services.llm import LLMService
 from agentchat.api.services.mcp_server import MCPService
 from agentchat.api.services.mcp_user_config import MCPUserConfigService
 from agentchat.api.services.tool import ToolService
 from agentchat.core.callbacks import usage_metadata_callback
 from agentchat.core.models.manager import ModelManager
+from agentchat.core.runtime.agent_runtime import AgentRuntime
 from agentchat.database import AgentSkill
 from agentchat.services.mcp.manager import MCPManager
 from agentchat.services.rag.handler import RagHandler
@@ -52,23 +54,8 @@ class AgentConfig(BaseModel):
     agent_skill_ids: List[str]
     system_prompt: str
     enable_memory: bool = False
-    multi_agent_enabled: bool = False
     name: str | None = None
-
-
-class KnowledgeService:
-    @staticmethod
-    async def get_runtime_settings(knowledge_id: str):
-        from agentchat.api.services.knowledge import KnowledgeService as _KnowledgeService
-
-        return await _KnowledgeService.get_runtime_settings(knowledge_id)
-
-
-class AgentRuntime:
-    async def run_domain_qa(self, **kwargs):
-        from agentchat.core.runtime.agent_runtime import AgentRuntime as _AgentRuntime
-
-        return await _AgentRuntime().run_domain_qa(**kwargs)
+    multi_agent_enabled: bool = False
 
 
 class EmitEventAgentMiddleware(AgentMiddleware):
@@ -182,6 +169,8 @@ class GeneralAgent:
         self.middlewares: list[AgentMiddleware] = []
         self.tool_metadata_map: Dict[str, Dict[str, str]] = {}
         self.mcp_tool_server_map: Dict[str, str] = {}
+        self.domain_qa_runtime = AgentRuntime()
+        self._runtime_settings_cache: dict[str, dict] = {}
 
         self.event_queue = asyncio.Queue()
         self.stop_streaming = False
@@ -361,27 +350,12 @@ class GeneralAgent:
             Args:
                 query: 用户问题
             """
-            runtime_settings = None
-            if self.agent_config.knowledge_ids:
-                runtime_settings = await KnowledgeService.get_runtime_settings(
-                    self.agent_config.knowledge_ids[0]
-                )
-            domain_pack_id = self.agent_config.domain_pack_id or (
-                (runtime_settings or {}).get("domain_pack_id")
+            domain_pack_answer = await self._run_domain_pack_query(query)
+            if domain_pack_answer:
+                return domain_pack_answer
+            return await RagHandler.retrieve_ranked_documents(
+                query, self.agent_config.knowledge_ids
             )
-            if domain_pack_id:
-                result = await AgentRuntime().run_domain_qa(
-                    query=query,
-                    user_id=self.agent_config.user_id,
-                    agent_id=self.agent_config.name or "general_agent",
-                    knowledge_ids=self.agent_config.knowledge_ids,
-                    dialog_id=self.agent_config.dialog_id or "",
-                    domain_pack_id=domain_pack_id,
-                    runtime_settings=runtime_settings or {},
-                )
-                return str(result.get("final_answer") or "")
-
-            return await RagHandler.retrieve_ranked_documents(query, self.agent_config.knowledge_ids)
 
         if self.agent_config.knowledge_ids:
             self.tools.append(retrival_knowledge)
@@ -390,67 +364,123 @@ class GeneralAgent:
                 "type": "工具",
             }
 
+    async def _get_primary_runtime_settings(self) -> dict[str, Any] | None:
+        if not self.agent_config.knowledge_ids:
+            return None
+        primary_knowledge_id = self.agent_config.knowledge_ids[0]
+        if primary_knowledge_id not in self._runtime_settings_cache:
+            self._runtime_settings_cache[primary_knowledge_id] = await KnowledgeService.get_runtime_settings(primary_knowledge_id)
+        return self._runtime_settings_cache[primary_knowledge_id]
+
+    async def _run_domain_pack_query(self, query: str) -> str | None:
+        state = await self._run_domain_pack_state(query)
+        if not state:
+            return None
+        return str(state.get("final_answer") or "")
+
+    async def _run_domain_pack_state(self, query: str) -> dict[str, Any] | None:
+        runtime_settings = await self._get_primary_runtime_settings()
+        if not runtime_settings or not runtime_settings.get("domain_pack"):
+            return None
+        runtime_settings = copy.deepcopy(runtime_settings)
+        if self.agent_config.multi_agent_enabled:
+            knowledge_config = dict(runtime_settings.get("knowledge_config") or {})
+            retrieval_settings = dict(knowledge_config.get("retrieval_settings") or {})
+            retrieval_settings["multi_agent_enabled"] = True
+            knowledge_config["retrieval_settings"] = retrieval_settings
+            runtime_settings["knowledge_config"] = knowledge_config
+        return await self.domain_qa_runtime.run_domain_qa(
+            user_id=self.agent_config.user_id,
+            agent_id=self.agent_config.name or "general_agent",
+            dialog_id=self.agent_config.dialog_id or f"general-agent-{self.agent_config.user_id}",
+            query=query,
+            knowledge_ids=self.agent_config.knowledge_ids,
+            domain_pack_id=runtime_settings.get("domain_pack_id") or self.agent_config.domain_pack_id,
+            runtime_settings=runtime_settings,
+            domain_pack=runtime_settings.get("domain_pack"),
+        )
+
+    @staticmethod
+    def _extract_latest_user_query(messages: List[BaseMessage]) -> str:
+        for message in reversed(messages):
+            if isinstance(message, HumanMessage):
+                return str(message.content or "").strip()
+        if messages:
+            return str(getattr(messages[-1], "content", "") or "").strip()
+        return ""
+
+    async def _should_use_domain_pack_runtime(self, messages: List[BaseMessage]) -> bool:
+        if not self.agent_config.knowledge_ids:
+            return False
+        runtime_settings = await self._get_primary_runtime_settings()
+        if not runtime_settings or not runtime_settings.get("domain_pack"):
+            return False
+        query = self._extract_latest_user_query(messages)
+        return bool(query)
+
+    async def _astream_domain_pack_query(self, messages: List[BaseMessage]) -> AsyncGenerator[Dict[str, Any], None]:
+        query = self._extract_latest_user_query(messages)
+        runtime_settings = await self._get_primary_runtime_settings()
+        domain_pack_id = (runtime_settings or {}).get("domain_pack_id") or self.agent_config.domain_pack_id
+        yield self.wrap_event(
+            {
+                "phase": "domain_qa",
+                "status": "START",
+                "message": "显式 DomainQAGraph 已接管本轮领域问答",
+                "domain_pack_id": domain_pack_id,
+            }
+        )
+        state = await self._run_domain_pack_state(query)
+        if not state:
+            return
+        final_answer = str(state.get("final_answer") or "")
+        status = "ERROR" if str(state.get("status") or "").lower() == "failed" else "END"
+        failure = state.get("failure_metadata") or {}
+        failed_node = str(failure.get("node") or "").strip()
+        error_text = str(failure.get("error") or "").strip()
+        message = "DomainQAGraph 问答完成"
+        if status == "ERROR":
+            message = f"DomainQAGraph 在 {failed_node or 'unknown'} 节点失败"
+        yield self.wrap_event(
+            {
+                "phase": "domain_qa",
+                "status": status,
+                "message": message,
+                "domain_pack_id": state.get("domain_pack_id"),
+                "trace_metadata": state.get("trace_metadata") or {},
+                "cost_metadata": state.get("cost_metadata") or {},
+                "support_verdict": state.get("support_verdict") or {},
+                "evidence_bundle": state.get("evidence_bundle") or {},
+                "failure_metadata": failure,
+                "error": error_text or None,
+            }
+        )
+        yield {
+            "type": "response_chunk",
+            "timestamp": time.time(),
+            "data": {
+                "chunk": final_answer,
+                "accumulated": final_answer,
+            },
+        }
+
     async def astream(self, messages: List[BaseMessage]) -> AsyncGenerator[Dict[str, Any], None]:
         response_content = ""
         visible_messages = copy.deepcopy(
             normalize_messages_for_model(messages, model=self.conversation_model)
         )
-        if self.agent_config.knowledge_ids:
-            runtime_settings = await KnowledgeService.get_runtime_settings(
-                self.agent_config.knowledge_ids[0]
-            )
-            domain_pack_id = self.agent_config.domain_pack_id or (
-                runtime_settings.get("domain_pack_id")
-            )
-            if domain_pack_id:
-                query = ""
-                if visible_messages:
-                    query = str(getattr(visible_messages[-1], "content", "") or "")
-                yield self.wrap_event(
-                    {
-                        "phase": "domain_qa",
-                        "status": "START",
-                        "domain_pack_id": domain_pack_id,
-                    }
-                )
-                result = await AgentRuntime().run_domain_qa(
-                    query=query,
-                    user_id=self.agent_config.user_id,
-                    agent_id=self.agent_config.name or "general_agent",
-                    knowledge_ids=self.agent_config.knowledge_ids,
-                    dialog_id=self.agent_config.dialog_id or "",
-                    domain_pack_id=domain_pack_id,
-                    runtime_settings=runtime_settings,
-                )
-                failure_metadata = result.get("failure_metadata")
-                yield self.wrap_event(
-                    {
-                        "phase": "domain_qa",
-                        "status": "ERROR" if failure_metadata or result.get("status") == "failed" else "END",
-                        "domain_pack_id": result.get("domain_pack_id") or domain_pack_id,
-                        "trace_metadata": result.get("trace_metadata"),
-                        "cost_metadata": result.get("cost_metadata"),
-                        "failure_metadata": failure_metadata,
-                    }
-                )
-                final_answer = str(result.get("final_answer") or "")
-                response_content += final_answer
-                yield {
-                    "type": "response_chunk",
-                    "timestamp": time.time(),
-                    "data": {
-                        "chunk": final_answer,
-                        "accumulated": response_content,
-                    },
-                }
-                return
         inside_think = False
         try:
+            if await self._should_use_domain_pack_runtime(visible_messages):
+                async for event in self._astream_domain_pack_query(visible_messages):
+                    yield event
+                return
             async for token, metadata in self.react_agent.astream(
                 input={
                     "messages": visible_messages,
                     "model_call_count": 0,
                     "user_id": self.agent_config.user_id,
+                    "domain_pack_id": self.agent_config.domain_pack_id,
                 },
                 config={"callbacks": [usage_metadata_callback]},
                 stream_mode=["messages", "custom"],

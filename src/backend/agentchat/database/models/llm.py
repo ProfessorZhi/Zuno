@@ -10,7 +10,6 @@ from agentchat.database.models.base import SQLModelSerializable
 
 class LLMTable(SQLModelSerializable, table=True):
     __tablename__ = "llm"
-    __table_args__ = {"extend_existing": True}
 
     llm_id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     llm_type: str = Field(default='LLM', description='大模型的类型, 分LLM、Embedding、Rerank')

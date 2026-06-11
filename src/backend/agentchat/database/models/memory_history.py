@@ -9,7 +9,6 @@ from agentchat.database.models.base import SQLModelSerializable
 
 class MemoryHistoryTable(SQLModelSerializable, table=True):
     __tablename__ = "memory_history"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True, description="主键ID")
     memory_id: str = Field(description="记忆ID")

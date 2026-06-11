@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS backend-base
+FROM python:3.12-bookworm AS backend-base
 
 ARG DEBIAN_MIRROR=deb.debian.org
 ARG PIP_INDEX_URL=https://pypi.org/simple
@@ -11,7 +11,7 @@ WORKDIR /app
 
 RUN (sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
     sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list) && \
-    apt-get update && apt-get install -y --no-install-recommends \
+    apt-get update -o Acquire::Retries=5 && apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \
       fonts-liberation \

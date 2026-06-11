@@ -12,23 +12,20 @@ EXPECTED_GROUP_COUNTS = {
     "docs_and_contract": 3,
     "logical_phase6_delta": 5,
     "eval_entrypoints": 4,
-    "runtime_foundations": 6,
-    "verification_tests": 19,
+    "runtime_foundations": 22,
+    "verification_tests": 20,
     "phase6_node_ops": 6,
 }
-EXPECTED_TOTAL = 43
+EXPECTED_TOTAL = 60
 REQUIRED_RECOMMENDATIONS = [
     "review docs_and_contract first to keep the closure claim honest",
     "then confirm logical_phase6_delta matches the direct Phase 6 behavior change",
-    "on the current main base, keep eval_entrypoints and runtime_foundations together",
+    "if branch base lacks earlier foundations, include eval_entrypoints and runtime_foundations together",
     "keep verification_tests with the final bundled node, not as a separate proof story",
     "keep phase6_node_ops with the same node so the staging contract stays reproducible",
 ]
-EXPECTED_BUNDLE_SUBJECTS = {
-    "phase6: close eval evidence bundle",
-    "phase6: rebuild evidence bundle on foundation base",
-}
-RECENT_BUNDLE_SCAN_LIMIT = 8
+EXPECTED_PRIMARY_COMMIT_SUBJECT = "phase6: solidify eval evidence bundle"
+EXPECTED_FOLLOWUP_COMMIT_SUBJECT = "phase6: sync local node readiness state"
 
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
@@ -39,38 +36,6 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         check=False,
     )
-
-
-def _find_matching_bundle_commit() -> tuple[str, str] | None:
-    log_proc = _run(
-        [
-            "git",
-            "log",
-            f"-{RECENT_BUNDLE_SCAN_LIMIT}",
-            "--pretty=%H%x09%s",
-        ]
-    )
-    if log_proc.returncode != 0:
-        return None
-
-    for line in log_proc.stdout.splitlines():
-        if not line.strip():
-            continue
-        commit_sha, _, subject = line.partition("\t")
-        if subject.strip() not in EXPECTED_BUNDLE_SUBJECTS:
-            continue
-
-        paths_proc = _run(["git", "show", "--name-only", "--format=", commit_sha])
-        if paths_proc.returncode != 0:
-            continue
-
-        paths = [entry.strip() for entry in paths_proc.stdout.splitlines() if entry.strip()]
-        counts = _count_paths_against_groups(paths)
-        total = sum(counts.values())
-        if counts == EXPECTED_GROUP_COUNTS and total == EXPECTED_TOTAL:
-            return commit_sha, subject.strip()
-
-    return None
 
 
 def _parse_summary(output: str) -> tuple[dict[str, int], int]:
@@ -112,25 +77,14 @@ def _load_preview_module():
 
 def _count_paths_against_groups(paths: list[str]) -> dict[str, int]:
     module = _load_preview_module()
-    matched_prefixes = {group_name: set() for group_name in EXPECTED_GROUP_COUNTS}
+    counts = {group_name: 0 for group_name in EXPECTED_GROUP_COUNTS}
     for path in paths:
         normalized = path.replace("\\", "/").strip()
         for group_name, prefixes in module.PHASE6_BUNDLE_GROUPS.items():
-            matched_prefix = next(
-                (
-                    prefix
-                    for prefix in prefixes
-                    if normalized == prefix or normalized.startswith(prefix)
-                ),
-                None,
-            )
-            if matched_prefix is not None:
-                matched_prefixes[group_name].add(matched_prefix)
+            if any(normalized == prefix or normalized.startswith(prefix) for prefix in prefixes):
+                counts[group_name] += 1
                 break
-    return {
-        group_name: len(prefixes)
-        for group_name, prefixes in matched_prefixes.items()
-    }
+    return counts
 
 
 def main() -> int:
@@ -171,17 +125,66 @@ def main() -> int:
         errors.append("dry-run output missing final stage command")
 
     if errors:
-        matching_commit = _find_matching_bundle_commit()
-        if matching_commit is not None:
-            commit_sha, subject = matching_commit
-            print("phase6 bundle readiness check passed.")
-            print("mode=matching_commit_history")
-            for group_name, count in EXPECTED_GROUP_COUNTS.items():
-                print(f"{group_name}={count}")
-            print(f"total_changed={EXPECTED_TOTAL}")
-            print(f"bundle_commit={commit_sha}")
-            print(f"bundle_commit_subject={subject}")
-            return 0
+        head_subject = _run(["git", "log", "-1", "--pretty=%s"])
+        head_paths_proc = _run(["git", "show", "--name-only", "--format=", "HEAD"])
+        if head_subject.returncode == 0 and head_paths_proc.returncode == 0:
+            head_paths = [line.strip() for line in head_paths_proc.stdout.splitlines() if line.strip()]
+            head_counts = _count_paths_against_groups(head_paths)
+            head_total = sum(head_counts.values())
+            head_errors: list[str] = []
+            if head_subject.stdout.strip() != EXPECTED_PRIMARY_COMMIT_SUBJECT:
+                head_errors.append(
+                    f"head subject differs: expected={EXPECTED_PRIMARY_COMMIT_SUBJECT!r} actual={head_subject.stdout.strip()!r}"
+                )
+            if head_counts != EXPECTED_GROUP_COUNTS:
+                head_errors.append(
+                    f"head commit counts differ: expected={EXPECTED_GROUP_COUNTS} actual={head_counts}"
+                )
+            if head_total != EXPECTED_TOTAL:
+                head_errors.append(
+                    f"head commit total differs: expected={EXPECTED_TOTAL} actual={head_total}"
+                )
+            if not head_errors:
+                print("phase6 bundle readiness check passed.")
+                print("mode=head_commit")
+                for group_name, count in EXPECTED_GROUP_COUNTS.items():
+                    print(f"{group_name}={count}")
+                print(f"total_changed={EXPECTED_TOTAL}")
+                print(f"head_commit_subject={head_subject.stdout.strip()}")
+                return 0
+
+        range_subjects = _run(["git", "log", "-2", "--pretty=%s"])
+        range_paths_proc = _run(["git", "diff", "--name-only", "HEAD~2..HEAD"])
+        if range_subjects.returncode == 0 and range_paths_proc.returncode == 0:
+            subjects = [line.strip() for line in range_subjects.stdout.splitlines() if line.strip()]
+            range_paths = [line.strip() for line in range_paths_proc.stdout.splitlines() if line.strip()]
+            range_counts = _count_paths_against_groups(range_paths)
+            range_total = sum(range_counts.values())
+            range_errors: list[str] = []
+            expected_subjects = [
+                EXPECTED_FOLLOWUP_COMMIT_SUBJECT,
+                EXPECTED_PRIMARY_COMMIT_SUBJECT,
+            ]
+            if subjects != expected_subjects:
+                range_errors.append(
+                    f"recent commit subjects differ: expected={expected_subjects!r} actual={subjects!r}"
+                )
+            if range_counts != EXPECTED_GROUP_COUNTS:
+                range_errors.append(
+                    f"recent commit range counts differ: expected={EXPECTED_GROUP_COUNTS} actual={range_counts}"
+                )
+            if range_total != EXPECTED_TOTAL:
+                range_errors.append(
+                    f"recent commit range total differs: expected={EXPECTED_TOTAL} actual={range_total}"
+                )
+            if not range_errors:
+                print("phase6 bundle readiness check passed.")
+                print("mode=head_commit_range")
+                for group_name, count in EXPECTED_GROUP_COUNTS.items():
+                    print(f"{group_name}={count}")
+                print(f"total_changed={EXPECTED_TOTAL}")
+                print(f"recent_commit_subjects={subjects}")
+                return 0
 
         for error in errors:
             print(f"ERROR: {error}")

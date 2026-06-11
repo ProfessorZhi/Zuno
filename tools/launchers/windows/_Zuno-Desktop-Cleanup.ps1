@@ -111,11 +111,11 @@ function Matches-AnyMarker {
 }
 
 $launcherTargets = @(
-    (Join-Path $ProjectRoot "launchers\Zuno-Desktop-Start.cmd"),
-    (Join-Path $ProjectRoot "launchers\Zuno-Desktop-Stop.cmd"),
-    (Join-Path $ProjectRoot "launchers\Zuno-Desktop-Rebuild.cmd"),
-    (Join-Path $ProjectRoot "launchers\Zuno-Desktop-Full-Rebuild.cmd"),
-    (Join-Path $ProjectRoot "launchers\_Zuno-Desktop-Common.cmd")
+    (Join-Path $ProjectRoot "tools\launchers\windows\Zuno-Desktop-Start.cmd"),
+    (Join-Path $ProjectRoot "tools\launchers\windows\Zuno-Desktop-Stop.cmd"),
+    (Join-Path $ProjectRoot "tools\launchers\windows\Zuno-Desktop-Rebuild.cmd"),
+    (Join-Path $ProjectRoot "tools\launchers\windows\Zuno-Desktop-Full-Rebuild.cmd"),
+    (Join-Path $ProjectRoot "tools\launchers\windows\_Zuno-Desktop-Common.cmd")
 )
 
 $runtimeTargets = @($FrontendRoot, $DesktopRoot) + $launcherTargets

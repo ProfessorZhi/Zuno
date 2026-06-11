@@ -67,4 +67,4 @@ def test_send_email_manifest_declares_cli_tool():
 
     assert manifest["type"] == "cli"
     assert manifest["credentials"]["mode"] == "profiles"
-    assert manifest["entry"]["module"] == "agentchat.tools.send_email.cli"
+    assert manifest["entry"]["module"] == "zuno.tools.send_email.cli"

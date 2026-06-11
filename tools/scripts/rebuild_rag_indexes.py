@@ -32,7 +32,7 @@ def download_to_local_path(oss_url: str, file_name: str) -> tuple[str, bool]:
 
 
 async def rebuild_indexes():
-    await initialize_app_settings("/app/agentchat/config.yaml")
+    await initialize_app_settings(os.getenv("ZUNO_CONFIG") or os.getenv("AGENTCHAT_CONFIG") or "/app/zuno/config.yaml")
     from agentchat.services.rag.parser import DocParser
 
     parser = DocParser()

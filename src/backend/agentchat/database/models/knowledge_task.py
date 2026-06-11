@@ -15,7 +15,6 @@ def get_task_id() -> str:
 
 class KnowledgeTaskTable(SQLModelSerializable, table=True):
     __tablename__ = "knowledge_task"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=get_task_id, primary_key=True)
     knowledge_id: str = Field(index=True)
@@ -48,7 +47,6 @@ class KnowledgeTaskTable(SQLModelSerializable, table=True):
 
 class KnowledgeTaskEventTable(SQLModelSerializable, table=True):
     __tablename__ = "knowledge_task_event"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     task_id: str = Field(index=True)

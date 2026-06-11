@@ -3,6 +3,7 @@ import httpx
 import asyncio
 import time
 import requests
+from pathlib import Path
 from loguru import logger
 import xml.etree.ElementTree as ET
 
@@ -46,8 +47,10 @@ class WeChatService:
         """将图片临时推送到微信服务器中，可使用Redis缓存三天 media_id"""
         access_token = cls._get_access_token()
         url = f"https://api.weixin.qq.com/cgi-bin/media/upload?access_token={access_token}&type=image"
+        default_candidates = [Path("zuno/config/default.jpg"), Path("agentchat/config/default.jpg")]
+        default_image = next((str(candidate) for candidate in default_candidates if candidate.exists()), str(default_candidates[-1]))
         files = {
-            "media": open(image_path or "agentchat/config/default.jpg", "rb") # 示例，可放到config.yaml文件
+            "media": open(image_path or default_image, "rb") # 示例，可放到config.yaml文件
         }
         response = requests.post(url, files=files)
         result = response.json()

@@ -12,7 +12,6 @@ from agentchat.database.models.base import SQLModelSerializable
 # 拉踩的信息
 class MessageDownTable(SQLModelSerializable, table=True):
     __tablename__ = "message_down"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     user_input: str = Field(sa_column=Column(Text))
@@ -37,7 +36,6 @@ class MessageDownTable(SQLModelSerializable, table=True):
 # 点赞的信息
 class MessageLikeTable(SQLModelSerializable, table=True):
     __tablename__ = "message_like"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     user_input: str = Field(sa_column=Column(Text))

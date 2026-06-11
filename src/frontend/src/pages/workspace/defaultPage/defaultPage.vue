@@ -47,11 +47,16 @@ import Model from '../../model'
 import Profile from '../../profile'
 import Tool from '../../tool'
 import { ConversationArchive } from '../../account'
+import SettingsUiModeSwitch from '../components/SettingsUiModeSwitch.vue'
 import {
   loadWorkspaceDefaults,
   saveWorkspaceSessionMode,
   type WorkspaceMode,
 } from '../../../utils/workspace-defaults'
+import {
+  loadSettingsUiMode,
+  type SettingsUiMode,
+} from '../../../utils/settings-preferences'
 import {
   AGENT_DOCUMENT_EXTENSIONS,
   ALWAYS_WEB_SEARCH,
@@ -151,6 +156,7 @@ let restoringSettingsRoute = false
 let pendingSettingsNavigationThreadId = ''
 let sessionHistoryLoadToken = ''
 const activeSettingsRouteSnapshot = ref<SettingsRouteSnapshot | null>(null)
+const settingsUiMode = ref<SettingsUiMode>(loadSettingsUiMode())
 
 const settingsComponentByRouteName: Record<string, Component> = {
   workspaceSettingsAgent: markRaw(Agent),
@@ -168,6 +174,8 @@ const settingsComponentByRouteName: Record<string, Component> = {
 }
 
 const activeMode = computed(() => modes.find((mode) => mode.id === selectedMode.value) || modes[0])
+const settingsRouteActive = computed(() => Boolean(route.meta.settingsSection || route.meta.accountSection))
+const useTraditionalSettingsShell = computed(() => settingsRouteActive.value && settingsUiMode.value === 'traditional')
 const conversationBlocks = computed<ConversationBlock[]>(() => {
   const messageBlocks = messages.value.map((message, index) => ({
     type: 'message' as const,
@@ -403,7 +411,7 @@ const progressSteps = computed<ProgressStep[]>(() => {
   const activeIndex = progressStageIndex.value
   return [
     { key: 'prepare', label: '准备请求', done: activeIndex > 0, active: activeIndex === 0, accent: 'default' },
-    { key: 'retrieve', label: '检索知识', done: activeIndex > 1, active: activeIndex === 1, accent: effectiveRetrievalMode.value === 'graphrag' ? 'graph' : 'retrieval' },
+    { key: 'retrieve', label: '检索知识', done: activeIndex > 1, active: activeIndex === 1, accent: effectiveRetrievalMode.value === 'rag_graph' ? 'graph' : 'retrieval' },
     { key: 'tool', label: '调用能力', done: activeIndex > 2, active: activeIndex === 2, accent: 'tool' },
     { key: 'answer', label: '整理答案', done: activeIndex > 3, active: activeIndex === 3, accent: 'answer' },
     { key: 'done', label: '完成输出', done: !isGenerating.value && executionEvents.value.length > 0, active: activeIndex === 4, accent: 'default' },
@@ -790,6 +798,7 @@ const snapshotSettingsRoute = (): SettingsRouteSnapshot | null => {
   }
 }
 const appendSettingsThreadFromRoute = async () => {
+  if (useTraditionalSettingsShell.value) return
   const section = String(route.meta.settingsSection || route.meta.accountSection || '')
   if (!section) return
 
@@ -2292,6 +2301,7 @@ onBeforeUnmount(() => {
                     :data-settings-detail="block.thread.detail ? 'true' : 'false'"
                     :style="{ '--settings-page-icon': `url(${block.thread.icon})` }"
                   >
+                    <SettingsUiModeSwitch class="settings-mode-inline-switch" :mode="settingsUiMode" compact />
                     <div v-if="canNavigateSettingsThreadBack(block.thread)" class="settings-bubble-toolbar">
                       <button
                         class="settings-bubble-nav-button"

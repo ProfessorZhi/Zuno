@@ -8,6 +8,12 @@ import Workspace from '../pages/workspace/workspace.vue'
 import WorkspaceDefaultPage from '../pages/workspace/defaultPage/defaultPage.vue'
 import { isDesktopRuntime } from '../utils/api'
 
+const shouldUseHashHistory = () => {
+  if (typeof window === 'undefined') return false
+  if (!isDesktopRuntime()) return false
+  return window.location.protocol === 'file:'
+}
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
@@ -261,7 +267,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: isDesktopRuntime() ? createWebHashHistory() : createWebHistory(),
+  history: shouldUseHashHistory() ? createWebHashHistory() : createWebHistory(),
   routes,
 })
 

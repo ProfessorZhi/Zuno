@@ -1,22 +1,100 @@
 # Zuno Refactor Execution Plan
 
-## Current Status Update (2026-06-11)
+## Current Status Update (2026-06-10)
 
-- `Phase 1` completed on top of `origin/main`.
-- `Phase 2` completed on top of the updated `main`.
-- `Phase 3` is completed on top of the updated `main`.
-- `Phase 4` is completed on top of the updated `main`.
-- `Phase 5` is completed and already merged to `main`.
-- `Phase 6` is completed under the new serial ledger.
-- `Phase 7` is completed under the new serial ledger.
+- `Phase 1` completed under the hard gate `src/backend/zuno` direct `agentchat` imports `44 -> 0`.
+- `Phase 2` completed after structure governance, publish-boundary checks, and repo-structure gates were added and verified.
+- `Phase 3` completed after the public documentation surface was split into a short first-read path and clearly separated maintainer-only entrypoints.
+- `Phase 4` completed after the highest-value backend controller paths were forced through explicit service-layer boundaries and the remaining direct runtime couplings in `api/v1` were removed.
+- `Phase 5` completed after the LangGraph + GraphRAG mainline closure gate was proven from the `zuno` test surface.
+- `Phase 6` completed after the local evidence bundle was split into an isolated standalone node, verified, committed locally (`01d3db0`, `909f7f1`), and pushed to `origin/codex/zuno-bm25-retrieval-modes`.
+- The next serial step is `Phase 7`.
 
-当前 `Phase 6` 的判断口径也已经更硬：
+Latest `Phase 6` progress now verified in the repo state:
 
-- 不再沿用早期“foundation 节点已经单独落地”的假设
-- 直接以当前 `main` 基线为准
-- 凡是当前 `Phase 6` 入口在 `main` 上仍然实际依赖的 entrypoint / runtime foundation / verification test / node-op 文档脚本，都属于真实 `Phase 6` bundled node
+1. the `contract_review_eval` demo profile no longer drops graph-path evidence on inline clause samples:
+   - root cause was in `StructuredGraphExtractor._find_clause_sections()`, which previously ignored clause content placed on the same line as the clause heading
+   - the extractor now preserves inline clause bodies, so the demo contract can emit `Clause` / `Risk` relations again
+2. the local embedding preflight path no longer hangs on avoidable heavyweight imports and avoidable DB access:
+   - `run_local_embedding_eval.py` now lazy-loads the embedding runtime instead of importing the full embedding stack at module import time
+   - explicit `text_embedding_model_id` no longer forces `resolve_embedding_model_id() -> list_llm_candidates() -> LLMDao.get_all_llm()` before validation
+3. the current Phase 6 candidate minimum test surface is green:
+   - `pytest -q src/backend/agentchat/test/test_contract_eval_runner.py src/backend/agentchat/test/test_rag_eval_local_scheme.py src/backend/agentchat/test/test_stackless_compare_matrix.py src/backend/agentchat/test/test_rag_eval_local_launcher.py`
+   - latest result: `22 passed`
+4. the public demo verification layer is now green as a whole:
+   - `python tools/scripts/verify_public_demo_runtime.py`
+   - `python tools/scripts/verify_public_demo_strict_grounding.py`
+   - targeted `pytest -q tests/test_publish_boundary.py -k "public_demo_runtime_verifier_script_mentions_contract_review_smoke_expectations or public_readme_explains_why_contract_review_needs_graphrag"`
+5. the local embedding preflight path is now proven with a real local request, not only monkeypatched tests:
+   - the repo-local `local_embedding_server.py` can serve an OpenAI-compatible embedding endpoint
+   - `run_local_embedding_eval.py --validate-only` now completes against that local endpoint and returns a real embedding probe result (`dimension = 64`)
+6. the compare-matrix proof surface now has a committed real run artifact:
+   - `run_stackless_compare_matrix.py` completed against the contract-review corpus/dataset and wrote `summary.json` + `summary.md`
+   - current output root: `src/backend/agentchat/evals/rag_eval/runs/stackless-contract-review-phase6`
+   - the five retrieval metrics are reproducible, but the current matrix still shows a flat result where `prefer_rerank_when_tied = no`
+7. the compare-matrix artifact now reports coverage directly, so tiny sample slices can no longer be over-read:
+   - the `sample_limit = 3` contract-review run clearly reports `3` sampled questions, `2` referenced files, and `2` indexed chunks, plus a low-coverage warning
+   - a wider `sample_limit = 12` run now covers `12` sampled questions and `8` indexed chunks
+   - on that wider run, GraphRAG improves `MRR` / `NDCG` over baseline, but still does not beat the `rag_rerank` line as the safer default
+8. the scaled-corpus local proof has now turned the GraphRAG value claim into a stronger Phase 6 evidence line:
+   - `generate_contract_review_scale_corpus.py --copies-per-file 4` produced a `40`-file local distractor corpus
+   - the scaled compare matrix run at `src/backend/agentchat/evals/rag_eval/runs/stackless-contract-review-scale-phase6-s12` covers `12` sampled questions and `40` indexed chunks
+   - on this harder local corpus, `rag_graph_chunk_backed` now beats both `baseline_rag` and `rag_rerank` across recall / MRR / NDCG / citation accuracy, and the matrix acceptance layer is fully green
+9. the one-command local embedding eval entry now also has real repo-state proof instead of stopping at preflight:
+   - previous hard failure was a DB timeout on the `LLMDao` / ingest path (`localhost:5432`), not an embedding-endpoint failure
+   - `run_local_embedding_eval.py` now falls back to stackless local eval when a direct local embedding target is provided and the DB-backed path is unavailable
+   - a real contract-review run now succeeds at `src/backend/agentchat/evals/rag_eval/runs/local-embedding-phase6-contract-review-fallback`
+   - on that run, `rag_graph_chunk_backed` reaches recall `1.0000`, MRR `0.9583`, NDCG `0.9692`, citation accuracy `1.0000`, while baseline / rerank both stay at recall `0.9167`, MRR `0.6528`, NDCG `0.7212`, citation accuracy `0.9167`
 
-当前 `Phase 6` bundle 统一用下面这组命令观察和验收：
+`Phase 6` is now process-closed as well as technically closed in the current branch history:
+
+- standalone local node formed as `01d3db0` (`phase6: solidify eval evidence bundle`)
+- readiness-sync follow-up formed as `909f7f1` (`phase6: sync local node readiness state`)
+- `Phase 7` default-phase switch formed as `154319e` (`phase7: switch default phase after phase6 publish`)
+- the branch was pushed to `origin/codex/zuno-bm25-retrieval-modes`
+
+Recommended minimum standalone `Phase 6` node scope from the current worktree:
+
+- `docs/architecture/plans/current-phase-audit.md`
+- `docs/architecture/plans/zuno-refactor-execution-plan.md`
+- `src/backend/agentchat/evals/rag_eval/README.md`
+- `src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py`
+- `src/backend/agentchat/evals/rag_eval/run_stackless_compare_matrix.py`
+- `src/backend/agentchat/evals/rag_eval/generate_contract_review_scale_corpus.py`
+- `src/backend/agentchat/test/test_rag_eval_local_launcher.py`
+- `src/backend/agentchat/test/test_stackless_compare_matrix.py`
+
+Important qualification for the current branch state:
+
+- that list is the logical `Phase 6` delta, not yet a guaranteed self-contained node on top of the current branch tip
+- in the current worktree, those files still depend on untracked foundation files such as `run_stackless_local_eval.py`, `summarize_eval_profiles.py`, `local_embedding_server.py`, `local_rerank_server.py`, `services/runtime_registry.py`, `services/domain_pack/`, `services/graphrag/extractors/`, `services/graphrag/retrievers/`, `core/graphs/`, and `core/runtime/`
+- therefore, a truly standalone `Phase 6` GitHub node from the current tip still requires one of two things:
+  - a branch base that already contains the `Phase 1-5` foundations
+  - or a broader bundled node that includes those missing foundations
+
+Current-tip bundled scope if no branch-base switch is made:
+
+- the logical `Phase 6` files listed above
+- `run_stackless_local_eval.py`
+- `summarize_eval_profiles.py`
+- `local_embedding_server.py`
+- `local_rerank_server.py`
+- `services/runtime_registry.py`
+- `services/domain_pack/`
+- `services/graphrag/extractors/`
+- `services/graphrag/retrievers/`
+- `core/graphs/`
+- `core/runtime/`
+- the associated local-eval / domain-pack / contract test files that verify this runtime bundle
+
+Current local git evidence also shows that a cleaner branch-base switch is not currently available inside this repository snapshot:
+
+- the key foundation files above have no visible local commit history on the current branches
+- the locally visible branches (`main`, `codex/zuno-bm25-retrieval-modes`, and the other local codex branches) do not currently provide a recorded base that already contains those files
+
+So, from the current repo state alone, the realistic `Phase 6` process path is the broader bundled node rather than a pure local rebase onto a better historical base.
+
+Use the grouped preview commands instead of treating the bundle as one flat list:
 
 - `python tools/scripts/preview_phase6_bundle_scope.py --groups`
 - `python tools/scripts/preview_phase6_bundle_scope.py --summary`
@@ -26,231 +104,517 @@
 - `python tools/scripts/preview_phase6_bundle_scope.py --stage-command`
 - `python tools/scripts/verify_phase6_bundle_ready.py`
 
-## 这份文档的职责
+Current operational notes:
 
-这份文档只回答两件事：
+- `docs/architecture/plans/phase6-bundle-prestage.md`
+- `docs/architecture/plans/phase6-bundle-ready.md`
 
-1. 新的 `Phase 1-7` 应按什么顺序线性推进
-2. 每个 phase 到什么证据强度才算真正关闭
+That split is intentional:
 
-它是当前仓库的 phase 真相来源。
-如果其他历史文档和这里冲突，以这里为准。
+- `docs_and_contract`: docs sync and architecture-plan sync for the closure claim
+- `logical_phase6_delta`: the smallest direct code/test delta that carries the newly-proven Phase 6 behavior
+- `eval_entrypoints`: stackless/local-eval helpers that the logical delta still imports on the current branch tip
+- `runtime_foundations`: domain/runtime foundations required when the branch base does not already contain the earlier phases
+- `verification_tests`: the associated tests that prove the broader bundle still works as one node
+- `phase6_node_ops`: the local docs/scripts/tests that make the bundle staging contract reproducible
 
-## 串行执行规则
+Latest `Phase 5` progress now verified in the repo state:
 
-后续 phase 必须严格串行：
+1. GraphRAG dynamic update is no longer only file-level:
+   - parser chunks carry `document_hash`, `chunk_hash`, and stable `source_chunk_id`
+   - graph extraction and graph writing preserve those runtime identity fields
+   - graph indexing deletes prior graph state by `source_chunk_id` before rewriting the chunk path
+2. normal / enhanced retrieval mode now has an explicit minimum contract:
+   - normal mode stays on the vector + keyword path
+   - enhanced mode enables graph retrieval when graph capability is healthy
+   - enhanced mode degrades back to normal retrieval when graph health is unavailable
+   - Domain QA runtime still forwards the knowledge default retrieval mode into the retrieval runner
+3. LangGraph / Domain Pack runtime import path is now harder:
+   - `zuno.api` and `zuno.api.services` no longer eagerly import the full router / service tree during package initialization
+   - `zuno.core.graphs.domain_qa_graph` can be imported directly from the current `zuno` mainline without hitting the earlier circular import chain
+   - `contract_review` Domain Pack assets now live under `src/backend/zuno/domain_packs/contract_review`, so the default `zuno` loader path resolves the pack directly
+4. contract-review Domain Pack now has direct zuno-side value evidence:
+   - the `contract_review` pack loads from the `zuno` runtime path and is listed by the `zuno` registry
+   - the structured graph extractor uses the Domain Pack schema to emit contract-specific entities and typed relations
+   - the graph retriever can answer a Chinese contract-risk question through the Domain Pack graph path instead of only generic vector recall
+5. contract-review main runtime path now also has zuno-side checks:
+   - `AgentRuntime` stays on the single-agent graph by default and switches to the multi-agent graph when the Domain Pack enables it
+   - `GeneralAgent` imported through the `zuno` entrypoint prefers the domain-pack runtime path for both knowledge-tool execution and streamed answer generation
+   - these checks now run from the `zuno` test surface instead of only the legacy `agentchat/test` tree
+6. `DomainQAGraph` itself now has zuno-side offline integration coverage:
+   - the contract-review retrieval result is wired through `retrieve_evidence -> draft_answer -> citation_check -> finalize`
+   - support verdict, evidence bundle, graph paths, and runtime trace metadata are all asserted from the `zuno` test surface
+   - failure flow is also covered, including `retrieve_evidence` failure metadata and finalize behavior
+7. `MultiAgentSupervisorGraph` now also has zuno-side offline integration coverage:
+   - the supervisor graph runs the actual `zuno` `DomainQAGraph` subgraph path instead of only a fake specialist stub
+   - planner -> domain_qa_specialist -> citation_verifier_specialist -> finalize trace is asserted from the `zuno` test surface
+   - citation dedup, support verdict carry-over, and failure finalize behavior are now covered on the multi-agent line too
+8. the public high-value agent entrypoint now also has real zuno-side graph-chain coverage:
+   - `zuno.core.agents.general_agent` can drive the real `DomainQAGraph` path from the public knowledge-tool entrypoint without stubbing `run_domain_qa`
+   - `GeneralAgent -> AgentRuntime -> MultiAgentSupervisorGraph -> DomainQAGraph` now runs from the public `astream` path with only the retrieval backend faked
+   - the multi-agent public-path trace is asserted as `plan_specialists -> domain_qa_specialist -> citation_verifier_specialist -> finalize`
+9. public runtime exits now preserve contract-review evidence semantics instead of dropping them:
+   - `GeneralAgent` domain-pack events now expose `support_verdict` and `evidence_bundle`
+   - `WorkSpaceSimpleAgent` prefetch/runtime payloads now preserve `domain_pack_support_verdict` and `domain_pack_evidence_bundle`
+   - supported vs `insufficient_evidence` contract-review outcomes are both asserted from the `zuno` test surface
+10. Chinese contract-review query alignment is now stricter and more realistic:
+   - query-aware support checks no longer treat the full Chinese question sentence as one opaque token
+   - filler phrases such as `这份合同` / `是否` / `约定` are stripped before overlap checks
+   - this closes the earlier false negative where real `违约责任` evidence could still be marked `evidence_not_query_aligned`
 
-1. `Phase N` 未关闭，不进入 `Phase N+1`
-2. 单个 phase 内部任务可并行，但 phase 之间不可并行
-3. 每个 phase 结束后必须先跑本阶段最小测试
-4. 每个 phase 结束后必须同步 `docs/architecture/` 和 `README.md`
-5. 每个 phase 结束后必须作为独立 GitHub 节点推送，再并回 `main`
+Latest focused `Phase 5` verification set:
+
+1. `pytest -q tests/test_phase5_retrieval_modes.py`
+2. `pytest -q tests/test_phase5_langgraph_runtime_imports.py`
+3. `pytest -q tests/test_phase5_contract_review_domain_pack.py`
+4. `pytest -q tests/test_phase5_domain_runtime_paths.py`
+5. `pytest -q tests/test_phase5_domain_qa_graph_runtime.py`
+6. `pytest -q tests/test_phase5_multi_agent_supervisor_runtime.py`
+7. `pytest -q tests/test_phase5_general_agent_real_runtime_flow.py`
+8. `pytest -q tests/test_phase5_workspace_real_runtime_flow.py`
+9. `pytest -q tests/test_phase5_general_agent_real_runtime_flow.py tests/test_phase5_workspace_real_runtime_flow.py tests/test_phase5_multi_agent_supervisor_runtime.py tests/test_phase5_domain_qa_graph_runtime.py tests/test_phase5_domain_runtime_paths.py tests/test_phase5_contract_review_domain_pack.py tests/test_phase5_langgraph_runtime_imports.py tests/test_phase5_retrieval_modes.py tests/test_phase5_graphrag_index_filters.py`
+10. `pytest -q tests/test_phase5_general_agent_real_runtime_flow.py tests/test_phase5_workspace_real_runtime_flow.py tests/test_phase5_multi_agent_supervisor_runtime.py tests/test_phase5_domain_qa_graph_runtime.py tests/test_phase5_domain_runtime_paths.py tests/test_phase5_contract_review_domain_pack.py tests/test_phase5_langgraph_runtime_imports.py tests/test_phase5_retrieval_modes.py tests/test_phase5_graphrag_index_filters.py tests/test_zuno_public_entrypoints.py::test_high_value_service_modules_prefer_local_zuno_contracts tests/test_zuno_public_entrypoints.py::test_public_worker_entrypoints_and_manifest_prefer_zuno tests/test_layered_api_boundaries.py::test_knowledge_file_controller_avoids_direct_storage_imports`
+
+`Phase 5` closure gate is now treated as satisfied in the current repo state:
+
+- LangGraph is now the stable core runtime line across the high-value public and offline main flows
+- GraphRAG dynamic update has landed beyond file-level replacement
+- normal / enhanced retrieval behavior has an explicit stable contract
+- the phase minimum integration set now passes as a whole from the `zuno` test surface (`42 passed`)
+
+Latest `Phase 4` verification set:
+
+1. `pytest -q tests/test_layered_api_boundaries.py tests/test_zuno_runtime_chain_guard.py`
+2. `pytest -q tests/test_zuno_public_entrypoints.py -k "workspace_prep_services_prefer_zuno_entrypoints or workspace_api_session_routes_prefer_zuno or mcp_server_and_user_config_v1_routes_prefer_zuno"`
+3. minimal `import zuno.main` + `create_app` smoke
+
+## 目标
+
+这份计划只回答一件事：
+
+```text
+从现在开始，Zuno 应该按什么线性 phase 往面试前目标推进，
+并且每个 phase 结束时如何确认“真的完成了问题解决”，而不是只完成了文档表述。
+```
+
+这里不再沿用早期分散的 phase 口径。
+从现在开始，统一使用新的 `Phase 1-7` 线性编号。
+
+## 执行规则
+
+后续 phase 必须线性推进，不并行推进多个 phase。
+
+也就是说：
+
+1. `Phase N` 完成前，不进入 `Phase N+1`
+2. 单个 phase 内部的多个任务可以并行，只要最后一起收口验收
+3. 每个 phase 结束后都必须先做一次和本阶段目标直接相关的简单测试
+4. 每个 phase 结束后都必须同步 `docs/architecture/`、README，并单独推送 GitHub
+5. 只有当本 phase 对应的问题真的被关闭，才允许切到下一 phase
+
+这里的“简单测试”不是要求每次都跑全量大回归，而是要求至少有一轮最小验证。
 
 默认节奏：
 
 ```text
-phase 内并行任务
-  -> 跑本阶段最小验证
-  -> 回看 README / docs / phase 状态
-  -> 单独推 GitHub
-  -> 合并回 main
-  -> 再进入下一个 phase
+phase 内任务并行推进
+  -> phase 验收
+  -> 跑本阶段简单测试
+  -> 回看 docs/architecture
+  -> 同步 README / 文档
+  -> 单独推送 GitHub
+  -> 再进入下一 phase
 ```
 
-## 最终共同目标
+## 面试前最终目标
 
-所有 phase 最终都服务于同一目标：
+所有 phase 最终都服务于同一套目标架构：
 
 ```text
-形成一个本地优先的 Agent 工作台，
-它拥有清晰项目结构、清晰分层边界、
-深度 LangGraph + GraphRAG 主线、
-GraphRAG 动态更新、普通/增强两档检索、
-本地 embedding、本地评测、自动化测试，
-以及正式 GitHub 展示面。
+以 LangGraph 为核心运行时，
+以 RAG / GraphRAG / Domain Pack 为知识主线，
+具备 GraphRAG 动态更新、普通 / 增强两档检索体验、
+本地 embedding、本地评测、自动化测试、
+清晰项目结构、清晰分层边界和正式 GitHub 展示面的本地优先 Agent 工作台。
 ```
 
-## Phase 1：运行时收口与可运行恢复
+换句话说，面试前必须做到：
+
+1. 深入运用 LangGraph，而不是停留在简单 LangChain agent 封装
+2. 深入运用 GraphRAG，而不是只做概念演示或表层接入
+3. 让代码结构、项目结构、评测证据、文档口径和 GitHub 展示面最终一致
+
+## Phase 体系
+
+### Phase 1：运行时收口与可运行恢复
 
 目标：
 
-- `zuno` 成为主运行时入口
-- bridge / alias / runtime contract 收口
-- 启动链路恢复稳定
+- 把当前 rename / bridge / alias / runtime contract 尾巴收好
+- 先让 `zuno` 主路径稳定跑起来
+- 保证运行主入口、关键 import、关键 runtime contract 不再漂移
 
-建议最小测试：
+本 phase 内可并行任务：
+
+- package / import / alias 收口
+- launcher / Docker / config 路径同步
+- README / docs 引用同步
+- 最小启动链路 smoke 修复
+
+必须解决的问题：
+
+- `agentchat -> zuno` 深层 bridge 不能继续主导主阅读路径
+- 关键公开入口必须优先指向 `zuno.*`
+- 关键运行入口必须统一到 `zuno.main:app`
+
+验收标准：
+
+- `zuno` 主运行入口稳定
+- 关键 import / alias contract 不再漂移
+- 关键启动链路可以跑通
+- 文档口径不再把旧桥接当主路径
+
+建议最小测试集：
 
 1. `pytest -q tests/test_zuno_public_entrypoints.py`
 2. `pytest -q src/backend/agentchat/test/test_zuno_alias_imports.py`
 3. `pytest -q tests/test_zuno_runtime_chain_guard.py`
-4. `import zuno.main` smoke
+4. 最小 `import zuno.main` smoke
 
-完成判定：
+只有同时满足下面四条，才能认为 `Phase 1` 完成：
 
-1. 最小测试通过
-2. `zuno.main` 可导入并持有最小 `app`
-3. 高价值 alias / contract 不再漂移
+1. 最小测试集通过
+2. `zuno.main` 主路径可导入、可启动最小 app
+3. 高价值 package / alias / runtime contract 基本收口
 4. README 与架构文档不再把旧桥接当主路径
 
 GitHub 节点：
 
-- 作为“运行时收口与可运行恢复”独立推送
+- 作为“运行时收口与可运行恢复节点”单独推送
 
-## Phase 2：项目文件夹与结构硬治理
+### Phase 2：项目文件夹与结构硬治理
 
 目标：
 
-- 根目录主骨架清楚
-- `src/backend`、`src/frontend`、`apps/desktop` 角色清楚
-- 发布边界、私有边界、本地边界清楚
+- 真正整理项目文件夹，而不是只在文档里解释
+- 明确根目录主骨架
+- 明确正式项目结构、生成面、本地面、私有面的边界
 
-建议最小测试：
+本 phase 内可并行任务：
 
-1. `python tools/scripts/verify_repo_structure.py`
-2. `pytest -q tests/test_repo_structure_consistency.py`
-3. `pytest -q tests/test_publish_boundary.py`
+- 根目录清理与归类
+- `src/` 层整理
+- `backend / frontend / desktop` 边界整理
+- `docs / tools / infra / tests` 归类整理
+- 文档中的目录解释同步
 
-完成判定：
+必须解决的问题：
 
-1. 文件夹结构发生真实整理
+- 当前项目表面还是 `src + apps` 混合形态，但解释和实际整理还不够硬
+- 根目录存在大量本地面 / 生成面，会干扰项目主视图
+- `src/backend/zuno` 与 `src/backend/agentchat` 当前角色不够一眼看清
+
+必须发生的实际整理动作：
+
+- 根目录主骨架清晰化
+- `src/backend` 下历史残留目录语义明确
+- `src/frontend` 的正式源码层与生成层边界明确
+- `apps/desktop` 与 `src/frontend` 的关系说明清楚
+- `docs/architecture`、`docs/development`、`tools/`、`infra/`、`tests/` 各归其位
+
+验收标准：
+
+- 文件夹结构发生了可见整理，不只是文档改名
+- 根目录与 `src/` 层的混乱入口明显减少
+- 生成面 / 本地面 / 正式项目面三者边界清楚
+- `src/backend/zuno` 主路径可见性更强
+- 架构文档、README、publish boundary 与当前结构一致
+
+建议最小测试集：
+
+1. 结构一致性检查
+2. publish boundary 检查
+3. 最小 import smoke
+
+只有同时满足下面五条，才能认为 `Phase 2` 完成：
+
+1. 文件夹结构发生了真实整理动作
 2. 根目录主骨架清楚
-3. 主要目录职责稳定可解释
-4. README、架构文档、publish boundary 已同步
-5. 本阶段最小测试通过
+3. `src/backend`、`src/frontend`、`apps/desktop`、`docs/`、`tools/`、`infra/`、`tests/` 的职责稳定
+4. 文档、README、publish boundary 已同步
+5. 本阶段最小结构测试通过
 
 GitHub 节点：
 
-- 作为“项目文件夹与结构硬治理”独立推送
+- 作为“项目结构硬治理节点”单独推送
 
-## Phase 3：文档与展示面硬收口
+### Phase 3：文档与展示面硬收口
 
 目标：
 
-- 首次阅读路径稳定成单一路线
-- README、架构文档、开发文档、plans/specs 口径一致
-- 过时、冲突、过早暴露的展示叙事不再干扰主阅读路径
+- 让第一次看项目的人和面试官顺着主路径理解项目
+- 不再被历史文档、重复说明、冲突表述带偏
 
-当前推荐公开阅读路径：
+本 phase 内可并行任务：
 
-1. `README.md`
-2. `docs/README.md`
-3. `docs/architecture/README.md`
-4. `docs/architecture/specs/README.md`
-5. `docs/architecture/plans/README.md`
-6. `docs/architecture/plans/current-phase-audit.md`
+- README 重构
+- docs 清理
+- specs / plans / audit 口径统一
+- GitHub 展示面优化
 
-建议最小测试：
+必须解决的问题：
 
-1. `python tools/scripts/verify_docs_surface.py`
-2. `pytest tests/test_docs_surface_consistency.py`
-3. `pytest tests/test_publish_boundary.py`
+- 同一件事在多份文档里重复、冲突或说法不一致
+- 首次阅读路径不够硬，容易被历史文档拖走
+- GitHub 展示面还不够像正式项目
 
-完成判定：
+验收标准：
 
-1. 公开入口文档已形成稳定主阅读路径
-2. 过时文档和冲突表述已清理、降级或移出主路径
+- README、架构文档、开发文档口径一致
+- 首次阅读路径清楚
+- 过时文档不再干扰主阅读路径
+- GitHub 展示面专业、稳定、面向公众
+
+建议最小测试集：
+
+1. 文档检查脚本
+2. 最小发布边界检查
+
+只有同时满足下面四条，才能认为 `Phase 3` 完成：
+
+1. 公开入口文档已经形成主阅读路径
+2. 过时文档和冲突表述已被清理或降级
 3. README / docs / plans / specs 口径一致
 4. 文档与发布边界相关最小检查通过
 
 GitHub 节点：
 
-- 作为“文档与展示面硬收口”独立推送
+- 作为“文档与展示面硬收口节点”单独推送
 
-## Phase 4：分层架构与运行时边界强化
+### Phase 4：分层架构与运行时边界强化
 
 目标：
 
-- 控制层 / 服务层 / DAO / 基础设施边界更硬
-- 高价值运行时路径减少跨层缠绕
+- 把“分层架构清晰、可扩展、可修改”这件事真正做硬
+- 不只是写文档，而是让代码组织和运行时边界真正体现控制层 / 服务层 / DAO 层 / 基础设施层
 
-建议最小测试：
+本 phase 内可并行任务：
+
+- backend 分层边界强化
+- runtime contract 收紧
+- knowledge / retrieval / workflow 编排边界强化
+- 为未来微服务 / 云原生 / 异语言接入保留稳定边界
+
+必须解决的问题：
+
+- 有些运行时主路径仍然容易跨层耦合
+- 文档里说分层清楚，但代码里不一定完全体现
+- 后续 LangGraph / GraphRAG 深化前，运行时和服务层边界必须更稳
+
+验收标准：
+
+- 控制层、服务层、DAO 层、基础设施层边界清楚
+- 高价值主链路不再随意跨层缠绕
+- 架构文档里的分层说明能被代码结构印证
+
+建议最小测试集：
 
 1. 高价值 runtime contract 测试
 2. 最小 import / service smoke
 3. publish boundary / layering 守门测试
 
-完成判定：
+只有同时满足下面四条，才能认为 `Phase 4` 完成：
 
-1. 分层边界已在高价值代码路径上体现
-2. runtime / service / dao / infra 主要耦合点被压缩
-3. 文档与代码对同一边界说法一致
+1. 分层边界已经在高价值代码路径上体现
+2. runtime / service / dao / infra 主要耦合点已被压缩
+3. 文档和代码对同一分层边界说法一致
 4. 本阶段最小分层测试通过
 
 GitHub 节点：
 
-- 作为“分层架构与运行时边界强化”独立推送
+- 作为“分层架构与运行时边界强化节点”单独推送
 
-## Phase 5：LangGraph + GraphRAG 主线深化
+### Phase 5：LangGraph + GraphRAG 主线深化
 
 目标：
 
-- `LangGraph` 成为主运行时骨架
-- `GraphRAG` 动态更新主线落地
-- 普通 / 增强两档检索稳定
+- 把文档里定义的那条主架构真正落到代码主链路里
+- 深度用 LangGraph 和 GraphRAG，而不是表层接入
 
-建议最小测试：
+本 phase 内可并行任务：
+
+- LangGraph workflow 深化
+- GraphRAG 动态更新实现
+- retrieval planner / orchestrator 收口
+- Domain Pack 合同审查主链路深化
+- 普通 / 增强模式体验固定
+
+必须解决的问题：
+
+- LangGraph 还没有在所有关键主流程上深度落地
+- GraphRAG 动态更新还不够硬
+- 普通 / 增强两档检索体验和底层能力包边界还不够稳定
+
+验收标准：
+
+- LangGraph、RAG、GraphRAG、Domain Pack 的主运行链路清楚稳定
+- GraphRAG 动态更新不再停留在设计层
+- 普通模式 / 增强模式两档体验稳定
+- 合同审查场景能体现 Domain Pack + GraphRAG 的真实价值
+
+建议最小测试集：
 
 1. retrieval / graph / runtime 集成测试
-2. `GraphRAG` dynamic update 测试
-3. `Domain Pack` runtime 测试
+2. GraphRAG dynamic update 相关测试
+3. Domain Pack runtime 测试
 
-完成判定：
+只有同时满足下面四条，才能认为 `Phase 5` 完成：
 
-1. `LangGraph` 已成为核心运行时主线
-2. `GraphRAG` 动态更新主线落地
-3. 两档检索体验稳定
+1. LangGraph 已成为核心运行时主线
+2. GraphRAG 动态更新主线已落地
+3. 两档检索体验已稳定
 4. 本阶段最小集成测试通过
 
 GitHub 节点：
 
-- 作为“LangGraph + GraphRAG 主线深化”独立推送
+- 作为“LangGraph + GraphRAG 主线深化节点”单独推送
 
-## Phase 6：评测与证据链固化
+### Phase 6：评测与证据链固化
 
 目标：
 
-- 本地 embedding、本地评测、compare matrix、trace、citation 形成稳定证据链
-- 阶段文档、bundle 预览脚本、readiness verifier 和真实代码范围一致
-- 从当前 `main` 基线上形成一个可独立推 GitHub 的 `Phase 6` 节点
+- 把“这套架构为什么有价值”证明出来，而不是只靠口头解释
 
-建议最小测试：
+本 phase 内可并行任务：
 
-1. `pytest -q src/backend/agentchat/test/test_contract_eval_runner.py src/backend/agentchat/test/test_rag_eval_local_scheme.py src/backend/agentchat/test/test_stackless_compare_matrix.py src/backend/agentchat/test/test_rag_eval_local_launcher.py`
-2. `python tools/scripts/preview_phase6_bundle_scope.py --summary`
-3. `python tools/scripts/verify_phase6_bundle_ready.py`
+- local embedding / eval 流程打磨
+- compare matrix 产出
+- 指标报告整理
+- trace / citation / grounding 证据整理
 
-完成判定：
+必须解决的问题：
+
+- 目前还不能稳定、可重复地证明 GraphRAG、领域建模、增强模式的价值
+- 需要本地 embedding、本地评测、五项指标、自动化测试和 failure case 一起形成证据链
+
+验收标准：
+
+- 指标能证明 GraphRAG 和领域建模价值
+- 本地评测可以稳定复现
+- 自动化测试与人工展示证据一致
+- failure case 也能被解释
+
+建议最小测试集：
+
+1. local eval
+2. compare matrix 生成
+3. 指标汇总脚本
+
+只有同时满足下面四条，才能认为 `Phase 6` 完成：
 
 1. 本地 embedding + 本地评测链路稳定
-2. compare matrix 可复现
-3. 自动化测试、README、`docs/architecture/`、bundle verifier 对同一套证据链说法一致
-4. 当前 `main` 基线下实际依赖的 eval entrypoints / runtime foundations / verification tests 已作为同一个节点收口
-5. 本阶段最小测试通过
-6. 该节点已独立推 GitHub 并合回 `main`
+2. 五项核心指标与 compare matrix 可复现
+3. 自动化测试和展示证据一致
+4. 本阶段评测测试通过
 
 GitHub 节点：
 
-- 作为“评测与证据链固化”独立推送
+- 作为“评测与证据链固化节点”单独推送
 
-## Phase 7：面试前总收口
+### Phase 7：面试前总收口
 
 目标：
 
-- 代码、目录、文档、评测、展示面、讲解口径完全对齐
+- 把前面所有成果统一成一个可以稳定讲解、稳定演示、稳定展示的版本
 
-建议最小测试：
+本 phase 内可并行任务：
 
-1. 最终 runtime smoke
-2. 最终文档/展示面检查
+- 最终 README / docs / architecture 收口
+- 最终 smoke tests
+- GitHub 展示面优化
+- 面试讲解路径检查
+
+必须解决的问题：
+
+- 历史桥接、灰色地带入口、解释噪音仍可能影响最终讲解
+- 需要把代码、文档、目录、评测、展示面完全对齐
+
+验收标准：
+
+- 架构能讲清楚
+- 结构能讲清楚
+- 文档、代码、评测、展示面口径一致
+- 面试前公开版本可以稳定演示与讲解
+
+建议最小测试集：
+
+1. 最终 smoke tests
+2. 关键主链路检查
 3. 最终 publish boundary 检查
 
-完成判定：
+只有同时满足下面四条，才能认为 `Phase 7` 完成：
 
-1. 前面各阶段成果口径一致
+1. 面试讲解路径稳定
 2. 公开展示面稳定
-3. 文档、代码、评测、展示面统一
-4. 本阶段最终检查通过
+3. 代码、文档、结构、评测已统一
+4. 最终总收口测试通过
 
 GitHub 节点：
 
-- 作为“面试前总收口”独立推送
+- 作为“面试前总收口节点”单独推送
+
+## 当前阶段判断
+
+按这套新编号体系，当前判断应改成：
+
+- `Phase 1-4` 已完成并已有最小验收证据
+- `Phase 5-7` 尚未正式完成
+
+保守判断下，当前仍然更适合视为：
+
+- 继续线性推进 `Phase 5`
+- 不再回到“先确认 Phase 1 是否关闭”的旧阶段判断
+
+当前仓库口径已经同步记录了 `Phase 1-4` 的关闭判断；后续重点是保持这些阶段的验收结果稳定，并继续推进 `Phase 5-7`。
+
+## 推荐推进顺序
+
+后续按这个顺序线性推进：
+
+1. 先保持 `Phase 4` 验收结果稳定
+2. 再完成 `Phase 5`
+3. 再完成 `Phase 6`
+4. 最后完成 `Phase 7`
+
+原因很简单：
+
+1. 系统先稳定跑起来，后面结构治理才不会反复返工
+2. 文件夹结构先收硬，后面文档和展示面才有稳定对象
+3. 文档和展示面先收硬，后面技术主线深化才不会被旧表述拖住
+4. 分层边界先加强，后面 LangGraph + GraphRAG 深化才不会越做越乱
+5. 技术主线深化和价值证明拆开，才能分别把“实现”和“证明”做扎实
+6. 面试前总收口必须放最后，专门负责统一讲解口径
+
+## 每个 Phase 完成后的固定动作
+
+每个 phase 结束后，固定执行：
+
+1. 跑本阶段简单测试
+2. 回看 `docs/architecture/`
+3. 同步 README / 文档
+4. 单独推送 GitHub
+
+## 大更新后的文档回看要求
+
+每当完成一次较大的架构更新，至少要回看并同步下面这些文档：
+
+- `docs/architecture/README.md`
+- `docs/architecture/zuno_refactor_plan.md`
+- 相关 `specs/*.md`
+- 本执行计划
+
+同步目标：
+
+- 删除已经解决的问题
+- 更新当前仍未完成的阶段判断
+- 确保 phase、spec、README 口径一致

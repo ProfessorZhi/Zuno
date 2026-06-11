@@ -1,49 +1,46 @@
-from sqlmodel import Field, SQLModel
-from typing import Literal, Optional, List
 from datetime import datetime
+from typing import List, Optional
 from uuid import uuid4
-from sqlalchemy import JSON, Column, text, DateTime
 
-from agentchat.settings import app_settings
+from sqlalchemy import JSON, Column, DateTime, text
+from sqlmodel import Field
+
 from agentchat.database.models.base import SQLModelSerializable
+from agentchat.settings import app_settings
 
 
 class AgentTable(SQLModelSerializable, table=True):
     __tablename__ = "agent"
-    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
-    name: str = Field(default="", description="Agent 的名称")
-    description: str = Field(default="", description="Agent 的描述")
+    name: str = Field(default="", description="Agent name")
+    description: str = Field(default="", description="Agent description")
     logo_url: str = Field(default=app_settings.default_config.get("agent_logo_url"))
-    user_id: Optional[str] = Field(index=True, description="Agent绑定的用户ID")
-    is_custom: bool = Field(default=True, description="Agent是否为用户自定义")
-    system_prompt: str = Field(default="", description="Agent设定的系统提示词")
-    llm_id: str = Field(default="", description="Agent绑定的LLM模型")
-    enable_memory: bool = Field(default=True, description="是否开启记忆功能")
-    mcp_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Agent绑定的MCP Server")
-    tool_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Agent绑定的工具列表")
-    agent_skill_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Agent绑定的技能")
-    knowledge_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Agent 绑定的知识库")
-    domain_pack_id: Optional[str] = Field(default=None, description="Agent绑定的领域包")
+    user_id: Optional[str] = Field(default=None, index=True, description="Agent owner user ID")
+    is_custom: bool = Field(default=True, description="Whether the agent is user-defined")
+    system_prompt: str = Field(default="", description="Agent system prompt")
+    llm_id: str = Field(default="", description="Bound LLM ID")
+    enable_memory: bool = Field(default=True, description="Whether memory is enabled")
+    mcp_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Bound MCP server IDs")
+    tool_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Bound tool IDs")
+    agent_skill_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Bound agent skill IDs")
+    knowledge_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Bound knowledge IDs")
+    domain_pack_id: Optional[str] = Field(default=None, description="Default Domain Pack ID")
 
-    # 修改时间，默认为当前时间戳，自动更新
     update_time: Optional[datetime] = Field(
         sa_column=Column(
             DateTime,
             nullable=False,
-            server_default=text('CURRENT_TIMESTAMP'),
-            onupdate=text('CURRENT_TIMESTAMP')
+            server_default=text("CURRENT_TIMESTAMP"),
+            onupdate=text("CURRENT_TIMESTAMP"),
         ),
-        description="修改时间"
+        description="Last update time",
     )
-
-    # 创建时间，默认为当前时间戳
     create_time: Optional[datetime] = Field(
         sa_column=Column(
             DateTime,
             nullable=False,
-            server_default=text('CURRENT_TIMESTAMP')
+            server_default=text("CURRENT_TIMESTAMP"),
         ),
-        description="创建时间"
+        description="Creation time",
     )

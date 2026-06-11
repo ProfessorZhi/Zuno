@@ -1,45 +1,60 @@
 # Backend Layering Guidelines
 
-当前后端的最小稳定分层约束是：
+This guide turns the target architecture into day-to-day development rules.
 
-- 控制层：`src/backend/zuno/api/v1/*`
-- 服务层：`src/backend/zuno/services/*`
-- DAO 层：`src/backend/zuno/database/dao/*`
-- 基础设施适配继续通过服务层和 DAO 层暴露，不直接污染控制层
+## Default Placement
 
-这份规则当前主要服务 `Phase 2` 和 `Phase 4`：
+When adding backend code, prefer:
 
-- `Phase 2` 先把目录职责讲清楚
-- `Phase 4` 再把高价值代码路径上的分层边界进一步收硬
+- controller or route code:
+  - `src/backend/zuno/api/v1/*`
+- business or orchestration code:
+  - `src/backend/zuno/api/services/*`
+  - `src/backend/zuno/services/*`
+  - `src/backend/zuno/core/*`
+- persistence code:
+  - `src/backend/zuno/database/dao/*`
+- infrastructure adapters:
+  - `src/backend/zuno/services/redis.py`
+  - `src/backend/zuno/services/queue/*`
+  - `src/backend/zuno/services/storage/*`
+  - `src/backend/zuno/services/rag/vector_db/*`
+  - `src/backend/zuno/services/graphrag/*`
 
-## Phase 4 Boundary Rule
+## Placement Rules
 
-从 `Phase 4` 开始，`core/`、`database/` 和运行时导向的 `services/` 模块不应再直接依赖 `zuno.api.services.*`。
+If the code mainly:
 
-如果下层代码需要复用已有业务服务，默认走：
+- handles HTTP input/output:
+  - put it in the control layer
+- coordinates business flow:
+  - put it in the service layer
+- reads or writes database records:
+  - put it in the DAO layer
+- talks to Redis, queues, storage, vector DBs, or graph stores:
+  - put it in the infrastructure layer
 
-- `zuno.services.application.*`
+## Evolution Rule
 
-原因不是“换个 import 名字更好看”，而是要把下面这条边界收硬：
+Whenever possible, write new code so it can later become:
 
-```text
-controller-facing namespace
-  !=
-runtime/service/database lower-layer dependency surface
-```
+- a standalone internal service
+- a queue worker
+- or an external language-backed service boundary
 
-这意味着：
+That means:
 
-- `api/v1/*` 可以继续依赖 `zuno.api.services.*`
-- `core/*` 不应直接依赖 `zuno.api.services.*`
-- `database/*` 不应直接依赖 `zuno.api.services.*`
-- `services/rag/*`、`services/retrieval/*`、`services/pipeline/*`、`services/capability_registry.py`
-  这类运行时导向模块不应直接依赖 `zuno.api.services.*`
+- explicit inputs
+- explicit outputs
+- minimized hidden state
+- minimized cross-layer imports
 
-最低守门入口：
+## Future-Oriented Context
 
-```powershell
-python tools/scripts/verify_backend_layering.py
-pytest tests/test_backend_layering_boundaries.py
-pytest tests/test_phase4_runtime_boundary_smoke.py
-```
+The project is expected to keep growing in three directions:
+
+1. multi-agent product capabilities
+2. microservice and cloud-native deployment readiness
+3. integration with non-Python business backends such as Java services
+
+Those goals should influence module placement today, even if deployment stays monolithic for now.

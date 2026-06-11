@@ -297,6 +297,7 @@ async def workspace_simple_chat(
         desktop_bridge_token=simple_task.desktop_bridge_token,
         original_query=simple_task.query,
         usage_agent_name=usage_agent_name,
+        multi_agent_enabled=simple_task.multi_agent_enabled,
     )
     if workspace_session:
         contexts = workspace_session.get("contexts", [])

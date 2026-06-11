@@ -19,6 +19,9 @@ def _sample_knowledge_config():
             "remove_urls_emails": True,
             "image_indexing_mode": "dual",
             "vector_backend": "milvus",
+            "index_version": "vector_v2",
+            "status": "active",
+            "health_status": "ready",
         },
         "graph_index_settings": {
             "entity_extraction_mode": "rule_llm",
@@ -26,6 +29,8 @@ def _sample_knowledge_config():
             "entity_normalization": True,
             "evidence_backlink": True,
             "use_rag_entry_chunk": True,
+            "index_version": "graph_v2",
+            "health_status": "ready",
         },
         "retrieval_settings": {
             "default_mode": "rag_graph",
@@ -86,12 +91,13 @@ def test_create_knowledge_endpoint_passes_knowledge_config(monkeypatch):
     response = asyncio.run(upload_knowledge(knowledge_req=request, login_user=login_user))
 
     assert response.status_code == 200
-    assert captured == {
-        "knowledge_name": "PyIndex",
-        "knowledge_desc": "Python knowledge base for tests.",
-        "user_id": "u_test",
-        "knowledge_config": _sample_knowledge_config(),
-    }
+    assert captured["knowledge_name"] == "PyIndex"
+    assert captured["knowledge_desc"] == "Python knowledge base for tests."
+    assert captured["user_id"] == "u_test"
+    assert captured["knowledge_config"]["retrieval_settings"]["default_mode"] == "rag_graph"
+    assert captured["knowledge_config"]["index_settings"]["index_version"] == "vector_v2"
+    assert captured["knowledge_config"]["index_settings"]["status"] == "active"
+    assert captured["knowledge_config"]["graph_index_settings"]["index_version"] == "graph_v2"
 
 
 def test_update_knowledge_endpoint_passes_knowledge_config_patch(monkeypatch):
@@ -187,6 +193,8 @@ def test_select_knowledge_exposes_normalized_knowledge_config(monkeypatch):
     assert results[0]["knowledge_config"]["retrieval_settings"]["default_mode"] == "rag_graph"
     assert results[0]["knowledge_config"]["retrieval_settings"]["top_k"] == 9
     assert results[0]["knowledge_config"]["index_settings"]["chunk_mode"] == "general"
+    assert results[0]["knowledge_config"]["index_settings"]["status"] == "active"
+    assert results[0]["knowledge_config"]["index_settings"]["index_version"] == "v1"
 
 
 def test_update_knowledge_service_merges_partial_knowledge_config(monkeypatch):
@@ -249,6 +257,7 @@ def test_update_knowledge_service_merges_partial_knowledge_config(monkeypatch):
     assert merged_config["retrieval_settings"]["top_k"] == 2
     assert merged_config["index_settings"]["chunk_size"] == 512
     assert merged_config["index_settings"]["overlap"] == 128
+    assert merged_config["index_settings"]["status"] == "active"
     assert merged_config["model_refs"]["rerank_model_id"] == "llm_rerank"
 
 

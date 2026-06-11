@@ -1,0 +1,33 @@
+{
+  "name": "zuno",
+  "version": "1.0.0",
+  "description": "Local-first agent workspace with LangGraph, RAG, GraphRAG, MCP, knowledge bases, and desktop runtime.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ProfessorZhi/Zuno.git"
+  },
+  "keywords": [
+    "agent",
+    "langgraph",
+    "rag",
+    "graphrag",
+    "mcp",
+    "fastapi",
+    "electron",
+    "vue"
+  ],
+  "author": "ProfessorZhi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ProfessorZhi/Zuno/issues"
+  },
+  "homepage": "https://github.com/ProfessorZhi/Zuno#readme"
+}

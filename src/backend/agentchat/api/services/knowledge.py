@@ -5,10 +5,13 @@ from agentchat.database.dao.knowledge import KnowledgeDao
 from agentchat.database.dao.knowledge_file import KnowledgeFileDao
 from agentchat.database.dao.llm import LLMDao
 from agentchat.database.models.user import AdminUser
+from agentchat.services.domain_pack.loader import DomainPackLoader
+from agentchat.services.runtime_registry import get_local_runtime_settings
 from agentchat.utils.file_utils import format_file_size
 
 DEFAULT_KNOWLEDGE_CONFIG = {
     "index_capability": "rag",
+    "domain_pack_id": None,
     "model_refs": {
         "text_embedding_model_id": None,
         "vl_embedding_model_id": None,
@@ -23,6 +26,9 @@ DEFAULT_KNOWLEDGE_CONFIG = {
         "remove_urls_emails": False,
         "image_indexing_mode": "dual",
         "vector_backend": "milvus",
+        "index_version": "v1",
+        "status": "active",
+        "health_status": "ready",
     },
     "graph_index_settings": {
         "entity_extraction_mode": "rule_llm",
@@ -30,6 +36,8 @@ DEFAULT_KNOWLEDGE_CONFIG = {
         "entity_normalization": True,
         "evidence_backlink": True,
         "use_rag_entry_chunk": True,
+        "index_version": "v1",
+        "health_status": "ready",
     },
     "retrieval_settings": {
         "default_mode": "rag",
@@ -250,6 +258,9 @@ class KnowledgeService:
     @classmethod
     async def get_knowledge_config(cls, knowledge_id: str) -> dict[str, Any]:
         try:
+            local_runtime = get_local_runtime_settings(knowledge_id)
+            if local_runtime:
+                return cls._normalize_knowledge_config(local_runtime.get("knowledge_config"))
             knowledge = await KnowledgeDao.select_user_by_id(knowledge_id)
             if not knowledge:
                 return deepcopy(DEFAULT_KNOWLEDGE_CONFIG)
@@ -289,13 +300,29 @@ class KnowledgeService:
 
     @classmethod
     async def get_runtime_settings(cls, knowledge_id: str) -> dict[str, Any]:
+        local_runtime = get_local_runtime_settings(knowledge_id)
+        if local_runtime:
+            runtime = dict(local_runtime)
+            config = cls._normalize_knowledge_config(runtime.get("knowledge_config"))
+            runtime["knowledge_id"] = knowledge_id
+            runtime["knowledge_config"] = config
+            runtime.setdefault("domain_pack_id", config.get("domain_pack_id"))
+            runtime.setdefault("domain_pack", None)
+            runtime.setdefault("text_embedding_config", None)
+            runtime.setdefault("vl_embedding_config", None)
+            runtime.setdefault("rerank_config", None)
+            return runtime
         payload = await cls.get_knowledge_payload(knowledge_id)
         config = payload["knowledge_config"]
         model_refs = config.get("model_refs", {})
+        domain_pack_id = config.get("domain_pack_id")
+        domain_pack = DomainPackLoader().load(domain_pack_id) if domain_pack_id else None
 
         return {
             "knowledge_id": knowledge_id,
             "knowledge_config": config,
+            "domain_pack_id": domain_pack_id,
+            "domain_pack": domain_pack.to_dict() if domain_pack else None,
             "text_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("text_embedding_model_id")),
             "vl_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("vl_embedding_model_id")),
             "rerank_config": await cls.resolve_model_config_by_id(model_refs.get("rerank_model_id")),

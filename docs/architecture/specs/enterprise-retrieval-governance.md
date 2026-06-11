@@ -56,12 +56,15 @@ citation check、Domain Pack 和本地评测能力时，
 
 ### 4. Public Proof and Operational Docs
 
-这部分当前仍处于后续 phase 范围。
+- `docs/development/public-demo-runbook.md`
+- `docs/development/public-demo-acceptance.md`
+- `docs/development/public-demo-evidence.md`
+- `tools/scripts/verify_public_demo_runtime.py`
 
-到现阶段为止，只能保守理解为：
+这部分已经说明：
 
-- 公开展示面与演示证据链仍需后续 phase 继续收口
-- 不能提前把未来展示材料当成当前稳定入口
+- 已经有 GitHub-safe 的公开 demo 复现链
+- 已经能提供低成本 runtime smoke proof
 
 ## What Is Still Missing
 

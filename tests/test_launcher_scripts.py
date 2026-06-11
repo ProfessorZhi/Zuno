@@ -6,7 +6,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_web_start_launcher_does_not_rebuild_on_plain_start():
-    content = (REPO_ROOT / "launchers" / "_Zuno-Web-Common.cmd").read_text(encoding="utf-8")
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Web-Common.cmd").read_text(encoding="utf-8")
     start_block = re.search(r"^:start\s*(.*?)^:stop\s*$", content, flags=re.MULTILINE | re.DOTALL)
 
     assert start_block is not None
@@ -24,7 +24,7 @@ def test_scripts_start_does_not_install_dependencies_by_default():
 
 
 def test_desktop_stop_stops_backend_services_too():
-    content = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
     stop_block = re.search(r"^:launcher_stop\s*(.*?)^:launcher_rebuild\s*$", content, flags=re.MULTILINE | re.DOTALL)
 
     assert stop_block is not None
@@ -36,8 +36,8 @@ def test_desktop_stop_stops_backend_services_too():
 
 
 def test_desktop_start_uses_direct_vite_and_electron_runtime():
-    content = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
-    helper = (REPO_ROOT / "launchers" / "_Zuno-Desktop-StartElectron.ps1").read_text(encoding="utf-8")
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
+    helper = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-StartElectron.ps1").read_text(encoding="utf-8")
 
     assert "node_modules\\.bin\\vite.cmd" in content
     assert "call :recordListeningPid \"%DESKTOP_FRONTEND_PORT%\" \"%FRONTEND_PID_FILE%\"" in content
@@ -50,15 +50,15 @@ def test_desktop_start_uses_direct_vite_and_electron_runtime():
 
 
 def test_desktop_launcher_uses_external_electron_helper_not_batch_label():
-    content = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
 
     assert "call :startElectron" not in content
     assert "_Zuno-Desktop-StartElectron.ps1" in content
 
 
 def test_desktop_cleanup_uses_external_helper_and_targets_launcher_processes():
-    content = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
-    helper = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Cleanup.ps1").read_text(encoding="utf-8")
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
+    helper = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Cleanup.ps1").read_text(encoding="utf-8")
 
     assert "_Zuno-Desktop-Cleanup.ps1" in content
     assert 'powershell -NoProfile -ExecutionPolicy Bypass -File "%CLEANUP_HELPER%"' in content
@@ -85,7 +85,7 @@ def test_legacy_desktop_forwarders_target_current_launcher_names():
 
 
 def test_desktop_shortcuts_only_pause_on_failure():
-    content = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
     start_block = re.search(r"^:launcher_start\s*(.*?)^:launcher_stop\s*$", content, flags=re.MULTILINE | re.DOTALL)
     stop_block = re.search(r"^:launcher_stop\s*(.*?)^:launcher_rebuild\s*$", content, flags=re.MULTILINE | re.DOTALL)
 
@@ -96,7 +96,7 @@ def test_desktop_shortcuts_only_pause_on_failure():
 
 
 def test_web_shortcuts_only_pause_on_failure():
-    content = (REPO_ROOT / "launchers" / "_Zuno-Web-Common.cmd").read_text(encoding="utf-8")
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Web-Common.cmd").read_text(encoding="utf-8")
     start_block = re.search(r"^:start\s*(.*?)^:stop\s*$", content, flags=re.MULTILINE | re.DOTALL)
     stop_block = re.search(r"^:stop\s*(.*?)^:rebuild\s*$", content, flags=re.MULTILINE | re.DOTALL)
 
@@ -120,10 +120,12 @@ def test_docker_stack_includes_neo4j_runtime():
 
 
 def test_compose_launchers_remove_orphans_on_lifecycle_commands():
-    desktop = (REPO_ROOT / "launchers" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
-    web = (REPO_ROOT / "launchers" / "_Zuno-Web-Common.cmd").read_text(encoding="utf-8")
+    desktop = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
+    web = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Web-Common.cmd").read_text(encoding="utf-8")
 
-    assert "docker compose up -d --remove-orphans postgres redis neo4j minio backend" in desktop
+    assert "docker compose up -d --remove-orphans" in desktop
+    assert "rabbitmq" in desktop
+    assert "worker" in desktop
     assert "docker compose down --remove-orphans" in desktop
     assert "docker compose up -d --remove-orphans" in web
     assert "docker compose up --build -d --remove-orphans" in web

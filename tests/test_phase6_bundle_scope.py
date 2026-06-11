@@ -110,17 +110,17 @@ def test_phase6_bundle_ready_docs_and_script_stay_in_sync() -> None:
     assert "docs_and_contract = 3" in prestage
     assert "logical_phase6_delta = 5" in prestage
     assert "eval_entrypoints = 4" in prestage
-    assert "runtime_foundations = 6" in prestage
-    assert "verification_tests = 19" in prestage
+    assert "runtime_foundations = 22" in prestage
+    assert "verification_tests = 20" in prestage
     assert "phase6_node_ops = 6" in ready
-    assert "total_changed = 43" in ready
+    assert "total_changed = 60" in ready
     assert "./phase6-bundle-prestage.md" in plans_index
     assert "./phase6-bundle-ready.md" in plans_index
     assert "EXPECTED_GROUP_COUNTS" in verifier
-    assert "EXPECTED_TOTAL = 43" in verifier
-    assert "EXPECTED_BUNDLE_SUBJECTS" in verifier
-    assert "phase6: close eval evidence bundle" in verifier
-    assert "phase6: rebuild evidence bundle on foundation base" in verifier
-    assert "mode=matching_commit_history" in verifier
+    assert "EXPECTED_TOTAL = 60" in verifier
+    assert "EXPECTED_PRIMARY_COMMIT_SUBJECT = \"phase6: solidify eval evidence bundle\"" in verifier
+    assert "EXPECTED_FOLLOWUP_COMMIT_SUBJECT = \"phase6: sync local node readiness state\"" in verifier
+    assert "mode=head_commit" in verifier
+    assert "mode=head_commit_range" in verifier
     assert "mode=worktree" in verifier
     assert "phase6 bundle readiness check passed." in verifier

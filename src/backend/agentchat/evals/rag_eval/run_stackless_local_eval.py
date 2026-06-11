@@ -22,6 +22,7 @@ from agentchat.api.services.knowledge import DEFAULT_KNOWLEDGE_CONFIG
 from agentchat.evals.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
 from agentchat.evals.rag_eval.local_embedding_server import run_dev_server
 from agentchat.evals.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
+from agentchat.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
 from agentchat.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 from agentchat.schema.chunk import ChunkModel
 from agentchat.services.domain_pack.loader import DomainPackLoader
@@ -33,12 +34,6 @@ from agentchat.services.rag.parser import doc_parser
 from agentchat.services.rag.vector_db import milvus_client
 from agentchat.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
 from agentchat.settings import initialize_app_settings, resolve_app_config_path
-
-
-def _load_run_eval_tools():
-    from agentchat.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
-
-    return PROFILE_SETTINGS, resolve_profiles, run_eval
 
 
 def _resolve_prepared_path(manifest_path: Path, item: dict[str, Any]) -> Path:
@@ -272,7 +267,6 @@ def _override_profile_thresholds(
     profiles: list[str],
     rerank_score_threshold_override: float | None = None,
 ):
-    PROFILE_SETTINGS, _, _ = _load_run_eval_tools()
     snapshots: dict[str, Any] = {}
     if rerank_score_threshold_override is None:
         yield
@@ -315,7 +309,6 @@ async def run_stackless_local_eval(
     chunk_size_override: int | None = None,
     overlap_override: int | None = None,
 ) -> dict[str, Any]:
-    _, resolve_profiles, run_eval = _load_run_eval_tools()
     temp_config = _build_temp_config()
     os.environ["ZUNO_CONFIG"] = str(temp_config)
     await initialize_app_settings(str(temp_config))
