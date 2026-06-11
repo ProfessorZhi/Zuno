@@ -105,6 +105,7 @@ Frontend
 本地临时资产、评测运行残留、Agent 工作流资料不会进入公开仓库主结构：
 
 - `.local/`
+- `.local/state/vector_db/`
 - `.agent/`
 - `.agentmd`
 - `docs/superpowers/`

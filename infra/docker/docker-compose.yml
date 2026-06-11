@@ -209,7 +209,7 @@ services:
         condition: service_healthy
     volumes:
       - ./docker_config.local.yaml:/app/zuno/config.yaml:ro
-      - backend_vector_db:/app/vector_db
+      - backend_vector_db:/app/.local/state/vector_db
     networks:
       - agentchat-network
     healthcheck:
@@ -248,7 +248,7 @@ services:
     volumes:
       - ../../src/backend:/app
       - ./docker_config.local.yaml:/app/zuno/config.yaml:ro
-      - backend_vector_db:/app/vector_db
+      - backend_vector_db:/app/.local/state/vector_db
     networks:
       - agentchat-network
 

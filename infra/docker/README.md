@@ -122,6 +122,7 @@ Compose 使用 named volumes 保存运行数据：
 - `neo4j_logs`：Neo4j 日志。
 - `minio_data`：MinIO 对象存储数据。
 - `backend_vector_db`：后端向量库数据。
+  - 容器内路径：`/app/.local/state/vector_db`
 
 停止服务但保留数据：
 

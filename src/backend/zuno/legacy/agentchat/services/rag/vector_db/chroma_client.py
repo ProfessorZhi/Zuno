@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import chromadb
@@ -8,10 +9,18 @@ from agentchat.services.rag.embedding import get_embedding
 from agentchat.services.rag.vl_embedding import get_vl_image_embedding, get_vl_text_embedding
 
 
+def _resolve_vector_db_path() -> Path:
+    modern_path = Path(".local/state/vector_db")
+    legacy_path = Path("vector_db")
+    target_path = legacy_path if legacy_path.exists() and not modern_path.exists() else modern_path
+    target_path.mkdir(parents=True, exist_ok=True)
+    return target_path
+
+
 class ChromaClient:
     def __init__(self, **kwargs):
         self.collections: Dict[str, chromadb.Collection] = {}
-        self.client = chromadb.PersistentClient(path="./vector_db")
+        self.client = chromadb.PersistentClient(path=str(_resolve_vector_db_path()))
         logger.info("Successfully connected to Chroma")
 
     @staticmethod
