@@ -35,7 +35,7 @@ def test_docs_indexes_define_public_and_maintainer_paths() -> None:
     assert "It should explain maintenance rules, not replace the public architecture path." in dev_readme
 
 
-def test_architecture_entrypoints_match_phase3_serial_status() -> None:
+def test_architecture_entrypoints_match_phase5_serial_status() -> None:
     architecture_index = (
         REPO_ROOT / "docs" / "architecture" / "README.md"
     ).read_text(encoding="utf-8")
@@ -50,9 +50,11 @@ def test_architecture_entrypoints_match_phase3_serial_status() -> None:
         / "zuno-refactor-execution-plan.md"
     ).read_text(encoding="utf-8")
 
-    assert "`Phase 4`: current serial phase" in architecture_index
-    assert "`Phase 4`：当前串行阶段" in refactor_plan
-    assert "`Phase 4` is the next serial phase." in execution_plan
+    assert "`Phase 5`: completed" in architecture_index
+    assert "`Phase 6`: current serial phase" in architecture_index
+    assert "`Phase 5`：已完成" in refactor_plan
+    assert "`Phase 6`：当前串行阶段" in refactor_plan
+    assert "`Phase 5` is completed on this branch and ready to merge." in execution_plan
     assert "### Phase 3：GraphRAG 重构" not in refactor_plan
     assert "### Phase 7：包名收口 `agentchat -> zuno`" not in refactor_plan
     assert "`Phase 1-4` 已完成并已有最小验收证据" not in execution_plan

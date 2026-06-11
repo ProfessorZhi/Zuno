@@ -279,6 +279,11 @@ pytest tests/test_phase4_runtime_boundary_smoke.py
 ```
 
 ```powershell
+pytest tests/test_phase5_langgraph_graphrag_mainline.py
+python -c "import importlib, sys; sys.path.insert(0, 'src/backend'); importlib.import_module('zuno.services.rag.vector_db'); importlib.import_module('zuno.core.graphs.domain_qa_graph'); print('phase5-smoke-ok')"
+```
+
+```powershell
 cd src\frontend
 npm run lint
 npm run build
