@@ -30,12 +30,12 @@
 This high-level plan describes the long-running target architecture. For the current serial execution status, treat the summary below as authoritative:
 
 - `Phase 1`: completed
-- `Phase 2`: next serial phase
-- `Phase 3`: pending
+- `Phase 2`: completed
+- `Phase 3`: next serial phase
 - `Phase 4`: pending
 - `Phase 5`: pending
 - `Phase 6`: pending
-- Current serial focus: `Phase 2`
+- Current serial focus: `Phase 3`
 
 为了避免“总方案”只讲终局，不讲阶段边界，这里先把当前阶段目标说清楚：
 
@@ -85,7 +85,7 @@ This high-level plan describes the long-running target architecture. For the cur
 2. GraphRAG 已经拿到动态更新、图检索和合同审查场景的最小闭门证据，但版本治理和更稳定的价值证明还需要继续补强。
 3. 检索控制面已经成形，普通模式 / 增强模式两档体验也已有最小稳定证据；下一步重点转向评测治理，而不是继续讨论体验口径本身。
 4. 自动化评测已经有本地入口，但还需要继续强化成面试前可稳定展示的证据链。
-5. 新的串行执行体系里，运行时收口与可运行恢复现在已经拿到第一个真实完成节点；后面的项目结构治理、公开展示面收口、分层边界强化、LangGraph + GraphRAG 主线深化以及评测证据链固化，都还需要按后续 phase 继续完成。
+5. 新的串行执行体系里，运行时收口与可运行恢复、项目结构治理现在都已经拿到真实完成节点；后面的公开展示面收口、分层边界强化、LangGraph + GraphRAG 主线深化以及评测证据链固化，都还需要按后续 phase 继续完成。
 6. 目录结构和公开展示面已经明显改善，但还需要继续压掉混乱入口和历史痕迹。
 7. 项目结构仍处在 `src/backend + src/frontend + apps/desktop` 的混合语义阶段；这不是错，但还没有完全达到面试前最好讲、最好维护的清晰结构。
 
@@ -95,8 +95,8 @@ This high-level plan describes the long-running target architecture. For the cur
 旧阶段里的很多能力已经出现，
 但新的执行体系下，
 当前更稳妥的口径仍然是：
-确认新的 `Phase 1` 节点稳定，
-再线性推进新的 `Phase 2-7`。
+确认新的 `Phase 1-2` 节点稳定，
+再线性推进新的 `Phase 3-7`。
 ```
 
 ### 后续阶段划分

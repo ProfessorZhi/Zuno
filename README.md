@@ -53,6 +53,37 @@ Zuno/
 └─ .local/              # 本地资料和历史运行数据，不提交
 ```
 
+## Repository Layout
+
+当前正式项目面按下面几组目录理解：
+
+- `apps/`：应用入口，目前桌面壳在 `apps/desktop`
+- `docs/`：架构与维护文档
+- `infra/`：Docker 与环境编排
+- `launchers/`：Windows 稳定启动入口
+- `src/`：后端和 Web 前端源码
+- `tests/`：跨层 contract、结构和发布边界测试
+- `tools/`：脚本、迁移和辅助工具
+
+当前 `src/backend` 内部语义：
+
+- `zuno/`：当前主运行时路径
+- `agentchat/`：历史兼容与过渡承载面，后续 phase 继续收口
+
+结构与发布边界的最低验证入口：
+
+```powershell
+python tools/scripts/verify_repo_structure.py
+pytest tests/test_repo_structure_consistency.py
+pytest tests/test_publish_boundary.py
+```
+
+相关文档：
+
+- [Architecture Docs](./docs/architecture/README.md)
+- [Development Docs](./docs/development/README.md)
+- [GitHub Publish Boundary](./docs/development/github-publish-boundary.md)
+
 ## 端口
 
 | 服务 | 地址 |
