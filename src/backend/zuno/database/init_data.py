@@ -8,15 +8,15 @@ from loguru import logger
 from sqlalchemy import inspect, text
 from sqlmodel import SQLModel
 
-from zuno.api.services.agent import AgentService
-from zuno.api.services.llm import LLMService
-from zuno.api.services.mcp_server import MCPService
-from zuno.api.services.tool import ToolService
 from zuno.database import AgentTable, SystemUser, ToolTable, engine, ensure_database
 from zuno.database.dao.agent import AgentDao
 from zuno.database.dao.dialog import DialogDao
 from zuno.database.dao.llm import LLMDao
 from zuno.database.models.user import AdminUser
+from zuno.services.application.agent import AgentService
+from zuno.services.application.llm import LLMService
+from zuno.services.application.mcp_server import MCPService
+from zuno.services.application.tool import ToolService
 from zuno.services.mcp.manager import MCPManager
 from zuno.services.storage import storage_client
 from zuno.settings import app_settings

@@ -5,10 +5,40 @@
 - `Phase 1`: completed
 - `Phase 2`: completed
 - `Phase 3`: completed
-- `Phase 4`: next serial phase
-- `Phase 5`: pending
+- `Phase 4`: completed
+- `Phase 5`: next serial phase
 - `Phase 6`: pending
 - `Phase 7`: pending
+
+## Phase 4 Closure Evidence
+
+This branch closes the new serial `Phase 4` gate by hardening stable service-layer imports for high-value runtime paths and adding dedicated layering guardrails.
+
+Current evidence from the repo state:
+
+- `src/backend/zuno/core/callbacks/usage_metadata.py` no longer reaches upward into `zuno.api.services.*`
+- `src/backend/zuno/database/init_data.py` now depends on stable application-service exports instead of controller-facing service paths
+- `src/backend/zuno/services/capability_registry.py`, `services/pipeline/manager.py`, `services/retrieval/retrievers.py`, `services/rag/handler.py`, and `services/tool_creation_service.py` no longer import `zuno.api.services.*` directly
+- `src/backend/zuno/services/application/` now exists as a stable lower-layer service export surface
+- `docs/development/backend-layering-guidelines.md` now documents the `zuno.services.application.*` boundary rule explicitly
+- `tools/scripts/verify_backend_layering.py` now verifies forbidden imports and required application-layer imports
+- `tests/test_backend_layering_boundaries.py` and `tests/test_phase4_runtime_boundary_smoke.py` now provide automated guardrails and runtime smoke coverage
+
+## Phase 4 Minimum Verification
+
+The Phase 4 minimum gate now passes on this branch:
+
+1. `python tools/scripts/verify_backend_layering.py`
+2. `pytest -q tests/test_backend_layering_boundaries.py`
+3. `pytest -q tests/test_phase4_runtime_boundary_smoke.py`
+4. minimum `import zuno.main` smoke
+
+These checks verify:
+
+- lower runtime-oriented layers no longer import `zuno.api.services.*` directly
+- stable service-layer exports exist for high-value paths
+- the tightened boundary still preserves minimum runtime imports
+- the repo structure and publish-boundary checks remain stable underneath the Phase 4 change
 
 ## Phase 3 Closure Evidence
 
@@ -79,10 +109,10 @@ The earlier `Phase 1` runtime closure remains stable underneath this branch:
 
 ## Next Default Step
 
-Proceed to `Phase 4`: layered architecture and runtime-boundary hardening.
+Proceed to `Phase 5`: LangGraph + GraphRAG mainline deepening.
 
 The default next action is:
 
-- keep the new `Phase 1-3` repository surface stable
-- harden layering and runtime boundaries next
-- keep later `Phase 5-7` goals as pending, not pre-claimed
+- keep the new `Phase 1-4` repository surface stable
+- deepen `LangGraph + GraphRAG` mainline next
+- keep later `Phase 6-7` goals as pending, not pre-claimed
