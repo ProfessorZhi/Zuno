@@ -26,14 +26,16 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     ],
     "docs/architecture/README.md": [
         "`Phase 5`: completed",
-        "`Phase 6`: current serial phase",
+        "`Phase 6`: completed",
+        "`Phase 7`: current serial phase",
         "./specs/README.md",
         "./plans/README.md",
         "./plans/current-phase-audit.md",
     ],
     "docs/architecture/zuno_refactor_plan.md": [
         "`Phase 5`：已完成",
-        "`Phase 6`：当前串行阶段",
+        "`Phase 6`：已完成",
+        "`Phase 7`：当前串行阶段",
         "每完成一个大阶段，都必须回看这些入口是否仍然对齐",
         "已经解决的问题，不再继续挂在主阅读路径里；",
     ],
@@ -45,7 +47,9 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     "docs/architecture/plans/current-phase-audit.md": [
         "`Phase 4`: completed",
         "`Phase 5`: completed",
-        "Proceed to `Phase 6`: evaluation and evidence-chain hardening.",
+        "`Phase 6`: completed",
+        "`Phase 7`: current serial phase",
+        "Stay on `Phase 7`.",
     ],
     "docs/architecture/plans/zuno-refactor-execution-plan.md": [
         "## Phase 3：文档与展示面硬收口",
@@ -53,7 +57,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "python tools/scripts/verify_docs_surface.py",
         "pytest tests/test_docs_surface_consistency.py",
         "pytest tests/test_publish_boundary.py",
-        "`Phase 5` is completed on this branch and ready to merge.",
+        "`Phase 5` is completed and already merged to `main`.",
     ],
     "docs/architecture/specs/README.md": [
         "Platform Evolution And Future Direction",

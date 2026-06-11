@@ -61,6 +61,8 @@ async def completion(
     # 根据对话ID获取智能体配置信息
     db_config = await DialogService.get_agent_by_dialog_id(dialog_id=req.dialog_id)
     agent_config = AgentConfig(**db_config)
+    agent_config.dialog_id = req.dialog_id
+    agent_config.multi_agent_enabled = bool(req.multi_agent_enabled)
 
     # 设置全局变量统计调用
     set_user_id_context(login_user.user_id)

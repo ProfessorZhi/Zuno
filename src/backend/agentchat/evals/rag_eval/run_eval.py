@@ -61,7 +61,7 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
             "needs_query_rewrite": True,
         },
     },
-    "rag_graph": {
+    "rag_graph_chunk_backed": {
         "retrieval_mode": "rag_graph",
         "retrieval_options": {
             "top_k": 5,
@@ -73,7 +73,7 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
             "needs_query_rewrite": True,
         },
     },
-    "rag_graph_3hop": {
+    "rag_graph_chunk_backed_3hop": {
         "retrieval_mode": "rag_graph",
         "retrieval_options": {
             "top_k": 5,
@@ -86,6 +86,54 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
         },
     },
 }
+
+# Keep old names as aliases so pre-Phase-6 callers still resolve cleanly.
+PROFILE_SETTINGS["rag_graph"] = PROFILE_SETTINGS["rag_graph_chunk_backed"]
+PROFILE_SETTINGS["rag_graph_3hop"] = PROFILE_SETTINGS["rag_graph_chunk_backed_3hop"]
+
+PROFILE_SETS: dict[str, list[str]] = {
+    "local_compare": ["baseline_rag", "rag_rerank", "rag_graph_chunk_backed"],
+    "graph_compare": [
+        "baseline_rag",
+        "rag_graph_chunk_backed",
+        "rag_graph_chunk_backed_3hop",
+    ],
+}
+
+PROFILE_ALIASES: dict[str, str] = {
+    "rag_graph": "rag_graph_chunk_backed",
+    "rag_graph_3hop": "rag_graph_chunk_backed_3hop",
+}
+
+
+def resolve_profiles(
+    profiles: str | list[str] | tuple[str, ...] | None = None,
+    *,
+    profile_set: str | None = None,
+) -> list[str]:
+    if profiles is not None:
+        raw_profiles = (
+            [item.strip() for item in profiles.split(",")]
+            if isinstance(profiles, str)
+            else [str(item).strip() for item in profiles]
+        )
+        resolved = [PROFILE_ALIASES.get(item, item) for item in raw_profiles if item]
+    else:
+        selected_set = str(profile_set or "local_compare").strip()
+        if selected_set not in PROFILE_SETS:
+            raise ValueError(
+                f"unsupported profile_set: {selected_set}. "
+                f"expected one of {sorted(PROFILE_SETS)}"
+            )
+        resolved = list(PROFILE_SETS[selected_set])
+
+    if not resolved:
+        raise ValueError("at least one evaluation profile is required")
+
+    unknown = [item for item in resolved if item not in PROFILE_SETTINGS]
+    if unknown:
+        raise ValueError(f"unsupported profiles: {unknown}")
+    return resolved
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:

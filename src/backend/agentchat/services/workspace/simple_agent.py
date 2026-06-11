@@ -88,6 +88,21 @@ from agentchat.settings import app_settings
 tool = lc_tool
 
 
+class KnowledgeService:
+    @staticmethod
+    async def get_runtime_settings(knowledge_id: str):
+        from agentchat.api.services.knowledge import KnowledgeService as _KnowledgeService
+
+        return await _KnowledgeService.get_runtime_settings(knowledge_id)
+
+
+class AgentRuntime:
+    async def run_domain_qa(self, **kwargs):
+        from agentchat.core.runtime.agent_runtime import AgentRuntime as _AgentRuntime
+
+        return await _AgentRuntime().run_domain_qa(**kwargs)
+
+
 class MCPConfig(BaseModel):
     url: str = ""
     type: str = "sse"
@@ -233,9 +248,11 @@ class WorkSpaceSimpleAgent:
 
     def _build_retrieval_event_payload(self, result: Dict[str, Any], phase: str = "retrieval") -> Dict[str, Any]:
         metadata = result.get("metadata") or {}
+        domain_pack_failure = metadata.get("domain_pack_failure")
+        domain_pack_cost = metadata.get("domain_pack_cost")
         return {
             "phase": phase,
-            "status": "END",
+            "status": "ERROR" if domain_pack_failure or (domain_pack_cost or {}).get("status") == "failed" else "END",
             "message": self._summarize_retrieval_metadata(metadata),
             "retrieval_mode": result.get("actual_mode") or metadata.get("final_mode") or self.retrieval_mode,
             "first_mode": result.get("first_mode") or metadata.get("first_mode"),
@@ -247,6 +264,8 @@ class WorkSpaceSimpleAgent:
             "query_variants": metadata.get("query_variants") or [],
             "rounds": metadata.get("rounds") or [],
             "knowledge_ids": self.knowledge_ids,
+            "domain_pack_failure": domain_pack_failure,
+            "domain_pack_cost": domain_pack_cost,
         }
 
     @staticmethod
@@ -2138,6 +2157,38 @@ class WorkSpaceSimpleAgent:
         ]
         return any(keyword in normalized for keyword in keywords)
 
+    async def _run_domain_pack_query(self, query: str) -> Dict[str, Any] | None:
+        if not self.knowledge_ids:
+            return None
+        runtime_settings = await KnowledgeService.get_runtime_settings(self.knowledge_ids[0])
+        domain_pack_id = runtime_settings.get("domain_pack_id") or (
+            (runtime_settings.get("domain_pack") or {}).get("id")
+        )
+        if not domain_pack_id:
+            return None
+        result = await AgentRuntime().run_domain_qa(
+            query=query,
+            user_id=self.user_id,
+            agent_id=self.usage_agent_name or "workspace_simple_agent",
+            knowledge_ids=self.knowledge_ids,
+            dialog_id=self.session_id,
+            domain_pack_id=domain_pack_id,
+            runtime_settings=runtime_settings,
+        )
+        retrieval_result = dict(result.get("retrieval_result") or {})
+        metadata = dict(retrieval_result.get("metadata") or {})
+        metadata["domain_pack_trace"] = result.get("trace_metadata")
+        metadata["domain_pack_cost"] = result.get("cost_metadata")
+        metadata["domain_pack_failure"] = result.get("failure_metadata")
+        retrieval_result["metadata"] = metadata
+        return {
+            "domain_pack_id": result.get("domain_pack_id") or domain_pack_id,
+            "content": str(result.get("final_answer") or ""),
+            "metadata": metadata,
+            "result": result,
+            **retrieval_result,
+        }
+
     async def _prefetch_knowledge_context(self, query: str) -> Dict[str, Any] | None:
         if self.execution_mode == "terminal" or not self.knowledge_ids:
             return None
@@ -2145,6 +2196,12 @@ class WorkSpaceSimpleAgent:
         if not normalized_query:
             return None
         try:
+            domain_pack_result = await self._run_domain_pack_query(normalized_query)
+            if domain_pack_result:
+                context = str(domain_pack_result.get("content") or "").strip()
+                if not context:
+                    return None
+                return {"content": context, "result": domain_pack_result}
             result = await RagHandler.retrieve_ranked_documents_with_metadata(
                 normalized_query,
                 self.knowledge_ids,

@@ -1,0 +1,4 @@
+{
+  "entities": ["Clause", "Risk"],
+  "relations": ["CLAUSE_HAS_RISK"]
+}

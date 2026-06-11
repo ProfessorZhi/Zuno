@@ -7,6 +7,7 @@ from agentchat.database.models.base import SQLModelSerializable
 
 class AgentSkill(SQLModelSerializable, table=True):
     __tablename__ = "agent_skill"
+    __table_args__ = {"extend_existing": True}
 
     id: str = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True, description="Agent Skill的ID")
     name: str = Field(..., description="Agent Skill的名称")

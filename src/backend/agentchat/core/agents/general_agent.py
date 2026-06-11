@@ -46,11 +46,29 @@ class AgentConfig(BaseModel):
     llm_id: str
     mcp_ids: List[str]
     knowledge_ids: List[str]
+    domain_pack_id: str | None = None
+    dialog_id: str | None = None
     tool_ids: List[str]
     agent_skill_ids: List[str]
     system_prompt: str
     enable_memory: bool = False
+    multi_agent_enabled: bool = False
     name: str | None = None
+
+
+class KnowledgeService:
+    @staticmethod
+    async def get_runtime_settings(knowledge_id: str):
+        from agentchat.api.services.knowledge import KnowledgeService as _KnowledgeService
+
+        return await _KnowledgeService.get_runtime_settings(knowledge_id)
+
+
+class AgentRuntime:
+    async def run_domain_qa(self, **kwargs):
+        from agentchat.core.runtime.agent_runtime import AgentRuntime as _AgentRuntime
+
+        return await _AgentRuntime().run_domain_qa(**kwargs)
 
 
 class EmitEventAgentMiddleware(AgentMiddleware):
@@ -343,9 +361,27 @@ class GeneralAgent:
             Args:
                 query: 用户问题
             """
-            return await RagHandler.retrieve_ranked_documents(
-                query, self.agent_config.knowledge_ids
+            runtime_settings = None
+            if self.agent_config.knowledge_ids:
+                runtime_settings = await KnowledgeService.get_runtime_settings(
+                    self.agent_config.knowledge_ids[0]
+                )
+            domain_pack_id = self.agent_config.domain_pack_id or (
+                (runtime_settings or {}).get("domain_pack_id")
             )
+            if domain_pack_id:
+                result = await AgentRuntime().run_domain_qa(
+                    query=query,
+                    user_id=self.agent_config.user_id,
+                    agent_id=self.agent_config.name or "general_agent",
+                    knowledge_ids=self.agent_config.knowledge_ids,
+                    dialog_id=self.agent_config.dialog_id or "",
+                    domain_pack_id=domain_pack_id,
+                    runtime_settings=runtime_settings or {},
+                )
+                return str(result.get("final_answer") or "")
+
+            return await RagHandler.retrieve_ranked_documents(query, self.agent_config.knowledge_ids)
 
         if self.agent_config.knowledge_ids:
             self.tools.append(retrival_knowledge)
@@ -359,6 +395,55 @@ class GeneralAgent:
         visible_messages = copy.deepcopy(
             normalize_messages_for_model(messages, model=self.conversation_model)
         )
+        if self.agent_config.knowledge_ids:
+            runtime_settings = await KnowledgeService.get_runtime_settings(
+                self.agent_config.knowledge_ids[0]
+            )
+            domain_pack_id = self.agent_config.domain_pack_id or (
+                runtime_settings.get("domain_pack_id")
+            )
+            if domain_pack_id:
+                query = ""
+                if visible_messages:
+                    query = str(getattr(visible_messages[-1], "content", "") or "")
+                yield self.wrap_event(
+                    {
+                        "phase": "domain_qa",
+                        "status": "START",
+                        "domain_pack_id": domain_pack_id,
+                    }
+                )
+                result = await AgentRuntime().run_domain_qa(
+                    query=query,
+                    user_id=self.agent_config.user_id,
+                    agent_id=self.agent_config.name or "general_agent",
+                    knowledge_ids=self.agent_config.knowledge_ids,
+                    dialog_id=self.agent_config.dialog_id or "",
+                    domain_pack_id=domain_pack_id,
+                    runtime_settings=runtime_settings,
+                )
+                failure_metadata = result.get("failure_metadata")
+                yield self.wrap_event(
+                    {
+                        "phase": "domain_qa",
+                        "status": "ERROR" if failure_metadata or result.get("status") == "failed" else "END",
+                        "domain_pack_id": result.get("domain_pack_id") or domain_pack_id,
+                        "trace_metadata": result.get("trace_metadata"),
+                        "cost_metadata": result.get("cost_metadata"),
+                        "failure_metadata": failure_metadata,
+                    }
+                )
+                final_answer = str(result.get("final_answer") or "")
+                response_content += final_answer
+                yield {
+                    "type": "response_chunk",
+                    "timestamp": time.time(),
+                    "data": {
+                        "chunk": final_answer,
+                        "accumulated": response_content,
+                    },
+                }
+                return
         inside_think = False
         try:
             async for token, metadata in self.react_agent.astream(
