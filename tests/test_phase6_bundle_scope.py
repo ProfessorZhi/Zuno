@@ -118,7 +118,9 @@ def test_phase6_bundle_ready_docs_and_script_stay_in_sync() -> None:
     assert "./phase6-bundle-ready.md" in plans_index
     assert "EXPECTED_GROUP_COUNTS" in verifier
     assert "EXPECTED_TOTAL = 43" in verifier
-    assert "EXPECTED_BUNDLE_SUBJECT = \"phase6: rebuild evidence bundle on foundation base\"" in verifier
+    assert "EXPECTED_BUNDLE_SUBJECTS" in verifier
+    assert "phase6: close eval evidence bundle" in verifier
+    assert "phase6: rebuild evidence bundle on foundation base" in verifier
     assert "mode=matching_commit_history" in verifier
     assert "mode=worktree" in verifier
     assert "phase6 bundle readiness check passed." in verifier
