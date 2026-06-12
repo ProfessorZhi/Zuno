@@ -375,5 +375,5 @@ Expected: PASS
 
 - [ ] **Step 3: Inspect git diff for unintended files**
 
-Run: `git -C F:\\resume project\\02_projects\\Zuno diff -- src/backend/agentchat/services src/backend/agentchat/test docs/superpowers`
+Run: `git -C F:\\resume project\\02_projects\\Zuno diff -- src/backend/agentchat/services src/backend/agentchat/test docs/prototypes/superpowers-legacy`
 Expected: only retrieval refactor files and touched tests / docs
