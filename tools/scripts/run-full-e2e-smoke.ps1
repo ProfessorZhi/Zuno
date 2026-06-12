@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $qaRoot = Join-Path $repoRoot 'tmp-qa-playwright'
-$frontendRoot = Join-Path $repoRoot 'src\frontend'
+$frontendRoot = Join-Path $repoRoot 'apps\web'
 $authPath = Join-Path $qaRoot 'auth.json'
 $qaApiScript = Join-Path $qaRoot 'qa_echo_api.py'
 $frontendOut = Join-Path $repoRoot 'tmp\frontend-dev.out.log'

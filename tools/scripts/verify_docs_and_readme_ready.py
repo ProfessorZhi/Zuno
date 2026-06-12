@@ -23,7 +23,7 @@ EXPECTED_GROUP_PATHS = {
 }
 EXCLUDED_LOCAL_PATHS = {
     "docs/superpowers/",
-    "src/frontend/AGENTS.md",
+    "apps/web/AGENTS.md",
 }
 
 

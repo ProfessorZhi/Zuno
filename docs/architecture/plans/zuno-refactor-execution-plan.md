@@ -19,7 +19,7 @@ Latest `Phase 6` progress now verified in the repo state:
    - `run_local_embedding_eval.py` now lazy-loads the embedding runtime instead of importing the full embedding stack at module import time
    - explicit `text_embedding_model_id` no longer forces `resolve_embedding_model_id() -> list_llm_candidates() -> LLMDao.get_all_llm()` before validation
 3. the current Phase 6 candidate minimum test surface is green:
-   - `pytest -q src/backend/agentchat/test/test_contract_eval_runner.py src/backend/agentchat/test/test_rag_eval_local_scheme.py src/backend/agentchat/test/test_stackless_compare_matrix.py src/backend/agentchat/test/test_rag_eval_local_launcher.py`
+   - `pytest -q tests/compat/test_contract_eval_runner.py tests/compat/test_rag_eval_local_scheme.py tests/compat/test_stackless_compare_matrix.py tests/compat/test_rag_eval_local_launcher.py`
    - latest result: `22 passed`
 4. the public demo verification layer is now green as a whole:
    - `python tools/scripts/verify_public_demo_runtime.py`
@@ -30,7 +30,7 @@ Latest `Phase 6` progress now verified in the repo state:
    - `run_local_embedding_eval.py --validate-only` now completes against that local endpoint and returns a real embedding probe result (`dimension = 64`)
 6. the compare-matrix proof surface now has a committed real run artifact:
    - `run_stackless_compare_matrix.py` completed against the contract-review corpus/dataset and wrote `summary.json` + `summary.md`
-   - current output root: `src/backend/agentchat/evals/rag_eval/runs/stackless-contract-review-phase6`
+   - current output root: `.local/evals/agentchat/rag_eval/runs/stackless-contract-review-phase6`
    - the five retrieval metrics are reproducible, but the current matrix still shows a flat result where `prefer_rerank_when_tied = no`
 7. the compare-matrix artifact now reports coverage directly, so tiny sample slices can no longer be over-read:
    - the `sample_limit = 3` contract-review run clearly reports `3` sampled questions, `2` referenced files, and `2` indexed chunks, plus a low-coverage warning
@@ -38,12 +38,12 @@ Latest `Phase 6` progress now verified in the repo state:
    - on that wider run, GraphRAG improves `MRR` / `NDCG` over baseline, but still does not beat the `rag_rerank` line as the safer default
 8. the scaled-corpus local proof has now turned the GraphRAG value claim into a stronger Phase 6 evidence line:
    - `generate_contract_review_scale_corpus.py --copies-per-file 4` produced a `40`-file local distractor corpus
-   - the scaled compare matrix run at `src/backend/agentchat/evals/rag_eval/runs/stackless-contract-review-scale-phase6-s12` covers `12` sampled questions and `40` indexed chunks
+   - the scaled compare matrix run at `.local/evals/agentchat/rag_eval/runs/stackless-contract-review-scale-phase6-s12` covers `12` sampled questions and `40` indexed chunks
    - on this harder local corpus, `rag_graph_chunk_backed` now beats both `baseline_rag` and `rag_rerank` across recall / MRR / NDCG / citation accuracy, and the matrix acceptance layer is fully green
 9. the one-command local embedding eval entry now also has real repo-state proof instead of stopping at preflight:
    - previous hard failure was a DB timeout on the `LLMDao` / ingest path (`localhost:5432`), not an embedding-endpoint failure
    - `run_local_embedding_eval.py` now falls back to stackless local eval when a direct local embedding target is provided and the DB-backed path is unavailable
-   - a real contract-review run now succeeds at `src/backend/agentchat/evals/rag_eval/runs/local-embedding-phase6-contract-review-fallback`
+   - a real contract-review run now succeeds at `.local/evals/agentchat/rag_eval/runs/local-embedding-phase6-contract-review-fallback`
    - on that run, `rag_graph_chunk_backed` reaches recall `1.0000`, MRR `0.9583`, NDCG `0.9692`, citation accuracy `1.0000`, while baseline / rerank both stay at recall `0.9167`, MRR `0.6528`, NDCG `0.7212`, citation accuracy `0.9167`
 
 `Phase 6` is now process-closed as well as technically closed in the current branch history:
@@ -57,12 +57,12 @@ Recommended minimum standalone `Phase 6` node scope from the current worktree:
 
 - `docs/architecture/plans/current-phase-audit.md`
 - `docs/architecture/plans/zuno-refactor-execution-plan.md`
-- `src/backend/agentchat/evals/rag_eval/README.md`
-- `src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py`
-- `src/backend/agentchat/evals/rag_eval/run_stackless_compare_matrix.py`
-- `src/backend/agentchat/evals/rag_eval/generate_contract_review_scale_corpus.py`
-- `src/backend/agentchat/test/test_rag_eval_local_launcher.py`
-- `src/backend/agentchat/test/test_stackless_compare_matrix.py`
+- `tools/evals/zuno/rag_eval/README.md`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`
+- `tools/evals/zuno/rag_eval/generate_contract_review_scale_corpus.py`
+- `tests/compat/test_rag_eval_local_launcher.py`
+- `tests/compat/test_stackless_compare_matrix.py`
 
 Important qualification for the current branch state:
 
@@ -277,7 +277,7 @@ phase 内任务并行推进
 建议最小测试集：
 
 1. `pytest -q tests/test_zuno_public_entrypoints.py`
-2. `pytest -q src/backend/agentchat/test/test_zuno_alias_imports.py`
+2. `pytest -q tests/compat/test_zuno_alias_imports.py`
 3. `pytest -q tests/test_zuno_runtime_chain_guard.py`
 4. 最小 `import zuno.main` smoke
 
@@ -318,8 +318,8 @@ GitHub 节点：
 
 - 根目录主骨架清晰化
 - `src/backend` 下历史残留目录语义明确
-- `src/frontend` 的正式源码层与生成层边界明确
-- `apps/desktop` 与 `src/frontend` 的关系说明清楚
+- `apps/web` 的正式源码层与生成层边界明确
+- `apps/desktop` 与 `apps/web` 的关系说明清楚
 - `docs/architecture`、`docs/development`、`tools/`、`infra/`、`tests/` 各归其位
 
 验收标准：
@@ -340,7 +340,7 @@ GitHub 节点：
 
 1. 文件夹结构发生了真实整理动作
 2. 根目录主骨架清楚
-3. `src/backend`、`src/frontend`、`apps/desktop`、`docs/`、`tools/`、`infra/`、`tests/` 的职责稳定
+3. `src/backend`、`apps/web`、`apps/desktop`、`docs/`、`tools/`、`infra/`、`tests/` 的职责稳定
 4. 文档、README、publish boundary 已同步
 5. 本阶段最小结构测试通过
 

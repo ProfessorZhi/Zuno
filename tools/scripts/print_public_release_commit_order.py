@@ -41,7 +41,7 @@ COMMIT_GROUPS = [
 
 EXCLUDED_LOCAL_ONLY = [
     "docs/superpowers/",
-    "src/frontend/AGENTS.md",
+    "apps/web/AGENTS.md",
 ]
 
 

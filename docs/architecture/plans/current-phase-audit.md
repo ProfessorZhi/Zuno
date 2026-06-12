@@ -61,10 +61,10 @@ Proceed to `Phase 7`: do the final interview-facing total cleanup on top of the 
   - `run_local_embedding_eval.py` now lazy-loads the embedding runtime instead of importing the full embedding stack at module import time
   - explicit `text_embedding_model_id` no longer forces `resolve_embedding_model_id() -> list_llm_candidates() -> LLMDao.get_all_llm()` before validation
 - the Phase 6 candidate test surface now has a green baseline:
-  - `src/backend/agentchat/test/test_contract_eval_runner.py`
-  - `src/backend/agentchat/test/test_rag_eval_local_scheme.py`
-  - `src/backend/agentchat/test/test_stackless_compare_matrix.py`
-  - `src/backend/agentchat/test/test_rag_eval_local_launcher.py`
+  - `tests/compat/test_contract_eval_runner.py`
+  - `tests/compat/test_rag_eval_local_scheme.py`
+  - `tests/compat/test_stackless_compare_matrix.py`
+  - `tests/compat/test_rag_eval_local_launcher.py`
   - latest combined result: `22 passed`
 - the public demo verification layer is now green as a whole instead of only partially sampled:
   - `python tools/scripts/verify_public_demo_runtime.py`
@@ -77,7 +77,7 @@ Proceed to `Phase 7`: do the final interview-facing total cleanup on top of the 
   - latest result: a real embedding probe completed with `dimension = 64`
 - the compare-matrix proof surface now has a real stackless contract-review run artifact:
   - `run_stackless_compare_matrix.py` completed against `contract_review_graph_relation_small.jsonl`
-  - output root: `src/backend/agentchat/evals/rag_eval/runs/stackless-contract-review-phase6`
+  - output root: `.local/evals/agentchat/rag_eval/runs/stackless-contract-review-phase6`
   - the five retrieval metrics plus faithfulness / citation accuracy are now written to `summary.json` and `summary.md`
   - current acceptance surface is informative but not yet a closure proof: `prefer_rerank_when_tied = no` while the other three matrix gates are `yes`
 - the compare-matrix surface now exposes coverage metadata so a tiny slice cannot masquerade as a system-level conclusion:
@@ -85,12 +85,12 @@ Proceed to `Phase 7`: do the final interview-facing total cleanup on top of the 
   - `summary.md` / `summary.json` now show sampled-question count, unique referenced file count, chunk count, and a low-coverage warning
   - this turns the earlier flat `s3` result into a debuggable evidence artifact instead of a misleading headline
 - the larger contract-review matrix run now gives a stronger baseline for interpretation:
-  - output root: `src/backend/agentchat/evals/rag_eval/runs/stackless-contract-review-phase6-s12`
+  - output root: `.local/evals/agentchat/rag_eval/runs/stackless-contract-review-phase6-s12`
   - current run covers `12` sampled questions and `8` indexed chunks
   - current result: GraphRAG is not worse than baseline and improves `MRR` / `NDCG` over baseline, but it still does not beat the `rag_rerank` line on the default acceptance story
 - the scaled-corpus hypothesis has now been verified with a harder local corpus instead of staying as a README suggestion:
   - `generate_contract_review_scale_corpus.py --copies-per-file 4` produced `40` local contract files under `contract_review_scale_phase6`
-  - the scaled matrix run at `src/backend/agentchat/evals/rag_eval/runs/stackless-contract-review-scale-phase6-s12` covers `12` sampled questions, `8` referenced gold files, and `40` indexed chunks
+  - the scaled matrix run at `.local/evals/agentchat/rag_eval/runs/stackless-contract-review-scale-phase6-s12` covers `12` sampled questions, `8` referenced gold files, and `40` indexed chunks
   - on this harder corpus, `rag_graph_chunk_backed` now clearly beats both `baseline_rag` and `rag_rerank`
     - vs `baseline_rag`: recall `0.5000 > 0.3333`, MRR `0.5000 > 0.2153`, NDCG `0.5000 > 0.2442`, citation accuracy `0.5000 > 0.3333`
     - vs `rag_rerank`: recall `0.5000 > 0.2500`, MRR `0.5000 > 0.1944`, NDCG `0.5000 > 0.2083`, citation accuracy `0.5000 > 0.2500`
@@ -100,7 +100,7 @@ Proceed to `Phase 7`: do the final interview-facing total cleanup on top of the 
   - root cause of the previous failure was not the embedding endpoint itself, but the database-backed `LLMDao` / ingest path trying to connect to `localhost:5432`
   - `run_local_embedding_eval.py` now falls back to `run_stackless_local_eval` when a direct local embedding target is provided and the DB-backed registration / ingest path is unavailable
   - the fallback preserves one-command local-eval semantics and writes the usual `summary.json` / `summary.md`
-  - real proof run: `src/backend/agentchat/evals/rag_eval/runs/local-embedding-phase6-contract-review-fallback`
+  - real proof run: `.local/evals/agentchat/rag_eval/runs/local-embedding-phase6-contract-review-fallback`
   - current full-command result on the contract-review dataset is strong:
     - `rag_graph_chunk_backed` recall `1.0000`
     - `rag_graph_chunk_backed` MRR `0.9583`
@@ -129,6 +129,10 @@ The highest-value next action is now the first real `Phase 7` gate:
 - use `python tools/scripts/preview_phase6_bundle_scope.py --dry-run` to print the full grouped stage dry-run before forming the GitHub node
 - use `python tools/scripts/preview_phase6_bundle_scope.py --stage-command` to print the canonical `git add` command for the full bundled node
 - use `python tools/scripts/verify_phase6_bundle_ready.py` for the current one-command go/no-go check
+- use `python tools/scripts/preview_phase6_bundle_scope.py --groups` to list the grouped Phase 6 bundle slices
+- use `python tools/scripts/preview_phase6_bundle_scope.py --summary` to print the current Phase 6 bundle summary
+- use `python tools/scripts/preview_phase6_bundle_scope.py --group logical_phase6_delta` to inspect the logical delta slice
+- use `python tools/scripts/preview_phase6_bundle_scope.py --group runtime_foundations --stat` to inspect the runtime foundations slice with stats
 - see `./phase6-bundle-prestage.md` and `./phase6-bundle-ready.md` for the current operational staging contract
 
 ## Phase 6 Minimal Standalone Node Scope
@@ -142,12 +146,12 @@ If the branch you are pushing from already contains the required `Phase 1-5` fou
 
 - `docs/architecture/plans/current-phase-audit.md`
 - `docs/architecture/plans/zuno-refactor-execution-plan.md`
-- `src/backend/agentchat/evals/rag_eval/README.md`
-- `src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py`
-- `src/backend/agentchat/evals/rag_eval/run_stackless_compare_matrix.py`
-- `src/backend/agentchat/evals/rag_eval/generate_contract_review_scale_corpus.py`
-- `src/backend/agentchat/test/test_rag_eval_local_launcher.py`
-- `src/backend/agentchat/test/test_stackless_compare_matrix.py`
+- `tools/evals/zuno/rag_eval/README.md`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`
+- `tools/evals/zuno/rag_eval/generate_contract_review_scale_corpus.py`
+- `tests/compat/test_rag_eval_local_launcher.py`
+- `tests/compat/test_stackless_compare_matrix.py`
 
 These files are the smallest current slice that explains and verifies the Phase 6 delta:
 
@@ -158,16 +162,16 @@ These files are the smallest current slice that explains and verifies the Phase 
 
 However, that slice is not yet self-contained on the current branch tip. In the current worktree, the `Phase 6` eval entrypoints still depend on several untracked foundation files, including:
 
-- `src/backend/agentchat/evals/rag_eval/run_stackless_local_eval.py`
-- `src/backend/agentchat/evals/rag_eval/summarize_eval_profiles.py`
-- `src/backend/agentchat/evals/rag_eval/local_embedding_server.py`
-- `src/backend/agentchat/evals/rag_eval/local_rerank_server.py`
-- `src/backend/agentchat/services/runtime_registry.py`
-- `src/backend/agentchat/services/domain_pack/`
-- `src/backend/agentchat/services/graphrag/extractors/`
-- `src/backend/agentchat/services/graphrag/retrievers/`
-- `src/backend/agentchat/core/graphs/`
-- `src/backend/agentchat/core/runtime/`
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`
+- `tools/evals/zuno/rag_eval/summarize_eval_profiles.py`
+- `tools/evals/zuno/rag_eval/local_embedding_server.py`
+- `tools/evals/zuno/rag_eval/local_rerank_server.py`
+- `src/backend/zuno/legacy/agentchat/services/runtime_registry.py`
+- `src/backend/zuno/legacy/agentchat/services/domain_pack/`
+- `src/backend/zuno/legacy/agentchat/services/graphrag/extractors/`
+- `src/backend/zuno/legacy/agentchat/services/graphrag/retrievers/`
+- `src/backend/zuno/legacy/agentchat/core/graphs/`
+- `src/backend/zuno/legacy/agentchat/core/runtime/`
 
 So the real process conclusion is stricter than before:
 
@@ -178,17 +182,17 @@ For the current branch tip specifically, the smallest realistic bundled scope no
 
 - the logical `Phase 6` files listed above
 - the stackless local-eval runtime helpers:
-  - `src/backend/agentchat/evals/rag_eval/run_stackless_local_eval.py`
-  - `src/backend/agentchat/evals/rag_eval/summarize_eval_profiles.py`
-  - `src/backend/agentchat/evals/rag_eval/local_embedding_server.py`
-  - `src/backend/agentchat/evals/rag_eval/local_rerank_server.py`
+  - `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`
+  - `tools/evals/zuno/rag_eval/summarize_eval_profiles.py`
+  - `tools/evals/zuno/rag_eval/local_embedding_server.py`
+  - `tools/evals/zuno/rag_eval/local_rerank_server.py`
 - the domain/runtime foundations that those helpers import directly:
-  - `src/backend/agentchat/services/runtime_registry.py`
-  - `src/backend/agentchat/services/domain_pack/`
-  - `src/backend/agentchat/services/graphrag/extractors/`
-  - `src/backend/agentchat/services/graphrag/retrievers/`
-  - `src/backend/agentchat/core/graphs/`
-  - `src/backend/agentchat/core/runtime/`
+  - `src/backend/zuno/legacy/agentchat/services/runtime_registry.py`
+  - `src/backend/zuno/legacy/agentchat/services/domain_pack/`
+  - `src/backend/zuno/legacy/agentchat/services/graphrag/extractors/`
+  - `src/backend/zuno/legacy/agentchat/services/graphrag/retrievers/`
+  - `src/backend/zuno/legacy/agentchat/core/graphs/`
+  - `src/backend/zuno/legacy/agentchat/core/runtime/`
 - the associated local-eval / domain-pack / contract tests that verify this bundled runtime
 
 The grouped preview tool now mirrors that split directly:
@@ -323,7 +327,7 @@ Latest whole-set closure proof:
 - 最小测试集已经通过：
   - `tests/test_zuno_public_entrypoints.py`
   - `tests/test_zuno_runtime_chain_guard.py`
-  - `src/backend/agentchat/test/test_zuno_alias_imports.py`
+  - `tests/compat/test_zuno_alias_imports.py`
 - `zuno.main` 的最小 import / create-app smoke 已通过
 
 这意味着“运行时收口与可运行恢复”已经不再是当前主战场。
@@ -334,7 +338,7 @@ Latest whole-set closure proof:
 
 - 清理混乱入口、历史残留、过时目录与过时文档引用
 - 明确应用入口、核心能力、评测、文档、工具、基础设施、测试边界
-- 收紧 `src/backend`、`src/frontend`、`apps/desktop`、`docs/`、`infra/`、`tools/`、`tests/` 的职责说明
+- 收紧 `src/backend`、`apps/web`、`apps/desktop`、`docs/`、`infra/`、`tools/`、`tests/` 的职责说明
 - 保持当前可运行结构，不做高风险全仓路径革命
 
 这轮已经补齐了对应的最小结构门禁：

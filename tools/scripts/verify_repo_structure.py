@@ -11,6 +11,7 @@ REQUIRED_PATHS = [
     "apps/desktop",
     "docs/architecture",
     "docs/development",
+    "infra/db",
     "infra/docker",
     "src/backend",
     "src/backend/zuno/api",
@@ -18,9 +19,11 @@ REQUIRED_PATHS = [
     "src/backend/zuno/database",
     "src/backend/zuno/database/dao",
     "src/backend/zuno/services",
-    "src/frontend",
+    "apps/web",
     "tests",
+    "tests/compat",
     "tools",
+    "tools/evals/zuno",
     "tools/launchers/windows",
 ]
 
@@ -33,6 +36,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "apps/",
         "docs/",
         "infra/",
+        "infra/db/",
         "src/",
         "tests/",
         "tools/",

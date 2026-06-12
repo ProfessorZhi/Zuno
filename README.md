@@ -76,8 +76,17 @@ Frontend
 - `src/backend/zuno/core/graphs/`：Domain QA 图与状态编排
 - `src/backend/zuno/services/domain_pack/`：Domain Pack 加载、校验、注册
 - `src/backend/zuno/services/graphrag/`：抽取、图存储、图检索、混合检索
-- `src/backend/agentchat/evals/rag_eval/`：本地 embedding 评测链、compare matrix、指标汇总
-- `src/backend/agentchat/evals/contract_review_eval/`：合同审查评测资产
+- `src/backend/zuno/fixtures/`：后端运行与回归用的稳定内置样例资产
+- `tools/evals/zuno/rag_eval/`：本地 embedding 评测链、compare matrix、指标汇总
+- `tools/evals/zuno/contract_review_eval/`：合同审查评测资产
+- `tests/compat/`：仍覆盖兼容层与历史能力的回归测试
+
+顶层目录现在按“核心源码域 + 应用壳”来分：
+
+- `src/`：核心产品源码域，目前只保留 backend
+- `apps/web/`：Vue Web 工作台
+- `apps/desktop/`：Electron 桌面壳，是消费 `apps/web` 与 backend runtime 的宿主应用
+- 根 `package.json` 使用 npm workspaces 管理 `apps/web` 和 `apps/desktop`，所以 `apps + src` 是显式 monorepo 结构，不再混用前后端语义
 
 更完整的架构文档见 [docs/architecture/README.md](./docs/architecture/README.md)。
 
@@ -86,7 +95,8 @@ Frontend
 ```text
 .
 ├─ apps/
-│  └─ desktop/                  # Electron desktop app
+│  ├─ desktop/                  # Electron desktop shell workspace
+│  └─ web/                      # Vue web workspace
 ├─ docs/
 │  ├─ architecture/             # Current architecture, plans, decisions
 │  ├─ development/              # Engineering and environment docs
@@ -94,10 +104,10 @@ Frontend
 │  ├─ assets/                   # Documentation assets
 │  └─ prototypes/               # Experimental materials safe to publish
 ├─ infra/
+│  ├─ db/                       # Alembic migrations and database infra config
 │  └─ docker/                   # Dockerfiles, compose stacks, nginx config
 ├─ src/
-│  ├─ backend/                  # FastAPI, agent runtime, RAG, GraphRAG, evals
-│  └─ frontend/                 # Vue web workspace
+│  └─ backend/                  # FastAPI packages, runtime code, compat shells
 ├─ tests/                       # Repo-level verification
 └─ tools/                       # Scripts, launchers, migrations, local maintenance tooling
 ```
@@ -109,7 +119,16 @@ Frontend
 - `.agent/`
 - `.agentmd`
 - `docs/superpowers/`
-- `src/frontend/AGENTS.md`
+- `apps/web/AGENTS.md`
+
+常用 workspace 命令：
+
+```powershell
+npm run frontend:dev
+npm run frontend:build
+npm run desktop:start
+python tools/scripts/clean_workspace.py --dry-run
+```
 
 ## Quick Start
 
@@ -161,7 +180,7 @@ uvicorn zuno.main:app --host 0.0.0.0 --port 7860
 前端：
 
 ```powershell
-cd src\frontend
+cd apps\web
 npm install
 npm run dev -- --host 127.0.0.1 --port 8090
 ```
@@ -185,8 +204,8 @@ Zuno 已经内置本地评测链，重点支持：
 
 关键目录：
 
-- `src/backend/agentchat/evals/rag_eval/`
-- `src/backend/agentchat/evals/contract_review_eval/`
+- `tools/evals/zuno/rag_eval/`
+- `tools/evals/zuno/contract_review_eval/`
 
 关键文档：
 
@@ -290,6 +309,7 @@ First-time readers start here:
 - `python tools/scripts/verify_public_demo_runtime.py` for the low-cost contract-review end-to-end smoke path
 - `python tools/scripts/verify_public_demo_strict_grounding.py` for the low-cost strict-grounded conservative-failure smoke path
 - [Docker Runtime Guide](./infra/docker/README.md)
+- [Database Migration Guide](./infra/db/README.md)
 - [Launchers Guide](./tools/launchers/windows/README.md)
 
 Maintainer-only release workflow:
@@ -304,7 +324,7 @@ Maintainer-only release workflow:
 前端：
 
 ```powershell
-cd src\frontend
+cd apps\web
 npm run lint
 npm run build
 ```

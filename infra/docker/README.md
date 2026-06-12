@@ -105,7 +105,7 @@ docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose
 dev override 会挂载：
 
 - `src/backend` 到 `/app`
-- `src/frontend` 到 `/app`
+- `apps/web` 到 `/app`
 - `tools/cli` 到 `/app/cli_tools`
 - `tools/scripts` 到 `/app/scripts`
 

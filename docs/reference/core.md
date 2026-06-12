@@ -105,10 +105,10 @@ Skill 是可复用的方法与执行模板。当前实现遵循两条规则：
 
 ## 相关目录
 
-- `src/backend/agentchat/services/workspace/`
-- `src/backend/agentchat/core/agents/`
+- `src/backend/zuno/legacy/agentchat/services/workspace/`
+- `src/backend/zuno/legacy/agentchat/core/agents/`
 - `src/backend/agentchat/api/services/`
-- `src/frontend/src/pages/workspace/`
+- `apps/web/src/pages/workspace/`
 
 ## 延伸阅读
 

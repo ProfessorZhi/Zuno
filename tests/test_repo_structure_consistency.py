@@ -9,6 +9,7 @@ def test_phase2_required_paths_exist() -> None:
         "apps/desktop",
         "docs/architecture",
         "docs/development",
+        "infra/db",
         "infra/docker",
         "src/backend",
         "src/backend/zuno/api",
@@ -16,9 +17,11 @@ def test_phase2_required_paths_exist() -> None:
         "src/backend/zuno/database",
         "src/backend/zuno/database/dao",
         "src/backend/zuno/services",
-        "src/frontend",
+        "apps/web",
         "tests",
+        "tests/compat",
         "tools",
+        "tools/evals/zuno",
         "tools/launchers/windows",
     ]
 

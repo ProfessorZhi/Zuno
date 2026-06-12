@@ -120,7 +120,7 @@ Zuno/
 
 - `src/backend/`
   后端主源码与运行时主线
-- `src/frontend/`
+- `apps/web/`
   Web 前端源码
 - `apps/desktop/`
   桌面应用壳与桌面端入口

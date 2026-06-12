@@ -11,7 +11,7 @@
 - [reference/](./reference/)
   - 面向读者的稳定参考资料
 - [prototypes/](./prototypes/)
-  - 原型和实验性材料
+  - 原型、实验材料和历史档案区
 - [assets/](./assets/)
   - 文档配图和资源文件
 
@@ -39,4 +39,4 @@ Maintainer entrypoints:
 - 当前主入口以 `docs/architecture/` 为准。
 - 如果你是第一次读项目，优先走上面的 `Reading Order`，不要先跳进发布分组、staging 计划或本地工作流材料。
 - 本地 Agent 工作流入口在仓库根目录的 `.agentmd` 和 `.agent/`，不会作为公开文档的一部分提交到 GitHub。
-- 历史 handoff / workflow 材料属于本地内容，不属于公开文档入口。
+- 历史 handoff / workflow 材料已经降级到 `docs/prototypes/`，不属于公开文档主入口。

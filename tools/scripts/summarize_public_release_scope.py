@@ -34,13 +34,13 @@ GROUP_RULES: list[tuple[str, tuple[str, ...]]] = [
             "src/backend/zuno/legacy/agentchat/services/workspace/simple_agent.py",
             "src/backend/zuno/legacy/agentchat/services/embedding/",
             "src/backend/zuno/legacy/agentchat/services/llm/",
-            "src/backend/agentchat/evals/contract_review_eval/",
+            "tools/evals/zuno/contract_review_eval/",
         ),
     ),
     (
         "backend_rag_graphrag_eval",
         (
-            "src/backend/agentchat/evals/rag_eval/",
+            "tools/evals/zuno/rag_eval/",
             "src/backend/zuno/legacy/agentchat/services/graphrag/",
             "src/backend/zuno/legacy/agentchat/services/pipeline/manager.py",
             "src/backend/zuno/legacy/agentchat/services/retrieval/",
@@ -63,7 +63,7 @@ GROUP_RULES: list[tuple[str, tuple[str, ...]]] = [
     (
         "frontend_workspace",
         (
-            "src/frontend/",
+            "apps/web/",
             "package.json",
         ),
     ),
@@ -72,7 +72,7 @@ GROUP_RULES: list[tuple[str, tuple[str, ...]]] = [
         (
             ".gitignore",
             "tests/",
-            "src/backend/agentchat/test/",
+            "tests/compat/",
             "tools/scripts/audit_public_release.py",
             "tools/scripts/preview_public_release_group.py",
             "tools/scripts/preview_public_release_stage_dry_run.py",
@@ -86,7 +86,7 @@ GROUP_RULES: list[tuple[str, tuple[str, ...]]] = [
 
 EXCLUDED_LOCAL_PREFIXES = [
     "docs/superpowers/",
-    "src/frontend/AGENTS.md",
+    "apps/web/AGENTS.md",
 ]
 
 

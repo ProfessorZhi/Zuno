@@ -41,7 +41,7 @@ These files now do four public-facing jobs cleanly:
 - historical local-only workflow inventory such as `superpowers-legacy-migration-inventory.md` is not part of the public docs entry surface
 - excluded local content remains:
   - `docs/superpowers/`
-  - `src/frontend/AGENTS.md`
+  - `apps/web/AGENTS.md`
   - `.agent/`
   - `.agentmd`
   - `.local/`

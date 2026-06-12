@@ -42,7 +42,7 @@ Before moving past this group, confirm:
 
 1. the cached diff contains only the docs-and-readme paths above
 2. `docs/superpowers/` is not staged
-3. `src/frontend/AGENTS.md` is not staged
+3. `apps/web/AGENTS.md` is not staged
 4. public docs do not link to ignored eval-run directories
 5. the staged README still reads like a public-facing project entrypoint, not an internal handoff note
 
