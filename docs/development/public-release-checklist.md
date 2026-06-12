@@ -21,12 +21,12 @@ Make sure none of the following are staged:
 - `.agentmd`
 - `.local/`
 - `docs/superpowers/`
-- `src/frontend/AGENTS.md`
+- `apps/web/AGENTS.md`
 - `infra/docker/docker_config.local.yaml`
-- `src/backend/agentchat/config.local.yaml`
+- `.local/config/agentchat/config.local.yaml`
 - secrets, tokens, keys, or personal credentials
-- `src/backend/agentchat/evals/rag_eval/runs/`
-- `src/backend/agentchat/evals/rag_eval/corpus/`
+- `.local/evals/agentchat/rag_eval/runs/`
+- `.local/evals/agentchat/rag_eval/corpus/`
 
 ## 3. Confirm Public Docs Use Public Evidence
 
@@ -35,7 +35,7 @@ Public docs must point to committed evidence pages, not ignored local run output
 Check that:
 
 - README links to `docs/development/public-demo-evidence.md`
-- demo docs do not link to `src/backend/agentchat/evals/rag_eval/runs/`
+- demo docs do not link to `.local/evals/agentchat/rag_eval/runs/`
 - public explanations are written for external readers, not local operator memory
 
 ## 4. Confirm The Working Tree Before Staging

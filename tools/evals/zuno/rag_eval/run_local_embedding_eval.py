@@ -11,13 +11,14 @@ from typing import Any
 
 from sqlalchemy.exc import OperationalError
 
-BACKEND_ROOT = Path(__file__).resolve().parents[3]
+BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from agentchat.api.services.llm import LLMService
 from agentchat.database.dao.llm import LLMDao
 from agentchat.database.models.user import SystemUser
+from agentchat.evals.rag_eval.paths import default_runs_root
 from agentchat.settings import app_settings, initialize_app_settings
 
 
@@ -510,7 +511,7 @@ def main() -> None:
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return
 
-    output_root = args.output_root or Path("src/backend/agentchat/evals/rag_eval/runs") / f"local-embedding-{time.strftime('%Y%m%d-%H%M%S')}"
+    output_root = args.output_root or default_runs_root() / f"local-embedding-{time.strftime('%Y%m%d-%H%M%S')}"
     if args.validate_only:
         result = asyncio.run(
             preflight_local_embedding_eval(

@@ -30,7 +30,7 @@ def test_phase6_bundle_scope_groups_cover_expected_boundaries() -> None:
 
     assert list(module.PHASE6_BUNDLE_GROUPS) == expected_groups
     assert (
-        "src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py"
+        "tools/evals/zuno/rag_eval/run_local_embedding_eval.py"
         in module.PHASE6_BUNDLE_GROUPS["logical_phase6_delta"]
     )
     assert (
@@ -38,7 +38,7 @@ def test_phase6_bundle_scope_groups_cover_expected_boundaries() -> None:
         in module.PHASE6_BUNDLE_GROUPS["runtime_foundations"]
     )
     assert (
-        "src/backend/agentchat/test/test_contract_eval_runner.py"
+        "tests/compat/test_contract_eval_runner.py"
         in module.PHASE6_BUNDLE_GROUPS["verification_tests"]
     )
 

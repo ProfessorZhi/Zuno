@@ -5,6 +5,8 @@ import json
 import shutil
 from pathlib import Path
 
+from agentchat.evals.rag_eval.paths import default_corpus_root
+
 
 DEFAULT_INCLUDE_NAMES = {
     "Python 关键字.md",
@@ -77,7 +79,7 @@ def prepare_corpus(source: Path, output_dir: Path, limit_files: int | None = Non
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare local Python notes for Zuno RAG eval.")
     parser.add_argument("--source", required=True, type=Path)
-    parser.add_argument("--output-dir", default=Path("src/backend/agentchat/evals/rag_eval/corpus/python_notes"), type=Path)
+    parser.add_argument("--output-dir", default=default_corpus_root() / "python_notes", type=Path)
     parser.add_argument("--limit-files", type=int, default=40)
     args = parser.parse_args()
 

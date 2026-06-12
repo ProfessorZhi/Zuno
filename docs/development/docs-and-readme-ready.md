@@ -11,7 +11,7 @@ The group is considered ready for real staging when all of the following are tru
 3. `audit_public_release.py` passes
 4. excluded local paths do not appear:
    - `docs/superpowers/`
-   - `src/frontend/AGENTS.md`
+   - `apps/web/AGENTS.md`
 
 ## Single Command
 

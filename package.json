@@ -1,14 +1,22 @@
 {
   "name": "zuno",
+  "private": true,
   "version": "1.0.0",
   "description": "Local-first agent workspace with LangGraph, RAG, GraphRAG, MCP, knowledge bases, and desktop runtime.",
-  "main": "index.js",
+  "workspaces": [
+    "apps/web",
+    "apps/desktop"
+  ],
   "directories": {
     "doc": "docs",
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "frontend:dev": "npm run dev -w agentchat-frontend",
+    "frontend:build": "npm run build -w agentchat-frontend",
+    "frontend:lint": "npm run lint -w agentchat-frontend",
+    "desktop:dev": "npm run dev -w zuno-desktop",
+    "desktop:start": "npm run start -w zuno-desktop"
   },
   "repository": {
     "type": "git",

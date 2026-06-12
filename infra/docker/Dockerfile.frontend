@@ -5,10 +5,10 @@ ARG NPM_REGISTRY=https://registry.npmjs.org/
 WORKDIR /app
 RUN npm config set registry ${NPM_REGISTRY}
 
-COPY src/frontend/package*.json ./
+COPY apps/web/package*.json ./
 RUN npm ci --registry=${NPM_REGISTRY}
 
-COPY src/frontend/ .
+COPY apps/web/ .
 
 FROM frontend-base AS frontend-dev
 

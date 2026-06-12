@@ -29,15 +29,15 @@ mcp_servers/
 **启动方式：**
 ```bash
 # 方式1：使用 uvicorn 启动 (推荐)
-cd src/backend/agentchat/mcp_servers
+cd src/backend/zuno/legacy/agentchat/mcp_servers
 uvicorn lark_mcp.main:app --host 0.0.0.0 --port 8000
 
 # 方式2：直接运行（stdio 模式）
-cd src/backend/agentchat/mcp_servers/lark_mcp
+cd src/backend/zuno/legacy/agentchat/mcp_servers/lark_mcp
 python main.py --transport stdio
 
 # 方式3：SSE 模式
-cd src/backend/agentchat/mcp_servers/lark_mcp
+cd src/backend/zuno/legacy/agentchat/mcp_servers/lark_mcp
 python main.py --transport sse
 ```
 
@@ -58,7 +58,7 @@ weather_endpoint=your_weather_api_endpoint
 
 **启动方式：**
 ```bash
-cd src/backend/agentchat/mcp_servers/weather
+cd src/backend/zuno/legacy/agentchat/mcp_servers/weather
 python mcp_weather.py
 ```
 
@@ -72,7 +72,7 @@ python mcp_weather.py
 
 **启动方式：**
 ```bash
-cd src/backend/agentchat/mcp_servers/arxiv
+cd src/backend/zuno/legacy/agentchat/mcp_servers/arxiv
 python mcp_arxiv.py
 ```
 
@@ -93,7 +93,7 @@ pip install requests
 
 1. **进入服务器目录**
    ```bash
-   cd src/backend/agentchat/mcp_servers
+   cd src/backend/zuno/legacy/agentchat/mcp_servers
    ```
 
 2. **选择要启动的服务器**

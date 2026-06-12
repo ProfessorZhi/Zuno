@@ -41,9 +41,9 @@ The demo should prove three things:
 If you already have a local OpenAI-compatible embedding endpoint:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --local-embedding-model-name zuno-local-embedding-dev `
   --local-embedding-base-url http://127.0.0.1:11434/v1 `
   --validate-only
@@ -52,7 +52,7 @@ python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
 If you do not already have one, start the built-in dev server first:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/local_embedding_server.py `
+python tools/evals/zuno/rag_eval/local_embedding_server.py `
   --host 127.0.0.1 `
   --port 11434 `
   --model-name zuno-local-embedding-dev
@@ -61,11 +61,11 @@ python src/backend/agentchat/evals/rag_eval/local_embedding_server.py `
 ### Step 2: Run the generic graph-relation compare matrix
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_stackless_compare_matrix.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/mixed_tuning_v2/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/mixed_tuning_v2/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --sample-limit 10 `
-  --output-root src/backend/agentchat/evals/rag_eval/runs/public-demo-graph-relation
+  --output-root .local/evals/agentchat/rag_eval/runs/public-demo-graph-relation
 ```
 
 Expected proof pattern:
@@ -80,11 +80,11 @@ Reference evidence already in repo:
 ### Step 3: Run the contract-review domain demo
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_stackless_compare_matrix.py `
-  --manifest src/backend/agentchat/evals/rag_eval/runs/contract_review_scale_corpus/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/contract_review_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/contract_review_scale_corpus/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl `
   --domain-pack-id contract_review `
-  --output-root src/backend/agentchat/evals/rag_eval/runs/public-demo-contract-review
+  --output-root .local/evals/agentchat/rag_eval/runs/public-demo-contract-review
 ```
 
 Expected proof pattern:

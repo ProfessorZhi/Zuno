@@ -20,12 +20,12 @@ The following content is local-only and must not be published:
 - `.agentmd`
 - `.local/`
 - `docs/superpowers/`
-- `src/frontend/AGENTS.md`
+- `apps/web/AGENTS.md`
 - local config overrides such as `infra/docker/docker_config.local.yaml`
-- local backend overrides such as `src/backend/agentchat/config.local.yaml`
+- local backend overrides such as `.local/config/agentchat/config.local.yaml`
 - secrets, tokens, keys, and personal credentials
-- one-off evaluation run outputs under `src/backend/agentchat/evals/rag_eval/runs/`
-- large local corpora or scratch corpora under `src/backend/agentchat/evals/rag_eval/corpus/`
+- one-off evaluation run outputs under `.local/evals/agentchat/rag_eval/runs/`
+- large local corpora or scratch corpora under `.local/evals/agentchat/rag_eval/corpus/`
 - Playwright, pytest, and desktop runtime leftovers
 
 ## Release Rule

@@ -40,7 +40,10 @@ def resolve_app_config_path(file_path: str | None = None, *, writable: bool = Fa
         return Path(env_path)
 
     package_root = Path(__file__).resolve().parent
+    repo_root = package_root.parents[2]
     candidates = [
+        repo_root / ".local" / "config" / "agentchat" / "config.local.yaml",
+        repo_root / ".local" / "config" / "agentchat" / "config.yaml",
         package_root / "config.local.yaml",
         package_root / "config.yaml",
         package_root / "config.example.yaml",
@@ -59,6 +62,7 @@ def resolve_app_config_path(file_path: str | None = None, *, writable: bool = Fa
     ]
     if writable:
         writable_candidates = [
+            repo_root / ".local" / "config" / "agentchat" / "config.local.yaml",
             package_root / "config.local.yaml",
             Path("zuno/config.local.yaml"),
             Path("/app/zuno/config.local.yaml"),

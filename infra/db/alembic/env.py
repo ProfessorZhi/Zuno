@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from logging.config import fileConfig
-from pathlib import Path
 
 import yaml
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from agentchat.database.metadata import metadata
+from zuno.settings import resolve_app_config_path
 
 config = context.config
 
@@ -16,7 +16,7 @@ if config.config_file_name is not None:
 
 
 def _load_database_url() -> str:
-    config_path = Path(__file__).resolve().parents[1] / "agentchat" / "config.yaml"
+    config_path = resolve_app_config_path()
     with config_path.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
     database = data.get("database") or {}

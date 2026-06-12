@@ -17,7 +17,7 @@ python -m agentchat.main
 
 ### 2. 检查前端开发服务器
 ```bash
-cd src/frontend
+cd apps/web
 npm run dev
 ```
 

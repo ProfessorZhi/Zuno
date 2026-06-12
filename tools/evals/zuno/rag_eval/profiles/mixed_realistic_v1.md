@@ -34,18 +34,18 @@
 ## 典型执行
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/ingest_prepared_corpus.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/mixed_realistic_v1/manifest.json `
+python tools/evals/zuno/rag_eval/ingest_prepared_corpus.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/mixed_realistic_v1/manifest.json `
   --knowledge-name ZunoMixedRealisticV1 `
-  --output src/backend/agentchat/evals/rag_eval/runs/mixed_realistic_v1_ingest.json
+  --output .local/evals/agentchat/rag_eval/runs/mixed_realistic_v1_ingest.json
 ```
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_eval.py `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_realistic_v1_eval.jsonl `
+python tools/evals/zuno/rag_eval/run_eval.py `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl `
   --knowledge-id <knowledge_id> `
   --profiles baseline_rag,rag_rerank_recall_first,rag_graph_chunk_backed `
-  --output-dir src/backend/agentchat/evals/rag_eval/runs/mixed_realistic_v1_first_pass `
+  --output-dir .local/evals/agentchat/rag_eval/runs/mixed_realistic_v1_first_pass `
   --trace-langsmith
 ```
 

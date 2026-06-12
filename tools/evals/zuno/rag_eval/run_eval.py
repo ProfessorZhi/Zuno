@@ -10,11 +10,12 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Awaitable, Callable
 
-BACKEND_ROOT = Path(__file__).resolve().parents[3]
+BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from agentchat.evals.rag_eval.metrics import compute_metrics
+from agentchat.evals.rag_eval.paths import default_runs_root
 from agentchat.services.rag.handler import RagHandler
 from agentchat.settings import initialize_app_settings
 from agentchat.utils.runtime_observability import configure_langsmith
@@ -1323,7 +1324,7 @@ def main() -> None:
     parser.add_argument("--judge-mode", choices=["heuristic", "llm"], default="heuristic")
     args = parser.parse_args()
 
-    output_dir = args.output_dir or Path("src/backend/agentchat/evals/rag_eval/runs") / time.strftime("%Y%m%d-%H%M%S")
+    output_dir = args.output_dir or default_runs_root() / time.strftime("%Y%m%d-%H%M%S")
     report = asyncio.run(
         run_eval(
             dataset_path=args.dataset,

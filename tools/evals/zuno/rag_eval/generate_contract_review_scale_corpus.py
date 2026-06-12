@@ -102,7 +102,7 @@ def build_scaled_corpus(*, output_dir: Path, copies_per_file: int) -> dict:
 
     scaled_manifest = {
         "source": "contract_review_scale",
-        "dataset": "src/backend/agentchat/evals/rag_eval/datasets/contract_review_graph_relation_small.jsonl",
+        "dataset": "tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl",
         "source_root": str(output_files_dir),
         "referenced_file_count": len(generated_files),
         "missing_file_count": 0,

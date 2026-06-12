@@ -15,7 +15,7 @@ exit /b 1
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "PROJECT_ROOT=%%~fI"
 set "DOCKER_DIR=%PROJECT_ROOT%\infra\docker"
-set "FRONTEND_DIR=%PROJECT_ROOT%\src\frontend"
+set "FRONTEND_DIR=%PROJECT_ROOT%\apps\web"
 set "DESKTOP_DIR=%PROJECT_ROOT%\apps\desktop"
 set "DESKTOP_ELECTRON_EXE=%DESKTOP_DIR%\node_modules\electron\dist\electron.exe"
 set "LAUNCHER_DIR=%PROJECT_ROOT%\launchers"

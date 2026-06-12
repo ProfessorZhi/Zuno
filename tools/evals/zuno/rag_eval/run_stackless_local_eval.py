@@ -14,13 +14,14 @@ from typing import Any
 
 import yaml
 
-BACKEND_ROOT = Path(__file__).resolve().parents[3]
+BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from agentchat.api.services.knowledge import DEFAULT_KNOWLEDGE_CONFIG
 from agentchat.evals.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
 from agentchat.evals.rag_eval.local_embedding_server import run_dev_server
+from agentchat.evals.rag_eval.paths import default_runs_root
 from agentchat.evals.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
 from agentchat.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
 from agentchat.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
@@ -468,7 +469,7 @@ def main() -> None:
     parser.add_argument("--overlap-override", type=int, default=None)
     args = parser.parse_args()
 
-    output_root = args.output_root or Path("src/backend/agentchat/evals/rag_eval/runs") / f"stackless-local-{time.strftime('%Y%m%d-%H%M%S')}"
+    output_root = args.output_root or default_runs_root() / f"stackless-local-{time.strftime('%Y%m%d-%H%M%S')}"
     result = asyncio.run(
         run_stackless_local_eval(
             manifest_path=args.manifest,

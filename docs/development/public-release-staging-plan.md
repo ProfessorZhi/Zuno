@@ -59,7 +59,7 @@ Recommended group order:
 
 8. `excluded_local_only`
    - internal handoff or workflow-facing materials
-   - examples: `docs/superpowers/`, `src/frontend/AGENTS.md`
+   - examples: `docs/superpowers/`, `apps/web/AGENTS.md`
 
 ## Recommended Commit Boundaries
 
@@ -107,7 +107,7 @@ Do not stage `manual_review` files by default.
 Files that are workflow-facing or handoff-facing should stay local instead of entering any public staging group. Current examples:
 
 - `docs/superpowers/`
-- `src/frontend/AGENTS.md`
+- `apps/web/AGENTS.md`
 
 ## Suggested Command
 

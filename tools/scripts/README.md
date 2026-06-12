@@ -5,6 +5,7 @@ This folder contains local helper scripts that are useful for development and ma
 ## Main Scripts
 
 - `start.py`: legacy local dev starter for backend/frontend.
+- `clean_workspace.py`: removes safe local cache and temporary directories from the repo root.
 - `run-full-e2e-smoke.ps1`: browser smoke-test helper.
 - `zuno-*.bat`: legacy forwarders that now call the stable scripts in `tools/launchers/windows/`.
 
@@ -23,6 +24,13 @@ For normal Windows usage, prefer the stable launchers:
 ```powershell
 .\tools\launchers\windows\Zuno-Web-Start.cmd
 .\tools\launchers\windows\Zuno-Desktop-Start.cmd
+```
+
+## Local Cleanup
+
+```powershell
+python tools/scripts/clean_workspace.py --dry-run
+python tools/scripts/clean_workspace.py
 ```
 
 ## Smoke Test

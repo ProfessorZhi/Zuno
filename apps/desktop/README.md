@@ -5,7 +5,7 @@ This directory contains the Electron shell for Zuno.
 ## Development
 
 1. Start the backend separately. Default API base URL: `http://127.0.0.1:7860`
-2. Start the frontend dev server from `src/frontend`:
+2. Start the frontend dev server from `apps/web`:
 
 ```bash
 npm run dev
@@ -25,7 +25,7 @@ npm run dev
 
 ## Production-style Run
 
-1. Build the frontend in `src/frontend`:
+1. Build the frontend in `apps/web`:
 
 ```bash
 npm run build

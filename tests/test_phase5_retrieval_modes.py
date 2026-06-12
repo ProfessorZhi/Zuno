@@ -108,7 +108,7 @@ def test_domain_graph_runner_preserves_knowledge_default_mode_contract():
 
 def test_enhanced_orchestrator_contract_keeps_graph_path_and_trace_metadata():
     orchestrator = (BACKEND_ROOT / "zuno/services/retrieval/orchestrator.py").read_text(encoding="utf-8")
-    frontend_utils = (REPO_ROOT / "src/frontend/src/utils/retrieval.ts").read_text(encoding="utf-8")
+    frontend_utils = (REPO_ROOT / "apps/web/src/utils/retrieval.ts").read_text(encoding="utf-8")
 
     assert 'if "graph" in plan.enabled_retrievers:' in orchestrator
     assert 'retriever_runs.append({"source": "graph", "result_count": len(docs), "mode": mode})' in orchestrator

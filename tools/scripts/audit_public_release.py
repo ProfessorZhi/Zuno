@@ -36,11 +36,11 @@ SUSPICIOUS_STATUS_PREFIXES = [
     ".agentmd",
     ".local/",
     "docs/superpowers/",
-    "src/frontend/AGENTS.md",
+    "apps/web/AGENTS.md",
     "infra/docker/docker_config.local.yaml",
-    "src/backend/agentchat/config.local.yaml",
-    "src/backend/agentchat/evals/rag_eval/runs/",
-    "src/backend/agentchat/evals/rag_eval/corpus/",
+    ".local/config/agentchat/",
+    ".local/evals/agentchat/rag_eval/runs/",
+    ".local/evals/agentchat/rag_eval/corpus/",
 ]
 
 

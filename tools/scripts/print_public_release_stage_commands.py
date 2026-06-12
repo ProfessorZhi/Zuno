@@ -11,7 +11,7 @@ STAGE_GROUPS = [
     (
         "tests_and_release_guards",
         [
-            "git add .gitignore tests/ src/backend/agentchat/test/",
+            "git add .gitignore tests/compat/ tests/",
             "git add tools/scripts/audit_public_release.py tools/scripts/print_public_release_commit_order.py tools/scripts/print_public_release_stage_commands.py tools/scripts/summarize_public_release_scope.py",
         ],
     ),
@@ -24,13 +24,13 @@ STAGE_GROUPS = [
     (
         "backend_domain_runtime",
         [
-            "git add src/backend/zuno/legacy/agentchat/core/ src/backend/zuno/legacy/agentchat/domain_packs/ src/backend/zuno/legacy/agentchat/services/domain_pack/ src/backend/zuno/legacy/agentchat/services/runtime_registry.py src/backend/zuno/legacy/agentchat/services/workspace/simple_agent.py src/backend/zuno/legacy/agentchat/services/embedding/ src/backend/zuno/legacy/agentchat/services/llm/ src/backend/agentchat/evals/contract_review_eval/",
+            "git add src/backend/zuno/legacy/agentchat/core/ src/backend/zuno/legacy/agentchat/domain_packs/ src/backend/zuno/legacy/agentchat/services/domain_pack/ src/backend/zuno/legacy/agentchat/services/runtime_registry.py src/backend/zuno/legacy/agentchat/services/workspace/simple_agent.py src/backend/zuno/legacy/agentchat/services/embedding/ src/backend/zuno/legacy/agentchat/services/llm/ tools/evals/zuno/contract_review_eval/",
         ],
     ),
     (
         "backend_rag_graphrag_eval",
         [
-            "git add src/backend/agentchat/evals/rag_eval/ src/backend/zuno/legacy/agentchat/services/graphrag/ src/backend/zuno/legacy/agentchat/services/pipeline/manager.py src/backend/zuno/legacy/agentchat/services/retrieval/ src/backend/zuno/legacy/agentchat/services/rag/",
+            "git add tools/evals/zuno/rag_eval/ src/backend/zuno/legacy/agentchat/services/graphrag/ src/backend/zuno/legacy/agentchat/services/pipeline/manager.py src/backend/zuno/legacy/agentchat/services/retrieval/ src/backend/zuno/legacy/agentchat/services/rag/",
         ],
     ),
     (
@@ -42,14 +42,14 @@ STAGE_GROUPS = [
     (
         "frontend_workspace",
         [
-            "git add package.json src/frontend/src/pages/workspace/ src/frontend/src/router/index.ts src/frontend/src/utils/settings-preferences.ts",
+            "git add package.json apps/web/src/pages/workspace/ apps/web/src/router/index.ts apps/web/src/utils/settings-preferences.ts",
         ],
     ),
 ]
 
 EXCLUDED_LOCAL_ONLY = [
     "docs/superpowers/",
-    "src/frontend/AGENTS.md",
+    "apps/web/AGENTS.md",
 ]
 
 

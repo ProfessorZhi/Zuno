@@ -1,11 +1,17 @@
 from pathlib import Path
 import uuid
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "src" / "backend"))
+
+from agentchat.evals.rag_eval.paths import default_runs_root
 
 
 def test_stackless_compare_matrix_build_dataset_coverage_warns_on_tiny_slice():
     from agentchat.evals.rag_eval.run_stackless_compare_matrix import _build_dataset_coverage
 
-    temp_dir = Path("src/backend/agentchat/evals/rag_eval/runs") / f"tmp-test-{uuid.uuid4().hex}"
+    temp_dir = default_runs_root() / f"tmp-test-{uuid.uuid4().hex}"
     temp_dir.mkdir(parents=True, exist_ok=True)
     dataset = temp_dir / "dataset.jsonl"
     dataset.write_text(
@@ -76,7 +82,7 @@ def test_stackless_compare_matrix_write_markdown():
             }
         },
     }
-    output_dir = Path("src/backend/agentchat/evals/rag_eval/runs") / f"tmp-test-{uuid.uuid4().hex}"
+    output_dir = default_runs_root() / f"tmp-test-{uuid.uuid4().hex}"
     output_dir.mkdir(parents=True, exist_ok=True)
     output = output_dir / "summary.md"
     write_markdown(output, summary)
@@ -91,7 +97,7 @@ def test_stackless_compare_matrix_write_markdown():
 
 
 def test_stackless_compare_matrix_help_lists_threshold_args():
-    target = Path("src/backend/agentchat/evals/rag_eval/run_stackless_compare_matrix.py")
+    target = Path("tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py")
     content = target.read_text(encoding="utf-8")
     assert "--local-compare-rerank-threshold-override" in content
     assert "--graph-compare-rerank-threshold-override" in content

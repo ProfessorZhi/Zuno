@@ -1,5 +1,11 @@
 import asyncio
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "src" / "backend"))
+
+from agentchat.evals.rag_eval.paths import default_runs_root
 
 
 def test_is_probably_local_base_url():
@@ -389,7 +395,7 @@ def test_run_local_embedding_eval_falls_back_to_stackless_when_db_is_unavailable
             knowledge_name="ZunoLocalEmbeddingEval",
             text_embedding_model_id=None,
             profile_set="local_compare",
-            output_root=Path("src/backend/agentchat/evals/rag_eval/runs/test-local-embedding-fallback"),
+            output_root=default_runs_root() / "test-local-embedding-fallback",
             direct_local_embedding_model_name="zuno-local-embedding-dev",
             direct_local_embedding_base_url="http://127.0.0.1:11434/v1",
         )

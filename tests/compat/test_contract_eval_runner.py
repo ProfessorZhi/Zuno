@@ -5,8 +5,9 @@ from pathlib import Path
 
 
 def test_contract_eval_runner_offline():
-    script = Path(__file__).resolve().parents[1] / "evals" / "contract_review_eval" / "run_contract_eval.py"
-    output_dir = Path(__file__).resolve().parents[1] / "evals" / "contract_review_eval" / ".tmp_test_reports"
+    repo_root = Path(__file__).resolve().parents[2]
+    script = repo_root / "tools" / "evals" / "zuno" / "contract_review_eval" / "run_contract_eval.py"
+    output_dir = repo_root / ".local" / "evals" / "agentchat" / "contract_review_eval" / ".tmp_test_reports"
     if output_dir.exists():
         for path in output_dir.glob("*"):
             path.unlink()
@@ -25,7 +26,8 @@ def test_contract_eval_runner_offline():
 
 
 def test_contract_eval_runner_demo_uses_real_extraction():
-    script = Path(__file__).resolve().parents[1] / "evals" / "contract_review_eval" / "run_contract_eval.py"
+    repo_root = Path(__file__).resolve().parents[2]
+    script = repo_root / "tools" / "evals" / "zuno" / "contract_review_eval" / "run_contract_eval.py"
     completed = subprocess.run(
         [sys.executable, str(script), "--profile", "demo"],
         check=True,
@@ -42,7 +44,8 @@ def test_contract_eval_runner_demo_uses_real_extraction():
 
 
 def test_contract_eval_runner_can_compare_profiles():
-    script = Path(__file__).resolve().parents[1] / "evals" / "contract_review_eval" / "run_contract_eval.py"
+    repo_root = Path(__file__).resolve().parents[2]
+    script = repo_root / "tools" / "evals" / "zuno" / "contract_review_eval" / "run_contract_eval.py"
     completed = subprocess.run(
         [sys.executable, str(script), "--profiles", "dev_offline,dev_local,demo"],
         check=True,

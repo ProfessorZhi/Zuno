@@ -10,7 +10,7 @@ This folder contains the local RAG / GraphRAG evaluation harness used to compare
 - `ingest_prepared_corpus.py`: imports a prepared corpus into a Zuno knowledge base.
 - `run_eval.py`: runs retrieval profiles and writes metrics/reports.
 
-Generated corpora and eval runs are ignored by git:
+Generated corpora and eval runs are ignored by git under `.local/evals/agentchat/rag_eval/`:
 
 - `corpus/`
 - `runs/`
@@ -34,22 +34,22 @@ Optional answer-layer metrics can be added on top:
 ## Typical Local Flow
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/prepare_python_notes_corpus.py `
+python tools/evals/zuno/rag_eval/prepare_python_notes_corpus.py `
   --source "F:\Onboard anything\02_Notes_笔记\2llm_note\Python" `
-  --output-dir src/backend/agentchat/evals/rag_eval/corpus/python_notes `
+  --output-dir .local/evals/agentchat/rag_eval/corpus/python_notes `
   --limit-files 40
 
-python src/backend/agentchat/evals/rag_eval/ingest_prepared_corpus.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
+python tools/evals/zuno/rag_eval/ingest_prepared_corpus.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
   --knowledge-name ZunoPythonEval `
   --text-embedding-model-id <local_embedding_llm_id> `
-  --output src/backend/agentchat/evals/rag_eval/runs/ingest-result.json
+  --output .local/evals/agentchat/rag_eval/runs/ingest-result.json
 
-python src/backend/agentchat/evals/rag_eval/run_eval.py `
-  --dataset src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl `
+python tools/evals/zuno/rag_eval/run_eval.py `
+  --dataset tools/evals/zuno/rag_eval/python_notes_eval.jsonl `
   --knowledge-id <knowledge_id> `
   --profile-set local_compare `
-  --output-dir src/backend/agentchat/evals/rag_eval/runs/<run_id> `
+  --output-dir .local/evals/agentchat/rag_eval/runs/<run_id> `
   --trace-langsmith
 ```
 
@@ -62,11 +62,11 @@ python src/backend/agentchat/evals/rag_eval/run_eval.py `
 If you specifically want to compare GraphRAG hop settings, run:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_eval.py `
-  --dataset src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl `
+python tools/evals/zuno/rag_eval/run_eval.py `
+  --dataset tools/evals/zuno/rag_eval/python_notes_eval.jsonl `
   --knowledge-id <knowledge_id> `
   --profile-set graph_compare `
-  --output-dir src/backend/agentchat/evals/rag_eval/runs/<run_id>
+  --output-dir .local/evals/agentchat/rag_eval/runs/<run_id>
 ```
 
 LangSmith is used for trace replay and profile comparison. The numeric metrics are computed locally from `retrieval_results.jsonl`, `answers.jsonl`, `judge_results.jsonl`, and `metrics.json`.
@@ -76,9 +76,9 @@ LangSmith is used for trace replay and profile comparison. The numeric metrics a
 If you already have a locally running embedding model registered in Zuno as an `Embedding` LLM entry, you can use the end-to-end launcher:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --knowledge-name ZunoLocalEmbeddingEval `
   --text-embedding-model-id <local_embedding_llm_id> `
   --profile-set local_compare
@@ -94,9 +94,9 @@ This launcher will:
 If you do not remember the model id, list candidate models first:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --list-embedding-models `
   --local-only
 ```
@@ -104,9 +104,9 @@ python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
 If your local embedding model is already registered in Zuno and its `base_url` points at `localhost`, `127.0.0.1`, or `host.docker.internal`, you can also let the launcher auto-pick it:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --auto-pick-local-embedding `
   --validate-only
 ```
@@ -114,9 +114,9 @@ python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
 If the model table is temporarily unavailable or you intentionally want to use the currently active `multi_models.embedding` config, you can fall back to the active config slot directly:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --use-active-config-embedding `
   --validate-only
 ```
@@ -124,9 +124,9 @@ python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
 If you have a local OpenAI-compatible embedding endpoint but have not registered it in Zuno yet, you can now pass it directly and let the launcher auto-register a temporary `Embedding` entry:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --local-embedding-model-name bge-m3 `
   --local-embedding-base-url http://127.0.0.1:11434/v1 `
   --validate-only
@@ -141,7 +141,7 @@ That path is intentionally strict:
 If you do not already have a local embedding service running, the repo now includes a tiny OpenAI-compatible dev server you can start locally:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/local_embedding_server.py `
+python tools/evals/zuno/rag_eval/local_embedding_server.py `
   --host 127.0.0.1 `
   --port 11434 `
   --model-name zuno-local-embedding-dev
@@ -150,9 +150,9 @@ python src/backend/agentchat/evals/rag_eval/local_embedding_server.py `
 Then preflight the local-eval chain against that server:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --local-embedding-model-name zuno-local-embedding-dev `
   --local-embedding-base-url http://127.0.0.1:11434/v1 `
   --validate-only
@@ -165,15 +165,15 @@ In `--validate-only` mode, Zuno now probes that local endpoint directly and does
 If you want to compare `baseline_rag`, `rag_rerank`, and `rag_graph_chunk_backed` without relying on database-backed knowledge metadata, use the stackless launcher:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_stackless_local_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl `
+python tools/evals/zuno/rag_eval/run_stackless_local_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/python_notes_eval.jsonl `
   --profile-set local_compare `
   --sample-limit 1 `
   --spawn-dev-embedding-server `
   --spawn-dev-rerank-server `
   --rerank-score-threshold-override 0.0 `
-  --output-root src/backend/agentchat/evals/rag_eval/runs/stackless-local-compare
+  --output-root .local/evals/agentchat/rag_eval/runs/stackless-local-compare
 ```
 
 This mode:
@@ -190,12 +190,12 @@ Use `--profiles baseline_rag` or `--profiles rag_graph_chunk_backed` when you wa
 If you want one command that produces both `local_compare` and `graph_compare` summary artifacts, use:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_stackless_compare_matrix.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl `
+python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/python_notes_eval.jsonl `
   --sample-limit 3 `
   --local-compare-rerank-threshold-override 0.0 `
-  --output-root src/backend/agentchat/evals/rag_eval/runs/stackless-compare-matrix
+  --output-root .local/evals/agentchat/rag_eval/runs/stackless-compare-matrix
 ```
 
 This matrix runner writes:
@@ -209,21 +209,21 @@ This matrix runner writes:
 
 The repo now includes a dedicated contract-review corpus and graph-relation dataset:
 
-- `src/backend/agentchat/evals/rag_eval/corpus/contract_review/manifest.json`
-- `src/backend/agentchat/evals/rag_eval/datasets/contract_review_graph_relation_small.jsonl`
+- `.local/evals/agentchat/rag_eval/corpus/contract_review/manifest.json`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`
 
 Use the same stackless matrix runner, but bind the `contract_review` domain pack so GraphRAG uses the structured contract extractor instead of the generic extractor:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_stackless_compare_matrix.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/contract_review/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/contract_review_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/contract_review/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl `
   --sample-limit 12 `
   --domain-pack-id contract_review `
   --chunk-size-override 256 `
   --overlap-override 48 `
   --local-compare-rerank-threshold-override 0.0 `
-  --output-root src/backend/agentchat/evals/rag_eval/runs/stackless-contract-review
+  --output-root .local/evals/agentchat/rag_eval/runs/stackless-contract-review
 ```
 
 This setup is the fastest way to answer the real architecture question for the contract domain:
@@ -237,8 +237,8 @@ For contract review specifically, smaller clause-level chunks are usually more t
 If you want to test whether GraphRAG starts to matter more as the contract corpus gets larger and more confusing, generate a scaled local corpus with synthetic distractor variants:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/generate_contract_review_scale_corpus.py `
-  --output-dir src/backend/agentchat/evals/rag_eval/corpus/contract_review_scale `
+python tools/evals/zuno/rag_eval/generate_contract_review_scale_corpus.py `
+  --output-dir .local/evals/agentchat/rag_eval/corpus/contract_review_scale `
   --copies-per-file 4
 ```
 
@@ -247,9 +247,9 @@ Then run the same contract-review matrix against the generated manifest. This is
 Before launching the full ingest + eval flow, you can run a pure preflight check:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_local_embedding_eval.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/python_notes/manifest.json `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
+python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --text-embedding-model-id <local_embedding_llm_id> `
   --validate-only
 ```
@@ -268,8 +268,8 @@ If the database-backed LLM registry or knowledge-ingest path is unavailable, the
 For stricter answer quality metrics, run:
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_eval.py `
-  --dataset src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl `
+python tools/evals/zuno/rag_eval/run_eval.py `
+  --dataset tools/evals/zuno/rag_eval/python_notes_eval.jsonl `
   --knowledge-id <knowledge_id> `
   --profiles baseline_rag `
   --answer-mode llm `

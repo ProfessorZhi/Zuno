@@ -13,11 +13,11 @@ def test_gitignore_covers_private_and_local_surfaces() -> None:
         ".agentmd",
         ".local/",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
         "infra/docker/docker_config.local.yaml",
-        "src/backend/agentchat/config.local.yaml",
-        "src/backend/agentchat/evals/rag_eval/corpus/",
-        "src/backend/agentchat/evals/rag_eval/runs/",
+        ".local/config/agentchat/",
+        ".local/evals/agentchat/rag_eval/corpus/",
+        ".local/evals/agentchat/rag_eval/runs/",
     ]
 
     for entry in required_entries:
@@ -258,7 +258,7 @@ def test_publish_boundary_doc_mentions_private_local_assets() -> None:
         ".agentmd",
         ".local/",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
         "docker_config.local.yaml",
         "config.local.yaml",
         "rag_eval/runs/",
@@ -280,7 +280,7 @@ def test_public_release_checklist_mentions_pre_push_audit_steps() -> None:
         ".agentmd",
         ".local/",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
         "docker_config.local.yaml",
         "config.local.yaml",
         "rag_eval/runs/",
@@ -312,7 +312,7 @@ def test_public_release_audit_script_detects_ignored_eval_run_links() -> None:
 
     assert "FORBIDDEN_PUBLIC_DOC_LINKS" in content
     assert "git status --short" in content
-    assert "src/backend/agentchat/evals/rag_eval/runs/" in content
+    assert ".local/evals/agentchat/rag_eval/runs/" in content
 
 
 def test_public_release_audit_script_runs_from_repo() -> None:
@@ -463,7 +463,7 @@ def test_public_release_scope_script_mentions_expected_groups() -> None:
         "tests_and_release_guards",
         "excluded_local_only",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
         "manual_review",
         "preview_public_release_group.py",
         "git status --short",
@@ -488,7 +488,7 @@ def test_public_release_commit_order_script_mentions_review_boundaries() -> None
         "frontend_workspace",
         "Excluded local-only content",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
     ]
 
     for phrase in required_phrases:
@@ -509,7 +509,7 @@ def test_public_release_stage_commands_script_mentions_expected_groups() -> None
         "backend_public_entrypoints",
         "frontend_workspace",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
         "git add README.md docs/",
     ]
 
@@ -553,7 +553,7 @@ def test_docs_and_readme_signoff_records_public_acceptance_boundary() -> None:
         "docs/architecture/",
         "docs/development/public-demo-evidence.md",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
         "superpowers-legacy-migration-inventory.md",
         "python tools/scripts/preview_public_release_group.py docs_and_readme --stat",
     ]
@@ -575,7 +575,7 @@ def test_docs_and_readme_prestage_records_first_group_execution_steps() -> None:
         "python tools/scripts/verify_docs_and_readme_ready.py",
         "python tools/scripts/audit_public_release.py",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
         "git diff --cached -- README.md docs/",
     ]
 
@@ -616,7 +616,7 @@ def test_docs_and_readme_ready_note_records_current_acceptance_set() -> None:
         "python tools/scripts/verify_docs_and_readme_ready.py",
         "docs/development/docs-and-readme-ready.md",
         "docs/superpowers/",
-        "src/frontend/AGENTS.md",
+        "apps/web/AGENTS.md",
     ]
 
     for phrase in required_phrases:

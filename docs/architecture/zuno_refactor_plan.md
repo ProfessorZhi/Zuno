@@ -87,7 +87,7 @@ This high-level plan describes the long-running target architecture. For the cur
 4. 自动化评测已经有本地入口，但还需要继续强化成面试前可稳定展示的证据链。
 5. 运行时收口与可运行恢复、项目结构治理、公开展示面收口、分层边界强化、LangGraph + GraphRAG 主线深化以及评测证据链固化都已有最小验收结果；当前串行主线应进入 `Phase 7`，继续做面试前总收口。
 6. 目录结构和公开展示面已经明显改善，但还需要继续压掉混乱入口和历史痕迹。
-7. 项目结构仍处在 `src/backend + src/frontend + apps/desktop` 的混合语义阶段；这不是错，但还没有完全达到面试前最好讲、最好维护的清晰结构。
+7. 项目结构仍处在 `src/backend + apps/web + apps/desktop` 的混合语义阶段；这不是错，但还没有完全达到面试前最好讲、最好维护的清晰结构。
 
 这意味着：
 
@@ -401,7 +401,7 @@ src/backend/
 
   alembic/
   fastapi_jwt_auth/
-  alembic.ini
+  infra/db/alembic.ini
 ```
 
 最终收口后：
@@ -415,7 +415,7 @@ src/backend/
 ### 4.3 `core/`：统一 Runtime 与 LangGraph
 
 ```text
-src/backend/agentchat/core/
+src/backend/zuno/core/
   agents/
     general_agent.py
     react_agent.py
@@ -446,7 +446,7 @@ src/backend/agentchat/core/
 ### 4.4 `services/`：基础能力服务
 
 ```text
-src/backend/agentchat/services/
+src/backend/zuno/services/
   llm/
     providers.py
     deepseek_provider.py
@@ -514,7 +514,7 @@ src/backend/agentchat/services/
 ### 4.5 `domain_packs/`：领域插件
 
 ```text
-src/backend/agentchat/domain_packs/
+src/backend/zuno/domain_packs/
   contract_review/
     pack.yaml
     schema.json
@@ -1050,7 +1050,7 @@ profiles:
 ### 9.2 新增合同审查评估目录
 
 ```text
-src/backend/agentchat/evals/contract_review_eval/
+tools/evals/zuno/contract_review_eval/
   README.md
   contract_eval.jsonl
   fake_contracts/
@@ -1147,7 +1147,7 @@ pytest tests/test_domain_pack_loader.py
 pytest tests/test_mock_graph_extractor.py
 pytest tests/test_fake_embedding_provider.py
 pytest tests/test_domain_qa_graph_offline.py
-python src/backend/agentchat/evals/contract_review_eval/run_contract_eval.py --profile dev_offline
+python tools/evals/zuno/contract_review_eval/run_contract_eval.py --profile dev_offline
 ```
 
 真实评估手动跑。

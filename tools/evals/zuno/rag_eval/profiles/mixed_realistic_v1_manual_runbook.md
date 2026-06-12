@@ -29,7 +29,7 @@
    - `标准检索`
 5. 打开文件页，把下面目录里的文件一次性上传：
 
-`src/backend/agentchat/evals/rag_eval/corpus/mixed_realistic_v1/files`
+`.local/evals/agentchat/rag_eval/corpus/mixed_realistic_v1/files`
 
 6. 等索引完成
 
@@ -40,10 +40,10 @@
 如果你不想手点上传，可以执行：
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/ingest_prepared_corpus.py `
-  --manifest src/backend/agentchat/evals/rag_eval/corpus/mixed_realistic_v1/manifest.json `
+python tools/evals/zuno/rag_eval/ingest_prepared_corpus.py `
+  --manifest .local/evals/agentchat/rag_eval/corpus/mixed_realistic_v1/manifest.json `
   --knowledge-name ZunoMixedRealisticV1 `
-  --output src/backend/agentchat/evals/rag_eval/runs/mixed_realistic_v1_ingest.json
+  --output .local/evals/agentchat/rag_eval/runs/mixed_realistic_v1_ingest.json
 ```
 
 ## 推荐建一个专用测试智能体
@@ -161,11 +161,11 @@ python src/backend/agentchat/evals/rag_eval/ingest_prepared_corpus.py `
 等你手测 6 到 8 题觉得链路正常，再跑：
 
 ```powershell
-python src/backend/agentchat/evals/rag_eval/run_eval.py `
-  --dataset src/backend/agentchat/evals/rag_eval/datasets/mixed_realistic_v1_eval.jsonl `
+python tools/evals/zuno/rag_eval/run_eval.py `
+  --dataset tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl `
   --knowledge-id <knowledge_id> `
   --profiles baseline_rag,rag_rerank_recall_first,rag_graph_chunk_backed `
-  --output-dir src/backend/agentchat/evals/rag_eval/runs/mixed_realistic_v1_first_pass `
+  --output-dir .local/evals/agentchat/rag_eval/runs/mixed_realistic_v1_first_pass `
   --trace-langsmith
 ```
 

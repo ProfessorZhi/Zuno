@@ -9,11 +9,16 @@ chat.html
 .env
 .env.*
 !.env.example
+**/__pycache__/
+apps/desktop/node_modules/
+apps/web/node_modules/
+apps/web/dist/
 infra/docker/docker_config.local.yaml
 infra/docker/data/
 src/backend/agentchat/config.yaml
 src/backend/agentchat/config.local.yaml
 src/backend/zuno/config.yaml
+.local/config/agentchat/
 
 /chroma_db/
 /memory_db/
@@ -23,7 +28,7 @@ src/backend/zuno/config.yaml
 .agent/
 .agentmd
 docs/superpowers/
-src/frontend/AGENTS.md
+apps/web/AGENTS.md
 
 .astrid-memory/
 .playwright-mcp/
@@ -41,12 +46,12 @@ qa_2026-04-18_full_validation/
 output/
 screenshots-original/
 screenshots-redesign/
-src/frontend/output/
+apps/web/output/
 
 # generated RAG evaluation artifacts
-src/backend/agentchat/evals/rag_eval/corpus/
-src/backend/agentchat/evals/rag_eval/runs/
-src/backend/agentchat/evals/contract_review_eval/.tmp_test_reports/
+.local/evals/agentchat/rag_eval/corpus/
+.local/evals/agentchat/rag_eval/runs/
+.local/evals/agentchat/contract_review_eval/.tmp_test_reports/
 
 tmp-*.png
 tmp-*.json
@@ -67,7 +72,7 @@ $null
 *.pfx
 
 node_modules/
-src/frontend/*.tsbuildinfo
+apps/web/*.tsbuildinfo
 
 # local desktop startup scripts
 Zuno-*.local.cmd
