@@ -16,7 +16,7 @@ Zuno 是一个本地优先的个人 Agent 工作台，用 Web、桌面端和 Doc
 
 这里不是“目录没统一”，而是刻意分成两种语义：
 
-- `src/*` 放核心产品源码
+- `src/*` 放核心产品源码，目前主要是 backend
 - `apps/*` 放应用壳或宿主
 - 根 `package.json` 用 npm workspaces 把 `apps/web` 和 `apps/desktop` 收成一个工程
 

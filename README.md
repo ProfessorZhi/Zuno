@@ -81,11 +81,12 @@ Frontend
 - `tools/evals/zuno/contract_review_eval/`：合同审查评测资产
 - `tests/compat/`：仍覆盖兼容层与历史能力的回归测试
 
-顶层目录现在按“源码域 + 应用壳”来分，而不是把一切都塞进 `src/`：
+顶层目录现在按“核心源码域 + 应用壳”来分：
 
-- `src/`：真正的产品源码域，只放 backend / frontend 源码
+- `src/`：核心产品源码域，目前只保留 backend
+- `apps/web/`：Vue Web 工作台
 - `apps/desktop/`：Electron 桌面壳，是消费 `apps/web` 与 backend runtime 的宿主应用
-- 根 `package.json` 使用 npm workspaces 管理 `apps/web` 和 `apps/desktop`，所以 `apps + src` 现在是显式 monorepo 结构，不是历史遗留的随意并列
+- 根 `package.json` 使用 npm workspaces 管理 `apps/web` 和 `apps/desktop`，所以 `apps + src` 是显式 monorepo 结构，不再混用前后端语义
 
 更完整的架构文档见 [docs/architecture/README.md](./docs/architecture/README.md)。
 
@@ -94,7 +95,8 @@ Frontend
 ```text
 .
 ├─ apps/
-│  └─ desktop/                  # Electron desktop shell workspace
+│  ├─ desktop/                  # Electron desktop shell workspace
+│  └─ web/                      # Vue web workspace
 ├─ docs/
 │  ├─ architecture/             # Current architecture, plans, decisions
 │  ├─ development/              # Engineering and environment docs
@@ -105,8 +107,7 @@ Frontend
 │  ├─ db/                       # Alembic migrations and database infra config
 │  └─ docker/                   # Dockerfiles, compose stacks, nginx config
 ├─ src/
-│  ├─ backend/                  # FastAPI packages, runtime code, compat shells
-│  └─ frontend/                 # Vue web workspace package
+│  └─ backend/                  # FastAPI packages, runtime code, compat shells
 ├─ tests/                       # Repo-level verification
 └─ tools/                       # Scripts, launchers, migrations, local maintenance tooling
 ```
