@@ -58,6 +58,8 @@ class MilvusLiteClient:
         fields = [
             FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
             FieldSchema(name="chunk_id", dtype=DataType.VARCHAR, max_length=256),
+            FieldSchema(name="document_hash", dtype=DataType.VARCHAR, max_length=128),
+            FieldSchema(name="chunk_hash", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="content", dtype=DataType.VARCHAR, max_length=4096),
             FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=1024),
             FieldSchema(name="summary", dtype=DataType.VARCHAR, max_length=1024),
@@ -91,7 +93,18 @@ class MilvusLiteClient:
                 anns_field="embedding",
                 param={"metric_type": "L2", "params": {"nprobe": 16}},
                 limit=top_k,
-                output_fields=["content", "chunk_id", "summary", "file_id", "file_name", "knowledge_id", "update_time", "source_url"],
+                output_fields=[
+                    "content",
+                    "chunk_id",
+                    "document_hash",
+                    "chunk_hash",
+                    "summary",
+                    "file_id",
+                    "file_name",
+                    "knowledge_id",
+                    "update_time",
+                    "source_url",
+                ],
             )
             documents = []
             for hit in results[0]:
@@ -103,6 +116,8 @@ class MilvusLiteClient:
                         file_name=hit.entity.file_name,
                         knowledge_id=hit.entity.knowledge_id,
                         update_time=hit.entity.update_time,
+                        document_hash=getattr(hit.entity, "document_hash", ""),
+                        chunk_hash=getattr(hit.entity, "chunk_hash", ""),
                         summary=hit.entity.summary,
                         score=hit.distance,
                         modality=modality,
@@ -165,6 +180,8 @@ class MilvusLiteClient:
 
         data = [
             [chunk.chunk_id for chunk in chunks],
+            [chunk.document_hash for chunk in chunks],
+            [chunk.chunk_hash for chunk in chunks],
             [chunk.content for chunk in chunks],
             embeddings,
             [chunk.summary for chunk in chunks],

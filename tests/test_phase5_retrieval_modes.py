@@ -105,7 +105,7 @@ def test_domain_graph_runner_preserves_knowledge_default_mode_contract():
 
     assert 'default_mode = retrieval_settings.get("default_mode") or "rag"' in content
     assert 'return str(default_mode), merged' in content
-    assert "retrieval_mode=mode," in content
+    assert '"mode": custom_result.get("actual_mode") or retrieval_plan.get("resolved_mode"),' in content
 
 
 def test_enhanced_orchestrator_contract_keeps_graph_path_and_trace_metadata():

@@ -115,108 +115,81 @@ class GraphRetriever:
         "执行路径": ["Task queue"],
         "运行路径": ["Task queue"],
     }
-    CONTRACT_REVIEW_SEED_CUES = (
-        "违约责任",
-        "解除",
-        "终止",
-        "赔偿",
-        "罚则",
-        "争议解决",
-        "保密义务",
-        "连带责任",
-        "甲方",
-        "乙方",
-        "丙方",
-        "合同",
+    DEFAULT_POLICY_SEED_TERMS: tuple[str, ...] = ()
+    DEFAULT_POLICY_RELATION_CUES = (
+        "关系",
+        "关联",
+        "路径",
+        "链路",
+        "依赖",
+        "通过",
+        "谁负责",
+        "谁处理",
+        "谁承担",
+        "由谁",
+        "位于",
+        "组成",
+        "架构",
+        "部署",
+        "持久化",
         "条款",
-        "验收",
-        "数据安全",
-        "服务级别",
-        "提前到期",
-        "恢复原状",
-        "知识产权",
-        "分包",
-        "删除",
-        "返还",
-        "退款",
-        "事件通知",
-        "审计配合",
-    )
-    CONTRACT_REVIEW_GRAPH_CUES = (
+        "义务",
         "约定",
         "风险",
-        "条款",
-        "合同",
-        "审查",
-        "义务",
-        "法律",
         "期限",
-        "多久",
-        "多长时间",
-        "何时",
-        "哪一条",
-        "哪两步",
         "前置条件",
-        "情形",
-        "条件",
-        "由谁",
-        "谁",
-        "通知",
-        "返还",
-        "删除",
-        "回购",
-        "退款",
     )
-    CONTRACT_REVIEW_STEP_CUES = (
+    DEFAULT_POLICY_STEP_CUES = (
         "流程",
         "步骤",
         "顺序",
         "阶段",
         "先后顺序",
+        "怎么走",
         "怎么做",
     )
-    CONTRACT_TITLE_ALIASES = {
-        "主服务合同": (
-            "主服务合同",
-            "主服务",
-            "master service",
-        ),
-        "saas订阅服务合同": (
-            "saas订阅服务合同",
-            "saas",
-            "订阅服务",
-        ),
-        "借款合同": ("借款合同", "借款"),
-        "商业房屋租赁合同": (
-            "商业房屋租赁合同",
-            "商业房屋租赁",
-            "租赁合同",
-        ),
-        "采购框架协议": (
-            "采购框架协议",
-            "采购框架",
-            "采购协议",
-        ),
-        "数据处理附录": (
-            "数据处理附录",
-            "附录",
-            "数据处理",
-        ),
-        "区域经销协议": (
-            "区域经销协议",
-            "经销协议",
-            "区域经销",
-        ),
-        "外包运维服务合同": (
-            "外包运维服务合同",
-            "外包运维",
-            "运维服务合同",
-        ),
-    }
 
     def __init__(self, client: Neo4jClient | None = None, chunk_store=None):
         self.client = client or Neo4jClient()
         self.chunk_store = chunk_store or milvus_client
+
+    @staticmethod
+    def _policy_values(query_policy: dict | None, key: str) -> list[str]:
+        if not query_policy:
+            return []
+        raw_value = query_policy.get(key)
+        if raw_value is None:
+            return []
+        if isinstance(raw_value, (list, tuple, set)):
+            values = raw_value
+        else:
+            values = re.split(r"[|,，;/]+", str(raw_value))
+        cleaned: list[str] = []
+        for item in values:
+            text = str(item or "").strip()
+            if text:
+                cleaned.append(text)
+        return cleaned
+
+    @classmethod
+    def _resolve_query_policy(
+        cls,
+        *,
+        domain_pack_id: str | None,
+        query_policy: dict | None,
+    ) -> dict[str, object]:
+        merged: dict[str, object] = {}
+        if domain_pack_id and not query_policy:
+            try:
+                from zuno.services.domain_pack.loader import DomainPackLoader
+
+                pack = DomainPackLoader().load(domain_pack_id)
+                if pack and pack.retrieval_policy_data:
+                    merged.update(dict(pack.retrieval_policy_data))
+            except Exception:
+                pass
+        merged.update(dict(query_policy or {}))
+        return merged
 
     @classmethod
     def _add_seed(cls, ordered: list[str], seen: set[str], value: str):
@@ -240,10 +213,9 @@ class GraphRetriever:
         return candidates
 
     @classmethod
-    def _extract_query_seeds(cls, query: str) -> list[str]:
+    def _extract_query_seeds(cls, query: str, query_policy: dict | None = None) -> list[str]:
         lines = [line.strip() for line in str(query or "").splitlines() if line.strip()]
         first_line = lines[0] if lines else ""
-        query_lower = str(query or "").lower()
         ordered: list[str] = []
         seen: set[str] = set()
         for line_index, line in enumerate(lines[:4]):
@@ -270,15 +242,10 @@ class GraphRetriever:
             if trigger in lowered:
                 for alias in aliases:
                     cls._add_seed(ordered, seen, alias)
-        for cue in cls.CONTRACT_REVIEW_SEED_CUES:
+        policy_seed_terms = cls._policy_values(query_policy, "graph_seed_terms") or list(cls.DEFAULT_POLICY_SEED_TERMS)
+        for cue in policy_seed_terms:
             if cue in first_line:
                 cls._add_seed(ordered, seen, cue)
-        for phrase in cls.CJK_PHRASE_PATTERN.findall(first_line):
-            if phrase in cls.CONTRACT_REVIEW_SEED_CUES:
-                cls._add_seed(ordered, seen, phrase)
-        for canonical_title, aliases in cls.CONTRACT_TITLE_ALIASES.items():
-            if any(str(alias).lower() in query_lower for alias in aliases):
-                cls._add_seed(ordered, seen, canonical_title)
         return ordered[:8]
 
     @classmethod
@@ -295,7 +262,7 @@ class GraphRetriever:
         return False
 
     @classmethod
-    def _expanded_query_terms(cls, query: str, seed_entities: list[str]) -> set[str]:
+    def _expanded_query_terms(cls, query: str, seed_entities: list[str], query_policy: dict | None = None) -> set[str]:
         query_lower = str(query or "").lower()
         terms = {term.lower() for term in seed_entities}
         for phrase in cls.ASCII_PHRASE_PATTERN.findall(query_lower):
@@ -305,29 +272,29 @@ class GraphRetriever:
         for trigger, aliases in cls.QUERY_TERM_ALIASES.items():
             if trigger in query_lower:
                 terms.update(aliases)
-        for cue in cls.CONTRACT_REVIEW_SEED_CUES:
+        for cue in cls._policy_values(query_policy, "graph_seed_terms"):
             if cue in query:
                 terms.add(cue.lower())
         return terms
 
     @classmethod
-    def _is_graph_worthy_query(cls, query: str, seed_entities: list[str]) -> bool:
+    def _is_graph_worthy_query(cls, query: str, seed_entities: list[str], query_policy: dict | None = None) -> bool:
         first_line = str(query or "").splitlines()[0]
         if not seed_entities:
             return False
+        policy_relation_cues = cls._policy_values(query_policy, "graph_relation_cues") or list(
+            cls.DEFAULT_POLICY_RELATION_CUES
+        )
+        policy_step_cues = cls._policy_values(query_policy, "graph_step_cues") or list(
+            cls.DEFAULT_POLICY_STEP_CUES
+        )
+        has_policy_relation_cue = any(cue in first_line for cue in policy_relation_cues)
+        has_policy_step_cue = any(cue in first_line for cue in policy_step_cues)
         if cls.STRONG_RELATION_CUE_PATTERN.search(first_line):
             return True
-        if any(cue in first_line for cue in cls.CONTRACT_REVIEW_STEP_CUES) and any(
-            re.search(r"[\u4e00-\u9fff]", seed) for seed in seed_entities
-        ):
+        if has_policy_step_cue and any(re.search(r"[\u4e00-\u9fff]", seed) for seed in seed_entities):
             return True
-        if any(cue in first_line for cue in cls.CONTRACT_REVIEW_GRAPH_CUES) and any(
-            seed in first_line for seed in cls.CONTRACT_REVIEW_SEED_CUES
-        ):
-            return True
-        if any(cue in first_line for cue in cls.CONTRACT_REVIEW_GRAPH_CUES) and any(
-            re.search(r"[\u4e00-\u9fff]", seed) for seed in seed_entities
-        ):
+        if has_policy_relation_cue and any(re.search(r"[\u4e00-\u9fff]", seed) for seed in seed_entities):
             return True
         if cls.NON_GRAPH_LISTING_PATTERN.search(first_line):
             return False
@@ -503,6 +470,7 @@ class GraphRetriever:
         domain_pack_id: str | None = None,
         index_version: str | None = None,
         status: str | None = None,
+        query_policy: dict | None = None,
     ) -> dict:
         entities = []
         paths = []
@@ -510,8 +478,12 @@ class GraphRetriever:
         chunk_id_support: dict[str, int] = {}
         seen_chunk_ids: set[str] = set()
         seen_paths: set[tuple[str, str]] = set()
-        seed_entities = self._extract_query_seeds(query)
-        if not self._is_graph_worthy_query(query, seed_entities):
+        effective_query_policy = self._resolve_query_policy(
+            domain_pack_id=domain_pack_id,
+            query_policy=query_policy,
+        )
+        seed_entities = self._extract_query_seeds(query, effective_query_policy)
+        if not self._is_graph_worthy_query(query, seed_entities, effective_query_policy):
             return {
                 "content": "",
                 "entities": [],
@@ -555,7 +527,7 @@ class GraphRetriever:
         path_lines = [f"{item['source']} -> {item['target']}" for item in paths]
         documents = await self.chunk_store.get_documents_by_chunk_ids(knowledge_id, chunk_ids)
         document_dicts = [doc.to_dict() if hasattr(doc, "to_dict") else doc for doc in documents]
-        query_terms = self._expanded_query_terms(query, seed_entities)
+        query_terms = self._expanded_query_terms(query, seed_entities, effective_query_policy)
         for doc in document_dicts:
             haystack = " ".join(
                 [

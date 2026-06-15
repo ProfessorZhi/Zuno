@@ -7,9 +7,10 @@ Make GraphRAG a clean mainline capability instead of a partially hardcoded enhan
 ## Focus
 
 - `RetrievalOrchestrator` as the unified retrieval entry
-- explicit retrieval planning
+- `RetrievalPlanner` explicitly decides `rag / hybrid / graphrag`
 - clear retriever mode decisions
 - reduced business hardcoding inside GraphRAG internals
+- contract-review-specific graph cues move into `Domain Pack retrieval_policy`
 - 先把 Local GraphRAG 主线做扎实
 - keep Community GraphRAG as a later global-summary layer, not the current default
 

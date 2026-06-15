@@ -276,7 +276,7 @@ class RetrievalOrchestrator:
             candidate_queries = [query]
 
         first_pass = await self._run_single_pass(
-            "hybrid" if normalized_mode == "auto" and "关系" in query else ("rag" if normalized_mode == "auto" else normalized_mode),
+            normalized_mode,
             candidate_queries[0],
             knowledge_ids,
             retrieval_options,
