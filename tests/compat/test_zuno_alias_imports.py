@@ -132,7 +132,7 @@ def test_zuno_api_alias_module_matrix_imports():
         assert module is not None, module_name
 
 
-def test_zuno_api_imports_resolve_from_services_api_surface():
+def test_zuno_api_imports_resolve_from_backend_runtime_surface():
     modules = [
         "zuno.api",
         "zuno.api.router",
@@ -147,10 +147,10 @@ def test_zuno_api_imports_resolve_from_services_api_surface():
     for module_name in modules:
         module = importlib.import_module(module_name)
         module_path = Path(module.__file__).as_posix()
-        assert "/services/api/src/zuno/api/" in module_path, module_path
+        assert "/src/backend/zuno/api/" in module_path, module_path
 
 
-def test_zuno_service_imports_resolve_from_services_api_surface():
+def test_zuno_service_imports_resolve_from_backend_runtime_surface():
     modules = [
         "zuno.middleware",
         "zuno.middleware.trace_id_middleware",
@@ -168,8 +168,8 @@ def test_zuno_service_imports_resolve_from_services_api_surface():
         module = importlib.import_module(module_name)
         module_path = Path(module.__file__).as_posix()
         assert (
-            "/services/api/src/zuno/services/" in module_path
-            or "/services/api/src/zuno/middleware/" in module_path
+            "/src/backend/zuno/services/" in module_path
+            or "/src/backend/zuno/middleware/" in module_path
         ), module_path
 
 

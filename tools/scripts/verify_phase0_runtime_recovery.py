@@ -47,13 +47,13 @@ def verify_high_value_imports() -> list[str]:
             "from zuno.core.graphs.domain_qa_graph import DomainQAGraph; "
             "from zuno.services.retrieval.orchestrator import RetrievalOrchestrator; "
             "from zuno.services.graphrag.retriever import GraphRetriever; "
-            "from zuno.services.domain_pack.loader import load_domain_pack; "
-            "print(DomainQAGraph.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__, callable(load_domain_pack))"
+            "from zuno.services.domain_pack.loader import DomainPackLoader; "
+            "print(DomainQAGraph.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__, DomainPackLoader.__name__)"
         )
     )
     if result.returncode != 0:
         return [f"high-value runtime import check failed: {result.stderr.strip()}"]
-    if "DomainQAGraph RetrievalOrchestrator GraphRetriever True" not in result.stdout:
+    if "DomainQAGraph RetrievalOrchestrator GraphRetriever DomainPackLoader" not in result.stdout:
         return [f"unexpected high-value import output: {result.stdout.strip()}"]
     return []
 
@@ -71,9 +71,9 @@ def verify_local_start_script() -> list[str]:
 def verify_docker_startup_path() -> list[str]:
     dockerfile = (REPO_ROOT / "infra" / "docker" / "Dockerfile").read_text(encoding="utf-8")
     errors: list[str] = []
-    if "ENV PYTHONPATH=/app/legacy_backend:/app/src:/app" not in dockerfile:
+    if "ENV PYTHONPATH=/app/src/backend:/app" not in dockerfile:
         errors.append("infra/docker/Dockerfile does not expose the Phase 0 backend import path")
-    if 'CMD ["uvicorn", "--app-dir", "legacy_backend", "zuno.main:app"' not in dockerfile:
+    if 'CMD ["uvicorn", "--app-dir", "src/backend", "zuno.main:app"' not in dockerfile:
         errors.append("infra/docker/Dockerfile does not use the Phase 0 backend startup path")
     return errors
 

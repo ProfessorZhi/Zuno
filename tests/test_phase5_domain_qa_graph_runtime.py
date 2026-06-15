@@ -5,12 +5,12 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
+SERVICE_API_ROOT = REPO_ROOT / "src" / "backend"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
 def _ensure_runtime_paths() -> None:
-    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+    for runtime_root in (str(BACKEND_ROOT),):
         if runtime_root not in sys.path:
             sys.path.insert(0, runtime_root)
 
@@ -108,20 +108,21 @@ def test_domain_qa_graph_ainvoke_runs_contract_review_retrieval_and_formats_answ
     assert result["graph_paths"][0]["source"] == "Termination Clause"
     assert result["cost_metadata"]["used_domain_pack"] is True
     assert result["trace_metadata"]["nodes"][-1]["node"] == "finalize"
-    assert result["trace_metadata"]["nodes"][3]["payload"]["requested_profile"] == "contract_review_strict"
-    assert result["trace_metadata"]["nodes"][3]["payload"]["resolved_profile"] == "contract_review_strict"
-    assert result["trace_metadata"]["nodes"][3]["payload"]["scope_status"] == "active"
-    assert result["trace_metadata"]["nodes"][3]["payload"]["index_version"]["graph"] == "graph_v2"
+    assert result["trace_metadata"]["nodes"][4]["node"] == "plan_retrieval"
+    assert result["trace_metadata"]["nodes"][5]["node"] == "retrieve_evidence"
+    assert result["trace_metadata"]["nodes"][5]["payload"]["round_count"] == 1
+    assert result["trace_metadata"]["nodes"][5]["payload"]["retriever_runs"][0]["mode"] == "graphrag"
     assert result["support_verdict"]["status"] == "supported"
     assert result["evidence_bundle"]["citation_count"] == 1
     assert result["status"] == "completed"
-    assert [node["node"] for node in result["trace_metadata"]["nodes"][:6]] == [
+    assert [node["node"] for node in result["trace_metadata"]["nodes"][:7]] == [
+        "load_agent_config",
         "resolve_domain_pack",
         "route_intent",
         "rewrite_query",
+        "plan_retrieval",
         "retrieve_evidence",
-        "draft_answer",
-        "citation_check",
+        "fuse_evidence",
     ]
 
 

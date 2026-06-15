@@ -1,4 +1,7 @@
 from importlib import import_module
+from pkgutil import extend_path
+
+__path__ = extend_path(__path__, __name__)
 
 _SUBMODULES = {
     "es_client",

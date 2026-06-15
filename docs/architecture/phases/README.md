@@ -25,15 +25,16 @@ That belongs in `../specs/`.
 
 Only one phase should be current at a time.
 
-Right now the entry phase is:
+Right now the current phase is:
 
-- [Phase 0: Stable Runtime Recovery](phase-00-stable-runtime-recovery.md)
+- [Phase 2: GraphRAG Mainline Deepening](phase-02-graphrag-mainline-deepening.md)
 
-Do not begin Phase 1 until:
+Phase status:
 
-1. the runtime baseline is stable again
-2. focused startup and import checks pass
+1. `Phase 0` is complete
+2. `Phase 1` is complete
 3. the user has personally tried the recovered runtime
+4. `Phase 2` is the active engineering track
 
 ## Current Track Notes
 

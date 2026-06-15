@@ -64,6 +64,8 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     "docs/architecture/phases/README.md": [
         "Phase 0: Stable Runtime Recovery",
         "Phase 1: LangGraph Runtime Deepening",
+        "Phase 2: GraphRAG Mainline Deepening",
+        "Phase 6: Agent GraphRAG Pluginization / Future Platform Layer",
         "Phase 5: Docs And Public Explanation Sync",
         "the user has personally tried the recovered runtime",
     ],
@@ -72,7 +74,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "src/backend/zuno/core/*",
         "src/backend/zuno/services/*",
         "src/backend/zuno/database/dao/*",
-        "do not treat `services/api/src/zuno/*` as the default placement rule while Phase 0 is still open",
+        "do not treat `services/api/src/zuno/*` as the default placement rule unless a later migration phase explicitly reopens that path",
     ],
     "docs/development/README.md": [
         "Architecture Doc Maintenance Workflow",

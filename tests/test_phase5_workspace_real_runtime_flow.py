@@ -6,12 +6,12 @@ from types import SimpleNamespace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
+SERVICE_API_ROOT = REPO_ROOT / "src" / "backend"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
 def _ensure_runtime_paths() -> None:
-    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+    for runtime_root in (str(BACKEND_ROOT),):
         if runtime_root not in sys.path:
             sys.path.insert(0, runtime_root)
 

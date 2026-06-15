@@ -9,9 +9,9 @@ If this file and the code disagree, update this file.
 
 ## Current Reality
 
-The repo is currently in a mixed and unstable transition state.
+The repo has recovered one stable backend runtime baseline.
 
-The visible codebase contains both:
+The visible codebase contains:
 
 ```text
 apps/
@@ -21,7 +21,7 @@ apps/
 src/backend/zuno/
 ```
 
-and an unfinished root-level migration attempt:
+and a paused future-facing migration surface:
 
 ```text
 services/
@@ -30,11 +30,11 @@ services/
 domain-packs/
 ```
 
-That migration attempt is not currently the stable runtime baseline.
+That migration surface is not the active runtime baseline.
 
 ## Current Backend Truth
 
-The stable backend package expected by the rest of the repo is still:
+The stable backend package expected by the rest of the repo is now:
 
 ```text
 src/backend/zuno/
@@ -45,8 +45,8 @@ The current `services/api/src/zuno/` tree should be treated as a paused migratio
 In other words:
 
 1. `apps/web` and `apps/desktop` remain valid top-level app shells
-2. the Python backend still needs to recover to one stable `src/backend/zuno` runtime root
-3. the root-level `services/` move is paused until the repo is stable again
+2. the Python backend runtime truth is `src/backend/zuno`
+3. the root-level `services/` move remains paused until a later architecture phase reopens it
 
 ## Current Execution Truth
 
@@ -59,9 +59,8 @@ continue pushing the paused root-level service migration first
 The active execution priority is now:
 
 ```text
-recover one stable runnable backend baseline first
-  -> then deepen LangGraph
-  -> then deepen GraphRAG
+stabilize the recovered runtime baseline
+  -> then deepen GraphRAG mainline
   -> then strengthen Domain Pack and local eval
 ```
 
@@ -85,10 +84,12 @@ Domain Pack
 ```
 
 What changed is not the thesis.
-What changed is the execution decision:
+What changed is the current stage:
 
 ```text
-stability first, repo-boundary migration later
+Phase 0 stable runtime recovery is closed
+Phase 1 LangGraph runtime deepening is closed
+Phase 2 GraphRAG mainline deepening is next
 ```
 
 ## Current Documentation Rule

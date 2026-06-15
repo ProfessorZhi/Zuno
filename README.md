@@ -13,9 +13,9 @@ Zuno 是一个本地优先的 Agent Workspace。它把 LangGraph 编排、RAG / 
 当前仓库的执行真相不是“继续做 `services/api` 迁移”，而是：
 
 ```text
-先恢复一个稳定可运行版本
-  -> 用户亲自体验
-  -> 再继续后续架构升级
+Phase 0 已完成稳定运行恢复
+  -> Phase 1 已完成 LangGraph Runtime 深化
+  -> 当前进入 Phase 2 GraphRAG Mainline Deepening
 ```
 
 当前 phase 程序见：
@@ -28,14 +28,14 @@ Zuno 是一个本地优先的 Agent Workspace。它把 LangGraph 编排、RAG / 
 
 ## Repo Reality
 
-仓库当前仍是混合态：
+仓库当前的边界已经比恢复初期更清楚：
 
 - `apps/web` 与 `apps/desktop` 已经是明确应用入口
-- 后端最终希望收口到单一稳定基线，而不是长期维持双根
-- 根目录 `services/`、`domain-packs/` 等结构已经出现，但恢复阶段还没有完成
-- 一部分现有 Docker、launcher、测试仍引用迁移中的运行面
+- `src/backend/zuno` 是当前唯一后端运行真相
+- 根目录 `services/`、`domain-packs/` 等结构已经出现，但 `services/api` 仍是暂停中的未来迁移面
+- 当前 Docker、launcher、测试应统一围绕 `src/backend/zuno`
 
-因此当前最重要的不是继续扩目录，而是先把“哪一套路径才是稳定运行真相”收口清楚。
+因此当前最重要的不是继续扩目录，而是在稳定运行真相之上推进后续架构升级。
 
 ## Architecture Thesis
 
@@ -120,8 +120,8 @@ docker compose -f infra/docker/docker-compose.yml up --build -d
 
 说明：
 
-- 当前 Docker 栈仍通过仓库里的迁移中运行面启动
-- `Phase 0` 的目标之一就是把这条启动链收口成稳定、单一、可解释的基线
+- 当前 Docker 栈已经与 `src/backend/zuno` 运行真相对齐
+- `services/api` 仍保留在仓库里，但不再作为当前运行入口
 
 更多 Docker 说明见 [infra/docker/README.md](./infra/docker/README.md)。
 
@@ -133,7 +133,7 @@ docker compose -f infra/docker/docker-compose.yml up --build -d
 uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860
 ```
 
-这条命令是当前 `Phase 0` 应优先验证的本地后端启动路径。
+这条命令是当前稳定后端的本地启动路径。
 如果本地 PostgreSQL 等依赖没有就绪，后端现在会快速失败并明确报出启动依赖问题，而不是长时间卡住。
 
 前端：

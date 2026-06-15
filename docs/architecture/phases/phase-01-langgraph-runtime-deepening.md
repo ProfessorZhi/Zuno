@@ -4,6 +4,10 @@
 
 Turn LangGraph into the explicit runtime backbone of the stable backend baseline.
 
+## Status
+
+Closed.
+
 ## Focus
 
 - `DomainQAState` standardization
@@ -17,3 +21,4 @@ Turn LangGraph into the explicit runtime backbone of the stable backend baseline
 - state fields are explicit and stable
 - graph orchestration no longer depends on scattered hidden workflow logic
 - focused LangGraph runtime checks pass
+- failures are unified through `finalize`

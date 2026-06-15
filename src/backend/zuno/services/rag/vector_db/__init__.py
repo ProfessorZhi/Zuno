@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+from pkgutil import extend_path
+
 from zuno.settings import app_settings
+
+__path__ = extend_path(__path__, __name__)
 
 
 class LazyVectorStoreClient:

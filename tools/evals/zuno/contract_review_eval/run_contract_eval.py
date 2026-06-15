@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
-SERVICE_API_SRC_ROOT = Path(__file__).resolve().parents[4] / "services" / "api" / "src"
-if str(SERVICE_API_SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SERVICE_API_SRC_ROOT))
+BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
 
 from agentchat.core.graphs.domain_qa_graph import DomainQAGraph
 from agentchat.services.domain_pack.loader import DomainPackLoader

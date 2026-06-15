@@ -3,8 +3,8 @@ services:
     environment:
       ZUNO_CONFIG: /app/zuno/config.yaml
     volumes:
-      - ../../services/api:/app:cached
-      - ../../src/backend:/app/legacy_backend:cached
+      - ../../src/backend:/app/src/backend:cached
+      - ../../domain-packs:/app/domain-packs:cached
       - ./docker_config.local.yaml:/app/zuno/config.yaml
       - ../../tools/cli:/app/cli_tools:cached
       - ../../tools/scripts:/app/scripts:cached

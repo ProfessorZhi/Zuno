@@ -48,7 +48,7 @@ def test_front_path_docs_link_current_phase0_entrypoints() -> None:
     assert "./development/architecture-doc-maintenance-workflow.md" in docs_index
 
 
-def test_phase_index_matches_phase0_to_phase5_program() -> None:
+def test_phase_index_matches_phase0_to_phase6_program() -> None:
     content = (
         REPO_ROOT / "docs" / "architecture" / "phases" / "README.md"
     ).read_text(encoding="utf-8")
@@ -58,8 +58,9 @@ def test_phase_index_matches_phase0_to_phase5_program() -> None:
         "Phase 1: LangGraph Runtime Deepening",
         "Phase 2: GraphRAG Mainline Deepening",
         "Phase 3: Domain Pack Formalization",
-        "Phase 4: Local Eval Strengthening",
+        "Phase 4: Knowledge Config V2 + Local Eval Strengthening",
         "Phase 5: Docs And Public Explanation Sync",
+        "Phase 6: Agent GraphRAG Pluginization / Future Platform Layer",
         "the user has personally tried the recovered runtime",
     ]
 
@@ -95,7 +96,7 @@ def test_backend_layering_guidelines_use_src_backend_as_default() -> None:
         "src/backend/zuno/core/*",
         "src/backend/zuno/services/*",
         "src/backend/zuno/database/dao/*",
-        "do not treat `services/api/src/zuno/*` as the default placement rule while Phase 0 is still open",
+        "do not treat `services/api/src/zuno/*` as the default placement rule unless a later migration phase explicitly reopens that path",
     ]
 
     for phrase in required_phrases:

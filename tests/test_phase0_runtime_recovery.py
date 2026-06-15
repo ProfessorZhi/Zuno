@@ -48,13 +48,13 @@ def test_phase0_backend_root_keeps_high_value_runtime_imports_working() -> None:
             "from zuno.core.graphs.domain_qa_graph import DomainQAGraph; "
             "from zuno.services.retrieval.orchestrator import RetrievalOrchestrator; "
             "from zuno.services.graphrag.retriever import GraphRetriever; "
-            "from zuno.services.domain_pack.loader import load_domain_pack; "
-            "print(DomainQAGraph.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__, callable(load_domain_pack))"
+            "from zuno.services.domain_pack.loader import DomainPackLoader; "
+            "print(DomainQAGraph.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__, DomainPackLoader.__name__)"
         )
     )
 
     assert result.returncode == 0, result.stderr
-    assert "DomainQAGraph RetrievalOrchestrator GraphRetriever True" in result.stdout
+    assert "DomainQAGraph RetrievalOrchestrator GraphRetriever DomainPackLoader" in result.stdout
 
 
 def test_phase0_readme_exposes_backend_recovery_start_and_verification() -> None:
@@ -76,26 +76,22 @@ def test_phase0_runtime_recovery_verifier_script_passes() -> None:
     assert "Phase 0 runtime recovery verification passed." in result.stdout
 
 
-def test_phase0_zuno_bootstrap_can_find_service_surface_in_container_like_layout(tmp_path) -> None:
+def test_phase0_zuno_package_init_does_not_bridge_to_services_api_runtime_root() -> None:
     sys.path.insert(0, str(BACKEND_ROOT))
     import zuno
 
-    package_root = tmp_path / "app" / "legacy_backend" / "zuno"
-    service_root = tmp_path / "app" / "src" / "zuno"
-    package_root.mkdir(parents=True)
-    service_root.mkdir(parents=True)
-    (service_root / "main.py").write_text("app = object()\n", encoding="utf-8")
+    package_init = Path(zuno.__file__).read_text(encoding="utf-8")
 
-    resolved = zuno._find_service_api_root(package_root)
-
-    assert resolved == tmp_path / "app" / "src"
+    assert "services/api/src" not in package_init
+    assert "_find_service_api_root" not in package_init
 
 
 def test_phase0_dockerfile_uses_src_backend_startup_path() -> None:
     content = (REPO_ROOT / "infra" / "docker" / "Dockerfile").read_text(encoding="utf-8")
 
-    assert "ENV PYTHONPATH=/app/legacy_backend:/app/src:/app" in content
-    assert 'CMD ["uvicorn", "--app-dir", "legacy_backend", "zuno.main:app"' in content
+    assert "ENV PYTHONPATH=/app/src/backend:/app" in content
+    assert 'COPY src/backend/ /app/src/backend/' in content
+    assert 'CMD ["uvicorn", "--app-dir", "src/backend", "zuno.main:app"' in content
 
 
 def test_phase0_compose_exposes_postgres_to_local_backend_startup() -> None:

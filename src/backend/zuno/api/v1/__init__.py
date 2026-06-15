@@ -1,0 +1,53 @@
+from pkgutil import extend_path
+
+__path__ = extend_path(__path__, __name__)
+
+from . import (
+    agent,
+    agent_skill,
+    capability,
+    completion,
+    config,
+    dialog,
+    history,
+    knowledge,
+    knowledge_file,
+    llm,
+    mcp_agent,
+    mcp_chat,
+    mcp_server,
+    mcp_stdio_server,
+    mcp_user_config,
+    message,
+    tool,
+    upload,
+    usage_stats,
+    user,
+    wechat,
+    workspace,
+)
+
+__all__ = [
+    "agent",
+    "agent_skill",
+    "capability",
+    "completion",
+    "config",
+    "dialog",
+    "history",
+    "knowledge",
+    "knowledge_file",
+    "llm",
+    "mcp_agent",
+    "mcp_chat",
+    "mcp_server",
+    "mcp_stdio_server",
+    "mcp_user_config",
+    "message",
+    "tool",
+    "upload",
+    "usage_stats",
+    "user",
+    "wechat",
+    "workspace",
+]

@@ -79,7 +79,7 @@ ZUNO_CONFIG: /app/zuno/config.yaml
 
 ## 生产镜像模式
 
-默认 Compose 文件不把前后端源码挂进容器，而是从仓库构建镜像：
+默认 Compose 文件不把前后端源码挂进容器，而是从仓库构建镜像。后端运行真相是 `src/backend/zuno`：
 
 ```powershell
 docker compose -f infra/docker/docker-compose.yml build
@@ -102,15 +102,15 @@ curl http://127.0.0.1:8090
 docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up --build -d
 ```
 
-dev override 目前仍反映恢复期的混合运行面，会挂载：
+dev override 直接挂载当前运行真相，会挂载：
 
-- `services/api` 到 `/app`
-- `src/backend` 到 `/app/legacy_backend`
+- `src/backend` 到 `/app/src/backend`
+- `domain-packs` 到 `/app/domain-packs`
 - `apps/web` 到 `/app`
 - `tools/cli` 到 `/app/cli_tools`
 - `tools/scripts` 到 `/app/scripts`
 
-这描述的是当前 Docker 开发态事实，不代表 `services/api` 迁移仍是当前执行主线。
+这描述的是当前 Docker 开发态事实，也和本地 Phase 0 稳定运行口径保持一致。
 
 ## 数据持久化
 

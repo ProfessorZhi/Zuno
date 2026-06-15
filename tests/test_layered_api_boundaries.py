@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SERVICE_API_V1_ROOT = REPO_ROOT / "services/api/src/zuno/api/v1"
+SERVICE_API_V1_ROOT = REPO_ROOT / "src/backend/zuno/api/v1"
 
 
 def _read(relative_path: str) -> str:
@@ -30,7 +30,7 @@ def test_api_v1_routes_no_longer_directly_import_runtime_layers() -> None:
 
 
 def test_user_controller_avoids_direct_dao_and_redis_imports() -> None:
-    content = _read("services/api/src/zuno/api/v1/user.py")
+    content = _read("src/backend/zuno/api/v1/user.py")
 
     assert "from zuno.api.services.user import UserService, get_user_jwt" in content
     assert "from zuno.database.dao.user import UserDao" not in content
@@ -39,8 +39,8 @@ def test_user_controller_avoids_direct_dao_and_redis_imports() -> None:
 
 
 def test_knowledge_controller_routes_search_through_service_layer() -> None:
-    controller = _read("services/api/src/zuno/api/v1/knowledge.py")
-    service = _read("services/api/src/zuno/api/services/knowledge.py")
+    controller = _read("src/backend/zuno/api/v1/knowledge.py")
+    service = _read("src/backend/zuno/api/services/knowledge.py")
 
     assert "from zuno.services.rag.handler import RagHandler" not in controller
     assert "await KnowledgeService.search_knowledge(" in controller
@@ -48,8 +48,8 @@ def test_knowledge_controller_routes_search_through_service_layer() -> None:
 
 
 def test_knowledge_file_controller_avoids_direct_storage_imports() -> None:
-    controller = _read("services/api/src/zuno/api/v1/knowledge_file.py")
-    service = _read("services/api/src/zuno/api/services/knowledge_file.py")
+    controller = _read("src/backend/zuno/api/v1/knowledge_file.py")
+    service = _read("src/backend/zuno/api/services/knowledge_file.py")
 
     assert "from zuno.services.storage import storage_client" not in controller
     assert "from zuno.utils.file_utils import get_object_key_from_public_url, get_save_tempfile" not in controller
@@ -59,8 +59,8 @@ def test_knowledge_file_controller_avoids_direct_storage_imports() -> None:
 
 
 def test_upload_controller_routes_storage_through_service_layer() -> None:
-    controller = _read("services/api/src/zuno/api/v1/upload.py")
-    service = _read("services/api/src/zuno/api/services/upload.py")
+    controller = _read("src/backend/zuno/api/v1/upload.py")
+    service = _read("src/backend/zuno/api/services/upload.py")
 
     assert "from zuno.api.services.upload import UploadService" in controller
     assert "from zuno.services.storage import storage_client" not in controller
@@ -69,8 +69,8 @@ def test_upload_controller_routes_storage_through_service_layer() -> None:
 
 
 def test_completion_controller_avoids_direct_agent_and_memory_imports() -> None:
-    controller = _read("services/api/src/zuno/api/v1/completion.py")
-    service = _read("services/api/src/zuno/api/services/completion.py")
+    controller = _read("src/backend/zuno/api/v1/completion.py")
+    service = _read("src/backend/zuno/api/services/completion.py")
 
     assert "from zuno.api.services.completion import CompletionService" in controller
     assert "from zuno.core.agents.general_agent import AgentConfig, GeneralAgent" not in controller
@@ -79,8 +79,8 @@ def test_completion_controller_avoids_direct_agent_and_memory_imports() -> None:
 
 
 def test_wechat_controller_avoids_direct_redis_and_agent_imports() -> None:
-    controller = _read("services/api/src/zuno/api/v1/wechat.py")
-    service = _read("services/api/src/zuno/api/services/wechat.py")
+    controller = _read("src/backend/zuno/api/v1/wechat.py")
+    service = _read("src/backend/zuno/api/services/wechat.py")
 
     assert "from zuno.services.redis import redis_client" not in controller
     assert "from zuno.services.workspace.wechat_agent import WeChatAgent" not in controller
@@ -90,8 +90,8 @@ def test_wechat_controller_avoids_direct_redis_and_agent_imports() -> None:
 
 
 def test_mcp_server_controller_avoids_direct_runtime_and_mcp_manager_imports() -> None:
-    controller = _read("services/api/src/zuno/api/v1/mcp_server.py")
-    service = _read("services/api/src/zuno/api/services/mcp_server.py")
+    controller = _read("src/backend/zuno/api/v1/mcp_server.py")
+    service = _read("src/backend/zuno/api/services/mcp_server.py")
 
     assert "from zuno.core.agents.structured_response_agent import StructuredResponseAgent" not in controller
     assert "from zuno.services.mcp.manager import MCPManager" not in controller
@@ -102,8 +102,8 @@ def test_mcp_server_controller_avoids_direct_runtime_and_mcp_manager_imports() -
 
 
 def test_workspace_controller_routes_runtime_orchestration_through_service_layer() -> None:
-    controller = _read("services/api/src/zuno/api/v1/workspace.py")
-    service = _read("services/api/src/zuno/api/services/workspace.py")
+    controller = _read("src/backend/zuno/api/v1/workspace.py")
+    service = _read("src/backend/zuno/api/services/workspace.py")
 
     assert "from zuno.api.services.workspace import WorkspaceService" in controller
     assert "from zuno.services.execution_policy import (" not in controller
@@ -116,8 +116,8 @@ def test_workspace_controller_routes_runtime_orchestration_through_service_layer
 
 
 def test_capability_controller_routes_registry_search_through_service_layer() -> None:
-    controller = _read("services/api/src/zuno/api/v1/capability.py")
-    service = _read("services/api/src/zuno/api/services/capability.py")
+    controller = _read("src/backend/zuno/api/v1/capability.py")
+    service = _read("src/backend/zuno/api/services/capability.py")
 
     assert "from zuno.api.services.capability import CapabilityService" in controller
     assert "from zuno.services.capability_registry import CapabilityRegistryService" not in controller
@@ -126,8 +126,8 @@ def test_capability_controller_routes_registry_search_through_service_layer() ->
 
 
 def test_tool_controller_routes_runtime_validation_and_connectivity_through_service_layer() -> None:
-    controller = _read("services/api/src/zuno/api/v1/tool.py")
-    service = _read("services/api/src/zuno/api/services/tool.py")
+    controller = _read("src/backend/zuno/api/v1/tool.py")
+    service = _read("src/backend/zuno/api/services/tool.py")
 
     assert "from zuno.api.services.tool import ToolRuntimeService, ToolService" in controller
     assert "from zuno.services.cli_tool_discovery import CliToolDiscoveryService" not in controller

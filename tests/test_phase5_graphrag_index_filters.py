@@ -8,9 +8,9 @@ from types import SimpleNamespace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
+SERVICE_API_ROOT = REPO_ROOT / "src" / "backend"
 BACKEND_ROOT = REPO_ROOT / "src/backend"
-for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+for runtime_root in (str(BACKEND_ROOT),):
     if runtime_root not in sys.path:
         sys.path.insert(0, runtime_root)
 
@@ -294,7 +294,7 @@ def test_chunk_level_graph_refresh_contract_is_present():
     graph_writer_content = (BACKEND_ROOT / "zuno/services/graphrag/graph_store/graph_writer.py").read_text(encoding="utf-8")
     graph_extractor_content = (BACKEND_ROOT / "zuno/services/graphrag/extractor.py").read_text(encoding="utf-8")
     chunk_ids_content = (
-        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/chunk_ids.py"
+        REPO_ROOT / "src/backend/zuno/services/rag/doc_parser/chunk_ids.py"
     ).read_text(encoding="utf-8")
 
     assert "await client.delete_by_source_chunk(task.knowledge_file_id, task.knowledge_id, source_chunk_id)" in manager_content

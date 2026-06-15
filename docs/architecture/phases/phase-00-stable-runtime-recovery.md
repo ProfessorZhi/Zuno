@@ -4,6 +4,10 @@
 
 Recover one stable, runnable backend baseline before any further architecture deepening.
 
+## Status
+
+Closed.
+
 ## Focus
 
 - preserve the paused `services/` migration attempt as history or WIP
@@ -15,7 +19,7 @@ Recover one stable, runnable backend baseline before any further architecture de
 ## Closure Gate
 
 - `src/backend/zuno/main.py` is the real backend entry again
-- `uvicorn zuno.main:app` is the shared startup path
+- `uvicorn --app-dir src/backend zuno.main:app` is the shared startup path
 - core runtime imports work again
 - focused runtime and entrypoint tests pass
-- the user has personally tried the recovered runtime before Phase 1 begins
+- the user has personally tried the recovered runtime before Phase 2 begins

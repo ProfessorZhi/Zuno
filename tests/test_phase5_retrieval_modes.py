@@ -4,7 +4,7 @@ import sys
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
+SERVICE_API_ROOT = REPO_ROOT / "src" / "backend"
 BACKEND_ROOT = REPO_ROOT / "src/backend"
 PLANNER_PATH = SERVICE_API_ROOT / "zuno/services/retrieval/planner.py"
 RETRIEVAL_MODELS_PATH = SERVICE_API_ROOT / "zuno/services/retrieval/models.py"

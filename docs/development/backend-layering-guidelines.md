@@ -4,7 +4,7 @@ This guide turns the current architecture direction into day-to-day backend plac
 
 ## Current Placement Default
 
-Until Phase 0 finishes, treat `src/backend/zuno/` as the stable-backend recovery baseline for new architectural decisions.
+Treat `src/backend/zuno/` as the stable backend runtime baseline for current architectural decisions.
 
 Prefer:
 
@@ -44,7 +44,7 @@ Do not deepen the mixed-root situation.
 
 That means:
 
-- do not treat `services/api/src/zuno/*` as the default placement rule while Phase 0 is still open
+- do not treat `services/api/src/zuno/*` as the default placement rule unless a later migration phase explicitly reopens that path
 - do not let docs, tests, and implementation each point to a different backend root
 - do not create new path assumptions without a matching verification step
 

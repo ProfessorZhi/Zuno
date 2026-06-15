@@ -1,0 +1,139 @@
+from sqlmodel import and_, or_, select, update, delete
+
+from zuno.database.models.llm import LLMTable
+from zuno.database.models.user import SystemUser
+from zuno.database.session import async_session_getter, session_getter
+
+UNSET = object()
+
+
+class LLMDao:
+    @classmethod
+    async def create_llm(
+        cls,
+        model: str,
+        base_url: str,
+        llm_type: str,
+        api_key: str,
+        provider: str,
+        user_id: str,
+        model_slot: str = None,
+    ):
+        with session_getter() as session:
+            llm = LLMTable(
+                model=model,
+                base_url=base_url,
+                api_key=api_key,
+                provider=provider,
+                user_id=user_id,
+                llm_type=llm_type,
+                model_slot=model_slot,
+            )
+            session.add(llm)
+            session.commit()
+
+    @classmethod
+    async def delete_llm(cls, llm_id: str):
+        with session_getter() as session:
+            sql = delete(LLMTable).where(LLMTable.llm_id == llm_id)
+            session.exec(sql)
+            session.commit()
+
+    @classmethod
+    async def update_llm(
+        cls,
+        llm_id: str,
+        model: str = None,
+        base_url: str = None,
+        api_key: str = None,
+        provider: str = None,
+        llm_type: str = None,
+        model_slot=UNSET,
+    ):
+        update_values = {
+            k: v
+            for k, v in {
+                "model": model,
+                "base_url": base_url,
+                "api_key": api_key,
+                "provider": provider,
+                "llm_type": llm_type,
+            }.items()
+            if v is not None
+        }
+
+        if model_slot is not UNSET:
+            update_values["model_slot"] = model_slot
+
+        if not update_values:
+            return
+
+        with session_getter() as session:
+            sql = update(LLMTable).where(LLMTable.llm_id == llm_id).values(**update_values)
+            session.exec(sql)
+            session.commit()
+
+    @classmethod
+    async def clear_model_slot(cls, model_slot: str):
+        with session_getter() as session:
+            sql = update(LLMTable).where(LLMTable.model_slot == model_slot).values(model_slot=None)
+            session.exec(sql)
+            session.commit()
+
+    @classmethod
+    async def get_llm_by_user(cls, user_id: str):
+        with session_getter() as session:
+            return session.exec(select(LLMTable).where(LLMTable.user_id == user_id)).all()
+
+    @classmethod
+    async def get_llm_by_id(cls, llm_id: str):
+        with session_getter() as session:
+            return session.exec(select(LLMTable).where(LLMTable.llm_id == llm_id)).first()
+
+    @classmethod
+    def get_llm_by_slot(cls, model_slot: str):
+        with session_getter() as session:
+            return session.exec(select(LLMTable).where(LLMTable.model_slot == model_slot)).first()
+
+    @classmethod
+    async def get_all_llm(cls):
+        with session_getter() as session:
+            return session.exec(select(LLMTable)).all()
+
+    @classmethod
+    async def get_user_id_by_llm(cls, llm_id: str):
+        with session_getter() as session:
+            return session.exec(select(LLMTable).where(LLMTable.llm_id == llm_id)).first()
+
+    @classmethod
+    async def get_llm_by_type(cls, llm_type: str):
+        with session_getter() as session:
+            return session.exec(select(LLMTable).where(LLMTable.llm_type == llm_type)).all()
+
+    @classmethod
+    async def get_llm_id_from_name(cls, llm_name: str, user_id: str):
+        with session_getter() as session:
+            return session.exec(
+                select(LLMTable).where(
+                    and_(
+                        LLMTable.model == llm_name,
+                        LLMTable.user_id == user_id,
+                    )
+                )
+            ).first()
+
+    @classmethod
+    async def search_llms_by_name(cls, user_id, llm_name):
+        async with async_session_getter() as session:
+            statement = select(LLMTable).where(
+                or_(
+                    LLMTable.user_id == user_id,
+                    LLMTable.user_id == SystemUser,
+                ),
+                LLMTable.model.ilike(f"%{llm_name}%"),
+            )
+            result = await session.exec(statement)
+            return result.all()
+
+
+__all__ = ["LLMDao", "UNSET"]
