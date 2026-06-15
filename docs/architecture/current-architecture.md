@@ -48,6 +48,26 @@ In other words:
 2. the Python backend runtime truth is `src/backend/zuno`
 3. the root-level `services/` move remains paused until a later architecture phase reopens it
 
+## Legacy Boundary
+
+The repo still contains:
+
+```text
+src/backend/zuno/legacy/agentchat/
+```
+
+That tree is now `compatibility-only`.
+
+It may still exist to support:
+
+- compat import surfaces named `agentchat`
+- paused migration bridges under `services/api`
+- explicit compatibility tests
+
+It is not runtime truth.
+
+Current mainline runtime work must not add new retrieval, GraphRAG, Docker, launcher, or default test dependencies on `src/backend/zuno/legacy/agentchat/`.
+
 ## Current Execution Truth
 
 The active execution priority is no longer:
@@ -89,7 +109,8 @@ What changed is the current stage:
 ```text
 Phase 0 stable runtime recovery is closed
 Phase 1 LangGraph runtime deepening is closed
-Phase 2 GraphRAG mainline deepening is next
+Phase 2 GraphRAG mainline deepening is closed
+the repo is in a legacy boundary hardening checkpoint before Phase 3
 ```
 
 ## Current Documentation Rule

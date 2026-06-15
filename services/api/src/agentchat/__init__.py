@@ -6,9 +6,13 @@ from pkgutil import extend_path
 
 __path__ = extend_path(__path__, __name__)
 
+# Compatibility-only package bridge.
+# This keeps old `agentchat` imports resolvable during the paused migration,
+# but it is not runtime truth.
+
 
 def _find_backend_root() -> Path | None:
-    # During Phase 2, compat imports still resolve to the legacy package tree.
+    # Compat imports still resolve to the legacy package tree until a later phase removes them.
     current = Path(__file__).resolve()
     for parent in current.parents:
         candidates = [

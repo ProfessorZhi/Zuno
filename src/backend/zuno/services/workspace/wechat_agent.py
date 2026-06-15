@@ -1,5 +1,6 @@
 from importlib import import_module
 
+# Compatibility-only facade over the legacy `agentchat` WeChat agent.
 _AGENTCHAT_MODULE = "agentchat.services.workspace.wechat_agent"
 _agentchat_wechat_agent = import_module(_AGENTCHAT_MODULE)
 

@@ -1,19 +1,24 @@
 # API Service
 
-`services/api` is the target backend service root defined by the current architecture upgrade.
+`services/api` is currently a paused migration surface, not runtime truth.
 
-Current truth:
+## Boundary
 
-- it is the migration-facing backend startup root in Phase 2
-- `src/` is now the migration-facing Python package root inside this service
-- `src/zuno/main.py`, `src/zuno/settings.py`, and `src/zuno/middleware/` already live here as migrated entry-layer code
-- `src/zuno/api/__init__.py`, `src/zuno/api/router.py`, and `src/zuno/api/v1/__init__.py` already live here as migrated API entry-layer code
-- `src/zuno/api/v1/agent.py`, `src/zuno/api/v1/agent_skill.py`, `src/zuno/api/v1/capability.py`, `src/zuno/api/v1/completion.py`, `src/zuno/api/v1/config.py`, `src/zuno/api/v1/dialog.py`, `src/zuno/api/v1/history.py`, `src/zuno/api/v1/knowledge.py`, `src/zuno/api/v1/knowledge_file.py`, `src/zuno/api/v1/llm.py`, `src/zuno/api/v1/mcp_agent.py`, `src/zuno/api/v1/mcp_chat.py`, `src/zuno/api/v1/mcp_server.py`, `src/zuno/api/v1/mcp_stdio_server.py`, `src/zuno/api/v1/mcp_user_config.py`, `src/zuno/api/v1/message.py`, `src/zuno/api/v1/tool.py`, `src/zuno/api/v1/upload.py`, `src/zuno/api/v1/usage_stats.py`, `src/zuno/api/v1/user.py`, `src/zuno/api/v1/wechat.py`, and `src/zuno/api/v1/workspace.py` already live here as migrated thin route controllers
-- `src/zuno/api/services/__init__.py`, `src/zuno/api/services/agent.py`, `src/zuno/api/services/agent_skill.py`, `src/zuno/api/services/capability.py`, `src/zuno/api/services/completion.py`, `src/zuno/api/services/dialog.py`, `src/zuno/api/services/history.py`, `src/zuno/api/services/knowledge.py`, `src/zuno/api/services/knowledge_file.py`, `src/zuno/api/services/llm.py`, `src/zuno/api/services/mcp_agent.py`, `src/zuno/api/services/mcp_chat.py`, `src/zuno/api/services/mcp_server.py`, `src/zuno/api/services/mcp_stdio_server.py`, `src/zuno/api/services/mcp_user_config.py`, `src/zuno/api/services/message.py`, `src/zuno/api/services/mineru.py`, `src/zuno/api/services/tool.py`, `src/zuno/api/services/upload.py`, `src/zuno/api/services/usage_stats.py`, `src/zuno/api/services/user.py`, `src/zuno/api/services/wechat.py`, `src/zuno/api/services/workspace.py`, and `src/zuno/api/services/workspace_session.py` now also live here as migrated service-layer modules
-- `src/zuno/prompts/__init__.py`, `src/zuno/prompts/completion.py`, `src/zuno/prompts/mcp.py`, `src/zuno/prompts/skill.py`, `src/zuno/services/__init__.py`, `src/zuno/services/execution_policy.py`, `src/zuno/services/pipeline/__init__.py`, `src/zuno/services/pipeline/manager.py`, `src/zuno/services/pipeline/models.py`, `src/zuno/services/pipeline/stages.py`, `src/zuno/services/queue/__init__.py`, `src/zuno/services/queue/client.py`, `src/zuno/services/queue/messages.py`, `src/zuno/services/queue/runner.py`, `src/zuno/services/queue/workers.py`, `src/zuno/services/rag/__init__.py`, `src/zuno/services/rag/embedding.py`, `src/zuno/services/rag/es_client.py`, `src/zuno/services/rag/handler.py`, `src/zuno/services/rag/parser.py`, `src/zuno/services/rag/retrieval.py`, `src/zuno/services/rag/rerank.py`, `src/zuno/services/rag/vl_embedding.py`, `src/zuno/services/rag/vector_db/__init__.py`, `src/zuno/services/rag/vector_db/chroma_client.py`, `src/zuno/services/rag/vector_db/milvus_client.py`, `src/zuno/services/rag/vector_db/milvus_lite_client.py`, `src/zuno/services/rag/doc_parser/__init__.py`, `src/zuno/services/rag/doc_parser/chunk_ids.py`, `src/zuno/services/rag/doc_parser/docx.py`, `src/zuno/services/rag/doc_parser/excel.py`, `src/zuno/services/rag/doc_parser/image.py`, `src/zuno/services/rag/doc_parser/markdown.py`, `src/zuno/services/rag/doc_parser/other_file.py`, `src/zuno/services/rag/doc_parser/pdf.py`, `src/zuno/services/rag/doc_parser/pptx.py`, `src/zuno/services/rag/doc_parser/text.py`, `src/zuno/services/redis.py`, `src/zuno/services/retrieval/__init__.py`, `src/zuno/services/retrieval/fusion.py`, `src/zuno/services/retrieval/models.py`, `src/zuno/services/retrieval/orchestrator.py`, `src/zuno/services/retrieval/planner.py`, `src/zuno/services/retrieval/retrievers.py`, `src/zuno/services/rewrite/__init__.py`, `src/zuno/services/rewrite/markdown_rewrite.py`, `src/zuno/services/rewrite/query_write.py`, `src/zuno/services/storage/__init__.py`, `src/zuno/services/storage/minio.py`, `src/zuno/services/storage/oss.py`, `src/zuno/services/workspace/__init__.py`, `src/zuno/services/workspace/attachment_service.py`, `src/zuno/tools/__init__.py`, `src/zuno/tools/image2text/__init__.py`, `src/zuno/tools/image2text/action.py`, `src/zuno/tools/text2image/__init__.py`, `src/zuno/tools/text2image/action.py`, `src/zuno/utils/convert.py`, `src/zuno/utils/helpers.py`, and `src/zuno/utils/model_output.py` now also live here as migrated runtime support modules
-- `src/zuno/api/JWT.py`, `src/zuno/api/errcode/`, and `src/zuno/utils/contexts.py` already live here as migrated thin contract modules
-- Docker/runtime compatibility now exposes the remaining legacy backend tree through `/app/legacy_backend`
-- runtime code still primarily resolves from `src/backend`
-- temporary package bridges exist here for `zuno` and compat-facing `agentchat`
+- runtime truth remains `src/backend/zuno/`
+- `services/api/src/zuno/` is kept in sync only where the repo still needs a migration-facing mirror
+- compat-facing `agentchat` packages under this service exist only to keep old import surfaces alive
+- those compat bridges are not runtime truth
 
-Do not treat this directory as fully migrated until code, entrypoints, scripts, tests, and docs no longer depend on those bridges.
+## What This Directory Is Allowed To Do
+
+- preserve a future service-root shape for later phases
+- host migration-facing mirrors that are explicitly kept aligned with `src/backend/zuno/`
+- expose temporary compat package bridges for `zuno` and compat-facing `agentchat`
+
+## What This Directory Must Not Be Treated As
+
+- the default backend startup root
+- the primary place to add new GraphRAG behavior
+- proof that the legacy import surface is still an active runtime dependency
+
+If code, tests, scripts, or Docker need a backend truth decision today, use `src/backend/zuno/` unless a file is explicitly marked as compat-only.

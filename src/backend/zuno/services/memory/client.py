@@ -1,5 +1,6 @@
 from importlib import import_module
 
+# Compatibility-only facade over the legacy `agentchat` memory client.
 _AGENTCHAT_MODULE = "agentchat.services.memory.client"
 _agentchat_memory_client = import_module(_AGENTCHAT_MODULE)
 

@@ -1,5 +1,6 @@
 from importlib import import_module
 
+# Compatibility-only facade over the legacy `agentchat` implementation.
 _AGENTCHAT_MODULE = "agentchat.core.agents.general_agent"
 _agentchat_general_agent = import_module(_AGENTCHAT_MODULE)
 
