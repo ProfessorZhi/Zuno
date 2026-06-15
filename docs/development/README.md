@@ -50,4 +50,9 @@ After any significant architecture or runtime change, review:
 5. the active file under [docs/architecture/phases/](../architecture/phases/)
 6. this index
 
+Relative path hints:
+
+- `../../README.md`
+- `../architecture/README.md`
+
 The goal is to keep maintainer workflow docs aligned with the current repo rather than the last completed cleanup operation.

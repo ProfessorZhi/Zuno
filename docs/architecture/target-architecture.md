@@ -56,10 +56,24 @@ The backend should be easy to explain as:
 Domain Pack
   -> LangGraph runtime
   -> retrieval planning
-  -> vector / BM25 / graph retrieval
+  -> vector / BM25 / Local GraphRAG retrieval
+  -> later Community GraphRAG global summary
   -> evidence fusion
   -> answer + citation check
   -> evaluation + proof
+```
+
+The GraphRAG target order should remain:
+
+```text
+Level 1: Local GraphRAG
+  current graph mainline
+
+Level 2: Community GraphRAG
+  later global-summary layer on the same graph
+
+Level 3: DRIFT-like hybrid
+  global overview + local deep dive
 ```
 
 ## Target Evolution Rule

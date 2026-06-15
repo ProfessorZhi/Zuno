@@ -147,10 +147,97 @@ Query
 
 ### 增强模式
 
-- `Conditional Requery + BM25 + Dense RAG + GraphRAG + Rerank + Citation Check + Grounding`
+- `Conditional Requery + BM25 + Dense RAG + Local GraphRAG + Fusion + Rerank + Citation Check + Grounding`
 - 适合关系型、跨条款、强引用、高质量场景
 
+这里要明确：
+
+```text
+当前增强模式里的 GraphRAG = Local GraphRAG
+```
+
+不是“社区摘要 + 全局图总结”整包全开。
+
 用户只选普通 / 增强两档，底层由 planner 决定这次具体启用哪些能力。
+
+## GraphRAG 分层语义
+
+### Local GraphRAG
+
+Local GraphRAG 负责：
+
+```text
+Query
+  -> Query Analyze
+  -> Entity Linking
+  -> Vector + BM25
+  -> Local Graph Path Retrieval
+  -> Chunk Hydration
+  -> Fusion
+  -> Rerank
+  -> Evidence Check
+  -> Answer with Citation
+```
+
+它解决的问题是：
+
+- 谁负责
+- 什么条件触发风险
+- 哪个条款支持结论
+- 哪条关系路径把问题带回原文证据
+
+### Community GraphRAG
+
+Community GraphRAG 负责：
+
+```text
+Entity / Relation Graph
+  -> Community Detection
+  -> Community Reports
+  -> Global Search
+  -> Map-Reduce Summary
+```
+
+它解决的问题是：
+
+- 这批知识整体有哪些主题
+- 风险主要聚在哪些社区
+- 某类问题在全库里呈现什么趋势
+
+### DRIFT-like Hybrid
+
+更后期的混合路线是：
+
+```text
+Community Report
+  -> choose theme region
+  -> Local Graph Search
+  -> hydrate chunk evidence
+  -> final answer
+```
+
+也就是：
+
+```text
+global overview + local deep dive
+```
+
+### 分层关系
+
+必须在编排层写清楚：
+
+```text
+Local 和 Community 共用同一张实体关系图。
+Local 不依赖 Community。
+Community 建立在已经成形的实体关系图上。
+```
+
+因此现阶段 planner 的顺序应是：
+
+1. 标准 RAG
+2. Local GraphRAG
+3. Community GraphRAG
+4. DRIFT-like hybrid
 
 ### `rag`
 
@@ -159,12 +246,14 @@ Query
 
 ### `graphrag`
 
+- 当前应解释为 `Local GraphRAG`
 - 主路径：vector + graph
 - vector 用于图谱入口 chunk
 
 ### `hybrid`
 
-- 主路径：vector + keyword + graph
+- 当前主路径：vector + keyword + Local GraphRAG
+- 后续可扩展为 `Community overview + Local deep dive`
 
 ### `auto`
 

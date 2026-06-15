@@ -21,6 +21,16 @@ keep current truth, execution phases, stable specs, support workflow, and histor
 - [assets/](./assets/)
   - documentation assets
 
+Relative path hints:
+
+- `./architecture/README.md`
+- `./development/architecture-doc-maintenance-workflow.md`
+- `./development/public-demo-evidence.md`
+- `./development/public-demo-runbook.md`
+- `./development/public-demo-acceptance.md`
+- `./development/README.md`
+- `./development/github-publish-boundary.md`
+
 ## First-Read Path
 
 If you are reading the project for the first time, use this order:

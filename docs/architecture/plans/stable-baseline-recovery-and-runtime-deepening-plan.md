@@ -183,6 +183,8 @@ Goals:
 - keep `RetrievalOrchestrator` as the unified retrieval entry
 - make retrieval mode decisions explicit
 - reduce business-specific hardcoding inside GraphRAG internals
+- make Local GraphRAG the explicit current graph-retrieval mainline
+- defer Community GraphRAG and DRIFT-like hybrid to later layers on the same graph
 
 ### Phase 3: Domain Pack Formalization
 

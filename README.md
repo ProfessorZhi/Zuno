@@ -196,6 +196,15 @@ First-time readers start here:
 6. [docs/development/public-demo-runbook.md](public-demo-runbook.md)
 7. [docs/development/public-demo-acceptance.md](public-demo-acceptance.md)
 
+Relative path hints:
+
+- `./docs/architecture/README.md`
+- `./docs/architecture/current-architecture.md`
+- `./docs/architecture/target-architecture.md`
+- `./docs/development/public-demo-evidence.md`
+- `./docs/development/public-demo-runbook.md`
+- `./docs/development/public-demo-acceptance.md`
+
 Maintainer-only release workflow:
 
 维护者路径：

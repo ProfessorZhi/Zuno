@@ -77,7 +77,8 @@ The backend runtime thesis is still the same:
 Domain Pack
   -> LangGraph runtime
   -> retrieval orchestration
-  -> vector / BM25 / graph retrieval
+  -> vector / BM25 / Local GraphRAG retrieval
+  -> later Community GraphRAG global summary
   -> answer generation
   -> citation / evidence checks
   -> local evaluation surfaces

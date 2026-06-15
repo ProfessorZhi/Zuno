@@ -10,10 +10,14 @@ Make GraphRAG a clean mainline capability instead of a partially hardcoded enhan
 - explicit retrieval planning
 - clear retriever mode decisions
 - reduced business hardcoding inside GraphRAG internals
+- 先把 Local GraphRAG 主线做扎实
+- keep Community GraphRAG as a later global-summary layer, not the current default
 
 ## Closure Gate
 
 - retrieval orchestration is unified
 - graph-specific behavior is explicit rather than accidental
+- Local GraphRAG is documented as the current graph mainline
+- Community GraphRAG is documented as a later layer on the same graph, not a competing default
 - runtime and retrieval docs describe the same GraphRAG model
 - focused GraphRAG runtime checks pass
