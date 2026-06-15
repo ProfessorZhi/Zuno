@@ -19,18 +19,12 @@ apps/
   desktop/
 
 src/backend/zuno/
-```
-
-and a paused future-facing migration surface:
-
-```text
-services/
-  api/
-
 domain-packs/
+services/
 ```
 
-That migration surface is not the active runtime baseline.
+The `services/` root is now only a reserved future boundary.
+There is no active `services/api` backend runtime tree in current truth.
 
 ## Current Backend Truth
 
@@ -40,13 +34,11 @@ The stable backend package expected by the rest of the repo is now:
 src/backend/zuno/
 ```
 
-The current `services/api/src/zuno/` tree should be treated as a paused migration surface, not as the confirmed runtime mainline.
-
 In other words:
 
 1. `apps/web` and `apps/desktop` remain valid top-level app shells
 2. the Python backend runtime truth is `src/backend/zuno`
-3. the root-level `services/` move remains paused until a later architecture phase reopens it
+3. the root-level `services/` move remains retired until a later architecture phase explicitly reopens it
 
 ## Legacy Boundary
 
@@ -61,7 +53,6 @@ That tree is now `compatibility-only`.
 It may still exist to support:
 
 - compat import surfaces named `agentchat`
-- paused migration bridges under `services/api`
 - explicit compatibility tests
 
 It is not runtime truth.
@@ -87,6 +78,8 @@ stabilize the recovered runtime baseline
 The current execution plan for that is:
 
 - `docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md`
+
+Any future attempt to move the backend into a root-level `services/` subtree must be treated as a new architecture phase, not as a continuation of the removed `services/api` path.
 
 ## Current Runtime Line
 

@@ -45,6 +45,7 @@ recover one stable runnable baseline
 ```
 
 The earlier `services/api` migration attempt remains useful as context, but it is not the current execution mainline.
+That tree has now been retired from the live repo; any future root-level service move must reopen under a new phase instead of reviving the old path.
 
 ## Target Shape For This Round
 

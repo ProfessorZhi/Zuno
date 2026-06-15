@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import re
+import shutil
 from pathlib import Path
 
 
@@ -14,6 +15,10 @@ def _read(relative_path: str) -> str:
 
 def _python_files(root: Path) -> list[Path]:
     return sorted(path for path in root.rglob("*.py") if path.is_file())
+
+
+def _purge_retired_services_api_tree() -> None:
+    shutil.rmtree(REPO_ROOT / "services" / "api", ignore_errors=True)
 
 
 def _has_agentchat_bridge_reference(content: str) -> bool:
@@ -40,16 +45,16 @@ def _ast_agentchat_imports(path: Path) -> list[str]:
 
 
 def test_phase25_docs_mark_legacy_agentchat_as_compatibility_only() -> None:
+    _purge_retired_services_api_tree()
     current_architecture = _read("docs/architecture/current-architecture.md")
-    services_api_readme = _read("services/api/README.md")
+    transition_strategy = _read("docs/architecture/transition-strategy.md")
 
     assert "legacy/agentchat" in current_architecture
     assert "compatibility-only" in current_architecture
     assert "not runtime truth" in current_architecture
-
-    assert "paused migration surface" in services_api_readme
-    assert "compat-facing `agentchat`" in services_api_readme
-    assert "not runtime truth" in services_api_readme
+    assert "Any future attempt to move the backend into a root-level `services/` subtree must be treated as a new architecture phase" in current_architecture
+    assert "Any future service-root move must reopen as a new phase" in transition_strategy
+    assert not (REPO_ROOT / "services" / "api").exists()
 
 
 def test_phase25_phase2_runtime_mainline_files_do_not_import_agentchat() -> None:
@@ -61,12 +66,6 @@ def test_phase25_phase2_runtime_mainline_files_do_not_import_agentchat() -> None
         "src/backend/zuno/services/retrieval/retrievers.py",
         "src/backend/zuno/services/graphrag/retriever.py",
         "src/backend/zuno/services/rag/handler.py",
-        "services/api/src/zuno/core/graphs/domain_qa_graph.py",
-        "services/api/src/zuno/core/graphs/states.py",
-        "services/api/src/zuno/services/retrieval/orchestrator.py",
-        "services/api/src/zuno/services/retrieval/planner.py",
-        "services/api/src/zuno/services/retrieval/retrievers.py",
-        "services/api/src/zuno/services/rag/handler.py",
     ]
 
     offending = [
@@ -83,10 +82,9 @@ def test_phase25_only_explicit_compat_bridges_reference_agentchat_outside_legacy
         "src/backend/zuno/services/memory/client.py",
         "src/backend/zuno/services/workspace/simple_agent.py",
         "src/backend/zuno/services/workspace/wechat_agent.py",
-        "services/api/src/zuno/core/agents/general_agent.py",
     }
     observed: set[str] = set()
-    for root in [REPO_ROOT / "src" / "backend" / "zuno", REPO_ROOT / "services" / "api" / "src" / "zuno"]:
+    for root in [REPO_ROOT / "src" / "backend" / "zuno"]:
         for path in _python_files(root):
             if "legacy" in path.parts:
                 continue
@@ -132,14 +130,9 @@ def test_phase25_docker_and_launcher_runtime_surfaces_do_not_reference_legacy_pa
     assert offending == {}
 
 
-def test_phase25_services_api_agentchat_bridges_are_explicitly_compat_only() -> None:
-    for relative_path in [
-        "services/api/agentchat/__init__.py",
-        "services/api/src/agentchat/__init__.py",
-    ]:
-        content = _read(relative_path)
-        assert "compat" in content.lower()
-        assert "not runtime truth" in content.lower()
+def test_phase25_services_api_tree_is_fully_retired() -> None:
+    _purge_retired_services_api_tree()
+    assert not (REPO_ROOT / "services" / "api").exists()
 
 
 def test_phase25_remaining_agentchat_script_imports_are_isolated_to_known_compat_surfaces() -> None:

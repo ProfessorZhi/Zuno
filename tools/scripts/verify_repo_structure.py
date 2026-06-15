@@ -16,7 +16,6 @@ REQUIRED_PATHS = [
     "infra/db",
     "infra/docker",
     "services",
-    "services/api",
     "src/backend",
     "src/backend/zuno",
     "src/backend/zuno/main.py",
@@ -74,7 +73,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "src/backend/zuno/core/*",
         "src/backend/zuno/services/*",
         "src/backend/zuno/database/dao/*",
-        "do not treat `services/api/src/zuno/*` as the default placement rule unless a later migration phase explicitly reopens that path",
+        "do not recreate the retired service-root backend tree as the default placement rule unless a later migration phase explicitly creates a new service-root execution plan",
     ],
     "docs/development/README.md": [
         "Architecture Doc Maintenance Workflow",

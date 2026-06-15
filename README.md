@@ -32,7 +32,7 @@ Phase 0 已完成稳定运行恢复
 
 - `apps/web` 与 `apps/desktop` 已经是明确应用入口
 - `src/backend/zuno` 是当前唯一后端运行真相
-- 根目录 `services/`、`domain-packs/` 等结构已经出现，但 `services/api` 仍是暂停中的未来迁移面
+- 根目录 `services/` 仅保留为未来服务拆分预留位，不再承载当前后端运行面
 - 当前 Docker、launcher、测试应统一围绕 `src/backend/zuno`
 
 因此当前最重要的不是继续扩目录，而是在稳定运行真相之上推进后续架构升级。
@@ -83,17 +83,18 @@ monorepo now, service-ready later
 │  ├─ reference/                # Stable reference material
 │  ├─ assets/                   # Documentation assets
 │  └─ prototypes/               # Experiments safe to keep outside the front path
+├─ domain-packs/                # Domain knowledge packs and related runtime assets
 ├─ infra/
 │  ├─ db/                       # Database and migration infra
 │  └─ docker/                   # Dockerfiles, compose stacks, nginx config
-├─ services/                    # Migration-era service surfaces still present in repo
+├─ services/                    # Reserved for future service extraction, no active backend runtime here
 ├─ src/
 │  └─ backend/                  # Stable-backend recovery baseline and legacy runtime source
 ├─ tests/                       # Repo-level verification
 └─ tools/                       # Scripts, launchers, evals, maintenance tooling
 ```
 
-如果你是第一次看这个仓库，不要把 `services/` 理解成“当前迁移已经完成”。它现在更接近恢复阶段必须治理的混合面。
+如果你是第一次看这个仓库，不要把 `services/` 理解成“后端现在就在这里”。当前后端运行真相只有 `src/backend/zuno`。
 
 ## Quick Start
 
@@ -121,7 +122,7 @@ docker compose -f infra/docker/docker-compose.yml up --build -d
 说明：
 
 - 当前 Docker 栈已经与 `src/backend/zuno` 运行真相对齐
-- `services/api` 仍保留在仓库里，但不再作为当前运行入口
+- 根目录没有第二套后端运行树；当前运行入口只指向 `src/backend/zuno`
 
 更多 Docker 说明见 [infra/docker/README.md](./infra/docker/README.md)。
 

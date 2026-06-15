@@ -14,7 +14,6 @@ def test_phase0_required_paths_exist() -> None:
         "infra/db",
         "infra/docker",
         "services",
-        "services/api",
         "src/backend",
         "src/backend/zuno",
         "src/backend/zuno/main.py",
@@ -96,7 +95,7 @@ def test_backend_layering_guidelines_use_src_backend_as_default() -> None:
         "src/backend/zuno/core/*",
         "src/backend/zuno/services/*",
         "src/backend/zuno/database/dao/*",
-        "do not treat `services/api/src/zuno/*` as the default placement rule unless a later migration phase explicitly reopens that path",
+        "do not recreate the retired service-root backend tree as the default placement rule unless a later migration phase explicitly creates a new service-root execution plan",
     ]
 
     for phrase in required_phrases:

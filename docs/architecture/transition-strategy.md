@@ -16,7 +16,8 @@ then:
 resume deeper architecture work from that stable baseline
 ```
 
-The root-level `services/api` migration is paused.
+The earlier root-level `services/api` migration has been retired.
+Any future service-root move must reopen as a new phase with fresh verification.
 
 ## Rules
 

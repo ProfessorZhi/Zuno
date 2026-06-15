@@ -44,7 +44,7 @@ Do not deepen the mixed-root situation.
 
 That means:
 
-- do not treat `services/api/src/zuno/*` as the default placement rule unless a later migration phase explicitly reopens that path
+- do not recreate the retired service-root backend tree as the default placement rule unless a later migration phase explicitly creates a new service-root execution plan
 - do not let docs, tests, and implementation each point to a different backend root
 - do not create new path assumptions without a matching verification step
 

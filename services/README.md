@@ -1,10 +1,10 @@
 # Services
 
-This directory is part of the Phase 1 repo skeleton.
+This directory is part of the repo skeleton only.
 
 Current truth:
 
 - `src/backend` is still the real backend source root
-- `services/api` is now the migration-facing backend startup root
+- no active backend runtime lives under `services/`
 
-Phase 2 is migrating the runnable backend boundary here together with imports, entrypoints, scripts, tests, and docs.
+If Zuno later reopens root-level service extraction, that work must start as a new architecture phase with fresh docs, runtime wiring, and verification.
