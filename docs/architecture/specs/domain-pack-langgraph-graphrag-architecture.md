@@ -285,11 +285,12 @@ ReQuery + Vector + BM25 + Local GraphRAG + Fusion + Rerank + Evidence Check
 ## 目录目标
 
 ```text
-src/backend/agentchat/
+src/backend/zuno/
   core/graphs/
   core/runtime/
   services/domain_pack/
   services/graphrag/
+  services/retrieval/
   services/llm/
   services/embedding/
   domain_packs/

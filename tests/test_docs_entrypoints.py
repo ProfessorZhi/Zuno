@@ -78,3 +78,21 @@ def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() ->
 
     for phrase in required_phrases:
         assert phrase in content, f"missing docs entrypoint verifier phrase: {phrase}"
+
+
+def test_architecture_docs_use_clean_relative_links_in_active_entrypoints() -> None:
+    architecture_index = (
+        REPO_ROOT / "docs" / "architecture" / "README.md"
+    ).read_text(encoding="utf-8")
+    phases_index = (
+        REPO_ROOT / "docs" / "architecture" / "phases" / "README.md"
+    ).read_text(encoding="utf-8")
+
+    assert "./phases/README.md" in architecture_index
+    assert "./history/README.md" in architecture_index
+    assert "../history/README.md" in phases_index
+
+    abnormal_long_path = "05_TopDown_题库学习/项目/02_项目映射/Zuno/"
+
+    assert abnormal_long_path not in architecture_index
+    assert abnormal_long_path not in phases_index

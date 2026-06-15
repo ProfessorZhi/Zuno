@@ -14,11 +14,11 @@ Its job is to keep four things aligned:
 If you want the shortest current path, read:
 
 1. [Current Architecture](current-architecture.md)
-2. [Stable Baseline Recovery And Runtime Deepening Plan](stable-baseline-recovery-and-runtime-deepening-plan.md)
+2. [Stable Baseline Recovery And Runtime Deepening Plan](./plans/stable-baseline-recovery-and-runtime-deepening-plan.md)
 3. [Target Architecture](target-architecture.md)
 4. [Transition Strategy](transition-strategy.md)
-5. [Architecture Upgrade Phases](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/phases/README.md)
-6. [Architecture Upgrade Design](architecture-upgrade-2026-06.md)
+5. [Architecture Upgrade Phases](./phases/README.md)
+6. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
 
 ## Directory Map
 
@@ -51,7 +51,15 @@ docs/architecture/
   - major architecture choices and why they were made
 - `history/`
   - older plans, audits, readiness notes, and legacy execution materials
-  - see [Architecture History](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/history/README.md)
+  - see [Architecture History](./history/README.md)
+
+Relative path hints:
+
+- `./current-architecture.md`
+- `./target-architecture.md`
+- `./phases/README.md`
+- `./history/README.md`
+- `./specs/enterprise-retrieval-governance.md`
 
 ## Current Rule
 
@@ -67,14 +75,14 @@ Use `history/` only when you need:
 
 If you want the deeper technical model after reading the current path:
 
-1. [Architecture Upgrade Design](architecture-upgrade-2026-06.md)
-2. [Domain Pack + LangGraph + GraphRAG Architecture](domain-pack-langgraph-graphrag-architecture.md)
-3. [LangGraph Runtime](langgraph-runtime.md)
-4. [Retrieval Orchestrator](retrieval-orchestrator.md)
-5. [Enterprise Retrieval Governance](enterprise-retrieval-governance.md)
-6. [RAG Evaluation And Observability](rag-evaluation-and-observability.md)
-7. [Layered Backend And Service Evolution](layered-backend-and-service-evolution.md)
-8. [Platform Evolution And Future Direction](platform-evolution-and-future-direction.md)
+1. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
+2. [Domain Pack + LangGraph + GraphRAG Architecture](./specs/domain-pack-langgraph-graphrag-architecture.md)
+3. [LangGraph Runtime](./specs/langgraph-runtime.md)
+4. [Retrieval Orchestrator](./specs/retrieval-orchestrator.md)
+5. [Enterprise Retrieval Governance](./specs/enterprise-retrieval-governance.md)
+6. [RAG Evaluation And Observability](./specs/rag-evaluation-and-observability.md)
+7. [Layered Backend And Service Evolution](./specs/layered-backend-and-service-evolution.md)
+8. [Platform Evolution And Future Direction](./specs/platform-evolution-and-future-direction.md)
 
 ## Maintenance Rule
 

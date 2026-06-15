@@ -67,6 +67,7 @@ def main() -> int:
                 "./current-architecture.md",
                 "./target-architecture.md",
                 "./phases/README.md",
+                "./history/README.md",
                 "./specs/enterprise-retrieval-governance.md",
             ],
         )
@@ -88,6 +89,32 @@ def main() -> int:
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
+        print("documentation entrypoint verification failed.")
+        return 1
+
+    abnormal_long_path = "05_TopDown_题库学习/项目/02_项目映射/Zuno/"
+    legacy_target_path = "src/backend/agentchat/"
+
+    if abnormal_long_path in architecture_index:
+        print(
+            "ERROR: docs/architecture/README.md still contains abnormal long local paths."
+        )
+        print("documentation entrypoint verification failed.")
+        return 1
+
+    if abnormal_long_path in _read("docs/architecture/phases/README.md"):
+        print(
+            "ERROR: docs/architecture/phases/README.md still contains abnormal long local paths."
+        )
+        print("documentation entrypoint verification failed.")
+        return 1
+
+    if legacy_target_path in _read(
+        "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md"
+    ):
+        print(
+            "ERROR: GraphRAG architecture spec still points to src/backend/agentchat/."
+        )
         print("documentation entrypoint verification failed.")
         return 1
 

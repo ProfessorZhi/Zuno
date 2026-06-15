@@ -30,7 +30,7 @@ It is not the first-read public explanation path.
 
 Completed workflow temperature docs have been downgraded to:
 
-- [development/history/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/development/history/README.md)
+- [development/history/README.md](./history/README.md)
 
 This includes one-off:
 
@@ -43,10 +43,10 @@ This includes one-off:
 
 After any significant architecture or runtime change, review:
 
-1. [README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/README.md)
-2. [docs/architecture/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/README.md)
-3. [docs/architecture/current-architecture.md](current-architecture.md)
-4. [docs/architecture/target-architecture.md](target-architecture.md)
+1. [README.md](../../README.md)
+2. [docs/architecture/README.md](../architecture/README.md)
+3. [docs/architecture/current-architecture.md](../architecture/current-architecture.md)
+4. [docs/architecture/target-architecture.md](../architecture/target-architecture.md)
 5. the active file under [docs/architecture/phases/](../architecture/phases/)
 6. this index
 

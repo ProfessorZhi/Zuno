@@ -20,11 +20,11 @@ Zuno 是一个本地优先的 Agent Workspace。它把 LangGraph 编排、RAG / 
 
 当前 phase 程序见：
 
-- [docs/architecture/phases/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/phases/README.md)
+- [docs/architecture/phases/README.md](./docs/architecture/phases/README.md)
 
 当前恢复与深化计划见：
 
-- [docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md](stable-baseline-recovery-and-runtime-deepening-plan.md)
+- [docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md](./docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md)
 
 ## Repo Reality
 
@@ -123,7 +123,7 @@ docker compose -f infra/docker/docker-compose.yml up --build -d
 - 当前 Docker 栈仍通过仓库里的迁移中运行面启动
 - `Phase 0` 的目标之一就是把这条启动链收口成稳定、单一、可解释的基线
 
-更多 Docker 说明见 [infra/docker/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/infra/docker/README.md)。
+更多 Docker 说明见 [infra/docker/README.md](./infra/docker/README.md)。
 
 ### 3. Local App Surfaces
 
@@ -152,7 +152,7 @@ npm install
 npm start
 ```
 
-Windows 快捷启动入口见 [tools/launchers/windows/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/tools/launchers/windows/README.md)。
+Windows 快捷启动入口见 [tools/launchers/windows/README.md](./tools/launchers/windows/README.md)。
 
 Windows 上如果你只想做 `Phase 0` 用户检查，也可以直接运行：
 
@@ -175,10 +175,10 @@ Zuno 已经内置本地评测链，重点支持：
 
 关键文档：
 
-- [docs/architecture/plans/rag-local-eval-scheme.md](rag-local-eval-scheme.md)
-- [docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md](domain-pack-langgraph-graphrag-architecture.md)
-- [docs/development/public-demo-runbook.md](public-demo-runbook.md)
-- [docs/development/public-demo-acceptance.md](public-demo-acceptance.md)
+- [docs/architecture/plans/rag-local-eval-scheme.md](./docs/architecture/plans/rag-local-eval-scheme.md)
+- [docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md](./docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md)
+- [docs/development/public-demo-runbook.md](./docs/development/public-demo-runbook.md)
+- [docs/development/public-demo-acceptance.md](./docs/development/public-demo-acceptance.md)
 
 ## Documentation
 
@@ -188,13 +188,13 @@ First-time readers start here:
 
 首次阅读建议按这条路径：
 
-1. [docs/architecture/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/README.md)
-2. [docs/architecture/current-architecture.md](current-architecture.md)
-3. [docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md](stable-baseline-recovery-and-runtime-deepening-plan.md)
-4. [docs/architecture/target-architecture.md](target-architecture.md)
-5. [docs/development/public-demo-evidence.md](public-demo-evidence.md)
-6. [docs/development/public-demo-runbook.md](public-demo-runbook.md)
-7. [docs/development/public-demo-acceptance.md](public-demo-acceptance.md)
+1. [docs/architecture/README.md](./docs/architecture/README.md)
+2. [docs/architecture/current-architecture.md](./docs/architecture/current-architecture.md)
+3. [docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md](./docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md)
+4. [docs/architecture/target-architecture.md](./docs/architecture/target-architecture.md)
+5. [docs/development/public-demo-evidence.md](./docs/development/public-demo-evidence.md)
+6. [docs/development/public-demo-runbook.md](./docs/development/public-demo-runbook.md)
+7. [docs/development/public-demo-acceptance.md](./docs/development/public-demo-acceptance.md)
 
 Relative path hints:
 
@@ -209,10 +209,10 @@ Maintainer-only release workflow:
 
 维护者路径：
 
-- [docs/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/README.md)
-- [docs/architecture/phases/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/phases/README.md)
-- [docs/development/architecture-doc-maintenance-workflow.md](architecture-doc-maintenance-workflow.md)
-- [docs/development/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/development/README.md)
+- [docs/README.md](./docs/README.md)
+- [docs/architecture/phases/README.md](./docs/architecture/phases/README.md)
+- [docs/development/architecture-doc-maintenance-workflow.md](./docs/development/architecture-doc-maintenance-workflow.md)
+- [docs/development/README.md](./docs/development/README.md)
 
 ## Verification
 

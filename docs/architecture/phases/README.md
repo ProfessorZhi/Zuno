@@ -17,8 +17,9 @@ That belongs in `../specs/`.
 2. [Phase 1: LangGraph Runtime Deepening](phase-01-langgraph-runtime-deepening.md)
 3. [Phase 2: GraphRAG Mainline Deepening](phase-02-graphrag-mainline-deepening.md)
 4. [Phase 3: Domain Pack Formalization](phase-03-domain-pack-formalization.md)
-5. [Phase 4: Local Eval Strengthening](phase-04-local-eval-strengthening.md)
+5. [Phase 4: Knowledge Config V2 + Local Eval Strengthening](phase-04-local-eval-strengthening.md)
 6. [Phase 5: Docs And Public Explanation Sync](phase-05-docs-and-public-explanation-sync.md)
+7. Phase 6: Agent GraphRAG Pluginization / Future Platform Layer
 
 ## Current Execution Rule
 
@@ -34,8 +35,20 @@ Do not begin Phase 1 until:
 2. focused startup and import checks pass
 3. the user has personally tried the recovered runtime
 
+## Current Track Notes
+
+- `Phase 4` now explicitly carries two linked subtracks:
+  - `Knowledge Config V2`
+  - `Local Eval Strengthening`
+- `Phase 6` is a future platform layer for `Agent GraphRAG Pluginization`.
+- `Community GraphRAG` remains a later layer, not the current default retrieval mainline.
+
+Relative path hints:
+
+- `../history/README.md`
+
 ## Historical Rule
 
 Older phase files from the paused service-migration-first program have been downgraded to:
 
-- [Architecture History](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/history/README.md)
+- [Architecture History](../history/README.md)

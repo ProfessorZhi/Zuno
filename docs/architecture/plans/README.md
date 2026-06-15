@@ -4,7 +4,7 @@ This directory keeps plan documents that support the current architecture progra
 
 If you want the active execution order, start from:
 
-- [Architecture Upgrade Phases](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/phases/README.md)
+- [Architecture Upgrade Phases](../phases/README.md)
 
 If you want the current recovery-and-deepening plan, start from:
 
