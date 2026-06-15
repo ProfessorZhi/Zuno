@@ -1,10 +1,18 @@
 const USER_AVATAR_ASSET_VERSION = '20260511-clean3'
 
+const resolveDesktopAvatarPath = (value: string) => {
+  if (typeof window === 'undefined') return value
+  if (window.location.protocol !== 'file:') return value
+  if (!value.startsWith('/avatars/')) return value
+  return `.${value}`
+}
+
 export const withUserAvatarVersion = (value: string) => {
   if (value.startsWith('/avatars/user/zuno-user-') && !value.includes('?')) {
-    return `${value}?v=${USER_AVATAR_ASSET_VERSION}`
+    const withVersion = `${value}?v=${USER_AVATAR_ASSET_VERSION}`
+    return resolveDesktopAvatarPath(withVersion)
   }
-  return value
+  return resolveDesktopAvatarPath(value)
 }
 
 export const USER_AVATAR_PRESETS = Array.from(

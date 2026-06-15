@@ -191,7 +191,7 @@ Zuno 未来需要保留往下面两类方向演进的可能：
 - 让控制层、服务层、DAO 层、基础设施层职责清楚
 - 保证未来可以把部分服务抽离出去
 
-这类边界由 [Layered Backend And Service Evolution](./layered-backend-and-service-evolution.md) 负责定义。
+这类边界由 [Layered Backend And Service Evolution](layered-backend-and-service-evolution.md) 负责定义。
 
 ## 后端分层原则
 

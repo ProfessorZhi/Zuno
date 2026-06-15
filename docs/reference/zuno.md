@@ -1,24 +1,31 @@
 # Zuno 项目参考
 
-Zuno 是一个本地优先的个人 Agent 工作台，用 Web、桌面端和 Docker 运行栈统一承载聊天、Agent 执行、MCP、Skills、知识库、工具和模型配置。
+这份文档提供 Zuno 的稳定参考视图，不承担当前 phase 或迁移决策说明。
+
+如果你要看当前执行真相，请先读：
+
+- [README](05_TopDown_题库学习/项目/02_项目映射/Zuno/README.md)
+- [当前架构](current-architecture.md)
+- [当前 phase 程序](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/phases/README.md)
 
 ## 核心入口
 
-- `src/backend/`：FastAPI 后端、Agent runtime、RAG、MCP 和工具执行。
-- `apps/web/`：Vue 3 + Vite Web 工作台。
-- `apps/desktop/`：Electron 桌面端壳层，不和 `apps/web/` 混放。
-- `infra/db/`：数据库迁移与 Alembic 配置，和产品源码解耦。
-- `infra/docker/`：Dockerfile、Compose、nginx 和容器运行配置模板。
-- `tools/launchers/windows/`：Windows Web/Desktop 稳定启动入口。
-- `tools/cli/`：可被 Agent 调用的本地 CLI 工具。
-- `tools/scripts/`：本地维护脚本。
-- `tools/migrations/`：一次性迁移脚本。
+- `apps/web/`：Vue 3 + Vite Web 工作台
+- `apps/desktop/`：Electron 桌面端壳层
+- `src/backend/`：当前稳定后端恢复基线
+- `infra/db/`：数据库迁移与 Alembic 配置
+- `infra/docker/`：Dockerfile、Compose、nginx 和容器运行配置
+- `tools/launchers/windows/`：Windows Web/Desktop 启动入口
+- `tools/scripts/`：本地维护脚本
+- `tools/evals/`：本地评测与验证工具
 
-这里不是“目录没统一”，而是刻意分成两种语义：
+## 当前说明
 
-- `src/*` 放核心产品源码，目前主要是 backend
-- `apps/*` 放应用壳或宿主
-- 根 `package.json` 用 npm workspaces 把 `apps/web` 和 `apps/desktop` 收成一个工程
+仓库里仍能看到部分迁移期结构，但当前规则是：
+
+- 前台文档以稳定恢复优先的 phase 口径为准
+- 历史迁移材料不再作为默认阅读入口
+- 是否继续更大规模目录迁移，要等 Phase 0 恢复验证后再决定
 
 ## 运行入口
 
@@ -29,16 +36,16 @@ Zuno 是一个本地优先的个人 Agent 工作台，用 Web、桌面端和 Doc
 
 ## 本地资料与配置
 
-- `.local/` 放个人资料、学习材料和历史运行数据，不提交。
-- `infra/docker/docker_config.local.yaml` 放 Docker 本地模型配置和密钥，不提交。
-- `.local/config/agentchat/config.local.yaml` 放本地后端覆盖配置，不提交。
-- Docker named volumes 保存 PostgreSQL、Redis、Neo4j、MinIO 和后端向量库数据。
+- `.local/` 放个人资料、学习材料和历史运行数据，不提交
+- `infra/docker/docker_config.local.yaml` 放 Docker 本地模型配置和密钥，不提交
+- `.local/config/agentchat/config.local.yaml` 放本地后端覆盖配置，不提交
+- Docker named volumes 保存 PostgreSQL、Redis、Neo4j、MinIO 和后端向量库数据
 
 ## 相关文档
 
-- [README](../../README.md)
-- [核心架构](./core.md)
-- [数据库结构](./database.md)
-- [API 参考](./api.md)
-- [Docker 运行](../../infra/docker/README.md)
-- [数据库迁移](../../infra/db/README.md)
+- [README](05_TopDown_题库学习/项目/02_项目映射/Zuno/README.md)
+- [核心架构](core.md)
+- [数据库结构](database.md)
+- [API 参考](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/reference/api.md)
+- [Docker 运行](05_TopDown_题库学习/项目/02_项目映射/Zuno/infra/docker/README.md)
+- [数据库迁移](05_TopDown_题库学习/项目/02_项目映射/Zuno/infra/db/README.md)

@@ -8,13 +8,14 @@ from langchain_core.messages import HumanMessage
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
-def _ensure_backend_path() -> None:
-    backend_path = str(BACKEND_ROOT)
-    if backend_path not in sys.path:
-        sys.path.insert(0, backend_path)
+def _ensure_runtime_paths() -> None:
+    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+        if runtime_root not in sys.path:
+            sys.path.insert(0, runtime_root)
 
 
 def _build_fake_retrieval_result(*, answer_text: str) -> dict:
@@ -85,7 +86,7 @@ def _runtime_settings(*, multi_agent_enabled: bool = False) -> dict:
 
 
 def test_zuno_general_agent_knowledge_tool_runs_real_domain_qa_graph(monkeypatch):
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     ga = importlib.import_module("agentchat.core.agents.general_agent")
     AgentConfig = importlib.import_module("zuno.core.agents.general_agent").AgentConfig
@@ -133,7 +134,7 @@ def test_zuno_general_agent_knowledge_tool_runs_real_domain_qa_graph(monkeypatch
 
 
 def test_zuno_general_agent_astream_runs_real_multi_agent_runtime_chain(monkeypatch):
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     ga = importlib.import_module("agentchat.core.agents.general_agent")
     AgentConfig = importlib.import_module("zuno.core.agents.general_agent").AgentConfig

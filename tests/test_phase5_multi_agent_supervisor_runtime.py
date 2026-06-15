@@ -5,17 +5,18 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
-def _ensure_backend_path() -> None:
-    backend_path = str(BACKEND_ROOT)
-    if backend_path not in sys.path:
-        sys.path.insert(0, backend_path)
+def _ensure_runtime_paths() -> None:
+    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+        if runtime_root not in sys.path:
+            sys.path.insert(0, runtime_root)
 
 
 def test_multi_agent_supervisor_graph_builds_initial_state():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     MultiAgentSupervisorGraph = importlib.import_module(
         "zuno.core.graphs.multi_agent_supervisor_graph"
@@ -38,7 +39,7 @@ def test_multi_agent_supervisor_graph_builds_initial_state():
 
 
 def test_multi_agent_supervisor_graph_runs_actual_domain_graph_path():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
     MultiAgentSupervisorGraph = importlib.import_module(
@@ -169,7 +170,7 @@ def test_multi_agent_supervisor_graph_runs_actual_domain_graph_path():
 
 
 def test_multi_agent_supervisor_graph_records_failure_and_finalizes():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     MultiAgentSupervisorGraph = importlib.import_module(
         "zuno.core.graphs.multi_agent_supervisor_graph"

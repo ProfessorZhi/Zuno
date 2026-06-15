@@ -132,6 +132,47 @@ def test_zuno_api_alias_module_matrix_imports():
         assert module is not None, module_name
 
 
+def test_zuno_api_imports_resolve_from_services_api_surface():
+    modules = [
+        "zuno.api",
+        "zuno.api.router",
+        "zuno.api.JWT",
+        "zuno.api.errcode",
+        "zuno.api.errcode.base",
+        "zuno.api.errcode.user",
+        "zuno.api.v1.user",
+        "zuno.api.services.user",
+    ]
+
+    for module_name in modules:
+        module = importlib.import_module(module_name)
+        module_path = Path(module.__file__).as_posix()
+        assert "/services/api/src/zuno/api/" in module_path, module_path
+
+
+def test_zuno_service_imports_resolve_from_services_api_surface():
+    modules = [
+        "zuno.middleware",
+        "zuno.middleware.trace_id_middleware",
+        "zuno.middleware.white_list_middleware",
+        "zuno.services.queue",
+        "zuno.services.queue.client",
+        "zuno.services.queue.runner",
+        "zuno.services.retrieval",
+        "zuno.services.retrieval.orchestrator",
+        "zuno.services.rewrite",
+        "zuno.services.rewrite.query_write",
+    ]
+
+    for module_name in modules:
+        module = importlib.import_module(module_name)
+        module_path = Path(module.__file__).as_posix()
+        assert (
+            "/services/api/src/zuno/services/" in module_path
+            or "/services/api/src/zuno/middleware/" in module_path
+        ), module_path
+
+
 def test_zuno_database_alias_module_matrix_imports():
     modules = [
         "zuno.database.init_data",

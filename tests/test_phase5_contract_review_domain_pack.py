@@ -5,17 +5,18 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
-def _ensure_backend_path() -> None:
-    backend_path = str(BACKEND_ROOT)
-    if backend_path not in sys.path:
-        sys.path.insert(0, backend_path)
+def _ensure_runtime_paths() -> None:
+    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+        if runtime_root not in sys.path:
+            sys.path.insert(0, runtime_root)
 
 
 def test_contract_review_pack_can_be_loaded_from_zuno_runtime():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
     DomainPackRegistry = importlib.import_module("zuno.services.domain_pack.registry").DomainPackRegistry
@@ -27,13 +28,13 @@ def test_contract_review_pack_can_be_loaded_from_zuno_runtime():
     assert pack.id == "contract_review"
     assert pack.schema == "schema.json"
     assert pack.retrieval_policy_data["graph_hop_limit"] == 2
-    assert "缁撹" in (pack.answer_template_text or "")
+    assert "结论" in (pack.answer_template_text or "")
     assert pack.schema_data is not None
     assert "contract_review" in pack_ids
 
 
 def test_structured_graph_extractor_builds_contract_review_entities_and_relations():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
     StructuredGraphExtractor = importlib.import_module(
@@ -101,7 +102,7 @@ def test_structured_graph_extractor_builds_contract_review_entities_and_relation
 
 
 def test_structured_graph_extractor_recovers_contract_title_from_file_name():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
     StructuredGraphExtractor = importlib.import_module(
@@ -140,7 +141,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
 
 
 def test_graph_retriever_handles_contract_review_chinese_query():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     GraphRetriever = importlib.import_module("zuno.services.graphrag.retriever").GraphRetriever
 

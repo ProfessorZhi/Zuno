@@ -1,12 +1,12 @@
 # Public Demo Acceptance
 
-This note turns the current public demo material into an explicit Phase 6 acceptance layer.
+This note turns the current public demo material into an explicit public-proof acceptance layer.
 
 ## Why This Exists
 
 The public demo is no longer only "we have a runbook" or "we have some benchmark numbers".
 
-For Phase 6, the public-facing proof needs to show all of the following:
+For the current architecture-upgrade program, the public-facing proof needs to show all of the following:
 
 1. there is a real quality result for a public audience
 2. there is a reproducible local command path
@@ -14,21 +14,21 @@ For Phase 6, the public-facing proof needs to show all of the following:
 4. there is at least one low-cost end-to-end runtime smoke path that produces a real report artifact
 5. evidence-insufficient cases fail conservatively instead of fabricating a grounded-looking answer
 
-## Phase 6 Acceptance Gate
+## Public Proof Acceptance Gate
 
 Treat the public demo as ready only when all of the following are true:
 
-1. [public-demo-runbook.md](./public-demo-runbook.md) contains a local embedding preflight command
-2. [public-demo-runbook.md](./public-demo-runbook.md) contains both:
+1. [public-demo-runbook.md](public-demo-runbook.md) contains a local embedding preflight command
+2. [public-demo-runbook.md](public-demo-runbook.md) contains both:
    - the generic `graph_relation` compare matrix command
    - the `contract_review` scaled compare matrix command
-3. [public-demo-runbook.md](./public-demo-runbook.md) explicitly lists the five core retrieval metrics:
+3. [public-demo-runbook.md](public-demo-runbook.md) explicitly lists the five core retrieval metrics:
    - Recall@5
    - Hit Rate@5
    - Context Precision@5
    - MRR@5
    - NDCG@5
-4. [public-demo-evidence.md](./public-demo-evidence.md) records the current public benchmark result for:
+4. [public-demo-evidence.md](public-demo-evidence.md) records the current public benchmark result for:
    - generic graph-relation retrieval
    - scaled contract-review retrieval
 5. [README.md](/abs/path/F:/internship-work/resume%26resume%20project/02_projects/Zuno/README.md) exposes the same thesis in public-facing language:
@@ -64,7 +64,7 @@ python tools/scripts/verify_public_demo_runtime.py
 ```
 
 This smoke verifier does not claim that a real remote model is live.
-It proves something narrower and more useful for Phase 6:
+It proves something narrower and more useful for the public proof surface:
 
 - the committed `contract_review` demo path still runs end-to-end in `dev_offline`
 - the run emits a real markdown report artifact

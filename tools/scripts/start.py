@@ -10,8 +10,8 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[1]
-BACKEND_DIR = PROJECT_ROOT / "src" / "backend"
-FRONTEND_DIR = PROJECT_ROOT / "src" / "frontend"
+BACKEND_DIR = PROJECT_ROOT
+FRONTEND_DIR = PROJECT_ROOT / "apps" / "web"
 IS_WINDOWS = platform.system() == "Windows"
 
 processes: list[subprocess.Popen] = []
@@ -41,7 +41,7 @@ def start_services() -> None:
         raise FileNotFoundError(f"Frontend directory not found: {FRONTEND_DIR}")
 
     backend = start_process(
-        ["uvicorn", "zuno.main:app", "--host", "0.0.0.0", "--port", "7860"],
+        ["uvicorn", "--app-dir", "src/backend", "zuno.main:app", "--host", "0.0.0.0", "--port", "7860"],
         BACKEND_DIR,
     )
 

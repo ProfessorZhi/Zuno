@@ -2725,6 +2725,22 @@
   margin: 3px 5px;
 }
 
+.workspace-container.desktop-runtime .settings-float,
+.workspace-container.desktop-runtime .account-float,
+.workspace-container.desktop-runtime .settings-center-backdrop,
+.workspace-container.desktop-runtime .settings-center-window {
+  backdrop-filter: none !important;
+}
+
+.workspace-container.desktop-runtime .settings-float,
+.workspace-container.desktop-runtime .account-float {
+  background: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12) !important;
+  transform: none !important;
+  filter: none !important;
+  contain: layout paint !important;
+}
+
 .settings-float-icon {
   width: 17px;
   height: 17px;

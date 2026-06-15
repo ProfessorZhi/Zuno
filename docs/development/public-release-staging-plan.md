@@ -21,8 +21,8 @@ Use [tools/scripts/preview_public_release_group.py](/abs/path/F:/internship-work
 Add `--stat` when you also want the group's current diff summary.
 Use [tools/scripts/preview_public_release_stage_dry_run.py](/abs/path/F:/internship-work/resume%26resume%20project/02_projects/Zuno/tools/scripts/preview_public_release_stage_dry_run.py) when you want a non-index staging preview in restricted environments.
 Use [tools/scripts/verify_docs_and_readme_ready.py](/abs/path/F:/internship-work/resume%26resume%20project/02_projects/Zuno/tools/scripts/verify_docs_and_readme_ready.py) when you want one go/no-go check for the first public docs group.
-For the current acceptance state of the first public docs commit, see [docs-and-readme-signoff.md](./docs-and-readme-signoff.md).
-For the first group's readiness rule, see [docs-and-readme-ready.md](./docs-and-readme-ready.md).
+
+Older docs-and-readme readiness notes are now historical and live under [development/history/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/development/history/README.md).
 
 Recommended group order:
 
@@ -125,7 +125,7 @@ Then stage by group deliberately instead of staging the whole working tree at on
 
 ## Final Rule
 
-This plan does not replace [public-release-checklist.md](./public-release-checklist.md).
+This plan does not replace [public-release-checklist.md](public-release-checklist.md).
 
 Use both:
 

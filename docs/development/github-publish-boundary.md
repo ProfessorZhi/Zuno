@@ -58,4 +58,4 @@ Before a public push:
 4. confirm README and docs reflect the public project, not local operator notes
 5. review `git status --short` before staging
 
-For the full pre-push checklist, see [public-release-checklist.md](./public-release-checklist.md).
+For the full pre-push checklist, see [public-release-checklist.md](public-release-checklist.md).

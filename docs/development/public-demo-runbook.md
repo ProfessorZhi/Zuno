@@ -12,7 +12,7 @@ This is the shortest reproducible path for a public demo audience.
 
 For the formal public acceptance gate of this material, see:
 
-- [public-demo-acceptance.md](./public-demo-acceptance.md)
+- [public-demo-acceptance.md](public-demo-acceptance.md)
 
 For the lowest-cost live runtime smoke check, run:
 
@@ -75,7 +75,7 @@ Expected proof pattern:
 
 Reference evidence already in repo:
 
-- [public-demo-evidence.md](./public-demo-evidence.md)
+- [public-demo-evidence.md](public-demo-evidence.md)
 
 ### Step 3: Run the contract-review domain demo
 
@@ -95,7 +95,7 @@ Expected proof pattern:
 
 Reference evidence already in repo:
 
-- [public-demo-evidence.md](./public-demo-evidence.md)
+- [public-demo-evidence.md](public-demo-evidence.md)
 
 ### Step 4: Run the low-cost end-to-end smoke verifier
 

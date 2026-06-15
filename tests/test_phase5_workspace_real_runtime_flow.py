@@ -6,13 +6,14 @@ from types import SimpleNamespace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
-def _ensure_backend_path() -> None:
-    backend_path = str(BACKEND_ROOT)
-    if backend_path not in sys.path:
-        sys.path.insert(0, backend_path)
+def _ensure_runtime_paths() -> None:
+    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+        if runtime_root not in sys.path:
+            sys.path.insert(0, runtime_root)
 
 
 def _build_fake_retrieval_result(*, content: str) -> dict:
@@ -80,7 +81,7 @@ def _runtime_settings() -> dict:
 
 
 def test_workspace_prefetch_exposes_supported_contract_review_evidence(monkeypatch):
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     workspace_module = importlib.import_module("agentchat.services.workspace.simple_agent")
     WorkSpaceSimpleAgent = importlib.import_module("zuno.services.workspace.simple_agent").WorkSpaceSimpleAgent
@@ -126,7 +127,7 @@ def test_workspace_prefetch_exposes_supported_contract_review_evidence(monkeypat
 
 
 def test_workspace_prefetch_exposes_insufficient_contract_review_evidence(monkeypatch):
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     workspace_module = importlib.import_module("agentchat.services.workspace.simple_agent")
     WorkSpaceSimpleAgent = importlib.import_module("zuno.services.workspace.simple_agent").WorkSpaceSimpleAgent

@@ -1,9 +1,8 @@
 from pathlib import Path
 import sys
 
-
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "src" / "backend"))
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
 from agentchat.utils.runtime_observability import (  # noqa: E402
     RedisKeys,

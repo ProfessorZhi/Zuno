@@ -7,9 +7,17 @@ from zuno.services.domain_pack.models import DomainPack
 from zuno.services.domain_pack.validators import DomainPackValidator
 
 
+def _find_repo_root(package_root: Path) -> Path:
+    for parent in package_root.parents:
+        if (parent / "docs" / "architecture").exists() and (parent / "README.md").exists():
+            return parent
+    return package_root.parents[-1]
+
+
 class DomainPackLoader:
     def __init__(self, packs_root: Path | None = None):
-        self.packs_root = packs_root or Path(__file__).resolve().parents[2] / "domain_packs"
+        repo_root = _find_repo_root(Path(__file__).resolve())
+        self.packs_root = packs_root or repo_root / "domain-packs"
 
     @staticmethod
     def _parse_simple_yaml(text: str) -> dict[str, str]:
@@ -87,4 +95,8 @@ class DomainPackLoader:
         )
 
 
-__all__ = ["DomainPackLoader"]
+def load_domain_pack(pack_id: str | None, packs_root: Path | None = None) -> DomainPack | None:
+    return DomainPackLoader(packs_root=packs_root).load(pack_id)
+
+
+__all__ = ["DomainPackLoader", "load_domain_pack"]

@@ -5,9 +5,11 @@ from types import SimpleNamespace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src/backend"
-if str(BACKEND_ROOT) not in sys.path:
-    sys.path.insert(0, str(BACKEND_ROOT))
+for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+    if runtime_root not in sys.path:
+        sys.path.insert(0, runtime_root)
 
 
 def test_zuno_system_tool_payload_exposes_strategy_install_and_config_metadata():

@@ -29,6 +29,14 @@ function getEnv(name, fallback) {
 }
 
 function resolveFrontendTarget() {
+  const explicitFrontendFile = getEnv('DESKTOP_FRONTEND_FILE', '')
+  if (explicitFrontendFile) {
+    return {
+      type: 'file',
+      target: explicitFrontendFile,
+    }
+  }
+
   if (app.isPackaged) {
     return {
       type: 'file',
@@ -81,6 +89,18 @@ async function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
     return { action: 'deny' }
+  })
+
+  mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    console.log(`[desktop:renderer:${level}] ${message} (${sourceId || 'unknown'}:${line || 0})`)
+  })
+
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    console.error('[desktop] Renderer process gone:', details)
+  })
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('[desktop] Renderer finished load:', mainWindow.webContents.getURL())
   })
 
   await resetDesktopSessionCache()

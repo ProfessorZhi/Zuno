@@ -376,8 +376,13 @@ def test_extract_contexts_keeps_rag_first_when_graph_docs_are_query_noise():
         query="一次 Agent Server run 从 API server 到 queue worker 再到客户端流式返回的执行路径是什么？",
     )
 
-    assert contexts[0]["content"].startswith("Runtime architecture > Run execution lifecycle")
-    assert contexts[1]["content"].startswith("Example configuration for high reads and high writes")
+    top_documents = contexts[:2]
+    assert {item["file_name"] for item in top_documents} == {"rag.md", "graph.md"}
+    assert any(
+        item["content"].startswith("Runtime architecture > Run execution lifecycle")
+        for item in top_documents
+    )
+    assert all(item.get("kind") != "graph_path" for item in top_documents)
 
 
 def test_extract_contexts_does_not_promote_weak_compact_graph_docs_ahead_of_rag():
@@ -862,7 +867,7 @@ def test_graph_retriever_resolves_graph_hits_back_to_source_chunks():
     from agentchat.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             assert knowledge_id == "k_graph"
             return [
                 {
@@ -1005,7 +1010,7 @@ def test_graph_retriever_uses_query_seed_entities_from_first_line_only():
     seen_entities = []
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             seen_entities.append(entity_name)
             return []
 
@@ -1035,7 +1040,7 @@ def test_graph_retriever_skips_graph_for_non_relational_single_entity_query():
     seen_entities = []
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             seen_entities.append(entity_name)
             return [{"source": "Milvus", "target": "Introduction", "chunk_ids": ["chunk_1"]}]
 
@@ -1063,7 +1068,7 @@ def test_graph_retriever_keeps_graph_for_relational_structure_query_and_filters_
     seen_entities = []
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             seen_entities.append(entity_name)
             return [
                 {"source": "Milvus", "target": "Introduction", "chunk_ids": ["chunk_noise"]},
@@ -1092,7 +1097,7 @@ def test_graph_retriever_filters_scale_template_targets_for_agent_server_queries
     from agentchat.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             return [
                 {"source": "Agent Server", "target": "Example", "chunk_ids": ["chunk_noise"]},
                 {"source": "Agent Server", "target": "High", "chunk_ids": ["chunk_noise_2"]},
@@ -1122,7 +1127,7 @@ def test_graph_retriever_adds_alias_seed_for_chinese_persistence_query():
     seen_entities = []
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             seen_entities.append(entity_name)
             if entity_name == "Persistence":
                 return [{"source": "Agent Server", "target": "Persistence", "chunk_ids": ["chunk_good"]}]
@@ -1158,7 +1163,7 @@ def test_graph_retriever_does_not_enable_graph_only_because_query_has_many_ascii
     seen_entities = []
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             seen_entities.append(entity_name)
             return [{"source": "LangSmith", "target": "Assistants", "chunk_ids": ["chunk_1"]}]
 
@@ -1185,7 +1190,7 @@ def test_graph_retriever_skips_graph_for_non_relational_type_listing_query():
     seen_entities = []
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             seen_entities.append(entity_name)
             return [{"source": "Milvus", "target": "RabbitMQ", "chunk_ids": ["chunk_1"]}]
 
@@ -1210,7 +1215,7 @@ def test_graph_retriever_downranks_agent_server_scale_chunks_for_non_scaling_que
     from agentchat.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             return [
                 {"source": "Agent Server", "target": "Persistence", "chunk_ids": ["chunk_scale", "chunk_good"]},
             ]
@@ -1248,7 +1253,7 @@ def test_graph_retriever_downranks_docs_navigation_chunks_when_question_is_not_a
     from agentchat.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             return [
                 {"source": "GraphRAG", "target": "Python", "chunk_ids": ["chunk_nav", "chunk_intro"]},
             ]
@@ -1495,7 +1500,7 @@ def test_graph_retriever_prefers_task_queue_section_for_redis_postgres_question(
     from agentchat.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10):
+        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
             return [
                 {"source": "Agent Server", "target": "Task queue", "chunk_ids": ["chunk_diagram", "chunk_task_queue"]},
             ]

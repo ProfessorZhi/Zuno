@@ -27,7 +27,6 @@ src/backend/zuno/config.yaml
 .local/
 .agent/
 .agentmd
-docs/superpowers/
 apps/web/AGENTS.md
 
 .astrid-memory/

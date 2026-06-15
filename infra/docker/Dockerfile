@@ -4,7 +4,7 @@ ARG DEBIAN_MIRROR=deb.debian.org
 ARG PIP_INDEX_URL=https://pypi.org/simple
 ARG CHROME_VERSION=138.0.7204.183
 
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/legacy_backend:/app/src:/app
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
@@ -57,11 +57,12 @@ RUN wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_V
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -i "${PIP_INDEX_URL}"
 
-COPY src/backend/ .
+COPY services/api/ /app/
+COPY src/backend/ /app/legacy_backend/
 COPY tools/cli/ /app/cli_tools/
 COPY tools/scripts/ /app/scripts/
 COPY tools/migrations/ /app/migrations/
 
 EXPOSE 7860
 
-CMD ["uvicorn", "zuno.main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "--app-dir", "legacy_backend", "zuno.main:app", "--host", "0.0.0.0", "--port", "7860"]

@@ -3,7 +3,7 @@ import uuid
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "src" / "backend"))
+sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
 from agentchat.evals.rag_eval.paths import default_runs_root
 

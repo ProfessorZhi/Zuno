@@ -13,27 +13,55 @@ exit /b 1
 
 :config
 set "SCRIPT_DIR=%~dp0"
-for %%I in ("%SCRIPT_DIR%..") do set "PROJECT_ROOT=%%~fI"
+pushd "%SCRIPT_DIR%..\..\.." >nul
+set "PROJECT_ROOT=%CD%"
+popd >nul
 set "DOCKER_DIR=%PROJECT_ROOT%\infra\docker"
+set "LAUNCHER_DIR=%PROJECT_ROOT%\tools\launchers\windows"
+set "RUNTIME_DIR=%TEMP%\zuno-desktop-runtime"
 set "FRONTEND_DIR=%PROJECT_ROOT%\apps\web"
 set "DESKTOP_DIR=%PROJECT_ROOT%\apps\desktop"
-set "DESKTOP_ELECTRON_EXE=%DESKTOP_DIR%\node_modules\electron\dist\electron.exe"
-set "LAUNCHER_DIR=%PROJECT_ROOT%\launchers"
-set "RUNTIME_DIR=%TEMP%\zuno-desktop-runtime"
+set "VITE_ENTRY=%PROJECT_ROOT%\node_modules\vite\bin\vite.js"
+set "DESKTOP_ELECTRON_EXE=%PROJECT_ROOT%\node_modules\electron\dist\electron.exe"
+set "DESKTOP_FRONTEND_FILE=%PROJECT_ROOT%\apps\web\dist\index.html"
 set "FRONTEND_LOG=%RUNTIME_DIR%\frontend.log"
 set "FRONTEND_ERR_LOG=%RUNTIME_DIR%\frontend.err.log"
 set "DESKTOP_LOG=%RUNTIME_DIR%\desktop.log"
 set "DESKTOP_ERR_LOG=%RUNTIME_DIR%\desktop.err.log"
 set "FRONTEND_PID_FILE=%RUNTIME_DIR%\frontend.pid"
 set "DESKTOP_PID_FILE=%RUNTIME_DIR%\desktop.pid"
+set "BUILD_FRONTEND_HELPER=%LAUNCHER_DIR%\_Zuno-Desktop-BuildFrontend.ps1"
+set "START_FRONTEND_HELPER=%LAUNCHER_DIR%\_Zuno-Desktop-StartFrontend.ps1"
 set "START_ELECTRON_HELPER=%LAUNCHER_DIR%\_Zuno-Desktop-StartElectron.ps1"
 set "CLEANUP_HELPER=%LAUNCHER_DIR%\_Zuno-Desktop-Cleanup.ps1"
 set "DESKTOP_FRONTEND_PORT=8091"
+set "DESKTOP_FRONTEND_MODE=dev"
+set "PROJECT_ROOT_WITHOUT_AMP=!PROJECT_ROOT:&=!"
+if /I not "!PROJECT_ROOT_WITHOUT_AMP!"=="!PROJECT_ROOT!" set "DESKTOP_FRONTEND_MODE=dist"
 exit /b 0
 
 :cleanup_logs
 if not exist "%RUNTIME_DIR%" mkdir "%RUNTIME_DIR%"
 del /q "%FRONTEND_LOG%" "%FRONTEND_ERR_LOG%" "%DESKTOP_LOG%" "%DESKTOP_ERR_LOG%" >nul 2>nul
+exit /b 0
+
+:ensureWorkspaceAlias
+set "SUBST_TARGET="
+for /f "usebackq delims=" %%S in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$needle = '%WORKSPACE_ALIAS_DRIVE%\: =>'; $line = subst | Where-Object { $_.StartsWith($needle) } | Select-Object -First 1; if ($line) { ($line -split '=>', 2)[1].Trim() }"`) do (
+  set "SUBST_TARGET=%%S"
+)
+if defined SUBST_TARGET (
+  if /I "!SUBST_TARGET!"=="!PROJECT_ROOT!" exit /b 0
+  echo Workspace alias drive %WORKSPACE_ALIAS_DRIVE% is already mapped to:
+  echo !SUBST_TARGET!
+  exit /b 1
+)
+subst %WORKSPACE_ALIAS_DRIVE% "%PROJECT_ROOT%"
+if errorlevel 1 exit /b 1
+exit /b 0
+
+:releaseWorkspaceAlias
+subst %WORKSPACE_ALIAS_DRIVE% /d >nul 2>nul
 exit /b 0
 
 :cleanup_processes
@@ -53,6 +81,21 @@ exit /b 0
 :stopBackend
 cd /d "%DOCKER_DIR%"
 docker compose down --remove-orphans >nul 2>nul
+for %%C in (
+  agentchat-backend
+  agentchat-worker
+  agentchat-postgres
+  agentchat-redis
+  agentchat-rabbitmq
+  agentchat-neo4j
+  agentchat-minio
+  agentchat-milvus
+  agentchat-etcd
+  agentchat-elasticsearch
+  agentchat-frontend
+) do (
+  docker rm -f %%C >nul 2>nul
+)
 exit /b 0
 
 :waitHttp
@@ -88,6 +131,18 @@ for /L %%I in (1,1,10) do (
 echo Could not determine the listening process for port %LISTEN_PORT%.
 exit /b 1
 
+:releaseFrontendPorts
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$ports = @(8091, 8090);" ^
+  "foreach ($port in $ports) {" ^
+  "  $listeners = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue;" ^
+  "  foreach ($listener in $listeners) {" ^
+  "    try { Stop-Process -Id $listener.OwningProcess -Force -ErrorAction Stop } catch {}" ^
+  "  }" ^
+  "}"
+del /q "%FRONTEND_PID_FILE%" >nul 2>nul
+exit /b 0
+
 :waitContainerHealthy
 set "WAIT_CONTAINER=%~1"
 set "WAIT_NAME=%~2"
@@ -110,26 +165,19 @@ echo %WAIT_NAME% did not become healthy in time.
 exit /b 1
 
 :ensureDeps
-cd /d "%FRONTEND_DIR%"
+cd /d "%PROJECT_ROOT%"
 if not exist node_modules (
-  echo Installing frontend dependencies...
+  echo Installing workspace dependencies...
   call npm install
   if errorlevel 1 exit /b 1
 )
-if not exist "%FRONTEND_DIR%\node_modules\.bin\vite.cmd" (
-  echo Frontend dependencies look incomplete. Reinstalling frontend dependencies...
+if not exist "%VITE_ENTRY%" (
+  echo Workspace dependencies look incomplete for Vite. Reinstalling workspace dependencies...
   call npm install
   if errorlevel 1 exit /b 1
 )
-
-cd /d "%DESKTOP_DIR%"
-if not exist node_modules (
-  echo Installing desktop dependencies...
-  call npm install
-  if errorlevel 1 exit /b 1
-)
-if not exist "%DESKTOP_DIR%\node_modules\.bin\electron.cmd" (
-  echo Desktop dependencies look incomplete. Reinstalling desktop dependencies...
+if not exist "%DESKTOP_ELECTRON_EXE%" (
+  echo Workspace dependencies look incomplete for Electron. Reinstalling workspace dependencies...
   call npm install
   if errorlevel 1 exit /b 1
 )
@@ -179,10 +227,18 @@ exit /b 0
 
 :startFrontend
 cd /d "%FRONTEND_DIR%"
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$env:VITE_API_BASE_URL='http://127.0.0.1:7860';" ^
-  "$p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','\"%FRONTEND_DIR%\node_modules\.bin\vite.cmd\" --host 127.0.0.1 --port %DESKTOP_FRONTEND_PORT% --strictPort' -WorkingDirectory '%FRONTEND_DIR%' -WindowStyle Hidden -RedirectStandardOutput '%FRONTEND_LOG%' -RedirectStandardError '%FRONTEND_ERR_LOG%' -PassThru;" ^
-  "Set-Content -Path '%FRONTEND_PID_FILE%' -Value $p.Id"
+if not exist "%START_FRONTEND_HELPER%" (
+  echo Missing frontend launcher helper:
+  echo %START_FRONTEND_HELPER%
+  exit /b 1
+)
+powershell -NoProfile -ExecutionPolicy Bypass -File "%START_FRONTEND_HELPER%" ^
+  -FrontendDir "%FRONTEND_DIR%" ^
+  -ViteEntry "%VITE_ENTRY%" ^
+  -FrontendPort "%DESKTOP_FRONTEND_PORT%" ^
+  -FrontendLog "%FRONTEND_LOG%" ^
+  -FrontendErrLog "%FRONTEND_ERR_LOG%" ^
+  -FrontendPidFile "%FRONTEND_PID_FILE%"
 if errorlevel 1 exit /b 1
 call :waitHttp "http://127.0.0.1:%DESKTOP_FRONTEND_PORT%" "Desktop frontend" 45
 if errorlevel 1 exit /b 1
@@ -190,16 +246,36 @@ call :recordListeningPid "%DESKTOP_FRONTEND_PORT%" "%FRONTEND_PID_FILE%"
 if errorlevel 1 exit /b 1
 exit /b 0
 
+:buildFrontendDist
+cd /d "%FRONTEND_DIR%"
+if not exist "%BUILD_FRONTEND_HELPER%" (
+  echo Missing frontend build helper:
+  echo %BUILD_FRONTEND_HELPER%
+  exit /b 1
+)
+powershell -NoProfile -ExecutionPolicy Bypass -File "%BUILD_FRONTEND_HELPER%" ^
+  -FrontendDir "%FRONTEND_DIR%" ^
+  -ViteEntry "%VITE_ENTRY%" ^
+  -FrontendLog "%FRONTEND_LOG%" ^
+  -FrontendErrLog "%FRONTEND_ERR_LOG%"
+if errorlevel 1 exit /b 1
+if not exist "%DESKTOP_FRONTEND_FILE%" (
+  echo Built frontend file not found:
+  echo %DESKTOP_FRONTEND_FILE%
+  exit /b 1
+)
+exit /b 0
+
 :startSequence
 echo [0/5] Cleaning old desktop background processes...
 call :cleanup_processes
 call :cleanup_logs
-
 echo [1/5] Ensuring Docker backend services are available...
 call :ensureDocker
 if errorlevel 1 exit /b 1
 call :ensureLocalConfig
 if errorlevel 1 exit /b 1
+call :stopBackend
 
 echo [2/5] Starting desktop backend services...
 call :startBackend
@@ -209,9 +285,18 @@ echo [3/5] Ensuring frontend and desktop dependencies...
 call :ensureDeps
 if errorlevel 1 exit /b 1
 
-echo [4/5] Starting desktop frontend dev server on port %DESKTOP_FRONTEND_PORT%...
-call :startFrontend
-if errorlevel 1 exit /b 1
+echo [4/5] Preparing desktop frontend runtime...
+if /I "%DESKTOP_FRONTEND_MODE%"=="dist" (
+  echo Using static desktop frontend because project path contains special shell characters.
+  call :buildFrontendDist
+  if errorlevel 1 exit /b 1
+) else (
+  echo Starting desktop frontend dev server on port %DESKTOP_FRONTEND_PORT%...
+  call :releaseFrontendPorts
+  if errorlevel 1 exit /b 1
+  call :startFrontend
+  if errorlevel 1 exit /b 1
+)
 
 echo [5/5] Launching Electron client...
 if not exist "%START_ELECTRON_HELPER%" (
@@ -222,6 +307,8 @@ if not exist "%START_ELECTRON_HELPER%" (
 powershell -NoProfile -ExecutionPolicy Bypass -File "%START_ELECTRON_HELPER%" ^
   -DesktopDir "%DESKTOP_DIR%" ^
   -DesktopFrontendPort "%DESKTOP_FRONTEND_PORT%" ^
+  -DesktopFrontendFile "%DESKTOP_FRONTEND_FILE%" ^
+  -DesktopFrontendMode "%DESKTOP_FRONTEND_MODE%" ^
   -DesktopLog "%DESKTOP_LOG%" ^
   -DesktopErrLog "%DESKTOP_ERR_LOG%" ^
   -DesktopPidFile "%DESKTOP_PID_FILE%"
@@ -230,7 +317,11 @@ if errorlevel 1 exit /b 1
 echo.
 echo Zuno Desktop started.
 echo Backend:  http://127.0.0.1:7860
-echo Frontend: http://127.0.0.1:%DESKTOP_FRONTEND_PORT%
+if /I "%DESKTOP_FRONTEND_MODE%"=="dist" (
+  echo Frontend: %DESKTOP_FRONTEND_FILE%
+) else (
+  echo Frontend: http://127.0.0.1:%DESKTOP_FRONTEND_PORT%
+)
 echo Logs:
 echo   %FRONTEND_LOG%
 echo   %FRONTEND_ERR_LOG%
@@ -338,7 +429,7 @@ if errorlevel 1 (
 docker compose down --remove-orphans >nul 2>nul
 echo Removing desktop dependency folders and Vite cache...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$paths = @('%PROJECT_ROOT%\\src\\frontend\\node_modules','%PROJECT_ROOT%\\apps\\desktop\\node_modules','%PROJECT_ROOT%\\src\\frontend\\dist','%PROJECT_ROOT%\\src\\frontend\\node_modules\\.vite');" ^
+  "$paths = @('!PROJECT_ROOT!\\apps\\web\\node_modules','!PROJECT_ROOT!\\apps\\desktop\\node_modules','!PROJECT_ROOT!\\apps\\web\\dist','!PROJECT_ROOT!\\apps\\web\\node_modules\\.vite');" ^
   "foreach ($path in $paths) { if (Test-Path $path) { Remove-Item -LiteralPath $path -Recurse -Force } }"
 if errorlevel 1 (
   echo Failed to clean desktop dependency folders.

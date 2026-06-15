@@ -9,17 +9,18 @@ from types import SimpleNamespace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
-def _ensure_backend_path() -> None:
-    backend_path = str(BACKEND_ROOT)
-    if backend_path not in sys.path:
-        sys.path.insert(0, backend_path)
+def _ensure_runtime_paths() -> None:
+    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+        if runtime_root not in sys.path:
+            sys.path.insert(0, runtime_root)
 
 
 def test_zuno_agent_runtime_uses_single_agent_graph_by_default():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     AgentRuntime = importlib.import_module("zuno.core.runtime.agent_runtime").AgentRuntime
 
@@ -55,7 +56,7 @@ def test_zuno_agent_runtime_uses_single_agent_graph_by_default():
 
 
 def test_zuno_agent_runtime_uses_multi_agent_graph_when_enabled_in_domain_pack():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     AgentRuntime = importlib.import_module("zuno.core.runtime.agent_runtime").AgentRuntime
 

@@ -1,18 +1,20 @@
 # Backend Layering Guidelines
 
-This guide turns the target architecture into day-to-day development rules.
+This guide turns the current architecture direction into day-to-day backend placement rules.
 
-## Default Placement
+## Current Placement Default
 
-When adding backend code, prefer:
+Until Phase 0 finishes, treat `src/backend/zuno/` as the stable-backend recovery baseline for new architectural decisions.
+
+Prefer:
 
 - controller or route code:
-  - `src/backend/zuno/api/v1/*`
+  - `src/backend/zuno/api/*`
 - business or orchestration code:
-  - `src/backend/zuno/api/services/*`
-  - `src/backend/zuno/services/*`
   - `src/backend/zuno/core/*`
+  - `src/backend/zuno/services/*`
 - persistence code:
+  - `src/backend/zuno/database/models/*`
   - `src/backend/zuno/database/dao/*`
 - infrastructure adapters:
   - `src/backend/zuno/services/redis.py`
@@ -20,6 +22,8 @@ When adding backend code, prefer:
   - `src/backend/zuno/services/storage/*`
   - `src/backend/zuno/services/rag/vector_db/*`
   - `src/backend/zuno/services/graphrag/*`
+
+If a capability still exists only under a migration-era path, treat that as transitional debt to be reconciled during recovery, not as the default place to grow new structure.
 
 ## Placement Rules
 
@@ -34,13 +38,23 @@ If the code mainly:
 - talks to Redis, queues, storage, vector DBs, or graph stores:
   - put it in the infrastructure layer
 
+## Recovery Rule
+
+Do not deepen the mixed-root situation.
+
+That means:
+
+- do not treat `services/api/src/zuno/*` as the default placement rule while Phase 0 is still open
+- do not let docs, tests, and implementation each point to a different backend root
+- do not create new path assumptions without a matching verification step
+
 ## Evolution Rule
 
-Whenever possible, write new code so it can later become:
+Write new code so it can later become:
 
-- a standalone internal service
+- a clearer internal module boundary
 - a queue worker
-- or an external language-backed service boundary
+- or a future service boundary
 
 That means:
 
@@ -54,7 +68,7 @@ That means:
 The project is expected to keep growing in three directions:
 
 1. multi-agent product capabilities
-2. microservice and cloud-native deployment readiness
-3. integration with non-Python business backends such as Java services
+2. stronger runtime orchestration around LangGraph and GraphRAG
+3. possible service extraction or non-Python backend integration later
 
-Those goals should influence module placement today, even if deployment stays monolithic for now.
+Those goals should influence module placement today, but they do not justify keeping the current mixed-root state forever.

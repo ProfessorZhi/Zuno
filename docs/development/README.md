@@ -1,92 +1,53 @@
 # Development Docs
 
-This section is for engineering-facing documentation.
-It is not part of the first-read public project path.
+This section is for engineering-facing and maintainer-facing documentation.
 
-## Maintainer Reading Order
+It is not the first-read public explanation path.
 
-1. [backend-layering-guidelines.md](./backend-layering-guidelines.md)
-2. [github-publish-boundary.md](./github-publish-boundary.md)
-3. [public-release-checklist.md](./public-release-checklist.md)
-4. [public-release-staging-plan.md](./public-release-staging-plan.md)
-5. [docs-and-readme-signoff.md](./docs-and-readme-signoff.md)
-6. [docs-and-readme-prestage.md](./docs-and-readme-prestage.md)
-7. [docs-and-readme-ready.md](./docs-and-readme-ready.md)
-8. [public-demo-evidence.md](./public-demo-evidence.md)
-9. [public-demo-runbook.md](./public-demo-runbook.md)
-10. [public-demo-acceptance.md](./public-demo-acceptance.md)
-11. [zuno-upgrade-roadmap.md](./zuno-upgrade-roadmap.md)
-12. [install_minio_win.md](./install_minio_win.md)
+## Current Maintainer Path
 
-## Maintainer Scope
-
-Use this section when you are changing repo structure, release surface, publish boundary, or engineering workflow docs.
-
-If you are reading Zuno for the first time, go back to:
-
-1. [README.md](../../README.md)
-2. [docs/architecture/README.md](../architecture/README.md)
-3. [public-demo-evidence.md](./public-demo-evidence.md)
-4. [public-demo-runbook.md](./public-demo-runbook.md)
-5. [public-demo-acceptance.md](./public-demo-acceptance.md)
+1. [Architecture Doc Maintenance Workflow](architecture-doc-maintenance-workflow.md)
+2. [backend-layering-guidelines.md](backend-layering-guidelines.md)
+3. [github-publish-boundary.md](github-publish-boundary.md)
+4. [public-demo-evidence.md](public-demo-evidence.md)
+5. [public-demo-runbook.md](public-demo-runbook.md)
+6. [public-demo-acceptance.md](public-demo-acceptance.md)
+7. [public-release-checklist.md](public-release-checklist.md)
+8. [public-release-staging-plan.md](public-release-staging-plan.md)
+9. [install_minio_win.md](install_minio_win.md)
 
 ## What Lives Here
 
+- architecture-doc maintenance workflow
 - backend layering rules
 - publish and open-source boundary rules
-- public release checklist
-- public release staging plan
-- docs and README signoff
-- docs and README prestage checklist
-- docs and README readiness check
-- public release commit order
-- public release staging commands
-- public release group preview
-- public release stage dry run preview
-- docs and README readiness verifier
-- automated public release audit
-- repository structure verification
-- public demo evidence
-- public demo reproduction guidance
+- public demo evidence and reproduction guidance
 - public demo acceptance gate
-- public demo runtime smoke verification
-- strict-grounded public demo smoke verification
-- upgrade and migration notes
+- release and staging notes that are still operational
 - local development environment guidance
 
-## Current Architecture Direction
+## What No Longer Lives On The Main Path
 
-The backend is expected to evolve under a layered structure:
+Completed workflow temperature docs have been downgraded to:
 
-- control layer
-- service layer
-- DAO layer
-- infrastructure layer
+- [development/history/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/development/history/README.md)
 
-And the long-term engineering direction remains:
+This includes one-off:
 
-- multi-agent product growth
-- microservice and cloud-native readiness
-- future integration with non-Python business backends such as Java
+- prestage notes
+- ready-check notes
+- signoff notes
+- older upgrade roadmaps that no longer define the current architecture program
 
-For retrieval governance and architecture-upgrade planning, start from:
+## Current Sync Rule
 
-- `docs/architecture/specs/enterprise-retrieval-governance.md`
-- `docs/architecture/plans/retrieval-governance-upgrade-plan.md`
+After any significant architecture or runtime change, review:
 
-## Documentation Sync Rule
+1. [README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/README.md)
+2. [docs/architecture/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/README.md)
+3. [docs/architecture/current-architecture.md](current-architecture.md)
+4. [docs/architecture/target-architecture.md](target-architecture.md)
+5. the active file under [docs/architecture/phases/](../architecture/phases/)
+6. this index
 
-After every major architecture or runtime update, review `docs/architecture/` again.
-
-At minimum, check:
-
-- which architecture problems have now been solved
-- which unresolved items should be removed from the docs
-- whether current phase status is still accurate
-- whether architecture specs, plans, README, and development docs still match
-
-The goal is:
-
-```text
-do not let architecture docs lag behind the actual project state
-```
+The goal is to keep maintainer workflow docs aligned with the current repo rather than the last completed cleanup operation.

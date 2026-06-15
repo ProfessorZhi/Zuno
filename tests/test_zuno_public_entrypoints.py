@@ -7,40 +7,104 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def test_public_backend_entrypoints_prefer_zuno():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     dockerfile = (REPO_ROOT / "infra/docker/Dockerfile").read_text(encoding="utf-8")
+    alembic_ini = (REPO_ROOT / "infra/db/alembic.ini").read_text(encoding="utf-8")
+    alembic_env = (REPO_ROOT / "infra/db/alembic/env.py").read_text(encoding="utf-8")
+    db_readme = (REPO_ROOT / "infra/db/README.md").read_text(encoding="utf-8")
     start_script = (REPO_ROOT / "tools/scripts/start.py").read_text(encoding="utf-8")
     main_module = (
         REPO_ROOT / "src/backend/zuno/legacy/agentchat/main.py"
     ).read_text(encoding="utf-8")
-    zuno_main = (REPO_ROOT / "src/backend/zuno/main.py").read_text(encoding="utf-8")
+    zuno_main = (REPO_ROOT / "services/api/src/zuno/main.py").read_text(encoding="utf-8")
 
-    assert "uvicorn zuno.main:app" in readme
-    assert 'CMD ["uvicorn", "zuno.main:app"' in dockerfile
-    assert '"zuno.main:app"' in start_script
+    service_api_bootstrap = (
+        REPO_ROOT / "services" / "api" / "src" / "zuno" / "__init__.py"
+    ).read_text(encoding="utf-8")
+    compat_agentchat_bootstrap = (
+        REPO_ROOT / "services" / "api" / "src" / "agentchat" / "__init__.py"
+    ).read_text(encoding="utf-8")
+
+    assert "cd services\\api" in readme
+    assert "uvicorn --app-dir src zuno.main:app" in readme
+    assert "COPY services/api/ /app/" in dockerfile
+    assert "COPY src/backend/ /app/legacy_backend/" in dockerfile
+    assert "prepend_sys_path = services/api/src" in alembic_ini
+    assert "from zuno.database.metadata import metadata" in alembic_env
+    assert "from agentchat.database.metadata import metadata" not in alembic_env
+    assert "`prepend_sys_path = services/api/src`" in db_readme
+    assert "`zuno.database.metadata`" in db_readme
+    assert 'CMD ["uvicorn", "--app-dir", "src", "zuno.main:app"' in dockerfile
+    assert '"--app-dir", "src", "zuno.main:app"' in start_script
+    assert 'BACKEND_DIR = PROJECT_ROOT / "services" / "api"' in start_script
+    assert 'FRONTEND_DIR = PROJECT_ROOT / "apps" / "web"' in start_script
     assert 'uvicorn.run("zuno.main:app"' in main_module
+    assert '"legacy_backend"' in service_api_bootstrap
+    assert '"src" / "backend"' in service_api_bootstrap
+    assert '"zuno" / "main.py"' in service_api_bootstrap
+    assert "sys.path.insert" in service_api_bootstrap
+    assert "__path__.append" in service_api_bootstrap
+    assert '"agentchat"' in compat_agentchat_bootstrap
+    assert '"zuno" / "legacy" / "agentchat"' in compat_agentchat_bootstrap
+    assert "__path__.append" in compat_agentchat_bootstrap
     assert "from zuno.api.router import router" in zuno_main
     assert "from zuno.api.JWT import Settings" in zuno_main
     assert "from zuno.middleware.trace_id_middleware import TraceIDMiddleware" in zuno_main
     assert "from agentchat.main import app" not in zuno_main
 
 
+def test_compat_tests_enter_backend_via_services_api():
+    compat_conftest = (REPO_ROOT / "tests" / "compat" / "conftest.py").read_text(encoding="utf-8")
+    assert 'services" / "api" / "src' in compat_conftest
+
+    compat_tests = [
+        "tests/compat/test_database_schema.py",
+        "tests/compat/test_pipeline.py",
+        "tests/compat/test_queue.py",
+        "tests/compat/test_rag_eval_local_launcher.py",
+        "tests/compat/test_runtime_observability.py",
+        "tests/compat/test_stackless_compare_matrix.py",
+        "tests/compat/test_storage_utils.py",
+    ]
+
+    for relative_path in compat_tests:
+        content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+        assert 'services" / "api" / "src' in content
+        assert 'src" / "backend' not in content
+
+
+def test_eval_scripts_enter_backend_via_services_api():
+    eval_scripts = [
+        "tools/evals/zuno/rag_eval/ingest_prepared_corpus.py",
+        "tools/evals/zuno/rag_eval/run_eval.py",
+        "tools/evals/zuno/rag_eval/run_local_embedding_eval.py",
+        "tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py",
+        "tools/evals/zuno/rag_eval/run_stackless_local_eval.py",
+        "tools/evals/zuno/contract_review_eval/run_contract_eval.py",
+    ]
+
+    for relative_path in eval_scripts:
+        content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+        assert 'services" / "api" / "src' in content
+        assert 'src" / "backend' not in content
+
+
 def test_core_runtime_and_agent_packages_prefer_local_zuno_exports():
     zuno_core_runtime_init = (
-        REPO_ROOT / "src/backend/zuno/core/runtime/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/core/runtime/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_core_runtime = (
-        REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
+        REPO_ROOT / "services/api/src/zuno/core/runtime/agent_runtime.py"
     ).read_text(encoding="utf-8")
     zuno_core_agents_init = (
-        REPO_ROOT / "src/backend/zuno/core/agents/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/core/agents/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_core_general_agent = (
-        REPO_ROOT / "src/backend/zuno/core/agents/general_agent.py"
+        REPO_ROOT / "services/api/src/zuno/core/agents/general_agent.py"
     ).read_text(encoding="utf-8")
     zuno_core_domain_graph = (
-        REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py"
+        REPO_ROOT / "services/api/src/zuno/core/graphs/domain_qa_graph.py"
     ).read_text(encoding="utf-8")
     zuno_core_models_init = (
-        REPO_ROOT / "src/backend/zuno/core/models/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/core/models/__init__.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.core.runtime.agent_runtime import AgentRuntime" in zuno_core_runtime_init
@@ -70,16 +134,25 @@ def test_core_runtime_and_agent_packages_prefer_local_zuno_exports():
 
 def test_top_level_zuno_packages_prefer_local_explicit_exports():
     zuno_root_init = (REPO_ROOT / "src/backend/zuno/__init__.py").read_text(encoding="utf-8")
-    zuno_api_init = (REPO_ROOT / "src/backend/zuno/api/__init__.py").read_text(encoding="utf-8")
-    zuno_core_init = (REPO_ROOT / "src/backend/zuno/core/__init__.py").read_text(encoding="utf-8")
-    zuno_database_init = (REPO_ROOT / "src/backend/zuno/database/__init__.py").read_text(encoding="utf-8")
+    zuno_api_init = (REPO_ROOT / "services/api/src/zuno/api/__init__.py").read_text(encoding="utf-8")
+    zuno_api_router = (REPO_ROOT / "services/api/src/zuno/api/router.py").read_text(encoding="utf-8")
+    zuno_core_init = (REPO_ROOT / "services/api/src/zuno/core/__init__.py").read_text(encoding="utf-8")
+    zuno_database_init = (
+        REPO_ROOT / "services/api/src/zuno/database/__init__.py"
+    ).read_text(encoding="utf-8")
 
+    assert "from pkgutil import extend_path" in zuno_root_init
+    assert "__path__ = extend_path(__path__, __name__)" in zuno_root_init
+    assert '_SERVICE_API_ROOT = _REPO_ROOT / "services" / "api" / "src"' in zuno_root_init
     assert "__all__: list[str] = []" in zuno_root_init
     assert "from agentchat import *" not in zuno_root_init
 
     assert "from zuno.api.JWT import Settings" in zuno_api_init
     assert "from zuno.api.router import router" in zuno_api_init
     assert "from agentchat.api import *" not in zuno_api_init
+    assert "router = APIRouter(prefix=\"/api/v1\")" in zuno_api_router
+    assert "router.include_router(workspace.router)" in zuno_api_router
+    assert "from agentchat.api.router import *" not in zuno_api_router
 
     assert "_EXPORT_TO_MODULE = {" in zuno_core_init
     assert '"GeneralAgent": ("agents", "GeneralAgent")' in zuno_core_init
@@ -91,47 +164,54 @@ def test_top_level_zuno_packages_prefer_local_explicit_exports():
     assert "from zuno.database.models.user import SystemUser" in zuno_database_init
     assert "from zuno.database.models.tool import ToolTable" in zuno_database_init
     assert "from zuno.settings import app_settings" in zuno_database_init
+    assert "__path__ = extend_path(__path__, __name__)" in zuno_database_init
+    assert "import zuno as zuno_package" in zuno_database_init
+    assert "for zuno_package_path in getattr(zuno_package, \"__path__\", []):" in zuno_database_init
+    assert "config_path = Path(zuno_package_path).resolve() / \"config.yaml\"" in zuno_database_init
     assert "from agentchat.database import *" not in zuno_database_init
 
 
 def test_schema_utils_tools_and_support_packages_prefer_local_package_contracts():
-    zuno_schema_init = (REPO_ROOT / "src/backend/zuno/schema/__init__.py").read_text(encoding="utf-8")
-    zuno_utils_init = (REPO_ROOT / "src/backend/zuno/utils/__init__.py").read_text(encoding="utf-8")
-    zuno_tools_init = (REPO_ROOT / "src/backend/zuno/tools/__init__.py").read_text(encoding="utf-8")
+    zuno_schema_init = (REPO_ROOT / "services/api/src/zuno/schema/__init__.py").read_text(encoding="utf-8")
+    zuno_utils_init = (REPO_ROOT / "services/api/src/zuno/utils/__init__.py").read_text(encoding="utf-8")
+    zuno_tools_init = (REPO_ROOT / "services/api/src/zuno/tools/__init__.py").read_text(encoding="utf-8")
     zuno_cli_tool_init = (
-        REPO_ROOT / "src/backend/zuno/tools/cli_tool/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/tools/cli_tool/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_openapi_tool_init = (
-        REPO_ROOT / "src/backend/zuno/tools/openapi_tool/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/tools/openapi_tool/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_send_email_tool_init = (
-        REPO_ROOT / "src/backend/zuno/tools/send_email/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/tools/send_email/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_image2text_tool_init = (
-        REPO_ROOT / "src/backend/zuno/tools/image2text/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/tools/image2text/__init__.py"
+    ).read_text(encoding="utf-8")
+    zuno_image2text_tool_action = (
+        REPO_ROOT / "services/api/src/zuno/tools/image2text/action.py"
     ).read_text(encoding="utf-8")
     zuno_text2image_tool_init = (
-        REPO_ROOT / "src/backend/zuno/tools/text2image/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/tools/text2image/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_text2image_tool_action = (
-        REPO_ROOT / "src/backend/zuno/tools/text2image/action.py"
+        REPO_ROOT / "services/api/src/zuno/tools/text2image/action.py"
     ).read_text(encoding="utf-8")
     zuno_middleware_init = (
-        REPO_ROOT / "src/backend/zuno/middleware/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/middleware/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_mcp_servers_init = (
-        REPO_ROOT / "src/backend/zuno/mcp_servers/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/mcp_servers/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_mcp_remote_proxy_init = (
-        REPO_ROOT / "src/backend/zuno/mcp_servers/remote_proxy/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/mcp_servers/remote_proxy/__init__.py"
     ).read_text(encoding="utf-8")
-    zuno_prompts_init = (REPO_ROOT / "src/backend/zuno/prompts/__init__.py").read_text(encoding="utf-8")
+    zuno_prompts_init = (REPO_ROOT / "services/api/src/zuno/prompts/__init__.py").read_text(encoding="utf-8")
     zuno_prompts_completion = (
-        REPO_ROOT / "src/backend/zuno/prompts/completion.py"
+        REPO_ROOT / "services/api/src/zuno/prompts/completion.py"
     ).read_text(encoding="utf-8")
-    zuno_prompts_mcp = (REPO_ROOT / "src/backend/zuno/prompts/mcp.py").read_text(encoding="utf-8")
-    zuno_prompts_skill = (REPO_ROOT / "src/backend/zuno/prompts/skill.py").read_text(encoding="utf-8")
-    zuno_utils_convert = (REPO_ROOT / "src/backend/zuno/utils/convert.py").read_text(encoding="utf-8")
+    zuno_prompts_mcp = (REPO_ROOT / "services/api/src/zuno/prompts/mcp.py").read_text(encoding="utf-8")
+    zuno_prompts_skill = (REPO_ROOT / "services/api/src/zuno/prompts/skill.py").read_text(encoding="utf-8")
+    zuno_utils_convert = (REPO_ROOT / "services/api/src/zuno/utils/convert.py").read_text(encoding="utf-8")
 
     assert "from . import (" in zuno_schema_init
     assert "schemas" in zuno_schema_init
@@ -155,6 +235,8 @@ def test_schema_utils_tools_and_support_packages_prefer_local_package_contracts(
 
     assert "from zuno.tools.image2text.action import _image_to_text, image_to_text" in zuno_image2text_tool_init
     assert "from agentchat.tools.image2text import *" not in zuno_image2text_tool_init
+    assert "DEFAULT_MINIMAX_API_HOST = " in zuno_image2text_tool_action
+    assert "from zuno.settings import app_settings" in zuno_image2text_tool_action
 
     assert "from zuno.tools.text2image.action import _text_to_image" in zuno_text2image_tool_init
     assert "from agentchat.tools.text2image import *" not in zuno_text2image_tool_init
@@ -187,7 +269,7 @@ def test_schema_utils_tools_and_support_packages_prefer_local_package_contracts(
 
 
 def test_services_packages_prefer_local_zuno_contracts():
-    zuno_services_init = (REPO_ROOT / "src/backend/zuno/services/__init__.py").read_text(encoding="utf-8")
+    zuno_services_init = (REPO_ROOT / "services/api/src/zuno/services/__init__.py").read_text(encoding="utf-8")
     zuno_memory_init = (REPO_ROOT / "src/backend/zuno/services/memory/__init__.py").read_text(encoding="utf-8")
     zuno_mcp_init = (REPO_ROOT / "src/backend/zuno/services/mcp/__init__.py").read_text(encoding="utf-8")
     zuno_mcp_multi_client = (
@@ -203,12 +285,12 @@ def test_services_packages_prefer_local_zuno_contracts():
         REPO_ROOT / "src/backend/zuno/services/mcp_openai/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_workspace_init = (
-        REPO_ROOT / "src/backend/zuno/services/workspace/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/services/workspace/__init__.py"
     ).read_text(encoding="utf-8")
-    zuno_queue_init = (REPO_ROOT / "src/backend/zuno/services/queue/__init__.py").read_text(encoding="utf-8")
-    zuno_rag_init = (REPO_ROOT / "src/backend/zuno/services/rag/__init__.py").read_text(encoding="utf-8")
+    zuno_queue_init = (REPO_ROOT / "services/api/src/zuno/services/queue/__init__.py").read_text(encoding="utf-8")
+    zuno_rag_init = (REPO_ROOT / "services/api/src/zuno/services/rag/__init__.py").read_text(encoding="utf-8")
     zuno_retrieval_init = (
-        REPO_ROOT / "src/backend/zuno/services/retrieval/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/services/retrieval/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_graphrag_init = (
         REPO_ROOT / "src/backend/zuno/services/graphrag/__init__.py"
@@ -260,7 +342,7 @@ def test_services_packages_prefer_local_zuno_contracts():
 
 def test_high_value_service_modules_prefer_local_zuno_contracts():
     zuno_execution_policy = (
-        REPO_ROOT / "src/backend/zuno/services/execution_policy.py"
+        REPO_ROOT / "services/api/src/zuno/services/execution_policy.py"
     ).read_text(encoding="utf-8")
     zuno_mcp_manager = (
         REPO_ROOT / "src/backend/zuno/services/mcp/manager.py"
@@ -290,46 +372,46 @@ def test_high_value_service_modules_prefer_local_zuno_contracts():
         REPO_ROOT / "src/backend/zuno/services/capability_registry.py"
     ).read_text(encoding="utf-8")
     zuno_rag_handler = (
-        REPO_ROOT / "src/backend/zuno/services/rag/handler.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/handler.py"
     ).read_text(encoding="utf-8")
     zuno_rag_rerank = (
-        REPO_ROOT / "src/backend/zuno/services/rag/rerank.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/rerank.py"
     ).read_text(encoding="utf-8")
     zuno_model_manager = (
-        REPO_ROOT / "src/backend/zuno/core/models/manager.py"
+        REPO_ROOT / "services/api/src/zuno/core/models/manager.py"
     ).read_text(encoding="utf-8")
     zuno_rag_retrieval = (
-        REPO_ROOT / "src/backend/zuno/services/rag/retrieval.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/retrieval.py"
     ).read_text(encoding="utf-8")
     zuno_retrieval_orchestrator = (
-        REPO_ROOT / "src/backend/zuno/services/retrieval/orchestrator.py"
+        REPO_ROOT / "services/api/src/zuno/services/retrieval/orchestrator.py"
     ).read_text(encoding="utf-8")
     zuno_retrieval_planner = (
-        REPO_ROOT / "src/backend/zuno/services/retrieval/planner.py"
+        REPO_ROOT / "services/api/src/zuno/services/retrieval/planner.py"
     ).read_text(encoding="utf-8")
     zuno_retrieval_fusion = (
-        REPO_ROOT / "src/backend/zuno/services/retrieval/fusion.py"
+        REPO_ROOT / "services/api/src/zuno/services/retrieval/fusion.py"
     ).read_text(encoding="utf-8")
     zuno_retrieval_retrievers = (
-        REPO_ROOT / "src/backend/zuno/services/retrieval/retrievers.py"
+        REPO_ROOT / "services/api/src/zuno/services/retrieval/retrievers.py"
     ).read_text(encoding="utf-8")
     zuno_rewrite_init = (
-        REPO_ROOT / "src/backend/zuno/services/rewrite/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/services/rewrite/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_rewrite_query_write = (
-        REPO_ROOT / "src/backend/zuno/services/rewrite/query_write.py"
+        REPO_ROOT / "services/api/src/zuno/services/rewrite/query_write.py"
     ).read_text(encoding="utf-8")
     zuno_rewrite_markdown = (
-        REPO_ROOT / "src/backend/zuno/services/rewrite/markdown_rewrite.py"
+        REPO_ROOT / "services/api/src/zuno/services/rewrite/markdown_rewrite.py"
     ).read_text(encoding="utf-8")
     zuno_graphrag_models = (
         REPO_ROOT / "src/backend/zuno/services/graphrag/models.py"
     ).read_text(encoding="utf-8")
     zuno_prompts_init = (
-        REPO_ROOT / "src/backend/zuno/prompts/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/prompts/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_prompts_rewrite = (
-        REPO_ROOT / "src/backend/zuno/prompts/rewrite.py"
+        REPO_ROOT / "services/api/src/zuno/prompts/rewrite.py"
     ).read_text(encoding="utf-8")
 
     assert "class ExecutionMode(str, Enum):" in zuno_execution_policy
@@ -433,7 +515,7 @@ def test_high_value_service_modules_prefer_local_zuno_contracts():
         REPO_ROOT / "src/backend/zuno/services/workspace/simple_agent.py"
     ).read_text(encoding="utf-8")
     zuno_workspace_attachment_service = (
-        REPO_ROOT / "src/backend/zuno/services/workspace/attachment_service.py"
+        REPO_ROOT / "services/api/src/zuno/services/workspace/attachment_service.py"
     ).read_text(encoding="utf-8")
     zuno_workspace_wechat_agent = (
         REPO_ROOT / "src/backend/zuno/services/workspace/wechat_agent.py"
@@ -487,22 +569,22 @@ def test_high_value_service_modules_prefer_local_zuno_contracts():
 
 
 def test_api_settings_and_schema_packages_prefer_local_zuno_contracts():
-    zuno_jwt = (REPO_ROOT / "src/backend/zuno/api/JWT.py").read_text(encoding="utf-8")
+    zuno_jwt = (REPO_ROOT / "services/api/src/zuno/api/JWT.py").read_text(encoding="utf-8")
     zuno_errcode_init = (
-        REPO_ROOT / "src/backend/zuno/api/errcode/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/api/errcode/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_errcode_base = (
-        REPO_ROOT / "src/backend/zuno/api/errcode/base.py"
+        REPO_ROOT / "services/api/src/zuno/api/errcode/base.py"
     ).read_text(encoding="utf-8")
     zuno_errcode_user = (
-        REPO_ROOT / "src/backend/zuno/api/errcode/user.py"
+        REPO_ROOT / "services/api/src/zuno/api/errcode/user.py"
     ).read_text(encoding="utf-8")
-    zuno_settings = (REPO_ROOT / "src/backend/zuno/settings.py").read_text(encoding="utf-8")
+    zuno_settings = (REPO_ROOT / "services/api/src/zuno/settings.py").read_text(encoding="utf-8")
     zuno_schema_common = (
-        REPO_ROOT / "src/backend/zuno/schema/common.py"
+        REPO_ROOT / "services/api/src/zuno/schema/common.py"
     ).read_text(encoding="utf-8")
     zuno_schema_schemas = (
-        REPO_ROOT / "src/backend/zuno/schema/schemas.py"
+        REPO_ROOT / "services/api/src/zuno/schema/schemas.py"
     ).read_text(encoding="utf-8")
 
     assert "class Settings(BaseSettings):" in zuno_jwt
@@ -536,32 +618,32 @@ def test_api_settings_and_schema_packages_prefer_local_zuno_contracts():
 
 
 def test_high_value_schema_modules_prefer_local_zuno_contracts():
-    zuno_schema_agent = (REPO_ROOT / "src/backend/zuno/schema/agent.py").read_text(encoding="utf-8")
+    zuno_schema_agent = (REPO_ROOT / "services/api/src/zuno/schema/agent.py").read_text(encoding="utf-8")
     zuno_schema_agent_skill = (
-        REPO_ROOT / "src/backend/zuno/schema/agent_skill.py"
+        REPO_ROOT / "services/api/src/zuno/schema/agent_skill.py"
     ).read_text(encoding="utf-8")
     zuno_schema_capability = (
-        REPO_ROOT / "src/backend/zuno/schema/capability.py"
+        REPO_ROOT / "services/api/src/zuno/schema/capability.py"
     ).read_text(encoding="utf-8")
-    zuno_schema_chunk = (REPO_ROOT / "src/backend/zuno/schema/chunk.py").read_text(encoding="utf-8")
+    zuno_schema_chunk = (REPO_ROOT / "services/api/src/zuno/schema/chunk.py").read_text(encoding="utf-8")
     zuno_schema_completion = (
-        REPO_ROOT / "src/backend/zuno/schema/completion.py"
+        REPO_ROOT / "services/api/src/zuno/schema/completion.py"
     ).read_text(encoding="utf-8")
-    zuno_schema_dialog = (REPO_ROOT / "src/backend/zuno/schema/dialog.py").read_text(encoding="utf-8")
+    zuno_schema_dialog = (REPO_ROOT / "services/api/src/zuno/schema/dialog.py").read_text(encoding="utf-8")
     zuno_schema_knowledge = (
-        REPO_ROOT / "src/backend/zuno/schema/knowledge.py"
+        REPO_ROOT / "services/api/src/zuno/schema/knowledge.py"
     ).read_text(encoding="utf-8")
-    zuno_schema_llm = (REPO_ROOT / "src/backend/zuno/schema/llm.py").read_text(encoding="utf-8")
-    zuno_schema_mcp = (REPO_ROOT / "src/backend/zuno/schema/mcp.py").read_text(encoding="utf-8")
+    zuno_schema_llm = (REPO_ROOT / "services/api/src/zuno/schema/llm.py").read_text(encoding="utf-8")
+    zuno_schema_mcp = (REPO_ROOT / "services/api/src/zuno/schema/mcp.py").read_text(encoding="utf-8")
     zuno_schema_mcp_user_config = (
-        REPO_ROOT / "src/backend/zuno/schema/mcp_user_config.py"
+        REPO_ROOT / "services/api/src/zuno/schema/mcp_user_config.py"
     ).read_text(encoding="utf-8")
-    zuno_schema_tool = (REPO_ROOT / "src/backend/zuno/schema/tool.py").read_text(encoding="utf-8")
+    zuno_schema_tool = (REPO_ROOT / "services/api/src/zuno/schema/tool.py").read_text(encoding="utf-8")
     zuno_schema_usage_stats = (
-        REPO_ROOT / "src/backend/zuno/schema/usage_stats.py"
+        REPO_ROOT / "services/api/src/zuno/schema/usage_stats.py"
     ).read_text(encoding="utf-8")
     zuno_schema_workspace = (
-        REPO_ROOT / "src/backend/zuno/schema/workspace.py"
+        REPO_ROOT / "services/api/src/zuno/schema/workspace.py"
     ).read_text(encoding="utf-8")
 
     assert "class AgentCreateReq(BaseModel):" in zuno_schema_agent
@@ -611,26 +693,26 @@ def test_high_value_schema_modules_prefer_local_zuno_contracts():
 
 
 def test_high_value_utils_modules_prefer_local_zuno_contracts():
-    zuno_utils_init = (REPO_ROOT / "src/backend/zuno/utils/__init__.py").read_text(encoding="utf-8")
-    zuno_utils_jwt = (REPO_ROOT / "src/backend/zuno/utils/JWT.py").read_text(encoding="utf-8")
+    zuno_utils_init = (REPO_ROOT / "services/api/src/zuno/utils/__init__.py").read_text(encoding="utf-8")
+    zuno_utils_jwt = (REPO_ROOT / "services/api/src/zuno/utils/JWT.py").read_text(encoding="utf-8")
     zuno_utils_constants = (
-        REPO_ROOT / "src/backend/zuno/utils/constants.py"
+        REPO_ROOT / "services/api/src/zuno/utils/constants.py"
     ).read_text(encoding="utf-8")
     zuno_utils_contexts = (
-        REPO_ROOT / "src/backend/zuno/utils/contexts.py"
+        REPO_ROOT / "services/api/src/zuno/utils/contexts.py"
     ).read_text(encoding="utf-8")
     zuno_utils_date_utils = (
-        REPO_ROOT / "src/backend/zuno/utils/date_utils.py"
+        REPO_ROOT / "services/api/src/zuno/utils/date_utils.py"
     ).read_text(encoding="utf-8")
     zuno_utils_file_utils = (
-        REPO_ROOT / "src/backend/zuno/utils/file_utils.py"
+        REPO_ROOT / "services/api/src/zuno/utils/file_utils.py"
     ).read_text(encoding="utf-8")
-    zuno_utils_hash = (REPO_ROOT / "src/backend/zuno/utils/hash.py").read_text(encoding="utf-8")
+    zuno_utils_hash = (REPO_ROOT / "services/api/src/zuno/utils/hash.py").read_text(encoding="utf-8")
     zuno_utils_model_output = (
-        REPO_ROOT / "src/backend/zuno/utils/model_output.py"
+        REPO_ROOT / "services/api/src/zuno/utils/model_output.py"
     ).read_text(encoding="utf-8")
     zuno_utils_runtime_observability = (
-        REPO_ROOT / "src/backend/zuno/utils/runtime_observability.py"
+        REPO_ROOT / "services/api/src/zuno/utils/runtime_observability.py"
     ).read_text(encoding="utf-8")
 
     assert "date_utils" in zuno_utils_init
@@ -667,10 +749,10 @@ def test_high_value_utils_modules_prefer_local_zuno_contracts():
 
 def test_database_session_and_metadata_prefer_local_zuno_contract():
     zuno_database_session = (
-        REPO_ROOT / "src/backend/zuno/database/session.py"
+        REPO_ROOT / "services/api/src/zuno/database/session.py"
     ).read_text(encoding="utf-8")
     zuno_database_metadata = (
-        REPO_ROOT / "src/backend/zuno/database/metadata.py"
+        REPO_ROOT / "services/api/src/zuno/database/metadata.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database import async_engine, engine" in zuno_database_session
@@ -683,14 +765,27 @@ def test_database_session_and_metadata_prefer_local_zuno_contract():
 
 def test_database_models_package_prefers_explicit_zuno_bridge_exports():
     zuno_database_models_init = (
-        REPO_ROOT / "src/backend/zuno/database/models/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/database/models/__init__.py"
     ).read_text(encoding="utf-8")
 
+    assert "__path__ = extend_path(__path__, __name__)" in zuno_database_models_init
     assert "from zuno.database.models.agent import AgentTable" in zuno_database_models_init
     assert "from zuno.database.models.base import SQLModelSerializable, orjson_dumps" in zuno_database_models_init
     assert "from zuno.database.models.user import AdminUser, SystemUser, UserTable" in zuno_database_models_init
     assert "from zuno.database.models.workspace_session import WorkSpaceSession, WorkSpaceSessionCreate" in zuno_database_models_init
     assert "from agentchat.database.models import *" not in zuno_database_models_init
+
+
+def test_database_dao_package_prefers_explicit_zuno_bridge_exports():
+    zuno_database_dao_init = (
+        REPO_ROOT / "services/api/src/zuno/database/dao/__init__.py"
+    ).read_text(encoding="utf-8")
+
+    assert "__path__ = extend_path(__path__, __name__)" in zuno_database_dao_init
+    assert "from . import (" in zuno_database_dao_init
+    assert "knowledge_file" in zuno_database_dao_init
+    assert "workspace_session" in zuno_database_dao_init
+    assert "from agentchat.database.dao import *" not in zuno_database_dao_init
 
 
 def test_domain_pack_and_pipeline_packages_prefer_local_zuno_contract():
@@ -710,13 +805,13 @@ def test_domain_pack_and_pipeline_packages_prefer_local_zuno_contract():
         REPO_ROOT / "src/backend/zuno/services/domain_pack/validators.py"
     ).read_text(encoding="utf-8")
     zuno_pipeline_init = (
-        REPO_ROOT / "src/backend/zuno/services/pipeline/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/services/pipeline/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_pipeline_models = (
-        REPO_ROOT / "src/backend/zuno/services/pipeline/models.py"
+        REPO_ROOT / "services/api/src/zuno/services/pipeline/models.py"
     ).read_text(encoding="utf-8")
     zuno_pipeline_stages = (
-        REPO_ROOT / "src/backend/zuno/services/pipeline/stages.py"
+        REPO_ROOT / "services/api/src/zuno/services/pipeline/stages.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.services.domain_pack.loader import DomainPackLoader" in zuno_domain_pack_init
@@ -727,6 +822,7 @@ def test_domain_pack_and_pipeline_packages_prefer_local_zuno_contract():
 
     assert "from zuno.services.domain_pack.models import DomainPack" in zuno_domain_pack_loader
     assert "from zuno.services.domain_pack.validators import DomainPackValidator" in zuno_domain_pack_loader
+    assert 'repo_root / "domain-packs"' in zuno_domain_pack_loader
     assert "from agentchat.services.domain_pack.loader import *" not in zuno_domain_pack_loader
 
     assert "@dataclass(slots=True)" in zuno_domain_pack_models
@@ -772,21 +868,21 @@ def test_graphrag_packages_prefer_local_zuno_contract():
 
 def test_small_bridge_modules_are_localized_under_zuno():
     small_bridge_modules = {
-        "src/backend/zuno/api/services/mineru.py": [
+        "services/api/src/zuno/api/services/mineru.py": [
             "def convert_pdf_to_markdown(",
             "from magic_pdf.tools.common import do_parse",
         ],
-        "src/backend/zuno/tools/cli_tool/adapter.py": [
+        "services/api/src/zuno/tools/cli_tool/adapter.py": [
             "class CLIToolAdapter:",
         ],
-        "src/backend/zuno/tools/openapi_tool/adapter.py": [
+        "services/api/src/zuno/tools/openapi_tool/adapter.py": [
             "class OpenAPIToolAdapter:",
         ],
-        "src/backend/zuno/tools/send_email/cli.py": [
+        "services/api/src/zuno/tools/send_email/cli.py": [
             "from zuno.settings import initialize_app_settings, resolve_app_config_path",
             "from zuno.tools.send_email import action as email_action",
         ],
-        "src/backend/zuno/utils/helpers.py": [
+        "services/api/src/zuno/utils/helpers.py": [
             "from zuno.settings import app_settings",
             "class ImportedConfigInfo(BaseModel):",
         ],
@@ -802,23 +898,23 @@ def test_small_bridge_modules_are_localized_under_zuno():
 
 def test_rag_vector_store_modules_are_localized_under_zuno():
     localized_modules = {
-        "src/backend/zuno/services/rag/embedding.py": [
+        "services/api/src/zuno/services/rag/embedding.py": [
             "from zuno.core.models.manager import ModelManager",
             "async def get_embedding(",
         ],
-        "src/backend/zuno/services/rag/vl_embedding.py": [
+        "services/api/src/zuno/services/rag/vl_embedding.py": [
             "from zuno.core.models.manager import ModelManager",
             "from zuno.services.storage import storage_client",
             "async def get_vl_text_embedding(",
         ],
-        "src/backend/zuno/services/rag/vector_db/chroma_client.py": [
+        "services/api/src/zuno/services/rag/vector_db/chroma_client.py": [
             "from zuno.schema.search import SearchModel",
             "from zuno.services.rag.embedding import get_embedding",
         ],
-        "src/backend/zuno/services/rag/vector_db/milvus_client.py": [
+        "services/api/src/zuno/services/rag/vector_db/milvus_client.py": [
             "from zuno.services.rag.vector_db.milvus_lite_client import MilvusLiteClient",
         ],
-        "src/backend/zuno/services/rag/vector_db/milvus_lite_client.py": [
+        "services/api/src/zuno/services/rag/vector_db/milvus_lite_client.py": [
             "from zuno.schema.search import SearchModel",
             "from zuno.services.rag.vl_embedding import get_vl_image_embedding, get_vl_text_embedding",
             "from zuno.settings import app_settings",
@@ -835,7 +931,7 @@ def test_rag_vector_store_modules_are_localized_under_zuno():
 
 def test_optional_mineru_service_is_implemented_locally():
     zuno_mineru_service = (
-        REPO_ROOT / "src/backend/zuno/api/services/mineru.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/mineru.py"
     ).read_text(encoding="utf-8")
 
     assert "from magic_pdf.tools.common import do_parse" in zuno_mineru_service
@@ -856,20 +952,20 @@ def test_public_worker_entrypoints_and_manifest_prefer_zuno():
     settings_py = (
         REPO_ROOT / "src/backend/zuno/legacy/agentchat/settings.py"
     ).read_text(encoding="utf-8")
-    zuno_queue_runner = (REPO_ROOT / "src/backend/zuno/services/queue/runner.py").read_text(encoding="utf-8")
-    zuno_queue_workers = (REPO_ROOT / "src/backend/zuno/services/queue/workers.py").read_text(encoding="utf-8")
-    zuno_queue_client = (REPO_ROOT / "src/backend/zuno/services/queue/client.py").read_text(encoding="utf-8")
+    zuno_queue_runner = (REPO_ROOT / "services/api/src/zuno/services/queue/runner.py").read_text(encoding="utf-8")
+    zuno_queue_workers = (REPO_ROOT / "services/api/src/zuno/services/queue/workers.py").read_text(encoding="utf-8")
+    zuno_queue_client = (REPO_ROOT / "services/api/src/zuno/services/queue/client.py").read_text(encoding="utf-8")
     zuno_queue_messages = (
-        REPO_ROOT / "src/backend/zuno/services/queue/messages.py"
+        REPO_ROOT / "services/api/src/zuno/services/queue/messages.py"
     ).read_text(encoding="utf-8")
     zuno_rag_handler = (
-        REPO_ROOT / "src/backend/zuno/services/rag/handler.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/handler.py"
     ).read_text(encoding="utf-8")
     zuno_model_manager = (
-        REPO_ROOT / "src/backend/zuno/core/models/manager.py"
+        REPO_ROOT / "services/api/src/zuno/core/models/manager.py"
     ).read_text(encoding="utf-8")
     zuno_vector_db = (
-        REPO_ROOT / "src/backend/zuno/services/rag/vector_db/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/vector_db/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_graph_retriever = (
         REPO_ROOT / "src/backend/zuno/services/graphrag/retriever.py"
@@ -890,7 +986,7 @@ def test_public_worker_entrypoints_and_manifest_prefer_zuno():
         REPO_ROOT / "src/backend/zuno/services/graphrag/graph_store/graph_writer.py"
     ).read_text(encoding="utf-8")
     zuno_rag_es_client = (
-        REPO_ROOT / "src/backend/zuno/services/rag/es_client.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/es_client.py"
     ).read_text(encoding="utf-8")
     zuno_convert_files_init = (
         REPO_ROOT / "src/backend/zuno/services/convert_files/__init__.py"
@@ -899,42 +995,66 @@ def test_public_worker_entrypoints_and_manifest_prefer_zuno():
         REPO_ROOT / "src/backend/zuno/services/convert_files/convert_pdf.py"
     ).read_text(encoding="utf-8")
     zuno_rag_docx_parser = (
-        REPO_ROOT / "src/backend/zuno/services/rag/doc_parser/docx.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/docx.py"
     ).read_text(encoding="utf-8")
     zuno_rag_pdf_parser = (
-        REPO_ROOT / "src/backend/zuno/services/rag/doc_parser/pdf.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/pdf.py"
     ).read_text(encoding="utf-8")
     zuno_rag_pptx_parser = (
-        REPO_ROOT / "src/backend/zuno/services/rag/doc_parser/pptx.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/pptx.py"
+    ).read_text(encoding="utf-8")
+    zuno_rag_excel_parser = (
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/excel.py"
+    ).read_text(encoding="utf-8")
+    zuno_rag_other_file_parser = (
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/other_file.py"
+    ).read_text(encoding="utf-8")
+    zuno_rag_doc_parser_init = (
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/__init__.py"
+    ).read_text(encoding="utf-8")
+    zuno_rag_chunk_ids = (
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/chunk_ids.py"
+    ).read_text(encoding="utf-8")
+    zuno_rag_markdown_parser = (
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/markdown.py"
+    ).read_text(encoding="utf-8")
+    zuno_rag_text_parser = (
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/text.py"
     ).read_text(encoding="utf-8")
     zuno_rag_image_parser = (
-        REPO_ROOT / "src/backend/zuno/services/rag/doc_parser/image.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/doc_parser/image.py"
     ).read_text(encoding="utf-8")
     zuno_rag_parser = (
-        REPO_ROOT / "src/backend/zuno/services/rag/parser.py"
+        REPO_ROOT / "services/api/src/zuno/services/rag/parser.py"
     ).read_text(encoding="utf-8")
     zuno_rewrite_markdown = (
-        REPO_ROOT / "src/backend/zuno/services/rewrite/markdown_rewrite.py"
+        REPO_ROOT / "services/api/src/zuno/services/rewrite/markdown_rewrite.py"
     ).read_text(encoding="utf-8")
-    zuno_redis = (REPO_ROOT / "src/backend/zuno/services/redis.py").read_text(encoding="utf-8")
+    zuno_redis = (REPO_ROOT / "services/api/src/zuno/services/redis.py").read_text(encoding="utf-8")
     zuno_storage_init = (
-        REPO_ROOT / "src/backend/zuno/services/storage/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/services/storage/__init__.py"
     ).read_text(encoding="utf-8")
     zuno_storage_minio = (
-        REPO_ROOT / "src/backend/zuno/services/storage/minio.py"
+        REPO_ROOT / "services/api/src/zuno/services/storage/minio.py"
     ).read_text(encoding="utf-8")
     zuno_storage_oss = (
-        REPO_ROOT / "src/backend/zuno/services/storage/oss.py"
+        REPO_ROOT / "services/api/src/zuno/services/storage/oss.py"
     ).read_text(encoding="utf-8")
     zuno_pipeline_manager = (
-        REPO_ROOT / "src/backend/zuno/services/pipeline/manager.py"
+        REPO_ROOT / "services/api/src/zuno/services/pipeline/manager.py"
     ).read_text(encoding="utf-8")
-    zuno_main = (REPO_ROOT / "src/backend/zuno/main.py").read_text(encoding="utf-8")
+    zuno_main = (REPO_ROOT / "services/api/src/zuno/main.py").read_text(encoding="utf-8")
 
     assert 'command: ["python", "-m", "zuno.services.queue.runner"]' in compose
+    assert "- ../../services/api:/app" in compose
+    assert "- ../../src/backend:/app/legacy_backend" in compose
+    assert "- ../../services/api:/app:cached" in compose_dev
+    assert "- ../../src/backend:/app/legacy_backend:cached" in compose_dev
     assert "ZUNO_CONFIG: /app/zuno/config.yaml" in compose
     assert "ZUNO_CONFIG: /app/zuno/config.yaml" in compose_dev
     assert "ZUNO_CONFIG: /app/zuno/config.yaml" in docker_readme
+    assert "`services/api` 到 `/app`" in docker_readme
+    assert "`src/backend` 到 `/app/legacy_backend`" in docker_readme
     assert "module: zuno.tools.send_email.cli" in manifest
     assert 'os.getenv("ZUNO_CONFIG") or os.getenv("AGENTCHAT_CONFIG")' in settings_py
     assert 'Path("zuno/config.yaml")' in settings_py
@@ -950,113 +1070,39 @@ def test_public_worker_entrypoints_and_manifest_prefer_zuno():
     assert "from zuno.services.queue.messages import build_task_message" in zuno_queue_workers
     assert "from zuno.settings import app_settings" in zuno_queue_client
     assert "from zuno.services.pipeline.models import KnowledgeTaskStage" in zuno_queue_messages
-    assert "from zuno.api.services.knowledge import KnowledgeService" in zuno_rag_handler
-    assert "from zuno.settings import app_settings" in zuno_rag_handler
-    assert "from zuno.services.rag.es_client import client as es_client" in zuno_rag_handler
-    assert "from zuno.services.rag.vector_db import milvus_client" in zuno_rag_handler
-    assert "class RagHandler:" in zuno_rag_handler
-    assert "from agentchat.services.rag.handler import RagHandler" not in zuno_rag_handler
-    assert "from zuno.core.models.embedding import EmbeddingModel" in zuno_model_manager
-    assert "from zuno.core.models.reason_model import ReasoningModel" in zuno_model_manager
-    assert "from zuno.database.dao.llm import LLMDao" in zuno_model_manager
-    assert "from zuno.schema.common import ModelConfig" in zuno_model_manager
-    assert "from zuno.settings import app_settings" in zuno_model_manager
-    assert "from zuno.utils.model_output import normalize_model_id_for_provider" in zuno_model_manager
-    assert "class ModelManager:" in zuno_model_manager
-    assert "from agentchat.core.models.manager import *" not in zuno_model_manager
-    assert "from zuno.services.convert_files.convert_pdf import convert_to_pdf, get_libreoffice_command" in zuno_convert_files_init
-    assert "def convert_to_pdf(input_path):" in zuno_convert_pdf
-    assert "def get_libreoffice_command():" in zuno_convert_pdf
-    assert "from agentchat.services.convert_files.convert_pdf import *" not in zuno_convert_pdf
+
+
+def test_config_assets_now_resolve_from_services_api_surface():
+    zuno_rag_es_client = (
+        REPO_ROOT / "services/api/src/zuno/services/rag/es_client.py"
+    ).read_text(encoding="utf-8")
+    zuno_database_init_data = (
+        REPO_ROOT / "services/api/src/zuno/database/init_data.py"
+    ).read_text(encoding="utf-8")
+    zuno_config_init = (
+        REPO_ROOT / "services/api/src/zuno/config/__init__.py"
+    ).read_text(encoding="utf-8")
+    zuno_config_es_index = (
+        REPO_ROOT / "services/api/src/zuno/config/es_index.py"
+    ).read_text(encoding="utf-8")
+
     assert "from zuno.config.es_index import ESIndex" in zuno_rag_es_client
-    assert "from zuno.schema.chunk import ChunkModel" in zuno_rag_es_client
-    assert "from zuno.schema.search import SearchModel" in zuno_rag_es_client
-    assert "from zuno.settings import app_settings" in zuno_rag_es_client
-    assert "class ESClient:" in zuno_rag_es_client
-    assert "from agentchat.services.rag.es_client import client" not in zuno_rag_es_client
-    assert "from zuno.settings import app_settings" in zuno_vector_db
-    assert "LazyVectorStoreClient" in zuno_vector_db
-    assert "from zuno.services.graphrag.client import Neo4jClient" in zuno_graph_retriever
-    assert "from zuno.services.rag.vector_db import milvus_client" in zuno_graph_retriever
-    assert "class GraphRetriever:" in zuno_graph_retriever
-    assert "from agentchat.services.graphrag.retriever" not in zuno_graph_retriever
-    assert "class GraphExtractor:" in zuno_graph_extractor
-    assert "async def extract_from_chunk(self, chunk: dict, knowledge_id: str) -> dict:" in zuno_graph_extractor
-    assert "from agentchat.services.graphrag.extractor import GraphExtractor" not in zuno_graph_extractor
-    assert "from zuno.services.graphrag.extractor import GraphExtractor" in zuno_structured_extractor
-    assert "class StructuredGraphExtractor(GraphExtractor):" in zuno_structured_extractor
-    assert "from agentchat.services.graphrag.extractors.structured_extractor" not in zuno_structured_extractor
-    assert "from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor" in zuno_cached_extractor
-    assert "class CachedGraphExtractor:" in zuno_cached_extractor
-    assert "from agentchat.services.graphrag.extractors.cached_extractor" not in zuno_cached_extractor
-    assert "from zuno.settings import app_settings" in zuno_graph_client
-    assert "class Neo4jClient:" in zuno_graph_client
-    assert "from agentchat.services.graphrag.client" not in zuno_graph_client
-    assert "class GraphWriter:" in zuno_graph_writer
-    assert "def build_entity_payload(" in zuno_graph_writer
-    assert "from agentchat.services.graphrag.graph_store.graph_writer" not in zuno_graph_writer
-    assert "class DocParser:" in zuno_rag_parser
-    assert "doc_parser = DocParser()" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.chunk_ids import build_chunk_id" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.excel import excel_to_txt" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.image import build_image_chunk, describe_image" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.markdown import markdown_parser" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.docx import docx_parser" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.other_file import other_file_to_txt" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.pdf import pdf_parser" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.pptx import pptx_parser" in zuno_rag_parser
-    assert "from zuno.services.rag.doc_parser.text import text_parser" in zuno_rag_parser
-    assert "from zuno.core.models.manager import ModelManager" in zuno_rag_parser
-    assert "from agentchat.services.rag.parser import DocParser" not in zuno_rag_parser
-    assert "from agentchat.core.models.manager import ModelManager" not in zuno_rag_parser
-    assert "from zuno.services.convert_files.convert_pdf import convert_to_pdf" in zuno_rag_docx_parser
-    assert "from agentchat.services.convert_files.convert_pdf import convert_to_pdf" not in zuno_rag_docx_parser
-    assert "from zuno.services.convert_files.convert_pdf import convert_to_pdf" in zuno_rag_pptx_parser
-    assert "from agentchat.services.convert_files.convert_pdf import convert_to_pdf" not in zuno_rag_pptx_parser
-    assert "from zuno.services.rag.doc_parser.image import build_image_chunk" in zuno_rag_pdf_parser
-    assert "from zuno.services.rag.doc_parser.markdown import markdown_parser" in zuno_rag_pdf_parser
-    assert "from zuno.services.rewrite.markdown_rewrite import markdown_rewriter" in zuno_rag_pdf_parser
-    assert "from zuno.services.rag.doc_parser.text import text_parser" in zuno_rag_pdf_parser
-    assert "from zuno.services.storage import storage_client" in zuno_rag_pdf_parser
-    assert "from zuno.utils.file_utils import (" in zuno_rag_pdf_parser
-    assert "class PDFParser:" in zuno_rag_pdf_parser
-    assert "from agentchat.services.rag.doc_parser.pdf" not in zuno_rag_pdf_parser
-    assert "from agentchat.services.rewrite.markdown_rewrite" not in zuno_rag_pdf_parser
-    assert "from zuno.core.models.manager import ModelManager" in zuno_rag_image_parser
-    assert "from agentchat.core.models.manager import ModelManager" not in zuno_rag_image_parser
-    assert "class RedisClient:" in zuno_redis
-    assert "from zuno.settings import app_settings" in zuno_redis
-    assert "from agentchat.services.redis import RedisClient as AgentchatRedisClient" not in zuno_redis
-    assert "from zuno.settings import app_settings" in zuno_storage_init
-    assert "class MinioClient:" in zuno_storage_minio
-    assert "from zuno.settings import app_settings" in zuno_storage_minio
-    assert "from agentchat.services.storage.minio import MinioClient as AgentchatMinioClient" not in zuno_storage_minio
-    assert "class OSSClient:" in zuno_storage_oss
-    assert "from zuno.settings import app_settings" in zuno_storage_oss
-    assert "from agentchat.services.storage.oss import OSSClient as AgentchatOSSClient" not in zuno_storage_oss
-    assert "from zuno.api.services.knowledge import KnowledgeService" in zuno_pipeline_manager
-    assert "from zuno.database.dao.knowledge_file import KnowledgeFileDao" in zuno_pipeline_manager
-    assert "from zuno.database.dao.knowledge_task import KnowledgeTaskDao" in zuno_pipeline_manager
-    assert "from zuno.services.rag.handler import RagHandler" in zuno_pipeline_manager
-    assert "from zuno.services.storage import storage_client" in zuno_pipeline_manager
-    assert "from zuno.services.graphrag.client import Neo4jClient" in zuno_pipeline_manager
-    assert "from zuno.services.graphrag.extractors.cached_extractor import CachedGraphExtractor" in zuno_pipeline_manager
-    assert "from zuno.services.graphrag.graph_store.graph_writer import GraphWriter" in zuno_pipeline_manager
-    assert "from zuno.services.rag.parser import doc_parser" in zuno_pipeline_manager
-    assert "from zuno.services.redis import redis_client" in zuno_pipeline_manager
-    assert "from zuno.utils.file_utils import get_object_key_from_public_url, get_save_tempfile" in zuno_pipeline_manager
-    assert "from zuno.utils.runtime_observability import RedisKeys" in zuno_pipeline_manager
+    assert 'package_root / "config" / file_name' in zuno_database_init_data
+    assert 'Path("./zuno/config") / file_name' in zuno_database_init_data
+    assert 'Path("./agentchat/config") / file_name' in zuno_database_init_data
+    assert '"""zuno config resource aliases."""' in zuno_config_init
+    assert "class ESIndex:" in zuno_config_es_index
 
 
 def test_high_value_knowledge_api_prefers_zuno():
     zuno_api_service_knowledge = (
-        REPO_ROOT / "src/backend/zuno/api/services/knowledge.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/knowledge.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_knowledge = (
-        REPO_ROOT / "src/backend/zuno/api/v1/knowledge.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/knowledge.py"
     ).read_text(encoding="utf-8")
     zuno_dao_knowledge = (
-        REPO_ROOT / "src/backend/zuno/database/dao/knowledge.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/knowledge.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database.dao.knowledge import KnowledgeDao" in zuno_api_service_knowledge
@@ -1078,13 +1124,13 @@ def test_high_value_knowledge_api_prefers_zuno():
 
 def test_high_value_knowledge_file_api_prefers_zuno():
     zuno_api_service_knowledge_file = (
-        REPO_ROOT / "src/backend/zuno/api/services/knowledge_file.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/knowledge_file.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_knowledge_file = (
-        REPO_ROOT / "src/backend/zuno/api/v1/knowledge_file.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/knowledge_file.py"
     ).read_text(encoding="utf-8")
     zuno_dao_knowledge_file = (
-        REPO_ROOT / "src/backend/zuno/database/dao/knowledge_file.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/knowledge_file.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.api.services.knowledge import KnowledgeService" in zuno_api_service_knowledge_file
@@ -1108,13 +1154,13 @@ def test_high_value_knowledge_file_api_prefers_zuno():
 
 def test_high_value_workspace_session_service_prefers_zuno():
     zuno_api_service_workspace_session = (
-        REPO_ROOT / "src/backend/zuno/api/services/workspace_session.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/workspace_session.py"
     ).read_text(encoding="utf-8")
     zuno_dao_workspace_session = (
-        REPO_ROOT / "src/backend/zuno/database/dao/workspace_session.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/workspace_session.py"
     ).read_text(encoding="utf-8")
     zuno_model_workspace_session = (
-        REPO_ROOT / "src/backend/zuno/database/models/workspace_session.py"
+        REPO_ROOT / "services/api/src/zuno/database/models/workspace_session.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database.dao.workspace_session import WorkSpaceSession, WorkSpaceSessionDao" in zuno_api_service_workspace_session
@@ -1130,13 +1176,13 @@ def test_high_value_workspace_session_service_prefers_zuno():
 
 def test_high_value_user_api_prefers_zuno():
     zuno_api_service_user = (
-        REPO_ROOT / "src/backend/zuno/api/services/user.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/user.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_user = (
-        REPO_ROOT / "src/backend/zuno/api/v1/user.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/user.py"
     ).read_text(encoding="utf-8")
     zuno_dao_user = (
-        REPO_ROOT / "src/backend/zuno/database/dao/user.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/user.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.services.storage import storage_client" in zuno_api_service_user
@@ -1156,7 +1202,7 @@ def test_high_value_user_api_prefers_zuno():
 
 def test_high_value_knowledge_task_dao_prefers_zuno():
     zuno_dao_knowledge_task = (
-        REPO_ROOT / "src/backend/zuno/database/dao/knowledge_task.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/knowledge_task.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database.models.knowledge_task import KnowledgeTaskEventTable, KnowledgeTaskTable" in zuno_dao_knowledge_task
@@ -1166,13 +1212,13 @@ def test_high_value_knowledge_task_dao_prefers_zuno():
 
 def test_high_value_dialog_api_prefers_zuno():
     zuno_api_service_dialog = (
-        REPO_ROOT / "src/backend/zuno/api/services/dialog.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/dialog.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_dialog = (
-        REPO_ROOT / "src/backend/zuno/api/v1/dialog.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/dialog.py"
     ).read_text(encoding="utf-8")
     zuno_dao_dialog = (
-        REPO_ROOT / "src/backend/zuno/database/dao/dialog.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/dialog.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.api.services.agent import AgentService" in zuno_api_service_dialog
@@ -1191,13 +1237,13 @@ def test_high_value_dialog_api_prefers_zuno():
 
 def test_high_value_history_api_prefers_zuno():
     zuno_api_service_history = (
-        REPO_ROOT / "src/backend/zuno/api/services/history.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/history.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_history = (
-        REPO_ROOT / "src/backend/zuno/api/v1/history.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/history.py"
     ).read_text(encoding="utf-8")
     zuno_dao_history = (
-        REPO_ROOT / "src/backend/zuno/database/dao/history.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/history.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.api.services.dialog import DialogService" in zuno_api_service_history
@@ -1216,13 +1262,13 @@ def test_high_value_history_api_prefers_zuno():
 
 def test_high_value_usage_stats_api_prefers_zuno():
     zuno_api_service_usage = (
-        REPO_ROOT / "src/backend/zuno/api/services/usage_stats.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/usage_stats.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_usage = (
-        REPO_ROOT / "src/backend/zuno/api/v1/usage_stats.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/usage_stats.py"
     ).read_text(encoding="utf-8")
     zuno_dao_usage = (
-        REPO_ROOT / "src/backend/zuno/database/dao/usage_stats.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/usage_stats.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database.dao.usage_stats import UsageStats, UsageStatsDao" in zuno_api_service_usage
@@ -1238,13 +1284,13 @@ def test_high_value_usage_stats_api_prefers_zuno():
 
 def test_high_value_message_api_prefers_zuno():
     zuno_api_service_message = (
-        REPO_ROOT / "src/backend/zuno/api/services/message.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/message.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_message = (
-        REPO_ROOT / "src/backend/zuno/api/v1/message.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/message.py"
     ).read_text(encoding="utf-8")
     zuno_dao_message = (
-        REPO_ROOT / "src/backend/zuno/database/dao/message.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/message.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database.dao.message import MessageDownDao, MessageLikeDao" in zuno_api_service_message
@@ -1260,58 +1306,58 @@ def test_high_value_message_api_prefers_zuno():
 
 def test_workspace_prep_services_prefer_zuno_entrypoints():
     zuno_api_v1_agent = (
-        REPO_ROOT / "src/backend/zuno/api/v1/agent.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/agent.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_capability = (
-        REPO_ROOT / "src/backend/zuno/api/v1/capability.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/capability.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_completion = (
-        REPO_ROOT / "src/backend/zuno/api/v1/completion.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/completion.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_config = (
-        REPO_ROOT / "src/backend/zuno/api/v1/config.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/config.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_mcp_chat = (
-        REPO_ROOT / "src/backend/zuno/api/v1/mcp_chat.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/mcp_chat.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_tool = (
-        REPO_ROOT / "src/backend/zuno/api/v1/tool.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/tool.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_upload = (
-        REPO_ROOT / "src/backend/zuno/api/v1/upload.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/upload.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_wechat = (
-        REPO_ROOT / "src/backend/zuno/api/v1/wechat.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/wechat.py"
     ).read_text(encoding="utf-8")
     zuno_api_service_mcp_chat = (
-        REPO_ROOT / "src/backend/zuno/api/services/mcp_chat.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/mcp_chat.py"
     ).read_text(encoding="utf-8")
     zuno_api_service_wechat = (
-        REPO_ROOT / "src/backend/zuno/api/services/wechat.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/wechat.py"
     ).read_text(encoding="utf-8")
     zuno_api_service_llm = (
-        REPO_ROOT / "src/backend/zuno/api/services/llm.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/llm.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_llm = (
-        REPO_ROOT / "src/backend/zuno/api/v1/llm.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/llm.py"
     ).read_text(encoding="utf-8")
     zuno_api_service_agent = (
-        REPO_ROOT / "src/backend/zuno/api/services/agent.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/agent.py"
     ).read_text(encoding="utf-8")
     zuno_api_service_tool = (
-        REPO_ROOT / "src/backend/zuno/api/services/tool.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/tool.py"
     ).read_text(encoding="utf-8")
     zuno_api_service_mcp_server = (
-        REPO_ROOT / "src/backend/zuno/api/services/mcp_server.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/mcp_server.py"
     ).read_text(encoding="utf-8")
     zuno_dao_llm = (
-        REPO_ROOT / "src/backend/zuno/database/dao/llm.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/llm.py"
     ).read_text(encoding="utf-8")
     zuno_dao_agent = (
-        REPO_ROOT / "src/backend/zuno/database/dao/agent.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/agent.py"
     ).read_text(encoding="utf-8")
     zuno_dao_tool = (
-        REPO_ROOT / "src/backend/zuno/database/dao/tool.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/tool.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.api.services.agent import AgentService" in zuno_api_v1_agent
@@ -1416,10 +1462,10 @@ def test_workspace_prep_services_prefer_zuno_entrypoints():
 
 def test_high_value_mcp_server_service_and_dao_prefer_zuno():
     zuno_api_service_mcp_server = (
-        REPO_ROOT / "src/backend/zuno/api/services/mcp_server.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/mcp_server.py"
     ).read_text(encoding="utf-8")
     zuno_dao_mcp_server = (
-        REPO_ROOT / "src/backend/zuno/database/dao/mcp_server.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/mcp_server.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.api.services.mcp_user_config import MCPUserConfigService" in zuno_api_service_mcp_server
@@ -1434,10 +1480,10 @@ def test_high_value_mcp_server_service_and_dao_prefer_zuno():
 
 def test_high_value_mcp_user_config_service_and_dao_prefer_zuno():
     zuno_api_service_mcp_user_config = (
-        REPO_ROOT / "src/backend/zuno/api/services/mcp_user_config.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/mcp_user_config.py"
     ).read_text(encoding="utf-8")
     zuno_dao_mcp_user_config = (
-        REPO_ROOT / "src/backend/zuno/database/dao/mcp_user_config.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/mcp_user_config.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database.dao.mcp_user_config import MCPUserConfigDao" in zuno_api_service_mcp_user_config
@@ -1449,16 +1495,16 @@ def test_high_value_mcp_user_config_service_and_dao_prefer_zuno():
 
 def test_high_value_mcp_agent_and_stdio_service_and_dao_prefer_zuno():
     zuno_api_service_mcp_agent = (
-        REPO_ROOT / "src/backend/zuno/api/services/mcp_agent.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/mcp_agent.py"
     ).read_text(encoding="utf-8")
     zuno_api_service_mcp_stdio = (
-        REPO_ROOT / "src/backend/zuno/api/services/mcp_stdio_server.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/mcp_stdio_server.py"
     ).read_text(encoding="utf-8")
     zuno_dao_mcp_agent = (
-        REPO_ROOT / "src/backend/zuno/database/dao/mcp_agent.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/mcp_agent.py"
     ).read_text(encoding="utf-8")
     zuno_dao_mcp_stdio = (
-        REPO_ROOT / "src/backend/zuno/database/dao/mcp_stdio_server.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/mcp_stdio_server.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database.dao.mcp_agent import MCPAgentDao" in zuno_api_service_mcp_agent
@@ -1484,10 +1530,10 @@ def test_high_value_mcp_agent_and_stdio_service_and_dao_prefer_zuno():
 
 def test_high_value_mcp_agent_and_stdio_v1_routes_prefer_zuno():
     zuno_api_v1_mcp_agent = (
-        REPO_ROOT / "src/backend/zuno/api/v1/mcp_agent.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/mcp_agent.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_mcp_stdio = (
-        REPO_ROOT / "src/backend/zuno/api/v1/mcp_stdio_server.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/mcp_stdio_server.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.api.services.mcp_agent import MCPAgentService" in zuno_api_v1_mcp_agent
@@ -1504,10 +1550,10 @@ def test_high_value_mcp_agent_and_stdio_v1_routes_prefer_zuno():
 
 def test_high_value_mcp_server_and_user_config_v1_routes_prefer_zuno():
     zuno_api_v1_mcp_server = (
-        REPO_ROOT / "src/backend/zuno/api/v1/mcp_server.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/mcp_server.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_mcp_user_config = (
-        REPO_ROOT / "src/backend/zuno/api/v1/mcp_user_config.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/mcp_user_config.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.api.services.mcp_server import MCPService" in zuno_api_v1_mcp_server
@@ -1531,13 +1577,13 @@ def test_high_value_mcp_server_and_user_config_v1_routes_prefer_zuno():
 
 def test_high_value_agent_skill_service_v1_and_dao_prefer_zuno():
     zuno_api_service_agent_skill = (
-        REPO_ROOT / "src/backend/zuno/api/services/agent_skill.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/agent_skill.py"
     ).read_text(encoding="utf-8")
     zuno_api_v1_agent_skill = (
-        REPO_ROOT / "src/backend/zuno/api/v1/agent_skill.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/agent_skill.py"
     ).read_text(encoding="utf-8")
     zuno_dao_agent_skill = (
-        REPO_ROOT / "src/backend/zuno/database/dao/agent_skill.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/agent_skill.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.core.agents.structured_response_agent import StructuredResponseAgent" in zuno_api_service_agent_skill
@@ -1561,16 +1607,16 @@ def test_high_value_agent_skill_service_v1_and_dao_prefer_zuno():
 
 def test_high_value_user_permission_and_memory_daos_prefer_zuno():
     zuno_api_service_user = (
-        REPO_ROOT / "src/backend/zuno/api/services/user.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/user.py"
     ).read_text(encoding="utf-8")
     zuno_dao_user_role = (
-        REPO_ROOT / "src/backend/zuno/database/dao/user_role.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/user_role.py"
     ).read_text(encoding="utf-8")
     zuno_dao_role = (
-        REPO_ROOT / "src/backend/zuno/database/dao/role.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/role.py"
     ).read_text(encoding="utf-8")
     zuno_dao_memory_history = (
-        REPO_ROOT / "src/backend/zuno/database/dao/memory_history.py"
+        REPO_ROOT / "services/api/src/zuno/database/dao/memory_history.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.database.dao.user_role import UserRoleDao" in zuno_api_service_user
@@ -1588,10 +1634,10 @@ def test_high_value_user_permission_and_memory_daos_prefer_zuno():
 
 def test_workspace_api_session_routes_prefer_zuno():
     zuno_api_v1_workspace = (
-        REPO_ROOT / "src/backend/zuno/api/v1/workspace.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/workspace.py"
     ).read_text(encoding="utf-8")
     zuno_api_service_workspace = (
-        REPO_ROOT / "src/backend/zuno/api/services/workspace.py"
+        REPO_ROOT / "services/api/src/zuno/api/services/workspace.py"
     ).read_text(encoding="utf-8")
 
     assert "from zuno.api.services.user import UserPayload, get_login_user" in zuno_api_v1_workspace
@@ -1628,9 +1674,10 @@ def test_workspace_api_session_routes_prefer_zuno():
 
 def test_zuno_api_v1_package_no_longer_uses_agentchat_wildcard_bridge():
     zuno_api_v1_init = (
-        REPO_ROOT / "src/backend/zuno/api/v1/__init__.py"
+        REPO_ROOT / "services/api/src/zuno/api/v1/__init__.py"
     ).read_text(encoding="utf-8")
 
+    assert "__path__ = extend_path(__path__, __name__)" in zuno_api_v1_init
     assert "from . import (" in zuno_api_v1_init
     assert '"completion"' in zuno_api_v1_init
     assert '"workspace"' in zuno_api_v1_init

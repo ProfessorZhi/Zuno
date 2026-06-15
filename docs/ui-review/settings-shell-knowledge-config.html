@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zuno Settings Mock - Knowledge Config</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --sidebar: #edf4fb;
+      --line: #d9e0e7;
+      --text: #1c2733;
+      --muted: #806957;
+      --accent: #f59e0b;
+      --accent-strong: #c97835;
+      --card: rgba(255, 252, 247, 0.96);
+      --card-soft: rgba(255, 249, 243, 0.94);
+      --shadow: 0 24px 60px rgba(22, 30, 39, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
+      color: var(--text);
+    }
+
+    .frame {
+      width: 1360px;
+      min-height: 900px;
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 18px 12px;
+      gap: 18px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--line);
+    }
+
+    .back-btn, .nav-item, .mode-card {
+      border: none;
+      background: none;
+      font: inherit;
+    }
+
+    .back-btn {
+      width: 100%;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      color: #445263;
+      background: rgba(176, 187, 199, 0.22);
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .nav-item {
+      height: 44px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 16px;
+      color: #2b3948;
+      font-size: 17px;
+    }
+
+    .nav-item.active {
+      background: rgba(176, 187, 199, 0.42);
+      font-weight: 600;
+    }
+
+    .nav-icon {
+      width: 22px;
+      text-align: center;
+      color: var(--accent);
+      font-size: 18px;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-footer {
+      border: 1px solid #d4dee8;
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.54);
+    }
+
+    .sidebar-footer h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .sidebar-footer p {
+      margin: 0 0 14px;
+      color: #6b7a8c;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mode-card {
+      border: 1px solid #e8d0aa;
+      border-radius: 16px;
+      padding: 12px 12px 10px;
+      text-align: left;
+      background: rgba(255, 251, 245, 0.96);
+    }
+
+    .mode-card.active {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.18);
+    }
+
+    .mode-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #5d3a16;
+    }
+
+    .mode-card span {
+      display: block;
+      color: #8a7765;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: 72px minmax(0, 1fr);
+      min-width: 0;
+      background: #fff;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 34px;
+      border-bottom: 1px solid #dde3ea;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ghost-icon, .close-btn {
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 12px;
+      background: #f2f5f8;
+      color: #526171;
+      font-size: 20px;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .content {
+      padding: 28px 34px 34px;
+      display: grid;
+      gap: 14px;
+      overflow: auto;
+    }
+
+    .hero, .panel, .summary-card, .option-card, .switch-card {
+      border: 1px solid rgba(214, 132, 70, 0.14);
+      border-radius: 24px;
+      background: var(--card);
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      padding: 22px 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #a16207;
+      font-size: 14px;
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .summary-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .summary-tags span {
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(214, 132, 70, 0.16);
+      background: rgba(255, 245, 236, 0.9);
+      color: #7c5835;
+      font-size: 14px;
+    }
+
+    .hero-action {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #d9e0e7;
+      border-radius: 999px;
+      background: #fff;
+      color: #607082;
+      font-size: 18px;
+      flex: 0 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 490px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .main-col, .side-col {
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      padding: 22px 24px;
+    }
+
+    .impact {
+      background: #fff8ec;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .panel-head h3, .summary-card h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #5e3518;
+    }
+
+    .panel-head p, .panel p, .switch-card p, .pipeline-item p, .preview-chunk p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .accent-icon {
+      color: var(--accent-strong);
+      font-size: 22px;
+      flex: 0 0 auto;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .option-card {
+      padding: 16px 18px;
+      background: var(--card-soft);
+    }
+
+    .option-card.active {
+      box-shadow: inset 0 0 0 1px rgba(201, 120, 53, 0.24);
+      background: linear-gradient(180deg, rgba(255, 246, 236, 0.96), rgba(255, 240, 227, 0.94));
+    }
+
+    .option-card strong, .switch-card strong, .pipeline-item strong {
+      display: block;
+      color: #5a3115;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .field-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 136px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .field:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .field-label {
+      color: #5a3115;
+      font-weight: 600;
+    }
+
+    .field-control {
+      min-height: 42px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 14px;
+      border: 1px solid rgba(214, 132, 70, 0.12);
+      background: #fff;
+      color: #6e5a4b;
+    }
+
+    .field-meta {
+      min-width: 84px;
+      text-align: right;
+      color: #8f7a68;
+      font-size: 13px;
+    }
+
+    .switch-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .switch-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      background: var(--card-soft);
+    }
+
+    .switch-pill {
+      width: 48px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.22);
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .switch-pill::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 23px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.22);
+    }
+
+    .summary-card {
+      padding: 18px;
+      background: var(--card);
+    }
+
+    .summary-card + .summary-card {
+      margin-top: 12px;
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .summary-item {
+      display: grid;
+      grid-template-columns: 146px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      color: #5a3115;
+    }
+
+    .summary-item .key {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .pipeline-list, .preview-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .pipeline-item {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .pipeline-badge {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(255, 243, 232, 0.96);
+      color: var(--accent-strong);
+      font-size: 16px;
+    }
+
+    .preview-chunk {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(214, 132, 70, 0.12);
+      background: var(--card-soft);
+    }
+
+    .preview-chunk .chunk-title {
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .ghost-action, .primary-action {
+      height: 38px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font: inherit;
+    }
+
+    .ghost-action {
+      border: 1px solid rgba(214, 132, 70, 0.18);
+      background: rgba(255, 249, 243, 0.94);
+      color: #7c5835;
+    }
+
+    .primary-action {
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(245, 158, 11, 0.18);
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <aside class="sidebar">
+      <button class="back-btn"><span>‹</span><span>返回应用</span></button>
+
+      <div class="nav-group">
+        <button class="nav-item"><span class="nav-icon">◌</span><span>智能体</span></button>
+        <button class="nav-item"><span class="nav-icon">◎</span><span>模型</span></button>
+        <button class="nav-item active"><span class="nav-icon">▣</span><span>知识库</span></button>
+        <button class="nav-item"><span class="nav-icon">M</span><span>MCP</span></button>
+        <button class="nav-item"><span class="nav-icon">⌘</span><span>工具</span></button>
+        <button class="nav-item"><span class="nav-icon">✦</span><span>Skill</span></button>
+        <button class="nav-item"><span class="nav-icon">▤</span><span>数据看板</span></button>
+        <button class="nav-item"><span class="nav-icon">◔</span><span>个人资料</span></button>
+        <button class="nav-item"><span class="nav-icon">◡</span><span>对话记录</span></button>
+      </div>
+
+      <div class="sidebar-footer">
+        <h3>设置界面</h3>
+        <p>切换后会自动刷新当前页面。</p>
+        <div class="mode-grid">
+          <button class="mode-card active">
+            <strong>传统窗口</strong>
+            <span>左侧导航 + 独立设置页，默认推荐。</span>
+          </button>
+          <button class="mode-card">
+            <strong>聊天流</strong>
+            <span>把设置页作为对话内容打开。</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="ghost-icon">‹</button>
+          <h1>知识库</h1>
+        </div>
+        <button class="close-btn">×</button>
+      </header>
+
+      <section class="content">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">知识库配置</p>
+            <h2>mixed_tuning_v2_graph_tuned11</h2>
+            <div class="summary-tags">
+              <span>RAG + GraphRAG</span>
+              <span>父子分段</span>
+              <span>图谱增强检索</span>
+              <span>Milvus</span>
+            </div>
+          </div>
+          <button class="hero-action">◫</button>
+        </section>
+
+        <div class="layout">
+          <div class="main-col">
+            <section class="panel impact">
+              <h3>索引结构已变化</h3>
+              <p>建库模式、分段、Embedding、图片索引、向量库或图谱索引参数变更后，需要重建或补建索引才能完全生效。</p>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3>建库方式</h3>
+                  <p>建库方式决定是否额外建立图谱索引；标准 RAG 索引会同时服务向量检索与 BM25 检索。</p>
+                </div>
+                <div class="accent-icon">⛓</div>
+              </div>
+              <div class="option-grid">
+                <div class="option-card">
+                  <strong>RAG</strong>
+                  <span>建立向量与 BM25 所需的文本索引，不建立图谱索引，适合大多数文档问答知识库。</span>
+                </div>
+                <div class="option-card active">
+                  <strong>RAG + GraphRAG</strong>
+                  <span>建立文本检索与图谱索引，适合需要关系路径、实体扩展和证据回链的知识库。</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3>查询设置</h3>
+                  <p>这些参数只影响提问时的向量召回、BM25 检索、图谱扩展、排序和补检，保存后即时生效。</p>
+                </div>
+                <div class="accent-icon">▤</div>
+              </div>
+
+              <div class="option-grid">
+                <div class="option-card active">
+                  <strong>图谱增强检索</strong>
+                  <span>优先使用图谱增强的多跳路径，再回到文本证据。</span>
+                </div>
+                <div class="option-card">
+                  <strong>标准 RAG</strong>
+                  <span>仅使用向量与 BM25 召回链路。</span>
+                </div>
+              </div>
+
+              <div class="field-list">
+                <div class="field">
+                  <div class="field-label">补检策略</div>
+                  <div class="field-control"><span>不够强再补检</span><span>⌄</span></div>
+                  <div class="field-meta">默认</div>
+                </div>
+                <div class="field">
+                  <div class="field-label">默认 Top K</div>
+                  <div class="field-control"><span>5</span><span>▭▭▭▭▭</span></div>
+                  <div class="field-meta">Top K 5</div>
+                </div>
+                <div class="field">
+                  <div class="field-label">Rerank 模型</div>
+                  <div class="field-control"><span>gte-rerank-v2 / Qwen</span><span>⌄</span></div>
+                  <div class="field-meta">已启用</div>
+                </div>
+                <div class="field">
+                  <div class="field-label">GraphRAG 最大跳数</div>
+                  <div class="field-control"><span>2-hop</span><span>⌄</span></div>
+                  <div class="field-meta">查询时</div>
+                </div>
+              </div>
+
+              <div class="switch-grid">
+                <div class="switch-card">
+                  <div>
+                    <strong>启用 Rerank</strong>
+                    <p>先做向量/BM25 混合召回，再用排序模型重排优先级。</p>
+                  </div>
+                  <div class="switch-pill"></div>
+                </div>
+                <div class="switch-card">
+                  <div>
+                    <strong>启用 Score 阈值</strong>
+                    <p>低于阈值的结果不会进入最终上下文。</p>
+                  </div>
+                  <div class="switch-pill"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="side-col">
+            <section class="summary-card">
+              <h3>即时预览</h3>
+              <p>配置保存前先看链路会怎么走。</p>
+            </section>
+
+            <section class="summary-card">
+              <h3>当前模型</h3>
+              <div class="summary-list">
+                <div class="summary-item"><div class="key">文本 Embedding</div><div>text-embedding-v4</div></div>
+                <div class="summary-item"><div class="key">VL Embedding</div><div>text-embedding-v4</div></div>
+                <div class="summary-item"><div class="key">Rerank</div><div>gte-rerank-v2</div></div>
+              </div>
+            </section>
+
+            <section class="summary-card">
+              <h3>这套链路会怎么走</h3>
+              <div class="pipeline-list">
+                <div class="pipeline-item">
+                  <div class="pipeline-badge">▣</div>
+                  <div>
+                    <strong>建立索引时</strong>
+                    <p>RAG + GraphRAG / 父子分段 / 分块 1024 / 重叠 120</p>
+                  </div>
+                </div>
+                <div class="pipeline-item">
+                  <div class="pipeline-badge">◫</div>
+                  <div>
+                    <strong>存储与图片</strong>
+                    <p>Milvus / 图片转文本</p>
+                  </div>
+                </div>
+                <div class="pipeline-item">
+                  <div class="pipeline-badge">▤</div>
+                  <div>
+                    <strong>查询时</strong>
+                    <p>图谱增强检索 / Top K 5 / gte-rerank-v2 / GraphRAG 2-hop / 每实体最多 5 条路径</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="summary-card">
+              <h3>示例切块</h3>
+              <div class="preview-list">
+                <div class="preview-chunk">
+                  <div class="chunk-title">Chunk 1</div>
+                  <p>mixed_tuning_v2_graph_tuned11 用于混合调优实验，覆盖 GraphRAG 检索、多路径召回与重排配置。</p>
+                </div>
+                <div class="preview-chunk">
+                  <div class="chunk-title">Chunk 2</div>
+                  <p>当前配置保留父子分段、Milvus 向量库、text-embedding-v4 和 gte-rerank-v2 的组合。</p>
+                </div>
+              </div>
+
+              <div class="footer-actions">
+                <button class="ghost-action">恢复推荐默认值</button>
+                <button class="primary-action">保存并重建索引</button>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

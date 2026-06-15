@@ -2,9 +2,8 @@ import asyncio
 from pathlib import Path
 import sys
 
-
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "src" / "backend"))
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
 
 def test_extract_object_key_from_public_minio_url():

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-这份计划文档不重复讲 GraphRAG 原理，也不替代 `zuno_refactor_plan.md`。
+这份计划文档不重复讲 GraphRAG 原理，也不替代当前架构升级主文档。
 
 它只负责回答：
 
@@ -141,7 +141,9 @@
 ## Relationship To Other Docs
 
 - `zuno_refactor_plan.md`
-  - 负责全局 phase 目标和总体重构方向
+  - 现已降级到 `docs/architecture/history/`，只保留历史上下文价值
+- `specs/architecture-upgrade-2026-06.md`
+  - 负责当前架构升级的目标结构、phase 分层与 workflow 规则
 - `enterprise-retrieval-governance.md`
   - 负责治理层语义边界
 - `retrieval-orchestrator.md`

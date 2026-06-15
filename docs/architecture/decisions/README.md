@@ -11,8 +11,8 @@
 
 当前保留两份真正还在影响主线的决策：
 
-- [ADR 0001: Domain Pack Binding](./0001-domain-pack-binding.md)
-- [ADR 0002: Rename agentchat to zuno](./0002-rename-agentchat-to-zuno.md)
+- [ADR 0001: Domain Pack Binding](0001-domain-pack-binding.md)
+- [ADR 0002: Rename agentchat to zuno](0002-rename-agentchat-to-zuno.md)
 
 后面如果继续新增 ADR，优先记录这类决策：
 

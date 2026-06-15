@@ -6,9 +6,9 @@ import json
 import sys
 from pathlib import Path, PureWindowsPath
 
-BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
-if str(BACKEND_ROOT) not in sys.path:
-    sys.path.insert(0, str(BACKEND_ROOT))
+SERVICE_API_SRC_ROOT = Path(__file__).resolve().parents[4] / "services" / "api" / "src"
+if str(SERVICE_API_SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SERVICE_API_SRC_ROOT))
 
 from agentchat.api.services.knowledge import KnowledgeService
 from agentchat.api.services.knowledge_file import KnowledgeFileService

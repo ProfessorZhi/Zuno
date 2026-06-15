@@ -6,9 +6,11 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src/backend"
-if str(BACKEND_ROOT) not in sys.path:
-    sys.path.insert(0, str(BACKEND_ROOT))
+for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+    if runtime_root not in sys.path:
+        sys.path.insert(0, runtime_root)
 
 from agentchat.evals.rag_eval.run_eval import NO_EVIDENCE_ANSWER, _build_answer
 

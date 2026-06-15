@@ -10,6 +10,7 @@ import { getWorkspaceSessionsAPI, deleteWorkspaceSessionAPI } from '../../apis/w
 import { getAgentsAPI, type AgentResponse } from '../../apis/agent'
 import { useResizablePanel } from '../../composables/useResizablePanel'
 import { getSettingsIcon } from '../../utils/settings-icons'
+import { isDesktopRuntime } from '../../utils/api'
 import { DEFAULT_USER_AVATAR, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../../utils/user-avatars'
 import SidebarMascot from '../../components/SidebarMascot.vue'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
@@ -108,6 +109,7 @@ const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(re
 const hasAuthToken = () => Boolean(typeof window !== 'undefined' && window.localStorage.getItem('token'))
 const authUnlocked = ref(hasAuthToken())
 const authUnlocking = ref(false)
+const desktopRuntime = computed(() => isDesktopRuntime())
 const workspaceNavVisible = computed(() => authUnlocked.value || authUnlocking.value)
 const authInitialMode = computed<AuthMode>(() => {
   const rawMode = Array.isArray(route.query.auth) ? route.query.auth[0] : route.query.auth
@@ -664,7 +666,7 @@ watch(sidebarCollapsed, (collapsed) => {
 </script>
 
 <template>
-  <div class="workspace-container" :class="{ 'navigation-settling': navigationSettling }">
+  <div class="workspace-container" :class="{ 'navigation-settling': navigationSettling, 'desktop-runtime': desktopRuntime }">
     <button class="mobile-rail-toggle mobile-only" type="button" @click="sidebarCollapsed = !sidebarCollapsed">
       <el-icon><Expand v-if="sidebarCollapsed" /><Fold v-else /></el-icon>
     </button>

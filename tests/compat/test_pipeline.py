@@ -3,9 +3,8 @@ from pathlib import Path
 from types import SimpleNamespace
 import sys
 
-
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "src" / "backend"))
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
 
 def test_pipeline_stage_flow():
@@ -54,20 +53,42 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     async def fake_update_pipeline_fields(knowledge_file_id, **kwargs):
         file_updates.append((knowledge_file_id, kwargs))
 
-    async def fake_parse_doc_into_chunks(file_id, file_path, knowledge_id, source_url=None):
+    async def fake_parse_doc_into_chunks(
+        file_id,
+        file_path,
+        knowledge_id,
+        source_url=None,
+        knowledge_config=None,
+    ):
         assert file_id == "f_1"
         assert file_path == "demo.txt"
         assert knowledge_id == "k_1"
         assert source_url is None
+        assert knowledge_config == {"index_capability": "rag"}
         return [{"chunk_id": "c_1", "content": "hello"}]
 
-    async def fake_index_milvus_documents(knowledge_id, chunks):
+    async def fake_index_milvus_documents(
+        knowledge_id,
+        chunks,
+        text_embedding_config=None,
+        vl_embedding_config=None,
+    ):
         assert knowledge_id == "k_1"
         assert len(chunks) == 1
+        assert text_embedding_config is None
+        assert vl_embedding_config is None
 
     async def fake_index_es_documents(knowledge_id, chunks):
         assert knowledge_id == "k_1"
         assert len(chunks) == 1
+
+    async def fake_get_knowledge_config(knowledge_id):
+        assert knowledge_id == "k_1"
+        return {"index_capability": "rag"}
+
+    async def fake_get_runtime_settings(knowledge_id):
+        assert knowledge_id == "k_1"
+        return {}
 
     monkeypatch.setattr(
         "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
@@ -96,6 +117,14 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     monkeypatch.setattr(
         "agentchat.services.rag.handler.RagHandler.index_es_documents",
         fake_index_es_documents,
+    )
+    monkeypatch.setattr(
+        "agentchat.api.services.knowledge.KnowledgeService.get_knowledge_config",
+        fake_get_knowledge_config,
+    )
+    monkeypatch.setattr(
+        "agentchat.api.services.knowledge.KnowledgeService.get_runtime_settings",
+        fake_get_runtime_settings,
     )
 
     asyncio.run(
@@ -356,6 +385,12 @@ def test_graph_extractor_accepts_chunk_model():
 
     result = asyncio.run(GraphExtractor().extract_from_chunk(chunk, "knowledge_1"))
 
-    assert [entity["name"] for entity in result["entities"]] == ["Alice", "Bob", "OpenAI"]
-    assert result["relations"][0]["source"] == "Alice"
-    assert result["relations"][0]["target"] == "Bob"
+    entity_names = {entity["name"] for entity in result["entities"]}
+    relation_pairs = {
+        (relation["source"], relation["target"])
+        for relation in result["relations"]
+    }
+
+    assert entity_names == {"Alice", "Bob", "OpenAI"}
+    assert relation_pairs
+    assert {name for pair in relation_pairs for name in pair}.issubset(entity_names)

@@ -13,7 +13,7 @@ exit /b 1
 
 :config
 set "SCRIPT_DIR=%~dp0"
-for %%I in ("%SCRIPT_DIR%..") do set "PROJECT_ROOT=%%~fI"
+for %%I in ("%SCRIPT_DIR%..\..\..") do set "PROJECT_ROOT=%%~fI"
 set "DOCKER_DIR=%PROJECT_ROOT%\infra\docker"
 exit /b 0
 

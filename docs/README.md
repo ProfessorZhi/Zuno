@@ -1,42 +1,50 @@
 # Documentation Index
 
-`docs/` 是给人看的正式文档入口，不放本地 Agent 工作流材料。
+`docs/` is the formal documentation root for Zuno.
+
+The organizing rule is:
+
+```text
+keep current truth, execution phases, stable specs, support workflow, and history separate
+```
 
 ## Sections
 
-- [architecture/](./architecture/README.md)
-  - 当前主架构、分阶段计划、决策记录、RAG / GraphRAG / Domain Pack 设计
-- [development/](./development/)
-  - 环境搭建、开发说明、分层架构开发规则、迁移、运行手册、GitHub 发布边界
+- [architecture/](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/README.md)
+  - current architecture truth, active phases, stable specs, decisions, history
+- [development/](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/development/README.md)
+  - maintainer workflow, publish boundary, demo runbooks, architecture-doc maintenance
 - [reference/](./reference/)
-  - 面向读者的稳定参考资料
+  - stable reference material that is not the active execution path
 - [prototypes/](./prototypes/)
-  - 原型、实验材料和历史档案区
+  - experiments and non-current materials safe to keep
 - [assets/](./assets/)
-  - 文档配图和资源文件
+  - documentation assets
 
-## Reading Order
+## First-Read Path
 
-如果你第一次进入项目，建议按这个顺序读：
+If you are reading the project for the first time, use this order:
 
-1. [README.md](../README.md)
-2. [docs/architecture/README.md](./architecture/README.md)
-3. [docs/development/public-demo-evidence.md](./development/public-demo-evidence.md)
-4. [docs/development/public-demo-runbook.md](./development/public-demo-runbook.md)
-5. [docs/development/public-demo-acceptance.md](./development/public-demo-acceptance.md)
-6. [infra/docker/README.md](../infra/docker/README.md)
-7. [tools/launchers/windows/README.md](../tools/launchers/windows/README.md)
+1. [README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/README.md)
+2. [docs/architecture/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/README.md)
+3. [docs/architecture/current-architecture.md](current-architecture.md)
+4. [docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md](stable-baseline-recovery-and-runtime-deepening-plan.md)
+5. [docs/architecture/target-architecture.md](target-architecture.md)
+6. [docs/development/public-demo-evidence.md](public-demo-evidence.md)
+7. [docs/development/public-demo-runbook.md](public-demo-runbook.md)
+8. [docs/development/public-demo-acceptance.md](public-demo-acceptance.md)
 
-Maintainer entrypoints:
+## Maintainer Path
 
-- [docs/development/README.md](./development/README.md)
-- [docs/development/github-publish-boundary.md](./development/github-publish-boundary.md)
+If you are changing structure, runtime, docs, or release surfaces, use:
+
+1. [docs/architecture/phases/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/architecture/phases/README.md)
+2. [docs/development/architecture-doc-maintenance-workflow.md](architecture-doc-maintenance-workflow.md)
+3. [docs/development/README.md](05_TopDown_题库学习/项目/02_项目映射/Zuno/docs/development/README.md)
+4. [docs/development/github-publish-boundary.md](github-publish-boundary.md)
 
 ## Notes
 
-- First-time readers should stop after step 7.
-
-- 当前主入口以 `docs/architecture/` 为准。
-- 如果你是第一次读项目，优先走上面的 `Reading Order`，不要先跳进发布分组、staging 计划或本地工作流材料。
-- 本地 Agent 工作流入口在仓库根目录的 `.agentmd` 和 `.agent/`，不会作为公开文档的一部分提交到 GitHub。
-- 历史 handoff / workflow 材料已经降级到 `docs/prototypes/`，不属于公开文档主入口。
+- `docs/architecture/history/` stores older architecture and phase materials that are no longer current truth.
+- `docs/development/history/` stores older workflow notes that should not stay on the active maintainer path.
+- completed one-off workflow notes should not remain in the default reading order after the underlying task is done.

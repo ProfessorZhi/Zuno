@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zuno Settings Mock - Dashboard</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --sidebar: #edf4fb;
+      --line: #d9e0e7;
+      --text: #1c2733;
+      --muted: #6b7a8c;
+      --accent: #f59e0b;
+      --accent-soft: rgba(245, 158, 11, 0.10);
+      --card: rgba(255, 252, 247, 0.96);
+      --shadow: 0 24px 60px rgba(22, 30, 39, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
+      color: var(--text);
+    }
+
+    .frame {
+      width: 1360px;
+      min-height: 860px;
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 18px 12px;
+      gap: 18px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--line);
+    }
+
+    .back-btn, .nav-item, .mode-card {
+      border: none;
+      background: none;
+      font: inherit;
+    }
+
+    .back-btn {
+      width: 100%;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      color: #445263;
+      background: rgba(176, 187, 199, 0.22);
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .nav-item {
+      height: 44px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 16px;
+      color: #2b3948;
+      font-size: 17px;
+    }
+
+    .nav-item.active {
+      background: rgba(176, 187, 199, 0.42);
+      font-weight: 600;
+    }
+
+    .nav-icon {
+      width: 22px;
+      text-align: center;
+      color: var(--accent);
+      font-size: 18px;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-footer {
+      border: 1px solid #d4dee8;
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.54);
+    }
+
+    .sidebar-footer h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .sidebar-footer p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mode-card {
+      border: 1px solid #e8d0aa;
+      border-radius: 16px;
+      padding: 12px 12px 10px;
+      text-align: left;
+      background: rgba(255, 251, 245, 0.96);
+    }
+
+    .mode-card.active {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.18);
+    }
+
+    .mode-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #5d3a16;
+    }
+
+    .mode-card span {
+      display: block;
+      color: #8a7765;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: 72px minmax(0, 1fr);
+      min-width: 0;
+      background: #fff;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 34px;
+      border-bottom: 1px solid #dde3ea;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ghost-icon, .close-btn {
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 12px;
+      background: #f2f5f8;
+      color: #526171;
+      font-size: 20px;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .content {
+      padding: 28px 34px 34px;
+      display: grid;
+      gap: 16px;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .filter-bar {
+      display: grid;
+      grid-template-columns: 28px repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      align-items: center;
+      color: var(--muted);
+    }
+
+    .filter-marker {
+      text-align: center;
+      color: var(--accent);
+      font-size: 20px;
+    }
+
+    .select {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid #dfe6ed;
+      color: #617286;
+      font-size: 15px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kpi {
+      min-height: 110px;
+      padding: 16px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(214, 132, 70, 0.14);
+      background: var(--card);
+    }
+
+    .kpi .label {
+      color: #7c8a9a;
+      font-size: 14px;
+    }
+
+    .kpi .value {
+      margin-top: 10px;
+      font-size: 22px;
+      font-weight: 800;
+      color: #1c2733;
+    }
+
+    .kpi .meta {
+      margin-top: 8px;
+      color: #9aa7b5;
+      font-size: 13px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+      gap: 14px;
+    }
+
+    .panel {
+      border-radius: 22px;
+      border: 1px solid rgba(214, 132, 70, 0.14);
+      background: var(--card);
+      padding: 18px 20px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .panel-meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .rows {
+      display: grid;
+      gap: 12px;
+    }
+
+    .trend-row, .rank-row {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr) 86px;
+      gap: 12px;
+      align-items: center;
+      font-size: 14px;
+      color: #617286;
+    }
+
+    .bar, .mini-bar {
+      height: 5px;
+      background: rgba(245, 158, 11, 0.10);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar > span, .mini-bar > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.48));
+      border-radius: inherit;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 72px repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eceff4;
+    }
+
+    .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .date, .metric {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .date strong, .metric strong {
+      font-size: 16px;
+      color: #1c2733;
+    }
+
+    .date span, .metric span {
+      font-size: 13px;
+      color: #9aa7b5;
+    }
+
+    .rank-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .rank-index {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      background: var(--accent-soft);
+      color: #b45309;
+      font-weight: 700;
+      font-size: 12px;
+      flex: 0 0 auto;
+    }
+
+    .rank-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rank-value {
+      flex: 0 0 auto;
+      font-weight: 700;
+      color: #1c2733;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <aside class="sidebar">
+      <button class="back-btn"><span>‹</span><span>返回应用</span></button>
+
+      <div class="nav-group">
+        <button class="nav-item"><span class="nav-icon">◌</span><span>智能体</span></button>
+        <button class="nav-item"><span class="nav-icon">◎</span><span>模型</span></button>
+        <button class="nav-item"><span class="nav-icon">▣</span><span>知识库</span></button>
+        <button class="nav-item"><span class="nav-icon">M</span><span>MCP</span></button>
+        <button class="nav-item"><span class="nav-icon">⌘</span><span>工具</span></button>
+        <button class="nav-item"><span class="nav-icon">✦</span><span>Skill</span></button>
+        <button class="nav-item active"><span class="nav-icon">▤</span><span>数据看板</span></button>
+        <button class="nav-item"><span class="nav-icon">◔</span><span>个人资料</span></button>
+        <button class="nav-item"><span class="nav-icon">◡</span><span>对话记录</span></button>
+      </div>
+
+      <div class="sidebar-footer">
+        <h3>设置界面</h3>
+        <p>切换后会自动刷新当前页面。</p>
+        <div class="mode-grid">
+          <button class="mode-card active">
+            <strong>传统窗口</strong>
+            <span>左侧导航 + 独立设置页，默认推荐。</span>
+          </button>
+          <button class="mode-card">
+            <strong>聊天流</strong>
+            <span>把设置页作为对话内容打开。</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="ghost-icon">‹</button>
+          <h1>数据看板</h1>
+        </div>
+        <button class="close-btn">×</button>
+      </header>
+
+      <section class="content">
+        <h2 class="section-title">数据看板</h2>
+
+        <div class="filter-bar">
+          <div class="filter-marker">⎇</div>
+          <div class="select"><span>全部模型</span><span>⌄</span></div>
+          <div class="select"><span>全部智能体</span><span>⌄</span></div>
+          <div class="select"><span>最近 30 天</span><span>⌄</span></div>
+        </div>
+
+        <div class="kpi-grid">
+          <article class="kpi"><div class="label">调用次数</div><div class="value">2</div><div class="meta">最近 30 天</div></article>
+          <article class="kpi"><div class="label">输入 Token</div><div class="value">3,877</div><div class="meta">最近 30 天</div></article>
+          <article class="kpi"><div class="label">输出 Token</div><div class="value">263</div><div class="meta">最近 30 天</div></article>
+          <article class="kpi"><div class="label">总 Token</div><div class="value">4,140</div><div class="meta">最近 30 天</div></article>
+        </div>
+
+        <div class="two-col">
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title"><span>↗</span><span>趋势</span></div>
+              <div class="panel-meta">最近 30 天</div>
+            </div>
+            <div class="rows">
+              <div class="trend-row">
+                <span>06-15</span>
+                <div class="bar"><span style="width: 100%"></span></div>
+                <strong>4,140</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title"><span>≣</span><span>最近明细</span></div>
+              <div class="panel-meta">按日期汇总</div>
+            </div>
+            <div class="detail-list">
+              <div class="detail-row">
+                <div class="date"><strong>06-15</strong><span>2026</span></div>
+                <div class="metric"><span>调用</span><strong>2</strong><div class="mini-bar"><span style="width: 100%"></span></div></div>
+                <div class="metric"><span>输入</span><strong>3,877</strong></div>
+                <div class="metric"><span>输出</span><strong>263</strong></div>
+                <div class="metric"><span>总量</span><strong>4,140</strong><div class="mini-bar"><span style="width: 100%"></span></div></div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="two-col">
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title"><span>♛</span><span>模型排行</span></div>
+              <div class="panel-meta">按总 Token</div>
+            </div>
+            <div class="rows">
+              <div class="rank-row">
+                <div class="rank-line">
+                  <span class="rank-index">1</span>
+                  <span class="rank-name">deepseek-v4-flash</span>
+                  <span class="rank-value">4,140</span>
+                </div>
+                <div class="mini-bar" style="grid-column: 2 / 4;"><span style="width: 100%"></span></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title"><span>☷</span><span>智能体排行</span></div>
+              <div class="panel-meta">按调用次数</div>
+            </div>
+            <div class="rows">
+              <div class="panel-meta">暂无智能体数据</div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -102,12 +102,15 @@ curl http://127.0.0.1:8090
 docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up --build -d
 ```
 
-dev override 会挂载：
+dev override 目前仍反映恢复期的混合运行面，会挂载：
 
-- `src/backend` 到 `/app`
+- `services/api` 到 `/app`
+- `src/backend` 到 `/app/legacy_backend`
 - `apps/web` 到 `/app`
 - `tools/cli` 到 `/app/cli_tools`
 - `tools/scripts` 到 `/app/scripts`
+
+这描述的是当前 Docker 开发态事实，不代表 `services/api` 迁移仍是当前执行主线。
 
 ## 数据持久化
 
@@ -181,6 +184,6 @@ docker compose -f infra/docker/docker-compose.yml down -v
 
 ## 相关文档
 
-- [项目 README](../../README.md)
-- [Windows Launchers](../../tools/launchers/windows/README.md)
-- [Zuno 项目参考](../../docs/reference/zuno.md)
+- [项目 README](05_TopDown_题库学习/项目/02_项目映射/Zuno/README.md)
+- [Windows Launchers](05_TopDown_题库学习/项目/02_项目映射/Zuno/tools/launchers/windows/README.md)
+- [Zuno 项目参考](zuno.md)

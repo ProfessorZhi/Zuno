@@ -4,17 +4,18 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
-def _ensure_backend_path() -> None:
-    backend_path = str(BACKEND_ROOT)
-    if backend_path not in sys.path:
-        sys.path.insert(0, backend_path)
+def _ensure_runtime_paths() -> None:
+    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+        if runtime_root not in sys.path:
+            sys.path.insert(0, runtime_root)
 
 
 def test_langgraph_runtime_modules_import_from_zuno_mainline():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     domain_graph_module = importlib.import_module("zuno.core.graphs.domain_qa_graph")
     retrieval_models_module = importlib.import_module("zuno.services.retrieval.models")
@@ -28,7 +29,7 @@ def test_langgraph_runtime_modules_import_from_zuno_mainline():
 
 
 def test_domain_pack_loader_can_load_contract_review_from_zuno_runtime():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
 
@@ -40,7 +41,7 @@ def test_domain_pack_loader_can_load_contract_review_from_zuno_runtime():
 
 
 def test_domain_qa_graph_build_initial_state_remains_available_after_direct_import():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
 

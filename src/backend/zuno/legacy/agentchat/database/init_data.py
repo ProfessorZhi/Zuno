@@ -28,7 +28,9 @@ HIDDEN_SYSTEM_AGENT_NAMES = {"联网搜索助手", "博查搜索助手", "文生
 
 
 def _resolve_config_asset_path(file_name: str) -> str:
+    package_root = Path(__file__).resolve().parents[1]
     candidates = [
+        package_root / "config" / file_name,
         Path("./zuno/config") / file_name,
         Path("./agentchat/config") / file_name,
     ]

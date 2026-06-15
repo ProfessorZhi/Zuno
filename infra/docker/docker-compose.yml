@@ -7,6 +7,8 @@ services:
     container_name: agentchat-postgres
     image: postgres:16
     restart: unless-stopped
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -246,7 +248,8 @@ services:
       milvus:
         condition: service_healthy
     volumes:
-      - ../../src/backend:/app
+      - ../../services/api:/app
+      - ../../src/backend:/app/legacy_backend
       - ./docker_config.local.yaml:/app/zuno/config.yaml:ro
       - backend_vector_db:/app/.local/state/vector_db
     networks:

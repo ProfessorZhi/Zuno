@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, View, Hide, Check } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, View, Hide, Check, Close } from '@element-plus/icons-vue'
 import modelIcon from '../../assets/model.svg'
 import {
   getVisibleLLMsAPI,
   searchLLMsAPI,
   createLLMAPI,
   updateLLMAPI,
+  activateLLMAPI,
   deleteLLMAPI,
   type LLMResponse,
   type CreateLLMRequest,
@@ -30,6 +31,7 @@ const listPage = ref(1)
 
 const dialogVisible = ref(false)
 const dialogLoading = ref(false)
+const activationLoadingId = ref('')
 const isEditMode = ref(false)
 const showApiKey = ref(false)
 
@@ -45,6 +47,14 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const sortedModels = computed(() => {
   return [...models.value].sort((a, b) => {
+    const slotDiff = Number(a.model_slot === 'conversation_model') === Number(b.model_slot === 'conversation_model')
+      ? 0
+      : a.model_slot === 'conversation_model'
+        ? -1
+        : 1
+
+    if (slotDiff !== 0) return slotDiff
+
     const officialDiff = Number(a.user_id === '0') === Number(b.user_id === '0')
       ? 0
       : a.user_id === '0'
@@ -62,9 +72,11 @@ const paginatedModels = computed(() => sortedModels.value.slice(
 ))
 
 const isOfficial = (item: LLMResponse) => item.user_id === '0'
+const isConversationModel = (item: LLMResponse) => item.model_slot === 'conversation_model'
 const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
 const canManageItem = (item: LLMResponse) => !isOfficial(item) || isAdmin.value
 const isEditingItem = (item: LLMResponse) => dialogVisible.value && isEditMode.value && form.value.llm_id === item.llm_id
+const canActivateConversationModel = (item: LLMResponse) => item.llm_type === 'LLM'
 
 const flattenModelMap = (value: Record<string, LLMResponse[]>) => {
   const result: LLMResponse[] = []
@@ -80,6 +92,7 @@ const fetchModels = async () => {
     const response = await getVisibleLLMsAPI()
     if (response.data.status_code === 200) {
       models.value = flattenModelMap(response.data.data || {})
+      listPage.value = 1
       return
     }
     ElMessage.error(response.data.status_message || '加载模型列表失败')
@@ -102,6 +115,7 @@ const searchModels = async (search: string) => {
     const response = await searchLLMsAPI({ llm_name: search.trim() })
     if (response.data.status_code === 200) {
       models.value = flattenModelMap(response.data.data || {})
+      listPage.value = 1
       return
     }
     ElMessage.error(response.data.status_message || '搜索模型失败')
@@ -199,7 +213,7 @@ const validateForm = () => {
 
 const handleSave = async () => {
   if (!validateForm()) {
-    closeInlineForm()
+    ElMessage.warning('请先填写完整的模型信息')
     return
   }
 
@@ -244,6 +258,29 @@ const handleSave = async () => {
     ElMessage.error('保存模型失败')
   } finally {
     dialogLoading.value = false
+  }
+}
+
+const handleActivateConversationModel = async (item: LLMResponse) => {
+  if (!canActivateConversationModel(item) || isConversationModel(item)) return
+
+  activationLoadingId.value = item.llm_id
+  try {
+    const response = await activateLLMAPI({
+      llm_id: item.llm_id,
+      model_slot: 'conversation_model',
+    })
+    if (response.data.status_code === 200) {
+      ElMessage.success(`已切换聊天模型到 ${item.model}`)
+      await fetchModels()
+      return
+    }
+    ElMessage.error(response.data.status_message || '切换聊天模型失败')
+  } catch (error) {
+    console.error('切换聊天模型失败:', error)
+    ElMessage.error('切换聊天模型失败')
+  } finally {
+    activationLoadingId.value = ''
   }
 }
 
@@ -305,8 +342,10 @@ onMounted(fetchModels)
       <header class="inline-form-head">
         <div>
           <h2>{{ isEditMode ? '编辑模型' : '新建模型' }}</h2>
+          <p>创建模型后，还需要把它设为聊天模型，聊天页才会真正走这套配置。</p>
         </div>
         <div class="inline-form-actions">
+          <ZunoIconButton :icon="Close" title="关闭" @click="closeInlineForm" />
           <ZunoIconButton class="save-action" type="primary" :icon="Check" :loading="dialogLoading" title="保存" @click="handleSave" />
         </div>
       </header>
@@ -346,6 +385,9 @@ onMounted(fetchModels)
               <span class="badge" :class="{ official: isOfficial(item) }">
                 {{ isOfficial(item) ? '官方模型' : '自定义模型' }}
               </span>
+              <span v-if="isConversationModel(item)" class="badge active-slot">
+                当前聊天模型
+              </span>
             </div>
 
             <div class="meta-grid">
@@ -355,6 +397,17 @@ onMounted(fetchModels)
           </div>
 
           <div class="card-actions">
+            <el-button
+              v-if="canActivateConversationModel(item)"
+              class="slot-button"
+              :type="isConversationModel(item) ? 'warning' : 'default'"
+              :plain="!isConversationModel(item)"
+              :loading="activationLoadingId === item.llm_id"
+              :disabled="isConversationModel(item)"
+              @click="handleActivateConversationModel(item)"
+            >
+              {{ isConversationModel(item) ? '当前聊天模型' : '设为聊天模型' }}
+            </el-button>
             <el-button
               :class="['model-icon-button', { active: isEditingItem(item) }]"
               :icon="isEditingItem(item) ? Check : Edit"
@@ -587,6 +640,11 @@ onMounted(fetchModels)
     background: rgba(34, 197, 94, 0.08);
     color: #15803d;
   }
+
+  &.active-slot {
+    background: rgba(249, 115, 22, 0.1);
+    color: #c2410c;
+  }
 }
 
 .meta-grid {
@@ -622,6 +680,7 @@ onMounted(fetchModels)
   justify-content: flex-end;
   gap: 6px;
   min-width: max-content;
+  flex-wrap: wrap;
 }
 
 .card-actions :deep(.el-button + .el-button) {
@@ -650,6 +709,11 @@ onMounted(fetchModels)
   border-color: rgba(239, 68, 68, 0.16);
   background: rgba(239, 68, 68, 0.06);
   color: #b91c1c;
+}
+
+.slot-button {
+  min-width: 104px;
+  border-radius: 999px;
 }
 
 .dialog-grid {

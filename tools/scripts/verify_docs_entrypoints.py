@@ -30,7 +30,9 @@ def main() -> int:
             "README.md",
             readme,
             [
-                "./docs/architecture/plans/current-phase-audit.md",
+                "./docs/architecture/README.md",
+                "./docs/architecture/current-architecture.md",
+                "./docs/architecture/target-architecture.md",
                 "./docs/development/public-demo-evidence.md",
                 "./docs/development/public-demo-runbook.md",
                 "./docs/development/public-demo-acceptance.md",
@@ -46,13 +48,14 @@ def main() -> int:
             docs_index,
             [
                 "./architecture/README.md",
+                "./development/architecture-doc-maintenance-workflow.md",
                 "./development/public-demo-evidence.md",
                 "./development/public-demo-runbook.md",
                 "./development/public-demo-acceptance.md",
                 "./development/README.md",
                 "./development/github-publish-boundary.md",
-                "Maintainer entrypoints:",
-                "First-time readers should stop after step 7.",
+                "## Maintainer Path",
+                "## First-Read Path",
             ],
         )
     )
@@ -61,8 +64,10 @@ def main() -> int:
             "docs/architecture/README.md",
             architecture_index,
             [
-                "./plans/current-phase-audit.md",
-                "./plans/retrieval-governance-upgrade-plan.md",
+                "./current-architecture.md",
+                "./target-architecture.md",
+                "./phases/README.md",
+                "./specs/enterprise-retrieval-governance.md",
             ],
         )
     )
@@ -71,8 +76,9 @@ def main() -> int:
             "docs/development/README.md",
             development_index,
             [
-                "It is not part of the first-read public project path.",
-                "## Maintainer Scope",
+                "It is not the first-read public explanation path.",
+                "## Current Maintainer Path",
+                "## Current Sync Rule",
                 "../../README.md",
                 "../architecture/README.md",
             ],

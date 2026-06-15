@@ -58,4 +58,4 @@ Together, these results support three claims:
 
 For the reproducible local commands, see:
 
-- [public-demo-runbook.md](./public-demo-runbook.md)
+- [public-demo-runbook.md](public-demo-runbook.md)

@@ -5,17 +5,18 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
-def _ensure_backend_path() -> None:
-    backend_path = str(BACKEND_ROOT)
-    if backend_path not in sys.path:
-        sys.path.insert(0, backend_path)
+def _ensure_runtime_paths() -> None:
+    for runtime_root in (str(BACKEND_ROOT), str(SERVICE_API_ROOT)):
+        if runtime_root not in sys.path:
+            sys.path.insert(0, runtime_root)
 
 
 def test_domain_qa_graph_builds_initial_state_from_zuno_runtime():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
 
@@ -36,7 +37,7 @@ def test_domain_qa_graph_builds_initial_state_from_zuno_runtime():
 
 
 def test_domain_qa_graph_ainvoke_runs_contract_review_retrieval_and_formats_answer():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
 
@@ -125,7 +126,7 @@ def test_domain_qa_graph_ainvoke_runs_contract_review_retrieval_and_formats_answ
 
 
 def test_domain_qa_graph_citation_check_deduplicates_citations_from_zuno_runtime():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
 
@@ -175,7 +176,7 @@ def test_domain_qa_graph_citation_check_deduplicates_citations_from_zuno_runtime
 
 
 def test_domain_qa_graph_ainvoke_records_failure_node_and_finalizes_from_zuno_runtime():
-    _ensure_backend_path()
+    _ensure_runtime_paths()
 
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
 

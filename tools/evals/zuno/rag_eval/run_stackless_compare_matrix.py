@@ -8,9 +8,9 @@ import time
 from pathlib import Path
 from typing import Any
 
-BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
-if str(BACKEND_ROOT) not in sys.path:
-    sys.path.insert(0, str(BACKEND_ROOT))
+SERVICE_API_SRC_ROOT = Path(__file__).resolve().parents[4] / "services" / "api" / "src"
+if str(SERVICE_API_SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SERVICE_API_SRC_ROOT))
 
 from agentchat.evals.rag_eval.run_stackless_local_eval import run_stackless_local_eval
 from agentchat.evals.rag_eval.paths import default_runs_root

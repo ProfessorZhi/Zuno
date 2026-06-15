@@ -24,7 +24,7 @@ def test_gitignore_covers_private_and_local_surfaces() -> None:
         assert entry in content, f"missing publish-boundary ignore: {entry}"
 
 
-def test_public_docs_link_publish_boundary() -> None:
+def test_public_docs_link_current_architecture_and_publish_boundary() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     docs_index = (REPO_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
     dev_docs = (
@@ -35,6 +35,9 @@ def test_public_docs_link_publish_boundary() -> None:
     ).read_text(encoding="utf-8")
     architecture_plans = (
         REPO_ROOT / "docs" / "architecture" / "plans" / "README.md"
+    ).read_text(encoding="utf-8")
+    architecture_phases = (
+        REPO_ROOT / "docs" / "architecture" / "phases" / "README.md"
     ).read_text(encoding="utf-8")
 
     assert "./docs/development/github-publish-boundary.md" in readme
@@ -49,25 +52,23 @@ def test_public_docs_link_publish_boundary() -> None:
     assert "./docs/development/public-release-checklist.md" in readme
     assert "./docs/development/public-release-staging-plan.md" in readme
     assert "./development/github-publish-boundary.md" in docs_index
-    assert "backend-layering-guidelines.md" in dev_docs
-    assert "docs-and-readme-signoff.md" in dev_docs
-    assert "docs-and-readme-prestage.md" in dev_docs
-    assert "docs-and-readme-ready.md" in dev_docs
+    assert "./development/architecture-doc-maintenance-workflow.md" in docs_index
+    assert "architecture-doc-maintenance-workflow.md" in dev_docs
+    assert "history/README.md" in dev_docs
     assert "public-release-checklist.md" in dev_docs
     assert "public-release-staging-plan.md" in dev_docs
     assert "public-demo-evidence.md" in dev_docs
     assert "public-demo-runbook.md" in dev_docs
     assert "public-demo-acceptance.md" in dev_docs
-    assert "public demo runtime smoke verification" in dev_docs
-    assert "strict-grounded public demo smoke verification" in dev_docs
-    assert "multi-agent product growth" in dev_docs
-    assert "enterprise-retrieval-governance.md" in dev_docs
-    assert "retrieval-governance-upgrade-plan.md" in dev_docs
     assert "./specs/enterprise-retrieval-governance.md" in architecture_docs
-    assert "./plans/current-phase-audit.md" in architecture_docs
-    assert "./plans/retrieval-governance-upgrade-plan.md" in architecture_docs
-    assert "./current-phase-audit.md" in architecture_plans
+    assert "./current-architecture.md" in architecture_docs
+    assert "./target-architecture.md" in architecture_docs
+    assert "./phases/README.md" in architecture_docs
+    assert "./history/README.md" in architecture_docs
+    assert "../phases/README.md" in architecture_plans
     assert "./retrieval-governance-upgrade-plan.md" in architecture_plans
+    assert "Phase 1: Repo Skeleton" in architecture_phases
+    assert "Phase 6: Public Surface" in architecture_phases
 
 
 def test_public_indexes_do_not_present_local_superpowers_material_as_public_docs() -> None:
@@ -124,7 +125,7 @@ def test_public_docs_do_not_use_ignored_eval_run_paths_as_public_evidence() -> N
         REPO_ROOT / "README.md",
         REPO_ROOT / "docs" / "development" / "public-demo-runbook.md",
         REPO_ROOT / "docs" / "development" / "public-demo-acceptance.md",
-        REPO_ROOT / "docs" / "architecture" / "plans" / "current-phase-audit.md",
+        REPO_ROOT / "docs" / "architecture" / "current-architecture.md",
     ]
 
     forbidden_public_links = [
@@ -153,99 +154,82 @@ def test_public_readme_explains_why_contract_review_needs_graphrag() -> None:
         assert phrase in readme, f"missing contract-review GraphRAG explanation: {phrase}"
 
 
-def test_public_docs_switch_current_focus_to_phase7() -> None:
+def test_public_docs_switch_to_new_architecture_upgrade_path() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     architecture_readme = (
         REPO_ROOT / "docs" / "architecture" / "README.md"
     ).read_text(encoding="utf-8")
-    current_phase_audit = (
-        REPO_ROOT / "docs" / "architecture" / "plans" / "current-phase-audit.md"
+    phase_index = (
+        REPO_ROOT / "docs" / "architecture" / "phases" / "README.md"
     ).read_text(encoding="utf-8")
 
-    required_phrases = [
-        "Current serial focus: `Phase 7` interview-facing total cleanup",
-        "当前默认主线应切到 `Phase 7`",
-        "Proceed to `Phase 7`",
-        "`Phase 7`: current default phase",
-    ]
-
-    assert required_phrases[0] in readme
-    assert required_phrases[0] in architecture_readme
-    assert required_phrases[1] in architecture_readme
-    assert required_phrases[2] in current_phase_audit
-    assert required_phrases[3] in current_phase_audit
+    assert "Current Architecture Upgrade Path" in readme
+    assert "current-architecture.md" in readme
+    assert "target-architecture.md" in readme
+    assert "Architecture Upgrade Phases" in architecture_readme
+    assert "Phase 1: Repo Skeleton" in phase_index
+    assert "Phase 6: Public Surface" in phase_index
 
     forbidden_phrases = [
-        "Current serial focus: `Phase 6` evaluation and evidence-chain hardening",
-        "当前默认主线应切到 `Phase 6`",
-        "`Phase 6` 是当前默认下一阶段",
-        "Do not move to `Phase 7` yet.",
+        "./plans/current-phase-audit.md",
+        "./plans/zuno-refactor-execution-plan.md",
     ]
 
     for phrase in forbidden_phrases:
         assert phrase not in readme
         assert phrase not in architecture_readme
-        assert phrase not in current_phase_audit
 
 
-def test_phase7_public_reading_path_and_final_verifier_are_explicit() -> None:
+def test_current_architecture_upgrade_path_and_workflow_are_explicit() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     architecture_readme = (
         REPO_ROOT / "docs" / "architecture" / "README.md"
     ).read_text(encoding="utf-8")
-    current_phase_audit = (
-        REPO_ROOT / "docs" / "architecture" / "plans" / "current-phase-audit.md"
-    ).read_text(encoding="utf-8")
-    verifier = (
-        REPO_ROOT / "tools" / "scripts" / "verify_phase7_readiness.py"
-    ).read_text(encoding="utf-8")
-
-    required_phrases = [
-        "Phase 7 final interview path",
-        "最终面试讲解路径",
-        "python tools/scripts/verify_phase7_readiness.py",
-        "phase7 readiness check passed.",
-        "verify_public_demo_docs.py",
-        "verify_repo_structure.py",
-        "tests/test_publish_boundary.py",
-        "tests/test_repo_structure_consistency.py",
-    ]
-
-    assert required_phrases[0] in readme
-    assert required_phrases[1] in architecture_readme
-    assert required_phrases[2] in readme
-    assert required_phrases[2] in current_phase_audit
-    for phrase in required_phrases[3:]:
-        assert phrase in verifier, f"missing Phase 7 verifier phrase: {phrase}"
-
-
-def test_phase7_ready_and_prestage_docs_exist_and_link_final_verifier() -> None:
-    prestage = (
-        REPO_ROOT / "docs" / "architecture" / "plans" / "phase7-final-prestage.md"
-    ).read_text(encoding="utf-8")
-    ready = (
-        REPO_ROOT / "docs" / "architecture" / "plans" / "phase7-final-ready.md"
-    ).read_text(encoding="utf-8")
-    plans_index = (
-        REPO_ROOT / "docs" / "architecture" / "plans" / "README.md"
+    maintenance_workflow = (
+        REPO_ROOT
+        / "docs"
+        / "development"
+        / "architecture-doc-maintenance-workflow.md"
     ).read_text(encoding="utf-8")
 
-    required_phrases = [
-        "python tools/scripts/verify_phase7_readiness.py",
-        "最终面试讲解路径",
-        "最终 smoke tests",
-        "最终 publish boundary 检查",
-        "./phase7-final-prestage.md",
-        "./phase7-final-ready.md",
-    ]
+    assert "Current Architecture Upgrade Path" in readme
+    assert "Architecture Upgrade Phases" in architecture_readme
+    for phrase in [
+        "spec update",
+        "active phase update",
+        "targeted verification",
+        "docs sync",
+        "GitHub node",
+    ]:
+        assert phrase in maintenance_workflow, f"missing maintenance workflow phrase: {phrase}"
 
-    assert required_phrases[0] in prestage
-    assert required_phrases[0] in ready
-    assert required_phrases[1] in prestage
-    assert required_phrases[2] in ready
-    assert required_phrases[3] in ready
-    assert required_phrases[4] in plans_index
-    assert required_phrases[5] in plans_index
+
+def test_architecture_and_development_history_keep_legacy_materials_reachable() -> None:
+    architecture_history = (
+        REPO_ROOT / "docs" / "architecture" / "history" / "README.md"
+    ).read_text(encoding="utf-8")
+    phase_index = (
+        REPO_ROOT / "docs" / "architecture" / "phases" / "README.md"
+    ).read_text(encoding="utf-8")
+    development_history = (
+        REPO_ROOT / "docs" / "development" / "history" / "README.md"
+    ).read_text(encoding="utf-8")
+
+    for phrase in [
+        "historical phase context",
+        "past readiness notes",
+        "older refactor narratives",
+    ]:
+        assert phrase in architecture_history, f"missing architecture history phrase: {phrase}"
+
+    for phrase in [
+        "one-off signoff notes",
+        "prestage checklists",
+        "ready-check notes",
+    ]:
+        assert phrase in development_history, f"missing development history phrase: {phrase}"
+
+    assert "Older `Phase 1-7` execution documents" in phase_index
 
 
 def test_publish_boundary_doc_mentions_private_local_assets() -> None:
@@ -311,6 +295,7 @@ def test_public_release_audit_script_detects_ignored_eval_run_links() -> None:
     content = script.read_text(encoding="utf-8")
 
     assert "FORBIDDEN_PUBLIC_DOC_LINKS" in content
+    assert "current-architecture.md" in content
     assert "git status --short" in content
     assert ".local/evals/agentchat/rag_eval/runs/" in content
 
@@ -330,13 +315,13 @@ def test_public_release_audit_script_runs_from_repo() -> None:
     assert "Public release audit" in (proc.stdout + proc.stderr)
 
 
-def test_public_demo_acceptance_doc_mentions_phase6_gate() -> None:
+def test_public_demo_acceptance_doc_mentions_public_proof_gate() -> None:
     content = (
         REPO_ROOT / "docs" / "development" / "public-demo-acceptance.md"
     ).read_text(encoding="utf-8")
 
     required_phrases = [
-        "Phase 6 acceptance layer",
+        "public-proof acceptance layer",
         "real quality result for a public audience",
         "reproducible local command path",
         "why the answer or benchmark result holds",
@@ -440,8 +425,7 @@ def test_public_release_staging_plan_mentions_grouping_rules() -> None:
         "preview_public_release_group.py",
         "preview_public_release_stage_dry_run.py",
         "verify_docs_and_readme_ready.py",
-        "docs-and-readme-signoff.md",
-        "docs-and-readme-ready.md",
+        "development/history/README.md",
     ]
 
     for phrase in required_phrases:
@@ -535,52 +519,45 @@ def test_public_release_group_preview_script_mentions_expected_groups() -> None:
         "\"docs_and_readme\"",
         "\"--stat\"",
         "git diff",
-        "docs-and-readme-ready.md",
+        "docs_and_readme",
     ]
 
     for phrase in required_phrases:
         assert phrase in script, f"missing public release preview rule: {phrase}"
 
 
-def test_docs_and_readme_signoff_records_public_acceptance_boundary() -> None:
+def test_development_history_records_archived_workflow_temperature_docs() -> None:
     content = (
-        REPO_ROOT / "docs" / "development" / "docs-and-readme-signoff.md"
+        REPO_ROOT / "docs" / "development" / "history" / "README.md"
     ).read_text(encoding="utf-8")
 
     required_phrases = [
-        "`docs_and_readme` can be treated as a valid first public commit group.",
-        "README.md",
-        "docs/architecture/",
-        "docs/development/public-demo-evidence.md",
-        "docs/superpowers/",
-        "apps/web/AGENTS.md",
-        "superpowers-legacy-migration-inventory.md",
-        "python tools/scripts/preview_public_release_group.py docs_and_readme --stat",
+        "one-off signoff notes",
+        "prestage checklists",
+        "ready-check notes",
+        "architecture-doc-maintenance-workflow.md",
     ]
 
     for phrase in required_phrases:
-        assert phrase in content, f"missing docs/readme signoff guidance: {phrase}"
+        assert phrase in content, f"missing development history guidance: {phrase}"
 
 
-def test_docs_and_readme_prestage_records_first_group_execution_steps() -> None:
+def test_architecture_doc_maintenance_workflow_records_current_execution_steps() -> None:
     content = (
-        REPO_ROOT / "docs" / "development" / "docs-and-readme-prestage.md"
+        REPO_ROOT / "docs" / "development" / "architecture-doc-maintenance-workflow.md"
     ).read_text(encoding="utf-8")
 
     required_phrases = [
-        "git add README.md docs/",
-        "git diff --cached --stat",
-        "python tools/scripts/preview_public_release_group.py docs_and_readme --stat",
-        "python tools/scripts/preview_public_release_stage_dry_run.py docs_and_readme",
-        "python tools/scripts/verify_docs_and_readme_ready.py",
-        "python tools/scripts/audit_public_release.py",
-        "docs/superpowers/",
-        "apps/web/AGENTS.md",
-        "git diff --cached -- README.md docs/",
+        "spec update",
+        "active phase update",
+        "targeted verification",
+        "docs sync",
+        "GitHub node",
+        "completed operational checklist",
     ]
 
     for phrase in required_phrases:
-        assert phrase in content, f"missing docs/readme prestage guidance: {phrase}"
+        assert phrase in content, f"missing architecture doc maintenance workflow guidance: {phrase}"
 
 
 def test_public_release_stage_dry_run_script_mentions_expected_groups() -> None:
@@ -606,21 +583,20 @@ def test_public_release_stage_dry_run_script_mentions_expected_groups() -> None:
         assert phrase in script, f"missing public release stage dry-run rule: {phrase}"
 
 
-def test_docs_and_readme_ready_note_records_current_acceptance_set() -> None:
+def test_development_readme_points_to_current_maintainer_workflow() -> None:
     content = (
-        REPO_ROOT / "docs" / "development" / "docs-and-readme-ready.md"
+        REPO_ROOT / "docs" / "development" / "README.md"
     ).read_text(encoding="utf-8")
 
     required_phrases = [
-        "expected 14 paths",
-        "python tools/scripts/verify_docs_and_readme_ready.py",
-        "docs/development/docs-and-readme-ready.md",
-        "docs/superpowers/",
-        "apps/web/AGENTS.md",
+        "Architecture Doc Maintenance Workflow",
+        "history/README.md",
+        "public-release-checklist.md",
+        "public-release-staging-plan.md",
     ]
 
     for phrase in required_phrases:
-        assert phrase in content, f"missing docs/readme ready guidance: {phrase}"
+        assert phrase in content, f"missing development readme guidance: {phrase}"
 
 
 def test_verify_docs_and_readme_ready_script_tracks_current_expected_paths() -> None:

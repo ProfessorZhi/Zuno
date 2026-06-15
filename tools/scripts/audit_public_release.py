@@ -16,9 +16,10 @@ FORBIDDEN_PUBLIC_DOC_LINKS = [
 PUBLIC_DOC_FILES = [
     REPO_ROOT / "README.md",
     REPO_ROOT / "docs" / "README.md",
+    REPO_ROOT / "docs" / "architecture" / "current-architecture.md",
     REPO_ROOT / "docs" / "development" / "public-demo-runbook.md",
     REPO_ROOT / "docs" / "development" / "public-demo-evidence.md",
-    REPO_ROOT / "docs" / "architecture" / "plans" / "current-phase-audit.md",
+    REPO_ROOT / "docs" / "development" / "public-demo-acceptance.md",
 ]
 
 FORBIDDEN_PUBLIC_INDEX_MENTIONS = {

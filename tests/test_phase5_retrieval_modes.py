@@ -4,10 +4,12 @@ import sys
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SERVICE_API_ROOT = REPO_ROOT / "services" / "api" / "src"
 BACKEND_ROOT = REPO_ROOT / "src/backend"
-PLANNER_PATH = BACKEND_ROOT / "zuno/services/retrieval/planner.py"
-RETRIEVAL_MODELS_PATH = BACKEND_ROOT / "zuno/services/retrieval/models.py"
+PLANNER_PATH = SERVICE_API_ROOT / "zuno/services/retrieval/planner.py"
+RETRIEVAL_MODELS_PATH = SERVICE_API_ROOT / "zuno/services/retrieval/models.py"
 GRAPHRAG_MODELS_PATH = BACKEND_ROOT / "zuno/services/graphrag/models.py"
+CORE_ROOT = SERVICE_API_ROOT / "zuno/core"
 
 
 def _load_module(module_name: str, path: Path):
@@ -99,7 +101,7 @@ def test_enhanced_retrieval_mode_degrades_to_normal_when_graph_is_unavailable():
 
 
 def test_domain_graph_runner_preserves_knowledge_default_mode_contract():
-    content = (BACKEND_ROOT / "zuno/core/graphs/domain_qa_graph.py").read_text(encoding="utf-8")
+    content = (CORE_ROOT / "graphs/domain_qa_graph.py").read_text(encoding="utf-8")
 
     assert 'default_mode = retrieval_settings.get("default_mode") or "rag"' in content
     assert 'return str(default_mode), merged' in content
@@ -107,7 +109,7 @@ def test_domain_graph_runner_preserves_knowledge_default_mode_contract():
 
 
 def test_enhanced_orchestrator_contract_keeps_graph_path_and_trace_metadata():
-    orchestrator = (BACKEND_ROOT / "zuno/services/retrieval/orchestrator.py").read_text(encoding="utf-8")
+    orchestrator = (SERVICE_API_ROOT / "zuno/services/retrieval/orchestrator.py").read_text(encoding="utf-8")
     frontend_utils = (REPO_ROOT / "apps/web/src/utils/retrieval.ts").read_text(encoding="utf-8")
 
     assert 'if "graph" in plan.enabled_retrievers:' in orchestrator

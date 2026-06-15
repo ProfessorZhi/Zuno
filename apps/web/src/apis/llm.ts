@@ -33,6 +33,11 @@ export interface UpdateLLMRequest {
   model_slot?: string | null
 }
 
+export interface ActivateLLMRequest {
+  llm_id: string
+  model_slot: string
+}
+
 export interface ApiResponse<T> {
   status_code: number
   status_message: string
@@ -62,6 +67,15 @@ export function updateLLMAPI(data: UpdateLLMRequest) {
   return request<ApiResponse<null>>({
     url: '/api/v1/llm/update',
     method: 'PUT',
+    data
+  })
+}
+
+// 激活模型槽位
+export function activateLLMAPI(data: ActivateLLMRequest) {
+  return request<ApiResponse<null>>({
+    url: '/api/v1/llm/activate',
+    method: 'POST',
     data
   })
 }

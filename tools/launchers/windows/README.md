@@ -2,11 +2,14 @@
 
 This folder keeps the Windows launcher scripts grouped by product surface.
 
+- `Zuno-Phase0-Backend-*.cmd`: focused backend recovery launchers for the Phase 0 user checkpoint
 - `Zuno-Web-*.cmd`: browser-based Docker stack launchers
 - `Zuno-Desktop-*.cmd`: Electron desktop launchers backed by Docker services
 
 Behavior summary:
 
+- `Phase0-Backend-Start`: starts Docker PostgreSQL, waits for health, then runs `uvicorn --app-dir src/backend zuno.main:app`
+- `Phase0-Backend-Stop`: stops the local backend listener on `7860` and stops the PostgreSQL container used for the checkpoint
 - `Web-Start`: starts the browser stack without forcing rebuild
 - `Web-Rebuild`: rebuilds the Docker web stack and starts it
 - `Desktop-Start`: starts backend containers, RabbitMQ worker, local Vite desktop frontend, and Electron
@@ -38,6 +41,9 @@ Runtime services included in the Docker-backed stack:
 
 Recommended desktop shortcuts:
 
+- Phase 0 checkpoint:
+  - `Zuno-Phase0-Backend-Start`
+  - `Zuno-Phase0-Backend-Stop`
 - Web:
   - `Zuno-Web-Start`
   - `Zuno-Web-Stop`
