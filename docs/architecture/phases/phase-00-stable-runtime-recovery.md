@@ -10,7 +10,7 @@ Closed.
 
 ## Focus
 
-- preserve the paused `services/` migration attempt as history or WIP
+- preserve the retired `services/` migration attempt only as history
 - restore `src/backend/zuno` as the stable backend runtime root
 - restore startup closure
 - restore import closure

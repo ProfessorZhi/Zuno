@@ -32,7 +32,7 @@ Phase 0 已完成稳定运行恢复
 
 - `apps/web` 与 `apps/desktop` 已经是明确应用入口
 - `src/backend/zuno` 是当前唯一后端运行真相
-- 根目录 `services/` 仅保留为未来服务拆分预留位，不再承载当前后端运行面
+- 当前仓库不存在 active services root；后端运行面只有 `src/backend/zuno`
 - 当前 Docker、launcher、测试应统一围绕 `src/backend/zuno`
 
 因此当前最重要的不是继续扩目录，而是在稳定运行真相之上推进后续架构升级。
@@ -87,14 +87,13 @@ monorepo now, service-ready later
 ├─ infra/
 │  ├─ db/                       # Database and migration infra
 │  └─ docker/                   # Dockerfiles, compose stacks, nginx config
-├─ services/                    # Reserved for future service extraction, no active backend runtime here
 ├─ src/
 │  └─ backend/                  # Stable-backend recovery baseline and legacy runtime source
 ├─ tests/                       # Repo-level verification
 └─ tools/                       # Scripts, launchers, evals, maintenance tooling
 ```
 
-如果你是第一次看这个仓库，不要把 `services/` 理解成“后端现在就在这里”。当前后端运行真相只有 `src/backend/zuno`。
+如果未来真的要重开 root-level `services/` 微服务化，必须作为新的 architecture phase 重新创建，而不是沿用旧迁移残留。
 
 ## Quick Start
 

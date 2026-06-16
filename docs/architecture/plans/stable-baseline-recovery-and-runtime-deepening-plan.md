@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This plan records a deliberate pause of the root-level `services/` migration line.
+This plan records the retirement of the earlier root-level `services/` migration line.
 
 The immediate priority is no longer:
 
@@ -37,7 +37,7 @@ It is to recover a stable backend runtime first, then continue architecture upgr
 Until the recovery work is complete:
 
 1. do not continue treating root-level `services/` as the active backend runtime destination
-2. treat the current `services/` migration tree as a work-in-progress snapshot, not the mainline target
+2. do not keep a placeholder `services/` tree in the live repo as if it were still part of current truth
 3. keep `apps/web` and `apps/desktop` as valid top-level app shells
 4. restore `src/backend/zuno` as the stable Python backend runtime root
 5. shift architecture effort toward runtime quality, not repo-boundary motion
@@ -115,7 +115,7 @@ get back to one stable, runnable version first
 
 Work in this phase:
 
-1. preserve the paused migration-era runtime surface as reference, not as current truth
+1. preserve the retired migration-era runtime surface in history or Git history, not as current truth
 2. restore `src/backend/zuno` as the stable backend runtime root
 3. restore one valid backend startup path
 4. restore import closure for the main runtime modules

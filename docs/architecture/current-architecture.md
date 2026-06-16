@@ -20,11 +20,9 @@ apps/
 
 src/backend/zuno/
 domain-packs/
-services/
 ```
 
-The `services/` root is now only a reserved future boundary.
-There is no active `services/api` backend runtime tree in current truth.
+There is no active root-level `services/` tree in current truth.
 
 ## Current Backend Truth
 
@@ -38,7 +36,7 @@ In other words:
 
 1. `apps/web` and `apps/desktop` remain valid top-level app shells
 2. the Python backend runtime truth is `src/backend/zuno`
-3. the root-level `services/` move remains retired until a later architecture phase explicitly reopens it
+3. any future root-level `services/` move must be reopened explicitly as a new architecture phase
 
 ## Legacy Boundary
 
@@ -79,7 +77,7 @@ The current execution plan for that is:
 
 - `docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md`
 
-Any future attempt to move the backend into a root-level `services/` subtree must be treated as a new architecture phase, not as a continuation of the removed `services/api` path.
+Any future attempt to move the backend into a root-level `services/` subtree must be treated as a new architecture phase that recreates that root from scratch, not as a continuation of the removed `services/api` path.
 
 ## Current Runtime Line
 

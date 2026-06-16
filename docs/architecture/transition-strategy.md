@@ -16,8 +16,8 @@ then:
 resume deeper architecture work from that stable baseline
 ```
 
-The earlier root-level `services/api` migration has been retired.
-Any future service-root move must reopen as a new phase with fresh verification.
+The earlier root-level `services/api` migration has been retired, and the placeholder `services/` root should not remain in the live repo.
+Any future service-root move must reopen as a new phase with fresh verification and a newly created root.
 
 ## Rules
 

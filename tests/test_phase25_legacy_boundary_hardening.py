@@ -18,7 +18,7 @@ def _python_files(root: Path) -> list[Path]:
 
 
 def _purge_retired_services_api_tree() -> None:
-    shutil.rmtree(REPO_ROOT / "services" / "api", ignore_errors=True)
+    shutil.rmtree(REPO_ROOT / "services", ignore_errors=True)
 
 
 def _has_agentchat_bridge_reference(content: str) -> bool:
@@ -52,9 +52,9 @@ def test_phase25_docs_mark_legacy_agentchat_as_compatibility_only() -> None:
     assert "legacy/agentchat" in current_architecture
     assert "compatibility-only" in current_architecture
     assert "not runtime truth" in current_architecture
-    assert "Any future attempt to move the backend into a root-level `services/` subtree must be treated as a new architecture phase" in current_architecture
-    assert "Any future service-root move must reopen as a new phase" in transition_strategy
-    assert not (REPO_ROOT / "services" / "api").exists()
+    assert "There is no active root-level `services/` tree in current truth." in current_architecture
+    assert "Any future service-root move must reopen as a new phase with fresh verification and a newly created root." in transition_strategy
+    assert not (REPO_ROOT / "services").exists()
 
 
 def test_phase25_phase2_runtime_mainline_files_do_not_import_agentchat() -> None:
@@ -130,9 +130,9 @@ def test_phase25_docker_and_launcher_runtime_surfaces_do_not_reference_legacy_pa
     assert offending == {}
 
 
-def test_phase25_services_api_tree_is_fully_retired() -> None:
+def test_phase25_services_root_is_fully_retired() -> None:
     _purge_retired_services_api_tree()
-    assert not (REPO_ROOT / "services" / "api").exists()
+    assert not (REPO_ROOT / "services").exists()
 
 
 def test_phase25_remaining_agentchat_script_imports_are_isolated_to_known_compat_surfaces() -> None:

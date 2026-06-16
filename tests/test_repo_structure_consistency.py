@@ -13,7 +13,6 @@ def test_phase0_required_paths_exist() -> None:
         "domain-packs",
         "infra/db",
         "infra/docker",
-        "services",
         "src/backend",
         "src/backend/zuno",
         "src/backend/zuno/main.py",
@@ -77,8 +76,8 @@ def test_readme_mentions_phase0_backend_start_and_focused_verification() -> None
         "pytest tests/test_repo_structure_consistency.py",
         "pytest tests/test_publish_boundary.py",
         "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
-        "services/",
         "domain-packs/",
+        "当前仓库不存在 active services root",
     ]
 
     for phrase in required_phrases:
@@ -95,7 +94,7 @@ def test_backend_layering_guidelines_use_src_backend_as_default() -> None:
         "src/backend/zuno/core/*",
         "src/backend/zuno/services/*",
         "src/backend/zuno/database/dao/*",
-        "do not recreate the retired service-root backend tree as the default placement rule unless a later migration phase explicitly creates a new service-root execution plan",
+        "do not recreate a root-level `services/` backend tree unless a later migration phase explicitly creates a new service-root execution plan",
     ]
 
     for phrase in required_phrases:
