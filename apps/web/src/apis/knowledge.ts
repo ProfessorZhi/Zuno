@@ -8,6 +8,8 @@ export interface UnifiedResponse<T = any> {
 
 export interface KnowledgeConfigPayload {
   index_capability: 'rag' | 'rag_graph'
+  domain_pack_id: string | null
+  eval_profile_id: string | null
   model_refs: {
     text_embedding_model_id: string | null
     vl_embedding_model_id: string | null
@@ -22,6 +24,9 @@ export interface KnowledgeConfigPayload {
     remove_urls_emails: boolean
     image_indexing_mode: 'text_only' | 'vl_only' | 'dual'
     vector_backend: 'milvus' | 'chroma' | 'milvus_lite'
+    index_version: string
+    status: 'active' | 'disabled' | 'archived'
+    health_status: 'ready' | 'degraded' | 'stale' | 'failed' | 'unavailable'
   }
   graph_index_settings: {
     entity_extraction_mode: 'rule' | 'llm' | 'rule_llm'
@@ -29,9 +34,12 @@ export interface KnowledgeConfigPayload {
     entity_normalization: boolean
     evidence_backlink: boolean
     use_rag_entry_chunk: boolean
+    index_version: string
+    health_status: 'ready' | 'degraded' | 'stale' | 'failed' | 'unavailable'
   }
   retrieval_settings: {
     default_mode: 'auto' | 'hybrid' | 'rag' | 'graphrag' | 'rag_graph'
+    profile: string
     refill_policy: 'none' | 'auto' | 'smart'
     top_k: number
     rerank_enabled: boolean
@@ -43,8 +51,12 @@ export interface KnowledgeConfigPayload {
 }
 
 export interface KnowledgeConfigPatchPayload {
+  index_capability?: KnowledgeConfigPayload['index_capability']
+  domain_pack_id?: string | null
+  eval_profile_id?: string | null
   model_refs?: Partial<KnowledgeConfigPayload['model_refs']>
   index_settings?: Partial<KnowledgeConfigPayload['index_settings']>
+  graph_index_settings?: Partial<KnowledgeConfigPayload['graph_index_settings']>
   retrieval_settings?: Partial<KnowledgeConfigPayload['retrieval_settings']>
 }
 

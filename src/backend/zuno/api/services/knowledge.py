@@ -12,6 +12,7 @@ from zuno.utils.file_utils import format_file_size
 DEFAULT_KNOWLEDGE_CONFIG = {
     "index_capability": "rag",
     "domain_pack_id": None,
+    "eval_profile_id": None,
     "model_refs": {
         "text_embedding_model_id": None,
         "vl_embedding_model_id": None,
@@ -36,6 +37,7 @@ DEFAULT_KNOWLEDGE_CONFIG = {
     },
     "retrieval_settings": {
         "default_mode": "rag",
+        "profile": "auto",
         "refill_policy": "smart",
         "top_k": 5,
         "rerank_enabled": True,
@@ -48,6 +50,21 @@ DEFAULT_KNOWLEDGE_CONFIG = {
 
 
 class KnowledgeService:
+    @staticmethod
+    def _apply_domain_pack_defaults(
+        config: dict[str, Any],
+        domain_pack: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        normalized = deepcopy(config or {})
+        retrieval_settings = dict(normalized.get("retrieval_settings") or {})
+        current_profile = str(retrieval_settings.get("profile") or "").strip().lower()
+        if domain_pack and domain_pack.get("default_retrieval_profile") and current_profile in {"", "auto", "default"}:
+            retrieval_settings["profile"] = domain_pack.get("default_retrieval_profile")
+        normalized["retrieval_settings"] = retrieval_settings
+        if domain_pack and domain_pack.get("default_eval_profile_id") and not normalized.get("eval_profile_id"):
+            normalized["eval_profile_id"] = domain_pack.get("default_eval_profile_id")
+        return normalized
+
     @staticmethod
     def _looks_encoding_damaged(value: str | None) -> bool:
         if not value:
@@ -300,6 +317,7 @@ class KnowledgeService:
             if domain_pack_id and not domain_pack:
                 loaded_pack = DomainPackLoader().load(domain_pack_id)
                 domain_pack = loaded_pack.to_dict() if loaded_pack else None
+            config = cls._apply_domain_pack_defaults(config, domain_pack)
             runtime["knowledge_id"] = knowledge_id
             runtime["knowledge_config"] = config
             runtime["domain_pack_id"] = domain_pack_id
@@ -313,6 +331,10 @@ class KnowledgeService:
         model_refs = config.get("model_refs", {})
         domain_pack_id = config.get("domain_pack_id")
         domain_pack = DomainPackLoader().load(domain_pack_id) if domain_pack_id else None
+        config = cls._apply_domain_pack_defaults(
+            config,
+            domain_pack.to_dict() if domain_pack else None,
+        )
 
         return {
             "knowledge_id": knowledge_id,

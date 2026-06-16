@@ -19,15 +19,16 @@ That belongs in `../specs/`.
 4. [Phase 3: Domain Pack Formalization](phase-03-domain-pack-formalization.md)
 5. [Phase 4: Knowledge Config V2 + Local Eval Strengthening](phase-04-local-eval-strengthening.md)
 6. [Phase 5: Docs And Public Explanation Sync](phase-05-docs-and-public-explanation-sync.md)
-7. Phase 6: Agent GraphRAG Pluginization / Future Platform Layer
+7. [Phase 6: Agent GraphRAG Pluginization / Future Platform Layer](phase-06-agent-graphrag-pluginization.md)
 
 ## Current Execution Rule
 
-Only one phase should be current at a time.
+The remaining closure order after the migration pause is:
 
-Right now the current phase is:
-
-- [Phase 3: Domain Pack Formalization](phase-03-domain-pack-formalization.md)
+- close `Phase 3`
+- close `Phase 4`
+- close `Phase 5`
+- close `Phase 6`
 
 Phase status:
 
@@ -36,15 +37,20 @@ Phase status:
 3. `Phase 2` is complete
 4. `Phase 2.5` is complete
 5. the user has personally tried the recovered runtime
-6. `Phase 3` is the active engineering track
+6. `Phase 3` is complete
+7. `Phase 4` is complete
+8. `Phase 5` is complete
+9. `Phase 6` is complete
 
 ## Current Track Notes
 
 - `Phase 4` now explicitly carries two linked subtracks:
   - `Knowledge Config V2`
   - `Local Eval Strengthening`
-- `Phase 6` is a future platform layer for `Agent GraphRAG Pluginization`.
+- `Phase 5` is the public explanation sync layer.
+- `Phase 6` is the platform boundary layer for `Agent GraphRAG Pluginization`.
 - `Community GraphRAG` remains a later layer, not the current default retrieval mainline.
+- `DRIFT-like Search` remains a future slot, not a committed runtime feature.
 
 Relative path hints:
 

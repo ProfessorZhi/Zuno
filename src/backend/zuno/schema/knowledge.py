@@ -65,6 +65,7 @@ class KnowledgeGraphIndexSettingsPatch(BaseModel):
 
 class KnowledgeRetrievalSettings(BaseModel):
     default_mode: str = Field(default="rag", pattern="^(auto|hybrid|rag|graphrag|rag_graph)$")
+    profile: str = Field(default="auto", min_length=1, max_length=64)
     refill_policy: str = Field(default="smart", pattern="^(none|auto|smart)$")
     top_k: int = Field(default=5, ge=1, le=50)
     rerank_enabled: bool = Field(default=True)
@@ -76,6 +77,7 @@ class KnowledgeRetrievalSettings(BaseModel):
 
 class KnowledgeRetrievalSettingsPatch(BaseModel):
     default_mode: Optional[str] = Field(default=None, pattern="^(auto|hybrid|rag|graphrag|rag_graph)$")
+    profile: Optional[str] = Field(default=None, min_length=1, max_length=64)
     refill_policy: Optional[str] = Field(default=None, pattern="^(none|auto|smart)$")
     top_k: Optional[int] = Field(default=None, ge=1, le=50)
     rerank_enabled: Optional[bool] = Field(default=None)
@@ -88,6 +90,7 @@ class KnowledgeRetrievalSettingsPatch(BaseModel):
 class KnowledgeConfig(BaseModel):
     index_capability: str = Field(default="rag", pattern="^(rag|rag_graph)$")
     domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: KnowledgeModelRefs = Field(default_factory=KnowledgeModelRefs)
     index_settings: KnowledgeIndexSettings = Field(default_factory=KnowledgeIndexSettings)
     graph_index_settings: KnowledgeGraphIndexSettings = Field(default_factory=KnowledgeGraphIndexSettings)
@@ -97,6 +100,7 @@ class KnowledgeConfig(BaseModel):
 class KnowledgeConfigPatch(BaseModel):
     index_capability: Optional[str] = Field(default=None, pattern="^(rag|rag_graph)$")
     domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: Optional[KnowledgeModelRefsPatch] = Field(default=None)
     index_settings: Optional[KnowledgeIndexSettingsPatch] = Field(default=None)
     graph_index_settings: Optional[KnowledgeGraphIndexSettingsPatch] = Field(default=None)

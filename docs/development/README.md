@@ -22,6 +22,8 @@ It is not the first-read public explanation path.
 - backend layering rules
 - publish and open-source boundary rules
 - public demo evidence and reproduction guidance
+- public demo runtime smoke verification
+- strict-grounded public demo smoke verification
 - public demo acceptance gate
 - release and staging notes that are still operational
 - local development environment guidance

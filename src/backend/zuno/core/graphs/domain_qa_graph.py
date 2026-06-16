@@ -553,6 +553,8 @@ class DomainQAGraph:
         knowledge_ids: list[str],
         retrieval_plan: dict[str, Any],
         retrieval_options: dict[str, Any],
+        runtime_settings: dict[str, Any] | None = None,
+        domain_pack: dict[str, Any] | None = None,
     ) -> tuple[dict[str, list[dict]], list[dict], dict, dict]:
         documents_by_source: dict[str, list[dict]] = {}
         retriever_runs: list[dict] = []
@@ -568,11 +570,25 @@ class DomainQAGraph:
         }
         enabled_retrievers = list(retrieval_plan.get("enabled_retrievers") or [])
         if self.retrieval_runner is not None:
+            effective_runtime_settings = deepcopy(runtime_settings or {})
+            effective_domain_pack = deepcopy(domain_pack or {})
+            knowledge_config = dict(effective_runtime_settings.get("knowledge_config") or {})
+            knowledge_retrieval_settings = dict(knowledge_config.get("retrieval_settings") or {})
+            knowledge_retrieval_settings.update(retrieval_options)
+            knowledge_config["retrieval_settings"] = knowledge_retrieval_settings
+            effective_runtime_settings["knowledge_config"] = knowledge_config
+            if retrieval_options.get("domain_pack_id") and not effective_runtime_settings.get("domain_pack_id"):
+                effective_runtime_settings["domain_pack_id"] = retrieval_options.get("domain_pack_id")
+            if effective_domain_pack:
+                effective_domain_pack["retrieval_policy_data"] = {
+                    **dict(effective_domain_pack.get("retrieval_policy_data") or {}),
+                    **retrieval_options,
+                }
             custom_result = await self.retrieval_runner(
                 query=query,
                 knowledge_ids=knowledge_ids,
-                runtime_settings={"knowledge_config": {"retrieval_settings": retrieval_options}},
-                domain_pack={"retrieval_policy_data": retrieval_options},
+                runtime_settings=effective_runtime_settings,
+                domain_pack=effective_domain_pack or {"retrieval_policy_data": retrieval_options},
             )
             final_pass = dict(custom_result.get("final_pass_result") or {})
             documents_by_source["vector"] = list(final_pass.get("documents") or [])
@@ -672,6 +688,8 @@ class DomainQAGraph:
                 knowledge_ids=list(state.get("knowledge_ids") or []),
                 retrieval_plan=retrieval_plan,
                 retrieval_options=retrieval_options,
+                runtime_settings=runtime_settings,
+                domain_pack=domain_pack,
             )
             graph_result = dict(raw_results.get("graph_result") or {})
             retrieval_rounds = list(state.get("retrieval_rounds") or [])

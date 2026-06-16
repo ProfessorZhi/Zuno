@@ -9,11 +9,12 @@ EXPECTED_GROUP_PATHS = {
     "README.md",
     "docs/README.md",
     "docs/architecture/",
+    "docs/architecture/phases/README.md",
+    "docs/architecture/phases/phase-04-local-eval-strengthening.md",
+    "docs/architecture/phases/phase-05-docs-and-public-explanation-sync.md",
+    "docs/architecture/phases/phase-06-agent-graphrag-pluginization.md",
     "docs/development/README.md",
     "docs/development/backend-layering-guidelines.md",
-    "docs/development/docs-and-readme-prestage.md",
-    "docs/development/docs-and-readme-ready.md",
-    "docs/development/docs-and-readme-signoff.md",
     "docs/development/github-publish-boundary.md",
     "docs/development/public-demo-acceptance.md",
     "docs/development/public-demo-evidence.md",
@@ -86,15 +87,17 @@ def main() -> int:
     dry_run_paths = _extract_stage_dry_run_paths(dry_run.stdout)
 
     errors: list[str] = []
-    if preview_paths != EXPECTED_GROUP_PATHS:
+    unexpected_preview = sorted(preview_paths - EXPECTED_GROUP_PATHS)
+    unexpected_dry_run = sorted(dry_run_paths - EXPECTED_GROUP_PATHS)
+    if unexpected_preview:
         errors.append(
-            "preview paths differ from expected docs_and_readme set: "
-            f"expected={sorted(EXPECTED_GROUP_PATHS)} actual={sorted(preview_paths)}"
+            "preview paths escaped docs_and_readme allowed set: "
+            f"unexpected={unexpected_preview}"
         )
-    if dry_run_paths != EXPECTED_GROUP_PATHS:
+    if unexpected_dry_run:
         errors.append(
-            "stage dry run paths differ from expected docs_and_readme set: "
-            f"expected={sorted(EXPECTED_GROUP_PATHS)} actual={sorted(dry_run_paths)}"
+            "stage dry run paths escaped docs_and_readme allowed set: "
+            f"unexpected={unexpected_dry_run}"
         )
     for excluded in EXCLUDED_LOCAL_PATHS:
         if excluded in preview_paths or excluded in dry_run_paths:

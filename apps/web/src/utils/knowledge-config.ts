@@ -119,6 +119,8 @@ export const refillPolicyOptions = [
 
 const defaultConfig = (): KnowledgeConfigPayload => ({
   index_capability: 'rag',
+  domain_pack_id: null,
+  eval_profile_id: null,
   model_refs: {
     text_embedding_model_id: null,
     vl_embedding_model_id: null,
@@ -133,6 +135,9 @@ const defaultConfig = (): KnowledgeConfigPayload => ({
     remove_urls_emails: false,
     image_indexing_mode: 'dual',
     vector_backend: 'milvus',
+    index_version: 'v1',
+    status: 'active',
+    health_status: 'ready',
   },
   graph_index_settings: {
     entity_extraction_mode: 'rule_llm',
@@ -140,9 +145,12 @@ const defaultConfig = (): KnowledgeConfigPayload => ({
     entity_normalization: true,
     evidence_backlink: true,
     use_rag_entry_chunk: true,
+    index_version: 'v1',
+    health_status: 'ready',
   },
   retrieval_settings: {
     default_mode: 'rag',
+    profile: 'auto',
     refill_policy: 'smart',
     top_k: 5,
     rerank_enabled: true,
@@ -190,6 +198,8 @@ export const normalizeKnowledgeConfig = (
       config?.index_capability,
       config?.retrieval_settings?.default_mode,
     ),
+    domain_pack_id: config?.domain_pack_id ?? base.domain_pack_id,
+    eval_profile_id: config?.eval_profile_id ?? base.eval_profile_id,
     model_refs: {
       ...base.model_refs,
       ...(config?.model_refs || {}),
@@ -216,6 +226,8 @@ export const normalizeKnowledgeConfig = (
 
 export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): KnowledgeConfigPatchPayload => ({
   index_capability: config.index_capability,
+  domain_pack_id: config.domain_pack_id,
+  eval_profile_id: config.eval_profile_id,
   model_refs: { ...config.model_refs },
   index_settings: { ...config.index_settings },
   graph_index_settings: { ...config.graph_index_settings },
@@ -292,6 +304,9 @@ export const buildKnowledgePreviewChunks = (
   const graphHint = config.index_capability === 'rag_graph'
     ? `查询可走标准检索或图谱增强检索，图谱扩展默认 ${config.retrieval_settings.graph_hop_limit}-hop。`
     : '当前不建立图谱索引，查询模式锁定为标准检索。'
+  const domainPackHint = config.domain_pack_id
+    ? `当前绑定 Domain Pack：${config.domain_pack_id}。`
+    : '当前未绑定 Domain Pack。'
   const imageHint = config.index_settings.image_indexing_mode === 'dual'
     ? '图片会同时保留描述文本索引和 VL 图像向量索引。'
     : config.index_settings.image_indexing_mode === 'vl_only'
@@ -303,7 +318,7 @@ export const buildKnowledgePreviewChunks = (
   return [
     `${title}：${description}`,
     chunkHint,
-    `${imageHint} ${retrievalHint} ${graphHint}`,
+    `${imageHint} ${retrievalHint} ${graphHint} ${domainPackHint}`,
   ]
 }
 
@@ -348,6 +363,7 @@ export const detectReindexImpact = (
 
   ;([
     'default_mode',
+    'profile',
     'refill_policy',
     'top_k',
     'rerank_enabled',
@@ -363,6 +379,12 @@ export const detectReindexImpact = (
 
   if (previous.model_refs.rerank_model_id !== next.model_refs.rerank_model_id) {
     changedQueryFields.push('model_refs.rerank_model_id')
+  }
+  if (previous.domain_pack_id !== next.domain_pack_id) {
+    changedQueryFields.push('domain_pack_id')
+  }
+  if (previous.eval_profile_id !== next.eval_profile_id) {
+    changedQueryFields.push('eval_profile_id')
   }
 
   return {

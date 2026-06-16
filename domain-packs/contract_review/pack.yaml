@@ -8,3 +8,5 @@ retrieval_policy: retrieval_policy.yaml
 answer_template: answer_template.md
 report_template: report_template.md
 eval_dataset: eval_dataset.jsonl
+default_retrieval_profile: relation_hybrid
+default_eval_profile_id: contract_review_local

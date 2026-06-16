@@ -55,6 +55,9 @@ class AgentConfig(BaseModel):
     system_prompt: str
     enable_memory: bool = False
     name: str | None = None
+    retrieval_profile: str | None = None
+    eval_profile_id: str | None = None
+    graph_capability: str | None = None
     multi_agent_enabled: bool = False
 
 
@@ -380,12 +383,47 @@ class GeneralAgent:
 
     async def _run_domain_pack_state(self, query: str) -> dict[str, Any] | None:
         runtime_settings = await self._get_primary_runtime_settings()
-        if not runtime_settings or not runtime_settings.get("domain_pack"):
+        if not runtime_settings and not self.agent_config.domain_pack_id:
             return None
-        runtime_settings = copy.deepcopy(runtime_settings)
+        runtime_settings = copy.deepcopy(runtime_settings or {})
+        knowledge_config = dict(runtime_settings.get("knowledge_config") or {})
+        retrieval_settings = dict(knowledge_config.get("retrieval_settings") or {})
+
+        current_profile = str(retrieval_settings.get("profile") or "").strip().lower()
+        if self.agent_config.retrieval_profile and current_profile in {"", "auto", "default"}:
+            retrieval_settings["profile"] = self.agent_config.retrieval_profile
+        if self.agent_config.eval_profile_id and not knowledge_config.get("eval_profile_id"):
+            knowledge_config["eval_profile_id"] = self.agent_config.eval_profile_id
+        if self.agent_config.graph_capability and not knowledge_config.get("index_capability"):
+            knowledge_config["index_capability"] = self.agent_config.graph_capability
+
+        runtime_settings["knowledge_config"] = {
+            **knowledge_config,
+            "retrieval_settings": retrieval_settings,
+        }
+
+        domain_pack = runtime_settings.get("domain_pack")
+        domain_pack_id = runtime_settings.get("domain_pack_id") or self.agent_config.domain_pack_id
+        if domain_pack_id and not domain_pack:
+            from zuno.services.domain_pack.loader import DomainPackLoader
+
+            loaded_pack = DomainPackLoader().load(domain_pack_id)
+            domain_pack = loaded_pack.to_dict() if loaded_pack else None
+            runtime_settings["domain_pack"] = domain_pack
+            runtime_settings["domain_pack_id"] = domain_pack_id
+            if (
+                domain_pack
+                and domain_pack.get("default_retrieval_profile")
+                and str(retrieval_settings.get("profile") or "").strip().lower() in {"", "auto", "default"}
+            ):
+                retrieval_settings["profile"] = domain_pack.get("default_retrieval_profile")
+            if domain_pack and domain_pack.get("default_eval_profile_id") and not runtime_settings["knowledge_config"].get("eval_profile_id"):
+                runtime_settings["knowledge_config"]["eval_profile_id"] = domain_pack.get("default_eval_profile_id")
+
+        if not domain_pack:
+            return None
+
         if self.agent_config.multi_agent_enabled:
-            knowledge_config = dict(runtime_settings.get("knowledge_config") or {})
-            retrieval_settings = dict(knowledge_config.get("retrieval_settings") or {})
             retrieval_settings["multi_agent_enabled"] = True
             knowledge_config["retrieval_settings"] = retrieval_settings
             runtime_settings["knowledge_config"] = knowledge_config
@@ -413,7 +451,16 @@ class GeneralAgent:
         if not self.agent_config.knowledge_ids:
             return False
         runtime_settings = await self._get_primary_runtime_settings()
-        if not runtime_settings or not runtime_settings.get("domain_pack"):
+        if not runtime_settings and not self.agent_config.domain_pack_id:
+            return False
+        if runtime_settings and (
+            runtime_settings.get("domain_pack")
+            or runtime_settings.get("domain_pack_id")
+            or self.agent_config.domain_pack_id
+        ):
+            query = self._extract_latest_user_query(messages)
+            return bool(query)
+        if not self.agent_config.domain_pack_id:
             return False
         query = self._extract_latest_user_query(messages)
         return bool(query)

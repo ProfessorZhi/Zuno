@@ -101,7 +101,7 @@ def main() -> int:
             "public-demo-acceptance.md",
             acceptance,
             [
-                "Phase 6 acceptance layer",
+                "public-proof acceptance layer",
                 "real quality result for a public audience",
                 "reproducible local command path",
                 "why the answer or benchmark result holds",

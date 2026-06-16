@@ -15,7 +15,13 @@ Zuno 是一个本地优先的 Agent Workspace。它把 LangGraph 编排、RAG / 
 ```text
 Phase 0 已完成稳定运行恢复
   -> Phase 1 已完成 LangGraph Runtime 深化
-  -> 当前进入 Phase 2 GraphRAG Mainline Deepening
+  -> Phase 2 已完成 GraphRAG Mainline Deepening
+  -> Phase 2.5 已完成 legacy boundary hardening
+  -> Phase 3 已完成 Domain Pack Formalization
+  -> 当前收口 Phase 4-6
+     - Phase 4: Knowledge Config V2 + Local Eval Strengthening
+     - Phase 5: Docs And Public Explanation Sync
+     - Phase 6: Agent GraphRAG Pluginization / Future Platform Layer
 ```
 
 当前 phase 程序见：
@@ -45,7 +51,7 @@ Zuno 的核心运行主线仍然是：
 Domain Pack
   -> LangGraph Runtime
   -> Retrieval Orchestrator
-  -> Vector / BM25 / Graph Retrieval
+  -> Local GraphRAG + Vector / BM25 / Graph Retrieval
   -> Answer + Citation
   -> Evaluation + Proof
 ```
@@ -154,7 +160,7 @@ npm start
 
 Windows 快捷启动入口见 [tools/launchers/windows/README.md](./tools/launchers/windows/README.md)。
 
-Windows 上如果你只想做 `Phase 0` 用户检查，也可以直接运行：
+Windows 上如果你只想做 Phase 0 恢复验收，可以直接运行：
 
 ```powershell
 .\tools\launchers\windows\Zuno-Phase0-Backend-Start.cmd
@@ -165,8 +171,17 @@ Windows 上如果你只想做 `Phase 0` 用户检查，也可以直接运行：
 Zuno 已经内置本地评测链，重点支持：
 
 - 本地 embedding 预检与评测启动
-- RAG / GraphRAG 对比 profile
+- stackless compare matrix
+- retrieval metrics 与 citation metrics
+- RAG / Local GraphRAG 对比 profile
 - 合同审查领域题集、图关系题集与报告输出
+
+当前 Phase 4 的目标不是“把 GraphRAG 写死成合同功能”，而是证明这条能力链路已经具备平台化边界：
+
+- Knowledge Config V2 可以表达标准索引、图谱索引、默认查询模式、Local GraphRAG 设置、Domain Pack 绑定、eval profile
+- Local Eval 可以稳定输出 compare matrix、retrieval metrics、citation metrics、GraphRAG-vs-RAG proof surface
+- GraphRAG 当前主线是 `Local GraphRAG`
+- `Community GraphRAG` 和 `DRIFT-like Search` 目前只保留 future capability slot，不作为已实现主线
 
 关键目录：
 
@@ -180,6 +195,43 @@ Zuno 已经内置本地评测链，重点支持：
 - [docs/development/public-demo-runbook.md](./docs/development/public-demo-runbook.md)
 - [docs/development/public-demo-acceptance.md](./docs/development/public-demo-acceptance.md)
 
+## Public Demo Evidence
+
+当前公开 proof surface 统一收口到这三份文档：
+
+- [docs/development/public-demo-evidence.md](./docs/development/public-demo-evidence.md)
+- [docs/development/public-demo-runbook.md](./docs/development/public-demo-runbook.md)
+- [docs/development/public-demo-acceptance.md](./docs/development/public-demo-acceptance.md)
+
+当前 README 只保留最短结论：
+
+- Generic Graph-Relation Benchmark:
+  - `baseline_rag` -> Recall@5 `0.1167`, MRR@5 `0.2000`
+  - `rag_graph_chunk_backed` -> Recall@5 `0.3167`, MRR@5 `0.4000`
+- Contract-Review Scaled Domain Benchmark:
+  - `baseline_rag` -> Recall@5 `0.3333`, MRR@5 `0.1486`, NDCG@5 `0.1931`
+  - `rag_graph_chunk_backed` -> Recall@5 `1.0000`, MRR@5 `0.9583`, NDCG@5 `0.9692`
+
+最小验证命令：
+
+```powershell
+python tools/scripts/verify_public_demo_docs.py
+python tools/scripts/verify_public_demo_runtime.py
+python tools/scripts/verify_public_demo_strict_grounding.py
+```
+
+## Why GraphRAG For Contract Review
+
+合同审查在这里不是普通 FAQ 检索问题，而是一个 `domain-modeling problem`。
+
+如果只做 generic vector retrieval，系统很容易在大语料里拉回“局部相似但结构错误”的干扰条款。
+当合同数量更大、噪声更多时，`contract_review` Domain Pack、typed extraction、Local GraphRAG 和 citation check 会明显更有价值。
+
+一句话收口：
+
+- GraphRAG beats baseline on relation-heavy retrieval
+- with larger and noisier corpora, typed extraction plus GraphRAG becomes much more valuable
+
 ## Documentation
 
 First-time readers should stop at the public path below and skip release staging, checklist, and publish-boundary docs on the first pass.
@@ -190,8 +242,8 @@ First-time readers start here:
 
 1. [docs/architecture/README.md](./docs/architecture/README.md)
 2. [docs/architecture/current-architecture.md](./docs/architecture/current-architecture.md)
-3. [docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md](./docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md)
-4. [docs/architecture/target-architecture.md](./docs/architecture/target-architecture.md)
+3. [docs/architecture/target-architecture.md](./docs/architecture/target-architecture.md)
+4. [docs/architecture/phases/README.md](./docs/architecture/phases/README.md)
 5. [docs/development/public-demo-evidence.md](./docs/development/public-demo-evidence.md)
 6. [docs/development/public-demo-runbook.md](./docs/development/public-demo-runbook.md)
 7. [docs/development/public-demo-acceptance.md](./docs/development/public-demo-acceptance.md)
@@ -201,6 +253,7 @@ Relative path hints:
 - `./docs/architecture/README.md`
 - `./docs/architecture/current-architecture.md`
 - `./docs/architecture/target-architecture.md`
+- `./docs/architecture/phases/README.md`
 - `./docs/development/public-demo-evidence.md`
 - `./docs/development/public-demo-runbook.md`
 - `./docs/development/public-demo-acceptance.md`
