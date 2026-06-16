@@ -4,6 +4,10 @@
 
 Make contract-review behavior pack-driven instead of code-scattered.
 
+## Status
+
+Active.
+
 ## Focus
 
 - `contract_review` pack contract

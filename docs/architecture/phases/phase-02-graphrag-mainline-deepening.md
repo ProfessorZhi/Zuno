@@ -4,6 +4,10 @@
 
 Make GraphRAG a clean mainline capability instead of a partially hardcoded enhancement path.
 
+## Status
+
+Closed.
+
 ## Focus
 
 - `RetrievalOrchestrator` as the unified retrieval entry

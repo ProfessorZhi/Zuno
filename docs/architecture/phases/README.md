@@ -27,14 +27,16 @@ Only one phase should be current at a time.
 
 Right now the current phase is:
 
-- [Phase 2: GraphRAG Mainline Deepening](phase-02-graphrag-mainline-deepening.md)
+- [Phase 3: Domain Pack Formalization](phase-03-domain-pack-formalization.md)
 
 Phase status:
 
 1. `Phase 0` is complete
 2. `Phase 1` is complete
-3. the user has personally tried the recovered runtime
-4. `Phase 2` is the active engineering track
+3. `Phase 2` is complete
+4. `Phase 2.5` is complete
+5. the user has personally tried the recovered runtime
+6. `Phase 3` is the active engineering track
 
 ## Current Track Notes
 
