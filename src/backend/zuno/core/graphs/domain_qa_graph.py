@@ -309,10 +309,13 @@ class DomainQAGraph:
         citations: list[dict[str, Any]],
         graph_paths: list[dict[str, Any]],
         retrieval_plan: dict | None,
+        domain_pack: dict | None = None,
     ) -> dict[str, Any]:
+        retrieval_policy = dict((domain_pack or {}).get("retrieval_policy_data") or {})
+        citation_strictness = str(retrieval_policy.get("citation_strictness") or "high").strip().lower()
         if not documents:
             return {"status": "insufficient_evidence", "reason": "no_documents"}
-        if not citations:
+        if not citations and citation_strictness in {"medium", "high"}:
             return {"status": "insufficient_evidence", "reason": "missing_citations"}
         query_terms = cls._query_terms(query)
         if query_terms:
@@ -411,6 +414,11 @@ class DomainQAGraph:
                 or runtime_settings.get("domain_pack_id")
                 or (domain_pack or {}).get("id")
             )
+            if domain_pack_id and not domain_pack:
+                from zuno.services.domain_pack.loader import DomainPackLoader
+
+                loaded_pack = DomainPackLoader().load(domain_pack_id)
+                domain_pack = loaded_pack.to_dict() if loaded_pack else None
             updates = self._with_trace(
                 state,
                 node="resolve_domain_pack",
@@ -760,6 +768,7 @@ class DomainQAGraph:
                 citations=citations,
                 graph_paths=graph_paths,
                 retrieval_plan=retrieval_plan,
+                domain_pack=state.get("domain_pack"),
             )
             evidence_quality = self._assess_evidence_quality(
                 documents=documents,
@@ -834,7 +843,14 @@ class DomainQAGraph:
             return self._failure_update(state, node="maybe_retry_or_fallback", error=err)
 
     @staticmethod
-    def _build_answer_markdown(state: DomainQAState) -> tuple[str, str]:
+    def _render_template(template_text: str, values: dict[str, str]) -> str:
+        rendered = template_text
+        for key, value in values.items():
+            rendered = rendered.replace(f"{{{{{key}}}}}", value)
+        return rendered
+
+    @classmethod
+    def _build_answer_markdown(cls, state: DomainQAState) -> tuple[str, str]:
         domain_pack = state.get("domain_pack") or {}
         documents = list(state.get("vector_contexts") or [])
         graph_paths = list(state.get("graph_paths") or [])
@@ -852,46 +868,72 @@ class DomainQAGraph:
             for item in citations
         ] or ["- 无"]
         risk_lines = path_lines or ["- 需要结合检索到的条款进一步人工确认风险。"]
-
+        risk_block = "\n".join(risk_lines)
+        citation_block = "\n".join(citation_lines)
+        recommendation_text = "建议结合上述证据与风险点进一步补充人工审查意见。"
         answer = "\n".join(
             [
-                "结论",
+                "# Answer",
+                "",
+                "## Conclusion",
                 top_excerpt,
                 "",
-                "条款依据",
+                "## Evidence",
                 top_excerpt,
                 "",
-                "风险点",
-                *risk_lines,
+                "## Graph Paths",
+                risk_block,
                 "",
-                "引用",
-                *citation_lines,
+                "## Citations",
+                citation_block,
             ]
         )
         report = "\n".join(
             [
-                "# Contract Review Report",
+                "# Report",
                 "",
-                "## 审查结论",
+                "## Summary",
                 top_excerpt,
                 "",
-                "## 风险列表",
-                *risk_lines,
+                "## Risks",
+                risk_block,
                 "",
-                "## 条款依据",
+                "## Evidence",
                 top_excerpt,
                 "",
-                "## 修改建议",
-                "建议结合上述条款与风险点进一步补充人工审查意见。",
+                "## Recommendations",
+                recommendation_text,
             ]
         )
 
         answer_template = str(domain_pack.get("answer_template_text") or "").strip()
         report_template = str(domain_pack.get("report_template_text") or "").strip()
         if answer_template:
-            answer = f"{answer_template}\n\n{answer}"
+            if "{{" in answer_template:
+                answer = cls._render_template(
+                    answer_template,
+                    {
+                        "conclusion": top_excerpt,
+                        "evidence": top_excerpt,
+                        "risks": risk_block,
+                        "citations": citation_block,
+                    },
+                )
+            else:
+                answer = f"{answer_template}\n\n{answer}"
         if report_template:
-            report = f"{report_template}\n\n{report}"
+            if "{{" in report_template:
+                report = cls._render_template(
+                    report_template,
+                    {
+                        "summary": top_excerpt,
+                        "risks": risk_block,
+                        "evidence": top_excerpt,
+                        "recommendations": recommendation_text,
+                    },
+                )
+            else:
+                report = f"{report_template}\n\n{report}"
         return answer, report
 
     async def _generate_answer_node(self, state: DomainQAState) -> dict[str, Any]:
@@ -962,6 +1004,7 @@ class DomainQAGraph:
                 citations=normalized,
                 graph_paths=list(state.get("graph_paths") or []),
                 retrieval_plan=dict(state.get("retrieval_plan") or {}),
+                domain_pack=state.get("domain_pack"),
             )
             evidence_quality = self._assess_evidence_quality(
                 documents=list(state.get("vector_contexts") or []),

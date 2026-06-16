@@ -87,6 +87,10 @@ class GraphRetrieverAdapter:
         runtime_settings = await KnowledgeService.get_runtime_settings(knowledge_id) if knowledge_id else {
             "domain_pack_id": None,
         }
+        domain_pack_id = options.get("domain_pack_id") or runtime_settings.get("domain_pack_id")
+        domain_pack = runtime_settings.get("domain_pack")
+        effective_query_policy = dict((domain_pack or {}).get("retrieval_policy_data") or {})
+        effective_query_policy.update(options)
         scope_policy = dict(options.get("scope_policy") or {})
         index_version = dict(options.get("index_version") or {})
         local_graph_retriever = runtime_settings.get("graph_retriever")
@@ -97,10 +101,10 @@ class GraphRetrieverAdapter:
                     knowledge_id,
                     graph_hop_limit=options.get("graph_hop_limit", 2),
                     max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                    domain_pack_id=options.get("domain_pack_id") or runtime_settings.get("domain_pack_id"),
+                    domain_pack_id=domain_pack_id,
                     index_version=index_version.get("graph"),
                     status=scope_policy.get("status"),
-                    query_policy=options,
+                    query_policy=effective_query_policy,
                 )
             except TypeError:
                 return await local_graph_retriever.retrieve(
@@ -108,7 +112,7 @@ class GraphRetrieverAdapter:
                     knowledge_id,
                     graph_hop_limit=options.get("graph_hop_limit", 2),
                     max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                    domain_pack_id=options.get("domain_pack_id") or runtime_settings.get("domain_pack_id"),
+                    domain_pack_id=domain_pack_id,
                     index_version=index_version.get("graph"),
                     status=scope_policy.get("status"),
                 )
@@ -118,10 +122,10 @@ class GraphRetrieverAdapter:
                 knowledge_id,
                 graph_hop_limit=options.get("graph_hop_limit", 2),
                 max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                domain_pack_id=options.get("domain_pack_id") or runtime_settings.get("domain_pack_id"),
+                domain_pack_id=domain_pack_id,
                 index_version=index_version.get("graph"),
                 status=scope_policy.get("status"),
-                query_policy=options,
+                query_policy=effective_query_policy,
             )
         except TypeError:
             return await self.retriever.retrieve(
@@ -129,7 +133,7 @@ class GraphRetrieverAdapter:
                 knowledge_id,
                 graph_hop_limit=options.get("graph_hop_limit", 2),
                 max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                domain_pack_id=options.get("domain_pack_id") or runtime_settings.get("domain_pack_id"),
+                domain_pack_id=domain_pack_id,
                 index_version=index_version.get("graph"),
                 status=scope_policy.get("status"),
             )

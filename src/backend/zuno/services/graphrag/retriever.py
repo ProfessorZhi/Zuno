@@ -68,8 +68,6 @@ class GraphRetriever:
         "agent",
         "server",
         "agent server",
-        "contract",
-        "合同",
     }
     CJK_CONNECTOR_PATTERN = re.compile(
         "(\u4e4b\u95f4|\u662f\u4ec0\u4e48|\u4ec0\u4e48|\u54ea\u4e9b|\u4e3b\u8981|\u9002\u5408|\u7528\u6765|"
@@ -132,12 +130,6 @@ class GraphRetriever:
         "架构",
         "部署",
         "持久化",
-        "条款",
-        "义务",
-        "约定",
-        "风险",
-        "期限",
-        "前置条件",
     )
     DEFAULT_POLICY_STEP_CUES = (
         "流程",
@@ -171,6 +163,28 @@ class GraphRetriever:
                 cleaned.append(text)
         return cleaned
 
+    @staticmethod
+    def _policy_aliases(query_policy: dict | None, key: str) -> dict[str, list[str]]:
+        if not query_policy:
+            return {}
+        raw = query_policy.get(key)
+        if not isinstance(raw, dict):
+            return {}
+        aliases: dict[str, list[str]] = {}
+        for trigger, values in raw.items():
+            normalized_trigger = str(trigger or "").strip().lower()
+            if not normalized_trigger:
+                continue
+            if isinstance(values, str):
+                parsed = [item.strip() for item in re.split(r"[|,，;/]+", values) if item.strip()]
+            elif isinstance(values, (list, tuple, set)):
+                parsed = [str(item or "").strip() for item in values if str(item or "").strip()]
+            else:
+                continue
+            if parsed:
+                aliases[normalized_trigger] = parsed
+        return aliases
+
     @classmethod
     def _resolve_query_policy(
         cls,
@@ -179,15 +193,17 @@ class GraphRetriever:
         query_policy: dict | None,
     ) -> dict[str, object]:
         merged: dict[str, object] = {}
-        if domain_pack_id and not query_policy:
+        if domain_pack_id:
             try:
                 from zuno.services.domain_pack.loader import DomainPackLoader
 
                 pack = DomainPackLoader().load(domain_pack_id)
-                if pack and pack.retrieval_policy_data:
-                    merged.update(dict(pack.retrieval_policy_data))
-            except Exception:
-                pass
+            except ValueError as err:
+                if "domain pack not found" not in str(err):
+                    raise
+                pack = None
+            if pack and pack.retrieval_policy_data:
+                merged.update(dict(pack.retrieval_policy_data))
         merged.update(dict(query_policy or {}))
         return merged
 
@@ -238,7 +254,10 @@ class GraphRetriever:
                 if line_index == 0 or len(candidate) >= 3:
                     cls._add_seed(ordered, seen, candidate)
         lowered = first_line.lower()
-        for trigger, aliases in cls.QUERY_SEED_ALIASES.items():
+        seed_aliases = cls._policy_aliases(query_policy, "graph_seed_aliases")
+        if not seed_aliases:
+            seed_aliases = {key: list(value) for key, value in cls.QUERY_SEED_ALIASES.items()}
+        for trigger, aliases in seed_aliases.items():
             if trigger in lowered:
                 for alias in aliases:
                     cls._add_seed(ordered, seen, alias)
@@ -269,13 +288,31 @@ class GraphRetriever:
             for word in phrase.split():
                 if word not in cls.NOISE_QUERY_TERMS and len(word) > 1:
                     terms.add(word)
-        for trigger, aliases in cls.QUERY_TERM_ALIASES.items():
+        term_aliases = cls._policy_aliases(query_policy, "query_term_aliases")
+        if not term_aliases:
+            term_aliases = {key: list(value) for key, value in cls.QUERY_TERM_ALIASES.items()}
+        for trigger, aliases in term_aliases.items():
             if trigger in query_lower:
                 terms.update(aliases)
         for cue in cls._policy_values(query_policy, "graph_seed_terms"):
             if cue in query:
                 terms.add(cue.lower())
         return terms
+
+    @staticmethod
+    def _preferred_relation_type(query_policy: dict | None) -> str | None:
+        value = str((query_policy or {}).get("risk_relation_preference") or "").strip()
+        return value or None
+
+    @classmethod
+    def _path_sort_key(cls, item: dict, preferred_relation_type: str | None) -> tuple[int, str, str]:
+        relation_type = str(item.get("relation_type") or "").strip()
+        preferred = 1 if preferred_relation_type and relation_type == preferred_relation_type else 0
+        return (
+            preferred,
+            str(item.get("source") or ""),
+            str(item.get("target") or ""),
+        )
 
     @classmethod
     def _is_graph_worthy_query(cls, query: str, seed_entities: list[str], query_policy: dict | None = None) -> bool:
@@ -501,6 +538,7 @@ class GraphRetriever:
                 status=status,
             )
             if neighbor_paths:
+                preferred_relation_type = self._preferred_relation_type(effective_query_policy)
                 filtered_paths = []
                 for item in neighbor_paths:
                     source = str(item.get("source") or "").strip()
@@ -508,7 +546,11 @@ class GraphRetriever:
                     if self._is_generic_graph_entity(source) or self._is_generic_graph_entity(target):
                         continue
                     filtered_paths.append(item)
-                neighbor_paths = filtered_paths
+                neighbor_paths = sorted(
+                    filtered_paths,
+                    key=lambda item: self._path_sort_key(item, preferred_relation_type),
+                    reverse=True,
+                )
             if neighbor_paths:
                 entities.append(entity_name)
                 for item in neighbor_paths:

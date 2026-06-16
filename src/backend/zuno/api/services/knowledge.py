@@ -295,10 +295,15 @@ class KnowledgeService:
         if local_runtime:
             runtime = dict(local_runtime)
             config = cls._normalize_knowledge_config(runtime.get("knowledge_config"))
+            domain_pack_id = runtime.get("domain_pack_id") or config.get("domain_pack_id")
+            domain_pack = runtime.get("domain_pack")
+            if domain_pack_id and not domain_pack:
+                loaded_pack = DomainPackLoader().load(domain_pack_id)
+                domain_pack = loaded_pack.to_dict() if loaded_pack else None
             runtime["knowledge_id"] = knowledge_id
             runtime["knowledge_config"] = config
-            runtime.setdefault("domain_pack_id", config.get("domain_pack_id"))
-            runtime.setdefault("domain_pack", None)
+            runtime["domain_pack_id"] = domain_pack_id
+            runtime["domain_pack"] = domain_pack
             runtime.setdefault("text_embedding_config", None)
             runtime.setdefault("vl_embedding_config", None)
             runtime.setdefault("rerank_config", None)

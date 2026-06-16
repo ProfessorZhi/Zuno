@@ -27,6 +27,7 @@ class DomainPack:
     retrieval_policy_data: dict | None = None
     answer_template_text: str | None = None
     report_template_text: str | None = None
+    eval_dataset_text: str | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
