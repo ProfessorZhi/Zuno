@@ -101,7 +101,11 @@ What changed is the current stage:
 Phase 0 stable runtime recovery is closed
 Phase 1 LangGraph runtime deepening is closed
 Phase 2 GraphRAG mainline deepening is closed
-the repo is in a legacy boundary hardening checkpoint before Phase 3
+Phase 2.5 legacy boundary hardening is closed
+Phase 3 Domain Pack formalization is closed
+Phase 4 Knowledge Config V2 + Local Eval strengthening is closed
+Phase 5 docs and public explanation sync is closed
+Phase 6 Agent GraphRAG pluginization boundary is closed
 ```
 
 ## Current Documentation Rule

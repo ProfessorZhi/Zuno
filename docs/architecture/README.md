@@ -44,7 +44,7 @@ docs/architecture/
   - migration rules and constraints
 - `phases/`
   - phase model for the architecture program
-  - current runtime recovery must complete before phase execution resumes in full
+  - current phase completion truth and closure gates
 - `specs/`
   - stable architecture definitions
 - `decisions/`

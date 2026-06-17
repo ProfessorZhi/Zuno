@@ -118,8 +118,9 @@ The active phase program is now:
 2. Phase 1: LangGraph Runtime Deepening
 3. Phase 2: GraphRAG Mainline Deepening
 4. Phase 3: Domain Pack Formalization
-5. Phase 4: Local Eval Strengthening
+5. Phase 4: Knowledge Config V2 + Local Eval Strengthening
 6. Phase 5: Docs And Public Explanation Sync
+7. Phase 6: Agent GraphRAG Pluginization / Future Platform Layer
 
 This replaces the paused migration-first phase story as the current execution truth.
 

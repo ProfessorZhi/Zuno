@@ -18,10 +18,9 @@ Phase 0 已完成稳定运行恢复
   -> Phase 2 已完成 GraphRAG Mainline Deepening
   -> Phase 2.5 已完成 legacy boundary hardening
   -> Phase 3 已完成 Domain Pack Formalization
-  -> 当前收口 Phase 4-6
-     - Phase 4: Knowledge Config V2 + Local Eval Strengthening
-     - Phase 5: Docs And Public Explanation Sync
-     - Phase 6: Agent GraphRAG Pluginization / Future Platform Layer
+  -> Phase 4 已完成 Knowledge Config V2 + Local Eval Strengthening
+  -> Phase 5 已完成 Docs And Public Explanation Sync
+  -> Phase 6 已完成 Agent GraphRAG Pluginization / Future Platform Layer
 ```
 
 当前 phase 程序见：

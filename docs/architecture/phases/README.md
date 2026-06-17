@@ -23,12 +23,13 @@ That belongs in `../specs/`.
 
 ## Current Execution Rule
 
-The remaining closure order after the migration pause is:
+The migration-pause closure program is already complete.
 
-- close `Phase 3`
-- close `Phase 4`
-- close `Phase 5`
-- close `Phase 6`
+The current rule is:
+
+- treat `Phase 0-6` as completed closure truth
+- keep future work aligned with the same runtime truth and documentation layering
+- if a new architecture round starts, open it as a fresh phase program instead of reviving retired service-migration steps
 
 Phase status:
 
