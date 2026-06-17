@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from zuno.schema.chunk import ChunkModel
 from zuno.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
@@ -7,6 +7,8 @@ from zuno.settings import app_settings
 
 
 class TextParser:
+    CHINA_TZ = timezone(timedelta(hours=8))
+
     def __init__(self):
         self.chunk_size = app_settings.rag.split.get("chunk_size")
         self.overlap_size = app_settings.rag.split.get("overlap_size")
@@ -46,7 +48,7 @@ class TextParser:
         file_content = await self.parse_file(file_path)
         contents = await self.split_text_into_chunks_by_lines(file_content)
         chunks = []
-        update_time = datetime.utcnow() + timedelta(hours=8)
+        update_time = datetime.now(self.CHINA_TZ)
         for index, content in enumerate(contents):
             source_chunk_id = build_source_chunk_id(
                 file_id=file_id,

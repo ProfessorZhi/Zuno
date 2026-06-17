@@ -62,7 +62,17 @@ def test_send_email_cli_send_forwards_args(monkeypatch, capsys):
 
 
 def test_send_email_manifest_declares_cli_tool():
-    manifest_path = Path(__file__).resolve().parents[1] / "tools" / "send_email" / "manifest.yaml"
+    manifest_path = (
+        Path(__file__).resolve().parents[2]
+        / "src"
+        / "backend"
+        / "zuno"
+        / "legacy"
+        / "agentchat"
+        / "tools"
+        / "send_email"
+        / "manifest.yaml"
+    )
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
 
     assert manifest["type"] == "cli"

@@ -1,12 +1,14 @@
 import os.path
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from zuno.schema.chunk import ChunkModel
 from zuno.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
 
 
 class MarkdownParser:
+    CHINA_TZ = timezone(timedelta(hours=8))
+
     def __init__(self, min_chunk_size=256, max_chunk_size=512, overlap_size=128):
         self.min_chunk_size = min_chunk_size
         self.max_chunk_size = max_chunk_size
@@ -179,7 +181,7 @@ class MarkdownParser:
         text = await self.parse_file(file_path)
         contents = await self.parse_markdown_headers(text)
         chunks = []
-        update_time = datetime.utcnow() + timedelta(hours=8)
+        update_time = datetime.now(self.CHINA_TZ)
         for index, content in enumerate(contents):
             source_chunk_id = build_source_chunk_id(
                 file_id=file_id,

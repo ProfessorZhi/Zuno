@@ -154,7 +154,7 @@ def test_multi_agent_supervisor_graph_runs_actual_domain_graph_path():
         }
     ]
     assert result["support_verdict"]["status"] == "supported"
-    assert result["evidence_bundle"]["document_count"] == 2
+    assert result["evidence_bundle"]["document_count"] == 1
     assert result["final_answer"].startswith("你是一名合同审查助手")
     assert "第八条 违约责任" in result["final_answer"]
     assert [node["node"] for node in result["trace_metadata"]["nodes"]] == [

@@ -5,7 +5,15 @@ def test_graph_retriever_adapter_uses_local_runtime_graph_retriever(monkeypatch)
     from agentchat.services.retrieval.retrievers import GraphRetrieverAdapter
 
     class FakeLocalGraphRetriever:
-        async def retrieve(self, query, knowledge_id, graph_hop_limit=2, max_paths_per_entity=10, domain_pack_id=None):
+        async def retrieve(
+            self,
+            query,
+            knowledge_id,
+            graph_hop_limit=2,
+            max_paths_per_entity=10,
+            domain_pack_id=None,
+            **_kwargs,
+        ):
             return {
                 "content": "local graph content",
                 "entities": ["Agent Server"],

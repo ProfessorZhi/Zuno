@@ -528,15 +528,24 @@ class GraphRetriever:
                 "documents": [],
             }
         for entity_name in seed_entities:
-            neighbor_paths = await self.client.query_neighbors(
-                entity_name,
-                knowledge_id,
-                hops=graph_hop_limit,
-                limit=max_paths_per_entity,
-                domain_pack_id=domain_pack_id,
-                index_version=index_version,
-                status=status,
-            )
+            try:
+                neighbor_paths = await self.client.query_neighbors(
+                    entity_name,
+                    knowledge_id,
+                    hops=graph_hop_limit,
+                    limit=max_paths_per_entity,
+                    domain_pack_id=domain_pack_id,
+                    index_version=index_version,
+                    status=status,
+                )
+            except TypeError:
+                neighbor_paths = await self.client.query_neighbors(
+                    entity_name,
+                    knowledge_id,
+                    hops=graph_hop_limit,
+                    limit=max_paths_per_entity,
+                    domain_pack_id=domain_pack_id,
+                )
             if neighbor_paths:
                 preferred_relation_type = self._preferred_relation_type(effective_query_policy)
                 filtered_paths = []

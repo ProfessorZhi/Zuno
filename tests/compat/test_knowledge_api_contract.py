@@ -193,8 +193,9 @@ def test_select_knowledge_exposes_normalized_knowledge_config(monkeypatch):
     assert results[0]["knowledge_config"]["retrieval_settings"]["default_mode"] == "rag_graph"
     assert results[0]["knowledge_config"]["retrieval_settings"]["top_k"] == 9
     assert results[0]["knowledge_config"]["index_settings"]["chunk_mode"] == "general"
-    assert results[0]["knowledge_config"]["index_settings"]["status"] == "active"
-    assert results[0]["knowledge_config"]["index_settings"]["index_version"] == "v1"
+    assert results[0]["knowledge_config"]["index_settings"]["vector_backend"] == "milvus"
+    assert "status" not in results[0]["knowledge_config"]["index_settings"]
+    assert "index_version" not in results[0]["knowledge_config"]["index_settings"]
 
 
 def test_update_knowledge_service_merges_partial_knowledge_config(monkeypatch):

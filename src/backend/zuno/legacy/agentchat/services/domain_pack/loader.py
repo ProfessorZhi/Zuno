@@ -87,5 +87,6 @@ class DomainPackLoader:
             retrieval_policy_data=retrieval_policy_data,
             answer_template_text=self._read_text(answer_template_path),
             report_template_text=self._read_text(report_template_path),
+            eval_dataset_text=self._read_text(eval_dataset_path),
             **payload,
         )

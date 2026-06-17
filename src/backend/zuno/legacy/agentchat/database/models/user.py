@@ -1,11 +1,9 @@
-import orjson
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
-from uuid import UUID
 
-from pydantic import validator, BaseModel
+from pydantic import field_validator
 from sqlalchemy import Column, DateTime, text
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 
 from agentchat.database.models.base import SQLModelSerializable
 
@@ -33,9 +31,9 @@ class UserTable(SQLModelSerializable, table=True):
                          server_default=text('CURRENT_TIMESTAMP'),
                          onupdate=text('CURRENT_TIMESTAMP')))
 
-    @validator('user_name')
-    def validate_str(v):
-        # dict_keys(['description', 'name', 'id', 'data'])
+    @field_validator("user_name")
+    @classmethod
+    def validate_str(cls, v: str):
         if not v:
             raise ValueError('user_name 不能为空')
         return v

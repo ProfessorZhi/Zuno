@@ -5,7 +5,15 @@ def test_graph_retriever_handles_contract_review_chinese_query():
     from agentchat.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
-        async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
+        async def query_neighbors(
+            self,
+            entity_name,
+            knowledge_id,
+            hops=1,
+            limit=10,
+            domain_pack_id=None,
+            **_kwargs,
+        ):
             if entity_name != "违约责任":
                 return []
             return [

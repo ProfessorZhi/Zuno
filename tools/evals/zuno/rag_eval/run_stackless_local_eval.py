@@ -112,6 +112,7 @@ class _LocalGraphClient:
         hops: int = 1,
         limit: int = 10,
         domain_pack_id: str | None = None,
+        **_kwargs,
     ) -> list[dict[str, Any]]:
         matches: list[dict[str, Any]] = []
         needle = str(entity_name or "").strip().lower()

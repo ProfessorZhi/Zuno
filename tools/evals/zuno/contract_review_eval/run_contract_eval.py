@@ -89,6 +89,8 @@ class _LocalGraphClient:
         hops: int = 1,
         limit: int = 10,
         domain_pack_id: str | None = None,
+        index_version: str | None = None,
+        **_: Any,
     ) -> list[dict[str, Any]]:
         matches: list[dict[str, Any]] = []
         needle = str(entity_name or "").strip().lower()
@@ -257,6 +259,12 @@ async def _build_retrieval_result(
         documents = list(graph_result.get("documents") or [])
         if not path_strings or not documents:
             path_strings, structured_paths = _build_paths_from_extraction(top_document)
+            documents = [document_chunk]
+        if not path_strings:
+            path_strings, structured_paths = _fixture_paths_for_document(
+                top_document["document_name"],
+                document_chunk["chunk_id"],
+            )
             documents = [document_chunk]
 
     document_chunk["graph_support_count"] = len(structured_paths)

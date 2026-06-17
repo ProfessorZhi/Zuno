@@ -1,6 +1,6 @@
 import asyncio
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from agentchat.core.models.manager import ModelManager
 from agentchat.schema.chunk import ChunkModel
@@ -22,6 +22,7 @@ EXCEL_SUFFIXES = {"xls", "xlsx"}
 
 class DocParser:
     MILVUS_CONTENT_LIMIT = 4000
+    CHINA_TZ = timezone(timedelta(hours=8))
 
     @staticmethod
     def _build_markdown_parser(config: dict | None):
@@ -117,7 +118,7 @@ class DocParser:
                     content=description,
                     index=0,
                 )
-                update_time = datetime.utcnow() + timedelta(hours=8)
+                update_time = datetime.now(cls.CHINA_TZ)
                 chunks = [
                     ChunkModel(
                         chunk_id=chunk_id,

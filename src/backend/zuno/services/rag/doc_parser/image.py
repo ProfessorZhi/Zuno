@@ -1,7 +1,7 @@
 import base64
 import os
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from zuno.core.models.manager import ModelManager
 
@@ -58,7 +58,7 @@ def build_image_chunk(
     image_name: str,
     description: str,
 ) -> ChunkModel:
-    update_time = datetime.utcnow() + timedelta(hours=8)
+    update_time = datetime.now(CHINA_TZ)
     source_chunk_id = build_source_chunk_id(
         file_id=file_id,
         file_name=file_name,
@@ -86,3 +86,4 @@ def build_image_chunk(
 
 
 __all__ = ["build_image_chunk", "describe_image", "image_to_txt"]
+CHINA_TZ = timezone(timedelta(hours=8))

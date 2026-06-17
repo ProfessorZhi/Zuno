@@ -1,7 +1,7 @@
 import base64
 import os
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from agentchat.core.models.manager import ModelManager
 from agentchat.schema.chunk import ChunkModel
@@ -57,7 +57,7 @@ def build_image_chunk(
     image_name: str,
     description: str,
 ) -> ChunkModel:
-    update_time = datetime.utcnow() + timedelta(hours=8)
+    update_time = datetime.now(CHINA_TZ)
     chunk_id = build_chunk_id(
         file_id=file_id,
         file_name=file_name,
@@ -75,3 +75,4 @@ def build_image_chunk(
         modality="image",
         source_url=source_url,
     )
+CHINA_TZ = timezone(timedelta(hours=8))

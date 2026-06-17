@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ModelConfig(BaseModel):
@@ -19,8 +19,7 @@ class ModelConfig(BaseModel):
 
 
 class MultiModels(BaseModel):
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     reasoning_model: ModelConfig = Field(default_factory=ModelConfig)
     conversation_model: ModelConfig = Field(default_factory=ModelConfig)
@@ -34,8 +33,7 @@ class MultiModels(BaseModel):
 
 
 class Tools(BaseModel):
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     email: dict = Field(default_factory=dict)
     weather: dict = Field(default_factory=dict)
@@ -46,8 +44,7 @@ class Tools(BaseModel):
 
 
 class Rag(BaseModel):
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     enable_elasticsearch: bool = Field(default=False)
     enable_summary: bool = Field(default=False)

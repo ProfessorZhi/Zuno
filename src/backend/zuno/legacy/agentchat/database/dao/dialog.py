@@ -1,7 +1,7 @@
 from agentchat.database.models.dialog import DialogTable
 from sqlmodel import Session, select, update, desc, delete
 from agentchat.database.session import session_getter
-from datetime import datetime
+from datetime import datetime, timezone
 
 class DialogDao:
 
@@ -45,7 +45,7 @@ class DialogDao:
     @classmethod
     async def update_dialog_time(cls, dialog_id: str):
         with session_getter() as session:
-            sql = update(DialogTable).where(DialogTable.dialog_id == dialog_id).values(update_time=datetime.utcnow())
+            sql = update(DialogTable).where(DialogTable.dialog_id == dialog_id).values(update_time=datetime.now(timezone.utc))
             session.exec(sql)
             session.commit()
 
