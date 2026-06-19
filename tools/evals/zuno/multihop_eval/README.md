@@ -14,6 +14,9 @@ Phase C scope:
 Phase C does **not** run full GraphRAG evaluation and does not commit raw or
 full normalized datasets.
 
+Phase D adds a mocked smoke runner for report-shape validation. It is useful for
+CLI flow and artifact checks, not for claiming real GraphRAG quality.
+
 ## Normalized Schema
 
 ```json
@@ -90,3 +93,28 @@ tools/evals/zuno/multihop_eval/sample_data/
 
 These are tiny normalized JSONL files for adapter tests and stackless smoke
 work. They are not benchmark results.
+
+## Smoke Runner
+
+Phase D exposes:
+
+```powershell
+python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode baseline_rag
+python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode local_graphrag
+python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode deep_graphrag
+```
+
+Current runner status:
+
+- execution mode: `mocked`
+- purpose: sample-data smoke and report-shape validation
+- not a real GraphRAG benchmark
+
+It writes per-mode reports plus:
+
+```text
+reports/evals/multihop/compare_matrix.json
+```
+
+The report explicitly labels itself as `mocked`, so it cannot be mistaken for a
+real GraphRAG result.
