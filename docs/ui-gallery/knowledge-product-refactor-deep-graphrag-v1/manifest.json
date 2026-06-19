@@ -1,0 +1,254 @@
+[
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-list",
+    "route": "/workspace/settings/knowledge/domain-packs",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-list.vue",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "screenshot_path": "screenshots/desktop/domain-pack-list-desktop.png",
+    "html_path": "html/domain-pack-list.html",
+    "notes": "?????????????????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-list",
+    "route": "/workspace/settings/knowledge/domain-packs",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-list.vue",
+    "viewport": {
+      "width": 1024,
+      "height": 900
+    },
+    "screenshot_path": "screenshots/tablet/domain-pack-list-tablet.png",
+    "html_path": "html/domain-pack-list.html",
+    "notes": "?????????????????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-list",
+    "route": "/workspace/settings/knowledge/domain-packs",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-list.vue",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot_path": "screenshots/mobile/domain-pack-list-mobile.png",
+    "html_path": "html/domain-pack-list.html",
+    "notes": "?????????????????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-create",
+    "route": "/workspace/settings/knowledge/domain-packs/create",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-create.vue",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "screenshot_path": "screenshots/desktop/domain-pack-create-desktop.png",
+    "html_path": "html/domain-pack-create.html",
+    "notes": "?????????????schema/prompt ????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-create",
+    "route": "/workspace/settings/knowledge/domain-packs/create",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-create.vue",
+    "viewport": {
+      "width": 1024,
+      "height": 900
+    },
+    "screenshot_path": "screenshots/tablet/domain-pack-create-tablet.png",
+    "html_path": "html/domain-pack-create.html",
+    "notes": "?????????????schema/prompt ????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-create",
+    "route": "/workspace/settings/knowledge/domain-packs/create",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-create.vue",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot_path": "screenshots/mobile/domain-pack-create-mobile.png",
+    "html_path": "html/domain-pack-create.html",
+    "notes": "?????????????schema/prompt ????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-detail",
+    "route": "/workspace/settings/knowledge/domain-packs/contract-review-v1",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-detail.vue",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "screenshot_path": "screenshots/desktop/domain-pack-detail-desktop.png",
+    "html_path": "html/domain-pack-detail.html",
+    "notes": "????????????????????????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-detail",
+    "route": "/workspace/settings/knowledge/domain-packs/contract-review-v1",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-detail.vue",
+    "viewport": {
+      "width": 1024,
+      "height": 900
+    },
+    "screenshot_path": "screenshots/tablet/domain-pack-detail-tablet.png",
+    "html_path": "html/domain-pack-detail.html",
+    "notes": "????????????????????????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "domain-pack-detail",
+    "route": "/workspace/settings/knowledge/domain-packs/contract-review-v1",
+    "component_path": "apps/web/src/pages/knowledge/domain-pack-detail.vue",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot_path": "screenshots/mobile/domain-pack-detail-mobile.png",
+    "html_path": "html/domain-pack-detail.html",
+    "notes": "????????????????????????????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "knowledge-create-wizard",
+    "route": "/workspace/settings/knowledge/create",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-create.vue",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "screenshot_path": "screenshots/desktop/knowledge-create-wizard-desktop.png",
+    "html_path": "html/knowledge-create-wizard.html",
+    "notes": "??????????????????????? runtime ???"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "knowledge-create-wizard",
+    "route": "/workspace/settings/knowledge/create",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-create.vue",
+    "viewport": {
+      "width": 1024,
+      "height": 900
+    },
+    "screenshot_path": "screenshots/tablet/knowledge-create-wizard-tablet.png",
+    "html_path": "html/knowledge-create-wizard.html",
+    "notes": "??????????????????????? runtime ???"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "knowledge-create-wizard",
+    "route": "/workspace/settings/knowledge/create",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-create.vue",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot_path": "screenshots/mobile/knowledge-create-wizard-mobile.png",
+    "html_path": "html/knowledge-create-wizard.html",
+    "notes": "??????????????????????? runtime ???"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "knowledge-maintenance",
+    "route": "/workspace/settings/knowledge/kb-contract-review/settings?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "screenshot_path": "screenshots/desktop/knowledge-maintenance-desktop.png",
+    "html_path": "html/knowledge-maintenance.html",
+    "notes": "????????????????????????? Phase 1 ?????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "knowledge-maintenance",
+    "route": "/workspace/settings/knowledge/kb-contract-review/settings?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
+    "viewport": {
+      "width": 1024,
+      "height": 900
+    },
+    "screenshot_path": "screenshots/tablet/knowledge-maintenance-tablet.png",
+    "html_path": "html/knowledge-maintenance.html",
+    "notes": "????????????????????????? Phase 1 ?????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "knowledge-maintenance",
+    "route": "/workspace/settings/knowledge/kb-contract-review/settings?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot_path": "screenshots/mobile/knowledge-maintenance-mobile.png",
+    "html_path": "html/knowledge-maintenance.html",
+    "notes": "????????????????????????? Phase 1 ?????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "legacy-knowledge-config-route",
+    "route": "/workspace/settings/knowledge/kb-contract-review/config?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "screenshot_path": "screenshots/desktop/legacy-knowledge-config-route-desktop.png",
+    "html_path": "html/legacy-knowledge-config-route.html",
+    "notes": "? config ?????????????? settings?????? apps/web/src/pages/knowledge/knowledge-config.vue ???????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "legacy-knowledge-config-route",
+    "route": "/workspace/settings/knowledge/kb-contract-review/config?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
+    "viewport": {
+      "width": 1024,
+      "height": 900
+    },
+    "screenshot_path": "screenshots/tablet/legacy-knowledge-config-route-tablet.png",
+    "html_path": "html/legacy-knowledge-config-route.html",
+    "notes": "? config ?????????????? settings?????? apps/web/src/pages/knowledge/knowledge-config.vue ???????"
+  },
+  {
+    "commit_sha": "ee948a3fd7b3b8cc1f1cbf4f828169c4c5186d37",
+    "generated_at": "2026-06-19T08:29:05.301683+00:00",
+    "page_name": "legacy-knowledge-config-route",
+    "route": "/workspace/settings/knowledge/kb-contract-review/config?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
+    "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot_path": "screenshots/mobile/legacy-knowledge-config-route-mobile.png",
+    "html_path": "html/legacy-knowledge-config-route.html",
+    "notes": "? config ?????????????? settings?????? apps/web/src/pages/knowledge/knowledge-config.vue ???????"
+  }
+]
