@@ -17,6 +17,54 @@ full normalized datasets.
 Phase D adds a mocked smoke runner for report-shape validation. It is useful for
 CLI flow and artifact checks, not for claiming real GraphRAG quality.
 
+## Explicit Eval Profiles
+
+Current status:
+
+- this folder now includes `eval_profiles.example.json`
+- the file is a committed example, not a secret-bearing local config
+- it uses model names, not DB ids
+- current mocked runner does not fully consume `--profile-file` / `--profile-name` yet
+
+Why this exists:
+
+- real multihop eval should not depend on ambiguous default slot resolution
+- especially do not rely on implicit `conversation_model` when local DB state may
+  contain duplicate active defaults
+- text-only multihop eval should explicitly name conversation, text embedding,
+  and rerank models
+
+Recommended rule for future real eval:
+
+1. pass an explicit eval profile file
+2. select one named profile for the run
+3. resolve model names into current registry rows at runtime
+4. fail early if a required named model cannot be resolved cleanly
+
+Current example file:
+
+```text
+tools/evals/zuno/multihop_eval/eval_profiles.example.json
+```
+
+The first example profile is the recommended baseline for upcoming real
+HotpotQA / 2Wiki / MuSiQue text-only retrieval work:
+
+- conversation model: `qwen-plus`
+- text embedding model: `text-embedding-v4`
+- VL embedding model: `null`
+- rerank model: `gte-rerank-v2`
+
+For lower-cost answer generation experiments, the example also includes:
+
+- conversation model: `deepseek-v4-flash`
+
+This example file must never include:
+
+- API keys
+- database primary keys
+- local database dumps
+
 ## Normalized Schema
 
 ```json
@@ -118,3 +166,16 @@ reports/evals/multihop/compare_matrix.json
 
 The report explicitly labels itself as `mocked`, so it cannot be mistaken for a
 real GraphRAG result.
+
+## Future Runner Wiring
+
+The intended next integration path is:
+
+1. add `--profile-file`
+2. add `--profile-name`
+3. resolve named models before launching real multihop retrieval/eval
+4. keep current mocked runner behavior unchanged until real multihop runtime is
+   intentionally enabled
+
+Until that wiring lands, treat `eval_profiles.example.json` as the source of
+truth for how future real multihop runs should bind models explicitly.

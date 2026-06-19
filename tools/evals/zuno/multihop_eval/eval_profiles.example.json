@@ -1,0 +1,33 @@
+{
+  "retrieval_only_text_multihop": {
+    "description": "Text-only multi-hop retrieval profile. Does not require VL embedding.",
+    "conversation_model": "qwen-plus",
+    "text_embedding_model": "text-embedding-v4",
+    "vl_embedding_model": null,
+    "rerank_model": "gte-rerank-v2",
+    "retrieval": {
+      "top_k": 10,
+      "rerank_enabled": true,
+      "rerank_top_k": 5,
+      "score_threshold": null,
+      "graph_hop_limit": 2,
+      "max_paths_per_entity": 5
+    },
+    "notes": [
+      "Use explicit model names to avoid ambiguous default slots.",
+      "VL embedding is not required for HotpotQA, 2WikiMultiHopQA, or MuSiQue text-only eval.",
+      "This profile is not a production default."
+    ]
+  },
+  "cheap_answer_llm_text_multihop": {
+    "description": "Optional answer-generation profile for low-cost text-only evaluation.",
+    "conversation_model": "deepseek-v4-flash",
+    "text_embedding_model": "text-embedding-v4",
+    "vl_embedding_model": null,
+    "rerank_model": "gte-rerank-v2",
+    "notes": [
+      "Prefer explicit profile binding over default conversation_model.",
+      "Use this when answer generation cost matters more than highest answer quality."
+    ]
+  }
+}
