@@ -51,6 +51,11 @@ apps/web/output/
 .local/evals/zuno/rag_eval/corpus/
 .local/evals/zuno/rag_eval/runs/
 .local/evals/zuno/contract_review_eval/.tmp_test_reports/
+data/evals/multihop/raw/
+data/evals/multihop/normalized/
+data/evals/multihop/**/*.zip
+data/evals/multihop/**/*.json
+data/evals/multihop/**/*.jsonl
 
 tmp-*.png
 tmp-*.json

@@ -1,0 +1,2 @@
+{"dataset":"musique","id":"mu_sample_1","question":"What links the two facts?","answer":"Ada","documents":[{"doc_id":"paragraph_0","title":"A","sentences":["A mentions Ada."],"text":"A mentions Ada."},{"doc_id":"1","title":"B","sentences":["B is a distractor."],"text":"B is a distractor."}],"gold_support":[{"title":"A","sent_id":0,"text":"A mentions Ada."}],"gold_entities":[],"gold_evidence_path":[],"metadata":{"question_decomposition":[{"id":1,"question":"Who is mentioned?","answer":"Ada"}]}}
+

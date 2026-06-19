@@ -1,0 +1,2 @@
+{"dataset":"hotpotqa","id":"hp_sample_1","question":"Which city links Alpha and Beta?","answer":"Paris","documents":[{"doc_id":"Alpha","title":"Alpha","sentences":["Alpha starts in Paris.","Alpha ends."],"text":"Alpha starts in Paris. Alpha ends."},{"doc_id":"Beta","title":"Beta","sentences":["Beta mentions Paris."],"text":"Beta mentions Paris."}],"gold_support":[{"title":"Alpha","sent_id":0,"text":"Alpha starts in Paris."},{"title":"Beta","sent_id":0,"text":"Beta mentions Paris."}],"gold_entities":[],"gold_evidence_path":[],"metadata":{"type":"bridge","level":"easy"}}
+

@@ -1,0 +1,2 @@
+{"dataset":"2wikimultihopqa","id":"tw_sample_1","question":"Who connects A and B?","answer":"Ada","documents":[{"doc_id":"A","title":"A","sentences":["A mentions Ada."],"text":"A mentions Ada."},{"doc_id":"B","title":"B","sentences":["B also mentions Ada."],"text":"B also mentions Ada."}],"gold_support":[{"title":"A","sent_id":0,"text":"A mentions Ada."},{"title":"B","sent_id":0,"text":"B also mentions Ada."}],"gold_entities":["A","Ada"],"gold_evidence_path":[{"subject":"A","relation":"connected_to","object":"Ada"}],"metadata":{"type":"inference"}}
+
