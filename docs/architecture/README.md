@@ -33,6 +33,7 @@ docs/architecture/
   programs/
   specs/
   decisions/
+  audits/
   history/
 ```
 
@@ -54,6 +55,8 @@ docs/architecture/
   - stable architecture definitions
 - `decisions/`
   - major architecture choices and why they were made
+- `audits/`
+  - current-state evidence gathered before a later implementation phase
 - `history/`
   - older plans, audits, readiness notes, and legacy execution materials
   - see [Architecture History](./history/README.md)
