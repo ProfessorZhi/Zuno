@@ -666,7 +666,14 @@ watch(sidebarCollapsed, (collapsed) => {
 </script>
 
 <template>
-  <div class="workspace-container" :class="{ 'navigation-settling': navigationSettling, 'desktop-runtime': desktopRuntime }">
+  <div
+    class="workspace-container"
+    :class="{
+      'navigation-settling': navigationSettling,
+      'desktop-runtime': desktopRuntime,
+      'settings-overlay-open': traditionalSettingsWindowVisible,
+    }"
+  >
     <button class="mobile-rail-toggle mobile-only" type="button" @click="sidebarCollapsed = !sidebarCollapsed">
       <el-icon><Expand v-if="sidebarCollapsed" /><Fold v-else /></el-icon>
     </button>

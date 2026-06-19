@@ -20,7 +20,7 @@
       </article>
       <article class="status-card">
         <strong>社区发现</strong>
-        <p>Community GraphRAG 只在增强检索链路里作为全局层能力。</p>
+        <p>社区增强只在增强检索链路里作为全局分析能力。</p>
       </article>
       <article class="status-card">
         <strong>社区报告</strong>
@@ -47,6 +47,7 @@
   display: grid;
   gap: 18px;
   padding: 24px;
+  min-width: 0;
 }
 
 .hero-card,
@@ -56,6 +57,7 @@
   border: 1px solid rgba(214, 132, 70, 0.16);
   border-radius: 20px;
   background: rgba(255, 252, 247, 0.96);
+  min-width: 0;
 }
 
 .eyebrow {
@@ -100,5 +102,42 @@ button {
   border-radius: 999px;
   background: rgba(255, 244, 230, 0.94);
   color: #8a4b16;
+}
+
+@media (max-width: 1199px) {
+  .knowledge-settings-page {
+    padding: 18px;
+  }
+
+  .status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .knowledge-settings-page {
+    gap: 14px;
+    padding: 0;
+  }
+
+  .hero-card,
+  .status-card,
+  .action-panel {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    width: 100%;
+  }
 }
 </style>

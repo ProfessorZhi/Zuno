@@ -24,6 +24,7 @@
   display: grid;
   gap: 18px;
   padding: 24px;
+  min-width: 0;
 }
 
 .hero-card,
@@ -33,6 +34,7 @@
   border: 1px solid rgba(214, 132, 70, 0.16);
   border-radius: 20px;
   background: rgba(255, 252, 247, 0.96);
+  min-width: 0;
 }
 
 .eyebrow {
@@ -75,5 +77,34 @@ button {
   margin-top: 8px;
   color: #7c6b5c;
   line-height: 1.6;
+}
+
+@media (max-width: 1199px) {
+  .domain-pack-page {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 767px) {
+  .domain-pack-page {
+    gap: 14px;
+    padding: 0;
+  }
+
+  .hero-card,
+  .panel,
+  .pack-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .panel-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
 }
 </style>

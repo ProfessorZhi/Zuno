@@ -185,6 +185,8 @@ const backToWorkspace = async () => {
   display: grid;
   grid-template-columns: 284px minmax(0, 1fr);
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   gap: 0;
   padding: 0;
   background: #ffffff;
@@ -198,6 +200,7 @@ const backToWorkspace = async () => {
   display: grid;
   grid-template-rows: auto 1fr auto;
   min-height: 0;
+  min-width: 0;
   gap: 18px;
   padding: 14px 10px 14px 12px;
   border-right: 1px solid #d9e0e7;
@@ -335,38 +338,105 @@ const backToWorkspace = async () => {
   background: #ffffff;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 1199px) {
   .settings-shell-page {
-    grid-template-columns: 1fr;
+    grid-template-columns: 214px minmax(0, 1fr);
   }
 
   .settings-shell-sidebar {
-    min-height: auto;
-    border-right: none;
-    border-bottom: 1px solid #d9e0e7;
+    gap: 14px;
+    padding: 12px 8px 12px 10px;
   }
 
-  .settings-shell-main {
-    min-height: auto;
-  }
-}
-
-@media (max-width: 720px) {
-  .settings-shell-page {
-    grid-template-columns: 1fr;
-  }
-
-  .settings-shell-sidebar {
-    padding: 12px 8px;
+  .settings-shell-nav {
+    min-height: 40px;
+    padding: 0 10px;
   }
 
   .settings-shell-header {
-    min-height: 60px;
-    padding: 0 16px;
+    min-height: 64px;
+    padding: 0 20px;
   }
 
   .settings-shell-content {
-    padding: 16px;
+    padding: 16px 20px 20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .settings-shell-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  .settings-shell-sidebar {
+    grid-template-rows: auto auto auto auto;
+    gap: 8px;
+    min-height: auto;
+    padding: 10px 12px 8px;
+    border-right: none;
+    border-bottom: 1px solid #d9e0e7;
+    background: rgba(237, 244, 251, 0.92);
+  }
+
+  .settings-shell-back {
+    min-height: 36px;
+    padding: 0 8px;
+  }
+
+  .settings-shell-group,
+  .settings-shell-group-account {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .settings-shell-group-account {
+    display: none;
+  }
+
+  .settings-shell-group::-webkit-scrollbar,
+  .settings-shell-group-account::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-shell-nav {
+    width: auto;
+    min-width: max-content;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    flex: 0 0 auto;
+  }
+
+  .settings-shell-nav.active {
+    background: rgba(176, 187, 199, 0.42);
+  }
+
+  .settings-shell-sidebar-footer {
+    display: none;
+  }
+
+  .settings-shell-main {
+    min-height: 0;
+  }
+
+  .settings-shell-header {
+    min-height: 56px;
+    padding: 0 14px;
+  }
+
+  .settings-shell-content {
+    padding: 12px;
   }
 }
 </style>

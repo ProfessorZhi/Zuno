@@ -60,6 +60,7 @@ const retrievalModes = [
   display: grid;
   gap: 18px;
   padding: 24px;
+  min-width: 0;
 }
 
 .hero-card,
@@ -68,6 +69,7 @@ const retrievalModes = [
   border: 1px solid rgba(214, 132, 70, 0.16);
   border-radius: 20px;
   background: rgba(255, 252, 247, 0.96);
+  min-width: 0;
 }
 
 .eyebrow {
@@ -128,6 +130,7 @@ h1 {
 label {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 label span {
@@ -140,5 +143,49 @@ input {
   padding: 0 12px;
   border: 1px solid rgba(148, 163, 184, 0.26);
   border-radius: 12px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1199px) {
+  .knowledge-create-page {
+    padding: 18px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .knowledge-create-page {
+    gap: 14px;
+    padding: 0;
+  }
+
+  .hero-card,
+  .panel {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  h1 {
+    font-size: 21px;
+    line-height: 1.25;
+  }
+
+  .mode-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-card {
+    padding: 14px;
+  }
 }
 </style>
