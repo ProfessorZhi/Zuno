@@ -14,4 +14,5 @@ Rules:
 ## Current Audits
 
 - [Current Model And Retrieval Config Audit](./current-model-and-retrieval-config-audit.md)
+- [Model Registry And Defaults Audit](./model-registry-and-defaults-audit.md)
 - [Tests Folder Organization Audit](./tests-folder-organization-audit.md)
