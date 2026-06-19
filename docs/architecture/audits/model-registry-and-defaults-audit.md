@@ -284,6 +284,10 @@ Immediate next actions for hardening:
 2. add explicit multihop eval profile examples using model names, not DB ids
 3. document a safe local cleanup plan for `conversation_model`
 
+Checker entrypoint after Phase M2:
+
+- `python tools/scripts/check_model_registry_defaults.py`
+
 Not part of this phase:
 
 - no GraphRAG runtime changes
