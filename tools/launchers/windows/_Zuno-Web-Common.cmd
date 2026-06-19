@@ -70,11 +70,48 @@ exit /b 1
 start "" "http://127.0.0.1:8090"
 exit /b 0
 
+:cleanup_stale_stack
+cd /d "%DOCKER_DIR%"
+docker compose down --remove-orphans >nul 2>nul
+for %%C in (
+  zuno-backend
+  zuno-worker
+  zuno-postgres
+  zuno-redis
+  zuno-rabbitmq
+  zuno-neo4j
+  zuno-minio
+  zuno-milvus
+  zuno-etcd
+  zuno-elasticsearch
+  zuno-frontend
+  agentchat-backend
+  agentchat-worker
+  agentchat-postgres
+  agentchat-redis
+  agentchat-rabbitmq
+  agentchat-neo4j
+  agentchat-minio
+  agentchat-milvus
+  agentchat-etcd
+  agentchat-elasticsearch
+  agentchat-frontend
+) do (
+  docker rm -f %%C >nul 2>nul
+)
+for /f "usebackq delims=" %%C in (`powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$names = docker ps -a --format '{{.Names}}' | Where-Object { $_ -match '(^|_)zuno-(backend|worker)$' -or $_ -match '(^|_)agentchat-(backend|worker)$' }; $names"`) do (
+  docker rm -f %%C >nul 2>nul
+)
+exit /b 0
+
 :start
 call :config
 call :ensure_docker
 if errorlevel 1 goto :fail
 call :ensure_local_config
+if errorlevel 1 goto :fail
+call :cleanup_stale_stack
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Starting Zuno Web stack...
@@ -98,7 +135,7 @@ call :ensure_docker
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Stopping Zuno Web stack...
-docker compose down --remove-orphans
+call :cleanup_stale_stack
 if errorlevel 1 goto :fail
 echo.
 echo Zuno Web stack stopped.
@@ -109,6 +146,8 @@ call :config
 call :ensure_docker
 if errorlevel 1 goto :fail
 call :ensure_local_config
+if errorlevel 1 goto :fail
+call :cleanup_stale_stack
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Rebuilding and restarting Zuno Web stack...
@@ -129,9 +168,10 @@ call :ensure_docker
 if errorlevel 1 goto :fail
 call :ensure_local_config
 if errorlevel 1 goto :fail
+call :cleanup_stale_stack
+if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Running full rebuild for Zuno Web stack...
-docker compose down --remove-orphans
 docker compose build --no-cache
 if errorlevel 1 goto :fail
 docker compose up -d --remove-orphans

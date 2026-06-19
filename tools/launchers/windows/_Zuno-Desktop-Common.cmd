@@ -318,7 +318,7 @@ echo.
 echo Zuno Desktop started.
 echo Backend:  http://127.0.0.1:7860
 if /I "%DESKTOP_FRONTEND_MODE%"=="dist" (
-  echo Frontend: %DESKTOP_FRONTEND_FILE%
+  echo Frontend: "%DESKTOP_FRONTEND_FILE%"
 ) else (
   echo Frontend: http://127.0.0.1:%DESKTOP_FRONTEND_PORT%
 )
