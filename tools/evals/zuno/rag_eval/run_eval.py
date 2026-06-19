@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import asyncio
@@ -14,8 +14,8 @@ BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from tools.evals.zuno.rag_eval.metrics import compute_metrics
-from tools.evals.zuno.rag_eval.paths import default_runs_root
+from zuno.evals.rag_eval.metrics import compute_metrics
+from zuno.evals.rag_eval.paths import default_runs_root
 from zuno.services.rag.handler import RagHandler
 from zuno.settings import initialize_app_settings
 from zuno.utils.runtime_observability import configure_langsmith
@@ -1341,3 +1341,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

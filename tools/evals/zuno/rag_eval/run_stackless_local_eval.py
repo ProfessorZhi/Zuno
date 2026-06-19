@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import asyncio
@@ -19,12 +19,12 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.api.services.knowledge import DEFAULT_KNOWLEDGE_CONFIG
-from tools.evals.zuno.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
-from tools.evals.zuno.rag_eval.local_embedding_server import run_dev_server
-from tools.evals.zuno.rag_eval.paths import default_runs_root
-from tools.evals.zuno.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
-from tools.evals.zuno.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
-from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+from zuno.evals.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
+from zuno.evals.rag_eval.local_embedding_server import run_dev_server
+from zuno.evals.rag_eval.paths import default_runs_root
+from zuno.evals.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
+from zuno.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
+from zuno.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 from zuno.schema.chunk import ChunkModel
 from zuno.services.domain_pack.loader import DomainPackLoader
 from zuno.services.graphrag.extractor import GraphExtractor
@@ -509,3 +509,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

@@ -1,9 +1,9 @@
-import json
+﻿import json
 from urllib.request import urlopen
 
 from fastapi.testclient import TestClient
 
-from tools.evals.zuno.rag_eval.local_embedding_server import create_app, run_dev_server
+from zuno.evals.rag_eval.local_embedding_server import create_app, run_dev_server
 
 
 def test_local_embedding_server_healthz():
@@ -90,3 +90,4 @@ def test_local_embedding_server_bridges_chinese_query_and_english_doc_terms():
         return sum(x * y for x, y in zip(a, b))
 
     assert dot(q, related) > dot(q, unrelated)
+

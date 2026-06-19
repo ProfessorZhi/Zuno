@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import asyncio
 import sys
@@ -12,7 +12,7 @@ for runtime_root in (str(BACKEND_ROOT),):
     if runtime_root not in sys.path:
         sys.path.insert(0, runtime_root)
 
-from tools.evals.zuno.rag_eval.run_eval import NO_EVIDENCE_ANSWER, _build_answer
+from zuno.evals.rag_eval.run_eval import NO_EVIDENCE_ANSWER, _build_answer
 
 
 async def _verify_supported_case() -> list[str]:
@@ -97,3 +97,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

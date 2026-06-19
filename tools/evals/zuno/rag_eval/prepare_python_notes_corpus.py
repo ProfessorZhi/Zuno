@@ -1,11 +1,11 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import json
 import shutil
 from pathlib import Path
 
-from tools.evals.zuno.rag_eval.paths import default_corpus_root
+from zuno.evals.rag_eval.paths import default_corpus_root
 
 
 DEFAULT_INCLUDE_NAMES = {
@@ -89,3 +89,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

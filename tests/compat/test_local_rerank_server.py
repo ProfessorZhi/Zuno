@@ -1,9 +1,9 @@
-import json
+﻿import json
 from urllib.request import Request, urlopen
 
 from fastapi.testclient import TestClient
 
-from tools.evals.zuno.rag_eval.local_rerank_server import create_app, run_dev_server
+from zuno.evals.rag_eval.local_rerank_server import create_app, run_dev_server
 
 
 def test_local_rerank_server_ranks_overlap_higher():
@@ -57,3 +57,4 @@ def test_local_rerank_run_dev_server_accepts_http_request():
         with urlopen(request, timeout=3) as response:
             payload = json.loads(response.read().decode("utf-8"))
     assert payload["output"]["results"][0]["index"] == 0
+

@@ -1,15 +1,15 @@
-from pathlib import Path
+﻿from pathlib import Path
 import uuid
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
-from tools.evals.zuno.rag_eval.paths import default_runs_root
+from zuno.evals.rag_eval.paths import default_runs_root
 
 
 def test_stackless_compare_matrix_build_dataset_coverage_warns_on_tiny_slice():
-    from tools.evals.zuno.rag_eval.run_stackless_compare_matrix import _build_dataset_coverage
+    from zuno.evals.rag_eval.run_stackless_compare_matrix import _build_dataset_coverage
 
     temp_dir = default_runs_root() / f"tmp-test-{uuid.uuid4().hex}"
     temp_dir.mkdir(parents=True, exist_ok=True)
@@ -32,7 +32,7 @@ def test_stackless_compare_matrix_build_dataset_coverage_warns_on_tiny_slice():
 
 
 def test_stackless_compare_matrix_write_markdown():
-    from tools.evals.zuno.rag_eval.run_stackless_compare_matrix import write_markdown
+    from zuno.evals.rag_eval.run_stackless_compare_matrix import write_markdown
 
     summary = {
         "dataset_path": "dataset.jsonl",
@@ -104,7 +104,7 @@ def test_stackless_compare_matrix_help_lists_threshold_args():
 
 
 def test_stackless_compare_matrix_build_acceptance():
-    from tools.evals.zuno.rag_eval.run_stackless_compare_matrix import _build_acceptance
+    from zuno.evals.rag_eval.run_stackless_compare_matrix import _build_acceptance
 
     acceptance = _build_acceptance(
         {
@@ -143,3 +143,4 @@ def test_stackless_compare_matrix_build_acceptance():
     assert acceptance["graph_relation_2hop_not_worse_than_baseline"]["passed"] is True
     assert acceptance["graph_relation_citation_not_lower_than_baseline"]["passed"] is True
     assert acceptance["three_hop_only_if_precision_not_hurt"]["passed"] is True
+

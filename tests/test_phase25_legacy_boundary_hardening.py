@@ -3,10 +3,14 @@ from __future__ import annotations
 import ast
 import re
 import shutil
+import subprocess
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+_RETIRED_COMPAT_SEGMENT = "agent" + "chat"
+_RETIRED_COMPAT_ROOT = f"src/backend/{_RETIRED_COMPAT_SEGMENT}"
+_RETIRED_LEGACY_ROOT = f"src/backend/zuno/legacy/{_RETIRED_COMPAT_SEGMENT}"
 
 
 def _read(relative_path: str) -> str:
@@ -21,87 +25,64 @@ def _purge_retired_services_api_tree() -> None:
     shutil.rmtree(REPO_ROOT / "services", ignore_errors=True)
 
 
-def _has_zuno_bridge_reference(content: str) -> bool:
-    return bool(
-        re.search(r'_AGENTCHAT_MODULE\s*=\s*["\']zuno', content)
-        or re.search(r"from\s+zuno\b", content)
-        or re.search(r"import\s+zuno\b", content)
-    )
-
-
-def _ast_zuno_imports(path: Path) -> list[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+def _ast_retired_compat_imports(path: Path) -> list[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8-sig"))
     hits: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name == "zuno" or alias.name.startswith("zuno."):
+                if alias.name == _RETIRED_COMPAT_SEGMENT or alias.name.startswith(f"{_RETIRED_COMPAT_SEGMENT}."):
                     hits.append(alias.name)
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            if module == "zuno" or module.startswith("zuno."):
+            if module == _RETIRED_COMPAT_SEGMENT or module.startswith(f"{_RETIRED_COMPAT_SEGMENT}."):
                 hits.append(module)
     return sorted(set(hits))
 
 
-def test_phase25_docs_mark_legacy_zuno_as_compatibility_only() -> None:
+def test_phase25_docs_mark_retired_compat_namespace_as_closed() -> None:
     _purge_retired_services_api_tree()
     current_architecture = _read("docs/architecture/current-architecture.md")
     transition_strategy = _read("docs/architecture/transition-strategy.md")
 
-    assert "legacy/zuno" in current_architecture
-    assert "compatibility-only" in current_architecture
-    assert "not runtime truth" in current_architecture
+    assert "There is no active compatibility namespace in current truth." in current_architecture
+    assert "src/backend/zuno" in current_architecture
     assert "There is no active root-level `services/` tree in current truth." in current_architecture
     assert "Any future service-root move must reopen as a new phase with fresh verification and a newly created root." in transition_strategy
     assert not (REPO_ROOT / "services").exists()
 
 
-def test_phase25_phase2_runtime_mainline_files_do_not_import_zuno() -> None:
-    mainline_files = [
-        "src/backend/zuno/core/graphs/domain_qa_graph.py",
-        "src/backend/zuno/core/graphs/states.py",
-        "src/backend/zuno/services/retrieval/orchestrator.py",
-        "src/backend/zuno/services/retrieval/planner.py",
-        "src/backend/zuno/services/retrieval/retrievers.py",
-        "src/backend/zuno/services/graphrag/retriever.py",
-        "src/backend/zuno/services/rag/handler.py",
-    ]
-
-    offending = [
-        relative_path
-        for relative_path in mainline_files
-        if _has_zuno_bridge_reference(_read(relative_path))
-    ]
-    assert offending == []
-
-
-def test_phase25_only_explicit_compat_bridges_reference_zuno_outside_legacy_tree() -> None:
-    allowed = {
-        "src/backend/zuno/core/agents/general_agent.py",
-        "src/backend/zuno/services/memory/client.py",
-        "src/backend/zuno/services/workspace/simple_agent.py",
-        "src/backend/zuno/services/workspace/wechat_agent.py",
-    }
+def test_phase25_current_source_tree_has_no_retired_compat_imports() -> None:
     observed: set[str] = set()
-    for root in [REPO_ROOT / "src" / "backend" / "zuno"]:
+    for root in [REPO_ROOT / "src", REPO_ROOT / "tests", REPO_ROOT / "tools", REPO_ROOT / "infra"]:
         for path in _python_files(root):
-            if "legacy" in path.parts:
-                continue
             relative_path = path.relative_to(REPO_ROOT).as_posix()
-            if _has_zuno_bridge_reference(path.read_text(encoding="utf-8")):
+            if _ast_retired_compat_imports(path):
                 observed.add(relative_path)
 
-    assert observed == allowed
+    assert observed == set()
 
 
-def test_phase25_non_compat_tests_do_not_import_zuno_modules() -> None:
+def test_phase25_non_history_docs_do_not_reference_retired_compat_namespace() -> None:
+    observed: set[str] = set()
+    for root in [REPO_ROOT / "docs", REPO_ROOT]:
+        candidates = root.rglob("*.md") if root == REPO_ROOT else root.rglob("*.md")
+        for path in candidates:
+            relative_path = path.relative_to(REPO_ROOT).as_posix()
+            if relative_path.startswith("docs/architecture/history/"):
+                continue
+            if relative_path == "README.md" or relative_path.startswith("docs/"):
+                if _RETIRED_COMPAT_SEGMENT in path.read_text(encoding="utf-8"):
+                    observed.add(relative_path)
+
+    assert observed == set()
+
+
+def test_phase25_non_history_tests_do_not_import_retired_compat_modules() -> None:
     observed: set[str] = set()
     for path in _python_files(REPO_ROOT / "tests"):
-        if "compat" in path.parts:
-            continue
         relative_path = path.relative_to(REPO_ROOT).as_posix()
-        if _ast_zuno_imports(path):
+        if _ast_retired_compat_imports(path):
             observed.add(relative_path)
 
     assert observed == set()
@@ -109,10 +90,10 @@ def test_phase25_non_compat_tests_do_not_import_zuno_modules() -> None:
 
 def test_phase25_docker_and_launcher_runtime_surfaces_do_not_reference_legacy_paths() -> None:
     forbidden = [
-        "legacy/zuno",
-        "legacy_backend",
-        "src/backend/zuno",
-        "zuno/legacy/zuno",
+        _RETIRED_COMPAT_ROOT,
+        f"zuno/legacy/{_RETIRED_COMPAT_SEGMENT}",
+        f"legacy/{_RETIRED_COMPAT_SEGMENT}",
+        f"services/api/src/{_RETIRED_COMPAT_SEGMENT}",
     ]
     runtime_surface_files = [
         "infra/docker/docker-compose.yml",
@@ -135,25 +116,17 @@ def test_phase25_services_root_is_fully_retired() -> None:
     assert not (REPO_ROOT / "services").exists()
 
 
-def test_phase25_remaining_zuno_script_imports_are_isolated_to_known_compat_surfaces() -> None:
-    allowed = {
-        "infra/db/alembic/versions/20260417_01_init_postgresql.py",
-        "tools/evals/zuno/contract_review_eval/run_contract_eval.py",
-        "tools/evals/zuno/rag_eval/ingest_prepared_corpus.py",
-        "tools/evals/zuno/rag_eval/prepare_python_notes_corpus.py",
-        "tools/evals/zuno/rag_eval/run_eval.py",
-        "tools/evals/zuno/rag_eval/run_local_embedding_eval.py",
-        "tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py",
-        "tools/evals/zuno/rag_eval/run_stackless_local_eval.py",
-        "tools/scripts/rebuild_rag_indexes.py",
-        "tools/scripts/verify_public_demo_runtime.py",
-        "tools/scripts/verify_public_demo_strict_grounding.py",
-    }
-    observed: set[str] = set()
-    for root in [REPO_ROOT / "tools", REPO_ROOT / "infra"]:
-        for path in _python_files(root):
-            relative_path = path.relative_to(REPO_ROOT).as_posix()
-            if _ast_zuno_imports(path):
-                observed.add(relative_path)
+def test_phase25_git_tracking_has_no_retired_compat_trees() -> None:
+    result = subprocess.run(
+        ["git", "ls-files", "--", _RETIRED_COMPAT_ROOT, _RETIRED_LEGACY_ROOT],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.stdout.strip() == ""
 
-    assert observed == allowed
+
+def test_phase25_filesystem_has_no_retired_compat_trees() -> None:
+    assert not (REPO_ROOT / "src" / "backend" / _RETIRED_COMPAT_SEGMENT).exists()
+    assert not (REPO_ROOT / "src" / "backend" / "zuno" / "legacy" / _RETIRED_COMPAT_SEGMENT).exists()

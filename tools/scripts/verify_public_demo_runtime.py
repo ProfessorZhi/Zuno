@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import asyncio
 import sys
@@ -13,7 +13,7 @@ for runtime_root in (str(BACKEND_ROOT),):
     if runtime_root not in sys.path:
         sys.path.insert(0, runtime_root)
 
-from tools.evals.zuno.contract_review_eval.run_contract_eval import run
+from zuno.evals.contract_review_eval.run_contract_eval import run
 
 
 def _validate_result(payload: dict, report_root: Path) -> list[str]:
@@ -82,3 +82,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import asyncio
@@ -18,7 +18,7 @@ if str(BACKEND_ROOT) not in sys.path:
 from zuno.api.services.llm import LLMService
 from zuno.database.dao.llm import LLMDao
 from zuno.database.models.user import SystemUser
-from tools.evals.zuno.rag_eval.paths import default_runs_root
+from zuno.evals.rag_eval.paths import default_runs_root
 from zuno.settings import app_settings, initialize_app_settings
 
 
@@ -346,8 +346,8 @@ async def _run_stackless_fallback(
     direct_local_embedding_api_key: str | None,
     rerank_model_id: str | None,
 ) -> dict[str, Any]:
-    from tools.evals.zuno.rag_eval.run_stackless_local_eval import run_stackless_local_eval
-    from tools.evals.zuno.rag_eval.summarize_eval_profiles import summarize, write_markdown
+    from zuno.evals.rag_eval.run_stackless_local_eval import run_stackless_local_eval
+    from zuno.evals.rag_eval.summarize_eval_profiles import summarize, write_markdown
 
     result = await run_stackless_local_eval(
         manifest_path=manifest_path,
@@ -401,9 +401,9 @@ async def run_local_embedding_eval(
     direct_local_embedding_base_url: str | None = None,
     direct_local_embedding_api_key: str | None = None,
 ) -> dict[str, Any]:
-    from tools.evals.zuno.rag_eval.ingest_prepared_corpus import ingest_prepared_corpus
-    from tools.evals.zuno.rag_eval.run_eval import resolve_profiles, run_eval
-    from tools.evals.zuno.rag_eval.summarize_eval_profiles import summarize, write_markdown
+    from zuno.evals.rag_eval.ingest_prepared_corpus import ingest_prepared_corpus
+    from zuno.evals.rag_eval.run_eval import resolve_profiles, run_eval
+    from zuno.evals.rag_eval.summarize_eval_profiles import summarize, write_markdown
 
     try:
         preflight = await preflight_local_embedding_eval(
@@ -562,3 +562,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

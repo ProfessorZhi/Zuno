@@ -1,8 +1,8 @@
-import asyncio
+﻿import asyncio
 
 
 def test_build_local_graph_retriever_uses_contract_domain_pack():
-    from tools.evals.zuno.rag_eval.run_stackless_local_eval import _build_local_graph_retriever
+    from zuno.evals.rag_eval.run_stackless_local_eval import _build_local_graph_retriever
     from zuno.schema.chunk import ChunkModel
 
     chunk = ChunkModel(
@@ -47,3 +47,4 @@ def test_build_local_graph_retriever_uses_contract_domain_pack():
     )
 
     assert result["structured_paths"]
+

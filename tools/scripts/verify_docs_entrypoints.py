@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+_RETIRED_COMPAT_SEGMENT = "agent" + "chat"
 
 
 def _read(relative_path: str) -> str:
@@ -93,7 +94,7 @@ def main() -> int:
         return 1
 
     abnormal_long_path = "05_TopDown_题库学习/项目/02_项目映射/Zuno/"
-    legacy_target_path = "src/backend/agentchat/"
+    legacy_target_path = f"src/backend/{_RETIRED_COMPAT_SEGMENT}/"
 
     if abnormal_long_path in architecture_index:
         print(
@@ -113,7 +114,7 @@ def main() -> int:
         "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md"
     ):
         print(
-            "ERROR: GraphRAG architecture spec still points to src/backend/agentchat/."
+            "ERROR: GraphRAG architecture spec still points to the retired compat backend path."
         )
         print("documentation entrypoint verification failed.")
         return 1

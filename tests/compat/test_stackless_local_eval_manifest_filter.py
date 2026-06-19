@@ -1,10 +1,10 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import tempfile
 from pathlib import Path
 
-from tools.evals.zuno.rag_eval.run_stackless_local_eval import _filter_manifest_by_dataset
+from zuno.evals.rag_eval.run_stackless_local_eval import _filter_manifest_by_dataset
 
 
 def test_filter_manifest_by_dataset_keeps_variant_files() -> None:
@@ -41,3 +41,4 @@ def test_filter_manifest_by_dataset_keeps_variant_files() -> None:
         if dataset_path.exists():
             dataset_path.unlink()
         workspace_tmp.rmdir()
+

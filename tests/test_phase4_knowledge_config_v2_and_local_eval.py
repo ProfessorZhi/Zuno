@@ -64,5 +64,4 @@ def test_phase4_runtime_defaults_and_zuno_eval_compat_imports(monkeypatch) -> No
     importlib.import_module("zuno.api.services.knowledge_file")
     importlib.import_module("zuno.services.rag.handler")
     importlib.import_module("zuno.services.graphrag.retriever")
-    importlib.import_module("tools.evals.zuno.rag_eval.ingest_prepared_corpus")
-
+    importlib.import_module("zuno.evals.rag_eval.ingest_prepared_corpus")

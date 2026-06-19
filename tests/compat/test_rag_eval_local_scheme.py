@@ -1,5 +1,5 @@
-from tools.evals.zuno.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
-from tools.evals.zuno.rag_eval.run_eval import resolve_profiles
+﻿from zuno.evals.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
+from zuno.evals.rag_eval.run_eval import resolve_profiles
 
 
 def test_build_eval_knowledge_config_includes_local_embedding_model_refs():
@@ -24,3 +24,4 @@ def test_resolve_profiles_supports_local_compare_profile_set():
 def test_resolve_profiles_supports_graph_compare_profile_set():
     profiles = resolve_profiles(profile_set="graph_compare")
     assert profiles == ["baseline_rag", "rag_graph_chunk_backed", "rag_graph_chunk_backed_3hop"]
+
