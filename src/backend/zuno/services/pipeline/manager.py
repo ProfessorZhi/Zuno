@@ -283,6 +283,7 @@ class KnowledgePipelineManager:
                     knowledge_file_id=task.knowledge_file_id,
                     file_patch=build_success_file_patch(KnowledgeTaskStage.graph_indexing, task_id),
                 )
+                await KnowledgeService.mark_community_stale(task.knowledge_id)
             else:
                 await self._record_stage(
                     task_id,

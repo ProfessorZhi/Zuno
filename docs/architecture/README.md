@@ -6,7 +6,7 @@ Its job is to keep four things aligned:
 
 1. the current repo reality
 2. the target architecture
-3. the active upgrade phases
+3. the completed and active architecture programs
 4. the stable architecture specs that explain why the system is shaped this way
 
 ## Start Here
@@ -18,7 +18,8 @@ If you want the shortest current path, read:
 3. [Target Architecture](target-architecture.md)
 4. [Transition Strategy](transition-strategy.md)
 5. [Architecture Upgrade Phases](./phases/README.md)
-6. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
+6. [Knowledge Product Refactor + Deep GraphRAG V1](./programs/knowledge-product-refactor-deep-graphrag-v1/README.md)
+7. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
 
 ## Directory Map
 
@@ -29,6 +30,7 @@ docs/architecture/
   target-architecture.md
   transition-strategy.md
   phases/
+  programs/
   specs/
   decisions/
   history/
@@ -45,6 +47,9 @@ docs/architecture/
 - `phases/`
   - phase model for the architecture program
   - current phase completion truth and closure gates
+- `programs/`
+  - new independent architecture programs that start after a previous round is already closed
+  - use this layer when future work should not overwrite earlier completion truth
 - `specs/`
   - stable architecture definitions
 - `decisions/`

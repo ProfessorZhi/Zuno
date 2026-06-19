@@ -121,6 +121,18 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
             "needs_query_rewrite": False,
         },
     },
+    "local_graphrag": {
+        "retrieval_mode": "rag_graph",
+        "retrieval_options": {
+            "top_k": 5,
+            "rerank_enabled": False,
+            "rerank_top_k": 5,
+            "score_threshold": None,
+            "graph_hop_limit": 2,
+            "max_paths_per_entity": 5,
+            "needs_query_rewrite": False,
+        },
+    },
     "rag_graph_rerank_recall_first": {
         "retrieval_mode": "rag_graph",
         "retrieval_options": {
@@ -157,6 +169,18 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
             "needs_query_rewrite": False,
         },
     },
+    "deep_graphrag": {
+        "retrieval_mode": "rag_graph",
+        "retrieval_options": {
+            "top_k": 5,
+            "rerank_enabled": False,
+            "rerank_top_k": 5,
+            "score_threshold": None,
+            "graph_hop_limit": 3,
+            "max_paths_per_entity": 10,
+            "needs_query_rewrite": False,
+        },
+    },
     "rag_graph_rerank_recall_first_3hop": {
         "retrieval_mode": "rag_graph",
         "retrieval_options": {
@@ -173,6 +197,7 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
 PROFILE_SETS: dict[str, list[str]] = {
     "local_compare": ["baseline_rag", "rag_rerank", "rag_graph_chunk_backed"],
     "graph_compare": ["baseline_rag", "rag_graph_chunk_backed", "rag_graph_chunk_backed_3hop"],
+    "deep_graphrag_compare": ["baseline_rag", "local_graphrag", "deep_graphrag"],
 }
 
 

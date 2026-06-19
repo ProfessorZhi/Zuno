@@ -42,6 +42,24 @@
 4. 目标未达成前，不把任务标记为完成。
 5. 目标模式下，停止条件不是“解释完了”，而是“验收点满足了”。
 
+## Phase Program 规则
+
+1. 不允许覆盖旧 `docs/architecture/phases/README.md` 中已经完成的 `Phase 0-6` closure truth。
+2. 新一轮架构或产品需求，必须新开 independent phase program。
+3. 新 program 的正式真相写入 `docs/architecture/programs/`。
+4. 过期计划、临时草稿、被替代的执行材料归档到 `docs/architecture/history/`。
+5. `.agent/` 如果被 gitignore，只作为本地执行缓存，不作为仓库级真相。
+6. 每个 Phase 开始前必须先列：
+   - `goal`
+   - `files to change`
+   - `files not to change`
+   - `verification commands`
+7. 每个 Phase 完成后必须输出：
+   - `changed files`
+   - `key decisions`
+   - `verification commands`
+   - `remaining risks`
+
 ## 优先参考
 
 ### 人类正式文档入口

@@ -31,37 +31,83 @@ class RetrievalPlanner:
         processed_query: ProcessedQuery,
         *,
         knowledge_capability: str = "rag",
+        rerank_available: bool = True,
     ) -> RetrievalPlan:
         requested_mode = normalize_retrieval_mode(request.mode)
         relation_question = bool(processed_query.query_features.get("relation_question"))
+        global_question = bool(processed_query.query_features.get("global_question"))
+        evidence_required = bool(processed_query.query_features.get("evidence_required"))
         scope_policy = dict(request.scope_policy or {})
         index_version = dict(request.index_version or {})
         index_health = dict(request.index_health or {})
         scope_status = str(scope_policy.get("status") or "active").strip().lower()
         graph_health = str(index_health.get("graph") or index_health.get("graph_status") or "ready").strip().lower()
+        community_health = str(
+            index_health.get("community")
+            or index_health.get("community_status")
+            or "not_built"
+        ).strip().lower()
+        graph_available = knowledge_capability == "rag_graph" and graph_health not in {"unavailable", "failed", "stale"}
+        community_ready = community_health in {"ready", "active"}
 
         if requested_mode == "auto":
-            resolved_mode = "hybrid" if relation_question and knowledge_capability == "rag_graph" else "rag"
+            resolved_mode = "rag_graph_deep" if knowledge_capability == "rag_graph" else "rag"
         else:
             resolved_mode = requested_mode
         if scope_status != "active":
             resolved_mode = "rag"
         requested_profile = str(request.requested_profile or "auto").strip() or "auto"
 
-        enabled_retrievers = [] if scope_status != "active" else ["vector"]
-        if enabled_retrievers and self.enable_keyword_recall and resolved_mode in {"rag", "hybrid"}:
-            enabled_retrievers.append("bm25")
-        if (
-            resolved_mode in {"graphrag", "hybrid"}
-            and knowledge_capability == "rag_graph"
-            and graph_health not in {"unavailable", "failed", "stale"}
-        ):
-            enabled_retrievers.append("graph")
-        if resolved_mode == "graphrag" and "graph" not in enabled_retrievers:
+        internal_route = "standard_rag"
+        route_trace = {
+            "requested_internal_route": "standard_rag",
+            "degraded_from": None,
+            "graph_required": False,
+            "community_required": False,
+            "local_graph_required": False,
+        }
+        if resolved_mode == "rag_graph_deep":
+            if global_question and evidence_required:
+                internal_route = "drift_like"
+            elif global_question:
+                internal_route = "community_global"
+            elif relation_question:
+                internal_route = "local_graphrag"
+            else:
+                internal_route = "standard_rag"
+        elif resolved_mode == "local_graphrag":
+            internal_route = "local_graphrag"
+        elif resolved_mode == "community_global":
+            internal_route = "community_global"
+        elif resolved_mode == "drift_like":
+            internal_route = "drift_like"
+
+        route_trace["requested_internal_route"] = internal_route
+        route_trace["graph_required"] = internal_route in {"local_graphrag", "drift_like"}
+        route_trace["community_required"] = internal_route in {"community_global", "drift_like"}
+        route_trace["local_graph_required"] = internal_route in {"local_graphrag", "drift_like"}
+
+        if internal_route in {"community_global", "drift_like"} and not community_ready:
+            route_trace["degraded_from"] = internal_route
+            internal_route = "local_graphrag"
+
+        if internal_route == "local_graphrag" and not graph_available:
+            route_trace["degraded_from"] = route_trace["degraded_from"] or "local_graphrag"
+            internal_route = "standard_rag"
             resolved_mode = "rag"
+
+        enabled_retrievers = [] if scope_status != "active" else ["vector"]
+        if enabled_retrievers and self.enable_keyword_recall and internal_route in {"standard_rag", "local_graphrag"}:
+            enabled_retrievers.append("bm25")
+        if internal_route == "local_graphrag" and graph_available:
+            enabled_retrievers.append("graph")
         resolved_profile = self._resolve_profile(
             requested_profile,
-            resolved_mode=resolved_mode,
+            resolved_mode=(
+                "graphrag"
+                if internal_route == "local_graphrag"
+                else ("hybrid" if internal_route == "standard_rag" and resolved_mode != "rag" else resolved_mode)
+            ),
             relation_question=relation_question,
             knowledge_capability=knowledge_capability,
         )
@@ -81,8 +127,13 @@ class RetrievalPlanner:
         fallback_policy.update(request.fallback_policy or {})
         if scope_status != "active":
             fallback_policy["allow_retry"] = False
-        if graph_health in {"unavailable", "failed", "stale"}:
-            fallback_policy.setdefault("graph_degraded", True)
+        if route_trace["degraded_from"] in {"community_global", "drift_like"}:
+            fallback_policy["community_degraded"] = True
+        if not graph_available and knowledge_capability == "rag_graph":
+            fallback_policy["graph_degraded"] = True
+        rerank_enabled = request.rerank_enabled is not False and rerank_available
+        if request.rerank_enabled is not False and not rerank_available:
+            fallback_policy["rerank_degraded"] = True
         trace_policy = {
             "enabled": request.trace_enabled,
             "include_processed_query": True,
@@ -94,6 +145,8 @@ class RetrievalPlanner:
         return RetrievalPlan(
             requested_mode=requested_mode,
             resolved_mode=resolved_mode,
+            internal_route=internal_route,
+            route_trace=route_trace,
             requested_profile=requested_profile,
             resolved_profile=resolved_profile,
             enabled_retrievers=enabled_retrievers,
@@ -109,7 +162,11 @@ class RetrievalPlanner:
                 for name in enabled_retrievers
             },
             fusion_policy={"name": "query_aware"},
-            rerank_policy={"enabled": request.rerank_enabled, "top_k": request.rerank_top_k or request.top_k},
+            rerank_policy={
+                "enabled": rerank_enabled,
+                "top_k": request.rerank_top_k or request.top_k,
+                "strategy": "rerank" if rerank_enabled else "score_sort",
+            },
             budget_policy=budget_policy,
             fallback_policy=fallback_policy,
             trace_policy=trace_policy,

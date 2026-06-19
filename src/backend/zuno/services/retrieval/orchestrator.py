@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from zuno.services.graphrag.models import normalize_retrieval_mode
+from zuno.services.graphrag.community.service import CommunityGraphService
 from zuno.services.retrieval.fusion import RetrievalFusion
 from zuno.services.retrieval.models import ProcessedQuery, RetrievalRequest, RetrievedDocument
 from zuno.services.retrieval.planner import RetrievalPlanner
@@ -43,6 +44,7 @@ class RetrievalOrchestrator:
         query_processor: QueryProcessor | None = None,
         fusion: RetrievalFusion | None = None,
         keyword_retriever=None,
+        community_service: CommunityGraphService | None = None,
         max_rounds: int = 3,
     ):
         self.rag_retriever = rag_retriever or RagRetrieverAdapter()
@@ -52,7 +54,85 @@ class RetrievalOrchestrator:
         self.planner = planner or RetrievalPlanner()
         self.query_processor = query_processor or QueryProcessor()
         self.fusion = fusion or RetrievalFusion()
+        self.community_service = community_service or CommunityGraphService()
         self.max_rounds = max(1, min(int(max_rounds or 1), 3))
+
+    async def _run_community_global(
+        self,
+        query: str,
+        knowledge_ids: list[str],
+        retrieval_options: dict,
+    ) -> dict:
+        knowledge_id = knowledge_ids[0] if knowledge_ids else ""
+        index_health = dict(retrieval_options.get("index_health") or {})
+        community_version = str(index_health.get("community_version") or "v0")
+        communities = await self.community_service.load_communities(
+            knowledge_id,
+            status="ready",
+            community_version=community_version,
+        )
+        report_payload = self.community_service.search_reports(query, communities, limit=retrieval_options.get("top_k") or 3)
+        answer_payload = self.community_service.build_global_answer(query, report_payload)
+        return {
+            "content": answer_payload.get("content") or "",
+            "used_communities": list(report_payload.get("used_communities") or []),
+            "supporting_chunks": list(report_payload.get("supporting_chunks") or []),
+            "community_trace": dict(report_payload.get("community_trace") or {}),
+            "map_results": list(answer_payload.get("map_results") or []),
+            "reduce_trace": dict(answer_payload.get("reduce_trace") or {}),
+        }
+
+    async def _run_drift_like(
+        self,
+        query: str,
+        knowledge_ids: list[str],
+        retrieval_options: dict,
+    ) -> dict:
+        knowledge_id = knowledge_ids[0] if knowledge_ids else ""
+        index_health = dict(retrieval_options.get("index_health") or {})
+        community_version = str(index_health.get("community_version") or "v0")
+        communities = await self.community_service.load_communities(
+            knowledge_id,
+            status="ready",
+            community_version=community_version,
+        )
+        report_payload = self.community_service.search_reports(query, communities, limit=retrieval_options.get("top_k") or 3)
+        drift_plan = self.community_service.build_drift_plan(query, report_payload)
+
+        follow_up_questions = list(drift_plan.get("follow_up_questions") or [])[:1]
+        evidence_parts: list[str] = []
+        used_paths: list[str] = []
+        citation_chunks: list[str] = []
+        final_graph_result = {"used_communities": list(report_payload.get("used_communities") or []), "follow_up_questions": follow_up_questions}
+        for follow_up in follow_up_questions:
+            graph_result = await self.graph_retriever.retrieve(follow_up, knowledge_ids, retrieval_options)
+            final_graph_result = graph_result | final_graph_result
+            content = str(graph_result.get("content") or "").strip()
+            if content:
+                evidence_parts.append(content)
+            used_paths.extend(list(graph_result.get("paths") or []))
+            for document in graph_result.get("documents") or []:
+                chunk_id = document.get("chunk_id")
+                if chunk_id and chunk_id not in citation_chunks:
+                    citation_chunks.append(chunk_id)
+
+        final_content_parts = [str(drift_plan.get("broad_answer") or "").strip()]
+        final_content_parts.extend(part for part in evidence_parts if part)
+        final_content = "\n".join(part for part in final_content_parts if part)
+        return {
+            "content": final_content,
+            "used_communities": list(report_payload.get("used_communities") or []),
+            "supporting_chunks": list(report_payload.get("supporting_chunks") or []),
+            "community_trace": dict(report_payload.get("community_trace") or {}),
+            "follow_up_questions": follow_up_questions,
+            "used_paths": used_paths,
+            "drift_trace": {
+                "broad_answer": drift_plan.get("broad_answer"),
+                "follow_up_count": len(follow_up_questions),
+            },
+            "graph_result": final_graph_result,
+            "citation_chunks": citation_chunks,
+        }
 
     def _should_use_rag_entry_chunk(self, query: str, retrieval_options: dict) -> bool:
         if not retrieval_options.get("use_rag_entry_chunk", True):
@@ -69,10 +149,11 @@ class RetrievalOrchestrator:
 
     @staticmethod
     def _result_quality(mode: str, result: dict) -> str | None:
+        internal_route = str(result.get("internal_route") or mode or "").strip().lower()
         raw_content = (result.get("raw_content") or result.get("content") or "").strip()
         if not raw_content or raw_content == "No relevant documents found.":
             return "empty_result"
-        if mode == "graphrag":
+        if internal_route == "local_graphrag":
             if not result.get("paths") and not result.get("entities"):
                 return "graph_result_empty"
             return None
@@ -174,13 +255,30 @@ class RetrievalOrchestrator:
             index_health=dict(retrieval_options.get("index_health") or {}),
         )
         knowledge_capability = retrieval_options.get("knowledge_capability") or ("rag_graph" if knowledge_ids else "rag")
-        plan = self.planner.build_plan(request, processed_query, knowledge_capability=knowledge_capability)
+        plan = self.planner.build_plan(
+            request,
+            processed_query,
+            knowledge_capability=knowledge_capability,
+            rerank_available=bool(retrieval_options.get("rerank_available", True)),
+        )
 
         documents_by_source: dict[str, list[RetrievedDocument]] = {}
         retriever_runs: list[dict] = []
         rag_result = {"content": "", "raw_content": "", "documents": [], "document_count": 0}
         keyword_result = {"content": "", "raw_content": "", "documents": []}
         graph_result = {"content": "", "raw_content": "", "documents": [], "entities": [], "paths": []}
+        community_result = {
+            "content": "",
+            "used_communities": [],
+            "supporting_chunks": [],
+            "community_trace": {},
+            "map_results": [],
+            "reduce_trace": {},
+            "follow_up_questions": [],
+            "used_paths": [],
+            "drift_trace": {},
+            "citation_chunks": [],
+        }
 
         if "vector" in plan.enabled_retrievers:
             rag_result = await self.rag_retriever.retrieve(query, knowledge_ids, retrieval_options)
@@ -215,11 +313,38 @@ class RetrievalOrchestrator:
             documents_by_source["graph"] = docs
             retriever_runs.append({"source": "graph", "result_count": len(docs), "mode": mode})
 
+        if plan.internal_route == "community_global":
+            community_result = await self._run_community_global(query, knowledge_ids, retrieval_options)
+            retriever_runs.append(
+                {
+                    "source": "community",
+                    "result_count": len(community_result.get("used_communities") or []),
+                    "mode": mode,
+                }
+            )
+        elif plan.internal_route == "drift_like":
+            community_result = await self._run_drift_like(query, knowledge_ids, retrieval_options)
+            graph_result = dict(community_result.get("graph_result") or graph_result)
+            retriever_runs.append(
+                {
+                    "source": "community",
+                    "result_count": len(community_result.get("used_communities") or []),
+                    "mode": mode,
+                }
+            )
+
         fusion_result = self.fusion.merge(query=query, documents_by_source=documents_by_source, top_k=retrieval_options.get("top_k"))
         merged_content = "\n".join(doc.content for doc in fusion_result.documents if doc.content.strip())
-        if mode == "graphrag":
+        if plan.internal_route == "local_graphrag":
             content = merged_content or graph_result.get("content") or rag_result.get("content") or ""
-        elif mode == "hybrid":
+        elif plan.internal_route in {"community_global", "drift_like"}:
+            parts: list[str] = []
+            for part in [community_result.get("content"), graph_result.get("content"), merged_content, rag_result.get("content"), keyword_result.get("content")]:
+                cleaned = str(part or "").strip()
+                if cleaned and cleaned not in parts:
+                    parts.append(cleaned)
+            content = "\n".join(parts)
+        elif mode in {"hybrid", "hybrid_rag"}:
             if merged_content:
                 parts = [merged_content]
                 graph_content = str(graph_result.get("content") or "").strip()
@@ -239,6 +364,7 @@ class RetrievalOrchestrator:
         top_score = max((doc.score for doc in fusion_result.documents), default=rag_result.get("top_score"))
         return {
             "mode": plan.resolved_mode,
+            "internal_route": plan.internal_route,
             "content": content or "No relevant documents found.",
             "raw_content": content or "",
             "documents": [doc.to_dict() for doc in fusion_result.documents],
@@ -253,6 +379,7 @@ class RetrievalOrchestrator:
             "rag_result": rag_result,
             "keyword_result": keyword_result,
             "graph_result": graph_result,
+            "community_result": community_result,
             "plan": plan.to_dict(),
             "retriever_runs": retriever_runs,
             "processed_query": {
@@ -283,10 +410,12 @@ class RetrievalOrchestrator:
         )
         first_plan = dict(first_pass.get("plan") or {})
         first_mode = first_pass["mode"]
+        first_internal_route = first_pass.get("internal_route") or first_plan.get("internal_route")
         first_quality = self._result_quality(first_mode, first_pass)
         rounds = [{
             "round": 1,
             "mode": first_mode,
+            "internal_route": first_internal_route,
             "query": candidate_queries[0],
             "trigger": "initial",
             "quality_reason": first_quality,
@@ -313,6 +442,7 @@ class RetrievalOrchestrator:
             rounds.append({
                 "round": index,
                 "mode": current_pass["mode"],
+                "internal_route": current_pass.get("internal_route"),
                 "query": attempt["query"],
                 "trigger": attempt["trigger"],
                 "quality_reason": current_quality,
@@ -328,6 +458,7 @@ class RetrievalOrchestrator:
 
         final_mode = final_pass["mode"]
         final_plan = dict(final_pass.get("plan") or first_plan)
+        final_internal_route = final_pass.get("internal_route") or final_plan.get("internal_route")
         second_pass_used = len(rounds) >= 2
         metadata = {
             "plan": final_plan,
@@ -337,7 +468,23 @@ class RetrievalOrchestrator:
             "requested_mode": first_plan.get("requested_mode"),
             "requested_profile": first_plan.get("requested_profile"),
             "resolved_mode": final_plan.get("resolved_mode") or final_mode,
+            "internal_route": final_internal_route,
+            "route_trace": dict(final_plan.get("route_trace") or {}),
             "resolved_profile": final_plan.get("resolved_profile"),
+            "enabled_retrievers": list(final_plan.get("enabled_retrievers") or []),
+            "used_vector": any(
+                run.get("source") == "vector" for run in (final_pass.get("retriever_runs") or [])
+            ),
+            "used_bm25": any(run.get("source") == "bm25" for run in (final_pass.get("retriever_runs") or [])),
+            "used_graph": any(run.get("source") == "graph" for run in (final_pass.get("retriever_runs") or [])),
+            "used_communities": list(final_pass.get("community_result", {}).get("used_communities") or []),
+            "used_paths": list(final_pass.get("community_result", {}).get("used_paths") or final_pass.get("paths") or []),
+            "supporting_chunks": list(final_pass.get("community_result", {}).get("supporting_chunks") or []),
+            "follow_up_questions": list(final_pass.get("community_result", {}).get("follow_up_questions") or []),
+            "map_results": list(final_pass.get("community_result", {}).get("map_results") or []),
+            "reduce_trace": dict(final_pass.get("community_result", {}).get("reduce_trace") or {}),
+            "community_trace": dict(final_pass.get("community_result", {}).get("community_trace") or {}),
+            "drift_trace": dict(final_pass.get("community_result", {}).get("drift_trace") or {}),
             "budget_policy": dict(final_plan.get("budget_policy") or {}),
             "fallback_policy": dict(final_plan.get("fallback_policy") or {}),
             "trace_policy": dict(final_plan.get("trace_policy") or {}),
@@ -354,6 +501,12 @@ class RetrievalOrchestrator:
             "rounds": rounds,
             "query_variants": candidate_queries,
             "rewritten_query_used": any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds),
+            "rerank_info": dict(final_plan.get("rerank_policy") or {}),
+            "citation_chunks": list(final_pass.get("community_result", {}).get("citation_chunks") or [
+                doc.get("chunk_id")
+                for doc in final_pass.get("documents", [])
+                if doc.get("chunk_id")
+            ]),
             "first_pass_quality": {
                 "document_count": first_pass.get("document_count"),
                 "top_score": first_pass.get("top_score"),

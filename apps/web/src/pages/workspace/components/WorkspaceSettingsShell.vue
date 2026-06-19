@@ -11,8 +11,12 @@ import AgentEditor from '../../agent/agent-editor.vue'
 import AgentSkillPage from '../../agent-skill'
 import Dashboard from '../../dashboard'
 import Knowledge from '../../knowledge'
-import KnowledgeConfig from '../../knowledge/knowledge-config.vue'
+import KnowledgeCreate from '../../knowledge/knowledge-create.vue'
+import KnowledgeDomainPackCreate from '../../knowledge/domain-pack-create.vue'
+import KnowledgeDomainPackDetail from '../../knowledge/domain-pack-detail.vue'
+import KnowledgeDomainPacks from '../../knowledge/domain-pack-list.vue'
 import KnowledgeFile from '../../knowledge/knowledge-file.vue'
+import KnowledgeSettings from '../../knowledge/knowledge-settings.vue'
 import McpServer from '../../mcp-server'
 import Model from '../../model'
 import Profile from '../../profile'
@@ -38,8 +42,13 @@ const settingsComponentByRouteName: Record<string, Component> = {
   workspaceSettingsAgentEditor: markRaw(AgentEditor),
   workspaceSettingsModel: markRaw(Model),
   workspaceSettingsKnowledge: markRaw(Knowledge),
+  workspaceSettingsKnowledgeCreate: markRaw(KnowledgeCreate),
   workspaceSettingsKnowledgeFile: markRaw(KnowledgeFile),
-  workspaceSettingsKnowledgeConfig: markRaw(KnowledgeConfig),
+  workspaceSettingsKnowledgeSettings: markRaw(KnowledgeSettings),
+  workspaceSettingsKnowledgeConfig: markRaw(KnowledgeSettings),
+  workspaceSettingsKnowledgeDomainPacks: markRaw(KnowledgeDomainPacks),
+  workspaceSettingsKnowledgeDomainPackCreate: markRaw(KnowledgeDomainPackCreate),
+  workspaceSettingsKnowledgeDomainPackDetail: markRaw(KnowledgeDomainPackDetail),
   workspaceSettingsMcp: markRaw(McpServer),
   workspaceSettingsTool: markRaw(Tool),
   workspaceSettingsSkill: markRaw(AgentSkillPage),

@@ -53,6 +53,16 @@ Phase status:
 - `Community GraphRAG` remains a later layer, not the current default retrieval mainline.
 - `DRIFT-like Search` remains a future slot, not a committed runtime feature.
 
+## New Independent Program Link
+
+The earlier `Phase 0-6` files remain the completed closure truth for the previous architecture round.
+
+The next knowledge-system round now lives in a separate independent program:
+
+- [Knowledge Product Refactor + Deep GraphRAG V1](../programs/knowledge-product-refactor-deep-graphrag-v1/README.md)
+
+Do not rewrite the earlier `Phase 0-6` files to carry that new work.
+
 Relative path hints:
 
 - `../history/README.md`

@@ -7,6 +7,7 @@ from zuno.api.v1 import (
     completion,
     config,
     dialog,
+    domain_packs,
     history,
     knowledge,
     knowledge_file,
@@ -30,6 +31,7 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(config.router)
 router.include_router(completion.router)
 router.include_router(dialog.router)
+router.include_router(domain_packs.router)
 router.include_router(message.router)
 router.include_router(agent.router)
 router.include_router(history.router)

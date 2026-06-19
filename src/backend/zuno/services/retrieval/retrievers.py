@@ -17,6 +17,7 @@ def _guess_keyword_heavy(query: str) -> bool:
 class QueryProcessor:
     async def process(self, query: str) -> Any:
         normalized = str(query or "").strip()
+        lower = normalized.lower()
         return {
             "original_query": query,
             "normalized_query": normalized,
@@ -25,6 +26,16 @@ class QueryProcessor:
             "query_features": {
                 "relation_question": "关系" in normalized
                 or any(word in normalized.lower() for word in ["relation", "relationship", "graph"]),
+                "global_question": any(
+                    phrase in normalized
+                    for phrase in ["整体", "总体", "全局", "趋势", "主题", "高频风险", "主要有哪些"]
+                )
+                or any(word in lower for word in ["overall", "global", "trend", "themes"]),
+                "evidence_required": any(
+                    phrase in normalized
+                    for phrase in ["依据", "证据", "条款依据", "引用", "出处"]
+                )
+                or any(word in lower for word in ["evidence", "citation", "supporting"]),
                 "keyword_heavy": _guess_keyword_heavy(normalized),
             },
             "route_hints": [],

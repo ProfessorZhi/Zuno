@@ -39,12 +39,34 @@ def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():
         def __init__(self):
             self.last_capability = None
 
-        def build_plan(self, request, processed_query, knowledge_capability=None):
+        def build_plan(
+            self,
+            request,
+            processed_query,
+            knowledge_capability=None,
+            rerank_available=None,
+        ):
             self.last_capability = knowledge_capability
             return SimpleNamespace(
                 enabled_retrievers=[],
                 resolved_mode=request.mode,
-                to_dict=lambda: {"resolved_mode": request.mode},
+                internal_route="standard_rag",
+                to_dict=lambda: {
+                    "requested_mode": request.mode,
+                    "resolved_mode": request.mode,
+                    "internal_route": "standard_rag",
+                    "requested_profile": "auto",
+                    "resolved_profile": "auto",
+                    "enabled_retrievers": [],
+                    "route_trace": {},
+                    "budget_policy": {},
+                    "fallback_policy": {},
+                    "trace_policy": {},
+                    "scope_policy": {},
+                    "index_version": {},
+                    "index_health": {},
+                    "rerank_policy": {},
+                },
             )
 
     class FakeProcessor:

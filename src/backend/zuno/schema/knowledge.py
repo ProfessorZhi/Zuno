@@ -27,6 +27,10 @@ class KnowledgeIndexSettings(BaseModel):
     index_version: str = Field(default="v1", min_length=1, max_length=64)
     status: str = Field(default="active", pattern="^(active|disabled|archived)$")
     health_status: str = Field(default="ready", pattern="^(ready|degraded|stale|failed|unavailable)$")
+    text_index_status: str = Field(default="ready", pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    bm25_index_status: str = Field(default="ready", pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    last_build_time: Optional[str] = Field(default=None)
+    last_error: Optional[str] = Field(default=None)
 
 
 class KnowledgeIndexSettingsPatch(BaseModel):
@@ -41,6 +45,10 @@ class KnowledgeIndexSettingsPatch(BaseModel):
     index_version: Optional[str] = Field(default=None, min_length=1, max_length=64)
     status: Optional[str] = Field(default=None, pattern="^(active|disabled|archived)$")
     health_status: Optional[str] = Field(default=None, pattern="^(ready|degraded|stale|failed|unavailable)$")
+    text_index_status: Optional[str] = Field(default=None, pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    bm25_index_status: Optional[str] = Field(default=None, pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    last_build_time: Optional[str] = Field(default=None)
+    last_error: Optional[str] = Field(default=None)
 
 
 class KnowledgeGraphIndexSettings(BaseModel):
@@ -51,6 +59,10 @@ class KnowledgeGraphIndexSettings(BaseModel):
     use_rag_entry_chunk: bool = Field(default=True)
     index_version: str = Field(default="v1", min_length=1, max_length=64)
     health_status: str = Field(default="ready", pattern="^(ready|degraded|stale|failed|unavailable)$")
+    graph_index_status: str = Field(default="ready", pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    community_detection_status: str = Field(default="not_built", pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    community_report_status: str = Field(default="not_built", pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    community_version: str = Field(default="v0", min_length=1, max_length=64)
 
 
 class KnowledgeGraphIndexSettingsPatch(BaseModel):
@@ -61,6 +73,10 @@ class KnowledgeGraphIndexSettingsPatch(BaseModel):
     use_rag_entry_chunk: Optional[bool] = Field(default=None)
     index_version: Optional[str] = Field(default=None, min_length=1, max_length=64)
     health_status: Optional[str] = Field(default=None, pattern="^(ready|degraded|stale|failed|unavailable)$")
+    graph_index_status: Optional[str] = Field(default=None, pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    community_detection_status: Optional[str] = Field(default=None, pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    community_report_status: Optional[str] = Field(default=None, pattern="^(ready|queued|running|stale|failed|unavailable|not_built)$")
+    community_version: Optional[str] = Field(default=None, min_length=1, max_length=64)
 
 
 class KnowledgeRetrievalSettings(BaseModel):

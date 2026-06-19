@@ -5,7 +5,11 @@ from loguru import logger
 
 from zuno.api.services.knowledge import KnowledgeService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.knowledge import KnowledgeCreateRequest, KnowledgeUpdateRequest
+from zuno.schema.knowledge import (
+    KnowledgeConfig,
+    KnowledgeCreateRequest,
+    KnowledgeUpdateRequest,
+)
 from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
 
 router = APIRouter(tags=["Knowledge"])
@@ -119,6 +123,51 @@ async def reindex_knowledge(
         return resp_500(message=str(err))
 
 
+@router.post("/knowledge/{knowledge_id}/config/impact", response_model=UnifiedResponseModel)
+async def analyze_knowledge_config_impact(
+    *,
+    knowledge_id: str,
+    next_config: KnowledgeConfig | dict,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id)
+        previous_config = await KnowledgeService.get_knowledge_config(knowledge_id)
+        normalized_next_config = (
+            next_config.model_dump() if isinstance(next_config, KnowledgeConfig) else next_config
+        )
+        impact = KnowledgeService.analyze_config_impact(previous_config, normalized_next_config)
+        return resp_200(data=impact)
+    except Exception as err:
+        logger.error(err)
+        return resp_500(message=str(err))
+
+
+@router.post("/knowledge/{knowledge_id}/reindex/{action}", response_model=UnifiedResponseModel)
+async def reindex_knowledge_action(
+    *,
+    knowledge_id: str,
+    action: str,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id)
+        result = await KnowledgeService.run_reindex_action(knowledge_id, action)
+        return resp_200(data=result)
+    except Exception as err:
+        logger.error(err)
+        return resp_500(message=str(err))
+
+
+@router.get("/knowledge/eval-profiles", response_model=UnifiedResponseModel)
+async def list_eval_profiles():
+    try:
+        return resp_200(data=await KnowledgeService.list_eval_profiles())
+    except Exception as err:
+        logger.error(err)
+        return resp_500(message=str(err))
+
+
 @router.post("/knowledge/search", response_model=UnifiedResponseModel)
 async def search_knowledge(
     *,
@@ -143,9 +192,12 @@ async def search_knowledge(
 
 
 __all__ = [
+    "analyze_knowledge_config_impact",
     "delete_knowledge",
     "get_knowledge_files",
+    "list_eval_profiles",
     "reindex_knowledge",
+    "reindex_knowledge_action",
     "router",
     "search_knowledge",
     "select_knowledge",

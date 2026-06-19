@@ -452,7 +452,11 @@ def main() -> None:
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--dataset", required=True, type=Path)
     parser.add_argument("--output-root", type=Path, default=None)
-    parser.add_argument("--profile-set", choices=["local_compare", "graph_compare"], default="local_compare")
+    parser.add_argument(
+        "--profile-set",
+        choices=["local_compare", "graph_compare", "deep_graphrag_compare"],
+        default="local_compare",
+    )
     parser.add_argument("--profiles", default=None)
     parser.add_argument("--local-embedding-model-name", default=None)
     parser.add_argument("--local-embedding-base-url", default=None)

@@ -70,9 +70,10 @@ def test_enhanced_retrieval_mode_enables_graph_path_for_relation_questions():
         knowledge_capability="rag_graph",
     )
 
-    assert plan.requested_mode == "hybrid"
-    assert plan.resolved_mode == "hybrid"
-    assert plan.resolved_profile == "relation_hybrid"
+    assert plan.requested_mode == "rag_graph_deep"
+    assert plan.resolved_mode == "rag_graph_deep"
+    assert plan.internal_route == "local_graphrag"
+    assert plan.resolved_profile == "graph_relation"
     assert plan.enabled_retrievers == ["vector", "bm25", "graph"]
 
 
@@ -84,7 +85,7 @@ def test_enhanced_retrieval_mode_degrades_to_normal_when_graph_is_unavailable():
         RetrievalRequest(
             query="赔偿责任链路",
             knowledge_ids=["kb_1"],
-            mode="graphrag",
+            mode="rag_graph",
             scope_policy={"status": "active"},
             index_health={"graph": "unavailable"},
             index_version={"vector": "vector_v2", "graph": "graph_v2"},
@@ -93,8 +94,9 @@ def test_enhanced_retrieval_mode_degrades_to_normal_when_graph_is_unavailable():
         knowledge_capability="rag_graph",
     )
 
-    assert plan.requested_mode == "graphrag"
+    assert plan.requested_mode == "rag_graph_deep"
     assert plan.resolved_mode == "rag"
+    assert plan.internal_route == "standard_rag"
     assert "graph" not in plan.enabled_retrievers
     assert plan.fallback_policy["graph_degraded"] is True
     assert plan.index_version["graph"] == "graph_v2"

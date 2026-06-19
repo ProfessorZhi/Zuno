@@ -20,6 +20,7 @@ from zuno.evals.rag_eval.summarize_eval_profiles import summarize as summarize_p
 PROFILE_SETS = {
     "local_compare": ["baseline_rag", "rag_rerank", "rag_graph_chunk_backed"],
     "graph_compare": ["baseline_rag", "rag_graph_chunk_backed", "rag_graph_chunk_backed_3hop"],
+    "deep_graphrag_compare": ["baseline_rag", "local_graphrag", "deep_graphrag"],
 }
 
 

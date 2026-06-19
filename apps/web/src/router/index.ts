@@ -67,14 +67,47 @@ const routes: RouteRecordRaw[] = [
         meta: { settingsSection: 'knowledge' },
       },
       {
+        path: 'settings/knowledge/create',
+        name: 'workspaceSettingsKnowledgeCreate',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'knowledge', settingsDetail: true },
+      },
+      {
         path: 'settings/knowledge/:knowledgeId/files',
         name: 'workspaceSettingsKnowledgeFile',
         component: WorkspaceDefaultPage,
         meta: { settingsSection: 'knowledge', settingsDetail: true },
       },
       {
+        path: 'settings/knowledge/:knowledgeId/settings',
+        name: 'workspaceSettingsKnowledgeSettings',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'knowledge', settingsDetail: true },
+      },
+      {
         path: 'settings/knowledge/:knowledgeId/config',
         name: 'workspaceSettingsKnowledgeConfig',
+        redirect: (to) => ({
+          name: 'workspaceSettingsKnowledgeSettings',
+          params: to.params,
+          query: to.query,
+        }),
+      },
+      {
+        path: 'settings/knowledge/domain-packs',
+        name: 'workspaceSettingsKnowledgeDomainPacks',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'knowledge', settingsDetail: true },
+      },
+      {
+        path: 'settings/knowledge/domain-packs/create',
+        name: 'workspaceSettingsKnowledgeDomainPackCreate',
+        component: WorkspaceDefaultPage,
+        meta: { settingsSection: 'knowledge', settingsDetail: true },
+      },
+      {
+        path: 'settings/knowledge/domain-packs/:packId',
+        name: 'workspaceSettingsKnowledgeDomainPackDetail',
         component: WorkspaceDefaultPage,
         meta: { settingsSection: 'knowledge', settingsDetail: true },
       },
@@ -202,6 +235,12 @@ const routes: RouteRecordRaw[] = [
         redirect: { name: 'workspaceSettingsKnowledge' },
       },
       {
+        path: '/knowledge/create',
+        name: 'knowledge-create',
+        meta: { current: 'knowledge' },
+        redirect: { name: 'workspaceSettingsKnowledgeCreate' },
+      },
+      {
         path: '/knowledge/:knowledgeId/files',
         name: 'knowledge-file',
         meta: { current: 'knowledge' },
@@ -212,14 +251,30 @@ const routes: RouteRecordRaw[] = [
         }),
       },
       {
+        path: '/knowledge/:knowledgeId/settings',
+        name: 'knowledge-settings',
+        meta: { current: 'knowledge' },
+        redirect: (to) => ({
+          name: 'workspaceSettingsKnowledgeSettings',
+          params: to.params,
+          query: to.query,
+        }),
+      },
+      {
         path: '/knowledge/:knowledgeId/config',
         name: 'knowledge-config',
         meta: { current: 'knowledge' },
         redirect: (to) => ({
-          name: 'workspaceSettingsKnowledgeConfig',
+          name: 'workspaceSettingsKnowledgeSettings',
           params: to.params,
           query: to.query,
         }),
+      },
+      {
+        path: '/knowledge/domain-packs',
+        name: 'knowledge-domain-packs',
+        meta: { current: 'knowledge' },
+        redirect: { name: 'workspaceSettingsKnowledgeDomainPacks' },
       },
       {
         path: '/tool',

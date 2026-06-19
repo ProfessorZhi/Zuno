@@ -25,9 +25,10 @@ def test_auto_mode_prefers_graphrag_for_relation_question():
         knowledge_capability="rag_graph",
     )
 
-    assert plan.resolved_mode == "hybrid"
+    assert plan.resolved_mode == "rag_graph_deep"
+    assert plan.internal_route == "local_graphrag"
     assert plan.requested_profile == "auto"
-    assert plan.resolved_profile == "relation_hybrid"
+    assert plan.resolved_profile == "graph_relation"
     assert plan.enabled_retrievers == ["vector", "bm25", "graph"]
     assert plan.budget_policy["rewrite_enabled"] is True
     assert plan.fallback_policy["allow_retry"] is True
@@ -42,9 +43,10 @@ def test_hybrid_mode_enables_keyword_when_elasticsearch_is_available():
         knowledge_capability="rag_graph",
     )
 
-    assert plan.resolved_mode == "hybrid"
+    assert plan.resolved_mode == "hybrid_rag"
+    assert plan.internal_route == "standard_rag"
     assert plan.resolved_profile == "hybrid_balanced"
-    assert plan.enabled_retrievers == ["vector", "bm25", "graph"]
+    assert plan.enabled_retrievers == ["vector", "bm25"]
     assert plan.rerank_policy["top_k"] is None
 
 
@@ -97,7 +99,7 @@ def test_planner_drops_graph_when_graph_index_health_is_unavailable():
         RetrievalRequest(
             query="合同中的赔偿责任关系是什么",
             knowledge_ids=["kb_1"],
-            mode="graphrag",
+            mode="rag_graph",
             scope_policy={"status": "active"},
             index_health={"graph": "unavailable"},
             index_version={"vector": "vector_v2", "graph": "graph_v2"},
@@ -107,6 +109,7 @@ def test_planner_drops_graph_when_graph_index_health_is_unavailable():
     )
 
     assert plan.resolved_mode == "rag"
+    assert plan.internal_route == "standard_rag"
     assert "graph" not in plan.enabled_retrievers
     assert plan.index_health["graph"] == "unavailable"
     assert plan.index_version["graph"] == "graph_v2"

@@ -27,6 +27,13 @@ DEFAULT_KNOWLEDGE_CONFIG = {
         "remove_urls_emails": False,
         "image_indexing_mode": "dual",
         "vector_backend": "milvus",
+        "index_version": "v1",
+        "status": "active",
+        "health_status": "ready",
+        "text_index_status": "ready",
+        "bm25_index_status": "ready",
+        "last_build_time": None,
+        "last_error": None,
     },
     "graph_index_settings": {
         "entity_extraction_mode": "rule_llm",
@@ -34,6 +41,12 @@ DEFAULT_KNOWLEDGE_CONFIG = {
         "entity_normalization": True,
         "evidence_backlink": True,
         "use_rag_entry_chunk": True,
+        "index_version": "v1",
+        "health_status": "ready",
+        "graph_index_status": "ready",
+        "community_detection_status": "not_built",
+        "community_report_status": "not_built",
+        "community_version": "v0",
     },
     "retrieval_settings": {
         "default_mode": "rag",
@@ -50,6 +63,135 @@ DEFAULT_KNOWLEDGE_CONFIG = {
 
 
 class KnowledgeService:
+    @staticmethod
+    def _get_nested_value(payload: dict[str, Any], path: str) -> Any:
+        current: Any = payload
+        for part in path.split("."):
+            if not isinstance(current, dict):
+                return None
+            current = current.get(part)
+        return current
+
+    @classmethod
+    def _collect_changed_fields(
+        cls,
+        previous_config: dict[str, Any],
+        next_config: dict[str, Any],
+        *,
+        prefix: str = "",
+    ) -> list[str]:
+        changed_fields: list[str] = []
+        keys = set(previous_config.keys()) | set(next_config.keys())
+        for key in sorted(keys):
+            previous_value = previous_config.get(key)
+            next_value = next_config.get(key)
+            field_name = f"{prefix}.{key}" if prefix else key
+            if isinstance(previous_value, dict) and isinstance(next_value, dict):
+                changed_fields.extend(
+                    cls._collect_changed_fields(previous_value, next_value, prefix=field_name)
+                )
+                continue
+            if previous_value != next_value:
+                changed_fields.append(field_name)
+        return changed_fields
+
+    @classmethod
+    def analyze_config_impact(
+        cls,
+        previous_config: dict[str, Any] | None,
+        next_config: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        previous = cls._normalize_knowledge_config(previous_config)
+        next_payload = cls._normalize_knowledge_config(next_config)
+        changed_fields = cls._collect_changed_fields(previous, next_payload)
+
+        immediate_effect_fields = sorted(
+            field
+            for field in changed_fields
+            if field.startswith("retrieval_settings.")
+            or field in {"eval_profile_id", "model_refs.rerank_model_id"}
+        )
+
+        text_reindex_fields = {
+            "index_capability",
+            "model_refs.text_embedding_model_id",
+            "model_refs.vl_embedding_model_id",
+            "index_settings.chunk_mode",
+            "index_settings.chunk_size",
+            "index_settings.overlap",
+            "index_settings.separator",
+            "index_settings.replace_consecutive_spaces",
+            "index_settings.remove_urls_emails",
+            "index_settings.image_indexing_mode",
+            "index_settings.vector_backend",
+        }
+        bm25_reindex_fields = {
+            "index_settings.chunk_mode",
+            "index_settings.chunk_size",
+            "index_settings.overlap",
+            "index_settings.separator",
+            "index_settings.replace_consecutive_spaces",
+            "index_settings.remove_urls_emails",
+        }
+        graph_update_fields = {
+            "index_capability",
+            "domain_pack_id",
+            "graph_index_settings.entity_extraction_mode",
+            "graph_index_settings.relation_schema",
+            "graph_index_settings.entity_normalization",
+            "graph_index_settings.evidence_backlink",
+            "graph_index_settings.use_rag_entry_chunk",
+            "index_settings.chunk_mode",
+            "index_settings.chunk_size",
+            "index_settings.overlap",
+            "index_settings.separator",
+        }
+        community_report_fields = {
+            "domain_pack_id",
+            "eval_profile_id",
+        }
+
+        text_reindex_required = any(field in text_reindex_fields for field in changed_fields)
+        bm25_reindex_required = any(field in bm25_reindex_fields for field in changed_fields)
+        graph_update_required = any(field in graph_update_fields for field in changed_fields)
+        community_detection_required = graph_update_required and next_payload.get("index_capability") == "rag_graph"
+        community_report_required = any(field in community_report_fields for field in changed_fields) and (
+            next_payload.get("index_capability") == "rag_graph"
+        )
+        if community_detection_required:
+            community_report_required = True
+
+        full_rebuild_required = (
+            "index_capability" in changed_fields
+            and previous.get("index_capability") != next_payload.get("index_capability")
+        )
+
+        recommended_action = "save_only"
+        if full_rebuild_required:
+            recommended_action = "full_rebuild"
+        elif community_report_required:
+            recommended_action = "community_report"
+        elif community_detection_required:
+            recommended_action = "community_detection"
+        elif graph_update_required:
+            recommended_action = "graph_index"
+        elif bm25_reindex_required:
+            recommended_action = "bm25_index"
+        elif text_reindex_required:
+            recommended_action = "text_index"
+
+        return {
+            "changed_fields": changed_fields,
+            "immediate_effect_fields": immediate_effect_fields,
+            "text_reindex_required": text_reindex_required,
+            "bm25_reindex_required": bm25_reindex_required,
+            "graph_update_required": graph_update_required,
+            "community_detection_required": community_detection_required,
+            "community_report_required": community_report_required,
+            "full_rebuild_required": full_rebuild_required,
+            "recommended_action": recommended_action,
+        }
+
     @staticmethod
     def _apply_domain_pack_defaults(
         config: dict[str, Any],
@@ -344,6 +486,63 @@ class KnowledgeService:
             "text_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("text_embedding_model_id")),
             "vl_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("vl_embedding_model_id")),
             "rerank_config": await cls.resolve_model_config_by_id(model_refs.get("rerank_model_id")),
+        }
+
+    @classmethod
+    async def mark_community_stale(cls, knowledge_id: str) -> dict[str, Any]:
+        knowledge = await KnowledgeDao.select_user_by_id(knowledge_id)
+        if not knowledge:
+            raise ValueError("knowledge not found")
+        payload = knowledge.to_dict()
+        normalized_config = cls._normalize_knowledge_config(
+            payload.get("knowledge_config"),
+            payload.get("default_retrieval_mode"),
+        )
+        graph_index_settings = dict(normalized_config.get("graph_index_settings") or {})
+        graph_index_settings["community_detection_status"] = "stale"
+        graph_index_settings["community_report_status"] = "stale"
+        normalized_config["graph_index_settings"] = graph_index_settings
+        await KnowledgeDao.update_knowledge_by_id(
+            knowledge_id,
+            payload.get("description"),
+            payload.get("name"),
+            default_retrieval_mode=normalized_config["retrieval_settings"]["default_mode"],
+            knowledge_config=normalized_config,
+        )
+        return normalized_config
+
+    @staticmethod
+    async def list_eval_profiles() -> list[dict[str, Any]]:
+        return [
+            {
+                "eval_profile_id": "general_local",
+                "label": "通用本地评测",
+                "scope": "knowledge",
+            },
+            {
+                "eval_profile_id": "contract_review_local",
+                "label": "合同本地评测",
+                "scope": "domain_pack",
+            },
+        ]
+
+    @classmethod
+    async def run_reindex_action(cls, knowledge_id: str, action: str) -> dict[str, Any]:
+        normalized_action = str(action or "").strip().lower()
+        supported_actions = {
+            "text_index",
+            "bm25_index",
+            "graph_index",
+            "community_detection",
+            "community_report",
+            "full_rebuild",
+        }
+        if normalized_action not in supported_actions:
+            raise ValueError(f"Unsupported reindex action: {action}")
+        return {
+            "knowledge_id": knowledge_id,
+            "action": normalized_action,
+            "status": "accepted",
         }
 
     @classmethod

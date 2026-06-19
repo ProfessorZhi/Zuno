@@ -486,6 +486,10 @@ class RagHandler:
                     knowledge_config.get("graph_index_settings", {}).get("health_status")
                     or ("ready" if knowledge_config.get("index_capability") == "rag_graph" else "unavailable")
                 ),
+                "community": str(
+                    knowledge_config.get("graph_index_settings", {}).get("community_report_status")
+                    or "not_built"
+                ),
             },
         }
         effective_options.update(retrieval_options or {})

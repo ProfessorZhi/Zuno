@@ -40,6 +40,8 @@ class ProcessedQuery:
 class RetrievalPlan:
     requested_mode: str
     resolved_mode: str
+    internal_route: str
+    route_trace: dict[str, Any]
     requested_profile: str
     resolved_profile: str
     enabled_retrievers: list[str]
@@ -57,6 +59,8 @@ class RetrievalPlan:
         return {
             "requested_mode": self.requested_mode,
             "resolved_mode": self.resolved_mode,
+            "internal_route": self.internal_route,
+            "route_trace": self.route_trace,
             "requested_profile": self.requested_profile,
             "resolved_profile": self.resolved_profile,
             "enabled_retrievers": list(self.enabled_retrievers),
