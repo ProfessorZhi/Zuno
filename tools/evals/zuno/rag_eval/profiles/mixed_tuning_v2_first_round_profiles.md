@@ -91,7 +91,7 @@ Import the prepared corpus first:
 python tools/evals/zuno/rag_eval/ingest_prepared_corpus.py `
   --manifest "F:\resume project\03_rag_eval_dataset\prepared\mixed_tuning_v2\sample_manifest.csv" `
   --knowledge-name ZunoMixedTuningV2 `
-  --output .local/evals/agentchat/rag_eval/runs/mixed_tuning_v2_ingest_result.json
+  --output .local/evals/zuno/rag_eval/runs/mixed_tuning_v2_ingest_result.json
 ```
 
 Then run the three-profile comparison:
@@ -101,7 +101,7 @@ python tools/evals/zuno/rag_eval/run_eval.py `
   --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl `
   --knowledge-id <knowledge_id> `
   --profiles baseline_rag,rag_rerank,rag_graph `
-  --output-dir .local/evals/agentchat/rag_eval/runs/<timestamp> `
+  --output-dir .local/evals/zuno/rag_eval/runs/<timestamp> `
   --trace-langsmith
 ```
 

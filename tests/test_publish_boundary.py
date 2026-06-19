@@ -13,9 +13,9 @@ def test_gitignore_matches_current_local_only_boundary() -> None:
         ".local/",
         "apps/web/AGENTS.md",
         "infra/docker/docker_config.local.yaml",
-        ".local/config/agentchat/",
-        ".local/evals/agentchat/rag_eval/corpus/",
-        ".local/evals/agentchat/rag_eval/runs/",
+        ".local/config/zuno/",
+        ".local/evals/zuno/rag_eval/corpus/",
+        ".local/evals/zuno/rag_eval/runs/",
     ]
 
     for entry in required_entries:

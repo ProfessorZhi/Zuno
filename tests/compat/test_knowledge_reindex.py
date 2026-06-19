@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_reindex_knowledge_files_requeues_every_file(monkeypatch):
-    from agentchat.api.services.knowledge_file import KnowledgeFileService
+    from zuno.api.services.knowledge_file import KnowledgeFileService
 
     knowledge_files = [
         SimpleNamespace(id="file_1", file_name="a.md", oss_url="oss://bucket/a.md", last_task_id="task_old_1"),
@@ -29,15 +29,15 @@ def test_reindex_knowledge_files_requeues_every_file(monkeypatch):
         return "sync"
 
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge_file.KnowledgeFileDao.select_knowledge_file",
+        "zuno.api.services.knowledge_file.KnowledgeFileDao.select_knowledge_file",
         fake_select_knowledge_file,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge_file.KnowledgeTaskDao.create_task",
+        "zuno.api.services.knowledge_file.KnowledgeTaskDao.create_task",
         fake_create_task,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        "zuno.api.services.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(KnowledgeFileService, "_dispatch_task", fake_dispatch_task)
@@ -59,7 +59,7 @@ def test_reindex_knowledge_files_requeues_every_file(monkeypatch):
 
 
 def test_reindex_knowledge_files_collects_failures(monkeypatch):
-    from agentchat.api.services.knowledge_file import KnowledgeFileService
+    from zuno.api.services.knowledge_file import KnowledgeFileService
 
     knowledge_files = [
         SimpleNamespace(id="file_1", file_name="a.md", oss_url="oss://bucket/a.md", last_task_id="task_old_1"),
@@ -81,15 +81,15 @@ def test_reindex_knowledge_files_collects_failures(monkeypatch):
         return "sync"
 
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge_file.KnowledgeFileDao.select_knowledge_file",
+        "zuno.api.services.knowledge_file.KnowledgeFileDao.select_knowledge_file",
         fake_select_knowledge_file,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge_file.KnowledgeTaskDao.create_task",
+        "zuno.api.services.knowledge_file.KnowledgeTaskDao.create_task",
         fake_create_task,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        "zuno.api.services.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(KnowledgeFileService, "_dispatch_task", fake_dispatch_task)
@@ -104,7 +104,7 @@ def test_reindex_knowledge_files_collects_failures(monkeypatch):
 
 
 def test_reindex_knowledge_endpoint_checks_permission(monkeypatch):
-    from agentchat.api.v1.knowledge_file import reindex_knowledge_files
+    from zuno.api.v1.knowledge_file import reindex_knowledge_files
 
     captured = {}
 
@@ -116,11 +116,11 @@ def test_reindex_knowledge_endpoint_checks_permission(monkeypatch):
         return {"knowledge_id": knowledge_id, "total_files": 0, "queued_files": 0, "failed_files": 0, "tasks": []}
 
     monkeypatch.setattr(
-        "agentchat.api.v1.knowledge_file.KnowledgeService.verify_user_permission",
+        "zuno.api.v1.knowledge_file.KnowledgeService.verify_user_permission",
         fake_verify_user_permission,
     )
     monkeypatch.setattr(
-        "agentchat.api.v1.knowledge_file.KnowledgeFileService.reindex_knowledge_files",
+        "zuno.api.v1.knowledge_file.KnowledgeFileService.reindex_knowledge_files",
         fake_reindex,
     )
 

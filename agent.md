@@ -109,7 +109,7 @@
 ### 做评估或验证前
 
 1. 优先找 `tests/`
-2. 再找 `src/backend/agentchat/evals/`
+2. 再找 `src/backend/zuno/evals/`
 3. 必要时用 `.agent/scripts/` 下的本地脚本辅助
 
 ## 主线分类

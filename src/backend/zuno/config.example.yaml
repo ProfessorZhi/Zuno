@@ -5,8 +5,8 @@ server:
   version: "2.4.0"
 
 database:
-  sync_endpoint: "postgresql+psycopg://postgres:postgres@localhost:5432/agentchat"
-  async_endpoint: "postgresql+asyncpg://postgres:postgres@localhost:5432/agentchat"
+  sync_endpoint: "postgresql+psycopg://postgres:postgres@localhost:5432/zuno"
+  async_endpoint: "postgresql+asyncpg://postgres:postgres@localhost:5432/zuno"
   echo: false
   pool_size: 10
   max_overflow: 20
@@ -115,20 +115,20 @@ storage:
     access_key_id: ""
     access_key_secret: ""
     endpoint: "oss-cn-beijing.aliyuncs.com"
-    bucket_name: "agentchat"
-    base_url: "https://agentchat.oss-cn-beijing.aliyuncs.com"
+    bucket_name: "zuno"
+    base_url: "https://zuno.oss-cn-beijing.aliyuncs.com"
 
   minio:
     access_key_id: ""
     access_key_secret: ""
     endpoint: "127.0.0.1:9000"
-    bucket_name: "agentchat"
-    base_url: "http://127.0.0.1:9000/agentchat"
+    bucket_name: "zuno"
+    base_url: "http://127.0.0.1:9000/zuno"
 
 default_config:
-  mcp_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/mcp.png"
-  tool_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/default.png"
-  agent_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/bot.png"
+  mcp_logo_url: "https://zuno.oss-cn-beijing.aliyuncs.com/icons/mcp/mcp.png"
+  tool_logo_url: "https://zuno.oss-cn-beijing.aliyuncs.com/icons/tools/default.png"
+  agent_logo_url: "https://zuno.oss-cn-beijing.aliyuncs.com/icons/tools/bot.png"
   memory_collection_name: "memory"
 
 wechat_config:
@@ -137,7 +137,7 @@ wechat_config:
   secret: ""
 
 langfuse:
-  trace_name: "agentchat"
+  trace_name: "zuno"
   host: "https://cloud.langfuse.com"
   public_key: ""
   secret_key: ""

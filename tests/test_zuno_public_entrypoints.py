@@ -23,7 +23,7 @@ def test_top_level_zuno_package_does_not_bridge_to_service_api() -> None:
     assert "services/api/src" not in zuno_root_init
     assert "_find_service_api_root" not in zuno_root_init
     assert "from zuno.api.router import router" in zuno_main
-    assert "from agentchat.main import app" not in zuno_main
+    assert "from zuno.main import app" not in zuno_main
 
 
 def test_compat_and_eval_entrypoints_insert_backend_root_only() -> None:

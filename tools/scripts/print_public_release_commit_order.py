@@ -29,7 +29,7 @@ COMMIT_GROUPS = [
     ),
     (
         "backend_public_entrypoints",
-        "agentchat to zuno public runtime surface, API, DAO, schema, config, and startup convergence.",
+        "zuno to zuno public runtime surface, API, DAO, schema, config, and startup convergence.",
         "Keep separate from evaluation-heavy GraphRAG commits when possible because review intent is different.",
     ),
     (

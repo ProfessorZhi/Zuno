@@ -4,7 +4,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from agentchat.evals.rag_eval.run_stackless_local_eval import _filter_manifest_by_dataset
+from tools.evals.zuno.rag_eval.run_stackless_local_eval import _filter_manifest_by_dataset
 
 
 def test_filter_manifest_by_dataset_keeps_variant_files() -> None:

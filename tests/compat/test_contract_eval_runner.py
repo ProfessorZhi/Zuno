@@ -7,7 +7,7 @@ from pathlib import Path
 def test_contract_eval_runner_offline():
     repo_root = Path(__file__).resolve().parents[2]
     script = repo_root / "tools" / "evals" / "zuno" / "contract_review_eval" / "run_contract_eval.py"
-    output_dir = repo_root / ".local" / "evals" / "agentchat" / "contract_review_eval" / ".tmp_test_reports"
+    output_dir = repo_root / ".local" / "evals" / "zuno" / "contract_review_eval" / ".tmp_test_reports"
     if output_dir.exists():
         for path in output_dir.glob("*"):
             path.unlink()

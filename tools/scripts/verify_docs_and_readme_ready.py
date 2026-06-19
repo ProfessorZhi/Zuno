@@ -11,11 +11,17 @@ EXPECTED_GROUP_PATHS = {
     "docs/architecture/",
     "docs/architecture/README.md",
     "docs/architecture/current-architecture.md",
+    "docs/architecture/decisions/README.md",
+    "docs/architecture/decisions/0002-rename-zuno-to-zuno.md",
+    "docs/architecture/decisions/0002-retire-compat-namespace.md",
     "docs/architecture/phases/README.md",
+    "docs/architecture/plans/rag-local-eval-scheme.md",
     "docs/architecture/phases/phase-04-local-eval-strengthening.md",
     "docs/architecture/phases/phase-05-docs-and-public-explanation-sync.md",
     "docs/architecture/phases/phase-06-agent-graphrag-pluginization.md",
     "docs/architecture/specs/architecture-upgrade-2026-06.md",
+    "docs/architecture/specs/enterprise-retrieval-governance.md",
+    "docs/architecture/specs/platform-evolution-and-future-direction.md",
     "docs/development/README.md",
     "docs/development/backend-layering-guidelines.md",
     "docs/development/github-publish-boundary.md",
@@ -24,9 +30,12 @@ EXPECTED_GROUP_PATHS = {
     "docs/development/public-demo-runbook.md",
     "docs/development/public-release-checklist.md",
     "docs/development/public-release-staging-plan.md",
+    "docs/reference/core.md",
+    "docs/reference/zuno.md",
 }
 EXCLUDED_LOCAL_PATHS = {
     "docs/superpowers/",
+    "docs/prototypes/",
     "apps/web/AGENTS.md",
 }
 
@@ -63,6 +72,14 @@ def _extract_stage_dry_run_paths(output: str) -> set[str]:
     return paths
 
 
+def _strip_excluded_local(paths: set[str]) -> set[str]:
+    return {
+        path
+        for path in paths
+        if not any(path == prefix or path.startswith(prefix) for prefix in EXCLUDED_LOCAL_PATHS)
+    }
+
+
 def main() -> int:
     preview = _run(["python", "tools/scripts/preview_public_release_group.py", "docs_and_readme"])
     preview_stat = _run(
@@ -86,8 +103,8 @@ def main() -> int:
         print(audit.stdout.strip() or audit.stderr.strip() or "public release audit failed")
         return 1
 
-    preview_paths = _extract_preview_paths(preview.stdout)
-    dry_run_paths = _extract_stage_dry_run_paths(dry_run.stdout)
+    preview_paths = _strip_excluded_local(_extract_preview_paths(preview.stdout))
+    dry_run_paths = _strip_excluded_local(_extract_stage_dry_run_paths(dry_run.stdout))
 
     errors: list[str] = []
     unexpected_preview = sorted(preview_paths - EXPECTED_GROUP_PATHS)

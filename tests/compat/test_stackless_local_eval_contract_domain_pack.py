@@ -2,8 +2,8 @@ import asyncio
 
 
 def test_build_local_graph_retriever_uses_contract_domain_pack():
-    from agentchat.evals.rag_eval.run_stackless_local_eval import _build_local_graph_retriever
-    from agentchat.schema.chunk import ChunkModel
+    from tools.evals.zuno.rag_eval.run_stackless_local_eval import _build_local_graph_retriever
+    from zuno.schema.chunk import ChunkModel
 
     chunk = ChunkModel(
         chunk_id="contract_chunk_1",

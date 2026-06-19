@@ -13,8 +13,8 @@ src/frontend/.npm
 src/frontend/.yarn
 src/frontend/.env*
 
-src/backend/agentchat/config.yaml
-src/backend/agentchat/config.local.yaml
+src/backend/zuno/config.yaml
+src/backend/zuno/config.local.yaml
 
 infra/docker/docker_config.local.yaml
 infra/docker/data

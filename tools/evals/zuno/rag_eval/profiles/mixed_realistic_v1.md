@@ -35,9 +35,9 @@
 
 ```powershell
 python tools/evals/zuno/rag_eval/ingest_prepared_corpus.py `
-  --manifest .local/evals/agentchat/rag_eval/corpus/mixed_realistic_v1/manifest.json `
+  --manifest .local/evals/zuno/rag_eval/corpus/mixed_realistic_v1/manifest.json `
   --knowledge-name ZunoMixedRealisticV1 `
-  --output .local/evals/agentchat/rag_eval/runs/mixed_realistic_v1_ingest.json
+  --output .local/evals/zuno/rag_eval/runs/mixed_realistic_v1_ingest.json
 ```
 
 ```powershell
@@ -45,7 +45,7 @@ python tools/evals/zuno/rag_eval/run_eval.py `
   --dataset tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl `
   --knowledge-id <knowledge_id> `
   --profiles baseline_rag,rag_rerank_recall_first,rag_graph_chunk_backed `
-  --output-dir .local/evals/agentchat/rag_eval/runs/mixed_realistic_v1_first_pass `
+  --output-dir .local/evals/zuno/rag_eval/runs/mixed_realistic_v1_first_pass `
   --trace-langsmith
 ```
 

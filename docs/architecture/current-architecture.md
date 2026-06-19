@@ -38,24 +38,17 @@ In other words:
 2. the Python backend runtime truth is `src/backend/zuno`
 3. any future root-level `services/` move must be reopened explicitly as a new architecture phase
 
-## Legacy Boundary
+## Runtime Boundary
 
-The repo still contains:
+There is no active compatibility namespace in current truth.
+
+The only backend runtime boundary is:
 
 ```text
-src/backend/zuno/legacy/agentchat/
+src/backend/zuno/
 ```
 
-That tree is now `compatibility-only`.
-
-It may still exist to support:
-
-- compat import surfaces named `agentchat`
-- explicit compatibility tests
-
-It is not runtime truth.
-
-Current mainline runtime work must not add new retrieval, GraphRAG, Docker, launcher, or default test dependencies on `src/backend/zuno/legacy/agentchat/`.
+Current mainline runtime work must not reintroduce retired alias packages, duplicate backend roots, or compatibility-only import trees.
 
 ## Current Execution Truth
 

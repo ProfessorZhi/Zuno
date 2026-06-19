@@ -3,7 +3,7 @@ import pytest
 
 
 def test_ensure_tools_available_returns_server_tools():
-    from agentchat.api.services.mcp_server import MCPService
+    from zuno.api.services.mcp_server import MCPService
 
     tools = MCPService.ensure_tools_available(
         "qa-server",
@@ -18,14 +18,14 @@ def test_ensure_tools_available_returns_server_tools():
 
 
 def test_ensure_tools_available_rejects_empty_server_tools():
-    from agentchat.api.services.mcp_server import MCPService
+    from zuno.api.services.mcp_server import MCPService
 
     with pytest.raises(ValueError, match="没有获取到可用工具"):
         MCPService.ensure_tools_available("qa-server", {"qa-server": []})
 
 
 def test_get_mcp_tools_info_tolerates_null_params(monkeypatch):
-    from agentchat.api.services.mcp_server import MCPService
+    from zuno.api.services.mcp_server import MCPService
 
     class FakeServer:
         def to_dict(self):
@@ -36,7 +36,7 @@ def test_get_mcp_tools_info_tolerates_null_params(monkeypatch):
         return FakeServer()
 
     monkeypatch.setattr(
-        "agentchat.api.services.mcp_server.MCPServerDao.get_mcp_server_from_id",
+        "zuno.api.services.mcp_server.MCPServerDao.get_mcp_server_from_id",
         fake_get_server,
     )
 

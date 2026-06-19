@@ -3,7 +3,7 @@ from urllib.request import Request, urlopen
 
 from fastapi.testclient import TestClient
 
-from agentchat.evals.rag_eval.local_rerank_server import create_app, run_dev_server
+from tools.evals.zuno.rag_eval.local_rerank_server import create_app, run_dev_server
 
 
 def test_local_rerank_server_ranks_overlap_higher():

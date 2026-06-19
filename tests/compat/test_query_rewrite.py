@@ -1,6 +1,6 @@
 import asyncio
 
-from agentchat.services.rewrite.query_write import QueryRewrite
+from zuno.services.rewrite.query_write import QueryRewrite
 
 
 class _FakeResponse:

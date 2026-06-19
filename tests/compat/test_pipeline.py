@@ -8,7 +8,7 @@ sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
 
 def test_pipeline_stage_flow():
-    from agentchat.services.pipeline.models import PIPELINE_STAGES
+    from zuno.services.pipeline.models import PIPELINE_STAGES
 
     assert PIPELINE_STAGES[0] == "uploaded"
     assert PIPELINE_STAGES[-1] == "completed"
@@ -17,8 +17,8 @@ def test_pipeline_stage_flow():
 
 
 def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
-    from agentchat.services.pipeline.manager import KnowledgePipelineManager
-    from agentchat.services.pipeline.models import (
+    from zuno.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.services.pipeline.models import (
         KnowledgeTaskStage,
         KnowledgeTaskStatus,
     )
@@ -91,39 +91,39 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
         return {}
 
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
+        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
         fake_select_task_by_id,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.update_task",
+        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.update_task",
         fake_update_task,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.create_task_event",
+        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.create_task_event",
         fake_create_task_event,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        "zuno.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(
-        "agentchat.services.rag.parser.doc_parser.parse_doc_into_chunks",
+        "zuno.services.rag.parser.doc_parser.parse_doc_into_chunks",
         fake_parse_doc_into_chunks,
     )
     monkeypatch.setattr(
-        "agentchat.services.rag.handler.RagHandler.index_milvus_documents",
+        "zuno.services.rag.handler.RagHandler.index_milvus_documents",
         fake_index_milvus_documents,
     )
     monkeypatch.setattr(
-        "agentchat.services.rag.handler.RagHandler.index_es_documents",
+        "zuno.services.rag.handler.RagHandler.index_es_documents",
         fake_index_es_documents,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge.KnowledgeService.get_knowledge_config",
+        "zuno.api.services.knowledge.KnowledgeService.get_knowledge_config",
         fake_get_knowledge_config,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge.KnowledgeService.get_runtime_settings",
+        "zuno.api.services.knowledge.KnowledgeService.get_runtime_settings",
         fake_get_runtime_settings,
     )
 
@@ -145,7 +145,7 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
 
 
 def test_retry_task_creates_new_task_and_redispatches(monkeypatch):
-    from agentchat.api.services.knowledge_file import KnowledgeFileService
+    from zuno.api.services.knowledge_file import KnowledgeFileService
 
     original_task = SimpleNamespace(
         id="task_old",
@@ -175,15 +175,15 @@ def test_retry_task_creates_new_task_and_redispatches(monkeypatch):
         return "sync"
 
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
+        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
         fake_select_task_by_id,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
+        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
         fake_create_task,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        "zuno.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(KnowledgeFileService, "_dispatch_task", fake_dispatch)
@@ -215,7 +215,7 @@ def test_retry_task_creates_new_task_and_redispatches(monkeypatch):
 
 
 def test_bulk_reindex_knowledge_files_creates_tasks_for_all_files(monkeypatch):
-    from agentchat.api.services.knowledge_file import KnowledgeFileService
+    from zuno.api.services.knowledge_file import KnowledgeFileService
 
     files = [
         SimpleNamespace(id="file_1", file_name="a.pdf", oss_url="oss/a.pdf"),
@@ -248,19 +248,19 @@ def test_bulk_reindex_knowledge_files_creates_tasks_for_all_files(monkeypatch):
         return "sync"
 
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge.KnowledgeService.verify_user_permission",
+        "zuno.api.services.knowledge.KnowledgeService.verify_user_permission",
         fake_verify_user_permission,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_file.KnowledgeFileDao.select_knowledge_file",
+        "zuno.database.dao.knowledge_file.KnowledgeFileDao.select_knowledge_file",
         fake_select_knowledge_file,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
+        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
         fake_create_task,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        "zuno.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(KnowledgeFileService, "_dispatch_task", fake_dispatch)
@@ -322,7 +322,7 @@ def test_bulk_reindex_knowledge_files_creates_tasks_for_all_files(monkeypatch):
 
 
 def test_pipeline_resolve_file_path_uses_public_url_helper(monkeypatch, tmp_path):
-    from agentchat.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.services.pipeline.manager import KnowledgePipelineManager
 
     download_calls = []
 
@@ -331,7 +331,7 @@ def test_pipeline_resolve_file_path_uses_public_url_helper(monkeypatch, tmp_path
 
     fake_client = SimpleNamespace(download_file=fake_download_file)
     monkeypatch.setattr(
-        "agentchat.services.pipeline.manager.storage_client._get_client",
+        "zuno.services.pipeline.manager.storage_client._get_client",
         lambda: fake_client,
     )
 
@@ -340,7 +340,7 @@ def test_pipeline_resolve_file_path_uses_public_url_helper(monkeypatch, tmp_path
         payload={
             "file_name": "demo.txt",
             "file_path": str(tmp_path / "missing.txt"),
-            "oss_url": "http://127.0.0.1:9000/agentchat/files/2026-4-17/txt/demo.txt",
+            "oss_url": "http://127.0.0.1:9000/zuno/files/2026-4-17/txt/demo.txt",
         },
     )
 
@@ -353,7 +353,7 @@ def test_pipeline_resolve_file_path_uses_public_url_helper(monkeypatch, tmp_path
 
 
 def test_pipeline_resolve_file_path_uses_local_fixture_for_reindex():
-    from agentchat.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.services.pipeline.manager import KnowledgePipelineManager
 
     task = SimpleNamespace(
         knowledge_file_id="file_1",
@@ -371,8 +371,8 @@ def test_pipeline_resolve_file_path_uses_local_fixture_for_reindex():
 
 
 def test_graph_extractor_accepts_chunk_model():
-    from agentchat.schema.chunk import ChunkModel
-    from agentchat.services.graphrag.extractor import GraphExtractor
+    from zuno.schema.chunk import ChunkModel
+    from zuno.services.graphrag.extractor import GraphExtractor
 
     chunk = ChunkModel(
         chunk_id="chunk_1",

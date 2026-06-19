@@ -99,7 +99,7 @@ def test_zuno_general_agent_knowledge_tool_uses_domain_pack_runtime(monkeypatch)
         import sys
         sys.path.insert(0, {str(BACKEND_ROOT)!r})
         from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
-        import agentchat.core.agents.general_agent as ga
+        import zuno.core.agents.general_agent as ga
 
         async def fake_runtime_settings(_knowledge_id):
             return {{
@@ -162,7 +162,7 @@ def test_zuno_general_agent_astream_prefers_explicit_domain_graph_runtime(monkey
         sys.path.insert(0, {str(BACKEND_ROOT)!r})
         from langchain_core.messages import HumanMessage
         from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
-        import agentchat.core.agents.general_agent as ga
+        import zuno.core.agents.general_agent as ga
 
         async def fake_runtime_settings(_knowledge_id):
             return {{

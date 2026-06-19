@@ -7,7 +7,7 @@ This plan turns the current working tree into reviewable public release groups i
 The current project state spans:
 
 - GraphRAG and local evaluation work
-- `agentchat -> zuno` runtime convergence
+- `zuno -> zuno` runtime convergence
 - frontend workspace polish
 - README and public demo documentation
 - GitHub publish-boundary and guard tests
@@ -51,7 +51,7 @@ Recommended group order:
    - contract-review and graph-relation evaluation support
 
 6. `backend_public_entrypoints`
-   - `agentchat -> zuno` public runtime surface
+   - `zuno -> zuno` public runtime surface
    - API, DAO, schema, config, and startup convergence
 
 7. `frontend_workspace`

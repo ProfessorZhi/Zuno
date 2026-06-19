@@ -1,5 +1,5 @@
-from agentchat.services.retrieval.fusion import RetrievalFusion
-from agentchat.services.retrieval.models import RetrievedDocument
+from zuno.services.retrieval.fusion import RetrievalFusion
+from zuno.services.retrieval.models import RetrievedDocument
 
 
 def _doc(chunk_id: str, source_type: str, score: float, content: str):

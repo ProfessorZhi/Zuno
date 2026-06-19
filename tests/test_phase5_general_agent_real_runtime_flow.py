@@ -88,7 +88,7 @@ def _runtime_settings(*, multi_agent_enabled: bool = False) -> dict:
 def test_zuno_general_agent_knowledge_tool_runs_real_domain_qa_graph(monkeypatch):
     _ensure_runtime_paths()
 
-    ga = importlib.import_module("agentchat.core.agents.general_agent")
+    ga = importlib.import_module("zuno.core.agents.general_agent")
     AgentConfig = importlib.import_module("zuno.core.agents.general_agent").AgentConfig
     GeneralAgent = importlib.import_module("zuno.core.agents.general_agent").GeneralAgent
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
@@ -136,7 +136,7 @@ def test_zuno_general_agent_knowledge_tool_runs_real_domain_qa_graph(monkeypatch
 def test_zuno_general_agent_astream_runs_real_multi_agent_runtime_chain(monkeypatch):
     _ensure_runtime_paths()
 
-    ga = importlib.import_module("agentchat.core.agents.general_agent")
+    ga = importlib.import_module("zuno.core.agents.general_agent")
     AgentConfig = importlib.import_module("zuno.core.agents.general_agent").AgentConfig
     GeneralAgent = importlib.import_module("zuno.core.agents.general_agent").GeneralAgent
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph

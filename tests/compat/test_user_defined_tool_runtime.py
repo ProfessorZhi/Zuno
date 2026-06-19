@@ -1,4 +1,4 @@
-from agentchat.services.user_defined_tool_runtime import build_stored_tool_auth_config
+from zuno.services.user_defined_tool_runtime import build_stored_tool_auth_config
 
 
 def test_build_stored_tool_auth_config_preserves_source_metadata_for_remote_api():

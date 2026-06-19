@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 
 def test_tool_connectivity_service_dispatches_remote_api(monkeypatch):
-    from agentchat.schema.tool import SimpleApiConfig, ToolConnectivityReq
-    from agentchat.services.tool_connectivity_service import ToolConnectivityService
+    from zuno.schema.tool import SimpleApiConfig, ToolConnectivityReq
+    from zuno.services.tool_connectivity_service import ToolConnectivityService
 
     captured = {}
 
@@ -29,8 +29,8 @@ def test_tool_connectivity_service_dispatches_remote_api(monkeypatch):
                 "tested_url": "https://example.com/check",
             }
 
-    monkeypatch.setattr("agentchat.services.tool_connectivity_service.ToolCreationService.validate_and_resolve", fake_validate_and_resolve)
-    monkeypatch.setattr("agentchat.services.tool_connectivity_service.OpenAPIToolAdapter", FakeAdapter)
+    monkeypatch.setattr("zuno.services.tool_connectivity_service.ToolCreationService.validate_and_resolve", fake_validate_and_resolve)
+    monkeypatch.setattr("zuno.services.tool_connectivity_service.OpenAPIToolAdapter", FakeAdapter)
 
     req = ToolConnectivityReq(
         runtime_type="remote_api",
@@ -52,8 +52,8 @@ def test_tool_connectivity_service_dispatches_remote_api(monkeypatch):
 
 
 def test_tool_connectivity_route_returns_resp_200(monkeypatch):
-    from agentchat.api.v1.tool import test_tool_connectivity
-    from agentchat.schema.tool import ToolConnectivityReq
+    from zuno.api.v1.tool import test_tool_connectivity
+    from zuno.schema.tool import ToolConnectivityReq
 
     async def fake_test(_req):
         return SimpleNamespace(
@@ -68,7 +68,7 @@ def test_tool_connectivity_route_returns_resp_200(monkeypatch):
             }
         )
 
-    monkeypatch.setattr("agentchat.api.v1.tool.ToolConnectivityService.test", fake_test)
+    monkeypatch.setattr("zuno.api.v1.tool.ToolConnectivityService.test", fake_test)
 
     response = asyncio.run(
         test_tool_connectivity(
@@ -83,7 +83,7 @@ def test_tool_connectivity_route_returns_resp_200(monkeypatch):
 
 
 def test_saved_tool_connectivity_route_returns_status(monkeypatch):
-    from agentchat.api.v1.tool import test_saved_tool_connectivity
+    from zuno.api.v1.tool import test_saved_tool_connectivity
 
     async def fake_verify(_tool_id, _user_id):
         return None
@@ -116,11 +116,11 @@ def test_saved_tool_connectivity_route_returns_status(monkeypatch):
             },
         )
 
-    monkeypatch.setattr("agentchat.api.v1.tool.ToolService.verify_user_permission", fake_verify)
-    monkeypatch.setattr("agentchat.api.v1.tool.ToolService.get_tool_by_id", fake_get_tool)
-    monkeypatch.setattr("agentchat.api.v1.tool.ToolConnectivityService.test_saved_tool", fake_test_saved_tool)
+    monkeypatch.setattr("zuno.api.v1.tool.ToolService.verify_user_permission", fake_verify)
+    monkeypatch.setattr("zuno.api.v1.tool.ToolService.get_tool_by_id", fake_get_tool)
+    monkeypatch.setattr("zuno.api.v1.tool.ToolConnectivityService.test_saved_tool", fake_test_saved_tool)
     monkeypatch.setattr(
-        "agentchat.api.v1.tool.ToolConnectivityService.to_runtime_status",
+        "zuno.api.v1.tool.ToolConnectivityService.to_runtime_status",
         lambda result: {"code": "ready", "label": "已就绪", "detail": result.summary, "configurable": True},
     )
 
@@ -137,8 +137,8 @@ def test_saved_tool_connectivity_route_returns_status(monkeypatch):
 
 
 def test_connectivity_status_for_missing_cli_healthcheck_is_runtime_input():
-    from agentchat.schema.tool import ToolConnectivityResp
-    from agentchat.services.tool_connectivity_service import ToolConnectivityService
+    from zuno.schema.tool import ToolConnectivityResp
+    from zuno.services.tool_connectivity_service import ToolConnectivityService
 
     status = ToolConnectivityService.to_runtime_status(
         ToolConnectivityResp(
@@ -154,7 +154,7 @@ def test_connectivity_status_for_missing_cli_healthcheck_is_runtime_input():
 
 
 def test_system_tool_connectivity_route_returns_status(monkeypatch):
-    from agentchat.api.v1.tool import test_system_tool_connectivity
+    from zuno.api.v1.tool import test_system_tool_connectivity
 
     async def fake_test_system_tool(_tool_name):
         return SimpleNamespace(
@@ -174,9 +174,9 @@ def test_system_tool_connectivity_route_returns_status(monkeypatch):
             },
         )
 
-    monkeypatch.setattr("agentchat.api.v1.tool.ToolConnectivityService.test_system_tool", fake_test_system_tool)
+    monkeypatch.setattr("zuno.api.v1.tool.ToolConnectivityService.test_system_tool", fake_test_system_tool)
     monkeypatch.setattr(
-        "agentchat.api.v1.tool.ToolConnectivityService.to_runtime_status",
+        "zuno.api.v1.tool.ToolConnectivityService.to_runtime_status",
         lambda result: {"code": "needs_config", "label": "需配置", "detail": result.summary, "configurable": True},
     )
 

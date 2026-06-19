@@ -1,8 +1,8 @@
 import asyncio
 from unittest.mock import patch
 
-from agentchat.services.rag.rerank import Reranker
-from agentchat.settings import app_settings
+from zuno.services.rag.rerank import Reranker
+from zuno.settings import app_settings
 
 
 def test_rerank_documents_falls_back_when_not_configured():
@@ -15,7 +15,7 @@ def test_rerank_documents_falls_back_when_not_configured():
     app_settings.multi_models.rerank.model_name = ""
 
     try:
-        with patch("agentchat.database.dao.llm.LLMDao.get_llm_by_slot", return_value=None):
+        with patch("zuno.database.dao.llm.LLMDao.get_llm_by_slot", return_value=None):
             results = asyncio.run(Reranker.rerank_documents("什么是 RAG", ["doc1", "doc2"]))
     finally:
         app_settings.multi_models.rerank.api_key = original_api_key

@@ -1,6 +1,6 @@
 import asyncio
 
-from agentchat.core.runtime.agent_runtime import AgentRuntime
+from zuno.core.runtime.agent_runtime import AgentRuntime
 
 
 def test_agent_runtime_uses_single_agent_graph_by_default():

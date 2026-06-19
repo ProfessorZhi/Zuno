@@ -1,6 +1,6 @@
 import asyncio
 
-from agentchat.core.graphs.domain_qa_graph import DomainQAGraph
+from zuno.core.graphs.domain_qa_graph import DomainQAGraph
 
 
 def test_domain_qa_graph_builds_initial_state():

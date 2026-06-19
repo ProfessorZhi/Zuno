@@ -70,7 +70,7 @@ def _graph_result(content: str = "", *, entities=None, paths=None):
 
 
 def test_retrieval_orchestrator_broadens_to_hybrid_when_rag_is_too_weak():
-    from agentchat.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     rag = _FakeRagRetriever(
         [
@@ -100,7 +100,7 @@ def test_retrieval_orchestrator_broadens_to_hybrid_when_rag_is_too_weak():
 
 
 def test_retrieval_orchestrator_uses_rewritten_query_on_third_round_when_needed():
-    from agentchat.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     rag = _FakeRagRetriever(
         [
@@ -142,7 +142,7 @@ def test_retrieval_orchestrator_uses_rewritten_query_on_third_round_when_needed(
 
 
 def test_retrieval_orchestrator_returns_plan_and_retriever_run_metadata():
-    from agentchat.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     rag = _FakeRagRetriever([_rag_result("redis persistence", 3, top_score=0.88)])
     graph = _FakeGraphRetriever([_graph_result("redis -> postgresql", entities=[{"id": "e1"}], paths=[{"id": "p1"}])])

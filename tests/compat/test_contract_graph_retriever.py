@@ -2,7 +2,7 @@ import asyncio
 
 
 def test_graph_retriever_handles_contract_review_chinese_query():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(

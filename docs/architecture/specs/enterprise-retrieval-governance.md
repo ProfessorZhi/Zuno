@@ -23,7 +23,7 @@ citation check、Domain Pack 和本地评测能力时，
 
 - `docs/architecture/specs/retrieval-orchestrator.md`
 - `docs/architecture/specs/langgraph-runtime.md`
-- `src/backend/zuno/legacy/agentchat/core/runtime/agent_runtime.py`
+- `src/backend/zuno/core/runtime/agent_runtime.py`
 
 这部分已经说明：
 
@@ -34,8 +34,8 @@ citation check、Domain Pack 和本地评测能力时，
 ### 2. Domain Modeling and GraphRAG
 
 - `docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md`
-- `src/backend/zuno/legacy/agentchat/domain_packs/contract_review/`
-- `src/backend/zuno/legacy/agentchat/services/graphrag/`
+- `src/backend/zuno/domain_packs/contract_review/`
+- `src/backend/zuno/services/graphrag/`
 
 这部分已经说明：
 

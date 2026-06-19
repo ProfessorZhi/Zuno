@@ -13,15 +13,15 @@
 ### Task 1: 建立统一 retrieval 数据模型与 planner
 
 **Files:**
-- Create: `src/backend/agentchat/services/retrieval/models.py`
-- Create: `src/backend/agentchat/services/retrieval/planner.py`
-- Test: `src/backend/agentchat/test/test_retrieval_planner.py`
+- Create: `src/backend/zuno/services/retrieval/models.py`
+- Create: `src/backend/zuno/services/retrieval/planner.py`
+- Test: `src/backend/zuno/test/test_retrieval_planner.py`
 
 - [ ] **Step 1: Write the failing planner tests**
 
 ```python
-from agentchat.services.retrieval.planner import RetrievalPlanner
-from agentchat.services.retrieval.models import ProcessedQuery, RetrievalRequest
+from zuno.services.retrieval.planner import RetrievalPlanner
+from zuno.services.retrieval.models import ProcessedQuery, RetrievalRequest
 
 
 def _processed(query: str, *, relation=False, keyword=False):
@@ -62,8 +62,8 @@ def test_hybrid_mode_enables_keyword_when_elasticsearch_is_available():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pytest src/backend/agentchat/test/test_retrieval_planner.py -v`
-Expected: FAIL with import errors for `agentchat.services.retrieval`
+Run: `pytest src/backend/zuno/test/test_retrieval_planner.py -v`
+Expected: FAIL with import errors for `zuno.services.retrieval`
 
 - [ ] **Step 3: Write minimal models and planner**
 
@@ -147,21 +147,21 @@ class RetrievalPlanner:
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pytest src/backend/agentchat/test/test_retrieval_planner.py -v`
+Run: `pytest src/backend/zuno/test/test_retrieval_planner.py -v`
 Expected: PASS
 
 ### Task 2: 抽统一 retriever 适配器与 fusion 层
 
 **Files:**
-- Create: `src/backend/agentchat/services/retrieval/retrievers.py`
-- Create: `src/backend/agentchat/services/retrieval/fusion.py`
-- Test: `src/backend/agentchat/test/test_retrieval_fusion.py`
+- Create: `src/backend/zuno/services/retrieval/retrievers.py`
+- Create: `src/backend/zuno/services/retrieval/fusion.py`
+- Test: `src/backend/zuno/test/test_retrieval_fusion.py`
 
 - [ ] **Step 1: Write the failing fusion tests**
 
 ```python
-from agentchat.services.retrieval.fusion import RetrievalFusion
-from agentchat.services.retrieval.models import RetrievedDocument
+from zuno.services.retrieval.fusion import RetrievalFusion
+from zuno.services.retrieval.models import RetrievedDocument
 
 
 def _doc(chunk_id: str, source_type: str, score: float, content: str):
@@ -197,7 +197,7 @@ def test_fusion_merges_same_chunk_and_tracks_matched_sources():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pytest src/backend/agentchat/test/test_retrieval_fusion.py -v`
+Run: `pytest src/backend/zuno/test/test_retrieval_fusion.py -v`
 Expected: FAIL with import errors for `RetrievalFusion`
 
 - [ ] **Step 3: Write minimal retriever adapters and fusion**
@@ -240,21 +240,21 @@ class RetrievalFusion:
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pytest src/backend/agentchat/test/test_retrieval_fusion.py -v`
+Run: `pytest src/backend/zuno/test/test_retrieval_fusion.py -v`
 Expected: PASS
 
 ### Task 3: 把统一 orchestrator 主线落到新目录并保留兼容入口
 
 **Files:**
-- Create: `src/backend/agentchat/services/retrieval/orchestrator.py`
-- Modify: `src/backend/agentchat/services/graphrag/orchestrator.py`
-- Test: `src/backend/agentchat/test/test_graphrag.py`
+- Create: `src/backend/zuno/services/retrieval/orchestrator.py`
+- Modify: `src/backend/zuno/services/graphrag/orchestrator.py`
+- Test: `src/backend/zuno/test/test_graphrag.py`
 
 - [ ] **Step 1: Write the failing orchestrator test for plan metadata**
 
 ```python
 def test_retrieval_orchestrator_returns_plan_and_trace_metadata():
-    from agentchat.services.retrieval.orchestrator import RetrievalOrchestrator
+    from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
 
     orchestrator = RetrievalOrchestrator(
         planner=FakePlanner(),
@@ -269,7 +269,7 @@ def test_retrieval_orchestrator_returns_plan_and_trace_metadata():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pytest src/backend/agentchat/test/test_graphrag.py -k plan -v`
+Run: `pytest src/backend/zuno/test/test_graphrag.py -k plan -v`
 Expected: FAIL with missing orchestrator implementation
 
 - [ ] **Step 3: Implement the new orchestrator and thin compatibility wrapper**
@@ -296,22 +296,22 @@ class RetrievalOrchestrator:
 ```
 
 ```python
-from agentchat.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
 
 __all__ = ["RetrievalOrchestrator", "RagRetrieverAdapter", "QueryExpanderAdapter"]
 ```
 
 - [ ] **Step 4: Run orchestrator regression tests**
 
-Run: `pytest src/backend/agentchat/test/test_graphrag.py -v`
+Run: `pytest src/backend/zuno/test/test_graphrag.py -v`
 Expected: PASS
 
 ### Task 4: 接入 RagHandler 与 workspace 主路径
 
 **Files:**
-- Modify: `src/backend/agentchat/services/rag/handler.py`
-- Modify: `src/backend/agentchat/services/workspace/simple_agent.py`
-- Test: `src/backend/agentchat/test/test_workspace_retrieval_trace.py`
+- Modify: `src/backend/zuno/services/rag/handler.py`
+- Modify: `src/backend/zuno/services/workspace/simple_agent.py`
+- Test: `src/backend/zuno/test/test_workspace_retrieval_trace.py`
 
 - [ ] **Step 1: Write the failing workspace trace test for planner metadata passthrough**
 
@@ -331,7 +331,7 @@ def test_build_retrieval_event_payload_includes_plan_summary():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pytest src/backend/agentchat/test/test_workspace_retrieval_trace.py -v`
+Run: `pytest src/backend/zuno/test/test_workspace_retrieval_trace.py -v`
 Expected: FAIL because payload lacks plan metadata
 
 - [ ] **Step 3: Switch handler/workspace to the new metadata shape**
@@ -355,7 +355,7 @@ return {
 
 - [ ] **Step 4: Run trace test to verify it passes**
 
-Run: `pytest src/backend/agentchat/test/test_workspace_retrieval_trace.py -v`
+Run: `pytest src/backend/zuno/test/test_workspace_retrieval_trace.py -v`
 Expected: PASS
 
 ### Task 5: 做完整后端回归验证
@@ -365,15 +365,15 @@ Expected: PASS
 
 - [ ] **Step 1: Run focused retrieval tests**
 
-Run: `pytest src/backend/agentchat/test/test_retrieval_planner.py src/backend/agentchat/test/test_retrieval_fusion.py src/backend/agentchat/test/test_graphrag.py src/backend/agentchat/test/test_workspace_retrieval_trace.py -v`
+Run: `pytest src/backend/zuno/test/test_retrieval_planner.py src/backend/zuno/test/test_retrieval_fusion.py src/backend/zuno/test/test_graphrag.py src/backend/zuno/test/test_workspace_retrieval_trace.py -v`
 Expected: PASS
 
 - [ ] **Step 2: Run broader workspace / knowledge contract regressions**
 
-Run: `pytest src/backend/agentchat/test/test_workspace_simple_agent.py src/backend/agentchat/test/test_knowledge_api_contract.py -v`
+Run: `pytest src/backend/zuno/test/test_workspace_simple_agent.py src/backend/zuno/test/test_knowledge_api_contract.py -v`
 Expected: PASS
 
 - [ ] **Step 3: Inspect git diff for unintended files**
 
-Run: `git -C F:\\resume project\\02_projects\\Zuno diff -- src/backend/agentchat/services src/backend/agentchat/test docs/prototypes/superpowers-legacy`
+Run: `git -C F:\\resume project\\02_projects\\Zuno diff -- src/backend/zuno/services src/backend/zuno/test docs/prototypes/superpowers-legacy`
 Expected: only retrieval refactor files and touched tests / docs

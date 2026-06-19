@@ -9,8 +9,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 FORBIDDEN_PUBLIC_DOC_LINKS = [
-    "./src/backend/agentchat/evals/rag_eval/runs/",
-    "/src/backend/agentchat/evals/rag_eval/runs/",
+    "./src/backend/zuno/evals/rag_eval/runs/",
+    "/src/backend/zuno/evals/rag_eval/runs/",
 ]
 
 PUBLIC_DOC_FILES = [
@@ -36,12 +36,12 @@ SUSPICIOUS_STATUS_PREFIXES = [
     ".agent/",
     ".agentmd",
     ".local/",
-    "docs/superpowers/",
+    "docs/superpowers/specs/",
     "apps/web/AGENTS.md",
     "infra/docker/docker_config.local.yaml",
-    ".local/config/agentchat/",
-    ".local/evals/agentchat/rag_eval/runs/",
-    ".local/evals/agentchat/rag_eval/corpus/",
+    ".local/config/zuno/",
+    ".local/evals/zuno/rag_eval/runs/",
+    ".local/evals/zuno/rag_eval/corpus/",
 ]
 
 

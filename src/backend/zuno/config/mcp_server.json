@@ -6,7 +6,7 @@
     "config": {},
     "params": {},
     "config_enabled": false,
-    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/map.png",
+    "logo_url": "https://zuno.oss-cn-beijing.aliyuncs.com/icons/mcp/map.png",
     "imported_config": {
       "mcpServers": {
         "高德地图": {
@@ -35,7 +35,7 @@
     "config": {},
     "params": {},
     "config_enabled": false,
-    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/biying.png",
+    "logo_url": "https://zuno.oss-cn-beijing.aliyuncs.com/icons/mcp/biying.png",
     "imported_config": {
       "mcpServers": {
         "必应搜索": {
@@ -75,7 +75,7 @@
     ],
     "params": {},
     "config_enabled": true,
-    "logo_url": "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/feishu.png",
+    "logo_url": "https://zuno.oss-cn-beijing.aliyuncs.com/icons/mcp/feishu.png",
     "imported_config": {
       "mcpServers": {
         "飞书": {

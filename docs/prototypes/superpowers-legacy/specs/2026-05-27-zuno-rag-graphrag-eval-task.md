@@ -233,7 +233,7 @@ RAG + GraphRAG + rerank + selected chunk strategy
 每次评测输出到：
 
 ```text
-src/backend/agentchat/evals/rag_eval/runs/<timestamp>/
+src/backend/zuno/evals/rag_eval/runs/<timestamp>/
 ```
 
 至少包含：

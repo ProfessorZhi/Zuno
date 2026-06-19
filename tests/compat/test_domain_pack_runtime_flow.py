@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_graph_retriever_adapter_uses_runtime_domain_pack_id(monkeypatch):
-    from agentchat.services.retrieval.retrievers import GraphRetrieverAdapter
+    from zuno.services.retrieval.retrievers import GraphRetrieverAdapter
 
     captured = {}
 
@@ -18,7 +18,7 @@ def test_graph_retriever_adapter_uses_runtime_domain_pack_id(monkeypatch):
             return {"content": "", "documents": [], "domain_pack_id": kwargs.get("domain_pack_id")}
 
     monkeypatch.setattr(
-        "agentchat.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
+        "zuno.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
 
@@ -32,8 +32,8 @@ def test_graph_retriever_adapter_uses_runtime_domain_pack_id(monkeypatch):
 
 
 def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():
-    from agentchat.services.retrieval.models import ProcessedQuery
-    from agentchat.services.retrieval.orchestrator import RetrievalOrchestrator
+    from zuno.services.retrieval.models import ProcessedQuery
+    from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
 
     class FakePlanner:
         def __init__(self):
@@ -75,7 +75,7 @@ def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():
 
 
 def test_agent_table_accepts_domain_pack_id():
-    from agentchat.database.models.agent import AgentTable
+    from zuno.database.models.agent import AgentTable
 
     agent = AgentTable(
         name="contract agent",

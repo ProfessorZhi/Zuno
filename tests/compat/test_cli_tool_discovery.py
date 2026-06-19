@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 
 def test_cli_preview_local_directory_returns_recommended_candidate(monkeypatch, tmp_path):
-    from agentchat.schema.tool import CLIToolPreviewReq
-    from agentchat.services.cli_tool_discovery import CliToolDiscoveryService
+    from zuno.schema.tool import CLIToolPreviewReq
+    from zuno.services.cli_tool_discovery import CliToolDiscoveryService
 
     repo_root = tmp_path / "repo"
     tool_dir = repo_root / "tools" / "cli" / "demo_cli"
@@ -24,8 +24,8 @@ def test_cli_preview_local_directory_returns_recommended_candidate(monkeypatch, 
 
 
 def test_cli_preview_npm_package_suggests_install_and_healthcheck():
-    from agentchat.schema.tool import CLIToolPreviewReq
-    from agentchat.services.cli_tool_discovery import CliToolDiscoveryService
+    from zuno.schema.tool import CLIToolPreviewReq
+    from zuno.services.cli_tool_discovery import CliToolDiscoveryService
 
     result = CliToolDiscoveryService.preview_tool(
         CLIToolPreviewReq(
@@ -39,8 +39,8 @@ def test_cli_preview_npm_package_suggests_install_and_healthcheck():
 
 
 def test_cli_preview_executable_uses_absolute_path(tmp_path):
-    from agentchat.schema.tool import CLIToolPreviewReq
-    from agentchat.services.cli_tool_discovery import CliToolDiscoveryService
+    from zuno.schema.tool import CLIToolPreviewReq
+    from zuno.services.cli_tool_discovery import CliToolDiscoveryService
 
     exe_path = tmp_path / "tool.exe"
     exe_path.write_text("binary", encoding="utf-8")
@@ -58,7 +58,7 @@ def test_cli_preview_executable_uses_absolute_path(tmp_path):
 
 
 def test_cli_tool_preview_request_accepts_richer_inputs_without_tool_dir():
-    from agentchat.schema.tool import CLIToolPreviewReq
+    from zuno.schema.tool import CLIToolPreviewReq
 
     req = CLIToolPreviewReq(
         source_type="python_package",
@@ -74,8 +74,8 @@ def test_cli_tool_preview_request_accepts_richer_inputs_without_tool_dir():
 
 
 def test_cli_preview_python_package_supports_structured_suggestions():
-    from agentchat.schema.tool import CLIToolPreviewReq
-    from agentchat.services.cli_tool_discovery import CliToolDiscoveryService
+    from zuno.schema.tool import CLIToolPreviewReq
+    from zuno.services.cli_tool_discovery import CliToolDiscoveryService
 
     result = CliToolDiscoveryService.preview(
         CLIToolPreviewReq(
@@ -96,8 +96,8 @@ def test_cli_preview_python_package_supports_structured_suggestions():
 
 
 def test_cli_preview_github_repo_accepts_github_and_docs_aliases():
-    from agentchat.schema.tool import CLIToolPreviewReq
-    from agentchat.services.cli_tool_discovery import CliToolDiscoveryService
+    from zuno.schema.tool import CLIToolPreviewReq
+    from zuno.services.cli_tool_discovery import CliToolDiscoveryService
 
     result = CliToolDiscoveryService.preview(
         CLIToolPreviewReq(
@@ -117,8 +117,8 @@ def test_cli_preview_github_repo_accepts_github_and_docs_aliases():
 
 
 def test_cli_preview_endpoint_passes_full_request_to_service(monkeypatch):
-    from agentchat.api.v1.tool import preview_cli_tool_directory
-    from agentchat.schema.tool import CLIToolPreviewReq, CLIToolPreviewResp
+    from zuno.api.v1.tool import preview_cli_tool_directory
+    from zuno.schema.tool import CLIToolPreviewReq, CLIToolPreviewResp
 
     captured = {}
 
@@ -140,7 +140,7 @@ def test_cli_preview_endpoint_passes_full_request_to_service(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "agentchat.api.v1.tool.CliToolDiscoveryService.preview",
+        "zuno.api.v1.tool.CliToolDiscoveryService.preview",
         fake_preview,
     )
 

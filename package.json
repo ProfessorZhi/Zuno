@@ -12,9 +12,9 @@
     "test": "tests"
   },
   "scripts": {
-    "frontend:dev": "npm run dev -w agentchat-frontend",
-    "frontend:build": "npm run build -w agentchat-frontend",
-    "frontend:lint": "npm run lint -w agentchat-frontend",
+    "frontend:dev": "npm run dev -w zuno-frontend",
+    "frontend:build": "npm run build -w zuno-frontend",
+    "frontend:lint": "npm run lint -w zuno-frontend",
     "desktop:dev": "npm run dev -w zuno-desktop",
     "desktop:start": "npm run start -w zuno-desktop"
   },

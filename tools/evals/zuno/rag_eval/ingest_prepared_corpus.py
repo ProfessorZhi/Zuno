@@ -10,10 +10,10 @@ BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from agentchat.api.services.knowledge import KnowledgeService
-from agentchat.api.services.knowledge_file import KnowledgeFileService
-from agentchat.database.models.user import AdminUser
-from agentchat.settings import app_settings, initialize_app_settings
+from zuno.api.services.knowledge import KnowledgeService
+from zuno.api.services.knowledge_file import KnowledgeFileService
+from zuno.database.models.user import AdminUser
+from zuno.settings import app_settings, initialize_app_settings
 
 
 DEFAULT_EVAL_CONFIG = {

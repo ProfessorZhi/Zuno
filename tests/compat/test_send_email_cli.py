@@ -4,8 +4,8 @@ import yaml
 
 
 def test_send_email_cli_lists_accounts(monkeypatch, capsys):
-    from agentchat.tools.send_email import action as email_action
-    from agentchat.tools.send_email import cli as email_cli
+    from zuno.tools.send_email import action as email_action
+    from zuno.tools.send_email import cli as email_cli
 
     monkeypatch.setattr(email_cli, "_load_runtime_settings", lambda: None)
     monkeypatch.setattr(email_action, "_format_email_account_summaries", lambda: "slot-a")
@@ -18,8 +18,8 @@ def test_send_email_cli_lists_accounts(monkeypatch, capsys):
 
 
 def test_send_email_cli_send_forwards_args(monkeypatch, capsys):
-    from agentchat.tools.send_email import action as email_action
-    from agentchat.tools.send_email import cli as email_cli
+    from zuno.tools.send_email import action as email_action
+    from zuno.tools.send_email import cli as email_cli
 
     recorded = {}
 
@@ -68,7 +68,7 @@ def test_send_email_manifest_declares_cli_tool():
         / "backend"
         / "zuno"
         / "legacy"
-        / "agentchat"
+        / "zuno"
         / "tools"
         / "send_email"
         / "manifest.yaml"

@@ -3,13 +3,13 @@ from types import SimpleNamespace
 
 
 def test_normalize_image_input_converts_local_storage_url_to_data_uri(monkeypatch):
-    from agentchat.services.rag import vl_embedding
+    from zuno.services.rag import vl_embedding
 
     captured = {}
     monkeypatch.setattr(
         vl_embedding.app_settings,
         "storage",
-        SimpleNamespace(active=SimpleNamespace(base_url="http://127.0.0.1:9000/agentchat", bucket_name="agentchat")),
+        SimpleNamespace(active=SimpleNamespace(base_url="http://127.0.0.1:9000/zuno", bucket_name="zuno")),
     )
     def fake_get_file_bytes(object_name):
         captured["object_name"] = object_name

@@ -1,5 +1,5 @@
 def test_contract_relation_question_is_graph_worthy():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
     from zuno.services.domain_pack.loader import DomainPackLoader
 
     query = (
@@ -16,7 +16,7 @@ def test_contract_relation_question_is_graph_worthy():
 
 
 def test_contract_title_alias_is_promoted_to_seed():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
     from zuno.services.domain_pack.loader import DomainPackLoader
 
     query = (
@@ -33,7 +33,7 @@ def test_contract_title_alias_is_promoted_to_seed():
 
 
 def test_contract_step_question_is_graph_worthy():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
     from zuno.services.domain_pack.loader import DomainPackLoader
 
     query = (

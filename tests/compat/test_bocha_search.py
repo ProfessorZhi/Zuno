@@ -1,5 +1,5 @@
 # test_bocha_search_simple.py
-from agentchat.tools.web_search.bocha_search.action import bocha_search
+from zuno.tools.web_search.bocha_search.action import bocha_search
 
 def run_test(name, **kwargs):
     print(f"\n{'='*20} {name} {'='*20}")

@@ -34,7 +34,7 @@ def test_phase6_bundle_scope_groups_cover_expected_boundaries() -> None:
         in module.PHASE6_BUNDLE_GROUPS["logical_phase6_delta"]
     )
     assert (
-        "src/backend/zuno/legacy/agentchat/services/runtime_registry.py"
+        "src/backend/zuno/services/runtime_registry.py"
         in module.PHASE6_BUNDLE_GROUPS["runtime_foundations"]
     )
     assert (

@@ -5,11 +5,11 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
-from agentchat.evals.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.paths import default_runs_root
 
 
 def test_is_probably_local_base_url():
-    from agentchat.evals.rag_eval.run_local_embedding_eval import is_probably_local_base_url
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import is_probably_local_base_url
 
     assert is_probably_local_base_url("http://127.0.0.1:8000/v1") is True
     assert is_probably_local_base_url("http://host.docker.internal:11434/v1") is True
@@ -17,30 +17,30 @@ def test_is_probably_local_base_url():
 
 
 def test_infer_provider_from_base_url():
-    from agentchat.evals.rag_eval.run_local_embedding_eval import infer_provider_from_base_url
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import infer_provider_from_base_url
 
     assert infer_provider_from_base_url("http://127.0.0.1:11434/v1") == "openai-compatible-local"
     assert infer_provider_from_base_url("https://dashscope.aliyuncs.com/compatible-mode/v1") == "dashscope"
 
 
 def test_validate_model_id_accepts_matching_embedding(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import validate_model_id
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import validate_model_id
 
     async def fake_get_llm_by_id(llm_id):
         return {"llm_id": llm_id, "llm_type": "Embedding", "base_url": "http://127.0.0.1:11434/v1"}
 
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
     payload = asyncio.run(validate_model_id("llm_embed_1", "Embedding"))
     assert payload["llm_id"] == "llm_embed_1"
 
 
 def test_validate_model_id_rejects_wrong_type(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import validate_model_id
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import validate_model_id
 
     async def fake_get_llm_by_id(llm_id):
         return {"llm_id": llm_id, "llm_type": "LLM"}
 
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
 
     try:
         asyncio.run(validate_model_id("llm_embed_1", "Embedding"))
@@ -51,19 +51,19 @@ def test_validate_model_id_rejects_wrong_type(monkeypatch):
 
 
 def test_probe_embedding_model_returns_dimension(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import probe_embedding_model
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import probe_embedding_model
 
     async def fake_get_embedding(text, config_override=None):
         return [0.1, 0.2, 0.3, 0.4]
 
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
     result = asyncio.run(probe_embedding_model({"llm_id": "embed_1", "model": "bge-local"}))
     assert result["dimension"] == 4
     assert result["llm_id"] == "embed_1"
 
 
 def test_preflight_local_embedding_eval_includes_probe(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 
     async def fake_get_llm_by_id(llm_id):
         return {
@@ -76,8 +76,8 @@ def test_preflight_local_embedding_eval_includes_probe(monkeypatch):
     async def fake_get_embedding(text, config_override=None):
         return [1.0, 2.0, 3.0]
 
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
     payload = asyncio.run(
         preflight_local_embedding_eval(
             text_embedding_model_id="embed_1",
@@ -89,7 +89,7 @@ def test_preflight_local_embedding_eval_includes_probe(monkeypatch):
 
 
 def test_resolve_embedding_model_id_auto_picks_local_candidate(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import resolve_embedding_model_id
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import resolve_embedding_model_id
 
     async def fake_list_llm_candidates(*, expected_type=None, local_only=False):
         assert expected_type == "Embedding"
@@ -113,7 +113,7 @@ def test_resolve_embedding_model_id_auto_picks_local_candidate(monkeypatch):
         ]
 
     monkeypatch.setattr(
-        "agentchat.evals.rag_eval.run_local_embedding_eval.list_llm_candidates",
+        "tools.evals.zuno.rag_eval.run_local_embedding_eval.list_llm_candidates",
         fake_list_llm_candidates,
     )
     resolved_id, candidates = asyncio.run(
@@ -127,7 +127,7 @@ def test_resolve_embedding_model_id_auto_picks_local_candidate(monkeypatch):
 
 
 def test_preflight_auto_pick_local_embedding(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 
     async def fake_resolve_embedding_model_id(text_embedding_model_id, *, auto_pick_local_embedding=False):
         assert text_embedding_model_id is None
@@ -149,11 +149,11 @@ def test_preflight_auto_pick_local_embedding(monkeypatch):
         return [1.0, 2.0]
 
     monkeypatch.setattr(
-        "agentchat.evals.rag_eval.run_local_embedding_eval.resolve_embedding_model_id",
+        "tools.evals.zuno.rag_eval.run_local_embedding_eval.resolve_embedding_model_id",
         fake_resolve_embedding_model_id,
     )
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
 
     payload = asyncio.run(
         preflight_local_embedding_eval(
@@ -166,7 +166,7 @@ def test_preflight_auto_pick_local_embedding(monkeypatch):
 
 
 def test_preflight_can_use_active_config_embedding(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 
     async def fake_resolve_embedding_model_id(text_embedding_model_id, *, auto_pick_local_embedding=False):
         return None, []
@@ -187,14 +187,14 @@ def test_preflight_can_use_active_config_embedding(monkeypatch):
         return [0.1, 0.2, 0.3]
 
     monkeypatch.setattr(
-        "agentchat.evals.rag_eval.run_local_embedding_eval.resolve_embedding_model_id",
+        "tools.evals.zuno.rag_eval.run_local_embedding_eval.resolve_embedding_model_id",
         fake_resolve_embedding_model_id,
     )
     monkeypatch.setattr(
-        "agentchat.evals.rag_eval.run_local_embedding_eval.get_active_embedding_config",
+        "tools.evals.zuno.rag_eval.run_local_embedding_eval.get_active_embedding_config",
         fake_get_active_embedding_config,
     )
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
 
     payload = asyncio.run(
         preflight_local_embedding_eval(
@@ -208,7 +208,7 @@ def test_preflight_can_use_active_config_embedding(monkeypatch):
 
 
 def test_preflight_rejects_remote_embedding_target(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 
     async def fake_get_llm_by_id(llm_id):
         return {
@@ -218,7 +218,7 @@ def test_preflight_rejects_remote_embedding_target(monkeypatch):
             "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         }
 
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
 
     try:
         asyncio.run(preflight_local_embedding_eval(text_embedding_model_id="embed_remote"))
@@ -229,7 +229,7 @@ def test_preflight_rejects_remote_embedding_target(monkeypatch):
 
 
 def test_resolve_direct_local_embedding_registration_registers_new_llm(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import resolve_direct_local_embedding_registration
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import resolve_direct_local_embedding_registration
 
     created_payloads = []
     rows = []
@@ -259,8 +259,8 @@ def test_resolve_direct_local_embedding_registration_registers_new_llm(monkeypat
             }
         )
 
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.LLMDao.get_all_llm", fake_get_all_llm)
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.LLMService.create_llm", fake_create_llm)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.LLMDao.get_all_llm", fake_get_all_llm)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.LLMService.create_llm", fake_create_llm)
 
     payload = asyncio.run(
         resolve_direct_local_embedding_registration(
@@ -274,7 +274,7 @@ def test_resolve_direct_local_embedding_registration_registers_new_llm(monkeypat
 
 
 def test_preflight_accepts_direct_local_embedding_registration(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 
     async def fake_resolve_direct_local_embedding_registration(*, model_name=None, base_url=None, api_key=None):
         assert model_name == "bge-m3"
@@ -302,12 +302,12 @@ def test_preflight_accepts_direct_local_embedding_registration(monkeypatch):
         return [0.1, 0.2, 0.3, 0.4]
 
     monkeypatch.setattr(
-        "agentchat.evals.rag_eval.run_local_embedding_eval.resolve_direct_local_embedding_registration",
+        "tools.evals.zuno.rag_eval.run_local_embedding_eval.resolve_direct_local_embedding_registration",
         fake_resolve_direct_local_embedding_registration,
     )
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.list_llm_candidates", fake_list_llm_candidates)
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.LLMService.get_llm_by_id", fake_get_llm_by_id)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.list_llm_candidates", fake_list_llm_candidates)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
 
     payload = asyncio.run(
         preflight_local_embedding_eval(
@@ -323,14 +323,14 @@ def test_preflight_accepts_direct_local_embedding_registration(monkeypatch):
 
 
 def test_preflight_accepts_direct_local_embedding_without_registration(monkeypatch):
-    from agentchat.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 
     async def fake_get_embedding(text, config_override=None):
         assert config_override["model"] == "bge-m3-dev"
         assert config_override["base_url"] == "http://127.0.0.1:11434/v1"
         return [0.1, 0.2, 0.3]
 
-    monkeypatch.setattr("agentchat.evals.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.run_local_embedding_eval.get_embedding", fake_get_embedding)
 
     payload = asyncio.run(
         preflight_local_embedding_eval(
@@ -349,7 +349,7 @@ def test_preflight_accepts_direct_local_embedding_without_registration(monkeypat
 def test_run_local_embedding_eval_falls_back_to_stackless_when_db_is_unavailable(monkeypatch):
     from sqlalchemy.exc import OperationalError
 
-    from agentchat.evals.rag_eval.run_local_embedding_eval import run_local_embedding_eval
+    from tools.evals.zuno.rag_eval.run_local_embedding_eval import run_local_embedding_eval
 
     async def fake_preflight_local_embedding_eval(**kwargs):
         raise OperationalError("select 1", {}, Exception("localhost:5432 unavailable"))
@@ -378,15 +378,15 @@ def test_run_local_embedding_eval_falls_back_to_stackless_when_db_is_unavailable
         path.write_text("# summary", encoding="utf-8")
 
     monkeypatch.setattr(
-        "agentchat.evals.rag_eval.run_local_embedding_eval.preflight_local_embedding_eval",
+        "tools.evals.zuno.rag_eval.run_local_embedding_eval.preflight_local_embedding_eval",
         fake_preflight_local_embedding_eval,
     )
     monkeypatch.setattr(
-        "agentchat.evals.rag_eval.run_stackless_local_eval.run_stackless_local_eval",
+        "tools.evals.zuno.rag_eval.run_stackless_local_eval.run_stackless_local_eval",
         fake_run_stackless_local_eval,
     )
-    monkeypatch.setattr("agentchat.evals.rag_eval.summarize_eval_profiles.summarize", fake_summarize)
-    monkeypatch.setattr("agentchat.evals.rag_eval.summarize_eval_profiles.write_markdown", fake_write_markdown)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.summarize_eval_profiles.summarize", fake_summarize)
+    monkeypatch.setattr("tools.evals.zuno.rag_eval.summarize_eval_profiles.write_markdown", fake_write_markdown)
 
     result = asyncio.run(
         run_local_embedding_eval(

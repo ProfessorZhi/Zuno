@@ -14,7 +14,7 @@ def _usage(agent="Simple-Agent", model="MiniMax-M2.5", input_tokens=10, output_t
 
 
 def test_blank_usage_filters_are_treated_as_all(monkeypatch):
-    from agentchat.api.services.usage_stats import UsageStatsService
+    from zuno.api.services.usage_stats import UsageStatsService
 
     calls = []
 
@@ -23,7 +23,7 @@ def test_blank_usage_filters_are_treated_as_all(monkeypatch):
         return [_usage()]
 
     monkeypatch.setattr(
-        "agentchat.database.dao.usage_stats.UsageStatsDao.get_agent_model_time_usage",
+        "zuno.database.dao.usage_stats.UsageStatsDao.get_agent_model_time_usage",
         fake_get_agent_model_time_usage,
     )
 
@@ -41,7 +41,7 @@ def test_blank_usage_filters_are_treated_as_all(monkeypatch):
 
 
 def test_specific_usage_filters_are_preserved(monkeypatch):
-    from agentchat.api.services.usage_stats import UsageStatsService
+    from zuno.api.services.usage_stats import UsageStatsService
 
     calls = []
 
@@ -50,7 +50,7 @@ def test_specific_usage_filters_are_preserved(monkeypatch):
         return [_usage()]
 
     monkeypatch.setattr(
-        "agentchat.database.dao.usage_stats.UsageStatsDao.get_agent_model_time_usage",
+        "zuno.database.dao.usage_stats.UsageStatsDao.get_agent_model_time_usage",
         fake_get_agent_model_time_usage,
     )
 

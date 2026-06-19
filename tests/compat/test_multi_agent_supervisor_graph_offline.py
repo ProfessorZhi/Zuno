@@ -1,6 +1,6 @@
 import asyncio
 
-from agentchat.core.graphs.multi_agent_supervisor_graph import MultiAgentSupervisorGraph
+from zuno.core.graphs.multi_agent_supervisor_graph import MultiAgentSupervisorGraph
 
 
 def test_multi_agent_supervisor_graph_builds_initial_state():

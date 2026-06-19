@@ -12,7 +12,7 @@
 
 - `apps/web/`：Vue 3 + Vite Web 工作台
 - `apps/desktop/`：Electron 桌面端壳层
-- `src/backend/`：当前稳定后端恢复基线
+- `src/backend/zuno/`：当前稳定后端恢复基线
 - `infra/db/`：数据库迁移与 Alembic 配置
 - `infra/docker/`：Dockerfile、Compose、nginx 和容器运行配置
 - `tools/launchers/windows/`：Windows Web/Desktop 启动入口
@@ -38,7 +38,7 @@
 
 - `.local/` 放个人资料、学习材料和历史运行数据，不提交
 - `infra/docker/docker_config.local.yaml` 放 Docker 本地模型配置和密钥，不提交
-- `.local/config/agentchat/config.local.yaml` 放本地后端覆盖配置，不提交
+- `.local/config/zuno/config.local.yaml` 放本地后端覆盖配置，不提交
 - Docker named volumes 保存 PostgreSQL、Redis、Neo4j、MinIO 和后端向量库数据
 
 ## 相关文档

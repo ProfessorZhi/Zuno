@@ -82,17 +82,17 @@ exit /b 0
 cd /d "%DOCKER_DIR%"
 docker compose down --remove-orphans >nul 2>nul
 for %%C in (
-  agentchat-backend
-  agentchat-worker
-  agentchat-postgres
-  agentchat-redis
-  agentchat-rabbitmq
-  agentchat-neo4j
-  agentchat-minio
-  agentchat-milvus
-  agentchat-etcd
-  agentchat-elasticsearch
-  agentchat-frontend
+  zuno-backend
+  zuno-worker
+  zuno-postgres
+  zuno-redis
+  zuno-rabbitmq
+  zuno-neo4j
+  zuno-minio
+  zuno-milvus
+  zuno-etcd
+  zuno-elasticsearch
+  zuno-frontend
 ) do (
   docker rm -f %%C >nul 2>nul
 )

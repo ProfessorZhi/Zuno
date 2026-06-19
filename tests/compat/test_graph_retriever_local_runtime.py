@@ -2,7 +2,7 @@ import asyncio
 
 
 def test_graph_retriever_adapter_uses_local_runtime_graph_retriever(monkeypatch):
-    from agentchat.services.retrieval.retrievers import GraphRetrieverAdapter
+    from zuno.services.retrieval.retrievers import GraphRetrieverAdapter
 
     class FakeLocalGraphRetriever:
         async def retrieve(
@@ -30,7 +30,7 @@ def test_graph_retriever_adapter_uses_local_runtime_graph_retriever(monkeypatch)
         }
 
     monkeypatch.setattr(
-        "agentchat.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
+        "zuno.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
         fake_get_runtime_settings,
     )
 

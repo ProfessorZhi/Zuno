@@ -24,19 +24,19 @@ STAGE_GROUPS = [
     (
         "backend_domain_runtime",
         [
-            "git add src/backend/zuno/legacy/agentchat/core/ src/backend/zuno/legacy/agentchat/domain_packs/ src/backend/zuno/legacy/agentchat/services/domain_pack/ src/backend/zuno/legacy/agentchat/services/runtime_registry.py src/backend/zuno/legacy/agentchat/services/workspace/simple_agent.py src/backend/zuno/legacy/agentchat/services/embedding/ src/backend/zuno/legacy/agentchat/services/llm/ tools/evals/zuno/contract_review_eval/",
+            "git add src/backend/zuno/core/ src/backend/zuno/domain_packs/ src/backend/zuno/services/domain_pack/ src/backend/zuno/services/runtime_registry.py src/backend/zuno/services/workspace/simple_agent.py src/backend/zuno/services/embedding/ src/backend/zuno/services/llm/ tools/evals/zuno/contract_review_eval/",
         ],
     ),
     (
         "backend_rag_graphrag_eval",
         [
-            "git add tools/evals/zuno/rag_eval/ src/backend/zuno/legacy/agentchat/services/graphrag/ src/backend/zuno/legacy/agentchat/services/pipeline/manager.py src/backend/zuno/legacy/agentchat/services/retrieval/ src/backend/zuno/legacy/agentchat/services/rag/",
+            "git add tools/evals/zuno/rag_eval/ src/backend/zuno/services/graphrag/ src/backend/zuno/services/pipeline/manager.py src/backend/zuno/services/retrieval/ src/backend/zuno/services/rag/",
         ],
     ),
     (
         "backend_public_entrypoints",
         [
-            "git add src/backend/zuno/legacy/agentchat/main.py src/backend/zuno/legacy/agentchat/settings.py src/backend/zuno/legacy/agentchat/api/ src/backend/zuno/legacy/agentchat/database/ src/backend/zuno/legacy/agentchat/schema/ src/backend/zuno/legacy/agentchat/tools/ src/backend/zuno/legacy/agentchat/config/ src/backend/zuno/",
+            "git add src/backend/zuno/main.py src/backend/zuno/settings.py src/backend/zuno/api/ src/backend/zuno/database/ src/backend/zuno/schema/ src/backend/zuno/tools/ src/backend/zuno/config/ src/backend/zuno/",
         ],
     ),
     (

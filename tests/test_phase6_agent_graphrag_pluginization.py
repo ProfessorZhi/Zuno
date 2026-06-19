@@ -17,7 +17,7 @@ def _ensure_runtime_paths() -> None:
 def test_phase6_agent_runtime_can_bind_domain_pack_without_knowledge_runtime_pack(monkeypatch) -> None:
     _ensure_runtime_paths()
 
-    ga = importlib.import_module("agentchat.core.agents.general_agent")
+    ga = importlib.import_module("zuno.core.agents.general_agent")
     AgentConfig = importlib.import_module("zuno.core.agents.general_agent").AgentConfig
     GeneralAgent = importlib.import_module("zuno.core.agents.general_agent").GeneralAgent
 

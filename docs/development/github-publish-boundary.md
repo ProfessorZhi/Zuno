@@ -22,10 +22,10 @@ The following content is local-only and must not be published:
 - `docs/superpowers/`
 - `apps/web/AGENTS.md`
 - local config overrides such as `infra/docker/docker_config.local.yaml`
-- local backend overrides such as `.local/config/agentchat/config.local.yaml`
+- local backend overrides such as `.local/config/zuno/config.local.yaml`
 - secrets, tokens, keys, and personal credentials
-- one-off evaluation run outputs under `.local/evals/agentchat/rag_eval/runs/`
-- large local corpora or scratch corpora under `.local/evals/agentchat/rag_eval/corpus/`
+- one-off evaluation run outputs under `.local/evals/zuno/rag_eval/runs/`
+- large local corpora or scratch corpora under `.local/evals/zuno/rag_eval/corpus/`
 - Playwright, pytest, and desktop runtime leftovers
 
 ## Release Rule

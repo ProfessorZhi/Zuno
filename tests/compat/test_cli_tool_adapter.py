@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 def test_cli_tool_adapter_resolves_repo_local_cli_tools_root(monkeypatch, tmp_path):
-    from agentchat.tools.cli_tool.adapter import CLIToolAdapter
+    from zuno.tools.cli_tool.adapter import CLIToolAdapter
 
     repo_root = tmp_path / "repo"
     tool_dir = repo_root / "tools" / "cli" / "echo_tool"
@@ -22,7 +22,7 @@ def test_cli_tool_adapter_resolves_repo_local_cli_tools_root(monkeypatch, tmp_pa
 
 
 def test_cli_tool_adapter_executes_from_repo_local_cli_tools(monkeypatch, tmp_path):
-    from agentchat.tools.cli_tool.adapter import CLIToolAdapter
+    from zuno.tools.cli_tool.adapter import CLIToolAdapter
 
     repo_root = tmp_path / "repo"
     tool_dir = repo_root / "tools" / "cli" / "echo_tool"
@@ -54,7 +54,7 @@ def test_cli_tool_adapter_executes_from_repo_local_cli_tools(monkeypatch, tmp_pa
 
 
 def test_cli_tool_adapter_runs_healthcheck_command(monkeypatch, tmp_path):
-    from agentchat.tools.cli_tool.adapter import CLIToolAdapter
+    from zuno.tools.cli_tool.adapter import CLIToolAdapter
 
     repo_root = tmp_path / "repo"
     tool_dir = repo_root / "tools" / "cli" / "echo_tool"
@@ -86,7 +86,7 @@ def test_cli_tool_adapter_runs_healthcheck_command(monkeypatch, tmp_path):
 
 
 def test_cli_tool_adapter_connectivity_without_healthcheck_is_not_ready(monkeypatch, tmp_path):
-    from agentchat.tools.cli_tool.adapter import CLIToolAdapter
+    from zuno.tools.cli_tool.adapter import CLIToolAdapter
 
     repo_root = tmp_path / "repo"
     tool_dir = repo_root / "tools" / "cli" / "echo_tool"

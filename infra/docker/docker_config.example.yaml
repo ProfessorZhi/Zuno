@@ -8,8 +8,8 @@ server:
   version: "2.4.0"
 
 database:
-  sync_endpoint: "postgresql+psycopg://postgres:postgres@postgres:5432/agentchat"
-  async_endpoint: "postgresql+asyncpg://postgres:postgres@postgres:5432/agentchat"
+  sync_endpoint: "postgresql+psycopg://postgres:postgres@postgres:5432/zuno"
+  async_endpoint: "postgresql+asyncpg://postgres:postgres@postgres:5432/zuno"
   echo: false
   pool_size: 10
   max_overflow: 20
@@ -104,13 +104,13 @@ storage:
     access_key_id: "minioadmin"
     access_key_secret: "minioadmin"
     endpoint: "minio:9000"
-    bucket_name: "agentchat"
-    base_url: "http://127.0.0.1:9000/agentchat"
+    bucket_name: "zuno"
+    base_url: "http://127.0.0.1:9000/zuno"
 
 default_config:
-  mcp_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/mcp/mcp.png"
-  tool_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/default.png"
-  agent_logo_url: "https://agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/bot.png"
+  mcp_logo_url: "https://zuno.oss-cn-beijing.aliyuncs.com/icons/mcp/mcp.png"
+  tool_logo_url: "https://zuno.oss-cn-beijing.aliyuncs.com/icons/tools/default.png"
+  agent_logo_url: "https://zuno.oss-cn-beijing.aliyuncs.com/icons/tools/bot.png"
   mars_daily_url: "https://news.aibase.com/zh/news"
   memory_collection_name: "memory"
 
@@ -120,7 +120,7 @@ wechat_config:
   secret: ""
 
 langfuse:
-  trace_name: "agentchat"
+  trace_name: "zuno"
   host: "https://cloud.langfuse.com"
   public_key: ""
   secret_key: ""

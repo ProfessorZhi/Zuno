@@ -31,8 +31,8 @@ def test_desktop_stop_stops_backend_services_too():
     assert stop_block is not None
     assert "call :stopBackend" in stop_block.group(1)
     assert "docker rm -f %%C" in content
-    assert "agentchat-worker" in content
-    assert "agentchat-backend" in content
+    assert "zuno-worker" in content
+    assert "zuno-backend" in content
     assert "DESKTOP_ELECTRON_EXE" in content
     assert "call :cleanup_processes" in stop_block.group(1)
     assert "_Zuno-Desktop-Cleanup.ps1" in content
@@ -187,7 +187,7 @@ def test_phase0_backend_launcher_uses_postgres_then_src_backend_uvicorn():
     ).read_text(encoding="utf-8")
 
     assert 'docker compose up -d postgres' in start_content
-    assert 'docker inspect -f "{{.State.Health.Status}}" agentchat-postgres' in start_content
+    assert 'docker inspect -f "{{.State.Health.Status}}" zuno-postgres' in start_content
     assert 'python -m uvicorn --app-dir src/backend zuno.main:app --host 127.0.0.1 --port 7860' in start_content
     assert 'Get-NetTCPConnection -LocalPort 7860 -State Listen' in stop_content
     assert 'docker compose stop postgres' in stop_content

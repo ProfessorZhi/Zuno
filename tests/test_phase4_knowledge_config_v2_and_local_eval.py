@@ -40,7 +40,7 @@ def test_phase4_docs_and_frontend_contract_expose_knowledge_config_v2() -> None:
         assert phrase in backend_schema
 
 
-def test_phase4_runtime_defaults_and_agentchat_eval_compat_imports(monkeypatch) -> None:
+def test_phase4_runtime_defaults_and_zuno_eval_compat_imports(monkeypatch) -> None:
     _ensure_runtime_paths()
 
     KnowledgeService = importlib.import_module("zuno.api.services.knowledge").KnowledgeService
@@ -61,8 +61,8 @@ def test_phase4_runtime_defaults_and_agentchat_eval_compat_imports(monkeypatch) 
     assert runtime["knowledge_config"]["retrieval_settings"]["profile"] == "relation_hybrid"
     assert runtime["knowledge_config"]["eval_profile_id"] == "contract_review_local"
 
-    importlib.import_module("agentchat.api.services.knowledge_file")
-    importlib.import_module("agentchat.services.rag.handler")
-    importlib.import_module("agentchat.services.graphrag.retriever")
-    importlib.import_module("agentchat.evals.rag_eval.ingest_prepared_corpus")
+    importlib.import_module("zuno.api.services.knowledge_file")
+    importlib.import_module("zuno.services.rag.handler")
+    importlib.import_module("zuno.services.graphrag.retriever")
+    importlib.import_module("tools.evals.zuno.rag_eval.ingest_prepared_corpus")
 

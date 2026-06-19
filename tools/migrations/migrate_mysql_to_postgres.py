@@ -18,7 +18,7 @@ CORE_TABLES = [
 
 
 def load_postgres_url() -> str:
-    config_path = Path(__file__).resolve().parents[1] / "src" / "backend" / "agentchat" / "config.yaml"
+    config_path = Path(__file__).resolve().parents[1] / "src" / "backend" / "zuno" / "config.yaml"
     with config_path.open("r", encoding="utf-8") as file:
         config = yaml.safe_load(file) or {}
     database = config.get("database") or {}
@@ -88,7 +88,7 @@ def main() -> None:
     parser.add_argument(
         "--mysql-url",
         required=True,
-        help="旧 MySQL 连接串，例如 mysql+pymysql://root:password@127.0.0.1:3306/agentchat",
+        help="旧 MySQL 连接串，例如 mysql+pymysql://root:password@127.0.0.1:3306/zuno",
     )
     parser.add_argument(
         "--postgres-url",

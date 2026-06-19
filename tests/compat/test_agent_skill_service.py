@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_list_host_skills_reads_skill_directory(monkeypatch, tmp_path):
-    from agentchat.api.services.agent_skill import AgentSkillService
+    from zuno.api.services.agent_skill import AgentSkillService
 
     root = tmp_path / "zuno-skills"
     skill_dir = root / "release-check"
@@ -37,7 +37,7 @@ def test_list_host_skills_reads_skill_directory(monkeypatch, tmp_path):
 
 
 def test_get_agent_skills_by_ids_includes_host_skills(monkeypatch, tmp_path):
-    from agentchat.api.services.agent_skill import AgentSkillService
+    from zuno.api.services.agent_skill import AgentSkillService
 
     root = tmp_path / "zuno-skills"
     skill_dir = root / "host-one"
@@ -53,7 +53,7 @@ def test_get_agent_skills_by_ids_includes_host_skills(monkeypatch, tmp_path):
         return [SimpleNamespace(id="db-skill", name="db-skill")]
 
     monkeypatch.setattr(
-        "agentchat.api.services.agent_skill.AgentSkillDao.get_agent_skills_by_ids",
+        "zuno.api.services.agent_skill.AgentSkillDao.get_agent_skills_by_ids",
         fake_db_skills,
     )
 
@@ -65,6 +65,6 @@ def test_get_agent_skills_by_ids_includes_host_skills(monkeypatch, tmp_path):
 
 
 def test_readonly_skill_operations_reject_host_skill():
-    from agentchat.api.services.agent_skill import AgentSkillService
+    from zuno.api.services.agent_skill import AgentSkillService
 
     assert AgentSkillService.is_readonly_skill_id("host-skill-demo") is True

@@ -23,7 +23,7 @@ export const USER_AVATAR_PRESETS = Array.from(
 export const DEFAULT_USER_AVATAR = USER_AVATAR_PRESETS[0]
 
 export const isLegacyRemoteUserAvatar = (value: string) => (
-  value.includes('agentchat.oss-cn-beijing.aliyuncs.com/icons/user/')
-  || value.includes('/agentchat/icons/user/')
+  value.includes('zuno.oss-cn-beijing.aliyuncs.com/icons/user/')
+  || value.includes('/zuno/icons/user/')
   || value.includes('/icons/user/')
 )

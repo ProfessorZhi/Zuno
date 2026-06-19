@@ -9,7 +9,7 @@ router = APIRouter(tags=["Usage-Stats"])
 
 
 @router.post("/usage", summary="根据不同的参数获取用量统计")
-async def get_agentchat_usage(
+async def get_zuno_usage(
     usage_stats: UsageStatsRequest,
     login_user: UserPayload = Depends(get_login_user),
 ):
@@ -24,7 +24,7 @@ async def get_agentchat_usage(
 
 
 @router.post("/usage_count", summary="统计每个Agent、Model统计次数")
-async def get_agentchat_usage_count(
+async def get_zuno_usage_count(
     usage_stats: UsageStatsRequest,
     login_user: UserPayload = Depends(get_login_user),
 ):
@@ -57,8 +57,8 @@ async def get_usage_agents(login_user: UserPayload = Depends(get_login_user)):
 
 
 __all__ = [
-    "get_agentchat_usage",
-    "get_agentchat_usage_count",
+    "get_zuno_usage",
+    "get_zuno_usage_count",
     "get_usage_agents",
     "get_usage_models",
     "router",

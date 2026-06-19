@@ -7,7 +7,7 @@ Create Date: 2026-04-17 03:30:00
 
 from alembic import op
 
-from agentchat.database.metadata import metadata
+from zuno.database.metadata import metadata
 
 revision = "20260417_01"
 down_revision = None

@@ -2,8 +2,8 @@ import asyncio
 
 
 def test_create_workspace_session_prunes_empty_disposable_sessions_for_same_scope(monkeypatch):
-    from agentchat.api.services.workspace_session import WorkSpaceSessionService
-    from agentchat.database.models.workspace_session import WorkSpaceSessionCreate
+    from zuno.api.services.workspace_session import WorkSpaceSessionService
+    from zuno.database.models.workspace_session import WorkSpaceSessionCreate
 
     captured = {"deleted": None, "created": None}
 
@@ -25,15 +25,15 @@ def test_create_workspace_session_prunes_empty_disposable_sessions_for_same_scop
         return workspace_session
 
     monkeypatch.setattr(
-        "agentchat.api.services.workspace_session.WorkSpaceSessionDao.get_workspace_sessions",
+        "zuno.api.services.workspace_session.WorkSpaceSessionDao.get_workspace_sessions",
         fake_get_workspace_sessions,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.workspace_session.WorkSpaceSessionDao.delete_workspace_session",
+        "zuno.api.services.workspace_session.WorkSpaceSessionDao.delete_workspace_session",
         fake_delete_workspace_session,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.workspace_session.WorkSpaceSessionDao.create_workspace_session",
+        "zuno.api.services.workspace_session.WorkSpaceSessionDao.create_workspace_session",
         fake_create_workspace_session,
     )
 
@@ -52,8 +52,8 @@ def test_create_workspace_session_prunes_empty_disposable_sessions_for_same_scop
 
 
 def test_create_workspace_session_keeps_nonempty_or_nondisposable_sessions(monkeypatch):
-    from agentchat.api.services.workspace_session import WorkSpaceSessionService
-    from agentchat.database.models.workspace_session import WorkSpaceSessionCreate
+    from zuno.api.services.workspace_session import WorkSpaceSessionService
+    from zuno.database.models.workspace_session import WorkSpaceSessionCreate
 
     captured = {"deleted": None}
 
@@ -75,15 +75,15 @@ def test_create_workspace_session_keeps_nonempty_or_nondisposable_sessions(monke
         return workspace_session
 
     monkeypatch.setattr(
-        "agentchat.api.services.workspace_session.WorkSpaceSessionDao.get_workspace_sessions",
+        "zuno.api.services.workspace_session.WorkSpaceSessionDao.get_workspace_sessions",
         fake_get_workspace_sessions,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.workspace_session.WorkSpaceSessionDao.delete_workspace_session",
+        "zuno.api.services.workspace_session.WorkSpaceSessionDao.delete_workspace_session",
         fake_delete_workspace_session,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.workspace_session.WorkSpaceSessionDao.create_workspace_session",
+        "zuno.api.services.workspace_session.WorkSpaceSessionDao.create_workspace_session",
         fake_create_workspace_session,
     )
 
@@ -101,7 +101,7 @@ def test_create_workspace_session_keeps_nonempty_or_nondisposable_sessions(monke
 
 
 def test_update_workspace_session_contexts_passes_normalized_title(monkeypatch):
-    from agentchat.api.services.workspace_session import WorkSpaceSessionService
+    from zuno.api.services.workspace_session import WorkSpaceSessionService
 
     captured = {}
 
@@ -112,7 +112,7 @@ def test_update_workspace_session_contexts_passes_normalized_title(monkeypatch):
         return {"session_id": session_id, "title": title, "contexts": [session_context]}
 
     monkeypatch.setattr(
-        "agentchat.api.services.workspace_session.WorkSpaceSessionDao.update_workspace_session_contexts",
+        "zuno.api.services.workspace_session.WorkSpaceSessionDao.update_workspace_session_contexts",
         fake_update_workspace_session_contexts,
     )
 
@@ -130,7 +130,7 @@ def test_update_workspace_session_contexts_passes_normalized_title(monkeypatch):
 
 
 def test_get_workspace_sessions_hides_empty_drafts(monkeypatch):
-    from agentchat.api.services.workspace_session import WorkSpaceSessionService
+    from zuno.api.services.workspace_session import WorkSpaceSessionService
 
     class FakeSession:
         def __init__(self, session_id, contexts):
@@ -158,7 +158,7 @@ def test_get_workspace_sessions_hides_empty_drafts(monkeypatch):
         ]
 
     monkeypatch.setattr(
-        "agentchat.api.services.workspace_session.WorkSpaceSessionDao.get_workspace_sessions",
+        "zuno.api.services.workspace_session.WorkSpaceSessionDao.get_workspace_sessions",
         fake_get_workspace_sessions,
     )
 

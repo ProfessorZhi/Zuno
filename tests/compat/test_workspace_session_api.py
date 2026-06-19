@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_create_workspace_session_endpoint_persists_scope_payload(monkeypatch):
-    from agentchat.api.v1.workspace import (
+    from zuno.api.v1.workspace import (
         WorkSpaceSessionCreateBody,
         create_workspace_session,
     )
@@ -29,7 +29,7 @@ def test_create_workspace_session_endpoint_persists_scope_payload(monkeypatch):
         return FakeSession(payload)
 
     monkeypatch.setattr(
-        "agentchat.api.v1.workspace.WorkSpaceSessionService.create_workspace_session",
+        "zuno.api.v1.workspace.WorkSpaceSessionService.create_workspace_session",
         fake_create_workspace_session,
     )
 
@@ -53,7 +53,7 @@ def test_create_workspace_session_endpoint_persists_scope_payload(monkeypatch):
 
 
 def test_create_workspace_session_endpoint_allows_missing_session_id(monkeypatch):
-    from agentchat.api.v1.workspace import (
+    from zuno.api.v1.workspace import (
         WorkSpaceSessionCreateBody,
         create_workspace_session,
     )
@@ -79,7 +79,7 @@ def test_create_workspace_session_endpoint_allows_missing_session_id(monkeypatch
         return FakeSession(payload)
 
     monkeypatch.setattr(
-        "agentchat.api.v1.workspace.WorkSpaceSessionService.create_workspace_session",
+        "zuno.api.v1.workspace.WorkSpaceSessionService.create_workspace_session",
         fake_create_workspace_session,
     )
 
@@ -100,7 +100,7 @@ def test_create_workspace_session_endpoint_allows_missing_session_id(monkeypatch
 
 
 def test_get_workspace_sessions_endpoint_passes_mode_filter(monkeypatch):
-    from agentchat.api.v1.workspace import get_workspace_sessions
+    from zuno.api.v1.workspace import get_workspace_sessions
 
     captured = {}
 
@@ -112,7 +112,7 @@ def test_get_workspace_sessions_endpoint_passes_mode_filter(monkeypatch):
         return []
 
     monkeypatch.setattr(
-        "agentchat.api.v1.workspace.WorkSpaceSessionService.get_workspace_sessions",
+        "zuno.api.v1.workspace.WorkSpaceSessionService.get_workspace_sessions",
         fake_get_workspace_sessions,
     )
 
@@ -132,8 +132,8 @@ def test_get_workspace_sessions_endpoint_passes_mode_filter(monkeypatch):
 
 
 def test_agent_draft_titles_are_treated_as_placeholders():
-    from agentchat.api.services.workspace_session import WorkSpaceSessionService
-    from agentchat.database.dao.workspace_session import WorkSpaceSessionDao
+    from zuno.api.services.workspace_session import WorkSpaceSessionService
+    from zuno.database.dao.workspace_session import WorkSpaceSessionDao
 
     for title in ["Demo Agent的新对话", "Demo Agent 的新对话", "Agent Alpha 的新会话", "新对话"]:
         assert WorkSpaceSessionService.is_placeholder_title(title)

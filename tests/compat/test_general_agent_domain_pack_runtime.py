@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_general_agent_knowledge_tool_uses_domain_pack_runtime(monkeypatch):
-    from agentchat.core.agents.general_agent import AgentConfig, GeneralAgent
+    from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
 
     async def fake_runtime_settings(_knowledge_id):
         return {
@@ -21,15 +21,15 @@ def test_general_agent_knowledge_tool_uses_domain_pack_runtime(monkeypatch):
         raise AssertionError("fallback RagHandler path should not be used when domain pack runtime is available")
 
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.KnowledgeService.get_runtime_settings",
+        "zuno.core.agents.general_agent.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.AgentRuntime.run_domain_qa",
+        "zuno.core.agents.general_agent.AgentRuntime.run_domain_qa",
         fake_run_domain_qa,
     )
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.RagHandler.retrieve_ranked_documents",
+        "zuno.core.agents.general_agent.RagHandler.retrieve_ranked_documents",
         fail_if_called,
     )
 
@@ -57,7 +57,7 @@ def test_general_agent_knowledge_tool_uses_domain_pack_runtime(monkeypatch):
 def test_general_agent_astream_prefers_explicit_domain_graph_runtime(monkeypatch):
     from langchain_core.messages import HumanMessage
 
-    from agentchat.core.agents.general_agent import AgentConfig, GeneralAgent
+    from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
 
     async def fake_runtime_settings(_knowledge_id):
         return {
@@ -80,11 +80,11 @@ def test_general_agent_astream_prefers_explicit_domain_graph_runtime(monkeypatch
             yield None
 
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.KnowledgeService.get_runtime_settings",
+        "zuno.core.agents.general_agent.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.AgentRuntime.run_domain_qa",
+        "zuno.core.agents.general_agent.AgentRuntime.run_domain_qa",
         fake_run_domain_qa,
     )
 
@@ -116,7 +116,7 @@ def test_general_agent_astream_prefers_explicit_domain_graph_runtime(monkeypatch
 def test_general_agent_astream_exposes_domain_graph_failure(monkeypatch):
     from langchain_core.messages import HumanMessage
 
-    from agentchat.core.agents.general_agent import AgentConfig, GeneralAgent
+    from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
 
     async def fake_runtime_settings(_knowledge_id):
         return {
@@ -135,11 +135,11 @@ def test_general_agent_astream_exposes_domain_graph_failure(monkeypatch):
         }
 
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.KnowledgeService.get_runtime_settings",
+        "zuno.core.agents.general_agent.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.AgentRuntime.run_domain_qa",
+        "zuno.core.agents.general_agent.AgentRuntime.run_domain_qa",
         fake_run_domain_qa,
     )
 
@@ -174,7 +174,7 @@ async def _collect_events(agent, messages):
 def test_general_agent_astream_can_select_multi_agent_runtime(monkeypatch):
     from langchain_core.messages import HumanMessage
 
-    from agentchat.core.agents.general_agent import AgentConfig, GeneralAgent
+    from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
 
     async def fake_runtime_settings(_knowledge_id):
         return {
@@ -206,11 +206,11 @@ def test_general_agent_astream_can_select_multi_agent_runtime(monkeypatch):
             yield None
 
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.KnowledgeService.get_runtime_settings",
+        "zuno.core.agents.general_agent.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
     monkeypatch.setattr(
-        "agentchat.core.agents.general_agent.AgentRuntime.run_domain_qa",
+        "zuno.core.agents.general_agent.AgentRuntime.run_domain_qa",
         fake_run_domain_qa,
     )
 

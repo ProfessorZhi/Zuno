@@ -14,33 +14,33 @@
 
 ### 后端核心文件
 
-- `src/backend/agentchat/settings.py`
+- `src/backend/zuno/settings.py`
   - 配置加载入口
-- `src/backend/agentchat/config.yaml`
+- `src/backend/zuno/config.yaml`
   - 本地默认配置模板
-- `src/backend/agentchat/main.py`
+- `src/backend/zuno/main.py`
   - FastAPI 入口、生命周期和中间件注册
-- `src/backend/agentchat/database/__init__.py`
+- `src/backend/zuno/database/__init__.py`
   - 数据库引擎、连接初始化、数据库层总入口
-- `src/backend/agentchat/database/session.py`
+- `src/backend/zuno/database/session.py`
   - 同步和异步 session 获取
-- `src/backend/agentchat/database/init_data.py`
+- `src/backend/zuno/database/init_data.py`
   - 启动时初始化逻辑
-- `src/backend/agentchat/database/models/*.py`
+- `src/backend/zuno/database/models/*.py`
   - SQLModel 表定义
-- `src/backend/agentchat/database/dao/*.py`
+- `src/backend/zuno/database/dao/*.py`
   - 数据访问
-- `src/backend/agentchat/services/redis.py`
+- `src/backend/zuno/services/redis.py`
   - Redis 客户端封装
-- `src/backend/agentchat/api/services/knowledge_file.py`
+- `src/backend/zuno/api/services/knowledge_file.py`
   - 当前知识文件处理入口，将被重构为 pipeline 入口
-- `src/backend/agentchat/services/rag/handler.py`
+- `src/backend/zuno/services/rag/handler.py`
   - RAG 检索和索引入口
-- `src/backend/agentchat/api/v1/workspace.py`
+- `src/backend/zuno/api/v1/workspace.py`
   - 工作台 SSE 查询入口
-- `src/backend/agentchat/services/workspace/simple_agent.py`
+- `src/backend/zuno/services/workspace/simple_agent.py`
   - 单 Agent 主链路
-- `src/backend/agentchat/middleware/trace_id_middleware.py`
+- `src/backend/zuno/middleware/trace_id_middleware.py`
   - trace_id 注入
 
 ### 本轮预计新增文件
@@ -48,13 +48,13 @@
 - `src/backend/alembic.ini`
 - `src/backend/alembic/env.py`
 - `src/backend/alembic/versions/*.py`
-- `src/backend/agentchat/schema/runtime.py`
-- `src/backend/agentchat/database/models/knowledge_task.py`
-- `src/backend/agentchat/database/dao/knowledge_task.py`
-- `src/backend/agentchat/services/pipeline/*.py`
-- `src/backend/agentchat/services/queue/*.py`
-- `src/backend/agentchat/services/graphrag/*.py`
-- `src/backend/agentchat/api/v1/task.py`
+- `src/backend/zuno/schema/runtime.py`
+- `src/backend/zuno/database/models/knowledge_task.py`
+- `src/backend/zuno/database/dao/knowledge_task.py`
+- `src/backend/zuno/services/pipeline/*.py`
+- `src/backend/zuno/services/queue/*.py`
+- `src/backend/zuno/services/graphrag/*.py`
+- `src/backend/zuno/api/v1/task.py`
 
 ### 前端预计修改文件
 
@@ -72,21 +72,21 @@
 - Create: `src/backend/alembic.ini`
 - Create: `src/backend/alembic/env.py`
 - Create: `src/backend/alembic/versions/20260417_01_init_postgresql.py`
-- Modify: `src/backend/agentchat/settings.py`
-- Modify: `src/backend/agentchat/config.yaml`
-- Modify: `src/backend/agentchat/database/__init__.py`
-- Modify: `src/backend/agentchat/database/session.py`
-- Modify: `src/backend/agentchat/database/init_data.py`
-- Modify: `src/backend/agentchat/core/agents/text2sql_agent.py`
-- Modify: `src/backend/agentchat/prompts/completion.py`
-- Test: `src/backend/agentchat/test/test_sqlmodel.py`
+- Modify: `src/backend/zuno/settings.py`
+- Modify: `src/backend/zuno/config.yaml`
+- Modify: `src/backend/zuno/database/__init__.py`
+- Modify: `src/backend/zuno/database/session.py`
+- Modify: `src/backend/zuno/database/init_data.py`
+- Modify: `src/backend/zuno/core/agents/text2sql_agent.py`
+- Modify: `src/backend/zuno/prompts/completion.py`
+- Test: `src/backend/zuno/test/test_sqlmodel.py`
 
 - [ ] **Step 1: 为数据库配置抽象写失败用例**
 
 ```python
-# src/backend/agentchat/test/test_sqlmodel.py
+# src/backend/zuno/test/test_sqlmodel.py
 def test_database_settings_support_postgresql_urls():
-    from agentchat.settings import Settings
+    from zuno.settings import Settings
 
     settings = Settings()
     settings.database = {
@@ -100,13 +100,13 @@ def test_database_settings_support_postgresql_urls():
 
 - [ ] **Step 2: 运行测试确认当前失败**
 
-Run: `pytest src/backend/agentchat/test/test_sqlmodel.py -v`  
+Run: `pytest src/backend/zuno/test/test_sqlmodel.py -v`  
 Expected: FAIL，原因是当前配置仍然是 `mysql` 字段和 MySQL URL。
 
 - [ ] **Step 3: 抽象数据库配置模型**
 
 ```yaml
-# src/backend/agentchat/config.yaml
+# src/backend/zuno/config.yaml
 database:
   sync_endpoint: "postgresql+psycopg://postgres:postgres@localhost:5432/zuno"
   async_endpoint: "postgresql+asyncpg://postgres:postgres@localhost:5432/zuno"
@@ -116,7 +116,7 @@ database:
 ```
 
 ```python
-# src/backend/agentchat/settings.py
+# src/backend/zuno/settings.py
 class Settings(BaseSettings):
     database: dict = {}
     redis: dict = {}
@@ -126,7 +126,7 @@ class Settings(BaseSettings):
 - [ ] **Step 4: 切换数据库引擎到 PostgreSQL**
 
 ```python
-# src/backend/agentchat/database/__init__.py
+# src/backend/zuno/database/__init__.py
 engine = create_engine(
     url=app_settings.database.get("sync_endpoint"),
     pool_pre_ping=True,
@@ -143,7 +143,7 @@ async_engine = create_async_engine(
 - [ ] **Step 5: 删除 MySQL 专属启动逻辑并改成 migration 驱动**
 
 ```python
-# src/backend/agentchat/database/init_data.py
+# src/backend/zuno/database/init_data.py
 async def init_database():
     SQLModel.metadata.create_all(engine)
 ```
@@ -159,8 +159,8 @@ async def init_database():
 from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from agentchat.database.models.base import SQLModel
-from agentchat.database import app_settings
+from zuno.database.models.base import SQLModel
+from zuno.database import app_settings
 
 config = context.config
 config.set_main_option("sqlalchemy.url", app_settings.database.get("sync_endpoint"))
@@ -170,13 +170,13 @@ target_metadata = SQLModel.metadata
 - [ ] **Step 7: 清理 MySQL 专属残留**
 
 ```python
-# src/backend/agentchat/core/agents/text2sql_agent.py
+# src/backend/zuno/core/agents/text2sql_agent.py
 # 第一轮先改为显式抛出 PostgreSQL-only/disabled 提示，避免保留 pymysql 硬依赖
 raise NotImplementedError("text2sql_agent needs PostgreSQL adaptation before use")
 ```
 
 ```python
-# src/backend/agentchat/prompts/completion.py
+# src/backend/zuno/prompts/completion.py
 # 将 “你是一个 MySQL 专家” 改成更中性的 SQL 助手描述
 ```
 
@@ -187,7 +187,7 @@ Expected: 安装成功。
 
 - [ ] **Step 9: 运行数据库测试**
 
-Run: `pytest src/backend/agentchat/test/test_sqlmodel.py -v`  
+Run: `pytest src/backend/zuno/test/test_sqlmodel.py -v`  
 Expected: PASS
 
 - [ ] **Step 10: 启动后端进行工程验证**
@@ -213,29 +213,29 @@ Expected: 基础 CRUD 正常。
 - PostgreSQL 中已存在核心表
 - 应用启动日志正常
 
-Run: `git add src/backend/alembic.ini src/backend/alembic src/backend/agentchat/settings.py src/backend/agentchat/config.yaml src/backend/agentchat/database src/backend/agentchat/core/agents/text2sql_agent.py src/backend/agentchat/prompts/completion.py src/backend/agentchat/test/test_sqlmodel.py && git commit -m "feat: migrate core database path to postgresql"`
+Run: `git add src/backend/alembic.ini src/backend/alembic src/backend/zuno/settings.py src/backend/zuno/config.yaml src/backend/zuno/database src/backend/zuno/core/agents/text2sql_agent.py src/backend/zuno/prompts/completion.py src/backend/zuno/test/test_sqlmodel.py && git commit -m "feat: migrate core database path to postgresql"`
 
 ---
 
 ## 小轮 2：Redis 与 LangSmith 基础收口
 
 **Files:**
-- Create: `src/backend/agentchat/schema/runtime.py`
-- Modify: `src/backend/agentchat/services/redis.py`
-- Modify: `src/backend/agentchat/api/v1/user.py`
-- Modify: `src/backend/agentchat/api/services/user.py`
-- Modify: `src/backend/agentchat/utils/captcha.py`
-- Modify: `src/backend/agentchat/api/v1/workspace.py`
-- Modify: `src/backend/agentchat/services/workspace/simple_agent.py`
-- Modify: `src/backend/agentchat/services/rag/handler.py`
-- Modify: `src/backend/agentchat/middleware/trace_id_middleware.py`
-- Modify: `src/backend/agentchat/main.py`
-- Test: `src/backend/agentchat/test/test_config.py`
+- Create: `src/backend/zuno/schema/runtime.py`
+- Modify: `src/backend/zuno/services/redis.py`
+- Modify: `src/backend/zuno/api/v1/user.py`
+- Modify: `src/backend/zuno/api/services/user.py`
+- Modify: `src/backend/zuno/utils/captcha.py`
+- Modify: `src/backend/zuno/api/v1/workspace.py`
+- Modify: `src/backend/zuno/services/workspace/simple_agent.py`
+- Modify: `src/backend/zuno/services/rag/handler.py`
+- Modify: `src/backend/zuno/middleware/trace_id_middleware.py`
+- Modify: `src/backend/zuno/main.py`
+- Test: `src/backend/zuno/test/test_config.py`
 
 - [ ] **Step 1: 定义 Redis 键命名常量**
 
 ```python
-# src/backend/agentchat/schema/runtime.py
+# src/backend/zuno/schema/runtime.py
 AUTH_USER_TOKEN = "auth:user:{user_id}:token"
 CAPTCHA_KEY = "captcha:{captcha_key}"
 TASK_PROGRESS_KEY = "task_progress:{task_id}"
@@ -245,14 +245,14 @@ RETRIEVAL_CACHE_KEY = "retrieval_cache:{knowledge_id}:{query_hash}"
 - [ ] **Step 2: 让 Redis 客户端使用统一 key 常量**
 
 ```python
-# src/backend/agentchat/services/redis.py
-from agentchat.schema.runtime import AUTH_USER_TOKEN, CAPTCHA_KEY, TASK_PROGRESS_KEY
+# src/backend/zuno/services/redis.py
+from zuno.schema.runtime import AUTH_USER_TOKEN, CAPTCHA_KEY, TASK_PROGRESS_KEY
 ```
 
 - [ ] **Step 3: 为 LangSmith 加环境变量与开关读取**
 
 ```python
-# src/backend/agentchat/main.py
+# src/backend/zuno/main.py
 import os
 
 os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
@@ -262,7 +262,7 @@ os.environ.setdefault("LANGCHAIN_PROJECT", "zuno")
 - [ ] **Step 4: 在 workspace 请求入口注入 tracing metadata**
 
 ```python
-# src/backend/agentchat/api/v1/workspace.py
+# src/backend/zuno/api/v1/workspace.py
 trace_metadata = {
     "trace_id": getattr(login_user, "trace_id", ""),
     "user_id": login_user.user_id,
@@ -274,7 +274,7 @@ trace_metadata = {
 - [ ] **Step 5: 在 simple agent 主链路埋点**
 
 ```python
-# src/backend/agentchat/services/workspace/simple_agent.py
+# src/backend/zuno/services/workspace/simple_agent.py
 self.run_metadata = {
     "trace_id": trace_id,
     "user_id": user_id,
@@ -285,13 +285,13 @@ self.run_metadata = {
 - [ ] **Step 6: 在 RAG 检索入口埋点**
 
 ```python
-# src/backend/agentchat/services/rag/handler.py
+# src/backend/zuno/services/rag/handler.py
 logger.bind(retrieval_mode="rag").info("Starting RAG retrieval")
 ```
 
 - [ ] **Step 7: 运行配置类测试**
 
-Run: `pytest src/backend/agentchat/test/test_config.py -v`  
+Run: `pytest src/backend/zuno/test/test_config.py -v`  
 Expected: PASS
 
 - [ ] **Step 8: 做工程验证**
@@ -318,27 +318,27 @@ Expected:
 - LangSmith 中能看到一次完整 query trace
 - run metadata 中带 `trace_id / user_id / session_id`
 
-Run: `git add src/backend/agentchat/schema/runtime.py src/backend/agentchat/services/redis.py src/backend/agentchat/api/v1/user.py src/backend/agentchat/api/services/user.py src/backend/agentchat/utils/captcha.py src/backend/agentchat/api/v1/workspace.py src/backend/agentchat/services/workspace/simple_agent.py src/backend/agentchat/services/rag/handler.py src/backend/agentchat/middleware/trace_id_middleware.py src/backend/agentchat/main.py src/backend/agentchat/test/test_config.py && git commit -m "feat: standardize redis runtime keys and langsmith tracing"`
+Run: `git add src/backend/zuno/schema/runtime.py src/backend/zuno/services/redis.py src/backend/zuno/api/v1/user.py src/backend/zuno/api/services/user.py src/backend/zuno/utils/captcha.py src/backend/zuno/api/v1/workspace.py src/backend/zuno/services/workspace/simple_agent.py src/backend/zuno/services/rag/handler.py src/backend/zuno/middleware/trace_id_middleware.py src/backend/zuno/main.py src/backend/zuno/test/test_config.py && git commit -m "feat: standardize redis runtime keys and langsmith tracing"`
 
 ---
 
 ## 小轮 3：Knowledge Pipeline 抽象
 
 **Files:**
-- Create: `src/backend/agentchat/database/models/knowledge_task.py`
-- Create: `src/backend/agentchat/database/dao/knowledge_task.py`
-- Create: `src/backend/agentchat/services/pipeline/models.py`
-- Create: `src/backend/agentchat/services/pipeline/manager.py`
-- Create: `src/backend/agentchat/services/pipeline/stages.py`
-- Modify: `src/backend/agentchat/database/models/knowledge_file.py`
-- Modify: `src/backend/agentchat/api/services/knowledge_file.py`
-- Modify: `src/backend/agentchat/api/v1/knowledge_file.py`
-- Test: `src/backend/agentchat/test/test_pipeline.py`
+- Create: `src/backend/zuno/database/models/knowledge_task.py`
+- Create: `src/backend/zuno/database/dao/knowledge_task.py`
+- Create: `src/backend/zuno/services/pipeline/models.py`
+- Create: `src/backend/zuno/services/pipeline/manager.py`
+- Create: `src/backend/zuno/services/pipeline/stages.py`
+- Modify: `src/backend/zuno/database/models/knowledge_file.py`
+- Modify: `src/backend/zuno/api/services/knowledge_file.py`
+- Modify: `src/backend/zuno/api/v1/knowledge_file.py`
+- Test: `src/backend/zuno/test/test_pipeline.py`
 
 - [ ] **Step 1: 先写任务状态机测试**
 
 ```python
-# src/backend/agentchat/test/test_pipeline.py
+# src/backend/zuno/test/test_pipeline.py
 def test_pipeline_task_stage_flow():
     stages = ["uploaded", "queued", "parsing", "splitting", "rag_indexing", "graph_extracting", "graph_indexing", "completed"]
     assert stages[0] == "uploaded"
@@ -348,7 +348,7 @@ def test_pipeline_task_stage_flow():
 - [ ] **Step 2: 定义任务模型**
 
 ```python
-# src/backend/agentchat/database/models/knowledge_task.py
+# src/backend/zuno/database/models/knowledge_task.py
 class KnowledgeTask(SQLModelSerializable, table=True):
     id: str = Field(primary_key=True)
     knowledge_id: str
@@ -372,7 +372,7 @@ class KnowledgeTaskEvent(SQLModelSerializable, table=True):
 - [ ] **Step 3: 扩展知识文件模型状态字段**
 
 ```python
-# src/backend/agentchat/database/models/knowledge_file.py
+# src/backend/zuno/database/models/knowledge_file.py
 parse_status: str = "pending"
 rag_index_status: str = "pending"
 graph_index_status: str = "pending"
@@ -383,7 +383,7 @@ last_error: str | None = None
 - [ ] **Step 4: 抽 pipeline 结构模型**
 
 ```python
-# src/backend/agentchat/services/pipeline/models.py
+# src/backend/zuno/services/pipeline/models.py
 PIPELINE_STAGES = [
     "uploaded",
     "queued",
@@ -399,7 +399,7 @@ PIPELINE_STAGES = [
 - [ ] **Step 5: 实现同步版 pipeline manager**
 
 ```python
-# src/backend/agentchat/services/pipeline/manager.py
+# src/backend/zuno/services/pipeline/manager.py
 class KnowledgePipelineManager:
     async def run_sync(self, task_id: str):
         ...
@@ -408,14 +408,14 @@ class KnowledgePipelineManager:
 - [ ] **Step 6: 把 knowledge file 入口改成创建任务并走 pipeline manager**
 
 ```python
-# src/backend/agentchat/api/services/knowledge_file.py
+# src/backend/zuno/api/services/knowledge_file.py
 task_id = await KnowledgeTaskDao.create_task(...)
 await KnowledgePipelineManager().run_sync(task_id)
 ```
 
 - [ ] **Step 7: 运行 pipeline 测试**
 
-Run: `pytest src/backend/agentchat/test/test_pipeline.py -v`  
+Run: `pytest src/backend/zuno/test/test_pipeline.py -v`  
 Expected: PASS
 
 - [ ] **Step 8: 做工程验证**
@@ -438,25 +438,25 @@ Expected:
 - PostgreSQL 中有 `knowledge_task` 和 `knowledge_task_event`
 - 文件记录中状态字段已更新
 
-Run: `git add src/backend/agentchat/database/models/knowledge_task.py src/backend/agentchat/database/dao/knowledge_task.py src/backend/agentchat/services/pipeline src/backend/agentchat/database/models/knowledge_file.py src/backend/agentchat/api/services/knowledge_file.py src/backend/agentchat/api/v1/knowledge_file.py src/backend/agentchat/test/test_pipeline.py && git commit -m "feat: add knowledge pipeline task model"`
+Run: `git add src/backend/zuno/database/models/knowledge_task.py src/backend/zuno/database/dao/knowledge_task.py src/backend/zuno/services/pipeline src/backend/zuno/database/models/knowledge_file.py src/backend/zuno/api/services/knowledge_file.py src/backend/zuno/api/v1/knowledge_file.py src/backend/zuno/test/test_pipeline.py && git commit -m "feat: add knowledge pipeline task model"`
 
 ---
 
 ## 小轮 4：RabbitMQ 异步化 Pipeline
 
 **Files:**
-- Create: `src/backend/agentchat/services/queue/client.py`
-- Create: `src/backend/agentchat/services/queue/messages.py`
-- Create: `src/backend/agentchat/services/queue/workers.py`
-- Modify: `src/backend/agentchat/services/pipeline/manager.py`
-- Modify: `src/backend/agentchat/api/services/knowledge_file.py`
-- Modify: `src/backend/agentchat/config.yaml`
-- Test: `src/backend/agentchat/test/test_queue.py`
+- Create: `src/backend/zuno/services/queue/client.py`
+- Create: `src/backend/zuno/services/queue/messages.py`
+- Create: `src/backend/zuno/services/queue/workers.py`
+- Modify: `src/backend/zuno/services/pipeline/manager.py`
+- Modify: `src/backend/zuno/api/services/knowledge_file.py`
+- Modify: `src/backend/zuno/config.yaml`
+- Test: `src/backend/zuno/test/test_queue.py`
 
 - [ ] **Step 1: 先写消息结构测试**
 
 ```python
-# src/backend/agentchat/test/test_queue.py
+# src/backend/zuno/test/test_queue.py
 def test_queue_message_contains_task_refs():
     payload = {
         "task_id": "task_1",
@@ -471,7 +471,7 @@ def test_queue_message_contains_task_refs():
 - [ ] **Step 2: 定义 RabbitMQ 配置项**
 
 ```yaml
-# src/backend/agentchat/config.yaml
+# src/backend/zuno/config.yaml
 rabbitmq:
   url: "amqp://guest:guest@localhost:5672/"
   parse_queue: "knowledge.parse"
@@ -482,7 +482,7 @@ rabbitmq:
 - [ ] **Step 3: 实现消息模型**
 
 ```python
-# src/backend/agentchat/services/queue/messages.py
+# src/backend/zuno/services/queue/messages.py
 class KnowledgeTaskMessage(TypedDict):
     task_id: str
     knowledge_id: str
@@ -494,7 +494,7 @@ class KnowledgeTaskMessage(TypedDict):
 - [ ] **Step 4: 实现 queue client**
 
 ```python
-# src/backend/agentchat/services/queue/client.py
+# src/backend/zuno/services/queue/client.py
 class QueueClient:
     async def publish(self, queue_name: str, payload: dict):
         ...
@@ -503,7 +503,7 @@ class QueueClient:
 - [ ] **Step 5: 实现三个 worker**
 
 ```python
-# src/backend/agentchat/services/queue/workers.py
+# src/backend/zuno/services/queue/workers.py
 class ParseWorker: ...
 class IndexWorker: ...
 class GraphWorker: ...
@@ -512,13 +512,13 @@ class GraphWorker: ...
 - [ ] **Step 6: 把 pipeline manager 改成 producer**
 
 ```python
-# src/backend/agentchat/services/pipeline/manager.py
+# src/backend/zuno/services/pipeline/manager.py
 await queue_client.publish(parse_queue, payload)
 ```
 
 - [ ] **Step 7: 运行队列测试**
 
-Run: `pytest src/backend/agentchat/test/test_queue.py -v`  
+Run: `pytest src/backend/zuno/test/test_queue.py -v`  
 Expected: PASS
 
 - [ ] **Step 8: 做工程验证**
@@ -542,34 +542,34 @@ Expected: PASS
 - PostgreSQL 最终状态为成功或失败
 - RabbitMQ 管理界面可见消息消费
 
-Run: `git add src/backend/agentchat/services/queue src/backend/agentchat/services/pipeline/manager.py src/backend/agentchat/api/services/knowledge_file.py src/backend/agentchat/config.yaml src/backend/agentchat/test/test_queue.py && git commit -m "feat: add rabbitmq-driven knowledge pipeline"`
+Run: `git add src/backend/zuno/services/queue src/backend/zuno/services/pipeline/manager.py src/backend/zuno/api/services/knowledge_file.py src/backend/zuno/config.yaml src/backend/zuno/test/test_queue.py && git commit -m "feat: add rabbitmq-driven knowledge pipeline"`
 
 ---
 
 ## 小轮 5：Neo4j + GraphRAG
 
 **Files:**
-- Create: `src/backend/agentchat/services/graphrag/models.py`
-- Create: `src/backend/agentchat/services/graphrag/client.py`
-- Create: `src/backend/agentchat/services/graphrag/extractor.py`
-- Create: `src/backend/agentchat/services/graphrag/retriever.py`
-- Create: `src/backend/agentchat/services/graphrag/orchestrator.py`
-- Modify: `src/backend/agentchat/services/rag/handler.py`
-- Modify: `src/backend/agentchat/schema/knowledge.py`
-- Modify: `src/backend/agentchat/database/models/knowledge.py`
-- Modify: `src/backend/agentchat/api/v1/knowledge.py`
-- Modify: `src/backend/agentchat/api/v1/workspace.py`
+- Create: `src/backend/zuno/services/graphrag/models.py`
+- Create: `src/backend/zuno/services/graphrag/client.py`
+- Create: `src/backend/zuno/services/graphrag/extractor.py`
+- Create: `src/backend/zuno/services/graphrag/retriever.py`
+- Create: `src/backend/zuno/services/graphrag/orchestrator.py`
+- Modify: `src/backend/zuno/services/rag/handler.py`
+- Modify: `src/backend/zuno/schema/knowledge.py`
+- Modify: `src/backend/zuno/database/models/knowledge.py`
+- Modify: `src/backend/zuno/api/v1/knowledge.py`
+- Modify: `src/backend/zuno/api/v1/workspace.py`
 - Modify: `src/frontend/src/apis/knowledge.ts`
 - Modify: `src/frontend/src/apis/workspace.ts`
 - Modify: `src/frontend/src/pages/knowledge/knowledge.vue`
 - Modify: `src/frontend/src/pages/knowledge/knowledge-file.vue`
 - Modify: `src/frontend/src/pages/workspace/defaultPage/defaultPage.vue`
-- Test: `src/backend/agentchat/test/test_graphrag.py`
+- Test: `src/backend/zuno/test/test_graphrag.py`
 
 - [ ] **Step 1: 先写 GraphRAG 模式测试**
 
 ```python
-# src/backend/agentchat/test/test_graphrag.py
+# src/backend/zuno/test/test_graphrag.py
 def test_retrieval_modes_include_graphrag():
     modes = {"default", "rag", "graphrag", "hybrid", "auto"}
     assert "graphrag" in modes
@@ -579,19 +579,19 @@ def test_retrieval_modes_include_graphrag():
 - [ ] **Step 2: 给知识库增加默认检索模式字段**
 
 ```python
-# src/backend/agentchat/database/models/knowledge.py
+# src/backend/zuno/database/models/knowledge.py
 default_retrieval_mode: str = "rag"
 ```
 
 ```python
-# src/backend/agentchat/schema/knowledge.py
+# src/backend/zuno/schema/knowledge.py
 default_retrieval_mode: Optional[str] = "rag"
 ```
 
 - [ ] **Step 3: 实现 Neo4j 客户端**
 
 ```python
-# src/backend/agentchat/services/graphrag/client.py
+# src/backend/zuno/services/graphrag/client.py
 class Neo4jClient:
     async def upsert_entity(self, entity: dict): ...
     async def upsert_relation(self, relation: dict): ...
@@ -601,7 +601,7 @@ class Neo4jClient:
 - [ ] **Step 4: 实现图谱抽取器**
 
 ```python
-# src/backend/agentchat/services/graphrag/extractor.py
+# src/backend/zuno/services/graphrag/extractor.py
 class GraphExtractor:
     async def extract_from_chunk(self, chunk: dict) -> dict:
         return {"entities": [], "relations": []}
@@ -610,7 +610,7 @@ class GraphExtractor:
 - [ ] **Step 5: 实现 GraphRAG 检索器**
 
 ```python
-# src/backend/agentchat/services/graphrag/retriever.py
+# src/backend/zuno/services/graphrag/retriever.py
 class GraphRetriever:
     async def retrieve(self, query: str, knowledge_id: str) -> dict:
         return {"entities": [], "paths": [], "chunks": []}
@@ -619,7 +619,7 @@ class GraphRetriever:
 - [ ] **Step 6: 实现检索编排器**
 
 ```python
-# src/backend/agentchat/services/graphrag/orchestrator.py
+# src/backend/zuno/services/graphrag/orchestrator.py
 class RetrievalOrchestrator:
     async def run(self, mode: str, query: str, knowledge_ids: list[str]) -> dict:
         ...
@@ -628,7 +628,7 @@ class RetrievalOrchestrator:
 - [ ] **Step 7: 把 workspace 接口加上 retrieval_mode**
 
 ```python
-# src/backend/agentchat/api/v1/workspace.py
+# src/backend/zuno/api/v1/workspace.py
 retrieval_mode = getattr(simple_task, "retrieval_mode", "default")
 ```
 
@@ -641,7 +641,7 @@ retrieval_mode?: 'default' | 'rag' | 'graphrag' | 'hybrid' | 'auto'
 
 - [ ] **Step 9: 运行 GraphRAG 测试**
 
-Run: `pytest src/backend/agentchat/test/test_graphrag.py -v`  
+Run: `pytest src/backend/zuno/test/test_graphrag.py -v`  
 Expected: PASS
 
 - [ ] **Step 10: 做工程验证**
@@ -664,7 +664,7 @@ Expected: PASS
 - Neo4j 中存在 `Entity / Chunk / Document` 节点和关系
 - LangSmith 中能区分实际采用的检索策略
 
-Run: `git add src/backend/agentchat/services/graphrag src/backend/agentchat/services/rag/handler.py src/backend/agentchat/schema/knowledge.py src/backend/agentchat/database/models/knowledge.py src/backend/agentchat/api/v1/knowledge.py src/backend/agentchat/api/v1/workspace.py src/frontend/src/apis/knowledge.ts src/frontend/src/apis/workspace.ts src/frontend/src/pages/knowledge/knowledge.vue src/frontend/src/pages/knowledge/knowledge-file.vue src/frontend/src/pages/workspace/defaultPage/defaultPage.vue src/backend/agentchat/test/test_graphrag.py && git commit -m "feat: add neo4j graphrag retrieval modes"`
+Run: `git add src/backend/zuno/services/graphrag src/backend/zuno/services/rag/handler.py src/backend/zuno/schema/knowledge.py src/backend/zuno/database/models/knowledge.py src/backend/zuno/api/v1/knowledge.py src/backend/zuno/api/v1/workspace.py src/frontend/src/apis/knowledge.ts src/frontend/src/apis/workspace.ts src/frontend/src/pages/knowledge/knowledge.vue src/frontend/src/pages/knowledge/knowledge-file.vue src/frontend/src/pages/workspace/defaultPage/defaultPage.vue src/backend/zuno/test/test_graphrag.py && git commit -m "feat: add neo4j graphrag retrieval modes"`
 
 ---
 

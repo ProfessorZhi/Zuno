@@ -28,7 +28,7 @@
 - Modify: `F:\internship-work\resume&resume project\02_projects\Zuno\docs\architecture\phases\README.md`
 - Modify: `F:\internship-work\resume&resume project\02_projects\Zuno\docs\architecture\specs\domain-pack-langgraph-graphrag-architecture.md`
 
-- [ ] Step 1: Replace legacy `src/backend/agentchat/` target-path wording with `src/backend/zuno/`
+- [ ] Step 1: Replace legacy `src/backend/zuno/` target-path wording with `src/backend/zuno/`
 - [ ] Step 2: Replace abnormal long local links with clean relative links in the architecture entry docs
 - [ ] Step 3: Clarify how `Knowledge Config V2` and `Agent GraphRAG Pluginization` fit the current phase model without changing backend code
 

@@ -1,9 +1,9 @@
 # Compatibility Tests
 
-This folder keeps compatibility and historical regression tests that still exercise the `agentchat` compatibility surface.
+This folder keeps repo-level runtime regression tests that are still useful even when they are not part of the main front path.
 
-Why it lives here instead of `src/backend/agentchat/`:
+Why it lives here instead of `src/backend/zuno/`:
 
-- `src/backend/agentchat/` is now a thin compatibility package, not a source-owned test tree
-- keeping legacy tests under the repo-level `tests/` tree makes the runtime boundary cleaner
-- the test names and import targets stay unchanged, so existing compatibility coverage still works
+- `src/backend/zuno/` is the runtime package, not a source-owned test tree
+- keeping these checks under the repo-level `tests/` tree keeps the runtime boundary cleaner
+- legacy-oriented assertions can be rewritten here without reintroducing alias packages

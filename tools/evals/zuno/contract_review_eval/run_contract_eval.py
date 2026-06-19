@@ -11,11 +11,11 @@ BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from agentchat.core.graphs.domain_qa_graph import DomainQAGraph
-from agentchat.services.domain_pack.loader import DomainPackLoader
-from agentchat.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
-from agentchat.services.graphrag.retriever import GraphRetriever
-from agentchat.utils.runtime_observability import configure_langsmith
+from zuno.core.graphs.domain_qa_graph import DomainQAGraph
+from zuno.services.domain_pack.loader import DomainPackLoader
+from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+from zuno.services.graphrag.retriever import GraphRetriever
+from zuno.utils.runtime_observability import configure_langsmith
 
 
 BASE_DIR = Path(__file__).resolve().parent

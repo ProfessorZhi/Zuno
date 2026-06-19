@@ -1,4 +1,4 @@
-from agentchat.services.structured_tool_result_formatter import (
+from zuno.services.structured_tool_result_formatter import (
     format_structured_tool_result,
 )
 

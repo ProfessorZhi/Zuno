@@ -1,4 +1,4 @@
-from agentchat.api.v1.mcp_server import _build_mcp_summary
+from zuno.api.v1.mcp_server import _build_mcp_summary
 
 
 def test_build_mcp_summary_uses_deterministic_tool_preview():

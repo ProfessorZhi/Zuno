@@ -83,7 +83,7 @@ def _runtime_settings() -> dict:
 def test_workspace_prefetch_exposes_supported_contract_review_evidence(monkeypatch):
     _ensure_runtime_paths()
 
-    workspace_module = importlib.import_module("agentchat.services.workspace.simple_agent")
+    workspace_module = importlib.import_module("zuno.services.workspace.simple_agent")
     WorkSpaceSimpleAgent = importlib.import_module("zuno.services.workspace.simple_agent").WorkSpaceSimpleAgent
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
 
@@ -129,7 +129,7 @@ def test_workspace_prefetch_exposes_supported_contract_review_evidence(monkeypat
 def test_workspace_prefetch_exposes_insufficient_contract_review_evidence(monkeypatch):
     _ensure_runtime_paths()
 
-    workspace_module = importlib.import_module("agentchat.services.workspace.simple_agent")
+    workspace_module = importlib.import_module("zuno.services.workspace.simple_agent")
     WorkSpaceSimpleAgent = importlib.import_module("zuno.services.workspace.simple_agent").WorkSpaceSimpleAgent
     DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
 

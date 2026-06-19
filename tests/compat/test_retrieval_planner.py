@@ -1,5 +1,5 @@
-from agentchat.services.retrieval.models import ProcessedQuery, RetrievalRequest
-from agentchat.services.retrieval.planner import RetrievalPlanner
+from zuno.services.retrieval.models import ProcessedQuery, RetrievalRequest
+from zuno.services.retrieval.planner import RetrievalPlanner
 
 
 def _processed(query: str, *, relation: bool = False, keyword: bool = False):

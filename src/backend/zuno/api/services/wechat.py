@@ -104,7 +104,7 @@ class WeChatService:
     def push_user_image(cls, image_path=None):
         access_token = cls._get_access_token()
         url = f"https://api.weixin.qq.com/cgi-bin/media/upload?access_token={access_token}&type=image"
-        default_candidates = [Path("zuno/config/default.jpg"), Path("agentchat/config/default.jpg")]
+        default_candidates = [Path("zuno/config/default.jpg"), Path("zuno/config/default.jpg")]
         default_image = next((str(candidate) for candidate in default_candidates if candidate.exists()), str(default_candidates[-1]))
         files = {"media": open(image_path or default_image, "rb")}
         response = requests.post(url, files=files)

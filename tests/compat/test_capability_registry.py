@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_capability_registry_searches_tools_skills_and_mcp(monkeypatch):
-    from agentchat.services.capability_registry import CapabilityRegistryService
+    from zuno.services.capability_registry import CapabilityRegistryService
 
     async def fake_tools(user_id):
         return [
@@ -49,9 +49,9 @@ def test_capability_registry_searches_tools_skills_and_mcp(monkeypatch):
             }
         ]
 
-    monkeypatch.setattr("agentchat.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
-    monkeypatch.setattr("agentchat.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
-    monkeypatch.setattr("agentchat.services.capability_registry.MCPService.get_all_servers", fake_mcps)
+    monkeypatch.setattr("zuno.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
+    monkeypatch.setattr("zuno.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
+    monkeypatch.setattr("zuno.services.capability_registry.MCPService.get_all_servers", fake_mcps)
 
     results = asyncio.run(CapabilityRegistryService.search("飞书 发消息", user_id="u1"))
 
@@ -70,7 +70,7 @@ def test_capability_registry_searches_tools_skills_and_mcp(monkeypatch):
 
 
 def test_capability_registry_reports_unconfigured_mcp(monkeypatch):
-    from agentchat.services.capability_registry import CapabilityRegistryService
+    from zuno.services.capability_registry import CapabilityRegistryService
 
     async def fake_tools(user_id):
         return []
@@ -90,9 +90,9 @@ def test_capability_registry_reports_unconfigured_mcp(monkeypatch):
             }
         ]
 
-    monkeypatch.setattr("agentchat.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
-    monkeypatch.setattr("agentchat.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
-    monkeypatch.setattr("agentchat.services.capability_registry.MCPService.get_all_servers", fake_mcps)
+    monkeypatch.setattr("zuno.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
+    monkeypatch.setattr("zuno.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
+    monkeypatch.setattr("zuno.services.capability_registry.MCPService.get_all_servers", fake_mcps)
 
     results = asyncio.run(CapabilityRegistryService.search("飞书", user_id="u1"))
 
@@ -101,8 +101,8 @@ def test_capability_registry_reports_unconfigured_mcp(monkeypatch):
 
 
 def test_capability_search_route_uses_login_user(monkeypatch):
-    from agentchat.api.v1.capability import search_capabilities
-    from agentchat.schema.capability import CapabilitySearchReq
+    from zuno.api.v1.capability import search_capabilities
+    from zuno.schema.capability import CapabilitySearchReq
 
     captured = {}
 
@@ -110,7 +110,7 @@ def test_capability_search_route_uses_login_user(monkeypatch):
         captured.update({"query": query, "user_id": user_id, "kind": kind, "limit": limit})
         return [{"id": "tool:send_email", "name": "send_email"}]
 
-    monkeypatch.setattr("agentchat.api.v1.capability.CapabilityRegistryService.search", fake_search)
+    monkeypatch.setattr("zuno.api.v1.capability.CapabilityRegistryService.search", fake_search)
 
     response = asyncio.run(
         search_capabilities(

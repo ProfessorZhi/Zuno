@@ -5,7 +5,7 @@ import json
 import shutil
 from pathlib import Path
 
-from agentchat.evals.rag_eval.paths import default_corpus_root
+from tools.evals.zuno.rag_eval.paths import default_corpus_root
 
 
 DEFAULT_INCLUDE_NAMES = {

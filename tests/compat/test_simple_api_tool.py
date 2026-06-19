@@ -1,11 +1,11 @@
-from agentchat.services.simple_api_tool import (
+from zuno.services.simple_api_tool import (
     build_openapi_schema_from_simple_config,
     build_remote_api_assist_draft_agentic,
     build_remote_api_assist_draft,
     normalize_remote_api_auth_config,
 )
-from agentchat.schema.tool import RemoteApiAssistReq, SimpleApiConfig
-from agentchat.services import simple_api_tool
+from zuno.schema.tool import RemoteApiAssistReq, SimpleApiConfig
+from zuno.services import simple_api_tool
 import asyncio
 
 

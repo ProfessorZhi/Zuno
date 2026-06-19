@@ -5,13 +5,13 @@ from urllib.parse import urlparse
 
 from sqlmodel import select
 
-from agentchat.database.models.knowledge_file import KnowledgeFileTable
-from agentchat.database.session import session_getter
-from agentchat.services.rag.handler import RagHandler
-from agentchat.services.rag.vector_db import milvus_client
-from agentchat.services.storage import storage_client
-from agentchat.settings import initialize_app_settings
-from agentchat.utils.file_utils import get_object_key_from_public_url, get_save_tempfile
+from zuno.database.models.knowledge_file import KnowledgeFileTable
+from zuno.database.session import session_getter
+from zuno.services.rag.handler import RagHandler
+from zuno.services.rag.vector_db import milvus_client
+from zuno.services.storage import storage_client
+from zuno.settings import initialize_app_settings
+from zuno.utils.file_utils import get_object_key_from_public_url, get_save_tempfile
 
 
 def iter_successful_knowledge_files():
@@ -33,7 +33,7 @@ def download_to_local_path(oss_url: str, file_name: str) -> tuple[str, bool]:
 
 async def rebuild_indexes():
     await initialize_app_settings(os.getenv("ZUNO_CONFIG") or os.getenv("AGENTCHAT_CONFIG") or "/app/zuno/config.yaml")
-    from agentchat.services.rag.parser import DocParser
+    from zuno.services.rag.parser import DocParser
 
     parser = DocParser()
     files = iter_successful_knowledge_files()

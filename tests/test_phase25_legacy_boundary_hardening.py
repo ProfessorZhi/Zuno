@@ -21,35 +21,35 @@ def _purge_retired_services_api_tree() -> None:
     shutil.rmtree(REPO_ROOT / "services", ignore_errors=True)
 
 
-def _has_agentchat_bridge_reference(content: str) -> bool:
+def _has_zuno_bridge_reference(content: str) -> bool:
     return bool(
-        re.search(r'_AGENTCHAT_MODULE\s*=\s*["\']agentchat', content)
-        or re.search(r"from\s+agentchat\b", content)
-        or re.search(r"import\s+agentchat\b", content)
+        re.search(r'_AGENTCHAT_MODULE\s*=\s*["\']zuno', content)
+        or re.search(r"from\s+zuno\b", content)
+        or re.search(r"import\s+zuno\b", content)
     )
 
 
-def _ast_agentchat_imports(path: Path) -> list[str]:
+def _ast_zuno_imports(path: Path) -> list[str]:
     tree = ast.parse(path.read_text(encoding="utf-8"))
     hits: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name == "agentchat" or alias.name.startswith("agentchat."):
+                if alias.name == "zuno" or alias.name.startswith("zuno."):
                     hits.append(alias.name)
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            if module == "agentchat" or module.startswith("agentchat."):
+            if module == "zuno" or module.startswith("zuno."):
                 hits.append(module)
     return sorted(set(hits))
 
 
-def test_phase25_docs_mark_legacy_agentchat_as_compatibility_only() -> None:
+def test_phase25_docs_mark_legacy_zuno_as_compatibility_only() -> None:
     _purge_retired_services_api_tree()
     current_architecture = _read("docs/architecture/current-architecture.md")
     transition_strategy = _read("docs/architecture/transition-strategy.md")
 
-    assert "legacy/agentchat" in current_architecture
+    assert "legacy/zuno" in current_architecture
     assert "compatibility-only" in current_architecture
     assert "not runtime truth" in current_architecture
     assert "There is no active root-level `services/` tree in current truth." in current_architecture
@@ -57,7 +57,7 @@ def test_phase25_docs_mark_legacy_agentchat_as_compatibility_only() -> None:
     assert not (REPO_ROOT / "services").exists()
 
 
-def test_phase25_phase2_runtime_mainline_files_do_not_import_agentchat() -> None:
+def test_phase25_phase2_runtime_mainline_files_do_not_import_zuno() -> None:
     mainline_files = [
         "src/backend/zuno/core/graphs/domain_qa_graph.py",
         "src/backend/zuno/core/graphs/states.py",
@@ -71,12 +71,12 @@ def test_phase25_phase2_runtime_mainline_files_do_not_import_agentchat() -> None
     offending = [
         relative_path
         for relative_path in mainline_files
-        if _has_agentchat_bridge_reference(_read(relative_path))
+        if _has_zuno_bridge_reference(_read(relative_path))
     ]
     assert offending == []
 
 
-def test_phase25_only_explicit_compat_bridges_reference_agentchat_outside_legacy_tree() -> None:
+def test_phase25_only_explicit_compat_bridges_reference_zuno_outside_legacy_tree() -> None:
     allowed = {
         "src/backend/zuno/core/agents/general_agent.py",
         "src/backend/zuno/services/memory/client.py",
@@ -89,19 +89,19 @@ def test_phase25_only_explicit_compat_bridges_reference_agentchat_outside_legacy
             if "legacy" in path.parts:
                 continue
             relative_path = path.relative_to(REPO_ROOT).as_posix()
-            if _has_agentchat_bridge_reference(path.read_text(encoding="utf-8")):
+            if _has_zuno_bridge_reference(path.read_text(encoding="utf-8")):
                 observed.add(relative_path)
 
     assert observed == allowed
 
 
-def test_phase25_non_compat_tests_do_not_import_agentchat_modules() -> None:
+def test_phase25_non_compat_tests_do_not_import_zuno_modules() -> None:
     observed: set[str] = set()
     for path in _python_files(REPO_ROOT / "tests"):
         if "compat" in path.parts:
             continue
         relative_path = path.relative_to(REPO_ROOT).as_posix()
-        if _ast_agentchat_imports(path):
+        if _ast_zuno_imports(path):
             observed.add(relative_path)
 
     assert observed == set()
@@ -109,10 +109,10 @@ def test_phase25_non_compat_tests_do_not_import_agentchat_modules() -> None:
 
 def test_phase25_docker_and_launcher_runtime_surfaces_do_not_reference_legacy_paths() -> None:
     forbidden = [
-        "legacy/agentchat",
+        "legacy/zuno",
         "legacy_backend",
-        "src/backend/agentchat",
-        "zuno/legacy/agentchat",
+        "src/backend/zuno",
+        "zuno/legacy/zuno",
     ]
     runtime_surface_files = [
         "infra/docker/docker-compose.yml",
@@ -135,7 +135,7 @@ def test_phase25_services_root_is_fully_retired() -> None:
     assert not (REPO_ROOT / "services").exists()
 
 
-def test_phase25_remaining_agentchat_script_imports_are_isolated_to_known_compat_surfaces() -> None:
+def test_phase25_remaining_zuno_script_imports_are_isolated_to_known_compat_surfaces() -> None:
     allowed = {
         "infra/db/alembic/versions/20260417_01_init_postgresql.py",
         "tools/evals/zuno/contract_review_eval/run_contract_eval.py",
@@ -153,7 +153,7 @@ def test_phase25_remaining_agentchat_script_imports_are_isolated_to_known_compat
     for root in [REPO_ROOT / "tools", REPO_ROOT / "infra"]:
         for path in _python_files(root):
             relative_path = path.relative_to(REPO_ROOT).as_posix()
-            if _ast_agentchat_imports(path):
+            if _ast_zuno_imports(path):
                 observed.add(relative_path)
 
     assert observed == allowed

@@ -49,7 +49,7 @@ docker compose -f infra/docker/docker-compose.yml up --build -d
 
 默认基础设施账号：
 
-- PostgreSQL：`postgres` / `postgres`，数据库 `agentchat`
+- PostgreSQL：`postgres` / `postgres`，数据库 `zuno`
 - RabbitMQ：`guest` / `guest`
 - Neo4j：`neo4j` / `neo4j12345`
 - MinIO：`minioadmin` / `minioadmin`
@@ -169,7 +169,7 @@ docker compose -f infra/docker/docker-compose.yml config
 
 ```powershell
 curl http://127.0.0.1:7860/health
-docker logs --tail 200 agentchat-backend
+docker logs --tail 200 zuno-backend
 ```
 
 如果后端正常但 Agent 不回答，检查 `docker_config.local.yaml` 的模型设置。

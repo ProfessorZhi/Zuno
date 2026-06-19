@@ -1,5 +1,5 @@
-from agentchat.api.services.tool import ToolService
-from agentchat.database import ToolTable
+from zuno.api.services.tool import ToolService
+from zuno.database import ToolTable
 
 
 def test_serialize_tool_sets_runtime_type_for_cli_user_defined_tool():

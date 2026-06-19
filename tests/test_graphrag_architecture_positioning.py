@@ -21,7 +21,7 @@ def test_graphrag_specs_define_local_community_and_hybrid_layers():
     assert "共用同一张实体关系图" in domain_spec
     assert "Community GraphRAG 不是当前默认检索主线" in domain_spec
     assert "src/backend/zuno/" in domain_spec
-    assert "src/backend/agentchat/" not in domain_spec
+    assert "src/backend/zuno/" not in domain_spec
 
     assert "Local GraphRAG" in orchestrator_spec
     assert "Community GraphRAG" in orchestrator_spec

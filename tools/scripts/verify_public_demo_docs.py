@@ -115,8 +115,8 @@ def main() -> int:
     )
 
     forbidden_public_links = [
-        "./src/backend/agentchat/evals/rag_eval/runs/",
-        "/src/backend/agentchat/evals/rag_eval/runs/",
+        "./src/backend/zuno/evals/rag_eval/runs/",
+        "/src/backend/zuno/evals/rag_eval/runs/",
     ]
     for forbidden in forbidden_public_links:
         if forbidden in readme or forbidden in runbook or forbidden in acceptance:

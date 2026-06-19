@@ -36,7 +36,7 @@ class KnowledgePipelineManager:
 
         candidate_roots = [
             Path("/app/zuno/fixtures/knowledge_reindex"),
-            Path("/app/agentchat/fixtures/knowledge_reindex"),
+            Path("/app/zuno/fixtures/knowledge_reindex"),
             Path(__file__).resolve().parents[2] / "fixtures" / "knowledge_reindex",
         ]
         for root in candidate_roots:

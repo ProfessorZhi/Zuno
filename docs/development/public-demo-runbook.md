@@ -42,7 +42,7 @@ If you already have a local OpenAI-compatible embedding endpoint:
 
 ```powershell
 python tools/evals/zuno/rag_eval/run_local_embedding_eval.py `
-  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --manifest .local/evals/zuno/rag_eval/corpus/python_notes/manifest.json `
   --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --local-embedding-model-name zuno-local-embedding-dev `
   --local-embedding-base-url http://127.0.0.1:11434/v1 `
@@ -62,10 +62,10 @@ python tools/evals/zuno/rag_eval/local_embedding_server.py `
 
 ```powershell
 python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
-  --manifest .local/evals/agentchat/rag_eval/corpus/mixed_tuning_v2/manifest.json `
+  --manifest .local/evals/zuno/rag_eval/corpus/mixed_tuning_v2/manifest.json `
   --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --sample-limit 10 `
-  --output-root .local/evals/agentchat/rag_eval/runs/public-demo-graph-relation
+  --output-root .local/evals/zuno/rag_eval/runs/public-demo-graph-relation
 ```
 
 Expected proof pattern:
@@ -81,10 +81,10 @@ Reference evidence already in repo:
 
 ```powershell
 python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
-  --manifest .local/evals/agentchat/rag_eval/corpus/contract_review_scale_corpus/manifest.json `
+  --manifest .local/evals/zuno/rag_eval/corpus/contract_review_scale_corpus/manifest.json `
   --dataset tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl `
   --domain-pack-id contract_review `
-  --output-root .local/evals/agentchat/rag_eval/runs/public-demo-contract-review
+  --output-root .local/evals/zuno/rag_eval/runs/public-demo-contract-review
 ```
 
 Expected proof pattern:

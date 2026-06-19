@@ -22,7 +22,7 @@ def _load_database_url() -> str:
     database = data.get("database") or {}
     return database.get(
         "sync_endpoint",
-        "postgresql+psycopg://postgres:postgres@localhost:5432/agentchat",
+        "postgresql+psycopg://postgres:postgres@localhost:5432/zuno",
     )
 
 

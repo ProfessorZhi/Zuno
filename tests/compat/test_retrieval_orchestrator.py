@@ -1,7 +1,7 @@
 import asyncio
 
-from agentchat.services.retrieval.models import FusionResult, ProcessedQuery, RetrievedDocument
-from agentchat.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.services.retrieval.models import FusionResult, ProcessedQuery, RetrievedDocument
+from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
 
 
 class _FakeQueryExpander:

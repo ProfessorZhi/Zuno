@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 
 def test_insert_llm_to_mysql_syncs_conversation_embedding_vl_embedding_and_rerank(monkeypatch):
-    from agentchat.database.init_data import insert_llm_to_mysql
-    from agentchat.settings import app_settings
+    from zuno.database.init_data import insert_llm_to_mysql
+    from zuno.settings import app_settings
 
     original_multi_models = app_settings.multi_models
     created_records = []
@@ -16,11 +16,11 @@ def test_insert_llm_to_mysql_syncs_conversation_embedding_vl_embedding_and_reran
         created_records.append(kwargs)
 
     monkeypatch.setattr(
-        "agentchat.database.dao.llm.LLMDao.get_llm_by_user",
+        "zuno.database.dao.llm.LLMDao.get_llm_by_user",
         fake_get_llm_by_user,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.llm.LLMService.create_llm",
+        "zuno.api.services.llm.LLMService.create_llm",
         fake_create_llm,
     )
 
@@ -69,7 +69,7 @@ def test_insert_llm_to_mysql_syncs_conversation_embedding_vl_embedding_and_reran
 
 
 def test_get_visible_llm_normalizes_legacy_reranker_type(monkeypatch):
-    from agentchat.api.services.llm import LLMService
+    from zuno.api.services.llm import LLMService
 
     llms = [
         {
@@ -104,7 +104,7 @@ def test_get_visible_llm_normalizes_legacy_reranker_type(monkeypatch):
         ]
 
     monkeypatch.setattr(
-        "agentchat.database.dao.llm.LLMDao.get_llm_by_user",
+        "zuno.database.dao.llm.LLMDao.get_llm_by_user",
         fake_get_llm_by_user,
     )
 
@@ -119,7 +119,7 @@ def test_activate_model_slot_replaces_previous_binding(monkeypatch):
     import asyncio
     from types import SimpleNamespace
 
-    from agentchat.api.services.llm import LLMService
+    from zuno.api.services.llm import LLMService
 
     operations = []
 
@@ -133,15 +133,15 @@ def test_activate_model_slot_replaces_previous_binding(monkeypatch):
         operations.append(("update", kwargs))
 
     monkeypatch.setattr(
-        "agentchat.database.dao.llm.LLMDao.get_llm_by_id",
+        "zuno.database.dao.llm.LLMDao.get_llm_by_id",
         fake_get_llm_by_id,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.llm.LLMDao.clear_model_slot",
+        "zuno.database.dao.llm.LLMDao.clear_model_slot",
         fake_clear_model_slot,
     )
     monkeypatch.setattr(
-        "agentchat.database.dao.llm.LLMDao.update_llm",
+        "zuno.database.dao.llm.LLMDao.update_llm",
         fake_update_llm,
     )
 
@@ -156,13 +156,13 @@ def test_activate_model_slot_replaces_previous_binding(monkeypatch):
 def test_model_manager_prefers_active_slot_over_yaml(monkeypatch):
     from types import SimpleNamespace
 
-    from agentchat.core.models.manager import ModelManager
-    from agentchat.settings import app_settings
+    from zuno.core.models.manager import ModelManager
+    from zuno.settings import app_settings
 
     original_embedding = app_settings.multi_models.embedding
 
     monkeypatch.setattr(
-        "agentchat.database.dao.llm.LLMDao.get_llm_by_slot",
+        "zuno.database.dao.llm.LLMDao.get_llm_by_slot",
         lambda _slot: SimpleNamespace(
             model="active-embedding",
             api_key="active-key",

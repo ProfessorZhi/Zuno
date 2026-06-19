@@ -15,10 +15,10 @@ apps/web/node_modules/
 apps/web/dist/
 infra/docker/docker_config.local.yaml
 infra/docker/data/
-src/backend/agentchat/config.yaml
-src/backend/agentchat/config.local.yaml
 src/backend/zuno/config.yaml
-.local/config/agentchat/
+src/backend/zuno/config.local.yaml
+src/backend/zuno/config.yaml
+.local/config/zuno/
 
 /chroma_db/
 /memory_db/
@@ -48,9 +48,9 @@ screenshots-redesign/
 apps/web/output/
 
 # generated RAG evaluation artifacts
-.local/evals/agentchat/rag_eval/corpus/
-.local/evals/agentchat/rag_eval/runs/
-.local/evals/agentchat/contract_review_eval/.tmp_test_reports/
+.local/evals/zuno/rag_eval/corpus/
+.local/evals/zuno/rag_eval/runs/
+.local/evals/zuno/contract_review_eval/.tmp_test_reports/
 
 tmp-*.png
 tmp-*.json

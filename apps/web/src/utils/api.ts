@@ -12,7 +12,7 @@ declare global {
 }
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
-const CONTAINER_ONLY_HOSTS = new Set(['backend', 'agentchat-backend', 'frontend', 'agentchat-frontend'])
+const CONTAINER_ONLY_HOSTS = new Set(['backend', 'zuno-backend', 'frontend', 'zuno-frontend'])
 
 const getApiBaseUrl = () => {
   const desktopApiBaseUrl = window.__ZUNO_DESKTOP__?.apiBaseUrl?.trim()

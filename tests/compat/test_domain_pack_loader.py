@@ -1,5 +1,5 @@
-from agentchat.services.domain_pack.loader import DomainPackLoader
-from agentchat.services.domain_pack.registry import DomainPackRegistry
+from zuno.services.domain_pack.loader import DomainPackLoader
+from zuno.services.domain_pack.registry import DomainPackRegistry
 
 
 def test_contract_review_pack_can_be_loaded():

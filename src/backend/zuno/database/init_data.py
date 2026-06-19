@@ -34,7 +34,7 @@ def _resolve_config_asset_path(file_name: str) -> str:
     candidates = [
         package_root / "config" / file_name,
         Path("./zuno/config") / file_name,
-        Path("./agentchat/config") / file_name,
+        Path("./zuno/config") / file_name,
     ]
     for candidate in candidates:
         if candidate.exists():

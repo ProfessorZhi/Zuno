@@ -3,10 +3,10 @@ from types import SimpleNamespace
 
 
 def test_workspace_prefetch_uses_domain_pack_runtime_when_available(monkeypatch):
-    from agentchat.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "agentchat.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -36,11 +36,11 @@ def test_workspace_prefetch_uses_domain_pack_runtime_when_available(monkeypatch)
         }
 
     monkeypatch.setattr(
-        "agentchat.services.workspace.simple_agent.KnowledgeService.get_runtime_settings",
+        "zuno.services.workspace.simple_agent.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
     monkeypatch.setattr(
-        "agentchat.services.workspace.simple_agent.AgentRuntime.run_domain_qa",
+        "zuno.services.workspace.simple_agent.AgentRuntime.run_domain_qa",
         fake_run_domain_qa,
     )
 
@@ -60,10 +60,10 @@ def test_workspace_prefetch_uses_domain_pack_runtime_when_available(monkeypatch)
 
 
 def test_workspace_retrieval_event_payload_exposes_domain_pack_failure(monkeypatch):
-    from agentchat.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "agentchat.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -92,10 +92,10 @@ def test_workspace_retrieval_event_payload_exposes_domain_pack_failure(monkeypat
 
 
 def test_workspace_domain_pack_query_can_select_multi_agent_runtime(monkeypatch):
-    from agentchat.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "agentchat.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -142,15 +142,15 @@ def test_workspace_domain_pack_query_can_select_multi_agent_runtime(monkeypatch)
         }
 
     monkeypatch.setattr(
-        "agentchat.services.workspace.simple_agent.KnowledgeService.get_runtime_settings",
+        "zuno.services.workspace.simple_agent.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
     monkeypatch.setattr(
-        "agentchat.core.runtime.agent_runtime.DomainQAGraph.ainvoke",
+        "zuno.core.runtime.agent_runtime.DomainQAGraph.ainvoke",
         fail_single_agent_ainvoke,
     )
     monkeypatch.setattr(
-        "agentchat.core.runtime.agent_runtime.MultiAgentSupervisorGraph.ainvoke",
+        "zuno.core.runtime.agent_runtime.MultiAgentSupervisorGraph.ainvoke",
         fake_multi_agent_ainvoke,
     )
 

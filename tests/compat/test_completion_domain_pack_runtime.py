@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 
 def test_completion_passes_dialog_id_into_general_agent(monkeypatch):
-    from agentchat.api.v1.completion import completion
-    from agentchat.schema.completion import CompletionReq
+    from zuno.api.v1.completion import completion
+    from zuno.schema.completion import CompletionReq
 
     captured = {}
 
@@ -46,10 +46,10 @@ def test_completion_passes_dialog_id_into_general_agent(monkeypatch):
     async def fake_save_chat_history(**kwargs):
         return None
 
-    monkeypatch.setattr("agentchat.api.v1.completion.GeneralAgent", FakeAgent)
-    monkeypatch.setattr("agentchat.api.v1.completion.DialogService.get_agent_by_dialog_id", fake_get_agent_by_dialog_id)
-    monkeypatch.setattr("agentchat.api.v1.completion.HistoryService.select_history", fake_select_history)
-    monkeypatch.setattr("agentchat.api.v1.completion.HistoryService.save_chat_history", fake_save_chat_history)
+    monkeypatch.setattr("zuno.api.v1.completion.GeneralAgent", FakeAgent)
+    monkeypatch.setattr("zuno.api.v1.completion.DialogService.get_agent_by_dialog_id", fake_get_agent_by_dialog_id)
+    monkeypatch.setattr("zuno.api.v1.completion.HistoryService.select_history", fake_select_history)
+    monkeypatch.setattr("zuno.api.v1.completion.HistoryService.save_chat_history", fake_save_chat_history)
 
     response = asyncio.run(
         completion(
@@ -63,8 +63,8 @@ def test_completion_passes_dialog_id_into_general_agent(monkeypatch):
 
 
 def test_completion_can_enable_multi_agent_runtime(monkeypatch):
-    from agentchat.api.v1.completion import completion
-    from agentchat.schema.completion import CompletionReq
+    from zuno.api.v1.completion import completion
+    from zuno.schema.completion import CompletionReq
 
     captured = {}
 
@@ -106,10 +106,10 @@ def test_completion_can_enable_multi_agent_runtime(monkeypatch):
     async def fake_save_chat_history(**kwargs):
         return None
 
-    monkeypatch.setattr("agentchat.api.v1.completion.GeneralAgent", FakeAgent)
-    monkeypatch.setattr("agentchat.api.v1.completion.DialogService.get_agent_by_dialog_id", fake_get_agent_by_dialog_id)
-    monkeypatch.setattr("agentchat.api.v1.completion.HistoryService.select_history", fake_select_history)
-    monkeypatch.setattr("agentchat.api.v1.completion.HistoryService.save_chat_history", fake_save_chat_history)
+    monkeypatch.setattr("zuno.api.v1.completion.GeneralAgent", FakeAgent)
+    monkeypatch.setattr("zuno.api.v1.completion.DialogService.get_agent_by_dialog_id", fake_get_agent_by_dialog_id)
+    monkeypatch.setattr("zuno.api.v1.completion.HistoryService.select_history", fake_select_history)
+    monkeypatch.setattr("zuno.api.v1.completion.HistoryService.save_chat_history", fake_save_chat_history)
 
     response = asyncio.run(
         completion(

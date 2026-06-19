@@ -434,7 +434,7 @@ const systemToolIconMap: Record<string, string> = {
   convert_to_pdf: toolPdfIcon,
   convert_to_docx: toolDocxIcon,
 }
-const isRemoteDefaultToolLogo = (value: string) => value.includes('agentchat.oss-cn-beijing.aliyuncs.com/icons/tools/default.png')
+const isRemoteDefaultToolLogo = (value: string) => value.includes('zuno.oss-cn-beijing.aliyuncs.com/icons/tools/default.png')
 const getToolLogo = (tool: ToolItem) => {
   if (isSystemTool(tool)) return systemToolIconMap[tool.name] || toolDefaultIcon
   const logoUrl = String(tool.logo_url || '').trim()

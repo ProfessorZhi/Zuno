@@ -72,7 +72,7 @@ LangSmith records traces and supports failure analysis
 评测集使用 JSONL，放在：
 
 ```text
-src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl
+src/backend/zuno/evals/rag_eval/python_notes_eval.jsonl
 ```
 
 每行结构：
@@ -239,7 +239,7 @@ max_paths_per_entity = 10
 评测输出目录：
 
 ```text
-src/backend/agentchat/evals/rag_eval/runs/<timestamp>/
+src/backend/zuno/evals/rag_eval/runs/<timestamp>/
 ```
 
 每次运行输出：
@@ -389,12 +389,12 @@ Evidence:
 Final commands will be implemented later, but target shape:
 
 ```text
-python -m agentchat.evals.rag_eval.prepare_python_notes_corpus \
+python -m zuno.evals.rag_eval.prepare_python_notes_corpus \
   --source "F:\Onboard anything\02_Notes_笔记\2llm_note\Python" \
   --limit-files 40
 
-python -m agentchat.evals.rag_eval.run_eval \
-  --dataset src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl \
+python -m zuno.evals.rag_eval.run_eval \
+  --dataset src/backend/zuno/evals/rag_eval/python_notes_eval.jsonl \
   --profiles baseline_rag,rag_rerank,parent_child_rag,rag_graph \
   --knowledge-name ZunoPythonEval \
   --trace-langsmith true
@@ -422,12 +422,12 @@ python -m agentchat.evals.rag_eval.run_eval \
 
 2026-05-26 已落地第一版评测骨架：
 
-- 评测数据集：`src/backend/agentchat/evals/rag_eval/python_notes_eval.jsonl`
-- 指标计算模块：`src/backend/agentchat/evals/rag_eval/metrics.py`
-- Python 笔记语料准备：`src/backend/agentchat/evals/rag_eval/prepare_python_notes_corpus.py`
-- 知识库同步导入脚本：`src/backend/agentchat/evals/rag_eval/ingest_prepared_corpus.py`
-- 多 profile 评测 runner：`src/backend/agentchat/evals/rag_eval/run_eval.py`
-- 单元测试：`src/backend/agentchat/test/test_rag_eval_metrics.py`
+- 评测数据集：`src/backend/zuno/evals/rag_eval/python_notes_eval.jsonl`
+- 指标计算模块：`src/backend/zuno/evals/rag_eval/metrics.py`
+- Python 笔记语料准备：`src/backend/zuno/evals/rag_eval/prepare_python_notes_corpus.py`
+- 知识库同步导入脚本：`src/backend/zuno/evals/rag_eval/ingest_prepared_corpus.py`
+- 多 profile 评测 runner：`src/backend/zuno/evals/rag_eval/run_eval.py`
+- 单元测试：`src/backend/zuno/test/test_rag_eval_metrics.py`
 
 当前已实现本地离线计算：
 
@@ -441,7 +441,7 @@ python -m agentchat.evals.rag_eval.run_eval \
 - 评测报告输出：每个 profile 写出 `retrieval_results.jsonl`、`answers.jsonl`、`judge_results.jsonl`、`metrics.json`，总目录写出 `report.json` 和 `report.md`
 - 语料准备脚本会按文件名去重，避免 paired note 中同名标准库笔记重复污染测试集
 - profile 配置已真实进入检索链路：`baseline_rag`、`rag_rerank`、`rag_graph`、`rag_graph_3hop` 会分别传入不同的 `rerank_enabled`、`score_threshold`、`graph_hop_limit` 和 `max_paths_per_entity`，保证后续指标对比能对应具体参数。
-- 2026-05-27 已在 Docker worker 中用 `ZunoPythonEval` 知识库导入 40 个 Python Markdown 笔记文件，并基于 Milvus 跑通真实 smoke eval。当前 8 条样本的结果保存在本地忽略目录 `src/backend/agentchat/evals/rag_eval/runs/smoke-real/`：
+- 2026-05-27 已在 Docker worker 中用 `ZunoPythonEval` 知识库导入 40 个 Python Markdown 笔记文件，并基于 Milvus 跑通真实 smoke eval。当前 8 条样本的结果保存在本地忽略目录 `src/backend/zuno/evals/rag_eval/runs/smoke-real/`：
   - `baseline_rag`: Recall@5 0.8750，HitRate@5 1.0000，Context Precision@5 0.9500，Citation Accuracy 0.9583。
   - `rag_rerank`: Recall@5 0.8125，Context Precision@5 0.5750，Citation Accuracy 0.6250。
   - `rag_graph`: Recall@5 0.8125，Context Precision@5 0.3500，Citation Accuracy 0.5833。

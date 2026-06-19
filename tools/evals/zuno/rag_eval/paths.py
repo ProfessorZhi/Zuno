@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-LOCAL_AGENTCHAT_ROOT = REPO_ROOT / ".local" / "evals" / "agentchat" / "rag_eval"
+LOCAL_AGENTCHAT_ROOT = REPO_ROOT / ".local" / "evals" / "zuno" / "rag_eval"
 LOCAL_CORPUS_ROOT = LOCAL_AGENTCHAT_ROOT / "corpus"
 LOCAL_RUNS_ROOT = LOCAL_AGENTCHAT_ROOT / "runs"
 

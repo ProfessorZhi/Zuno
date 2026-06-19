@@ -2,8 +2,8 @@ import asyncio
 
 
 def test_structured_graph_extractor_builds_contract_entities_and_relations():
-    from agentchat.services.domain_pack.loader import DomainPackLoader
-    from agentchat.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+    from zuno.services.domain_pack.loader import DomainPackLoader
+    from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
     pack = DomainPackLoader().load("contract_review")
     assert pack is not None
@@ -64,8 +64,8 @@ def test_structured_graph_extractor_builds_contract_entities_and_relations():
 
 
 def test_structured_graph_extractor_recovers_contract_title_from_file_name():
-    from agentchat.services.domain_pack.loader import DomainPackLoader
-    from agentchat.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+    from zuno.services.domain_pack.loader import DomainPackLoader
+    from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
     pack = DomainPackLoader().load("contract_review")
     chunk = {
@@ -99,8 +99,8 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
 
 
 def test_structured_graph_extractor_supports_inline_clause_body_format():
-    from agentchat.services.domain_pack.loader import DomainPackLoader
-    from agentchat.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+    from zuno.services.domain_pack.loader import DomainPackLoader
+    from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
     pack = DomainPackLoader().load("contract_review")
     chunk = {

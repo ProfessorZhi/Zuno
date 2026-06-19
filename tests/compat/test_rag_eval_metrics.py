@@ -13,7 +13,7 @@ def _write_jsonl(path: Path, rows: list[dict]):
 
 
 def test_rag_eval_metrics_compute_retrieval_and_citation_scores():
-    from agentchat.evals.rag_eval.metrics import compute_metrics
+    from tools.evals.zuno.rag_eval.metrics import compute_metrics
 
     local_tmp_root = Path.cwd() / ".test-tmp"
     local_tmp_root.mkdir(exist_ok=True)
@@ -90,7 +90,7 @@ def test_rag_eval_metrics_compute_retrieval_and_citation_scores():
 
 
 def test_rag_eval_metrics_falls_back_to_text_match_when_source_metadata_missing():
-    from agentchat.evals.rag_eval.metrics import compute_metrics
+    from tools.evals.zuno.rag_eval.metrics import compute_metrics
 
     local_tmp_root = Path.cwd() / ".test-tmp"
     local_tmp_root.mkdir(exist_ok=True)
@@ -130,7 +130,7 @@ def test_rag_eval_metrics_falls_back_to_text_match_when_source_metadata_missing(
 
 
 def test_prepare_python_notes_corpus_deduplicates_file_names():
-    from agentchat.evals.rag_eval.prepare_python_notes_corpus import prepare_corpus
+    from tools.evals.zuno.rag_eval.prepare_python_notes_corpus import prepare_corpus
 
     local_tmp_root = Path.cwd() / ".test-tmp"
     local_tmp_root.mkdir(exist_ok=True)
@@ -150,7 +150,7 @@ def test_prepare_python_notes_corpus_deduplicates_file_names():
 
 
 def test_run_eval_writes_profile_outputs(monkeypatch):
-    from agentchat.evals.rag_eval import run_eval as run_eval_module
+    from tools.evals.zuno.rag_eval import run_eval as run_eval_module
 
     calls = []
 
@@ -220,8 +220,8 @@ def test_run_eval_writes_profile_outputs(monkeypatch):
 
 
 def test_run_eval_supports_llm_answer_and_judge_modes(monkeypatch):
-    from agentchat.core.models import manager as model_manager
-    from agentchat.evals.rag_eval import run_eval as run_eval_module
+    from zuno.core.models import manager as model_manager
+    from tools.evals.zuno.rag_eval import run_eval as run_eval_module
 
     async def fake_retrieve(query, collection_names, index_names=None, **kwargs):
         return {
@@ -300,7 +300,7 @@ def test_run_eval_supports_llm_answer_and_judge_modes(monkeypatch):
 
 
 def test_extract_contexts_uses_query_aware_priority_to_put_graph_evidence_first():
-    from agentchat.evals.rag_eval.run_eval import _extract_contexts
+    from tools.evals.zuno.rag_eval.run_eval import _extract_contexts
 
     contexts = _extract_contexts(
         {
@@ -336,7 +336,7 @@ def test_extract_contexts_uses_query_aware_priority_to_put_graph_evidence_first(
 
 
 def test_extract_contexts_keeps_rag_first_when_graph_docs_are_query_noise():
-    from agentchat.evals.rag_eval.run_eval import _extract_contexts
+    from tools.evals.zuno.rag_eval.run_eval import _extract_contexts
 
     contexts = _extract_contexts(
         {
@@ -386,7 +386,7 @@ def test_extract_contexts_keeps_rag_first_when_graph_docs_are_query_noise():
 
 
 def test_extract_contexts_does_not_promote_weak_compact_graph_docs_ahead_of_rag():
-    from agentchat.evals.rag_eval.run_eval import _extract_contexts
+    from tools.evals.zuno.rag_eval.run_eval import _extract_contexts
 
     contexts = _extract_contexts(
         {
@@ -429,7 +429,7 @@ def test_extract_contexts_does_not_promote_weak_compact_graph_docs_ahead_of_rag(
 
 
 def test_build_extractive_answer_prefers_relevant_clause_snippets():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_contract",
@@ -467,7 +467,7 @@ def test_build_extractive_answer_prefers_relevant_clause_snippets():
 
 
 def test_build_extractive_answer_prefers_law_basis_snippet():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_law_basis",
@@ -494,7 +494,7 @@ def test_build_extractive_answer_prefers_law_basis_snippet():
 
 
 def test_build_extractive_answer_contract_review_handles_guarantee_scope():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_guarantee",
@@ -521,7 +521,7 @@ def test_build_extractive_answer_contract_review_handles_guarantee_scope():
 
 
 def test_build_answer_strict_grounded_returns_no_evidence_when_citations_do_not_support_answer():
-    from agentchat.evals.rag_eval.run_eval import NO_EVIDENCE_ANSWER, _build_answer
+    from tools.evals.zuno.rag_eval.run_eval import NO_EVIDENCE_ANSWER, _build_answer
 
     sample = {
         "id": "q_strict_grounded",
@@ -552,7 +552,7 @@ def test_build_answer_strict_grounded_returns_no_evidence_when_citations_do_not_
 
 
 def test_build_answer_strict_grounded_keeps_supported_answer_and_bundle():
-    from agentchat.evals.rag_eval.run_eval import _build_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_answer
 
     sample = {
         "id": "q_strict_supported",
@@ -583,7 +583,7 @@ def test_build_answer_strict_grounded_keeps_supported_answer_and_bundle():
 
 
 def test_build_extractive_answer_contract_review_handles_saas_data_deletion():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_saas_delete",
@@ -612,7 +612,7 @@ def test_build_extractive_answer_contract_review_handles_saas_data_deletion():
 
 
 def test_build_extractive_answer_contract_review_handles_payment_trigger():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_payment_trigger",
@@ -638,7 +638,7 @@ def test_build_extractive_answer_contract_review_handles_payment_trigger():
 
 
 def test_build_extractive_answer_contract_review_handles_distribution_return():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_distribution_return",
@@ -664,7 +664,7 @@ def test_build_extractive_answer_contract_review_handles_distribution_return():
 
 
 def test_build_extractive_answer_contract_review_handles_guarantee_with_reference_style():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_guarantee_style",
@@ -691,7 +691,7 @@ def test_build_extractive_answer_contract_review_handles_guarantee_with_referenc
 
 
 def test_build_extractive_answer_contract_review_handles_ip_risk_with_reference_style():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_ip_risk_style",
@@ -715,7 +715,7 @@ def test_build_extractive_answer_contract_review_handles_ip_risk_with_reference_
 
 
 def test_build_extractive_answer_contract_review_handles_incident_response_with_reference_style():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_incident_style",
@@ -739,7 +739,7 @@ def test_build_extractive_answer_contract_review_handles_incident_response_with_
 
 
 def test_build_extractive_answer_contract_review_selects_relevant_citations():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_citation_focus",
@@ -767,7 +767,7 @@ def test_build_extractive_answer_contract_review_selects_relevant_citations():
 
 
 def test_build_extractive_answer_contract_review_prefers_canonical_citation_over_variant():
-    from agentchat.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_canonical_citation",
@@ -801,7 +801,7 @@ def test_build_extractive_answer_contract_review_prefers_canonical_citation_over
 
 
 def test_overlap_score_handles_semantically_equivalent_contract_answers():
-    from agentchat.evals.rag_eval.run_eval import _overlap_score
+    from tools.evals.zuno.rag_eval.run_eval import _overlap_score
 
     answer = "甲方应在收到交付通知后5个工作日内完成验收，逾期未提出实质性异议的视为该阶段交付物已经验收通过。"
     reference = "在主服务合同中，甲方应在收到交付通知后5个工作日内完成验收；若逾期未提出实质性异议，则视为该阶段交付物已经验收通过。"
@@ -810,7 +810,7 @@ def test_overlap_score_handles_semantically_equivalent_contract_answers():
 
 
 def test_judge_answer_heuristic_supports_semantic_contract_fragments():
-    from agentchat.evals.rag_eval.run_eval import _judge_answer_heuristic
+    from tools.evals.zuno.rag_eval.run_eval import _judge_answer_heuristic
 
     sample = {
         "id": "q_faithful_contract",
@@ -836,7 +836,7 @@ def test_judge_answer_heuristic_supports_semantic_contract_fragments():
 
 
 def test_judge_answer_heuristic_supports_multiline_extracts():
-    from agentchat.evals.rag_eval.run_eval import _judge_answer_heuristic
+    from tools.evals.zuno.rag_eval.run_eval import _judge_answer_heuristic
 
     sample = {
         "id": "q_judge",
@@ -863,8 +863,8 @@ def test_judge_answer_heuristic_supports_multiline_extracts():
 
 
 def test_graph_retriever_resolves_graph_hits_back_to_source_chunks():
-    from agentchat.schema.search import SearchModel
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.schema.search import SearchModel
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -924,7 +924,7 @@ def test_graph_retriever_resolves_graph_hits_back_to_source_chunks():
 
 
 def test_graph_extractor_connects_anchor_to_structure_lists():
-    from agentchat.services.graphrag.extractor import GraphExtractor
+    from zuno.services.graphrag.extractor import GraphExtractor
 
     chunk = {
         "chunk_id": "chunk_milvus",
@@ -948,7 +948,7 @@ def test_graph_extractor_connects_anchor_to_structure_lists():
 
 
 def test_graph_extractor_filters_noise_and_keeps_rabbitmq_list_labels():
-    from agentchat.services.graphrag.extractor import GraphExtractor
+    from zuno.services.graphrag.extractor import GraphExtractor
 
     chunk = {
         "chunk_id": "chunk_rabbitmq",
@@ -975,7 +975,7 @@ def test_graph_extractor_filters_noise_and_keeps_rabbitmq_list_labels():
 
 
 def test_graph_extractor_captures_agent_server_deployment_and_persistence_lists():
-    from agentchat.services.graphrag.extractor import GraphExtractor
+    from zuno.services.graphrag.extractor import GraphExtractor
 
     chunk = {
         "chunk_id": "chunk_agent_server",
@@ -1005,7 +1005,7 @@ def test_graph_extractor_captures_agent_server_deployment_and_persistence_lists(
 
 
 def test_graph_retriever_uses_query_seed_entities_from_first_line_only():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1035,7 +1035,7 @@ def test_graph_retriever_uses_query_seed_entities_from_first_line_only():
 
 
 def test_graph_retriever_skips_graph_for_non_relational_single_entity_query():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1063,7 +1063,7 @@ def test_graph_retriever_skips_graph_for_non_relational_single_entity_query():
 
 
 def test_graph_retriever_keeps_graph_for_relational_structure_query_and_filters_generic_targets():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1094,7 +1094,7 @@ def test_graph_retriever_keeps_graph_for_relational_structure_query_and_filters_
 
 
 def test_graph_retriever_filters_scale_template_targets_for_agent_server_queries():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1122,7 +1122,7 @@ def test_graph_retriever_filters_scale_template_targets_for_agent_server_queries
 
 
 def test_graph_retriever_adds_alias_seed_for_chinese_persistence_query():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1158,7 +1158,7 @@ def test_graph_retriever_adds_alias_seed_for_chinese_persistence_query():
 
 
 def test_graph_retriever_does_not_enable_graph_only_because_query_has_many_ascii_terms():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1185,7 +1185,7 @@ def test_graph_retriever_does_not_enable_graph_only_because_query_has_many_ascii
 
 
 def test_graph_retriever_skips_graph_for_non_relational_type_listing_query():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1212,7 +1212,7 @@ def test_graph_retriever_skips_graph_for_non_relational_type_listing_query():
 
 
 def test_graph_retriever_downranks_agent_server_scale_chunks_for_non_scaling_queries():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1250,7 +1250,7 @@ def test_graph_retriever_downranks_agent_server_scale_chunks_for_non_scaling_que
 
 
 def test_graph_retriever_downranks_docs_navigation_chunks_when_question_is_not_about_tests():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1288,7 +1288,7 @@ def test_graph_retriever_downranks_docs_navigation_chunks_when_question_is_not_a
 
 
 def test_text_parser_chunk_ids_are_stable_for_repeated_parses(tmp_path):
-    from agentchat.services.rag.doc_parser.text import TextParser
+    from zuno.services.rag.doc_parser.text import TextParser
 
     path = tmp_path / "demo.txt"
     path.write_text("ProjectAtlas release approvals are handled by Bob.\nBob reports to Carol.", encoding="utf-8")
@@ -1301,8 +1301,8 @@ def test_text_parser_chunk_ids_are_stable_for_repeated_parses(tmp_path):
 
 
 def test_rag_detail_retrieval_preserves_document_metadata_after_rerank(monkeypatch):
-    from agentchat.schema.search import SearchModel
-    from agentchat.services.rag.handler import RagHandler
+    from zuno.schema.search import SearchModel
+    from zuno.services.rag.handler import RagHandler
 
     async def fake_mix_retrieval(*args, **kwargs):
         return [
@@ -1351,7 +1351,7 @@ def test_rag_detail_retrieval_preserves_document_metadata_after_rerank(monkeypat
 
     monkeypatch.setattr(RagHandler, "_resolve_runtime_settings", classmethod(lambda cls, ids: fake_runtime_settings()))
     monkeypatch.setattr(RagHandler, "mix_retrival_documents", classmethod(lambda cls, *args, **kwargs: fake_mix_retrieval()))
-    monkeypatch.setattr("agentchat.services.rag.handler.Reranker.rerank_documents", fake_rerank_documents)
+    monkeypatch.setattr("zuno.services.rag.handler.Reranker.rerank_documents", fake_rerank_documents)
 
     result = asyncio.run(
         RagHandler._retrieve_ranked_documents_rag_detail(
@@ -1368,8 +1368,8 @@ def test_rag_detail_retrieval_preserves_document_metadata_after_rerank(monkeypat
 
 
 def test_rag_detail_without_external_rerank_uses_local_priority_for_agent_server_query(monkeypatch):
-    from agentchat.schema.search import SearchModel
-    from agentchat.services.rag.handler import RagHandler
+    from zuno.schema.search import SearchModel
+    from zuno.services.rag.handler import RagHandler
 
     async def fake_mix_retrieval(*args, **kwargs):
         return [
@@ -1426,8 +1426,8 @@ def test_rag_detail_without_external_rerank_uses_local_priority_for_agent_server
 
 
 def test_rag_detail_local_priority_bridges_chinese_persistence_query_to_english_section(monkeypatch):
-    from agentchat.schema.search import SearchModel
-    from agentchat.services.rag.handler import RagHandler
+    from zuno.schema.search import SearchModel
+    from zuno.services.rag.handler import RagHandler
 
     async def fake_mix_retrieval(*args, **kwargs):
         return [
@@ -1497,7 +1497,7 @@ def test_rag_detail_local_priority_bridges_chinese_persistence_query_to_english_
 
 
 def test_graph_retriever_prefers_task_queue_section_for_redis_postgres_question():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1539,7 +1539,7 @@ def test_graph_retriever_prefers_task_queue_section_for_redis_postgres_question(
 
 
 def test_reranker_falls_back_when_request_errors(monkeypatch):
-    from agentchat.services.rag.rerank import Reranker
+    from zuno.services.rag.rerank import Reranker
 
     monkeypatch.setattr(Reranker, "_is_configured", classmethod(lambda cls, config_override=None: True))
 
@@ -1563,7 +1563,7 @@ def test_reranker_falls_back_when_request_errors(monkeypatch):
 
 
 def test_orchestrator_skips_rag_entry_chunk_for_already_graph_worthy_query():
-    from agentchat.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     captured = {}
 
@@ -1610,7 +1610,7 @@ def test_orchestrator_skips_rag_entry_chunk_for_already_graph_worthy_query():
 
 
 def test_orchestrator_keeps_rag_entry_chunk_for_weak_graph_query():
-    from agentchat.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     captured = {}
 
@@ -1657,7 +1657,7 @@ def test_orchestrator_keeps_rag_entry_chunk_for_weak_graph_query():
 
 
 def test_graph_retriever_extracts_additional_multiline_seeds_from_entry_chunk():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     seeds = GraphRetriever._extract_query_seeds(
         "Python 閲屽彉閲忋€佸懡鍚嶇┖闂村拰瀵硅薄缁戝畾涔嬮棿鏄粈涔堝叧绯伙紵\n"
@@ -1670,7 +1670,7 @@ def test_graph_retriever_extracts_additional_multiline_seeds_from_entry_chunk():
 
 
 def test_graph_retriever_needs_entry_chunk_for_generic_relation_seed():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     assert GraphRetriever._needs_entry_chunk(
         "Python 閲屽彉閲忋€佸懡鍚嶇┖闂村拰瀵硅薄缁戝畾涔嬮棿鏄粈涔堝叧绯伙紵",
@@ -1679,7 +1679,7 @@ def test_graph_retriever_needs_entry_chunk_for_generic_relation_seed():
 
 
 def test_graph_retriever_augments_focus_file_with_sibling_chunks():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=2, limit=10, domain_pack_id=None):
@@ -1737,7 +1737,7 @@ def test_graph_retriever_augments_focus_file_with_sibling_chunks():
 
 
 def test_graph_retriever_score_demotes_metadata_heavy_graph_chunk():
-    from agentchat.services.graphrag.retriever import GraphRetriever
+    from zuno.services.graphrag.retriever import GraphRetriever
 
     query = "Python 里变量、命名空间和对象绑定之间是什么关系？"
     query_terms = GraphRetriever._expanded_query_terms(query, ["Python", "命名空间", "对象绑定"])
@@ -1766,7 +1766,7 @@ def test_graph_retriever_score_demotes_metadata_heavy_graph_chunk():
 
 
 def test_orchestrator_hybrid_content_uses_query_aware_merged_order():
-    from agentchat.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     class FakeRagRetriever:
         async def retrieve(self, query, knowledge_ids, options=None):
@@ -1831,7 +1831,7 @@ def test_orchestrator_hybrid_content_uses_query_aware_merged_order():
 
 
 def test_orchestrator_hybrid_content_can_elevate_graph_doc_when_query_matches_it():
-    from agentchat.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     class FakeRagRetriever:
         async def retrieve(self, query, knowledge_ids, options=None):

@@ -49,32 +49,32 @@ def resolve_app_config_path(file_path: str | None = None, *, writable: bool = Fa
     package_root = Path(__file__).resolve().parent
     repo_root = _find_repo_root(package_root)
     candidates = [
-        repo_root / ".local" / "config" / "agentchat" / "config.local.yaml",
-        repo_root / ".local" / "config" / "agentchat" / "config.yaml",
+        repo_root / ".local" / "config" / "zuno" / "config.local.yaml",
+        repo_root / ".local" / "config" / "zuno" / "config.yaml",
         package_root / "config.local.yaml",
         package_root / "config.yaml",
         package_root / "config.example.yaml",
         Path("zuno/config.local.yaml"),
         Path("zuno/config.yaml"),
         Path("zuno/config.example.yaml"),
-        Path("agentchat/config.local.yaml"),
-        Path("agentchat/config.yaml"),
-        Path("agentchat/config.example.yaml"),
+        Path("zuno/config.local.yaml"),
+        Path("zuno/config.yaml"),
+        Path("zuno/config.example.yaml"),
         Path("/app/zuno/config.local.yaml"),
         Path("/app/zuno/config.yaml"),
         Path("/app/zuno/config.example.yaml"),
-        Path("/app/agentchat/config.local.yaml"),
-        Path("/app/agentchat/config.yaml"),
-        Path("/app/agentchat/config.example.yaml"),
+        Path("/app/zuno/config.local.yaml"),
+        Path("/app/zuno/config.yaml"),
+        Path("/app/zuno/config.example.yaml"),
     ]
     if writable:
         writable_candidates = [
-            repo_root / ".local" / "config" / "agentchat" / "config.local.yaml",
+            repo_root / ".local" / "config" / "zuno" / "config.local.yaml",
             package_root / "config.local.yaml",
             Path("zuno/config.local.yaml"),
             Path("/app/zuno/config.local.yaml"),
-            Path("agentchat/config.local.yaml"),
-            Path("/app/agentchat/config.local.yaml"),
+            Path("zuno/config.local.yaml"),
+            Path("/app/zuno/config.local.yaml"),
         ]
         for candidate in writable_candidates:
             if candidate.exists():

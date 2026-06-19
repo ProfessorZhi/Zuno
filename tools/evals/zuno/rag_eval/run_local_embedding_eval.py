@@ -15,11 +15,11 @@ BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from agentchat.api.services.llm import LLMService
-from agentchat.database.dao.llm import LLMDao
-from agentchat.database.models.user import SystemUser
-from agentchat.evals.rag_eval.paths import default_runs_root
-from agentchat.settings import app_settings, initialize_app_settings
+from zuno.api.services.llm import LLMService
+from zuno.database.dao.llm import LLMDao
+from zuno.database.models.user import SystemUser
+from tools.evals.zuno.rag_eval.paths import default_runs_root
+from zuno.settings import app_settings, initialize_app_settings
 
 
 LOCAL_MODEL_HOSTS = {
@@ -32,7 +32,7 @@ LOCAL_MODEL_HOSTS = {
 
 
 async def get_embedding(text: str, config_override=None):
-    from agentchat.services.rag.embedding import get_embedding as _get_embedding
+    from zuno.services.rag.embedding import get_embedding as _get_embedding
 
     return await _get_embedding(text, config_override=config_override)
 
@@ -346,8 +346,8 @@ async def _run_stackless_fallback(
     direct_local_embedding_api_key: str | None,
     rerank_model_id: str | None,
 ) -> dict[str, Any]:
-    from agentchat.evals.rag_eval.run_stackless_local_eval import run_stackless_local_eval
-    from agentchat.evals.rag_eval.summarize_eval_profiles import summarize, write_markdown
+    from tools.evals.zuno.rag_eval.run_stackless_local_eval import run_stackless_local_eval
+    from tools.evals.zuno.rag_eval.summarize_eval_profiles import summarize, write_markdown
 
     result = await run_stackless_local_eval(
         manifest_path=manifest_path,
@@ -401,9 +401,9 @@ async def run_local_embedding_eval(
     direct_local_embedding_base_url: str | None = None,
     direct_local_embedding_api_key: str | None = None,
 ) -> dict[str, Any]:
-    from agentchat.evals.rag_eval.ingest_prepared_corpus import ingest_prepared_corpus
-    from agentchat.evals.rag_eval.run_eval import resolve_profiles, run_eval
-    from agentchat.evals.rag_eval.summarize_eval_profiles import summarize, write_markdown
+    from tools.evals.zuno.rag_eval.ingest_prepared_corpus import ingest_prepared_corpus
+    from tools.evals.zuno.rag_eval.run_eval import resolve_profiles, run_eval
+    from tools.evals.zuno.rag_eval.summarize_eval_profiles import summarize, write_markdown
 
     try:
         preflight = await preflight_local_embedding_eval(

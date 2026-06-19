@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_config_resolver_prefers_private_local_file(monkeypatch, tmp_path):
-    from agentchat import settings
+    from zuno import settings
 
     local_config = tmp_path / "config.local.yaml"
     public_config = tmp_path / "config.example.yaml"
@@ -18,7 +18,7 @@ def test_config_resolver_prefers_private_local_file(monkeypatch, tmp_path):
 
 
 def test_system_tool_payload_exposes_strategy_install_and_config_metadata():
-    from agentchat.api.v1 import config as config_api
+    from zuno.api.v1 import config as config_api
 
     payload = config_api._build_system_tool_payload("send_email", {})
     assert payload["tool_kind"] == "smtp_protocol"
@@ -44,7 +44,7 @@ def test_system_tool_payload_exposes_strategy_install_and_config_metadata():
 
 
 def test_get_runtime_config_lists_strategy_metadata_for_system_tools(monkeypatch):
-    from agentchat.api.v1.config import get_runtime_config
+    from zuno.api.v1.config import get_runtime_config
 
     sample_config = {
         "tools": {
@@ -56,7 +56,7 @@ def test_get_runtime_config_lists_strategy_metadata_for_system_tools(monkeypatch
     }
 
     monkeypatch.setattr(
-        "agentchat.api.v1.config._load_runtime_config",
+        "zuno.api.v1.config._load_runtime_config",
         lambda: ("config.yaml", sample_config),
     )
 
@@ -76,10 +76,10 @@ def test_get_runtime_config_lists_strategy_metadata_for_system_tools(monkeypatch
 
 
 def test_get_system_tool_status_route_returns_status(monkeypatch):
-    from agentchat.api.v1.config import get_system_tool_status
+    from zuno.api.v1.config import get_system_tool_status
 
     monkeypatch.setattr(
-        "agentchat.api.v1.config._load_runtime_config",
+        "zuno.api.v1.config._load_runtime_config",
         lambda: ("config.yaml", {"tools": {"weather": {"api_key": "secret", "endpoint": "https://example.com"}}}),
     )
 

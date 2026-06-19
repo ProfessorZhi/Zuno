@@ -46,7 +46,7 @@ def _sample_knowledge_config():
 
 
 def test_knowledge_create_request_accepts_knowledge_config_and_ignores_legacy_default_retrieval_mode():
-    from agentchat.schema.knowledge import KnowledgeCreateRequest
+    from zuno.schema.knowledge import KnowledgeCreateRequest
 
     request = KnowledgeCreateRequest(
         knowledge_name="PyIndex",
@@ -64,8 +64,8 @@ def test_knowledge_create_request_accepts_knowledge_config_and_ignores_legacy_de
 
 
 def test_create_knowledge_endpoint_passes_knowledge_config(monkeypatch):
-    from agentchat.api.v1.knowledge import upload_knowledge
-    from agentchat.schema.knowledge import KnowledgeCreateRequest
+    from zuno.api.v1.knowledge import upload_knowledge
+    from zuno.schema.knowledge import KnowledgeCreateRequest
 
     captured = {}
 
@@ -76,7 +76,7 @@ def test_create_knowledge_endpoint_passes_knowledge_config(monkeypatch):
         captured["knowledge_config"] = knowledge_config
 
     monkeypatch.setattr(
-        "agentchat.api.v1.knowledge.KnowledgeService.create_knowledge",
+        "zuno.api.v1.knowledge.KnowledgeService.create_knowledge",
         fake_create_knowledge,
     )
 
@@ -101,8 +101,8 @@ def test_create_knowledge_endpoint_passes_knowledge_config(monkeypatch):
 
 
 def test_update_knowledge_endpoint_passes_knowledge_config_patch(monkeypatch):
-    from agentchat.api.v1.knowledge import update_knowledge
-    from agentchat.schema.knowledge import KnowledgeUpdateRequest
+    from zuno.api.v1.knowledge import update_knowledge
+    from zuno.schema.knowledge import KnowledgeUpdateRequest
 
     captured = {}
 
@@ -113,11 +113,11 @@ def test_update_knowledge_endpoint_passes_knowledge_config_patch(monkeypatch):
         captured["update"] = (knowledge_id, knowledge_name, knowledge_desc, knowledge_config)
 
     monkeypatch.setattr(
-        "agentchat.api.v1.knowledge.KnowledgeService.verify_user_permission",
+        "zuno.api.v1.knowledge.KnowledgeService.verify_user_permission",
         fake_verify_user_permission,
     )
     monkeypatch.setattr(
-        "agentchat.api.v1.knowledge.KnowledgeService.update_knowledge",
+        "zuno.api.v1.knowledge.KnowledgeService.update_knowledge",
         fake_update_knowledge,
     )
 
@@ -153,7 +153,7 @@ def test_update_knowledge_endpoint_passes_knowledge_config_patch(monkeypatch):
 
 
 def test_select_knowledge_exposes_normalized_knowledge_config(monkeypatch):
-    from agentchat.api.services.knowledge import KnowledgeService
+    from zuno.api.services.knowledge import KnowledgeService
 
     async def fake_get_knowledge_by_user(_user_id):
         return [
@@ -176,11 +176,11 @@ def test_select_knowledge_exposes_normalized_knowledge_config(monkeypatch):
         return []
 
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge.KnowledgeDao.get_knowledge_by_user",
+        "zuno.api.services.knowledge.KnowledgeDao.get_knowledge_by_user",
         fake_get_knowledge_by_user,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge.KnowledgeFileDao.select_knowledge_file",
+        "zuno.api.services.knowledge.KnowledgeFileDao.select_knowledge_file",
         fake_select_knowledge_file,
     )
 
@@ -199,7 +199,7 @@ def test_select_knowledge_exposes_normalized_knowledge_config(monkeypatch):
 
 
 def test_update_knowledge_service_merges_partial_knowledge_config(monkeypatch):
-    from agentchat.api.services.knowledge import KnowledgeService
+    from zuno.api.services.knowledge import KnowledgeService
 
     captured = {}
 
@@ -228,11 +228,11 @@ def test_update_knowledge_service_merges_partial_knowledge_config(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge.KnowledgeDao.select_user_by_id",
+        "zuno.api.services.knowledge.KnowledgeDao.select_user_by_id",
         fake_select_user_by_id,
     )
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge.KnowledgeDao.update_knowledge_by_id",
+        "zuno.api.services.knowledge.KnowledgeDao.update_knowledge_by_id",
         fake_update_knowledge_by_id,
     )
 
@@ -263,13 +263,13 @@ def test_update_knowledge_service_merges_partial_knowledge_config(monkeypatch):
 
 
 def test_knowledge_service_rejects_encoding_damaged_text(monkeypatch):
-    from agentchat.api.services.knowledge import KnowledgeService
+    from zuno.api.services.knowledge import KnowledgeService
 
     async def fake_create_knowledge(*_args, **_kwargs):
         raise AssertionError("damaged text should be rejected before database write")
 
     monkeypatch.setattr(
-        "agentchat.api.services.knowledge.KnowledgeDao.create_knowledge",
+        "zuno.api.services.knowledge.KnowledgeDao.create_knowledge",
         fake_create_knowledge,
     )
 
@@ -288,7 +288,7 @@ def test_knowledge_service_rejects_encoding_damaged_text(monkeypatch):
 
 
 def test_reindex_knowledge_files_endpoint_passes_knowledge_id(monkeypatch):
-    from agentchat.api.v1.knowledge_file import reindex_knowledge_files
+    from zuno.api.v1.knowledge_file import reindex_knowledge_files
 
     captured = {}
 
@@ -310,11 +310,11 @@ def test_reindex_knowledge_files_endpoint_passes_knowledge_id(monkeypatch):
     }
 
     monkeypatch.setattr(
-        "agentchat.api.v1.knowledge_file.KnowledgeService.verify_user_permission",
+        "zuno.api.v1.knowledge_file.KnowledgeService.verify_user_permission",
         fake_verify_user_permission,
     )
     monkeypatch.setattr(
-        "agentchat.api.v1.knowledge_file.KnowledgeFileService.reindex_knowledge_files",
+        "zuno.api.v1.knowledge_file.KnowledgeFileService.reindex_knowledge_files",
         fake_reindex_knowledge_files,
     )
 
@@ -331,7 +331,7 @@ def test_reindex_knowledge_files_endpoint_passes_knowledge_id(monkeypatch):
 
 
 def test_retrieval_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
-    from agentchat.api.v1.knowledge import retrieval_knowledge
+    from zuno.api.v1.knowledge import retrieval_knowledge
 
     async def fake_retrieve_ranked_documents_with_metadata(*args, **kwargs):
         return {
@@ -344,7 +344,7 @@ def test_retrieval_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
         }
 
     monkeypatch.setattr(
-        "agentchat.api.v1.knowledge.RagHandler.retrieve_ranked_documents_with_metadata",
+        "zuno.api.v1.knowledge.RagHandler.retrieve_ranked_documents_with_metadata",
         fake_retrieve_ranked_documents_with_metadata,
     )
 

@@ -67,10 +67,10 @@
 
 ```powershell
 python tools/evals/zuno/rag_eval/ingest_prepared_corpus.py `
-  --manifest .local/evals/agentchat/rag_eval/corpus/python_notes/manifest.json `
+  --manifest .local/evals/zuno/rag_eval/corpus/python_notes/manifest.json `
   --knowledge-name ZunoPythonEval `
   --text-embedding-model-id <local_embedding_llm_id> `
-  --output .local/evals/agentchat/rag_eval/runs/ingest-result.json
+  --output .local/evals/zuno/rag_eval/runs/ingest-result.json
 ```
 
 说明：
@@ -88,7 +88,7 @@ python tools/evals/zuno/rag_eval/run_eval.py `
   --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --knowledge-id <knowledge_id> `
   --profile-set local_compare `
-  --output-dir .local/evals/agentchat/rag_eval/runs/<run_id>
+  --output-dir .local/evals/zuno/rag_eval/runs/<run_id>
 ```
 
 ### Graph Hop Comparison
@@ -98,7 +98,7 @@ python tools/evals/zuno/rag_eval/run_eval.py `
   --dataset tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl `
   --knowledge-id <knowledge_id> `
   --profile-set graph_compare `
-  --output-dir .local/evals/agentchat/rag_eval/runs/<run_id>
+  --output-dir .local/evals/zuno/rag_eval/runs/<run_id>
 ```
 
 ### Optional Answer-Layer Pass
@@ -111,7 +111,7 @@ python tools/evals/zuno/rag_eval/run_eval.py `
   --answer-mode llm `
   --judge-mode llm `
   --trace-langsmith `
-  --output-dir .local/evals/agentchat/rag_eval/runs/<run_id>
+  --output-dir .local/evals/zuno/rag_eval/runs/<run_id>
 ```
 
 ## Acceptance Gates

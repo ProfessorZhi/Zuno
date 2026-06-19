@@ -15,6 +15,6 @@ alembic -c infra/db/alembic.ini revision --autogenerate -m "describe change"
 Notes:
 
 - `prepend_sys_path = src/backend` reflects the current Alembic import path.
-- `infra/db/alembic/env.py` now resolves metadata from `zuno.database.metadata`, not the legacy `agentchat` path.
+- `infra/db/alembic/env.py` resolves metadata from `zuno.database.metadata`.
 - Runtime config resolution follows the same search order as `zuno.settings.resolve_app_config_path()`.
-- Local overrides should stay in `.local/config/agentchat/config.local.yaml`.
+- Local overrides should stay in `.local/config/zuno/config.local.yaml`.

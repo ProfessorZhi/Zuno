@@ -33,7 +33,7 @@ if errorlevel 1 (
 
 echo Waiting for PostgreSQL to become healthy...
 for /L %%I in (1,1,45) do (
-  for /f "usebackq delims=" %%S in (`docker inspect -f "{{.State.Health.Status}}" agentchat-postgres 2^>nul`) do (
+  for /f "usebackq delims=" %%S in (`docker inspect -f "{{.State.Health.Status}}" zuno-postgres 2^>nul`) do (
     set "POSTGRES_STATUS=%%S"
   )
   if /I "!POSTGRES_STATUS!"=="healthy" goto :postgres_ready
