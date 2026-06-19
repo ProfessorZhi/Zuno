@@ -22,7 +22,7 @@ async def upload_knowledge(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.create_knowledge(
+        result = await KnowledgeService.create_knowledge(
             knowledge_name=knowledge_req.knowledge_name,
             knowledge_desc=knowledge_req.knowledge_desc,
             user_id=login_user.user_id,
@@ -32,7 +32,7 @@ async def upload_knowledge(
                 else None
             ),
         )
-        return resp_200()
+        return resp_200(data=result)
     except Exception as err:
         return resp_500(message=str(err))
 
@@ -127,7 +127,7 @@ async def reindex_knowledge(
 async def analyze_knowledge_config_impact(
     *,
     knowledge_id: str,
-    next_config: KnowledgeConfig | dict,
+    next_config: KnowledgeConfig | dict = Body(..., embed=True),
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
@@ -138,6 +138,44 @@ async def analyze_knowledge_config_impact(
         )
         impact = KnowledgeService.analyze_config_impact(previous_config, normalized_next_config)
         return resp_200(data=impact)
+    except Exception as err:
+        logger.error(err)
+        return resp_500(message=str(err))
+
+
+@router.get("/knowledge/{knowledge_id}/config", response_model=UnifiedResponseModel)
+async def get_knowledge_config(
+    *,
+    knowledge_id: str,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id)
+        return resp_200(data=await KnowledgeService.get_knowledge_config(knowledge_id))
+    except Exception as err:
+        logger.error(err)
+        return resp_500(message=str(err))
+
+
+@router.put("/knowledge/{knowledge_id}/config", response_model=UnifiedResponseModel)
+async def update_knowledge_config(
+    *,
+    knowledge_id: str,
+    next_config: KnowledgeConfig | dict = Body(..., embed=True),
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id)
+        normalized_next_config = (
+            next_config.model_dump() if isinstance(next_config, KnowledgeConfig) else next_config
+        )
+        await KnowledgeService.update_knowledge(
+            knowledge_id,
+            None,
+            None,
+            normalized_next_config,
+        )
+        return resp_200()
     except Exception as err:
         logger.error(err)
         return resp_500(message=str(err))
@@ -194,6 +232,7 @@ async def search_knowledge(
 __all__ = [
     "analyze_knowledge_config_impact",
     "delete_knowledge",
+    "get_knowledge_config",
     "get_knowledge_files",
     "list_eval_profiles",
     "reindex_knowledge",
@@ -201,6 +240,7 @@ __all__ = [
     "router",
     "search_knowledge",
     "select_knowledge",
+    "update_knowledge_config",
     "update_knowledge",
     "upload_knowledge",
 ]

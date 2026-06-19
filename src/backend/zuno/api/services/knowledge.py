@@ -258,7 +258,7 @@ class KnowledgeService:
             "default": "rag",
         }
         normalized = legacy_map.get(normalized, normalized)
-        if normalized not in {"rag", "rag_graph"}:
+        if normalized not in {"rag", "rag_graph", "rag_graph_deep"}:
             normalized = "rag"
         if index_capability != "rag_graph":
             return "rag"
@@ -269,7 +269,7 @@ class KnowledgeService:
         normalized = str(value or "").strip().lower()
         if normalized in {"rag", "rag_graph"}:
             return normalized
-        if str(retrieval_mode or "").strip().lower() in {"hybrid", "graphrag", "rag_graph"}:
+        if str(retrieval_mode or "").strip().lower() in {"hybrid", "graphrag", "rag_graph", "rag_graph_deep"}:
             return "rag_graph"
         return "rag"
 
@@ -314,13 +314,14 @@ class KnowledgeService:
             cls._validate_text_not_encoding_damaged("知识库名称", knowledge_name)
             cls._validate_text_not_encoding_damaged("知识库说明", knowledge_desc)
             normalized_config = cls._normalize_knowledge_config(knowledge_config)
-            await KnowledgeDao.create_knowledge(
+            knowledge = await KnowledgeDao.create_knowledge(
                 knowledge_name,
                 knowledge_desc,
                 user_id,
                 default_retrieval_mode=normalized_config["retrieval_settings"]["default_mode"],
                 knowledge_config=normalized_config,
             )
+            return cls._sanitize_knowledge_payload(knowledge.to_dict())
         except Exception as err:
             raise ValueError(f"Create Knowledge Error: {err}")
 

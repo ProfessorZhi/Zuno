@@ -15,16 +15,17 @@ class KnowledgeDao:
         knowledge_config=None,
     ):
         with session_getter() as session:
-            session.add(
-                KnowledgeTable(
-                    name=knowledge_name,
-                    description=knowledge_desc,
-                    user_id=user_id,
-                    default_retrieval_mode=default_retrieval_mode,
-                    knowledge_config=knowledge_config or {},
-                )
+            knowledge = KnowledgeTable(
+                name=knowledge_name,
+                description=knowledge_desc,
+                user_id=user_id,
+                default_retrieval_mode=default_retrieval_mode,
+                knowledge_config=knowledge_config or {},
             )
+            session.add(knowledge)
             session.commit()
+            session.refresh(knowledge)
+            return knowledge
 
     @classmethod
     async def get_knowledge_by_user(cls, user_id):

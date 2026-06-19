@@ -175,12 +175,73 @@ def build_mock_payloads() -> tuple[list[dict[str, Any]], dict[str, list[dict[str
 
 def api_body(url: str) -> dict[str, Any]:
     knowledge_list, llm_data = build_mock_payloads()
+    domain_packs = [
+        {
+            "pack_id": "contract-review-v1",
+            "name": "合同审查",
+            "version": "0.1.0",
+            "description": "合同条款问答、风险识别和引用溯源模板。",
+            "status": "published",
+        }
+    ]
     if url.endswith("/api/v1/knowledge/select"):
         return {"status_code": 200, "status_message": "ok", "data": knowledge_list}
+    if url.endswith("/api/v1/domain-packs"):
+        return {"status_code": 200, "status_message": "ok", "data": domain_packs}
+    if url.endswith("/api/v1/domain-packs/draft") or url.endswith("/api/v1/domain-packs/draft/from-knowledge"):
+        return {"status_code": 200, "status_message": "ok", "data": {"pack_id": "contract-review-v1", "status": "draft"}}
+    if "/api/v1/domain-packs/" in url and url.endswith("/publish"):
+        return {"status_code": 200, "status_message": "ok", "data": {**domain_packs[0], "status": "published"}}
+    if "/api/v1/domain-packs/" in url:
+        return {
+            "status_code": 200,
+            "status_message": "ok",
+            "data": {
+                **domain_packs[0],
+                "schema_data": {"entities": ["Party", "Clause"], "relations": ["HAS_OBLIGATION"]},
+                "retrieval_policy_data": {"graph_hop_limit": 2, "max_paths_per_entity": 5},
+                "extraction_prompt_text": "Extract contract entities and evidence.",
+            },
+        }
+    if "/api/v1/knowledge/kb-contract-review/config/impact" in url:
+        return {
+            "status_code": 200,
+            "status_message": "ok",
+            "data": {
+                "changed_fields": [],
+                "immediate_effect_fields": [],
+                "text_reindex_required": False,
+                "image_reindex_required": False,
+                "bm25_reindex_required": False,
+                "graph_update_required": False,
+                "community_detection_required": False,
+                "community_report_required": False,
+                "full_rebuild_required": False,
+                "recommended_action": "save_only",
+            },
+        }
+    if url.endswith("/api/v1/knowledge/kb-contract-review/config"):
+        return {"status_code": 200, "status_message": "ok", "data": knowledge_list[0]["knowledge_config"]}
+    if "/api/v1/knowledge/kb-contract-review/reindex/" in url:
+        action = url.rsplit("/", 1)[-1]
+        return {"status_code": 200, "status_message": "ok", "data": {"knowledge_id": "kb-contract-review", "action": action, "status": "accepted"}}
+    if url.endswith("/api/v1/knowledge/create"):
+        return {
+            "status_code": 200,
+            "status_message": "ok",
+            "data": {
+                "id": "kb-new-product-wiring",
+                "name": "新知识库",
+                "description": "用于 Product Wiring V1 的知识库说明。",
+                "knowledge_config": knowledge_list[0]["knowledge_config"],
+            },
+        }
     if url.endswith("/api/v1/llm/visible"):
         return {"status_code": 200, "status_message": "ok", "data": llm_data}
     if url.endswith("/api/v1/knowledge/update"):
         return {"status_code": 200, "status_message": "ok", "data": None}
+    if url.endswith("/api/v1/knowledge_file/select"):
+        return {"status_code": 200, "status_message": "ok", "data": []}
     if url.endswith("/api/v1/knowledge_file/reindex"):
         return {
             "status_code": 200,
@@ -215,10 +276,9 @@ def prepare_page(page: Page, base_url: str, target_route: str) -> None:
     )
     page.add_init_script(
         """
-        () => {
-          localStorage.setItem('token', 'audit-token')
-          localStorage.setItem('zuno.workspace.settingsUiMode', 'traditional')
-        }
+        localStorage.setItem('token', 'audit-token')
+        localStorage.setItem('userInfo', JSON.stringify({ id: 'audit', username: 'audit' }))
+        localStorage.setItem('zuno.workspace.settingsUiMode', 'traditional')
         """
     )
     page.goto(base_url, wait_until="networkidle", timeout=30000)

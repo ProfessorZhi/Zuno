@@ -1,7 +1,7 @@
 [
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-list",
     "route": "/workspace/settings/knowledge/domain-packs",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-list.vue",
@@ -14,8 +14,8 @@
     "notes": "领域包作为独立资源展示；创建入口在列表页。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-list",
     "route": "/workspace/settings/knowledge/domain-packs",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-list.vue",
@@ -28,8 +28,8 @@
     "notes": "领域包作为独立资源展示；创建入口在列表页。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-list",
     "route": "/workspace/settings/knowledge/domain-packs",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-list.vue",
@@ -42,8 +42,8 @@
     "notes": "领域包作为独立资源展示；创建入口在列表页。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-create",
     "route": "/workspace/settings/knowledge/domain-packs/create",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-create.vue",
@@ -56,8 +56,8 @@
     "notes": "领域包构建页强调样本文件、schema/prompt 审核、发布步骤。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-create",
     "route": "/workspace/settings/knowledge/domain-packs/create",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-create.vue",
@@ -70,8 +70,8 @@
     "notes": "领域包构建页强调样本文件、schema/prompt 审核、发布步骤。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-create",
     "route": "/workspace/settings/knowledge/domain-packs/create",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-create.vue",
@@ -84,8 +84,8 @@
     "notes": "领域包构建页强调样本文件、schema/prompt 审核、发布步骤。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-detail",
     "route": "/workspace/settings/knowledge/domain-packs/contract-review-v1",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-detail.vue",
@@ -98,8 +98,8 @@
     "notes": "详情页聚焦领域包本体，不直接承担知识库维护职责。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-detail",
     "route": "/workspace/settings/knowledge/domain-packs/contract-review-v1",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-detail.vue",
@@ -112,8 +112,8 @@
     "notes": "详情页聚焦领域包本体，不直接承担知识库维护职责。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "domain-pack-detail",
     "route": "/workspace/settings/knowledge/domain-packs/contract-review-v1",
     "component_path": "apps/web/src/pages/knowledge/domain-pack-detail.vue",
@@ -126,8 +126,8 @@
     "notes": "详情页聚焦领域包本体，不直接承担知识库维护职责。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "knowledge-create-wizard",
     "route": "/workspace/settings/knowledge/create",
     "component_path": "apps/web/src/pages/knowledge/knowledge-create.vue",
@@ -140,8 +140,8 @@
     "notes": "产品层只暴露标准检索与增强检索，不直接暴露内部 runtime 模式。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "knowledge-create-wizard",
     "route": "/workspace/settings/knowledge/create",
     "component_path": "apps/web/src/pages/knowledge/knowledge-create.vue",
@@ -154,8 +154,8 @@
     "notes": "产品层只暴露标准检索与增强检索，不直接暴露内部 runtime 模式。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "knowledge-create-wizard",
     "route": "/workspace/settings/knowledge/create",
     "component_path": "apps/web/src/pages/knowledge/knowledge-create.vue",
@@ -168,8 +168,8 @@
     "notes": "产品层只暴露标准检索与增强检索，不直接暴露内部 runtime 模式。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "knowledge-maintenance",
     "route": "/workspace/settings/knowledge/kb-contract-review/settings?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
     "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
@@ -182,8 +182,8 @@
     "notes": "维护页展示模型、索引、图谱、社区与重建动作，用产品词汇表达能力。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "knowledge-maintenance",
     "route": "/workspace/settings/knowledge/kb-contract-review/settings?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
     "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
@@ -196,8 +196,8 @@
     "notes": "维护页展示模型、索引、图谱、社区与重建动作，用产品词汇表达能力。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "knowledge-maintenance",
     "route": "/workspace/settings/knowledge/kb-contract-review/settings?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
     "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
@@ -210,8 +210,8 @@
     "notes": "维护页展示模型、索引、图谱、社区与重建动作，用产品词汇表达能力。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "legacy-knowledge-config-route",
     "route": "/workspace/settings/knowledge/kb-contract-review/config?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
     "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
@@ -224,8 +224,8 @@
     "notes": "旧 config 路由仍保留，但当前用户路径已收口到 settings 页面。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "legacy-knowledge-config-route",
     "route": "/workspace/settings/knowledge/kb-contract-review/config?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
     "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",
@@ -238,8 +238,8 @@
     "notes": "旧 config 路由仍保留，但当前用户路径已收口到 settings 页面。"
   },
   {
-    "commit_sha": "5ac897d2e060cbb4443ea102203ffe557209720e",
-    "generated_at": "2026-06-19T17:10:00.240419+00:00",
+    "commit_sha": "caf1c394d2035a3acff273b7aa62de4be21b89ba",
+    "generated_at": "2026-06-19T18:29:24.246919+00:00",
     "page_name": "legacy-knowledge-config-route",
     "route": "/workspace/settings/knowledge/kb-contract-review/config?name=%E5%90%88%E5%90%8C%E5%AE%A1%E6%9F%A5%E7%9F%A5%E8%AF%86%E5%BA%93",
     "component_path": "apps/web/src/pages/knowledge/knowledge-settings.vue",

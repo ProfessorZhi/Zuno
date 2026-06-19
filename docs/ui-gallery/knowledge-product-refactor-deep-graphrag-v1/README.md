@@ -1,7 +1,7 @@
 # Knowledge Product Refactor + Deep GraphRAG V1 UI Snapshot Audit
 
-- Generated at: 2026-06-19T17:10:00.240419+00:00
-- Commit SHA: `5ac897d2e060cbb4443ea102203ffe557209720e`
+- Generated at: 2026-06-19T18:29:24.246919+00:00
+- Commit SHA: `caf1c394d2035a3acff273b7aa62de4be21b89ba`
 - Previous baseline commit: `8b44326`
 - Capture method: load root preview page, navigate client-side to target routes, intercept `/api/**` with audit-safe mock data, then export screenshots and HTML snapshots.
 - This is the responsive hardening after snapshot for tablet/mobile settings shell layout.

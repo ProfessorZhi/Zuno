@@ -13,6 +13,7 @@ export type KnowledgeChunkMode = 'general' | 'parent_child' | 'qa'
 export type KnowledgeImageStrategy = 'text_only' | 'vl_only' | 'dual'
 export type KnowledgeVectorBackend = 'milvus' | 'chroma' | 'milvus_lite'
 export type KnowledgeRefillPolicy = 'none' | 'auto' | 'smart'
+export type KnowledgeProductMode = 'standard' | 'enhanced'
 
 export interface KnowledgeModelBinding {
   llm_id: string
@@ -169,17 +170,17 @@ const defaultConfig = (): KnowledgeConfigPayload => ({
 const normalizeRetrievalModeForCapability = (
   mode: string | null | undefined,
   capability: KnowledgeIndexCapability,
-): RetrievalMode => {
-  const legacyMap: Record<string, RetrievalMode> = {
+): KnowledgeConfigPayload['retrieval_settings']['default_mode'] => {
+  const legacyMap: Record<string, KnowledgeConfigPayload['retrieval_settings']['default_mode']> = {
     auto: 'rag',
     default: 'rag',
     hybrid: 'rag_graph',
     graphrag: 'rag_graph',
   }
   const raw = String(mode || 'rag').toLowerCase()
-  const normalized = (legacyMap[raw] || raw) as RetrievalMode
+  const normalized = (legacyMap[raw] || raw) as KnowledgeConfigPayload['retrieval_settings']['default_mode']
   if (capability === 'rag') return 'rag'
-  return normalized === 'rag_graph' ? 'rag_graph' : 'rag'
+  return normalized === 'rag_graph' || normalized === 'rag_graph_deep' ? normalized : 'rag'
 }
 
 const normalizeIndexCapability = (
@@ -187,7 +188,7 @@ const normalizeIndexCapability = (
   defaultMode?: string | null,
 ): KnowledgeIndexCapability => {
   if (capability === 'rag_graph' || capability === 'rag') return capability
-  return ['hybrid', 'graphrag', 'rag_graph'].includes(String(defaultMode || '').toLowerCase())
+  return ['hybrid', 'graphrag', 'rag_graph', 'rag_graph_deep'].includes(String(defaultMode || '').toLowerCase())
     ? 'rag_graph'
     : 'rag'
 }
@@ -238,6 +239,25 @@ export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): Knowledg
   graph_index_settings: { ...config.graph_index_settings },
   retrieval_settings: { ...config.retrieval_settings },
 })
+
+export const toProductKnowledgeConfig = (
+  mode: KnowledgeProductMode,
+  overrides: Partial<KnowledgeConfigPayload> = {},
+): KnowledgeConfigPayload => {
+  const config = normalizeKnowledgeConfig(overrides)
+  if (mode === 'enhanced') {
+    config.index_capability = 'rag_graph'
+    config.retrieval_settings.default_mode = 'rag_graph_deep'
+    return config
+  }
+  config.index_capability = 'rag'
+  config.retrieval_settings.default_mode = 'rag'
+  config.domain_pack_id = null
+  config.graph_index_settings.graph_index_status = 'not_built'
+  config.graph_index_settings.community_detection_status = 'not_built'
+  config.graph_index_settings.community_report_status = 'not_built'
+  return config
+}
 
 const mapModelToBinding = (
   model?: KnowledgeModelBindingPayload | null,

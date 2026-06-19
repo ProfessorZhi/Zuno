@@ -1,8 +1,13 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
+import { getDomainPacksAPI, type DomainPackSummary } from '../../apis/domain-packs'
 
 const router = useRouter()
 const route = useRoute()
+const loading = ref(false)
+const domainPacks = ref<DomainPackSummary[]>([])
 
 const buildSettingsQuery = () => ({
   ...route.query,
@@ -16,13 +21,32 @@ const openCreate = () => {
   })
 }
 
-const openDetail = () => {
+const openDetail = (packId: string) => {
   router.push({
     name: 'workspaceSettingsKnowledgeDomainPackDetail',
-    params: { packId: 'contract-review-v1' },
+    params: { packId },
     query: buildSettingsQuery(),
   })
 }
+
+const loadDomainPacks = async () => {
+  loading.value = true
+  try {
+    const response = await getDomainPacksAPI()
+    if (response.data.status_code === 200) {
+      domainPacks.value = response.data.data || []
+      return
+    }
+    ElMessage.error(response.data.status_message || '加载领域包失败')
+  } catch (error) {
+    console.error('加载领域包失败', error)
+    ElMessage.error('加载领域包失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadDomainPacks)
 </script>
 
 <template>
@@ -33,14 +57,24 @@ const openDetail = () => {
       <p>这里集中管理已发布模板、草稿状态，以及从知识库回跳创建新的领域包的入口。</p>
     </section>
 
-    <section class="panel">
+    <section class="panel" v-loading="loading">
       <div class="panel-head">
         <h2>领域包列表</h2>
         <button type="button" @click="openCreate">创建新的领域包</button>
       </div>
-      <button type="button" class="pack-card" title="查看 contract_review 领域包" @click="openDetail">
-        <strong>contract_review</strong>
-        <p>合同审查模板，包含 schema、retrieval policy 和 report prompt。</p>
+      <p v-if="!domainPacks.length && !loading" class="empty-copy">还没有领域包，先创建草稿再发布。</p>
+      <button
+        v-for="pack in domainPacks"
+        :key="pack.pack_id"
+        type="button"
+        class="pack-card"
+        :title="`查看 ${pack.name} 领域包`"
+        @click="openDetail(pack.pack_id)"
+      >
+        <span class="pack-status" :class="pack.status">{{ pack.status === 'published' ? '已发布' : '草稿' }}</span>
+        <strong>{{ pack.name || pack.pack_id }}</strong>
+        <p>{{ pack.description || '这个领域包还没有说明。' }}</p>
+        <small>{{ pack.pack_id }}<template v-if="pack.version"> · {{ pack.version }}</template></small>
       </button>
     </section>
   </div>
@@ -113,6 +147,28 @@ button {
   margin-top: 8px;
   color: #7c6b5c;
   line-height: 1.6;
+}
+
+.pack-card small,
+.empty-copy {
+  display: block;
+  margin-top: 10px;
+  color: #9a7a60;
+}
+
+.pack-status {
+  display: inline-flex;
+  margin-bottom: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fff4e6;
+  color: #9a4f12;
+  font-size: 12px;
+}
+
+.pack-status.published {
+  background: #ecfdf3;
+  color: #28714b;
 }
 
 @media (max-width: 1199px) {

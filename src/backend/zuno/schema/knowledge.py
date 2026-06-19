@@ -82,7 +82,7 @@ class KnowledgeGraphIndexSettingsPatch(BaseModel):
 
 
 class KnowledgeRetrievalSettings(BaseModel):
-    default_mode: str = Field(default="rag", pattern="^(auto|hybrid|rag|graphrag|rag_graph)$")
+    default_mode: str = Field(default="rag", pattern="^(auto|hybrid|rag|graphrag|rag_graph|rag_graph_deep)$")
     profile: str = Field(default="auto", min_length=1, max_length=64)
     refill_policy: str = Field(default="smart", pattern="^(none|auto|smart)$")
     top_k: int = Field(default=5, ge=1, le=50)
@@ -94,7 +94,7 @@ class KnowledgeRetrievalSettings(BaseModel):
 
 
 class KnowledgeRetrievalSettingsPatch(BaseModel):
-    default_mode: Optional[str] = Field(default=None, pattern="^(auto|hybrid|rag|graphrag|rag_graph)$")
+    default_mode: Optional[str] = Field(default=None, pattern="^(auto|hybrid|rag|graphrag|rag_graph|rag_graph_deep)$")
     profile: Optional[str] = Field(default=None, min_length=1, max_length=64)
     refill_policy: Optional[str] = Field(default=None, pattern="^(none|auto|smart)$")
     top_k: Optional[int] = Field(default=None, ge=1, le=50)

@@ -43,7 +43,7 @@ export interface KnowledgeConfigPayload {
     community_version?: string
   }
   retrieval_settings: {
-    default_mode: 'auto' | 'hybrid' | 'rag' | 'graphrag' | 'rag_graph'
+    default_mode: 'auto' | 'hybrid' | 'rag' | 'graphrag' | 'rag_graph' | 'rag_graph_deep'
     profile: string
     refill_policy: 'none' | 'auto' | 'smart'
     top_k: number
@@ -95,6 +95,28 @@ export interface KnowledgeUpdateRequest {
 
 export interface KnowledgeDeleteRequest {
   knowledge_id: string
+}
+
+export type KnowledgeReindexAction =
+  | 'text_index'
+  | 'image_index'
+  | 'bm25_index'
+  | 'graph_index'
+  | 'community_detection'
+  | 'community_report'
+  | 'full_rebuild'
+
+export interface KnowledgeConfigImpactResponse {
+  changed_fields: string[]
+  immediate_effect_fields: string[]
+  text_reindex_required: boolean
+  image_reindex_required: boolean
+  bm25_reindex_required: boolean
+  graph_update_required: boolean
+  community_detection_required: boolean
+  community_report_required: boolean
+  full_rebuild_required: boolean
+  recommended_action: KnowledgeReindexAction | 'save_only'
 }
 
 export interface KnowledgeModelBindingPayload {
@@ -155,7 +177,7 @@ export function getKnowledgeListAPI() {
 }
 
 export function createKnowledgeAPI(data: KnowledgeCreateRequest) {
-  return request<UnifiedResponse<null>>({
+  return request<UnifiedResponse<KnowledgeResponse>>({
     url: '/api/v1/knowledge/create',
     method: 'POST',
     data,
@@ -167,6 +189,40 @@ export function updateKnowledgeAPI(data: KnowledgeUpdateRequest) {
     url: '/api/v1/knowledge/update',
     method: 'PUT',
     data,
+  })
+}
+
+export function getKnowledgeConfigAPI(knowledgeId: string) {
+  return request<UnifiedResponse<KnowledgeConfigPayload>>({
+    url: `/api/v1/knowledge/${knowledgeId}/config`,
+    method: 'GET',
+  })
+}
+
+export function updateKnowledgeConfigAPI(knowledgeId: string, nextConfig: KnowledgeConfigPayload) {
+  return request<UnifiedResponse<null>>({
+    url: `/api/v1/knowledge/${knowledgeId}/config`,
+    method: 'PUT',
+    data: {
+      next_config: nextConfig,
+    },
+  })
+}
+
+export function analyzeKnowledgeConfigImpactAPI(knowledgeId: string, nextConfig: KnowledgeConfigPayload) {
+  return request<UnifiedResponse<KnowledgeConfigImpactResponse>>({
+    url: `/api/v1/knowledge/${knowledgeId}/config/impact`,
+    method: 'POST',
+    data: {
+      next_config: nextConfig,
+    },
+  })
+}
+
+export function runKnowledgeReindexActionAPI(knowledgeId: string, action: KnowledgeReindexAction) {
+  return request<UnifiedResponse<{ knowledge_id: string; action: KnowledgeReindexAction; status: string }>>({
+    url: `/api/v1/knowledge/${knowledgeId}/reindex/${action}`,
+    method: 'POST',
   })
 }
 

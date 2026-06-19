@@ -94,6 +94,42 @@ def assert_visible_text(page: Page, text: str) -> None:
     page.get_by_text(text, exact=False).first.wait_for(state="visible", timeout=10000)
 
 
+def verify_create_wizard_wiring(page: Page) -> list[str]:
+    failures: list[str] = []
+    page.locator(".knowledge-create-page .mode-card", has_text="增强检索").click()
+    domain_pack_select = page.locator(".knowledge-create-page select").nth(2)
+    domain_pack_select.wait_for(state="visible", timeout=10000)
+    domain_pack_select.select_option("contract-review-v1")
+    selected = domain_pack_select.input_value()
+    if selected != "contract-review-v1":
+        failures.append(f"domain pack was not selected in create wizard: {selected}")
+    assert_visible_text(page, "创建知识库")
+    return failures
+
+
+def submit_create_wizard(page: Page) -> list[str]:
+    failures: list[str] = []
+    page.get_by_role("button", name="创建知识库").click()
+    try:
+        wait_for_page(page, ".knowledge-file-page")
+    except PlaywrightTimeoutError:
+        failures.append("create wizard did not navigate to knowledge file upload page")
+    return failures
+
+
+def verify_maintenance_wiring(page: Page) -> list[str]:
+    failures: list[str] = []
+    assert_visible_text(page, "配置影响")
+    assert_visible_text(page, "可执行动作")
+    page.get_by_role("button", name="保存配置").click()
+    page.wait_for_timeout(250)
+    page.get_by_role("button", name="重新生成社区报告").click()
+    status_cards = page.locator(".knowledge-settings-page .status-card").count()
+    if status_cards < 5:
+        failures.append(f"maintenance page rendered {status_cards} status cards, expected at least 5")
+    return failures
+
+
 def metrics(page: Page, selector: str) -> dict[str, object]:
     return page.evaluate(
         """
@@ -161,7 +197,10 @@ def run_case(page: Page, base_url: str, case: ViewportCase) -> dict[str, object]
         wait_for_page(page, ".knowledge-create-page")
         assert_visible_text(page, "标准检索")
         assert_visible_text(page, "增强检索")
+        failures.extend(verify_create_wizard_wiring(page))
         failures.extend(validate_layout(page, ".knowledge-create-page", case))
+        failures.extend(submit_create_wizard(page))
+        failures.extend(validate_layout(page, ".knowledge-file-page", case))
 
         click_detail_back(page)
         wait_for_page(page, ".knowledge-page")
@@ -170,6 +209,7 @@ def run_case(page: Page, base_url: str, case: ViewportCase) -> dict[str, object]
         config_button.wait_for(state="visible", timeout=10000)
         config_button.click()
         wait_for_page(page, ".knowledge-settings-page")
+        failures.extend(verify_maintenance_wiring(page))
         failures.extend(validate_layout(page, ".knowledge-settings-page", case))
 
         click_detail_back(page)

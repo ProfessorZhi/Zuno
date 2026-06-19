@@ -1,14 +1,141 @@
 <script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useRoute, useRouter } from 'vue-router'
+import { getDomainPacksAPI, type DomainPackSummary } from '../../apis/domain-packs'
+import { createKnowledgeAPI } from '../../apis/knowledge'
+import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
+import {
+  createDefaultKnowledgeConfig,
+  toProductKnowledgeConfig,
+  type KnowledgeProductMode,
+} from '../../utils/knowledge-config'
+
 const retrievalModes = [
   {
+    value: 'standard',
     title: '标准检索',
     subtitle: '普通文档问答、FAQ、具体内容查找',
   },
   {
+    value: 'enhanced',
     title: '增强检索',
     subtitle: '关系推理、跨文档分析、图谱增强问答',
   },
-]
+] as const
+
+const router = useRouter()
+const route = useRoute()
+const saving = ref(false)
+const loadingOptions = ref(false)
+const productMode = ref<KnowledgeProductMode>('standard')
+const domainPacks = ref<DomainPackSummary[]>([])
+const models = ref<LLMResponse[]>([])
+const form = ref({
+  knowledge_name: '新知识库',
+  knowledge_desc: '用于 Product Wiring V1 的知识库说明。',
+  text_embedding_model_id: '',
+  vl_embedding_model_id: '',
+  rerank_model_id: '',
+  domain_pack_id: String(route.query.domain_pack_id || ''),
+})
+
+const embeddingModels = computed(() => models.value.filter((item) => item.llm_type === 'Embedding'))
+const rerankModels = computed(() => models.value.filter((item) => item.llm_type === 'Rerank'))
+const selectedDomainPack = computed(() => domainPacks.value.find((item) => item.pack_id === form.value.domain_pack_id))
+const canSubmit = computed(() => (
+  form.value.knowledge_name.trim().length >= 2
+  && form.value.knowledge_desc.trim().length >= 10
+))
+
+const loadOptions = async () => {
+  loadingOptions.value = true
+  try {
+    const [domainResponse, modelResponse] = await Promise.all([
+      getDomainPacksAPI(),
+      getVisibleLLMsAPI(),
+    ])
+    if (domainResponse.data.status_code === 200) {
+      domainPacks.value = domainResponse.data.data || []
+    }
+    if (modelResponse.data.status_code === 200) {
+      models.value = Object.values(modelResponse.data.data || {}).flat().filter(Boolean) as LLMResponse[]
+    }
+  } catch (error) {
+    console.error('加载创建选项失败', error)
+    ElMessage.error('加载创建选项失败')
+  } finally {
+    loadingOptions.value = false
+  }
+}
+
+const buildConfig = () => {
+  const base = createDefaultKnowledgeConfig()
+  base.model_refs.text_embedding_model_id = form.value.text_embedding_model_id || null
+  base.model_refs.vl_embedding_model_id = form.value.vl_embedding_model_id || null
+  base.model_refs.rerank_model_id = form.value.rerank_model_id || null
+  base.domain_pack_id = productMode.value === 'enhanced' ? (form.value.domain_pack_id || null) : null
+  return toProductKnowledgeConfig(productMode.value, base)
+}
+
+const submit = async () => {
+  if (!canSubmit.value) {
+    ElMessage.warning('请填写 2 个字以上名称和 10 个字以上说明')
+    return
+  }
+  saving.value = true
+  try {
+    const response = await createKnowledgeAPI({
+      knowledge_name: form.value.knowledge_name.trim(),
+      knowledge_desc: form.value.knowledge_desc.trim(),
+      knowledge_config: buildConfig(),
+    })
+    if (response.data.status_code !== 200) {
+      throw new Error(response.data.status_message || '创建知识库失败')
+    }
+    ElMessage.success('知识库已创建')
+    const knowledgeId = response.data.data?.id
+    if (knowledgeId) {
+      router.push({
+        name: 'workspaceSettingsKnowledgeFile',
+        params: { knowledgeId },
+        query: {
+          name: form.value.knowledge_name.trim(),
+          settings_turn: String(Date.now()),
+        },
+      })
+      return
+    }
+    router.push({ name: 'workspaceSettingsKnowledge', query: { settings_turn: String(Date.now()) } })
+  } catch (error) {
+    console.error('创建知识库失败', error)
+    ElMessage.error(error instanceof Error ? error.message : '创建知识库失败')
+  } finally {
+    saving.value = false
+  }
+}
+
+const openDomainPackBuilder = () => {
+  router.push({
+    name: 'workspaceSettingsKnowledgeDomainPackCreate',
+    query: {
+      returnTo: 'knowledge-create',
+      settings_turn: String(Date.now()),
+    },
+  })
+}
+
+watch(
+  () => route.query.domain_pack_id,
+  (value) => {
+    if (value) {
+      form.value.domain_pack_id = String(value)
+      productMode.value = 'enhanced'
+    }
+  },
+)
+
+onMounted(loadOptions)
 </script>
 
 <template>
@@ -21,13 +148,20 @@ const retrievalModes = [
       </p>
     </section>
 
-    <section class="panel">
+    <section class="panel" v-loading="loadingOptions">
       <h2>1. 选择检索模式</h2>
       <div class="mode-grid">
-        <article v-for="item in retrievalModes" :key="item.title" class="mode-card">
+        <button
+          v-for="item in retrievalModes"
+          :key="item.title"
+          type="button"
+          class="mode-card"
+          :class="{ active: productMode === item.value }"
+          @click="productMode = item.value"
+        >
           <strong>{{ item.title }}</strong>
           <p>{{ item.subtitle }}</p>
-        </article>
+        </button>
       </div>
     </section>
 
@@ -35,21 +169,56 @@ const retrievalModes = [
       <h2>2. 选择索引与领域模板</h2>
       <div class="form-grid">
         <label>
+          <span>知识库名称</span>
+          <input v-model="form.knowledge_name" type="text" placeholder="2-10 个字" />
+        </label>
+        <label>
+          <span>说明</span>
+          <input v-model="form.knowledge_desc" type="text" placeholder="说明这个知识库收什么资料" />
+        </label>
+        <label>
           <span>Embedding</span>
-          <input type="text" placeholder="选择文本 / 多模态 Embedding" />
+          <select v-model="form.text_embedding_model_id">
+            <option value="">稍后选择</option>
+            <option v-for="model in embeddingModels" :key="model.llm_id" :value="model.llm_id">
+              {{ model.model }} · {{ model.provider }}
+            </option>
+          </select>
         </label>
         <label>
           <span>Rerank</span>
-          <input type="text" placeholder="选择排序模型" />
+          <select v-model="form.rerank_model_id">
+            <option value="">稍后选择</option>
+            <option v-for="model in rerankModels" :key="model.llm_id" :value="model.llm_id">
+              {{ model.model }} · {{ model.provider }}
+            </option>
+          </select>
         </label>
-        <label>
+        <label :class="{ muted: productMode === 'standard' }">
           <span>Domain Pack</span>
-          <input type="text" placeholder="选择已发布领域包，或跳转创建新的领域包" />
+          <select v-model="form.domain_pack_id" :disabled="productMode === 'standard'">
+            <option value="">暂不绑定</option>
+            <option v-for="pack in domainPacks" :key="pack.pack_id" :value="pack.pack_id">
+              {{ pack.name }} · {{ pack.status === 'published' ? '已发布' : '草稿' }}
+            </option>
+          </select>
         </label>
         <label>
           <span>构建计划</span>
-          <input type="text" placeholder="上传文件后预览文本索引、图谱索引、社区能力开关" />
+          <input
+            type="text"
+            readonly
+            :value="productMode === 'enhanced'
+              ? `增强检索 · ${selectedDomainPack?.name || '未绑定领域包'} · 创建后进入文件管理上传资料`
+              : '标准检索 · 向量 + BM25 · 创建后进入文件管理上传资料'"
+          />
         </label>
+      </div>
+      <div class="action-row">
+        <button type="button" @click="openDomainPackBuilder">创建领域包</button>
+        <button type="button" :disabled="saving || !canSubmit" @click="submit">
+          {{ saving ? '创建中...' : '创建知识库' }}
+        </button>
       </div>
     </section>
   </div>
@@ -107,10 +276,17 @@ h1 {
 }
 
 .mode-card {
+  cursor: pointer;
+  text-align: left;
   padding: 16px;
   border-radius: 16px;
   border: 1px solid rgba(214, 132, 70, 0.16);
   background: rgba(255, 248, 240, 0.92);
+}
+
+.mode-card.active {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.3);
 }
 
 .mode-card strong {
@@ -146,6 +322,42 @@ input {
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
+}
+
+select {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 12px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.muted {
+  opacity: 0.58;
+}
+
+.action-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.action-row button {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 244, 230, 0.94);
+  color: #8a4b16;
+}
+
+.action-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
 }
 
 @media (max-width: 1199px) {
@@ -186,6 +398,14 @@ input {
 
   .mode-card {
     padding: 14px;
+  }
+
+  .action-row {
+    display: grid;
+  }
+
+  .action-row button {
+    width: 100%;
   }
 }
 </style>
