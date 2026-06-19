@@ -49,6 +49,7 @@ const createDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const LIST_PAGE_SIZE = 6
 const listPage = ref(1)
+const inWorkspaceSettings = computed(() => String(route.name || '').startsWith('workspaceSettings'))
 
 const createForm = ref({
   knowledge_name: '',
@@ -178,6 +179,27 @@ const openCreateDialog = () => {
   resetCreateForm()
   editDialogVisible.value = false
   createDialogVisible.value = true
+}
+
+const buildSettingsQuery = () => ({
+  ...route.query,
+  settings_turn: String(Date.now()),
+})
+
+const openCreateWizard = () => {
+  closeInlineForm()
+  router.push({
+    name: inWorkspaceSettings.value ? 'workspaceSettingsKnowledgeCreate' : 'knowledge-create',
+    query: buildSettingsQuery(),
+  })
+}
+
+const openDomainPacks = () => {
+  closeInlineForm()
+  router.push({
+    name: inWorkspaceSettings.value ? 'workspaceSettingsKnowledgeDomainPacks' : 'knowledge-domain-packs',
+    query: buildSettingsQuery(),
+  })
 }
 
 const openEditDialog = (item: KnowledgeItem) => {
@@ -361,11 +383,16 @@ onActivated(fetchKnowledges)
 
       <div class="header-actions">
         <ZunoIconButton
+          :icon="FolderOpened"
+          title="领域包"
+          @click="openDomainPacks"
+        />
+        <ZunoIconButton
           type="primary"
           :icon="Plus"
           :active="createDialogVisible"
-          :title="createDialogVisible ? '收起新建知识库' : '新建知识库'"
-          @click="openCreateDialog"
+          title="新建知识库"
+          @click="openCreateWizard"
         />
       </div>
       <div class="settings-search-row">

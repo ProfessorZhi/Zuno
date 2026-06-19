@@ -1,3 +1,30 @@
+<script setup lang="ts">
+import { useRoute, useRouter } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+
+const buildSettingsQuery = () => ({
+  ...route.query,
+  settings_turn: String(Date.now()),
+})
+
+const openCreate = () => {
+  router.push({
+    name: 'workspaceSettingsKnowledgeDomainPackCreate',
+    query: buildSettingsQuery(),
+  })
+}
+
+const openDetail = () => {
+  router.push({
+    name: 'workspaceSettingsKnowledgeDomainPackDetail',
+    params: { packId: 'contract-review-v1' },
+    query: buildSettingsQuery(),
+  })
+}
+</script>
+
 <template>
   <div class="domain-pack-page">
     <section class="hero-card">
@@ -9,12 +36,12 @@
     <section class="panel">
       <div class="panel-head">
         <h2>领域包列表</h2>
-        <button type="button">创建新的领域包</button>
+        <button type="button" @click="openCreate">创建新的领域包</button>
       </div>
-      <article class="pack-card">
+      <button type="button" class="pack-card" title="查看 contract_review 领域包" @click="openDetail">
         <strong>contract_review</strong>
         <p>合同审查模板，包含 schema、retrieval policy 和 report prompt。</p>
-      </article>
+      </button>
     </section>
   </div>
 </template>
@@ -67,6 +94,15 @@ button {
 
 .pack-card {
   margin-top: 14px;
+  width: 100%;
+  min-height: auto;
+  padding: 22px;
+  border: 1px solid rgba(214, 132, 70, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 252, 247, 0.96);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
 }
 
 .pack-card strong {
