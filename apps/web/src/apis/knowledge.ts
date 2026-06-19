@@ -34,8 +34,13 @@ export interface KnowledgeConfigPayload {
     entity_normalization: boolean
     evidence_backlink: boolean
     use_rag_entry_chunk: boolean
+    community_report_prompt_id: string | null
     index_version: string
     health_status: 'ready' | 'degraded' | 'stale' | 'failed' | 'unavailable'
+    graph_index_status?: 'ready' | 'queued' | 'running' | 'stale' | 'failed' | 'unavailable' | 'not_built'
+    community_detection_status?: 'ready' | 'queued' | 'running' | 'stale' | 'failed' | 'unavailable' | 'not_built'
+    community_report_status?: 'ready' | 'queued' | 'running' | 'stale' | 'failed' | 'unavailable' | 'not_built'
+    community_version?: string
   }
   retrieval_settings: {
     default_mode: 'auto' | 'hybrid' | 'rag' | 'graphrag' | 'rag_graph'

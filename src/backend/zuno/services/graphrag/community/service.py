@@ -92,13 +92,13 @@ class CommunityGraphService:
         *,
         status: str | None = None,
         community_version: str | None = None,
-    ) -> list[dict]:
-        communities = await self.client.fetch_communities(
+    ) -> list[GraphCommunity]:
+        rows = await self.client.fetch_communities(
             knowledge_id,
             status=status,
             community_version=community_version,
         )
-        return communities
+        return [GraphCommunity.from_dict(row) for row in rows]
 
     def build_global_answer(self, query: str, report_payload: dict) -> dict:
         reports = list(report_payload.get("reports") or [])

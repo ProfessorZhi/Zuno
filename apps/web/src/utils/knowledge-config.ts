@@ -145,8 +145,13 @@ const defaultConfig = (): KnowledgeConfigPayload => ({
     entity_normalization: true,
     evidence_backlink: true,
     use_rag_entry_chunk: true,
+    community_report_prompt_id: null,
     index_version: 'v1',
     health_status: 'ready',
+    graph_index_status: 'ready',
+    community_detection_status: 'not_built',
+    community_report_status: 'not_built',
+    community_version: 'v0',
   },
   retrieval_settings: {
     default_mode: 'rag',

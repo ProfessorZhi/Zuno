@@ -41,6 +41,7 @@ DEFAULT_KNOWLEDGE_CONFIG = {
         "entity_normalization": True,
         "evidence_backlink": True,
         "use_rag_entry_chunk": True,
+        "community_report_prompt_id": None,
         "index_version": "v1",
         "health_status": "ready",
         "graph_index_status": "ready",
@@ -115,15 +116,17 @@ class KnowledgeService:
         text_reindex_fields = {
             "index_capability",
             "model_refs.text_embedding_model_id",
-            "model_refs.vl_embedding_model_id",
             "index_settings.chunk_mode",
             "index_settings.chunk_size",
             "index_settings.overlap",
             "index_settings.separator",
             "index_settings.replace_consecutive_spaces",
             "index_settings.remove_urls_emails",
-            "index_settings.image_indexing_mode",
             "index_settings.vector_backend",
+        }
+        image_reindex_fields = {
+            "model_refs.vl_embedding_model_id",
+            "index_settings.image_indexing_mode",
         }
         bm25_reindex_fields = {
             "index_settings.chunk_mode",
@@ -149,9 +152,11 @@ class KnowledgeService:
         community_report_fields = {
             "domain_pack_id",
             "eval_profile_id",
+            "graph_index_settings.community_report_prompt_id",
         }
 
         text_reindex_required = any(field in text_reindex_fields for field in changed_fields)
+        image_reindex_required = any(field in image_reindex_fields for field in changed_fields)
         bm25_reindex_required = any(field in bm25_reindex_fields for field in changed_fields)
         graph_update_required = any(field in graph_update_fields for field in changed_fields)
         community_detection_required = graph_update_required and next_payload.get("index_capability") == "rag_graph"
@@ -175,6 +180,8 @@ class KnowledgeService:
             recommended_action = "community_detection"
         elif graph_update_required:
             recommended_action = "graph_index"
+        elif image_reindex_required:
+            recommended_action = "image_index"
         elif bm25_reindex_required:
             recommended_action = "bm25_index"
         elif text_reindex_required:
@@ -184,6 +191,7 @@ class KnowledgeService:
             "changed_fields": changed_fields,
             "immediate_effect_fields": immediate_effect_fields,
             "text_reindex_required": text_reindex_required,
+            "image_reindex_required": image_reindex_required,
             "bm25_reindex_required": bm25_reindex_required,
             "graph_update_required": graph_update_required,
             "community_detection_required": community_detection_required,
@@ -531,6 +539,7 @@ class KnowledgeService:
         normalized_action = str(action or "").strip().lower()
         supported_actions = {
             "text_index",
+            "image_index",
             "bm25_index",
             "graph_index",
             "community_detection",

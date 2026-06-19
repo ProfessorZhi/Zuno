@@ -31,6 +31,49 @@ Optional answer-layer metrics can be added on top:
 - Answer Correctness
 - Citation Accuracy
 
+## Deep GraphRAG Eval Surface
+
+This repo now exposes a small public eval surface for the current Deep GraphRAG V1 round.
+
+Supported public profiles:
+
+- `baseline_rag`
+- `local_graphrag`
+- `deep_graphrag`
+
+Supported public compare set:
+
+- `deep_graphrag_compare`
+
+The intent of this surface is narrow:
+
+1. give one stable baseline for normal RAG
+2. give one stable local-graph profile
+3. give one stable deep-routed GraphRAG profile
+
+It is **not** a full production evaluation framework.
+It is the V1 public compare surface for the current architecture round.
+
+Minimal example:
+
+```powershell
+python tools/evals/zuno/rag_eval/run_eval.py `
+  --dataset tools/evals/zuno/rag_eval/python_notes_eval.jsonl `
+  --knowledge-id <knowledge_id> `
+  --profile-set deep_graphrag_compare `
+  --output-dir .local/evals/zuno/rag_eval/runs/<run_id>
+```
+
+If you want to isolate one profile at a time:
+
+```powershell
+python tools/evals/zuno/rag_eval/run_eval.py `
+  --dataset tools/evals/zuno/rag_eval/python_notes_eval.jsonl `
+  --knowledge-id <knowledge_id> `
+  --profiles baseline_rag,local_graphrag,deep_graphrag `
+  --output-dir .local/evals/zuno/rag_eval/runs/<run_id>
+```
+
 ## Typical Local Flow
 
 ```powershell
