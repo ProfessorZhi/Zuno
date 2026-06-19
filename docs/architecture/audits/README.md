@@ -14,4 +14,4 @@ Rules:
 ## Current Audits
 
 - [Current Model And Retrieval Config Audit](./current-model-and-retrieval-config-audit.md)
-
+- [Tests Folder Organization Audit](./tests-folder-organization-audit.md)
