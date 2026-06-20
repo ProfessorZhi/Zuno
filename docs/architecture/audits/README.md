@@ -13,6 +13,7 @@ Rules:
 
 ## Current Audits
 
+- [Benchmark Corpus Ingestion Plan](./benchmark-corpus-ingestion-plan.md)
 - [Current Model And Retrieval Config Audit](./current-model-and-retrieval-config-audit.md)
 - [Local Model Default Cleanup Plan](./local-model-default-cleanup-plan.md)
 - [Model Registry And Defaults Audit](./model-registry-and-defaults-audit.md)

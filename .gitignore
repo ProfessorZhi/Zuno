@@ -53,9 +53,13 @@ apps/web/output/
 .local/evals/zuno/contract_review_eval/.tmp_test_reports/
 data/evals/multihop/raw/
 data/evals/multihop/normalized/
+data/evals/multihop/corpus/
+data/evals/multihop/ingested/
 data/evals/multihop/**/*.zip
 data/evals/multihop/**/*.json
 data/evals/multihop/**/*.jsonl
+reports/evals/multihop/stackless_ingestion_smoke.json
+reports/evals/multihop/stackless_ingestion_smoke_*.json
 
 tmp-*.png
 tmp-*.json

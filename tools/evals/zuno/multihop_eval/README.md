@@ -114,7 +114,19 @@ Normalized files are written under:
 data/evals/multihop/normalized/
 ```
 
-Both directories are gitignored.
+Benchmark corpus files are written under:
+
+```text
+data/evals/multihop/corpus/
+```
+
+Temporary ingestion manifests can be written under:
+
+```text
+data/evals/multihop/ingested/
+```
+
+All four directories are gitignored.
 
 ## Sources
 
@@ -141,6 +153,31 @@ tools/evals/zuno/multihop_eval/sample_data/
 
 These are tiny normalized JSONL files for adapter tests and stackless smoke
 work. They are not benchmark results.
+
+## Benchmark Corpus Ingestion
+
+Phase I adds benchmark corpus preparation for future real runtime evaluation.
+
+Current ingestion tools:
+
+- `ingestion/build_corpus.py`
+- `ingestion/stackless_index.py`
+- `ingestion/ingest_to_knowledge.py` placeholder
+
+`build_corpus.py` converts normalized multihop records into per-document corpus
+rows with:
+
+- `question_id`
+- `doc_id`
+- `is_gold`
+- `gold_sent_ids`
+
+`stackless_index.py` validates that the resulting corpus can be consumed by a
+deterministic local retrieval flow. Its report must always be treated as:
+
+- execution mode: `stackless`
+- purpose: ingestion smoke only
+- not a real GraphRAG runtime result
 
 ## Smoke Runner
 
