@@ -15,6 +15,7 @@ Rules:
 
 - [Benchmark Corpus Ingestion Plan](./benchmark-corpus-ingestion-plan.md)
 - [Current Model And Retrieval Config Audit](./current-model-and-retrieval-config-audit.md)
+- [GraphRAG Route Activation Calibration](./graphrag-route-activation-calibration.md)
 - [Local Model Default Cleanup Plan](./local-model-default-cleanup-plan.md)
 - [Model Registry And Defaults Audit](./model-registry-and-defaults-audit.md)
 - [Real Runtime Multihop Eval Results](./real-runtime-multihop-eval-results.md)
