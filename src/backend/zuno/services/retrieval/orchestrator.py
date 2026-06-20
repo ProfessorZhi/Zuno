@@ -408,6 +408,8 @@ class RetrievalOrchestrator:
             "keyword_result": keyword_result,
             "graph_result": graph_result,
             "community_result": community_result,
+            "fusion_metadata": dict(fusion_result.fusion_metadata or {}),
+            "rerank_metadata": dict(fusion_result.rerank_metadata or {}),
             "plan": plan.to_dict(),
             "retriever_runs": retriever_runs,
             "processed_query": {
@@ -492,10 +494,35 @@ class RetrievalOrchestrator:
         final_plan = dict(final_pass.get("plan") or first_plan)
         final_internal_route = final_pass.get("internal_route") or final_plan.get("internal_route")
         second_pass_used = len(rounds) >= 2
+        processed_query_payload = final_pass.get("processed_query") or first_pass.get("processed_query") or {}
+        query_features = dict(processed_query_payload.get("query_features") or {})
+        internal_route = final_internal_route
+        community_available = str((retrieval_options.get("index_health") or {}).get("community") or "").strip().lower() in {"ready", "active"}
+        graph_available = (
+            retrieval_options.get("knowledge_capability") == "rag_graph"
+            and str((retrieval_options.get("index_health") or {}).get("graph") or "ready").strip().lower()
+            not in {"unavailable", "failed", "stale"}
+        )
+        graph_route_attempted = internal_route in {"local_graphrag", "drift_like"}
+        graph_route_used = bool(
+            (final_pass.get("graph_result") or {}).get("documents")
+            or (final_pass.get("graph_result") or {}).get("paths")
+            or any(run.get("source") == "graph" for run in (final_pass.get("retriever_runs") or []))
+        )
+        community_used = bool((final_pass.get("community_result") or {}).get("used_communities"))
+        drift_used = internal_route == "drift_like"
+        if query_features.get("global_question") and query_features.get("evidence_required"):
+            route_selection_reason = "global_question_with_evidence"
+        elif query_features.get("global_question"):
+            route_selection_reason = "global_question"
+        elif query_features.get("relation_question"):
+            route_selection_reason = "relation_question"
+        else:
+            route_selection_reason = "standard_question"
         metadata = {
             "plan": final_plan,
             "initial_plan": first_plan,
-            "processed_query": final_pass.get("processed_query") or first_pass.get("processed_query") or {},
+            "processed_query": processed_query_payload,
             "retriever_runs": final_pass.get("retriever_runs") or [],
             "requested_mode": first_plan.get("requested_mode"),
             "requested_profile": first_plan.get("requested_profile"),
@@ -526,6 +553,24 @@ class RetrievalOrchestrator:
                 if not bool(retrieval_options.get("bm25_available", False))
                 else None
             ),
+            "standard_floor_used": bool(
+                any(run.get("source") == "vector" for run in (final_pass.get("retriever_runs") or []))
+                or any(run.get("source") == "bm25" for run in (final_pass.get("retriever_runs") or []))
+            ),
+            "graph_route_attempted": graph_route_attempted,
+            "graph_route_used": graph_route_used,
+            "requery_available": bool(retrieval_options.get("needs_query_rewrite", True)),
+            "requery_used": any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds),
+            "community_available": community_available,
+            "community_used": community_used,
+            "drift_available": bool(graph_available and community_available),
+            "drift_used": drift_used,
+            "confidence_gated_fusion_used": (
+                str((final_pass.get("fusion_metadata") or {}).get("strategy") or "").strip().lower()
+                == "baseline_preserving"
+            ),
+            "final_rerank_used": bool((final_plan.get("rerank_policy") or {}).get("enabled")),
+            "route_selection_reason": route_selection_reason,
             "used_communities": list(final_pass.get("community_result", {}).get("used_communities") or []),
             "used_paths": list(final_pass.get("community_result", {}).get("used_paths") or final_pass.get("paths") or []),
             "supporting_chunks": list(final_pass.get("community_result", {}).get("supporting_chunks") or []),
@@ -556,6 +601,8 @@ class RetrievalOrchestrator:
                 for doc in final_pass.get("documents", [])
                 if doc.get("chunk_id")
             ]),
+            "fusion_metadata": dict(final_pass.get("fusion_metadata") or {}),
+            "fusion_strategy": (final_pass.get("fusion_metadata") or {}).get("strategy"),
             "first_pass_quality": {
                 "document_count": first_pass.get("document_count"),
                 "top_score": first_pass.get("top_score"),

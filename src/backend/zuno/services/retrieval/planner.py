@@ -97,7 +97,9 @@ class RetrievalPlanner:
             resolved_mode = "rag"
 
         enabled_retrievers = [] if scope_status != "active" else ["vector"]
-        if enabled_retrievers and self.enable_keyword_recall and internal_route in {"standard_rag", "local_graphrag"}:
+        if enabled_retrievers and self.enable_keyword_recall and (
+            internal_route in {"standard_rag", "local_graphrag"} or resolved_mode == "rag_graph_deep"
+        ):
             enabled_retrievers.append("bm25")
         if internal_route == "local_graphrag" and graph_available:
             enabled_retrievers.append("graph")
