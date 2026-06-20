@@ -227,6 +227,51 @@ def _filter_corpus_for_questions(corpus_rows: list[dict[str, Any]], question_ids
     return [row for row in corpus_rows if str(row.get("question_id") or "") in question_ids]
 
 
+def extract_route_diagnostics(
+    *,
+    runtime_result: dict[str, Any] | None,
+    fallback: bool,
+    fallback_reason: str | None,
+) -> tuple[dict[str, Any], list[str]]:
+    metadata = dict((runtime_result or {}).get("metadata") or {})
+    first_pass = dict((runtime_result or {}).get("first_pass_result") or {})
+    final_pass = dict((runtime_result or {}).get("final_pass_result") or {})
+    rounds = list(metadata.get("rounds") or [])
+    primary_pass = first_pass or final_pass
+
+    retriever_runs = list(metadata.get("retriever_runs") or [])
+    retriever_used = [str(run.get("source") or "").strip() for run in retriever_runs if str(run.get("source") or "").strip()]
+    graph_result = dict(primary_pass.get("graph_result") or {})
+    community_result = dict(primary_pass.get("community_result") or {})
+    notes: list[str] = []
+
+    seed_entities = metadata.get("seed_entities")
+    if seed_entities is None:
+        notes.append("seed_entities not exposed by runtime metadata")
+
+    if "graph_result" not in primary_pass:
+        notes.append("graph_result not exposed by selected runtime pass")
+    if "community_result" not in primary_pass and metadata.get("internal_route") in {"community_global", "drift_like"}:
+        notes.append("community_result not exposed by selected runtime pass")
+
+    diagnostics = {
+        "requested_mode": metadata.get("requested_mode"),
+        "resolved_mode": metadata.get("resolved_mode"),
+        "internal_route": metadata.get("internal_route"),
+        "retriever_used": retriever_used or None,
+        "fallback": fallback,
+        "fallback_reason": fallback_reason,
+        "graph_result_count": len(list(graph_result.get("documents") or [])) if graph_result else None,
+        "graph_path_count": len(list(graph_result.get("paths") or [])) if graph_result else None,
+        "seed_entities": seed_entities if seed_entities is not None else None,
+        "seed_entity_count": (len(seed_entities) if isinstance(seed_entities, list) else None),
+        "community_report_count": len(list(community_result.get("used_communities") or [])) if community_result else None,
+        "drift_followup_count": len(list(community_result.get("follow_up_questions") or [])) if community_result else None,
+        "round_count": len(rounds) or None,
+    }
+    return diagnostics, notes
+
+
 async def run_real_runtime_eval(
     *,
     dataset: str,
@@ -343,6 +388,14 @@ async def run_real_runtime_eval(
                     scores_top10.append(document.get("score"))
 
             fallback = bool(route_metadata.get("fallback_triggered")) or bool(fallback_reason)
+            diagnostics, missing_notes = extract_route_diagnostics(
+                runtime_result=runtime_result,
+                fallback=fallback,
+                fallback_reason=fallback_reason,
+            )
+            for note in missing_notes:
+                if note not in notes:
+                    notes.append(note)
             metrics = compute_question_metrics(
                 question_id=question_id,
                 gold_doc_ids=gold_doc_ids,
@@ -360,6 +413,7 @@ async def run_real_runtime_eval(
                     "retrieved_titles_top10": retrieved_titles_top10[:10],
                     "scores_top10": scores_top10[:10],
                     "route_metadata": route_metadata,
+                    "route_diagnostics": diagnostics,
                     "latency_ms": latency_ms,
                     "fallback": fallback,
                     "fallback_reason": fallback_reason,

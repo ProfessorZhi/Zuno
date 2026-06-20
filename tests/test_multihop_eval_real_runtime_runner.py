@@ -49,3 +49,47 @@ def test_real_runtime_runner_builds_gold_doc_ids_from_titles():
     }
 
     assert build_gold_doc_ids(record) == ["doc-a", "doc-b"]
+
+
+def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
+    from tools.evals.zuno.multihop_eval.run_real_runtime_eval import extract_route_diagnostics
+
+    runtime_result = {
+        "metadata": {
+            "requested_mode": "local_graphrag",
+            "resolved_mode": "hybrid_rag",
+            "internal_route": "standard_rag",
+            "retriever_runs": [
+                {"source": "vector"},
+                {"source": "graph"},
+            ],
+            "rounds": [{"round": 1}, {"round": 2}],
+        },
+        "first_pass_result": {
+            "graph_result": {
+                "documents": [{"chunk_id": "c1"}],
+                "paths": ["A -> B", "B -> C"],
+            },
+            "community_result": {
+                "used_communities": ["community-0"],
+                "follow_up_questions": ["follow-up"],
+            },
+        },
+    }
+
+    diagnostics, notes = extract_route_diagnostics(
+        runtime_result=runtime_result,
+        fallback=True,
+        fallback_reason="graph_result_empty",
+    )
+
+    assert diagnostics["requested_mode"] == "local_graphrag"
+    assert diagnostics["resolved_mode"] == "hybrid_rag"
+    assert diagnostics["internal_route"] == "standard_rag"
+    assert diagnostics["retriever_used"] == ["vector", "graph"]
+    assert diagnostics["graph_result_count"] == 1
+    assert diagnostics["graph_path_count"] == 2
+    assert diagnostics["community_report_count"] == 1
+    assert diagnostics["drift_followup_count"] == 1
+    assert diagnostics["seed_entities"] is None
+    assert "seed_entities not exposed by runtime metadata" in notes
