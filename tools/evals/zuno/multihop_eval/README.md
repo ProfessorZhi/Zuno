@@ -219,6 +219,47 @@ These metrics are shared across future real runtime runners so that:
 Answer-generation metrics remain out of the primary closure gate for this first
 real runtime round.
 
+## Runtime Eval Mode Naming
+
+Current real runtime runner now accepts both product-facing aliases and legacy
+engineering labels.
+
+Preferred product-facing modes:
+
+- `standard_retrieval`
+- `enhanced_retrieval`
+
+Legacy compatible modes:
+
+- `baseline_rag`
+- `local_graphrag`
+- `deep_graphrag`
+
+Meaning:
+
+- `standard_retrieval`
+  - product mode
+  - intended baseline category
+- `enhanced_retrieval`
+  - product mode
+  - intended enhanced category
+- `baseline_rag`
+  - deprecated eval alias
+  - historical behavior, not the full product `standard_retrieval`
+- `local_graphrag`
+  - internal local graph ablation
+- `deep_graphrag`
+  - internal deep-route ablation
+
+Every real runtime report should now expose:
+
+- `requested_mode`
+- `normalized_mode`
+- `product_mode`
+- `is_product_mode`
+- `is_deprecated_alias`
+- `is_ablation_mode`
+
 ## Smoke Runner
 
 Phase D exposes:
@@ -253,7 +294,8 @@ Future real runtime output must instead:
 The real runtime runner is now:
 
 ```powershell
-python tools/evals/zuno/multihop_eval/run_real_runtime_eval.py --dataset hotpotqa --mode baseline_rag --questions data/evals/multihop/normalized/hotpotqa/dev_sample50.jsonl --corpus data/evals/multihop/corpus/hotpotqa/dev_sample50_corpus.jsonl --limit 5 --top-k 10
+python tools/evals/zuno/multihop_eval/run_real_runtime_eval.py --dataset hotpotqa --mode standard_retrieval --questions data/evals/multihop/normalized/hotpotqa/dev_sample50.jsonl --corpus data/evals/multihop/corpus/hotpotqa/dev_sample50_corpus.jsonl --limit 5 --top-k 10
+python tools/evals/zuno/multihop_eval/run_real_runtime_eval.py --dataset hotpotqa --mode enhanced_retrieval --questions data/evals/multihop/normalized/hotpotqa/dev_sample50.jsonl --corpus data/evals/multihop/corpus/hotpotqa/dev_sample50_corpus.jsonl --limit 5 --top-k 10
 ```
 
 Important:

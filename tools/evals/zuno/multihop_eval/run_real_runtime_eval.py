@@ -35,17 +35,65 @@ from tools.evals.zuno.rag_eval.run_stackless_local_eval import _build_local_grap
 
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "reports" / "evals" / "multihop" / "real_runtime"
 SUPPORTED_DATASETS = {"hotpotqa", "twowiki", "musique"}
-SUPPORTED_MODES = {"baseline_rag", "local_graphrag", "deep_graphrag"}
-SUPPORTED_ROUTE_POLICIES = {"auto", "force_graph", "force_deep"}
-MODE_TO_RUNTIME = {
-    "baseline_rag": "rag",
-    "local_graphrag": "local_graphrag",
-    "deep_graphrag": "rag_graph_deep",
+SUPPORTED_MODES = {
+    "standard_retrieval",
+    "enhanced_retrieval",
+    "baseline_rag",
+    "local_graphrag",
+    "deep_graphrag",
 }
-MODE_TO_CAPABILITY = {
-    "baseline_rag": "rag",
-    "local_graphrag": "rag_graph",
-    "deep_graphrag": "rag_graph",
+SUPPORTED_ROUTE_POLICIES = {"auto", "force_graph", "force_deep"}
+MODE_METADATA = {
+    "standard_retrieval": {
+        "normalized_mode": "standard_retrieval",
+        "runtime_mode": "rag",
+        "knowledge_capability": "rag",
+        "product_mode": "standard_retrieval",
+        "is_product_mode": True,
+        "is_deprecated_alias": False,
+        "is_ablation_mode": False,
+        "warning": None,
+    },
+    "enhanced_retrieval": {
+        "normalized_mode": "enhanced_retrieval",
+        "runtime_mode": "rag_graph_deep",
+        "knowledge_capability": "rag_graph",
+        "product_mode": "enhanced_retrieval",
+        "is_product_mode": True,
+        "is_deprecated_alias": False,
+        "is_ablation_mode": False,
+        "warning": None,
+    },
+    "baseline_rag": {
+        "normalized_mode": "baseline_rag",
+        "runtime_mode": "rag",
+        "knowledge_capability": "rag",
+        "product_mode": "standard_retrieval",
+        "is_product_mode": False,
+        "is_deprecated_alias": True,
+        "is_ablation_mode": False,
+        "warning": "baseline_rag is a deprecated eval alias, not full product standard_retrieval",
+    },
+    "local_graphrag": {
+        "normalized_mode": "local_graphrag",
+        "runtime_mode": "local_graphrag",
+        "knowledge_capability": "rag_graph",
+        "product_mode": "enhanced_retrieval",
+        "is_product_mode": False,
+        "is_deprecated_alias": False,
+        "is_ablation_mode": True,
+        "warning": "local_graphrag is an internal local graph ablation",
+    },
+    "deep_graphrag": {
+        "normalized_mode": "deep_graphrag",
+        "runtime_mode": "rag_graph_deep",
+        "knowledge_capability": "rag_graph",
+        "product_mode": "enhanced_retrieval",
+        "is_product_mode": False,
+        "is_deprecated_alias": False,
+        "is_ablation_mode": True,
+        "warning": "deep_graphrag is an internal deep route ablation",
+    },
 }
 MODEL_SLOT_BY_TYPE = {
     "LLM": "conversation_model",
@@ -79,9 +127,18 @@ def _build_temp_config() -> Path:
 
 def resolve_runtime_mode(mode: str) -> str:
     normalized = str(mode or "").strip().lower()
-    if normalized not in MODE_TO_RUNTIME:
+    if normalized not in MODE_METADATA:
         raise ValueError(f"Unsupported mode: {mode}")
-    return MODE_TO_RUNTIME[normalized]
+    return str(MODE_METADATA[normalized]["runtime_mode"])
+
+
+def resolve_eval_mode_metadata(mode: str) -> dict[str, Any]:
+    requested_mode = str(mode or "").strip().lower()
+    if requested_mode not in MODE_METADATA:
+        raise ValueError(f"Unsupported mode: {mode}")
+    payload = dict(MODE_METADATA[requested_mode])
+    payload["requested_mode"] = requested_mode
+    return payload
 
 
 def resolve_route_policy(route_policy: str | None) -> str:
@@ -171,8 +228,9 @@ async def resolve_profile_model_configs(profile: dict[str, Any]) -> dict[str, An
 
 def _build_runtime_knowledge_config(*, mode: str, profile: dict[str, Any], top_k: int) -> dict[str, Any]:
     config = deepcopy(DEFAULT_KNOWLEDGE_CONFIG)
-    config["index_capability"] = MODE_TO_CAPABILITY[mode]
-    config["retrieval_settings"]["default_mode"] = "rag" if mode == "baseline_rag" else "rag_graph_deep"
+    mode_metadata = resolve_eval_mode_metadata(mode)
+    config["index_capability"] = mode_metadata["knowledge_capability"]
+    config["retrieval_settings"]["default_mode"] = mode_metadata["runtime_mode"]
     config["retrieval_settings"]["profile"] = str(profile.get("profile_name") or "auto")
     config["retrieval_settings"]["top_k"] = int(top_k)
     config["retrieval_settings"]["rerank_top_k"] = int((profile.get("retrieval") or {}).get("rerank_top_k") or min(top_k, 5))
@@ -313,7 +371,8 @@ async def run_real_runtime_eval(
     normalized_dataset = str(dataset).strip().lower()
     if normalized_dataset not in SUPPORTED_DATASETS:
         raise ValueError(f"Unsupported dataset: {dataset}")
-    normalized_mode = str(mode).strip().lower()
+    mode_metadata = resolve_eval_mode_metadata(mode)
+    normalized_mode = str(mode_metadata["normalized_mode"])
     if normalized_mode not in SUPPORTED_MODES:
         raise ValueError(f"Unsupported mode: {mode}")
 
@@ -329,14 +388,14 @@ async def run_real_runtime_eval(
     selected_question_ids = {str(row.get("id") or "") for row in selected_questions}
     corpus_rows = _filter_corpus_for_questions(_read_jsonl(corpus_path), selected_question_ids)
     runtime_knowledge_id = str(knowledge_id or f"eval_{normalized_dataset}_{normalized_mode}_{uuid4().hex[:8]}")
-    runtime_mode = resolve_runtime_mode(normalized_mode)
+    runtime_mode = str(mode_metadata["runtime_mode"])
     knowledge_config = _build_runtime_knowledge_config(mode=normalized_mode, profile=profile, top_k=top_k)
     chunks = build_chunks_from_corpus(corpus_rows=corpus_rows, knowledge_id=runtime_knowledge_id)
 
     notes: list[str] = []
     graph_init_error: str | None = None
     graph_retriever = None
-    if normalized_mode in {"local_graphrag", "deep_graphrag"}:
+    if normalized_mode in {"local_graphrag", "deep_graphrag", "enhanced_retrieval"}:
         try:
             graph_retriever = await _build_local_graph_retriever(chunks)
         except Exception as exc:
@@ -397,7 +456,11 @@ async def run_real_runtime_eval(
             except Exception as exc:
                 failure = True
                 error_message = str(exc)
-                fallback_reason = graph_init_error if normalized_mode in {"local_graphrag", "deep_graphrag"} else None
+                fallback_reason = (
+                    graph_init_error
+                    if normalized_mode in {"local_graphrag", "deep_graphrag", "enhanced_retrieval"}
+                    else None
+                )
 
             latency_ms = round((time.perf_counter() - started) * 1000, 3)
             final_pass = dict((runtime_result or {}).get("final_pass_result") or {})
@@ -455,6 +518,13 @@ async def run_real_runtime_eval(
     report = {
         "execution_mode": "real_runtime",
         "dataset": normalized_dataset,
+        "requested_mode": mode_metadata["requested_mode"],
+        "normalized_mode": normalized_mode,
+        "product_mode": mode_metadata["product_mode"],
+        "is_product_mode": mode_metadata["is_product_mode"],
+        "is_deprecated_alias": mode_metadata["is_deprecated_alias"],
+        "is_ablation_mode": mode_metadata["is_ablation_mode"],
+        "mode_warning": mode_metadata["warning"],
         "mode": normalized_mode,
         "requested_runtime_mode": runtime_mode,
         "route_policy": resolved_route_policy,
