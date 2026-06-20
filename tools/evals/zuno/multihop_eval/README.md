@@ -63,10 +63,17 @@ tools/evals/zuno/multihop_eval/eval_profiles.example.json
 The first example profile is the recommended baseline for upcoming real
 HotpotQA / 2Wiki / MuSiQue text-only retrieval work:
 
-- conversation model: `qwen-plus`
+- conversation model: `deepseek-v4-flash`
 - text embedding model: `text-embedding-v4`
 - VL embedding model: `null`
 - rerank model: `gte-rerank-v2`
+
+The previous HotpotQA `limit=5` real runtime smoke was run before this profile
+alignment, so its summary still reflects `qwen-plus`.
+
+The example file also keeps a documented backup retrieval profile with:
+
+- conversation model: `qwen-plus`
 
 For lower-cost answer generation experiments, the example also includes:
 

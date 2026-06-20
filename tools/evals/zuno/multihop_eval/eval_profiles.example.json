@@ -1,7 +1,7 @@
 {
   "retrieval_only_text_multihop": {
     "description": "Text-only multi-hop retrieval profile. Does not require VL embedding.",
-    "conversation_model": "qwen-plus",
+    "conversation_model": "deepseek-v4-flash",
     "text_embedding_model": "text-embedding-v4",
     "vl_embedding_model": null,
     "rerank_model": "gte-rerank-v2",
@@ -16,7 +16,19 @@
     "notes": [
       "Use explicit model names to avoid ambiguous default slots.",
       "VL embedding is not required for HotpotQA, 2WikiMultiHopQA, or MuSiQue text-only eval.",
-      "This profile is not a production default."
+      "This profile follows the current cleaned local default for text-only retrieval eval.",
+      "The earlier HotpotQA limit=5 real runtime smoke used qwen-plus before this profile alignment."
+    ]
+  },
+  "retrieval_only_text_multihop_qwen_backup": {
+    "description": "Backup text-only multi-hop retrieval profile using qwen-plus as the conversation model.",
+    "conversation_model": "qwen-plus",
+    "text_embedding_model": "text-embedding-v4",
+    "vl_embedding_model": null,
+    "rerank_model": "gte-rerank-v2",
+    "notes": [
+      "Keep this as a documented backup profile.",
+      "Do not treat it as the default after local model slot cleanup."
     ]
   },
   "cheap_answer_llm_text_multihop": {

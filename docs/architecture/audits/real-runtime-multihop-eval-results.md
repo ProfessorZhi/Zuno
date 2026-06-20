@@ -7,6 +7,15 @@ multihop evaluation.
 
 Completed first retrieval-only real runtime smoke on June 20, 2026.
 
+Important profile note:
+
+- the first HotpotQA `limit=5` smoke used the older `qwen-plus` retrieval-only
+  profile
+- after `GraphRAG Route Activation Debug V1`, the default committed multihop
+  retrieval profile is aligned to `deepseek-v4-flash`
+- later reruns should therefore show the DeepSeek-aligned profile unless an
+  explicit backup profile is chosen
+
 Executed dataset and limit:
 
 - dataset: `hotpotqa`
