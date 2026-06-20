@@ -249,6 +249,48 @@ class Neo4jClient:
 
         return await asyncio.to_thread(_run)
 
+    async def count_knowledge_graph(
+        self,
+        knowledge_id: str,
+        *,
+        index_version: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, int]:
+        def _run():
+            driver = self._driver()
+            try:
+                with driver.session(database=self.database) as session:
+                    result = session.run(
+                        """
+                        MATCH (e:Entity {knowledge_id: $knowledge_id})
+                        WHERE ($index_version IS NULL OR e.index_version = $index_version)
+                        AND ($status IS NULL OR e.status = $status)
+                        OPTIONAL MATCH (s:Entity {knowledge_id: $knowledge_id})-[r:RELATES_TO]->(t:Entity {knowledge_id: $knowledge_id})
+                        WHERE ($index_version IS NULL OR r.index_version = $index_version)
+                        AND ($status IS NULL OR r.status = $status)
+                        RETURN
+                          count(DISTINCT e) AS entity_count,
+                          count(DISTINCT r) AS relation_count,
+                          count(DISTINCT CASE WHEN r.chunk_id IS NOT NULL AND r.chunk_id <> "" THEN r END) AS backlink_count
+                        """,
+                        {
+                            "knowledge_id": knowledge_id,
+                            "index_version": index_version,
+                            "status": status,
+                        },
+                    )
+                    record = result.single()
+                    data = record.data() if record else {}
+                    return {
+                        "entity_count": int(data.get("entity_count") or 0),
+                        "relation_count": int(data.get("relation_count") or 0),
+                        "backlink_count": int(data.get("backlink_count") or 0),
+                    }
+            finally:
+                driver.close()
+
+        return await asyncio.to_thread(_run)
+
     async def replace_communities(
         self,
         knowledge_id: str,

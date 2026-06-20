@@ -16,6 +16,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.services.runtime_registry import get_local_runtime_settings
+from zuno.services.graphrag.client import Neo4jClient
 
 from tools.evals.zuno.multihop_eval.run_real_runtime_eval import (
     _read_jsonl,
@@ -48,6 +49,22 @@ async def build_graph_index_smoke(
     ]
     runtime_settings = get_local_runtime_settings(knowledge_id)
     persisted_graph_runtime_available = runtime_settings is not None and bool(runtime_settings.get("graph_retriever"))
+    persisted_entity_count = None
+    persisted_relation_count = None
+    persisted_backlink_count = None
+    mismatch_reason = None
+    if Neo4jClient.is_enabled():
+        try:
+            persisted_counts = await Neo4jClient().count_knowledge_graph(knowledge_id, status="active")
+            persisted_entity_count = persisted_counts["entity_count"]
+            persisted_relation_count = persisted_counts["relation_count"]
+            persisted_backlink_count = persisted_counts["backlink_count"]
+            if persisted_entity_count == 0 and persisted_relation_count == 0:
+                mismatch_reason = "persisted_graph_empty_for_eval_knowledge"
+        except Exception as exc:
+            mismatch_reason = f"persisted_graph_query_failed: {exc}"
+    else:
+        mismatch_reason = "neo4j_disabled_or_unavailable"
     chunks = build_chunks_from_corpus(corpus_rows=corpus_rows, knowledge_id=knowledge_id)
     graph_retriever = await _build_local_graph_retriever(chunks)
 
@@ -101,6 +118,12 @@ async def build_graph_index_smoke(
         "entity_count": entity_count,
         "relation_count": relation_count,
         "chunk_backlink_count": backlink_count,
+        "persisted_entity_count": persisted_entity_count,
+        "persisted_relation_count": persisted_relation_count,
+        "persisted_backlink_count": persisted_backlink_count,
+        "local_rebuilt_entity_count": entity_count,
+        "local_rebuilt_relation_count": relation_count,
+        "mismatch_reason": mismatch_reason,
         "questions": question_reports,
         "notes": [
             "Current multihop real runtime runner clears local runtime registration after each run.",

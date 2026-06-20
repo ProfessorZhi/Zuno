@@ -32,6 +32,10 @@ def test_graph_index_smoke_reports_missing_persisted_runtime_and_local_artifact_
     assert report["chunk_count"] >= 1
     assert report["entity_count"] >= 0
     assert report["relation_count"] >= 0
+    assert "persisted_entity_count" in report
+    assert "persisted_relation_count" in report
+    assert "local_rebuilt_entity_count" in report
+    assert "mismatch_reason" in report
     assert report["questions"][0]["seed_entity_count"] >= 0
     assert "graph_path_empty" in report["questions"][0]["status"]
 
