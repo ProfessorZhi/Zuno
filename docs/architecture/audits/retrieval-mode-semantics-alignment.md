@@ -89,6 +89,16 @@ Current repository-specific notes:
 - `baseline_rag`, `local_graphrag`, and `deep_graphrag` are the current eval
   runner names in `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`.
 
+### Current Label Mapping
+
+Current labels should be interpreted like this until formal aliases are added:
+
+| current label | current meaning | should later become |
+| --- | --- | --- |
+| `baseline_rag` | historical eval baseline, currently vector-first + rerank | `standard_retrieval` after BM25 + real fusion are formalized |
+| `local_graphrag` | internal local graph ablation | `local_graphrag_ablation` |
+| `deep_graphrag` | internal deep-route ablation around `rag_graph_deep` | `deep_route_ablation` |
+
 ## Naming Rules
 
 Future product reports should prefer:
@@ -130,6 +140,13 @@ current planner, `RetrievalPlanner(enable_keyword_recall=False)` enables only
 the `vector` retriever for standard RAG routing. That means the current
 `baseline_rag` is a historical vector-first baseline with rerank, not the full
 product definition of `standard_retrieval`.
+
+Closest honest description today:
+
+- vector-first retrieval baseline
+- rerank-enabled
+- BM25-off in the current eval runtime
+- not yet full product `standard_retrieval`
 
 ### 2. Does current `baseline_rag` include BM25?
 
@@ -226,6 +243,15 @@ Minimum alias and contract surface:
   - add product-mode runner labels alongside internal ablations
 - related tests under `tests/`
   - update normalization, planner, runner, and eval expectations
+
+Recommended follow-on runtime touchpoints once alias work starts:
+
+- `src/backend/zuno/services/retrieval/models.py`
+  - keep planner and trace payloads aligned with the new public names
+- frontend settings or retrieval-mode selectors
+  - expose only `standard_retrieval` and `enhanced_retrieval`
+- docs and eval reports
+  - stop leading with `baseline_rag`, `local_graphrag`, and `deep_graphrag`
 
 If product semantics are implemented correctly, the next runner split should be:
 
