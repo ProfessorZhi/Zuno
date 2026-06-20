@@ -170,6 +170,218 @@ Reason:
 - product comparison already answered the main decision question
 - no additional runtime change was needed to explain this sample
 
+## Product Retrieval Comparison: HotpotQA Limit=20
+
+Current verified product-mode `limit=20` run set was executed on June 20, 2026
+with:
+
+- dataset: `hotpotqa`
+- limit: `20`
+- top_k: `10`
+- route policy: `auto`
+- product comparison:
+  - `standard_retrieval`
+  - `enhanced_retrieval`
+- conversation model: `deepseek-v4-flash`
+- text embedding model: `text-embedding-v4`
+- rerank model: `gte-rerank-v2`
+
+### standard_retrieval limit=20
+
+- `Recall@2 = 0.90`
+- `Recall@5 = 0.975`
+- `Recall@10 = 0.975`
+- `Precision@5 = 0.39`
+- `Precision@10 = 0.195`
+- `MRR@10 = 1.00`
+- derived `ChainRecall@2 = 0.90`
+- derived `ChainRecall@3 = 0.95`
+- `ChainRecall@5 = 0.975`
+- `ChainRecall@10 = 0.975`
+- derived `FullChainHit@2 = 0.80`
+- derived `FullChainHit@3 = 0.90`
+- `FullChainHit@5 = 0.95`
+- `FullChainHit@10 = 0.95`
+- `avg/p50/p95 latency = 11819.80 / 11935.43 / 13724.23 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+- route diagnostics:
+  - `retriever_used distribution = {vector: 20}`
+  - `vector_used = 20/20`
+  - `bm25_available = 0/20`
+  - `bm25_used = 0/20`
+  - `bm25_fallback_reason = bm25_backend_unavailable`
+  - `fusion_used = 20/20`
+  - `rerank_used = 20/20`
+  - `internal_route distribution = {standard_rag: 20}`
+
+### enhanced_retrieval limit=20
+
+- `Recall@2 = 0.90`
+- `Recall@5 = 0.975`
+- `Recall@10 = 0.975`
+- `Precision@5 = 0.39`
+- `Precision@10 = 0.195`
+- `MRR@10 = 1.00`
+- derived `ChainRecall@2 = 0.90`
+- derived `ChainRecall@3 = 0.925`
+- `ChainRecall@5 = 0.975`
+- `ChainRecall@10 = 0.975`
+- derived `FullChainHit@2 = 0.80`
+- derived `FullChainHit@3 = 0.85`
+- `FullChainHit@5 = 0.95`
+- `FullChainHit@10 = 0.95`
+- `avg/p50/p95 latency = 12765.11 / 12022.86 / 18057.80 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+- route diagnostics:
+  - `standard_floor_used = 20/20`
+  - `graph_route_attempted = 4/20`
+  - `graph_route_used = 4/20`
+  - `graph_result_count > 0 = 4`
+  - `graph_path_count > 0 = 4`
+  - `requery_available = 20/20`
+  - `requery_used = 0/20`
+  - `community_available = 0/20`
+  - `community_used = 0/20`
+  - `drift_available = 0/20`
+  - `drift_used = 0/20`
+  - `confidence_gated_fusion_used = 20/20`
+  - `final_rerank_used = 20/20`
+  - `route_selection_reason distribution = {relation_question: 4, standard_question: 16}`
+  - `internal_route distribution = {local_graphrag: 4, standard_rag: 16}`
+  - `retriever_used distribution = {vector: 20, graph: 4}`
+
+## Per-question Delta Summary: Limit=20
+
+### enhanced_helps cases
+
+No help case was observed on the `limit=20` product sample.
+
+That means enhanced retrieval did not improve:
+
+- `Recall@2`
+- `MRR@10`
+- `FullChainHit@2`
+- `FullChainHit@3`
+
+### enhanced_hurts cases
+
+One hurt case was observed:
+
+1. `5a8b57f25542995d1e6f1371`
+   - question: `Were Scott Derrickson and Ed Wood of the same nationality?`
+   - category: `comparison`
+   - standard top3:
+     - `Scott Derrickson`
+     - `Ed Wood (film)`
+     - `Ed Wood`
+   - enhanced top3:
+     - `Scott Derrickson`
+     - `Sinister (film)`
+     - `Ed Wood (film)`
+   - effect:
+     - standard derived `FullChainHit@3 = 1.0`
+     - enhanced derived `FullChainHit@3 = 0.0`
+   - route:
+     - `route_selection_reason = relation_question`
+     - `graph_used = true`
+   - likely reason:
+     - graph path entry introduced a noisy film node and delayed the second gold
+       document beyond top3
+
+### enhanced_ties cases
+
+The remaining nineteen sampled questions tied on the tracked product metrics.
+
+### enhanced_fallback cases
+
+No enhanced fallback case was observed:
+
+- `fallback_count = 0`
+
+## Hard Multihop Subset Analysis
+
+Question-text-only hard subset rule matched three questions:
+
+- comparison: `2`
+- bridge relation: `1`
+- multi-entity relation: `0`
+
+### Hard subset metrics
+
+standard:
+
+- `hard_subset_count = 3`
+- derived `ChainRecall@2 = 0.8333`
+- derived `ChainRecall@3 = 1.0000`
+- `ChainRecall@5 = 1.0000`
+- derived `FullChainHit@2 = 0.6667`
+- derived `FullChainHit@3 = 1.0000`
+- `FullChainHit@5 = 1.0000`
+- `graph_activation_rate = 0.0000`
+
+enhanced:
+
+- `hard_subset_count = 3`
+- derived `ChainRecall@2 = 0.8333`
+- derived `ChainRecall@3 = 0.8333`
+- `ChainRecall@5 = 1.0000`
+- derived `FullChainHit@2 = 0.6667`
+- derived `FullChainHit@3 = 0.6667`
+- `FullChainHit@5 = 1.0000`
+- `graph_activation_rate = 0.6667`
+
+hard subset outcome:
+
+- `enhanced_win_count = 0`
+- `enhanced_tie_count = 2`
+- `enhanced_loss_count = 1`
+
+Verdict on hard subset:
+
+- enhanced retrieval did not beat standard retrieval on the current hard subset
+- it lost one comparison question because graph routing reduced top3 chain
+  completeness
+
+## Product Comparison Decision: Limit=20
+
+Decision rules:
+
+1. `Recall@5 >= standard Recall@5`
+2. `failure_count = 0`
+3. `fallback_rate <= 30%`
+4. `p95 latency <= standard p95 * 2.2`
+5. `enhanced_hurts cases <= 2`
+
+Result:
+
+1. passed
+2. passed
+3. passed
+4. passed
+5. passed
+
+Win conditions:
+
+- `Recall@2 > standard`: failed
+- `MRR@10 > standard`: failed
+- `FullChainHit@2 > standard`: failed
+- `FullChainHit@3 > standard`: failed
+- hard subset recall / MRR / chain hit win: failed
+
+Final verdict:
+
+- `enhanced_retrieval` is baseline-preserving enough to continue evaluation
+- `enhanced_retrieval` is not yet superior
+- current evidence does **not** justify direct expansion to `2Wiki`
+
+Recommended next step:
+
+- prefer `HotpotQA` hard-subset targeted tuning first
+- then consider `HotpotQA limit=50`
+- keep `2Wiki small smoke` as a later option, not the immediate next move
+
 ## Current Status
 
 Current verified quality-optimization rerun set was executed on June 20, 2026
