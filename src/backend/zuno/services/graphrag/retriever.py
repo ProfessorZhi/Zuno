@@ -398,6 +398,54 @@ class GraphRetriever:
         )
 
     @classmethod
+    def _score_path(cls, query: str, item: dict, seed_entities: list[str]) -> tuple[int, int, int, int, int, int]:
+        query_lower = str(query or "").lower()
+        source = str(item.get("source") or "").strip()
+        target = str(item.get("target") or "").strip()
+        relation_type = str(item.get("relation_type") or "").strip().lower()
+        combined = f"{source} {target} {relation_type}".lower()
+        normalized_seeds = [str(seed or "").strip().lower() for seed in seed_entities if str(seed or "").strip()]
+
+        seed_coverage = sum(1 for seed in normalized_seeds if seed and (seed in combined or combined in seed))
+        relation_cue_match = 0
+        bridge_bonus = 0
+        comparison_bonus = 0
+        title_match_bonus = 0
+        generic_entity_penalty = 0
+
+        if cls._is_comparison_query(query):
+            if relation_type in {"nationality", "country", "birthplace", "location", "neighborhood"}:
+                comparison_bonus += 3
+            if any(token in combined for token in ["american", "country", "city", "birth", "neighborhood"]):
+                comparison_bonus += 2
+
+        if cls._is_bridge_relation_query(query):
+            if relation_type in {"director", "founder", "author", "performer", "spouse", "mother", "government_position"}:
+                bridge_bonus += 3
+            if any(token in query_lower for token in ["director", "founder", "author", "performer", "spouse", "mother", "position"]):
+                bridge_bonus += 1
+
+        if cls._is_multi_entity_relation_query(query):
+            if relation_type in {"related_to", "acquired", "influenced", "founded_by", "directed_by"}:
+                relation_cue_match += 2
+
+        if any(seed in str(source).lower() or seed in str(target).lower() for seed in normalized_seeds):
+            title_match_bonus += 1
+
+        if cls._is_generic_graph_entity(source) or cls._is_generic_graph_entity(target):
+            generic_entity_penalty += 3
+
+        support_count = len(list(item.get("chunk_ids") or []))
+        return (
+            seed_coverage + relation_cue_match + bridge_bonus + comparison_bonus + title_match_bonus - generic_entity_penalty,
+            seed_coverage,
+            relation_cue_match + bridge_bonus + comparison_bonus,
+            title_match_bonus,
+            support_count,
+            -generic_entity_penalty,
+        )
+
+    @classmethod
     def _is_graph_worthy_query(cls, query: str, seed_entities: list[str], query_policy: dict | None = None) -> bool:
         first_line = str(query or "").splitlines()[0]
         if not seed_entities:
@@ -546,11 +594,12 @@ class GraphRetriever:
         hit_count = sum(1 for term in query_terms if term in haystack)
         support_count = int(doc.get("graph_support_count") or 0)
         file_focus = int(doc.get("graph_file_focus") or 0)
+        path_score = int(doc.get("graph_path_score") or 0)
         noise_penalty = cls._noise_penalty(query, doc)
         section_bonus = cls._section_bonus(query, haystack)
         return (
-            hit_count + section_bonus + (file_focus * 2) - noise_penalty,
-            support_count + section_bonus + file_focus - noise_penalty,
+            hit_count + section_bonus + (file_focus * 2) + path_score - noise_penalty,
+            support_count + section_bonus + file_focus + path_score - noise_penalty,
             file_focus,
             section_bonus - noise_penalty,
             len(str(doc.get("content") or "")),
@@ -639,6 +688,8 @@ class GraphRetriever:
         paths = []
         chunk_ids = []
         chunk_id_support: dict[str, int] = {}
+        chunk_path_score: dict[str, int] = {}
+        chunk_path_count: dict[str, int] = {}
         seen_chunk_ids: set[str] = set()
         seen_paths: set[tuple[str, str]] = set()
         effective_query_policy = self._resolve_query_policy(
@@ -689,7 +740,10 @@ class GraphRetriever:
                     filtered_paths.append(item)
                 neighbor_paths = sorted(
                     filtered_paths,
-                    key=lambda item: self._path_sort_key(item, preferred_relation_type),
+                    key=lambda item: (
+                        self._score_path(query, item, seed_entities),
+                        self._path_sort_key(item, preferred_relation_type),
+                    ),
                     reverse=True,
                 )
             if neighbor_paths:
@@ -700,12 +754,17 @@ class GraphRetriever:
                         seen_paths.add(path_key)
                         paths.append(item)
                     for chunk_id in item.get("chunk_ids") or []:
+                        path_score = sum(max(value, 0) for value in self._score_path(query, item, seed_entities))
                         if chunk_id in seen_chunk_ids:
                             chunk_id_support[chunk_id] = chunk_id_support.get(chunk_id, 0) + 1
+                            chunk_path_score[chunk_id] = chunk_path_score.get(chunk_id, 0) + path_score
+                            chunk_path_count[chunk_id] = chunk_path_count.get(chunk_id, 0) + 1
                             continue
                         seen_chunk_ids.add(chunk_id)
                         chunk_ids.append(chunk_id)
                         chunk_id_support[chunk_id] = chunk_id_support.get(chunk_id, 0) + 1
+                        chunk_path_score[chunk_id] = chunk_path_score.get(chunk_id, 0) + path_score
+                        chunk_path_count[chunk_id] = chunk_path_count.get(chunk_id, 0) + 1
 
         path_lines = [f"{item['source']} -> {item['target']}" for item in paths]
         documents = await self.chunk_store.get_documents_by_chunk_ids(knowledge_id, chunk_ids)
@@ -722,6 +781,8 @@ class GraphRetriever:
             doc["graph_seed_hit_count"] = sum(1 for term in query_terms if term in haystack)
             doc["graph_support_count"] = chunk_id_support.get(str(doc.get("chunk_id") or ""), 0)
             doc["graph_file_focus"] = 0
+            doc["graph_path_count"] = chunk_path_count.get(str(doc.get("chunk_id") or ""), 0)
+            doc["graph_path_score"] = chunk_path_score.get(str(doc.get("chunk_id") or ""), 0)
         document_dicts = await self._augment_documents_from_focus_files(
             knowledge_id=knowledge_id,
             documents=document_dicts,
