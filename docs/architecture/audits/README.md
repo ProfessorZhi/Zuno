@@ -20,6 +20,7 @@ Rules:
 - [GraphRAG Forced Vs Auto Route Report](./graphrag-forced-vs-auto-route-report.md)
 - [GraphRAG Route Activation Calibration](./graphrag-route-activation-calibration.md)
 - [Retrieval Mode Semantics Alignment](./retrieval-mode-semantics-alignment.md)
+- [Retrieval Eval Mode Contract](./retrieval-eval-mode-contract.md)
 - [Local Model Default Cleanup Plan](./local-model-default-cleanup-plan.md)
 - [Model Registry And Defaults Audit](./model-registry-and-defaults-audit.md)
 - [Real Runtime Multihop Eval Results](./real-runtime-multihop-eval-results.md)

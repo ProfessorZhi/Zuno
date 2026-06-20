@@ -4,6 +4,15 @@ This audit records the current retrieval-only real runtime evidence for
 HotpotQA multihop evaluation after GraphRAG retrieval quality optimization and
 the controlled `limit=10` expansion.
 
+Naming note:
+
+- current runner labels still use `baseline_rag`, `local_graphrag`, and
+  `deep_graphrag`
+- future product-facing reports should translate that comparison to
+  `standard_retrieval` vs `enhanced_retrieval`
+- `local_graphrag` and `deep_graphrag` should remain internal ablation labels
+  unless a report is explicitly diagnostic
+
 ## Current Status
 
 Current verified quality-optimization rerun set was executed on June 20, 2026
@@ -221,6 +230,38 @@ The next loop should return to:
 - alias quality
 - path ranking
 - graph-worthiness for the six fallback question shapes
+
+## Next-Round Eval Contract
+
+The next HotpotQA `limit=10` comparison should prioritize product semantics:
+
+1. `standard_retrieval`
+2. `enhanced_retrieval`
+
+Optional internal analysis:
+
+3. `local_graphrag_ablation`
+4. `vector_only_ablation`
+
+Rules for that next round:
+
+- `standard_retrieval` is the product baseline
+- `enhanced_retrieval` is the product enhanced mode
+- `local_graphrag` is allowed only as a graph-module attribution view
+- `deep_graphrag` is allowed only as a deep-route attribution view
+- `force_graph` is diagnostic only and must not be presented as product score
+
+Required reporting fields for the next product comparison:
+
+- `Recall@2 / Recall@5 / Recall@10`
+- `Precision@5 / Precision@10`
+- `MRR@10`
+- `FullChainHit@2 / FullChainHit@3 / FullChainHit@5`
+- hard-subset metrics
+- latency
+- fallback
+- route distribution
+- `retriever_used` distribution
 
 ## Auto Route Results
 
