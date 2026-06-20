@@ -60,6 +60,7 @@ data/evals/multihop/**/*.json
 data/evals/multihop/**/*.jsonl
 reports/evals/multihop/stackless_ingestion_smoke.json
 reports/evals/multihop/stackless_ingestion_smoke_*.json
+reports/evals/multihop/real_runtime/
 
 tmp-*.png
 tmp-*.json

@@ -243,6 +243,19 @@ Future real runtime output must instead:
 - record runtime fallback / failure
 - avoid Answer EM / F1 as the main headline metrics for round 1
 
+The real runtime runner is now:
+
+```powershell
+python tools/evals/zuno/multihop_eval/run_real_runtime_eval.py --dataset hotpotqa --mode baseline_rag --questions data/evals/multihop/normalized/hotpotqa/dev_sample50.jsonl --corpus data/evals/multihop/corpus/hotpotqa/dev_sample50_corpus.jsonl --limit 5 --top-k 10
+```
+
+Important:
+
+- reports under `reports/evals/multihop/real_runtime/` stay gitignored
+- only the audit summary belongs in Git
+- local graph or deep routes may legitimately degrade if graph or community
+  capability is not actually exercised by the runtime
+
 ## Future Runner Wiring
 
 The intended next integration path is:
