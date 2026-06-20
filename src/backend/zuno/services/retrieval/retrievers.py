@@ -122,6 +122,7 @@ class GraphRetrieverAdapter:
                     index_version=index_version.get("graph"),
                     status=scope_policy.get("status"),
                     query_policy=effective_query_policy,
+                    candidate_context=options.get("candidate_context"),
                 )
             except TypeError:
                 return await local_graph_retriever.retrieve(
@@ -132,6 +133,7 @@ class GraphRetrieverAdapter:
                     domain_pack_id=domain_pack_id,
                     index_version=index_version.get("graph"),
                     status=scope_policy.get("status"),
+                    candidate_context=options.get("candidate_context"),
                 )
         try:
             return await self.retriever.retrieve(
@@ -143,6 +145,7 @@ class GraphRetrieverAdapter:
                 index_version=index_version.get("graph"),
                 status=scope_policy.get("status"),
                 query_policy=effective_query_policy,
+                candidate_context=options.get("candidate_context"),
             )
         except TypeError:
             return await self.retriever.retrieve(
@@ -153,4 +156,5 @@ class GraphRetrieverAdapter:
                 domain_pack_id=domain_pack_id,
                 index_version=index_version.get("graph"),
                 status=scope_policy.get("status"),
+                candidate_context=options.get("candidate_context"),
             )

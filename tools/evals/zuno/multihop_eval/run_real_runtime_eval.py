@@ -287,6 +287,7 @@ def extract_route_diagnostics(
         "graph_result_count": len(list(graph_result.get("documents") or [])) if graph_result else None,
         "graph_path_count": len(list(graph_result.get("paths") or [])) if graph_result else None,
         "seed_entities": seed_entities if seed_entities is not None else None,
+        "seed_entities_with_source": list(metadata.get("seed_entities_with_source") or []),
         "seed_entity_count": (len(seed_entities) if isinstance(seed_entities, list) else None),
         "community_report_count": len(list(community_result.get("used_communities") or [])) if community_result else None,
         "drift_followup_count": len(list(community_result.get("follow_up_questions") or [])) if community_result else None,

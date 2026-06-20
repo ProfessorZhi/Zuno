@@ -310,20 +310,32 @@ class RetrievalOrchestrator:
 
         if "graph" in plan.enabled_retrievers:
             graph_query = query
+            candidate_context = {
+                "documents": [
+                    {
+                        "title": document.get("file_name") or document.get("title"),
+                        "file_name": document.get("file_name") or document.get("title"),
+                    }
+                    for document in rag_result.get("documents", [])[:5]
+                ]
+            }
             if self._should_use_rag_entry_chunk(query, retrieval_options) and rag_result.get("documents"):
                 entry_text = "\n".join(
                     str(document.get("content") or document.get("page_content") or "")
                     for document in rag_result.get("documents", [])[:3]
                 )
                 graph_query = f"{query}\n{entry_text[:2000]}"
+            graph_options = dict(retrieval_options)
+            graph_options["candidate_context"] = candidate_context
             try:
-                graph_result = await self.graph_retriever.retrieve(graph_query, knowledge_ids, retrieval_options)
+                graph_result = await self.graph_retriever.retrieve(graph_query, knowledge_ids, graph_options)
             except TypeError:
                 graph_result = await self.graph_retriever.retrieve(
                     graph_query,
                     knowledge_ids[0] if knowledge_ids else "",
                     graph_hop_limit=retrieval_options.get("graph_hop_limit", 2),
                     max_paths_per_entity=retrieval_options.get("max_paths_per_entity", 10),
+                    candidate_context=candidate_context,
                 )
             docs = [self._dict_to_document(item, source_type="graph", source_backend="neo4j") for item in graph_result.get("documents") or []]
             documents_by_source["graph"] = docs
@@ -407,6 +419,7 @@ class RetrievalOrchestrator:
                 "route_hints": list(processed_query.route_hints),
             },
             "seed_entities": seed_entities,
+            "seed_entities_with_source": list(graph_result.get("seed_entities_with_source") or []),
             "graph_worthy": graph_worthy,
         }
 
@@ -492,6 +505,7 @@ class RetrievalOrchestrator:
             "resolved_profile": final_plan.get("resolved_profile"),
             "enabled_retrievers": list(final_plan.get("enabled_retrievers") or []),
             "seed_entities": final_pass.get("seed_entities"),
+            "seed_entities_with_source": list(final_pass.get("seed_entities_with_source") or []),
             "graph_worthy": final_pass.get("graph_worthy"),
             "used_vector": any(
                 run.get("source") == "vector" for run in (final_pass.get("retriever_runs") or [])

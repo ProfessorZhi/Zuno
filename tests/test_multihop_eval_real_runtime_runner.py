@@ -61,6 +61,10 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
             "resolved_mode": "hybrid_rag",
             "internal_route": "standard_rag",
             "seed_entities": ["Scott Derrickson", "Ed Wood"],
+            "seed_entities_with_source": [
+                {"value": "Scott Derrickson", "source": "query"},
+                {"value": "Ed Wood", "source": "baseline_title"},
+            ],
             "graph_worthy": True,
             "retriever_runs": [
                 {"source": "vector"},
@@ -94,6 +98,7 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
     assert diagnostics["graph_worthy"] is True
     assert diagnostics["graph_result_count"] == 1
     assert diagnostics["graph_path_count"] == 2
+    assert diagnostics["seed_entities_with_source"][1]["source"] == "baseline_title"
     assert diagnostics["community_report_count"] == 1
     assert diagnostics["drift_followup_count"] == 1
     assert diagnostics["seed_entities"] == ["Scott Derrickson", "Ed Wood"]

@@ -252,29 +252,61 @@ class GraphRetriever:
 
     @classmethod
     def _extract_query_seeds(cls, query: str, query_policy: dict | None = None) -> list[str]:
+        return [
+            item["value"]
+            for item in cls._build_seed_entities_with_source(
+                query,
+                query_policy=query_policy,
+            )
+        ]
+
+    @classmethod
+    def _build_seed_entities_with_source(
+        cls,
+        query: str,
+        *,
+        query_policy: dict | None = None,
+        candidate_context: dict | None = None,
+        max_seed_entities: int = 8,
+    ) -> list[dict[str, str]]:
         lines = [line.strip() for line in str(query or "").splitlines() if line.strip()]
         first_line = lines[0] if lines else ""
-        ordered: list[str] = []
+        ordered: list[dict[str, str]] = []
         seen: set[str] = set()
+
+        def add_seed(value: str, source: str):
+            cleaned = re.sub(r"\s+", " ", str(value or "")).strip("`*_#-:;,.!?()[]{}<>\"'")
+            if not cleaned:
+                return
+            normalized = cleaned.lower()
+            if normalized in cls.NOISE_QUERY_TERMS or normalized in seen or cls._is_generic_graph_entity(cleaned):
+                return
+            seen.add(normalized)
+            ordered.append({"value": cleaned, "source": source})
+
+        deferred_query_terms: list[str] = []
         for line_index, line in enumerate(lines[:4]):
             for phrase in cls.ASCII_PHRASE_PATTERN.findall(line):
                 words = phrase.split()
                 has_uppercase_signal = any(any(char.isupper() for char in word) for word in words)
                 if len(words) > 1 and has_uppercase_signal:
-                    cls._add_seed(ordered, seen, " ".join(words))
+                    add_seed(" ".join(words), "query")
                 for word in words:
                     lowered = word.lower()
                     if lowered in cls.NOISE_QUERY_TERMS:
                         continue
                     if line_index == 0:
                         if any(char.isupper() for char in word) or len(word) >= 3:
-                            cls._add_seed(ordered, seen, word)
+                            if any(char.isupper() for char in word):
+                                add_seed(word, "query")
+                            else:
+                                deferred_query_terms.append(word)
                     else:
                         if any(char.isupper() for char in word):
-                            cls._add_seed(ordered, seen, word)
+                            add_seed(word, "query")
             for candidate in cls._extract_cjk_seed_candidates(line):
                 if line_index == 0 or len(candidate) >= 3:
-                    cls._add_seed(ordered, seen, candidate)
+                    add_seed(candidate, "query")
         lowered = first_line.lower()
         seed_aliases = cls._policy_aliases(query_policy, "graph_seed_aliases")
         if not seed_aliases:
@@ -282,12 +314,29 @@ class GraphRetriever:
         for trigger, aliases in seed_aliases.items():
             if trigger in lowered:
                 for alias in aliases:
-                    cls._add_seed(ordered, seen, alias)
+                    add_seed(alias, "alias")
         policy_seed_terms = cls._policy_values(query_policy, "graph_seed_terms") or list(cls.DEFAULT_POLICY_SEED_TERMS)
         for cue in policy_seed_terms:
             if cue in first_line:
-                cls._add_seed(ordered, seen, cue)
-        return ordered[:8]
+                add_seed(cue, "query")
+
+        documents = list((candidate_context or {}).get("documents") or [])
+        for document in documents:
+            title = str(document.get("title") or "").strip()
+            file_name = str(document.get("file_name") or "").strip()
+            if title:
+                add_seed(title, "baseline_title")
+            if file_name and file_name != title:
+                add_seed(file_name, "baseline_file")
+            for mention in document.get("entity_mentions") or []:
+                add_seed(str(mention or ""), "baseline_entity")
+            if len(ordered) >= max_seed_entities:
+                break
+        for deferred in deferred_query_terms:
+            if len(ordered) >= max_seed_entities:
+                break
+            add_seed(deferred, "query")
+        return ordered[:max_seed_entities]
 
     @classmethod
     def _needs_entry_chunk(cls, query: str, seed_entities: list[str]) -> bool:
@@ -572,6 +621,7 @@ class GraphRetriever:
         index_version: str | None = None,
         status: str | None = None,
         query_policy: dict | None = None,
+        candidate_context: dict | None = None,
     ) -> dict:
         entities = []
         paths = []
@@ -583,13 +633,19 @@ class GraphRetriever:
             domain_pack_id=domain_pack_id,
             query_policy=query_policy,
         )
-        seed_entities = self._extract_query_seeds(query, effective_query_policy)
+        seed_entities_with_source = self._build_seed_entities_with_source(
+            query,
+            query_policy=effective_query_policy,
+            candidate_context=candidate_context,
+        )
+        seed_entities = [item["value"] for item in seed_entities_with_source]
         if not self._is_graph_worthy_query(query, seed_entities, effective_query_policy):
             return {
                 "content": "",
                 "entities": [],
                 "paths": [],
                 "documents": [],
+                "seed_entities_with_source": seed_entities_with_source,
             }
         for entity_name in seed_entities:
             try:
@@ -670,6 +726,7 @@ class GraphRetriever:
             "paths": path_lines,
             "structured_paths": paths,
             "documents": document_dicts,
+            "seed_entities_with_source": seed_entities_with_source,
             "domain_pack_id": domain_pack_id,
             "index_version": index_version,
             "status": status,
