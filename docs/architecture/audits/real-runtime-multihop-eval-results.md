@@ -172,8 +172,8 @@ Reason:
 
 ## Product Retrieval Comparison: HotpotQA Limit=20
 
-Current verified product-mode `limit=20` run set was executed on June 20, 2026
-with:
+Current verified product-mode `limit=20` run set was rerun on June 20, 2026
+after comparison-chain fusion tuning, with:
 
 - dataset: `hotpotqa`
 - limit: `20`
@@ -202,7 +202,7 @@ with:
 - derived `FullChainHit@3 = 0.90`
 - `FullChainHit@5 = 0.95`
 - `FullChainHit@10 = 0.95`
-- `avg/p50/p95 latency = 11819.80 / 11935.43 / 13724.23 ms`
+- `avg/p50/p95 latency = 13763.89 / 13563.89 / 18021.79 ms`
 - `fallback_count = 0`
 - `failure_count = 0`
 - route diagnostics:
@@ -224,14 +224,14 @@ with:
 - `Precision@10 = 0.195`
 - `MRR@10 = 1.00`
 - derived `ChainRecall@2 = 0.90`
-- derived `ChainRecall@3 = 0.925`
+- derived `ChainRecall@3 = 0.95`
 - `ChainRecall@5 = 0.975`
 - `ChainRecall@10 = 0.975`
 - derived `FullChainHit@2 = 0.80`
-- derived `FullChainHit@3 = 0.85`
+- derived `FullChainHit@3 = 0.90`
 - `FullChainHit@5 = 0.95`
 - `FullChainHit@10 = 0.95`
-- `avg/p50/p95 latency = 12765.11 / 12022.86 / 18057.80 ms`
+- `avg/p50/p95 latency = 12989.80 / 12040.78 / 17307.62 ms`
 - `fallback_count = 0`
 - `failure_count = 0`
 - route diagnostics:
@@ -256,39 +256,35 @@ with:
 
 ### enhanced_helps cases
 
-No help case was observed on the `limit=20` product sample.
+No help case was observed on the rerun `limit=20` product sample.
 
-That means enhanced retrieval did not improve:
-
-- `Recall@2`
-- `MRR@10`
-- `FullChainHit@2`
-- `FullChainHit@3`
+Enhanced retrieval did not improve headline retrieval metrics beyond standard,
+but it no longer regresses the hard comparison subset.
 
 ### enhanced_hurts cases
 
-One hurt case was observed:
+No hurt case was observed on the rerun `limit=20` product sample.
 
-1. `5a8b57f25542995d1e6f1371`
-   - question: `Were Scott Derrickson and Ed Wood of the same nationality?`
-   - category: `comparison`
-   - standard top3:
-     - `Scott Derrickson`
-     - `Ed Wood (film)`
-     - `Ed Wood`
-   - enhanced top3:
-     - `Scott Derrickson`
-     - `Sinister (film)`
-     - `Ed Wood (film)`
-   - effect:
-     - standard derived `FullChainHit@3 = 1.0`
-     - enhanced derived `FullChainHit@3 = 0.0`
-   - route:
-     - `route_selection_reason = relation_question`
-     - `graph_used = true`
-   - likely reason:
-     - graph path entry introduced a noisy film node and delayed the second gold
-       document beyond top3
+The previously failing comparison question:
+
+- `5a8b57f25542995d1e6f1371`
+- question: `Were Scott Derrickson and Ed Wood of the same nationality?`
+- current standard top3:
+  - `Scott Derrickson`
+  - `Ed Wood (film)`
+  - `Ed Wood`
+- current enhanced top3:
+  - `Scott Derrickson`
+  - `Ed Wood (film)`
+  - `Ed Wood`
+- current effect:
+  - standard derived `FullChainHit@3 = 1.0`
+  - enhanced derived `FullChainHit@3 = 1.0`
+- current route:
+  - `internal_route = local_graphrag`
+  - `graph_result_count = 14`
+  - `graph_path_count = 24`
+  - `fusion_metadata.comparison_seed_entities = [scott derrickson, ed wood]`
 
 ### enhanced_ties cases
 
@@ -325,24 +321,24 @@ enhanced:
 
 - `hard_subset_count = 3`
 - derived `ChainRecall@2 = 0.8333`
-- derived `ChainRecall@3 = 0.8333`
+- derived `ChainRecall@3 = 1.0000`
 - `ChainRecall@5 = 1.0000`
 - derived `FullChainHit@2 = 0.6667`
-- derived `FullChainHit@3 = 0.6667`
+- derived `FullChainHit@3 = 1.0000`
 - `FullChainHit@5 = 1.0000`
-- `graph_activation_rate = 0.6667`
+- `graph_activation_rate = 1.0000`
 
 hard subset outcome:
 
 - `enhanced_win_count = 0`
-- `enhanced_tie_count = 2`
-- `enhanced_loss_count = 1`
+- `enhanced_tie_count = 3`
+- `enhanced_loss_count = 0`
 
 Verdict on hard subset:
 
-- enhanced retrieval did not beat standard retrieval on the current hard subset
-- it lost one comparison question because graph routing reduced top3 chain
-  completeness
+- enhanced retrieval recovered the former comparison regression
+- enhanced retrieval now matches standard retrieval on the current hard subset
+- enhanced retrieval is still not superior on the current hard subset
 
 ## Product Comparison Decision: Limit=20
 
@@ -372,14 +368,15 @@ Win conditions:
 
 Final verdict:
 
-- `enhanced_retrieval` is baseline-preserving enough to continue evaluation
+- `enhanced_retrieval` recovers the hard-subset regression and is baseline-preserving enough to continue evaluation
 - `enhanced_retrieval` is not yet superior
-- current evidence does **not** justify direct expansion to `2Wiki`
+- current evidence is strong enough to allow `HotpotQA limit=50`
+- current evidence still does **not** justify direct expansion to `2Wiki`
 
 Recommended next step:
 
-- prefer `HotpotQA` hard-subset targeted tuning first
-- then consider `HotpotQA limit=50`
+- proceed to `HotpotQA limit=50`
+- keep a follow-up audit on whether enhanced can create genuine help cases
 - keep `2Wiki small smoke` as a later option, not the immediate next move
 
 ## Current Status

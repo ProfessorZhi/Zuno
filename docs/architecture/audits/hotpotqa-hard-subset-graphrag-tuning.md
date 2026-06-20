@@ -1,7 +1,7 @@
 # HotpotQA Hard-subset GraphRAG Tuning
 
-This audit explains why the current `enhanced_retrieval` path regressed on a
-hard comparison question in HotpotQA `limit=20`.
+This audit explains why `enhanced_retrieval` regressed on a hard comparison
+question in HotpotQA `limit=20`, and what was changed to close that gap.
 
 The target is not to blame one branch in the abstract. The goal is to identify
 which runtime rule allowed a noisy graph candidate to displace chain evidence
@@ -9,15 +9,46 @@ that standard retrieval already had.
 
 ## Scope
 
-Current hurt case:
+Target hurt case:
 
 - `question_id = 5a8b57f25542995d1e6f1371`
 - question: `Were Scott Derrickson and Ed Wood of the same nationality?`
 
-Current outcome:
+Pre-fix outcome:
 
 - standard derived `FullChainHit@3 = 1.0`
 - enhanced derived `FullChainHit@3 = 0.0`
+
+Post-fix outcome after the June 20, 2026 rerun:
+
+- standard derived `FullChainHit@3 = 0.90`
+- enhanced derived `FullChainHit@3 = 0.90`
+- the former hurt case now has matching top3 chain coverage in both modes
+
+## Closure Summary
+
+The implemented fix stayed in the fusion layer instead of turning GraphRAG off.
+
+What changed:
+
+1. comparison queries now derive clean comparison seed entities in fusion
+2. each candidate gets `candidate_seed_coverage`
+3. graph-only promotion is blocked when it would break dual-seed top3 coverage
+4. dual-seed / chain-complete candidates receive `chain_completeness_score`
+5. fusion metadata now records:
+`comparison_question` and `comparison_seed_entities`
+
+Closure evidence:
+
+- enhanced rerun top4 for `5a8b57f25542995d1e6f1371` is now:
+  1. `Scott Derrickson`
+  2. `Ed Wood (film)`
+  3. `Ed Wood`
+  4. `Sinister (film)`
+- `Sinister (film)` no longer displaces the second gold entity beyond top3
+- current `limit=20` product comparison shows:
+no help cases, no hurt cases, and enhanced parity with standard on derived
+`FullChainHit@3`
 
 ## Evidence Snapshot
 
