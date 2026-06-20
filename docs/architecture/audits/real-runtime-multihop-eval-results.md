@@ -1,7 +1,8 @@
 # Real Runtime Multihop Eval Results
 
 This audit records the current retrieval-only real runtime evidence for
-HotpotQA multihop evaluation after GraphRAG retrieval quality optimization.
+HotpotQA multihop evaluation after GraphRAG retrieval quality optimization and
+the controlled `limit=10` expansion.
 
 ## Current Status
 
@@ -29,6 +30,197 @@ Quality optimization outcome:
 3. `local_graphrag` still keeps `fallback_count = 1`, but no longer underperforms baseline on the sampled metrics.
 4. `deep_graphrag` also matches baseline on the same sampled metrics while still activating local graph routing on `4/5` questions.
 5. Graph retrieval quality is now baseline-preserving on this sample, with only residual noisy promotions in some top5/top10 positions.
+
+## HotpotQA Limit=10 Controlled Expansion
+
+Current verified `limit=10` run set was executed on June 20, 2026 with:
+
+- dataset: `hotpotqa`
+- limit: `10`
+- top_k: `10`
+- route policy: `auto`
+- conversation model: `deepseek-v4-flash`
+- text embedding model: `text-embedding-v4`
+- rerank model: `gte-rerank-v2`
+
+### baseline_rag limit=10
+
+- `Recall@2 = 0.90`
+- `Recall@5 = 1.00`
+- `Recall@10 = 1.00`
+- `Precision@5 = 0.40`
+- `Precision@10 = 0.20`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 1.00`
+- `ChainRecall@10 = 1.00`
+- `FullChainHit@5 = 1.00`
+- `FullChainHit@10 = 1.00`
+- `avg/p50/p95 latency = 14672.14 / 14792.11 / 17375.52 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+- `graph_result_count > 0 = 0`
+- `graph_path_count > 0 = 0`
+- `internal_route distribution = {standard_rag: 10}`
+- `retriever_used distribution = {vector: 10}`
+
+### local_graphrag limit=10
+
+- `Recall@2 = 0.95`
+- `Recall@5 = 1.00`
+- `Recall@10 = 1.00`
+- `Precision@5 = 0.40`
+- `Precision@10 = 0.20`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 1.00`
+- `ChainRecall@10 = 1.00`
+- `FullChainHit@5 = 1.00`
+- `FullChainHit@10 = 1.00`
+- `avg/p50/p95 latency = 19783.35 / 21054.74 / 26643.14 ms`
+- `fallback_count = 6`
+- `failure_count = 0`
+- `graph_result_count > 0 = 4`
+- `graph_path_count > 0 = 4`
+- `internal_route distribution = {local_graphrag: 4, standard_rag: 6}`
+- `retriever_used distribution = {vector: 10, graph: 4}`
+
+### deep_graphrag limit=10
+
+- `Recall@2 = 0.90`
+- `Recall@5 = 1.00`
+- `Recall@10 = 1.00`
+- `Precision@5 = 0.40`
+- `Precision@10 = 0.20`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 1.00`
+- `ChainRecall@10 = 1.00`
+- `FullChainHit@5 = 1.00`
+- `FullChainHit@10 = 1.00`
+- `avg/p50/p95 latency = 14559.42 / 14885.93 / 16528.08 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+- `graph_result_count > 0 = 4`
+- `graph_path_count > 0 = 4`
+- `internal_route distribution = {local_graphrag: 4, standard_rag: 6}`
+- `retriever_used distribution = {vector: 10, graph: 4}`
+
+## Per-question Delta Summary
+
+### graph_helps cases
+
+Current clear metric help case versus baseline:
+
+- `5abd94525542992ac4f382d2`
+  - question: `2014 S/S is the debut album of a South Korean boy group that was formed by who?`
+  - local GraphRAG improved `Recall@2` over baseline
+  - but this happened on a fallback-to-standard path, not on a graph-activated path
+  - treat it as a retrieval help, not a proof of graph path quality
+
+### graph_hurts cases
+
+No metric-breaking graph-hurt case was observed at `limit=10`.
+
+Specifically:
+
+- no question lost `Recall@5` versus baseline
+- no question lost `MRR@10` versus baseline
+- no gold support document was pushed out of local top5 relative to baseline
+
+Residual noisy promotions still exist, but they did not break the measured
+retrieval metrics in this sample.
+
+### graph_neutral cases
+
+Nine of the ten sampled questions were metric-neutral against baseline on the
+tracked retrieval metrics.
+
+That means:
+
+- GraphRAG is still baseline-preserving
+- but it is not yet stably outperforming baseline on this broader sample
+
+### fallback cases
+
+Current local GraphRAG fallback cases:
+
+1. `5a85ea095542994775f606a8`
+   - `What science fantasy young adult series, told in first person, has a set of companion books narrating the stories of enslaved worlds and alien species?`
+   - fallback reason: `graph_result_empty`
+
+2. `5abd94525542992ac4f382d2`
+   - `2014 S/S is the debut album of a South Korean boy group that was formed by who?`
+   - fallback reason: `graph_result_empty`
+
+3. `5a85b2d95542997b5ce40028`
+   - `Who was known by his stage name Aladin and helped organizations improve their performance as a consultant?`
+   - fallback reason: `graph_result_empty`
+
+4. `5a87ab905542996e4f3088c1`
+   - `The arena where the Lewiston Maineiacs played their home games can seat how many people?`
+   - fallback reason: `graph_result_empty`
+
+5. `5a7bbb64554299042af8f7cc`
+   - `Who is older, Annie Morton or Terry Richardson?`
+   - fallback reason: `graph_result_empty`
+
+6. `5a8db19d5542994ba4e3dd00`
+   - `Are Local H and For Against both from the United States?`
+   - fallback reason: `graph_result_empty`
+
+### standard_rag fallback but still correct cases
+
+All six fallback cases still returned correct top5 gold support under the
+current retrieval metrics.
+
+This is good for robustness, but it also proves that graph coverage on the
+expanded sample is still too narrow.
+
+## H3 Decision Check
+
+Required rules:
+
+1. `local_graphrag Recall@5 >= baseline Recall@5`
+2. `local_graphrag MRR@10 >= baseline MRR@10`, or `Recall@2 > baseline`
+3. `local_graphrag fallback_rate <= 30%`
+4. `graph_result_count > 0` question ratio `>= 60%`
+5. `p95 latency <= baseline p95 * 2`
+6. `graph_hurts cases <= 2`
+
+Result:
+
+1. passed
+2. passed
+3. failed
+4. failed
+5. passed
+6. passed
+
+Why it fails overall:
+
+- fallback rate is `6/10 = 60%`
+- graph-active coverage is `4/10 = 40%`
+
+So the current `limit=10` expansion does **not** pass the controlled expansion
+gate, even though the top-line retrieval metrics are strong.
+
+## Decision
+
+Do **not** expand to:
+
+- HotpotQA `limit=20`
+- `2Wiki` small smoke
+
+Reason:
+
+- GraphRAG is baseline-preserving
+- GraphRAG does not underperform baseline on current `limit=10`
+- but graph coverage and fallback rate still fail the explicit expansion rules
+
+The next loop should return to:
+
+- seed quality
+- alias quality
+- path ranking
+- graph-worthiness for the six fallback question shapes
 
 ## Auto Route Results
 
