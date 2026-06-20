@@ -19,6 +19,28 @@ class GraphRetriever:
         "(\u5c5e\u4e8e|\u5206\u522b|\u5404\u81ea)",
         re.IGNORECASE,
     )
+    COMPARISON_CUE_PATTERN = re.compile(
+        r"(same nationality|same country|same neighborhood|same birthplace|share the same|"
+        r"located in the same|which is older|which is younger|which is earlier|which is later|"
+        r"which is larger|which is smaller|\u662f\u5426\u76f8\u540c|\u540c\u4e00|\u5206\u522b\u6765\u81ea|\u8c01\u66f4)",
+        re.IGNORECASE,
+    )
+    BRIDGE_RELATION_CUE_PATTERN = re.compile(
+        r"(mother of the director|father of the director|spouse of the performer|"
+        r"birthplace of the founder|government position .* portrayed|woman who portrayed|"
+        r"man who portrayed|director of .* based in what|founder of|author of|performer of|"
+        r"producer of|creator of|\u7684\u5bfc\u6f14|\u7684\u521b\u59cb\u4eba|\u7684\u4f5c\u8005|\u7684\u914d\u5076)",
+        re.IGNORECASE,
+    )
+    MULTI_ENTITY_RELATION_CUE_PATTERN = re.compile(
+        r"(related to|relationship between|what connects|how is .* related|acquired|influenced|"
+        r"founded by|directed by|portrayed by|based in what|held by|\u5173\u8054|\u8fde\u63a5|\u6536\u8d2d|\u5f71\u54cd)",
+        re.IGNORECASE,
+    )
+    SIMPLE_FACT_LOOKUP_PATTERN = re.compile(
+        r"^\s*(what is|who is|when was|when is|where is|what year|what date|\u4ec0\u4e48\u662f|\u4f55\u65f6|\u54ea\u4e00\u5e74)",
+        re.IGNORECASE,
+    )
     NON_GRAPH_LISTING_PATTERN = re.compile(
         "(\u7d22\u5f15\u7c7b\u578b|\u76f8\u4f3c\u5ea6\u6307\u6807|index types?|indexes|metrics)",
         re.IGNORECASE,
@@ -319,6 +341,15 @@ class GraphRetriever:
         first_line = str(query or "").splitlines()[0]
         if not seed_entities:
             return False
+        if cls.NON_GRAPH_LISTING_PATTERN.search(first_line):
+            return False
+        comparison_question = cls._is_comparison_query(first_line)
+        bridge_relation_question = cls._is_bridge_relation_query(first_line)
+        multi_entity_relation_question = cls._is_multi_entity_relation_query(first_line)
+        if cls._is_simple_fact_lookup(first_line) and not (
+            comparison_question or bridge_relation_question or multi_entity_relation_question
+        ):
+            return False
         policy_relation_cues = cls._policy_values(query_policy, "graph_relation_cues") or list(
             cls.DEFAULT_POLICY_RELATION_CUES
         )
@@ -329,13 +360,46 @@ class GraphRetriever:
         has_policy_step_cue = any(cue in first_line for cue in policy_step_cues)
         if cls.STRONG_RELATION_CUE_PATTERN.search(first_line):
             return True
+        if comparison_question or bridge_relation_question or multi_entity_relation_question:
+            return True
         if has_policy_step_cue and any(re.search(r"[\u4e00-\u9fff]", seed) for seed in seed_entities):
             return True
         if has_policy_relation_cue and any(re.search(r"[\u4e00-\u9fff]", seed) for seed in seed_entities):
             return True
-        if cls.NON_GRAPH_LISTING_PATTERN.search(first_line):
-            return False
         return len(seed_entities) >= 2 and bool(cls.WEAK_RELATION_CUE_PATTERN.search(first_line))
+
+    @classmethod
+    def _is_comparison_query(cls, query: str) -> bool:
+        return bool(cls.COMPARISON_CUE_PATTERN.search(str(query or "")))
+
+    @classmethod
+    def _is_bridge_relation_query(cls, query: str) -> bool:
+        return bool(cls.BRIDGE_RELATION_CUE_PATTERN.search(str(query or "")))
+
+    @classmethod
+    def _is_multi_entity_relation_query(cls, query: str) -> bool:
+        return bool(cls.MULTI_ENTITY_RELATION_CUE_PATTERN.search(str(query or "")))
+
+    @classmethod
+    def _is_simple_fact_lookup(cls, query: str) -> bool:
+        return bool(cls.SIMPLE_FACT_LOOKUP_PATTERN.search(str(query or "")))
+
+    @classmethod
+    def _has_graph_relation_signal(cls, query: str, query_policy: dict | None = None) -> bool:
+        first_line = str(query or "").splitlines()[0] if str(query or "").splitlines() else ""
+        policy_relation_cues = cls._policy_values(query_policy, "graph_relation_cues") or list(
+            cls.DEFAULT_POLICY_RELATION_CUES
+        )
+        policy_step_cues = cls._policy_values(query_policy, "graph_step_cues") or list(cls.DEFAULT_POLICY_STEP_CUES)
+        return bool(
+            cls.STRONG_RELATION_CUE_PATTERN.search(first_line)
+            or cls.WEAK_RELATION_CUE_PATTERN.search(first_line)
+            or cls._is_comparison_query(first_line)
+            or cls._is_bridge_relation_query(first_line)
+            or cls._is_multi_entity_relation_query(first_line)
+            or any(cue in first_line for cue in policy_relation_cues)
+            or any(cue in first_line for cue in policy_step_cues)
+        )
 
     @classmethod
     def _is_generic_graph_entity(cls, value: str) -> bool:

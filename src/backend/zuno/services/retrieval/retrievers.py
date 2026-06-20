@@ -18,14 +18,19 @@ class QueryProcessor:
     async def process(self, query: str) -> Any:
         normalized = str(query or "").strip()
         lower = normalized.lower()
+        seed_entities = GraphRetriever._extract_query_seeds(normalized)
+        relation_question = "关系" in normalized or any(
+            word in normalized.lower() for word in ["relation", "relationship", "graph"]
+        )
+        if not relation_question:
+            relation_question = GraphRetriever._has_graph_relation_signal(normalized)
         return {
             "original_query": query,
             "normalized_query": normalized,
             "rewritten_queries": [normalized] if normalized else [query],
             "intent_labels": [],
             "query_features": {
-                "relation_question": "关系" in normalized
-                or any(word in normalized.lower() for word in ["relation", "relationship", "graph"]),
+                "relation_question": relation_question,
                 "global_question": any(
                     phrase in normalized
                     for phrase in ["整体", "总体", "全局", "趋势", "主题", "高频风险", "主要有哪些"]
@@ -37,6 +42,7 @@ class QueryProcessor:
                 )
                 or any(word in lower for word in ["evidence", "citation", "supporting"]),
                 "keyword_heavy": _guess_keyword_heavy(normalized),
+                "seed_entity_count": len(seed_entities),
             },
             "route_hints": [],
         }
