@@ -271,6 +271,13 @@ Optional engineering-only follow-up cuts:
 - `local_graphrag_ablation`
 - `deep_route_ablation`
 
+Current checked result:
+
+- HotpotQA `limit=10` has now been run for
+  `standard_retrieval` vs `enhanced_retrieval`
+- current outcome is a baseline-preserving tie
+- next allowed expansion is HotpotQA `limit=20`
+
 ## Smoke Runner
 
 Phase D exposes:

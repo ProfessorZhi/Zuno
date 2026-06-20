@@ -79,6 +79,13 @@ Current runtime-alignment status:
 - `baseline_rag` remains compatible but deprecated
 - `local_graphrag` and `deep_graphrag` remain internal ablation labels
 
+Current product-comparison status:
+
+- HotpotQA `limit=10` product comparison has now been executed with
+  `standard_retrieval` vs `enhanced_retrieval`
+- current verdict is baseline-preserving tie, not clear enhanced win
+- next allowed sample expansion is HotpotQA `limit=20`
+
 ## What Each Internal Label Is Allowed To Claim
 
 ### `local_graphrag_ablation`
