@@ -1,44 +1,38 @@
 # Real Runtime Multihop Eval Results
 
-This audit records the current evidence for retrieval-only real runtime
-multihop evaluation.
+This audit records the current retrieval-only real runtime evidence for
+HotpotQA multihop evaluation after GraphRAG route activation calibration.
 
 ## Current Status
 
-Completed first retrieval-only real runtime smoke on June 20, 2026.
-
-Important profile note:
-
-- the first HotpotQA `limit=5` smoke used the older `qwen-plus` retrieval-only
-  profile
-- after `GraphRAG Route Activation Debug V1`, the default committed multihop
-  retrieval profile is aligned to `deepseek-v4-flash`
-- later reruns should therefore show the DeepSeek-aligned profile unless an
-  explicit backup profile is chosen
-
-Current closure status after rerun:
-
-- `baseline_rag` rerun succeeded with the DeepSeek-aligned profile
-- `local_graphrag` rerun still fell back on all 5 HotpotQA questions
-- `deep_graphrag` rerun still stayed on `standard_rag`
-- stop condition reached: do not expand to `limit=10` or `2Wiki` yet
-
-Executed dataset and limit:
+Current verified run set was executed on June 20, 2026 with:
 
 - dataset: `hotpotqa`
 - limit: `5`
 - top_k: `10`
-- model profile:
-  - conversation model: `qwen-plus`
-  - text embedding model: `text-embedding-v4`
-  - rerank model: `gte-rerank-v2`
+- route policy: `auto`
+- conversation model: `deepseek-v4-flash`
+- text embedding model: `text-embedding-v4`
+- rerank model: `gte-rerank-v2`
 
-## Real Runtime Results
+Calibration outcome:
+
+1. `baseline_rag` still runs cleanly on real runtime.
+2. `local_graphrag` no longer falls back `5/5`.
+3. `deep_graphrag` no longer stays `5/5` on `standard_rag`.
+4. The current HotpotQA smoke sample now activates graph routing on `4/5`
+   questions.
+5. The remaining miss is no longer "planner never tries graph". It is one
+   specific question that still fails graph-worthiness / graph-result
+   production.
+
+## Auto Route Results
 
 ### baseline_rag
 
 - execution mode: `real_runtime`
 - requested runtime mode: `rag`
+- route policy: `auto`
 - `Recall@2 = 0.70`
 - `Recall@5 = 1.00`
 - `Recall@10 = 1.00`
@@ -49,220 +43,160 @@ Executed dataset and limit:
 - `ChainRecall@10 = 1.00`
 - `FullChainHit@5 = 1.00`
 - `FullChainHit@10 = 1.00`
-- `avg_latency_ms = 11294.88`
-- `p50_latency_ms = 11816.87`
-- `p95_latency_ms = 13371.06`
-- `failure_count = 0`
+- `avg/p50/p95 latency = 12148.21 / 11776.82 / 13803.59 ms`
 - `fallback_count = 0`
-- verdict: real runtime baseline retrieval succeeded
+- `failure_count = 0`
+- route diagnostics:
+  - `graph_worthy_count = 4`
+  - `graph_result_count > 0 = 0`
+  - `graph_path_count > 0 = 0`
+  - `internal_route distribution = {standard_rag: 5}`
+  - `retriever_used distribution = {vector: 5}`
+
+Verdict:
+
+- baseline remains the clean control run
+- graph-worthiness can now be diagnosed even when the mode is standard RAG
+- baseline does not use graph retrieval, as expected
 
 ### local_graphrag
 
 - execution mode: `real_runtime`
 - requested runtime mode: `local_graphrag`
+- route policy: `auto`
 - `Recall@2 = 0.60`
-- `Recall@5 = 1.00`
+- `Recall@5 = 0.80`
 - `Recall@10 = 1.00`
-- `Precision@5 = 0.40`
+- `Precision@5 = 0.32`
 - `Precision@10 = 0.20`
-- `MRR@10 = 0.8667`
-- `ChainRecall@5 = 1.00`
+- `MRR@10 = 0.80`
+- `ChainRecall@5 = 0.80`
 - `ChainRecall@10 = 1.00`
-- `FullChainHit@5 = 1.00`
+- `FullChainHit@5 = 0.60`
 - `FullChainHit@10 = 1.00`
-- `avg_latency_ms = 22279.38`
-- `p50_latency_ms = 22183.11`
-- `p95_latency_ms = 24315.79`
+- `avg/p50/p95 latency = 15806.78 / 13326.67 / 23182.03 ms`
+- `fallback_count = 1`
 - `failure_count = 0`
-- `fallback_count = 5`
-- fallback reason: all five samples degraded with `graph_result_empty`
-- verdict: not a clean local GraphRAG win; current runtime path fell back for every sample
+- route diagnostics:
+  - `graph_worthy_count = 4`
+  - `graph_result_count > 0 = 4`
+  - `graph_path_count > 0 = 4`
+  - `internal_route distribution = {local_graphrag: 4, standard_rag: 1}`
+  - `fallback_reason distribution = {graph_result_empty: 1}`
+  - `retriever_used distribution = {vector: 5, graph: 4}`
+
+Per-question route summary:
+
+- `5a8b57f25542995d1e6f1371`: `local_graphrag`, `graph_worthy = true`,
+  `graph_result_count = 8`, `graph_path_count = 14`
+- `5a8c7595554299585d9e36b6`: `local_graphrag`, `graph_worthy = true`,
+  `graph_result_count = 7`, `graph_path_count = 10`
+- `5a85ea095542994775f606a8`: fallback to `standard_rag`,
+  `graph_worthy = false`, `graph_result_empty`
+- `5adbf0a255429947ff17385a`: `local_graphrag`, `graph_worthy = true`,
+  `graph_result_count = 9`, `graph_path_count = 24`
+- `5a8e3ea95542995a26add48d`: `local_graphrag`, `graph_worthy = true`,
+  `graph_result_count = 8`, `graph_path_count = 15`
+
+Verdict:
+
+- local GraphRAG is now genuinely activated on most of the sample
+- this is the first current proof that route calibration changed runtime
+  behavior instead of only adding diagnostics
+- there is still one remaining miss, so this is not yet a full clean sweep
 
 ### deep_graphrag
 
 - execution mode: `real_runtime`
 - requested runtime mode: `rag_graph_deep`
-- `Recall@2 = 0.70`
-- `Recall@5 = 1.00`
+- route policy: `auto`
+- `Recall@2 = 0.60`
+- `Recall@5 = 0.80`
 - `Recall@10 = 1.00`
-- `Precision@5 = 0.40`
+- `Precision@5 = 0.32`
 - `Precision@10 = 0.20`
 - `MRR@10 = 0.90`
-- `ChainRecall@5 = 1.00`
+- `ChainRecall@5 = 0.80`
 - `ChainRecall@10 = 1.00`
-- `FullChainHit@5 = 1.00`
+- `FullChainHit@5 = 0.60`
 - `FullChainHit@10 = 1.00`
-- `avg_latency_ms = 13772.39`
-- `p50_latency_ms = 13117.17`
-- `p95_latency_ms = 16221.32`
-- `failure_count = 0`
+- `avg/p50/p95 latency = 13595.57 / 13009.20 / 16923.67 ms`
 - `fallback_count = 0`
-- verdict: this run stayed on real runtime, but the internal route remained `standard_rag`
+- `failure_count = 0`
+- route diagnostics:
+  - `graph_worthy_count = 4`
+  - `graph_result_count > 0 = 4`
+  - `graph_path_count > 0 = 4`
+  - `internal_route distribution = {local_graphrag: 4, standard_rag: 1}`
+  - `fallback_reason distribution = {none: 5}`
+  - `retriever_used distribution = {vector: 5, graph: 4}`
+
+Verdict:
+
+- `deep_graphrag` no longer behaves like pure standard retrieval on all 5
+  samples
+- on this current sample it resolves to local graph routing for the same 4
+  graph-worthy questions
+- this is still not proof of community or drift quality because no community
+  route was activated in this smoke
 
 ## Interpretation
 
-Current evidence proves:
+Current evidence now proves:
 
-- retrieval-only real runtime eval is now executable
-- baseline RAG can run against normalized HotpotQA + built corpus without mocked
-  or stackless substitution
-- local GraphRAG currently degrades under this sample because graph retrieval did
-  not return usable graph evidence
-- deep GraphRAG did not fail, but these five HotpotQA questions did not trigger
-  a graph/community route, so this is not yet proof of deep GraphRAG quality
+- route activation calibration worked
+- real runtime graph routing is no longer blocked at planner level for most of
+  the sampled HotpotQA questions
+- local graph retrieval can return entities, graph documents, and graph paths on
+  current eval artifacts
+- `deep_graphrag` can enter graph-backed routing on the same subset of
+  graph-worthy questions
 
-Current evidence does **not** prove:
+Current evidence does not yet prove:
 
-- Community GraphRAG quality
-- DRIFT-like quality
-- stable local GraphRAG gains on benchmark multihop questions
-- cross-dataset results for 2Wiki or MuSiQue
+- community-global retrieval quality
+- drift-like retrieval quality
+- stable improvement over baseline on broader multihop samples
+- cross-dataset behavior for 2Wiki or MuSiQue
 
-## Blockers And Gaps
+## Remaining Blocker
 
-- `twowiki` normalized sample50 file was not present in the current workspace at
-  run time, so 2Wiki real runtime execution was not started in this round.
-- `local_graphrag` needs follow-up debugging on why graph retrieval returns
-  empty graph results for all five sampled HotpotQA questions.
-- `deep_graphrag` needs a second-round audit with questions that actually
-  trigger relation/global routing, otherwise it mostly behaves like baseline
-  standard retrieval.
+One question still fails:
 
-## Graph Index Smoke
+- `5a85ea095542994775f606a8`
+- `What science fantasy young adult series, told in first person, has a set of companion books narrating the stories of enslaved worlds and alien species?`
 
-HotpotQA `limit=5` graph smoke now shows:
+Current behavior:
 
-- `graph_index_missing = true` for persisted eval runtime reuse
-- local eval graph artifacts rebuilt from corpus still contain:
-  - `entity_count = 246`
-  - `relation_count = 196`
-  - `chunk_backlink_count = 196`
-- all 5 sampled questions still have:
-  - `graph_worthy = false`
-  - `path_count = 0`
+- `graph_worthy = false`
+- `internal_route = standard_rag`
+- `local_graphrag` fallback reason = `graph_result_empty`
 
-Interpretation:
+Root-cause summary:
 
-- the current blocker is not “the corpus cannot produce entities or relations”
-- the current blocker is that the sampled HotpotQA questions do not activate a
-  usable graph route under current query gating and planner policy
-
-## DeepSeek-Aligned Rerun
-
-Rerun profile:
-
-- conversation model: `deepseek-v4-flash`
-- text embedding model: `text-embedding-v4`
-- rerank model: `gte-rerank-v2`
-
-### baseline_rag rerun
-
-- `Recall@2 = 0.70`
-- `Recall@5 = 1.00`
-- `Recall@10 = 1.00`
-- `Precision@5 = 0.40`
-- `Precision@10 = 0.20`
-- `MRR@10 = 0.90`
-- `ChainRecall@5 = 1.00`
-- `ChainRecall@10 = 1.00`
-- `FullChainHit@5 = 1.00`
-- `FullChainHit@10 = 1.00`
-- `avg/p50/p95 latency = 15135.67 / 14856.13 / 17286.62 ms`
-- `fallback_count = 0`
-- `failure_count = 0`
-- route diagnostics:
-  - `requested_mode = rag`
-  - `internal_route = standard_rag`
-  - `retriever_used = [vector]`
-
-### local_graphrag rerun
-
-- `Recall@2 = 0.60`
-- `Recall@5 = 1.00`
-- `Recall@10 = 1.00`
-- `Precision@5 = 0.40`
-- `Precision@10 = 0.20`
-- `MRR@10 = 0.8667`
-- `ChainRecall@5 = 1.00`
-- `ChainRecall@10 = 1.00`
-- `FullChainHit@5 = 1.00`
-- `FullChainHit@10 = 1.00`
-- `avg/p50/p95 latency = 23251.55 / 21390.44 / 27038.09 ms`
-- `fallback_count = 5`
-- `failure_count = 0`
-- route diagnostics:
-  - `requested_mode = local_graphrag`
-  - `resolved_mode = hybrid_rag`
-  - `internal_route = standard_rag`
-  - `retriever_used = [vector]`
-  - `graph_result_count = 0`
-  - `graph_path_count = 0`
-  - `fallback_reason = graph_result_empty`
-
-### deep_graphrag rerun
-
-- `Recall@2 = 0.70`
-- `Recall@5 = 1.00`
-- `Recall@10 = 1.00`
-- `Precision@5 = 0.40`
-- `Precision@10 = 0.20`
-- `MRR@10 = 0.90`
-- `ChainRecall@5 = 1.00`
-- `ChainRecall@10 = 1.00`
-- `FullChainHit@5 = 1.00`
-- `FullChainHit@10 = 1.00`
-- `avg/p50/p95 latency = 14130.61 / 13716.73 / 16670.16 ms`
-- `fallback_count = 0`
-- `failure_count = 0`
-- route diagnostics:
-  - `requested_mode = rag_graph_deep`
-  - `resolved_mode = rag_graph_deep`
-  - `internal_route = standard_rag`
-  - `retriever_used = [vector]`
-  - `graph_result_count = 0`
-  - `graph_path_count = 0`
-  - `community_report_count = 0`
-  - `drift_followup_count = 0`
+- this is no longer a global route-activation failure
+- this is a narrower descriptive bridge-question miss
+- the next tuning target is graph-worthiness / seed quality for descriptive
+  parent-series questions
 
 ## Decision
 
-Do **not** expand to:
+Current stop condition from the earlier debug phase has been cleared.
 
-- HotpotQA `limit=10`
-- 2Wiki
-- MuSiQue
+New decision:
 
-Reason:
+- allowed next step: expand to HotpotQA `limit=10`
+- still hold: `2Wiki` and `MuSiQue`
 
-- `local_graphrag` still falls back `5/5`
-- `deep_graphrag` still does not activate graph/community routing on this sample
+Why:
+
+- `local_graphrag` is no longer fallback `5/5`
+- `deep_graphrag` is no longer `standard_rag` `5/5`
+- but community and drift routes are still unproven, so broader dataset
+  expansion is premature
 
 ## Required Reading
 
 The scoring contract is defined in:
 
 - [Real Runtime Multihop Eval Standards](./real-runtime-multihop-eval-standards.md)
-
-## Reporting Rules
-
-When a run succeeds, this audit must record:
-
-- dataset
-- limit
-- mode
-- `Recall@2/5/10`
-- `Precision@5/10`
-- `MRR@10`
-- `ChainRecall@5/10`
-- `FullChainHit@5/10`
-- `avg/p50/p95 latency`
-- `failure_count`
-- `fallback_count`
-- whether the run used real GraphRAG or degraded
-
-When a run is blocked, this audit must record:
-
-- blocker
-- failure point
-- completed parts
-- next fix

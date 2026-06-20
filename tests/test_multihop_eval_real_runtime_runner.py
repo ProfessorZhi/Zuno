@@ -56,9 +56,12 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
 
     runtime_result = {
         "metadata": {
+            "route_policy": "auto",
             "requested_mode": "local_graphrag",
             "resolved_mode": "hybrid_rag",
             "internal_route": "standard_rag",
+            "seed_entities": ["Scott Derrickson", "Ed Wood"],
+            "graph_worthy": True,
             "retriever_runs": [
                 {"source": "vector"},
                 {"source": "graph"},
@@ -86,10 +89,13 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
     assert diagnostics["requested_mode"] == "local_graphrag"
     assert diagnostics["resolved_mode"] == "hybrid_rag"
     assert diagnostics["internal_route"] == "standard_rag"
+    assert diagnostics["route_policy"] == "auto"
     assert diagnostics["retriever_used"] == ["vector", "graph"]
+    assert diagnostics["graph_worthy"] is True
     assert diagnostics["graph_result_count"] == 1
     assert diagnostics["graph_path_count"] == 2
     assert diagnostics["community_report_count"] == 1
     assert diagnostics["drift_followup_count"] == 1
-    assert diagnostics["seed_entities"] is None
-    assert "seed_entities not exposed by runtime metadata" in notes
+    assert diagnostics["seed_entities"] == ["Scott Derrickson", "Ed Wood"]
+    assert diagnostics["seed_entity_count"] == 2
+    assert "seed_entities not exposed by runtime metadata" not in notes

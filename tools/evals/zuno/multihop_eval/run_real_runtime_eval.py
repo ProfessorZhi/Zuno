@@ -280,6 +280,7 @@ def extract_route_diagnostics(
         "requested_mode": metadata.get("requested_mode"),
         "resolved_mode": metadata.get("resolved_mode"),
         "internal_route": metadata.get("internal_route"),
+        "graph_worthy": metadata.get("graph_worthy"),
         "retriever_used": retriever_used or None,
         "fallback": fallback,
         "fallback_reason": fallback_reason,

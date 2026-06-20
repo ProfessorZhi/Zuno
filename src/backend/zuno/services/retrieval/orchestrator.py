@@ -242,6 +242,14 @@ class RetrievalOrchestrator:
             processed_query.query_features["global_question"] = True
             processed_query.query_features["evidence_required"] = True
             processed_query.route_hints.append("force_deep_eval")
+        seed_entities = None
+        graph_worthy = None
+        seed_extractor = getattr(self.graph_retriever, "_extract_query_seeds", None)
+        graph_worthy_checker = getattr(self.graph_retriever, "_is_graph_worthy_query", None)
+        if callable(seed_extractor):
+            seed_entities = list(seed_extractor(query))
+        if callable(graph_worthy_checker):
+            graph_worthy = bool(graph_worthy_checker(query, seed_entities or []))
         request = RetrievalRequest(
             query=query,
             knowledge_ids=knowledge_ids,
@@ -398,10 +406,13 @@ class RetrievalOrchestrator:
                 "query_features": dict(processed_query.query_features),
                 "route_hints": list(processed_query.route_hints),
             },
+            "seed_entities": seed_entities,
+            "graph_worthy": graph_worthy,
         }
 
     async def run(self, mode: str, query: str, knowledge_ids: list[str], retrieval_options: dict | None = None) -> dict:
         retrieval_options = retrieval_options or {}
+        route_policy = str(retrieval_options.get("route_policy") or "auto").strip().lower()
         normalized_mode = normalize_retrieval_mode(mode)
         if retrieval_options.get("needs_query_rewrite", True):
             candidate_queries = await self.query_expander.expand(query)
@@ -480,6 +491,8 @@ class RetrievalOrchestrator:
             "route_trace": dict(final_plan.get("route_trace") or {}),
             "resolved_profile": final_plan.get("resolved_profile"),
             "enabled_retrievers": list(final_plan.get("enabled_retrievers") or []),
+            "seed_entities": final_pass.get("seed_entities"),
+            "graph_worthy": final_pass.get("graph_worthy"),
             "used_vector": any(
                 run.get("source") == "vector" for run in (final_pass.get("retriever_runs") or [])
             ),
