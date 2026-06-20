@@ -14,8 +14,9 @@ This directory keeps the stable architecture definitions that should outlive any
 8. [Platform Evolution And Future Direction](platform-evolution-and-future-direction.md)
 9. [Knowledge Product Boundary](knowledge-product-boundary.md)
 10. [Deep GraphRAG V1 Runtime](deep-graphrag-v1-runtime.md)
-11. [Domain Pack Builder](domain-pack-builder.md)
-12. [Knowledge Config Impact And Reindex](knowledge-config-impact-and-reindex.md)
+11. [Enhanced Retrieval Orchestrator Contract](enhanced-retrieval-orchestrator-contract.md)
+12. [Domain Pack Builder](domain-pack-builder.md)
+13. [Knowledge Config Impact And Reindex](knowledge-config-impact-and-reindex.md)
 
 ## What Belongs Here
 
