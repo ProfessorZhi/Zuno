@@ -19,6 +19,157 @@ Runtime alignment note:
   `enhanced_retrieval`
 - `baseline_rag` remains supported only as a deprecated historical alias
 
+## Product Retrieval Comparison: HotpotQA Limit=10
+
+Current verified product-mode run set was executed on June 20, 2026 with:
+
+- dataset: `hotpotqa`
+- limit: `10`
+- top_k: `10`
+- route policy: `auto`
+- product comparison:
+  - `standard_retrieval`
+  - `enhanced_retrieval`
+- conversation model: `deepseek-v4-flash`
+- text embedding model: `text-embedding-v4`
+- rerank model: `gte-rerank-v2`
+
+### standard_retrieval limit=10
+
+- `Recall@2 = 0.90`
+- `Recall@5 = 1.00`
+- `Recall@10 = 1.00`
+- `Precision@5 = 0.40`
+- `Precision@10 = 0.20`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 1.00`
+- `ChainRecall@10 = 1.00`
+- `FullChainHit@5 = 1.00`
+- `FullChainHit@10 = 1.00`
+- `avg/p50/p95 latency = 12266.23 / 12299.34 / 13362.47 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+- route diagnostics:
+  - `retriever_used distribution = {vector: 10}`
+  - `vector_used = 10/10`
+  - `bm25_available = 0/10`
+  - `bm25_used = 0/10`
+  - `bm25_fallback_reason = bm25_backend_unavailable`
+  - `fusion_used = 10/10`
+  - `rerank_used = 10/10`
+  - `internal_route distribution = {standard_rag: 10}`
+
+### enhanced_retrieval limit=10
+
+- `Recall@2 = 0.90`
+- `Recall@5 = 1.00`
+- `Recall@10 = 1.00`
+- `Precision@5 = 0.40`
+- `Precision@10 = 0.20`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 1.00`
+- `ChainRecall@10 = 1.00`
+- `FullChainHit@5 = 1.00`
+- `FullChainHit@10 = 1.00`
+- `avg/p50/p95 latency = 11328.32 / 11405.82 / 13185.05 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+- route diagnostics:
+  - `standard_floor_used = 10/10`
+  - `graph_route_attempted = 4/10`
+  - `graph_route_used = 4/10`
+  - `graph_result_count > 0 = 4`
+  - `graph_path_count > 0 = 4`
+  - `requery_available = 10/10`
+  - `requery_used = 0/10`
+  - `community_available = 0/10`
+  - `community_used = 0/10`
+  - `drift_available = 0/10`
+  - `drift_used = 0/10`
+  - `confidence_gated_fusion_used = 10/10`
+  - `final_rerank_used = 10/10`
+  - `route_selection_reason distribution = {relation_question: 4, standard_question: 6}`
+  - `internal_route distribution = {local_graphrag: 4, standard_rag: 6}`
+  - `retriever_used distribution = {vector: 10, graph: 4}`
+
+## Per-question Delta Summary
+
+### enhanced_helps cases
+
+No product-level help case was observed on this `limit=10` sample.
+
+That means enhanced retrieval did not beat standard retrieval on:
+
+- `Recall@2`
+- `Recall@5`
+- `MRR@10`
+- `FullChainHit@3`
+
+### enhanced_hurts cases
+
+No hurt case was observed.
+
+Specifically:
+
+- no standard top5 gold document was pushed out by enhanced retrieval
+- no `MRR@10` drop was observed
+- no `Recall@5` drop was observed
+
+### enhanced_ties cases
+
+All ten sampled questions tied exactly on the tracked retrieval metrics.
+
+Four tied questions still activated the local graph route:
+
+- `5a8b57f25542995d1e6f1371`
+- `5a8c7595554299585d9e36b6`
+- `5adbf0a255429947ff17385a`
+- `5a8e3ea95542995a26add48d`
+
+The remaining six stayed on the standard floor without metric change.
+
+### enhanced_fallback cases
+
+No enhanced fallback case was observed on this run:
+
+- `fallback_count = 0`
+
+## Product Comparison Decision
+
+Decision rules:
+
+1. `enhanced_retrieval Recall@5 >= standard_retrieval Recall@5`
+2. `enhanced_retrieval MRR@10 >= standard_retrieval MRR@10`, or stronger early-hit gain
+3. `enhanced_retrieval fallback_rate <= 30%`
+4. `enhanced_retrieval failure_count = 0`
+5. `enhanced_retrieval p95 latency <= standard_retrieval p95 * 2.2`
+6. `enhanced_hurts cases <= 2`
+
+Result:
+
+1. passed
+2. passed
+3. passed
+4. passed
+5. passed
+6. passed
+
+Verdict:
+
+- `enhanced_retrieval` is baseline-preserving on HotpotQA `limit=10`
+- it is not better than `standard_retrieval` on this sample
+- it is safe enough to continue to HotpotQA `limit=20`
+- it is still too early to skip directly to `2Wiki` or `MuSiQue`
+
+## Optional Ablation Status
+
+Optional ablation smoke was not executed in this round.
+
+Reason:
+
+- product comparison already answered the main decision question
+- no additional runtime change was needed to explain this sample
+
 ## Current Status
 
 Current verified quality-optimization rerun set was executed on June 20, 2026
