@@ -1,5 +1,6 @@
 import json
 import sys
+import zipfile
 from pathlib import Path
 
 
@@ -119,7 +120,32 @@ def test_downloader_resolves_expected_dataset_sources():
 
     assert hotpot.raw_name == "hotpot_dev_distractor_v1.json"
     assert "curtis.ml.cmu.edu/datasets/hotpot" in hotpot.url
+    assert hotpot.fallback_urls
     assert twowiki.raw_name == "data_ids_april7.zip"
     assert "ms2m13252h6xubs" in twowiki.url
     assert musique.raw_name == "musique_v1.0.zip"
     assert musique.gdown_id == "1tGdADlNjWFaHLeZZGShh2IRcpO6Lv24h"
+    assert any("confirm=t" in url for url in musique.fallback_urls)
+
+
+def test_archive_reader_can_read_named_member_without_extracting(tmp_path):
+    from tools.evals.zuno.multihop_eval.download_datasets import _read_archive_member
+
+    archive_path = tmp_path / "sample.zip"
+    member_name = "data/dev.json"
+    payload = [{"id": "x", "question": "q", "answer": "a", "context": [], "supporting_facts": []}]
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr(member_name, json.dumps(payload))
+
+    rows = _read_archive_member(archive_path, member_name)
+    assert rows[0]["id"] == "x"
+
+
+def test_html_download_detection_flags_google_drive_warning_page(tmp_path):
+    from tools.evals.zuno.multihop_eval.download_datasets import _looks_like_html, _is_valid_archive
+
+    html_path = tmp_path / "warning.html"
+    html_path.write_text("<!DOCTYPE html><html><body>warning</body></html>", encoding="utf-8")
+
+    assert _looks_like_html(html_path) is True
+    assert _is_valid_archive(html_path) is False

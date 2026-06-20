@@ -85,9 +85,14 @@ def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
 
 def read_json_or_jsonl(path: Path) -> list[dict[str, Any]]:
     text = path.read_text(encoding="utf-8").strip()
+    return read_json_or_jsonl_text(text=text, source=str(path))
+
+
+def read_json_or_jsonl_text(*, text: str, source: str = "<memory>") -> list[dict[str, Any]]:
+    text = str(text or "").strip()
     if not text:
         return []
-    if path.suffix == ".jsonl":
+    if source.endswith(".jsonl"):
         return [json.loads(line) for line in text.splitlines() if line.strip()]
     payload = json.loads(text)
     if isinstance(payload, list):
@@ -96,5 +101,4 @@ def read_json_or_jsonl(path: Path) -> list[dict[str, Any]]:
         for key in ("data", "examples", "records"):
             if isinstance(payload.get(key), list):
                 return payload[key]
-    raise ValueError(f"unsupported dataset payload shape: {path}")
-
+    raise ValueError(f"unsupported dataset payload shape: {source}")
