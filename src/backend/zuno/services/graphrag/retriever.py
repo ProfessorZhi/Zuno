@@ -1,6 +1,7 @@
 import re
 
 from zuno.services.graphrag.client import Neo4jClient
+from zuno.services.graphrag.entity_alias import resolve_alias
 from zuno.services.rag.vector_db import milvus_client
 
 
@@ -321,15 +322,26 @@ class GraphRetriever:
                 add_seed(cue, "query")
 
         documents = list((candidate_context or {}).get("documents") or [])
+        known_entities = []
         for document in documents:
             title = str(document.get("title") or "").strip()
             file_name = str(document.get("file_name") or "").strip()
             if title:
-                add_seed(title, "baseline_title")
+                known_entities.append(title)
             if file_name and file_name != title:
-                add_seed(file_name, "baseline_file")
+                known_entities.append(file_name)
+        for document in documents:
+            title = str(document.get("title") or "").strip()
+            file_name = str(document.get("file_name") or "").strip()
+            if title:
+                alias_match = resolve_alias(title, known_entities)
+                add_seed(str(alias_match["resolved_to"]), "alias" if alias_match["matched"] and alias_match["resolved_to"] != title else "baseline_title")
+            if file_name and file_name != title:
+                alias_match = resolve_alias(file_name, known_entities)
+                add_seed(str(alias_match["resolved_to"]), "alias" if alias_match["matched"] and alias_match["resolved_to"] != file_name else "baseline_file")
             for mention in document.get("entity_mentions") or []:
-                add_seed(str(mention or ""), "baseline_entity")
+                alias_match = resolve_alias(str(mention or ""), known_entities)
+                add_seed(str(alias_match["resolved_to"]), "alias" if alias_match["matched"] and alias_match["resolved_to"] != str(mention or "") else "baseline_entity")
             if len(ordered) >= max_seed_entities:
                 break
         for deferred in deferred_query_terms:
