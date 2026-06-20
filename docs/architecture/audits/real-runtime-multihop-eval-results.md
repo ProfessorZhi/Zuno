@@ -1,11 +1,12 @@
 # Real Runtime Multihop Eval Results
 
 This audit records the current retrieval-only real runtime evidence for
-HotpotQA multihop evaluation after GraphRAG route activation calibration.
+HotpotQA multihop evaluation after GraphRAG retrieval quality optimization.
 
 ## Current Status
 
-Current verified run set was executed on June 20, 2026 with:
+Current verified quality-optimization rerun set was executed on June 20, 2026
+with:
 
 - dataset: `hotpotqa`
 - limit: `5`
@@ -15,16 +16,19 @@ Current verified run set was executed on June 20, 2026 with:
 - text embedding model: `text-embedding-v4`
 - rerank model: `gte-rerank-v2`
 
-Calibration outcome:
+Quality optimization outcome:
 
 1. `baseline_rag` still runs cleanly on real runtime.
-2. `local_graphrag` no longer falls back `5/5`.
-3. `deep_graphrag` no longer stays `5/5` on `standard_rag`.
-4. The current HotpotQA smoke sample now activates graph routing on `4/5`
-   questions.
-5. The remaining miss is no longer "planner never tries graph". It is one
-   specific question that still fails graph-worthiness / graph-result
-   production.
+2. `local_graphrag` now matches `baseline_rag` on:
+   - `Recall@2`
+   - `Recall@5`
+   - `Recall@10`
+   - `MRR@10`
+   - `ChainRecall@5`
+   - `FullChainHit@5`
+3. `local_graphrag` still keeps `fallback_count = 1`, but no longer underperforms baseline on the sampled metrics.
+4. `deep_graphrag` also matches baseline on the same sampled metrics while still activating local graph routing on `4/5` questions.
+5. Graph retrieval quality is now baseline-preserving on this sample, with only residual noisy promotions in some top5/top10 positions.
 
 ## Auto Route Results
 
@@ -33,17 +37,17 @@ Calibration outcome:
 - execution mode: `real_runtime`
 - requested runtime mode: `rag`
 - route policy: `auto`
-- `Recall@2 = 0.70`
+- `Recall@2 = 0.90`
 - `Recall@5 = 1.00`
 - `Recall@10 = 1.00`
 - `Precision@5 = 0.40`
 - `Precision@10 = 0.20`
-- `MRR@10 = 0.90`
+- `MRR@10 = 1.00`
 - `ChainRecall@5 = 1.00`
 - `ChainRecall@10 = 1.00`
 - `FullChainHit@5 = 1.00`
 - `FullChainHit@10 = 1.00`
-- `avg/p50/p95 latency = 12148.21 / 11776.82 / 13803.59 ms`
+- `avg/p50/p95 latency = 16064.76 / 15440.79 / 19005.90 ms`
 - `fallback_count = 0`
 - `failure_count = 0`
 - route diagnostics:
@@ -64,17 +68,17 @@ Verdict:
 - execution mode: `real_runtime`
 - requested runtime mode: `local_graphrag`
 - route policy: `auto`
-- `Recall@2 = 0.60`
-- `Recall@5 = 0.80`
+- `Recall@2 = 0.90`
+- `Recall@5 = 1.00`
 - `Recall@10 = 1.00`
-- `Precision@5 = 0.32`
+- `Precision@5 = 0.40`
 - `Precision@10 = 0.20`
-- `MRR@10 = 0.80`
-- `ChainRecall@5 = 0.80`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 1.00`
 - `ChainRecall@10 = 1.00`
-- `FullChainHit@5 = 0.60`
+- `FullChainHit@5 = 1.00`
 - `FullChainHit@10 = 1.00`
-- `avg/p50/p95 latency = 15806.78 / 13326.67 / 23182.03 ms`
+- `avg/p50/p95 latency = 18503.86 / 15174.18 / 26616.99 ms`
 - `fallback_count = 1`
 - `failure_count = 0`
 - route diagnostics:
@@ -88,39 +92,41 @@ Verdict:
 Per-question route summary:
 
 - `5a8b57f25542995d1e6f1371`: `local_graphrag`, `graph_worthy = true`,
-  `graph_result_count = 8`, `graph_path_count = 14`
+  `graph_result_count = 8`, `graph_path_count = 14`, both gold docs remain in top5
 - `5a8c7595554299585d9e36b6`: `local_graphrag`, `graph_worthy = true`,
-  `graph_result_count = 7`, `graph_path_count = 10`
+  `graph_result_count = 9`, `graph_path_count = 17`, both gold docs remain in top5
 - `5a85ea095542994775f606a8`: fallback to `standard_rag`,
   `graph_worthy = false`, `graph_result_empty`
 - `5adbf0a255429947ff17385a`: `local_graphrag`, `graph_worthy = true`,
-  `graph_result_count = 9`, `graph_path_count = 24`
+  `graph_result_count = 9`, `graph_path_count = 24`, both gold docs remain in top5
 - `5a8e3ea95542995a26add48d`: `local_graphrag`, `graph_worthy = true`,
-  `graph_result_count = 8`, `graph_path_count = 15`
+  `graph_result_count = 13`, `graph_path_count = 18`, both gold docs remain in top5
 
 Verdict:
 
-- local GraphRAG is now genuinely activated on most of the sample
-- this is the first current proof that route calibration changed runtime
-  behavior instead of only adding diagnostics
-- there is still one remaining miss, so this is not yet a full clean sweep
+- local GraphRAG is now both genuinely activated and baseline-preserving on this
+  sample
+- this is the first current proof that graph retrieval quality no longer breaks
+  the already-strong baseline top5 on the measured sample
+- the remaining miss is still one descriptive bridge question that falls back
+  to standard retrieval
 
 ### deep_graphrag
 
 - execution mode: `real_runtime`
 - requested runtime mode: `rag_graph_deep`
 - route policy: `auto`
-- `Recall@2 = 0.60`
-- `Recall@5 = 0.80`
+- `Recall@2 = 0.90`
+- `Recall@5 = 1.00`
 - `Recall@10 = 1.00`
-- `Precision@5 = 0.32`
+- `Precision@5 = 0.40`
 - `Precision@10 = 0.20`
-- `MRR@10 = 0.90`
-- `ChainRecall@5 = 0.80`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 1.00`
 - `ChainRecall@10 = 1.00`
-- `FullChainHit@5 = 0.60`
+- `FullChainHit@5 = 1.00`
 - `FullChainHit@10 = 1.00`
-- `avg/p50/p95 latency = 13595.57 / 13009.20 / 16923.67 ms`
+- `avg/p50/p95 latency = 14576.69 / 14141.65 / 18072.44 ms`
 - `fallback_count = 0`
 - `failure_count = 0`
 - route diagnostics:
@@ -151,6 +157,8 @@ Current evidence now proves:
   current eval artifacts
 - `deep_graphrag` can enter graph-backed routing on the same subset of
   graph-worthy questions
+- baseline-preserving fusion plus seed/alias/path improvements can recover the
+  lost `Recall@5` and `MRR@10` on this sample
 
 Current evidence does not yet prove:
 
@@ -161,7 +169,7 @@ Current evidence does not yet prove:
 
 ## Remaining Blocker
 
-One question still fails:
+One question still fails as a graph route:
 
 - `5a85ea095542994775f606a8`
 - `What science fantasy young adult series, told in first person, has a set of companion books narrating the stories of enslaved worlds and alien species?`
@@ -181,19 +189,33 @@ Root-cause summary:
 
 ## Decision
 
-Current stop condition from the earlier debug phase has been cleared.
+Current success conditions for this phase:
 
-New decision:
+- `local_graphrag fallback_count <= 1`: passed
+- `local_graphrag Recall@5 >= baseline Recall@5`: passed
+- `local_graphrag MRR@10 >= baseline MRR@10` or `Recall@2 > baseline`: passed
+- `graph_result_count > 0` on at least 4 questions: passed
+- `p95 latency <= 2x baseline`: passed
 
-- allowed next step: expand to HotpotQA `limit=10`
-- still hold: `2Wiki` and `MuSiQue`
+Decision:
 
-Why:
+- yes, the next allowed step is HotpotQA `limit=10`
+- still do not expand to `2Wiki` or `MuSiQue` yet
 
-- `local_graphrag` is no longer fallback `5/5`
-- `deep_graphrag` is no longer `standard_rag` `5/5`
-- but community and drift routes are still unproven, so broader dataset
-  expansion is premature
+## Residual Graph-hurts Cases
+
+Current sampled metrics no longer show recall or MRR harm versus baseline.
+
+Residual quality risks still visible in ranking:
+
+- `5a8b57f25542995d1e6f1371`
+  - graph promotes `Sinister (film)` into local top5
+  - but it no longer pushes out gold support
+- `5a8e3ea95542995a26add48d`
+  - graph promotes `Great Eastern Conventions` into local top5
+  - but both gold docs remain in place
+
+These are now noisy promotions, not metric-breaking failures.
 
 ## Required Reading
 
