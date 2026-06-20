@@ -284,8 +284,13 @@ Current follow-up result:
   `standard_retrieval` vs `enhanced_retrieval`
 - current outcome remains baseline-preserving, but enhanced is still not
   superior
-- recommended next move is HotpotQA hard-subset targeted tuning, then
-  `limit=50`
+- HotpotQA hard-subset targeted tuning has now been completed
+- HotpotQA `limit=50` has now also been run for
+  `standard_retrieval` vs `enhanced_retrieval`
+- current outcome at `limit=50` remains baseline-preserving, but enhanced is
+  still not superior
+- recommended next move is HotpotQA missed-opportunity tuning; do not move to
+  `2Wiki` yet
 
 ## Smoke Runner
 

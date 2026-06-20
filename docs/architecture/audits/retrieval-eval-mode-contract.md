@@ -87,8 +87,12 @@ Current product-comparison status:
 - next allowed sample expansion is HotpotQA `limit=20`
 - HotpotQA `limit=20` has now also been executed
 - current verdict is still baseline-preserving, but not superior
-- immediate next move should favor HotpotQA hard-subset tuning rather than
-  direct `2Wiki` expansion
+- HotpotQA hard-subset tuning has now been completed
+- HotpotQA `limit=50` has now also been executed
+- current verdict at `limit=50` remains baseline-preserving, but still not
+  superior
+- immediate next move should stay on HotpotQA missed-opportunity tuning rather
+  than direct `2Wiki` expansion
 
 ## What Each Internal Label Is Allowed To Claim
 

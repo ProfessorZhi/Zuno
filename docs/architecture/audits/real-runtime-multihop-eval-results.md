@@ -379,6 +379,300 @@ Recommended next step:
 - keep a follow-up audit on whether enhanced can create genuine help cases
 - keep `2Wiki small smoke` as a later option, not the immediate next move
 
+## Product Retrieval Comparison: HotpotQA Limit=50
+
+Current verified product-mode `limit=50` run set was executed on June 21, 2026
+with:
+
+- dataset: `hotpotqa`
+- limit: `50`
+- top_k: `10`
+- route policy: `auto`
+- product comparison:
+  - `standard_retrieval`
+  - `enhanced_retrieval`
+- conversation model: `deepseek-v4-flash`
+- text embedding model: `text-embedding-v4`
+- rerank model: `gte-rerank-v2`
+
+### standard_retrieval limit=50
+
+- `Recall@2 = 0.85`
+- `Recall@5 = 0.97`
+- `Recall@10 = 0.97`
+- `Precision@5 = 0.388`
+- `Precision@10 = 0.194`
+- `MRR@10 = 1.00`
+- derived `ChainRecall@2 = 0.85`
+- derived `ChainRecall@3 = 0.93`
+- `ChainRecall@5 = 0.97`
+- `ChainRecall@10 = 0.97`
+- derived `FullChainHit@2 = 0.70`
+- derived `FullChainHit@3 = 0.86`
+- `FullChainHit@5 = 0.94`
+- `FullChainHit@10 = 0.94`
+- `avg/p50/p95 latency = 12788.60 / 12434.31 / 15647.17 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+- route diagnostics:
+  - `retriever_used distribution = {vector: 50}`
+  - `vector_used = 50/50`
+  - `bm25_available = 0/50`
+  - `bm25_used = 0/50`
+  - `bm25_fallback_reason = bm25_backend_unavailable`
+  - `fusion_used = 50/50`
+  - `rerank_used = 50/50`
+  - `internal_route distribution = {standard_rag: 50}`
+
+### enhanced_retrieval limit=50
+
+- `Recall@2 = 0.84`
+- `Recall@5 = 0.97`
+- `Recall@10 = 0.97`
+- `Precision@5 = 0.388`
+- `Precision@10 = 0.194`
+- `MRR@10 = 1.00`
+- derived `ChainRecall@2 = 0.84`
+- derived `ChainRecall@3 = 0.93`
+- `ChainRecall@5 = 0.97`
+- `ChainRecall@10 = 0.97`
+- derived `FullChainHit@2 = 0.68`
+- derived `FullChainHit@3 = 0.86`
+- `FullChainHit@5 = 0.94`
+- `FullChainHit@10 = 0.94`
+- `avg/p50/p95 latency = 12586.02 / 11964.68 / 16617.77 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+- route diagnostics:
+  - `standard_floor_used = 50/50`
+  - `graph_route_attempted = 5/50`
+  - `graph_route_used = 5/50`
+  - `graph_result_count > 0 = 5`
+  - `graph_path_count > 0 = 5`
+  - `requery_available = 50/50`
+  - `requery_used = 0/50`
+  - `community_available = 0/50`
+  - `community_used = 0/50`
+  - `drift_available = 0/50`
+  - `drift_used = 0/50`
+  - `confidence_gated_fusion_used = 50/50`
+  - `final_rerank_used = 50/50`
+  - `route_selection_reason distribution = {relation_question: 5, standard_question: 45}`
+  - `internal_route distribution = {local_graphrag: 5, standard_rag: 45}`
+  - `retriever_used distribution = {vector: 50, graph: 5}`
+
+## Per-question Delta Summary: Limit=50
+
+### enhanced_helps cases
+
+One help case was observed:
+
+1. `5ae4a3265542995ad6573de5`
+   - question: `Hayden is a singer-songwriter from Canada, but where does Buck-Tick hail from?`
+   - standard top5:
+     - `Buck-Tick`
+     - `Atsushi Sakurai`
+     - `Masami Tsuchiya`
+     - `Kyo (musician)`
+     - `Mick (DJ)`
+   - enhanced top5:
+     - `Buck-Tick`
+     - `Hayden (musician)`
+     - `Atsushi Sakurai`
+     - `Masami Tsuchiya`
+     - `Skyscraper National Park`
+   - effect:
+     - `Recall@2: 0.5 -> 1.0`
+     - `Recall@5: 0.5 -> 1.0`
+     - `FullChainHit@2: 0 -> 1`
+     - `FullChainHit@3: 0 -> 1`
+   - route:
+     - `internal_route = standard_rag`
+     - `graph_used = false`
+   - likely reason:
+     - enhanced product path improved baseline retrieval ordering even without
+       graph activation
+
+### enhanced_hurts cases
+
+Two hurt cases were observed:
+
+1. `5a828c8355429966c78a6a50`
+   - question: `Kaiser Ventures corporation was founded by an American industrialist who became known as the father of modern American shipbuilding?`
+   - standard top5:
+     - `Henry J. Kaiser`
+     - `Kaiser Ventures`
+     - `Kaiser Shipyards`
+     - `Edgar Kaiser Sr.`
+     - `Edgar Kaiser Jr.`
+   - enhanced top5:
+     - `Henry J. Kaiser`
+     - `Cho Kyuhyun`
+     - `Kaiser Ventures`
+     - `Method Man`
+     - `Kaiser Shipyards`
+   - effect:
+     - `FullChainHit@2: 1 -> 0`
+     - `FullChainHit@3: 1 -> 1`
+   - route:
+     - `internal_route = local_graphrag`
+     - `graph_used = true`
+   - likely reason:
+     - graph route introduced noisy rank-2 distraction before the second gold
+       document
+
+2. `5a7571135542992d0ec05f98`
+   - question: `Ralph Hefferline was a psychology professor at a university that is located in what city?`
+   - standard top5:
+     - `Ralph Hefferline`
+     - `Columbia University`
+     - `Virginia Commonwealth University`
+     - `University of the Incarnate Word`
+     - `University of Kansas`
+   - enhanced top5:
+     - `Ralph Hefferline`
+     - `Virginia Commonwealth University`
+     - `University of the Incarnate Word`
+     - `University of Kansas`
+     - `Amherst, Massachusetts`
+   - effect:
+     - `Recall@2: 1.0 -> 0.5`
+     - `Recall@5: 1.0 -> 0.5`
+     - `FullChainHit@2: 1 -> 0`
+     - `FullChainHit@3: 1 -> 0`
+   - route:
+     - `internal_route = standard_rag`
+     - `graph_used = false`
+   - likely reason:
+     - baseline ordering changed and dropped `Columbia University` out of top5
+
+### enhanced_ties cases
+
+The remaining forty-seven sampled questions tied on the tracked product
+metrics.
+
+### standard_gap_cases
+
+Seven standard gap cases were observed.
+
+- one gap was improved by enhanced retrieval:
+  - `5ae4a3265542995ad6573de5`
+- six gap cases remained missed opportunities:
+  - `5ab6d09255429954757d337d`
+  - `5a75e05c55429976ec32bc5f`
+  - `5ae0d4c9554299603e418468`
+  - `5adddccd5542997dc7907069`
+  - `5a79311755429970f5fffe67`
+  - `5abbf698554299114383a0b5`
+
+### missed_opportunity_cases
+
+Enhanced retrieval failed to improve six cases where standard retrieval still
+had a gap.
+
+Pattern:
+
+- all six stayed on `standard_rag`
+- none used graph, community, or drift
+- none used requery
+
+This means the current missed-opportunity ceiling is mostly in the standard
+baseline path, not in graph route under-activation alone.
+
+### enhanced_fallback cases
+
+No enhanced fallback case was observed:
+
+- `fallback_count = 0`
+
+## Hard Multihop Subset Analysis: Limit=50
+
+Question-text-only hard subset rule again matched three questions:
+
+- comparison: `2`
+- bridge relation: `1`
+- multi-entity relation: `0`
+
+### Hard subset metrics
+
+standard:
+
+- `hard_subset_count = 3`
+- `Recall@2 = 0.8333`
+- `Recall@5 = 1.0000`
+- `MRR@10 = 1.0000`
+- `FullChainHit@2 = 0.6667`
+- `FullChainHit@3 = 1.0000`
+- `FullChainHit@5 = 1.0000`
+- `graph_activation_rate = 0.0000`
+
+enhanced:
+
+- `hard_subset_count = 3`
+- `Recall@2 = 0.8333`
+- `Recall@5 = 1.0000`
+- `MRR@10 = 1.0000`
+- `FullChainHit@2 = 0.6667`
+- `FullChainHit@3 = 1.0000`
+- `FullChainHit@5 = 1.0000`
+- `graph_activation_rate = 1.0000`
+
+hard subset outcome:
+
+- `enhanced_win_count = 0`
+- `enhanced_tie_count = 3`
+- `enhanced_loss_count = 0`
+- `hard_subset_helps = 0`
+- `hard_subset_hurts = 0`
+- `hard_subset_missed_opportunities = 0`
+
+Verdict on hard subset:
+
+- enhanced retrieval still preserves the repaired hard subset
+- enhanced retrieval does not yet beat standard retrieval on the hard subset
+
+## Product Comparison Decision: Limit=50
+
+Decision rules:
+
+1. `Recall@5 >= standard Recall@5`
+2. `failure_count = 0`
+3. `fallback_rate <= 30%`
+4. `p95 latency <= standard p95 * 2.2`
+5. `enhanced_hurts cases <= 2`
+
+Result:
+
+1. passed
+2. passed
+3. passed
+4. passed
+5. passed
+
+Win conditions:
+
+- `Recall@2 > standard`: failed
+- `MRR@10 > standard`: failed
+- `FullChainHit@2 > standard`: failed
+- `FullChainHit@3 > standard`: failed
+- hard subset Recall@5 > standard: failed
+- hard subset MRR@10 > standard: failed
+- hard subset FullChainHit@2/3 > standard: failed
+- `enhanced_helps_count > enhanced_hurts_count`: failed
+
+Final verdict:
+
+- `enhanced_retrieval` remains baseline-preserving at `limit=50`
+- `enhanced_retrieval` is still not yet superior
+- one genuine help case appeared, but two hurt cases remain
+- current evidence does **not** justify direct expansion to `2Wiki`
+
+Recommended next step:
+
+- keep `HotpotQA` as the active dataset
+- target the two `limit=50` hurt cases and the six missed-opportunity cases
+- do not start `2Wiki small smoke` yet
+
 ## Current Status
 
 Current verified quality-optimization rerun set was executed on June 20, 2026
