@@ -280,12 +280,16 @@ def build_gold_doc_ids(question_row: dict[str, Any]) -> list[str]:
 
 def build_chunks_from_corpus(*, corpus_rows: list[dict[str, Any]], knowledge_id: str) -> list[ChunkModel]:
     chunks: list[ChunkModel] = []
+    seen_doc_ids: set[str] = set()
     for index, row in enumerate(corpus_rows):
         doc_id = str(row.get("doc_id") or row.get("title") or f"doc-{index}")
         title = str(row.get("title") or doc_id)
         text = str(row.get("text") or "").strip()
         if not text:
             continue
+        if doc_id in seen_doc_ids:
+            continue
+        seen_doc_ids.add(doc_id)
         chunks.append(
             ChunkModel(
                 chunk_id=f"{doc_id}::0",

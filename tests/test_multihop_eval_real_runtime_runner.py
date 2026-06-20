@@ -51,6 +51,33 @@ def test_real_runtime_runner_builds_gold_doc_ids_from_titles():
     assert build_gold_doc_ids(record) == ["doc-a", "doc-b"]
 
 
+def test_real_runtime_runner_deduplicates_corpus_documents_before_chunk_build():
+    from tools.evals.zuno.multihop_eval.run_real_runtime_eval import build_chunks_from_corpus
+
+    rows = [
+        {
+            "dataset": "hotpotqa",
+            "question_id": "q1",
+            "doc_id": "shared-doc",
+            "title": "Shared",
+            "text": "same body",
+        },
+        {
+            "dataset": "hotpotqa",
+            "question_id": "q2",
+            "doc_id": "shared-doc",
+            "title": "Shared",
+            "text": "same body",
+        },
+    ]
+
+    chunks = build_chunks_from_corpus(corpus_rows=rows, knowledge_id="kb_1")
+
+    assert len(chunks) == 1
+    assert chunks[0].chunk_id == "shared-doc::0"
+    assert chunks[0].file_id == "shared-doc"
+
+
 def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
     from tools.evals.zuno.multihop_eval.run_real_runtime_eval import extract_route_diagnostics
 
