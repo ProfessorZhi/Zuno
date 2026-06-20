@@ -17,6 +17,19 @@ full normalized datasets.
 Phase D adds a mocked smoke runner for report-shape validation. It is useful for
 CLI flow and artifact checks, not for claiming real GraphRAG quality.
 
+Phase E adds the first real runtime multihop retrieval standard. The committed
+standard lives in:
+
+```text
+docs/architecture/audits/real-runtime-multihop-eval-standards.md
+```
+
+Its core rule is simple:
+
+- round 1 is retrieval-only real runtime eval
+- Answer EM / F1 are not primary closure metrics yet
+- mocked, stackless, and real_runtime results must never be mixed
+
 ## Explicit Eval Profiles
 
 Current status:
@@ -179,6 +192,26 @@ deterministic local retrieval flow. Its report must always be treated as:
 - purpose: ingestion smoke only
 - not a real GraphRAG runtime result
 
+## Real Runtime Retrieval Metrics
+
+Round 1 real runtime multihop eval uses retrieval-only metrics:
+
+- `Recall@2/5/10`
+- `Precision@5/10`
+- `MRR@10`
+- `ChainRecall@5/10`
+- `FullChainHit@5/10`
+- latency / failure / fallback metrics
+
+These metrics are shared across future real runtime runners so that:
+
+- HotpotQA / 2Wiki / MuSiQue use the same aggregation rules
+- failure and fallback are visible instead of hidden
+- graph-unavailable downgrade cases are recorded explicitly
+
+Answer-generation metrics remain out of the primary closure gate for this first
+real runtime round.
+
 ## Smoke Runner
 
 Phase D exposes:
@@ -203,6 +236,12 @@ reports/evals/multihop/compare_matrix.json
 
 The report explicitly labels itself as `mocked`, so it cannot be mistaken for a
 real GraphRAG result.
+
+Future real runtime output must instead:
+
+- use `execution_mode = "real_runtime"`
+- record runtime fallback / failure
+- avoid Answer EM / F1 as the main headline metrics for round 1
 
 ## Future Runner Wiring
 
