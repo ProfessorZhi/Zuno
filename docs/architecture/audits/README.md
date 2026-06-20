@@ -19,6 +19,7 @@ Rules:
 - [GraphRAG Retrieval Quality Optimization](./graphrag-retrieval-quality-optimization.md)
 - [GraphRAG Forced Vs Auto Route Report](./graphrag-forced-vs-auto-route-report.md)
 - [GraphRAG Route Activation Calibration](./graphrag-route-activation-calibration.md)
+- [HotpotQA Hard-subset GraphRAG Tuning](./hotpotqa-hard-subset-graphrag-tuning.md)
 - [Retrieval Mode Semantics Alignment](./retrieval-mode-semantics-alignment.md)
 - [Retrieval Eval Mode Contract](./retrieval-eval-mode-contract.md)
 - [Local Model Default Cleanup Plan](./local-model-default-cleanup-plan.md)
