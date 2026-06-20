@@ -458,6 +458,8 @@ class RagHandler:
             "needs_query_rewrite": needs_query_rewrite,
             "rerank_enabled": retrieval_settings.get("rerank_enabled"),
             "rerank_top_k": retrieval_settings.get("rerank_top_k"),
+            "rerank_available": runtime_settings.get("rerank_config") is not None,
+            "bm25_available": bool(app_settings.rag.enable_elasticsearch),
             "graph_hop_limit": retrieval_settings.get("graph_hop_limit", 2),
             "max_paths_per_entity": retrieval_settings.get("max_paths_per_entity", 10),
             "use_rag_entry_chunk": graph_index_settings.get("use_rag_entry_chunk", True),

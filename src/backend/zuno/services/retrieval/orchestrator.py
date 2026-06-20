@@ -512,6 +512,20 @@ class RetrievalOrchestrator:
             ),
             "used_bm25": any(run.get("source") == "bm25" for run in (final_pass.get("retriever_runs") or [])),
             "used_graph": any(run.get("source") == "graph" for run in (final_pass.get("retriever_runs") or [])),
+            "vector_used": any(
+                run.get("source") == "vector" for run in (final_pass.get("retriever_runs") or [])
+            ),
+            "bm25_used": any(run.get("source") == "bm25" for run in (final_pass.get("retriever_runs") or [])),
+            "graph_used": any(run.get("source") == "graph" for run in (final_pass.get("retriever_runs") or [])),
+            "fusion_used": bool((final_pass.get("documents") or []) or (final_pass.get("retriever_runs") or [])),
+            "rerank_used": bool((final_plan.get("rerank_policy") or {}).get("enabled")),
+            "bm25_available": bool(retrieval_options.get("bm25_available", False)),
+            "rerank_available": bool(retrieval_options.get("rerank_available", True)),
+            "bm25_fallback_reason": (
+                "bm25_backend_unavailable"
+                if not bool(retrieval_options.get("bm25_available", False))
+                else None
+            ),
             "used_communities": list(final_pass.get("community_result", {}).get("used_communities") or []),
             "used_paths": list(final_pass.get("community_result", {}).get("used_paths") or final_pass.get("paths") or []),
             "supporting_chunks": list(final_pass.get("community_result", {}).get("supporting_chunks") or []),
