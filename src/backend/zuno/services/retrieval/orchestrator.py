@@ -228,12 +228,20 @@ class RetrievalOrchestrator:
 
     async def _run_single_pass(self, mode: str, query: str, knowledge_ids: list[str], retrieval_options: dict | None = None) -> dict:
         retrieval_options = retrieval_options or {}
+        route_policy = str(retrieval_options.get("route_policy") or "auto").strip().lower()
         processed_payload = await self.query_processor.process(query)
         processed_query = (
             processed_payload
             if isinstance(processed_payload, ProcessedQuery)
             else ProcessedQuery(**processed_payload)
         )
+        if route_policy == "force_graph":
+            processed_query.query_features["relation_question"] = True
+            processed_query.route_hints.append("force_graph_eval")
+        elif route_policy == "force_deep":
+            processed_query.query_features["global_question"] = True
+            processed_query.query_features["evidence_required"] = True
+            processed_query.route_hints.append("force_deep_eval")
         request = RetrievalRequest(
             query=query,
             knowledge_ids=knowledge_ids,
@@ -515,6 +523,7 @@ class RetrievalOrchestrator:
                 "entity_count": len(first_pass.get("entities") or []),
             },
             "retrieval_options": retrieval_options,
+            "route_policy": route_policy,
         }
         return {
             "actual_mode": final_mode,

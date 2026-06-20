@@ -36,6 +36,7 @@ from tools.evals.zuno.rag_eval.run_stackless_local_eval import _build_local_grap
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "reports" / "evals" / "multihop" / "real_runtime"
 SUPPORTED_DATASETS = {"hotpotqa", "twowiki", "musique"}
 SUPPORTED_MODES = {"baseline_rag", "local_graphrag", "deep_graphrag"}
+SUPPORTED_ROUTE_POLICIES = {"auto", "force_graph", "force_deep"}
 MODE_TO_RUNTIME = {
     "baseline_rag": "rag",
     "local_graphrag": "local_graphrag",
@@ -81,6 +82,13 @@ def resolve_runtime_mode(mode: str) -> str:
     if normalized not in MODE_TO_RUNTIME:
         raise ValueError(f"Unsupported mode: {mode}")
     return MODE_TO_RUNTIME[normalized]
+
+
+def resolve_route_policy(route_policy: str | None) -> str:
+    normalized = str(route_policy or "auto").strip().lower() or "auto"
+    if normalized not in SUPPORTED_ROUTE_POLICIES:
+        raise ValueError(f"Unsupported route policy: {route_policy}")
+    return normalized
 
 
 def resolve_eval_profile(*, profile_file: Path, profile_name: str) -> dict[str, Any]:
@@ -181,6 +189,19 @@ def _build_runtime_knowledge_config(*, mode: str, profile: dict[str, Any], top_k
     return config
 
 
+def build_runtime_retrieval_options(*, top_k: int, profile_name: str, route_policy: str) -> dict[str, Any]:
+    resolved_route_policy = resolve_route_policy(route_policy)
+    options = {
+        "top_k": top_k,
+        "requested_profile": profile_name,
+        "trace_policy": {"enabled": True},
+        "route_policy": resolved_route_policy,
+    }
+    if resolved_route_policy != "auto":
+        options["eval_only_route_override"] = resolved_route_policy
+    return options
+
+
 def _doc_identity(document: dict[str, Any]) -> str:
     return str(document.get("doc_id") or document.get("title") or "").strip()
 
@@ -255,6 +276,7 @@ def extract_route_diagnostics(
         notes.append("community_result not exposed by selected runtime pass")
 
     diagnostics = {
+        "route_policy": metadata.get("route_policy"),
         "requested_mode": metadata.get("requested_mode"),
         "resolved_mode": metadata.get("resolved_mode"),
         "internal_route": metadata.get("internal_route"),
@@ -280,6 +302,7 @@ async def run_real_runtime_eval(
     corpus_path: Path,
     profile_file: Path,
     profile_name: str,
+    route_policy: str = "auto",
     knowledge_id: str | None = None,
     limit: int = 10,
     top_k: int = 10,
@@ -293,6 +316,7 @@ async def run_real_runtime_eval(
         raise ValueError(f"Unsupported mode: {mode}")
 
     profile = resolve_eval_profile(profile_file=profile_file, profile_name=profile_name)
+    resolved_route_policy = resolve_route_policy(route_policy)
     model_configs = await resolve_profile_model_configs(profile)
     temp_config = _build_temp_config()
     os.environ["ZUNO_CONFIG"] = str(temp_config)
@@ -357,11 +381,11 @@ async def run_real_runtime_eval(
                     collection_names=[runtime_knowledge_id],
                     retrieval_mode=runtime_mode,
                     top_k=top_k,
-                    retrieval_options={
-                        "top_k": top_k,
-                        "requested_profile": profile_name,
-                        "trace_policy": {"enabled": True},
-                    },
+                    retrieval_options=build_runtime_retrieval_options(
+                        top_k=top_k,
+                        profile_name=profile_name,
+                        route_policy=resolved_route_policy,
+                    ),
                 )
                 route_metadata = dict(runtime_result.get("metadata") or {})
                 fallback_reason = (
@@ -431,6 +455,7 @@ async def run_real_runtime_eval(
         "dataset": normalized_dataset,
         "mode": normalized_mode,
         "requested_runtime_mode": runtime_mode,
+        "route_policy": resolved_route_policy,
         "knowledge_id": runtime_knowledge_id,
         "sample_limit": len(selected_questions),
         "top_k": top_k,
@@ -463,6 +488,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument("--route-policy", default="auto")
     parser.add_argument("--profile-file", type=Path, default=REPO_ROOT / "tools" / "evals" / "zuno" / "multihop_eval" / "eval_profiles.example.json")
     parser.add_argument("--profile-name", default="retrieval_only_text_multihop")
     args = parser.parse_args()
@@ -477,6 +503,7 @@ def main() -> None:
             corpus_path=args.corpus,
             profile_file=args.profile_file,
             profile_name=args.profile_name,
+            route_policy=args.route_policy,
             limit=args.limit,
             top_k=args.top_k,
             output_path=output_path,
