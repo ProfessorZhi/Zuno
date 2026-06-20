@@ -13,6 +13,12 @@ Naming note:
 - `local_graphrag` and `deep_graphrag` should remain internal ablation labels
   unless a report is explicitly diagnostic
 
+Runtime alignment note:
+
+- real runtime runner now accepts `standard_retrieval` and
+  `enhanced_retrieval`
+- `baseline_rag` remains supported only as a deprecated historical alias
+
 ## Current Status
 
 Current verified quality-optimization rerun set was executed on June 20, 2026
@@ -242,6 +248,7 @@ Optional internal analysis:
 
 3. `local_graphrag_ablation`
 4. `vector_only_ablation`
+5. `deep_route_ablation`
 
 Rules for that next round:
 

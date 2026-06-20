@@ -260,6 +260,17 @@ Every real runtime report should now expose:
 - `is_deprecated_alias`
 - `is_ablation_mode`
 
+Recommended next product comparison:
+
+- `standard_retrieval`
+- `enhanced_retrieval`
+
+Optional engineering-only follow-up cuts:
+
+- `vector_only_ablation`
+- `local_graphrag_ablation`
+- `deep_route_ablation`
+
 ## Smoke Runner
 
 Phase D exposes:

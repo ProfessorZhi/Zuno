@@ -72,6 +72,13 @@ Historical compatibility note:
 - until the runner is renamed, every product-facing report should translate
   those labels explicitly and call out the mismatch
 
+Current runtime-alignment status:
+
+- `standard_retrieval` is now a supported real-runtime eval alias
+- `enhanced_retrieval` is now a supported real-runtime eval alias
+- `baseline_rag` remains compatible but deprecated
+- `local_graphrag` and `deep_graphrag` remain internal ablation labels
+
 ## What Each Internal Label Is Allowed To Claim
 
 ### `local_graphrag_ablation`
@@ -123,6 +130,7 @@ The next preferred `limit=10` retrieval comparison should be:
 2. `enhanced_retrieval`
 3. `local_graphrag_ablation` optional
 4. `vector_only_ablation` optional
+5. `deep_route_ablation` optional
 
 Do not lead the next report with:
 
