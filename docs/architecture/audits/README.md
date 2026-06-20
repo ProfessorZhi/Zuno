@@ -15,6 +15,7 @@ Rules:
 
 - [Benchmark Corpus Ingestion Plan](./benchmark-corpus-ingestion-plan.md)
 - [Current Model And Retrieval Config Audit](./current-model-and-retrieval-config-audit.md)
+- [GraphRAG Retrieval Quality Optimization](./graphrag-retrieval-quality-optimization.md)
 - [GraphRAG Forced Vs Auto Route Report](./graphrag-forced-vs-auto-route-report.md)
 - [GraphRAG Route Activation Calibration](./graphrag-route-activation-calibration.md)
 - [Local Model Default Cleanup Plan](./local-model-default-cleanup-plan.md)
