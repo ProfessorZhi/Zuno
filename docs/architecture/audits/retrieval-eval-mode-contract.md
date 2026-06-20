@@ -85,6 +85,10 @@ Current product-comparison status:
   `standard_retrieval` vs `enhanced_retrieval`
 - current verdict is baseline-preserving tie, not clear enhanced win
 - next allowed sample expansion is HotpotQA `limit=20`
+- HotpotQA `limit=20` has now also been executed
+- current verdict is still baseline-preserving, but not superior
+- immediate next move should favor HotpotQA hard-subset tuning rather than
+  direct `2Wiki` expansion
 
 ## What Each Internal Label Is Allowed To Claim
 

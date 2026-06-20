@@ -278,6 +278,15 @@ Current checked result:
 - current outcome is a baseline-preserving tie
 - next allowed expansion is HotpotQA `limit=20`
 
+Current follow-up result:
+
+- HotpotQA `limit=20` has now also been run for
+  `standard_retrieval` vs `enhanced_retrieval`
+- current outcome remains baseline-preserving, but enhanced is still not
+  superior
+- recommended next move is HotpotQA hard-subset targeted tuning, then
+  `limit=50`
+
 ## Smoke Runner
 
 Phase D exposes:
