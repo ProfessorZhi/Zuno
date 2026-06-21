@@ -12,6 +12,7 @@ class RetrievalFusion:
     BRIDGE_SELECTION_SIZE = 3
     BRIDGE_PROTECTED_TOP = 2
     BRIDGE_MIN_SEEDS = 2
+    GENEALOGY_PROTECTED_TOP = 5
     ENTITY_STOPWORDS = {
         "same",
         "nationality",
@@ -50,6 +51,64 @@ class RetrievalFusion:
         "served during what years",
         "population of",
     )
+    GENEALOGY_RELATION_CUES = (
+        "maternal grandfather",
+        "paternal grandfather",
+        "grandfather",
+        "grandmother",
+        "father of",
+        "mother of",
+        "parent of",
+        "child of",
+        "son of",
+        "daughter of",
+        "spouse of",
+        "wife of",
+        "husband of",
+        "sibling of",
+        "brother of",
+        "sister of",
+        "family of",
+        "born to",
+        "relative of",
+        "descendant of",
+        "ancestor of",
+        "married to",
+        "children of",
+        "who is the father",
+        "who is the mother",
+        "whose spouse",
+        "whose child",
+    )
+    GENEALOGY_RELATION_TOKEN_MAP = {
+        "maternal grandfather": ("maternal", "grandfather", "mother", "father"),
+        "paternal grandfather": ("paternal", "grandfather", "father"),
+        "grandfather": ("grandfather", "father"),
+        "grandmother": ("grandmother", "mother"),
+        "father of": ("father", "parent"),
+        "mother of": ("mother", "parent"),
+        "parent of": ("parent", "father", "mother"),
+        "child of": ("child", "son", "daughter"),
+        "son of": ("son", "child"),
+        "daughter of": ("daughter", "child"),
+        "spouse of": ("spouse", "wife", "husband", "married"),
+        "wife of": ("wife", "spouse", "married"),
+        "husband of": ("husband", "spouse", "married"),
+        "sibling of": ("sibling", "brother", "sister"),
+        "brother of": ("brother", "sibling"),
+        "sister of": ("sister", "sibling"),
+        "family of": ("family", "relative", "ancestor", "descendant"),
+        "born to": ("born", "mother", "father", "parent"),
+        "relative of": ("relative", "family"),
+        "descendant of": ("descendant", "ancestor"),
+        "ancestor of": ("ancestor", "descendant"),
+        "married to": ("married", "spouse", "wife", "husband"),
+        "children of": ("children", "child", "son", "daughter"),
+        "who is the father": ("father", "parent"),
+        "who is the mother": ("mother", "parent"),
+        "whose spouse": ("spouse", "wife", "husband", "married"),
+        "whose child": ("child", "son", "daughter"),
+    }
     REQUERY_GENERIC_SEEDS = {
         "japanese",
         "american",
@@ -283,6 +342,11 @@ class RetrievalFusion:
         return [cue for cue in cls.BRIDGE_RELATION_CUES if cue in query_lower]
 
     @classmethod
+    def _extract_genealogy_relation_cues(cls, query: str) -> list[str]:
+        query_lower = str(query or "").lower()
+        return [cue for cue in cls.GENEALOGY_RELATION_CUES if cue in query_lower]
+
+    @classmethod
     def _extract_bridge_seeds(cls, query: str, items: list[RetrievedDocument]) -> list[str]:
         ordered: list[str] = []
         for phrase in cls.QUERY_ENTITY_PHRASE_PATTERN.findall(str(query or "")):
@@ -345,6 +409,90 @@ class RetrievalFusion:
             "bridge_relation_question": bridge_question,
             "bridge_seed_entities": bridge_seeds,
             "bridge_relation_cues": bridge_cues,
+        }
+
+    @classmethod
+    def _genealogy_relation_match_count(cls, item: RetrievedDocument, cues: list[str]) -> int:
+        haystack = cls._normalize_entity(" ".join([item.file_name, item.content, item.summary]))
+        relation_labels = [
+            cls._normalize_entity(value)
+            for value in (item.metadata.get("graph_path_relation_labels") or [])
+            if cls._normalize_entity(value)
+        ]
+        count = 0
+        for cue in cues:
+            token_hits = cls.GENEALOGY_RELATION_TOKEN_MAP.get(cue, ())
+            if any(token in haystack for token in token_hits):
+                count += 1
+                continue
+            if any(token in " ".join(relation_labels) for token in token_hits):
+                count += 1
+        return count
+
+    @classmethod
+    def _extract_genealogy_seeds(cls, query: str, items: list[RetrievedDocument]) -> list[str]:
+        ordered: list[str] = []
+        for phrase in cls.QUERY_ENTITY_PHRASE_PATTERN.findall(str(query or "")):
+            normalized = cls._normalize_entity(cls.QUERY_ENTITY_PREFIX_PATTERN.sub("", phrase))
+            if not normalized or normalized in cls.ENTITY_STOPWORDS:
+                continue
+            if len(normalized) < 3:
+                continue
+            if any(normalized == seed or normalized in seed or seed in normalized for seed in ordered):
+                continue
+            ordered.append(normalized)
+            if len(ordered) >= cls.BRIDGE_MIN_SEEDS:
+                return ordered[: cls.BRIDGE_MIN_SEEDS]
+
+        baseline_candidates = [item for item in items if cls._is_baseline_candidate(item)]
+        for candidate in baseline_candidates[:5]:
+            normalized = cls._normalize_entity(candidate.file_name)
+            if not normalized or normalized in cls.ENTITY_STOPWORDS:
+                continue
+            if len(normalized) < 3:
+                continue
+            if any(normalized == seed or normalized in seed or seed in normalized for seed in ordered):
+                continue
+            ordered.append(normalized)
+            if len(ordered) >= cls.BRIDGE_MIN_SEEDS:
+                break
+        return ordered[: cls.BRIDGE_MIN_SEEDS]
+
+    @classmethod
+    def _annotate_genealogy_metadata(
+        cls,
+        *,
+        query: str,
+        items: list[RetrievedDocument],
+    ) -> dict[str, object]:
+        genealogy_cues = cls._extract_genealogy_relation_cues(query)
+        genealogy_question = bool(genealogy_cues)
+        genealogy_seeds = cls._extract_genealogy_seeds(query, items) if genealogy_question else []
+        for item in items:
+            coverage = cls._seed_coverage(item, genealogy_seeds)
+            relation_match_count = cls._genealogy_relation_match_count(item, genealogy_cues)
+            direct_relation_path = bool(item.metadata.get("direct_relation_path"))
+            indirect_family_noise_path = bool(item.metadata.get("indirect_family_noise_path"))
+            precision = len(coverage) + relation_match_count + (2 if direct_relation_path else 0) - (3 if indirect_family_noise_path else 0)
+            allowed = (precision >= 2 and relation_match_count >= 1) or direct_relation_path
+            item.metadata["genealogy_bridge_question"] = genealogy_question
+            item.metadata["genealogy_relation_cues"] = list(genealogy_cues)
+            item.metadata["genealogy_seed_entities"] = list(genealogy_seeds)
+            item.metadata["genealogy_seed_coverage"] = sorted(coverage)
+            item.metadata["graph_path_relation_labels"] = list(item.metadata.get("graph_path_relation_labels") or [])
+            item.metadata["direct_relation_path"] = direct_relation_path
+            item.metadata["indirect_family_noise_path"] = indirect_family_noise_path
+            item.metadata["genealogy_path_precision_score"] = precision
+            item.metadata["genealogy_promotion_allowed"] = allowed if genealogy_question else None
+            item.metadata["genealogy_promotion_blocked_reason"] = None
+            item.metadata["noisy_genealogy_graph_only"] = False
+            if genealogy_question and cls._is_graph_only(item) and not allowed:
+                item.metadata["genealogy_promotion_blocked_reason"] = "low_precision_genealogy"
+                item.metadata["noisy_genealogy_graph_only"] = indirect_family_noise_path or not bool(coverage)
+        return {
+            "genealogy_bridge_question": genealogy_question,
+            "genealogy_relation_cues": list(genealogy_cues),
+            "genealogy_seed_entities": list(genealogy_seeds),
         }
 
     @classmethod
@@ -587,6 +735,45 @@ class RetrievalFusion:
         return selected + remainder
 
     @classmethod
+    def _apply_genealogy_guardrail(
+        cls,
+        *,
+        ordered: list[RetrievedDocument],
+        genealogy_relation_cues: list[str],
+    ) -> list[RetrievedDocument]:
+        if len(ordered) <= cls.BRIDGE_PROTECTED_TOP or not genealogy_relation_cues:
+            return ordered
+
+        selected = list(ordered[: cls.GENEALOGY_PROTECTED_TOP])
+        remaining = list(ordered[cls.GENEALOGY_PROTECTED_TOP :])
+        baseline_candidates = [item for item in ordered if cls._is_baseline_candidate(item)]
+        baseline_replacements = [
+            item
+            for item in baseline_candidates
+            if item not in selected
+            and cls._genealogy_relation_match_count(item, genealogy_relation_cues) >= 1
+        ]
+
+        for index, item in enumerate(selected):
+            if not cls._is_graph_only(item):
+                continue
+            if item.metadata.get("genealogy_promotion_allowed") is True:
+                continue
+            replacement = baseline_replacements[0] if baseline_replacements else None
+            if replacement is None:
+                continue
+            item.metadata["genealogy_promotion_blocked_reason"] = "genealogy_chain_protection"
+            item.metadata["noisy_genealogy_graph_only"] = True
+            selected[index] = replacement
+            baseline_replacements.remove(replacement)
+            remaining.append(item)
+
+        selected_ids = {id(item) for item in selected}
+        selected = sorted(selected, key=lambda item: ordered.index(item))
+        remainder = [item for item in ordered if id(item) not in selected_ids]
+        return selected + remainder
+
+    @classmethod
     def _rank_key(cls, query: str, item: RetrievedDocument) -> tuple[int, int, int, int, int, float]:
         from zuno.services.rag.handler import RagHandler
 
@@ -665,8 +852,14 @@ class RetrievalFusion:
 
         comparison_metadata = self._annotate_comparison_metadata(query=query, items=list(merged.values()))
         bridge_metadata = self._annotate_bridge_metadata(query=query, items=list(merged.values()))
+        genealogy_metadata = self._annotate_genealogy_metadata(query=query, items=list(merged.values()))
         requery_metadata = self._annotate_requery_metadata(query=query, items=list(merged.values()))
         ordered = sorted(merged.values(), key=lambda item: self._rank_key(query, item))
+        if genealogy_metadata["genealogy_bridge_question"]:
+            ordered = self._apply_genealogy_guardrail(
+                ordered=ordered,
+                genealogy_relation_cues=list(genealogy_metadata["genealogy_relation_cues"]),
+            )
         if comparison_metadata["comparison_question"]:
             ordered = self._apply_comparison_guardrail(
                 ordered=ordered,
@@ -691,6 +884,7 @@ class RetrievalFusion:
                 "strategy": "baseline_preserving",
                 **comparison_metadata,
                 **bridge_metadata,
+                **genealogy_metadata,
                 **requery_metadata,
             },
             rerank_metadata={},
