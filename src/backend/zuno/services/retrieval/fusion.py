@@ -509,6 +509,9 @@ class RetrievalFusion:
             for index, doc in enumerate(docs, start=1):
                 if source_name == "vector":
                     doc.metadata["vector_rank"] = index
+                elif source_name == "requery":
+                    doc.metadata["requery_rank"] = index
+                    doc.metadata.setdefault("vector_rank", index)
                 elif source_name in {"bm25", "keyword"}:
                     doc.metadata["bm25_rank"] = index
                 elif source_name == "graph":
@@ -529,6 +532,9 @@ class RetrievalFusion:
                 current.metadata.setdefault("source_scores", {})[source_name] = doc.score
                 if source_name == "vector":
                     current.metadata["vector_rank"] = index
+                elif source_name == "requery":
+                    current.metadata["requery_rank"] = index
+                    current.metadata.setdefault("vector_rank", index)
                 elif source_name in {"bm25", "keyword"}:
                     current.metadata["bm25_rank"] = index
                 elif source_name == "graph":

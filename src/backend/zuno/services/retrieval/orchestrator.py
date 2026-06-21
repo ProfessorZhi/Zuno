@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 
 from zuno.services.graphrag.models import normalize_retrieval_mode
 from zuno.services.graphrag.community.service import CommunityGraphService
@@ -34,6 +35,25 @@ class QueryExpanderAdapter:
 
 
 class RetrievalOrchestrator:
+    PROACTIVE_REQUERY_PATTERNS = (
+        (r"\bbut where does\b", "bridge_attribute_pattern"),
+        (r"\bhail from\b", "bridge_attribute_pattern"),
+        (r"\blocated in what city\b", "bridge_attribute_pattern"),
+        (r"\bbased in what city\b", "bridge_attribute_pattern"),
+        (r"\bprofessor at\b", "bridge_attribute_pattern"),
+        (r"\bfounded by\b", "bridge_attribute_pattern"),
+        (r"\bfather of\b", "bridge_attribute_pattern"),
+        (r"\bmother of\b", "bridge_attribute_pattern"),
+        (r"\bdirector of\b", "bridge_attribute_pattern"),
+        (r"\bauthor of\b", "bridge_attribute_pattern"),
+        (r"\bmanaged .* during what timeframe\b", "bridge_attribute_pattern"),
+        (r"\badministration of\b", "bridge_attribute_pattern"),
+        (r"\bborn in what year\b", "bridge_attribute_pattern"),
+        (r"\bserved during what years\b", "bridge_attribute_pattern"),
+        (r"\bpopulation of\b", "bridge_attribute_pattern"),
+        (r"\bcountry .* population\b", "bridge_attribute_pattern"),
+    )
+
     def __init__(
         self,
         rag_retriever=None,
@@ -244,6 +264,14 @@ class RetrievalOrchestrator:
                 return True
         return False
 
+    @classmethod
+    def _proactive_requery_reason(cls, query: str) -> str | None:
+        query_text = str(query or "").strip().lower()
+        for pattern, reason in cls.PROACTIVE_REQUERY_PATTERNS:
+            if re.search(pattern, query_text):
+                return reason
+        return None
+
     async def _run_single_pass(self, mode: str, query: str, knowledge_ids: list[str], retrieval_options: dict | None = None) -> dict:
         retrieval_options = retrieval_options or {}
         route_policy = str(retrieval_options.get("route_policy") or "auto").strip().lower()
@@ -319,6 +347,35 @@ class RetrievalOrchestrator:
             docs = [self._dict_to_document(item, source_type="vector", source_backend="milvus") for item in rag_result.get("documents") or []]
             documents_by_source["vector"] = docs
             retriever_runs.append({"source": "vector", "result_count": len(docs), "mode": mode})
+
+        proactive_requery_queries = [
+            candidate
+            for candidate in (retrieval_options.get("proactive_requery_queries") or [])
+            if str(candidate or "").strip() and str(candidate).strip().lower() != str(query).strip().lower()
+        ]
+        if proactive_requery_queries and "vector" in plan.enabled_retrievers and plan.internal_route in {"standard_rag", "local_graphrag"}:
+            requery_documents: list[RetrievedDocument] = []
+            for requery_query in proactive_requery_queries:
+                requery_result = await self.rag_retriever.retrieve(requery_query, knowledge_ids, retrieval_options)
+                requery_docs = [
+                    self._dict_to_document(item, source_type="vector", source_backend="milvus")
+                    for item in requery_result.get("documents") or []
+                ]
+                for index, requery_doc in enumerate(requery_docs, start=1):
+                    requery_doc.metadata["matched_by"] = ["requery"]
+                    requery_doc.metadata["requery_query"] = requery_query
+                    requery_doc.metadata["requery_rank"] = index
+                requery_documents.extend(requery_docs)
+                retriever_runs.append(
+                    {
+                        "source": "requery",
+                        "result_count": len(requery_docs),
+                        "mode": mode,
+                        "query": requery_query,
+                    }
+                )
+            if requery_documents:
+                documents_by_source["requery"] = requery_documents
 
         if "bm25" in plan.enabled_retrievers:
             keyword_result = await self.keyword_retriever.retrieve(query, knowledge_ids, retrieval_options)
@@ -466,12 +523,21 @@ class RetrievalOrchestrator:
             candidate_queries = [query]
         if not candidate_queries:
             candidate_queries = [query]
+        proactive_requery_reason = None
+        proactive_requery_queries: list[str] = []
+        first_pass_options = dict(retrieval_options)
+        if normalized_mode == "rag_graph_deep" and len(candidate_queries) > 1:
+            proactive_requery_reason = self._proactive_requery_reason(query)
+            if proactive_requery_reason:
+                proactive_requery_queries = list(candidate_queries[1:])
+                first_pass_options["proactive_requery_queries"] = proactive_requery_queries
+                first_pass_options["proactive_requery_reason"] = proactive_requery_reason
 
         first_pass = await self._run_single_pass(
             normalized_mode,
             candidate_queries[0],
             knowledge_ids,
-            retrieval_options,
+            first_pass_options,
         )
         first_plan = dict(first_pass.get("plan") or {})
         first_mode = first_pass["mode"]
@@ -541,12 +607,14 @@ class RetrievalOrchestrator:
             or any(run.get("source") == "graph" for run in (final_pass.get("retriever_runs") or []))
         )
         requery_used = any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds)
+        requery_attempted = any(run.get("source") == "requery" for run in (final_pass.get("retriever_runs") or []))
         community_used = bool((final_pass.get("community_result") or {}).get("used_communities"))
         drift_used = internal_route == "drift_like"
         standard_floor_documents = list(final_pass.get("standard_floor_documents") or [])
         standard_floor_content = str(final_pass.get("standard_floor_content") or "")
         graph_contributed = self._documents_include_source(list(final_pass.get("documents") or []), "graph")
-        enhancement_channel_used = bool(graph_contributed or requery_used or community_used or drift_used)
+        requery_contributed = self._documents_include_source(list(final_pass.get("documents") or []), "requery")
+        enhancement_channel_used = bool(graph_contributed or requery_contributed or community_used or drift_used)
         standard_floor_reused = False
         enhanced_noop = False
         enhanced_noop_reason = None
@@ -557,12 +625,13 @@ class RetrievalOrchestrator:
                 final_pass["content"] = standard_floor_content
                 final_pass["raw_content"] = standard_floor_content
             standard_floor_reused = True
-            if graph_route_attempted or graph_route_used:
+            if graph_route_attempted or graph_route_used or requery_attempted:
                 enhanced_fallback_to_floor = True
                 enhanced_noop_reason = "enhancement_channel_low_confidence"
             else:
                 enhanced_noop = True
                 enhanced_noop_reason = "no_enhancement_channel_used"
+        requery_fallback_to_floor = bool(requery_attempted and not requery_contributed)
         if query_features.get("global_question") and query_features.get("evidence_required"):
             route_selection_reason = "global_question_with_evidence"
         elif query_features.get("global_question"):
@@ -612,7 +681,15 @@ class RetrievalOrchestrator:
             "graph_route_attempted": graph_route_attempted,
             "graph_route_used": graph_route_used,
             "requery_available": bool(retrieval_options.get("needs_query_rewrite", True)),
-            "requery_used": requery_used,
+            "requery_used": bool(requery_attempted or requery_used),
+            "requery_triggered_reason": proactive_requery_reason,
+            "requery_queries": proactive_requery_queries,
+            "requery_result_count": sum(
+                int(run.get("result_count") or 0)
+                for run in (final_pass.get("retriever_runs") or [])
+                if run.get("source") == "requery"
+            ),
+            "requery_fallback_to_floor": requery_fallback_to_floor,
             "community_available": community_available,
             "community_used": community_used,
             "drift_available": bool(graph_available and community_available),
