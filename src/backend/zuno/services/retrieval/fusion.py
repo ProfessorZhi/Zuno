@@ -9,6 +9,9 @@ class RetrievalFusion:
     GRAPH_PROMOTION_THRESHOLD = 6
     COMPARISON_SELECTION_SIZE = 3
     COMPARISON_MIN_SEEDS = 2
+    BRIDGE_SELECTION_SIZE = 3
+    BRIDGE_PROTECTED_TOP = 2
+    BRIDGE_MIN_SEEDS = 2
     ENTITY_STOPWORDS = {
         "same",
         "nationality",
@@ -27,6 +30,26 @@ class RetrievalFusion:
         re.IGNORECASE,
     )
     QUERY_ENTITY_PHRASE_PATTERN = re.compile(r"[A-Z][A-Za-z0-9'_-]*(?:\s+[A-Z][A-Za-z0-9'_-]*)*")
+    BRIDGE_RELATION_CUES = (
+        "founded by",
+        "founder of",
+        "father of",
+        "mother of",
+        "professor at",
+        "located in what city",
+        "based in what city",
+        "hail from",
+        "where does",
+        "director of",
+        "author of",
+        "performer of",
+        "spouse of",
+        "managed",
+        "administration of",
+        "born in what year",
+        "served during what years",
+        "population of",
+    )
 
     @classmethod
     def _graph_signal(cls, item: RetrievedDocument) -> int:
@@ -202,6 +225,76 @@ class RetrievalFusion:
             "comparison_seed_entities": seeds,
         }
 
+    @classmethod
+    def _extract_bridge_relation_cues(cls, query: str) -> list[str]:
+        query_lower = str(query or "").lower()
+        return [cue for cue in cls.BRIDGE_RELATION_CUES if cue in query_lower]
+
+    @classmethod
+    def _extract_bridge_seeds(cls, query: str, items: list[RetrievedDocument]) -> list[str]:
+        ordered: list[str] = []
+        for phrase in cls.QUERY_ENTITY_PHRASE_PATTERN.findall(str(query or "")):
+            normalized = cls._normalize_entity(cls.QUERY_ENTITY_PREFIX_PATTERN.sub("", phrase))
+            if not normalized or normalized in cls.ENTITY_STOPWORDS:
+                continue
+            if len(normalized) < 3:
+                continue
+            if " " not in normalized:
+                continue
+            if len(normalized.split()) > 4:
+                continue
+            if any(normalized == seed or normalized in seed or seed in normalized for seed in ordered):
+                continue
+            ordered.append(normalized)
+            if len(ordered) >= cls.BRIDGE_MIN_SEEDS:
+                return ordered[: cls.BRIDGE_MIN_SEEDS]
+
+        baseline_candidates = [item for item in items if cls._is_baseline_candidate(item)]
+        for candidate in baseline_candidates[:5]:
+            normalized = cls._normalize_entity(candidate.file_name)
+            if not normalized or normalized in cls.ENTITY_STOPWORDS:
+                continue
+            if len(normalized) < 3:
+                continue
+            if any(normalized == seed or normalized in seed or seed in normalized for seed in ordered):
+                continue
+            ordered.append(normalized)
+            if len(ordered) >= cls.BRIDGE_MIN_SEEDS:
+                break
+        return ordered[: cls.BRIDGE_MIN_SEEDS]
+
+    @classmethod
+    def _bridge_relation_match_count(cls, item: RetrievedDocument, cues: list[str]) -> int:
+        haystack = cls._normalize_entity(" ".join([item.file_name, item.content, item.summary]))
+        return sum(1 for cue in cues if cls._normalize_entity(cue) in haystack)
+
+    @classmethod
+    def _annotate_bridge_metadata(
+        cls,
+        *,
+        query: str,
+        items: list[RetrievedDocument],
+    ) -> dict[str, object]:
+        from zuno.services.graphrag.retriever import GraphRetriever
+
+        bridge_question = GraphRetriever._is_bridge_relation_query(query)
+        bridge_seeds = cls._extract_bridge_seeds(query, items) if bridge_question else []
+        bridge_cues = cls._extract_bridge_relation_cues(query) if bridge_question else []
+        for item in items:
+            coverage = cls._seed_coverage(item, bridge_seeds)
+            relation_match_count = cls._bridge_relation_match_count(item, bridge_cues)
+            item.metadata["bridge_relation_question"] = bridge_question
+            item.metadata["bridge_seed_coverage"] = sorted(coverage)
+            item.metadata["bridge_relation_cues"] = list(bridge_cues)
+            item.metadata["bridge_chain_score"] = len(coverage) + relation_match_count
+            item.metadata["bridge_promotion_blocked_reason"] = None
+            item.metadata["noisy_bridge_graph_only"] = False
+        return {
+            "bridge_relation_question": bridge_question,
+            "bridge_seed_entities": bridge_seeds,
+            "bridge_relation_cues": bridge_cues,
+        }
+
     @staticmethod
     def _combined_seed_coverage(items: list[RetrievedDocument]) -> set[str]:
         combined: set[str] = set()
@@ -321,6 +414,59 @@ class RetrievalFusion:
         return selected + remainder
 
     @classmethod
+    def _apply_bridge_guardrail(
+        cls,
+        *,
+        ordered: list[RetrievedDocument],
+        bridge_seed_entities: list[str],
+    ) -> list[RetrievedDocument]:
+        if len(ordered) <= cls.BRIDGE_PROTECTED_TOP or len(bridge_seed_entities) < cls.BRIDGE_MIN_SEEDS:
+            return ordered
+
+        seeds = set(bridge_seed_entities)
+        baseline_ordered = [item for item in ordered if cls._is_baseline_candidate(item)]
+        baseline_top = baseline_ordered[: cls.BRIDGE_PROTECTED_TOP]
+        baseline_coverage = set()
+        for item in baseline_top:
+            baseline_coverage.update(item.metadata.get("bridge_seed_coverage") or [])
+        if baseline_coverage < seeds:
+            return ordered
+
+        selected = list(ordered[: cls.BRIDGE_SELECTION_SIZE])
+        protected = selected[: cls.BRIDGE_PROTECTED_TOP]
+        available_replacements = [
+            item
+            for item in baseline_top
+            if all(id(item) != id(current) for current in protected)
+        ]
+
+        for index, item in enumerate(protected):
+            coverage = set(item.metadata.get("bridge_seed_coverage") or [])
+            if not cls._is_graph_only(item):
+                continue
+            if coverage >= seeds:
+                continue
+            replacement = next(
+                (
+                    candidate
+                    for candidate in available_replacements
+                    if candidate.metadata.get("bridge_seed_coverage")
+                ),
+                None,
+            )
+            if replacement is None:
+                continue
+            item.metadata["bridge_promotion_blocked_reason"] = "bridge_chain_protection"
+            item.metadata["noisy_bridge_graph_only"] = not bool(coverage)
+            selected[index] = replacement
+            available_replacements.remove(replacement)
+
+        selected_ids = {id(item) for item in selected}
+        selected = sorted(selected, key=lambda item: ordered.index(item))
+        remainder = [item for item in ordered if id(item) not in selected_ids]
+        return selected + remainder
+
+    @classmethod
     def _rank_key(cls, query: str, item: RetrievedDocument) -> tuple[int, int, int, int, int, float]:
         from zuno.services.rag.handler import RagHandler
 
@@ -392,11 +538,17 @@ class RetrievalFusion:
                 dropped.append(doc)
 
         comparison_metadata = self._annotate_comparison_metadata(query=query, items=list(merged.values()))
+        bridge_metadata = self._annotate_bridge_metadata(query=query, items=list(merged.values()))
         ordered = sorted(merged.values(), key=lambda item: self._rank_key(query, item))
         if comparison_metadata["comparison_question"]:
             ordered = self._apply_comparison_guardrail(
                 ordered=ordered,
                 comparison_seed_entities=list(comparison_metadata["comparison_seed_entities"]),
+            )
+        if bridge_metadata["bridge_relation_question"]:
+            ordered = self._apply_bridge_guardrail(
+                ordered=ordered,
+                bridge_seed_entities=list(bridge_metadata["bridge_seed_entities"]),
             )
         if top_k:
             ordered = ordered[:top_k]
@@ -411,6 +563,7 @@ class RetrievalFusion:
                 "merged_count": len(merged),
                 "strategy": "baseline_preserving",
                 **comparison_metadata,
+                **bridge_metadata,
             },
             rerank_metadata={},
         )

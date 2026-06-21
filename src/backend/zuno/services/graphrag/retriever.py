@@ -29,8 +29,10 @@ class GraphRetriever:
     BRIDGE_RELATION_CUE_PATTERN = re.compile(
         r"(mother of the director|father of the director|spouse of the performer|"
         r"birthplace of the founder|government position .* portrayed|woman who portrayed|"
-        r"man who portrayed|director of .* based in what|founder of|author of|performer of|"
-        r"producer of|creator of|\u7684\u5bfc\u6f14|\u7684\u521b\u59cb\u4eba|\u7684\u4f5c\u8005|\u7684\u914d\u5076)",
+        r"man who portrayed|director of .* based in what|founder of|founded by|father of|mother of|"
+        r"professor at|university .* located in what city|based in what city|hail from|where does .* hail from|"
+        r"located in what city|director of|author of|performer of|spouse of|producer of|creator of|"
+        r"\u7684\u5bfc\u6f14|\u7684\u521b\u59cb\u4eba|\u7684\u4f5c\u8005|\u7684\u914d\u5076)",
         re.IGNORECASE,
     )
     MULTI_ENTITY_RELATION_CUE_PATTERN = re.compile(
