@@ -469,3 +469,216 @@ Verified conclusions:
    - genealogy guardrail first
    - activation review second
    - then rerun `2Wiki limit=10`
+
+## W2-W3 Implementation Closure
+
+`W2` and `W3` are now implemented in:
+
+- `src/backend/zuno/services/retrieval/fusion.py`
+- `src/backend/zuno/services/graphrag/retriever.py`
+- `src/backend/zuno/services/retrieval/orchestrator.py`
+- `tests/test_graphrag_genealogy_guardrail.py`
+- `tests/test_2wiki_missed_opportunity_activation.py`
+
+Current runtime additions:
+
+- genealogy / family relation activation now recognizes:
+  - `maternal grandfather`
+  - `paternal grandfather`
+  - `father die`
+  - `mother die`
+  - `who was born later`
+- enhanced route metadata now records:
+  - `enhanced_activation_reason`
+  - `graph_activation_reason`
+  - `requery_activation_reason`
+  - `missed_opportunity_trigger_reason`
+  - `candidate_blocked_reason`
+  - `floor_preserved_reason`
+
+This means the original 2Wiki under-activation cases are no longer silent:
+
+- `e2a3...` now enters `local_graphrag` through genealogy activation
+- `298f...` now enters `local_graphrag` through comparison activation
+- `f9dc...` still activates graph + requery, but now exposes blocked low-confidence requery metadata
+
+## W4: 2Wiki Limit=10 Targeted Rerun
+
+Verified reports:
+
+- `twowiki_standard_retrieval_limit10_targeted_v2.json`
+- `twowiki_enhanced_retrieval_limit10_targeted_v2.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.70`
+- `Recall@5 = 0.85`
+- `Recall@10 = 0.85`
+- `Precision@5 = 0.36`
+- `Precision@10 = 0.18`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.85`
+- `ChainRecall@10 = 0.85`
+- `FullChainHit@5 = 0.70`
+- `FullChainHit@10 = 0.70`
+- `avg/p50/p95 latency = 14866.14 / 14033.90 / 18782.37 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.70`
+- `Recall@5 = 0.80`
+- `Recall@10 = 0.90`
+- `Precision@5 = 0.34`
+- `Precision@10 = 0.19`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.80`
+- `ChainRecall@10 = 0.90`
+- `FullChainHit@5 = 0.60`
+- `FullChainHit@10 = 0.80`
+- `avg/p50/p95 latency = 16494.69 / 12822.09 / 27024.74 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Route Diagnostics
+
+- `internal_route distribution = {local_graphrag: 9, standard_rag: 1}`
+- `route_selection_reason distribution = {relation_question: 9, standard_question: 1}`
+- `graph_used = 9/10`
+- `requery_used = 4/10`
+- `community_used = 0/10`
+- `drift_used = 0/10`
+- `standard_floor_used = 10/10`
+- `genealogy_promotion_blocked count = 6`
+
+### Rerun Delta Summary
+
+- `enhanced_helps cases = 0`
+- `enhanced_hurts cases = 1`
+  - `2ec440560bb011ebab90acde48001122`
+- `standard_gap_cases = 3`
+- `missed_opportunity_cases = 3`
+
+Current missed-opportunity set is still:
+
+1. `e2a3bf2a0bdd11eba7f7acde48001122`
+2. `f9dcb4a60bda11eba7f7acde48001122`
+3. `298f23b8088a11ebbd6eac1f6bf848b6`
+
+But the shape changed:
+
+- all three now activate as intended
+- none stays on the old under-activation path
+- the remaining problem is recovery precision, not activation silence
+
+### Updated Blocker Interpretation
+
+The blocker `2ec440...` still fails, but with better diagnostics:
+
+- `graph_activation_reason = genealogy_bridge_pattern`
+- `enhanced_activation_reason = genealogy_bridge_pattern`
+- `candidate_blocked_reason = low_precision_genealogy`
+- `floor_preserved_reason = standard_floor_chain_protection`
+- `genealogy_relation_cues = [maternal grandfather, grandfather, father of]`
+
+So the new result is not "genealogy never activated".
+
+It is:
+
+- genealogy activation now works
+- genealogy blocking now records low-precision candidates
+- but the current guardrail still does not fully stop noisy family neighbors from surviving above the missing bridge evidence
+
+That is why:
+
+- `Recall@10` improves from `0.85 -> 0.90`
+- `FullChainHit@10` improves from `0.70 -> 0.80`
+- but `Recall@5` and `FullChainHit@5` are still below standard
+
+## W4 Verdict
+
+Current rerun does **not** pass the required 2Wiki gate.
+
+Required gate:
+
+1. `enhanced Recall@5 >= standard Recall@5`
+2. `enhanced FullChainHit@5 >= standard FullChainHit@5`
+3. `failure_count = 0`
+4. `fallback_rate <= 30%`
+5. `p95 latency <= standard p95 * 2.5`
+6. `enhanced_hurts cases <= 1`
+
+Result:
+
+1. failed
+2. failed
+3. passed
+4. passed
+5. passed
+6. passed
+
+Current interpretation:
+
+- activation got better
+- top10 recovery got slightly better
+- early-rank preservation is still not solved
+- this is still not baseline-preserving on 2Wiki `limit=10`
+
+So `2Wiki limit=20` is still blocked.
+
+## W5: HotpotQA Regression Check
+
+Verified reports:
+
+- `hotpotqa_standard_retrieval_limit50_2wiki_regression_v2.json`
+- `hotpotqa_enhanced_retrieval_limit50_2wiki_regression_v2.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.86`
+- `Recall@5 = 0.98`
+- `Recall@10 = 0.98`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.98`
+- `FullChainHit@5 = 0.96`
+- derived `FullChainHit@3 = 0.88`
+- `avg/p50/p95 latency = 12418.59 / 11968.05 / 15253.67 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.85`
+- `Recall@5 = 0.98`
+- `Recall@10 = 0.99`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.98`
+- `FullChainHit@5 = 0.96`
+- derived `FullChainHit@3 = 0.88`
+- `avg/p50/p95 latency = 16108.13 / 13625.91 / 28336.51 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Regression Verdict
+
+This is not a hard regression, but it is also no longer a clean enhanced win.
+
+What still holds:
+
+- `enhanced Recall@5 >= standard Recall@5`
+- `enhanced FullChainHit@3 >= standard FullChainHit@3`
+- `fallback_count = 0`
+- `failure_count = 0`
+- `p95 latency ratio = 1.86x < 2.2`
+
+What no longer holds:
+
+- `enhanced Recall@2 > standard Recall@2`
+- `enhanced_helps_count > enhanced_hurts_count`
+
+Current HotpotQA hurt count on this rerun is `1`, and the main surface is now a
+baseline-preserving tie rather than a clear enhanced lead.
+
+So the current 2Wiki activation change is keepable for local analysis, but it
+does not justify broader 2Wiki expansion or a stronger product claim.

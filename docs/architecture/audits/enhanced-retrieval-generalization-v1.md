@@ -515,3 +515,33 @@ This program is now closed at the intended scope:
 4. `2Wiki` currently fails the same baseline-preserving standard and should not
    expand to larger samples until graph ranking is tightened for genealogy-style
    bridge questions
+
+## Post-2Wiki Targeted Tuning Check
+
+After the dedicated `2Wiki Targeted Tuning V1` activation pass:
+
+- genealogy / comparison under-activation is no longer the main failure shape
+- `2Wiki` still fails the product gate because early-rank genealogy precision is
+  not yet good enough
+- HotpotQA main surface still stays within the non-regression envelope, but no
+  longer shows the previous stronger enhanced lead on the rerun
+
+Latest verification:
+
+- `2Wiki limit=10`
+  - `standard Recall@5 / FullChainHit@5 = 0.85 / 0.70`
+  - `enhanced Recall@5 / FullChainHit@5 = 0.80 / 0.60`
+  - `enhanced Recall@10 / FullChainHit@10 = 0.90 / 0.80`
+  - verdict: activation improved, product gate still failed
+- HotpotQA `limit=50`
+  - `standard Recall@5 / FullChainHit@5 = 0.98 / 0.96`
+  - `enhanced Recall@5 / FullChainHit@5 = 0.98 / 0.96`
+  - derived `FullChainHit@3` ties at `0.88`
+  - verdict: no hard regression, but current rerun is a tie rather than an
+    enhanced win
+
+So the correct next move after this audit is still:
+
+1. tighten genealogy path precision
+2. keep HotpotQA as the regression rail
+3. do not expand `2Wiki` to `limit=20` yet

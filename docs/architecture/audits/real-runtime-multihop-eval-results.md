@@ -1339,3 +1339,156 @@ Decision:
 - do not expand `2Wiki` beyond this smoke yet
 - the next required work is graph ranking / path precision for genealogy-style
   bridge questions, not more requery tuning
+
+## 2Wiki Limit=10 Targeted Rerun V2
+
+Current verified targeted rerun was executed on June 21, 2026 after:
+
+- genealogy bridge guardrail
+- 2Wiki relation / comparison activation expansion
+- enhanced activation metadata hardening
+
+Compared reports:
+
+- `twowiki_standard_retrieval_limit10_targeted_v2.json`
+- `twowiki_enhanced_retrieval_limit10_targeted_v2.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.70`
+- `Recall@5 = 0.85`
+- `Recall@10 = 0.85`
+- `Precision@5 = 0.36`
+- `Precision@10 = 0.18`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.85`
+- `ChainRecall@10 = 0.85`
+- `FullChainHit@5 = 0.70`
+- `FullChainHit@10 = 0.70`
+- `avg/p50/p95 latency = 14866.14 / 14033.90 / 18782.37 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.70`
+- `Recall@5 = 0.80`
+- `Recall@10 = 0.90`
+- `Precision@5 = 0.34`
+- `Precision@10 = 0.19`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.80`
+- `ChainRecall@10 = 0.90`
+- `FullChainHit@5 = 0.60`
+- `FullChainHit@10 = 0.80`
+- `avg/p50/p95 latency = 16494.69 / 12822.09 / 27024.74 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Route Diagnostics
+
+- `internal_route distribution = {local_graphrag: 9, standard_rag: 1}`
+- `route_selection_reason distribution = {relation_question: 9, standard_question: 1}`
+- `graph_used = 9/10`
+- `requery_used = 4/10`
+- `community_used = 0/10`
+- `drift_used = 0/10`
+- `standard_floor_used = 10/10`
+- `genealogy_promotion_blocked count = 6`
+
+### Delta Summary
+
+- `enhanced_helps cases = 0`
+- `enhanced_hurts cases = 1`
+  - `2ec440560bb011ebab90acde48001122`
+- `standard_gap_cases = 3`
+- `missed_opportunity_cases = 3`
+
+The important change is structural, not headline score:
+
+- all three earlier missed-opportunity questions now activate
+- none remains a pure under-activation miss
+- remaining failures are now precision failures inside the activated route
+
+Current blocker still is:
+
+- `2ec440560bb011ebab90acde48001122`
+- `Who is the maternal grandfather of Antiochus X Eusebes?`
+- enhanced metadata now shows:
+  - `graph_activation_reason = genealogy_bridge_pattern`
+  - `candidate_blocked_reason = low_precision_genealogy`
+  - `floor_preserved_reason = standard_floor_chain_protection`
+
+But the current guardrail still does not fully protect top5:
+
+- `North Marion High School (West Virginia)` still reaches rank 3
+- `Cleopatra IV of Egypt` is still pushed to rank 6
+
+### Decision
+
+This rerun still fails the 2Wiki gate:
+
+1. `enhanced Recall@5 >= standard Recall@5`: failed
+2. `enhanced FullChainHit@5 >= standard FullChainHit@5`: failed
+3. `failure_count = 0`: passed
+4. `fallback_rate <= 30%`: passed
+5. `p95 latency <= standard p95 * 2.5`: passed
+6. `enhanced_hurts cases <= 1`: passed
+
+Verdict:
+
+- activation work improved observability and top10 recovery
+- enhanced retrieval is still **not** baseline-preserving on `2Wiki limit=10`
+- `2Wiki limit=20` remains blocked
+
+## HotpotQA Limit=50 Regression Check After 2Wiki Tuning
+
+Current verified regression check was executed on June 21, 2026 with:
+
+- `hotpotqa_standard_retrieval_limit50_2wiki_regression_v2.json`
+- `hotpotqa_enhanced_retrieval_limit50_2wiki_regression_v2.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.86`
+- `Recall@5 = 0.98`
+- `Recall@10 = 0.98`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.98`
+- `FullChainHit@5 = 0.96`
+- derived `FullChainHit@3 = 0.88`
+- `avg/p50/p95 latency = 12418.59 / 11968.05 / 15253.67 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.85`
+- `Recall@5 = 0.98`
+- `Recall@10 = 0.99`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.98`
+- `FullChainHit@5 = 0.96`
+- derived `FullChainHit@3 = 0.88`
+- `avg/p50/p95 latency = 16108.13 / 13625.91 / 28336.51 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Regression Verdict
+
+Current HotpotQA rerun stays inside the minimum non-regression envelope:
+
+- `enhanced Recall@5 >= standard Recall@5`
+- `enhanced FullChainHit@3 >= standard FullChainHit@3`
+- `fallback_count = 0`
+- `failure_count = 0`
+- `p95 latency ratio = 1.86x < 2.2`
+
+But it is no longer a stronger enhanced win:
+
+- `Recall@2` drops from `0.86` to `0.85`
+- current rerun shows `enhanced_hurts cases = 1`
+- current rerun `enhanced_helps cases = 0`
+
+So the current 2Wiki tuning is acceptable as a local targeted branch result,
+but it does not justify broader rollout or larger 2Wiki expansion.

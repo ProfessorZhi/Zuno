@@ -114,6 +114,19 @@ Current product-comparison status:
   - `enhanced FullChainHit@5 = 0.60 < 0.70`
   - `enhanced_hurts cases = 1`
 - next move is `2Wiki targeted tuning`, not `2Wiki limit=20`
+- `2Wiki targeted tuning` has now completed activation review plus a rerun
+- current targeted rerun still does **not** pass the product gate:
+  - `enhanced Recall@5 = 0.80 < 0.85`
+  - `enhanced FullChainHit@5 = 0.60 < 0.70`
+  - `enhanced Recall@10 = 0.90 > 0.85`
+  - `enhanced FullChainHit@10 = 0.80 > 0.70`
+  - `graph_used = 9/10`
+  - `requery_used = 4/10`
+- meaning:
+  - activation is no longer the main blocker
+  - early-rank genealogy precision is still the blocker
+- current next move is tighter genealogy path precision, still **not**
+  `2Wiki limit=20`
 
 ## What Each Internal Label Is Allowed To Claim
 
