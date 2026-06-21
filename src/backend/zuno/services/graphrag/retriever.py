@@ -23,6 +23,7 @@ class GraphRetriever:
     COMPARISON_CUE_PATTERN = re.compile(
         r"(same nationality|same country|same neighborhood|same birthplace|share the same|"
         r"located in the same|which is older|which is younger|which is earlier|which is later|"
+        r"born later|born earlier|was born later|was born earlier|"
         r"which is larger|which is smaller|\u662f\u5426\u76f8\u540c|\u540c\u4e00|\u5206\u522b\u6765\u81ea|\u8c01\u66f4)",
         re.IGNORECASE,
     )
@@ -33,6 +34,13 @@ class GraphRetriever:
         r"professor at|university .* located in what city|based in what city|hail from|where does .* hail from|"
         r"located in what city|director of|author of|performer of|spouse of|producer of|creator of|"
         r"\u7684\u5bfc\u6f14|\u7684\u521b\u59cb\u4eba|\u7684\u4f5c\u8005|\u7684\u914d\u5076)",
+        re.IGNORECASE,
+    )
+    GENEALOGY_RELATION_CUE_PATTERN = re.compile(
+        r"(maternal grandfather|paternal grandfather|grandfather|grandmother|father die|mother die|"
+        r"when did .* father die|when did .* mother die|who is .* father|who is .* mother|"
+        r"spouse|wife|husband|child of|son of|daughter of|sibling of|brother of|sister of|"
+        r"married to|family tree|ancestor|descendant)",
         re.IGNORECASE,
     )
     MULTI_ENTITY_RELATION_CUE_PATTERN = re.compile(
@@ -426,6 +434,14 @@ class GraphRetriever:
                 bridge_bonus += 3
             if any(token in query_lower for token in ["director", "founder", "author", "performer", "spouse", "mother", "position"]):
                 bridge_bonus += 1
+        if cls._is_genealogy_relation_query(query):
+            if relation_type in {"father", "mother", "parent", "child", "spouse", "sibling", "ancestor", "descendant"}:
+                bridge_bonus += 3
+            if any(
+                token in query_lower
+                for token in ["father", "mother", "parent", "child", "spouse", "wife", "husband", "grandfather", "grandmother"]
+            ):
+                bridge_bonus += 1
 
         if cls._is_multi_entity_relation_query(query):
             if relation_type in {"related_to", "acquired", "influenced", "founded_by", "directed_by"}:
@@ -456,9 +472,10 @@ class GraphRetriever:
             return False
         comparison_question = cls._is_comparison_query(first_line)
         bridge_relation_question = cls._is_bridge_relation_query(first_line)
+        genealogy_relation_question = cls._is_genealogy_relation_query(first_line)
         multi_entity_relation_question = cls._is_multi_entity_relation_query(first_line)
         if cls._is_simple_fact_lookup(first_line) and not (
-            comparison_question or bridge_relation_question or multi_entity_relation_question
+            comparison_question or bridge_relation_question or genealogy_relation_question or multi_entity_relation_question
         ):
             return False
         policy_relation_cues = cls._policy_values(query_policy, "graph_relation_cues") or list(
@@ -471,7 +488,7 @@ class GraphRetriever:
         has_policy_step_cue = any(cue in first_line for cue in policy_step_cues)
         if cls.STRONG_RELATION_CUE_PATTERN.search(first_line):
             return True
-        if comparison_question or bridge_relation_question or multi_entity_relation_question:
+        if comparison_question or bridge_relation_question or genealogy_relation_question or multi_entity_relation_question:
             return True
         if has_policy_step_cue and any(re.search(r"[\u4e00-\u9fff]", seed) for seed in seed_entities):
             return True
@@ -486,6 +503,10 @@ class GraphRetriever:
     @classmethod
     def _is_bridge_relation_query(cls, query: str) -> bool:
         return bool(cls.BRIDGE_RELATION_CUE_PATTERN.search(str(query or "")))
+
+    @classmethod
+    def _is_genealogy_relation_query(cls, query: str) -> bool:
+        return bool(cls.GENEALOGY_RELATION_CUE_PATTERN.search(str(query or "")))
 
     @classmethod
     def _is_multi_entity_relation_query(cls, query: str) -> bool:
@@ -507,6 +528,7 @@ class GraphRetriever:
             or cls.WEAK_RELATION_CUE_PATTERN.search(first_line)
             or cls._is_comparison_query(first_line)
             or cls._is_bridge_relation_query(first_line)
+            or cls._is_genealogy_relation_query(first_line)
             or cls._is_multi_entity_relation_query(first_line)
             or any(cue in first_line for cue in policy_relation_cues)
             or any(cue in first_line for cue in policy_step_cues)

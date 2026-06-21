@@ -1,6 +1,7 @@
 from __future__ import annotations
 import re
 
+from zuno.services.graphrag.retriever import GraphRetriever
 from zuno.services.graphrag.models import normalize_retrieval_mode
 from zuno.services.graphrag.community.service import CommunityGraphService
 from zuno.services.retrieval.fusion import RetrievalFusion
@@ -270,6 +271,124 @@ class RetrievalOrchestrator:
         for pattern, reason in cls.PROACTIVE_REQUERY_PATTERNS:
             if re.search(pattern, query_text):
                 return reason
+        return None
+
+    @staticmethod
+    def _standard_floor_gap(*, standard_floor_documents: list[dict], top_k: int | None) -> bool:
+        required = min(int(top_k or 5), 5)
+        return len(list(standard_floor_documents or [])) < max(required, 1)
+
+    @staticmethod
+    def _collect_candidate_blocked_reasons(documents: list[dict]) -> list[str]:
+        reasons: list[str] = []
+        for document in documents or []:
+            metadata = dict(document.get("metadata") or {})
+            for key in (
+                "candidate_blocked_reason",
+                "genealogy_promotion_blocked_reason",
+                "requery_promotion_blocked_reason",
+            ):
+                value = str(metadata.get(key) or "").strip()
+                if value and value not in reasons:
+                    reasons.append(value)
+        return reasons
+
+    @staticmethod
+    def _graph_activation_reason(
+        *,
+        query: str,
+        graph_route_attempted: bool,
+        graph_worthy: bool,
+        fusion_metadata: dict,
+    ) -> str | None:
+        if not graph_route_attempted:
+            return None
+        if fusion_metadata.get("genealogy_bridge_question"):
+            return "genealogy_bridge_pattern"
+        if GraphRetriever._is_genealogy_relation_query(query):
+            return "genealogy_bridge_pattern"
+        if GraphRetriever._is_comparison_query(query):
+            return "comparison_bridge_pattern"
+        if GraphRetriever._is_bridge_relation_query(query):
+            return "bridge_relation_pattern"
+        if graph_worthy:
+            return "graph_worthy_relation_question"
+        return "graph_route_attempted"
+
+    @staticmethod
+    def _enhanced_activation_reason(
+        *,
+        normalized_mode: str,
+        graph_route_attempted: bool,
+        requery_attempted: bool,
+        graph_contributed: bool,
+        requery_contributed: bool,
+        standard_floor_reused: bool,
+        enhanced_noop: bool,
+        enhanced_fallback_to_floor: bool,
+        graph_activation_reason: str | None,
+        requery_activation_reason: str | None,
+    ) -> str | None:
+        if normalized_mode != "rag_graph_deep":
+            return None
+        if graph_contributed and requery_contributed:
+            return "graph_and_requery_confidence_gated"
+        if graph_contributed:
+            return graph_activation_reason or "graph_relation_activation"
+        if requery_contributed:
+            return requery_activation_reason or "requery_bridge_activation"
+        if enhanced_fallback_to_floor:
+            return "standard_floor_preserved_after_low_confidence_enhancement"
+        if enhanced_noop or standard_floor_reused:
+            return "standard_floor_only"
+        if graph_route_attempted:
+            return graph_activation_reason or "graph_route_attempted_without_gain"
+        if requery_attempted:
+            return requery_activation_reason or "requery_attempted_without_gain"
+        return None
+
+    @staticmethod
+    def _missed_opportunity_trigger_reason(
+        *,
+        normalized_mode: str,
+        route_selection_reason: str,
+        standard_floor_gap: bool,
+        graph_route_attempted: bool,
+        graph_contributed: bool,
+        requery_attempted: bool,
+        requery_contributed: bool,
+        graph_activation_reason: str | None,
+        requery_activation_reason: str | None,
+    ) -> str | None:
+        if normalized_mode != "rag_graph_deep" or not standard_floor_gap:
+            return None
+        if route_selection_reason == "relation_question" and not graph_route_attempted and not requery_attempted:
+            return "relation_floor_gap_without_activation"
+        if graph_route_attempted and not graph_contributed and requery_attempted and not requery_contributed:
+            return "graph_and_requery_recovery_incomplete"
+        if graph_route_attempted and not graph_contributed:
+            return graph_activation_reason or "graph_recovery_incomplete"
+        if requery_attempted and not requery_contributed:
+            return requery_activation_reason or "requery_recovery_incomplete"
+        return None
+
+    @staticmethod
+    def _floor_preserved_reason(
+        *,
+        standard_floor_gap: bool,
+        standard_floor_reused: bool,
+        enhanced_noop: bool,
+        enhanced_fallback_to_floor: bool,
+        blocked_reasons: list[str],
+    ) -> str | None:
+        if standard_floor_gap:
+            return None
+        if blocked_reasons:
+            return "standard_floor_chain_protection"
+        if enhanced_fallback_to_floor:
+            return "enhancement_channel_low_confidence"
+        if enhanced_noop or standard_floor_reused:
+            return "standard_floor_topk_complete"
         return None
 
     async def _run_single_pass(self, mode: str, query: str, knowledge_ids: list[str], retrieval_options: dict | None = None) -> dict:
@@ -653,6 +772,52 @@ class RetrievalOrchestrator:
             route_selection_reason = "relation_question"
         else:
             route_selection_reason = "standard_question"
+        fusion_metadata = dict(final_pass.get("fusion_metadata") or {})
+        standard_floor_gap = self._standard_floor_gap(
+            standard_floor_documents=standard_floor_documents,
+            top_k=retrieval_options.get("top_k"),
+        )
+        blocked_reasons = self._collect_candidate_blocked_reasons(list(final_pass.get("documents") or []))
+        for blocked_reason in requery_blocked_reasons:
+            if blocked_reason and blocked_reason not in blocked_reasons:
+                blocked_reasons.append(blocked_reason)
+        graph_activation_reason = self._graph_activation_reason(
+            query=query,
+            graph_route_attempted=graph_route_attempted,
+            graph_worthy=bool(final_pass.get("graph_worthy")),
+            fusion_metadata=fusion_metadata,
+        )
+        requery_activation_reason = proactive_requery_reason if (requery_attempted or proactive_requery_queries) else None
+        enhanced_activation_reason = self._enhanced_activation_reason(
+            normalized_mode=normalized_mode,
+            graph_route_attempted=graph_route_attempted,
+            requery_attempted=requery_attempted,
+            graph_contributed=graph_contributed,
+            requery_contributed=requery_contributed,
+            standard_floor_reused=standard_floor_reused,
+            enhanced_noop=enhanced_noop,
+            enhanced_fallback_to_floor=enhanced_fallback_to_floor,
+            graph_activation_reason=graph_activation_reason,
+            requery_activation_reason=requery_activation_reason,
+        )
+        missed_opportunity_trigger_reason = self._missed_opportunity_trigger_reason(
+            normalized_mode=normalized_mode,
+            route_selection_reason=route_selection_reason,
+            standard_floor_gap=standard_floor_gap,
+            graph_route_attempted=graph_route_attempted,
+            graph_contributed=graph_contributed,
+            requery_attempted=requery_attempted,
+            requery_contributed=requery_contributed,
+            graph_activation_reason=graph_activation_reason,
+            requery_activation_reason=requery_activation_reason,
+        )
+        floor_preserved_reason = self._floor_preserved_reason(
+            standard_floor_gap=standard_floor_gap,
+            standard_floor_reused=standard_floor_reused,
+            enhanced_noop=enhanced_noop,
+            enhanced_fallback_to_floor=enhanced_fallback_to_floor,
+            blocked_reasons=blocked_reasons,
+        )
         metadata = {
             "plan": final_plan,
             "initial_plan": first_plan,
@@ -696,6 +861,7 @@ class RetrievalOrchestrator:
             "requery_available": bool(retrieval_options.get("needs_query_rewrite", True)),
             "requery_used": bool(requery_attempted or requery_used),
             "requery_triggered_reason": proactive_requery_reason,
+            "requery_activation_reason": requery_activation_reason,
             "requery_queries": proactive_requery_queries,
             "requery_result_count": sum(
                 int(run.get("result_count") or 0)
@@ -727,8 +893,13 @@ class RetrievalOrchestrator:
             "enhanced_noop": enhanced_noop,
             "enhanced_noop_reason": enhanced_noop_reason,
             "enhanced_fallback_to_floor": enhanced_fallback_to_floor,
+            "enhanced_activation_reason": enhanced_activation_reason,
+            "graph_activation_reason": graph_activation_reason,
+            "missed_opportunity_trigger_reason": missed_opportunity_trigger_reason,
+            "candidate_blocked_reason": blocked_reasons[0] if blocked_reasons else None,
+            "floor_preserved_reason": floor_preserved_reason,
             "confidence_gated_fusion_used": (
-                str((final_pass.get("fusion_metadata") or {}).get("strategy") or "").strip().lower()
+                str(fusion_metadata.get("strategy") or "").strip().lower()
                 == "baseline_preserving"
             ),
             "final_rerank_used": bool((final_plan.get("rerank_policy") or {}).get("enabled")),
@@ -763,8 +934,8 @@ class RetrievalOrchestrator:
                 for doc in final_pass.get("documents", [])
                 if doc.get("chunk_id")
             ]),
-            "fusion_metadata": dict(final_pass.get("fusion_metadata") or {}),
-            "fusion_strategy": (final_pass.get("fusion_metadata") or {}).get("strategy"),
+            "fusion_metadata": fusion_metadata,
+            "fusion_strategy": fusion_metadata.get("strategy"),
             "first_pass_quality": {
                 "document_count": first_pass.get("document_count"),
                 "top_score": first_pass.get("top_score"),
