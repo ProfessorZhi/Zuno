@@ -50,6 +50,30 @@ class RetrievalFusion:
         "served during what years",
         "population of",
     )
+    REQUERY_GENERIC_SEEDS = {
+        "japanese",
+        "american",
+        "british",
+        "canadian",
+        "chinese",
+        "french",
+        "german",
+        "italian",
+        "korean",
+        "russian",
+        "spanish",
+        "manga",
+        "series",
+        "band",
+        "film",
+        "movie",
+        "novel",
+        "song",
+        "album",
+        "city",
+        "country",
+        "university",
+    }
     REQUERY_RELATION_TOKEN_MAP = {
         "born in what year": ("born", "birth", "year"),
         "hail from": ("from", "origin", "country", "canadian", "japanese"),
@@ -331,6 +355,8 @@ class RetrievalFusion:
             if not normalized or normalized in cls.ENTITY_STOPWORDS:
                 continue
             if len(normalized) < 3:
+                continue
+            if normalized in cls.REQUERY_GENERIC_SEEDS:
                 continue
             if any(normalized == seed or normalized in seed or seed in normalized for seed in ordered):
                 continue

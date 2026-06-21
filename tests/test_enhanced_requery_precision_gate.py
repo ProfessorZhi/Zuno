@@ -51,7 +51,7 @@ def test_low_confidence_requery_cannot_displace_standard_top5():
             "vector",
             0.0,
             matched_by=["requery"],
-            content="A manga and anime work by a related creator.",
+            content="A Japanese manga and anime work by a related creator.",
         )
     ]
 
@@ -68,6 +68,7 @@ def test_low_confidence_requery_cannot_displace_standard_top5():
     assert requery_doc.metadata["requery_promotion_allowed"] is False
     assert requery_doc.metadata["requery_promotion_blocked_reason"] == "low_confidence_requery"
     assert requery_doc.metadata["requery_noise_reason"] is not None
+    assert requery_doc.metadata["requery_seed_coverage"] == []
 
 
 def test_requery_can_promote_when_it_recovers_missing_evidence_side():
@@ -177,3 +178,33 @@ def test_requery_metadata_records_confidence_and_block_reason():
     assert promoted.metadata["requery_promotion_allowed"] is True
     assert blocked.metadata["requery_confidence_score"] < promoted.metadata["requery_confidence_score"]
     assert blocked.metadata["requery_promotion_blocked_reason"] == "low_confidence_requery"
+
+
+def test_generic_nationality_seed_alone_does_not_unlock_requery_promotion():
+    fusion = RetrievalFusion()
+    vector_docs = [
+        _doc("v1", 'I&quot;s', "vector", 0.95, content="I's follows Ichitaka Seto."),
+        _doc("v2", "Masakazu Katsura", "vector", 0.90, content="Masakazu Katsura was born in 1962."),
+    ]
+    requery_docs = [
+        _doc(
+            "r1",
+            "Noise Manga",
+            "vector",
+            0.0,
+            matched_by=["requery"],
+            content="A Japanese manga series by another creator.",
+        )
+    ]
+
+    result = fusion.merge(
+        query="A Japanese manga series based on a 16 year old high school student Ichitaka Seto, is written and illustrated by someone born in what year?",
+        documents_by_source={"vector": vector_docs, "requery": requery_docs},
+        top_k=5,
+    )
+
+    requery_doc = next(doc for doc in result.documents if doc.file_name == "Noise Manga")
+
+    assert requery_doc.metadata["requery_seed_coverage"] == []
+    assert requery_doc.metadata["requery_confidence_score"] == 0
+    assert requery_doc.metadata["requery_promotion_allowed"] is False

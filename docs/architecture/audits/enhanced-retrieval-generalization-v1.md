@@ -372,3 +372,141 @@ Verified conclusions:
    - add requery precision gate
    - rerun HotpotQA `limit=50`
    - only then enter `2Wiki small smoke`
+
+## G2 Implementation Closure
+
+`G2` is now implemented in:
+
+- `src/backend/zuno/services/retrieval/fusion.py`
+- `src/backend/zuno/services/retrieval/orchestrator.py`
+- `tests/test_enhanced_requery_precision_gate.py`
+
+The final precision gate does two things:
+
+1. treat `requery`-only candidates as a separate fusion class instead of normal
+   baseline vector docs
+2. block promotion when requery support comes only from generic same-domain
+   tokens such as `Japanese` or `manga`
+
+This closes the exact leak observed in `5a79311755429970f5fffe67`:
+
+- generic nationality/topic tokens no longer count as enough seed support
+- low-confidence requery stays supplementary instead of entering early ranks
+
+Runtime metadata now exposes:
+
+- `requery_confidence_score`
+- `requery_promotion_allowed`
+- `requery_promotion_blocked_reason`
+- `requery_help_reason`
+- `requery_noise_reason`
+- `requery_confidence_summary`
+
+## HotpotQA Limit=50 Post-cleanup Rerun
+
+Verified reports:
+
+- `hotpotqa_standard_retrieval_limit50_post_cleanup.json`
+- `hotpotqa_enhanced_retrieval_limit50_post_cleanup_v2.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.85`
+- `Recall@5 = 0.97`
+- `Recall@10 = 0.97`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.97`
+- `FullChainHit@5 = 0.94`
+- `avg/p50/p95 latency = 13291.03 / 12854.74 / 17251.26 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.85`
+- `Recall@5 = 0.98`
+- `Recall@10 = 0.99`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.98`
+- `FullChainHit@5 = 0.96`
+- `avg/p50/p95 latency = 13823.47 / 12821.26 / 21651.31 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Route Diagnostics
+
+- `internal_route distribution = {standard_rag: 42, local_graphrag: 8}`
+- `route_selection_reason distribution = {standard_question: 42, relation_question: 8}`
+- `graph_used = 8/50`
+- `requery_used = 9/50`
+- `community_used = 0/50`
+- `drift_used = 0/50`
+- `p95 latency ratio vs standard = 1.26x`
+
+### Per-question Delta Summary
+
+- `enhanced_helps cases = 1`
+  - `5ae4a3265542995ad6573de5`
+- `enhanced_hurts cases = 0`
+- `enhanced_ties cases = 49`
+
+The previous hurt case is now closed:
+
+- `5a79311755429970f5fffe67`
+- `requery_confidence_summary = {count: 0, promoted_count: 0}`
+- top5 again keeps both `I&quot;s` and `Masakazu Katsura`
+
+## 2Wiki Small Smoke
+
+Verified reports:
+
+- `twowiki_standard_retrieval_limit10_smoke.json`
+- `twowiki_enhanced_retrieval_limit10_smoke.json`
+
+Current smoke result is intentionally small and should be treated only as a
+cross-dataset guardrail check.
+
+### standard_retrieval
+
+- `Recall@5 = 0.85`
+- `FullChainHit@5 = 0.70`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@5 = 0.80`
+- `FullChainHit@5 = 0.60`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Smoke Verdict
+
+`2Wiki` is not ready for expansion yet.
+
+Observed blocker:
+
+- `question_id = 2ec440560bb011ebab90acde48001122`
+- question: `Who is the maternal grandfather of Antiochus X Eusebes?`
+- standard top5 keeps both:
+  - `Antiochus X Eusebes`
+  - `Cleopatra IV of Egypt`
+- enhanced `local_graphrag` promotes noisy genealogy neighbors into top5 and
+  pushes `Cleopatra IV of Egypt` to rank 6
+
+This is not a requery problem.
+
+It is a remaining graph-ranking / path-selection precision gap for genealogical
+bridge questions on `2Wiki`.
+
+## Final Verdict
+
+This program is now closed at the intended scope:
+
+1. HotpotQA false-positive requery hurt case is fixed
+2. HotpotQA `limit=50` post-cleanup still beats standard on the main retrieval
+   surface
+3. cautious `2Wiki` smoke is now verified
+4. `2Wiki` currently fails the same baseline-preserving standard and should not
+   expand to larger samples until graph ranking is tightened for genealogy-style
+   bridge questions

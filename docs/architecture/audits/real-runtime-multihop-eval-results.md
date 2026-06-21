@@ -1212,3 +1212,128 @@ Verdict:
 - this is strong enough to allow a cautious `2Wiki small smoke`
 - the next precision cleanup target is the single remaining false-positive
   requery hurt case
+
+## HotpotQA Limit=50 Post-cleanup V2
+
+Current verified cleanup rerun was executed on June 21, 2026 after the
+dedicated requery precision gate blocked generic same-domain requery promotion.
+
+Compared reports:
+
+- `hotpotqa_standard_retrieval_limit50_post_cleanup.json`
+- `hotpotqa_enhanced_retrieval_limit50_post_cleanup_v2.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.85`
+- `Recall@5 = 0.97`
+- `Recall@10 = 0.97`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.97`
+- `FullChainHit@5 = 0.94`
+- `avg/p50/p95 latency = 13291.03 / 12854.74 / 17251.26 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.85`
+- `Recall@5 = 0.98`
+- `Recall@10 = 0.99`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.98`
+- `FullChainHit@5 = 0.96`
+- `avg/p50/p95 latency = 13823.47 / 12821.26 / 21651.31 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Route Diagnostics
+
+- `internal_route distribution = {standard_rag: 42, local_graphrag: 8}`
+- `route_selection_reason distribution = {standard_question: 42, relation_question: 8}`
+- `graph_used = 8/50`
+- `requery_used = 9/50`
+- `community_used = 0/50`
+- `drift_used = 0/50`
+- `p95 latency ratio vs standard = 1.26x`
+
+### Delta Summary
+
+- `enhanced_helps cases = 1`
+  - `5ae4a3265542995ad6573de5`
+- `enhanced_hurts cases = 0`
+- `enhanced_ties cases = 49`
+
+The previous false-positive requery hurt case
+`5a79311755429970f5fffe67` is now closed. Enhanced top5 no longer inserts
+`My Bride is a Mermaid`, and `requery_confidence_summary` reports no promoted
+requery candidates for that query.
+
+Decision:
+
+- HotpotQA main retrieval surface remains improved after cleanup
+- this is the correct stable baseline before any further cross-dataset work
+
+## 2Wiki Limit=10 Small Smoke
+
+Current verified smoke was executed on June 21, 2026 as the first cautious
+cross-dataset check after HotpotQA cleanup.
+
+Compared reports:
+
+- `twowiki_standard_retrieval_limit10_smoke.json`
+- `twowiki_enhanced_retrieval_limit10_smoke.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.70`
+- `Recall@5 = 0.85`
+- `Recall@10 = 0.85`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.85`
+- `FullChainHit@5 = 0.70`
+- `avg/p50/p95 latency = 12091.48 / 11234.70 / 16137.56 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.70`
+- `Recall@5 = 0.80`
+- `Recall@10 = 0.85`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.80`
+- `FullChainHit@5 = 0.60`
+- `avg/p50/p95 latency = 16051.30 / 11908.35 / 29846.32 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Route Diagnostics
+
+- `internal_route distribution = {local_graphrag: 6, standard_rag: 4}`
+- `route_selection_reason distribution = {relation_question: 6, standard_question: 4}`
+- `graph_used = 6/10`
+- `requery_used = 4/10`
+- `community_used = 0/10`
+- `drift_used = 0/10`
+- `p95 latency ratio vs standard = 1.85x`
+
+### Delta Summary
+
+- `enhanced_helps cases = 0`
+- `enhanced_hurts cases = 1`
+  - `2ec440560bb011ebab90acde48001122`
+- `enhanced_ties cases = 9`
+
+Current blocker shape:
+
+- query: `Who is the maternal grandfather of Antiochus X Eusebes?`
+- standard top5 keeps both `Antiochus X Eusebes` and `Cleopatra IV of Egypt`
+- enhanced local graph route promotes noisy genealogy neighbors and pushes
+  `Cleopatra IV of Egypt` to rank 6
+
+Decision:
+
+- do not expand `2Wiki` beyond this smoke yet
+- the next required work is graph ranking / path precision for genealogy-style
+  bridge questions, not more requery tuning
