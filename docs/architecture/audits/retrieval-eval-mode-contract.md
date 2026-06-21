@@ -93,6 +93,16 @@ Current product-comparison status:
   superior
 - immediate next move should stay on HotpotQA missed-opportunity tuning rather
   than direct `2Wiki` expansion
+- HotpotQA missed-opportunity tuning has now been completed through:
+  - standard floor invariance
+  - bridge relation guardrail
+  - proactive requery activation
+- post-tuning `limit=50` rerun now shows:
+  - `enhanced Recall@5 > standard Recall@5`
+  - `enhanced FullChainHit@3 > standard FullChainHit@3`
+  - `enhanced_hurts cases = 1`
+  - `missed_opportunity_cases = 0`
+- next allowed move is a cautious `2Wiki small smoke`
 
 ## What Each Internal Label Is Allowed To Claim
 

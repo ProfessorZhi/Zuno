@@ -291,6 +291,13 @@ Current follow-up result:
   still not superior
 - recommended next move is HotpotQA missed-opportunity tuning; do not move to
   `2Wiki` yet
+- HotpotQA missed-opportunity tuning has now been completed through:
+  - standard floor invariance
+  - bridge relation guardrail
+  - proactive requery activation
+- post-tuning `limit=50` rerun now shows enhanced improvement over standard on
+  the main retrieval surface, with `enhanced_hurts cases = 1`
+- next allowed move is a cautious `2Wiki small smoke`
 
 ## Smoke Runner
 

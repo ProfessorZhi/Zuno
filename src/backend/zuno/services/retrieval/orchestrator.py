@@ -529,7 +529,7 @@ class RetrievalOrchestrator:
         if normalized_mode == "rag_graph_deep" and len(candidate_queries) > 1:
             proactive_requery_reason = self._proactive_requery_reason(query)
             if proactive_requery_reason:
-                proactive_requery_queries = list(candidate_queries[1:])
+                proactive_requery_queries = list(candidate_queries[1:2])
                 first_pass_options["proactive_requery_queries"] = proactive_requery_queries
                 first_pass_options["proactive_requery_reason"] = proactive_requery_reason
 

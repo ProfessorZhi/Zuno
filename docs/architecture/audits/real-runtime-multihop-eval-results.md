@@ -1116,3 +1116,99 @@ These are now noisy promotions, not metric-breaking failures.
 The scoring contract is defined in:
 
 - [Real Runtime Multihop Eval Standards](./real-runtime-multihop-eval-standards.md)
+
+## HotpotQA Limit=50 Post-tuning Rerun
+
+Current verified post-tuning rerun was executed on June 21, 2026 after:
+
+- standard floor invariance
+- bridge relation graph guardrail
+- proactive requery activation for bridge / attribute questions
+
+Compared reports:
+
+- `hotpotqa_standard_retrieval_limit50_post_tuning.json`
+- `hotpotqa_enhanced_retrieval_limit50_post_tuning_v3.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.84`
+- `Recall@5 = 0.96`
+- `Recall@10 = 0.96`
+- `MRR@10 = 1.00`
+- derived `ChainRecall@2/3/5 = 0.84 / 0.92 / 0.96`
+- derived `FullChainHit@2/3/5 = 0.68 / 0.84 / 0.92`
+- `avg/p50/p95 latency = 13340.82 / 13001.57 / 19170.42 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.86`
+- `Recall@5 = 0.97`
+- `Recall@10 = 0.98`
+- `MRR@10 = 1.00`
+- derived `ChainRecall@2/3/5 = 0.86 / 0.94 / 0.97`
+- derived `FullChainHit@2/3/5 = 0.72 / 0.88 / 0.94`
+- `avg/p50/p95 latency = 14615.90 / 13099.89 / 23663.10 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Route Diagnostics
+
+- `internal_route distribution = {standard_rag: 42, local_graphrag: 8}`
+- `route_selection_reason distribution = {standard_question: 42, relation_question: 8}`
+- `graph_used = 8/50`
+- `requery_used = 9/50`
+- `requery_fallback_to_floor = 0/50`
+- `community_used = 0/50`
+- `drift_used = 0/50`
+- `p95 latency ratio vs standard = 1.23x`
+
+### Per-question Delta Summary
+
+- `enhanced_helps cases = 2`
+  - `5a8e3ea95542995a26add48d`
+  - `5ae4a3265542995ad6573de5`
+- `enhanced_hurts cases = 1`
+  - `5a79311755429970f5fffe67`
+- `enhanced_ties cases = 47`
+- `standard_gap_cases = 4`
+- `missed_opportunity_cases = 0`
+
+Help shape:
+
+- `Big Stone Gap` now reaches both gold docs at `top2` through
+  `local_graphrag + requery`
+- `Buck-Tick hail from` now promotes `Hayden (musician)` into the early ranks
+  through `local_graphrag + requery`
+
+Remaining hurt shape:
+
+- `5a79311755429970f5fffe67`
+- current issue is no longer graph noise
+- it is a narrow false-positive requery case on
+  `written and illustrated by someone born in what year`
+
+### Decision
+
+This rerun passes the current closure gates:
+
+1. `enhanced Recall@5 >= standard Recall@5`
+2. `enhanced FullChainHit@3 >= standard FullChainHit@3`
+3. `enhanced_hurts cases <= 1`
+4. `enhanced_helps_count >= enhanced_hurts_count`
+5. `requery_used > 0`
+6. `missed_opportunity_cases` reduced
+7. `p95 latency <= standard p95 * 2.2`
+8. `fallback_count = 0`
+9. `failure_count = 0`
+
+Verdict:
+
+- `enhanced_retrieval` now beats the rerun `standard_retrieval` baseline on the
+  main HotpotQA `limit=50` retrieval surface
+- M2 to M4 closed the previous missed-opportunity ceiling
+- this is strong enough to allow a cautious `2Wiki small smoke`
+- the next precision cleanup target is the single remaining false-positive
+  requery hurt case
