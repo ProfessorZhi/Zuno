@@ -50,6 +50,23 @@ class RetrievalFusion:
         "served during what years",
         "population of",
     )
+    REQUERY_RELATION_TOKEN_MAP = {
+        "born in what year": ("born", "birth", "year"),
+        "hail from": ("from", "origin", "country", "canadian", "japanese"),
+        "but where does": ("from", "origin", "country", "city"),
+        "located in what city": ("city", "located", "based", "new york"),
+        "based in what city": ("city", "located", "based", "new york"),
+        "professor at": ("professor", "university", "city", "located"),
+        "founded by": ("founded", "founder"),
+        "father of": ("father", "founder"),
+        "mother of": ("mother",),
+        "director of": ("director",),
+        "author of": ("author", "written", "illustrated"),
+        "administration of": ("president", "administration", "served"),
+        "served during what years": ("served", "years", "president"),
+        "managed": ("managed", "timeframe", "years"),
+        "population of": ("population", "inhabitants", "country"),
+    }
 
     @classmethod
     def _graph_signal(cls, item: RetrievedDocument) -> int:
@@ -67,6 +84,12 @@ class RetrievalFusion:
         has_bm25 = "bm25" in matched_by or "keyword" in matched_by or item.source_type in {"bm25", "keyword"}
         has_graph = "graph" in matched_by or item.source_type == "graph"
         graph_signal = cls._graph_signal(item)
+
+        if cls._is_requery_only(item):
+            confidence = int(item.metadata.get("requery_confidence_score") or 0)
+            if item.metadata.get("requery_promotion_allowed") and confidence >= 2:
+                return 1
+            return 3
 
         if has_vector and has_graph and graph_signal >= cls.GRAPH_PROMOTION_THRESHOLD:
             return 0
@@ -199,6 +222,11 @@ class RetrievalFusion:
         has_baseline = bool({"vector", "bm25", "keyword"} & matched_by) or item.source_type in {"vector", "bm25", "keyword"}
         return has_graph and not has_baseline
 
+    @staticmethod
+    def _is_requery_only(item: RetrievedDocument) -> bool:
+        matched_by = {str(value or "").strip().lower() for value in (item.metadata.get("matched_by") or [])}
+        return "requery" in matched_by and not bool({"vector", "bm25", "keyword", "graph"} & (matched_by - {"requery"}))
+
     @classmethod
     def _annotate_comparison_metadata(
         cls,
@@ -293,6 +321,72 @@ class RetrievalFusion:
             "bridge_relation_question": bridge_question,
             "bridge_seed_entities": bridge_seeds,
             "bridge_relation_cues": bridge_cues,
+        }
+
+    @classmethod
+    def _extract_requery_seed_entities(cls, query: str) -> list[str]:
+        ordered: list[str] = []
+        for phrase in cls.QUERY_ENTITY_PHRASE_PATTERN.findall(str(query or "")):
+            normalized = cls._normalize_entity(cls.QUERY_ENTITY_PREFIX_PATTERN.sub("", phrase))
+            if not normalized or normalized in cls.ENTITY_STOPWORDS:
+                continue
+            if len(normalized) < 3:
+                continue
+            if any(normalized == seed or normalized in seed or seed in normalized for seed in ordered):
+                continue
+            ordered.append(normalized)
+        return ordered[:4]
+
+    @classmethod
+    def _extract_requery_relation_cues(cls, query: str) -> list[str]:
+        query_lower = str(query or "").lower()
+        return [cue for cue in cls.REQUERY_RELATION_TOKEN_MAP if cue in query_lower]
+
+    @classmethod
+    def _annotate_requery_metadata(
+        cls,
+        *,
+        query: str,
+        items: list[RetrievedDocument],
+    ) -> dict[str, object]:
+        seed_entities = cls._extract_requery_seed_entities(query)
+        relation_cues = cls._extract_requery_relation_cues(query)
+        baseline_titles = [
+            cls._normalize_entity(item.file_name)
+            for item in items
+            if cls._is_baseline_candidate(item) and not cls._is_requery_only(item)
+        ][:5]
+        for item in items:
+            item.metadata["requery_confidence_score"] = None
+            item.metadata["requery_promotion_allowed"] = None
+            item.metadata["requery_promotion_blocked_reason"] = None
+            item.metadata["requery_help_reason"] = None
+            item.metadata["requery_noise_reason"] = None
+            if not cls._is_requery_only(item):
+                continue
+            coverage = cls._seed_coverage(item, seed_entities)
+            haystack = cls._normalize_entity(" ".join([item.file_name, item.content, item.summary]))
+            baseline_anchor_match = 1 if any(anchor and anchor in haystack for anchor in baseline_titles) else 0
+            relation_match = 0
+            for cue in relation_cues:
+                token_hits = cls.REQUERY_RELATION_TOKEN_MAP.get(cue, ())
+                if any(token in haystack for token in token_hits):
+                    relation_match = 1
+                    break
+            confidence = len(coverage) * 2 + baseline_anchor_match + relation_match
+            allowed = confidence >= 2
+            item.metadata["requery_seed_coverage"] = sorted(coverage)
+            item.metadata["requery_relation_cues"] = list(relation_cues)
+            item.metadata["requery_confidence_score"] = confidence
+            item.metadata["requery_promotion_allowed"] = allowed
+            if allowed:
+                item.metadata["requery_help_reason"] = "seed_or_relation_supported"
+            else:
+                item.metadata["requery_promotion_blocked_reason"] = "low_confidence_requery"
+                item.metadata["requery_noise_reason"] = "weak_related_neighbor"
+        return {
+            "requery_seed_entities": seed_entities,
+            "requery_relation_cues": relation_cues,
         }
 
     @staticmethod
@@ -545,6 +639,7 @@ class RetrievalFusion:
 
         comparison_metadata = self._annotate_comparison_metadata(query=query, items=list(merged.values()))
         bridge_metadata = self._annotate_bridge_metadata(query=query, items=list(merged.values()))
+        requery_metadata = self._annotate_requery_metadata(query=query, items=list(merged.values()))
         ordered = sorted(merged.values(), key=lambda item: self._rank_key(query, item))
         if comparison_metadata["comparison_question"]:
             ordered = self._apply_comparison_guardrail(
@@ -570,6 +665,7 @@ class RetrievalFusion:
                 "strategy": "baseline_preserving",
                 **comparison_metadata,
                 **bridge_metadata,
+                **requery_metadata,
             },
             rerank_metadata={},
         )

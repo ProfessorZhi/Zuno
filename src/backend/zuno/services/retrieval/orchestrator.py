@@ -632,6 +632,19 @@ class RetrievalOrchestrator:
                 enhanced_noop = True
                 enhanced_noop_reason = "no_enhancement_channel_used"
         requery_fallback_to_floor = bool(requery_attempted and not requery_contributed)
+        requery_documents = [
+            doc for doc in (final_pass.get("documents") or [])
+            if (doc.get("metadata") or {}).get("requery_confidence_score") is not None
+        ]
+        requery_confidences = [
+            int((doc.get("metadata") or {}).get("requery_confidence_score") or 0)
+            for doc in requery_documents
+        ]
+        requery_blocked_reasons = [
+            (doc.get("metadata") or {}).get("requery_promotion_blocked_reason")
+            for doc in requery_documents
+            if (doc.get("metadata") or {}).get("requery_promotion_blocked_reason")
+        ]
         if query_features.get("global_question") and query_features.get("evidence_required"):
             route_selection_reason = "global_question_with_evidence"
         elif query_features.get("global_question"):
@@ -689,6 +702,22 @@ class RetrievalOrchestrator:
                 for run in (final_pass.get("retriever_runs") or [])
                 if run.get("source") == "requery"
             ),
+            "requery_confidence_summary": {
+                "count": len(requery_documents),
+                "max_score": max(requery_confidences) if requery_confidences else None,
+                "min_score": min(requery_confidences) if requery_confidences else None,
+                "promoted_count": sum(
+                    1
+                    for doc in requery_documents
+                    if (doc.get("metadata") or {}).get("requery_promotion_allowed") is True
+                ),
+                "blocked_count": sum(
+                    1
+                    for doc in requery_documents
+                    if (doc.get("metadata") or {}).get("requery_promotion_allowed") is False
+                ),
+                "blocked_reasons": sorted(set(requery_blocked_reasons)),
+            },
             "requery_fallback_to_floor": requery_fallback_to_floor,
             "community_available": community_available,
             "community_used": community_used,
