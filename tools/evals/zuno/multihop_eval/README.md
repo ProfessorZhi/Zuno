@@ -297,7 +297,18 @@ Current follow-up result:
   - proactive requery activation
 - post-tuning `limit=50` rerun now shows enhanced improvement over standard on
   the main retrieval surface, with `enhanced_hurts cases = 1`
-- next allowed move is a cautious `2Wiki small smoke`
+- false-positive requery cleanup has now also been completed
+- post-cleanup `limit=50` rerun now keeps HotpotQA improved while removing the
+  remaining requery hurt case:
+  - `enhanced Recall@5 = 0.98 > 0.97`
+  - `enhanced FullChainHit@5 = 0.96 > 0.94`
+  - `enhanced_hurts cases = 0`
+- cautious `2Wiki limit=10` smoke has now been executed
+- current `2Wiki` smoke does **not** preserve the standard floor:
+  - `enhanced Recall@5 = 0.80 < 0.85`
+  - `enhanced FullChainHit@5 = 0.60 < 0.70`
+  - `enhanced_hurts cases = 1`
+- next correct move is `2Wiki targeted tuning`, not `2Wiki limit=20`
 
 ## Smoke Runner
 
@@ -344,15 +355,13 @@ Important:
 - local graph or deep routes may legitimately degrade if graph or community
   capability is not actually exercised by the runtime
 
-## Future Runner Wiring
+## Current Runner Wiring
 
-The intended next integration path is:
+The real runtime runner now supports:
 
-1. add `--profile-file`
-2. add `--profile-name`
-3. resolve named models before launching real multihop retrieval/eval
-4. keep current mocked runner behavior unchanged until real multihop runtime is
-   intentionally enabled
+1. `--profile-file`
+2. `--profile-name`
+3. named model resolution before launching real multihop retrieval/eval
 
-Until that wiring lands, treat `eval_profiles.example.json` as the source of
-truth for how future real multihop runs should bind models explicitly.
+Use `eval_profiles.example.json` as the committed profile contract, and keep
+real reports under gitignored `reports/evals/multihop/real_runtime/`.

@@ -102,7 +102,18 @@ Current product-comparison status:
   - `enhanced FullChainHit@3 > standard FullChainHit@3`
   - `enhanced_hurts cases = 1`
   - `missed_opportunity_cases = 0`
-- next allowed move is a cautious `2Wiki small smoke`
+- the false-positive requery cleanup has now also been completed
+- post-cleanup `limit=50` rerun now shows:
+  - `enhanced Recall@5 = 0.98 > 0.97`
+  - `enhanced FullChainHit@5 = 0.96 > 0.94`
+  - `enhanced_hurts cases = 0`
+  - HotpotQA false-positive requery hurt case is closed
+- cautious `2Wiki limit=10` smoke has now been executed
+- current `2Wiki` smoke verdict is **not** baseline-preserving:
+  - `enhanced Recall@5 = 0.80 < 0.85`
+  - `enhanced FullChainHit@5 = 0.60 < 0.70`
+  - `enhanced_hurts cases = 1`
+- next move is `2Wiki targeted tuning`, not `2Wiki limit=20`
 
 ## What Each Internal Label Is Allowed To Claim
 
@@ -147,9 +158,9 @@ Must not claim:
 - final user-facing retrieval quality
 - product-grade latency or product-grade win rate
 
-## Next HotpotQA Limit=10 Comparison Rule
+## Preferred Product Comparison Rule
 
-The next preferred `limit=10` retrieval comparison should be:
+The preferred product comparison structure should remain:
 
 1. `standard_retrieval`
 2. `enhanced_retrieval`
@@ -157,7 +168,7 @@ The next preferred `limit=10` retrieval comparison should be:
 4. `vector_only_ablation` optional
 5. `deep_route_ablation` optional
 
-Do not lead the next report with:
+Do not lead reports with:
 
 - `baseline_rag` vs `local_graphrag` vs `deep_graphrag`
 
@@ -208,3 +219,11 @@ evaluation must separate:
 - product retrieval comparison
 - internal module attribution
 - graph-route diagnostics
+
+Current execution conclusion:
+
+- HotpotQA main retrieval surface is now stable enough after requery cleanup
+- `2Wiki` has been entered only as a small smoke
+- `2Wiki` does not yet preserve the standard floor
+- the next correct work item is cross-dataset graph-ranking tuning, not larger
+  `2Wiki` expansion
