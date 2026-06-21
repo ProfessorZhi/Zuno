@@ -226,6 +226,24 @@ class RetrievalOrchestrator:
             metadata=metadata,
         )
 
+    @staticmethod
+    def _serialize_documents(documents: list[RetrievedDocument]) -> list[dict]:
+        return [doc.to_dict() for doc in documents]
+
+    @staticmethod
+    def _merge_document_content(documents: list[RetrievedDocument]) -> str:
+        return "\n".join(doc.content for doc in documents if str(doc.content or "").strip())
+
+    @staticmethod
+    def _documents_include_source(documents: list[dict], source_name: str) -> bool:
+        normalized = str(source_name or "").strip().lower()
+        for item in documents:
+            source_type = str(item.get("source_type") or "").strip().lower()
+            matched_by = {str(value or "").strip().lower() for value in (item.get("metadata") or {}).get("matched_by") or []}
+            if source_type == normalized or normalized in matched_by:
+                return True
+        return False
+
     async def _run_single_pass(self, mode: str, query: str, knowledge_ids: list[str], retrieval_options: dict | None = None) -> dict:
         retrieval_options = retrieval_options or {}
         route_policy = str(retrieval_options.get("route_policy") or "auto").strip().lower()
@@ -361,6 +379,16 @@ class RetrievalOrchestrator:
                 }
             )
 
+        baseline_documents_by_source = {
+            source_name: list(source_docs)
+            for source_name, source_docs in documents_by_source.items()
+            if source_name in {"vector", "bm25"} and source_docs
+        }
+        standard_floor_result = self.fusion.merge(
+            query=query,
+            documents_by_source=baseline_documents_by_source,
+            top_k=retrieval_options.get("top_k"),
+        ) if baseline_documents_by_source else None
         fusion_result = self.fusion.merge(query=query, documents_by_source=documents_by_source, top_k=retrieval_options.get("top_k"))
         merged_content = "\n".join(doc.content for doc in fusion_result.documents if doc.content.strip())
         if plan.internal_route == "local_graphrag":
@@ -410,6 +438,9 @@ class RetrievalOrchestrator:
             "community_result": community_result,
             "fusion_metadata": dict(fusion_result.fusion_metadata or {}),
             "rerank_metadata": dict(fusion_result.rerank_metadata or {}),
+            "standard_floor_documents": self._serialize_documents(standard_floor_result.documents) if standard_floor_result else [],
+            "standard_floor_content": self._merge_document_content(standard_floor_result.documents) if standard_floor_result else "",
+            "standard_floor_fusion_metadata": dict(standard_floor_result.fusion_metadata or {}) if standard_floor_result else {},
             "plan": plan.to_dict(),
             "retriever_runs": retriever_runs,
             "processed_query": {
@@ -509,8 +540,29 @@ class RetrievalOrchestrator:
             or (final_pass.get("graph_result") or {}).get("paths")
             or any(run.get("source") == "graph" for run in (final_pass.get("retriever_runs") or []))
         )
+        requery_used = any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds)
         community_used = bool((final_pass.get("community_result") or {}).get("used_communities"))
         drift_used = internal_route == "drift_like"
+        standard_floor_documents = list(final_pass.get("standard_floor_documents") or [])
+        standard_floor_content = str(final_pass.get("standard_floor_content") or "")
+        graph_contributed = self._documents_include_source(list(final_pass.get("documents") or []), "graph")
+        enhancement_channel_used = bool(graph_contributed or requery_used or community_used or drift_used)
+        standard_floor_reused = False
+        enhanced_noop = False
+        enhanced_noop_reason = None
+        enhanced_fallback_to_floor = False
+        if normalized_mode == "rag_graph_deep" and standard_floor_documents and not enhancement_channel_used:
+            final_pass["documents"] = list(standard_floor_documents)
+            if standard_floor_content:
+                final_pass["content"] = standard_floor_content
+                final_pass["raw_content"] = standard_floor_content
+            standard_floor_reused = True
+            if graph_route_attempted or graph_route_used:
+                enhanced_fallback_to_floor = True
+                enhanced_noop_reason = "enhancement_channel_low_confidence"
+            else:
+                enhanced_noop = True
+                enhanced_noop_reason = "no_enhancement_channel_used"
         if query_features.get("global_question") and query_features.get("evidence_required"):
             route_selection_reason = "global_question_with_evidence"
         elif query_features.get("global_question"):
@@ -560,11 +612,15 @@ class RetrievalOrchestrator:
             "graph_route_attempted": graph_route_attempted,
             "graph_route_used": graph_route_used,
             "requery_available": bool(retrieval_options.get("needs_query_rewrite", True)),
-            "requery_used": any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds),
+            "requery_used": requery_used,
             "community_available": community_available,
             "community_used": community_used,
             "drift_available": bool(graph_available and community_available),
             "drift_used": drift_used,
+            "standard_floor_reused": standard_floor_reused,
+            "enhanced_noop": enhanced_noop,
+            "enhanced_noop_reason": enhanced_noop_reason,
+            "enhanced_fallback_to_floor": enhanced_fallback_to_floor,
             "confidence_gated_fusion_used": (
                 str((final_pass.get("fusion_metadata") or {}).get("strategy") or "").strip().lower()
                 == "baseline_preserving"
