@@ -1324,6 +1324,8 @@ Compared reports:
 - `enhanced_hurts cases = 1`
   - `2ec440560bb011ebab90acde48001122`
 - `enhanced_ties cases = 9`
+- `standard_gap_cases = 3`
+- `missed_opportunity_cases = 3`
 
 Current blocker shape:
 

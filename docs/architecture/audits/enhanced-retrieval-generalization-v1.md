@@ -484,6 +484,11 @@ cross-dataset guardrail check.
 
 `2Wiki` is not ready for expansion yet.
 
+Derived from the same per-question dominance rule used in the HotpotQA audit:
+
+- `standard_gap_cases = 3`
+- `missed_opportunity_cases = 3`
+
 Observed blocker:
 
 - `question_id = 2ec440560bb011ebab90acde48001122`
