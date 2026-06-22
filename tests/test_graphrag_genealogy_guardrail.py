@@ -89,7 +89,7 @@ def test_noisy_genealogy_graph_doc_cannot_displace_standard_top5_evidence():
     assert "Cleopatra IV of Egypt" in top5
     assert noisy.metadata["genealogy_bridge_question"] is True
     assert noisy.metadata["genealogy_promotion_allowed"] is False
-    assert noisy.metadata["genealogy_promotion_blocked_reason"] == "genealogy_chain_protection"
+    assert noisy.metadata["genealogy_promotion_blocked_reason"] == "relation_label_mismatch"
     assert noisy.metadata["noisy_genealogy_graph_only"] is True
 
 

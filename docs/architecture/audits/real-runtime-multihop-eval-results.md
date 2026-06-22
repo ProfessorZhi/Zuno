@@ -1492,3 +1492,86 @@ But it is no longer a stronger enhanced win:
 
 So the current 2Wiki tuning is acceptable as a local targeted branch result,
 but it does not justify broader rollout or larger 2Wiki expansion.
+
+## 2026-06-22: W7 Genealogy Path Precision Ranking Closure
+
+Verified reports:
+
+- `twowiki_standard_retrieval_limit10_targeted_v4.json`
+- `twowiki_enhanced_retrieval_limit10_targeted_v4.json`
+- `hotpotqa_standard_retrieval_limit50_2wiki_regression_v3.json`
+- `hotpotqa_enhanced_retrieval_limit50_2wiki_regression_v3.json`
+
+### 2Wiki limit=10
+
+#### standard_retrieval
+
+- `Recall@5 = 0.85`
+- `Recall@10 = 0.85`
+- `FullChainHit@5 = 0.70`
+- `FullChainHit@10 = 0.70`
+- `MRR@10 = 1.00`
+- `p95 latency = 16796.76 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+#### enhanced_retrieval
+
+- `Recall@5 = 0.85`
+- `Recall@10 = 0.90`
+- `FullChainHit@5 = 0.70`
+- `FullChainHit@10 = 0.80`
+- `MRR@10 = 1.00`
+- `p95 latency = 24912.50 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+#### 2Wiki closure verdict
+
+- `enhanced Recall@5 >= standard Recall@5`: passed
+- `enhanced FullChainHit@5 >= standard FullChainHit@5`: passed
+- `enhanced_hurts cases = 0`
+- `fallback_count = 0`
+- `failure_count = 0`
+- `p95 latency ratio = 1.48x < 2.5`
+
+This is the first rerun in the current 2Wiki branch where enhanced retrieval
+is baseline-preserving again on the targeted `limit=10` set without widening to
+`limit=20`.
+
+### HotpotQA limit=50 regression
+
+#### standard_retrieval
+
+- `Recall@2 = 0.86`
+- `Recall@5 = 0.97`
+- `Recall@10 = 0.97`
+- `FullChainHit@5 = 0.94`
+- `FullChainHit@10 = 0.94`
+- `MRR@10 = 1.00`
+- `p95 latency = 18578.41 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+#### enhanced_retrieval
+
+- `Recall@2 = 0.85`
+- `Recall@5 = 0.98`
+- `Recall@10 = 0.98`
+- `FullChainHit@5 = 0.96`
+- `FullChainHit@10 = 0.96`
+- `MRR@10 = 1.00`
+- `p95 latency = 23250.61 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+#### HotpotQA regression verdict
+
+- `enhanced Recall@5 >= standard Recall@5`: passed
+- `enhanced FullChainHit@5 >= standard FullChainHit@5`: passed
+- `fallback_count = 0`: passed
+- `failure_count = 0`: passed
+- `p95 latency ratio = 1.25x`: passed
+
+So the W7 tightening does not just preserve HotpotQA; it slightly improves the
+main retrieval metrics on this 50-question regression slice.

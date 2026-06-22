@@ -6,6 +6,35 @@ from zuno.services.rag.vector_db import milvus_client
 
 
 class GraphRetriever:
+    GENEALOGY_PATH_TEMPLATES = (
+        ("maternal_grandfather", (("mother", "father"),)),
+        ("paternal_grandfather", (("father", "father"),)),
+        ("grandfather", (("parent", "father"), ("mother", "father"), ("father", "father"))),
+        ("grandmother", (("parent", "mother"), ("father", "mother"), ("mother", "mother"))),
+        ("father", (("father",), ("parent",))),
+        ("mother", (("mother",), ("parent",))),
+        ("spouse", (("spouse",), ("married_to",), ("married",))),
+    )
+    FAMILY_RELATION_TYPES = {
+        "mother",
+        "father",
+        "parent",
+        "child",
+        "son",
+        "daughter",
+        "spouse",
+        "wife",
+        "husband",
+        "married",
+        "married_to",
+        "sibling",
+        "brother",
+        "sister",
+        "ancestor",
+        "descendant",
+        "grandfather",
+        "grandmother",
+    }
     ASCII_PHRASE_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_-]*(?:\s+[A-Za-z][A-Za-z0-9_-]*)*")
     CJK_PHRASE_PATTERN = re.compile(r"[\u4e00-\u9fff]{2,}")
     STRONG_RELATION_CUE_PATTERN = re.compile(
@@ -463,6 +492,85 @@ class GraphRetriever:
             -generic_entity_penalty,
         )
 
+    @staticmethod
+    def _normalize_relation_type(value: str) -> str:
+        normalized = re.sub(r"[^0-9A-Za-z]+", "_", str(value or "").strip().lower()).strip("_")
+        return normalized
+
+    @classmethod
+    def _normalized_relation_types(cls, item: dict) -> list[str]:
+        ordered: list[str] = []
+        seen: set[str] = set()
+        raw_values = list(item.get("path_relation_types") or item.get("relation_labels") or [])
+        relation_type = str(item.get("relation_type") or "").strip()
+        if relation_type:
+            raw_values.append(relation_type)
+        for value in raw_values:
+            normalized = cls._normalize_relation_type(value)
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                ordered.append(normalized)
+        return ordered
+
+    @classmethod
+    def _genealogy_template_match(cls, query: str, normalized_relation_types: list[str]) -> str | None:
+        if not cls._is_genealogy_relation_query(query):
+            return None
+        relation_chain = tuple(normalized_relation_types)
+        for template_name, candidate_paths in cls.GENEALOGY_PATH_TEMPLATES:
+            if template_name.replace("_", " ") not in str(query or "").lower() and template_name not in relation_chain:
+                if template_name not in {"father", "mother", "spouse"}:
+                    continue
+            for candidate_path in candidate_paths:
+                if len(relation_chain) < len(candidate_path):
+                    continue
+                if tuple(relation_chain[: len(candidate_path)]) == candidate_path:
+                    return template_name
+        return None
+
+    @classmethod
+    def _relation_cue_match(cls, query: str, normalized_relation_types: list[str]) -> bool:
+        query_lower = str(query or "").lower()
+        if not normalized_relation_types:
+            return False
+        if cls._genealogy_template_match(query, normalized_relation_types):
+            return True
+        if cls._is_genealogy_relation_query(query):
+            return any(relation_type in cls.FAMILY_RELATION_TYPES and relation_type in query_lower for relation_type in normalized_relation_types) or any(
+                relation_type in cls.FAMILY_RELATION_TYPES for relation_type in normalized_relation_types
+            )
+        return any(relation_type in query_lower for relation_type in normalized_relation_types)
+
+    @classmethod
+    def _path_metadata(cls, query: str, item: dict, seed_entities: list[str]) -> dict[str, object]:
+        normalized_relation_types = cls._normalized_relation_types(item)
+        path_nodes = [str(value or "").strip() for value in (item.get("path_nodes") or []) if str(value or "").strip()]
+        normalized_seeds = [str(seed or "").strip().lower() for seed in seed_entities if str(seed or "").strip()]
+        seed_entity_coverage = 0
+        bridge_entity_coverage = 0
+        normalized_path_nodes = [value.lower() for value in path_nodes]
+        for seed in normalized_seeds:
+            if any(seed in node or node in seed for node in normalized_path_nodes):
+                seed_entity_coverage += 1
+        if path_nodes:
+            bridge_nodes = path_nodes[1:-1] if len(path_nodes) > 2 else path_nodes[1:]
+            bridge_entity_coverage = len([node for node in bridge_nodes if node])
+        relation_labels = list(item.get("relation_labels") or item.get("path_relation_types") or normalized_relation_types)
+        path_length = len(normalized_relation_types) or max(len(path_nodes) - 1, 1 if relation_labels else 0)
+        text_unit_support_count = len(list(item.get("chunk_ids") or []))
+        genealogy_path_template_match = cls._genealogy_template_match(query, normalized_relation_types)
+        relation_cue_match = cls._relation_cue_match(query, normalized_relation_types)
+        return {
+            "graph_path_relation_labels": relation_labels,
+            "normalized_relation_types": normalized_relation_types,
+            "path_length": path_length,
+            "seed_entity_coverage": seed_entity_coverage,
+            "bridge_entity_coverage": bridge_entity_coverage,
+            "text_unit_support_count": text_unit_support_count,
+            "relation_cue_match": relation_cue_match,
+            "genealogy_path_template_match": genealogy_path_template_match,
+        }
+
     @classmethod
     def _is_graph_worthy_query(cls, query: str, seed_entities: list[str], query_policy: dict | None = None) -> bool:
         first_line = str(query or "").splitlines()[0]
@@ -714,6 +822,7 @@ class GraphRetriever:
         chunk_id_support: dict[str, int] = {}
         chunk_path_score: dict[str, int] = {}
         chunk_path_count: dict[str, int] = {}
+        chunk_best_path_metadata: dict[str, dict[str, object]] = {}
         seen_chunk_ids: set[str] = set()
         seen_paths: set[tuple[str, str]] = set()
         effective_query_policy = self._resolve_query_policy(
@@ -773,12 +882,29 @@ class GraphRetriever:
             if neighbor_paths:
                 entities.append(entity_name)
                 for item in neighbor_paths:
+                    path_metadata = self._path_metadata(query, item, seed_entities)
+                    item.update(path_metadata)
                     path_key = (str(item.get("source") or ""), str(item.get("target") or ""))
                     if path_key not in seen_paths:
                         seen_paths.add(path_key)
                         paths.append(item)
                     for chunk_id in item.get("chunk_ids") or []:
                         path_score = sum(max(value, 0) for value in self._score_path(query, item, seed_entities))
+                        current_best = chunk_best_path_metadata.get(chunk_id)
+                        if current_best is None or (
+                            int(path_metadata.get("relation_cue_match") or 0),
+                            int(bool(path_metadata.get("genealogy_path_template_match"))),
+                            int(path_metadata.get("text_unit_support_count") or 0),
+                            int(path_metadata.get("seed_entity_coverage") or 0),
+                            int(path_metadata.get("bridge_entity_coverage") or 0),
+                        ) > (
+                            int(current_best.get("relation_cue_match") or 0),
+                            int(bool(current_best.get("genealogy_path_template_match"))),
+                            int(current_best.get("text_unit_support_count") or 0),
+                            int(current_best.get("seed_entity_coverage") or 0),
+                            int(current_best.get("bridge_entity_coverage") or 0),
+                        ):
+                            chunk_best_path_metadata[chunk_id] = dict(path_metadata)
                         if chunk_id in seen_chunk_ids:
                             chunk_id_support[chunk_id] = chunk_id_support.get(chunk_id, 0) + 1
                             chunk_path_score[chunk_id] = chunk_path_score.get(chunk_id, 0) + path_score
@@ -807,6 +933,7 @@ class GraphRetriever:
             doc["graph_file_focus"] = 0
             doc["graph_path_count"] = chunk_path_count.get(str(doc.get("chunk_id") or ""), 0)
             doc["graph_path_score"] = chunk_path_score.get(str(doc.get("chunk_id") or ""), 0)
+            doc.update(chunk_best_path_metadata.get(str(doc.get("chunk_id") or ""), {}))
         document_dicts = await self._augment_documents_from_focus_files(
             knowledge_id=knowledge_id,
             documents=document_dicts,

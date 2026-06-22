@@ -898,6 +898,10 @@ class RetrievalOrchestrator:
             "missed_opportunity_trigger_reason": missed_opportunity_trigger_reason,
             "candidate_blocked_reason": blocked_reasons[0] if blocked_reasons else None,
             "floor_preserved_reason": floor_preserved_reason,
+            "graph_challenger_pool_size": fusion_metadata.get("graph_challenger_pool_size"),
+            "graph_promotion_allowed": fusion_metadata.get("graph_promotion_allowed"),
+            "graph_promotion_blocked_reason": fusion_metadata.get("graph_promotion_blocked_reason"),
+            "final_top5_floor_preserved": fusion_metadata.get("final_top5_floor_preserved"),
             "confidence_gated_fusion_used": (
                 str(fusion_metadata.get("strategy") or "").strip().lower()
                 == "baseline_preserving"

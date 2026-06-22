@@ -13,6 +13,8 @@ class RetrievalFusion:
     BRIDGE_PROTECTED_TOP = 2
     BRIDGE_MIN_SEEDS = 2
     GENEALOGY_PROTECTED_TOP = 5
+    GENEALOGY_PROMOTION_SIGNAL_THRESHOLD = 2
+    GENEALOGY_FULL_CHAIN_THRESHOLD = 3
     ENTITY_STOPWORDS = {
         "same",
         "nationality",
@@ -429,6 +431,59 @@ class RetrievalFusion:
                 count += 1
         return count
 
+    @staticmethod
+    def _metadata_int(item: RetrievedDocument, key: str) -> int:
+        return int(item.metadata.get(key) or 0)
+
+    @classmethod
+    def _genealogy_template_match(cls, item: RetrievedDocument) -> str | None:
+        value = str(item.metadata.get("genealogy_path_template_match") or item.metadata.get("graph_path_template_match") or "").strip()
+        return value or None
+
+    @classmethod
+    def _genealogy_relation_types(cls, item: RetrievedDocument) -> list[str]:
+        raw_values = item.metadata.get("normalized_relation_types") or item.metadata.get("graph_path_relation_labels") or []
+        ordered: list[str] = []
+        seen: set[str] = set()
+        for value in raw_values:
+            normalized = cls._normalize_entity(str(value or "")).replace(" ", "_")
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                ordered.append(normalized)
+        return ordered
+
+    @classmethod
+    def _relation_label_mismatch(cls, item: RetrievedDocument, cues: list[str], template_match: str | None) -> bool:
+        if template_match:
+            return False
+        relation_types = cls._genealogy_relation_types(item)
+        if not relation_types:
+            return False
+        family_hits = {"mother", "father", "parent", "child", "spouse", "wife", "husband", "sibling", "ancestor", "descendant"}
+        if any(token in relation_type for relation_type in relation_types for token in family_hits):
+            return False
+        return bool(cues)
+
+    @classmethod
+    def _strong_genealogy_signal_count(
+        cls,
+        item: RetrievedDocument,
+        *,
+        relation_cue_match: bool,
+        template_match: str | None,
+        seed_entity_coverage: int,
+        bridge_entity_coverage: int,
+        text_support_count: int,
+    ) -> int:
+        strong_signals = [
+            relation_cue_match,
+            bool(template_match),
+            seed_entity_coverage > 0,
+            bridge_entity_coverage > 0,
+            text_support_count > 0,
+        ]
+        return sum(1 for signal in strong_signals if signal)
+
     @classmethod
     def _extract_genealogy_seeds(cls, query: str, items: list[RetrievedDocument]) -> list[str]:
         ordered: list[str] = []
@@ -471,29 +526,104 @@ class RetrievalFusion:
         for item in items:
             coverage = cls._seed_coverage(item, genealogy_seeds)
             relation_match_count = cls._genealogy_relation_match_count(item, genealogy_cues)
-            direct_relation_path = bool(item.metadata.get("direct_relation_path"))
+            relation_cue_match = bool(item.metadata.get("relation_cue_match")) or relation_match_count >= 1
+            template_match = cls._genealogy_template_match(item)
+            direct_relation_path = bool(item.metadata.get("direct_relation_path")) or bool(template_match)
             indirect_family_noise_path = bool(item.metadata.get("indirect_family_noise_path"))
-            precision = len(coverage) + relation_match_count + (2 if direct_relation_path else 0) - (3 if indirect_family_noise_path else 0)
-            allowed = (precision >= 2 and relation_match_count >= 1) or direct_relation_path
+            seed_entity_coverage = max(len(coverage), cls._metadata_int(item, "seed_entity_coverage"))
+            bridge_entity_coverage = cls._metadata_int(item, "bridge_entity_coverage")
+            text_support_count = max(cls._metadata_int(item, "text_unit_support_count"), cls._metadata_int(item, "graph_support_count"))
+            high_degree_entity_noise = bool(item.metadata.get("high_degree_entity_noise"))
+            graph_only_without_text_support = cls._is_graph_only(item) and text_support_count <= 0
+            relation_label_mismatch = cls._relation_label_mismatch(item, genealogy_cues, template_match)
+            community_only_support = "community" in set(item.metadata.get("matched_by") or []) and not cls._is_baseline_candidate(item)
+            off_type_candidate = relation_label_mismatch and not relation_cue_match and not template_match
+            strong_signal_count = cls._strong_genealogy_signal_count(
+                item,
+                relation_cue_match=relation_cue_match,
+                template_match=template_match,
+                seed_entity_coverage=seed_entity_coverage,
+                bridge_entity_coverage=bridge_entity_coverage,
+                text_support_count=text_support_count,
+            )
+            precision = (
+                strong_signal_count
+                + relation_match_count
+                + (1 if direct_relation_path else 0)
+                - (3 if indirect_family_noise_path else 0)
+                - (2 if relation_label_mismatch else 0)
+                - (2 if high_degree_entity_noise else 0)
+            )
+            allowed = (
+                (strong_signal_count >= cls.GENEALOGY_PROMOTION_SIGNAL_THRESHOLD and not graph_only_without_text_support)
+                or (bool(template_match) and text_support_count > 0)
+            ) and not relation_label_mismatch and not indirect_family_noise_path and not high_degree_entity_noise and not community_only_support
             item.metadata["genealogy_bridge_question"] = genealogy_question
             item.metadata["genealogy_relation_cues"] = list(genealogy_cues)
             item.metadata["genealogy_seed_entities"] = list(genealogy_seeds)
             item.metadata["genealogy_seed_coverage"] = sorted(coverage)
             item.metadata["graph_path_relation_labels"] = list(item.metadata.get("graph_path_relation_labels") or [])
+            item.metadata["normalized_relation_types"] = list(item.metadata.get("normalized_relation_types") or cls._genealogy_relation_types(item))
+            item.metadata["graph_relation_cue_match"] = relation_cue_match
+            item.metadata["relation_cue_match"] = relation_cue_match
+            item.metadata["graph_path_template_match"] = template_match
+            item.metadata["genealogy_path_template_match"] = template_match
+            item.metadata["graph_text_support_count"] = text_support_count
+            item.metadata["text_unit_support_count"] = text_support_count
+            item.metadata["seed_entity_coverage"] = seed_entity_coverage
+            item.metadata["bridge_entity_coverage"] = bridge_entity_coverage
             item.metadata["direct_relation_path"] = direct_relation_path
             item.metadata["indirect_family_noise_path"] = indirect_family_noise_path
+            item.metadata["graph_only_without_text_support"] = graph_only_without_text_support
+            item.metadata["high_degree_entity_noise"] = high_degree_entity_noise
+            item.metadata["relation_label_mismatch"] = relation_label_mismatch
+            item.metadata["community_only_support"] = community_only_support
+            item.metadata["off_type_candidate"] = off_type_candidate
+            item.metadata["graph_challenger_signal_count"] = strong_signal_count
             item.metadata["genealogy_path_precision_score"] = precision
             item.metadata["genealogy_promotion_allowed"] = allowed if genealogy_question else None
             item.metadata["genealogy_promotion_blocked_reason"] = None
             item.metadata["noisy_genealogy_graph_only"] = False
             if genealogy_question and cls._is_graph_only(item) and not allowed:
-                item.metadata["genealogy_promotion_blocked_reason"] = "low_precision_genealogy"
-                item.metadata["noisy_genealogy_graph_only"] = indirect_family_noise_path or not bool(coverage)
+                blocked_reason = "low_precision_genealogy"
+                if graph_only_without_text_support:
+                    blocked_reason = "graph_only_without_text_support"
+                elif relation_label_mismatch:
+                    blocked_reason = "relation_label_mismatch"
+                elif indirect_family_noise_path:
+                    blocked_reason = "indirect_family_noise_path"
+                elif high_degree_entity_noise:
+                    blocked_reason = "high_degree_entity_noise"
+                elif community_only_support:
+                    blocked_reason = "community_only_support"
+                elif off_type_candidate:
+                    blocked_reason = "off_type_candidate"
+                item.metadata["genealogy_promotion_blocked_reason"] = blocked_reason
+                item.metadata["noisy_genealogy_graph_only"] = indirect_family_noise_path or not bool(coverage) or graph_only_without_text_support
         return {
             "genealogy_bridge_question": genealogy_question,
             "genealogy_relation_cues": list(genealogy_cues),
             "genealogy_seed_entities": list(genealogy_seeds),
         }
+
+    @classmethod
+    def _graph_challenger_rank_key(cls, item: RetrievedDocument) -> tuple[int, int, int, float]:
+        return (
+            int(item.metadata.get("graph_challenger_signal_count") or 0),
+            int(item.metadata.get("graph_text_support_count") or 0),
+            int(item.metadata.get("genealogy_path_precision_score") or 0),
+            float(item.score or 0.0),
+        )
+
+    @classmethod
+    def _genealogy_floor_has_full_chain(cls, selected: list[RetrievedDocument], genealogy_relation_cues: list[str]) -> bool:
+        for item in selected:
+            relation_match_count = cls._genealogy_relation_match_count(item, genealogy_relation_cues)
+            text_support_count = max(cls._metadata_int(item, "graph_text_support_count"), cls._metadata_int(item, "text_unit_support_count"))
+            template_match = cls._genealogy_template_match(item)
+            if relation_match_count >= 1 and (template_match or text_support_count > 0):
+                return True
+        return False
 
     @classmethod
     def _extract_requery_seed_entities(cls, query: str) -> list[str]:
@@ -740,38 +870,74 @@ class RetrievalFusion:
         *,
         ordered: list[RetrievedDocument],
         genealogy_relation_cues: list[str],
-    ) -> list[RetrievedDocument]:
+    ) -> tuple[list[RetrievedDocument], dict[str, object]]:
         if len(ordered) <= cls.BRIDGE_PROTECTED_TOP or not genealogy_relation_cues:
-            return ordered
+            return ordered, {
+                "graph_challenger_pool_size": 0,
+                "graph_promotion_allowed": None,
+                "graph_promotion_blocked_reason": None,
+                "final_top5_floor_preserved": None,
+            }
 
-        selected = list(ordered[: cls.GENEALOGY_PROTECTED_TOP])
-        remaining = list(ordered[cls.GENEALOGY_PROTECTED_TOP :])
-        baseline_candidates = [item for item in ordered if cls._is_baseline_candidate(item)]
-        baseline_replacements = [
+        baseline_floor = [item for item in ordered if cls._is_baseline_candidate(item)][: cls.GENEALOGY_PROTECTED_TOP]
+        selected = list(baseline_floor or ordered[: cls.GENEALOGY_PROTECTED_TOP])
+        remaining = [item for item in ordered if item not in selected]
+        challenger_pool = [item for item in ordered if cls._is_graph_only(item)]
+        promotion_allowed = False
+        blocked_reason = None
+        full_chain_floor = cls._genealogy_floor_has_full_chain(selected, genealogy_relation_cues)
+
+        promoted_candidate = None
+        promotion_candidates = [
             item
-            for item in baseline_candidates
-            if item not in selected
-            and cls._genealogy_relation_match_count(item, genealogy_relation_cues) >= 1
+            for item in challenger_pool
+            if item.metadata.get("genealogy_promotion_allowed") is True and item not in selected
         ]
+        if promotion_candidates:
+            candidate = sorted(promotion_candidates, key=cls._graph_challenger_rank_key, reverse=True)[0]
+            candidate_signal_count = int(candidate.metadata.get("graph_challenger_signal_count") or 0)
+            if full_chain_floor and candidate_signal_count < cls.GENEALOGY_FULL_CHAIN_THRESHOLD:
+                blocked_reason = "standard_floor_full_chain"
+                candidate.metadata["genealogy_promotion_blocked_reason"] = blocked_reason
+            else:
+                weakest_baseline = next(
+                    (
+                        item
+                        for item in reversed(selected)
+                        if cls._is_baseline_candidate(item)
+                    ),
+                    None,
+                )
+                if weakest_baseline is not None:
+                    weakest_index = selected.index(weakest_baseline)
+                    selected[weakest_index] = candidate
+                    remaining.append(weakest_baseline)
+                    if candidate in remaining:
+                        remaining.remove(candidate)
+                    promoted_candidate = candidate
+                    promotion_allowed = True
 
-        for index, item in enumerate(selected):
-            if not cls._is_graph_only(item):
-                continue
-            if item.metadata.get("genealogy_promotion_allowed") is True:
-                continue
-            replacement = baseline_replacements[0] if baseline_replacements else None
-            if replacement is None:
-                continue
-            item.metadata["genealogy_promotion_blocked_reason"] = "genealogy_chain_protection"
-            item.metadata["noisy_genealogy_graph_only"] = True
-            selected[index] = replacement
-            baseline_replacements.remove(replacement)
-            remaining.append(item)
+        if not promotion_allowed and not blocked_reason:
+            blocked_reason = next(
+                (
+                    str(item.metadata.get("genealogy_promotion_blocked_reason") or "").strip()
+                    for item in challenger_pool
+                    if str(item.metadata.get("genealogy_promotion_blocked_reason") or "").strip()
+                ),
+                None,
+            )
 
         selected_ids = {id(item) for item in selected}
-        selected = sorted(selected, key=lambda item: ordered.index(item))
+        selected = sorted(selected, key=lambda item: ordered.index(item) if item in ordered else 10_000)
         remainder = [item for item in ordered if id(item) not in selected_ids]
-        return selected + remainder
+        final_top = selected[: cls.GENEALOGY_PROTECTED_TOP]
+        floor_preserved = promoted_candidate is None
+        return selected + remainder, {
+            "graph_challenger_pool_size": len(challenger_pool),
+            "graph_promotion_allowed": promotion_allowed,
+            "graph_promotion_blocked_reason": blocked_reason,
+            "final_top5_floor_preserved": floor_preserved,
+        }
 
     @classmethod
     def _rank_key(cls, query: str, item: RetrievedDocument) -> tuple[int, int, int, int, int, float]:
@@ -855,8 +1021,14 @@ class RetrievalFusion:
         genealogy_metadata = self._annotate_genealogy_metadata(query=query, items=list(merged.values()))
         requery_metadata = self._annotate_requery_metadata(query=query, items=list(merged.values()))
         ordered = sorted(merged.values(), key=lambda item: self._rank_key(query, item))
+        genealogy_guardrail_metadata = {
+            "graph_challenger_pool_size": 0,
+            "graph_promotion_allowed": None,
+            "graph_promotion_blocked_reason": None,
+            "final_top5_floor_preserved": None,
+        }
         if genealogy_metadata["genealogy_bridge_question"]:
-            ordered = self._apply_genealogy_guardrail(
+            ordered, genealogy_guardrail_metadata = self._apply_genealogy_guardrail(
                 ordered=ordered,
                 genealogy_relation_cues=list(genealogy_metadata["genealogy_relation_cues"]),
             )
@@ -885,6 +1057,7 @@ class RetrievalFusion:
                 **comparison_metadata,
                 **bridge_metadata,
                 **genealogy_metadata,
+                **genealogy_guardrail_metadata,
                 **requery_metadata,
             },
             rerank_metadata={},

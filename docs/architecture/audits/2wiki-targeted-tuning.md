@@ -682,3 +682,70 @@ baseline-preserving tie rather than a clear enhanced lead.
 
 So the current 2Wiki activation change is keepable for local analysis, but it
 does not justify broader 2Wiki expansion or a stronger product claim.
+
+## W7: Genealogy Path Precision Ranking
+
+Verified reports:
+
+- `twowiki_standard_retrieval_limit10_targeted_v4.json`
+- `twowiki_enhanced_retrieval_limit10_targeted_v4.json`
+
+### What changed
+
+- genealogy paths now emit typed metadata:
+  - `normalized_relation_types`
+  - `path_length`
+  - `seed_entity_coverage`
+  - `bridge_entity_coverage`
+  - `text_unit_support_count`
+  - `relation_cue_match`
+  - `genealogy_path_template_match`
+- enhanced genealogy ranking now starts from the `standard_retrieval` top5
+  floor, then lets graph-only candidates enter only as challengers
+- low-confidence graph-only genealogy candidates now record explicit blocked
+  reasons such as:
+  - `graph_only_without_text_support`
+  - `relation_label_mismatch`
+  - `indirect_family_noise_path`
+  - `high_degree_entity_noise`
+
+### standard_retrieval
+
+- `Recall@5 = 0.85`
+- `Recall@10 = 0.85`
+- `FullChainHit@5 = 0.70`
+- `FullChainHit@10 = 0.70`
+- `MRR@10 = 1.00`
+- `avg/p50/p95 latency = 12257.86 / 12260.31 / 16796.76 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@5 = 0.85`
+- `Recall@10 = 0.90`
+- `FullChainHit@5 = 0.70`
+- `FullChainHit@10 = 0.80`
+- `MRR@10 = 1.00`
+- `avg/p50/p95 latency = 16459.45 / 15381.96 / 24912.50 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### W7 Verdict
+
+This rerun clears the 2Wiki gate:
+
+1. `enhanced Recall@5 >= standard Recall@5`: passed
+2. `enhanced FullChainHit@5 >= standard FullChainHit@5`: passed
+3. `failure_count = 0`: passed
+4. `fallback_rate <= 30%`: passed
+5. `p95 latency <= standard p95 * 2.5`: passed
+6. `enhanced_hurts cases <= 1`: passed with `0`
+
+Most importantly, the earlier blocker is no longer a hurt case:
+
+- `2ec440560bb011ebab90acde48001122`
+- `Who is the maternal grandfather of Antiochus X Eusebes?`
+
+The enhanced route now keeps the standard floor intact unless a typed
+genealogy challenger has enough evidence to justify promotion.
