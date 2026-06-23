@@ -749,3 +749,98 @@ Most importantly, the earlier blocker is no longer a hurt case:
 
 The enhanced route now keeps the standard floor intact unless a typed
 genealogy challenger has enough evidence to justify promotion.
+
+## W8: 2Wiki Limit=20 Cautious Expansion
+
+Verified reports:
+
+- `twowiki_standard_retrieval_limit20_cautious_v1.json`
+- `twowiki_enhanced_retrieval_limit20_cautious_v1.json`
+
+### standard_retrieval
+
+- `Recall@2 = 0.65`
+- `Recall@5 = 0.7625`
+- `Recall@10 = 0.7625`
+- `Precision@5 = 0.38`
+- `Precision@10 = 0.19`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.7625`
+- `ChainRecall@10 = 0.7625`
+- `FullChainHit@5 = 0.45`
+- `FullChainHit@10 = 0.45`
+- `avg/p50/p95 latency = 12480.22 / 12132.71 / 15620.04 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval
+
+- `Recall@2 = 0.65`
+- `Recall@5 = 0.725`
+- `Recall@10 = 0.775`
+- `Precision@5 = 0.36`
+- `Precision@10 = 0.19`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.725`
+- `ChainRecall@10 = 0.775`
+- `FullChainHit@5 = 0.40`
+- `FullChainHit@10 = 0.50`
+- `avg/p50/p95 latency = 13180.70 / 11269.22 / 19574.10 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### Diagnostics Summary
+
+- `internal_route distribution = {local_graphrag: 13, standard_rag: 7}`
+- `route_selection_reason distribution = {relation_question: 13, standard_question: 7}`
+- `graph_used = 13/20`
+- `requery_used = 6/20`
+- `community_used = 0/20`
+- `drift_used = 0/20`
+- `standard_floor_used = 20/20`
+- `graph_challenger_pool_size avg = 1.95`
+- `graph_promotion_allowed count = 2`
+- `graph_promotion_blocked_reason distribution = {low_precision_genealogy: 2}`
+- `final_top5_floor_preserved count = 2`
+- `enhanced_helps cases = 0`
+- `enhanced_hurts cases = 2`
+- `missed_opportunity_cases = 0`
+- `standard_gap_cases = 7`
+
+### Hurt Cases
+
+1. `2ec440560bb011ebab90acde48001122`
+   - `Who is the maternal grandfather of Antiochus X Eusebes?`
+   - `graph_used = true`
+   - `graph_challenger_pool_size = 12`
+   - `graph_promotion_allowed = true`
+   - `final_top5_floor_preserved = false`
+   - current issue: genealogy challenger gate is still too permissive on the larger slice
+
+2. `5bec3cd408a711ebbd7fac1f6bf848b6`
+   - `Which film has the director who died earlier, Il Seduttore or The Trial Of Joan Of Arc?`
+   - `graph_used = false`
+   - `internal_route = standard_rag`
+   - current issue: this one is not a graph-promotion failure; it is a standard floor completeness gap on a comparison-style question
+
+### W8 Verdict
+
+W7 does not yet generalize to 2Wiki `limit=20`.
+
+Why it fails the gate:
+
+1. `enhanced Recall@5 >= standard Recall@5`: failed
+2. `enhanced FullChainHit@5 >= standard FullChainHit@5`: failed
+3. `enhanced_hurts cases <= 2`: passed
+4. `fallback_count = 0`: passed
+5. `failure_count = 0`: passed
+6. `p95 latency <= standard p95 * 2.5`: passed
+
+Interpretation:
+
+- W7 remains valid on the targeted `limit=10` slice
+- but its baseline-preserving genealogy challenger gate is not yet stable enough
+  to claim `limit=20` generalization
+- `limit=50` expansion should stay blocked for now
+- the next step should be targeted tuning against the two new hurt surfaces,
+  not blind sample expansion

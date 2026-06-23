@@ -1575,3 +1575,97 @@ is baseline-preserving again on the targeted `limit=10` set without widening to
 
 So the W7 tightening does not just preserve HotpotQA; it slightly improves the
 main retrieval metrics on this 50-question regression slice.
+
+## 2026-06-23: W8 2Wiki Limit=20 Cautious Expansion
+
+Verified reports:
+
+- `twowiki_standard_retrieval_limit20_cautious_v1.json`
+- `twowiki_enhanced_retrieval_limit20_cautious_v1.json`
+
+### standard_retrieval limit=20
+
+- `Recall@2 = 0.65`
+- `Recall@5 = 0.7625`
+- `Recall@10 = 0.7625`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.7625`
+- `ChainRecall@10 = 0.7625`
+- `FullChainHit@5 = 0.45`
+- `FullChainHit@10 = 0.45`
+- `p95 latency = 15620.04 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### enhanced_retrieval limit=20
+
+- `Recall@2 = 0.65`
+- `Recall@5 = 0.725`
+- `Recall@10 = 0.775`
+- `MRR@10 = 1.00`
+- `ChainRecall@5 = 0.725`
+- `ChainRecall@10 = 0.775`
+- `FullChainHit@5 = 0.40`
+- `FullChainHit@10 = 0.50`
+- `p95 latency = 19574.10 ms`
+- `fallback_count = 0`
+- `failure_count = 0`
+
+### W8 diagnostics
+
+- `internal_route distribution = {local_graphrag: 13, standard_rag: 7}`
+- `route_selection_reason distribution = {relation_question: 13, standard_question: 7}`
+- `graph_used = 13/20`
+- `requery_used = 6/20`
+- `community_used = 0/20`
+- `drift_used = 0/20`
+- `standard_floor_used = 20/20`
+- `graph_challenger_pool_size avg = 1.95`
+- `graph_promotion_allowed count = 2`
+- `graph_promotion_blocked_reason distribution = {low_precision_genealogy: 2}`
+- `final_top5_floor_preserved count = 2`
+- `enhanced_helps cases = 0`
+- `enhanced_hurts cases = 2`
+- `missed_opportunity_cases = 0`
+- `standard_gap_cases = 7`
+
+### Gate result
+
+W7 does not yet generalize to 2Wiki `limit=20`.
+
+Gate check:
+
+1. `enhanced Recall@5 >= standard Recall@5`: failed
+2. `enhanced FullChainHit@5 >= standard FullChainHit@5`: failed
+3. `enhanced_hurts cases <= 2`: passed
+4. `fallback_count = 0`: passed
+5. `failure_count = 0`: passed
+6. `p95 latency <= standard p95 * 2.5`: passed
+
+Current reading:
+
+- enhanced still has stronger `top10` recovery than standard on this slice
+  because `Recall@10` and `FullChainHit@10` are higher
+- but that does not matter yet because the top5 baseline-preserving gate fails
+- `2Wiki limit=50` should remain blocked
+
+### Failure audit summary
+
+There are two hurt cases:
+
+1. `2ec440560bb011ebab90acde48001122`
+   - genealogy question
+   - `graph_used = true`
+   - `graph_challenger_pool_size = 12`
+   - `graph_promotion_allowed = true`
+   - `final_top5_floor_preserved = false`
+   - indicates the genealogy challenger gate is still too loose on a larger slice
+
+2. `5bec3cd408a711ebbd7fac1f6bf848b6`
+   - comparison / director-death ordering question
+   - `graph_used = false`
+   - `internal_route = standard_rag`
+   - indicates a standard floor completeness issue rather than a graph-only over-promotion issue
+
+No new code was applied in W8 after the limit=20 run, so the last verified
+HotpotQA regression rail remains the W7 `v3` result.
