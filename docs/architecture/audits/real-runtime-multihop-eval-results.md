@@ -1578,36 +1578,47 @@ main retrieval metrics on this 50-question regression slice.
 
 ## 2026-06-23: W8 2Wiki Limit=20 Cautious Expansion
 
-Verified reports:
+Fresh verification reports:
 
-- `twowiki_standard_retrieval_limit20_cautious_v1.json`
-- `twowiki_enhanced_retrieval_limit20_cautious_v1.json`
+- `twowiki_standard_retrieval_limit20_verify_20260623.json`
+- `twowiki_enhanced_retrieval_limit20_verify_20260623.json`
+
+The earlier `cautious_v1` pair remains useful as historical evidence, but the
+fresh `verify_20260623` pair is the current-state reading.
 
 ### standard_retrieval limit=20
 
 - `Recall@2 = 0.65`
-- `Recall@5 = 0.7625`
-- `Recall@10 = 0.7625`
+- `Recall@5 = 0.725`
+- `Recall@10 = 0.725`
 - `MRR@10 = 1.00`
-- `ChainRecall@5 = 0.7625`
-- `ChainRecall@10 = 0.7625`
-- `FullChainHit@5 = 0.45`
-- `FullChainHit@10 = 0.45`
-- `p95 latency = 15620.04 ms`
+- `ChainRecall@2 = 0.65`
+- `ChainRecall@3 = 0.70`
+- `ChainRecall@5 = 0.725`
+- `ChainRecall@10 = 0.725`
+- `FullChainHit@2 = 0.30`
+- `FullChainHit@3 = 0.35`
+- `FullChainHit@5 = 0.35`
+- `FullChainHit@10 = 0.35`
+- `p95 latency = 17096.99 ms`
 - `fallback_count = 0`
 - `failure_count = 0`
 
 ### enhanced_retrieval limit=20
 
 - `Recall@2 = 0.65`
-- `Recall@5 = 0.725`
-- `Recall@10 = 0.775`
+- `Recall@5 = 0.75`
+- `Recall@10 = 0.80`
 - `MRR@10 = 1.00`
-- `ChainRecall@5 = 0.725`
-- `ChainRecall@10 = 0.775`
+- `ChainRecall@2 = 0.65`
+- `ChainRecall@3 = 0.70`
+- `ChainRecall@5 = 0.75`
+- `ChainRecall@10 = 0.80`
+- `FullChainHit@2 = 0.30`
+- `FullChainHit@3 = 0.35`
 - `FullChainHit@5 = 0.40`
 - `FullChainHit@10 = 0.50`
-- `p95 latency = 19574.10 ms`
+- `p95 latency = 26806.36 ms`
 - `fallback_count = 0`
 - `failure_count = 0`
 
@@ -1620,52 +1631,55 @@ Verified reports:
 - `community_used = 0/20`
 - `drift_used = 0/20`
 - `standard_floor_used = 20/20`
-- `graph_challenger_pool_size avg = 1.95`
+- `graph_challenger_pool_size avg = 2.05`
 - `graph_promotion_allowed count = 2`
 - `graph_promotion_blocked_reason distribution = {low_precision_genealogy: 2}`
 - `final_top5_floor_preserved count = 2`
-- `enhanced_helps cases = 0`
-- `enhanced_hurts cases = 2`
+- `enhanced_helps cases = 3`
+- `enhanced_hurts cases = 0`
 - `missed_opportunity_cases = 0`
-- `standard_gap_cases = 7`
+- `standard_gap_cases = 13` using current top5 full-chain misses as the
+  operational definition on this slice
+- `latency ratio = 1.57x`
 
 ### Gate result
 
-W7 does not yet generalize to 2Wiki `limit=20`.
+`enhanced_retrieval` is baseline-preserving on 2Wiki `limit=20`.
 
 Gate check:
 
-1. `enhanced Recall@5 >= standard Recall@5`: failed
-2. `enhanced FullChainHit@5 >= standard FullChainHit@5`: failed
-3. `enhanced_hurts cases <= 2`: passed
+1. `enhanced Recall@5 >= standard Recall@5`: passed
+2. `enhanced FullChainHit@5 >= standard FullChainHit@5`: passed
+3. `enhanced_hurts cases <= 2`: passed with `0`
 4. `fallback_count = 0`: passed
 5. `failure_count = 0`: passed
 6. `p95 latency <= standard p95 * 2.5`: passed
 
 Current reading:
 
-- enhanced still has stronger `top10` recovery than standard on this slice
-  because `Recall@10` and `FullChainHit@10` are higher
-- but that does not matter yet because the top5 baseline-preserving gate fails
-- `2Wiki limit=50` should remain blocked
+- enhanced has stronger `top10` recovery than standard on this slice
+- the top5 baseline-preserving gate now also passes
+- this supports a cautious small-to-medium expansion claim
+- `2Wiki limit=50` is now allowed as the next step
+- this still does not justify any full-dataset superiority claim
 
-### Failure audit summary
+### Fresh HotpotQA Regression Rail
 
-There are two hurt cases:
+Verified reports:
 
-1. `2ec440560bb011ebab90acde48001122`
-   - genealogy question
-   - `graph_used = true`
-   - `graph_challenger_pool_size = 12`
-   - `graph_promotion_allowed = true`
-   - `final_top5_floor_preserved = false`
-   - indicates the genealogy challenger gate is still too loose on a larger slice
+- `hotpotqa_standard_retrieval_limit50_verify_20260623.json`
+- `hotpotqa_enhanced_retrieval_limit50_verify_20260623.json`
 
-2. `5bec3cd408a711ebbd7fac1f6bf848b6`
-   - comparison / director-death ordering question
-   - `graph_used = false`
-   - `internal_route = standard_rag`
-   - indicates a standard floor completeness issue rather than a graph-only over-promotion issue
+Current result:
 
-No new code was applied in W8 after the limit=20 run, so the last verified
-HotpotQA regression rail remains the W7 `v3` result.
+- `standard Recall@5 = 0.97`
+- `enhanced Recall@5 = 0.98`
+- `standard FullChainHit@5 = 0.94`
+- `enhanced FullChainHit@5 = 0.96`
+- `fallback_count = 0`
+- `failure_count = 0`
+- `p95 latency ratio = 1.48x`
+- `enhanced_hurts cases = 0`
+
+The fresh W8 verification therefore does not break the HotpotQA regression
+rail.

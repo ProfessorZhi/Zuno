@@ -303,12 +303,25 @@ Current follow-up result:
   - `enhanced Recall@5 = 0.98 > 0.97`
   - `enhanced FullChainHit@5 = 0.96 > 0.94`
   - `enhanced_hurts cases = 0`
-- cautious `2Wiki limit=10` smoke has now been executed
-- current `2Wiki` smoke does **not** preserve the standard floor:
-  - `enhanced Recall@5 = 0.80 < 0.85`
-  - `enhanced FullChainHit@5 = 0.60 < 0.70`
-  - `enhanced_hurts cases = 1`
-- next correct move is `2Wiki targeted tuning`, not `2Wiki limit=20`
+- cautious `2Wiki limit=10` smoke has now been executed and the initial
+  failure was addressed by targeted tuning
+- a fresh `2Wiki limit=20` product rerun on `2026-06-23` is now
+  baseline-preserving:
+  - `standard Recall@5 = 0.725`
+  - `enhanced Recall@5 = 0.75`
+  - `standard FullChainHit@5 = 0.35`
+  - `enhanced FullChainHit@5 = 0.40`
+  - `enhanced Recall@10 = 0.80 > 0.725`
+  - `enhanced FullChainHit@10 = 0.50 > 0.35`
+  - `enhanced_hurts cases = 0`
+- the same fresh verification also keeps the HotpotQA `limit=50` regression
+  rail green:
+  - `enhanced Recall@5 = 0.98 >= 0.97`
+  - `enhanced FullChainHit@5 = 0.96 >= 0.94`
+  - `fallback_count = 0`
+  - `failure_count = 0`
+- next allowed move is a cautious `2Wiki limit=50` small expansion
+- do not turn this into a claim that full `2Wiki` is already won
 
 ## Smoke Runner
 

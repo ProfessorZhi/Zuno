@@ -752,40 +752,51 @@ genealogy challenger has enough evidence to justify promotion.
 
 ## W8: 2Wiki Limit=20 Cautious Expansion
 
-Verified reports:
+Fresh verification reports:
 
-- `twowiki_standard_retrieval_limit20_cautious_v1.json`
-- `twowiki_enhanced_retrieval_limit20_cautious_v1.json`
+- `twowiki_standard_retrieval_limit20_verify_20260623.json`
+- `twowiki_enhanced_retrieval_limit20_verify_20260623.json`
+
+This rerun is the current-state reading for `limit=20`. The earlier
+`cautious_v1` pair is now historical evidence, not the active conclusion.
 
 ### standard_retrieval
 
 - `Recall@2 = 0.65`
-- `Recall@5 = 0.7625`
-- `Recall@10 = 0.7625`
-- `Precision@5 = 0.38`
-- `Precision@10 = 0.19`
+- `Recall@5 = 0.725`
+- `Recall@10 = 0.725`
+- `Precision@5 = 0.37`
+- `Precision@10 = 0.185`
 - `MRR@10 = 1.00`
-- `ChainRecall@5 = 0.7625`
-- `ChainRecall@10 = 0.7625`
-- `FullChainHit@5 = 0.45`
-- `FullChainHit@10 = 0.45`
-- `avg/p50/p95 latency = 12480.22 / 12132.71 / 15620.04 ms`
+- `ChainRecall@2 = 0.65`
+- `ChainRecall@3 = 0.70`
+- `ChainRecall@5 = 0.725`
+- `ChainRecall@10 = 0.725`
+- `FullChainHit@2 = 0.30`
+- `FullChainHit@3 = 0.35`
+- `FullChainHit@5 = 0.35`
+- `FullChainHit@10 = 0.35`
+- `avg/p50/p95 latency = 12978.02 / 12489.02 / 17096.99 ms`
 - `fallback_count = 0`
 - `failure_count = 0`
 
 ### enhanced_retrieval
 
 - `Recall@2 = 0.65`
-- `Recall@5 = 0.725`
-- `Recall@10 = 0.775`
-- `Precision@5 = 0.36`
-- `Precision@10 = 0.19`
+- `Recall@5 = 0.75`
+- `Recall@10 = 0.80`
+- `Precision@5 = 0.38`
+- `Precision@10 = 0.20`
 - `MRR@10 = 1.00`
-- `ChainRecall@5 = 0.725`
-- `ChainRecall@10 = 0.775`
+- `ChainRecall@2 = 0.65`
+- `ChainRecall@3 = 0.70`
+- `ChainRecall@5 = 0.75`
+- `ChainRecall@10 = 0.80`
+- `FullChainHit@2 = 0.30`
+- `FullChainHit@3 = 0.35`
 - `FullChainHit@5 = 0.40`
 - `FullChainHit@10 = 0.50`
-- `avg/p50/p95 latency = 13180.70 / 11269.22 / 19574.10 ms`
+- `avg/p50/p95 latency = 15699.83 / 13002.55 / 26806.36 ms`
 - `fallback_count = 0`
 - `failure_count = 0`
 
@@ -798,49 +809,72 @@ Verified reports:
 - `community_used = 0/20`
 - `drift_used = 0/20`
 - `standard_floor_used = 20/20`
-- `graph_challenger_pool_size avg = 1.95`
+- `graph_challenger_pool_size avg = 2.05`
 - `graph_promotion_allowed count = 2`
 - `graph_promotion_blocked_reason distribution = {low_precision_genealogy: 2}`
 - `final_top5_floor_preserved count = 2`
-- `enhanced_helps cases = 0`
-- `enhanced_hurts cases = 2`
+- `enhanced_helps cases = 3`
+- `enhanced_hurts cases = 0`
 - `missed_opportunity_cases = 0`
-- `standard_gap_cases = 7`
+- `standard_gap_cases = 13` using current top5 full-chain misses as the
+  operational definition on this slice
+- `latency ratio = 1.57x`
 
-### Hurt Cases
+### Help Cases
 
-1. `2ec440560bb011ebab90acde48001122`
+1. `e2a3bf2a0bdd11eba7f7acde48001122`
+   - `When did John V, Prince Of Anhalt-Zerbst's father die?`
+   - standard `top10` recovered only `1/2` gold docs
+   - enhanced `top10` recovered `2/2` gold docs and reached `FullChainHit@10`
+
+2. `0cd3bdea0bde11eba7f7acde48001122`
+   - `What is the award that the director of film Wearing Velvet Slippers Under A Golden Umbrella won?`
+   - enhanced improved from a partial top5 hit to `FullChainHit@5`
+
+3. `2ec440560bb011ebab90acde48001122`
    - `Who is the maternal grandfather of Antiochus X Eusebes?`
-   - `graph_used = true`
-   - `graph_challenger_pool_size = 12`
-   - `graph_promotion_allowed = true`
-   - `final_top5_floor_preserved = false`
-   - current issue: genealogy challenger gate is still too permissive on the larger slice
-
-2. `5bec3cd408a711ebbd7fac1f6bf848b6`
-   - `Which film has the director who died earlier, Il Seduttore or The Trial Of Joan Of Arc?`
-   - `graph_used = false`
-   - `internal_route = standard_rag`
-   - current issue: this one is not a graph-promotion failure; it is a standard floor completeness gap on a comparison-style question
+   - this was an earlier genealogy blocker
+   - current rerun now reaches `FullChainHit@10` without creating a new top5 hurt
 
 ### W8 Verdict
 
-W7 does not yet generalize to 2Wiki `limit=20`.
+`enhanced_retrieval` is baseline-preserving on 2Wiki `limit=20`.
 
-Why it fails the gate:
+Gate check:
 
-1. `enhanced Recall@5 >= standard Recall@5`: failed
-2. `enhanced FullChainHit@5 >= standard FullChainHit@5`: failed
-3. `enhanced_hurts cases <= 2`: passed
+1. `enhanced Recall@5 >= standard Recall@5`: passed
+2. `enhanced FullChainHit@5 >= standard FullChainHit@5`: passed
+3. `enhanced_hurts cases <= 2`: passed with `0`
 4. `fallback_count = 0`: passed
 5. `failure_count = 0`: passed
 6. `p95 latency <= standard p95 * 2.5`: passed
 
-Interpretation:
+Current reading:
 
-- W7 remains valid on the targeted `limit=10` slice
-- but its baseline-preserving genealogy challenger gate is not yet stable enough
-  to claim `limit=20` generalization
-- `limit=50` expansion should stay blocked for now
-- the next step should be targeted tuning against the two new hurt surfaces,
-  not blind sample expansion
+- enhanced now preserves the top5 baseline on this `limit=20` slice
+- enhanced also has stronger top10 recovery because both `Recall@10` and
+  `FullChainHit@10` are higher
+- this is enough to record a small-to-medium cautious expansion result
+- it is still not a claim that full `2Wiki` is won
+- the next allowed step is a cautious `limit=50` expansion, not blind full-scale rollout
+
+### HotpotQA Regression Rail
+
+Fresh verification reports:
+
+- `hotpotqa_standard_retrieval_limit50_verify_20260623.json`
+- `hotpotqa_enhanced_retrieval_limit50_verify_20260623.json`
+
+Current result:
+
+- `standard Recall@5 = 0.97`
+- `enhanced Recall@5 = 0.98`
+- `standard FullChainHit@5 = 0.94`
+- `enhanced FullChainHit@5 = 0.96`
+- `fallback_count = 0`
+- `failure_count = 0`
+- `p95 latency ratio = 1.48x`
+- `enhanced_hurts cases = 0`
+
+This keeps the HotpotQA regression rail green after the fresh `2Wiki limit=20`
+verification.
