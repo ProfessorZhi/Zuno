@@ -840,6 +840,11 @@ This rerun is the current-state reading for `limit=20`. The earlier
 
 `enhanced_retrieval` is baseline-preserving on 2Wiki `limit=20`.
 
+Recorded conclusion:
+
+- `enhanced_retrieval is baseline-preserving on 2Wiki limit=20.`
+- `enhanced has stronger top10 recovery.`
+
 Gate check:
 
 1. `enhanced Recall@5 >= standard Recall@5`: passed
