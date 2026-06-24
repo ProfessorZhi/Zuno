@@ -25,8 +25,6 @@ src/backend/zuno/config.yaml
 /vector_db/
 
 .local/
-.agent/
-.agentmd
 apps/web/AGENTS.md
 
 .astrid-memory/

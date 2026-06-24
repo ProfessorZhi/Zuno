@@ -33,8 +33,6 @@ FORBIDDEN_PUBLIC_INDEX_MENTIONS = {
 }
 
 SUSPICIOUS_STATUS_PREFIXES = [
-    ".agent/",
-    ".agentmd",
     ".local/",
     "docs/superpowers/specs/",
     "apps/web/AGENTS.md",

@@ -17,8 +17,6 @@ If a file does not clearly fit one of those categories, treat it as suspicious u
 
 Make sure none of the following are staged:
 
-- `.agent/`
-- `.agentmd`
 - `.local/`
 - `docs/superpowers/`
 - `apps/web/AGENTS.md`
@@ -75,6 +73,6 @@ pytest -q tests/test_zuno_public_entrypoints.py tests/test_zuno_runtime_chain_gu
 Only push when all of the following are true:
 
 - the staged diff matches the intended public project story
-- no local-only assets are staged
+- no private-only assets are staged
 - public docs link only to publishable evidence
 - publish-boundary and runtime-guard tests pass

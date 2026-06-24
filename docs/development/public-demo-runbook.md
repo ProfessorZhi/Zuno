@@ -148,6 +148,6 @@ That is the shortest proof of the architecture thesis.
 
 ## Public Demo Notes
 
-- Do not publish `.local/`, `.agent/`, `.agentmd`, local config files, or generated eval corpora/runs.
+- Do not publish `.local/`, local config files, or generated eval corpora/runs.
 - Use committed datasets and committed docs as the public explanation layer.
 - Treat generated run directories as reproducible local evidence, not public repo assets.

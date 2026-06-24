@@ -8,8 +8,6 @@ def test_gitignore_matches_current_local_only_boundary() -> None:
     content = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
 
     required_entries = [
-        ".agent/",
-        ".agentmd",
         ".local/",
         "apps/web/AGENTS.md",
         "infra/docker/docker_config.local.yaml",

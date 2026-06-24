@@ -1,12 +1,12 @@
 # Local Agent Workflow
 
-这个文件只服务本地开发 Agent 工作流，不属于仓库正式文档，不上传 GitHub。
+这个文件说明仓库内 Agent 工作流入口如何组织，以及 `agent.md` 和 `.agent/` 如何与正式文档配合。
 
 ## 文档边界
 
 - `docs/`：给人看的正式文档系统
-- `.agent/`：给 Agent 看的本地工作流系统
-- `.agentmd`：Agent 进入仓库时的总入口，负责告诉 Agent 先看什么、怎么连接 `.agent/` 和 `docs/`
+- `.agent/`：给 Agent 看的工作流系统
+- `agent.md`：Agent 进入仓库时的总入口，负责告诉 Agent 先看什么、怎么连接 `.agent/` 和 `docs/`
 
 ## 目标
 
@@ -48,7 +48,7 @@
 2. 新一轮架构或产品需求，必须新开 independent phase program。
 3. 新 program 的正式真相写入 `docs/architecture/programs/`。
 4. 过期计划、临时草稿、被替代的执行材料归档到 `docs/architecture/history/`。
-5. `.agent/` 如果被 gitignore，只作为本地执行缓存，不作为仓库级真相。
+5. `.agent/` 不是仓库级正式架构真相，只承担 Agent 导航、模板和辅助脚本职责。
 6. 每个 Phase 开始前必须先列：
    - `goal`
    - `files to change`
@@ -89,7 +89,7 @@
 
 - `docs/architecture/` 是当前和未来的人类架构主入口。
 - `docs/superpowers/` 视为历史正式设计资产，后续能迁则迁，不能迁也要在新文档里引用。
-- `.agent/` 不重复承载正式结论，只做 Agent 导航、索引、脚本和临时工作流。
+- `.agent/` 不重复承载正式结论，只做 Agent 导航、索引、脚本和工作流支持。
 - Agent 默认先读 `docs/architecture/`，只有需要历史背景时再读 `docs/superpowers/`。
 
 ## 默认工作流
@@ -149,14 +149,13 @@
 
 ## `.agent/` 约定
 
-- `.agent/references/`：给开发 Agent 的本地参考索引
-- `.agent/scripts/`：本地辅助脚本，不进入仓库
-- `.agent/notes/`：临时分析、排查、执行记录
-- `.agent/templates/`：可复用的本地提示模板、执行模板
+- `.agent/references/`：给开发 Agent 的参考索引
+- `.agent/scripts/`：辅助脚本
+- `.agent/notes/`：分析、排查、执行记录
+- `.agent/templates/`：可复用的提示模板、执行模板
 
 ## 注意事项
 
-- `.agentmd` 和 `.agent/` 都是本地工作流资产，不上传 GitHub。
 - `docs/` 是给人看的正式文档，不要把 Agent 私有流程塞进去。
 - `.agent/` 是给 Agent 看的操作层材料，不要把正式架构结论只留在这里。
 - 架构相关正式结论要写进 `docs/architecture/`。

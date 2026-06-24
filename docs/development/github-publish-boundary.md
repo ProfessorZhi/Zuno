@@ -8,6 +8,7 @@ The public repository should contain the project itself:
 
 - application source code
 - public-facing documentation
+- published agent-workspace guidance under `agent.md` and `.agent/`
 - Docker and launcher assets needed to run the project
 - tests that verify product behavior and architecture guards
 - evaluation code, schemas, and reusable datasets that are safe to publish
@@ -16,8 +17,6 @@ The public repository should contain the project itself:
 
 The following content is local-only and must not be published:
 
-- `.agent/`
-- `.agentmd`
 - `.local/`
 - `docs/superpowers/`
 - `apps/web/AGENTS.md`
@@ -52,7 +51,7 @@ The repository already enforces part of this boundary through:
 
 Before a public push:
 
-1. confirm no local workflow files are staged
+1. confirm no private workflow files or secrets are staged
 2. confirm no local config or secret files are staged
 3. confirm no evaluation run artifacts are staged
 4. confirm README and docs reflect the public project, not local operator notes
