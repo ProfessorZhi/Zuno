@@ -42,6 +42,15 @@ The current new program is:
 
 Its purpose is to standardize docs and Agent workflow, clean legacy surfaces, retire Domain Pack as the front-path architecture mainline, and align the next GraphRAG work with official GraphRAG Project, Prompt Tuning, and Query Method concepts.
 
+Detailed target architecture design for this program lives in:
+
+- `.agent/architecture/`
+
+That directory is a design-stage Agent working set for Zuno Target Architecture
+v0.1. It may describe proposed or future capabilities, including Java business
+services, microservices, and multi-agent mode. Do not read those future sections
+as implemented runtime facts unless the code and formal docs also say so.
+
 ## Self-Maintenance Rule
 
 For every new requirement, new feature, refactor, or architecture replacement, decide whether each item must be updated:

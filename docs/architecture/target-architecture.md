@@ -21,6 +21,15 @@ one stable, explainable monorepo baseline
   -> self-maintaining docs and Agent workflow
 ```
 
+The detailed design-stage version of this target is:
+
+- `.agent/architecture/`
+
+That directory is Zuno Target Architecture v0.1. It is intentionally more
+detailed than this formal summary and includes proposed future boundaries for
+Java business services, microservices, and multi-agent mode. Treat those
+sections as target/proposed, not current implementation truth.
+
 ## Target Repository Shape
 
 ```text
@@ -59,10 +68,11 @@ The backend should be easy to explain as:
 ```text
 LangGraph runtime
   -> retrieval planning
-  -> vector / BM25 / Local GraphRAG retrieval
+  -> Basic RAG with BM25 + dense vector + fusion + rerank
+  -> Local GraphRAG retrieval
   -> official GraphRAG-aligned project settings
   -> prompt tuning and query method selection
-  -> later Community GraphRAG global summary
+  -> later Global search over community reports
   -> evidence fusion
   -> answer + citation check
   -> evaluation + proof
@@ -71,15 +81,21 @@ LangGraph runtime
 The GraphRAG target order should remain:
 
 ```text
-Level 1: Local GraphRAG
-  current graph mainline
+Query Method: basic
+  BM25 + dense vector + fusion + rerank, no graph/community assets
 
-Level 2: Community GraphRAG
-  later global-summary layer on the same graph
+Query Method: local
+  entity-specific graph + raw chunk search
 
-Level 3: DRIFT-like hybrid
-  global overview + local deep dive
+Query Method: global
+  map-reduce over community reports
+
+Query Method: drift
+  community primer + follow-up local/basic retrieval
 ```
+
+Community reports are target assets for `global` and `drift`; they are not a
+first-level query method.
 
 ## Target Evolution Rule
 

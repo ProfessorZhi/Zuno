@@ -10,3 +10,11 @@ Use it to orient quickly, then verify against:
 4. `docs/architecture/programs/official-graphrag-cleanup-v1/README.md`
 
 The current rule is simple: docs hold decisions, `AGENTS.md` tells Agents how to enter, `.agent/` helps Agents work, and `history/` keeps superseded material out of the front path.
+
+For the detailed target architecture v0.1 design, read:
+
+- `.agent/architecture/README.md`
+- `.agent/architecture/00-architecture-index.md`
+
+That directory describes target/proposed architecture. This directory remains
+the quick current-reality reference.

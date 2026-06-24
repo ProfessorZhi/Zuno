@@ -16,6 +16,7 @@ Formal conclusions go to `docs/`. Agent execution aids go here.
 ```text
 .agent/
   README.md
+  architecture/
   references/
     README.md
     current-program.md
@@ -64,5 +65,7 @@ If a change replaces an older design, move the old material to `docs/architectur
 - Use `.agent/references/` only as the Agent navigation layer.
 - Use `.agent/templates/` for reusable prompts and closure reports.
 - Use `.agent/scripts/` for read-only workflow checks.
+- Use `.agent/architecture/` for detailed target architecture design drafts
+  that are not yet full formal docs truth.
 - Modification tasks require verification, commit, and push unless blocked.
 - Read-only reconnaissance does not commit or push.

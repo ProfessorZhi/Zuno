@@ -15,6 +15,20 @@ The new work is a separate cleanup and alignment program:
 3. retire Domain Pack as the front-path architecture mainline
 4. align future GraphRAG work with official GraphRAG Project, Prompt Tuning, and Query Method concepts
 
+## Detailed Target Architecture V0.1
+
+The detailed design-stage architecture working set is:
+
+- `.agent/architecture/`
+
+It expands the target program into C4-style context/container/component/runtime
+views, layered runtime boundaries, GraphRAG Project design, Enhanced Mode,
+future Java business service integration, microservices readiness, multi-agent
+mode, observability, migration, decisions, and open questions.
+
+This directory is not an implementation-complete claim. Future sections must be
+treated as target/proposed until runtime code and formal docs prove them.
+
 ## Current Rule
 
 Do not rewrite completed Phase 0-6 files as incomplete.

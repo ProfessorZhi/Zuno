@@ -19,6 +19,7 @@
 
 - `AGENTS.md`: repository-level Agent entrypoint
 - `.agent/README.md`: Agent workflow library rules
+- `.agent/architecture/`: detailed design-stage target architecture v0.1
 - `.agent/references/`: durable Agent references
 - `.agent/templates/`: reusable prompts and reports
 - `.agent/scripts/`: read-only workflow checks

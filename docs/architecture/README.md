@@ -19,6 +19,15 @@ If you want the shortest current path, read:
 4. [Official GraphRAG Cleanup V1](./programs/official-graphrag-cleanup-v1/README.md)
 5. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
 
+For the detailed design-stage target architecture v0.1, also read:
+
+- `../../.agent/architecture/README.md`
+- `../../.agent/architecture/00-architecture-index.md`
+
+That working set is more detailed than the formal summary here, but it remains
+target/proposed design material until synchronized into formal docs and runtime
+code.
+
 ## Directory Map
 
 ```text
@@ -34,6 +43,13 @@ docs/architecture/
   audits/
   history/
     programs/
+```
+
+Related Agent working set:
+
+```text
+.agent/
+  architecture/
 ```
 
 ## What Each Layer Means
@@ -56,6 +72,8 @@ docs/architecture/
   - evidence gathered before or during implementation phases
 - `history/`
   - older plans, archived programs, readiness notes, and legacy execution materials
+- `.agent/architecture/`
+  - detailed target architecture v0.1 design-stage working set, not formal truth
 
 ## Agent Workflow Boundary
 
