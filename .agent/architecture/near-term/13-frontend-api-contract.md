@@ -2,17 +2,16 @@
 
 ## Purpose
 
-Define the target product-facing API contract.
+Define the near-term frontend/backend contract.
 
 ## Current Evidence
 
-- `apps/web/src/utils/retrieval.ts` exposes `standard` as `rag` and enhanced as
-  `rag_graph`, while mapping `rag_graph_deep` back to the product label.
-- `apps/web/src/apis/knowledge.ts` includes `domain_pack_id`,
-  `index_capability`, `graph_index_settings`, and retrieval modes such as
-  `rag_graph_deep`.
+- `apps/web/src/utils/retrieval.ts` maps `rag` to Standard Mode and `rag_graph`
+  to Enhanced Mode.
+- `apps/web/src/apis/knowledge.ts` still includes `domain_pack_id`,
+  `rag_graph_deep`, and graph index settings.
 - `apps/web/src/utils/knowledge-config.ts` creates standard/enhanced product
-  configs and still carries `domain_pack_id`.
+  configs and still carries Domain Pack fields.
 
 ## Target Product Layer
 
@@ -28,7 +27,7 @@ Trace
 Evidence / Citation
 ```
 
-## Target API Config
+## Target Fields
 
 ```text
 graphrag_project_id
@@ -50,9 +49,9 @@ community_global
 drift_like
 ```
 
-## Trace Contract
+## Trace Fields
 
-Backend trace should expose:
+Frontend may display:
 
 - requested query method
 - resolved query method
@@ -61,7 +60,14 @@ Backend trace should expose:
 - graph paths used
 - community reports used
 - citation coverage
-- latency and cost metadata
+- index and prompt versions
 
-Frontend may keep standard/enhanced simple by default. Advanced users can opt
-into explicit query methods.
+## Migration Notes
+
+Keep the simple Standard/Enhanced UX. Move advanced GraphRAG details into an
+advanced panel or trace view.
+
+## Acceptance Direction
+
+Frontend API tests should prove old internal route names do not appear in new
+public product contracts except in explicit migration/retired terminology docs.

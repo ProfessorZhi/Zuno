@@ -21,13 +21,21 @@ The detailed design-stage architecture working set is:
 
 - `.agent/architecture/`
 
-It expands the target program into C4-style context/container/component/runtime
-views, layered runtime boundaries, GraphRAG Project design, Enhanced Mode,
-future Java business service integration, microservices readiness, multi-agent
-mode, observability, migration, decisions, and open questions.
+Its current structure separates near-term and future direction:
 
-This directory is not an implementation-complete claim. Future sections must be
-treated as target/proposed until runtime code and formal docs prove them.
+- `.agent/architecture/near-term/`
+  - detailed next refactor target for Python FastAPI, Service Layer, LangGraph,
+    LLM/Tool adapters, RAG/GraphRAG, Enhanced Mode, persistence, frontend API,
+    observability, and near-term migration
+- `.agent/architecture/future/`
+  - horizon planning for Java business services, microservices, event-driven
+    workers, and multi-agent mode
+- `.agent/architecture/decisions/`
+  - locked near-term choices, open questions, and retired surfaces
+
+Future material is not an implementation-complete claim and is not a near-term
+acceptance target. The current program remains focused on GraphRAG official
+alignment, Enhanced Mode, Domain Pack retirement, and legacy cleanup.
 
 ## Current Rule
 

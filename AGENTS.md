@@ -46,10 +46,23 @@ Detailed target architecture design for this program lives in:
 
 - `.agent/architecture/`
 
-That directory is a design-stage Agent working set for Zuno Target Architecture
-v0.1. It may describe proposed or future capabilities, including Java business
-services, microservices, and multi-agent mode. Do not read those future sections
-as implemented runtime facts unless the code and formal docs also say so.
+That directory is a design-stage Agent working set for Zuno architecture. Its
+current structure separates:
+
+- `.agent/architecture/near-term/`
+  - the detailed near-term ideal architecture for the next refactor target
+  - Python FastAPI, Service Layer, LangGraph, LLM/Tool adapters, RAG/GraphRAG,
+    persistence, frontend API contract, observability, migration, and gates
+- `.agent/architecture/future/`
+  - long-term direction for Java business services, microservices,
+    event-driven workers, and multi-agent mode
+  - not a current refactor acceptance target
+- `.agent/architecture/decisions/`
+  - locked near-term decisions, split open questions, and retired surfaces
+
+Do not treat Java, microservices, event-driven workers, or multi-agent mode as
+near-term implementation work unless the user explicitly opens a separate
+future-direction implementation program.
 
 ## Self-Maintenance Rule
 

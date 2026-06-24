@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define target trace and evaluation fields.
+Define near-term trace and evaluation expectations.
 
 ## Current Evidence
 
@@ -10,9 +10,8 @@ Define target trace and evaluation fields.
 - `DomainQAGraph` and `MultiAgentSupervisorGraph` collect trace and cost
   metadata.
 - `RetrievalOrchestrator` emits metadata for retrievers, routing, fallback,
-  requery, graph, community, drift-like paths, and index health.
-- Evaluation tooling exists under `tools/evals/zuno/` and tests cover retrieval,
-  multihop, GraphRAG, and docs entrypoints.
+  requery, graph, community, drift-like paths, index version, and index health.
+- Evaluation tooling exists under `tools/evals/zuno/`.
 
 ## Target Trace Fields
 
@@ -38,11 +37,12 @@ latency
 token_cost
 model_used
 tool_calls
-java_service_calls
-agent_steps
 ```
 
-## Evaluation
+Future fields like service calls and agent steps belong in `../future/` until
+they become an explicit near-term implementation target.
+
+## Evaluation Metrics
 
 ```text
 retrieval hit rate
@@ -59,5 +59,10 @@ regression fixtures
 
 ## Migration Notes
 
-Rename trace fields from old route names to query methods at the public layer,
-but keep raw internal diagnostics available during migration.
+Keep raw internal diagnostics during migration, but public trace should use
+query method names: `basic`, `local`, `global`, `drift`, and `auto`.
+
+## Acceptance Direction
+
+Every Enhanced Mode query should explain why it chose or abandoned graph,
+community, requery, and rerank paths.

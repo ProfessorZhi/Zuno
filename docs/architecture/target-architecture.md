@@ -23,12 +23,17 @@ one stable, explainable monorepo baseline
 
 The detailed design-stage version of this target is:
 
-- `.agent/architecture/`
+- `.agent/architecture/near-term/`
 
-That directory is Zuno Target Architecture v0.1. It is intentionally more
-detailed than this formal summary and includes proposed future boundaries for
-Java business services, microservices, and multi-agent mode. Treat those
-sections as target/proposed, not current implementation truth.
+That directory is the detailed near-term target architecture for the next
+refactor path. It is intentionally more detailed than this formal summary and
+focuses on the current Python AI Runtime: FastAPI, Service Layer, LangGraph,
+LLM/Tool adapters, RAG/GraphRAG, Enhanced Mode, persistence, frontend API, and
+observability.
+
+Long-term Java business services, microservices, event-driven workers, and
+multi-agent mode live in `.agent/architecture/future/`. They are direction
+notes, not current near-term acceptance targets.
 
 ## Target Repository Shape
 
@@ -111,6 +116,9 @@ That means:
 2. deepen runtime quality second
 3. only reopen repo-boundary migration after the runtime is stable and testable
 4. keep docs and Agent workflow synchronized as the architecture changes
+
+The near-term program does not implement Java services, split microservices,
+roll out an event bus, or make multi-agent the default QA path.
 
 ## Target Documentation Rule
 

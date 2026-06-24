@@ -19,7 +19,9 @@
 
 - `AGENTS.md`: repository-level Agent entrypoint
 - `.agent/README.md`: Agent workflow library rules
-- `.agent/architecture/`: detailed design-stage target architecture v0.1
+- `.agent/architecture/near-term/`: detailed near-term target architecture for the next refactor path
+- `.agent/architecture/future/`: horizon notes for Java, microservices, workers, and multi-agent direction
+- `.agent/architecture/decisions/`: locked choices, open questions, and retired surfaces
 - `.agent/references/`: durable Agent references
 - `.agent/templates/`: reusable prompts and reports
 - `.agent/scripts/`: read-only workflow checks

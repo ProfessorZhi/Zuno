@@ -17,6 +17,9 @@ Formal conclusions go to `docs/`. Agent execution aids go here.
 .agent/
   README.md
   architecture/
+    near-term/
+    future/
+    decisions/
   references/
     README.md
     current-program.md
@@ -65,7 +68,10 @@ If a change replaces an older design, move the old material to `docs/architectur
 - Use `.agent/references/` only as the Agent navigation layer.
 - Use `.agent/templates/` for reusable prompts and closure reports.
 - Use `.agent/scripts/` for read-only workflow checks.
-- Use `.agent/architecture/` for detailed target architecture design drafts
-  that are not yet full formal docs truth.
+- Use `.agent/architecture/near-term/` for the detailed next refactor target.
+- Use `.agent/architecture/future/` only for Java, microservices, event/workers,
+  and multi-agent horizon discussions.
+- Use `.agent/architecture/decisions/` for locked choices, open questions, and
+  retired surfaces.
 - Modification tasks require verification, commit, and push unless blocked.
 - Read-only reconnaissance does not commit or push.

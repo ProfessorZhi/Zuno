@@ -23,10 +23,13 @@ For the detailed design-stage target architecture v0.1, also read:
 
 - `../../.agent/architecture/README.md`
 - `../../.agent/architecture/00-architecture-index.md`
+- `../../.agent/architecture/near-term/README.md`
 
 That working set is more detailed than the formal summary here, but it remains
 target/proposed design material until synchronized into formal docs and runtime
-code.
+code. Its `near-term/` directory is the next refactor design path. Its
+`future/` directory is horizon planning for Java, microservices, workers, and
+multi-agent direction, not the current acceptance target.
 
 ## Directory Map
 
@@ -50,6 +53,9 @@ Related Agent working set:
 ```text
 .agent/
   architecture/
+    near-term/
+    future/
+    decisions/
 ```
 
 ## What Each Layer Means
@@ -73,7 +79,11 @@ Related Agent working set:
 - `history/`
   - older plans, archived programs, readiness notes, and legacy execution materials
 - `.agent/architecture/`
-  - detailed target architecture v0.1 design-stage working set, not formal truth
+  - design-stage working set, not formal truth
+- `.agent/architecture/near-term/`
+  - detailed near-term target for the next refactor path
+- `.agent/architecture/future/`
+  - horizon material for Java, microservices, workers, and multi-agent direction
 
 ## Agent Workflow Boundary
 

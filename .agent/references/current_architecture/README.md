@@ -15,6 +15,9 @@ For the detailed target architecture v0.1 design, read:
 
 - `.agent/architecture/README.md`
 - `.agent/architecture/00-architecture-index.md`
+- `.agent/architecture/near-term/README.md`
 
-That directory describes target/proposed architecture. This directory remains
-the quick current-reality reference.
+For near-term refactor work, prioritize `.agent/architecture/near-term/`.
+Read `.agent/architecture/future/` only for Java, microservices, event/workers,
+or multi-agent direction. This directory remains the quick current-reality
+reference.

@@ -16,14 +16,21 @@ The detailed design-stage target architecture working set lives at:
 
 - `.agent/architecture/`
 
-It expands this program into system context, container, component, runtime,
-deployment, layered backend, GraphRAG Project, Enhanced Mode, Java business
-service integration, microservices readiness, multi-agent design,
-observability, migration, decisions, open questions, and glossary documents.
+It is split into:
 
-Those files are target/proposed design material. They may include future Java
-backend, microservice, and multi-agent capabilities that are not implemented
-today.
+- `.agent/architecture/near-term/`
+  - detailed next refactor target for the current Python AI Runtime
+  - FastAPI, Service Layer, LangGraph, LLM/Tool adapters, RAG/GraphRAG,
+    Enhanced Mode, persistence, frontend API, observability, and migration
+- `.agent/architecture/future/`
+  - horizon planning for Java business services, microservices, event-driven
+    workers, and multi-agent mode
+  - not a current program acceptance target
+- `.agent/architecture/decisions/`
+  - locked near-term choices, open questions, and retired surfaces
+
+The current program should not treat Java, microservices, event-driven workers,
+or default multi-agent mode as near-term implementation work.
 
 ## Phase Order
 
@@ -36,9 +43,9 @@ today.
 7. [Phase 06: Frontend API Surface](phase-06-frontend-api-surface.md)
 8. [Phase 07: Tests Eval Closure](phase-07-tests-eval-closure.md)
 
-Additional future-oriented roadmap notes are in
-`.agent/architecture/20-migration-roadmap.md`; they do not replace the phase
-files above.
+Additional near-term roadmap notes are in
+`.agent/architecture/near-term/15-near-term-migration-roadmap.md`; they do not
+replace the phase files above.
 
 ## Acceptance Rule
 

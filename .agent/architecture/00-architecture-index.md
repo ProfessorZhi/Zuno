@@ -1,42 +1,28 @@
 # Architecture Index
 
-## Purpose
+## Default Reading Order
 
-This index gives the reading order for Zuno Target Architecture v0.1.
+1. [README](README.md)
+2. [Near-Term README](near-term/README.md)
+3. [Near-Term Target Overview](near-term/01-near-term-target-overview.md)
+4. [Layered Architecture](near-term/04-layered-architecture.md)
+5. [GraphRAG Project Architecture](near-term/11-graphrag-project-architecture.md)
+6. [Enhanced Mode Pipeline](near-term/12-enhanced-mode-pipeline.md)
+7. [Near-Term Migration Roadmap](near-term/15-near-term-migration-roadmap.md)
+8. [Locked Near-Term Decisions](decisions/01-locked-near-term-decisions.md)
+9. [Open Architecture Questions](decisions/02-open-architecture-questions.md)
+10. [Future README](future/README.md)
 
-## Reading Order
+## Rule For Refactor Work
 
-1. [System Context](01-system-context.md)
-2. [Container View](02-container-view.md)
-3. [Component View](03-component-view.md)
-4. [Runtime View](04-runtime-view.md)
-5. [Deployment And Microservices View](05-deployment-and-microservices-view.md)
-6. [Target Layered Architecture](06-target-layered-architecture.md)
-7. [Backend FastAPI And Service Layer](07-backend-fastapi-and-service-layer.md)
-8. [LangGraph Orchestration](08-langgraph-orchestration.md)
-9. [LangChain LLM Tool Layer](09-langchain-llm-tool-layer.md)
-10. [Context State Memory](10-context-state-memory.md)
-11. [Persistence Database Storage](11-persistence-database-storage.md)
-12. [Retrieval RAG Architecture](12-retrieval-rag-architecture.md)
-13. [GraphRAG Target Architecture](13-graphrag-target-architecture.md)
-14. [Enhanced Mode Pipeline](14-enhanced-mode-pipeline.md)
-15. [Frontend API Contract](15-frontend-api-contract.md)
-16. [Java Business Layer Integration](16-java-business-layer-integration.md)
-17. [Microservices Roadmap](17-microservices-roadmap.md)
-18. [Multi-Agent Architecture](18-multi-agent-architecture.md)
-19. [Observability Evaluation Trace](19-observability-evaluation-trace.md)
-20. [Migration Roadmap](20-migration-roadmap.md)
-21. [Design Options And Decisions](21-design-options-and-decisions.md)
-22. [Open Questions](22-open-questions.md)
-23. [Glossary](23-glossary.md)
+For near-term code refactor work, read `near-term/` first after the formal docs.
+The current mainline is Python FastAPI + Service Layer + LangGraph + LLM/Tool
+Adapters + RAG/GraphRAG + Persistence + Frontend API Contract.
 
-## Reference Style
+Read `future/` only when discussing Java business services, microservices,
+event-driven workers, independent GraphRAG/evaluation services, or multi-agent
+direction. Those topics must not become near-term acceptance gates unless the
+user explicitly opens a new future-direction implementation program.
 
-The structure borrows from:
-
-- C4: context, container, component, dynamic, and deployment views.
-- arc42: goals, constraints, building blocks, runtime, deployment, decisions,
-  quality, risks, and glossary.
-- ADR: context, options, decision, consequences, and status.
-
-These are writing aids, not templates to copy mechanically.
+`docs/architecture/` remains the formal documentation truth. `.agent/architecture/`
+is the detailed Agent-side design library.
