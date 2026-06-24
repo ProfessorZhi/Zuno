@@ -11,6 +11,10 @@
 
 Formal conclusions go to `docs/`. Agent execution aids go here.
 
+`.agent/references/` is only the Agent navigation layer: quick maps, current
+reality snapshots, command maps, and verification maps. It does not carry target
+architecture design and does not replace `.agent/architecture/near-term/`.
+
 ## Tracked Structure
 
 ```text
@@ -40,6 +44,8 @@ Local-only directories are ignored by `.gitignore`:
 .agent/local/
 .agent/secrets/
 ```
+
+Do not keep tracked placeholder files inside those local-only directories.
 
 ## Self-Maintenance Rule
 

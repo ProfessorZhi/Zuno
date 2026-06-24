@@ -1,6 +1,16 @@
 # Agent Reference Index
 
-This directory is the durable navigation layer for Agents. It summarizes where to look; it does not replace formal docs.
+This directory is the durable navigation layer for Agents. It summarizes where
+to look; it does not replace formal docs.
+
+`.agent/references/` is for quick navigation, current-reality snapshots,
+command maps, and verification maps. It does not carry target architecture
+design.
+
+For target architecture design, use:
+
+- `.agent/architecture/near-term/` for the detailed next refactor target
+- `.agent/architecture/future/` for horizon direction only
 
 ## Primary References
 
@@ -9,6 +19,9 @@ This directory is the durable navigation layer for Agents. It summarizes where t
 - `code-surfaces.md` maps code surfaces without authorizing code edits.
 - `verification-map.md` maps workflow and docs verification commands.
 - `current_architecture/` gives a fast Agent-oriented snapshot of current architecture boundaries.
+
+Historical Agent workflow notes do not stay in this current navigation layer.
+They belong under `docs/architecture/history/agent-workflow/`.
 
 ## Formal Truth
 

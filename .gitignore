@@ -40,6 +40,8 @@ apps/web/AGENTS.md
 .pytest_cache/
 .test-tmp/
 .tmp-local-embed*.log
+.phase0-launch*.log
+tmp-web-*.log
 .tmp_qa_playwright/
 tmp/
 tmp-qa-playwright/
@@ -75,6 +77,7 @@ $null
 &1
 
 *.log
+*.pyc
 *.sqlite
 *.sqlite3
 *.db

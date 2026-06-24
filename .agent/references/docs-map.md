@@ -23,5 +23,11 @@
 - `.agent/architecture/future/`: horizon notes for Java, microservices, workers, and multi-agent direction
 - `.agent/architecture/decisions/`: locked choices, open questions, and retired surfaces
 - `.agent/references/`: durable Agent references
+  - quick navigation, current-reality snapshots, command maps, and verification maps
+  - not target architecture design
 - `.agent/templates/`: reusable prompts and reports
 - `.agent/scripts/`: read-only workflow checks
+
+## Archived Agent Workflow Material
+
+- `docs/architecture/history/agent-workflow/`: superseded Agent workflow notes
