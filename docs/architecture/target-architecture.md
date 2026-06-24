@@ -2,8 +2,7 @@
 
 ## Purpose
 
-This file describes the target shape for the current architecture direction.
-It is the desired structure, not the current state.
+This file describes the target shape for the current architecture direction. It is the desired structure, not the current state.
 
 ## Target Shape Now
 
@@ -17,8 +16,9 @@ one stable, explainable monorepo baseline
   -> apps/desktop
   -> src/backend/zuno
   -> strong LangGraph runtime
-  -> strong GraphRAG and Domain Pack contracts
+  -> official GraphRAG-aligned project settings, prompt tuning, and query method boundaries
   -> strong local evaluation proof
+  -> self-maintaining docs and Agent workflow
 ```
 
 ## Target Repository Shape
@@ -35,6 +35,8 @@ Zuno/
   tools/
   tests/
   docs/
+  .agent/
+  AGENTS.md
 ```
 
 ## Target Directory Meaning
@@ -45,7 +47,9 @@ src/backend/zuno  = stable Python backend package
 infra             = deployment and environment infrastructure
 tools             = scripts, launchers, eval tooling, migration helpers
 tests             = repo-level verification and end-to-end checks
-docs              = current truth, plans, specs, workflow, history
+docs              = current truth, programs, specs, workflow, history
+.agent            = Agent workflow references, templates, and scripts
+AGENTS.md         = Agent entrypoint
 ```
 
 ## Target Runtime Mainline
@@ -53,10 +57,11 @@ docs              = current truth, plans, specs, workflow, history
 The backend should be easy to explain as:
 
 ```text
-Domain Pack
-  -> LangGraph runtime
+LangGraph runtime
   -> retrieval planning
   -> vector / BM25 / Local GraphRAG retrieval
+  -> official GraphRAG-aligned project settings
+  -> prompt tuning and query method selection
   -> later Community GraphRAG global summary
   -> evidence fusion
   -> answer + citation check
@@ -86,21 +91,30 @@ monorepo now, service-ready later
 
 That means:
 
-1. recover and stabilize `src/backend/zuno` first
+1. keep `src/backend/zuno` stable first
 2. deepen runtime quality second
 3. only reopen repo-boundary migration after the runtime is stable and testable
+4. keep docs and Agent workflow synchronized as the architecture changes
 
 ## Target Documentation Rule
 
 The docs system should expose only these current-truth layers on the front path:
 
 1. `current`
-2. `plan`
-3. `spec`
-4. `decision`
+2. `target`
+3. `program`
+4. `phase`
+5. `spec`
+6. `decision`
 
 Everything older belongs in:
 
 - `history`
 - `reference`
 - `development`
+
+Agent workflow has its own boundary:
+
+- `AGENTS.md` is the Agent entrypoint.
+- `.agent/` is the Agent workflow library.
+- `.agent/` does not replace formal docs.

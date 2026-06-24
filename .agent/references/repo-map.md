@@ -9,12 +9,13 @@
 
 ## Frontend
 
-- `src/frontend/`
+- `apps/web/`
+- `apps/desktop/`
 
 ## Infra
 
 - `infra/docker/`
-- `launchers/`
+- `tools/launchers/`
 
 ## Tests
 

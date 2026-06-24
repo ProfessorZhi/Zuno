@@ -1,25 +1,23 @@
 # Architecture Docs
 
-This directory is the current architecture truth for Zuno.
+This directory is the formal architecture entrypoint for Zuno.
 
-Its job is to keep four things aligned:
+It keeps four boundaries explicit:
 
-1. the current repo reality
-2. the target architecture
-3. the completed and active architecture programs
-4. the stable architecture specs that explain why the system is shaped this way
+1. `docs/` is the formal documentation truth.
+2. `AGENTS.md` is the repository-level Agent entrypoint.
+3. `.agent/` is the Agent workflow library, not formal truth.
+4. `docs/architecture/history/` archives superseded plans, old programs, and replaced designs.
 
 ## Start Here
 
 If you want the shortest current path, read:
 
 1. [Current Architecture](current-architecture.md)
-2. [Stable Baseline Recovery And Runtime Deepening Plan](./plans/stable-baseline-recovery-and-runtime-deepening-plan.md)
-3. [Target Architecture](target-architecture.md)
-4. [Transition Strategy](transition-strategy.md)
-5. [Architecture Upgrade Phases](./phases/README.md)
-6. [Knowledge Product Refactor + Deep GraphRAG V1](./programs/knowledge-product-refactor-deep-graphrag-v1/README.md)
-7. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
+2. [Target Architecture](target-architecture.md)
+3. [Architecture Upgrade Phases](./phases/README.md)
+4. [Official GraphRAG Cleanup V1](./programs/official-graphrag-cleanup-v1/README.md)
+5. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
 
 ## Directory Map
 
@@ -35,6 +33,7 @@ docs/architecture/
   decisions/
   audits/
   history/
+    programs/
 ```
 
 ## What Each Layer Means
@@ -42,24 +41,45 @@ docs/architecture/
 - `current-architecture.md`
   - what the repo is today
 - `target-architecture.md`
-  - what this upgrade is trying to make true
+  - what the active direction is trying to make true
 - `transition-strategy.md`
   - migration rules and constraints
 - `phases/`
-  - phase model for the architecture program
-  - current phase completion truth and closure gates
+  - completed Phase 0-6 closure truth for the previous architecture round
 - `programs/`
-  - new independent architecture programs that start after a previous round is already closed
-  - use this layer when future work should not overwrite earlier completion truth
+  - active independent architecture programs
 - `specs/`
   - stable architecture definitions
 - `decisions/`
   - major architecture choices and why they were made
 - `audits/`
-  - current-state evidence gathered before a later implementation phase
+  - evidence gathered before or during implementation phases
 - `history/`
-  - older plans, audits, readiness notes, and legacy execution materials
-  - see [Architecture History](./history/README.md)
+  - older plans, archived programs, readiness notes, and legacy execution materials
+
+## Agent Workflow Boundary
+
+- `AGENTS.md` tells Agents how to enter the repository and maintain the workflow system.
+- `.agent/` stores Agent references, templates, and read-only verification scripts.
+- `.agent/` may point to `docs/`, but it must not become the only place where formal conclusions live.
+
+## Current Rule
+
+Do not treat historical execution notes as the active architecture path.
+
+The current active program is:
+
+- [Official GraphRAG Cleanup V1](./programs/official-graphrag-cleanup-v1/README.md)
+
+The superseded knowledge-product program is archived at:
+
+- [Knowledge Product Refactor + Deep GraphRAG V1](./history/programs/knowledge-product-refactor-deep-graphrag-v1/README.md)
+
+Use `history/` only when you need:
+
+- historical phase evidence
+- older refactor reasoning
+- older readiness or staging context
 
 Relative path hints:
 
@@ -69,38 +89,29 @@ Relative path hints:
 - `./history/README.md`
 - `./specs/enterprise-retrieval-governance.md`
 
-## Current Rule
-
-Do not treat historical execution notes as the active architecture path.
-
-Use `history/` only when you need:
-
-- historical phase evidence
-- older refactor reasoning
-- older readiness or staging context
-
 ## Stable Spec Reading Order
 
 If you want the deeper technical model after reading the current path:
 
 1. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
-2. [Domain Pack + LangGraph + GraphRAG Architecture](./specs/domain-pack-langgraph-graphrag-architecture.md)
-3. [LangGraph Runtime](./specs/langgraph-runtime.md)
-4. [Retrieval Orchestrator](./specs/retrieval-orchestrator.md)
-5. [Enterprise Retrieval Governance](./specs/enterprise-retrieval-governance.md)
-6. [RAG Evaluation And Observability](./specs/rag-evaluation-and-observability.md)
-7. [Layered Backend And Service Evolution](./specs/layered-backend-and-service-evolution.md)
-8. [Platform Evolution And Future Direction](./specs/platform-evolution-and-future-direction.md)
+2. [LangGraph Runtime](./specs/langgraph-runtime.md)
+3. [Retrieval Orchestrator](./specs/retrieval-orchestrator.md)
+4. [Enterprise Retrieval Governance](./specs/enterprise-retrieval-governance.md)
+5. [RAG Evaluation And Observability](./specs/rag-evaluation-and-observability.md)
+6. [Layered Backend And Service Evolution](./specs/layered-backend-and-service-evolution.md)
+7. [Platform Evolution And Future Direction](./specs/platform-evolution-and-future-direction.md)
 
 ## Maintenance Rule
 
-After every major structure, runtime, or evaluation change, review:
+After every major structure, runtime, evaluation, feature, refactor, or architecture replacement, review:
 
 - this index
 - the current architecture file
 - the target architecture file
-- the active phase file
-- the affected specs
+- the active program or phase file
+- the affected specs, ADRs, and audits
+- `AGENTS.md`
+- `.agent/references/`
 
 The goal is simple:
 

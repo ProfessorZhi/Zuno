@@ -27,6 +27,14 @@ src/backend/zuno/config.yaml
 .local/
 apps/web/AGENTS.md
 
+# Agent workflow library: keep durable references/templates/scripts tracked,
+# ignore local notes, scratch space, logs, machine-local state, and secrets.
+.agent/notes/
+.agent/tmp/
+.agent/logs/
+.agent/local/
+.agent/secrets/
+
 .astrid-memory/
 .playwright-mcp/
 .pytest_cache/

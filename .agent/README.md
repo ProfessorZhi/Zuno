@@ -1,52 +1,68 @@
-# Agent Workspace
+# Agent Workflow Library
 
-这个目录承载仓库内 Agent 工作流材料。
+`.agent/` is the Agent workflow library. It is not the formal architecture truth.
 
-## 边界
+## Boundaries
 
-- `docs/`：给人看的正式文档
-- `.agent/`：给 Agent 看的工作流材料
-- `agent.md`：Agent 进入仓库的总入口
+- `docs/` holds formal human-facing documentation truth.
+- `AGENTS.md` is the repository-level Agent entrypoint.
+- `.agent/` holds Agent references, templates, scripts, and operating aids.
+- `docs/architecture/history/` archives superseded programs, old plans, and replaced designs.
 
-## 目录
+Formal conclusions go to `docs/`. Agent execution aids go here.
+
+## Tracked Structure
 
 ```text
 .agent/
   README.md
   references/
-  scripts/
-  notes/
+    README.md
+    current-program.md
+    docs-map.md
+    code-surfaces.md
+    verification-map.md
+    current_architecture/
   templates/
+  scripts/
 ```
 
-## 用法
+Local-only directories are ignored by `.gitignore`:
 
-- `references/`：放给 Agent 快速读取的参考索引
-- `scripts/`：放辅助脚本
-- `notes/`：放分析和排查记录
-- `templates/`：放常用执行模板
+```text
+.agent/notes/
+.agent/tmp/
+.agent/logs/
+.agent/local/
+.agent/secrets/
+```
 
-正式架构文档统一放：
+## Self-Maintenance Rule
 
-- `docs/architecture/`
+When a user asks for a new requirement, new feature, refactor, or architecture replacement, first decide whether the change must update:
 
-这里不保存正式架构结论，只保存：
+1. `docs/architecture/programs/<program>/`
+2. a phase document
+3. a spec, ADR, or audit
+4. `docs/architecture/history/`
+5. `docs/architecture/README.md`
+6. `docs/architecture/current-architecture.md`
+7. `docs/architecture/target-architecture.md`
+8. `AGENTS.md`
+9. `.agent/references/current-program.md`
+10. `.agent/references/docs-map.md`
+11. `.agent/references/current_architecture/`
+12. `.agent/scripts/` or `.agent/templates/`
+13. `.gitignore`
+14. verification, commit, and push if files changed
 
-- 导航索引
-- 本地脚本
-- 临时记录
-- Agent 工作模板
+If a change replaces an older design, move the old material to `docs/architecture/history/` instead of deleting it.
 
-## 工作流约定
+## Operating Rules
 
-- 允许 Codex 在开发过程中开启多 Agent 模式
-- 允许使用目标模式持续追踪任务
-- 文档里的验收点可以直接转成目标
-- `spec coding` 任务默认追求“验收达成”，不是“分析结束”
-
-## 工作流硬规则
-
-- 复杂开发任务可以直接进入多 Agent 模式
-- 需要验收收口的任务应进入目标模式
-- 目标优先来源于正式文档中的验收点
-- 目标未达成，不视为任务完成
+- Read formal truth from `docs/architecture/` first.
+- Use `.agent/references/` only as the Agent navigation layer.
+- Use `.agent/templates/` for reusable prompts and closure reports.
+- Use `.agent/scripts/` for read-only workflow checks.
+- Modification tasks require verification, commit, and push unless blocked.
+- Read-only reconnaissance does not commit or push.

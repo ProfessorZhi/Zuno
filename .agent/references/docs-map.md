@@ -1,0 +1,24 @@
+# Docs Map
+
+## Formal Architecture Entrypoints
+
+- `docs/architecture/README.md`: formal architecture index
+- `docs/architecture/current-architecture.md`: current repo reality
+- `docs/architecture/target-architecture.md`: target shape for the active direction
+- `docs/architecture/phases/README.md`: completed Phase 0-6 truth and pointer to the new program
+- `docs/architecture/programs/official-graphrag-cleanup-v1/README.md`: current new program
+
+## Supporting Architecture Material
+
+- `docs/architecture/specs/`: stable technical specs
+- `docs/architecture/decisions/`: ADRs
+- `docs/architecture/audits/`: evidence and investigation reports
+- `docs/architecture/history/`: superseded plans, old programs, replaced designs, and historical closure material
+
+## Agent Workflow Material
+
+- `AGENTS.md`: repository-level Agent entrypoint
+- `.agent/README.md`: Agent workflow library rules
+- `.agent/references/`: durable Agent references
+- `.agent/templates/`: reusable prompts and reports
+- `.agent/scripts/`: read-only workflow checks

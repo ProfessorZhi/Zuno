@@ -8,7 +8,7 @@ The public repository should contain the project itself:
 
 - application source code
 - public-facing documentation
-- published agent-workspace guidance under `agent.md` and `.agent/`
+- published agent-workspace guidance under `AGENTS.md` and `.agent/`
 - Docker and launcher assets needed to run the project
 - tests that verify product behavior and architecture guards
 - evaluation code, schemas, and reusable datasets that are safe to publish

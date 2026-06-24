@@ -8,6 +8,8 @@ Use it when you need:
 - past readiness notes
 - older refactor narratives
 - evidence of how the project evolved
+- superseded programs
+- replaced designs
 
 Do not start here if you want to understand the current architecture upgrade.
 
@@ -17,3 +19,10 @@ Start from:
 - `../current-architecture.md`
 - `../target-architecture.md`
 - `../phases/README.md`
+- `../programs/official-graphrag-cleanup-v1/README.md`
+
+## Archived Programs
+
+- [Knowledge Product Refactor + Deep GraphRAG V1](./programs/knowledge-product-refactor-deep-graphrag-v1/README.md) is superseded by [Official GraphRAG Cleanup V1](../programs/official-graphrag-cleanup-v1/README.md).
+
+Do not delete historical material merely because a new program replaces it.

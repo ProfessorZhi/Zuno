@@ -1,30 +1,26 @@
 # Architecture Map
 
-## 正式架构入口
+## Formal Entrypoints
 
 - `docs/architecture/README.md`
-- `docs/architecture/zuno_refactor_plan.md`
+- `docs/architecture/current-architecture.md`
+- `docs/architecture/target-architecture.md`
+- `docs/architecture/phases/README.md`
+- `docs/architecture/programs/official-graphrag-cleanup-v1/README.md`
 
-## 设计文档
+## Stable Design Docs
 
-- `docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md`
 - `docs/architecture/specs/retrieval-orchestrator.md`
 - `docs/architecture/specs/rag-evaluation-and-observability.md`
-- `docs/architecture/specs/knowledge-capability-and-query-policy.md`
 - `docs/architecture/specs/langgraph-runtime.md`
-- `docs/architecture/specs/graphrag-contract-review.md`
+- `docs/architecture/specs/enhanced-retrieval-orchestrator-contract.md`
+- `docs/architecture/specs/enterprise-retrieval-governance.md`
 
-## 执行计划
+## Decisions
 
-- `docs/architecture/plans/zuno-refactor-execution-plan.md`
-- `docs/architecture/plans/superpowers-legacy-migration-inventory.md`
+- `docs/architecture/decisions/`
 
-## 关键决策
+## History
 
-- `docs/architecture/decisions/0001-domain-pack-binding.md`
-- `docs/architecture/decisions/0002-rename-zuno-to-zuno.md`
-
-## 历史可参考资料
-
-- `docs/superpowers/specs/`
-- `docs/superpowers/plans/`
+- `docs/architecture/history/`
+- `docs/architecture/history/programs/`
