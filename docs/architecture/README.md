@@ -98,6 +98,7 @@ Do not treat historical execution notes as the active architecture path.
 The current active program is:
 
 - [Official GraphRAG Cleanup V1](./programs/official-graphrag-cleanup-v1/README.md)
+- [Official GraphRAG Cleanup V1 Implementation Roadmap](./programs/official-graphrag-cleanup-v1/implementation-roadmap.md)
 
 The superseded knowledge-product program is archived at:
 

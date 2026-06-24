@@ -37,6 +37,24 @@ Future material is not an implementation-complete claim and is not a near-term
 acceptance target. The current program remains focused on GraphRAG official
 alignment, Enhanced Mode, Domain Pack retirement, and legacy cleanup.
 
+## Implementation Program
+
+The executable near-term implementation breakdown lives in:
+
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `.agent/architecture/near-term/17-implementation-phase-map.md`
+
+Use these files when the user asks to implement the near-term ideal
+architecture in target mode. They split the work into phases for legacy audit,
+docs cleanup, Domain Pack contract retirement, GraphRAG Project contracts,
+settings loading, prompt registry, index versioning, query method routing,
+Enhanced Mode, frontend migration, runtime legacy deletion, and final
+tests/eval/trace closure.
+
+Do not use the implementation phases to pull Java, microservices,
+event-driven workers, or default multi-agent mode into near-term acceptance.
+
 ## Current Rule
 
 Do not rewrite completed Phase 0-6 files as incomplete.

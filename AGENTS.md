@@ -42,6 +42,12 @@ The current new program is:
 
 Its purpose is to standardize docs and Agent workflow, clean legacy surfaces, retire Domain Pack as the front-path architecture mainline, and align the next GraphRAG work with official GraphRAG Project, Prompt Tuning, and Query Method concepts.
 
+The executable near-term implementation breakdown is:
+
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `.agent/architecture/near-term/17-implementation-phase-map.md`
+
 Detailed target architecture design for this program lives in:
 
 - `.agent/architecture/`

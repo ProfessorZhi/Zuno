@@ -9,6 +9,9 @@ State what would prove the near-term architecture is actually ready later.
 - `near-term/` remains the main refactor design path.
 - `future/` topics do not appear as near-term acceptance requirements.
 - `decisions/` records locked choices and retired surfaces.
+- the formal implementation program is linked from
+  `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+  and `.agent/architecture/near-term/17-implementation-phase-map.md`.
 
 ## Contract Gates
 
@@ -26,6 +29,12 @@ State what would prove the near-term architecture is actually ready later.
   fallback reason, evidence bundle, and citation coverage.
 - GraphRAG Project trace records project id, prompt version, index version, and
   community version where applicable.
+
+## Program Closure Gates
+
+- every implementation phase returns its evidence package.
+- final grep gates classify retired terms by allowed and disallowed location.
+- final docs are updated from fresh runtime, test, eval, and trace evidence.
 
 ## Scope Gates
 

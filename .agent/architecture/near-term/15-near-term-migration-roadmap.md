@@ -5,6 +5,15 @@
 Define the next-stage refactor sequence. Java, microservices, event bus, and
 default multi-agent work are intentionally not in this roadmap.
 
+The formal executable implementation program now lives in:
+
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `.agent/architecture/near-term/17-implementation-phase-map.md`
+
+The phase notes below remain the compact design-level sequence. Use the formal
+implementation phases for target-mode execution.
+
 ## Phase 01: docs/spec cleanup
 
 Goal: keep architecture entrypoints clear and route future material out of the

@@ -21,3 +21,10 @@ For near-term refactor work, prioritize `.agent/architecture/near-term/`.
 Read `.agent/architecture/future/` only for Java, microservices, event/workers,
 or multi-agent direction. This directory remains the quick current-reality
 reference.
+
+When the task is to implement the near-term target architecture, use the formal
+implementation roadmap first:
+
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
+- `.agent/architecture/near-term/17-implementation-phase-map.md`

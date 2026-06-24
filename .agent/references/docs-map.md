@@ -7,6 +7,8 @@
 - `docs/architecture/target-architecture.md`: target shape for the active direction
 - `docs/architecture/phases/README.md`: completed Phase 0-6 truth and pointer to the new program
 - `docs/architecture/programs/official-graphrag-cleanup-v1/README.md`: current new program
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`: executable near-term implementation roadmap
+- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`: target-mode implementation phases
 
 ## Supporting Architecture Material
 
@@ -20,6 +22,7 @@
 - `AGENTS.md`: repository-level Agent entrypoint
 - `.agent/README.md`: Agent workflow library rules
 - `.agent/architecture/near-term/`: detailed near-term target architecture for the next refactor path
+- `.agent/architecture/near-term/17-implementation-phase-map.md`: Agent execution map for the implementation phases
 - `.agent/architecture/future/`: horizon notes for Java, microservices, workers, and multi-agent direction
 - `.agent/architecture/decisions/`: locked choices, open questions, and retired surfaces
 - `.agent/references/`: durable Agent references

@@ -34,6 +34,13 @@ or default multi-agent mode as near-term implementation work.
 
 ## Phase Order
 
+The original program phases below describe the high-level cleanup sequence.
+The executable implementation breakdown for moving code toward the near-term
+target architecture lives in:
+
+- [Implementation Roadmap](implementation-roadmap.md)
+- [Implementation Phases](implementation-phases/README.md)
+
 1. [Phase 00: Docs And Agent Workflow](phase-00-docs-and-agent-workflow.md)
 2. [Phase 01: Legacy Cleanup](phase-01-legacy-cleanup.md)
 3. [Phase 02: GraphRAG Project Settings](phase-02-graphrag-project-settings.md)
@@ -46,6 +53,9 @@ or default multi-agent mode as near-term implementation work.
 Additional near-term roadmap notes are in
 `.agent/architecture/near-term/15-near-term-migration-roadmap.md`; they do not
 replace the phase files above.
+
+The implementation phases do not expand near-term scope into Java business
+services, microservices, event-driven workers, or default multi-agent mode.
 
 ## Acceptance Rule
 
