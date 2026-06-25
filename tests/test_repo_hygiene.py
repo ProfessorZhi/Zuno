@@ -48,6 +48,7 @@ def test_blocked_legacy_paths_are_present_and_classified() -> None:
     ).read_text(encoding="utf-8")
     assert "`domain-packs/`: Blocked Legacy" in map_content
     assert "`tests/compat/`: Current / Blocked Legacy" in map_content
+    assert "must not be treated as target repository layout" in map_content
 
 
 def test_repo_hygiene_verifiers_are_registered() -> None:

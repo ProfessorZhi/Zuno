@@ -10,6 +10,8 @@ def test_required_current_paths_exist() -> None:
         ".agent/README.md",
         ".agent/programs/current.md",
         ".agent/programs/official-graphrag-cleanup-v1",
+        ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+        ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
         "apps/desktop",
         "apps/web",
         "docs/architecture/current-architecture.md",
@@ -89,6 +91,10 @@ def test_readme_mentions_current_backend_start_and_focused_verification() -> Non
         "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
         "domain-packs/",
         "Blocked Legacy",
+        "Phase 11A",
+        "Phase 11B",
+        "Phase 11C",
+        "Phase 12",
     ]
 
     for phrase in required_phrases:

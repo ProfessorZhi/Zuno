@@ -2,6 +2,8 @@
 
 ## Program Goal
 
+Status: Candidate / Design-ready, not active Current implementation.
+
 Implement the ideal architecture as a sequence of bounded changes:
 
 ```text
@@ -19,8 +21,10 @@ single GeneralAgent
   GraphRAG services, frontend apps, and tests.
 - The current executable program remains
   `.agent/programs/official-graphrag-cleanup-v1/`.
-- Phase 11 Runtime Legacy Deletion is still the dependency gate for removing
-  old Domain Pack and `DomainQAGraph` runtime surfaces.
+- Phase 11A and Phase 11B are complete in that cleanup program.
+- Phase 11C active dependency removal and Phase 12 closure are still the
+  dependency gate for implementation work in this program unless dependencies
+  are explicitly re-verified.
 - Existing memory-related runtime exists under `src/backend/zuno/services/memory/`,
   but the ideal Context Orchestrator and post-turn pipeline are not yet proven
   as the central runtime contract.
@@ -42,6 +46,10 @@ The target state is:
 - a `GraphRAGProjectSnapshot` passed into GraphRAG query execution
 - evals for recall, false memory rate, summary faithfulness, token cost,
   cross-session consistency, privacy deletion, and tool-result compression
+
+The existing `GraphRAGProjectSnapshot` and `GraphRAGQueryService` from the
+cleanup program must be reused. This program must not implement a second
+snapshot or query service.
 
 ## Non-Goals
 

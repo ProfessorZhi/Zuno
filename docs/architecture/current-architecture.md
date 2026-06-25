@@ -32,23 +32,62 @@ workspace.
   `src/backend/zuno/settings.py`
 - Eval and maintenance tooling: `tools/evals/zuno/`, `tools/scripts/`
 
-## Current GraphRAG State
+## Current GraphRAG And Agent State
 
-The current code already contains GraphRAG Project, Prompt Registry, Query
-Method, Enhanced Mode, index-version, trace, and frontend contract migration
-work from the active cleanup program.
+Current code and focused tests prove this mainline:
 
-Blocked Legacy remains:
+```text
+Completion API
+  -> CompletionService
+  -> GeneralAgent single loop
+  -> search_knowledge_base
+  -> KnowledgeQueryService
+  -> GraphRAGQueryService
+  -> RetrievalPlanner / RetrievalOrchestrator
+  -> Evidence / Citation / Trace
+  -> GeneralAgent answer
+```
+
+Phase 11A is complete. The current code contains `KnowledgeQueryService`,
+`GraphRAGQueryService`, `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult`.
+This is the current GraphRAG Project Query Runtime boundary.
+
+Phase 11B is complete. `GeneralAgent.astream()` uses the single current session
+path, `search_knowledge_base` calls `KnowledgeQueryService`, and
+`DomainQAGraph` no longer owns the `GeneralAgent` conversation path.
+
+The old `AgentConfig` public shape still exists, including migration fields
+such as `domain_pack_id`; that is current compatibility surface, not target
+architecture.
+
+## Blocked Legacy
+
+Phase 11C is blocked because these active dependencies still exist:
 
 - `domain-packs/`
-- Domain Pack runtime services
-- `DomainQAGraph`
-- selected old public names in compatibility or migration paths
+- Domain Pack route/service/frontend/eval/Docker surfaces
+- `src/backend/zuno/api/v1/domain_packs.py`
+- `src/backend/zuno/services/domain_pack/`
+- remaining `DomainQAGraph` source and dependencies
+- remaining `MultiAgentSupervisorGraph` source and compat surfaces
 - `tests/compat/`
 
 These surfaces are not the future front-path architecture, but they still have
-active imports or tests. They are retained until Phase 11 can prove safe runtime
-deletion.
+active imports, routes, evals, assets, or tests. They are retained until 11C
+active dependency removal is proved.
+
+## Not Current
+
+Context Orchestrator and new Memory layering are Target, not Current.
+
+The near-term Context & Memory design is documented under `.agent/`; it is not
+implemented as the current runtime. Do not describe short/medium/long memory,
+Context Orchestrator, Dynamic Capability Selector, or the Post-turn Pipeline as
+current behavior until code and tests prove them.
+
+Phase 12 is partial / not closed. The repository has focused tests for recent
+changes, but final full `pytest` and formal Eval baseline comparison have not
+been completed.
 
 ## Historical Completion Truth
 

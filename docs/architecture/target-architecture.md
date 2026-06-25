@@ -2,43 +2,28 @@
 
 ## Purpose
 
-This file states the near-term target. It is desired direction, not current
-implementation truth.
+This file states the high-level near-term target. It is desired direction, not
+current implementation truth.
 
 ## Target
 
 Zuno should remain:
 
 ```text
-monorepo now, service-ready later
+monorepo now, modular monolith, service-ready later
 ```
 
-The near-term target is:
+The stable target concepts are:
 
-```text
-apps/web + apps/desktop
-  -> src/backend/zuno
-  -> FastAPI service boundary
-  -> LangGraph runtime
-  -> Basic RAG: BM25 + dense vector + fusion + rerank
-  -> GraphRAG Project settings
-  -> query_method: auto/basic/local/global/drift
-  -> Prompt Registry and prompt versions
-  -> index/update/version boundaries
-  -> Enhanced Mode pipeline
-  -> evidence bundle, citation, and trace
-  -> local eval proof
-```
-
-## Not Near-Term
-
-These are future direction, not current acceptance targets:
-
-- Java business services
-- microservice extraction
-- event-driven workers
-- default multi-agent QA mode
-- independent GraphRAG or indexing services
+- Single `GeneralAgent`
+- Context & Memory Engine
+- Capability System
+- GraphRAG Project
+- Query methods: Basic, Local, Global, DRIFT
+- Index / Update / Full Rebuild lifecycle
+- Evidence / Citation / Trace / Eval
+- FastAPI service boundary inside the current Python monorepo
+- Vue web and Electron clients over typed API contracts
 
 ## Replacement Direction
 
@@ -51,6 +36,17 @@ community_global -> global
 drift_like -> drift
 ```
 
+## Not Near-Term
+
+These are future direction, not current acceptance targets:
+
+- Java business services
+- microservice extraction
+- event-driven workers
+- product-level multi-agent mode
+- Coding Agent mode
+- independent GraphRAG or indexing services
+
 ## Detailed Design
 
 Detailed design-stage material lives in:
@@ -58,6 +54,10 @@ Detailed design-stage material lives in:
 - `.agent/architecture/near-term/`
 - `.agent/architecture/future/`
 - `.agent/architecture/decisions/`
+
+The canonical Target / Proposed visual blueprint is:
+
+- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 
 Only implemented and verified conclusions should be promoted from `.agent/` to
 formal `docs/`.

@@ -33,7 +33,10 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         assert phrase in readme
 
     for phrase in [
-        "Phase 11 is Runtime Legacy Deletion.",
+        "Phase 11A: complete",
+        "Phase 11B: complete",
+        "Phase 11C: blocked",
+        "Phase 12: partial / not closed",
         "Phase 01 through Phase 10 are complete.",
         "Blocked Legacy",
     ]:

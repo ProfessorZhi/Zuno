@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Document the ideal architecture from the local design source:
+Document the ideal architecture from the repository design source:
 
-- `C:\Users\Administrator\Downloads\zuno_ideal_architecture_with_context_memory.html`
+- `./zuno-ideal-architecture-and-repo-layout.html`
 
 This is Agent-side target design. It does not claim current runtime behavior.
 It refines the near-term Python/FastAPI/LangGraph target by separating Agent

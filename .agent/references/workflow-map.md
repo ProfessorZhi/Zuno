@@ -33,3 +33,11 @@ Map task types to Agent workflows.
 ## Update Triggers
 
 Update this map when adding, removing, or renaming workflows or skills.
+## Required Target Blueprint
+
+Architecture replacement, directory moves, Context/Memory, GraphRAG boundary,
+and repository hygiene workflows must read:
+
+- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+
+Treat it as Target / Proposed visual reference only.

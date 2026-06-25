@@ -5,6 +5,21 @@
 Create a project-first knowledge query runtime before deleting legacy runtime
 surfaces.
 
+## Status
+
+Complete. Commit `24abdd9` introduced `KnowledgeQueryService`,
+`GraphRAGQueryService`, `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult`.
+Fresh verification should still be run before using this as dependency evidence.
+
+Fresh status-sync evidence from this docs run:
+
+- `pytest -q tests/test_phase11a_knowledge_query_service.py` passed.
+- Code read confirmed the query runtime is in
+  `src/backend/zuno/api/services/knowledge_query.py` and
+  `src/backend/zuno/services/graphrag/query_service.py`.
+- Phase 11C deletion remains blocked; this status does not delete legacy
+  runtime surfaces.
+
 ## Why This Phase Exists
 
 The old Phase 11 combined replacement and deletion. That made active imports a

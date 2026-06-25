@@ -14,7 +14,9 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/references/local-state-map.md",
         ".agent/workflows/docs-maintenance.md",
         ".agent/workflows/repo-hygiene.md",
+        ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
         ".agent/architecture/near-term/18-context-memory-ideal-architecture.md",
+        ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
         ".agent/programs/context-memory-agent-runtime-v1/README.md",
         ".agent/programs/context-memory-agent-runtime-v1/implementation-plan.md",
         ".agent/programs/context-memory-agent-runtime-v1/implementation-phases/README.md",
@@ -25,6 +27,49 @@ def test_agent_system_required_paths_exist() -> None:
 
     for relative_path in required_paths:
         assert (REPO_ROOT / relative_path).exists(), f"missing Agent path: {relative_path}"
+
+
+def test_target_architecture_html_is_canonical_and_referenced() -> None:
+    html_path = (
+        REPO_ROOT
+        / ".agent"
+        / "architecture"
+        / "near-term"
+        / "zuno-ideal-architecture-and-repo-layout.html"
+    )
+    html = html_path.read_text(encoding="utf-8")
+    assert "<html" in html.lower()
+    assert "Zuno" in html
+    assert "Target" in html or "Proposed" in html or "目标" in html
+
+    tracked_html = [
+        path.replace("\\", "/")
+        for path in __import__("subprocess")
+        .run(
+            ["git", "ls-files", "*.html"],
+            cwd=REPO_ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        .stdout.splitlines()
+        if "zuno-ideal-architecture" in path
+    ]
+    assert tracked_html == [
+        ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html"
+    ]
+
+    required_files = [
+        "AGENTS.md",
+        ".agent/architecture/near-term/README.md",
+        ".agent/workflows/architecture-refactor.md",
+        ".agent/workflows/repo-hygiene.md",
+        ".agent/skills/zuno-architecture-refactor/SKILL.md",
+        ".agent/skills/zuno-repo-hygiene/SKILL.md",
+    ]
+    for relative_path in required_files:
+        content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+        assert "zuno-ideal-architecture-and-repo-layout.html" in content
 
 
 def test_root_agents_routes_to_module_agents_and_skills() -> None:

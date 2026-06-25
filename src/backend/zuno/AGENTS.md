@@ -6,6 +6,10 @@ Before changing `src/backend/zuno`, read:
 2. `.agent/references/runtime-call-chain.md`
 3. `.agent/workflows/backend-change.md`
 
+For backend architecture replacement, GraphRAG boundary, Context/Memory, or
+package layout work, also read
+`.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`.
+
 Rules:
 
 - Routes do not own business logic or retrieval strategy.

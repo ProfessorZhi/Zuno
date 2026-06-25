@@ -13,6 +13,8 @@ REQUIRED_PATHS = [
     ".agent/README.md",
     ".agent/programs/current.md",
     ".agent/programs/official-graphrag-cleanup-v1",
+    ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+    ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
     ".agent/scripts/verify_agent_system.py",
     ".agent/scripts/verify_doc_boundaries.py",
     ".agent/scripts/verify_repo_hygiene.py",
@@ -83,7 +85,10 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "history/phases/",
     ],
     "docs/architecture/roadmap.md": [
-        "Phase 11 is Runtime Legacy Deletion.",
+        "Phase 11A: complete",
+        "Phase 11B: complete",
+        "Phase 11C: blocked",
+        "Phase 12: partial / not closed",
         "Blocked Legacy",
         ".agent/programs/official-graphrag-cleanup-v1/",
     ],
@@ -133,6 +138,25 @@ def verify_doc_phrases() -> list[str]:
     return errors
 
 
+def verify_target_architecture_html() -> list[str]:
+    errors: list[str] = []
+    html_path = REPO_ROOT / ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html"
+    if not html_path.exists():
+        return ["missing canonical target architecture HTML"]
+    html = html_path.read_text(encoding="utf-8")
+    if "<html" not in html.lower() or "</html>" not in html.lower():
+        errors.append("canonical target architecture HTML is not valid HTML")
+    if not any(marker in html for marker in ["Target", "Proposed", "目标"]):
+        errors.append("canonical target architecture HTML missing Target/Proposed marker")
+    html_refs = [
+        path for path in REPO_ROOT.glob(".agent/**/*.md")
+        if "zuno-ideal-architecture-and-repo-layout.html" in path.read_text(encoding="utf-8")
+    ]
+    if len(html_refs) < 6:
+        errors.append("target architecture HTML is under-referenced by Agent workflows")
+    return errors
+
+
 def verify_archived_reference_docs() -> list[str]:
     errors: list[str] = []
     if (REPO_ROOT / "docs" / "reference" / "migration.md").exists():
@@ -147,6 +171,7 @@ def run_verification() -> VerificationResult:
         *verify_required_paths(),
         *verify_forbidden_current_paths(),
         *verify_doc_phrases(),
+        *verify_target_architecture_html(),
         *verify_archived_reference_docs(),
     ]
     return VerificationResult(errors=errors)

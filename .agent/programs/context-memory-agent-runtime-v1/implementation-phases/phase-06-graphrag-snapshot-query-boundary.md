@@ -5,6 +5,13 @@
 Separate Agent Context from GraphRAG query configuration by introducing
 `GraphRAGProjectSnapshot` as immutable query input.
 
+## Current Status
+
+Not complete for this program. `GraphRAGProjectSnapshot` and
+`GraphRAGQueryService` have partially landed in the cleanup program, but this
+phase still depends on Context/Memory phases and must reuse the existing query
+runtime instead of creating a second one.
+
 ## Dependency
 
 Phase 05 complete and the current GraphRAG cleanup program no longer blocks

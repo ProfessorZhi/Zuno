@@ -5,6 +5,18 @@
 Close the implementation program with tests, evals, trace proof, docs sync, and
 final legacy grep classification.
 
+## Status
+
+Partially complete / not closed. Focused tests exist for completed phases, but
+final full `pytest` and formal Eval baseline comparison are not complete.
+
+Fresh non-closure evidence from this docs run:
+
+- Phase 11A/11B focused tests were run for status verification.
+- Final full `pytest` was not run as a closure gate.
+- Formal Eval baseline comparison was not run.
+- Final legacy grep classification was not closed.
+
 ## Why This Phase Exists
 
 Passing unit tests alone does not prove the architecture is implemented. Final

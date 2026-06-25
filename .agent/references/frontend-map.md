@@ -25,3 +25,7 @@ npm run frontend:build
 
 Update this map when frontend entrypoints, API clients, route structure, design
 system, or validation commands change.
+
+For frontend API contract migration, route restructuring, or target repository
+layout work, first read
+`.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`.

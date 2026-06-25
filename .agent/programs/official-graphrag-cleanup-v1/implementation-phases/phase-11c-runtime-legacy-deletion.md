@@ -5,6 +5,23 @@
 Delete or archive legacy runtime surfaces after replacement and cutover evidence
 prove no active dependency remains.
 
+## Status
+
+Blocked. Active dependencies still exist in `domain-packs/`, Domain Pack
+route/service/frontend/eval/Docker surfaces, remaining `DomainQAGraph` source
+and dependencies, remaining `MultiAgentSupervisorGraph` source/compat surfaces,
+and `tests/compat/`.
+
+Fresh blocker classification from this docs run:
+
+- `src/backend/zuno/api/router.py` still includes Domain Pack routes.
+- `src/backend/zuno/api/v1/domain_packs.py` still exposes `/domain-packs`.
+- `src/backend/zuno/services/domain_pack/` still exists.
+- `src/backend/zuno/core/graphs/domain_qa_graph.py` still exists.
+- `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` still exists.
+- `tests/compat/` still exists with Domain Pack and multi-agent compatibility
+  coverage.
+
 ## Dependency
 
 Phase 11A and Phase 11B must pass first.

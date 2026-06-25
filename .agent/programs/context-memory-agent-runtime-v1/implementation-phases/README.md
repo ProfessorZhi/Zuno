@@ -7,9 +7,15 @@ Read first:
 1. `../implementation-plan.md`
 2. `../../current.md`
 3. `../../official-graphrag-cleanup-v1/implementation-roadmap.md`
-4. `../../../architecture/near-term/18-context-memory-ideal-architecture.md`
-5. `../../../../docs/architecture/current-architecture.md`
-6. `../../../../docs/architecture/target-architecture.md`
+4. `../../../architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+5. `../../../architecture/near-term/18-context-memory-ideal-architecture.md`
+6. `../../../../docs/architecture/current-architecture.md`
+7. `../../../../docs/architecture/target-architecture.md`
+
+## Status
+
+Candidate / Design-ready. Phase 00 must wait for 11C/12 closure or explicitly
+re-verify dependencies before implementation starts.
 
 ## Phase List
 

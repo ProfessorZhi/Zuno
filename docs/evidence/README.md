@@ -9,3 +9,4 @@ in ignored local folders or `.agent/audits/` unless promoted deliberately.
 Start with:
 
 - [Public Demo](public-demo.md)
+- [Eval Baselines](eval-baselines.md)

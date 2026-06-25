@@ -5,8 +5,18 @@
 - `docs/architecture/README.md`
 - `docs/architecture/current-architecture.md`
 - `docs/architecture/target-architecture.md`
+- `docs/architecture/roadmap.md`
 - `docs/architecture/history/phases/README.md`
 - `.agent/programs/official-graphrag-cleanup-v1/README.md`
+
+## Agent Target Design
+
+- `.agent/architecture/near-term/`
+- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+- `.agent/architecture/near-term/19-repository-layout-and-module-boundaries.md`
+
+The HTML is the canonical Target / Proposed visual blueprint, not Current
+Truth and not a `docs/` front-path document.
 
 ## Stable Design Docs
 

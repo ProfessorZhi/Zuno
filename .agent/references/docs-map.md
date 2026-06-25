@@ -29,3 +29,16 @@
 `docs/` carries stable conclusions. `.agent/` carries executable workflow and
 design-stage detail. Historical material stays reachable through
 `docs/architecture/history/`.
+## Target Architecture Visual Reference
+
+- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`:
+  canonical Target / Proposed visual blueprint for architecture replacement,
+  directory layout, Context/Memory, GraphRAG boundary, and repository hygiene
+  work.
+- The HTML is not Current Truth and is not part of the `docs/` front path.
+
+## Formal Reference Docs
+
+- `docs/reference/terminology.md`: status labels and public architecture terms.
+- `docs/evidence/eval-baselines.md`: Eval baseline status; currently records
+  that Phase 12 is partial / not closed.

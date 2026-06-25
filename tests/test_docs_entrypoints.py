@@ -14,6 +14,9 @@ def test_readme_exposes_short_first_reader_path() -> None:
         "./docs/evidence/public-demo.md",
         "First-time readers start here:",
         "Blocked Legacy",
+        "Phase 11A",
+        "Phase 11B",
+        "Completion API -> CompletionService -> GeneralAgent single loop",
     ]
 
     for phrase in required_phrases:
@@ -81,7 +84,10 @@ def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() ->
         "./docs/architecture/roadmap.md",
         "./docs/evidence/public-demo.md",
         "Blocked Legacy",
-        "Phase 11 is Runtime Legacy Deletion.",
+        "Phase 11A",
+        "Phase 11B",
+        "Phase 11C",
+        "Phase 12",
     ]
 
     for phrase in required_phrases:
@@ -106,3 +112,37 @@ def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
         content = path.read_text(encoding="utf-8")
         for phrase in forbidden:
             assert phrase not in content, f"{path} contains retired front-path text: {phrase}"
+
+
+def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -> None:
+    current = (REPO_ROOT / "docs" / "architecture" / "current-architecture.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = (REPO_ROOT / "docs" / "architecture" / "roadmap.md").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "GeneralAgent single loop",
+        "GraphRAG Project Query Runtime",
+        "Context Orchestrator and new Memory layering are Target, not Current",
+        "Domain Pack route/service/frontend/eval/Docker surfaces",
+    ]:
+        assert phrase in current
+
+    for phrase in [
+        "Phase 11A: complete",
+        "Phase 11B: complete",
+        "Phase 11C: blocked",
+        "Phase 12: partial / not closed",
+        "11C active dependency removal",
+        "full pytest",
+        "eval baseline comparison",
+    ]:
+        assert phrase in roadmap
+
+
+def test_repository_docs_do_not_keep_local_download_reference() -> None:
+    for path in [*REPO_ROOT.glob("docs/**/*.md"), *REPO_ROOT.glob(".agent/**/*.md")]:
+        content = path.read_text(encoding="utf-8")
+        assert "C:\\Users\\Administrator\\Downloads" not in content

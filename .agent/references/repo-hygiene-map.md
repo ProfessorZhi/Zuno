@@ -21,3 +21,6 @@ Classify repository directories for cleanup decisions.
 ## Rule
 
 Do not delete Blocked Legacy. Do not commit Generated or Local outputs.
+`domain-packs/` and `tests/compat/` must not be treated as target repository layout.
+Read `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+before directory-boundary work.

@@ -33,6 +33,10 @@ def main() -> int:
                 "./docs/architecture/roadmap.md",
                 "./docs/evidence/public-demo.md",
                 "Blocked Legacy",
+                "Phase 11A",
+                "Phase 11B",
+                "Phase 11C",
+                "Phase 12",
                 "src/backend/zuno",
             ],
         )
@@ -69,7 +73,10 @@ def main() -> int:
             "docs/architecture/roadmap.md",
             roadmap,
             [
-                "Phase 11 is Runtime Legacy Deletion.",
+                "Phase 11A: complete",
+                "Phase 11B: complete",
+                "Phase 11C: blocked",
+                "Phase 12: partial / not closed",
                 "Blocked Legacy",
                 ".agent/programs/official-graphrag-cleanup-v1/",
             ],

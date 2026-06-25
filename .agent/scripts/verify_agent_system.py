@@ -20,6 +20,8 @@ REQUIRED_PATHS = [
     ".agent/references/runtime-call-chain.md",
     ".agent/references/test-eval-map.md",
     ".agent/references/repo-hygiene-map.md",
+    ".agent/references/context-memory-map.md",
+    ".agent/references/graphrag-map.md",
     ".agent/references/command-catalog.md",
     ".agent/references/known-pitfalls.md",
     ".agent/workflows/README.md",
@@ -34,6 +36,8 @@ REQUIRED_PATHS = [
     ".agent/workflows/bugfix-root-cause.md",
     ".agent/workflows/task-closure.md",
     ".agent/architecture/near-term/18-context-memory-ideal-architecture.md",
+    ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
+    ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
     ".agent/programs/context-memory-agent-runtime-v1/README.md",
     ".agent/programs/context-memory-agent-runtime-v1/implementation-plan.md",
     ".agent/programs/context-memory-agent-runtime-v1/implementation-phases/README.md",
@@ -90,9 +94,28 @@ def main() -> int:
         "tools/evals/zuno/AGENTS.md",
         ".agent/skills/zuno-docs-maintenance/SKILL.md",
         ".agent/skills/zuno-repo-hygiene/SKILL.md",
+        "zuno-ideal-architecture-and-repo-layout.html",
     ]:
         if phrase not in agent_entry:
             errors.append(f"AGENTS.md missing routing phrase: {phrase}")
+
+    html = _read(".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html")
+    if "<html" not in html.lower() or "</html>" not in html.lower():
+        errors.append("target architecture HTML is not valid HTML")
+    if not any(marker in html for marker in ["Target", "Proposed", "目标"]):
+        errors.append("target architecture HTML missing Target/Proposed marker")
+
+    required_html_references = [
+        "AGENTS.md",
+        ".agent/architecture/near-term/README.md",
+        ".agent/workflows/architecture-refactor.md",
+        ".agent/workflows/repo-hygiene.md",
+        ".agent/skills/zuno-architecture-refactor/SKILL.md",
+        ".agent/skills/zuno-repo-hygiene/SKILL.md",
+    ]
+    for relative_path in required_html_references:
+        if "zuno-ideal-architecture-and-repo-layout.html" not in _read(relative_path):
+            errors.append(f"{relative_path} missing target architecture HTML reference")
 
     agent_readme = _read(".agent/README.md")
     for phrase in [

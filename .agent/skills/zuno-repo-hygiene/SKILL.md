@@ -4,4 +4,6 @@ description: Use for Zuno directory cleanup, ignore rules, generated/local files
 ---
 
 Read `AGENTS.md`, `.agent/references/local-state-map.md`, and
-`.agent/workflows/repo-hygiene.md`.
+`.agent/workflows/repo-hygiene.md`. For target layout or directory-boundary
+work, also read
+`.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`.

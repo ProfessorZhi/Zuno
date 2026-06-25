@@ -4,5 +4,7 @@ description: Use for Zuno architecture replacement, broad refactors, and boundar
 ---
 
 Read `AGENTS.md`, `docs/architecture/roadmap.md`,
-`.agent/architecture/near-term/README.md`, `.agent/architecture/decisions/`,
-and `.agent/workflows/architecture-refactor.md`.
+`.agent/architecture/near-term/README.md`,
+`.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`,
+`.agent/architecture/decisions/`, and
+`.agent/workflows/architecture-refactor.md`.

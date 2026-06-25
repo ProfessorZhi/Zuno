@@ -112,8 +112,16 @@ This roadmap does not implement:
 - Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
   public query-method trace fields, removes old route names from `apps/web`,
   and keeps Domain Pack runtime deletion for Phase 11.
-- The next executable phase is Phase 11A: GraphRAG Project Runtime
-  Replacement.
+- Phase 11A is complete; commit `24abdd9` introduced the project query runtime
+  (`KnowledgeQueryService`, `GraphRAGQueryService`, `GraphRAGProjectSnapshot`,
+  `KnowledgeQueryResult`).
+- Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
+  single `GeneralAgent` path through `search_knowledge_base`.
+- Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
+  route/service/frontend/eval/Docker surfaces, `DomainQAGraph`,
+  `MultiAgentSupervisorGraph`, and `tests/compat/`.
+- Phase 12 is partially complete / not closed. Final full `pytest` and formal
+  Eval baseline comparison are not complete.
 
 ## Dependency Rules
 
@@ -128,7 +136,8 @@ This roadmap does not implement:
   proves the replacement query service.
 - Phase 11C can delete old runtime surfaces only after 11A and 11B remove
   active dependencies on old names.
-- Phase 12 closes the program after all implementation phases pass.
+- Phase 12 closes the program only after 11C removal/migration, full pytest,
+  eval baseline comparison, trace evidence, and final grep classification pass.
 
 ## Global Acceptance Gates
 

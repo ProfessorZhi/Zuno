@@ -30,6 +30,7 @@ BLOCKED_LEGACY_PATHS = [
     "tests/compat",
     "src/backend/zuno/services/domain_pack",
     "src/backend/zuno/core/graphs/domain_qa_graph.py",
+    "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py",
 ]
 
 FORBIDDEN_CURRENT_PATHS = [
@@ -73,6 +74,18 @@ def main() -> int:
     for path in BLOCKED_LEGACY_PATHS:
         if not (REPO_ROOT / path).exists():
             errors.append(f"Blocked Legacy path missing without Phase 11 proof: {path}")
+
+    repo_hygiene_map = _read(".agent/references/repo-hygiene-map.md")
+    if "must not be treated as target repository layout" not in repo_hygiene_map:
+        errors.append("repo hygiene map must keep Domain Pack out of target layout")
+
+    html_matches = [
+        path
+        for path in _tracked_files()
+        if path.replace("\\", "/").endswith("zuno-ideal-architecture-and-repo-layout.html")
+    ]
+    if html_matches != [".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html"]:
+        errors.append("canonical target architecture HTML must be the only tracked copy")
 
     for path in FORBIDDEN_CURRENT_PATHS:
         if (REPO_ROOT / path).exists():

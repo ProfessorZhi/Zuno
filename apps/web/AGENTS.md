@@ -6,6 +6,9 @@ Before changing `apps/web`, read:
 2. `.agent/references/api-contract-map.md`
 3. `.agent/workflows/frontend-change.md`
 
+For frontend/API contract migration or repository layout work, also read
+`.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`.
+
 Rules:
 
 - API field changes must sync backend DTOs, frontend types, and contract tests.

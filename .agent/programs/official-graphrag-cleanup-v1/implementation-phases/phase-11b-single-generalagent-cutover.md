@@ -5,6 +5,20 @@
 Route knowledge-backed conversations through the single `GeneralAgent` loop,
 with knowledge access exposed as a tool.
 
+## Status
+
+Complete. Commit `b160c4b` made `GeneralAgent.astream()` use one current
+session path and routed `search_knowledge_base` through `KnowledgeQueryService`.
+`DomainQAGraph` no longer owns the `GeneralAgent` conversation path.
+
+Fresh status-sync evidence from this docs run:
+
+- `pytest -q tests/test_phase11b_single_generalagent_cutover.py` passed.
+- Code read confirmed `search_knowledge_base` calls `KnowledgeQueryService` in
+  `src/backend/zuno/core/agents/general_agent.py`.
+- Phase 11C deletion remains blocked; this status does not remove
+  `DomainQAGraph`, `MultiAgentSupervisorGraph`, or compatibility surfaces.
+
 ## Dependency
 
 Phase 11A must pass first.

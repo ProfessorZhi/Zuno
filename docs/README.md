@@ -18,6 +18,8 @@
 3. [Target Architecture](./architecture/target-architecture.md)
 4. [Roadmap](./architecture/roadmap.md)
 5. [Public Demo Evidence](./evidence/public-demo.md)
+6. [Eval Baselines](./evidence/eval-baselines.md)
+7. [Terminology](./reference/terminology.md)
 
 ## Sections
 

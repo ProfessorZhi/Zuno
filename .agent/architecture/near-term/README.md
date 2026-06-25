@@ -14,24 +14,29 @@ extraction, event bus rollout, or default multi-agent behavior.
 
 ## Reading Order
 
-1. [Near-Term Target Overview](01-near-term-target-overview.md)
-2. [System Context](02-system-context.md)
-3. [Container And Component View](03-container-and-component-view.md)
-4. [Layered Architecture](04-layered-architecture.md)
-5. [Backend FastAPI Service Layer](05-backend-fastapi-service-layer.md)
-6. [LangGraph Orchestration](06-langgraph-orchestration.md)
-7. [LangChain LLM Tool Adapters](07-langchain-llm-tool-adapters.md)
-8. [Context State Memory](08-context-state-memory.md)
-9. [Persistence Database Storage](09-persistence-database-storage.md)
-10. [Retrieval RAG Architecture](10-retrieval-rag-architecture.md)
-11. [GraphRAG Project Architecture](11-graphrag-project-architecture.md)
-12. [Enhanced Mode Pipeline](12-enhanced-mode-pipeline.md)
-13. [Frontend API Contract](13-frontend-api-contract.md)
-14. [Observability Evaluation Trace](14-observability-evaluation-trace.md)
-15. [Near-Term Migration Roadmap](15-near-term-migration-roadmap.md)
-16. [Near-Term Acceptance Gates](16-near-term-acceptance-gates.md)
-17. [Implementation Phase Map](17-implementation-phase-map.md)
-18. [Context Memory Ideal Architecture](18-context-memory-ideal-architecture.md)
+1. [Target / Proposed Visual Blueprint](zuno-ideal-architecture-and-repo-layout.html)
+2. [Near-Term Target Overview](01-near-term-target-overview.md)
+3. [System Context](02-system-context.md)
+4. [Container And Component View](03-container-and-component-view.md)
+5. [Layered Architecture](04-layered-architecture.md)
+6. [Backend FastAPI Service Layer](05-backend-fastapi-service-layer.md)
+7. [LangGraph Orchestration](06-langgraph-orchestration.md)
+8. [LangChain LLM Tool Adapters](07-langchain-llm-tool-adapters.md)
+9. [Context State Memory](08-context-state-memory.md)
+10. [Persistence Database Storage](09-persistence-database-storage.md)
+11. [Retrieval RAG Architecture](10-retrieval-rag-architecture.md)
+12. [GraphRAG Project Architecture](11-graphrag-project-architecture.md)
+13. [Enhanced Mode Pipeline](12-enhanced-mode-pipeline.md)
+14. [Frontend API Contract](13-frontend-api-contract.md)
+15. [Observability Evaluation Trace](14-observability-evaluation-trace.md)
+16. [Near-Term Migration Roadmap](15-near-term-migration-roadmap.md)
+17. [Near-Term Acceptance Gates](16-near-term-acceptance-gates.md)
+18. [Implementation Phase Map](17-implementation-phase-map.md)
+19. [Context Memory Ideal Architecture](18-context-memory-ideal-architecture.md)
+20. [Repository Layout And Module Boundaries](19-repository-layout-and-module-boundaries.md)
+
+The HTML blueprint is a Target / Proposed visual reference for maintainers and
+Agents. It is not Current Truth and must not be copied into `docs/`.
 
 ## Standard Sections
 

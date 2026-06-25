@@ -29,6 +29,7 @@ For architecture, refactor, new feature, or workflow tasks:
 6. `.agent/references/current-program.md`
 7. `.agent/references/docs-map.md`
 8. `.agent/references/current_architecture/README.md`
+9. `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 
 For implementation tasks, read the relevant code after the docs. Do not infer runtime behavior from docs alone.
 
@@ -41,6 +42,9 @@ For implementation tasks, read the relevant code after the docs. Do not infer ru
 - `src/backend/zuno` -> `src/backend/zuno/AGENTS.md` and `.agent/skills/zuno-backend-change/SKILL.md`
 - API, DTO, request/response, frontend/backend contract -> `.agent/skills/zuno-api-contract-change/SKILL.md`
 - architecture replacement -> `.agent/skills/zuno-architecture-refactor/SKILL.md`
+- architecture replacement, directory moves, Context/Memory, GraphRAG boundary,
+  or repository hygiene tasks must also read
+  `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 - eval tooling, datasets, metrics, profiles, reports -> `tools/evals/zuno/AGENTS.md` and `.agent/skills/zuno-eval-change/SKILL.md`
 
 ## Current Mainline
@@ -68,6 +72,8 @@ current structure separates:
 
 - `.agent/architecture/near-term/`
   - the detailed near-term ideal architecture for the next refactor target
+  - `zuno-ideal-architecture-and-repo-layout.html` as the canonical Target /
+    Proposed visual blueprint, not Current Truth
   - Python FastAPI, Service Layer, LangGraph, LLM/Tool adapters, RAG/GraphRAG,
     persistence, frontend API contract, observability, migration, and gates
 - `.agent/architecture/future/`

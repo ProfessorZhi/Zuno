@@ -24,3 +24,7 @@ storage modules.
 
 Update this map when backend package layout, route ownership, runtime call
 chain, or validation commands change.
+
+For backend architecture replacement, GraphRAG boundary, Context/Memory, or
+package layout work, first read
+`.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`.

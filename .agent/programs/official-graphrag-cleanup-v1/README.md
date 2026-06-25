@@ -15,6 +15,8 @@ Formal truth lives in `docs/`. Agent workflow aids live in `.agent/`. Superseded
 The detailed design-stage target architecture working set lives at:
 
 - `.agent/architecture/`
+- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+  as the canonical Target / Proposed visual blueprint, not Current Truth
 
 It is split into:
 
@@ -43,6 +45,17 @@ target architecture is the current execution source:
 Use those files for target-mode implementation. They start with Phase 01 legacy
 surface audit, then Phase 02 docs/spec cleanup, then Phase 03 Domain Pack
 contract retirement.
+
+## Current Status
+
+- Phase 11A is complete; commit `24abdd9` introduced the project query runtime.
+- Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
+  single `GeneralAgent` path.
+- Phase 11C is blocked by active Domain Pack, `DomainQAGraph`,
+  `MultiAgentSupervisorGraph`, Docker/eval/frontend/API, and `tests/compat/`
+  dependencies.
+- Phase 12 is partially complete / not closed. Do not claim final full `pytest`
+  or Eval baseline comparison until fresh evidence exists.
 
 ## Original Program Outline
 

@@ -26,6 +26,7 @@ REQUIRED_DOCS = [
 REQUIRED_AGENT_PROGRAMS = [
     ".agent/programs/current.md",
     ".agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
+    ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
 ]
 
 
@@ -43,6 +44,21 @@ def main() -> int:
     for relative_path in FORBIDDEN_CURRENT_DIRS:
         if (REPO_ROOT / relative_path).exists():
             errors.append(f"retired docs directory still on current path: {relative_path}")
+
+    for relative_path in [*REPO_ROOT.glob("docs/**/*.md"), *REPO_ROOT.glob(".agent/**/*.md")]:
+        content = relative_path.read_text(encoding="utf-8")
+        if "C:\\Users\\Administrator\\Downloads" in content:
+            errors.append(f"{relative_path.relative_to(REPO_ROOT)} contains local Downloads path")
+
+    current = _read("docs/architecture/current-architecture.md")
+    if "Context Orchestrator and new Memory layering are Target, not Current" not in current:
+        errors.append("current architecture must not promote Context Orchestrator to Current")
+
+    docs_front_path = ["README.md", "docs/README.md", "docs/architecture/README.md"]
+    for relative_path in docs_front_path:
+        content = _read(relative_path)
+        if "zuno-ideal-architecture-and-repo-layout.html" in content:
+            errors.append(f"{relative_path} must not place .agent target HTML in docs front path")
 
     front_path_files = ["README.md", "docs/README.md", "docs/architecture/README.md"]
     forbidden_front_path_text = [

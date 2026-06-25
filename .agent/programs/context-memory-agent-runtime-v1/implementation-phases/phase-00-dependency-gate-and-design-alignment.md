@@ -3,13 +3,20 @@
 ## Goal
 
 Prove whether Context Memory Agent Runtime V1 can begin as implementation work
-or must remain design-only until `official-graphrag-cleanup-v1` Phase 11 is
-closed.
+or must remain design-only until `official-graphrag-cleanup-v1` Phase 11C and
+Phase 12 are closed.
+
+## Current Status
+
+Blocked for implementation until 11C/12 closure or fresh dependency
+re-verification.
 
 ## Scope
 
 - Check current branch, current program status, and runtime legacy references.
 - Confirm whether Domain Pack and `DomainQAGraph` are still active.
+- Confirm whether `MultiAgentSupervisorGraph` and `tests/compat/` still block
+  cleanup.
 - Update this program status only from evidence.
 
 ## Files To Change

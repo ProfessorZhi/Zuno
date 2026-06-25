@@ -13,21 +13,35 @@ Current:
 - `src/backend/zuno` is the only active Python backend runtime boundary.
 - Phase 0-6 architecture closure remains complete historical truth.
 - The active cleanup program is the official GraphRAG alignment program.
+- Phase 11A is complete: `KnowledgeQueryService`, `GraphRAGQueryService`,
+  `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult` exist in the current
+  runtime.
+- Phase 11B is complete: the current knowledge-answering call chain is
+  `Completion API -> CompletionService -> GeneralAgent single loop ->
+  search_knowledge_base -> KnowledgeQueryService -> GraphRAGQueryService ->
+  RetrievalPlanner / RetrievalOrchestrator -> Evidence / Citation / Trace ->
+  GeneralAgent answer`.
 
 Target:
 
 - Keep one stable monorepo baseline.
 - Move the front-path GraphRAG language toward GraphRAG Project, Prompt
   Tuning, Query Method, index versions, evidence, and trace metadata.
-- Keep Java services, microservices, event workers, and default multi-agent mode
-  as future direction only.
+- Keep Context & Memory Engine, Capability System, and GraphRAG Project query
+  concepts as the near-term target direction until implemented and verified.
+- Keep Java services, microservices, event workers, product-level multi-agent
+  mode, and Coding Agent direction as future direction only.
 
 Blocked Legacy:
 
-- `domain-packs/`, Domain Pack runtime services, `DomainQAGraph`, and
-  `tests/compat/` still have active runtime, eval, or test dependencies.
-- They are not the future public mainline, but they must not be deleted before
-  Phase 11 proves replacement behavior and import removal.
+- Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
+  route/service/frontend/eval/Docker surfaces, remaining `DomainQAGraph`
+  surfaces, remaining `MultiAgentSupervisorGraph` source/compat surfaces, and
+  `tests/compat/`.
+- These surfaces are not the future public mainline, but they must not be
+  deleted before active dependency removal is proven.
+- Phase 12 is partial / not closed: final full `pytest` and formal Eval
+  baseline comparison are not complete.
 
 ## Default Reading Path
 

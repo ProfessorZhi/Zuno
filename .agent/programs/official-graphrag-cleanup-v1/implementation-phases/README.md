@@ -9,7 +9,8 @@ Read first:
 2. `../../../current-architecture.md`
 3. `../../../target-architecture.md`
 4. `../../../../.agent/architecture/near-term/README.md`
-5. `../../../../.agent/architecture/near-term/17-implementation-phase-map.md`
+5. `../../../../.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+6. `../../../../.agent/architecture/near-term/17-implementation-phase-map.md`
 
 ## Phase List
 
@@ -53,9 +54,13 @@ Read first:
 - Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
   public query-method trace fields, and removes old runtime route names from
   `apps/web`.
-- Phase 11A is next and owns GraphRAG Project Runtime Replacement.
-- Phase 11B owns Single GeneralAgent Cutover.
-- Phase 11C owns Runtime Legacy Deletion.
+- Phase 11A is complete; commit `24abdd9` introduced the project query runtime.
+- Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
+  single `GeneralAgent` path.
+- Phase 11C is blocked by active Domain Pack, `DomainQAGraph`,
+  `MultiAgentSupervisorGraph`, Docker/eval/frontend/API, and `tests/compat/`
+  dependencies.
+- Phase 12 is partially complete / not closed.
 
 ## Rule
 
