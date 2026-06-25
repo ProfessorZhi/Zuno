@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 
-from zuno.api.services.capability import CapabilityService
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.schema.capability import CapabilitySearchReq
 from zuno.schema.schemas import UnifiedResponseModel, resp_200
+from zuno.services.capability_registry import CapabilityRegistryService
 
 router = APIRouter(tags=["Capability"], prefix="/capability")
 
@@ -16,7 +16,7 @@ async def search_capabilities(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        results = await CapabilityService.search_capabilities(
+        results = await CapabilityRegistryService.search(
             req.query,
             user_id=login_user.user_id,
             kind=req.kind,
@@ -28,4 +28,4 @@ async def search_capabilities(
         raise HTTPException(status_code=500, detail=str(err)) from err
 
 
-__all__ = ["router", "search_capabilities"]
+__all__ = ["CapabilityRegistryService", "router", "search_capabilities"]

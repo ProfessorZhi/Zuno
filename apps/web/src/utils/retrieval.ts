@@ -6,7 +6,7 @@ const retrievalModeOptions = [
   },
   {
     value: 'rag_graph',
-    label: '增强检索',
+    label: '图谱增强检索',
     description: '在标准检索上增加 GraphRAG 路径扩展，适合关系追问、依赖链路和结构化问题。',
   },
 ] as const

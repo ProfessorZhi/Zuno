@@ -7,12 +7,29 @@ from fastapi.responses import StreamingResponse
 from starlette.types import Receive
 
 from zuno.api.services.completion import CompletionService
+from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.schema.completion import CompletionReq
 from zuno.utils.contexts import set_agent_name_context, set_user_id_context
 
 router = APIRouter(tags=["Completion"])
+
+
+class _LazyClassProxy:
+    def __init__(self, module_path: str, class_name: str) -> None:
+        self._module_path = module_path
+        self._class_name = class_name
+
+    def __call__(self, *args, **kwargs):
+        from importlib import import_module
+
+        klass = getattr(import_module(self._module_path), self._class_name)
+        return klass(*args, **kwargs)
+
+
+AgentConfig = _LazyClassProxy("zuno.core.agents.general_agent", "AgentConfig")
+GeneralAgent = _LazyClassProxy("zuno.core.agents.general_agent", "GeneralAgent")
 
 
 class WatchedStreamingResponse(StreamingResponse):
@@ -38,9 +55,21 @@ class WatchedStreamingResponse(StreamingResponse):
                 break
 
 
+async def _create_chat_agent(req: CompletionReq, login_user_id: str):
+    db_config = await DialogService.get_agent_by_dialog_id(dialog_id=req.dialog_id)
+    agent_config = AgentConfig(**db_config)
+    agent_config.user_id = login_user_id
+    agent_config.dialog_id = req.dialog_id
+    agent_config.multi_agent_enabled = bool(req.multi_agent_enabled)
+
+    chat_agent = GeneralAgent(agent_config)
+    await chat_agent.init_agent()
+    return chat_agent, agent_config
+
+
 @router.post("/completion", description="Completion chat endpoint")
 async def completion(*, req: CompletionReq, login_user: UserPayload = Depends(get_login_user)):
-    chat_agent, agent_config = await CompletionService.create_chat_agent(req, login_user.user_id)
+    chat_agent, agent_config = await _create_chat_agent(req, login_user.user_id)
 
     set_user_id_context(login_user.user_id)
     set_agent_name_context(agent_config.name)
@@ -91,4 +120,4 @@ async def completion(*, req: CompletionReq, login_user: UserPayload = Depends(ge
     )
 
 
-__all__ = ["WatchedStreamingResponse", "completion", "router"]
+__all__ = ["DialogService", "GeneralAgent", "WatchedStreamingResponse", "completion", "router"]

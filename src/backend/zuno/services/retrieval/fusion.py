@@ -830,6 +830,15 @@ class RetrievalFusion:
         if baseline_coverage < seeds:
             return ordered
 
+        for item in ordered:
+            if not cls._is_graph_only(item):
+                continue
+            coverage = set(item.metadata.get("bridge_seed_coverage") or [])
+            if coverage >= seeds:
+                continue
+            item.metadata["bridge_promotion_blocked_reason"] = "bridge_chain_protection"
+            item.metadata["noisy_bridge_graph_only"] = not bool(coverage)
+
         selected = list(ordered[: cls.BRIDGE_SELECTION_SIZE])
         protected = selected[: cls.BRIDGE_PROTECTED_TOP]
         available_replacements = [

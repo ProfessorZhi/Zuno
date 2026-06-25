@@ -12,6 +12,7 @@ from zuno.schema.tool import (
     ToolDeleteReq,
     ToolUpdateReq,
 )
+from zuno.services.cli_tool_discovery import CliToolDiscoveryService
 from zuno.settings import app_settings
 
 router = APIRouter(tags=["Tool"], prefix="/tool")
@@ -69,7 +70,7 @@ async def preview_cli_tool_directory(
 ):
     try:
         _ = login_user
-        result = ToolRuntimeService.preview_cli_tool_directory(req)
+        result = CliToolDiscoveryService.preview(req)
         return resp_200(data=result.model_dump())
     except ValueError as err:
         logger.warning(f"preview cli tool rejected: {err}")
@@ -185,6 +186,7 @@ async def get_default_tol_logo(login_user: UserPayload = Depends(get_login_user)
 
 __all__ = [
     "assist_remote_api_tool",
+    "CliToolDiscoveryService",
     "create_tool",
     "delete_user_defined_tool",
     "get_all_tools",

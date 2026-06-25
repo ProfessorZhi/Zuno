@@ -20,8 +20,9 @@ def test_graphrag_specs_define_local_community_and_hybrid_layers():
     assert "DRIFT-like" in domain_spec
     assert "共用同一张实体关系图" in domain_spec
     assert "Community GraphRAG 不是当前默认检索主线" in domain_spec
+    assert "Status: superseded migration context" in domain_spec
+    assert "GraphRAG Project, Prompt Registry, Query Method, and Enhanced Mode" in domain_spec
     assert "src/backend/zuno/" in domain_spec
-    assert "src/backend/zuno/" not in domain_spec
 
     assert "Local GraphRAG" in orchestrator_spec
     assert "Community GraphRAG" in orchestrator_spec

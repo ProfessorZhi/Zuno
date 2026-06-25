@@ -7,6 +7,23 @@ from typing import Any, Literal
 CapabilityKind = Literal["tool", "skill", "mcp_server", "mcp_tool"]
 
 
+class _LazyServiceProxy:
+    def __init__(self, module_path: str, service_name: str) -> None:
+        self._module_path = module_path
+        self._service_name = service_name
+
+    def __getattr__(self, name: str) -> Any:
+        from importlib import import_module
+
+        service = getattr(import_module(self._module_path), self._service_name)
+        return getattr(service, name)
+
+
+ToolService = _LazyServiceProxy("zuno.api.services.tool", "ToolService")
+AgentSkillService = _LazyServiceProxy("zuno.api.services.agent_skill", "AgentSkillService")
+MCPService = _LazyServiceProxy("zuno.api.services.mcp_server", "MCPService")
+
+
 class CapabilityRegistryService:
     """Unified searchable catalog for tools, skills, and MCP capabilities."""
 
@@ -55,12 +72,6 @@ class CapabilityRegistryService:
 
     @classmethod
     async def list_capabilities(cls, user_id: str) -> list[dict[str, Any]]:
-        # Delay service imports so the registry can be imported from route modules
-        # without immediately recursing back through zuno.api package initialization.
-        from zuno.api.services.agent_skill import AgentSkillService
-        from zuno.api.services.mcp_server import MCPService
-        from zuno.api.services.tool import ToolService
-
         tools = await ToolService.get_visible_tool_by_user(user_id)
         skills = await AgentSkillService.get_agent_skills(user_id)
         mcp_servers = await MCPService.get_all_servers(user_id)
