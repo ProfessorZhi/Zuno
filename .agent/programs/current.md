@@ -32,7 +32,8 @@ Current status:
   `examples/graphrag-projects/contract_review/` now holds the Target
   GraphRAG Project copy of Contract Review schema, prompts, retrieval policy,
   and eval fixture. The project loader materializes `retrieval_policy.yaml`
-  for explicit graph query policy, but eval paths still need
+  plus schema/eval assets for explicit graph query policy and stackless local
+  eval. Contract Review eval and `DomainQAGraph` still need
   `DomainPackLoader`, so Phase 02 is not closed.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository

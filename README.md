@@ -51,11 +51,14 @@ Phase 11C progress / Blocked Legacy:
 - `GraphRetriever` no longer loads Domain Pack retrieval policy from a bare
   `domain_pack_id`; graph policy must come from explicit `query_policy`, such
   as a GraphRAG Project `retrieval_policy.yaml`.
+- Stackless local eval can build the Contract Review local graph from
+  GraphRAG Project assets without loading `DomainPackLoader`; generic legacy
+  `domain_pack_id` fallback remains for unmigrated packs.
 - Remaining blockers still exist in `domain-packs/`, Domain Pack runtime
-  services, eval Domain Pack loader paths, Docker surfaces, direct
-  `DomainQAGraph` source, retained `MultiAgentSupervisorGraph` compat
-  retirement evidence, and `tests/compat/`. The old Domain Pack backend
-  endpoint/API-service wrappers are retired.
+  services, Contract Review eval / `DomainQAGraph` loader paths, Docker
+  surfaces, retained `MultiAgentSupervisorGraph` compat retirement evidence,
+  and `tests/compat/`. The old Domain Pack backend endpoint/API-service
+  wrappers are retired.
 - These surfaces are not the future public mainline, but they must not be
   deleted before active dependency removal is proven.
 - Phase 12 is partial / not closed: final full `pytest` and formal Eval

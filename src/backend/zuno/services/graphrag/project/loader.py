@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -39,6 +40,10 @@ class LoadedGraphRAGProject:
     prompt_paths: dict[str, str]
     prompt_texts: dict[str, str]
     readiness: ProjectReadiness
+    schema_data: dict[str, Any] = field(default_factory=dict)
+    retrieval_policy_data: dict[str, Any] = field(default_factory=dict)
+    eval_dataset_text: str | None = None
+    eval_dataset_rows: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -47,6 +52,35 @@ class LoadedGraphRAGProject:
             "settings": dict(self.settings),
             "prompt_paths": dict(self.prompt_paths),
             "readiness": self.readiness.to_dict(),
+            "schema_data": dict(self.schema_data),
+            "retrieval_policy_data": dict(self.retrieval_policy_data),
+            "eval_dataset_rows": list(self.eval_dataset_rows),
+        }
+
+    def to_domain_pack_payload(self) -> dict[str, Any]:
+        source_domain_pack = dict(self.settings.get("source_domain_pack") or {})
+        prompts = dict(self.settings.get("prompts") or {})
+        return {
+            "id": self.contract.graphrag_project_id,
+            "name": source_domain_pack.get("name") or self.contract.graphrag_project_id,
+            "version": source_domain_pack.get("version") or self.contract.prompt_version or "project",
+            "description": source_domain_pack.get("description") or "GraphRAG Project compatibility payload",
+            "base_path": self.base_path,
+            "schema": self.settings.get("schema_path"),
+            "extraction_prompt": prompts.get("extract_graph"),
+            "retrieval_policy": self.settings.get("retrieval_policy_path"),
+            "answer_template": prompts.get("local_query"),
+            "report_template": prompts.get("report_template"),
+            "eval_dataset": self.settings.get("eval_dataset_path"),
+            "schema_path": str(Path(self.base_path) / str(self.settings.get("schema_path") or "")),
+            "retrieval_policy_path": str(Path(self.base_path) / str(self.settings.get("retrieval_policy_path") or "")),
+            "eval_dataset_path": str(Path(self.base_path) / str(self.settings.get("eval_dataset_path") or "")),
+            "schema_data": dict(self.schema_data),
+            "retrieval_policy_data": dict(self.retrieval_policy_data),
+            "extraction_prompt_text": self.prompt_texts.get("extract_graph"),
+            "answer_template_text": self.prompt_texts.get("local_query"),
+            "report_template_text": self.prompt_texts.get("report_template"),
+            "eval_dataset_text": self.eval_dataset_text,
         }
 
 
@@ -117,6 +151,14 @@ class GraphRAGProjectLoader:
             project_dir,
             GraphRAGSettingsValidator.prompt_manifest(settings),
         )
+        schema_data = self._load_json_asset(
+            project_dir,
+            str(settings.get("schema_path") or "").strip(),
+        )
+        eval_dataset_text, eval_dataset_rows = self._load_eval_dataset(
+            project_dir,
+            str(settings.get("eval_dataset_path") or "").strip(),
+        )
         ready = contract.status == "ready" and not readiness_errors
         readiness = ProjectReadiness(
             ready=ready,
@@ -130,6 +172,10 @@ class GraphRAGProjectLoader:
             prompt_paths=prompt_paths,
             prompt_texts=prompt_texts,
             readiness=readiness,
+            schema_data=schema_data,
+            retrieval_policy_data=dict(settings.get("retrieval_policy") or {}),
+            eval_dataset_text=eval_dataset_text,
+            eval_dataset_rows=eval_dataset_rows,
         )
 
     @staticmethod
@@ -146,6 +192,36 @@ class GraphRAGProjectLoader:
         merged = dict(settings)
         merged["retrieval_policy"] = payload
         return merged
+
+    @staticmethod
+    def _load_json_asset(project_dir: Path, relative_path: str) -> dict[str, Any]:
+        if not relative_path:
+            return {}
+        asset_path = project_dir / relative_path
+        if not asset_path.is_file():
+            raise ValueError(f"project asset not found: {relative_path}")
+        payload = json.loads(asset_path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError(f"{asset_path} must be a JSON object")
+        return payload
+
+    @staticmethod
+    def _load_eval_dataset(project_dir: Path, relative_path: str) -> tuple[str | None, list[dict[str, Any]]]:
+        if not relative_path:
+            return None, []
+        asset_path = project_dir / relative_path
+        if not asset_path.is_file():
+            raise ValueError(f"project asset not found: {relative_path}")
+        text = asset_path.read_text(encoding="utf-8")
+        rows: list[dict[str, Any]] = []
+        for line in text.splitlines():
+            if not line.strip():
+                continue
+            payload = json.loads(line)
+            if not isinstance(payload, dict):
+                raise ValueError(f"{asset_path} rows must be JSON objects")
+            rows.append(payload)
+        return text, rows
 
     @staticmethod
     def _load_prompts(

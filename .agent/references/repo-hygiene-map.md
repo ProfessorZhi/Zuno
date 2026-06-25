@@ -26,9 +26,11 @@ knowledge route/settings entrypoints no longer open Domain Pack pages. The
 old frontend Domain Pack API/page files are retired from `apps/web/src/`.
 `KnowledgeService.get_runtime_settings` no longer auto-loads `DomainPackLoader`
 from `domain_pack_id`. `GraphRetriever` policy resolution also no longer loads
-`DomainPackLoader` from `domain_pack_id`. Retained Domain Pack backend
-modules, assets, eval loader paths, Docker references, and compat tests remain
-Blocked Legacy until their replacement or migration is proved.
+`DomainPackLoader` from `domain_pack_id`. Stackless local eval can build the
+Contract Review local graph from GraphRAG Project assets. Retained Domain Pack
+backend modules, assets, Contract Review eval / `DomainQAGraph` loader paths,
+Docker references, and compat tests remain Blocked Legacy until their
+replacement or migration is proved.
 
 ## Rule
 

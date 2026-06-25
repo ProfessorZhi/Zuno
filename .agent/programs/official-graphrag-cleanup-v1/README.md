@@ -62,8 +62,9 @@ contract retirement.
   package public exports. `KnowledgeService.get_runtime_settings` preserves
   `domain_pack_id` without auto-loading `DomainPackLoader`. `GraphRetriever`
   now uses explicit `query_policy` instead of loading Domain Pack policy from
-  `domain_pack_id`. Domain Pack runtime services/assets, eval loader paths,
-  direct `DomainQAGraph` source/dependencies, Docker surfaces, and
+  `domain_pack_id`. Stackless local eval can build the Contract Review local
+  graph from GraphRAG Project assets. Domain Pack runtime services/assets,
+  Contract Review eval / `DomainQAGraph` loader paths, Docker surfaces, and
   `tests/compat/` still block closure. Domain Pack backend endpoint/API-service
   wrappers and frontend API/page files are retired from current source.
 - Phase 12 is partially complete / not closed. Do not claim final full `pytest`

@@ -130,6 +130,9 @@ Removed from the active current path:
   `domain_pack_id`; graph policy must be provided as explicit `query_policy`.
   Contract Review compatibility graph tests now load that policy from the
   GraphRAG Project example assets.
+- Stackless local eval can build its Contract Review local graph from
+  GraphRAG Project schema, prompt, retrieval policy, and eval assets without
+  loading `DomainPackLoader` for `contract_review`.
 
 Retained as Blocked Legacy / Phase 02 migration assets:
 
@@ -148,8 +151,10 @@ Retired from current source:
 
 Still blocked:
 
-- `tools/evals/zuno/contract_review_eval/` and stackless eval paths still
-  depend on `DomainPackLoader` / `DomainQAGraph`.
+- `tools/evals/zuno/contract_review_eval/` and direct `DomainQAGraph` paths
+  still depend on `DomainPackLoader` / `DomainQAGraph`.
+- Stackless local eval still keeps a legacy Domain Pack fallback for
+  unmigrated packs.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
   direct `DomainQAGraph`, Domain Pack loader/eval, and graph/runtime surfaces,
   plus replacement evidence for retired runtime names, including

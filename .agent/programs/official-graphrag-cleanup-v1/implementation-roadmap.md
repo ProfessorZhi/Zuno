@@ -22,7 +22,9 @@ Current truth is still the Python monorepo runtime:
   router, active Vue knowledge entrypoints, `GeneralAgent`, Workspace knowledge
   prefetch/tools, `KnowledgeService.get_runtime_settings`, and
   `GraphRetriever` policy resolution no longer use the Domain Pack runtime
-  path by default.
+  path by default. Stackless local eval can build the Contract Review local
+  graph from GraphRAG Project assets, while keeping a legacy fallback for
+  unmigrated packs.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
   `RetrievalFusion`, BM25/vector/graph adapters, community services, requery,
   index version fields, and trace metadata.
@@ -125,14 +127,15 @@ This roadmap does not implement:
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
 - Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
-  runtime services, eval loader paths, Docker surfaces, direct `DomainQAGraph`
-  source/dependencies, and `tests/compat/`. Workspace knowledge prefetch/tools
-  have been cut over to `KnowledgeQueryService`,
+  runtime services, Contract Review eval / `DomainQAGraph` loader paths, Docker
+  surfaces, direct `DomainQAGraph` source/dependencies, and `tests/compat/`.
+  Workspace knowledge prefetch/tools have been cut over to `KnowledgeQueryService`,
   `KnowledgeService.get_runtime_settings` no longer auto-loads
   `DomainPackLoader` from `domain_pack_id`, `GraphRetriever` no longer loads
-  Domain Pack policy from `domain_pack_id`, the standalone `AgentRuntime`
-  facade and direct `MultiAgentSupervisorGraph` source have been removed from
-  current backend source and exports, and `DomainQAGraph` /
+  Domain Pack policy from `domain_pack_id`, stackless local eval has a
+  Contract Review GraphRAG Project path, the standalone `AgentRuntime` facade
+  and direct `MultiAgentSupervisorGraph` source have been removed from current
+  backend source and exports, and `DomainQAGraph` /
   `MultiAgentSupervisorGraph` are no longer current core package public
   exports.
 - Phase 12 is partially complete / not closed. Final full `pytest` and formal

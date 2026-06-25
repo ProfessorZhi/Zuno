@@ -26,9 +26,9 @@ from zuno.evals.rag_eval.local_rerank_server import run_dev_server as run_rerank
 from zuno.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
 from zuno.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 from zuno.schema.chunk import ChunkModel
-from zuno.services.domain_pack.loader import DomainPackLoader
 from zuno.services.graphrag.extractor import GraphExtractor
 from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
 from zuno.services.graphrag.retriever import GraphRetriever
 from zuno.services.rag.handler import RagHandler
 from zuno.services.rag.parser import doc_parser
@@ -208,13 +208,16 @@ async def _build_local_graph_retriever(
     chunks: list[ChunkModel],
     *,
     domain_pack_id: str | None = None,
+    graphrag_project_id: str | None = None,
 ) -> GraphRetriever:
-    domain_pack = DomainPackLoader().load(domain_pack_id) if domain_pack_id else None
+    domain_pack = _load_graph_project_domain_payload(graphrag_project_id or domain_pack_id)
+    if domain_pack is None:
+        domain_pack = _load_legacy_domain_pack_payload(domain_pack_id)
     extractor = StructuredGraphExtractor() if domain_pack else GraphExtractor()
     extracted_documents: list[dict[str, Any]] = []
     for chunk in chunks:
         if domain_pack:
-            extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id, domain_pack=domain_pack.to_dict())
+            extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id, domain_pack=domain_pack)
         else:
             extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id)
         extracted_documents.append(
@@ -228,6 +231,35 @@ async def _build_local_graph_retriever(
         client=_LocalGraphClient(extracted_documents),
         chunk_store=_LocalChunkStore(chunks),
     )
+
+
+def _example_projects_root() -> Path:
+    return Path(__file__).resolve().parents[4] / "examples" / "graphrag-projects"
+
+
+def _load_graph_project_domain_payload(project_id: str | None) -> dict[str, Any] | None:
+    normalized = str(project_id or "").strip()
+    if not normalized:
+        return None
+    try:
+        project = GraphRAGProjectLoader(projects_root=_example_projects_root()).load(normalized)
+    except ValueError as err:
+        if "settings.yaml not found" not in str(err):
+            raise
+        return None
+    if project is None:
+        return None
+    return project.to_domain_pack_payload()
+
+
+def _load_legacy_domain_pack_payload(domain_pack_id: str | None) -> dict[str, Any] | None:
+    normalized = str(domain_pack_id or "").strip()
+    if not normalized:
+        return None
+    from zuno.services.domain_pack.loader import DomainPackLoader
+
+    pack = DomainPackLoader().load(normalized)
+    return pack.to_dict() if pack else None
 
 
 def _build_temp_config() -> Path:
@@ -308,6 +340,7 @@ async def run_stackless_local_eval(
     spawn_dev_embedding_server: bool = False,
     spawn_dev_rerank_server: bool = False,
     domain_pack_id: str | None = None,
+    graphrag_project_id: str | None = None,
     chunk_size_override: int | None = None,
     overlap_override: int | None = None,
 ) -> dict[str, Any]:
@@ -398,7 +431,17 @@ async def run_stackless_local_eval(
             vl_embedding_config=None,
         )
 
-        graph_retriever = await _build_local_graph_retriever(chunks, domain_pack_id=domain_pack_id)
+        domain_pack = _load_graph_project_domain_payload(graphrag_project_id or domain_pack_id)
+        if domain_pack is None:
+            domain_pack = _load_legacy_domain_pack_payload(domain_pack_id)
+        graph_retriever = await _build_local_graph_retriever(
+            chunks,
+            domain_pack_id=domain_pack_id,
+            graphrag_project_id=graphrag_project_id,
+        )
+        effective_project_id = graphrag_project_id or (domain_pack or {}).get("id")
+        if effective_project_id:
+            merged_knowledge_config["graphrag_project_id"] = effective_project_id
         register_local_runtime_settings(
             knowledge_id,
             {
@@ -407,7 +450,7 @@ async def run_stackless_local_eval(
                 "vl_embedding_config": None,
                 "rerank_config": rerank_config,
                 "domain_pack_id": domain_pack_id,
-                "domain_pack": DomainPackLoader().load(domain_pack_id).to_dict() if domain_pack_id else None,
+                "domain_pack": domain_pack,
                 "graph_retriever": graph_retriever,
             },
         )
@@ -440,6 +483,7 @@ async def run_stackless_local_eval(
         "rerank_config": rerank_config,
         "rerank_score_threshold_override": rerank_score_threshold_override,
         "domain_pack_id": domain_pack_id,
+        "graphrag_project_id": graphrag_project_id,
         "chunk_size_override": chunk_size_override,
         "overlap_override": overlap_override,
         "report": report,
@@ -470,6 +514,7 @@ def main() -> None:
     parser.add_argument("--spawn-dev-embedding-server", action="store_true")
     parser.add_argument("--spawn-dev-rerank-server", action="store_true")
     parser.add_argument("--domain-pack-id", default=None)
+    parser.add_argument("--graphrag-project-id", default=None)
     parser.add_argument("--chunk-size-override", type=int, default=None)
     parser.add_argument("--overlap-override", type=int, default=None)
     args = parser.parse_args()
@@ -494,6 +539,7 @@ def main() -> None:
             spawn_dev_embedding_server=args.spawn_dev_embedding_server,
             spawn_dev_rerank_server=args.spawn_dev_rerank_server,
             domain_pack_id=args.domain_pack_id,
+            graphrag_project_id=args.graphrag_project_id,
             chunk_size_override=args.chunk_size_override,
             overlap_override=args.overlap_override,
         )

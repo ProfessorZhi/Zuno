@@ -35,6 +35,10 @@ def test_contract_review_example_project_loads_with_prompt_manifest() -> None:
     assert set(loaded.prompt_texts) == {"extract_graph", "local_query", "report_template"}
     assert loaded.settings["retrieval_policy"]["graph_hop_limit"] == 2
     assert loaded.settings["retrieval_policy"]["risk_relation_preference"] == "CLAUSE_HAS_RISK"
+    assert "Contract" in loaded.schema_data["entities"]
+    assert loaded.retrieval_policy_data["graph_hop_limit"] == 2
+    assert "contract_demo_q1" in loaded.eval_dataset_text
+    assert loaded.eval_dataset_rows[0]["id"] == "contract_demo_q1"
 
 
 def test_contract_review_domain_pack_assets_are_mapped_to_project_assets() -> None:

@@ -59,18 +59,22 @@ Asset migration table:
 Additional progress:
 
 - `GraphRAGProjectLoader` now materializes
-  `examples/graphrag-projects/contract_review/retrieval_policy.yaml` into
-  loaded project settings.
+  `examples/graphrag-projects/contract_review/retrieval_policy.yaml`,
+  `schema.json`, and `eval/eval_dataset.jsonl` into loaded project settings.
 - Contract Review graph policy tests use the GraphRAG Project policy as
   explicit `query_policy`; `GraphRetriever` no longer loads policy through
   `DomainPackLoader`.
+- Stackless local eval can build the Contract Review local graph from
+  GraphRAG Project assets and no longer loads `DomainPackLoader` for the
+  `contract_review` project path.
 
 Still blocked:
 
 - Runtime/eval still needs `DomainPackLoader` through Contract Review eval and
-  stackless eval paths. `KnowledgeService.get_runtime_settings` and
-  `GraphRetriever` no longer load `DomainPackLoader`, but that does not close
-  Phase 02.
+  direct `DomainQAGraph` paths. Stackless local eval also keeps a generic
+  legacy fallback for unmigrated packs. `KnowledgeService.get_runtime_settings`,
+  `GraphRetriever`, and the Contract Review stackless local eval path no
+  longer load `DomainPackLoader`, but that does not close Phase 02.
 - `domain-packs/contract_review/` remains Blocked Legacy until those runtime
   and eval dependencies are cut over.
 

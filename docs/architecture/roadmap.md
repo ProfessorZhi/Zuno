@@ -33,9 +33,12 @@ migration stages.
   `domain_pack_id` as a migration field but no longer loads
   `DomainPackLoader` from it. `GraphRetriever` no longer loads retrieval
   policy from a bare `domain_pack_id`; explicit `query_policy` now carries the
-  GraphRAG Project policy data. Active dependencies still remain in
-  `domain-packs/`, Domain Pack runtime services, eval loader paths, Docker
-  surfaces, direct `DomainQAGraph` source/dependencies, and `tests/compat/`.
+  GraphRAG Project policy data. Stackless local eval can build the Contract
+  Review local graph from GraphRAG Project assets without loading
+  `DomainPackLoader`. Active dependencies still remain in `domain-packs/`,
+  Domain Pack runtime services, Contract Review eval / `DomainQAGraph` loader
+  paths, Docker surfaces, direct `DomainQAGraph` source/dependencies, and
+  `tests/compat/`.
   Domain Pack backend endpoint/API-service wrappers and frontend API/page
   files are retired from current source.
 - Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
@@ -51,8 +54,9 @@ migration stages.
 
 Contract Review asset migration has started: the Target example copy lives at
 `examples/graphrag-projects/contract_review/`. This does not close Phase 02 or
-11C because Contract Review eval and stackless eval paths still use
-`DomainPackLoader`.
+11C because Contract Review eval and `DomainQAGraph` paths still use
+`DomainPackLoader`, and stackless local eval still keeps a generic legacy
+fallback for unmigrated packs.
 
 ## Next Candidate
 

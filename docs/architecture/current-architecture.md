@@ -80,13 +80,19 @@ Project configuration on `graphrag_project_id`.
 `query_policy` data, including the GraphRAG Project `retrieval_policy.yaml`
 copy under `examples/graphrag-projects/contract_review/`.
 
+Stackless local eval can build its Contract Review local graph from
+GraphRAG Project assets. It still keeps a legacy Domain Pack fallback for
+unmigrated packs; the dedicated Contract Review eval and `DomainQAGraph`
+remain Blocked Legacy.
+
 ## Blocked Legacy
 
 Phase 11C is blocked because these active dependencies still exist:
 
 - `domain-packs/`
 - Domain Pack service/eval/Docker surfaces
-- eval paths that still call `DomainPackLoader`
+- Contract Review eval and `DomainQAGraph` paths that still call
+  `DomainPackLoader`
 - Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
 - Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
   Pack pages are not active knowledge routes or settings-shell pages
