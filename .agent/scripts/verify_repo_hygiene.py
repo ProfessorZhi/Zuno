@@ -123,6 +123,14 @@ def main() -> int:
     if "KnowledgeQueryService" not in workspace_agent:
         errors.append("Workspace knowledge path must use KnowledgeQueryService")
 
+    agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
+    if agent_runtime_path.exists():
+        errors.append("AgentRuntime facade must not remain as current backend source")
+    core_init = _read("src/backend/zuno/core/__init__.py")
+    runtime_init = _read("src/backend/zuno/core/runtime/__init__.py")
+    if '"AgentRuntime"' in core_init or "AgentRuntime" in runtime_init:
+        errors.append("AgentRuntime facade must not be exported from current backend source")
+
     html_matches = [
         path
         for path in _tracked_files()

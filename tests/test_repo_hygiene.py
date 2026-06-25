@@ -89,6 +89,24 @@ def test_workspace_knowledge_path_stays_off_legacy_agent_runtime() -> None:
     assert "Workspace knowledge path must not import AgentRuntime" in verifier
 
 
+def test_agent_runtime_facade_stays_retired() -> None:
+    assert not (REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py").exists()
+
+    core_init = (REPO_ROOT / "src/backend/zuno/core/__init__.py").read_text(
+        encoding="utf-8"
+    )
+    runtime_init = (
+        REPO_ROOT / "src/backend/zuno/core/runtime/__init__.py"
+    ).read_text(encoding="utf-8")
+    assert '"AgentRuntime"' not in core_init
+    assert "AgentRuntime" not in runtime_init
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "AgentRuntime facade must not remain as current backend source" in verifier
+
+
 def test_domain_pack_is_not_current_api_or_frontend_entrypoint() -> None:
     router = (REPO_ROOT / "src/backend/zuno/api/router.py").read_text(encoding="utf-8")
     api_v1_init = (REPO_ROOT / "src/backend/zuno/api/v1/__init__.py").read_text(encoding="utf-8")

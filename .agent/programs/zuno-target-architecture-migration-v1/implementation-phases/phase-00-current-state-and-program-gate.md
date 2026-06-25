@@ -70,8 +70,9 @@ git diff --check
 - Phase 11B is proved for the Completion API / `GeneralAgent` path through
   `search_knowledge_base` and `KnowledgeQueryService`.
 - Phase 11C remains blocked by Domain Pack assets/services/eval/Docker
-  surfaces, `AgentRuntime`, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and
-  `tests/compat/`.
+  surfaces, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and `tests/compat/`.
+  The standalone `AgentRuntime` facade has been removed after this gate was
+  first established.
 - Phase 12 remains partial / not closed; full `pytest` and formal Eval
   baseline comparison were not completed in this pass.
 - Go for bounded Phase 01 work: yes, but only for surfaces whose references

@@ -64,37 +64,14 @@ def test_phase1_domain_qa_graph_exposes_required_node_boundaries() -> None:
         assert node_name in content, node_name
 
 
-def test_phase1_agent_runtime_routes_single_agent_flow_through_domain_qa_graph() -> None:
+def test_phase1_agent_runtime_facade_is_retired_after_project_cutover() -> None:
     _ensure_backend_root()
 
-    AgentRuntime = importlib.import_module("zuno.core.runtime.agent_runtime").AgentRuntime
+    runtime_file = BACKEND_ROOT / "zuno" / "core" / "runtime" / "agent_runtime.py"
+    runtime_module = importlib.import_module("zuno.core.runtime")
 
-    events: list[str] = []
-
-    class FakeDomainGraph:
-        def build_initial_state(self, **kwargs):
-            events.append("build_initial_state")
-            return {"built": True, **kwargs}
-
-        async def ainvoke(self, state):
-            events.append("ainvoke")
-            return {"status": "completed", "state": state}
-
-    runtime = AgentRuntime(graph=FakeDomainGraph(), multi_agent_graph=None)
-    result = asyncio.run(
-        runtime.run_domain_qa(
-            user_id="u1",
-            agent_id="a1",
-            dialog_id="d1",
-            query="合同里甲方什么时候可以解除？",
-            knowledge_ids=["kb1"],
-            runtime_settings={"knowledge_config": {"retrieval_settings": {}}},
-            domain_pack={"id": "contract_review"},
-        )
-    )
-
-    assert result["status"] == "completed"
-    assert events == ["build_initial_state", "ainvoke"]
+    assert not runtime_file.exists()
+    assert "AgentRuntime" not in getattr(runtime_module, "__all__", [])
 
 
 def test_phase1_domain_qa_graph_failure_always_reaches_finalize() -> None:

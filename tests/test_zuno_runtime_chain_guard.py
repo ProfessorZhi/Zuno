@@ -18,7 +18,6 @@ PHASE0_RUNTIME_TRUTH_FILES = [
     "services/graphrag/retriever.py",
     "services/domain_pack/loader.py",
     "core/graphs/domain_qa_graph.py",
-    "core/runtime/agent_runtime.py",
     "settings.py",
 ]
 
@@ -38,6 +37,10 @@ def test_phase0_runtime_truth_no_longer_depends_on_services_api_import_bridge() 
     assert "_find_service_api_root" not in zuno_package_init
     assert "services/api/src" not in zuno_services_init
     assert "service_api_root_str" not in zuno_services_init
+
+
+def test_agent_runtime_facade_no_longer_part_of_current_runtime_truth() -> None:
+    assert not (BACKEND_ROOT / "core/runtime/agent_runtime.py").exists()
 
 
 def test_phase0_runtime_truth_avoids_service_api_runtime_paths_in_active_tests() -> None:

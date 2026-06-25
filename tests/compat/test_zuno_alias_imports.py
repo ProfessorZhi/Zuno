@@ -18,7 +18,6 @@ def test_zuno_alias_modules_import():
     from zuno.core.graphs.domain_qa_graph import DomainQAGraph
     from zuno.core.graphs.multi_agent_supervisor_graph import MultiAgentSupervisorGraph
     from zuno.core.models.manager import ModelManager
-    from zuno.core.runtime.agent_runtime import AgentRuntime
     from zuno.database.metadata import metadata
     from zuno.database.models.knowledge_file import KnowledgeFileTable
     from zuno.middleware.trace_id_middleware import TraceIDMiddleware
@@ -52,7 +51,6 @@ def test_zuno_alias_modules_import():
     assert DomainQAGraph is not None
     assert MultiAgentSupervisorGraph is not None
     assert ModelManager is not None
-    assert AgentRuntime is not None
     assert metadata is not None
     assert KnowledgeFileTable is not None
     assert TraceIDMiddleware is not None

@@ -122,10 +122,11 @@ This roadmap does not implement:
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
 - Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
-  service/retained endpoint/frontend/eval/Docker surfaces, standalone
-  `AgentRuntime` source/compat surfaces, `DomainQAGraph`,
+  service/retained endpoint/frontend/eval/Docker surfaces, `DomainQAGraph`,
   `MultiAgentSupervisorGraph`, and `tests/compat/`. Workspace knowledge
-  prefetch/tools have been cut over to `KnowledgeQueryService`.
+  prefetch/tools have been cut over to `KnowledgeQueryService`, and the
+  standalone `AgentRuntime` facade has been removed from current backend source
+  and exports.
 - Phase 12 is partially complete / not closed. Final full `pytest` and formal
   Eval baseline comparison are not complete.
 

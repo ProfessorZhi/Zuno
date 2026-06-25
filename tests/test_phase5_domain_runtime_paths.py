@@ -16,76 +16,26 @@ def _ensure_runtime_paths() -> None:
             sys.path.insert(0, runtime_root)
 
 
-def test_zuno_agent_runtime_uses_single_agent_graph_by_default():
+def test_zuno_agent_runtime_facade_is_removed_from_current_source():
     _ensure_runtime_paths()
 
-    AgentRuntime = importlib.import_module("zuno.core.runtime.agent_runtime").AgentRuntime
+    runtime_file = BACKEND_ROOT / "zuno" / "core" / "runtime" / "agent_runtime.py"
+    runtime_module = importlib.import_module("zuno.core.runtime")
+    core_module = importlib.import_module("zuno.core")
 
-    class FakeDomainGraph:
-        def build_initial_state(self, **kwargs):
-            return {"mode": "single", **kwargs}
-
-        async def ainvoke(self, state):
-            return {"status": "completed", "mode": "single", "state": state}
-
-    class FakeMultiGraph:
-        def build_initial_state(self, **kwargs):
-            return {"mode": "multi", **kwargs}
-
-        async def ainvoke(self, state):
-            return {"status": "completed", "mode": "multi", "state": state}
-
-    runtime = AgentRuntime(graph=FakeDomainGraph(), multi_agent_graph=FakeMultiGraph())
-
-    result = asyncio.run(
-        runtime.run_domain_qa(
-            user_id="u1",
-            agent_id="a1",
-            dialog_id="d1",
-            query="review contract",
-            knowledge_ids=["kb_1"],
-            runtime_settings={"knowledge_config": {"retrieval_settings": {}}},
-            domain_pack={"id": "contract_review"},
-        )
-    )
-
-    assert result["mode"] == "single"
+    assert not runtime_file.exists()
+    assert "AgentRuntime" not in getattr(runtime_module, "__all__", [])
+    assert "AgentRuntime" not in getattr(core_module, "__all__", [])
 
 
-def test_zuno_agent_runtime_uses_multi_agent_graph_when_enabled_in_domain_pack():
+def test_zuno_legacy_graph_sources_remain_as_direct_blocked_legacy():
     _ensure_runtime_paths()
 
-    AgentRuntime = importlib.import_module("zuno.core.runtime.agent_runtime").AgentRuntime
+    domain_graph = importlib.import_module("zuno.core.graphs.domain_qa_graph")
+    supervisor_graph = importlib.import_module("zuno.core.graphs.multi_agent_supervisor_graph")
 
-    class FakeDomainGraph:
-        def build_initial_state(self, **kwargs):
-            return {"mode": "single", **kwargs}
-
-        async def ainvoke(self, state):
-            return {"status": "completed", "mode": "single", "state": state}
-
-    class FakeMultiGraph:
-        def build_initial_state(self, **kwargs):
-            return {"mode": "multi", **kwargs}
-
-        async def ainvoke(self, state):
-            return {"status": "completed", "mode": "multi", "state": state}
-
-    runtime = AgentRuntime(graph=FakeDomainGraph(), multi_agent_graph=FakeMultiGraph())
-
-    result = asyncio.run(
-        runtime.run_domain_qa(
-            user_id="u1",
-            agent_id="a1",
-            dialog_id="d1",
-            query="review contract",
-            knowledge_ids=["kb_1"],
-            runtime_settings={"knowledge_config": {"retrieval_settings": {}}},
-            domain_pack={"id": "contract_review", "multi_agent_enabled": True},
-        )
-    )
-
-    assert result["mode"] == "multi"
+    assert domain_graph.DomainQAGraph is not None
+    assert supervisor_graph.MultiAgentSupervisorGraph is not None
 
 
 def _general_agent_config():

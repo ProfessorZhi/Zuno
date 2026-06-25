@@ -11,9 +11,8 @@ In progress / blocked overall. The current FastAPI router no longer mounts
 `/domain-packs`, and active Vue knowledge routes/pages no longer open Domain
 Pack entrypoints. Active dependencies still exist in `domain-packs/`, Domain
 Pack services/assets, retained legacy endpoint/frontend files, eval/Docker
-surfaces, standalone `AgentRuntime` source/compat surfaces, remaining
-`DomainQAGraph` source and dependencies, remaining `MultiAgentSupervisorGraph`
-source/compat surfaces, and `tests/compat/`.
+surfaces, remaining `DomainQAGraph` source and dependencies, remaining
+`MultiAgentSupervisorGraph` source/compat surfaces, and `tests/compat/`.
 
 Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 
@@ -28,8 +27,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   migration evidence.
 - `tests/test_phase5_domain_runtime_paths.py` no longer expects
   `GeneralAgent` to expose the old `KnowledgeService` / `AgentRuntime`
-  Domain Pack path; the remaining `AgentRuntime` assertions in that file are
-  blocker evidence.
+  Domain Pack path; it now protects the retired `AgentRuntime` facade boundary
+  and the current `GeneralAgent` project-query path.
 - `tests/compat/test_general_agent_domain_pack_runtime.py` has been reclassified
   to retired compatibility evidence for the removed `GeneralAgent` Domain Pack
   path.
@@ -43,12 +42,18 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   `tests/compat/test_workspace_domain_pack_runtime.py`, and
   `tests/test_phase5_workspace_real_runtime_flow.py` now protect the Workspace
   project-query runtime path.
+- `src/backend/zuno/core/runtime/agent_runtime.py` has been removed from
+  current backend source; `zuno.core` and `zuno.core.runtime` no longer export
+  `AgentRuntime`.
+- `tests/test_phase11c_agent_runtime_retirement.py`,
+  `tests/compat/test_agent_runtime_multi_agent.py`,
+  `tests/test_phase1_langgraph_runtime_deepening.py`, and
+  `tests/test_phase5_domain_runtime_paths.py` now protect the retired
+  `AgentRuntime` facade boundary.
 - `src/backend/zuno/api/v1/domain_packs.py` still retains legacy endpoint
   functions for asset migration and compatibility evidence.
 - `src/backend/zuno/api/services/domain_pack.py` still exists.
 - `src/backend/zuno/services/domain_pack/` still exists.
-- `src/backend/zuno/core/runtime/agent_runtime.py` still dispatches legacy graph
-  runtime as a standalone Blocked Legacy source/compat surface.
 - `src/backend/zuno/core/graphs/domain_qa_graph.py` still exists.
 - `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` still exists.
 - `tests/compat/` still exists with Domain Pack and multi-agent compatibility

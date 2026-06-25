@@ -80,6 +80,9 @@ Removed from the active current path:
   import `AgentRuntime`, expose `domain_qa_runtime`, or call
   `_run_domain_pack_query`; they use `KnowledgeQueryService` and
   `KnowledgeQueryResult` payload mapping.
+- The standalone `src/backend/zuno/core/runtime/agent_runtime.py` facade has
+  been removed from current backend source; `zuno.core` and
+  `zuno.core.runtime` no longer export `AgentRuntime`.
 - The stale tracked backend package asset copy
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under
@@ -88,8 +91,7 @@ Removed from the active current path:
 - `tests/test_phase5_domain_runtime_paths.py` no longer expects
   `GeneralAgent` to expose `KnowledgeService` or `AgentRuntime`; it now records
   the current 11B fact that `GeneralAgent` uses `KnowledgeQueryService` and a
-  single react loop while still retaining `AgentRuntime` tests as Blocked
-  Legacy evidence.
+  single react loop while protecting the retired `AgentRuntime` facade boundary.
 - `tests/compat/test_general_agent_domain_pack_runtime.py` has been reclassified
   from legacy Domain Pack runtime coverage to retired compatibility evidence:
   it now proves `GeneralAgent` no longer exposes the old
@@ -110,11 +112,8 @@ Retained as Blocked Legacy / Phase 02 migration assets:
 
 Still blocked:
 
-- `src/backend/zuno/core/runtime/agent_runtime.py` still imports and dispatches
-  `DomainQAGraph` and `MultiAgentSupervisorGraph`; it remains a standalone
-  Blocked Legacy source/compat surface.
 - `tools/evals/zuno/contract_review_eval/` and stackless eval paths still
   depend on `DomainPackLoader` / `DomainQAGraph`.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
-  `AgentRuntime`, `DomainQAGraph`, `MultiAgentSupervisorGraph`, Domain Pack
-  loader/eval, and graph/runtime surfaces.
+  `DomainQAGraph`, `MultiAgentSupervisorGraph`, Domain Pack loader/eval, and
+  graph/runtime surfaces, plus replacement evidence for retired runtime names.
