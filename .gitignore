@@ -25,7 +25,6 @@ src/backend/zuno/config.yaml
 /vector_db/
 
 .local/
-apps/web/AGENTS.md
 
 # Agent workflow library: keep durable references/templates/scripts tracked.
 # All local-only notes, scratch space, logs, machine-local state, and secrets

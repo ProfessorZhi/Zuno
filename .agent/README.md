@@ -34,6 +34,9 @@ architecture design and does not replace `.agent/architecture/near-term/`.
   programs/
     current.md
     official-graphrag-cleanup-v1/
+  workflows/
+  skills/
+  lessons/
   templates/
   scripts/
 ```
@@ -41,11 +44,11 @@ architecture design and does not replace `.agent/architecture/near-term/`.
 Local-only directories are ignored by `.gitignore`:
 
 ```text
-.agent/notes/
-.agent/tmp/
-.agent/logs/
 .agent/local/
-.agent/secrets/
+.agent/local/notes/
+.agent/local/tmp/
+.agent/local/logs/
+.agent/local/secrets/
 ```
 
 Do not keep tracked placeholder files inside those local-only directories.
@@ -77,6 +80,9 @@ If a change replaces an older design, move the old material to `docs/architectur
 - Use `.agent/references/` only as the Agent navigation layer.
 - Use `.agent/templates/` for reusable prompts and closure reports.
 - Use `.agent/scripts/` for read-only workflow checks.
+- Use `.agent/workflows/` for complete execution procedures.
+- Use `.agent/skills/` for thin task-routing entries.
+- Use `.agent/lessons/` for verified reusable experience.
 - Use `.agent/architecture/near-term/` for the detailed next refactor target.
 - Use `.agent/architecture/future/` only for Java, microservices, event/workers,
   and multi-agent horizon discussions.
@@ -84,3 +90,22 @@ If a change replaces an older design, move the old material to `docs/architectur
   retired surfaces.
 - Modification tasks require verification, commit, and push unless blocked.
 - Read-only reconnaissance does not commit or push.
+
+## Knowledge Promotion
+
+Temporary discovery -> `.agent/local/notes/` (ignored).
+
+One-task investigation evidence -> `.agent/audits/`.
+
+Verified reusable experience -> `.agent/lessons/`.
+
+Stable operation procedure -> `.agent/workflows/`.
+
+Task-triggered mature workflow -> `.agent/skills/`.
+
+Rules that apply to every task -> `AGENTS.md`.
+
+Implemented, verified, human-facing facts -> `docs/`.
+
+Promote material only when it has code, tests, commands, or repeated task
+evidence; a clear scope; and clear non-scope.

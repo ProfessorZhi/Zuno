@@ -32,6 +32,17 @@ For architecture, refactor, new feature, or workflow tasks:
 
 For implementation tasks, read the relevant code after the docs. Do not infer runtime behavior from docs alone.
 
+## Task Routing
+
+- scope unclear -> `.agent/skills/zuno-read-only-audit/SKILL.md`
+- docs, `.agent`, references, workflows, skills, or history -> `.agent/skills/zuno-docs-maintenance/SKILL.md`
+- directory move, deletion, archive, ignore rules, generated/local cleanup -> `.agent/skills/zuno-repo-hygiene/SKILL.md`
+- `apps/web` -> `apps/web/AGENTS.md` and `.agent/skills/zuno-frontend-change/SKILL.md`
+- `src/backend/zuno` -> `src/backend/zuno/AGENTS.md` and `.agent/skills/zuno-backend-change/SKILL.md`
+- API, DTO, request/response, frontend/backend contract -> `.agent/skills/zuno-api-contract-change/SKILL.md`
+- architecture replacement -> `.agent/skills/zuno-architecture-refactor/SKILL.md`
+- eval tooling, datasets, metrics, profiles, reports -> `tools/evals/zuno/AGENTS.md` and `.agent/skills/zuno-eval-change/SKILL.md`
+
 ## Current Mainline
 
 The completed Phase 0-6 architecture closure remains historical completion truth and must not be rewritten as incomplete.
@@ -98,6 +109,7 @@ If the answer is no, the reason should be obvious from the task scope. If the an
 - Modification tasks end with commit and push unless verification or push is blocked.
 - Never force push, force-with-lease, or amend old commits unless the user explicitly asks.
 - Do not keep legacy lowercase or dotted Agent entrypoints in parallel with `AGENTS.md`.
+- Module-level `AGENTS.md` files are allowed only where this root entrypoint routes to them.
 
 ## Scope Rules
 
