@@ -24,7 +24,7 @@ STAGE_GROUPS = [
     (
         "backend_domain_runtime",
         [
-            "git add src/backend/zuno/core/ src/backend/zuno/domain_packs/ src/backend/zuno/services/domain_pack/ src/backend/zuno/services/runtime_registry.py src/backend/zuno/services/workspace/simple_agent.py src/backend/zuno/services/embedding/ src/backend/zuno/services/llm/ tools/evals/zuno/contract_review_eval/",
+            "git add src/backend/zuno/core/ src/backend/zuno/services/domain_pack/ src/backend/zuno/services/runtime_registry.py src/backend/zuno/services/workspace/simple_agent.py src/backend/zuno/services/embedding/ src/backend/zuno/services/llm/ tools/evals/zuno/contract_review_eval/",
         ],
     ),
     (

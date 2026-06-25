@@ -26,7 +26,6 @@ GROUP_PATHS = {
     ],
     "backend_domain_runtime": [
         "src/backend/zuno/core/",
-        "src/backend/zuno/domain_packs/",
         "src/backend/zuno/services/domain_pack/",
         "src/backend/zuno/services/runtime_registry.py",
         "src/backend/zuno/services/workspace/simple_agent.py",

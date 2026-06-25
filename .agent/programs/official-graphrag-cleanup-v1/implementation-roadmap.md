@@ -12,8 +12,9 @@ Current truth is still the Python monorepo runtime:
 
 - `src/backend/zuno/` is the backend runtime boundary.
 - `apps/web/` and `apps/desktop/` are the application shells.
-- `domain-packs/` and `src/backend/zuno/domain_packs/` still exist as current
-  or migration evidence.
+- `domain-packs/` still exists as current or migration evidence; the old
+  `src/backend/zuno/domain_packs/` asset copy has been removed from the current
+  package path and archived under `docs/architecture/history/domain-packs/`.
 - Domain Pack routes, services, frontend pages, graph names, and tests still
   exist in active code paths.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,

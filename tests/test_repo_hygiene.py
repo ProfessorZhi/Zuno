@@ -51,6 +51,29 @@ def test_blocked_legacy_paths_are_present_and_classified() -> None:
     assert "must not be treated as target repository layout" in map_content
 
 
+def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
+    assert not (
+        REPO_ROOT / "src/backend/zuno/domain_packs"
+    ).exists(), "backend package Domain Pack asset copy should not remain a current path"
+
+
+def test_active_repo_tools_do_not_reference_retired_backend_domain_pack_copy() -> None:
+    for path in [
+        "tools/scripts/preview_public_release_group.py",
+        "tools/scripts/preview_public_release_stage_dry_run.py",
+        "tools/scripts/print_public_release_stage_commands.py",
+        "tools/scripts/summarize_public_release_scope.py",
+    ]:
+        content = (REPO_ROOT / path).read_text(encoding="utf-8")
+        assert "src/backend/zuno/domain_packs" not in content, path
+
+    roadmap = (
+        REPO_ROOT
+        / ".agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md"
+    ).read_text(encoding="utf-8")
+    assert "`src/backend/zuno/domain_packs/` still exist" not in roadmap
+
+
 def test_domain_pack_is_not_current_api_or_frontend_entrypoint() -> None:
     router = (REPO_ROOT / "src/backend/zuno/api/router.py").read_text(encoding="utf-8")
     api_v1_init = (REPO_ROOT / "src/backend/zuno/api/v1/__init__.py").read_text(encoding="utf-8")

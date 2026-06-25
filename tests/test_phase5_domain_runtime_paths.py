@@ -1,9 +1,6 @@
 import asyncio
 import importlib
-import json
-import subprocess
 import sys
-import textwrap
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -91,134 +88,106 @@ def test_zuno_agent_runtime_uses_multi_agent_graph_when_enabled_in_domain_pack()
     assert result["mode"] == "multi"
 
 
-def test_zuno_general_agent_knowledge_tool_uses_domain_pack_runtime(monkeypatch):
-    script = textwrap.dedent(
-        f"""
-        import asyncio
-        import json
-        import sys
-        sys.path.insert(0, {str(BACKEND_ROOT)!r})
-        from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
-        import zuno.core.agents.general_agent as ga
+def _general_agent_config():
+    from zuno.core.agents.general_agent import AgentConfig
 
-        async def fake_runtime_settings(_knowledge_id):
-            return {{
-                "domain_pack_id": "contract_review",
-                "domain_pack": {{"id": "contract_review"}},
-                "knowledge_config": {{"retrieval_settings": {{"default_mode": "graphrag"}}}},
-            }}
+    return AgentConfig(
+        user_id="u_1",
+        llm_id="",
+        mcp_ids=[],
+        knowledge_ids=["kb_1"],
+        domain_pack_id="contract_review",
+        dialog_id="dialog_1",
+        tool_ids=[],
+        agent_skill_ids=[],
+        system_prompt="review contract",
+        name="contract-agent",
+    )
 
-        async def fake_run_domain_qa(self, **kwargs):
-            return {{
-                "final_answer": "结论\\n合同包含违约责任条款。",
-            }}
 
-        async def fail_if_called(*args, **kwargs):
-            raise AssertionError("fallback RagHandler path should not be used when domain pack runtime is available")
+def test_zuno_general_agent_knowledge_tool_uses_project_query_runtime(monkeypatch):
+    from zuno.core.agents import general_agent as ga
+    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.services.graphrag.query_service import KnowledgeQueryResult
 
-        ga.KnowledgeService.get_runtime_settings = fake_runtime_settings
-        ga.AgentRuntime.run_domain_qa = fake_run_domain_qa
-        ga.RagHandler.retrieve_ranked_documents = fail_if_called
+    captured = {}
 
-        agent = GeneralAgent(
-            AgentConfig(
-                user_id="u_1",
-                llm_id="",
-                mcp_ids=[],
-                knowledge_ids=["kb_1"],
-                domain_pack_id="contract_review",
-                tool_ids=[],
-                agent_skill_ids=[],
-                system_prompt="review contract",
-                name="contract-agent",
-            )
+    async def fake_query(self, *, user_id, knowledge_ids, query, query_method=None, top_k=None):
+        captured.update(
+            {
+                "user_id": user_id,
+                "knowledge_ids": knowledge_ids,
+                "query": query,
+                "query_method": query_method,
+                "top_k": top_k,
+            }
+        )
+        return KnowledgeQueryResult(
+            graphrag_project_id="contract_review",
+            answer="第八条约定了违约责任。",
+            requested_query_method="auto",
+            resolved_query_method="local",
+            fallback_reason=None,
+            documents=[{"chunk_id": "chunk-1", "file_name": "contract.md"}],
+            evidence={"document_count": 1, "citation_coverage": 1.0},
+            citations=["chunk-1"],
+            retrievers_used=["vector", "graph"],
+            graph_paths=[{"source": "第八条", "target": "违约责任"}],
+            communities=[],
+            prompt_version="extract-v2",
+            query_prompt_version="query-v3",
+            index_version={"vector": "v1", "graph": "g1"},
+            community_version="c1",
+            trace_metadata={"resolved_query_method": "local"},
         )
 
-        async def main():
-            await agent.setup_knowledge_tool()
-            result = await agent.tools[0].ainvoke({{"query": "这份合同是否约定违约责任？"}})
-            print(json.dumps({{"result": result}}, ensure_ascii=False))
+    monkeypatch.setattr(ga.KnowledgeQueryService, "query", fake_query)
 
-        asyncio.run(main())
-        """
-    )
-    completed = subprocess.run(
-        [sys.executable, "-c", script],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    payload = json.loads(completed.stdout.strip())
-    assert "违约责任条款" in payload["result"]
+    agent = GeneralAgent(_general_agent_config())
+    asyncio.run(agent.setup_knowledge_tool())
+
+    result = asyncio.run(agent.tools[0].ainvoke({"query": "这份合同是否约定违约责任？"}))
+
+    assert "AgentRuntime" not in vars(ga)
+    assert "KnowledgeService" not in vars(ga)
+    assert captured["user_id"] == "u_1"
+    assert captured["knowledge_ids"] == ["kb_1"]
+    assert captured["query"] == "这份合同是否约定违约责任？"
+    assert "第八条约定了违约责任" in result
+    assert "citations: chunk-1" in result
+    assert "resolved_query_method: local" in result
 
 
-def test_zuno_general_agent_astream_prefers_explicit_domain_graph_runtime(monkeypatch):
-    script = textwrap.dedent(
-        f"""
-        import asyncio
-        import json
-        import sys
-        from types import SimpleNamespace
-        sys.path.insert(0, {str(BACKEND_ROOT)!r})
-        from langchain_core.messages import HumanMessage
-        from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
-        import zuno.core.agents.general_agent as ga
+def test_zuno_general_agent_astream_uses_single_react_loop_when_project_is_bound():
+    from langchain_core.messages import AIMessageChunk, HumanMessage
 
-        async def fake_runtime_settings(_knowledge_id):
-            return {{
-                "domain_pack_id": "contract_review",
-                "domain_pack": {{"id": "contract_review"}},
-                "knowledge_config": {{"retrieval_settings": {{"default_mode": "graphrag"}}}},
-            }}
+    from zuno.core.agents import general_agent as ga
+    from zuno.core.agents.general_agent import GeneralAgent
 
-        async def fake_run_domain_qa(self, **kwargs):
-            return {{
-                "domain_pack_id": "contract_review",
-                "final_answer": "结论\\n合同包含违约责任条款。",
-                "trace_metadata": {{"nodes": [{{"node": "resolve_domain_pack"}}]}},
-                "cost_metadata": {{"used_domain_pack": True}},
-            }}
+    class FakeReactAgent:
+        async def astream(self, *args, **kwargs):
+            yield "messages", [AIMessageChunk(content="react-loop answer")]
 
-        class FailReactAgent:
-            async def astream(self, *args, **kwargs):
-                raise AssertionError("react agent path should be bypassed for explicit domain graph runtime")
-                yield None
+    agent = GeneralAgent(_general_agent_config())
+    assert "AgentRuntime" not in vars(ga)
+    agent.react_agent = FakeReactAgent()
+    agent.conversation_model = SimpleNamespace()
 
-        ga.KnowledgeService.get_runtime_settings = fake_runtime_settings
-        ga.AgentRuntime.run_domain_qa = fake_run_domain_qa
+    async def collect():
+        return [
+            event
+            async for event in agent.astream([HumanMessage(content="这份合同是否约定违约责任？")])
+        ]
 
-        agent = GeneralAgent(
-            AgentConfig(
-                user_id="u_1",
-                llm_id="",
-                mcp_ids=[],
-                knowledge_ids=["kb_1"],
-                domain_pack_id="contract_review",
-                dialog_id="dialog_1",
-                tool_ids=[],
-                agent_skill_ids=[],
-                system_prompt="review contract",
-                name="contract-agent",
-            )
-        )
-        agent.react_agent = FailReactAgent()
-        agent.conversation_model = SimpleNamespace()
+    events = asyncio.run(collect())
 
-        async def collect():
-            return [event async for event in agent.astream([HumanMessage(content="这份合同是否约定违约责任？")])]
-
-        events = asyncio.run(collect())
-        print(json.dumps(events, ensure_ascii=False))
-        """
-    )
-    completed = subprocess.run(
-        [sys.executable, "-c", script],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    events = json.loads(completed.stdout.strip())
-    assert events[0]["type"] == "event"
-    assert events[0]["data"]["phase"] == "domain_qa"
-    assert events[-1]["type"] == "response_chunk"
-    assert "违约责任条款" in events[-1]["data"]["accumulated"]
+    assert events == [
+        {
+            "type": "response_chunk",
+            "timestamp": events[0]["timestamp"],
+            "data": {
+                "chunk": "react-loop answer",
+                "accumulated": "react-loop answer",
+            },
+        }
+    ]

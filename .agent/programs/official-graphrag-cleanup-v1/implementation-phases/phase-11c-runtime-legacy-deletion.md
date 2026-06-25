@@ -21,6 +21,20 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 - `apps/web/src/router/index.ts`,
   `apps/web/src/pages/workspace/components/WorkspaceSettingsShell.vue`, and
   active knowledge pages no longer expose Domain Pack entrypoints.
+- `src/backend/zuno/domain_packs/contract_review/` has been removed from the
+  current package path as a stale backend package asset copy and archived under
+  `docs/architecture/history/domain-packs/backend-package-contract-review/`;
+  root `domain-packs/contract_review/` remains Blocked Legacy / Phase 02
+  migration evidence.
+- `tests/test_phase5_domain_runtime_paths.py` no longer expects
+  `GeneralAgent` to expose the old `KnowledgeService` / `AgentRuntime`
+  Domain Pack path; the remaining `AgentRuntime` assertions in that file are
+  blocker evidence.
+- `tests/compat/test_general_agent_domain_pack_runtime.py` has been reclassified
+  to retired compatibility evidence for the removed `GeneralAgent` Domain Pack
+  path.
+- `tests/compat/test_domain_qa_graph_offline.py` now matches the current
+  `DomainQAGraph` trace shape while remaining Blocked Legacy coverage.
 - `src/backend/zuno/api/v1/domain_packs.py` still retains legacy endpoint
   functions for asset migration and compatibility evidence.
 - `src/backend/zuno/api/services/domain_pack.py` still exists.

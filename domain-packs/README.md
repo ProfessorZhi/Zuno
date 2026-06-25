@@ -1,5 +1,8 @@
 # Domain Packs
 
-This directory is the current top-level home for extracted domain capability assets.
+This directory is the retained top-level home for extracted domain capability
+assets while Phase 11C is still blocked.
 
-During Phase 2, runtime pack loaders should resolve pack manifests and templates from `domain-packs/` instead of `src/backend/zuno/domain_packs/`.
+Runtime pack loaders resolve pack manifests and templates from `domain-packs/`.
+The old `src/backend/zuno/domain_packs/` asset copy has been removed from the
+current package path and archived under `docs/architecture/history/domain-packs/`.
