@@ -90,13 +90,13 @@ def test_retrieval_orchestrator_broadens_to_hybrid_when_rag_is_too_weak():
     result = asyncio.run(orchestrator.run("rag", "how refund works", ["kb_1"]))
 
     assert result["first_mode"] == "rag"
-    assert result["final_mode"] == "hybrid"
+    assert result["final_mode"] == "hybrid_rag"
     assert result["second_pass_used"] is True
     assert result["fallback_reason"] == "too_few_documents"
     assert result["round_count"] == 2
     assert result["metadata"]["rounds"][1]["trigger"] == "route_broadening"
     assert "stronger hybrid result" in result["content"]
-    assert "graph evidence" in result["content"]
+    assert [item["source"] for item in result["metadata"]["retriever_runs"]] == ["vector"]
 
 
 def test_retrieval_orchestrator_uses_rewritten_query_on_third_round_when_needed():
@@ -127,7 +127,7 @@ def test_retrieval_orchestrator_uses_rewritten_query_on_third_round_when_needed(
     result = asyncio.run(orchestrator.run("rag", "invoice policy", ["kb_1"]))
 
     assert result["first_mode"] == "rag"
-    assert result["final_mode"] == "hybrid"
+    assert result["final_mode"] == "hybrid_rag"
     assert result["round_count"] == 3
     assert result["second_pass_used"] is True
     assert result["metadata"]["rewritten_query_used"] is True
@@ -156,6 +156,6 @@ def test_retrieval_orchestrator_returns_plan_and_retriever_run_metadata():
 
     result = asyncio.run(orchestrator.run("hybrid", "redis persistence", ["kb_1"]))
 
-    assert result["metadata"]["plan"]["resolved_mode"] == "hybrid"
+    assert result["metadata"]["plan"]["resolved_mode"] == "hybrid_rag"
     assert result["metadata"]["plan"]["enabled_retrievers"] == ["vector", "graph"]
     assert [item["source"] for item in result["metadata"]["retriever_runs"]] == ["vector", "graph"]

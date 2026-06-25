@@ -7,7 +7,8 @@ In progress / blocked overall.
 ## Goal
 
 Remove active dependencies that keep Domain Pack, `DomainQAGraph`,
-`MultiAgentSupervisorGraph`, and `tests/compat/` on the current path.
+`MultiAgentSupervisorGraph`, and migration compatibility tests on the current
+path.
 
 ## Dependency
 
@@ -44,7 +45,8 @@ Phase 00 complete.
 - No current `GeneralAgent` path imports `DomainQAGraph`.
 - `MultiAgentSupervisorGraph` is removed from current runtime or explicitly
   moved to history/compat with proof.
-- `tests/compat/` is reduced, replaced, or reclassified with exact evidence.
+- migration compatibility tests are reduced, replaced, or reclassified with
+  exact evidence.
 
 ## Verification Commands
 
@@ -101,9 +103,10 @@ Removed from the active current path:
   `MultiAgentSupervisorGraph` compat guard files have also been retired after
   root Phase 11C tests took over the source/import boundary.
 - Domain Pack formalization and Contract Review asset-runtime tests have moved
-  from root `tests/` into `tests/compat/` until Phase 02 migrates the assets.
+  into root migration compatibility tests while Phase 02 completes asset
+  migration evidence.
 - Root Phase 5 domain runtime path tests no longer assert direct legacy graph
-  source availability; that coverage is isolated to 11C/compat tests.
+  source availability; root Phase 11C tests own retired-import coverage.
 - The stale tracked backend package asset copy
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under
@@ -113,7 +116,7 @@ Removed from the active current path:
   `GeneralAgent` to expose `KnowledgeService` or `AgentRuntime`; it now records
   the current 11B fact that `GeneralAgent` uses `KnowledgeQueryService` and a
   single react loop while protecting the retired `AgentRuntime` facade boundary.
-- `tests/compat/test_general_agent_domain_pack_runtime.py` has been reclassified
+- `tests/test_general_agent_domain_pack_runtime.py` has been reclassified
   from legacy Domain Pack runtime coverage to retired compatibility evidence:
   it now proves `GeneralAgent` no longer exposes the old
   `KnowledgeService` / `AgentRuntime` / `RagHandler` path.
@@ -145,7 +148,7 @@ Removed from the active current path:
 
 Still retained as Blocked Legacy:
 
-- `tests/compat/`
+- remaining Domain Pack-era migration compatibility tests under root `tests/`
 
 Retired from current source:
 
@@ -163,7 +166,7 @@ No longer blocked by current eval runtime:
 
 - `tools/evals/zuno/contract_review_eval/` no longer depends on
   `DomainPackLoader` or `DomainQAGraph`.
-- `tests/compat/` still contains migration/current compatibility coverage for
+- Root `tests/` still contains migration/current compatibility coverage for
   Workspace, Domain Pack migration fields, and Contract Review GraphRAG Project
   compatibility payloads. Retired runtime import/source guards have moved to
   root Phase 11C tests.

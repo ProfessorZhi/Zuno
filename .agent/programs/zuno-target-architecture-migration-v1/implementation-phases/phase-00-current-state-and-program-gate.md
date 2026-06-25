@@ -36,8 +36,8 @@ None.
 - `KnowledgeQueryService`, `GraphRAGQueryService`,
   `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult` are present.
 - `GeneralAgent.search_knowledge_base` calls `KnowledgeQueryService`.
-- Domain Pack, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and
-  `tests/compat/` are classified as Current / Blocked Legacy.
+- Domain Pack-era migration compatibility tests are classified as Current /
+  Blocked Legacy; the former `tests/compat/` holding area is retired.
 - Phase 12 remains not closed unless full pytest and eval evidence exist.
 
 ## Verification Commands
@@ -69,8 +69,8 @@ git diff --check
   `KnowledgeQueryResult`.
 - Phase 11B is proved for the Completion API / `GeneralAgent` path through
   `search_knowledge_base` and `KnowledgeQueryService`.
-- Phase 11C remains blocked by remaining compatibility surfaces and
-  `tests/compat/`. The standalone `AgentRuntime` facade, direct
+- Phase 11C remains blocked by remaining compatibility surfaces in
+  root `tests/`. The standalone `AgentRuntime` facade, direct
   `DomainQAGraph` source, direct `MultiAgentSupervisorGraph` source,
   `src/backend/zuno/services/domain_pack/` runtime service package, root
   Domain Pack assets, and Docker `/app/domain-packs` references have been

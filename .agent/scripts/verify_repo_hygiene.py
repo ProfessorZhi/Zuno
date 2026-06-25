@@ -25,9 +25,7 @@ FORBIDDEN_IGNORE_LINES = [
     "&1",
 ]
 
-BLOCKED_LEGACY_PATHS = [
-    "tests/compat",
-]
+BLOCKED_LEGACY_PATHS = []
 
 FORBIDDEN_CURRENT_PATHS = [
     "src/frontend",
@@ -35,6 +33,7 @@ FORBIDDEN_CURRENT_PATHS = [
     "docs/architecture/plans",
     "docs/architecture/programs",
     "domain-packs",
+    "tests/compat",
 ]
 
 RETIRED_FRONTEND_DOMAIN_PACK_FILES = [

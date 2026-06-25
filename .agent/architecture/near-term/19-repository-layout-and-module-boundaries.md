@@ -72,8 +72,9 @@ the business or infrastructure capability they own.
 
 ## Blocked Legacy Rule
 
-`tests/compat/` and remaining migration compatibility surfaces are Blocked
-Legacy until 11C proves active dependency removal. Root `domain-packs/` assets
+Remaining migration compatibility surfaces under root `tests/` are Blocked
+Legacy until 11C proves active dependency removal. The former `tests/compat/`
+holding area is retired. Root `domain-packs/` assets
 are archived under `docs/architecture/history/domain-packs/root-contract-review/`,
 and Docker no longer copies or mounts them. The Domain Pack route/API wrappers,
 frontend Domain Pack pages, Domain Pack runtime service package, direct

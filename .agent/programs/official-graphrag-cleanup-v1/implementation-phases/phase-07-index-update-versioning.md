@@ -38,7 +38,7 @@ and tests.
 - `src/backend/zuno/services/rag/es_client.py`
 - `src/backend/zuno/services/retrieval/models.py`
 - `tests/test_hardening01_config_impact_contract.py`
-- `tests/compat/test_retrieval_orchestrator.py`
+- `tests/test_retrieval_orchestrator.py`
 
 ## Execution Order
 
@@ -91,7 +91,7 @@ Stale detection examples:
 
 ```powershell
 pytest -q tests/test_hardening01_config_impact_contract.py
-pytest -q tests/compat/test_retrieval_orchestrator.py
+pytest -q tests/test_retrieval_orchestrator.py
 python tools\scripts\verify_docs_entrypoints.py
 git diff --check
 ```

@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 
 
-PROJECTS_ROOT = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
+PROJECTS_ROOT = Path(__file__).resolve().parents[1] / "examples" / "graphrag-projects"
 
 
 def _contract_review_payload():

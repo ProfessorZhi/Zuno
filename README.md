@@ -61,10 +61,11 @@ Phase 11C progress / Blocked Legacy:
 - Root `domain-packs/` assets have been archived under
   `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
   longer copies or mounts `/app/domain-packs`. Remaining blockers still exist
-  in `tests/compat/` migration/current compatibility coverage. Root Phase 11C
-  tests now guard the retired `DomainQAGraph`, `MultiAgentSupervisorGraph`,
-  `AgentRuntime`, and Domain Pack runtime service imports. The old Domain Pack
-  backend endpoint/API-service wrappers are retired.
+  in root `tests/` migration compatibility coverage. The former `tests/compat/`
+  holding area is retired. Root Phase 11C tests guard the retired
+  `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, and Domain Pack
+  runtime service imports. The old Domain Pack backend endpoint/API-service
+  wrappers are retired.
 - These surfaces are not the future public mainline, but they must not be
   deleted before active dependency removal is proven.
 - Phase 12 is partial / not closed: final full `pytest` and formal Eval

@@ -45,7 +45,7 @@ longer copies or mounts `/app/domain-packs`.
 - `apps/web/src/apis/knowledge.ts`
 - `apps/web/src/utils/knowledge-config.ts`
 - `tests/test_product_wiring_v1_api_contract.py`
-- `tests/compat/test_knowledge_api_contract.py`
+- `tests/test_knowledge_api_contract.py`
 
 ## Execution Order
 
@@ -68,7 +68,7 @@ longer copies or mounts `/app/domain-packs`.
 
 ```powershell
 pytest -q tests/test_product_wiring_v1_api_contract.py
-pytest -q tests/compat/test_knowledge_api_contract.py
+pytest -q tests/test_knowledge_api_contract.py
 python tools\scripts\verify_docs_entrypoints.py
 git diff --check
 git grep -n "domain_pack_id"

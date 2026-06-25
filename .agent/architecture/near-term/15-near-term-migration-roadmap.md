@@ -65,8 +65,8 @@ verification, commit message, and evidence package.
 
 - Do not treat Java, microservices, event bus, or default multi-agent behavior
   as near-term acceptance gates.
-- Do not recreate retired Domain Pack runtime or root `domain-packs/`.
-  Do not delete `tests/compat/` during docs cleanup.
+- Do not recreate retired Domain Pack runtime, root `domain-packs/`, or the
+  former `tests/compat/` holding area.
 - Keep old names in history, audits, retired terminology, migration notes, and
   explicit compatibility tests until the final closure gate says otherwise.
 - Make public target language GraphRAG Project, Prompt Registry, Query Method,

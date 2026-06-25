@@ -35,7 +35,7 @@ compatibility reads, and tests.
 - `src/backend/zuno/services/retrieval/orchestrator.py`
 - `src/backend/zuno/services/graphrag/models.py`
 - `src/backend/zuno/schema/knowledge.py`
-- `tests/compat/test_retrieval_planner.py`
+- `tests/test_retrieval_planner.py`
 - `tests/test_phase2_retrieval_strategy_program.py`
 - `tests/test_retrieval_mode_semantics.py`
 
@@ -111,7 +111,7 @@ They are not accepted as the target public query method vocabulary.
 ## Verification Commands
 
 ```powershell
-pytest -q tests/compat/test_retrieval_planner.py
+pytest -q tests/test_retrieval_planner.py
 pytest -q tests/test_phase2_retrieval_strategy_program.py
 pytest -q tests/test_retrieval_mode_semantics.py
 git grep -n "rag_graph_deep"

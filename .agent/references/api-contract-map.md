@@ -10,7 +10,7 @@ Map public contract changes across backend and frontend.
 - Backend schemas: `src/backend/zuno/schema/`
 - Frontend API clients: `apps/web/src/apis/`
 - Frontend utilities/types: `apps/web/src/utils/`
-- Contract tests: `tests/` and `tests/compat/`
+- Contract tests: `tests/`
 
 ## Current Direction
 

@@ -63,11 +63,9 @@ def test_send_email_cli_send_forwards_args(monkeypatch, capsys):
 
 def test_send_email_manifest_declares_cli_tool():
     manifest_path = (
-        Path(__file__).resolve().parents[2]
+        Path(__file__).resolve().parents[1]
         / "src"
         / "backend"
-        / "zuno"
-        / "legacy"
         / "zuno"
         / "tools"
         / "send_email"

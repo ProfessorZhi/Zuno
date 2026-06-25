@@ -111,3 +111,9 @@ git status --short
 ## Follow-up Phase
 
 Phase 02: Docs / Spec / Current Truth Cleanup.
+
+## Later Status
+
+The former `tests/compat/` holding area has been retired after replacement and
+migration-compatibility coverage moved to root `tests/`. Do not recreate it as
+test protection.

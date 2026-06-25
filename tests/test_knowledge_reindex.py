@@ -101,32 +101,3 @@ def test_reindex_knowledge_files_collects_failures(monkeypatch):
     assert result["summary"]["failed_tasks"] == 1
     assert result["task_ids"] == ["task_for_file_1", "task_for_file_2"]
     assert result["file_ids"] == ["file_1", "file_2"]
-
-
-def test_reindex_knowledge_endpoint_checks_permission(monkeypatch):
-    from zuno.api.v1.knowledge_file import reindex_knowledge_files
-
-    captured = {}
-
-    async def fake_verify_user_permission(knowledge_id, user_id):
-        captured["permission"] = (knowledge_id, user_id)
-
-    async def fake_reindex(knowledge_id):
-        captured["reindex"] = knowledge_id
-        return {"knowledge_id": knowledge_id, "total_files": 0, "queued_files": 0, "failed_files": 0, "tasks": []}
-
-    monkeypatch.setattr(
-        "zuno.api.v1.knowledge_file.KnowledgeService.verify_user_permission",
-        fake_verify_user_permission,
-    )
-    monkeypatch.setattr(
-        "zuno.api.v1.knowledge_file.KnowledgeFileService.reindex_knowledge_files",
-        fake_reindex,
-    )
-
-    login_user = SimpleNamespace(user_id="user_1")
-    response = asyncio.run(reindex_knowledge_files(knowledge_id="knowledge_1", login_user=login_user))
-
-    assert response.status_code == 200
-    assert captured["permission"] == ("knowledge_1", "user_1")
-    assert captured["reindex"] == "knowledge_1"

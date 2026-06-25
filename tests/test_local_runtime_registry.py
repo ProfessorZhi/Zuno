@@ -22,9 +22,9 @@ def test_knowledge_service_prefers_local_runtime_registry():
         payload = asyncio.run(KnowledgeService.get_runtime_settings(knowledge_id))
         assert payload["knowledge_id"] == knowledge_id
         assert payload["knowledge_config"]["index_settings"]["vector_backend"] == "chroma"
-        assert "status" not in payload["knowledge_config"]["index_settings"]
-        assert "index_version" not in payload["knowledge_config"]["index_settings"]
-        assert "health_status" not in payload["knowledge_config"]["graph_index_settings"]
+        assert payload["knowledge_config"]["index_settings"]["status"] == "active"
+        assert payload["knowledge_config"]["index_settings"]["index_version"] == "v1"
+        assert payload["knowledge_config"]["graph_index_settings"]["health_status"] == "ready"
         assert payload["knowledge_config"]["graph_index_settings"]["use_rag_entry_chunk"] is True
         assert payload["text_embedding_config"]["model_name"] == "bge-m3"
     finally:

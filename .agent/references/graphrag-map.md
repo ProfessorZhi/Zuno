@@ -44,10 +44,11 @@ GraphRAG Project assets when an id is provided.
 
 ## Blocked Legacy
 
-`tests/compat/` and remaining migration compatibility dependencies remain
-Blocked Legacy until Phase 11C active dependency removal is proved. The graph
-classes are no longer public exports from `zuno.core` or `zuno.core.graphs`;
-the direct `DomainQAGraph` and `MultiAgentSupervisorGraph` sources are retired
-from current backend source, and the Domain Pack runtime service source is
-retired too. Those retired sources and root asset/Docker surfaces must stay
-absent while remaining compat blockers are closed.
+Remaining migration compatibility dependencies in root `tests/` remain Blocked
+Legacy until Phase 11C active dependency removal is proved. The former
+`tests/compat/` holding area is retired. The graph classes are no longer public
+exports from `zuno.core` or `zuno.core.graphs`; the direct `DomainQAGraph` and
+`MultiAgentSupervisorGraph` sources are retired from current backend source,
+and the Domain Pack runtime service source is retired too. Those retired
+sources and root asset/Docker surfaces must stay absent while remaining
+compatibility blockers are closed.

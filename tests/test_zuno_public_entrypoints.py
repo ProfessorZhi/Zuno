@@ -28,7 +28,7 @@ def test_top_level_zuno_package_does_not_bridge_to_service_api() -> None:
 
 def test_compat_and_eval_entrypoints_insert_backend_root_only() -> None:
     files_to_check = [
-        "tests/compat/conftest.py",
+        "tests/conftest.py",
         "tools/evals/zuno/rag_eval/ingest_prepared_corpus.py",
         "tools/evals/zuno/rag_eval/run_eval.py",
         "tools/evals/zuno/rag_eval/run_local_embedding_eval.py",

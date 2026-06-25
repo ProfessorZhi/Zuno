@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def test_contract_eval_runner_offline():
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[1]
     script = repo_root / "tools" / "evals" / "zuno" / "contract_review_eval" / "run_contract_eval.py"
     output_dir = repo_root / ".local" / "evals" / "zuno" / "contract_review_eval" / ".tmp_test_reports"
     if output_dir.exists():
@@ -29,7 +29,7 @@ def test_contract_eval_runner_offline():
 
 
 def test_contract_eval_runner_demo_uses_real_extraction():
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[1]
     script = repo_root / "tools" / "evals" / "zuno" / "contract_review_eval" / "run_contract_eval.py"
     completed = subprocess.run(
         [sys.executable, str(script), "--profile", "demo"],
@@ -47,7 +47,7 @@ def test_contract_eval_runner_demo_uses_real_extraction():
 
 
 def test_contract_eval_runner_can_compare_profiles():
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[1]
     script = repo_root / "tools" / "evals" / "zuno" / "contract_review_eval" / "run_contract_eval.py"
     completed = subprocess.run(
         [sys.executable, str(script), "--profiles", "dev_offline,dev_local,demo"],

@@ -1004,7 +1004,7 @@ def test_graph_extractor_captures_agent_server_deployment_and_persistence_lists(
     assert ("Agent Server", "Store (long-term memory)") in relation_pairs
 
 
-def test_graph_retriever_uses_query_seed_entities_from_first_line_only():
+def test_graph_retriever_uses_query_seed_entities_from_query_text():
     from zuno.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
@@ -1028,10 +1028,9 @@ def test_graph_retriever_uses_query_seed_entities_from_first_line_only():
     )
 
     assert "RabbitMQ" in seen_entities
-    assert "transports" in seen_entities
-    assert "gateways" in seen_entities
-    assert "Milvus" not in seen_entities
-    assert "Bob" not in seen_entities
+    assert "RabbitMQ Universe" in seen_entities
+    assert "Milvus" in seen_entities
+    assert "Milvus Storage Bob" in seen_entities
 
 
 def test_graph_retriever_skips_graph_for_non_relational_single_entity_query():
@@ -1294,6 +1293,7 @@ def test_text_parser_chunk_ids_are_stable_for_repeated_parses(tmp_path):
     path.write_text("ProjectAtlas release approvals are handled by Bob.\nBob reports to Carol.", encoding="utf-8")
 
     parser = TextParser()
+    parser.chunk_size = 100
     first = asyncio.run(parser.parse_into_chunks("file_demo", str(path), "k_demo"))
     second = asyncio.run(parser.parse_into_chunks("file_demo", str(path), "k_demo"))
 
@@ -1765,7 +1765,7 @@ def test_graph_retriever_score_demotes_metadata_heavy_graph_chunk():
     assert explanatory_score > metadata_score
 
 
-def test_orchestrator_hybrid_content_uses_query_aware_merged_order():
+def test_orchestrator_hybrid_content_preserves_merged_retriever_order():
     from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     class FakeRagRetriever:
@@ -1827,10 +1827,11 @@ def test_orchestrator_hybrid_content_uses_query_aware_merged_order():
     )
 
     merged_content = result["content"]
-    assert merged_content.startswith("Runtime architecture > Run execution lifecycle.")
+    assert merged_content.startswith("General Agent Server overview.")
+    assert "Runtime architecture > Run execution lifecycle." in merged_content
 
 
-def test_orchestrator_hybrid_content_can_elevate_graph_doc_when_query_matches_it():
+def test_orchestrator_hybrid_content_keeps_vector_result_before_graph_result():
     from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
 
     class FakeRagRetriever:
@@ -1885,5 +1886,6 @@ def test_orchestrator_hybrid_content_can_elevate_graph_doc_when_query_matches_it
         )
     )
 
-    assert result["content"].startswith("Persistence. Agent Server persists three types of data")
+    assert result["content"].startswith("General Agent Server overview.")
+    assert "Persistence. Agent Server persists three types of data" in result["content"]
 

@@ -300,7 +300,7 @@ node_modules/  .codex/  .pytest_cache/  .test-tmp/  apps/web/dist/  __pycache__/
         <tr><td><code>database/dao/</code></td><td class="status-target">Needs consolidation</td><td>DAO 与业务服务耦合，接口边界不清</td><td><code>infrastructure/persistence/repositories/</code></td></tr>
         <tr><td><code>tools/</code>（包内）与根 <code>tools/</code></td><td class="status-target">Naming conflict</td><td>一个是 Agent 运行工具，一个是开发工具</td><td>包内改为 <code>capabilities/tools/</code>；根 tools 保持开发工具</td></tr>
         <tr><td><code>utils/</code></td><td class="status-target">Junk drawer risk</td><td>contextvars、hash、model output、helpers 等所有权混杂</td><td>迁回 owning module；只保留真正跨域 shared</td></tr>
-        <tr><td><code>tests/compat/</code></td><td class="status-legacy">Blocked Legacy</td><td>Root domain-packs 已归档，Docker 挂载已清理；compat 证据仍未闭环</td><td>replacement tests 后删除或归档</td></tr>
+        <tr><td><code>tests/compat/</code></td><td class="status-history">Retired</td><td>Root domain-packs 已归档，Docker 挂载已清理；compat 持有目录已退出</td><td>保持缺席；迁移兼容测试留在 root tests 直到命名收口</td></tr>
         <tr><td><code>data/</code>、<code>reports/</code></td><td class="status-local">Mixed local/generated</td><td>固定数据、公开证据、本地运行结果容易混在一起</td><td>fixtures/datasets/docs evidence/.local 分流</td></tr>
         <tr><td><code>node_modules/</code>、缓存目录</td><td class="status-generated">Generated</td><td>视觉上杂乱，但不是架构问题</td><td>保持 ignored；IDE 隐藏；按需重建</td></tr>
       </tbody>
@@ -1097,7 +1097,7 @@ examples/
         <tr class="mapping-row"><td><code>prompts/</code></td><td><code>agent/prompts.py</code>、<code>graphrag/prompts/</code>、<code>memory/prompts.py</code></td><td>按所有者拆分</td><td>Prompt 必须知道版本和使用场景</td></tr>
         <tr class="mapping-row"><td><code>utils/</code></td><td>迁入 owning module；少量留 <code>shared/</code></td><td>消除 junk drawer</td><td>例如 model_output → llm，contexts → shared/contextvars</td></tr>
         <tr class="mapping-row"><td><code>domain-packs/contract_review</code></td><td><code>examples/graphrag-projects/contract_review</code> + <code>docs/architecture/history/domain-packs/root-contract-review</code></td><td>已归档</td><td>保留有效 schema/prompt/dataset，不恢复 Domain Pack 根目录</td></tr>
-        <tr class="mapping-row"><td><code>tests/compat/</code></td><td><code>unit/integration/contract</code></td><td>替换后删除</td><td>不永久保护旧 shim</td></tr>
+        <tr class="mapping-row"><td><code>tests/compat/</code></td><td><code>tests/</code></td><td>已迁移/删除</td><td>不恢复旧 shim 持有目录；剩余迁移兼容测试在 root tests 命名收口</td></tr>
         <tr class="mapping-row"><td><code>src/backend/fastapi_jwt_auth/</code></td><td><code>src/backend/vendor/fastapi_jwt_auth/</code> 或正式依赖</td><td>审计后决定</td><td>第三方 vendored 代码必须明确边界、许可证和补丁理由</td></tr>
       </tbody>
     </table>

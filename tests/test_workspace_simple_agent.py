@@ -879,24 +879,11 @@ def test_skill_route_does_not_over_restrict_request_tools(monkeypatch):
 
 def test_prefetched_knowledge_context_is_injected_into_messages(monkeypatch):
     from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.services.graphrag.query_service import KnowledgeQueryResult
 
     monkeypatch.setattr(
         "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
-    )
-
-    async def fake_retrieve(*args, **kwargs):
-        return {
-            "content": "Zuno -> Neo4j\nMCP -> Skill",
-            "round_count": 1,
-            "first_mode": "graphrag",
-            "final_mode": "graphrag",
-            "rounds": [],
-        }
-
-    monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.RagHandler.retrieve_ranked_documents_with_metadata",
-        fake_retrieve,
     )
 
     agent = WorkSpaceSimpleAgent(
@@ -906,6 +893,32 @@ def test_prefetched_knowledge_context_is_injected_into_messages(monkeypatch):
         knowledge_ids=["kb_1"],
         retrieval_mode="graphrag",
     )
+
+    async def fake_query(**kwargs):
+        assert kwargs["user_id"] == "u_1"
+        assert kwargs["knowledge_ids"] == ["kb_1"]
+        assert kwargs["query"] == "Zuno 与 Neo4j 是什么关系？"
+        assert kwargs["query_method"] is None
+        return KnowledgeQueryResult(
+            graphrag_project_id="project_1",
+            answer="Zuno -> Neo4j\nMCP -> Skill",
+            requested_query_method="auto",
+            resolved_query_method="local",
+            fallback_reason=None,
+            documents=[],
+            evidence={},
+            citations=[],
+            retrievers_used=["vector", "graph"],
+            graph_paths=[],
+            communities=[],
+            prompt_version=None,
+            query_prompt_version=None,
+            index_version={},
+            community_version=None,
+            trace_metadata={"round_count": 1},
+        )
+
+    agent.knowledge_query_service = SimpleNamespace(query=fake_query)
 
     context = asyncio.run(agent._prefetch_knowledge_context("Zuno 与 Neo4j 是什么关系？"))
     messages = agent._inject_prefetched_knowledge_context(

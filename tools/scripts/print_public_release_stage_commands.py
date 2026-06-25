@@ -11,7 +11,7 @@ STAGE_GROUPS = [
     (
         "tests_and_release_guards",
         [
-            "git add .gitignore tests/compat/ tests/",
+            "git add .gitignore tests/",
             "git add tools/scripts/audit_public_release.py tools/scripts/print_public_release_commit_order.py tools/scripts/print_public_release_stage_commands.py tools/scripts/summarize_public_release_scope.py",
         ],
     ),

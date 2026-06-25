@@ -20,7 +20,7 @@ def test_ensure_tools_available_returns_server_tools():
 def test_ensure_tools_available_rejects_empty_server_tools():
     from zuno.api.services.mcp_server import MCPService
 
-    with pytest.raises(ValueError, match="没有获取到可用工具"):
+    with pytest.raises(ValueError, match="no tools were discovered"):
         MCPService.ensure_tools_available("qa-server", {"qa-server": []})
 
 

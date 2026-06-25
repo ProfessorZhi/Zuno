@@ -19,7 +19,7 @@ def _contract_review_query_policy() -> dict:
     _ensure_runtime_paths()
 
     GraphRAGProjectLoader = importlib.import_module("zuno.services.graphrag.project.loader").GraphRAGProjectLoader
-    projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
+    projects_root = Path(__file__).resolve().parents[1] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
     return dict(project.settings["retrieval_policy"])
 
@@ -28,7 +28,7 @@ def _contract_review_payload() -> dict:
     _ensure_runtime_paths()
 
     GraphRAGProjectLoader = importlib.import_module("zuno.services.graphrag.project.loader").GraphRAGProjectLoader
-    projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
+    projects_root = Path(__file__).resolve().parents[1] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
     assert project is not None
     return project.to_domain_pack_payload()

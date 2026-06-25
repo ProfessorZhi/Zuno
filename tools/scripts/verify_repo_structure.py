@@ -46,7 +46,6 @@ REQUIRED_PATHS = [
     "src/backend/zuno/AGENTS.md",
     "src/backend/zuno/main.py",
     "tests",
-    "tests/compat",
     "tools",
     "tools/evals/zuno",
     "tools/evals/zuno/AGENTS.md",
@@ -63,6 +62,7 @@ FORBIDDEN_CURRENT_PATHS = [
     "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
     "src/frontend",
     "domain-packs",
+    "tests/compat",
 ]
 
 DOC_REQUIRED_PHRASES: dict[str, list[str]] = {

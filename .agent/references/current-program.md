@@ -21,8 +21,9 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - Target Migration Phase 00 is ready.
 - Phase 01 continues official cleanup 11C active dependency removal.
 - Official cleanup Phase 11A and 11B are complete.
-- Official cleanup Phase 11C remains blocked by `tests/compat/` and remaining
-  migration compatibility dependencies. Root `domain-packs/` assets are
+- Official cleanup Phase 11C remains blocked by remaining migration
+  compatibility dependencies in root `tests/`. The former `tests/compat/`
+  holding area is retired. Root `domain-packs/` assets are
   archived under `docs/architecture/history/domain-packs/root-contract-review/`,
   and Docker no longer copies or mounts `/app/domain-packs`.
   Workspace knowledge prefetch/tools have been cut over to

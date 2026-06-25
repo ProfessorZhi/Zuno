@@ -8,17 +8,9 @@ def test_mcp_chat_agent_ainvoke_uses_ranked_retrieval(monkeypatch):
     async def fake_ainvoke(messages):
         return {"messages": messages}
 
-    monkeypatch.setattr(
-        MCPChatAgent,
-        "_init_Anthropic",
-        lambda self: SimpleNamespace(ainvoke=fake_ainvoke),
-    )
-
     class FakeMCPManager:
         async def process_query(self, messages):
             return list(messages)
-
-    monkeypatch.setattr(MCPChatAgent, "_init_MCP_Manager", lambda self: FakeMCPManager())
 
     async def fake_history(self, user_input, dialog_id, top_k=5):
         assert user_input == "解释一下这套 Python 课程结构"
@@ -44,6 +36,8 @@ def test_mcp_chat_agent_ainvoke_uses_ranked_retrieval(monkeypatch):
         enable_memory=False,
         knowledges_id=["kb_1"],
     )
+    agent.deep_anthropic = SimpleNamespace(ainvoke=fake_ainvoke)
+    agent.mcp_manager = FakeMCPManager()
 
     result = asyncio.run(agent.ainvoke("解释一下这套 Python 课程结构", "dialog_1"))
 
@@ -52,9 +46,6 @@ def test_mcp_chat_agent_ainvoke_uses_ranked_retrieval(monkeypatch):
 
 def test_mcp_chat_agent_memory_history_falls_back_to_direct_history(monkeypatch):
     from zuno.api.services.mcp_chat import MCPChatAgent
-
-    monkeypatch.setattr(MCPChatAgent, "_init_Anthropic", lambda self: SimpleNamespace())
-    monkeypatch.setattr(MCPChatAgent, "_init_MCP_Manager", lambda self: SimpleNamespace())
 
     async def fake_direct_history(self, dialog_id, top_k):
         assert dialog_id == "dialog_2"
@@ -77,9 +68,6 @@ def test_mcp_chat_agent_memory_history_falls_back_to_direct_history(monkeypatch)
 
 def test_mcp_chat_agent_direct_history_awaits_history_service(monkeypatch):
     from zuno.api.services.mcp_chat import MCPChatAgent
-
-    monkeypatch.setattr(MCPChatAgent, "_init_Anthropic", lambda self: SimpleNamespace())
-    monkeypatch.setattr(MCPChatAgent, "_init_MCP_Manager", lambda self: SimpleNamespace())
 
     async def fake_select_history(dialog_id, top_k):
         assert dialog_id == "dialog_3"

@@ -38,7 +38,7 @@ def test_phase6_bundle_scope_groups_cover_expected_boundaries() -> None:
         in module.PHASE6_BUNDLE_GROUPS["runtime_foundations"]
     )
     assert (
-        "tests/compat/test_contract_eval_runner.py"
+        "tests/test_contract_eval_runner.py"
         in module.PHASE6_BUNDLE_GROUPS["verification_tests"]
     )
 
@@ -72,7 +72,7 @@ def test_phase6_bundle_scope_script_mentions_grouped_cli() -> None:
 
 def test_phase6_docs_reference_grouped_bundle_scope_commands() -> None:
     plans_index = (
-        REPO_ROOT / "docs" / "architecture" / "plans" / "README.md"
+        REPO_ROOT / "docs" / "architecture" / "history" / "plans" / "README.md"
     ).read_text(encoding="utf-8")
 
     assert "stable-baseline-recovery-and-runtime-deepening-plan.md" in plans_index
@@ -83,7 +83,7 @@ def test_phase6_docs_reference_grouped_bundle_scope_commands() -> None:
 
 def test_phase6_bundle_ready_docs_and_script_stay_in_sync() -> None:
     plans_index = (
-        REPO_ROOT / "docs" / "architecture" / "plans" / "README.md"
+        REPO_ROOT / "docs" / "architecture" / "history" / "plans" / "README.md"
     ).read_text(encoding="utf-8")
     preview_script = SCRIPT_PATH.read_text(encoding="utf-8")
     verifier = (

@@ -165,6 +165,7 @@ def test_model_manager_prefers_active_slot_over_yaml(monkeypatch):
         "zuno.database.dao.llm.LLMDao.get_llm_by_slot",
         lambda _slot: SimpleNamespace(
             model="active-embedding",
+            provider="openai",
             api_key="active-key",
             base_url="https://active.example.com/v1",
         ),

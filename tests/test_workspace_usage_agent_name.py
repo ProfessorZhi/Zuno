@@ -15,10 +15,10 @@ def _task(**kwargs):
 
 
 def test_normal_workspace_usage_keeps_internal_simple_agent():
-    from zuno.api.v1.workspace import _resolve_workspace_usage_agent_name
+    from zuno.api.services.workspace import WorkspaceService
 
     result = asyncio.run(
-        _resolve_workspace_usage_agent_name(
+        WorkspaceService.resolve_workspace_usage_agent_name(
             _task(workspace_mode="normal", agent_name="Demo Agent"),
             "user_1",
             {"agent": "Demo Agent"},
@@ -29,10 +29,10 @@ def test_normal_workspace_usage_keeps_internal_simple_agent():
 
 
 def test_agent_workspace_usage_prefers_session_agent_name():
-    from zuno.api.v1.workspace import _resolve_workspace_usage_agent_name
+    from zuno.api.services.workspace import WorkspaceService
 
     result = asyncio.run(
-        _resolve_workspace_usage_agent_name(
+        WorkspaceService.resolve_workspace_usage_agent_name(
             _task(workspace_mode="agent"),
             "user_1",
             {"agent": "Agent Alpha"},
@@ -43,16 +43,19 @@ def test_agent_workspace_usage_prefers_session_agent_name():
 
 
 def test_agent_workspace_usage_can_resolve_agent_id(monkeypatch):
-    from zuno.api.v1 import workspace
+    from zuno.api.services.workspace import WorkspaceService
 
     async def fake_select_agent_by_id(agent_id):
         assert agent_id == "agent_1"
         return {"name": "Agent Beta", "user_id": "user_1"}
 
-    monkeypatch.setattr(workspace.AgentService, "select_agent_by_id", fake_select_agent_by_id)
+    monkeypatch.setattr(
+        "zuno.api.services.workspace.AgentService.select_agent_by_id",
+        fake_select_agent_by_id,
+    )
 
     result = asyncio.run(
-        workspace._resolve_workspace_usage_agent_name(
+        WorkspaceService.resolve_workspace_usage_agent_name(
             _task(workspace_mode="agent", agent_id="agent_1"),
             "user_1",
             {"agent": "agent"},
@@ -99,21 +102,21 @@ def test_workspace_simple_chat_can_enable_multi_agent_runtime(monkeypatch):
     async def fake_build_workspace_attachment_prompt(**kwargs):
         return kwargs["query"]
 
-    monkeypatch.setattr("zuno.api.v1.workspace.LLMService.get_llm_by_id", fake_get_llm_by_id)
+    monkeypatch.setattr("zuno.api.services.workspace.LLMService.get_llm_by_id", fake_get_llm_by_id)
     monkeypatch.setattr(
-        "zuno.api.v1.workspace.WorkSpaceSessionService.get_workspace_session_from_id",
+        "zuno.api.services.workspace.WorkSpaceSessionService.get_workspace_session_from_id",
         fake_get_workspace_session_from_id,
     )
-    monkeypatch.setattr("zuno.api.v1.workspace.ToolService.get_tools_from_id", fake_get_tools_from_id)
+    monkeypatch.setattr("zuno.api.services.workspace.ToolService.get_tools_from_id", fake_get_tools_from_id)
     monkeypatch.setattr(
-        "zuno.api.v1.workspace.build_workspace_attachment_prompt",
+        "zuno.api.services.workspace.build_workspace_attachment_prompt",
         fake_build_workspace_attachment_prompt,
     )
     monkeypatch.setattr(
-        "zuno.api.v1.workspace.validate_tools_for_mode",
+        "zuno.api.services.workspace.validate_tools_for_mode",
         lambda tools, execution_mode: None,
     )
-    monkeypatch.setattr("zuno.api.v1.workspace.WorkSpaceSimpleAgent", FakeSimpleAgent)
+    monkeypatch.setattr("zuno.services.workspace.simple_agent.WorkSpaceSimpleAgent", FakeSimpleAgent)
 
     response = asyncio.run(
         workspace_simple_chat(

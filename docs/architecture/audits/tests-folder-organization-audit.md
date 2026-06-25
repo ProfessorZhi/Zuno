@@ -8,6 +8,10 @@ Scope: audit only. No test files were moved in this phase.
 
 Baseline commit before this audit: `3b8bc41 Audit current model and retrieval config surface`.
 
+Status: History. This audit describes the test tree at the time it was written.
+The former `tests/compat/` holding area has since been retired; current
+migration compatibility coverage lives in root `tests/`.
+
 ## Evidence Sources
 
 Audited paths:
@@ -214,4 +218,3 @@ Migration rules:
 No test files were moved. The safest next step is Phase C: add multi-hop dataset
 downloaders, adapters, small fixtures, and adapter tests without reorganizing the
 existing test tree.
-

@@ -34,12 +34,8 @@ def test_package_license_matches_root_license() -> None:
     assert license_text.startswith("MIT License")
 
 
-def test_blocked_legacy_paths_are_present_and_classified() -> None:
-    for path in [
-        "tests/compat",
-    ]:
-        assert (REPO_ROOT / path).exists(), f"Blocked Legacy path missing: {path}"
-
+def test_retired_legacy_paths_are_absent_and_classified() -> None:
+    assert not (REPO_ROOT / "tests/compat").exists()
     assert not (REPO_ROOT / "domain-packs").exists()
     assert (
         REPO_ROOT
@@ -50,7 +46,7 @@ def test_blocked_legacy_paths_are_present_and_classified() -> None:
         REPO_ROOT / ".agent" / "references" / "repo-hygiene-map.md"
     ).read_text(encoding="utf-8")
     assert "docs/architecture/history/domain-packs/root-contract-review/" in map_content
-    assert "`tests/compat/`: Current / Blocked Legacy" in map_content
+    assert "`tests/compat/`: Retired" in map_content
     assert "must not be restored as target repository layout" in map_content
 
 

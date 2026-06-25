@@ -26,7 +26,7 @@ tests, migration docs, and final grep classification.
 ## Non-goals
 
 - deleting evidence from history/audits
-- removing `tests/compat/` before replacement tests exist
+- removing compatibility evidence before replacement tests exist
 - changing future architecture scope
 
 ## Candidate Files
@@ -36,7 +36,7 @@ tests, migration docs, and final grep classification.
   archived former root `domain-packs/` evidence
 - `src/backend/zuno/legacy/`
 - `tools/launchers/windows/_Zuno-Web-Common.cmd`
-- `tests/compat/`
+- former `tests/compat/` coverage now migrated to root `tests/`
 
 Already-retired candidates that must stay absent:
 
@@ -55,8 +55,8 @@ already retired from current backend source. The former root `domain-packs/`
 assets are archived under
 `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
 longer copies or mounts `/app/domain-packs`. Phase 11C remains blocked by
-`tests/compat/` and any remaining migration compatibility evidence that has
-not yet been promoted or retired.
+remaining migration compatibility evidence under root `tests/` that has not yet
+been promoted or retired.
 
 ## Execution Order
 

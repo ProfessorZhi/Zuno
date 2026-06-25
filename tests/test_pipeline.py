@@ -82,6 +82,10 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
         assert knowledge_id == "k_1"
         assert len(chunks) == 1
 
+    async def fake_delete_documents_by_file(file_id, knowledge_id):
+        assert file_id == "f_1"
+        assert knowledge_id == "k_1"
+
     async def fake_get_knowledge_config(knowledge_id):
         assert knowledge_id == "k_1"
         return {"index_capability": "rag"}
@@ -113,6 +117,10 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     monkeypatch.setattr(
         "zuno.services.rag.handler.RagHandler.index_milvus_documents",
         fake_index_milvus_documents,
+    )
+    monkeypatch.setattr(
+        "zuno.services.rag.handler.RagHandler.delete_documents_by_file",
+        fake_delete_documents_by_file,
     )
     monkeypatch.setattr(
         "zuno.services.rag.handler.RagHandler.index_es_documents",

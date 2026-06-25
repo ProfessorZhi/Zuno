@@ -9,7 +9,6 @@ GROUP_PATHS = {
     "tests_and_release_guards": [
         ".gitignore",
         "tests/",
-        "tests/compat/",
         "tools/scripts/audit_public_release.py",
         "tools/scripts/preview_public_release_group.py",
         "tools/scripts/preview_public_release_stage_dry_run.py",

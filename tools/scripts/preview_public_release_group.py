@@ -84,7 +84,6 @@ GROUP_RULES: list[tuple[str, tuple[str, ...]]] = [
         (
             ".gitignore",
             "tests/",
-            "tests/compat/",
             "tools/scripts/audit_public_release.py",
             "tools/scripts/preview_public_release_group.py",
             "tools/scripts/preview_public_release_stage_dry_run.py",

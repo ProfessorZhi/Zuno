@@ -41,7 +41,7 @@ Phase 01 complete or a narrower asset-only gate approved by the user.
 ## 2026-06-25 Progress
 
 Status: root asset migration complete; broader 11C closure is still blocked by
-compat tests. The target GraphRAG Project asset copy now exists at:
+migration compatibility tests. The target GraphRAG Project asset copy now exists at:
 
 - `examples/graphrag-projects/contract_review/`
 
@@ -86,7 +86,8 @@ Closure evidence:
 - Docker no longer copies or mounts `/app/domain-packs`.
 - The `src/backend/zuno/services/domain_pack/` runtime service package is
   retired from current backend source.
-- `tests/compat/` still remains for later 11C reduction.
+- The former `tests/compat/` holding area is retired; remaining migration
+  compatibility tests live under root `tests/`.
 
 ## Verification Commands
 

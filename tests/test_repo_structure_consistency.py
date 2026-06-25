@@ -26,7 +26,6 @@ def test_required_current_paths_exist() -> None:
         "examples/graphrag-projects/contract_review/settings.yaml",
         "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
         "src/backend/zuno/main.py",
-        "tests/compat",
         "tools/evals/zuno",
     ]
 
@@ -45,6 +44,7 @@ def test_retired_front_path_directories_are_not_current_paths() -> None:
         "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
         "src/frontend",
         "domain-packs",
+        "tests/compat",
     ]
 
     for relative_path in retired_paths:

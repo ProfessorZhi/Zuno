@@ -96,21 +96,7 @@ def test_legacy_graph_runtime_retirement_guards_live_in_root_phase11c_tests() ->
     for relative_path in legacy_root_tests:
         assert not (REPO_ROOT / relative_path).exists(), relative_path
 
-    retired_legacy_compat_tests = [
-        "tests/compat/test_domain_qa_graph_langgraph_runtime_deepening.py",
-        "tests/compat/test_domain_qa_graph_runtime.py",
-        "tests/compat/test_domain_qa_graph_offline.py",
-    ]
-    for relative_path in retired_legacy_compat_tests:
-        assert not (REPO_ROOT / relative_path).exists(), relative_path
-
-    retired_compat_tests = [
-        "tests/compat/test_domain_qa_graph_retirement.py",
-        "tests/compat/test_multi_agent_supervisor_graph_offline.py",
-        "tests/compat/test_multi_agent_supervisor_runtime.py",
-    ]
-    for relative_path in retired_compat_tests:
-        assert not (REPO_ROOT / relative_path).exists(), relative_path
+    assert not (REPO_ROOT / "tests/compat").exists()
 
     root_guard_tests = [
         "tests/test_phase11c_agent_runtime_retirement.py",
@@ -128,18 +114,12 @@ def test_domain_pack_retirement_guards_live_in_root_phase11c_tests() -> None:
     for relative_path in legacy_root_tests:
         assert not (REPO_ROOT / relative_path).exists(), relative_path
 
-    retired_compat_tests = [
-        "tests/compat/test_domain_pack_loader.py",
-        "tests/compat/test_domain_pack_formalization.py",
-        "tests/compat/test_domain_pack_runtime_service_retirement.py",
-    ]
-    for relative_path in retired_compat_tests:
-        assert not (REPO_ROOT / relative_path).exists(), relative_path
+    assert not (REPO_ROOT / "tests/compat").exists()
 
-    compat_tests = [
-        "tests/compat/test_contract_review_domain_pack.py",
+    root_tests = [
+        "tests/test_contract_review_domain_pack.py",
     ]
-    for relative_path in compat_tests:
+    for relative_path in root_tests:
         assert (REPO_ROOT / relative_path).exists(), relative_path
 
     assert (REPO_ROOT / "tests/test_phase11c_agent_runtime_retirement.py").exists()

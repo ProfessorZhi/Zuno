@@ -39,8 +39,9 @@ migration stages.
   for `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, legacy
   graph states, and `zuno.services.domain_pack`. Root `domain-packs/` assets are archived under
   `docs/architecture/history/domain-packs/root-contract-review/`, Docker no
-  longer copies or mounts `/app/domain-packs`, and active dependencies still
-  remain in `tests/compat/`. The direct `DomainQAGraph` source, its legacy
+  longer copies or mounts `/app/domain-packs`, and the former `tests/compat/`
+  holding area is retired. Active migration compatibility dependencies remain
+  in root `tests/`. The direct `DomainQAGraph` source, its legacy
   graph state module, and `src/backend/zuno/services/domain_pack/` runtime
   service package have also been retired from current backend source. Domain
   Pack backend endpoint/API-service wrappers and frontend API/page files are
@@ -74,7 +75,8 @@ or explicitly re-verify dependencies before implementation starts.
 These surfaces are confirmed legacy directionally, but still current or blocked
 by active dependencies:
 
-- `tests/compat/`
+- remaining `domain_pack_id` and Domain Pack-era migration compatibility tests
+  under root `tests/`
 
 Retired evidence kept for verification, not active source:
 

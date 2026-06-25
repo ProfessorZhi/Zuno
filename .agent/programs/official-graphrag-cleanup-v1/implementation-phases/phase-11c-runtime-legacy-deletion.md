@@ -15,8 +15,9 @@ no longer loads Domain Pack policy from `domain_pack_id`. Stackless local eval
 and the dedicated Contract Review eval can build from GraphRAG Project assets.
 Root `domain-packs/` assets are archived under
 `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
-longer copies or mounts `/app/domain-packs`. Active dependencies still exist
-in `tests/compat/` and remaining migration compatibility surfaces. The old
+longer copies or mounts `/app/domain-packs`. The former `tests/compat/`
+holding area is retired. Active dependencies still exist in remaining
+migration compatibility surfaces under root `tests/`. The old
 backend Domain Pack endpoint/API-service wrappers, frontend Domain Pack
 API/page files, direct `DomainQAGraph` source, legacy graph state module,
 `src/backend/zuno/services/domain_pack/` runtime service package, and direct
@@ -37,7 +38,7 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   `GeneralAgent` to expose the old `KnowledgeService` / `AgentRuntime`
   Domain Pack path; it now protects the retired `AgentRuntime` facade boundary
   and the current `GeneralAgent` project-query path.
-- `tests/compat/test_general_agent_domain_pack_runtime.py` has been reclassified
+- `tests/test_general_agent_domain_pack_runtime.py` has been reclassified
   to retired compatibility evidence for the removed `GeneralAgent` Domain Pack
   path.
 - Root Phase 11C tests now prove the direct `DomainQAGraph` module and legacy
@@ -61,7 +62,7 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   `_run_domain_pack_query`; Workspace knowledge prefetch/tools now use
   `KnowledgeQueryService`.
 - `tests/test_phase11c_workspace_project_query_cutover.py`,
-  `tests/compat/test_workspace_domain_pack_runtime.py`, and
+  `tests/test_workspace_domain_pack_runtime.py`, and
   `tests/test_phase5_workspace_real_runtime_flow.py` now protect the Workspace
   project-query runtime path.
 - `src/backend/zuno/core/runtime/agent_runtime.py` has been removed from
@@ -108,8 +109,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   backend source.
 - `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` has been
   retired from current backend source.
-- `tests/compat/` still exists with migration/current compatibility coverage
-  that must be promoted to root tests or retired before 11C can close.
+- Root `tests/` still contains migration/current compatibility coverage that
+  must be promoted to target naming or retired before 11C can close.
 
 ## Dependency
 

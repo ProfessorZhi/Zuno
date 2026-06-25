@@ -39,4 +39,8 @@ in `.agent/architecture/near-term/`.
 - `domain_pack_id`
 - `DomainQAGraph`
 - `MultiAgentSupervisorGraph`
-- `tests/compat/`
+
+## Retired Holding Areas
+
+- Former `tests/compat/`: retired. Migration compatibility coverage now lives in
+  root `tests/` until each test family receives a dedicated naming split.

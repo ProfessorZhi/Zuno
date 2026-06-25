@@ -68,7 +68,7 @@ def test_tool_connectivity_route_returns_resp_200(monkeypatch):
             }
         )
 
-    monkeypatch.setattr("zuno.api.v1.tool.ToolConnectivityService.test", fake_test)
+    monkeypatch.setattr("zuno.api.v1.tool.ToolRuntimeService.test_tool_connectivity", fake_test)
 
     response = asyncio.run(
         test_tool_connectivity(
@@ -118,9 +118,9 @@ def test_saved_tool_connectivity_route_returns_status(monkeypatch):
 
     monkeypatch.setattr("zuno.api.v1.tool.ToolService.verify_user_permission", fake_verify)
     monkeypatch.setattr("zuno.api.v1.tool.ToolService.get_tool_by_id", fake_get_tool)
-    monkeypatch.setattr("zuno.api.v1.tool.ToolConnectivityService.test_saved_tool", fake_test_saved_tool)
+    monkeypatch.setattr("zuno.api.v1.tool.ToolRuntimeService.test_saved_tool_connectivity", fake_test_saved_tool)
     monkeypatch.setattr(
-        "zuno.api.v1.tool.ToolConnectivityService.to_runtime_status",
+        "zuno.api.v1.tool.ToolRuntimeService.to_runtime_status",
         lambda result: {"code": "ready", "label": "已就绪", "detail": result.summary, "configurable": True},
     )
 
@@ -174,9 +174,9 @@ def test_system_tool_connectivity_route_returns_status(monkeypatch):
             },
         )
 
-    monkeypatch.setattr("zuno.api.v1.tool.ToolConnectivityService.test_system_tool", fake_test_system_tool)
+    monkeypatch.setattr("zuno.api.v1.tool.ToolRuntimeService.test_system_tool_connectivity", fake_test_system_tool)
     monkeypatch.setattr(
-        "zuno.api.v1.tool.ToolConnectivityService.to_runtime_status",
+        "zuno.api.v1.tool.ToolRuntimeService.to_runtime_status",
         lambda result: {"code": "needs_config", "label": "需配置", "detail": result.summary, "configurable": True},
     )
 

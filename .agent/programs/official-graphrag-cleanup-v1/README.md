@@ -68,9 +68,10 @@ contract retirement.
   `src/backend/zuno/services/domain_pack/` runtime service package is also
   retired from current backend source. Root Domain Pack assets are archived
   under `docs/architecture/history/domain-packs/root-contract-review/`, Docker
-  no longer copies or mounts `/app/domain-packs`, and `tests/compat/` still
-  blocks closure. Domain Pack backend endpoint/API-service wrappers and
-  frontend API/page files are retired from current source.
+  no longer copies or mounts `/app/domain-packs`, and the former
+  `tests/compat/` holding area is retired. Remaining migration compatibility
+  coverage lives in root `tests/`. Domain Pack backend endpoint/API-service
+  wrappers and frontend API/page files are retired from current source.
 - Phase 12 is partially complete / not closed. Do not claim final full `pytest`
   or Eval baseline comparison until fresh evidence exists.
 
