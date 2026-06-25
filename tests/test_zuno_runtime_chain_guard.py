@@ -64,6 +64,18 @@ def test_phase0_recovery_tests_use_project_query_runtime_truth() -> None:
     assert "DomainPackLoader" not in phase0_test
 
 
+def test_phase0_recovery_verifier_uses_project_query_runtime_truth() -> None:
+    phase0_verifier = (
+        REPO_ROOT / "tools" / "scripts" / "verify_phase0_runtime_recovery.py"
+    ).read_text(encoding="utf-8")
+
+    assert "KnowledgeQueryService" in phase0_verifier
+    assert "GraphRAGQueryService" in phase0_verifier
+    assert "GraphRAGProjectSnapshot" in phase0_verifier
+    assert "DomainQAGraph" not in phase0_verifier
+    assert "DomainPackLoader" not in phase0_verifier
+
+
 def test_phase5_import_tests_use_project_query_runtime_truth() -> None:
     phase5_import_test = (
         REPO_ROOT / "tests" / "test_phase5_langgraph_runtime_imports.py"

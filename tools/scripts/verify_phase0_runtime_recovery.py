@@ -44,16 +44,20 @@ def verify_backend_entry_file() -> list[str]:
 def verify_high_value_imports() -> list[str]:
     result = _run_backend_python(
         (
-            "from zuno.core.graphs.domain_qa_graph import DomainQAGraph; "
+            "from zuno.api.services.knowledge_query import KnowledgeQueryService; "
+            "from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot, GraphRAGQueryService; "
             "from zuno.services.retrieval.orchestrator import RetrievalOrchestrator; "
             "from zuno.services.graphrag.retriever import GraphRetriever; "
-            "from zuno.services.domain_pack.loader import DomainPackLoader; "
-            "print(DomainQAGraph.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__, DomainPackLoader.__name__)"
+            "print(KnowledgeQueryService.__name__, GraphRAGQueryService.__name__, "
+            "GraphRAGProjectSnapshot.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__)"
         )
     )
     if result.returncode != 0:
         return [f"high-value runtime import check failed: {result.stderr.strip()}"]
-    if "DomainQAGraph RetrievalOrchestrator GraphRetriever DomainPackLoader" not in result.stdout:
+    if (
+        "KnowledgeQueryService GraphRAGQueryService GraphRAGProjectSnapshot "
+        "RetrievalOrchestrator GraphRetriever"
+    ) not in result.stdout:
         return [f"unexpected high-value import output: {result.stdout.strip()}"]
     return []
 
