@@ -20,7 +20,9 @@ Lower layers do not depend backward on the API layer.
 
 ## Known Limitations
 
-Root Domain Pack assets, Docker/eval migration surfaces, and compatibility
-tests remain Blocked Legacy until Phase 11C proves safe deletion. The direct
+Root Domain Pack assets are archived under
+`docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+longer copies or mounts `/app/domain-packs`. Compatibility tests remain Blocked
+Legacy until Phase 11C proves replacement or deletion. The direct
 `DomainQAGraph` backend source and Domain Pack runtime service package are
 already retired from the current call chain.

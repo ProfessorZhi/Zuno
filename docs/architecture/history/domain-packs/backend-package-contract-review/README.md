@@ -8,9 +8,11 @@ This directory preserves the stale `src/backend/zuno/domain_packs/contract_revie
 asset copy removed during the 2026-06-25 Phase 01 pass. It is not Current
 runtime input and not the Target GraphRAG Project layout.
 
-The retained Blocked Legacy / migration evidence remains:
+The root Domain Pack migration evidence now lives at:
 
-- `domain-packs/contract_review/`
+- `docs/architecture/history/domain-packs/root-contract-review/`
+
+Do not restore root `domain-packs/` as current layout or target layout.
 
 The old backend-package copy differed from the root `domain-packs/` copy and
 was archived here before removal from the current package path.

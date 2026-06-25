@@ -16,10 +16,9 @@ Phase 00 complete.
 ## Scope
 
 - Continue `official-graphrag-cleanup-v1` Phase 11C.
-- Replace remaining active root Domain Pack assets, eval references, Docker
-  references, and compatibility tests with GraphRAG Project equivalents or
-  archived history. Keep already-retired route, service, frontend, and graph
-  sources absent.
+- Replace remaining active compatibility tests and migration surfaces with
+  GraphRAG Project equivalents or archived history. Keep already-retired root
+  assets, Docker mounts, route, service, frontend, and graph sources absent.
 - Keep migration-only compatibility only where a test proves it is still
   required.
 
@@ -109,7 +108,7 @@ Removed from the active current path:
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under
   `docs/architecture/history/domain-packs/backend-package-contract-review/`
-  after grep showed the current loader defaults to root `domain-packs/`.
+  after grep showed it was not the current project asset source.
 - `tests/test_phase5_domain_runtime_paths.py` no longer expects
   `GeneralAgent` to expose `KnowledgeService` or `AgentRuntime`; it now records
   the current 11B fact that `GeneralAgent` uses `KnowledgeQueryService` and a
@@ -142,11 +141,13 @@ Removed from the active current path:
   project query/eval paths work without importing it, and
   `tests/compat/test_domain_pack_runtime_service_retirement.py` keeps the
   retirement boundary.
+- Root `domain-packs/contract_review/` has been archived under
+  `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+  longer copies or mounts `/app/domain-packs`.
 
-Retained as Blocked Legacy / Phase 02 migration assets:
+Still retained as Blocked Legacy:
 
-- `domain-packs/contract_review/`
-- Domain Pack Docker mounts
+- `tests/compat/`
 
 Retired from current source:
 
@@ -160,7 +161,7 @@ Retired from current source:
 - `apps/web/src/pages/knowledge/domain-pack-create.vue`
 - `apps/web/src/pages/knowledge/domain-pack-detail.vue`
 
-Still blocked:
+No longer blocked by current eval runtime:
 
 - `tools/evals/zuno/contract_review_eval/` no longer depends on
   `DomainPackLoader` or `DomainQAGraph`.

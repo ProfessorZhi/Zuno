@@ -35,12 +35,14 @@ migration stages.
   policy from a bare `domain_pack_id`; explicit `query_policy` now carries the
   GraphRAG Project policy data. Stackless local eval and the dedicated
   Contract Review eval can build from GraphRAG Project assets without loading
-  `DomainPackLoader`. Active dependencies still remain in `domain-packs/`,
-  Docker surfaces, and `tests/compat/`. The direct `DomainQAGraph` source, its
-  legacy graph state module, and `src/backend/zuno/services/domain_pack/`
-  runtime service package have also been retired from current backend source.
-  Domain Pack backend endpoint/API-service wrappers and frontend API/page
-  files are retired from current source.
+  `DomainPackLoader`. Root `domain-packs/` assets are archived under
+  `docs/architecture/history/domain-packs/root-contract-review/`, Docker no
+  longer copies or mounts `/app/domain-packs`, and active dependencies still
+  remain in `tests/compat/`. The direct `DomainQAGraph` source, its legacy
+  graph state module, and `src/backend/zuno/services/domain_pack/` runtime
+  service package have also been retired from current backend source. Domain
+  Pack backend endpoint/API-service wrappers and frontend API/page files are
+  retired from current source.
 - Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
   and formal Eval baseline comparison are not complete.
 
@@ -55,8 +57,9 @@ migration stages.
 Contract Review asset migration has started: the Target example copy lives at
 `examples/graphrag-projects/contract_review/`, and the dedicated Contract
 Review eval now reads its GraphRAG Project compatibility payload and eval
-fixture from that copy. This does not close Phase 02 or 11C because root
-Domain Pack assets, Docker, and compat surfaces remain.
+fixture from that copy. Root Domain Pack assets are archived and Docker
+Domain Pack mounts are retired, but this does not close 11C because compat
+surfaces remain.
 
 ## Next Candidate
 
@@ -69,11 +72,13 @@ or explicitly re-verify dependencies before implementation starts.
 These surfaces are confirmed legacy directionally, but still current or blocked
 by active dependencies:
 
-- `domain-packs/`
 - `tests/compat/`
 
 Retired evidence kept for verification, not active source:
 
+- retired root `domain-packs/` archive at
+  `docs/architecture/history/domain-packs/root-contract-review/`
+- retired Docker `/app/domain-packs` copy and mounts
 - retired `src/backend/zuno/services/domain_pack/` compatibility evidence
 - retired `DomainQAGraph` compatibility evidence
 - retired `MultiAgentSupervisorGraph` compatibility evidence

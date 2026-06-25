@@ -94,21 +94,25 @@ assets.
 
 Phase 11C is blocked because these active dependencies still exist:
 
-- `domain-packs/`
-- Domain Pack asset/eval/Docker surfaces
-- retired `DomainQAGraph` compatibility evidence and remaining Domain Pack
-  compat tests
+- `tests/compat/`
+- remaining migration compatibility fields and tests that still mention Domain
+  Pack-era names
+
+Retired evidence kept for verification, not active source:
+
 - Contract Review eval has moved to a GraphRAG Project local eval flow without
   `DomainPackLoader` or `DomainQAGraph`
+- Root `domain-packs/` assets are archived under
+  `docs/architecture/history/domain-packs/root-contract-review/`. Docker no longer copies or mounts `/app/domain-packs`
 - Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
 - Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
   Pack pages are not active knowledge routes or settings-shell pages
-- retained `MultiAgentSupervisorGraph` compat retirement evidence
-- `tests/compat/`
+- retired `DomainQAGraph` compatibility evidence
+- retired `MultiAgentSupervisorGraph` compatibility evidence
 
-These surfaces are not the future front-path architecture, but they still have
-active imports, evals, assets, runtime paths, Docker references, or tests. They
-are retained until 11C active dependency removal is proved.
+These surfaces are not the future front-path architecture, but remaining compat
+tests and migration fields still require explicit replacement or retirement
+proof before 11C can close.
 
 ## Not Current
 

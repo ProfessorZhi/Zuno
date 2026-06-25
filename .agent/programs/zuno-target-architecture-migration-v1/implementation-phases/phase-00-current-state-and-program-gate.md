@@ -69,11 +69,12 @@ git diff --check
   `KnowledgeQueryResult`.
 - Phase 11B is proved for the Completion API / `GeneralAgent` path through
   `search_knowledge_base` and `KnowledgeQueryService`.
-- Phase 11C remains blocked by root Domain Pack assets, remaining eval/Docker
-  surfaces, and `tests/compat/`. The standalone `AgentRuntime` facade, direct
-  `DomainQAGraph` source, direct `MultiAgentSupervisorGraph` source, and
-  `src/backend/zuno/services/domain_pack/` runtime service package have been
-  removed after this gate was first established.
+- Phase 11C remains blocked by remaining compatibility surfaces and
+  `tests/compat/`. The standalone `AgentRuntime` facade, direct
+  `DomainQAGraph` source, direct `MultiAgentSupervisorGraph` source,
+  `src/backend/zuno/services/domain_pack/` runtime service package, root
+  Domain Pack assets, and Docker `/app/domain-packs` references have been
+  removed or archived after this gate was first established.
 - Phase 12 remains partial / not closed; full `pytest` and formal Eval
   baseline comparison were not completed in this pass.
 - Go for bounded Phase 01 work: yes, but only for surfaces whose references

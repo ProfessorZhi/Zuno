@@ -58,7 +58,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -i "${PIP_INDEX_URL}"
 
 COPY src/backend/ /app/src/backend/
-COPY domain-packs/ /app/domain-packs/
 COPY infra/docker/docker_config.example.yaml /app/zuno/config.yaml
 COPY tools/cli/ /app/cli_tools/
 COPY tools/scripts/ /app/scripts/

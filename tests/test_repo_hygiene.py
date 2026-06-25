@@ -36,17 +36,22 @@ def test_package_license_matches_root_license() -> None:
 
 def test_blocked_legacy_paths_are_present_and_classified() -> None:
     for path in [
-        "domain-packs",
         "tests/compat",
     ]:
         assert (REPO_ROOT / path).exists(), f"Blocked Legacy path missing: {path}"
 
+    assert not (REPO_ROOT / "domain-packs").exists()
+    assert (
+        REPO_ROOT
+        / "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml"
+    ).exists()
+
     map_content = (
         REPO_ROOT / ".agent" / "references" / "repo-hygiene-map.md"
     ).read_text(encoding="utf-8")
-    assert "`domain-packs/`: Blocked Legacy" in map_content
+    assert "docs/architecture/history/domain-packs/root-contract-review/" in map_content
     assert "`tests/compat/`: Current / Blocked Legacy" in map_content
-    assert "must not be treated as target repository layout" in map_content
+    assert "must not be restored as target repository layout" in map_content
 
 
 def test_multi_agent_supervisor_source_stays_retired_from_current_backend() -> None:

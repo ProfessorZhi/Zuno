@@ -20,8 +20,10 @@ Current status:
   `src/backend/zuno/services/domain_pack/` runtime service package is retired
   from current backend source.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
-- Phase 11C remains blocked by root Domain Pack assets, Docker surfaces, and
-  `tests/compat/` dependencies. Domain Pack backend endpoint/API-service
+- Phase 11C remains blocked by `tests/compat/` and remaining migration
+  compatibility dependencies. Root Domain Pack assets are archived under
+  `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+  longer copies or mounts `/app/domain-packs`. Domain Pack backend endpoint/API-service
   wrappers and frontend API/page files are retired from current source. The
   standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
   source have been removed from current backend source and exports. The direct
@@ -37,9 +39,10 @@ Current status:
   plus schema/eval assets for explicit graph query policy and stackless local
   eval. Contract Review eval now reads the GraphRAG Project compatibility
   payload and eval fixture without loading `DomainPackLoader` or executing
-  through `DomainQAGraph`; Phase 02 is not closed because root Domain Pack
-  assets, Docker, and compat tests remain. Stackless local eval now requires
-  GraphRAG Project assets when an id is provided.
+  through `DomainQAGraph`; root Domain Pack assets are archived as History and
+  Docker no longer carries Domain Pack mounts. Phase 02 is not closed until
+  compat tests and migration evidence are fully reduced. Stackless local eval
+  now requires GraphRAG Project assets when an id is provided.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

@@ -249,7 +249,6 @@ services:
         condition: service_healthy
     volumes:
       - ../../src/backend:/app/src/backend
-      - ../../domain-packs:/app/domain-packs
       - ./docker_config.local.yaml:/app/zuno/config.yaml:ro
       - backend_vector_db:/app/.local/state/vector_db
     networks:

@@ -40,7 +40,8 @@ Phase 01 complete or a narrower asset-only gate approved by the user.
 
 ## 2026-06-25 Progress
 
-Status: partial. The target GraphRAG Project asset copy now exists at:
+Status: root asset migration complete; broader 11C closure is still blocked by
+compat tests. The target GraphRAG Project asset copy now exists at:
 
 - `examples/graphrag-projects/contract_review/`
 
@@ -73,17 +74,19 @@ Additional progress:
 - Stackless local eval no longer has a generic Domain Pack loader fallback;
   when an id is provided, it must resolve to GraphRAG Project assets.
 
-Still blocked:
+Closure evidence:
 
 - `KnowledgeService.get_runtime_settings`, `GraphRetriever`, stackless local
   eval, and the dedicated Contract Review eval no longer load
   `DomainPackLoader`; the dedicated Contract Review eval also no longer
   executes through `DomainQAGraph`, and the direct `DomainQAGraph` source is
   retired.
-- `domain-packs/contract_review/` remains Blocked Legacy until remaining root
-  Domain Pack assets, Docker, and compat dependencies are cut over. The
-  `src/backend/zuno/services/domain_pack/` runtime service package is retired
-  from current backend source.
+- `domain-packs/contract_review/` is archived under
+  `docs/architecture/history/domain-packs/root-contract-review/`.
+- Docker no longer copies or mounts `/app/domain-packs`.
+- The `src/backend/zuno/services/domain_pack/` runtime service package is
+  retired from current backend source.
+- `tests/compat/` still remains for later 11C reduction.
 
 ## Verification Commands
 

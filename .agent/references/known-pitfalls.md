@@ -1,7 +1,8 @@
 # Known Pitfalls
 
-- Do not treat `domain-packs/`, `DomainQAGraph`, or `tests/compat/` as safe to
-  delete before Phase 11 import and test proof.
+- Do not restore root `domain-packs/`, `DomainQAGraph`, or retired Domain Pack
+  runtime sources after Phase 11 retirement proof. Do not delete `tests/compat/`
+  before replacement or retirement tests exist.
 - Do not restore `docs/architecture/phases/`, `docs/architecture/plans/`, or
   `docs/architecture/programs/` as current front-path directories.
 - Do not commit `data/`, `reports/`, `.local/`, `.codex/`, or `node_modules/`.

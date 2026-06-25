@@ -72,14 +72,15 @@ the business or infrastructure capability they own.
 
 ## Blocked Legacy Rule
 
-`domain-packs/`, remaining Domain Pack eval/Docker asset surfaces, and
-`tests/compat/` are Blocked Legacy until 11C proves active dependency removal.
-The Domain Pack route/API wrappers, frontend Domain Pack pages, Domain Pack
-runtime service package, direct `DomainQAGraph`, legacy graph state, and
-`MultiAgentSupervisorGraph` sources are retired from current source and must not
-be recreated as target repository layout. Blocked Legacy surfaces must not be
-deleted to satisfy a layout verifier unless the relevant active dependency
-removal proof exists.
+`tests/compat/` and remaining migration compatibility surfaces are Blocked
+Legacy until 11C proves active dependency removal. Root `domain-packs/` assets
+are archived under `docs/architecture/history/domain-packs/root-contract-review/`,
+and Docker no longer copies or mounts them. The Domain Pack route/API wrappers,
+frontend Domain Pack pages, Domain Pack runtime service package, direct
+`DomainQAGraph`, legacy graph state, and `MultiAgentSupervisorGraph` sources
+are retired from current source and must not be recreated as target repository
+layout. Blocked Legacy surfaces must not be deleted to satisfy a layout verifier
+unless the relevant active dependency removal proof exists.
 
 ## File Move Acceptance Gates
 

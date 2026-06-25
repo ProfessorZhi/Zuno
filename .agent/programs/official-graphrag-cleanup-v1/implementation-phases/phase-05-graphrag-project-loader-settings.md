@@ -32,7 +32,9 @@ unit tests.
 - new `src/backend/zuno/services/graphrag/project/`
 - `src/backend/zuno/services/graphrag/models.py`
 - `src/backend/zuno/api/services/knowledge.py`
-- `domain-packs/contract_review/` as migration evidence only
+- `examples/graphrag-projects/contract_review/` as the current project fixture
+- `docs/architecture/history/domain-packs/root-contract-review/` as archived
+  migration evidence only
 - new `tests/test_graphrag_project_loader.py`
 
 ## Execution Order
@@ -84,7 +86,11 @@ Fixture policy:
 
 - Unit tests create temporary GraphRAG Project directories with `settings.yaml`
   and `prompts/`.
-- Domain Pack assets remain migration evidence only.
+- Current Contract Review fixture coverage uses
+  `examples/graphrag-projects/contract_review/`.
+- Archived root Domain Pack assets remain migration evidence only under
+  `docs/architecture/history/domain-packs/root-contract-review/`; do not
+  restore `domain-packs/` as a current root directory.
 
 ## Verification Commands
 
@@ -126,7 +132,8 @@ claims after failed validation.
 ## Stop Conditions
 
 - Loader cannot be added without deciding storage tables.
-- Existing Domain Pack assets are the only available project fixture.
+- GraphRAG Project fixtures cannot be validated without either current project
+  assets or archived migration evidence.
 
 ## Evidence Package Required
 

@@ -52,10 +52,17 @@ def test_contract_review_example_project_loads_with_prompt_manifest() -> None:
 def test_contract_review_domain_pack_assets_are_mapped_to_project_assets() -> None:
     settings = yaml.safe_load((PROJECT_ROOT / "settings.yaml").read_text(encoding="utf-8"))
     source_pack = yaml.safe_load(
-        (REPO_ROOT / "domain-packs" / "contract_review" / "pack.yaml").read_text(encoding="utf-8")
+        (
+            REPO_ROOT
+            / "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml"
+        ).read_text(encoding="utf-8")
     )
 
     assert settings["source_domain_pack"]["id"] == source_pack["id"]
+    assert (
+        settings["source_domain_pack"]["path"]
+        == "docs/architecture/history/domain-packs/root-contract-review/contract_review"
+    )
     assert settings["schema_path"] == "schema.json"
     assert settings["retrieval_policy_path"] == "retrieval_policy.yaml"
     assert settings["eval_dataset_path"] == "eval/eval_dataset.jsonl"

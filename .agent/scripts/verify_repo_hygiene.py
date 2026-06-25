@@ -26,7 +26,6 @@ FORBIDDEN_IGNORE_LINES = [
 ]
 
 BLOCKED_LEGACY_PATHS = [
-    "domain-packs",
     "tests/compat",
 ]
 
@@ -35,6 +34,7 @@ FORBIDDEN_CURRENT_PATHS = [
     "docs/architecture/phases",
     "docs/architecture/plans",
     "docs/architecture/programs",
+    "domain-packs",
 ]
 
 RETIRED_FRONTEND_DOMAIN_PACK_FILES = [
@@ -84,8 +84,14 @@ def main() -> int:
         if not (REPO_ROOT / path).exists():
             errors.append(f"Blocked Legacy path missing without Phase 11 proof: {path}")
 
+    if not (
+        REPO_ROOT
+        / "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml"
+    ).exists():
+        errors.append("root Domain Pack archive missing after Phase 11C asset migration")
+
     repo_hygiene_map = _read(".agent/references/repo-hygiene-map.md")
-    if "must not be treated as target repository layout" not in repo_hygiene_map:
+    if "must not be restored as target repository layout" not in repo_hygiene_map:
         errors.append("repo hygiene map must keep Domain Pack out of target layout")
 
     backend_router = _read("src/backend/zuno/api/router.py")

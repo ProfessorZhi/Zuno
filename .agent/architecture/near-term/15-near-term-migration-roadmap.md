@@ -58,15 +58,15 @@ verification, commit message, and evidence package.
   public query-method trace fields, and removes old runtime route names from
   `apps/web`.
 - Target Migration Phase 00 is ready. Phase 01 should keep already-retired
-  runtime legacy surfaces absent and delete or classify remaining root assets,
-  Docker references, and compat surfaces only after dependency proof.
+  runtime legacy, root asset, and Docker surfaces absent and delete or classify
+  remaining compat surfaces only after dependency proof.
 
 ## Migration Rules
 
 - Do not treat Java, microservices, event bus, or default multi-agent behavior
   as near-term acceptance gates.
-- Do not recreate retired Domain Pack runtime. Do not delete root
-  `domain-packs/` or `tests/compat/` during docs cleanup.
+- Do not recreate retired Domain Pack runtime or root `domain-packs/`.
+  Do not delete `tests/compat/` during docs cleanup.
 - Keep old names in history, audits, retired terminology, migration notes, and
   explicit compatibility tests until the final closure gate says otherwise.
 - Make public target language GraphRAG Project, Prompt Registry, Query Method,

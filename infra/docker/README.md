@@ -105,12 +105,12 @@ docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose
 dev override 直接挂载当前运行真相，会挂载：
 
 - `src/backend` 到 `/app/src/backend`
-- `domain-packs` 到 `/app/domain-packs`
 - `apps/web` 到 `/app`
 - `tools/cli` 到 `/app/cli_tools`
 - `tools/scripts` 到 `/app/scripts`
 
-这描述的是当前 Docker 开发态事实，也和本地 Phase 0 稳定运行口径保持一致。
+这描述的是当前 Docker 开发态事实。旧 `domain-packs` 挂载已退出；
+Contract Review 示例资产来自 `examples/graphrag-projects/contract_review/`。
 
 ## 数据持久化
 

@@ -13,12 +13,14 @@ Pack entrypoints. `KnowledgeService.get_runtime_settings` now preserves
 `domain_pack_id` without auto-loading `DomainPackLoader`, and `GraphRetriever`
 no longer loads Domain Pack policy from `domain_pack_id`. Stackless local eval
 and the dedicated Contract Review eval can build from GraphRAG Project assets.
-Active dependencies still exist in `domain-packs/`, Docker surfaces, and
-`tests/compat/`. The old backend Domain Pack endpoint/API-service wrappers,
-frontend Domain Pack API/page files, direct `DomainQAGraph` source, legacy
-graph state module, `src/backend/zuno/services/domain_pack/` runtime service
-package, and direct `MultiAgentSupervisorGraph` source are retired from current
-source.
+Root `domain-packs/` assets are archived under
+`docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+longer copies or mounts `/app/domain-packs`. Active dependencies still exist
+in `tests/compat/` and remaining migration compatibility surfaces. The old
+backend Domain Pack endpoint/API-service wrappers, frontend Domain Pack
+API/page files, direct `DomainQAGraph` source, legacy graph state module,
+`src/backend/zuno/services/domain_pack/` runtime service package, and direct
+`MultiAgentSupervisorGraph` source are retired from current source.
 
 Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 
@@ -29,8 +31,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 - `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path as a stale backend package asset copy and archived under
   `docs/architecture/history/domain-packs/backend-package-contract-review/`;
-  root `domain-packs/contract_review/` remains Blocked Legacy / Phase 02
-  migration evidence.
+  root `domain-packs/contract_review/` has also been moved to
+  `docs/architecture/history/domain-packs/root-contract-review/` as History.
 - `tests/test_phase5_domain_runtime_paths.py` no longer expects
   `GeneralAgent` to expose the old `KnowledgeService` / `AgentRuntime`
   Domain Pack path; it now protects the retired `AgentRuntime` facade boundary
@@ -101,6 +103,9 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   current source.
 - `src/backend/zuno/services/domain_pack/` has been retired from current
   backend source.
+- Root `domain-packs/` has been retired from the current root layout and moved
+  to `docs/architecture/history/domain-packs/root-contract-review/`.
+- Docker no longer copies or mounts `/app/domain-packs`.
 - `src/backend/zuno/core/graphs/domain_qa_graph.py` and
   `src/backend/zuno/core/graphs/states.py` have been retired from current
   backend source.
@@ -120,7 +125,8 @@ Phase 11A and Phase 11B must pass first.
 - Remove active `MultiAgentSupervisorGraph` runtime.
 - Remove frontend Domain Pack current routes and API clients after replacement.
 - Replace or delete compatibility tests that only protect old runtime names.
-- Update Docker, launchers, docs, Agent references, and verifiers.
+- Keep Docker `/app/domain-packs` copy and mounts retired.
+- Update docs, Agent references, and verifiers after each retired surface.
 
 ## Stop Conditions
 

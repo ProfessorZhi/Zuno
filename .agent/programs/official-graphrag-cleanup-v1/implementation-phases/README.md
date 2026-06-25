@@ -57,8 +57,10 @@ Read first:
 - Phase 11A is complete; commit `24abdd9` introduced the project query runtime.
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path.
-- Phase 11C is blocked by root `domain-packs/`, remaining Docker/eval asset
-  migration, and `tests/compat/` dependencies. The direct `DomainQAGraph`,
+- Phase 11C is blocked by `tests/compat/` and remaining migration
+  compatibility dependencies. Root `domain-packs/` assets are archived under
+  `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+  longer copies or mounts `/app/domain-packs`. The direct `DomainQAGraph`,
   legacy graph state, `MultiAgentSupervisorGraph`, Domain Pack route/API,
   frontend Domain Pack pages, and Domain Pack runtime service sources are
   retired from current source.

@@ -12,11 +12,12 @@ Current truth is still the Python monorepo runtime:
 
 - `src/backend/zuno/` is the backend runtime boundary.
 - `apps/web/` and `apps/desktop/` are the application shells.
-- `domain-packs/` still exists as current or migration evidence; the old
-  `src/backend/zuno/domain_packs/` asset copy has been removed from the current
-  package path and archived under `docs/architecture/history/domain-packs/`.
-- Root Domain Pack assets, Docker references, and compatibility tests still
-  exist in active or Blocked Legacy paths. The old backend Domain Pack
+- Root `domain-packs/` assets have moved to
+  `docs/architecture/history/domain-packs/root-contract-review/`; the old
+  `src/backend/zuno/domain_packs/` asset copy has also been removed from the
+  current package path and archived under `docs/architecture/history/domain-packs/`.
+- Docker no longer copies or mounts `/app/domain-packs`. Compatibility tests
+  still exist in active or Blocked Legacy paths. The old backend Domain Pack
   endpoint/API-service wrappers, frontend API/page files, and
   `src/backend/zuno/services/domain_pack/` runtime service package have retired
   from current source. The current FastAPI router, active Vue knowledge
@@ -128,8 +129,8 @@ This roadmap does not implement:
   `KnowledgeQueryResult`).
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
-- Phase 11C is blocked by active dependencies in `domain-packs/`, Docker
-  surfaces, and `tests/compat/`.
+- Phase 11C is blocked by active dependencies in `tests/compat/` and remaining
+  migration compatibility surfaces.
   Workspace knowledge prefetch/tools have been cut over to `KnowledgeQueryService`,
   `KnowledgeService.get_runtime_settings` no longer auto-loads
   `DomainPackLoader` from `domain_pack_id`, `GraphRetriever` no longer loads
@@ -147,9 +148,9 @@ This roadmap does not implement:
 ## Dependency Rules
 
 - Phase 01 must run before code deletion.
-- Phase 03 preceded removal of Domain Pack runtime paths; those paths must now
-  stay retired while remaining root assets, Docker references, and compat tests
-  close.
+- Phase 03 preceded removal of Domain Pack runtime paths; those paths, root
+  asset surfaces, and Docker `/app/domain-packs` mounts must now stay retired
+  while remaining compat tests close.
 - Phase 04 must precede loaders, prompt registry, index versioning, router, and
   frontend contract migration.
 - Phase 08 must precede final Enhanced Mode and frontend advanced method work.

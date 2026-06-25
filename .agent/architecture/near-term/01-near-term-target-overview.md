@@ -14,7 +14,8 @@ over the current mainline.
 - `src/backend/zuno/core/graphs/domain_qa_graph.py` and the former
   `multi_agent_supervisor_graph.py` source have retired from current backend.
   The Domain Pack runtime service package has also retired; root Domain Pack
-  assets, Docker references, and compat tests remain Blocked Legacy.
+  assets are archived as History, Docker no longer mounts them, and compat
+  tests remain Blocked Legacy.
 - `src/backend/zuno/services/retrieval/`, `services/rag/`, and
   `services/graphrag/` already contain the retrieval, RAG, and GraphRAG pieces.
 - Frontend standard/enhanced product terms exist under `apps/web/src/utils/`

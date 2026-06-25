@@ -41,5 +41,6 @@ source.
 
 `test_contract_review_domain_pack.py` keeps Contract Review compatibility
 coverage through the GraphRAG Project payload shape instead of the old Domain
-Pack loader. It remains here until the root `domain-packs/` assets and Docker
-surfaces are fully retired.
+Pack loader. It remains here until the remaining compatibility coverage is
+either promoted to current tests or retired; root `domain-packs/` assets and
+Docker `/app/domain-packs` mounts are already retired.

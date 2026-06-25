@@ -34,7 +34,9 @@ for contract behavior.
 This Phase 03 non-goal is historical. The
 `src/backend/zuno/services/domain_pack/` runtime service package was retired
 during later Phase 11C dependency-removal work. Root `domain-packs/` assets
-remain Blocked Legacy until Contract Review migration and Docker cleanup close.
+were later archived under
+`docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+longer copies or mounts `/app/domain-packs`.
 
 ## Candidate Files
 

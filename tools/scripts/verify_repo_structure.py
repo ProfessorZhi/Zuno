@@ -38,8 +38,8 @@ REQUIRED_PATHS = [
     "docs/evidence/README.md",
     "docs/evidence/public-demo.md",
     "docs/reference",
-    "domain-packs",
     "examples/graphrag-projects/contract_review/settings.yaml",
+    "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
     "infra/db",
     "infra/docker",
     "src/backend/zuno",
@@ -62,6 +62,7 @@ FORBIDDEN_CURRENT_PATHS = [
     "docs/prototypes/superpowers-legacy",
     "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
     "src/frontend",
+    "domain-packs",
 ]
 
 DOC_REQUIRED_PHRASES: dict[str, list[str]] = {

@@ -32,7 +32,8 @@ tests, migration docs, and final grep classification.
 ## Candidate Files
 
 - `src/backend/zuno/domain_packs/`
-- `domain-packs/`
+- `docs/architecture/history/domain-packs/root-contract-review/` for the
+  archived former root `domain-packs/` evidence
 - `src/backend/zuno/legacy/`
 - `tools/launchers/windows/_Zuno-Web-Common.cmd`
 - `tests/compat/`
@@ -50,8 +51,12 @@ This pre-split Phase 11 checklist is historical planning context. Current
 execution is tracked by Phase 11A, 11B, and 11C. The direct `DomainQAGraph`
 source, legacy graph state module, direct `MultiAgentSupervisorGraph` source,
 and `src/backend/zuno/services/domain_pack/` runtime service package are
-already retired from current backend source. Phase 11C remains blocked by root
-`domain-packs/`, Docker references, and `tests/compat/`.
+already retired from current backend source. The former root `domain-packs/`
+assets are archived under
+`docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+longer copies or mounts `/app/domain-packs`. Phase 11C remains blocked by
+`tests/compat/` and any remaining migration compatibility evidence that has
+not yet been promoted or retired.
 
 ## Execution Order
 
@@ -102,7 +107,8 @@ git diff --check
 After validation passes:
 
 ```powershell
-git add src/backend/zuno tests tools docs .agent domain-packs
+git add -u
+git add src/backend/zuno tests tools docs .agent docs/architecture/history/domain-packs
 git commit -m "refactor: delete legacy graphrag surfaces"
 git push
 ```

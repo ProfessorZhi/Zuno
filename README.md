@@ -58,11 +58,12 @@ Phase 11C progress / Blocked Legacy:
   eval now requires GraphRAG Project assets when an id is provided. The
   `src/backend/zuno/services/domain_pack/` runtime service package is also
   retired from current backend source.
-- Remaining blockers still exist in `domain-packs/`, Domain Pack Docker
-  surfaces, retained `DomainQAGraph` /
-  `MultiAgentSupervisorGraph` compat retirement evidence,
-  and `tests/compat/`. The old Domain Pack backend endpoint/API-service
-  wrappers are retired.
+- Root `domain-packs/` assets have been archived under
+  `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+  longer copies or mounts `/app/domain-packs`. Remaining blockers still exist
+  in retained `DomainQAGraph` / `MultiAgentSupervisorGraph` compat retirement
+  evidence and `tests/compat/`. The old Domain Pack backend
+  endpoint/API-service wrappers are retired.
 - These surfaces are not the future public mainline, but they must not be
   deleted before active dependency removal is proven.
 - Phase 12 is partial / not closed: final full `pytest` and formal Eval
@@ -96,7 +97,7 @@ Maintainers and Agents should then read:
 │  ├─ development/              # maintainer runbooks
 │  ├─ evidence/                 # selected public evidence
 │  └─ reference/                # stable reference material
-├─ domain-packs/                # Blocked Legacy runtime assets
+├─ examples/graphrag-projects/  # Target GraphRAG Project examples
 ├─ infra/                       # deployment and environment infrastructure
 ├─ src/backend/zuno/            # current backend runtime truth
 ├─ tests/                       # repo-level verification

@@ -37,16 +37,17 @@ no longer auto-load it. Stackless local eval and the dedicated Contract Review
 eval can build from GraphRAG Project assets. The dedicated Contract Review eval
 is cut over from `DomainQAGraph`; the direct `DomainQAGraph` source and
 `src/backend/zuno/services/domain_pack/` runtime service package are retired.
-Root Domain Pack assets and Docker surfaces remain Blocked Legacy until the
-asset/Docker/compat cleanup is complete. Stackless local eval now requires
+Root Domain Pack assets are archived under
+`docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+longer copies or mounts `/app/domain-packs`. Stackless local eval now requires
 GraphRAG Project assets when an id is provided.
 
 ## Blocked Legacy
 
-Root Domain Pack assets, Docker surfaces, and `tests/compat/` remain Blocked
-Legacy until Phase 11C active dependency removal is proved. The graph classes
-are no longer public exports from `zuno.core` or `zuno.core.graphs`; the direct
-`DomainQAGraph` and `MultiAgentSupervisorGraph` sources are retired from
-current backend source, and the Domain Pack runtime service source is retired
-too. Those retired sources must stay absent while the remaining root asset,
-Docker, and compat blockers are closed.
+`tests/compat/` and remaining migration compatibility dependencies remain
+Blocked Legacy until Phase 11C active dependency removal is proved. The graph
+classes are no longer public exports from `zuno.core` or `zuno.core.graphs`;
+the direct `DomainQAGraph` and `MultiAgentSupervisorGraph` sources are retired
+from current backend source, and the Domain Pack runtime service source is
+retired too. Those retired sources and root asset/Docker surfaces must stay
+absent while remaining compat blockers are closed.

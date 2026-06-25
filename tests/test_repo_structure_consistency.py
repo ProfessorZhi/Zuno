@@ -23,8 +23,8 @@ def test_required_current_paths_exist() -> None:
         "docs/architecture/history/programs/README.md",
         "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
         "docs/evidence/public-demo.md",
-        "domain-packs",
         "examples/graphrag-projects/contract_review/settings.yaml",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
         "src/backend/zuno/main.py",
         "tests/compat",
         "tools/evals/zuno",
@@ -44,6 +44,7 @@ def test_retired_front_path_directories_are_not_current_paths() -> None:
         "docs/prototypes/superpowers-legacy",
         "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
         "src/frontend",
+        "domain-packs",
     ]
 
     for relative_path in retired_paths:
@@ -94,8 +95,8 @@ def test_readme_mentions_current_backend_start_and_focused_verification() -> Non
         "pytest -q tests/test_repo_structure_consistency.py",
         "pytest -q tests/test_publish_boundary.py",
         "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
-        "domain-packs/",
         "Blocked Legacy",
+        "docs/architecture/history/domain-packs/root-contract-review/",
         "Phase 11A",
         "Phase 11B",
         "Phase 11C",
