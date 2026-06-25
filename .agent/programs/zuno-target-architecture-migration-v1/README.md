@@ -18,10 +18,11 @@ complete.
   routes/pages no longer open Domain Pack entrypoints. Workspace knowledge
   prefetch/tools now use `KnowledgeQueryService`, not `AgentRuntime` or
   `_run_domain_pack_query`. The standalone `AgentRuntime` facade has been
-  removed from current backend source and exports. Domain Pack services/assets,
-  retained legacy endpoint/frontend files, `DomainQAGraph`,
-  `MultiAgentSupervisorGraph`, Docker/eval surfaces, and `tests/compat/` still
-  block closure.
+  removed from current backend source and exports. `DomainQAGraph` and
+  `MultiAgentSupervisorGraph` are no longer current core package public
+  exports. Domain Pack services/assets, retained legacy endpoint/frontend
+  files, direct graph source modules, Docker/eval surfaces, and `tests/compat/`
+  still block closure.
 - Phase 12 is partial / not closed.
 - Context Orchestrator and new Memory layering are Target, not Current.
 

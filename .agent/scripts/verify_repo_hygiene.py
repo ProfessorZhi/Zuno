@@ -130,6 +130,10 @@ def main() -> int:
     runtime_init = _read("src/backend/zuno/core/runtime/__init__.py")
     if '"AgentRuntime"' in core_init or "AgentRuntime" in runtime_init:
         errors.append("AgentRuntime facade must not be exported from current backend source")
+    graphs_init = _read("src/backend/zuno/core/graphs/__init__.py")
+    legacy_graph_exports = ["DomainQAGraph", "MultiAgentSupervisorGraph"]
+    if any(name in core_init or name in graphs_init for name in legacy_graph_exports):
+        errors.append("Legacy graph facades must not be exported from current backend packages")
 
     html_matches = [
         path

@@ -26,5 +26,6 @@ the current Workspace knowledge prefetch/tool path no longer exposes
 GraphRAG Project query runtime through `KnowledgeQueryService`.
 
 `test_agent_runtime_multi_agent.py` is retired compatibility evidence: the
-standalone `AgentRuntime` facade module no longer exists, while the direct
-`DomainQAGraph` and `MultiAgentSupervisorGraph` sources remain Blocked Legacy.
+standalone `AgentRuntime` facade module no longer exists. `DomainQAGraph` and
+`MultiAgentSupervisorGraph` are no longer public core package exports, while
+their direct source modules remain Blocked Legacy.

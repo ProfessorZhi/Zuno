@@ -83,6 +83,9 @@ Removed from the active current path:
 - The standalone `src/backend/zuno/core/runtime/agent_runtime.py` facade has
   been removed from current backend source; `zuno.core` and
   `zuno.core.runtime` no longer export `AgentRuntime`.
+- `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
+  `zuno.core` or `zuno.core.graphs`; their direct source modules remain for
+  Blocked Legacy coverage.
 - The stale tracked backend package asset copy
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under
@@ -115,5 +118,6 @@ Still blocked:
 - `tools/evals/zuno/contract_review_eval/` and stackless eval paths still
   depend on `DomainPackLoader` / `DomainQAGraph`.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
-  `DomainQAGraph`, `MultiAgentSupervisorGraph`, Domain Pack loader/eval, and
-  graph/runtime surfaces, plus replacement evidence for retired runtime names.
+  direct `DomainQAGraph`, direct `MultiAgentSupervisorGraph`, Domain Pack
+  loader/eval, and graph/runtime surfaces, plus replacement evidence for
+  retired runtime names.

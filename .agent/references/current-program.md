@@ -26,7 +26,9 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
   frontend/API, Docker, or `tests/compat/` still have active dependencies.
   Workspace knowledge prefetch/tools have been cut over to
   `KnowledgeQueryService`, and the standalone `AgentRuntime` facade has been
-  removed from current backend source and exports.
+  removed from current backend source and exports. `DomainQAGraph` and
+  `MultiAgentSupervisorGraph` are no longer current core package public
+  exports.
 - Official cleanup Phase 12 is partial / not closed.
 
 ## Detailed Sources

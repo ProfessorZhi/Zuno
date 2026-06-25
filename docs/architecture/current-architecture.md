@@ -61,6 +61,9 @@ also use `KnowledgeQueryService` now. `WorkSpaceSimpleAgent` no longer imports
 `AgentRuntime`, exposes `domain_qa_runtime`, or calls `_run_domain_pack_query`.
 The standalone `src/backend/zuno/core/runtime/agent_runtime.py` facade has also
 been removed from current backend source and exports.
+`DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
+the `zuno.core` or `zuno.core.graphs` public package surfaces. Their direct
+source modules remain Blocked Legacy.
 
 The old `AgentConfig` public shape still exists, including migration fields
 such as `domain_pack_id`; that is current compatibility surface, not target
@@ -78,8 +81,8 @@ Phase 11C is blocked because these active dependencies still exist:
   retained legacy assets, not active knowledge routes or settings-shell pages
 - `src/backend/zuno/api/services/domain_pack.py`
 - `src/backend/zuno/services/domain_pack/`
-- remaining `DomainQAGraph` source and dependencies
-- remaining `MultiAgentSupervisorGraph` source and compat surfaces
+- remaining direct `DomainQAGraph` source and dependencies
+- remaining direct `MultiAgentSupervisorGraph` source and compat surfaces
 - `tests/compat/`
 
 These surfaces are not the future front-path architecture, but they still have

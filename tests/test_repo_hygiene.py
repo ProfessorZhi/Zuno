@@ -107,6 +107,24 @@ def test_agent_runtime_facade_stays_retired() -> None:
     assert "AgentRuntime facade must not remain as current backend source" in verifier
 
 
+def test_legacy_graphs_are_not_current_public_package_exports() -> None:
+    core_init = (REPO_ROOT / "src/backend/zuno/core/__init__.py").read_text(
+        encoding="utf-8"
+    )
+    graphs_init = (
+        REPO_ROOT / "src/backend/zuno/core/graphs/__init__.py"
+    ).read_text(encoding="utf-8")
+
+    for legacy_name in ["DomainQAGraph", "MultiAgentSupervisorGraph"]:
+        assert legacy_name not in core_init
+        assert legacy_name not in graphs_init
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "Legacy graph facades must not be exported" in verifier
+
+
 def test_domain_pack_is_not_current_api_or_frontend_entrypoint() -> None:
     router = (REPO_ROOT / "src/backend/zuno/api/router.py").read_text(encoding="utf-8")
     api_v1_init = (REPO_ROOT / "src/backend/zuno/api/v1/__init__.py").read_text(encoding="utf-8")

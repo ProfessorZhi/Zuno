@@ -18,7 +18,9 @@ Current status:
   endpoint/frontend files, `DomainQAGraph`, `MultiAgentSupervisorGraph`,
   Docker/eval surfaces, and `tests/compat/` dependencies. The standalone
   `AgentRuntime` facade has been removed from current backend source and
-  exports.
+  exports. `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer
+  exported from current core package public surfaces, but their direct source
+  modules remain Blocked Legacy.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

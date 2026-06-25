@@ -32,4 +32,6 @@ also reach this runtime through `KnowledgeQueryService`; they no longer call
 
 Domain Pack surfaces, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and
 `tests/compat/` remain Blocked Legacy until Phase 11C active dependency removal
-is proved.
+is proved. The graph classes are no longer public exports from `zuno.core` or
+`zuno.core.graphs`, but their direct modules still exist for Blocked Legacy
+coverage and eval dependencies.

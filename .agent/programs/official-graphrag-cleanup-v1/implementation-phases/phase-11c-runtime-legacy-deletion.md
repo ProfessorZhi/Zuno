@@ -11,8 +11,8 @@ In progress / blocked overall. The current FastAPI router no longer mounts
 `/domain-packs`, and active Vue knowledge routes/pages no longer open Domain
 Pack entrypoints. Active dependencies still exist in `domain-packs/`, Domain
 Pack services/assets, retained legacy endpoint/frontend files, eval/Docker
-surfaces, remaining `DomainQAGraph` source and dependencies, remaining
-`MultiAgentSupervisorGraph` source/compat surfaces, and `tests/compat/`.
+surfaces, remaining direct `DomainQAGraph` source and dependencies, remaining
+direct `MultiAgentSupervisorGraph` source/compat surfaces, and `tests/compat/`.
 
 Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 
@@ -45,6 +45,9 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 - `src/backend/zuno/core/runtime/agent_runtime.py` has been removed from
   current backend source; `zuno.core` and `zuno.core.runtime` no longer export
   `AgentRuntime`.
+- `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
+  `zuno.core` or `zuno.core.graphs`; their direct source modules remain for
+  Blocked Legacy coverage.
 - `tests/test_phase11c_agent_runtime_retirement.py`,
   `tests/compat/test_agent_runtime_multi_agent.py`,
   `tests/test_phase1_langgraph_runtime_deepening.py`, and
