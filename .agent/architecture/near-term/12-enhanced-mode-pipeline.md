@@ -10,6 +10,8 @@ Define Enhanced Mode as a pipeline, not a single retriever.
 - Backend mode normalization maps enhanced style names into deeper graph routes.
 - `RetrievalOrchestrator` handles vector, BM25, graph, community, drift-like,
   requery, fusion, fallback, and trace metadata.
+- `RetrievalPlanner` now accepts `auto/basic/local/global/drift`, keeps old
+  route names internal, and exposes requested/resolved/fallback trace fields.
 
 ## Target Definition
 

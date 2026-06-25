@@ -39,5 +39,7 @@ GraphRAG Project settings loading, prompt discovery, and readiness metadata
 without changing retrieval behavior. Phase 06 has added Prompt Registry
 categories and prompt-version impact rules without automatic tuning. Phase 07
 has added index version, hash flow, full rebuild boundary, and stale-index
-trace detection without database migration. The next phase is Phase 08: Query
-Method Router.
+trace detection without database migration. Phase 08 has added the backend
+Query Method Router for `auto/basic/local/global/drift`, bounded compatibility
+mapping from old route names, and requested/resolved/fallback trace fields. The
+next phase is Phase 09: Enhanced Mode Pipeline.

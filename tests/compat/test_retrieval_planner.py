@@ -27,6 +27,9 @@ def test_auto_mode_prefers_graphrag_for_relation_question():
 
     assert plan.resolved_mode == "rag_graph_deep"
     assert plan.internal_route == "local_graphrag"
+    assert plan.requested_query_method == "auto"
+    assert plan.resolved_query_method == "local"
+    assert plan.route_trace["resolved_query_method"] == "local"
     assert plan.requested_profile == "auto"
     assert plan.resolved_profile == "graph_relation"
     assert plan.enabled_retrievers == ["vector", "bm25", "graph"]
@@ -60,6 +63,8 @@ def test_rag_mode_defaults_to_vector_plus_bm25_when_elasticsearch_is_available()
     )
 
     assert plan.resolved_mode == "rag"
+    assert plan.requested_query_method == "basic"
+    assert plan.resolved_query_method == "basic"
     assert plan.resolved_profile == "vector_rerank"
     assert plan.enabled_retrievers == ["vector", "bm25"]
 
@@ -110,6 +115,8 @@ def test_planner_drops_graph_when_graph_index_health_is_unavailable():
 
     assert plan.resolved_mode == "rag"
     assert plan.internal_route == "standard_rag"
+    assert plan.resolved_query_method == "basic"
+    assert plan.route_trace["fallback_reason"] == "graph_not_ready"
     assert "graph" not in plan.enabled_retrievers
     assert plan.index_health["graph"] == "unavailable"
     assert plan.index_version["graph"] == "graph_v2"
@@ -132,3 +139,59 @@ def test_planner_disables_retrievers_for_inactive_scope():
     assert plan.enabled_retrievers == []
     assert plan.scope_policy["status"] == "archived"
     assert plan.fallback_policy["allow_retry"] is False
+
+
+def test_public_query_methods_route_without_old_names_as_public_methods():
+    planner = RetrievalPlanner(enable_keyword_recall=True)
+
+    local = planner.build_plan(
+        RetrievalRequest(query="contract relation", knowledge_ids=["kb_1"], mode="rag_graph", query_method="local"),
+        _processed("contract relation", relation=True),
+        knowledge_capability="rag_graph",
+    )
+    global_plan = planner.build_plan(
+        RetrievalRequest(query="overall risk", knowledge_ids=["kb_1"], mode="rag_graph", query_method="global"),
+        ProcessedQuery(
+            original_query="overall risk",
+            normalized_query="overall risk",
+            rewritten_queries=["overall risk"],
+            query_features={"global_question": True, "evidence_required": False},
+        ),
+        knowledge_capability="rag_graph",
+        rerank_available=True,
+    )
+    drift = planner.build_plan(
+        RetrievalRequest(query="summary with evidence", knowledge_ids=["kb_1"], mode="rag_graph", query_method="drift"),
+        ProcessedQuery(
+            original_query="summary with evidence",
+            normalized_query="summary with evidence",
+            rewritten_queries=["summary with evidence"],
+            query_features={"global_question": True, "evidence_required": True},
+        ),
+        knowledge_capability="rag_graph",
+        rerank_available=True,
+    )
+
+    assert local.requested_query_method == "local"
+    assert local.resolved_query_method == "local"
+    assert local.internal_route == "local_graphrag"
+    assert global_plan.requested_query_method == "global"
+    assert global_plan.resolved_query_method == "local"
+    assert global_plan.route_trace["fallback_reason"] == "community_not_ready"
+    assert drift.requested_query_method == "drift"
+    assert drift.resolved_query_method == "local"
+    assert drift.route_trace["fallback_reason"] == "community_not_ready"
+
+
+def test_legacy_route_names_map_to_public_query_methods():
+    planner = RetrievalPlanner(enable_keyword_recall=False)
+
+    plan = planner.build_plan(
+        RetrievalRequest(query="legacy local", knowledge_ids=["kb_1"], mode="local_graphrag"),
+        _processed("legacy local", relation=True),
+        knowledge_capability="rag_graph",
+    )
+
+    assert plan.requested_query_method == "local"
+    assert plan.resolved_query_method == "local"
+    assert plan.internal_route == "local_graphrag"

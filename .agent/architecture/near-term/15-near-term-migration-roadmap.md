@@ -46,7 +46,10 @@ verification, commit message, and evidence package.
   without implementing automatic tuning.
 - Phase 07 defines index version, hash flow, full rebuild boundary, and
   stale-index trace detection without database migration.
-- Phase 08 is next and should implement the public Query Method Router.
+- Phase 08 implements the backend public Query Method Router for
+  `auto/basic/local/global/drift`, keeps old route names as internal or
+  compatibility-only, and exposes requested/resolved/fallback trace fields.
+- Phase 09 is next and should prove Enhanced Mode as a complete pipeline.
 
 ## Migration Rules
 

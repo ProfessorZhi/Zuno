@@ -18,6 +18,9 @@ Define the near-term official-compatible GraphRAG target.
   prompts and records rebuild-impact rules for prompt version changes.
 - `services/graphrag/versioning.py` records active index/community/hash/status
   metadata and stale-index reasons for trace surfaces.
+- `services/retrieval/planner.py` accepts public query methods
+  `auto/basic/local/global/drift`, maps old names as compatibility input, and
+  records requested/resolved method plus fallback reason.
 - Current storage and query filters still use `domain_pack_id`.
 
 ## Target Project Layout
@@ -77,5 +80,5 @@ Do this at the contract level first. Then migrate storage and frontend fields.
 ## Acceptance Direction
 
 Later implementation should prove project loading, settings validation,
-prompt/index version propagation, community report readiness, and query method
-trace metadata.
+prompt/index version propagation, community report readiness, frontend/API
+migration to public query methods, and complete Enhanced Mode trace metadata.

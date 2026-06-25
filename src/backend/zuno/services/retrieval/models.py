@@ -9,6 +9,7 @@ class RetrievalRequest:
     query: str
     knowledge_ids: list[str]
     mode: str = "auto"
+    query_method: str = "auto"
     requested_profile: str = "auto"
     top_k: int | None = None
     score_threshold: float | None = None
@@ -56,6 +57,8 @@ class RetrievalPlan:
     index_version: dict[str, Any]
     index_health: dict[str, Any]
     graphrag_project: dict[str, Any] = field(default_factory=dict)
+    requested_query_method: str = "auto"
+    resolved_query_method: str = "basic"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -76,6 +79,8 @@ class RetrievalPlan:
             "index_version": self.index_version,
             "index_health": self.index_health,
             "graphrag_project": self.graphrag_project,
+            "requested_query_method": self.requested_query_method,
+            "resolved_query_method": self.resolved_query_method,
         }
 
 

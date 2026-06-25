@@ -41,12 +41,49 @@ compatibility reads, and tests.
 
 ## Execution Order
 
-1. Add tests for public `auto/basic/local/global/drift`.
-2. Map old names only through compatibility reads.
-3. Make trace show requested method, resolved method, fallback reason, and
+1. Added tests for public `auto/basic/local/global/drift`.
+2. Mapped old names through compatibility reads while preserving runtime
+   internal routes.
+3. Made trace show requested method, resolved method, fallback reason, and
    retrievers used.
-4. Preserve Basic baseline behavior.
-5. Update docs and grep classification.
+4. Preserved Basic baseline behavior.
+5. Updated docs and grep classification.
+
+## Implemented Mapping
+
+| Public input | Resolved query method | Runtime internal route |
+| --- | --- | --- |
+| `basic` | `basic` | `standard_rag` |
+| `local` | `local` | `local_graphrag` |
+| `global` | `global` | `community_global` |
+| `drift` | `drift` | `drift_like` |
+| `auto` | capability/query dependent | `standard_rag`, `local_graphrag`, `community_global`, or `drift_like` |
+
+Compatibility names are accepted at the router boundary only:
+
+| Compatibility input | Public equivalent |
+| --- | --- |
+| `rag`, `standard_retrieval` | `basic` |
+| `rag_graph_deep`, `enhanced_retrieval` | `auto` |
+| `local_graphrag` | `local` |
+| `community_global` | `global` |
+| `drift_like` | `drift` |
+
+The router still passes old internal route names to the existing orchestrator
+implementation. Removing those runtime names belongs to Phase 11 after
+frontend/API migration and dependency proof.
+
+## Trace Fields
+
+`RetrievalPlan` and orchestrator metadata now carry:
+
+- `requested_query_method`
+- `resolved_query_method`
+- `query_method_fallback_reason`
+
+`route_trace` also records `requested_query_method`, `resolved_query_method`,
+and `fallback_reason`. Fallback is explicit for graph-not-ready and
+community-not-ready cases.
 
 ## Acceptance Criteria
 
@@ -55,6 +92,21 @@ compatibility reads, and tests.
 - `local_graphrag`, `community_global`, and `drift_like` do not leak as public
   names.
 - Fallback from unavailable graph/community assets is traceable.
+
+Status: satisfied at the backend router and trace boundary. Frontend API/UI
+migration is intentionally deferred to Phase 10.
+
+## Grep Classification
+
+Old route names remain in these allowed categories after Phase 08:
+
+- runtime internal route dispatch in `RetrievalPlanner` and
+  `RetrievalOrchestrator`
+- bounded compatibility schemas and compatibility tests
+- frontend migration targets owned by Phase 10
+- history, retired terminology, specs, and phase evidence docs
+
+They are not accepted as the target public query method vocabulary.
 
 ## Verification Commands
 

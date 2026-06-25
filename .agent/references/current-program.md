@@ -71,7 +71,10 @@ event-driven workers, or default multi-agent mode into near-term acceptance.
   without implementing automatic tuning.
 - Phase 07 adds index version, hash flow, full rebuild boundary, and stale-index
   trace detection without database migration.
-- Phase 08 is next: Query Method Router.
+- Phase 08 adds the backend Query Method Router for
+  `auto/basic/local/global/drift`, compatibility maps old route names, and
+  exposes requested/resolved method plus fallback reason in trace metadata.
+- Phase 09 is next: Enhanced Mode Pipeline.
 
 ## Current Rule
 

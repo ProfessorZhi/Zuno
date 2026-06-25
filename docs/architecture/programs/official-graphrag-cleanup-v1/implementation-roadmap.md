@@ -100,7 +100,11 @@ This roadmap does not implement:
   without implementing automatic tuning.
 - Phase 07 adds index version, hash flow, full rebuild boundary, and stale-index
   trace detection without database migration.
-- The next executable phase is Phase 08: Query Method Router.
+- Phase 08 adds the backend Query Method Router for
+  `auto/basic/local/global/drift`, keeps old names as bounded compatibility or
+  internal routes, and records requested/resolved method plus fallback reason in
+  trace metadata.
+- The next executable phase is Phase 09: Enhanced Mode Pipeline.
 
 ## Dependency Rules
 

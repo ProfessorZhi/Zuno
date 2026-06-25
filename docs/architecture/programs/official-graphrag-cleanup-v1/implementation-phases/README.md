@@ -42,7 +42,10 @@ Read first:
   without implementing automatic tuning.
 - Phase 07 adds index version, hash flow, full rebuild boundary, and stale-index
   trace detection without database migration.
-- Phase 08 is next and owns Query Method Router.
+- Phase 08 adds the public backend Query Method Router for
+  `auto/basic/local/global/drift`, with compatibility mapping to current
+  internal runtime routes and explicit fallback trace.
+- Phase 09 is next and owns the Enhanced Mode Pipeline.
 
 ## Rule
 

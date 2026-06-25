@@ -25,6 +25,26 @@ class RetrievalPlanner:
             return "graph_relation" if knowledge_capability == "rag_graph" else "graph_expanded"
         return "vector_rerank"
 
+    @staticmethod
+    def _normalize_query_method(method: str | None, requested_mode: str) -> str:
+        normalized = str(method or "").strip().lower()
+        if requested_mode == "rag" and normalized in {"", "auto"}:
+            return "basic"
+        legacy_map = {
+            "rag": "basic",
+            "standard_retrieval": "basic",
+            "rag_graph_deep": "auto",
+            "enhanced_retrieval": "auto",
+            "local_graphrag": "local",
+            "community_global": "global",
+            "drift_like": "drift",
+        }
+        if normalized in {"", "auto"} and requested_mode in legacy_map:
+            return legacy_map[requested_mode]
+        if normalized in {"auto", "basic", "local", "global", "drift"}:
+            return normalized
+        return legacy_map.get(requested_mode, "auto")
+
     def build_plan(
         self,
         request: RetrievalRequest,
@@ -34,6 +54,7 @@ class RetrievalPlanner:
         rerank_available: bool = True,
     ) -> RetrievalPlan:
         requested_mode = normalize_retrieval_mode(request.mode)
+        requested_query_method = self._normalize_query_method(request.query_method, requested_mode)
         relation_question = bool(processed_query.query_features.get("relation_question"))
         global_question = bool(processed_query.query_features.get("global_question"))
         evidence_required = bool(processed_query.query_features.get("evidence_required"))
@@ -56,6 +77,20 @@ class RetrievalPlanner:
             resolved_mode = requested_mode
         if scope_status != "active":
             resolved_mode = "rag"
+        resolved_query_method = requested_query_method
+        if resolved_query_method == "auto":
+            if knowledge_capability != "rag_graph":
+                resolved_query_method = "basic"
+            elif global_question and evidence_required:
+                resolved_query_method = "drift"
+            elif global_question:
+                resolved_query_method = "global"
+            elif relation_question:
+                resolved_query_method = "local"
+            else:
+                resolved_query_method = "basic"
+        if scope_status != "active":
+            resolved_query_method = "basic"
         requested_profile = str(request.requested_profile or "auto").strip() or "auto"
 
         internal_route = "standard_rag"
@@ -65,16 +100,20 @@ class RetrievalPlanner:
             "graph_required": False,
             "community_required": False,
             "local_graph_required": False,
+            "requested_query_method": requested_query_method,
+            "resolved_query_method": resolved_query_method,
+            "fallback_reason": None,
         }
-        if resolved_mode == "rag_graph_deep":
-            if global_question and evidence_required:
-                internal_route = "drift_like"
-            elif global_question:
-                internal_route = "community_global"
-            elif relation_question:
-                internal_route = "local_graphrag"
-            else:
-                internal_route = "standard_rag"
+        if resolved_query_method == "drift":
+            internal_route = "drift_like"
+        elif resolved_query_method == "global":
+            internal_route = "community_global"
+        elif resolved_query_method == "local":
+            internal_route = "local_graphrag"
+        elif resolved_query_method == "basic":
+            internal_route = "standard_rag"
+        elif resolved_mode == "rag_graph_deep":
+            internal_route = "standard_rag"
         elif resolved_mode == "local_graphrag":
             internal_route = "local_graphrag"
         elif resolved_mode == "community_global":
@@ -89,12 +128,17 @@ class RetrievalPlanner:
 
         if internal_route in {"community_global", "drift_like"} and not community_ready:
             route_trace["degraded_from"] = internal_route
+            route_trace["fallback_reason"] = "community_not_ready"
             internal_route = "local_graphrag"
+            resolved_query_method = "local"
 
         if internal_route == "local_graphrag" and not graph_available:
             route_trace["degraded_from"] = route_trace["degraded_from"] or "local_graphrag"
+            route_trace["fallback_reason"] = route_trace["fallback_reason"] or "graph_not_ready"
             internal_route = "standard_rag"
             resolved_mode = "rag"
+            resolved_query_method = "basic"
+        route_trace["resolved_query_method"] = resolved_query_method
 
         enabled_retrievers = [] if scope_status != "active" else ["vector"]
         if enabled_retrievers and self.enable_keyword_recall and (
@@ -175,4 +219,6 @@ class RetrievalPlanner:
             scope_policy=scope_policy,
             index_version=index_version,
             index_health=index_health,
+            requested_query_method=requested_query_method,
+            resolved_query_method=resolved_query_method,
         )
