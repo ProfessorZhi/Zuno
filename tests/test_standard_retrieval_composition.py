@@ -26,6 +26,11 @@ class _FakeProcessor:
         )
 
 
+class _FakeExpander:
+    async def expand(self, query: str):
+        return [query]
+
+
 def _vector_payload():
     return {
         "content": "vector evidence",
@@ -73,6 +78,7 @@ def test_standard_retrieval_uses_vector_bm25_fusion_and_rerank_when_available():
         rag_retriever=_FakeRetriever(_vector_payload()),
         keyword_retriever=_FakeRetriever(_bm25_payload()),
         graph_retriever=_FakeRetriever({"content": "", "raw_content": "", "documents": [], "entities": [], "paths": []}),
+        query_expander=_FakeExpander(),
         planner=RetrievalPlanner(enable_keyword_recall=True),
         query_processor=_FakeProcessor(),
     )
@@ -110,6 +116,7 @@ def test_standard_retrieval_falls_back_to_vector_when_bm25_is_unavailable():
         rag_retriever=_FakeRetriever(_vector_payload()),
         keyword_retriever=_FakeRetriever(_bm25_payload()),
         graph_retriever=_FakeRetriever({"content": "", "raw_content": "", "documents": [], "entities": [], "paths": []}),
+        query_expander=_FakeExpander(),
         planner=RetrievalPlanner(enable_keyword_recall=False),
         query_processor=_FakeProcessor(),
     )

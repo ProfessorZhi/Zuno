@@ -38,7 +38,9 @@ Phase 07 -> index/update/full rebuild versioning
 Phase 08 -> query method router and trace contract
 Phase 09 -> Enhanced Mode pipeline and evidence trace
 Phase 10 -> frontend API and UI contract migration
-Phase 11 -> old runtime surface deletion after dependency proof
+Phase 11A -> project-first replacement query runtime
+Phase 11B -> single GeneralAgent cutover
+Phase 11C -> old runtime surface deletion after dependency proof
 Phase 12 -> final tests, evals, trace, docs, grep closure
 ```
 

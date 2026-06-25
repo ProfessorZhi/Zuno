@@ -79,8 +79,10 @@ This roadmap does not implement:
 | 08 | Query Method Router | 04, 07 | public query methods and fallback trace |
 | 09 | Enhanced Mode Pipeline | 08 | full Enhanced pipeline and trace evidence |
 | 10 | Frontend API Contract Migration | 03, 08-09 | frontend uses target public fields |
-| 11 | Runtime Legacy Deletion | 03-10 | old surfaces removed or migration-only |
-| 12 | Tests / Eval / Trace Closure | 01-11 | final proof package and legacy grep gate |
+| 11A | GraphRAG Project Runtime Replacement | 03-10 | project-first query runtime that does not depend on Domain Pack |
+| 11B | Single GeneralAgent Cutover | 11A | knowledge queries run through the single Agent loop as tools |
+| 11C | Runtime Legacy Deletion | 11A-11B | old surfaces removed or migration-only |
+| 12 | Tests / Eval / Trace Closure | 01-11C | final proof package and legacy grep gate |
 
 ## Implementation Status
 
@@ -110,7 +112,8 @@ This roadmap does not implement:
 - Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
   public query-method trace fields, removes old route names from `apps/web`,
   and keeps Domain Pack runtime deletion for Phase 11.
-- The next executable phase is Phase 11: Runtime Legacy Deletion.
+- The next executable phase is Phase 11A: GraphRAG Project Runtime
+  Replacement.
 
 ## Dependency Rules
 
@@ -119,8 +122,12 @@ This roadmap does not implement:
 - Phase 04 must precede loaders, prompt registry, index versioning, router, and
   frontend contract migration.
 - Phase 08 must precede final Enhanced Mode and frontend advanced method work.
-- Phase 11 can run only after contracts, frontend, router, and tests prove no
-  active dependency on old names.
+- Phase 11A may run while legacy imports still exist because it creates the
+  replacement runtime path.
+- Phase 11B cuts conversation flow to the single `GeneralAgent` path after 11A
+  proves the replacement query service.
+- Phase 11C can delete old runtime surfaces only after 11A and 11B remove
+  active dependencies on old names.
 - Phase 12 closes the program after all implementation phases pass.
 
 ## Global Acceptance Gates

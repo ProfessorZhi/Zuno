@@ -23,8 +23,10 @@ Read first:
 8. [Phase 08: Query Method Router](phase-08-query-method-router.md)
 9. [Phase 09: Enhanced Mode Pipeline](phase-09-enhanced-mode-pipeline.md)
 10. [Phase 10: Frontend API Contract Migration](phase-10-frontend-api-contract-migration.md)
-11. [Phase 11: Runtime Legacy Deletion](phase-11-runtime-legacy-deletion.md)
-12. [Phase 12: Tests / Eval / Trace Closure](phase-12-tests-eval-trace-closure.md)
+11. [Phase 11A: GraphRAG Project Runtime Replacement](phase-11a-graphrag-project-runtime-replacement.md)
+12. [Phase 11B: Single GeneralAgent Cutover](phase-11b-single-generalagent-cutover.md)
+13. [Phase 11C: Runtime Legacy Deletion](phase-11c-runtime-legacy-deletion.md)
+14. [Phase 12: Tests / Eval / Trace Closure](phase-12-tests-eval-trace-closure.md)
 
 ## Current Status
 
@@ -51,7 +53,9 @@ Read first:
 - Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
   public query-method trace fields, and removes old runtime route names from
   `apps/web`.
-- Phase 11 is next and owns Runtime Legacy Deletion.
+- Phase 11A is next and owns GraphRAG Project Runtime Replacement.
+- Phase 11B owns Single GeneralAgent Cutover.
+- Phase 11C owns Runtime Legacy Deletion.
 
 ## Rule
 
