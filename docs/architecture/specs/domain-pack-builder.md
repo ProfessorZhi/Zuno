@@ -1,5 +1,11 @@
 # Domain Pack Builder
 
+> Status: superseded migration context. Domain Pack Builder remains useful
+> evidence for existing assets and workflows, but it is not the future front-path
+> resource model. New implementation work should express the target as GraphRAG
+> Project settings, prompts, project readiness, and versioned index/update
+> behavior.
+
 ## Purpose
 
 This spec defines the Domain Pack Builder as an independent product and backend resource.

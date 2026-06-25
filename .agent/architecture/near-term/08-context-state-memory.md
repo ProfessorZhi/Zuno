@@ -6,8 +6,10 @@ Separate context, durable state, and transient graph state.
 
 ## Current Evidence
 
-- `DomainQAGraph` carries runtime settings, domain pack, retrieval plan,
-  evidence bundle, trace metadata, cost metadata, and failure metadata.
+- `DomainQAGraph` carries runtime settings, legacy domain pack context,
+  retrieval plan, evidence bundle, trace metadata, cost metadata, and failure
+  metadata. This is current implementation evidence to migrate from, not the
+  target contract name.
 - `KnowledgeService.get_runtime_settings()` returns knowledge config, model
   configs, and current Domain Pack state.
 - `src/backend/zuno/services/memory/` exists for memory-related behavior.

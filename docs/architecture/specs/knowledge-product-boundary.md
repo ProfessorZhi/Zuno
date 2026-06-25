@@ -1,5 +1,10 @@
 # Knowledge Product Boundary
 
+> Status: migration context. The current implementation program retires Domain
+> Pack and old internal mode names from the public front path. Use this file to
+> understand the previous knowledge-product split, not as the target GraphRAG
+> Project contract.
+
 ## Purpose
 
 This spec defines the product boundary for the next knowledge-system round.

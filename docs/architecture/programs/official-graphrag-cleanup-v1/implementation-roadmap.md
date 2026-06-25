@@ -82,6 +82,15 @@ This roadmap does not implement:
 | 11 | Runtime Legacy Deletion | 03-10 | old surfaces removed or migration-only |
 | 12 | Tests / Eval / Trace Closure | 01-11 | final proof package and legacy grep gate |
 
+## Implementation Status
+
+- Phase 01 is complete as read-only legacy surface evidence.
+- Phase 02 cleans current docs, specs, and Agent references so the active front
+  path points to GraphRAG Project, Query Method, and Enhanced Mode instead of
+  Domain Pack-era target language.
+- The next executable phase after this docs cleanup is Phase 03: Domain Pack
+  Contract Retirement.
+
 ## Dependency Rules
 
 - Phase 01 must run before code deletion.

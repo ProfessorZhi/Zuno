@@ -6,10 +6,11 @@ Define the near-term target for AI orchestration.
 
 ## Current Evidence
 
-- `src/backend/zuno/core/graphs/domain_qa_graph.py` uses `StateGraph` and
-  already has nodes for config loading, domain pack resolution, query rewrite,
-  retrieval planning, evidence retrieval, fusion, verification, retry/fallback,
-  answer generation, citation check, and finalize.
+- `src/backend/zuno/core/graphs/domain_qa_graph.py` is current implementation
+  evidence to migrate from. It uses `StateGraph` and already has nodes for
+  config loading, legacy domain pack resolution, query rewrite, retrieval
+  planning, evidence retrieval, fusion, verification, retry/fallback, answer
+  generation, citation check, and finalize.
 - `src/backend/zuno/core/graphs/states.py` defines graph state.
 - `MultiAgentSupervisorGraph` exists, but multi-agent defaulting is future
   direction, not near-term mainline.

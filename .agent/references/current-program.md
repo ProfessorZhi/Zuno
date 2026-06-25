@@ -55,6 +55,14 @@ tests/eval/trace closure.
 Do not use the implementation phases to pull Java, microservices,
 event-driven workers, or default multi-agent mode into near-term acceptance.
 
+## Current Implementation Status
+
+- Phase 01 legacy surface audit is complete as read-only evidence.
+- Phase 02 cleans docs, specs, and Agent references so current entrypoints point
+  toward GraphRAG Project, Query Method, and Enhanced Mode rather than Domain
+  Pack-era target language.
+- Phase 03 is the next runtime-facing phase: Domain Pack Contract Retirement.
+
 ## Current Rule
 
 Do not rewrite completed Phase 0-6 files as incomplete.

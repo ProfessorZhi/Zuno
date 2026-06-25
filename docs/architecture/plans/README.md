@@ -1,12 +1,14 @@
 # Architecture Plans
 
-This directory keeps plan documents that support the current architecture program.
+This directory keeps supporting or historical plan documents. It is not the
+current implementation entrypoint.
 
 If you want the active execution order, start from:
 
-- [Architecture Upgrade Phases](../phases/README.md)
+- [Official GraphRAG Cleanup V1 Implementation Roadmap](../programs/official-graphrag-cleanup-v1/implementation-roadmap.md)
+- [Official GraphRAG Cleanup V1 Implementation Phases](../programs/official-graphrag-cleanup-v1/implementation-phases/README.md)
 
-If you want the current recovery-and-deepening plan, start from:
+If you want historical recovery-and-deepening context, read:
 
 - [Stable Baseline Recovery And Runtime Deepening Plan](stable-baseline-recovery-and-runtime-deepening-plan.md)
 
@@ -18,6 +20,6 @@ If you want the current recovery-and-deepening plan, start from:
 
 Rule of thumb:
 
-- `phases/` defines current execution order
+- `programs/official-graphrag-cleanup-v1/implementation-phases/` defines current execution order
 - `plans/` holds supporting or topic-specific plans
 - `history/` holds retired execution materials

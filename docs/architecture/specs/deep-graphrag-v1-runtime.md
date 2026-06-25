@@ -1,5 +1,12 @@
 # Deep GraphRAG V1 Runtime
 
+> Status: superseded naming context. This file records old enhanced retrieval
+> runtime names such as `rag_graph_deep`, `local_graphrag`,
+> `community_global`, and `drift_like`. The current public target is
+> `query_method=auto/basic/local/global/drift` plus Enhanced Mode trace
+> semantics. Keep these names only for migration, compatibility, or historical
+> explanation.
+
 ## Purpose
 
 This spec defines the runtime contract for `增强检索` in the new knowledge product round.

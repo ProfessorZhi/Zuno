@@ -32,14 +32,22 @@ It is split into:
 The current program should not treat Java, microservices, event-driven workers,
 or default multi-agent mode as near-term implementation work.
 
-## Phase Order
+## Execution Order
 
-The original program phases below describe the high-level cleanup sequence.
 The executable implementation breakdown for moving code toward the near-term
-target architecture lives in:
+target architecture is the current execution source:
 
 - [Implementation Roadmap](implementation-roadmap.md)
 - [Implementation Phases](implementation-phases/README.md)
+
+Use those files for target-mode implementation. They start with Phase 01 legacy
+surface audit, then Phase 02 docs/spec cleanup, then Phase 03 Domain Pack
+contract retirement.
+
+## Original Program Outline
+
+The original program phases below are a high-level outline only. They are kept
+as program context and must not override the executable implementation phases.
 
 1. [Phase 00: Docs And Agent Workflow](phase-00-docs-and-agent-workflow.md)
 2. [Phase 01: Legacy Cleanup](phase-01-legacy-cleanup.md)

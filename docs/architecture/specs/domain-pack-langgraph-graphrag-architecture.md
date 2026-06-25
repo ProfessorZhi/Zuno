@@ -1,5 +1,11 @@
 # Domain Pack + LangGraph + GraphRAG Architecture
 
+> Status: superseded migration context. This Domain Pack-era spec preserves
+> historical design evidence, but the current near-term implementation mainline
+> is GraphRAG Project, Prompt Registry, Query Method, and Enhanced Mode. Do not
+> use `domain_pack_id` or Domain Pack binding from this file as the target public
+> contract.
+
 ## 目标
 
 这份文档描述 Zuno 这一轮核心架构目标：

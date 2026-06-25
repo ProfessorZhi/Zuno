@@ -26,6 +26,13 @@ Read first:
 11. [Phase 11: Runtime Legacy Deletion](phase-11-runtime-legacy-deletion.md)
 12. [Phase 12: Tests / Eval / Trace Closure](phase-12-tests-eval-trace-closure.md)
 
+## Current Status
+
+- Phase 01 is complete as read-only evidence.
+- Phase 02 is the docs/spec/current-truth cleanup step that removes misleading
+  Domain Pack-era target language from current entrypoints.
+- Phase 03 is next and owns public contract retirement.
+
 ## Rule
 
 Do not skip phase evidence. If a later phase seems easier, first prove the
