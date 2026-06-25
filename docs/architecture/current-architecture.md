@@ -86,13 +86,20 @@ Project configuration on `graphrag_project_id`.
 `domain_pack_id`. Contract Review graph policy now resolves through explicit
 `query_policy` data, including the GraphRAG Project `retrieval_policy.yaml`
 copy under `examples/graphrag-projects/contract_review/`.
+`GraphRetrieverAdapter` maps `scope_policy.graphrag_project_id` to the current
+legacy Neo4j storage filter field, `domain_pack_id`, so GraphRAG Project scope
+can query the existing graph store without a database schema or property-name
+migration. Explicit legacy `domain_pack_id` remains a compatibility override,
+not the target API shape.
 
 Stackless local eval and the dedicated Contract Review eval can build their
 Contract Review graph/eval payloads from GraphRAG Project assets. The dedicated
 Contract Review eval no longer loads `DomainPackLoader` or executes through
 `DomainQAGraph`. Stackless local eval no longer has a generic Domain Pack
 loader fallback; when an id is provided, it must resolve to GraphRAG Project
-assets.
+assets. Their graph extraction paths now call extractors with
+`project_payload=project_payload`; `domain_pack=` is retained only as an
+extractor compatibility alias.
 
 GraphRAG Project Contract Review assets now expose `to_project_payload()` as
 the project-named compatibility payload API. `to_domain_pack_payload()` remains

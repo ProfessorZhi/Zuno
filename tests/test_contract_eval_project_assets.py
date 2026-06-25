@@ -47,7 +47,8 @@ def test_contract_eval_internal_payload_names_follow_project_mainline():
 
     assert "project_payload: dict[str, Any]" in source
     assert "sample_project_payload = dict(project_payload)" in source
-    assert "domain_pack=project_payload" in source
+    assert "project_payload=project_payload" in source
+    assert "domain_pack=project_payload" not in source
     assert "domain_pack: dict[str, Any]" not in source
     assert "domain_pack = dict(project_payload)" not in source
     assert '"domain_pack_id"' in source

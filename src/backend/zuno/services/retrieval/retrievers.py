@@ -105,10 +105,15 @@ class GraphRetrieverAdapter:
             "domain_pack_id": None,
         }
         domain_pack = runtime_settings.get("domain_pack")
-        domain_pack_id = options.get("domain_pack_id") or (domain_pack or {}).get("id")
+        scope_policy = dict(options.get("scope_policy") or {})
+        domain_pack_id = (
+            options.get("domain_pack_id")
+            or scope_policy.get("graphrag_project_id")
+            or (domain_pack or {}).get("graphrag_project_id")
+            or (domain_pack or {}).get("id")
+        )
         effective_query_policy = dict((domain_pack or {}).get("retrieval_policy_data") or {})
         effective_query_policy.update(options)
-        scope_policy = dict(options.get("scope_policy") or {})
         index_version = dict(options.get("index_version") or {})
         local_graph_retriever = runtime_settings.get("graph_retriever")
         if local_graph_retriever:

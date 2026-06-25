@@ -33,9 +33,12 @@ knowledge route/settings entrypoints no longer open Domain Pack pages. The
 old frontend Domain Pack API/page files are retired from `apps/web/src/`.
 `KnowledgeService.get_runtime_settings` no longer auto-loads `DomainPackLoader`
 from `domain_pack_id`. `GraphRetriever` policy resolution also no longer loads
-`DomainPackLoader` from `domain_pack_id`. Stackless local eval and the
-dedicated Contract Review eval can build from GraphRAG Project assets. The
-direct `DomainQAGraph` source, legacy graph state module, and
+`DomainPackLoader` from `domain_pack_id`. `GraphRetrieverAdapter` maps
+`scope_policy.graphrag_project_id` to the existing legacy graph storage filter
+without restoring Domain Pack policy loading. Stackless local eval and the
+dedicated Contract Review eval can build from GraphRAG Project assets, and
+their extractor calls use `project_payload=project_payload`. The direct
+`DomainQAGraph` source, legacy graph state module, and
 `src/backend/zuno/services/domain_pack/` runtime service package are retired
 from current backend source. Root Domain Pack assets have moved to
 `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no

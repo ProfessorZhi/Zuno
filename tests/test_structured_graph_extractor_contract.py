@@ -13,6 +13,59 @@ def _contract_review_payload():
     return project.to_domain_pack_payload()
 
 
+def _contract_review_project_payload():
+    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+
+    project = GraphRAGProjectLoader(projects_root=PROJECTS_ROOT).load("contract_review")
+    assert project is not None
+    return project.to_project_payload()
+
+
+def test_structured_graph_extractor_accepts_project_payload_as_primary_contract():
+    from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+
+    project_payload = _contract_review_project_payload()
+    chunk = {
+        "chunk_id": "contract_project_payload",
+        "file_name": "loan_contract_001.md",
+        "content": "# 借款合同\n\n第八条 违约责任：借款人未按约定期限还款的，应承担违约责任。\n",
+    }
+
+    result = asyncio.run(
+        StructuredGraphExtractor().extract_from_chunk(
+            chunk,
+            "kb_contract",
+            project_payload=project_payload,
+        )
+    )
+
+    entity_pairs = {(item["name"], item["type"]) for item in result["entities"]}
+    assert ("借款合同", "Contract") in entity_pairs
+    assert ("第八条 违约责任", "Clause") in entity_pairs
+    assert ("违约责任", "Risk") in entity_pairs
+
+
+def test_cached_graph_extractor_accepts_project_payload_as_primary_contract():
+    from zuno.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
+
+    project_payload = _contract_review_project_payload()
+    chunk = {
+        "chunk_id": "cached_contract_project_payload",
+        "file_name": "loan_contract_001.md",
+        "content": "# 借款合同\n\n第八条 违约责任：借款人未按约定期限还款的，应承担违约责任。\n",
+    }
+
+    result = asyncio.run(
+        CachedGraphExtractor().extract_from_chunk(
+            chunk,
+            "kb_contract",
+            project_payload=project_payload,
+        )
+    )
+
+    assert any(item["type"] == "Risk" for item in result["entities"])
+
+
 def test_structured_graph_extractor_builds_contract_entities_and_relations():
     from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 

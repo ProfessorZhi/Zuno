@@ -188,24 +188,34 @@ class StructuredGraphExtractor(GraphExtractor):
         return amounts
 
     @classmethod
-    def _append_domain_pack_id(cls, items: list[dict], domain_pack: dict | None) -> None:
-        if not domain_pack:
+    def _append_project_id(cls, items: list[dict], project_payload: dict | None) -> None:
+        if not project_payload:
             return
-        pack_id = str(domain_pack.get("id") or "").strip()
-        if not pack_id:
+        project_id = str(
+            project_payload.get("graphrag_project_id") or project_payload.get("id") or ""
+        ).strip()
+        if not project_id:
             return
         for item in items:
-            item.setdefault("domain_pack_id", pack_id)
+            item.setdefault("domain_pack_id", project_id)
 
-    async def extract_from_chunk(self, chunk: dict, knowledge_id: str, *, domain_pack: dict | None = None) -> dict:
+    async def extract_from_chunk(
+        self,
+        chunk: dict,
+        knowledge_id: str,
+        *,
+        project_payload: dict | None = None,
+        domain_pack: dict | None = None,
+    ) -> dict:
+        project_payload = project_payload or domain_pack
         chunk_payload = self._chunk_dict(chunk)
         result = await super().extract_from_chunk(chunk_payload, knowledge_id)
         content = str(chunk_payload.get("content") or "")
         chunk_id = str(chunk_payload.get("chunk_id") or "")
         contract_name = self._build_contract_name(chunk_payload, content)
 
-        schema_entities = set((domain_pack or {}).get("schema_data", {}).get("entities") or [])
-        schema_relations = set((domain_pack or {}).get("schema_data", {}).get("relations") or [])
+        schema_entities = set((project_payload or {}).get("schema_data", {}).get("entities") or [])
+        schema_relations = set((project_payload or {}).get("schema_data", {}).get("relations") or [])
 
         def add_entity(name: str, entity_type: str, evidence: str, confidence: float, metadata: dict | None = None) -> None:
             if entity_type not in schema_entities or not name:
@@ -292,8 +302,8 @@ class StructuredGraphExtractor(GraphExtractor):
             deduped_relations.append(relation)
         result["relations"] = deduped_relations
 
-        self._append_domain_pack_id(result.get("entities", []), domain_pack)
-        self._append_domain_pack_id(result.get("relations", []), domain_pack)
+        self._append_project_id(result.get("entities", []), project_payload)
+        self._append_project_id(result.get("relations", []), project_payload)
         return result
 
 

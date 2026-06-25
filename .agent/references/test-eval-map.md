@@ -12,6 +12,12 @@ Orient test and eval changes.
 - RAG evals: `tools/evals/zuno/rag_eval/`
 - Contract review evals: `tools/evals/zuno/contract_review_eval/`
 
+Contract Review and stackless local evals load GraphRAG Project assets as the
+current mainline evidence. Their graph extraction calls should use
+`project_payload=project_payload`; `domain_pack` remains only as a migration
+alias inside extractor compatibility surfaces. Stackless local eval must not
+restore a private `_load_graph_project_domain_payload` alias.
+
 ## Rule
 
 Smoke tests are not formal evals. Historical baselines must not be overwritten.

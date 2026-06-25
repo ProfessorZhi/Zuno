@@ -25,6 +25,12 @@ The `/knowledge/search` API service path also reaches this runtime through
 `KnowledgeQueryService`; it no longer calls the legacy `RagHandler` search
 path directly.
 
+GraphRAG Project scope currently reaches legacy graph storage through a
+compatibility mapping: `GraphRetrieverAdapter` maps
+`scope_policy.graphrag_project_id` to the existing Neo4j filter field
+`domain_pack_id`. This avoids a database/schema migration during Phase 11C
+cleanup and must not be described as the target public contract.
+
 ## Target References
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
@@ -44,7 +50,9 @@ is cut over from `DomainQAGraph`; the direct `DomainQAGraph` source and
 Root Domain Pack assets are archived under
 `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
 longer copies or mounts `/app/domain-packs`. Stackless local eval now requires
-GraphRAG Project assets when an id is provided.
+GraphRAG Project assets when an id is provided. Contract Review and stackless
+local graph extraction calls use `project_payload=project_payload`; extractor
+`domain_pack` parameters remain migration aliases only.
 
 ## Blocked Legacy
 

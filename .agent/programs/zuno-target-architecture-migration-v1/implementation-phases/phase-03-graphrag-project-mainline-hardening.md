@@ -14,7 +14,10 @@ has started: `/knowledge/search` now routes through `KnowledgeQueryService`
 instead of the legacy `RagHandler` search path, while preserving compatibility
 response fields for current callers. Contract Review eval project assets now
 use `to_project_payload()` as the main GraphRAG Project payload API, and
-stackless eval entrypoints prefer `graphrag_project_id` /
+Structured/Cached graph extractors expose `project_payload` as their primary
+payload parameter while keeping `domain_pack` as a migration alias. Contract
+Review and stackless local eval graph extraction calls now use
+`project_payload=project_payload`. Stackless eval entrypoints prefer `graphrag_project_id` /
 `--graphrag-project-id` while retaining `domain_pack_id` only as migration
 compatibility. Stable active architecture specs now frame retrieval governance,
 LangGraph runtime, enhanced retrieval, platform direction, eval, and knowledge
@@ -23,6 +26,11 @@ the target driver. Active near-term target docs now also classify retired
 `DomainQAGraph`, retired Domain Pack endpoint/page wrappers, and bare
 `domain_pack_id` query-policy wording as legacy or migration evidence instead
 of current GraphRAG Project target evidence.
+
+`GraphRetrieverAdapter` maps GraphRAG Project scope
+(`scope_policy.graphrag_project_id`) to the current legacy graph storage filter
+field (`domain_pack_id`). This is current compatibility with the existing
+storage model, not a target endorsement of Domain Pack as the public contract.
 
 ## Scope
 

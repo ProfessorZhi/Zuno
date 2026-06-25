@@ -31,6 +31,12 @@ phase that owns it proves active dependency removal.
 | 08 | blocked by 05-07 | single GeneralAgent runtime integration |
 | 09 | final | full tests, eval, trace, docs, and grep closure |
 
+Current Phase 01/03 safe prework also includes `GraphRetrieverAdapter`
+mapping `scope_policy.graphrag_project_id` to the existing legacy graph storage
+filter and eval/extractor paths using `project_payload` as the primary
+GraphRAG Project payload name. This is not full Phase 01 or Phase 03 closure;
+remaining migration compatibility evidence still blocks closure.
+
 ## Execution Rules
 
 - [ ] Run the phase gate before editing phase files or runtime code.

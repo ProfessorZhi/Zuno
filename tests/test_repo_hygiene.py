@@ -198,6 +198,43 @@ def test_stackless_local_eval_stays_off_legacy_domain_pack_loader_fallback() -> 
     assert "Stackless local eval must not fall back to DomainPackLoader" in verifier
 
 
+def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() -> None:
+    contract_eval = (
+        REPO_ROOT / "tools/evals/zuno/contract_review_eval/run_contract_eval.py"
+    ).read_text(encoding="utf-8")
+    stackless_eval = (
+        REPO_ROOT / "tools/evals/zuno/rag_eval/run_stackless_local_eval.py"
+    ).read_text(encoding="utf-8")
+    structured_extractor = (
+        REPO_ROOT
+        / "src/backend/zuno/services/graphrag/extractors/structured_extractor.py"
+    ).read_text(encoding="utf-8")
+    cached_extractor = (
+        REPO_ROOT
+        / "src/backend/zuno/services/graphrag/extractors/cached_extractor.py"
+    ).read_text(encoding="utf-8")
+    graph_retrievers = (
+        REPO_ROOT / "src/backend/zuno/services/retrieval/retrievers.py"
+    ).read_text(encoding="utf-8")
+
+    assert "project_payload=project_payload" in contract_eval
+    assert "project_payload=project_payload" in stackless_eval
+    assert "domain_pack=project_payload" not in contract_eval
+    assert "domain_pack=project_payload" not in stackless_eval
+    assert "_load_graph_project_domain_payload" not in stackless_eval
+    assert "project_payload:" in structured_extractor
+    assert "project_payload:" in cached_extractor
+    assert 'scope_policy.get("graphrag_project_id")' in graph_retrievers
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "GraphRAG eval paths must call extractors with project_payload" in verifier
+    assert "Stackless local eval must not keep a graph project domain payload alias" in verifier
+    assert "GraphRAG extractors must expose project_payload as the primary payload parameter" in verifier
+    assert "GraphRetrieverAdapter must map GraphRAG Project scope to the legacy storage filter" in verifier
+
+
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
     assert not (
         REPO_ROOT / "src/backend/zuno/domain_packs"

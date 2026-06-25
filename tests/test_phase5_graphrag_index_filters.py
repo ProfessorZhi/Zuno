@@ -100,6 +100,60 @@ def test_graph_retriever_adapter_forwards_scope_status_and_graph_index_version(m
     assert captured["kwargs"]["index_version"] == "graph_v9"
 
 
+def test_graph_retriever_adapter_maps_project_scope_to_legacy_storage_filter(monkeypatch):
+    captured = {}
+
+    class FakeGraphRetriever:
+        async def retrieve(self, query, knowledge_id, **kwargs):
+            captured["query"] = query
+            captured["knowledge_id"] = knowledge_id
+            captured["kwargs"] = kwargs
+            return {"content": "", "documents": []}
+
+    fake_api_package = types.ModuleType("zuno.api")
+    fake_api_package.__path__ = []  # type: ignore[attr-defined]
+    fake_api_services_package = types.ModuleType("zuno.api.services")
+    fake_api_services_package.__path__ = []  # type: ignore[attr-defined]
+    fake_knowledge_module = types.ModuleType("zuno.api.services.knowledge")
+
+    class FakeKnowledgeService:
+        @staticmethod
+        async def get_runtime_settings(_knowledge_id):
+            return {
+                "graph_retriever": FakeGraphRetriever(),
+            }
+
+    fake_knowledge_module.KnowledgeService = FakeKnowledgeService
+
+    monkeypatch.setitem(sys.modules, "zuno.api", fake_api_package)
+    monkeypatch.setitem(sys.modules, "zuno.api.services", fake_api_services_package)
+    monkeypatch.setitem(sys.modules, "zuno.api.services.knowledge", fake_knowledge_module)
+
+    module_path = BACKEND_ROOT / "zuno/services/retrieval/retrievers.py"
+    spec = importlib.util.spec_from_file_location("phase5_project_scope_retrievers", module_path)
+    retrievers_module = importlib.util.module_from_spec(spec)
+    assert spec is not None and spec.loader is not None
+    spec.loader.exec_module(retrievers_module)
+    GraphRetrieverAdapter = retrievers_module.GraphRetrieverAdapter
+
+    asyncio.run(
+        GraphRetrieverAdapter().retrieve(
+            "Redis 和 PostgreSQL 的关系是什么",
+            ["k1"],
+            {
+                "scope_policy": {
+                    "graphrag_project_id": "ops",
+                    "status": "active",
+                },
+            },
+        )
+    )
+
+    assert captured["knowledge_id"] == "k1"
+    assert captured["kwargs"]["domain_pack_id"] == "ops"
+    assert captured["kwargs"]["status"] == "active"
+
+
 def test_graph_retriever_passes_status_and_graph_index_version_to_client():
     from zuno.services.graphrag.retriever import GraphRetriever
 

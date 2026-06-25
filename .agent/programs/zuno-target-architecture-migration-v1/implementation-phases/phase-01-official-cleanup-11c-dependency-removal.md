@@ -130,6 +130,10 @@ Removed from the active current path:
   `domain_pack_id`; graph policy must be provided as explicit `query_policy`.
   Contract Review compatibility graph tests now load that policy from the
   GraphRAG Project example assets.
+- `GraphRetrieverAdapter` now maps `scope_policy.graphrag_project_id` to the
+  current legacy graph storage filter field, `domain_pack_id`, so GraphRAG
+  Project scoped graph retrieval works without a database schema, Neo4j
+  property-name, API, or frontend migration.
 - Stackless local eval can build its Contract Review local graph from
   GraphRAG Project schema, prompt, retrieval policy, and eval assets without
   loading `DomainPackLoader` for `contract_review`.
@@ -166,6 +170,8 @@ No longer blocked by current eval runtime:
 
 - `tools/evals/zuno/contract_review_eval/` no longer depends on
   `DomainPackLoader` or `DomainQAGraph`.
+- GraphRAG Project scope can reach the existing graph storage filter through
+  `GraphRetrieverAdapter` without restoring Domain Pack policy loading.
 - Root `tests/` still contains migration/current compatibility coverage for
   Workspace, Domain Pack migration fields, and Contract Review GraphRAG Project
   compatibility payloads. Retired runtime import/source guards have moved to

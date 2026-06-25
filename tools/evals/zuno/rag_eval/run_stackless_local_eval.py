@@ -216,7 +216,7 @@ async def _build_local_graph_retriever(
     extracted_documents: list[dict[str, Any]] = []
     for chunk in chunks:
         if project_payload:
-            extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id, domain_pack=project_payload)
+            extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id, project_payload=project_payload)
         else:
             extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id)
         extracted_documents.append(
@@ -249,10 +249,6 @@ def _load_graph_project_payload(project_id: str | None) -> dict[str, Any] | None
     if project is None:
         return None
     return project.to_project_payload()
-
-
-def _load_graph_project_domain_payload(project_id: str | None) -> dict[str, Any] | None:
-    return _load_graph_project_payload(project_id)
 
 
 def _build_temp_config() -> Path:

@@ -12,7 +12,11 @@ In progress / blocked overall. The current FastAPI router no longer mounts
 Pack entrypoints. `KnowledgeService.get_runtime_settings` now preserves
 `domain_pack_id` without auto-loading `DomainPackLoader`, and `GraphRetriever`
 no longer loads Domain Pack policy from `domain_pack_id`. Stackless local eval
-and the dedicated Contract Review eval can build from GraphRAG Project assets.
+and the dedicated Contract Review eval can build from GraphRAG Project assets
+and call graph extractors with `project_payload=project_payload`.
+`GraphRetrieverAdapter` maps `scope_policy.graphrag_project_id` to the current
+legacy graph storage filter without a database schema, Neo4j property-name,
+API, or frontend migration.
 Root `domain-packs/` assets are archived under
 `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
 longer copies or mounts `/app/domain-packs`. The former `tests/compat/`
@@ -50,13 +54,20 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   `DomainPackLoader` or calls `DomainPackLoader().load` for retrieval policy
   defaults; Contract Review graph tests pass explicit GraphRAG Project
   `query_policy`.
+- `src/backend/zuno/services/retrieval/retrievers.py` maps
+  `scope_policy.graphrag_project_id` to the current legacy graph storage
+  filter field, `domain_pack_id`, so project-scoped graph retrieval works
+  without restoring Domain Pack policy loading or changing the storage schema.
 - `tools/evals/zuno/rag_eval/run_stackless_local_eval.py` can build the
   Contract Review local graph from `GraphRAGProjectLoader` assets and no
-  longer loads `DomainPackLoader` for the `contract_review` project path.
+  longer loads `DomainPackLoader` for the `contract_review` project path. It
+  calls graph extraction with `project_payload=project_payload` and no longer
+  keeps the private `_load_graph_project_domain_payload` alias.
 - `tools/evals/zuno/contract_review_eval/run_contract_eval.py` loads the
   Contract Review compatibility payload and eval fixture from the GraphRAG
   Project example assets instead of `DomainPackLoader` and no longer executes
-  through `DomainQAGraph`.
+  through `DomainQAGraph`. It calls graph extraction with
+  `project_payload=project_payload`.
 - `src/backend/zuno/services/workspace/simple_agent.py` no longer imports
   `AgentRuntime`, exposes `domain_qa_runtime`, or calls
   `_run_domain_pack_query`; Workspace knowledge prefetch/tools now use

@@ -64,7 +64,10 @@ Read first:
   longer copies or mounts `/app/domain-packs`. The direct `DomainQAGraph`,
   legacy graph state, `MultiAgentSupervisorGraph`, Domain Pack route/API,
   frontend Domain Pack pages, and Domain Pack runtime service sources are
-  retired from current source.
+  retired from current source. `GraphRetrieverAdapter` maps
+  `scope_policy.graphrag_project_id` to the current legacy graph storage
+  filter, and Contract Review / stackless local eval graph extraction calls use
+  `project_payload=project_payload`.
 - Phase 12 is partially complete / not closed.
 
 ## Rule

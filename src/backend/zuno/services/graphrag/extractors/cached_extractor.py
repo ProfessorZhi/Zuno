@@ -10,13 +10,22 @@ class CachedGraphExtractor:
         self.extractor = extractor or StructuredGraphExtractor()
         self._cache: dict[str, dict] = {}
 
-    async def extract_from_chunk(self, chunk: dict, knowledge_id: str, *, domain_pack: dict | None = None) -> dict:
+    async def extract_from_chunk(
+        self,
+        chunk: dict,
+        knowledge_id: str,
+        *,
+        project_payload: dict | None = None,
+        domain_pack: dict | None = None,
+    ) -> dict:
+        project_payload = project_payload or domain_pack
         cache_key = json.dumps(
             {
                 "knowledge_id": knowledge_id,
                 "chunk_id": chunk.get("chunk_id"),
                 "content": chunk.get("content"),
-                "domain_pack_id": (domain_pack or {}).get("id"),
+                "graphrag_project_id": (project_payload or {}).get("graphrag_project_id")
+                or (project_payload or {}).get("id"),
             },
             ensure_ascii=False,
             sort_keys=True,
@@ -25,7 +34,7 @@ class CachedGraphExtractor:
             self._cache[cache_key] = await self.extractor.extract_from_chunk(
                 chunk,
                 knowledge_id,
-                domain_pack=domain_pack,
+                project_payload=project_payload,
             )
         return self._cache[cache_key]
 

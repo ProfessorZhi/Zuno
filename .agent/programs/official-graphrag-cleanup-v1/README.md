@@ -63,8 +63,11 @@ contract retirement.
   package public exports. `KnowledgeService.get_runtime_settings` preserves
   `domain_pack_id` without auto-loading `DomainPackLoader`. `GraphRetriever`
   now uses explicit `query_policy` instead of loading Domain Pack policy from
-  `domain_pack_id`. Stackless local eval and the dedicated Contract Review eval
-  can build from GraphRAG Project assets. The
+  `domain_pack_id`. `GraphRetrieverAdapter` maps
+  `scope_policy.graphrag_project_id` to the existing legacy graph storage
+  filter without restoring Domain Pack policy loading. Stackless local eval and
+  the dedicated Contract Review eval can build from GraphRAG Project assets and
+  call graph extractors with `project_payload=project_payload`. The
   `src/backend/zuno/services/domain_pack/` runtime service package is also
   retired from current backend source. Root Domain Pack assets are archived
   under `docs/architecture/history/domain-packs/root-contract-review/`, Docker

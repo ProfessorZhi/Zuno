@@ -240,6 +240,10 @@ def main() -> int:
         errors.append("Contract Review eval must not use DomainQAGraph")
     if "DomainQAGraph(" in contract_eval:
         errors.append("Contract Review eval must not use DomainQAGraph")
+    if "domain_pack=project_payload" in contract_eval:
+        errors.append("GraphRAG eval paths must call extractors with project_payload")
+    if "project_payload=project_payload" not in contract_eval:
+        errors.append("GraphRAG eval paths must call extractors with project_payload")
 
     stackless_eval = _read("tools/evals/zuno/rag_eval/run_stackless_local_eval.py")
     if "_load_legacy_domain_pack_payload" in stackless_eval:
@@ -248,6 +252,21 @@ def main() -> int:
         errors.append("Stackless local eval must not fall back to DomainPackLoader")
     if "DomainPackLoader().load" in stackless_eval:
         errors.append("Stackless local eval must not fall back to DomainPackLoader")
+    if "_load_graph_project_domain_payload" in stackless_eval:
+        errors.append("Stackless local eval must not keep a graph project domain payload alias")
+    if "domain_pack=project_payload" in stackless_eval:
+        errors.append("GraphRAG eval paths must call extractors with project_payload")
+    if "project_payload=project_payload" not in stackless_eval:
+        errors.append("GraphRAG eval paths must call extractors with project_payload")
+
+    structured_extractor = _read("src/backend/zuno/services/graphrag/extractors/structured_extractor.py")
+    cached_extractor = _read("src/backend/zuno/services/graphrag/extractors/cached_extractor.py")
+    if "project_payload:" not in structured_extractor or "project_payload:" not in cached_extractor:
+        errors.append("GraphRAG extractors must expose project_payload as the primary payload parameter")
+
+    graph_retrievers = _read("src/backend/zuno/services/retrieval/retrievers.py")
+    if 'scope_policy.get("graphrag_project_id")' not in graph_retrievers:
+        errors.append("GraphRetrieverAdapter must map GraphRAG Project scope to the legacy storage filter")
 
     retired_ui_script_phrases = [
         "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",

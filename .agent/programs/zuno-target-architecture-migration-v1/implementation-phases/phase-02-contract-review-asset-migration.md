@@ -70,9 +70,13 @@ Additional progress:
   `contract_review` project path.
 - The dedicated Contract Review eval now loads its compatibility payload and
   eval dataset from `examples/graphrag-projects/contract_review/` and no longer
-  loads `DomainPackLoader` or executes through `DomainQAGraph`.
+  loads `DomainPackLoader` or executes through `DomainQAGraph`; its extraction
+  path now calls `StructuredGraphExtractor` with
+  `project_payload=project_payload`.
 - Stackless local eval no longer has a generic Domain Pack loader fallback;
-  when an id is provided, it must resolve to GraphRAG Project assets.
+  when an id is provided, it must resolve to GraphRAG Project assets. Its local
+  graph builder also calls extractors with `project_payload=project_payload`
+  and no longer keeps a private `_load_graph_project_domain_payload` alias.
 - GraphRAG Project assets now expose `to_project_payload()` as the project-named
   compatibility payload API. The legacy `to_domain_pack_payload()` method is a
   wrapper retained for migration tests and older compatibility callers.
@@ -88,6 +92,9 @@ Closure evidence:
   `DomainPackLoader`; the dedicated Contract Review eval also no longer
   executes through `DomainQAGraph`, and the direct `DomainQAGraph` source is
   retired.
+- Contract Review graph extraction uses `project_payload` as the primary
+  internal payload name while preserving legacy extractor alias support for
+  migration callers.
 - `domain-packs/contract_review/` is archived under
   `docs/architecture/history/domain-packs/root-contract-review/`.
 - Docker no longer copies or mounts `/app/domain-packs`.

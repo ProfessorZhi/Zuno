@@ -162,7 +162,7 @@ async def _extract_document_graph(document_name: str, project_payload: dict[str,
     extraction = await StructuredGraphExtractor().extract_from_chunk(
         chunk,
         OFFLINE_KNOWLEDGE_ID,
-        domain_pack=project_payload,
+        project_payload=project_payload,
     )
     return {
         "document_name": document_name,

@@ -16,7 +16,9 @@ Current status:
   `domain_pack_id` as a migration field but no longer auto-loads
   `DomainPackLoader` from it. `GraphRetriever` now requires explicit
   `query_policy` for project policy defaults instead of loading
-  `DomainPackLoader` from `domain_pack_id`. The
+  `DomainPackLoader` from `domain_pack_id`. `GraphRetrieverAdapter` maps
+  `scope_policy.graphrag_project_id` to the current legacy graph storage
+  filter field without a database schema or Neo4j property migration. The
   `src/backend/zuno/services/domain_pack/` runtime service package is retired
   from current backend source.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
@@ -41,13 +43,17 @@ Current status:
   plus schema/eval assets for explicit graph query policy and stackless local
   eval. Contract Review eval now reads the GraphRAG Project compatibility
   payload and eval fixture without loading `DomainPackLoader` or executing
-  through `DomainQAGraph`; root Domain Pack assets are archived as History and
-  Docker no longer carries Domain Pack mounts. Stackless local eval now
-  requires GraphRAG Project assets when an id is provided.
+  through `DomainQAGraph`; its extractor calls now use
+  `project_payload=project_payload` as the primary internal contract. Root
+  Domain Pack assets are archived as History and Docker no longer carries
+  Domain Pack mounts. Stackless local eval now requires GraphRAG Project assets
+  when an id is provided and no longer keeps the private
+  `_load_graph_project_domain_payload` alias.
 - Phase 03 has safe prework started, but full closure remains blocked by
   Phase 01 / Phase 02: `/knowledge/search` now routes through
   `KnowledgeQueryService`, Contract Review project assets expose
-  `to_project_payload()`, and stackless eval entrypoints prefer
+  `to_project_payload()`, graph extractors accept `project_payload` as the
+  primary payload parameter, and stackless eval entrypoints prefer
   `graphrag_project_id` / `--graphrag-project-id` while retaining legacy
   compatibility aliases. Active stable architecture specs now describe
   GraphRAG Project / query policy as the mainline driver instead of Domain

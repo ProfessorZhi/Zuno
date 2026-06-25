@@ -26,8 +26,12 @@ Current truth is still the Python monorepo runtime:
   resolution no longer use the Domain Pack runtime path by default. Stackless
   local eval and the dedicated Contract Review eval can build from GraphRAG
   Project assets; stackless local eval now requires GraphRAG Project assets
-  when an id is provided. The direct `DomainQAGraph` source and legacy graph
-  state module are retired from current backend source.
+  when an id is provided, and both eval extraction paths use
+  `project_payload=project_payload`. `GraphRetrieverAdapter` maps
+  `scope_policy.graphrag_project_id` to the existing legacy graph storage
+  filter without restoring Domain Pack policy loading. The direct
+  `DomainQAGraph` source and legacy graph state module are retired from
+  current backend source.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
   `RetrievalFusion`, BM25/vector/graph adapters, community services, requery,
   index version fields, and trace metadata.
@@ -135,7 +139,9 @@ This roadmap does not implement:
   `KnowledgeService.get_runtime_settings` no longer auto-loads
   `DomainPackLoader` from `domain_pack_id`, `GraphRetriever` no longer loads
   Domain Pack policy from `domain_pack_id`, stackless local eval and the
-  dedicated Contract Review eval have Contract Review GraphRAG Project paths,
+  dedicated Contract Review eval have Contract Review GraphRAG Project paths
+  using `project_payload` extractor calls, `GraphRetrieverAdapter` maps
+  GraphRAG Project scope to the current legacy graph storage filter,
   the standalone `AgentRuntime` facade, direct `DomainQAGraph` source, legacy
   graph state module, `src/backend/zuno/services/domain_pack/` runtime service
   package, and direct `MultiAgentSupervisorGraph` source have been removed
