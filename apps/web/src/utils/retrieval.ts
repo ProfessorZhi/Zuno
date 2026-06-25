@@ -18,7 +18,6 @@ const legacyModeMap: Record<string, RetrievalMode> = {
   default: 'rag',
   hybrid: 'rag_graph',
   graphrag: 'rag_graph',
-  rag_graph_deep: 'rag_graph',
 }
 
 const retrievalModeLabelMap = Object.fromEntries(

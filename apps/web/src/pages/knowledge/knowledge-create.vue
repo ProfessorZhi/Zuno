@@ -37,12 +37,12 @@ const form = ref({
   text_embedding_model_id: '',
   vl_embedding_model_id: '',
   rerank_model_id: '',
-  domain_pack_id: String(route.query.domain_pack_id || ''),
+  graphrag_project_id: String(route.query.graphrag_project_id || route.query.domain_pack_id || ''),
 })
 
 const embeddingModels = computed(() => models.value.filter((item) => item.llm_type === 'Embedding'))
 const rerankModels = computed(() => models.value.filter((item) => item.llm_type === 'Rerank'))
-const selectedDomainPack = computed(() => domainPacks.value.find((item) => item.pack_id === form.value.domain_pack_id))
+const selectedDomainPack = computed(() => domainPacks.value.find((item) => item.pack_id === form.value.graphrag_project_id))
 const canSubmit = computed(() => (
   form.value.knowledge_name.trim().length >= 2
   && form.value.knowledge_desc.trim().length >= 10
@@ -74,7 +74,7 @@ const buildConfig = () => {
   base.model_refs.text_embedding_model_id = form.value.text_embedding_model_id || null
   base.model_refs.vl_embedding_model_id = form.value.vl_embedding_model_id || null
   base.model_refs.rerank_model_id = form.value.rerank_model_id || null
-  base.domain_pack_id = productMode.value === 'enhanced' ? (form.value.domain_pack_id || null) : null
+  base.graphrag_project_id = productMode.value === 'enhanced' ? (form.value.graphrag_project_id || null) : null
   return toProductKnowledgeConfig(productMode.value, base)
 }
 
@@ -129,7 +129,17 @@ watch(
   () => route.query.domain_pack_id,
   (value) => {
     if (value) {
-      form.value.domain_pack_id = String(value)
+      form.value.graphrag_project_id = String(value)
+      productMode.value = 'enhanced'
+    }
+  },
+)
+
+watch(
+  () => route.query.graphrag_project_id,
+  (value) => {
+    if (value) {
+      form.value.graphrag_project_id = String(value)
       productMode.value = 'enhanced'
     }
   },
@@ -142,7 +152,7 @@ onMounted(loadOptions)
   <div class="knowledge-create-page">
     <section class="hero-card">
       <p class="eyebrow">知识库创建向导</p>
-      <h1>先选产品模式，再决定模型、Domain Pack 和构建计划</h1>
+      <h1>先选产品模式，再决定模型、GraphRAG Project 和构建计划</h1>
       <p class="copy">
         这里把知识库创建和后续参数维护拆开。创建时只做一次性的构建决策，后续调参放到维护页。
       </p>
@@ -195,8 +205,8 @@ onMounted(loadOptions)
           </select>
         </label>
         <label :class="{ muted: productMode === 'standard' }">
-          <span>Domain Pack</span>
-          <select v-model="form.domain_pack_id" :disabled="productMode === 'standard'">
+          <span>GraphRAG Project</span>
+          <select v-model="form.graphrag_project_id" :disabled="productMode === 'standard'">
             <option value="">暂不绑定</option>
             <option v-for="pack in domainPacks" :key="pack.pack_id" :value="pack.pack_id">
               {{ pack.name }} · {{ pack.status === 'published' ? '已发布' : '草稿' }}

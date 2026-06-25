@@ -44,4 +44,7 @@ Query Method Router for `auto/basic/local/global/drift`, bounded compatibility
 mapping from old route names, and requested/resolved/fallback trace fields.
 Phase 09 has hardened Enhanced Mode pipeline trace for router, recall,
 fusion/rerank, evidence, requery, citation coverage, and standard-floor
-preservation. The next phase is Phase 10: Frontend API Contract Migration.
+preservation. Phase 10 has migrated frontend API/types/config utilities to
+GraphRAG Project and public query-method trace fields, and removed old runtime
+route names from `apps/web`. The next phase is Phase 11: Runtime Legacy
+Deletion.

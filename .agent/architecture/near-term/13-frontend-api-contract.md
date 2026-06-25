@@ -15,10 +15,13 @@ Define the near-term frontend/backend contract.
   settings path, prompt/index/query/community versions, document/chunk hashes,
   query method, and project status.
 - `apps/web/src/utils/knowledge-config.ts` creates standard/enhanced product
-  configs, normalizes legacy `domain_pack_id` into `graphrag_project_id`, and
-  creates a GraphRAG Project contract object only when a project id exists.
-- Old query mode names still exist as migration/runtime names until the query
-  method router and frontend migration phases remove them from the public path.
+  configs, creates a GraphRAG Project contract object only when a project id
+  exists, and writes Enhanced Mode as `rag_graph` plus
+  `graphrag_project.query_method=auto`.
+- `apps/web/src/apis/knowledge.ts` types requested/resolved query method,
+  retrievers, evidence bundle, citation coverage, and pipeline trace metadata.
+- Old query route names no longer appear under `apps/web`; remaining Domain
+  Pack pages are migration/runtime surfaces for the runtime deletion phase.
 
 ## Target Product Layer
 
@@ -78,3 +81,6 @@ advanced panel or trace view.
 
 Frontend API tests should prove old internal route names do not appear in new
 public product contracts except in explicit migration/retired terminology docs.
+
+Current frontend contract satisfies this for `apps/web`. Runtime compatibility
+deletion remains a later phase.

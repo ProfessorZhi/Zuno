@@ -42,14 +42,53 @@ controls, trace display, and contract tests.
 
 ## Execution Order
 
-1. Add tests that frontend payloads use `graphrag_project_id`,
-   `query_method`, `prompt_version`, `index_version`, and
-   `retrieval_trace_enabled`.
-2. Remove old terms from user-facing labels.
-3. Preserve Standard and Enhanced Mode product language.
-4. Add advanced controls for `auto/basic/local/global/drift` if the phase
-   chooses to expose them.
-5. Show requested/resolved method and trace details without old internal names.
+1. Added tests that frontend payloads use `graphrag_project_id`,
+   `graphrag_project.query_method`, prompt/index versions, and trace contract
+   fields.
+2. Removed old runtime route names from `apps/web`.
+3. Preserved Standard and Enhanced Mode product language.
+4. Kept advanced `auto/basic/local/global/drift` methods in the API/type
+   contract rather than adding a broad UI redesign.
+5. Exposed requested/resolved method, retrievers, evidence bundle, citation
+   coverage, and pipeline trace in frontend API types without old internal
+   names.
+
+## Implemented Frontend Contract
+
+Enhanced product configs now write:
+
+```json
+{
+  "index_capability": "rag_graph",
+  "graphrag_project_id": "contract_review",
+  "domain_pack_id": null,
+  "graphrag_project": {
+    "graphrag_project_id": "contract_review",
+    "query_method": "auto",
+    "prompt_version": "default",
+    "index_version": "v1"
+  },
+  "retrieval_settings": {
+    "default_mode": "rag_graph"
+  }
+}
+```
+
+`rag_graph_deep`, `local_graphrag`, `community_global`, and `drift_like` no
+longer appear under `apps/web`.
+
+## Trace Type Contract
+
+`apps/web/src/apis/knowledge.ts` accepts retrieval `query_method` and types
+metadata for:
+
+- `requested_query_method`
+- `resolved_query_method`
+- `query_method_fallback_reason`
+- `retrievers_used`
+- `evidence_bundle`
+- `citation_coverage`
+- `pipeline_trace`
 
 ## Acceptance Criteria
 
@@ -57,6 +96,10 @@ controls, trace display, and contract tests.
 - API payloads do not use Domain Pack as the mainline.
 - Trace shows requested and resolved query method.
 - Frontend tests or equivalent route checks pass.
+
+Status: satisfied for frontend API/types/config utilities and page-level
+contract tests. Domain Pack pages and runtime compatibility paths remain for
+Phase 11 deletion/classification.
 
 ## Verification Commands
 

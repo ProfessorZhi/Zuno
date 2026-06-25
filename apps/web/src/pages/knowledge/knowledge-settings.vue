@@ -107,6 +107,7 @@ const loadPage = async () => {
 const previewImpact = async () => {
   if (!knowledgeId.value) return
   try {
+    config.value = normalizeKnowledgeConfig(config.value)
     const response = await analyzeKnowledgeConfigImpactAPI(knowledgeId.value, config.value)
     if (response.data.status_code === 200) {
       impact.value = response.data.data || null
@@ -120,6 +121,7 @@ const saveConfig = async () => {
   if (!knowledgeId.value) return
   saving.value = true
   try {
+    config.value = normalizeKnowledgeConfig(config.value)
     const response = await updateKnowledgeConfigAPI(knowledgeId.value, config.value)
     if (response.data.status_code !== 200) {
       throw new Error(response.data.status_message || '保存配置失败')
@@ -184,7 +186,7 @@ onMounted(loadPage)
         </label>
         <label>
           <span>领域包</span>
-          <select v-model="config.domain_pack_id">
+          <select v-model="config.graphrag_project_id">
             <option :value="null">暂不绑定</option>
             <option v-for="pack in domainPacks" :key="pack.pack_id" :value="pack.pack_id">{{ pack.name }}</option>
           </select>

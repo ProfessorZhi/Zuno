@@ -107,7 +107,10 @@ This roadmap does not implement:
 - Phase 09 hardens Enhanced Mode pipeline trace for query method routing,
   query rewrite, multi-retriever recall, fusion/rerank, evidence check,
   conditional requery, citation coverage, and standard-floor preservation.
-- The next executable phase is Phase 10: Frontend API Contract Migration.
+- Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
+  public query-method trace fields, removes old route names from `apps/web`,
+  and keeps Domain Pack runtime deletion for Phase 11.
+- The next executable phase is Phase 11: Runtime Legacy Deletion.
 
 ## Dependency Rules
 

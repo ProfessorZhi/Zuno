@@ -52,8 +52,11 @@ verification, commit message, and evidence package.
 - Phase 09 hardens Enhanced Mode pipeline trace for router, multi-retriever
   recall, fusion/rerank, evidence bundle, requery, citation coverage, and
   standard-floor preservation.
-- Phase 10 is next and should migrate the frontend API contract to target
-  public fields.
+- Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
+  public query-method trace fields, and removes old runtime route names from
+  `apps/web`.
+- Phase 11 is next and should delete or classify runtime legacy surfaces only
+  after dependency proof.
 
 ## Migration Rules
 

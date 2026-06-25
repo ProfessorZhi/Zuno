@@ -13,7 +13,8 @@
     Phase 03 public contract retirement, Phase 04 GraphRAG Project contracts,
     Phase 05 project loader/settings, Phase 06 prompt registry/tuning, then
     Phase 07 index/update/versioning, Phase 08 query method router, Phase 09
-    enhanced mode pipeline, then Phase 10 frontend API contract migration
+    enhanced mode pipeline, Phase 10 frontend API contract migration, then
+    Phase 11 runtime legacy deletion
 
 ## Supporting Architecture Material
 

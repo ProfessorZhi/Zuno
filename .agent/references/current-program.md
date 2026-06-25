@@ -77,7 +77,10 @@ event-driven workers, or default multi-agent mode into near-term acceptance.
 - Phase 09 hardens Enhanced Mode pipeline trace for query method routing,
   multi-retriever recall, fusion/rerank, evidence bundle, conditional requery,
   citation coverage, and standard-floor preservation.
-- Phase 10 is next: Frontend API Contract Migration.
+- Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
+  public query-method trace fields, and removes old runtime route names from
+  `apps/web`.
+- Phase 11 is next: Runtime Legacy Deletion.
 
 ## Current Rule
 

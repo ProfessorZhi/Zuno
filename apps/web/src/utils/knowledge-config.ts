@@ -196,7 +196,7 @@ const normalizeRetrievalModeForCapability = (
   const raw = String(mode || 'rag').toLowerCase()
   const normalized = (legacyMap[raw] || raw) as KnowledgeConfigPayload['retrieval_settings']['default_mode']
   if (capability === 'rag') return 'rag'
-  return normalized === 'rag_graph' || normalized === 'rag_graph_deep' ? normalized : 'rag'
+  return normalized === 'rag_graph' ? normalized : 'rag'
 }
 
 const normalizeIndexCapability = (
@@ -204,7 +204,7 @@ const normalizeIndexCapability = (
   defaultMode?: string | null,
 ): KnowledgeIndexCapability => {
   if (capability === 'rag_graph' || capability === 'rag') return capability
-  return ['hybrid', 'graphrag', 'rag_graph', 'rag_graph_deep'].includes(String(defaultMode || '').toLowerCase())
+  return ['hybrid', 'graphrag', 'rag_graph'].includes(String(defaultMode || '').toLowerCase())
     ? 'rag_graph'
     : 'rag'
 }
@@ -229,7 +229,7 @@ export const normalizeKnowledgeConfig = (
       config?.retrieval_settings?.default_mode,
     ),
     graphrag_project_id: graphragProjectId,
-    domain_pack_id: graphragProjectId,
+    domain_pack_id: config?.domain_pack_id ?? null,
     graphrag_project: graphragProject,
     eval_profile_id: config?.eval_profile_id ?? base.eval_profile_id,
     model_refs: {
@@ -275,7 +275,10 @@ export const toProductKnowledgeConfig = (
   const config = normalizeKnowledgeConfig(overrides)
   if (mode === 'enhanced') {
     config.index_capability = 'rag_graph'
-    config.retrieval_settings.default_mode = 'rag_graph_deep'
+    config.retrieval_settings.default_mode = 'rag_graph'
+    if (config.graphrag_project) {
+      config.graphrag_project.query_method = config.graphrag_project.query_method || 'auto'
+    }
     return config
   }
   config.index_capability = 'rag'

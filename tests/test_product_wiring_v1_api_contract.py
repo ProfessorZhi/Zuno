@@ -36,14 +36,15 @@ def test_product_wiring_domain_pack_update_preserves_existing_assets(monkeypatch
     assert detail["extraction_prompt_text"] == "Keep this extraction prompt."
 
 
-def _config(default_mode="rag", domain_pack_id=None):
+def _config(default_mode="rag", graphrag_project_id=None, domain_pack_id=None):
+    project_id = graphrag_project_id or domain_pack_id
     return {
-        "index_capability": "rag_graph" if default_mode == "rag_graph_deep" else "rag",
-        "graphrag_project_id": domain_pack_id,
+        "index_capability": "rag_graph" if default_mode == "rag_graph" else "rag",
+        "graphrag_project_id": project_id,
         "domain_pack_id": domain_pack_id,
         "graphrag_project": (
             {
-                "graphrag_project_id": domain_pack_id,
+                "graphrag_project_id": project_id,
                 "settings_path": "projects/contract_review/settings.yaml",
                 "prompt_version": "default",
                 "index_version": "v1",
@@ -54,7 +55,7 @@ def _config(default_mode="rag", domain_pack_id=None):
                 "chunk_hash": None,
                 "status": "not_configured",
             }
-            if domain_pack_id
+            if project_id
             else None
         ),
         "eval_profile_id": None,
@@ -159,7 +160,7 @@ def test_product_wiring_knowledge_config_endpoints_delegate_to_service(monkeypat
 
     async def fake_get_config(knowledge_id):
         captured["get_config"] = knowledge_id
-        return _config(default_mode="rag_graph_deep", domain_pack_id="contract_review")
+        return _config(default_mode="rag_graph", graphrag_project_id="contract_review")
 
     async def fake_update(knowledge_id, knowledge_name, knowledge_desc, knowledge_config=None):
         captured["update"] = (knowledge_id, knowledge_name, knowledge_desc, knowledge_config)
@@ -175,17 +176,17 @@ def test_product_wiring_knowledge_config_endpoints_delegate_to_service(monkeypat
     put_response = asyncio.run(
         knowledge.update_knowledge_config(
             knowledge_id="kb_1",
-            next_config=_config(default_mode="rag_graph_deep", domain_pack_id="contract_review"),
+            next_config=_config(default_mode="rag_graph", graphrag_project_id="contract_review"),
             login_user=login_user,
         )
     )
 
     assert get_response.status_code == 200
-    assert get_response.data["retrieval_settings"]["default_mode"] == "rag_graph_deep"
+    assert get_response.data["retrieval_settings"]["default_mode"] == "rag_graph"
     assert put_response.status_code == 200
     assert captured["update"][0] == "kb_1"
     assert captured["update"][3]["graphrag_project_id"] == "contract_review"
-    assert captured["update"][3]["domain_pack_id"] == "contract_review"
+    assert captured["update"][3]["domain_pack_id"] is None
 
 
 def test_product_wiring_knowledge_create_returns_created_knowledge_with_config(monkeypatch):
@@ -212,7 +213,7 @@ def test_product_wiring_knowledge_create_returns_created_knowledge_with_config(m
                 knowledge_name="产品知识库",
                 knowledge_desc="用于 Product Wiring V1 的测试知识库",
                 knowledge_config=KnowledgeConfig.model_validate(
-                    _config(default_mode="rag_graph_deep", domain_pack_id="contract_review")
+                    _config(default_mode="rag_graph", graphrag_project_id="contract_review")
                 ),
             ),
             login_user=login_user,
@@ -223,8 +224,8 @@ def test_product_wiring_knowledge_create_returns_created_knowledge_with_config(m
     assert response.data["id"] == "kb_new"
     assert captured["create"][2] == "u_test"
     assert captured["create"][3]["graphrag_project_id"] == "contract_review"
-    assert captured["create"][3]["retrieval_settings"]["default_mode"] == "rag_graph_deep"
-    assert captured["create"][3]["domain_pack_id"] == "contract_review"
+    assert captured["create"][3]["retrieval_settings"]["default_mode"] == "rag_graph"
+    assert captured["create"][3]["domain_pack_id"] is None
 
 
 def test_product_wiring_frontend_pages_use_real_api_contracts():
@@ -233,6 +234,8 @@ def test_product_wiring_frontend_pages_use_real_api_contracts():
     root = Path(__file__).resolve().parents[1]
     domain_api = (root / "apps/web/src/apis/domain-packs.ts").read_text(encoding="utf-8")
     knowledge_api = (root / "apps/web/src/apis/knowledge.ts").read_text(encoding="utf-8")
+    retrieval_utils = (root / "apps/web/src/utils/retrieval.ts").read_text(encoding="utf-8")
+    knowledge_config_utils = (root / "apps/web/src/utils/knowledge-config.ts").read_text(encoding="utf-8")
     create_page = (root / "apps/web/src/pages/knowledge/knowledge-create.vue").read_text(encoding="utf-8")
     settings_page = (root / "apps/web/src/pages/knowledge/knowledge-settings.vue").read_text(encoding="utf-8")
 
@@ -259,8 +262,17 @@ def test_product_wiring_frontend_pages_use_real_api_contracts():
     assert "graphrag_project_id" in knowledge_api
     assert "GraphRAGProjectPayload" in knowledge_api
     assert "graphrag_project" in knowledge_api
-    assert "graphrag_project_id" in (root / "apps/web/src/utils/knowledge-config.ts").read_text(encoding="utf-8")
-    assert "rag_graph_deep" not in create_page
-    assert "rag_graph_deep" not in settings_page
+    assert "query_method: 'auto' | 'basic' | 'local' | 'global' | 'drift'" in knowledge_api
+    assert "requested_query_method?: 'auto' | 'basic' | 'local' | 'global' | 'drift'" in knowledge_api
+    assert "pipeline_trace?" in knowledge_api
+    assert "citation_coverage?" in knowledge_api
+    assert "graphrag_project_id" in knowledge_config_utils
+    assert "config.retrieval_settings.default_mode = 'rag_graph'" in knowledge_config_utils
+    for frontend_surface in [knowledge_api, retrieval_utils, knowledge_config_utils, create_page, settings_page]:
+        assert "rag_graph_deep" not in frontend_surface
+        assert "local_graphrag" not in frontend_surface
+        assert "community_global" not in frontend_surface
+        assert "drift_like" not in frontend_surface
+    assert "GraphRAG Project" in create_page
     assert "analyzeKnowledgeConfigImpactAPI" in settings_page
     assert "runKnowledgeReindexActionAPI" in settings_page

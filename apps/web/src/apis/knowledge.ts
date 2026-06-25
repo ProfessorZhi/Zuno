@@ -58,7 +58,7 @@ export interface KnowledgeConfigPayload {
     community_version?: string
   }
   retrieval_settings: {
-    default_mode: 'auto' | 'hybrid' | 'rag' | 'graphrag' | 'rag_graph' | 'rag_graph_deep'
+    default_mode: 'rag' | 'rag_graph'
     profile: string
     refill_policy: 'none' | 'auto' | 'smart'
     top_k: number
@@ -147,6 +147,7 @@ interface KnowledgeRetrievalRequest {
   knowledge_id: string | string[]
   top_k?: number
   retrieval_mode?: string
+  query_method?: 'auto' | 'basic' | 'local' | 'global' | 'drift'
 }
 
 interface KnowledgeRetrievalRound {
@@ -183,6 +184,30 @@ interface KnowledgeRetrievalResponse {
     rounds: KnowledgeRetrievalRound[]
     query_variants: string[]
     rewritten_query_used: boolean
+    requested_query_method?: 'auto' | 'basic' | 'local' | 'global' | 'drift'
+    resolved_query_method?: 'basic' | 'local' | 'global' | 'drift'
+    query_method_fallback_reason?: string | null
+    retrievers_used?: string[]
+    citation_coverage?: number
+    evidence_bundle?: {
+      document_count: number
+      source_types: string[]
+      chunk_ids: string[]
+      citation_chunks: string[]
+      cited_document_count: number
+      citation_coverage: number
+    }
+    pipeline_trace?: {
+      requested_query_method?: string | null
+      resolved_query_method?: string | null
+      fallback_reason?: string | null
+      retrievers_used: string[]
+      steps: Array<{
+        name: string
+        status: string
+        detail?: unknown
+      }>
+    }
   }
 }
 
