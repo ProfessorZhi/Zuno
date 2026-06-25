@@ -44,7 +44,8 @@ def test_knowledge_controller_routes_search_through_service_layer() -> None:
 
     assert "from zuno.services.rag.handler import RagHandler" not in controller
     assert "await KnowledgeService.search_knowledge(" in controller
-    assert "from zuno.services.rag.handler import RagHandler" in service
+    assert "from zuno.services.rag.handler import RagHandler" not in service
+    assert "from zuno.api.services.knowledge_query import KnowledgeQueryService" in service
 
 
 def test_knowledge_file_controller_avoids_direct_storage_imports() -> None:

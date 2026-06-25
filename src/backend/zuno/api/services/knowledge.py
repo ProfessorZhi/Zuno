@@ -652,14 +652,37 @@ class KnowledgeService:
             raise ValueError(f"Get knowledges id form name error:{err}")
 
     @classmethod
-    async def search_knowledge(cls, *, knowledge_ids: List[str], query: str, top_k: int):
-        from zuno.services.rag.handler import RagHandler
+    async def search_knowledge(
+        cls,
+        *,
+        user_id: str,
+        knowledge_ids: List[str],
+        query: str,
+        top_k: int,
+    ):
+        from zuno.api.services.knowledge_query import KnowledgeQueryService
 
-        return await RagHandler.retrieve_ranked_documents_with_metadata(
+        result = await KnowledgeQueryService().query(
+            user_id=user_id,
+            knowledge_ids=list(knowledge_ids),
             query=query,
-            collection_names=knowledge_ids,
             top_k=top_k,
         )
+        return cls._knowledge_query_result_to_search_payload(result)
+
+    @staticmethod
+    def _knowledge_query_result_to_search_payload(result) -> dict[str, Any]:
+        payload = result.to_dict()
+        trace_metadata = dict(result.trace_metadata or {})
+        payload["content"] = result.answer
+        payload["first_mode"] = trace_metadata.get("first_mode") or result.requested_query_method
+        payload["final_mode"] = trace_metadata.get("final_mode") or result.resolved_query_method
+        payload["fallback_triggered"] = bool(
+            trace_metadata.get("fallback_triggered") or result.fallback_reason
+        )
+        payload["fallback_reason"] = result.fallback_reason
+        payload["second_pass_used"] = bool(trace_metadata.get("second_pass_used"))
+        return payload
 
 
 __all__ = ["DEFAULT_KNOWLEDGE_CONFIG", "KnowledgeService"]

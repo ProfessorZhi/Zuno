@@ -219,6 +219,7 @@ async def search_knowledge(
             await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id)
 
         result = await KnowledgeService.search_knowledge(
+            user_id=login_user.user_id,
             knowledge_ids=knowledge_ids,
             query=query,
             top_k=top_k,

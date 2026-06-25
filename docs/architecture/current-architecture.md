@@ -59,6 +59,10 @@ path, `search_knowledge_base` calls `KnowledgeQueryService`, and
 Workspace knowledge prefetch and the Workspace `search_knowledge_base` tool
 also use `KnowledgeQueryService` now. `WorkSpaceSimpleAgent` no longer imports
 `AgentRuntime`, exposes `domain_qa_runtime`, or calls `_run_domain_pack_query`.
+The `/knowledge/search` API service path also routes through
+`KnowledgeQueryService` and returns evidence/citation/trace-oriented query
+metadata while preserving compatibility fields such as `content` and
+`final_mode`.
 The standalone `src/backend/zuno/core/runtime/agent_runtime.py` facade and the
 direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` source
 have also been removed from current backend source and exports. The direct

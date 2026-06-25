@@ -29,7 +29,9 @@ migration stages.
   removed from current backend source and exports. The direct
   `MultiAgentSupervisorGraph` source has also been removed. `DomainQAGraph`
   and `MultiAgentSupervisorGraph` are no longer exported from current core
-  package public surfaces. `KnowledgeService.get_runtime_settings` preserves
+  package public surfaces. The `/knowledge/search` API service path now routes
+  through `KnowledgeQueryService` instead of the legacy `RagHandler` search
+  path. `KnowledgeService.get_runtime_settings` preserves
   `domain_pack_id` as a migration field but no longer loads
   `DomainPackLoader` from it. `GraphRetriever` no longer loads retrieval
   policy from a bare `domain_pack_id`; explicit `query_policy` now carries the

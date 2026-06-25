@@ -21,6 +21,10 @@ Workspace knowledge prefetch and the Workspace `search_knowledge_base` tool
 also reach this runtime through `KnowledgeQueryService`; they no longer call
 `AgentRuntime` or `DomainQAGraph`.
 
+The `/knowledge/search` API service path also reaches this runtime through
+`KnowledgeQueryService`; it no longer calls the legacy `RagHandler` search
+path directly.
+
 ## Target References
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`

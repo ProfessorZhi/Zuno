@@ -23,7 +23,7 @@ phase that owns it proves active dependency removal.
 | 00 | complete | current-state and dependency gate |
 | 01 | in progress / blocked | official cleanup 11C dependency removal |
 | 02 | blocked by 01 | Contract Review asset migration |
-| 03 | blocked by 01-02 | GraphRAG Project mainline hardening |
+| 03 | blocked by 01-02 / safe prework started | GraphRAG Project mainline hardening |
 | 04 | blocked by 01-03 | repository layout cleanup |
 | 05 | blocked by 04 | Context contract foundation |
 | 06 | blocked by 05 | Memory layer foundation |

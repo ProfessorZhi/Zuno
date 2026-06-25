@@ -362,19 +362,46 @@ def test_reindex_knowledge_action_endpoint_passes_knowledge_id(monkeypatch):
 
 def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
     from zuno.api.v1.knowledge import search_knowledge
+    from zuno.services.graphrag.query_service import KnowledgeQueryResult
 
     async def fake_verify_user_permission(knowledge_id, user_id):
         assert (knowledge_id, user_id) == ("k_test", "u_test")
 
-    async def fake_retrieve_ranked_documents_with_metadata(*args, **kwargs):
-        return {
-            "content": "final-context",
-            "first_mode": "rag",
-            "final_mode": "hybrid",
-            "second_pass_used": True,
-            "fallback_triggered": True,
-            "fallback_reason": "too_few_documents",
+    captured = {}
+
+    async def fake_project_query(self, *, user_id, knowledge_ids, query, query_method=None, top_k=None):
+        captured["query"] = {
+            "user_id": user_id,
+            "knowledge_ids": knowledge_ids,
+            "query": query,
+            "query_method": query_method,
+            "top_k": top_k,
         }
+        return KnowledgeQueryResult(
+            graphrag_project_id="contract_review",
+            answer="final-context",
+            requested_query_method="auto",
+            resolved_query_method="local",
+            fallback_reason="too_few_documents",
+            documents=[{"id": "doc-1", "score": 0.91}],
+            evidence={"chunks": ["doc-1"]},
+            citations=["doc-1#p1"],
+            retrievers_used=["vector", "graph"],
+            graph_paths=[],
+            communities=[],
+            prompt_version="extract-v1",
+            query_prompt_version="local-v1",
+            index_version={"vector": "v1"},
+            community_version="v0",
+            trace_metadata={
+                "second_pass_used": True,
+                "fallback_triggered": True,
+            },
+            raw_result={"content": "raw-context"},
+        )
+
+    async def fail_legacy_rag_handler(*args, **kwargs):
+        raise AssertionError("legacy RagHandler search path should not be used")
 
     monkeypatch.setattr(
         "zuno.api.v1.knowledge.KnowledgeService.verify_user_permission",
@@ -382,7 +409,11 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
     )
     monkeypatch.setattr(
         "zuno.services.rag.handler.RagHandler.retrieve_ranked_documents_with_metadata",
-        fake_retrieve_ranked_documents_with_metadata,
+        fail_legacy_rag_handler,
+    )
+    monkeypatch.setattr(
+        "zuno.api.services.knowledge_query.KnowledgeQueryService.query",
+        fake_project_query,
     )
 
     response = asyncio.run(
@@ -397,4 +428,14 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
     assert response.status_code == 200
     assert response.data["content"] == "final-context"
     assert response.data["second_pass_used"] is True
-    assert response.data["final_mode"] == "hybrid"
+    assert response.data["final_mode"] == "local"
+    assert response.data["fallback_triggered"] is True
+    assert response.data["fallback_reason"] == "too_few_documents"
+    assert response.data["citations"] == ["doc-1#p1"]
+    assert captured["query"] == {
+        "user_id": "u_test",
+        "knowledge_ids": ["k_test"],
+        "query": "请补充知识库内容",
+        "query_method": None,
+        "top_k": 5,
+    }

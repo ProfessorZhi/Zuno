@@ -41,9 +41,11 @@ Phase 11C progress / Blocked Legacy:
   old frontend Domain Pack API/page files have also been retired from
   `apps/web/src/`.
 - Workspace knowledge prefetch/tools now use `KnowledgeQueryService`; the
-  standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
-  source have been removed. The direct `DomainQAGraph` source and legacy graph
-  state module have also been removed. `DomainQAGraph` /
+  `/knowledge/search` API service path also uses `KnowledgeQueryService`
+  instead of the legacy `RagHandler` search path. The standalone `AgentRuntime`
+  facade and direct `MultiAgentSupervisorGraph` source have been removed. The
+  direct `DomainQAGraph` source and legacy graph state module have also been
+  removed. `DomainQAGraph` /
   `MultiAgentSupervisorGraph` are no longer current core package public
   exports.
 - `KnowledgeService.get_runtime_settings` preserves `domain_pack_id` as a

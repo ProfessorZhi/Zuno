@@ -9,6 +9,11 @@ query methods, evidence, citation, and trace.
 
 Phase 01 and Phase 02 complete.
 
+Current status: blocked by Phase 01 / Phase 02 for full closure. Safe prework
+has started: `/knowledge/search` now routes through `KnowledgeQueryService`
+instead of the legacy `RagHandler` search path, while preserving compatibility
+response fields for current callers.
+
 ## Scope
 
 - Harden `graphrag_project_id` and `query_method` contracts.
