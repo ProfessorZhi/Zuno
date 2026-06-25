@@ -53,18 +53,20 @@ migration stages.
 
 ## Next Actions
 
-1. 11C active dependency removal
-2. Contract Review asset migration
-3. full pytest
-4. eval baseline comparison
-5. program closure
+1. finish 11C active dependency removal through compatibility dependency
+   reduction and formal Phase 02 closure proof
+2. continue Phase 03 GraphRAG Project mainline hardening from safe prework
+3. continue Phase 04 repository layout cleanup from safe prework
+4. full pytest
+5. eval baseline comparison
+6. program closure
 
-Contract Review asset migration has started: the Target example copy lives at
-`examples/graphrag-projects/contract_review/`, and the dedicated Contract
-Review eval now reads its GraphRAG Project compatibility payload and eval
-fixture from that copy. Root Domain Pack assets are archived and Docker
-Domain Pack mounts are retired, but this does not close 11C because compat
-surfaces remain.
+Contract Review asset migration has completed its asset-only slice: the Target
+example copy lives at `examples/graphrag-projects/contract_review/`, and the
+dedicated Contract Review eval now reads its GraphRAG Project compatibility
+payload and eval fixture from that copy. Root Domain Pack assets are archived
+and Docker Domain Pack mounts are retired, but this does not close 11C because
+compat surfaces remain.
 
 ## Next Candidate
 

@@ -48,6 +48,22 @@ RETIRED_DOMAIN_PACK_API_WRAPPERS = [
     "src/backend/zuno/api/services/domain_pack.py",
 ]
 
+REQUIRED_CONTRACT_REVIEW_HISTORY_ASSETS = [
+    "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+    "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
+    "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
+    "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
+    "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
+    "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
+    "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
+]
+
+REQUIRED_RETIRED_UI_SCRIPT_ARCHIVES = [
+    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
+    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
+    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
+]
+
 
 def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
@@ -83,11 +99,13 @@ def main() -> int:
         if not (REPO_ROOT / path).exists():
             errors.append(f"Blocked Legacy path missing without Phase 11 proof: {path}")
 
-    if not (
-        REPO_ROOT
-        / "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml"
-    ).exists():
-        errors.append("root Domain Pack archive missing after Phase 11C asset migration")
+    for relative_path in REQUIRED_CONTRACT_REVIEW_HISTORY_ASSETS:
+        if not (REPO_ROOT / relative_path).exists():
+            errors.append(f"root Domain Pack archive asset missing after Phase 11C asset migration: {relative_path}")
+
+    for relative_path in REQUIRED_RETIRED_UI_SCRIPT_ARCHIVES:
+        if not (REPO_ROOT / relative_path).exists():
+            errors.append(f"retired Domain Pack UI script archive missing: {relative_path}")
 
     repo_hygiene_map = _read(".agent/references/repo-hygiene-map.md")
     if "must not be restored as target repository layout" not in repo_hygiene_map:

@@ -33,7 +33,8 @@ Current status:
   `DomainQAGraph` and
   `MultiAgentSupervisorGraph` are no longer exported from current core package
   public surfaces.
-- Phase 02 has started as an asset-only migration slice:
+- Phase 02 asset-only migration is complete, but formal Phase 02 closure
+  remains blocked until remaining migration compatibility evidence is reduced:
   `examples/graphrag-projects/contract_review/` now holds the Target
   GraphRAG Project copy of Contract Review schema, prompts, retrieval policy,
   and eval fixture. The project loader materializes `retrieval_policy.yaml`
@@ -41,9 +42,18 @@ Current status:
   eval. Contract Review eval now reads the GraphRAG Project compatibility
   payload and eval fixture without loading `DomainPackLoader` or executing
   through `DomainQAGraph`; root Domain Pack assets are archived as History and
-  Docker no longer carries Domain Pack mounts. Phase 02 is not closed until
-  migration compatibility evidence is fully reduced. Stackless local eval now
+  Docker no longer carries Domain Pack mounts. Stackless local eval now
   requires GraphRAG Project assets when an id is provided.
+- Phase 03 has safe prework started, but full closure remains blocked by
+  Phase 01 / Phase 02: `/knowledge/search` now routes through
+  `KnowledgeQueryService`, Contract Review project assets expose
+  `to_project_payload()`, and stackless eval entrypoints prefer
+  `graphrag_project_id` / `--graphrag-project-id` while retaining legacy
+  compatibility aliases.
+- Phase 04 has safe prework started, but full closure remains blocked by
+  Phase 01-03: retired Domain Pack UI capture and responsive-check scripts
+  were archived under
+  `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

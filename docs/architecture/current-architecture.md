@@ -94,6 +94,13 @@ Contract Review eval no longer loads `DomainPackLoader` or executes through
 loader fallback; when an id is provided, it must resolve to GraphRAG Project
 assets.
 
+GraphRAG Project Contract Review assets now expose `to_project_payload()` as
+the project-named compatibility payload API. `to_domain_pack_payload()` remains
+only as a legacy wrapper for migration tests and older compatibility callers.
+Stackless compare/local embedding evals prefer `graphrag_project_id` /
+`--graphrag-project-id` while retaining `domain_pack_id` only as a migration
+alias where current contracts still require it.
+
 ## Blocked Legacy
 
 Phase 11C is blocked because these active dependencies still exist:

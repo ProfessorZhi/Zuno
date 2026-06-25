@@ -1,6 +1,24 @@
 import asyncio
+from pathlib import Path
 
 import pytest
+
+
+def test_stackless_local_eval_exposes_project_named_payload_loader():
+    from zuno.evals.rag_eval.run_stackless_local_eval import _load_graph_project_payload
+
+    payload = _load_graph_project_payload("contract_review")
+
+    assert payload is not None
+    assert payload["id"] == "contract_review"
+    assert payload["retrieval_policy_data"]["graph_hop_limit"] == 2
+    schema_path = Path(payload["schema_path"])
+    assert schema_path.parts[-4:] == (
+        "examples",
+        "graphrag-projects",
+        "contract_review",
+        "schema.json",
+    )
 
 
 def test_stackless_local_graph_retriever_uses_project_assets_without_domain_pack_loader():

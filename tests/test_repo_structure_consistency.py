@@ -1,3 +1,5 @@
+import importlib.util
+import sys
 from pathlib import Path
 
 
@@ -31,6 +33,38 @@ def test_required_current_paths_exist() -> None:
 
     for relative_path in required_paths:
         assert (REPO_ROOT / relative_path).exists(), f"missing required path: {relative_path}"
+
+
+def test_repo_structure_verifier_pins_full_contract_review_asset_migration() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    required_paths = set(verifier.REQUIRED_PATHS)
+    for relative_path in [
+        "examples/graphrag-projects/contract_review/settings.yaml",
+        "examples/graphrag-projects/contract_review/schema.json",
+        "examples/graphrag-projects/contract_review/retrieval_policy.yaml",
+        "examples/graphrag-projects/contract_review/prompts/extract_graph.md",
+        "examples/graphrag-projects/contract_review/prompts/local_query.md",
+        "examples/graphrag-projects/contract_review/prompts/report_template.md",
+        "examples/graphrag-projects/contract_review/eval/eval_dataset.jsonl",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
+        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
+        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
+        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
+    ]:
+        assert relative_path in required_paths
 
 
 def test_retired_front_path_directories_are_not_current_paths() -> None:

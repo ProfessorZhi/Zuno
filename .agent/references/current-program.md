@@ -18,7 +18,7 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 
 ## Current Implementation Status
 
-- Target Migration Phase 00 is ready.
+- Target Migration Phase 00 is complete.
 - Phase 01 continues official cleanup 11C active dependency removal.
 - Official cleanup Phase 11A and 11B are complete.
 - Official cleanup Phase 11C remains blocked by remaining migration
@@ -35,6 +35,19 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
   retired from current backend.
   `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer current core
   package public exports.
+- Phase 02 asset-only migration is complete, but formal closure remains blocked
+  by remaining migration compatibility evidence. Contract Review target assets
+  live under `examples/graphrag-projects/contract_review/`, with root Domain
+  Pack assets archived under
+  `docs/architecture/history/domain-packs/root-contract-review/`.
+- Phase 03 has safe prework started: `/knowledge/search` routes through
+  `KnowledgeQueryService`, Contract Review project assets expose
+  `to_project_payload()`, and stackless eval entrypoints prefer
+  `graphrag_project_id` / `--graphrag-project-id` while retaining legacy
+  compatibility aliases.
+- Phase 04 has safe prework started: retired Domain Pack UI capture and
+  responsive-check scripts are archived under
+  `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
 - Official cleanup Phase 12 is partial / not closed.
 
 ## Detailed Sources

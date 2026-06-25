@@ -37,10 +37,16 @@ def test_package_license_matches_root_license() -> None:
 def test_retired_legacy_paths_are_absent_and_classified() -> None:
     assert not (REPO_ROOT / "tests/compat").exists()
     assert not (REPO_ROOT / "domain-packs").exists()
-    assert (
-        REPO_ROOT
-        / "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml"
-    ).exists()
+    for relative_path in [
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
+    ]:
+        assert (REPO_ROOT / relative_path).exists()
 
     map_content = (
         REPO_ROOT / ".agent" / "references" / "repo-hygiene-map.md"
@@ -48,6 +54,26 @@ def test_retired_legacy_paths_are_absent_and_classified() -> None:
     assert "docs/architecture/history/domain-packs/root-contract-review/" in map_content
     assert "`tests/compat/`: Retired" in map_content
     assert "must not be restored as target repository layout" in map_content
+
+
+def test_repo_hygiene_verifier_preserves_full_contract_review_history() -> None:
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+
+    for relative_path in [
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
+        "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
+        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
+        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
+        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
+    ]:
+        assert relative_path in verifier
 
 
 def test_multi_agent_supervisor_source_stays_retired_from_current_backend() -> None:

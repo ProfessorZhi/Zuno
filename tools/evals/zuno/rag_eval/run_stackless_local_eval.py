@@ -211,7 +211,7 @@ async def _build_local_graph_retriever(
     graphrag_project_id: str | None = None,
 ) -> GraphRetriever:
     project_id = graphrag_project_id or domain_pack_id
-    domain_pack = _load_graph_project_domain_payload(project_id)
+    domain_pack = _load_graph_project_payload(project_id)
     extractor = StructuredGraphExtractor() if domain_pack else GraphExtractor()
     extracted_documents: list[dict[str, Any]] = []
     for chunk in chunks:
@@ -236,7 +236,7 @@ def _example_projects_root() -> Path:
     return Path(__file__).resolve().parents[4] / "examples" / "graphrag-projects"
 
 
-def _load_graph_project_domain_payload(project_id: str | None) -> dict[str, Any] | None:
+def _load_graph_project_payload(project_id: str | None) -> dict[str, Any] | None:
     normalized = str(project_id or "").strip()
     if not normalized:
         return None
@@ -249,6 +249,10 @@ def _load_graph_project_domain_payload(project_id: str | None) -> dict[str, Any]
     if project is None:
         return None
     return project.to_project_payload()
+
+
+def _load_graph_project_domain_payload(project_id: str | None) -> dict[str, Any] | None:
+    return _load_graph_project_payload(project_id)
 
 
 def _build_temp_config() -> Path:
@@ -420,7 +424,7 @@ async def run_stackless_local_eval(
             vl_embedding_config=None,
         )
 
-        domain_pack = _load_graph_project_domain_payload(graphrag_project_id or domain_pack_id)
+        domain_pack = _load_graph_project_payload(graphrag_project_id or domain_pack_id)
         graph_retriever = await _build_local_graph_retriever(
             chunks,
             domain_pack_id=domain_pack_id,
