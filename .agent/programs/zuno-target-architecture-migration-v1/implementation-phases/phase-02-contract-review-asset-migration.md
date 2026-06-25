@@ -92,9 +92,9 @@ Closure evidence:
   `DomainPackLoader`; the dedicated Contract Review eval also no longer
   executes through `DomainQAGraph`, and the direct `DomainQAGraph` source is
   retired.
-- Contract Review graph extraction uses `project_payload` as the primary
-  internal payload name while preserving legacy extractor alias support for
-  migration callers.
+- Contract Review graph extraction uses `project_payload` as the active
+  payload name. The old extractor `domain_pack` payload alias is retired from
+  active extractor APIs.
 - `domain-packs/contract_review/` is archived under
   `docs/architecture/history/domain-packs/root-contract-review/`.
 - Docker no longer copies or mounts `/app/domain-packs`.

@@ -116,10 +116,10 @@ Removed from the active current path:
   `GeneralAgent` to expose `KnowledgeService` or `AgentRuntime`; it now records
   the current 11B fact that `GeneralAgent` uses `KnowledgeQueryService` and a
   single react loop while protecting the retired `AgentRuntime` facade boundary.
-- `tests/test_general_agent_domain_pack_runtime.py` has been reclassified
-  from legacy Domain Pack runtime coverage to retired compatibility evidence:
-  it now proves `GeneralAgent` no longer exposes the old
-  `KnowledgeService` / `AgentRuntime` / `RagHandler` path.
+- `tests/test_general_agent_project_query_runtime.py` has been reclassified
+  from legacy Domain Pack runtime coverage to project query runtime and retired
+  compatibility evidence: it now proves `GeneralAgent` no longer exposes the
+  old `KnowledgeService` / `AgentRuntime` / `RagHandler` path.
 - Root Phase 11C tests prove the direct `DomainQAGraph` module and legacy graph
   state module remain retired from current backend source.
 - `KnowledgeService.get_runtime_settings` no longer auto-loads
@@ -182,5 +182,6 @@ No longer blocked by current eval runtime:
   project-query-policy named test instead of a Domain Pack named current test.
 - Root `tests/` still contains migration/current compatibility coverage for
   Workspace, Domain Pack migration fields, and Contract Review GraphRAG Project
-  compatibility payloads. Retired runtime import/source guards have moved to
-  root Phase 11C tests.
+  compatibility payloads. The main root compatibility tests now use project or
+  retirement naming instead of Domain Pack runtime naming. Retired runtime
+  import/source guards have moved to root Phase 11C tests.

@@ -117,7 +117,7 @@ def test_domain_pack_retirement_guards_live_in_root_phase11c_tests() -> None:
     assert not (REPO_ROOT / "tests/compat").exists()
 
     root_tests = [
-        "tests/test_contract_review_domain_pack.py",
+        "tests/test_contract_review_project_payload.py",
     ]
     for relative_path in root_tests:
         assert (REPO_ROOT / relative_path).exists(), relative_path

@@ -24,18 +24,18 @@ def _contract_review_query_policy() -> dict:
     return dict(project.settings["retrieval_policy"])
 
 
-def _contract_review_payload() -> dict:
+def _contract_review_project_payload() -> dict:
     _ensure_runtime_paths()
 
     GraphRAGProjectLoader = importlib.import_module("zuno.services.graphrag.project.loader").GraphRAGProjectLoader
     projects_root = Path(__file__).resolve().parents[1] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
     assert project is not None
-    return project.to_domain_pack_payload()
+    return project.to_project_payload()
 
 
 def test_contract_review_project_payload_matches_legacy_shape():
-    payload = _contract_review_payload()
+    payload = _contract_review_project_payload()
 
     assert payload["id"] == "contract_review"
     assert payload["schema"] == "schema.json"
@@ -51,7 +51,7 @@ def test_structured_graph_extractor_builds_contract_review_entities_and_relation
         "zuno.services.graphrag.extractors.structured_extractor"
     ).StructuredGraphExtractor
 
-    contract_review = _contract_review_payload()
+    project_payload = _contract_review_project_payload()
 
     chunk = {
         "chunk_id": "contract_chunk_1",
@@ -77,7 +77,7 @@ def test_structured_graph_extractor_builds_contract_review_entities_and_relation
         StructuredGraphExtractor().extract_from_chunk(
             chunk,
             "kb_contract",
-            domain_pack=contract_review,
+            project_payload=project_payload,
         )
     )
 
@@ -117,7 +117,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
         "zuno.services.graphrag.extractors.structured_extractor"
     ).StructuredGraphExtractor
 
-    contract_review = _contract_review_payload()
+    project_payload = _contract_review_project_payload()
     chunk = {
         "chunk_id": "contract_chunk_2",
         "file_name": "contract_008_outsourcing_service_agreement__variant_2.md",
@@ -133,7 +133,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
         StructuredGraphExtractor().extract_from_chunk(
             chunk,
             "kb_contract",
-            domain_pack=contract_review,
+            project_payload=project_payload,
         )
     )
 

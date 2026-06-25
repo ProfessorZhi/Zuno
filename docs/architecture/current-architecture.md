@@ -97,9 +97,10 @@ Contract Review graph/eval payloads from GraphRAG Project assets. The dedicated
 Contract Review eval no longer loads `DomainPackLoader` or executes through
 `DomainQAGraph`. Stackless local eval no longer has a generic Domain Pack
 loader fallback; when an id is provided, it must resolve to GraphRAG Project
-assets. Their graph extraction paths now call extractors with
-`project_payload=project_payload`; `domain_pack=` is retained only as an
-extractor compatibility alias.
+assets. Their graph extraction paths, the active pipeline graph extraction
+path, and the extractor contract tests now call extractors with
+`project_payload=project_payload`; the graph extractor `domain_pack=` payload
+alias is retired from active extractor APIs.
 
 GraphRAG Project Contract Review assets now expose `to_project_payload()` as
 the project-named compatibility payload API. `to_domain_pack_payload()` remains

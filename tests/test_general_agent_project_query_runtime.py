@@ -19,7 +19,7 @@ def _agent_config():
     )
 
 
-def test_general_agent_domain_pack_runtime_symbols_are_retired():
+def test_general_agent_legacy_runtime_symbols_are_retired():
     from zuno.core.agents import general_agent as ga
 
     assert "AgentRuntime" not in vars(ga)

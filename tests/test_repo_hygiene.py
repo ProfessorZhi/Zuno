@@ -213,6 +213,12 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
         REPO_ROOT
         / "src/backend/zuno/services/graphrag/extractors/cached_extractor.py"
     ).read_text(encoding="utf-8")
+    pipeline_manager = (
+        REPO_ROOT / "src/backend/zuno/services/pipeline/manager.py"
+    ).read_text(encoding="utf-8")
+    structured_contract_test = (
+        REPO_ROOT / "tests/test_structured_graph_extractor_contract.py"
+    ).read_text(encoding="utf-8")
     graph_retrievers = (
         REPO_ROOT / "src/backend/zuno/services/retrieval/retrievers.py"
     ).read_text(encoding="utf-8")
@@ -221,6 +227,10 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     assert "project_payload=project_payload" in stackless_eval
     assert "domain_pack=project_payload" not in contract_eval
     assert "domain_pack=project_payload" not in stackless_eval
+    assert "domain_pack=domain_pack" not in pipeline_manager
+    assert "domain_pack:" not in structured_extractor
+    assert "domain_pack:" not in cached_extractor
+    assert "domain_pack=contract_review" not in structured_contract_test
     assert "_load_graph_project_domain_payload" not in stackless_eval
     assert "project_payload:" in structured_extractor
     assert "project_payload:" in cached_extractor
@@ -230,6 +240,9 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
         REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
     ).read_text(encoding="utf-8")
     assert "GraphRAG eval paths must call extractors with project_payload" in verifier
+    assert "Pipeline graph extraction must call extractors with project_payload" in verifier
+    assert "GraphRAG extractors must not expose domain_pack payload aliases" in verifier
+    assert "Structured graph extractor contract tests must use project_payload" in verifier
     assert "Stackless local eval must not keep a graph project domain payload alias" in verifier
     assert "GraphRAG extractors must expose project_payload as the primary payload parameter" in verifier
     assert "GraphRetrieverAdapter must map GraphRAG Project scope to the legacy storage filter" in verifier
@@ -247,6 +260,33 @@ def test_stackless_contract_eval_test_is_project_query_policy_named() -> None:
         REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
     ).read_text(encoding="utf-8")
     assert "Stackless Contract Review eval test must use project query policy naming" in verifier
+
+
+def test_root_runtime_tests_use_project_or_retirement_naming() -> None:
+    retired_names = [
+        "tests/test_completion_domain_pack_runtime.py",
+        "tests/test_contract_review_domain_pack.py",
+        "tests/test_domain_pack_runtime_flow.py",
+        "tests/test_general_agent_domain_pack_runtime.py",
+        "tests/test_workspace_domain_pack_runtime.py",
+    ]
+    project_names = [
+        "tests/test_completion_agent_config_compatibility.py",
+        "tests/test_contract_review_project_payload.py",
+        "tests/test_project_query_compatibility_boundaries.py",
+        "tests/test_general_agent_project_query_runtime.py",
+        "tests/test_workspace_project_query_runtime.py",
+    ]
+
+    for relative_path in retired_names:
+        assert not (REPO_ROOT / relative_path).exists(), f"retired test name remains: {relative_path}"
+    for relative_path in project_names:
+        assert (REPO_ROOT / relative_path).exists(), f"project-named test missing: {relative_path}"
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "Root migration tests must use project or retirement naming" in verifier
 
 
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:

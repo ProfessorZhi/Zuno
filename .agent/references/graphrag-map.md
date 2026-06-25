@@ -51,8 +51,11 @@ Root Domain Pack assets are archived under
 `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
 longer copies or mounts `/app/domain-packs`. Stackless local eval now requires
 GraphRAG Project assets when an id is provided. Contract Review and stackless
-local graph extraction calls use `project_payload=project_payload`; extractor
-`domain_pack` parameters remain migration aliases only.
+local graph extraction calls use `project_payload=project_payload`; active
+pipeline graph extraction also passes `project_payload`, and graph extractors
+no longer expose a `domain_pack` payload parameter alias. `domain_pack_id`
+remains only as existing storage and migration compatibility where explicitly
+tested.
 
 ## Blocked Legacy
 

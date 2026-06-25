@@ -42,9 +42,9 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   `GeneralAgent` to expose the old `KnowledgeService` / `AgentRuntime`
   Domain Pack path; it now protects the retired `AgentRuntime` facade boundary
   and the current `GeneralAgent` project-query path.
-- `tests/test_general_agent_domain_pack_runtime.py` has been reclassified
-  to retired compatibility evidence for the removed `GeneralAgent` Domain Pack
-  path.
+- `tests/test_general_agent_project_query_runtime.py` has been reclassified
+  to project query runtime and retired compatibility evidence for the removed
+  `GeneralAgent` Domain Pack path.
 - Root Phase 11C tests now prove the direct `DomainQAGraph` module and legacy
   graph state module remain retired from current backend source.
 - `src/backend/zuno/api/services/knowledge.py` no longer imports
@@ -73,7 +73,7 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   `_run_domain_pack_query`; Workspace knowledge prefetch/tools now use
   `KnowledgeQueryService`.
 - `tests/test_phase11c_workspace_project_query_cutover.py`,
-  `tests/test_workspace_domain_pack_runtime.py`, and
+  `tests/test_workspace_project_query_runtime.py`, and
   `tests/test_phase5_workspace_real_runtime_flow.py` now protect the Workspace
   project-query runtime path.
 - `src/backend/zuno/core/runtime/agent_runtime.py` has been removed from

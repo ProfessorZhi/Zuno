@@ -217,7 +217,7 @@ class KnowledgePipelineManager:
             if self.enable_graph_indexing and index_capability == "rag_graph":
                 chunks = await self._parse_chunks(task)
                 runtime_settings = await KnowledgeService.get_runtime_settings(task.knowledge_id)
-                domain_pack = runtime_settings.get("domain_pack")
+                project_payload = runtime_settings.get("domain_pack")
                 domain_pack_id = runtime_settings.get("domain_pack_id")
                 graph_index_version = str(knowledge_config.get("graph_index_settings", {}).get("index_version") or "v1")
                 graph_status = str(knowledge_config.get("index_settings", {}).get("status") or "active")
@@ -243,7 +243,7 @@ class KnowledgePipelineManager:
                         graph_data = await extractor.extract_from_chunk(
                             chunk,
                             task.knowledge_id,
-                            domain_pack=domain_pack,
+                            project_payload=project_payload,
                         )
                         for entity in graph_data["entities"]:
                             await client.upsert_entity(

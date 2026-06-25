@@ -14,10 +14,10 @@ has started: `/knowledge/search` now routes through `KnowledgeQueryService`
 instead of the legacy `RagHandler` search path, while preserving compatibility
 response fields for current callers. Contract Review eval project assets now
 use `to_project_payload()` as the main GraphRAG Project payload API, and
-Structured/Cached graph extractors expose `project_payload` as their primary
-payload parameter while keeping `domain_pack` as a migration alias. Contract
-Review and stackless local eval graph extraction calls now use
-`project_payload=project_payload`. Stackless eval entrypoints prefer `graphrag_project_id` /
+Structured/Cached graph extractors expose `project_payload` as their payload
+parameter without the old `domain_pack` payload alias. Contract Review,
+stackless local eval, active pipeline graph extraction, and extractor contract
+tests now use `project_payload=project_payload`. Stackless eval entrypoints prefer `graphrag_project_id` /
 `--graphrag-project-id` while retaining `domain_pack_id` only as migration
 compatibility. Stable active architecture specs now frame retrieval governance,
 LangGraph runtime, enhanced retrieval, platform direction, eval, and knowledge

@@ -5,14 +5,6 @@ from pathlib import Path
 PROJECTS_ROOT = Path(__file__).resolve().parents[1] / "examples" / "graphrag-projects"
 
 
-def _contract_review_payload():
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
-
-    project = GraphRAGProjectLoader(projects_root=PROJECTS_ROOT).load("contract_review")
-    assert project is not None
-    return project.to_domain_pack_payload()
-
-
 def _contract_review_project_payload():
     from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
 
@@ -69,7 +61,7 @@ def test_cached_graph_extractor_accepts_project_payload_as_primary_contract():
 def test_structured_graph_extractor_builds_contract_entities_and_relations():
     from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
-    contract_review = _contract_review_payload()
+    project_payload = _contract_review_project_payload()
 
     chunk = {
         "chunk_id": "contract_chunk_1",
@@ -95,7 +87,7 @@ def test_structured_graph_extractor_builds_contract_entities_and_relations():
         StructuredGraphExtractor().extract_from_chunk(
             chunk,
             "kb_contract",
-            domain_pack=contract_review,
+            project_payload=project_payload,
         )
     )
 
@@ -129,7 +121,7 @@ def test_structured_graph_extractor_builds_contract_entities_and_relations():
 def test_structured_graph_extractor_recovers_contract_title_from_file_name():
     from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
-    contract_review = _contract_review_payload()
+    project_payload = _contract_review_project_payload()
     chunk = {
         "chunk_id": "contract_chunk_2",
         "file_name": "contract_008_outsourcing_service_agreement__variant_2.md",
@@ -145,7 +137,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
         StructuredGraphExtractor().extract_from_chunk(
             chunk,
             "kb_contract",
-            domain_pack=contract_review,
+            project_payload=project_payload,
         )
     )
 
@@ -163,7 +155,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
 def test_structured_graph_extractor_supports_inline_clause_body_format():
     from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
-    contract_review = _contract_review_payload()
+    project_payload = _contract_review_project_payload()
     chunk = {
         "chunk_id": "contract_chunk_inline",
         "file_name": "loan_contract_001.md",
@@ -174,7 +166,7 @@ def test_structured_graph_extractor_supports_inline_clause_body_format():
         StructuredGraphExtractor().extract_from_chunk(
             chunk,
             "kb_contract",
-            domain_pack=contract_review,
+            project_payload=project_payload,
         )
     )
 

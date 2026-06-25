@@ -53,7 +53,7 @@ def test_contract_review_example_project_loads_with_prompt_manifest() -> None:
     assert legacy_payload == payload
 
 
-def test_contract_review_domain_pack_assets_are_mapped_to_project_assets() -> None:
+def test_contract_review_history_assets_are_mapped_to_project_assets() -> None:
     settings = yaml.safe_load((PROJECT_ROOT / "settings.yaml").read_text(encoding="utf-8"))
     source_pack = yaml.safe_load(
         (

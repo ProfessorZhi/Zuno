@@ -205,9 +205,7 @@ class StructuredGraphExtractor(GraphExtractor):
         knowledge_id: str,
         *,
         project_payload: dict | None = None,
-        domain_pack: dict | None = None,
     ) -> dict:
-        project_payload = project_payload or domain_pack
         chunk_payload = self._chunk_dict(chunk)
         result = await super().extract_from_chunk(chunk_payload, knowledge_id)
         content = str(chunk_payload.get("content") or "")

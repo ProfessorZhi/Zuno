@@ -53,9 +53,10 @@ Current status:
   Phase 01 / Phase 02: `/knowledge/search` now routes through
   `KnowledgeQueryService`, Contract Review project assets expose
   `to_project_payload()`, graph extractors accept `project_payload` as the
-  primary payload parameter, and stackless eval entrypoints prefer
-  `graphrag_project_id` / `--graphrag-project-id` while retaining legacy
-  compatibility aliases. Active stable architecture specs now describe
+  active payload parameter without the old `domain_pack` payload alias, and
+  stackless eval entrypoints prefer `graphrag_project_id` /
+  `--graphrag-project-id` while retaining legacy compatibility aliases where
+  explicitly tested. Active stable architecture specs now describe
   GraphRAG Project / query policy as the mainline driver instead of Domain
   Pack, and the docs entrypoint verifier guards against reintroducing Domain
   Pack-as-target wording outside explicit migration specs. Active near-term
