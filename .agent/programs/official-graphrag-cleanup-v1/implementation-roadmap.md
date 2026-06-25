@@ -23,8 +23,8 @@ Current truth is still the Python monorepo runtime:
   prefetch/tools, `KnowledgeService.get_runtime_settings`, and
   `GraphRetriever` policy resolution no longer use the Domain Pack runtime
   path by default. Stackless local eval and the dedicated Contract Review eval
-  can build from GraphRAG Project assets, while stackless local eval keeps a
-  legacy fallback for unmigrated packs.
+  can build from GraphRAG Project assets; stackless local eval now requires
+  GraphRAG Project assets when an id is provided.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
   `RetrievalFusion`, BM25/vector/graph adapters, community services, requery,
   index version fields, and trace metadata.

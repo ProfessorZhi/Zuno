@@ -133,6 +133,20 @@ def test_contract_eval_runner_stays_off_domain_pack_loader_project_defaults() ->
     assert "Contract Review eval must not use DomainQAGraph" in verifier
 
 
+def test_stackless_local_eval_stays_off_legacy_domain_pack_loader_fallback() -> None:
+    stackless_eval = (
+        REPO_ROOT / "tools/evals/zuno/rag_eval/run_stackless_local_eval.py"
+    ).read_text(encoding="utf-8")
+    assert "_load_legacy_domain_pack_payload" not in stackless_eval
+    assert "from zuno.services.domain_pack.loader import DomainPackLoader" not in stackless_eval
+    assert "DomainPackLoader().load" not in stackless_eval
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "Stackless local eval must not fall back to DomainPackLoader" in verifier
+
+
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
     assert not (
         REPO_ROOT / "src/backend/zuno/domain_packs"

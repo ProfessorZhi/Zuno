@@ -83,8 +83,9 @@ copy under `examples/graphrag-projects/contract_review/`.
 Stackless local eval and the dedicated Contract Review eval can build their
 Contract Review graph/eval payloads from GraphRAG Project assets. The dedicated
 Contract Review eval no longer loads `DomainPackLoader` or executes through
-`DomainQAGraph`. Stackless local eval still keeps a legacy Domain Pack fallback
-for unmigrated packs.
+`DomainQAGraph`. Stackless local eval no longer has a generic Domain Pack
+loader fallback; when an id is provided, it must resolve to GraphRAG Project
+assets.
 
 ## Blocked Legacy
 

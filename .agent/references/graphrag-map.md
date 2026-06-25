@@ -36,8 +36,9 @@ proof that all runtime paths no longer need `DomainPackLoader`;
 no longer auto-load it. Stackless local eval and the dedicated Contract Review
 eval can build from GraphRAG Project assets. The dedicated Contract Review eval
 is cut over from `DomainQAGraph`; direct `DomainQAGraph` id-only fallback and
-generic legacy eval fallback paths remain Blocked Legacy until the runtime/eval
-cutover is complete.
+Domain Pack service paths remain Blocked Legacy until the runtime/eval cutover
+is complete. Stackless local eval now requires GraphRAG Project assets when an
+id is provided.
 
 ## Blocked Legacy
 

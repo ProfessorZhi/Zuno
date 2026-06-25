@@ -136,6 +136,8 @@ Removed from the active current path:
 - The dedicated Contract Review eval now loads the same GraphRAG Project
   compatibility payload and eval fixture without loading `DomainPackLoader` or
   executing through `DomainQAGraph`.
+- Stackless local eval no longer has a generic Domain Pack loader fallback;
+  when an id is provided, it must resolve to GraphRAG Project assets.
 
 Retained as Blocked Legacy / Phase 02 migration assets:
 
@@ -158,8 +160,6 @@ Still blocked:
   `DomainPackLoader` or `DomainQAGraph`.
 - direct `DomainQAGraph` id-only fallback paths still depend on
   `DomainPackLoader`.
-- Stackless local eval still keeps a legacy Domain Pack fallback for
-  unmigrated packs.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
   direct `DomainQAGraph`, Domain Pack loader/eval, and graph/runtime surfaces,
   plus replacement evidence for retired runtime names, including

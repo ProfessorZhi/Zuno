@@ -36,8 +36,9 @@ Current status:
   eval. Contract Review eval now reads the GraphRAG Project compatibility
   payload and eval fixture without loading `DomainPackLoader` or executing
   through `DomainQAGraph`; Phase 02 is not closed because direct
-  `DomainQAGraph` fallback/source, generic legacy eval fallback, Domain Pack
-  services/assets/Docker, and compat tests remain.
+  `DomainQAGraph` fallback/source, Domain Pack services/assets/Docker, and
+  compat tests remain. Stackless local eval now requires GraphRAG Project assets
+  when an id is provided.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

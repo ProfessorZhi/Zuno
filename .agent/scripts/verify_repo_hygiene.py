@@ -164,6 +164,14 @@ def main() -> int:
     if "DomainQAGraph(" in contract_eval:
         errors.append("Contract Review eval must not use DomainQAGraph")
 
+    stackless_eval = _read("tools/evals/zuno/rag_eval/run_stackless_local_eval.py")
+    if "_load_legacy_domain_pack_payload" in stackless_eval:
+        errors.append("Stackless local eval must not fall back to DomainPackLoader")
+    if "from zuno.services.domain_pack.loader import DomainPackLoader" in stackless_eval:
+        errors.append("Stackless local eval must not fall back to DomainPackLoader")
+    if "DomainPackLoader().load" in stackless_eval:
+        errors.append("Stackless local eval must not fall back to DomainPackLoader")
+
     agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():
         errors.append("AgentRuntime facade must not remain as current backend source")

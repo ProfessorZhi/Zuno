@@ -52,8 +52,8 @@ Phase 11C progress / Blocked Legacy:
   `domain_pack_id`; graph policy must come from explicit `query_policy`, such
   as a GraphRAG Project `retrieval_policy.yaml`.
 - Stackless local eval and the dedicated Contract Review eval can build from
-  GraphRAG Project assets without loading `DomainPackLoader`; generic legacy
-  `domain_pack_id` fallback remains for unmigrated packs.
+  GraphRAG Project assets without loading `DomainPackLoader`; stackless local
+  eval now requires GraphRAG Project assets when an id is provided.
 - Remaining blockers still exist in `domain-packs/`, Domain Pack runtime
   services, direct `DomainQAGraph` loader fallback paths, Docker
   surfaces, retained `MultiAgentSupervisorGraph` compat retirement evidence,

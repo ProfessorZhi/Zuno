@@ -210,9 +210,8 @@ async def _build_local_graph_retriever(
     domain_pack_id: str | None = None,
     graphrag_project_id: str | None = None,
 ) -> GraphRetriever:
-    domain_pack = _load_graph_project_domain_payload(graphrag_project_id or domain_pack_id)
-    if domain_pack is None:
-        domain_pack = _load_legacy_domain_pack_payload(domain_pack_id)
+    project_id = graphrag_project_id or domain_pack_id
+    domain_pack = _load_graph_project_domain_payload(project_id)
     extractor = StructuredGraphExtractor() if domain_pack else GraphExtractor()
     extracted_documents: list[dict[str, Any]] = []
     for chunk in chunks:
@@ -246,20 +245,10 @@ def _load_graph_project_domain_payload(project_id: str | None) -> dict[str, Any]
     except ValueError as err:
         if "settings.yaml not found" not in str(err):
             raise
-        return None
+        raise ValueError(f"GraphRAG Project assets are required for {normalized}") from err
     if project is None:
         return None
     return project.to_domain_pack_payload()
-
-
-def _load_legacy_domain_pack_payload(domain_pack_id: str | None) -> dict[str, Any] | None:
-    normalized = str(domain_pack_id or "").strip()
-    if not normalized:
-        return None
-    from zuno.services.domain_pack.loader import DomainPackLoader
-
-    pack = DomainPackLoader().load(normalized)
-    return pack.to_dict() if pack else None
 
 
 def _build_temp_config() -> Path:
@@ -432,8 +421,6 @@ async def run_stackless_local_eval(
         )
 
         domain_pack = _load_graph_project_domain_payload(graphrag_project_id or domain_pack_id)
-        if domain_pack is None:
-            domain_pack = _load_legacy_domain_pack_payload(domain_pack_id)
         graph_retriever = await _build_local_graph_retriever(
             chunks,
             domain_pack_id=domain_pack_id,

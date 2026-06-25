@@ -56,8 +56,7 @@ Contract Review asset migration has started: the Target example copy lives at
 `examples/graphrag-projects/contract_review/`, and the dedicated Contract
 Review eval now reads its GraphRAG Project compatibility payload and eval
 fixture from that copy. This does not close Phase 02 or 11C because direct
-`DomainQAGraph` id-only fallback paths still use `DomainPackLoader`, stackless
-local eval still keeps a generic legacy fallback for unmigrated packs, and
+`DomainQAGraph` id-only fallback paths still use `DomainPackLoader`, and
 Domain Pack services/assets/Docker/compat surfaces remain.
 
 ## Next Candidate
