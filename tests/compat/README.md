@@ -29,3 +29,8 @@ GraphRAG Project query runtime through `KnowledgeQueryService`.
 standalone `AgentRuntime` facade module no longer exists. `DomainQAGraph` and
 `MultiAgentSupervisorGraph` are no longer public core package exports, while
 their direct source modules remain Blocked Legacy.
+
+`test_domain_qa_graph_runtime.py` and `test_multi_agent_supervisor_runtime.py`
+are moved Phase 5 legacy runtime tests. They remain here as Blocked Legacy
+coverage while root-level runtime import tests track the GraphRAG Project
+mainline.

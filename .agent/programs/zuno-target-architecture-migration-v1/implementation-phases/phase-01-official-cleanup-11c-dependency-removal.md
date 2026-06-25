@@ -93,6 +93,8 @@ Removed from the active current path:
 - Root Phase 5 runtime import tests no longer import Domain Pack loader or the
   legacy graph as current mainline; direct legacy import coverage remains under
   `tests/compat/`.
+- Phase 5 `DomainQAGraph` and `MultiAgentSupervisorGraph` runtime tests have
+  moved from root `tests/` into `tests/compat/` as Blocked Legacy coverage.
 - The stale tracked backend package asset copy
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under

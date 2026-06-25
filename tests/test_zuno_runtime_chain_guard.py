@@ -73,3 +73,19 @@ def test_phase5_import_tests_use_project_query_runtime_truth() -> None:
     assert "GraphRAGQueryService" in phase5_import_test
     assert "DomainQAGraph" not in phase5_import_test
     assert "DomainPackLoader" not in phase5_import_test
+
+
+def test_legacy_graph_runtime_tests_live_under_compat() -> None:
+    legacy_root_tests = [
+        "tests/test_phase5_domain_qa_graph_runtime.py",
+        "tests/test_phase5_multi_agent_supervisor_runtime.py",
+    ]
+    for relative_path in legacy_root_tests:
+        assert not (REPO_ROOT / relative_path).exists(), relative_path
+
+    compat_tests = [
+        "tests/compat/test_domain_qa_graph_runtime.py",
+        "tests/compat/test_multi_agent_supervisor_runtime.py",
+    ]
+    for relative_path in compat_tests:
+        assert (REPO_ROOT / relative_path).exists(), relative_path
