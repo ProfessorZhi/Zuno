@@ -33,6 +33,8 @@ def test_contract_review_example_project_loads_with_prompt_manifest() -> None:
     assert loaded.contract.query_method == "local"
     assert loaded.readiness.ready is True
     assert set(loaded.prompt_texts) == {"extract_graph", "local_query", "report_template"}
+    assert loaded.settings["retrieval_policy"]["graph_hop_limit"] == 2
+    assert loaded.settings["retrieval_policy"]["risk_relation_preference"] == "CLAUSE_HAS_RISK"
 
 
 def test_contract_review_domain_pack_assets_are_mapped_to_project_assets() -> None:

@@ -146,6 +146,12 @@ def main() -> int:
     if "DomainPackLoader().load" in knowledge_service:
         errors.append("KnowledgeService runtime settings must not load DomainPackLoader")
 
+    graph_retriever = _read("src/backend/zuno/services/graphrag/retriever.py")
+    if "from zuno.services.domain_pack.loader import DomainPackLoader" in graph_retriever:
+        errors.append("GraphRetriever policy defaults must not load DomainPackLoader")
+    if "DomainPackLoader().load" in graph_retriever:
+        errors.append("GraphRetriever policy defaults must not load DomainPackLoader")
+
     agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():
         errors.append("AgentRuntime facade must not remain as current backend source")

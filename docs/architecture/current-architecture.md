@@ -75,13 +75,18 @@ auto-loading `DomainPackLoader` from that field. It accepts an explicit
 `domain_pack` payload only as compatibility data and otherwise keeps GraphRAG
 Project configuration on `graphrag_project_id`.
 
+`GraphRetriever` no longer loads Domain Pack retrieval policy from
+`domain_pack_id`. Contract Review graph policy now resolves through explicit
+`query_policy` data, including the GraphRAG Project `retrieval_policy.yaml`
+copy under `examples/graphrag-projects/contract_review/`.
+
 ## Blocked Legacy
 
 Phase 11C is blocked because these active dependencies still exist:
 
 - `domain-packs/`
 - Domain Pack service/eval/Docker surfaces
-- `GraphRetriever` and eval paths that still call `DomainPackLoader`
+- eval paths that still call `DomainPackLoader`
 - Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
 - Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
   Pack pages are not active knowledge routes or settings-shell pages

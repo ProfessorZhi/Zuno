@@ -2,7 +2,7 @@ import asyncio
 from types import SimpleNamespace
 
 
-def test_graph_retriever_adapter_uses_runtime_domain_pack_id(monkeypatch):
+def test_graph_retriever_adapter_does_not_fallback_to_runtime_domain_pack_id(monkeypatch):
     from zuno.services.retrieval.retrievers import GraphRetrieverAdapter
 
     captured = {}
@@ -27,8 +27,8 @@ def test_graph_retriever_adapter_uses_runtime_domain_pack_id(monkeypatch):
 
     assert captured["knowledge_id"] == "kb_1"
     assert captured["kwargs"]["graph_hop_limit"] == 3
-    assert captured["kwargs"]["domain_pack_id"] == "contract_review"
-    assert result["domain_pack_id"] == "contract_review"
+    assert captured["kwargs"]["domain_pack_id"] is None
+    assert result["domain_pack_id"] is None
 
 
 def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():

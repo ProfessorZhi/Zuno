@@ -56,12 +56,21 @@ Asset migration table:
 | `domain-packs/contract_review/report_template.md` | `examples/graphrag-projects/contract_review/prompts/report_template.md` | Target report prompt/template |
 | `domain-packs/contract_review/eval_dataset.jsonl` | `examples/graphrag-projects/contract_review/eval/eval_dataset.jsonl` | Target eval fixture copy |
 
+Additional progress:
+
+- `GraphRAGProjectLoader` now materializes
+  `examples/graphrag-projects/contract_review/retrieval_policy.yaml` into
+  loaded project settings.
+- Contract Review graph policy tests use the GraphRAG Project policy as
+  explicit `query_policy`; `GraphRetriever` no longer loads policy through
+  `DomainPackLoader`.
+
 Still blocked:
 
-- Runtime still needs `DomainPackLoader` through `GraphRetriever`, Contract
-  Review eval, and stackless eval paths. `KnowledgeService.get_runtime_settings`
-  now preserves `domain_pack_id` without loading `DomainPackLoader`, but that
-  alone does not close Phase 02.
+- Runtime/eval still needs `DomainPackLoader` through Contract Review eval and
+  stackless eval paths. `KnowledgeService.get_runtime_settings` and
+  `GraphRetriever` no longer load `DomainPackLoader`, but that does not close
+  Phase 02.
 - `domain-packs/contract_review/` remains Blocked Legacy until those runtime
   and eval dependencies are cut over.
 

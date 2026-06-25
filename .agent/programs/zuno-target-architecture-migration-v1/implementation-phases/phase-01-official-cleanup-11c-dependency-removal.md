@@ -126,6 +126,10 @@ Removed from the active current path:
   `DomainPackLoader` from `domain_pack_id`. It preserves the migration field
   and explicit `domain_pack` compatibility payloads while keeping
   `graphrag_project_id` as the GraphRAG Project configuration field.
+- `GraphRetriever` no longer loads Domain Pack retrieval policy from a bare
+  `domain_pack_id`; graph policy must be provided as explicit `query_policy`.
+  Contract Review compatibility graph tests now load that policy from the
+  GraphRAG Project example assets.
 
 Retained as Blocked Legacy / Phase 02 migration assets:
 
@@ -146,8 +150,6 @@ Still blocked:
 
 - `tools/evals/zuno/contract_review_eval/` and stackless eval paths still
   depend on `DomainPackLoader` / `DomainQAGraph`.
-- `src/backend/zuno/services/graphrag/retriever.py` still loads
-  `DomainPackLoader` when runtime options pass `domain_pack_id`.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
   direct `DomainQAGraph`, Domain Pack loader/eval, and graph/runtime surfaces,
   plus replacement evidence for retired runtime names, including

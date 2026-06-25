@@ -61,7 +61,6 @@ def test_graph_retriever_adapter_forwards_scope_status_and_graph_index_version(m
         @staticmethod
         async def get_runtime_settings(_knowledge_id):
             return {
-                "domain_pack_id": "ops",
                 "graph_retriever": FakeGraphRetriever(),
             }
 
@@ -85,6 +84,7 @@ def test_graph_retriever_adapter_forwards_scope_status_and_graph_index_version(m
             {
                 "graph_hop_limit": 3,
                 "max_paths_per_entity": 7,
+                "domain_pack_id": "ops",
                 "scope_policy": {"status": "archived"},
                 "index_version": {"graph": "graph_v9"},
             },

@@ -31,11 +31,13 @@ migration stages.
   and `MultiAgentSupervisorGraph` are no longer exported from current core
   package public surfaces. `KnowledgeService.get_runtime_settings` preserves
   `domain_pack_id` as a migration field but no longer loads
-  `DomainPackLoader` from it. Active dependencies still remain in
-  `domain-packs/`, Domain Pack runtime services, `GraphRetriever`/eval loader
-  paths, Docker surfaces, direct `DomainQAGraph` source/dependencies, and
-  `tests/compat/`. Domain Pack backend endpoint/API-service wrappers and
-  frontend API/page files are retired from current source.
+  `DomainPackLoader` from it. `GraphRetriever` no longer loads retrieval
+  policy from a bare `domain_pack_id`; explicit `query_policy` now carries the
+  GraphRAG Project policy data. Active dependencies still remain in
+  `domain-packs/`, Domain Pack runtime services, eval loader paths, Docker
+  surfaces, direct `DomainQAGraph` source/dependencies, and `tests/compat/`.
+  Domain Pack backend endpoint/API-service wrappers and frontend API/page
+  files are retired from current source.
 - Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
   and formal Eval baseline comparison are not complete.
 
@@ -49,8 +51,8 @@ migration stages.
 
 Contract Review asset migration has started: the Target example copy lives at
 `examples/graphrag-projects/contract_review/`. This does not close Phase 02 or
-11C because `GraphRetriever`, Contract Review eval, and stackless eval paths
-still use `DomainPackLoader`.
+11C because Contract Review eval and stackless eval paths still use
+`DomainPackLoader`.
 
 ## Next Candidate
 

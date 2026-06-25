@@ -32,9 +32,9 @@ also reach this runtime through `KnowledgeQueryService`; they no longer call
 `examples/graphrag-projects/contract_review/` is the Target asset copy for
 Contract Review schema, prompts, retrieval policy, and eval fixture. It is not
 proof that all runtime paths no longer need `DomainPackLoader`;
-`KnowledgeService.get_runtime_settings` no longer auto-loads it, but
-`GraphRetriever` and eval paths remain Blocked Legacy until the Contract Review
-runtime/eval cutover is complete.
+`KnowledgeService.get_runtime_settings` and `GraphRetriever` policy resolution
+no longer auto-load it, but eval paths remain Blocked Legacy until the Contract
+Review runtime/eval cutover is complete.
 
 ## Blocked Legacy
 

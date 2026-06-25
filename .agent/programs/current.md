@@ -14,10 +14,12 @@ Current status:
   longer import `AgentRuntime` or call `_run_domain_pack_query`; they use
   `KnowledgeQueryService`. `KnowledgeService.get_runtime_settings` preserves
   `domain_pack_id` as a migration field but no longer auto-loads
-  `DomainPackLoader` from it.
+  `DomainPackLoader` from it. `GraphRetriever` now requires explicit
+  `query_policy` for project policy defaults instead of loading
+  `DomainPackLoader` from `domain_pack_id`.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
-- Phase 11C remains blocked by Domain Pack runtime services/assets,
-  `GraphRetriever`/eval loader paths, `DomainQAGraph`, Docker surfaces, and
+- Phase 11C remains blocked by Domain Pack runtime services/assets, eval
+  loader paths, `DomainQAGraph`, Docker surfaces, and
   `tests/compat/` dependencies. Domain Pack backend endpoint/API-service
   wrappers and frontend API/page files are retired from current source. The
   standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
@@ -29,7 +31,8 @@ Current status:
 - Phase 02 has started as an asset-only migration slice:
   `examples/graphrag-projects/contract_review/` now holds the Target
   GraphRAG Project copy of Contract Review schema, prompts, retrieval policy,
-  and eval fixture. `GraphRetriever` and eval paths still need
+  and eval fixture. The project loader materializes `retrieval_policy.yaml`
+  for explicit graph query policy, but eval paths still need
   `DomainPackLoader`, so Phase 02 is not closed.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository

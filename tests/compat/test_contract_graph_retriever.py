@@ -1,4 +1,13 @@
 import asyncio
+from pathlib import Path
+
+
+def _contract_review_query_policy() -> dict:
+    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+
+    projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
+    project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
+    return dict(project.settings["retrieval_policy"])
 
 
 def test_graph_retriever_handles_contract_review_chinese_query():
@@ -42,6 +51,7 @@ def test_graph_retriever_handles_contract_review_chinese_query():
             graph_hop_limit=2,
             max_paths_per_entity=5,
             domain_pack_id="contract_review",
+            query_policy=_contract_review_query_policy(),
         )
     )
 

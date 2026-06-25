@@ -15,13 +15,14 @@ Current truth is still the Python monorepo runtime:
 - `domain-packs/` still exists as current or migration evidence; the old
   `src/backend/zuno/domain_packs/` asset copy has been removed from the current
   package path and archived under `docs/architecture/history/domain-packs/`.
-- Domain Pack runtime services, graph names, `GraphRetriever`/eval loader
-  paths, Docker references, and tests still exist in active or Blocked Legacy
+- Domain Pack runtime services, graph names, eval loader paths, Docker
+  references, and tests still exist in active or Blocked Legacy
   paths. The old backend Domain Pack endpoint/API-service wrappers and
   frontend API/page files have retired from current source. The current FastAPI
   router, active Vue knowledge entrypoints, `GeneralAgent`, Workspace knowledge
-  prefetch/tools, and `KnowledgeService.get_runtime_settings` no longer use
-  the Domain Pack runtime path by default.
+  prefetch/tools, `KnowledgeService.get_runtime_settings`, and
+  `GraphRetriever` policy resolution no longer use the Domain Pack runtime
+  path by default.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
   `RetrievalFusion`, BM25/vector/graph adapters, community services, requery,
   index version fields, and trace metadata.
@@ -124,11 +125,12 @@ This roadmap does not implement:
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
 - Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
-  runtime services, `GraphRetriever`/eval loader paths, Docker surfaces, direct
-  `DomainQAGraph` source/dependencies, and `tests/compat/`. Workspace
-  knowledge prefetch/tools have been cut over to `KnowledgeQueryService`,
+  runtime services, eval loader paths, Docker surfaces, direct `DomainQAGraph`
+  source/dependencies, and `tests/compat/`. Workspace knowledge prefetch/tools
+  have been cut over to `KnowledgeQueryService`,
   `KnowledgeService.get_runtime_settings` no longer auto-loads
-  `DomainPackLoader` from `domain_pack_id`, the standalone `AgentRuntime`
+  `DomainPackLoader` from `domain_pack_id`, `GraphRetriever` no longer loads
+  Domain Pack policy from `domain_pack_id`, the standalone `AgentRuntime`
   facade and direct `MultiAgentSupervisorGraph` source have been removed from
   current backend source and exports, and `DomainQAGraph` /
   `MultiAgentSupervisorGraph` are no longer current core package public

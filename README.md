@@ -48,9 +48,12 @@ Phase 11C progress / Blocked Legacy:
   migration field but no longer auto-loads `DomainPackLoader` from that field;
   GraphRAG Project defaults come from `graphrag_project_id` or explicit
   runtime configuration.
+- `GraphRetriever` no longer loads Domain Pack retrieval policy from a bare
+  `domain_pack_id`; graph policy must come from explicit `query_policy`, such
+  as a GraphRAG Project `retrieval_policy.yaml`.
 - Remaining blockers still exist in `domain-packs/`, Domain Pack runtime
-  services, `GraphRetriever`/eval Domain Pack loader paths, Docker surfaces,
-  direct `DomainQAGraph` source, retained `MultiAgentSupervisorGraph` compat
+  services, eval Domain Pack loader paths, Docker surfaces, direct
+  `DomainQAGraph` source, retained `MultiAgentSupervisorGraph` compat
   retirement evidence, and `tests/compat/`. The old Domain Pack backend
   endpoint/API-service wrappers are retired.
 - These surfaces are not the future public mainline, but they must not be

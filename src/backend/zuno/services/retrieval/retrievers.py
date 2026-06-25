@@ -104,8 +104,8 @@ class GraphRetrieverAdapter:
         runtime_settings = await KnowledgeService.get_runtime_settings(knowledge_id) if knowledge_id else {
             "domain_pack_id": None,
         }
-        domain_pack_id = options.get("domain_pack_id") or runtime_settings.get("domain_pack_id")
         domain_pack = runtime_settings.get("domain_pack")
+        domain_pack_id = options.get("domain_pack_id") or (domain_pack or {}).get("id")
         effective_query_policy = dict((domain_pack or {}).get("retrieval_policy_data") or {})
         effective_query_policy.update(options)
         scope_policy = dict(options.get("scope_policy") or {})

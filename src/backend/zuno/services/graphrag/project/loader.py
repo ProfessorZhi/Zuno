@@ -107,6 +107,7 @@ class GraphRAGProjectLoader:
             settings_path.read_text(encoding="utf-8"),
             settings_path=settings_path,
         )
+        settings = self._load_retrieval_policy(project_dir, settings)
         contract = GraphRAGSettingsValidator.validate_contract(
             settings,
             project_id=normalized,
@@ -130,6 +131,21 @@ class GraphRAGProjectLoader:
             prompt_texts=prompt_texts,
             readiness=readiness,
         )
+
+    @staticmethod
+    def _load_retrieval_policy(project_dir: Path, settings: dict[str, Any]) -> dict[str, Any]:
+        relative_path = str(settings.get("retrieval_policy_path") or "").strip()
+        if not relative_path:
+            return settings
+        policy_path = project_dir / relative_path
+        if not policy_path.is_file():
+            raise ValueError(f"retrieval_policy_path not found: {relative_path}")
+        payload = yaml.safe_load(policy_path.read_text(encoding="utf-8")) or {}
+        if not isinstance(payload, dict):
+            raise ValueError(f"{policy_path} must be a YAML object")
+        merged = dict(settings)
+        merged["retrieval_policy"] = payload
+        return merged
 
     @staticmethod
     def _load_prompts(

@@ -1,6 +1,17 @@
 ﻿import asyncio
 
 
+from pathlib import Path
+
+
+def _contract_review_query_policy() -> dict:
+    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+
+    projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
+    project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
+    return dict(project.settings["retrieval_policy"])
+
+
 def test_build_local_graph_retriever_uses_contract_domain_pack():
     from zuno.evals.rag_eval.run_stackless_local_eval import _build_local_graph_retriever
     from zuno.schema.chunk import ChunkModel
@@ -43,6 +54,7 @@ def test_build_local_graph_retriever_uses_contract_domain_pack():
             "主服务合同里，发生数据泄露后乙方需要在多久内通知甲方？还需要依据哪部法律配合处置？",
             "kb_contract",
             domain_pack_id="contract_review",
+            query_policy=_contract_review_query_policy(),
         )
     )
 

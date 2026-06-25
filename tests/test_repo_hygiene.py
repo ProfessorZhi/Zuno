@@ -103,6 +103,19 @@ def test_knowledge_service_stays_off_domain_pack_loader_runtime_defaults() -> No
     assert "KnowledgeService runtime settings must not load DomainPackLoader" in verifier
 
 
+def test_graph_retriever_stays_off_domain_pack_loader_policy_defaults() -> None:
+    graph_retriever = (
+        REPO_ROOT / "src/backend/zuno/services/graphrag/retriever.py"
+    ).read_text(encoding="utf-8")
+    assert "from zuno.services.domain_pack.loader import DomainPackLoader" not in graph_retriever
+    assert "DomainPackLoader().load" not in graph_retriever
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "GraphRetriever policy defaults must not load DomainPackLoader" in verifier
+
+
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
     assert not (
         REPO_ROOT / "src/backend/zuno/domain_packs"

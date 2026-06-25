@@ -254,20 +254,8 @@ class GraphRetriever:
         domain_pack_id: str | None,
         query_policy: dict | None,
     ) -> dict[str, object]:
-        merged: dict[str, object] = {}
-        if domain_pack_id:
-            try:
-                from zuno.services.domain_pack.loader import DomainPackLoader
-
-                pack = DomainPackLoader().load(domain_pack_id)
-            except ValueError as err:
-                if "domain pack not found" not in str(err):
-                    raise
-                pack = None
-            if pack and pack.retrieval_policy_data:
-                merged.update(dict(pack.retrieval_policy_data))
-        merged.update(dict(query_policy or {}))
-        return merged
+        del domain_pack_id
+        return dict(query_policy or {})
 
     @classmethod
     def _add_seed(cls, ordered: list[str], seen: set[str], value: str):
