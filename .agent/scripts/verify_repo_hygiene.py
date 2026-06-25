@@ -64,6 +64,28 @@ REQUIRED_RETIRED_UI_SCRIPT_ARCHIVES = [
     "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
 ]
 
+REQUIRED_PHASE6_BUNDLE_HELPER_ARCHIVES = [
+    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
+    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
+]
+
+RETIRED_PHASE6_BUNDLE_ACTIVE_TOOLS = [
+    "tools/scripts/preview_phase6_bundle_scope.py",
+    "tools/scripts/verify_phase6_bundle_ready.py",
+]
+
+REQUIRED_ARCHIVED_MIGRATION_SPECS = [
+    "docs/architecture/history/specs/deep-graphrag-v1-runtime.md",
+    "docs/architecture/history/specs/domain-pack-builder.md",
+    "docs/architecture/history/specs/knowledge-product-boundary.md",
+]
+
+RETIRED_ACTIVE_MIGRATION_SPECS = [
+    "docs/architecture/specs/deep-graphrag-v1-runtime.md",
+    "docs/architecture/specs/domain-pack-builder.md",
+    "docs/architecture/specs/knowledge-product-boundary.md",
+]
+
 
 def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
@@ -106,6 +128,22 @@ def main() -> int:
     for relative_path in REQUIRED_RETIRED_UI_SCRIPT_ARCHIVES:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"retired Domain Pack UI script archive missing: {relative_path}")
+
+    for relative_path in REQUIRED_PHASE6_BUNDLE_HELPER_ARCHIVES:
+        if not (REPO_ROOT / relative_path).exists():
+            errors.append(f"retired Phase 6 bundle helper archive missing: {relative_path}")
+
+    for relative_path in RETIRED_PHASE6_BUNDLE_ACTIVE_TOOLS:
+        if (REPO_ROOT / relative_path).exists():
+            errors.append(f"retired Phase 6 bundle helper must not remain active: {relative_path}")
+
+    for relative_path in REQUIRED_ARCHIVED_MIGRATION_SPECS:
+        if not (REPO_ROOT / relative_path).exists():
+            errors.append(f"superseded migration spec archive missing: {relative_path}")
+
+    for relative_path in RETIRED_ACTIVE_MIGRATION_SPECS:
+        if (REPO_ROOT / relative_path).exists():
+            errors.append(f"superseded migration spec must not remain active: {relative_path}")
 
     repo_hygiene_map = _read(".agent/references/repo-hygiene-map.md")
     if "must not be restored as target repository layout" not in repo_hygiene_map:

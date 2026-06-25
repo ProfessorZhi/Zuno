@@ -328,6 +328,41 @@ def test_retired_domain_pack_ui_gallery_scripts_are_not_active_tools() -> None:
         assert phrase not in active_scripts
 
 
+def test_phase6_bundle_helpers_are_not_active_repo_tools() -> None:
+    for relative_path in [
+        "tools/scripts/preview_phase6_bundle_scope.py",
+        "tools/scripts/verify_phase6_bundle_ready.py",
+    ]:
+        assert not (REPO_ROOT / relative_path).exists(), f"retired Phase 6 helper remains active: {relative_path}"
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    for relative_path in [
+        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
+        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
+        "tools/scripts/preview_phase6_bundle_scope.py",
+        "tools/scripts/verify_phase6_bundle_ready.py",
+    ]:
+        assert relative_path in verifier
+
+
+def test_superseded_migration_specs_are_not_active_specs() -> None:
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+
+    for relative_path in [
+        "docs/architecture/specs/deep-graphrag-v1-runtime.md",
+        "docs/architecture/specs/domain-pack-builder.md",
+        "docs/architecture/specs/knowledge-product-boundary.md",
+        "docs/architecture/history/specs/deep-graphrag-v1-runtime.md",
+        "docs/architecture/history/specs/domain-pack-builder.md",
+        "docs/architecture/history/specs/knowledge-product-boundary.md",
+    ]:
+        assert relative_path in verifier
+
+
 def test_repo_hygiene_verifiers_are_registered() -> None:
     for path in [
         ".agent/scripts/verify_doc_boundaries.py",

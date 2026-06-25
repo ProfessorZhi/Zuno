@@ -5,11 +5,16 @@ import pytest
 
 
 def test_stackless_local_eval_exposes_project_named_payload_loader():
-    from zuno.evals.rag_eval.run_stackless_local_eval import _load_graph_project_payload
+    from zuno.evals.rag_eval.run_stackless_local_eval import (
+        _load_graph_project_domain_payload,
+        _load_graph_project_payload,
+    )
 
     payload = _load_graph_project_payload("contract_review")
+    legacy_payload = _load_graph_project_domain_payload("contract_review")
 
     assert payload is not None
+    assert legacy_payload == payload
     assert payload["id"] == "contract_review"
     assert payload["retrieval_policy_data"]["graph_hop_limit"] == 2
     schema_path = Path(payload["schema_path"])
@@ -19,6 +24,18 @@ def test_stackless_local_eval_exposes_project_named_payload_loader():
         "contract_review",
         "schema.json",
     )
+
+
+def test_stackless_local_eval_internal_payload_names_follow_project_mainline():
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "tools/evals/zuno/rag_eval/run_stackless_local_eval.py"
+    ).read_text(encoding="utf-8")
+
+    assert "project_payload = _load_graph_project_payload" in source
+    assert "domain_pack=project_payload" in source
+    assert '"domain_pack": project_payload' in source
+    assert "domain_pack = _load_graph_project_payload" not in source
 
 
 def test_stackless_local_graph_retriever_uses_project_assets_without_domain_pack_loader():

@@ -13,7 +13,10 @@ Classify repository directories for cleanup decisions.
 - `examples/graphrag-projects/`: Target examples
 - `docs/architecture/history/domain-packs/root-contract-review/`: History
 - `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`:
-  History for retired Domain Pack UI gallery capture/check scripts
+  History for retired Domain Pack UI gallery capture/check scripts and old
+  Phase 6 bundle staging helpers
+- `docs/architecture/history/specs/`: History for superseded migration specs
+  that no longer belong on the active specs front path
 - `tests/compat/`: Retired
 - `data/`: Generated unless promoted
 - `reports/`: Generated unless promoted
@@ -43,5 +46,9 @@ in root `tests/`.
 Do not delete Blocked Legacy. Do not commit Generated or Local outputs.
 `tests/compat/` must not be restored as target repository layout. Archived root
 Domain Pack assets must not be restored as target repository layout.
+Retired Phase 6 bundle helpers must not be restored under active
+`tools/scripts/`. Superseded migration specs under
+`docs/architecture/history/specs/` must stay reachable as history instead of
+returning to the active specs front path.
 Read `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 before directory-boundary work.

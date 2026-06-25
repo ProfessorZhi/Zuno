@@ -22,9 +22,13 @@ the official GraphRAG cleanup program moves contracts toward GraphRAG Project,
 Prompt Registry, Query Method, and Enhanced Mode concepts.
 
 - [Domain Pack + LangGraph + GraphRAG Architecture](domain-pack-langgraph-graphrag-architecture.md)
-- [Domain Pack Builder](domain-pack-builder.md)
-- [Knowledge Product Boundary](knowledge-product-boundary.md)
-- [Deep GraphRAG V1 Runtime](deep-graphrag-v1-runtime.md)
+
+Superseded migration specs that no longer belong on the active specs front path
+live under `../history/specs/`:
+
+- [Domain Pack Builder](../history/specs/domain-pack-builder.md)
+- [Knowledge Product Boundary](../history/specs/knowledge-product-boundary.md)
+- [Deep GraphRAG V1 Runtime](../history/specs/deep-graphrag-v1-runtime.md)
 
 ## What Belongs Here
 

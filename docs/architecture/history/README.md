@@ -19,6 +19,8 @@ Current architecture readers should start from:
 - `phases/`: completed Phase 0-6 closure and older phase evidence.
 - `plans/`: superseded execution plans.
 - `programs/`: archived architecture programs and their evidence.
+- `specs/`: superseded architecture specs that should remain reachable without
+  staying on the active specs front path.
 - `agent-workflow/`: retired Agent workflow notes and old superpowers plans.
 - `audits/`: historical audits that are not active program evidence.
 - `domain-packs/`: retired Domain Pack asset copies preserved as history, not

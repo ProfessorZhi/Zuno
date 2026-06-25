@@ -37,3 +37,17 @@ def test_contract_eval_runner_does_not_use_domain_qa_graph():
 
     assert "from zuno.core.graphs.domain_qa_graph import DomainQAGraph" not in source
     assert "DomainQAGraph(" not in source
+
+
+def test_contract_eval_internal_payload_names_follow_project_mainline():
+    repo_root = Path(__file__).resolve().parents[1]
+    source = (
+        repo_root / "tools/evals/zuno/contract_review_eval/run_contract_eval.py"
+    ).read_text(encoding="utf-8")
+
+    assert "project_payload: dict[str, Any]" in source
+    assert "sample_project_payload = dict(project_payload)" in source
+    assert "domain_pack=project_payload" in source
+    assert "domain_pack: dict[str, Any]" not in source
+    assert "domain_pack = dict(project_payload)" not in source
+    assert '"domain_pack_id"' in source

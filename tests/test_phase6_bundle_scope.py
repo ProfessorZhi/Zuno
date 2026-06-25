@@ -4,7 +4,19 @@ import sys
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "tools" / "scripts" / "preview_phase6_bundle_scope.py"
+ACTIVE_PREVIEW_SCRIPT = REPO_ROOT / "tools" / "scripts" / "preview_phase6_bundle_scope.py"
+ACTIVE_VERIFIER_SCRIPT = REPO_ROOT / "tools" / "scripts" / "verify_phase6_bundle_ready.py"
+ARCHIVED_SCRIPT_DIR = (
+    REPO_ROOT
+    / "docs"
+    / "architecture"
+    / "history"
+    / "programs"
+    / "knowledge-product-refactor-deep-graphrag-v1"
+    / "scripts"
+)
+SCRIPT_PATH = ARCHIVED_SCRIPT_DIR / "preview_phase6_bundle_scope.py"
+VERIFIER_PATH = ARCHIVED_SCRIPT_DIR / "verify_phase6_bundle_ready.py"
 
 
 def _load_module():
@@ -41,6 +53,13 @@ def test_phase6_bundle_scope_groups_cover_expected_boundaries() -> None:
         "tests/test_contract_eval_runner.py"
         in module.PHASE6_BUNDLE_GROUPS["verification_tests"]
     )
+
+
+def test_phase6_bundle_helpers_are_archived_out_of_active_tools() -> None:
+    assert not ACTIVE_PREVIEW_SCRIPT.exists()
+    assert not ACTIVE_VERIFIER_SCRIPT.exists()
+    assert SCRIPT_PATH.exists()
+    assert VERIFIER_PATH.exists()
 
 
 def test_phase6_bundle_scope_script_mentions_grouped_cli() -> None:
@@ -86,9 +105,7 @@ def test_phase6_bundle_ready_docs_and_script_stay_in_sync() -> None:
         REPO_ROOT / "docs" / "architecture" / "history" / "plans" / "README.md"
     ).read_text(encoding="utf-8")
     preview_script = SCRIPT_PATH.read_text(encoding="utf-8")
-    verifier = (
-        REPO_ROOT / "tools" / "scripts" / "verify_phase6_bundle_ready.py"
-    ).read_text(encoding="utf-8")
+    verifier = VERIFIER_PATH.read_text(encoding="utf-8")
 
     assert "stable-baseline-recovery-and-runtime-deepening-plan.md" in plans_index
     assert "phase6-bundle-prestage.md" not in plans_index

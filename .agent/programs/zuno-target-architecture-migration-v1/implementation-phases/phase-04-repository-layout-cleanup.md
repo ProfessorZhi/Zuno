@@ -49,6 +49,26 @@ The move preserves old UI evidence while keeping active repository tools from
 generating `docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1` or
 mocking retired `/api/v1/domain-packs` and Domain Pack settings pages.
 
+The old Phase 6 bundle staging helper scripts were also moved out of active
+`tools/scripts/` and archived under the same historical program scripts path:
+
+- `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py`
+- `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py`
+
+The move preserves local staging evidence for the completed historical Phase 6
+work without keeping a stale Phase 6 bundle tool on the active maintenance path.
+
+Superseded migration specs were moved from active `docs/architecture/specs/`
+to `docs/architecture/history/specs/`:
+
+- `deep-graphrag-v1-runtime.md`
+- `domain-pack-builder.md`
+- `knowledge-product-boundary.md`
+
+`domain-pack-langgraph-graphrag-architecture.md` remains in active specs for
+now because current tests and `enterprise-retrieval-governance.md` still depend
+on it as migration evidence.
+
 ## Verification Commands
 
 ```powershell

@@ -211,12 +211,12 @@ async def _build_local_graph_retriever(
     graphrag_project_id: str | None = None,
 ) -> GraphRetriever:
     project_id = graphrag_project_id or domain_pack_id
-    domain_pack = _load_graph_project_payload(project_id)
-    extractor = StructuredGraphExtractor() if domain_pack else GraphExtractor()
+    project_payload = _load_graph_project_payload(project_id)
+    extractor = StructuredGraphExtractor() if project_payload else GraphExtractor()
     extracted_documents: list[dict[str, Any]] = []
     for chunk in chunks:
-        if domain_pack:
-            extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id, domain_pack=domain_pack)
+        if project_payload:
+            extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id, domain_pack=project_payload)
         else:
             extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id)
         extracted_documents.append(
@@ -424,13 +424,13 @@ async def run_stackless_local_eval(
             vl_embedding_config=None,
         )
 
-        domain_pack = _load_graph_project_payload(graphrag_project_id or domain_pack_id)
+        project_payload = _load_graph_project_payload(graphrag_project_id or domain_pack_id)
         graph_retriever = await _build_local_graph_retriever(
             chunks,
             domain_pack_id=domain_pack_id,
             graphrag_project_id=graphrag_project_id,
         )
-        effective_project_id = graphrag_project_id or (domain_pack or {}).get("id")
+        effective_project_id = graphrag_project_id or (project_payload or {}).get("id")
         if effective_project_id:
             merged_knowledge_config["graphrag_project_id"] = effective_project_id
         register_local_runtime_settings(
@@ -441,7 +441,7 @@ async def run_stackless_local_eval(
                 "vl_embedding_config": None,
                 "rerank_config": rerank_config,
                 "domain_pack_id": domain_pack_id,
-                "domain_pack": domain_pack,
+                "domain_pack": project_payload,
                 "graph_retriever": graph_retriever,
             },
         )

@@ -156,13 +156,13 @@ class _LocalChunkStore:
         return documents
 
 
-async def _extract_document_graph(document_name: str, domain_pack: dict[str, Any]) -> dict[str, Any]:
+async def _extract_document_graph(document_name: str, project_payload: dict[str, Any]) -> dict[str, Any]:
     content = _load_contract_text(document_name)
     chunk = _build_chunk_payload(document_name, content)
     extraction = await StructuredGraphExtractor().extract_from_chunk(
         chunk,
         OFFLINE_KNOWLEDGE_ID,
-        domain_pack=domain_pack,
+        domain_pack=project_payload,
     )
     return {
         "document_name": document_name,
@@ -239,13 +239,13 @@ def _score_candidate(query_terms: set[str], extraction: dict[str, Any]) -> int:
 async def _build_retrieval_result(
     *,
     query: str,
-    domain_pack: dict[str, Any],
+    project_payload: dict[str, Any],
     gold_evidence: list[dict[str, Any]],
     extraction_mode: str,
 ) -> dict[str, Any]:
     query_terms = _normalize_query_terms(query)
     target_document = str(gold_evidence[0].get("document") or "loan_contract_001.md") if gold_evidence else "loan_contract_001.md"
-    extracted_documents = [await _extract_document_graph(name, domain_pack) for name in _iter_contract_documents()]
+    extracted_documents = [await _extract_document_graph(name, project_payload) for name in _iter_contract_documents()]
     extracted_documents.sort(
         key=lambda item: (
             item["document_name"] != target_document,
@@ -266,9 +266,9 @@ async def _build_retrieval_result(
         ).retrieve(
             query,
             OFFLINE_KNOWLEDGE_ID,
-            graph_hop_limit=int(domain_pack.get("retrieval_policy_data", {}).get("graph_hop_limit", 2)),
-            max_paths_per_entity=int(domain_pack.get("retrieval_policy_data", {}).get("max_paths_per_entity", 5)),
-            domain_pack_id=str(domain_pack.get("id") or ""),
+            graph_hop_limit=int(project_payload.get("retrieval_policy_data", {}).get("graph_hop_limit", 2)),
+            max_paths_per_entity=int(project_payload.get("retrieval_policy_data", {}).get("max_paths_per_entity", 5)),
+            domain_pack_id=str(project_payload.get("id") or ""),
         )
         path_strings = list(graph_result.get("paths") or [])
         structured_paths = list(graph_result.get("structured_paths") or [])
@@ -294,7 +294,7 @@ async def _build_retrieval_result(
         "fallback_reason": None,
         "second_pass_used": False,
         "content": document_chunk["content"],
-        "domain_pack_id": domain_pack.get("id"),
+        "domain_pack_id": project_payload.get("id"),
         "metadata": {
             "round_count": 1,
             "query": query,
@@ -419,13 +419,13 @@ def _build_eval_report(
 async def _run_project_eval_sample(
     *,
     row: dict[str, Any],
-    domain_pack: dict[str, Any],
+    project_payload: dict[str, Any],
     profile_settings: dict[str, Any],
     graphrag_project_id: str,
 ) -> dict[str, Any]:
     retrieval_result = await _build_retrieval_result(
         query=str(row["query"]),
-        domain_pack=domain_pack,
+        project_payload=project_payload,
         gold_evidence=list(row.get("gold_evidence") or []),
         extraction_mode=str(profile_settings["extraction_mode"]),
     )
@@ -447,7 +447,7 @@ async def _run_project_eval_sample(
         path_strings=path_strings,
         structured_paths=structured_paths,
         citations=citations,
-        report_template_text=str(domain_pack.get("report_template_text") or ""),
+        report_template_text=str(project_payload.get("report_template_text") or ""),
     )
     trace_nodes = [
         {"node": "load_project_assets", "status": "OK", "graphrag_project_id": graphrag_project_id},
@@ -516,13 +516,13 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
         output_dir.mkdir(parents=True, exist_ok=True)
 
     for row in dataset_rows:
-        domain_pack = dict(project_payload)
-        domain_pack["eval_gold_evidence"] = row.get("gold_evidence") or []
+        sample_project_payload = dict(project_payload)
+        sample_project_payload["eval_gold_evidence"] = row.get("gold_evidence") or []
 
         async def invoke_eval() -> dict[str, Any]:
             return await _run_project_eval_sample(
                 row=row,
-                domain_pack=domain_pack,
+                project_payload=sample_project_payload,
                 profile_settings=profile_settings,
                 graphrag_project_id=graphrag_project_id,
             )

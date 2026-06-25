@@ -54,6 +54,9 @@ Current status:
   Phase 01-03: retired Domain Pack UI capture and responsive-check scripts
   were archived under
   `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
+  The old Phase 6 bundle staging helpers were archived under the same
+  historical program path, and superseded migration specs were moved from
+  active `docs/architecture/specs/` to `docs/architecture/history/specs/`.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.
