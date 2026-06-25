@@ -23,6 +23,11 @@ Current status:
   `MultiAgentSupervisorGraph` are no longer exported from current core package
   public surfaces; only the direct `DomainQAGraph` source remains Blocked
   Legacy.
+- Phase 02 has started as an asset-only migration slice:
+  `examples/graphrag-projects/contract_review/` now holds the Target
+  GraphRAG Project copy of Contract Review schema, prompts, retrieval policy,
+  and eval fixture. Runtime still needs `DomainPackLoader`, so Phase 02 is not
+  closed.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

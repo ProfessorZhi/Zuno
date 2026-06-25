@@ -1,0 +1,17 @@
+graphrag_project_id: contract_review
+prompt_version: contract-review-v1
+query_prompt_version: contract-review-v1
+index_version: example-v1
+community_version: v0
+query_method: local
+status: ready
+source_domain_pack:
+  id: contract_review
+  path: domain-packs/contract_review
+schema_path: schema.json
+retrieval_policy_path: retrieval_policy.yaml
+eval_dataset_path: eval/eval_dataset.jsonl
+prompts:
+  extract_graph: prompts/extract_graph.md
+  local_query: prompts/local_query.md
+  report_template: prompts/report_template.md

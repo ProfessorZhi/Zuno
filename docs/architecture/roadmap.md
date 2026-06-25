@@ -45,6 +45,10 @@ migration stages.
 4. eval baseline comparison
 5. program closure
 
+Contract Review asset migration has started: the Target example copy lives at
+`examples/graphrag-projects/contract_review/`. This does not close Phase 02 or
+11C because runtime/eval paths still use `DomainPackLoader`.
+
 ## Next Candidate
 
 Context Memory Agent Runtime V1 is the next candidate / design-ready program.

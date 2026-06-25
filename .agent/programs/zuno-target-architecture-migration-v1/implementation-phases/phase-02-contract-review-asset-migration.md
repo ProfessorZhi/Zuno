@@ -38,6 +38,31 @@ Phase 01 complete or a narrower asset-only gate approved by the user.
 - History paths preserve old Domain Pack evidence.
 - Eval fixtures use target names where possible.
 
+## 2026-06-25 Progress
+
+Status: partial. The target GraphRAG Project asset copy now exists at:
+
+- `examples/graphrag-projects/contract_review/`
+
+Asset migration table:
+
+| Source | Target | Classification |
+| --- | --- | --- |
+| `domain-packs/contract_review/pack.yaml` | `examples/graphrag-projects/contract_review/settings.yaml` | Target asset metadata with `source_domain_pack` provenance |
+| `domain-packs/contract_review/schema.json` | `examples/graphrag-projects/contract_review/schema.json` | Target schema asset |
+| `domain-packs/contract_review/retrieval_policy.yaml` | `examples/graphrag-projects/contract_review/retrieval_policy.yaml` | Target query policy asset |
+| `domain-packs/contract_review/extraction_prompt.md` | `examples/graphrag-projects/contract_review/prompts/extract_graph.md` | Target indexing prompt |
+| `domain-packs/contract_review/answer_template.md` | `examples/graphrag-projects/contract_review/prompts/local_query.md` | Target local query prompt/template |
+| `domain-packs/contract_review/report_template.md` | `examples/graphrag-projects/contract_review/prompts/report_template.md` | Target report prompt/template |
+| `domain-packs/contract_review/eval_dataset.jsonl` | `examples/graphrag-projects/contract_review/eval/eval_dataset.jsonl` | Target eval fixture copy |
+
+Still blocked:
+
+- Runtime still needs `DomainPackLoader` through `KnowledgeService`,
+  `GraphRetriever`, Contract Review eval, and stackless eval paths.
+- `domain-packs/contract_review/` remains Blocked Legacy until those runtime
+  and eval dependencies are cut over.
+
 ## Verification Commands
 
 ```powershell

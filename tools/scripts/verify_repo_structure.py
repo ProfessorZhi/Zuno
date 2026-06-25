@@ -39,6 +39,7 @@ REQUIRED_PATHS = [
     "docs/evidence/public-demo.md",
     "docs/reference",
     "domain-packs",
+    "examples/graphrag-projects/contract_review/settings.yaml",
     "infra/db",
     "infra/docker",
     "src/backend/zuno",

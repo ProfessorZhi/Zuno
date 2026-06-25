@@ -1,0 +1,61 @@
+graph_hop_limit: 2
+max_paths_per_entity: 5
+citation_strictness: high
+risk_relation_preference: CLAUSE_HAS_RISK
+graph_seed_terms:
+  - 违约责任
+  - 解除
+  - 终止
+  - 赔偿
+  - 罚则
+  - 争议解决
+  - 保密义务
+  - 连带责任
+  - 甲方
+  - 乙方
+  - 丙方
+  - 合同
+  - 条款
+  - 验收
+  - 数据安全
+  - 服务级别
+  - 提前到期
+  - 恢复原状
+  - 知识产权
+  - 分包
+  - 删除
+  - 返还
+  - 退款
+  - 事件通知
+  - 审计配合
+graph_relation_cues:
+  - 约定
+  - 风险
+  - 条款
+  - 合同
+  - 审查
+  - 义务
+  - 法律
+  - 期限
+  - 多久
+  - 多长时间
+  - 何时
+  - 哪一条
+  - 哪两步
+  - 前置条件
+  - 情形
+  - 条件
+  - 由谁
+  - 谁
+  - 通知
+  - 返还
+  - 删除
+  - 回购
+  - 退款
+graph_step_cues:
+  - 流程
+  - 步骤
+  - 顺序
+  - 阶段
+  - 先后顺序
+  - 怎么做

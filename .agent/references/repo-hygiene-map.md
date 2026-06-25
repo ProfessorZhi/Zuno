@@ -10,6 +10,7 @@ Classify repository directories for cleanup decisions.
 - `src/backend/zuno/`: Current
 - `docs/`: Current formal docs
 - `.agent/`: Current Agent workflow library
+- `examples/graphrag-projects/`: Target examples
 - `domain-packs/`: Blocked Legacy
 - `tests/compat/`: Current / Blocked Legacy
 - `data/`: Generated unless promoted

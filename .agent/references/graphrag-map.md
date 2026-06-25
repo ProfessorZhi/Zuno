@@ -25,8 +25,14 @@ also reach this runtime through `KnowledgeQueryService`; they no longer call
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 - `.agent/architecture/near-term/11-graphrag-project-architecture.md`
+- `examples/graphrag-projects/contract_review/`
 - `.agent/programs/zuno-target-architecture-migration-v1/`
 - `.agent/programs/official-graphrag-cleanup-v1/`
+
+`examples/graphrag-projects/contract_review/` is the Target asset copy for
+Contract Review schema, prompts, retrieval policy, and eval fixture. It is not
+proof that runtime no longer needs `DomainPackLoader`; that dependency remains
+Blocked Legacy until the Contract Review runtime/eval cutover is complete.
 
 ## Blocked Legacy
 

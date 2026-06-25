@@ -1,0 +1,1 @@
+{"id":"contract_demo_q1","query":"这份合同是否约定了违约责任？","reference_answer":"合同包含违约责任条款，回答时应指出对应条款并给出引用。","gold_evidence":[{"document":"loan_contract_001.md","text_contains":"违约责任"}],"required_citations":true}
