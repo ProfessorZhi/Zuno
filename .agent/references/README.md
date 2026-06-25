@@ -31,6 +31,6 @@ Use these files as the current formal path:
 2. `docs/architecture/current-architecture.md`
 3. `docs/architecture/target-architecture.md`
 4. `docs/architecture/history/phases/README.md`
-5. `.agent/programs/official-graphrag-cleanup-v1/README.md`
+5. `.agent/programs/zuno-target-architecture-migration-v1/README.md`
 
 Use `docs/architecture/history/` only for superseded plans and evidence.

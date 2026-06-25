@@ -33,6 +33,7 @@ architecture design and does not replace `.agent/architecture/near-term/`.
     current_architecture/
   programs/
     current.md
+    zuno-target-architecture-migration-v1/
     official-graphrag-cleanup-v1/
   workflows/
   skills/

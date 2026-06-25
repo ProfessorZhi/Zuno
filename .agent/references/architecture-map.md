@@ -7,6 +7,7 @@
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/roadmap.md`
 - `docs/architecture/history/phases/README.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/README.md`
 - `.agent/programs/official-graphrag-cleanup-v1/README.md`
 
 ## Agent Target Design

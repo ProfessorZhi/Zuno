@@ -4,7 +4,10 @@
 
 The completed Phase 0-6 architecture closure is historical truth.
 
-The active program is official GraphRAG cleanup and alignment.
+The active program is target architecture migration. It continues the unfinished
+official GraphRAG cleanup 11C/12 gates and then proceeds through repository
+layout, Context/Memory, Capability System, and single `GeneralAgent`
+integration phases.
 
 Phase 01 through Phase 10 are complete. Those phases cover contract, loader,
 prompt registry, index versioning, query router, Enhanced Mode, and frontend API
@@ -61,5 +64,6 @@ mode.
 Detailed implementation planning lives in:
 
 - `.agent/programs/current.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/`
 - `.agent/programs/official-graphrag-cleanup-v1/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`

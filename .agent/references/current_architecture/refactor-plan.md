@@ -6,45 +6,29 @@ Phase 0-6 closure is complete and remains completion truth.
 
 ## Active Program
 
-The current program is `official-graphrag-cleanup-v1`.
+The current program is `zuno-target-architecture-migration-v1`.
 
 Its executable stages are defined by:
 
-- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 The current implementation sequence is:
 
-1. Legacy Surface Audit
-2. Docs / Spec / Current Truth Cleanup
-3. Domain Pack Contract Retirement
-4. GraphRAG Project Contracts
-5. GraphRAG Project Loader / Settings
-6. Prompt Registry And Tuning Boundary
-7. Index / Update / Versioning
-8. Query Method Router
-9. Enhanced Mode Pipeline
-10. Frontend API Contract Migration
-11. Runtime Legacy Deletion
-12. Tests / Eval / Trace Closure
+1. Current State And Program Gate
+2. Official Cleanup 11C Dependency Removal
+3. Contract Review Asset Migration
+4. GraphRAG Project Mainline Hardening
+5. Repository Layout Cleanup
+6. Context Contract Foundation
+7. Memory Layer Foundation
+8. Capability System
+9. GeneralAgent Runtime Integration
+10. Tests Eval Trace Closure
 
 ## Current Phase
 
-Phase 01 legacy surface audit and Phase 02 docs/spec cleanup are complete.
-Phase 03 has introduced `graphrag_project_id` at the public contract edge while
-keeping `domain_pack_id` as bounded compatibility input. Phase 04 has added the
-GraphRAG Project contract fields without claiming a loader. Phase 05 has added
-GraphRAG Project settings loading, prompt discovery, and readiness metadata
-without changing retrieval behavior. Phase 06 has added Prompt Registry
-categories and prompt-version impact rules without automatic tuning. Phase 07
-has added index version, hash flow, full rebuild boundary, and stale-index
-trace detection without database migration. Phase 08 has added the backend
-Query Method Router for `auto/basic/local/global/drift`, bounded compatibility
-mapping from old route names, and requested/resolved/fallback trace fields.
-Phase 09 has hardened Enhanced Mode pipeline trace for router, recall,
-fusion/rerank, evidence, requery, citation coverage, and standard-floor
-preservation. Phase 10 has migrated frontend API/types/config utilities to
-GraphRAG Project and public query-method trace fields, and removed old runtime
-route names from `apps/web`. The next phase is Phase 11: Runtime Legacy
-Deletion.
+Target Migration Phase 00 is ready. The first implementation phase continues
+official cleanup 11C active dependency removal; Context/Memory phases wait
+until GraphRAG cleanup and repository layout gates are complete.

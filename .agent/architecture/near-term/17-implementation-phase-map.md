@@ -2,15 +2,18 @@
 
 ## Purpose
 
-Tell future Codex runs how to execute the near-term GraphRAG implementation
-program without drifting into future architecture.
+Tell future Codex runs how to execute the near-term target architecture
+migration program without drifting into future architecture.
 
 ## Formal Program
 
 Use:
 
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md`
 - `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
+  as dependency history and unfinished 11C/12 cleanup source material
 
 ## Required Reading For Every Implementation Round
 
@@ -18,8 +21,8 @@ Use:
 2. `docs/architecture/README.md`
 3. `docs/architecture/current-architecture.md`
 4. `docs/architecture/target-architecture.md`
-5. `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-6. the exact phase file under `implementation-phases/`
+5. `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+6. the exact target migration phase file under `implementation-phases/`
 7. `.agent/architecture/near-term/README.md`
 8. `.agent/architecture/near-term/16-near-term-acceptance-gates.md`
 9. `.agent/architecture/decisions/01-locked-near-term-decisions.md`
@@ -28,20 +31,16 @@ Use:
 ## Phase To Surface Map
 
 ```text
-Phase 01 -> read-only inventory across runtime, frontend, tests, docs, tools
-Phase 02 -> docs, specs, Agent references
-Phase 03 -> API contracts, DTOs, frontend API payloads
-Phase 04 -> GraphRAG Project types and contract tests
-Phase 05 -> project loader, settings validation, prompts discovery
-Phase 06 -> prompt registry and prompt tuning boundary
-Phase 07 -> index/update/full rebuild versioning
-Phase 08 -> query method router and trace contract
-Phase 09 -> Enhanced Mode pipeline and evidence trace
-Phase 10 -> frontend API and UI contract migration
-Phase 11A -> project-first replacement query runtime
-Phase 11B -> single GeneralAgent cutover
-Phase 11C -> old runtime surface deletion after dependency proof
-Phase 12 -> final tests, evals, trace, docs, grep closure
+Phase 00 -> current-state and dependency gate
+Phase 01 -> official cleanup 11C active dependency removal
+Phase 02 -> Contract Review asset migration
+Phase 03 -> GraphRAG Project mainline hardening
+Phase 04 -> repository layout cleanup
+Phase 05 -> context contract foundation
+Phase 06 -> memory layer foundation
+Phase 07 -> capability system
+Phase 08 -> GeneralAgent runtime integration
+Phase 09 -> final tests, evals, trace, docs, grep closure
 ```
 
 ## Scope Boundary

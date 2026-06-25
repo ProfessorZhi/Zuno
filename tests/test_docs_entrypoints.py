@@ -50,6 +50,7 @@ def test_architecture_docs_use_current_target_roadmap_path() -> None:
         "roadmap.md",
         "../evidence/public-demo.md",
         ".agent/programs/official-graphrag-cleanup-v1/",
+        ".agent/programs/zuno-target-architecture-migration-v1/",
         "history/phases/",
     ]
 

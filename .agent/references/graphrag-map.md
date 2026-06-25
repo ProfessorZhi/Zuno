@@ -21,6 +21,7 @@ The current GraphRAG Project Query Runtime includes:
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 - `.agent/architecture/near-term/11-graphrag-project-architecture.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/`
 - `.agent/programs/official-graphrag-cleanup-v1/`
 
 ## Blocked Legacy

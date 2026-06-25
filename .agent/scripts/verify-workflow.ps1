@@ -44,7 +44,9 @@ Require-Path ".agent\scripts\verify_doc_boundaries.py"
 Require-Path ".agent\scripts\verify_repo_hygiene.py"
 Require-Path ".agent\scripts\grep-legacy.ps1"
 Require-Path ".agent\scripts\grep-domain-pack.ps1"
+Require-Path ".agent\programs\zuno-target-architecture-migration-v1\README.md"
 Require-Path ".agent\programs\official-graphrag-cleanup-v1\README.md"
+Require-Path "docs\architecture\history\programs\context-memory-agent-runtime-v1\README.md"
 Require-Path "docs\architecture\history\README.md"
 Require-Path "apps\web\AGENTS.md"
 Require-Path "src\backend\zuno\AGENTS.md"
@@ -72,8 +74,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/architecture/hist
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw
-if ($currentProgram -notmatch "official-graphrag-cleanup-v1") {
-    $failures.Add("current-program.md does not point to official-graphrag-cleanup-v1")
+if ($currentProgram -notmatch "zuno-target-architecture-migration-v1") {
+    $failures.Add("current-program.md does not point to zuno-target-architecture-migration-v1")
 }
 
 if ($failures.Count -gt 0) {

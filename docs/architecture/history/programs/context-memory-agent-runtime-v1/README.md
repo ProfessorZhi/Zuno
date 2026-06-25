@@ -1,5 +1,12 @@
 # Context Memory Agent Runtime V1
 
+## Archive Status
+
+Archived. This candidate program has been superseded by
+`.agent/programs/zuno-target-architecture-migration-v1/`, which folds
+Context/Memory work into the end-to-end target architecture migration after
+GraphRAG cleanup and repository layout gates.
+
 ## Status
 
 Candidate / Design-ready. This is not active Current implementation.

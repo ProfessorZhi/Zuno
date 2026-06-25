@@ -20,15 +20,18 @@ resume deeper architecture work from that stable baseline
 The earlier root-level `services/api` migration has been retired, and the placeholder `services/` root should not remain in the live repo.
 Any future service-root move must reopen as a new phase with fresh verification and a newly created root.
 
-The current active strategy is now the Official GraphRAG Cleanup V1
+The current active strategy is now the Zuno Target Architecture Migration V1
 implementation program:
 
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
-It moves the front path from Domain Pack and old query-mode naming toward
-GraphRAG Project, Prompt Registry, Query Method, and Enhanced Mode.
+It first closes the unfinished Domain Pack / legacy runtime dependency gates,
+then moves the front path toward GraphRAG Project, target repository layout,
+Context/Memory, Capability System, and the single `GeneralAgent` runtime.
 
 ## Rules
 
@@ -60,6 +63,8 @@ Only one execution path should steer the repo at a time.
 
 Right now that path is:
 
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
@@ -85,7 +90,8 @@ recover runtime
   -> sync README and architecture docs
 ```
 
-The current implementation order starts at docs/spec cleanup, then retires the
-Domain Pack public contract before adding GraphRAG Project contracts, settings,
-prompt registry, index versioning, query method routing, Enhanced Mode,
-frontend migration, runtime legacy deletion, and tests/eval/trace closure.
+The current implementation order starts by proving current state, then removing
+Domain Pack active dependencies, migrating Contract Review assets, hardening
+GraphRAG Project as the mainline, cleaning repository layout, implementing
+Context/Memory and Capability boundaries, integrating them into the single
+`GeneralAgent`, and closing with full tests, eval, trace, docs, and grep gates.

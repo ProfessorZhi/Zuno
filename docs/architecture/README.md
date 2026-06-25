@@ -12,11 +12,15 @@ This is the formal architecture entrypoint for Zuno.
 
 ## Current Program
 
-The active program is official GraphRAG cleanup and alignment. Its detailed
-execution material is maintained for Agents under:
+The active program is target architecture migration. Its detailed execution
+material is maintained for Agents under:
 
+- `.agent/programs/zuno-target-architecture-migration-v1/`
 - `.agent/programs/official-graphrag-cleanup-v1/`
 - `.agent/architecture/near-term/`
+
+`official-graphrag-cleanup-v1` remains referenced because its completed 11A/11B
+work and blocked 11C/12 cleanup are dependencies of the target migration.
 
 The completed Phase 0-6 architecture closure remains historical truth. It is
 archived under:
@@ -43,5 +47,5 @@ docs/architecture/
 - History: completed or superseded plans, programs, phases, audits, and older
   Agent workflow material.
 
-Agent workflow aids live in `.agent/`. Formal conclusions that humans should
-read live in `docs/`.
+`AGENTS.md` is the repository-level Agent entrypoint. Agent workflow aids live
+in `.agent/`. Formal conclusions that humans should read live in `docs/`.

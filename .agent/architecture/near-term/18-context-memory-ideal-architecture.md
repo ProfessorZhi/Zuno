@@ -146,8 +146,10 @@ Snapshot fields:
 
 The implementation direction is captured in:
 
-- `.agent/programs/context-memory-agent-runtime-v1/`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-05-context-contract-foundation.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-06-memory-layer-foundation.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-08-generalagent-runtime-integration.md`
 
-That program should run after the current `official-graphrag-cleanup-v1` runtime
-legacy-deletion dependency is satisfied, or explicitly document any earlier
-phase that is read-only/design-only.
+Those phases should run only after the target migration program finishes the
+official cleanup 11C/12 dependency and repository layout gates, or explicitly
+document an earlier read-only/design-only scope.

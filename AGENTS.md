@@ -53,14 +53,20 @@ The completed Phase 0-6 architecture closure remains historical completion truth
 
 The current executable Agent program is:
 
-- `.agent/programs/official-graphrag-cleanup-v1/`
+- `.agent/programs/zuno-target-architecture-migration-v1/`
 
-Its purpose is to standardize docs and Agent workflow, clean legacy surfaces, retire Domain Pack as the front-path architecture mainline, and align the next GraphRAG work with official GraphRAG Project, Prompt Tuning, and Query Method concepts.
+Its purpose is to move from the current 11A/11B runtime state to the near-term
+target architecture and repository layout: finish 11C/12 cleanup, migrate
+Contract Review assets, harden GraphRAG Project as the mainline, clean folder
+boundaries, then implement Context/Memory and Capability phases around the
+single `GeneralAgent`.
 
 The executable near-term implementation breakdown is:
 
-- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
+- `.agent/programs/official-graphrag-cleanup-v1/` as the source for completed
+  GraphRAG cleanup phases and the still-blocked 11C/12 evidence
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 Detailed target architecture design for this program lives in:

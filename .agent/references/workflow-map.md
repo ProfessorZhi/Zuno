@@ -33,6 +33,12 @@ Map task types to Agent workflows.
 ## Update Triggers
 
 Update this map when adding, removing, or renaming workflows or skills.
+
+## Active Program
+
+End-to-end target architecture and folder cleanup execution lives in:
+
+- `.agent/programs/zuno-target-architecture-migration-v1/`
 ## Required Target Blueprint
 
 Architecture replacement, directory moves, Context/Memory, GraphRAG boundary,

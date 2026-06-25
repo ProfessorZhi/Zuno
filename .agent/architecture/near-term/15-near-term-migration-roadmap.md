@@ -7,6 +7,8 @@ default multi-agent work are intentionally not in this roadmap.
 
 The formal executable implementation program now lives in:
 
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
@@ -19,18 +21,16 @@ verification, commit message, and evidence package.
 
 | Phase | Title | Primary migration intent |
 | --- | --- | --- |
-| 01 | Legacy Surface Audit | classify old Domain Pack, query-mode, agentchat, compat, and alias surfaces |
-| 02 | Docs / Spec / Current Truth Cleanup | prevent current docs and Agent references from steering implementation toward retired surfaces |
-| 03 | Domain Pack Contract Retirement | move public contracts toward GraphRAG Project while keeping bounded compatibility reads |
-| 04 | GraphRAG Project Contracts | add project identity, settings, prompt, index, query method, and version contract fields |
-| 05 | GraphRAG Project Loader / Settings | load `settings.yaml`, discover prompts, and report project readiness |
-| 06 | Prompt Registry And Tuning Boundary | make prompt versions and indexing-side prompt tuning explicit |
-| 07 | Index / Update / Versioning | define index, update, full rebuild, document hash, chunk hash, and community version semantics |
-| 08 | Query Method Router | expose `auto/basic/local/global/drift` and keep old names migration-only |
-| 09 | Enhanced Mode Pipeline | prove Enhanced Mode is a complete router, recall, fusion, rerank, evidence, requery, citation pipeline |
-| 10 | Frontend API Contract Migration | migrate frontend public contract and UI language to target names |
-| 11 | Runtime Legacy Deletion | delete or archive old runtime surfaces only after dependency proof |
-| 12 | Tests / Eval / Trace Closure | close tests, evals, trace evidence, grep gates, docs, and phase material |
+| 00 | Current State And Program Gate | prove 11A/11B current truth and 11C/12 blockers |
+| 01 | Official Cleanup 11C Dependency Removal | remove or explicitly block Domain Pack, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and compat dependencies |
+| 02 | Contract Review Asset Migration | preserve useful assets without keeping Domain Pack runtime |
+| 03 | GraphRAG Project Mainline Hardening | make `graphrag_project_id`, query methods, evidence, citation, and trace the stable mainline |
+| 04 | Repository Layout Cleanup | align files with target ownership and history boundaries |
+| 05 | Context Contract Foundation | define `AgentExecutionContext`, `ModelContextPacket`, token budget, and trace contracts |
+| 06 | Memory Layer Foundation | separate raw events, short-term state, task memory, long-term memory, and external knowledge |
+| 07 | Capability System | select tools, MCP, skills, memory, and evidence by metadata and relevance |
+| 08 | GeneralAgent Runtime Integration | use Context Orchestrator and Post-turn Pipeline around one `GeneralAgent` loop |
+| 09 | Tests Eval Trace Closure | run full tests, eval baseline, trace proof, docs sync, and final grep gates |
 
 ## Current Status
 
@@ -55,8 +55,8 @@ verification, commit message, and evidence package.
 - Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
   public query-method trace fields, and removes old runtime route names from
   `apps/web`.
-- Phase 11 is next and should delete or classify runtime legacy surfaces only
-  after dependency proof.
+- Target Migration Phase 00 is ready. Phase 01 should delete or classify
+  runtime legacy surfaces only after dependency proof.
 
 ## Migration Rules
 

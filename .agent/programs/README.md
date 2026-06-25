@@ -9,5 +9,7 @@ here.
 Start with:
 
 - [Current Program](current.md)
+- [Zuno Target Architecture Migration V1](zuno-target-architecture-migration-v1/README.md)
 - [Official GraphRAG Cleanup V1](official-graphrag-cleanup-v1/README.md)
-- [Context Memory Agent Runtime V1](context-memory-agent-runtime-v1/README.md)
+
+Archived programs live under `docs/architecture/history/programs/`.

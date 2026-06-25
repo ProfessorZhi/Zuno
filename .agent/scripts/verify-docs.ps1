@@ -8,8 +8,10 @@ $required = @(
     "docs\architecture\README.md",
     "docs\architecture\current-architecture.md",
     "docs\architecture\target-architecture.md",
-    "docs\architecture\phases\README.md",
-    "docs\architecture\programs\official-graphrag-cleanup-v1\README.md"
+    "docs\architecture\roadmap.md",
+    "docs\architecture\history\phases\README.md",
+    ".agent\programs\zuno-target-architecture-migration-v1\README.md",
+    ".agent\programs\official-graphrag-cleanup-v1\README.md"
 )
 
 foreach ($path in $required) {
@@ -19,8 +21,11 @@ foreach ($path in $required) {
 }
 
 $index = Get-Content -LiteralPath "docs\architecture\README.md" -Raw
+if ($index -notmatch "zuno-target-architecture-migration-v1") {
+    throw "docs/architecture/README.md does not point to zuno-target-architecture-migration-v1"
+}
 if ($index -notmatch "official-graphrag-cleanup-v1") {
-    throw "docs/architecture/README.md does not point to official-graphrag-cleanup-v1"
+    throw "docs/architecture/README.md does not preserve official cleanup dependency"
 }
 if ($index -notmatch "AGENTS.md") {
     throw "docs/architecture/README.md does not describe AGENTS.md boundary"
