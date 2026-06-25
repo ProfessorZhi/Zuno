@@ -55,6 +55,34 @@ identity and metadata.
 - Existing runtime still works.
 - No full loader is claimed complete.
 
+## Implemented Contract Surface
+
+Phase 04 adds the contract surface only. It does not load a project directory or
+run prompt tuning.
+
+Fields:
+
+- `graphrag_project_id`
+- `settings_path`
+- `prompt_version`
+- `index_version`
+- `query_method`
+- `query_prompt_version`
+- `community_version`
+- `document_hash`
+- `chunk_hash`
+- `status`
+
+Contract paths:
+
+- `src/backend/zuno/services/graphrag/models.py`
+- `src/backend/zuno/schema/knowledge.py`
+- `src/backend/zuno/api/services/knowledge.py`
+- `src/backend/zuno/services/retrieval/models.py`
+- `apps/web/src/apis/knowledge.ts`
+- `apps/web/src/utils/knowledge-config.ts`
+- `tests/test_graphrag_project_contracts.py`
+
 ## Verification Commands
 
 ```powershell

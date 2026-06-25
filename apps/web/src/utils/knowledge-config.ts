@@ -1,4 +1,5 @@
 import type {
+  GraphRAGProjectPayload,
   KnowledgeConfigPayload,
   KnowledgeConfigPatchPayload,
   KnowledgeModelBindingPayload,
@@ -31,6 +32,19 @@ export interface KnowledgeConfigSummary {
   vlEmbeddingLabel: string
   rerankLabel: string
 }
+
+const defaultGraphRAGProject = (projectId: string): GraphRAGProjectPayload => ({
+  graphrag_project_id: projectId,
+  settings_path: null,
+  prompt_version: 'default',
+  index_version: 'v1',
+  query_method: 'auto',
+  query_prompt_version: 'default',
+  community_version: 'v0',
+  document_hash: null,
+  chunk_hash: null,
+  status: 'not_configured',
+})
 
 const REINDEX_FIELDS = {
   root: ['index_capability'] as const,
@@ -122,6 +136,7 @@ const defaultConfig = (): KnowledgeConfigPayload => ({
   index_capability: 'rag',
   graphrag_project_id: null,
   domain_pack_id: null,
+  graphrag_project: null,
   eval_profile_id: null,
   model_refs: {
     text_embedding_model_id: null,
@@ -201,6 +216,13 @@ export const normalizeKnowledgeConfig = (
 ): KnowledgeConfigPayload => {
   const base = defaultConfig()
   const graphragProjectId = config?.graphrag_project_id ?? config?.domain_pack_id ?? base.graphrag_project_id
+  const graphragProject = graphragProjectId
+    ? {
+        ...defaultGraphRAGProject(graphragProjectId),
+        ...(config?.graphrag_project || {}),
+        graphrag_project_id: graphragProjectId,
+      }
+    : null
   const merged = {
     index_capability: normalizeIndexCapability(
       config?.index_capability,
@@ -208,6 +230,7 @@ export const normalizeKnowledgeConfig = (
     ),
     graphrag_project_id: graphragProjectId,
     domain_pack_id: graphragProjectId,
+    graphrag_project: graphragProject,
     eval_profile_id: config?.eval_profile_id ?? base.eval_profile_id,
     model_refs: {
       ...base.model_refs,
@@ -237,6 +260,7 @@ export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): Knowledg
   index_capability: config.index_capability,
   graphrag_project_id: config.graphrag_project_id,
   domain_pack_id: config.domain_pack_id,
+  graphrag_project: config.graphrag_project ? { ...config.graphrag_project } : null,
   eval_profile_id: config.eval_profile_id,
   model_refs: { ...config.model_refs },
   index_settings: { ...config.index_settings },
@@ -258,6 +282,7 @@ export const toProductKnowledgeConfig = (
   config.retrieval_settings.default_mode = 'rag'
   config.graphrag_project_id = null
   config.domain_pack_id = null
+  config.graphrag_project = null
   config.graph_index_settings.graph_index_status = 'not_built'
   config.graph_index_settings.community_detection_status = 'not_built'
   config.graph_index_settings.community_report_status = 'not_built'

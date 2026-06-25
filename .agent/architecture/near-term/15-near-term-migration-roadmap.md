@@ -38,7 +38,9 @@ verification, commit message, and evidence package.
 - Phase 02 docs/spec cleanup is complete.
 - Phase 03 public contract retirement introduces `graphrag_project_id` while
   keeping `domain_pack_id` as bounded migration/runtime compatibility.
-- Phase 04 is next and should make GraphRAG Project contracts first-class.
+- Phase 04 adds first-class GraphRAG Project contract fields without claiming a
+  loader.
+- Phase 05 is next and should load and validate GraphRAG Project settings.
 
 ## Migration Rules
 

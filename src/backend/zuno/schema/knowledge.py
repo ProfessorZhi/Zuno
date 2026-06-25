@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from zuno.services.graphrag.models import GraphRAGProjectContract
+
 
 class KnowledgeModelRefs(BaseModel):
     text_embedding_model_id: Optional[str] = Field(default=None, min_length=1)
@@ -109,6 +111,7 @@ class KnowledgeConfig(BaseModel):
     index_capability: str = Field(default="rag", pattern="^(rag|rag_graph)$")
     graphrag_project_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    graphrag_project: Optional[GraphRAGProjectContract] = Field(default=None)
     eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: KnowledgeModelRefs = Field(default_factory=KnowledgeModelRefs)
     index_settings: KnowledgeIndexSettings = Field(default_factory=KnowledgeIndexSettings)
@@ -120,6 +123,7 @@ class KnowledgeConfigPatch(BaseModel):
     index_capability: Optional[str] = Field(default=None, pattern="^(rag|rag_graph)$")
     graphrag_project_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    graphrag_project: Optional[GraphRAGProjectContract] = Field(default=None)
     eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: Optional[KnowledgeModelRefsPatch] = Field(default=None)
     index_settings: Optional[KnowledgeIndexSettingsPatch] = Field(default=None)
@@ -154,6 +158,7 @@ __all__ = [
     "KnowledgeConfig",
     "KnowledgeConfigPatch",
     "KnowledgeCreateRequest",
+    "GraphRAGProjectContract",
     "KnowledgeGraphIndexSettings",
     "KnowledgeGraphIndexSettingsPatch",
     "KnowledgeIndexSettings",

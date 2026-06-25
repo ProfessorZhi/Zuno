@@ -6,10 +6,24 @@ export interface UnifiedResponse<T = any> {
   data?: T
 }
 
+export interface GraphRAGProjectPayload {
+  graphrag_project_id: string
+  settings_path: string | null
+  prompt_version: string
+  index_version: string
+  query_method: 'auto' | 'basic' | 'local' | 'global' | 'drift'
+  query_prompt_version: string
+  community_version: string
+  document_hash: string | null
+  chunk_hash: string | null
+  status: 'not_configured' | 'ready' | 'stale' | 'failed' | 'disabled'
+}
+
 export interface KnowledgeConfigPayload {
   index_capability: 'rag' | 'rag_graph'
   graphrag_project_id: string | null
   domain_pack_id: string | null
+  graphrag_project: GraphRAGProjectPayload | null
   eval_profile_id: string | null
   model_refs: {
     text_embedding_model_id: string | null
@@ -60,6 +74,7 @@ export interface KnowledgeConfigPatchPayload {
   index_capability?: KnowledgeConfigPayload['index_capability']
   graphrag_project_id?: string | null
   domain_pack_id?: string | null
+  graphrag_project?: Partial<GraphRAGProjectPayload> | null
   eval_profile_id?: string | null
   model_refs?: Partial<KnowledgeConfigPayload['model_refs']>
   index_settings?: Partial<KnowledgeConfigPayload['index_settings']>

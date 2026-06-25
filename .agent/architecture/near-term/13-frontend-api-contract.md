@@ -11,9 +11,12 @@ Define the near-term frontend/backend contract.
 - `apps/web/src/apis/knowledge.ts` now exposes `graphrag_project_id` as the
   preferred public field while retaining `domain_pack_id` as migration
   compatibility.
+- `apps/web/src/apis/knowledge.ts` also exposes `graphrag_project` with
+  settings path, prompt/index/query/community versions, document/chunk hashes,
+  query method, and project status.
 - `apps/web/src/utils/knowledge-config.ts` creates standard/enhanced product
   configs, normalizes legacy `domain_pack_id` into `graphrag_project_id`, and
-  mirrors it back only for existing runtime compatibility.
+  creates a GraphRAG Project contract object only when a project id exists.
 - Old query mode names still exist as migration/runtime names until the query
   method router and frontend migration phases remove them from the public path.
 

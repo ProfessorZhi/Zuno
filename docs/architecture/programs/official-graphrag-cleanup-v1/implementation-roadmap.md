@@ -91,7 +91,10 @@ This roadmap does not implement:
 - Phase 03 introduces `graphrag_project_id` as the preferred public knowledge
   config field while keeping `domain_pack_id` as bounded migration/runtime
   compatibility input.
-- The next executable phase is Phase 04: GraphRAG Project Contracts.
+- Phase 04 adds first-class GraphRAG Project contract fields for project
+  identity, settings path, prompt/index/query/community versions, hashes, and
+  status without claiming a loader.
+- The next executable phase is Phase 05: GraphRAG Project Loader / Settings.
 
 ## Dependency Rules
 

@@ -34,7 +34,9 @@ Read first:
 - Phase 03 introduces `graphrag_project_id` at the public contract edge and
   keeps `domain_pack_id` as bounded compatibility input for the existing
   runtime.
-- Phase 04 is next and owns first-class GraphRAG Project contracts.
+- Phase 04 adds first-class GraphRAG Project contract fields without claiming a
+  loader.
+- Phase 05 is next and owns project settings loading and validation.
 
 ## Rule
 

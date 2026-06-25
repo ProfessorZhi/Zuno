@@ -1,3 +1,21 @@
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+
+class GraphRAGProjectContract(BaseModel):
+    graphrag_project_id: str = Field(min_length=1, max_length=64)
+    settings_path: str | None = Field(default=None, min_length=1, max_length=512)
+    prompt_version: str = Field(default="default", min_length=1, max_length=128)
+    index_version: str = Field(default="v1", min_length=1, max_length=64)
+    query_method: Literal["auto", "basic", "local", "global", "drift"] = "auto"
+    query_prompt_version: str = Field(default="default", min_length=1, max_length=128)
+    community_version: str = Field(default="v0", min_length=1, max_length=64)
+    document_hash: str | None = Field(default=None, min_length=1, max_length=128)
+    chunk_hash: str | None = Field(default=None, min_length=1, max_length=128)
+    status: Literal["not_configured", "ready", "stale", "failed", "disabled"] = "not_configured"
+
+
 RETRIEVAL_MODES = {
     "default",
     "rag",
@@ -32,3 +50,10 @@ def normalize_retrieval_mode(mode: str | None) -> str:
     if normalized == "default":
         return "auto"
     return normalized
+
+
+__all__ = [
+    "GraphRAGProjectContract",
+    "RETRIEVAL_MODES",
+    "normalize_retrieval_mode",
+]

@@ -13,6 +13,7 @@ DEFAULT_KNOWLEDGE_CONFIG = {
     "index_capability": "rag",
     "graphrag_project_id": None,
     "domain_pack_id": None,
+    "graphrag_project": None,
     "eval_profile_id": None,
     "model_refs": {
         "text_embedding_model_id": None,
@@ -278,9 +279,24 @@ class KnowledgeService:
 
     @staticmethod
     def _normalize_project_identity(config: dict[str, Any]) -> None:
-        project_id = config.get("graphrag_project_id") or config.get("domain_pack_id")
+        project = dict(config.get("graphrag_project") or {})
+        project_id = config.get("graphrag_project_id") or project.get("graphrag_project_id") or config.get("domain_pack_id")
         config["graphrag_project_id"] = project_id
         config["domain_pack_id"] = project_id
+        if project_id:
+            project.setdefault("settings_path", None)
+            project.setdefault("prompt_version", "default")
+            project.setdefault("index_version", "v1")
+            project.setdefault("query_method", "auto")
+            project.setdefault("query_prompt_version", "default")
+            project.setdefault("community_version", "v0")
+            project.setdefault("document_hash", None)
+            project.setdefault("chunk_hash", None)
+            project.setdefault("status", "not_configured")
+            project["graphrag_project_id"] = project_id
+            config["graphrag_project"] = project
+        else:
+            config["graphrag_project"] = None
 
     @classmethod
     def _normalize_knowledge_config(

@@ -24,6 +24,7 @@ class RetrievalRequest:
     scope_policy: dict[str, Any] = field(default_factory=dict)
     index_version: dict[str, Any] = field(default_factory=dict)
     index_health: dict[str, Any] = field(default_factory=dict)
+    graphrag_project: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -54,6 +55,7 @@ class RetrievalPlan:
     scope_policy: dict[str, Any]
     index_version: dict[str, Any]
     index_health: dict[str, Any]
+    graphrag_project: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -73,6 +75,7 @@ class RetrievalPlan:
             "scope_policy": self.scope_policy,
             "index_version": self.index_version,
             "index_health": self.index_health,
+            "graphrag_project": self.graphrag_project,
         }
 
 

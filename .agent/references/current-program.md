@@ -63,7 +63,9 @@ event-driven workers, or default multi-agent mode into near-term acceptance.
   Pack-era target language.
 - Phase 03 adds `graphrag_project_id` as the preferred public config field and
   keeps `domain_pack_id` as bounded migration/runtime compatibility.
-- Phase 04 is next: GraphRAG Project Contracts.
+- Phase 04 adds first-class GraphRAG Project contract fields without claiming a
+  loader.
+- Phase 05 is next: GraphRAG Project Loader / Settings.
 
 ## Current Rule
 

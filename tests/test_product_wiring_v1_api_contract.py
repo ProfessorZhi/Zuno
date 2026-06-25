@@ -41,6 +41,22 @@ def _config(default_mode="rag", domain_pack_id=None):
         "index_capability": "rag_graph" if default_mode == "rag_graph_deep" else "rag",
         "graphrag_project_id": domain_pack_id,
         "domain_pack_id": domain_pack_id,
+        "graphrag_project": (
+            {
+                "graphrag_project_id": domain_pack_id,
+                "settings_path": "projects/contract_review/settings.yaml",
+                "prompt_version": "default",
+                "index_version": "v1",
+                "query_method": "auto",
+                "query_prompt_version": "default",
+                "community_version": "v0",
+                "document_hash": None,
+                "chunk_hash": None,
+                "status": "not_configured",
+            }
+            if domain_pack_id
+            else None
+        ),
         "eval_profile_id": None,
         "model_refs": {
             "text_embedding_model_id": "embed_text",
@@ -241,6 +257,8 @@ def test_product_wiring_frontend_pages_use_real_api_contracts():
     assert "toProductKnowledgeConfig" in create_page
     assert "workspaceSettingsKnowledgeFile" in create_page
     assert "graphrag_project_id" in knowledge_api
+    assert "GraphRAGProjectPayload" in knowledge_api
+    assert "graphrag_project" in knowledge_api
     assert "graphrag_project_id" in (root / "apps/web/src/utils/knowledge-config.ts").read_text(encoding="utf-8")
     assert "rag_graph_deep" not in create_page
     assert "rag_graph_deep" not in settings_page
