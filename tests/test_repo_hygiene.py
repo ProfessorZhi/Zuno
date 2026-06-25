@@ -432,9 +432,11 @@ def test_superseded_migration_specs_are_not_active_specs() -> None:
 
     for relative_path in [
         "docs/architecture/specs/deep-graphrag-v1-runtime.md",
+        "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md",
         "docs/architecture/specs/domain-pack-builder.md",
         "docs/architecture/specs/knowledge-product-boundary.md",
         "docs/architecture/history/specs/deep-graphrag-v1-runtime.md",
+        "docs/architecture/history/specs/domain-pack-langgraph-graphrag-architecture.md",
         "docs/architecture/history/specs/domain-pack-builder.md",
         "docs/architecture/history/specs/knowledge-product-boundary.md",
     ]:

@@ -162,7 +162,6 @@ def test_repository_docs_do_not_keep_local_download_reference() -> None:
 def test_stable_architecture_specs_do_not_make_domain_pack_the_target_driver() -> None:
     allowed_migration_specs = {
         REPO_ROOT / "docs/architecture/specs/README.md",
-        REPO_ROOT / "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md",
     }
     stable_specs = sorted(
         path

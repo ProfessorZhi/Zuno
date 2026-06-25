@@ -6,7 +6,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 def test_graphrag_specs_define_local_community_and_hybrid_layers():
     domain_spec = (
-        REPO_ROOT / "docs" / "architecture" / "specs" / "domain-pack-langgraph-graphrag-architecture.md"
+        REPO_ROOT
+        / "docs"
+        / "architecture"
+        / "history"
+        / "specs"
+        / "domain-pack-langgraph-graphrag-architecture.md"
     ).read_text(encoding="utf-8")
     orchestrator_spec = (
         REPO_ROOT / "docs" / "architecture" / "specs" / "retrieval-orchestrator.md"

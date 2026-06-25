@@ -33,7 +33,7 @@ citation check、GraphRAG Project / query policy 和本地评测能力时，
 
 ### 2. Domain Modeling and GraphRAG
 
-- `docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md`
+- `docs/architecture/history/specs/domain-pack-langgraph-graphrag-architecture.md`
 - `examples/graphrag-projects/contract_review/`
 - `src/backend/zuno/services/graphrag/`
 
@@ -276,7 +276,7 @@ Trace 回答的是：
 
 - tenant
 - knowledge
-- domain pack
+- GraphRAG Project / migration alias scope
 - active status
 
 ### `index_version`
@@ -518,7 +518,7 @@ citation verifier unavailable
 
 - `tenant_id`
 - `knowledge_id`
-- `domain_pack_id`
+- `graphrag_project_id`
 - `status=active`
 
 ### Index Version Must Be Traceable
@@ -614,7 +614,7 @@ citation verifier unavailable
 这份文档不是替代已有 spec，而是补它们之间缺少的治理层。
 
 - `retrieval-orchestrator.md` 负责统一控制面骨架
-- `domain-pack-langgraph-graphrag-architecture.md` 只保留 Domain Pack-era
+- `../history/specs/domain-pack-langgraph-graphrag-architecture.md` 只保留 Domain Pack-era
   迁移上下文；当前总体结构以 GraphRAG Project / query policy 为准
 - `rag-evaluation-and-observability.md` 负责评测与 trace 基础要求
 

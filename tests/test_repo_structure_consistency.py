@@ -151,6 +151,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
 def test_superseded_migration_specs_are_archived_out_of_active_specs() -> None:
     for relative_path in [
         "deep-graphrag-v1-runtime.md",
+        "domain-pack-langgraph-graphrag-architecture.md",
         "domain-pack-builder.md",
         "knowledge-product-boundary.md",
     ]:
@@ -165,6 +166,7 @@ def test_superseded_migration_specs_are_archived_out_of_active_specs() -> None:
     ).read_text(encoding="utf-8")
 
     assert "../history/specs/domain-pack-builder.md" in specs_index
+    assert "../history/specs/domain-pack-langgraph-graphrag-architecture.md" in specs_index
     assert "../history/specs/knowledge-product-boundary.md" in specs_index
     assert "../history/specs/deep-graphrag-v1-runtime.md" in specs_index
     assert "`specs/`: superseded architecture specs" in history_index

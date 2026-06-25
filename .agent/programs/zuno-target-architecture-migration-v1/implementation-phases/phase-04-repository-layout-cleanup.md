@@ -62,15 +62,14 @@ Superseded migration specs were moved from active `docs/architecture/specs/`
 to `docs/architecture/history/specs/`:
 
 - `deep-graphrag-v1-runtime.md`
+- `domain-pack-langgraph-graphrag-architecture.md`
 - `domain-pack-builder.md`
 - `knowledge-product-boundary.md`
 
-`domain-pack-langgraph-graphrag-architecture.md` remains in active specs for
-now because current tests and `enterprise-retrieval-governance.md` still depend
-on it as migration evidence.
-
 Active docs entrypoint verification now scans stable specs and rejects
-Domain Pack-as-current/target-driver phrases outside explicit migration specs.
+Domain Pack-as-current/target-driver phrases outside the specs index, which may
+link to history but may not keep Domain Pack-era target prose on the active
+specs front path.
 This keeps old migration evidence reachable while preventing active specs from
 becoming a second target front path for Domain Pack.
 

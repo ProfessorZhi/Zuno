@@ -58,6 +58,7 @@ REQUIRED_PATHS = [
     "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
     "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
     "docs/architecture/history/specs/deep-graphrag-v1-runtime.md",
+    "docs/architecture/history/specs/domain-pack-langgraph-graphrag-architecture.md",
     "docs/architecture/history/specs/domain-pack-builder.md",
     "docs/architecture/history/specs/knowledge-product-boundary.md",
     "infra/db",

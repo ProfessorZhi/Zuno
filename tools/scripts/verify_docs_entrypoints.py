@@ -17,7 +17,6 @@ def _require_phrases(name: str, content: str, phrases: list[str]) -> list[str]:
 def verify_active_spec_domain_pack_boundaries() -> list[str]:
     allowed_migration_specs = {
         REPO_ROOT / "docs/architecture/specs/README.md",
-        REPO_ROOT / "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md",
     }
     forbidden_phrases = [
         "Domain Pack\n  ->",

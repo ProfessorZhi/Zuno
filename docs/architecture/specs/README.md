@@ -14,18 +14,17 @@ This directory keeps the stable architecture definitions that should outlive any
 8. [Platform Evolution And Future Direction](platform-evolution-and-future-direction.md)
 9. [Knowledge Config Impact And Reindex](knowledge-config-impact-and-reindex.md)
 
-## Migration Context Specs
+## History Context Specs
 
 These specs preserve useful Domain Pack-era design evidence, but they are not
 the current implementation mainline. Use them only as migration context while
 the official GraphRAG cleanup program moves contracts toward GraphRAG Project,
 Prompt Registry, Query Method, and Enhanced Mode concepts.
 
-- [Domain Pack + LangGraph + GraphRAG Architecture](domain-pack-langgraph-graphrag-architecture.md)
-
 Superseded migration specs that no longer belong on the active specs front path
 live under `../history/specs/`:
 
+- [Domain Pack + LangGraph + GraphRAG Architecture](../history/specs/domain-pack-langgraph-graphrag-architecture.md)
 - [Domain Pack Builder](../history/specs/domain-pack-builder.md)
 - [Knowledge Product Boundary](../history/specs/knowledge-product-boundary.md)
 - [Deep GraphRAG V1 Runtime](../history/specs/deep-graphrag-v1-runtime.md)

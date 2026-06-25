@@ -78,12 +78,14 @@ RETIRED_PHASE6_BUNDLE_ACTIVE_TOOLS = [
 
 REQUIRED_ARCHIVED_MIGRATION_SPECS = [
     "docs/architecture/history/specs/deep-graphrag-v1-runtime.md",
+    "docs/architecture/history/specs/domain-pack-langgraph-graphrag-architecture.md",
     "docs/architecture/history/specs/domain-pack-builder.md",
     "docs/architecture/history/specs/knowledge-product-boundary.md",
 ]
 
 RETIRED_ACTIVE_MIGRATION_SPECS = [
     "docs/architecture/specs/deep-graphrag-v1-runtime.md",
+    "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md",
     "docs/architecture/specs/domain-pack-builder.md",
     "docs/architecture/specs/knowledge-product-boundary.md",
 ]
