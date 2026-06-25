@@ -94,24 +94,6 @@ const routes: RouteRecordRaw[] = [
         }),
       },
       {
-        path: 'settings/knowledge/domain-packs',
-        name: 'workspaceSettingsKnowledgeDomainPacks',
-        component: WorkspaceDefaultPage,
-        meta: { settingsSection: 'knowledge', settingsDetail: true },
-      },
-      {
-        path: 'settings/knowledge/domain-packs/create',
-        name: 'workspaceSettingsKnowledgeDomainPackCreate',
-        component: WorkspaceDefaultPage,
-        meta: { settingsSection: 'knowledge', settingsDetail: true },
-      },
-      {
-        path: 'settings/knowledge/domain-packs/:packId',
-        name: 'workspaceSettingsKnowledgeDomainPackDetail',
-        component: WorkspaceDefaultPage,
-        meta: { settingsSection: 'knowledge', settingsDetail: true },
-      },
-      {
         path: 'settings/mcp',
         name: 'workspaceSettingsMcp',
         component: WorkspaceDefaultPage,
@@ -269,12 +251,6 @@ const routes: RouteRecordRaw[] = [
           params: to.params,
           query: to.query,
         }),
-      },
-      {
-        path: '/knowledge/domain-packs',
-        name: 'knowledge-domain-packs',
-        meta: { current: 'knowledge' },
-        redirect: { name: 'workspaceSettingsKnowledgeDomainPacks' },
       },
       {
         path: '/tool',

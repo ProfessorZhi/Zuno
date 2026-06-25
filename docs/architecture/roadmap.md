@@ -21,8 +21,11 @@ migration stages.
 - Phase 11B: complete. Commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base` and
   `KnowledgeQueryService`.
-- Phase 11C: blocked. Active dependencies remain in `domain-packs/`, Domain
-  Pack route/service/frontend/eval/Docker surfaces, `DomainQAGraph`,
+- Phase 11C: blocked. The current FastAPI router no longer mounts
+  `/domain-packs`, and the active Vue knowledge route/settings entrypoints no
+  longer open Domain Pack pages. Active dependencies still remain in
+  `domain-packs/`, Domain Pack services, legacy endpoint/frontend assets,
+  eval/Docker surfaces, `AgentRuntime`, `DomainQAGraph`,
   `MultiAgentSupervisorGraph`, and `tests/compat/`.
 - Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
   and formal Eval baseline comparison are not complete.
@@ -47,8 +50,11 @@ These surfaces are confirmed legacy directionally, but still current or blocked
 by active dependencies:
 
 - `domain-packs/`
-- `src/backend/zuno/api/v1/domain_packs.py`
+- `src/backend/zuno/api/v1/domain_packs.py` as a retained legacy endpoint
+  module, no longer mounted on the current FastAPI router
+- `apps/web/src/apis/domain-packs.ts` and retained Domain Pack Vue components
 - `src/backend/zuno/services/domain_pack/`
+- `src/backend/zuno/core/runtime/agent_runtime.py`
 - `src/backend/zuno/core/graphs/domain_qa_graph.py`
 - `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
 - `tests/compat/`

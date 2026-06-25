@@ -51,9 +51,12 @@ contract retirement.
 - Phase 11A is complete; commit `24abdd9` introduced the project query runtime.
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path.
-- Phase 11C is blocked by active Domain Pack, `DomainQAGraph`,
-  `MultiAgentSupervisorGraph`, Docker/eval/frontend/API, and `tests/compat/`
-  dependencies.
+- Phase 11C is in progress and still blocked overall. The current FastAPI
+  router no longer mounts `/domain-packs`, and active Vue knowledge
+  routes/pages no longer open Domain Pack entrypoints. Domain Pack
+  services/assets, retained legacy endpoint/frontend files, `AgentRuntime`,
+  `DomainQAGraph`, `MultiAgentSupervisorGraph`, Docker/eval surfaces, and
+  `tests/compat/` still block closure.
 - Phase 12 is partially complete / not closed. Do not claim final full `pytest`
   or Eval baseline comparison until fresh evidence exists.
 

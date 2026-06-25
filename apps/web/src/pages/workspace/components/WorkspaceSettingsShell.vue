@@ -12,9 +12,6 @@ import AgentSkillPage from '../../agent-skill'
 import Dashboard from '../../dashboard'
 import Knowledge from '../../knowledge'
 import KnowledgeCreate from '../../knowledge/knowledge-create.vue'
-import KnowledgeDomainPackCreate from '../../knowledge/domain-pack-create.vue'
-import KnowledgeDomainPackDetail from '../../knowledge/domain-pack-detail.vue'
-import KnowledgeDomainPacks from '../../knowledge/domain-pack-list.vue'
 import KnowledgeFile from '../../knowledge/knowledge-file.vue'
 import KnowledgeSettings from '../../knowledge/knowledge-settings.vue'
 import McpServer from '../../mcp-server'
@@ -46,9 +43,6 @@ const settingsComponentByRouteName: Record<string, Component> = {
   workspaceSettingsKnowledgeFile: markRaw(KnowledgeFile),
   workspaceSettingsKnowledgeSettings: markRaw(KnowledgeSettings),
   workspaceSettingsKnowledgeConfig: markRaw(KnowledgeSettings),
-  workspaceSettingsKnowledgeDomainPacks: markRaw(KnowledgeDomainPacks),
-  workspaceSettingsKnowledgeDomainPackCreate: markRaw(KnowledgeDomainPackCreate),
-  workspaceSettingsKnowledgeDomainPackDetail: markRaw(KnowledgeDomainPackDetail),
   workspaceSettingsMcp: markRaw(McpServer),
   workspaceSettingsTool: markRaw(Tool),
   workspaceSettingsSkill: markRaw(AgentSkillPage),

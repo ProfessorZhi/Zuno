@@ -13,9 +13,12 @@ complete.
 
 - Phase 11A is complete: GraphRAG Project query runtime exists.
 - Phase 11B is complete: knowledge queries use the single `GeneralAgent` path.
-- Phase 11C is blocked by active Domain Pack, `DomainQAGraph`,
-  `MultiAgentSupervisorGraph`, Docker/eval/frontend/API, and `tests/compat/`
-  dependencies.
+- Phase 11C is in progress and still blocked overall. The current FastAPI
+  router no longer mounts `/domain-packs`, and active Vue knowledge
+  routes/pages no longer open Domain Pack entrypoints. Domain Pack
+  services/assets, retained legacy endpoint/frontend files, `AgentRuntime`,
+  `DomainQAGraph`, `MultiAgentSupervisorGraph`, Docker/eval surfaces, and
+  `tests/compat/` still block closure.
 - Phase 12 is partial / not closed.
 - Context Orchestrator and new Memory layering are Target, not Current.
 

@@ -7,16 +7,26 @@ prove no active dependency remains.
 
 ## Status
 
-Blocked. Active dependencies still exist in `domain-packs/`, Domain Pack
-route/service/frontend/eval/Docker surfaces, remaining `DomainQAGraph` source
-and dependencies, remaining `MultiAgentSupervisorGraph` source/compat surfaces,
-and `tests/compat/`.
+In progress / blocked overall. The current FastAPI router no longer mounts
+`/domain-packs`, and active Vue knowledge routes/pages no longer open Domain
+Pack entrypoints. Active dependencies still exist in `domain-packs/`, Domain
+Pack services/assets, retained legacy endpoint/frontend files, eval/Docker
+surfaces, `AgentRuntime`, remaining `DomainQAGraph` source and dependencies,
+remaining `MultiAgentSupervisorGraph` source/compat surfaces, and
+`tests/compat/`.
 
-Fresh blocker classification from this docs run:
+Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 
-- `src/backend/zuno/api/router.py` still includes Domain Pack routes.
-- `src/backend/zuno/api/v1/domain_packs.py` still exposes `/domain-packs`.
+- `src/backend/zuno/api/router.py` no longer includes Domain Pack routes.
+- `apps/web/src/router/index.ts`,
+  `apps/web/src/pages/workspace/components/WorkspaceSettingsShell.vue`, and
+  active knowledge pages no longer expose Domain Pack entrypoints.
+- `src/backend/zuno/api/v1/domain_packs.py` still retains legacy endpoint
+  functions for asset migration and compatibility evidence.
+- `src/backend/zuno/api/services/domain_pack.py` still exists.
 - `src/backend/zuno/services/domain_pack/` still exists.
+- `src/backend/zuno/core/runtime/agent_runtime.py` still dispatches legacy graph
+  runtime.
 - `src/backend/zuno/core/graphs/domain_qa_graph.py` still exists.
 - `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` still exists.
 - `tests/compat/` still exists with Domain Pack and multi-agent compatibility

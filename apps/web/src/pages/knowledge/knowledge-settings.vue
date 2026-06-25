@@ -2,7 +2,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRoute } from 'vue-router'
-import { getDomainPacksAPI, type DomainPackSummary } from '../../apis/domain-packs'
 import {
   analyzeKnowledgeConfigImpactAPI,
   getKnowledgeConfigAPI,
@@ -21,7 +20,6 @@ const saving = ref(false)
 const reindexingAction = ref<KnowledgeReindexAction | ''>('')
 const config = ref<KnowledgeConfigPayload>(normalizeKnowledgeConfig())
 const impact = ref<KnowledgeConfigImpactResponse | null>(null)
-const domainPacks = ref<DomainPackSummary[]>([])
 const models = ref<LLMResponse[]>([])
 const knowledgeId = computed(() => String(route.params.knowledgeId || ''))
 const embeddingModels = computed(() => models.value.filter((item) => item.llm_type === 'Embedding'))
@@ -82,16 +80,12 @@ const loadPage = async () => {
   if (!knowledgeId.value) return
   loading.value = true
   try {
-    const [configResponse, domainResponse, modelResponse] = await Promise.all([
+    const [configResponse, modelResponse] = await Promise.all([
       getKnowledgeConfigAPI(knowledgeId.value),
-      getDomainPacksAPI(),
       getVisibleLLMsAPI(),
     ])
     if (configResponse.data.status_code === 200) {
       config.value = normalizeKnowledgeConfig(configResponse.data.data)
-    }
-    if (domainResponse.data.status_code === 200) {
-      domainPacks.value = domainResponse.data.data || []
     }
     if (modelResponse.data.status_code === 200) {
       models.value = Object.values(modelResponse.data.data || {}).flat().filter(Boolean) as LLMResponse[]
@@ -185,11 +179,12 @@ onMounted(loadPage)
           </select>
         </label>
         <label>
-          <span>领域包</span>
-          <select v-model="config.graphrag_project_id">
-            <option :value="null">暂不绑定</option>
-            <option v-for="pack in domainPacks" :key="pack.pack_id" :value="pack.pack_id">{{ pack.name }}</option>
-          </select>
+          <span>GraphRAG Project</span>
+          <input
+            v-model="config.graphrag_project_id"
+            type="text"
+            placeholder="可选 GraphRAG Project ID"
+          />
         </label>
       </div>
     </section>
@@ -269,6 +264,7 @@ label {
   font-weight: 700;
 }
 
+input,
 select {
   height: 40px;
   min-width: 0;

@@ -20,8 +20,8 @@ phase that owns it proves active dependency removal.
 
 | Phase | Status | Main Output |
 | --- | --- | --- |
-| 00 | ready | current-state and dependency gate |
-| 01 | blocked until executed | official cleanup 11C dependency removal |
+| 00 | complete | current-state and dependency gate |
+| 01 | in progress / blocked | official cleanup 11C dependency removal |
 | 02 | blocked by 01 | Contract Review asset migration |
 | 03 | blocked by 01-02 | GraphRAG Project mainline hardening |
 | 04 | blocked by 01-03 | repository layout cleanup |

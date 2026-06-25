@@ -79,6 +79,40 @@ def main() -> int:
     if "must not be treated as target repository layout" not in repo_hygiene_map:
         errors.append("repo hygiene map must keep Domain Pack out of target layout")
 
+    backend_router = _read("src/backend/zuno/api/router.py")
+    backend_v1_init = _read("src/backend/zuno/api/v1/__init__.py")
+    if "domain_packs" in backend_router or "router.include_router(domain_packs.router)" in backend_router:
+        errors.append("Domain Pack router must not be mounted on the current FastAPI router")
+    if "domain_packs" in backend_v1_init:
+        errors.append("Domain Pack module must not be exported from the current API v1 front path")
+
+    frontend_active_paths = [
+        "apps/web/src/router/index.ts",
+        "apps/web/src/pages/workspace/components/WorkspaceSettingsShell.vue",
+        "apps/web/src/pages/knowledge/knowledge.vue",
+        "apps/web/src/pages/knowledge/knowledge-create.vue",
+        "apps/web/src/pages/knowledge/knowledge-settings.vue",
+    ]
+    forbidden_frontend_phrases = [
+        "workspaceSettingsKnowledgeDomainPacks",
+        "workspaceSettingsKnowledgeDomainPackCreate",
+        "workspaceSettingsKnowledgeDomainPackDetail",
+        "knowledge-domain-packs",
+        "settings/knowledge/domain-packs",
+        "/knowledge/domain-packs",
+        "KnowledgeDomainPacks",
+        "KnowledgeDomainPackCreate",
+        "KnowledgeDomainPackDetail",
+        "getDomainPacksAPI",
+        "openDomainPacks",
+        "openDomainPackBuilder",
+    ]
+    for relative_path in frontend_active_paths:
+        content = _read(relative_path)
+        for phrase in forbidden_frontend_phrases:
+            if phrase in content:
+                errors.append(f"{relative_path} still exposes active Domain Pack frontend phrase: {phrase}")
+
     html_matches = [
         path
         for path in _tracked_files()

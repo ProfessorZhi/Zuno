@@ -1,5 +1,9 @@
 # Phase 01: Official Cleanup 11C Dependency Removal
 
+## Status
+
+In progress / blocked overall.
+
 ## Goal
 
 Remove active dependencies that keep Domain Pack, `DomainQAGraph`,
@@ -60,3 +64,36 @@ git diff --check
 - replacement tests
 - grep classification
 - commit hash and push result
+
+## 2026-06-25 Progress
+
+Removed from the active current path:
+
+- Current FastAPI router no longer imports or includes
+  `zuno.api.v1.domain_packs.router`; `/api/v1/domain-packs` is no longer a
+  mounted current route.
+- Active Vue knowledge routes and settings-shell mappings no longer expose
+  Domain Pack list/create/detail pages.
+- Knowledge create/settings pages no longer call `getDomainPacksAPI`; they use
+  `graphrag_project_id` as the GraphRAG Project field.
+
+Retained as Blocked Legacy / Phase 02 migration assets:
+
+- `domain-packs/contract_review/`
+- `src/backend/zuno/api/v1/domain_packs.py`
+- `src/backend/zuno/api/services/domain_pack.py`
+- `src/backend/zuno/services/domain_pack/`
+- `apps/web/src/apis/domain-packs.ts`
+- `apps/web/src/pages/knowledge/domain-pack-*.vue`
+- Contract Review eval assets and Domain Pack Docker mounts
+
+Still blocked:
+
+- `src/backend/zuno/core/runtime/agent_runtime.py` still imports and dispatches
+  `DomainQAGraph` and `MultiAgentSupervisorGraph`.
+- `src/backend/zuno/services/workspace/simple_agent.py` still has the
+  domain-pack runtime branch through `AgentRuntime`.
+- `tools/evals/zuno/contract_review_eval/` and stackless eval paths still
+  depend on `DomainPackLoader` / `DomainQAGraph`.
+- `tests/compat/` still contains active compatibility coverage for the legacy
+  graph/runtime surfaces.

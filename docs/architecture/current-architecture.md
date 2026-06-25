@@ -65,16 +65,21 @@ architecture.
 Phase 11C is blocked because these active dependencies still exist:
 
 - `domain-packs/`
-- Domain Pack route/service/frontend/eval/Docker surfaces
-- `src/backend/zuno/api/v1/domain_packs.py`
+- Domain Pack service/eval/Docker surfaces
+- `src/backend/zuno/api/v1/domain_packs.py` as a retained legacy endpoint
+  module, not mounted on the current FastAPI router
+- `apps/web/src/apis/domain-packs.ts` and Domain Pack Vue components as
+  retained legacy assets, not active knowledge routes or settings-shell pages
+- `src/backend/zuno/api/services/domain_pack.py`
 - `src/backend/zuno/services/domain_pack/`
+- `src/backend/zuno/core/runtime/agent_runtime.py`
 - remaining `DomainQAGraph` source and dependencies
 - remaining `MultiAgentSupervisorGraph` source and compat surfaces
 - `tests/compat/`
 
 These surfaces are not the future front-path architecture, but they still have
-active imports, routes, evals, assets, or tests. They are retained until 11C
-active dependency removal is proved.
+active imports, evals, assets, runtime paths, Docker references, or tests. They
+are retained until 11C active dependency removal is proved.
 
 ## Not Current
 

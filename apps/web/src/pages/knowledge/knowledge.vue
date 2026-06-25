@@ -194,14 +194,6 @@ const openCreateWizard = () => {
   })
 }
 
-const openDomainPacks = () => {
-  closeInlineForm()
-  router.push({
-    name: inWorkspaceSettings.value ? 'workspaceSettingsKnowledgeDomainPacks' : 'knowledge-domain-packs',
-    query: buildSettingsQuery(),
-  })
-}
-
 const openEditDialog = (item: KnowledgeItem) => {
   createDialogVisible.value = false
   editForm.value = {
@@ -382,11 +374,6 @@ onActivated(fetchKnowledges)
       </div>
 
       <div class="header-actions">
-        <ZunoIconButton
-          :icon="FolderOpened"
-          title="领域包"
-          @click="openDomainPacks"
-        />
         <ZunoIconButton
           type="primary"
           :icon="Plus"

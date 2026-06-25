@@ -2,13 +2,13 @@ import asyncio
 from types import SimpleNamespace
 
 
-def test_domain_pack_routes_are_registered() -> None:
+def test_domain_pack_routes_are_not_registered_on_current_router() -> None:
     router = open("src/backend/zuno/api/router.py", encoding="utf-8").read()
     package_exports = open("src/backend/zuno/api/v1/__init__.py", encoding="utf-8").read()
 
-    assert "domain_packs" in router
-    assert "router.include_router(domain_packs.router)" in router
-    assert "domain_packs" in package_exports
+    assert "domain_packs" not in router
+    assert "router.include_router(domain_packs.router)" not in router
+    assert "domain_packs" not in package_exports
 
 
 def test_list_domain_packs_endpoint_returns_service_payload(monkeypatch):
@@ -65,4 +65,3 @@ def test_eval_profiles_endpoint_returns_skeleton_payload(monkeypatch):
 
     assert response.status_code == 200
     assert response.data[0]["eval_profile_id"] == "contract_review_local"
-

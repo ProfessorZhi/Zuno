@@ -51,6 +51,41 @@ def test_blocked_legacy_paths_are_present_and_classified() -> None:
     assert "must not be treated as target repository layout" in map_content
 
 
+def test_domain_pack_is_not_current_api_or_frontend_entrypoint() -> None:
+    router = (REPO_ROOT / "src/backend/zuno/api/router.py").read_text(encoding="utf-8")
+    api_v1_init = (REPO_ROOT / "src/backend/zuno/api/v1/__init__.py").read_text(encoding="utf-8")
+    assert "domain_packs" not in router
+    assert "router.include_router(domain_packs.router)" not in router
+    assert "domain_packs" not in api_v1_init
+
+    active_frontend_paths = [
+        "apps/web/src/router/index.ts",
+        "apps/web/src/pages/workspace/components/WorkspaceSettingsShell.vue",
+        "apps/web/src/pages/knowledge/knowledge.vue",
+        "apps/web/src/pages/knowledge/knowledge-create.vue",
+        "apps/web/src/pages/knowledge/knowledge-settings.vue",
+    ]
+    active_frontend = "\n".join(
+        (REPO_ROOT / path).read_text(encoding="utf-8")
+        for path in active_frontend_paths
+    )
+    for phrase in [
+        "workspaceSettingsKnowledgeDomainPacks",
+        "workspaceSettingsKnowledgeDomainPackCreate",
+        "workspaceSettingsKnowledgeDomainPackDetail",
+        "knowledge-domain-packs",
+        "settings/knowledge/domain-packs",
+        "/knowledge/domain-packs",
+        "KnowledgeDomainPacks",
+        "KnowledgeDomainPackCreate",
+        "KnowledgeDomainPackDetail",
+        "getDomainPacksAPI",
+        "openDomainPacks",
+        "openDomainPackBuilder",
+    ]:
+        assert phrase not in active_frontend
+
+
 def test_repo_hygiene_verifiers_are_registered() -> None:
     for path in [
         ".agent/scripts/verify_doc_boundaries.py",

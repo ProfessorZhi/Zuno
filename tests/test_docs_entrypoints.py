@@ -127,7 +127,9 @@ def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -
         "GeneralAgent single loop",
         "GraphRAG Project Query Runtime",
         "Context Orchestrator and new Memory layering are Target, not Current",
-        "Domain Pack route/service/frontend/eval/Docker surfaces",
+        "Domain Pack service/eval/Docker surfaces",
+        "not mounted on the current FastAPI router",
+        "not active knowledge routes or settings-shell pages",
     ]:
         assert phrase in current
 

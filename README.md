@@ -32,12 +32,15 @@ Target:
 - Keep Java services, microservices, event workers, product-level multi-agent
   mode, and Coding Agent direction as future direction only.
 
-Blocked Legacy:
+Phase 11C progress / Blocked Legacy:
 
-- Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
-  route/service/frontend/eval/Docker surfaces, remaining `DomainQAGraph`
-  surfaces, remaining `MultiAgentSupervisorGraph` source/compat surfaces, and
-  `tests/compat/`.
+- Phase 11C has started, but remains blocked. `/api/v1/domain-packs` is no
+  longer mounted on the current FastAPI router, and the active Vue knowledge
+  routes/pages no longer open the Domain Pack builder/list/detail flow.
+- Remaining blockers still exist in `domain-packs/`, Domain Pack services,
+  legacy endpoint module, eval/Docker surfaces, `AgentRuntime`,
+  remaining `DomainQAGraph` surfaces, remaining
+  `MultiAgentSupervisorGraph` source/compat surfaces, and `tests/compat/`.
 - These surfaces are not the future public mainline, but they must not be
   deleted before active dependency removal is proven.
 - Phase 12 is partial / not closed: final full `pytest` and formal Eval

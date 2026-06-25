@@ -2,7 +2,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
-import { getDomainPacksAPI, type DomainPackSummary } from '../../apis/domain-packs'
 import { createKnowledgeAPI } from '../../apis/knowledge'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
 import {
@@ -29,7 +28,6 @@ const route = useRoute()
 const saving = ref(false)
 const loadingOptions = ref(false)
 const productMode = ref<KnowledgeProductMode>('standard')
-const domainPacks = ref<DomainPackSummary[]>([])
 const models = ref<LLMResponse[]>([])
 const form = ref({
   knowledge_name: '新知识库',
@@ -42,7 +40,6 @@ const form = ref({
 
 const embeddingModels = computed(() => models.value.filter((item) => item.llm_type === 'Embedding'))
 const rerankModels = computed(() => models.value.filter((item) => item.llm_type === 'Rerank'))
-const selectedDomainPack = computed(() => domainPacks.value.find((item) => item.pack_id === form.value.graphrag_project_id))
 const canSubmit = computed(() => (
   form.value.knowledge_name.trim().length >= 2
   && form.value.knowledge_desc.trim().length >= 10
@@ -51,13 +48,7 @@ const canSubmit = computed(() => (
 const loadOptions = async () => {
   loadingOptions.value = true
   try {
-    const [domainResponse, modelResponse] = await Promise.all([
-      getDomainPacksAPI(),
-      getVisibleLLMsAPI(),
-    ])
-    if (domainResponse.data.status_code === 200) {
-      domainPacks.value = domainResponse.data.data || []
-    }
+    const modelResponse = await getVisibleLLMsAPI()
     if (modelResponse.data.status_code === 200) {
       models.value = Object.values(modelResponse.data.data || {}).flat().filter(Boolean) as LLMResponse[]
     }
@@ -114,26 +105,6 @@ const submit = async () => {
     saving.value = false
   }
 }
-
-const openDomainPackBuilder = () => {
-  router.push({
-    name: 'workspaceSettingsKnowledgeDomainPackCreate',
-    query: {
-      returnTo: 'knowledge-create',
-      settings_turn: String(Date.now()),
-    },
-  })
-}
-
-watch(
-  () => route.query.domain_pack_id,
-  (value) => {
-    if (value) {
-      form.value.graphrag_project_id = String(value)
-      productMode.value = 'enhanced'
-    }
-  },
-)
 
 watch(
   () => route.query.graphrag_project_id,
@@ -206,12 +177,12 @@ onMounted(loadOptions)
         </label>
         <label :class="{ muted: productMode === 'standard' }">
           <span>GraphRAG Project</span>
-          <select v-model="form.graphrag_project_id" :disabled="productMode === 'standard'">
-            <option value="">暂不绑定</option>
-            <option v-for="pack in domainPacks" :key="pack.pack_id" :value="pack.pack_id">
-              {{ pack.name }} · {{ pack.status === 'published' ? '已发布' : '草稿' }}
-            </option>
-          </select>
+          <input
+            v-model="form.graphrag_project_id"
+            type="text"
+            :disabled="productMode === 'standard'"
+            placeholder="可选 GraphRAG Project ID"
+          />
         </label>
         <label>
           <span>构建计划</span>
@@ -219,13 +190,12 @@ onMounted(loadOptions)
             type="text"
             readonly
             :value="productMode === 'enhanced'
-              ? `增强检索 · ${selectedDomainPack?.name || '未绑定领域包'} · 创建后进入文件管理上传资料`
+              ? `增强检索 · ${form.graphrag_project_id || '未绑定 GraphRAG Project'} · 创建后进入文件管理上传资料`
               : '标准检索 · 向量 + BM25 · 创建后进入文件管理上传资料'"
           />
         </label>
       </div>
       <div class="action-row">
-        <button type="button" @click="openDomainPackBuilder">创建领域包</button>
         <button type="button" :disabled="saving || !canSubmit" @click="submit">
           {{ saving ? '创建中...' : '创建知识库' }}
         </button>

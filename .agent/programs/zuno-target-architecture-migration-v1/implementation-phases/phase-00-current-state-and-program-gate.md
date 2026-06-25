@@ -1,5 +1,9 @@
 # Phase 00: Current State And Program Gate
 
+## Status
+
+Complete for the 2026-06-25 execution pass.
+
 ## Goal
 
 Prove the current repo state before starting architecture migration work.
@@ -52,3 +56,23 @@ git diff --check
 - command output summary
 - dependency classification
 - go/no-go for Phase 01
+
+## 2026-06-25 Evidence
+
+- `git status --short`: clean before Phase 00 edits.
+- `git log -5 --oneline`: `53ab9e4`, `60b6b62`, `b160c4b`,
+  `24abdd9`, `c4c52d9`.
+- `pytest -q tests/test_phase11a_knowledge_query_service.py tests/test_phase11b_single_generalagent_cutover.py`:
+  `4 passed`.
+- Phase 11A is proved from `KnowledgeQueryService`,
+  `GraphRAGQueryService`, `GraphRAGProjectSnapshot`, and
+  `KnowledgeQueryResult`.
+- Phase 11B is proved for the Completion API / `GeneralAgent` path through
+  `search_knowledge_base` and `KnowledgeQueryService`.
+- Phase 11C remains blocked by Domain Pack assets/services/eval/Docker
+  surfaces, `AgentRuntime`, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and
+  `tests/compat/`.
+- Phase 12 remains partial / not closed; full `pytest` and formal Eval
+  baseline comparison were not completed in this pass.
+- Go for bounded Phase 01 work: yes, but only for surfaces whose references
+  are proved safe before removal.
