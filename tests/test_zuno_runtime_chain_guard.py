@@ -62,3 +62,14 @@ def test_phase0_recovery_tests_use_project_query_runtime_truth() -> None:
     assert "GraphRAGQueryService" in phase0_test
     assert "DomainQAGraph" not in phase0_test
     assert "DomainPackLoader" not in phase0_test
+
+
+def test_phase5_import_tests_use_project_query_runtime_truth() -> None:
+    phase5_import_test = (
+        REPO_ROOT / "tests" / "test_phase5_langgraph_runtime_imports.py"
+    ).read_text(encoding="utf-8")
+
+    assert "KnowledgeQueryService" in phase5_import_test
+    assert "GraphRAGQueryService" in phase5_import_test
+    assert "DomainQAGraph" not in phase5_import_test
+    assert "DomainPackLoader" not in phase5_import_test

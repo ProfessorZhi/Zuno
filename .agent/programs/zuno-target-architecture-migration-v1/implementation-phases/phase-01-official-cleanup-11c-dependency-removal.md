@@ -90,6 +90,9 @@ Removed from the active current path:
   `DomainPackLoader` as high-value current imports; they use
   `KnowledgeQueryService`, `GraphRAGQueryService`, and
   `GraphRAGProjectSnapshot`.
+- Root Phase 5 runtime import tests no longer import Domain Pack loader or the
+  legacy graph as current mainline; direct legacy import coverage remains under
+  `tests/compat/`.
 - The stale tracked backend package asset copy
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under
