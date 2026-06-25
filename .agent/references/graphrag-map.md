@@ -17,6 +17,10 @@ The current GraphRAG Project Query Runtime includes:
 `GeneralAgent` reaches this runtime through `search_knowledge_base` and
 `KnowledgeQueryService`.
 
+Workspace knowledge prefetch and the Workspace `search_knowledge_base` tool
+also reach this runtime through `KnowledgeQueryService`; they no longer call
+`AgentRuntime` or `DomainQAGraph`.
+
 ## Target References
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`

@@ -10,12 +10,14 @@ Current status:
   and legacy grep evidence were re-verified.
 - Phase 01 is in progress and still blocked overall. The current FastAPI router
   no longer mounts `/domain-packs`, and active Vue knowledge routes/pages no
-  longer open Domain Pack entrypoints.
+  longer open Domain Pack entrypoints. Workspace knowledge prefetch/tools no
+  longer import `AgentRuntime` or call `_run_domain_pack_query`; they use
+  `KnowledgeQueryService`.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
 - Phase 11C remains blocked by Domain Pack services/assets, retained legacy
-  endpoint/frontend files, `AgentRuntime`, `DomainQAGraph`,
-  `MultiAgentSupervisorGraph`, Docker/eval surfaces, and `tests/compat/`
-  dependencies.
+  endpoint/frontend files, standalone `AgentRuntime` source/compat surfaces,
+  `DomainQAGraph`, `MultiAgentSupervisorGraph`, Docker/eval surfaces, and
+  `tests/compat/` dependencies.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

@@ -113,6 +113,16 @@ def main() -> int:
             if phrase in content:
                 errors.append(f"{relative_path} still exposes active Domain Pack frontend phrase: {phrase}")
 
+    workspace_agent = _read("src/backend/zuno/services/workspace/simple_agent.py")
+    if "from zuno.core.runtime.agent_runtime import AgentRuntime" in workspace_agent:
+        errors.append("Workspace knowledge path must not import AgentRuntime")
+    if "domain_qa_runtime" in workspace_agent:
+        errors.append("Workspace knowledge path must not expose domain_qa_runtime")
+    if "_run_domain_pack_query" in workspace_agent:
+        errors.append("Workspace knowledge path must not call _run_domain_pack_query")
+    if "KnowledgeQueryService" not in workspace_agent:
+        errors.append("Workspace knowledge path must use KnowledgeQueryService")
+
     html_matches = [
         path
         for path in _tracked_files()

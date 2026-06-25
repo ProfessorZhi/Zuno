@@ -74,6 +74,21 @@ def test_active_repo_tools_do_not_reference_retired_backend_domain_pack_copy() -
     assert "`src/backend/zuno/domain_packs/` still exist" not in roadmap
 
 
+def test_workspace_knowledge_path_stays_off_legacy_agent_runtime() -> None:
+    workspace_agent = (
+        REPO_ROOT / "src/backend/zuno/services/workspace/simple_agent.py"
+    ).read_text(encoding="utf-8")
+    assert "from zuno.core.runtime.agent_runtime import AgentRuntime" not in workspace_agent
+    assert "domain_qa_runtime" not in workspace_agent
+    assert "_run_domain_pack_query" not in workspace_agent
+    assert "KnowledgeQueryService" in workspace_agent
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "Workspace knowledge path must not import AgentRuntime" in verifier
+
+
 def test_domain_pack_is_not_current_api_or_frontend_entrypoint() -> None:
     router = (REPO_ROOT / "src/backend/zuno/api/router.py").read_text(encoding="utf-8")
     api_v1_init = (REPO_ROOT / "src/backend/zuno/api/v1/__init__.py").read_text(encoding="utf-8")

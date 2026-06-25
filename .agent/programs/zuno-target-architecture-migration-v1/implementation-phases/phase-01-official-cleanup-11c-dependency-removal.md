@@ -76,6 +76,10 @@ Removed from the active current path:
   Domain Pack list/create/detail pages.
 - Knowledge create/settings pages no longer call `getDomainPacksAPI`; they use
   `graphrag_project_id` as the GraphRAG Project field.
+- Workspace knowledge prefetch and Workspace `search_knowledge_base` no longer
+  import `AgentRuntime`, expose `domain_qa_runtime`, or call
+  `_run_domain_pack_query`; they use `KnowledgeQueryService` and
+  `KnowledgeQueryResult` payload mapping.
 - The stale tracked backend package asset copy
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under
@@ -107,9 +111,8 @@ Retained as Blocked Legacy / Phase 02 migration assets:
 Still blocked:
 
 - `src/backend/zuno/core/runtime/agent_runtime.py` still imports and dispatches
-  `DomainQAGraph` and `MultiAgentSupervisorGraph`.
-- `src/backend/zuno/services/workspace/simple_agent.py` still has the
-  domain-pack runtime branch through `AgentRuntime`.
+  `DomainQAGraph` and `MultiAgentSupervisorGraph`; it remains a standalone
+  Blocked Legacy source/compat surface.
 - `tools/evals/zuno/contract_review_eval/` and stackless eval paths still
   depend on `DomainPackLoader` / `DomainQAGraph`.
 - `tests/compat/` still contains active compatibility coverage for Workspace,

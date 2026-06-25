@@ -15,8 +15,11 @@ Current truth is still the Python monorepo runtime:
 - `domain-packs/` still exists as current or migration evidence; the old
   `src/backend/zuno/domain_packs/` asset copy has been removed from the current
   package path and archived under `docs/architecture/history/domain-packs/`.
-- Domain Pack routes, services, frontend pages, graph names, and tests still
-  exist in active code paths.
+- Domain Pack services, retained frontend/API assets, graph names, eval/Docker
+  references, and tests still exist in active or Blocked Legacy paths. The
+  current FastAPI router, active Vue knowledge entrypoints, `GeneralAgent`, and
+  Workspace knowledge prefetch/tools no longer use the Domain Pack runtime
+  path.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
   `RetrievalFusion`, BM25/vector/graph adapters, community services, requery,
   index version fields, and trace metadata.
@@ -119,8 +122,10 @@ This roadmap does not implement:
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
 - Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
-  route/service/frontend/eval/Docker surfaces, `DomainQAGraph`,
-  `MultiAgentSupervisorGraph`, and `tests/compat/`.
+  service/retained endpoint/frontend/eval/Docker surfaces, standalone
+  `AgentRuntime` source/compat surfaces, `DomainQAGraph`,
+  `MultiAgentSupervisorGraph`, and `tests/compat/`. Workspace knowledge
+  prefetch/tools have been cut over to `KnowledgeQueryService`.
 - Phase 12 is partially complete / not closed. Final full `pytest` and formal
   Eval baseline comparison are not complete.
 

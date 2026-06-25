@@ -11,9 +11,9 @@ In progress / blocked overall. The current FastAPI router no longer mounts
 `/domain-packs`, and active Vue knowledge routes/pages no longer open Domain
 Pack entrypoints. Active dependencies still exist in `domain-packs/`, Domain
 Pack services/assets, retained legacy endpoint/frontend files, eval/Docker
-surfaces, `AgentRuntime`, remaining `DomainQAGraph` source and dependencies,
-remaining `MultiAgentSupervisorGraph` source/compat surfaces, and
-`tests/compat/`.
+surfaces, standalone `AgentRuntime` source/compat surfaces, remaining
+`DomainQAGraph` source and dependencies, remaining `MultiAgentSupervisorGraph`
+source/compat surfaces, and `tests/compat/`.
 
 Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 
@@ -35,12 +35,20 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   path.
 - `tests/compat/test_domain_qa_graph_offline.py` now matches the current
   `DomainQAGraph` trace shape while remaining Blocked Legacy coverage.
+- `src/backend/zuno/services/workspace/simple_agent.py` no longer imports
+  `AgentRuntime`, exposes `domain_qa_runtime`, or calls
+  `_run_domain_pack_query`; Workspace knowledge prefetch/tools now use
+  `KnowledgeQueryService`.
+- `tests/test_phase11c_workspace_project_query_cutover.py`,
+  `tests/compat/test_workspace_domain_pack_runtime.py`, and
+  `tests/test_phase5_workspace_real_runtime_flow.py` now protect the Workspace
+  project-query runtime path.
 - `src/backend/zuno/api/v1/domain_packs.py` still retains legacy endpoint
   functions for asset migration and compatibility evidence.
 - `src/backend/zuno/api/services/domain_pack.py` still exists.
 - `src/backend/zuno/services/domain_pack/` still exists.
 - `src/backend/zuno/core/runtime/agent_runtime.py` still dispatches legacy graph
-  runtime.
+  runtime as a standalone Blocked Legacy source/compat surface.
 - `src/backend/zuno/core/graphs/domain_qa_graph.py` still exists.
 - `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` still exists.
 - `tests/compat/` still exists with Domain Pack and multi-agent compatibility

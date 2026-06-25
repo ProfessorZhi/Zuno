@@ -23,10 +23,12 @@ migration stages.
   `KnowledgeQueryService`.
 - Phase 11C: blocked. The current FastAPI router no longer mounts
   `/domain-packs`, and the active Vue knowledge route/settings entrypoints no
-  longer open Domain Pack pages. Active dependencies still remain in
+  longer open Domain Pack pages. Workspace knowledge prefetch/tools no longer
+  use `AgentRuntime` or `_run_domain_pack_query`; they use
+  `KnowledgeQueryService`. Active dependencies still remain in
   `domain-packs/`, Domain Pack services, legacy endpoint/frontend assets,
-  eval/Docker surfaces, `AgentRuntime`, `DomainQAGraph`,
-  `MultiAgentSupervisorGraph`, and `tests/compat/`.
+  eval/Docker surfaces, standalone `AgentRuntime` source/compat surfaces,
+  `DomainQAGraph`, `MultiAgentSupervisorGraph`, and `tests/compat/`.
 - Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
   and formal Eval baseline comparison are not complete.
 
@@ -54,7 +56,8 @@ by active dependencies:
   module, no longer mounted on the current FastAPI router
 - `apps/web/src/apis/domain-packs.ts` and retained Domain Pack Vue components
 - `src/backend/zuno/services/domain_pack/`
-- `src/backend/zuno/core/runtime/agent_runtime.py`
+- `src/backend/zuno/core/runtime/agent_runtime.py` as standalone Blocked
+  Legacy source/compat surface, not the Workspace knowledge current path
 - `src/backend/zuno/core/graphs/domain_qa_graph.py`
 - `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
 - `tests/compat/`

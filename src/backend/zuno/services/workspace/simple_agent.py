@@ -27,14 +27,14 @@ from loguru import logger
 from pydantic import BaseModel
 
 from zuno.api.services.mcp_user_config import MCPUserConfigService
-from zuno.api.services.knowledge import KnowledgeService
+from zuno.api.services.knowledge_query import KnowledgeQueryService
 from zuno.api.services.agent_skill import AgentSkillService
 from zuno.api.services.tool import ToolService
 from zuno.api.services.usage_stats import UsageStatsService
 from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.core.callbacks import usage_metadata_callback
 from zuno.core.models.manager import ModelManager
-from zuno.core.runtime.agent_runtime import AgentRuntime
+from zuno.services.graphrag.query_service import KnowledgeQueryResult
 from zuno.database import AgentSkill
 from zuno.schema.tool import (
     CLIToolPreviewReq,
@@ -178,8 +178,7 @@ class WorkSpaceSimpleAgent:
 
         self.server_dict: dict[str, Any] = {}
         self.route_hint = self._detect_route_hint(self.original_query)
-        self.domain_qa_runtime = AgentRuntime()
-        self._runtime_settings_cache: dict[str, dict] = {}
+        self.knowledge_query_service = KnowledgeQueryService()
         self._initialized = False
 
     def _wrap_event(self, event: str, data: Dict[str, Any]) -> WorkspaceAgentStreamEvent:
@@ -247,6 +246,8 @@ class WorkSpaceSimpleAgent:
             "status": "ERROR" if failed else "END",
             "message": self._summarize_retrieval_metadata(metadata),
             "retrieval_mode": result.get("actual_mode") or metadata.get("final_mode") or self.retrieval_mode,
+            "graphrag_project_id": result.get("graphrag_project_id") or metadata.get("graphrag_project_id"),
+            "query_method": result.get("final_mode") or metadata.get("resolved_query_method"),
             "domain_pack_id": result.get("domain_pack_id"),
             "first_mode": result.get("first_mode") or metadata.get("first_mode"),
             "final_mode": result.get("final_mode") or metadata.get("final_mode"),
@@ -264,61 +265,68 @@ class WorkSpaceSimpleAgent:
             "domain_pack_failure": domain_pack_failure,
             "domain_pack_support_verdict": metadata.get("domain_pack_support_verdict") or {},
             "domain_pack_evidence_bundle": metadata.get("domain_pack_evidence_bundle") or {},
+            "support_verdict": metadata.get("support_verdict") or result.get("support_verdict") or {},
+            "evidence_bundle": metadata.get("evidence_bundle") or result.get("evidence_bundle") or {},
+            "citations": result.get("citations") or metadata.get("citation_chunks") or [],
         }
 
-    async def _get_primary_runtime_settings(self) -> Dict[str, Any] | None:
+    def _workspace_query_method(self) -> str | None:
+        method = str(self.retrieval_mode or "").strip().lower()
+        return method if method in {"auto", "basic", "local", "global", "drift"} else None
+
+    @staticmethod
+    def _project_query_result_to_retrieval_payload(result: KnowledgeQueryResult) -> Dict[str, Any]:
+        metadata = dict(result.trace_metadata or {})
+        support_verdict = metadata.get("support_verdict") or result.evidence.get("support_verdict") or {}
+        metadata.setdefault("requested_query_method", result.requested_query_method)
+        metadata.setdefault("resolved_query_method", result.resolved_query_method)
+        metadata.setdefault("fallback_reason", result.fallback_reason)
+        metadata.setdefault("retrievers_used", list(result.retrievers_used))
+        metadata.setdefault("evidence_bundle", dict(result.evidence))
+        metadata.setdefault("citation_chunks", list(result.citations))
+        metadata.setdefault("index_version", dict(result.index_version))
+        metadata.setdefault("graphrag_project_id", result.graphrag_project_id)
+        metadata.setdefault("support_verdict", support_verdict)
+
+        final_pass_result = dict((result.raw_result or {}).get("final_pass_result") or {})
+        final_pass_result.setdefault("documents", list(result.documents))
+        final_pass_result.setdefault("paths", list(result.graph_paths))
+        graph_result = dict((result.raw_result or {}).get("graph_result") or {})
+        graph_result.setdefault("paths", list(result.graph_paths))
+        graph_result.setdefault("communities", list(result.communities))
+        return {
+            "content": result.answer,
+            "actual_mode": result.resolved_query_method,
+            "first_mode": result.requested_query_method,
+            "final_mode": result.resolved_query_method,
+            "fallback_reason": result.fallback_reason,
+            "round_count": metadata.get("round_count") or 1,
+            "second_pass_used": metadata.get("second_pass_used") or False,
+            "graphrag_project_id": result.graphrag_project_id,
+            "domain_pack_id": None,
+            "metadata": metadata,
+            "final_pass_result": final_pass_result,
+            "graph_result": graph_result,
+            "support_verdict": support_verdict,
+            "evidence_bundle": dict(result.evidence),
+            "citations": list(result.citations),
+            "prompt_version": result.prompt_version,
+            "query_prompt_version": result.query_prompt_version,
+            "community_version": result.community_version,
+            "index_version": dict(result.index_version),
+            "retrievers_used": list(result.retrievers_used),
+        }
+
+    async def _run_knowledge_query(self, query: str) -> Dict[str, Any] | None:
         if not self.knowledge_ids:
             return None
-        primary_knowledge_id = self.knowledge_ids[0]
-        if primary_knowledge_id not in self._runtime_settings_cache:
-            self._runtime_settings_cache[primary_knowledge_id] = await KnowledgeService.get_runtime_settings(primary_knowledge_id)
-        return self._runtime_settings_cache[primary_knowledge_id]
-
-    async def _run_domain_pack_query(self, query: str) -> Dict[str, Any] | None:
-        runtime_settings = await self._get_primary_runtime_settings()
-        if not runtime_settings or not runtime_settings.get("domain_pack"):
-            return None
-        runtime_settings = copy.deepcopy(runtime_settings)
-        if self.multi_agent_enabled:
-            knowledge_config = dict(runtime_settings.get("knowledge_config") or {})
-            retrieval_settings = dict(knowledge_config.get("retrieval_settings") or {})
-            retrieval_settings["multi_agent_enabled"] = True
-            knowledge_config["retrieval_settings"] = retrieval_settings
-            runtime_settings["knowledge_config"] = knowledge_config
-
-        state = await self.domain_qa_runtime.run_domain_qa(
+        result = await self.knowledge_query_service.query(
             user_id=self.user_id,
-            agent_id="workspace_simple_agent",
-            dialog_id=self.session_id,
-            query=query,
             knowledge_ids=self.knowledge_ids,
-            domain_pack_id=runtime_settings.get("domain_pack_id"),
-            runtime_settings=runtime_settings,
-            domain_pack=runtime_settings.get("domain_pack"),
+            query=query,
+            query_method=self._workspace_query_method(),
         )
-        retrieval_result = state.get("retrieval_result") or {}
-        metadata = dict(retrieval_result.get("metadata") or {})
-        metadata["domain_pack_trace"] = state.get("trace_metadata") or {}
-        metadata["domain_pack_cost"] = state.get("cost_metadata") or {}
-        metadata["domain_pack_failure"] = state.get("failure_metadata") or {}
-        metadata["domain_pack_support_verdict"] = state.get("support_verdict") or {}
-        metadata["domain_pack_evidence_bundle"] = state.get("evidence_bundle") or {}
-        return {
-            "content": state.get("final_answer") or retrieval_result.get("content") or "",
-            "actual_mode": retrieval_result.get("actual_mode"),
-            "first_mode": retrieval_result.get("first_mode"),
-            "final_mode": retrieval_result.get("final_mode"),
-            "fallback_reason": retrieval_result.get("fallback_reason"),
-            "round_count": retrieval_result.get("round_count") or metadata.get("round_count") or 1,
-            "second_pass_used": retrieval_result.get("second_pass_used"),
-            "domain_pack_id": state.get("domain_pack_id"),
-            "metadata": metadata,
-            "report_markdown": state.get("report_markdown"),
-            "final_pass_result": retrieval_result.get("final_pass_result") or {},
-            "graph_result": retrieval_result.get("graph_result") or {},
-            "support_verdict": state.get("support_verdict") or {},
-            "evidence_bundle": state.get("evidence_bundle") or {},
-        }
+        return self._project_query_result_to_retrieval_payload(result)
 
     @staticmethod
     def _norm(text: str | None) -> str:
@@ -1642,7 +1650,7 @@ class WorkSpaceSimpleAgent:
             Args:
                 query: The question or keywords to retrieve from the selected knowledge bases.
             """
-            result = await self._run_domain_pack_query(query)
+            result = await self._run_knowledge_query(query)
             if result is None:
                 result = await RagHandler.retrieve_ranked_documents_with_metadata(
                     query,
@@ -2218,7 +2226,7 @@ class WorkSpaceSimpleAgent:
         if not normalized_query:
             return None
         try:
-            result = await self._run_domain_pack_query(normalized_query)
+            result = await self._run_knowledge_query(normalized_query)
             if result is None:
                 result = await RagHandler.retrieve_ranked_documents_with_metadata(
                     normalized_query,

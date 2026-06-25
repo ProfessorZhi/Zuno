@@ -15,8 +15,10 @@ complete.
 - Phase 11B is complete: knowledge queries use the single `GeneralAgent` path.
 - Phase 11C is in progress and still blocked overall. The current FastAPI
   router no longer mounts `/domain-packs`, and active Vue knowledge
-  routes/pages no longer open Domain Pack entrypoints. Domain Pack
-  services/assets, retained legacy endpoint/frontend files, `AgentRuntime`,
+  routes/pages no longer open Domain Pack entrypoints. Workspace knowledge
+  prefetch/tools now use `KnowledgeQueryService`, not `AgentRuntime` or
+  `_run_domain_pack_query`. Domain Pack services/assets, retained legacy
+  endpoint/frontend files, standalone `AgentRuntime` source/compat surfaces,
   `DomainQAGraph`, `MultiAgentSupervisorGraph`, Docker/eval surfaces, and
   `tests/compat/` still block closure.
 - Phase 12 is partial / not closed.

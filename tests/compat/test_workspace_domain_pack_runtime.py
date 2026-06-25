@@ -2,7 +2,8 @@ import asyncio
 from types import SimpleNamespace
 
 
-def test_workspace_prefetch_uses_domain_pack_runtime_when_available(monkeypatch):
+def test_workspace_prefetch_uses_project_query_runtime_when_available(monkeypatch):
+    from zuno.services.graphrag.query_service import KnowledgeQueryResult
     from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
@@ -10,39 +11,31 @@ def test_workspace_prefetch_uses_domain_pack_runtime_when_available(monkeypatch)
         lambda **_: SimpleNamespace(),
     )
 
-    async def fake_runtime_settings(_knowledge_id):
-        return {
-            "domain_pack_id": "contract_review",
-            "domain_pack": {"id": "contract_review"},
-            "knowledge_config": {"retrieval_settings": {"default_mode": "graphrag"}},
-        }
+    async def fake_project_query(self, *, user_id, knowledge_ids, query, query_method=None, top_k=None):
+        assert user_id == "u_1"
+        assert knowledge_ids == ["kb_1"]
+        assert query_method is None
+        assert top_k is None
+        return KnowledgeQueryResult(
+            graphrag_project_id="contract_review",
+            answer="结论\n合同存在终止条款风险。",
+            requested_query_method="auto",
+            resolved_query_method="local",
+            fallback_reason=None,
+            documents=[{"chunk_id": "chunk-1"}],
+            evidence={"document_count": 1},
+            citations=["chunk-1"],
+            retrievers_used=["vector", "graph"],
+            graph_paths=[],
+            communities=[],
+            prompt_version="extract-v2",
+            query_prompt_version="query-v3",
+            index_version={"vector": "v1", "graph": "g1"},
+            community_version="c1",
+            trace_metadata={"resolved_query_method": "local"},
+        )
 
-    async def fake_run_domain_qa(self, **kwargs):
-        return {
-            "domain_pack_id": "contract_review",
-            "final_answer": "结论\n合同存在终止条款风险。",
-            "report_markdown": "# report",
-            "trace_metadata": {"nodes": [{"node": "resolve_domain_pack"}]},
-            "cost_metadata": {"used_domain_pack": True},
-            "retrieval_result": {
-                "actual_mode": "graphrag",
-                "first_mode": "graphrag",
-                "final_mode": "graphrag",
-                "round_count": 1,
-                "metadata": {"round_count": 1},
-                "final_pass_result": {"documents": [], "paths": []},
-                "graph_result": {"paths": []},
-            },
-        }
-
-    monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.KnowledgeService.get_runtime_settings",
-        fake_runtime_settings,
-    )
-    monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.AgentRuntime.run_domain_qa",
-        fake_run_domain_qa,
-    )
+    monkeypatch.setattr("zuno.services.workspace.simple_agent.KnowledgeQueryService.query", fake_project_query)
 
     agent = WorkSpaceSimpleAgent(
         model_config={},
@@ -56,7 +49,8 @@ def test_workspace_prefetch_uses_domain_pack_runtime_when_available(monkeypatch)
 
     assert context is not None
     assert "终止条款风险" in context["content"]
-    assert context["result"]["domain_pack_id"] == "contract_review"
+    assert context["result"]["domain_pack_id"] is None
+    assert context["result"]["graphrag_project_id"] == "contract_review"
 
 
 def test_workspace_retrieval_event_payload_exposes_domain_pack_failure(monkeypatch):
@@ -91,67 +85,12 @@ def test_workspace_retrieval_event_payload_exposes_domain_pack_failure(monkeypat
     assert payload["domain_pack_cost"]["failed_node"] == "retrieve_evidence"
 
 
-def test_workspace_domain_pack_query_can_select_multi_agent_runtime(monkeypatch):
+def test_workspace_legacy_multi_agent_runtime_is_not_current_path(monkeypatch):
     from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
         "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
-    )
-
-    async def fake_runtime_settings(_knowledge_id):
-        return {
-            "domain_pack_id": "contract_review",
-            "domain_pack": {"id": "contract_review"},
-            "knowledge_config": {
-                "retrieval_settings": {
-                    "default_mode": "graphrag",
-                    "multi_agent_enabled": True,
-                }
-            },
-        }
-
-    async def fail_single_agent_ainvoke(self, state):
-        raise AssertionError("single-agent DomainQAGraph should not be used when multi_agent_enabled is true")
-
-    async def fake_multi_agent_ainvoke(self, state):
-        return {
-            "domain_pack_id": "contract_review",
-            "status": "completed",
-            "final_answer": "multi-agent workspace contract review answer",
-            "report_markdown": "# report",
-            "trace_metadata": {
-                "nodes": [
-                    {"node": "plan_specialists"},
-                    {"node": "domain_qa_specialist"},
-                    {"node": "citation_verifier_specialist"},
-                    {"node": "finalize"},
-                ]
-            },
-            "cost_metadata": {"used_domain_pack": True, "specialist_count": 2},
-            "failure_metadata": None,
-            "retrieval_result": {
-                "actual_mode": "graphrag",
-                "first_mode": "graphrag",
-                "final_mode": "graphrag",
-                "round_count": 1,
-                "metadata": {"round_count": 1},
-                "final_pass_result": {"documents": [], "paths": []},
-                "graph_result": {"paths": []},
-            },
-        }
-
-    monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.KnowledgeService.get_runtime_settings",
-        fake_runtime_settings,
-    )
-    monkeypatch.setattr(
-        "zuno.core.runtime.agent_runtime.DomainQAGraph.ainvoke",
-        fail_single_agent_ainvoke,
-    )
-    monkeypatch.setattr(
-        "zuno.core.runtime.agent_runtime.MultiAgentSupervisorGraph.ainvoke",
-        fake_multi_agent_ainvoke,
     )
 
     agent = WorkSpaceSimpleAgent(
@@ -162,10 +101,5 @@ def test_workspace_domain_pack_query_can_select_multi_agent_runtime(monkeypatch)
         retrieval_mode="graphrag",
     )
 
-    result = asyncio.run(agent._run_domain_pack_query("请用多agent审查这份合同"))
-
-    assert result is not None
-    assert result["domain_pack_id"] == "contract_review"
-    assert "multi-agent workspace" in result["content"]
-    assert result["metadata"]["domain_pack_trace"]["nodes"][0]["node"] == "plan_specialists"
-    assert result["metadata"]["domain_pack_cost"]["specialist_count"] == 2
+    assert not hasattr(agent, "domain_qa_runtime")
+    assert not hasattr(agent, "_run_domain_pack_query")
