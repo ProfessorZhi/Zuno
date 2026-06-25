@@ -2,6 +2,10 @@
 
 This folder keeps repo-level runtime regression tests that are still useful even when they are not part of the main front path.
 
+Manual probes without default pytest tests have been removed from this folder.
+Do not add new human-run scripts here; either create a hermetic root test or
+preserve evidence under `docs/architecture/history/`.
+
 Why it lives here instead of `src/backend/zuno/`:
 
 - `src/backend/zuno/` is the runtime package, not a source-owned test tree
@@ -25,19 +29,9 @@ the current Workspace knowledge prefetch/tool path no longer exposes
 `AgentRuntime`, `domain_qa_runtime`, or `_run_domain_pack_query`; it uses the
 GraphRAG Project query runtime through `KnowledgeQueryService`.
 
-`test_agent_runtime_multi_agent.py` is retired compatibility evidence: the
-standalone `AgentRuntime` facade module no longer exists. `DomainQAGraph` and
-`MultiAgentSupervisorGraph` are no longer public core package exports or
-current backend source modules.
-
-`test_domain_qa_graph_retirement.py` proves the former direct
-`DomainQAGraph` module and its legacy graph state module stay retired from the
-current backend source. Root-level runtime import tests track the GraphRAG
-Project mainline.
-
-`test_domain_pack_runtime_service_retirement.py` proves the former
-`zuno.services.domain_pack` runtime service stays retired from current backend
-source.
+Root Phase 11C tests now own retired-source and retired-import guards for
+`AgentRuntime`, `DomainQAGraph`, `MultiAgentSupervisorGraph`, legacy graph
+state modules, and the former `zuno.services.domain_pack` runtime service.
 
 `test_contract_review_domain_pack.py` keeps Contract Review compatibility
 coverage through the GraphRAG Project payload shape instead of the old Domain

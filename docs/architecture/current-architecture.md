@@ -107,8 +107,9 @@ Retired evidence kept for verification, not active source:
 - Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
 - Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
   Pack pages are not active knowledge routes or settings-shell pages
-- retired `DomainQAGraph` compatibility evidence
-- retired `MultiAgentSupervisorGraph` compatibility evidence
+- root Phase 11C tests guard retired `DomainQAGraph`,
+  `MultiAgentSupervisorGraph`, `AgentRuntime`, legacy graph states, and Domain
+  Pack runtime service imports
 
 These surfaces are not the future front-path architecture, but remaining compat
 tests and migration fields still require explicit replacement or retirement

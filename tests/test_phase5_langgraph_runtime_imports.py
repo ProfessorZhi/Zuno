@@ -29,6 +29,9 @@ def test_project_query_runtime_modules_import_from_zuno_mainline():
     assert hasattr(planner_module, "RetrievalPlanner")
 
 
-def test_legacy_runtime_import_coverage_lives_in_compat():
-    assert (REPO_ROOT / "tests/compat/test_domain_pack_runtime_service_retirement.py").exists()
-    assert (REPO_ROOT / "tests/compat/test_domain_qa_graph_retirement.py").exists()
+def test_legacy_runtime_import_coverage_lives_in_root_phase11c_tests():
+    assert (REPO_ROOT / "tests/test_phase11c_agent_runtime_retirement.py").exists()
+    assert not (
+        REPO_ROOT / "tests/compat/test_domain_pack_runtime_service_retirement.py"
+    ).exists()
+    assert not (REPO_ROOT / "tests/compat/test_domain_qa_graph_retirement.py").exists()

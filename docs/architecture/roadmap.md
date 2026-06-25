@@ -35,7 +35,9 @@ migration stages.
   policy from a bare `domain_pack_id`; explicit `query_policy` now carries the
   GraphRAG Project policy data. Stackless local eval and the dedicated
   Contract Review eval can build from GraphRAG Project assets without loading
-  `DomainPackLoader`. Root `domain-packs/` assets are archived under
+  `DomainPackLoader`. Root Phase 11C tests now guard retired runtime imports
+  for `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, legacy
+  graph states, and `zuno.services.domain_pack`. Root `domain-packs/` assets are archived under
   `docs/architecture/history/domain-packs/root-contract-review/`, Docker no
   longer copies or mounts `/app/domain-packs`, and active dependencies still
   remain in `tests/compat/`. The direct `DomainQAGraph` source, its legacy
@@ -79,9 +81,9 @@ Retired evidence kept for verification, not active source:
 - retired root `domain-packs/` archive at
   `docs/architecture/history/domain-packs/root-contract-review/`
 - retired Docker `/app/domain-packs` copy and mounts
-- retired `src/backend/zuno/services/domain_pack/` compatibility evidence
-- retired `DomainQAGraph` compatibility evidence
-- retired `MultiAgentSupervisorGraph` compatibility evidence
+- root Phase 11C retired-import guards for `src/backend/zuno/services/domain_pack/`,
+  `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, and legacy
+  graph states
 
 ## Non-Goals
 

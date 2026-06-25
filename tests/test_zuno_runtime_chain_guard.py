@@ -87,7 +87,7 @@ def test_phase5_import_tests_use_project_query_runtime_truth() -> None:
     assert "DomainPackLoader" not in phase5_import_test
 
 
-def test_legacy_graph_runtime_tests_live_under_compat() -> None:
+def test_legacy_graph_runtime_retirement_guards_live_in_root_phase11c_tests() -> None:
     legacy_root_tests = [
         "tests/test_phase1_langgraph_runtime_deepening.py",
         "tests/test_phase5_domain_qa_graph_runtime.py",
@@ -104,15 +104,23 @@ def test_legacy_graph_runtime_tests_live_under_compat() -> None:
     for relative_path in retired_legacy_compat_tests:
         assert not (REPO_ROOT / relative_path).exists(), relative_path
 
-    compat_tests = [
+    retired_compat_tests = [
         "tests/compat/test_domain_qa_graph_retirement.py",
+        "tests/compat/test_multi_agent_supervisor_graph_offline.py",
         "tests/compat/test_multi_agent_supervisor_runtime.py",
     ]
-    for relative_path in compat_tests:
+    for relative_path in retired_compat_tests:
+        assert not (REPO_ROOT / relative_path).exists(), relative_path
+
+    root_guard_tests = [
+        "tests/test_phase11c_agent_runtime_retirement.py",
+        "tests/test_phase11c_graph_public_export_retirement.py",
+    ]
+    for relative_path in root_guard_tests:
         assert (REPO_ROOT / relative_path).exists(), relative_path
 
 
-def test_domain_pack_asset_runtime_tests_live_under_compat() -> None:
+def test_domain_pack_retirement_guards_live_in_root_phase11c_tests() -> None:
     legacy_root_tests = [
         "tests/test_phase3_domain_pack_formalization.py",
         "tests/test_phase5_contract_review_domain_pack.py",
@@ -123,16 +131,18 @@ def test_domain_pack_asset_runtime_tests_live_under_compat() -> None:
     retired_compat_tests = [
         "tests/compat/test_domain_pack_loader.py",
         "tests/compat/test_domain_pack_formalization.py",
+        "tests/compat/test_domain_pack_runtime_service_retirement.py",
     ]
     for relative_path in retired_compat_tests:
         assert not (REPO_ROOT / relative_path).exists(), relative_path
 
     compat_tests = [
-        "tests/compat/test_domain_pack_runtime_service_retirement.py",
         "tests/compat/test_contract_review_domain_pack.py",
     ]
     for relative_path in compat_tests:
         assert (REPO_ROOT / relative_path).exists(), relative_path
+
+    assert (REPO_ROOT / "tests/test_phase11c_agent_runtime_retirement.py").exists()
 
 
 def test_phase5_domain_runtime_paths_stays_on_current_general_agent_path() -> None:

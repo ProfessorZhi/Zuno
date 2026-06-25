@@ -86,20 +86,20 @@ Removed from the active current path:
   `zuno.core` or `zuno.core.graphs`; the direct `DomainQAGraph` source and
   legacy graph state module have been removed from current backend source.
 - The direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
-  source has been removed from current backend source; `tests/compat/` now
-  keeps retirement evidence that the module stays absent.
+  source has been removed from current backend source; root Phase 11C tests now
+  keep retirement evidence that the module stays absent.
 - Phase 0 recovery/current-truth tests no longer treat `DomainQAGraph` or
   `DomainPackLoader` as high-value current imports; they use
   `KnowledgeQueryService`, `GraphRAGQueryService`, and
   `GraphRAGProjectSnapshot`.
 - Root Phase 5 runtime import tests no longer import Domain Pack loader or the
-  legacy graph as current mainline; direct legacy import coverage remains under
-  `tests/compat/`.
+  legacy graph as current mainline; root Phase 11C tests own retired-import
+  coverage.
 - Former Phase 5 and Phase 1 `DomainQAGraph` behavior compat tests have been
-  removed after the direct graph source retired; `tests/compat/` now keeps
+  removed after the direct graph source retired; root Phase 11C tests now keep
   retirement evidence for the old module instead of behavior coverage. Former
-  `MultiAgentSupervisorGraph` compat tests now prove the supervisor source and
-  module remain retired.
+  `MultiAgentSupervisorGraph` compat guard files have also been retired after
+  root Phase 11C tests took over the source/import boundary.
 - Domain Pack formalization and Contract Review asset-runtime tests have moved
   from root `tests/` into `tests/compat/` until Phase 02 migrates the assets.
 - Root Phase 5 domain runtime path tests no longer assert direct legacy graph
@@ -117,9 +117,8 @@ Removed from the active current path:
   from legacy Domain Pack runtime coverage to retired compatibility evidence:
   it now proves `GeneralAgent` no longer exposes the old
   `KnowledgeService` / `AgentRuntime` / `RagHandler` path.
-- `tests/compat/test_domain_qa_graph_retirement.py` proves the direct
-  `DomainQAGraph` module and legacy graph state module remain retired from
-  current backend source.
+- Root Phase 11C tests prove the direct `DomainQAGraph` module and legacy graph
+  state module remain retired from current backend source.
 - `KnowledgeService.get_runtime_settings` no longer auto-loads
   `DomainPackLoader` from `domain_pack_id`. It preserves the migration field
   and explicit `domain_pack` compatibility payloads while keeping
@@ -138,9 +137,8 @@ Removed from the active current path:
   when an id is provided, it must resolve to GraphRAG Project assets.
 - The `src/backend/zuno/services/domain_pack/` runtime service package has
   been removed from current backend source. Root tests now prove the current
-  project query/eval paths work without importing it, and
-  `tests/compat/test_domain_pack_runtime_service_retirement.py` keeps the
-  retirement boundary.
+  project query/eval paths work without importing it, and root Phase 11C tests
+  keep the retired-import boundary.
 - Root `domain-packs/contract_review/` has been archived under
   `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
   longer copies or mounts `/app/domain-packs`.
@@ -165,7 +163,7 @@ No longer blocked by current eval runtime:
 
 - `tools/evals/zuno/contract_review_eval/` no longer depends on
   `DomainPackLoader` or `DomainQAGraph`.
-- `tests/compat/` still contains active compatibility coverage for Workspace,
-  Domain Pack eval/assets, and graph/runtime surfaces, plus replacement
-  evidence for retired runtime names, including `DomainQAGraph`, the Domain
-  Pack runtime service, and `MultiAgentSupervisorGraph`.
+- `tests/compat/` still contains migration/current compatibility coverage for
+  Workspace, Domain Pack migration fields, and Contract Review GraphRAG Project
+  compatibility payloads. Retired runtime import/source guards have moved to
+  root Phase 11C tests.

@@ -1,6 +1,8 @@
 import importlib
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -29,3 +31,16 @@ def test_graph_sources_track_current_phase11c_retirement_status():
     assert not (
         REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py"
     ).exists(), "MultiAgentSupervisorGraph should not remain as current backend source"
+
+
+def test_retired_runtime_modules_stay_unimportable():
+    for module_name in [
+        "zuno.core.runtime.agent_runtime",
+        "zuno.core.graphs.domain_qa_graph",
+        "zuno.core.graphs.states",
+        "zuno.core.graphs.multi_agent_supervisor_graph",
+        "zuno.services.domain_pack",
+        "zuno.services.domain_pack.loader",
+    ]:
+        with pytest.raises(ModuleNotFoundError):
+            importlib.import_module(module_name)

@@ -40,9 +40,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 - `tests/compat/test_general_agent_domain_pack_runtime.py` has been reclassified
   to retired compatibility evidence for the removed `GeneralAgent` Domain Pack
   path.
-- `tests/compat/test_domain_qa_graph_retirement.py` now proves the direct
-  `DomainQAGraph` module and legacy graph state module remain retired from
-  current backend source.
+- Root Phase 11C tests now prove the direct `DomainQAGraph` module and legacy
+  graph state module remain retired from current backend source.
 - `src/backend/zuno/api/services/knowledge.py` no longer imports
   `DomainPackLoader` or calls `DomainPackLoader().load` while resolving
   runtime settings from `domain_pack_id`.
@@ -72,29 +71,27 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   `zuno.core` or `zuno.core.graphs`; the direct `DomainQAGraph` source has
   been removed from current backend source.
 - The direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
-  source has been removed from current backend source; `tests/compat/` now
-  keeps retirement evidence that the module stays absent.
+  source has been removed from current backend source; root Phase 11C tests
+  keep retirement evidence that the module stays absent.
 - Phase 0 recovery/current-truth tests no longer treat `DomainQAGraph` or
   `DomainPackLoader` as high-value current imports; they use
   `KnowledgeQueryService`, `GraphRAGQueryService`, and
   `GraphRAGProjectSnapshot`.
 - Root Phase 5 runtime import tests no longer import Domain Pack loader or the
-  legacy graph as current mainline; direct legacy import coverage remains under
-  `tests/compat/`.
+  legacy graph as current mainline; root Phase 11C tests own retired-import
+  coverage.
 - Former Phase 5 and Phase 1 `DomainQAGraph` behavior compat tests have been
-  removed after the direct graph source retired; `tests/compat/` now keeps
+  removed after the direct graph source retired; root Phase 11C tests now keep
   retirement evidence for the old module instead of behavior coverage. Former
-  `MultiAgentSupervisorGraph` compat tests now prove the supervisor source and
-  module remain retired.
-- Domain Pack runtime service behavior tests have been replaced by
-  `tests/compat/test_domain_pack_runtime_service_retirement.py`, which proves
-  the old `zuno.services.domain_pack` import stays retired. Contract Review
+  `MultiAgentSupervisorGraph` compat guard files have also been retired after
+  root Phase 11C tests took over the source/import boundary.
+- Domain Pack runtime service behavior tests have been replaced by root Phase
+  11C retired-import guards for `zuno.services.domain_pack`. Contract Review
   compatibility tests now use GraphRAG Project payloads instead of
   `DomainPackLoader`.
 - Root Phase 5 domain runtime path tests no longer assert direct legacy graph
-  source availability; that coverage is isolated to 11C/compat tests.
+  source availability; root Phase 11C tests own that retired-import coverage.
 - `tests/test_phase11c_agent_runtime_retirement.py`,
-  `tests/compat/test_agent_runtime_multi_agent.py`,
   `tests/test_phase1_langgraph_runtime_deepening.py`, and
   `tests/test_phase5_domain_runtime_paths.py` now protect the retired
   `AgentRuntime` facade boundary.
@@ -111,8 +108,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   backend source.
 - `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` has been
   retired from current backend source.
-- `tests/compat/` still exists with Domain Pack and multi-agent compatibility
-  coverage.
+- `tests/compat/` still exists with migration/current compatibility coverage
+  that must be promoted to root tests or retired before 11C can close.
 
 ## Dependency
 
