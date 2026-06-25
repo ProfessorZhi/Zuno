@@ -29,6 +29,13 @@ for contract behavior.
 - graph runtime rewrite
 - long-term Domain Pack shim
 
+## Later Status
+
+This Phase 03 non-goal is historical. The
+`src/backend/zuno/services/domain_pack/` runtime service package was retired
+during later Phase 11C dependency-removal work. Root `domain-packs/` assets
+remain Blocked Legacy until Contract Review migration and Docker cleanup close.
+
 ## Candidate Files
 
 - `src/backend/zuno/api/services/knowledge.py`
@@ -96,7 +103,8 @@ claims after failed validation.
 
 ## Stop Conditions
 
-- Active imports require deleting Domain Pack runtime in the same phase.
+- Active imports require broad runtime deletion in the same phase instead of
+  bounded contract retirement.
 - Frontend cannot preserve Standard/Enhanced UX without broader runtime work.
 - Contract tests cannot express a bounded compatibility window.
 

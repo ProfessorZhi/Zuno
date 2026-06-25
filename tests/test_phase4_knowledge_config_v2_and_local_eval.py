@@ -3,6 +3,8 @@ import importlib
 import sys
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
@@ -43,13 +45,9 @@ def test_phase4_docs_and_frontend_contract_expose_knowledge_config_v2() -> None:
 def test_phase4_runtime_preserves_domain_pack_id_without_loading_pack(monkeypatch) -> None:
     _ensure_runtime_paths()
 
-    DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("zuno.services.domain_pack.loader")
     KnowledgeService = importlib.import_module("zuno.api.services.knowledge").KnowledgeService
-
-    def fail_if_loaded(*_args, **_kwargs):
-        raise AssertionError("KnowledgeService runtime settings must not load DomainPackLoader")
-
-    monkeypatch.setattr(DomainPackLoader, "load", fail_if_loaded)
 
     monkeypatch.setattr(
         "zuno.api.services.knowledge.get_local_runtime_settings",

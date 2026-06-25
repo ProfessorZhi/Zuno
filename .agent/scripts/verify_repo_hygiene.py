@@ -28,7 +28,6 @@ FORBIDDEN_IGNORE_LINES = [
 BLOCKED_LEGACY_PATHS = [
     "domain-packs",
     "tests/compat",
-    "src/backend/zuno/services/domain_pack",
 ]
 
 FORBIDDEN_CURRENT_PATHS = [
@@ -191,6 +190,9 @@ def main() -> int:
     legacy_graph_states_path = REPO_ROOT / "src/backend/zuno/core/graphs/states.py"
     if legacy_graph_states_path.exists():
         errors.append("Legacy graph states must not remain without current graph source")
+    domain_pack_service_path = REPO_ROOT / "src/backend/zuno/services/domain_pack"
+    if domain_pack_service_path.exists():
+        errors.append("Domain Pack runtime service must not remain as current backend source")
 
     html_matches = [
         path

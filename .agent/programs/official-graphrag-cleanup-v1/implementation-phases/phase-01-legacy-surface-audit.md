@@ -58,7 +58,8 @@ Domain Pack assets.
 
 - Every retired term has path, line summary, classification, and recommended
   phase.
-- Domain Pack runtime and frontend surfaces are not deleted.
+- No runtime, frontend, asset, or compat surfaces are deleted by this read-only
+  phase.
 - `tests/compat/` is classified as test protection, not removed.
 - Evidence is enough for Phase 02 and Phase 03 to act.
 

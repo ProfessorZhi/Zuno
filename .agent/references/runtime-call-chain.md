@@ -20,6 +20,7 @@ Lower layers do not depend backward on the API layer.
 
 ## Known Limitations
 
-Domain Pack assets/services and compatibility tests remain Blocked Legacy until
-Phase 11C proves safe deletion. The direct `DomainQAGraph` backend source is
+Root Domain Pack assets, Docker/eval migration surfaces, and compatibility
+tests remain Blocked Legacy until Phase 11C proves safe deletion. The direct
+`DomainQAGraph` backend source and Domain Pack runtime service package are
 already retired from the current call chain.

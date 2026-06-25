@@ -27,10 +27,21 @@ GROUP_RULES: list[tuple[str, tuple[str, ...]]] = [
         ),
     ),
     (
+        "retired_runtime_legacy",
+        (
+            "src/backend/zuno/api/v1/domain_packs.py",
+            "src/backend/zuno/api/services/domain_pack.py",
+            "src/backend/zuno/core/graphs/domain_qa_graph.py",
+            "src/backend/zuno/core/graphs/states.py",
+            "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py",
+            "src/backend/zuno/core/runtime/agent_runtime.py",
+            "src/backend/zuno/services/domain_pack/",
+        ),
+    ),
+    (
         "backend_domain_runtime",
         (
             "src/backend/zuno/core/",
-            "src/backend/zuno/services/domain_pack/",
             "src/backend/zuno/services/runtime_registry.py",
             "src/backend/zuno/services/workspace/simple_agent.py",
             "src/backend/zuno/services/embedding/",

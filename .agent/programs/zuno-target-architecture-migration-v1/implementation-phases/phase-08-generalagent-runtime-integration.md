@@ -24,7 +24,7 @@ Phase 05 through Phase 07 complete.
 
 ## Files Not To Change
 
-- Domain Pack runtime.
+- Retired Domain Pack runtime source or remaining root Domain Pack blockers.
 - A second chat runtime.
 - Product-level multi-agent default mode.
 

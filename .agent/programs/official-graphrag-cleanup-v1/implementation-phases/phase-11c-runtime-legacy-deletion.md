@@ -13,11 +13,12 @@ Pack entrypoints. `KnowledgeService.get_runtime_settings` now preserves
 `domain_pack_id` without auto-loading `DomainPackLoader`, and `GraphRetriever`
 no longer loads Domain Pack policy from `domain_pack_id`. Stackless local eval
 and the dedicated Contract Review eval can build from GraphRAG Project assets.
-Active dependencies still exist in `domain-packs/`, Domain Pack runtime
-services/assets, Docker surfaces, and `tests/compat/`. The old backend Domain
-Pack endpoint/API-service wrappers, frontend Domain Pack API/page files, direct
-`DomainQAGraph` source, legacy graph state module, and direct
-`MultiAgentSupervisorGraph` source are retired from current source.
+Active dependencies still exist in `domain-packs/`, Docker surfaces, and
+`tests/compat/`. The old backend Domain Pack endpoint/API-service wrappers,
+frontend Domain Pack API/page files, direct `DomainQAGraph` source, legacy
+graph state module, `src/backend/zuno/services/domain_pack/` runtime service
+package, and direct `MultiAgentSupervisorGraph` source are retired from current
+source.
 
 Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 
@@ -83,8 +84,11 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   retirement evidence for the old module instead of behavior coverage. Former
   `MultiAgentSupervisorGraph` compat tests now prove the supervisor source and
   module remain retired.
-- Domain Pack formalization and Contract Review asset-runtime tests have moved
-  from root `tests/` into `tests/compat/` until Phase 02 migrates the assets.
+- Domain Pack runtime service behavior tests have been replaced by
+  `tests/compat/test_domain_pack_runtime_service_retirement.py`, which proves
+  the old `zuno.services.domain_pack` import stays retired. Contract Review
+  compatibility tests now use GraphRAG Project payloads instead of
+  `DomainPackLoader`.
 - Root Phase 5 domain runtime path tests no longer assert direct legacy graph
   source availability; that coverage is isolated to 11C/compat tests.
 - `tests/test_phase11c_agent_runtime_retirement.py`,
@@ -95,7 +99,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 - `src/backend/zuno/api/v1/domain_packs.py` and
   `src/backend/zuno/api/services/domain_pack.py` have been retired from
   current source.
-- `src/backend/zuno/services/domain_pack/` still exists.
+- `src/backend/zuno/services/domain_pack/` has been retired from current
+  backend source.
 - `src/backend/zuno/core/graphs/domain_qa_graph.py` and
   `src/backend/zuno/core/graphs/states.py` have been retired from current
   backend source.
@@ -110,7 +115,7 @@ Phase 11A and Phase 11B must pass first.
 
 ## Scope
 
-- Delete or migrate Domain Pack runtime services.
+- Keep Domain Pack runtime services retired from current backend source.
 - Keep `DomainQAGraph` / `DomainQAState` retired from current backend source.
 - Remove active `MultiAgentSupervisorGraph` runtime.
 - Remove frontend Domain Pack current routes and API clients after replacement.

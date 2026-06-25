@@ -26,9 +26,12 @@ complete.
   `domain_pack_id` without auto-loading `DomainPackLoader`. `GraphRetriever`
   uses explicit `query_policy` instead of loading Domain Pack policy from
   `domain_pack_id`. Stackless local eval and the dedicated Contract Review eval
-  can build from GraphRAG Project assets. Domain Pack runtime services/assets,
-  Docker surfaces, and `tests/compat/` still block closure. Domain Pack backend endpoint/API-service
-  wrappers and frontend API/page files are retired from current source.
+  can build from GraphRAG Project assets. The
+  `src/backend/zuno/services/domain_pack/` runtime service package is also
+  retired from current backend source. Root Domain Pack assets, Docker
+  surfaces, and `tests/compat/` still block closure. Domain Pack backend
+  endpoint/API-service wrappers and frontend API/page files are retired from
+  current source.
 - Phase 12 is partial / not closed.
 - Context Orchestrator and new Memory layering are Target, not Current.
 

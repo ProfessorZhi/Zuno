@@ -7,7 +7,6 @@ _SUBMODULES = {
     "capability_registry",
     "cli_tool_discovery",
     "convert_files",
-    "domain_pack",
     "execution_policy",
     "graphrag",
     "mcp",

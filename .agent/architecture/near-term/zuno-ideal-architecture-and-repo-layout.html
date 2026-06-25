@@ -293,14 +293,14 @@ node_modules/  .codex/  .pytest_cache/  .test-tmp/  apps/web/dist/  __pycache__/
         <tr><td><code>src/backend/zuno/core/agents/general_agent.py</code></td><td class="status-current">Current</td><td>已单循环，但仍直接依赖大量 API Service、MCP、Tools、ModelManager；AgentConfig 还含旧字段</td><td>收敛到 <code>agent/runtime.py</code>，依赖 Capability/Context ports</td></tr>
         <tr><td><code>src/backend/zuno/api/services/knowledge_query.py</code></td><td class="status-current">Current</td><td>正确的新 Application Service，但仍放在 API 层</td><td><code>application/knowledge/query_service.py</code></td></tr>
         <tr><td><code>src/backend/zuno/services/graphrag/query_service.py</code></td><td class="status-current">Current</td><td>已统一 Snapshot 与 Query Result，但仍处于宽泛 services 树</td><td><code>graphrag/query/service.py</code></td></tr>
-        <tr><td><code>src/backend/zuno/api/router.py</code></td><td class="status-legacy">Blocked Legacy</td><td>仍 include <code>domain_packs</code></td><td>Phase 11C 后删除旧 Route，按 feature 路由</td></tr>
+        <tr><td><code>src/backend/zuno/api/router.py</code></td><td class="status-current">Current</td><td><code>domain_packs</code> 旧 Route 已退出当前挂载；仍需保持路由边界清晰</td><td>保持旧 Route 缺席，按 feature 路由</td></tr>
         <tr><td><code>api/services/</code> 与 <code>services/</code></td><td class="status-target">Needs consolidation</td><td>“Service”所有权重复，API、业务用例、Adapter 混在两棵树</td><td>拆为 application / feature / infrastructure</td></tr>
         <tr><td><code>core/</code></td><td class="status-target">Needs consolidation</td><td>Agent、Graph、ModelManager 等不同职责共存</td><td>显式 agent/context/capabilities；LLM manager 进入 infrastructure</td></tr>
         <tr><td><code>services/memory/client.py</code></td><td class="status-target">Existing foundation</td><td>语义/情景/程序记忆零件存在，但单文件职责过重，未形成 Context Orchestrator</td><td>拆为 memory models/extractor/consolidator/retriever/ports</td></tr>
         <tr><td><code>database/dao/</code></td><td class="status-target">Needs consolidation</td><td>DAO 与业务服务耦合，接口边界不清</td><td><code>infrastructure/persistence/repositories/</code></td></tr>
         <tr><td><code>tools/</code>（包内）与根 <code>tools/</code></td><td class="status-target">Naming conflict</td><td>一个是 Agent 运行工具，一个是开发工具</td><td>包内改为 <code>capabilities/tools/</code>；根 tools 保持开发工具</td></tr>
         <tr><td><code>utils/</code></td><td class="status-target">Junk drawer risk</td><td>contextvars、hash、model output、helpers 等所有权混杂</td><td>迁回 owning module；只保留真正跨域 shared</td></tr>
-        <tr><td><code>domain-packs/</code>、<code>tests/compat/</code></td><td class="status-legacy">Blocked Legacy</td><td>仍有 API/frontend/eval/Docker/test 依赖</td><td>资产迁移和 replacement tests 后删除</td></tr>
+        <tr><td><code>domain-packs/</code>、<code>tests/compat/</code></td><td class="status-legacy">Blocked Legacy</td><td>Root 资产、Docker、eval/compat 证据仍未闭环；API/frontend/service 源已退休</td><td>资产迁移、Docker 清理和 replacement tests 后删除或归档</td></tr>
         <tr><td><code>data/</code>、<code>reports/</code></td><td class="status-local">Mixed local/generated</td><td>固定数据、公开证据、本地运行结果容易混在一起</td><td>fixtures/datasets/docs evidence/.local 分流</td></tr>
         <tr><td><code>node_modules/</code>、缓存目录</td><td class="status-generated">Generated</td><td>视觉上杂乱，但不是架构问题</td><td>保持 ignored；IDE 隐藏；按需重建</td></tr>
       </tbody>
@@ -1108,7 +1108,7 @@ examples/
   <div class="section">
     <h2>推荐实施顺序：先闭旧链，再整理目录，再实现 Context/Memory</h2>
     <div class="timeline">
-      <div class="step"><div class="step-id">P0</div><div class="step-body"><h3>Phase 11C / 12 Closure</h3><p>迁移 Contract Review 资产，删除 Domain Pack Route/Runtime、DomainQAGraph、Supervisor 和 compat；完成全量 pytest 与 Eval。</p></div></div>
+      <div class="step"><div class="step-id">P0</div><div class="step-body"><h3>Phase 11C / 12 Closure</h3><p>迁移 Contract Review 资产，清理 root domain-packs、Docker 和 compat；保持已退休 Route/Runtime/Graph 源缺席；完成全量 pytest 与 Eval。</p></div></div>
       <div class="step"><div class="step-id">P1</div><div class="step-body"><h3>Package Ownership Baseline</h3><p>先建立 bootstrap/interfaces/application/agent/knowledge/graphrag/infrastructure 的 dependency tests；只做无行为变化的小批移动。</p></div></div>
       <div class="step"><div class="step-id">P2</div><div class="step-body"><h3>Context Contracts</h3><p>实现 AgentExecutionContext、ModelContextPacket、TokenBudgetPolicy、ContextTrace。</p></div></div>
       <div class="step"><div class="step-id">P3</div><div class="step-body"><h3>Raw Events + Checkpoint</h3><p>PostgreSQL append-only event log，LangGraph checkpoint，recent coherent window。</p></div></div>

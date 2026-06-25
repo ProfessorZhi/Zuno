@@ -16,9 +16,10 @@ Phase 00 complete.
 ## Scope
 
 - Continue `official-graphrag-cleanup-v1` Phase 11C.
-- Replace active Domain Pack routes, services, frontend API clients, eval
-  references, Docker references, and compatibility tests with GraphRAG Project
-  equivalents or archived history.
+- Replace remaining active root Domain Pack assets, eval references, Docker
+  references, and compatibility tests with GraphRAG Project equivalents or
+  archived history. Keep already-retired route, service, frontend, and graph
+  sources absent.
 - Keep migration-only compatibility only where a test proves it is still
   required.
 
@@ -27,7 +28,6 @@ Phase 00 complete.
 - `src/backend/zuno/api/`
 - `src/backend/zuno/api/services/`
 - `src/backend/zuno/core/`
-- `src/backend/zuno/services/domain_pack/`
 - `apps/web/src/apis/`
 - `tools/evals/zuno/`
 - `tests/`
@@ -137,17 +137,22 @@ Removed from the active current path:
   executing through `DomainQAGraph`.
 - Stackless local eval no longer has a generic Domain Pack loader fallback;
   when an id is provided, it must resolve to GraphRAG Project assets.
+- The `src/backend/zuno/services/domain_pack/` runtime service package has
+  been removed from current backend source. Root tests now prove the current
+  project query/eval paths work without importing it, and
+  `tests/compat/test_domain_pack_runtime_service_retirement.py` keeps the
+  retirement boundary.
 
 Retained as Blocked Legacy / Phase 02 migration assets:
 
 - `domain-packs/contract_review/`
-- `src/backend/zuno/services/domain_pack/`
 - Domain Pack Docker mounts
 
 Retired from current source:
 
 - `src/backend/zuno/core/graphs/domain_qa_graph.py`
 - `src/backend/zuno/core/graphs/states.py`
+- `src/backend/zuno/services/domain_pack/`
 - `src/backend/zuno/api/v1/domain_packs.py`
 - `src/backend/zuno/api/services/domain_pack.py`
 - `apps/web/src/apis/domain-packs.ts`
@@ -160,6 +165,6 @@ Still blocked:
 - `tools/evals/zuno/contract_review_eval/` no longer depends on
   `DomainPackLoader` or `DomainQAGraph`.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
-  Domain Pack loader/eval, and graph/runtime surfaces, plus replacement
-  evidence for retired runtime names, including `DomainQAGraph` and
-  `MultiAgentSupervisorGraph`.
+  Domain Pack eval/assets, and graph/runtime surfaces, plus replacement
+  evidence for retired runtime names, including `DomainQAGraph`, the Domain
+  Pack runtime service, and `MultiAgentSupervisorGraph`.

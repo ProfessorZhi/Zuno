@@ -15,29 +15,30 @@ Current truth is still the Python monorepo runtime:
 - `domain-packs/` still exists as current or migration evidence; the old
   `src/backend/zuno/domain_packs/` asset copy has been removed from the current
   package path and archived under `docs/architecture/history/domain-packs/`.
-- Domain Pack runtime services, graph names, eval loader paths, Docker
-  references, and tests still exist in active or Blocked Legacy
-  paths. The old backend Domain Pack endpoint/API-service wrappers and
-  frontend API/page files have retired from current source. The current FastAPI
-  router, active Vue knowledge entrypoints, `GeneralAgent`, Workspace knowledge
-  prefetch/tools, `KnowledgeService.get_runtime_settings`, and
-  `GraphRetriever` policy resolution no longer use the Domain Pack runtime
-  path by default. Stackless local eval and the dedicated Contract Review eval
-  can build from GraphRAG Project assets; stackless local eval now requires
-  GraphRAG Project assets when an id is provided. The direct `DomainQAGraph`
-  source and legacy graph state module are retired from current backend
-  source.
+- Root Domain Pack assets, Docker references, and compatibility tests still
+  exist in active or Blocked Legacy paths. The old backend Domain Pack
+  endpoint/API-service wrappers, frontend API/page files, and
+  `src/backend/zuno/services/domain_pack/` runtime service package have retired
+  from current source. The current FastAPI router, active Vue knowledge
+  entrypoints, `GeneralAgent`, Workspace knowledge prefetch/tools,
+  `KnowledgeService.get_runtime_settings`, and `GraphRetriever` policy
+  resolution no longer use the Domain Pack runtime path by default. Stackless
+  local eval and the dedicated Contract Review eval can build from GraphRAG
+  Project assets; stackless local eval now requires GraphRAG Project assets
+  when an id is provided. The direct `DomainQAGraph` source and legacy graph
+  state module are retired from current backend source.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
   `RetrievalFusion`, BM25/vector/graph adapters, community services, requery,
   index version fields, and trace metadata.
 
-Read-only evidence gathered for this roadmap found active references under:
+Read-only evidence gathered for this roadmap found current paths and retired
+verification evidence under:
 
-- retired backend Domain Pack endpoint/API-service wrapper files under
+- retired backend Domain Pack endpoint/API-service wrapper evidence under
   `src/backend/zuno/api/`
 - `src/backend/zuno/api/services/knowledge.py`
 - retired direct `DomainQAGraph` source and legacy graph state evidence
-- `src/backend/zuno/services/domain_pack/`
+- retired `src/backend/zuno/services/domain_pack/` runtime service evidence
 - `src/backend/zuno/services/graphrag/`
 - `src/backend/zuno/services/retrieval/`
 - retired frontend Domain Pack API/page files under `apps/web/src/`
@@ -96,7 +97,7 @@ This roadmap does not implement:
 
 ## Implementation Status
 
-- Phase 01 is complete as read-only legacy surface evidence.
+- Read-only Phase 01 legacy surface audit evidence is complete.
 - Phase 02 cleans current docs, specs, and Agent references so the active front
   path points to GraphRAG Project, Query Method, and Enhanced Mode instead of
   Domain Pack-era target language.
@@ -121,22 +122,23 @@ This roadmap does not implement:
   conditional requery, citation coverage, and standard-floor preservation.
 - Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
   public query-method trace fields, removes old route names from `apps/web`,
-  and keeps Domain Pack runtime deletion for Phase 11.
+  and kept legacy runtime deletion for Phase 11.
 - Phase 11A is complete; commit `24abdd9` introduced the project query runtime
   (`KnowledgeQueryService`, `GraphRAGQueryService`, `GraphRAGProjectSnapshot`,
   `KnowledgeQueryResult`).
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
-- Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
-  runtime services, Docker surfaces, and `tests/compat/`.
+- Phase 11C is blocked by active dependencies in `domain-packs/`, Docker
+  surfaces, and `tests/compat/`.
   Workspace knowledge prefetch/tools have been cut over to `KnowledgeQueryService`,
   `KnowledgeService.get_runtime_settings` no longer auto-loads
   `DomainPackLoader` from `domain_pack_id`, `GraphRetriever` no longer loads
   Domain Pack policy from `domain_pack_id`, stackless local eval and the
   dedicated Contract Review eval have Contract Review GraphRAG Project paths,
   the standalone `AgentRuntime` facade, direct `DomainQAGraph` source, legacy
-  graph state module, and direct `MultiAgentSupervisorGraph` source have been
-  removed from current backend source and exports, and `DomainQAGraph` /
+  graph state module, `src/backend/zuno/services/domain_pack/` runtime service
+  package, and direct `MultiAgentSupervisorGraph` source have been removed
+  from current backend source and exports, and `DomainQAGraph` /
   `MultiAgentSupervisorGraph` are no longer current core package public
   exports.
 - Phase 12 is partially complete / not closed. Final full `pytest` and formal
@@ -145,7 +147,9 @@ This roadmap does not implement:
 ## Dependency Rules
 
 - Phase 01 must run before code deletion.
-- Phase 03 must precede removal of Domain Pack runtime paths.
+- Phase 03 preceded removal of Domain Pack runtime paths; those paths must now
+  stay retired while remaining root assets, Docker references, and compat tests
+  close.
 - Phase 04 must precede loaders, prompt registry, index versioning, router, and
   frontend contract migration.
 - Phase 08 must precede final Enhanced Mode and frontend advanced method work.

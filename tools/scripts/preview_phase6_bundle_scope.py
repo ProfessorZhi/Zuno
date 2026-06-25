@@ -41,7 +41,6 @@ PHASE6_BUNDLE_GROUPS: "OrderedDict[str, list[str]]" = OrderedDict(
             "runtime_foundations",
             [
                 "src/backend/zuno/services/runtime_registry.py",
-                "src/backend/zuno/services/domain_pack/",
                 "src/backend/zuno/services/graphrag/extractors/",
                 "src/backend/zuno/services/graphrag/retrievers/",
                 "src/backend/zuno/core/graphs/",
@@ -55,7 +54,7 @@ PHASE6_BUNDLE_GROUPS: "OrderedDict[str, list[str]]" = OrderedDict(
                 "tests/compat/test_contract_eval_runner.py",
                 "tests/compat/test_contract_graph_query_routing.py",
                 "tests/compat/test_contract_graph_retriever.py",
-                "tests/compat/test_domain_pack_loader.py",
+                "tests/compat/test_domain_pack_runtime_service_retirement.py",
                 "tests/compat/test_domain_pack_runtime_flow.py",
                 "tests/compat/test_domain_qa_graph_retirement.py",
                 "tests/compat/test_general_agent_domain_pack_runtime.py",

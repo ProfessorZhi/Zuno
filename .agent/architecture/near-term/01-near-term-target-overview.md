@@ -13,7 +13,8 @@ over the current mainline.
 - `src/backend/zuno/api/router.py` exposes the `/api/v1` route surface.
 - `src/backend/zuno/core/graphs/domain_qa_graph.py` and the former
   `multi_agent_supervisor_graph.py` source have retired from current backend.
-  Domain Pack assets/services and compat tests remain Blocked Legacy.
+  The Domain Pack runtime service package has also retired; root Domain Pack
+  assets, Docker references, and compat tests remain Blocked Legacy.
 - `src/backend/zuno/services/retrieval/`, `services/rag/`, and
   `services/graphrag/` already contain the retrieval, RAG, and GraphRAG pieces.
 - Frontend standard/enhanced product terms exist under `apps/web/src/utils/`

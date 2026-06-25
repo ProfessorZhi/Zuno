@@ -38,7 +38,6 @@ def test_blocked_legacy_paths_are_present_and_classified() -> None:
     for path in [
         "domain-packs",
         "tests/compat",
-        "src/backend/zuno/services/domain_pack",
     ]:
         assert (REPO_ROOT / path).exists(), f"Blocked Legacy path missing: {path}"
 
@@ -102,6 +101,17 @@ def test_domain_pack_api_wrapper_files_stay_retired() -> None:
         REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
     ).read_text(encoding="utf-8")
     assert "Retired Domain Pack API wrapper must not remain" in verifier
+
+
+def test_domain_pack_runtime_service_stays_retired_from_current_backend() -> None:
+    assert not (
+        REPO_ROOT / "src/backend/zuno/services/domain_pack"
+    ).exists(), "Domain Pack runtime service should not remain as current backend source"
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "Domain Pack runtime service must not remain as current backend source" in verifier
 
 
 def test_knowledge_service_stays_off_domain_pack_loader_runtime_defaults() -> None:

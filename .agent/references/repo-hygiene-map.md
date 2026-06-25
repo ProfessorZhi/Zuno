@@ -27,11 +27,12 @@ old frontend Domain Pack API/page files are retired from `apps/web/src/`.
 `KnowledgeService.get_runtime_settings` no longer auto-loads `DomainPackLoader`
 from `domain_pack_id`. `GraphRetriever` policy resolution also no longer loads
 `DomainPackLoader` from `domain_pack_id`. Stackless local eval and the
-dedicated Contract Review eval can build from GraphRAG Project assets.
-Retained Domain Pack backend modules, assets, Docker references, and compat
-tests remain Blocked Legacy until their replacement or migration is proved.
-The direct `DomainQAGraph` source and legacy graph state module are retired
-from current backend source.
+dedicated Contract Review eval can build from GraphRAG Project assets. The
+direct `DomainQAGraph` source, legacy graph state module, and
+`src/backend/zuno/services/domain_pack/` runtime service package are retired
+from current backend source. Retained root Domain Pack assets, Docker
+references, and compat tests remain Blocked Legacy until their replacement or
+migration is proved.
 
 ## Rule
 

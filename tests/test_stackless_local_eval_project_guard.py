@@ -3,15 +3,11 @@ import asyncio
 import pytest
 
 
-def test_stackless_local_graph_retriever_rejects_domain_pack_without_project_assets(monkeypatch):
+def test_stackless_local_graph_retriever_rejects_domain_pack_without_project_assets():
     from zuno.evals.rag_eval.run_stackless_local_eval import _build_local_graph_retriever
     from zuno.schema.chunk import ChunkModel
-    from zuno.services.domain_pack.loader import DomainPackLoader
-
-    def fail_if_loaded(*_args, **_kwargs):
-        raise AssertionError("stackless local eval must not fall back to DomainPackLoader")
-
-    monkeypatch.setattr(DomainPackLoader, "load", fail_if_loaded)
+    with pytest.raises(ModuleNotFoundError):
+        __import__("zuno.services.domain_pack.loader")
 
     chunk = ChunkModel(
         chunk_id="plain_chunk_1",

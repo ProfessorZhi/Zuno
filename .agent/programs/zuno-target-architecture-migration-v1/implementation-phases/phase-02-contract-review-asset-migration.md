@@ -80,9 +80,10 @@ Still blocked:
   `DomainPackLoader`; the dedicated Contract Review eval also no longer
   executes through `DomainQAGraph`, and the direct `DomainQAGraph` source is
   retired.
-- `domain-packs/contract_review/` and `src/backend/zuno/services/domain_pack/`
-  remain Blocked Legacy until remaining Domain Pack services/assets/Docker and
-  compat dependencies are cut over.
+- `domain-packs/contract_review/` remains Blocked Legacy until remaining root
+  Domain Pack assets, Docker, and compat dependencies are cut over. The
+  `src/backend/zuno/services/domain_pack/` runtime service package is retired
+  from current backend source.
 
 ## Verification Commands
 

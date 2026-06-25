@@ -31,7 +31,7 @@ Read first:
 
 ## Current Status
 
-- Phase 01 is complete as read-only evidence.
+- Read-only Phase 01 legacy surface audit evidence is complete.
 - Phase 02 is the docs/spec/current-truth cleanup step that removes misleading
   Domain Pack-era target language from current entrypoints.
 - Phase 03 introduces `graphrag_project_id` at the public contract edge and
@@ -57,10 +57,11 @@ Read first:
 - Phase 11A is complete; commit `24abdd9` introduced the project query runtime.
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path.
-- Phase 11C is blocked by active Domain Pack Docker/eval/frontend/API and
-  `tests/compat/` dependencies. The direct `DomainQAGraph`, legacy graph
-  state, and `MultiAgentSupervisorGraph` sources are retired from current
-  backend source.
+- Phase 11C is blocked by root `domain-packs/`, remaining Docker/eval asset
+  migration, and `tests/compat/` dependencies. The direct `DomainQAGraph`,
+  legacy graph state, `MultiAgentSupervisorGraph`, Domain Pack route/API,
+  frontend Domain Pack pages, and Domain Pack runtime service sources are
+  retired from current source.
 - Phase 12 is partially complete / not closed.
 
 ## Rule

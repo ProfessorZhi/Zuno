@@ -1,22 +1,21 @@
 import asyncio
+import importlib
 import importlib.util
 from pathlib import Path
 
+import pytest
 
-def test_contract_eval_runner_uses_project_assets_without_domain_pack_loader(monkeypatch):
-    from zuno.services.domain_pack.loader import DomainPackLoader
 
+def test_contract_eval_runner_uses_project_assets_without_domain_pack_loader():
     repo_root = Path(__file__).resolve().parents[1]
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("zuno.services.domain_pack.loader")
+
     script = repo_root / "tools/evals/zuno/contract_review_eval/run_contract_eval.py"
     spec = importlib.util.spec_from_file_location("contract_eval_project_assets", script)
     assert spec and spec.loader
     run_contract_eval = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(run_contract_eval)
-
-    def fail_if_loaded(*_args, **_kwargs):
-        raise AssertionError("contract eval must load GraphRAG Project assets")
-
-    monkeypatch.setattr(DomainPackLoader, "load", fail_if_loaded)
 
     payload = asyncio.run(
         run_contract_eval.run("dev_offline", trace_langsmith=False)

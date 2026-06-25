@@ -40,24 +40,27 @@ Recommended group order:
    - Docker defaults
    - startup and rebuild scripts
 
-4. `backend_domain_runtime`
-   - Domain Pack runtime
-   - LangGraph domain routing
-   - contract-review domain runtime pieces
+4. `retired_runtime_legacy`
+   - retired legacy runtime source and route deletions
+   - retired graph modules and package asset copies
 
-5. `backend_rag_graphrag_eval`
+5. `backend_domain_runtime`
+   - current Agent and LangGraph runtime behavior
+   - workspace-agent, embedding, LLM, and contract-review runtime pieces
+
+6. `backend_rag_graphrag_eval`
    - local embedding and rerank evaluation
    - GraphRAG retrieval and compare matrix
    - contract-review and graph-relation evaluation support
 
-6. `backend_public_entrypoints`
+7. `backend_public_entrypoints`
    - `zuno -> zuno` public runtime surface
    - API, DAO, schema, config, and startup convergence
 
-7. `frontend_workspace`
+8. `frontend_workspace`
    - workspace UI and routing changes
 
-8. `excluded_local_only`
+9. `excluded_local_only`
    - internal handoff or workflow-facing materials
    - examples: `docs/superpowers/`, `apps/web/AGENTS.md`
 
@@ -77,6 +80,7 @@ The practical intent is:
    - `infra_and_launch`
 
 4. keep runtime-domain behavior and GraphRAG evaluation behavior reviewable as separate backend concerns
+   - `retired_runtime_legacy`
    - `backend_domain_runtime`
    - `backend_rag_graphrag_eval`
 

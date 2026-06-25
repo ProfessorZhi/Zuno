@@ -64,7 +64,8 @@ direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` source
 have also been removed from current backend source and exports. The direct
 `src/backend/zuno/core/graphs/domain_qa_graph.py` source and its legacy
 `states.py` graph state module have also been removed from current backend
-source.
+source. The `src/backend/zuno/services/domain_pack/` runtime service package
+has also been retired from current backend source.
 `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
 the `zuno.core` or `zuno.core.graphs` public package surfaces.
 
@@ -94,7 +95,7 @@ assets.
 Phase 11C is blocked because these active dependencies still exist:
 
 - `domain-packs/`
-- Domain Pack service/eval/Docker surfaces
+- Domain Pack asset/eval/Docker surfaces
 - retired `DomainQAGraph` compatibility evidence and remaining Domain Pack
   compat tests
 - Contract Review eval has moved to a GraphRAG Project local eval flow without
@@ -102,7 +103,6 @@ Phase 11C is blocked because these active dependencies still exist:
 - Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
 - Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
   Pack pages are not active knowledge routes or settings-shell pages
-- `src/backend/zuno/services/domain_pack/`
 - retained `MultiAgentSupervisorGraph` compat retirement evidence
 - `tests/compat/`
 

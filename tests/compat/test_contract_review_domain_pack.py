@@ -18,42 +18,40 @@ def _ensure_runtime_paths() -> None:
 def _contract_review_query_policy() -> dict:
     _ensure_runtime_paths()
 
-    GraphRAGProjectLoader = importlib.import_module(
-        "zuno.services.graphrag.project.loader"
-    ).GraphRAGProjectLoader
+    GraphRAGProjectLoader = importlib.import_module("zuno.services.graphrag.project.loader").GraphRAGProjectLoader
     projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
     return dict(project.settings["retrieval_policy"])
 
 
-def test_contract_review_pack_can_be_loaded_from_zuno_runtime():
+def _contract_review_payload() -> dict:
     _ensure_runtime_paths()
 
-    DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
-    DomainPackRegistry = importlib.import_module("zuno.services.domain_pack.registry").DomainPackRegistry
+    GraphRAGProjectLoader = importlib.import_module("zuno.services.graphrag.project.loader").GraphRAGProjectLoader
+    projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
+    project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
+    assert project is not None
+    return project.to_domain_pack_payload()
 
-    pack = DomainPackLoader().load("contract_review")
-    pack_ids = DomainPackRegistry().list_pack_ids()
 
-    assert pack is not None
-    assert pack.id == "contract_review"
-    assert pack.schema == "schema.json"
-    assert pack.retrieval_policy_data["graph_hop_limit"] == 2
-    assert "结论" in (pack.answer_template_text or "")
-    assert pack.schema_data is not None
-    assert "contract_review" in pack_ids
+def test_contract_review_project_payload_matches_legacy_shape():
+    payload = _contract_review_payload()
+
+    assert payload["id"] == "contract_review"
+    assert payload["schema"] == "schema.json"
+    assert payload["retrieval_policy_data"]["graph_hop_limit"] == 2
+    assert "结论" in (payload["answer_template_text"] or "")
+    assert payload["schema_data"] is not None
 
 
 def test_structured_graph_extractor_builds_contract_review_entities_and_relations():
     _ensure_runtime_paths()
 
-    DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
     StructuredGraphExtractor = importlib.import_module(
         "zuno.services.graphrag.extractors.structured_extractor"
     ).StructuredGraphExtractor
 
-    pack = DomainPackLoader().load("contract_review")
-    assert pack is not None
+    contract_review = _contract_review_payload()
 
     chunk = {
         "chunk_id": "contract_chunk_1",
@@ -79,7 +77,7 @@ def test_structured_graph_extractor_builds_contract_review_entities_and_relation
         StructuredGraphExtractor().extract_from_chunk(
             chunk,
             "kb_contract",
-            domain_pack=pack.to_dict(),
+            domain_pack=contract_review,
         )
     )
 
@@ -115,12 +113,11 @@ def test_structured_graph_extractor_builds_contract_review_entities_and_relation
 def test_structured_graph_extractor_recovers_contract_title_from_file_name():
     _ensure_runtime_paths()
 
-    DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
     StructuredGraphExtractor = importlib.import_module(
         "zuno.services.graphrag.extractors.structured_extractor"
     ).StructuredGraphExtractor
 
-    pack = DomainPackLoader().load("contract_review")
+    contract_review = _contract_review_payload()
     chunk = {
         "chunk_id": "contract_chunk_2",
         "file_name": "contract_008_outsourcing_service_agreement__variant_2.md",
@@ -136,7 +133,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
         StructuredGraphExtractor().extract_from_chunk(
             chunk,
             "kb_contract",
-            domain_pack=pack.to_dict(),
+            domain_pack=contract_review,
         )
     )
 

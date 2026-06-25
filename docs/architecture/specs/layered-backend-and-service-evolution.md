@@ -128,7 +128,7 @@ Responsibilities:
 
 - business orchestration
 - retrieval orchestration
-- Domain Pack runtime
+- GraphRAG Project and knowledge-query runtime orchestration
 - LangGraph runtime composition
 - multi-agent coordination
 

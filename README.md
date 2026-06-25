@@ -55,9 +55,11 @@ Phase 11C progress / Blocked Legacy:
   as a GraphRAG Project `retrieval_policy.yaml`.
 - Stackless local eval and the dedicated Contract Review eval can build from
   GraphRAG Project assets without loading `DomainPackLoader`; stackless local
-  eval now requires GraphRAG Project assets when an id is provided.
-- Remaining blockers still exist in `domain-packs/`, Domain Pack runtime
-  services, Docker surfaces, retained `DomainQAGraph` /
+  eval now requires GraphRAG Project assets when an id is provided. The
+  `src/backend/zuno/services/domain_pack/` runtime service package is also
+  retired from current backend source.
+- Remaining blockers still exist in `domain-packs/`, Domain Pack Docker
+  surfaces, retained `DomainQAGraph` /
   `MultiAgentSupervisorGraph` compat retirement evidence,
   and `tests/compat/`. The old Domain Pack backend endpoint/API-service
   wrappers are retired.

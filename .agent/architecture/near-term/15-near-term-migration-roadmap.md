@@ -34,7 +34,9 @@ verification, commit message, and evidence package.
 
 ## Current Status
 
-- Phase 01 is complete as read-only evidence.
+- Official cleanup Phase 01 read-only evidence is complete; Target Migration
+  Phase 01 / 11C active dependency removal is still in progress and blocked
+  overall.
 - Phase 02 docs/spec cleanup is complete.
 - Phase 03 public contract retirement introduces `graphrag_project_id` while
   keeping `domain_pack_id` as bounded migration/runtime compatibility.
@@ -55,14 +57,16 @@ verification, commit message, and evidence package.
 - Phase 10 migrates frontend API/types/config utilities to GraphRAG Project and
   public query-method trace fields, and removes old runtime route names from
   `apps/web`.
-- Target Migration Phase 00 is ready. Phase 01 should delete or classify
-  runtime legacy surfaces only after dependency proof.
+- Target Migration Phase 00 is ready. Phase 01 should keep already-retired
+  runtime legacy surfaces absent and delete or classify remaining root assets,
+  Docker references, and compat surfaces only after dependency proof.
 
 ## Migration Rules
 
 - Do not treat Java, microservices, event bus, or default multi-agent behavior
   as near-term acceptance gates.
-- Do not delete Domain Pack runtime or `tests/compat/` during docs cleanup.
+- Do not recreate retired Domain Pack runtime. Do not delete root
+  `domain-packs/` or `tests/compat/` during docs cleanup.
 - Keep old names in history, audits, retired terminology, migration notes, and
   explicit compatibility tests until the final closure gate says otherwise.
 - Make public target language GraphRAG Project, Prompt Registry, Query Method,

@@ -7,8 +7,9 @@ contracts no longer depend on them.
 
 ## Why This Phase Exists
 
-Domain Pack services, DomainQAGraph naming, old query modes, agentchat launcher
-names, and compat aliases are high-risk until contracts and tests migrate.
+Domain Pack legacy surfaces, DomainQAGraph naming, old query modes, agentchat
+launcher names, and compat aliases are high-risk until contracts and tests
+migrate.
 
 ## Required Reading
 
@@ -30,14 +31,27 @@ tests, migration docs, and final grep classification.
 
 ## Candidate Files
 
-- `src/backend/zuno/services/domain_pack/`
 - `src/backend/zuno/domain_packs/`
 - `domain-packs/`
-- `src/backend/zuno/core/graphs/domain_qa_graph.py`
-- `src/backend/zuno/core/graphs/states.py`
 - `src/backend/zuno/legacy/`
 - `tools/launchers/windows/_Zuno-Web-Common.cmd`
 - `tests/compat/`
+
+Already-retired candidates that must stay absent:
+
+- `src/backend/zuno/services/domain_pack/`
+- `src/backend/zuno/core/graphs/domain_qa_graph.py`
+- `src/backend/zuno/core/graphs/states.py`
+- `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
+
+## Later Status
+
+This pre-split Phase 11 checklist is historical planning context. Current
+execution is tracked by Phase 11A, 11B, and 11C. The direct `DomainQAGraph`
+source, legacy graph state module, direct `MultiAgentSupervisorGraph` source,
+and `src/backend/zuno/services/domain_pack/` runtime service package are
+already retired from current backend source. Phase 11C remains blocked by root
+`domain-packs/`, Docker references, and `tests/compat/`.
 
 ## Execution Order
 

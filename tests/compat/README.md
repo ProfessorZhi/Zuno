@@ -11,10 +11,10 @@ Why it lives here instead of `src/backend/zuno/`:
 ## Phase 11C Classification
 
 This directory is a mixed Current / Blocked Legacy surface. Some tests still
-protect active legacy runtime paths such as the Domain Pack loader and eval
-compatibility. Other tests are retired compatibility or replacement evidence
-and should prove that replaced surfaces stay removed, including
-`DomainQAGraph` and `MultiAgentSupervisorGraph`.
+protect eval or asset compatibility. Other tests are retired compatibility or
+replacement evidence and should prove that replaced surfaces stay removed,
+including `DomainQAGraph`, the Domain Pack runtime service, and
+`MultiAgentSupervisorGraph`.
 
 `test_general_agent_domain_pack_runtime.py` is retired compatibility evidence:
 the current `GeneralAgent` no longer exposes the old
@@ -35,7 +35,11 @@ current backend source modules.
 current backend source. Root-level runtime import tests track the GraphRAG
 Project mainline.
 
-`test_domain_pack_formalization.py` and `test_contract_review_domain_pack.py`
-are moved Domain Pack / Contract Review asset-runtime coverage. They remain
-here until Contract Review assets migrate to GraphRAG Project ownership in
-Phase 02.
+`test_domain_pack_runtime_service_retirement.py` proves the former
+`zuno.services.domain_pack` runtime service stays retired from current backend
+source.
+
+`test_contract_review_domain_pack.py` keeps Contract Review compatibility
+coverage through the GraphRAG Project payload shape instead of the old Domain
+Pack loader. It remains here until the root `domain-packs/` assets and Docker
+surfaces are fully retired.

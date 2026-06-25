@@ -71,12 +71,9 @@ prompts:
 
 
 def test_knowledge_query_service_uses_project_runtime_without_domain_pack_loader(tmp_path, monkeypatch):
-    from zuno.services.domain_pack.loader import DomainPackLoader
-
-    def fail_if_loaded(*args, **kwargs):
-        raise AssertionError("Phase 11A project query path must not call DomainPackLoader")
-
-    monkeypatch.setattr(DomainPackLoader, "load", fail_if_loaded)
+    del monkeypatch
+    repo_root = Path(__file__).resolve().parents[1]
+    assert not (repo_root / "src/backend/zuno/services/domain_pack").exists()
 
     _write_project(tmp_path)
     orchestrator = _RecordingOrchestrator()

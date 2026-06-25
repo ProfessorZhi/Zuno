@@ -120,8 +120,15 @@ def test_domain_pack_asset_runtime_tests_live_under_compat() -> None:
     for relative_path in legacy_root_tests:
         assert not (REPO_ROOT / relative_path).exists(), relative_path
 
-    compat_tests = [
+    retired_compat_tests = [
+        "tests/compat/test_domain_pack_loader.py",
         "tests/compat/test_domain_pack_formalization.py",
+    ]
+    for relative_path in retired_compat_tests:
+        assert not (REPO_ROOT / relative_path).exists(), relative_path
+
+    compat_tests = [
+        "tests/compat/test_domain_pack_runtime_service_retirement.py",
         "tests/compat/test_contract_review_domain_pack.py",
     ]
     for relative_path in compat_tests:

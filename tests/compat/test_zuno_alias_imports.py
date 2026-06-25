@@ -22,7 +22,6 @@ def test_zuno_alias_modules_import():
     from zuno.middleware.white_list_middleware import WhitelistMiddleware
     from zuno.mcp_servers.remote_proxy.main import main as remote_proxy_main
     from zuno.schema.common import ModelConfig
-    from zuno.services.domain_pack.loader import DomainPackLoader
     from zuno.services.graphrag.extractor import GraphExtractor
     from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
     from zuno.services.graphrag.retriever import GraphRetriever
@@ -53,7 +52,6 @@ def test_zuno_alias_modules_import():
     assert WhitelistMiddleware is not None
     assert remote_proxy_main is not None
     assert ModelConfig is not None
-    assert DomainPackLoader is not None
     assert GraphExtractor is not None
     assert StructuredGraphExtractor is not None
     assert GraphRetriever is not None
