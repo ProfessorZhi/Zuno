@@ -6,12 +6,15 @@
 **/.pytest_cache
 **/*.pyc
 
-src/frontend/node_modules
-src/frontend/dist
-src/frontend/.pnpm
-src/frontend/.npm
-src/frontend/.yarn
-src/frontend/.env*
+node_modules
+apps/web/node_modules
+apps/web/dist
+apps/web/.pnpm
+apps/web/.npm
+apps/web/.yarn
+apps/web/.env*
+apps/web/*.tsbuildinfo
+apps/desktop/node_modules
 
 src/backend/zuno/config.yaml
 src/backend/zuno/config.local.yaml
@@ -19,10 +22,9 @@ src/backend/zuno/config.local.yaml
 infra/docker/docker_config.local.yaml
 infra/docker/data
 .local
-apps/desktop/node_modules
-src/frontend/*.tsbuildinfo
-
-node_modules
+.codex
+data
+reports
 tmp
 *.log
 *.sqlite

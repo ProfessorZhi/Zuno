@@ -17,7 +17,6 @@ infra/docker/docker_config.local.yaml
 infra/docker/data/
 src/backend/zuno/config.yaml
 src/backend/zuno/config.local.yaml
-src/backend/zuno/config.yaml
 .local/config/zuno/
 
 /chroma_db/
@@ -25,6 +24,7 @@ src/backend/zuno/config.yaml
 /vector_db/
 
 .local/
+.codex/
 
 # Agent workflow library: keep durable references/templates/scripts tracked.
 # All local-only notes, scratch space, logs, machine-local state, and secrets
@@ -82,8 +82,6 @@ reports/evals/multihop/real_runtime/
 tmp-*.png
 tmp-*.json
 tmp-*.cjs
-$null
-&1
 
 *.log
 *.pyc

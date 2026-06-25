@@ -40,6 +40,8 @@ Require-Path ".agent\lessons\README.md"
 Require-Path ".agent\templates\requirement-intake.md"
 Require-Path ".agent\scripts\verify-docs.ps1"
 Require-Path ".agent\scripts\verify_agent_system.py"
+Require-Path ".agent\scripts\verify_doc_boundaries.py"
+Require-Path ".agent\scripts\verify_repo_hygiene.py"
 Require-Path ".agent\scripts\grep-legacy.ps1"
 Require-Path ".agent\scripts\grep-domain-pack.ps1"
 Require-Path ".agent\programs\official-graphrag-cleanup-v1\README.md"
@@ -80,6 +82,16 @@ if ($failures.Count -gt 0) {
 }
 
 python .agent\scripts\verify_agent_system.py
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+python .agent\scripts\verify_doc_boundaries.py
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+python .agent\scripts\verify_repo_hygiene.py
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
