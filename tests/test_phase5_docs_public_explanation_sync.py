@@ -7,17 +7,17 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def test_phase5_docs_sync_current_public_story() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     phase_index = (
-        REPO_ROOT / "docs" / "architecture" / "phases" / "README.md"
+        REPO_ROOT / "docs" / "architecture" / "history" / "phases" / "README.md"
     ).read_text(encoding="utf-8")
     phase5_doc = (
-        REPO_ROOT / "docs" / "architecture" / "phases" / "phase-05-docs-and-public-explanation-sync.md"
+        REPO_ROOT / "docs" / "architecture" / "history" / "phases" / "phase-05-docs-and-public-explanation-sync.md"
     ).read_text(encoding="utf-8")
 
     for phrase in [
-        "鏈湴浼樺厛鐨?Agent Workspace",
-        "Local GraphRAG",
-        "Evaluation + Proof",
-        "./docs/architecture/history/phases/README.md",
+        "local-first Agent Workspace",
+        "`src/backend/zuno` is the only active Python backend runtime boundary.",
+        "Phase 0-6 architecture closure remains complete historical truth.",
+        "architecture/             # current, target, roadmap, decisions, history",
     ]:
         assert phrase in readme
 
@@ -28,7 +28,7 @@ def test_phase5_docs_sync_current_public_story() -> None:
         assert phrase in phase5_doc
 
     assert "`Phase 5` is complete" in phase_index
-    assert "`src/backend/zuno` 鏄綋鍓嶅敮涓€鍚庣杩愯鐪熺浉" in readme
+    assert "src/backend/zuno/            # current backend runtime truth" in readme
 
 
 def test_phase5_maintainer_docs_use_clean_paths_and_current_truth() -> None:

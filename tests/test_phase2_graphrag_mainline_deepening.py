@@ -31,13 +31,23 @@ def test_phase2_orchestrator_delegates_auto_mode_decision_to_planner() -> None:
     captured: dict[str, object] = {}
 
     class FakePlanner:
-        def build_plan(self, request, processed_query, *, knowledge_capability: str = "rag"):
+        def build_plan(
+            self,
+            request,
+            processed_query,
+            *,
+            knowledge_capability: str = "rag",
+            rerank_available: bool = True,
+        ):
             captured["requested_mode"] = request.mode
             captured["knowledge_capability"] = knowledge_capability
+            captured["rerank_available"] = rerank_available
             captured["query"] = processed_query.normalized_query
             return RetrievalPlan(
                 requested_mode="auto",
                 resolved_mode="graphrag",
+                internal_route="enhanced_retrieval",
+                route_trace={"selected_by": "fake_planner"},
                 requested_profile="auto",
                 resolved_profile="graph_relation",
                 enabled_retrievers=["graph"],
@@ -190,7 +200,7 @@ def test_phase2_graph_retriever_runtime_no_longer_contains_contract_review_hardc
 
 def test_phase2_docs_position_local_graphrag_as_current_mainline() -> None:
     phase_doc = (
-        REPO_ROOT / "docs" / "architecture" / "phases" / "phase-02-graphrag-mainline-deepening.md"
+        REPO_ROOT / "docs" / "architecture" / "history" / "phases" / "phase-02-graphrag-mainline-deepening.md"
     ).read_text(encoding="utf-8")
     orchestrator_doc = (
         REPO_ROOT / "docs" / "architecture" / "specs" / "retrieval-orchestrator.md"
