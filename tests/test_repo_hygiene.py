@@ -39,7 +39,6 @@ def test_blocked_legacy_paths_are_present_and_classified() -> None:
         "domain-packs",
         "tests/compat",
         "src/backend/zuno/services/domain_pack",
-        "src/backend/zuno/core/graphs/domain_qa_graph.py",
     ]:
         assert (REPO_ROOT / path).exists(), f"Blocked Legacy path missing: {path}"
 
@@ -60,6 +59,21 @@ def test_multi_agent_supervisor_source_stays_retired_from_current_backend() -> N
         REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
     ).read_text(encoding="utf-8")
     assert "MultiAgentSupervisorGraph source must not remain as current backend source" in verifier
+
+
+def test_domain_qa_graph_source_stays_retired_from_current_backend() -> None:
+    assert not (
+        REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py"
+    ).exists(), "DomainQAGraph should not remain as current backend source"
+    assert not (
+        REPO_ROOT / "src/backend/zuno/core/graphs/states.py"
+    ).exists(), "legacy graph states should not remain without current graph source"
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "DomainQAGraph source must not remain as current backend source" in verifier
+    assert "Legacy graph states must not remain without current graph source" in verifier
 
 
 def test_domain_pack_frontend_files_stay_retired() -> None:

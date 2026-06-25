@@ -6,14 +6,13 @@ Define the near-term target for AI orchestration.
 
 ## Current Evidence
 
-- `src/backend/zuno/core/graphs/domain_qa_graph.py` is current implementation
-  evidence to migrate from. It uses `StateGraph` and already has nodes for
-  config loading, legacy domain pack resolution, query rewrite, retrieval
-  planning, evidence retrieval, fusion, verification, retry/fallback, answer
-  generation, citation check, and finalize.
-- `src/backend/zuno/core/graphs/states.py` defines graph state.
-- Historical `MultiAgentSupervisorGraph` work existed, but its direct source is
-  retired. Multi-agent defaulting is future direction, not near-term mainline.
+- The current conversation mainline is the single `GeneralAgent` loop calling
+  `KnowledgeQueryService` and `GraphRAGQueryService`.
+- `src/backend/zuno/core/graphs/domain_qa_graph.py` and its legacy
+  `states.py` module are retired from current backend source.
+- Historical `DomainQAGraph` and `MultiAgentSupervisorGraph` work can inform
+  migration notes, but they are not current implementation surfaces.
+- Multi-agent defaulting is future direction, not near-term mainline.
 
 ## Target Design
 
@@ -59,9 +58,10 @@ Graph state should not carry:
 
 ## Migration Notes
 
-`DomainQAGraph` is current evidence and can be the migration source. The target
-renames the concept away from Domain Pack and toward GraphRAG Project. Do not
-delete current graph code until replacement tests prove equivalent behavior.
+Historical `DomainQAGraph` evidence has been replaced on the current mainline
+by `KnowledgeQueryService`, `GraphRAGQueryService`, and focused retirement
+tests. Any future graph extraction should be implemented around GraphRAG
+Project contracts, not by restoring the old Domain Pack graph.
 
 `agentchat` and legacy graph paths are retired surfaces. They may appear in
 history or migration notes, not as near-term front-path architecture.

@@ -17,9 +17,8 @@ def test_legacy_graphs_are_not_core_public_exports():
     assert not hasattr(graphs_module, "MultiAgentSupervisorGraph")
 
 
-def test_legacy_graph_sources_remain_as_direct_blocked_legacy_modules():
-    domain_graph_module = importlib.import_module("zuno.core.graphs.domain_qa_graph")
-
-    assert domain_graph_module.DomainQAGraph is not None
+def test_legacy_graph_sources_are_retired_from_current_backend_modules():
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("zuno.core.graphs.domain_qa_graph")
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module("zuno.core.graphs.multi_agent_supervisor_graph")

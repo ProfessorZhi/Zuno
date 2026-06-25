@@ -75,14 +75,14 @@ Additional progress:
 
 Still blocked:
 
-- Runtime/eval still needs `DomainPackLoader` through direct `DomainQAGraph`
-  id-only fallback paths. `KnowledgeService.get_runtime_settings`,
-  `GraphRetriever`, stackless local eval, and the dedicated Contract Review
-  eval no longer load `DomainPackLoader`; the dedicated Contract Review eval
-  also no longer executes through `DomainQAGraph`, but that does not close
-  Phase 02.
-- `domain-packs/contract_review/` remains Blocked Legacy until those runtime
-  and eval dependencies are cut over.
+- `KnowledgeService.get_runtime_settings`, `GraphRetriever`, stackless local
+  eval, and the dedicated Contract Review eval no longer load
+  `DomainPackLoader`; the dedicated Contract Review eval also no longer
+  executes through `DomainQAGraph`, and the direct `DomainQAGraph` source is
+  retired.
+- `domain-packs/contract_review/` and `src/backend/zuno/services/domain_pack/`
+  remain Blocked Legacy until remaining Domain Pack services/assets/Docker and
+  compat dependencies are cut over.
 
 ## Verification Commands
 

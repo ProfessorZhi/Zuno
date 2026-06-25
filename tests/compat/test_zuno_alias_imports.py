@@ -15,7 +15,6 @@ def test_zuno_alias_modules_import():
     from zuno.api.v1.config import get_runtime_config
     from zuno.api.v1.knowledge import upload_knowledge
     from zuno.api.v1.workspace import get_workspace_sessions
-    from zuno.core.graphs.domain_qa_graph import DomainQAGraph
     from zuno.core.models.manager import ModelManager
     from zuno.database.metadata import metadata
     from zuno.database.models.knowledge_file import KnowledgeFileTable
@@ -47,7 +46,6 @@ def test_zuno_alias_modules_import():
     assert get_runtime_config is not None
     assert upload_knowledge is not None
     assert get_workspace_sessions is not None
-    assert DomainQAGraph is not None
     assert ModelManager is not None
     assert metadata is not None
     assert KnowledgeFileTable is not None

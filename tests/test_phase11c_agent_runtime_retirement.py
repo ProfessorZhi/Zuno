@@ -20,7 +20,12 @@ def test_agent_runtime_facade_is_retired_from_current_backend_source():
 
 
 def test_graph_sources_track_current_phase11c_retirement_status():
-    assert (REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py").exists()
+    assert not (
+        REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py"
+    ).exists(), "DomainQAGraph should not remain as current backend source"
+    assert not (
+        REPO_ROOT / "src/backend/zuno/core/graphs/states.py"
+    ).exists(), "legacy graph states should not remain without current graph source"
     assert not (
         REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py"
     ).exists(), "MultiAgentSupervisorGraph should not remain as current backend source"

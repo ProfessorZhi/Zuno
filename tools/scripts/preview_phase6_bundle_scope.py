@@ -57,7 +57,7 @@ PHASE6_BUNDLE_GROUPS: "OrderedDict[str, list[str]]" = OrderedDict(
                 "tests/compat/test_contract_graph_retriever.py",
                 "tests/compat/test_domain_pack_loader.py",
                 "tests/compat/test_domain_pack_runtime_flow.py",
-                "tests/compat/test_domain_qa_graph_offline.py",
+                "tests/compat/test_domain_qa_graph_retirement.py",
                 "tests/compat/test_general_agent_domain_pack_runtime.py",
                 "tests/compat/test_graph_retriever_local_runtime.py",
                 "tests/compat/test_local_embedding_server.py",

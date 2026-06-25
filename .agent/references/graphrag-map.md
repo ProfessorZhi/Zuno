@@ -35,7 +35,7 @@ proof that all runtime paths no longer need `DomainPackLoader`;
 `KnowledgeService.get_runtime_settings` and `GraphRetriever` policy resolution
 no longer auto-load it. Stackless local eval and the dedicated Contract Review
 eval can build from GraphRAG Project assets. The dedicated Contract Review eval
-is cut over from `DomainQAGraph`; direct `DomainQAGraph` id-only fallback and
+is cut over from `DomainQAGraph`; the direct `DomainQAGraph` source is retired.
 Domain Pack service paths remain Blocked Legacy until the runtime/eval cutover
 is complete. Stackless local eval now requires GraphRAG Project assets when an
 id is provided.
@@ -45,6 +45,6 @@ id is provided.
 Domain Pack surfaces, `DomainQAGraph`, and `tests/compat/` remain Blocked
 Legacy until Phase 11C active dependency removal is proved. The graph classes
 are no longer public exports from `zuno.core` or `zuno.core.graphs`; the direct
-`MultiAgentSupervisorGraph` source is retired, while the direct
-`DomainQAGraph` module still exists for Blocked Legacy coverage and eval
-dependencies.
+`DomainQAGraph` and `MultiAgentSupervisorGraph` sources are retired from
+current backend source. Domain Pack services/assets, Docker surfaces, and
+compat tests still keep 11C blocked.

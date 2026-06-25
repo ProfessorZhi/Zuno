@@ -29,7 +29,6 @@ BLOCKED_LEGACY_PATHS = [
     "domain-packs",
     "tests/compat",
     "src/backend/zuno/services/domain_pack",
-    "src/backend/zuno/core/graphs/domain_qa_graph.py",
 ]
 
 FORBIDDEN_CURRENT_PATHS = [
@@ -186,6 +185,12 @@ def main() -> int:
     supervisor_graph_path = REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py"
     if supervisor_graph_path.exists():
         errors.append("MultiAgentSupervisorGraph source must not remain as current backend source")
+    domain_qa_graph_path = REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py"
+    if domain_qa_graph_path.exists():
+        errors.append("DomainQAGraph source must not remain as current backend source")
+    legacy_graph_states_path = REPO_ROOT / "src/backend/zuno/core/graphs/states.py"
+    if legacy_graph_states_path.exists():
+        errors.append("Legacy graph states must not remain without current graph source")
 
     html_matches = [
         path

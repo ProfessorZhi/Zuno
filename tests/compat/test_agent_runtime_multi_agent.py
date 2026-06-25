@@ -13,8 +13,11 @@ def test_agent_runtime_facade_module_is_retired():
         importlib.import_module("zuno.core.runtime.agent_runtime")
 
 
-def test_legacy_graph_sources_remain_for_direct_blocker_coverage():
-    assert (REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py").exists()
+def test_legacy_graph_sources_are_retired_from_current_backend():
+    assert not (REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py").exists()
+    assert not (REPO_ROOT / "src/backend/zuno/core/graphs/states.py").exists()
     assert not (REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py").exists()
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("zuno.core.graphs.domain_qa_graph")
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module("zuno.core.graphs.multi_agent_supervisor_graph")

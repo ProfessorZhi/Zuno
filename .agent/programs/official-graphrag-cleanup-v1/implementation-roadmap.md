@@ -24,7 +24,9 @@ Current truth is still the Python monorepo runtime:
   `GraphRetriever` policy resolution no longer use the Domain Pack runtime
   path by default. Stackless local eval and the dedicated Contract Review eval
   can build from GraphRAG Project assets; stackless local eval now requires
-  GraphRAG Project assets when an id is provided.
+  GraphRAG Project assets when an id is provided. The direct `DomainQAGraph`
+  source and legacy graph state module are retired from current backend
+  source.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
   `RetrievalFusion`, BM25/vector/graph adapters, community services, requery,
   index version fields, and trace metadata.
@@ -34,8 +36,7 @@ Read-only evidence gathered for this roadmap found active references under:
 - retired backend Domain Pack endpoint/API-service wrapper files under
   `src/backend/zuno/api/`
 - `src/backend/zuno/api/services/knowledge.py`
-- `src/backend/zuno/core/graphs/domain_qa_graph.py`
-- `src/backend/zuno/core/graphs/states.py`
+- retired direct `DomainQAGraph` source and legacy graph state evidence
 - `src/backend/zuno/services/domain_pack/`
 - `src/backend/zuno/services/graphrag/`
 - `src/backend/zuno/services/retrieval/`
@@ -127,16 +128,15 @@ This roadmap does not implement:
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
 - Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
-  runtime services, direct `DomainQAGraph` loader fallback paths, Docker
-  surfaces, direct `DomainQAGraph` source/dependencies, and `tests/compat/`.
+  runtime services, Docker surfaces, and `tests/compat/`.
   Workspace knowledge prefetch/tools have been cut over to `KnowledgeQueryService`,
   `KnowledgeService.get_runtime_settings` no longer auto-loads
   `DomainPackLoader` from `domain_pack_id`, `GraphRetriever` no longer loads
   Domain Pack policy from `domain_pack_id`, stackless local eval and the
   dedicated Contract Review eval have Contract Review GraphRAG Project paths,
-  the standalone `AgentRuntime` facade
-  and direct `MultiAgentSupervisorGraph` source have been removed from current
-  backend source and exports, and `DomainQAGraph` /
+  the standalone `AgentRuntime` facade, direct `DomainQAGraph` source, legacy
+  graph state module, and direct `MultiAgentSupervisorGraph` source have been
+  removed from current backend source and exports, and `DomainQAGraph` /
   `MultiAgentSupervisorGraph` are no longer current core package public
   exports.
 - Phase 12 is partially complete / not closed. Final full `pytest` and formal
@@ -168,8 +168,8 @@ This roadmap does not implement:
 6. Community reports are `global` and `drift` assets, not first-level methods.
 7. Prompt Tuning belongs to indexing-side work.
 8. Index, Update, and Full Rebuild have version boundaries.
-9. `DomainQAGraph` and `DomainQAState` are replaced or kept only in migration
-   compatibility notes.
+9. `DomainQAGraph` and `DomainQAState` are replaced or kept only in retired
+   migration evidence and compatibility notes.
 10. `agentchat`, `services/api`, `zuno/legacy`, and compat aliases are not
     active paths.
 11. Frontend does not leak `rag_graph_deep`, `local_graphrag`,

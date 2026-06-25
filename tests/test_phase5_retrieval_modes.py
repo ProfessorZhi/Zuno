@@ -102,12 +102,17 @@ def test_enhanced_retrieval_mode_degrades_to_normal_when_graph_is_unavailable():
     assert plan.index_version["graph"] == "graph_v2"
 
 
-def test_domain_graph_runner_preserves_knowledge_default_mode_contract():
-    content = (CORE_ROOT / "graphs/domain_qa_graph.py").read_text(encoding="utf-8")
+def test_project_query_runtime_preserves_knowledge_default_mode_contract():
+    query_service = (SERVICE_API_ROOT / "zuno/api/services/knowledge_query.py").read_text(encoding="utf-8")
+    graphrag_query_service = (
+        SERVICE_API_ROOT / "zuno/services/graphrag/query_service.py"
+    ).read_text(encoding="utf-8")
+    planner = PLANNER_PATH.read_text(encoding="utf-8")
 
-    assert 'default_mode = retrieval_settings.get("default_mode") or "rag"' in content
-    assert 'return str(default_mode), merged' in content
-    assert '"mode": custom_result.get("actual_mode") or retrieval_plan.get("resolved_mode"),' in content
+    assert 'retrieval_settings = dict(config.get("retrieval_settings") or {})' in query_service
+    assert 'knowledge_capability=str(config.get("index_capability") or "rag")' in query_service
+    assert 'mode = "enhanced_retrieval" if snapshot.knowledge_capability == "rag_graph"' in graphrag_query_service
+    assert 'resolved_mode = "rag_graph_deep" if knowledge_capability == "rag_graph" else "rag"' in planner
 
 
 def test_enhanced_orchestrator_contract_keeps_graph_path_and_trace_metadata():

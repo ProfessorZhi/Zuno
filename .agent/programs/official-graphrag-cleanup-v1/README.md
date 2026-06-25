@@ -57,15 +57,15 @@ contract retirement.
   prefetch/tools now use `KnowledgeQueryService`, not `AgentRuntime` or
   `_run_domain_pack_query`. The standalone `AgentRuntime` facade has been
   removed from current backend source and exports. The direct
-  `MultiAgentSupervisorGraph` source has also retired from current backend.
+  `DomainQAGraph` source, legacy graph state module, and
+  `MultiAgentSupervisorGraph` source have also retired from current backend.
   `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer current core
   package public exports. `KnowledgeService.get_runtime_settings` preserves
   `domain_pack_id` without auto-loading `DomainPackLoader`. `GraphRetriever`
   now uses explicit `query_policy` instead of loading Domain Pack policy from
   `domain_pack_id`. Stackless local eval and the dedicated Contract Review eval
   can build from GraphRAG Project assets. Domain Pack runtime services/assets,
-  direct `DomainQAGraph` loader fallback paths, Docker surfaces, and
-  `tests/compat/` still block closure. Domain Pack backend endpoint/API-service
+  Docker surfaces, and `tests/compat/` still block closure. Domain Pack backend endpoint/API-service
   wrappers and frontend API/page files are retired from current source.
 - Phase 12 is partially complete / not closed. Do not claim final full `pytest`
   or Eval baseline comparison until fresh evidence exists.

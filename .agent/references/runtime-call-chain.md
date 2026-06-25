@@ -20,5 +20,6 @@ Lower layers do not depend backward on the API layer.
 
 ## Known Limitations
 
-Domain Pack and `DomainQAGraph` remain Blocked Legacy until Phase 11 proves
-safe deletion.
+Domain Pack assets/services and compatibility tests remain Blocked Legacy until
+Phase 11C proves safe deletion. The direct `DomainQAGraph` backend source is
+already retired from the current call chain.

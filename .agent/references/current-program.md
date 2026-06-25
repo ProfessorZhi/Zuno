@@ -22,12 +22,13 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - Phase 01 continues official cleanup 11C active dependency removal.
 - Official cleanup Phase 11A and 11B are complete.
 - Official cleanup Phase 11C remains blocked wherever Domain Pack runtime,
-  `DomainQAGraph`, launchers, evals, frontend/API, Docker, or
-  `tests/compat/` still have active dependencies.
+  launchers, evals, frontend/API, Docker, or `tests/compat/` still have
+  active dependencies.
   Workspace knowledge prefetch/tools have been cut over to
   `KnowledgeQueryService`, and the standalone `AgentRuntime` facade has been
   removed from current backend source and exports. The direct
-  `MultiAgentSupervisorGraph` source has also retired from current backend.
+  `DomainQAGraph` source, legacy graph state module, and
+  `MultiAgentSupervisorGraph` source have also retired from current backend.
   `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer current core
   package public exports.
 - Official cleanup Phase 12 is partial / not closed.

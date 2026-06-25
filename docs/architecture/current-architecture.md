@@ -61,10 +61,12 @@ also use `KnowledgeQueryService` now. `WorkSpaceSimpleAgent` no longer imports
 `AgentRuntime`, exposes `domain_qa_runtime`, or calls `_run_domain_pack_query`.
 The standalone `src/backend/zuno/core/runtime/agent_runtime.py` facade and the
 direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` source
-have also been removed from current backend source and exports.
+have also been removed from current backend source and exports. The direct
+`src/backend/zuno/core/graphs/domain_qa_graph.py` source and its legacy
+`states.py` graph state module have also been removed from current backend
+source.
 `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
-the `zuno.core` or `zuno.core.graphs` public package surfaces. The direct
-`DomainQAGraph` source remains Blocked Legacy.
+the `zuno.core` or `zuno.core.graphs` public package surfaces.
 
 The old `AgentConfig` public shape still exists, including migration fields
 such as `domain_pack_id`; that is current compatibility surface, not target
@@ -93,15 +95,14 @@ Phase 11C is blocked because these active dependencies still exist:
 
 - `domain-packs/`
 - Domain Pack service/eval/Docker surfaces
-- direct `DomainQAGraph` id-only fallback paths that still call
-  `DomainPackLoader`
+- retired `DomainQAGraph` compatibility evidence and remaining Domain Pack
+  compat tests
 - Contract Review eval has moved to a GraphRAG Project local eval flow without
   `DomainPackLoader` or `DomainQAGraph`
 - Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
 - Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
   Pack pages are not active knowledge routes or settings-shell pages
 - `src/backend/zuno/services/domain_pack/`
-- remaining direct `DomainQAGraph` source and dependencies
 - retained `MultiAgentSupervisorGraph` compat retirement evidence
 - `tests/compat/`
 

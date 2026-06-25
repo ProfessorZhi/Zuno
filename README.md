@@ -42,8 +42,10 @@ Phase 11C progress / Blocked Legacy:
   `apps/web/src/`.
 - Workspace knowledge prefetch/tools now use `KnowledgeQueryService`; the
   standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
-  source have been removed. `DomainQAGraph` / `MultiAgentSupervisorGraph` are
-  no longer current core package public exports.
+  source have been removed. The direct `DomainQAGraph` source and legacy graph
+  state module have also been removed. `DomainQAGraph` /
+  `MultiAgentSupervisorGraph` are no longer current core package public
+  exports.
 - `KnowledgeService.get_runtime_settings` preserves `domain_pack_id` as a
   migration field but no longer auto-loads `DomainPackLoader` from that field;
   GraphRAG Project defaults come from `graphrag_project_id` or explicit
@@ -55,8 +57,8 @@ Phase 11C progress / Blocked Legacy:
   GraphRAG Project assets without loading `DomainPackLoader`; stackless local
   eval now requires GraphRAG Project assets when an id is provided.
 - Remaining blockers still exist in `domain-packs/`, Domain Pack runtime
-  services, direct `DomainQAGraph` loader fallback paths, Docker
-  surfaces, retained `MultiAgentSupervisorGraph` compat retirement evidence,
+  services, Docker surfaces, retained `DomainQAGraph` /
+  `MultiAgentSupervisorGraph` compat retirement evidence,
   and `tests/compat/`. The old Domain Pack backend endpoint/API-service
   wrappers are retired.
 - These surfaces are not the future public mainline, but they must not be

@@ -19,15 +19,15 @@ Current status:
   `DomainPackLoader` from `domain_pack_id`.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
 - Phase 11C remains blocked by Domain Pack runtime services/assets, direct
-  `DomainQAGraph` loader fallback paths, Docker surfaces, and
-  `tests/compat/` dependencies. Domain Pack backend endpoint/API-service
+  Docker surfaces, and `tests/compat/` dependencies. Domain Pack backend endpoint/API-service
   wrappers and frontend API/page files are retired from current source. The
   standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
-  source have been removed from current backend source and exports.
+  source have been removed from current backend source and exports. The direct
+  `DomainQAGraph` source and its legacy graph state module have also been
+  removed from current backend source.
   `DomainQAGraph` and
   `MultiAgentSupervisorGraph` are no longer exported from current core package
-  public surfaces; only the direct `DomainQAGraph` source remains Blocked
-  Legacy.
+  public surfaces.
 - Phase 02 has started as an asset-only migration slice:
   `examples/graphrag-projects/contract_review/` now holds the Target
   GraphRAG Project copy of Contract Review schema, prompts, retrieval policy,
@@ -35,10 +35,9 @@ Current status:
   plus schema/eval assets for explicit graph query policy and stackless local
   eval. Contract Review eval now reads the GraphRAG Project compatibility
   payload and eval fixture without loading `DomainPackLoader` or executing
-  through `DomainQAGraph`; Phase 02 is not closed because direct
-  `DomainQAGraph` fallback/source, Domain Pack services/assets/Docker, and
-  compat tests remain. Stackless local eval now requires GraphRAG Project assets
-  when an id is provided.
+  through `DomainQAGraph`; Phase 02 is not closed because Domain Pack
+  services/assets/Docker and compat tests remain. Stackless local eval now
+  requires GraphRAG Project assets when an id is provided.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

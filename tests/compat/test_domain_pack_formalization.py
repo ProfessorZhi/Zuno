@@ -240,33 +240,3 @@ def test_knowledge_service_local_runtime_preserves_domain_pack_id_without_loadin
     assert runtime["domain_pack_id"] == "contract_review"
     assert runtime["domain_pack"] is None
     assert runtime["knowledge_config"]["graphrag_project_id"] == "contract_review"
-
-
-def test_domain_qa_graph_renders_template_boundary_without_contract_hardcode():
-    _ensure_runtime_paths()
-
-    DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
-    DomainQAGraph = importlib.import_module("zuno.core.graphs.domain_qa_graph").DomainQAGraph
-
-    pack = DomainPackLoader().load("contract_review")
-    answer, report = DomainQAGraph._build_answer_markdown(
-        {
-            "domain_pack": pack.to_dict(),
-            "vector_contexts": [
-                {
-                    "chunk_id": "chunk_1",
-                    "file_name": "contract.md",
-                    "content": "乙方违约时应承担违约责任。",
-                }
-            ],
-            "graph_paths": [{"source": "第八条 违约责任", "target": "违约责任"}],
-            "graph_path_strings": ["第八条 违约责任 -> 违约责任"],
-            "citations": [{"file_name": "contract.md", "chunk_id": "chunk_1", "knowledge_id": "kb_1"}],
-        }
-    )
-
-    assert "# 合同审查回答" in answer
-    assert "# 合同审查报告" in report
-    assert "{{conclusion}}" not in answer
-    assert "{{summary}}" not in report
-    assert "# Contract Review Report" not in report

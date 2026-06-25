@@ -84,8 +84,8 @@ Removed from the active current path:
   been removed from current backend source; `zuno.core` and
   `zuno.core.runtime` no longer export `AgentRuntime`.
 - `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
-  `zuno.core` or `zuno.core.graphs`; the direct `DomainQAGraph` source remains
-  for Blocked Legacy coverage.
+  `zuno.core` or `zuno.core.graphs`; the direct `DomainQAGraph` source and
+  legacy graph state module have been removed from current backend source.
 - The direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
   source has been removed from current backend source; `tests/compat/` now
   keeps retirement evidence that the module stays absent.
@@ -96,12 +96,11 @@ Removed from the active current path:
 - Root Phase 5 runtime import tests no longer import Domain Pack loader or the
   legacy graph as current mainline; direct legacy import coverage remains under
   `tests/compat/`.
-- Phase 5 `DomainQAGraph` runtime tests have moved from root `tests/` into
-  `tests/compat/` as Blocked Legacy coverage. Former
+- Former Phase 5 and Phase 1 `DomainQAGraph` behavior compat tests have been
+  removed after the direct graph source retired; `tests/compat/` now keeps
+  retirement evidence for the old module instead of behavior coverage. Former
   `MultiAgentSupervisorGraph` compat tests now prove the supervisor source and
   module remain retired.
-- Phase 1 `DomainQAGraph` LangGraph runtime-deepening tests have moved from
-  root `tests/` into `tests/compat/` as Blocked Legacy coverage.
 - Domain Pack formalization and Contract Review asset-runtime tests have moved
   from root `tests/` into `tests/compat/` until Phase 02 migrates the assets.
 - Root Phase 5 domain runtime path tests no longer assert direct legacy graph
@@ -119,9 +118,9 @@ Removed from the active current path:
   from legacy Domain Pack runtime coverage to retired compatibility evidence:
   it now proves `GeneralAgent` no longer exposes the old
   `KnowledgeService` / `AgentRuntime` / `RagHandler` path.
-- `tests/compat/test_domain_qa_graph_offline.py` has been synchronized with the
-  current `DomainQAGraph` trace shape; it remains Blocked Legacy coverage, not
-  a target runtime endorsement.
+- `tests/compat/test_domain_qa_graph_retirement.py` proves the direct
+  `DomainQAGraph` module and legacy graph state module remain retired from
+  current backend source.
 - `KnowledgeService.get_runtime_settings` no longer auto-loads
   `DomainPackLoader` from `domain_pack_id`. It preserves the migration field
   and explicit `domain_pack` compatibility payloads while keeping
@@ -143,10 +142,12 @@ Retained as Blocked Legacy / Phase 02 migration assets:
 
 - `domain-packs/contract_review/`
 - `src/backend/zuno/services/domain_pack/`
-- direct `DomainQAGraph` loader fallback paths and Domain Pack Docker mounts
+- Domain Pack Docker mounts
 
 Retired from current source:
 
+- `src/backend/zuno/core/graphs/domain_qa_graph.py`
+- `src/backend/zuno/core/graphs/states.py`
 - `src/backend/zuno/api/v1/domain_packs.py`
 - `src/backend/zuno/api/services/domain_pack.py`
 - `apps/web/src/apis/domain-packs.ts`
@@ -158,9 +159,7 @@ Still blocked:
 
 - `tools/evals/zuno/contract_review_eval/` no longer depends on
   `DomainPackLoader` or `DomainQAGraph`.
-- direct `DomainQAGraph` id-only fallback paths still depend on
-  `DomainPackLoader`.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
-  direct `DomainQAGraph`, Domain Pack loader/eval, and graph/runtime surfaces,
-  plus replacement evidence for retired runtime names, including
+  Domain Pack loader/eval, and graph/runtime surfaces, plus replacement
+  evidence for retired runtime names, including `DomainQAGraph` and
   `MultiAgentSupervisorGraph`.

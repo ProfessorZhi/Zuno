@@ -96,9 +96,16 @@ def test_legacy_graph_runtime_tests_live_under_compat() -> None:
     for relative_path in legacy_root_tests:
         assert not (REPO_ROOT / relative_path).exists(), relative_path
 
-    compat_tests = [
+    retired_legacy_compat_tests = [
         "tests/compat/test_domain_qa_graph_langgraph_runtime_deepening.py",
         "tests/compat/test_domain_qa_graph_runtime.py",
+        "tests/compat/test_domain_qa_graph_offline.py",
+    ]
+    for relative_path in retired_legacy_compat_tests:
+        assert not (REPO_ROOT / relative_path).exists(), relative_path
+
+    compat_tests = [
+        "tests/compat/test_domain_qa_graph_retirement.py",
         "tests/compat/test_multi_agent_supervisor_runtime.py",
     ]
     for relative_path in compat_tests:

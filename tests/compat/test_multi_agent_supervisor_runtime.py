@@ -18,7 +18,6 @@ def test_multi_agent_supervisor_runtime_module_import_stays_retired():
         importlib.import_module("zuno.core.graphs.multi_agent_supervisor_graph")
 
 
-def test_domain_qa_graph_remains_direct_blocked_legacy_until_asset_migration():
-    domain_graph_module = importlib.import_module("zuno.core.graphs.domain_qa_graph")
-
-    assert domain_graph_module.DomainQAGraph is not None
+def test_domain_qa_graph_runtime_module_import_stays_retired():
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("zuno.core.graphs.domain_qa_graph")

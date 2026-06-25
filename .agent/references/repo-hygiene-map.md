@@ -28,9 +28,10 @@ old frontend Domain Pack API/page files are retired from `apps/web/src/`.
 from `domain_pack_id`. `GraphRetriever` policy resolution also no longer loads
 `DomainPackLoader` from `domain_pack_id`. Stackless local eval and the
 dedicated Contract Review eval can build from GraphRAG Project assets.
-Retained Domain Pack backend modules, assets, direct `DomainQAGraph` loader
-fallback paths, Docker references, and compat tests remain Blocked Legacy until their
-replacement or migration is proved.
+Retained Domain Pack backend modules, assets, Docker references, and compat
+tests remain Blocked Legacy until their replacement or migration is proved.
+The direct `DomainQAGraph` source and legacy graph state module are retired
+from current backend source.
 
 ## Rule
 

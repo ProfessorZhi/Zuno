@@ -36,9 +36,9 @@ migration stages.
   GraphRAG Project policy data. Stackless local eval and the dedicated
   Contract Review eval can build from GraphRAG Project assets without loading
   `DomainPackLoader`. Active dependencies still remain in `domain-packs/`,
-  Domain Pack runtime services, direct `DomainQAGraph` loader fallback paths,
-  Docker surfaces, direct `DomainQAGraph` source/dependencies, and
-  `tests/compat/`.
+  Domain Pack runtime services, Docker surfaces, and `tests/compat/`. The
+  direct `DomainQAGraph` source and its legacy graph state module have also
+  been retired from current backend source.
   Domain Pack backend endpoint/API-service wrappers and frontend API/page
   files are retired from current source.
 - Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
@@ -55,9 +55,8 @@ migration stages.
 Contract Review asset migration has started: the Target example copy lives at
 `examples/graphrag-projects/contract_review/`, and the dedicated Contract
 Review eval now reads its GraphRAG Project compatibility payload and eval
-fixture from that copy. This does not close Phase 02 or 11C because direct
-`DomainQAGraph` id-only fallback paths still use `DomainPackLoader`, and
-Domain Pack services/assets/Docker/compat surfaces remain.
+fixture from that copy. This does not close Phase 02 or 11C because Domain
+Pack services/assets/Docker/compat surfaces remain.
 
 ## Next Candidate
 
@@ -72,7 +71,7 @@ by active dependencies:
 
 - `domain-packs/`
 - `src/backend/zuno/services/domain_pack/`
-- `src/backend/zuno/core/graphs/domain_qa_graph.py`
+- retired `DomainQAGraph` compatibility evidence
 - retained `MultiAgentSupervisorGraph` compat retirement evidence
 - `tests/compat/`
 

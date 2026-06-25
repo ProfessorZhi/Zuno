@@ -31,4 +31,4 @@ def test_project_query_runtime_modules_import_from_zuno_mainline():
 
 def test_legacy_runtime_import_coverage_lives_in_compat():
     assert (REPO_ROOT / "tests/compat/test_domain_pack_loader.py").exists()
-    assert (REPO_ROOT / "tests/compat/test_domain_qa_graph_offline.py").exists()
+    assert (REPO_ROOT / "tests/compat/test_domain_qa_graph_retirement.py").exists()
