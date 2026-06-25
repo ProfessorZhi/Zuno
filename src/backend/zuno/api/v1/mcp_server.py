@@ -10,6 +10,10 @@ from zuno.settings import app_settings
 router = APIRouter(tags=["MCP-Server"])
 
 
+def _build_mcp_summary(server_name: str, tools_params: dict):
+    return MCPService.build_mcp_summary(server_name, tools_params)
+
+
 @router.post("/mcp_server")
 async def create_mcp_server(
     req: MCPServerImportedReq,
