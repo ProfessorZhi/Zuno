@@ -46,8 +46,11 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   current backend source; `zuno.core` and `zuno.core.runtime` no longer export
   `AgentRuntime`.
 - `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
-  `zuno.core` or `zuno.core.graphs`; their direct source modules remain for
-  Blocked Legacy coverage.
+  `zuno.core` or `zuno.core.graphs`; the direct `DomainQAGraph` source remains
+  for Blocked Legacy coverage.
+- The direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
+  source has been removed from current backend source; `tests/compat/` now
+  keeps retirement evidence that the module stays absent.
 - Phase 0 recovery/current-truth tests no longer treat `DomainQAGraph` or
   `DomainPackLoader` as high-value current imports; they use
   `KnowledgeQueryService`, `GraphRAGQueryService`, and
@@ -55,8 +58,10 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 - Root Phase 5 runtime import tests no longer import Domain Pack loader or the
   legacy graph as current mainline; direct legacy import coverage remains under
   `tests/compat/`.
-- Phase 5 `DomainQAGraph` and `MultiAgentSupervisorGraph` runtime tests have
-  moved from root `tests/` into `tests/compat/` as Blocked Legacy coverage.
+- Phase 5 `DomainQAGraph` runtime tests have moved from root `tests/` into
+  `tests/compat/` as Blocked Legacy coverage. Former
+  `MultiAgentSupervisorGraph` compat tests now prove the supervisor source and
+  module remain retired.
 - Phase 1 `DomainQAGraph` LangGraph runtime-deepening tests have moved from
   root `tests/` into `tests/compat/` as Blocked Legacy coverage.
 - Domain Pack formalization and Contract Review asset-runtime tests have moved
@@ -73,7 +78,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 - `src/backend/zuno/api/services/domain_pack.py` still exists.
 - `src/backend/zuno/services/domain_pack/` still exists.
 - `src/backend/zuno/core/graphs/domain_qa_graph.py` still exists.
-- `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` still exists.
+- `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` has been
+  retired from current backend source.
 - `tests/compat/` still exists with Domain Pack and multi-agent compatibility
   coverage.
 

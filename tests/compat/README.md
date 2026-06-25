@@ -11,10 +11,10 @@ Why it lives here instead of `src/backend/zuno/`:
 ## Phase 11C Classification
 
 This directory is a mixed Current / Blocked Legacy surface. Some tests still
-protect active legacy runtime paths such as `DomainQAGraph`,
-`MultiAgentSupervisorGraph`, Domain Pack loader, and eval compatibility. Other
-tests are retired compatibility or replacement evidence and should prove that
-replaced surfaces stay removed.
+protect active legacy runtime paths such as `DomainQAGraph`, Domain Pack
+loader, and eval compatibility. Other tests are retired compatibility or
+replacement evidence and should prove that replaced surfaces stay removed,
+including `MultiAgentSupervisorGraph`.
 
 `test_general_agent_domain_pack_runtime.py` is retired compatibility evidence:
 the current `GeneralAgent` no longer exposes the old
@@ -27,13 +27,14 @@ GraphRAG Project query runtime through `KnowledgeQueryService`.
 
 `test_agent_runtime_multi_agent.py` is retired compatibility evidence: the
 standalone `AgentRuntime` facade module no longer exists. `DomainQAGraph` and
-`MultiAgentSupervisorGraph` are no longer public core package exports, while
-their direct source modules remain Blocked Legacy.
+`MultiAgentSupervisorGraph` are no longer public core package exports; the
+direct `DomainQAGraph` source remains Blocked Legacy, while the direct
+`MultiAgentSupervisorGraph` source is retired.
 
-`test_domain_qa_graph_runtime.py` and `test_multi_agent_supervisor_runtime.py`
-are moved Phase 5 legacy runtime tests. They remain here as Blocked Legacy
-coverage while root-level runtime import tests track the GraphRAG Project
-mainline.
+`test_domain_qa_graph_runtime.py` is moved Phase 5 legacy runtime coverage and
+remains here as Blocked Legacy coverage while root-level runtime import tests
+track the GraphRAG Project mainline. `test_multi_agent_supervisor_runtime.py`
+now proves the former supervisor module stays retired.
 
 `test_domain_qa_graph_langgraph_runtime_deepening.py` is moved Phase 1
 legacy graph/runtime behavior coverage. It remains here as Blocked Legacy

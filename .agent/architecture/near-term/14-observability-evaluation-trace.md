@@ -7,8 +7,9 @@ Define near-term trace and evaluation expectations.
 ## Current Evidence
 
 - `TraceIDMiddleware` exists in `src/backend/zuno/middleware/`.
-- `DomainQAGraph` and `MultiAgentSupervisorGraph` collect trace and cost
-  metadata.
+- `DomainQAGraph` collects trace and cost metadata. Historical
+  `MultiAgentSupervisorGraph` work also collected this shape, but its direct
+  source has retired from current backend.
 - `RetrievalOrchestrator` emits metadata for retrievers, routing, fallback,
   requery, graph, community, drift-like paths, index version, and index health.
 - Evaluation tooling exists under `tools/evals/zuno/`.

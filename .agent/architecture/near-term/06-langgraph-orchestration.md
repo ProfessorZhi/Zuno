@@ -12,8 +12,8 @@ Define the near-term target for AI orchestration.
   planning, evidence retrieval, fusion, verification, retry/fallback, answer
   generation, citation check, and finalize.
 - `src/backend/zuno/core/graphs/states.py` defines graph state.
-- `MultiAgentSupervisorGraph` exists, but multi-agent defaulting is future
-  direction, not near-term mainline.
+- Historical `MultiAgentSupervisorGraph` work existed, but its direct source is
+  retired. Multi-agent defaulting is future direction, not near-term mainline.
 
 ## Target Design
 

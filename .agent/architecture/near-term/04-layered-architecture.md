@@ -75,7 +75,8 @@ assembly, citation check, final trace.
 Non-Responsibilities: SQL, Neo4j Cypher, provider configuration, frontend
 contracts.
 
-Current Evidence: `DomainQAGraph` and `MultiAgentSupervisorGraph`.
+Current Evidence: `DomainQAGraph`. Historical evidence:
+`MultiAgentSupervisorGraph` existed but has retired from current backend source.
 
 Target Design: `GraphRAGQAGraph` becomes the near-term primary QA graph.
 

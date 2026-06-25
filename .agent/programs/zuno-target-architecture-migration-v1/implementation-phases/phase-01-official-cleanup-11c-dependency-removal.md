@@ -84,8 +84,11 @@ Removed from the active current path:
   been removed from current backend source; `zuno.core` and
   `zuno.core.runtime` no longer export `AgentRuntime`.
 - `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
-  `zuno.core` or `zuno.core.graphs`; their direct source modules remain for
-  Blocked Legacy coverage.
+  `zuno.core` or `zuno.core.graphs`; the direct `DomainQAGraph` source remains
+  for Blocked Legacy coverage.
+- The direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
+  source has been removed from current backend source; `tests/compat/` now
+  keeps retirement evidence that the module stays absent.
 - Phase 0 recovery/current-truth tests no longer treat `DomainQAGraph` or
   `DomainPackLoader` as high-value current imports; they use
   `KnowledgeQueryService`, `GraphRAGQueryService`, and
@@ -93,8 +96,10 @@ Removed from the active current path:
 - Root Phase 5 runtime import tests no longer import Domain Pack loader or the
   legacy graph as current mainline; direct legacy import coverage remains under
   `tests/compat/`.
-- Phase 5 `DomainQAGraph` and `MultiAgentSupervisorGraph` runtime tests have
-  moved from root `tests/` into `tests/compat/` as Blocked Legacy coverage.
+- Phase 5 `DomainQAGraph` runtime tests have moved from root `tests/` into
+  `tests/compat/` as Blocked Legacy coverage. Former
+  `MultiAgentSupervisorGraph` compat tests now prove the supervisor source and
+  module remain retired.
 - Phase 1 `DomainQAGraph` LangGraph runtime-deepening tests have moved from
   root `tests/` into `tests/compat/` as Blocked Legacy coverage.
 - Domain Pack formalization and Contract Review asset-runtime tests have moved
@@ -133,6 +138,6 @@ Still blocked:
 - `tools/evals/zuno/contract_review_eval/` and stackless eval paths still
   depend on `DomainPackLoader` / `DomainQAGraph`.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
-  direct `DomainQAGraph`, direct `MultiAgentSupervisorGraph`, Domain Pack
-  loader/eval, and graph/runtime surfaces, plus replacement evidence for
-  retired runtime names.
+  direct `DomainQAGraph`, Domain Pack loader/eval, and graph/runtime surfaces,
+  plus replacement evidence for retired runtime names, including
+  `MultiAgentSupervisorGraph`.

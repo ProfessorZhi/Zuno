@@ -16,7 +16,6 @@ def test_zuno_alias_modules_import():
     from zuno.api.v1.knowledge import upload_knowledge
     from zuno.api.v1.workspace import get_workspace_sessions
     from zuno.core.graphs.domain_qa_graph import DomainQAGraph
-    from zuno.core.graphs.multi_agent_supervisor_graph import MultiAgentSupervisorGraph
     from zuno.core.models.manager import ModelManager
     from zuno.database.metadata import metadata
     from zuno.database.models.knowledge_file import KnowledgeFileTable
@@ -49,7 +48,6 @@ def test_zuno_alias_modules_import():
     assert upload_knowledge is not None
     assert get_workspace_sessions is not None
     assert DomainQAGraph is not None
-    assert MultiAgentSupervisorGraph is not None
     assert ModelManager is not None
     assert metadata is not None
     assert KnowledgeFileTable is not None

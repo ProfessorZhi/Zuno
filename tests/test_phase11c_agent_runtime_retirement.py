@@ -19,6 +19,8 @@ def test_agent_runtime_facade_is_retired_from_current_backend_source():
     assert "AgentRuntime" not in vars(runtime_module)
 
 
-def test_graph_sources_remain_direct_blocked_legacy_until_their_own_slice():
+def test_graph_sources_track_current_phase11c_retirement_status():
     assert (REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py").exists()
-    assert (REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py").exists()
+    assert not (
+        REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py"
+    ).exists(), "MultiAgentSupervisorGraph should not remain as current backend source"

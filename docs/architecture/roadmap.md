@@ -26,11 +26,13 @@ migration stages.
   longer open Domain Pack pages. Workspace knowledge prefetch/tools no longer
   use `AgentRuntime` or `_run_domain_pack_query`; they use
   `KnowledgeQueryService`. The standalone `AgentRuntime` facade has been
-  removed from current backend source and exports. `DomainQAGraph` and
-  `MultiAgentSupervisorGraph` are no longer exported from current core package
-  public surfaces. Active dependencies still remain in `domain-packs/`, Domain
-  Pack services, legacy endpoint/frontend assets, eval/Docker surfaces, direct
-  graph source modules, and `tests/compat/`.
+  removed from current backend source and exports. The direct
+  `MultiAgentSupervisorGraph` source has also been removed. `DomainQAGraph`
+  and `MultiAgentSupervisorGraph` are no longer exported from current core
+  package public surfaces. Active dependencies still remain in
+  `domain-packs/`, Domain Pack services, legacy endpoint/frontend assets,
+  eval/Docker surfaces, direct `DomainQAGraph` source/dependencies, and
+  `tests/compat/`.
 - Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
   and formal Eval baseline comparison are not complete.
 
@@ -59,7 +61,7 @@ by active dependencies:
 - `apps/web/src/apis/domain-packs.ts` and retained Domain Pack Vue components
 - `src/backend/zuno/services/domain_pack/`
 - `src/backend/zuno/core/graphs/domain_qa_graph.py`
-- `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py`
+- retained `MultiAgentSupervisorGraph` compat retirement evidence
 - `tests/compat/`
 
 ## Non-Goals

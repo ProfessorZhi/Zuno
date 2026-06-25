@@ -39,12 +39,12 @@ Phase 11C progress / Blocked Legacy:
   longer mounted on the current FastAPI router, and the active Vue knowledge
   routes/pages no longer open the Domain Pack builder/list/detail flow.
 - Workspace knowledge prefetch/tools now use `KnowledgeQueryService`; the
-  standalone `AgentRuntime` facade has been removed, and `DomainQAGraph` /
-  `MultiAgentSupervisorGraph` are no longer current core package public
-  exports.
+  standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
+  source have been removed. `DomainQAGraph` / `MultiAgentSupervisorGraph` are
+  no longer current core package public exports.
 - Remaining blockers still exist in `domain-packs/`, Domain Pack services,
   legacy endpoint module, eval/Docker surfaces, direct `DomainQAGraph` source,
-  direct `MultiAgentSupervisorGraph` source/compat surfaces, and
+  retained `MultiAgentSupervisorGraph` compat retirement evidence, and
   `tests/compat/`.
 - These surfaces are not the future public mainline, but they must not be
   deleted before active dependency removal is proven.

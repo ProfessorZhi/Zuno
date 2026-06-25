@@ -11,8 +11,9 @@ over the current mainline.
 - `src/backend/zuno/main.py` creates the FastAPI app, lifespan startup,
   middleware, and router registration.
 - `src/backend/zuno/api/router.py` exposes the `/api/v1` route surface.
-- `src/backend/zuno/core/graphs/domain_qa_graph.py` and
-  `multi_agent_supervisor_graph.py` show LangGraph orchestration already exists.
+- `src/backend/zuno/core/graphs/domain_qa_graph.py` remains Blocked Legacy
+  LangGraph orchestration evidence; the former
+  `multi_agent_supervisor_graph.py` source has retired from current backend.
 - `src/backend/zuno/services/retrieval/`, `services/rag/`, and
   `services/graphrag/` already contain the retrieval, RAG, and GraphRAG pieces.
 - Frontend standard/enhanced product terms exist under `apps/web/src/utils/`

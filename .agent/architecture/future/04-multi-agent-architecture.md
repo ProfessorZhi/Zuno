@@ -7,8 +7,9 @@ near-term QA path.
 
 ## Current Evidence
 
-`MultiAgentSupervisorGraph` exists today and plans a domain QA specialist plus
-citation verifier. That is current evidence of possibility, not proof that
+Historical `MultiAgentSupervisorGraph` work planned a domain QA specialist plus
+citation verifier, but that source has retired from the current backend. It is
+evidence of possibility, not a current implementation and not proof that
 ordinary QA should default to multi-agent.
 
 ## Possible Shape

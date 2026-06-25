@@ -51,6 +51,17 @@ def test_blocked_legacy_paths_are_present_and_classified() -> None:
     assert "must not be treated as target repository layout" in map_content
 
 
+def test_multi_agent_supervisor_source_stays_retired_from_current_backend() -> None:
+    assert not (
+        REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py"
+    ).exists(), "MultiAgentSupervisorGraph should not remain as current backend source"
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "MultiAgentSupervisorGraph source must not remain as current backend source" in verifier
+
+
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
     assert not (
         REPO_ROOT / "src/backend/zuno/domain_packs"

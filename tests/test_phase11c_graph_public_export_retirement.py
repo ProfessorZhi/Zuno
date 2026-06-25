@@ -1,5 +1,7 @@
 import importlib
 
+import pytest
+
 
 def test_legacy_graphs_are_not_core_public_exports():
     core_module = importlib.import_module("zuno.core")
@@ -17,9 +19,7 @@ def test_legacy_graphs_are_not_core_public_exports():
 
 def test_legacy_graph_sources_remain_as_direct_blocked_legacy_modules():
     domain_graph_module = importlib.import_module("zuno.core.graphs.domain_qa_graph")
-    supervisor_module = importlib.import_module(
-        "zuno.core.graphs.multi_agent_supervisor_graph"
-    )
 
     assert domain_graph_module.DomainQAGraph is not None
-    assert supervisor_module.MultiAgentSupervisorGraph is not None
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("zuno.core.graphs.multi_agent_supervisor_graph")

@@ -30,7 +30,6 @@ BLOCKED_LEGACY_PATHS = [
     "tests/compat",
     "src/backend/zuno/services/domain_pack",
     "src/backend/zuno/core/graphs/domain_qa_graph.py",
-    "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py",
 ]
 
 FORBIDDEN_CURRENT_PATHS = [
@@ -134,6 +133,9 @@ def main() -> int:
     legacy_graph_exports = ["DomainQAGraph", "MultiAgentSupervisorGraph"]
     if any(name in core_init or name in graphs_init for name in legacy_graph_exports):
         errors.append("Legacy graph facades must not be exported from current backend packages")
+    supervisor_graph_path = REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py"
+    if supervisor_graph_path.exists():
+        errors.append("MultiAgentSupervisorGraph source must not remain as current backend source")
 
     html_matches = [
         path

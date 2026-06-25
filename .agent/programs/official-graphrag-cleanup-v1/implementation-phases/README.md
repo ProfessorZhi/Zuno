@@ -58,8 +58,8 @@ Read first:
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path.
 - Phase 11C is blocked by active Domain Pack, `DomainQAGraph`,
-  `MultiAgentSupervisorGraph`, Docker/eval/frontend/API, and `tests/compat/`
-  dependencies.
+  Docker/eval/frontend/API, and `tests/compat/` dependencies. The direct
+  `MultiAgentSupervisorGraph` source is retired from current backend source.
 - Phase 12 is partially complete / not closed.
 
 ## Rule
