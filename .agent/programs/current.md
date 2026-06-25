@@ -18,8 +18,8 @@ Current status:
   `query_policy` for project policy defaults instead of loading
   `DomainPackLoader` from `domain_pack_id`.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
-- Phase 11C remains blocked by Domain Pack runtime services/assets, eval
-  loader paths, `DomainQAGraph`, Docker surfaces, and
+- Phase 11C remains blocked by Domain Pack runtime services/assets, direct
+  `DomainQAGraph` loader fallback paths, Docker surfaces, and
   `tests/compat/` dependencies. Domain Pack backend endpoint/API-service
   wrappers and frontend API/page files are retired from current source. The
   standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
@@ -33,8 +33,9 @@ Current status:
   GraphRAG Project copy of Contract Review schema, prompts, retrieval policy,
   and eval fixture. The project loader materializes `retrieval_policy.yaml`
   plus schema/eval assets for explicit graph query policy and stackless local
-  eval. Contract Review eval and `DomainQAGraph` still need
-  `DomainPackLoader`, so Phase 02 is not closed.
+  eval. Contract Review eval now reads the GraphRAG Project compatibility
+  payload and eval fixture without loading `DomainPackLoader`, but it still
+  executes through `DomainQAGraph`; Phase 02 is not closed.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

@@ -21,8 +21,11 @@ def test_contract_eval_runner_offline():
     assert payload["profile"] == "dev_offline"
     assert payload["status"] == "ok"
     assert payload["report_count"] == payload["sample_count"]
+    assert payload["asset_source"] == "graphrag_project"
+    assert payload["dataset_source"] == "graphrag_project"
+    assert payload["graphrag_project_id"] == "contract_review"
     assert payload["profile_settings"]["extraction_mode"] == "fixture"
-    assert output_dir.joinpath("contract_001_q1.report.md").exists()
+    assert output_dir.joinpath("contract_demo_q1.report.md").exists()
 
 
 def test_contract_eval_runner_demo_uses_real_extraction():

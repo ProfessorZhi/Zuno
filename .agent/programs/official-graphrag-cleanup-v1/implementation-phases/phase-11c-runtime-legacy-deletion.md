@@ -12,10 +12,9 @@ In progress / blocked overall. The current FastAPI router no longer mounts
 Pack entrypoints. `KnowledgeService.get_runtime_settings` now preserves
 `domain_pack_id` without auto-loading `DomainPackLoader`, and `GraphRetriever`
 no longer loads Domain Pack policy from `domain_pack_id`. Stackless local eval
-can build the Contract Review local graph from GraphRAG Project assets. Active
-dependencies still exist in `domain-packs/`, Domain Pack runtime
-services/assets, Contract Review eval / `DomainQAGraph` loader paths, Docker
-surfaces,
+and the dedicated Contract Review eval can build from GraphRAG Project assets.
+Active dependencies still exist in `domain-packs/`, Domain Pack runtime
+services/assets, direct `DomainQAGraph` loader fallback paths, Docker surfaces,
 remaining direct `DomainQAGraph` source and dependencies, and `tests/compat/`.
 The old backend Domain Pack endpoint/API-service wrappers, frontend Domain Pack
 API/page files, and direct `MultiAgentSupervisorGraph` source are retired from
@@ -51,6 +50,10 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 - `tools/evals/zuno/rag_eval/run_stackless_local_eval.py` can build the
   Contract Review local graph from `GraphRAGProjectLoader` assets and no
   longer loads `DomainPackLoader` for the `contract_review` project path.
+- `tools/evals/zuno/contract_review_eval/run_contract_eval.py` loads the
+  Contract Review compatibility payload and eval fixture from the GraphRAG
+  Project example assets instead of `DomainPackLoader`, while still executing
+  through `DomainQAGraph` as Blocked Legacy.
 - `src/backend/zuno/services/workspace/simple_agent.py` no longer imports
   `AgentRuntime`, exposes `domain_qa_runtime`, or calls
   `_run_domain_pack_query`; Workspace knowledge prefetch/tools now use

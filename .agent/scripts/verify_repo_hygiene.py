@@ -152,6 +152,14 @@ def main() -> int:
     if "DomainPackLoader().load" in graph_retriever:
         errors.append("GraphRetriever policy defaults must not load DomainPackLoader")
 
+    contract_eval = _read("tools/evals/zuno/contract_review_eval/run_contract_eval.py")
+    if "from zuno.services.domain_pack.loader import DomainPackLoader" in contract_eval:
+        errors.append("Contract Review eval must load GraphRAG Project assets")
+    if "DomainPackLoader().load" in contract_eval:
+        errors.append("Contract Review eval must load GraphRAG Project assets")
+    if "GraphRAGProjectLoader" not in contract_eval:
+        errors.append("Contract Review eval must load GraphRAG Project assets")
+
     agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():
         errors.append("AgentRuntime facade must not remain as current backend source")

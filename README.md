@@ -51,11 +51,11 @@ Phase 11C progress / Blocked Legacy:
 - `GraphRetriever` no longer loads Domain Pack retrieval policy from a bare
   `domain_pack_id`; graph policy must come from explicit `query_policy`, such
   as a GraphRAG Project `retrieval_policy.yaml`.
-- Stackless local eval can build the Contract Review local graph from
+- Stackless local eval and the dedicated Contract Review eval can build from
   GraphRAG Project assets without loading `DomainPackLoader`; generic legacy
   `domain_pack_id` fallback remains for unmigrated packs.
 - Remaining blockers still exist in `domain-packs/`, Domain Pack runtime
-  services, Contract Review eval / `DomainQAGraph` loader paths, Docker
+  services, direct `DomainQAGraph` loader fallback paths, Docker
   surfaces, retained `MultiAgentSupervisorGraph` compat retirement evidence,
   and `tests/compat/`. The old Domain Pack backend endpoint/API-service
   wrappers are retired.

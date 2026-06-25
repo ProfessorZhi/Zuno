@@ -67,14 +67,18 @@ Additional progress:
 - Stackless local eval can build the Contract Review local graph from
   GraphRAG Project assets and no longer loads `DomainPackLoader` for the
   `contract_review` project path.
+- The dedicated Contract Review eval now loads its compatibility payload and
+  eval dataset from `examples/graphrag-projects/contract_review/` and no longer
+  loads `DomainPackLoader`.
 
 Still blocked:
 
-- Runtime/eval still needs `DomainPackLoader` through Contract Review eval and
-  direct `DomainQAGraph` paths. Stackless local eval also keeps a generic
-  legacy fallback for unmigrated packs. `KnowledgeService.get_runtime_settings`,
-  `GraphRetriever`, and the Contract Review stackless local eval path no
-  longer load `DomainPackLoader`, but that does not close Phase 02.
+- Runtime/eval still needs `DomainPackLoader` through direct `DomainQAGraph`
+  id-only fallback paths and stackless local eval's generic legacy fallback for
+  unmigrated packs. `KnowledgeService.get_runtime_settings`, `GraphRetriever`,
+  the Contract Review stackless local eval path, and the dedicated Contract
+  Review eval no longer load `DomainPackLoader`, but that does not close
+  Phase 02.
 - `domain-packs/contract_review/` remains Blocked Legacy until those runtime
   and eval dependencies are cut over.
 

@@ -7,13 +7,14 @@ import sys
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
-BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.core.graphs.domain_qa_graph import DomainQAGraph
-from zuno.services.domain_pack.loader import DomainPackLoader
 from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+from zuno.services.graphrag.project.loader import GraphRAGProjectLoader, LoadedGraphRAGProject
 from zuno.services.graphrag.retriever import GraphRetriever
 from zuno.utils.runtime_observability import configure_langsmith
 
@@ -41,7 +42,23 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
 }
 
 
-def _load_dataset() -> list[dict]:
+def _example_projects_root() -> Path:
+    return REPO_ROOT / "examples" / "graphrag-projects"
+
+
+def _load_contract_review_project() -> LoadedGraphRAGProject:
+    project = GraphRAGProjectLoader(projects_root=_example_projects_root()).load("contract_review")
+    if project is None:
+        raise ValueError("contract_review GraphRAG Project is required")
+    if not project.readiness.ready:
+        errors = ", ".join(project.readiness.errors) or project.readiness.status
+        raise ValueError(f"contract_review GraphRAG Project is not ready: {errors}")
+    return project
+
+
+def _load_dataset(project: LoadedGraphRAGProject | None = None) -> list[dict]:
+    if project is not None and project.eval_dataset_rows:
+        return [dict(row) for row in project.eval_dataset_rows]
     dataset = BASE_DIR / "contract_eval.jsonl"
     return [json.loads(line) for line in dataset.read_text(encoding="utf-8").splitlines() if line.strip()]
 
@@ -342,10 +359,10 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
     profile_settings = dict(PROFILE_SETTINGS[profile])
     trace_enabled = profile_settings["trace_langsmith"] if trace_langsmith is None else bool(trace_langsmith)
     langsmith_configured = configure_langsmith() if trace_enabled else False
-    dataset_rows = _load_dataset()
-    pack = DomainPackLoader().load("contract_review")
-    if pack is None:
-        raise ValueError("contract_review pack is required")
+    project = _load_contract_review_project()
+    dataset_rows = _load_dataset(project)
+    project_payload = project.to_domain_pack_payload()
+    graphrag_project_id = str(project_payload.get("id") or project.contract.graphrag_project_id)
 
     graph = DomainQAGraph(retrieval_runner=_build_retrieval_runner(profile_settings))
     results: list[dict] = []
@@ -355,7 +372,7 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
         output_dir.mkdir(parents=True, exist_ok=True)
 
     for row in dataset_rows:
-        domain_pack = pack.to_dict()
+        domain_pack = dict(project_payload)
         domain_pack["eval_gold_evidence"] = row.get("gold_evidence") or []
         state = graph.build_initial_state(
             user_id="eval_user",
@@ -363,13 +380,14 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
             dialog_id=row["id"],
             query=row["query"],
             knowledge_ids=[OFFLINE_KNOWLEDGE_ID],
-            domain_pack_id=pack.id,
+            domain_pack_id=graphrag_project_id,
             runtime_settings={
                 "knowledge_config": {
                     "index_capability": "rag_graph",
                     "retrieval_settings": {"default_mode": "graphrag", "graph_hop_limit": 2, "max_paths_per_entity": 5},
                 },
-                "domain_pack_id": pack.id,
+                "domain_pack_id": graphrag_project_id,
+                "graphrag_project_id": graphrag_project_id,
                 "domain_pack": domain_pack,
             },
             domain_pack=domain_pack,
@@ -381,7 +399,12 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
         final_state = await _maybe_trace(
             enabled=trace_enabled and langsmith_configured,
             run_name=f"zuno-contract-review-eval:{profile}:{row['id']}",
-            metadata={"profile": profile, "sample_id": row["id"], "domain_pack_id": pack.id},
+            metadata={
+                "profile": profile,
+                "sample_id": row["id"],
+                "graphrag_project_id": graphrag_project_id,
+                "asset_source": "graphrag_project",
+            },
             func=invoke_graph,
         )
         answer = str(final_state.get("final_answer") or "")
@@ -410,6 +433,9 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
         "profile_settings": profile_settings,
         "sample_count": len(results),
         "status": "ok",
+        "asset_source": "graphrag_project",
+        "dataset_source": "graphrag_project" if project.eval_dataset_rows else "legacy_file",
+        "graphrag_project_id": graphrag_project_id,
         "trace_langsmith": trace_enabled,
         "langsmith_configured": langsmith_configured,
         "report_count": len(report_paths),
