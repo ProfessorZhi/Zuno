@@ -1,39 +1,15 @@
 import asyncio
+import importlib
+from pathlib import Path
 from types import SimpleNamespace
 
 
-def test_product_wiring_domain_pack_update_preserves_existing_assets(monkeypatch, tmp_path):
-    from zuno.api.services import domain_pack
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
-    class FakeLoader:
-        def __init__(self):
-            self.packs_root = tmp_path
 
-    monkeypatch.setattr(domain_pack, "DomainPackLoader", FakeLoader)
-
-    draft = asyncio.run(
-        domain_pack.DomainPackService.create_draft(
-            {
-                "pack_id": "legal_v1",
-                "name": "Legal",
-                "schema_data": {"entities": ["Clause"], "relations": ["TRIGGERS"]},
-                "extraction_prompt_text": "Keep this extraction prompt.",
-                "retrieval_policy_data": {"graph_hop_limit": 3},
-            }
-        )
-    )
-    updated = asyncio.run(
-        domain_pack.DomainPackService.update_domain_pack(
-            draft["pack_id"],
-            {"description": "metadata only"},
-        )
-    )
-    detail = asyncio.run(domain_pack.DomainPackService.get_domain_pack(draft["pack_id"]))
-
-    assert updated["description"] == "metadata only"
-    assert detail["schema_data"]["entities"] == ["Clause"]
-    assert detail["retrieval_policy_data"]["graph_hop_limit"] == 3
-    assert detail["extraction_prompt_text"] == "Keep this extraction prompt."
+def test_product_wiring_domain_pack_api_service_is_retired() -> None:
+    assert not (REPO_ROOT / "src/backend/zuno/api/services/domain_pack.py").exists()
+    assert "domain_pack" not in getattr(importlib.import_module("zuno.api.services"), "__all__", [])
 
 
 def _config(default_mode="rag", graphrag_project_id=None, domain_pack_id=None):
@@ -107,47 +83,9 @@ def _config(default_mode="rag", graphrag_project_id=None, domain_pack_id=None):
     }
 
 
-def test_product_wiring_domain_pack_endpoints_delegate_to_service(monkeypatch):
-    from zuno.api.v1 import domain_packs
-
-    captured = {}
-
-    async def fake_get(pack_id):
-        captured["get"] = pack_id
-        return {"pack_id": pack_id, "name": "contract review", "status": "published"}
-
-    async def fake_draft(payload):
-        captured["draft"] = payload
-        return {"pack_id": payload["pack_id"], "status": "draft"}
-
-    async def fake_from_knowledge(payload):
-        captured["from_knowledge"] = payload
-        return {"pack_id": payload["pack_id"], "source_knowledge_id": payload["knowledge_id"], "status": "draft"}
-
-    async def fake_update(pack_id, payload):
-        captured["update"] = (pack_id, payload)
-        return {"pack_id": pack_id, "status": "draft"}
-
-    monkeypatch.setattr(domain_packs.DomainPackService, "get_domain_pack", fake_get)
-    monkeypatch.setattr(domain_packs.DomainPackService, "create_draft", fake_draft)
-    monkeypatch.setattr(domain_packs.DomainPackService, "create_draft_from_knowledge", fake_from_knowledge)
-    monkeypatch.setattr(domain_packs.DomainPackService, "update_domain_pack", fake_update)
-
-    detail = asyncio.run(domain_packs.get_domain_pack(pack_id="contract_review"))
-    draft = asyncio.run(domain_packs.create_domain_pack_draft(payload={"pack_id": "legal_v1", "name": "法务"}))
-    from_knowledge = asyncio.run(
-        domain_packs.create_domain_pack_draft_from_knowledge(
-            payload={"pack_id": "legal_from_kb", "knowledge_id": "kb_1", "file_ids": ["f1"]}
-        )
-    )
-    update = asyncio.run(domain_packs.update_domain_pack(pack_id="legal_v1", payload={"description": "updated"}))
-
-    assert detail.status_code == 200
-    assert detail.data["pack_id"] == "contract_review"
-    assert draft.data["status"] == "draft"
-    assert from_knowledge.data["source_knowledge_id"] == "kb_1"
-    assert update.data["pack_id"] == "legal_v1"
-    assert captured["update"] == ("legal_v1", {"description": "updated"})
+def test_product_wiring_domain_pack_endpoint_module_is_retired() -> None:
+    assert not (REPO_ROOT / "src/backend/zuno/api/v1/domain_packs.py").exists()
+    assert "domain_packs" not in getattr(importlib.import_module("zuno.api.v1"), "__all__", [])
 
 
 def test_product_wiring_knowledge_config_endpoints_delegate_to_service(monkeypatch):

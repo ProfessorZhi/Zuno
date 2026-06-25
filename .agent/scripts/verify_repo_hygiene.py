@@ -46,6 +46,11 @@ RETIRED_FRONTEND_DOMAIN_PACK_FILES = [
     "apps/web/src/pages/knowledge/domain-pack-detail.vue",
 ]
 
+RETIRED_DOMAIN_PACK_API_WRAPPERS = [
+    "src/backend/zuno/api/v1/domain_packs.py",
+    "src/backend/zuno/api/services/domain_pack.py",
+]
+
 
 def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
@@ -91,6 +96,9 @@ def main() -> int:
         errors.append("Domain Pack router must not be mounted on the current FastAPI router")
     if "domain_packs" in backend_v1_init:
         errors.append("Domain Pack module must not be exported from the current API v1 front path")
+    for relative_path in RETIRED_DOMAIN_PACK_API_WRAPPERS:
+        if (REPO_ROOT / relative_path).exists():
+            errors.append(f"Retired Domain Pack API wrapper must not remain: {relative_path}")
 
     frontend_active_paths = [
         "apps/web/src/router/index.ts",

@@ -33,8 +33,6 @@ tests, migration docs, and final grep classification.
 - `src/backend/zuno/services/domain_pack/`
 - `src/backend/zuno/domain_packs/`
 - `domain-packs/`
-- `src/backend/zuno/api/v1/domain_packs.py`
-- `src/backend/zuno/api/services/domain_pack.py`
 - `src/backend/zuno/core/graphs/domain_qa_graph.py`
 - `src/backend/zuno/core/graphs/states.py`
 - `src/backend/zuno/legacy/`

@@ -77,6 +77,19 @@ def test_domain_pack_frontend_files_stay_retired() -> None:
     assert "Retired Domain Pack frontend file must not remain" in verifier
 
 
+def test_domain_pack_api_wrapper_files_stay_retired() -> None:
+    for path in [
+        "src/backend/zuno/api/v1/domain_packs.py",
+        "src/backend/zuno/api/services/domain_pack.py",
+    ]:
+        assert not (REPO_ROOT / path).exists(), f"retired Domain Pack API wrapper remains: {path}"
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "Retired Domain Pack API wrapper must not remain" in verifier
+
+
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
     assert not (
         REPO_ROOT / "src/backend/zuno/domain_packs"

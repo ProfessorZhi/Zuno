@@ -31,8 +31,6 @@ for contract behavior.
 
 ## Candidate Files
 
-- `src/backend/zuno/api/v1/domain_packs.py`
-- `src/backend/zuno/api/services/domain_pack.py`
 - `src/backend/zuno/api/services/knowledge.py`
 - `src/backend/zuno/schema/knowledge.py`
 - `apps/web/src/apis/knowledge.ts`

@@ -126,13 +126,13 @@ Removed from the active current path:
 Retained as Blocked Legacy / Phase 02 migration assets:
 
 - `domain-packs/contract_review/`
-- `src/backend/zuno/api/v1/domain_packs.py`
-- `src/backend/zuno/api/services/domain_pack.py`
 - `src/backend/zuno/services/domain_pack/`
 - Contract Review eval assets and Domain Pack Docker mounts
 
-Retired from current frontend source:
+Retired from current source:
 
+- `src/backend/zuno/api/v1/domain_packs.py`
+- `src/backend/zuno/api/services/domain_pack.py`
 - `apps/web/src/apis/domain-packs.ts`
 - `apps/web/src/pages/knowledge/domain-pack-list.vue`
 - `apps/web/src/pages/knowledge/domain-pack-create.vue`

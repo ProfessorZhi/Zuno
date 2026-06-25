@@ -15,10 +15,10 @@ Current truth is still the Python monorepo runtime:
 - `domain-packs/` still exists as current or migration evidence; the old
   `src/backend/zuno/domain_packs/` asset copy has been removed from the current
   package path and archived under `docs/architecture/history/domain-packs/`.
-- Domain Pack services, retained backend API assets, graph names, eval/Docker
-  references, and tests still exist in active or Blocked Legacy paths. The
-  old frontend Domain Pack API/page files have retired from `apps/web/src/`.
-  The current FastAPI router, active Vue knowledge entrypoints,
+- Domain Pack runtime services, graph names, eval/Docker references, and tests
+  still exist in active or Blocked Legacy paths. The old backend Domain Pack
+  endpoint/API-service wrappers and frontend API/page files have retired from
+  current source. The current FastAPI router, active Vue knowledge entrypoints,
   `GeneralAgent`, and Workspace knowledge prefetch/tools no longer use the
   Domain Pack runtime path.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
@@ -27,8 +27,8 @@ Current truth is still the Python monorepo runtime:
 
 Read-only evidence gathered for this roadmap found active references under:
 
-- `src/backend/zuno/api/v1/domain_packs.py`
-- `src/backend/zuno/api/services/domain_pack.py`
+- retired backend Domain Pack endpoint/API-service wrapper files under
+  `src/backend/zuno/api/`
 - `src/backend/zuno/api/services/knowledge.py`
 - `src/backend/zuno/core/graphs/domain_qa_graph.py`
 - `src/backend/zuno/core/graphs/states.py`
@@ -123,7 +123,7 @@ This roadmap does not implement:
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
 - Phase 11C is blocked by active dependencies in `domain-packs/`, Domain Pack
-  service/retained endpoint/frontend/eval/Docker surfaces, direct
+  runtime service/eval/Docker surfaces, direct
   `DomainQAGraph` source/dependencies, and `tests/compat/`. Workspace
   knowledge prefetch/tools have been cut over to `KnowledgeQueryService`, the
   standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`

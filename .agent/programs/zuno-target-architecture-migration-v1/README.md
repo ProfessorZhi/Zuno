@@ -21,10 +21,10 @@ complete.
   removed from current backend source and exports. The direct
   `MultiAgentSupervisorGraph` source has also retired from current backend.
   `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer current core
-  package public exports. Domain Pack services/assets, retained legacy
-  endpoint files, direct `DomainQAGraph` source/dependencies, Docker/eval
-  surfaces, and `tests/compat/` still block closure. Domain Pack frontend
-  API/page files are retired from `apps/web/src/`.
+  package public exports. Domain Pack runtime services/assets, direct
+  `DomainQAGraph` source/dependencies, Docker/eval surfaces, and
+  `tests/compat/` still block closure. Domain Pack backend endpoint/API-service
+  wrappers and frontend API/page files are retired from current source.
 - Phase 12 is partial / not closed.
 - Context Orchestrator and new Memory layering are Target, not Current.
 

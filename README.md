@@ -44,10 +44,10 @@ Phase 11C progress / Blocked Legacy:
   standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
   source have been removed. `DomainQAGraph` / `MultiAgentSupervisorGraph` are
   no longer current core package public exports.
-- Remaining blockers still exist in `domain-packs/`, Domain Pack services,
-  legacy endpoint module, eval/Docker surfaces, direct `DomainQAGraph` source,
-  retained `MultiAgentSupervisorGraph` compat retirement evidence, and
-  `tests/compat/`.
+- Remaining blockers still exist in `domain-packs/`, Domain Pack runtime
+  services, eval/Docker surfaces, direct `DomainQAGraph` source, retained
+  `MultiAgentSupervisorGraph` compat retirement evidence, and `tests/compat/`.
+  The old Domain Pack backend endpoint/API-service wrappers are retired.
 - These surfaces are not the future public mainline, but they must not be
   deleted before active dependency removal is proven.
 - Phase 12 is partial / not closed: final full `pytest` and formal Eval
