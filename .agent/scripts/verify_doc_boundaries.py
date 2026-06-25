@@ -35,6 +35,20 @@ def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
+def verify_active_audits_are_not_history_documents() -> list[str]:
+    errors: list[str] = []
+
+    for path in sorted((REPO_ROOT / "docs/architecture/audits").glob("*.md")):
+        content = path.read_text(encoding="utf-8")
+        if "Status: History" in content:
+            relative_path = path.relative_to(REPO_ROOT).as_posix()
+            errors.append(
+                f"{relative_path} active architecture audit is marked History"
+            )
+
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -90,6 +104,8 @@ def main() -> int:
                 errors.append(
                     f"{relative_path} links retired architecture current path: {phrase}"
                 )
+
+    errors.extend(verify_active_audits_are_not_history_documents())
 
     if errors:
         for error in errors:

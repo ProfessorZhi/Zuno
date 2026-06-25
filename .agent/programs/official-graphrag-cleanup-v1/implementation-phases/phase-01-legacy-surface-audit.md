@@ -16,7 +16,8 @@ would be guesswork.
 - `../implementation-roadmap.md`
 - `.agent/architecture/decisions/03-retired-surfaces.md`
 - `docs/architecture/current-architecture.md`
-- `docs/architecture/audits/tests-folder-organization-audit.md`
+- `docs/architecture/history/audits/tests-folder-organization-audit.md`
+  as historical input only
 
 ## Scope
 

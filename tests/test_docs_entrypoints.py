@@ -246,3 +246,23 @@ def test_architecture_decisions_do_not_keep_domain_pack_binding_as_active_mainli
     assert history_decision.exists()
     assert "0001-domain-pack-binding.md" not in decisions_index
     assert "ADR 0002: Retire Compat Namespace" in decisions_index
+
+
+def test_active_architecture_audits_are_not_history_documents() -> None:
+    active_audits = sorted((REPO_ROOT / "docs/architecture/audits").glob("*.md"))
+    assert active_audits
+
+    for path in active_audits:
+        content = path.read_text(encoding="utf-8")
+        assert "Status: History" not in content, (
+            f"{path} is marked History but remains in active architecture audits"
+        )
+
+
+def test_doc_boundary_verifier_rejects_history_status_in_active_audits() -> None:
+    content = (
+        REPO_ROOT / ".agent/scripts/verify_doc_boundaries.py"
+    ).read_text(encoding="utf-8")
+
+    assert "verify_active_audits_are_not_history_documents" in content
+    assert "active architecture audit is marked History" in content
