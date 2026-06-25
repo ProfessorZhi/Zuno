@@ -27,14 +27,23 @@ src/backend/zuno/config.yaml
 .local/
 apps/web/AGENTS.md
 
-# Agent workflow library: keep durable references/templates/scripts tracked,
-# ignore local notes, scratch space, logs, machine-local state, and secrets.
-.agent/notes/*
-!.agent/notes/README.md
-.agent/tmp/
-.agent/logs/
-.agent/local/
-.agent/secrets/
+# Agent workflow library: keep durable references/templates/scripts tracked.
+# All local-only notes, scratch space, logs, machine-local state, and secrets
+# live under .agent/local/ and stay ignored except for placeholder docs.
+.agent/local/*
+!.agent/local/README.md
+!.agent/local/logs/
+.agent/local/logs/*
+!.agent/local/logs/.gitkeep
+!.agent/local/notes/
+.agent/local/notes/*
+!.agent/local/notes/.gitkeep
+!.agent/local/secrets/
+.agent/local/secrets/*
+!.agent/local/secrets/.gitkeep
+!.agent/local/tmp/
+.agent/local/tmp/*
+!.agent/local/tmp/.gitkeep
 
 .astrid-memory/
 .playwright-mcp/
@@ -97,3 +106,15 @@ apps/web/*.tsbuildinfo
 Zuno-*.local.cmd
 _Zuno-Desktop-Common.local.cmd
 *.local.*
+
+# Keep Agent local-state placeholders visible while ignoring real local content.
+!.agent/local/
+!.agent/local/README.md
+!.agent/local/logs/
+!.agent/local/logs/.gitkeep
+!.agent/local/notes/
+!.agent/local/notes/.gitkeep
+!.agent/local/secrets/
+!.agent/local/secrets/.gitkeep
+!.agent/local/tmp/
+!.agent/local/tmp/.gitkeep
