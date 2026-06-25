@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pathlib import Path
 from typing import Any, List
 
 from zuno.database.dao.knowledge import KnowledgeDao
@@ -66,6 +67,52 @@ DEFAULT_KNOWLEDGE_CONFIG = {
 
 
 class KnowledgeService:
+    @classmethod
+    def describe_graphrag_project_readiness(
+        cls,
+        knowledge_config: dict[str, Any] | None,
+        *,
+        projects_root: Path | None = None,
+    ) -> dict[str, Any]:
+        from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+
+        normalized = cls._normalize_knowledge_config(knowledge_config)
+        project_id = normalized.get("graphrag_project_id")
+        if not project_id:
+            return {
+                "graphrag_project_id": None,
+                "ready": False,
+                "status": "not_configured",
+                "errors": ["graphrag_project_id is not configured"],
+                "prompt_names": [],
+            }
+        try:
+            project = GraphRAGProjectLoader(projects_root=projects_root).load(project_id)
+        except ValueError as err:
+            return {
+                "graphrag_project_id": project_id,
+                "ready": False,
+                "status": "not_ready",
+                "errors": [str(err)],
+                "prompt_names": [],
+            }
+        if project is None:
+            return {
+                "graphrag_project_id": project_id,
+                "ready": False,
+                "status": "not_ready",
+                "errors": ["project loader returned no project"],
+                "prompt_names": [],
+            }
+        return {
+            "graphrag_project_id": project.contract.graphrag_project_id,
+            "ready": project.readiness.ready,
+            "status": project.readiness.status,
+            "errors": list(project.readiness.errors),
+            "prompt_names": sorted(project.prompt_paths),
+            "settings_path": project.contract.settings_path,
+        }
+
     @staticmethod
     def _get_nested_value(payload: dict[str, Any], path: str) -> Any:
         current: Any = payload

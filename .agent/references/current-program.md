@@ -65,7 +65,9 @@ event-driven workers, or default multi-agent mode into near-term acceptance.
   keeps `domain_pack_id` as bounded migration/runtime compatibility.
 - Phase 04 adds first-class GraphRAG Project contract fields without claiming a
   loader.
-- Phase 05 is next: GraphRAG Project Loader / Settings.
+- Phase 05 adds GraphRAG Project `settings.yaml` loading, prompt discovery, and
+  readiness metadata without changing retrieval behavior.
+- Phase 06 is next: Prompt Registry And Tuning Boundary.
 
 ## Current Rule
 

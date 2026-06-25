@@ -36,7 +36,9 @@ Read first:
   runtime.
 - Phase 04 adds first-class GraphRAG Project contract fields without claiming a
   loader.
-- Phase 05 is next and owns project settings loading and validation.
+- Phase 05 adds project settings loading, prompt discovery, and readiness
+  metadata without changing retrieval behavior.
+- Phase 06 is next and owns Prompt Registry / tuning boundary.
 
 ## Rule
 

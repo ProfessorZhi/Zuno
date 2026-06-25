@@ -94,7 +94,9 @@ This roadmap does not implement:
 - Phase 04 adds first-class GraphRAG Project contract fields for project
   identity, settings path, prompt/index/query/community versions, hashes, and
   status without claiming a loader.
-- The next executable phase is Phase 05: GraphRAG Project Loader / Settings.
+- Phase 05 adds `settings.yaml` loading, prompt discovery, validation errors,
+  and readiness metadata without changing retrieval behavior.
+- The next executable phase is Phase 06: Prompt Registry And Tuning Boundary.
 
 ## Dependency Rules
 

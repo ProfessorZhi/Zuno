@@ -52,6 +52,40 @@ unit tests.
 - Readiness state is inspectable.
 - Runtime behavior is not overclaimed.
 
+## Implemented Loader Boundary
+
+Phase 05 adds a loader boundary only. Retrieval, indexing, prompt tuning, and
+frontend migration are still later phases.
+
+Loader API:
+
+- `GraphRAGProjectLoader(projects_root=None).load(project_id)`
+- `GraphRAGSettingsValidator.parse_settings(text, settings_path=...)`
+- `GraphRAGSettingsValidator.validate_contract(payload, project_id=..., settings_path=...)`
+- `GraphRAGSettingsValidator.prompt_manifest(payload)`
+- `KnowledgeService.describe_graphrag_project_readiness(config, projects_root=None)`
+
+Loaded project metadata:
+
+- `base_path`
+- `contract`
+- `settings`
+- `prompt_paths`
+- `prompt_texts`
+- `readiness`
+
+Validator/readiness error examples:
+
+- `settings.yaml not found: <project_id>`
+- `query_method` validation errors
+- `missing prompt: <prompt_name>`
+
+Fixture policy:
+
+- Unit tests create temporary GraphRAG Project directories with `settings.yaml`
+  and `prompts/`.
+- Domain Pack assets remain migration evidence only.
+
 ## Verification Commands
 
 ```powershell

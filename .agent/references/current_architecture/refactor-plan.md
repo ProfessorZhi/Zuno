@@ -34,5 +34,7 @@ The current implementation sequence is:
 Phase 01 legacy surface audit and Phase 02 docs/spec cleanup are complete.
 Phase 03 has introduced `graphrag_project_id` at the public contract edge while
 keeping `domain_pack_id` as bounded compatibility input. Phase 04 has added the
-GraphRAG Project contract fields without claiming a loader. The next phase is
-Phase 05: GraphRAG Project Loader / Settings.
+GraphRAG Project contract fields without claiming a loader. Phase 05 has added
+GraphRAG Project settings loading, prompt discovery, and readiness metadata
+without changing retrieval behavior. The next phase is Phase 06: Prompt
+Registry And Tuning Boundary.

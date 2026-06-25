@@ -12,6 +12,8 @@ Define the near-term official-compatible GraphRAG target.
   Neo4j.
 - `KnowledgeService.DEFAULT_KNOWLEDGE_CONFIG` includes `graph_index_settings`,
   `community_report_prompt_id`, `index_version`, and `community_version`.
+- `services/graphrag/project/loader.py` loads GraphRAG Project `settings.yaml`,
+  validates the contract, discovers prompts, and exposes readiness metadata.
 - Current storage and query filters still use `domain_pack_id`.
 
 ## Target Project Layout

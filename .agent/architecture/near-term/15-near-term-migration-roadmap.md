@@ -40,7 +40,9 @@ verification, commit message, and evidence package.
   keeping `domain_pack_id` as bounded migration/runtime compatibility.
 - Phase 04 adds first-class GraphRAG Project contract fields without claiming a
   loader.
-- Phase 05 is next and should load and validate GraphRAG Project settings.
+- Phase 05 loads and validates GraphRAG Project settings, discovers prompts,
+  and exposes readiness metadata without changing retrieval behavior.
+- Phase 06 is next and should define Prompt Registry / tuning boundaries.
 
 ## Migration Rules
 
