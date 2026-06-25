@@ -15,11 +15,12 @@ Current truth is still the Python monorepo runtime:
 - `domain-packs/` still exists as current or migration evidence; the old
   `src/backend/zuno/domain_packs/` asset copy has been removed from the current
   package path and archived under `docs/architecture/history/domain-packs/`.
-- Domain Pack services, retained frontend/API assets, graph names, eval/Docker
+- Domain Pack services, retained backend API assets, graph names, eval/Docker
   references, and tests still exist in active or Blocked Legacy paths. The
-  current FastAPI router, active Vue knowledge entrypoints, `GeneralAgent`, and
-  Workspace knowledge prefetch/tools no longer use the Domain Pack runtime
-  path.
+  old frontend Domain Pack API/page files have retired from `apps/web/src/`.
+  The current FastAPI router, active Vue knowledge entrypoints,
+  `GeneralAgent`, and Workspace knowledge prefetch/tools no longer use the
+  Domain Pack runtime path.
 - Retrieval already has `RetrievalPlanner`, `RetrievalOrchestrator`,
   `RetrievalFusion`, BM25/vector/graph adapters, community services, requery,
   index version fields, and trace metadata.
@@ -34,7 +35,7 @@ Read-only evidence gathered for this roadmap found active references under:
 - `src/backend/zuno/services/domain_pack/`
 - `src/backend/zuno/services/graphrag/`
 - `src/backend/zuno/services/retrieval/`
-- `apps/web/src/apis/domain-packs.ts`
+- retired frontend Domain Pack API/page files under `apps/web/src/`
 - `apps/web/src/apis/knowledge.ts`
 - `apps/web/src/utils/knowledge-config.ts`
 - `apps/web/src/utils/retrieval.ts`

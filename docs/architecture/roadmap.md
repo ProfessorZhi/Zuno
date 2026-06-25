@@ -30,9 +30,10 @@ migration stages.
   `MultiAgentSupervisorGraph` source has also been removed. `DomainQAGraph`
   and `MultiAgentSupervisorGraph` are no longer exported from current core
   package public surfaces. Active dependencies still remain in
-  `domain-packs/`, Domain Pack services, legacy endpoint/frontend assets,
+  `domain-packs/`, Domain Pack services, retained legacy endpoint modules,
   eval/Docker surfaces, direct `DomainQAGraph` source/dependencies, and
-  `tests/compat/`.
+  `tests/compat/`. Domain Pack frontend API/page files are retired from
+  `apps/web/src/`.
 - Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
   and formal Eval baseline comparison are not complete.
 
@@ -58,7 +59,6 @@ by active dependencies:
 - `domain-packs/`
 - `src/backend/zuno/api/v1/domain_packs.py` as a retained legacy endpoint
   module, no longer mounted on the current FastAPI router
-- `apps/web/src/apis/domain-packs.ts` and retained Domain Pack Vue components
 - `src/backend/zuno/services/domain_pack/`
 - `src/backend/zuno/core/graphs/domain_qa_graph.py`
 - retained `MultiAgentSupervisorGraph` compat retirement evidence

@@ -35,7 +35,6 @@ for contract behavior.
 - `src/backend/zuno/api/services/domain_pack.py`
 - `src/backend/zuno/api/services/knowledge.py`
 - `src/backend/zuno/schema/knowledge.py`
-- `apps/web/src/apis/domain-packs.ts`
 - `apps/web/src/apis/knowledge.ts`
 - `apps/web/src/utils/knowledge-config.ts`
 - `tests/test_product_wiring_v1_api_contract.py`

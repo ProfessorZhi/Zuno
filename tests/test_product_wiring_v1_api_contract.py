@@ -232,21 +232,13 @@ def test_product_wiring_frontend_pages_use_real_api_contracts():
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[1]
-    domain_api = (root / "apps/web/src/apis/domain-packs.ts").read_text(encoding="utf-8")
     knowledge_api = (root / "apps/web/src/apis/knowledge.ts").read_text(encoding="utf-8")
     retrieval_utils = (root / "apps/web/src/utils/retrieval.ts").read_text(encoding="utf-8")
     knowledge_config_utils = (root / "apps/web/src/utils/knowledge-config.ts").read_text(encoding="utf-8")
     create_page = (root / "apps/web/src/pages/knowledge/knowledge-create.vue").read_text(encoding="utf-8")
     settings_page = (root / "apps/web/src/pages/knowledge/knowledge-settings.vue").read_text(encoding="utf-8")
 
-    for phrase in [
-        "getDomainPackDetailAPI",
-        "createDomainPackDraftAPI",
-        "createDomainPackDraftFromKnowledgeAPI",
-        "updateDomainPackAPI",
-        "publishDomainPackAPI",
-    ]:
-        assert phrase in domain_api
+    assert not (root / "apps/web/src/apis/domain-packs.ts").exists()
 
     for phrase in [
         "getKnowledgeConfigAPI",

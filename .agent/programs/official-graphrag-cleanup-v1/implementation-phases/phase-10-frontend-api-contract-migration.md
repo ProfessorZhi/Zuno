@@ -30,7 +30,6 @@ controls, trace display, and contract tests.
 ## Candidate Files
 
 - `apps/web/src/apis/knowledge.ts`
-- `apps/web/src/apis/domain-packs.ts`
 - `apps/web/src/utils/knowledge-config.ts`
 - `apps/web/src/utils/retrieval.ts`
 - `apps/web/src/pages/knowledge/`

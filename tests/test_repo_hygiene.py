@@ -62,6 +62,21 @@ def test_multi_agent_supervisor_source_stays_retired_from_current_backend() -> N
     assert "MultiAgentSupervisorGraph source must not remain as current backend source" in verifier
 
 
+def test_domain_pack_frontend_files_stay_retired() -> None:
+    for path in [
+        "apps/web/src/apis/domain-packs.ts",
+        "apps/web/src/pages/knowledge/domain-pack-list.vue",
+        "apps/web/src/pages/knowledge/domain-pack-create.vue",
+        "apps/web/src/pages/knowledge/domain-pack-detail.vue",
+    ]:
+        assert not (REPO_ROOT / path).exists(), f"retired Domain Pack frontend file remains: {path}"
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "Retired Domain Pack frontend file must not remain" in verifier
+
+
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
     assert not (
         REPO_ROOT / "src/backend/zuno/domain_packs"

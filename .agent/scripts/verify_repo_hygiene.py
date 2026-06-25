@@ -39,6 +39,13 @@ FORBIDDEN_CURRENT_PATHS = [
     "docs/architecture/programs",
 ]
 
+RETIRED_FRONTEND_DOMAIN_PACK_FILES = [
+    "apps/web/src/apis/domain-packs.ts",
+    "apps/web/src/pages/knowledge/domain-pack-list.vue",
+    "apps/web/src/pages/knowledge/domain-pack-create.vue",
+    "apps/web/src/pages/knowledge/domain-pack-detail.vue",
+]
+
 
 def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
@@ -111,6 +118,9 @@ def main() -> int:
         for phrase in forbidden_frontend_phrases:
             if phrase in content:
                 errors.append(f"{relative_path} still exposes active Domain Pack frontend phrase: {phrase}")
+    for relative_path in RETIRED_FRONTEND_DOMAIN_PACK_FILES:
+        if (REPO_ROOT / relative_path).exists():
+            errors.append(f"Retired Domain Pack frontend file must not remain: {relative_path}")
 
     workspace_agent = _read("src/backend/zuno/services/workspace/simple_agent.py")
     if "from zuno.core.runtime.agent_runtime import AgentRuntime" in workspace_agent:

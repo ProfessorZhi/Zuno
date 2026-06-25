@@ -78,8 +78,8 @@ Phase 11C is blocked because these active dependencies still exist:
 - Domain Pack service/eval/Docker surfaces
 - `src/backend/zuno/api/v1/domain_packs.py` as a retained legacy endpoint
   module, not mounted on the current FastAPI router
-- `apps/web/src/apis/domain-packs.ts` and Domain Pack Vue components as
-  retained legacy assets, not active knowledge routes or settings-shell pages
+- Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
+  Pack pages are not active knowledge routes or settings-shell pages
 - `src/backend/zuno/api/services/domain_pack.py`
 - `src/backend/zuno/services/domain_pack/`
 - remaining direct `DomainQAGraph` source and dependencies

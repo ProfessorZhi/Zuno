@@ -43,17 +43,14 @@ def test_phase11c_frontend_routes_retire_domain_pack_entrypoints() -> None:
         assert phrase not in active_surfaces, f"Domain Pack frontend surface still active: {phrase}"
 
 
-def test_phase11c_domain_pack_frontend_files_remain_legacy_assets() -> None:
+def test_phase11c_domain_pack_frontend_files_are_retired_assets() -> None:
     for relative_path in [
         "apps/web/src/apis/domain-packs.ts",
         "apps/web/src/pages/knowledge/domain-pack-list.vue",
         "apps/web/src/pages/knowledge/domain-pack-create.vue",
         "apps/web/src/pages/knowledge/domain-pack-detail.vue",
     ]:
-        assert (REPO_ROOT / relative_path).exists(), f"missing legacy asset: {relative_path}"
-
-    domain_api = _read("apps/web/src/apis/domain-packs.ts")
-    assert "/api/v1/domain-packs" in domain_api
+        assert not (REPO_ROOT / relative_path).exists(), f"retired frontend asset remains: {relative_path}"
 
 
 def test_phase1_frontend_contract_keeps_only_two_product_modes() -> None:

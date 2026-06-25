@@ -15,8 +15,9 @@ Current status:
   `KnowledgeQueryService`.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
 - Phase 11C remains blocked by Domain Pack services/assets, retained legacy
-  endpoint/frontend files, `DomainQAGraph`, Docker/eval surfaces, and
-  `tests/compat/` dependencies. The standalone `AgentRuntime` facade and
+  endpoint files, `DomainQAGraph`, Docker/eval surfaces, and `tests/compat/`
+  dependencies. Domain Pack frontend API/page files are retired from
+  `apps/web/src/`. The standalone `AgentRuntime` facade and
   direct `MultiAgentSupervisorGraph` source have been removed from current
   backend source and exports. `DomainQAGraph` and
   `MultiAgentSupervisorGraph` are no longer exported from current core package

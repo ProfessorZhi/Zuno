@@ -10,9 +10,10 @@ prove no active dependency remains.
 In progress / blocked overall. The current FastAPI router no longer mounts
 `/domain-packs`, and active Vue knowledge routes/pages no longer open Domain
 Pack entrypoints. Active dependencies still exist in `domain-packs/`, Domain
-Pack services/assets, retained legacy endpoint/frontend files, eval/Docker
-surfaces, remaining direct `DomainQAGraph` source and dependencies, remaining
-direct `MultiAgentSupervisorGraph` source/compat surfaces, and `tests/compat/`.
+Pack services/assets, retained legacy endpoint files, eval/Docker surfaces,
+remaining direct `DomainQAGraph` source and dependencies, and `tests/compat/`.
+The old frontend Domain Pack API/page files and direct
+`MultiAgentSupervisorGraph` source are retired from current source.
 
 Fresh blocker classification from the 2026-06-25 Phase 01 pass:
 

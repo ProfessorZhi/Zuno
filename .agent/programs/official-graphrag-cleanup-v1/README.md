@@ -60,8 +60,9 @@ contract retirement.
   `MultiAgentSupervisorGraph` source has also retired from current backend.
   `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer current core
   package public exports. Domain Pack services/assets, retained legacy
-  endpoint/frontend files, direct `DomainQAGraph` source/dependencies,
-  Docker/eval surfaces, and `tests/compat/` still block closure.
+  endpoint files, direct `DomainQAGraph` source/dependencies, Docker/eval
+  surfaces, and `tests/compat/` still block closure. Domain Pack frontend
+  API/page files are retired from `apps/web/src/`.
 - Phase 12 is partially complete / not closed. Do not claim final full `pytest`
   or Eval baseline comparison until fresh evidence exists.
 

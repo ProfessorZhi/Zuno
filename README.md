@@ -37,7 +37,9 @@ Phase 11C progress / Blocked Legacy:
 
 - Phase 11C has started, but remains blocked. `/api/v1/domain-packs` is no
   longer mounted on the current FastAPI router, and the active Vue knowledge
-  routes/pages no longer open the Domain Pack builder/list/detail flow.
+  routes/pages no longer open the Domain Pack builder/list/detail flow. The
+  old frontend Domain Pack API/page files have also been retired from
+  `apps/web/src/`.
 - Workspace knowledge prefetch/tools now use `KnowledgeQueryService`; the
   standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
   source have been removed. `DomainQAGraph` / `MultiAgentSupervisorGraph` are
