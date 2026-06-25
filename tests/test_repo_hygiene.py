@@ -219,6 +219,12 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     pipeline_manager = (
         REPO_ROOT / "src/backend/zuno/services/pipeline/manager.py"
     ).read_text(encoding="utf-8")
+    knowledge_service = (
+        REPO_ROOT / "src/backend/zuno/api/services/knowledge.py"
+    ).read_text(encoding="utf-8")
+    real_runtime_eval = (
+        REPO_ROOT / "tools/evals/zuno/multihop_eval/run_real_runtime_eval.py"
+    ).read_text(encoding="utf-8")
     structured_contract_test = (
         REPO_ROOT / "tests/test_structured_graph_extractor_contract.py"
     ).read_text(encoding="utf-8")
@@ -230,6 +236,17 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     assert "project_payload=project_payload" in stackless_eval
     assert "domain_pack=project_payload" not in contract_eval
     assert "domain_pack=project_payload" not in stackless_eval
+    assert '"project_payload": project_payload' in stackless_eval
+    assert '"domain_pack": project_payload' not in stackless_eval
+    assert 'runtime_settings.get("project_payload")' in pipeline_manager
+    assert 'runtime_settings.get("project_payload")' in graph_retrievers
+    assert 'runtime.get("project_payload") or runtime.get("domain_pack")' in knowledge_service
+    assert 'runtime["project_payload"] = project_payload' in knowledge_service
+    assert 'runtime["domain_pack"]' not in knowledge_service
+    assert '"project_payload": project_payload' in knowledge_service
+    assert '"domain_pack": domain_pack' not in knowledge_service
+    assert '"project_payload": None' in real_runtime_eval
+    assert '"domain_pack": None' not in real_runtime_eval
     assert "domain_pack=domain_pack" not in pipeline_manager
     assert "domain_pack:" not in structured_extractor
     assert "domain_pack:" not in cached_extractor
@@ -251,6 +268,7 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     assert "Stackless local eval must not keep a graph project domain payload alias" in verifier
     assert "GraphRAG extractors must expose project_payload as the primary payload parameter" in verifier
     assert "GraphRetrieverAdapter must map GraphRAG Project scope to the legacy storage filter" in verifier
+    assert "Runtime settings must expose GraphRAG Project payload via project_payload" in verifier
 
 
 def test_stackless_contract_eval_test_is_project_query_policy_named() -> None:

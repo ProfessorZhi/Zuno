@@ -51,7 +51,8 @@ Phase 11C progress / Blocked Legacy:
 - `KnowledgeService.get_runtime_settings` preserves `domain_pack_id` as a
   migration field but no longer auto-loads `DomainPackLoader` from that field;
   GraphRAG Project defaults come from `graphrag_project_id` or explicit
-  runtime configuration.
+  `project_payload` runtime configuration. Legacy `domain_pack` runtime
+  payload input is accepted only as a migration fallback.
 - `GraphRetriever` no longer loads Domain Pack retrieval policy from a bare
   `domain_pack_id`; graph policy must come from explicit `query_policy`, such
   as a GraphRAG Project `retrieval_policy.yaml`.

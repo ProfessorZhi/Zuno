@@ -19,7 +19,10 @@ parameter without the old `domain_pack` payload alias. Contract Review,
 stackless local eval, active pipeline graph extraction, and extractor contract
 tests now use `project_payload=project_payload`. Stackless eval entrypoints prefer `graphrag_project_id` /
 `--graphrag-project-id` while retaining `domain_pack_id` only as migration
-compatibility. Stable active architecture specs now frame retrieval governance,
+compatibility. Runtime settings now expose GraphRAG Project payload state under
+`project_payload`; the old `domain_pack` runtime payload key is accepted only
+as a migration fallback where older producers still exist. Stable active
+architecture specs now frame retrieval governance,
 LangGraph runtime, enhanced retrieval, platform direction, eval, and knowledge
 config impact around GraphRAG Project / query policy instead of Domain Pack as
 the target driver. Active near-term target docs now also classify retired

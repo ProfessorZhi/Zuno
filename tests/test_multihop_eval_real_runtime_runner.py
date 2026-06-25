@@ -131,3 +131,12 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
     assert diagnostics["seed_entities"] == ["Scott Derrickson", "Ed Wood"]
     assert diagnostics["seed_entity_count"] == 2
     assert "seed_entities not exposed by runtime metadata" not in notes
+
+
+def test_real_runtime_runner_registers_project_payload_runtime_key():
+    source = (
+        REPO_ROOT / "tools/evals/zuno/multihop_eval/run_real_runtime_eval.py"
+    ).read_text(encoding="utf-8")
+
+    assert '"project_payload": None' in source
+    assert '"domain_pack": None' not in source

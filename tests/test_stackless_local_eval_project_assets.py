@@ -50,7 +50,8 @@ def test_stackless_local_eval_internal_payload_names_follow_project_mainline():
     assert "project_payload = _load_graph_project_payload" in source
     assert "project_payload=project_payload" in source
     assert "domain_pack=project_payload" not in source
-    assert '"domain_pack": project_payload' in source
+    assert '"project_payload": project_payload' in source
+    assert '"domain_pack": project_payload' not in source
     assert "domain_pack = _load_graph_project_payload" not in source
 
 

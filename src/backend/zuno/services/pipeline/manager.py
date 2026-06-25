@@ -217,7 +217,7 @@ class KnowledgePipelineManager:
             if self.enable_graph_indexing and index_capability == "rag_graph":
                 chunks = await self._parse_chunks(task)
                 runtime_settings = await KnowledgeService.get_runtime_settings(task.knowledge_id)
-                project_payload = runtime_settings.get("domain_pack")
+                project_payload = runtime_settings.get("project_payload") or runtime_settings.get("domain_pack")
                 domain_pack_id = runtime_settings.get("domain_pack_id")
                 graph_index_version = str(knowledge_config.get("graph_index_settings", {}).get("index_version") or "v1")
                 graph_status = str(knowledge_config.get("index_settings", {}).get("status") or "active")

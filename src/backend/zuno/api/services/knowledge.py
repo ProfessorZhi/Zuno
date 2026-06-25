@@ -265,18 +265,18 @@ class KnowledgeService:
         }
 
     @staticmethod
-    def _apply_domain_pack_defaults(
+    def _apply_project_payload_defaults(
         config: dict[str, Any],
-        domain_pack: dict[str, Any] | None,
+        project_payload: dict[str, Any] | None,
     ) -> dict[str, Any]:
         normalized = deepcopy(config or {})
         retrieval_settings = dict(normalized.get("retrieval_settings") or {})
         current_profile = str(retrieval_settings.get("profile") or "").strip().lower()
-        if domain_pack and domain_pack.get("default_retrieval_profile") and current_profile in {"", "auto", "default"}:
-            retrieval_settings["profile"] = domain_pack.get("default_retrieval_profile")
+        if project_payload and project_payload.get("default_retrieval_profile") and current_profile in {"", "auto", "default"}:
+            retrieval_settings["profile"] = project_payload.get("default_retrieval_profile")
         normalized["retrieval_settings"] = retrieval_settings
-        if domain_pack and domain_pack.get("default_eval_profile_id") and not normalized.get("eval_profile_id"):
-            normalized["eval_profile_id"] = domain_pack.get("default_eval_profile_id")
+        if project_payload and project_payload.get("default_eval_profile_id") and not normalized.get("eval_profile_id"):
+            normalized["eval_profile_id"] = project_payload.get("default_eval_profile_id")
         return normalized
 
     @staticmethod
@@ -550,12 +550,13 @@ class KnowledgeService:
             runtime = dict(local_runtime)
             config = cls._normalize_knowledge_config(runtime.get("knowledge_config"))
             domain_pack_id = runtime.get("domain_pack_id") or config.get("domain_pack_id")
-            domain_pack = runtime.get("domain_pack")
-            config = cls._apply_domain_pack_defaults(config, domain_pack)
+            project_payload = runtime.get("project_payload") or runtime.get("domain_pack")
+            config = cls._apply_project_payload_defaults(config, project_payload)
             runtime["knowledge_id"] = knowledge_id
             runtime["knowledge_config"] = config
             runtime["domain_pack_id"] = domain_pack_id
-            runtime["domain_pack"] = domain_pack
+            runtime["project_payload"] = project_payload
+            runtime.pop("domain_pack", None)
             runtime.setdefault("text_embedding_config", None)
             runtime.setdefault("vl_embedding_config", None)
             runtime.setdefault("rerank_config", None)
@@ -564,14 +565,14 @@ class KnowledgeService:
         config = payload["knowledge_config"]
         model_refs = config.get("model_refs", {})
         domain_pack_id = config.get("domain_pack_id")
-        domain_pack = None
-        config = cls._apply_domain_pack_defaults(config, domain_pack)
+        project_payload = None
+        config = cls._apply_project_payload_defaults(config, project_payload)
 
         return {
             "knowledge_id": knowledge_id,
             "knowledge_config": config,
             "domain_pack_id": domain_pack_id,
-            "domain_pack": domain_pack,
+            "project_payload": project_payload,
             "text_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("text_embedding_model_id")),
             "vl_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("vl_embedding_model_id")),
             "rerank_config": await cls.resolve_model_config_by_id(model_refs.get("rerank_model_id")),

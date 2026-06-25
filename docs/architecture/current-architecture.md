@@ -78,9 +78,11 @@ such as `domain_pack_id`; that is current compatibility surface, not target
 architecture.
 
 `KnowledgeService.get_runtime_settings` now preserves `domain_pack_id` without
-auto-loading `DomainPackLoader` from that field. It accepts an explicit
-`domain_pack` payload only as compatibility data and otherwise keeps GraphRAG
-Project configuration on `graphrag_project_id`.
+auto-loading `DomainPackLoader` from that field. It emits GraphRAG Project
+runtime payloads under `project_payload`; legacy `domain_pack` runtime payload
+input is accepted only as a migration fallback. The current project identity
+still comes from `graphrag_project_id` and compatibility `domain_pack_id`
+where existing contracts require it.
 
 `GraphRetriever` no longer loads Domain Pack retrieval policy from
 `domain_pack_id`. Contract Review graph policy now resolves through explicit
@@ -108,6 +110,8 @@ the project-named compatibility payload API. The legacy
 Stackless compare/local embedding evals prefer `graphrag_project_id` /
 `--graphrag-project-id` while retaining `domain_pack_id` only as a migration
 alias where current contracts still require it.
+Stackless and real-runtime local eval runtime registries now expose GraphRAG
+Project payload state through `project_payload`, not `domain_pack`.
 
 ## Blocked Legacy
 

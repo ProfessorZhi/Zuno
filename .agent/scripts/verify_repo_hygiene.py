@@ -248,6 +248,7 @@ def main() -> int:
         errors.append("GraphRAG eval paths must call extractors with project_payload")
 
     stackless_eval = _read("tools/evals/zuno/rag_eval/run_stackless_local_eval.py")
+    real_runtime_eval = _read("tools/evals/zuno/multihop_eval/run_real_runtime_eval.py")
     if "_load_legacy_domain_pack_payload" in stackless_eval:
         errors.append("Stackless local eval must not fall back to DomainPackLoader")
     if "from zuno.services.domain_pack.loader import DomainPackLoader" in stackless_eval:
@@ -260,9 +261,28 @@ def main() -> int:
         errors.append("GraphRAG eval paths must call extractors with project_payload")
     if "project_payload=project_payload" not in stackless_eval:
         errors.append("GraphRAG eval paths must call extractors with project_payload")
+    if '"domain_pack": project_payload' in stackless_eval:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
+    if '"project_payload": project_payload' not in stackless_eval:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
+    if '"domain_pack": None' in real_runtime_eval:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
+    if '"project_payload": None' not in real_runtime_eval:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
+    knowledge_service = _read("src/backend/zuno/api/services/knowledge.py")
+    if 'runtime.get("project_payload") or runtime.get("domain_pack")' not in knowledge_service:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
+    if 'runtime["project_payload"] = project_payload' not in knowledge_service:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
+    if 'runtime["domain_pack"]' in knowledge_service:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
+    if '"domain_pack": domain_pack' in knowledge_service:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
     pipeline_manager = _read("src/backend/zuno/services/pipeline/manager.py")
     if "domain_pack=domain_pack" in pipeline_manager:
         errors.append("Pipeline graph extraction must call extractors with project_payload")
+    if 'runtime_settings.get("project_payload")' not in pipeline_manager:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
     project_loader = _read("src/backend/zuno/services/graphrag/project/loader.py")
     if "def to_domain_pack_payload" in project_loader:
         errors.append("GraphRAG Project loader must expose only to_project_payload")
@@ -304,6 +324,8 @@ def main() -> int:
     graph_retrievers = _read("src/backend/zuno/services/retrieval/retrievers.py")
     if 'scope_policy.get("graphrag_project_id")' not in graph_retrievers:
         errors.append("GraphRetrieverAdapter must map GraphRAG Project scope to the legacy storage filter")
+    if 'runtime_settings.get("project_payload")' not in graph_retrievers:
+        errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
 
     retired_ui_script_phrases = [
         "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",

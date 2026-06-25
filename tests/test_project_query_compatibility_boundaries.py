@@ -31,6 +31,40 @@ def test_graph_retriever_adapter_does_not_fallback_to_runtime_domain_pack_id(mon
     assert result["domain_pack_id"] is None
 
 
+def test_graph_retriever_adapter_uses_project_payload_runtime_settings(monkeypatch):
+    from zuno.services.retrieval.retrievers import GraphRetrieverAdapter
+
+    captured = {}
+
+    async def fake_runtime_settings(_knowledge_id):
+        return {
+            "project_payload": {
+                "id": "contract_review",
+                "retrieval_policy_data": {"graph_hop_limit": 4},
+            },
+        }
+
+    class FakeRetriever:
+        async def retrieve(self, query, knowledge_id, **kwargs):
+            captured["query"] = query
+            captured["knowledge_id"] = knowledge_id
+            captured["kwargs"] = kwargs
+            return {"content": "", "documents": [], "domain_pack_id": kwargs.get("domain_pack_id")}
+
+    monkeypatch.setattr(
+        "zuno.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
+        fake_runtime_settings,
+    )
+
+    adapter = GraphRetrieverAdapter(retriever=FakeRetriever())
+    result = asyncio.run(adapter.retrieve("find termination clause", ["kb_1"], {}))
+
+    assert captured["knowledge_id"] == "kb_1"
+    assert captured["kwargs"]["domain_pack_id"] == "contract_review"
+    assert captured["kwargs"]["query_policy"]["graph_hop_limit"] == 4
+    assert result["domain_pack_id"] == "contract_review"
+
+
 def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():
     from zuno.services.retrieval.models import ProcessedQuery
     from zuno.services.retrieval.orchestrator import RetrievalOrchestrator

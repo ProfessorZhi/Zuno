@@ -33,8 +33,10 @@ migration stages.
   through `KnowledgeQueryService` instead of the legacy `RagHandler` search
   path. `KnowledgeService.get_runtime_settings` preserves
   `domain_pack_id` as a migration field but no longer loads
-  `DomainPackLoader` from it. `GraphRetriever` no longer loads retrieval
-  policy from a bare `domain_pack_id`; explicit `query_policy` now carries the
+  `DomainPackLoader` from it. Runtime payload output is project-named as
+  `project_payload`, while legacy `domain_pack` payload input remains only as
+  a migration fallback. `GraphRetriever` no longer loads retrieval policy from
+  a bare `domain_pack_id`; explicit `query_policy` now carries the
   GraphRAG Project policy data. Stackless local eval and the dedicated
   Contract Review eval can build from GraphRAG Project assets without loading
   `DomainPackLoader`. Root Phase 11C tests now guard retired runtime imports

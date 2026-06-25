@@ -152,6 +152,105 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     assert any(update[1].get("graph_index_status") == "success" for update in file_updates)
 
 
+def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
+    from zuno.services.pipeline.manager import KnowledgePipelineManager
+
+    project_payload = {"id": "contract_review"}
+    captured = {}
+
+    async def fake_load_task(task_id):
+        return SimpleNamespace(
+            id=task_id,
+            knowledge_id="kb_1",
+            knowledge_file_id="file_1",
+            payload={},
+            result_summary={},
+        )
+
+    async def fake_get_knowledge_config(_knowledge_id):
+        return {
+            "index_capability": "rag_graph",
+            "index_settings": {"status": "active"},
+            "graph_index_settings": {"index_version": "v1"},
+        }
+
+    async def fake_get_runtime_settings(_knowledge_id):
+        return {
+            "project_payload": project_payload,
+            "domain_pack_id": "contract_review",
+        }
+
+    async def fake_parse_chunks(_task):
+        return [{"chunk_id": "chunk_1", "source_chunk_id": "source_1", "content": "contract clause"}]
+
+    async def fake_record_stage(*args, **kwargs):
+        return None
+
+    async def fake_mark_community_stale(_knowledge_id):
+        return None
+
+    async def fake_mark_task_finished(*args, **kwargs):
+        return None
+
+    async def fake_create_task_event(*args, **kwargs):
+        return None
+
+    async def fake_update_pipeline_fields(*args, **kwargs):
+        return None
+
+    class FakeExtractor:
+        async def extract_from_chunk(self, chunk, knowledge_id, project_payload=None):
+            captured["chunk"] = chunk
+            captured["knowledge_id"] = knowledge_id
+            captured["project_payload"] = project_payload
+            return {
+                "entities": [{"name": "Contract", "knowledge_id": knowledge_id}],
+                "relations": [],
+            }
+
+    class FakeGraphWriter:
+        def build_entity_payload(self, entity, **kwargs):
+            captured["entity_kwargs"] = kwargs
+            return dict(entity)
+
+        def build_relation_payload(self, relation, **kwargs):
+            return dict(relation)
+
+    class FakeNeo4jClient:
+        @classmethod
+        def is_enabled(cls):
+            return True
+
+        async def delete_by_source_chunk(self, *args, **kwargs):
+            return None
+
+        async def upsert_entity(self, *args, **kwargs):
+            return None
+
+        async def upsert_relation(self, *args, **kwargs):
+            return None
+
+    monkeypatch.setattr(KnowledgePipelineManager, "_load_task", staticmethod(fake_load_task))
+    monkeypatch.setattr(KnowledgePipelineManager, "_parse_chunks", staticmethod(fake_parse_chunks))
+    monkeypatch.setattr(KnowledgePipelineManager, "_record_stage", staticmethod(fake_record_stage))
+    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
+    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
+    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.mark_community_stale", fake_mark_community_stale)
+    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeTaskDao.mark_task_finished", fake_mark_task_finished)
+    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeTaskDao.create_task_event", fake_create_task_event)
+    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeFileDao.update_pipeline_fields", fake_update_pipeline_fields)
+    monkeypatch.setattr("zuno.services.pipeline.manager.Neo4jClient", FakeNeo4jClient)
+    monkeypatch.setattr("zuno.services.pipeline.manager.CachedGraphExtractor", FakeExtractor)
+    monkeypatch.setattr("zuno.services.pipeline.manager.GraphWriter", FakeGraphWriter)
+
+    manager = KnowledgePipelineManager(enable_graph_indexing=True, enable_elasticsearch=False)
+    asyncio.run(manager.run_graph_stage("task_1"))
+
+    assert captured["knowledge_id"] == "kb_1"
+    assert captured["project_payload"] == project_payload
+    assert captured["entity_kwargs"]["domain_pack_id"] == "contract_review"
+
+
 def test_retry_task_creates_new_task_and_redispatches(monkeypatch):
     from zuno.api.services.knowledge_file import KnowledgeFileService
 

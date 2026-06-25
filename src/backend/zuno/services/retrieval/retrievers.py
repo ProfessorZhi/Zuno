@@ -104,15 +104,15 @@ class GraphRetrieverAdapter:
         runtime_settings = await KnowledgeService.get_runtime_settings(knowledge_id) if knowledge_id else {
             "domain_pack_id": None,
         }
-        domain_pack = runtime_settings.get("domain_pack")
+        project_payload = runtime_settings.get("project_payload") or runtime_settings.get("domain_pack")
         scope_policy = dict(options.get("scope_policy") or {})
         domain_pack_id = (
             options.get("domain_pack_id")
             or scope_policy.get("graphrag_project_id")
-            or (domain_pack or {}).get("graphrag_project_id")
-            or (domain_pack or {}).get("id")
+            or (project_payload or {}).get("graphrag_project_id")
+            or (project_payload or {}).get("id")
         )
-        effective_query_policy = dict((domain_pack or {}).get("retrieval_policy_data") or {})
+        effective_query_policy = dict((project_payload or {}).get("retrieval_policy_data") or {})
         effective_query_policy.update(options)
         index_version = dict(options.get("index_version") or {})
         local_graph_retriever = runtime_settings.get("graph_retriever")

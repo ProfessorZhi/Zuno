@@ -414,7 +414,7 @@ async def run_real_runtime_eval(
             "vl_embedding_config": None,
             "rerank_config": model_configs["rerank_config"],
             "domain_pack_id": None,
-            "domain_pack": None,
+            "project_payload": None,
             "graph_retriever": graph_retriever,
             "knowledge_status": "active",
         },

@@ -437,7 +437,7 @@ async def run_stackless_local_eval(
                 "vl_embedding_config": None,
                 "rerank_config": rerank_config,
                 "domain_pack_id": domain_pack_id,
-                "domain_pack": project_payload,
+                "project_payload": project_payload,
                 "graph_retriever": graph_retriever,
             },
         )
