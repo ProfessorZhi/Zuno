@@ -506,7 +506,7 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
     langsmith_configured = configure_langsmith() if trace_enabled else False
     project = _load_contract_review_project()
     dataset_rows = _load_dataset(project)
-    project_payload = project.to_domain_pack_payload()
+    project_payload = project.to_project_payload()
     graphrag_project_id = str(project_payload.get("id") or project.contract.graphrag_project_id)
 
     results: list[dict] = []

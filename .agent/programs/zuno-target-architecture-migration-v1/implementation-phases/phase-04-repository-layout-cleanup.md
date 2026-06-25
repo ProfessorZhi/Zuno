@@ -38,6 +38,17 @@ Phase 01 through Phase 03 complete.
 - `docs/architecture/history/` is the only history archive.
 - Verifiers protect target layout without treating Blocked Legacy as target.
 
+## 2026-06-26 Safe Prework
+
+Retired Domain Pack UI capture and responsive-check scripts were moved out of
+active `tools/scripts/` and archived under:
+
+- `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`
+
+The move preserves old UI evidence while keeping active repository tools from
+generating `docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1` or
+mocking retired `/api/v1/domain-packs` and Domain Pack settings pages.
+
 ## Verification Commands
 
 ```powershell

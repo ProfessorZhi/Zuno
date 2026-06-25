@@ -178,6 +178,7 @@ async def run_matrix(
     sample_limit: int | None = None,
     local_compare_rerank_threshold_override: float | None = None,
     graph_compare_rerank_threshold_override: float | None = None,
+    graphrag_project_id: str | None = None,
     domain_pack_id: str | None = None,
     chunk_size_override: int | None = None,
     overlap_override: int | None = None,
@@ -196,6 +197,7 @@ async def run_matrix(
         spawn_dev_embedding_server=True,
         spawn_dev_rerank_server=True,
         rerank_score_threshold_override=local_compare_rerank_threshold_override,
+        graphrag_project_id=graphrag_project_id,
         domain_pack_id=domain_pack_id,
         chunk_size_override=chunk_size_override,
         overlap_override=overlap_override,
@@ -211,6 +213,7 @@ async def run_matrix(
         spawn_dev_embedding_server=True,
         spawn_dev_rerank_server=False,
         rerank_score_threshold_override=graph_compare_rerank_threshold_override,
+        graphrag_project_id=graphrag_project_id,
         domain_pack_id=domain_pack_id,
         chunk_size_override=chunk_size_override,
         overlap_override=overlap_override,
@@ -220,6 +223,7 @@ async def run_matrix(
         "manifest_path": str(manifest_path),
         "dataset_path": str(dataset_path),
         "sample_limit": sample_limit,
+        "graphrag_project_id": graphrag_project_id,
         "domain_pack_id": domain_pack_id,
         "chunk_size_override": chunk_size_override,
         "overlap_override": overlap_override,
@@ -334,6 +338,7 @@ def main() -> None:
     parser.add_argument("--sample-limit", type=int, default=None)
     parser.add_argument("--local-compare-rerank-threshold-override", type=float, default=0.0)
     parser.add_argument("--graph-compare-rerank-threshold-override", type=float, default=None)
+    parser.add_argument("--graphrag-project-id", default=None)
     parser.add_argument("--domain-pack-id", default=None)
     parser.add_argument("--chunk-size-override", type=int, default=None)
     parser.add_argument("--overlap-override", type=int, default=None)
@@ -348,6 +353,7 @@ def main() -> None:
             sample_limit=args.sample_limit,
             local_compare_rerank_threshold_override=args.local_compare_rerank_threshold_override,
             graph_compare_rerank_threshold_override=args.graph_compare_rerank_threshold_override,
+            graphrag_project_id=args.graphrag_project_id,
             domain_pack_id=args.domain_pack_id,
             chunk_size_override=args.chunk_size_override,
             overlap_override=args.overlap_override,

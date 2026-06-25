@@ -248,21 +248,23 @@ This matrix runner writes:
 - `summary.json`
 - `summary.md`
 
-## Contract Review Domain Eval
+## Contract Review GraphRAG Project Eval
 
 The repo now includes a dedicated contract-review corpus and graph-relation dataset:
 
 - `.local/evals/zuno/rag_eval/corpus/contract_review/manifest.json`
 - `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`
 
-Use the same stackless matrix runner, but bind the `contract_review` domain pack so GraphRAG uses the structured contract extractor instead of the generic extractor:
+Use the same stackless matrix runner, but bind the `contract_review` GraphRAG
+Project so GraphRAG uses the structured contract extractor instead of the
+generic extractor:
 
 ```powershell
 python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
   --manifest .local/evals/zuno/rag_eval/corpus/contract_review/manifest.json `
   --dataset tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl `
   --sample-limit 12 `
-  --domain-pack-id contract_review `
+  --graphrag-project-id contract_review `
   --chunk-size-override 256 `
   --overlap-override 48 `
   --local-compare-rerank-threshold-override 0.0 `

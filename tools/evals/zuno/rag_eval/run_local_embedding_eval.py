@@ -359,7 +359,7 @@ async def _run_stackless_fallback(
         local_embedding_api_key=str(direct_local_embedding_api_key or ""),
         spawn_dev_embedding_server=False,
         spawn_dev_rerank_server=False,
-        domain_pack_id="contract_review" if "contract_review" in str(manifest_path).lower() else None,
+        graphrag_project_id="contract_review" if "contract_review" in str(manifest_path).lower() else None,
     )
     summary = summarize(dataset_path=Path(result["effective_dataset_path"]), profiles_root=output_root)
     summary_json_path = output_root / "summary.json"

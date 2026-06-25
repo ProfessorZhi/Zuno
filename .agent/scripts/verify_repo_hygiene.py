@@ -175,6 +175,28 @@ def main() -> int:
     if "DomainPackLoader().load" in stackless_eval:
         errors.append("Stackless local eval must not fall back to DomainPackLoader")
 
+    retired_ui_script_phrases = [
+        "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
+        "/api/v1/domain-packs",
+        "/workspace/settings/knowledge/domain-packs",
+        "domain-pack-list.vue",
+        "domain-pack-create.vue",
+        "domain-pack-detail.vue",
+        ".domain-pack-page",
+        ".domain-pack-create-page",
+        ".domain-pack-detail-page",
+    ]
+    for script_path in sorted((REPO_ROOT / "tools/scripts").glob("*.py")):
+        if script_path.name.startswith("verify_"):
+            continue
+        content = script_path.read_text(encoding="utf-8")
+        for phrase in retired_ui_script_phrases:
+            if phrase in content:
+                errors.append(
+                    f"active tool script references retired Domain Pack UI surface: {script_path.relative_to(REPO_ROOT)}"
+                )
+                break
+
     agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():
         errors.append("AgentRuntime facade must not remain as current backend source")

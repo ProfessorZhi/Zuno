@@ -281,6 +281,27 @@ def test_domain_pack_is_not_current_api_or_frontend_entrypoint() -> None:
         assert phrase not in active_frontend
 
 
+def test_retired_domain_pack_ui_gallery_scripts_are_not_active_tools() -> None:
+    active_scripts = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((REPO_ROOT / "tools/scripts").glob("*.py"))
+        if not path.name.startswith("verify_")
+    )
+
+    for phrase in [
+        "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
+        "/api/v1/domain-packs",
+        "/workspace/settings/knowledge/domain-packs",
+        "domain-pack-list.vue",
+        "domain-pack-create.vue",
+        "domain-pack-detail.vue",
+        ".domain-pack-page",
+        ".domain-pack-create-page",
+        ".domain-pack-detail-page",
+    ]:
+        assert phrase not in active_scripts
+
+
 def test_repo_hygiene_verifiers_are_registered() -> None:
     for path in [
         ".agent/scripts/verify_doc_boundaries.py",

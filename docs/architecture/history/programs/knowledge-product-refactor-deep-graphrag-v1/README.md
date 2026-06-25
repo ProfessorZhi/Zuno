@@ -92,3 +92,9 @@ Enhanced Retrieval = routed retrieval umbrella, not one fixed retriever
 - `docs/architecture/specs/deep-graphrag-v1-runtime.md`
 - `docs/architecture/specs/domain-pack-builder.md`
 - `docs/architecture/specs/knowledge-config-impact-and-reindex.md`
+
+## Archived Artifacts
+
+- `ui-gallery/`: retired Domain Pack UI capture output from this program.
+- `scripts/`: retired UI capture and responsive-check scripts that exercised
+  the old Domain Pack settings pages and mock `/api/v1/domain-packs` routes.

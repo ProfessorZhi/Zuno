@@ -57,11 +57,12 @@ class LoadedGraphRAGProject:
             "eval_dataset_rows": list(self.eval_dataset_rows),
         }
 
-    def to_domain_pack_payload(self) -> dict[str, Any]:
+    def to_project_payload(self) -> dict[str, Any]:
         source_domain_pack = dict(self.settings.get("source_domain_pack") or {})
         prompts = dict(self.settings.get("prompts") or {})
         return {
             "id": self.contract.graphrag_project_id,
+            "graphrag_project_id": self.contract.graphrag_project_id,
             "name": source_domain_pack.get("name") or self.contract.graphrag_project_id,
             "version": source_domain_pack.get("version") or self.contract.prompt_version or "project",
             "description": source_domain_pack.get("description") or "GraphRAG Project compatibility payload",
@@ -82,6 +83,9 @@ class LoadedGraphRAGProject:
             "report_template_text": self.prompt_texts.get("report_template"),
             "eval_dataset_text": self.eval_dataset_text,
         }
+
+    def to_domain_pack_payload(self) -> dict[str, Any]:
+        return self.to_project_payload()
 
 
 class GraphRAGSettingsValidator:

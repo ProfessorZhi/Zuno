@@ -12,7 +12,11 @@ Phase 01 and Phase 02 complete.
 Current status: blocked by Phase 01 / Phase 02 for full closure. Safe prework
 has started: `/knowledge/search` now routes through `KnowledgeQueryService`
 instead of the legacy `RagHandler` search path, while preserving compatibility
-response fields for current callers.
+response fields for current callers. Contract Review eval project assets now
+use `to_project_payload()` as the main GraphRAG Project payload API, and
+stackless eval entrypoints prefer `graphrag_project_id` /
+`--graphrag-project-id` while retaining `domain_pack_id` only as migration
+compatibility.
 
 ## Scope
 

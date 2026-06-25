@@ -12,6 +12,8 @@ Classify repository directories for cleanup decisions.
 - `.agent/`: Current Agent workflow library
 - `examples/graphrag-projects/`: Target examples
 - `docs/architecture/history/domain-packs/root-contract-review/`: History
+- `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`:
+  History for retired Domain Pack UI gallery capture/check scripts
 - `tests/compat/`: Retired
 - `data/`: Generated unless promoted
 - `reports/`: Generated unless promoted

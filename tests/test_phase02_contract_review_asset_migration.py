@@ -40,13 +40,17 @@ def test_contract_review_example_project_loads_with_prompt_manifest() -> None:
     assert "contract_demo_q1" in loaded.eval_dataset_text
     assert loaded.eval_dataset_rows[0]["id"] == "contract_demo_q1"
 
-    payload = loaded.to_domain_pack_payload()
+    payload = loaded.to_project_payload()
     assert payload["id"] == "contract_review"
+    assert payload["graphrag_project_id"] == "contract_review"
     assert "Contract" in payload["schema_data"]["entities"]
     assert payload["retrieval_policy_data"]["graph_hop_limit"] == 2
     assert payload["answer_template_text"]
     assert payload["report_template_text"]
     assert "contract_demo_q1" in payload["eval_dataset_text"]
+
+    legacy_payload = loaded.to_domain_pack_payload()
+    assert legacy_payload == payload
 
 
 def test_contract_review_domain_pack_assets_are_mapped_to_project_assets() -> None:

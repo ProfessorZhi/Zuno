@@ -248,7 +248,7 @@ def _load_graph_project_domain_payload(project_id: str | None) -> dict[str, Any]
         raise ValueError(f"GraphRAG Project assets are required for {normalized}") from err
     if project is None:
         return None
-    return project.to_domain_pack_payload()
+    return project.to_project_payload()
 
 
 def _build_temp_config() -> Path:

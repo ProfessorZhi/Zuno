@@ -1,4 +1,5 @@
 ﻿from pathlib import Path
+import asyncio
 import uuid
 import sys
 
@@ -101,6 +102,43 @@ def test_stackless_compare_matrix_help_lists_threshold_args():
     content = target.read_text(encoding="utf-8")
     assert "--local-compare-rerank-threshold-override" in content
     assert "--graph-compare-rerank-threshold-override" in content
+    assert "--graphrag-project-id" in content
+
+
+def test_stackless_compare_matrix_prefers_graphrag_project_id(monkeypatch, tmp_path):
+    from zuno.evals.rag_eval import run_stackless_compare_matrix as matrix
+
+    calls = []
+
+    async def fake_run_stackless_local_eval(**kwargs):
+        calls.append(kwargs)
+        return {
+            "profiles": ["baseline_rag"],
+            "knowledge_id": f"kb_{len(calls)}",
+            "chunk_count": 1,
+            "output_root": str(kwargs["output_root"]),
+            "rerank_score_threshold_override": kwargs.get("rerank_score_threshold_override"),
+            "report": {"profiles": {"baseline_rag": {}}},
+        }
+
+    monkeypatch.setattr(matrix, "run_stackless_local_eval", fake_run_stackless_local_eval)
+
+    dataset = tmp_path / "dataset.jsonl"
+    dataset.write_text('{"id":"q1","gold_evidence":[{"file_contains":"a.md"}]}', encoding="utf-8")
+    summary = asyncio.run(
+        matrix.run_matrix(
+            manifest_path=tmp_path / "manifest.json",
+            dataset_path=dataset,
+            output_root=tmp_path / "runs",
+            graphrag_project_id="contract_review",
+            domain_pack_id="legacy_contract_review",
+        )
+    )
+
+    assert summary["graphrag_project_id"] == "contract_review"
+    assert summary["domain_pack_id"] == "legacy_contract_review"
+    assert [call["graphrag_project_id"] for call in calls] == ["contract_review", "contract_review"]
+    assert [call["domain_pack_id"] for call in calls] == ["legacy_contract_review", "legacy_contract_review"]
 
 
 def test_stackless_compare_matrix_build_acceptance():
