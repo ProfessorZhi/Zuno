@@ -12,7 +12,8 @@ Current:
 - `apps/desktop` is the Electron desktop workspace.
 - `src/backend/zuno` is the only active Python backend runtime boundary.
 - Phase 0-6 architecture closure remains complete historical truth.
-- The active cleanup program is the official GraphRAG alignment program.
+- The active executable program is Target Architecture Migration V1, which
+  continues the unfinished official GraphRAG alignment program gates.
 - Phase 11A is complete: `KnowledgeQueryService`, `GraphRAGQueryService`,
   `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult` exist in the current
   runtime.
@@ -37,10 +38,14 @@ Phase 11C progress / Blocked Legacy:
 - Phase 11C has started, but remains blocked. `/api/v1/domain-packs` is no
   longer mounted on the current FastAPI router, and the active Vue knowledge
   routes/pages no longer open the Domain Pack builder/list/detail flow.
+- Workspace knowledge prefetch/tools now use `KnowledgeQueryService`; the
+  standalone `AgentRuntime` facade has been removed, and `DomainQAGraph` /
+  `MultiAgentSupervisorGraph` are no longer current core package public
+  exports.
 - Remaining blockers still exist in `domain-packs/`, Domain Pack services,
-  legacy endpoint module, eval/Docker surfaces, `AgentRuntime`,
-  remaining `DomainQAGraph` surfaces, remaining
-  `MultiAgentSupervisorGraph` source/compat surfaces, and `tests/compat/`.
+  legacy endpoint module, eval/Docker surfaces, direct `DomainQAGraph` source,
+  direct `MultiAgentSupervisorGraph` source/compat surfaces, and
+  `tests/compat/`.
 - These surfaces are not the future public mainline, but they must not be
   deleted before active dependency removal is proven.
 - Phase 12 is partial / not closed: final full `pytest` and formal Eval
@@ -123,6 +128,7 @@ python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
 powershell -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 pytest -q tests/test_docs_entrypoints.py
+pytest tests/test_phase0_runtime_recovery.py
 pytest -q tests/test_repo_structure_consistency.py
 pytest -q tests/test_publish_boundary.py
 ```

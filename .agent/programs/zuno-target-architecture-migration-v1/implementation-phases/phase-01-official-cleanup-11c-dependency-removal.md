@@ -86,6 +86,10 @@ Removed from the active current path:
 - `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
   `zuno.core` or `zuno.core.graphs`; their direct source modules remain for
   Blocked Legacy coverage.
+- Phase 0 recovery/current-truth tests no longer treat `DomainQAGraph` or
+  `DomainPackLoader` as high-value current imports; they use
+  `KnowledgeQueryService`, `GraphRAGQueryService`, and
+  `GraphRAGProjectSnapshot`.
 - The stale tracked backend package asset copy
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under

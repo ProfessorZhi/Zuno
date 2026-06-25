@@ -42,19 +42,23 @@ def test_phase0_local_start_script_uses_src_backend_startup_path() -> None:
     assert '"--app-dir", "src/backend", "zuno.main:app"' in content
 
 
-def test_phase0_backend_root_keeps_high_value_runtime_imports_working() -> None:
+def test_phase0_backend_root_keeps_project_query_runtime_imports_working() -> None:
     result = _run_backend_python(
         (
-            "from zuno.core.graphs.domain_qa_graph import DomainQAGraph; "
+            "from zuno.api.services.knowledge_query import KnowledgeQueryService; "
+            "from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot, GraphRAGQueryService; "
             "from zuno.services.retrieval.orchestrator import RetrievalOrchestrator; "
             "from zuno.services.graphrag.retriever import GraphRetriever; "
-            "from zuno.services.domain_pack.loader import DomainPackLoader; "
-            "print(DomainQAGraph.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__, DomainPackLoader.__name__)"
+            "print(KnowledgeQueryService.__name__, GraphRAGQueryService.__name__, "
+            "GraphRAGProjectSnapshot.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__)"
         )
     )
 
     assert result.returncode == 0, result.stderr
-    assert "DomainQAGraph RetrievalOrchestrator GraphRetriever DomainPackLoader" in result.stdout
+    assert (
+        "KnowledgeQueryService GraphRAGQueryService GraphRAGProjectSnapshot "
+        "RetrievalOrchestrator GraphRetriever"
+    ) in result.stdout
 
 
 def test_phase0_readme_exposes_backend_recovery_start_and_verification() -> None:

@@ -15,9 +15,10 @@ PHASE0_RUNTIME_TRUTH_FILES = [
     "database/metadata.py",
     "services/retrieval/orchestrator.py",
     "services/retrieval/planner.py",
+    "api/services/knowledge_query.py",
+    "services/graphrag/query_service.py",
+    "services/graphrag/project/loader.py",
     "services/graphrag/retriever.py",
-    "services/domain_pack/loader.py",
-    "core/graphs/domain_qa_graph.py",
     "settings.py",
 ]
 
@@ -50,3 +51,14 @@ def test_phase0_runtime_truth_avoids_service_api_runtime_paths_in_active_tests()
     banned_phrase = "/".join(["services", "api", "src", "zuno"])
 
     assert banned_phrase not in phase0_test
+
+
+def test_phase0_recovery_tests_use_project_query_runtime_truth() -> None:
+    phase0_test = (REPO_ROOT / "tests" / "test_phase0_runtime_recovery.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "KnowledgeQueryService" in phase0_test
+    assert "GraphRAGQueryService" in phase0_test
+    assert "DomainQAGraph" not in phase0_test
+    assert "DomainPackLoader" not in phase0_test
