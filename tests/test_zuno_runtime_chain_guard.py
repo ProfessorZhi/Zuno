@@ -107,3 +107,13 @@ def test_domain_pack_asset_runtime_tests_live_under_compat() -> None:
     ]
     for relative_path in compat_tests:
         assert (REPO_ROOT / relative_path).exists(), relative_path
+
+
+def test_phase5_domain_runtime_paths_stays_on_current_general_agent_path() -> None:
+    phase5_paths_test = (
+        REPO_ROOT / "tests" / "test_phase5_domain_runtime_paths.py"
+    ).read_text(encoding="utf-8")
+
+    assert "KnowledgeQueryService" in phase5_paths_test
+    assert "DomainQAGraph" not in phase5_paths_test
+    assert "MultiAgentSupervisorGraph" not in phase5_paths_test

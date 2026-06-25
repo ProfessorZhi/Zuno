@@ -28,16 +28,6 @@ def test_zuno_agent_runtime_facade_is_removed_from_current_source():
     assert "AgentRuntime" not in getattr(core_module, "__all__", [])
 
 
-def test_zuno_legacy_graph_sources_remain_as_direct_blocked_legacy():
-    _ensure_runtime_paths()
-
-    domain_graph = importlib.import_module("zuno.core.graphs.domain_qa_graph")
-    supervisor_graph = importlib.import_module("zuno.core.graphs.multi_agent_supervisor_graph")
-
-    assert domain_graph.DomainQAGraph is not None
-    assert supervisor_graph.MultiAgentSupervisorGraph is not None
-
-
 def _general_agent_config():
     from zuno.core.agents.general_agent import AgentConfig
 
