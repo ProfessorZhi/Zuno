@@ -44,7 +44,9 @@ verification, commit message, and evidence package.
   and exposes readiness metadata without changing retrieval behavior.
 - Phase 06 defines Prompt Registry categories and prompt-version impact rules
   without implementing automatic tuning.
-- Phase 07 is next and should define index/update/versioning behavior.
+- Phase 07 defines index version, hash flow, full rebuild boundary, and
+  stale-index trace detection without database migration.
+- Phase 08 is next and should implement the public Query Method Router.
 
 ## Migration Rules
 

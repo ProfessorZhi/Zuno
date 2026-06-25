@@ -56,6 +56,37 @@ and tests.
 - Query prompt changes do not require graph rebuild by default.
 - Stale index use is detectable.
 
+## Implemented Version Boundary
+
+Phase 07 adds versioning and stale-detection contracts only. It does not perform
+database migration or execute rebuild jobs.
+
+Version flow:
+
+- `GraphRAGVersionState` records `index_version`, `community_version`,
+  `document_hash`, `chunk_hash`, and `status`.
+- `GraphWriter` preserves `index_version`, `document_hash`, `chunk_hash`,
+  `source_chunk_id`, and `status` on graph payloads.
+- `RetrievalOrchestrator` metadata includes `index_version`, `index_health`,
+  `stale_index_detected`, and `stale_index_reasons`.
+
+Rebuild rules:
+
+| Change | Result |
+| --- | --- |
+| `index_settings.chunk_mode` | full rebuild |
+| `index_settings.chunk_size` | full rebuild |
+| `index_settings.overlap` | full rebuild |
+| `index_settings.separator` | full rebuild |
+| `graph_index_settings.entity_extraction_mode` | full rebuild |
+| `graph_index_settings.relation_schema` | full rebuild |
+| `graphrag_project.query_prompt_version` | immediate query effect only |
+
+Stale detection examples:
+
+- `graph index health is stale`
+- `knowledge status is archived`
+
 ## Verification Commands
 
 ```powershell

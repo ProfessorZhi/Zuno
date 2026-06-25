@@ -107,6 +107,37 @@ def test_image_indexing_mode_change_requires_image_reindex():
     assert impact["recommended_action"] == "image_index"
 
 
+def test_chunking_change_requires_full_rebuild_boundary():
+    from zuno.api.services.knowledge import KnowledgeService
+
+    previous = _config()
+    next_config = _config(index_settings={**previous["index_settings"], "chunk_size": 1536})
+
+    impact = KnowledgeService.analyze_config_impact(previous, next_config)
+
+    assert impact["full_rebuild_required"] is True
+    assert impact["recommended_action"] == "full_rebuild"
+
+
+def test_graph_schema_change_requires_full_rebuild_boundary():
+    from zuno.api.services.knowledge import KnowledgeService
+
+    previous = _config(
+        index_capability="rag_graph",
+        retrieval_settings={**_config()["retrieval_settings"], "default_mode": "rag_graph"},
+    )
+    next_config = _config(
+        index_capability="rag_graph",
+        retrieval_settings={**_config()["retrieval_settings"], "default_mode": "rag_graph"},
+        graph_index_settings={**previous["graph_index_settings"], "relation_schema": "typed"},
+    )
+
+    impact = KnowledgeService.analyze_config_impact(previous, next_config)
+
+    assert impact["full_rebuild_required"] is True
+    assert impact["recommended_action"] == "full_rebuild"
+
+
 def test_domain_pack_change_still_requires_graph_and_community_updates():
     from zuno.api.services.knowledge import KnowledgeService
 

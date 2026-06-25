@@ -16,6 +16,8 @@ Define the near-term official-compatible GraphRAG target.
   validates the contract, discovers prompts, and exposes readiness metadata.
 - `services/graphrag/prompts/registry.py` separates indexing prompts from query
   prompts and records rebuild-impact rules for prompt version changes.
+- `services/graphrag/versioning.py` records active index/community/hash/status
+  metadata and stale-index reasons for trace surfaces.
 - Current storage and query filters still use `domain_pack_id`.
 
 ## Target Project Layout

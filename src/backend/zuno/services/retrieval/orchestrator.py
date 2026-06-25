@@ -3,6 +3,7 @@ import re
 
 from zuno.services.graphrag.retriever import GraphRetriever
 from zuno.services.graphrag.models import normalize_retrieval_mode
+from zuno.services.graphrag.versioning import detect_stale_index_reasons
 from zuno.services.graphrag.community.service import CommunityGraphService
 from zuno.services.retrieval.fusion import RetrievalFusion
 from zuno.services.retrieval.models import ProcessedQuery, RetrievalRequest, RetrievedDocument
@@ -818,6 +819,10 @@ class RetrievalOrchestrator:
             enhanced_fallback_to_floor=enhanced_fallback_to_floor,
             blocked_reasons=blocked_reasons,
         )
+        stale_index_reasons = detect_stale_index_reasons(
+            index_health=dict(final_plan.get("index_health") or {}),
+            scope_policy=dict(final_plan.get("scope_policy") or {}),
+        )
         metadata = {
             "plan": final_plan,
             "initial_plan": first_plan,
@@ -922,6 +927,8 @@ class RetrievalOrchestrator:
             "scope_policy": dict(final_plan.get("scope_policy") or {}),
             "index_version": dict(final_plan.get("index_version") or {}),
             "index_health": dict(final_plan.get("index_health") or {}),
+            "stale_index_detected": bool(stale_index_reasons),
+            "stale_index_reasons": stale_index_reasons,
             "first_mode": first_mode,
             "final_mode": final_mode,
             "second_pass_used": second_pass_used,

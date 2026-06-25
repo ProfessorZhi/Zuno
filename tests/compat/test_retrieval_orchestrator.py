@@ -112,5 +112,7 @@ def test_retrieval_orchestrator_preserves_governance_contract_across_fallback():
     assert result["metadata"]["scope_policy"]["status"] == "active"
     assert result["metadata"]["index_version"]["graph"] == "graph_v2"
     assert result["metadata"]["index_health"]["graph"] == "ready"
+    assert result["metadata"]["stale_index_detected"] is False
+    assert result["metadata"]["stale_index_reasons"] == []
     assert result["metadata"]["round_count"] == 2
     assert result["metadata"]["rounds"][1]["trigger"] == "query_rewrite_retry"

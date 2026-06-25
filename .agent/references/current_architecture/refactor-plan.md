@@ -37,5 +37,7 @@ keeping `domain_pack_id` as bounded compatibility input. Phase 04 has added the
 GraphRAG Project contract fields without claiming a loader. Phase 05 has added
 GraphRAG Project settings loading, prompt discovery, and readiness metadata
 without changing retrieval behavior. Phase 06 has added Prompt Registry
-categories and prompt-version impact rules without automatic tuning. The next
-phase is Phase 07: Index / Update / Versioning.
+categories and prompt-version impact rules without automatic tuning. Phase 07
+has added index version, hash flow, full rebuild boundary, and stale-index
+trace detection without database migration. The next phase is Phase 08: Query
+Method Router.

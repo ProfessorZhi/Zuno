@@ -211,6 +211,14 @@ class KnowledgeService:
             "eval_profile_id",
             "graph_index_settings.community_report_prompt_id",
         }
+        full_rebuild_fields = {
+            "index_settings.chunk_mode",
+            "index_settings.chunk_size",
+            "index_settings.overlap",
+            "index_settings.separator",
+            "graph_index_settings.entity_extraction_mode",
+            "graph_index_settings.relation_schema",
+        }
 
         text_reindex_required = any(field in text_reindex_fields for field in changed_fields)
         image_reindex_required = any(field in image_reindex_fields for field in changed_fields)
@@ -226,7 +234,7 @@ class KnowledgeService:
         full_rebuild_required = (
             "index_capability" in changed_fields
             and previous.get("index_capability") != next_payload.get("index_capability")
-        )
+        ) or any(field in full_rebuild_fields for field in changed_fields)
 
         recommended_action = "save_only"
         if full_rebuild_required:

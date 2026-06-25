@@ -98,7 +98,9 @@ This roadmap does not implement:
   and readiness metadata without changing retrieval behavior.
 - Phase 06 adds Prompt Registry categories and prompt-version impact rules
   without implementing automatic tuning.
-- The next executable phase is Phase 07: Index / Update / Versioning.
+- Phase 07 adds index version, hash flow, full rebuild boundary, and stale-index
+  trace detection without database migration.
+- The next executable phase is Phase 08: Query Method Router.
 
 ## Dependency Rules
 

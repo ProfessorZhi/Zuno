@@ -40,7 +40,9 @@ Read first:
   metadata without changing retrieval behavior.
 - Phase 06 adds Prompt Registry categories and prompt-version impact rules
   without implementing automatic tuning.
-- Phase 07 is next and owns Index / Update / Versioning.
+- Phase 07 adds index version, hash flow, full rebuild boundary, and stale-index
+  trace detection without database migration.
+- Phase 08 is next and owns Query Method Router.
 
 ## Rule
 
