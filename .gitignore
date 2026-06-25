@@ -29,7 +29,8 @@ apps/web/AGENTS.md
 
 # Agent workflow library: keep durable references/templates/scripts tracked,
 # ignore local notes, scratch space, logs, machine-local state, and secrets.
-.agent/notes/
+.agent/notes/*
+!.agent/notes/README.md
 .agent/tmp/
 .agent/logs/
 .agent/local/
