@@ -9,8 +9,10 @@ prove no active dependency remains.
 
 In progress / blocked overall. The current FastAPI router no longer mounts
 `/domain-packs`, and active Vue knowledge routes/pages no longer open Domain
-Pack entrypoints. Active dependencies still exist in `domain-packs/`, Domain
-Pack runtime services/assets, eval/Docker surfaces,
+Pack entrypoints. `KnowledgeService.get_runtime_settings` now preserves
+`domain_pack_id` without auto-loading `DomainPackLoader`. Active dependencies
+still exist in `domain-packs/`, Domain Pack runtime services/assets,
+`GraphRetriever`/eval loader paths, Docker surfaces,
 remaining direct `DomainQAGraph` source and dependencies, and `tests/compat/`.
 The old backend Domain Pack endpoint/API-service wrappers, frontend Domain Pack
 API/page files, and direct `MultiAgentSupervisorGraph` source are retired from
@@ -36,6 +38,9 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   path.
 - `tests/compat/test_domain_qa_graph_offline.py` now matches the current
   `DomainQAGraph` trace shape while remaining Blocked Legacy coverage.
+- `src/backend/zuno/api/services/knowledge.py` no longer imports
+  `DomainPackLoader` or calls `DomainPackLoader().load` while resolving
+  runtime settings from `domain_pack_id`.
 - `src/backend/zuno/services/workspace/simple_agent.py` no longer imports
   `AgentRuntime`, exposes `domain_qa_runtime`, or calls
   `_run_domain_pack_query`; Workspace knowledge prefetch/tools now use

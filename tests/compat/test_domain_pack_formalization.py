@@ -216,10 +216,16 @@ def test_graph_retriever_adapter_merges_runtime_domain_pack_policy(monkeypatch):
     assert result["domain_pack_id"] == "contract_review"
 
 
-def test_knowledge_service_local_runtime_loads_domain_pack_from_domain_pack_id(monkeypatch):
+def test_knowledge_service_local_runtime_preserves_domain_pack_id_without_loading_pack(monkeypatch):
     _ensure_runtime_paths()
 
+    DomainPackLoader = importlib.import_module("zuno.services.domain_pack.loader").DomainPackLoader
     KnowledgeService = importlib.import_module("zuno.api.services.knowledge").KnowledgeService
+
+    def fail_if_loaded(*_args, **_kwargs):
+        raise AssertionError("KnowledgeService runtime settings must not load DomainPackLoader")
+
+    monkeypatch.setattr(DomainPackLoader, "load", fail_if_loaded)
 
     monkeypatch.setattr(
         "zuno.api.services.knowledge.get_local_runtime_settings",
@@ -232,8 +238,8 @@ def test_knowledge_service_local_runtime_loads_domain_pack_from_domain_pack_id(m
     runtime = asyncio.run(KnowledgeService.get_runtime_settings("kb_1"))
 
     assert runtime["domain_pack_id"] == "contract_review"
-    assert runtime["domain_pack"]["id"] == "contract_review"
-    assert runtime["domain_pack"]["retrieval_policy_data"]["citation_strictness"] == "high"
+    assert runtime["domain_pack"] is None
+    assert runtime["knowledge_config"]["graphrag_project_id"] == "contract_review"
 
 
 def test_domain_qa_graph_renders_template_boundary_without_contract_hardcode():

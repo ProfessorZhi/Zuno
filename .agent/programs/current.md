@@ -12,22 +12,25 @@ Current status:
   no longer mounts `/domain-packs`, and active Vue knowledge routes/pages no
   longer open Domain Pack entrypoints. Workspace knowledge prefetch/tools no
   longer import `AgentRuntime` or call `_run_domain_pack_query`; they use
-  `KnowledgeQueryService`.
+  `KnowledgeQueryService`. `KnowledgeService.get_runtime_settings` preserves
+  `domain_pack_id` as a migration field but no longer auto-loads
+  `DomainPackLoader` from it.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
 - Phase 11C remains blocked by Domain Pack runtime services/assets,
-  `DomainQAGraph`, Docker/eval surfaces, and `tests/compat/` dependencies.
-  Domain Pack backend endpoint/API-service wrappers and frontend API/page
-  files are retired from current source. The standalone `AgentRuntime` facade
-  and direct `MultiAgentSupervisorGraph` source have been removed from current
-  backend source and exports. `DomainQAGraph` and
+  `GraphRetriever`/eval loader paths, `DomainQAGraph`, Docker surfaces, and
+  `tests/compat/` dependencies. Domain Pack backend endpoint/API-service
+  wrappers and frontend API/page files are retired from current source. The
+  standalone `AgentRuntime` facade and direct `MultiAgentSupervisorGraph`
+  source have been removed from current backend source and exports.
+  `DomainQAGraph` and
   `MultiAgentSupervisorGraph` are no longer exported from current core package
   public surfaces; only the direct `DomainQAGraph` source remains Blocked
   Legacy.
 - Phase 02 has started as an asset-only migration slice:
   `examples/graphrag-projects/contract_review/` now holds the Target
   GraphRAG Project copy of Contract Review schema, prompts, retrieval policy,
-  and eval fixture. Runtime still needs `DomainPackLoader`, so Phase 02 is not
-  closed.
+  and eval fixture. `GraphRetriever` and eval paths still need
+  `DomainPackLoader`, so Phase 02 is not closed.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

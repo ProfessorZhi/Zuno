@@ -90,6 +90,19 @@ def test_domain_pack_api_wrapper_files_stay_retired() -> None:
     assert "Retired Domain Pack API wrapper must not remain" in verifier
 
 
+def test_knowledge_service_stays_off_domain_pack_loader_runtime_defaults() -> None:
+    knowledge_service = (
+        REPO_ROOT / "src/backend/zuno/api/services/knowledge.py"
+    ).read_text(encoding="utf-8")
+    assert "from zuno.services.domain_pack.loader import DomainPackLoader" not in knowledge_service
+    assert "DomainPackLoader().load" not in knowledge_service
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "KnowledgeService runtime settings must not load DomainPackLoader" in verifier
+
+
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
     assert not (
         REPO_ROOT / "src/backend/zuno/domain_packs"

@@ -24,9 +24,10 @@ Classify repository directories for cleanup decisions.
 The current FastAPI router no longer mounts `/domain-packs`, and active Vue
 knowledge route/settings entrypoints no longer open Domain Pack pages. The
 old frontend Domain Pack API/page files are retired from `apps/web/src/`.
-Retained Domain Pack backend modules, assets, evals, Docker references, and
-compat tests remain Blocked Legacy until their replacement or migration is
-proved.
+`KnowledgeService.get_runtime_settings` no longer auto-loads `DomainPackLoader`
+from `domain_pack_id`. Retained Domain Pack backend modules, assets,
+`GraphRetriever`/eval loader paths, Docker references, and compat tests remain
+Blocked Legacy until their replacement or migration is proved.
 
 ## Rule
 

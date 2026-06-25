@@ -70,12 +70,18 @@ The old `AgentConfig` public shape still exists, including migration fields
 such as `domain_pack_id`; that is current compatibility surface, not target
 architecture.
 
+`KnowledgeService.get_runtime_settings` now preserves `domain_pack_id` without
+auto-loading `DomainPackLoader` from that field. It accepts an explicit
+`domain_pack` payload only as compatibility data and otherwise keeps GraphRAG
+Project configuration on `graphrag_project_id`.
+
 ## Blocked Legacy
 
 Phase 11C is blocked because these active dependencies still exist:
 
 - `domain-packs/`
 - Domain Pack service/eval/Docker surfaces
+- `GraphRetriever` and eval paths that still call `DomainPackLoader`
 - Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
 - Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
   Pack pages are not active knowledge routes or settings-shell pages

@@ -122,6 +122,10 @@ Removed from the active current path:
 - `tests/compat/test_domain_qa_graph_offline.py` has been synchronized with the
   current `DomainQAGraph` trace shape; it remains Blocked Legacy coverage, not
   a target runtime endorsement.
+- `KnowledgeService.get_runtime_settings` no longer auto-loads
+  `DomainPackLoader` from `domain_pack_id`. It preserves the migration field
+  and explicit `domain_pack` compatibility payloads while keeping
+  `graphrag_project_id` as the GraphRAG Project configuration field.
 
 Retained as Blocked Legacy / Phase 02 migration assets:
 
@@ -142,6 +146,8 @@ Still blocked:
 
 - `tools/evals/zuno/contract_review_eval/` and stackless eval paths still
   depend on `DomainPackLoader` / `DomainQAGraph`.
+- `src/backend/zuno/services/graphrag/retriever.py` still loads
+  `DomainPackLoader` when runtime options pass `domain_pack_id`.
 - `tests/compat/` still contains active compatibility coverage for Workspace,
   direct `DomainQAGraph`, Domain Pack loader/eval, and graph/runtime surfaces,
   plus replacement evidence for retired runtime names, including

@@ -58,8 +58,10 @@ Asset migration table:
 
 Still blocked:
 
-- Runtime still needs `DomainPackLoader` through `KnowledgeService`,
-  `GraphRetriever`, Contract Review eval, and stackless eval paths.
+- Runtime still needs `DomainPackLoader` through `GraphRetriever`, Contract
+  Review eval, and stackless eval paths. `KnowledgeService.get_runtime_settings`
+  now preserves `domain_pack_id` without loading `DomainPackLoader`, but that
+  alone does not close Phase 02.
 - `domain-packs/contract_review/` remains Blocked Legacy until those runtime
   and eval dependencies are cut over.
 

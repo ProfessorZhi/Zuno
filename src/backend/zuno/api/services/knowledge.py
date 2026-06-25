@@ -6,7 +6,6 @@ from zuno.database.dao.knowledge import KnowledgeDao
 from zuno.database.dao.knowledge_file import KnowledgeFileDao
 from zuno.database.dao.llm import LLMDao
 from zuno.database.models.user import AdminUser
-from zuno.services.domain_pack.loader import DomainPackLoader
 from zuno.services.runtime_registry import get_local_runtime_settings
 from zuno.utils.file_utils import format_file_size
 
@@ -552,9 +551,6 @@ class KnowledgeService:
             config = cls._normalize_knowledge_config(runtime.get("knowledge_config"))
             domain_pack_id = runtime.get("domain_pack_id") or config.get("domain_pack_id")
             domain_pack = runtime.get("domain_pack")
-            if domain_pack_id and not domain_pack:
-                loaded_pack = DomainPackLoader().load(domain_pack_id)
-                domain_pack = loaded_pack.to_dict() if loaded_pack else None
             config = cls._apply_domain_pack_defaults(config, domain_pack)
             runtime["knowledge_id"] = knowledge_id
             runtime["knowledge_config"] = config
@@ -568,17 +564,14 @@ class KnowledgeService:
         config = payload["knowledge_config"]
         model_refs = config.get("model_refs", {})
         domain_pack_id = config.get("domain_pack_id")
-        domain_pack = DomainPackLoader().load(domain_pack_id) if domain_pack_id else None
-        config = cls._apply_domain_pack_defaults(
-            config,
-            domain_pack.to_dict() if domain_pack else None,
-        )
+        domain_pack = None
+        config = cls._apply_domain_pack_defaults(config, domain_pack)
 
         return {
             "knowledge_id": knowledge_id,
             "knowledge_config": config,
             "domain_pack_id": domain_pack_id,
-            "domain_pack": domain_pack.to_dict() if domain_pack else None,
+            "domain_pack": domain_pack,
             "text_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("text_embedding_model_id")),
             "vl_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("vl_embedding_model_id")),
             "rerank_config": await cls.resolve_model_config_by_id(model_refs.get("rerank_model_id")),

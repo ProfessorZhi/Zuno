@@ -140,6 +140,12 @@ def main() -> int:
     if "KnowledgeQueryService" not in workspace_agent:
         errors.append("Workspace knowledge path must use KnowledgeQueryService")
 
+    knowledge_service = _read("src/backend/zuno/api/services/knowledge.py")
+    if "from zuno.services.domain_pack.loader import DomainPackLoader" in knowledge_service:
+        errors.append("KnowledgeService runtime settings must not load DomainPackLoader")
+    if "DomainPackLoader().load" in knowledge_service:
+        errors.append("KnowledgeService runtime settings must not load DomainPackLoader")
+
     agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():
         errors.append("AgentRuntime facade must not remain as current backend source")
