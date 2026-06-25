@@ -41,5 +41,7 @@ categories and prompt-version impact rules without automatic tuning. Phase 07
 has added index version, hash flow, full rebuild boundary, and stale-index
 trace detection without database migration. Phase 08 has added the backend
 Query Method Router for `auto/basic/local/global/drift`, bounded compatibility
-mapping from old route names, and requested/resolved/fallback trace fields. The
-next phase is Phase 09: Enhanced Mode Pipeline.
+mapping from old route names, and requested/resolved/fallback trace fields.
+Phase 09 has hardened Enhanced Mode pipeline trace for router, recall,
+fusion/rerank, evidence, requery, citation coverage, and standard-floor
+preservation. The next phase is Phase 10: Frontend API Contract Migration.

@@ -49,7 +49,11 @@ verification, commit message, and evidence package.
 - Phase 08 implements the backend public Query Method Router for
   `auto/basic/local/global/drift`, keeps old route names as internal or
   compatibility-only, and exposes requested/resolved/fallback trace fields.
-- Phase 09 is next and should prove Enhanced Mode as a complete pipeline.
+- Phase 09 hardens Enhanced Mode pipeline trace for router, multi-retriever
+  recall, fusion/rerank, evidence bundle, requery, citation coverage, and
+  standard-floor preservation.
+- Phase 10 is next and should migrate the frontend API contract to target
+  public fields.
 
 ## Migration Rules
 

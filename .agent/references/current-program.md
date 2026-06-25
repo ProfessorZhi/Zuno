@@ -74,7 +74,10 @@ event-driven workers, or default multi-agent mode into near-term acceptance.
 - Phase 08 adds the backend Query Method Router for
   `auto/basic/local/global/drift`, compatibility maps old route names, and
   exposes requested/resolved method plus fallback reason in trace metadata.
-- Phase 09 is next: Enhanced Mode Pipeline.
+- Phase 09 hardens Enhanced Mode pipeline trace for query method routing,
+  multi-retriever recall, fusion/rerank, evidence bundle, conditional requery,
+  citation coverage, and standard-floor preservation.
+- Phase 10 is next: Frontend API Contract Migration.
 
 ## Current Rule
 

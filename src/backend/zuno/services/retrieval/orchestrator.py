@@ -257,6 +257,87 @@ class RetrievalOrchestrator:
         return "\n".join(doc.content for doc in documents if str(doc.content or "").strip())
 
     @staticmethod
+    def _source_names_from_runs(retriever_runs: list[dict]) -> list[str]:
+        ordered: list[str] = []
+        for run in retriever_runs or []:
+            source = str(run.get("source") or "").strip()
+            if source and source not in ordered:
+                ordered.append(source)
+        return ordered
+
+    @staticmethod
+    def _evidence_bundle(documents: list[dict], citation_chunks: list[str]) -> dict:
+        source_types: list[str] = []
+        chunk_ids: list[str] = []
+        for document in documents or []:
+            source_type = str(document.get("source_type") or "").strip()
+            if source_type and source_type not in source_types:
+                source_types.append(source_type)
+            chunk_id = str(document.get("chunk_id") or "").strip()
+            if chunk_id and chunk_id not in chunk_ids:
+                chunk_ids.append(chunk_id)
+        cited_chunks = [
+            chunk_id
+            for chunk_id in dict.fromkeys(str(item or "").strip() for item in citation_chunks)
+            if chunk_id
+        ]
+        cited_document_count = sum(1 for chunk_id in chunk_ids if chunk_id in cited_chunks)
+        return {
+            "document_count": len(documents or []),
+            "source_types": source_types,
+            "chunk_ids": chunk_ids,
+            "citation_chunks": cited_chunks,
+            "cited_document_count": cited_document_count,
+            "citation_coverage": cited_document_count / len(chunk_ids) if chunk_ids else 0.0,
+        }
+
+    @staticmethod
+    def _pipeline_trace(
+        *,
+        requested_query_method: str | None,
+        resolved_query_method: str | None,
+        retrievers_used: list[str],
+        fallback_reason: str | None,
+        rewritten_query_used: bool,
+        requery_used: bool,
+        fusion_used: bool,
+        rerank_used: bool,
+        evidence_bundle: dict,
+    ) -> dict:
+        steps = [
+            {"name": "query_method_router", "status": "used", "detail": resolved_query_method},
+            {"name": "query_rewrite", "status": "used" if rewritten_query_used else "skipped"},
+            {
+                "name": "multi_retriever_recall",
+                "status": "used" if retrievers_used else "skipped",
+                "detail": list(retrievers_used),
+            },
+            {"name": "fusion", "status": "used" if fusion_used else "skipped"},
+            {"name": "rerank", "status": "used" if rerank_used else "skipped"},
+            {
+                "name": "evidence_check",
+                "status": "used" if evidence_bundle.get("document_count") else "empty",
+                "detail": {
+                    "document_count": evidence_bundle.get("document_count"),
+                    "source_types": evidence_bundle.get("source_types"),
+                },
+            },
+            {"name": "conditional_requery", "status": "used" if requery_used else "skipped"},
+            {
+                "name": "citation_answer",
+                "status": "used" if evidence_bundle.get("citation_chunks") else "missing",
+                "detail": {"citation_coverage": evidence_bundle.get("citation_coverage")},
+            },
+        ]
+        return {
+            "requested_query_method": requested_query_method,
+            "resolved_query_method": resolved_query_method,
+            "fallback_reason": fallback_reason,
+            "retrievers_used": list(retrievers_used),
+            "steps": steps,
+        }
+
+    @staticmethod
     def _documents_include_source(documents: list[dict], source_name: str) -> bool:
         normalized = str(source_name or "").strip().lower()
         for item in documents:
@@ -420,6 +501,7 @@ class RetrievalOrchestrator:
             query=query,
             knowledge_ids=knowledge_ids,
             mode=mode,
+            query_method=retrieval_options.get("query_method") or "auto",
             requested_profile=retrieval_options.get("requested_profile") or retrieval_options.get("profile") or "auto",
             top_k=retrieval_options.get("top_k"),
             score_threshold=retrieval_options.get("score_threshold"),
@@ -823,6 +905,25 @@ class RetrievalOrchestrator:
             index_health=dict(final_plan.get("index_health") or {}),
             scope_policy=dict(final_plan.get("scope_policy") or {}),
         )
+        citation_chunks = list(final_pass.get("community_result", {}).get("citation_chunks") or [
+            doc.get("chunk_id")
+            for doc in final_pass.get("documents", [])
+            if doc.get("chunk_id")
+        ])
+        retrievers_used = self._source_names_from_runs(final_pass.get("retriever_runs") or [])
+        rewritten_query_used = any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds)
+        evidence_bundle = self._evidence_bundle(list(final_pass.get("documents") or []), citation_chunks)
+        pipeline_trace = self._pipeline_trace(
+            requested_query_method=first_plan.get("requested_query_method"),
+            resolved_query_method=final_plan.get("resolved_query_method"),
+            retrievers_used=retrievers_used,
+            fallback_reason=(final_plan.get("route_trace") or {}).get("fallback_reason"),
+            rewritten_query_used=rewritten_query_used,
+            requery_used=bool(requery_attempted or requery_used),
+            fusion_used=bool((final_pass.get("documents") or []) or (final_pass.get("retriever_runs") or [])),
+            rerank_used=bool((final_plan.get("rerank_policy") or {}).get("enabled")),
+            evidence_bundle=evidence_bundle,
+        )
         metadata = {
             "plan": final_plan,
             "initial_plan": first_plan,
@@ -941,13 +1042,13 @@ class RetrievalOrchestrator:
             "round_count": len(rounds),
             "rounds": rounds,
             "query_variants": candidate_queries,
-            "rewritten_query_used": any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds),
+            "rewritten_query_used": rewritten_query_used,
             "rerank_info": dict(final_plan.get("rerank_policy") or {}),
-            "citation_chunks": list(final_pass.get("community_result", {}).get("citation_chunks") or [
-                doc.get("chunk_id")
-                for doc in final_pass.get("documents", [])
-                if doc.get("chunk_id")
-            ]),
+            "citation_chunks": citation_chunks,
+            "citation_coverage": evidence_bundle["citation_coverage"],
+            "evidence_bundle": evidence_bundle,
+            "retrievers_used": retrievers_used,
+            "pipeline_trace": pipeline_trace,
             "fusion_metadata": fusion_metadata,
             "fusion_strategy": fusion_metadata.get("strategy"),
             "first_pass_quality": {

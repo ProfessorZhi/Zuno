@@ -45,7 +45,10 @@ Read first:
 - Phase 08 adds the public backend Query Method Router for
   `auto/basic/local/global/drift`, with compatibility mapping to current
   internal runtime routes and explicit fallback trace.
-- Phase 09 is next and owns the Enhanced Mode Pipeline.
+- Phase 09 hardens Enhanced Mode pipeline trace for query method routing,
+  multi-retriever recall, fusion/rerank, evidence, requery, citation coverage,
+  and standard-floor preservation.
+- Phase 10 is next and owns Frontend API Contract Migration.
 
 ## Rule
 

@@ -104,7 +104,10 @@ This roadmap does not implement:
   `auto/basic/local/global/drift`, keeps old names as bounded compatibility or
   internal routes, and records requested/resolved method plus fallback reason in
   trace metadata.
-- The next executable phase is Phase 09: Enhanced Mode Pipeline.
+- Phase 09 hardens Enhanced Mode pipeline trace for query method routing,
+  query rewrite, multi-retriever recall, fusion/rerank, evidence check,
+  conditional requery, citation coverage, and standard-floor preservation.
+- The next executable phase is Phase 10: Frontend API Contract Migration.
 
 ## Dependency Rules
 

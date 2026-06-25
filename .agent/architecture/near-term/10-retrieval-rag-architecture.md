@@ -12,6 +12,9 @@ Separate query methods from retrievers and define Basic RAG.
 - `RetrievalFusion` merges evidence with baseline-preserving metadata.
 - `RagHandler` mixes Milvus/vector and Elasticsearch/BM25 when available, then
   reranks.
+- `RetrievalOrchestrator` records `pipeline_trace`, `evidence_bundle`,
+  `citation_coverage`, and `retrievers_used` for Basic and Enhanced pipeline
+  proof.
 
 ## Target Definitions
 
@@ -66,4 +69,6 @@ into frontend product contracts after the migration.
 ## Acceptance Direction
 
 Tests should prove Basic uses BM25 when available, dense vector recall, fusion,
-rerank or score fallback, citation metadata, and traceable fallback.
+rerank or score fallback, citation metadata, and traceable fallback. Current
+backend tests cover this through the orchestrator trace contract; frontend
+contract migration remains a later phase.

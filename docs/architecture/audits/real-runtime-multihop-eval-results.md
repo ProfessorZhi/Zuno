@@ -1688,3 +1688,21 @@ Current result:
 
 The fresh W8 verification therefore does not break the HotpotQA regression
 rail.
+
+## 2026-06-25: Phase 09 Pipeline Trace Contract
+
+Phase 09 did not run a new broad real-runtime eval. It hardened the backend
+trace contract that future eval reports should consume.
+
+New runtime metadata fields:
+
+- `pipeline_trace`
+- `evidence_bundle`
+- `citation_coverage`
+- `retrievers_used`
+
+The trace contract records query method routing, query rewrite,
+multi-retriever recall, fusion, rerank, evidence check, conditional requery,
+and citation answer status. Existing W8 retrieval conclusions remain the
+current eval evidence; this section only records the implementation trace
+surface needed to make future eval diagnostics less ambiguous.

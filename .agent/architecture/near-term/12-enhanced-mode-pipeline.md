@@ -12,6 +12,9 @@ Define Enhanced Mode as a pipeline, not a single retriever.
   requery, fusion, fallback, and trace metadata.
 - `RetrievalPlanner` now accepts `auto/basic/local/global/drift`, keeps old
   route names internal, and exposes requested/resolved/fallback trace fields.
+- `RetrievalOrchestrator` now exposes `pipeline_trace`, `evidence_bundle`,
+  `citation_coverage`, and `retrievers_used` so Enhanced Mode can be verified
+  as a pipeline rather than inferred from scattered metadata.
 
 ## Target Definition
 
@@ -85,3 +88,6 @@ Auto, Basic, Local, Global, and DRIFT. Do not expose `local_graphrag`,
 
 Enhanced Mode is ready when trace proves requested method, resolved method,
 retrievers used, fallback reason, evidence bundle, and citation coverage.
+
+Current backend trace contract satisfies this direction. Frontend API language
+and runtime legacy deletion are separate later phases.

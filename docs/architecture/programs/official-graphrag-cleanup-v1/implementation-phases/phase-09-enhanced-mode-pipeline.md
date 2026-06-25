@@ -41,13 +41,54 @@ evidence check, conditional requery, citation answer, fallback trace, and tests.
 
 ## Execution Order
 
-1. Add tests for Basic, Local, Global, and DRIFT pipeline composition.
-2. Prove Basic uses BM25, dense vector, fusion/rerank, evidence check, requery,
-   and citations when available.
-3. Prove Enhanced trace includes requested method, resolved method, retrievers,
-   fallback reason, evidence bundle, and citation coverage.
-4. Guard against graph/requery hurting Basic floor.
-5. Update docs and eval notes.
+1. Added tests for Basic, Local, Global, and DRIFT pipeline composition.
+2. Proved Basic uses BM25, dense vector, fusion/rerank, evidence check, and
+   citations when available.
+3. Proved Enhanced trace includes requested method, resolved method,
+   retrievers, fallback reason, evidence bundle, and citation coverage.
+4. Preserved graph/requery standard-floor guards.
+5. Updated docs and eval notes.
+
+## Implemented Pipeline Trace
+
+`RetrievalOrchestrator` now exposes:
+
+- `pipeline_trace`
+- `evidence_bundle`
+- `citation_coverage`
+- `retrievers_used`
+
+`pipeline_trace.steps` records these stable steps:
+
+1. `query_method_router`
+2. `query_rewrite`
+3. `multi_retriever_recall`
+4. `fusion`
+5. `rerank`
+6. `evidence_check`
+7. `conditional_requery`
+8. `citation_answer`
+
+The trace is assembled from the existing runtime components rather than a new
+service boundary. That keeps Phase 09 scoped to proof and contract hardening,
+not a runtime rewrite.
+
+## Query Method Coverage
+
+- Explicit `query_method=basic` keeps Enhanced mode on the strong standard
+  pipeline and prevents graph/community route activation.
+- `auto` relation questions resolve to `local` and include vector, BM25, and
+  graph recall when available.
+- `auto` global evidence questions resolve to `drift` when graph and community
+  assets are ready.
+- Unavailable graph/community assets remain visible through fallback trace from
+  Phase 08.
+
+## Evidence And Citation Contract
+
+`evidence_bundle` records document count, source types, chunk ids, citation
+chunks, cited document count, and citation coverage. This makes citation proof
+available to tests and eval diagnostics without requiring frontend changes.
 
 ## Acceptance Criteria
 
@@ -57,6 +98,11 @@ evidence check, conditional requery, citation answer, fallback trace, and tests.
 - DRIFT uses community primer plus follow-up retrieval.
 - Fallback and requery are traceable.
 - Tests/evals show no baseline regression.
+
+Status: satisfied for the backend pipeline trace contract and existing
+baseline-preserving gates. No new broad real-runtime eval was run in this
+phase; the current eval note remains the existing W8 evidence plus this trace
+contract hardening.
 
 ## Verification Commands
 
