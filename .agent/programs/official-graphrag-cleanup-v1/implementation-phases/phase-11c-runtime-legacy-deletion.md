@@ -57,6 +57,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   `tests/compat/`.
 - Phase 5 `DomainQAGraph` and `MultiAgentSupervisorGraph` runtime tests have
   moved from root `tests/` into `tests/compat/` as Blocked Legacy coverage.
+- Phase 1 `DomainQAGraph` LangGraph runtime-deepening tests have moved from
+  root `tests/` into `tests/compat/` as Blocked Legacy coverage.
 - `tests/test_phase11c_agent_runtime_retirement.py`,
   `tests/compat/test_agent_runtime_multi_agent.py`,
   `tests/test_phase1_langgraph_runtime_deepening.py`, and

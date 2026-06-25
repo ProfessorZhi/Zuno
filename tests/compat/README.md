@@ -34,3 +34,8 @@ their direct source modules remain Blocked Legacy.
 are moved Phase 5 legacy runtime tests. They remain here as Blocked Legacy
 coverage while root-level runtime import tests track the GraphRAG Project
 mainline.
+
+`test_domain_qa_graph_langgraph_runtime_deepening.py` is moved Phase 1
+legacy graph/runtime behavior coverage. It remains here as Blocked Legacy
+coverage because the current mainline is the single `GeneralAgent` project
+query path.

@@ -95,6 +95,8 @@ Removed from the active current path:
   `tests/compat/`.
 - Phase 5 `DomainQAGraph` and `MultiAgentSupervisorGraph` runtime tests have
   moved from root `tests/` into `tests/compat/` as Blocked Legacy coverage.
+- Phase 1 `DomainQAGraph` LangGraph runtime-deepening tests have moved from
+  root `tests/` into `tests/compat/` as Blocked Legacy coverage.
 - The stale tracked backend package asset copy
   `src/backend/zuno/domain_packs/contract_review/` has been removed from the
   current package path and archived under

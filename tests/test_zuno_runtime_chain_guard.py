@@ -77,6 +77,7 @@ def test_phase5_import_tests_use_project_query_runtime_truth() -> None:
 
 def test_legacy_graph_runtime_tests_live_under_compat() -> None:
     legacy_root_tests = [
+        "tests/test_phase1_langgraph_runtime_deepening.py",
         "tests/test_phase5_domain_qa_graph_runtime.py",
         "tests/test_phase5_multi_agent_supervisor_runtime.py",
     ]
@@ -84,6 +85,7 @@ def test_legacy_graph_runtime_tests_live_under_compat() -> None:
         assert not (REPO_ROOT / relative_path).exists(), relative_path
 
     compat_tests = [
+        "tests/compat/test_domain_qa_graph_langgraph_runtime_deepening.py",
         "tests/compat/test_domain_qa_graph_runtime.py",
         "tests/compat/test_multi_agent_supervisor_runtime.py",
     ]
