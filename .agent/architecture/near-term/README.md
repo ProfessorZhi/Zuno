@@ -31,6 +31,7 @@ extraction, event bus rollout, or default multi-agent behavior.
 15. [Near-Term Migration Roadmap](15-near-term-migration-roadmap.md)
 16. [Near-Term Acceptance Gates](16-near-term-acceptance-gates.md)
 17. [Implementation Phase Map](17-implementation-phase-map.md)
+18. [Context Memory Ideal Architecture](18-context-memory-ideal-architecture.md)
 
 ## Standard Sections
 
