@@ -1,4 +1,4 @@
-# Architecture Doc Maintenance Workflow
+﻿# Architecture Doc Maintenance Workflow
 
 ## Purpose
 
@@ -32,7 +32,7 @@ At minimum, review:
 2. `docs/architecture/README.md`
 3. `docs/architecture/current-architecture.md`
 4. `docs/architecture/target-architecture.md`
-5. the active file in `docs/architecture/phases/`
+5. the active file in `docs/architecture/history/phases/`
 6. affected specs in `docs/architecture/specs/`
 7. `docs/development/README.md`
 

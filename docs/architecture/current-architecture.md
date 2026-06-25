@@ -2,96 +2,60 @@
 
 ## Purpose
 
-This file describes the current repo reality. It does not describe the desired future state.
+This file states current repository reality. It does not describe the desired
+future state.
 
-If this file and the code disagree, update this file.
+## Current
 
-## Current Reality
-
-The repo has recovered one stable backend runtime baseline.
-
-The visible codebase contains:
+Zuno is a monorepo with these active runtime boundaries:
 
 ```text
-apps/
-  web/
-  desktop/
-
-src/backend/zuno/
-domain-packs/
+apps/web
+apps/desktop
+src/backend/zuno
+infra
+tools
+tests
 ```
 
-There is no active root-level `services/` tree in current truth.
+`src/backend/zuno` is the only active Python backend runtime boundary. There is
+no active root-level `services/` backend tree and no active `src/frontend`
+workspace.
 
-## Current Backend Truth
+## Current Backend Shape
 
-The stable backend package expected by the rest of the repo is:
+- FastAPI entrypoint: `src/backend/zuno/main.py`
+- API layer: `src/backend/zuno/api/`
+- Runtime/core layer: `src/backend/zuno/core/`
+- Service layer: `src/backend/zuno/services/`
+- Persistence and settings: `src/backend/zuno/database/`,
+  `src/backend/zuno/settings.py`
+- Eval and maintenance tooling: `tools/evals/zuno/`, `tools/scripts/`
 
-```text
-src/backend/zuno/
-```
+## Current GraphRAG State
 
-In other words:
+The current code already contains GraphRAG Project, Prompt Registry, Query
+Method, Enhanced Mode, index-version, trace, and frontend contract migration
+work from the active cleanup program.
 
-1. `apps/web` and `apps/desktop` remain valid top-level app shells.
-2. the Python backend runtime truth is `src/backend/zuno`.
-3. any future root-level `services/` move must be reopened explicitly as a new architecture phase.
+Blocked Legacy remains:
 
-## Current Runtime Boundary
+- `domain-packs/`
+- Domain Pack runtime services
+- `DomainQAGraph`
+- selected old public names in compatibility or migration paths
+- `tests/compat/`
 
-There is no active compatibility namespace in current truth.
+These surfaces are not the future front-path architecture, but they still have
+active imports or tests. They are retained until Phase 11 can prove safe runtime
+deletion.
 
-The only backend runtime boundary is:
+## Historical Completion Truth
 
-```text
-src/backend/zuno/
-```
+Phase 0-6 is complete and historical. Do not rewrite those phase files as
+incomplete to carry new work.
 
-Current mainline runtime work must not reintroduce retired alias packages, duplicate backend roots, or compatibility-only import trees.
+## Documentation Boundary
 
-## Completed Closure Truth
-
-The previous architecture closure remains complete:
-
-```text
-Phase 0 stable runtime recovery is closed
-Phase 1 LangGraph runtime deepening is closed
-Phase 2 GraphRAG mainline deepening is closed
-Phase 2.5 legacy boundary hardening is closed
-Phase 3 Domain Pack formalization is closed
-Phase 4 Knowledge Config V2 + Local Eval strengthening is closed
-Phase 5 docs and public explanation sync is closed
-Phase 6 Agent GraphRAG pluginization boundary is closed
-```
-
-Do not rewrite these files as incomplete to carry new work.
-
-## Current New Program
-
-The current new execution program is:
-
-- `docs/architecture/programs/official-graphrag-cleanup-v1/`
-
-This program starts a separate cleanup and alignment round for:
-
-1. docs and Agent workflow boundaries
-2. legacy front-path cleanup
-3. official GraphRAG Project settings
-4. Prompt Tuning and indexing
-5. Query Method routing
-6. storage versioning
-7. frontend/API surface alignment
-8. tests, evals, and closure
-
-## Current Documentation Rule
-
-The front path under `docs/architecture/` should expose:
-
-1. the current repo reality
-2. the active independent program
-3. the target architecture expectation
-4. the stable technical specs
-
-Older migration-first execution materials and superseded programs should remain reachable only through `history/`.
-
-`AGENTS.md` is the Agent entrypoint. `.agent/` is the Agent workflow library. Neither replaces `docs/architecture/` as formal truth.
+`docs/` is formal documentation. `.agent/` is the Agent workflow library.
+Historical materials live under `docs/architecture/history/`.

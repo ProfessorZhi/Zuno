@@ -1,4 +1,4 @@
-# Requirement Intake
+﻿# Requirement Intake
 
 Use this before new requirements, new features, refactors, or architecture replacements.
 
@@ -13,7 +13,7 @@ Use this before new requirements, new features, refactors, or architecture repla
 
 Decide whether this task updates:
 
-1. `docs/architecture/programs/<program>/`
+1. `.agent/programs/<program>/`
 2. a phase document
 3. a spec, ADR, or audit
 4. `docs/architecture/history/`

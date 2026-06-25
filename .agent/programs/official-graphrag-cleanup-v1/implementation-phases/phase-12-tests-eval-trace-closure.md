@@ -35,7 +35,7 @@ gate, docs sync, commit, and push.
 - `tests/`
 - `tools/evals/zuno/`
 - `docs/architecture/audits/`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/`
+- `.agent/programs/official-graphrag-cleanup-v1/`
 - `.agent/references/`
 - `.agent/architecture/near-term/`
 

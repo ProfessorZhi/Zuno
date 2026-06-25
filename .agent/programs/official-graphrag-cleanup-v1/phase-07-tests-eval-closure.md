@@ -11,7 +11,7 @@ Verification, eval reports, closure docs, and final index updates.
 ## Files to change
 
 - `docs/architecture/audits/`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/`
+- `.agent/programs/official-graphrag-cleanup-v1/`
 - tests and eval scripts that directly verify the completed program
 
 ## Files not to change

@@ -2,143 +2,62 @@
 
 ## Purpose
 
-This file describes the target shape for the current architecture direction. It is the desired structure, not the current state.
+This file states the near-term target. It is desired direction, not current
+implementation truth.
 
-## Target Shape Now
+## Target
 
-The next target is not immediate root-level service extraction.
-
-The next target is:
-
-```text
-one stable, explainable monorepo baseline
-  -> apps/web
-  -> apps/desktop
-  -> src/backend/zuno
-  -> strong LangGraph runtime
-  -> official GraphRAG-aligned project settings, prompt tuning, and query method boundaries
-  -> strong local evaluation proof
-  -> self-maintaining docs and Agent workflow
-```
-
-The detailed design-stage version of this target is:
-
-- `.agent/architecture/near-term/`
-
-That directory is the detailed near-term target architecture for the next
-refactor path. It is intentionally more detailed than this formal summary and
-focuses on the current Python AI Runtime: FastAPI, Service Layer, LangGraph,
-LLM/Tool adapters, RAG/GraphRAG, Enhanced Mode, persistence, frontend API, and
-observability.
-
-Long-term Java business services, microservices, event-driven workers, and
-multi-agent mode live in `.agent/architecture/future/`. They are direction
-notes, not current near-term acceptance targets.
-
-## Target Repository Shape
-
-```text
-Zuno/
-  apps/
-    web/
-    desktop/
-  src/
-    backend/
-      zuno/
-  infra/
-  tools/
-  tests/
-  docs/
-  .agent/
-  AGENTS.md
-```
-
-## Target Directory Meaning
-
-```text
-apps              = user-facing application shells
-src/backend/zuno  = stable Python backend package
-infra             = deployment and environment infrastructure
-tools             = scripts, launchers, eval tooling, migration helpers
-tests             = repo-level verification and end-to-end checks
-docs              = current truth, programs, specs, workflow, history
-.agent            = Agent workflow references, templates, and scripts
-AGENTS.md         = Agent entrypoint
-```
-
-## Target Runtime Mainline
-
-The backend should be easy to explain as:
-
-```text
-LangGraph runtime
-  -> retrieval planning
-  -> Basic RAG with BM25 + dense vector + fusion + rerank
-  -> Local GraphRAG retrieval
-  -> official GraphRAG-aligned project settings
-  -> prompt tuning and query method selection
-  -> later Global search over community reports
-  -> evidence fusion
-  -> answer + citation check
-  -> evaluation + proof
-```
-
-The GraphRAG target order should remain:
-
-```text
-Query Method: basic
-  BM25 + dense vector + fusion + rerank, no graph/community assets
-
-Query Method: local
-  entity-specific graph + raw chunk search
-
-Query Method: global
-  map-reduce over community reports
-
-Query Method: drift
-  community primer + follow-up local/basic retrieval
-```
-
-Community reports are target assets for `global` and `drift`; they are not a
-first-level query method.
-
-## Target Evolution Rule
-
-The repo should remain:
+Zuno should remain:
 
 ```text
 monorepo now, service-ready later
 ```
 
-That means:
+The near-term target is:
 
-1. keep `src/backend/zuno` stable first
-2. deepen runtime quality second
-3. only reopen repo-boundary migration after the runtime is stable and testable
-4. keep docs and Agent workflow synchronized as the architecture changes
+```text
+apps/web + apps/desktop
+  -> src/backend/zuno
+  -> FastAPI service boundary
+  -> LangGraph runtime
+  -> Basic RAG: BM25 + dense vector + fusion + rerank
+  -> GraphRAG Project settings
+  -> query_method: auto/basic/local/global/drift
+  -> Prompt Registry and prompt versions
+  -> index/update/version boundaries
+  -> Enhanced Mode pipeline
+  -> evidence bundle, citation, and trace
+  -> local eval proof
+```
 
-The near-term program does not implement Java services, split microservices,
-roll out an event bus, or make multi-agent the default QA path.
+## Not Near-Term
 
-## Target Documentation Rule
+These are future direction, not current acceptance targets:
 
-The docs system should expose only these current-truth layers on the front path:
+- Java business services
+- microservice extraction
+- event-driven workers
+- default multi-agent QA mode
+- independent GraphRAG or indexing services
 
-1. `current`
-2. `target`
-3. `program`
-4. `phase`
-5. `spec`
-6. `decision`
+## Replacement Direction
 
-Everything older belongs in:
+```text
+Domain Pack front path -> GraphRAG Project
+domain_pack_id target name -> graphrag_project_id
+rag_graph_deep -> Enhanced Mode plus query_method
+local_graphrag -> local
+community_global -> global
+drift_like -> drift
+```
 
-- `history`
-- `reference`
-- `development`
+## Detailed Design
 
-Agent workflow has its own boundary:
+Detailed design-stage material lives in:
 
-- `AGENTS.md` is the Agent entrypoint.
-- `.agent/` is the Agent workflow library.
-- `.agent/` does not replace formal docs.
+- `.agent/architecture/near-term/`
+- `.agent/architecture/future/`
+- `.agent/architecture/decisions/`
+
+Only implemented and verified conclusions should be promoted from `.agent/` to
+formal `docs/`.

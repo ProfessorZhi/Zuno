@@ -1,6 +1,7 @@
-# Architecture Upgrade Phases
+# Historical Architecture Phases
 
-This directory preserves the completed phase truth for the previous architecture round.
+This directory preserves the completed Phase 0-6 truth for the previous
+architecture round.
 
 Use it to answer:
 
@@ -8,7 +9,11 @@ Use it to answer:
 - what each phase solved
 - why the old Phase 0-6 closure remains complete
 
-Do not use this directory for long-term architecture theory. That belongs in `../specs/`.
+Current readers should start from:
+
+- [Current Architecture](../../current-architecture.md)
+- [Target Architecture](../../target-architecture.md)
+- [Roadmap](../../roadmap.md)
 
 ## Completed Phase Order
 
@@ -37,19 +42,3 @@ Phase status:
 9. `Phase 6` is complete.
 
 Do not rewrite the earlier `Phase 0-6` files to carry new work.
-
-## New Independent Program Link
-
-The next architecture and workflow cleanup round lives in a separate independent program:
-
-- [Official GraphRAG Cleanup V1](../programs/official-graphrag-cleanup-v1/README.md)
-
-The superseded knowledge-product program is archived at:
-
-- [Knowledge Product Refactor + Deep GraphRAG V1](../history/programs/knowledge-product-refactor-deep-graphrag-v1/README.md)
-
-## Historical Rule
-
-Older phase files from the paused service-migration-first program have been downgraded to:
-
-- [Architecture History](../history/README.md)

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import subprocess
 from pathlib import Path
@@ -14,11 +14,11 @@ EXPECTED_GROUP_PATHS = {
     "docs/architecture/decisions/README.md",
     "docs/architecture/decisions/0002-rename-zuno-to-zuno.md",
     "docs/architecture/decisions/0002-retire-compat-namespace.md",
-    "docs/architecture/phases/README.md",
-    "docs/architecture/plans/rag-local-eval-scheme.md",
-    "docs/architecture/phases/phase-04-local-eval-strengthening.md",
-    "docs/architecture/phases/phase-05-docs-and-public-explanation-sync.md",
-    "docs/architecture/phases/phase-06-agent-graphrag-pluginization.md",
+    "docs/architecture/history/phases/README.md",
+    "docs/architecture/history/plans/rag-local-eval-scheme.md",
+    "docs/architecture/history/phases/phase-04-local-eval-strengthening.md",
+    "docs/architecture/history/phases/phase-05-docs-and-public-explanation-sync.md",
+    "docs/architecture/history/phases/phase-06-agent-graphrag-pluginization.md",
     "docs/architecture/specs/architecture-upgrade-2026-06.md",
     "docs/architecture/specs/enterprise-retrieval-governance.md",
     "docs/architecture/specs/platform-evolution-and-future-direction.md",

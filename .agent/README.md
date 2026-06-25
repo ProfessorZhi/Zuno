@@ -1,4 +1,4 @@
-# Agent Workflow Library
+﻿# Agent Workflow Library
 
 `.agent/` is the Agent workflow library. It is not the formal architecture truth.
 
@@ -31,6 +31,9 @@ architecture design and does not replace `.agent/architecture/near-term/`.
     code-surfaces.md
     verification-map.md
     current_architecture/
+  programs/
+    current.md
+    official-graphrag-cleanup-v1/
   templates/
   scripts/
 ```
@@ -51,7 +54,7 @@ Do not keep tracked placeholder files inside those local-only directories.
 
 When a user asks for a new requirement, new feature, refactor, or architecture replacement, first decide whether the change must update:
 
-1. `docs/architecture/programs/<program>/`
+1. `.agent/programs/<program>/`
 2. a phase document
 3. a spec, ADR, or audit
 4. `docs/architecture/history/`
@@ -61,7 +64,7 @@ When a user asks for a new requirement, new feature, refactor, or architecture r
 8. `AGENTS.md`
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`
-11. `.agent/references/current_architecture/`
+11. `.agent/programs/` or `.agent/references/current_architecture/`
 12. `.agent/scripts/` or `.agent/templates/`
 13. `.gitignore`
 14. verification, commit, and push if files changed

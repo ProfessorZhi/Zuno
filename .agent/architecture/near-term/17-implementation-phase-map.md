@@ -1,4 +1,4 @@
-# Implementation Phase Map
+﻿# Implementation Phase Map
 
 ## Purpose
 
@@ -9,8 +9,8 @@ program without drifting into future architecture.
 
 Use:
 
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
 
 ## Required Reading For Every Implementation Round
 
@@ -18,7 +18,7 @@ Use:
 2. `docs/architecture/README.md`
 3. `docs/architecture/current-architecture.md`
 4. `docs/architecture/target-architecture.md`
-5. `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+5. `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 6. the exact phase file under `implementation-phases/`
 7. `.agent/architecture/near-term/README.md`
 8. `.agent/architecture/near-term/16-near-term-acceptance-gates.md`

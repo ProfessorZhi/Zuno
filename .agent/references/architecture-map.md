@@ -1,12 +1,12 @@
-# Architecture Map
+﻿# Architecture Map
 
 ## Formal Entrypoints
 
 - `docs/architecture/README.md`
 - `docs/architecture/current-architecture.md`
 - `docs/architecture/target-architecture.md`
-- `docs/architecture/phases/README.md`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/README.md`
+- `docs/architecture/history/phases/README.md`
+- `.agent/programs/official-graphrag-cleanup-v1/README.md`
 
 ## Stable Design Docs
 

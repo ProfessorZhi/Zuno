@@ -36,7 +36,7 @@ Docs and Agent workflow references only.
 - `docs/architecture/current-architecture.md`
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/specs/`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/`
+- `.agent/programs/official-graphrag-cleanup-v1/`
 - `.agent/references/`
 - `.agent/architecture/near-term/`
 - `AGENTS.md`

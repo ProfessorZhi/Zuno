@@ -1,4 +1,4 @@
-# Refactor Plan
+﻿# Refactor Plan
 
 ## Completed Baseline
 
@@ -10,8 +10,8 @@ The current program is `official-graphrag-cleanup-v1`.
 
 Its executable stages are defined by:
 
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 The current implementation sequence is:

@@ -1,35 +1,27 @@
-# Architecture Docs
+# Architecture
 
-This directory is the formal architecture entrypoint for Zuno.
+This is the formal architecture entrypoint for Zuno.
 
-It keeps four boundaries explicit:
-
-1. `docs/` is the formal documentation truth.
-2. `AGENTS.md` is the repository-level Agent entrypoint.
-3. `.agent/` is the Agent workflow library, not formal truth.
-4. `docs/architecture/history/` archives superseded plans, old programs, and replaced designs.
-
-## Start Here
-
-If you want the shortest current path, read:
+## Read First
 
 1. [Current Architecture](current-architecture.md)
 2. [Target Architecture](target-architecture.md)
-3. [Architecture Upgrade Phases](./phases/README.md)
-4. [Official GraphRAG Cleanup V1](./programs/official-graphrag-cleanup-v1/README.md)
-5. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
+3. [Roadmap](roadmap.md)
+4. [Public Evidence](../evidence/public-demo.md)
+5. [Architecture Decisions](decisions/README.md)
 
-For the detailed design-stage target architecture v0.1, also read:
+## Current Program
 
-- `../../.agent/architecture/README.md`
-- `../../.agent/architecture/00-architecture-index.md`
-- `../../.agent/architecture/near-term/README.md`
+The active program is official GraphRAG cleanup and alignment. Its detailed
+execution material is maintained for Agents under:
 
-That working set is more detailed than the formal summary here, but it remains
-target/proposed design material until synchronized into formal docs and runtime
-code. Its `near-term/` directory is the next refactor design path. Its
-`future/` directory is horizon planning for Java, microservices, workers, and
-multi-agent direction, not the current acceptance target.
+- `.agent/programs/official-graphrag-cleanup-v1/`
+- `.agent/architecture/near-term/`
+
+The completed Phase 0-6 architecture closure remains historical truth. It is
+archived under:
+
+- [history/phases/](history/phases/)
 
 ## Directory Map
 
@@ -38,112 +30,18 @@ docs/architecture/
   README.md
   current-architecture.md
   target-architecture.md
-  transition-strategy.md
-  phases/
-  programs/
-  specs/
+  roadmap.md
   decisions/
-  audits/
   history/
-    programs/
 ```
 
-Related Agent working set:
+## Boundaries
 
-```text
-.agent/
-  architecture/
-    near-term/
-    future/
-    decisions/
-```
+- Current: what the repository really does now.
+- Target: the near-term direction, without claiming it is implemented.
+- Roadmap: current status, next step, blockers, and accepted non-goals.
+- History: completed or superseded plans, programs, phases, audits, and older
+  Agent workflow material.
 
-## What Each Layer Means
-
-- `current-architecture.md`
-  - what the repo is today
-- `target-architecture.md`
-  - what the active direction is trying to make true
-- `transition-strategy.md`
-  - migration rules and constraints
-- `phases/`
-  - completed Phase 0-6 closure truth for the previous architecture round
-- `programs/`
-  - active independent architecture programs
-- `specs/`
-  - stable architecture definitions
-- `decisions/`
-  - major architecture choices and why they were made
-- `audits/`
-  - evidence gathered before or during implementation phases
-- `history/`
-  - older plans, archived programs, readiness notes, and legacy execution materials
-- `.agent/architecture/`
-  - design-stage working set, not formal truth
-- `.agent/architecture/near-term/`
-  - detailed near-term target for the next refactor path
-- `.agent/architecture/future/`
-  - horizon material for Java, microservices, workers, and multi-agent direction
-
-## Agent Workflow Boundary
-
-- `AGENTS.md` tells Agents how to enter the repository and maintain the workflow system.
-- `.agent/` stores Agent references, templates, and read-only verification scripts.
-- `.agent/` may point to `docs/`, but it must not become the only place where formal conclusions live.
-
-## Current Rule
-
-Do not treat historical execution notes as the active architecture path.
-
-The current active program is:
-
-- [Official GraphRAG Cleanup V1](./programs/official-graphrag-cleanup-v1/README.md)
-- [Official GraphRAG Cleanup V1 Implementation Roadmap](./programs/official-graphrag-cleanup-v1/implementation-roadmap.md)
-
-The superseded knowledge-product program is archived at:
-
-- [Knowledge Product Refactor + Deep GraphRAG V1](./history/programs/knowledge-product-refactor-deep-graphrag-v1/README.md)
-
-Use `history/` only when you need:
-
-- historical phase evidence
-- older refactor reasoning
-- older readiness or staging context
-
-Relative path hints:
-
-- `./current-architecture.md`
-- `./target-architecture.md`
-- `./phases/README.md`
-- `./history/README.md`
-- `./specs/enterprise-retrieval-governance.md`
-
-## Stable Spec Reading Order
-
-If you want the deeper technical model after reading the current path:
-
-1. [Architecture Upgrade Design](./specs/architecture-upgrade-2026-06.md)
-2. [LangGraph Runtime](./specs/langgraph-runtime.md)
-3. [Retrieval Orchestrator](./specs/retrieval-orchestrator.md)
-4. [Enterprise Retrieval Governance](./specs/enterprise-retrieval-governance.md)
-5. [RAG Evaluation And Observability](./specs/rag-evaluation-and-observability.md)
-6. [Layered Backend And Service Evolution](./specs/layered-backend-and-service-evolution.md)
-7. [Platform Evolution And Future Direction](./specs/platform-evolution-and-future-direction.md)
-
-## Maintenance Rule
-
-After every major structure, runtime, evaluation, feature, refactor, or architecture replacement, review:
-
-- this index
-- the current architecture file
-- the target architecture file
-- the active program or phase file
-- the affected specs, ADRs, and audits
-- `AGENTS.md`
-- `.agent/references/`
-
-The goal is simple:
-
-```text
-keep architecture docs smaller, current, and structurally honest
-```
+Agent workflow aids live in `.agent/`. Formal conclusions that humans should
+read live in `docs/`.

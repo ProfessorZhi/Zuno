@@ -1,4 +1,4 @@
-# Transition Strategy
+﻿# Transition Strategy
 
 ## Goal
 
@@ -23,8 +23,8 @@ Any future service-root move must reopen as a new phase with fresh verification 
 The current active strategy is now the Official GraphRAG Cleanup V1
 implementation program:
 
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 It moves the front path from Domain Pack and old query-mode naming toward
@@ -60,8 +60,8 @@ Only one execution path should steer the repo at a time.
 
 Right now that path is:
 
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 Older migration-first materials may remain available, but they must not steer current work.

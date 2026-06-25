@@ -1,4 +1,4 @@
-# Modules
+﻿# Modules
 
 ## Application Surfaces
 
@@ -13,7 +13,7 @@
 
 - `docs/`: formal documentation truth.
 - `docs/architecture/`: formal architecture entrypoint.
-- `docs/architecture/programs/`: active independent architecture programs.
+- `.agent/programs/`: active independent Agent execution programs.
 - `docs/architecture/history/`: archived and superseded plans.
 - `AGENTS.md`: repository-level Agent entrypoint.
 - `.agent/`: Agent workflow library.

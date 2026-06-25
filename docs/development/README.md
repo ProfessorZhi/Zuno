@@ -1,4 +1,4 @@
-# Development Docs
+﻿# Development Docs
 
 This section is for engineering-facing and maintainer-facing documentation.
 
@@ -49,7 +49,7 @@ After any significant architecture or runtime change, review:
 2. [docs/architecture/README.md](../architecture/README.md)
 3. [docs/architecture/current-architecture.md](../architecture/current-architecture.md)
 4. [docs/architecture/target-architecture.md](../architecture/target-architecture.md)
-5. the active file under [docs/architecture/phases/](../architecture/phases/)
+5. the active file under [docs/architecture/history/phases/](../architecture/phases/)
 6. this index
 
 Relative path hints:

@@ -8,33 +8,27 @@ def test_readme_exposes_short_first_reader_path() -> None:
     content = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
     required_phrases = [
-        "./docs/architecture/README.md",
         "./docs/architecture/current-architecture.md",
         "./docs/architecture/target-architecture.md",
-        "./docs/development/public-demo-evidence.md",
-        "./docs/development/public-demo-runbook.md",
-        "./docs/development/public-demo-acceptance.md",
+        "./docs/architecture/roadmap.md",
+        "./docs/evidence/public-demo.md",
         "First-time readers start here:",
-        "Maintainer-only release workflow:",
-        "First-time readers should stop at the public path below and skip release staging, checklist, and publish-boundary docs on the first pass.",
+        "Blocked Legacy",
     ]
 
     for phrase in required_phrases:
         assert phrase in content, f"missing README first-reader phrase: {phrase}"
 
 
-def test_docs_index_prioritizes_public_demo_reading_path() -> None:
+def test_docs_index_prioritizes_stable_public_path() -> None:
     content = (REPO_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
 
     required_phrases = [
-        "./architecture/README.md",
-        "./development/architecture-doc-maintenance-workflow.md",
-        "./development/public-demo-evidence.md",
-        "./development/public-demo-runbook.md",
-        "./development/public-demo-acceptance.md",
-        "./development/README.md",
-        "./development/github-publish-boundary.md",
-        "## Maintainer Path",
+        "./architecture/current-architecture.md",
+        "./architecture/target-architecture.md",
+        "./architecture/roadmap.md",
+        "./evidence/public-demo.md",
+        "./architecture/history/README.md",
         "## First-Read Path",
     ]
 
@@ -42,21 +36,37 @@ def test_docs_index_prioritizes_public_demo_reading_path() -> None:
         assert phrase in content, f"missing docs index phrase: {phrase}"
 
 
-def test_development_docs_are_marked_as_maintainer_only() -> None:
-    content = (REPO_ROOT / "docs" / "development" / "README.md").read_text(
+def test_architecture_docs_use_current_target_roadmap_path() -> None:
+    content = (REPO_ROOT / "docs" / "architecture" / "README.md").read_text(
         encoding="utf-8"
     )
 
     required_phrases = [
-        "It is not the first-read public explanation path.",
-        "## Current Maintainer Path",
-        "## Current Sync Rule",
-        "../../README.md",
-        "../architecture/README.md",
+        "current-architecture.md",
+        "target-architecture.md",
+        "roadmap.md",
+        "../evidence/public-demo.md",
+        ".agent/programs/official-graphrag-cleanup-v1/",
+        "history/phases/",
     ]
 
     for phrase in required_phrases:
-        assert phrase in content, f"missing development docs maintainer phrase: {phrase}"
+        assert phrase in content, f"missing architecture index phrase: {phrase}"
+
+
+def test_evidence_page_links_selected_public_demo_material() -> None:
+    content = (REPO_ROOT / "docs" / "evidence" / "public-demo.md").read_text(
+        encoding="utf-8"
+    )
+
+    required_phrases = [
+        "../development/public-demo-evidence.md",
+        "../development/public-demo-runbook.md",
+        "../development/public-demo-acceptance.md",
+    ]
+
+    for phrase in required_phrases:
+        assert phrase in content, f"missing evidence link: {phrase}"
 
 
 def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() -> None:
@@ -66,33 +76,33 @@ def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() ->
 
     required_phrases = [
         "documentation entrypoint verification passed.",
-        "./docs/development/public-demo-evidence.md",
-        "./development/public-demo-runbook.md",
         "./docs/architecture/current-architecture.md",
-        "./current-architecture.md",
-        "./phases/README.md",
-        "First-time readers start here:",
-        "## Maintainer Path",
-        "It is not the first-read public explanation path.",
+        "./docs/architecture/target-architecture.md",
+        "./docs/architecture/roadmap.md",
+        "./docs/evidence/public-demo.md",
+        "Blocked Legacy",
+        "Phase 11 is Runtime Legacy Deletion.",
     ]
 
     for phrase in required_phrases:
         assert phrase in content, f"missing docs entrypoint verifier phrase: {phrase}"
 
 
-def test_architecture_docs_use_clean_relative_links_in_active_entrypoints() -> None:
-    architecture_index = (
-        REPO_ROOT / "docs" / "architecture" / "README.md"
-    ).read_text(encoding="utf-8")
-    phases_index = (
-        REPO_ROOT / "docs" / "architecture" / "phases" / "README.md"
-    ).read_text(encoding="utf-8")
+def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
+    files = [
+        REPO_ROOT / "README.md",
+        REPO_ROOT / "docs" / "README.md",
+        REPO_ROOT / "docs" / "architecture" / "README.md",
+    ]
+    forbidden = [
+        "docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md",
+        "./docs/architecture/phases/README.md",
+        "./phases/README.md",
+        "./plans/",
+        "05_TopDown_题库学习/项目/02_项目映射/Zuno/",
+    ]
 
-    assert "./phases/README.md" in architecture_index
-    assert "./history/README.md" in architecture_index
-    assert "../history/README.md" in phases_index
-
-    abnormal_long_path = "05_TopDown_题库学习/项目/02_项目映射/Zuno/"
-
-    assert abnormal_long_path not in architecture_index
-    assert abnormal_long_path not in phases_index
+    for path in files:
+        content = path.read_text(encoding="utf-8")
+        for phrase in forbidden:
+            assert phrase not in content, f"{path} contains retired front-path text: {phrase}"

@@ -9,7 +9,6 @@ def test_gitignore_matches_current_local_only_boundary() -> None:
 
     required_entries = [
         ".local/",
-        "apps/web/AGENTS.md",
         "infra/docker/docker_config.local.yaml",
         ".local/config/zuno/",
         ".local/evals/zuno/rag_eval/corpus/",
@@ -20,31 +19,25 @@ def test_gitignore_matches_current_local_only_boundary() -> None:
         assert entry in content, f"missing local-only ignore: {entry}"
 
 
-def test_readme_and_phase_index_share_current_phase_truth() -> None:
+def test_readme_and_roadmap_share_current_program_truth() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    phases = (
-        REPO_ROOT / "docs" / "architecture" / "phases" / "README.md"
-    ).read_text(encoding="utf-8")
+    roadmap = (REPO_ROOT / "docs" / "architecture" / "roadmap.md").read_text(
+        encoding="utf-8"
+    )
 
     for phrase in [
-        "Phase 3 已完成 Domain Pack Formalization",
-        "Phase 4: Knowledge Config V2 + Local Eval Strengthening",
-        "Phase 5: Docs And Public Explanation Sync",
-        "Phase 6: Agent GraphRAG Pluginization / Future Platform Layer",
+        "Phase 0-6 architecture closure remains complete historical truth.",
+        "official GraphRAG alignment program",
+        "Blocked Legacy",
     ]:
         assert phrase in readme
 
     for phrase in [
-        "Phase 3: Domain Pack Formalization",
-        "Phase 4: Knowledge Config V2 + Local Eval Strengthening",
-        "Phase 5: Docs And Public Explanation Sync",
-        "Phase 6: Agent GraphRAG Pluginization / Future Platform Layer",
-        "`Phase 3` is complete",
-        "`Phase 4` is complete",
-        "`Phase 5` is complete",
-        "`Phase 6` is complete",
+        "Phase 11 is Runtime Legacy Deletion.",
+        "Phase 01 through Phase 10 are complete.",
+        "Blocked Legacy",
     ]:
-        assert phrase in phases
+        assert phrase in roadmap
 
 
 def test_public_docs_keep_history_off_front_path_but_reachable() -> None:
@@ -52,15 +45,15 @@ def test_public_docs_keep_history_off_front_path_but_reachable() -> None:
     architecture_index = (
         REPO_ROOT / "docs" / "architecture" / "README.md"
     ).read_text(encoding="utf-8")
-    development_index = (
-        REPO_ROOT / "docs" / "development" / "README.md"
+    history_index = (
+        REPO_ROOT / "docs" / "architecture" / "history" / "README.md"
     ).read_text(encoding="utf-8")
 
-    assert "./docs/architecture/phases/README.md" in readme
-    assert "./history/README.md" in architecture_index
-    assert "history/README.md" in development_index
-    assert "`src/backend/zuno` 是当前唯一后端运行真相" in readme
-    assert "./phases/README.md" in architecture_index
+    assert "./docs/architecture/roadmap.md" in readme
+    assert "history/phases/" in architecture_index
+    assert "phases/" in history_index
+    assert "plans/" in history_index
+    assert "src/backend/zuno" in readme
 
 
 def test_launcher_docs_label_phase0_as_recovery_surface() -> None:

@@ -1,4 +1,4 @@
-# Near-Term Acceptance Gates
+﻿# Near-Term Acceptance Gates
 
 ## Purpose
 
@@ -10,7 +10,7 @@ State what would prove the near-term architecture is actually ready later.
 - `future/` topics do not appear as near-term acceptance requirements.
 - `decisions/` records locked choices and retired surfaces.
 - the formal implementation program is linked from
-  `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+  `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
   and `.agent/architecture/near-term/17-implementation-phase-map.md`.
 
 ## Contract Gates

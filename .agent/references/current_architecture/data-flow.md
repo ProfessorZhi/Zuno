@@ -1,4 +1,4 @@
-# Data Flow
+﻿# Data Flow
 
 This is a documentation-level flow, not a claim about uninspected code internals.
 
@@ -7,7 +7,7 @@ This is a documentation-level flow, not a claim about uninspected code internals
 ```text
 formal decision
   -> docs/architecture/
-  -> docs/architecture/programs/ when it is active work
+  -> .agent/programs/ when it is active work
   -> docs/architecture/history/ when superseded
 ```
 

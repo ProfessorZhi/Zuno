@@ -4,7 +4,6 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-_RETIRED_COMPAT_SEGMENT = "agent" + "chat"
 
 
 def _read(relative_path: str) -> str:
@@ -12,18 +11,15 @@ def _read(relative_path: str) -> str:
 
 
 def _require_phrases(name: str, content: str, phrases: list[str]) -> list[str]:
-    errors: list[str] = []
-    for phrase in phrases:
-        if phrase not in content:
-            errors.append(f"{name} missing phrase: {phrase}")
-    return errors
+    return [f"{name} missing phrase: {phrase}" for phrase in phrases if phrase not in content]
 
 
 def main() -> int:
     readme = _read("README.md")
     docs_index = _read("docs/README.md")
     architecture_index = _read("docs/architecture/README.md")
-    development_index = _read("docs/development/README.md")
+    roadmap = _read("docs/architecture/roadmap.md")
+    evidence = _read("docs/evidence/public-demo.md")
 
     errors: list[str] = []
     errors.extend(
@@ -31,15 +27,13 @@ def main() -> int:
             "README.md",
             readme,
             [
-                "./docs/architecture/README.md",
+                "First-time readers start here:",
                 "./docs/architecture/current-architecture.md",
                 "./docs/architecture/target-architecture.md",
-                "./docs/development/public-demo-evidence.md",
-                "./docs/development/public-demo-runbook.md",
-                "./docs/development/public-demo-acceptance.md",
-                "First-time readers start here:",
-                "Maintainer-only release workflow:",
-                "First-time readers should stop at the public path below and skip release staging, checklist, and publish-boundary docs on the first pass.",
+                "./docs/architecture/roadmap.md",
+                "./docs/evidence/public-demo.md",
+                "Blocked Legacy",
+                "src/backend/zuno",
             ],
         )
     )
@@ -48,15 +42,11 @@ def main() -> int:
             "docs/README.md",
             docs_index,
             [
-                "./architecture/README.md",
-                "./development/architecture-doc-maintenance-workflow.md",
-                "./development/public-demo-evidence.md",
-                "./development/public-demo-runbook.md",
-                "./development/public-demo-acceptance.md",
-                "./development/README.md",
-                "./development/github-publish-boundary.md",
-                "## Maintainer Path",
-                "## First-Read Path",
+                "./architecture/current-architecture.md",
+                "./architecture/target-architecture.md",
+                "./architecture/roadmap.md",
+                "./evidence/public-demo.md",
+                "docs/architecture/history/",
             ],
         )
     )
@@ -65,57 +55,57 @@ def main() -> int:
             "docs/architecture/README.md",
             architecture_index,
             [
-                "./current-architecture.md",
-                "./target-architecture.md",
-                "./phases/README.md",
-                "./history/README.md",
-                "./specs/enterprise-retrieval-governance.md",
+                "current-architecture.md",
+                "target-architecture.md",
+                "roadmap.md",
+                "../evidence/public-demo.md",
+                ".agent/programs/official-graphrag-cleanup-v1/",
+                "history/phases/",
             ],
         )
     )
     errors.extend(
         _require_phrases(
-            "docs/development/README.md",
-            development_index,
+            "docs/architecture/roadmap.md",
+            roadmap,
             [
-                "It is not the first-read public explanation path.",
-                "## Current Maintainer Path",
-                "## Current Sync Rule",
-                "../../README.md",
-                "../architecture/README.md",
+                "Phase 11 is Runtime Legacy Deletion.",
+                "Blocked Legacy",
+                ".agent/programs/official-graphrag-cleanup-v1/",
+            ],
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            "docs/evidence/public-demo.md",
+            evidence,
+            [
+                "../development/public-demo-evidence.md",
+                "../development/public-demo-runbook.md",
+                "../development/public-demo-acceptance.md",
             ],
         )
     )
 
+    forbidden_front_path = [
+        "docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md",
+        "./docs/architecture/phases/README.md",
+        "./phases/README.md",
+        "./plans/",
+        "05_TopDown_题库学习/项目/02_项目映射/Zuno/",
+    ]
+    for name, content in {
+        "README.md": readme,
+        "docs/README.md": docs_index,
+        "docs/architecture/README.md": architecture_index,
+    }.items():
+        for forbidden in forbidden_front_path:
+            if forbidden in content:
+                errors.append(f"{name} contains retired front-path text: {forbidden}")
+
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
-        print("documentation entrypoint verification failed.")
-        return 1
-
-    abnormal_long_path = "05_TopDown_题库学习/项目/02_项目映射/Zuno/"
-    legacy_target_path = f"src/backend/{_RETIRED_COMPAT_SEGMENT}/"
-
-    if abnormal_long_path in architecture_index:
-        print(
-            "ERROR: docs/architecture/README.md still contains abnormal long local paths."
-        )
-        print("documentation entrypoint verification failed.")
-        return 1
-
-    if abnormal_long_path in _read("docs/architecture/phases/README.md"):
-        print(
-            "ERROR: docs/architecture/phases/README.md still contains abnormal long local paths."
-        )
-        print("documentation entrypoint verification failed.")
-        return 1
-
-    if legacy_target_path in _read(
-        "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md"
-    ):
-        print(
-            "ERROR: GraphRAG architecture spec still points to the retired compat backend path."
-        )
         print("documentation entrypoint verification failed.")
         return 1
 

@@ -1,4 +1,4 @@
-# Zuno Agent Entry
+﻿# Zuno Agent Entry
 
 This is the only repository-level Agent entrypoint.
 
@@ -24,7 +24,7 @@ For architecture, refactor, new feature, or workflow tasks:
 1. `docs/architecture/README.md`
 2. `docs/architecture/current-architecture.md`
 3. `docs/architecture/target-architecture.md`
-4. `docs/architecture/phases/README.md`
+4. `docs/architecture/roadmap.md`
 5. `.agent/README.md`
 6. `.agent/references/current-program.md`
 7. `.agent/references/docs-map.md`
@@ -36,16 +36,16 @@ For implementation tasks, read the relevant code after the docs. Do not infer ru
 
 The completed Phase 0-6 architecture closure remains historical completion truth and must not be rewritten as incomplete.
 
-The current new program is:
+The current executable Agent program is:
 
-- `docs/architecture/programs/official-graphrag-cleanup-v1/`
+- `.agent/programs/official-graphrag-cleanup-v1/`
 
 Its purpose is to standardize docs and Agent workflow, clean legacy surfaces, retire Domain Pack as the front-path architecture mainline, and align the next GraphRAG work with official GraphRAG Project, Prompt Tuning, and Query Method concepts.
 
 The executable near-term implementation breakdown is:
 
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 Detailed target architecture design for this program lives in:
@@ -74,7 +74,7 @@ future-direction implementation program.
 
 For every new requirement, new feature, refactor, or architecture replacement, decide whether each item must be updated:
 
-1. `docs/architecture/programs/<program>/`
+1. `.agent/programs/<program>/`
 2. a phase document
 3. a spec, ADR, or audit
 4. `docs/architecture/history/` for any superseded plan

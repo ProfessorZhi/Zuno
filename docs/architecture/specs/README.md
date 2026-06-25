@@ -1,4 +1,4 @@
-# Architecture Specs
+﻿# Architecture Specs
 
 This directory keeps the stable architecture definitions that should outlive any one execution phase.
 
@@ -46,6 +46,6 @@ A spec belongs here only if it defines one of these:
 
 Those belong in either:
 
-- `../phases/`
+- `../history/phases/`
 - `../history/`
 - `../../development/`

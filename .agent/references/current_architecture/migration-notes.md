@@ -1,4 +1,4 @@
-# Migration Notes
+﻿# Migration Notes
 
 ## Agent Entrypoint
 
@@ -17,7 +17,7 @@ docs/architecture/history/programs/
 The current active program remains under:
 
 ```text
-docs/architecture/programs/
+.agent/programs/
 ```
 
 ## Domain Pack Mainline

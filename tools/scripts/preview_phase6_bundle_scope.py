@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import subprocess
 import sys
@@ -13,8 +13,8 @@ PHASE6_BUNDLE_GROUPS: "OrderedDict[str, list[str]]" = OrderedDict(
         (
             "docs_and_contract",
             [
-                "docs/architecture/plans/current-phase-audit.md",
-                "docs/architecture/plans/zuno-refactor-execution-plan.md",
+                "docs/architecture/history/plans/current-phase-audit.md",
+                "docs/architecture/history/plans/zuno-refactor-execution-plan.md",
                 "tools/evals/zuno/rag_eval/README.md",
             ],
         ),
@@ -76,9 +76,9 @@ PHASE6_BUNDLE_GROUPS: "OrderedDict[str, list[str]]" = OrderedDict(
         (
             "phase6_node_ops",
             [
-                "docs/architecture/plans/README.md",
-                "docs/architecture/plans/phase6-bundle-prestage.md",
-                "docs/architecture/plans/phase6-bundle-ready.md",
+                "docs/architecture/history/plans/README.md",
+                "docs/architecture/history/plans/phase6-bundle-prestage.md",
+                "docs/architecture/history/plans/phase6-bundle-ready.md",
                 "tools/scripts/preview_phase6_bundle_scope.py",
                 "tools/scripts/verify_phase6_bundle_ready.py",
                 "tests/test_phase6_bundle_scope.py",

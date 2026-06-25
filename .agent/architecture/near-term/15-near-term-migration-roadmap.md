@@ -1,4 +1,4 @@
-# Near-Term Migration Roadmap
+﻿# Near-Term Migration Roadmap
 
 ## Purpose
 
@@ -7,8 +7,8 @@ default multi-agent work are intentionally not in this roadmap.
 
 The formal executable implementation program now lives in:
 
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 The compact design-level sequence has been replaced by the formal

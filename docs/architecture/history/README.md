@@ -1,28 +1,29 @@
 # Architecture History
 
-This directory stores older architecture and execution materials that are no longer the current truth.
+This directory stores architecture material that is no longer on the default
+reading path.
 
-Use it when you need:
+Use it for historical context, not current acceptance criteria.
 
-- historical phase context
-- past readiness notes
-- older refactor narratives
-- evidence of how the project evolved
-- superseded programs
-- replaced designs
+## Start Elsewhere For Current Truth
 
-Do not start here if you want to understand the current architecture upgrade.
+Current architecture readers should start from:
 
-Start from:
+- [Architecture README](../README.md)
+- [Current Architecture](../current-architecture.md)
+- [Target Architecture](../target-architecture.md)
+- [Roadmap](../roadmap.md)
 
-- `../README.md`
-- `../current-architecture.md`
-- `../target-architecture.md`
-- `../phases/README.md`
-- `../programs/official-graphrag-cleanup-v1/README.md`
+## Contents
+
+- `phases/`: completed Phase 0-6 closure and older phase evidence.
+- `plans/`: superseded execution plans.
+- `programs/`: archived architecture programs and their evidence.
+- `agent-workflow/`: retired Agent workflow notes and old superpowers plans.
+- `audits/`: historical audits that are not active program evidence.
 
 ## Archived Programs
 
-- [Knowledge Product Refactor + Deep GraphRAG V1](./programs/knowledge-product-refactor-deep-graphrag-v1/README.md) is superseded by [Official GraphRAG Cleanup V1](../programs/official-graphrag-cleanup-v1/README.md).
+- [Knowledge Product Refactor + Deep GraphRAG V1](./programs/knowledge-product-refactor-deep-graphrag-v1/README.md)
 
 Do not delete historical material merely because a new program replaces it.

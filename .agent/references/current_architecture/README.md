@@ -1,4 +1,4 @@
-# Current Architecture Reference
+﻿# Current Architecture Reference
 
 This directory is an Agent quick reference. It does not replace formal truth in `docs/architecture/`.
 
@@ -7,7 +7,7 @@ Use it to orient quickly, then verify against:
 1. `docs/architecture/README.md`
 2. `docs/architecture/current-architecture.md`
 3. `docs/architecture/target-architecture.md`
-4. `docs/architecture/programs/official-graphrag-cleanup-v1/README.md`
+4. `.agent/programs/official-graphrag-cleanup-v1/README.md`
 
 The current rule is simple: docs hold decisions, `AGENTS.md` tells Agents how to enter, `.agent/` helps Agents work, and `history/` keeps superseded material out of the front path.
 
@@ -25,6 +25,6 @@ reference.
 When the task is to implement the near-term target architecture, use the formal
 implementation roadmap first:
 
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`

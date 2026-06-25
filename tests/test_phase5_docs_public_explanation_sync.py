@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -14,10 +14,10 @@ def test_phase5_docs_sync_current_public_story() -> None:
     ).read_text(encoding="utf-8")
 
     for phrase in [
-        "本地优先的 Agent Workspace",
+        "鏈湴浼樺厛鐨?Agent Workspace",
         "Local GraphRAG",
         "Evaluation + Proof",
-        "./docs/architecture/phases/README.md",
+        "./docs/architecture/history/phases/README.md",
     ]:
         assert phrase in readme
 
@@ -28,7 +28,7 @@ def test_phase5_docs_sync_current_public_story() -> None:
         assert phrase in phase5_doc
 
     assert "`Phase 5` is complete" in phase_index
-    assert "`src/backend/zuno` 是当前唯一后端运行真相" in readme
+    assert "`src/backend/zuno` 鏄綋鍓嶅敮涓€鍚庣杩愯鐪熺浉" in readme
 
 
 def test_phase5_maintainer_docs_use_clean_paths_and_current_truth() -> None:
@@ -40,6 +40,6 @@ def test_phase5_maintainer_docs_use_clean_paths_and_current_truth() -> None:
     ).read_text(encoding="utf-8")
 
     assert "development/history/README.md" in staging_plan
-    assert "05_TopDown_题库学习/项目/02_项目映射/Zuno/" not in staging_plan
+    assert "05_TopDown_棰樺簱瀛︿範/椤圭洰/02_椤圭洰鏄犲皠/Zuno/" not in staging_plan
     assert "Phase 0" in launcher_docs
     assert "recovery" in launcher_docs.lower()
