@@ -38,7 +38,9 @@ Read first:
   loader.
 - Phase 05 adds project settings loading, prompt discovery, and readiness
   metadata without changing retrieval behavior.
-- Phase 06 is next and owns Prompt Registry / tuning boundary.
+- Phase 06 adds Prompt Registry categories and prompt-version impact rules
+  without implementing automatic tuning.
+- Phase 07 is next and owns Index / Update / Versioning.
 
 ## Rule
 

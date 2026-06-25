@@ -159,7 +159,11 @@ class KnowledgeService:
             field
             for field in changed_fields
             if field.startswith("retrieval_settings.")
-            or field in {"eval_profile_id", "model_refs.rerank_model_id"}
+            or field in {
+                "eval_profile_id",
+                "model_refs.rerank_model_id",
+                "graphrag_project.query_prompt_version",
+            }
         )
 
         text_reindex_fields = {
@@ -189,6 +193,7 @@ class KnowledgeService:
             "index_capability",
             "graphrag_project_id",
             "domain_pack_id",
+            "graphrag_project.prompt_version",
             "graph_index_settings.entity_extraction_mode",
             "graph_index_settings.relation_schema",
             "graph_index_settings.entity_normalization",
@@ -202,6 +207,7 @@ class KnowledgeService:
         community_report_fields = {
             "graphrag_project_id",
             "domain_pack_id",
+            "graphrag_project.prompt_version",
             "eval_profile_id",
             "graph_index_settings.community_report_prompt_id",
         }

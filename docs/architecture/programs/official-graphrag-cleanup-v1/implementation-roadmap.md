@@ -96,7 +96,9 @@ This roadmap does not implement:
   status without claiming a loader.
 - Phase 05 adds `settings.yaml` loading, prompt discovery, validation errors,
   and readiness metadata without changing retrieval behavior.
-- The next executable phase is Phase 06: Prompt Registry And Tuning Boundary.
+- Phase 06 adds Prompt Registry categories and prompt-version impact rules
+  without implementing automatic tuning.
+- The next executable phase is Phase 07: Index / Update / Versioning.
 
 ## Dependency Rules
 

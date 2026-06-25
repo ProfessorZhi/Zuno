@@ -36,5 +36,6 @@ Phase 03 has introduced `graphrag_project_id` at the public contract edge while
 keeping `domain_pack_id` as bounded compatibility input. Phase 04 has added the
 GraphRAG Project contract fields without claiming a loader. Phase 05 has added
 GraphRAG Project settings loading, prompt discovery, and readiness metadata
-without changing retrieval behavior. The next phase is Phase 06: Prompt
-Registry And Tuning Boundary.
+without changing retrieval behavior. Phase 06 has added Prompt Registry
+categories and prompt-version impact rules without automatic tuning. The next
+phase is Phase 07: Index / Update / Versioning.

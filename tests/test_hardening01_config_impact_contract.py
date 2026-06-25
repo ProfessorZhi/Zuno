@@ -152,6 +152,70 @@ def test_community_report_prompt_change_requires_only_community_report_refresh()
     assert impact["recommended_action"] == "community_report"
 
 
+def test_graphrag_prompt_version_change_requires_graph_and_community_updates():
+    from zuno.api.services.knowledge import KnowledgeService
+
+    previous = _config(
+        index_capability="rag_graph",
+        graphrag_project_id="legal",
+        retrieval_settings={**_config()["retrieval_settings"], "default_mode": "rag_graph"},
+        graphrag_project={
+            "graphrag_project_id": "legal",
+            "prompt_version": "extract-v1",
+            "query_prompt_version": "query-v1",
+        },
+    )
+    next_config = _config(
+        index_capability="rag_graph",
+        graphrag_project_id="legal",
+        retrieval_settings={**_config()["retrieval_settings"], "default_mode": "rag_graph"},
+        graphrag_project={
+            "graphrag_project_id": "legal",
+            "prompt_version": "extract-v2",
+            "query_prompt_version": "query-v1",
+        },
+    )
+
+    impact = KnowledgeService.analyze_config_impact(previous, next_config)
+
+    assert "graphrag_project.prompt_version" in impact["changed_fields"]
+    assert impact["graph_update_required"] is True
+    assert impact["community_report_required"] is True
+
+
+def test_query_prompt_version_change_is_immediate_without_graph_rebuild():
+    from zuno.api.services.knowledge import KnowledgeService
+
+    previous = _config(
+        index_capability="rag_graph",
+        graphrag_project_id="legal",
+        retrieval_settings={**_config()["retrieval_settings"], "default_mode": "rag_graph"},
+        graphrag_project={
+            "graphrag_project_id": "legal",
+            "prompt_version": "extract-v1",
+            "query_prompt_version": "query-v1",
+        },
+    )
+    next_config = _config(
+        index_capability="rag_graph",
+        graphrag_project_id="legal",
+        retrieval_settings={**_config()["retrieval_settings"], "default_mode": "rag_graph"},
+        graphrag_project={
+            "graphrag_project_id": "legal",
+            "prompt_version": "extract-v1",
+            "query_prompt_version": "query-v2",
+        },
+    )
+
+    impact = KnowledgeService.analyze_config_impact(previous, next_config)
+
+    assert "graphrag_project.query_prompt_version" in impact["changed_fields"]
+    assert "graphrag_project.query_prompt_version" in impact["immediate_effect_fields"]
+    assert impact["graph_update_required"] is False
+    assert impact["community_report_required"] is False
+    assert impact["recommended_action"] == "save_only"
+
+
 def test_image_index_reindex_action_is_accepted():
     from zuno.api.services.knowledge import KnowledgeService
     import asyncio

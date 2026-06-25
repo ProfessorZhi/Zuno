@@ -53,6 +53,37 @@ rebuild impact rules.
 - Prompt changes have explicit rebuild impact.
 - Tests prove query prompt changes do not automatically rebuild graph.
 
+## Implemented Prompt Boundary
+
+Phase 06 adds a prompt registry and rebuild-impact contract only. It does not
+run automatic prompt optimization, edit prompts in the frontend, or execute a
+graph rebuild.
+
+Prompt categories:
+
+| Category | Scope | Graph rebuild | Community refresh |
+| --- | --- | --- | --- |
+| `extract_graph` | indexing | yes | yes |
+| `summarize` | indexing | no | yes |
+| `community_report` | indexing | no | yes |
+| `local_query` | query | no | no |
+| `global_query` | query | no | no |
+| `drift_query` | query | no | no |
+
+Contract paths:
+
+- `src/backend/zuno/services/graphrag/prompts/registry.py`
+- `src/backend/zuno/api/services/knowledge.py`
+- `tests/test_graphrag_prompt_registry.py`
+- `tests/test_hardening01_config_impact_contract.py`
+
+Impact examples:
+
+- `graphrag_project.prompt_version` changes require graph/community update
+  analysis.
+- `graphrag_project.query_prompt_version` changes are immediate query effects
+  and do not automatically rebuild graph indexes.
+
 ## Verification Commands
 
 ```powershell

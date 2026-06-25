@@ -14,6 +14,8 @@ Define the near-term official-compatible GraphRAG target.
   `community_report_prompt_id`, `index_version`, and `community_version`.
 - `services/graphrag/project/loader.py` loads GraphRAG Project `settings.yaml`,
   validates the contract, discovers prompts, and exposes readiness metadata.
+- `services/graphrag/prompts/registry.py` separates indexing prompts from query
+  prompts and records rebuild-impact rules for prompt version changes.
 - Current storage and query filters still use `domain_pack_id`.
 
 ## Target Project Layout

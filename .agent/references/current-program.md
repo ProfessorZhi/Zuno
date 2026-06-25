@@ -67,7 +67,9 @@ event-driven workers, or default multi-agent mode into near-term acceptance.
   loader.
 - Phase 05 adds GraphRAG Project `settings.yaml` loading, prompt discovery, and
   readiness metadata without changing retrieval behavior.
-- Phase 06 is next: Prompt Registry And Tuning Boundary.
+- Phase 06 adds Prompt Registry categories and prompt-version impact rules
+  without implementing automatic tuning.
+- Phase 07 is next: Index / Update / Versioning.
 
 ## Current Rule
 

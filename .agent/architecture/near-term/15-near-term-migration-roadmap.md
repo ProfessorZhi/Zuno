@@ -42,7 +42,9 @@ verification, commit message, and evidence package.
   loader.
 - Phase 05 loads and validates GraphRAG Project settings, discovers prompts,
   and exposes readiness metadata without changing retrieval behavior.
-- Phase 06 is next and should define Prompt Registry / tuning boundaries.
+- Phase 06 defines Prompt Registry categories and prompt-version impact rules
+  without implementing automatic tuning.
+- Phase 07 is next and should define index/update/versioning behavior.
 
 ## Migration Rules
 
