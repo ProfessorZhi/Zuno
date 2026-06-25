@@ -52,8 +52,8 @@ Fresh blocker classification from the 2026-06-25 Phase 01 pass:
   longer loads `DomainPackLoader` for the `contract_review` project path.
 - `tools/evals/zuno/contract_review_eval/run_contract_eval.py` loads the
   Contract Review compatibility payload and eval fixture from the GraphRAG
-  Project example assets instead of `DomainPackLoader`, while still executing
-  through `DomainQAGraph` as Blocked Legacy.
+  Project example assets instead of `DomainPackLoader` and no longer executes
+  through `DomainQAGraph`.
 - `src/backend/zuno/services/workspace/simple_agent.py` no longer imports
   `AgentRuntime`, exposes `domain_qa_runtime`, or calls
   `_run_domain_pack_query`; Workspace knowledge prefetch/tools now use

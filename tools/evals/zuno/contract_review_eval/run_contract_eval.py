@@ -12,7 +12,6 @@ BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from zuno.core.graphs.domain_qa_graph import DomainQAGraph
 from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 from zuno.services.graphrag.project.loader import GraphRAGProjectLoader, LoadedGraphRAGProject
 from zuno.services.graphrag.retriever import GraphRetriever
@@ -316,21 +315,167 @@ async def _build_retrieval_result(
     }
 
 
-def _build_retrieval_runner(profile_settings: dict[str, Any]):
-    extraction_mode = str(profile_settings["extraction_mode"])
+def _excerpt(text: str, limit: int = 360) -> str:
+    normalized = " ".join(str(text or "").split())
+    if len(normalized) <= limit:
+        return normalized
+    return f"{normalized[:limit].rstrip()}..."
 
-    async def _runner(**kwargs) -> dict[str, Any]:
-        query = str(kwargs.get("query") or "")
-        domain_pack = dict(kwargs.get("domain_pack") or {})
-        gold_evidence = list(domain_pack.get("eval_gold_evidence") or [])
-        return await _build_retrieval_result(
-            query=query,
-            domain_pack=domain_pack,
-            gold_evidence=gold_evidence,
-            extraction_mode=extraction_mode,
+
+def _build_eval_citations(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    citations: list[dict[str, Any]] = []
+    for index, document in enumerate(documents, start=1):
+        content = str(document.get("content") or document.get("summary") or "")
+        citations.append(
+            {
+                "id": f"C{index}",
+                "source": str(document.get("file_name") or document.get("chunk_id") or "contract"),
+                "chunk_id": str(document.get("chunk_id") or ""),
+                "quote": _excerpt(content, 180),
+            }
         )
+    return citations
 
-    return _runner
+
+def _build_eval_answer(
+    *,
+    query: str,
+    documents: list[dict[str, Any]],
+    path_strings: list[str],
+) -> str:
+    top_document = documents[0] if documents else {}
+    source = str(top_document.get("file_name") or "contract evidence")
+    evidence = _excerpt(str(top_document.get("content") or top_document.get("summary") or ""), 520)
+    path_line = f"Graph paths: {len(path_strings)}." if path_strings else "Graph paths: none."
+    return "\n".join(
+        [
+            "Contract review evidence was retrieved from the GraphRAG Project assets.",
+            "",
+            f"Query: {query}",
+            f"Primary source: {source}",
+            path_line,
+            "",
+            f"Evidence: {evidence}",
+        ]
+    ).strip()
+
+
+def _build_eval_report(
+    *,
+    query: str,
+    answer: str,
+    documents: list[dict[str, Any]],
+    path_strings: list[str],
+    structured_paths: list[dict[str, Any]],
+    citations: list[dict[str, Any]],
+    report_template_text: str | None = None,
+) -> str:
+    evidence_lines = [
+        f"- {citation['id']} {citation['source']}: {citation['quote']}"
+        for citation in citations
+    ] or ["- No document evidence retrieved."]
+    path_lines = [f"- {path}" for path in path_strings] or ["- No graph path retrieved."]
+    structured_count = len(structured_paths)
+    template = str(report_template_text or "").strip()
+    if template:
+        rendered_template = (
+            template.replace("{{summary}}", answer)
+            .replace("{{risks}}", "\n".join(path_lines))
+            .replace("{{evidence}}", "\n".join(evidence_lines + path_lines))
+            .replace("{{recommendations}}", "Review the cited clauses and resolve high-risk obligations before signing.")
+        )
+    else:
+        rendered_template = "\n".join(
+            [
+                "## Query",
+                query,
+                "",
+                "## Answer",
+                answer,
+                "",
+                "## Evidence",
+                *evidence_lines,
+            ]
+        )
+    return "\n".join(
+        [
+            "# Contract Review Eval Report",
+            "",
+            "Contract Review Report Template",
+            "",
+            rendered_template,
+            "",
+            "## Graph Paths",
+            *path_lines,
+            "",
+            "## Trace",
+            f"- document_count: {len(documents)}",
+            f"- graph_path_count: {len(path_strings)}",
+            f"- structured_path_count: {structured_count}",
+        ]
+    )
+
+
+async def _run_project_eval_sample(
+    *,
+    row: dict[str, Any],
+    domain_pack: dict[str, Any],
+    profile_settings: dict[str, Any],
+    graphrag_project_id: str,
+) -> dict[str, Any]:
+    retrieval_result = await _build_retrieval_result(
+        query=str(row["query"]),
+        domain_pack=domain_pack,
+        gold_evidence=list(row.get("gold_evidence") or []),
+        extraction_mode=str(profile_settings["extraction_mode"]),
+    )
+    final_pass = dict(retrieval_result.get("final_pass_result") or {})
+    graph_result = dict(retrieval_result.get("graph_result") or {})
+    documents = list(final_pass.get("documents") or [])
+    path_strings = list(graph_result.get("paths") or final_pass.get("paths") or [])
+    structured_paths = list(graph_result.get("structured_paths") or final_pass.get("structured_paths") or [])
+    citations = _build_eval_citations(documents)
+    answer = _build_eval_answer(
+        query=str(row["query"]),
+        documents=documents,
+        path_strings=path_strings,
+    )
+    report = _build_eval_report(
+        query=str(row["query"]),
+        answer=answer,
+        documents=documents,
+        path_strings=path_strings,
+        structured_paths=structured_paths,
+        citations=citations,
+        report_template_text=str(domain_pack.get("report_template_text") or ""),
+    )
+    trace_nodes = [
+        {"node": "load_project_assets", "status": "OK", "graphrag_project_id": graphrag_project_id},
+        {"node": "extract_graph", "status": "OK", "mode": profile_settings["extraction_mode"]},
+        {"node": "retrieve_evidence", "status": "OK", "path_count": len(path_strings)},
+        {"node": "generate_answer", "status": "OK", "citation_count": len(citations)},
+        {"node": "finalize", "status": "OK"},
+    ]
+    return {
+        "final_answer": answer,
+        "report_markdown": report,
+        "citations": citations,
+        "graph_paths": path_strings,
+        "structured_graph_paths": structured_paths,
+        "retrieval_result": retrieval_result,
+        "trace_metadata": {
+            "nodes": trace_nodes,
+            "graphrag_project_id": graphrag_project_id,
+            "asset_source": "graphrag_project",
+        },
+        "cost_metadata": {
+            "document_count": len(documents),
+            "citation_count": len(citations),
+            "path_count": len(path_strings),
+            "status": "completed",
+        },
+        "status": "completed",
+    }
 
 
 async def _maybe_trace(
@@ -364,7 +509,6 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
     project_payload = project.to_domain_pack_payload()
     graphrag_project_id = str(project_payload.get("id") or project.contract.graphrag_project_id)
 
-    graph = DomainQAGraph(retrieval_runner=_build_retrieval_runner(profile_settings))
     results: list[dict] = []
     report_paths: list[str] = []
 
@@ -374,27 +518,14 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
     for row in dataset_rows:
         domain_pack = dict(project_payload)
         domain_pack["eval_gold_evidence"] = row.get("gold_evidence") or []
-        state = graph.build_initial_state(
-            user_id="eval_user",
-            agent_id="contract_review_eval",
-            dialog_id=row["id"],
-            query=row["query"],
-            knowledge_ids=[OFFLINE_KNOWLEDGE_ID],
-            domain_pack_id=graphrag_project_id,
-            runtime_settings={
-                "knowledge_config": {
-                    "index_capability": "rag_graph",
-                    "retrieval_settings": {"default_mode": "graphrag", "graph_hop_limit": 2, "max_paths_per_entity": 5},
-                },
-                "domain_pack_id": graphrag_project_id,
-                "graphrag_project_id": graphrag_project_id,
-                "domain_pack": domain_pack,
-            },
-            domain_pack=domain_pack,
-        )
 
-        async def invoke_graph() -> dict[str, Any]:
-            return await graph.ainvoke(state)
+        async def invoke_eval() -> dict[str, Any]:
+            return await _run_project_eval_sample(
+                row=row,
+                domain_pack=domain_pack,
+                profile_settings=profile_settings,
+                graphrag_project_id=graphrag_project_id,
+            )
 
         final_state = await _maybe_trace(
             enabled=trace_enabled and langsmith_configured,
@@ -405,7 +536,7 @@ async def run(profile: str, *, output_dir: Path | None = None, trace_langsmith: 
                 "graphrag_project_id": graphrag_project_id,
                 "asset_source": "graphrag_project",
             },
-            func=invoke_graph,
+            func=invoke_eval,
         )
         answer = str(final_state.get("final_answer") or "")
         report = str(final_state.get("report_markdown") or "")

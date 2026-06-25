@@ -28,3 +28,13 @@ def test_contract_eval_runner_uses_project_assets_without_domain_pack_loader(mon
     assert payload["graphrag_project_id"] == "contract_review"
     assert payload["results"][0]["id"] == "contract_demo_q1"
     assert payload["results"][0]["path_count"] >= 1
+
+
+def test_contract_eval_runner_does_not_use_domain_qa_graph():
+    repo_root = Path(__file__).resolve().parents[1]
+    source = (
+        repo_root / "tools/evals/zuno/contract_review_eval/run_contract_eval.py"
+    ).read_text(encoding="utf-8")
+
+    assert "from zuno.core.graphs.domain_qa_graph import DomainQAGraph" not in source
+    assert "DomainQAGraph(" not in source

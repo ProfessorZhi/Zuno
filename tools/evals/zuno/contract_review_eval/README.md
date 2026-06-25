@@ -8,8 +8,8 @@ Current asset source:
 - `examples/graphrag-projects/contract_review/`
 - The runner uses `GraphRAGProjectLoader` for schema, prompt, retrieval policy,
   and eval dataset assets.
-- The runner still executes through `DomainQAGraph` as Blocked Legacy until the
-  final 11C eval/runtime cutover replaces that shell.
+- The runner uses a local GraphRAG Project eval flow and does not execute
+  through `DomainQAGraph`.
 
 Profiles:
 

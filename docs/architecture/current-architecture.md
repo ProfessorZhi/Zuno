@@ -81,10 +81,10 @@ Project configuration on `graphrag_project_id`.
 copy under `examples/graphrag-projects/contract_review/`.
 
 Stackless local eval and the dedicated Contract Review eval can build their
-Contract Review graph/eval payloads from GraphRAG Project assets. Stackless
-local eval still keeps a legacy Domain Pack fallback for unmigrated packs, and
-the dedicated Contract Review eval still executes through `DomainQAGraph` as a
-Blocked Legacy shell.
+Contract Review graph/eval payloads from GraphRAG Project assets. The dedicated
+Contract Review eval no longer loads `DomainPackLoader` or executes through
+`DomainQAGraph`. Stackless local eval still keeps a legacy Domain Pack fallback
+for unmigrated packs.
 
 ## Blocked Legacy
 
@@ -94,9 +94,8 @@ Phase 11C is blocked because these active dependencies still exist:
 - Domain Pack service/eval/Docker surfaces
 - direct `DomainQAGraph` id-only fallback paths that still call
   `DomainPackLoader`
-- Contract Review eval still executes through `DomainQAGraph`, but now supplies
-  a GraphRAG Project compatibility payload instead of loading
-  `DomainPackLoader`
+- Contract Review eval has moved to a GraphRAG Project local eval flow without
+  `DomainPackLoader` or `DomainQAGraph`
 - Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
 - Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
   Pack pages are not active knowledge routes or settings-shell pages

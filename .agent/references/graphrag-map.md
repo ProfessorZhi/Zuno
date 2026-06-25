@@ -35,9 +35,9 @@ proof that all runtime paths no longer need `DomainPackLoader`;
 `KnowledgeService.get_runtime_settings` and `GraphRetriever` policy resolution
 no longer auto-load it. Stackless local eval and the dedicated Contract Review
 eval can build from GraphRAG Project assets. The dedicated Contract Review eval
-still executes through `DomainQAGraph`; direct `DomainQAGraph` id-only fallback
-and generic legacy eval fallback paths remain Blocked Legacy until the
-runtime/eval cutover is complete.
+is cut over from `DomainQAGraph`; direct `DomainQAGraph` id-only fallback and
+generic legacy eval fallback paths remain Blocked Legacy until the runtime/eval
+cutover is complete.
 
 ## Blocked Legacy
 

@@ -159,6 +159,10 @@ def main() -> int:
         errors.append("Contract Review eval must load GraphRAG Project assets")
     if "GraphRAGProjectLoader" not in contract_eval:
         errors.append("Contract Review eval must load GraphRAG Project assets")
+    if "from zuno.core.graphs.domain_qa_graph import DomainQAGraph" in contract_eval:
+        errors.append("Contract Review eval must not use DomainQAGraph")
+    if "DomainQAGraph(" in contract_eval:
+        errors.append("Contract Review eval must not use DomainQAGraph")
 
     agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():

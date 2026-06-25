@@ -34,8 +34,10 @@ Current status:
   and eval fixture. The project loader materializes `retrieval_policy.yaml`
   plus schema/eval assets for explicit graph query policy and stackless local
   eval. Contract Review eval now reads the GraphRAG Project compatibility
-  payload and eval fixture without loading `DomainPackLoader`, but it still
-  executes through `DomainQAGraph`; Phase 02 is not closed.
+  payload and eval fixture without loading `DomainPackLoader` or executing
+  through `DomainQAGraph`; Phase 02 is not closed because direct
+  `DomainQAGraph` fallback/source, generic legacy eval fallback, Domain Pack
+  services/assets/Docker, and compat tests remain.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

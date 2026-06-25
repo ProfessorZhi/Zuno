@@ -134,8 +134,8 @@ Removed from the active current path:
   GraphRAG Project schema, prompt, retrieval policy, and eval assets without
   loading `DomainPackLoader` for `contract_review`.
 - The dedicated Contract Review eval now loads the same GraphRAG Project
-  compatibility payload and eval fixture without loading `DomainPackLoader`,
-  while still executing through `DomainQAGraph` as Blocked Legacy.
+  compatibility payload and eval fixture without loading `DomainPackLoader` or
+  executing through `DomainQAGraph`.
 
 Retained as Blocked Legacy / Phase 02 migration assets:
 
@@ -154,8 +154,8 @@ Retired from current source:
 
 Still blocked:
 
-- `tools/evals/zuno/contract_review_eval/` still depends on `DomainQAGraph`,
-  but no longer loads `DomainPackLoader`.
+- `tools/evals/zuno/contract_review_eval/` no longer depends on
+  `DomainPackLoader` or `DomainQAGraph`.
 - direct `DomainQAGraph` id-only fallback paths still depend on
   `DomainPackLoader`.
 - Stackless local eval still keeps a legacy Domain Pack fallback for

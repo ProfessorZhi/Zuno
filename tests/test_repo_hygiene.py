@@ -123,11 +123,14 @@ def test_contract_eval_runner_stays_off_domain_pack_loader_project_defaults() ->
     assert "from zuno.services.domain_pack.loader import DomainPackLoader" not in contract_eval
     assert "DomainPackLoader().load" not in contract_eval
     assert "GraphRAGProjectLoader" in contract_eval
+    assert "from zuno.core.graphs.domain_qa_graph import DomainQAGraph" not in contract_eval
+    assert "DomainQAGraph(" not in contract_eval
 
     verifier = (
         REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
     ).read_text(encoding="utf-8")
     assert "Contract Review eval must load GraphRAG Project assets" in verifier
+    assert "Contract Review eval must not use DomainQAGraph" in verifier
 
 
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
