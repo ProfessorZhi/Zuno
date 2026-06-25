@@ -39,3 +39,8 @@ mainline.
 legacy graph/runtime behavior coverage. It remains here as Blocked Legacy
 coverage because the current mainline is the single `GeneralAgent` project
 query path.
+
+`test_domain_pack_formalization.py` and `test_contract_review_domain_pack.py`
+are moved Domain Pack / Contract Review asset-runtime coverage. They remain
+here until Contract Review assets migrate to GraphRAG Project ownership in
+Phase 02.
