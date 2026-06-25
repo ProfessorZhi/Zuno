@@ -35,6 +35,7 @@ REQUIRED_PATHS = [
     "docs/architecture/history/programs/README.md",
     "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
     "docs/architecture/history/development/README.md",
+    "docs/architecture/history/reference/migration.md",
     "docs/development",
     "docs/evidence/README.md",
     "docs/evidence/public-demo.md",
@@ -86,6 +87,7 @@ FORBIDDEN_CURRENT_PATHS = [
     "domain-packs",
     "tests/compat",
     "docs/development/history",
+    "docs/reference/history",
 ]
 
 DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
@@ -192,8 +194,8 @@ def verify_archived_reference_docs() -> list[str]:
     errors: list[str] = []
     if (REPO_ROOT / "docs" / "reference" / "migration.md").exists():
         errors.append("docs/reference/migration.md should be archived out of the front path")
-    if not (REPO_ROOT / "docs" / "reference" / "history" / "migration.md").exists():
-        errors.append("docs/reference/history/migration.md is missing")
+    if not (REPO_ROOT / "docs" / "architecture" / "history" / "reference" / "migration.md").exists():
+        errors.append("docs/architecture/history/reference/migration.md is missing")
     return errors
 
 

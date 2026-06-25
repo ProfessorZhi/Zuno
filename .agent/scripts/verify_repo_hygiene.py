@@ -37,6 +37,7 @@ FORBIDDEN_CURRENT_PATHS = [
     "domain-packs",
     "tests/compat",
     "docs/development/history",
+    "docs/reference/history",
 ]
 
 RETIRED_FRONTEND_DOMAIN_PACK_FILES = [

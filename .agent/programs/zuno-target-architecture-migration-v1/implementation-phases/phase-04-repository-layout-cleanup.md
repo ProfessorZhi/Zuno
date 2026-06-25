@@ -97,6 +97,11 @@ wrong commit group. The public-release audit also treats the whole
 `docs/superpowers/specs/`, and preview output points to the existing
 `docs/architecture/history/development/docs-and-readme-ready.md` note.
 
+The superseded reference migration guide was also moved from
+`docs/reference/history/migration.md` to
+`docs/architecture/history/reference/migration.md`, leaving
+`docs/architecture/history/` as the only tracked docs history archive.
+
 ## Verification Commands
 
 ```powershell

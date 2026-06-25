@@ -19,6 +19,8 @@ Current architecture readers should start from:
 - `phases/`: completed Phase 0-6 closure and older phase evidence.
 - `plans/`: superseded execution plans.
 - `programs/`: archived architecture programs and their evidence.
+- `reference/`: superseded reference migration notes retained as historical
+  context, not front-path reference guidance.
 - `specs/`: superseded architecture specs that should remain reachable without
   staying on the active specs front path.
 - `decisions/`: superseded architecture decisions retained for historical

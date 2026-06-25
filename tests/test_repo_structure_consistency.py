@@ -25,6 +25,7 @@ def test_required_current_paths_exist() -> None:
         "docs/architecture/history/programs/README.md",
         "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
         "docs/architecture/history/development/README.md",
+        "docs/architecture/history/reference/migration.md",
         "docs/evidence/public-demo.md",
         "examples/graphrag-projects/contract_review/settings.yaml",
         "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
@@ -83,6 +84,7 @@ def test_retired_front_path_directories_are_not_current_paths() -> None:
         "domain-packs",
         "tests/compat",
         "docs/development/history",
+        "docs/reference/history",
     ]
 
     for relative_path in retired_paths:
@@ -147,7 +149,9 @@ def test_readme_mentions_current_backend_start_and_focused_verification() -> Non
 
 def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert not (REPO_ROOT / "docs" / "reference" / "migration.md").exists()
-    assert (REPO_ROOT / "docs" / "reference" / "history" / "migration.md").exists()
+    assert (
+        REPO_ROOT / "docs" / "architecture" / "history" / "reference" / "migration.md"
+    ).exists()
 
 
 def test_superseded_migration_specs_are_archived_out_of_active_specs() -> None:
