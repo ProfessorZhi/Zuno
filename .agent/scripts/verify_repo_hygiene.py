@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import runpy
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -86,6 +88,14 @@ RETIRED_ACTIVE_MIGRATION_SPECS = [
     "docs/architecture/specs/knowledge-product-boundary.md",
 ]
 
+REQUIRED_ARCHIVED_DECISIONS = [
+    "docs/architecture/history/decisions/0001-domain-pack-binding.md",
+]
+
+RETIRED_ACTIVE_DECISIONS = [
+    "docs/architecture/decisions/0001-domain-pack-binding.md",
+]
+
 
 def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
@@ -144,6 +154,14 @@ def main() -> int:
     for relative_path in RETIRED_ACTIVE_MIGRATION_SPECS:
         if (REPO_ROOT / relative_path).exists():
             errors.append(f"superseded migration spec must not remain active: {relative_path}")
+
+    for relative_path in REQUIRED_ARCHIVED_DECISIONS:
+        if not (REPO_ROOT / relative_path).exists():
+            errors.append(f"superseded architecture decision archive missing: {relative_path}")
+
+    for relative_path in RETIRED_ACTIVE_DECISIONS:
+        if (REPO_ROOT / relative_path).exists():
+            errors.append(f"superseded architecture decision must not remain active: {relative_path}")
 
     repo_hygiene_map = _read(".agent/references/repo-hygiene-map.md")
     if "must not be restored as target repository layout" not in repo_hygiene_map:
@@ -277,6 +295,23 @@ def main() -> int:
                     f"active public release tool stages retired runtime source: {relative_path}"
                 )
                 break
+
+    stage_namespace = runpy.run_path(
+        str(REPO_ROOT / "tools/scripts/print_public_release_stage_commands.py")
+    )
+    stage_groups = dict(stage_namespace["STAGE_GROUPS"])
+    backend_public_commands = stage_groups.get("backend_public_entrypoints", [])
+    backend_public_paths = [
+        token
+        for command in backend_public_commands
+        for token in shlex.split(command, posix=False)
+        if token not in {"git", "add"}
+    ]
+    if "src/backend/zuno/" in backend_public_paths:
+        errors.append(
+            "active public release tool crosses backend release-group boundary: "
+            "tools/scripts/print_public_release_stage_commands.py"
+        )
 
     agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():

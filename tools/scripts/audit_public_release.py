@@ -34,7 +34,7 @@ FORBIDDEN_PUBLIC_INDEX_MENTIONS = {
 
 SUSPICIOUS_STATUS_PREFIXES = [
     ".local/",
-    "docs/superpowers/specs/",
+    "docs/superpowers/",
     "apps/web/AGENTS.md",
     "infra/docker/docker_config.local.yaml",
     ".local/config/zuno/",

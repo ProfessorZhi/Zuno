@@ -10,8 +10,9 @@ Define near-term FastAPI and service responsibilities.
 - `lifespan()` calls config initialization, database initialization, router
   registration, and startup tasks.
 - `register_middleware()` adds trace id, whitelist, and CORS middleware.
-- `src/backend/zuno/api/router.py` mounts `/api/v1` and includes current routes,
-  including legacy-facing `domain_packs`.
+- `src/backend/zuno/api/router.py` mounts `/api/v1` and includes current
+  routes. Domain Pack endpoint wrappers are retired evidence, not current
+  mounted routes.
 - `src/backend/zuno/api/services/` contains application service modules.
 
 ## Target Design

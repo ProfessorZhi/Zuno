@@ -20,8 +20,9 @@ Define the near-term frontend/backend contract.
   `graphrag_project.query_method=auto`.
 - `apps/web/src/apis/knowledge.ts` types requested/resolved query method,
   retrievers, evidence bundle, citation coverage, and pipeline trace metadata.
-- Old query route names no longer appear under `apps/web`; remaining Domain
-  Pack pages are migration/runtime surfaces for the runtime deletion phase.
+- Old query route names no longer appear under `apps/web`. Retired Domain Pack
+  pages and API files are migration evidence only; active `apps/web` contracts
+  use GraphRAG Project fields.
 
 ## Target Product Layer
 

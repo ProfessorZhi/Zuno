@@ -248,6 +248,7 @@ def test_active_public_release_tools_do_not_stage_retired_runtime_sources() -> N
         REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
     ).read_text(encoding="utf-8")
     assert "active public release tool stages retired runtime source" in verifier
+    assert "active public release tool crosses backend release-group boundary" in verifier
 
 
 def test_active_architecture_audits_do_not_list_retired_frontend_files_as_current_inputs() -> None:
@@ -401,6 +402,22 @@ def test_superseded_migration_specs_are_not_active_specs() -> None:
         "docs/architecture/history/specs/knowledge-product-boundary.md",
     ]:
         assert relative_path in verifier
+
+
+def test_superseded_domain_pack_binding_decision_is_history() -> None:
+    assert not (
+        REPO_ROOT / "docs/architecture/decisions/0001-domain-pack-binding.md"
+    ).exists()
+    assert (
+        REPO_ROOT
+        / "docs/architecture/history/decisions/0001-domain-pack-binding.md"
+    ).exists()
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "docs/architecture/history/decisions/0001-domain-pack-binding.md" in verifier
+    assert "docs/architecture/decisions/0001-domain-pack-binding.md" in verifier
 
 
 def test_repo_hygiene_verifiers_are_registered() -> None:

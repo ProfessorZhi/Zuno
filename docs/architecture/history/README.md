@@ -21,6 +21,8 @@ Current architecture readers should start from:
 - `programs/`: archived architecture programs and their evidence.
 - `specs/`: superseded architecture specs that should remain reachable without
   staying on the active specs front path.
+- `decisions/`: superseded architecture decisions retained for historical
+  context.
 - `agent-workflow/`: retired Agent workflow notes and old superpowers plans.
 - `audits/`: historical audits that are not active program evidence.
 - `domain-packs/`: retired Domain Pack asset copies preserved as history, not

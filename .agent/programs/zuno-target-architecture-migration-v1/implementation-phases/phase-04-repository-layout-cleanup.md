@@ -81,6 +81,23 @@ demo and architecture-maintenance docs now prefer GraphRAG Project /
 query-policy and migration-compatibility wording instead of Domain Pack-first
 workflow language.
 
+Superseded ADR 0001 Domain Pack Binding was moved from active architecture
+decisions to:
+
+- `docs/architecture/history/decisions/0001-domain-pack-binding.md`
+
+The active decisions index now points only to decisions that still influence
+the current mainline, while history keeps the old Domain Pack binding decision
+reachable.
+
+Public-release staging commands no longer use a broad `git add
+src/backend/zuno/` command for `backend_public_entrypoints`, because that could
+stage `backend_domain_runtime` or `backend_rag_graphrag_eval` changes into the
+wrong commit group. The public-release audit also treats the whole
+`docs/superpowers/` tree as local-only instead of only
+`docs/superpowers/specs/`, and preview output points to the existing
+`docs/development/history/docs-and-readme-ready.md` note.
+
 ## Verification Commands
 
 ```powershell

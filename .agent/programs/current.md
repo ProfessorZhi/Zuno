@@ -52,7 +52,10 @@ Current status:
   compatibility aliases. Active stable architecture specs now describe
   GraphRAG Project / query policy as the mainline driver instead of Domain
   Pack, and the docs entrypoint verifier guards against reintroducing Domain
-  Pack-as-target wording outside explicit migration specs.
+  Pack-as-target wording outside explicit migration specs. Active near-term
+  target docs now also reject wording that marks retired `DomainQAGraph`,
+  retired Domain Pack endpoint/page wrappers, or bare `domain_pack_id` query
+  policy as current target evidence.
 - Phase 04 has safe prework started, but full closure remains blocked by
   Phase 01-03: retired Domain Pack UI capture and responsive-check scripts
   were archived under
@@ -66,7 +69,10 @@ Current status:
   `retired_runtime_legacy` group or `git add` commands for already-retired
   Domain Pack route/API, graph, runtime, and service source paths; active demo
   and maintenance docs prefer GraphRAG Project / migration compatibility
-  wording.
+  wording. Superseded ADR 0001 Domain Pack Binding is archived under
+  `docs/architecture/history/decisions/`, and public-release stage commands no
+  longer use a broad `src/backend/zuno/` add path that could cross backend
+  release groups.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

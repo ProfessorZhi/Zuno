@@ -1,4 +1,6 @@
 from pathlib import Path
+import runpy
+import shlex
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -103,6 +105,45 @@ def test_public_release_stage_commands_cover_release_guard_helpers() -> None:
         "tools/scripts/verify_docs_and_readme_ready.py",
     ]:
         assert path in stage_commands
+
+
+def test_public_release_stage_commands_do_not_cross_backend_group_boundaries() -> None:
+    namespace = runpy.run_path(
+        str(REPO_ROOT / "tools" / "scripts" / "print_public_release_stage_commands.py")
+    )
+    stage_groups = dict(namespace["STAGE_GROUPS"])
+    commands = stage_groups["backend_public_entrypoints"]
+    staged_paths = [
+        token
+        for command in commands
+        for token in shlex.split(command, posix=False)
+        if token not in {"git", "add"}
+    ]
+
+    assert "src/backend/zuno/" not in staged_paths, (
+        "backend_public_entrypoints stage command must not include broad "
+        "src/backend/zuno/ because it can stage backend_domain_runtime or "
+        "backend_rag_graphrag_eval changes into the wrong commit"
+    )
+
+
+def test_public_release_audit_blocks_entire_superpowers_tree() -> None:
+    audit_script = (
+        REPO_ROOT / "tools" / "scripts" / "audit_public_release.py"
+    ).read_text(encoding="utf-8")
+
+    assert '"docs/superpowers/"' in audit_script
+    assert '"docs/superpowers/specs/"' not in audit_script
+
+
+def test_public_release_preview_ready_note_points_to_existing_history() -> None:
+    namespace = runpy.run_path(
+        str(REPO_ROOT / "tools" / "scripts" / "preview_public_release_group.py")
+    )
+    ready_note = namespace["DOCS_AND_README_READY_NOTE"]
+
+    assert ready_note == "docs/development/history/docs-and-readme-ready.md"
+    assert (REPO_ROOT / ready_note).exists()
 
 
 def test_public_demo_docs_prefer_graphrag_project_id() -> None:

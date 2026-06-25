@@ -17,6 +17,8 @@ Classify repository directories for cleanup decisions.
   Phase 6 bundle staging helpers
 - `docs/architecture/history/specs/`: History for superseded migration specs
   that no longer belong on the active specs front path
+- `docs/architecture/history/decisions/`: History for superseded architecture
+  decisions that no longer influence the current mainline
 - `tests/compat/`: Retired
 - `data/`: Generated unless promoted
 - `reports/`: Generated unless promoted
@@ -51,6 +53,7 @@ Retired Phase 6 bundle helpers must not be restored under active
 `docs/architecture/history/specs/` must stay reachable as history instead of
 returning to the active specs front path. Active public-release staging helpers
 must not stage or name already-retired Domain Pack route/API, graph, runtime,
-or service source paths as current release groups.
+or service source paths as current release groups, and must not use broad
+backend add paths that cross release-group boundaries.
 Read `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 before directory-boundary work.

@@ -36,7 +36,7 @@ STAGE_GROUPS = [
     (
         "backend_public_entrypoints",
         [
-            "git add src/backend/zuno/main.py src/backend/zuno/settings.py src/backend/zuno/api/ src/backend/zuno/database/ src/backend/zuno/schema/ src/backend/zuno/tools/ src/backend/zuno/config/ src/backend/zuno/",
+            "git add src/backend/zuno/main.py src/backend/zuno/settings.py src/backend/zuno/api/ src/backend/zuno/database/ src/backend/zuno/schema/ src/backend/zuno/tools/ src/backend/zuno/config/",
         ],
     ),
     (

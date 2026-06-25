@@ -49,6 +49,55 @@ def verify_active_spec_domain_pack_boundaries() -> list[str]:
     return errors
 
 
+def verify_near_term_retired_runtime_boundaries() -> list[str]:
+    forbidden_phrases = [
+        "Current Evidence: `DomainQAGraph`",
+        "current Domain Pack state",
+        "`DomainQAGraph` carries runtime settings",
+        "`DomainQAGraph` collects trace and cost metadata",
+        "including legacy-facing `domain_packs`",
+        "Current storage and query filters still use `domain_pack_id`",
+        "remaining Domain Pack pages are migration/runtime surfaces",
+    ]
+
+    errors: list[str] = []
+    for path in sorted((REPO_ROOT / ".agent/architecture/near-term").glob("*.md")):
+        content = path.read_text(encoding="utf-8")
+        for phrase in forbidden_phrases:
+            if phrase in content:
+                relative_path = path.relative_to(REPO_ROOT).as_posix()
+                errors.append(
+                    f"{relative_path} marks retired Domain Pack runtime evidence as current: {phrase}"
+                )
+    return errors
+
+
+def verify_architecture_decision_boundaries() -> list[str]:
+    errors: list[str] = []
+    active_decision = REPO_ROOT / "docs/architecture/decisions/0001-domain-pack-binding.md"
+    history_decision = (
+        REPO_ROOT
+        / "docs/architecture/history/decisions/0001-domain-pack-binding.md"
+    )
+    decisions_index = _read("docs/architecture/decisions/README.md")
+
+    if active_decision.exists():
+        errors.append(
+            "docs/architecture/decisions/0001-domain-pack-binding.md must be archived; "
+            "Domain Pack binding is no longer an active mainline decision"
+        )
+    if not history_decision.exists():
+        errors.append(
+            "docs/architecture/history/decisions/0001-domain-pack-binding.md is missing"
+        )
+    if "0001-domain-pack-binding.md" in decisions_index:
+        errors.append(
+            "docs/architecture/decisions/README.md must not list superseded ADR 0001 as active"
+        )
+
+    return errors
+
+
 def main() -> int:
     readme = _read("README.md")
     docs_index = _read("docs/README.md")
@@ -131,6 +180,8 @@ def main() -> int:
         )
     )
     errors.extend(verify_active_spec_domain_pack_boundaries())
+    errors.extend(verify_near_term_retired_runtime_boundaries())
+    errors.extend(verify_architecture_decision_boundaries())
 
     forbidden_front_path = [
         "docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md",

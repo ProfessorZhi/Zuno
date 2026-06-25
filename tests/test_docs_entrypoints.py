@@ -90,7 +90,11 @@ def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() ->
         "Phase 11C",
         "Phase 12",
         "verify_active_spec_domain_pack_boundaries",
+        "verify_near_term_retired_runtime_boundaries",
+        "verify_architecture_decision_boundaries",
         "Domain Pack retrieval policy inputs",
+        "Current Evidence: `DomainQAGraph`",
+        "0001-domain-pack-binding.md",
     ]
 
     for phrase in required_phrases:
@@ -185,3 +189,41 @@ def test_stable_architecture_specs_do_not_make_domain_pack_the_target_driver() -
         content = path.read_text(encoding="utf-8")
         for phrase in forbidden_phrases:
             assert phrase not in content, f"{path} still promotes Domain Pack target wording: {phrase}"
+
+
+def test_near_term_architecture_docs_do_not_mark_retired_runtime_as_current() -> None:
+    near_term_docs = sorted((REPO_ROOT / ".agent/architecture/near-term").glob("*.md"))
+    forbidden_phrases = [
+        "Current Evidence: `DomainQAGraph`",
+        "current Domain Pack state",
+        "`DomainQAGraph` carries runtime settings",
+        "`DomainQAGraph` collects trace and cost metadata",
+        "including legacy-facing `domain_packs`",
+        "Current storage and query filters still use `domain_pack_id`",
+        "remaining Domain Pack pages are migration/runtime surfaces",
+    ]
+
+    for path in near_term_docs:
+        content = path.read_text(encoding="utf-8")
+        for phrase in forbidden_phrases:
+            assert phrase not in content, (
+                f"{path} marks retired Domain Pack runtime evidence as current: {phrase}"
+            )
+
+
+def test_architecture_decisions_do_not_keep_domain_pack_binding_as_active_mainline() -> None:
+    active_decision = (
+        REPO_ROOT / "docs/architecture/decisions/0001-domain-pack-binding.md"
+    )
+    history_decision = (
+        REPO_ROOT
+        / "docs/architecture/history/decisions/0001-domain-pack-binding.md"
+    )
+    decisions_index = (
+        REPO_ROOT / "docs/architecture/decisions/README.md"
+    ).read_text(encoding="utf-8")
+
+    assert not active_decision.exists()
+    assert history_decision.exists()
+    assert "0001-domain-pack-binding.md" not in decisions_index
+    assert "ADR 0002: Retire Compat Namespace" in decisions_index

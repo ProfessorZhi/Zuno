@@ -19,7 +19,10 @@ stackless eval entrypoints prefer `graphrag_project_id` /
 compatibility. Stable active architecture specs now frame retrieval governance,
 LangGraph runtime, enhanced retrieval, platform direction, eval, and knowledge
 config impact around GraphRAG Project / query policy instead of Domain Pack as
-the target driver.
+the target driver. Active near-term target docs now also classify retired
+`DomainQAGraph`, retired Domain Pack endpoint/page wrappers, and bare
+`domain_pack_id` query-policy wording as legacy or migration evidence instead
+of current GraphRAG Project target evidence.
 
 ## Scope
 

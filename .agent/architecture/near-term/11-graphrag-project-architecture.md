@@ -21,7 +21,9 @@ Define the near-term official-compatible GraphRAG target.
 - `services/retrieval/planner.py` accepts public query methods
   `auto/basic/local/global/drift`, maps old names as compatibility input, and
   records requested/resolved method plus fallback reason.
-- Current storage and query filters still use `domain_pack_id`.
+- Legacy storage and migration compatibility tests still contain
+  `domain_pack_id`; the target primary project field is `graphrag_project_id`,
+  and graph query policy should be explicit.
 
 ## Target Project Layout
 
