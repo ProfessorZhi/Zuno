@@ -34,6 +34,7 @@ REQUIRED_PATHS = [
     "docs/architecture/history/plans/README.md",
     "docs/architecture/history/programs/README.md",
     "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
+    "docs/architecture/history/development/README.md",
     "docs/development",
     "docs/evidence/README.md",
     "docs/evidence/public-demo.md",
@@ -84,6 +85,7 @@ FORBIDDEN_CURRENT_PATHS = [
     "src/frontend",
     "domain-packs",
     "tests/compat",
+    "docs/development/history",
 ]
 
 DOC_REQUIRED_PHRASES: dict[str, list[str]] = {

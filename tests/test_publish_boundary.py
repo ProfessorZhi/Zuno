@@ -76,7 +76,7 @@ def test_public_release_staging_plan_uses_clean_history_link() -> None:
         REPO_ROOT / "docs" / "development" / "public-release-staging-plan.md"
     ).read_text(encoding="utf-8")
 
-    assert "development/history/README.md" in content
+    assert "../architecture/history/development/README.md" in content
     assert "05_TopDown_题库学习/项目/02_项目映射/Zuno/" not in content
 
 
@@ -142,7 +142,7 @@ def test_public_release_preview_ready_note_points_to_existing_history() -> None:
     )
     ready_note = namespace["DOCS_AND_README_READY_NOTE"]
 
-    assert ready_note == "docs/development/history/docs-and-readme-ready.md"
+    assert ready_note == "docs/architecture/history/development/docs-and-readme-ready.md"
     assert (REPO_ROOT / ready_note).exists()
 
 

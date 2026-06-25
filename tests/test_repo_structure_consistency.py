@@ -24,6 +24,7 @@ def test_required_current_paths_exist() -> None:
         "docs/architecture/history/plans/README.md",
         "docs/architecture/history/programs/README.md",
         "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
+        "docs/architecture/history/development/README.md",
         "docs/evidence/public-demo.md",
         "examples/graphrag-projects/contract_review/settings.yaml",
         "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
@@ -81,6 +82,7 @@ def test_retired_front_path_directories_are_not_current_paths() -> None:
         "src/frontend",
         "domain-packs",
         "tests/compat",
+        "docs/development/history",
     ]
 
     for relative_path in retired_paths:

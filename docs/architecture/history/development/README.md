@@ -13,5 +13,5 @@ These notes may still be useful for historical traceability, but they should not
 
 For the current maintainer workflow, start from:
 
-- `../README.md`
-- `../architecture-doc-maintenance-workflow.md`
+- `../../../development/README.md`
+- `../../../development/architecture-doc-maintenance-workflow.md`

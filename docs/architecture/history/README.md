@@ -25,6 +25,8 @@ Current architecture readers should start from:
   context.
 - `agent-workflow/`: retired Agent workflow notes and old superpowers plans.
 - `audits/`: historical audits that are not active program evidence.
+- `development/`: older maintainer workflow notes and public-release readiness
+  notes that are not active engineering guidance.
 - `domain-packs/`: retired Domain Pack asset copies preserved as history, not
   current runtime input.
 

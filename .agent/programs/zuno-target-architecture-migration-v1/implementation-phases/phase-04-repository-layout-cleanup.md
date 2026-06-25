@@ -95,7 +95,7 @@ stage `backend_domain_runtime` or `backend_rag_graphrag_eval` changes into the
 wrong commit group. The public-release audit also treats the whole
 `docs/superpowers/` tree as local-only instead of only
 `docs/superpowers/specs/`, and preview output points to the existing
-`docs/development/history/docs-and-readme-ready.md` note.
+`docs/architecture/history/development/docs-and-readme-ready.md` note.
 
 ## Verification Commands
 

@@ -39,7 +39,7 @@ def test_phase5_maintainer_docs_use_clean_paths_and_current_truth() -> None:
         REPO_ROOT / "tools" / "launchers" / "windows" / "README.md"
     ).read_text(encoding="utf-8")
 
-    assert "development/history/README.md" in staging_plan
+    assert "../architecture/history/development/README.md" in staging_plan
     assert "05_TopDown_棰樺簱瀛︿範/椤圭洰/02_椤圭洰鏄犲皠/Zuno/" not in staging_plan
     assert "Phase 0" in launcher_docs
     assert "recovery" in launcher_docs.lower()

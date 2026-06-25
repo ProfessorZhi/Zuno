@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DOCS_AND_README_READY_NOTE = "docs/development/history/docs-and-readme-ready.md"
+DOCS_AND_README_READY_NOTE = "docs/architecture/history/development/docs-and-readme-ready.md"
 
 GROUP_RULES: list[tuple[str, tuple[str, ...]]] = [
     (

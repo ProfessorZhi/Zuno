@@ -22,7 +22,7 @@ Add `--stat` when you also want the group's current diff summary.
 Use [tools/scripts/preview_public_release_stage_dry_run.py](/abs/path/F:/internship-work/resume%26resume%20project/02_projects/Zuno/tools/scripts/preview_public_release_stage_dry_run.py) when you want a non-index staging preview in restricted environments.
 Use [tools/scripts/verify_docs_and_readme_ready.py](/abs/path/F:/internship-work/resume%26resume%20project/02_projects/Zuno/tools/scripts/verify_docs_and_readme_ready.py) when you want one go/no-go check for the first public docs group.
 
-Older docs-and-readme readiness notes are now historical and live under [development/history/README.md](./history/README.md).
+Older docs-and-readme readiness notes are now historical and live under [architecture/history/development/README.md](../architecture/history/development/README.md).
 
 Recommended group order:
 

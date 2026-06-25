@@ -32,7 +32,7 @@ It is not the first-read public explanation path.
 
 Completed workflow temperature docs have been downgraded to:
 
-- [development/history/README.md](./history/README.md)
+- [architecture/history/development/README.md](../architecture/history/development/README.md)
 
 This includes one-off:
 
