@@ -221,6 +221,46 @@ def test_active_repo_tools_do_not_reference_retired_backend_domain_pack_copy() -
     assert "`src/backend/zuno/domain_packs/` still exist" not in roadmap
 
 
+def test_active_public_release_tools_do_not_stage_retired_runtime_sources() -> None:
+    retired_runtime_sources = [
+        "src/backend/zuno/api/v1/domain_packs.py",
+        "src/backend/zuno/api/services/domain_pack.py",
+        "src/backend/zuno/core/graphs/domain_qa_graph.py",
+        "src/backend/zuno/core/graphs/states.py",
+        "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py",
+        "src/backend/zuno/core/runtime/agent_runtime.py",
+        "src/backend/zuno/services/domain_pack/",
+    ]
+    active_public_release_tools = [
+        "tools/scripts/preview_public_release_group.py",
+        "tools/scripts/preview_public_release_stage_dry_run.py",
+        "tools/scripts/print_public_release_stage_commands.py",
+        "tools/scripts/summarize_public_release_scope.py",
+    ]
+
+    for path in active_public_release_tools:
+        content = (REPO_ROOT / path).read_text(encoding="utf-8")
+        assert "retired_runtime_legacy" not in content, path
+        for retired_source in retired_runtime_sources:
+            assert retired_source not in content, f"{path} stages retired source {retired_source}"
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "active public release tool stages retired runtime source" in verifier
+
+
+def test_active_architecture_audits_do_not_list_retired_frontend_files_as_current_inputs() -> None:
+    audit = (
+        REPO_ROOT
+        / "docs/architecture/audits/current-model-and-retrieval-config-audit.md"
+    ).read_text(encoding="utf-8")
+
+    assert "- `apps/web/src/apis/domain-packs.ts`" not in audit
+    assert "Retired frontend evidence:" in audit
+    assert "`apps/web/src/apis/domain-packs.ts`" in audit
+
+
 def test_workspace_knowledge_path_stays_off_legacy_agent_runtime() -> None:
     workspace_agent = (
         REPO_ROOT / "src/backend/zuno/services/workspace/simple_agent.py"

@@ -74,6 +74,13 @@ Domain Pack-as-current/target-driver phrases outside explicit migration specs.
 This keeps old migration evidence reachable while preventing active specs from
 becoming a second target front path for Domain Pack.
 
+Active public-release staging helpers no longer expose `retired_runtime_legacy`
+as a staging or commit-order group, and they no longer print commands for
+retired Domain Pack route/API, graph, runtime, or service source paths. Public
+demo and architecture-maintenance docs now prefer GraphRAG Project /
+query-policy and migration-compatibility wording instead of Domain Pack-first
+workflow language.
+
 ## Verification Commands
 
 ```powershell

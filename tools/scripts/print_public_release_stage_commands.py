@@ -12,19 +12,13 @@ STAGE_GROUPS = [
         "tests_and_release_guards",
         [
             "git add .gitignore tests/",
-            "git add tools/scripts/audit_public_release.py tools/scripts/print_public_release_commit_order.py tools/scripts/print_public_release_stage_commands.py tools/scripts/summarize_public_release_scope.py",
+            "git add tools/scripts/audit_public_release.py tools/scripts/preview_public_release_group.py tools/scripts/preview_public_release_stage_dry_run.py tools/scripts/print_public_release_commit_order.py tools/scripts/print_public_release_stage_commands.py tools/scripts/summarize_public_release_scope.py tools/scripts/verify_docs_and_readme_ready.py",
         ],
     ),
     (
         "infra_and_launch",
         [
             "git add infra/docker/ tools/migrations/ tools/scripts/start.py tools/scripts/rebuild_rag_indexes.py",
-        ],
-    ),
-    (
-        "retired_runtime_legacy",
-        [
-            "git add -u -- src/backend/zuno/api/v1/domain_packs.py src/backend/zuno/api/services/domain_pack.py src/backend/zuno/core/graphs/domain_qa_graph.py src/backend/zuno/core/graphs/states.py src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py src/backend/zuno/core/runtime/agent_runtime.py src/backend/zuno/services/domain_pack/",
         ],
     ),
     (

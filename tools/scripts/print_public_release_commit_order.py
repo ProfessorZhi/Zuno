@@ -18,11 +18,6 @@ COMMIT_GROUPS = [
         "Keep separate from frontend polish and GraphRAG internals so infra rollback stays easy.",
     ),
     (
-        "retired_runtime_legacy",
-        "Deleted or retired legacy runtime source, routes, graph modules, and package assets.",
-        "Keep separate from current runtime behavior so reviewers can confirm the absence boundary.",
-    ),
-    (
         "backend_domain_runtime",
         "Current Agent, LangGraph, workspace-agent, embedding, LLM, and contract-review runtime convergence.",
         "Do not mix with broad zuno rename commits if runtime behavior and rename-only work can be reviewed separately.",

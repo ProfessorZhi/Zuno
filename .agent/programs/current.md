@@ -62,7 +62,11 @@ Current status:
   active `docs/architecture/specs/` to `docs/architecture/history/specs/`.
   Active docs verifiers now scan stable specs so `.agent` and `docs/` keep the
   Current / Target / History boundary without treating migration context as
-  target layout.
+  target layout. Active public-release staging helpers no longer expose a
+  `retired_runtime_legacy` group or `git add` commands for already-retired
+  Domain Pack route/API, graph, runtime, and service source paths; active demo
+  and maintenance docs prefer GraphRAG Project / migration compatibility
+  wording.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

@@ -76,3 +76,48 @@ def test_public_release_staging_plan_uses_clean_history_link() -> None:
 
     assert "development/history/README.md" in content
     assert "05_TopDown_题库学习/项目/02_项目映射/Zuno/" not in content
+
+
+def test_public_release_guidance_does_not_keep_retired_runtime_group() -> None:
+    staging_plan = (
+        REPO_ROOT / "docs" / "development" / "public-release-staging-plan.md"
+    ).read_text(encoding="utf-8")
+    commit_order = (
+        REPO_ROOT / "tools" / "scripts" / "print_public_release_commit_order.py"
+    ).read_text(encoding="utf-8")
+
+    assert "retired_runtime_legacy" not in staging_plan
+    assert "retired_runtime_legacy" not in commit_order
+    assert "backend_domain_runtime" in staging_plan
+    assert "backend_domain_runtime" in commit_order
+
+
+def test_public_release_stage_commands_cover_release_guard_helpers() -> None:
+    stage_commands = (
+        REPO_ROOT / "tools" / "scripts" / "print_public_release_stage_commands.py"
+    ).read_text(encoding="utf-8")
+
+    for path in [
+        "tools/scripts/preview_public_release_group.py",
+        "tools/scripts/preview_public_release_stage_dry_run.py",
+        "tools/scripts/verify_docs_and_readme_ready.py",
+    ]:
+        assert path in stage_commands
+
+
+def test_public_demo_docs_prefer_graphrag_project_id() -> None:
+    runbook = (
+        REPO_ROOT / "docs" / "development" / "public-demo-runbook.md"
+    ).read_text(encoding="utf-8")
+
+    assert "--graphrag-project-id contract_review" in runbook
+    assert "--domain-pack-id contract_review" not in runbook
+
+
+def test_architecture_maintenance_workflow_tracks_project_contracts() -> None:
+    workflow = (
+        REPO_ROOT / "docs" / "development" / "architecture-doc-maintenance-workflow.md"
+    ).read_text(encoding="utf-8")
+
+    assert "GraphRAG Project / migration compatibility contracts" in workflow
+    assert "GraphRAG / Domain Pack contracts" not in workflow

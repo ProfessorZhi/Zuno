@@ -83,7 +83,7 @@ Reference evidence already in repo:
 python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
   --manifest .local/evals/zuno/rag_eval/corpus/contract_review_scale_corpus/manifest.json `
   --dataset tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl `
-  --domain-pack-id contract_review `
+  --graphrag-project-id contract_review `
   --output-root .local/evals/zuno/rag_eval/runs/public-demo-contract-review
 ```
 

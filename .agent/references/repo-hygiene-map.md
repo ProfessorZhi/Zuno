@@ -49,6 +49,8 @@ Domain Pack assets must not be restored as target repository layout.
 Retired Phase 6 bundle helpers must not be restored under active
 `tools/scripts/`. Superseded migration specs under
 `docs/architecture/history/specs/` must stay reachable as history instead of
-returning to the active specs front path.
+returning to the active specs front path. Active public-release staging helpers
+must not stage or name already-retired Domain Pack route/API, graph, runtime,
+or service source paths as current release groups.
 Read `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 before directory-boundary work.

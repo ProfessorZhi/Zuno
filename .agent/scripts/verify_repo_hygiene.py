@@ -253,6 +253,31 @@ def main() -> int:
                 )
                 break
 
+    retired_runtime_source_phrases = [
+        "retired_runtime_legacy",
+        "src/backend/zuno/api/v1/domain_packs.py",
+        "src/backend/zuno/api/services/domain_pack.py",
+        "src/backend/zuno/core/graphs/domain_qa_graph.py",
+        "src/backend/zuno/core/graphs/states.py",
+        "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py",
+        "src/backend/zuno/core/runtime/agent_runtime.py",
+        "src/backend/zuno/services/domain_pack/",
+    ]
+    active_public_release_tools = [
+        "tools/scripts/preview_public_release_group.py",
+        "tools/scripts/preview_public_release_stage_dry_run.py",
+        "tools/scripts/print_public_release_stage_commands.py",
+        "tools/scripts/summarize_public_release_scope.py",
+    ]
+    for relative_path in active_public_release_tools:
+        content = _read(relative_path)
+        for phrase in retired_runtime_source_phrases:
+            if phrase in content:
+                errors.append(
+                    f"active public release tool stages retired runtime source: {relative_path}"
+                )
+                break
+
     agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():
         errors.append("AgentRuntime facade must not remain as current backend source")

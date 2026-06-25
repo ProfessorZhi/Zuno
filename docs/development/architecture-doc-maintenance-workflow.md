@@ -9,7 +9,7 @@ Use it after any significant change to:
 - repo structure
 - backend service boundary
 - runtime workflow
-- GraphRAG / Domain Pack contracts
+- GraphRAG Project / migration compatibility contracts
 - evaluation surface
 - README public explanation path
 

@@ -23,12 +23,15 @@ Audited files:
 - `src/backend/zuno/services/graphrag/**`
 - `src/backend/zuno/services/rag/**`
 - `apps/web/src/apis/knowledge.ts`
-- `apps/web/src/apis/domain-packs.ts`
 - `apps/web/src/utils/knowledge-config.ts`
 - `apps/web/src/pages/knowledge/knowledge-create.vue`
 - `apps/web/src/pages/knowledge/knowledge-settings.vue`
 - `tools/evals/zuno/rag_eval/**`
 - `tests/test_phase5_deep_graphrag_eval_surface.py`
+
+Retired frontend evidence: `apps/web/src/apis/domain-packs.ts` was part of
+the historical audit input, but it is no longer an active frontend API file
+after Phase 11C cleanup.
 
 ## Short Verdict
 
@@ -182,4 +185,3 @@ minimal multi-hop eval start, but not a full tuning surface.
 
 Next phase should audit `tests/` structure before moving or adding large eval
 test groups.
-
