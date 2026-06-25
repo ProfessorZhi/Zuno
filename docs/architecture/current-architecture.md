@@ -103,8 +103,8 @@ path, and the extractor contract tests now call extractors with
 alias is retired from active extractor APIs.
 
 GraphRAG Project Contract Review assets now expose `to_project_payload()` as
-the project-named compatibility payload API. `to_domain_pack_payload()` remains
-only as a legacy wrapper for migration tests and older compatibility callers.
+the project-named compatibility payload API. The legacy
+`to_domain_pack_payload()` wrapper is retired from the active project loader.
 Stackless compare/local embedding evals prefer `graphrag_project_id` /
 `--graphrag-project-id` while retaining `domain_pack_id` only as a migration
 alias where current contracts still require it.

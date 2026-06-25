@@ -263,6 +263,9 @@ def main() -> int:
     pipeline_manager = _read("src/backend/zuno/services/pipeline/manager.py")
     if "domain_pack=domain_pack" in pipeline_manager:
         errors.append("Pipeline graph extraction must call extractors with project_payload")
+    project_loader = _read("src/backend/zuno/services/graphrag/project/loader.py")
+    if "def to_domain_pack_payload" in project_loader:
+        errors.append("GraphRAG Project loader must expose only to_project_payload")
     structured_contract_test = _read("tests/test_structured_graph_extractor_contract.py")
     if "domain_pack=contract_review" in structured_contract_test:
         errors.append("Structured graph extractor contract tests must use project_payload")

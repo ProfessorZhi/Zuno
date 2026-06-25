@@ -48,9 +48,7 @@ def test_contract_review_example_project_loads_with_prompt_manifest() -> None:
     assert payload["answer_template_text"]
     assert payload["report_template_text"]
     assert "contract_demo_q1" in payload["eval_dataset_text"]
-
-    legacy_payload = loaded.to_domain_pack_payload()
-    assert legacy_payload == payload
+    assert not hasattr(loaded, "to_domain_pack_payload")
 
 
 def test_contract_review_history_assets_are_mapped_to_project_assets() -> None:

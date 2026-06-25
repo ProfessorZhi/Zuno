@@ -213,6 +213,9 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
         REPO_ROOT
         / "src/backend/zuno/services/graphrag/extractors/cached_extractor.py"
     ).read_text(encoding="utf-8")
+    project_loader = (
+        REPO_ROOT / "src/backend/zuno/services/graphrag/project/loader.py"
+    ).read_text(encoding="utf-8")
     pipeline_manager = (
         REPO_ROOT / "src/backend/zuno/services/pipeline/manager.py"
     ).read_text(encoding="utf-8")
@@ -231,6 +234,7 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     assert "domain_pack:" not in structured_extractor
     assert "domain_pack:" not in cached_extractor
     assert "domain_pack=contract_review" not in structured_contract_test
+    assert "def to_domain_pack_payload" not in project_loader
     assert "_load_graph_project_domain_payload" not in stackless_eval
     assert "project_payload:" in structured_extractor
     assert "project_payload:" in cached_extractor
@@ -242,6 +246,7 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     assert "GraphRAG eval paths must call extractors with project_payload" in verifier
     assert "Pipeline graph extraction must call extractors with project_payload" in verifier
     assert "GraphRAG extractors must not expose domain_pack payload aliases" in verifier
+    assert "GraphRAG Project loader must expose only to_project_payload" in verifier
     assert "Structured graph extractor contract tests must use project_payload" in verifier
     assert "Stackless local eval must not keep a graph project domain payload alias" in verifier
     assert "GraphRAG extractors must expose project_payload as the primary payload parameter" in verifier

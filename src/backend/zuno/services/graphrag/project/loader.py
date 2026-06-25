@@ -84,10 +84,6 @@ class LoadedGraphRAGProject:
             "eval_dataset_text": self.eval_dataset_text,
         }
 
-    def to_domain_pack_payload(self) -> dict[str, Any]:
-        return self.to_project_payload()
-
-
 class GraphRAGSettingsValidator:
     @staticmethod
     def parse_settings(text: str, *, settings_path: Path) -> dict[str, Any]:

@@ -78,8 +78,8 @@ Additional progress:
   graph builder also calls extractors with `project_payload=project_payload`
   and no longer keeps a private `_load_graph_project_domain_payload` alias.
 - GraphRAG Project assets now expose `to_project_payload()` as the project-named
-  compatibility payload API. The legacy `to_domain_pack_payload()` method is a
-  wrapper retained for migration tests and older compatibility callers.
+  compatibility payload API. The legacy `to_domain_pack_payload()` wrapper has
+  been retired from the active project loader.
 - Stackless compare/local embedding evals prefer `graphrag_project_id` /
   `--graphrag-project-id` for Contract Review project binding while retaining
   `domain_pack_id` as a legacy alias where current runtime contracts still
