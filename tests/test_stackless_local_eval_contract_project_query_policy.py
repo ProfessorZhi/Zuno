@@ -12,7 +12,7 @@ def _contract_review_query_policy() -> dict:
     return dict(project.settings["retrieval_policy"])
 
 
-def test_build_local_graph_retriever_uses_contract_domain_pack():
+def test_build_local_graph_retriever_uses_contract_graphrag_project_query_policy():
     from zuno.evals.rag_eval.run_stackless_local_eval import _build_local_graph_retriever
     from zuno.schema.chunk import ChunkModel
 
@@ -32,7 +32,12 @@ def test_build_local_graph_retriever_uses_contract_domain_pack():
         summary="数据安全条款",
     )
 
-    retriever = asyncio.run(_build_local_graph_retriever([chunk], domain_pack_id="contract_review"))
+    retriever = asyncio.run(
+        _build_local_graph_retriever(
+            [chunk],
+            graphrag_project_id="contract_review",
+        )
+    )
     extracted_documents = retriever.client.extracted_documents
     assert extracted_documents
     relation_types = {
@@ -53,7 +58,6 @@ def test_build_local_graph_retriever_uses_contract_domain_pack():
         retriever.retrieve(
             "主服务合同里，发生数据泄露后乙方需要在多久内通知甲方？还需要依据哪部法律配合处置？",
             "kb_contract",
-            domain_pack_id="contract_review",
             query_policy=_contract_review_query_policy(),
         )
     )

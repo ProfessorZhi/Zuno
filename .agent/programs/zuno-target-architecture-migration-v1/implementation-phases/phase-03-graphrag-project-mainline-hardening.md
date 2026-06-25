@@ -32,6 +32,11 @@ of current GraphRAG Project target evidence.
 field (`domain_pack_id`). This is current compatibility with the existing
 storage model, not a target endorsement of Domain Pack as the public contract.
 
+Stackless Contract Review local eval coverage now lives in
+`tests/test_stackless_local_eval_contract_project_query_policy.py`, which
+builds from `graphrag_project_id="contract_review"` and explicit GraphRAG
+Project `query_policy`.
+
 ## Scope
 
 - Harden `graphrag_project_id` and `query_method` contracts.

@@ -125,3 +125,31 @@ def test_gitignore_allows_module_agents() -> None:
 
     assert "apps/web/AGENTS.md" not in content
     assert ".agent/local/*" in content
+
+
+def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
+    content = (REPO_ROOT / ".agent/scripts/grep-domain-pack.ps1").read_text(
+        encoding="utf-8"
+    )
+
+    for pattern in [
+        "Domain Pack",
+        "domain_pack",
+        "DomainQAGraph",
+        "MultiAgentSupervisorGraph",
+        "domain-packs",
+    ]:
+        assert pattern in content
+
+    assert "rg" in content
+    assert "docs/architecture/history/**" in content
+
+    verification_map = (
+        REPO_ROOT / ".agent/references/verification-map.md"
+    ).read_text(encoding="utf-8")
+    current_validation = (
+        REPO_ROOT / ".agent/references/current_architecture/validation.md"
+    ).read_text(encoding="utf-8")
+
+    assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
+    assert ".agent/scripts/grep-domain-pack.ps1" in current_validation

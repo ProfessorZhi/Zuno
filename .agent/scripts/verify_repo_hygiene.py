@@ -260,6 +260,10 @@ def main() -> int:
         errors.append("GraphRAG eval paths must call extractors with project_payload")
     if "project_payload=project_payload" not in stackless_eval:
         errors.append("GraphRAG eval paths must call extractors with project_payload")
+    if (REPO_ROOT / "tests/test_stackless_local_eval_contract_domain_pack.py").exists():
+        errors.append("Stackless Contract Review eval test must use project query policy naming")
+    if not (REPO_ROOT / "tests/test_stackless_local_eval_contract_project_query_policy.py").exists():
+        errors.append("Stackless Contract Review eval test must use project query policy naming")
 
     structured_extractor = _read("src/backend/zuno/services/graphrag/extractors/structured_extractor.py")
     cached_extractor = _read("src/backend/zuno/services/graphrag/extractors/cached_extractor.py")

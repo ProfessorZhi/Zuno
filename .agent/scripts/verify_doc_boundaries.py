@@ -75,6 +75,22 @@ def main() -> int:
             if phrase in content:
                 errors.append(f"{relative_path} contains retired front-path text: {phrase}")
 
+    forbidden_active_doc_text = [
+        "docs/architecture/phases/",
+        "docs/architecture/plans/",
+        "docs/architecture/programs/",
+    ]
+    for path in sorted(REPO_ROOT.glob("docs/**/*.md")):
+        relative_path = path.relative_to(REPO_ROOT).as_posix()
+        if relative_path.startswith("docs/architecture/history/"):
+            continue
+        content = path.read_text(encoding="utf-8")
+        for phrase in forbidden_active_doc_text:
+            if phrase in content:
+                errors.append(
+                    f"{relative_path} links retired architecture current path: {phrase}"
+                )
+
     if errors:
         for error in errors:
             print(f"ERROR: {error}")

@@ -32,6 +32,15 @@ def test_stackless_local_eval_does_not_keep_private_domain_payload_alias():
     assert "_load_graph_project_domain_payload" not in source
 
 
+def test_stackless_contract_local_eval_test_is_project_named():
+    root = Path(__file__).resolve().parents[1]
+
+    assert not (root / "tests/test_stackless_local_eval_contract_domain_pack.py").exists()
+    assert (
+        root / "tests/test_stackless_local_eval_contract_project_query_policy.py"
+    ).exists()
+
+
 def test_stackless_local_eval_internal_payload_names_follow_project_mainline():
     source = (
         Path(__file__).resolve().parents[1]

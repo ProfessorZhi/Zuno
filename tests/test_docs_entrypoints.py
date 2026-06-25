@@ -92,6 +92,8 @@ def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() ->
         "verify_active_spec_domain_pack_boundaries",
         "verify_near_term_retired_runtime_boundaries",
         "verify_architecture_decision_boundaries",
+        "verify_active_docs_do_not_link_retired_architecture_current_paths",
+        "docs/architecture/plans/",
         "Domain Pack retrieval policy inputs",
         "Current Evidence: `DomainQAGraph`",
         "0001-domain-pack-binding.md",
@@ -119,6 +121,24 @@ def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
         content = path.read_text(encoding="utf-8")
         for phrase in forbidden:
             assert phrase not in content, f"{path} contains retired front-path text: {phrase}"
+
+
+def test_active_docs_do_not_link_retired_architecture_current_paths() -> None:
+    active_docs = [
+        path
+        for path in REPO_ROOT.glob("docs/**/*.md")
+        if "docs/architecture/history" not in path.as_posix()
+    ]
+    forbidden = [
+        "docs/architecture/plans/",
+        "docs/architecture/phases/",
+        "docs/architecture/programs/",
+    ]
+
+    for path in active_docs:
+        content = path.read_text(encoding="utf-8")
+        for phrase in forbidden:
+            assert phrase not in content, f"{path} links retired architecture current path: {phrase}"
 
 
 def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -> None:

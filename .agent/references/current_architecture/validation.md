@@ -29,8 +29,11 @@ git diff --check
 git grep -n ".agentmd"
 git grep -n ".agent.md"
 git grep -n "<legacy lowercase Agent entrypoint filename>"
-git grep -n "Domain Pack"
-git grep -n "domain_pack"
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/grep-domain-pack.ps1
 ```
 
-When running the second command, replace the placeholder with the retired lowercase entrypoint filename. Historical hits are allowed when they live under `docs/architecture/history/` or explicitly describe a migration.
+When running the second command, replace the placeholder with the retired
+lowercase entrypoint filename. The Domain Pack helper excludes
+`docs/architecture/history/**` and scans the Phase 11C legacy terms that need
+classification: `Domain Pack`, `domain_pack`, `DomainQAGraph`,
+`MultiAgentSupervisorGraph`, and `domain-packs`.

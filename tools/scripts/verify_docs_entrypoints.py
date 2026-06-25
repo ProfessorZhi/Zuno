@@ -97,6 +97,27 @@ def verify_architecture_decision_boundaries() -> list[str]:
     return errors
 
 
+def verify_active_docs_do_not_link_retired_architecture_current_paths() -> list[str]:
+    forbidden_phrases = [
+        "docs/architecture/phases/",
+        "docs/architecture/plans/",
+        "docs/architecture/programs/",
+    ]
+
+    errors: list[str] = []
+    for path in sorted((REPO_ROOT / "docs").glob("**/*.md")):
+        relative_path = path.relative_to(REPO_ROOT).as_posix()
+        if relative_path.startswith("docs/architecture/history/"):
+            continue
+        content = path.read_text(encoding="utf-8")
+        for phrase in forbidden_phrases:
+            if phrase in content:
+                errors.append(
+                    f"{relative_path} links retired architecture current path: {phrase}"
+                )
+    return errors
+
+
 def main() -> int:
     readme = _read("README.md")
     docs_index = _read("docs/README.md")
@@ -181,6 +202,7 @@ def main() -> int:
     errors.extend(verify_active_spec_domain_pack_boundaries())
     errors.extend(verify_near_term_retired_runtime_boundaries())
     errors.extend(verify_architecture_decision_boundaries())
+    errors.extend(verify_active_docs_do_not_link_retired_architecture_current_paths())
 
     forbidden_front_path = [
         "docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md",

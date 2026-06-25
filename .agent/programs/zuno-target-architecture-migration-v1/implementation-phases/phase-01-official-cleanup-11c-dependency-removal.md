@@ -142,6 +142,12 @@ Removed from the active current path:
   executing through `DomainQAGraph`.
 - Stackless local eval no longer has a generic Domain Pack loader fallback;
   when an id is provided, it must resolve to GraphRAG Project assets.
+- The former stackless Contract Review local eval test has been reclassified
+  from `test_stackless_local_eval_contract_domain_pack.py` to
+  `test_stackless_local_eval_contract_project_query_policy.py`; it now builds
+  with `graphrag_project_id="contract_review"` and explicit GraphRAG Project
+  `query_policy` instead of presenting the behavior as Domain Pack runtime
+  coverage.
 - The `src/backend/zuno/services/domain_pack/` runtime service package has
   been removed from current backend source. Root tests now prove the current
   project query/eval paths work without importing it, and root Phase 11C tests
@@ -172,6 +178,8 @@ No longer blocked by current eval runtime:
   `DomainPackLoader` or `DomainQAGraph`.
 - GraphRAG Project scope can reach the existing graph storage filter through
   `GraphRetrieverAdapter` without restoring Domain Pack policy loading.
+- Stackless Contract Review local eval behavior is now protected by a
+  project-query-policy named test instead of a Domain Pack named current test.
 - Root `tests/` still contains migration/current compatibility coverage for
   Workspace, Domain Pack migration fields, and Contract Review GraphRAG Project
   compatibility payloads. Retired runtime import/source guards have moved to

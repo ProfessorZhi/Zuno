@@ -235,6 +235,20 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     assert "GraphRetrieverAdapter must map GraphRAG Project scope to the legacy storage filter" in verifier
 
 
+def test_stackless_contract_eval_test_is_project_query_policy_named() -> None:
+    assert not (
+        REPO_ROOT / "tests/test_stackless_local_eval_contract_domain_pack.py"
+    ).exists()
+    assert (
+        REPO_ROOT / "tests/test_stackless_local_eval_contract_project_query_policy.py"
+    ).exists()
+
+    verifier = (
+        REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    ).read_text(encoding="utf-8")
+    assert "Stackless Contract Review eval test must use project query policy naming" in verifier
+
+
 def test_retired_backend_domain_pack_asset_copy_is_removed() -> None:
     assert not (
         REPO_ROOT / "src/backend/zuno/domain_packs"

@@ -46,7 +46,7 @@ citation check、GraphRAG Project / query policy 和本地评测能力时，
 ### 3. Evaluation and Observability
 
 - `docs/architecture/specs/rag-evaluation-and-observability.md`
-- `docs/architecture/plans/rag-local-eval-scheme.md`
+- `docs/architecture/history/plans/rag-local-eval-scheme.md`
 - `tools/evals/zuno/rag_eval/`
 - `tools/evals/zuno/contract_review_eval/`
 
