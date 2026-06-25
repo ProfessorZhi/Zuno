@@ -70,11 +70,11 @@ It favors one explainable, runnable monorepo baseline over a partially migrated 
 
 ## Runtime Mainline
 
-The runtime thesis remains:
+The current target runtime thesis is now:
 
 ```text
-Domain Pack
-  -> LangGraph Runtime
+Single GeneralAgent / LangGraph Runtime
+  -> GraphRAG Project / query policy
   -> Retrieval Planning
   -> Vector / BM25 / Graph Retrieval
   -> Evidence Fusion
@@ -82,8 +82,8 @@ Domain Pack
   -> Evaluation + Proof
 ```
 
-What changed is not the runtime thesis.
-What changed is the execution order used to stabilize it.
+The older Domain Pack thesis remains migration context only. It must not be
+used as the current or target runtime driver.
 
 ## Documentation Layering
 
@@ -117,12 +117,14 @@ The active phase program is now:
 1. Phase 0: Stable Runtime Recovery
 2. Phase 1: LangGraph Runtime Deepening
 3. Phase 2: GraphRAG Mainline Deepening
-4. Phase 3: Domain Pack Formalization
+4. Phase 3: GraphRAG Project / query policy formalization
 5. Phase 4: Knowledge Config V2 + Local Eval Strengthening
 6. Phase 5: Docs And Public Explanation Sync
 7. Phase 6: Agent GraphRAG Pluginization / Future Platform Layer
 
-This replaces the paused migration-first phase story as the current execution truth.
+This older sequence has been superseded by the active Target Architecture
+Migration V1 program, but it remains useful background for why the project
+stabilized runtime and docs before larger package moves.
 
 ## Workflow Rule
 
@@ -164,7 +166,7 @@ This architecture-upgrade round is in a healthy state only when all of the follo
 2. the user has personally tried that recovered runtime
 3. front-path docs expose only the latest plan, latest phase model, and latest architecture truth
 4. older migration-first materials live only in `history/` or explicit historical context
-5. deeper LangGraph, GraphRAG, Domain Pack, and eval work can continue without reopening doc ambiguity first
+5. deeper LangGraph, GraphRAG Project, query policy, and eval work can continue without reopening doc ambiguity first
 
 ## Summary
 
@@ -177,4 +179,5 @@ recover a stable baseline
   -> then deepen the architecture
 ```
 
-That is the current architecture-upgrade design truth for Zuno.
+That is the retained architecture-upgrade design background for Zuno; current
+execution truth lives in `zuno-target-architecture-migration-v1`.

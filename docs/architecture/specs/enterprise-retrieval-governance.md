@@ -6,7 +6,7 @@
 
 ```text
 当 Zuno 同时具备 Dense RAG、BM25、GraphRAG、requery、rerank、
-citation check、Domain Pack 和本地评测能力时，
+citation check、GraphRAG Project / query policy 和本地评测能力时，
 如何把它们收束成一套可解释、可审计、可降级、可控成本的企业级检索系统。
 ```
 
@@ -23,23 +23,24 @@ citation check、Domain Pack 和本地评测能力时，
 
 - `docs/architecture/specs/retrieval-orchestrator.md`
 - `docs/architecture/specs/langgraph-runtime.md`
-- `src/backend/zuno/core/runtime/agent_runtime.py`
+- `src/backend/zuno/api/services/knowledge_query.py`
 
 这部分已经说明：
 
 - 存在统一 retrieval orchestrator 方向
 - 存在 knowledge capability / query policy 的拆层
-- 已有 LangGraph runtime 入口和 domain-pack runtime
+- 已有单一 `GeneralAgent` 会话入口和 GraphRAG Project query runtime
 
 ### 2. Domain Modeling and GraphRAG
 
 - `docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md`
-- `src/backend/zuno/domain_packs/contract_review/`
+- `examples/graphrag-projects/contract_review/`
 - `src/backend/zuno/services/graphrag/`
 
 这部分已经说明：
 
-- GraphRAG 不是孤立能力，而是受 Domain Pack 驱动
+- GraphRAG 不是孤立能力，而是受 GraphRAG Project、query policy、
+  retrieval planner 和 evidence contract 共同约束
 - 合同审查是当前第一条高质量领域建模主线
 
 ### 3. Evaluation and Observability
@@ -188,7 +189,7 @@ Trace 回答的是：
 
 职责：
 
-- 消费 query、capability、domain pack、scope、budget、health
+- 消费 query、capability、GraphRAG Project policy、scope、budget、health
 - 产出结构化 `RetrievalPlan`
 
 不负责：
@@ -351,7 +352,7 @@ Trace 回答的是：
 企业级要求下，planner 至少要显式接收：
 
 - `knowledge_id`
-- `domain_pack_id`
+- `graphrag_project_id`
 - `index_version`
 - `index_health`
 - `status=active`
@@ -376,9 +377,10 @@ Requery 不能默认执行。
 
 ### Domain-Aware Requery
 
-在合同审查等领域场景里，requery 应优先受 Domain Pack 驱动，而不是纯通用 rewrite。
+在合同审查等领域场景里，requery 应优先受 GraphRAG Project query policy
+驱动，而不是纯通用 rewrite。
 
-例如 `contract_review` pack 应能定义：
+例如 `contract_review` project policy 应能定义：
 
 - 风险槽位
 - clause / obligation / regulation 相关的补检提示
@@ -430,7 +432,7 @@ retrieve evidence
 
 - knowledge 具备 `rag_graph`
 - graph index health 正常
-- 当前 domain pack 定义了有效 schema
+- 当前 GraphRAG Project 定义了有效 schema / retrieval policy
 - query 明显具有关联或结构化需求
 
 ### GraphRAG Must Be Source-Backed
@@ -444,11 +446,11 @@ graph path 不能脱离原文证据独立存在。
 - extraction evidence
 - schema version
 
-### Domain Pack Controls Path Semantics
+### GraphRAG Project Controls Path Semantics
 
 GraphRAG 的 path 语义不应统一硬编码。
 
-例如 `contract_review` pack 应能定义：
+例如 `contract_review` GraphRAG Project 应能定义：
 
 - 哪些 relation 更重要
 - 哪些 path 优先返回
@@ -612,7 +614,8 @@ citation verifier unavailable
 这份文档不是替代已有 spec，而是补它们之间缺少的治理层。
 
 - `retrieval-orchestrator.md` 负责统一控制面骨架
-- `domain-pack-langgraph-graphrag-architecture.md` 负责 Domain Pack 与 GraphRAG 总体结构
+- `domain-pack-langgraph-graphrag-architecture.md` 只保留 Domain Pack-era
+  迁移上下文；当前总体结构以 GraphRAG Project / query policy 为准
 - `rag-evaluation-and-observability.md` 负责评测与 trace 基础要求
 
 这份文档额外定义的是：

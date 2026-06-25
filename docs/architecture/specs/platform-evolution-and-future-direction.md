@@ -21,7 +21,7 @@ Zuno 当前更合理的定位不是：
 
 ```text
 本地优先的 Agent 工作台
-  支持用户通过模型、Prompt、知识库、Domain Pack、MCP、Skills 和 Tools
+  支持用户通过模型、Prompt、知识库、GraphRAG Project、MCP、Skills 和 Tools
   搭建具备领域问答、工具调用和任务执行能力的 Agent
 ```
 
@@ -29,7 +29,7 @@ Zuno 当前更合理的定位不是：
 
 - LangGraph runtime
 - RAG / GraphRAG / BM25 检索
-- Domain Pack 领域扩展
+- GraphRAG Project 领域知识建模
 - 证据、引用、评测、成本控制
 - 清楚的目录结构与分层边界
 
@@ -42,7 +42,7 @@ Frontend
   -> Backend API
   -> LangGraph runtime
   -> Retrieval Orchestrator
-  -> Domain Pack
+  -> GraphRAG Project / query policy
   -> RAG / GraphRAG / BM25
   -> Evaluation / Trace / Citation / Cost control
 ```
@@ -65,7 +65,7 @@ Frontend
 - LangGraph 成为运行时主线
 - Retrieval Orchestrator 成为知识检索控制面
 - RAG / GraphRAG / BM25 主线成立
-- Domain Pack 成为领域扩展机制
+- GraphRAG Project 成为领域知识与 query policy 的目标容器
 - 本地评测、trace、citation、成本控制进入架构主线
 - 文件夹结构、文档入口、后端分层开始清晰
 
@@ -74,7 +74,7 @@ Frontend
 下一步不是再平行加新系统，而是继续补治理层和边界：
 
 - profile / planner / RetrievalPlan / trace contract 更明确
-- GraphRAG 与 Domain Pack 的领域边界更清楚
+- GraphRAG Project、query policy 与 retrieval planner 的领域边界更清楚
 - GraphRAG 动态更新与图谱版本治理明确落地
 - 用户层检索模式收成普通 / 增强两档
 - 文档系统、目录系统、公开说明进一步收口
@@ -137,7 +137,7 @@ Frontend
 
 - `profile` 是策略边界，不是固定 DAG
 - `planner` 按单次请求生成 plan
-- `GraphRAG` 受 `Domain Pack` 控制
+- `GraphRAG` 受 GraphRAG Project / query policy 控制
 - citation 走 evidence-first 路线
 - scope、budget、fallback、index version 是硬约束
 
@@ -217,7 +217,7 @@ Zuno 未来需要保留往下面两类方向演进的可能：
 
 - retrieval contract
 - evidence / citation contract
-- domain pack contract
+- GraphRAG Project / query policy contract
 - runtime state contract
 - service / DAO contract
 - publish-safe repository boundary
@@ -231,7 +231,7 @@ Zuno 未来需要保留往下面两类方向演进的可能：
 重点是把当前主线做扎实：
 
 - RAG / GraphRAG / BM25 检索
-- Domain Pack
+- GraphRAG Project
 - LangGraph runtime
 - 低成本评测
 - 检索治理

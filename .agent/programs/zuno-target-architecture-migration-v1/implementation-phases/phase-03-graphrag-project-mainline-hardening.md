@@ -16,7 +16,10 @@ response fields for current callers. Contract Review eval project assets now
 use `to_project_payload()` as the main GraphRAG Project payload API, and
 stackless eval entrypoints prefer `graphrag_project_id` /
 `--graphrag-project-id` while retaining `domain_pack_id` only as migration
-compatibility.
+compatibility. Stable active architecture specs now frame retrieval governance,
+LangGraph runtime, enhanced retrieval, platform direction, eval, and knowledge
+config impact around GraphRAG Project / query policy instead of Domain Pack as
+the target driver.
 
 ## Scope
 
@@ -45,6 +48,8 @@ compatibility.
 - Old names remain only in history, migration notes, or explicit compatibility
   tests.
 - Query result includes evidence, citation, versions, and trace metadata.
+- Active stable specs do not reintroduce Domain Pack as the GraphRAG Project
+  mainline driver.
 
 ## Verification Commands
 

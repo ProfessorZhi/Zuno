@@ -80,7 +80,7 @@ Current recommended meaning:
 - `src/backend/zuno/database/`
   - models, metadata, session, DAO
 - `src/backend/zuno/services/`
-  - business orchestration, retrieval, GraphRAG, Domain Pack, provider adapters
+  - business orchestration, retrieval, GraphRAG Project, provider adapters
 
 Repo-level meaning:
 
@@ -196,7 +196,7 @@ Avoid:
 This layering keeps space for:
 
 1. stronger LangGraph and retrieval runtime workflows
-2. deeper GraphRAG and Domain Pack contracts
+2. deeper GraphRAG Project and query policy contracts
 3. possible queue-worker or service extraction later
 4. possible non-Python backend integration later
 

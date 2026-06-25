@@ -59,7 +59,7 @@ trace 和成本如何挂进去。
 ```text
 Agent Config Layer
   - agent defaults
-  - domain defaults
+  - GraphRAG Project defaults
 
 Runtime Layer
   - StateGraph
@@ -81,7 +81,7 @@ Capability Layer
 ```text
 START
   -> load_agent_config
-  -> resolve_domain_pack
+  -> resolve_graphrag_project
   -> route_intent
   -> rewrite_query
   -> retrieve_context
@@ -113,7 +113,7 @@ START
 - 用户输入
 - agent id / dialog id
 - knowledge ids
-- domain pack id
+- graphrag project id
 - rewritten queries
 - retrieved contexts
 - graph paths
@@ -156,16 +156,16 @@ RetrievalOrchestrator 负责检索控制面
 
 普通模式和增强模式的对外体验可以保持简单，但 graph 内部仍然要保留清楚的检索前后节点和状态演进。
 
-## 与 Domain Pack 的关系
+## 与 GraphRAG Project 的关系
 
-LangGraph runtime 必须能感知 Domain Pack，但不持有领域细节本身。
+LangGraph runtime 必须能感知 GraphRAG Project 和 query policy，但不持有领域细节本身。
 
 graph 负责：
 
-- resolve 当前 pack
-- 把 pack 信息传给 retrieval / answer 相关节点
+- resolve 当前 project
+- 把 project policy 信息传给 retrieval / answer 相关节点
 
-pack 负责：
+project policy 负责：
 
 - schema
 - policy

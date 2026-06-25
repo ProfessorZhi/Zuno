@@ -14,6 +14,41 @@ def _require_phrases(name: str, content: str, phrases: list[str]) -> list[str]:
     return [f"{name} missing phrase: {phrase}" for phrase in phrases if phrase not in content]
 
 
+def verify_active_spec_domain_pack_boundaries() -> list[str]:
+    allowed_migration_specs = {
+        REPO_ROOT / "docs/architecture/specs/README.md",
+        REPO_ROOT / "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md",
+    }
+    forbidden_phrases = [
+        "Domain Pack\n  ->",
+        "Domain Pack ->",
+        "Domain Pack retrieval policy inputs",
+        "Domain-specific graph cues belong in `Domain Pack retrieval_policy`",
+        "GraphRAG 不是孤立能力，而是受 Domain Pack 驱动",
+        "Domain Pack 成为领域扩展机制",
+        "GraphRAG 受 `Domain Pack` 控制",
+        "LangGraph runtime 必须能感知 Domain Pack",
+        "它验证 Domain Pack 是否有价值",
+        "Domain Pack schema",
+        "Phase 3: Domain Pack Formalization",
+        "deeper LangGraph, GraphRAG, Domain Pack",
+        "business orchestration, retrieval, GraphRAG, Domain Pack, provider adapters",
+    ]
+
+    errors: list[str] = []
+    for path in sorted((REPO_ROOT / "docs/architecture/specs").glob("*.md")):
+        if path in allowed_migration_specs:
+            continue
+        content = path.read_text(encoding="utf-8")
+        for phrase in forbidden_phrases:
+            if phrase in content:
+                relative_path = path.relative_to(REPO_ROOT).as_posix()
+                errors.append(
+                    f"{relative_path} promotes Domain Pack as current/target driver: {phrase}"
+                )
+    return errors
+
+
 def main() -> int:
     readme = _read("README.md")
     docs_index = _read("docs/README.md")
@@ -95,6 +130,7 @@ def main() -> int:
             ],
         )
     )
+    errors.extend(verify_active_spec_domain_pack_boundaries())
 
     forbidden_front_path = [
         "docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md",

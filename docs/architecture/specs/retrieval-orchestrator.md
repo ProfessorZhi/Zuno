@@ -36,7 +36,7 @@ It takes:
 - query features
 - knowledge capability
 - scope and index health
-- Domain Pack retrieval policy inputs
+- GraphRAG Project `query_policy` and retrieval policy inputs
 
 It outputs:
 
@@ -72,7 +72,8 @@ It is responsible for:
 - graph evidence formatting
 
 It must not hardcode contract-review-only rules.
-Domain-specific graph cues belong in `Domain Pack retrieval_policy`.
+Domain-specific graph cues belong in GraphRAG Project `query_policy` /
+`retrieval_policy.yaml`, not in a restored Domain Pack runtime.
 
 ## Mode Semantics
 

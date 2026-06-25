@@ -12,7 +12,7 @@ The old knowledge configuration experience mixed:
 2. query-time settings
 3. graph-time settings
 4. model settings
-5. Domain Pack settings
+5. GraphRAG Project / query policy settings
 
 The new system should classify changes by operational impact.
 
@@ -62,7 +62,7 @@ save + rebuild image or multimodal index
 
 Examples:
 
-- Domain Pack schema
+- GraphRAG Project schema
 - extraction prompt
 - graph extraction model
 

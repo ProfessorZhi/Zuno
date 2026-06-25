@@ -22,7 +22,7 @@ Enhanced retrieval takes:
 
 - `query`
 - `knowledge config`
-- `Domain Pack`
+- GraphRAG Project `query_policy` / retrieval policy
 - available index inventory and health
 - model profile
 - query features

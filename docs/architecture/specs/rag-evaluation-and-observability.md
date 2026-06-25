@@ -135,7 +135,7 @@ LangSmith records traces and supports failure analysis
 
 这套评测体系不是附属品，而是当前主线的一部分：
 
-- 它验证 Domain Pack 是否有价值
+- 它验证 GraphRAG Project / query policy 是否有价值
 - 它验证 GraphRAG 是否真的带来收益
 - 它验证 fallback 和 hybrid 策略是否合理
 - 它控制开发成本，防止盲目烧 API

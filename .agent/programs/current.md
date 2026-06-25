@@ -49,7 +49,10 @@ Current status:
   `KnowledgeQueryService`, Contract Review project assets expose
   `to_project_payload()`, and stackless eval entrypoints prefer
   `graphrag_project_id` / `--graphrag-project-id` while retaining legacy
-  compatibility aliases.
+  compatibility aliases. Active stable architecture specs now describe
+  GraphRAG Project / query policy as the mainline driver instead of Domain
+  Pack, and the docs entrypoint verifier guards against reintroducing Domain
+  Pack-as-target wording outside explicit migration specs.
 - Phase 04 has safe prework started, but full closure remains blocked by
   Phase 01-03: retired Domain Pack UI capture and responsive-check scripts
   were archived under
@@ -57,6 +60,9 @@ Current status:
   The old Phase 6 bundle staging helpers were archived under the same
   historical program path, and superseded migration specs were moved from
   active `docs/architecture/specs/` to `docs/architecture/history/specs/`.
+  Active docs verifiers now scan stable specs so `.agent` and `docs/` keep the
+  Current / Target / History boundary without treating migration context as
+  target layout.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.

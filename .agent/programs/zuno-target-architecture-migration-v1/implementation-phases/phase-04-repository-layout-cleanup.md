@@ -69,6 +69,11 @@ to `docs/architecture/history/specs/`:
 now because current tests and `enterprise-retrieval-governance.md` still depend
 on it as migration evidence.
 
+Active docs entrypoint verification now scans stable specs and rejects
+Domain Pack-as-current/target-driver phrases outside explicit migration specs.
+This keeps old migration evidence reachable while preventing active specs from
+becoming a second target front path for Domain Pack.
+
 ## Verification Commands
 
 ```powershell

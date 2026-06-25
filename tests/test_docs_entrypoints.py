@@ -89,6 +89,8 @@ def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() ->
         "Phase 11B",
         "Phase 11C",
         "Phase 12",
+        "verify_active_spec_domain_pack_boundaries",
+        "Domain Pack retrieval policy inputs",
     ]
 
     for phrase in required_phrases:
@@ -151,3 +153,35 @@ def test_repository_docs_do_not_keep_local_download_reference() -> None:
     for path in [*REPO_ROOT.glob("docs/**/*.md"), *REPO_ROOT.glob(".agent/**/*.md")]:
         content = path.read_text(encoding="utf-8")
         assert "C:\\Users\\Administrator\\Downloads" not in content
+
+
+def test_stable_architecture_specs_do_not_make_domain_pack_the_target_driver() -> None:
+    allowed_migration_specs = {
+        REPO_ROOT / "docs/architecture/specs/README.md",
+        REPO_ROOT / "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md",
+    }
+    stable_specs = sorted(
+        path
+        for path in (REPO_ROOT / "docs/architecture/specs").glob("*.md")
+        if path not in allowed_migration_specs
+    )
+    forbidden_phrases = [
+        "Domain Pack\n  ->",
+        "Domain Pack ->",
+        "Domain Pack retrieval policy inputs",
+        "Domain-specific graph cues belong in `Domain Pack retrieval_policy`",
+        "GraphRAG 不是孤立能力，而是受 Domain Pack 驱动",
+        "Domain Pack 成为领域扩展机制",
+        "GraphRAG 受 `Domain Pack` 控制",
+        "LangGraph runtime 必须能感知 Domain Pack",
+        "它验证 Domain Pack 是否有价值",
+        "Domain Pack schema",
+        "Phase 3: Domain Pack Formalization",
+        "deeper LangGraph, GraphRAG, Domain Pack",
+        "business orchestration, retrieval, GraphRAG, Domain Pack, provider adapters",
+    ]
+
+    for path in stable_specs:
+        content = path.read_text(encoding="utf-8")
+        for phrase in forbidden_phrases:
+            assert phrase not in content, f"{path} still promotes Domain Pack target wording: {phrase}"
