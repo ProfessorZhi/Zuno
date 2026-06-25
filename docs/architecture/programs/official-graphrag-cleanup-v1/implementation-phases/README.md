@@ -31,7 +31,10 @@ Read first:
 - Phase 01 is complete as read-only evidence.
 - Phase 02 is the docs/spec/current-truth cleanup step that removes misleading
   Domain Pack-era target language from current entrypoints.
-- Phase 03 is next and owns public contract retirement.
+- Phase 03 introduces `graphrag_project_id` at the public contract edge and
+  keeps `domain_pack_id` as bounded compatibility input for the existing
+  runtime.
+- Phase 04 is next and owns first-class GraphRAG Project contracts.
 
 ## Rule
 

@@ -63,6 +63,38 @@ def test_knowledge_create_request_accepts_knowledge_config_and_ignores_legacy_de
     assert "default_retrieval_mode" not in dumped
 
 
+def test_knowledge_config_prefers_graphrag_project_id_with_domain_pack_migration_input():
+    from zuno.api.services.knowledge import KnowledgeService
+    from zuno.schema.knowledge import KnowledgeConfig
+
+    request_config = KnowledgeConfig.model_validate(
+        {
+            "graphrag_project_id": "contract_review_project",
+            "domain_pack_id": "legacy_contract_review",
+            "retrieval_settings": {"default_mode": "rag_graph"},
+        }
+    ).model_dump()
+
+    normalized = KnowledgeService._normalize_knowledge_config(request_config)
+
+    assert normalized["graphrag_project_id"] == "contract_review_project"
+    assert normalized["domain_pack_id"] == "contract_review_project"
+
+
+def test_legacy_domain_pack_id_is_bounded_migration_input_for_project_id():
+    from zuno.api.services.knowledge import KnowledgeService
+
+    normalized = KnowledgeService._normalize_knowledge_config(
+        {
+            "domain_pack_id": "contract_review",
+            "retrieval_settings": {"default_mode": "rag_graph"},
+        }
+    )
+
+    assert normalized["graphrag_project_id"] == "contract_review"
+    assert normalized["domain_pack_id"] == "contract_review"
+
+
 def test_create_knowledge_endpoint_passes_knowledge_config(monkeypatch):
     from zuno.api.v1.knowledge import upload_knowledge
     from zuno.schema.knowledge import KnowledgeCreateRequest
@@ -194,8 +226,8 @@ def test_select_knowledge_exposes_normalized_knowledge_config(monkeypatch):
     assert results[0]["knowledge_config"]["retrieval_settings"]["top_k"] == 9
     assert results[0]["knowledge_config"]["index_settings"]["chunk_mode"] == "general"
     assert results[0]["knowledge_config"]["index_settings"]["vector_backend"] == "milvus"
-    assert "status" not in results[0]["knowledge_config"]["index_settings"]
-    assert "index_version" not in results[0]["knowledge_config"]["index_settings"]
+    assert results[0]["knowledge_config"]["index_settings"]["status"] == "active"
+    assert results[0]["knowledge_config"]["index_settings"]["index_version"] == "v1"
 
 
 def test_update_knowledge_service_merges_partial_knowledge_config(monkeypatch):
@@ -287,51 +319,52 @@ def test_knowledge_service_rejects_encoding_damaged_text(monkeypatch):
         raise AssertionError("expected encoding damage validation error")
 
 
-def test_reindex_knowledge_files_endpoint_passes_knowledge_id(monkeypatch):
-    from zuno.api.v1.knowledge_file import reindex_knowledge_files
+def test_reindex_knowledge_action_endpoint_passes_knowledge_id(monkeypatch):
+    from zuno.api.v1.knowledge import reindex_knowledge_action
 
     captured = {}
 
     async def fake_verify_user_permission(knowledge_id, user_id):
         captured["permission"] = (knowledge_id, user_id)
 
-    async def fake_reindex_knowledge_files(knowledge_id):
-        captured["reindex"] = knowledge_id
+    async def fake_run_reindex_action(knowledge_id, action):
+        captured["reindex"] = (knowledge_id, action)
         return {
-            "summary": {
-                "knowledge_id": knowledge_id,
-                "total_files": 2,
-                "created_tasks": 2,
-                "dispatched_tasks": 2,
-                "failed_tasks": 0,
-            },
-            "task_ids": ["task_1", "task_2"],
-            "file_ids": ["file_1", "file_2"],
-    }
+            "knowledge_id": knowledge_id,
+            "action": action,
+            "status": "accepted",
+        }
 
     monkeypatch.setattr(
         "zuno.api.v1.knowledge_file.KnowledgeService.verify_user_permission",
         fake_verify_user_permission,
     )
     monkeypatch.setattr(
-        "zuno.api.v1.knowledge_file.KnowledgeFileService.reindex_knowledge_files",
-        fake_reindex_knowledge_files,
+        "zuno.api.v1.knowledge.KnowledgeService.run_reindex_action",
+        fake_run_reindex_action,
     )
 
     login_user = SimpleNamespace(user_id="u_test")
 
-    response = asyncio.run(reindex_knowledge_files(knowledge_id="k_test", login_user=login_user))
+    response = asyncio.run(
+        reindex_knowledge_action(
+            knowledge_id="k_test",
+            action="full_rebuild",
+            login_user=login_user,
+        )
+    )
 
     assert response.status_code == 200
     assert captured["permission"] == ("k_test", "u_test")
-    assert captured["reindex"] == "k_test"
-    assert response.data["summary"]["created_tasks"] == 2
-    assert response.data["task_ids"] == ["task_1", "task_2"]
-    assert response.data["file_ids"] == ["file_1", "file_2"]
+    assert captured["reindex"] == ("k_test", "full_rebuild")
+    assert response.data["status"] == "accepted"
 
 
-def test_retrieval_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
-    from zuno.api.v1.knowledge import retrieval_knowledge
+def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
+    from zuno.api.v1.knowledge import search_knowledge
+
+    async def fake_verify_user_permission(knowledge_id, user_id):
+        assert (knowledge_id, user_id) == ("k_test", "u_test")
 
     async def fake_retrieve_ranked_documents_with_metadata(*args, **kwargs):
         return {
@@ -344,15 +377,20 @@ def test_retrieval_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
         }
 
     monkeypatch.setattr(
-        "zuno.api.v1.knowledge.RagHandler.retrieve_ranked_documents_with_metadata",
+        "zuno.api.v1.knowledge.KnowledgeService.verify_user_permission",
+        fake_verify_user_permission,
+    )
+    monkeypatch.setattr(
+        "zuno.services.rag.handler.RagHandler.retrieve_ranked_documents_with_metadata",
         fake_retrieve_ranked_documents_with_metadata,
     )
 
     response = asyncio.run(
-        retrieval_knowledge(
+        search_knowledge(
             query="请补充知识库内容",
-            knowledge_id="k_test",
-            retrieval_mode="auto",
+            knowledge_ids=["k_test"],
+            top_k=5,
+            login_user=SimpleNamespace(user_id="u_test"),
         )
     )
 

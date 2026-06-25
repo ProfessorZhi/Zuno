@@ -8,10 +8,14 @@ Define the near-term frontend/backend contract.
 
 - `apps/web/src/utils/retrieval.ts` maps `rag` to Standard Mode and `rag_graph`
   to Enhanced Mode.
-- `apps/web/src/apis/knowledge.ts` still includes `domain_pack_id`,
-  `rag_graph_deep`, and graph index settings.
+- `apps/web/src/apis/knowledge.ts` now exposes `graphrag_project_id` as the
+  preferred public field while retaining `domain_pack_id` as migration
+  compatibility.
 - `apps/web/src/utils/knowledge-config.ts` creates standard/enhanced product
-  configs and still carries Domain Pack fields.
+  configs, normalizes legacy `domain_pack_id` into `graphrag_project_id`, and
+  mirrors it back only for existing runtime compatibility.
+- Old query mode names still exist as migration/runtime names until the query
+  method router and frontend migration phases remove them from the public path.
 
 ## Target Product Layer
 

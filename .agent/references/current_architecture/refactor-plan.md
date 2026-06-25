@@ -31,6 +31,7 @@ The current implementation sequence is:
 
 ## Current Phase
 
-Phase 01 legacy surface audit is complete as read-only evidence. The current
-work starts at Phase 02: Docs / Spec / Current Truth Cleanup, then proceeds to
-Phase 03: Domain Pack Contract Retirement.
+Phase 01 legacy surface audit and Phase 02 docs/spec cleanup are complete.
+Phase 03 has introduced `graphrag_project_id` at the public contract edge while
+keeping `domain_pack_id` as bounded compatibility input. The next phase is
+Phase 04: GraphRAG Project Contracts.

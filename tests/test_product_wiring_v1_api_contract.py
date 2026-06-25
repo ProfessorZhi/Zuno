@@ -39,6 +39,7 @@ def test_product_wiring_domain_pack_update_preserves_existing_assets(monkeypatch
 def _config(default_mode="rag", domain_pack_id=None):
     return {
         "index_capability": "rag_graph" if default_mode == "rag_graph_deep" else "rag",
+        "graphrag_project_id": domain_pack_id,
         "domain_pack_id": domain_pack_id,
         "eval_profile_id": None,
         "model_refs": {
@@ -167,6 +168,7 @@ def test_product_wiring_knowledge_config_endpoints_delegate_to_service(monkeypat
     assert get_response.data["retrieval_settings"]["default_mode"] == "rag_graph_deep"
     assert put_response.status_code == 200
     assert captured["update"][0] == "kb_1"
+    assert captured["update"][3]["graphrag_project_id"] == "contract_review"
     assert captured["update"][3]["domain_pack_id"] == "contract_review"
 
 
@@ -204,6 +206,7 @@ def test_product_wiring_knowledge_create_returns_created_knowledge_with_config(m
     assert response.status_code == 200
     assert response.data["id"] == "kb_new"
     assert captured["create"][2] == "u_test"
+    assert captured["create"][3]["graphrag_project_id"] == "contract_review"
     assert captured["create"][3]["retrieval_settings"]["default_mode"] == "rag_graph_deep"
     assert captured["create"][3]["domain_pack_id"] == "contract_review"
 
@@ -237,6 +240,8 @@ def test_product_wiring_frontend_pages_use_real_api_contracts():
     assert "createKnowledgeAPI" in create_page
     assert "toProductKnowledgeConfig" in create_page
     assert "workspaceSettingsKnowledgeFile" in create_page
+    assert "graphrag_project_id" in knowledge_api
+    assert "graphrag_project_id" in (root / "apps/web/src/utils/knowledge-config.ts").read_text(encoding="utf-8")
     assert "rag_graph_deep" not in create_page
     assert "rag_graph_deep" not in settings_page
     assert "analyzeKnowledgeConfigImpactAPI" in settings_page

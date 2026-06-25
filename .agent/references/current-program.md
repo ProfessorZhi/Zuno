@@ -61,7 +61,9 @@ event-driven workers, or default multi-agent mode into near-term acceptance.
 - Phase 02 cleans docs, specs, and Agent references so current entrypoints point
   toward GraphRAG Project, Query Method, and Enhanced Mode rather than Domain
   Pack-era target language.
-- Phase 03 is the next runtime-facing phase: Domain Pack Contract Retirement.
+- Phase 03 adds `graphrag_project_id` as the preferred public config field and
+  keeps `domain_pack_id` as bounded migration/runtime compatibility.
+- Phase 04 is next: GraphRAG Project Contracts.
 
 ## Current Rule
 

@@ -10,7 +10,8 @@
 - `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`: executable near-term implementation roadmap
 - `docs/architecture/programs/official-graphrag-cleanup-v1/implementation-phases/`: target-mode implementation phases
   - current sequence: Phase 01 evidence complete, Phase 02 docs/spec cleanup,
-    then Phase 03 public contract retirement
+    Phase 03 public contract retirement, then Phase 04 GraphRAG Project
+    contracts
 
 ## Supporting Architecture Material
 

@@ -11,6 +11,7 @@ from zuno.utils.file_utils import format_file_size
 
 DEFAULT_KNOWLEDGE_CONFIG = {
     "index_capability": "rag",
+    "graphrag_project_id": None,
     "domain_pack_id": None,
     "eval_profile_id": None,
     "model_refs": {
@@ -138,6 +139,7 @@ class KnowledgeService:
         }
         graph_update_fields = {
             "index_capability",
+            "graphrag_project_id",
             "domain_pack_id",
             "graph_index_settings.entity_extraction_mode",
             "graph_index_settings.relation_schema",
@@ -150,6 +152,7 @@ class KnowledgeService:
             "index_settings.separator",
         }
         community_report_fields = {
+            "graphrag_project_id",
             "domain_pack_id",
             "eval_profile_id",
             "graph_index_settings.community_report_prompt_id",
@@ -273,6 +276,12 @@ class KnowledgeService:
             return "rag_graph"
         return "rag"
 
+    @staticmethod
+    def _normalize_project_identity(config: dict[str, Any]) -> None:
+        project_id = config.get("graphrag_project_id") or config.get("domain_pack_id")
+        config["graphrag_project_id"] = project_id
+        config["domain_pack_id"] = project_id
+
     @classmethod
     def _normalize_knowledge_config(
         cls,
@@ -282,6 +291,7 @@ class KnowledgeService:
         normalized = deepcopy(DEFAULT_KNOWLEDGE_CONFIG)
         if knowledge_config:
             normalized = cls._deep_merge(normalized, knowledge_config)
+        cls._normalize_project_identity(normalized)
         if legacy_default_mode and not (
             (knowledge_config or {}).get("retrieval_settings", {}).get("default_mode")
         ):

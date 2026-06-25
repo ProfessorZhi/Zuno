@@ -120,6 +120,7 @@ export const refillPolicyOptions = [
 
 const defaultConfig = (): KnowledgeConfigPayload => ({
   index_capability: 'rag',
+  graphrag_project_id: null,
   domain_pack_id: null,
   eval_profile_id: null,
   model_refs: {
@@ -199,12 +200,14 @@ export const normalizeKnowledgeConfig = (
   config?: Partial<KnowledgeConfigPayload> | null,
 ): KnowledgeConfigPayload => {
   const base = defaultConfig()
+  const graphragProjectId = config?.graphrag_project_id ?? config?.domain_pack_id ?? base.graphrag_project_id
   const merged = {
     index_capability: normalizeIndexCapability(
       config?.index_capability,
       config?.retrieval_settings?.default_mode,
     ),
-    domain_pack_id: config?.domain_pack_id ?? base.domain_pack_id,
+    graphrag_project_id: graphragProjectId,
+    domain_pack_id: graphragProjectId,
     eval_profile_id: config?.eval_profile_id ?? base.eval_profile_id,
     model_refs: {
       ...base.model_refs,
@@ -232,6 +235,7 @@ export const normalizeKnowledgeConfig = (
 
 export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): KnowledgeConfigPatchPayload => ({
   index_capability: config.index_capability,
+  graphrag_project_id: config.graphrag_project_id,
   domain_pack_id: config.domain_pack_id,
   eval_profile_id: config.eval_profile_id,
   model_refs: { ...config.model_refs },
@@ -252,6 +256,7 @@ export const toProductKnowledgeConfig = (
   }
   config.index_capability = 'rag'
   config.retrieval_settings.default_mode = 'rag'
+  config.graphrag_project_id = null
   config.domain_pack_id = null
   config.graph_index_settings.graph_index_status = 'not_built'
   config.graph_index_settings.community_detection_status = 'not_built'
@@ -329,9 +334,9 @@ export const buildKnowledgePreviewChunks = (
   const graphHint = config.index_capability === 'rag_graph'
     ? `查询可走标准检索或图谱增强检索，图谱扩展默认 ${config.retrieval_settings.graph_hop_limit}-hop。`
     : '当前不建立图谱索引，查询模式锁定为标准检索。'
-  const domainPackHint = config.domain_pack_id
-    ? `当前绑定 Domain Pack：${config.domain_pack_id}。`
-    : '当前未绑定 Domain Pack。'
+  const graphragProjectHint = config.graphrag_project_id
+    ? `当前绑定 GraphRAG Project：${config.graphrag_project_id}。`
+    : '当前未绑定 GraphRAG Project。'
   const imageHint = config.index_settings.image_indexing_mode === 'dual'
     ? '图片会同时保留描述文本索引和 VL 图像向量索引。'
     : config.index_settings.image_indexing_mode === 'vl_only'
@@ -343,7 +348,7 @@ export const buildKnowledgePreviewChunks = (
   return [
     `${title}：${description}`,
     chunkHint,
-    `${imageHint} ${retrievalHint} ${graphHint} ${domainPackHint}`,
+    `${imageHint} ${retrievalHint} ${graphHint} ${graphragProjectHint}`,
   ]
 }
 
@@ -404,6 +409,9 @@ export const detectReindexImpact = (
 
   if (previous.model_refs.rerank_model_id !== next.model_refs.rerank_model_id) {
     changedQueryFields.push('model_refs.rerank_model_id')
+  }
+  if (previous.graphrag_project_id !== next.graphrag_project_id) {
+    changedQueryFields.push('graphrag_project_id')
   }
   if (previous.domain_pack_id !== next.domain_pack_id) {
     changedQueryFields.push('domain_pack_id')

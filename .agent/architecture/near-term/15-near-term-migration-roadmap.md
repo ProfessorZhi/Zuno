@@ -35,9 +35,10 @@ verification, commit message, and evidence package.
 ## Current Status
 
 - Phase 01 is complete as read-only evidence.
-- Phase 02 is the current implementation step.
-- Phase 03 is next and must not start until Phase 02 verification, commit, and
-  push are complete.
+- Phase 02 docs/spec cleanup is complete.
+- Phase 03 public contract retirement introduces `graphrag_project_id` while
+  keeping `domain_pack_id` as bounded migration/runtime compatibility.
+- Phase 04 is next and should make GraphRAG Project contracts first-class.
 
 ## Migration Rules
 

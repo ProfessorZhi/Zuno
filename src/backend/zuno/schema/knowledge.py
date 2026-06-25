@@ -107,6 +107,7 @@ class KnowledgeRetrievalSettingsPatch(BaseModel):
 
 class KnowledgeConfig(BaseModel):
     index_capability: str = Field(default="rag", pattern="^(rag|rag_graph)$")
+    graphrag_project_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: KnowledgeModelRefs = Field(default_factory=KnowledgeModelRefs)
@@ -117,6 +118,7 @@ class KnowledgeConfig(BaseModel):
 
 class KnowledgeConfigPatch(BaseModel):
     index_capability: Optional[str] = Field(default=None, pattern="^(rag|rag_graph)$")
+    graphrag_project_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: Optional[KnowledgeModelRefsPatch] = Field(default=None)

@@ -88,8 +88,10 @@ This roadmap does not implement:
 - Phase 02 cleans current docs, specs, and Agent references so the active front
   path points to GraphRAG Project, Query Method, and Enhanced Mode instead of
   Domain Pack-era target language.
-- The next executable phase after this docs cleanup is Phase 03: Domain Pack
-  Contract Retirement.
+- Phase 03 introduces `graphrag_project_id` as the preferred public knowledge
+  config field while keeping `domain_pack_id` as bounded migration/runtime
+  compatibility input.
+- The next executable phase is Phase 04: GraphRAG Project Contracts.
 
 ## Dependency Rules
 
