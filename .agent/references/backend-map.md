@@ -10,6 +10,8 @@ Orient Agents working in `src/backend/zuno`.
 - API layer: `src/backend/zuno/api/`
 - Core/runtime: `src/backend/zuno/core/`
 - Services: `src/backend/zuno/services/`
+- Application knowledge boundary:
+  `src/backend/zuno/services/application/knowledge/`
 - Schemas: `src/backend/zuno/schema/`
 - Database: `src/backend/zuno/database/`
 - Settings: `src/backend/zuno/settings.py`

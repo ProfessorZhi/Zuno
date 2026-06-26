@@ -63,6 +63,13 @@ Deletion condition for `zuno.api.services.knowledge_query`:
 - If a temporary re-export is required, it must state its deletion phase and be
   guarded by `verify_module_boundaries.py`.
 
+Phase 03 migration result:
+
+- `KnowledgeQueryService` moved to
+  `src/backend/zuno/services/application/knowledge/query_service.py`.
+- The old `src/backend/zuno/api/services/knowledge_query.py` module is deleted.
+- Current imports and tests use `zuno.services.application.knowledge`.
+
 ## Other Candidate Areas
 
 ### Context Contracts
@@ -119,7 +126,7 @@ knowledge boundary move is proven.
 
 ## Import Impact Summary
 
-Current import consumers for `zuno.api.services.knowledge_query` include:
+Former import consumers for `zuno.api.services.knowledge_query` included:
 
 - `src/backend/zuno/core/agents/general_agent.py`
 - `src/backend/zuno/api/services/knowledge.py`

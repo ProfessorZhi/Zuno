@@ -105,7 +105,7 @@ def test_knowledge_query_service_uses_project_runtime_without_domain_pack_loader
             },
         }
 
-    from zuno.api.services.knowledge_query import KnowledgeQueryService
+    from zuno.services.application.knowledge import KnowledgeQueryService
     from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
     from zuno.services.graphrag.query_service import GraphRAGQueryService
 

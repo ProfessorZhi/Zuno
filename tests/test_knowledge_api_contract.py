@@ -412,7 +412,7 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
         fail_legacy_rag_handler,
     )
     monkeypatch.setattr(
-        "zuno.api.services.knowledge_query.KnowledgeQueryService.query",
+        "zuno.services.application.knowledge.KnowledgeQueryService.query",
         fake_project_query,
     )
 

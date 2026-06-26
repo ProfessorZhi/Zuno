@@ -15,7 +15,6 @@ from loguru import logger
 from pydantic import BaseModel
 
 from zuno.api.services.agent_skill import AgentSkillService
-from zuno.api.services.knowledge_query import KnowledgeQueryService
 from zuno.api.services.llm import LLMService
 from zuno.api.services.mcp_server import MCPService
 from zuno.api.services.mcp_user_config import MCPUserConfigService
@@ -43,6 +42,7 @@ from zuno.services.application.context import (
     ModelContextPacket,
     TokenBudgetPolicy,
 )
+from zuno.services.application.knowledge import KnowledgeQueryService
 from zuno.services.memory import (
     InMemoryLayerStore,
     MemoryLayer,

@@ -92,20 +92,30 @@ def verify_new_modules_do_not_add_vague_packages(errors: list[str]) -> None:
                 errors.append(f"new backend module uses vague package name: {relative_path}")
 
 
-def verify_knowledge_query_compatibility_is_documented(errors: list[str]) -> None:
+def verify_knowledge_query_boundary(errors: list[str]) -> None:
     audit_path = REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/evidence/module-boundary-audit.md"
     if not audit_path.exists():
         errors.append("module boundary audit is missing")
         return
     audit = _read(audit_path)
     required = [
-        "Deletion condition for `zuno.api.services.knowledge_query`",
+        "Phase 03 migration result",
         "src/backend/zuno/api/services/knowledge_query.py",
         "src/backend/zuno/services/application/knowledge/query_service.py",
     ]
     for phrase in required:
         if phrase not in audit:
             errors.append(f"module boundary audit missing compatibility phrase: {phrase}")
+
+    old_path = REPO_ROOT / "src/backend/zuno/api/services/knowledge_query.py"
+    if old_path.exists():
+        errors.append("old KnowledgeQueryService API-service path still exists")
+
+    for root in ["src", "tests", "tools"]:
+        for path in _python_files(root):
+            content = _read(path)
+            if "zuno.api.services.knowledge_query" in content:
+                errors.append(f"old KnowledgeQueryService import remains: {path.relative_to(REPO_ROOT)}")
 
 
 def main() -> int:
@@ -114,7 +124,7 @@ def main() -> int:
     verify_api_routes_do_not_import_concrete_retrieval(errors)
     verify_core_does_not_import_api_routes(errors)
     verify_new_modules_do_not_add_vague_packages(errors)
-    verify_knowledge_query_compatibility_is_documented(errors)
+    verify_knowledge_query_boundary(errors)
 
     if errors:
         for error in errors:

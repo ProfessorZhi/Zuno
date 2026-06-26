@@ -16,7 +16,7 @@ def _ensure_runtime_paths() -> None:
 def test_project_query_runtime_modules_import_from_zuno_mainline():
     _ensure_runtime_paths()
 
-    knowledge_query_module = importlib.import_module("zuno.api.services.knowledge_query")
+    knowledge_query_module = importlib.import_module("zuno.services.application.knowledge")
     query_service_module = importlib.import_module("zuno.services.graphrag.query_service")
     retrieval_models_module = importlib.import_module("zuno.services.retrieval.models")
     planner_module = importlib.import_module("zuno.services.retrieval.planner")

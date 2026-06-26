@@ -17,7 +17,8 @@ in `.agent/architecture/near-term/`.
 ## Current Terms
 
 - `GeneralAgent single loop`: current knowledge-answering conversation path.
-- `KnowledgeQueryService`: API-facing query service introduced by Phase 11A.
+- `KnowledgeQueryService`: application knowledge query service introduced by
+  Phase 11A and moved to the application boundary in Target Runtime V2.
 - `GraphRAGQueryService`: GraphRAG Project query runtime introduced by Phase
   11A.
 - `GraphRAGProjectSnapshot`: immutable query-time project/config snapshot.

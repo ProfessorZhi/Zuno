@@ -15,7 +15,7 @@ PHASE0_RUNTIME_TRUTH_FILES = [
     "database/metadata.py",
     "services/retrieval/orchestrator.py",
     "services/retrieval/planner.py",
-    "api/services/knowledge_query.py",
+    "services/application/knowledge/query_service.py",
     "services/graphrag/query_service.py",
     "services/graphrag/project/loader.py",
     "services/graphrag/retriever.py",

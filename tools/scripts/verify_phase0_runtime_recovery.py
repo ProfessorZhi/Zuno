@@ -44,7 +44,7 @@ def verify_backend_entry_file() -> list[str]:
 def verify_high_value_imports() -> list[str]:
     result = _run_backend_python(
         (
-            "from zuno.api.services.knowledge_query import KnowledgeQueryService; "
+            "from zuno.services.application.knowledge import KnowledgeQueryService; "
             "from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot, GraphRAGQueryService; "
             "from zuno.services.retrieval.orchestrator import RetrievalOrchestrator; "
             "from zuno.services.graphrag.retriever import GraphRetriever; "

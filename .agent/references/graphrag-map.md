@@ -8,7 +8,7 @@ Orient GraphRAG boundary work without duplicating detailed target architecture.
 
 The current GraphRAG Project Query Runtime includes:
 
-- `src/backend/zuno/api/services/knowledge_query.py`
+- `src/backend/zuno/services/application/knowledge/query_service.py`
 - `src/backend/zuno/services/graphrag/query_service.py`
 - `GraphRAGProjectSnapshot`
 - `GraphRAGQueryService`

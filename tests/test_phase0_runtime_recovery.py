@@ -45,7 +45,7 @@ def test_phase0_local_start_script_uses_src_backend_startup_path() -> None:
 def test_phase0_backend_root_keeps_project_query_runtime_imports_working() -> None:
     result = _run_backend_python(
         (
-            "from zuno.api.services.knowledge_query import KnowledgeQueryService; "
+            "from zuno.services.application.knowledge import KnowledgeQueryService; "
             "from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot, GraphRAGQueryService; "
             "from zuno.services.retrieval.orchestrator import RetrievalOrchestrator; "
             "from zuno.services.graphrag.retriever import GraphRetriever; "

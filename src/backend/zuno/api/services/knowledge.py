@@ -660,7 +660,7 @@ class KnowledgeService:
         query: str,
         top_k: int,
     ):
-        from zuno.api.services.knowledge_query import KnowledgeQueryService
+        from zuno.services.application.knowledge import KnowledgeQueryService
 
         result = await KnowledgeQueryService().query(
             user_id=user_id,

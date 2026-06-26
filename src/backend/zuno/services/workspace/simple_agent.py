@@ -27,7 +27,6 @@ from loguru import logger
 from pydantic import BaseModel
 
 from zuno.api.services.mcp_user_config import MCPUserConfigService
-from zuno.api.services.knowledge_query import KnowledgeQueryService
 from zuno.api.services.agent_skill import AgentSkillService
 from zuno.api.services.tool import ToolService
 from zuno.api.services.usage_stats import UsageStatsService
@@ -35,6 +34,7 @@ from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.core.callbacks import usage_metadata_callback
 from zuno.core.models.manager import ModelManager
 from zuno.services.graphrag.query_service import KnowledgeQueryResult
+from zuno.services.application.knowledge import KnowledgeQueryService
 from zuno.database import AgentSkill
 from zuno.schema.tool import (
     CLIToolPreviewReq,
