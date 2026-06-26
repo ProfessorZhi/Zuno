@@ -41,6 +41,37 @@ def test_graph_writer_attaches_runtime_metadata_fields():
     assert relation_payload["status"] == "active"
 
 
+def test_graph_writer_attaches_project_id_as_primary_graph_scope():
+    from zuno.services.graphrag.graph_store.graph_writer import GraphWriter
+
+    writer = GraphWriter()
+
+    entity_payload = writer.build_entity_payload(
+        {"name": "Redis", "knowledge_id": "k1"},
+        graphrag_project_id="ops",
+    )
+    relation_payload = writer.build_relation_payload(
+        {"source": "Redis", "target": "PostgreSQL", "knowledge_id": "k1"},
+        graphrag_project_id="ops",
+    )
+
+    assert entity_payload["graphrag_project_id"] == "ops"
+    assert "domain_pack_id" not in entity_payload
+    assert relation_payload["graphrag_project_id"] == "ops"
+    assert "domain_pack_id" not in relation_payload
+
+
+def test_neo4j_client_uses_project_id_property_as_primary_graph_scope():
+    graph_client_content = (BACKEND_ROOT / "zuno/services/graphrag/client.py").read_text(encoding="utf-8")
+
+    assert "e.graphrag_project_id = $graphrag_project_id" in graph_client_content
+    assert "r.graphrag_project_id = $graphrag_project_id" in graph_client_content
+    assert "s.graphrag_project_id = COALESCE($graphrag_project_id, s.graphrag_project_id)" in graph_client_content
+    assert "t.graphrag_project_id = COALESCE($graphrag_project_id, t.graphrag_project_id)" in graph_client_content
+    assert "e.domain_pack_id = $domain_pack_id" not in graph_client_content
+    assert "r.domain_pack_id = $domain_pack_id" not in graph_client_content
+
+
 def test_graph_retriever_adapter_forwards_scope_status_and_graph_index_version(monkeypatch):
     captured = {}
 
@@ -150,7 +181,8 @@ def test_graph_retriever_adapter_maps_project_scope_to_legacy_storage_filter(mon
     )
 
     assert captured["knowledge_id"] == "k1"
-    assert captured["kwargs"]["domain_pack_id"] == "ops"
+    assert captured["kwargs"]["graphrag_project_id"] == "ops"
+    assert captured["kwargs"]["domain_pack_id"] is None
     assert captured["kwargs"]["status"] == "active"
 
 
@@ -182,7 +214,7 @@ def test_graph_retriever_passes_status_and_graph_index_version_to_client():
             "k1",
             graph_hop_limit=3,
             max_paths_per_entity=4,
-            domain_pack_id="ops",
+            graphrag_project_id="ops",
             index_version="graph_v3",
             status="active",
         )
@@ -191,7 +223,8 @@ def test_graph_retriever_passes_status_and_graph_index_version_to_client():
     assert result["documents"] == []
     assert captured
     assert all(item["knowledge_id"] == "k1" for item in captured)
-    assert all(item["kwargs"]["domain_pack_id"] == "ops" for item in captured)
+    assert all(item["kwargs"]["graphrag_project_id"] == "ops" for item in captured)
+    assert all(item["kwargs"]["domain_pack_id"] is None for item in captured)
     assert all(item["kwargs"]["index_version"] == "graph_v3" for item in captured)
     assert all(item["kwargs"]["status"] == "active" for item in captured)
 

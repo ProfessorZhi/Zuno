@@ -8,7 +8,8 @@ Current status:
 
 - Phase 00 is complete for the current run: Git, focused Phase 11A/11B tests,
   and legacy grep evidence were re-verified.
-- Phase 01 is in progress and still blocked overall. The current FastAPI router
+- Phase 01 active runtime cleanup is complete; live graph data backfill remains
+  an operational migration step. The current FastAPI router
   no longer mounts `/domain-packs`, and active Vue knowledge routes/pages no
   longer open Domain Pack entrypoints. Workspace knowledge prefetch/tools no
   longer import `AgentRuntime` or call `_run_domain_pack_query`; they use
@@ -16,20 +17,23 @@ Current status:
   `domain_pack_id` as a migration field but no longer auto-loads
   `DomainPackLoader` from it. `GraphRetriever` now requires explicit
   `query_policy` for project policy defaults instead of loading
-  `DomainPackLoader` from `domain_pack_id`. `GraphRetrieverAdapter` maps
-  `scope_policy.graphrag_project_id` to the current legacy graph storage
-  filter field without a database schema or Neo4j property migration. The
+  `DomainPackLoader` from `domain_pack_id`. `GraphRetrieverAdapter`,
+  `GraphRetriever`, `GraphWriter`, structured graph extraction, pipeline graph
+  indexing, and the Neo4j client now use `graphrag_project_id` as the primary
+  graph scope while dual-reading legacy graph properties until the migration
+  helper is applied. The
   `src/backend/zuno/services/domain_pack/` runtime service package is retired
   from current backend source. Agent and Knowledge public DTOs now prefer
   `graphrag_project_id`; legacy `domain_pack_id` is accepted only as migration
   input and mapped to existing storage boundaries where required. Frontend
   knowledge config patches no longer send `domain_pack_id`. A dry-run-first
   Neo4j migration helper exists under `tools/migrations/` for backfilling
-  `graphrag_project_id` from legacy graph `domain_pack_id` properties, but the
-  graph storage migration has not been applied.
+  `graphrag_project_id` from legacy graph `domain_pack_id` properties; live
+  graph data backfill remains an operational step, not active code debt.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
-- Phase 11C remains blocked by remaining migration compatibility dependencies
-  in root `tests/`. The former `tests/compat/` holding area is retired. Root
+- Phase 11C active runtime cleanup is closed for the current code path; bounded
+  migration aliases remain only where tests name their storage/eval/DB role.
+  The former `tests/compat/` holding area is retired. Root
   Domain Pack assets are archived under
   `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
   longer copies or mounts `/app/domain-packs`. Domain Pack backend endpoint/API-service

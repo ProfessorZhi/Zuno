@@ -2,7 +2,8 @@
 
 ## Status
 
-In progress / blocked overall.
+Complete for active runtime cleanup; live graph data backfill remains an
+operational migration step.
 
 ## Goal
 
@@ -130,10 +131,10 @@ Removed from the active current path:
   `domain_pack_id`; graph policy must be provided as explicit `query_policy`.
   Contract Review compatibility graph tests now load that policy from the
   GraphRAG Project example assets.
-- `GraphRetrieverAdapter` now maps `scope_policy.graphrag_project_id` to the
-  current legacy graph storage filter field, `domain_pack_id`, so GraphRAG
-  Project scoped graph retrieval works without a database schema, Neo4j
-  property-name, API, or frontend migration.
+- `GraphRetrieverAdapter`, `GraphRetriever`, `GraphWriter`, and the Neo4j
+  client now use `graphrag_project_id` as the primary graph scope for new graph
+  writes and project-scoped graph retrieval. Neo4j queries dual-read legacy
+  `domain_pack_id` properties until backfill is applied.
 - Stackless local eval can build its Contract Review local graph from
   GraphRAG Project schema, prompt, retrieval policy, and eval assets without
   loading `DomainPackLoader` for `contract_review`.
@@ -180,19 +181,28 @@ Public contract cleanup started:
   `tests/test_phase11c_domain_pack_api_retirement.py` so the test name matches
   the current retirement guard role instead of implying an active API skeleton.
 
-Still blocked:
+2026-06-26 additional closure:
 
-- Neo4j graph storage still uses `domain_pack_id` as the existing persisted
-  property and filter field. Full removal requires an approved graph backfill
-  and runtime migration from compatibility dual-read/write to
-  `graphrag_project_id`-only behavior.
-- Root tests still contain migration compatibility coverage for graph storage,
-  eval extractive answers, and older internal route names. These must be
-  reduced in later Phase 01/03 slices rather than deleted for grep cleanup.
+- Graph writer metadata, structured graph extraction, pipeline graph indexing,
+  `GraphRetrieverAdapter`, `GraphRetriever`, and the Neo4j client now use
+  `graphrag_project_id` as the primary project scope for active graph writes
+  and retrieval calls.
+- Neo4j query filters dual-read old `domain_pack_id` properties with
+  `COALESCE` only so pre-backfill graph data remains readable.
+- Tests now prove new graph payloads and extractor output carry
+  `graphrag_project_id` and do not emit `domain_pack_id` when project payloads
+  are present.
 
-Still retained as Blocked Legacy:
+Still retained as bounded migration evidence:
 
-- remaining Domain Pack-era migration compatibility tests under root `tests/`
+- Agent database model/initialization still uses the old persisted column name
+  until a separate database migration exists.
+- Legacy API/schema/frontend input aliases accept `domain_pack_id` only to map
+  old callers onto `graphrag_project_id`.
+- Eval CLIs and report payloads still expose compatibility fields where current
+  tests name that role.
+- The Neo4j backfill helper must be run with explicit `--apply` before old
+  graph data can be considered fully migrated.
 
 Retired from current source:
 
@@ -210,8 +220,8 @@ No longer blocked by current eval runtime:
 
 - `tools/evals/zuno/contract_review_eval/` no longer depends on
   `DomainPackLoader` or `DomainQAGraph`.
-- GraphRAG Project scope can reach the existing graph storage filter through
-  `GraphRetrieverAdapter` without restoring Domain Pack policy loading.
+- GraphRAG Project scope reaches graph storage through `graphrag_project_id`
+  without restoring Domain Pack policy loading.
 - Stackless Contract Review local eval behavior is now protected by a
   project-query-policy named test instead of a Domain Pack named current test.
 - Root `tests/` still contains migration/current compatibility coverage for

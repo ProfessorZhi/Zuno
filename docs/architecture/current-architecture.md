@@ -88,13 +88,15 @@ where existing contracts require it.
 `domain_pack_id`. Contract Review graph policy now resolves through explicit
 `query_policy` data, including the GraphRAG Project `retrieval_policy.yaml`
 copy under `examples/graphrag-projects/contract_review/`.
-`GraphRetrieverAdapter` maps `scope_policy.graphrag_project_id` to the current
-legacy Neo4j storage filter field, `domain_pack_id`, so GraphRAG Project scope
-can query the existing graph store until the graph store migration is applied.
-A dry-run-first migration helper exists under `tools/migrations/` to backfill
-`graphrag_project_id` from legacy graph properties, but the migration has not
-been applied. Explicit legacy `domain_pack_id` remains a storage/migration
-boundary, not the target API shape.
+`GraphRetrieverAdapter`, `GraphRetriever`, `GraphWriter`, structured graph
+extraction, pipeline graph indexing, and the Neo4j client now use
+`graphrag_project_id` as the primary graph scope for new graph writes and
+project-scoped graph retrieval. Neo4j queries still dual-read legacy
+`domain_pack_id` properties with `COALESCE` so old graph data remains readable
+until the backfill is applied. A dry-run-first migration helper exists under
+`tools/migrations/` to backfill `graphrag_project_id` from legacy graph
+properties. Explicit legacy `domain_pack_id` remains a bounded migration input,
+not the target API or graph-write shape.
 
 Stackless local eval and the dedicated Contract Review eval can build their
 Contract Review graph/eval payloads from GraphRAG Project assets. The dedicated

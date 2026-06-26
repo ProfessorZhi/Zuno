@@ -218,7 +218,12 @@ class KnowledgePipelineManager:
                 chunks = await self._parse_chunks(task)
                 runtime_settings = await KnowledgeService.get_runtime_settings(task.knowledge_id)
                 project_payload = runtime_settings.get("project_payload") or runtime_settings.get("domain_pack")
-                domain_pack_id = runtime_settings.get("domain_pack_id")
+                graphrag_project_id = (
+                    runtime_settings.get("graphrag_project_id")
+                    or runtime_settings.get("domain_pack_id")
+                    or (project_payload or {}).get("graphrag_project_id")
+                    or (project_payload or {}).get("id")
+                )
                 graph_index_version = str(knowledge_config.get("graph_index_settings", {}).get("index_version") or "v1")
                 graph_status = str(knowledge_config.get("index_settings", {}).get("status") or "active")
                 await self._record_stage(
@@ -249,7 +254,7 @@ class KnowledgePipelineManager:
                             await client.upsert_entity(
                                 writer.build_entity_payload(
                                     entity,
-                                    domain_pack_id=domain_pack_id,
+                                    graphrag_project_id=graphrag_project_id,
                                     index_version=graph_index_version,
                                     status=graph_status,
                                     knowledge_file_id=task.knowledge_file_id,
@@ -259,7 +264,7 @@ class KnowledgePipelineManager:
                             await client.upsert_relation(
                                 writer.build_relation_payload(
                                     relation,
-                                    domain_pack_id=domain_pack_id,
+                                    graphrag_project_id=graphrag_project_id,
                                     index_version=graph_index_version,
                                     status=graph_status,
                                     knowledge_file_id=task.knowledge_file_id,

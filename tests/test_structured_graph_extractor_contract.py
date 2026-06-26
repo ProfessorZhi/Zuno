@@ -116,6 +116,10 @@ def test_structured_graph_extractor_builds_contract_entities_and_relations():
         "CLAUSE_REFERENCES_REGULATION",
     ) in relation_pairs
     assert ("\u7b2c\u56db\u6761 \u8fdd\u7ea6\u8d23\u4efb", "\u8fdd\u7ea6\u8d23\u4efb", "CLAUSE_HAS_RISK") in relation_pairs
+    assert all(item.get("graphrag_project_id") == "contract_review" for item in result["entities"])
+    assert all("domain_pack_id" not in item for item in result["entities"])
+    assert all(item.get("graphrag_project_id") == "contract_review" for item in result["relations"])
+    assert all("domain_pack_id" not in item for item in result["relations"])
 
 
 def test_structured_graph_extractor_recovers_contract_title_from_file_name():

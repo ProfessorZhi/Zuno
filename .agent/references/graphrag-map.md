@@ -25,11 +25,13 @@ The `/knowledge/search` API service path also reaches this runtime through
 `KnowledgeQueryService`; it no longer calls the legacy `RagHandler` search
 path directly.
 
-GraphRAG Project scope currently reaches legacy graph storage through a
-compatibility mapping: `GraphRetrieverAdapter` maps
-`scope_policy.graphrag_project_id` to the existing Neo4j filter field
-`domain_pack_id`. This avoids a database/schema migration during Phase 11C
-cleanup and must not be described as the target public contract.
+GraphRAG Project scope currently reaches graph storage through
+`graphrag_project_id`: `GraphRetrieverAdapter`, `GraphRetriever`,
+`GraphWriter`, structured graph extraction, pipeline graph indexing, and the
+Neo4j client use it as the primary graph scope. Neo4j queries dual-read legacy
+`domain_pack_id` properties with `COALESCE` until the backfill helper is
+applied. This must not be described as Domain Pack being the target public
+contract.
 
 ## Target References
 
@@ -53,14 +55,14 @@ longer copies or mounts `/app/domain-packs`. Stackless local eval now requires
 GraphRAG Project assets when an id is provided. Contract Review and stackless
 local graph extraction calls use `project_payload=project_payload`; active
 pipeline graph extraction also passes `project_payload`, and graph extractors
-no longer expose a `domain_pack` payload parameter alias. `domain_pack_id`
-remains only as existing storage and migration compatibility where explicitly
-tested.
+no longer expose a `domain_pack` payload parameter alias. Extracted graph
+items now carry `graphrag_project_id`; `domain_pack_id` remains only as a
+legacy input/backfill/eval compatibility surface where explicitly tested.
 
 ## Blocked Legacy
 
-Remaining migration compatibility dependencies in root `tests/` remain Blocked
-Legacy until Phase 11C active dependency removal is proved. The former
+Remaining migration compatibility references in root `tests/` are bounded to
+storage/eval/DB alias roles. The former
 `tests/compat/` holding area is retired. The graph classes are no longer public
 exports from `zuno.core` or `zuno.core.graphs`; the direct `DomainQAGraph` and
 `MultiAgentSupervisorGraph` sources are retired from current backend source,

@@ -106,8 +106,10 @@ def test_structured_graph_extractor_builds_contract_review_entities_and_relation
         "CLAUSE_REFERENCES_REGULATION",
     ) in relation_pairs
     assert ("第四条 违约责任", "违约责任", "CLAUSE_HAS_RISK") in relation_pairs
-    assert all(item.get("domain_pack_id") == "contract_review" for item in result["entities"])
-    assert all(item.get("domain_pack_id") == "contract_review" for item in result["relations"])
+    assert all(item.get("graphrag_project_id") == "contract_review" for item in result["entities"])
+    assert all("domain_pack_id" not in item for item in result["entities"])
+    assert all(item.get("graphrag_project_id") == "contract_review" for item in result["relations"])
+    assert all("domain_pack_id" not in item for item in result["relations"])
 
 
 def test_structured_graph_extractor_recovers_contract_title_from_file_name():

@@ -6,12 +6,15 @@ class GraphWriter:
     def _attach_runtime_metadata(
         payload: dict,
         *,
+        graphrag_project_id: str | None = None,
         domain_pack_id: str | None = None,
         index_version: str | None = None,
         status: str | None = None,
         knowledge_file_id: str | None = None,
     ) -> dict:
-        if domain_pack_id:
+        if graphrag_project_id:
+            payload.setdefault("graphrag_project_id", graphrag_project_id)
+        elif domain_pack_id:
             payload.setdefault("domain_pack_id", domain_pack_id)
         if index_version:
             payload.setdefault("index_version", index_version)
@@ -34,6 +37,7 @@ class GraphWriter:
         self,
         entity: dict,
         *,
+        graphrag_project_id: str | None = None,
         domain_pack_id: str | None = None,
         index_version: str | None = None,
         status: str | None = None,
@@ -42,6 +46,7 @@ class GraphWriter:
         payload = dict(entity)
         return self._attach_runtime_metadata(
             payload,
+            graphrag_project_id=graphrag_project_id,
             domain_pack_id=domain_pack_id,
             index_version=index_version,
             status=status,
@@ -52,6 +57,7 @@ class GraphWriter:
         self,
         relation: dict,
         *,
+        graphrag_project_id: str | None = None,
         domain_pack_id: str | None = None,
         index_version: str | None = None,
         status: str | None = None,
@@ -60,6 +66,7 @@ class GraphWriter:
         payload = dict(relation)
         return self._attach_runtime_metadata(
             payload,
+            graphrag_project_id=graphrag_project_id,
             domain_pack_id=domain_pack_id,
             index_version=index_version,
             status=status,

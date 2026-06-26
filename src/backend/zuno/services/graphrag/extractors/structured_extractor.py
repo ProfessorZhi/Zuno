@@ -197,7 +197,7 @@ class StructuredGraphExtractor(GraphExtractor):
         if not project_id:
             return
         for item in items:
-            item.setdefault("domain_pack_id", project_id)
+            item.setdefault("graphrag_project_id", project_id)
 
     async def extract_from_chunk(
         self,

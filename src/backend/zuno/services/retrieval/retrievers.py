@@ -106,12 +106,13 @@ class GraphRetrieverAdapter:
         }
         project_payload = runtime_settings.get("project_payload") or runtime_settings.get("domain_pack")
         scope_policy = dict(options.get("scope_policy") or {})
-        domain_pack_id = (
-            options.get("domain_pack_id")
+        graphrag_project_id = (
+            options.get("graphrag_project_id")
             or scope_policy.get("graphrag_project_id")
             or (project_payload or {}).get("graphrag_project_id")
             or (project_payload or {}).get("id")
         )
+        domain_pack_id = options.get("domain_pack_id")
         effective_query_policy = dict((project_payload or {}).get("retrieval_policy_data") or {})
         effective_query_policy.update(options)
         index_version = dict(options.get("index_version") or {})
@@ -123,6 +124,7 @@ class GraphRetrieverAdapter:
                     knowledge_id,
                     graph_hop_limit=options.get("graph_hop_limit", 2),
                     max_paths_per_entity=options.get("max_paths_per_entity", 10),
+                    graphrag_project_id=graphrag_project_id or domain_pack_id,
                     domain_pack_id=domain_pack_id,
                     index_version=index_version.get("graph"),
                     status=scope_policy.get("status"),
@@ -135,7 +137,7 @@ class GraphRetrieverAdapter:
                     knowledge_id,
                     graph_hop_limit=options.get("graph_hop_limit", 2),
                     max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                    domain_pack_id=domain_pack_id,
+                    domain_pack_id=graphrag_project_id or domain_pack_id,
                     index_version=index_version.get("graph"),
                     status=scope_policy.get("status"),
                     candidate_context=options.get("candidate_context"),
@@ -146,6 +148,7 @@ class GraphRetrieverAdapter:
                 knowledge_id,
                 graph_hop_limit=options.get("graph_hop_limit", 2),
                 max_paths_per_entity=options.get("max_paths_per_entity", 10),
+                graphrag_project_id=graphrag_project_id or domain_pack_id,
                 domain_pack_id=domain_pack_id,
                 index_version=index_version.get("graph"),
                 status=scope_policy.get("status"),
@@ -158,7 +161,7 @@ class GraphRetrieverAdapter:
                 knowledge_id,
                 graph_hop_limit=options.get("graph_hop_limit", 2),
                 max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                domain_pack_id=domain_pack_id,
+                domain_pack_id=graphrag_project_id or domain_pack_id,
                 index_version=index_version.get("graph"),
                 status=scope_policy.get("status"),
                 candidate_context=options.get("candidate_context"),

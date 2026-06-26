@@ -248,7 +248,7 @@ def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
 
     assert captured["knowledge_id"] == "kb_1"
     assert captured["project_payload"] == project_payload
-    assert captured["entity_kwargs"]["domain_pack_id"] == "contract_review"
+    assert captured["entity_kwargs"]["graphrag_project_id"] == "contract_review"
 
 
 def test_retry_task_creates_new_task_and_redispatches(monkeypatch):

@@ -56,6 +56,10 @@ Phase 11C progress / Blocked Legacy:
 - `GraphRetriever` no longer loads Domain Pack retrieval policy from a bare
   `domain_pack_id`; graph policy must come from explicit `query_policy`, such
   as a GraphRAG Project `retrieval_policy.yaml`.
+- Graph writer/client/retriever paths now use `graphrag_project_id` as the
+  primary graph scope for new graph writes and project-scoped graph retrieval.
+  Legacy graph properties are dual-read only for migration until the
+  dry-run-first Neo4j backfill is applied.
 - Stackless local eval and the dedicated Contract Review eval can build from
   GraphRAG Project assets without loading `DomainPackLoader`; stackless local
   eval now requires GraphRAG Project assets when an id is provided. The

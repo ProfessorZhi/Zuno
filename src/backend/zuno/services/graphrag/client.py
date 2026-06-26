@@ -35,7 +35,7 @@ class Neo4jClient:
                         """
                         MERGE (e:Entity {name: $name, knowledge_id: $knowledge_id, knowledge_file_id: $knowledge_file_id})
                         SET e.type = $type,
-                            e.domain_pack_id = $domain_pack_id,
+                            e.graphrag_project_id = $graphrag_project_id,
                             e.index_version = $index_version,
                             e.status = $status,
                             e.source_chunk_id = $source_chunk_id,
@@ -47,7 +47,7 @@ class Neo4jClient:
                             "knowledge_id": entity.get("knowledge_id", ""),
                             "knowledge_file_id": entity.get("knowledge_file_id", ""),
                             "type": entity.get("type", "entity"),
-                            "domain_pack_id": entity.get("domain_pack_id"),
+                            "graphrag_project_id": entity.get("graphrag_project_id") or entity.get("domain_pack_id"),
                             "index_version": entity.get("index_version"),
                             "status": entity.get("status"),
                             "source_chunk_id": entity.get("source_chunk_id"),
@@ -71,19 +71,19 @@ class Neo4jClient:
                         MERGE (t:Entity {name: $target, knowledge_id: $knowledge_id, knowledge_file_id: $knowledge_file_id})
                         MERGE (s)-[r:RELATES_TO {type: $relation_type, knowledge_file_id: $knowledge_file_id}]->(t)
                         SET r.chunk_id = $chunk_id,
-                            r.domain_pack_id = $domain_pack_id,
+                            r.graphrag_project_id = $graphrag_project_id,
                             r.index_version = $index_version,
                             r.status = $status,
                             r.source_chunk_id = $source_chunk_id,
                             r.document_hash = $document_hash,
                             r.chunk_hash = $chunk_hash,
-                            s.domain_pack_id = COALESCE($domain_pack_id, s.domain_pack_id),
+                            s.graphrag_project_id = COALESCE($graphrag_project_id, s.graphrag_project_id),
                             s.index_version = COALESCE($index_version, s.index_version),
                             s.status = COALESCE($status, s.status),
                             s.source_chunk_id = COALESCE($source_chunk_id, s.source_chunk_id),
                             s.document_hash = COALESCE($document_hash, s.document_hash),
                             s.chunk_hash = COALESCE($chunk_hash, s.chunk_hash),
-                            t.domain_pack_id = COALESCE($domain_pack_id, t.domain_pack_id),
+                            t.graphrag_project_id = COALESCE($graphrag_project_id, t.graphrag_project_id),
                             t.index_version = COALESCE($index_version, t.index_version),
                             t.status = COALESCE($status, t.status),
                             t.source_chunk_id = COALESCE($source_chunk_id, t.source_chunk_id),
@@ -97,7 +97,7 @@ class Neo4jClient:
                             "knowledge_file_id": relation.get("knowledge_file_id", ""),
                             "relation_type": relation.get("relation_type", "related_to"),
                             "chunk_id": relation.get("chunk_id", ""),
-                            "domain_pack_id": relation.get("domain_pack_id"),
+                            "graphrag_project_id": relation.get("graphrag_project_id") or relation.get("domain_pack_id"),
                             "index_version": relation.get("index_version"),
                             "status": relation.get("status"),
                             "source_chunk_id": relation.get("source_chunk_id"),
@@ -161,6 +161,7 @@ class Neo4jClient:
         knowledge_id: str,
         hops: int = 1,
         limit: int = 10,
+        graphrag_project_id: str | None = None,
         domain_pack_id: str | None = None,
         index_version: str | None = None,
         status: str | None = None,
@@ -175,9 +176,9 @@ class Neo4jClient:
                     result = session.run(
                         f"""
                         MATCH p=(e:Entity {{name: $name, knowledge_id: $knowledge_id}})-[:RELATES_TO*1..{safe_hops}]-(n:Entity {{knowledge_id: $knowledge_id}})
-                        WHERE $domain_pack_id IS NULL OR (
-                          e.domain_pack_id = $domain_pack_id
-                          AND n.domain_pack_id = $domain_pack_id
+                        WHERE $graphrag_project_id IS NULL OR (
+                          COALESCE(e.graphrag_project_id, e.domain_pack_id) = $graphrag_project_id
+                          AND COALESCE(n.graphrag_project_id, n.domain_pack_id) = $graphrag_project_id
                         )
                         AND ($index_version IS NULL OR (
                           e.index_version = $index_version
@@ -200,7 +201,7 @@ class Neo4jClient:
                             "name": entity_name,
                             "knowledge_id": knowledge_id,
                             "limit": safe_limit,
-                            "domain_pack_id": domain_pack_id,
+                            "graphrag_project_id": graphrag_project_id or domain_pack_id,
                             "index_version": index_version,
                             "status": status,
                         },

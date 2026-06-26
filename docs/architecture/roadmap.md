@@ -40,10 +40,11 @@ migration stages.
   GraphRAG Project policy data. Agent and Knowledge public DTOs now prefer
   `graphrag_project_id`, and frontend knowledge config patches no longer send
   `domain_pack_id`; old `domain_pack_id` input is migration compatibility only.
-  A dry-run-first Neo4j graph backfill helper exists, but the graph property
-  migration has not been applied. Stackless local eval and the dedicated
-  Contract Review eval can build from GraphRAG Project assets without loading
-  `DomainPackLoader`. Root Phase 11C tests now guard retired runtime imports
+  Graph writer/client/retriever paths now write and query
+  `graphrag_project_id` as the primary graph scope while dual-reading legacy
+  graph properties until the dry-run-first Neo4j backfill is applied.
+  Stackless local eval and the dedicated Contract Review eval can build from
+  GraphRAG Project assets without loading `DomainPackLoader`. Root Phase 11C tests now guard retired runtime imports
   for `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, legacy
   graph states, and `zuno.services.domain_pack`. Root `domain-packs/` assets are archived under
   `docs/architecture/history/domain-packs/root-contract-review/`, Docker no
@@ -85,8 +86,9 @@ or explicitly re-verify dependencies before implementation starts.
 These surfaces are confirmed legacy directionally, but still current or blocked
 by active dependencies:
 
-- remaining `domain_pack_id` and Domain Pack-era migration compatibility tests
-  under root `tests/`
+- remaining `domain_pack_id` references are bounded migration aliases,
+  existing Agent database-column compatibility, eval CLI compatibility, and
+  retirement/history tests under root `tests/`
 
 Retired evidence kept for verification, not active source:
 

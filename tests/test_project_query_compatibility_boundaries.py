@@ -15,7 +15,12 @@ def test_graph_retriever_adapter_does_not_fallback_to_runtime_domain_pack_id(mon
             captured["query"] = query
             captured["knowledge_id"] = knowledge_id
             captured["kwargs"] = kwargs
-            return {"content": "", "documents": [], "domain_pack_id": kwargs.get("domain_pack_id")}
+            return {
+                "content": "",
+                "documents": [],
+                "graphrag_project_id": kwargs.get("graphrag_project_id"),
+                "domain_pack_id": kwargs.get("domain_pack_id"),
+            }
 
     monkeypatch.setattr(
         "zuno.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
@@ -49,7 +54,12 @@ def test_graph_retriever_adapter_uses_project_payload_runtime_settings(monkeypat
             captured["query"] = query
             captured["knowledge_id"] = knowledge_id
             captured["kwargs"] = kwargs
-            return {"content": "", "documents": [], "domain_pack_id": kwargs.get("domain_pack_id")}
+            return {
+                "content": "",
+                "documents": [],
+                "graphrag_project_id": kwargs.get("graphrag_project_id"),
+                "domain_pack_id": kwargs.get("domain_pack_id"),
+            }
 
     monkeypatch.setattr(
         "zuno.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
@@ -60,9 +70,11 @@ def test_graph_retriever_adapter_uses_project_payload_runtime_settings(monkeypat
     result = asyncio.run(adapter.retrieve("find termination clause", ["kb_1"], {}))
 
     assert captured["knowledge_id"] == "kb_1"
-    assert captured["kwargs"]["domain_pack_id"] == "contract_review"
+    assert captured["kwargs"]["graphrag_project_id"] == "contract_review"
+    assert captured["kwargs"]["domain_pack_id"] is None
     assert captured["kwargs"]["query_policy"]["graph_hop_limit"] == 4
-    assert result["domain_pack_id"] == "contract_review"
+    assert result["graphrag_project_id"] == "contract_review"
+    assert result["domain_pack_id"] is None
 
 
 def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():

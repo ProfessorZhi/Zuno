@@ -798,6 +798,7 @@ class GraphRetriever:
         *,
         graph_hop_limit: int = 2,
         max_paths_per_entity: int = 10,
+        graphrag_project_id: str | None = None,
         domain_pack_id: str | None = None,
         index_version: str | None = None,
         status: str | None = None,
@@ -817,6 +818,7 @@ class GraphRetriever:
             domain_pack_id=domain_pack_id,
             query_policy=query_policy,
         )
+        effective_graphrag_project_id = graphrag_project_id or domain_pack_id
         seed_entities_with_source = self._build_seed_entities_with_source(
             query,
             query_policy=effective_query_policy,
@@ -838,6 +840,7 @@ class GraphRetriever:
                     knowledge_id,
                     hops=graph_hop_limit,
                     limit=max_paths_per_entity,
+                    graphrag_project_id=effective_graphrag_project_id,
                     domain_pack_id=domain_pack_id,
                     index_version=index_version,
                     status=status,
@@ -848,7 +851,7 @@ class GraphRetriever:
                     knowledge_id,
                     hops=graph_hop_limit,
                     limit=max_paths_per_entity,
-                    domain_pack_id=domain_pack_id,
+                    domain_pack_id=effective_graphrag_project_id,
                 )
             if neighbor_paths:
                 preferred_relation_type = self._preferred_relation_type(effective_query_policy)
@@ -939,6 +942,7 @@ class GraphRetriever:
             "structured_paths": paths,
             "documents": document_dicts,
             "seed_entities_with_source": seed_entities_with_source,
+            "graphrag_project_id": effective_graphrag_project_id,
             "domain_pack_id": domain_pack_id,
             "index_version": index_version,
             "status": status,
