@@ -3,154 +3,156 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Zuno 理想架构与仓库布局蓝图 V4</title>
+<title>Zuno 目标架构与仓库布局蓝图 V5</title>
 <style>
 :root{
-  --bg:#07111f;--panel:#0d1b30;--panel2:#122640;--panel3:#09172a;
-  --line:#294869;--text:#eef5ff;--muted:#9fb3cc;
-  --blue:#4da3ff;--cyan:#35d0ba;--green:#32d583;
-  --orange:#fdb022;--red:#ff6678;--purple:#a985ff;
-  --shadow:0 18px 48px rgba(0,0,0,.28);--radius:18px;
+  --bg:#f4f7fb;--surface:#ffffff;--surface2:#f8fafc;--surface3:#eef4fb;
+  --ink:#172033;--text:#243047;--muted:#64748b;--soft:#8a98aa;
+  --line:#d8e0ea;--line-strong:#b8c4d4;
+  --blue:#2368c4;--cyan:#087f8c;--green:#168456;
+  --orange:#b75d00;--red:#c8354a;--purple:#6d4acb;
+  --shadow:0 18px 44px rgba(31,44,71,.08);--radius:8px;
+  --mono-bg:#f1f6fb;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0;color:var(--text);line-height:1.58;
-  font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
-  background:
-    radial-gradient(circle at 7% -5%,rgba(77,163,255,.18),transparent 28%),
-    radial-gradient(circle at 93% 0,rgba(169,133,255,.15),transparent 25%),
-    radial-gradient(circle at 50% 100%,rgba(53,208,186,.07),transparent 30%),
-    var(--bg);
+  margin:0;color:var(--text);line-height:1.66;
+  font-family:"Inter","IBM Plex Sans","Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  font-size:15.5px;background:
+    linear-gradient(180deg,#eef4fb 0,#f7f9fc 320px,#f4f7fb 100%);
 }
-a{color:#9dccff}
+a{color:#1d5db8;text-underline-offset:3px}
 code,.mono{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}
-code{padding:2px 5px;border:1px solid #294663;border-radius:6px;background:#061321;color:#b9d9ff}
+code{padding:2px 5px;border:1px solid #cbd8e8;border-radius:6px;background:var(--mono-bg);color:#174a89}
 button{font:inherit}
-.wrap{max-width:1600px;margin:auto;padding:24px}
+.wrap{max-width:1500px;margin:auto;padding:28px}
 .hero,.section{
   border:1px solid var(--line);border-radius:var(--radius);
-  background:rgba(13,27,48,.95);box-shadow:var(--shadow)
+  background:rgba(255,255,255,.96);box-shadow:var(--shadow)
 }
-.hero{padding:30px}
+.hero{padding:34px 36px}
 .hero-top{display:flex;gap:24px;justify-content:space-between;align-items:flex-start}
-.hero h1{font-size:clamp(30px,4.3vw,54px);line-height:1.08;margin:0 0 12px;letter-spacing:-1.4px}
-.hero p{max-width:1150px;color:var(--muted);font-size:16px;margin:7px 0}
-.meta{margin-top:12px;color:#b9cae0;font-size:13px}
+.hero h1{font-size:clamp(32px,4vw,52px);line-height:1.08;margin:0 0 14px;color:var(--ink);font-weight:850;letter-spacing:0}
+.hero p{max-width:1120px;color:#475569;font-size:16.5px;margin:8px 0}
+.meta{margin-top:14px;color:#55657a;font-size:13.5px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .btn{
   cursor:pointer;border:1px solid var(--line);border-radius:10px;
-  color:var(--text);background:#0a182a;padding:9px 12px;font-weight:750
+  color:#17324f;background:#fff;padding:9px 12px;font-weight:750
 }
-.btn:hover{border-color:var(--blue);background:#102442}
+.btn:hover{border-color:var(--blue);background:#edf5ff}
 .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;background:#08172a}
-.pill.blue{color:#a8d1ff;border-color:#376998}
-.pill.green{color:#91eab9;border-color:#2b7457}
-.pill.purple{color:#d2c1ff;border-color:#7057a0}
-.pill.orange{color:#ffd88c;border-color:#8c641b}
-.pill.red{color:#ffabb5;border-color:#87404a}
+.pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;background:#f7fafc;font-weight:650}
+.pill.blue{color:#1959ad;border-color:#b7d2f6;background:#edf5ff}
+.pill.green{color:#117245;border-color:#b9e3ce;background:#eefaf3}
+.pill.purple{color:#5d3cb4;border-color:#d4c8fb;background:#f4f0ff}
+.pill.orange{color:#9b4d00;border-color:#f2c68b;background:#fff7e8}
+.pill.red{color:#b42337;border-color:#f2b8c1;background:#fff1f3}
 .tabs{
   position:sticky;top:8px;z-index:20;margin:16px 0;padding:8px;
   display:flex;gap:7px;flex-wrap:wrap;border:1px solid var(--line);
-  border-radius:14px;background:rgba(7,17,31,.92);backdrop-filter:blur(12px)
+  border-radius:12px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+  box-shadow:0 10px 30px rgba(31,44,71,.08)
 }
 .tabs button{
   border:0;border-radius:10px;background:transparent;color:var(--muted);
-  padding:10px 14px;cursor:pointer;font-weight:780
+  padding:9px 13px;cursor:pointer;font-weight:760
 }
-.tabs button.active{background:var(--blue);color:white;box-shadow:0 5px 20px rgba(77,163,255,.28)}
+.tabs button.active{background:#1f5faa;color:white;box-shadow:0 8px 22px rgba(35,104,196,.22)}
 .view{display:none}.view.active{display:block}
-.section{padding:22px;margin:16px 0}
-.section h2{margin:0 0 13px;font-size:26px}
-.section h3{margin:0 0 8px;font-size:18px}
+.section{padding:24px;margin:16px 0}
+.section h2{margin:0 0 14px;font-size:24px;color:var(--ink);line-height:1.22;font-weight:820}
+.section h3{margin:0 0 8px;font-size:18px;color:var(--ink)}
 .section h4{margin:0 0 7px}
 .muted{color:var(--muted)}
 .callout{
-  border-left:4px solid var(--blue);background:rgba(77,163,255,.08);
+  border-left:4px solid var(--blue);background:#edf5ff;
   border-radius:11px;padding:14px 16px;margin:12px 0
 }
-.callout.green{border-color:var(--green);background:rgba(50,213,131,.08)}
-.callout.orange{border-color:var(--orange);background:rgba(253,176,34,.08)}
-.callout.purple{border-color:var(--purple);background:rgba(169,133,255,.08)}
-.callout.red{border-color:var(--red);background:rgba(255,102,120,.08)}
+.callout.green{border-color:var(--green);background:#eefaf3}
+.callout.orange{border-color:var(--orange);background:#fff7e8}
+.callout.purple{border-color:var(--purple);background:#f4f0ff}
+.callout.red{border-color:var(--red);background:#fff1f3}
 .grid2,.grid3,.grid4{display:grid;gap:14px}
 .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .grid4{grid-template-columns:repeat(4,minmax(0,1fr))}
-.card{border:1px solid var(--line);background:var(--panel2);border-radius:14px;padding:16px;min-width:0}
+.card{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:16px;min-width:0}
 .card p:last-child,.card ul:last-child{margin-bottom:0}
 .card strong.title{font-size:16px;display:block;margin-bottom:6px}
 .metric{font-weight:900;font-size:29px;line-height:1;margin-bottom:8px}
-.metric.blue{color:#8dc4ff}.metric.green{color:#79e2aa}.metric.orange{color:#ffc85f}
-.metric.purple{color:#c8b3ff}.metric.red{color:#ff9aa6}
-.diagram{overflow:auto;padding:18px;border:1px solid #223d5d;border-radius:16px;background:#06101e}
+.metric.blue{color:#2368c4}.metric.green{color:#168456}.metric.orange{color:#b75d00}
+.metric.purple{color:#6d4acb}.metric.red{color:#c8354a}
+.diagram{overflow:auto;padding:18px;border:1px solid var(--line);border-radius:8px;background:#f8fafc}
 .flow{min-width:1090px;max-width:1410px;margin:auto}
 .row{display:flex;gap:13px;justify-content:center;align-items:stretch}
 .box{
   flex:1;min-width:185px;max-width:325px;padding:14px;
-  border:1px solid #3a618d;border-radius:12px;
-  background:linear-gradient(145deg,#152b48,#0d1c31);
-  box-shadow:0 8px 22px rgba(0,0,0,.2)
+  border:1px solid #c8d8eb;border-radius:8px;
+  background:#fff;
+  box-shadow:0 6px 18px rgba(31,44,71,.06)
 }
 .box strong{display:block;margin-bottom:4px}
 .box small{display:block;color:var(--muted)}
 .box.full{max-width:none}.box.wide{max-width:530px}
-.box.green{border-color:#258b66}.box.purple{border-color:#7659b7}
-.box.orange{border-color:#a16f17}.box.red{border-color:#a74352}
-.box.cyan{border-color:#258b82}.box.dashed{border-style:dashed}
-.arrow{text-align:center;height:35px;line-height:33px;color:#7597bd;font-size:25px}
+.box.green{border-color:#9bd8b5;background:#f6fff9}.box.purple{border-color:#cabdf5;background:#faf7ff}
+.box.orange{border-color:#ecc078;background:#fffaf0}.box.red{border-color:#efb3bd;background:#fff6f7}
+.box.cyan{border-color:#96d7df;background:#f1fdff}.box.dashed{border-style:dashed}
+.arrow{text-align:center;height:35px;line-height:33px;color:#8296ad;font-size:25px}
 .layer-row{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:stretch;margin:10px 0}
 .side-label{
-  writing-mode:vertical-rl;transform:rotate(180deg);font-weight:850;color:#9dc8f5;
-  border:1px solid var(--line);border-radius:10px;padding:11px 8px;background:#08172a
+  writing-mode:vertical-rl;transform:rotate(180deg);font-weight:850;color:#1f5faa;
+  border:1px solid var(--line);border-radius:8px;padding:11px 8px;background:#edf5ff
 }
-.arch-layer{border:1px solid var(--line);border-radius:13px;padding:13px;background:var(--panel2)}
+.arch-layer{border:1px solid var(--line);border-radius:8px;padding:13px;background:var(--surface2)}
 .arch-layer .row{flex-wrap:wrap}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 .legend span{font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px}
 table{width:100%;border-collapse:collapse}
 th,td{text-align:left;vertical-align:top;padding:11px 12px;border-bottom:1px solid var(--line)}
-th{background:#08172a;color:#bed4ed}
+th{background:#edf3fa;color:#334155;font-weight:800}
 tr:last-child td{border-bottom:0}
 pre{
-  white-space:pre;overflow:auto;padding:16px;border:1px solid #294663;
-  border-radius:12px;background:#05101d;color:#dfeeff;line-height:1.48;font-size:13px
+  white-space:pre;overflow:auto;padding:16px;border:1px solid #cbd8e8;
+  border-radius:8px;background:#f6f9fd;color:#26364f;line-height:1.5;font-size:13px
 }
 .tree-wrap{position:relative}
 .copy-btn{position:absolute;right:9px;top:9px;z-index:2}
-details{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:11px 13px;margin:10px 0}
+details{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:11px 13px;margin:10px 0}
 summary{cursor:pointer;font-weight:850}
 .memory-layer{
   display:grid;grid-template-columns:150px 1fr 240px;gap:12px;align-items:center;
   padding:13px;border-bottom:1px solid var(--line)
 }
 .memory-layer:last-child{border-bottom:0}
-.level{font-weight:900;color:#9dccff}
+.level{font-weight:900;color:#1f5faa}
 .tag{
   display:inline-block;margin:2px;padding:3px 7px;font-size:12px;
-  border:1px solid var(--line);border-radius:6px;background:#08172a;color:#bed4ed
+  border:1px solid var(--line);border-radius:6px;background:#f8fafc;color:#46566c
 }
 .timeline{display:grid;gap:13px}
 .step{display:grid;grid-template-columns:115px 1fr;gap:13px}
 .step-id{
   padding:11px;text-align:center;font-weight:900;border:1px solid var(--line);
-  border-radius:12px;background:#08172a;height:max-content;color:#9dccff
+  border-radius:8px;background:#edf5ff;height:max-content;color:#1f5faa
 }
-.step-body{padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--panel2)}
-.status-current{color:#8eddb4}.status-target{color:#9dccff}
-.status-local{color:#d0baff}.status-generated{color:#ffd07c}
-.status-legacy{color:#ff9eaa}.status-history{color:#b5c2d3}
+.step-body{padding:15px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.status-current{color:#168456}.status-target{color:#2368c4}
+.status-local{color:#6d4acb}.status-generated{color:#b75d00}
+.status-legacy{color:#c8354a}.status-history{color:#64748b}
 .owner-rule{display:grid;grid-template-columns:220px 1fr;gap:13px;padding:12px;border-bottom:1px solid var(--line)}
 .owner-rule:last-child{border-bottom:0}
 .searchbar{
   width:100%;border:1px solid var(--line);border-radius:10px;
-  background:#071321;color:var(--text);padding:11px 12px;margin:9px 0 14px
+  background:#fff;color:var(--text);padding:11px 12px;margin:9px 0 14px
 }
 .mapping-row.hidden{display:none}
 .footer{text-align:center;color:var(--muted);padding:22px}
 @media(max-width:980px){
-  .wrap{padding:12px}.hero-top{display:block}.actions{justify-content:flex-start;margin-top:15px}
+  .wrap{padding:12px}.hero{padding:24px}.hero-top{display:block}.actions{justify-content:flex-start;margin-top:15px}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+  .tabs button{flex:0 0 auto;white-space:nowrap}
   .grid2,.grid3,.grid4{grid-template-columns:1fr}.memory-layer,.owner-rule{grid-template-columns:1fr}
   .step{grid-template-columns:1fr}.flow{min-width:900px}
 }
@@ -169,7 +171,7 @@ summary{cursor:pointer;font-weight:850}
 <header class="hero">
   <div class="hero-top">
     <div>
-      <h1>Zuno 理想架构与仓库布局蓝图 V4</h1>
+      <h1>Zuno 目标架构与仓库布局蓝图 V5</h1>
       <p>
         这份设计把“运行架构、数据架构、上下文管理和文件夹所有权”统一起来。
         目标不是机械创建更多目录，而是让每个概念只有一个代码所有者、每类文件只有一个归宿，
@@ -178,7 +180,7 @@ summary{cursor:pointer;font-weight:850}
       </p>
       <div class="meta">
         文档状态：<b>Target / Proposed</b>，不是 Current 完成声明 ·
-        当前观察：Phase 11A/11B 已落地，11C 与 Phase 12 尚未闭环 ·
+        当前观察：Target Architecture Migration V1 已关闭并归档，Phase 11A/11B/11C 与 Phase 12 closure evidence 已完成 ·
         原则：<b>monorepo now, service-ready later</b>
       </div>
     </div>
@@ -1107,8 +1109,8 @@ examples/
   <div class="section">
     <h2>推荐实施顺序：先闭旧链，再整理目录，再实现 Context/Memory</h2>
     <div class="timeline">
-      <div class="step"><div class="step-id">P0</div><div class="step-body"><h3>Phase 11C / 12 Closure</h3><p>保持 root domain-packs 和 Docker 挂载缺席，继续清理 compat；保持已退休 Route/Runtime/Graph 源缺席；完成全量 pytest 与 Eval。</p></div></div>
-      <div class="step"><div class="step-id">P1</div><div class="step-body"><h3>Package Ownership Baseline</h3><p>先建立 bootstrap/interfaces/application/agent/knowledge/graphrag/infrastructure 的 dependency tests；只做无行为变化的小批移动。</p></div></div>
+      <div class="step"><div class="step-id">P0</div><div class="step-body"><h3>Closure Baseline</h3><p>Target Architecture Migration V1 已关闭并归档。root domain-packs 和 Docker 挂载保持缺席；已退休 Route/Runtime/Graph 源保持缺席；full pytest、Contract Review eval、stackless baseline、trace metadata 与 legacy grep classification 已作为 closure evidence 记录。</p></div></div>
+      <div class="step"><div class="step-id">P1</div><div class="step-body"><h3>Package Ownership Baseline</h3><p>如果开启新的架构实现 program，先建立 bootstrap/interfaces/application/agent/knowledge/graphrag/infrastructure 的 dependency tests；只做无行为变化的小批移动。</p></div></div>
       <div class="step"><div class="step-id">P2</div><div class="step-body"><h3>Context Contracts</h3><p>实现 AgentExecutionContext、ModelContextPacket、TokenBudgetPolicy、ContextTrace。</p></div></div>
       <div class="step"><div class="step-id">P3</div><div class="step-body"><h3>Raw Events + Checkpoint</h3><p>PostgreSQL append-only event log，LangGraph checkpoint，recent coherent window。</p></div></div>
       <div class="step"><div class="step-id">P4</div><div class="step-body"><h3>Compaction + Task Memory</h3><p>结构化 summary、source_event_ids、大型 Tool Result Artifact 化。</p></div></div>
@@ -1146,7 +1148,7 @@ examples/
 </main>
 
 <div class="footer">
-  Zuno Target Architecture & Repository Blueprint V4 · Target reference for Codex and maintainers
+  Zuno Target Architecture & Repository Blueprint V5 · Target reference for Codex and maintainers
 </div>
 </div>
 
