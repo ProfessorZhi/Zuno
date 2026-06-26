@@ -36,6 +36,31 @@ Phase 05 complete.
 - External knowledge is not stored as Agent memory without an explicit
   promotion path.
 
+## 2026-06-26 Closure Evidence
+
+Memory layer foundation contracts live under:
+
+- `src/backend/zuno/services/memory/layers.py`
+
+The layer API defines:
+
+- `MemoryLayer`: working context, short-term, task memory, long-term, and
+  external knowledge.
+- `MemoryScope`: `user_id`, `agent_id`, `project_id`, and `thread_id`.
+- `RawMemoryEvent`: append-only raw event record.
+- `TaskMemorySummary`: source-linked task/session summary.
+- `MemoryCandidate`: scoped long-term memory candidate with confidence,
+  `source_event_ids`, `dedupe_key`, and retention policy.
+- `ExternalKnowledgeRecord`: knowledge evidence that requires explicit
+  promotion before becoming Agent memory.
+- `RetentionPolicy`: TTL and privacy deletion boundary.
+- `InMemoryLayerStore`: testable adapter proving summaries do not delete raw
+  events.
+
+Existing `memory_client` persistence remains unchanged. No database schema,
+GraphRAG query runtime, Domain Pack compatibility surface, or GeneralAgent
+runtime integration changed in this phase.
+
 ## Verification Commands
 
 ```powershell

@@ -149,13 +149,16 @@ proof before final Phase 09 grep closure.
 
 Typed Context Contract models are current code under
 `src/backend/zuno/services/application/context/`.
+Memory layer foundation contracts are current code under
+`src/backend/zuno/services/memory/layers.py`.
 
-Context Orchestrator and new Memory layering are Target, not Current.
+Context Orchestrator and Post-turn Pipeline are Target, not Current.
 
 The near-term Context & Memory orchestration design is documented under
 `.agent/`; it is not implemented as the current runtime. Do not describe
-short/medium/long memory, Context Orchestrator, Dynamic Capability Selector, or
-the Post-turn Pipeline as current behavior until code and tests prove them.
+production-grade memory extraction/retrieval/consolidation, Context
+Orchestrator, Dynamic Capability Selector, or the Post-turn Pipeline as current
+behavior until code and tests prove them.
 
 Phase 12 is partial / not closed. The repository has focused tests for recent
 changes, but final full `pytest` and formal Eval baseline comparison have not

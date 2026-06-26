@@ -26,8 +26,8 @@ phase that owns it proves active dependency removal.
 | 03 | complete for public GraphRAG Project mainline | GraphRAG Project mainline hardening |
 | 04 | complete | repository layout cleanup |
 | 05 | complete | Context contract foundation |
-| 06 | next active foundation phase | Memory layer foundation |
-| 07 | blocked by 05-06 | Capability System |
+| 06 | complete | Memory layer foundation |
+| 07 | next active foundation phase | Capability System |
 | 08 | blocked by 05-07 | single GeneralAgent runtime integration |
 | 09 | final | full tests, eval, trace, docs, and grep closure |
 
@@ -47,6 +47,12 @@ Phase 05 closure adds typed context contracts under
 `ModelContextPacket`, `TokenBudgetPolicy`, `ContextTrace`, `ContextItem`,
 `ContextSource`, and `ContextSelectionReason`. These contracts are Current
 code, while Context Orchestrator runtime integration remains Phase 08.
+
+Phase 06 closure adds typed memory layer foundation contracts under
+`zuno.services.memory.layers`: `MemoryLayer`, `MemoryScope`, `RawMemoryEvent`,
+`TaskMemorySummary`, `MemoryCandidate`, `ExternalKnowledgeRecord`,
+`RetentionPolicy`, and `InMemoryLayerStore`. Existing `memory_client`
+persistence remains unchanged; Phase 08 owns runtime integration.
 
 ## Execution Rules
 

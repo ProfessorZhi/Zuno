@@ -37,7 +37,7 @@ official GraphRAG cleanup work without pretending Phase 12 is complete.
   coverage lives in root `tests/`. Domain Pack backend endpoint/API-service
   wrappers and frontend API/page files are retired from current source.
 - Phase 12 is partial / not closed.
-- Context Orchestrator and new Memory layering are Target, not Current.
+- Context Orchestrator and Post-turn Pipeline are Target, not Current.
 
 ## Target
 

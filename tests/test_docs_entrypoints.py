@@ -152,7 +152,8 @@ def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -
     for phrase in [
         "GeneralAgent single loop",
         "GraphRAG Project Query Runtime",
-        "Context Orchestrator and new Memory layering are Target, not Current",
+        "Context Orchestrator and Post-turn Pipeline are Target, not Current",
+        "Memory layer foundation contracts are current code",
         "Root `domain-packs/` assets are archived",
         "Docker no longer copies or mounts `/app/domain-packs`",
         "`src/backend/zuno/services/domain_pack/` runtime service package",

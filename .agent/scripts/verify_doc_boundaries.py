@@ -66,7 +66,7 @@ def main() -> int:
             errors.append(f"{relative_path.relative_to(REPO_ROOT)} contains local Downloads path")
 
     current = _read("docs/architecture/current-architecture.md")
-    if "Context Orchestrator and new Memory layering are Target, not Current" not in current:
+    if "Context Orchestrator and Post-turn Pipeline are Target, not Current" not in current:
         errors.append("current architecture must not promote Context Orchestrator to Current")
 
     docs_front_path = ["README.md", "docs/README.md", "docs/architecture/README.md"]

@@ -103,6 +103,11 @@ Current status:
   `ContextTrace`, `ContextItem`, `ContextSource`, and
   `ContextSelectionReason`. GeneralAgent runtime integration and long-term
   memory layering remain later phases.
+- Phase 06 is complete. Memory layer foundation contracts now live under
+  `src/backend/zuno/services/memory/layers.py` and define scoped raw events,
+  task summaries, long-term memory candidates, retention policy, external
+  knowledge promotion, and an in-memory layer adapter. Existing `memory_client`
+  behavior and database schema are unchanged.
 
 Superseded candidate program:
 
