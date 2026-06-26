@@ -24,6 +24,7 @@ REQUIRED_PATHS = [
     ".agent/references/graphrag-map.md",
     ".agent/references/command-catalog.md",
     ".agent/references/known-pitfalls.md",
+    ".agent/scripts/verify_module_boundaries.py",
     ".agent/workflows/README.md",
     ".agent/workflows/read-only-audit.md",
     ".agent/workflows/docs-maintenance.md",

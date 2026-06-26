@@ -17,6 +17,7 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
         ".agent/architecture/near-term/18-context-memory-ideal-architecture.md",
         ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
+        ".agent/scripts/verify_module_boundaries.py",
         ".agent/programs/zuno-target-runtime-v2/README.md",
         ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
         ".agent/programs/zuno-target-runtime-v2/implementation-phases/README.md",

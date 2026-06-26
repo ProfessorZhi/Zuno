@@ -17,6 +17,14 @@ Preferred:
 powershell -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 ```
 
+## Module Boundary Gates
+
+Preferred for target runtime V2 backend boundary work:
+
+```powershell
+python .agent/scripts/verify_module_boundaries.py
+```
+
 ## Frontend Dependency Install
 
 Preferred:

@@ -8,7 +8,7 @@ before moving files.
 ## Deliverables
 
 - `evidence/module-boundary-audit.md`
-- Optional `.agent/scripts/verify_module_boundaries.py`
+- `.agent/scripts/verify_module_boundaries.py`
 
 ## Candidate Areas
 
