@@ -151,14 +151,19 @@ Typed Context Contract models are current code under
 `src/backend/zuno/services/application/context/`.
 Memory layer foundation contracts are current code under
 `src/backend/zuno/services/memory/layers.py`.
+Capability System foundation contracts are current code under
+`src/backend/zuno/services/application/capabilities/`. The current capability
+search service exposes unified metadata for tools, skills, MCP servers, and
+MCP tools while keeping existing API-facing fields.
 
 Context Orchestrator and Post-turn Pipeline are Target, not Current.
+GeneralAgent runtime capability injection is also Target, not Current.
 
 The near-term Context & Memory orchestration design is documented under
 `.agent/`; it is not implemented as the current runtime. Do not describe
 production-grade memory extraction/retrieval/consolidation, Context
-Orchestrator, Dynamic Capability Selector, or the Post-turn Pipeline as current
-behavior until code and tests prove them.
+Orchestrator, GeneralAgent-integrated dynamic capability selection, or the
+Post-turn Pipeline as current behavior until code and tests prove them.
 
 Phase 12 is partial / not closed. The repository has focused tests for recent
 changes, but final full `pytest` and formal Eval baseline comparison have not

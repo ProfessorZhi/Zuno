@@ -27,8 +27,8 @@ phase that owns it proves active dependency removal.
 | 04 | complete | repository layout cleanup |
 | 05 | complete | Context contract foundation |
 | 06 | complete | Memory layer foundation |
-| 07 | next active foundation phase | Capability System |
-| 08 | blocked by 05-07 | single GeneralAgent runtime integration |
+| 07 | complete | Capability System |
+| 08 | next active integration phase | single GeneralAgent runtime integration |
 | 09 | final | full tests, eval, trace, docs, and grep closure |
 
 Current Phase 01/03 closure includes GraphRAG Project scoped graph writes and
@@ -53,6 +53,15 @@ Phase 06 closure adds typed memory layer foundation contracts under
 `TaskMemorySummary`, `MemoryCandidate`, `ExternalKnowledgeRecord`,
 `RetentionPolicy`, and `InMemoryLayerStore`. Existing `memory_client`
 persistence remains unchanged; Phase 08 owns runtime integration.
+
+Phase 07 closure adds typed capability foundation contracts under
+`zuno.services.application.capabilities`: `CapabilityRecord`,
+`CapabilityType`, `CapabilityRegistry`, `CapabilitySelectionRequest`,
+`CapabilitySelectionTrace`, and `DynamicCapabilitySelector`. The existing
+capability search service now returns unified capability metadata
+(`type`, `schema`, `permissions`, `cost`, `health`, `source`, and `owner`)
+for tools, skills, MCP servers, and MCP tools while preserving previous
+API-facing fields. GeneralAgent runtime selection remains Phase 08.
 
 ## Execution Rules
 

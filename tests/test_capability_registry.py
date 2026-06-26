@@ -57,9 +57,15 @@ def test_capability_registry_searches_tools_skills_and_mcp(monkeypatch):
 
     assert results
     assert results[0]["kind"] == "mcp_tool"
+    assert results[0]["type"] == "MCPTool"
     assert results[0]["name"] == "send_message"
     assert results[0]["display_name"] == "飞书 / send_message"
     assert results[0]["status"] == "ready"
+    assert results[0]["health"] == "ready"
+    assert results[0]["schema"] == {"type": "object", "properties": {}}
+    assert results[0]["permissions"] == {"scopes": ["mcp:tool:invoke"], "side_effects": True}
+    assert results[0]["cost"] == {"token_estimate": 200, "latency_ms": None, "unit_cost": None}
+    assert results[0]["owner"] == "user"
     assert results[0]["invoke_ref"] == {
         "mcp_server_id": "mcp-lark",
         "mcp_tool_name": "send_message",

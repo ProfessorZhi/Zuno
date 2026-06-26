@@ -4,6 +4,13 @@ import re
 from difflib import SequenceMatcher
 from typing import Any, Literal
 
+from zuno.services.application.capabilities import (
+    CapabilityCost,
+    CapabilityHealth,
+    CapabilityPermissions,
+    CapabilityType,
+)
+
 CapabilityKind = Literal["tool", "skill", "mcp_server", "mcp_tool"]
 
 
@@ -94,10 +101,15 @@ class CapabilityRegistryService:
         return cls._base_capability(
             id=f"tool:{tool.get('tool_id') or name}",
             kind="tool",
+            type=CapabilityType.ACTION_TOOL,
             name=name,
             display_name=display_name,
             description=str(tool.get("description") or ""),
+            schema=dict(tool.get("schema") or tool.get("parameters") or {}),
+            permissions=CapabilityPermissions(scopes=("tool:invoke",), side_effects=True),
+            cost=CapabilityCost(token_estimate=200),
             source=source,
+            owner=source,
             status="ready",
             status_message="",
             tags=[runtime_type, "api" if runtime_type == "remote_api" else runtime_type],
@@ -115,10 +127,15 @@ class CapabilityRegistryService:
         return cls._base_capability(
             id=f"skill:{skill_id}",
             kind="skill",
+            type=CapabilityType.SKILL,
             name=name,
             display_name=name,
             description=str(skill.get("description") or ""),
+            schema={"tool_name": tool_name},
+            permissions=CapabilityPermissions(scopes=("skill:run",), side_effects=False),
+            cost=CapabilityCost(token_estimate=500),
             source=source,
+            owner=source,
             status="ready",
             status_message="",
             tags=["skill", source],
@@ -138,10 +155,15 @@ class CapabilityRegistryService:
             cls._base_capability(
                 id=f"mcp_server:{server_id}",
                 kind="mcp_server",
+                type=CapabilityType.MCP_RESOURCE,
                 name=server_name,
                 display_name=server_name,
                 description=str(server.get("description") or ""),
+                schema={"transport": server.get("type"), "tools": list(server.get("tools") or [])},
+                permissions=CapabilityPermissions(scopes=("mcp:server:read",), side_effects=False),
+                cost=CapabilityCost(token_estimate=100),
                 source=source,
+                owner=source,
                 status=status,
                 status_message=status_message,
                 tags=["mcp", str(server.get("type") or "")],
@@ -159,10 +181,15 @@ class CapabilityRegistryService:
                 cls._base_capability(
                     id=f"mcp_tool:{server_id}:{tool_name}",
                     kind="mcp_tool",
+                    type=CapabilityType.MCP_TOOL,
                     name=tool_name,
                     display_name=f"{server_name} / {tool_name}",
                     description=str(tool_def.get("description") or ""),
+                    schema=dict(tool_def.get("input_schema") or tool_def.get("schema") or {}),
+                    permissions=CapabilityPermissions(scopes=("mcp:tool:invoke",), side_effects=True),
+                    cost=CapabilityCost(token_estimate=200),
                     source=source,
+                    owner=source,
                     status=status,
                     status_message=status_message,
                     tags=["mcp", str(server.get("type") or ""), server_name],
@@ -173,15 +200,21 @@ class CapabilityRegistryService:
             )
         return capabilities
 
-    @staticmethod
+    @classmethod
     def _base_capability(
+        cls,
         *,
         id: str,
         kind: CapabilityKind,
+        type: CapabilityType,
         name: str,
         display_name: str,
         description: str,
+        schema: dict[str, Any],
+        permissions: CapabilityPermissions,
+        cost: CapabilityCost,
         source: str,
+        owner: str,
         status: str,
         status_message: str,
         tags: list[str],
@@ -192,10 +225,16 @@ class CapabilityRegistryService:
         return {
             "id": id,
             "kind": kind,
+            "type": type.value,
             "name": name,
             "display_name": display_name,
             "description": description,
+            "schema": schema,
+            "permissions": permissions.to_dict(),
+            "cost": cost.to_dict(),
+            "health": cls._health_from_status(status).value,
             "source": source,
+            "owner": owner,
             "status": status,
             "status_message": status_message,
             "tags": [tag for tag in tags if tag],
@@ -225,6 +264,14 @@ class CapabilityRegistryService:
         if server.get("tools") or server.get("params"):
             return "ready", ""
         return "needs_config", "MCP 尚未测试或没有发现可用工具"
+
+    @staticmethod
+    def _health_from_status(status: str) -> CapabilityHealth:
+        if status == "ready":
+            return CapabilityHealth.READY
+        if status == "needs_config":
+            return CapabilityHealth.NEEDS_CONFIG
+        return CapabilityHealth.DEGRADED
 
     @classmethod
     def _normalize_kind(cls, kind: str | None) -> str:

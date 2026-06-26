@@ -30,9 +30,14 @@ Phase 05 and Phase 06 complete.
 
 ## Acceptance Gates
 
-- Capabilities are selected from task context and permissions.
-- Selection emits trace evidence.
-- Tools and knowledge remain capabilities, not parallel conversational agents.
+- Complete. Capabilities are selected from task context, allowed types, health,
+  and optional permission scopes.
+- Complete. Selection emits `CapabilitySelectionTrace` with selected names,
+  dropped names, reasons, and scores.
+- Complete. Tools, MCP entries, skills, and knowledge are capability records,
+  not parallel conversational agents.
+- Deferred to Phase 08. `GeneralAgent` runtime integration will inject selected
+  capabilities into the single agent loop.
 
 ## Verification Commands
 
@@ -47,3 +52,20 @@ git diff --check
 - registry schema
 - selector trace example
 - focused tests
+
+## Closure Evidence
+
+- Registry schema:
+  `CapabilityRecord(name, type, description, schema, permissions, cost, health, source, owner)`.
+- Capability types:
+  `Knowledge`, `ActionTool`, `MCPTool`, `MCPResource`, `MCPPrompt`, `Skill`.
+- Selector:
+  `DynamicCapabilitySelector.select(CapabilitySelectionRequest)` returns a
+  bounded `CapabilitySelectionResult`, not the full registry.
+- Compatibility:
+  `CapabilityRegistryService.search()` still returns existing API keys such as
+  `kind`, `status`, `display_name`, and `invoke_ref`, and now also returns
+  unified metadata fields.
+- Focused tests:
+  `python -m pytest -q tests/test_capability_system.py tests/test_capability_registry.py`
+  passed.

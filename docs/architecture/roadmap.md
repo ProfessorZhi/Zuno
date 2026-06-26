@@ -60,9 +60,8 @@ migration stages.
 
 ## Next Actions
 
-1. implement Phase 07 Capability System
-2. implement Phase 08 single `GeneralAgent` runtime integration
-3. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
+1. implement Phase 08 single `GeneralAgent` runtime integration
+2. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
    final docs/evidence
 
 Contract Review asset migration has completed its asset-only slice: the Target
@@ -94,6 +93,17 @@ Retired evidence kept for verification, not active source:
 - root Phase 11C retired-import guards for `src/backend/zuno/services/domain_pack/`,
   `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, and legacy
   graph states
+
+Current foundation closures:
+
+- Phase 05 Context Contract foundation is current code under
+  `src/backend/zuno/services/application/context/`.
+- Phase 06 Memory Layer foundation is current code under
+  `src/backend/zuno/services/memory/layers.py`.
+- Phase 07 Capability System foundation is current code under
+  `src/backend/zuno/services/application/capabilities/`, with the existing
+  capability search service exposing unified metadata for tools, skills, MCP
+  servers, and MCP tools.
 
 ## Non-Goals
 

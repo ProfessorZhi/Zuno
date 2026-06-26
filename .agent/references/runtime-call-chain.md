@@ -10,13 +10,25 @@ Summarize the current backend call direction.
 HTTP route
   -> application/service function
   -> core/runtime orchestration
-  -> retrieval, GraphRAG, memory, tools, storage
+  -> retrieval, GraphRAG, context contracts, memory, capabilities, tools, storage
   -> response DTO
 ```
 
 ## Rule
 
 Lower layers do not depend backward on the API layer.
+
+## Capability Boundary
+
+Capability foundation code lives under
+`src/backend/zuno/services/application/capabilities/`. It defines the current
+metadata contract for Knowledge, ActionTool, MCPTool, MCPResource, MCPPrompt,
+and Skill capabilities, plus a minimal selector that can return only relevant
+schemas for a task. The existing API capability search service preserves its
+previous response keys while also exposing the unified metadata fields.
+
+GeneralAgent does not yet inject selected capabilities into every model turn;
+that runtime integration belongs to Phase 08.
 
 ## Known Limitations
 
