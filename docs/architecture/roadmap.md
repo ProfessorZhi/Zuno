@@ -21,7 +21,7 @@ migration stages.
 - Phase 11B: complete. Commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base` and
   `KnowledgeQueryService`.
-- Phase 11C: blocked. The current FastAPI router no longer mounts
+- Phase 11C: active runtime cleanup complete. The current FastAPI router no longer mounts
   `/domain-packs`, and the active Vue knowledge route/settings entrypoints no
   longer open Domain Pack pages. Workspace knowledge prefetch/tools no longer
   use `AgentRuntime` or `_run_domain_pack_query`; they use
@@ -49,8 +49,8 @@ migration stages.
   graph states, and `zuno.services.domain_pack`. Root `domain-packs/` assets are archived under
   `docs/architecture/history/domain-packs/root-contract-review/`, Docker no
   longer copies or mounts `/app/domain-packs`, and the former `tests/compat/`
-  holding area is retired. Active migration compatibility dependencies remain
-  in root `tests/`. The direct `DomainQAGraph` source, its legacy
+  holding area is retired. Bounded migration compatibility evidence remains
+  in root `tests/` for storage/eval/DB aliases. The direct `DomainQAGraph` source, its legacy
   graph state module, and `src/backend/zuno/services/domain_pack/` runtime
   service package have also been retired from current backend source. Domain
   Pack backend endpoint/API-service wrappers and frontend API/page files are
@@ -60,20 +60,19 @@ migration stages.
 
 ## Next Actions
 
-1. finish 11C active dependency removal through compatibility dependency
-   reduction and formal Phase 02 closure proof
-2. continue Phase 03 GraphRAG Project mainline hardening from safe prework
-3. continue Phase 04 repository layout cleanup from safe prework
-4. full pytest
-5. eval baseline comparison
-6. program closure
+1. continue Phase 04 repository layout cleanup from safe prework
+2. implement Phase 05 Context contract foundation
+3. implement Phase 06 Memory layer foundation
+4. implement Phase 07 Capability System
+5. implement Phase 08 single `GeneralAgent` runtime integration
+6. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
+   final docs/evidence
 
 Contract Review asset migration has completed its asset-only slice: the Target
 example copy lives at `examples/graphrag-projects/contract_review/`, and the
 dedicated Contract Review eval now reads its GraphRAG Project compatibility
 payload and eval fixture from that copy. Root Domain Pack assets are archived
-and Docker Domain Pack mounts are retired, but this does not close 11C because
-compat surfaces remain.
+and Docker Domain Pack mounts are retired.
 
 ## Next Candidate
 

@@ -119,7 +119,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     "docs/architecture/roadmap.md": [
         "Phase 11A: complete",
         "Phase 11B: complete",
-        "Phase 11C: blocked",
+        "Phase 11C: active runtime cleanup complete",
         "Phase 12: partial / not closed",
         "Blocked Legacy",
         ".agent/programs/zuno-target-architecture-migration-v1/",

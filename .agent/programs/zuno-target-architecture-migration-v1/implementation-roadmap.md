@@ -21,21 +21,20 @@ phase that owns it proves active dependency removal.
 | Phase | Status | Main Output |
 | --- | --- | --- |
 | 00 | complete | current-state and dependency gate |
-| 01 | in progress / blocked | official cleanup 11C dependency removal |
-| 02 | asset-only migration complete / formal closure blocked by 01 and remaining migration compatibility evidence | Contract Review asset migration |
-| 03 | safe prework started / full closure blocked by 01-02 | GraphRAG Project mainline hardening |
-| 04 | safe prework started / full closure blocked by 01-03 | repository layout cleanup |
+| 01 | complete for active runtime cleanup | official cleanup 11C dependency removal |
+| 02 | complete | Contract Review asset migration |
+| 03 | complete for public GraphRAG Project mainline | GraphRAG Project mainline hardening |
+| 04 | next active cleanup phase | repository layout cleanup |
 | 05 | blocked by 04 | Context contract foundation |
 | 06 | blocked by 05 | Memory layer foundation |
 | 07 | blocked by 05-06 | Capability System |
 | 08 | blocked by 05-07 | single GeneralAgent runtime integration |
 | 09 | final | full tests, eval, trace, docs, and grep closure |
 
-Current Phase 01/03 safe prework also includes `GraphRetrieverAdapter`
-mapping `scope_policy.graphrag_project_id` to the existing legacy graph storage
-filter and eval/extractor paths using `project_payload` as the primary
-GraphRAG Project payload name. This is not full Phase 01 or Phase 03 closure;
-remaining migration compatibility evidence still blocks closure.
+Current Phase 01/03 closure includes GraphRAG Project scoped graph writes and
+retrieval through `graphrag_project_id`, eval/extractor paths using
+`project_payload` as the primary GraphRAG Project payload name, and bounded
+dual-read compatibility for pre-backfill graph data.
 
 ## Execution Rules
 

@@ -164,9 +164,9 @@ def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -
     for phrase in [
         "Phase 11A: complete",
         "Phase 11B: complete",
-        "Phase 11C: blocked",
+        "Phase 11C: active runtime cleanup complete",
         "Phase 12: partial / not closed",
-        "11C active dependency removal",
+        "Bounded migration compatibility evidence remains",
         "full pytest",
         "eval baseline comparison",
     ]:

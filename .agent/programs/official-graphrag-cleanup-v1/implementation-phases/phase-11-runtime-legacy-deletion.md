@@ -54,9 +54,10 @@ and `src/backend/zuno/services/domain_pack/` runtime service package are
 already retired from current backend source. The former root `domain-packs/`
 assets are archived under
 `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
-longer copies or mounts `/app/domain-packs`. Phase 11C remains blocked by
-remaining migration compatibility evidence under root `tests/` that has not yet
-been promoted or retired.
+longer copies or mounts `/app/domain-packs`. Phase 11C active runtime cleanup is
+closed for current source paths; remaining migration compatibility evidence
+under root `tests/` is kept as bounded migration coverage until each alias is
+promoted or retired.
 
 ## Execution Order
 

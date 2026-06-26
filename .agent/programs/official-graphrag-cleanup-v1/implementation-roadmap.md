@@ -133,15 +133,17 @@ This roadmap does not implement:
   `KnowledgeQueryResult`).
 - Phase 11B is complete; commit `b160c4b` unified knowledge queries under the
   single `GeneralAgent` path through `search_knowledge_base`.
-- Phase 11C is blocked by remaining migration compatibility surfaces now
+- Phase 11C active runtime cleanup is complete for current source paths, with
+  remaining migration compatibility surfaces now
   covered by root `tests/`; the former `tests/compat/` holding area is retired.
   Workspace knowledge prefetch/tools have been cut over to `KnowledgeQueryService`,
   `KnowledgeService.get_runtime_settings` no longer auto-loads
   `DomainPackLoader` from `domain_pack_id`, `GraphRetriever` no longer loads
   Domain Pack policy from `domain_pack_id`, stackless local eval and the
   dedicated Contract Review eval have Contract Review GraphRAG Project paths
-  using `project_payload` extractor calls, `GraphRetrieverAdapter` maps
-  GraphRAG Project scope to the current legacy graph storage filter,
+  using `project_payload` extractor calls, graph writes and retrieval use
+  `graphrag_project_id` as the current project scope with bounded dual-read
+  compatibility for pre-backfill legacy graph data,
   the standalone `AgentRuntime` facade, direct `DomainQAGraph` source, legacy
   graph state module, `src/backend/zuno/services/domain_pack/` runtime service
   package, and direct `MultiAgentSupervisorGraph` source have been removed

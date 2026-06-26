@@ -5,15 +5,14 @@
 This is the active end-to-end Agent program for moving Zuno from the current
 runtime state to the near-term target architecture and repository layout.
 
-It absorbs the old Context Memory candidate program and continues the unfinished
-official GraphRAG cleanup work without pretending Phase 11C or Phase 12 are
-complete.
+It absorbs the old Context Memory candidate program and continues the remaining
+official GraphRAG cleanup work without pretending Phase 12 is complete.
 
 ## Current Truth
 
 - Phase 11A is complete: GraphRAG Project query runtime exists.
 - Phase 11B is complete: knowledge queries use the single `GeneralAgent` path.
-- Phase 11C is in progress and still blocked overall. The current FastAPI
+- Phase 11C active runtime cleanup is complete for the current source path. The current FastAPI
   router no longer mounts `/domain-packs`, and active Vue knowledge
   routes/pages no longer open Domain Pack entrypoints. Workspace knowledge
   prefetch/tools now use `KnowledgeQueryService`, not `AgentRuntime` or
@@ -25,8 +24,9 @@ complete.
   package public exports. `KnowledgeService.get_runtime_settings` preserves
   `domain_pack_id` without auto-loading `DomainPackLoader`. `GraphRetriever`
   uses explicit `query_policy` instead of loading Domain Pack policy from
-  `domain_pack_id`. `GraphRetrieverAdapter` maps GraphRAG Project scope to the
-  current legacy graph storage filter. Stackless local eval and the dedicated
+  `domain_pack_id`. GraphRAG graph writes and retrieval use
+  `graphrag_project_id` as the current project scope, with bounded dual-read
+  compatibility for pre-backfill legacy graph data. Stackless local eval and the dedicated
   Contract Review eval can build from GraphRAG Project assets and call graph
   extractors with `project_payload=project_payload`. The
   `src/backend/zuno/services/domain_pack/` runtime service package is also
@@ -60,7 +60,7 @@ The target is a Python/FastAPI modular monolith with:
 ## Relationship To Other Programs
 
 - `official-graphrag-cleanup-v1` remains referenced as the source program for
-  completed GraphRAG cleanup phases and the still-blocked 11C/12 work.
+  completed GraphRAG cleanup phases and remaining Phase 12 evidence.
 - `context-memory-agent-runtime-v1` is archived under
   `docs/architecture/history/programs/context-memory-agent-runtime-v1/`; its
   useful design intent is folded into this program's Context/Memory phases.

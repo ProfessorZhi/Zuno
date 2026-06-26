@@ -33,9 +33,11 @@ knowledge route/settings entrypoints no longer open Domain Pack pages. The
 old frontend Domain Pack API/page files are retired from `apps/web/src/`.
 `KnowledgeService.get_runtime_settings` no longer auto-loads `DomainPackLoader`
 from `domain_pack_id`. `GraphRetriever` policy resolution also no longer loads
-`DomainPackLoader` from `domain_pack_id`. `GraphRetrieverAdapter` maps
-`scope_policy.graphrag_project_id` to the existing legacy graph storage filter
-without restoring Domain Pack policy loading. Stackless local eval and the
+`DomainPackLoader` from `domain_pack_id`. `GraphRetrieverAdapter`,
+`GraphRetriever`, `GraphWriter`, structured graph extraction, pipeline graph
+indexing, and the Neo4j client use `graphrag_project_id` as the primary graph
+scope while dual-reading legacy graph properties for pre-backfill data.
+Stackless local eval and the
 dedicated Contract Review eval can build from GraphRAG Project assets, and
 their extractor calls use `project_payload=project_payload`. The direct
 `DomainQAGraph` source, legacy graph state module, and

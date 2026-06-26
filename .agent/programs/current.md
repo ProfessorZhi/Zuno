@@ -45,8 +45,7 @@ Current status:
   `DomainQAGraph` and
   `MultiAgentSupervisorGraph` are no longer exported from current core package
   public surfaces.
-- Phase 02 asset-only migration is complete, but formal Phase 02 closure
-  remains blocked until remaining migration compatibility evidence is reduced:
+- Phase 02 is complete:
   `examples/graphrag-projects/contract_review/` now holds the Target
   GraphRAG Project copy of Contract Review schema, prompts, retrieval policy,
   and eval fixture. The project loader materializes `retrieval_policy.yaml`
@@ -59,22 +58,23 @@ Current status:
   Domain Pack mounts. Stackless local eval now requires GraphRAG Project assets
   when an id is provided and no longer keeps the private
   `_load_graph_project_domain_payload` alias.
-- Phase 03 has safe prework started, but full closure remains blocked by
-  Phase 01 / Phase 02: `/knowledge/search` now routes through
+- Phase 03 is complete for the public GraphRAG Project mainline:
+  `/knowledge/search` now routes through
   `KnowledgeQueryService`, Contract Review project assets expose
   `to_project_payload()`, graph extractors accept `project_payload` as the
   active payload parameter without the old `domain_pack` payload alias, and
   stackless eval entrypoints prefer `graphrag_project_id` /
   `--graphrag-project-id` while retaining legacy compatibility aliases where
-  explicitly tested. Active stable architecture specs now describe
+  explicitly tested. Graph scope now uses `graphrag_project_id` as the primary
+  field for graph writes and retrieval while dual-reading old graph properties
+  for pre-backfill data. Active stable architecture specs now describe
   GraphRAG Project / query policy as the mainline driver instead of Domain
   Pack, and the docs entrypoint verifier guards against reintroducing Domain
   Pack-as-target wording outside explicit migration specs. Active near-term
   target docs now also reject wording that marks retired `DomainQAGraph`,
   retired Domain Pack endpoint/page wrappers, or bare `domain_pack_id` query
   policy as current target evidence.
-- Phase 04 has safe prework started, but full closure remains blocked by
-  Phase 01-03: retired Domain Pack UI capture and responsive-check scripts
+- Phase 04 has safe prework started: retired Domain Pack UI capture and responsive-check scripts
   were archived under
   `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
   The old Phase 6 bundle staging helpers were archived under the same

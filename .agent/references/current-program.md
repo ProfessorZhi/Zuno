@@ -19,11 +19,11 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 ## Current Implementation Status
 
 - Target Migration Phase 00 is complete.
-- Phase 01 continues official cleanup 11C active dependency removal.
+- Phase 01 active runtime cleanup is complete.
 - Official cleanup Phase 11A and 11B are complete.
-- Official cleanup Phase 11C remains blocked by remaining migration
-  compatibility dependencies in root `tests/`. The former `tests/compat/`
-  holding area is retired. Root `domain-packs/` assets are
+- Official cleanup Phase 11C active runtime cleanup is closed. Bounded
+  migration aliases remain where tests name storage/eval/DB compatibility
+  roles. The former `tests/compat/` holding area is retired. Root `domain-packs/` assets are
   archived under `docs/architecture/history/domain-packs/root-contract-review/`,
   and Docker no longer copies or mounts `/app/domain-packs`.
   Workspace knowledge prefetch/tools have been cut over to
@@ -35,16 +35,16 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
   retired from current backend.
   `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer current core
   package public exports.
-- Phase 02 asset-only migration is complete, but formal closure remains blocked
-  by remaining migration compatibility evidence. Contract Review target assets
-  live under `examples/graphrag-projects/contract_review/`, with root Domain
+- Phase 02 is complete. Contract Review target assets live under
+  `examples/graphrag-projects/contract_review/`, with root Domain
   Pack assets archived under
   `docs/architecture/history/domain-packs/root-contract-review/`.
-- Phase 03 has safe prework started: `/knowledge/search` routes through
-  `KnowledgeQueryService`, Contract Review project assets expose
-  `to_project_payload()`, and stackless eval entrypoints prefer
+- Phase 03 is complete for the public GraphRAG Project mainline:
+  `/knowledge/search` routes through `KnowledgeQueryService`, Contract Review
+  project assets expose `to_project_payload()`, graph scope uses
+  `graphrag_project_id`, and stackless eval entrypoints prefer
   `graphrag_project_id` / `--graphrag-project-id` while retaining legacy
-  compatibility aliases.
+  compatibility aliases only where explicitly tested.
 - Phase 04 has safe prework started: retired Domain Pack UI capture and
   responsive-check scripts are archived under
   `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.

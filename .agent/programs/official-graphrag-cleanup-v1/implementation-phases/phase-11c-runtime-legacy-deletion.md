@@ -7,21 +7,21 @@ prove no active dependency remains.
 
 ## Status
 
-In progress / blocked overall. The current FastAPI router no longer mounts
+Active runtime cleanup complete for current source paths. The current FastAPI router no longer mounts
 `/domain-packs`, and active Vue knowledge routes/pages no longer open Domain
 Pack entrypoints. `KnowledgeService.get_runtime_settings` now preserves
 `domain_pack_id` without auto-loading `DomainPackLoader`, and `GraphRetriever`
 no longer loads Domain Pack policy from `domain_pack_id`. Stackless local eval
 and the dedicated Contract Review eval can build from GraphRAG Project assets
-and call graph extractors with `project_payload=project_payload`.
-`GraphRetrieverAdapter` maps `scope_policy.graphrag_project_id` to the current
-legacy graph storage filter without a database schema, Neo4j property-name,
-API, or frontend migration.
+and call graph extractors with `project_payload=project_payload`. GraphRAG graph
+writes and retrieval now use `graphrag_project_id` as the current project scope,
+with bounded dual-read compatibility for pre-backfill legacy graph data.
 Root `domain-packs/` assets are archived under
 `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
 longer copies or mounts `/app/domain-packs`. The former `tests/compat/`
-holding area is retired. Active dependencies still exist in remaining
-migration compatibility surfaces under root `tests/`. The old
+holding area is retired. Remaining compatibility coverage under root `tests/`
+is migration-scoped and must be promoted or retired by the phase that owns each
+alias. The old
 backend Domain Pack endpoint/API-service wrappers, frontend Domain Pack
 API/page files, direct `DomainQAGraph` source, legacy graph state module,
 `src/backend/zuno/services/domain_pack/` runtime service package, and direct

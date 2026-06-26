@@ -70,7 +70,7 @@ def test_knowledge_config_embeds_graphrag_project_contract_and_normalizes_identi
     normalized = KnowledgeService._normalize_knowledge_config(config)
 
     assert normalized["graphrag_project_id"] == "legal"
-    assert normalized["domain_pack_id"] == "legal"
+    assert "domain_pack_id" not in normalized
     assert normalized["graphrag_project"]["graphrag_project_id"] == "legal"
     assert normalized["graphrag_project"]["settings_path"] == "projects/legal/settings.yaml"
     assert normalized["graphrag_project"]["prompt_version"] == "extract-v2"

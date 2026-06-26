@@ -9,8 +9,10 @@ query methods, evidence, citation, and trace.
 
 Phase 01 and Phase 02 complete.
 
-Current status: blocked by Phase 01 / Phase 02 for full closure. Safe prework
-has started: `/knowledge/search` now routes through `KnowledgeQueryService`
+Current status: complete for public GraphRAG Project mainline hardening.
+Internal retrieval/eval labels such as `rag_graph_deep` and `local_graphrag`
+remain classified as implementation or ablation labels, not public query
+methods. `/knowledge/search` now routes through `KnowledgeQueryService`
 instead of the legacy `RagHandler` search path, while preserving compatibility
 response fields for current callers. Contract Review eval project assets now
 use `to_project_payload()` as the main GraphRAG Project payload API, and
@@ -30,15 +32,33 @@ the target driver. Active near-term target docs now also classify retired
 `domain_pack_id` query-policy wording as legacy or migration evidence instead
 of current GraphRAG Project target evidence.
 
-`GraphRetrieverAdapter` maps GraphRAG Project scope
-(`scope_policy.graphrag_project_id`) to the current legacy graph storage filter
-field (`domain_pack_id`). This is current compatibility with the existing
-storage model, not a target endorsement of Domain Pack as the public contract.
+`GraphRetrieverAdapter`, `GraphRetriever`, `GraphWriter`, structured graph
+extraction, pipeline graph indexing, and the Neo4j client now use
+`graphrag_project_id` as the primary graph scope. Neo4j query filters dual-read
+old `domain_pack_id` properties with `COALESCE` only for pre-backfill data.
+This is migration compatibility, not a target endorsement of Domain Pack as
+the public contract.
 
 Stackless Contract Review local eval coverage now lives in
 `tests/test_stackless_local_eval_contract_project_query_policy.py`, which
 builds from `graphrag_project_id="contract_review"` and explicit GraphRAG
 Project `query_policy`.
+
+## 2026-06-26 Closure Evidence
+
+- `GraphRAGProjectContract` accepts public query methods
+  `auto/basic/local/global/drift` and rejects legacy method names such as
+  `community_global`.
+- Normalized public knowledge config keeps `graphrag_project_id` and no longer
+  emits `domain_pack_id`.
+- `KnowledgeQueryService` and `GraphRAGQueryService` remain the GraphRAG
+  Project query mainline and preserve evidence/citation/version/trace metadata.
+- Standard/enhanced retrieval composition tests cover the public composition
+  path while `rag_graph_deep` and `local_graphrag` remain internal route/eval
+  labels.
+- Grep gates for `domain_pack_id`, `rag_graph_deep`, and `local_graphrag` are
+  classified as migration aliases, internal implementation labels, eval
+  ablations, audits, or history.
 
 ## Scope
 
