@@ -1,4 +1,4 @@
-﻿# Implementation Phase Map
+# Implementation Phase Map
 
 ## Purpose
 
@@ -11,9 +11,10 @@ Use:
 
 - `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
 - `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md`
-- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
-  as dependency history and unfinished 11C/12 cleanup source material
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
+  as archived dependency history; final tests/eval/trace closure now belongs
+  to target migration Phase 09
 
 ## Required Reading For Every Implementation Round
 

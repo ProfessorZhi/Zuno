@@ -12,6 +12,9 @@ and evidence, not the active Agent execution path.
 - `context-memory-agent-runtime-v1/`: superseded by
   `.agent/programs/zuno-target-architecture-migration-v1/`, which folds
   Context/Memory phases into the end-to-end target architecture migration.
+- `official-graphrag-cleanup-v1/`: completed GraphRAG cleanup source program
+  absorbed by `.agent/programs/zuno-target-architecture-migration-v1/`; kept as
+  historical evidence, not an active executable Agent program.
 
 ## Rule
 

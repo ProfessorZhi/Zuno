@@ -1,4 +1,4 @@
-# Phase 12: Tests / Eval / Trace Closure
+﻿# Phase 12: Tests / Eval / Trace Closure
 
 ## Goal
 
@@ -47,7 +47,7 @@ gate, docs sync, commit, and push.
 - `tests/`
 - `tools/evals/zuno/`
 - `docs/architecture/audits/`
-- `.agent/programs/official-graphrag-cleanup-v1/`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
 - `.agent/references/`
 - `.agent/architecture/near-term/`
 
@@ -142,3 +142,4 @@ claims after failed validation.
 
 No near-term follow-up phase. Future Java, microservice, event-worker, or
 multi-agent work requires a separate program.
+

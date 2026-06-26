@@ -74,7 +74,7 @@ Current status:
   target docs now also reject wording that marks retired `DomainQAGraph`,
   retired Domain Pack endpoint/page wrappers, or bare `domain_pack_id` query
   policy as current target evidence.
-- Phase 04 has safe prework started: retired Domain Pack UI capture and responsive-check scripts
+- Phase 04 is complete: retired Domain Pack UI capture and responsive-check scripts
   were archived under
   `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
   The old Phase 6 bundle staging helpers were archived under the same
@@ -89,7 +89,13 @@ Current status:
   wording. Superseded ADR 0001 Domain Pack Binding is archived under
   `docs/architecture/history/decisions/`, and public-release stage commands no
   longer use a broad `src/backend/zuno/` add path that could cross backend
-  release groups.
+  release groups. The superseded `official-graphrag-cleanup-v1` executable
+  program is now archived under
+  `docs/architecture/history/programs/official-graphrag-cleanup-v1/`, leaving
+  `.agent/programs/` with only the active target migration program and
+  `current.md`. Capability and tool API controllers now route runtime/discovery
+  work through `zuno.api.services` instead of importing `zuno.services`
+  directly.
 - Phase 12 is partial / not closed.
 - Context/Memory implementation is folded into this program after repository
   layout and GraphRAG mainline gates.
@@ -98,6 +104,8 @@ Superseded candidate program:
 
 - `context-memory-agent-runtime-v1` is archived under
   `docs/architecture/history/programs/context-memory-agent-runtime-v1/`.
+- `official-graphrag-cleanup-v1` is archived under
+  `docs/architecture/history/programs/official-graphrag-cleanup-v1/`.
 
 Formal public status is summarized in:
 

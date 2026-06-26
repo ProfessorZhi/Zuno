@@ -9,7 +9,7 @@ For current status, read:
 
 For executable Agent phase material, read:
 
-- `.agent/programs/official-graphrag-cleanup-v1/`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
 
 ## Archived Plans
 

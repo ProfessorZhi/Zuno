@@ -34,6 +34,7 @@ FORBIDDEN_CURRENT_PATHS = [
     "docs/architecture/phases",
     "docs/architecture/plans",
     "docs/architecture/programs",
+    ".agent/programs/official-graphrag-cleanup-v1",
     "domain-packs",
     "tests/compat",
     "docs/development/history",
@@ -325,7 +326,7 @@ def main() -> int:
 
     graph_retrievers = _read("src/backend/zuno/services/retrieval/retrievers.py")
     if 'scope_policy.get("graphrag_project_id")' not in graph_retrievers:
-        errors.append("GraphRetrieverAdapter must map GraphRAG Project scope to the legacy storage filter")
+        errors.append("GraphRetrieverAdapter must use GraphRAG Project scope from graphrag_project_id")
     if 'runtime_settings.get("project_payload")' not in graph_retrievers:
         errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
 

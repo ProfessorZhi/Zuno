@@ -102,12 +102,38 @@ The superseded reference migration guide was also moved from
 `docs/architecture/history/reference/migration.md`, leaving
 `docs/architecture/history/` as the only tracked docs history archive.
 
+## 2026-06-26 Closure Evidence
+
+The superseded `official-graphrag-cleanup-v1` executable program was moved from
+`.agent/programs/official-graphrag-cleanup-v1/` to:
+
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
+
+The move leaves `.agent/programs/` with only `current.md`, `README.md`, and the
+active `zuno-target-architecture-migration-v1/` program. Agent references,
+workflow scripts, docs entrypoints, repo-structure verifiers, and the target
+layout HTML now point to the archived program as history rather than an active
+execution front path.
+
+Capability and tool API controllers now route runtime/discovery work through
+`zuno.api.services`:
+
+- `src/backend/zuno/api/v1/capability.py` calls `CapabilityService`.
+- `src/backend/zuno/api/v1/tool.py` calls `ToolRuntimeService`.
+
+The runtime service imports remain in API service adapters, so API route files
+no longer directly import `zuno.services.*`, `zuno.core.*`, or `zuno.tools.*`.
+This closes the first low-risk backend ownership boundary without broad
+database, service, core, or frontend moves.
+
 ## Verification Commands
 
 ```powershell
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_repo_hygiene.py
 pytest -q tests/test_repo_structure_consistency.py tests/test_repo_hygiene.py
+pytest -q tests/test_zuno_public_entrypoints.py tests/test_zuno_runtime_chain_guard.py tests/test_layered_api_boundaries.py
+pytest -q tests/test_capability_registry.py tests/test_cli_tool_discovery.py tests/test_tool_service_runtime_type.py tests/test_user_defined_tool_runtime.py
 git diff --check
 ```
 

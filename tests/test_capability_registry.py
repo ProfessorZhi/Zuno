@@ -110,7 +110,10 @@ def test_capability_search_route_uses_login_user(monkeypatch):
         captured.update({"query": query, "user_id": user_id, "kind": kind, "limit": limit})
         return [{"id": "tool:send_email", "name": "send_email"}]
 
-    monkeypatch.setattr("zuno.api.v1.capability.CapabilityRegistryService.search", fake_search)
+    monkeypatch.setattr(
+        "zuno.api.v1.capability.CapabilityService.search_capabilities",
+        fake_search,
+    )
 
     response = asyncio.run(
         search_capabilities(

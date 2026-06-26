@@ -24,8 +24,8 @@ phase that owns it proves active dependency removal.
 | 01 | complete for active runtime cleanup | official cleanup 11C dependency removal |
 | 02 | complete | Contract Review asset migration |
 | 03 | complete for public GraphRAG Project mainline | GraphRAG Project mainline hardening |
-| 04 | next active cleanup phase | repository layout cleanup |
-| 05 | blocked by 04 | Context contract foundation |
+| 04 | complete | repository layout cleanup |
+| 05 | next active foundation phase | Context contract foundation |
 | 06 | blocked by 05 | Memory layer foundation |
 | 07 | blocked by 05-06 | Capability System |
 | 08 | blocked by 05-07 | single GeneralAgent runtime integration |
@@ -35,6 +35,12 @@ Current Phase 01/03 closure includes GraphRAG Project scoped graph writes and
 retrieval through `graphrag_project_id`, eval/extractor paths using
 `project_payload` as the primary GraphRAG Project payload name, and bounded
 dual-read compatibility for pre-backfill graph data.
+
+Phase 04 closure archives superseded executable programs out of
+`.agent/programs/`, keeps `official-graphrag-cleanup-v1` under
+`docs/architecture/history/programs/`, and tightens API controller boundaries
+so capability/tool routes call API service adapters instead of importing
+runtime service modules directly.
 
 ## Execution Rules
 
@@ -53,8 +59,9 @@ dual-read compatibility for pre-backfill graph data.
   -> 05 -> 06 -> 07 -> 08 -> 09
 ```
 
-Phase 01 continues `official-graphrag-cleanup-v1` 11C/12 work. Phases 05-08
-replace the archived `context-memory-agent-runtime-v1` candidate path.
+Phase 01 absorbed the archived `official-graphrag-cleanup-v1` 11C evidence.
+Phase 09 owns final tests/eval/trace closure. Phases 05-08 replace the
+archived `context-memory-agent-runtime-v1` candidate path.
 
 ## Required Global Verifiers
 

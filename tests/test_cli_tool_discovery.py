@@ -140,7 +140,7 @@ def test_cli_preview_endpoint_passes_full_request_to_service(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "zuno.api.v1.tool.CliToolDiscoveryService.preview",
+        "zuno.api.v1.tool.ToolRuntimeService.preview_cli_tool_directory",
         fake_preview,
     )
 

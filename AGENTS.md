@@ -1,4 +1,4 @@
-﻿# Zuno Agent Entry
+# Zuno Agent Entry
 
 This is the only repository-level Agent entrypoint.
 
@@ -65,8 +65,9 @@ The executable near-term implementation breakdown is:
 
 - `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
 - `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
-- `.agent/programs/official-graphrag-cleanup-v1/` as the source for completed
-  GraphRAG cleanup phases and the still-blocked 11C/12 evidence
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/` as
+  archived evidence for completed GraphRAG cleanup phases and old 11C/12
+  planning context
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 Detailed target architecture design for this program lives in:

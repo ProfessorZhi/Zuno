@@ -16,11 +16,11 @@ The active program is target architecture migration. Its detailed execution
 material is maintained for Agents under:
 
 - `.agent/programs/zuno-target-architecture-migration-v1/`
-- `.agent/programs/official-graphrag-cleanup-v1/`
 - `.agent/architecture/near-term/`
 
-`official-graphrag-cleanup-v1` remains referenced because its completed 11A/11B
-work and blocked 11C/12 cleanup are dependencies of the target migration.
+`docs/architecture/history/programs/official-graphrag-cleanup-v1/` preserves
+the completed 11A/11B/11C cleanup evidence as history. It is not an active
+executable Agent program.
 
 The completed Phase 0-6 architecture closure remains historical truth. It is
 archived under:

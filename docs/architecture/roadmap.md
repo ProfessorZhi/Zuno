@@ -60,12 +60,11 @@ migration stages.
 
 ## Next Actions
 
-1. continue Phase 04 repository layout cleanup from safe prework
-2. implement Phase 05 Context contract foundation
-3. implement Phase 06 Memory layer foundation
-4. implement Phase 07 Capability System
-5. implement Phase 08 single `GeneralAgent` runtime integration
-6. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
+1. implement Phase 05 Context contract foundation
+2. implement Phase 06 Memory layer foundation
+3. implement Phase 07 Capability System
+4. implement Phase 08 single `GeneralAgent` runtime integration
+5. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
    final docs/evidence
 
 Contract Review asset migration has completed its asset-only slice: the Target
@@ -110,5 +109,5 @@ Detailed implementation planning lives in:
 
 - `.agent/programs/current.md`
 - `.agent/programs/zuno-target-architecture-migration-v1/`
-- `.agent/programs/official-graphrag-cleanup-v1/`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`

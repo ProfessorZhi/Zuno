@@ -1,4 +1,4 @@
-# Phase 07: Tests Eval Closure
+﻿# Phase 07: Tests Eval Closure
 
 ## Goal
 
@@ -11,7 +11,7 @@ Verification, eval reports, closure docs, and final index updates.
 ## Files to change
 
 - `docs/architecture/audits/`
-- `.agent/programs/official-graphrag-cleanup-v1/`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
 - tests and eval scripts that directly verify the completed program
 
 ## Files not to change
@@ -41,3 +41,4 @@ git diff --check
 - final test and eval summary
 - closure report
 - commit and push result
+

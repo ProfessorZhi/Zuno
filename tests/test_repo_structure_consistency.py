@@ -11,7 +11,6 @@ def test_required_current_paths_exist() -> None:
         "AGENTS.md",
         ".agent/README.md",
         ".agent/programs/current.md",
-        ".agent/programs/official-graphrag-cleanup-v1",
         ".agent/programs/zuno-target-architecture-migration-v1",
         ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
         ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
@@ -24,6 +23,7 @@ def test_required_current_paths_exist() -> None:
         "docs/architecture/history/plans/README.md",
         "docs/architecture/history/programs/README.md",
         "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
+        "docs/architecture/history/programs/official-graphrag-cleanup-v1/README.md",
         "docs/architecture/history/development/README.md",
         "docs/architecture/history/reference/migration.md",
         "docs/evidence/public-demo.md",
@@ -77,6 +77,7 @@ def test_retired_front_path_directories_are_not_current_paths() -> None:
         "docs/architecture/plans",
         "docs/architecture/programs",
         ".agent/programs/context-memory-agent-runtime-v1",
+        ".agent/programs/official-graphrag-cleanup-v1",
         "docs/superpowers",
         "docs/prototypes/superpowers-legacy",
         "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
@@ -152,6 +153,24 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (
         REPO_ROOT / "docs" / "architecture" / "history" / "reference" / "migration.md"
     ).exists()
+
+
+def test_official_graphrag_cleanup_program_is_archived_out_of_active_programs() -> None:
+    assert not (REPO_ROOT / ".agent/programs/official-graphrag-cleanup-v1").exists()
+    assert (
+        REPO_ROOT
+        / "docs/architecture/history/programs/official-graphrag-cleanup-v1/README.md"
+    ).exists()
+
+    programs_index = (REPO_ROOT / ".agent/programs/README.md").read_text(
+        encoding="utf-8"
+    )
+    history_index = (
+        REPO_ROOT / "docs/architecture/history/programs/README.md"
+    ).read_text(encoding="utf-8")
+
+    assert "official-graphrag-cleanup-v1/" not in programs_index
+    assert "official-graphrag-cleanup-v1/" in history_index
 
 
 def test_superseded_migration_specs_are_archived_out_of_active_specs() -> None:

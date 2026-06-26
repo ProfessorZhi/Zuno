@@ -117,14 +117,16 @@ alias where current contracts still require it.
 Stackless and real-runtime local eval runtime registries now expose GraphRAG
 Project payload state through `project_payload`, not `domain_pack`.
 
-## Blocked Legacy
+## Migration Compatibility
 
-Phase 11C is blocked because these active dependencies still exist:
+Phase 11C active runtime cleanup is closed for current source paths. Remaining
+compatibility evidence exists because older stored data, eval fixtures, and
+migration tests still mention Domain Pack-era names:
 
 - remaining migration compatibility fields and tests that still mention Domain
   Pack-era names
 
-Retired evidence kept for verification, not active source:
+Retired evidence is kept for verification, not active source:
 
 - Contract Review eval has moved to a GraphRAG Project local eval flow without
   `DomainPackLoader` or `DomainQAGraph`

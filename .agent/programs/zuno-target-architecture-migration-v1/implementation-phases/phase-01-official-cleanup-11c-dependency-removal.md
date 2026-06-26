@@ -32,7 +32,7 @@ Phase 00 complete.
 - `apps/web/src/apis/`
 - `tools/evals/zuno/`
 - `tests/`
-- `.agent/programs/official-graphrag-cleanup-v1/`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
 
 ## Files Not To Change
 

@@ -15,6 +15,9 @@ Classify repository directories for cleanup decisions.
 - `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`:
   History for retired Domain Pack UI gallery capture/check scripts and old
   Phase 6 bundle staging helpers
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`: History
+  for the completed GraphRAG cleanup source program absorbed by target
+  migration
 - `docs/architecture/history/specs/`: History for superseded migration specs
   that no longer belong on the active specs front path
 - `docs/architecture/history/decisions/`: History for superseded architecture
@@ -62,3 +65,7 @@ or service source paths as current release groups, and must not use broad
 backend add paths that cross release-group boundaries.
 Read `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 before directory-boundary work.
+Superseded executable programs must live under `docs/architecture/history/programs/`,
+not under `.agent/programs/`. API route modules under `src/backend/zuno/api/v1/`
+should call API service adapters instead of importing runtime/service/core/tool
+modules directly.

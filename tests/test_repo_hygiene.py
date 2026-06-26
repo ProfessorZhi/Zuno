@@ -267,7 +267,7 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     assert "Structured graph extractor contract tests must use project_payload" in verifier
     assert "Stackless local eval must not keep a graph project domain payload alias" in verifier
     assert "GraphRAG extractors must expose project_payload as the primary payload parameter" in verifier
-    assert "GraphRetrieverAdapter must map GraphRAG Project scope to the legacy storage filter" in verifier
+    assert "GraphRetrieverAdapter must use GraphRAG Project scope from graphrag_project_id" in verifier
     assert "Runtime settings must expose GraphRAG Project payload via project_payload" in verifier
 
 
@@ -330,7 +330,7 @@ def test_active_repo_tools_do_not_reference_retired_backend_domain_pack_copy() -
 
     roadmap = (
         REPO_ROOT
-        / ".agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md"
+        / "docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     assert "`src/backend/zuno/domain_packs/` still exist" not in roadmap
 

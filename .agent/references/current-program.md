@@ -45,7 +45,7 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
   `graphrag_project_id`, and stackless eval entrypoints prefer
   `graphrag_project_id` / `--graphrag-project-id` while retaining legacy
   compatibility aliases only where explicitly tested.
-- Phase 04 has safe prework started: retired Domain Pack UI capture and
+- Phase 04 is complete: retired Domain Pack UI capture and
   responsive-check scripts are archived under
   `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
 - Official cleanup Phase 12 is partial / not closed.
@@ -55,8 +55,9 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - `.agent/programs/current.md`
 - `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
 - `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
-- `.agent/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `.agent/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
+  as archived cleanup evidence, not active executable program material
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 Do not use the implementation phases to pull Java, microservices,

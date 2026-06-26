@@ -1,4 +1,4 @@
-# Phase 02: Docs / Spec / Current Truth Cleanup
+﻿# Phase 02: Docs / Spec / Current Truth Cleanup
 
 ## Goal
 
@@ -36,7 +36,7 @@ Docs and Agent workflow references only.
 - `docs/architecture/current-architecture.md`
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/specs/`
-- `.agent/programs/official-graphrag-cleanup-v1/`
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
 - `.agent/references/`
 - `.agent/architecture/near-term/`
 - `AGENTS.md`
@@ -117,3 +117,4 @@ claims after failed validation.
 ## Follow-up Phase
 
 Phase 03: Domain Pack Contract Retirement.
+

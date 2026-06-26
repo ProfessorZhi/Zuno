@@ -18,8 +18,8 @@
 - `.agent/programs/current.md`: current executable Agent program pointer
 - `.agent/programs/zuno-target-architecture-migration-v1/`: active target
   migration phase material
-- `.agent/programs/official-graphrag-cleanup-v1/`: dependency program for
-  completed GraphRAG cleanup and blocked 11C/12 gates
+- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`: archived
+  GraphRAG cleanup evidence, not an active executable program
 - `.agent/architecture/near-term/`: detailed near-term target architecture
 - `.agent/architecture/future/`: Java, microservices, workers, and multi-agent horizon notes
 - `.agent/architecture/decisions/`: locked choices, open questions, retired surfaces

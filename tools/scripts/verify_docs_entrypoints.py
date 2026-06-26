@@ -167,7 +167,7 @@ def main() -> int:
                 "target-architecture.md",
                 "roadmap.md",
                 "../evidence/public-demo.md",
-                ".agent/programs/official-graphrag-cleanup-v1/",
+                "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
                 ".agent/programs/zuno-target-architecture-migration-v1/",
                 "history/phases/",
             ],
@@ -184,7 +184,7 @@ def main() -> int:
                 "Phase 12: partial / not closed",
                 "Blocked Legacy",
                 ".agent/programs/zuno-target-architecture-migration-v1/",
-                ".agent/programs/official-graphrag-cleanup-v1/",
+                "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
             ],
         )
     )

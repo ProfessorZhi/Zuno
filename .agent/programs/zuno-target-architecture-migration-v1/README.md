@@ -59,8 +59,9 @@ The target is a Python/FastAPI modular monolith with:
 
 ## Relationship To Other Programs
 
-- `official-graphrag-cleanup-v1` remains referenced as the source program for
-  completed GraphRAG cleanup phases and remaining Phase 12 evidence.
+- `official-graphrag-cleanup-v1` is archived under
+  `docs/architecture/history/programs/official-graphrag-cleanup-v1/` as
+  completed GraphRAG cleanup evidence and old Phase 12 planning context.
 - `context-memory-agent-runtime-v1` is archived under
   `docs/architecture/history/programs/context-memory-agent-runtime-v1/`; its
   useful design intent is folded into this program's Context/Memory phases.

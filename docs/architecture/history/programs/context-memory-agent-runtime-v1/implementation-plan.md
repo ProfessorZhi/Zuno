@@ -20,7 +20,7 @@ single GeneralAgent
 - Zuno is still a Python monorepo with FastAPI, LangGraph, retrieval services,
   GraphRAG services, frontend apps, and tests.
 - The current executable program remains
-  `.agent/programs/official-graphrag-cleanup-v1/`.
+  `docs/architecture/history/programs/official-graphrag-cleanup-v1/`.
 - Phase 11A and Phase 11B are complete in that cleanup program.
 - Phase 11C active dependency removal and Phase 12 closure are still the
   dependency gate for implementation work in this program unless dependencies
