@@ -28,11 +28,34 @@ in `.agent/architecture/near-term/`.
 ## Target Terms
 
 - Context & Memory Engine
-- Capability System
+- Summary Compression
+- Structured Extraction
+- ToolCard
+- Capability / Tool Retrieval
+- Native BM25
+- Optional vector tool search
+- Multi-query retrieval
+- Multi-retriever recall
+- RRF fusion
+- Optional rerank
 - GraphRAG Project
 - Basic / Local / Global / DRIFT query methods
+- `auto` router
 - Index / Update / Full Rebuild
 - Evidence / Citation / Trace / Eval
+
+## Target Term Boundaries
+
+- Native BM25: local BM25 ranking algorithm. Elasticsearch may expose BM25
+  scoring as an external adapter, but Elasticsearch is not the algorithm
+  itself.
+- ToolCard: compact retrievable metadata for a tool, MCP connector, skill, or
+  knowledge capability. It is not the full injected tool schema.
+- RRF fusion: coarse result fusion, default `k = 60`, followed by optional
+  rerank when enabled.
+- `auto` router: chooses `basic`, `local`, `global`, or `drift`; it is not a
+  fifth GraphRAG query mode.
+- External Knowledge: RAG/GraphRAG/file/web evidence. It is not Agent Memory.
 
 ## Blocked Legacy Terms
 

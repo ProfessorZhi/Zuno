@@ -2,7 +2,7 @@
 
 Before changing `src/backend/zuno`, read:
 
-1. `.agent/references/backend-map.md`
+1. `.agent/references/code-map.md`
 2. `.agent/references/runtime-call-chain.md`
 3. `.agent/workflows/backend-change.md`
 

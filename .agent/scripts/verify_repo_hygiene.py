@@ -168,9 +168,9 @@ def main() -> int:
         if (REPO_ROOT / relative_path).exists():
             errors.append(f"superseded architecture decision must not remain active: {relative_path}")
 
-    repo_hygiene_map = _read(".agent/references/repo-hygiene-map.md")
-    if "must not be restored as target repository layout" not in repo_hygiene_map:
-        errors.append("repo hygiene map must keep Domain Pack out of target layout")
+    known_pitfalls = _read(".agent/references/known-pitfalls.md")
+    if "must not be restored" not in known_pitfalls:
+        errors.append("known pitfalls must keep retired surfaces out of target layout")
 
     backend_router = _read("src/backend/zuno/api/router.py")
     backend_v1_init = _read("src/backend/zuno/api/v1/__init__.py")

@@ -6,8 +6,8 @@ Use for changes under `apps/web`.
 
 ## Required Reading
 
-- `.agent/references/frontend-map.md`
-- `.agent/references/api-contract-map.md`
+- `.agent/references/code-map.md`
+- `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 - `.agent/workflows/frontend-change.md`
 
 ## Steps

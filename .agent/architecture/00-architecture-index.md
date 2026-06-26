@@ -4,20 +4,19 @@
 
 1. [README](README.md)
 2. [Near-Term README](near-term/README.md)
-3. [Near-Term Target Overview](near-term/01-near-term-target-overview.md)
-4. [Layered Architecture](near-term/04-layered-architecture.md)
-5. [GraphRAG Project Architecture](near-term/11-graphrag-project-architecture.md)
-6. [Enhanced Mode Pipeline](near-term/12-enhanced-mode-pipeline.md)
-7. [Near-Term Migration Roadmap](near-term/15-near-term-migration-roadmap.md)
-8. [Locked Near-Term Decisions](decisions/01-locked-near-term-decisions.md)
-9. [Open Architecture Questions](decisions/02-open-architecture-questions.md)
-10. [Future README](future/README.md)
+3. [Target Runtime Architecture](near-term/01-target-runtime-architecture.md)
+4. [Context Memory Architecture](near-term/02-context-memory-architecture.md)
+5. [Capability Tool Retrieval Architecture](near-term/03-capability-tool-retrieval-architecture.md)
+6. [Knowledge GraphRAG Retrieval Fusion](near-term/04-knowledge-graphrag-retrieval-fusion.md)
+7. [Repository Boundaries And Acceptance Gates](near-term/05-repository-boundaries-and-acceptance-gates.md)
+8. [Architecture Decisions](decisions/architecture-decisions.md)
+9. [Future Horizon](future/future-horizon.md)
 
 ## Rule For Refactor Work
 
 For near-term code refactor work, read `near-term/` first after the formal docs.
-The current mainline is Python FastAPI + Service Layer + LangGraph + LLM/Tool
-Adapters + RAG/GraphRAG + Persistence + Frontend API Contract.
+The target mainline is Single GeneralAgent + Context/Memory + Capability/Tool
+Retrieval + Knowledge/GraphRAG + Retrieval/Fusion/Evidence + Trace/Eval.
 
 Read `future/` only when discussing Java business services, microservices,
 event-driven workers, independent GraphRAG/evaluation services, or multi-agent
@@ -25,4 +24,4 @@ direction. Those topics must not become near-term acceptance gates unless the
 user explicitly opens a new future-direction implementation program.
 
 `docs/architecture/` remains the formal documentation truth. `.agent/architecture/`
-is the detailed Agent-side design library.
+is the detailed Agent-side target design library.

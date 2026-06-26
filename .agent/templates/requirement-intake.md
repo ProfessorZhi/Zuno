@@ -23,7 +23,7 @@ Decide whether this task updates:
 8. `AGENTS.md`
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`
-11. `.agent/references/current_architecture/`
+11. `.agent/programs/`
 12. `.agent/scripts/` or `.agent/templates/`
 13. `.gitignore`
 14. verification, commit, and push

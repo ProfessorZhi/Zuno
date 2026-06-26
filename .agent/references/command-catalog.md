@@ -47,3 +47,14 @@ git push
 ```
 
 Avoid force push, force-with-lease, amend, and reset unless explicitly requested.
+
+## Canonical Architecture Checks
+
+```powershell
+git grep -n "Native BM25"
+git grep -n "RRF"
+git grep -n "Summary Compression"
+git grep -n "Structured Extraction"
+git grep -n "ToolCard"
+git grep -n "auto router"
+```

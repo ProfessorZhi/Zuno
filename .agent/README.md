@@ -28,15 +28,16 @@ architecture design and does not replace `.agent/architecture/near-term/`.
     README.md
     current-program.md
     docs-map.md
-    code-surfaces.md
+    code-map.md
+    runtime-call-chain.md
     verification-map.md
-    current_architecture/
+    command-catalog.md
+    known-pitfalls.md
   programs/
     current.md
-    zuno-target-architecture-migration-v1/
+    zuno-target-runtime-v2/
   workflows/
   skills/
-  lessons/
   templates/
   scripts/
 ```
@@ -67,7 +68,7 @@ When a user asks for a new requirement, new feature, refactor, or architecture r
 8. `AGENTS.md`
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`
-11. `.agent/programs/` or `.agent/references/current_architecture/`
+11. `.agent/programs/`
 12. `.agent/scripts/` or `.agent/templates/`
 13. `.gitignore`
 14. verification, commit, and push if files changed
@@ -77,12 +78,11 @@ If a change replaces an older design, move the old material to `docs/architectur
 ## Operating Rules
 
 - Read formal truth from `docs/architecture/` first.
-- Use `.agent/references/` only as the Agent navigation layer.
+- Use `.agent/references/` only as the slim Agent navigation layer.
 - Use `.agent/templates/` for reusable prompts and closure reports.
 - Use `.agent/scripts/` for read-only workflow checks.
 - Use `.agent/workflows/` for complete execution procedures.
 - Use `.agent/skills/` for thin task-routing entries.
-- Use `.agent/lessons/` for verified reusable experience.
 - Use `.agent/architecture/near-term/` for the detailed next refactor target.
 - Use `.agent/architecture/future/` only for Java, microservices, event/workers,
   and multi-agent horizon discussions.
@@ -97,7 +97,9 @@ Temporary discovery -> `.agent/local/notes/` (ignored).
 
 One-task investigation evidence -> `.agent/audits/`.
 
-Verified reusable experience -> `.agent/lessons/`.
+Verified reusable experience -> `.agent/references/known-pitfalls.md` when it
+still changes current decisions, or `docs/architecture/history/` when it is only
+past context.
 
 Stable operation procedure -> `.agent/workflows/`.
 

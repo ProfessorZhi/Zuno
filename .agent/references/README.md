@@ -1,36 +1,38 @@
 # Agent Reference Index
 
-This directory is the durable navigation layer for Agents. It summarizes where
-to look; it does not replace formal docs.
-
-`.agent/references/` is for quick navigation, current-reality snapshots,
-command maps, and verification maps. It does not carry target architecture
+`.agent/references/` is the durable navigation layer for Agents. It points to
+source-of-truth files and commands; it does not carry long target architecture
 design.
 
-For target architecture design, use:
+## Active Files
 
-- `.agent/architecture/near-term/` for the detailed next refactor target
-- `.agent/architecture/future/` for horizon direction only
+```text
+.agent/references/
+  README.md
+  current-program.md
+  docs-map.md
+  code-map.md
+  runtime-call-chain.md
+  verification-map.md
+  command-catalog.md
+  known-pitfalls.md
+```
 
-## Primary References
+## Use
 
-- `current-program.md` explains the active architecture program.
-- `docs-map.md` maps formal documentation entrypoints.
-- `code-surfaces.md` maps code surfaces without authorizing code edits.
-- `verification-map.md` maps workflow and docs verification commands.
-- `current_architecture/` gives a fast Agent-oriented snapshot of current architecture boundaries.
+- `current-program.md`: active executable Agent program.
+- `docs-map.md`: formal docs and history entrypoints.
+- `code-map.md`: current code owners and protected runtime boundaries.
+- `runtime-call-chain.md`: current backend call path.
+- `verification-map.md`: verifier, pytest, grep, and closure command map.
+- `command-catalog.md`: common command snippets.
+- `known-pitfalls.md`: common mistakes and forbidden restorations.
 
-Historical Agent workflow notes do not stay in this current navigation layer.
-They belong under `docs/architecture/history/agent-workflow/`.
+## Archive
 
-## Formal Truth
+Old detailed maps are archived under:
 
-Use these files as the current formal path:
+- `docs/architecture/history/agent-reference-fragments/`
 
-1. `docs/architecture/README.md`
-2. `docs/architecture/current-architecture.md`
-3. `docs/architecture/target-architecture.md`
-4. `docs/architecture/history/phases/README.md`
-5. `docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md`
-
-Use `docs/architecture/history/` only for superseded plans and evidence.
+If a future task needs archived detail, promote only the smallest current fact
+back into the active reference set.

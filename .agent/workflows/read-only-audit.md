@@ -9,7 +9,8 @@ user asks for reconnaissance.
 
 1. Read `AGENTS.md`.
 2. Read formal docs relevant to the task.
-3. Read `.agent/references/workflow-map.md` and the relevant reference maps.
+3. Read `.agent/references/README.md`, `.agent/references/code-map.md`, and
+   the relevant navigation map.
 4. Run read-only discovery with `rg`, `git status --short`, and targeted path
    reads.
 5. Classify findings as Current, Target, Future, History, Generated, Local,

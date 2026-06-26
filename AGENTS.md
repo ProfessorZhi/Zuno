@@ -28,8 +28,13 @@ For architecture, refactor, new feature, or workflow tasks:
 5. `.agent/README.md`
 6. `.agent/references/current-program.md`
 7. `.agent/references/docs-map.md`
-8. `.agent/references/current_architecture/README.md`
+8. `.agent/references/code-map.md`
 9. `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+10. `.agent/architecture/near-term/01-target-runtime-architecture.md`
+11. `.agent/architecture/near-term/02-context-memory-architecture.md`
+12. `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
+13. `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
+14. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
 For implementation tasks, read the relevant code after the docs. Do not infer runtime behavior from docs alone.
 
@@ -73,7 +78,8 @@ single `GeneralAgent`.
 The active V2 implementation breakdown is:
 
 - `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
-- `.agent/programs/zuno-target-runtime-v2/implementation-phases/`
+- `.agent/programs/zuno-target-runtime-v2/current-phase.md`
+- `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
 
 The archived V1 near-term implementation breakdown is:
 
@@ -82,7 +88,7 @@ The archived V1 near-term implementation breakdown is:
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/` as
   archived evidence for completed GraphRAG cleanup phases and old 11C/12
   planning context
-- `.agent/architecture/near-term/17-implementation-phase-map.md`
+- `docs/architecture/history/programs/zuno-target-runtime-v2/`
 
 Detailed target architecture design for this program lives in:
 
@@ -95,14 +101,15 @@ current structure separates:
   - the detailed near-term ideal architecture for the next refactor target
   - `zuno-ideal-architecture-and-repo-layout.html` as the canonical Target /
     Proposed visual blueprint, not Current Truth
-  - Python FastAPI, Service Layer, LangGraph, LLM/Tool adapters, RAG/GraphRAG,
-    persistence, frontend API contract, observability, migration, and gates
+  - five canonical Markdown documents for runtime, Context/Memory,
+    Capability/Tool Retrieval, Knowledge/GraphRAG/Retrieval/Fusion, and
+    repository boundaries/acceptance gates
 - `.agent/architecture/future/`
-  - long-term direction for Java business services, microservices,
-    event-driven workers, and multi-agent mode
+  - slim long-term horizon for Java business services, microservices,
+    event-driven workers, Coding Agent mode, and multi-agent mode
   - not a current refactor acceptance target
 - `.agent/architecture/decisions/`
-  - locked near-term decisions, split open questions, and retired surfaces
+  - slim Agent-side architecture decision summary
 
 Do not treat Java, microservices, event-driven workers, or multi-agent mode as
 near-term implementation work unless the user explicitly opens a separate
@@ -122,7 +129,7 @@ For every new requirement, new feature, refactor, or architecture replacement, d
 8. this `AGENTS.md` current mainline
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`
-11. `.agent/references/current_architecture/`
+11. `.agent/programs/`
 12. `.agent/scripts/` or `.agent/templates/`
 13. `.gitignore`
 14. verification, commit, and push if the task produced modifications

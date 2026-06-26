@@ -19,11 +19,18 @@ Formal human-facing status is summarized in:
 
 Current phase focus:
 
-- Phase 00: current state gate.
-- Phase 01: program setup.
-- Phase 02: module boundary audit and verifier.
-- Phase 03: first backend boundary move.
-- Phase 04: minimal Context Orchestrator runtime.
+- Phase 00-04 are complete.
+- Detailed Phase 00-04 files and evidence are archived under
+  `docs/architecture/history/programs/zuno-target-runtime-v2/`.
+- The next runtime phase should start only after the docs/.agent target
+  architecture canonicalization is complete and verified.
+
+Active program files:
+
+- `zuno-target-runtime-v2/README.md`
+- `zuno-target-runtime-v2/implementation-roadmap.md`
+- `zuno-target-runtime-v2/current-phase.md`
+- `zuno-target-runtime-v2/closure-checklist.md`
 
 Archived supporting evidence:
 

@@ -13,8 +13,8 @@ Current:
 - `src/backend/zuno` is the only active Python backend runtime boundary.
 - Phase 0-6 architecture closure remains complete historical truth.
 - Target Architecture Migration V1 is closed and archived.
-- There is no active executable Agent program after the target architecture
-  migration closure.
+- The active executable Agent program is
+  `.agent/programs/zuno-target-runtime-v2/`.
 - Phase 11A is complete: `KnowledgeQueryService`, `GraphRAGQueryService`,
   `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult` exist in the current
   runtime.
@@ -27,10 +27,21 @@ Current:
 Target:
 
 - Keep one stable monorepo baseline.
-- Move the front-path GraphRAG language toward GraphRAG Project, Prompt
-  Tuning, Query Method, index versions, evidence, and trace metadata.
-- Keep Context & Memory Engine, Capability System, and GraphRAG Project query
-  concepts as the near-term target direction until implemented and verified.
+- Keep the target architecture as: Single GeneralAgent Runtime + Context /
+  Memory Engine + Capability / Tool Retrieval + Knowledge / GraphRAG Retrieval
+  + Evidence / Citation / Trace / Eval + Typed API + Web/Desktop.
+- Use Summary Compression + Structured Extraction as the Memory target
+  strategy.
+- Use a ToolCard Registry with keyword / alias lookup, Native BM25, optional
+  vector search, permission / health / cost filtering, and capability selection
+  trace as the Capability target.
+- Use Native BM25 as a local ranking algorithm; Elasticsearch is an optional
+  external adapter, not the BM25 algorithm itself.
+- Use multi-query and multi-retriever retrieval with RRF coarse fusion
+  (`k=60`), optional rerank, evidence check, citations, and trace in enhanced
+  paths.
+- Keep GraphRAG query methods as `basic`, `local`, `global`, and `drift`;
+  `auto` is a router, not a fifth query mode.
 - Keep Java services, microservices, event workers, product-level multi-agent
   mode, and Coding Agent direction as future direction only.
 

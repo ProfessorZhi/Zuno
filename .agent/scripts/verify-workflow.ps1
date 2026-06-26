@@ -25,18 +25,17 @@ Require-Path ".agent\README.md"
 Require-Path ".agent\references\README.md"
 Require-Path ".agent\references\current-program.md"
 Require-Path ".agent\references\docs-map.md"
-Require-Path ".agent\references\code-surfaces.md"
+Require-Path ".agent\references\code-map.md"
 Require-Path ".agent\references\verification-map.md"
-Require-Path ".agent\references\workflow-map.md"
-Require-Path ".agent\references\skills-map.md"
-Require-Path ".agent\references\local-state-map.md"
-Require-Path ".agent\references\current_architecture\README.md"
 Require-Path ".agent\programs\current.md"
+Require-Path ".agent\programs\zuno-target-runtime-v2\README.md"
+Require-Path ".agent\programs\zuno-target-runtime-v2\implementation-roadmap.md"
+Require-Path ".agent\programs\zuno-target-runtime-v2\current-phase.md"
+Require-Path ".agent\programs\zuno-target-runtime-v2\closure-checklist.md"
 Require-Path ".agent\workflows\docs-maintenance.md"
 Require-Path ".agent\workflows\repo-hygiene.md"
 Require-Path ".agent\skills\zuno-docs-maintenance\SKILL.md"
 Require-Path ".agent\skills\zuno-repo-hygiene\SKILL.md"
-Require-Path ".agent\lessons\README.md"
 Require-Path ".agent\templates\requirement-intake.md"
 Require-Path ".agent\scripts\verify-docs.ps1"
 Require-Path ".agent\scripts\verify_agent_system.py"
@@ -74,8 +73,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/architecture/hist
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw
-if ($currentProgram -notmatch "There is no active executable Agent program") {
-    $failures.Add("current-program.md does not mark the target migration program closed")
+if ($currentProgram -notmatch "zuno-target-runtime-v2") {
+    $failures.Add("current-program.md does not point to the active V2 program")
 }
 
 if ($failures.Count -gt 0) {

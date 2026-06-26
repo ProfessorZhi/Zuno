@@ -39,6 +39,10 @@ Success for this round means:
 
 ## Evidence
 
-Phase evidence belongs under this program's `evidence/` directory or in each
-phase document. Local machine artifacts from a run must stay outside the repo
-or in ignored local paths.
+Completed detailed phase files and evidence are archived under:
+
+- `docs/architecture/history/programs/zuno-target-runtime-v2/`
+
+Future active phase evidence should stay small while work is open, then move to
+history when it is superseded by the slim program surface. Local machine
+artifacts from a run must stay outside the repo or in ignored local paths.

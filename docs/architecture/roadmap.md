@@ -8,7 +8,9 @@ The active executable Agent program is
 `.agent/programs/zuno-target-runtime-v2/`. It continues after the target
 architecture migration closure with a controlled first implementation slice:
 module boundary gates, one low-risk backend application-boundary move, and a
-minimal callable Context Orchestrator.
+minimal callable Context Orchestrator. Phase 00-04 detailed files and evidence
+are archived under
+`docs/architecture/history/programs/zuno-target-runtime-v2/`.
 
 The completed target architecture migration program is archived under
 `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`.
@@ -66,6 +68,8 @@ migration stages.
 ## Next Actions
 
 1. Execute the active `zuno-target-runtime-v2` phases linearly.
+2. Use the slim canonical near-term target architecture under
+   `.agent/architecture/near-term/` as the source for future runtime phases.
 
 Contract Review asset migration has completed its asset-only slice: the Target
 example copy lives at `examples/graphrag-projects/contract_review/`, and the
@@ -123,6 +127,8 @@ mode.
 Archived implementation planning lives in:
 
 - `.agent/programs/current.md`
+- `.agent/programs/zuno-target-runtime-v2/current-phase.md`
+- `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
+- `docs/architecture/history/programs/zuno-target-runtime-v2/`
 - `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
-- `.agent/architecture/near-term/17-implementation-phase-map.md`

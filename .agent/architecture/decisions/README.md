@@ -1,8 +1,11 @@
 # Architecture Decisions
 
-## Purpose
+This directory keeps one active Agent-side decision summary. Formal ADRs belong
+in `docs/architecture/decisions/`.
 
-This directory keeps near-term decisions, open questions, and retired surfaces
-separate from future-direction brainstorming.
+## Active File
 
-Read this after `near-term/` when planning code work.
+- [Architecture Decisions](architecture-decisions.md)
+
+Detailed old decision fragments are archived under
+`docs/architecture/history/agent-architecture-decision-fragments/`.

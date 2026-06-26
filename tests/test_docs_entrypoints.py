@@ -97,6 +97,9 @@ def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() ->
         "Domain Pack retrieval policy inputs",
         "Current Evidence: `DomainQAGraph`",
         "0001-domain-pack-binding.md",
+        "Summary Compression + Structured Extraction",
+        "Native BM25",
+        "ToolCard",
     ]
 
     for phrase in required_phrases:
@@ -172,6 +175,18 @@ def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -
         "eval baseline comparison",
     ]:
         assert phrase in roadmap
+
+    target = (REPO_ROOT / "docs" / "architecture" / "target-architecture.md").read_text(
+        encoding="utf-8"
+    )
+    for phrase in [
+        "Summary Compression + Structured Extraction",
+        "Native BM25",
+        "ToolCard",
+        "RRF",
+        "`auto` router",
+    ]:
+        assert phrase in target
 
 
 def test_repository_docs_do_not_keep_local_download_reference() -> None:

@@ -2,9 +2,9 @@
 
 `.agent/programs/` contains executable Agent-side program material.
 
-Formal human-facing status belongs in `docs/architecture/roadmap.md`. Detailed
-phase instructions, evidence packages, and target-mode execution files belong
-here.
+Formal human-facing status belongs in `docs/architecture/roadmap.md`. Active
+program files stay small; completed detailed phase files and evidence move to
+`docs/architecture/history/programs/`.
 
 Start with:
 

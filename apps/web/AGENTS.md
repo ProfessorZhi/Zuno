@@ -2,8 +2,8 @@
 
 Before changing `apps/web`, read:
 
-1. `.agent/references/frontend-map.md`
-2. `.agent/references/api-contract-map.md`
+1. `.agent/references/code-map.md`
+2. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 3. `.agent/workflows/frontend-change.md`
 
 For frontend/API contract migration or repository layout work, also read

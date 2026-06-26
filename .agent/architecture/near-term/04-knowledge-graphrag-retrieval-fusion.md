@@ -1,0 +1,179 @@
+# Knowledge GraphRAG Retrieval Fusion
+
+## Purpose
+
+Define the canonical target for Knowledge Query, GraphRAG query modes,
+multi-query retrieval, multi-retriever recall, fusion, rerank, evidence,
+citation, and trace.
+
+## Knowledge Boundary
+
+The target query path is:
+
+```text
+GeneralAgent
+  -> Knowledge Capability
+  -> KnowledgeQueryService
+  -> GraphRAGQueryService
+  -> Retrieval / Fusion / Evidence
+  -> Knowledge Evidence
+  -> GeneralAgent answer with citations
+```
+
+Current code already has `KnowledgeQueryService`, `GraphRAGQueryService`,
+`GraphRAGProjectSnapshot`, and `KnowledgeQueryResult`. The target architecture
+extends this with clearer retrieval/fusion components and stronger traces.
+
+## GraphRAG Query Modes
+
+The real query modes are exactly:
+
+- `basic`
+- `local`
+- `global`
+- `drift`
+
+`auto` is a router. It is not a fifth query mode.
+
+Mode meanings:
+
+```text
+basic
+  Native BM25 + Vector + RRF + optional rerank
+
+local
+  entity / relation / graph neighborhood / source chunks
+
+global
+  community reports / global summaries
+
+drift
+  global community primer -> local follow-up retrieval -> evidence merge
+```
+
+The router records requested method, resolved method, fallback reason, and
+method availability. If graph/community assets are not ready, the trace must
+show the fallback clearly.
+
+## Multi-query And Multi-retriever Flow
+
+Target enhanced retrieval:
+
+```text
+User Query
+  -> Query Understanding
+  -> Query Variants
+  -> Multi-retriever Recall
+       Native BM25
+       Dense Vector
+       Graph Local
+       Community Global
+  -> Deduplication
+  -> RRF Fusion
+  -> Optional Rerank
+  -> Evidence Check
+  -> Citation Builder
+  -> Trace
+```
+
+Query variants are enhanced / expensive mode. They are not enabled by default
+for every query. The original query must always be preserved in the trace and
+included in the candidate set.
+
+## Native BM25 For Knowledge
+
+Native BM25 is the local lexical baseline. Elasticsearch can be an optional
+adapter, but it is not the BM25 algorithm itself.
+
+Target components:
+
+```text
+NativeBM25Index
+  tokenizer
+  inverted_index
+  term_freq
+  doc_freq
+  doc_len
+  avg_doc_len
+  idf
+
+NativeBM25Retriever
+  build(documents)
+  search(query, top_k)
+  explain_score(query, doc_id)
+```
+
+Formula:
+
+```text
+score(q,d) =
+Σ idf(t) * tf(t,d) * (k1 + 1)
+ / (tf(t,d) + k1 * (1 - b + b * |d| / avgdl))
+```
+
+Defaults:
+
+```text
+k1 = 1.2 ~ 1.5
+b = 0.75
+```
+
+## Deduplication
+
+Deduplication uses stable ids:
+
+- `chunk_id`
+- `document_id + span`
+- `graph_node_id`
+- `community_report_id`
+
+The same evidence may arrive from BM25, vector, graph, and community recall.
+It must be merged before fusion/rerank to avoid over-counting one source.
+
+## RRF Fusion
+
+RRF is the default coarse-rank fusion method:
+
+```text
+score(d) = Σ 1 / (k + rank_i(d))
+```
+
+Default:
+
+```text
+k = 60
+```
+
+RRF produces a fused candidate list across retrievers and query variants.
+Optional rerank may run after RRF. RRF is not a final answer verifier.
+
+## Evidence And Citation
+
+The answer path must output:
+
+- evidence bundle
+- citation ids and source spans
+- citation coverage
+- retrievers used
+- fusion trace
+- optional rerank trace
+- prompt version
+- query prompt version
+- index version
+- community version
+- latency
+- cost when available
+
+## Boundary With Agent Context
+
+Do not confuse:
+
+```text
+Agent Context
+GraphRAGProjectSnapshot
+Knowledge Evidence
+```
+
+`GraphRAGProjectSnapshot` is internal query configuration. Knowledge Evidence is
+what returns to the Agent. Agent Context is what the model sees after
+ContextOrchestrator selection.

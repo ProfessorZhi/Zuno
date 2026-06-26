@@ -68,13 +68,19 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - `.agent/programs/current.md`
 - `.agent/programs/zuno-target-runtime-v2/README.md`
 - `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
-- `.agent/programs/zuno-target-runtime-v2/implementation-phases/`
+- `.agent/programs/zuno-target-runtime-v2/current-phase.md`
+- `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
+- `docs/architecture/history/programs/zuno-target-runtime-v2/`
 - `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
 - `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
   as archived cleanup evidence, not active executable program material
-- `.agent/architecture/near-term/17-implementation-phase-map.md`
+- `.agent/architecture/near-term/01-target-runtime-architecture.md`
+- `.agent/architecture/near-term/02-context-memory-architecture.md`
+- `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
+- `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
+- `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
 Do not use the archived implementation phases to pull Java, microservices,
 event-driven workers, or default multi-agent mode into current acceptance.

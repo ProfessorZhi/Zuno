@@ -10,7 +10,7 @@ templates, or history changes.
 1. Read `AGENTS.md`.
 2. Read `docs/architecture/current-architecture.md`,
    `docs/architecture/target-architecture.md`, and `docs/architecture/roadmap.md`.
-3. Read `.agent/references/docs-map.md` and `.agent/references/workflow-map.md`.
+3. Read `.agent/references/docs-map.md` and `.agent/references/code-map.md`.
 4. Decide whether the change is Current, Target, Future, History, Agent-only,
    or Local.
 5. Put formal conclusions in `docs/`.

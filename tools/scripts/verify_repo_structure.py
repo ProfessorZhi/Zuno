@@ -14,7 +14,11 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     "docs/architecture/history/programs/zuno-target-architecture-migration-v1",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
-    ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
+    ".agent/architecture/near-term/01-target-runtime-architecture.md",
+    ".agent/architecture/near-term/02-context-memory-architecture.md",
+    ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
+    ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
+    ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
     ".agent/scripts/verify_agent_system.py",
     ".agent/scripts/verify_doc_boundaries.py",
     ".agent/scripts/verify_repo_hygiene.py",
@@ -33,6 +37,7 @@ REQUIRED_PATHS = [
     "docs/architecture/history/plans/README.md",
     "docs/architecture/history/programs/README.md",
     "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
+    "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
     "docs/architecture/history/programs/official-graphrag-cleanup-v1/README.md",
     "docs/architecture/history/development/README.md",
     "docs/architecture/history/reference/migration.md",
@@ -182,6 +187,9 @@ def verify_target_architecture_html() -> list[str]:
         errors.append("canonical target architecture HTML is not valid HTML")
     if not any(marker in html for marker in ["Target", "Proposed", "目标"]):
         errors.append("canonical target architecture HTML missing Target/Proposed marker")
+    for phrase in ["Native BM25", "RRF", "Summary Compression", "Structured Extraction", "ToolCard"]:
+        if phrase not in html:
+            errors.append(f"canonical target architecture HTML missing phrase: {phrase}")
     html_refs = [
         path for path in REPO_ROOT.glob(".agent/**/*.md")
         if "zuno-ideal-architecture-and-repo-layout.html" in path.read_text(encoding="utf-8")

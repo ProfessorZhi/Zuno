@@ -2,7 +2,7 @@
 
 Before changing `tools/evals/zuno`, read:
 
-1. `.agent/references/test-eval-map.md`
+1. `.agent/references/verification-map.md`
 2. `.agent/workflows/eval-change.md`
 
 Rules:

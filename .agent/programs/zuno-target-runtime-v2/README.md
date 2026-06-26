@@ -37,14 +37,29 @@ Out of scope for this first slice:
 ## Source References
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
-- `.agent/architecture/near-term/18-context-memory-ideal-architecture.md`
-- `.agent/architecture/near-term/19-repository-layout-and-module-boundaries.md`
+- `.agent/architecture/near-term/01-target-runtime-architecture.md`
+- `.agent/architecture/near-term/02-context-memory-architecture.md`
+- `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
+- `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
+- `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 - `docs/architecture/current-architecture.md`
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/roadmap.md`
 
+## Active Files
+
+- `README.md`
+- `implementation-roadmap.md`
+- `current-phase.md`
+- `closure-checklist.md`
+
+Detailed Phase 00-04 evidence and old phase files are archived under
+`docs/architecture/history/programs/zuno-target-runtime-v2/`.
+
 ## Verification Rule
 
 Each phase must run the smallest meaningful verification set and record the
-result under `evidence/` or the phase document. Do not use this program to
-promote Target behavior to Current unless current code and tests prove it.
+current result in the active phase or closure checklist. Bulky phase evidence
+belongs under `docs/architecture/history/programs/zuno-target-runtime-v2/`.
+Do not use this program to promote Target behavior to Current unless current
+code and tests prove it.

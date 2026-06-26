@@ -6,7 +6,7 @@ Use for changes under `src/backend/zuno`.
 
 ## Required Reading
 
-- `.agent/references/backend-map.md`
+- `.agent/references/code-map.md`
 - `.agent/references/runtime-call-chain.md`
 - relevant architecture files under `.agent/architecture/near-term/`
 
@@ -16,8 +16,8 @@ Use for changes under `src/backend/zuno`.
 - Application services own use cases.
 - Core/runtime does not depend backward on the API layer.
 - Public contract changes must sync DTOs, frontend types, and tests.
-- Retrieval, Agent, Memory, and GraphRAG changes require the matching reference
-  maps and architecture notes.
+- Retrieval, Agent, Memory, and GraphRAG changes require `code-map.md`,
+  `runtime-call-chain.md`, and the matching canonical architecture notes.
 
 ## Verification
 

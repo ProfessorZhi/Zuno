@@ -13,7 +13,11 @@ def test_required_current_paths_exist() -> None:
         ".agent/programs/current.md",
         "docs/architecture/history/programs/zuno-target-architecture-migration-v1",
         ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
-        ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
+        ".agent/architecture/near-term/01-target-runtime-architecture.md",
+        ".agent/architecture/near-term/02-context-memory-architecture.md",
+        ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
+        ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
+        ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
         "apps/desktop",
         "apps/web",
         "docs/architecture/current-architecture.md",
@@ -24,6 +28,7 @@ def test_required_current_paths_exist() -> None:
         "docs/architecture/history/programs/README.md",
         "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
         "docs/architecture/history/programs/official-graphrag-cleanup-v1/README.md",
+        "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
         "docs/architecture/history/development/README.md",
         "docs/architecture/history/reference/migration.md",
         "docs/evidence/public-demo.md",
@@ -178,6 +183,26 @@ def test_official_graphrag_cleanup_program_is_archived_out_of_active_programs() 
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "official-graphrag-cleanup-v1/" in history_index
     assert "zuno-target-architecture-migration-v1/" in history_index
+
+
+def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
+    active_files = sorted(
+        path.name
+        for path in (REPO_ROOT / ".agent" / "programs" / "zuno-target-runtime-v2").iterdir()
+        if path.is_file()
+    )
+
+    assert active_files == sorted(
+        ["README.md", "implementation-roadmap.md", "current-phase.md", "closure-checklist.md"]
+    )
+    assert not (
+        REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/implementation-phases"
+    ).exists()
+    assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/evidence").exists()
+    assert (
+        REPO_ROOT
+        / "docs/architecture/history/programs/zuno-target-runtime-v2/implementation-phases/README.md"
+    ).exists()
 
 
 def test_superseded_migration_specs_are_archived_out_of_active_specs() -> None:

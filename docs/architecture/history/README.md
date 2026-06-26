@@ -19,6 +19,16 @@ Current architecture readers should start from:
 - `phases/`: completed Phase 0-6 closure and older phase evidence.
 - `plans/`: superseded execution plans.
 - `programs/`: archived architecture programs and their evidence.
+- `near-term-architecture-fragments/`: former detailed near-term `.agent`
+  fragments replaced by the canonical five-file target set.
+- `future-architecture-fragments/`: former long-form future-direction `.agent`
+  fragments replaced by the slim future horizon note.
+- `agent-architecture-decision-fragments/`: former `.agent` decision fragments
+  replaced by the slim active decision index.
+- `agent-reference-fragments/`: former expanded `.agent/references/` maps,
+  retained as historical navigation context only.
+- `agent-lessons/`: former `.agent/lessons/` notes. Active reusable guidance is
+  now folded into `.agent/references/known-pitfalls.md` when still needed.
 - `reference/`: superseded reference migration notes retained as historical
   context, not front-path reference guidance.
 - `specs/`: superseded architecture specs that should remain reachable without

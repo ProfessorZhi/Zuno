@@ -142,6 +142,10 @@ def main() -> int:
                 "Phase 11C",
                 "Phase 12",
                 "src/backend/zuno",
+                "Summary Compression + Structured Extraction",
+                "ToolCard Registry",
+                "Native BM25",
+                "RRF",
             ],
         )
     )
@@ -169,6 +173,7 @@ def main() -> int:
                 "../evidence/public-demo.md",
                 "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
                 "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
+                "zuno-target-runtime-v2",
                 "history/phases/",
             ],
         )

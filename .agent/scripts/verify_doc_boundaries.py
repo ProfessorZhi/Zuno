@@ -26,6 +26,9 @@ REQUIRED_DOCS = [
 REQUIRED_AGENT_PROGRAMS = [
     "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
     ".agent/programs/current.md",
+    ".agent/programs/zuno-target-runtime-v2/current-phase.md",
+    ".agent/programs/zuno-target-runtime-v2/closure-checklist.md",
+    "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
     "docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
 ]
@@ -68,6 +71,17 @@ def main() -> int:
     current = _read("docs/architecture/current-architecture.md")
     if "Context Orchestrator and Post-turn Pipeline are Target, not Current" not in current:
         errors.append("current architecture must not promote Context Orchestrator to Current")
+
+    target = _read("docs/architecture/target-architecture.md")
+    for phrase in [
+        "Summary Compression + Structured Extraction",
+        "Native BM25",
+        "ToolCard",
+        "RRF",
+        "`auto` router",
+    ]:
+        if phrase not in target:
+            errors.append(f"target architecture missing canonical phrase: {phrase}")
 
     docs_front_path = ["README.md", "docs/README.md", "docs/architecture/README.md"]
     for relative_path in docs_front_path:

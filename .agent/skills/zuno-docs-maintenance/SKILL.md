@@ -4,4 +4,4 @@ description: Use for Zuno docs, AGENTS.md, .agent, references, workflows, skills
 ---
 
 Read `AGENTS.md`, `.agent/references/docs-map.md`,
-`.agent/references/workflow-map.md`, and `.agent/workflows/docs-maintenance.md`.
+`.agent/references/code-map.md`, and `.agent/workflows/docs-maintenance.md`.

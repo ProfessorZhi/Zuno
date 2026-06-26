@@ -48,12 +48,12 @@ def test_retired_legacy_paths_are_absent_and_classified() -> None:
     ]:
         assert (REPO_ROOT / relative_path).exists()
 
-    map_content = (
-        REPO_ROOT / ".agent" / "references" / "repo-hygiene-map.md"
+    pitfalls = (
+        REPO_ROOT / ".agent" / "references" / "known-pitfalls.md"
     ).read_text(encoding="utf-8")
-    assert "docs/architecture/history/domain-packs/root-contract-review/" in map_content
-    assert "`tests/compat/`: Retired" in map_content
-    assert "must not be restored as target repository layout" in map_content
+    assert "root `domain-packs/`" in pitfalls
+    assert "tests/compat" in pitfalls
+    assert "Do not restore" in pitfalls
 
 
 def test_repo_hygiene_verifier_preserves_full_contract_review_history() -> None:

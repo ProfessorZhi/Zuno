@@ -93,7 +93,7 @@ def verify_new_modules_do_not_add_vague_packages(errors: list[str]) -> None:
 
 
 def verify_knowledge_query_boundary(errors: list[str]) -> None:
-    audit_path = REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/evidence/module-boundary-audit.md"
+    audit_path = REPO_ROOT / "docs/architecture/history/programs/zuno-target-runtime-v2/evidence/module-boundary-audit.md"
     if not audit_path.exists():
         errors.append("module boundary audit is missing")
         return

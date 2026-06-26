@@ -29,7 +29,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
 
     for phrase in [
         "Phase 0-6 architecture closure remains complete historical truth.",
-        "There is no active executable Agent program",
+        ".agent/programs/zuno-target-runtime-v2/",
         "Bounded Legacy Compatibility",
     ]:
         assert phrase in readme

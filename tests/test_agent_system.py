@@ -9,25 +9,28 @@ def test_agent_system_required_paths_exist() -> None:
         "apps/web/AGENTS.md",
         "src/backend/zuno/AGENTS.md",
         "tools/evals/zuno/AGENTS.md",
-        ".agent/references/workflow-map.md",
-        ".agent/references/skills-map.md",
-        ".agent/references/local-state-map.md",
+        ".agent/references/code-map.md",
+        ".agent/references/verification-map.md",
         ".agent/workflows/docs-maintenance.md",
         ".agent/workflows/repo-hygiene.md",
         ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
-        ".agent/architecture/near-term/18-context-memory-ideal-architecture.md",
-        ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
+        ".agent/architecture/near-term/01-target-runtime-architecture.md",
+        ".agent/architecture/near-term/02-context-memory-architecture.md",
+        ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
+        ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
+        ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
         ".agent/scripts/verify_module_boundaries.py",
         ".agent/programs/zuno-target-runtime-v2/README.md",
         ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
-        ".agent/programs/zuno-target-runtime-v2/implementation-phases/README.md",
+        ".agent/programs/zuno-target-runtime-v2/current-phase.md",
+        ".agent/programs/zuno-target-runtime-v2/closure-checklist.md",
+        "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
         "docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md",
         "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
         "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md",
         "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
         ".agent/skills/zuno-docs-maintenance/SKILL.md",
         ".agent/skills/zuno-repo-hygiene/SKILL.md",
-        ".agent/lessons/README.md",
     ]
 
     for relative_path in required_paths:
@@ -46,6 +49,8 @@ def test_target_architecture_html_is_canonical_and_referenced() -> None:
     assert "<html" in html.lower()
     assert "Zuno" in html
     assert "Target" in html or "Proposed" in html or "目标" in html
+    for phrase in ["Native BM25", "RRF", "Summary Compression", "Structured Extraction", "ToolCard"]:
+        assert phrase in html
 
     tracked_html = [
         path.replace("\\", "/")
@@ -100,7 +105,6 @@ def test_agent_readme_documents_knowledge_promotion() -> None:
     required_phrases = [
         ".agent/workflows/",
         ".agent/skills/",
-        ".agent/lessons/",
         "Temporary discovery -> `.agent/local/notes/`",
         "Implemented, verified, human-facing facts -> `docs/`",
     ]
@@ -124,6 +128,47 @@ def test_current_program_points_to_active_v2_and_archives_old_candidate() -> Non
     assert "zuno-target-architecture-migration-v1/" in history_index
     assert "context-memory-agent-runtime-v1" not in programs_index
     assert "context-memory-agent-runtime-v1" in history_index
+
+
+def test_near_term_architecture_uses_canonical_five_doc_set() -> None:
+    files = sorted(
+        path.name
+        for path in (REPO_ROOT / ".agent" / "architecture" / "near-term").iterdir()
+        if path.is_file()
+    )
+
+    assert files == sorted(
+        [
+            "README.md",
+            "zuno-ideal-architecture-and-repo-layout.html",
+            "01-target-runtime-architecture.md",
+            "02-context-memory-architecture.md",
+            "03-capability-tool-retrieval-architecture.md",
+            "04-knowledge-graphrag-retrieval-fusion.md",
+            "05-repository-boundaries-and-acceptance-gates.md",
+        ]
+    )
+
+
+def test_agent_references_are_slim_navigation_set() -> None:
+    files = sorted(
+        path.name
+        for path in (REPO_ROOT / ".agent" / "references").iterdir()
+        if path.is_file()
+    )
+
+    assert files == sorted(
+        [
+            "README.md",
+            "current-program.md",
+            "docs-map.md",
+            "code-map.md",
+            "runtime-call-chain.md",
+            "verification-map.md",
+            "command-catalog.md",
+            "known-pitfalls.md",
+        ]
+    )
 
 
 def test_gitignore_allows_module_agents() -> None:
@@ -153,9 +198,5 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     verification_map = (
         REPO_ROOT / ".agent/references/verification-map.md"
     ).read_text(encoding="utf-8")
-    current_validation = (
-        REPO_ROOT / ".agent/references/current_architecture/validation.md"
-    ).read_text(encoding="utf-8")
 
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
-    assert ".agent/scripts/grep-domain-pack.ps1" in current_validation

@@ -11,17 +11,12 @@ REQUIRED_PATHS = [
     "src/backend/zuno/AGENTS.md",
     "tools/evals/zuno/AGENTS.md",
     ".agent/README.md",
-    ".agent/references/workflow-map.md",
-    ".agent/references/skills-map.md",
-    ".agent/references/local-state-map.md",
-    ".agent/references/frontend-map.md",
-    ".agent/references/backend-map.md",
-    ".agent/references/api-contract-map.md",
+    ".agent/references/README.md",
+    ".agent/references/code-map.md",
     ".agent/references/runtime-call-chain.md",
-    ".agent/references/test-eval-map.md",
-    ".agent/references/repo-hygiene-map.md",
-    ".agent/references/context-memory-map.md",
-    ".agent/references/graphrag-map.md",
+    ".agent/references/verification-map.md",
+    ".agent/references/docs-map.md",
+    ".agent/references/current-program.md",
     ".agent/references/command-catalog.md",
     ".agent/references/known-pitfalls.md",
     ".agent/scripts/verify_module_boundaries.py",
@@ -36,12 +31,17 @@ REQUIRED_PATHS = [
     ".agent/workflows/eval-change.md",
     ".agent/workflows/bugfix-root-cause.md",
     ".agent/workflows/task-closure.md",
-    ".agent/architecture/near-term/18-context-memory-ideal-architecture.md",
-    ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+    ".agent/architecture/near-term/01-target-runtime-architecture.md",
+    ".agent/architecture/near-term/02-context-memory-architecture.md",
+    ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
+    ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
+    ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
     ".agent/programs/zuno-target-runtime-v2/README.md",
     ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
-    ".agent/programs/zuno-target-runtime-v2/implementation-phases/README.md",
+    ".agent/programs/zuno-target-runtime-v2/current-phase.md",
+    ".agent/programs/zuno-target-runtime-v2/closure-checklist.md",
+    "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
     "docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md",
     "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
     "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md",
@@ -56,7 +56,6 @@ REQUIRED_PATHS = [
     ".agent/skills/zuno-api-contract-change/SKILL.md",
     ".agent/skills/zuno-architecture-refactor/SKILL.md",
     ".agent/skills/zuno-eval-change/SKILL.md",
-    ".agent/lessons/README.md",
 ]
 
 FORBIDDEN_PATHS = [
@@ -65,6 +64,8 @@ FORBIDDEN_PATHS = [
     ".agentmd",
     ".agents",
     ".agent/programs/context-memory-agent-runtime-v1",
+    ".agent/programs/zuno-target-runtime-v2/implementation-phases",
+    ".agent/programs/zuno-target-runtime-v2/evidence",
     ".agent/notes",
     ".agent/tmp",
     ".agent/logs",
@@ -103,6 +104,7 @@ def main() -> int:
         ".agent/skills/zuno-repo-hygiene/SKILL.md",
         ".agent/programs/zuno-target-runtime-v2/",
         "zuno-ideal-architecture-and-repo-layout.html",
+        "01-target-runtime-architecture.md",
     ]:
         if phrase not in agent_entry:
             errors.append(f"AGENTS.md missing routing phrase: {phrase}")
@@ -112,6 +114,16 @@ def main() -> int:
         errors.append("target architecture HTML is not valid HTML")
     if not any(marker in html for marker in ["Target", "Proposed", "目标"]):
         errors.append("target architecture HTML missing Target/Proposed marker")
+    for phrase in [
+        "Summary Compression",
+        "Structured Extraction",
+        "ToolCard",
+        "Native BM25",
+        "RRF",
+        "auto 是 router",
+    ]:
+        if phrase not in html:
+            errors.append(f"target architecture HTML missing canonical phrase: {phrase}")
 
     required_html_references = [
         "AGENTS.md",
@@ -129,12 +141,61 @@ def main() -> int:
     for phrase in [
         ".agent/workflows/",
         ".agent/skills/",
-        ".agent/lessons/",
         "Temporary discovery -> `.agent/local/notes/`",
         "Implemented, verified, human-facing facts -> `docs/`",
     ]:
         if phrase not in agent_readme:
             errors.append(f".agent/README.md missing system phrase: {phrase}")
+
+    near_term_files = sorted(
+        path.name
+        for path in (REPO_ROOT / ".agent/architecture/near-term").iterdir()
+        if path.is_file()
+    )
+    expected_near_term = sorted(
+        [
+            "README.md",
+            "zuno-ideal-architecture-and-repo-layout.html",
+            "01-target-runtime-architecture.md",
+            "02-context-memory-architecture.md",
+            "03-capability-tool-retrieval-architecture.md",
+            "04-knowledge-graphrag-retrieval-fusion.md",
+            "05-repository-boundaries-and-acceptance-gates.md",
+        ]
+    )
+    if near_term_files != expected_near_term:
+        errors.append(f"near-term architecture files are not canonical: {near_term_files}")
+
+    reference_files = sorted(
+        path.name
+        for path in (REPO_ROOT / ".agent/references").iterdir()
+        if path.is_file()
+    )
+    expected_references = sorted(
+        [
+            "README.md",
+            "current-program.md",
+            "docs-map.md",
+            "code-map.md",
+            "runtime-call-chain.md",
+            "verification-map.md",
+            "command-catalog.md",
+            "known-pitfalls.md",
+        ]
+    )
+    if reference_files != expected_references:
+        errors.append(f".agent/references files are not slim canonical set: {reference_files}")
+
+    active_program_files = sorted(
+        path.name
+        for path in (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").iterdir()
+        if path.is_file()
+    )
+    expected_program_files = sorted(
+        ["README.md", "implementation-roadmap.md", "current-phase.md", "closure-checklist.md"]
+    )
+    if active_program_files != expected_program_files:
+        errors.append(f"active V2 program files are not slim canonical set: {active_program_files}")
 
     if errors:
         for error in errors:

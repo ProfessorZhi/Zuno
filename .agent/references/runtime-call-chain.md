@@ -40,6 +40,14 @@ full product-level capability orchestration remains Phase 09/future closure.
 and commits a scoped memory raw event plus task summary after the turn when
 memory is enabled.
 
+Detailed target behavior belongs in:
+
+- `.agent/architecture/near-term/01-target-runtime-architecture.md`
+- `.agent/architecture/near-term/02-context-memory-architecture.md`
+- `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
+- `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
+- `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
+
 ## Known Limitations
 
 Root Domain Pack assets are archived under

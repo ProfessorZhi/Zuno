@@ -12,11 +12,19 @@ This is the formal architecture entrypoint for Zuno.
 
 ## Program Status
 
-There is no active executable Agent program after the target architecture
-migration closure. The completed program is archived under:
+The active executable Agent program is:
+
+- `.agent/programs/zuno-target-runtime-v2/`
+
+It follows the completed target architecture migration closure with controlled
+runtime and documentation phases. Completed detailed V2 Phase 00-04 files are
+archived under:
+
+- `docs/architecture/history/programs/zuno-target-runtime-v2/`
+
+The completed target architecture migration program is archived under:
 
 - `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
-- `.agent/architecture/near-term/`
 
 `docs/architecture/history/programs/official-graphrag-cleanup-v1/` preserves
 the completed 11A/11B/11C cleanup evidence as history. It is not an active
