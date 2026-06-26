@@ -63,7 +63,7 @@ def test_knowledge_create_request_accepts_knowledge_config_and_ignores_legacy_de
     assert "default_retrieval_mode" not in dumped
 
 
-def test_knowledge_config_prefers_graphrag_project_id_with_domain_pack_migration_input():
+def test_knowledge_config_prefers_graphrag_project_id_without_public_legacy_output():
     from zuno.api.services.knowledge import KnowledgeService
     from zuno.schema.knowledge import KnowledgeConfig
 
@@ -78,7 +78,7 @@ def test_knowledge_config_prefers_graphrag_project_id_with_domain_pack_migration
     normalized = KnowledgeService._normalize_knowledge_config(request_config)
 
     assert normalized["graphrag_project_id"] == "contract_review_project"
-    assert normalized["domain_pack_id"] == "contract_review_project"
+    assert "domain_pack_id" not in normalized
 
 
 def test_legacy_domain_pack_id_is_bounded_migration_input_for_project_id():
@@ -92,7 +92,7 @@ def test_legacy_domain_pack_id_is_bounded_migration_input_for_project_id():
     )
 
     assert normalized["graphrag_project_id"] == "contract_review"
-    assert normalized["domain_pack_id"] == "contract_review"
+    assert "domain_pack_id" not in normalized
 
 
 def test_create_knowledge_endpoint_passes_knowledge_config(monkeypatch):

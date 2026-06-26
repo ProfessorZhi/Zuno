@@ -20,7 +20,13 @@ Current status:
   `scope_policy.graphrag_project_id` to the current legacy graph storage
   filter field without a database schema or Neo4j property migration. The
   `src/backend/zuno/services/domain_pack/` runtime service package is retired
-  from current backend source.
+  from current backend source. Agent and Knowledge public DTOs now prefer
+  `graphrag_project_id`; legacy `domain_pack_id` is accepted only as migration
+  input and mapped to existing storage boundaries where required. Frontend
+  knowledge config patches no longer send `domain_pack_id`. A dry-run-first
+  Neo4j migration helper exists under `tools/migrations/` for backfilling
+  `graphrag_project_id` from legacy graph `domain_pack_id` properties, but the
+  graph storage migration has not been applied.
 - Phase 11A and Phase 11B from `official-graphrag-cleanup-v1` are complete.
 - Phase 11C remains blocked by remaining migration compatibility dependencies
   in root `tests/`. The former `tests/compat/` holding area is retired. Root

@@ -36,10 +36,13 @@ def test_phase4_docs_and_frontend_contract_expose_knowledge_config_v2() -> None:
     ]:
         assert phrase in phase_doc
 
-    for phrase in ["domain_pack_id", "eval_profile_id", "profile", "graph_index_settings"]:
+    for phrase in ["eval_profile_id", "profile", "graph_index_settings"]:
         assert phrase in api_contract
         assert phrase in utils_contract
         assert phrase in backend_schema
+    assert "domain_pack_id:" not in api_contract
+    assert "domain_pack_id?:" not in api_contract
+    assert "domain_pack_id: config.domain_pack_id" not in utils_contract
 
 
 def test_phase4_runtime_preserves_domain_pack_id_without_loading_pack(monkeypatch) -> None:
@@ -63,7 +66,8 @@ def test_phase4_runtime_preserves_domain_pack_id_without_loading_pack(monkeypatc
     runtime = asyncio.run(KnowledgeService.get_runtime_settings("kb_phase4"))
 
     assert runtime["domain_pack_id"] == "contract_review"
-    assert runtime["domain_pack"] is None
+    assert "domain_pack" not in runtime
+    assert runtime["project_payload"] is None
     assert runtime["knowledge_config"]["graphrag_project_id"] == "contract_review"
     assert runtime["knowledge_config"]["retrieval_settings"]["profile"] == "auto"
     assert runtime["knowledge_config"]["eval_profile_id"] is None

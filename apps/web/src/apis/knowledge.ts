@@ -22,7 +22,6 @@ export interface GraphRAGProjectPayload {
 export interface KnowledgeConfigPayload {
   index_capability: 'rag' | 'rag_graph'
   graphrag_project_id: string | null
-  domain_pack_id: string | null
   graphrag_project: GraphRAGProjectPayload | null
   eval_profile_id: string | null
   model_refs: {
@@ -73,7 +72,6 @@ export interface KnowledgeConfigPayload {
 export interface KnowledgeConfigPatchPayload {
   index_capability?: KnowledgeConfigPayload['index_capability']
   graphrag_project_id?: string | null
-  domain_pack_id?: string | null
   graphrag_project?: Partial<GraphRAGProjectPayload> | null
   eval_profile_id?: string | null
   model_refs?: Partial<KnowledgeConfigPayload['model_refs']>

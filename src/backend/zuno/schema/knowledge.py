@@ -1,8 +1,16 @@
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from zuno.services.graphrag.models import GraphRAGProjectContract
+
+
+def _with_legacy_project_id(data: Any) -> Any:
+    if isinstance(data, dict) and not data.get("graphrag_project_id") and data.get("domain_pack_id"):
+        next_data = dict(data)
+        next_data["graphrag_project_id"] = next_data.get("domain_pack_id")
+        return next_data
+    return data
 
 
 class KnowledgeModelRefs(BaseModel):
@@ -110,7 +118,6 @@ class KnowledgeRetrievalSettingsPatch(BaseModel):
 class KnowledgeConfig(BaseModel):
     index_capability: str = Field(default="rag", pattern="^(rag|rag_graph)$")
     graphrag_project_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
-    domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     graphrag_project: Optional[GraphRAGProjectContract] = Field(default=None)
     eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: KnowledgeModelRefs = Field(default_factory=KnowledgeModelRefs)
@@ -118,17 +125,26 @@ class KnowledgeConfig(BaseModel):
     graph_index_settings: KnowledgeGraphIndexSettings = Field(default_factory=KnowledgeGraphIndexSettings)
     retrieval_settings: KnowledgeRetrievalSettings = Field(default_factory=KnowledgeRetrievalSettings)
 
+    @model_validator(mode="before")
+    @classmethod
+    def accept_legacy_domain_pack_id(cls, data: Any) -> Any:
+        return _with_legacy_project_id(data)
+
 
 class KnowledgeConfigPatch(BaseModel):
     index_capability: Optional[str] = Field(default=None, pattern="^(rag|rag_graph)$")
     graphrag_project_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
-    domain_pack_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     graphrag_project: Optional[GraphRAGProjectContract] = Field(default=None)
     eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: Optional[KnowledgeModelRefsPatch] = Field(default=None)
     index_settings: Optional[KnowledgeIndexSettingsPatch] = Field(default=None)
     graph_index_settings: Optional[KnowledgeGraphIndexSettingsPatch] = Field(default=None)
     retrieval_settings: Optional[KnowledgeRetrievalSettingsPatch] = Field(default=None)
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_legacy_domain_pack_id(cls, data: Any) -> Any:
+        return _with_legacy_project_id(data)
 
 
 class KnowledgeCreateRequest(BaseModel):

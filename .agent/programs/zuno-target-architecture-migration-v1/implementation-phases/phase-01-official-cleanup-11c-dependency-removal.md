@@ -156,6 +156,40 @@ Removed from the active current path:
   `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
   longer copies or mounts `/app/domain-packs`.
 
+## 2026-06-26 Progress
+
+Public contract cleanup started:
+
+- Agent create/update DTOs now expose `graphrag_project_id` as the public
+  project field. Legacy `domain_pack_id` is accepted only as migration input
+  and is mapped to the existing Agent database column inside
+  `AgentService`.
+- Knowledge config DTOs now accept legacy `domain_pack_id` as migration input,
+  but normalized public knowledge config output no longer re-emits
+  `domain_pack_id`.
+- Frontend knowledge API/config types no longer include `domain_pack_id` in
+  the target payload or patch contract. `normalizeKnowledgeConfig` still reads
+  old `domain_pack_id` input for migration compatibility, but
+  `toKnowledgeConfigPatch` no longer sends it.
+- A non-destructive Neo4j migration helper was added at
+  `tools/migrations/migrate_domain_pack_id_to_graphrag_project_id.py`. It
+  defaults to dry-run counts and requires explicit `--apply` to backfill
+  `graphrag_project_id` from legacy `domain_pack_id` on graph nodes and
+  relations.
+- `tests/test_domain_pack_api_skeleton.py` was renamed to
+  `tests/test_phase11c_domain_pack_api_retirement.py` so the test name matches
+  the current retirement guard role instead of implying an active API skeleton.
+
+Still blocked:
+
+- Neo4j graph storage still uses `domain_pack_id` as the existing persisted
+  property and filter field. Full removal requires an approved graph backfill
+  and runtime migration from compatibility dual-read/write to
+  `graphrag_project_id`-only behavior.
+- Root tests still contain migration compatibility coverage for graph storage,
+  eval extractive answers, and older internal route names. These must be
+  reduced in later Phase 01/03 slices rather than deleted for grep cleanup.
+
 Still retained as Blocked Legacy:
 
 - remaining Domain Pack-era migration compatibility tests under root `tests/`

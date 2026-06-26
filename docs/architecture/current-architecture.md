@@ -73,9 +73,9 @@ has also been retired from current backend source.
 `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
 the `zuno.core` or `zuno.core.graphs` public package surfaces.
 
-The old `AgentConfig` public shape still exists, including migration fields
-such as `domain_pack_id`; that is current compatibility surface, not target
-architecture.
+Agent and Knowledge public DTOs now prefer `graphrag_project_id`. Legacy
+`domain_pack_id` is accepted only as migration input and mapped to existing
+storage boundaries where required; it is not the target public field.
 
 `KnowledgeService.get_runtime_settings` now preserves `domain_pack_id` without
 auto-loading `DomainPackLoader` from that field. It emits GraphRAG Project
@@ -90,9 +90,11 @@ where existing contracts require it.
 copy under `examples/graphrag-projects/contract_review/`.
 `GraphRetrieverAdapter` maps `scope_policy.graphrag_project_id` to the current
 legacy Neo4j storage filter field, `domain_pack_id`, so GraphRAG Project scope
-can query the existing graph store without a database schema or property-name
-migration. Explicit legacy `domain_pack_id` remains a compatibility override,
-not the target API shape.
+can query the existing graph store until the graph store migration is applied.
+A dry-run-first migration helper exists under `tools/migrations/` to backfill
+`graphrag_project_id` from legacy graph properties, but the migration has not
+been applied. Explicit legacy `domain_pack_id` remains a storage/migration
+boundary, not the target API shape.
 
 Stackless local eval and the dedicated Contract Review eval can build their
 Contract Review graph/eval payloads from GraphRAG Project assets. The dedicated

@@ -12,7 +12,6 @@ from zuno.utils.file_utils import format_file_size
 DEFAULT_KNOWLEDGE_CONFIG = {
     "index_capability": "rag",
     "graphrag_project_id": None,
-    "domain_pack_id": None,
     "graphrag_project": None,
     "eval_profile_id": None,
     "model_refs": {
@@ -342,7 +341,7 @@ class KnowledgeService:
         project = dict(config.get("graphrag_project") or {})
         project_id = config.get("graphrag_project_id") or project.get("graphrag_project_id") or config.get("domain_pack_id")
         config["graphrag_project_id"] = project_id
-        config["domain_pack_id"] = project_id
+        config.pop("domain_pack_id", None)
         if project_id:
             project.setdefault("settings_path", None)
             project.setdefault("prompt_version", "default")
@@ -549,7 +548,7 @@ class KnowledgeService:
         if local_runtime:
             runtime = dict(local_runtime)
             config = cls._normalize_knowledge_config(runtime.get("knowledge_config"))
-            domain_pack_id = runtime.get("domain_pack_id") or config.get("domain_pack_id")
+            domain_pack_id = runtime.get("domain_pack_id") or config.get("graphrag_project_id")
             project_payload = runtime.get("project_payload") or runtime.get("domain_pack")
             config = cls._apply_project_payload_defaults(config, project_payload)
             runtime["knowledge_id"] = knowledge_id
@@ -564,7 +563,7 @@ class KnowledgeService:
         payload = await cls.get_knowledge_payload(knowledge_id)
         config = payload["knowledge_config"]
         model_refs = config.get("model_refs", {})
-        domain_pack_id = config.get("domain_pack_id")
+        domain_pack_id = config.get("graphrag_project_id")
         project_payload = None
         config = cls._apply_project_payload_defaults(config, project_payload)
 

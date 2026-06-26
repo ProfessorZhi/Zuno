@@ -37,7 +37,11 @@ migration stages.
   `project_payload`, while legacy `domain_pack` payload input remains only as
   a migration fallback. `GraphRetriever` no longer loads retrieval policy from
   a bare `domain_pack_id`; explicit `query_policy` now carries the
-  GraphRAG Project policy data. Stackless local eval and the dedicated
+  GraphRAG Project policy data. Agent and Knowledge public DTOs now prefer
+  `graphrag_project_id`, and frontend knowledge config patches no longer send
+  `domain_pack_id`; old `domain_pack_id` input is migration compatibility only.
+  A dry-run-first Neo4j graph backfill helper exists, but the graph property
+  migration has not been applied. Stackless local eval and the dedicated
   Contract Review eval can build from GraphRAG Project assets without loading
   `DomainPackLoader`. Root Phase 11C tests now guard retired runtime imports
   for `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, legacy

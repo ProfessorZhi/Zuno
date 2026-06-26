@@ -17,7 +17,6 @@ def _config(default_mode="rag", graphrag_project_id=None, domain_pack_id=None):
     return {
         "index_capability": "rag_graph" if default_mode == "rag_graph" else "rag",
         "graphrag_project_id": project_id,
-        "domain_pack_id": domain_pack_id,
         "graphrag_project": (
             {
                 "graphrag_project_id": project_id,
@@ -124,7 +123,7 @@ def test_product_wiring_knowledge_config_endpoints_delegate_to_service(monkeypat
     assert put_response.status_code == 200
     assert captured["update"][0] == "kb_1"
     assert captured["update"][3]["graphrag_project_id"] == "contract_review"
-    assert captured["update"][3]["domain_pack_id"] is None
+    assert "domain_pack_id" not in captured["update"][3]
 
 
 def test_product_wiring_knowledge_create_returns_created_knowledge_with_config(monkeypatch):
@@ -163,7 +162,7 @@ def test_product_wiring_knowledge_create_returns_created_knowledge_with_config(m
     assert captured["create"][2] == "u_test"
     assert captured["create"][3]["graphrag_project_id"] == "contract_review"
     assert captured["create"][3]["retrieval_settings"]["default_mode"] == "rag_graph"
-    assert captured["create"][3]["domain_pack_id"] is None
+    assert "domain_pack_id" not in captured["create"][3]
 
 
 def test_product_wiring_frontend_pages_use_real_api_contracts():
@@ -190,6 +189,8 @@ def test_product_wiring_frontend_pages_use_real_api_contracts():
     assert "toProductKnowledgeConfig" in create_page
     assert "workspaceSettingsKnowledgeFile" in create_page
     assert "graphrag_project_id" in knowledge_api
+    assert "domain_pack_id:" not in knowledge_api
+    assert "domain_pack_id?:" not in knowledge_api
     assert "GraphRAGProjectPayload" in knowledge_api
     assert "graphrag_project" in knowledge_api
     assert "query_method: 'auto' | 'basic' | 'local' | 'global' | 'drift'" in knowledge_api
@@ -197,6 +198,8 @@ def test_product_wiring_frontend_pages_use_real_api_contracts():
     assert "pipeline_trace?" in knowledge_api
     assert "citation_coverage?" in knowledge_api
     assert "graphrag_project_id" in knowledge_config_utils
+    assert "domain_pack_id: config.domain_pack_id" not in knowledge_config_utils
+    assert "changedQueryFields.push('domain_pack_id')" not in knowledge_config_utils
     assert "config.retrieval_settings.default_mode = 'rag_graph'" in knowledge_config_utils
     for frontend_surface in [knowledge_api, retrieval_utils, knowledge_config_utils, create_page, settings_page]:
         assert "rag_graph_deep" not in frontend_surface

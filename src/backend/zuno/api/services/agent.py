@@ -37,6 +37,22 @@ class AgentService:
             )
         ]
 
+    @staticmethod
+    def _agent_request_to_db_values(req: AgentCreateReq) -> dict:
+        values = req.model_dump()
+        graphrag_project_id = values.pop("graphrag_project_id", None)
+        if graphrag_project_id:
+            values["domain_pack_id"] = graphrag_project_id
+        return values
+
+    @staticmethod
+    def _agent_update_to_db_values(update_values: dict) -> dict:
+        values = dict(update_values)
+        graphrag_project_id = values.pop("graphrag_project_id", None)
+        if graphrag_project_id is not None:
+            values["domain_pack_id"] = graphrag_project_id
+        return values
+
     @classmethod
     async def _check_permission(cls, agent_id: str, user_id: str):
         if user_id == AdminUser:
@@ -47,7 +63,7 @@ class AgentService:
 
     @classmethod
     async def create_agent(cls, login_user, req: AgentCreateReq):
-        agent = AgentTable(**req.model_dump(), user_id=login_user.user_id)
+        agent = AgentTable(**cls._agent_request_to_db_values(req), user_id=login_user.user_id)
         return await AgentDao.create_agent(agent)
 
     @classmethod
@@ -55,7 +71,10 @@ class AgentService:
         await cls._check_permission(agent_id, user_id)
         if not update_values:
             return
-        await AgentDao.update_agent_by_id(agent_id=agent_id, update_values=update_values)
+        await AgentDao.update_agent_by_id(
+            agent_id=agent_id,
+            update_values=cls._agent_update_to_db_values(update_values),
+        )
 
     @classmethod
     async def delete_agent_by_id(cls, id: str):

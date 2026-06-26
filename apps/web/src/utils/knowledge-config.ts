@@ -15,6 +15,9 @@ export type KnowledgeImageStrategy = 'text_only' | 'vl_only' | 'dual'
 export type KnowledgeVectorBackend = 'milvus' | 'chroma' | 'milvus_lite'
 export type KnowledgeRefillPolicy = 'none' | 'auto' | 'smart'
 export type KnowledgeProductMode = 'standard' | 'enhanced'
+type LegacyKnowledgeConfigInput = Partial<KnowledgeConfigPayload> & {
+  domain_pack_id?: string | null
+}
 
 export interface KnowledgeModelBinding {
   llm_id: string
@@ -135,7 +138,6 @@ export const refillPolicyOptions = [
 const defaultConfig = (): KnowledgeConfigPayload => ({
   index_capability: 'rag',
   graphrag_project_id: null,
-  domain_pack_id: null,
   graphrag_project: null,
   eval_profile_id: null,
   model_refs: {
@@ -212,7 +214,7 @@ const normalizeIndexCapability = (
 export const createDefaultKnowledgeConfig = defaultConfig
 
 export const normalizeKnowledgeConfig = (
-  config?: Partial<KnowledgeConfigPayload> | null,
+  config?: LegacyKnowledgeConfigInput | null,
 ): KnowledgeConfigPayload => {
   const base = defaultConfig()
   const graphragProjectId = config?.graphrag_project_id ?? config?.domain_pack_id ?? base.graphrag_project_id
@@ -229,7 +231,6 @@ export const normalizeKnowledgeConfig = (
       config?.retrieval_settings?.default_mode,
     ),
     graphrag_project_id: graphragProjectId,
-    domain_pack_id: config?.domain_pack_id ?? null,
     graphrag_project: graphragProject,
     eval_profile_id: config?.eval_profile_id ?? base.eval_profile_id,
     model_refs: {
@@ -259,7 +260,6 @@ export const normalizeKnowledgeConfig = (
 export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): KnowledgeConfigPatchPayload => ({
   index_capability: config.index_capability,
   graphrag_project_id: config.graphrag_project_id,
-  domain_pack_id: config.domain_pack_id,
   graphrag_project: config.graphrag_project ? { ...config.graphrag_project } : null,
   eval_profile_id: config.eval_profile_id,
   model_refs: { ...config.model_refs },
@@ -284,7 +284,6 @@ export const toProductKnowledgeConfig = (
   config.index_capability = 'rag'
   config.retrieval_settings.default_mode = 'rag'
   config.graphrag_project_id = null
-  config.domain_pack_id = null
   config.graphrag_project = null
   config.graph_index_settings.graph_index_status = 'not_built'
   config.graph_index_settings.community_detection_status = 'not_built'
@@ -440,9 +439,6 @@ export const detectReindexImpact = (
   }
   if (previous.graphrag_project_id !== next.graphrag_project_id) {
     changedQueryFields.push('graphrag_project_id')
-  }
-  if (previous.domain_pack_id !== next.domain_pack_id) {
-    changedQueryFields.push('domain_pack_id')
   }
   if (previous.eval_profile_id !== next.eval_profile_id) {
     changedQueryFields.push('eval_profile_id')
