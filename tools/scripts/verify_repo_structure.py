@@ -98,7 +98,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "./docs/architecture/target-architecture.md",
         "./docs/architecture/roadmap.md",
         "./docs/evidence/public-demo.md",
-        "Blocked Legacy",
+        "Bounded Legacy Compatibility",
         "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
     ],
     "docs/README.md": [
@@ -122,7 +122,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "Phase 11B: complete",
         "Phase 11C: active runtime cleanup complete",
         "Phase 12: closed through the target migration closure evidence",
-        "Blocked Legacy",
+        "Bounded Legacy Compatibility",
         "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
         "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
     ],

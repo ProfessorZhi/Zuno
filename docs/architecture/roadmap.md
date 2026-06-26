@@ -74,10 +74,10 @@ Context Memory Agent Runtime V1 is the next candidate / design-ready program.
 It is not active Current implementation. Phase 00 must wait for 11C/12 closure
 or explicitly re-verify dependencies before implementation starts.
 
-## Blocked Legacy
+## Bounded Legacy Compatibility
 
-These surfaces are confirmed legacy directionally, but still current or blocked
-by active dependencies:
+These surfaces are confirmed legacy directionally and retained only as bounded
+migration compatibility:
 
 - remaining `domain_pack_id` references are bounded migration aliases,
   existing Agent database-column compatibility, eval CLI compatibility, and

@@ -29,8 +29,8 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
 
     for phrase in [
         "Phase 0-6 architecture closure remains complete historical truth.",
-        "official GraphRAG alignment program",
-        "Blocked Legacy",
+        "There is no active executable Agent program",
+        "Bounded Legacy Compatibility",
     ]:
         assert phrase in readme
 
@@ -40,7 +40,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "Phase 11C: active runtime cleanup complete",
         "Phase 12: closed through the target migration closure evidence",
         "Phase 01 through Phase 10 are complete.",
-        "Blocked Legacy",
+        "Bounded Legacy Compatibility",
     ]:
         assert phrase in roadmap
 

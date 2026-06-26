@@ -143,9 +143,11 @@ Retired evidence is kept for verification, not active source:
   `MultiAgentSupervisorGraph`, `AgentRuntime`, legacy graph states, and Domain
   Pack runtime service imports
 
-These surfaces are not the future front-path architecture, but remaining compat
-tests and migration fields still require explicit replacement or retirement
-proof before final Phase 09 grep closure.
+These surfaces are not the future front-path architecture. Remaining
+`domain_pack_id` references are bounded migration aliases, existing
+database-column compatibility, eval CLI compatibility, and retirement/history
+tests. Neo4j legacy graph data backfill is an operational migration helper /
+live data step, not active code debt.
 
 ## Not Current
 
@@ -172,9 +174,10 @@ production-grade memory extraction/retrieval/consolidation, Context
 Orchestrator, product-level dynamic capability orchestration, or the full
 Post-turn Pipeline as current behavior until code and tests prove them.
 
-Phase 12 is partial / not closed. The repository has focused tests for recent
-changes, but final full `pytest` and formal Eval baseline comparison have not
-been completed.
+Phase 12 closure evidence is complete. The target migration closure evidence
+records full pytest, formal Contract Review eval, stackless eval baseline
+comparison, trace metadata, legacy grep classification, and docs/evidence sync
+as complete.
 
 ## Historical Completion Truth
 

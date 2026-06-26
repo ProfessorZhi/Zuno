@@ -12,8 +12,9 @@ Current:
 - `apps/desktop` is the Electron desktop workspace.
 - `src/backend/zuno` is the only active Python backend runtime boundary.
 - Phase 0-6 architecture closure remains complete historical truth.
-- The active executable program is Target Architecture Migration V1, which
-  continues the unfinished official GraphRAG alignment program gates.
+- Target Architecture Migration V1 is closed and archived.
+- There is no active executable Agent program after the target architecture
+  migration closure.
 - Phase 11A is complete: `KnowledgeQueryService`, `GraphRAGQueryService`,
   `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult` exist in the current
   runtime.
@@ -33,12 +34,12 @@ Target:
 - Keep Java services, microservices, event workers, product-level multi-agent
   mode, and Coding Agent direction as future direction only.
 
-Phase 11C progress / Blocked Legacy:
+Phase 11C closure / Bounded Legacy Compatibility:
 
-- Phase 11C has started, but remains blocked. `/api/v1/domain-packs` is no
-  longer mounted on the current FastAPI router, and the active Vue knowledge
-  routes/pages no longer open the Domain Pack builder/list/detail flow. The
-  old frontend Domain Pack API/page files have also been retired from
+- Phase 11C active runtime cleanup is complete. `/api/v1/domain-packs` is no
+  longer mounted on the current FastAPI router, the active Vue knowledge
+  routes/pages no longer open the Domain Pack builder/list/detail flow, and
+  the old frontend Domain Pack API/page files have been retired from
   `apps/web/src/`.
 - Workspace knowledge prefetch/tools now use `KnowledgeQueryService`; the
   `/knowledge/search` API service path also uses `KnowledgeQueryService`
@@ -67,16 +68,21 @@ Phase 11C progress / Blocked Legacy:
   retired from current backend source.
 - Root `domain-packs/` assets have been archived under
   `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
-  longer copies or mounts `/app/domain-packs`. Remaining blockers still exist
-  in root `tests/` migration compatibility coverage. The former `tests/compat/`
-  holding area is retired. Root Phase 11C tests guard the retired
+  longer copies or mounts `/app/domain-packs`. Remaining `domain_pack_id`
+  references are bounded migration aliases, existing database-column
+  compatibility, eval CLI compatibility, and retirement/history tests. The
+  former `tests/compat/` holding area is retired. Root Phase 11C tests guard
+  the retired
   `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, and Domain Pack
   runtime service imports. The old Domain Pack backend endpoint/API-service
   wrappers are retired.
-- These surfaces are not the future public mainline, but they must not be
-  deleted before active dependency removal is proven.
-- Phase 12 is partial / not closed: final full `pytest` and formal Eval
-  baseline comparison are not complete.
+- These surfaces are not the future public mainline, but compatibility fields
+  are retained only where existing storage, eval, or retirement evidence still
+  requires them. Neo4j legacy graph data backfill is an operational migration
+  helper / live data step, not active code debt.
+- Phase 12 closure evidence is complete: full pytest, formal Contract Review
+  eval, stackless eval baseline comparison, trace metadata, legacy grep
+  classification, and docs/evidence sync are complete.
 
 ## Default Reading Path
 

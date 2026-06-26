@@ -136,7 +136,7 @@ def test_readme_mentions_current_backend_start_and_focused_verification() -> Non
         "pytest -q tests/test_repo_structure_consistency.py",
         "pytest -q tests/test_publish_boundary.py",
         "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
-        "Blocked Legacy",
+        "Bounded Legacy Compatibility",
         "docs/architecture/history/domain-packs/root-contract-review/",
         "Phase 11A",
         "Phase 11B",
