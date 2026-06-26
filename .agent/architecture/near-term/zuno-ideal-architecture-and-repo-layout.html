@@ -17,7 +17,7 @@
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0;color:var(--text);line-height:1.66;overflow-x:auto;
+  margin:0;color:var(--text);line-height:1.66;overflow-x:hidden;
   font-family:"Inter","IBM Plex Sans","Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   font-size:15.5px;background:
     linear-gradient(180deg,#eef4fb 0,#f7f9fc 320px,#f4f7fb 100%);
@@ -86,6 +86,34 @@ button{font:inherit}
 .metric.purple{color:#6d4acb}.metric.red{color:#c8354a}
 .diagram{max-width:100%;overflow:auto;padding:18px;border:1px solid var(--line);border-radius:8px;background:#f8fafc}
 .flow{min-width:1090px;max-width:1410px;margin:auto}
+.runtime-map{width:100%;min-width:1120px;display:grid;gap:14px;margin:0}
+.runtime-row{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:stretch}
+.runtime-label{
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  border:1px solid #cbd8e8;border-radius:8px;background:#edf5ff;color:#1f5faa;
+  font-weight:850;padding:10px
+}
+.runtime-lane{
+  display:grid;gap:12px;border:1px solid var(--line);border-radius:8px;
+  background:#fff;padding:12px
+}
+.runtime-lane.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.runtime-lane.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.runtime-lane.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.runtime-node{
+  min-width:0;border:1px solid #c8d8eb;border-radius:8px;background:#fff;
+  padding:12px;box-shadow:0 6px 18px rgba(31,44,71,.05)
+}
+.runtime-node strong{display:block;color:var(--ink);margin-bottom:5px}
+.runtime-node small{display:block;color:var(--muted);line-height:1.55}
+.runtime-node.primary{border-color:#8cb9ef;background:#f3f8ff}
+.runtime-node.agent{border-color:#c6b7f3;background:#fbf8ff}
+.runtime-node.knowledge{border-color:#9bd8b5;background:#f6fff9}
+.runtime-node.async{border-color:#efc680;background:#fffaf0}
+.runtime-node.infra{border-color:#bfd0e2;background:#f8fafc}
+.runtime-arrow{font-size:22px;color:#7b91aa;text-align:center;line-height:1}
+.runtime-branch{display:grid;grid-template-columns:1.25fr .9fr;gap:14px}
+.runtime-caption{color:#64748b;font-size:13px;margin-top:4px}
 .row{display:flex;gap:13px;justify-content:center;align-items:stretch}
 .box{
   flex:1;min-width:185px;max-width:325px;padding:14px;
@@ -333,88 +361,105 @@ node_modules/  .codex/  .pytest_cache/  .test-tmp/  apps/web/dist/  __pycache__/
   <div class="section">
     <h2>目标运行架构图</h2>
     <div class="diagram">
-      <div class="flow">
-        <div class="layer-row">
-          <div class="side-label">产品</div>
-          <div class="arch-layer">
-            <div class="row">
-              <div class="box green wide"><strong>Vue Web</strong><small>Chat、Knowledge、GraphRAG Project、Capabilities、Memory、Trace/Eval</small></div>
-              <div class="box green wide"><strong>Electron</strong><small>本地桌面壳、文件与系统能力、后续 Workspace</small></div>
+      <div class="runtime-map">
+        <div class="runtime-row">
+          <div class="runtime-label">Client Surface</div>
+          <div class="runtime-lane cols-2">
+            <div class="runtime-node primary"><strong>Vue Web</strong><small>Chat、Knowledge、GraphRAG Project、Capability、Memory、Trace/Eval 交互面。</small></div>
+            <div class="runtime-node primary"><strong>Electron Shell</strong><small>本地桌面壳、文件/系统能力入口；后续 Workspace 能力从这里进入。</small></div>
+          </div>
+        </div>
+
+        <div class="runtime-arrow">↓ HTTP / SSE / typed DTO</div>
+
+        <div class="runtime-row">
+          <div class="runtime-label">Transport Boundary</div>
+          <div class="runtime-lane cols-3">
+            <div class="runtime-node"><strong>FastAPI Routes</strong><small>Auth、validation、request/trace id、SSE stream、error mapping。</small></div>
+            <div class="runtime-node"><strong>API DTO / Contract</strong><small>前端只绑定公开 request/response，不依赖内部 Agent 或 Retrieval 对象。</small></div>
+            <div class="runtime-node"><strong>Dependency Injection</strong><small>装配 Application Service、settings、auth context 和 request scope。</small></div>
+          </div>
+        </div>
+
+        <div class="runtime-arrow">↓ route calls exactly one use case</div>
+
+        <div class="runtime-row">
+          <div class="runtime-label">Application Layer</div>
+          <div class="runtime-lane cols-4">
+            <div class="runtime-node primary"><strong>ChatService</strong><small>创建/恢复会话，调用唯一 GeneralAgent，保存 stream 与事件。</small></div>
+            <div class="runtime-node primary"><strong>KnowledgeQueryService</strong><small>统一 Basic / Local / Global / DRIFT 查询入口，返回 evidence/citation/trace。</small></div>
+            <div class="runtime-node primary"><strong>IndexService</strong><small>项目、文档、索引版本和异步 job 编排。</small></div>
+            <div class="runtime-node primary"><strong>Project / Memory / Capability Use Cases</strong><small>项目配置、记忆治理、能力目录和权限策略。</small></div>
+          </div>
+        </div>
+
+        <div class="runtime-arrow">↓ chat path enters one runtime</div>
+
+        <div class="runtime-row">
+          <div class="runtime-label">Agent Runtime</div>
+          <div class="runtime-lane">
+            <div class="runtime-node agent"><strong>Single GeneralAgent</strong><small>唯一会话运行时。LangGraph 负责 state、checkpoint、interrupt、resume、stream；LangChain 提供 model / message / tool / structured output 抽象。</small></div>
+            <div class="runtime-lane cols-4">
+              <div class="runtime-node agent"><strong>Context Orchestrator</strong><small>每次模型调用前构造 ModelContextPacket：instructions、thread、task、memory、knowledge evidence。</small></div>
+              <div class="runtime-node agent"><strong>Memory & State Engine</strong><small>Raw events、thread checkpoint、task summary、long-term memory candidates。</small></div>
+              <div class="runtime-node agent"><strong>Capability Registry</strong><small>按 task/context 选择 tools、MCP、skills、knowledge capability 和权限。</small></div>
+              <div class="runtime-node agent"><strong>LLM Adapter</strong><small>Provider/model routing、structured output、usage、latency、cost metadata。</small></div>
             </div>
           </div>
         </div>
-        <div class="arrow">↓ HTTP / SSE</div>
-        <div class="layer-row">
-          <div class="side-label">接口</div>
-          <div class="arch-layer">
-            <div class="row">
-              <div class="box"><strong>FastAPI Interface</strong><small>Auth、DTO、Validation、Request/Trace ID、Error Mapping</small></div>
-              <div class="box"><strong>Application Services</strong><small>Chat、Knowledge Query、Index、Project、Memory、Capability Use Cases</small></div>
+
+        <div class="runtime-arrow">↓ selected capability / tool call</div>
+
+        <div class="runtime-branch">
+          <div class="runtime-row">
+            <div class="runtime-label">Knowledge Capability</div>
+            <div class="runtime-lane">
+              <div class="runtime-node knowledge"><strong>search_knowledge_base tool</strong><small>GeneralAgent 不直接跑 GraphRAG；它只通过 capability/tool 边界请求知识。</small></div>
+              <div class="runtime-lane cols-3">
+                <div class="runtime-node knowledge"><strong>GraphRAGQueryService</strong><small>读取 GraphRAGProjectSnapshot、query method、prompt/index/community versions。</small></div>
+                <div class="runtime-node knowledge"><strong>Retrieval Orchestrator</strong><small>Planner → vector/BM25/graph retrievers → fusion → rerank。</small></div>
+                <div class="runtime-node knowledge"><strong>Evidence Pipeline</strong><small>Evidence bundle、citation coverage、trace metadata、eval fields。</small></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="runtime-row">
+            <div class="runtime-label">Action Capability</div>
+            <div class="runtime-lane">
+              <div class="runtime-node"><strong>Action Tools</strong><small>Local function、CLI、file、browser/API 操作。</small></div>
+              <div class="runtime-node"><strong>MCP / Skills</strong><small>外部 resources/tools/prompts 与按需加载的工作流知识。</small></div>
+              <div class="runtime-node"><strong>Permission Gate</strong><small>能力 schema、scope、cost、health、human approval。</small></div>
             </div>
           </div>
         </div>
-        <div class="arrow">↓ one use-case boundary</div>
-        <div class="layer-row">
-          <div class="side-label">Agent</div>
-          <div class="arch-layer">
-            <div class="row">
-              <div class="box wide"><strong>GeneralAgent：唯一会话运行时</strong><small>LangChain Agent Loop + LangGraph State / Checkpoint / Interrupt / Stream</small></div>
-            </div>
-            <div class="arrow">↕ before / after each model call</div>
-            <div class="row">
-              <div class="box purple"><strong>Context Orchestrator</strong><small>Selection、Token Budget、Compaction、Assembly</small></div>
-              <div class="box purple"><strong>Memory & State Engine</strong><small>Thread、Task、Long-term、Raw Events</small></div>
-              <div class="box purple"><strong>Capability Registry</strong><small>Type、Schema、Permission、Cost、Health、Selection</small></div>
-              <div class="box"><strong>LLM Adapter</strong><small>Provider、Model、Structured Output、Usage</small></div>
-            </div>
+
+        <div class="runtime-arrow">↓ durable truth and serving indexes</div>
+
+        <div class="runtime-row">
+          <div class="runtime-label">Infrastructure</div>
+          <div class="runtime-lane cols-4">
+            <div class="runtime-node infra"><strong>PostgreSQL</strong><small>业务、会话、raw events、task summary、memory metadata、project/index job truth。</small></div>
+            <div class="runtime-node infra"><strong>Redis</strong><small>cache、lock、SSE/job progress、hot state。</small></div>
+            <div class="runtime-node infra"><strong>MinIO / Files</strong><small>source files、large artifacts、versioned GraphRAG outputs。</small></div>
+            <div class="runtime-node infra"><strong>Milvus / Elasticsearch / Neo4j</strong><small>vector、BM25/keyword、graph serving indexes；都可由 source truth 重建。</small></div>
           </div>
         </div>
-        <div class="arrow">↓ selected capability</div>
-        <div class="layer-row">
-          <div class="side-label">能力</div>
-          <div class="arch-layer">
-            <div class="row">
-              <div class="box green"><strong>Knowledge</strong><small>RAG / GraphRAG / Files / Web；返回 Evidence</small></div>
-              <div class="box green"><strong>Action Tools</strong><small>Local Function / CLI / API / Browser / File</small></div>
-              <div class="box green"><strong>MCP</strong><small>External Tools / Resources / Prompts</small></div>
-              <div class="box orange"><strong>Skills</strong><small>按需加载的流程、规则、示例和 Reference</small></div>
-            </div>
+
+        <div class="runtime-row">
+          <div class="runtime-label">Async Indexing Side Path</div>
+          <div class="runtime-lane cols-4">
+            <div class="runtime-node async"><strong>Upload / Project Change</strong><small>源文件和 project settings 进入 truth store。</small></div>
+            <div class="runtime-node async"><strong>RabbitMQ Jobs</strong><small>只传 job_id / project_id / document_id / version。</small></div>
+            <div class="runtime-node async"><strong>Workers</strong><small>parse、chunk、embed、BM25、graph extraction、community report。</small></div>
+            <div class="runtime-node async"><strong>Atomic Publish</strong><small>发布 index_version / community_version；查询侧只读已发布版本。</small></div>
           </div>
         </div>
-        <div class="arrow">↓ ports / adapters</div>
-        <div class="layer-row">
-          <div class="side-label">知识</div>
-          <div class="arch-layer">
-            <div class="row">
-              <div class="box green"><strong>KnowledgeQueryService</strong><small>唯一 Application 查询入口</small></div>
-              <div class="box green"><strong>GraphRAGProjectSnapshot</strong><small>Project / Prompt / Index / Readiness 不可变快照</small></div>
-              <div class="box green"><strong>Retrieval Pipeline</strong><small>Planner → Multi-Retriever → Fusion → Rerank → Evidence → Citation</small></div>
-            </div>
-          </div>
+
+        <div class="runtime-lane cols-2">
+          <div class="runtime-node"><strong>Observability / Eval</strong><small>Trace、metrics、logs、prompt/index/query method versions、latency、token、offline eval。</small></div>
+          <div class="runtime-node"><strong>Security / Governance</strong><small>Tenant scope、tool permission、secrets、retention、deletion、audit。</small></div>
         </div>
-        <div class="arrow">↓ durable truth / serving indexes</div>
-        <div class="layer-row">
-          <div class="side-label">基础设施</div>
-          <div class="arch-layer">
-            <div class="row">
-              <div class="box green"><strong>PostgreSQL</strong><small>业务、会话、事件、任务、项目版本真相</small></div>
-              <div class="box green"><strong>Redis</strong><small>缓存、锁、进度、热状态</small></div>
-              <div class="box orange"><strong>RabbitMQ</strong><small>解析与索引任务队列</small></div>
-              <div class="box green"><strong>MinIO / Files</strong><small>源文件、Artifact、版本化索引输出</small></div>
-            </div>
-            <div class="row" style="margin-top:13px">
-              <div class="box green"><strong>Milvus</strong><small>Dense Vector Serving Index</small></div>
-              <div class="box green"><strong>Elasticsearch</strong><small>BM25 / Keyword Serving Index</small></div>
-              <div class="box green"><strong>Neo4j</strong><small>Graph Serving Index / Visualization</small></div>
-              <div class="box dashed"><strong>etcd</strong><small>Milvus 内部依赖，不是业务 Store</small></div>
-            </div>
-          </div>
-        </div>
-        <div class="arrow">↔ cross-cutting</div>
-        <div class="row">
-          <div class="box cyan wide"><strong>Observability / Eval</strong><small>Trace、Metrics、Logs、Version、Latency、Token、Offline Eval</small></div>
-          <div class="box red wide"><strong>Security / Governance</strong><small>Tenant Scope、Tool Permission、Secrets、Retention、Deletion、Audit</small></div>
-        </div>
+        <div class="runtime-caption">主规则：聊天同步路径只进入一个 GeneralAgent；GraphRAG 是被选中的 Knowledge Capability，不是第二套聊天运行时；索引构建是异步旁路。</div>
       </div>
     </div>
   </div>
