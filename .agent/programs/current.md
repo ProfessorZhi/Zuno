@@ -97,8 +97,12 @@ Current status:
   work through `zuno.api.services` instead of importing `zuno.services`
   directly.
 - Phase 12 is partial / not closed.
-- Context/Memory implementation is folded into this program after repository
-  layout and GraphRAG mainline gates.
+- Phase 05 is complete. Typed context contracts now live under
+  `src/backend/zuno/services/application/context/` and define
+  `AgentExecutionContext`, `ModelContextPacket`, `TokenBudgetPolicy`,
+  `ContextTrace`, `ContextItem`, `ContextSource`, and
+  `ContextSelectionReason`. GeneralAgent runtime integration and long-term
+  memory layering remain later phases.
 
 Superseded candidate program:
 

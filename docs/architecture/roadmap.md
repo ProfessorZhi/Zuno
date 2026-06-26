@@ -60,11 +60,10 @@ migration stages.
 
 ## Next Actions
 
-1. implement Phase 05 Context contract foundation
-2. implement Phase 06 Memory layer foundation
-3. implement Phase 07 Capability System
-4. implement Phase 08 single `GeneralAgent` runtime integration
-5. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
+1. implement Phase 06 Memory layer foundation
+2. implement Phase 07 Capability System
+3. implement Phase 08 single `GeneralAgent` runtime integration
+4. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
    final docs/evidence
 
 Contract Review asset migration has completed its asset-only slice: the Target

@@ -143,16 +143,19 @@ Retired evidence is kept for verification, not active source:
 
 These surfaces are not the future front-path architecture, but remaining compat
 tests and migration fields still require explicit replacement or retirement
-proof before 11C can close.
+proof before final Phase 09 grep closure.
 
 ## Not Current
 
+Typed Context Contract models are current code under
+`src/backend/zuno/services/application/context/`.
+
 Context Orchestrator and new Memory layering are Target, not Current.
 
-The near-term Context & Memory design is documented under `.agent/`; it is not
-implemented as the current runtime. Do not describe short/medium/long memory,
-Context Orchestrator, Dynamic Capability Selector, or the Post-turn Pipeline as
-current behavior until code and tests prove them.
+The near-term Context & Memory orchestration design is documented under
+`.agent/`; it is not implemented as the current runtime. Do not describe
+short/medium/long memory, Context Orchestrator, Dynamic Capability Selector, or
+the Post-turn Pipeline as current behavior until code and tests prove them.
 
 Phase 12 is partial / not closed. The repository has focused tests for recent
 changes, but final full `pytest` and formal Eval baseline comparison have not

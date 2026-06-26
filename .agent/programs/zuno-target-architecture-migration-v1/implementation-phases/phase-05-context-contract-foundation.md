@@ -35,10 +35,34 @@ Phase 04 complete.
 - Token budget decisions are traceable.
 - No second GraphRAG query runtime is introduced.
 
+## 2026-06-26 Closure Evidence
+
+Current context contracts live under:
+
+- `src/backend/zuno/services/application/context/contracts.py`
+
+The contract API defines:
+
+- `AgentExecutionContext`
+- `ModelContextPacket`
+- `TokenBudgetPolicy`
+- `ContextTrace`
+- `ContextItem`
+- `ContextSource`
+- `ContextSelectionReason`
+
+`ModelContextPacket` serializes the execution context, selected context items,
+token budget, and trace without embedding or mutating
+`GraphRAGProjectSnapshot`. `ContextTrace.from_items(...)` records selected and
+dropped item ids, selection reasons, used tokens, and remaining budget. The
+module exports contract types only and does not define a second
+`GraphRAGProjectSnapshot` or `GraphRAGQueryService`.
+
 ## Verification Commands
 
 ```powershell
 pytest -q tests/test_context_contracts.py
+pytest -q tests/test_phase11a_knowledge_query_service.py tests/test_graphrag_project_contracts.py
 python .agent/scripts/verify_agent_system.py
 git diff --check
 ```

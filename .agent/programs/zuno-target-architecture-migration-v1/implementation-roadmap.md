@@ -25,8 +25,8 @@ phase that owns it proves active dependency removal.
 | 02 | complete | Contract Review asset migration |
 | 03 | complete for public GraphRAG Project mainline | GraphRAG Project mainline hardening |
 | 04 | complete | repository layout cleanup |
-| 05 | next active foundation phase | Context contract foundation |
-| 06 | blocked by 05 | Memory layer foundation |
+| 05 | complete | Context contract foundation |
+| 06 | next active foundation phase | Memory layer foundation |
 | 07 | blocked by 05-06 | Capability System |
 | 08 | blocked by 05-07 | single GeneralAgent runtime integration |
 | 09 | final | full tests, eval, trace, docs, and grep closure |
@@ -41,6 +41,12 @@ Phase 04 closure archives superseded executable programs out of
 `docs/architecture/history/programs/`, and tightens API controller boundaries
 so capability/tool routes call API service adapters instead of importing
 runtime service modules directly.
+
+Phase 05 closure adds typed context contracts under
+`zuno.services.application.context`: `AgentExecutionContext`,
+`ModelContextPacket`, `TokenBudgetPolicy`, `ContextTrace`, `ContextItem`,
+`ContextSource`, and `ContextSelectionReason`. These contracts are Current
+code, while Context Orchestrator runtime integration remains Phase 08.
 
 ## Execution Rules
 
