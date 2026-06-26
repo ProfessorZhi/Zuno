@@ -10,12 +10,12 @@ This is the formal architecture entrypoint for Zuno.
 4. [Public Evidence](../evidence/public-demo.md)
 5. [Architecture Decisions](decisions/README.md)
 
-## Current Program
+## Program Status
 
-The active program is target architecture migration. Its detailed execution
-material is maintained for Agents under:
+There is no active executable Agent program after the target architecture
+migration closure. The completed program is archived under:
 
-- `.agent/programs/zuno-target-architecture-migration-v1/`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
 - `.agent/architecture/near-term/`
 
 `docs/architecture/history/programs/official-graphrag-cleanup-v1/` preserves

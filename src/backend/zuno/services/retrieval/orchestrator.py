@@ -1,5 +1,6 @@
 from __future__ import annotations
 import re
+import time
 
 from zuno.services.graphrag.retriever import GraphRetriever
 from zuno.services.graphrag.models import normalize_retrieval_mode
@@ -15,6 +16,7 @@ from zuno.services.retrieval.retrievers import (
     RagRetrieverAdapter,
     VectorRetrieverAdapter,
 )
+from zuno.utils.runtime_observability import get_active_trace_id
 
 
 class QueryExpanderAdapter:
@@ -477,11 +479,7 @@ class RetrievalOrchestrator:
         retrieval_options = retrieval_options or {}
         route_policy = str(retrieval_options.get("route_policy") or "auto").strip().lower()
         processed_payload = await self.query_processor.process(query)
-        processed_query = (
-            processed_payload
-            if isinstance(processed_payload, ProcessedQuery)
-            else ProcessedQuery(**processed_payload)
-        )
+        processed_query = self._normalize_processed_query(processed_payload)
         if route_policy == "force_graph":
             processed_query.query_features["relation_question"] = True
             processed_query.route_hints.append("force_graph_eval")
@@ -715,6 +713,21 @@ class RetrievalOrchestrator:
             "graph_worthy": graph_worthy,
         }
 
+    @staticmethod
+    def _normalize_processed_query(processed_payload) -> ProcessedQuery:
+        if isinstance(processed_payload, ProcessedQuery):
+            return processed_payload
+        if isinstance(processed_payload, dict):
+            return ProcessedQuery(**processed_payload)
+        return ProcessedQuery(
+            original_query=processed_payload.original_query,
+            normalized_query=processed_payload.normalized_query,
+            rewritten_queries=list(processed_payload.rewritten_queries),
+            intent_labels=list(getattr(processed_payload, "intent_labels", [])),
+            query_features=dict(getattr(processed_payload, "query_features", {})),
+            route_hints=list(getattr(processed_payload, "route_hints", [])),
+        )
+
     async def run(self, mode: str, query: str, knowledge_ids: list[str], retrieval_options: dict | None = None) -> dict:
         retrieval_options = retrieval_options or {}
         route_policy = str(retrieval_options.get("route_policy") or "auto").strip().lower()
@@ -924,7 +937,16 @@ class RetrievalOrchestrator:
             rerank_used=bool((final_plan.get("rerank_policy") or {}).get("enabled")),
             evidence_bundle=evidence_bundle,
         )
+        trace_id = get_active_trace_id(default=f"retrieval-{int(time.time() * 1000)}")
+        trace_cost = retrieval_options.get("cost_usd", retrieval_options.get("estimated_cost_usd"))
         metadata = {
+            "trace_id": trace_id,
+            "graphrag_project_id": retrieval_options.get("graphrag_project_id"),
+            "prompt_version": retrieval_options.get("prompt_version"),
+            "query_prompt_version": retrieval_options.get("query_prompt_version"),
+            "community_version": retrieval_options.get("community_version"),
+            "latency_ms": retrieval_options.get("latency_ms"),
+            "cost_usd": trace_cost,
             "plan": final_plan,
             "initial_plan": first_plan,
             "processed_query": processed_query_payload,

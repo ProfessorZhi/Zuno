@@ -429,6 +429,13 @@ async def run_stackless_local_eval(
         effective_project_id = graphrag_project_id or (project_payload or {}).get("id")
         if effective_project_id:
             merged_knowledge_config["graphrag_project_id"] = effective_project_id
+            merged_knowledge_config["graph_project_trace"] = {
+                "graphrag_project_id": effective_project_id,
+                "prompt_version": (project_payload or {}).get("prompt_version"),
+                "query_prompt_version": (project_payload or {}).get("query_prompt_version"),
+                "index_version": (project_payload or {}).get("index_version"),
+                "community_version": (project_payload or {}).get("community_version"),
+            }
         register_local_runtime_settings(
             knowledge_id,
             {

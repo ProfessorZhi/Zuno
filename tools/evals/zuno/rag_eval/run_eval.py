@@ -1264,14 +1264,20 @@ async def run_eval(
                     retrieval_options=retrieval_options,
                 )
 
+            retrieval_started_at = time.perf_counter()
             retrieval_result = await _maybe_trace(
                 enabled=trace_langsmith,
                 run_name=f"zuno-rag-eval:{profile}:{sample['id']}",
                 metadata=metadata,
                 func=retrieve_one,
             )
+            retrieval_latency_ms = round((time.perf_counter() - retrieval_started_at) * 1000, 2)
             contexts = _extract_contexts(retrieval_result, sample["query"])
             retrieval_metadata = retrieval_result.get("metadata") or {}
+            if retrieval_metadata.get("latency_ms") is None:
+                retrieval_metadata["latency_ms"] = retrieval_latency_ms
+            if "cost_usd" not in retrieval_metadata:
+                retrieval_metadata["cost_usd"] = None
             effective_domain_pack_id = str(
                 ((retrieval_metadata.get("retrieval_options") or {}).get("domain_pack_id"))
                 or retrieval_options.get("domain_pack_id")

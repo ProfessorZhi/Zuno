@@ -50,7 +50,7 @@ def test_architecture_docs_use_current_target_roadmap_path() -> None:
         "roadmap.md",
         "../evidence/public-demo.md",
         "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
-        ".agent/programs/zuno-target-architecture-migration-v1/",
+        "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
         "history/phases/",
     ]
 
@@ -166,7 +166,7 @@ def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -
         "Phase 11A: complete",
         "Phase 11B: complete",
         "Phase 11C: active runtime cleanup complete",
-        "Phase 12: partial / not closed",
+            "Phase 12: closed through the target migration closure evidence",
         "Bounded migration compatibility evidence remains",
         "full pytest",
         "eval baseline comparison",

@@ -135,6 +135,7 @@ call :ensure_docker
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Stopping Zuno Web stack...
+docker compose down --remove-orphans >nul 2>nul
 call :cleanup_stale_stack
 if errorlevel 1 goto :fail
 echo.

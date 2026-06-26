@@ -51,20 +51,23 @@ For implementation tasks, read the relevant code after the docs. Do not infer ru
 
 The completed Phase 0-6 architecture closure remains historical completion truth and must not be rewritten as incomplete.
 
-The current executable Agent program is:
+There is no active executable Agent program after the Zuno Target Architecture
+Migration V1 closure.
 
-- `.agent/programs/zuno-target-architecture-migration-v1/`
+The latest completed program is archived at:
 
-Its purpose is to move from the current 11A/11B runtime state to the near-term
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
+
+Its purpose was to move from the 11A/11B runtime state to the near-term
 target architecture and repository layout: finish 11C/12 cleanup, migrate
 Contract Review assets, harden GraphRAG Project as the mainline, clean folder
 boundaries, then implement Context/Memory and Capability phases around the
 single `GeneralAgent`.
 
-The executable near-term implementation breakdown is:
+The archived near-term implementation breakdown is:
 
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/` as
   archived evidence for completed GraphRAG cleanup phases and old 11C/12
   planning context

@@ -97,6 +97,11 @@ def test_retrieval_orchestrator_preserves_governance_contract_across_fallback():
                     "max_rounds": 2,
                 },
                 "trace_policy": {"enabled": True, "include_rounds": False},
+                "graphrag_project_id": "contract_review",
+                "prompt_version": "contract-review-v1",
+                "query_prompt_version": "contract-review-v1",
+                "community_version": "v0",
+                "latency_ms": 12.5,
             },
         )
     )
@@ -109,6 +114,12 @@ def test_retrieval_orchestrator_preserves_governance_contract_across_fallback():
     assert result["metadata"]["budget_policy"]["max_context_chars"] == 4000
     assert result["metadata"]["fallback_policy"]["route_broadening"] is False
     assert result["metadata"]["trace_policy"]["include_rounds"] is False
+    assert result["metadata"]["graphrag_project_id"] == "contract_review"
+    assert result["metadata"]["prompt_version"] == "contract-review-v1"
+    assert result["metadata"]["query_prompt_version"] == "contract-review-v1"
+    assert result["metadata"]["community_version"] == "v0"
+    assert result["metadata"]["latency_ms"] == 12.5
+    assert result["metadata"]["cost_usd"] is None
     assert result["metadata"]["scope_policy"]["status"] == "active"
     assert result["metadata"]["index_version"]["graph"] == "graph_v2"
     assert result["metadata"]["index_health"]["graph"] == "ready"

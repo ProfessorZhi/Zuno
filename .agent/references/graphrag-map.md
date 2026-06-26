@@ -38,7 +38,7 @@ contract.
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 - `.agent/architecture/near-term/11-graphrag-project-architecture.md`
 - `examples/graphrag-projects/contract_review/`
-- `.agent/programs/zuno-target-architecture-migration-v1/`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
 
 `examples/graphrag-projects/contract_review/` is the Target asset copy for

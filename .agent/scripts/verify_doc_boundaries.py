@@ -24,7 +24,7 @@ REQUIRED_DOCS = [
 ]
 
 REQUIRED_AGENT_PROGRAMS = [
-    ".agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
+    "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
     ".agent/programs/current.md",
     "docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",

@@ -10,11 +10,16 @@ and evidence, not the active Agent execution path.
 - `knowledge-product-refactor-deep-graphrag-v1/`: superseded by official
   GraphRAG cleanup and target migration work.
 - `context-memory-agent-runtime-v1/`: superseded by
-  `.agent/programs/zuno-target-architecture-migration-v1/`, which folds
+  `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`, which folds
   Context/Memory phases into the end-to-end target architecture migration.
 - `official-graphrag-cleanup-v1/`: completed GraphRAG cleanup source program
-  absorbed by `.agent/programs/zuno-target-architecture-migration-v1/`; kept as
+  absorbed by `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`; kept as
   historical evidence, not an active executable Agent program.
+- `zuno-target-architecture-migration-v1/`: completed target architecture
+  migration closure evidence. Phase 09 closed full tests, Contract Review eval,
+  stackless baseline comparison, trace metadata, legacy grep classification,
+  docs sync, and final evidence. It is no longer active executable program
+  material.
 
 ## Rule
 

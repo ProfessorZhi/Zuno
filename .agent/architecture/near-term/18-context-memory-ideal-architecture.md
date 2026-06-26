@@ -146,9 +146,9 @@ Snapshot fields:
 
 The implementation direction is captured in:
 
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-05-context-contract-foundation.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-06-memory-layer-foundation.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-08-generalagent-runtime-integration.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-05-context-contract-foundation.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-06-memory-layer-foundation.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-08-generalagent-runtime-integration.md`
 
 Those phases should run only after the target migration program finishes the
 official cleanup 11C/12 dependency and repository layout gates, or explicitly

@@ -1,4 +1,4 @@
-﻿# Docs Bridge
+# Docs Bridge
 
 ## Purpose
 
@@ -15,7 +15,7 @@ This file keeps the boundary clear:
 3. `docs/architecture/README.md`
 4. `docs/architecture/current-architecture.md`
 5. `docs/architecture/target-architecture.md`
-6. `.agent/programs/zuno-target-architecture-migration-v1/README.md`
+6. `docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md`
 
 ## Rule
 

@@ -23,8 +23,8 @@ Any future service-root move must reopen as a new phase with fresh verification 
 The current active strategy is now the Zuno Target Architecture Migration V1
 implementation program:
 
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
@@ -63,8 +63,8 @@ Only one execution path should steer the repo at a time.
 
 Right now that path is:
 
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`

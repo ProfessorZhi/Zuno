@@ -140,6 +140,7 @@ def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():
 
     assert planner.last_capability == "rag"
     assert result["metadata"]["retrieval_options"]["knowledge_capability"] == "rag"
+    assert result["metadata"]["trace_id"].startswith("retrieval-")
 
 
 def test_agent_table_accepts_domain_pack_id():

@@ -9,8 +9,8 @@ migration program without drifting into future architecture.
 
 Use:
 
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/README.md`
   as archived dependency history; final tests/eval/trace closure now belongs
@@ -22,7 +22,7 @@ Use:
 2. `docs/architecture/README.md`
 3. `docs/architecture/current-architecture.md`
 4. `docs/architecture/target-architecture.md`
-5. `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+5. `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
 6. the exact target migration phase file under `implementation-phases/`
 7. `.agent/architecture/near-term/README.md`
 8. `.agent/architecture/near-term/16-near-term-acceptance-gates.md`

@@ -168,7 +168,7 @@ def main() -> int:
                 "roadmap.md",
                 "../evidence/public-demo.md",
                 "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
-                ".agent/programs/zuno-target-architecture-migration-v1/",
+                "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
                 "history/phases/",
             ],
         )
@@ -181,9 +181,9 @@ def main() -> int:
                 "Phase 11A: complete",
                 "Phase 11B: complete",
                 "Phase 11C: active runtime cleanup complete",
-                "Phase 12: partial / not closed",
+                "Phase 12: closed through the target migration closure evidence",
                 "Blocked Legacy",
-                ".agent/programs/zuno-target-architecture-migration-v1/",
+                "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
                 "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
             ],
         )

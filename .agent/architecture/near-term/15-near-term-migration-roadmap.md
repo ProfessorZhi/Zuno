@@ -7,8 +7,8 @@ default multi-agent work are intentionally not in this roadmap.
 
 The formal executable implementation program now lives in:
 
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`

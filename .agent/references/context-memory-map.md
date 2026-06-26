@@ -23,9 +23,9 @@ current runtime still uses existing Agent and memory surfaces under
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 - `.agent/architecture/near-term/18-context-memory-ideal-architecture.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-05-context-contract-foundation.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-06-memory-layer-foundation.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-08-generalagent-runtime-integration.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-05-context-contract-foundation.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-06-memory-layer-foundation.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/phase-08-generalagent-runtime-integration.md`
 
 ## Rule
 

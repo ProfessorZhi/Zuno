@@ -14,12 +14,17 @@ Superseded programs move to:
 docs/architecture/history/programs/
 ```
 
-The current active program remains under:
+Completed programs move under:
 
 ```text
-.agent/programs/
+docs/architecture/history/programs/
 ```
+
+`.agent/programs/current.md` records whether a new executable Agent program is
+active. After the target architecture migration closure, there is no active
+executable program.
 
 ## Domain Pack Mainline
 
-Domain Pack remains historical and supporting context, but the current cleanup program should align the future front path with official GraphRAG Project, Prompt Tuning, and Query Method concepts.
+Domain Pack remains historical and supporting context. The current front path is
+official GraphRAG Project, Prompt Tuning, and Query Method concepts.

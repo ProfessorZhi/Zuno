@@ -9,6 +9,9 @@ here.
 Start with:
 
 - [Current Program](current.md)
-- [Zuno Target Architecture Migration V1](zuno-target-architecture-migration-v1/README.md)
 
 Archived programs live under `docs/architecture/history/programs/`.
+
+There is no active executable Agent program after the Zuno Target Architecture
+Migration V1 closure. The completed program is archived at
+`docs/architecture/history/programs/zuno-target-architecture-migration-v1/`.

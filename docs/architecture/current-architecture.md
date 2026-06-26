@@ -21,6 +21,8 @@ tests
 `src/backend/zuno` is the only active Python backend runtime boundary. There is
 no active root-level `services/` backend tree and no active `src/frontend`
 workspace.
+There is no active compatibility namespace in current truth.
+There is no active root-level `services/` tree in current truth.
 
 ## Current Backend Shape
 

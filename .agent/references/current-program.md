@@ -1,22 +1,25 @@
 # Current Program
 
-The active executable Agent program is:
+There is no active executable Agent program after the Zuno Target Architecture
+Migration V1 closure.
 
-- `.agent/programs/zuno-target-architecture-migration-v1/`
+Latest completed program:
+
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
 
 Formal human-facing status is summarized in:
 
 - `docs/architecture/roadmap.md`
 
-## Why This Program Exists
+## Why The Archived Program Exists
 
 The previous Phase 0-6 closure is complete and historical.
 
-The current work moves from the proven 11A/11B runtime state toward the target
+The completed work moved from the proven 11A/11B runtime state toward the target
 architecture and target repository layout. It continues official GraphRAG
 cleanup 11C/12 work before Context/Memory and Capability implementation.
 
-## Current Implementation Status
+## Completed Implementation Status
 
 - Target Migration Phase 00 is complete.
 - Phase 01 active runtime cleanup is complete.
@@ -48,17 +51,21 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - Phase 04 is complete: retired Domain Pack UI capture and
   responsive-check scripts are archived under
   `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
-- Official cleanup Phase 12 is partial / not closed.
+- Phase 09 full tests, eval, trace, docs, grep classification, and evidence
+  closure is complete for the target migration run.
+- Official cleanup Phase 12 is closed through the target migration closure
+  evidence. Remaining live data backfill is an operational migration step, not
+  an active executable Agent program.
 
 ## Detailed Sources
 
 - `.agent/programs/current.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
   as archived cleanup evidence, not active executable program material
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
-Do not use the implementation phases to pull Java, microservices,
-event-driven workers, or default multi-agent mode into near-term acceptance.
+Do not use the archived implementation phases to pull Java, microservices,
+event-driven workers, or default multi-agent mode into current acceptance.

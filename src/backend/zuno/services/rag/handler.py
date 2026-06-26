@@ -494,6 +494,18 @@ class RagHandler:
                 ),
             },
         }
+        project_trace = dict(knowledge_config.get("graph_project_trace") or {})
+        if project_trace:
+            effective_options.setdefault("graphrag_project_id", project_trace.get("graphrag_project_id"))
+            effective_options.setdefault("prompt_version", project_trace.get("prompt_version"))
+            effective_options.setdefault("query_prompt_version", project_trace.get("query_prompt_version"))
+            effective_options.setdefault("community_version", project_trace.get("community_version"))
+            project_index_version = project_trace.get("index_version")
+            if project_index_version:
+                effective_options["index_version"]["graph_project"] = str(project_index_version)
+            project_community_version = project_trace.get("community_version")
+            if project_community_version:
+                effective_options["index_health"]["community_version"] = str(project_community_version)
         effective_options.update(retrieval_options or {})
         effective_options["budget_policy"] = {
             "top_k": effective_options.get("top_k"),

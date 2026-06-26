@@ -11,7 +11,7 @@ def test_required_current_paths_exist() -> None:
         "AGENTS.md",
         ".agent/README.md",
         ".agent/programs/current.md",
-        ".agent/programs/zuno-target-architecture-migration-v1",
+        "docs/architecture/history/programs/zuno-target-architecture-migration-v1",
         ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
         ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
         "apps/desktop",
@@ -157,9 +157,14 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
 
 def test_official_graphrag_cleanup_program_is_archived_out_of_active_programs() -> None:
     assert not (REPO_ROOT / ".agent/programs/official-graphrag-cleanup-v1").exists()
+    assert not (REPO_ROOT / ".agent/programs/zuno-target-architecture-migration-v1").exists()
     assert (
         REPO_ROOT
         / "docs/architecture/history/programs/official-graphrag-cleanup-v1/README.md"
+    ).exists()
+    assert (
+        REPO_ROOT
+        / "docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md"
     ).exists()
 
     programs_index = (REPO_ROOT / ".agent/programs/README.md").read_text(
@@ -170,7 +175,9 @@ def test_official_graphrag_cleanup_program_is_archived_out_of_active_programs() 
     ).read_text(encoding="utf-8")
 
     assert "official-graphrag-cleanup-v1/" not in programs_index
+    assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "official-graphrag-cleanup-v1/" in history_index
+    assert "zuno-target-architecture-migration-v1/" in history_index
 
 
 def test_superseded_migration_specs_are_archived_out_of_active_specs() -> None:

@@ -38,7 +38,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "Phase 11A: complete",
         "Phase 11B: complete",
         "Phase 11C: active runtime cleanup complete",
-        "Phase 12: partial / not closed",
+        "Phase 12: closed through the target migration closure evidence",
         "Phase 01 through Phase 10 are complete.",
         "Blocked Legacy",
     ]:

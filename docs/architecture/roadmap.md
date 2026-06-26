@@ -4,10 +4,9 @@
 
 The completed Phase 0-6 architecture closure is historical truth.
 
-The active program is target architecture migration. It continues the unfinished
-official GraphRAG cleanup 11C/12 gates and then proceeds through repository
-layout, Context/Memory, Capability System, and single `GeneralAgent`
-integration phases.
+There is no active executable Agent program after the target architecture
+migration closure. The completed program is archived under
+`docs/architecture/history/programs/zuno-target-architecture-migration-v1/`.
 
 Phase 01 through Phase 10 are complete. Those phases cover contract, loader,
 prompt registry, index versioning, query router, Enhanced Mode, and frontend API
@@ -55,13 +54,13 @@ migration stages.
   service package have also been retired from current backend source. Domain
   Pack backend endpoint/API-service wrappers and frontend API/page files are
   retired from current source.
-- Phase 12: partial / not closed. Focused tests exist, but final full `pytest`
-  and formal Eval baseline comparison are not complete.
+- Phase 12: closed through the target migration closure evidence. full pytest,
+  formal Contract Review eval, stackless eval baseline comparison, trace
+  metadata, legacy grep classification, and docs/evidence sync are complete.
 
 ## Next Actions
 
-1. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
-   final docs/evidence
+1. Open a new executable program only if the next requirement needs one.
 
 Contract Review asset migration has completed its asset-only slice: the Target
 example copy lives at `examples/graphrag-projects/contract_review/`, and the
@@ -116,9 +115,9 @@ mode.
 
 ## Agent Execution Sources
 
-Detailed implementation planning lives in:
+Archived implementation planning lives in:
 
 - `.agent/programs/current.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`

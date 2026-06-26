@@ -1,4 +1,4 @@
-﻿# Goal Mode Prompt
+# Goal Mode Prompt
 
 You are working in `F:\internship-work\resume&resume project\02_projects\Zuno`.
 
@@ -11,7 +11,7 @@ Read first:
 3. `docs/architecture/current-architecture.md`
 4. `docs/architecture/target-architecture.md`
 5. `docs/architecture/history/phases/README.md`
-6. `.agent/programs/zuno-target-architecture-migration-v1/README.md`
+6. `docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md`
 7. `.agent/README.md`
 8. `.agent/references/current-program.md`
 

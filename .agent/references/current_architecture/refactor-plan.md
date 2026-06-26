@@ -1,4 +1,4 @@
-﻿# Refactor Plan
+# Refactor Plan
 
 ## Completed Baseline
 
@@ -10,8 +10,8 @@ The current program is `zuno-target-architecture-migration-v1`.
 
 Its executable stages are defined by:
 
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `.agent/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md`
 - `.agent/architecture/near-term/17-implementation-phase-map.md`
 
 The current implementation sequence is:
