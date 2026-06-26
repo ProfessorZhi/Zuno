@@ -15,9 +15,9 @@
   --mono-bg:#f1f6fb;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;width:100%;height:100%;overflow:hidden}
 body{
-  margin:0;color:var(--text);line-height:1.66;overflow-x:hidden;
+  width:100%;height:100%;margin:0;color:var(--text);line-height:1.66;overflow:hidden;
   font-family:"Inter","IBM Plex Sans","Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   font-size:15.5px;background:
     linear-gradient(180deg,#eef4fb 0,#f7f9fc 320px,#f4f7fb 100%);
@@ -26,7 +26,10 @@ a{color:#1d5db8;text-underline-offset:3px}
 code,.mono{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}
 code{padding:2px 5px;border:1px solid #cbd8e8;border-radius:6px;background:var(--mono-bg);color:#174a89}
 button{font:inherit}
-.wrap{width:100%;max-width:none;margin:0;padding:28px 36px}
+.wrap{
+  position:fixed;inset:0;width:auto;max-width:none;margin:0;
+  padding:28px 36px;overflow-y:auto;overflow-x:hidden
+}
 .hero,.section{
   border:1px solid var(--line);border-radius:var(--radius);
   background:rgba(255,255,255,.96);box-shadow:var(--shadow)
@@ -86,7 +89,48 @@ button{font:inherit}
 .metric.purple{color:#6d4acb}.metric.red{color:#c8354a}
 .diagram{max-width:100%;overflow:auto;padding:18px;border:1px solid var(--line);border-radius:8px;background:#f8fafc}
 .flow{min-width:1090px;max-width:1410px;margin:auto}
-.runtime-map{width:100%;min-width:1120px;display:grid;gap:14px;margin:0}
+.runtime-map{width:100%;min-width:1180px;display:grid;gap:12px;margin:0}
+.runtime-canvas{
+  display:grid;
+  grid-template-columns:1.05fr 1.05fr 1.15fr 1.35fr 1.2fr;
+  grid-template-areas:
+    "client transport app agent knowledge"
+    "client transport app agent action"
+    "index index index infra infra"
+    "governance governance governance infra infra";
+  gap:12px;align-items:stretch
+}
+.runtime-group{
+  border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px;
+  display:grid;gap:10px;min-width:0
+}
+.runtime-group.client{grid-area:client}.runtime-group.transport{grid-area:transport}
+.runtime-group.app{grid-area:app}.runtime-group.agent{grid-area:agent;background:#fbf8ff;border-color:#d5c7fb}
+.runtime-group.knowledge{grid-area:knowledge;background:#f6fff9;border-color:#b8e4ca}
+.runtime-group.action{grid-area:action}.runtime-group.index{grid-area:index;background:#fffaf0;border-color:#f0ca8c}
+.runtime-group.infra{grid-area:infra;background:#f8fafc}.runtime-group.governance{grid-area:governance}
+.runtime-group h3{
+  margin:0;color:#1f5faa;font-size:15px;line-height:1.2;font-weight:850;
+  padding-bottom:6px;border-bottom:1px solid var(--line)
+}
+.runtime-group.agent,.runtime-group.infra{grid-template-columns:repeat(2,minmax(0,1fr))}
+.runtime-group.index{grid-template-columns:repeat(4,minmax(0,1fr))}
+.runtime-group.governance{grid-template-columns:repeat(2,minmax(0,1fr))}
+.runtime-group.agent h3,.runtime-group.infra h3,.runtime-group.index h3,.runtime-group.governance h3{grid-column:1/-1}
+.runtime-card{
+  border:1px solid #c8d8eb;border-radius:8px;background:#fff;padding:10px;min-width:0
+}
+.runtime-card strong{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}
+.runtime-card small{display:block;color:var(--muted);font-size:12.5px;line-height:1.45}
+.runtime-card.primary{border-color:#8cb9ef;background:#f3f8ff}
+.runtime-card.agent{border-color:#c6b7f3;background:#fff}
+.runtime-card.knowledge{border-color:#9bd8b5;background:#fff}
+.runtime-card.async{border-color:#efc680;background:#fff}
+.runtime-card.infra{border-color:#bfd0e2;background:#fff}
+.runtime-flow-note{
+  text-align:center;color:#7b91aa;font-size:13px;font-weight:750;
+  padding:4px 0;border-top:1px dashed #c8d8eb;border-bottom:1px dashed #c8d8eb
+}
 .runtime-row{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:stretch}
 .runtime-label{
   display:flex;align-items:center;justify-content:center;text-align:center;
@@ -187,6 +231,8 @@ summary{cursor:pointer;font-weight:850}
   .tabs button{flex:0 0 auto;white-space:nowrap}
 }
 @media print{
+  html,body{height:auto;overflow:visible}
+  .wrap{position:static;overflow:visible;padding:0}
   body{background:white;color:#111}.tabs,.actions,.copy-btn,.searchbar{display:none!important}
   .view{display:block!important}
   .hero,.section,.card,.arch-layer,.box,.step-body,details{
@@ -362,104 +408,73 @@ node_modules/  .codex/  .pytest_cache/  .test-tmp/  apps/web/dist/  __pycache__/
     <h2>目标运行架构图</h2>
     <div class="diagram">
       <div class="runtime-map">
-        <div class="runtime-row">
-          <div class="runtime-label">Client Surface</div>
-          <div class="runtime-lane cols-2">
-            <div class="runtime-node primary"><strong>Vue Web</strong><small>Chat、Knowledge、GraphRAG Project、Capability、Memory、Trace/Eval 交互面。</small></div>
-            <div class="runtime-node primary"><strong>Electron Shell</strong><small>本地桌面壳、文件/系统能力入口；后续 Workspace 能力从这里进入。</small></div>
-          </div>
-        </div>
-
-        <div class="runtime-arrow">↓ HTTP / SSE / typed DTO</div>
-
-        <div class="runtime-row">
-          <div class="runtime-label">Transport Boundary</div>
-          <div class="runtime-lane cols-3">
-            <div class="runtime-node"><strong>FastAPI Routes</strong><small>Auth、validation、request/trace id、SSE stream、error mapping。</small></div>
-            <div class="runtime-node"><strong>API DTO / Contract</strong><small>前端只绑定公开 request/response，不依赖内部 Agent 或 Retrieval 对象。</small></div>
-            <div class="runtime-node"><strong>Dependency Injection</strong><small>装配 Application Service、settings、auth context 和 request scope。</small></div>
-          </div>
-        </div>
-
-        <div class="runtime-arrow">↓ route calls exactly one use case</div>
-
-        <div class="runtime-row">
-          <div class="runtime-label">Application Layer</div>
-          <div class="runtime-lane cols-4">
-            <div class="runtime-node primary"><strong>ChatService</strong><small>创建/恢复会话，调用唯一 GeneralAgent，保存 stream 与事件。</small></div>
-            <div class="runtime-node primary"><strong>KnowledgeQueryService</strong><small>统一 Basic / Local / Global / DRIFT 查询入口，返回 evidence/citation/trace。</small></div>
-            <div class="runtime-node primary"><strong>IndexService</strong><small>项目、文档、索引版本和异步 job 编排。</small></div>
-            <div class="runtime-node primary"><strong>Project / Memory / Capability Use Cases</strong><small>项目配置、记忆治理、能力目录和权限策略。</small></div>
-          </div>
-        </div>
-
-        <div class="runtime-arrow">↓ chat path enters one runtime</div>
-
-        <div class="runtime-row">
-          <div class="runtime-label">Agent Runtime</div>
-          <div class="runtime-lane">
-            <div class="runtime-node agent"><strong>Single GeneralAgent</strong><small>唯一会话运行时。LangGraph 负责 state、checkpoint、interrupt、resume、stream；LangChain 提供 model / message / tool / structured output 抽象。</small></div>
-            <div class="runtime-lane cols-4">
-              <div class="runtime-node agent"><strong>Context Orchestrator</strong><small>每次模型调用前构造 ModelContextPacket：instructions、thread、task、memory、knowledge evidence。</small></div>
-              <div class="runtime-node agent"><strong>Memory & State Engine</strong><small>Raw events、thread checkpoint、task summary、long-term memory candidates。</small></div>
-              <div class="runtime-node agent"><strong>Capability Registry</strong><small>按 task/context 选择 tools、MCP、skills、knowledge capability 和权限。</small></div>
-              <div class="runtime-node agent"><strong>LLM Adapter</strong><small>Provider/model routing、structured output、usage、latency、cost metadata。</small></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="runtime-arrow">↓ selected capability / tool call</div>
-
-        <div class="runtime-branch">
-          <div class="runtime-row">
-            <div class="runtime-label">Knowledge Capability</div>
-            <div class="runtime-lane">
-              <div class="runtime-node knowledge"><strong>search_knowledge_base tool</strong><small>GeneralAgent 不直接跑 GraphRAG；它只通过 capability/tool 边界请求知识。</small></div>
-              <div class="runtime-lane cols-3">
-                <div class="runtime-node knowledge"><strong>GraphRAGQueryService</strong><small>读取 GraphRAGProjectSnapshot、query method、prompt/index/community versions。</small></div>
-                <div class="runtime-node knowledge"><strong>Retrieval Orchestrator</strong><small>Planner → vector/BM25/graph retrievers → fusion → rerank。</small></div>
-                <div class="runtime-node knowledge"><strong>Evidence Pipeline</strong><small>Evidence bundle、citation coverage、trace metadata、eval fields。</small></div>
-              </div>
-            </div>
+        <div class="runtime-canvas">
+          <div class="runtime-group client">
+            <h3>Client Surface</h3>
+            <div class="runtime-card primary"><strong>Vue Web</strong><small>Chat、Knowledge、Project、Memory、Trace/Eval。</small></div>
+            <div class="runtime-card primary"><strong>Electron Shell</strong><small>桌面壳、本地文件/系统能力入口。</small></div>
+            <div class="runtime-flow-note">HTTP / SSE / typed DTO →</div>
           </div>
 
-          <div class="runtime-row">
-            <div class="runtime-label">Action Capability</div>
-            <div class="runtime-lane">
-              <div class="runtime-node"><strong>Action Tools</strong><small>Local function、CLI、file、browser/API 操作。</small></div>
-              <div class="runtime-node"><strong>MCP / Skills</strong><small>外部 resources/tools/prompts 与按需加载的工作流知识。</small></div>
-              <div class="runtime-node"><strong>Permission Gate</strong><small>能力 schema、scope、cost、health、human approval。</small></div>
-            </div>
+          <div class="runtime-group transport">
+            <h3>Transport Boundary</h3>
+            <div class="runtime-card"><strong>FastAPI Routes</strong><small>Auth、validation、SSE、trace id、error mapping。</small></div>
+            <div class="runtime-card"><strong>API DTO / Contract</strong><small>只暴露 request/response，不泄漏内部对象。</small></div>
+            <div class="runtime-flow-note">one route → one use case</div>
+          </div>
+
+          <div class="runtime-group app">
+            <h3>Application Layer</h3>
+            <div class="runtime-card primary"><strong>ChatService</strong><small>创建/恢复会话，进入唯一 GeneralAgent。</small></div>
+            <div class="runtime-card primary"><strong>KnowledgeQueryService</strong><small>Basic / Local / Global / DRIFT 统一查询入口。</small></div>
+            <div class="runtime-card primary"><strong>Index / Project / Memory Use Cases</strong><small>项目、索引、记忆、能力目录编排。</small></div>
+          </div>
+
+          <div class="runtime-group agent">
+            <h3>Single GeneralAgent Runtime</h3>
+            <div class="runtime-card agent"><strong>LangGraph State Loop</strong><small>state、checkpoint、interrupt、resume、stream。</small></div>
+            <div class="runtime-card agent"><strong>Context Orchestrator</strong><small>ModelContextPacket、token budget、compaction。</small></div>
+            <div class="runtime-card agent"><strong>Memory & State Engine</strong><small>raw events、task summary、long-term candidates。</small></div>
+            <div class="runtime-card agent"><strong>Capability Registry + LLM Adapter</strong><small>选择 tools/MCP/skills/knowledge，路由 provider/model。</small></div>
+          </div>
+
+          <div class="runtime-group knowledge">
+            <h3>Knowledge Capability</h3>
+            <div class="runtime-card knowledge"><strong>search_knowledge_base</strong><small>Agent 只通过 tool/capability 边界请求知识。</small></div>
+            <div class="runtime-card knowledge"><strong>GraphRAGQueryService</strong><small>Project snapshot、query method、prompt/index/community versions。</small></div>
+            <div class="runtime-card knowledge"><strong>Retrieval + Evidence</strong><small>planner、vector/BM25/graph、fusion、rerank、citation、trace。</small></div>
+          </div>
+
+          <div class="runtime-group action">
+            <h3>Action Capability</h3>
+            <div class="runtime-card"><strong>Action Tools</strong><small>local function、CLI、file、browser/API。</small></div>
+            <div class="runtime-card"><strong>MCP / Skills</strong><small>外部 resources/tools/prompts 与按需流程知识。</small></div>
+            <div class="runtime-card"><strong>Permission Gate</strong><small>schema、scope、cost、health、human approval。</small></div>
+          </div>
+
+          <div class="runtime-group index">
+            <h3>Async Indexing Side Path</h3>
+            <div class="runtime-card async"><strong>Upload / Project Change</strong><small>source file + project settings 进入 truth store。</small></div>
+            <div class="runtime-card async"><strong>RabbitMQ Jobs</strong><small>只传 job_id、project_id、document_id、version。</small></div>
+            <div class="runtime-card async"><strong>Workers</strong><small>parse、chunk、embed、BM25、graph extraction、community report。</small></div>
+            <div class="runtime-card async"><strong>Atomic Publish</strong><small>发布 index_version / community_version。</small></div>
+          </div>
+
+          <div class="runtime-group infra">
+            <h3>Infrastructure</h3>
+            <div class="runtime-card infra"><strong>PostgreSQL</strong><small>业务、会话、raw events、task summary、memory metadata、project/index job truth。</small></div>
+            <div class="runtime-card infra"><strong>Redis</strong><small>cache、lock、SSE/job progress、hot state。</small></div>
+            <div class="runtime-card infra"><strong>MinIO / Files</strong><small>source files、large artifacts、versioned GraphRAG outputs。</small></div>
+            <div class="runtime-card infra"><strong>Milvus / Elasticsearch / Neo4j</strong><small>vector、BM25/keyword、graph serving indexes。</small></div>
+          </div>
+
+          <div class="runtime-group governance">
+            <h3>Cross-Cutting</h3>
+            <div class="runtime-card"><strong>Observability / Eval</strong><small>trace、metrics、logs、prompt/index versions、latency、token、offline eval。</small></div>
+            <div class="runtime-card"><strong>Security / Governance</strong><small>tenant scope、tool permission、secrets、retention、deletion、audit。</small></div>
           </div>
         </div>
-
-        <div class="runtime-arrow">↓ durable truth and serving indexes</div>
-
-        <div class="runtime-row">
-          <div class="runtime-label">Infrastructure</div>
-          <div class="runtime-lane cols-4">
-            <div class="runtime-node infra"><strong>PostgreSQL</strong><small>业务、会话、raw events、task summary、memory metadata、project/index job truth。</small></div>
-            <div class="runtime-node infra"><strong>Redis</strong><small>cache、lock、SSE/job progress、hot state。</small></div>
-            <div class="runtime-node infra"><strong>MinIO / Files</strong><small>source files、large artifacts、versioned GraphRAG outputs。</small></div>
-            <div class="runtime-node infra"><strong>Milvus / Elasticsearch / Neo4j</strong><small>vector、BM25/keyword、graph serving indexes；都可由 source truth 重建。</small></div>
-          </div>
-        </div>
-
-        <div class="runtime-row">
-          <div class="runtime-label">Async Indexing Side Path</div>
-          <div class="runtime-lane cols-4">
-            <div class="runtime-node async"><strong>Upload / Project Change</strong><small>源文件和 project settings 进入 truth store。</small></div>
-            <div class="runtime-node async"><strong>RabbitMQ Jobs</strong><small>只传 job_id / project_id / document_id / version。</small></div>
-            <div class="runtime-node async"><strong>Workers</strong><small>parse、chunk、embed、BM25、graph extraction、community report。</small></div>
-            <div class="runtime-node async"><strong>Atomic Publish</strong><small>发布 index_version / community_version；查询侧只读已发布版本。</small></div>
-          </div>
-        </div>
-
-        <div class="runtime-lane cols-2">
-          <div class="runtime-node"><strong>Observability / Eval</strong><small>Trace、metrics、logs、prompt/index/query method versions、latency、token、offline eval。</small></div>
-          <div class="runtime-node"><strong>Security / Governance</strong><small>Tenant scope、tool permission、secrets、retention、deletion、audit。</small></div>
-        </div>
-        <div class="runtime-caption">主规则：聊天同步路径只进入一个 GeneralAgent；GraphRAG 是被选中的 Knowledge Capability，不是第二套聊天运行时；索引构建是异步旁路。</div>
+        <div class="runtime-caption">主规则：同步聊天路径只进入一个 GeneralAgent；GraphRAG 是被选择的 Knowledge Capability，不是第二套聊天运行时；索引构建是异步旁路。</div>
       </div>
     </div>
   </div>
