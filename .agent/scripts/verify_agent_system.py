@@ -38,6 +38,9 @@ REQUIRED_PATHS = [
     ".agent/architecture/near-term/18-context-memory-ideal-architecture.md",
     ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+    ".agent/programs/zuno-target-runtime-v2/README.md",
+    ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
+    ".agent/programs/zuno-target-runtime-v2/implementation-phases/README.md",
     "docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md",
     "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
     "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md",
@@ -97,7 +100,7 @@ def main() -> int:
         "tools/evals/zuno/AGENTS.md",
         ".agent/skills/zuno-docs-maintenance/SKILL.md",
         ".agent/skills/zuno-repo-hygiene/SKILL.md",
-        "There is no active executable Agent program",
+        ".agent/programs/zuno-target-runtime-v2/",
         "zuno-ideal-architecture-and-repo-layout.html",
     ]:
         if phrase not in agent_entry:

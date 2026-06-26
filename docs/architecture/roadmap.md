@@ -4,8 +4,13 @@
 
 The completed Phase 0-6 architecture closure is historical truth.
 
-There is no active executable Agent program after the target architecture
-migration closure. The completed program is archived under
+The active executable Agent program is
+`.agent/programs/zuno-target-runtime-v2/`. It continues after the target
+architecture migration closure with a controlled first implementation slice:
+module boundary gates, one low-risk backend application-boundary move, and a
+minimal callable Context Orchestrator.
+
+The completed target architecture migration program is archived under
 `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`.
 
 Phase 01 through Phase 10 are complete. Those phases cover contract, loader,
@@ -60,7 +65,7 @@ migration stages.
 
 ## Next Actions
 
-1. Open a new executable program only if the next requirement needs one.
+1. Execute the active `zuno-target-runtime-v2` phases linearly.
 
 Contract Review asset migration has completed its asset-only slice: the Target
 example copy lives at `examples/graphrag-projects/contract_review/`, and the
@@ -68,11 +73,11 @@ dedicated Contract Review eval now reads its GraphRAG Project compatibility
 payload and eval fixture from that copy. Root Domain Pack assets are archived
 and Docker Domain Pack mounts are retired.
 
-## Next Candidate
+## Active Candidate
 
-Context Memory Agent Runtime V1 is the next candidate / design-ready program.
-It is not active Current implementation. Phase 00 must wait for 11C/12 closure
-or explicitly re-verify dependencies before implementation starts.
+`zuno-target-runtime-v2` is active. It must not promote mature Context
+Orchestrator, Memory Engine, Dynamic Capability Selector, or full LangGraph
+runtime behavior to Current until code and tests prove each slice.
 
 ## Bounded Legacy Compatibility
 

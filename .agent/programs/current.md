@@ -1,7 +1,13 @@
 # Current Agent Program
 
-There is no active executable Agent program after the Zuno Target Architecture
-Migration V1 closure.
+The active executable Agent program is:
+
+- `zuno-target-runtime-v2/`
+
+Its purpose is to continue from the closed Zuno Target Architecture Migration
+V1 baseline into a controlled first implementation slice: module boundary
+gates, one low-risk backend application-boundary move, and a minimal callable
+Context Orchestrator.
 
 Latest completed program:
 
@@ -11,10 +17,13 @@ Formal human-facing status is summarized in:
 
 - `docs/architecture/roadmap.md`
 
-Next candidate:
+Current phase focus:
 
-- Context Memory Agent Runtime V1 remains design-ready only. It is not active
-  current implementation work until a new program is explicitly opened.
+- Phase 00: current state gate.
+- Phase 01: program setup.
+- Phase 02: module boundary audit and verifier.
+- Phase 03: first backend boundary move.
+- Phase 04: minimal Context Orchestrator runtime.
 
 Archived supporting evidence:
 

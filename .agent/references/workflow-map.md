@@ -36,7 +36,11 @@ Update this map when adding, removing, or renaming workflows or skills.
 
 ## Active Program
 
-End-to-end target architecture and folder cleanup execution lives in:
+The active executable Agent program is:
+
+- `.agent/programs/zuno-target-runtime-v2/`
+
+The completed V1 target architecture migration is archived at:
 
 - `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
 ## Required Target Blueprint

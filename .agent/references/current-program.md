@@ -1,7 +1,13 @@
 # Current Program
 
-There is no active executable Agent program after the Zuno Target Architecture
-Migration V1 closure.
+The active executable Agent program is:
+
+- `.agent/programs/zuno-target-runtime-v2/`
+
+This active program is a controlled first implementation slice after the Zuno
+Target Architecture Migration V1 closure. It opens module boundary gates,
+migrates one low-risk backend application boundary, and introduces a minimal
+callable Context Orchestrator.
 
 Latest completed program:
 
@@ -60,6 +66,9 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 ## Detailed Sources
 
 - `.agent/programs/current.md`
+- `.agent/programs/zuno-target-runtime-v2/README.md`
+- `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
+- `.agent/programs/zuno-target-runtime-v2/implementation-phases/`
 - `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
 - `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
@@ -69,3 +78,6 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 
 Do not use the archived implementation phases to pull Java, microservices,
 event-driven workers, or default multi-agent mode into current acceptance.
+
+Do not treat the V2 Target runtime as fully Current until the relevant code,
+tests, verifiers, and phase evidence prove each slice.

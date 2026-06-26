@@ -17,6 +17,9 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
         ".agent/architecture/near-term/18-context-memory-ideal-architecture.md",
         ".agent/architecture/near-term/19-repository-layout-and-module-boundaries.md",
+        ".agent/programs/zuno-target-runtime-v2/README.md",
+        ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
+        ".agent/programs/zuno-target-runtime-v2/implementation-phases/README.md",
         "docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md",
         "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
         "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md",
@@ -105,7 +108,7 @@ def test_agent_readme_documents_knowledge_promotion() -> None:
         assert phrase in content, f"missing promotion phrase: {phrase}"
 
 
-def test_current_program_points_to_target_migration_and_archives_old_candidate() -> None:
+def test_current_program_points_to_active_v2_and_archives_old_candidate() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -114,7 +117,8 @@ def test_current_program_points_to_target_migration_and_archives_old_candidate()
         REPO_ROOT / "docs" / "architecture" / "history" / "programs" / "README.md"
     ).read_text(encoding="utf-8")
 
-    assert "There is no active executable Agent program" in current
+    assert "zuno-target-runtime-v2/" in current
+    assert "controlled first implementation slice" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
     assert "context-memory-agent-runtime-v1" not in programs_index
