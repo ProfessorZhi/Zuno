@@ -1,5 +1,10 @@
 # Phase 02: Contract Review Asset Migration
 
+## Status
+
+Complete. Contract Review assets are preserved in the GraphRAG Project target
+copy and the old Domain Pack asset surfaces remain archived as history.
+
 ## Goal
 
 Preserve useful Contract Review assets while removing Domain Pack as the active
@@ -102,6 +107,24 @@ Closure evidence:
   retired from current backend source.
 - The former `tests/compat/` holding area is retired; remaining migration
   compatibility tests live under root `tests/`.
+
+## 2026-06-26 Verification
+
+Phase 01 active runtime cleanup is closed for the current code path, so Phase
+02 no longer depends on a narrower asset-only exception. Fresh verification on
+2026-06-26 confirmed:
+
+- `examples/graphrag-projects/contract_review/` contains the target settings,
+  schema, retrieval policy, prompts, and eval fixture.
+- `docs/architecture/history/domain-packs/root-contract-review/` preserves the
+  old root Domain Pack evidence.
+- `docs/architecture/history/domain-packs/backend-package-contract-review/`
+  preserves the former backend package asset copy.
+- Contract Review eval and stackless local eval load GraphRAG Project payloads
+  and call extractors with `project_payload=project_payload`.
+- Docker documentation points Contract Review example assets to
+  `examples/graphrag-projects/contract_review/`; active Docker config no
+  longer mounts `/app/domain-packs`.
 
 ## Verification Commands
 

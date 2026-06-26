@@ -71,3 +71,12 @@ def test_contract_review_history_assets_are_mapped_to_project_assets() -> None:
     assert settings["prompts"]["extract_graph"] == "prompts/extract_graph.md"
     assert settings["prompts"]["local_query"] == "prompts/local_query.md"
     assert settings["prompts"]["report_template"] == "prompts/report_template.md"
+
+
+def test_contract_review_eval_script_template_points_to_current_runner() -> None:
+    script = (REPO_ROOT / ".agent/scripts/run-contract-eval-template.ps1").read_text(encoding="utf-8")
+
+    assert "tools\\evals\\zuno\\contract_review_eval\\run_contract_eval.py" in script
+    assert "src\\backend\\zuno\\evals\\contract_review_eval" not in script
+    assert "Update this template after contract_review_eval is implemented." not in script
+    assert "& python $evalScript --profile $Profile" in script
