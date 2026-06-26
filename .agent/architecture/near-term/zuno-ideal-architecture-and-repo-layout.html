@@ -89,7 +89,7 @@ button{font:inherit}
 .metric.purple{color:#6d4acb}.metric.red{color:#c8354a}
 .diagram{max-width:100%;overflow:auto;padding:18px;border:1px solid var(--line);border-radius:8px;background:#f8fafc}
 .flow{min-width:1090px;max-width:1410px;margin:auto}
-.runtime-map{width:100%;min-width:1480px;display:grid;gap:12px;margin:0}
+.runtime-map{width:100%;min-width:1380px;display:grid;gap:12px;margin:0}
 .runtime-canvas{
   display:grid;
   grid-template-columns:1.05fr 1.05fr 1.15fr 1.35fr 1.2fr;
@@ -131,40 +131,68 @@ button{font:inherit}
   text-align:center;color:#7b91aa;font-size:13px;font-weight:750;
   padding:4px 0;border-top:1px dashed #c8d8eb;border-bottom:1px dashed #c8d8eb
 }
-.runtime-clear{min-width:1480px;display:grid;gap:16px}
-.runtime-band-title{
-  display:flex;align-items:center;gap:10px;color:#1f5faa;font-size:13px;
-  font-weight:850;text-transform:uppercase;letter-spacing:.02em
+.runtime-blueprint{min-width:1380px;display:grid;gap:12px}
+.runtime-layer{
+  display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:stretch;
+  border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px
 }
-.runtime-band-title:after{content:"";height:1px;background:#c9d8ea;flex:1}
-.main-flow{
-  display:grid;
-  grid-template-columns:210px 42px 230px 42px 280px 42px 320px 42px 260px;
-  align-items:stretch;gap:10px
+.runtime-layer-label{
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  border:1px solid #c8d8eb;border-radius:8px;background:#edf5ff;color:#1f5faa;
+  font-weight:850;padding:12px;line-height:1.25
 }
-.flow-card{
-  border:1px solid #9ec5f8;border-radius:8px;background:#f3f8ff;
-  padding:18px;min-height:136px;display:flex;flex-direction:column;justify-content:center
+.runtime-layer-body{display:grid;gap:12px}
+.runtime-layer-body.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.runtime-layer-body.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.runtime-layer-body.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.runtime-unit{
+  border:1px solid #c8d8eb;border-radius:8px;background:#fff;padding:13px;
+  min-height:82px;display:flex;flex-direction:column;justify-content:center
 }
-.flow-card.agent{background:#fbf8ff;border-color:#c8b9f5}
-.flow-card.capability{background:#f6fff9;border-color:#a7ddb9}
-.flow-card strong{font-size:18px;color:var(--ink);margin-bottom:9px}
-.flow-card small{font-size:14px;color:#52637a;line-height:1.55}
-.flow-arrow{display:flex;align-items:center;justify-content:center;color:#7890ad;font-size:28px;font-weight:800}
-.support-row{display:grid;grid-template-columns:1.15fr .98fr 1.35fr;gap:14px}
-.support-panel{
-  border:1px solid var(--line);border-radius:8px;background:#fff;padding:14px;
-  display:grid;gap:10px
+.runtime-unit.primary{border-color:#8cb9ef;background:#f3f8ff}
+.runtime-unit.agent{border-color:#c6b7f3;background:#fbf8ff}
+.runtime-unit.knowledge{border-color:#9bd8b5;background:#f6fff9}
+.runtime-unit.async{border-color:#efc680;background:#fffaf0}
+.runtime-unit.infra{border-color:#bfd0e2;background:#f8fafc}
+.runtime-unit strong{display:block;color:var(--ink);font-size:15.5px;margin-bottom:5px}
+.runtime-unit small{display:block;color:var(--muted);font-size:13px;line-height:1.48}
+.runtime-connector{
+  text-align:center;color:#7890ad;font-size:14px;font-weight:800;
+  line-height:1.2;padding:2px 0
 }
-.support-panel h3{margin:0;color:#1f5faa;font-size:16px;border-bottom:1px solid var(--line);padding-bottom:7px}
-.support-panel.knowledge{background:#f6fff9;border-color:#b8e4ca}
-.support-panel.async{background:#fffaf0;border-color:#efc680}
-.support-panel.infra{background:#f8fafc;border-color:#bfd0e2}
-.support-items{display:grid;gap:8px}
-.support-items.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.support-item{border:1px solid #c8d8eb;background:#fff;border-radius:8px;padding:11px}
-.support-item strong{display:block;color:var(--ink);font-size:14.5px;margin-bottom:4px}
-.support-item small{display:block;color:var(--muted);font-size:13px;line-height:1.48}
+.runtime-connector span{display:block;font-size:24px;line-height:1;color:#8aa0bb}
+.runtime-core-grid{display:grid;grid-template-columns:330px 1fr 330px;gap:14px;align-items:stretch}
+.runtime-side-panel,.runtime-agent-panel{
+  border:1px solid var(--line);border-radius:8px;background:#fff;padding:14px;display:grid;gap:10px
+}
+.runtime-side-panel h3,.runtime-agent-panel h3{
+  margin:0;color:#1f5faa;font-size:16px;border-bottom:1px solid var(--line);padding-bottom:7px
+}
+.runtime-agent-panel{
+  border-color:#c6b7f3;background:linear-gradient(180deg,#fbf8ff,#fff);
+  grid-template-rows:auto 1fr auto
+}
+.runtime-agent-box{
+  border:1px solid #bdaaf1;border-radius:8px;background:#fff;padding:20px;
+  display:grid;gap:12px;align-content:center;min-height:190px
+}
+.runtime-agent-box strong{font-size:22px;color:var(--ink)}
+.runtime-agent-box small{font-size:14px;color:var(--muted);line-height:1.55}
+.runtime-agent-cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.runtime-agent-cells span{
+  border:1px solid #d8cff7;border-radius:8px;background:#faf7ff;
+  padding:8px;text-align:center;color:#4f3d88;font-weight:750;font-size:12.5px
+}
+.runtime-capability-plane{
+  display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:12px;
+  border:1px solid #b8e4ca;border-radius:8px;background:#f6fff9;padding:12px
+}
+.runtime-plane-title{
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  border:1px solid #9bd8b5;border-radius:8px;background:#fff;color:#168456;
+  font-weight:850;padding:10px;line-height:1.25
+}
+.runtime-store{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .runtime-rule{
   border:1px dashed #9db5d0;border-radius:8px;background:#f8fafc;
   padding:10px 12px;color:#46566c;font-weight:650
@@ -446,52 +474,76 @@ node_modules/  .codex/  .pytest_cache/  .test-tmp/  apps/web/dist/  __pycache__/
     <h2>目标运行架构图</h2>
     <div class="diagram">
       <div class="runtime-map">
-        <div class="runtime-clear">
-          <div class="runtime-band-title">Synchronous request path</div>
-          <div class="main-flow">
-            <div class="flow-card"><strong>Client Surface</strong><small>Vue Web / Electron<br>只负责交互与本地入口</small></div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-card"><strong>FastAPI Boundary</strong><small>Auth、DTO、Validation<br>SSE、Trace ID、Error Mapping</small></div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-card"><strong>Application Use Cases</strong><small>ChatService、KnowledgeQueryService<br>Index / Project / Memory / Capability</small></div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-card agent"><strong>Single GeneralAgent Runtime</strong><small>LangGraph state loop<br>Context / Memory / LLM Adapter</small></div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-card capability"><strong>Selected Capability</strong><small>Knowledge、Action、MCP、Skills<br>Permission / Cost / Health Gate</small></div>
-          </div>
-
-          <div class="runtime-band-title">Supporting systems</div>
-          <div class="support-row">
-            <div class="support-panel knowledge">
-              <h3>Knowledge Path</h3>
-              <div class="support-items">
-                <div class="support-item"><strong>search_knowledge_base</strong><small>GeneralAgent 只通过 tool/capability 请求知识。</small></div>
-                <div class="support-item"><strong>GraphRAGQueryService</strong><small>Project snapshot、query method、prompt/index/community versions。</small></div>
-                <div class="support-item"><strong>Retrieval + Evidence</strong><small>Vector / BM25 / graph → citation / trace。</small></div>
-              </div>
-            </div>
-
-            <div class="support-panel async">
-              <h3>Async Indexing</h3>
-              <div class="support-items">
-                <div class="support-item"><strong>RabbitMQ Jobs</strong><small>只传 job_id、project_id、document_id、version。</small></div>
-                <div class="support-item"><strong>Workers</strong><small>parse、chunk、embed、BM25、graph extraction、community report。</small></div>
-                <div class="support-item"><strong>Atomic Publish</strong><small>发布 index_version / community_version。</small></div>
-              </div>
-            </div>
-
-            <div class="support-panel infra">
-              <h3>Infrastructure And Governance</h3>
-              <div class="support-items cols-2">
-                <div class="support-item"><strong>PostgreSQL</strong><small>业务真相、会话、raw events、memory/project metadata。</small></div>
-                <div class="support-item"><strong>Redis</strong><small>cache、lock、SSE/job progress、hot state。</small></div>
-                <div class="support-item"><strong>MinIO / Files</strong><small>source files、artifacts、versioned outputs。</small></div>
-                <div class="support-item"><strong>Milvus / ES / Neo4j</strong><small>向量、关键词、图查询索引。</small></div>
-              </div>
+        <div class="runtime-blueprint">
+          <div class="runtime-layer">
+            <div class="runtime-layer-label">Client<br>Surface</div>
+            <div class="runtime-layer-body cols-2">
+              <div class="runtime-unit primary"><strong>Vue Web</strong><small>Chat、Knowledge、GraphRAG Project、Capability、Memory、Trace/Eval 交互面。</small></div>
+              <div class="runtime-unit primary"><strong>Electron Shell</strong><small>本地桌面壳、文件/系统能力入口；后续 Workspace 能力从这里进入。</small></div>
             </div>
           </div>
 
-          <div class="runtime-rule">主规则：同步聊天路径只进入一个 GeneralAgent；GraphRAG 是被选择的 Knowledge Capability，不是第二套聊天运行时；索引构建是异步旁路。</div>
+          <div class="runtime-connector"><span>↓</span>HTTP / SSE / typed DTO</div>
+
+          <div class="runtime-layer">
+            <div class="runtime-layer-label">Transport<br>Boundary</div>
+            <div class="runtime-layer-body cols-3">
+              <div class="runtime-unit"><strong>FastAPI Routes</strong><small>Auth、validation、request/trace id、SSE stream、error mapping。</small></div>
+              <div class="runtime-unit"><strong>API DTO / Contract</strong><small>前端只绑定公开 request/response，不依赖内部 Agent 或 Retrieval 对象。</small></div>
+              <div class="runtime-unit"><strong>Dependency Injection</strong><small>装配 Application Service、settings、auth context 和 request scope。</small></div>
+            </div>
+          </div>
+
+          <div class="runtime-connector"><span>↓</span>route calls exactly one use case</div>
+
+          <div class="runtime-core-grid">
+            <div class="runtime-side-panel">
+              <h3>Application Use Cases</h3>
+              <div class="runtime-unit primary"><strong>ChatService</strong><small>创建/恢复会话，进入唯一 GeneralAgent。</small></div>
+              <div class="runtime-unit primary"><strong>KnowledgeQueryService</strong><small>Basic / Local / Global / DRIFT 统一查询入口。</small></div>
+              <div class="runtime-unit primary"><strong>Index / Project / Memory</strong><small>项目、索引、记忆、能力目录编排。</small></div>
+            </div>
+
+            <div class="runtime-agent-panel">
+              <h3>Single Runtime Core</h3>
+              <div class="runtime-agent-box">
+                <strong>Single GeneralAgent</strong>
+                <small>同步聊天路径只进入一个 Agent。LangGraph 负责 state、checkpoint、interrupt、resume、stream；LangChain 提供 model、message、tool、structured output 抽象。</small>
+                <div class="runtime-agent-cells">
+                  <span>Context Orchestrator</span>
+                  <span>Memory & State</span>
+                  <span>LLM Adapter</span>
+                </div>
+              </div>
+              <div class="runtime-rule">GraphRAG 不是第二套聊天运行时；它是 Agent 按需选择的 Knowledge Capability。</div>
+            </div>
+
+            <div class="runtime-side-panel">
+              <h3>Async Indexing Side Path</h3>
+              <div class="runtime-unit async"><strong>Project / File Change</strong><small>source file + project settings 进入 truth store。</small></div>
+              <div class="runtime-unit async"><strong>RabbitMQ Jobs</strong><small>只传 job_id、project_id、document_id、version。</small></div>
+              <div class="runtime-unit async"><strong>Workers + Atomic Publish</strong><small>parse、chunk、embed、BM25、graph extraction、community report，发布 index/community version。</small></div>
+            </div>
+          </div>
+
+          <div class="runtime-connector"><span>↓</span>selected capability / tool call</div>
+
+          <div class="runtime-capability-plane">
+            <div class="runtime-plane-title">Capability<br>Plane</div>
+            <div class="runtime-unit knowledge"><strong>Knowledge Capability</strong><small>search_knowledge_base → GraphRAGQueryService → evidence / citation / trace。</small></div>
+            <div class="runtime-unit"><strong>Action Tools / MCP / Skills</strong><small>文件、浏览器/API、外部 resources/tools/prompts 与流程知识。</small></div>
+            <div class="runtime-unit"><strong>Permission / Cost / Health Gate</strong><small>schema、scope、cost、health、human approval。</small></div>
+          </div>
+
+          <div class="runtime-layer">
+            <div class="runtime-layer-label">Durable<br>Truth</div>
+            <div class="runtime-store">
+              <div class="runtime-unit infra"><strong>PostgreSQL</strong><small>业务真相、会话、raw events、task summary、memory/project metadata。</small></div>
+              <div class="runtime-unit infra"><strong>Redis</strong><small>cache、lock、SSE/job progress、hot state。</small></div>
+              <div class="runtime-unit infra"><strong>MinIO / Files</strong><small>source files、large artifacts、versioned GraphRAG outputs。</small></div>
+              <div class="runtime-unit infra"><strong>Milvus / ES / Neo4j</strong><small>向量、关键词、图查询索引。</small></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
