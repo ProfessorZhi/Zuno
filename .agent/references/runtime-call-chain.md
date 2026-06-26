@@ -10,6 +10,9 @@ Summarize the current backend call direction.
 HTTP route
   -> application/service function
   -> core/runtime orchestration
+  -> GeneralAgent prepare_context
+  -> GeneralAgent React loop
+  -> post_turn_commit
   -> retrieval, GraphRAG, context contracts, memory, capabilities, tools, storage
   -> response DTO
 ```
@@ -28,7 +31,14 @@ schemas for a task. The existing API capability search service preserves its
 previous response keys while also exposing the unified metadata fields.
 
 GeneralAgent does not yet inject selected capabilities into every model turn;
-that runtime integration belongs to Phase 08.
+full product-level capability orchestration remains Phase 09/future closure.
+
+## GeneralAgent Context Runtime
+
+`GeneralAgent.astream()` now prepares a `ModelContextPacket`, passes
+`context_trace` and `model_context_packet` into the single React loop state,
+and commits a scoped memory raw event plus task summary after the turn when
+memory is enabled.
 
 ## Known Limitations
 

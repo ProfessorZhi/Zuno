@@ -116,6 +116,13 @@ Current status:
   exposes unified capability fields for tools, skills, MCP servers, and MCP
   tools while retaining its previous API-facing keys. GeneralAgent runtime
   integration remains Phase 08.
+- Phase 08 is complete for the minimal single-loop runtime integration.
+  `GeneralAgent.astream()` now prepares a `ModelContextPacket`, passes
+  `context_trace` and `model_context_packet` into the single React loop state,
+  selects bounded capability schemas from currently available tools, and
+  commits a scoped raw event plus task summary to the memory layer after the
+  turn when memory is enabled. Mature long-term memory retrieval,
+  consolidation, and product UI remain outside this phase.
 
 Superseded candidate program:
 

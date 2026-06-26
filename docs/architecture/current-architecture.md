@@ -155,14 +155,19 @@ Capability System foundation contracts are current code under
 `src/backend/zuno/services/application/capabilities/`. The current capability
 search service exposes unified metadata for tools, skills, MCP servers, and
 MCP tools while keeping existing API-facing fields.
+The current `GeneralAgent.astream()` path performs minimal runtime integration:
+it prepares a `ModelContextPacket`, passes `context_trace` and
+`model_context_packet` into the single React loop state, selects bounded
+capability schemas from available tools, and commits a scoped raw event plus
+task summary to the memory layer when memory is enabled.
 
 Context Orchestrator and Post-turn Pipeline are Target, not Current.
-GeneralAgent runtime capability injection is also Target, not Current.
+Full product-level capability orchestration is also Target, not Current.
 
 The near-term Context & Memory orchestration design is documented under
 `.agent/`; it is not implemented as the current runtime. Do not describe
 production-grade memory extraction/retrieval/consolidation, Context
-Orchestrator, GeneralAgent-integrated dynamic capability selection, or the
+Orchestrator, product-level dynamic capability orchestration, or the full
 Post-turn Pipeline as current behavior until code and tests prove them.
 
 Phase 12 is partial / not closed. The repository has focused tests for recent

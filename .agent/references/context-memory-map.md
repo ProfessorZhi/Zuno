@@ -10,6 +10,9 @@ target architecture into a reference file.
 Typed context contracts are Current under
 `src/backend/zuno/services/application/context/`. Memory layer foundation
 contracts are Current under `src/backend/zuno/services/memory/layers.py`.
+The single `GeneralAgent` runtime now prepares a `ModelContextPacket`, passes
+`ContextTrace` metadata into its React loop state, and commits a scoped raw
+event plus task summary to the memory layer when memory is enabled.
 
 Context Orchestrator and Post-turn Pipeline are Target, not Current. Mature
 memory extraction/retrieval/consolidation integration is later phase work. The
@@ -38,6 +41,15 @@ Phase 06 memory layer contracts keep raw events as source of truth, require
 source ids for summaries and candidates, scope long-term candidates by
 user/agent/project/thread, and require explicit promotion before external
 knowledge can become Agent memory.
+
+Phase 08 runtime integration keeps a single `GeneralAgent` path and adds the
+minimal current call shape:
+
+```text
+prepare_context
+  -> GeneralAgent React loop
+  -> post_turn_commit
+```
 
 The old `context-memory-agent-runtime-v1` candidate program is archived under
 `docs/architecture/history/programs/context-memory-agent-runtime-v1/`.

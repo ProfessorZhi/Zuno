@@ -60,8 +60,7 @@ migration stages.
 
 ## Next Actions
 
-1. implement Phase 08 single `GeneralAgent` runtime integration
-2. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
+1. close Phase 09 with full pytest, eval baseline comparison, grep gates, and
    final docs/evidence
 
 Contract Review asset migration has completed its asset-only slice: the Target
@@ -104,6 +103,10 @@ Current foundation closures:
   `src/backend/zuno/services/application/capabilities/`, with the existing
   capability search service exposing unified metadata for tools, skills, MCP
   servers, and MCP tools.
+- Phase 08 GeneralAgent runtime integration is current code in
+  `src/backend/zuno/core/agents/general_agent.py`: it prepares context,
+  passes trace metadata into the single React loop, and commits scoped memory
+  raw events and task summaries after a turn when memory is enabled.
 
 ## Non-Goals
 

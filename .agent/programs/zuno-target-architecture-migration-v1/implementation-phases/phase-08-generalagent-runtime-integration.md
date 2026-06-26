@@ -30,10 +30,14 @@ Phase 05 through Phase 07 complete.
 
 ## Acceptance Gates
 
-- One conversation path remains.
-- Context trace records what entered the model call.
-- Post-turn pipeline records raw events and derived updates.
-- GraphRAG Project query returns Knowledge Evidence to the Agent.
+- Complete. One conversation path remains: `GeneralAgent.astream()` still
+  drives the single React loop.
+- Complete. `prepare_context()` records a `ModelContextPacket` and
+  `ContextTrace` before the model call, then passes both into the loop state.
+- Complete. `post_turn_commit()` records a scoped raw event and task summary
+  into the memory layer when memory is enabled.
+- Complete. GraphRAG Project knowledge access still routes through
+  `search_knowledge_base -> KnowledgeQueryService`.
 
 ## Verification Commands
 
@@ -48,3 +52,17 @@ git diff --check
 - runtime call chain
 - trace example
 - focused test output
+
+## Closure Evidence
+
+- Runtime call chain:
+  `prepare_context -> GeneralAgent React loop -> post_turn_commit`.
+- Trace example:
+  `context_trace.selected_item_ids` includes recent message items and selected
+  capability schema item ids such as `search_knowledge_base`.
+- Memory example:
+  `RawMemoryEvent(layer=WORKING, event_type=agent_turn)` and
+  `TaskMemorySummary(layer=TASK, source_event_ids=(raw_event_id,))`.
+- Focused tests:
+  `python -m pytest -q tests/test_generalagent_context_memory_runtime.py`
+  passed.

@@ -28,7 +28,7 @@ phase that owns it proves active dependency removal.
 | 05 | complete | Context contract foundation |
 | 06 | complete | Memory layer foundation |
 | 07 | complete | Capability System |
-| 08 | next active integration phase | single GeneralAgent runtime integration |
+| 08 | complete | single GeneralAgent runtime integration |
 | 09 | final | full tests, eval, trace, docs, and grep closure |
 
 Current Phase 01/03 closure includes GraphRAG Project scoped graph writes and
@@ -62,6 +62,14 @@ capability search service now returns unified capability metadata
 (`type`, `schema`, `permissions`, `cost`, `health`, `source`, and `owner`)
 for tools, skills, MCP servers, and MCP tools while preserving previous
 API-facing fields. GeneralAgent runtime selection remains Phase 08.
+
+Phase 08 closure wires the existing single `GeneralAgent` loop through a
+minimal `prepare_context -> agent_loop -> post_turn_commit` shape. The agent
+creates a `ModelContextPacket`, passes context trace metadata into the React
+loop state, selects only bounded capability schemas from the currently
+available tools, and records a scoped raw event plus task summary into the
+memory layer when memory is enabled. Mature memory retrieval/consolidation and
+Phase 09 full test/eval/trace closure remain open.
 
 ## Execution Rules
 

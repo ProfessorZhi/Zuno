@@ -23,6 +23,33 @@ from zuno.api.services.tool import ToolService
 from zuno.core.callbacks import usage_metadata_callback
 from zuno.core.models.manager import ModelManager
 from zuno.database import AgentSkill
+from zuno.services.application.capabilities import (
+    CapabilityCost,
+    CapabilityHealth,
+    CapabilityPermissions,
+    CapabilityRecord,
+    CapabilityRegistry,
+    CapabilitySelectionRequest,
+    CapabilitySelectionResult,
+    CapabilityType,
+    DynamicCapabilitySelector,
+)
+from zuno.services.application.context import (
+    AgentExecutionContext,
+    ContextItem,
+    ContextSelectionReason,
+    ContextSource,
+    ContextTrace,
+    ModelContextPacket,
+    TokenBudgetPolicy,
+)
+from zuno.services.memory import (
+    InMemoryLayerStore,
+    MemoryLayer,
+    MemoryScope,
+    RawMemoryEvent,
+    TaskMemorySummary,
+)
 from zuno.services.mcp.manager import MCPManager
 from zuno.services.user_defined_tool_runtime import build_user_defined_langchain_tools
 from zuno.tools import AgentToolsWithName
@@ -39,6 +66,8 @@ class StreamAgentState(AgentState):
     tool_call_count: NotRequired[int]
     model_call_count: NotRequired[int]
     user_id: NotRequired[str]
+    model_context_packet: NotRequired[dict[str, Any]]
+    context_trace: NotRequired[dict[str, Any]]
 
 
 class AgentConfig(BaseModel):
@@ -170,6 +199,9 @@ class GeneralAgent:
         self.middlewares: list[AgentMiddleware] = []
         self.tool_metadata_map: Dict[str, Dict[str, str]] = {}
         self.mcp_tool_server_map: Dict[str, str] = {}
+        self.memory_layer_store = InMemoryLayerStore()
+        self.last_model_context_packet: ModelContextPacket | None = None
+        self.last_capability_selection: CapabilitySelectionResult | None = None
 
         self.event_queue = asyncio.Queue()
         self.stop_streaming = False
@@ -189,6 +221,155 @@ class GeneralAgent:
         await self.setup_language_model()
         self.middlewares = await self.setup_agent_middleware()
         self.react_agent = self.setup_react_agent()
+
+    def prepare_context(self, messages: List[BaseMessage]) -> ModelContextPacket:
+        task = self._extract_latest_user_query(messages)
+        token_budget = TokenBudgetPolicy(max_tokens=4000, reserved_response_tokens=800)
+        execution_context = AgentExecutionContext(
+            trace_id=f"ga-{int(time.time() * 1000)}",
+            user_id=self.agent_config.user_id,
+            agent_id=self.agent_config.name or "general_agent",
+            thread_id=self.agent_config.dialog_id or "",
+            project_id=self.agent_config.knowledge_ids[0] if self.agent_config.knowledge_ids else None,
+            task=task,
+        )
+
+        selected_capabilities = DynamicCapabilitySelector(
+            CapabilityRegistry(self._available_capability_records())
+        ).select(
+            CapabilitySelectionRequest(
+                task=task,
+                max_capabilities=8,
+            )
+        )
+        self.last_capability_selection = selected_capabilities
+
+        items: list[ContextItem] = []
+        if self.agent_config.system_prompt.strip():
+            items.append(
+                ContextItem(
+                    item_id="system_prompt",
+                    source=ContextSource.SYSTEM_INSTRUCTION,
+                    content=self.agent_config.system_prompt.strip(),
+                    token_estimate=self._estimate_tokens(self.agent_config.system_prompt),
+                    priority=100,
+                    reason=ContextSelectionReason.PINNED_INSTRUCTION,
+                )
+            )
+        if task:
+            items.append(
+                ContextItem(
+                    item_id="latest_user_message",
+                    source=ContextSource.RECENT_MESSAGE,
+                    content=task,
+                    token_estimate=self._estimate_tokens(task),
+                    priority=90,
+                    reason=ContextSelectionReason.RECENT_USER_TURN,
+                )
+            )
+
+        for capability in selected_capabilities.capabilities:
+            items.append(
+                ContextItem(
+                    item_id=capability.name,
+                    source=ContextSource.CAPABILITY_SCHEMA,
+                    content=str(capability.to_dict()),
+                    token_estimate=self._estimate_tokens(str(capability.schema)) + 20,
+                    priority=70,
+                    reason=ContextSelectionReason.CAPABILITY_SELECTED,
+                    metadata={"capability_type": capability.type.value},
+                )
+            )
+
+        selected_items = tuple(items)
+        trace = ContextTrace.from_items(
+            trace_id=execution_context.trace_id,
+            policy=token_budget,
+            selected_items=selected_items,
+            dropped_items=(),
+        )
+        packet = ModelContextPacket(
+            execution_context=execution_context,
+            items=selected_items,
+            token_budget=token_budget,
+            trace=trace,
+        )
+        self.last_model_context_packet = packet
+        return packet
+
+    def post_turn_commit(
+        self,
+        *,
+        messages: List[BaseMessage],
+        response: str,
+        context_packet: ModelContextPacket,
+    ) -> None:
+        if not self.agent_config.enable_memory:
+            return
+        event = RawMemoryEvent(
+            event_id=f"{context_packet.execution_context.trace_id}:turn",
+            scope=self._memory_scope(),
+            event_type="agent_turn",
+            payload={
+                "task": self._extract_latest_user_query(messages),
+                "response": response,
+                "context_trace": context_packet.trace.to_dict(),
+            },
+            layer=MemoryLayer.WORKING,
+        )
+        self.memory_layer_store.append_raw_event(event)
+        self.memory_layer_store.save_task_summary(
+            TaskMemorySummary(
+                summary_id=f"{event.event_id}:summary",
+                scope=event.scope,
+                layer=MemoryLayer.TASK,
+                content=response or event.payload["task"],
+                source_event_ids=(event.event_id,),
+                token_count=self._estimate_tokens(response or event.payload["task"]),
+            )
+        )
+
+    def _available_capability_records(self) -> list[CapabilityRecord]:
+        records: list[CapabilityRecord] = []
+        for tool_item in self.tools:
+            capability_type = (
+                CapabilityType.KNOWLEDGE
+                if getattr(tool_item, "name", "") == "search_knowledge_base"
+                else CapabilityType.ACTION_TOOL
+            )
+            records.append(self._tool_capability_record(tool_item, capability_type))
+        for tool_item in self.mcp_tools:
+            records.append(self._tool_capability_record(tool_item, CapabilityType.MCP_TOOL))
+        for tool_item in self.skill_tools:
+            records.append(self._tool_capability_record(tool_item, CapabilityType.SKILL))
+        return records
+
+    def _tool_capability_record(self, tool_item: Any, capability_type: CapabilityType) -> CapabilityRecord:
+        name = str(getattr(tool_item, "name", ""))
+        description = str(getattr(tool_item, "description", ""))
+        return CapabilityRecord(
+            name=name,
+            type=capability_type,
+            description=description,
+            schema=dict(getattr(tool_item, "args", {}) or {}),
+            permissions=CapabilityPermissions(
+                scopes=(f"{capability_type.value}:use",),
+                side_effects=capability_type in {CapabilityType.ACTION_TOOL, CapabilityType.MCP_TOOL},
+            ),
+            cost=CapabilityCost(token_estimate=200),
+            health=CapabilityHealth.READY,
+            source="general_agent_runtime",
+            owner="GeneralAgent",
+            tags=tuple(part for part in [name.replace("_", " "), description] if part),
+        )
+
+    def _memory_scope(self) -> MemoryScope:
+        return MemoryScope(
+            user_id=self.agent_config.user_id,
+            agent_id=self.agent_config.name or "general_agent",
+            project_id=self.agent_config.knowledge_ids[0] if self.agent_config.knowledge_ids else None,
+            thread_id=self.agent_config.dialog_id,
+        )
 
     async def setup_agent_middleware(self):
         return [
@@ -383,8 +564,13 @@ class GeneralAgent:
             return str(getattr(messages[-1], "content", "") or "").strip()
         return ""
 
+    @staticmethod
+    def _estimate_tokens(text: str) -> int:
+        return max(1, len(text) // 4)
+
     async def astream(self, messages: List[BaseMessage]) -> AsyncGenerator[Dict[str, Any], None]:
         response_content = ""
+        context_packet = self.prepare_context(messages)
         visible_messages = copy.deepcopy(
             normalize_messages_for_model(messages, model=self.conversation_model)
         )
@@ -395,6 +581,8 @@ class GeneralAgent:
                     "messages": visible_messages,
                     "model_call_count": 0,
                     "user_id": self.agent_config.user_id,
+                    "model_context_packet": context_packet.to_dict(),
+                    "context_trace": context_packet.trace.to_dict(),
                 },
                 config={"callbacks": [usage_metadata_callback]},
                 stream_mode=["messages", "custom"],
@@ -429,6 +617,12 @@ class GeneralAgent:
                     "accumulated": response_content,
                 },
             }
+        finally:
+            self.post_turn_commit(
+                messages=messages,
+                response=response_content,
+                context_packet=context_packet,
+            )
 
     def stop_streaming_callback(self):
         self.stop_streaming = True
