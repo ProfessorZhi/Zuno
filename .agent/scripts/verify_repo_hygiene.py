@@ -31,9 +31,18 @@ BLOCKED_LEGACY_PATHS = []
 
 FORBIDDEN_CURRENT_PATHS = [
     "src/frontend",
+    ".agent/skills",
+    ".agent/workflows",
+    "docs/architecture/history",
+    "docs/architecture/audits",
+    "docs/architecture/specs",
     "docs/architecture/phases",
     "docs/architecture/plans",
     "docs/architecture/programs",
+    "docs/development",
+    "docs/prototypes",
+    "docs/ui-review",
+    "docs/ui-gallery",
     ".agent/programs/official-graphrag-cleanup-v1",
     "domain-packs",
     "tests/compat",
@@ -54,24 +63,24 @@ RETIRED_DOMAIN_PACK_API_WRAPPERS = [
 ]
 
 REQUIRED_CONTRACT_REVIEW_HISTORY_ASSETS = [
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
+    "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+    "docs/history/domain-packs/root-contract-review/contract_review/schema.json",
+    "docs/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
+    "docs/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
+    "docs/history/domain-packs/root-contract-review/contract_review/answer_template.md",
+    "docs/history/domain-packs/root-contract-review/contract_review/report_template.md",
+    "docs/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
 ]
 
 REQUIRED_RETIRED_UI_SCRIPT_ARCHIVES = [
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
+    "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
+    "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
+    "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
 ]
 
 REQUIRED_PHASE6_BUNDLE_HELPER_ARCHIVES = [
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
+    "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
+    "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
 ]
 
 RETIRED_PHASE6_BUNDLE_ACTIVE_TOOLS = [
@@ -80,10 +89,10 @@ RETIRED_PHASE6_BUNDLE_ACTIVE_TOOLS = [
 ]
 
 REQUIRED_ARCHIVED_MIGRATION_SPECS = [
-    "docs/architecture/history/specs/deep-graphrag-v1-runtime.md",
-    "docs/architecture/history/specs/domain-pack-langgraph-graphrag-architecture.md",
-    "docs/architecture/history/specs/domain-pack-builder.md",
-    "docs/architecture/history/specs/knowledge-product-boundary.md",
+    "docs/history/specs/deep-graphrag-v1-runtime.md",
+    "docs/history/specs/domain-pack-langgraph-graphrag-architecture.md",
+    "docs/history/specs/domain-pack-builder.md",
+    "docs/history/specs/knowledge-product-boundary.md",
 ]
 
 RETIRED_ACTIVE_MIGRATION_SPECS = [
@@ -94,7 +103,7 @@ RETIRED_ACTIVE_MIGRATION_SPECS = [
 ]
 
 REQUIRED_ARCHIVED_DECISIONS = [
-    "docs/architecture/history/decisions/0001-domain-pack-binding.md",
+    "docs/history/decisions/0001-domain-pack-binding.md",
 ]
 
 RETIRED_ACTIVE_DECISIONS = [
@@ -332,6 +341,8 @@ def main() -> int:
 
     retired_ui_script_phrases = [
         "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
+        "docs/ui-review/",
+        "docs/prototypes/",
         "/api/v1/domain-packs",
         "/workspace/settings/knowledge/domain-packs",
         "domain-pack-list.vue",

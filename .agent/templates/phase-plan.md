@@ -16,4 +16,4 @@
 
 ## History Impact
 
-List any superseded material that must move to `docs/architecture/history/`.
+List any superseded material that must move to `docs/history/`.

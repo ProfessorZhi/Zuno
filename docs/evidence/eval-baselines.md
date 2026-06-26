@@ -1,44 +1,49 @@
 # Eval Baselines
 
-## Purpose
+## 用途
 
-Record the formal Eval baseline status for the Zuno Target Architecture
-Migration V1 closure without implying this page reran tests or evals.
+记录 Zuno Target Architecture Migration V1 closure 的正式 Eval baseline 状态，不暗示本页重新运行了测试或 eval。
 
-## Current Status
+## 当前状态
 
-Zuno Target Architecture Migration V1 is closed and archived. This page records
-the `ffa3add` closure evidence; it is not a fresh test or eval execution from
-this documentation-sync round.
+Zuno Target Architecture Migration V1 已关闭并归档。
 
-Phase 11C active runtime cleanup is complete. Phase 12 is closed through the
-target migration closure evidence.
+本页记录的是 `ffa3add` closure evidence；它不是本轮文档同步重新执行出来的测试或 eval 结果。
+
+Phase 11C active runtime cleanup 已完成。Phase 12 已通过 target migration closure evidence 关闭。
 
 ## Closure Evidence
 
-- Full pytest closure evidence: `714 passed, 3 warnings`.
-- Contract Review eval:
-  - `dev_offline`: status=`ok`.
-  - `dev_local`: status=`ok`.
-- Stackless baseline comparison:
-  - Core acceptance passed.
-  - `prefer_rerank_when_tied=no` is recorded as a tuning signal, not a failure.
-- Trace closure is complete. Eval JSONL includes `trace_id`,
-  `graphrag_project_id`, requested/resolved query method, evidence bundle,
-  citation coverage, prompt version, query prompt version, index version,
-  community version, latency, and `cost=null`.
-- Legacy grep closure:
-  - 457 hits.
-  - All hits are classified as `history_archive` or
-    `migration_retirement_guard`.
-  - `needs_review=0`.
+- full pytest closure evidence：`714 passed, 3 warnings`
+- Contract Review eval：
+  - `dev_offline`：status=`ok`
+  - `dev_local`：status=`ok`
+- Stackless baseline comparison：
+  - 核心 acceptance 通过。
+  - `prefer_rerank_when_tied=no` 记录为 tuning signal，不包装为失败。
+- Trace closure 已完成。eval JSONL 包含：
+  - `trace_id`
+  - `graphrag_project_id`
+  - requested/resolved query method
+  - evidence bundle
+  - citation coverage
+  - prompt version
+  - query prompt version
+  - index version
+  - community version
+  - latency
+  - `cost=null`
+- Legacy grep closure：
+  - 457 hits
+  - 全部 classified as `history_archive` or `migration_retirement_guard`
+  - `needs_review=0`
 
-## Current Boundaries
+## 当前边界
 
-Context Orchestrator full product behavior remains Target, not mature Current.
-Production-grade memory extraction, retrieval, and consolidation remain Target.
-Product-level dynamic capability orchestration remains Target.
+Context Orchestrator full product behavior 仍是 Target，不是成熟 Current。
 
-`domain_pack_id` may still appear as a migration alias, existing database-column
-compatibility, eval CLI compatibility, and retirement/history tests. It is not
-the active mainline public architecture.
+Production-grade memory extraction、retrieval、consolidation 仍是 Target。
+
+Product-level dynamic capability orchestration 仍是 Target。
+
+`domain_pack_id` 仍可能存在于 migration alias、existing database-column compatibility、eval CLI compatibility、retirement/history tests。它不是 active mainline public architecture。

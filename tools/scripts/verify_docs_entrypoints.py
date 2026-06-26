@@ -10,112 +10,71 @@ def _read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
-def _require_phrases(name: str, content: str, phrases: list[str]) -> list[str]:
+def _require(name: str, content: str, phrases: list[str]) -> list[str]:
     return [f"{name} missing phrase: {phrase}" for phrase in phrases if phrase not in content]
-
-
-def verify_active_spec_domain_pack_boundaries() -> list[str]:
-    allowed_migration_specs = {
-        REPO_ROOT / "docs/architecture/specs/README.md",
-    }
-    forbidden_phrases = [
-        "Domain Pack\n  ->",
-        "Domain Pack ->",
-        "Domain Pack retrieval policy inputs",
-        "Domain-specific graph cues belong in `Domain Pack retrieval_policy`",
-        "GraphRAG 不是孤立能力，而是受 Domain Pack 驱动",
-        "Domain Pack 成为领域扩展机制",
-        "GraphRAG 受 `Domain Pack` 控制",
-        "LangGraph runtime 必须能感知 Domain Pack",
-        "它验证 Domain Pack 是否有价值",
-        "Domain Pack schema",
-        "Phase 3: Domain Pack Formalization",
-        "deeper LangGraph, GraphRAG, Domain Pack",
-        "business orchestration, retrieval, GraphRAG, Domain Pack, provider adapters",
-    ]
-
-    errors: list[str] = []
-    for path in sorted((REPO_ROOT / "docs/architecture/specs").glob("*.md")):
-        if path in allowed_migration_specs:
-            continue
-        content = path.read_text(encoding="utf-8")
-        for phrase in forbidden_phrases:
-            if phrase in content:
-                relative_path = path.relative_to(REPO_ROOT).as_posix()
-                errors.append(
-                    f"{relative_path} promotes Domain Pack as current/target driver: {phrase}"
-                )
-    return errors
-
-
-def verify_near_term_retired_runtime_boundaries() -> list[str]:
-    forbidden_phrases = [
-        "Current Evidence: `DomainQAGraph`",
-        "current Domain Pack state",
-        "`DomainQAGraph` carries runtime settings",
-        "`DomainQAGraph` collects trace and cost metadata",
-        "including legacy-facing `domain_packs`",
-        "Current storage and query filters still use `domain_pack_id`",
-        "remaining Domain Pack pages are migration/runtime surfaces",
-    ]
-
-    errors: list[str] = []
-    for path in sorted((REPO_ROOT / ".agent/architecture/near-term").glob("*.md")):
-        content = path.read_text(encoding="utf-8")
-        for phrase in forbidden_phrases:
-            if phrase in content:
-                relative_path = path.relative_to(REPO_ROOT).as_posix()
-                errors.append(
-                    f"{relative_path} marks retired Domain Pack runtime evidence as current: {phrase}"
-                )
-    return errors
 
 
 def verify_architecture_decision_boundaries() -> list[str]:
     errors: list[str] = []
     active_decision = REPO_ROOT / "docs/architecture/decisions/0001-domain-pack-binding.md"
-    history_decision = (
-        REPO_ROOT
-        / "docs/architecture/history/decisions/0001-domain-pack-binding.md"
-    )
+    history_decision = REPO_ROOT / "docs/history/decisions/0001-domain-pack-binding.md"
     decisions_index = _read("docs/architecture/decisions/README.md")
 
     if active_decision.exists():
-        errors.append(
-            "docs/architecture/decisions/0001-domain-pack-binding.md must be archived; "
-            "Domain Pack binding is no longer an active mainline decision"
-        )
+        errors.append("docs/architecture/decisions/0001-domain-pack-binding.md must stay archived")
     if not history_decision.exists():
-        errors.append(
-            "docs/architecture/history/decisions/0001-domain-pack-binding.md is missing"
-        )
+        errors.append("docs/history/decisions/0001-domain-pack-binding.md is missing")
     if "0001-domain-pack-binding.md" in decisions_index:
-        errors.append(
-            "docs/architecture/decisions/README.md must not list superseded ADR 0001 as active"
-        )
-
+        errors.append("superseded ADR 0001 must not be listed as active")
     return errors
 
 
-def verify_active_docs_do_not_link_retired_architecture_current_paths() -> list[str]:
+def verify_active_docs_do_not_link_retired_paths() -> list[str]:
     forbidden_phrases = [
         "docs/architecture/phases/",
         "docs/architecture/plans/",
         "docs/architecture/programs/",
+        "docs/architecture/audits/",
+        "docs/architecture/specs/",
+        "docs/architecture/history/",
+        "docs/development/",
+        "docs/prototypes/",
+        "docs/ui-review/",
+        "docs/ui-gallery/",
     ]
 
     errors: list[str] = []
     for path in sorted((REPO_ROOT / "docs").glob("**/*.md")):
         relative_path = path.relative_to(REPO_ROOT).as_posix()
-        if relative_path.startswith("docs/architecture/history/"):
+        if relative_path.startswith("docs/history/"):
             continue
         content = path.read_text(encoding="utf-8")
         for phrase in forbidden_phrases:
             if phrase in content:
-                errors.append(
-                    f"{relative_path} links retired architecture current path: {phrase}"
-                )
+                errors.append(f"{relative_path} links retired front-path text: {phrase}")
     return errors
+
+
+def verify_front_path_shape() -> list[str]:
+    forbidden_paths = [
+        "docs/architecture/audits",
+        "docs/architecture/specs",
+        "docs/architecture/history",
+        "docs/development",
+        "docs/prototypes",
+        "docs/ui-review",
+        "docs/ui-gallery",
+        "docs/reference/api.md",
+        "docs/reference/core.md",
+        "docs/reference/database.md",
+        "docs/reference/service.md",
+        "docs/reference/zuno.md",
+    ]
+    return [
+        f"retired docs front-path still exists: {relative_path}"
+        for relative_path in forbidden_paths
+        if (REPO_ROOT / relative_path).exists()
+    ]
 
 
 def main() -> int:
@@ -123,34 +82,32 @@ def main() -> int:
     docs_index = _read("docs/README.md")
     architecture_index = _read("docs/architecture/README.md")
     roadmap = _read("docs/architecture/roadmap.md")
+    target = _read("docs/architecture/target-architecture.md")
     evidence = _read("docs/evidence/public-demo.md")
+    workflow = _read(".agent/references/workflow.md")
+    agents = _read("AGENTS.md")
 
     errors: list[str] = []
     errors.extend(
-        _require_phrases(
+        _require(
             "README.md",
             readme,
             [
-                "First-time readers start here:",
                 "./docs/architecture/current-architecture.md",
                 "./docs/architecture/target-architecture.md",
                 "./docs/architecture/roadmap.md",
                 "./docs/evidence/public-demo.md",
                 "Bounded Legacy Compatibility",
-                "Phase 11A",
-                "Phase 11B",
-                "Phase 11C",
-                "Phase 12",
                 "src/backend/zuno",
-                "Summary Compression + Structured Extraction",
-                "ToolCard Registry",
+                "Summary Compression",
+                "ToolCard",
                 "Native BM25",
                 "RRF",
             ],
         )
     )
     errors.extend(
-        _require_phrases(
+        _require(
             "docs/README.md",
             docs_index,
             [
@@ -158,12 +115,13 @@ def main() -> int:
                 "./architecture/target-architecture.md",
                 "./architecture/roadmap.md",
                 "./evidence/public-demo.md",
-                "docs/architecture/history/",
+                "./history/README.md",
+                "前台文档默认使用中文",
             ],
         )
     )
     errors.extend(
-        _require_phrases(
+        _require(
             "docs/architecture/README.md",
             architecture_index,
             [
@@ -171,15 +129,15 @@ def main() -> int:
                 "target-architecture.md",
                 "roadmap.md",
                 "../evidence/public-demo.md",
-                "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
-                "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
+                "docs/history/programs/official-graphrag-cleanup-v1/",
+                "docs/history/programs/zuno-target-architecture-migration-v1/",
                 "zuno-target-runtime-v2",
-                "history/phases/",
+                "过时审计、旧规格、旧 phase、旧计划和旧 runbook",
             ],
         )
     )
     errors.extend(
-        _require_phrases(
+        _require(
             "docs/architecture/roadmap.md",
             roadmap,
             [
@@ -188,42 +146,68 @@ def main() -> int:
                 "Phase 11C: active runtime cleanup complete",
                 "Phase 12: closed through the target migration closure evidence",
                 "Bounded Legacy Compatibility",
-                "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
-                "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
+                "Phase 05 Memory Engine",
+                "Phase 09 Product Boundary / Trace / Eval Closure",
+                "docs/history/programs/zuno-target-architecture-migration-v1/",
+                "docs/history/programs/official-graphrag-cleanup-v1/",
             ],
         )
     )
     errors.extend(
-        _require_phrases(
-            "docs/evidence/public-demo.md",
-            evidence,
+        _require(
+            "docs/architecture/target-architecture.md",
+            target,
             [
-                "../development/public-demo-evidence.md",
-                "../development/public-demo-runbook.md",
-                "../development/public-demo-acceptance.md",
+                "Summary Compression",
+                "Structured Extraction",
+                "Native BM25",
+                "ToolCard",
+                "RRF",
+                "`auto` 是 router",
+                "新增或重写的前台文档使用中文",
             ],
         )
     )
-    errors.extend(verify_active_spec_domain_pack_boundaries())
-    errors.extend(verify_near_term_retired_runtime_boundaries())
-    errors.extend(verify_architecture_decision_boundaries())
-    errors.extend(verify_active_docs_do_not_link_retired_architecture_current_paths())
+    errors.extend(
+        _require(
+            "docs/evidence/public-demo.md",
+            evidence,
+            [
+                "../history/development/public-demo-evidence.md",
+                "../history/development/public-demo-runbook.md",
+                "../history/development/public-demo-acceptance.md",
+            ],
+        )
+    )
+    errors.extend(
+        _require(
+            ".agent/references/workflow.md",
+            workflow,
+            [
+                "前台文档默认使用中文",
+                "过时材料移动到 `docs/history/`",
+                "旧 audit、旧 spec、旧 runbook、旧 UI 原型",
+            ],
+        )
+    )
+    errors.extend(
+        _require(
+            "AGENTS.md",
+            agents,
+            [
+                "这是仓库唯一的 Agent 入口",
+                ".agent/references/task-routing.md",
+                ".agent/references/workflow.md",
+                ".agent/programs/",
+                ".agent/architecture/",
+                "前台文档默认中文",
+            ],
+        )
+    )
 
-    forbidden_front_path = [
-        "docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md",
-        "./docs/architecture/phases/README.md",
-        "./phases/README.md",
-        "./plans/",
-        "05_TopDown_题库学习/项目/02_项目映射/Zuno/",
-    ]
-    for name, content in {
-        "README.md": readme,
-        "docs/README.md": docs_index,
-        "docs/architecture/README.md": architecture_index,
-    }.items():
-        for forbidden in forbidden_front_path:
-            if forbidden in content:
-                errors.append(f"{name} contains retired front-path text: {forbidden}")
+    errors.extend(verify_architecture_decision_boundaries())
+    errors.extend(verify_active_docs_do_not_link_retired_paths())
+    errors.extend(verify_front_path_shape())
 
     if errors:
         for error in errors:

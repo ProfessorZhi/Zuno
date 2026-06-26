@@ -6,13 +6,20 @@ Active executable Agent program.
 
 Phase 00-04 are complete and archived under:
 
-- `docs/architecture/history/programs/zuno-target-runtime-v2/`
+- `docs/history/programs/zuno-target-runtime-v2/`
 
 ## Current Focus
 
-The next implementation work should start after documentation canonicalization
-is complete and verified. Do not continue runtime work until the docs/.agent
-system points to the slim canonical target architecture.
+Documentation canonicalization is the gate before the next runtime phase. After
+that gate is committed and pushed, the next executable runtime phase is:
+
+```text
+Phase 05: Memory Engine
+```
+
+Phase 05 must start from the existing minimal `ContextOrchestrator` foundation
+and implement only a focused memory slice. It must not claim mature memory
+behavior until code and tests prove it.
 
 ## Completed Slice
 
@@ -24,10 +31,16 @@ system points to the slim canonical target architecture.
 
 ## Next Runtime Targets
 
-- mature Memory Engine.
-- mature Capability / Tool Retrieval.
-- explicit GeneralAgent LangGraph runtime graph.
-- frontend feature boundaries.
-- tests, eval, trace, and closure evidence.
+Execute phases linearly:
+
+1. Phase 05: Memory Engine.
+2. Phase 06: Capability / Tool Retrieval.
+3. Phase 07: Knowledge Retrieval / Fusion.
+4. Phase 08: GeneralAgent LangGraph Runtime.
+5. Phase 09: Product Boundary / Trace / Eval Closure.
 
 These are Target until code and focused tests prove each slice.
+
+Do not open Phase 06 until Phase 05 has focused tests, docs boundary sync, and
+closure evidence. Do not open Phase 07 until capability selection has a stable
+ToolCard trace. Do not open Phase 08 until retrieval/fusion traces are stable.

@@ -38,13 +38,13 @@ def test_retired_legacy_paths_are_absent_and_classified() -> None:
     assert not (REPO_ROOT / "tests/compat").exists()
     assert not (REPO_ROOT / "domain-packs").exists()
     for relative_path in [
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
+        "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+        "docs/history/domain-packs/root-contract-review/contract_review/schema.json",
+        "docs/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
+        "docs/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
+        "docs/history/domain-packs/root-contract-review/contract_review/answer_template.md",
+        "docs/history/domain-packs/root-contract-review/contract_review/report_template.md",
+        "docs/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
     ]:
         assert (REPO_ROOT / relative_path).exists()
 
@@ -62,16 +62,16 @@ def test_repo_hygiene_verifier_preserves_full_contract_review_history() -> None:
     ).read_text(encoding="utf-8")
 
     for relative_path in [
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
+        "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+        "docs/history/domain-packs/root-contract-review/contract_review/schema.json",
+        "docs/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
+        "docs/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
+        "docs/history/domain-packs/root-contract-review/contract_review/answer_template.md",
+        "docs/history/domain-packs/root-contract-review/contract_review/report_template.md",
+        "docs/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
+        "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
+        "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
+        "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
     ]:
         assert relative_path in verifier
 
@@ -330,7 +330,7 @@ def test_active_repo_tools_do_not_reference_retired_backend_domain_pack_copy() -
 
     roadmap = (
         REPO_ROOT
-        / "docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md"
+        / "docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     assert "`src/backend/zuno/domain_packs/` still exist" not in roadmap
 
@@ -368,7 +368,7 @@ def test_active_public_release_tools_do_not_stage_retired_runtime_sources() -> N
 def test_active_architecture_audits_do_not_list_retired_frontend_files_as_current_inputs() -> None:
     audit = (
         REPO_ROOT
-        / "docs/architecture/audits/current-model-and-retrieval-config-audit.md"
+        / "docs/history/audits/current-model-and-retrieval-config-audit.md"
     ).read_text(encoding="utf-8")
 
     assert "- `apps/web/src/apis/domain-packs.ts`" not in audit
@@ -494,8 +494,8 @@ def test_phase6_bundle_helpers_are_not_active_repo_tools() -> None:
         REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
     ).read_text(encoding="utf-8")
     for relative_path in [
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
+        "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
+        "docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
         "tools/scripts/preview_phase6_bundle_scope.py",
         "tools/scripts/verify_phase6_bundle_ready.py",
     ]:
@@ -508,14 +508,14 @@ def test_superseded_migration_specs_are_not_active_specs() -> None:
     ).read_text(encoding="utf-8")
 
     for relative_path in [
-        "docs/architecture/specs/deep-graphrag-v1-runtime.md",
-        "docs/architecture/specs/domain-pack-langgraph-graphrag-architecture.md",
-        "docs/architecture/specs/domain-pack-builder.md",
-        "docs/architecture/specs/knowledge-product-boundary.md",
-        "docs/architecture/history/specs/deep-graphrag-v1-runtime.md",
-        "docs/architecture/history/specs/domain-pack-langgraph-graphrag-architecture.md",
-        "docs/architecture/history/specs/domain-pack-builder.md",
-        "docs/architecture/history/specs/knowledge-product-boundary.md",
+        "docs/history/specs/deep-graphrag-v1-runtime.md",
+        "docs/history/specs/domain-pack-langgraph-graphrag-architecture.md",
+        "docs/history/specs/domain-pack-builder.md",
+        "docs/history/specs/knowledge-product-boundary.md",
+        "docs/history/specs/deep-graphrag-v1-runtime.md",
+        "docs/history/specs/domain-pack-langgraph-graphrag-architecture.md",
+        "docs/history/specs/domain-pack-builder.md",
+        "docs/history/specs/knowledge-product-boundary.md",
     ]:
         assert relative_path in verifier
 
@@ -526,13 +526,13 @@ def test_superseded_domain_pack_binding_decision_is_history() -> None:
     ).exists()
     assert (
         REPO_ROOT
-        / "docs/architecture/history/decisions/0001-domain-pack-binding.md"
+        / "docs/history/decisions/0001-domain-pack-binding.md"
     ).exists()
 
     verifier = (
         REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
     ).read_text(encoding="utf-8")
-    assert "docs/architecture/history/decisions/0001-domain-pack-binding.md" in verifier
+    assert "docs/history/decisions/0001-domain-pack-binding.md" in verifier
     assert "docs/architecture/decisions/0001-domain-pack-binding.md" in verifier
 
 
@@ -540,7 +540,7 @@ def test_repo_hygiene_verifiers_are_registered() -> None:
     for path in [
         ".agent/scripts/verify_doc_boundaries.py",
         ".agent/scripts/verify_repo_hygiene.py",
-        ".agent/workflows/repo-hygiene.md",
-        ".agent/skills/zuno-repo-hygiene/SKILL.md",
+        ".agent/references/task-routing.md",
+        ".agent/references/workflow.md",
     ]:
         assert (REPO_ROOT / path).exists()

@@ -43,7 +43,7 @@ Completion API
 - Backend changes: read `src/backend/zuno/AGENTS.md`.
 - Frontend changes: read `apps/web/AGENTS.md`.
 - Eval changes: read `tools/evals/zuno/AGENTS.md`.
-- Docs or Agent workflow changes: read `AGENTS.md` and `.agent/workflows/docs-maintenance.md`.
+- Docs or Agent workflow changes: read `AGENTS.md`, `.agent/references/task-routing.md`, and `.agent/references/workflow.md`.
 
 ## Boundary
 

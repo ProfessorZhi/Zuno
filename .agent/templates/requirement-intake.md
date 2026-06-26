@@ -16,7 +16,7 @@ Decide whether this task updates:
 1. `.agent/programs/<program>/`
 2. a phase document
 3. a spec, ADR, or audit
-4. `docs/architecture/history/`
+4. `docs/history/`
 5. `docs/architecture/README.md`
 6. `docs/architecture/current-architecture.md`
 7. `docs/architecture/target-architecture.md`

@@ -1,41 +1,34 @@
-# Architecture
+# 架构文档
 
-This is the formal architecture entrypoint for Zuno.
+这里是 Zuno 的正式架构入口，只保留当前判断需要的前台文档。
 
-## Read First
+## 首读
 
-1. [Current Architecture](current-architecture.md)
-2. [Target Architecture](target-architecture.md)
-3. [Roadmap](roadmap.md)
-4. [Public Evidence](../evidence/public-demo.md)
-5. [Architecture Decisions](decisions/README.md)
+1. [当前架构](current-architecture.md)
+2. [目标架构](target-architecture.md)
+3. [路线图](roadmap.md)
+4. [公开证据](../evidence/public-demo.md)
+5. [架构决策](decisions/README.md)
 
-## Program Status
+## 当前执行程序
 
-The active executable Agent program is:
+当前可执行 Agent program 是：
 
 - `.agent/programs/zuno-target-runtime-v2/`
 
-It follows the completed target architecture migration closure with controlled
-runtime and documentation phases. Completed detailed V2 Phase 00-04 files are
-archived under:
+它接在已完成的 Target Architecture Migration V1 closure 之后，按 Phase 05-09 落地目标 runtime。
 
-- `docs/architecture/history/programs/zuno-target-runtime-v2/`
+已完成或被替换的程序都归档在：
 
-The completed target architecture migration program is archived under:
+- `docs/history/programs/`
 
-- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
+其中：
 
-`docs/architecture/history/programs/official-graphrag-cleanup-v1/` preserves
-the completed 11A/11B/11C cleanup evidence as history. It is not an active
-executable Agent program.
+- `docs/history/programs/zuno-target-architecture-migration-v1/` 是已完成的 V1 迁移闭环。
+- `docs/history/programs/official-graphrag-cleanup-v1/` 是已完成的 GraphRAG 清理证据。
+- `docs/history/programs/zuno-target-runtime-v2/` 保存 V2 已完成 Phase 00-04 的历史材料。
 
-The completed Phase 0-6 architecture closure remains historical truth. It is
-archived under:
-
-- [history/phases/](history/phases/)
-
-## Directory Map
+## 当前前台结构
 
 ```text
 docs/architecture/
@@ -44,16 +37,16 @@ docs/architecture/
   target-architecture.md
   roadmap.md
   decisions/
-  history/
 ```
 
-## Boundaries
+过时审计、旧规格、旧 phase、旧计划和旧 runbook 不再放在 `docs/architecture/` 前台，统一归档到 `docs/history/`。
 
-- Current: what the repository really does now.
-- Target: the near-term direction, without claiming it is implemented.
-- Roadmap: current status, next step, blockers, and accepted non-goals.
-- History: completed or superseded plans, programs, phases, audits, and older
-  Agent workflow material.
+## 边界
 
-`AGENTS.md` is the repository-level Agent entrypoint. Agent workflow aids live
-in `.agent/`. Formal conclusions that humans should read live in `docs/`.
+- Current：仓库现在真实已经做到的行为。
+- Target：近期目标，不等于已经实现。
+- Roadmap：当前状态、下一步、非目标和 Phase 执行顺序。
+- Decisions：仍影响主线的正式架构决策。
+- History：完成或被替换的计划、程序、阶段、审计、规格和旧 Agent 工作流材料。
+
+`AGENTS.md` 是仓库级 Agent 入口；`.agent/` 是 Agent 工作流库；正式结论进入 `docs/`。

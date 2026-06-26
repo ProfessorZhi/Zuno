@@ -1,19 +1,25 @@
-# Agent Workflow Library
+# Agent 工作流库
 
-`.agent/` is the Agent workflow library. It is not the formal architecture truth.
+`.agent/` 是 Zuno 的 Agent 工作流库，不是正式架构真相本身。正式结论放在 `docs/`，这里放执行时需要的参考、程序、目标架构草图、模板和验证脚本。
 
-## Boundaries
+## 和 AGENTS.md 的关系
 
-- `docs/` holds formal human-facing documentation truth.
-- `AGENTS.md` is the repository-level Agent entrypoint.
-- `.agent/` holds Agent references, templates, scripts, and operating aids.
-- `docs/architecture/history/` archives superseded programs, old plans, and replaced designs.
+```text
+AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任务路由
+.agent/references/    当前程序、文档地图、代码地图、任务路由、工作流、验证地图、命令和已知坑
+.agent/programs/      当前可执行 Agent program；按 phase 的执行计划放这里
+.agent/architecture/  目标架构设计工作集；不放 phase 执行计划
+.agent/scripts/       验证器和本地操作辅助
+.agent/templates/     可复用提示与报告模板
+```
 
-Formal conclusions go to `docs/`. Agent execution aids go here.
+执行时先按 `AGENTS.md` 路由，再进入 `.agent/references/task-routing.md` 和 `.agent/references/workflow.md`，然后按对应参考和验证命令执行。
 
-`.agent/references/` is only the Agent navigation layer: quick maps, current
-reality snapshots, command maps, and verification maps. It does not carry target
-architecture design and does not replace `.agent/architecture/near-term/`.
+## 语言规则
+
+- 新写或重写的 Agent 文档默认使用中文。
+- 英文术语可以保留，但要配中文解释。
+- 历史档案放在 `docs/history/`，可以保留原文。
 
 ## Tracked Structure
 
@@ -25,24 +31,14 @@ architecture design and does not replace `.agent/architecture/near-term/`.
     future/
     decisions/
   references/
-    README.md
-    current-program.md
-    docs-map.md
-    code-map.md
-    runtime-call-chain.md
-    verification-map.md
-    command-catalog.md
-    known-pitfalls.md
+    task-routing.md
+    workflow.md
   programs/
-    current.md
-    zuno-target-runtime-v2/
-  workflows/
-  skills/
   templates/
   scripts/
 ```
 
-Local-only directories are ignored by `.gitignore`:
+本地临时目录由 `.gitignore` 忽略：
 
 ```text
 .agent/local/
@@ -52,62 +48,34 @@ Local-only directories are ignored by `.gitignore`:
 .agent/local/secrets/
 ```
 
-Do not keep tracked placeholder files inside those local-only directories.
+不要在 local-only 目录里保留 tracked placeholder。
 
-## Self-Maintenance Rule
+## 各目录作用
 
-When a user asks for a new requirement, new feature, refactor, or architecture replacement, first decide whether the change must update:
+- `.agent/references/`：轻量导航。这里放类似 skill 的任务路由、统一工作流、文档地图、代码地图和验证地图。
+- `.agent/programs/`：执行计划。按 phase 推进的 active program 放这里，完成后归档到 `docs/history/programs/`。
+- `.agent/architecture/near-term/`：近期目标架构设计，包含 `zuno-ideal-architecture-and-repo-layout.html` 和五份 canonical Markdown。
+- `.agent/architecture/future/`：未来方向，只记录 Java、microservices、event/workers、multi-agent 等 horizon，不作为近期验收目标。
+- `.agent/architecture/decisions/`：Agent 侧轻量决策摘要，说明为什么这样分层、为什么暂不做某些方向；正式 ADR 仍在 `docs/architecture/decisions/`。
+- `.agent/scripts/`：验证器和本地操作辅助。
+- `.agent/templates/`：可复用提示和 closure report。
 
-1. `.agent/programs/<program>/`
-2. a phase document
-3. a spec, ADR, or audit
-4. `docs/architecture/history/`
-5. `docs/architecture/README.md`
-6. `docs/architecture/current-architecture.md`
-7. `docs/architecture/target-architecture.md`
-8. `AGENTS.md`
-9. `.agent/references/current-program.md`
-10. `.agent/references/docs-map.md`
-11. `.agent/programs/`
-12. `.agent/scripts/` or `.agent/templates/`
-13. `.gitignore`
-14. verification, commit, and push if files changed
+## 操作规则
 
-If a change replaces an older design, move the old material to `docs/architecture/history/` instead of deleting it.
+- 先从 `docs/architecture/` 读取正式真相。
+- `.agent/references/` 只做精简导航，不承载长篇目标设计。
+- `.agent/programs/` 承载按 phase 的执行计划，不放进 `.agent/architecture/`。
+- 修改任务必须验证、commit、push，除非被阻塞。
+- 只读侦察不 commit、不 push。
 
-## Operating Rules
+## 知识提升规则
 
-- Read formal truth from `docs/architecture/` first.
-- Use `.agent/references/` only as the slim Agent navigation layer.
-- Use `.agent/templates/` for reusable prompts and closure reports.
-- Use `.agent/scripts/` for read-only workflow checks.
-- Use `.agent/workflows/` for complete execution procedures.
-- Use `.agent/skills/` for thin task-routing entries.
-- Use `.agent/architecture/near-term/` for the detailed next refactor target.
-- Use `.agent/architecture/future/` only for Java, microservices, event/workers,
-  and multi-agent horizon discussions.
-- Use `.agent/architecture/decisions/` for locked choices, open questions, and
-  retired surfaces.
-- Modification tasks require verification, commit, and push unless blocked.
-- Read-only reconnaissance does not commit or push.
-
-## Knowledge Promotion
-
-Temporary discovery -> `.agent/local/notes/` (ignored).
-
-One-task investigation evidence -> `.agent/audits/`.
-
-Verified reusable experience -> `.agent/references/known-pitfalls.md` when it
-still changes current decisions, or `docs/architecture/history/` when it is only
-past context.
-
-Stable operation procedure -> `.agent/workflows/`.
-
-Task-triggered mature workflow -> `.agent/skills/`.
-
-Rules that apply to every task -> `AGENTS.md`.
-
-Implemented, verified, human-facing facts -> `docs/`.
-
-Promote material only when it has code, tests, commands, or repeated task
-evidence; a clear scope; and clear non-scope.
+```text
+临时发现 -> .agent/local/notes/    ignored
+单次调查证据 -> 外部结果目录或 docs/history/
+可复用经验 -> .agent/references/known-pitfalls.md
+稳定操作流程 -> .agent/references/workflow.md
+任务触发路由 -> .agent/references/task-routing.md
+所有任务通用规则 -> AGENTS.md
+已实现、已验证、面向人的事实 -> docs/
+```

@@ -78,7 +78,7 @@ Phase 11C closure / Bounded Legacy Compatibility:
   `src/backend/zuno/services/domain_pack/` runtime service package is also
   retired from current backend source.
 - Root `domain-packs/` assets have been archived under
-  `docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+  `docs/history/domain-packs/root-contract-review/`, and Docker no
   longer copies or mounts `/app/domain-packs`. Remaining `domain_pack_id`
   references are bounded migration aliases, existing database-column
   compatibility, eval CLI compatibility, and retirement/history tests. The

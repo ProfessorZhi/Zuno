@@ -10,8 +10,11 @@ def test_required_current_paths_exist() -> None:
     required_paths = [
         "AGENTS.md",
         ".agent/README.md",
+        ".agent/references/README.md",
+        ".agent/references/task-routing.md",
+        ".agent/references/workflow.md",
+        ".agent/references/docs-map.md",
         ".agent/programs/current.md",
-        "docs/architecture/history/programs/zuno-target-architecture-migration-v1",
         ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
         ".agent/architecture/near-term/01-target-runtime-architecture.md",
         ".agent/architecture/near-term/02-context-memory-architecture.md",
@@ -20,20 +23,21 @@ def test_required_current_paths_exist() -> None:
         ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
         "apps/desktop",
         "apps/web",
+        "docs/README.md",
         "docs/architecture/current-architecture.md",
         "docs/architecture/target-architecture.md",
         "docs/architecture/roadmap.md",
-        "docs/architecture/history/phases/README.md",
-        "docs/architecture/history/plans/README.md",
-        "docs/architecture/history/programs/README.md",
-        "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
-        "docs/architecture/history/programs/official-graphrag-cleanup-v1/README.md",
-        "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
-        "docs/architecture/history/development/README.md",
-        "docs/architecture/history/reference/migration.md",
         "docs/evidence/public-demo.md",
-        "examples/graphrag-projects/contract_review/settings.yaml",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+        "docs/reference/terminology.md",
+        "docs/history/README.md",
+        "docs/history/phases/README.md",
+        "docs/history/plans/README.md",
+        "docs/history/programs/README.md",
+        "docs/history/development/README.md",
+        "docs/history/reference/migration.md",
+        "docs/history/audits",
+        "docs/history/specs",
+        "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
         "src/backend/zuno/main.py",
         "tools/evals/zuno",
     ]
@@ -42,7 +46,7 @@ def test_required_current_paths_exist() -> None:
         assert (REPO_ROOT / relative_path).exists(), f"missing required path: {relative_path}"
 
 
-def test_repo_structure_verifier_pins_full_contract_review_asset_migration() -> None:
+def test_repo_structure_verifier_pins_current_front_path() -> None:
     module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
     spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
     assert spec is not None
@@ -53,44 +57,47 @@ def test_repo_structure_verifier_pins_full_contract_review_asset_migration() -> 
 
     required_paths = set(verifier.REQUIRED_PATHS)
     for relative_path in [
-        "examples/graphrag-projects/contract_review/settings.yaml",
-        "examples/graphrag-projects/contract_review/schema.json",
-        "examples/graphrag-projects/contract_review/retrieval_policy.yaml",
-        "examples/graphrag-projects/contract_review/prompts/extract_graph.md",
-        "examples/graphrag-projects/contract_review/prompts/local_query.md",
-        "examples/graphrag-projects/contract_review/prompts/report_template.md",
-        "examples/graphrag-projects/contract_review/eval/eval_dataset.jsonl",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
-        "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
-        "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
+        "AGENTS.md",
+        ".agent/references/task-routing.md",
+        ".agent/references/workflow.md",
+        "docs/README.md",
+        "docs/architecture/current-architecture.md",
+        "docs/architecture/target-architecture.md",
+        "docs/architecture/roadmap.md",
+        "docs/evidence/public-demo.md",
+        "docs/reference/terminology.md",
+        "docs/history/audits",
+        "docs/history/specs",
+        "docs/history/development/README.md",
     ]:
         assert relative_path in required_paths
 
 
 def test_retired_front_path_directories_are_not_current_paths() -> None:
     retired_paths = [
+        "docs/architecture/history",
+        "docs/architecture/audits",
+        "docs/architecture/specs",
         "docs/architecture/phases",
         "docs/architecture/plans",
         "docs/architecture/programs",
+        "docs/development",
+        "docs/prototypes",
+        "docs/ui-review",
+        "docs/ui-gallery",
+        "docs/reference/api.md",
+        "docs/reference/core.md",
+        "docs/reference/database.md",
+        "docs/reference/service.md",
+        "docs/reference/zuno.md",
+        ".agent/skills",
+        ".agent/workflows",
         ".agent/programs/context-memory-agent-runtime-v1",
         ".agent/programs/official-graphrag-cleanup-v1",
         "docs/superpowers",
-        "docs/prototypes/superpowers-legacy",
-        "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
         "src/frontend",
         "domain-packs",
         "tests/compat",
-        "docs/development/history",
-        "docs/reference/history",
     ]
 
     for relative_path in retired_paths:
@@ -113,11 +120,11 @@ def test_front_path_docs_link_current_entrypoints() -> None:
 
 
 def test_phase_completion_truth_is_historical() -> None:
-    content = (
-        REPO_ROOT / "docs" / "architecture" / "history" / "phases" / "README.md"
-    ).read_text(encoding="utf-8")
+    content = (REPO_ROOT / "docs" / "history" / "phases" / "README.md").read_text(
+        encoding="utf-8"
+    )
 
-    required_phrases = [
+    for phrase in [
         "Phase 0: Stable Runtime Recovery",
         "Phase 1: LangGraph Runtime Deepening",
         "Phase 2: GraphRAG Mainline Deepening",
@@ -125,64 +132,32 @@ def test_phase_completion_truth_is_historical() -> None:
         "Phase 4: Knowledge Config V2 + Local Eval Strengthening",
         "Phase 5: Docs And Public Explanation Sync",
         "Phase 6: Agent GraphRAG Pluginization / Future Platform Layer",
-        "the user has personally tried the recovered runtime",
-    ]
-
-    for phrase in required_phrases:
-        assert phrase in content, f"missing historical phase phrase: {phrase}"
+    ]:
+        assert phrase in content
 
 
 def test_readme_mentions_current_backend_start_and_focused_verification() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    required_phrases = [
+    for phrase in [
         "python tools/scripts/verify_docs_entrypoints.py",
         "python tools/scripts/verify_repo_structure.py",
         "pytest -q tests/test_repo_structure_consistency.py",
         "pytest -q tests/test_publish_boundary.py",
         "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
         "Bounded Legacy Compatibility",
-        "docs/architecture/history/domain-packs/root-contract-review/",
+        "docs/history/domain-packs/root-contract-review/",
         "Phase 11A",
         "Phase 11B",
         "Phase 11C",
         "Phase 12",
-    ]
-
-    for phrase in required_phrases:
-        assert phrase in readme, f"missing README phrase: {phrase}"
+    ]:
+        assert phrase in readme
 
 
 def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert not (REPO_ROOT / "docs" / "reference" / "migration.md").exists()
-    assert (
-        REPO_ROOT / "docs" / "architecture" / "history" / "reference" / "migration.md"
-    ).exists()
-
-
-def test_official_graphrag_cleanup_program_is_archived_out_of_active_programs() -> None:
-    assert not (REPO_ROOT / ".agent/programs/official-graphrag-cleanup-v1").exists()
-    assert not (REPO_ROOT / ".agent/programs/zuno-target-architecture-migration-v1").exists()
-    assert (
-        REPO_ROOT
-        / "docs/architecture/history/programs/official-graphrag-cleanup-v1/README.md"
-    ).exists()
-    assert (
-        REPO_ROOT
-        / "docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md"
-    ).exists()
-
-    programs_index = (REPO_ROOT / ".agent/programs/README.md").read_text(
-        encoding="utf-8"
-    )
-    history_index = (
-        REPO_ROOT / "docs/architecture/history/programs/README.md"
-    ).read_text(encoding="utf-8")
-
-    assert "official-graphrag-cleanup-v1/" not in programs_index
-    assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
-    assert "official-graphrag-cleanup-v1/" in history_index
-    assert "zuno-target-architecture-migration-v1/" in history_index
+    assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
 def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
@@ -198,32 +173,30 @@ def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
     assert not (
         REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/implementation-phases"
     ).exists()
-    assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/evidence").exists()
     assert (
         REPO_ROOT
-        / "docs/architecture/history/programs/zuno-target-runtime-v2/implementation-phases/README.md"
+        / "docs/history/programs/zuno-target-runtime-v2/implementation-phases/README.md"
     ).exists()
 
+    roadmap = (
+        REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "Phase 05: Memory Engine",
+        "Phase 06: Capability / Tool Retrieval",
+        "Phase 07: Knowledge Retrieval / Fusion",
+        "Phase 08: GeneralAgent LangGraph Runtime",
+        "Phase 09: Product Boundary / Trace / Eval Closure",
+    ]:
+        assert phrase in roadmap
 
-def test_superseded_migration_specs_are_archived_out_of_active_specs() -> None:
+
+def test_superseded_specs_are_archived_out_of_architecture_front_path() -> None:
+    assert not (REPO_ROOT / "docs" / "architecture" / "specs").exists()
     for relative_path in [
         "deep-graphrag-v1-runtime.md",
         "domain-pack-langgraph-graphrag-architecture.md",
         "domain-pack-builder.md",
         "knowledge-product-boundary.md",
     ]:
-        assert not (REPO_ROOT / "docs" / "architecture" / "specs" / relative_path).exists()
-        assert (REPO_ROOT / "docs" / "architecture" / "history" / "specs" / relative_path).exists()
-
-    specs_index = (
-        REPO_ROOT / "docs" / "architecture" / "specs" / "README.md"
-    ).read_text(encoding="utf-8")
-    history_index = (
-        REPO_ROOT / "docs" / "architecture" / "history" / "README.md"
-    ).read_text(encoding="utf-8")
-
-    assert "../history/specs/domain-pack-builder.md" in specs_index
-    assert "../history/specs/domain-pack-langgraph-graphrag-architecture.md" in specs_index
-    assert "../history/specs/knowledge-product-boundary.md" in specs_index
-    assert "../history/specs/deep-graphrag-v1-runtime.md" in specs_index
-    assert "`specs/`: superseded architecture specs" in history_index
+        assert (REPO_ROOT / "docs" / "history" / "specs" / relative_path).exists()

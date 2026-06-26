@@ -20,10 +20,10 @@ def _require_phrases(name: str, content: str, phrases: list[str]) -> list[str]:
 
 def main() -> int:
     readme = _read("README.md")
-    dev_readme = _read("docs/development/README.md")
-    runbook = _read("docs/development/public-demo-runbook.md")
-    evidence = _read("docs/development/public-demo-evidence.md")
-    acceptance = _read("docs/development/public-demo-acceptance.md")
+    dev_readme = _read("docs/history/development/README.md")
+    runbook = _read("docs/history/development/public-demo-runbook.md")
+    evidence = _read("docs/history/development/public-demo-evidence.md")
+    acceptance = _read("docs/history/development/public-demo-acceptance.md")
 
     errors: list[str] = []
 
@@ -32,9 +32,7 @@ def main() -> int:
             "README.md",
             readme,
             [
-                "./docs/development/public-demo-runbook.md",
-                "./docs/development/public-demo-evidence.md",
-                "./docs/development/public-demo-acceptance.md",
+                "./docs/evidence/public-demo.md",
                 "python tools/scripts/verify_public_demo_runtime.py",
                 "python tools/scripts/verify_public_demo_strict_grounding.py",
                 "Recall@5 `0.3167`",
@@ -49,7 +47,7 @@ def main() -> int:
 
     errors.extend(
         _require_phrases(
-            "docs/development/README.md",
+            "docs/history/development/README.md",
             dev_readme,
             [
                 "public-demo-evidence.md",

@@ -9,9 +9,19 @@ Target Architecture Migration V1 closure. It opens module boundary gates,
 migrates one low-risk backend application boundary, and introduces a minimal
 callable Context Orchestrator.
 
+The next execution sequence is phase-based and linear:
+
+```text
+Phase 05 Memory Engine
+Phase 06 Capability / Tool Retrieval
+Phase 07 Knowledge Retrieval / Fusion
+Phase 08 GeneralAgent LangGraph Runtime
+Phase 09 Product Boundary / Trace / Eval Closure
+```
+
 Latest completed program:
 
-- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
+- `docs/history/programs/zuno-target-architecture-migration-v1/`
 
 Formal human-facing status is summarized in:
 
@@ -33,7 +43,7 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - Official cleanup Phase 11C active runtime cleanup is closed. Bounded
   migration aliases remain where tests name storage/eval/DB compatibility
   roles. The former `tests/compat/` holding area is retired. Root `domain-packs/` assets are
-  archived under `docs/architecture/history/domain-packs/root-contract-review/`,
+  archived under `docs/history/domain-packs/root-contract-review/`,
   and Docker no longer copies or mounts `/app/domain-packs`.
   Workspace knowledge prefetch/tools have been cut over to
   `KnowledgeQueryService`, and the standalone `AgentRuntime` facade has been
@@ -47,7 +57,7 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - Phase 02 is complete. Contract Review target assets live under
   `examples/graphrag-projects/contract_review/`, with root Domain
   Pack assets archived under
-  `docs/architecture/history/domain-packs/root-contract-review/`.
+  `docs/history/domain-packs/root-contract-review/`.
 - Phase 03 is complete for the public GraphRAG Project mainline:
   `/knowledge/search` routes through `KnowledgeQueryService`, Contract Review
   project assets expose `to_project_payload()`, graph scope uses
@@ -56,7 +66,7 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
   compatibility aliases only where explicitly tested.
 - Phase 04 is complete: retired Domain Pack UI capture and
   responsive-check scripts are archived under
-  `docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
+  `docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
 - Phase 09 full tests, eval, trace, docs, grep classification, and evidence
   closure is complete for the target migration run.
 - Official cleanup Phase 12 is closed through the target migration closure
@@ -70,11 +80,11 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
 - `.agent/programs/zuno-target-runtime-v2/current-phase.md`
 - `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
-- `docs/architecture/history/programs/zuno-target-runtime-v2/`
-- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
-- `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
+- `docs/history/programs/zuno-target-runtime-v2/`
+- `docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
+- `docs/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
+- `docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
+- `docs/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
   as archived cleanup evidence, not active executable program material
 - `.agent/architecture/near-term/01-target-runtime-architecture.md`
 - `.agent/architecture/near-term/02-context-memory-architecture.md`

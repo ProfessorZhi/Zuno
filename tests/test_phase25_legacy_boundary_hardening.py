@@ -69,7 +69,7 @@ def test_phase25_non_history_docs_do_not_reference_retired_compat_namespace() ->
         candidates = root.rglob("*.md") if root == REPO_ROOT else root.rglob("*.md")
         for path in candidates:
             relative_path = path.relative_to(REPO_ROOT).as_posix()
-            if relative_path.startswith("docs/architecture/history/"):
+            if relative_path.startswith("docs/history/"):
                 continue
             if relative_path == "README.md" or relative_path.startswith("docs/"):
                 if _RETIRED_COMPAT_SEGMENT in path.read_text(encoding="utf-8"):

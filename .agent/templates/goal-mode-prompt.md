@@ -10,8 +10,8 @@ Read first:
 2. `docs/architecture/README.md`
 3. `docs/architecture/current-architecture.md`
 4. `docs/architecture/target-architecture.md`
-5. `docs/architecture/history/phases/README.md`
-6. `docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md`
+5. `docs/history/phases/README.md`
+6. `docs/history/programs/zuno-target-architecture-migration-v1/README.md`
 7. `.agent/README.md`
 8. `.agent/references/current-program.md`
 
@@ -22,6 +22,6 @@ Rules:
 3. Preserve completed Phase 0-6 truth.
 4. Put formal conclusions in `docs/`, not only in `.agent/`.
 5. Put Agent aids in `.agent/`.
-6. Move superseded plans to `docs/architecture/history/`; do not delete them.
+6. Move superseded plans to `docs/history/`; do not delete them.
 7. After modifications, run relevant verification.
 8. If verification passes, commit and push.

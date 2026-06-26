@@ -51,7 +51,7 @@ Detailed target behavior belongs in:
 ## Known Limitations
 
 Root Domain Pack assets are archived under
-`docs/architecture/history/domain-packs/root-contract-review/`, and Docker no
+`docs/history/domain-packs/root-contract-review/`, and Docker no
 longer copies or mounts `/app/domain-packs`. Compatibility tests remain Blocked
 Legacy until Phase 11C proves replacement or deletion. The direct
 `DomainQAGraph` backend source and Domain Pack runtime service package are

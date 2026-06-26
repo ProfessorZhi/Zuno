@@ -1,33 +1,34 @@
-# Terminology
+# 术语表
 
-## Purpose
+## 用途
 
-Keep public architecture terms stable and short. Detailed target contracts stay
-in `.agent/architecture/near-term/`.
+保持公开架构术语稳定、简短。详细 target contract 放在 `.agent/architecture/near-term/`。
 
-## Status Labels
+## 状态标签
 
-- Current: current code and tests prove it.
-- Target: near-term desired architecture that is not fully implemented.
-- Future: longer-term direction such as Java services, microservices,
-  event-driven workers, product-level multi-agent mode, or Coding Agent mode.
-- History: superseded material retained for evidence.
-- Blocked Legacy: should exit the front path, but still has active dependency.
+- Current：当前代码和测试已经证明。
+- Foundation：已有最小可调用 slice，但还不是成熟产品行为。
+- Target：近期目标架构，尚未完全实现。
+- Future：更长期方向，例如 Java services、microservices、event-driven workers、product-level multi-agent mode、Coding Agent mode。
+- History：被替换但保留证据价值的历史材料。
+- Bounded Legacy Compatibility：应退出前台路径，但仍有迁移、DB、eval 或 retirement test 依赖。
 
-## Current Terms
+## 当前术语
 
-- `GeneralAgent single loop`: current knowledge-answering conversation path.
-- `KnowledgeQueryService`: application knowledge query service introduced by
-  Phase 11A and moved to the application boundary in Target Runtime V2.
-- `GraphRAGQueryService`: GraphRAG Project query runtime introduced by Phase
-  11A.
-- `GraphRAGProjectSnapshot`: immutable query-time project/config snapshot.
-- `KnowledgeQueryResult`: answer, documents, evidence, citation, version, and
-  trace result model.
+- `GeneralAgent single loop`：当前知识问答会话主线。
+- `KnowledgeQueryService`：application knowledge query service，Phase 11A 引入，并在 Target Runtime V2 中移动到 application boundary。
+- `GraphRAGQueryService`：GraphRAG Project query runtime。
+- `GraphRAGProjectSnapshot`：查询时不可变 project/config snapshot。
+- `KnowledgeQueryResult`：包含 answer、documents、evidence、citation、version 和 trace 的结果模型。
 
-## Target Terms
+## Target Runtime V2 术语
 
-- Context & Memory Engine
+- Target Runtime V2 Phase 05: Memory Engine
+- Target Runtime V2 Phase 06: Capability / Tool Retrieval
+- Target Runtime V2 Phase 07: Knowledge Retrieval / Fusion
+- Target Runtime V2 Phase 08: GeneralAgent LangGraph Runtime
+- Target Runtime V2 Phase 09: Product Boundary / Trace / Eval Closure
+- Context / Memory Engine
 - Summary Compression
 - Structured Extraction
 - ToolCard
@@ -41,30 +42,21 @@ in `.agent/architecture/near-term/`.
 - GraphRAG Project
 - Basic / Local / Global / DRIFT query methods
 - `auto` router
-- Index / Update / Full Rebuild
 - Evidence / Citation / Trace / Eval
 
-## Target Term Boundaries
+## 术语边界
 
-- Native BM25: local BM25 ranking algorithm. Elasticsearch may expose BM25
-  scoring as an external adapter, but Elasticsearch is not the algorithm
-  itself.
-- ToolCard: compact retrievable metadata for a tool, MCP connector, skill, or
-  knowledge capability. It is not the full injected tool schema.
-- RRF fusion: coarse result fusion, default `k = 60`, followed by optional
-  rerank when enabled.
-- `auto` router: chooses `basic`, `local`, `global`, or `drift`; it is not a
-  fifth GraphRAG query mode.
-- External Knowledge: RAG/GraphRAG/file/web evidence. It is not Agent Memory.
+- Native BM25：本地 BM25 排序算法。Elasticsearch 可以作为 external adapter 提供 BM25 scoring，但 Elasticsearch 不是算法本体。
+- ToolCard：tool、MCP connector、skill 或 knowledge capability 的可检索轻量元数据，不是完整注入的 tool schema。
+- RRF fusion：粗融合方法，默认 `k = 60`；启用时后面可接 optional rerank。
+- `auto` router：选择 `basic`、`local`、`global` 或 `drift`，不是第五种 GraphRAG query mode。
+- External Knowledge：RAG / GraphRAG / file / web evidence，不是 Agent Memory。
 
-## Blocked Legacy Terms
+## 退休术语
 
 - Domain Pack
 - `domain_pack_id`
 - `DomainQAGraph`
 - `MultiAgentSupervisorGraph`
 
-## Retired Holding Areas
-
-- Former `tests/compat/`: retired. Migration compatibility coverage now lives in
-  root `tests/` until each test family receives a dedicated naming split.
+这些只应出现在迁移兼容、历史档案、DB 兼容、eval CLI 兼容或 retirement tests 中。

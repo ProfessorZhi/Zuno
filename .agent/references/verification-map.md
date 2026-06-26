@@ -51,7 +51,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/grep-domain-p
 When running the second command, replace the placeholder with the retired
 lowercase entrypoint filename. The Domain Pack helper scans `Domain Pack`,
 `domain_pack`, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and
-`domain-packs` while excluding `docs/architecture/history/**`; remaining hits
+`domain-packs` while excluding `docs/history/**`; remaining hits
 must be classified as Current compatibility, Target reference, Blocked Legacy,
 or a bug to fix.
 

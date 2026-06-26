@@ -7,103 +7,103 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def test_readme_exposes_short_first_reader_path() -> None:
     content = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    required_phrases = [
+    for phrase in [
         "./docs/architecture/current-architecture.md",
         "./docs/architecture/target-architecture.md",
         "./docs/architecture/roadmap.md",
         "./docs/evidence/public-demo.md",
-        "First-time readers start here:",
         "Bounded Legacy Compatibility",
         "Phase 11A",
         "Phase 11B",
         "Completion API -> CompletionService -> GeneralAgent single loop",
-    ]
-
-    for phrase in required_phrases:
-        assert phrase in content, f"missing README first-reader phrase: {phrase}"
+    ]:
+        assert phrase in content
 
 
-def test_docs_index_prioritizes_stable_public_path() -> None:
-    content = (REPO_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+def test_docs_front_path_is_small_and_chinese() -> None:
+    docs_index = (REPO_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+    architecture_index = (REPO_ROOT / "docs" / "architecture" / "README.md").read_text(
+        encoding="utf-8"
+    )
 
-    required_phrases = [
+    for phrase in [
+        "Zuno 文档入口",
         "./architecture/current-architecture.md",
         "./architecture/target-architecture.md",
         "./architecture/roadmap.md",
         "./evidence/public-demo.md",
-        "./architecture/history/README.md",
-        "## First-Read Path",
-    ]
+        "./history/README.md",
+        "前台文档默认使用中文",
+    ]:
+        assert phrase in docs_index
 
-    for phrase in required_phrases:
-        assert phrase in content, f"missing docs index phrase: {phrase}"
-
-
-def test_architecture_docs_use_current_target_roadmap_path() -> None:
-    content = (REPO_ROOT / "docs" / "architecture" / "README.md").read_text(
-        encoding="utf-8"
-    )
-
-    required_phrases = [
+    for phrase in [
+        "架构文档",
         "current-architecture.md",
         "target-architecture.md",
         "roadmap.md",
         "../evidence/public-demo.md",
-        "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
-        "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
-        "history/phases/",
-    ]
-
-    for phrase in required_phrases:
-        assert phrase in content, f"missing architecture index phrase: {phrase}"
+        "docs/history/programs/official-graphrag-cleanup-v1/",
+        "docs/history/programs/zuno-target-architecture-migration-v1/",
+        "过时审计、旧规格、旧 phase、旧计划和旧 runbook",
+    ]:
+        assert phrase in architecture_index
 
 
-def test_evidence_page_links_selected_public_demo_material() -> None:
+def test_evidence_page_links_archived_public_demo_material() -> None:
     content = (REPO_ROOT / "docs" / "evidence" / "public-demo.md").read_text(
         encoding="utf-8"
     )
 
-    required_phrases = [
-        "../development/public-demo-evidence.md",
-        "../development/public-demo-runbook.md",
-        "../development/public-demo-acceptance.md",
-    ]
-
-    for phrase in required_phrases:
-        assert phrase in content, f"missing evidence link: {phrase}"
+    for phrase in [
+        "../history/development/public-demo-evidence.md",
+        "../history/development/public-demo-runbook.md",
+        "../history/development/public-demo-acceptance.md",
+    ]:
+        assert phrase in content
 
 
-def test_verify_docs_entrypoints_script_tracks_current_public_entry_surface() -> None:
-    content = (
-        REPO_ROOT / "tools" / "scripts" / "verify_docs_entrypoints.py"
-    ).read_text(encoding="utf-8")
+def test_agent_entrypoint_and_agent_folder_form_one_workflow() -> None:
+    agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    agent_readme = (REPO_ROOT / ".agent" / "README.md").read_text(encoding="utf-8")
+    routing = (REPO_ROOT / ".agent" / "references" / "task-routing.md").read_text(
+        encoding="utf-8"
+    )
+    workflow = (REPO_ROOT / ".agent" / "references" / "workflow.md").read_text(
+        encoding="utf-8"
+    )
 
-    required_phrases = [
+    for phrase in [
+        "这是仓库唯一的 Agent 入口",
+        ".agent/references/task-routing.md",
+        ".agent/references/workflow.md",
+        ".agent/references",
+        "前台文档默认中文",
+    ]:
+        assert phrase in agents
+
+    assert "Agent 工作流库" in agent_readme
+    assert "类似 skill 的任务路由" in agent_readme
+    assert "任务路由层" in routing
+    assert "具体执行步骤、停止条件、验证和收尾规则" in workflow
+
+
+def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
+    content = (REPO_ROOT / "tools" / "scripts" / "verify_docs_entrypoints.py").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
         "documentation entrypoint verification passed.",
-        "./docs/architecture/current-architecture.md",
-        "./docs/architecture/target-architecture.md",
-        "./docs/architecture/roadmap.md",
-        "./docs/evidence/public-demo.md",
-        "Bounded Legacy Compatibility",
-        "Phase 11A",
-        "Phase 11B",
-        "Phase 11C",
-        "Phase 12",
-        "verify_active_spec_domain_pack_boundaries",
-        "verify_near_term_retired_runtime_boundaries",
-        "verify_architecture_decision_boundaries",
-        "verify_active_docs_do_not_link_retired_architecture_current_paths",
-        "docs/architecture/plans/",
-        "Domain Pack retrieval policy inputs",
-        "Current Evidence: `DomainQAGraph`",
-        "0001-domain-pack-binding.md",
-        "Summary Compression + Structured Extraction",
-        "Native BM25",
-        "ToolCard",
-    ]
-
-    for phrase in required_phrases:
-        assert phrase in content, f"missing docs entrypoint verifier phrase: {phrase}"
+        "verify_front_path_shape",
+        "verify_active_docs_do_not_link_retired_paths",
+        "docs/architecture/audits",
+        "docs/development",
+        "前台文档默认使用中文",
+        "Phase 05 Memory Engine",
+        "Phase 09 Product Boundary / Trace / Eval Closure",
+    ]:
+        assert phrase in content
 
 
 def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
@@ -111,13 +111,19 @@ def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
         REPO_ROOT / "README.md",
         REPO_ROOT / "docs" / "README.md",
         REPO_ROOT / "docs" / "architecture" / "README.md",
+        REPO_ROOT / "AGENTS.md",
+        REPO_ROOT / ".agent" / "README.md",
     ]
     forbidden = [
-        "docs/architecture/plans/stable-baseline-recovery-and-runtime-deepening-plan.md",
-        "./docs/architecture/phases/README.md",
-        "./phases/README.md",
-        "./plans/",
-        "05_TopDown_题库学习/项目/02_项目映射/Zuno/",
+        "docs/architecture/phases/",
+        "docs/architecture/plans/",
+        "docs/architecture/programs/",
+        "docs/architecture/audits/",
+        "docs/architecture/specs/",
+        "docs/architecture/history/",
+        "docs/development/",
+        "docs/prototypes/",
+        "docs/ui-review/",
     ]
 
     for path in files:
@@ -126,26 +132,39 @@ def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
             assert phrase not in content, f"{path} contains retired front-path text: {phrase}"
 
 
-def test_active_docs_do_not_link_retired_architecture_current_paths() -> None:
-    active_docs = [
-        path
-        for path in REPO_ROOT.glob("docs/**/*.md")
-        if "docs/architecture/history" not in path.as_posix()
-    ]
-    forbidden = [
-        "docs/architecture/plans/",
-        "docs/architecture/phases/",
-        "docs/architecture/programs/",
-    ]
+def test_front_path_directories_are_archived() -> None:
+    for relative_path in [
+        "docs/architecture/history",
+        "docs/architecture/audits",
+        "docs/architecture/specs",
+        "docs/development",
+        "docs/prototypes",
+        "docs/ui-review",
+        "docs/ui-gallery",
+        "docs/reference/api.md",
+        "docs/reference/core.md",
+        "docs/reference/database.md",
+        "docs/reference/service.md",
+        "docs/reference/zuno.md",
+    ]:
+        assert not (REPO_ROOT / relative_path).exists(), f"retired front path still exists: {relative_path}"
 
-    for path in active_docs:
-        content = path.read_text(encoding="utf-8")
-        for phrase in forbidden:
-            assert phrase not in content, f"{path} links retired architecture current path: {phrase}"
+    for relative_path in [
+        "docs/history/audits",
+        "docs/history/specs",
+        "docs/history/development",
+        "docs/history/prototypes",
+        "docs/history/ui-review",
+        "docs/history/reference/api.md",
+    ]:
+        assert (REPO_ROOT / relative_path).exists(), f"missing archive path: {relative_path}"
 
 
-def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -> None:
+def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
     current = (REPO_ROOT / "docs" / "architecture" / "current-architecture.md").read_text(
+        encoding="utf-8"
+    )
+    target = (REPO_ROOT / "docs" / "architecture" / "target-architecture.md").read_text(
         encoding="utf-8"
     )
     roadmap = (REPO_ROOT / "docs" / "architecture" / "roadmap.md").read_text(
@@ -153,40 +172,35 @@ def test_current_target_and_roadmap_do_not_promote_target_runtime_to_current() -
     )
 
     for phrase in [
-        "GeneralAgent single loop",
-        "GraphRAG Project Query Runtime",
-        "Context Orchestrator and Post-turn Pipeline are Target, not Current",
-        "Memory layer foundation contracts are current code",
-        "Root `domain-packs/` assets are archived",
-        "Docker no longer copies or mounts `/app/domain-packs`",
-        "`src/backend/zuno/services/domain_pack/` runtime service package",
-        "not mounted on the current FastAPI router",
-        "not active knowledge routes or settings-shell pages",
+        "当前架构",
+        "以下仍是 Target，不是当前成熟事实",
+        "Memory layer foundation contracts",
+        "docs/history/domain-packs/root-contract-review/",
     ]:
         assert phrase in current
+
+    for phrase in [
+        "目标架构",
+        "Summary Compression",
+        "Structured Extraction",
+        "Native BM25",
+        "ToolCard",
+        "RRF",
+        "`auto` 是 router",
+        "新增或重写的前台文档使用中文",
+    ]:
+        assert phrase in target
 
     for phrase in [
         "Phase 11A: complete",
         "Phase 11B: complete",
         "Phase 11C: active runtime cleanup complete",
-            "Phase 12: closed through the target migration closure evidence",
-        "Bounded migration compatibility evidence remains",
-        "full pytest",
-        "eval baseline comparison",
+        "Phase 12: closed through the target migration closure evidence",
+        "Bounded Legacy Compatibility",
+        "Phase 05 Memory Engine",
+        "Phase 09 Product Boundary / Trace / Eval Closure",
     ]:
         assert phrase in roadmap
-
-    target = (REPO_ROOT / "docs" / "architecture" / "target-architecture.md").read_text(
-        encoding="utf-8"
-    )
-    for phrase in [
-        "Summary Compression + Structured Extraction",
-        "Native BM25",
-        "ToolCard",
-        "RRF",
-        "`auto` router",
-    ]:
-        assert phrase in target
 
 
 def test_repository_docs_do_not_keep_local_download_reference() -> None:
@@ -195,90 +209,14 @@ def test_repository_docs_do_not_keep_local_download_reference() -> None:
         assert "C:\\Users\\Administrator\\Downloads" not in content
 
 
-def test_stable_architecture_specs_do_not_make_domain_pack_the_target_driver() -> None:
-    allowed_migration_specs = {
-        REPO_ROOT / "docs/architecture/specs/README.md",
-    }
-    stable_specs = sorted(
-        path
-        for path in (REPO_ROOT / "docs/architecture/specs").glob("*.md")
-        if path not in allowed_migration_specs
-    )
-    forbidden_phrases = [
-        "Domain Pack\n  ->",
-        "Domain Pack ->",
-        "Domain Pack retrieval policy inputs",
-        "Domain-specific graph cues belong in `Domain Pack retrieval_policy`",
-        "GraphRAG 不是孤立能力，而是受 Domain Pack 驱动",
-        "Domain Pack 成为领域扩展机制",
-        "GraphRAG 受 `Domain Pack` 控制",
-        "LangGraph runtime 必须能感知 Domain Pack",
-        "它验证 Domain Pack 是否有价值",
-        "Domain Pack schema",
-        "Phase 3: Domain Pack Formalization",
-        "deeper LangGraph, GraphRAG, Domain Pack",
-        "business orchestration, retrieval, GraphRAG, Domain Pack, provider adapters",
-    ]
-
-    for path in stable_specs:
-        content = path.read_text(encoding="utf-8")
-        for phrase in forbidden_phrases:
-            assert phrase not in content, f"{path} still promotes Domain Pack target wording: {phrase}"
-
-
-def test_near_term_architecture_docs_do_not_mark_retired_runtime_as_current() -> None:
-    near_term_docs = sorted((REPO_ROOT / ".agent/architecture/near-term").glob("*.md"))
-    forbidden_phrases = [
-        "Current Evidence: `DomainQAGraph`",
-        "current Domain Pack state",
-        "`DomainQAGraph` carries runtime settings",
-        "`DomainQAGraph` collects trace and cost metadata",
-        "including legacy-facing `domain_packs`",
-        "Current storage and query filters still use `domain_pack_id`",
-        "remaining Domain Pack pages are migration/runtime surfaces",
-    ]
-
-    for path in near_term_docs:
-        content = path.read_text(encoding="utf-8")
-        for phrase in forbidden_phrases:
-            assert phrase not in content, (
-                f"{path} marks retired Domain Pack runtime evidence as current: {phrase}"
-            )
-
-
 def test_architecture_decisions_do_not_keep_domain_pack_binding_as_active_mainline() -> None:
-    active_decision = (
-        REPO_ROOT / "docs/architecture/decisions/0001-domain-pack-binding.md"
+    active_decision = REPO_ROOT / "docs/architecture/decisions/0001-domain-pack-binding.md"
+    history_decision = REPO_ROOT / "docs/history/decisions/0001-domain-pack-binding.md"
+    decisions_index = (REPO_ROOT / "docs/architecture/decisions/README.md").read_text(
+        encoding="utf-8"
     )
-    history_decision = (
-        REPO_ROOT
-        / "docs/architecture/history/decisions/0001-domain-pack-binding.md"
-    )
-    decisions_index = (
-        REPO_ROOT / "docs/architecture/decisions/README.md"
-    ).read_text(encoding="utf-8")
 
     assert not active_decision.exists()
     assert history_decision.exists()
     assert "0001-domain-pack-binding.md" not in decisions_index
-    assert "ADR 0002: Retire Compat Namespace" in decisions_index
-
-
-def test_active_architecture_audits_are_not_history_documents() -> None:
-    active_audits = sorted((REPO_ROOT / "docs/architecture/audits").glob("*.md"))
-    assert active_audits
-
-    for path in active_audits:
-        content = path.read_text(encoding="utf-8")
-        assert "Status: History" not in content, (
-            f"{path} is marked History but remains in active architecture audits"
-        )
-
-
-def test_doc_boundary_verifier_rejects_history_status_in_active_audits() -> None:
-    content = (
-        REPO_ROOT / ".agent/scripts/verify_doc_boundaries.py"
-    ).read_text(encoding="utf-8")
-
-    assert "verify_active_audits_are_not_history_documents" in content
-    assert "active architecture audit is marked History" in content
+    assert "ADR 0002" in decisions_index

@@ -45,7 +45,7 @@ def test_phase6_agent_runtime_no_longer_binds_domain_pack_graph_runtime() -> Non
 def test_phase6_domain_pack_defaults_are_retired_surface_evidence() -> None:
     pack_manifest = (
         REPO_ROOT
-        / "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml"
+        / "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml"
     ).read_text(encoding="utf-8")
     retired_doc = (
         REPO_ROOT / ".agent" / "architecture" / "decisions" / "03-retired-surfaces.md"

@@ -1,134 +1,86 @@
-# Architecture Roadmap
+# 架构路线图
 
-## Current
+## 当前状态
 
-The completed Phase 0-6 architecture closure is historical truth.
+Phase 0-6 architecture closure remains complete historical truth.
 
-The active executable Agent program is
-`.agent/programs/zuno-target-runtime-v2/`. It continues after the target
-architecture migration closure with a controlled first implementation slice:
-module boundary gates, one low-risk backend application-boundary move, and a
-minimal callable Context Orchestrator. Phase 00-04 detailed files and evidence
-are archived under
-`docs/architecture/history/programs/zuno-target-runtime-v2/`.
+当前可执行 Agent program 是：
 
-The completed target architecture migration program is archived under
-`docs/architecture/history/programs/zuno-target-architecture-migration-v1/`.
+- `.agent/programs/zuno-target-runtime-v2/`
 
-Phase 01 through Phase 10 are complete. Those phases cover contract, loader,
-prompt registry, index versioning, query router, Enhanced Mode, and frontend API
-migration stages.
+它接在 Target Architecture Migration V1 closure 之后，当前职责是按小 phase 落地目标 runtime。已完成的 V2 Phase 00-04 详细文件和证据归档在：
 
-## Phase Status
+- `docs/history/programs/zuno-target-runtime-v2/`
 
-- Phase 11A: complete. Commit `24abdd9` introduced the project query runtime:
-  `KnowledgeQueryService`, `GraphRAGQueryService`,
-  `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult`.
-- Phase 11B: complete. Commit `b160c4b` unified knowledge queries under the
-  single `GeneralAgent` path through `search_knowledge_base` and
-  `KnowledgeQueryService`.
-- Phase 11C: active runtime cleanup complete. The current FastAPI router no longer mounts
-  `/domain-packs`, and the active Vue knowledge route/settings entrypoints no
-  longer open Domain Pack pages. Workspace knowledge prefetch/tools no longer
-  use `AgentRuntime` or `_run_domain_pack_query`; they use
-  `KnowledgeQueryService`. The standalone `AgentRuntime` facade has been
-  removed from current backend source and exports. The direct
-  `MultiAgentSupervisorGraph` source has also been removed. `DomainQAGraph`
-  and `MultiAgentSupervisorGraph` are no longer exported from current core
-  package public surfaces. The `/knowledge/search` API service path now routes
-  through `KnowledgeQueryService` instead of the legacy `RagHandler` search
-  path. `KnowledgeService.get_runtime_settings` preserves
-  `domain_pack_id` as a migration field but no longer loads
-  `DomainPackLoader` from it. Runtime payload output is project-named as
-  `project_payload`, while legacy `domain_pack` payload input remains only as
-  a migration fallback. `GraphRetriever` no longer loads retrieval policy from
-  a bare `domain_pack_id`; explicit `query_policy` now carries the
-  GraphRAG Project policy data. Agent and Knowledge public DTOs now prefer
-  `graphrag_project_id`, and frontend knowledge config patches no longer send
-  `domain_pack_id`; old `domain_pack_id` input is migration compatibility only.
-  Graph writer/client/retriever paths now write and query
-  `graphrag_project_id` as the primary graph scope while dual-reading legacy
-  graph properties until the dry-run-first Neo4j backfill is applied.
-  Stackless local eval and the dedicated Contract Review eval can build from
-  GraphRAG Project assets without loading `DomainPackLoader`. Root Phase 11C tests now guard retired runtime imports
-  for `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, legacy
-  graph states, and `zuno.services.domain_pack`. Root `domain-packs/` assets are archived under
-  `docs/architecture/history/domain-packs/root-contract-review/`, Docker no
-  longer copies or mounts `/app/domain-packs`, and the former `tests/compat/`
-  holding area is retired. Bounded migration compatibility evidence remains
-  in root `tests/` for storage/eval/DB aliases. The direct `DomainQAGraph` source, its legacy
-  graph state module, and `src/backend/zuno/services/domain_pack/` runtime
-  service package have also been retired from current backend source. Domain
-  Pack backend endpoint/API-service wrappers and frontend API/page files are
-  retired from current source.
-- Phase 12: closed through the target migration closure evidence. full pytest,
-  formal Contract Review eval, stackless eval baseline comparison, trace
-  metadata, legacy grep classification, and docs/evidence sync are complete.
+已完成的 target architecture migration program 归档在：
 
-## Next Actions
+- `docs/history/programs/zuno-target-architecture-migration-v1/`
 
-1. Execute the active `zuno-target-runtime-v2` phases linearly.
-2. Use the slim canonical near-term target architecture under
-   `.agent/architecture/near-term/` as the source for future runtime phases.
+## 已完成状态
 
-Contract Review asset migration has completed its asset-only slice: the Target
-example copy lives at `examples/graphrag-projects/contract_review/`, and the
-dedicated Contract Review eval now reads its GraphRAG Project compatibility
-payload and eval fixture from that copy. Root Domain Pack assets are archived
-and Docker Domain Pack mounts are retired.
+- Phase 01 through Phase 10 are complete.
+- Phase 11A: complete。项目查询 runtime 已引入 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
+- Phase 11B: complete。知识查询已统一到 single `GeneralAgent` path，通过 `search_knowledge_base` 和 `KnowledgeQueryService` 执行。
+- Phase 11C: active runtime cleanup complete。当前 FastAPI router 不再挂载 `/domain-packs`；Vue knowledge route/settings 不再打开 Domain Pack 页面；`AgentRuntime` facade、`MultiAgentSupervisorGraph`、`DomainQAGraph`、legacy graph states 和 `zuno.services.domain_pack` 已从当前主线退休。
+- Phase 12: closed through the target migration closure evidence。full pytest、formal Contract Review eval、stackless eval baseline comparison、trace metadata、legacy grep classification 和 docs/evidence sync 已完成。
 
-## Active Candidate
+## 下一步
 
-`zuno-target-runtime-v2` is active. It must not promote mature Context
-Orchestrator, Memory Engine, Dynamic Capability Selector, or full LangGraph
-runtime behavior to Current until code and tests prove each slice.
+按 active `zuno-target-runtime-v2` 线性执行：
+
+1. Phase 05 Memory Engine
+2. Phase 06 Capability / Tool Retrieval
+3. Phase 07 Knowledge Retrieval / Fusion
+4. Phase 08 GeneralAgent LangGraph Runtime
+5. Phase 09 Product Boundary / Trace / Eval Closure
+
+执行源是 `.agent/architecture/near-term/` 和 `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`。
+
+## 当前候选主线
+
+`zuno-target-runtime-v2` 是当前 active program。它不能把成熟 Context Orchestrator、Memory Engine、Dynamic Capability Selector 或 full LangGraph runtime 写成 Current，直到代码和测试证明对应 slice。
 
 ## Bounded Legacy Compatibility
 
-These surfaces are confirmed legacy directionally and retained only as bounded
-migration compatibility:
+这些内容是兼容保留，不是目标方向：
 
-- remaining `domain_pack_id` references are bounded migration aliases,
-  existing Agent database-column compatibility, eval CLI compatibility, and
-  retirement/history tests under root `tests/`
+- remaining `domain_pack_id` references are bounded migration aliases、existing Agent database-column compatibility、eval CLI compatibility 和 retirement/history tests。
+- root `domain-packs/` archive 保留在 `docs/history/domain-packs/root-contract-review/`。
+- root Phase 11C retired-import guards 保留用于防回归。
 
-Retired evidence kept for verification, not active source:
+## 当前 Foundation Closure
 
-- retired root `domain-packs/` archive at
-  `docs/architecture/history/domain-packs/root-contract-review/`
-- retired Docker `/app/domain-packs` copy and mounts
-- root Phase 11C retired-import guards for `src/backend/zuno/services/domain_pack/`,
-  `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, and legacy
-  graph states
+- Phase 05 Context Contract foundation：`src/backend/zuno/services/application/context/`
+- Phase 06 Memory Layer foundation：`src/backend/zuno/services/memory/layers.py`
+- Phase 07 Capability System foundation：`src/backend/zuno/services/application/capabilities/`
+- Phase 08 GeneralAgent runtime integration：`src/backend/zuno/core/agents/general_agent.py`
 
-Current foundation closures:
+这些是 foundation，不等于成熟产品能力。
 
-- Phase 05 Context Contract foundation is current code under
-  `src/backend/zuno/services/application/context/`.
-- Phase 06 Memory Layer foundation is current code under
-  `src/backend/zuno/services/memory/layers.py`.
-- Phase 07 Capability System foundation is current code under
-  `src/backend/zuno/services/application/capabilities/`, with the existing
-  capability search service exposing unified metadata for tools, skills, MCP
-  servers, and MCP tools.
-- Phase 08 GeneralAgent runtime integration is current code in
-  `src/backend/zuno/core/agents/general_agent.py`: it prepares context,
-  passes trace metadata into the single React loop, and commits scoped memory
-  raw events and task summaries after a turn when memory is enabled.
+## Future Execution Phases
 
-## Non-Goals
+- Phase 05: mature Memory Engine around Raw Event Log、Summary Compression、Structured Extraction、`source_event_ids` 和 ContextTrace。
+- Phase 06: mature Capability / Tool Retrieval around ToolCard Registry、Native BM25 capability search、filters 和 `CapabilitySelectionTrace`。
+- Phase 07: mature Knowledge Retrieval / Fusion around Native BM25、multi-query、multi-retriever recall、RRF `k=60`、optional rerank、evidence、citation 和 trace。
+- Phase 08: explicit `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime，同时保持 single `GeneralAgent` path。
+- Phase 09: product/API boundary、frontend-visible state、trace/eval closure、docs/.agent front-path slimming、transient artifact cleanup 和 history archive hygiene。
 
-The active roadmap does not implement Java services, split microservices,
-event workers, database migrations, dependency upgrades, or default multi-agent
-mode.
+## 非目标
 
-## Agent Execution Sources
+当前路线图不实施：
 
-Archived implementation planning lives in:
+- Java services
+- split microservices
+- event workers
+- database migrations
+- dependency upgrades
+- default multi-agent mode
+
+## Agent 执行来源
 
 - `.agent/programs/current.md`
 - `.agent/programs/zuno-target-runtime-v2/current-phase.md`
 - `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
-- `docs/architecture/history/programs/zuno-target-runtime-v2/`
-- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
-- `docs/architecture/history/programs/official-graphrag-cleanup-v1/`
+- `docs/history/programs/zuno-target-runtime-v2/`
+- `docs/history/programs/zuno-target-architecture-migration-v1/`
+- `docs/history/programs/official-graphrag-cleanup-v1/`

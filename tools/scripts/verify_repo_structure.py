@@ -1,18 +1,24 @@
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+
 REQUIRED_PATHS = [
     "AGENTS.md",
-    ".agent",
     ".agent/README.md",
+    ".agent/references/README.md",
+    ".agent/references/task-routing.md",
+    ".agent/references/workflow.md",
+    ".agent/references/docs-map.md",
     ".agent/programs/current.md",
-    "docs/architecture/history/programs/zuno-target-architecture-migration-v1",
+    ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
+    ".agent/architecture/README.md",
+    ".agent/architecture/future/README.md",
+    ".agent/architecture/decisions/README.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
     ".agent/architecture/near-term/01-target-runtime-architecture.md",
     ".agent/architecture/near-term/02-context-memory-architecture.md",
@@ -22,52 +28,36 @@ REQUIRED_PATHS = [
     ".agent/scripts/verify_agent_system.py",
     ".agent/scripts/verify_doc_boundaries.py",
     ".agent/scripts/verify_repo_hygiene.py",
-    ".agent/workflows/repo-hygiene.md",
-    ".agent/skills/zuno-repo-hygiene/SKILL.md",
     "apps/desktop",
     "apps/web",
     "apps/web/AGENTS.md",
     "docs/README.md",
-    "docs/architecture",
+    "docs/architecture/README.md",
     "docs/architecture/current-architecture.md",
     "docs/architecture/target-architecture.md",
     "docs/architecture/roadmap.md",
-    "docs/architecture/history",
-    "docs/architecture/history/phases/README.md",
-    "docs/architecture/history/plans/README.md",
-    "docs/architecture/history/programs/README.md",
-    "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
-    "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
-    "docs/architecture/history/programs/official-graphrag-cleanup-v1/README.md",
-    "docs/architecture/history/development/README.md",
-    "docs/architecture/history/reference/migration.md",
-    "docs/development",
+    "docs/architecture/decisions/README.md",
     "docs/evidence/README.md",
     "docs/evidence/public-demo.md",
-    "docs/reference",
+    "docs/evidence/eval-baselines.md",
+    "docs/reference/terminology.md",
+    "docs/history/README.md",
+    "docs/history/phases/README.md",
+    "docs/history/plans/README.md",
+    "docs/history/programs/README.md",
+    "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
+    "docs/history/programs/zuno-target-runtime-v2/README.md",
+    "docs/history/programs/official-graphrag-cleanup-v1/README.md",
+    "docs/history/development/README.md",
+    "docs/history/reference/migration.md",
+    "docs/history/specs",
+    "docs/history/audits",
     "examples/graphrag-projects/contract_review/settings.yaml",
     "examples/graphrag-projects/contract_review/schema.json",
     "examples/graphrag-projects/contract_review/retrieval_policy.yaml",
-    "examples/graphrag-projects/contract_review/prompts/extract_graph.md",
-    "examples/graphrag-projects/contract_review/prompts/local_query.md",
-    "examples/graphrag-projects/contract_review/prompts/report_template.md",
     "examples/graphrag-projects/contract_review/eval/eval_dataset.jsonl",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/schema.json",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/retrieval_policy.yaml",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/extraction_prompt.md",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/answer_template.md",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/report_template.md",
-    "docs/architecture/history/domain-packs/root-contract-review/contract_review/eval_dataset.jsonl",
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/capture_knowledge_product_ui_gallery.py",
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_knowledge_product_responsive.py",
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/check_settings_navigation_interaction.py",
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/preview_phase6_bundle_scope.py",
-    "docs/architecture/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/verify_phase6_bundle_ready.py",
-    "docs/architecture/history/specs/deep-graphrag-v1-runtime.md",
-    "docs/architecture/history/specs/domain-pack-langgraph-graphrag-architecture.md",
-    "docs/architecture/history/specs/domain-pack-builder.md",
-    "docs/architecture/history/specs/knowledge-product-boundary.md",
+    "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
+    "docs/history/domain-packs/root-contract-review/contract_review/schema.json",
     "infra/db",
     "infra/docker",
     "src/backend/zuno",
@@ -77,50 +67,66 @@ REQUIRED_PATHS = [
     "tools",
     "tools/evals/zuno",
     "tools/evals/zuno/AGENTS.md",
-    "tools/launchers/windows",
 ]
 
+
 FORBIDDEN_CURRENT_PATHS = [
+    ".agent/skills",
+    ".agent/workflows",
+    "docs/architecture/history",
+    "docs/architecture/audits",
+    "docs/architecture/specs",
     "docs/architecture/phases",
     "docs/architecture/plans",
     "docs/architecture/programs",
+    "docs/development",
+    "docs/prototypes",
+    "docs/ui-review",
+    "docs/ui-gallery",
+    "docs/reference/api.md",
+    "docs/reference/core.md",
+    "docs/reference/database.md",
+    "docs/reference/service.md",
+    "docs/reference/zuno.md",
     ".agent/programs/context-memory-agent-runtime-v1",
     ".agent/programs/official-graphrag-cleanup-v1",
     "docs/superpowers",
-    "docs/prototypes/superpowers-legacy",
-    "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
     "src/frontend",
     "domain-packs",
     "tests/compat",
-    "docs/development/history",
-    "docs/reference/history",
 ]
 
+
 DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
-    "README.md": [
-        "## Default Reading Path",
-        "./docs/architecture/current-architecture.md",
-        "./docs/architecture/target-architecture.md",
-        "./docs/architecture/roadmap.md",
-        "./docs/evidence/public-demo.md",
-        "Bounded Legacy Compatibility",
-        "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
+    "AGENTS.md": [
+        "这是仓库唯一的 Agent 入口",
+        ".agent/references/task-routing.md",
+        ".agent/references/workflow.md",
+        ".agent/programs/",
+        ".agent/architecture/",
+        "前台文档默认中文",
+    ],
+    ".agent/README.md": [
+        "Agent 工作流库",
+        "类似 skill 的任务路由",
+        "新写或重写的 Agent 文档默认使用中文",
     ],
     "docs/README.md": [
         "./architecture/current-architecture.md",
         "./architecture/target-architecture.md",
         "./architecture/roadmap.md",
         "./evidence/public-demo.md",
-        "./architecture/history/README.md",
+        "./history/README.md",
+        "前台文档默认使用中文",
     ],
     "docs/architecture/README.md": [
         "current-architecture.md",
         "target-architecture.md",
         "roadmap.md",
         "../evidence/public-demo.md",
-        "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
-        "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
-        "history/phases/",
+        "docs/history/programs/official-graphrag-cleanup-v1/",
+        "docs/history/programs/zuno-target-architecture-migration-v1/",
+        "过时审计、旧规格、旧 phase、旧计划和旧 runbook",
     ],
     "docs/architecture/roadmap.md": [
         "Phase 11A: complete",
@@ -128,8 +134,8 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "Phase 11C: active runtime cleanup complete",
         "Phase 12: closed through the target migration closure evidence",
         "Bounded Legacy Compatibility",
-        "docs/architecture/history/programs/zuno-target-architecture-migration-v1/",
-        "docs/architecture/history/programs/official-graphrag-cleanup-v1/",
+        "Phase 05 Memory Engine",
+        "Phase 09 Product Boundary / Trace / Eval Closure",
     ],
 }
 
@@ -185,38 +191,59 @@ def verify_target_architecture_html() -> list[str]:
     html = html_path.read_text(encoding="utf-8")
     if "<html" not in html.lower() or "</html>" not in html.lower():
         errors.append("canonical target architecture HTML is not valid HTML")
-    if not any(marker in html for marker in ["Target", "Proposed", "目标"]):
-        errors.append("canonical target architecture HTML missing Target/Proposed marker")
-    for phrase in ["Native BM25", "RRF", "Summary Compression", "Structured Extraction", "ToolCard"]:
+    for phrase in [
+        "Target / Proposed",
+        "Native BM25",
+        "RRF",
+        "Summary Compression",
+        "Structured Extraction",
+        "ToolCard",
+        "Phase 05",
+        "Query Journey",
+        "产品入口层",
+        "RAG / GraphRAG 层",
+    ]:
         if phrase not in html:
             errors.append(f"canonical target architecture HTML missing phrase: {phrase}")
     html_refs = [
-        path for path in REPO_ROOT.glob(".agent/**/*.md")
+        path
+        for path in REPO_ROOT.glob(".agent/**/*.md")
         if "zuno-ideal-architecture-and-repo-layout.html" in path.read_text(encoding="utf-8")
     ]
-    if len(html_refs) < 6:
-        errors.append("target architecture HTML is under-referenced by Agent workflows")
+    if len(html_refs) < 5:
+        errors.append("target architecture HTML is under-referenced by Agent docs")
     return errors
 
 
-def verify_archived_reference_docs() -> list[str]:
-    errors: list[str] = []
-    if (REPO_ROOT / "docs" / "reference" / "migration.md").exists():
-        errors.append("docs/reference/migration.md should be archived out of the front path")
-    if not (REPO_ROOT / "docs" / "architecture" / "history" / "reference" / "migration.md").exists():
-        errors.append("docs/architecture/history/reference/migration.md is missing")
-    return errors
+def verify_active_v2_phase_plan() -> list[str]:
+    roadmap_path = REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md"
+    if not roadmap_path.exists():
+        return ["missing active V2 implementation roadmap"]
+    roadmap = roadmap_path.read_text(encoding="utf-8")
+    return [
+        f"active V2 roadmap missing phase plan: {phrase}"
+        for phrase in [
+            "Phase 05: Memory Engine",
+            "Phase 06: Capability / Tool Retrieval",
+            "Phase 07: Knowledge Retrieval / Fusion",
+            "Phase 08: GeneralAgent LangGraph Runtime",
+            "Phase 09: Product Boundary / Trace / Eval Closure",
+            "front-path slimming",
+        ]
+        if phrase not in roadmap
+    ]
 
 
 def run_verification() -> VerificationResult:
-    errors = [
-        *verify_required_paths(),
-        *verify_forbidden_current_paths(),
-        *verify_doc_phrases(),
-        *verify_target_architecture_html(),
-        *verify_archived_reference_docs(),
-    ]
-    return VerificationResult(errors=errors)
+    return VerificationResult(
+        errors=[
+            *verify_required_paths(),
+            *verify_forbidden_current_paths(),
+            *verify_doc_phrases(),
+            *verify_target_architecture_html(),
+            *verify_active_v2_phase_plan(),
+        ]
+    )
 
 
 def main() -> int:

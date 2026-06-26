@@ -1,16 +1,16 @@
-# Agent Reference Index
+# Agent 参考索引
 
-`.agent/references/` is the durable navigation layer for Agents. It points to
-source-of-truth files and commands; it does not carry long target architecture
-design.
+`.agent/references/` 是 Agent 的精简导航层。它指向 source-of-truth 文件和命令，不承载长篇目标架构设计。
 
-## Active Files
+## 当前文件
 
 ```text
 .agent/references/
   README.md
   current-program.md
   docs-map.md
+  task-routing.md
+  workflow.md
   code-map.md
   runtime-call-chain.md
   verification-map.md
@@ -18,21 +18,22 @@ design.
   known-pitfalls.md
 ```
 
-## Use
+## 用途
 
-- `current-program.md`: active executable Agent program.
-- `docs-map.md`: formal docs and history entrypoints.
-- `code-map.md`: current code owners and protected runtime boundaries.
-- `runtime-call-chain.md`: current backend call path.
-- `verification-map.md`: verifier, pytest, grep, and closure command map.
-- `command-catalog.md`: common command snippets.
-- `known-pitfalls.md`: common mistakes and forbidden restorations.
+- `current-program.md`：当前可执行 Agent program。
+- `docs-map.md`：正式 docs、history 和 Agent 工作流入口。
+- `task-routing.md`：任务类型到参考和流程的路由表。
+- `workflow.md`：通用执行流程、文档维护流程、仓库卫生流程和验证基线。
+- `code-map.md`：当前代码 owners 和受保护 runtime 边界。
+- `runtime-call-chain.md`：当前后端调用路径。
+- `verification-map.md`：verifier、pytest、grep 和 closure 命令地图。
+- `command-catalog.md`：常用命令片段。
+- `known-pitfalls.md`：常见错误和禁止恢复的旧路径。
 
-## Archive
+## 归档
 
-Old detailed maps are archived under:
+旧详细 map 归档在：
 
-- `docs/architecture/history/agent-reference-fragments/`
+- `docs/history/agent-reference-fragments/`
 
-If a future task needs archived detail, promote only the smallest current fact
-back into the active reference set.
+未来需要历史细节时，只把最小当前事实提升回 active reference。

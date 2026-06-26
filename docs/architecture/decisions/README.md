@@ -1,24 +1,17 @@
-# Architecture Decisions
+# 架构决策记录
 
-这个目录放关键架构决策记录。
+这里只保留仍然影响当前主线的正式 ADR。
 
-它只回答一类问题：
+当前有效决策：
 
-```text
-为什么最后选择了这条架构路径，
-而不是另外一条看起来也能走的路径。
-```
+- [ADR 0002：退休 compat namespace](0002-retire-compat-namespace.md)
 
-当前保留真正还在影响主线的决策：
+已被替换的决策归档在：
 
-- [ADR 0002: Retire Compat Namespace](0002-retire-compat-namespace.md)
+- `docs/history/decisions/`
 
-已替代的决策归档在：
+新增 ADR 时优先记录：
 
-- `../history/decisions/`
-
-后面如果继续新增 ADR，优先记录这类决策：
-
-- 影响长期边界的 runtime 决策
-- 影响 retrieval contract 的治理决策
-- 影响目录、服务边界、公开接口的结构决策
+- 会长期影响 runtime 边界的决策。
+- 会长期影响 retrieval / evidence contract 的决策。
+- 会影响目录结构、服务边界或公开 API 的决策。

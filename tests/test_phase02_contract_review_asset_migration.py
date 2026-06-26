@@ -56,14 +56,14 @@ def test_contract_review_history_assets_are_mapped_to_project_assets() -> None:
     source_pack = yaml.safe_load(
         (
             REPO_ROOT
-            / "docs/architecture/history/domain-packs/root-contract-review/contract_review/pack.yaml"
+            / "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml"
         ).read_text(encoding="utf-8")
     )
 
     assert settings["source_domain_pack"]["id"] == source_pack["id"]
     assert (
         settings["source_domain_pack"]["path"]
-        == "docs/architecture/history/domain-packs/root-contract-review/contract_review"
+        == "docs/history/domain-packs/root-contract-review/contract_review"
     )
     assert settings["schema_path"] == "schema.json"
     assert settings["retrieval_policy_path"] == "retrieval_policy.yaml"

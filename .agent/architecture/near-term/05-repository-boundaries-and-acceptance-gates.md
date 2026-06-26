@@ -25,7 +25,7 @@ examples/graphrag-projects/
 `src/backend/zuno` is the current Python backend runtime. `.agent` is the Agent
 workflow and target-design workspace. `docs` is the formal human-facing
 documentation surface. Historical material lives under
-`docs/architecture/history/`.
+`docs/history/`.
 
 ## Target Backend Ownership
 
@@ -77,8 +77,41 @@ migration-only fields as product concepts.
 - `.agent/architecture/near-term/`: detailed canonical target architecture.
 - `.agent/references/`: navigation indexes only, not long target prose.
 - `.agent/programs/`: current active program only.
-- `docs/architecture/history/`: superseded plans, old programs, old fragments,
+- `docs/history/`: superseded plans, old programs, old fragments,
   retired designs, and replaced references.
+
+## Front-path Slimming Target
+
+The target repository shape is not "fewer files at any cost." It is a small
+front path plus a reachable archive.
+
+Keep in the front path:
+
+| Area | Keep | Why |
+| --- | --- | --- |
+| Root | `AGENTS.md`, `README.md`, package/test config | first-read and tooling contracts |
+| `docs/` | `README.md`, Current, Target, Roadmap, ADRs, Evidence, Terminology | formal human truth |
+| `.agent/` | `README.md`, active program, near-term target design, references, scripts, skills, templates, workflows | executable Agent workflow |
+| Runtime | `src/`, `apps/`, `tools/`, `tests/`, `infra/` | code and verification surfaces |
+
+Move or keep out of the front path:
+
+| Material | Target Placement | Rule |
+| --- | --- | --- |
+| old lessons | `docs/history/agent-lessons/` | useful as history, not active guidance |
+| old phase files | `docs/history/phases/` or archived program folder | do not recreate phase sprawl under active `.agent/programs/` |
+| retired plans/specs | `docs/history/` | preserve evidence, remove from active reading order |
+| screenshots and browser snapshots | outside repo or ignored local scratch | never commit transient QA artifacts |
+| generated caches | ignored local directories | `.pytest_cache`, `.playwright-mcp`, `.test-tmp`, local reports |
+
+The active target mode is:
+
+```text
+formal truth in docs/
+executable workflow in .agent/
+completed or superseded material in docs/history/
+transient local artifacts outside the repository
+```
 
 ## Forbidden Catch-all Directories
 
@@ -100,7 +133,7 @@ Before moving or deleting files:
 2. Search imports, links, routes, scripts, evals, docs, and tests.
 3. Classify each touched file as Current, Foundation, Target, Future, History,
    Generated, Local, or Migration Compatibility.
-4. Preserve historical evidence under `docs/architecture/history/`.
+4. Preserve historical evidence under `docs/history/`.
 5. Update docs, `.agent` references, verifiers, and tests in the same change.
 6. Run the smallest meaningful verifier/test set plus `git diff --check`.
 
@@ -126,6 +159,32 @@ pytest -q tests/test_docs_entrypoints.py tests/test_repo_structure_consistency.p
 
 Runtime phases add focused runtime tests. Eval phases add eval-specific commands
 and must not overwrite historical baselines.
+
+## Phase Execution Plan
+
+The active `zuno-target-runtime-v2` program executes the target architecture in
+linear phases. The plan intentionally stays in one active roadmap file instead
+of adding many phase files back under `.agent/programs/`.
+
+| Phase | Target Slice | Main Owner | Exit Signal |
+| --- | --- | --- | --- |
+| 05 | Memory Engine | `services/application/context`, `services/memory`, `core/agents` | Raw Event Log, Summary Compression, Structured Extraction, `source_event_ids`, and ContextTrace are test-covered. |
+| 06 | Capability / Tool Retrieval | `services/application/capabilities`, `core/agents` | ToolCard Registry, Native BM25 capability search, filters, and `CapabilitySelectionTrace` are test-covered. |
+| 07 | Knowledge Retrieval / Fusion | `services/retrieval`, `services/graphrag`, `services/application/knowledge` | Native BM25, multi-query, multi-retriever recall, deduplication, RRF `k=60`, optional rerank boundary, evidence, citation, and trace are test-covered. |
+| 08 | GeneralAgent LangGraph Runtime | `core/agents`, context, capability, retrieval boundaries | Explicit `prepare_context -> agent_loop -> post_turn_commit` graph preserves one chat runtime and streaming compatibility. |
+| 09 | Product Boundary / Trace / Eval Closure | API, frontend contract, eval docs, evidence docs | Typed API, frontend-facing state, trace/eval closure evidence, and archive hygiene are complete. |
+
+Execution rule:
+
+```text
+Phase 05 must close before Phase 06.
+Phase 06 must close before Phase 07.
+Phase 07 must close before Phase 08.
+Phase 08 must close before Phase 09.
+```
+
+Each phase must update Current / Foundation / Target wording only for behavior
+proved by code and tests. Unproved design remains Target.
 
 ## Current / Target Boundary
 

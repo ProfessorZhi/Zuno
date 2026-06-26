@@ -4,6 +4,10 @@ Use this checklist before closing a future `zuno-target-runtime-v2` phase.
 
 ## Scope
 
+- Confirm the phase is the next linear phase in
+  `implementation-roadmap.md`; do not skip from Phase 05 to Phase 07.
+- Confirm the phase has explicit entry condition, touched owners, exit
+  criteria, and focused verification evidence.
 - Confirm the phase does not require Java services, microservices, event
   workers, database schema changes, dependency upgrades, full frontend
   migration, or eval baseline updates unless that phase explicitly authorizes
@@ -34,5 +38,5 @@ is closed and superseded by a slimmer program surface, move detailed evidence
 to:
 
 ```text
-docs/architecture/history/programs/zuno-target-runtime-v2/
+docs/history/programs/zuno-target-runtime-v2/
 ```

@@ -5,6 +5,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+
 REQUIRED_PATHS = [
     "AGENTS.md",
     "apps/web/AGENTS.md",
@@ -12,6 +13,8 @@ REQUIRED_PATHS = [
     "tools/evals/zuno/AGENTS.md",
     ".agent/README.md",
     ".agent/references/README.md",
+    ".agent/references/task-routing.md",
+    ".agent/references/workflow.md",
     ".agent/references/code-map.md",
     ".agent/references/runtime-call-chain.md",
     ".agent/references/verification-map.md",
@@ -20,42 +23,27 @@ REQUIRED_PATHS = [
     ".agent/references/command-catalog.md",
     ".agent/references/known-pitfalls.md",
     ".agent/scripts/verify_module_boundaries.py",
-    ".agent/workflows/README.md",
-    ".agent/workflows/read-only-audit.md",
-    ".agent/workflows/docs-maintenance.md",
-    ".agent/workflows/repo-hygiene.md",
-    ".agent/workflows/frontend-change.md",
-    ".agent/workflows/backend-change.md",
-    ".agent/workflows/api-contract-change.md",
-    ".agent/workflows/architecture-refactor.md",
-    ".agent/workflows/eval-change.md",
-    ".agent/workflows/bugfix-root-cause.md",
-    ".agent/workflows/task-closure.md",
+    ".agent/architecture/README.md",
+    ".agent/architecture/decisions/README.md",
+    ".agent/architecture/future/README.md",
+    ".agent/architecture/near-term/README.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
     ".agent/architecture/near-term/01-target-runtime-architecture.md",
     ".agent/architecture/near-term/02-context-memory-architecture.md",
     ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
     ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
     ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
+    ".agent/programs/README.md",
+    ".agent/programs/current.md",
     ".agent/programs/zuno-target-runtime-v2/README.md",
     ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
     ".agent/programs/zuno-target-runtime-v2/current-phase.md",
     ".agent/programs/zuno-target-runtime-v2/closure-checklist.md",
-    "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
-    "docs/architecture/history/programs/zuno-target-architecture-migration-v1/README.md",
-    "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
-    "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md",
-    "docs/architecture/history/programs/README.md",
-    "docs/architecture/history/programs/context-memory-agent-runtime-v1/README.md",
-    ".agent/skills/README.md",
-    ".agent/skills/zuno-read-only-audit/SKILL.md",
-    ".agent/skills/zuno-docs-maintenance/SKILL.md",
-    ".agent/skills/zuno-repo-hygiene/SKILL.md",
-    ".agent/skills/zuno-frontend-change/SKILL.md",
-    ".agent/skills/zuno-backend-change/SKILL.md",
-    ".agent/skills/zuno-api-contract-change/SKILL.md",
-    ".agent/skills/zuno-architecture-refactor/SKILL.md",
-    ".agent/skills/zuno-eval-change/SKILL.md",
+    "docs/history/programs/zuno-target-runtime-v2/README.md",
+    "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
+    "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md",
+    "docs/history/programs/README.md",
 ]
 
 FORBIDDEN_PATHS = [
@@ -63,6 +51,8 @@ FORBIDDEN_PATHS = [
     ".agent.md",
     ".agentmd",
     ".agents",
+    ".agent/skills",
+    ".agent/workflows",
     ".agent/programs/context-memory-agent-runtime-v1",
     ".agent/programs/zuno-target-runtime-v2/implementation-phases",
     ".agent/programs/zuno-target-runtime-v2/evidence",
@@ -86,7 +76,7 @@ def main() -> int:
 
     for relative_path in FORBIDDEN_PATHS:
         if (REPO_ROOT / relative_path).exists():
-            errors.append(f"unexpected legacy Agent path exists: {relative_path}")
+            errors.append(f"unexpected retired Agent path exists: {relative_path}")
 
     gitignore = _read(".gitignore")
     if "apps/web/AGENTS.md" in gitignore:
@@ -96,15 +86,16 @@ def main() -> int:
 
     agent_entry = _read("AGENTS.md")
     for phrase in [
-        "## Task Routing",
+        "这是仓库唯一的 Agent 入口",
+        "## 任务路由",
         "apps/web/AGENTS.md",
         "src/backend/zuno/AGENTS.md",
         "tools/evals/zuno/AGENTS.md",
-        ".agent/skills/zuno-docs-maintenance/SKILL.md",
-        ".agent/skills/zuno-repo-hygiene/SKILL.md",
+        ".agent/references/task-routing.md",
+        ".agent/references/workflow.md",
         ".agent/programs/zuno-target-runtime-v2/",
         "zuno-ideal-architecture-and-repo-layout.html",
-        "01-target-runtime-architecture.md",
+        "前台文档默认中文",
     ]:
         if phrase not in agent_entry:
             errors.append(f"AGENTS.md missing routing phrase: {phrase}")
@@ -112,64 +103,47 @@ def main() -> int:
     html = _read(".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html")
     if "<html" not in html.lower() or "</html>" not in html.lower():
         errors.append("target architecture HTML is not valid HTML")
-    if not any(marker in html for marker in ["Target", "Proposed", "目标"]):
-        errors.append("target architecture HTML missing Target/Proposed marker")
     for phrase in [
+        "Target / Proposed",
         "Summary Compression",
         "Structured Extraction",
         "ToolCard",
         "Native BM25",
         "RRF",
         "auto 是 router",
+        "Phase 05",
+        "Execution Contract",
+        "Query Journey",
+        "产品入口层",
+        "RAG / GraphRAG 层",
     ]:
         if phrase not in html:
             errors.append(f"target architecture HTML missing canonical phrase: {phrase}")
 
-    required_html_references = [
+    for relative_path in [
         "AGENTS.md",
+        ".agent/README.md",
+        ".agent/architecture/README.md",
         ".agent/architecture/near-term/README.md",
-        ".agent/workflows/architecture-refactor.md",
-        ".agent/workflows/repo-hygiene.md",
-        ".agent/skills/zuno-architecture-refactor/SKILL.md",
-        ".agent/skills/zuno-repo-hygiene/SKILL.md",
-    ]
-    for relative_path in required_html_references:
+        ".agent/references/task-routing.md",
+        ".agent/references/workflow.md",
+    ]:
         if "zuno-ideal-architecture-and-repo-layout.html" not in _read(relative_path):
             errors.append(f"{relative_path} missing target architecture HTML reference")
 
     agent_readme = _read(".agent/README.md")
     for phrase in [
-        ".agent/workflows/",
-        ".agent/skills/",
-        "Temporary discovery -> `.agent/local/notes/`",
-        "Implemented, verified, human-facing facts -> `docs/`",
+        ".agent/references/",
+        ".agent/programs/",
+        ".agent/architecture/",
+        "类似 skill 的任务路由",
+        "新写或重写的 Agent 文档默认使用中文",
     ]:
         if phrase not in agent_readme:
             errors.append(f".agent/README.md missing system phrase: {phrase}")
 
-    near_term_files = sorted(
-        path.name
-        for path in (REPO_ROOT / ".agent/architecture/near-term").iterdir()
-        if path.is_file()
-    )
-    expected_near_term = sorted(
-        [
-            "README.md",
-            "zuno-ideal-architecture-and-repo-layout.html",
-            "01-target-runtime-architecture.md",
-            "02-context-memory-architecture.md",
-            "03-capability-tool-retrieval-architecture.md",
-            "04-knowledge-graphrag-retrieval-fusion.md",
-            "05-repository-boundaries-and-acceptance-gates.md",
-        ]
-    )
-    if near_term_files != expected_near_term:
-        errors.append(f"near-term architecture files are not canonical: {near_term_files}")
-
     reference_files = sorted(
-        path.name
-        for path in (REPO_ROOT / ".agent/references").iterdir()
-        if path.is_file()
+        path.name for path in (REPO_ROOT / ".agent/references").iterdir() if path.is_file()
     )
     expected_references = sorted(
         [
@@ -181,6 +155,8 @@ def main() -> int:
             "verification-map.md",
             "command-catalog.md",
             "known-pitfalls.md",
+            "task-routing.md",
+            "workflow.md",
         ]
     )
     if reference_files != expected_references:
@@ -196,6 +172,18 @@ def main() -> int:
     )
     if active_program_files != expected_program_files:
         errors.append(f"active V2 program files are not slim canonical set: {active_program_files}")
+
+    roadmap = _read(".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md")
+    for phrase in [
+        "Phase 05: Memory Engine",
+        "Phase 06: Capability / Tool Retrieval",
+        "Phase 07: Knowledge Retrieval / Fusion",
+        "Phase 08: GeneralAgent LangGraph Runtime",
+        "Phase 09: Product Boundary / Trace / Eval Closure",
+        "front-path slimming",
+    ]:
+        if phrase not in roadmap:
+            errors.append(f"active V2 roadmap missing phase execution phrase: {phrase}")
 
     if errors:
         for error in errors:

@@ -21,7 +21,7 @@ Phase E adds the first real runtime multihop retrieval standard. The committed
 standard lives in:
 
 ```text
-docs/architecture/audits/real-runtime-multihop-eval-standards.md
+docs/history/audits/real-runtime-multihop-eval-standards.md
 ```
 
 Its core rule is simple:

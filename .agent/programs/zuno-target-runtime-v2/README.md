@@ -11,12 +11,13 @@ controlled first implementation slice of the target runtime architecture.
 
 This program keeps the current Single `GeneralAgent`, GraphRAG Project
 mainline, `KnowledgeQueryService`, and `GraphRAGQueryService` intact while
-moving low-risk backend ownership toward the target module boundaries and
-introducing a minimal callable Context Orchestrator.
+moving low-risk backend ownership toward the target module boundaries,
+introducing Context/Memory foundations, and then implementing the target
+runtime in linear phases.
 
 ## Scope
 
-In scope:
+Completed foundation slice:
 
 - Phase 00 current state gate.
 - Phase 01 program setup.
@@ -24,12 +25,16 @@ In scope:
 - Phase 03 first low-risk backend boundary move.
 - Phase 04 minimal Context Orchestrator runtime.
 
-Out of scope for this first slice:
+Planned execution phases:
 
-- mature Memory Engine implementation.
-- mature Dynamic Capability Selector implementation.
-- full `GeneralAgent` LangGraph runtime rewrite.
-- frontend feature-boundary migration.
+- Phase 05 Memory Engine.
+- Phase 06 Capability / Tool Retrieval.
+- Phase 07 Knowledge Retrieval / Fusion.
+- Phase 08 GeneralAgent LangGraph Runtime.
+- Phase 09 Product Boundary / Trace / Eval Closure.
+
+Out of scope unless a specific phase explicitly opens it:
+
 - database schema changes.
 - dependency upgrades.
 - Java services, microservices, event workers, and default multi-agent mode.
@@ -54,12 +59,12 @@ Out of scope for this first slice:
 - `closure-checklist.md`
 
 Detailed Phase 00-04 evidence and old phase files are archived under
-`docs/architecture/history/programs/zuno-target-runtime-v2/`.
+`docs/history/programs/zuno-target-runtime-v2/`.
 
 ## Verification Rule
 
 Each phase must run the smallest meaningful verification set and record the
 current result in the active phase or closure checklist. Bulky phase evidence
-belongs under `docs/architecture/history/programs/zuno-target-runtime-v2/`.
+belongs under `docs/history/programs/zuno-target-runtime-v2/`.
 Do not use this program to promote Target behavior to Current unless current
 code and tests prove it.

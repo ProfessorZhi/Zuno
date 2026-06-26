@@ -9,9 +9,14 @@ FORBIDDEN_CURRENT_DIRS = [
     "docs/architecture/phases",
     "docs/architecture/plans",
     "docs/architecture/programs",
+    "docs/architecture/history",
+    "docs/architecture/audits",
+    "docs/architecture/specs",
+    "docs/development",
+    "docs/prototypes",
+    "docs/ui-review",
+    "docs/ui-gallery",
     "docs/superpowers",
-    "docs/prototypes/superpowers-legacy",
-    "docs/ui-gallery/knowledge-product-refactor-deep-graphrag-v1",
 ]
 
 REQUIRED_DOCS = [
@@ -19,37 +24,23 @@ REQUIRED_DOCS = [
     "docs/architecture/current-architecture.md",
     "docs/architecture/target-architecture.md",
     "docs/architecture/roadmap.md",
-    "docs/architecture/history/README.md",
+    "docs/history/README.md",
     "docs/evidence/public-demo.md",
 ]
 
 REQUIRED_AGENT_PROGRAMS = [
-    "docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
     ".agent/programs/current.md",
     ".agent/programs/zuno-target-runtime-v2/current-phase.md",
     ".agent/programs/zuno-target-runtime-v2/closure-checklist.md",
-    "docs/architecture/history/programs/zuno-target-runtime-v2/README.md",
-    "docs/architecture/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-target-runtime-v2/README.md",
+    "docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
 ]
 
 
 def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
-
-
-def verify_active_audits_are_not_history_documents() -> list[str]:
-    errors: list[str] = []
-
-    for path in sorted((REPO_ROOT / "docs/architecture/audits").glob("*.md")):
-        content = path.read_text(encoding="utf-8")
-        if "Status: History" in content:
-            relative_path = path.relative_to(REPO_ROOT).as_posix()
-            errors.append(
-                f"{relative_path} active architecture audit is marked History"
-            )
-
-    return errors
 
 
 def main() -> int:
@@ -63,22 +54,23 @@ def main() -> int:
         if (REPO_ROOT / relative_path).exists():
             errors.append(f"retired docs directory still on current path: {relative_path}")
 
-    for relative_path in [*REPO_ROOT.glob("docs/**/*.md"), *REPO_ROOT.glob(".agent/**/*.md")]:
-        content = relative_path.read_text(encoding="utf-8")
+    for path in [*REPO_ROOT.glob("docs/**/*.md"), *REPO_ROOT.glob(".agent/**/*.md")]:
+        content = path.read_text(encoding="utf-8")
         if "C:\\Users\\Administrator\\Downloads" in content:
-            errors.append(f"{relative_path.relative_to(REPO_ROOT)} contains local Downloads path")
+            errors.append(f"{path.relative_to(REPO_ROOT)} contains local Downloads path")
 
     current = _read("docs/architecture/current-architecture.md")
-    if "Context Orchestrator and Post-turn Pipeline are Target, not Current" not in current:
-        errors.append("current architecture must not promote Context Orchestrator to Current")
+    if "以下仍是 Target，不是当前成熟事实" not in current:
+        errors.append("current architecture must not promote Target behavior to Current")
 
     target = _read("docs/architecture/target-architecture.md")
     for phrase in [
-        "Summary Compression + Structured Extraction",
+        "Summary Compression",
+        "Structured Extraction",
         "Native BM25",
         "ToolCard",
         "RRF",
-        "`auto` router",
+        "`auto` 是 router",
     ]:
         if phrase not in target:
             errors.append(f"target architecture missing canonical phrase: {phrase}")
@@ -89,15 +81,19 @@ def main() -> int:
         if "zuno-ideal-architecture-and-repo-layout.html" in content:
             errors.append(f"{relative_path} must not place .agent target HTML in docs front path")
 
-    front_path_files = ["README.md", "docs/README.md", "docs/architecture/README.md"]
     forbidden_front_path_text = [
         "docs/architecture/phases/README.md",
         "docs/architecture/plans/",
         "docs/architecture/programs/",
+        "docs/architecture/audits/",
+        "docs/architecture/specs/",
+        "docs/architecture/history/",
+        "docs/development/",
+        "docs/prototypes/",
+        "docs/ui-review/",
         "docs/superpowers/",
-        "docs/prototypes/superpowers-legacy/",
     ]
-    for relative_path in front_path_files:
+    for relative_path in docs_front_path:
         content = _read(relative_path)
         for phrase in forbidden_front_path_text:
             if phrase in content:
@@ -107,10 +103,16 @@ def main() -> int:
         "docs/architecture/phases/",
         "docs/architecture/plans/",
         "docs/architecture/programs/",
+        "docs/architecture/audits/",
+        "docs/architecture/specs/",
+        "docs/architecture/history/",
+        "docs/development/",
+        "docs/prototypes/",
+        "docs/ui-review/",
     ]
     for path in sorted(REPO_ROOT.glob("docs/**/*.md")):
         relative_path = path.relative_to(REPO_ROOT).as_posix()
-        if relative_path.startswith("docs/architecture/history/"):
+        if relative_path.startswith("docs/history/"):
             continue
         content = path.read_text(encoding="utf-8")
         for phrase in forbidden_active_doc_text:
@@ -118,8 +120,6 @@ def main() -> int:
                 errors.append(
                     f"{relative_path} links retired architecture current path: {phrase}"
                 )
-
-    errors.extend(verify_active_audits_are_not_history_documents())
 
     if errors:
         for error in errors:

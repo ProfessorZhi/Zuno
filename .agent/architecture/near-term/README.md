@@ -1,12 +1,12 @@
-# Near-Term Architecture
+# 近期目标架构
 
-## Purpose
+## 目的
 
-This directory is the canonical detailed target architecture for Zuno's next
-refactor stages. It is Target / Proposed design, not Current Truth.
+这个目录是 Zuno 下一轮 refactor 的 canonical Target / Proposed 设计，不是 Current Truth。
 
-The old fragmented 01-19 notes have been archived under
-`docs/architecture/history/near-term-architecture-fragments/`.
+旧的 01-19 fragment 已归档到：
+
+- `docs/history/near-term-architecture-fragments/`
 
 ## Canonical Files
 
@@ -21,7 +21,7 @@ The old fragmented 01-19 notes have been archived under
   05-repository-boundaries-and-acceptance-gates.md
 ```
 
-## Reading Order
+## 阅读顺序
 
 1. [Target / Proposed Visual Blueprint](zuno-ideal-architecture-and-repo-layout.html)
 2. [Target Runtime Architecture](01-target-runtime-architecture.md)
@@ -30,11 +30,16 @@ The old fragmented 01-19 notes have been archived under
 5. [Knowledge GraphRAG Retrieval Fusion](04-knowledge-graphrag-retrieval-fusion.md)
 6. [Repository Boundaries And Acceptance Gates](05-repository-boundaries-and-acceptance-gates.md)
 
-## Boundary
+## 边界
 
-Near-term means the next plausible architecture inside the current
-Python/FastAPI and LangGraph monorepo. It does not mean Java implementation,
-microservice extraction, event bus rollout, or default multi-agent behavior.
+near-term 指当前 Python/FastAPI、LangGraph、monorepo 内部可以逐步落地的目标架构。它不等于 Java 实现、microservice 拆分、event bus 全面 rollout，也不等于默认 multi-agent 行为。
 
-The HTML blueprint is the only canonical Target / Proposed visual blueprint.
-It must not be copied into `docs/` and must not be used as Current evidence.
+HTML 蓝图是唯一 canonical Target / Proposed visual blueprint。它不能复制到 `docs/`，也不能当作 Current evidence。
+
+## 执行计划放哪里
+
+按 phase 的执行计划放在 active program roadmap：
+
+- `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
+
+不要把 per-phase 文件重新加回 `.agent/architecture/near-term/` 或 `.agent/programs/zuno-target-runtime-v2/`，除非未来某个 phase 明确需要临时工作证据。active front path 保持为本 README、一个 HTML 蓝图和五份 Markdown 设计文件。

@@ -50,12 +50,12 @@ def test_public_docs_keep_history_off_front_path_but_reachable() -> None:
     architecture_index = (
         REPO_ROOT / "docs" / "architecture" / "README.md"
     ).read_text(encoding="utf-8")
-    history_index = (
-        REPO_ROOT / "docs" / "architecture" / "history" / "README.md"
-    ).read_text(encoding="utf-8")
+    history_index = (REPO_ROOT / "docs" / "history" / "README.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "./docs/architecture/roadmap.md" in readme
-    assert "history/phases/" in architecture_index
+    assert "docs/history/programs/" in architecture_index
     assert "phases/" in history_index
     assert "plans/" in history_index
     assert "src/backend/zuno" in readme
@@ -73,16 +73,16 @@ def test_launcher_docs_label_phase0_as_recovery_surface() -> None:
 
 def test_public_release_staging_plan_uses_clean_history_link() -> None:
     content = (
-        REPO_ROOT / "docs" / "development" / "public-release-staging-plan.md"
+        REPO_ROOT / "docs" / "history" / "development" / "public-release-staging-plan.md"
     ).read_text(encoding="utf-8")
 
-    assert "../architecture/history/development/README.md" in content
+    assert "README.md" in content
     assert "05_TopDown_题库学习/项目/02_项目映射/Zuno/" not in content
 
 
 def test_public_release_guidance_does_not_keep_retired_runtime_group() -> None:
     staging_plan = (
-        REPO_ROOT / "docs" / "development" / "public-release-staging-plan.md"
+        REPO_ROOT / "docs" / "history" / "development" / "public-release-staging-plan.md"
     ).read_text(encoding="utf-8")
     commit_order = (
         REPO_ROOT / "tools" / "scripts" / "print_public_release_commit_order.py"
@@ -142,13 +142,13 @@ def test_public_release_preview_ready_note_points_to_existing_history() -> None:
     )
     ready_note = namespace["DOCS_AND_README_READY_NOTE"]
 
-    assert ready_note == "docs/architecture/history/development/docs-and-readme-ready.md"
+    assert ready_note == "docs/history/development/docs-and-readme-ready.md"
     assert (REPO_ROOT / ready_note).exists()
 
 
 def test_public_demo_docs_prefer_graphrag_project_id() -> None:
     runbook = (
-        REPO_ROOT / "docs" / "development" / "public-demo-runbook.md"
+        REPO_ROOT / "docs" / "history" / "development" / "public-demo-runbook.md"
     ).read_text(encoding="utf-8")
 
     assert "--graphrag-project-id contract_review" in runbook
@@ -157,7 +157,11 @@ def test_public_demo_docs_prefer_graphrag_project_id() -> None:
 
 def test_architecture_maintenance_workflow_tracks_project_contracts() -> None:
     workflow = (
-        REPO_ROOT / "docs" / "development" / "architecture-doc-maintenance-workflow.md"
+        REPO_ROOT
+        / "docs"
+        / "history"
+        / "development"
+        / "architecture-doc-maintenance-workflow.md"
     ).read_text(encoding="utf-8")
 
     assert "GraphRAG Project / migration compatibility contracts" in workflow

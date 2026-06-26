@@ -1,13 +1,12 @@
-# Current Architecture
+# 当前架构
 
-## Purpose
+## 用途
 
-This file states current repository reality. It does not describe the desired
-future state.
+这份文档只描述当前仓库已经由代码和测试证明的事实，不描述尚未实现的目标状态。
 
-## Current
+## 当前仓库边界
 
-Zuno is a monorepo with these active runtime boundaries:
+Zuno 当前是一个 monorepo，主要前台边界是：
 
 ```text
 apps/web
@@ -16,27 +15,24 @@ src/backend/zuno
 infra
 tools
 tests
+docs
+.agent
 ```
 
-`src/backend/zuno` is the only active Python backend runtime boundary. There is
-no active root-level `services/` backend tree and no active `src/frontend`
-workspace.
-There is no active compatibility namespace in current truth.
-There is no active root-level `services/` tree in current truth.
+`src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。当前事实中没有 active root-level `services/` 后端树，也没有 active `src/frontend` workspace。
 
-## Current Backend Shape
+## 当前后端形态
 
-- FastAPI entrypoint: `src/backend/zuno/main.py`
-- API layer: `src/backend/zuno/api/`
-- Runtime/core layer: `src/backend/zuno/core/`
-- Service layer: `src/backend/zuno/services/`
-- Persistence and settings: `src/backend/zuno/database/`,
-  `src/backend/zuno/settings.py`
-- Eval and maintenance tooling: `tools/evals/zuno/`, `tools/scripts/`
+- FastAPI 入口：`src/backend/zuno/main.py`
+- API 层：`src/backend/zuno/api/`
+- Runtime / core 层：`src/backend/zuno/core/`
+- Service 层：`src/backend/zuno/services/`
+- 持久化和设置：`src/backend/zuno/database/`、`src/backend/zuno/settings.py`
+- Eval 和维护工具：`tools/evals/zuno/`、`tools/scripts/`
 
-## Current GraphRAG And Agent State
+## 当前 GraphRAG 与 Agent 主线
 
-Current code and focused tests prove this mainline:
+当前代码和聚焦测试证明的主线是：
 
 ```text
 Completion API
@@ -50,143 +46,60 @@ Completion API
   -> GeneralAgent answer
 ```
 
-Phase 11A is complete. The current code contains `KnowledgeQueryService`,
-`GraphRAGQueryService`, `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult`.
-This is the current GraphRAG Project Query Runtime boundary.
+已证明的当前事实：
 
-Phase 11B is complete. `GeneralAgent.astream()` uses the single current session
-path, `search_knowledge_base` calls `KnowledgeQueryService`, and
-`DomainQAGraph` no longer owns the `GeneralAgent` conversation path.
+- Phase 11A: complete。当前代码包含 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
+- Phase 11B: complete。`GeneralAgent.astream()` 使用单一会话路径，`search_knowledge_base` 调用 `KnowledgeQueryService`。
+- Phase 11C: active runtime cleanup complete。`DomainQAGraph`、`MultiAgentSupervisorGraph`、`AgentRuntime`、legacy graph states 和 `zuno.services.domain_pack` 不再是当前后端主线。
+- Phase 12: closed through the target migration closure evidence。full pytest、Contract Review eval、stackless baseline comparison、trace metadata、legacy grep classification 和 docs/evidence sync 已完成。
 
-Workspace knowledge prefetch and the Workspace `search_knowledge_base` tool
-also use `KnowledgeQueryService` now. `WorkSpaceSimpleAgent` no longer imports
-`AgentRuntime`, exposes `domain_qa_runtime`, or calls `_run_domain_pack_query`.
-The `/knowledge/search` API service path also routes through
-`KnowledgeQueryService` and returns evidence/citation/trace-oriented query
-metadata while preserving compatibility fields such as `content` and
-`final_mode`.
-The standalone `src/backend/zuno/core/runtime/agent_runtime.py` facade and the
-direct `src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py` source
-have also been removed from current backend source and exports. The direct
-`src/backend/zuno/core/graphs/domain_qa_graph.py` source and its legacy
-`states.py` graph state module have also been removed from current backend
-source. The `src/backend/zuno/services/domain_pack/` runtime service package
-has also been retired from current backend source.
-`DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer exported from
-the `zuno.core` or `zuno.core.graphs` public package surfaces.
+Workspace knowledge prefetch、Workspace `search_knowledge_base` tool 和 `/knowledge/search` API service path 现在都通过 `KnowledgeQueryService`。
 
-Agent and Knowledge public DTOs now prefer `graphrag_project_id`. Legacy
-`domain_pack_id` is accepted only as migration input and mapped to existing
-storage boundaries where required; it is not the target public field.
+## 当前兼容边界
 
-`KnowledgeService.get_runtime_settings` now preserves `domain_pack_id` without
-auto-loading `DomainPackLoader` from that field. It emits GraphRAG Project
-runtime payloads under `project_payload`; legacy `domain_pack` runtime payload
-input is accepted only as a migration fallback. The current project identity
-still comes from `graphrag_project_id` and compatibility `domain_pack_id`
-where existing contracts require it.
+`graphrag_project_id` 是 Agent 和 Knowledge public DTO 的目标身份字段。
 
-`GraphRetriever` no longer loads Domain Pack retrieval policy from
-`domain_pack_id`. Contract Review graph policy now resolves through explicit
-`query_policy` data, including the GraphRAG Project `retrieval_policy.yaml`
-copy under `examples/graphrag-projects/contract_review/`.
-`GraphRetrieverAdapter`, `GraphRetriever`, `GraphWriter`, structured graph
-extraction, pipeline graph indexing, and the Neo4j client now use
-`graphrag_project_id` as the primary graph scope for new graph writes and
-project-scoped graph retrieval. Neo4j queries still dual-read legacy
-`domain_pack_id` properties with `COALESCE` so old graph data remains readable
-until the backfill is applied. A dry-run-first migration helper exists under
-`tools/migrations/` to backfill `graphrag_project_id` from legacy graph
-properties. Explicit legacy `domain_pack_id` remains a bounded migration input,
-not the target API or graph-write shape.
+`domain_pack_id` 仍可能出现在：
 
-Stackless local eval and the dedicated Contract Review eval can build their
-Contract Review graph/eval payloads from GraphRAG Project assets. The dedicated
-Contract Review eval no longer loads `DomainPackLoader` or executes through
-`DomainQAGraph`. Stackless local eval no longer has a generic Domain Pack
-loader fallback; when an id is provided, it must resolve to GraphRAG Project
-assets. Their graph extraction paths, the active pipeline graph extraction
-path, and the extractor contract tests now call extractors with
-`project_payload=project_payload`; the graph extractor `domain_pack=` payload
-alias is retired from active extractor APIs.
+- migration alias
+- 旧数据库兼容字段
+- eval CLI 兼容
+- retirement / history tests
 
-GraphRAG Project Contract Review assets now expose `to_project_payload()` as
-the project-named compatibility payload API. The legacy
-`to_domain_pack_payload()` wrapper is retired from the active project loader.
-Stackless compare/local embedding evals prefer `graphrag_project_id` /
-`--graphrag-project-id` while retaining `domain_pack_id` only as a migration
-alias where current contracts still require it.
-Stackless and real-runtime local eval runtime registries now expose GraphRAG
-Project payload state through `project_payload`, not `domain_pack`.
+它不是 active mainline，也不是新的目标公开字段。
 
-## Migration Compatibility
+旧 root `domain-packs/` 已归档到：
 
-Phase 11C active runtime cleanup is closed for current source paths. Remaining
-compatibility evidence exists because older stored data, eval fixtures, and
-migration tests still mention Domain Pack-era names:
+- `docs/history/domain-packs/root-contract-review/`
 
-- remaining migration compatibility fields and tests that still mention Domain
-  Pack-era names
+Docker 不再复制或挂载 `/app/domain-packs`。
 
-Retired evidence is kept for verification, not active source:
+## 当前 Foundation
 
-- Contract Review eval has moved to a GraphRAG Project local eval flow without
-  `DomainPackLoader` or `DomainQAGraph`
-- Root `domain-packs/` assets are archived under
-  `docs/architecture/history/domain-packs/root-contract-review/`. Docker no longer copies or mounts `/app/domain-packs`
-- The former `tests/compat/` holding area is retired; remaining migration
-  compatibility coverage now lives in root `tests/`
-- Domain Pack backend endpoint/API-service wrappers are retired from current source; `/api/v1/domain-packs` is not mounted on the current FastAPI router
-- Domain Pack frontend API/page files are retired from `apps/web/src/`; Domain
-  Pack pages are not active knowledge routes or settings-shell pages
-- root Phase 11C tests guard retired `DomainQAGraph`,
-  `MultiAgentSupervisorGraph`, `AgentRuntime`, legacy graph states, and Domain
-  Pack runtime service imports
+这些是当前已经存在的 foundation slice，但不能写成成熟产品能力：
 
-These surfaces are not the future front-path architecture. Remaining
-`domain_pack_id` references are bounded migration aliases, existing
-database-column compatibility, eval CLI compatibility, and retirement/history
-tests. Neo4j legacy graph data backfill is an operational migration helper /
-live data step, not active code debt.
+- Typed Context Contract models 和 minimal pre-call `ContextOrchestrator`：`src/backend/zuno/services/application/context/`
+- Memory layer foundation contracts：`src/backend/zuno/services/memory/layers.py`
+- Capability System foundation contracts：`src/backend/zuno/services/application/capabilities/`
+- `GeneralAgent.astream()` 的 minimal runtime integration：准备 `ModelContextPacket`、传递 `context_trace`、选择有限 capability schema，并在 memory enabled 时提交 scoped raw event 与 task summary。
 
-## Not Current
+## 不属于 Current
 
-Typed Context Contract models and the minimal pre-call `ContextOrchestrator`
-are current code under `src/backend/zuno/services/application/context/`.
-Memory layer foundation contracts are current code under
-`src/backend/zuno/services/memory/layers.py`.
-Capability System foundation contracts are current code under
-`src/backend/zuno/services/application/capabilities/`. The current capability
-search service exposes unified metadata for tools, skills, MCP servers, and
-MCP tools while keeping existing API-facing fields.
-The current `GeneralAgent.astream()` path performs minimal runtime integration:
-it calls the minimal `ContextOrchestrator` to prepare a `ModelContextPacket`,
-passes `context_trace` and `model_context_packet` into the single React loop
-state, selects bounded capability schemas from available tools, and commits a
-scoped raw event plus task summary to the memory layer when memory is enabled.
+以下仍是 Target，不是当前成熟事实：
 
-Context Orchestrator and Post-turn Pipeline are Target, not Current as mature
-product behavior.
-Full product-level capability orchestration is also Target, not Current.
+- production-grade memory extraction / retrieval / consolidation
+- mature Context Orchestrator product behavior
+- product-level dynamic capability orchestration
+- full `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime
+- Native BM25 capability search
+- multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
 
-The near-term Context & Memory orchestration design is documented under
-`.agent/`; only the minimal pre-call context preparation slice is current
-runtime. Do not describe production-grade memory extraction/retrieval/
-consolidation, mature Context Orchestrator behavior, product-level dynamic
-capability orchestration, or the full Post-turn Pipeline as current behavior
-until code and tests prove them.
+## 历史完成事实
 
-Phase 12 closure evidence is complete. The target migration closure evidence
-records full pytest, formal Contract Review eval, stackless eval baseline
-comparison, trace metadata, legacy grep classification, and docs/evidence sync
-as complete.
+Phase 0-6 architecture closure 是历史完成事实，不应被重写成未完成。
 
-## Historical Completion Truth
+## 文档边界
 
-Phase 0-6 is complete and historical. Do not rewrite those phase files as
-incomplete to carry new work.
-
-## Documentation Boundary
-
-`docs/` is formal documentation. `.agent/` is the Agent workflow library.
-Historical materials live under `docs/architecture/history/`.
+- `docs/`：正式人类文档。
+- `.agent/`：Agent 工作流库和目标设计工作集。
+- `docs/history/`：完成、过时或被替换的历史材料。

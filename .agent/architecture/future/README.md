@@ -1,15 +1,25 @@
-# Future Architecture
+# 未来方向
 
-This directory contains one active future-horizon summary. Detailed old future
-fragments are archived under
-`docs/architecture/history/future-architecture-fragments/`.
+这个目录只保留一个未来 horizon 摘要。它帮助近期架构不堵死未来选项，但不是当前 refactor 验收目标。
 
-## Active File
+## 当前文件
 
 - [Future Horizon](future-horizon.md)
 
-## Rule
+## 边界
 
-Future direction is not near-term acceptance. If a task is not explicitly about
-Java, microservices, event-driven workers, Coding Agent mode, or product-level
-multi-agent mode, use `../near-term/` first.
+除非用户明确打开 future-direction implementation program，否则不要把下面内容当作近期实现任务：
+
+- Java business services
+- microservices
+- event-driven workers
+- Coding Agent mode
+- product-level multi-agent mode
+
+近期目标请优先读：
+
+- `../near-term/`
+
+旧 future fragments 已归档到：
+
+- `docs/history/future-architecture-fragments/`

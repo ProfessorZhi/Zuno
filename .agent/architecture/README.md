@@ -1,48 +1,50 @@
-# Zuno Architecture Design Library
+# Agent 架构设计工作集
 
-This directory is the Agent-side architecture design library for Zuno. It is not
-the formal documentation truth; formal conclusions still live in
-`docs/architecture/`.
+`.agent/architecture/` 存放目标架构设计，不存放按 phase 执行的计划。正式面向人的架构结论仍以 `docs/architecture/` 为准。
 
-## Structure
+## 目录分工
 
 ```text
 .agent/architecture/
   README.md
   00-architecture-index.md
-  near-term/
-  future/
-  decisions/
   glossary.md
+  near-term/     近期理想架构
+  future/        未来方向
+  decisions/     架构决策摘要
 ```
 
-## near-term/
+## near-term：近期理想架构
 
-`near-term/` is the canonical detailed target architecture. It contains one
-HTML visual blueprint and five Markdown documents:
+`near-term/` 是当前最重要的目标架构工作集，描述短期内希望 Zuno 收敛到的分层形态。
 
-- target runtime architecture
-- context and memory architecture
-- capability and tool retrieval architecture
-- knowledge, GraphRAG, retrieval, and fusion architecture
-- repository boundaries and acceptance gates
+核心文件：
 
-## future/
+- `zuno-ideal-architecture-and-repo-layout.html`：交互式目标架构蓝图。
+- `01-target-runtime-architecture.md`：Web/Electron -> FastAPI -> Application -> GeneralAgent 的主路径。
+- `02-context-memory-architecture.md`：Context Orchestrator、raw events、summary、structured memory。
+- `03-capability-tool-retrieval-architecture.md`：ToolCard、Capability Selector、MCP/Skill/Action Tool。
+- `04-knowledge-graphrag-retrieval-fusion.md`：BM25、Vector、GraphRAG Local/Global/DRIFT、RRF。
+- `05-repository-boundaries-and-acceptance-gates.md`：仓库边界、文档瘦身和验收门。
 
-`future/` is a slim horizon summary. It protects the near-term architecture
-from blocking future options, but it is not the next refactor acceptance target.
+## future：未来方向
 
-## decisions/
+`future/` 只记录更远的方向，例如 Java business services、microservices、event-driven workers、Coding Agent mode、multi-agent mode。它不是近期执行计划，也不是当前验收目标。
 
-`decisions/` records a concise Agent-side decision summary. Formal ADRs remain
-under `docs/architecture/decisions/`.
+## decisions：为什么这样设计
 
-## Related Sources
+`decisions/` 记录 Agent 侧的轻量决策摘要，用来回答：
 
-- `docs/architecture/`: formal human documentation truth.
-- `.agent/references/`: slim Agent navigation indexes.
-- `AGENTS.md`: repository workflow contract.
+- 为什么近期仍然是 monorepo now, service-ready later。
+- 为什么同步聊天路径只进入一个 GeneralAgent。
+- 为什么 GraphRAG 是被选择的 Knowledge Capability，而不是第二套聊天 runtime。
+- 为什么执行计划不放在 architecture，而放在 `.agent/programs/`。
 
-When doing code refactor work, read formal docs first, then
-`.agent/architecture/near-term/`. Read `future/` only when the task is explicitly
-about Java, microservices, event/workers, or multi-agent direction.
+正式 ADR 仍放在 `docs/architecture/decisions/`。
+
+## 和 programs 的边界
+
+- `.agent/architecture/`：描述目标形态和设计原则。
+- `.agent/programs/`：描述怎么按 phase 执行、怎么验收、当前卡在哪。
+
+如果一个文件写的是 Phase 05 / Phase 06 / Phase 07 这种执行顺序，它应该在 `.agent/programs/<program>/`；如果写的是系统应该长什么样，它应该在 `.agent/architecture/`。

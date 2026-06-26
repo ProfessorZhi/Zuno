@@ -6,639 +6,1185 @@
   <title>Zuno 目标架构与仓库布局蓝图</title>
   <style>
     :root {
-      --bg: #eef3f8;
-      --panel: #ffffff;
-      --ink: #142033;
-      --muted: #58708f;
-      --line: #c9d7e8;
-      --blue: #1f66b3;
-      --blue-soft: #eaf3ff;
-      --green: #0d8a56;
-      --green-soft: #eaf8f1;
-      --violet: #6842c2;
-      --violet-soft: #f2edff;
-      --amber: #b96d00;
-      --amber-soft: #fff6e6;
-      --rose: #c02943;
-      --rose-soft: #fff0f3;
-      --shadow: 0 18px 40px rgba(31, 62, 96, 0.12);
+      --paper: #f6efe3;
+      --paper-2: #fbf6ec;
+      --panel: #fffaf1;
+      --panel-2: #f1e5d2;
+      --ink: #2c241c;
+      --ink-2: #4a3d31;
+      --muted: #766958;
+      --line: #decdb5;
+      --line-strong: #c7ad8e;
+      --brown: #8a5a2b;
+      --brown-2: #6f431d;
+      --amber: #c98216;
+      --gold: #e1a83b;
+      --sage: #5e7c5d;
+      --sage-soft: #e7efe2;
+      --blue: #47657f;
+      --blue-soft: #e4edf3;
+      --violet: #7a5e8e;
+      --violet-soft: #eee6f4;
+      --rose: #a9574f;
+      --rose-soft: #f5e4df;
+      --code: #241d17;
+      --radius: 8px;
+      --shadow: 0 22px 55px rgba(83, 60, 35, 0.16);
+      --mono: "Cascadia Code", "Fira Code", Consolas, monospace;
     }
 
     * { box-sizing: border-box; }
 
     html {
       scroll-behavior: smooth;
+      background: var(--paper);
     }
 
     body {
       margin: 0;
-      font-family: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
       color: var(--ink);
-      background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 420px);
-      line-height: 1.55;
+      background:
+        linear-gradient(90deg, rgba(138, 90, 43, 0.045) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(138, 90, 43, 0.035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      line-height: 1.58;
       letter-spacing: 0;
     }
 
-    a { color: inherit; text-decoration: none; }
-
-    .shell {
-      width: 100%;
-      min-width: 0;
-      padding: 28px clamp(16px, 2.2vw, 36px) 56px;
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+      letter-spacing: 0;
     }
 
-    .hero,
-    .nav,
-    .section {
-      width: 100%;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
+    .page {
+      width: min(1440px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 34px 0 56px;
     }
 
-    .hero {
+    header {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 220px;
+      grid-template-columns: minmax(0, 1fr) 320px;
       gap: 28px;
-      padding: clamp(28px, 3vw, 40px) clamp(24px, 3vw, 44px);
-      border-radius: 10px;
+      align-items: stretch;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 250, 241, 0.92);
+      box-shadow: var(--shadow);
+      padding: 34px;
+    }
+
+    .eyebrow {
+      color: var(--brown);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
     }
 
     h1 {
-      margin: 0 0 14px;
-      font-size: 48px;
-      line-height: 1.08;
+      max-width: 980px;
+      margin: 10px 0 0;
+      color: var(--ink);
+      font-size: clamp(38px, 5vw, 68px);
+      line-height: 1.05;
       font-weight: 850;
       letter-spacing: 0;
     }
 
     .lead {
-      max-width: 1180px;
-      margin: 0;
-      color: #344761;
-      font-size: 18px;
+      max-width: 940px;
+      margin: 18px 0 0;
+      color: var(--ink-2);
+      font-size: 19px;
     }
 
-    .status {
-      margin-top: 22px;
-      color: #425873;
-      font-size: 14px;
-    }
-
-    .chips {
+    .badges {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 22px;
+      gap: 8px;
+      margin-top: 24px;
     }
 
-    .chip {
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid var(--line-strong);
       border-radius: 999px;
-      border: 1px solid #aac6e9;
-      background: var(--blue-soft);
-      color: #0759ad;
-      padding: 8px 13px;
+      background: #fff7e8;
+      color: var(--brown-2);
+      padding: 4px 11px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .hero-note {
+      border-left: 4px solid var(--gold);
+      border-radius: var(--radius);
+      background: #fff4dc;
+      padding: 18px;
+      align-self: end;
+    }
+
+    .hero-note h2,
+    .hero-note p {
+      margin: 0;
+    }
+
+    .hero-note h2 {
+      color: var(--brown-2);
+      font-size: 17px;
+      line-height: 1.3;
+    }
+
+    .hero-note p {
+      margin-top: 10px;
+      color: var(--muted);
       font-size: 14px;
-      font-weight: 750;
-      white-space: nowrap;
     }
 
-    .chip.green { border-color: #99d8b8; background: var(--green-soft); color: #047243; }
-    .chip.violet { border-color: #c6b6f2; background: var(--violet-soft); color: #5632ac; }
-    .chip.amber { border-color: #efc17b; background: var(--amber-soft); color: #955200; }
-    .chip.rose { border-color: #f0a8b4; background: var(--rose-soft); color: #b3122f; }
-
-    .hero-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: stretch;
-      justify-content: flex-start;
-    }
-
-    button {
-      min-height: 48px;
+    section {
+      margin-top: 22px;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      color: #173452;
-      font: inherit;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    button:hover {
-      border-color: #7aa8dc;
-      background: #f6fbff;
-    }
-
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 5;
-      margin-top: 18px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding: 12px;
-      border-radius: 10px;
-    }
-
-    .nav a {
-      border-radius: 8px;
-      padding: 10px 14px;
-      color: #526783;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .nav a:hover,
-    .nav a.active {
-      background: var(--blue);
-      color: #fff;
-    }
-
-    .section {
-      margin-top: 18px;
+      border-radius: var(--radius);
+      background: rgba(255, 250, 241, 0.94);
+      box-shadow: var(--shadow);
       padding: 26px;
-      border-radius: 10px;
-      overflow: clip;
     }
 
     h2 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       margin: 0 0 18px;
-      font-size: 26px;
-      line-height: 1.2;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.25;
       letter-spacing: 0;
     }
 
+    h2::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
     h3 {
-      margin: 0 0 12px;
-      font-size: 18px;
+      margin: 0 0 8px;
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.35;
       letter-spacing: 0;
     }
 
     p {
-      margin: 0 0 12px;
-      color: #536982;
-    }
-
-    .diagram-scroll {
-      width: 100%;
-      overflow-x: auto;
-      padding-bottom: 12px;
-      overscroll-behavior-inline: contain;
-    }
-
-    .runtime-map {
-      min-width: 1540px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #f8fbff;
-      padding: 20px;
-    }
-
-    .map-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      color: #164d8e;
-      font-size: 15px;
-      font-weight: 850;
-      text-transform: uppercase;
-    }
-
-    .map-title::after {
-      content: "";
-      height: 1px;
-      flex: 1;
-      background: var(--line);
-    }
-
-    .sync-path {
-      display: grid;
-      grid-template-columns: 210px 36px 250px 36px 280px 36px 320px 36px 260px;
-      align-items: stretch;
-      gap: 10px;
-      margin-bottom: 24px;
-    }
-
-    .arrow {
-      display: grid;
-      place-items: center;
-      color: #6e88a8;
-      font-size: 26px;
-      font-weight: 700;
-    }
-
-    .node,
-    .lane,
-    .mini {
-      border: 1px solid #9cc3f7;
-      background: #f0f6ff;
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .node h3,
-    .lane h3,
-    .mini h3 {
-      color: #172033;
-    }
-
-    .node p,
-    .mini p {
-      color: #58708f;
+      margin: 0;
+      color: var(--muted);
       font-size: 14px;
     }
 
-    .node.violet,
-    .lane.violet,
-    .mini.violet {
-      border-color: #bea8fa;
-      background: #fbf8ff;
+    strong { color: var(--brown-2); }
+
+    .caption {
+      max-width: 1050px;
+      margin: -6px 0 18px;
+      color: var(--muted);
+      font-size: 14px;
     }
 
-    .node.green,
-    .lane.green,
-    .mini.green {
-      border-color: #92d9b4;
-      background: #f2fcf7;
-    }
-
-    .node.amber,
-    .lane.amber,
-    .mini.amber {
-      border-color: #eab96b;
-      background: #fff9ec;
-    }
-
-    .support-grid {
+    .system-map {
       display: grid;
-      grid-template-columns: 1.1fr 1fr 1.05fr;
+      grid-template-columns: 170px repeat(6, minmax(150px, 1fr));
+      gap: 10px;
+      align-items: stretch;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .rail-label,
+    .arch-node,
+    .pipe-label,
+    .journey-card,
+    .subsystem-card,
+    .phase,
+    .repo-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .rail-label {
+      display: grid;
+      align-items: center;
+      min-height: 92px;
+      padding: 12px;
+      color: var(--brown-2);
+      font-weight: 850;
+      text-align: center;
+      background: #f3e2c7;
+    }
+
+    .arch-node {
+      position: relative;
+      min-height: 92px;
+      padding: 14px;
+    }
+
+    .arch-node::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -10px;
+      width: 10px;
+      height: 2px;
+      background: var(--line-strong);
+    }
+
+    .system-map .arch-node:nth-child(7n)::after,
+    .system-map .arch-node:last-child::after {
+      display: none;
+    }
+
+    .arch-node small,
+    .phase small,
+    .repo-card small {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .arch-node b {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    .arch-node span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .node-blue { background: var(--blue-soft); border-color: #aec2d0; }
+    .node-violet { background: var(--violet-soft); border-color: #cbb9d8; }
+    .node-sage { background: var(--sage-soft); border-color: #abc7a7; }
+    .node-amber { background: #fff0d4; border-color: #e6c07b; }
+    .node-rose { background: var(--rose-soft); border-color: #d9aca4; }
+
+    .layered-map {
+      display: grid;
+      gap: 12px;
+    }
+
+    .layer-band {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .layer-band.sidecar {
+      grid-template-columns: 150px minmax(0, 1.05fr) minmax(260px, 0.7fr);
+    }
+
+    .layer-title {
+      display: grid;
+      align-content: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f3e2c7;
+      color: var(--brown-2);
+      padding: 14px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .layer-title small {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .layer-nodes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 250, 241, 0.72);
+      padding: 12px;
+    }
+
+    .layer-nodes.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .layer-nodes.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .layer-node {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 14px;
+      min-height: 112px;
+    }
+
+    .layer-node small {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .layer-node b {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .layer-node span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .sidecar-note {
+      border: 1px solid #d6bf95;
+      border-radius: var(--radius);
+      background: #fff2d3;
+      padding: 14px;
+    }
+
+    .sidecar-note b {
+      display: block;
+      color: var(--brown-2);
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .layer-arrow {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .layer-arrow span:last-child {
+      display: block;
+      border-top: 1px dashed var(--line-strong);
+      padding-top: 8px;
+      text-align: center;
+    }
+
+    .pipe {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .pipe-label {
+      padding: 16px;
+      border-left: 5px solid var(--gold);
+      background: #fff6e6;
+    }
+
+    .pipe-label b {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--brown-2);
+      font-size: 15px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: #fff7e8;
+      color: var(--brown-2);
+      cursor: pointer;
+      padding: 9px 14px;
+      font-weight: 850;
+    }
+
+    .tab[aria-selected="true"] {
+      background: var(--brown-2);
+      color: #fff8ed;
+      border-color: var(--brown-2);
+    }
+
+    .journey {
+      display: none;
+    }
+
+    .journey.active {
+      display: block;
+    }
+
+    .journey-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
       gap: 16px;
+      align-items: start;
     }
 
-    .lane {
-      min-height: 245px;
-    }
-
-    .lane.green { border-color: #92d9b4; background: #f2fcf7; }
-    .lane.amber { border-color: #eab96b; background: #fff9ec; }
-    .lane.blue { border-color: #9cc3f7; background: #f0f6ff; }
-
-    .stack {
+    .journey-flow {
       display: grid;
       gap: 10px;
     }
 
-    .mini {
-      min-height: 76px;
-      padding: 12px 14px;
-      background: #fff;
+    .journey-step {
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr) 170px;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 13px;
     }
 
-    .mini h3 {
-      margin-bottom: 6px;
+    .step-layer {
+      color: var(--brown-2);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .step-main b {
+      display: block;
+      color: var(--ink);
       font-size: 15px;
     }
 
-    .rule {
-      margin-top: 18px;
-      border: 1px dashed #9fb6d1;
-      border-radius: 8px;
-      background: #f9fcff;
-      padding: 16px;
-      color: #39536f;
-      font-weight: 800;
+    .step-main span,
+    .step-code {
+      color: var(--muted);
+      font-size: 12px;
     }
 
-    .grid-2 {
+    .step-code {
+      border-radius: 6px;
+      background: #f5ead8;
+      padding: 8px;
+      font-family: var(--mono);
+      overflow-wrap: anywhere;
+    }
+
+    .journey-card {
+      padding: 18px;
+      background: #fff6e6;
+    }
+
+    .journey-card h3 {
+      color: var(--brown-2);
+    }
+
+    .decision-list {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 9px;
+      margin-top: 13px;
     }
 
-    .grid-3 {
+    .decision {
+      border-left: 4px solid var(--gold);
+      border-radius: 6px;
+      background: rgba(255, 250, 241, 0.88);
+      padding: 10px 12px;
+    }
+
+    .decision b {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .decision span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .subsystem-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
+      gap: 14px;
     }
 
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
+    .subsystem-card {
       padding: 18px;
-      background: #fff;
     }
 
-    .card ul {
-      margin: 8px 0 0;
-      padding-left: 20px;
-      color: #536982;
+    .subsystem-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .code {
-      margin: 12px 0 0;
-      white-space: pre-wrap;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #f8fbff;
-      padding: 14px;
-      color: #263950;
-      font-family: Consolas, "SFMono-Regular", monospace;
-      font-size: 13px;
-      line-height: 1.55;
+    .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--gold);
     }
+
+    .dot.sage { background: var(--sage); }
+    .dot.blue { background: var(--blue); }
+    .dot.violet { background: var(--violet); }
+    .dot.rose { background: var(--rose); }
 
     .matrix {
       display: grid;
-      grid-template-columns: 220px repeat(4, minmax(0, 1fr));
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .matrix div {
-      padding: 12px;
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      background: #fff;
-      color: #536982;
-    }
-
-    .matrix div:nth-child(5n) { border-right: 0; }
-    .matrix .head {
-      background: #eff6ff;
-      color: #164d8e;
-      font-weight: 850;
-    }
-
-    .footer {
-      padding: 28px 0 0;
-      color: #6b7f98;
-      text-align: center;
+      grid-template-columns: 104px minmax(0, 1fr);
+      gap: 8px 12px;
+      margin-top: 14px;
       font-size: 13px;
     }
 
-    @media print {
-      body { min-width: 0; background: #fff; }
-      .shell { padding: 0; }
-      .nav, .hero-actions { display: none; }
-      .hero, .section { box-shadow: none; break-inside: avoid; }
-      .diagram-scroll { overflow: visible; }
-      .runtime-map { min-width: 0; }
+    .matrix b {
+      color: var(--brown-2);
+      font-family: var(--mono);
+      font-size: 12px;
     }
 
-    @media (max-width: 980px) {
-      .hero {
+    .matrix span {
+      color: var(--muted);
+    }
+
+    .code {
+      margin-top: 13px;
+      border: 1px solid #5d4530;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: #f8ead6;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    .memory-board {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .memory-cell {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 14px;
+      min-height: 150px;
+    }
+
+    .memory-cell.source {
+      grid-column: 1 / -1;
+      background: #fff3d8;
+      border-color: #e1b864;
+    }
+
+    .memory-cell h3 {
+      font-size: 15px;
+    }
+
+    .retrieval-map {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .fusion-lane {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .fusion-step {
+      display: grid;
+      grid-template-columns: 108px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fffaf1;
+      padding: 9px 11px;
+      font-size: 13px;
+    }
+
+    .fusion-step b {
+      color: var(--brown-2);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .phase-line {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .phase {
+      min-height: 178px;
+      padding: 15px;
+      border-top: 4px solid var(--gold);
+    }
+
+    .phase:nth-child(2) { border-top-color: var(--violet); }
+    .phase:nth-child(3) { border-top-color: var(--sage); }
+    .phase:nth-child(4) { border-top-color: var(--blue); }
+    .phase:nth-child(5) { border-top-color: var(--rose); }
+
+    .phase h3 {
+      font-size: 16px;
+    }
+
+    .repo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .repo-card {
+      padding: 16px;
+    }
+
+    .note {
+      margin-top: 16px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: #fff4df;
+      padding: 13px 15px;
+      color: var(--ink-2);
+      font-size: 14px;
+    }
+
+    footer {
+      margin-top: 26px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1160px) {
+      header,
+      .journey-layout,
+      .pipe,
+      .layer-band,
+      .layer-band.sidecar,
+      .subsystem-grid,
+      .retrieval-map,
+      .phase-line,
+      .repo-grid {
         grid-template-columns: 1fr;
       }
 
-      .hero-actions {
-        max-width: 320px;
+      .layer-nodes,
+      .layer-nodes.three,
+      .layer-nodes.four,
+      .memory-board {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      h1 {
-        font-size: 38px;
+      .layer-arrow {
+        grid-template-columns: 1fr;
       }
+
+      .layer-arrow span:first-child {
+        display: none;
+      }
+
+      .journey-step {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100% - 22px, 1440px);
+        padding-top: 18px;
+      }
+
+      header,
+      section {
+        padding: 18px;
+      }
+
+      .memory-board {
+        grid-template-columns: 1fr;
+      }
+
+      .layer-nodes,
+      .layer-nodes.three,
+      .layer-nodes.four {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      header, section { box-shadow: none; break-inside: avoid; }
+      .tab { display: none; }
+      .journey { display: block; margin-top: 18px; }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <section class="hero" id="top">
+  <div class="page">
+    <header>
       <div>
+        <div class="eyebrow">Target / Proposed · Architecture Journey Blueprint</div>
         <h1>Zuno 目标架构与仓库布局蓝图</h1>
         <p class="lead">
-          目标不是机械创建更多目录，而是让每个概念只有一个代码所有者、每类文件只有一个归宿。
-          Zuno 的近端目标是一个 local-first Agent Workspace：
-          <strong>Single GeneralAgent Runtime + Context/Memory + Capability/Tool Retrieval + Knowledge/GraphRAG + Evidence/Trace/Eval</strong>。
+          一张图说明 Zuno 的理想分层：Web / Desktop 请求进入 FastAPI 和 Application Service，所有同步对话只进入一个 Single GeneralAgent，再由 Context / Memory、ToolCard、RAG / GraphRAG / BM25、Evidence Trace 共同完成回答。
         </p>
-        <p class="status">
-          文档状态：<strong>Target / Proposed</strong>。当前已有 Single GeneralAgent、GraphRAG Project query runtime、
-          minimal ContextOrchestrator、memory/capability foundations；成熟 Memory Engine、ToolCard retrieval、完整 LangGraph runtime graph 仍是 Target。
-        </p>
-        <div class="chips">
-          <span class="chip">Single GeneralAgent</span>
-          <span class="chip violet">Context / Memory</span>
-          <span class="chip green">GraphRAG Project</span>
-          <span class="chip amber">ToolCard + Native BM25</span>
-          <span class="chip">RRF + Evidence Trace</span>
-          <span class="chip rose">Domain Pack 退出主线</span>
+        <div class="badges">
+          <span class="badge">Local-first</span>
+          <span class="badge">Single GeneralAgent</span>
+          <span class="badge">Context Orchestrator</span>
+          <span class="badge">Summary Compression</span>
+          <span class="badge">Structured Extraction</span>
+          <span class="badge">ToolCard</span>
+          <span class="badge">Native BM25</span>
+          <span class="badge">RRF</span>
         </div>
       </div>
-      <div class="hero-actions">
-        <button onclick="window.print()">打印 / 导出 PDF</button>
-        <button onclick="document.querySelectorAll('details').forEach(d => d.open = true)">展开全部章节</button>
-      </div>
-    </section>
-
-    <nav class="nav" aria-label="Sections">
-      <a href="#summary" class="active">设计摘要</a>
-      <a href="#runtime">运行架构</a>
-      <a href="#memory">上下文 / 记忆</a>
-      <a href="#capability">能力 / 工具检索</a>
-      <a href="#retrieval">Knowledge / GraphRAG</a>
-      <a href="#repo">仓库边界</a>
-      <a href="#current-target">当前 → 目标</a>
-    </nav>
-
-    <section class="section" id="summary">
-      <h2>一段话说明整个项目</h2>
-      <div class="card">
+      <div class="hero-note">
+        <h2>边界先行</h2>
         <p>
-          Zuno 是一个本地优先的 Agent Workspace。Vue Web 和 Electron 负责产品交互，FastAPI 提供认证、
-          DTO、SSE 和 Application Service 边界；所有对话进入一个 GeneralAgent。GeneralAgent 在每次模型调用前由
-          ContextOrchestrator 按 token budget 组织上下文，在对话循环中按需选择 Knowledge、Action Tool、MCP 和 Skill，
-          通过 KnowledgeQueryService / GraphRAGQueryService 查询普通 RAG 与 GraphRAG Project，并在每轮之后把 raw events、
-          task summaries、structured memory candidates、evidence、citation 和 trace 写入可验证闭环。
+          这份 HTML 是 Target / Proposed，不是 Current 完成声明。当前已经闭合的是单 GeneralAgent 主线、KnowledgeQueryService、GraphRAGQueryService、minimal ContextOrchestrator 和 memory / capability foundation；成熟记忆、工具检索、Native BM25、RRF、完整 LangGraph runtime 仍是后续 phase。
         </p>
       </div>
-      <div class="grid-3">
-        <div class="card">
-          <h3>Current / Foundation</h3>
-          <ul>
-            <li>Single GeneralAgent mainline</li>
-            <li>KnowledgeQueryService application boundary</li>
-            <li>GraphRAGQueryService / GraphRAGProjectSnapshot</li>
-            <li>minimal ContextOrchestrator</li>
-            <li>memory / capability foundation contracts</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Target</h3>
-          <ul>
-            <li>mature Context / Memory Engine</li>
-            <li>ToolCard retrieval and Native BM25</li>
-            <li>multi-query + multi-retriever + RRF</li>
-            <li>full Evidence / Citation / Trace closure</li>
-            <li>explicit prepare_context -> agent_loop -> post_turn_commit graph</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Future</h3>
-          <ul>
-            <li>Java business services</li>
-            <li>microservices</li>
-            <li>event-driven workers</li>
-            <li>product-level multi-agent mode</li>
-            <li>Coding Agent mode</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+    </header>
 
-    <section class="section" id="runtime">
-      <h2>目标运行架构图</h2>
-      <div class="diagram-scroll">
-        <div class="runtime-map">
-          <div class="map-title">Synchronous Request Path</div>
-          <div class="sync-path">
-            <div class="node">
-              <h3>Client Surface</h3>
-              <p>Vue Web / Electron<br />只负责交互、显示、文件和本地入口。</p>
-            </div>
-            <div class="arrow">→</div>
-            <div class="node">
-              <h3>FastAPI Boundary</h3>
-              <p>Auth、DTO、Validation、SSE、Trace ID、Error Mapping。</p>
-            </div>
-            <div class="arrow">→</div>
-            <div class="node">
-              <h3>Application Use Cases</h3>
-              <p>Chat、KnowledgeQuery、Index、Project / Memory / Capability。</p>
-            </div>
-            <div class="arrow">→</div>
-            <div class="node violet">
-              <h3>Single GeneralAgent Runtime</h3>
-              <p>prepare_context → agent_loop → post_turn_commit。</p>
-            </div>
-            <div class="arrow">→</div>
-            <div class="node green">
-              <h3>Selected Capabilities</h3>
-              <p>Knowledge、Action、MCP、Skills；按需注入，不全量塞 schema。</p>
+    <main>
+      <section id="core-map">
+        <h2>01 / Zuno 理想分层架构地图</h2>
+        <p class="caption">
+          从上到下看主请求：Web / Desktop -> FastAPI -> Application -> Single GeneralAgent -> Tool / Knowledge -> Evidence。Memory 是 Agent runtime 的 sidecar：调用前供上下文，调用后写回事件和摘要；索引构建是异步旁路。
+        </p>
+        <div class="layered-map" aria-label="Zuno target vertical layered architecture map">
+          <div class="layer-band">
+            <div class="layer-title"><small>L1</small>产品入口层</div>
+            <div class="layer-nodes">
+              <div class="layer-node node-blue"><small>web surface</small><b>Vue Web</b><span>Chat、Knowledge、GraphRAG Project、Memory、Trace / Eval 页面。只负责交互和状态展示。</span></div>
+              <div class="layer-node node-blue"><small>desktop surface</small><b>Electron Desktop</b><span>本地文件、系统能力、Workspace shell。仍走同一后端 API 边界。</span></div>
             </div>
           </div>
+          <div class="layer-arrow"><span></span><span>HTTP / SSE / typed DTO</span></div>
 
-          <div class="map-title">Supporting Systems</div>
-          <div class="support-grid">
-            <div class="lane green">
-              <h3>Knowledge Path</h3>
-              <div class="stack">
-                <div class="mini"><h3>search_knowledge_base</h3><p>GeneralAgent 只通过 tool/capability 请求知识。</p></div>
-                <div class="mini"><h3>GraphRAGQueryService</h3><p>Project snapshot、query method、prompt/index/community versions。</p></div>
-                <div class="mini"><h3>Retrieval + Evidence</h3><p>Native BM25 / Vector / Graph / Community → citation / trace。</p></div>
-              </div>
-            </div>
-            <div class="lane amber">
-              <h3>Async Indexing</h3>
-              <div class="stack">
-                <div class="mini"><h3>RabbitMQ Jobs</h3><p>只传 job_id、project_id、document_id、version。</p></div>
-                <div class="mini"><h3>Workers</h3><p>parse、chunk、embed、BM25、graph extraction、community report。</p></div>
-                <div class="mini"><h3>Atomic Publish</h3><p>发布 index_version / community_version。</p></div>
-              </div>
-            </div>
-            <div class="lane blue">
-              <h3>Infrastructure And Governance</h3>
-              <div class="stack">
-                <div class="mini"><h3>PostgreSQL / Redis</h3><p>业务真相、会话、raw events、memory/project metadata、cache。</p></div>
-                <div class="mini"><h3>MinIO / Milvus / Neo4j</h3><p>source files、artifacts、vector index、graph/community index。</p></div>
-                <div class="mini"><h3>Trace / Eval</h3><p>context, capability, retrieval, fusion, citation, latency, cost。</p></div>
-              </div>
+          <div class="layer-band">
+            <div class="layer-title"><small>L2</small>API 边界层</div>
+            <div class="layer-nodes">
+              <div class="layer-node node-blue"><small>transport</small><b>FastAPI Boundary</b><span>Auth、DTO、Validation、SSE、request id、trace id、error mapping。</span></div>
+              <div class="layer-node node-blue"><small>contract</small><b>Public Request / Response</b><span>前端只绑定公开 DTO，不依赖内部 Agent、Retrieval 或 DB 对象。</span></div>
             </div>
           </div>
+          <div class="layer-arrow"><span></span><span>route calls exactly one use case</span></div>
 
-          <div class="rule">
-            主规则：同步聊天路径只进入一个 GeneralAgent；GraphRAG 是被选择的 Knowledge Capability，不是第二套聊天运行时；索引构建是异步旁路。
+          <div class="layer-band">
+            <div class="layer-title"><small>L3</small>应用用例层</div>
+            <div class="layer-nodes four">
+              <div class="layer-node node-blue"><small>chat</small><b>ChatService</b><span>创建 / 恢复会话，调用唯一 GeneralAgent，保存 stream event。</span></div>
+              <div class="layer-node node-blue"><small>knowledge</small><b>KnowledgeQueryService</b><span>统一 Basic RAG、BM25、GraphRAG query 入口，返回 evidence / citation / trace。</span></div>
+              <div class="layer-node node-blue"><small>index</small><b>IndexService</b><span>项目、文档、索引版本和异步 job 编排。</span></div>
+              <div class="layer-node node-blue"><small>workspace</small><b>Project / Memory / Capability</b><span>项目配置、记忆治理、能力目录和权限用例。</span></div>
+            </div>
+          </div>
+          <div class="layer-arrow"><span></span><span>chat path enters one runtime</span></div>
+
+          <div class="layer-band sidecar">
+            <div class="layer-title"><small>L4</small>Agent 运行层</div>
+            <div class="layer-nodes">
+              <div class="layer-node node-violet"><small>runtime</small><b>Single GeneralAgent</b><span>唯一会话运行时：prepare_context -> agent_loop -> post_turn_commit。</span></div>
+              <div class="layer-node node-violet"><small>langgraph target</small><b>Explicit State Loop</b><span>后续 Phase 08 显式化 state、checkpoint、interrupt、resume、stream。</span></div>
+            </div>
+            <div class="sidecar-note">
+              <b>Context / Memory Sidecar</b>
+              <p>Memory 不应画成普通工具。它围绕 Agent：调用前构造 ModelContextPacket，调用后通过 post_turn_commit 写 Raw Event Log、Summary Compression、Structured Extraction 和 ContextTrace。</p>
+            </div>
+          </div>
+          <div class="layer-arrow"><span></span><span>runtime selects capability, not all schemas</span></div>
+
+          <div class="layer-band">
+            <div class="layer-title"><small>L5</small>能力 / 工具层</div>
+            <div class="layer-nodes three">
+              <div class="layer-node node-amber"><small>catalog</small><b>ToolCard Registry</b><span>工具身份、描述、schema 摘要、权限、side effects、cost / health。</span></div>
+              <div class="layer-node node-amber"><small>retrieval</small><b>Capability Selector</b><span>keyword、Native BM25 over ToolCard、optional vector、permission / health / cost filter。</span></div>
+              <div class="layer-node node-amber"><small>selected tools</small><b>Knowledge / Action / MCP / Skill</b><span>只把选中的 schema 注入 Agent loop，并记录 CapabilitySelectionTrace。</span></div>
+            </div>
+          </div>
+          <div class="layer-arrow"><span></span><span>knowledge capability may route to retrieval stack</span></div>
+
+          <div class="layer-band">
+            <div class="layer-title"><small>L6</small>RAG / GraphRAG 层</div>
+            <div class="layer-nodes four">
+              <div class="layer-node node-sage"><small>router</small><b>Knowledge Router</b><span>requested / resolved query method：basic、local、global、drift；auto 是 router。</span></div>
+              <div class="layer-node node-sage"><small>basic</small><b>BM25 / Vector</b><span>Native BM25、dense vector、dedup、RRF k=60、optional rerank。</span></div>
+              <div class="layer-node node-sage"><small>graph</small><b>GraphRAG Local</b><span>entity、relation、graph neighborhood、source chunks。</span></div>
+              <div class="layer-node node-sage"><small>global</small><b>Community / Drift</b><span>community reports；drift = global primer -> local follow-up -> evidence merge。</span></div>
+            </div>
+          </div>
+          <div class="layer-arrow"><span></span><span>return evidence bundle, not a second chat runtime</span></div>
+
+          <div class="layer-band">
+            <div class="layer-title"><small>L7</small>证据闭环层</div>
+            <div class="layer-nodes">
+              <div class="layer-node node-rose"><small>evidence</small><b>Evidence Builder</b><span>citation coverage、evidence bundle、prompt / index / community version。</span></div>
+              <div class="layer-node node-rose"><small>trace / eval</small><b>Trace / Eval</b><span>trace_id、latency、cost null、query method requested / resolved。</span></div>
+            </div>
+          </div>
+          <div class="layer-arrow"><span></span><span>async indexing feeds retrieval; storage holds durable truth</span></div>
+
+          <div class="layer-band">
+            <div class="layer-title"><small>L8</small>异步 / 存储层</div>
+            <div class="layer-nodes four">
+              <div class="layer-node node-amber"><small>jobs</small><b>RabbitMQ / Workers</b><span>upload / project change -> parse、chunk、embed、Native BM25、graph extraction。</span></div>
+              <div class="layer-node node-amber"><small>publish</small><b>Atomic Publish</b><span>发布 index_version / community_version，避免半成品索引被查询。</span></div>
+              <div class="layer-node"><small>state</small><b>PostgreSQL / Redis</b><span>业务真相、会话、raw events、hot state、progress。</span></div>
+              <div class="layer-node"><small>indexes</small><b>MinIO / Milvus / Neo4j</b><span>源文件、大型 artifacts、向量索引、图索引；ES 只是 optional adapter。</span></div>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" id="memory">
-      <h2>Context / Memory Engine</h2>
-      <div class="grid-2">
-        <div class="card">
-          <h3>主策略</h3>
-          <p><strong>Summary Compression + Structured Extraction</strong></p>
-          <ul>
-            <li>Sliding Window 只是 L1 recent window / token budget 保护。</li>
-            <li>Importance Filtering 只是 retention / selection 辅助策略。</li>
-            <li>Summary 不能替代 Raw Event Log。</li>
-            <li>Task Summary 和 Structured Memory 都必须带 source_event_ids。</li>
-            <li>External Knowledge 不是 Agent Memory。</li>
-            <li>Prompt Caching 是 compute-layer hint，不是 memory compression。</li>
-          </ul>
+      <section id="query-journey">
+        <h2>02 / Query Journey：一个请求如何穿过各层代码</h2>
+        <p class="caption">
+          下面四个例子展示相同架构如何分流。按钮只切换视角；真正的边界仍然是 API -> Application -> GeneralAgent -> Capability / Retrieval -> Evidence。
+        </p>
+        <div class="tabs" role="tablist" aria-label="Query journey examples">
+          <button class="tab" type="button" role="tab" aria-selected="true" data-target="journey-web">Web Chat 问架构</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-target="journey-desktop">Desktop 文件问答</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-target="journey-bm25">BM25 精准检索</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-target="journey-graphrag">GraphRAG 多跳问题</button>
         </div>
-        <div class="card">
-          <h3>Context Layers</h3>
-          <div class="code">L0 Working Context
-L1 Recent Interaction Window
-L2 Task Summary Memory
-L3 Structured Long-term Memory
-L4 External Knowledge
-Raw Event Log</div>
+
+        <article class="journey active" id="journey-web">
+          <div class="journey-layout">
+            <div class="journey-flow">
+              <div class="journey-step">
+                <div class="step-layer">Frontend</div>
+                <div class="step-main"><b>Vue Web Chat</b><span>用户问：Zuno 的目标架构是什么？前端只维护 UI state 和 stream buffer。</span></div>
+                <div class="step-code">apps/web -> chat view</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">API</div>
+                <div class="step-main"><b>FastAPI SSE Route</b><span>注入 auth context、request id、trace id，校验 typed DTO。</span></div>
+                <div class="step-code">POST /chat/stream</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Application</div>
+                <div class="step-main"><b>ChatService</b><span>创建或恢复会话，调用唯一 GeneralAgent，并保存 stream event。</span></div>
+                <div class="step-code">src/backend/zuno/application</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Runtime</div>
+                <div class="step-main"><b>Single GeneralAgent</b><span>prepare_context 组装 ModelContextPacket，然后进入 agent_loop。</span></div>
+                <div class="step-code">prepare_context -> agent_loop</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Memory</div>
+                <div class="step-main"><b>Context Orchestrator</b><span>读取 Recent Window、Task Summary、long-term memory candidates 和可用 evidence。</span></div>
+                <div class="step-code">L0/L1/L2/L3/L4</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Knowledge</div>
+                <div class="step-main"><b>search_knowledge_base</b><span>如果需要项目文档证据，ToolCard selector 选择 Knowledge Capability。</span></div>
+                <div class="step-code">KnowledgeQueryService</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Response</div>
+                <div class="step-main"><b>Answer + Citation + Trace</b><span>返回 SSE token，同时记录 evidence bundle、citation coverage、latency。</span></div>
+                <div class="step-code">post_turn_commit</div>
+              </div>
+            </div>
+            <aside class="journey-card">
+              <h3>为什么这样分层</h3>
+              <p>Web 不知道 Agent 内部对象；API 不泄漏 retrieval 实现；ChatService 不自己做多 agent 编排；GeneralAgent 只通过 capability 请求外部能力。</p>
+              <div class="decision-list">
+                <div class="decision"><b>主线</b><span>同步聊天只进入 Single GeneralAgent。</span></div>
+                <div class="decision"><b>证据</b><span>回答可带 citation / trace，而不是只有自然语言。</span></div>
+                <div class="decision"><b>当前边界</b><span>Context Orchestrator full product behavior 仍是 Target。</span></div>
+              </div>
+            </aside>
+          </div>
+        </article>
+
+        <article class="journey" id="journey-desktop">
+          <div class="journey-layout">
+            <div class="journey-flow">
+              <div class="journey-step">
+                <div class="step-layer">Desktop</div>
+                <div class="step-main"><b>Electron Shell</b><span>用户拖入本地文件或选择 Workspace project；Desktop 只负责本地入口和权限提示。</span></div>
+                <div class="step-code">Electron -> Backend API</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Index API</div>
+                <div class="step-main"><b>Project / Upload Route</b><span>创建 project document 记录，生成 job_id、document_id、version。</span></div>
+                <div class="step-code">IndexService.enqueue</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Async</div>
+                <div class="step-main"><b>RabbitMQ Worker Path</b><span>parse、chunk、embed、Native BM25、graph extraction、community report。</span></div>
+                <div class="step-code">job payload only ids</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Publish</div>
+                <div class="step-main"><b>Atomic Index Version</b><span>完成后发布 index_version / community_version；失败不污染可查询索引。</span></div>
+                <div class="step-code">atomic publish</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Chat</div>
+                <div class="step-main"><b>GeneralAgent 查询项目</b><span>之后用户提问，KnowledgeQueryService 只读已发布版本。</span></div>
+                <div class="step-code">project snapshot</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Evidence</div>
+                <div class="step-main"><b>Source File Citations</b><span>答案引用源文件、chunk、index_version，不引用半成品 worker 状态。</span></div>
+                <div class="step-code">source refs</div>
+              </div>
+            </div>
+            <aside class="journey-card">
+              <h3>Desktop 的正确位置</h3>
+              <p>Desktop 不是另一套业务架构。它是 local-first 入口，文件和系统能力经由同一 API / Application / Agent 主线进入。</p>
+              <div class="decision-list">
+                <div class="decision"><b>同步边界</b><span>上传和索引不占用聊天 path。</span></div>
+                <div class="decision"><b>异步边界</b><span>Worker 只拿 ids，不搬运巨型对象。</span></div>
+                <div class="decision"><b>发布边界</b><span>查询只读已发布索引版本。</span></div>
+              </div>
+            </aside>
+          </div>
+        </article>
+
+        <article class="journey" id="journey-bm25">
+          <div class="journey-layout">
+            <div class="journey-flow">
+              <div class="journey-step">
+                <div class="step-layer">Query</div>
+                <div class="step-main"><b>精准关键词问题</b><span>用户问某个 API、术语、文件名、error code 或明确短语。</span></div>
+                <div class="step-code">lexical-heavy query</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Router</div>
+                <div class="step-main"><b>Knowledge Router</b><span>判断关键词匹配强，优先 Basic Retrieval 的 lexical branch。</span></div>
+                <div class="step-code">requested=auto resolved=basic</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Recall</div>
+                <div class="step-main"><b>Native BM25</b><span>本地 BM25 算法从 indexed chunks / ToolCards 召回候选，不等于 Elasticsearch。</span></div>
+                <div class="step-code">BM25 -> candidates</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Fusion</div>
+                <div class="step-main"><b>RRF + Dedup</b><span>BM25 可和 vector results 用 RRF 融合，默认 k=60，再做 dedup 和 optional rerank。</span></div>
+                <div class="step-code">RRF(k=60)</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Evidence</div>
+                <div class="step-main"><b>Citation Builder</b><span>保留 chunk ids、source refs、score trace 和 coverage。</span></div>
+                <div class="step-code">citation coverage</div>
+              </div>
+            </div>
+            <aside class="journey-card">
+              <h3>BM25 该解决什么</h3>
+              <p>BM25 不是“更聪明的 RAG”，它擅长可解释的关键词召回：函数名、配置项、错误字面量、专有名词、文件路径。</p>
+              <div class="decision-list">
+                <div class="decision"><b>Native BM25</b><span>算法本体属于本地实现目标。</span></div>
+                <div class="decision"><b>Elasticsearch</b><span>只是 optional external adapter。</span></div>
+                <div class="decision"><b>RRF</b><span>融合多路召回，不包装为最终模型判断。</span></div>
+              </div>
+            </aside>
+          </div>
+        </article>
+
+        <article class="journey" id="journey-graphrag">
+          <div class="journey-layout">
+            <div class="journey-flow">
+              <div class="journey-step">
+                <div class="step-layer">Query</div>
+                <div class="step-main"><b>多跳 / 关系型问题</b><span>用户问“这个设计和 roadmap、eval evidence、repo boundary 有什么关系？”</span></div>
+                <div class="step-code">entity / relation heavy</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Router</div>
+                <div class="step-main"><b>auto 是 router</b><span>auto 根据 query intent 选择 basic、local、global 或 drift；auto 不是第五种 GraphRAG mode。</span></div>
+                <div class="step-code">requested=auto resolved=local</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Local</div>
+                <div class="step-main"><b>GraphRAG Local</b><span>从实体、关系、邻域、source chunks 追踪项目内连接。</span></div>
+                <div class="step-code">entity neighborhood</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Global</div>
+                <div class="step-main"><b>Community Reports</b><span>如果问题需要全局概览，读取 community_version 对应摘要。</span></div>
+                <div class="step-code">community report</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Drift</div>
+                <div class="step-main"><b>Global Primer -> Local Follow-up</b><span>drift 用全局线索引导局部追溯，再融合 evidence。</span></div>
+                <div class="step-code">global -> local -> merge</div>
+              </div>
+              <div class="journey-step">
+                <div class="step-layer">Trace</div>
+                <div class="step-main"><b>GraphRAG Evidence Bundle</b><span>记录 graphrag_project_id、query method、prompt/index/community versions、latency、cost null。</span></div>
+                <div class="step-code">trace JSONL</div>
+              </div>
+            </div>
+            <aside class="journey-card">
+              <h3>GraphRAG 的正确位置</h3>
+              <p>GraphRAG 是 Knowledge Capability 的一种被选路径，不是独立聊天 runtime。它向 GeneralAgent 返回 evidence，而不是接管对话。</p>
+              <div class="decision-list">
+                <div class="decision"><b>basic</b><span>BM25 / vector / RRF 的普通检索。</span></div>
+                <div class="decision"><b>local</b><span>实体关系邻域与源 chunk。</span></div>
+                <div class="decision"><b>global / drift</b><span>社区报告与全局引导局部追溯。</span></div>
+              </div>
+            </aside>
+          </div>
+        </article>
+      </section>
+
+      <section id="request-pipes">
+        <h2>03 / 四条主路径不要混在一起</h2>
+        <div class="pipe">
+          <div class="pipe-label">
+            <b>同步聊天路径</b>
+            <p>Client -> FastAPI -> ChatService -> Single GeneralAgent -> selected capabilities -> SSE response。</p>
+          </div>
+          <div class="pipe-label">
+            <b>知识查询路径</b>
+            <p>GeneralAgent 或 Knowledge page -> KnowledgeQueryService -> router -> BM25 / RAG / GraphRAG -> evidence。</p>
+          </div>
+          <div class="pipe-label">
+            <b>异步索引路径</b>
+            <p>Upload / project change -> RabbitMQ -> Workers -> index_version / community_version atomic publish。</p>
+          </div>
+          <div class="pipe-label">
+            <b>记忆提交路径</b>
+            <p>post_turn_commit -> Raw Event Log -> Summary Compression -> Structured Extraction -> source_event_ids。</p>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" id="capability">
-      <h2>Capability / Tool Retrieval</h2>
-      <div class="grid-2">
-        <div class="card">
-          <h3>不全量注入工具 schema</h3>
-          <p>目标是通过 ToolCard 快速检索和动态能力选择，只把本轮相关 schema 注入 ModelContextPacket。</p>
-          <div class="code">keyword / alias exact lookup
-Native BM25 over ToolCard text
-optional vector retrieval over ToolCard embeddings
-permission / health / cost filter
-CapabilitySelectionTrace</div>
+      <section id="memory">
+        <h2>04 / 记忆层设计：上下文不是聊天记录拼接</h2>
+        <p class="caption">
+          Production-grade memory extraction / retrieval / consolidation 仍是 Target。当前目标是先把 Raw Event Log、摘要压缩、结构化提取和 trace 边界说清楚。
+        </p>
+        <div class="memory-board">
+          <div class="memory-cell">
+            <h3><span class="dot violet"></span> L0 Working Context</h3>
+            <p>一次模型调用真正看到的 instructions、task、selected memory、knowledge evidence 和 selected ToolCards。</p>
+          </div>
+          <div class="memory-cell">
+            <h3><span class="dot violet"></span> L1 Recent Window</h3>
+            <p>最近消息、tool calls、tool results、interrupt / resume 状态。Sliding Window 只在这里使用。</p>
+          </div>
+          <div class="memory-cell">
+            <h3><span class="dot violet"></span> L2 Task Summary</h3>
+            <p>Summary Compression 产物：目标、约束、决策、TODO、artifact refs、open questions。</p>
+          </div>
+          <div class="memory-cell">
+            <h3><span class="dot sage"></span> L3 Long-term Memory</h3>
+            <p>Structured Extraction 产物：durable facts、preferences、procedures、project memories，必须带 source_event_ids。</p>
+          </div>
+          <div class="memory-cell">
+            <h3><span class="dot blue"></span> L4 External Knowledge</h3>
+            <p>RAG / GraphRAG / files / web evidence。可进入上下文，但不是 Agent Memory 本身。</p>
+          </div>
+          <div class="memory-cell source">
+            <h3><span class="dot"></span> Raw Event Log 是源头</h3>
+            <p>append-only：messages、model outputs、tool calls/results、interrupts、memory updates。Summary 和 Structured Memory 都是派生层，不能替代 Raw Event Log。</p>
+            <div class="code">Raw Event Log
+  -> source_event_ids
+  -> Task Summary / Structured Long-term Memory
+  -> ContextTrace
+  -> ModelContextPacket</div>
+          </div>
         </div>
-        <div class="card">
-          <h3>Capability Types</h3>
-          <ul>
-            <li>Knowledge Capability</li>
-            <li>Action Tools</li>
-            <li>MCP Connector</li>
-            <li>Skills</li>
-          </ul>
+      </section>
+
+      <section id="tools">
+        <h2>05 / 能力与工具层：先检索 ToolCard，再注入 schema</h2>
+        <div class="subsystem-grid">
+          <div class="subsystem-card">
+            <h3><span class="dot"></span>ToolCard Registry</h3>
+            <p>记录每个能力的身份、用途、输入输出摘要、权限、side effects、成本、健康状态和 owner module。</p>
+            <div class="matrix">
+              <b>identity</b><span>id、name、aliases、type、owner_module</span>
+              <b>contract</b><span>description、input_schema_summary、output_schema_summary</span>
+              <b>policy</b><span>permissions、side_effects、cost_hint、latency_hint、health</span>
+            </div>
+          </div>
+          <div class="subsystem-card">
+            <h3><span class="dot"></span>Capability Selection</h3>
+            <p>根据 task/context 做 exact lookup、Native BM25 over ToolCard text、可选 vector retrieval，然后做 permission / health / cost filter。</p>
+            <div class="code">task/context
+  -> ToolCard recall
+  -> permission / health / cost
+  -> select schema
+  -> CapabilitySelectionTrace</div>
+          </div>
+          <div class="subsystem-card">
+            <h3><span class="dot rose"></span>边界规则</h3>
+            <p>Product-level dynamic capability orchestration 仍是 Target。短期目标是让 GeneralAgent 不再每轮看到全部工具 schema。</p>
+          </div>
         </div>
-      </div>
-      <div class="card">
-        <h3>Native BM25 边界</h3>
-        <p>Elasticsearch 是外部检索后端；BM25 是排序算法。Zuno 目标需要 NativeBM25Retriever，不能把 Elasticsearch 等同为 BM25 算法本体。</p>
-        <div class="code">NativeBM25Index: tokenizer, inverted_index, term_freq, doc_freq, doc_len, avg_doc_len, idf
-NativeBM25Retriever: build(documents), search(query, top_k), explain_score(query, doc_id)
+      </section>
 
-score(q,d) =
-Σ idf(t) * tf(t,d) * (k1 + 1)
- / (tf(t,d) + k1 * (1 - b + b * |d| / avgdl))
-
-k1 = 1.2 ~ 1.5
-b = 0.75</div>
-      </div>
-    </section>
-
-    <section class="section" id="retrieval">
-      <h2>Knowledge / GraphRAG / Retrieval Fusion</h2>
-      <div class="matrix">
-        <div class="head">Mode</div>
-        <div class="head">basic</div>
-        <div class="head">local</div>
-        <div class="head">global</div>
-        <div class="head">drift</div>
-        <div class="head">Meaning</div>
-        <div>Native BM25 + Vector + RRF + optional rerank</div>
-        <div>entity / relation / graph neighborhood / source chunks</div>
-        <div>community reports / global summaries</div>
-        <div>global community primer -> local follow-up retrieval -> evidence merge</div>
-      </div>
-      <p class="note">GraphRAG query methods are basic, local, global, and drift; auto 是 router, not a fifth query mode.</p>
-      <div class="card">
-        <h3>Enhanced Retrieval Chain</h3>
-        <div class="code">User Query
+      <section id="retrieval">
+        <h2>06 / RAG / GraphRAG / BM25：一个 Router，多条检索路径</h2>
+        <div class="retrieval-map">
+          <div class="subsystem-card">
+            <h3><span class="dot sage"></span>Knowledge Router</h3>
+            <p>router 读取 query intent、project state、index availability、requested method，然后解析成真正执行路径。</p>
+            <div class="fusion-lane">
+              <div class="fusion-step"><b>basic</b><span>Native BM25 + dense vector + RRF。</span></div>
+              <div class="fusion-step"><b>local</b><span>entity / relation / graph neighborhood / source chunks。</span></div>
+              <div class="fusion-step"><b>global</b><span>community reports / global summaries。</span></div>
+              <div class="fusion-step"><b>drift</b><span>global primer -> local follow-up -> evidence merge。</span></div>
+            </div>
+          </div>
+          <div class="subsystem-card">
+            <h3><span class="dot blue"></span>Fusion / Evidence</h3>
+            <p>多路召回后先 dedup，再 RRF，必要时 optional rerank，最后构建 citation 和 trace。</p>
+            <div class="code">Query
   -> Query Understanding
   -> Query Variants
   -> Multi-retriever Recall
@@ -652,77 +1198,93 @@ b = 0.75</div>
   -> Evidence Check
   -> Citation Builder
   -> Trace</div>
-        <p>Query variants 是 enhanced / expensive mode，不是默认每次开启。原始 query 必须保留。</p>
-        <p>RRF 默认 k = 60，是粗排融合，后续可接 optional rerank。输出 fusion_trace、rerank_trace 和 citation coverage。</p>
-      </div>
-    </section>
+          </div>
+        </div>
+        <div class="note">
+          <strong>auto 是 router</strong>，不是第五种 GraphRAG query method。Native BM25 是本地排序算法；Elasticsearch 只是 optional external adapter。domain_pack_id 仍可能存在于 migration alias、DB compatibility、retirement/history tests，不是 active mainline。
+        </div>
+      </section>
 
-    <section class="section" id="repo">
-      <h2>仓库边界</h2>
-      <div class="grid-3">
-        <div class="card">
-          <h3>docs/</h3>
-          <p>正式人类文档、Current、Target 高层、Roadmap、证据、术语和 history。</p>
+      <section id="phases">
+        <h2>07 / Phase 执行方案：按层落地，不横向摊大饼</h2>
+        <div class="phase-line">
+          <div class="phase">
+            <small>Phase 05</small>
+            <h3>Memory Engine</h3>
+            <p>Raw Event Log、Summary Compression、Structured Extraction、source_event_ids、ContextTrace。</p>
+          </div>
+          <div class="phase">
+            <small>Phase 06</small>
+            <h3>Capability / Tool Retrieval</h3>
+            <p>ToolCard Registry、Native BM25 capability search、权限 / 健康 / 成本过滤。</p>
+          </div>
+          <div class="phase">
+            <small>Phase 07</small>
+            <h3>Knowledge Retrieval / Fusion</h3>
+            <p>Basic / Local / Global / Drift、dedup、RRF、optional rerank、citation trace。</p>
+          </div>
+          <div class="phase">
+            <small>Phase 08</small>
+            <h3>LangGraph Runtime</h3>
+            <p>显式 prepare_context -> agent_loop -> post_turn_commit，保留单 GeneralAgent 主线。</p>
+          </div>
+          <div class="phase">
+            <small>Phase 09</small>
+            <h3>Product Boundary / Trace / Eval Closure</h3>
+            <p>Typed API、前端可见状态、trace / eval closure、history archive hygiene。</p>
+          </div>
         </div>
-        <div class="card">
-          <h3>.agent/</h3>
-          <p>Agent workflow、canonical target detail、references、programs、scripts、templates。</p>
+        <div class="note">
+          <strong>Execution Contract:</strong> Phase 05 关闭后才能开 06；06 关闭后才能开 07；07 关闭后才能开 08；08 关闭后才能开 09。所有阶段在测试和证据证明前都保持 Target。
         </div>
-        <div class="card">
-          <h3>src/backend/zuno/</h3>
-          <p>当前 Python runtime truth；API → Application → Core/Runtime → Service boundaries。</p>
-        </div>
-      </div>
-      <div class="code">.agent/architecture/near-term/
-  README.md
-  zuno-ideal-architecture-and-repo-layout.html
-  01-target-runtime-architecture.md
-  02-context-memory-architecture.md
-  03-capability-tool-retrieval-architecture.md
-  04-knowledge-graphrag-retrieval-fusion.md
-  05-repository-boundaries-and-acceptance-gates.md</div>
-    </section>
+      </section>
 
-    <section class="section" id="current-target">
-      <h2>当前 → 目标</h2>
-      <div class="grid-2">
-        <div class="card">
-          <h3>Current / Foundation</h3>
-          <ul>
-            <li>Single GeneralAgent 当前主线已成立。</li>
-            <li>KnowledgeQueryService / GraphRAGQueryService 当前成立。</li>
-            <li>minimal ContextOrchestrator 当前成立。</li>
-            <li>Memory / Capability foundation 当前成立。</li>
-            <li>Domain Pack active runtime 已退出主线。</li>
-          </ul>
+      <section id="repo">
+        <h2>08 / 仓库边界：文档和 Agent 工作集继续瘦身</h2>
+        <div class="repo-grid">
+          <div class="repo-card">
+            <small>formal truth</small>
+            <h3>docs/</h3>
+            <p>正式人类文档：current、target、roadmap、evidence、terminology、history。</p>
+          </div>
+          <div class="repo-card">
+            <small>agent workflow</small>
+            <h3>.agent/</h3>
+            <p>workflow、references、programs、scripts、templates、canonical target detail。</p>
+          </div>
+          <div class="repo-card">
+            <small>runtime truth</small>
+            <h3>src/backend/zuno/</h3>
+            <p>Python runtime truth：API -> Application -> Core/Runtime -> Services。</p>
+          </div>
+          <div class="repo-card">
+            <small>archive</small>
+            <h3>docs/history/</h3>
+            <p>迁移旧计划、retired designs、superseded programs。历史保留，不留在前台。</p>
+          </div>
         </div>
-        <div class="card">
-          <h3>Still Target</h3>
-          <ul>
-            <li>成熟 Memory extraction / retrieval / consolidation。</li>
-            <li>ToolCard Native BM25 + optional vector capability retrieval。</li>
-            <li>产品级 Dynamic Capability Selector。</li>
-            <li>完整 GeneralAgent LangGraph runtime graph。</li>
-            <li>完整 multi-query / multi-retriever / RRF / rerank evidence closure。</li>
-          </ul>
+        <div class="note">
+          Lessons / old phase folders 这类“解释过去过程但不指导当前执行”的内容，应归档进 history 或合并进 roadmap / current-program，不继续放在前台路径里制造噪音。
         </div>
-      </div>
-    </section>
+      </section>
+    </main>
 
-    <div class="footer">
-      Zuno Target Architecture and Repository Blueprint. Canonical Target / Proposed visual reference, not Current Truth.
-    </div>
-  </main>
+    <footer>
+      Zuno Target Architecture and Repository Blueprint · Canonical Target / Proposed visual reference, not Current Truth.
+    </footer>
+  </div>
 
   <script>
-    const links = [...document.querySelectorAll(".nav a")];
-    const sections = links.map(link => document.querySelector(link.getAttribute("href")));
-    const observer = new IntersectionObserver(entries => {
-      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!visible) return;
-      links.forEach(link => link.classList.toggle("active", link.getAttribute("href") === "#" + visible.target.id));
-    }, { threshold: [0.2, 0.4, 0.6] });
-    sections.forEach(section => section && observer.observe(section));
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const journeys = Array.from(document.querySelectorAll(".journey"));
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const target = tab.dataset.target;
+        tabs.forEach((item) => item.setAttribute("aria-selected", String(item === tab)));
+        journeys.forEach((panel) => panel.classList.toggle("active", panel.id === target));
+      });
+    });
   </script>
 </body>
 </html>

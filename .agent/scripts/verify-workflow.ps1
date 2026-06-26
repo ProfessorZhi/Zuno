@@ -26,16 +26,16 @@ Require-Path ".agent\references\README.md"
 Require-Path ".agent\references\current-program.md"
 Require-Path ".agent\references\docs-map.md"
 Require-Path ".agent\references\code-map.md"
+Require-Path ".agent\references\task-routing.md"
+Require-Path ".agent\references\workflow.md"
 Require-Path ".agent\references\verification-map.md"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\zuno-target-runtime-v2\README.md"
 Require-Path ".agent\programs\zuno-target-runtime-v2\implementation-roadmap.md"
 Require-Path ".agent\programs\zuno-target-runtime-v2\current-phase.md"
 Require-Path ".agent\programs\zuno-target-runtime-v2\closure-checklist.md"
-Require-Path ".agent\workflows\docs-maintenance.md"
-Require-Path ".agent\workflows\repo-hygiene.md"
-Require-Path ".agent\skills\zuno-docs-maintenance\SKILL.md"
-Require-Path ".agent\skills\zuno-repo-hygiene\SKILL.md"
+Require-NoPath ".agent\workflows"
+Require-NoPath ".agent\skills"
 Require-Path ".agent\templates\requirement-intake.md"
 Require-Path ".agent\scripts\verify-docs.ps1"
 Require-Path ".agent\scripts\verify_agent_system.py"
@@ -43,10 +43,10 @@ Require-Path ".agent\scripts\verify_doc_boundaries.py"
 Require-Path ".agent\scripts\verify_repo_hygiene.py"
 Require-Path ".agent\scripts\grep-legacy.ps1"
 Require-Path ".agent\scripts\grep-domain-pack.ps1"
-Require-Path "docs\architecture\history\programs\zuno-target-architecture-migration-v1\README.md"
-Require-Path "docs\architecture\history\programs\official-graphrag-cleanup-v1\README.md"
-Require-Path "docs\architecture\history\programs\context-memory-agent-runtime-v1\README.md"
-Require-Path "docs\architecture\history\README.md"
+Require-Path "docs\history\programs\zuno-target-architecture-migration-v1\README.md"
+Require-Path "docs\history\programs\official-graphrag-cleanup-v1\README.md"
+Require-Path "docs\history\programs\context-memory-agent-runtime-v1\README.md"
+Require-Path "docs\history\README.md"
 Require-Path "apps\web\AGENTS.md"
 Require-Path "src\backend\zuno\AGENTS.md"
 Require-Path "tools\evals\zuno\AGENTS.md"
@@ -66,7 +66,7 @@ if ($gitignore -match "(?m)^apps/web/AGENTS\.md$") {
 }
 
 $agentText = Get-Content -LiteralPath "AGENTS.md" -Raw
-foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/architecture/history/", "Self-Maintenance Rule")) {
+foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agent/references/task-routing.md", ".agent/references/workflow.md")) {
     if ($agentText -notmatch [regex]::Escape($required)) {
         $failures.Add("AGENTS.md missing required text: $required")
     }

@@ -1,25 +1,55 @@
-# Zuno Agent Entry
+# Zuno Agent 入口
 
-This is the only repository-level Agent entrypoint.
+这是仓库唯一的 Agent 入口和工作流契约。
 
-## First Principles
+## 第一性原则
 
-Start from the current task, not from old phase habit.
+从当前任务和问题本质出发，不从旧 phase 习惯或模板出发。
 
-When the user's motivation or target is unclear, stop and clarify the decision that would change the work. When the target is clear but the proposed path is longer than needed, say so and choose the shorter path. When something breaks, trace the root cause before writing around it.
+如果用户动机或目标不清晰，先澄清会改变工作的关键决策。如果目标清晰但路径更长，直接指出并选择更短路径。遇到问题先追根因，不打补丁。每个决策都要能回答“为什么”。
+
+## 本地工作流模型
+
+```text
+AGENTS.md
+  -> 唯一总入口：边界、阅读顺序、任务路由、收尾规则
+
+.agent/
+  -> Agent 工作流库
+     references/    当前程序、docs map、code map、任务路由、工作流、验证命令和已知坑
+     architecture/  目标架构设计工作集
+     programs/      当前可执行 Agent program 和按 phase 的执行计划
+     scripts/       验证器和本地操作辅助
+     templates/     可复用提示和报告模板
+
+docs/
+  -> 面向人的正式文档真相
+
+docs/history/
+  -> 完成、过时或被替换的历史档案
+```
+
+`AGENTS.md` 不承载所有细节。它只负责把任务路由到 `.agent/references/`、`.agent/architecture/` 和 `.agent/programs/` 中正确的位置。
+
+## 文档语言规则
+
+- 前台文档默认中文。
+- 新增或重写的 `docs/`、`.agent/` Markdown 必须用中文说明目标、状态、边界、执行步骤和验收。
+- 英文术语可以保留，但必须用中文解释其边界。
+- `docs/history/` 是历史证据库，可以保留原文，不为了翻译而改写历史。
 
 ## Source Boundaries
 
-- `docs/` is the formal documentation truth for humans.
-- `AGENTS.md` is the Agent entrypoint and workflow contract.
-- `.agent/` is the Agent workflow library: references, templates, scripts, and local operating aids.
-- `docs/architecture/history/` is the archive for superseded plans, old programs, retired migration notes, and replaced designs.
+- `docs/`：正式人类文档真相。
+- `AGENTS.md`：仓库级 Agent 入口和工作流契约。
+- `.agent/`：Agent 工作流库、参考、模板、脚本和本地操作辅助。
+- `docs/history/`：过时计划、旧程序、退休迁移说明和被替换设计的归档。
 
-Formal conclusions must land in `docs/`. Agent-only navigation, reusable prompts, and helper scripts belong in `.agent/`. Historical material is moved to `docs/architecture/history/`; do not delete it just because it is no longer current.
+正式结论必须进入 `docs/`。Agent-only 导航、可复用提示和 helper scripts 放在 `.agent/`。历史材料移动到 `docs/history/`，不要因为它不再当前有效就删除。
 
-## Required Reading Order
+## 必读顺序
 
-For architecture, refactor, new feature, or workflow tasks:
+架构、重构、新功能或工作流任务先读：
 
 1. `docs/architecture/README.md`
 2. `docs/architecture/current-architecture.md`
@@ -29,122 +59,94 @@ For architecture, refactor, new feature, or workflow tasks:
 6. `.agent/references/current-program.md`
 7. `.agent/references/docs-map.md`
 8. `.agent/references/code-map.md`
-9. `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
-10. `.agent/architecture/near-term/01-target-runtime-architecture.md`
-11. `.agent/architecture/near-term/02-context-memory-architecture.md`
-12. `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
-13. `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
-14. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
+9. `.agent/references/task-routing.md`
+10. `.agent/references/workflow.md`
+11. `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+12. `.agent/architecture/near-term/01-target-runtime-architecture.md`
+13. `.agent/architecture/near-term/02-context-memory-architecture.md`
+14. `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
+15. `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
+16. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
-For implementation tasks, read the relevant code after the docs. Do not infer runtime behavior from docs alone.
+实现任务在读完相关文档后再读代码。不要只凭文档推断 runtime 行为。
 
-## Task Routing
+## 任务路由
 
-- scope unclear -> `.agent/skills/zuno-read-only-audit/SKILL.md`
-- docs, `.agent`, references, workflows, skills, or history -> `.agent/skills/zuno-docs-maintenance/SKILL.md`
-- directory move, deletion, archive, ignore rules, generated/local cleanup -> `.agent/skills/zuno-repo-hygiene/SKILL.md`
-- `apps/web` -> `apps/web/AGENTS.md` and `.agent/skills/zuno-frontend-change/SKILL.md`
-- `src/backend/zuno` -> `src/backend/zuno/AGENTS.md` and `.agent/skills/zuno-backend-change/SKILL.md`
-- API, DTO, request/response, frontend/backend contract -> `.agent/skills/zuno-api-contract-change/SKILL.md`
-- architecture replacement -> `.agent/skills/zuno-architecture-refactor/SKILL.md`
-- architecture replacement, directory moves, Context/Memory, GraphRAG boundary,
-  or repository hygiene tasks must also read
-  `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
-- eval tooling, datasets, metrics, profiles, reports -> `tools/evals/zuno/AGENTS.md` and `.agent/skills/zuno-eval-change/SKILL.md`
+- 范围不清楚 -> `.agent/references/task-routing.md` 的只读审计路由。
+- `docs`、`.agent`、references、history -> `.agent/references/workflow.md` 的文档维护流程。
+- 目录移动、删除、归档、ignore、generated/local cleanup -> `.agent/references/workflow.md` 的仓库卫生流程。
+- `apps/web` -> `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
+- `src/backend/zuno` -> `src/backend/zuno/AGENTS.md` 和 `.agent/references/runtime-call-chain.md`。
+- API、DTO、request/response、frontend/backend contract -> `.agent/references/code-map.md`。
+- 架构替换 -> `.agent/references/workflow.md` 的架构重构流程。
+- 架构替换、目录移动、Context/Memory、GraphRAG boundary 或 repository hygiene 任务还必须读 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
+- eval tooling、datasets、metrics、profiles、reports -> `tools/evals/zuno/AGENTS.md` 和 `.agent/references/verification-map.md`。
 
-## Current Mainline
+## 当前主线
 
-The completed Phase 0-6 architecture closure remains historical completion truth and must not be rewritten as incomplete.
+已完成的 Phase 0-6 architecture closure 是历史完成事实，不能改写成未完成。
 
-The active executable Agent program is:
+当前可执行 Agent program：
 
 - `.agent/programs/zuno-target-runtime-v2/`
 
-Its current purpose is a controlled first implementation slice after the Zuno
-Target Architecture Migration V1 closure: module boundary gates, one low-risk
-backend application-boundary move, and minimal callable Context Orchestrator
-runtime.
+当前目标：在 Target Architecture Migration V1 closure 之后，以小步可验证方式落地目标 runtime：module boundary gates、低风险 backend application-boundary move、minimal callable Context Orchestrator runtime，以及后续 Phase 05-09。
 
-The latest completed program is archived at:
+最新完成 program 归档在：
 
-- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/`
+- `docs/history/programs/zuno-target-architecture-migration-v1/`
 
-Its purpose was to move from the 11A/11B runtime state to the near-term
-target architecture and repository layout: finish 11C/12 cleanup, migrate
-Contract Review assets, harden GraphRAG Project as the mainline, clean folder
-boundaries, then implement Context/Memory and Capability phases around the
-single `GeneralAgent`.
-
-The active V2 implementation breakdown is:
+active V2 分解：
 
 - `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
 - `.agent/programs/zuno-target-runtime-v2/current-phase.md`
 - `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
 
-The archived V1 near-term implementation breakdown is:
+归档 V1 / 旧 cleanup 材料：
 
-- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `docs/architecture/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
-- `docs/architecture/history/programs/official-graphrag-cleanup-v1/` as
-  archived evidence for completed GraphRAG cleanup phases and old 11C/12
-  planning context
-- `docs/architecture/history/programs/zuno-target-runtime-v2/`
+- `docs/history/programs/zuno-target-architecture-migration-v1/`
+- `docs/history/programs/official-graphrag-cleanup-v1/`
+- `docs/history/programs/zuno-target-runtime-v2/`
 
-Detailed target architecture design for this program lives in:
-
-- `.agent/architecture/`
-
-That directory is a design-stage Agent working set for Zuno architecture. Its
-current structure separates:
+目标架构设计工作集：
 
 - `.agent/architecture/near-term/`
-  - the detailed near-term ideal architecture for the next refactor target
-  - `zuno-ideal-architecture-and-repo-layout.html` as the canonical Target /
-    Proposed visual blueprint, not Current Truth
-  - five canonical Markdown documents for runtime, Context/Memory,
-    Capability/Tool Retrieval, Knowledge/GraphRAG/Retrieval/Fusion, and
-    repository boundaries/acceptance gates
 - `.agent/architecture/future/`
-  - slim long-term horizon for Java business services, microservices,
-    event-driven workers, Coding Agent mode, and multi-agent mode
-  - not a current refactor acceptance target
 - `.agent/architecture/decisions/`
-  - slim Agent-side architecture decision summary
 
-Do not treat Java, microservices, event-driven workers, or multi-agent mode as
-near-term implementation work unless the user explicitly opens a separate
-future-direction implementation program.
+不要把 Java、microservices、event-driven workers 或 multi-agent mode 当作近期实现工作，除非用户明确打开 future-direction implementation program。
 
-## Self-Maintenance Rule
+## 自维护规则
 
-For every new requirement, new feature, refactor, or architecture replacement, decide whether each item must be updated:
+每次新需求、新功能、重构或架构替换，都判断是否需要同步：
 
 1. `.agent/programs/<program>/`
-2. a phase document
-3. a spec, ADR, or audit
-4. `docs/architecture/history/` for any superseded plan
+2. phase 文档
+3. spec、ADR 或 audit
+4. `docs/history/`
 5. `docs/architecture/README.md`
 6. `docs/architecture/current-architecture.md`
 7. `docs/architecture/target-architecture.md`
-8. this `AGENTS.md` current mainline
+8. `AGENTS.md`
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`
-11. `.agent/programs/`
-12. `.agent/scripts/` or `.agent/templates/`
-13. `.gitignore`
-14. verification, commit, and push if the task produced modifications
+11. `.agent/references/task-routing.md` 或 `.agent/references/workflow.md`
+12. `.agent/programs/`
+13. `.agent/scripts/` 或 `.agent/templates/`
+14. `.gitignore`
+15. 如果产生修改，运行验证、commit、push
 
-If the answer is no, the reason should be obvious from the task scope. If the answer is yes, update the file in the same change set.
+如果旧设计被替换，把旧材料归档到 `docs/history/`，不要留在前台路径里，也不要静默删除。
 
-## Task Closure Rules
+## 任务收尾规则
 
-- Read-only reconnaissance does not commit or push.
-- Modification tasks must run the smallest meaningful verification before closure.
-- Modification tasks end with commit and push unless verification or push is blocked.
-- Never force push, force-with-lease, or amend old commits unless the user explicitly asks.
-- Do not keep legacy lowercase or dotted Agent entrypoints in parallel with `AGENTS.md`.
-- Module-level `AGENTS.md` files are allowed only where this root entrypoint routes to them.
+- 只读侦察不 commit、不 push。
+- 修改任务必须运行最小有效验证。
+- 修改任务结束时 commit 并 push，除非验证或 push 被阻塞。
+- 不要 force push、force-with-lease 或 amend 旧 commit，除非用户明确要求。
+- 不要保留 legacy lowercase 或 dotted Agent entrypoints 与 `AGENTS.md` 并行。
+- 只有 root entrypoint 路由到的模块才允许有模块级 `AGENTS.md`。
 
 ## Scope Rules
 
-This workflow document does not authorize broad code edits. Respect task-specific forbidden paths. If the requested verification requires changing a forbidden path, stop and return evidence instead of expanding scope.
+本工作流文档不授权广泛代码修改。必须遵守任务给出的 forbidden paths。如果验证需要修改 forbidden path，停止并返回证据，不扩大范围。

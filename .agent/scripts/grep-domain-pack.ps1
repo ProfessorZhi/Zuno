@@ -34,7 +34,7 @@ if (-not $rg) {
 foreach ($pattern in $patterns) {
     Write-Host ""
     Write-Host "=== $pattern ==="
-    & rg -n -F $pattern @roots -g "!docs/architecture/history/**"
+    & rg -n -F $pattern @roots -g "!docs/history/**"
     if ($LASTEXITCODE -gt 1) {
         exit $LASTEXITCODE
     }

@@ -1,19 +1,18 @@
-# Target Architecture
+# 目标架构
 
-## Purpose
+## 用途
 
-This file states the high-level near-term target. It is desired direction, not
-current implementation truth.
+这份文档描述近期目标架构。它是 Target，不是 Current 完成声明。
 
-## Target
+## 总目标
 
-Zuno should remain:
+Zuno 的近期目标是：
 
 ```text
 monorepo now, modular monolith, service-ready later
 ```
 
-The stable target concepts are:
+核心目标模型：
 
 ```text
 Local-first Agent Workspace
@@ -25,53 +24,37 @@ Local-first Agent Workspace
 + Typed API + Web/Desktop
 ```
 
-The high-level target layers are:
+## 分层架构
 
-1. Product Layer: Vue Web and Electron Desktop.
-2. API & Application Layer: FastAPI routes, DTOs, and Application Services.
-3. Single GeneralAgent Runtime:
-   `prepare_context -> agent_loop -> post_turn_commit`.
-4. Context & Memory Layer: L0 Working Context, L1 Recent Interaction Window,
-   L2 Task Summary Memory, L3 Structured Long-term Memory, L4 External
-   Knowledge, and Raw Event Log.
-5. Capability / Tool Retrieval Layer: ToolCard registry, keyword / alias
-   search, Native BM25 over ToolCards, optional vector search, permission /
-   health / cost filter, and capability selection trace.
-6. Knowledge / GraphRAG Layer: `KnowledgeQueryService`,
-   `GraphRAGQueryService`, `GraphRAGProjectSnapshot`, `basic`, `local`,
-   `global`, `drift`, and `auto` router.
-7. Retrieval / Fusion / Evidence Layer: query variants, Native BM25, dense
-   vector, graph local, community global, deduplication, RRF fusion, optional
-   rerank, evidence check, citation, and trace.
-8. Infrastructure / Observability / Eval: PostgreSQL, Redis, RabbitMQ, MinIO,
-   Milvus, optional Elasticsearch adapter, Neo4j, trace, eval, and benchmark.
+1. 产品入口层：Vue Web 和 Electron Desktop。
+2. API / Application 层：FastAPI routes、DTO、Auth、SSE 和 Application Services。
+3. Single GeneralAgent Runtime：`prepare_context -> agent_loop -> post_turn_commit`。
+4. Context / Memory 层：L0 Working Context、L1 Recent Window、L2 Task Summary、L3 Structured Long-term Memory、L4 External Knowledge、Raw Event Log。
+5. Capability / Tool Retrieval 层：ToolCard Registry、keyword / alias search、Native BM25 over ToolCards、optional vector search、permission / health / cost filter、CapabilitySelectionTrace。
+6. Knowledge / GraphRAG 层：`KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot`、`basic`、`local`、`global`、`drift`、`auto` router。
+7. Retrieval / Fusion / Evidence 层：query variants、Native BM25、dense vector、graph local、community global、deduplication、RRF、optional rerank、evidence check、citation、trace。
+8. Infrastructure / Eval 层：PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、optional Elasticsearch adapter、trace、eval、benchmark。
 
-Memory target strategy:
+## Memory 目标边界
 
-- Summary Compression + Structured Extraction.
-- Sliding Window remains L1 recent-window and token-budget protection only.
-- Importance Filtering can help retention/selection, but is not the main
-  strategy.
-- Summaries and structured memories must keep `source_event_ids`.
-- Summary does not replace the Raw Event Log.
-- External Knowledge is not Agent Memory.
-- Prompt Caching is a compute-layer hint, not memory compression.
+- 目标策略是 Summary Compression + Structured Extraction。
+- Sliding Window 只用于 L1 recent-window 和 token-budget 保护。
+- summaries 和 structured memories 必须保留 `source_event_ids`。
+- Summary 不能替代 Raw Event Log。
+- External Knowledge 是 RAG / GraphRAG / file / web evidence，不是 Agent Memory。
+- Prompt Caching 是 compute-layer hint，不是 memory compression。
 
-Retrieval target:
+## Retrieval 目标边界
 
-- Native BM25 is a ranking algorithm implemented locally by
-  `NativeBM25Index` and `NativeBM25Retriever`.
-- Elasticsearch is an optional external adapter, not BM25 itself.
-- Enhanced paths may generate query variants, but the original query must be
-  preserved.
-- Multi-retriever recall may use Native BM25, Dense Vector, Graph Local, and
-  Community Global.
-- Deduplication uses stable ids such as `chunk_id`, `document_id + span`,
-  `graph_node_id`, and `community_report_id`.
-- RRF is the default coarse fusion method with `k = 60`, followed by optional
-  rerank.
+- Native BM25 是本地 BM25 排序算法。
+- Elasticsearch 只是 optional external adapter，不是 BM25 算法本体。
+- Enhanced paths 可以生成 query variants，但必须保留 original query。
+- Multi-retriever recall 可使用 Native BM25、Dense Vector、Graph Local 和 Community Global。
+- Deduplication 使用稳定 id，例如 `chunk_id`、`document_id + span`、`graph_node_id`、`community_report_id`。
+- RRF 是默认 coarse fusion，默认 `k = 60`，后面可接 optional rerank。
+- `auto` 是 router，用来选择 `basic`、`local`、`global` 或 `drift`，不是第五种 GraphRAG query mode。
 
-## Replacement Direction
+## 替换方向
 
 ```text
 Domain Pack front path -> GraphRAG Project
@@ -82,9 +65,15 @@ community_global -> global
 drift_like -> drift
 ```
 
-## Not Near-Term
+## 仓库前台目标
 
-These are future direction, not current acceptance targets:
+- `docs/` 只保留正式人类真相：Current、Target、Roadmap、ADRs、Evidence、Terminology 和 History index。
+- `.agent/` 只保留可执行 Agent 工作流：active program、target design、references、scripts、templates。
+- `docs/history/` 保存旧 lessons、old phases、retired plans、replaced fragments、completed programs、旧 audits/specs/runbooks/prototypes。
+- transient screenshots、browser snapshots、caches 和 local reports 不进入提交的前台路径。
+- 新增或重写的前台文档使用中文；历史档案可保留原文。
+
+## 非近期目标
 
 - Java business services
 - microservice extraction
@@ -93,19 +82,19 @@ These are future direction, not current acceptance targets:
 - Coding Agent mode
 - independent GraphRAG or indexing services
 
-## Detailed Design
+## 详细设计
 
-Detailed design-stage material lives in:
+详细目标设计放在：
 
 - `.agent/architecture/near-term/`
 - `.agent/architecture/future/`
 - `.agent/architecture/decisions/`
 
-The canonical Target / Proposed visual blueprint is:
+Canonical Target / Proposed visual blueprint：
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 
-The canonical near-term Markdown files are:
+Canonical near-term Markdown：
 
 - `.agent/architecture/near-term/01-target-runtime-architecture.md`
 - `.agent/architecture/near-term/02-context-memory-architecture.md`
@@ -113,5 +102,20 @@ The canonical near-term Markdown files are:
 - `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
 - `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
-Only implemented and verified conclusions should be promoted from `.agent/` to
-formal `docs/`.
+只有已实现并通过测试证明的结论，才能从 `.agent/` 提升到正式 `docs/`。
+
+## 执行 Phase
+
+当前执行计划：
+
+- `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
+
+执行顺序：
+
+1. Phase 05 Memory Engine
+2. Phase 06 Capability / Tool Retrieval
+3. Phase 07 Knowledge Retrieval / Fusion
+4. Phase 08 GeneralAgent LangGraph Runtime
+5. Phase 09 Product Boundary / Trace / Eval Closure
+
+这些阶段在代码、测试、trace evidence 和文档边界更新证明前都保持 Target。

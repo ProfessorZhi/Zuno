@@ -1,26 +1,19 @@
-# Public Demo Evidence
+# 公开演示证据
 
-## Current
+## 当前说明
 
-Zuno's public proof surface is focused on local retrieval and GraphRAG behavior:
+Zuno 的公开证明面聚焦在本地检索、GraphRAG、Contract Review 和可复现实验边界。
 
-- backend starts from `src/backend/zuno`
-- frontend and desktop shells are under `apps/`
-- local eval tooling lives under `tools/evals/zuno/`
-- public demo runbooks remain under `docs/development/`
+当前前台只保留精选证据索引；旧 runbook、acceptance、release 和 staging 材料已经归档到 `docs/history/development/`。
 
-## Evidence Summary
+## 证据索引
 
-The existing public-demo materials record GraphRAG and contract-review evidence
-from prior verified runs. They remain reachable here without putting long
-runbooks on the first-read path:
+- [Public Demo Evidence](../history/development/public-demo-evidence.md)
+- [Public Demo Runbook](../history/development/public-demo-runbook.md)
+- [Public Demo Acceptance](../history/development/public-demo-acceptance.md)
 
-- [Public Demo Evidence](../development/public-demo-evidence.md)
-- [Public Demo Runbook](../development/public-demo-runbook.md)
-- [Public Demo Acceptance](../development/public-demo-acceptance.md)
+## 边界
 
-## Boundary
+这份文档是证据入口，不是原始报告目录。
 
-This page is a selected evidence index. It is not a raw report directory.
-Generated eval data, screenshots, logs, and local outputs remain ignored unless
-they are curated into formal docs.
+生成的 eval 数据、截图、日志和本地输出默认保持 ignored；只有经过整理并仍会影响当前判断的内容才进入正式文档。
