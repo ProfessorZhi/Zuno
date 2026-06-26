@@ -35,10 +35,11 @@ from zuno.services.application.capabilities import (
 )
 from zuno.services.application.context import (
     AgentExecutionContext,
+    ContextOrchestrator,
     ContextItem,
+    ContextPreparationInput,
     ContextSelectionReason,
     ContextSource,
-    ContextTrace,
     ModelContextPacket,
     TokenBudgetPolicy,
 )
@@ -244,32 +245,9 @@ class GeneralAgent:
         )
         self.last_capability_selection = selected_capabilities
 
-        items: list[ContextItem] = []
-        if self.agent_config.system_prompt.strip():
-            items.append(
-                ContextItem(
-                    item_id="system_prompt",
-                    source=ContextSource.SYSTEM_INSTRUCTION,
-                    content=self.agent_config.system_prompt.strip(),
-                    token_estimate=self._estimate_tokens(self.agent_config.system_prompt),
-                    priority=100,
-                    reason=ContextSelectionReason.PINNED_INSTRUCTION,
-                )
-            )
-        if task:
-            items.append(
-                ContextItem(
-                    item_id="latest_user_message",
-                    source=ContextSource.RECENT_MESSAGE,
-                    content=task,
-                    token_estimate=self._estimate_tokens(task),
-                    priority=90,
-                    reason=ContextSelectionReason.RECENT_USER_TURN,
-                )
-            )
-
+        capability_items: list[ContextItem] = []
         for capability in selected_capabilities.capabilities:
-            items.append(
+            capability_items.append(
                 ContextItem(
                     item_id=capability.name,
                     source=ContextSource.CAPABILITY_SCHEMA,
@@ -281,19 +259,15 @@ class GeneralAgent:
                 )
             )
 
-        selected_items = tuple(items)
-        trace = ContextTrace.from_items(
-            trace_id=execution_context.trace_id,
-            policy=token_budget,
-            selected_items=selected_items,
-            dropped_items=(),
-        )
-        packet = ModelContextPacket(
-            execution_context=execution_context,
-            items=selected_items,
-            token_budget=token_budget,
-            trace=trace,
-        )
+        packet = ContextOrchestrator().prepare(
+            ContextPreparationInput(
+                execution_context=execution_context,
+                messages=tuple(messages),
+                system_instruction=self.agent_config.system_prompt,
+                token_budget=token_budget,
+                capability_items=tuple(capability_items),
+            )
+        ).packet
         self.last_model_context_packet = packet
         return packet
 

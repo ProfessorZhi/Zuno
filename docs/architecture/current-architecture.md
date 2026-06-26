@@ -151,8 +151,8 @@ live data step, not active code debt.
 
 ## Not Current
 
-Typed Context Contract models are current code under
-`src/backend/zuno/services/application/context/`.
+Typed Context Contract models and the minimal pre-call `ContextOrchestrator`
+are current code under `src/backend/zuno/services/application/context/`.
 Memory layer foundation contracts are current code under
 `src/backend/zuno/services/memory/layers.py`.
 Capability System foundation contracts are current code under
@@ -160,19 +160,21 @@ Capability System foundation contracts are current code under
 search service exposes unified metadata for tools, skills, MCP servers, and
 MCP tools while keeping existing API-facing fields.
 The current `GeneralAgent.astream()` path performs minimal runtime integration:
-it prepares a `ModelContextPacket`, passes `context_trace` and
-`model_context_packet` into the single React loop state, selects bounded
-capability schemas from available tools, and commits a scoped raw event plus
-task summary to the memory layer when memory is enabled.
+it calls the minimal `ContextOrchestrator` to prepare a `ModelContextPacket`,
+passes `context_trace` and `model_context_packet` into the single React loop
+state, selects bounded capability schemas from available tools, and commits a
+scoped raw event plus task summary to the memory layer when memory is enabled.
 
-Context Orchestrator and Post-turn Pipeline are Target, not Current.
+Context Orchestrator and Post-turn Pipeline are Target, not Current as mature
+product behavior.
 Full product-level capability orchestration is also Target, not Current.
 
 The near-term Context & Memory orchestration design is documented under
-`.agent/`; it is not implemented as the current runtime. Do not describe
-production-grade memory extraction/retrieval/consolidation, Context
-Orchestrator, product-level dynamic capability orchestration, or the full
-Post-turn Pipeline as current behavior until code and tests prove them.
+`.agent/`; only the minimal pre-call context preparation slice is current
+runtime. Do not describe production-grade memory extraction/retrieval/
+consolidation, mature Context Orchestrator behavior, product-level dynamic
+capability orchestration, or the full Post-turn Pipeline as current behavior
+until code and tests prove them.
 
 Phase 12 closure evidence is complete. The target migration closure evidence
 records full pytest, formal Contract Review eval, stackless eval baseline

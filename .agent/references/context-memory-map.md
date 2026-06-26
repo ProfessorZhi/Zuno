@@ -8,16 +8,21 @@ target architecture into a reference file.
 ## Current
 
 Typed context contracts are Current under
-`src/backend/zuno/services/application/context/`. Memory layer foundation
-contracts are Current under `src/backend/zuno/services/memory/layers.py`.
-The single `GeneralAgent` runtime now prepares a `ModelContextPacket`, passes
-`ContextTrace` metadata into its React loop state, and commits a scoped raw
-event plus task summary to the memory layer when memory is enabled.
+`src/backend/zuno/services/application/context/`. A minimal pre-call
+`ContextOrchestrator` is Current there as the builder for
+`ModelContextPacket`, selected context items, dropped item reasons, and
+`ContextTrace`.
 
-Context Orchestrator and Post-turn Pipeline are Target, not Current. Mature
-memory extraction/retrieval/consolidation integration is later phase work. The
-current runtime still uses existing Agent and memory surfaces under
-`src/backend/zuno/`.
+Memory layer foundation contracts are Current under
+`src/backend/zuno/services/memory/layers.py`. The single `GeneralAgent`
+runtime now calls the minimal `ContextOrchestrator`, passes `ContextTrace`
+metadata into its React loop state, and commits a scoped raw event plus task
+summary to the memory layer when memory is enabled.
+
+Context Orchestrator and Post-turn Pipeline are Target, not Current as mature
+product behavior. Mature memory extraction/retrieval/consolidation integration
+is later phase work. The current runtime still uses existing Agent and memory
+surfaces under `src/backend/zuno/`.
 
 ## Target References
 
@@ -47,6 +52,7 @@ minimal current call shape:
 
 ```text
 prepare_context
+  -> ContextOrchestrator.prepare
   -> GeneralAgent React loop
   -> post_turn_commit
 ```

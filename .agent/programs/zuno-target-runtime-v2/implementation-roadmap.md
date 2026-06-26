@@ -18,10 +18,10 @@ Success for this round means:
 | Phase | Status | Purpose |
 | --- | --- | --- |
 | 00 | Complete | Re-verify current state before writing. |
-| 01 | Active | Open this executable program and update pointers. |
-| 02 | Planned | Audit module boundaries and add migration gates. |
-| 03 | Planned | Move the first low-risk backend boundary. |
-| 04 | Planned | Add minimal Context Orchestrator runtime. |
+| 01 | Complete | Open this executable program and update pointers. |
+| 02 | Complete | Audit module boundaries and add migration gates. |
+| 03 | Complete | Move the first low-risk backend boundary. |
+| 04 | Complete | Add minimal Context Orchestrator runtime. |
 | 05 | Future | Mature Memory Engine. |
 | 06 | Future | Mature Capability Selector. |
 | 07 | Future | Explicit `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime. |

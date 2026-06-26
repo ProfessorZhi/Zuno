@@ -5,6 +5,13 @@
 Promote the current context foundation into a callable, focused
 `ContextOrchestrator` without rewriting `GeneralAgent` streaming.
 
+## Status
+
+Complete for this first runtime slice. This phase adds callable pre-call
+context preparation only; mature memory extraction/retrieval/consolidation,
+the full Post-turn Pipeline, and full LangGraph runtime graph remain later
+phase targets.
+
 ## Required Behavior
 
 - `ContextOrchestrator`
@@ -38,3 +45,10 @@ python .agent/scripts/verify_module_boundaries.py
 python .agent/scripts/verify_agent_system.py
 git diff --check
 ```
+
+## Evidence
+
+- `src/backend/zuno/services/application/context/orchestrator.py`
+- `tests/test_context_orchestrator.py`
+- `docs/architecture/current-architecture.md`
+- `.agent/references/context-memory-map.md`

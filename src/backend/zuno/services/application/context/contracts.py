@@ -20,6 +20,8 @@ class ContextSource(StrEnum):
 class ContextSelectionReason(StrEnum):
     PINNED_INSTRUCTION = "pinned_instruction"
     RECENT_USER_TURN = "recent_user_turn"
+    RECENT_ASSISTANT_TURN = "recent_assistant_turn"
+    EXPLICIT_USER_CONSTRAINT = "explicit_user_constraint"
     RELEVANT_MEMORY = "relevant_memory"
     KNOWLEDGE_RESULT = "knowledge_result"
     TOOL_RESULT_REQUIRED = "tool_result_required"
@@ -62,6 +64,62 @@ class TokenBudgetPolicy:
 
     def remaining_after(self, used_tokens: int) -> int:
         return max(0, self.available_context_tokens() - used_tokens)
+
+    def apply(
+        self,
+        items: tuple[ContextItem, ...] | list[ContextItem],
+    ) -> tuple[tuple[ContextItem, ...], tuple[ContextItem, ...]]:
+        available = self.available_context_tokens()
+        selected: list[ContextItem] = []
+        dropped: list[ContextItem] = []
+        used_tokens = 0
+
+        groups: dict[str, list[ContextItem]] = {}
+        ungrouped: list[ContextItem] = []
+        for item in items:
+            group_id = item.metadata.get("group_id")
+            if group_id:
+                groups.setdefault(str(group_id), []).append(item)
+            else:
+                ungrouped.append(item)
+
+        candidates: list[tuple[int, str, tuple[ContextItem, ...]]] = [
+            (
+                max(group_item.priority for group_item in group_items),
+                group_id,
+                tuple(group_items),
+            )
+            for group_id, group_items in groups.items()
+        ]
+        candidates.extend((item.priority, item.item_id, (item,)) for item in ungrouped)
+        candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
+
+        for priority, _name, group_items in candidates:
+            group_tokens = sum(item.token_estimate for item in group_items)
+            protected = priority >= 90
+            if protected or used_tokens + group_tokens <= available:
+                selected.extend(group_items)
+                used_tokens += group_tokens
+            else:
+                dropped.extend(
+                    ContextItem(
+                        item_id=item.item_id,
+                        source=item.source,
+                        content=item.content,
+                        token_estimate=item.token_estimate,
+                        priority=item.priority,
+                        reason=ContextSelectionReason.LOW_PRIORITY_EVICTED,
+                        source_event_ids=item.source_event_ids,
+                        metadata=dict(item.metadata),
+                    )
+                    for item in group_items
+                )
+
+        selected_ids = {item.item_id for item in selected}
+        ordered_selected = tuple(item for item in items if item.item_id in selected_ids)
+        dropped_ids = {item.item_id for item in dropped}
+        ordered_dropped = tuple(item for item in dropped if item.item_id in dropped_ids)
+        return ordered_selected, ordered_dropped
 
     def to_dict(self, *, used_tokens: int = 0) -> dict[str, Any]:
         return {
@@ -164,9 +222,41 @@ class ModelContextPacket:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class ContextPreparationInput:
+    execution_context: AgentExecutionContext
+    messages: tuple[Any, ...] = ()
+    system_instruction: str = ""
+    token_budget: TokenBudgetPolicy = field(
+        default_factory=lambda: TokenBudgetPolicy(
+            max_tokens=4000,
+            reserved_response_tokens=800,
+        )
+    )
+    memory_items: tuple[ContextItem, ...] = ()
+    knowledge_evidence_items: tuple[ContextItem, ...] = ()
+    capability_items: tuple[ContextItem, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ContextPreparationResult:
+    packet: ModelContextPacket
+    selected_items: tuple[ContextItem, ...]
+    dropped_items: tuple[ContextItem, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "packet": self.packet.to_dict(),
+            "selected_items": [item.to_dict() for item in self.selected_items],
+            "dropped_items": [item.to_dict() for item in self.dropped_items],
+        }
+
+
 __all__ = [
     "AgentExecutionContext",
     "ContextItem",
+    "ContextPreparationInput",
+    "ContextPreparationResult",
     "ContextSelectionReason",
     "ContextSource",
     "ContextTrace",
