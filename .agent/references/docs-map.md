@@ -22,7 +22,7 @@
 - `.agent/references/`：精简导航、任务路由、工作流和查表层。
 - `.agent/programs/current.md`：当前执行状态。
 - `.agent/programs/implementation-roadmap.md`：当前执行计划总目录。
-- `.agent/programs/phase-*.md`：当前计划的平铺 phase 文件。
+- `.agent/programs/PHASE*.md`：当前计划的平铺 phase 文件；每个新 program 从 `PHASE01` 开始。
 - `.agent/programs/closure-checklist.md`：当前 phase 收口清单。
 - `.agent/architecture/near-term/`：近期目标架构详细设计。
 - `.agent/architecture/future/`：长期方向，不是当前实现目标。

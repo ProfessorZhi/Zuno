@@ -22,13 +22,15 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
         ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
         ".agent/scripts/verify_module_boundaries.py",
+        ".agent/system.yaml",
         ".agent/programs/README.md",
         ".agent/programs/implementation-roadmap.md",
-        ".agent/programs/phase-05-memory-engine.md",
-        ".agent/programs/phase-06-capability-tool-retrieval.md",
-        ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
-        ".agent/programs/phase-08-langgraph-runtime.md",
-        ".agent/programs/phase-09-product-trace-eval-closure.md",
+        ".agent/programs/PHASE01_public-architecture-surface.md",
+        ".agent/programs/PHASE02_local-agent-skill-system.md",
+        ".agent/programs/PHASE03_tools-tests-guardrails.md",
+        ".agent/programs/PHASE04_backend-facade-layers.md",
+        ".agent/programs/PHASE05_large-file-light-split.md",
+        ".agent/programs/PHASE06_architecture-diagrams-html.md",
         ".agent/programs/closure-checklist.md",
         "docs/history/programs/zuno-target-runtime-v2/README.md",
         "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
@@ -126,7 +128,8 @@ def test_agent_readme_documents_workflow_library_boundaries() -> None:
         ".agent/references/",
         ".agent/programs/",
         ".agent/architecture/",
-        "类似 skill 的任务路由",
+        "Zuno Local Agent Skill System",
+        "本地 Agent Skill System",
         "新写或重写的 Agent 文档默认使用中文",
     ]
 
@@ -134,7 +137,7 @@ def test_agent_readme_documents_workflow_library_boundaries() -> None:
         assert phrase in content, f"missing workflow-library phrase: {phrase}"
 
 
-def test_current_program_points_to_active_v2_and_archives_old_candidate() -> None:
+def test_current_program_points_to_architecture_surface_and_archives_old_candidate() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -144,7 +147,8 @@ def test_current_program_points_to_active_v2_and_archives_old_candidate() -> Non
     )
 
     assert "当前 active program 就是 `.agent/programs/` 根目录这一层" in current
-    assert "Phase 05 记忆引擎" in current
+    assert "zuno-architecture-surface-cleanup-v1" in current
+    assert "PHASE01" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
     assert "context-memory-agent-runtime-v1" not in programs_index
@@ -223,26 +227,29 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
 
 
-def test_active_v2_program_has_phase_execution_plan() -> None:
+def test_active_program_starts_from_phase01_and_has_surface_cleanup_plan() -> None:
     roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
         encoding="utf-8"
     )
-    phase05 = (REPO_ROOT / ".agent" / "programs" / "phase-05-memory-engine.md").read_text(
-        encoding="utf-8"
-    )
-    phase07 = (
-        REPO_ROOT / ".agent" / "programs" / "phase-07-graphrag-llm-entity-extraction.md"
+    phase01 = (
+        REPO_ROOT / ".agent" / "programs" / "PHASE01_public-architecture-surface.md"
+    ).read_text(encoding="utf-8")
+    phase02 = (
+        REPO_ROOT / ".agent" / "programs" / "PHASE02_local-agent-skill-system.md"
     ).read_text(encoding="utf-8")
 
     for phrase in [
-        "Phase 05：记忆引擎",
-        "Phase 06：能力与工具检索",
-        "Phase 07：GraphRAG LLM 实体抽取与知识检索融合",
-        "Phase 08：GeneralAgent LangGraph 运行时",
-        "Phase 09：产品边界、Trace 与 Eval 收口",
+        "zuno-architecture-surface-cleanup-v1",
+        "PHASE01：公开封面与架构叙事收口",
+        "PHASE02：本地 Agent Skill System 收口",
+        "PHASE03：tools / tests 工作流防回归",
+        "PHASE04：后端六层 facade 分层",
+        "PHASE05：大文件轻拆",
+        "PHASE06：架构图与 HTML 展示页",
+        "每次新 program 都从 `PHASE01` 开始编号",
     ]:
         assert phrase in roadmap
 
-    assert "Phase 05：记忆引擎" in phase05
-    assert "model_refs.entity_extraction_llm_id" in phase07
-    assert "规则/正则只辅助日期、金额、条款号" in phase07
+    assert "README" in phase01
+    assert "Zuno Local Agent Skill System" in phase02
+    assert "Lessons Learned" in phase02

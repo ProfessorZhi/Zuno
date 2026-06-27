@@ -12,6 +12,7 @@ REQUIRED_PATHS = [
     "src/backend/zuno/AGENTS.md",
     "tools/evals/zuno/AGENTS.md",
     ".agent/README.md",
+    ".agent/system.yaml",
     ".agent/references/README.md",
     ".agent/references/task-routing.md",
     ".agent/references/workflow.md",
@@ -36,11 +37,12 @@ REQUIRED_PATHS = [
     ".agent/programs/README.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/phase-05-memory-engine.md",
-    ".agent/programs/phase-06-capability-tool-retrieval.md",
-    ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
-    ".agent/programs/phase-08-langgraph-runtime.md",
-    ".agent/programs/phase-09-product-trace-eval-closure.md",
+    ".agent/programs/PHASE01_public-architecture-surface.md",
+    ".agent/programs/PHASE02_local-agent-skill-system.md",
+    ".agent/programs/PHASE03_tools-tests-guardrails.md",
+    ".agent/programs/PHASE04_backend-facade-layers.md",
+    ".agent/programs/PHASE05_large-file-light-split.md",
+    ".agent/programs/PHASE06_architecture-diagrams-html.md",
     ".agent/programs/closure-checklist.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
@@ -60,6 +62,11 @@ FORBIDDEN_PATHS = [
     ".agent/programs/zuno-target-runtime-v2",
     ".agent/programs/implementation-phases",
     ".agent/programs/evidence",
+    ".agent/programs/phase-05-memory-engine.md",
+    ".agent/programs/phase-06-capability-tool-retrieval.md",
+    ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
+    ".agent/programs/phase-08-langgraph-runtime.md",
+    ".agent/programs/phase-09-product-trace-eval-closure.md",
     ".agent/notes",
     ".agent/tmp",
     ".agent/logs",
@@ -97,6 +104,7 @@ def main() -> int:
         "tools/evals/zuno/AGENTS.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
+        ".agent/system.yaml",
         ".agent/programs/",
         "zuno-ideal-architecture-and-repo-layout.html",
         "前台文档默认中文",
@@ -140,7 +148,7 @@ def main() -> int:
         ".agent/references/",
         ".agent/programs/",
         ".agent/architecture/",
-        "类似 skill 的任务路由",
+        "本地 Agent Skill System",
         "新写或重写的 Agent 文档默认使用中文",
     ]:
         if phrase not in agent_readme:
@@ -174,11 +182,12 @@ def main() -> int:
             "README.md",
             "current.md",
             "implementation-roadmap.md",
-            "phase-05-memory-engine.md",
-            "phase-06-capability-tool-retrieval.md",
-            "phase-07-graphrag-llm-entity-extraction.md",
-            "phase-08-langgraph-runtime.md",
-            "phase-09-product-trace-eval-closure.md",
+            "PHASE01_public-architecture-surface.md",
+            "PHASE02_local-agent-skill-system.md",
+            "PHASE03_tools-tests-guardrails.md",
+            "PHASE04_backend-facade-layers.md",
+            "PHASE05_large-file-light-split.md",
+            "PHASE06_architecture-diagrams-html.md",
             "closure-checklist.md",
         ]
     )
@@ -187,24 +196,35 @@ def main() -> int:
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "Phase 05：记忆引擎",
-        "Phase 06：能力与工具检索",
-        "Phase 07：GraphRAG LLM 实体抽取与知识检索融合",
-        "Phase 08：GeneralAgent LangGraph 运行时",
-        "Phase 09：产品边界、Trace 与 Eval 收口",
-        "所有 phase 文件平铺在 `.agent/programs/`",
+        "zuno-architecture-surface-cleanup-v1",
+        "PHASE01：公开封面与架构叙事收口",
+        "PHASE02：本地 Agent Skill System 收口",
+        "PHASE03：tools / tests 工作流防回归",
+        "PHASE04：后端六层 facade 分层",
+        "PHASE05：大文件轻拆",
+        "PHASE06：架构图与 HTML 展示页",
+        "每次新 program 都从 `PHASE01` 开始编号",
     ]:
         if phrase not in roadmap:
-            errors.append(f"active V2 roadmap missing phase execution phrase: {phrase}")
+            errors.append(f"active architecture surface roadmap missing phrase: {phrase}")
 
-    phase07 = _read(".agent/programs/phase-07-graphrag-llm-entity-extraction.md")
+    phase02 = _read(".agent/programs/PHASE02_local-agent-skill-system.md")
     for phrase in [
-        "GraphRAG 的实体是语义节点",
-        "model_refs.entity_extraction_llm_id",
-        "规则/正则只辅助日期、金额、条款号",
+        "Zuno Local Agent Skill System",
+        "When To Use",
+        "Lessons Learned",
     ]:
-        if phrase not in phase07:
-            errors.append(f"Phase 07 missing LLM extraction phrase: {phrase}")
+        if phrase not in phase02:
+            errors.append(f"PHASE02 missing local skill system phrase: {phrase}")
+
+    system_yaml = _read(".agent/system.yaml")
+    for phrase in [
+        "new_program_first_phase: \"PHASE01\"",
+        "skill_routes:",
+        ".agent/references/workflow.md",
+    ]:
+        if phrase not in system_yaml:
+            errors.append(f".agent/system.yaml missing route phrase: {phrase}")
 
     if errors:
         for error in errors:

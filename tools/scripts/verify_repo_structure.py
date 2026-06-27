@@ -10,17 +10,19 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_PATHS = [
     "AGENTS.md",
     ".agent/README.md",
+    ".agent/system.yaml",
     ".agent/references/README.md",
     ".agent/references/task-routing.md",
     ".agent/references/workflow.md",
     ".agent/references/docs-map.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/phase-05-memory-engine.md",
-    ".agent/programs/phase-06-capability-tool-retrieval.md",
-    ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
-    ".agent/programs/phase-08-langgraph-runtime.md",
-    ".agent/programs/phase-09-product-trace-eval-closure.md",
+    ".agent/programs/PHASE01_public-architecture-surface.md",
+    ".agent/programs/PHASE02_local-agent-skill-system.md",
+    ".agent/programs/PHASE03_tools-tests-guardrails.md",
+    ".agent/programs/PHASE04_backend-facade-layers.md",
+    ".agent/programs/PHASE05_large-file-light-split.md",
+    ".agent/programs/PHASE06_architecture-diagrams-html.md",
     ".agent/programs/closure-checklist.md",
     ".agent/architecture/README.md",
     ".agent/architecture/future/README.md",
@@ -98,6 +100,11 @@ FORBIDDEN_CURRENT_PATHS = [
     ".agent/programs/official-graphrag-cleanup-v1",
     ".agent/programs/zuno-target-runtime-v2",
     ".agent/programs/implementation-phases",
+    ".agent/programs/phase-05-memory-engine.md",
+    ".agent/programs/phase-06-capability-tool-retrieval.md",
+    ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
+    ".agent/programs/phase-08-langgraph-runtime.md",
+    ".agent/programs/phase-09-product-trace-eval-closure.md",
     "docs/superpowers",
     "src/frontend",
     "domain-packs",
@@ -110,13 +117,14 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "这是仓库唯一的 Agent 入口",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
+        ".agent/system.yaml",
         ".agent/programs/",
         ".agent/architecture/",
         "前台文档默认中文",
     ],
     ".agent/README.md": [
-        "Agent 工作流库",
-        "类似 skill 的任务路由",
+        "Zuno Local Agent Skill System",
+        "本地 Agent Skill System",
         "新写或重写的 Agent 文档默认使用中文",
     ],
     "docs/README.md": [
@@ -142,8 +150,9 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "Phase 11C：active runtime cleanup 已完成",
         "Phase 12：已通过 target migration closure evidence 关闭",
         "受限历史兼容",
-        "Phase 05：记忆引擎",
-        "Phase 09：产品边界、Trace 与 Eval 收口",
+        "zuno-architecture-surface-cleanup-v1",
+        "PHASE01：公开封面与架构叙事收口",
+        "PHASE06：架构图与 HTML 展示页",
     ],
 }
 
@@ -223,35 +232,49 @@ def verify_target_architecture_html() -> list[str]:
     return errors
 
 
-def verify_active_v2_phase_plan() -> list[str]:
+def verify_active_architecture_surface_phase_plan() -> list[str]:
     roadmap_path = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     if not roadmap_path.exists():
-        return ["missing active V2 implementation roadmap"]
+        return ["missing active architecture surface implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
     errors = [
-        f"active V2 roadmap missing phase plan: {phrase}"
+        f"active architecture surface roadmap missing phase plan: {phrase}"
         for phrase in [
-            "Phase 05：记忆引擎",
-            "Phase 06：能力与工具检索",
-            "Phase 07：GraphRAG LLM 实体抽取与知识检索融合",
-            "Phase 08：GeneralAgent LangGraph 运行时",
-            "Phase 09：产品边界、Trace 与 Eval 收口",
-            "所有 phase 文件平铺在 `.agent/programs/`",
+            "zuno-architecture-surface-cleanup-v1",
+            "PHASE01：公开封面与架构叙事收口",
+            "PHASE02：本地 Agent Skill System 收口",
+            "PHASE03：tools / tests 工作流防回归",
+            "PHASE04：后端六层 facade 分层",
+            "PHASE05：大文件轻拆",
+            "PHASE06：架构图与 HTML 展示页",
+            "每次新 program 都从 `PHASE01` 开始编号",
         ]
         if phrase not in roadmap
     ]
-    phase07_path = REPO_ROOT / ".agent/programs/phase-07-graphrag-llm-entity-extraction.md"
-    if not phase07_path.exists():
-        errors.append("missing active Phase 07 GraphRAG LLM extraction plan")
+    phase02_path = REPO_ROOT / ".agent/programs/PHASE02_local-agent-skill-system.md"
+    if not phase02_path.exists():
+        errors.append("missing active PHASE02 local Agent Skill System plan")
     else:
-        phase07 = phase07_path.read_text(encoding="utf-8")
+        phase02 = phase02_path.read_text(encoding="utf-8")
         for phrase in [
-            "model_refs.entity_extraction_llm_id",
-            "LLM 抽取是默认主路径",
-            "规则/正则只辅助日期、金额、条款号",
+            "Zuno Local Agent Skill System",
+            "When To Use",
+            "Lessons Learned",
         ]:
-            if phrase not in phase07:
-                errors.append(f"Phase 07 GraphRAG LLM extraction plan missing phrase: {phrase}")
+            if phrase not in phase02:
+                errors.append(f"PHASE02 local Agent Skill System plan missing phrase: {phrase}")
+    system_yaml_path = REPO_ROOT / ".agent/system.yaml"
+    if not system_yaml_path.exists():
+        errors.append("missing .agent/system.yaml")
+    else:
+        system_yaml = system_yaml_path.read_text(encoding="utf-8")
+        for phrase in [
+            "new_program_first_phase: \"PHASE01\"",
+            "skill_routes:",
+            ".agent/references/workflow.md",
+        ]:
+            if phrase not in system_yaml:
+                errors.append(f".agent/system.yaml missing phrase: {phrase}")
     return errors
 
 
@@ -262,7 +285,7 @@ def run_verification() -> VerificationResult:
             *verify_forbidden_current_paths(),
             *verify_doc_phrases(),
             *verify_target_architecture_html(),
-            *verify_active_v2_phase_plan(),
+            *verify_active_architecture_surface_phase_plan(),
         ]
     )
 

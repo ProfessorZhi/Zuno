@@ -71,7 +71,7 @@ drift_like -> drift
 ## 仓库前台目标
 
 - `docs/` 只保留正式人类真相：当前架构、目标架构、路线图、ADR、证据、术语和 history index。
-- `.agent/` 只保留可执行 Agent 工作流：active program、target design、references、scripts、templates。
+- `.agent/` 只保留本地 Agent Skill System：active program、target design、references skills、templates 和过渡期 verifier。
 - `docs/history/` 保存旧 lessons、old phases、retired plans、replaced fragments、completed programs、旧 audits/specs/runbooks/prototypes。
 - transient screenshots、browser snapshots、caches 和 local reports 不进入提交的前台路径。
 - 新增或重写的前台文档使用中文；历史档案可保留原文。
@@ -115,10 +115,11 @@ Canonical near-term Markdown：
 
 执行顺序：
 
-1. Phase 05：记忆引擎
-2. Phase 06 Capability / Tool Retrieval
-3. Phase 07 GraphRAG LLM Entity Extraction / Knowledge Retrieval / Fusion
-4. Phase 08 GeneralAgent LangGraph Runtime
-5. Phase 09：产品边界、Trace 与 Eval 收口
+1. PHASE01：公开封面与架构叙事收口
+2. PHASE02：本地 Agent Skill System 收口
+3. PHASE03：tools / tests 工作流防回归
+4. PHASE04：后端六层 facade 分层
+5. PHASE05：大文件轻拆
+6. PHASE06：架构图与 HTML 展示页
 
 这些阶段在代码、测试、trace evidence 和文档边界更新证明前都保持 Target。

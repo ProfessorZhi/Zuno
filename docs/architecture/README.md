@@ -16,7 +16,7 @@
 
 - `.agent/programs/`
 
-它接在已完成的 Target Architecture Migration V1 closure 之后，按 Phase 05-09 落地目标 runtime。
+当前 program 是 `zuno-architecture-surface-cleanup-v1`。它接在目标运行时第一轮 slice 之后，优先做成熟项目封面化、分层目录计划、本地 Agent Skill System、tools/tests 防回归和架构图展示收口。
 
 已完成或被替换的程序都归档在：
 
@@ -26,7 +26,7 @@
 
 - `docs/history/programs/zuno-target-architecture-migration-v1/` 是已完成的 V1 迁移闭环。
 - `docs/history/programs/official-graphrag-cleanup-v1/` 是已完成的 GraphRAG 清理证据。
-- `docs/history/programs/zuno-target-runtime-v2/` 保存 V2 已完成 Phase 00-04 的历史材料。
+- `docs/history/programs/zuno-target-runtime-v2/` 保存已被当前 program 替换的目标运行时 V2 历史材料。
 
 ## 当前前台结构
 
@@ -49,4 +49,4 @@ docs/architecture/
 - Decisions：仍影响主线的正式架构决策。
 - History：完成或被替换的计划、程序、阶段、审计、规格和旧 Agent 工作流材料。
 
-`AGENTS.md` 是仓库级 Agent 入口；`.agent/` 是 Agent 工作流库；正式结论进入 `docs/`。
+`AGENTS.md` 是仓库级 Agent 入口；`.agent/` 是本地 Agent Skill System；正式结论进入 `docs/`。

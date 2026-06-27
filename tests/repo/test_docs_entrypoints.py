@@ -82,8 +82,8 @@ def test_agent_entrypoint_and_agent_folder_form_one_workflow() -> None:
     ]:
         assert phrase in agents
 
-    assert "Agent 工作流库" in agent_readme
-    assert "类似 skill 的任务路由" in agent_readme
+    assert "Zuno Local Agent Skill System" in agent_readme
+    assert "本地 Agent Skill System" in agent_readme
     assert "任务路由层" in routing
     assert "具体执行步骤、停止条件、验证和收尾规则" in workflow
 
@@ -100,8 +100,9 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "docs/architecture/audits",
         "docs/development",
         "前台文档默认使用中文",
-        "Phase 05：记忆引擎",
-        "Phase 09：产品边界、Trace 与 Eval 收口",
+        "zuno-architecture-surface-cleanup-v1",
+        "PHASE01：公开封面与架构叙事收口",
+        "PHASE06：架构图与 HTML 展示页",
     ]:
         assert phrase in content
 
@@ -197,8 +198,9 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "Phase 11C：active runtime cleanup 已完成",
         "Phase 12：已通过 target migration closure evidence 关闭",
         "受限历史兼容",
-        "Phase 05：记忆引擎",
-        "Phase 09：产品边界、Trace 与 Eval 收口",
+        "zuno-architecture-surface-cleanup-v1",
+        "PHASE01：公开封面与架构叙事收口",
+        "PHASE06：架构图与 HTML 展示页",
     ]:
         assert phrase in roadmap
 

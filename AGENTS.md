@@ -15,12 +15,12 @@ AGENTS.md
   -> 唯一总入口：边界、阅读顺序、任务路由、收尾规则
 
 .agent/
-  -> Agent 工作流库
-     references/    当前程序、docs map、code map、任务路由、工作流、验证命令和已知坑
+  -> Zuno Local Agent Skill System
+     references/    本地项目 skills、lessons、playbooks、任务路由和已知坑
      architecture/  目标架构设计工作集
      programs/      当前平铺执行计划、当前状态、各 phase 文件和收口清单
-     scripts/       验证器和本地操作辅助
-     templates/     可复用提示和报告模板
+     templates/     skill 执行模板和报告骨架
+     scripts/       过渡期保留的验证器；长期自动化目标位置是 tools/agent 与 tools/verify
 
 docs/
   -> 面向人的正式文档真相
@@ -42,7 +42,7 @@ docs/history/
 
 - `docs/`：正式人类文档真相。
 - `AGENTS.md`：仓库级 Agent 入口和工作流契约。
-- `.agent/`：Agent 工作流库、参考、模板、脚本和本地操作辅助。
+- `.agent/`：Zuno 本地 Agent Skill System，保存项目级 skills、执行计划、目标设计和模板。
 - `docs/history/`：过时计划、旧程序、退休迁移说明和被替换设计的归档。
 
 正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。历史材料移动到 `docs/history/`，不要因为它不再当前有效就删除。
@@ -56,17 +56,18 @@ docs/history/
 3. `docs/architecture/target-architecture.md`
 4. `docs/architecture/roadmap.md`
 5. `.agent/README.md`
-6. `.agent/references/current-program.md`
-7. `.agent/references/docs-map.md`
-8. `.agent/references/code-map.md`
-9. `.agent/references/task-routing.md`
-10. `.agent/references/workflow.md`
-11. `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
-12. `.agent/architecture/near-term/01-target-runtime-architecture.md`
-13. `.agent/architecture/near-term/02-context-memory-architecture.md`
-14. `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
-15. `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
-16. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
+6. `.agent/system.yaml`
+7. `.agent/references/current-program.md`
+8. `.agent/references/docs-map.md`
+9. `.agent/references/code-map.md`
+10. `.agent/references/task-routing.md`
+11. `.agent/references/workflow.md`
+12. `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+13. `.agent/architecture/near-term/01-target-runtime-architecture.md`
+14. `.agent/architecture/near-term/02-context-memory-architecture.md`
+15. `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
+16. `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
+17. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
 实现任务在读完相关文档后再读代码。不要只凭文档推断 runtime 行为。
 
@@ -90,21 +91,22 @@ docs/history/
 
 - `.agent/programs/`
 
-当前目标：在 Target Architecture Migration V1 收口之后，以小步可验证方式落地目标运行时：模块边界闸门、低风险后端应用边界移动、最小可调用 Context Orchestrator 运行时，以及后续 Phase 05-09。
+当前目标：停止继续堆 runtime feature，先完成成熟项目封面化、分层目录计划、本地 Agent Skill System、tools/tests 防回归和架构图展示收口。
 
 最新完成程序归档在：
 
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 
-当前 V2 分解：
+当前 program：
 
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/current.md`
-- `.agent/programs/phase-05-memory-engine.md`
-- `.agent/programs/phase-06-capability-tool-retrieval.md`
-- `.agent/programs/phase-07-graphrag-llm-entity-extraction.md`
-- `.agent/programs/phase-08-langgraph-runtime.md`
-- `.agent/programs/phase-09-product-trace-eval-closure.md`
+- `.agent/programs/PHASE01_public-architecture-surface.md`
+- `.agent/programs/PHASE02_local-agent-skill-system.md`
+- `.agent/programs/PHASE03_tools-tests-guardrails.md`
+- `.agent/programs/PHASE04_backend-facade-layers.md`
+- `.agent/programs/PHASE05_large-file-light-split.md`
+- `.agent/programs/PHASE06_architecture-diagrams-html.md`
 - `.agent/programs/closure-checklist.md`
 
 归档 V1 / 旧清理材料：
@@ -126,7 +128,7 @@ docs/history/
 每次新需求、新功能、重构或架构替换，都判断是否需要同步：
 
 1. `.agent/programs/`
-2. 平铺 phase 文档
+2. 平铺 phase 文档；每个新 program 从 `PHASE01` 开始，旧 active phase 文件从当前前台移除
 3. 规格、ADR 或审计
 4. `docs/history/`
 5. `docs/architecture/README.md`
@@ -137,7 +139,7 @@ docs/history/
 10. `.agent/references/docs-map.md`
 11. `.agent/references/task-routing.md` 或 `.agent/references/workflow.md`
 12. `.agent/programs/`
-13. `.agent/scripts/` 或 `.agent/templates/`
+13. `.agent/system.yaml`、`.agent/references/` skill 文件或 `.agent/templates/`
 14. `.gitignore`
 15. 如果产生修改，运行验证、提交、推送
 

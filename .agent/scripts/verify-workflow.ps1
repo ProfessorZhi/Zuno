@@ -29,15 +29,22 @@ Require-Path ".agent\references\code-map.md"
 Require-Path ".agent\references\task-routing.md"
 Require-Path ".agent\references\workflow.md"
 Require-Path ".agent\references\verification-map.md"
+Require-Path ".agent\system.yaml"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
-Require-Path ".agent\programs\phase-05-memory-engine.md"
-Require-Path ".agent\programs\phase-06-capability-tool-retrieval.md"
-Require-Path ".agent\programs\phase-07-graphrag-llm-entity-extraction.md"
-Require-Path ".agent\programs\phase-08-langgraph-runtime.md"
-Require-Path ".agent\programs\phase-09-product-trace-eval-closure.md"
+Require-Path ".agent\programs\PHASE01_public-architecture-surface.md"
+Require-Path ".agent\programs\PHASE02_local-agent-skill-system.md"
+Require-Path ".agent\programs\PHASE03_tools-tests-guardrails.md"
+Require-Path ".agent\programs\PHASE04_backend-facade-layers.md"
+Require-Path ".agent\programs\PHASE05_large-file-light-split.md"
+Require-Path ".agent\programs\PHASE06_architecture-diagrams-html.md"
 Require-Path ".agent\programs\closure-checklist.md"
 Require-NoPath ".agent\programs\zuno-target-runtime-v2"
+Require-NoPath ".agent\programs\phase-05-memory-engine.md"
+Require-NoPath ".agent\programs\phase-06-capability-tool-retrieval.md"
+Require-NoPath ".agent\programs\phase-07-graphrag-llm-entity-extraction.md"
+Require-NoPath ".agent\programs\phase-08-langgraph-runtime.md"
+Require-NoPath ".agent\programs\phase-09-product-trace-eval-closure.md"
 Require-NoPath ".agent\workflows"
 Require-NoPath ".agent\skills"
 Require-Path ".agent\templates\requirement-intake.md"
@@ -80,8 +87,11 @@ $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md
 if ($currentProgram -notmatch "\.agent/programs/") {
     $failures.Add("current-program.md does not point to the flat active program directory")
 }
-if ($currentProgram -notmatch "phase-07-graphrag-llm-entity-extraction.md") {
-    $failures.Add("current-program.md missing GraphRAG LLM extraction phase")
+if ($currentProgram -notmatch "PHASE01_public-architecture-surface.md") {
+    $failures.Add("current-program.md missing PHASE01 public architecture surface phase")
+}
+if ($currentProgram -notmatch "zuno-architecture-surface-cleanup-v1") {
+    $failures.Add("current-program.md missing active architecture surface program id")
 }
 
 if ($failures.Count -gt 0) {

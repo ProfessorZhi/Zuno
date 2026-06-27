@@ -1,25 +1,26 @@
 # 工作流
 
-本文件替代旧 workflow 目录。Zuno 的本地工作流由 `AGENTS.md` 总入口和 `.agent/references/` 参考文件共同组成。
+本文件替代旧 workflow 目录。Zuno 的本地工作流由 `AGENTS.md` 总入口、`.agent/system.yaml` 路由和 `.agent/references/` 本地 skills 共同组成。
 
 ## 通用执行流程
 
 1. 读 `AGENTS.md`，确认任务边界。
-2. 按 `.agent/references/task-routing.md` 判断任务类型。
-3. 读 `docs/architecture/current-architecture.md`、`target-architecture.md`、`roadmap.md`。
-4. 读 `.agent/references/docs-map.md`、`code-map.md`、`verification-map.md`。
-5. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
-6. 执行最小必要修改。
-7. 过时材料移动到 `docs/history/`，不留在前台路径。
-8. 同步验证器和测试。
-9. 运行最小有效验证。
-10. 修改任务完成后 commit 并 push，除非验证或 push 被阻塞。
+2. 读 `.agent/system.yaml`，根据路径选择需要的 skills、templates 和 verify 命令。
+3. 按 `.agent/references/task-routing.md` 判断任务类型。
+4. 读 `docs/architecture/current-architecture.md`、`target-architecture.md`、`roadmap.md`。
+5. 读 `.agent/references/docs-map.md`、`code-map.md`、`verification-map.md`。
+6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
+7. 执行最小必要修改。
+8. 过时材料移动到 `docs/history/`，不留在前台路径。
+9. 同步验证器和测试。
+10. 运行最小有效验证。
+11. 修改任务完成后 commit 并 push，除非验证或 push 被阻塞。
 
 ## 文档维护流程
 
 - 前台文档默认使用中文。
 - `docs/` 只放正式人类真相。
-- `.agent/` 只放 Agent 工作流、参考、目标设计、当前 program、脚本和模板。
+- `.agent/` 只放本地 Agent Skill System：skills、目标设计、当前 program、模板和过渡期 verifier。
 - `docs/history/` 统一存放旧 audit、旧 spec、旧 runbook、旧 UI 原型、旧 phase、旧 program 和被替换设计。
 - 不把 transient screenshot、browser snapshot、cache 或 local report 提交到仓库。
 
@@ -40,7 +41,8 @@
 4. 目标设计放 `.agent/architecture/near-term/`。
 5. 正式结论放 `docs/architecture/`。
 6. 执行计划放 `.agent/programs/` 根层，当前状态、总目录、phase 文件和收口清单平铺，不再按 program 子目录嵌套。
-7. 旧计划和旧设计放 `docs/history/`；如果执行计划被替换，旧计划从 `.agent/programs/` 当前前台移除。
+7. 每个新执行计划都从 `PHASE01` 开始，不能沿用被替换 program 的旧 phase 编号。
+8. 旧计划和旧设计放 `docs/history/`；如果执行计划被替换，旧 phase 文件从 `.agent/programs/` 当前前台移除。
 
 ## 具体执行步骤、停止条件、验证和收尾规则
 

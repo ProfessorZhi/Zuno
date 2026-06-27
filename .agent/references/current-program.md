@@ -4,16 +4,17 @@
 
 - `.agent/programs/`
 
-这个程序是在 Zuno Target Architecture Migration V1 收口后的受控首个实现切片。它打开模块边界闸门，迁移一个低风险后端应用边界，并引入最小可调用 Context Orchestrator。
+当前 program 是 `zuno-architecture-surface-cleanup-v1`。它接在目标运行时第一轮 slice 之后，目标不是继续堆 feature，而是成熟项目封面化、分层目录落地、本地 Agent Skill System 收口、tools/tests 防回归和架构图展示。
 
 后续执行顺序必须线性推进：
 
 ```text
-Phase 05：记忆引擎
-Phase 06 Capability / Tool Retrieval
-Phase 07 GraphRAG LLM Entity Extraction / Knowledge Retrieval / Fusion
-Phase 08 GeneralAgent LangGraph Runtime
-Phase 09：产品边界、Trace 与 Eval 收口
+PHASE01：公开封面与架构叙事收口
+PHASE02：本地 Agent Skill System 收口
+PHASE03：tools / tests 工作流防回归
+PHASE04：后端六层 facade 分层
+PHASE05：大文件轻拆
+PHASE06：架构图与 HTML 展示页
 ```
 
 最新完成程序：
@@ -46,11 +47,12 @@ Phase 09：产品边界、Trace 与 Eval 收口
 - `.agent/programs/README.md`
 - `.agent/programs/current.md`
 - `.agent/programs/implementation-roadmap.md`
-- `.agent/programs/phase-05-memory-engine.md`
-- `.agent/programs/phase-06-capability-tool-retrieval.md`
-- `.agent/programs/phase-07-graphrag-llm-entity-extraction.md`
-- `.agent/programs/phase-08-langgraph-runtime.md`
-- `.agent/programs/phase-09-product-trace-eval-closure.md`
+- `.agent/programs/PHASE01_public-architecture-surface.md`
+- `.agent/programs/PHASE02_local-agent-skill-system.md`
+- `.agent/programs/PHASE03_tools-tests-guardrails.md`
+- `.agent/programs/PHASE04_backend-facade-layers.md`
+- `.agent/programs/PHASE05_large-file-light-split.md`
+- `.agent/programs/PHASE06_architecture-diagrams-html.md`
 - `.agent/programs/closure-checklist.md`
 - `docs/history/programs/zuno-target-runtime-v2/`
 - `docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
@@ -59,4 +61,4 @@ Phase 09：产品边界、Trace 与 Eval 收口
 - `docs/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
 - `.agent/architecture/near-term/01-target-runtime-architecture.md`
 
-不要把 V2 Target runtime 当作完全 Current，除非相关代码、测试和 trace evidence 已经证明。
+不要把 V2 Target runtime 当作完全 Current，除非相关代码、测试和 trace evidence 已经证明。不要把旧 active Phase 05-09 恢复到 `.agent/programs/` 当前前台；它们只属于 history。

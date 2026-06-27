@@ -8,7 +8,9 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - `.agent/programs/`
 
-它接在 Target Architecture Migration V1 收口之后，当前职责是按小 phase 落地目标 runtime。已完成的 V2 Phase 00-04 详细文件和证据归档在：
+当前 program 是 `zuno-architecture-surface-cleanup-v1`。它接在目标运行时第一轮 slice 之后，当前职责不是继续堆 feature，而是把 Zuno 收口成成熟项目外形：README、docs、`.agent`、目录蓝图、tools/tests 和架构图都能一眼讲清。
+
+已被替换的 V2 目标运行时材料归档在：
 
 - `docs/history/programs/zuno-target-runtime-v2/`
 
@@ -26,19 +28,20 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 ## 下一步
 
-按当前 active `.agent/programs/` 平铺计划线性执行：
+按当前 active `.agent/programs/` 平铺计划线性执行。每个新 program 都从 `PHASE01` 开始，旧 phase 文件从当前前台移除：
 
-1. Phase 05：记忆引擎
-2. Phase 06 Capability / Tool Retrieval
-3. Phase 07 GraphRAG LLM Entity Extraction / Knowledge Retrieval / Fusion
-4. Phase 08 GeneralAgent LangGraph Runtime
-5. Phase 09：产品边界、Trace 与 Eval 收口
+1. PHASE01：公开封面与架构叙事收口
+2. PHASE02：本地 Agent Skill System 收口
+3. PHASE03：tools / tests 工作流防回归
+4. PHASE04：后端六层 facade 分层
+5. PHASE05：大文件轻拆
+6. PHASE06：架构图与 HTML 展示页
 
 执行源是 `.agent/architecture/near-term/` 和 `.agent/programs/implementation-roadmap.md`。
 
 ## 当前候选主线
 
-`.agent/programs/` 是当前 active program 平铺目录。它不能把成熟 Context Orchestrator、Memory Engine、Dynamic Capability Selector、GraphRAG LLM entity extraction 或 full LangGraph runtime 写成 Current，直到代码和测试证明对应 slice。
+`.agent/programs/` 是当前 active program 平铺目录。它不能把成熟 Context Orchestrator、Memory Engine、Dynamic Capability Selector、GraphRAG LLM entity extraction、full LangGraph runtime、六层 facade 物理迁移或大文件轻拆写成 Current，直到代码和测试证明对应 slice。
 
 ## 受限历史兼容
 
@@ -50,20 +53,21 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 ## 当前基础切片收口
 
-- Phase 05 Context Contract foundation：`src/backend/zuno/services/application/context/`
-- Phase 06 Memory Layer foundation：`src/backend/zuno/services/memory/layers.py`
-- Phase 07 Capability System foundation：`src/backend/zuno/services/application/capabilities/`
-- Phase 08 GeneralAgent runtime integration：`src/backend/zuno/core/agents/general_agent.py`
+- V2 Context Contract foundation：`src/backend/zuno/services/application/context/`
+- V2 Memory Layer foundation：`src/backend/zuno/services/memory/layers.py`
+- V2 Capability System foundation：`src/backend/zuno/services/application/capabilities/`
+- V2 GeneralAgent runtime integration：`src/backend/zuno/core/agents/general_agent.py`
 
 这些是 foundation，不等于成熟产品能力。
 
 ## 未来执行阶段
 
-- Phase 05: mature Memory Engine around Raw Event Log、Summary Compression、Structured Extraction、`source_event_ids` 和 ContextTrace。
-- Phase 06: mature Capability / Tool Retrieval around ToolCard Registry、Native BM25 capability search、filters 和 `CapabilitySelectionTrace`。
-- Phase 07: mature Knowledge Retrieval / Fusion around LLM-first GraphRAG entity extraction、Native BM25、multi-query、multi-retriever recall、RRF `k=60`、optional rerank、evidence、citation 和 trace。
-- Phase 08: explicit `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime，同时保持 single `GeneralAgent` path。
-- Phase 09：产品 / API 边界、前端可见状态、trace / eval 收口、`docs/` 与 `.agent/` 前台路径瘦身、临时产物清理和历史归档卫生。
+- PHASE01: README、docs/architecture、Mermaid 三图和公开叙事收口。
+- PHASE02: `.agent` 本地 Skill System，包含 `system.yaml`、references skills 和 templates 边界。
+- PHASE03: tools / tests 防回归，确保 program 平铺、PHASE01 编号、docs drift 和 skill 文件结构不会漂移。
+- PHASE04: backend 六层 facade，先 re-export，不改 runtime 行为。
+- PHASE05: `general_agent.py`、capabilities、retrieval orchestrator、fusion 的大文件轻拆。
+- PHASE06: 架构图 HTML 展示页和 Mermaid 源同步规则。
 
 ## 非目标
 
@@ -80,7 +84,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - `.agent/programs/current.md`
 - `.agent/programs/implementation-roadmap.md`
-- `.agent/programs/phase-*.md`
+- `.agent/programs/PHASE*.md`
 - `.agent/programs/closure-checklist.md`
 - `docs/history/programs/zuno-target-runtime-v2/`
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
