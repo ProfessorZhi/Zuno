@@ -6,8 +6,9 @@
 
 - 当前 program：`zuno-workflow-doc-system-v1`。
 - 上一个 program `zuno-architecture-surface-cleanup-v1` 已完成并归档到 `docs/history/programs/zuno-architecture-surface-cleanup-v1/`。
-- 当前待打开 phase：`PHASE01` 工作流与文档系统只读审计。
-- 后续剩余 phase：`PHASE02` Agent bootloader / routing、`PHASE03` skills / templates / programs、`PHASE04` workflow verifiers / drift tests、`PHASE05` closure / history archive。
+- `PHASE01` 工作流与文档系统只读审计已完成三线程审计和主线程合并。
+- 下一步待打开 phase：`PHASE02` Agent bootloader / routing；`PHASE03` skills / templates / programs 和 `PHASE04` workflow verifiers / drift tests 已有审计输入。
+- 后续剩余 phase：`PHASE02`、`PHASE03`、`PHASE04`、`PHASE05` closure / history archive。
 - 当前执行顺序以 [implementation-roadmap.md](implementation-roadmap.md) 和各 phase 文件为准。
 - 每次新 program 都从 `PHASE01` 开始编号；旧 active phase 先归档，再从前台移除。
 
@@ -15,6 +16,7 @@
 
 - 主线程负责 program 协调、线程拆分、合并、总验证和推送。
 - 子线程必须使用独立 worktree、独立 branch、Codex UI 目标模式。
+- 子线程可以常驻为工位，但每轮任务必须重新确认或切换本轮 worktree 和 `codex/` 分支。
 - 子线程内部默认使用多 agent 模式；无法使用时必须停止说明原因。
 - Program 串行；Phase 按依赖执行；同一 phase 内可拆 2-4 个粗粒度线程并行。
 

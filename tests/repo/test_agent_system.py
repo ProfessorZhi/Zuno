@@ -171,6 +171,12 @@ def test_agent_system_yaml_routes_to_skills_templates_docs_sync_and_verify() -> 
         "hangup_mode:",
         "multi_thread_mode:",
         "main_thread_goal_mode: true",
+        "persistent_thread_slots: true",
+        "task_isolation_unit: \"worktree + codex branch, not thread title\"",
+        "main_thread_can_self_execute: true",
+        "main_thread_can_delegate: true",
+        "child_threads_are_reusable_slots: true",
+        "require_fresh_or_confirmed_worktree_branch_per_task: true",
         "coarse_grained_child_tasks: true",
         "child_threads_allow_multi_agent: true",
         "prompt_only_is_not_goal_mode: true",
@@ -237,7 +243,8 @@ def test_workflow_documents_goal_work_modes_contract() -> None:
 
     for phrase in [
         "挂机模式由主线程作为真正的 Codex UI 目标模式",
-        "每个线程使用独立 `codex/` 分支",
+        "线程可以常驻",
+        "每轮任务必须重新确认或切换独立 worktree 和独立 `codex/` 分支",
         "粗粒度",
         "用户在 UI 里手动创建目标模式线程",
         "提示词目标模式不等于 Codex UI 目标模式",
@@ -378,5 +385,9 @@ def test_active_program_starts_from_phase01_and_has_surface_cleanup_plan() -> No
         assert phrase in roadmap
 
     assert "docs/architecture" in phase01
+    assert "主线程合并结果" in phase01
+    assert "Thread A" in phase01
+    assert "Thread B" in phase01
+    assert "Thread C" in phase01
     assert "本地 skill system" in phase03
     assert "skill / lesson / playbook" in phase03

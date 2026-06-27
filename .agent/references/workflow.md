@@ -34,13 +34,15 @@ Zuno 的本地工作流由以下表面共同组成：
 
 复杂任务先判断工作模式。挂机模式由主线程作为真正的 Codex UI 目标模式一路执行到底；多线程模式由主线程作为真正的 Codex UI 目标模式 coordinator，拆出粗粒度子线程、准备目标模式提示词、分支边界、禁止范围、验收闸门和验证命令。多线程模式下，用户在 UI 里手动创建目标模式线程；提示词目标模式不等于 Codex UI 目标模式。
 
+线程可以常驻为“工位”，但任务隔离边界是本轮 worktree + `codex/` branch，不是线程标题。每轮任务开始前必须确认或切换 worktree、branch、`git status --short --branch`、允许范围和禁止范围。主线程可以自己以目标模式/计划模式单干，也可以把粗粒度任务分配给常驻线程并行执行。
+
 这里的多 agent 是执行工作流，不是 Zuno runtime 架构目标。近期 runtime 仍保持 Single GeneralAgent，不能因为执行并行而把产品架构写成多 Agent。
 
 ## Target Direction
 
 PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，防回归测试目标位置是 `tests/agent_system`。当前 `.agent/scripts` 是过渡期保留。
 
-目标方向是：主线程先确定执行方案。能由一个目标模式线程连续完成就使用挂机模式；能拆成粗粒度独立块就使用多线程模式。多线程模式的重点是分线程工作，不是主线程吞掉所有实现。共享文件和冲突风险高的路径由主线程收口，合并必须集中到主线程完成。
+目标方向是：主线程先确定执行方案。能由一个目标模式线程连续完成就使用挂机模式；能拆成粗粒度独立块就使用多线程模式。多线程模式的重点是分线程工作，不是主线程吞掉所有实现。共享文件和冲突风险高的路径由主线程收口，合并必须集中到主线程完成。线程可以常驻复用，但每轮必须换到或确认新的任务隔离边界。
 
 ## Must Preserve
 
@@ -51,6 +53,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 是 Target / Proposed 视觉蓝图，不是 Current proof。
 - 修改任务必须验证、commit、push，除非验证或 push 被阻塞。
 - 两种默认工作模式是挂机模式和多线程模式；选择哪一种取决于任务能否拆成粗粒度、低冲突的独立范围。
+- 常驻线程只是执行工位；每轮任务必须以 worktree + `codex/` branch 作为隔离边界。
 - 多线程模式中，每个子线程都必须是真正的 Codex UI 目标模式；工具不能直接切换 UI 目标模式时，主线程只能输出 `.agent/templates/target-mode-prompt.md` 风格的提示词，并等待用户在 UI 里手动创建目标模式线程。
 - 过时材料移动到 `docs/history/`；旧 audit、旧 spec、旧 runbook、旧 UI 原型和旧 phase/program 不留在前台路径。
 
@@ -63,7 +66,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 5. 读需要的 reference skills：`docs-map.md`、`code-map.md`、`verification-map.md`、`known-pitfalls.md`。
 6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
 7. 确认任务允许范围和 forbidden paths。
-8. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个线程一个分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建真正的目标模式线程。
+8. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个常驻线程绑定或切换一个本轮 worktree / `codex/` 分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建或确认真正的目标模式线程。
 
 ## Allowed Changes
 
@@ -129,11 +132,11 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 1. 主线程本身必须是真正的 Codex UI 目标模式，并负责 coordinator 工作。
 2. 主线程拆出粗粒度子线程；每个线程要执行一大块互相独立的工作。
 3. 主线程写清每个线程的目标、允许范围、禁止范围、验收闸门和验证命令。
-4. 每个线程使用独立 `codex/` 分支。
+4. 线程可以常驻，但每轮任务必须重新确认或切换独立 worktree 和独立 `codex/` 分支。
 5. 每个子线程也必须是真正的 Codex UI 目标模式；提示词目标模式不等于 Codex UI 目标模式。
 6. 工具 API 不能直接打开 UI 目标模式时，主线程只输出线程提示词，等待用户在 UI 里手动创建目标模式线程，或改为挂机模式。
 7. 每个线程默认可以使用多 agent 模式，但只能在自己的写入范围内协作。
-8. 线程完成后必须提交并推送；主线程读取 diff 和验证结果，不只信总结。
+8. 写入线程完成后必须提交并推送；只读审计线程返回报告和干净 `git status` 即可。主线程读取 diff、验证结果或审计证据，不只信总结。
 9. 主线程按风险顺序合并，解决冲突后运行集成验证。
 
 ## Focused Tests

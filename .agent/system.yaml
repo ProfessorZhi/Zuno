@@ -20,6 +20,10 @@ program_rules:
 work_modes:
   runtime_boundary: "parallel agents are workflow execution helpers; Zuno runtime target remains Single GeneralAgent"
   branch_prefix: "codex/"
+  persistent_thread_slots: true
+  task_isolation_unit: "worktree + codex branch, not thread title"
+  main_thread_can_self_execute: true
+  main_thread_can_delegate: true
   prompt_only_is_not_goal_mode: true
   prompt_only_phrase: "提示词目标模式不等于 Codex UI 目标模式"
   hangup_mode:
@@ -32,6 +36,8 @@ work_modes:
     coordinator_role: "prepare coarse-grained child prompts, branch scopes, acceptance gates, progress tracking, diff review, integrated verification, and merge"
     child_thread_goal_mode: "user-created Codex UI goal mode thread required"
     user_manual_goal_thread_creation: true
+    child_threads_are_reusable_slots: true
+    require_fresh_or_confirmed_worktree_branch_per_task: true
     coarse_grained_child_tasks: true
     child_threads_allow_multi_agent: true
     require_disjoint_write_scope: true
