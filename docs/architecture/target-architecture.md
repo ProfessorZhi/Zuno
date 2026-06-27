@@ -24,6 +24,10 @@ Local-first Agent Workspace
 + Typed API + Web/Desktop
 ```
 
+目标 runtime 图见：
+
+- [diagrams.md](diagrams.md)
+
 ## 分层架构
 
 1. 产品入口层：Vue Web 和 Electron Desktop。
@@ -84,6 +88,18 @@ drift_like -> drift
 - product-level multi-agent mode
 - Coding Agent mode
 - independent GraphRAG or indexing services
+
+## 与 Current 的硬边界
+
+这些内容即使出现在目标设计里，也不能写成 Current：
+
+- 完整 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime。
+- 生产级 Memory DB、成熟 memory extraction / retrieval / consolidation。
+- 产品级动态 Capability Selector。
+- 完整 frontend trace 面板。
+- Java、微服务、事件驱动 worker 或产品级多 Agent 模式。
+
+Domain Pack 只保留为历史或迁移兼容语境；公开目标身份字段是 `graphrag_project_id`。
 
 ## 详细设计
 

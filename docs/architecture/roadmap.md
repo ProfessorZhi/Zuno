@@ -10,6 +10,8 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 当前 program 是 `zuno-architecture-surface-cleanup-v1`。它接在目标运行时第一轮 slice 之后，当前职责不是继续堆 feature，而是把 Zuno 收口成成熟项目外形：README、docs、`.agent`、目录蓝图、tools/tests 和架构图都能一眼讲清。
 
+本 program 的 PHASE01 只做公开封面与架构叙事收口：README、`docs/architecture/*` 和 Mermaid 图。它不修改 runtime、API、DTO、DB schema、依赖、Docker 或 eval baseline。
+
 已被替换的 V2 目标运行时材料归档在：
 
 - `docs/history/programs/zuno-target-runtime-v2/`
@@ -42,6 +44,10 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 ## 当前候选主线
 
 `.agent/programs/` 是当前 active program 平铺目录。它不能把成熟 Context Orchestrator、Memory Engine、Dynamic Capability Selector、GraphRAG LLM entity extraction、full LangGraph runtime、六层 facade 物理迁移或大文件轻拆写成 Current，直到代码和测试证明对应 slice。
+
+当前架构图入口：
+
+- `docs/architecture/diagrams.md`
 
 ## 受限历史兼容
 
