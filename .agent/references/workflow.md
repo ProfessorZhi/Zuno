@@ -39,8 +39,8 @@
 3. 明确 Current / Foundation / Target / Future / History。
 4. 目标设计放 `.agent/architecture/near-term/`。
 5. 正式结论放 `docs/architecture/`。
-6. 执行计划放 `.agent/programs/<program>/`。
-7. 旧计划和旧设计放 `docs/history/`。
+6. 执行计划放 `.agent/programs/` 根层，当前状态、总目录、phase 文件和收口清单平铺，不再按 program 子目录嵌套。
+7. 旧计划和旧设计放 `docs/history/`；如果执行计划被替换，旧计划从 `.agent/programs/` 当前前台移除。
 
 ## 具体执行步骤、停止条件、验证和收尾规则
 

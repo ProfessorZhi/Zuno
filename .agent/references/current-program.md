@@ -2,7 +2,7 @@
 
 当前可执行 Agent 程序是：
 
-- `.agent/programs/zuno-target-runtime-v2/`
+- `.agent/programs/`
 
 这个程序是在 Zuno Target Architecture Migration V1 收口后的受控首个实现切片。它打开模块边界闸门，迁移一个低风险后端应用边界，并引入最小可调用 Context Orchestrator。
 
@@ -11,7 +11,7 @@
 ```text
 Phase 05：记忆引擎
 Phase 06 Capability / Tool Retrieval
-Phase 07 Knowledge Retrieval / Fusion
+Phase 07 GraphRAG LLM Entity Extraction / Knowledge Retrieval / Fusion
 Phase 08 GeneralAgent LangGraph Runtime
 Phase 09：产品边界、Trace 与 Eval 收口
 ```
@@ -43,10 +43,15 @@ Phase 09：产品边界、Trace 与 Eval 收口
 
 ## 当前参考文件
 
-- `.agent/programs/zuno-target-runtime-v2/README.md`
-- `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
-- `.agent/programs/zuno-target-runtime-v2/current-phase.md`
-- `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
+- `.agent/programs/README.md`
+- `.agent/programs/current.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/phase-05-memory-engine.md`
+- `.agent/programs/phase-06-capability-tool-retrieval.md`
+- `.agent/programs/phase-07-graphrag-llm-entity-extraction.md`
+- `.agent/programs/phase-08-langgraph-runtime.md`
+- `.agent/programs/phase-09-product-trace-eval-closure.md`
+- `.agent/programs/closure-checklist.md`
 - `docs/history/programs/zuno-target-runtime-v2/`
 - `docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
 - `docs/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`

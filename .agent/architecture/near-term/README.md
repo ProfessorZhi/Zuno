@@ -40,6 +40,6 @@ HTML 蓝图是唯一 canonical Target / Proposed visual blueprint。它不能复
 
 按 phase 的执行计划放在 active program roadmap：
 
-- `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
+- `.agent/programs/implementation-roadmap.md`
 
-不要把 per-phase 文件重新加回 `.agent/architecture/near-term/` 或 `.agent/programs/zuno-target-runtime-v2/`，除非未来某个 phase 明确需要临时工作证据。active front path 保持为本 README、一个 HTML 蓝图和五份 Markdown 设计文件。
+不要把 per-phase 文件加回 `.agent/architecture/near-term/`。执行 phase 文件平铺在 `.agent/programs/`，architecture 保持为本 README、一个 HTML 蓝图和五份 Markdown 设计文件。

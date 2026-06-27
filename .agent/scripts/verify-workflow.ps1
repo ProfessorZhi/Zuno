@@ -30,10 +30,14 @@ Require-Path ".agent\references\task-routing.md"
 Require-Path ".agent\references\workflow.md"
 Require-Path ".agent\references\verification-map.md"
 Require-Path ".agent\programs\current.md"
-Require-Path ".agent\programs\zuno-target-runtime-v2\README.md"
-Require-Path ".agent\programs\zuno-target-runtime-v2\implementation-roadmap.md"
-Require-Path ".agent\programs\zuno-target-runtime-v2\current-phase.md"
-Require-Path ".agent\programs\zuno-target-runtime-v2\closure-checklist.md"
+Require-Path ".agent\programs\implementation-roadmap.md"
+Require-Path ".agent\programs\phase-05-memory-engine.md"
+Require-Path ".agent\programs\phase-06-capability-tool-retrieval.md"
+Require-Path ".agent\programs\phase-07-graphrag-llm-entity-extraction.md"
+Require-Path ".agent\programs\phase-08-langgraph-runtime.md"
+Require-Path ".agent\programs\phase-09-product-trace-eval-closure.md"
+Require-Path ".agent\programs\closure-checklist.md"
+Require-NoPath ".agent\programs\zuno-target-runtime-v2"
 Require-NoPath ".agent\workflows"
 Require-NoPath ".agent\skills"
 Require-Path ".agent\templates\requirement-intake.md"
@@ -73,8 +77,11 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw
-if ($currentProgram -notmatch "zuno-target-runtime-v2") {
-    $failures.Add("current-program.md does not point to the active V2 program")
+if ($currentProgram -notmatch "\.agent/programs/") {
+    $failures.Add("current-program.md does not point to the flat active program directory")
+}
+if ($currentProgram -notmatch "phase-07-graphrag-llm-entity-extraction.md") {
+    $failures.Add("current-program.md missing GraphRAG LLM extraction phase")
 }
 
 if ($failures.Count -gt 0) {

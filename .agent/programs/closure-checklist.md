@@ -1,10 +1,11 @@
 # 收口清单
 
-关闭未来 `zuno-target-runtime-v2` phase 前使用这份清单。
+关闭当前 phase 前使用这份清单。
 
 ## 范围
 
-- 确认当前 phase 是 `implementation-roadmap.md` 里的下一个线性 phase；不要从 Phase 05 跳到 Phase 07。
+- 确认当前 phase 是 [implementation-roadmap.md](implementation-roadmap.md) 里的下一个线性 phase。
+- 确认 phase 有独立平铺文件，不把执行细节塞回总目录。
 - 确认 phase 有明确进入条件、涉及 owner、退出标准和聚焦验证证据。
 - 确认 phase 没有要求 Java 服务、微服务、事件 worker、数据库 schema 变化、依赖升级、完整前端迁移或 eval baseline 更新，除非该 phase 明确授权。
 - 确认没有把 Target 行为写成 Current，除非代码和测试已经证明。
@@ -27,7 +28,7 @@ python tools/scripts/verify_repo_structure.py
 
 ## 证据
 
-phase 打开期间，证据记录在 active program 中。phase 关闭且被更瘦的程序表面替代后，把详细证据移到：
+phase 打开期间，证据记录在当前 phase 文件或临时报告中。phase 关闭且被更瘦的程序表面替代后，把详细证据移到：
 
 ```text
 docs/history/programs/zuno-target-runtime-v2/

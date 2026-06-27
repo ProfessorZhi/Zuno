@@ -35,10 +35,13 @@ REQUIRED_PATHS = [
     ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
     ".agent/programs/README.md",
     ".agent/programs/current.md",
-    ".agent/programs/zuno-target-runtime-v2/README.md",
-    ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
-    ".agent/programs/zuno-target-runtime-v2/current-phase.md",
-    ".agent/programs/zuno-target-runtime-v2/closure-checklist.md",
+    ".agent/programs/implementation-roadmap.md",
+    ".agent/programs/phase-05-memory-engine.md",
+    ".agent/programs/phase-06-capability-tool-retrieval.md",
+    ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
+    ".agent/programs/phase-08-langgraph-runtime.md",
+    ".agent/programs/phase-09-product-trace-eval-closure.md",
+    ".agent/programs/closure-checklist.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
@@ -54,8 +57,9 @@ FORBIDDEN_PATHS = [
     ".agent/skills",
     ".agent/workflows",
     ".agent/programs/context-memory-agent-runtime-v1",
-    ".agent/programs/zuno-target-runtime-v2/implementation-phases",
-    ".agent/programs/zuno-target-runtime-v2/evidence",
+    ".agent/programs/zuno-target-runtime-v2",
+    ".agent/programs/implementation-phases",
+    ".agent/programs/evidence",
     ".agent/notes",
     ".agent/tmp",
     ".agent/logs",
@@ -93,7 +97,7 @@ def main() -> int:
         "tools/evals/zuno/AGENTS.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
-        ".agent/programs/zuno-target-runtime-v2/",
+        ".agent/programs/",
         "zuno-ideal-architecture-and-repo-layout.html",
         "前台文档默认中文",
     ]:
@@ -163,27 +167,44 @@ def main() -> int:
         errors.append(f".agent/references files are not slim canonical set: {reference_files}")
 
     active_program_files = sorted(
-        path.name
-        for path in (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").iterdir()
-        if path.is_file()
+        path.name for path in (REPO_ROOT / ".agent/programs").iterdir() if path.is_file()
     )
     expected_program_files = sorted(
-        ["README.md", "implementation-roadmap.md", "current-phase.md", "closure-checklist.md"]
+        [
+            "README.md",
+            "current.md",
+            "implementation-roadmap.md",
+            "phase-05-memory-engine.md",
+            "phase-06-capability-tool-retrieval.md",
+            "phase-07-graphrag-llm-entity-extraction.md",
+            "phase-08-langgraph-runtime.md",
+            "phase-09-product-trace-eval-closure.md",
+            "closure-checklist.md",
+        ]
     )
     if active_program_files != expected_program_files:
-        errors.append(f"active V2 program files are not slim canonical set: {active_program_files}")
+        errors.append(f"active program files are not flat canonical set: {active_program_files}")
 
-    roadmap = _read(".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md")
+    roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
         "Phase 05：记忆引擎",
         "Phase 06：能力与工具检索",
-        "Phase 07：知识检索与融合",
+        "Phase 07：GraphRAG LLM 实体抽取与知识检索融合",
         "Phase 08：GeneralAgent LangGraph 运行时",
         "Phase 09：产品边界、Trace 与 Eval 收口",
-        "`docs/` 保持精简",
+        "所有 phase 文件平铺在 `.agent/programs/`",
     ]:
         if phrase not in roadmap:
             errors.append(f"active V2 roadmap missing phase execution phrase: {phrase}")
+
+    phase07 = _read(".agent/programs/phase-07-graphrag-llm-entity-extraction.md")
+    for phrase in [
+        "GraphRAG 的实体是语义节点",
+        "model_refs.entity_extraction_llm_id",
+        "规则/正则只辅助日期、金额、条款号",
+    ]:
+        if phrase not in phase07:
+            errors.append(f"Phase 07 missing LLM extraction phrase: {phrase}")
 
     if errors:
         for error in errors:

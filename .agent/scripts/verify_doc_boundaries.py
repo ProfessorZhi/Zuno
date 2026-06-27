@@ -31,8 +31,9 @@ REQUIRED_DOCS = [
 REQUIRED_AGENT_PROGRAMS = [
     "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
     ".agent/programs/current.md",
-    ".agent/programs/zuno-target-runtime-v2/current-phase.md",
-    ".agent/programs/zuno-target-runtime-v2/closure-checklist.md",
+    ".agent/programs/implementation-roadmap.md",
+    ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
+    ".agent/programs/closure-checklist.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
@@ -71,6 +72,7 @@ def main() -> int:
         "ToolCard",
         "RRF",
         "`auto` 是 router",
+        "GraphRAG 实体抽取默认主路径是 LLM 抽取",
     ]:
         if phrase not in target:
             errors.append(f"target architecture missing canonical phrase: {phrase}")

@@ -11,7 +11,7 @@ Zuno 是本地优先的 Agent Workspace。它把 Vue Web、Electron Desktop、Fa
 - `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。
 - Phase 0-6 架构收口仍是已完成的历史事实。
 - Target Architecture Migration V1 已关闭并归档。
-- 当前可执行 Agent 程序是 `.agent/programs/zuno-target-runtime-v2/`。
+- 当前可执行 Agent 程序是 `.agent/programs/` 平铺计划包。
 - Phase 11A 已完成：当前 runtime 已包含 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
 - Phase 11B 已完成：当前知识回答调用链是 `Completion API -> CompletionService -> GeneralAgent single loop -> search_knowledge_base -> KnowledgeQueryService -> GraphRAGQueryService -> RetrievalPlanner / RetrievalOrchestrator -> Evidence / Citation / Trace -> GeneralAgent answer`。
 

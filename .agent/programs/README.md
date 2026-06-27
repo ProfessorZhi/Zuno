@@ -1,34 +1,24 @@
-# Agent 执行程序
+# Agent 执行计划
 
-`.agent/programs/` 存放当前可执行的 Agent program，也就是“接下来按哪些 Phase 落地”的工作计划。
+`.agent/programs/` 只存放当前可执行计划。这里回答“下一步按哪些 phase 做、每个 phase 怎么验收”，不存放理想目标架构。
 
-它不是正式人类文档真相。正式状态写入 `docs/architecture/roadmap.md`；已经完成或被替换的 program 归档到 `docs/history/programs/`。
+本目录保持一层平铺。不要在当前前台再新建 `.agent/programs/<program>/` 或 `implementation-phases/` 子目录。执行计划被替换时，旧计划从当前前台移除；需要保留证据的旧材料移动到 `docs/history/programs/`。
 
 ## 当前入口
 
-- [current.md](current.md)：当前 active program 指针。
-- [zuno-target-runtime-v2/README.md](zuno-target-runtime-v2/README.md)：当前执行计划。
-- [zuno-target-runtime-v2/implementation-roadmap.md](zuno-target-runtime-v2/implementation-roadmap.md)：Phase 05-09 路线。
-- [zuno-target-runtime-v2/current-phase.md](zuno-target-runtime-v2/current-phase.md)：当前打开的 phase。
-- [zuno-target-runtime-v2/closure-checklist.md](zuno-target-runtime-v2/closure-checklist.md)：收尾验收清单。
+- [current.md](current.md)：当前状态和当前打开的 phase。
+- [implementation-roadmap.md](implementation-roadmap.md)：当前执行计划总目录。
+- [phase-05-memory-engine.md](phase-05-memory-engine.md)：Phase 05 记忆引擎。
+- [phase-06-capability-tool-retrieval.md](phase-06-capability-tool-retrieval.md)：Phase 06 能力与工具检索。
+- [phase-07-graphrag-llm-entity-extraction.md](phase-07-graphrag-llm-entity-extraction.md)：Phase 07 GraphRAG、LLM 实体抽取与检索融合。
+- [phase-08-langgraph-runtime.md](phase-08-langgraph-runtime.md)：Phase 08 GeneralAgent LangGraph 运行时。
+- [phase-09-product-trace-eval-closure.md](phase-09-product-trace-eval-closure.md)：Phase 09 产品边界、Trace 与 Eval 收口。
+- [closure-checklist.md](closure-checklist.md)：每个 phase 的收尾验收清单。
 
-## 什么时候写 programs
+## 与 architecture 的边界
 
-写入 `.agent/programs/` 的内容必须满足至少一个条件：
+- `.agent/architecture/`：理想目标架构，描述系统应该长什么样。
+- `.agent/programs/`：当前执行方案，描述按什么 phase 做、哪些文件可改、如何验收。
+- `docs/history/programs/`：已完成、被替换或不再当前执行的旧计划和证据。
 
-- 它决定当前要执行哪个 phase。
-- 它规定 phase 的验收门。
-- 它记录当前 program 的边界、禁止项或收尾规则。
-- 它会影响后续 Codex/Agent 如何继续执行。
-
-如果只是描述理想架构，应写到 `.agent/architecture/`。如果是已经完成的旧计划，应移动到 `docs/history/programs/`。
-
-## 当前 program
-
-active program 是：
-
-- `zuno-target-runtime-v2/`
-
-已完成的 Zuno Target Architecture Migration V1 已归档到：
-
-- `docs/history/programs/zuno-target-architecture-migration-v1/`
+如果文件写的是 `Phase 05 / Phase 06 / Phase 07` 这种执行顺序，它属于 `.agent/programs/`。如果文件写的是目标分层、长期边界、理想数据流，它属于 `.agent/architecture/`。

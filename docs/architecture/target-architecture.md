@@ -31,7 +31,7 @@ Local-first Agent Workspace
 3. Single GeneralAgent Runtime：`prepare_context -> agent_loop -> post_turn_commit`。
 4. Context / Memory 层：L0 Working Context、L1 Recent Window、L2 Task Summary、L3 Structured Long-term Memory、L4 External Knowledge、Raw Event Log。
 5. Capability / Tool Retrieval 层：ToolCard Registry、keyword / alias search、Native BM25 over ToolCards、optional vector search、permission / health / cost filter、CapabilitySelectionTrace。
-6. Knowledge / GraphRAG 层：`KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot`、`basic`、`local`、`global`、`drift`、`auto` router。
+6. Knowledge / GraphRAG 层：`KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot`、LLM-first entity / relation extraction、`basic`、`local`、`global`、`drift`、`auto` router。
 7. Retrieval / Fusion / Evidence 层：query variants、Native BM25、dense vector、graph local、community global、deduplication、RRF、optional rerank、evidence check、citation、trace。
 8. Infrastructure / Eval 层：PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、optional Elasticsearch adapter、trace、eval、benchmark。
 
@@ -48,6 +48,9 @@ Local-first Agent Workspace
 
 - Native BM25 是本地 BM25 排序算法。
 - Elasticsearch 只是可选外部 adapter，不是 BM25 算法本体。
+- GraphRAG 实体抽取默认主路径是 LLM 抽取，不是规则匹配或正则表达式。
+- 知识库配置必须能选择 `model_refs.entity_extraction_llm_id`，用于 GraphRAG entity / relation extraction。
+- 规则、正则和词典只用于日期、金额、条款号等确定格式辅助、preprocessing、fallback 或 baseline test。
 - enhanced path 可以生成 query variants，但必须保留 original query。
 - multi-retriever recall 可使用 Native BM25、Dense Vector、Graph Local 和 Community Global。
 - deduplication 使用稳定 id，例如 `chunk_id`、`document_id + span`、`graph_node_id`、`community_report_id`。
@@ -108,13 +111,13 @@ Canonical near-term Markdown：
 
 当前执行计划：
 
-- `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
+- `.agent/programs/implementation-roadmap.md`
 
 执行顺序：
 
 1. Phase 05：记忆引擎
 2. Phase 06 Capability / Tool Retrieval
-3. Phase 07 Knowledge Retrieval / Fusion
+3. Phase 07 GraphRAG LLM Entity Extraction / Knowledge Retrieval / Fusion
 4. Phase 08 GeneralAgent LangGraph Runtime
 5. Phase 09：产品边界、Trace 与 Eval 收口
 

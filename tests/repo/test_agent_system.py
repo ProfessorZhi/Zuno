@@ -22,10 +22,14 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
         ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
         ".agent/scripts/verify_module_boundaries.py",
-        ".agent/programs/zuno-target-runtime-v2/README.md",
-        ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
-        ".agent/programs/zuno-target-runtime-v2/current-phase.md",
-        ".agent/programs/zuno-target-runtime-v2/closure-checklist.md",
+        ".agent/programs/README.md",
+        ".agent/programs/implementation-roadmap.md",
+        ".agent/programs/phase-05-memory-engine.md",
+        ".agent/programs/phase-06-capability-tool-retrieval.md",
+        ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
+        ".agent/programs/phase-08-langgraph-runtime.md",
+        ".agent/programs/phase-09-product-trace-eval-closure.md",
+        ".agent/programs/closure-checklist.md",
         "docs/history/programs/zuno-target-runtime-v2/README.md",
         "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
         "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
@@ -107,7 +111,7 @@ def test_root_agents_routes_to_module_agents_and_references() -> None:
         "tools/evals/zuno/AGENTS.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
-        ".agent/programs/zuno-target-runtime-v2/",
+        ".agent/programs/",
         "前台文档默认中文",
     ]
 
@@ -139,8 +143,8 @@ def test_current_program_points_to_active_v2_and_archives_old_candidate() -> Non
         encoding="utf-8"
     )
 
-    assert "zuno-target-runtime-v2/" in current
-    assert "受控的首个实现切片" in current
+    assert "当前 active program 就是 `.agent/programs/` 根目录这一层" in current
+    assert "Phase 05 记忆引擎" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
     assert "context-memory-agent-runtime-v1" not in programs_index
@@ -220,21 +224,25 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
 
 
 def test_active_v2_program_has_phase_execution_plan() -> None:
-    roadmap = (
-        REPO_ROOT / ".agent" / "programs" / "zuno-target-runtime-v2" / "implementation-roadmap.md"
-    ).read_text(encoding="utf-8")
-    current_phase = (
-        REPO_ROOT / ".agent" / "programs" / "zuno-target-runtime-v2" / "current-phase.md"
+    roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
+        encoding="utf-8"
+    )
+    phase05 = (REPO_ROOT / ".agent" / "programs" / "phase-05-memory-engine.md").read_text(
+        encoding="utf-8"
+    )
+    phase07 = (
+        REPO_ROOT / ".agent" / "programs" / "phase-07-graphrag-llm-entity-extraction.md"
     ).read_text(encoding="utf-8")
 
     for phrase in [
         "Phase 05：记忆引擎",
         "Phase 06：能力与工具检索",
-        "Phase 07：知识检索与融合",
+        "Phase 07：GraphRAG LLM 实体抽取与知识检索融合",
         "Phase 08：GeneralAgent LangGraph 运行时",
         "Phase 09：产品边界、Trace 与 Eval 收口",
     ]:
         assert phrase in roadmap
 
-    assert "Phase 05：记忆引擎" in current_phase
-    assert "不要在 Phase 05 没有聚焦测试" in current_phase
+    assert "Phase 05：记忆引擎" in phase05
+    assert "model_refs.entity_extraction_llm_id" in phase07
+    assert "规则/正则只辅助日期、金额、条款号" in phase07

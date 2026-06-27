@@ -14,7 +14,7 @@
 
 当前可执行 Agent program 是：
 
-- `.agent/programs/zuno-target-runtime-v2/`
+- `.agent/programs/`
 
 它接在已完成的 Target Architecture Migration V1 closure 之后，按 Phase 05-09 落地目标 runtime。
 

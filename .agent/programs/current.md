@@ -1,33 +1,25 @@
-# 当前 Agent Program
+# 当前执行状态
 
-当前 active program 是：
+当前 active program 就是 `.agent/programs/` 根目录这一层。不要再进入子目录找当前计划。
 
-- `zuno-target-runtime-v2/`
+## 状态
 
-它的目的不是重新开启已经关闭的 V1 迁移，而是在 Zuno Target Architecture Migration V1 closure 之后，继续做一个受控的首个实现切片：module boundary gates、低风险 backend application-boundary move、minimal callable Context Orchestrator，以及后续 Phase 05-09。
+- Phase 00-04 已完成，详细文件和证据已归档到 `docs/history/programs/zuno-target-runtime-v2/`。
+- 当前待打开 phase：Phase 05 记忆引擎。
+- 当前执行顺序以 [implementation-roadmap.md](implementation-roadmap.md) 和各 phase 文件为准。
 
-最新完成 program：
+## 当前计划文件
 
-- `docs/history/programs/zuno-target-architecture-migration-v1/`
+- [implementation-roadmap.md](implementation-roadmap.md)
+- [phase-05-memory-engine.md](phase-05-memory-engine.md)
+- [phase-06-capability-tool-retrieval.md](phase-06-capability-tool-retrieval.md)
+- [phase-07-graphrag-llm-entity-extraction.md](phase-07-graphrag-llm-entity-extraction.md)
+- [phase-08-langgraph-runtime.md](phase-08-langgraph-runtime.md)
+- [phase-09-product-trace-eval-closure.md](phase-09-product-trace-eval-closure.md)
+- [closure-checklist.md](closure-checklist.md)
 
-正式面向人的状态汇总在：
+## 停止线
 
-- `docs/architecture/roadmap.md`
+不要在 Phase 05 没有聚焦测试、文档边界同步和收口证据前打开 Phase 06。不要在能力选择没有稳定 ToolCard trace 前打开 Phase 07。不要在 GraphRAG LLM 实体抽取、retrieval/fusion trace 稳定前打开 Phase 08。
 
-当前 phase 焦点：
-
-- Phase 00-04 已完成。
-- Phase 00-04 的详细文件和证据已归档到 `docs/history/programs/zuno-target-runtime-v2/`。
-- 下一步 runtime phase 只能在 docs/.agent 目标架构和工作流入口收敛、验证通过后打开。
-
-active program 文件：
-
-- `zuno-target-runtime-v2/README.md`
-- `zuno-target-runtime-v2/implementation-roadmap.md`
-- `zuno-target-runtime-v2/current-phase.md`
-- `zuno-target-runtime-v2/closure-checklist.md`
-
-归档支撑证据：
-
-- `docs/history/programs/official-graphrag-cleanup-v1/`
-- `docs/history/programs/context-memory-agent-runtime-v1/`
+正式面向人的状态汇总在 `docs/architecture/roadmap.md`。最新完成 program 归档在 `docs/history/programs/zuno-target-architecture-migration-v1/`。

@@ -94,6 +94,8 @@ def test_retired_front_path_directories_are_not_current_paths() -> None:
         ".agent/workflows",
         ".agent/programs/context-memory-agent-runtime-v1",
         ".agent/programs/official-graphrag-cleanup-v1",
+        ".agent/programs/zuno-target-runtime-v2",
+        ".agent/programs/implementation-phases",
         "docs/superpowers",
         "src/frontend",
         "domain-packs",
@@ -163,32 +165,45 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
 def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
     active_files = sorted(
         path.name
-        for path in (REPO_ROOT / ".agent" / "programs" / "zuno-target-runtime-v2").iterdir()
+        for path in (REPO_ROOT / ".agent" / "programs").iterdir()
         if path.is_file()
     )
 
     assert active_files == sorted(
-        ["README.md", "implementation-roadmap.md", "current-phase.md", "closure-checklist.md"]
+        [
+            "README.md",
+            "current.md",
+            "implementation-roadmap.md",
+            "phase-05-memory-engine.md",
+            "phase-06-capability-tool-retrieval.md",
+            "phase-07-graphrag-llm-entity-extraction.md",
+            "phase-08-langgraph-runtime.md",
+            "phase-09-product-trace-eval-closure.md",
+            "closure-checklist.md",
+        ]
     )
-    assert not (
-        REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/implementation-phases"
-    ).exists()
+    assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
+    assert not (REPO_ROOT / ".agent/programs/implementation-phases").exists()
     assert (
         REPO_ROOT
         / "docs/history/programs/zuno-target-runtime-v2/implementation-phases/README.md"
     ).exists()
 
     roadmap = (
-        REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md"
+        REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
         "Phase 05：记忆引擎",
         "Phase 06：能力与工具检索",
-        "Phase 07：知识检索与融合",
+        "Phase 07：GraphRAG LLM 实体抽取与知识检索融合",
         "Phase 08：GeneralAgent LangGraph 运行时",
         "Phase 09：产品边界、Trace 与 Eval 收口",
     ]:
         assert phrase in roadmap
+    phase07 = (
+        REPO_ROOT / ".agent/programs/phase-07-graphrag-llm-entity-extraction.md"
+    ).read_text(encoding="utf-8")
+    assert "model_refs.entity_extraction_llm_id" in phase07
 
 
 def test_superseded_specs_are_archived_out_of_architecture_front_path() -> None:

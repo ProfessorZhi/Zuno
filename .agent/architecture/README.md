@@ -47,4 +47,4 @@
 - `.agent/architecture/`：描述目标形态和设计原则。
 - `.agent/programs/`：描述怎么按 phase 执行、怎么验收、当前卡在哪。
 
-如果一个文件写的是 Phase 05 / Phase 06 / Phase 07 这种执行顺序，它应该在 `.agent/programs/<program>/`；如果写的是系统应该长什么样，它应该在 `.agent/architecture/`。
+如果一个文件写的是 Phase 05 / Phase 06 / Phase 07 这种执行顺序，它应该平铺在 `.agent/programs/`；如果写的是系统应该长什么样，它应该在 `.agent/architecture/`。

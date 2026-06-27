@@ -25,7 +25,7 @@
 
 - 目标运行时 V2 Phase 05：记忆引擎
 - 目标运行时 V2 Phase 06：能力与工具检索
-- 目标运行时 V2 Phase 07：知识检索与融合
+- 目标运行时 V2 Phase 07：GraphRAG LLM 实体抽取与知识检索融合
 - 目标运行时 V2 Phase 08：GeneralAgent LangGraph 运行时
 - 目标运行时 V2 Phase 09：产品边界、Trace 与 Eval 收口
 - Context / Memory Engine

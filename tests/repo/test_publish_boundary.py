@@ -29,7 +29,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
 
     for phrase in [
         "Phase 0-6 架构收口仍是已完成的历史事实",
-        ".agent/programs/zuno-target-runtime-v2/",
+        ".agent/programs/",
         "受限历史兼容",
     ]:
         assert phrase in readme

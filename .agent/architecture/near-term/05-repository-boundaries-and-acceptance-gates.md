@@ -99,7 +99,7 @@ Move or keep out of the front path:
 | Material | Target Placement | Rule |
 | --- | --- | --- |
 | old lessons | `docs/history/agent-lessons/` | useful as history, not active guidance |
-| old phase files | `docs/history/phases/` or archived program folder | do not recreate phase sprawl under active `.agent/programs/` |
+| old phase files | `docs/history/phases/` or archived program folder | only current executable phase files stay flat under active `.agent/programs/` |
 | retired plans/specs | `docs/history/` | preserve evidence, remove from active reading order |
 | screenshots and browser snapshots | outside repo or ignored local scratch | never commit transient QA artifacts |
 | generated caches | ignored local directories | `.pytest_cache`, `.playwright-mcp`, `.test-tmp`, local reports |
@@ -162,9 +162,9 @@ and must not overwrite historical baselines.
 
 ## Phase 执行计划
 
-The active `zuno-target-runtime-v2` program executes the target architecture in
-linear phases. The plan intentionally stays in one active roadmap file instead
-of adding many phase files back under `.agent/programs/`.
+The active `.agent/programs/` plan executes the target architecture in linear
+flat phase files. Current execution files stay visible at one directory level;
+completed or replaced detail moves to `docs/history/programs/`.
 
 | Phase | Target Slice | Main Owner | Exit Signal |
 | --- | --- | --- | --- |

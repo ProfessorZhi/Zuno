@@ -18,7 +18,7 @@ AGENTS.md
   -> Agent 工作流库
      references/    当前程序、docs map、code map、任务路由、工作流、验证命令和已知坑
      architecture/  目标架构设计工作集
-     programs/      当前可执行 Agent program 和按 phase 的执行计划
+     programs/      当前平铺执行计划、当前状态、各 phase 文件和收口清单
      scripts/       验证器和本地操作辅助
      templates/     可复用提示和报告模板
 
@@ -88,7 +88,7 @@ docs/history/
 
 当前可执行 Agent 程序：
 
-- `.agent/programs/zuno-target-runtime-v2/`
+- `.agent/programs/`
 
 当前目标：在 Target Architecture Migration V1 收口之后，以小步可验证方式落地目标运行时：模块边界闸门、低风险后端应用边界移动、最小可调用 Context Orchestrator 运行时，以及后续 Phase 05-09。
 
@@ -98,9 +98,14 @@ docs/history/
 
 当前 V2 分解：
 
-- `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
-- `.agent/programs/zuno-target-runtime-v2/current-phase.md`
-- `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/current.md`
+- `.agent/programs/phase-05-memory-engine.md`
+- `.agent/programs/phase-06-capability-tool-retrieval.md`
+- `.agent/programs/phase-07-graphrag-llm-entity-extraction.md`
+- `.agent/programs/phase-08-langgraph-runtime.md`
+- `.agent/programs/phase-09-product-trace-eval-closure.md`
+- `.agent/programs/closure-checklist.md`
 
 归档 V1 / 旧清理材料：
 
@@ -120,8 +125,8 @@ docs/history/
 
 每次新需求、新功能、重构或架构替换，都判断是否需要同步：
 
-1. `.agent/programs/<program>/`
-2. phase 文档
+1. `.agent/programs/`
+2. 平铺 phase 文档
 3. 规格、ADR 或审计
 4. `docs/history/`
 5. `docs/architecture/README.md`

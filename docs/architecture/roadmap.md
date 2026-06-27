@@ -6,7 +6,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 当前可执行 Agent 程序是：
 
-- `.agent/programs/zuno-target-runtime-v2/`
+- `.agent/programs/`
 
 它接在 Target Architecture Migration V1 收口之后，当前职责是按小 phase 落地目标 runtime。已完成的 V2 Phase 00-04 详细文件和证据归档在：
 
@@ -26,19 +26,19 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 ## 下一步
 
-按当前 active `zuno-target-runtime-v2` 线性执行：
+按当前 active `.agent/programs/` 平铺计划线性执行：
 
 1. Phase 05：记忆引擎
 2. Phase 06 Capability / Tool Retrieval
-3. Phase 07 Knowledge Retrieval / Fusion
+3. Phase 07 GraphRAG LLM Entity Extraction / Knowledge Retrieval / Fusion
 4. Phase 08 GeneralAgent LangGraph Runtime
 5. Phase 09：产品边界、Trace 与 Eval 收口
 
-执行源是 `.agent/architecture/near-term/` 和 `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`。
+执行源是 `.agent/architecture/near-term/` 和 `.agent/programs/implementation-roadmap.md`。
 
 ## 当前候选主线
 
-`zuno-target-runtime-v2` 是当前 active program。它不能把成熟 Context Orchestrator、Memory Engine、Dynamic Capability Selector 或 full LangGraph runtime 写成 Current，直到代码和测试证明对应 slice。
+`.agent/programs/` 是当前 active program 平铺目录。它不能把成熟 Context Orchestrator、Memory Engine、Dynamic Capability Selector、GraphRAG LLM entity extraction 或 full LangGraph runtime 写成 Current，直到代码和测试证明对应 slice。
 
 ## 受限历史兼容
 
@@ -61,7 +61,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - Phase 05: mature Memory Engine around Raw Event Log、Summary Compression、Structured Extraction、`source_event_ids` 和 ContextTrace。
 - Phase 06: mature Capability / Tool Retrieval around ToolCard Registry、Native BM25 capability search、filters 和 `CapabilitySelectionTrace`。
-- Phase 07: mature Knowledge Retrieval / Fusion around Native BM25、multi-query、multi-retriever recall、RRF `k=60`、optional rerank、evidence、citation 和 trace。
+- Phase 07: mature Knowledge Retrieval / Fusion around LLM-first GraphRAG entity extraction、Native BM25、multi-query、multi-retriever recall、RRF `k=60`、optional rerank、evidence、citation 和 trace。
 - Phase 08: explicit `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime，同时保持 single `GeneralAgent` path。
 - Phase 09：产品 / API 边界、前端可见状态、trace / eval 收口、`docs/` 与 `.agent/` 前台路径瘦身、临时产物清理和历史归档卫生。
 
@@ -79,8 +79,9 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 ## Agent 执行来源
 
 - `.agent/programs/current.md`
-- `.agent/programs/zuno-target-runtime-v2/current-phase.md`
-- `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/phase-*.md`
+- `.agent/programs/closure-checklist.md`
 - `docs/history/programs/zuno-target-runtime-v2/`
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 - `docs/history/programs/official-graphrag-cleanup-v1/`

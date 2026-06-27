@@ -15,7 +15,13 @@ REQUIRED_PATHS = [
     ".agent/references/workflow.md",
     ".agent/references/docs-map.md",
     ".agent/programs/current.md",
-    ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md",
+    ".agent/programs/implementation-roadmap.md",
+    ".agent/programs/phase-05-memory-engine.md",
+    ".agent/programs/phase-06-capability-tool-retrieval.md",
+    ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
+    ".agent/programs/phase-08-langgraph-runtime.md",
+    ".agent/programs/phase-09-product-trace-eval-closure.md",
+    ".agent/programs/closure-checklist.md",
     ".agent/architecture/README.md",
     ".agent/architecture/future/README.md",
     ".agent/architecture/decisions/README.md",
@@ -90,6 +96,8 @@ FORBIDDEN_CURRENT_PATHS = [
     "docs/reference/zuno.md",
     ".agent/programs/context-memory-agent-runtime-v1",
     ".agent/programs/official-graphrag-cleanup-v1",
+    ".agent/programs/zuno-target-runtime-v2",
+    ".agent/programs/implementation-phases",
     "docs/superpowers",
     "src/frontend",
     "domain-packs",
@@ -216,22 +224,35 @@ def verify_target_architecture_html() -> list[str]:
 
 
 def verify_active_v2_phase_plan() -> list[str]:
-    roadmap_path = REPO_ROOT / ".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md"
+    roadmap_path = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     if not roadmap_path.exists():
         return ["missing active V2 implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
-    return [
+    errors = [
         f"active V2 roadmap missing phase plan: {phrase}"
         for phrase in [
             "Phase 05：记忆引擎",
             "Phase 06：能力与工具检索",
-            "Phase 07：知识检索与融合",
+            "Phase 07：GraphRAG LLM 实体抽取与知识检索融合",
             "Phase 08：GeneralAgent LangGraph 运行时",
             "Phase 09：产品边界、Trace 与 Eval 收口",
-            "`docs/` 保持精简",
+            "所有 phase 文件平铺在 `.agent/programs/`",
         ]
         if phrase not in roadmap
     ]
+    phase07_path = REPO_ROOT / ".agent/programs/phase-07-graphrag-llm-entity-extraction.md"
+    if not phase07_path.exists():
+        errors.append("missing active Phase 07 GraphRAG LLM extraction plan")
+    else:
+        phase07 = phase07_path.read_text(encoding="utf-8")
+        for phrase in [
+            "model_refs.entity_extraction_llm_id",
+            "LLM 抽取是默认主路径",
+            "规则/正则只辅助日期、金额、条款号",
+        ]:
+            if phrase not in phase07:
+                errors.append(f"Phase 07 GraphRAG LLM extraction plan missing phrase: {phrase}")
+    return errors
 
 
 def run_verification() -> VerificationResult:

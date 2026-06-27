@@ -20,8 +20,10 @@
 - `.agent/references/task-routing.md`：任务路由入口。
 - `.agent/references/workflow.md`：执行步骤、停止条件、验证和收尾。
 - `.agent/references/`：精简导航、任务路由、工作流和查表层。
-- `.agent/programs/current.md`：当前 program 状态指针。
-- `.agent/programs/zuno-target-runtime-v2/`：当前可执行 Agent program。
+- `.agent/programs/current.md`：当前执行状态。
+- `.agent/programs/implementation-roadmap.md`：当前执行计划总目录。
+- `.agent/programs/phase-*.md`：当前计划的平铺 phase 文件。
+- `.agent/programs/closure-checklist.md`：当前 phase 收口清单。
 - `.agent/architecture/near-term/`：近期目标架构详细设计。
 - `.agent/architecture/future/`：长期方向，不是当前实现目标。
 - `.agent/templates/`：可复用提示和报告。

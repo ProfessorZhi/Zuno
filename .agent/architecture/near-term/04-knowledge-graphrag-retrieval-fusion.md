@@ -55,6 +55,31 @@ The router records requested method, resolved method, fallback reason, and
 method availability. If graph/community assets are not ready, the trace must
 show the fallback clearly.
 
+## GraphRAG 实体抽取目标
+
+GraphRAG 建图的 entity / relation discovery 默认走 LLM 抽取。规则、正则和词典不是主路径，只能作为确定格式辅助、预处理、LLM 不可用时的 fallback 或 baseline test。
+
+知识库配置必须能表达：
+
+```text
+graph_index_settings.entity_extraction_mode = llm
+model_refs.entity_extraction_llm_id = <selected LLM id>
+```
+
+LLM 抽取输出必须是 schema-constrained JSON，并至少包含：
+
+- entity name
+- entity type
+- relation type
+- source chunk id
+- source span
+- confidence
+- prompt version
+- schema version
+- fallback reason when applicable
+
+日期、金额、条款号、编号等确定格式可以由规则层辅助抽取，但这些辅助结果必须进入同一 evidence / trace，而不能绕过 GraphRAG extraction trace。
+
 ## 多查询与多检索器流程
 
 Target enhanced retrieval:
