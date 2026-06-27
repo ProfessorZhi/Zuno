@@ -179,12 +179,11 @@ def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
             "README.md",
             "current.md",
             "implementation-roadmap.md",
-            "PHASE01_public-architecture-surface.md",
-            "PHASE02_local-agent-skill-system.md",
-            "PHASE03_tools-tests-guardrails.md",
-            "PHASE04_backend-facade-layers.md",
-            "PHASE05_large-file-light-split.md",
-            "PHASE06_architecture-diagrams-html.md",
+            "PHASE01_workflow-doc-audit.md",
+            "PHASE02_agent-bootloader-routing.md",
+            "PHASE03_skill-template-program-system.md",
+            "PHASE04_workflow-verifiers-drift-tests.md",
+            "PHASE05_closure-history-archive.md",
             "closure-checklist.md",
         ]
     )
@@ -199,19 +198,19 @@ def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
-        "zuno-architecture-surface-cleanup-v1",
-        "PHASE01：公开封面与架构叙事收口",
-        "PHASE02：本地 Agent Skill System 收口",
-        "PHASE03：tools / tests 工作流防回归",
-        "PHASE04：后端六层 facade 分层",
-        "PHASE05：大文件轻拆",
-        "PHASE06：架构图与 HTML 展示页",
+        "zuno-workflow-doc-system-v1",
+        "PHASE01：工作流与文档系统只读审计",
+        "PHASE02：Agent bootloader 与 routing 收口",
+        "PHASE03：Skill / Template / Program 系统收口",
+        "PHASE04：Workflow verifier 与漂移测试",
+        "PHASE05：Program closure 与 history 归档",
+        "zuno-target-architecture-refresh-v1",
     ]:
         assert phrase in roadmap
-    phase02 = (
-        REPO_ROOT / ".agent/programs/PHASE02_local-agent-skill-system.md"
+    phase03 = (
+        REPO_ROOT / ".agent/programs/PHASE03_skill-template-program-system.md"
     ).read_text(encoding="utf-8")
-    assert "Zuno Local Agent Skill System" in phase02
+    assert "本地 skill system" in phase03
 
 
 def test_architecture_diagram_generation_paths_are_pinned() -> None:

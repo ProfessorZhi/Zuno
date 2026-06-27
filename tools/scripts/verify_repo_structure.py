@@ -19,13 +19,17 @@ REQUIRED_PATHS = [
     ".agent/references/docs-map.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/PHASE01_public-architecture-surface.md",
-    ".agent/programs/PHASE02_local-agent-skill-system.md",
-    ".agent/programs/PHASE03_tools-tests-guardrails.md",
-    ".agent/programs/PHASE04_backend-facade-layers.md",
-    ".agent/programs/PHASE05_large-file-light-split.md",
-    ".agent/programs/PHASE06_architecture-diagrams-html.md",
+    ".agent/programs/PHASE01_workflow-doc-audit.md",
+    ".agent/programs/PHASE02_agent-bootloader-routing.md",
+    ".agent/programs/PHASE03_skill-template-program-system.md",
+    ".agent/programs/PHASE04_workflow-verifiers-drift-tests.md",
+    ".agent/programs/PHASE05_closure-history-archive.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/architecture/future/programs/README.md",
+    ".agent/architecture/future/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md",
+    ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
+    ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
+    ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
     ".agent/architecture/README.md",
     ".agent/architecture/blueprint.html",
     ".agent/architecture/future/README.md",
@@ -156,9 +160,10 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "Phase 11C：active runtime cleanup 已完成",
         "Phase 12：已通过 target migration closure evidence 关闭",
         "受限历史兼容",
-        "zuno-architecture-surface-cleanup-v1",
-        "PHASE01：公开封面与架构叙事收口",
-        "PHASE06：架构图与 HTML 展示页",
+        "zuno-workflow-doc-system-v1",
+        "PHASE01：工作流与文档系统只读审计",
+        "zuno-target-architecture-refresh-v1",
+        "zuno-architecture-visuals-v1",
     ],
 }
 
@@ -246,29 +251,29 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     errors = [
         f"active architecture surface roadmap missing phase plan: {phrase}"
         for phrase in [
-            "zuno-architecture-surface-cleanup-v1",
-            "PHASE01：公开封面与架构叙事收口",
-            "PHASE02：本地 Agent Skill System 收口",
-            "PHASE03：tools / tests 工作流防回归",
-            "PHASE04：后端六层 facade 分层",
-            "PHASE05：大文件轻拆",
-            "PHASE06：架构图与 HTML 展示页",
+            "zuno-workflow-doc-system-v1",
+            "PHASE01：工作流与文档系统只读审计",
+            "PHASE02：Agent bootloader 与 routing 收口",
+            "PHASE03：Skill / Template / Program 系统收口",
+            "PHASE04：Workflow verifier 与漂移测试",
+            "PHASE05：Program closure 与 history 归档",
+            "zuno-target-architecture-refresh-v1",
             "每次新 program 都从 `PHASE01` 开始编号",
         ]
         if phrase not in roadmap
     ]
-    phase02_path = REPO_ROOT / ".agent/programs/PHASE02_local-agent-skill-system.md"
-    if not phase02_path.exists():
-        errors.append("missing active PHASE02 local Agent Skill System plan")
+    phase03_path = REPO_ROOT / ".agent/programs/PHASE03_skill-template-program-system.md"
+    if not phase03_path.exists():
+        errors.append("missing active PHASE03 Skill / Template / Program plan")
     else:
-        phase02 = phase02_path.read_text(encoding="utf-8")
+        phase03 = phase03_path.read_text(encoding="utf-8")
         for phrase in [
-            "Zuno Local Agent Skill System",
-            "When To Use",
-            "Lessons Learned",
+            "本地 skill system",
+            "skill / lesson / playbook",
+            "queued program",
         ]:
-            if phrase not in phase02:
-                errors.append(f"PHASE02 local Agent Skill System plan missing phrase: {phrase}")
+            if phrase not in phase03:
+                errors.append(f"PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     system_yaml_path = REPO_ROOT / ".agent/system.yaml"
     if not system_yaml_path.exists():
         errors.append("missing .agent/system.yaml")

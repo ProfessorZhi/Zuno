@@ -25,13 +25,17 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/system.yaml",
         ".agent/programs/README.md",
         ".agent/programs/implementation-roadmap.md",
-        ".agent/programs/PHASE01_public-architecture-surface.md",
-        ".agent/programs/PHASE02_local-agent-skill-system.md",
-        ".agent/programs/PHASE03_tools-tests-guardrails.md",
-        ".agent/programs/PHASE04_backend-facade-layers.md",
-        ".agent/programs/PHASE05_large-file-light-split.md",
-        ".agent/programs/PHASE06_architecture-diagrams-html.md",
+        ".agent/programs/PHASE01_workflow-doc-audit.md",
+        ".agent/programs/PHASE02_agent-bootloader-routing.md",
+        ".agent/programs/PHASE03_skill-template-program-system.md",
+        ".agent/programs/PHASE04_workflow-verifiers-drift-tests.md",
+        ".agent/programs/PHASE05_closure-history-archive.md",
         ".agent/programs/closure-checklist.md",
+        ".agent/architecture/future/programs/README.md",
+        ".agent/architecture/future/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md",
+        ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
+        ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
+        ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
         "docs/history/programs/zuno-target-runtime-v2/README.md",
         "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
         "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
@@ -269,7 +273,8 @@ def test_current_program_points_to_architecture_surface_and_archives_old_candida
     )
 
     assert "当前 active program 就是 `.agent/programs/` 根目录这一层" in current
-    assert "zuno-architecture-surface-cleanup-v1" in current
+    assert "zuno-workflow-doc-system-v1" in current
+    assert "zuno-target-architecture-refresh-v1" in current
     assert "PHASE01" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
@@ -354,24 +359,24 @@ def test_active_program_starts_from_phase01_and_has_surface_cleanup_plan() -> No
         encoding="utf-8"
     )
     phase01 = (
-        REPO_ROOT / ".agent" / "programs" / "PHASE01_public-architecture-surface.md"
+        REPO_ROOT / ".agent" / "programs" / "PHASE01_workflow-doc-audit.md"
     ).read_text(encoding="utf-8")
-    phase02 = (
-        REPO_ROOT / ".agent" / "programs" / "PHASE02_local-agent-skill-system.md"
+    phase03 = (
+        REPO_ROOT / ".agent" / "programs" / "PHASE03_skill-template-program-system.md"
     ).read_text(encoding="utf-8")
 
     for phrase in [
-        "zuno-architecture-surface-cleanup-v1",
-        "PHASE01：公开封面与架构叙事收口",
-        "PHASE02：本地 Agent Skill System 收口",
-        "PHASE03：tools / tests 工作流防回归",
-        "PHASE04：后端六层 facade 分层",
-        "PHASE05：大文件轻拆",
-        "PHASE06：架构图与 HTML 展示页",
+        "zuno-workflow-doc-system-v1",
+        "PHASE01：工作流与文档系统只读审计",
+        "PHASE02：Agent bootloader 与 routing 收口",
+        "PHASE03：Skill / Template / Program 系统收口",
+        "PHASE04：Workflow verifier 与漂移测试",
+        "PHASE05：Program closure 与 history 归档",
         "每次新 program 都从 `PHASE01` 开始编号",
+        "zuno-target-architecture-refresh-v1",
     ]:
         assert phrase in roadmap
 
-    assert "README" in phase01
-    assert "Zuno Local Agent Skill System" in phase02
-    assert "Lessons Learned" in phase02
+    assert "docs/architecture" in phase01
+    assert "本地 skill system" in phase03
+    assert "skill / lesson / playbook" in phase03

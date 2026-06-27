@@ -20,6 +20,11 @@ and evidence, not the active Agent execution path.
   stackless baseline comparison, trace metadata, legacy grep classification,
   docs sync, and final evidence. It is no longer active executable program
   material.
+- `zuno-architecture-surface-cleanup-v1/`: completed architecture surface
+  cleanup program. It covered the first pass of public architecture surface,
+  local Agent Skill System, guardrails, backend facade layers, large-file
+  split planning, and architecture diagrams / HTML. It is replaced by the
+  new five-program short-term queue.
 
 ## Rule
 

@@ -104,9 +104,10 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "docs/architecture/audits",
         "docs/development",
         "前台文档默认使用中文",
-        "zuno-architecture-surface-cleanup-v1",
-        "PHASE01：公开封面与架构叙事收口",
-        "PHASE06：架构图与 HTML 展示页",
+        "zuno-workflow-doc-system-v1",
+        "PHASE01：工作流与文档系统只读审计",
+        "zuno-target-architecture-refresh-v1",
+        "zuno-architecture-visuals-v1",
         "docs/architecture/diagrams.md",
     ]:
         assert phrase in content
@@ -203,9 +204,10 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "Phase 11C：active runtime cleanup 已完成",
         "Phase 12：已通过 target migration closure evidence 关闭",
         "受限历史兼容",
-        "zuno-architecture-surface-cleanup-v1",
-        "PHASE01：公开封面与架构叙事收口",
-        "PHASE06：架构图与 HTML 展示页",
+        "zuno-workflow-doc-system-v1",
+        "PHASE01：工作流与文档系统只读审计",
+        "zuno-target-architecture-refresh-v1",
+        "zuno-architecture-visuals-v1",
     ]:
         assert phrase in roadmap
 

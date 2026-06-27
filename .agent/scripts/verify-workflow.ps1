@@ -32,13 +32,13 @@ Require-Path ".agent\references\verification-map.md"
 Require-Path ".agent\system.yaml"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
-Require-Path ".agent\programs\PHASE01_public-architecture-surface.md"
-Require-Path ".agent\programs\PHASE02_local-agent-skill-system.md"
-Require-Path ".agent\programs\PHASE03_tools-tests-guardrails.md"
-Require-Path ".agent\programs\PHASE04_backend-facade-layers.md"
-Require-Path ".agent\programs\PHASE05_large-file-light-split.md"
-Require-Path ".agent\programs\PHASE06_architecture-diagrams-html.md"
+Require-Path ".agent\programs\PHASE01_workflow-doc-audit.md"
+Require-Path ".agent\programs\PHASE02_agent-bootloader-routing.md"
+Require-Path ".agent\programs\PHASE03_skill-template-program-system.md"
+Require-Path ".agent\programs\PHASE04_workflow-verifiers-drift-tests.md"
+Require-Path ".agent\programs\PHASE05_closure-history-archive.md"
 Require-Path ".agent\programs\closure-checklist.md"
+Require-Path ".agent\architecture\future\programs\README.md"
 Require-NoPath ".agent\programs\zuno-target-runtime-v2"
 Require-NoPath ".agent\programs\phase-05-memory-engine.md"
 Require-NoPath ".agent\programs\phase-06-capability-tool-retrieval.md"
@@ -87,11 +87,11 @@ $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md
 if ($currentProgram -notmatch "\.agent/programs/") {
     $failures.Add("current-program.md does not point to the flat active program directory")
 }
-if ($currentProgram -notmatch "PHASE01_public-architecture-surface.md") {
-    $failures.Add("current-program.md missing PHASE01 public architecture surface phase")
+if ($currentProgram -notmatch "PHASE01_workflow-doc-audit.md") {
+    $failures.Add("current-program.md missing PHASE01 workflow doc audit phase")
 }
-if ($currentProgram -notmatch "zuno-architecture-surface-cleanup-v1") {
-    $failures.Add("current-program.md missing active architecture surface program id")
+if ($currentProgram -notmatch "zuno-workflow-doc-system-v1") {
+    $failures.Add("current-program.md missing active workflow doc system program id")
 }
 
 if ($failures.Count -gt 0) {

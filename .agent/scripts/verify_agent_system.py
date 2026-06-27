@@ -38,17 +38,22 @@ REQUIRED_PATHS = [
     ".agent/programs/README.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/PHASE01_public-architecture-surface.md",
-    ".agent/programs/PHASE02_local-agent-skill-system.md",
-    ".agent/programs/PHASE03_tools-tests-guardrails.md",
-    ".agent/programs/PHASE04_backend-facade-layers.md",
-    ".agent/programs/PHASE05_large-file-light-split.md",
-    ".agent/programs/PHASE06_architecture-diagrams-html.md",
+    ".agent/programs/PHASE01_workflow-doc-audit.md",
+    ".agent/programs/PHASE02_agent-bootloader-routing.md",
+    ".agent/programs/PHASE03_skill-template-program-system.md",
+    ".agent/programs/PHASE04_workflow-verifiers-drift-tests.md",
+    ".agent/programs/PHASE05_closure-history-archive.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/architecture/future/programs/README.md",
+    ".agent/architecture/future/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md",
+    ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
+    ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
+    ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/implementation-phases/README.md",
+    "docs/history/programs/zuno-architecture-surface-cleanup-v1/README.md",
     "docs/history/programs/README.md",
 ]
 
@@ -427,12 +432,11 @@ def main() -> int:
             "README.md",
             "current.md",
             "implementation-roadmap.md",
-            "PHASE01_public-architecture-surface.md",
-            "PHASE02_local-agent-skill-system.md",
-            "PHASE03_tools-tests-guardrails.md",
-            "PHASE04_backend-facade-layers.md",
-            "PHASE05_large-file-light-split.md",
-            "PHASE06_architecture-diagrams-html.md",
+            "PHASE01_workflow-doc-audit.md",
+            "PHASE02_agent-bootloader-routing.md",
+            "PHASE03_skill-template-program-system.md",
+            "PHASE04_workflow-verifiers-drift-tests.md",
+            "PHASE05_closure-history-archive.md",
             "closure-checklist.md",
         ]
     )
@@ -441,26 +445,29 @@ def main() -> int:
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "zuno-architecture-surface-cleanup-v1",
-        "PHASE01：公开封面与架构叙事收口",
-        "PHASE02：本地 Agent Skill System 收口",
-        "PHASE03：tools / tests 工作流防回归",
-        "PHASE04：后端六层 facade 分层",
-        "PHASE05：大文件轻拆",
-        "PHASE06：架构图与 HTML 展示页",
+        "zuno-workflow-doc-system-v1",
+        "PHASE01：工作流与文档系统只读审计",
+        "PHASE02：Agent bootloader 与 routing 收口",
+        "PHASE03：Skill / Template / Program 系统收口",
+        "PHASE04：Workflow verifier 与漂移测试",
+        "PHASE05：Program closure 与 history 归档",
         "每次新 program 都从 `PHASE01` 开始编号",
+        "zuno-target-architecture-refresh-v1",
+        "zuno-repo-layout-cleanup-v1",
+        "zuno-runtime-architecture-upgrade-v1",
+        "zuno-architecture-visuals-v1",
     ]:
         if phrase not in roadmap:
             errors.append(f"active architecture surface roadmap missing phrase: {phrase}")
 
-    phase02 = _read(".agent/programs/PHASE02_local-agent-skill-system.md")
+    phase03 = _read(".agent/programs/PHASE03_skill-template-program-system.md")
     for phrase in [
-        "Zuno Local Agent Skill System",
-        "When To Use",
-        "Lessons Learned",
+        "本地 skill system",
+        "skill / lesson / playbook",
+        "queued program",
     ]:
-        if phrase not in phase02:
-            errors.append(f"PHASE02 missing local skill system phrase: {phrase}")
+        if phrase not in phase03:
+            errors.append(f"PHASE03 missing skill/template/program phrase: {phrase}")
 
     system_yaml = _read(".agent/system.yaml")
     for phrase in [

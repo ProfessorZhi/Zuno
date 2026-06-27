@@ -1,26 +1,29 @@
 # Agent 执行计划
 
-`.agent/programs/` 只存放当前可执行计划。这里回答“下一步按哪些 phase 做、每个 phase 怎么验收”，不存放理想目标架构。
+`.agent/programs/` 只存放当前可执行计划。这里回答“下一步按哪些 phase 做、每个 phase 怎么验收”，不存放理想目标架构，也不同时放多套 active program。
 
-本目录保持一层平铺。不要在当前前台再新建 `.agent/programs/<program>/` 或 `implementation-phases/` 子目录。每次打开新的执行计划，都从 `PHASE01` 开始编号；执行计划被替换时，旧 phase 文件从当前前台移除，需要保留证据的旧材料移动到 `docs/history/programs/`。
+本目录保持一层平铺。每次打开新的执行计划，都从 `PHASE01` 开始编号；执行计划被替换时，旧 phase 文件从当前前台移除，需要保留证据的旧材料移动到 `docs/history/programs/`。
 
 当前 program：
 
 ```text
-zuno-architecture-surface-cleanup-v1
+zuno-workflow-doc-system-v1
 ```
 
 ## 当前入口
 
 - [current.md](current.md)：当前状态和当前打开的 phase。
 - [implementation-roadmap.md](implementation-roadmap.md)：当前执行计划总目录。
-- [PHASE01_public-architecture-surface.md](PHASE01_public-architecture-surface.md)：公开封面与架构叙事收口。
-- [PHASE02_local-agent-skill-system.md](PHASE02_local-agent-skill-system.md)：本地 Agent Skill System 收口。
-- [PHASE03_tools-tests-guardrails.md](PHASE03_tools-tests-guardrails.md)：tools / tests 工作流防回归。
-- [PHASE04_backend-facade-layers.md](PHASE04_backend-facade-layers.md)：后端六层 facade 分层。
-- [PHASE05_large-file-light-split.md](PHASE05_large-file-light-split.md)：大文件轻拆。
-- [PHASE06_architecture-diagrams-html.md](PHASE06_architecture-diagrams-html.md)：架构图与 HTML 展示页。
+- [PHASE01_workflow-doc-audit.md](PHASE01_workflow-doc-audit.md)：工作流与文档系统只读审计。
+- [PHASE02_agent-bootloader-routing.md](PHASE02_agent-bootloader-routing.md)：`AGENTS.md` 与 `.agent/system.yaml` 路由收口。
+- [PHASE03_skill-template-program-system.md](PHASE03_skill-template-program-system.md)：skills、templates、programs 的自洽边界。
+- [PHASE04_workflow-verifiers-drift-tests.md](PHASE04_workflow-verifiers-drift-tests.md)：工作流 verifier 和漂移测试。
+- [PHASE05_closure-history-archive.md](PHASE05_closure-history-archive.md)：program closure 与历史归档。
 - [closure-checklist.md](closure-checklist.md)：每个 phase 的收尾验收清单。
+
+## 已排队但不 active 的 program
+
+后续 program 草案放在 `.agent/architecture/future/programs/`。这些文件是排队计划，不是当前执行面，不允许直接把其中 phase 当成 active phase 执行。
 
 ## 与 architecture 的边界
 

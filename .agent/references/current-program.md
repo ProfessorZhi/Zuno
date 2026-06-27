@@ -4,63 +4,58 @@
 
 - `.agent/programs/`
 
-当前 program 是 `zuno-architecture-surface-cleanup-v1`。它接在目标运行时第一轮 slice 之后，目标不是继续堆 feature，而是成熟项目封面化、分层目录落地、本地 Agent Skill System 收口、tools/tests 防回归和架构图展示。
+当前 program 是 `zuno-workflow-doc-system-v1`。它是短期五个 program 的第一个，目标不是继续堆 runtime feature，而是先把本地文档系统、Agent 工作流、program 平铺规则、skill/template 边界和 verifier 防漂移机制收口。
 
-后续执行顺序必须线性推进：
+## 为什么先做 Program 1
+
+后续目标架构升版、文件夹整理、runtime 架构升级和架构 HTML 都会持续修改文档和边界。如果工作流不先自洽，后续每轮都会靠临时提示词推进，容易再次出现 active program 过长、phase 编号漂移、旧计划留在前台和 verifier 不同步。
+
+## 当前执行顺序
 
 ```text
-PHASE01：公开封面与架构叙事收口（已完成）
-PHASE02：本地 Agent Skill System 收口（已完成）
-PHASE03：tools / tests 工作流防回归（已完成）
-PHASE04：后端六层 facade 分层（当前待打开）
-PHASE05：大文件轻拆
-PHASE06：架构图与 HTML 展示页
+PHASE01：工作流与文档系统只读审计
+PHASE02：Agent bootloader 与 routing 收口
+PHASE03：Skill / Template / Program 系统收口
+PHASE04：Workflow verifier 与漂移测试
+PHASE05：Program closure 与 history 归档
 ```
 
-当前执行焦点是 PHASE04。PHASE05 只能先做只读拆分审计和计划，PHASE06 可以并行做架构图/HTML 展示页，但主线程必须负责最终合并和集成验证。
+## 后续 program 队列
 
-最新完成程序：
+后续 program 只作为 queued drafts 存放在 `.agent/architecture/future/programs/`，不能直接当作 active program 执行。打开其中任一 program 时，必须先归档当前 `.agent/programs/`，再把对应 roadmap 和 phase 文件迁入 `.agent/programs/`，并从 `PHASE01` 重新开始。
 
+```text
+Program 2：zuno-target-architecture-refresh-v1
+Program 3：zuno-repo-layout-cleanup-v1
+Program 4：zuno-runtime-architecture-upgrade-v1
+Program 5：zuno-architecture-visuals-v1
+```
+
+## 最新完成程序
+
+- `docs/history/programs/zuno-architecture-surface-cleanup-v1/`
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
-
-面向人的正式状态见：
-
-- `docs/architecture/roadmap.md`
-
-## 为什么保留归档程序
-
-之前的 Phase 0-6 closure 已完成，是历史事实。
-
-已完成工作从已证明的 11A/11B runtime 状态推进到目标架构和目标仓库布局，并完成 official GraphRAG cleanup 11C/12，再进入 Context/Memory 与 Capability 实现阶段。
-
-## 已完成状态
-
-- Target Migration Phase 00 已完成。
-- Phase 01 active runtime cleanup 已完成。
-- Official cleanup Phase 11A 和 11B 已完成。
-- Official cleanup Phase 11C active runtime cleanup 已关闭。受限 migration aliases 只保留在 storage/eval/DB compatibility 等测试语境中。
-- 旧 `tests/compat/` holding area 已退休。
-- root `domain-packs/` 资产已归档到 `docs/history/domain-packs/root-contract-review/`。
-- `DomainQAGraph` 后端源码和 `src/backend/zuno/services/domain_pack/` runtime service package 已从当前后端移除。
-- Contract Review assets 保留为 GraphRAG Project / eval 证据，不再代表 active Domain Pack 主线。
 
 ## 当前参考文件
 
 - `.agent/programs/README.md`
 - `.agent/programs/current.md`
 - `.agent/programs/implementation-roadmap.md`
-- `.agent/programs/PHASE01_public-architecture-surface.md`
-- `.agent/programs/PHASE02_local-agent-skill-system.md`
-- `.agent/programs/PHASE03_tools-tests-guardrails.md`
-- `.agent/programs/PHASE04_backend-facade-layers.md`
-- `.agent/programs/PHASE05_large-file-light-split.md`
-- `.agent/programs/PHASE06_architecture-diagrams-html.md`
+- `.agent/programs/PHASE01_workflow-doc-audit.md`
+- `.agent/programs/PHASE02_agent-bootloader-routing.md`
+- `.agent/programs/PHASE03_skill-template-program-system.md`
+- `.agent/programs/PHASE04_workflow-verifiers-drift-tests.md`
+- `.agent/programs/PHASE05_closure-history-archive.md`
 - `.agent/programs/closure-checklist.md`
-- `docs/history/programs/zuno-target-runtime-v2/`
-- `docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md`
-- `docs/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
-- `docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
-- `docs/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
-- `.agent/architecture/near-term/01-target-runtime-architecture.md`
+- `.agent/architecture/future/programs/README.md`
+- `.agent/architecture/future/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md`
+- `.agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md`
+- `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md`
+- `.agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md`
+- `docs/architecture/roadmap.md`
 
-不要把 V2 Target runtime 当作完全 Current，除非相关代码、测试和 trace evidence 已经证明。不要把旧 active Phase 05-09 恢复到 `.agent/programs/` 当前前台；它们只属于 history。
+## 历史边界
+
+之前的 Phase 0-6 closure 和 `zuno-architecture-surface-cleanup-v1` 已完成，是历史事实。不要把这些旧 phase 恢复到 `.agent/programs/` 当前前台；它们只属于 `docs/history/programs/`。
+
+不要把 V2 Target runtime 当作完全 Current，除非相关代码、测试和 trace evidence 已经证明。不要把 queued program 写成已经完成或已经 current。

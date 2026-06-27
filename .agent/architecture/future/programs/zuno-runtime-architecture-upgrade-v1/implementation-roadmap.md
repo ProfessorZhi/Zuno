@@ -1,0 +1,17 @@
+# Zuno Runtime Architecture Upgrade V1
+
+## 目标
+
+在文档系统和目录边界清楚后，再做真正 runtime 架构升级。
+
+## Phase
+
+1. [PHASE01：Runtime upgrade audit](PHASE01_runtime-upgrade-audit.md)
+2. [PHASE02：GraphRAG LLM entity extraction](PHASE02_graphrag-llm-entity-extraction.md)
+3. [PHASE03：Knowledge extractor configs](PHASE03_knowledge-extractor-configs.md)
+4. [PHASE04：Memory / Capability / Trace hardening](PHASE04_memory-capability-trace-hardening.md)
+5. [PHASE05：Eval / trace closure](PHASE05_eval-trace-closure.md)
+
+## 禁止范围
+
+不恢复多 Agent runtime；Zuno runtime 目标仍是 Single GeneralAgent。

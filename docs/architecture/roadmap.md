@@ -8,13 +8,13 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - `.agent/programs/`
 
-当前 program 是 `zuno-architecture-surface-cleanup-v1`。它接在目标运行时第一轮 slice 之后，当前职责不是继续堆 feature，而是把 Zuno 收口成成熟项目外形：README、docs、`.agent`、目录蓝图、tools/tests 和架构图都能一眼讲清。
+当前 program 是 `zuno-workflow-doc-system-v1`。它是短期五个 program 的第一个，当前职责不是继续堆 feature，而是先把本地文档系统、Agent 工作流、program 平铺规则、skill/template 边界和 verifier 防漂移机制收口。
 
-本 program 的 PHASE01-06 已完成并合入 `main`：公开封面与架构叙事收口、本地 Agent Skill System 收口、tools / tests 工作流防回归、后端六层 facade 分层、大文件轻拆只读审计与计划、架构图与 HTML 展示页。当前下一步不是继续加 feature，而是按 `.agent/programs/closure-checklist.md` 做 program closure、状态归档和后续 program 决策。
+上一轮 `zuno-architecture-surface-cleanup-v1` 的 PHASE01-06 已完成并归档。当前 `.agent/programs/` 已重新从 `PHASE01` 开始，只执行工作流与文档系统升级，不实施 runtime 架构、目录物理迁移或 HTML 重做。
 
 ## 短期四个改进目标
 
-`zuno-architecture-surface-cleanup-v1` 已经把项目从恢复期推进到“可继续收口”的状态，但它不等于成熟项目封面已经完成。下一轮短期目标应继续围绕四件事推进：
+`zuno-architecture-surface-cleanup-v1` 已经把项目从恢复期推进到“可继续收口”的状态，但它不等于成熟项目封面已经完成。短期目标拆成五个 program 串行推进，每个 program 内部再拆 phase，并允许 phase 级多线程并行：
 
 | 短期目标 | 为什么要做 | 当前不足 | 近期收口标准 |
 | --- | --- | --- | --- |
@@ -22,6 +22,16 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 | 本地文档系统和工作流自洽 | 让仓库能由 Agent 按入口、skills、program、templates、verifiers 自助维护，而不是靠临时提示词记忆。 | `AGENTS.md`、`.agent/programs`、`.agent/references`、verifier 已有第一版，但 program closure、history 归档、skill 更新和 docs drift 防线还需要继续收紧。 | 新 program 从 `PHASE01` 开始；旧 active 计划归档；`.agent/references` 保持 skill / lesson / playbook，不膨胀成索引；修改 docs / agent workflow 时有对应 verifier 和 repo tests。 |
 | 文件夹继续分门别类 | 让第一次看仓库的人能从目录名直接读出架构，而不是在 `core`、`services`、`rag`、`retrieval`、`graphrag` 之间拼图。 | 六层 facade 已有，但旧 runtime 仍主要在 `core/`、`services/`、`database/` 等目录；PHASE04 只是 re-export 入口，不是物理迁移完成。 | 先做目录卫生和迁移计划，再小步物理迁移；根目录、`docs/`、`.agent/`、`tools/`、`tests/` 分工稳定；生成物和本地缓存不进入前台。 |
 | 架构 HTML 重做清晰 | 让 GitHub 访问者和面试场景能快速看懂架构，而不是只靠长文本解释。 | HTML 展示已有第一版，但仍偏工具型，视觉和信息层级不够成熟；Mermaid 渲染依赖 CDN；页面还不能完全承担“项目封面图”的展示任务。 | 保持 `docs/architecture/diagrams.md` 为唯一 Mermaid 源；继续优化 `overview.html` 的布局、层级、色彩和说明；图只保留 Current Runtime、Target Runtime、Maintenance Workflow 三张核心图；HTML 不能成为第二套架构真相。 |
+
+## 短期 Program 队列
+
+当前 active program 只在 `.agent/programs/` 根目录平铺存在。后续 program 草案在 `.agent/architecture/future/programs/`，打开时必须迁入 `.agent/programs/` 并从 `PHASE01` 重新编号。
+
+1. `zuno-workflow-doc-system-v1`：当前 active。收口本地文档系统、Agent 工作流、program 平铺规则、skill/template 边界和 verifier。
+2. `zuno-target-architecture-refresh-v1`：queued。更新目标架构，把 API / Agent / Memory / Capability / Knowledge / Platform / Trace 边界讲清，明确 GraphRAG LLM 实体抽取和知识库多配置目标。
+3. `zuno-repo-layout-cleanup-v1`：queued。整理根目录、docs、`.agent`、tools/tests 和后端六层 facade 的目录表达，先计划再小步迁移。
+4. `zuno-runtime-architecture-upgrade-v1`：queued。只在 Program 2/3 边界清楚后推进 runtime slice，重点是 GraphRAG LLM entity extraction、knowledge extractor configs、memory/capability/trace hardening。
+5. `zuno-architecture-visuals-v1`：queued。重做架构 HTML / Mermaid 展示面，保持图形展示不成为第二套架构真相。
 
 已被替换的 V2 目标运行时材料归档在：
 
@@ -41,18 +51,17 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 ## 下一步
 
-当前 active `.agent/programs/` 的 PHASE01-06 已完成。下一步不应继续在旧 program 里追加 phase，而应先做 closure；如果继续推进上面的短期四目标，应打开新的 program，并从 `PHASE01` 重新编号。
+当前 active `.agent/programs/` 是 `zuno-workflow-doc-system-v1`，下一步从 PHASE01 开始执行。不要在上一轮 `zuno-architecture-surface-cleanup-v1` 后继续追加 phase。
 
-已完成的当前 program：
+当前 active program：
 
-1. PHASE01：公开封面与架构叙事收口（已完成）
-2. PHASE02：本地 Agent Skill System 收口（已完成）
-3. PHASE03：tools / tests 工作流防回归（已完成）
-4. PHASE04：后端六层 facade 分层（已完成）
-5. PHASE05：大文件轻拆只读审计与计划（已完成）
-6. PHASE06：架构图与 HTML 展示页（已完成）
+1. PHASE01：工作流与文档系统只读审计
+2. PHASE02：Agent bootloader 与 routing 收口
+3. PHASE03：Skill / Template / Program 系统收口
+4. PHASE04：Workflow verifier 与漂移测试
+5. PHASE05：Program closure 与 history 归档
 
-执行源是 `.agent/architecture/near-term/` 和 `.agent/programs/implementation-roadmap.md`。
+执行源是 `.agent/programs/implementation-roadmap.md`。后续 queued program 源是 `.agent/architecture/future/programs/`。
 
 ## 当前候选主线
 
@@ -79,14 +88,10 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 这些是 foundation，不等于成熟产品能力。
 
-## 未来执行阶段
+## 已归档执行阶段
 
-- PHASE01: README、docs/architecture、Mermaid 三图和公开叙事收口（已完成）。
-- PHASE02: `.agent` 本地 Skill System，包含 `system.yaml`、references skills 和 templates 边界（已完成）。
-- PHASE03: tools / tests 防回归，确保 program 平铺、PHASE01 编号、docs drift 和 skill 文件结构不会漂移（已完成）。
-- PHASE04: backend 六层 facade，先 re-export，不改 runtime 行为（已完成）。
-- PHASE05: `general_agent.py`、capabilities、retrieval orchestrator、fusion 的大文件轻拆只读审计和执行计划（已完成；尚未执行物理拆分）。
-- PHASE06: 架构图 HTML 展示页和 Mermaid 源同步规则（已完成）。
+- `zuno-architecture-surface-cleanup-v1` PHASE01-06 已完成并归档。
+- 旧 V2 target runtime 材料已归档到 `docs/history/programs/zuno-target-runtime-v2/`。
 
 ## 非目标
 
@@ -105,6 +110,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/PHASE*.md`
 - `.agent/programs/closure-checklist.md`
+- `.agent/architecture/future/programs/`
 - `docs/history/programs/zuno-target-runtime-v2/`
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 - `docs/history/programs/official-graphrag-cleanup-v1/`

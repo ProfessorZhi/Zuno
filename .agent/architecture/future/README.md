@@ -5,6 +5,7 @@
 ## 当前文件
 
 - [Future Horizon](future-horizon.md)
+- [Queued Programs](programs/README.md)
 
 ## 边界
 
@@ -19,6 +20,7 @@
 近期目标请优先读：
 
 - `../near-term/`
+- `programs/README.md`
 
 旧 future fragments 已归档到：
 
