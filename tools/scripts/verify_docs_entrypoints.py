@@ -77,6 +77,54 @@ def verify_front_path_shape() -> list[str]:
     ]
 
 
+def verify_architecture_html_sync() -> list[str]:
+    errors: list[str] = []
+    for relative_path in [
+        "docs/architecture/overview.html",
+        ".agent/architecture/blueprint.html",
+        "tools/agent/render_architecture.py",
+    ]:
+        if not (REPO_ROOT / relative_path).exists():
+            errors.append(f"missing architecture diagram sync path: {relative_path}")
+
+    diagrams = _read("docs/architecture/diagrams.md")
+    for phrase in [
+        "Mermaid 源只维护在本文",
+        "python tools/agent/render_architecture.py --write",
+        "#f8f8fb",
+        "#f6f3ff",
+        "#a99cff",
+        "#2c255f",
+        "#9b8cff",
+    ]:
+        if phrase not in diagrams:
+            errors.append(f"docs/architecture/diagrams.md missing diagram sync phrase: {phrase}")
+
+    for relative_path in [
+        "docs/architecture/overview.html",
+        ".agent/architecture/blueprint.html",
+    ]:
+        path = REPO_ROOT / relative_path
+        if not path.exists():
+            continue
+        content = path.read_text(encoding="utf-8")
+        for phrase in [
+            "docs/architecture/diagrams.md",
+            "tools/agent/render_architecture.py",
+            "Current Runtime",
+            "Target Runtime",
+            "Maintenance Workflow",
+            "#f8f8fb",
+            "#f6f3ff",
+            "#a99cff",
+            "#2c255f",
+            "#9b8cff",
+        ]:
+            if phrase not in content:
+                errors.append(f"{relative_path} missing architecture diagram phrase: {phrase}")
+    return errors
+
+
 def main() -> int:
     readme = _read("README.md")
     docs_index = _read("docs/README.md")
@@ -227,6 +275,7 @@ def main() -> int:
     errors.extend(verify_architecture_decision_boundaries())
     errors.extend(verify_active_docs_do_not_link_retired_paths())
     errors.extend(verify_front_path_shape())
+    errors.extend(verify_architecture_html_sync())
 
     if errors:
         for error in errors:
