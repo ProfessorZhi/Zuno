@@ -1,3 +1,5 @@
+import importlib.util
+import sys
 from pathlib import Path
 
 
@@ -218,11 +220,57 @@ def test_architecture_diagrams_expose_current_target_and_maintenance_workflow() 
         "Target Runtime",
         "Maintenance Workflow",
         "```mermaid",
+        "Mermaid 源只维护在本文",
+        "python tools/agent/render_architecture.py --write",
+        "#f8f8fb",
+        "#f6f3ff",
+        "#a99cff",
+        "#2c255f",
+        "#9b8cff",
         "GeneralAgent single loop",
         "Single GeneralAgent Runtime",
         "Domain Pack 只允许作为历史或兼容语境出现",
     ]:
         assert phrase in content
+
+
+def test_architecture_html_is_generated_from_mermaid_source() -> None:
+    for relative_path in [
+        "docs/architecture/overview.html",
+        ".agent/architecture/blueprint.html",
+    ]:
+        content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+        for phrase in [
+            "docs/architecture/diagrams.md",
+            "tools/agent/render_architecture.py",
+            "CDN Mermaid runtime",
+            "Current Runtime",
+            "Target Runtime",
+            "Maintenance Workflow",
+            "#f8f8fb",
+            "#f6f3ff",
+            "#a99cff",
+            "#2c255f",
+            "#9b8cff",
+        ]:
+            assert phrase in content
+
+
+def test_architecture_html_matches_rendered_mermaid_source() -> None:
+    module_path = REPO_ROOT / "tools/agent/render_architecture.py"
+    spec = importlib.util.spec_from_file_location("render_architecture", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    render_architecture = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = render_architecture
+    spec.loader.exec_module(render_architecture)
+
+    expected = render_architecture.build_html()
+    for relative_path in [
+        "docs/architecture/overview.html",
+        ".agent/architecture/blueprint.html",
+    ]:
+        assert (REPO_ROOT / relative_path).read_bytes() == expected.encode("utf-8")
 
 
 def test_repository_docs_do_not_keep_local_download_reference() -> None:

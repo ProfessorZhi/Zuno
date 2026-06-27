@@ -21,12 +21,15 @@ def test_required_current_paths_exist() -> None:
         ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
         ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
         ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
+        ".agent/architecture/blueprint.html",
         "apps/desktop",
         "apps/web",
         "docs/README.md",
         "docs/architecture/current-architecture.md",
         "docs/architecture/target-architecture.md",
         "docs/architecture/roadmap.md",
+        "docs/architecture/diagrams.md",
+        "docs/architecture/overview.html",
         "docs/evidence/public-demo.md",
         "docs/reference/terminology.md",
         "docs/history/README.md",
@@ -39,6 +42,7 @@ def test_required_current_paths_exist() -> None:
         "docs/history/specs",
         "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
         "src/backend/zuno/main.py",
+        "tools/agent/render_architecture.py",
         "tools/evals/zuno",
     ]
 
@@ -64,6 +68,7 @@ def test_repo_structure_verifier_pins_current_front_path() -> None:
         "docs/architecture/current-architecture.md",
         "docs/architecture/target-architecture.md",
         "docs/architecture/roadmap.md",
+        "docs/architecture/overview.html",
         "docs/evidence/public-demo.md",
         "docs/reference/terminology.md",
         "docs/history/audits",
@@ -207,6 +212,21 @@ def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
         REPO_ROOT / ".agent/programs/PHASE02_local-agent-skill-system.md"
     ).read_text(encoding="utf-8")
     assert "Zuno Local Agent Skill System" in phase02
+
+
+def test_architecture_diagram_generation_paths_are_pinned() -> None:
+    content = (REPO_ROOT / "tools/scripts/verify_repo_structure.py").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "docs/architecture/diagrams.md",
+        "docs/architecture/overview.html",
+        ".agent/architecture/blueprint.html",
+        "tools/agent/render_architecture.py",
+        "verify_architecture_diagram_outputs",
+    ]:
+        assert phrase in content
 
 
 def test_superseded_specs_are_archived_out_of_architecture_front_path() -> None:

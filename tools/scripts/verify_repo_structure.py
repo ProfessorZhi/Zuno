@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import importlib.util
+import sys
 from pathlib import Path
 
 
@@ -25,6 +27,7 @@ REQUIRED_PATHS = [
     ".agent/programs/PHASE06_architecture-diagrams-html.md",
     ".agent/programs/closure-checklist.md",
     ".agent/architecture/README.md",
+    ".agent/architecture/blueprint.html",
     ".agent/architecture/future/README.md",
     ".agent/architecture/decisions/README.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
@@ -44,6 +47,8 @@ REQUIRED_PATHS = [
     "docs/architecture/current-architecture.md",
     "docs/architecture/target-architecture.md",
     "docs/architecture/roadmap.md",
+    "docs/architecture/diagrams.md",
+    "docs/architecture/overview.html",
     "docs/architecture/decisions/README.md",
     "docs/evidence/README.md",
     "docs/evidence/public-demo.md",
@@ -73,6 +78,7 @@ REQUIRED_PATHS = [
     "src/backend/zuno/main.py",
     "tests",
     "tools",
+    "tools/agent/render_architecture.py",
     "tools/evals/zuno",
     "tools/evals/zuno/AGENTS.md",
 ]
@@ -278,6 +284,64 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     return errors
 
 
+def verify_architecture_diagram_outputs() -> list[str]:
+    errors: list[str] = []
+    diagrams = _read_text("docs/architecture/diagrams.md")
+    for phrase in [
+        "Mermaid 源只维护在本文",
+        "python tools/agent/render_architecture.py --check",
+        "#f8f8fb",
+        "#f6f3ff",
+        "#a99cff",
+        "#2c255f",
+        "#9b8cff",
+    ]:
+        if phrase not in diagrams:
+            errors.append(f"docs/architecture/diagrams.md missing diagram sync phrase: {phrase}")
+
+    for relative_path in [
+        "docs/architecture/overview.html",
+        ".agent/architecture/blueprint.html",
+    ]:
+        path = REPO_ROOT / relative_path
+        if not path.exists():
+            errors.append(f"missing architecture diagram HTML: {relative_path}")
+            continue
+        content = path.read_text(encoding="utf-8")
+        for phrase in [
+            "docs/architecture/diagrams.md",
+            "tools/agent/render_architecture.py",
+            "Current Runtime",
+            "Target Runtime",
+            "Maintenance Workflow",
+            "#f8f8fb",
+            "#f6f3ff",
+            "#a99cff",
+            "#2c255f",
+            "#9b8cff",
+        ]:
+            if phrase not in content:
+                errors.append(f"{relative_path} missing diagram HTML phrase: {phrase}")
+    script_path = REPO_ROOT / "tools/agent/render_architecture.py"
+    if script_path.exists():
+        spec = importlib.util.spec_from_file_location("render_architecture", script_path)
+        if spec is None or spec.loader is None:
+            errors.append("cannot load tools/agent/render_architecture.py")
+        else:
+            render_architecture = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = render_architecture
+            spec.loader.exec_module(render_architecture)
+            rendered = render_architecture.build_html()
+            for relative_path in [
+                "docs/architecture/overview.html",
+                ".agent/architecture/blueprint.html",
+            ]:
+                path = REPO_ROOT / relative_path
+                if path.exists() and path.read_text(encoding="utf-8") != rendered:
+                    errors.append(f"generated architecture HTML is stale: {relative_path}")
+    return errors
+
+
 def run_verification() -> VerificationResult:
     return VerificationResult(
         errors=[
@@ -286,6 +350,7 @@ def run_verification() -> VerificationResult:
             *verify_doc_phrases(),
             *verify_target_architecture_html(),
             *verify_active_architecture_surface_phase_plan(),
+            *verify_architecture_diagram_outputs(),
         ]
     )
 
