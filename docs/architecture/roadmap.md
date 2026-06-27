@@ -10,7 +10,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 当前 program 是 `zuno-architecture-surface-cleanup-v1`。它接在目标运行时第一轮 slice 之后，当前职责不是继续堆 feature，而是把 Zuno 收口成成熟项目外形：README、docs、`.agent`、目录蓝图、tools/tests 和架构图都能一眼讲清。
 
-本 program 的 PHASE01-03 已完成并合入 `main`：公开封面与架构叙事收口、本地 Agent Skill System 收口、tools / tests 工作流防回归。当前下一步是 PHASE04 后端六层 facade 分层。
+本 program 的 PHASE01-06 已完成并合入 `main`：公开封面与架构叙事收口、本地 Agent Skill System 收口、tools / tests 工作流防回归、后端六层 facade 分层、大文件轻拆只读审计与计划、架构图与 HTML 展示页。当前下一步不是继续加 feature，而是按 `.agent/programs/closure-checklist.md` 做 program closure、状态归档和后续 program 决策。
 
 已被替换的 V2 目标运行时材料归档在：
 
@@ -35,9 +35,9 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 1. PHASE01：公开封面与架构叙事收口（已完成）
 2. PHASE02：本地 Agent Skill System 收口（已完成）
 3. PHASE03：tools / tests 工作流防回归（已完成）
-4. PHASE04：后端六层 facade 分层（当前待打开）
-5. PHASE05：大文件轻拆
-6. PHASE06：架构图与 HTML 展示页
+4. PHASE04：后端六层 facade 分层（已完成）
+5. PHASE05：大文件轻拆只读审计与计划（已完成）
+6. PHASE06：架构图与 HTML 展示页（已完成）
 
 执行源是 `.agent/architecture/near-term/` 和 `.agent/programs/implementation-roadmap.md`。
 
@@ -71,9 +71,9 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 - PHASE01: README、docs/architecture、Mermaid 三图和公开叙事收口（已完成）。
 - PHASE02: `.agent` 本地 Skill System，包含 `system.yaml`、references skills 和 templates 边界（已完成）。
 - PHASE03: tools / tests 防回归，确保 program 平铺、PHASE01 编号、docs drift 和 skill 文件结构不会漂移（已完成）。
-- PHASE04: backend 六层 facade，先 re-export，不改 runtime 行为。
-- PHASE05: `general_agent.py`、capabilities、retrieval orchestrator、fusion 的大文件轻拆。
-- PHASE06: 架构图 HTML 展示页和 Mermaid 源同步规则。
+- PHASE04: backend 六层 facade，先 re-export，不改 runtime 行为（已完成）。
+- PHASE05: `general_agent.py`、capabilities、retrieval orchestrator、fusion 的大文件轻拆只读审计和执行计划（已完成；尚未执行物理拆分）。
+- PHASE06: 架构图 HTML 展示页和 Mermaid 源同步规则（已完成）。
 
 ## 非目标
 
