@@ -2,14 +2,49 @@ version: 1
 
 purpose: "Route Zuno tasks to local skills, templates, docs sync, and verification."
 
+system_identity:
+  name: "Zuno Local Agent Skill System"
+  bootloader: "AGENTS.md"
+  local_skills_root: ".agent/references"
+  template_root: ".agent/templates"
+  active_program_root: ".agent/programs"
+  formal_truth_root: "docs"
+  history_root: "docs/history"
+
 program_rules:
   current_program_root: ".agent/programs"
   phase_filename_pattern: "PHASE[0-9][0-9]_<name>.md"
   new_program_first_phase: "PHASE01"
   replaced_program_policy: "remove old active phase files from .agent/programs; archive evidence under docs/history/programs"
 
+skill_file_contract:
+  recommended_sections:
+    - "When To Use"
+    - "Mental Model"
+    - "Current Truth"
+    - "Target Direction"
+    - "Must Preserve"
+    - "Before Editing"
+    - "Allowed Changes"
+    - "Forbidden Changes"
+    - "Common Failure Patterns"
+    - "Debug Playbooks"
+    - "Focused Tests"
+    - "Docs Sync"
+    - "Lessons Learned"
+
+template_rules:
+  purpose: "execution skeletons only"
+  forbidden_content:
+    - "project knowledge"
+    - "current architecture truth"
+    - "target architecture prose"
+    - "lessons learned"
+    - "debug playbooks"
+
 skill_routes:
-  - match:
+  - name: "docs-agent-system-history"
+    match:
       paths:
         - "README.md"
         - "docs/**"
@@ -19,58 +54,103 @@ skill_routes:
       - ".agent/references/task-routing.md"
       - ".agent/references/workflow.md"
       - ".agent/references/docs-map.md"
+      - ".agent/references/verification-map.md"
       - ".agent/references/known-pitfalls.md"
     templates:
+      - ".agent/templates/requirement-intake.md"
+      - ".agent/templates/readonly-audit-prompt.md"
+      - ".agent/templates/phase-plan.md"
       - ".agent/templates/phase-closure-report.md"
     docs_sync:
+      - "AGENTS.md"
+      - ".agent/README.md"
+      - ".agent/system.yaml"
+      - ".agent/references/README.md"
+      - ".agent/references/current-program.md"
+      - ".agent/references/docs-map.md"
+      - ".agent/references/task-routing.md"
+      - ".agent/references/workflow.md"
+      - ".agent/references/verification-map.md"
+      - ".agent/templates/README.md"
       - "docs/architecture/README.md"
       - "docs/architecture/current-architecture.md"
       - "docs/architecture/target-architecture.md"
       - "docs/architecture/roadmap.md"
-      - ".agent/programs/current.md"
     verify:
+      - "git diff --check"
       - "python .agent/scripts/verify_agent_system.py"
-      - "python .agent/scripts/verify_doc_boundaries.py"
-      - "python tools/scripts/verify_docs_entrypoints.py"
-      - "python tools/scripts/verify_repo_structure.py"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1"
+      - "pytest -q tests/repo/test_agent_system.py -p no:cacheprovider"
 
-  - match:
+  - name: "backend-agent-runtime"
+    match:
       paths:
         - "src/backend/zuno/core/agents/**"
         - "src/backend/zuno/agent/**"
         - "src/backend/zuno/services/memory/**"
         - "src/backend/zuno/memory/**"
     skills:
+      - "src/backend/zuno/AGENTS.md"
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/code-map.md"
+      - ".agent/references/verification-map.md"
+    templates:
+      - ".agent/templates/spec-coding-checklist.md"
+      - ".agent/templates/phase-closure-report.md"
+    docs_sync:
+      - "docs/architecture/current-architecture.md"
+      - "docs/architecture/target-architecture.md"
+      - "docs/architecture/roadmap.md"
+      - ".agent/references/code-map.md"
+      - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
     verify:
       - "pytest -q tests/agent/test_general_agent_project_query_runtime.py"
       - "pytest -q tests/test_generalagent_context_memory_runtime.py"
 
-  - match:
+  - name: "capability-tool-retrieval"
+    match:
       paths:
         - "src/backend/zuno/services/application/capabilities/**"
         - "src/backend/zuno/services/capability_registry.py"
         - "src/backend/zuno/capability/**"
     skills:
+      - "src/backend/zuno/AGENTS.md"
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"
+    templates:
+      - ".agent/templates/spec-coding-checklist.md"
+    docs_sync:
+      - "docs/architecture/current-architecture.md"
+      - "docs/architecture/target-architecture.md"
+      - ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md"
+      - ".agent/references/code-map.md"
     verify:
       - "pytest -q tests/test_toolcard_retrieval.py"
       - "pytest -q tests/test_capability_registry.py"
 
-  - match:
+  - name: "knowledge-graphrag-retrieval"
+    match:
       paths:
         - "src/backend/zuno/services/rag/**"
         - "src/backend/zuno/services/retrieval/**"
         - "src/backend/zuno/services/graphrag/**"
         - "src/backend/zuno/knowledge/**"
     skills:
+      - "src/backend/zuno/AGENTS.md"
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"
       - ".agent/references/known-pitfalls.md"
+    templates:
+      - ".agent/templates/spec-coding-checklist.md"
+      - ".agent/templates/phase-closure-report.md"
+    docs_sync:
+      - "docs/architecture/current-architecture.md"
+      - "docs/architecture/target-architecture.md"
+      - ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md"
+      - ".agent/references/runtime-call-chain.md"
+      - ".agent/references/verification-map.md"
     verify:
       - "pytest -q tests/test_standard_retrieval_composition.py"
       - "pytest -q tests/test_enhanced_retrieval_composition.py"
@@ -82,3 +162,4 @@ stop_conditions:
   - "dependency upgrade"
   - "Domain Pack restored as active public mainline"
   - "Target behavior promoted to Current without code and test evidence"
+  - "verification requires edits outside the authorized task scope"
