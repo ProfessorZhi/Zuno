@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 
@@ -78,8 +79,222 @@ def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
+def _repo_path(repo_root: Path, value: str) -> Path:
+    return repo_root / value.replace("/", "\\")
+
+
+def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
+    errors: list[str] = []
+    programs_root = repo_root / ".agent" / "programs"
+    if not programs_root.exists():
+        return ["missing .agent/programs"]
+
+    directories = sorted(path.name for path in programs_root.iterdir() if path.is_dir())
+    if directories:
+        errors.append(f".agent/programs must be flat; found directories: {directories}")
+
+    phase_files = sorted(
+        path.name for path in programs_root.iterdir() if path.is_file() and path.name.startswith("PHASE")
+    )
+    if not phase_files:
+        errors.append(".agent/programs has no PHASE files")
+        return errors
+
+    phase_numbers: list[int] = []
+    for name in phase_files:
+        match = re.fullmatch(r"PHASE(\d{2})_[A-Za-z0-9_-]+\.md", name)
+        if not match:
+            errors.append(f"active phase filename does not match PHASENN_name.md: {name}")
+            continue
+        phase_numbers.append(int(match.group(1)))
+
+    if phase_numbers and min(phase_numbers) != 1:
+        errors.append(f"active program must start at PHASE01; found first PHASE{min(phase_numbers):02d}")
+    if phase_numbers:
+        expected = list(range(1, max(phase_numbers) + 1))
+        if phase_numbers != expected:
+            errors.append(f"active phase numbers must be contiguous from PHASE01: {phase_numbers}")
+
+    retired_active_patterns = [
+        "phase-05-memory-engine.md",
+        "phase-06-capability-tool-retrieval.md",
+        "phase-07-graphrag-llm-entity-extraction.md",
+        "phase-08-langgraph-runtime.md",
+        "phase-09-product-trace-eval-closure.md",
+    ]
+    for name in retired_active_patterns:
+        if (programs_root / name).exists():
+            errors.append(f"retired active phase file remains in .agent/programs: {name}")
+
+    roadmap = programs_root / "implementation-roadmap.md"
+    if roadmap.exists() and "每次新 program 都从 `PHASE01` 开始编号" not in roadmap.read_text(
+        encoding="utf-8"
+    ):
+        errors.append("implementation-roadmap.md must document that new programs start at PHASE01")
+
+    return errors
+
+
+def _extract_system_yaml_entries(content: str, section: str) -> list[str]:
+    entries: list[str] = []
+    lines = content.splitlines()
+    in_section = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped == f"{section}:":
+            in_section = True
+            continue
+        if in_section and stripped and not line.startswith(" ") and not line.startswith("-"):
+            in_section = False
+        if in_section and stripped.startswith("- "):
+            value = stripped[2:].strip().strip('"').strip("'")
+            if value:
+                entries.append(value)
+    return entries
+
+
+def _command_path(command: str) -> str | None:
+    parts = command.split()
+    if not parts:
+        return None
+    if parts[0] in {"python", "py"} and len(parts) > 1:
+        return parts[1]
+    if parts[0] == "pytest":
+        for part in parts[1:]:
+            if not part.startswith("-"):
+                return part
+    if parts[0].lower() in {"powershell", "pwsh"} and "-File" in parts:
+        index = parts.index("-File")
+        if index + 1 < len(parts):
+            return parts[index + 1]
+    return None
+
+
+def verify_system_yaml(repo_root: Path = REPO_ROOT) -> list[str]:
+    system_yaml_path = repo_root / ".agent" / "system.yaml"
+    if not system_yaml_path.exists():
+        return ["missing .agent/system.yaml"]
+
+    content = system_yaml_path.read_text(encoding="utf-8")
+    errors: list[str] = []
+    for phrase in [
+        'current_program_root: ".agent/programs"',
+        'phase_filename_pattern: "PHASE[0-9][0-9]_<name>.md"',
+        'new_program_first_phase: "PHASE01"',
+    ]:
+        if phrase not in content:
+            errors.append(f".agent/system.yaml missing program rule: {phrase}")
+
+    for section in ["skills", "templates"]:
+        for relative_path in _extract_system_yaml_entries(content, section):
+            if relative_path.startswith(".") and not _repo_path(repo_root, relative_path).exists():
+                errors.append(f".agent/system.yaml references missing {section[:-1]} path: {relative_path}")
+
+    for command in _extract_system_yaml_entries(content, "verify"):
+        path = _command_path(command)
+        if path and not _repo_path(repo_root, path).exists():
+            errors.append(f".agent/system.yaml references missing verify command path: {path}")
+
+    return errors
+
+
+def verify_skill_links(repo_root: Path = REPO_ROOT) -> list[str]:
+    references_root = repo_root / ".agent" / "references"
+    if not references_root.exists():
+        return ["missing .agent/references"]
+
+    errors: list[str] = []
+    markdown_link = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+    for path in sorted(references_root.glob("*.md")):
+        content = path.read_text(encoding="utf-8")
+        if not content.lstrip().startswith("# "):
+            errors.append(f"{path.relative_to(repo_root).as_posix()} must start with a title heading")
+        for raw_target in markdown_link.findall(content):
+            target = raw_target.split("#", 1)[0].strip()
+            if not target or "://" in target or target.startswith("mailto:"):
+                continue
+            resolved = (path.parent / target).resolve()
+            try:
+                resolved.relative_to(repo_root.resolve())
+            except ValueError:
+                errors.append(
+                    f"{path.relative_to(repo_root).as_posix()} links outside repo: {raw_target}"
+                )
+                continue
+            if not resolved.exists():
+                errors.append(
+                    f"{path.relative_to(repo_root).as_posix()} links missing path: {raw_target}"
+                )
+    return errors
+
+
+TEMPLATE_REQUIRED_SECTIONS = {
+    "phase-plan.md": [
+        "## 目标",
+        "## 范围",
+        "## 需要修改的文件",
+        "## 禁止修改的文件",
+        "## 验收闸门",
+        "## 验证命令",
+    ],
+    "phase-closure-report.md": [
+        "## 摘要",
+        "## 修改文件",
+        "## 关键决策",
+        "## 验证结果",
+        "## 剩余风险",
+        "## Git 同步",
+    ],
+    "requirement-intake.md": [
+        "## 决策",
+        "## 自维护检查清单",
+        "## 验收闸门",
+    ],
+    "spec-coding-checklist.md": [
+        "## 任务开始前",
+        "## 执行前",
+        "## 执行中",
+        "## 收口前",
+        "## 完成标准",
+    ],
+    "target-mode-prompt.md": [
+        "## 规则",
+    ],
+}
+
+
+def verify_templates_have_required_sections(repo_root: Path = REPO_ROOT) -> list[str]:
+    templates_root = repo_root / ".agent" / "templates"
+    if not templates_root.exists():
+        return ["missing .agent/templates"]
+
+    errors: list[str] = []
+    for name, sections in TEMPLATE_REQUIRED_SECTIONS.items():
+        path = templates_root / name
+        if not path.exists():
+            errors.append(f"missing required template: .agent/templates/{name}")
+            continue
+        content = path.read_text(encoding="utf-8")
+        for section in sections:
+            if section not in content:
+                errors.append(f".agent/templates/{name} missing required section: {section}")
+
+    readme = templates_root / "README.md"
+    if readme.exists():
+        readme_text = readme.read_text(encoding="utf-8")
+        for phrase in ["templates/", "新增模板必须能被 `.agent/system.yaml` 或 phase 文件引用"]:
+            if phrase not in readme_text:
+                errors.append(f".agent/templates/README.md missing template boundary: {phrase}")
+
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
+    errors.extend(verify_programs_flat())
+    errors.extend(verify_system_yaml())
+    errors.extend(verify_skill_links())
+    errors.extend(verify_templates_have_required_sections())
 
     for relative_path in REQUIRED_PATHS:
         if not (REPO_ROOT / relative_path).exists():

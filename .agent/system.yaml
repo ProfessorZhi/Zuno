@@ -46,7 +46,7 @@ skill_routes:
       - ".agent/references/verification-map.md"
     verify:
       - "pytest -q tests/agent/test_general_agent_project_query_runtime.py"
-      - "pytest -q tests/test_generalagent_context_memory_runtime.py"
+      - "pytest -q tests/agent/test_generalagent_context_memory_runtime.py"
 
   - match:
       paths:
@@ -57,8 +57,8 @@ skill_routes:
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"
     verify:
-      - "pytest -q tests/test_toolcard_retrieval.py"
-      - "pytest -q tests/test_capability_registry.py"
+      - "pytest -q tests/agent/test_capability_system.py"
+      - "pytest -q tests/agent/test_capability_registry.py"
 
   - match:
       paths:
@@ -72,9 +72,9 @@ skill_routes:
       - ".agent/references/verification-map.md"
       - ".agent/references/known-pitfalls.md"
     verify:
-      - "pytest -q tests/test_standard_retrieval_composition.py"
-      - "pytest -q tests/test_enhanced_retrieval_composition.py"
-      - "pytest -q tests/test_retrieval_mode_semantics.py"
+      - "pytest -q tests/retrieval/test_standard_retrieval_composition.py"
+      - "pytest -q tests/retrieval/test_enhanced_retrieval_composition.py"
+      - "pytest -q tests/retrieval/test_retrieval_mode_semantics.py"
 
 stop_conditions:
   - "public API field rename"
