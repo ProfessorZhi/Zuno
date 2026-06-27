@@ -32,7 +32,7 @@ Zuno 的本地工作流由以下表面共同组成：
 
 前台文档默认使用中文；历史档案可以保留原文。
 
-复杂任务默认优先考虑多线程 / 多 agent 协作。主线程只做 coordinator；每个线程使用独立 `codex/` 分支、明确写入范围和目标模式提示词，线程内可以按范围开启多 agent 模式。
+复杂任务先判断工作模式。挂机模式由主线程作为真正的 Codex UI 目标模式一路执行到底；多线程模式由主线程作为真正的 Codex UI 目标模式 coordinator，拆出粗粒度子线程、准备目标模式提示词、分支边界、禁止范围、验收闸门和验证命令。多线程模式下，用户在 UI 里手动创建目标模式线程；提示词目标模式不等于 Codex UI 目标模式。
 
 这里的多 agent 是执行工作流，不是 Zuno runtime 架构目标。近期 runtime 仍保持 Single GeneralAgent，不能因为执行并行而把产品架构写成多 Agent。
 
@@ -40,7 +40,7 @@ Zuno 的本地工作流由以下表面共同组成：
 
 PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，防回归测试目标位置是 `tests/agent_system`。当前 `.agent/scripts` 是过渡期保留。
 
-并行执行的目标方向是：能拆就拆、能并行就并行、每个线程都是目标模式，但合并必须集中到主线程完成。共享文件和冲突风险高的路径由主线程收口。
+目标方向是：主线程先确定执行方案。能由一个目标模式线程连续完成就使用挂机模式；能拆成粗粒度独立块就使用多线程模式。多线程模式的重点是分线程工作，不是主线程吞掉所有实现。共享文件和冲突风险高的路径由主线程收口，合并必须集中到主线程完成。
 
 ## Must Preserve
 
@@ -50,8 +50,8 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - `docs/history/` 保存旧 audit、旧 spec、旧 runbook、旧 UI 原型、旧 phase、旧 program 和被替换设计。
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 是 Target / Proposed 视觉蓝图，不是 Current proof。
 - 修改任务必须验证、commit、push，除非验证或 push 被阻塞。
-- 多线程 / 多 agent 是默认可用工作方式；如果任务能拆成独立范围，优先使用。
-- 每个线程都必须是目标模式；优先打开 Codex UI 目标模式，工具不能直接切换时必须使用 `.agent/templates/target-mode-prompt.md` 写清目标、范围、验收和验证。
+- 两种默认工作模式是挂机模式和多线程模式；选择哪一种取决于任务能否拆成粗粒度、低冲突的独立范围。
+- 多线程模式中，每个子线程都必须是真正的 Codex UI 目标模式；工具不能直接切换 UI 目标模式时，主线程只能输出 `.agent/templates/target-mode-prompt.md` 风格的提示词，并等待用户在 UI 里手动创建目标模式线程。
 - 过时材料移动到 `docs/history/`；旧 audit、旧 spec、旧 runbook、旧 UI 原型和旧 phase/program 不留在前台路径。
 
 ## Before Editing
@@ -63,14 +63,14 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 5. 读需要的 reference skills：`docs-map.md`、`code-map.md`、`verification-map.md`、`known-pitfalls.md`。
 6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
 7. 确认任务允许范围和 forbidden paths。
-8. 如果任务可以拆成独立范围，先规划多线程：每个线程一个分支、一个目标模式提示词、一个验收闸门。
+8. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个线程一个分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建真正的目标模式线程。
 
 ## Allowed Changes
 
 - 对准任务目标的最小文档、skill、template、verifier、test 同步。
 - 将过时材料移动到 `docs/history/`。
 - 更新 `.agent/system.yaml` 以保持 route、docs_sync、verify 一致。
-- 启动多个独立线程或子 agent 处理互不重叠的范围。
+- 在多线程模式下，为多个独立线程准备粗粒度目标模式提示词、分支和验收闸门。
 - 在线程内部使用多 agent 模式处理独立子任务。
 
 ## Forbidden Changes
@@ -82,6 +82,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - 不恢复旧 root-level Agent 入口。
 - 不让多个线程同时编辑同一个共享文件，除非主线程明确负责最终合并。
 - 不把执行工作流里的多 agent 写成 Zuno runtime 的当前架构。
+- 不把提示词目标模式当成 Codex UI 目标模式。
 
 ## Common Failure Patterns
 
@@ -116,14 +117,24 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 4. 执行计划放 `.agent/programs/` 根层。
 5. 旧计划和旧设计归档到 `docs/history/`。
 
-### 多线程目标模式
+### 挂机模式
 
-1. 主线程拆分任务，写清每个线程的目标、允许范围、禁止范围、验收闸门和验证命令。
-2. 每个线程使用独立 `codex/` 分支；能打开 Codex UI 目标模式时必须打开。
-3. 如果工具 API 不能直接打开 UI 目标模式，线程提示词必须显式使用目标模式结构。
-4. 每个线程默认可以使用多 agent 模式，但只能在自己的写入范围内协作。
-5. 线程完成后必须提交并推送；主线程读取 diff 和验证结果，不只信总结。
-6. 主线程按风险顺序合并，解决冲突后运行集成验证。
+1. 主线程本身必须是真正的 Codex UI 目标模式。
+2. 主线程负责计划、实现、验证、提交和推送。
+3. 主线程可以使用多 agent / subagent 辅助审计或实现，但目标、范围、禁止范围和验收闸门不能漂移。
+4. 共享文件多、runtime 风险高、schema/API/DB 变更或用户要求一路执行时，优先使用挂机模式。
+
+### 多线程模式
+
+1. 主线程本身必须是真正的 Codex UI 目标模式，并负责 coordinator 工作。
+2. 主线程拆出粗粒度子线程；每个线程要执行一大块互相独立的工作。
+3. 主线程写清每个线程的目标、允许范围、禁止范围、验收闸门和验证命令。
+4. 每个线程使用独立 `codex/` 分支。
+5. 每个子线程也必须是真正的 Codex UI 目标模式；提示词目标模式不等于 Codex UI 目标模式。
+6. 工具 API 不能直接打开 UI 目标模式时，主线程只输出线程提示词，等待用户在 UI 里手动创建目标模式线程，或改为挂机模式。
+7. 每个线程默认可以使用多 agent 模式，但只能在自己的写入范围内协作。
+8. 线程完成后必须提交并推送；主线程读取 diff 和验证结果，不只信总结。
+9. 主线程按风险顺序合并，解决冲突后运行集成验证。
 
 ## Focused Tests
 

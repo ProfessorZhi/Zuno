@@ -17,17 +17,26 @@ program_rules:
   new_program_first_phase: "PHASE01"
   replaced_program_policy: "remove old active phase files from .agent/programs; archive evidence under docs/history/programs"
 
-parallel_execution:
-  default_policy: "默认优先考虑多线程 / 多 agent 协作"
-  coordinator_thread: "main Codex thread"
-  branch_prefix: "codex/"
-  require_target_mode: true
-  prefer_codex_ui_goal_mode: true
-  allow_multi_agent_inside_thread: true
-  require_disjoint_write_scope: true
-  require_commit_and_push_before_merge: true
-  ui_goal_mode_fallback: "if tool API cannot toggle Codex UI goal mode, use target-mode prompt with explicit objective, allowed scope, forbidden scope, acceptance gates, verification, commit, and push"
+work_modes:
   runtime_boundary: "parallel agents are workflow execution helpers; Zuno runtime target remains Single GeneralAgent"
+  branch_prefix: "codex/"
+  prompt_only_is_not_goal_mode: true
+  prompt_only_phrase: "提示词目标模式不等于 Codex UI 目标模式"
+  hangup_mode:
+    main_thread_goal_mode: true
+    description: "主线程作为真正的 Codex UI 目标模式端到端执行计划、实现、验证、提交和推送"
+    allow_multi_agent_inside_main_thread: true
+    verification_owner: "main thread"
+  multi_thread_mode:
+    coordinator_thread_goal_mode: true
+    coordinator_role: "prepare coarse-grained child prompts, branch scopes, acceptance gates, progress tracking, diff review, integrated verification, and merge"
+    child_thread_goal_mode: "user-created Codex UI goal mode thread required"
+    user_manual_goal_thread_creation: true
+    coarse_grained_child_tasks: true
+    child_threads_allow_multi_agent: true
+    require_disjoint_write_scope: true
+    require_commit_and_push_before_merge: true
+    merge_owner: "main coordinator thread"
 
 skill_file_contract:
   recommended_sections:

@@ -340,10 +340,12 @@ def main() -> int:
         ".agent/programs/",
         "zuno-ideal-architecture-and-repo-layout.html",
         "前台文档默认中文",
-        "## 并行执行规则",
-        "默认优先考虑多线程 / 多 agent 协作",
-        "每个线程都必须是目标模式",
-        "优先打开 Codex UI 的目标模式",
+        "## 工作模式",
+        "### 挂机模式",
+        "### 多线程模式",
+        "提示词里写“目标模式”不等于 UI 目标模式",
+        "粗粒度",
+        "用户在 UI 里手动创建目标模式线程",
         "线程内开启多 agent 模式",
         "Single GeneralAgent",
     ]:
@@ -388,8 +390,11 @@ def main() -> int:
         ".agent/architecture/",
         "本地 Agent Skill System",
         "新写或重写的 Agent 文档默认使用中文",
-        "默认优先考虑多线程 / 多 agent 协作",
-        "每个线程都必须带目标、范围、禁止范围、验收闸门和验证命令",
+        "挂机模式由主线程",
+        "多线程模式由主线程",
+        "提示词目标模式不等于 Codex UI 目标模式",
+        "粗粒度",
+        "用户在 UI 里手动创建真正的目标模式子线程",
     ]:
         if phrase not in agent_readme:
             errors.append(f".agent/README.md missing system phrase: {phrase}")
@@ -467,10 +472,14 @@ def main() -> int:
         "skill_routes:",
         "docs_sync:",
         "verify:",
-        "parallel_execution:",
-        "require_target_mode: true",
-        "prefer_codex_ui_goal_mode: true",
-        "allow_multi_agent_inside_thread: true",
+        "work_modes:",
+        "hangup_mode:",
+        "multi_thread_mode:",
+        "main_thread_goal_mode: true",
+        "coarse_grained_child_tasks: true",
+        "child_threads_allow_multi_agent: true",
+        "prompt_only_is_not_goal_mode: true",
+        "提示词目标模式不等于 Codex UI 目标模式",
         "require_disjoint_write_scope: true",
         "runtime target remains Single GeneralAgent",
         ".agent/references/workflow.md",
@@ -480,12 +489,14 @@ def main() -> int:
 
     workflow_skill = _read(".agent/references/workflow.md")
     for phrase in [
-        "复杂任务默认优先考虑多线程 / 多 agent 协作",
+        "挂机模式由主线程作为真正的 Codex UI 目标模式",
         "每个线程使用独立 `codex/` 分支",
-        "每个线程都必须是目标模式",
-        "线程内可以按范围开启多 agent 模式",
+        "粗粒度",
+        "用户在 UI 里手动创建目标模式线程",
+        "提示词目标模式不等于 Codex UI 目标模式",
         "不把执行工作流里的多 agent 写成 Zuno runtime 的当前架构",
-        "### 多线程目标模式",
+        "### 挂机模式",
+        "### 多线程模式",
     ]:
         if phrase not in workflow_skill:
             errors.append(f".agent/references/workflow.md missing parallel workflow phrase: {phrase}")

@@ -83,18 +83,29 @@ docs/history/
 - 架构替换、目录移动、上下文/记忆、GraphRAG 边界或仓库卫生任务还必须读 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
 - Eval 工具、数据集、指标、配置档和报告 -> `tools/evals/zuno/AGENTS.md` 和 `.agent/references/verification-map.md`。
 
-## 并行执行规则
+## 工作模式
 
-复杂任务默认优先考虑多线程 / 多 agent 协作。这里的多 agent 是 Codex 执行工作流里的协作方式，不是把 Zuno runtime 改成多 Agent 架构；Zuno 近期 runtime 主线仍是 Single GeneralAgent。
+Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这里的多 agent 是 Codex 执行工作流里的协作方式，不是把 Zuno runtime 改成多 Agent 架构；Zuno 近期 runtime 主线仍是 Single GeneralAgent。
 
-- 主线程只做 coordinator：拆任务、限定范围、分配分支、审查结果、解决冲突、跑集成验证和最终合并。
-- 每个线程必须使用独立 worktree 或独立 Codex 线程，并在独立 `codex/` 分支上工作。
-- 每个线程都必须是目标模式：优先打开 Codex UI 的目标模式；如果工具 API 不能直接切换 UI 目标模式，提示词必须显式写明目标、允许范围、禁止范围、验收闸门、验证命令和提交/推送要求。
-- 每个线程默认允许在自己的范围内开启多 agent 模式，但只能处理互相独立的子任务，不能让多个 agent 同时改同一批文件。
+### 挂机模式
+
+- 主线程必须是真正的 Codex UI 目标模式。
+- 适合单一连续任务、共享文件较多、风险需要集中控制，或用户希望主线程一路执行到底的场景。
+- 主线程自己完成计划、实现、验证、提交和推送。
+- 主线程可以在同一目标范围内使用多 agent / subagent 辅助审计或实现，但主线程仍负责最终判断、diff 审查和验证。
+
+### 多线程模式
+
+- 主线程必须是真正的 Codex UI 目标模式，并只做 coordinator：拆任务、给目标模式提示词、限定范围、分配分支、跟踪进度、审查结果、解决冲突、跑集成验证和最终合并。
+- 子线程任务必须粗粒度；每个线程都要执行一大块互相独立的工作，不为很小的编辑拆线程。
+- 每个子线程必须使用独立 worktree 或独立 Codex 线程，并在独立 `codex/` 分支上工作。
+- 每个子线程也必须是真正的 Codex UI 目标模式。提示词里写“目标模式”不等于 UI 目标模式。
+- 如果当前工具 API 不能为新线程打开 Codex UI 目标模式，主线程不能把该线程当作目标模式线程；只能输出线程提示词，等待用户在 UI 里手动创建目标模式线程，或改为挂机模式。
+- 每个子线程默认允许在自己的范围内开启多 agent 模式，但只能处理互相独立的子任务，不能让多个 agent 同时改同一批文件。
 - 线程内开启多 agent 模式时，必须保持同一线程的目标、范围、禁止范围和验收闸门不变。
 - 并行线程必须有不重叠或明确可合并的写入范围；共享文件如 `AGENTS.md`、`.agent/system.yaml`、核心 verifier、README 由主线程收口。
 - 每个线程完成前必须验证、提交、推送；主线程不能只信线程总结，必须读 diff、检查提交、运行集成验证后再合并。
-- 多线程目标模式适合 docs / `.agent` / tools / tests / facade 这类可拆任务；涉及 schema、public API、数据库、runtime 主循环或同一大文件拆分时，先做只读审计再决定是否并行。
+- 多线程模式适合 docs / `.agent` / tools / tests / facade 这类可拆任务；涉及 schema、public API、数据库、runtime 主循环或同一大文件拆分时，先做只读审计再决定是否并行。
 
 ## 当前主线
 
