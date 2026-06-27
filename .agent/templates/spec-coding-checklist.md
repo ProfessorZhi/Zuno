@@ -1,4 +1,4 @@
-# Spec Coding Checklist
+# 规格落地检查清单
 
 ## 任务开始前
 

@@ -1,22 +1,16 @@
-# Closure Checklist
+# 收口清单
 
-Use this checklist before closing a future `zuno-target-runtime-v2` phase.
+关闭未来 `zuno-target-runtime-v2` phase 前使用这份清单。
 
-## Scope
+## 范围
 
-- Confirm the phase is the next linear phase in
-  `implementation-roadmap.md`; do not skip from Phase 05 to Phase 07.
-- Confirm the phase has explicit entry condition, touched owners, exit
-  criteria, and focused verification evidence.
-- Confirm the phase does not require Java services, microservices, event
-  workers, database schema changes, dependency upgrades, full frontend
-  migration, or eval baseline updates unless that phase explicitly authorizes
-  them.
-- Confirm Target behavior is not written as Current without code and tests.
-- Confirm Domain Pack, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and
-  `AgentRuntime` are not restored.
+- 确认当前 phase 是 `implementation-roadmap.md` 里的下一个线性 phase；不要从 Phase 05 跳到 Phase 07。
+- 确认 phase 有明确进入条件、涉及 owner、退出标准和聚焦验证证据。
+- 确认 phase 没有要求 Java 服务、微服务、事件 worker、数据库 schema 变化、依赖升级、完整前端迁移或 eval baseline 更新，除非该 phase 明确授权。
+- 确认没有把 Target 行为写成 Current，除非代码和测试已经证明。
+- 确认没有恢复 Domain Pack、`DomainQAGraph`、`MultiAgentSupervisorGraph` 或 `AgentRuntime`。
 
-## Required Checks
+## 必跑检查
 
 ```powershell
 git status --short
@@ -29,13 +23,11 @@ python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
 ```
 
-Add focused runtime or eval tests for phases that change runtime or eval code.
+如果 phase 修改 runtime 或 eval 代码，还要补聚焦 runtime 或 eval 测试。
 
-## Evidence
+## 证据
 
-Record phase evidence in the active program while a phase is open. When a phase
-is closed and superseded by a slimmer program surface, move detailed evidence
-to:
+phase 打开期间，证据记录在 active program 中。phase 关闭且被更瘦的程序表面替代后，把详细证据移到：
 
 ```text
 docs/history/programs/zuno-target-runtime-v2/

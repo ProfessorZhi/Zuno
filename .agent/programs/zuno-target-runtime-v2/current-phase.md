@@ -1,46 +1,41 @@
-# Current Phase
+# 当前 Phase
 
-## Status
+## 状态
 
-Active executable Agent program.
+当前可执行 Agent 程序。
 
-Phase 00-04 are complete and archived under:
+Phase 00-04 已完成并归档到：
 
 - `docs/history/programs/zuno-target-runtime-v2/`
 
-## Current Focus
+## 当前焦点
 
-Documentation canonicalization is the gate before the next runtime phase. After
-that gate is committed and pushed, the next executable runtime phase is:
+文档中文化、入口收敛和仓库卫生是打开下一个 runtime phase 前的闸门。这个闸门提交并推送后，下一个可执行 runtime phase 是：
 
 ```text
-Phase 05: Memory Engine
+Phase 05：记忆引擎
 ```
 
-Phase 05 must start from the existing minimal `ContextOrchestrator` foundation
-and implement only a focused memory slice. It must not claim mature memory
-behavior until code and tests prove it.
+Phase 05 必须从现有最小 `ContextOrchestrator` 基础出发，只实现聚焦的记忆切片。除非代码和测试已经证明，不要声称成熟记忆产品行为已经完成。
 
-## Completed Slice
+## 已完成切片
 
-- Phase 00: current state gate.
-- Phase 01: active V2 program setup.
-- Phase 02: module boundary audit and verifier.
-- Phase 03: first low-risk backend boundary move.
-- Phase 04: minimal ContextOrchestrator runtime.
+- Phase 00：当前状态闸门。
+- Phase 01：active V2 program setup。
+- Phase 02：模块边界审计和验证器。
+- Phase 03：第一个低风险后端边界移动。
+- Phase 04：最小 ContextOrchestrator runtime。
 
-## Next Runtime Targets
+## 后续 Runtime 目标
 
-Execute phases linearly:
+按线性顺序执行：
 
-1. Phase 05: Memory Engine.
-2. Phase 06: Capability / Tool Retrieval.
-3. Phase 07: Knowledge Retrieval / Fusion.
-4. Phase 08: GeneralAgent LangGraph Runtime.
-5. Phase 09: Product Boundary / Trace / Eval Closure.
+1. Phase 05：Memory Engine。
+2. Phase 06：Capability / Tool Retrieval。
+3. Phase 07：Knowledge Retrieval / Fusion。
+4. Phase 08：GeneralAgent LangGraph Runtime。
+5. Phase 09：Product Boundary / Trace / Eval Closure。
 
-These are Target until code and focused tests prove each slice.
+这些都是 Target，直到每个切片被代码和聚焦测试证明。
 
-Do not open Phase 06 until Phase 05 has focused tests, docs boundary sync, and
-closure evidence. Do not open Phase 07 until capability selection has a stable
-ToolCard trace. Do not open Phase 08 until retrieval/fusion traces are stable.
+不要在 Phase 05 没有聚焦测试、文档边界同步和收口证据前打开 Phase 06。不要在能力选择没有稳定 ToolCard trace 前打开 Phase 07。不要在 retrieval/fusion trace 稳定前打开 Phase 08。

@@ -1,6 +1,6 @@
-# Command Catalog
+# 命令目录
 
-## Documentation Gates
+## 文档验证门
 
 Preferred:
 
@@ -9,7 +9,7 @@ python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
 ```
 
-## Agent Workflow Gates
+## Agent 工作流验证门
 
 Preferred:
 
@@ -17,7 +17,7 @@ Preferred:
 powershell -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 ```
 
-## Module Boundary Gates
+## 模块边界验证门
 
 Preferred for target runtime V2 backend boundary work:
 
@@ -25,7 +25,7 @@ Preferred for target runtime V2 backend boundary work:
 python .agent/scripts/verify_module_boundaries.py
 ```
 
-## Frontend Dependency Install
+## 前端依赖安装
 
 Preferred:
 
@@ -35,7 +35,7 @@ npm ci
 
 Avoid `npm install` unless dependency metadata intentionally changes.
 
-## Git
+## Git 操作
 
 Preferred:
 
@@ -48,7 +48,7 @@ git push
 
 Avoid force push, force-with-lease, amend, and reset unless explicitly requested.
 
-## Canonical Architecture Checks
+## 标准架构检查
 
 ```powershell
 git grep -n "Native BM25"

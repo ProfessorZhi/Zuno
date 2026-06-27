@@ -1,4 +1,4 @@
-# Agent Scripts
+# Agent 脚本
 
 这个目录放开发 Agent 辅助脚本。
 

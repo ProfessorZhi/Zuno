@@ -1,4 +1,4 @@
-# Eval Baselines
+# Eval 基线
 
 ## 用途
 
@@ -12,7 +12,7 @@ Zuno Target Architecture Migration V1 已关闭并归档。
 
 Phase 11C active runtime cleanup 已完成。Phase 12 已通过 target migration closure evidence 关闭。
 
-## Closure Evidence
+## 收口证据
 
 - full pytest closure evidence：`714 passed, 3 warnings`
 - Contract Review eval：

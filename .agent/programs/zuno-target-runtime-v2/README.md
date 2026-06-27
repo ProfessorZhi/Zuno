@@ -1,45 +1,40 @@
-# Zuno Target Runtime V2
+# Zuno 目标运行时 V2
 
-## Status
+## 状态
 
-Active executable Agent program.
+当前可执行 Agent 程序。
 
-## Purpose
+## 目的
 
-Continue from the closed Zuno Target Architecture Migration V1 baseline into a
-controlled first implementation slice of the target runtime architecture.
+在已经关闭的 Zuno Target Architecture Migration V1 基线上，继续推进目标运行时架构的第一个受控实现切片。
 
-This program keeps the current Single `GeneralAgent`, GraphRAG Project
-mainline, `KnowledgeQueryService`, and `GraphRAGQueryService` intact while
-moving low-risk backend ownership toward the target module boundaries,
-introducing Context/Memory foundations, and then implementing the target
-runtime in linear phases.
+这个程序保持当前 Single `GeneralAgent`、GraphRAG Project 主线、`KnowledgeQueryService` 和 `GraphRAGQueryService` 不变，同时把低风险后端所有权逐步移动到目标模块边界，补齐 Context/Memory 基础，再按线性 phase 落地目标运行时。
 
-## Scope
+## 范围
 
-Completed foundation slice:
+已经完成的基础切片：
 
-- Phase 00 current state gate.
-- Phase 01 program setup.
-- Phase 02 module boundary audit and verifier.
-- Phase 03 first low-risk backend boundary move.
-- Phase 04 minimal Context Orchestrator runtime.
+- Phase 00：当前状态闸门。
+- Phase 01：程序初始化。
+- Phase 02：模块边界审计和验证器。
+- Phase 03：第一个低风险后端边界移动。
+- Phase 04：最小可调用 Context Orchestrator 运行时。
 
-Planned execution phases:
+计划执行的阶段：
 
-- Phase 05 Memory Engine.
-- Phase 06 Capability / Tool Retrieval.
-- Phase 07 Knowledge Retrieval / Fusion.
-- Phase 08 GeneralAgent LangGraph Runtime.
-- Phase 09 Product Boundary / Trace / Eval Closure.
+- Phase 05：Memory Engine。
+- Phase 06：Capability / Tool Retrieval。
+- Phase 07：Knowledge Retrieval / Fusion。
+- Phase 08：GeneralAgent LangGraph Runtime。
+- Phase 09：Product Boundary / Trace / Eval Closure。
 
-Out of scope unless a specific phase explicitly opens it:
+除非某个 phase 明确打开，否则以下内容不在范围内：
 
-- database schema changes.
-- dependency upgrades.
-- Java services, microservices, event workers, and default multi-agent mode.
+- 数据库 schema 变化。
+- 依赖升级。
+- Java 服务、微服务、事件 worker 和默认多 Agent 模式。
 
-## Source References
+## 来源参考
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 - `.agent/architecture/near-term/01-target-runtime-architecture.md`
@@ -51,20 +46,21 @@ Out of scope unless a specific phase explicitly opens it:
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/roadmap.md`
 
-## Active Files
+## 当前文件
 
 - `README.md`
 - `implementation-roadmap.md`
 - `current-phase.md`
 - `closure-checklist.md`
 
-Detailed Phase 00-04 evidence and old phase files are archived under
-`docs/history/programs/zuno-target-runtime-v2/`.
+Phase 00-04 的详细证据和旧 phase 文件已经归档到：
 
-## Verification Rule
+- `docs/history/programs/zuno-target-runtime-v2/`
 
-Each phase must run the smallest meaningful verification set and record the
-current result in the active phase or closure checklist. Bulky phase evidence
-belongs under `docs/history/programs/zuno-target-runtime-v2/`.
-Do not use this program to promote Target behavior to Current unless current
-code and tests prove it.
+## 验证规则
+
+每个 phase 必须运行最小有效验证，并把当前结果记录到 active phase 或 closure checklist。体积较大的 phase 证据放到：
+
+- `docs/history/programs/zuno-target-runtime-v2/`
+
+不要把 Target 行为写成 Current，除非当前代码和测试已经证明它。

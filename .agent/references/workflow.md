@@ -61,5 +61,5 @@ python .agent/scripts/verify_module_boundaries.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
-pytest -q tests/test_docs_entrypoints.py tests/test_repo_structure_consistency.py tests/test_publish_boundary.py tests/test_agent_system.py tests/test_repo_hygiene.py -p no:cacheprovider
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/repo/test_agent_system.py tests/repo/test_repo_hygiene.py -p no:cacheprovider
 ```

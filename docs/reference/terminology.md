@@ -11,7 +11,7 @@
 - Target：近期目标架构，尚未完全实现。
 - Future：更长期方向，例如 Java services、microservices、event-driven workers、product-level multi-agent mode、Coding Agent mode。
 - History：被替换但保留证据价值的历史材料。
-- Bounded Legacy Compatibility：应退出前台路径，但仍有迁移、DB、eval 或 retirement test 依赖。
+- 受限历史兼容：应退出前台路径，但仍有迁移、DB、eval 或 retirement test 依赖。
 
 ## 当前术语
 
@@ -21,13 +21,13 @@
 - `GraphRAGProjectSnapshot`：查询时不可变 project/config snapshot。
 - `KnowledgeQueryResult`：包含 answer、documents、evidence、citation、version 和 trace 的结果模型。
 
-## Target Runtime V2 术语
+## 目标运行时 V2 术语
 
-- Target Runtime V2 Phase 05: Memory Engine
-- Target Runtime V2 Phase 06: Capability / Tool Retrieval
-- Target Runtime V2 Phase 07: Knowledge Retrieval / Fusion
-- Target Runtime V2 Phase 08: GeneralAgent LangGraph Runtime
-- Target Runtime V2 Phase 09: Product Boundary / Trace / Eval Closure
+- 目标运行时 V2 Phase 05：记忆引擎
+- 目标运行时 V2 Phase 06：能力与工具检索
+- 目标运行时 V2 Phase 07：知识检索与融合
+- 目标运行时 V2 Phase 08：GeneralAgent LangGraph 运行时
+- 目标运行时 V2 Phase 09：产品边界、Trace 与 Eval 收口
 - Context / Memory Engine
 - Summary Compression
 - Structured Extraction

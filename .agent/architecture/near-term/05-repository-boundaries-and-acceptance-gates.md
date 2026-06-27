@@ -1,13 +1,13 @@
-# Repository Boundaries And Acceptance Gates
+# 仓库边界与验收门
 
-## Purpose
+## 用途
 
 Define canonical repository ownership, file placement, archive policy, and
 acceptance gates. This replaces the old persistence, frontend API contract,
 migration roadmap, acceptance gates, implementation phase map, and repository
 layout fragments.
 
-## Current Layout
+## 当前布局
 
 ```text
 apps/
@@ -27,7 +27,7 @@ workflow and target-design workspace. `docs` is the formal human-facing
 documentation surface. Historical material lives under
 `docs/history/`.
 
-## Target Backend Ownership
+## 目标后端所有权
 
 ```text
 api/
@@ -62,7 +62,7 @@ services -> retrieval / graphrag / storage / persistence boundaries
 Core/runtime must not depend backward on API routes. API routes must not own
 business logic or retrieval strategy.
 
-## Frontend And Desktop Boundary
+## 前端与桌面端边界
 
 `apps/web` and `apps/desktop` are product clients. They may show GraphRAG
 Project settings, query method, evidence, citations, trace, memory state, and
@@ -70,7 +70,7 @@ capability state through typed API contracts. They must not expose retired
 Domain Pack pages, internal graph route names, provider details, or
 migration-only fields as product concepts.
 
-## Docs And Agent Boundary
+## 文档与 Agent 边界
 
 - `docs/`: current truth, high-level target, roadmap, public evidence,
   terminology, formal decisions, and history.
@@ -80,7 +80,7 @@ migration-only fields as product concepts.
 - `docs/history/`: superseded plans, old programs, old fragments,
   retired designs, and replaced references.
 
-## Front-path Slimming Target
+## 前台路径瘦身目标
 
 The target repository shape is not "fewer files at any cost." It is a small
 front path plus a reachable archive.
@@ -113,7 +113,7 @@ completed or superseded material in docs/history/
 transient local artifacts outside the repository
 ```
 
-## Forbidden Catch-all Directories
+## 禁止使用的兜底目录
 
 Do not create vague new packages or directories named only:
 
@@ -125,7 +125,7 @@ Do not create vague new packages or directories named only:
 Existing `src/backend/zuno/utils` is legacy/current utility surface; new code
 should prefer a clear owner.
 
-## Move Acceptance Gates
+## 移动验收门
 
 Before moving or deleting files:
 
@@ -141,7 +141,7 @@ Stop if the move requires runtime changes outside the authorized scope, erases
 history, breaks many links without a clear replacement, or requires Target to
 be described as Current.
 
-## Verification Matrix
+## 验证矩阵
 
 Documentation and Agent workflow changes use:
 
@@ -154,13 +154,13 @@ python .agent/scripts/verify_module_boundaries.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
-pytest -q tests/test_docs_entrypoints.py tests/test_repo_structure_consistency.py tests/test_publish_boundary.py tests/test_agent_system.py tests/test_repo_hygiene.py -p no:cacheprovider
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/repo/test_agent_system.py tests/repo/test_repo_hygiene.py -p no:cacheprovider
 ```
 
 Runtime phases add focused runtime tests. Eval phases add eval-specific commands
 and must not overwrite historical baselines.
 
-## Phase Execution Plan
+## Phase 执行计划
 
 The active `zuno-target-runtime-v2` program executes the target architecture in
 linear phases. The plan intentionally stays in one active roadmap file instead
@@ -186,7 +186,7 @@ Phase 08 must close before Phase 09.
 Each phase must update Current / Foundation / Target wording only for behavior
 proved by code and tests. Unproved design remains Target.
 
-## Current / Target Boundary
+## 当前与目标边界
 
 Current:
 

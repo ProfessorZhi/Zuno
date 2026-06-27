@@ -1,12 +1,12 @@
-# Target Mode Prompt
+# 目标架构模式提示模板
 
-Execute against the provided acceptance gates.
+按用户提供的验收闸门执行。
 
-Rules:
+## 规则
 
-1. Read the target source first.
-2. Do not stop at advice when execution is requested.
-3. Keep changes inside the allowed scope.
-4. Run verification before claiming completion.
-5. Commit and push only after verification passes.
-6. If blocked, return the exact command, output summary, changed files, and next recommendation.
+1. 先读取目标来源。
+2. 用户要求执行时，不停在建议层。
+3. 修改保持在允许范围内。
+4. 声称完成前必须运行验证。
+5. 验证通过后才提交并推送。
+6. 如果被阻塞，返回精确命令、输出摘要、已改文件和下一步建议。

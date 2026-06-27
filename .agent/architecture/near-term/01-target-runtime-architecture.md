@@ -1,13 +1,13 @@
-# Target Runtime Architecture
+# 目标运行架构
 
-## Purpose
+## 用途
 
 Define the canonical near-term Zuno target runtime without claiming it is fully
 current. This file replaces the old fragmented overview, system context,
 container/component, layering, FastAPI service, LangGraph, LangChain adapter,
 and observability notes.
 
-## Target Summary
+## 目标摘要
 
 ```text
 Local-first Agent Workspace
@@ -24,7 +24,7 @@ later. The goal is not to create more directories mechanically. The goal is to
 make every concept have one owner, every file have one home, and every runtime
 path be explainable through tests and traces.
 
-## Eight Target Layers
+## 八层目标结构
 
 ```text
 1. Product Layer
@@ -78,7 +78,7 @@ path be explainable through tests and traces.
    Trace / Eval / benchmark
 ```
 
-## Product Layer
+## 产品层
 
 `apps/web` and `apps/desktop` own product interaction. They display chats,
 knowledge projects, GraphRAG Project settings, capability state, memory
@@ -88,7 +88,7 @@ They must not own graph traversal, provider calls, rerank policy, prompt
 versioning, database writes, or migration-only fields such as active public
 `domain_pack_id`.
 
-## API & Application Layer
+## API 与应用层
 
 FastAPI routes own HTTP boundaries only:
 
@@ -113,7 +113,7 @@ Routes should call exactly one use-case boundary. They should not import
 concrete retrievers, GraphRAG traversal code, provider clients, or runtime graph
 internals.
 
-## Single GeneralAgent Runtime
+## 单一 GeneralAgent 运行时
 
 All conversational requests enter one `GeneralAgent` mainline:
 
@@ -136,7 +136,7 @@ foundation. The target is the mature form:
   summaries, extracts structured memory candidates, records traces, and schedules
   async work when needed.
 
-## LangChain And LangGraph Roles
+## LangChain 与 LangGraph 的职责
 
 LangChain provides provider/model/tool/message abstractions:
 
@@ -157,7 +157,7 @@ LangGraph provides stateful runtime control:
 LangGraph should orchestrate the single GeneralAgent runtime. It should not
 restore a second chat agent, `DomainQAGraph`, or a default multi-agent runtime.
 
-## Observability And Eval
+## 可观测性与 Eval
 
 Every important query path should be explainable through:
 
@@ -177,7 +177,7 @@ Eval and benchmark surfaces live under `tools/evals/zuno/` and curated evidence
 under `docs/evidence/`. Generated local reports stay out of the front path until
 explicitly promoted.
 
-## Current / Foundation / Target / Future
+## 当前、基础、目标与未来边界
 
 - Current: single GeneralAgent mainline, GraphRAG Project query runtime,
   KnowledgeQueryService, minimal ContextOrchestrator, context/memory/capability

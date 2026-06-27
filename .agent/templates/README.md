@@ -1,4 +1,4 @@
-# Templates
+# 模板
 
 这里放开发 Agent 常用模板，例如：
 

@@ -1,21 +1,21 @@
-﻿# Requirement Intake
+# 需求澄清模板
 
-Use this before new requirements, new features, refactors, or architecture replacements.
+新需求、新功能、重构或架构替换前使用。
 
-## Decision
+## 决策
 
-- User request:
-- Actual goal:
-- Shortest path:
-- Scope boundaries:
+- 用户原始请求：
+- 真实目标：
+- 最短路径：
+- 范围边界：
 
-## Self-Maintenance Checklist
+## 自维护检查清单
 
-Decide whether this task updates:
+判断本任务是否需要同步：
 
 1. `.agent/programs/<program>/`
-2. a phase document
-3. a spec, ADR, or audit
+2. phase 文档
+3. 规格、ADR 或审计
 4. `docs/history/`
 5. `docs/architecture/README.md`
 6. `docs/architecture/current-architecture.md`
@@ -24,14 +24,14 @@ Decide whether this task updates:
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`
 11. `.agent/programs/`
-12. `.agent/scripts/` or `.agent/templates/`
+12. `.agent/scripts/` 或 `.agent/templates/`
 13. `.gitignore`
-14. verification, commit, and push
+14. 验证、提交和推送
 
-## Acceptance Gates
+## 验收闸门
 
-- Formal docs updated when formal truth changed.
-- Agent workflow files updated when workflow changed.
-- Superseded material moved to history, not deleted.
-- Verification command:
-- Commit and push result:
+- 正式事实变化时，正式文档已更新。
+- 工作流变化时，Agent 工作流文件已更新。
+- 被替换材料移动到 history，没有直接删除。
+- 验证命令：
+- 提交和推送结果：

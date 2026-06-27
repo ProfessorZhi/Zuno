@@ -1,20 +1,20 @@
-# Phase Closure Report Template
+# Phase 收口报告模板
 
-## Summary
+## 摘要
 
-## Changed Files
+## 修改文件
 
-## Key Decisions
+## 关键决策
 
-## Verification
+## 验证结果
 
-## Acceptance Gate Result
+## 验收闸门结果
 
-## Remaining Risks
+## 剩余风险
 
-## Git Sync
+## Git 同步
 
-- Branch:
-- Commit:
-- Push:
-- Uncommitted changes:
+- 分支：
+- 提交：
+- 推送：
+- 未提交修改：

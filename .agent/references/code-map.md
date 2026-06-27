@@ -1,28 +1,27 @@
-# Code Map
+# 代码地图
 
-## Purpose
+## 目的
 
-Orient Agents to current code owners without copying target architecture design
-or authorizing code edits.
+帮助 Agent 找到当前代码 owner，不复制目标架构设计，也不单独授权代码修改。
 
-## Main Surfaces
+## 主要表面
 
-- `apps/web/`: Vue web workspace.
-- `apps/desktop/`: Electron desktop shell.
-- `src/backend/zuno/`: current Python backend runtime truth.
-- `src/backend/zuno/api/`: HTTP routes, DTOs, auth, response envelopes, SSE.
-- `src/backend/zuno/services/application/`: application use-case boundaries.
-- `src/backend/zuno/core/`: single GeneralAgent runtime and orchestration.
-- `src/backend/zuno/services/graphrag/`: GraphRAG Project query/index concepts.
-- `src/backend/zuno/services/retrieval/`: retrieval planning and retriever adapters.
-- `src/backend/zuno/services/memory/`: memory foundation.
-- `src/backend/zuno/database/`: persistence models and database wiring.
-- `tools/`: scripts, launchers, evals, and maintenance tooling.
-- `tests/`: repo-level verification and focused regression tests.
-- `docs/`: formal human-facing documentation.
-- `.agent/`: Agent workflow library and target-design workspace.
+- `apps/web/`：Vue Web 工作区。
+- `apps/desktop/`：Electron 桌面壳。
+- `src/backend/zuno/`：当前 Python 后端 runtime 真相。
+- `src/backend/zuno/api/`：HTTP routes、DTO、auth、response envelope、SSE。
+- `src/backend/zuno/services/application/`：应用用例边界。
+- `src/backend/zuno/core/`：单一 GeneralAgent runtime 和编排。
+- `src/backend/zuno/services/graphrag/`：GraphRAG Project 查询和索引概念。
+- `src/backend/zuno/services/retrieval/`：检索规划和 retriever adapters。
+- `src/backend/zuno/services/memory/`：记忆基础。
+- `src/backend/zuno/database/`：持久化模型和数据库 wiring。
+- `tools/`：脚本、启动器、eval 和维护工具。
+- `tests/`：仓库级验证和聚焦回归测试。
+- `docs/`：正式人类文档。
+- `.agent/`：Agent 工作流库和目标设计工作区。
 
-## Current Runtime Path
+## 当前 Runtime 路径
 
 ```text
 Completion API
@@ -38,23 +37,21 @@ Completion API
   -> post_turn_commit
 ```
 
-## Task Routing
+## 任务路由
 
-- Backend changes: read `src/backend/zuno/AGENTS.md`.
-- Frontend changes: read `apps/web/AGENTS.md`.
-- Eval changes: read `tools/evals/zuno/AGENTS.md`.
-- Docs or Agent workflow changes: read `AGENTS.md`, `.agent/references/task-routing.md`, and `.agent/references/workflow.md`.
+- 后端变更：读 `src/backend/zuno/AGENTS.md`。
+- 前端变更：读 `apps/web/AGENTS.md`。
+- Eval 变更：读 `tools/evals/zuno/AGENTS.md`。
+- 文档或 Agent 工作流变更：读 `AGENTS.md`、`.agent/references/task-routing.md` 和 `.agent/references/workflow.md`。
 
-## Boundary
+文档和工作流整理任务不得修改 runtime 代码。如果验证需要修改 runtime，先停止并返回证据。
 
-For documentation and workflow normalization tasks, do not modify runtime
-surfaces:
+## 受保护边界
 
 - `src/backend/zuno/`
 - `apps/web/`
-- `apps/desktop/`
 - `infra/`
-- `tools/evals/zuno/`
+- `tools/evals/zuno/*runner*`
+- 依赖文件
 
-If verification would require a forbidden runtime change, stop and return
-evidence instead of expanding scope.
+如果任务授权不包含这些路径，不要触碰它们。

@@ -21,7 +21,7 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 - 英文术语可以保留，但要配中文解释。
 - 历史档案放在 `docs/history/`，可以保留原文。
 
-## Tracked Structure
+## 跟踪结构
 
 ```text
 .agent/

@@ -2,37 +2,37 @@
 
 ## 当前状态
 
-Phase 0-6 architecture closure remains complete historical truth.
+Phase 0-6 架构收口仍是已完成的历史事实。
 
-当前可执行 Agent program 是：
+当前可执行 Agent 程序是：
 
 - `.agent/programs/zuno-target-runtime-v2/`
 
-它接在 Target Architecture Migration V1 closure 之后，当前职责是按小 phase 落地目标 runtime。已完成的 V2 Phase 00-04 详细文件和证据归档在：
+它接在 Target Architecture Migration V1 收口之后，当前职责是按小 phase 落地目标 runtime。已完成的 V2 Phase 00-04 详细文件和证据归档在：
 
 - `docs/history/programs/zuno-target-runtime-v2/`
 
-已完成的 target architecture migration program 归档在：
+已完成的 target architecture migration 程序归档在：
 
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 
 ## 已完成状态
 
-- Phase 01 through Phase 10 are complete.
-- Phase 11A: complete。项目查询 runtime 已引入 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
-- Phase 11B: complete。知识查询已统一到 single `GeneralAgent` path，通过 `search_knowledge_base` 和 `KnowledgeQueryService` 执行。
-- Phase 11C: active runtime cleanup complete。当前 FastAPI router 不再挂载 `/domain-packs`；Vue knowledge route/settings 不再打开 Domain Pack 页面；`AgentRuntime` facade、`MultiAgentSupervisorGraph`、`DomainQAGraph`、legacy graph states 和 `zuno.services.domain_pack` 已从当前主线退休。
-- Phase 12: closed through the target migration closure evidence。full pytest、formal Contract Review eval、stackless eval baseline comparison、trace metadata、legacy grep classification 和 docs/evidence sync 已完成。
+- Phase 01 到 Phase 10 已完成。
+- Phase 11A：已完成。项目查询 runtime 已引入 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
+- Phase 11B：已完成。知识查询已统一到 single `GeneralAgent` path，通过 `search_knowledge_base` 和 `KnowledgeQueryService` 执行。
+- Phase 11C：active runtime cleanup 已完成。当前 FastAPI router 不再挂载 `/domain-packs`；Vue knowledge route/settings 不再打开 Domain Pack 页面；`AgentRuntime` facade、`MultiAgentSupervisorGraph`、`DomainQAGraph`、legacy graph states 和 `zuno.services.domain_pack` 已从当前主线退休。
+- Phase 12：已通过 target migration closure evidence 关闭。full pytest、formal Contract Review eval、stackless eval baseline comparison、trace metadata、legacy grep classification 和 docs/evidence sync 已完成。
 
 ## 下一步
 
-按 active `zuno-target-runtime-v2` 线性执行：
+按当前 active `zuno-target-runtime-v2` 线性执行：
 
-1. Phase 05 Memory Engine
+1. Phase 05：记忆引擎
 2. Phase 06 Capability / Tool Retrieval
 3. Phase 07 Knowledge Retrieval / Fusion
 4. Phase 08 GeneralAgent LangGraph Runtime
-5. Phase 09 Product Boundary / Trace / Eval Closure
+5. Phase 09：产品边界、Trace 与 Eval 收口
 
 执行源是 `.agent/architecture/near-term/` 和 `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`。
 
@@ -40,15 +40,15 @@ Phase 0-6 architecture closure remains complete historical truth.
 
 `zuno-target-runtime-v2` 是当前 active program。它不能把成熟 Context Orchestrator、Memory Engine、Dynamic Capability Selector 或 full LangGraph runtime 写成 Current，直到代码和测试证明对应 slice。
 
-## Bounded Legacy Compatibility
+## 受限历史兼容
 
 这些内容是兼容保留，不是目标方向：
 
-- remaining `domain_pack_id` references are bounded migration aliases、existing Agent database-column compatibility、eval CLI compatibility 和 retirement/history tests。
+- 剩余 `domain_pack_id` references 只属于 migration aliases、existing Agent database-column compatibility、eval CLI compatibility 和 retirement/history tests。
 - root `domain-packs/` archive 保留在 `docs/history/domain-packs/root-contract-review/`。
 - root Phase 11C retired-import guards 保留用于防回归。
 
-## 当前 Foundation Closure
+## 当前基础切片收口
 
 - Phase 05 Context Contract foundation：`src/backend/zuno/services/application/context/`
 - Phase 06 Memory Layer foundation：`src/backend/zuno/services/memory/layers.py`
@@ -57,13 +57,13 @@ Phase 0-6 architecture closure remains complete historical truth.
 
 这些是 foundation，不等于成熟产品能力。
 
-## Future Execution Phases
+## 未来执行阶段
 
 - Phase 05: mature Memory Engine around Raw Event Log、Summary Compression、Structured Extraction、`source_event_ids` 和 ContextTrace。
 - Phase 06: mature Capability / Tool Retrieval around ToolCard Registry、Native BM25 capability search、filters 和 `CapabilitySelectionTrace`。
 - Phase 07: mature Knowledge Retrieval / Fusion around Native BM25、multi-query、multi-retriever recall、RRF `k=60`、optional rerank、evidence、citation 和 trace。
 - Phase 08: explicit `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime，同时保持 single `GeneralAgent` path。
-- Phase 09: product/API boundary、frontend-visible state、trace/eval closure、docs/.agent front-path slimming、transient artifact cleanup 和 history archive hygiene。
+- Phase 09：产品 / API 边界、前端可见状态、trace / eval 收口、`docs/` 与 `.agent/` 前台路径瘦身、临时产物清理和历史归档卫生。
 
 ## 非目标
 

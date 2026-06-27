@@ -129,13 +129,13 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "过时审计、旧规格、旧 phase、旧计划和旧 runbook",
     ],
     "docs/architecture/roadmap.md": [
-        "Phase 11A: complete",
-        "Phase 11B: complete",
-        "Phase 11C: active runtime cleanup complete",
-        "Phase 12: closed through the target migration closure evidence",
-        "Bounded Legacy Compatibility",
-        "Phase 05 Memory Engine",
-        "Phase 09 Product Boundary / Trace / Eval Closure",
+        "Phase 11A：已完成",
+        "Phase 11B：已完成",
+        "Phase 11C：active runtime cleanup 已完成",
+        "Phase 12：已通过 target migration closure evidence 关闭",
+        "受限历史兼容",
+        "Phase 05：记忆引擎",
+        "Phase 09：产品边界、Trace 与 Eval 收口",
     ],
 }
 
@@ -223,12 +223,12 @@ def verify_active_v2_phase_plan() -> list[str]:
     return [
         f"active V2 roadmap missing phase plan: {phrase}"
         for phrase in [
-            "Phase 05: Memory Engine",
-            "Phase 06: Capability / Tool Retrieval",
-            "Phase 07: Knowledge Retrieval / Fusion",
-            "Phase 08: GeneralAgent LangGraph Runtime",
-            "Phase 09: Product Boundary / Trace / Eval Closure",
-            "front-path slimming",
+            "Phase 05：记忆引擎",
+            "Phase 06：能力与工具检索",
+            "Phase 07：知识检索与融合",
+            "Phase 08：GeneralAgent LangGraph 运行时",
+            "Phase 09：产品边界、Trace 与 Eval 收口",
+            "`docs/` 保持精简",
         ]
         if phrase not in roadmap
     ]

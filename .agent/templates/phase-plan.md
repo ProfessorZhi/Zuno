@@ -1,19 +1,19 @@
-# Phase Plan Template
+# Phase 计划模板
 
-## Goal
+## 目标
 
-## Scope
+## 范围
 
-## Files To Change
+## 需要修改的文件
 
-## Files Not To Change
+## 禁止修改的文件
 
-## Acceptance Gates
+## 验收闸门
 
-## Verification Commands
+## 验证命令
 
-## Evidence To Return
+## 需要返回的证据
 
-## History Impact
+## 历史影响
 
-List any superseded material that must move to `docs/history/`.
+列出必须移动到 `docs/history/` 的被替换材料。

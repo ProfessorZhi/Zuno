@@ -1,11 +1,11 @@
-# Capability Tool Retrieval Architecture
+# 能力与工具检索架构
 
-## Purpose
+## 用途
 
 Define how Zuno finds and injects tools, MCP connectors, skills, and knowledge
 capabilities without loading every schema into every model call.
 
-## Target Principle
+## 目标原则
 
 Zuno should not inject all tool schemas on every turn. The target is fast tool
 lookup and dynamic capability selection:
@@ -19,7 +19,7 @@ Task / Context
   -> Selected schemas enter ModelContextPacket
 ```
 
-## Capability Types
+## 能力类型
 
 | Type | Meaning |
 | --- | --- |
@@ -28,7 +28,7 @@ Task / Context
 | MCP Connector | External tool/resource/prompt connection through MCP. |
 | Skills | Agent operating instructions, workflows, examples, and rules loaded on demand. |
 
-## ToolCard Registry
+## ToolCard 注册表
 
 Every capability should have a ToolCard:
 
@@ -54,7 +54,7 @@ ToolCards are the retrieval corpus for capability selection. They are not the
 same as full tool schemas. The selector retrieves and filters cards first, then
 injects only the needed schemas.
 
-## Retrieval Strategy
+## 检索策略
 
 Capability lookup uses layered retrieval:
 
@@ -70,7 +70,7 @@ Keyword and alias lookup handles exact names and stable product terms. Native
 BM25 handles lexical matching without requiring Elasticsearch. Optional vector
 retrieval handles semantic matches when embeddings are available.
 
-## Native BM25 For Tools
+## 面向工具的 Native BM25
 
 Elasticsearch is an external retrieval backend. BM25 is a ranking algorithm.
 Zuno target architecture needs a NativeBM25Retriever so capability and document
@@ -109,7 +109,7 @@ k1 = 1.2 ~ 1.5
 b = 0.75
 ```
 
-## Selection Filter
+## 选择过滤器
 
 After retrieval, selected candidates pass through:
 
@@ -131,7 +131,7 @@ The result is a `CapabilitySelectionTrace` with:
 - rejected capability ids and reasons
 - injected schema ids
 
-## Current / Target Boundary
+## 当前与目标边界
 
 Current code has capability metadata and a minimal selector foundation. The full
 ToolCard retrieval system, Native BM25 over ToolCards, optional vector

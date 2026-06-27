@@ -2,14 +2,14 @@
 
 ## 用途
 
-这份文档描述近期目标架构。它是 Target，不是 Current 完成声明。
+这份文档描述近期目标架构。它是目标状态，不是当前完成声明。
 
 ## 总目标
 
 Zuno 的近期目标是：
 
 ```text
-monorepo now, modular monolith, service-ready later
+现在保持 monorepo，近期形成模块化单体，未来具备服务拆分条件
 ```
 
 核心目标模型：
@@ -35,7 +35,7 @@ Local-first Agent Workspace
 7. Retrieval / Fusion / Evidence 层：query variants、Native BM25、dense vector、graph local、community global、deduplication、RRF、optional rerank、evidence check、citation、trace。
 8. Infrastructure / Eval 层：PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、optional Elasticsearch adapter、trace、eval、benchmark。
 
-## Memory 目标边界
+## 记忆目标边界
 
 - 目标策略是 Summary Compression + Structured Extraction。
 - Sliding Window 只用于 L1 recent-window 和 token-budget 保护。
@@ -44,13 +44,13 @@ Local-first Agent Workspace
 - External Knowledge 是 RAG / GraphRAG / file / web evidence，不是 Agent Memory。
 - Prompt Caching 是 compute-layer hint，不是 memory compression。
 
-## Retrieval 目标边界
+## 检索目标边界
 
 - Native BM25 是本地 BM25 排序算法。
-- Elasticsearch 只是 optional external adapter，不是 BM25 算法本体。
-- Enhanced paths 可以生成 query variants，但必须保留 original query。
-- Multi-retriever recall 可使用 Native BM25、Dense Vector、Graph Local 和 Community Global。
-- Deduplication 使用稳定 id，例如 `chunk_id`、`document_id + span`、`graph_node_id`、`community_report_id`。
+- Elasticsearch 只是可选外部 adapter，不是 BM25 算法本体。
+- enhanced path 可以生成 query variants，但必须保留 original query。
+- multi-retriever recall 可使用 Native BM25、Dense Vector、Graph Local 和 Community Global。
+- deduplication 使用稳定 id，例如 `chunk_id`、`document_id + span`、`graph_node_id`、`community_report_id`。
 - RRF 是默认 coarse fusion，默认 `k = 60`，后面可接 optional rerank。
 - `auto` 是 router，用来选择 `basic`、`local`、`global` 或 `drift`，不是第五种 GraphRAG query mode。
 
@@ -67,7 +67,7 @@ drift_like -> drift
 
 ## 仓库前台目标
 
-- `docs/` 只保留正式人类真相：Current、Target、Roadmap、ADRs、Evidence、Terminology 和 History index。
+- `docs/` 只保留正式人类真相：当前架构、目标架构、路线图、ADR、证据、术语和 history index。
 - `.agent/` 只保留可执行 Agent 工作流：active program、target design、references、scripts、templates。
 - `docs/history/` 保存旧 lessons、old phases、retired plans、replaced fragments、completed programs、旧 audits/specs/runbooks/prototypes。
 - transient screenshots、browser snapshots、caches 和 local reports 不进入提交的前台路径。
@@ -112,10 +112,10 @@ Canonical near-term Markdown：
 
 执行顺序：
 
-1. Phase 05 Memory Engine
+1. Phase 05：记忆引擎
 2. Phase 06 Capability / Tool Retrieval
 3. Phase 07 Knowledge Retrieval / Fusion
 4. Phase 08 GeneralAgent LangGraph Runtime
-5. Phase 09 Product Boundary / Trace / Eval Closure
+5. Phase 09：产品边界、Trace 与 Eval 收口
 
 这些阶段在代码、测试、trace evidence 和文档边界更新证明前都保持 Target。

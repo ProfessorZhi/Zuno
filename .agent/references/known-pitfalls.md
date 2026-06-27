@@ -1,4 +1,4 @@
-# Known Pitfalls
+# 已知坑
 
 - Do not restore root `domain-packs/`, `DomainQAGraph`, retired Domain Pack
   runtime sources, or the former `tests/compat/` holding area after Phase 11

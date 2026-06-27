@@ -1,188 +1,114 @@
 # Zuno
 
-Zuno is a local-first Agent Workspace. It combines a Vue web app, an Electron
-desktop shell, a FastAPI backend, LangGraph orchestration, RAG / GraphRAG,
-tools, MCP integration, and local evaluation into one monorepo.
+Zuno 是本地优先的 Agent Workspace。它把 Vue Web、Electron Desktop、FastAPI 后端、LangGraph 编排、RAG / GraphRAG、工具、MCP 集成和本地 Eval 放在一个 monorepo 里。
 
-## Current Status
+## 当前状态
 
-Current:
+当前事实：
 
-- `apps/web` is the Vue web workspace.
-- `apps/desktop` is the Electron desktop workspace.
-- `src/backend/zuno` is the only active Python backend runtime boundary.
-- Phase 0-6 architecture closure remains complete historical truth.
-- Target Architecture Migration V1 is closed and archived.
-- The active executable Agent program is
-  `.agent/programs/zuno-target-runtime-v2/`.
-- Phase 11A is complete: `KnowledgeQueryService`, `GraphRAGQueryService`,
-  `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult` exist in the current
-  runtime.
-- Phase 11B is complete: the current knowledge-answering call chain is
-  `Completion API -> CompletionService -> GeneralAgent single loop ->
-  search_knowledge_base -> KnowledgeQueryService -> GraphRAGQueryService ->
-  RetrievalPlanner / RetrievalOrchestrator -> Evidence / Citation / Trace ->
-  GeneralAgent answer`.
+- `apps/web` 是 Vue Web 工作区。
+- `apps/desktop` 是 Electron Desktop 工作区。
+- `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。
+- Phase 0-6 架构收口仍是已完成的历史事实。
+- Target Architecture Migration V1 已关闭并归档。
+- 当前可执行 Agent 程序是 `.agent/programs/zuno-target-runtime-v2/`。
+- Phase 11A 已完成：当前 runtime 已包含 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
+- Phase 11B 已完成：当前知识回答调用链是 `Completion API -> CompletionService -> GeneralAgent single loop -> search_knowledge_base -> KnowledgeQueryService -> GraphRAGQueryService -> RetrievalPlanner / RetrievalOrchestrator -> Evidence / Citation / Trace -> GeneralAgent answer`。
 
-Target:
+目标方向：
 
-- Keep one stable monorepo baseline.
-- Keep the target architecture as: Single GeneralAgent Runtime + Context /
-  Memory Engine + Capability / Tool Retrieval + Knowledge / GraphRAG Retrieval
-  + Evidence / Citation / Trace / Eval + Typed API + Web/Desktop.
-- Use Summary Compression + Structured Extraction as the Memory target
-  strategy.
-- Use a ToolCard Registry with keyword / alias lookup, Native BM25, optional
-  vector search, permission / health / cost filtering, and capability selection
-  trace as the Capability target.
-- Use Native BM25 as a local ranking algorithm; Elasticsearch is an optional
-  external adapter, not the BM25 algorithm itself.
-- Use multi-query and multi-retriever retrieval with RRF coarse fusion
-  (`k=60`), optional rerank, evidence check, citations, and trace in enhanced
-  paths.
-- Keep GraphRAG query methods as `basic`, `local`, `global`, and `drift`;
-  `auto` is a router, not a fifth query mode.
-- Keep Java services, microservices, event workers, product-level multi-agent
-  mode, and Coding Agent direction as future direction only.
+- 保持稳定 monorepo 基线。
+- 目标架构保持为：Single GeneralAgent Runtime + Context / Memory Engine + Capability / Tool Retrieval + Knowledge / GraphRAG Retrieval + Evidence / Citation / Trace / Eval + Typed API + Web/Desktop。
+- Memory 目标策略是 Summary Compression + Structured Extraction。
+- Capability 目标是 ToolCard Registry、keyword / alias lookup、Native BM25、optional vector search、permission / health / cost filter 和 capability selection trace。
+- Native BM25 是本地排序算法；Elasticsearch 是 optional external adapter，不是 BM25 算法本身。
+- enhanced path 使用 multi-query、multi-retriever retrieval、RRF coarse fusion `k=60`、optional rerank、evidence check、citation 和 trace。
+- GraphRAG query method 是 `basic`、`local`、`global`、`drift`；`auto` 是 router，不是第五种 query mode。
+- Java 服务、微服务、事件 worker、产品级多 Agent 模式和 Coding Agent 方向都只属于 Future。
 
-Phase 11C closure / Bounded Legacy Compatibility:
+## Phase 11C / 受限历史兼容
 
-- Phase 11C active runtime cleanup is complete. `/api/v1/domain-packs` is no
-  longer mounted on the current FastAPI router, the active Vue knowledge
-  routes/pages no longer open the Domain Pack builder/list/detail flow, and
-  the old frontend Domain Pack API/page files have been retired from
-  `apps/web/src/`.
-- Workspace knowledge prefetch/tools now use `KnowledgeQueryService`; the
-  `/knowledge/search` API service path also uses `KnowledgeQueryService`
-  instead of the legacy `RagHandler` search path. The standalone `AgentRuntime`
-  facade and direct `MultiAgentSupervisorGraph` source have been removed. The
-  direct `DomainQAGraph` source and legacy graph state module have also been
-  removed. `DomainQAGraph` /
-  `MultiAgentSupervisorGraph` are no longer current core package public
-  exports.
-- `KnowledgeService.get_runtime_settings` preserves `domain_pack_id` as a
-  migration field but no longer auto-loads `DomainPackLoader` from that field;
-  GraphRAG Project defaults come from `graphrag_project_id` or explicit
-  `project_payload` runtime configuration. Legacy `domain_pack` runtime
-  payload input is accepted only as a migration fallback.
-- `GraphRetriever` no longer loads Domain Pack retrieval policy from a bare
-  `domain_pack_id`; graph policy must come from explicit `query_policy`, such
-  as a GraphRAG Project `retrieval_policy.yaml`.
-- Graph writer/client/retriever paths now use `graphrag_project_id` as the
-  primary graph scope for new graph writes and project-scoped graph retrieval.
-  Legacy graph properties are dual-read only for migration until the
-  dry-run-first Neo4j backfill is applied.
-- Stackless local eval and the dedicated Contract Review eval can build from
-  GraphRAG Project assets without loading `DomainPackLoader`; stackless local
-  eval now requires GraphRAG Project assets when an id is provided. The
-  `src/backend/zuno/services/domain_pack/` runtime service package is also
-  retired from current backend source.
-- Root `domain-packs/` assets have been archived under
-  `docs/history/domain-packs/root-contract-review/`, and Docker no
-  longer copies or mounts `/app/domain-packs`. Remaining `domain_pack_id`
-  references are bounded migration aliases, existing database-column
-  compatibility, eval CLI compatibility, and retirement/history tests. The
-  former `tests/compat/` holding area is retired. Root Phase 11C tests guard
-  the retired
-  `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`, and Domain Pack
-  runtime service imports. The old Domain Pack backend endpoint/API-service
-  wrappers are retired.
-- These surfaces are not the future public mainline, but compatibility fields
-  are retained only where existing storage, eval, or retirement evidence still
-  requires them. Neo4j legacy graph data backfill is an operational migration
-  helper / live data step, not active code debt.
-- Phase 12 closure evidence is complete: full pytest, formal Contract Review
-  eval, stackless eval baseline comparison, trace metadata, legacy grep
-  classification, and docs/evidence sync are complete.
+- Phase 11C active runtime cleanup 已完成。当前 FastAPI router 不再挂载 `/api/v1/domain-packs`；active Vue knowledge routes/pages 不再打开 Domain Pack builder/list/detail flow；旧 frontend Domain Pack API/page 文件已经从 `apps/web/src` 当前树移除。
+- `graphrag_project_id` 是 Agent 与 Knowledge public DTO 的目标身份字段。兼容输入可映射到既有 storage column，但前台架构不再把 `domain_pack_id` 写成 active mainline。
+- `DomainQAGraph`、`MultiAgentSupervisorGraph`、`AgentRuntime` facade、legacy graph states 和 `src/backend/zuno/services/domain_pack/` runtime service package 已从当前后端移除。
+- Contract Review 资产已归档到 `docs/history/domain-packs/root-contract-review/`。Docker 不再复制或挂载 `/app/domain-packs`。
+- `domain_pack_id` 只可能出现在 migration alias、既有数据库字段兼容、eval CLI 兼容、retirement/history tests 和归档材料中。
+- Phase 12 closure evidence 已完成：full pytest、formal Contract Review eval、stackless baseline comparison、trace closure、legacy grep classification 和 `docs/evidence` 同步已闭合。
 
-## Default Reading Path
+## 首读路径
 
-First-time readers start here:
+1. [当前架构](./docs/architecture/current-architecture.md)
+2. [目标架构](./docs/architecture/target-architecture.md)
+3. [路线图](./docs/architecture/roadmap.md)
+4. [公开演示证据](./docs/evidence/public-demo.md)
+5. [Eval Baseline](./docs/evidence/eval-baselines.md)
+6. [术语表](./docs/reference/terminology.md)
+7. [Agent 入口](./AGENTS.md)
 
-1. [README.md](./README.md)
-2. [docs/architecture/current-architecture.md](./docs/architecture/current-architecture.md)
-3. [docs/architecture/target-architecture.md](./docs/architecture/target-architecture.md)
-4. [docs/architecture/roadmap.md](./docs/architecture/roadmap.md)
-5. [docs/evidence/public-demo.md](./docs/evidence/public-demo.md)
-
-Maintainers and Agents should then read:
-
-- [AGENTS.md](./AGENTS.md)
-- [.agent/README.md](./.agent/README.md)
-- [.agent/references/current-program.md](./.agent/references/current-program.md)
-
-## Repository Layout
+## 目录结构
 
 ```text
-.
+Zuno/
 ├─ apps/
-│  ├─ desktop/                  # Electron desktop shell
-│  └─ web/                      # Vue web workspace
-├─ docs/                        # stable human-facing documentation
-│  ├─ architecture/             # current, target, roadmap, decisions, history
-│  ├─ development/              # maintainer runbooks
-│  ├─ evidence/                 # selected public evidence
-│  └─ reference/                # stable reference material
-├─ examples/graphrag-projects/  # Target GraphRAG Project examples
-├─ infra/                       # deployment and environment infrastructure
-├─ src/backend/zuno/            # current backend runtime truth
-├─ tests/                       # repo-level verification
-├─ tools/                       # scripts, launchers, evals, maintenance tooling
-├─ .agent/                      # local Agent workflow library
-└─ AGENTS.md                    # repository-level Agent entrypoint
+│  ├─ web/                 # Vue Web 工作区
+│  └─ desktop/             # Electron Desktop 工作区
+├─ src/backend/zuno/       # 当前后端 runtime truth
+├─ tools/                  # 启动器、维护脚本和 eval 工具
+├─ tests/                  # 仓库级验证和聚焦回归测试
+├─ infra/                  # Docker 和基础设施配置
+├─ examples/               # GraphRAG Project 示例
+├─ docs/                   # 正式文档
+│  ├─ architecture/        # 当前架构、目标架构、路线图、正式决策
+│  ├─ evidence/            # 精选证据
+│  ├─ reference/           # 当前术语
+│  └─ history/             # 过时或已完成材料归档
+├─ .agent/                 # Agent 工作流库
+└─ AGENTS.md               # 仓库级 Agent 入口
 ```
 
-## Local Run
+## 本地启动
 
-Backend:
+后端示例：
 
 ```powershell
 uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860
 ```
 
-Frontend:
+前端示例：
 
 ```powershell
-cd apps\web
-npm ci
-npm run dev -- --host 127.0.0.1 --port 8090
+npm run frontend:dev
 ```
 
-Desktop:
+Windows 启动器：
 
 ```powershell
-cd apps\desktop
-npm ci
-npm start
+.\tools\launchers\windows\Zuno-Web-Start.cmd
+.\tools\launchers\windows\Zuno-Desktop-Start.cmd
 ```
 
-Docker:
+## 验证
+
+常用文档和仓库边界验证：
 
 ```powershell
-copy infra\docker\docker_config.example.yaml infra\docker\docker_config.local.yaml
-docker compose -f infra/docker/docker-compose.yml up --build -d
-```
-
-## Verification
-
-Focused documentation and repository checks:
-
-```powershell
+git diff --check
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+python .agent/scripts/verify_repo_hygiene.py
+python .agent/scripts/verify_module_boundaries.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
-powershell -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
-pytest -q tests/test_docs_entrypoints.py
-pytest tests/test_phase0_runtime_recovery.py
-pytest -q tests/test_repo_structure_consistency.py
-pytest -q tests/test_publish_boundary.py
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/repo/test_agent_system.py tests/repo/test_repo_hygiene.py -p no:cacheprovider
 ```
 
-Full test run:
+常用聚焦命令：
 
 ```powershell
-pytest -q
+pytest -q tests/repo/test_repo_structure_consistency.py
+pytest -q tests/repo/test_publish_boundary.py
+pytest -q tests/legacy_guards/test_phase0_runtime_recovery.py
 ```
 
-## License
-
-[MIT](./LICENSE)
+完整 pytest 和 eval 只在对应 phase 或 closure 明确要求时运行。

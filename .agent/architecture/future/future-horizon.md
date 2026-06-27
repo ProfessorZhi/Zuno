@@ -1,11 +1,11 @@
-# Future Horizon
+# 未来方向边界
 
-## Purpose
+## 用途
 
 Keep longer-term architecture direction visible without making it near-term
 implementation work.
 
-## Future Topics
+## 未来主题
 
 - Java business services for enterprise workflow boundaries.
 - Microservice extraction after modular monolith contracts are stable.
@@ -15,7 +15,7 @@ implementation work.
   retrieval is no longer sufficient.
 - Coding Agent mode as a separate product direction.
 
-## Rule
+## 规则
 
 These topics may influence adapter seams, trace fields, and service-ready
 interfaces. They are not current acceptance targets and must not be described as

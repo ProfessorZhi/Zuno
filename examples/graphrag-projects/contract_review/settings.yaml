@@ -7,7 +7,7 @@ query_method: local
 status: ready
 source_domain_pack:
   id: contract_review
-  path: docs/architecture/history/domain-packs/root-contract-review/contract_review
+  path: docs/history/domain-packs/root-contract-review/contract_review
 schema_path: schema.json
 retrieval_policy_path: retrieval_policy.yaml
 eval_dataset_path: eval/eval_dataset.jsonl

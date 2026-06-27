@@ -1,4 +1,4 @@
-# Agent Programs
+# Agent 执行程序
 
 `.agent/programs/` 存放当前可执行的 Agent program，也就是“接下来按哪些 Phase 落地”的工作计划。
 

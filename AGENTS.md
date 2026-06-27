@@ -38,14 +38,14 @@ docs/history/
 - 英文术语可以保留，但必须用中文解释其边界。
 - `docs/history/` 是历史证据库，可以保留原文，不为了翻译而改写历史。
 
-## Source Boundaries
+## 来源边界
 
 - `docs/`：正式人类文档真相。
 - `AGENTS.md`：仓库级 Agent 入口和工作流契约。
 - `.agent/`：Agent 工作流库、参考、模板、脚本和本地操作辅助。
 - `docs/history/`：过时计划、旧程序、退休迁移说明和被替换设计的归档。
 
-正式结论必须进入 `docs/`。Agent-only 导航、可复用提示和 helper scripts 放在 `.agent/`。历史材料移动到 `docs/history/`，不要因为它不再当前有效就删除。
+正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。历史材料移动到 `docs/history/`，不要因为它不再当前有效就删除。
 
 ## 必读顺序
 
@@ -73,36 +73,36 @@ docs/history/
 ## 任务路由
 
 - 范围不清楚 -> `.agent/references/task-routing.md` 的只读审计路由。
-- `docs`、`.agent`、references、history -> `.agent/references/workflow.md` 的文档维护流程。
-- 目录移动、删除、归档、ignore、generated/local cleanup -> `.agent/references/workflow.md` 的仓库卫生流程。
+- `docs`、`.agent`、参考资料、历史档案 -> `.agent/references/workflow.md` 的文档维护流程。
+- 目录移动、删除、归档、忽略规则、生成物和本地缓存清理 -> `.agent/references/workflow.md` 的仓库卫生流程。
 - `apps/web` -> `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
 - `src/backend/zuno` -> `src/backend/zuno/AGENTS.md` 和 `.agent/references/runtime-call-chain.md`。
-- API、DTO、request/response、frontend/backend contract -> `.agent/references/code-map.md`。
+- API、DTO、请求/响应、前后端契约 -> `.agent/references/code-map.md`。
 - 架构替换 -> `.agent/references/workflow.md` 的架构重构流程。
-- 架构替换、目录移动、Context/Memory、GraphRAG boundary 或 repository hygiene 任务还必须读 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
-- eval tooling、datasets、metrics、profiles、reports -> `tools/evals/zuno/AGENTS.md` 和 `.agent/references/verification-map.md`。
+- 架构替换、目录移动、上下文/记忆、GraphRAG 边界或仓库卫生任务还必须读 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
+- Eval 工具、数据集、指标、配置档和报告 -> `tools/evals/zuno/AGENTS.md` 和 `.agent/references/verification-map.md`。
 
 ## 当前主线
 
-已完成的 Phase 0-6 architecture closure 是历史完成事实，不能改写成未完成。
+已完成的 Phase 0-6 架构收口是历史完成事实，不能改写成未完成。
 
-当前可执行 Agent program：
+当前可执行 Agent 程序：
 
 - `.agent/programs/zuno-target-runtime-v2/`
 
-当前目标：在 Target Architecture Migration V1 closure 之后，以小步可验证方式落地目标 runtime：module boundary gates、低风险 backend application-boundary move、minimal callable Context Orchestrator runtime，以及后续 Phase 05-09。
+当前目标：在 Target Architecture Migration V1 收口之后，以小步可验证方式落地目标运行时：模块边界闸门、低风险后端应用边界移动、最小可调用 Context Orchestrator 运行时，以及后续 Phase 05-09。
 
-最新完成 program 归档在：
+最新完成程序归档在：
 
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 
-active V2 分解：
+当前 V2 分解：
 
 - `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
 - `.agent/programs/zuno-target-runtime-v2/current-phase.md`
 - `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
 
-归档 V1 / 旧 cleanup 材料：
+归档 V1 / 旧清理材料：
 
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 - `docs/history/programs/official-graphrag-cleanup-v1/`
@@ -114,7 +114,7 @@ active V2 分解：
 - `.agent/architecture/future/`
 - `.agent/architecture/decisions/`
 
-不要把 Java、microservices、event-driven workers 或 multi-agent mode 当作近期实现工作，除非用户明确打开 future-direction implementation program。
+不要把 Java、微服务、事件驱动 worker 或多 Agent 模式当作近期实现工作，除非用户明确打开未来方向实现程序。
 
 ## 自维护规则
 
@@ -122,7 +122,7 @@ active V2 分解：
 
 1. `.agent/programs/<program>/`
 2. phase 文档
-3. spec、ADR 或 audit
+3. 规格、ADR 或审计
 4. `docs/history/`
 5. `docs/architecture/README.md`
 6. `docs/architecture/current-architecture.md`
@@ -134,19 +134,19 @@ active V2 分解：
 12. `.agent/programs/`
 13. `.agent/scripts/` 或 `.agent/templates/`
 14. `.gitignore`
-15. 如果产生修改，运行验证、commit、push
+15. 如果产生修改，运行验证、提交、推送
 
 如果旧设计被替换，把旧材料归档到 `docs/history/`，不要留在前台路径里，也不要静默删除。
 
 ## 任务收尾规则
 
-- 只读侦察不 commit、不 push。
+- 只读侦察不提交、不推送。
 - 修改任务必须运行最小有效验证。
-- 修改任务结束时 commit 并 push，除非验证或 push 被阻塞。
-- 不要 force push、force-with-lease 或 amend 旧 commit，除非用户明确要求。
-- 不要保留 legacy lowercase 或 dotted Agent entrypoints 与 `AGENTS.md` 并行。
-- 只有 root entrypoint 路由到的模块才允许有模块级 `AGENTS.md`。
+- 修改任务结束时提交并推送，除非验证或推送被阻塞。
+- 不要强制推送、带租约强制推送或修改旧提交，除非用户明确要求。
+- 不要保留旧的小写或点号形式 Agent 入口与 `AGENTS.md` 并行。
+- 只有根入口路由到的模块才允许有模块级 `AGENTS.md`。
 
-## Scope Rules
+## 范围规则
 
-本工作流文档不授权广泛代码修改。必须遵守任务给出的 forbidden paths。如果验证需要修改 forbidden path，停止并返回证据，不扩大范围。
+本工作流文档不授权广泛代码修改。必须遵守任务给出的禁止路径。如果验证需要修改禁止路径，停止并返回证据，不扩大范围。

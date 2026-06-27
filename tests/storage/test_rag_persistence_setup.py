@@ -1,0 +1,11 @@
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_backend_compose_persists_chroma_vector_db():
+    compose_text = (REPO_ROOT / "infra" / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert "/app/.local/state/vector_db" in compose_text
+    assert "backend_vector_db:" in compose_text

@@ -298,26 +298,26 @@ def main() -> int:
     project_loader = _read("src/backend/zuno/services/graphrag/project/loader.py")
     if "def to_domain_pack_payload" in project_loader:
         errors.append("GraphRAG Project loader must expose only to_project_payload")
-    structured_contract_test = _read("tests/test_structured_graph_extractor_contract.py")
+    structured_contract_test = _read("tests/graphrag/test_structured_graph_extractor_contract.py")
     if "domain_pack=contract_review" in structured_contract_test:
         errors.append("Structured graph extractor contract tests must use project_payload")
-    if (REPO_ROOT / "tests/test_stackless_local_eval_contract_domain_pack.py").exists():
+    if (REPO_ROOT / "tests/evals/test_stackless_local_eval_contract_domain_pack.py").exists():
         errors.append("Stackless Contract Review eval test must use project query policy naming")
-    if not (REPO_ROOT / "tests/test_stackless_local_eval_contract_project_query_policy.py").exists():
+    if not (REPO_ROOT / "tests/evals/test_stackless_local_eval_contract_project_query_policy.py").exists():
         errors.append("Stackless Contract Review eval test must use project query policy naming")
     retired_root_migration_test_names = [
-        "tests/test_completion_domain_pack_runtime.py",
-        "tests/test_contract_review_domain_pack.py",
-        "tests/test_domain_pack_runtime_flow.py",
-        "tests/test_general_agent_domain_pack_runtime.py",
-        "tests/test_workspace_domain_pack_runtime.py",
+        "tests/legacy_guards/test_completion_domain_pack_runtime.py",
+        "tests/legacy_guards/test_contract_review_domain_pack.py",
+        "tests/legacy_guards/test_domain_pack_runtime_flow.py",
+        "tests/legacy_guards/test_general_agent_domain_pack_runtime.py",
+        "tests/legacy_guards/test_workspace_domain_pack_runtime.py",
     ]
     project_root_migration_test_names = [
-        "tests/test_completion_agent_config_compatibility.py",
-        "tests/test_contract_review_project_payload.py",
-        "tests/test_project_query_compatibility_boundaries.py",
-        "tests/test_general_agent_project_query_runtime.py",
-        "tests/test_workspace_project_query_runtime.py",
+        "tests/agent/test_completion_agent_config_compatibility.py",
+        "tests/graphrag/test_contract_review_project_payload.py",
+        "tests/legacy_guards/test_project_query_compatibility_boundaries.py",
+        "tests/agent/test_general_agent_project_query_runtime.py",
+        "tests/agent/test_workspace_project_query_runtime.py",
     ]
     for relative_path in retired_root_migration_test_names:
         if (REPO_ROOT / relative_path).exists():

@@ -1,81 +1,48 @@
-# Current Program
+# 当前程序
 
-The active executable Agent program is:
+当前可执行 Agent 程序是：
 
 - `.agent/programs/zuno-target-runtime-v2/`
 
-This active program is a controlled first implementation slice after the Zuno
-Target Architecture Migration V1 closure. It opens module boundary gates,
-migrates one low-risk backend application boundary, and introduces a minimal
-callable Context Orchestrator.
+这个程序是在 Zuno Target Architecture Migration V1 收口后的受控首个实现切片。它打开模块边界闸门，迁移一个低风险后端应用边界，并引入最小可调用 Context Orchestrator。
 
-The next execution sequence is phase-based and linear:
+后续执行顺序必须线性推进：
 
 ```text
-Phase 05 Memory Engine
+Phase 05：记忆引擎
 Phase 06 Capability / Tool Retrieval
 Phase 07 Knowledge Retrieval / Fusion
 Phase 08 GeneralAgent LangGraph Runtime
-Phase 09 Product Boundary / Trace / Eval Closure
+Phase 09：产品边界、Trace 与 Eval 收口
 ```
 
-Latest completed program:
+最新完成程序：
 
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 
-Formal human-facing status is summarized in:
+面向人的正式状态见：
 
 - `docs/architecture/roadmap.md`
 
-## Why The Archived Program Exists
+## 为什么保留归档程序
 
-The previous Phase 0-6 closure is complete and historical.
+之前的 Phase 0-6 closure 已完成，是历史事实。
 
-The completed work moved from the proven 11A/11B runtime state toward the target
-architecture and target repository layout. It continues official GraphRAG
-cleanup 11C/12 work before Context/Memory and Capability implementation.
+已完成工作从已证明的 11A/11B runtime 状态推进到目标架构和目标仓库布局，并完成 official GraphRAG cleanup 11C/12，再进入 Context/Memory 与 Capability 实现阶段。
 
-## Completed Implementation Status
+## 已完成状态
 
-- Target Migration Phase 00 is complete.
-- Phase 01 active runtime cleanup is complete.
-- Official cleanup Phase 11A and 11B are complete.
-- Official cleanup Phase 11C active runtime cleanup is closed. Bounded
-  migration aliases remain where tests name storage/eval/DB compatibility
-  roles. The former `tests/compat/` holding area is retired. Root `domain-packs/` assets are
-  archived under `docs/history/domain-packs/root-contract-review/`,
-  and Docker no longer copies or mounts `/app/domain-packs`.
-  Workspace knowledge prefetch/tools have been cut over to
-  `KnowledgeQueryService`, and the standalone `AgentRuntime` facade has been
-  removed from current backend source and exports. The direct
-  `DomainQAGraph` source, legacy graph state module,
-  `MultiAgentSupervisorGraph` source, and
-  `src/backend/zuno/services/domain_pack/` runtime service package have also
-  retired from current backend.
-  `DomainQAGraph` and `MultiAgentSupervisorGraph` are no longer current core
-  package public exports.
-- Phase 02 is complete. Contract Review target assets live under
-  `examples/graphrag-projects/contract_review/`, with root Domain
-  Pack assets archived under
-  `docs/history/domain-packs/root-contract-review/`.
-- Phase 03 is complete for the public GraphRAG Project mainline:
-  `/knowledge/search` routes through `KnowledgeQueryService`, Contract Review
-  project assets expose `to_project_payload()`, graph scope uses
-  `graphrag_project_id`, and stackless eval entrypoints prefer
-  `graphrag_project_id` / `--graphrag-project-id` while retaining legacy
-  compatibility aliases only where explicitly tested.
-- Phase 04 is complete: retired Domain Pack UI capture and
-  responsive-check scripts are archived under
-  `docs/history/programs/knowledge-product-refactor-deep-graphrag-v1/scripts/`.
-- Phase 09 full tests, eval, trace, docs, grep classification, and evidence
-  closure is complete for the target migration run.
-- Official cleanup Phase 12 is closed through the target migration closure
-  evidence. Remaining live data backfill is an operational migration step, not
-  an active executable Agent program.
+- Target Migration Phase 00 已完成。
+- Phase 01 active runtime cleanup 已完成。
+- Official cleanup Phase 11A 和 11B 已完成。
+- Official cleanup Phase 11C active runtime cleanup 已关闭。受限 migration aliases 只保留在 storage/eval/DB compatibility 等测试语境中。
+- 旧 `tests/compat/` holding area 已退休。
+- root `domain-packs/` 资产已归档到 `docs/history/domain-packs/root-contract-review/`。
+- `DomainQAGraph` 后端源码和 `src/backend/zuno/services/domain_pack/` runtime service package 已从当前后端移除。
+- Contract Review assets 保留为 GraphRAG Project / eval 证据，不再代表 active Domain Pack 主线。
 
-## Detailed Sources
+## 当前参考文件
 
-- `.agent/programs/current.md`
 - `.agent/programs/zuno-target-runtime-v2/README.md`
 - `.agent/programs/zuno-target-runtime-v2/implementation-roadmap.md`
 - `.agent/programs/zuno-target-runtime-v2/current-phase.md`
@@ -85,15 +52,6 @@ cleanup 11C/12 work before Context/Memory and Capability implementation.
 - `docs/history/programs/zuno-target-architecture-migration-v1/implementation-phases/`
 - `docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md`
 - `docs/history/programs/official-graphrag-cleanup-v1/implementation-phases/`
-  as archived cleanup evidence, not active executable program material
 - `.agent/architecture/near-term/01-target-runtime-architecture.md`
-- `.agent/architecture/near-term/02-context-memory-architecture.md`
-- `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
-- `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
-- `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
-Do not use the archived implementation phases to pull Java, microservices,
-event-driven workers, or default multi-agent mode into current acceptance.
-
-Do not treat the V2 Target runtime as fully Current until the relevant code,
-tests, verifiers, and phase evidence prove each slice.
+不要把 V2 Target runtime 当作完全 Current，除非相关代码、测试和 trace evidence 已经证明。

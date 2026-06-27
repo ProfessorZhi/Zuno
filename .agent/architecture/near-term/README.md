@@ -8,7 +8,7 @@
 
 - `docs/history/near-term-architecture-fragments/`
 
-## Canonical Files
+## 标准文件
 
 ```text
 .agent/architecture/near-term/

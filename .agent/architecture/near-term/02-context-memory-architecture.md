@@ -1,11 +1,11 @@
-# Context Memory Architecture
+# 上下文与记忆架构
 
-## Purpose
+## 用途
 
 Define the canonical target for context, state, and memory. This replaces the
 old context-state-memory and context-memory ideal fragments.
 
-## Core Rule
+## 核心规则
 
 Memory is not "whatever text we put back into the prompt." Zuno separates:
 
@@ -26,9 +26,9 @@ External Knowledge
 = RAG/GraphRAG/file/web evidence, not Agent memory
 ```
 
-## Layer Model
+## 分层模型
 
-| Layer | Name | Meaning | Current Status |
+| 层级 | 名称 | 含义 | 当前状态 |
 | --- | --- | --- | --- |
 | L0 | Working Context | Exact content visible to one model call. | Minimal foundation current. |
 | L1 | Recent Interaction Window | Recent coherent messages and incomplete tool groups. | Target policy; basic windowing current through ContextOrchestrator. |
@@ -37,7 +37,7 @@ External Knowledge
 | L4 | External Knowledge | RAG, GraphRAG, files, and web evidence. | Current query runtime exists; not Agent memory. |
 | Source | Raw Event Log | Append-only messages, model outputs, tool calls/results, interrupts, memory updates. | Foundation current; mature use target. |
 
-## Main Memory Strategy
+## 主记忆策略
 
 The target memory strategy is:
 
@@ -59,7 +59,7 @@ Prompt Caching is a compute-layer hint. It can reduce provider cost or latency,
 but it is not memory compression and does not replace summary or structured
 memory.
 
-## Invariants
+## 不变量
 
 - Summary cannot replace the Raw Event Log.
 - Task Summary Memory must store `source_event_ids`.
@@ -72,7 +72,7 @@ memory.
 - Tool result compression must preserve errors, permission results, paths,
   hashes, artifact refs, and evidence pointers.
 
-## Pre-call Context Preparation
+## 调用前上下文准备
 
 ```text
 ContextOrchestrator.prepare(step)
@@ -93,7 +93,7 @@ ContextOrchestrator.prepare(step)
 The current minimal `ContextOrchestrator` is a foundation slice. Mature
 retrieval, summarization, conflict resolution, and memory promotion are Target.
 
-## Post-turn Pipeline
+## 轮次后流水线
 
 ```text
 PostTurnPipeline.commit(turn)
@@ -110,7 +110,7 @@ PostTurnPipeline.commit(turn)
 
 The full Post-turn Pipeline remains Target until implemented and verified.
 
-## Context Selection
+## 上下文选择
 
 Context selection must protect:
 
@@ -125,7 +125,7 @@ Context selection must protect:
 Low-priority older messages, redundant summaries, stale tool results, and
 irrelevant memories are evicted first.
 
-## Boundary With GraphRAG
+## 与 GraphRAG 的边界
 
 Use three names consistently:
 

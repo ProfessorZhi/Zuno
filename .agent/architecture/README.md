@@ -14,7 +14,7 @@
   decisions/     架构决策摘要
 ```
 
-## near-term：近期理想架构
+## 近期理想架构
 
 `near-term/` 是当前最重要的目标架构工作集，描述短期内希望 Zuno 收敛到的分层形态。
 
@@ -27,11 +27,11 @@
 - `04-knowledge-graphrag-retrieval-fusion.md`：BM25、Vector、GraphRAG Local/Global/DRIFT、RRF。
 - `05-repository-boundaries-and-acceptance-gates.md`：仓库边界、文档瘦身和验收门。
 
-## future：未来方向
+## 未来方向
 
 `future/` 只记录更远的方向，例如 Java business services、microservices、event-driven workers、Coding Agent mode、multi-agent mode。它不是近期执行计划，也不是当前验收目标。
 
-## decisions：为什么这样设计
+## 架构决策：为什么这样设计
 
 `decisions/` 记录 Agent 侧的轻量决策摘要，用来回答：
 

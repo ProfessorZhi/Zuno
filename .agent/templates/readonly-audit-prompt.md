@@ -1,11 +1,11 @@
-# Read-Only Audit Prompt
+# 只读审计提示模板
 
-Run a read-only audit. Do not edit files, stage, commit, or push.
+执行只读审计。不要编辑文件，不要 stage，不要 commit，不要 push。
 
-Report:
+## 汇报内容
 
-1. current state
-2. evidence paths
-3. stale or conflicting material
-4. suggested next action
-5. whether a modification task is needed
+1. 当前状态。
+2. 证据路径。
+3. 过时或冲突材料。
+4. 建议的下一步。
+5. 是否需要进入修改任务。

@@ -1,11 +1,11 @@
-# Architecture Decisions
+# 架构决策
 
-## Purpose
+## 用途
 
 Keep Agent-side architecture choices concise. Formal human-facing ADRs remain
 under `docs/architecture/decisions/`.
 
-## Locked Near-Term Decisions
+## 已锁定的近期决策
 
 - Keep one `GeneralAgent` conversational runtime.
 - Treat GraphRAG Project as the target knowledge project boundary.
@@ -15,7 +15,7 @@ under `docs/architecture/decisions/`.
 - Keep Java, microservices, event workers, Coding Agent mode, and product-level
   multi-agent mode in future horizon unless a separate program opens them.
 
-## Open Questions
+## 待决问题
 
 - Exact persistence model for mature structured long-term memory.
 - Whether ToolCard vector retrieval is needed before Native BM25 proves
@@ -24,7 +24,7 @@ under `docs/architecture/decisions/`.
 - Whether the full GeneralAgent runtime graph should be explicit LangGraph nodes
   or a thinner LangGraph wrapper around the existing loop.
 
-## Retired Surfaces
+## 已退休表面
 
 - `DomainQAGraph`
 - `MultiAgentSupervisorGraph`

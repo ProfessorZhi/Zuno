@@ -1,12 +1,12 @@
-# Knowledge GraphRAG Retrieval Fusion
+# 知识、GraphRAG 与检索融合
 
-## Purpose
+## 用途
 
 Define the canonical target for Knowledge Query, GraphRAG query modes,
 multi-query retrieval, multi-retriever recall, fusion, rerank, evidence,
 citation, and trace.
 
-## Knowledge Boundary
+## 知识边界
 
 The target query path is:
 
@@ -24,7 +24,7 @@ Current code already has `KnowledgeQueryService`, `GraphRAGQueryService`,
 `GraphRAGProjectSnapshot`, and `KnowledgeQueryResult`. The target architecture
 extends this with clearer retrieval/fusion components and stronger traces.
 
-## GraphRAG Query Modes
+## GraphRAG 查询模式
 
 The real query modes are exactly:
 
@@ -55,7 +55,7 @@ The router records requested method, resolved method, fallback reason, and
 method availability. If graph/community assets are not ready, the trace must
 show the fallback clearly.
 
-## Multi-query And Multi-retriever Flow
+## 多查询与多检索器流程
 
 Target enhanced retrieval:
 
@@ -80,7 +80,7 @@ Query variants are enhanced / expensive mode. They are not enabled by default
 for every query. The original query must always be preserved in the trace and
 included in the candidate set.
 
-## Native BM25 For Knowledge
+## 面向知识的 Native BM25
 
 Native BM25 is the local lexical baseline. Elasticsearch can be an optional
 adapter, but it is not the BM25 algorithm itself.
@@ -118,7 +118,7 @@ k1 = 1.2 ~ 1.5
 b = 0.75
 ```
 
-## Deduplication
+## 去重
 
 Deduplication uses stable ids:
 
@@ -130,7 +130,7 @@ Deduplication uses stable ids:
 The same evidence may arrive from BM25, vector, graph, and community recall.
 It must be merged before fusion/rerank to avoid over-counting one source.
 
-## RRF Fusion
+## RRF 融合
 
 RRF is the default coarse-rank fusion method:
 
@@ -147,7 +147,7 @@ k = 60
 RRF produces a fused candidate list across retrievers and query variants.
 Optional rerank may run after RRF. RRF is not a final answer verifier.
 
-## Evidence And Citation
+## 证据与引用
 
 The answer path must output:
 
@@ -164,7 +164,7 @@ The answer path must output:
 - latency
 - cost when available
 
-## Boundary With Agent Context
+## 与 Agent 上下文的边界
 
 Do not confuse:
 

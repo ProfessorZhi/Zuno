@@ -9,8 +9,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 COMMANDS: list[list[str]] = [
     ["python", "tools/scripts/verify_public_demo_docs.py"],
     ["python", "tools/scripts/verify_repo_structure.py"],
-    ["pytest", "-q", "tests/test_publish_boundary.py"],
-    ["pytest", "-q", "tests/test_repo_structure_consistency.py"],
+    ["pytest", "-q", "tests/repo/test_publish_boundary.py"],
+    ["pytest", "-q", "tests/repo/test_repo_structure_consistency.py"],
 ]
 
 

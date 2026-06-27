@@ -1,58 +1,48 @@
-# Runtime Call Chain
+# 运行时调用链
 
-## Purpose
+## 目的
 
-Summarize the current backend call direction.
+概括当前后端调用方向，避免在重构时把依赖方向画反。
 
-## Current Shape
+## 当前形态
 
 ```text
 HTTP route
   -> application/service function
   -> core/runtime orchestration
   -> GeneralAgent prepare_context
-  -> GeneralAgent React loop
+  -> GeneralAgent ReAct loop
   -> post_turn_commit
   -> retrieval, GraphRAG, context contracts, memory, capabilities, tools, storage
   -> response DTO
 ```
 
-## Rule
+## 规则
 
-Lower layers do not depend backward on the API layer.
+下层不能反向依赖 API 层。
 
-## Capability Boundary
+## 能力边界
 
-Capability foundation code lives under
-`src/backend/zuno/services/application/capabilities/`. It defines the current
-metadata contract for Knowledge, ActionTool, MCPTool, MCPResource, MCPPrompt,
-and Skill capabilities, plus a minimal selector that can return only relevant
-schemas for a task. The existing API capability search service preserves its
-previous response keys while also exposing the unified metadata fields.
+Capability foundation 代码位于：
 
-GeneralAgent does not yet inject selected capabilities into every model turn;
-full product-level capability orchestration remains Phase 09/future closure.
+- `src/backend/zuno/services/application/capabilities/`
 
-## GeneralAgent Context Runtime
+它定义 Knowledge、ActionTool、MCPTool、MCPResource、MCPPrompt 和 Skill capability 的当前 metadata contract，以及一个最小 selector。selector 可以只返回与任务相关的 schema。现有 API capability search service 保留旧 response key，同时暴露统一 metadata 字段。
 
-`GeneralAgent.astream()` now prepares a `ModelContextPacket`, passes
-`context_trace` and `model_context_packet` into the single React loop state,
-and commits a scoped memory raw event plus task summary after the turn when
-memory is enabled.
+GeneralAgent 还没有在每轮模型调用中完整注入 selected capabilities；完整产品级 capability orchestration 仍属于 Phase 09 或 future closure。
 
-Detailed target behavior belongs in:
+## GeneralAgent 上下文运行时
+
+`GeneralAgent.astream()` 当前会准备 `ModelContextPacket`，把 `context_trace` 和 `model_context_packet` 放入单一 ReAct loop state，并在启用 memory 时写入 scoped raw event 和 task summary。
+
+详细目标行为见：
 
 - `.agent/architecture/near-term/01-target-runtime-architecture.md`
 - `.agent/architecture/near-term/02-context-memory-architecture.md`
 - `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
-- `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
-- `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
-## Known Limitations
+## GraphRAG 与知识路径
 
-Root Domain Pack assets are archived under
-`docs/history/domain-packs/root-contract-review/`, and Docker no
-longer copies or mounts `/app/domain-packs`. Compatibility tests remain Blocked
-Legacy until Phase 11C proves replacement or deletion. The direct
-`DomainQAGraph` backend source and Domain Pack runtime service package are
-already retired from the current call chain.
+GraphRAG 是被选择的 Knowledge Capability，不是第二套聊天 runtime。当前查询路径应经过 `KnowledgeQueryService` 和 `GraphRAGQueryService`，并把 evidence、citation、trace 返回给上层。
+
+Domain Pack 只在迁移 alias、DB compatibility、eval CLI compatibility、retirement/history tests 中保留受限含义，不是 active mainline。

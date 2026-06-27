@@ -1,21 +1,19 @@
-# Verification Map
+# 验证地图
 
-## Workflow Verification
+## 工作流验证
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 ```
 
-## Docs Entrypoint Verification
-
-Run these if present:
+## 文档入口验证
 
 ```powershell
 python tools/scripts/verify_docs_entrypoints.py
-pytest -q tests/test_docs_entrypoints.py
+pytest -q tests/repo/test_docs_entrypoints.py
 ```
 
-## Agent System Verification
+## Agent 系统验证
 
 ```powershell
 python .agent/scripts/verify_agent_system.py
@@ -25,13 +23,13 @@ python .agent/scripts/verify_module_boundaries.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 ```
 
-## Focused Docs / Agent Pytest
+## 聚焦文档 / Agent 测试
 
 ```powershell
-pytest -q tests/test_docs_entrypoints.py tests/test_repo_structure_consistency.py tests/test_publish_boundary.py tests/test_agent_system.py tests/test_repo_hygiene.py -p no:cacheprovider
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/repo/test_agent_system.py tests/repo/test_repo_hygiene.py -p no:cacheprovider
 ```
 
-## Git And Diff Checks
+## Git 与 diff 检查
 
 ```powershell
 git status --short
@@ -39,7 +37,7 @@ git diff --stat
 git diff --check
 ```
 
-## Legacy Grep Checks
+## 历史兼容 grep 检查
 
 ```powershell
 git grep -n ".agentmd"
@@ -48,22 +46,12 @@ git grep -n "<legacy lowercase Agent entrypoint filename>"
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/grep-domain-pack.ps1
 ```
 
-When running the second command, replace the placeholder with the retired
-lowercase entrypoint filename. The Domain Pack helper scans `Domain Pack`,
-`domain_pack`, `DomainQAGraph`, `MultiAgentSupervisorGraph`, and
-`domain-packs` while excluding `docs/history/**`; remaining hits
-must be classified as Current compatibility, Target reference, Blocked Legacy,
-or a bug to fix.
+第三条命令里的占位符要替换为已经退休的小写入口文件名。Domain Pack helper 会扫描 `Domain Pack`、`domain_pack`、`DomainQAGraph`、`MultiAgentSupervisorGraph` 和 `domain-packs`，并排除 `docs/history/**`。剩余命中必须分类为 Current compatibility、Target reference、Blocked Legacy 或需要修复的 bug。
 
-## Canonical Architecture Grep Checks
+## 标准架构 grep
 
 ```powershell
 git grep -n "zuno-ideal-architecture-and-repo-layout.html"
-git grep -n "Native BM25"
-git grep -n "RRF"
-git grep -n "Summary Compression"
-git grep -n "Structured Extraction"
-git grep -n "ToolCard"
-git grep -n "GraphRAGProjectSnapshot"
-git grep -n "auto router"
 ```
+
+该 HTML 只能是 `.agent/architecture/near-term/` 下的 Target / Proposed 视觉蓝图，不应被写成 Current truth。

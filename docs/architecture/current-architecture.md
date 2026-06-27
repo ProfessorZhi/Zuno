@@ -48,10 +48,10 @@ Completion API
 
 已证明的当前事实：
 
-- Phase 11A: complete。当前代码包含 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
-- Phase 11B: complete。`GeneralAgent.astream()` 使用单一会话路径，`search_knowledge_base` 调用 `KnowledgeQueryService`。
-- Phase 11C: active runtime cleanup complete。`DomainQAGraph`、`MultiAgentSupervisorGraph`、`AgentRuntime`、legacy graph states 和 `zuno.services.domain_pack` 不再是当前后端主线。
-- Phase 12: closed through the target migration closure evidence。full pytest、Contract Review eval、stackless baseline comparison、trace metadata、legacy grep classification 和 docs/evidence sync 已完成。
+- Phase 11A：已完成。当前代码包含 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
+- Phase 11B：已完成。`GeneralAgent.astream()` 使用单一会话路径，`search_knowledge_base` 调用 `KnowledgeQueryService`。
+- Phase 11C：active runtime cleanup 已完成。`DomainQAGraph`、`MultiAgentSupervisorGraph`、`AgentRuntime`、legacy graph states 和 `zuno.services.domain_pack` 不再是当前后端主线。
+- Phase 12：已通过 target migration closure evidence 关闭。full pytest、Contract Review eval、stackless baseline comparison、trace metadata、legacy grep classification 和 docs/evidence sync 已完成。
 
 Workspace knowledge prefetch、Workspace `search_knowledge_base` tool 和 `/knowledge/search` API service path 现在都通过 `KnowledgeQueryService`。
 
@@ -74,9 +74,9 @@ Workspace knowledge prefetch、Workspace `search_knowledge_base` tool 和 `/know
 
 Docker 不再复制或挂载 `/app/domain-packs`。
 
-## 当前 Foundation
+## 当前基础切片
 
-这些是当前已经存在的 foundation slice，但不能写成成熟产品能力：
+这些是当前已经存在的基础切片，但不能写成成熟产品能力：
 
 - Typed Context Contract models 和 minimal pre-call `ContextOrchestrator`：`src/backend/zuno/services/application/context/`
 - Memory layer foundation contracts：`src/backend/zuno/services/memory/layers.py`
@@ -90,7 +90,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - production-grade memory extraction / retrieval / consolidation
 - mature Context Orchestrator product behavior
 - product-level dynamic capability orchestration
-- full `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime
+- 完整 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime
 - Native BM25 capability search
 - multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
 

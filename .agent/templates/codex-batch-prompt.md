@@ -1,21 +1,21 @@
-# Codex Batch Prompt
+# Codex 批量任务提示模板
 
-Use this for bounded batches of repository work.
+用于边界明确的一批仓库工作。
 
-## Batch Goal
+## 批量目标
 
-## Allowed Paths
+## 允许路径
 
-## Forbidden Paths
+## 禁止路径
 
-## Required Reads
+## 必读文件
 
-## Required Changes
+## 必做修改
 
-## Verification
+## 验证命令
 
-## Commit Message
+## 提交信息
 
-## Push Rule
+## 推送规则
 
-No force push. No amend. Do not stage unrelated files.
+不强制推送，不 amend 旧提交，不 stage 无关文件。

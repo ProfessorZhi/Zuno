@@ -175,12 +175,12 @@ def main() -> int:
 
     roadmap = _read(".agent/programs/zuno-target-runtime-v2/implementation-roadmap.md")
     for phrase in [
-        "Phase 05: Memory Engine",
-        "Phase 06: Capability / Tool Retrieval",
-        "Phase 07: Knowledge Retrieval / Fusion",
-        "Phase 08: GeneralAgent LangGraph Runtime",
-        "Phase 09: Product Boundary / Trace / Eval Closure",
-        "front-path slimming",
+        "Phase 05：记忆引擎",
+        "Phase 06：能力与工具检索",
+        "Phase 07：知识检索与融合",
+        "Phase 08：GeneralAgent LangGraph 运行时",
+        "Phase 09：产品边界、Trace 与 Eval 收口",
+        "`docs/` 保持精简",
     ]:
         if phrase not in roadmap:
             errors.append(f"active V2 roadmap missing phase execution phrase: {phrase}")

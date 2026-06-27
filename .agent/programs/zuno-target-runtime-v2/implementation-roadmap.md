@@ -1,235 +1,194 @@
-# Zuno Target Runtime V2 Implementation Roadmap
+# Zuno 目标运行时 V2 实施路线图
 
-## Objective
+## 目标
 
-Implement the target runtime architecture in small, verifiable phases after the
-completed target architecture migration closure.
+在已经完成的 target architecture migration closure 之后，用小步、可验证的 phase 落地目标运行时架构。
 
-The program must keep this distinction:
+本程序必须保持以下边界：
 
-- Current: code and tests already prove it.
-- Foundation: a minimal callable slice exists, but product behavior is not
-  mature.
-- Target: the next architecture to implement.
-- Future: outside this program.
-- History: archived evidence and superseded plans.
+- Current：代码和测试已经证明的当前事实。
+- Foundation：已有最小可调用切片，但产品行为还不成熟。
+- Target：下一阶段要实现的架构。
+- Future：本程序之外的未来方向。
+- History：已经归档的证据和被替换计划。
 
-## Completed Foundation Slice
+## 已完成基础切片
 
-| Phase | Status | Result |
+| Phase | 状态 | 结果 |
 | --- | --- | --- |
-| 00 | Complete | Re-verified current state before writing. |
-| 01 | Complete | Opened this executable program and updated pointers. |
-| 02 | Complete | Added module boundary audit and migration gates. |
-| 03 | Complete | Moved the first low-risk backend boundary. |
-| 04 | Complete | Added minimal callable Context Orchestrator runtime. |
+| 00 | Complete | 写入前重新验证当前状态。 |
+| 01 | Complete | 打开当前可执行程序并更新指针。 |
+| 02 | Complete | 增加模块边界审计和迁移闸门。 |
+| 03 | Complete | 完成第一个低风险后端边界移动。 |
+| 04 | Complete | 增加最小可调用 Context Orchestrator runtime。 |
 
-Detailed Phase 00-04 files and evidence are archived under:
+Phase 00-04 的详细文件和证据已归档到：
 
 - `docs/history/programs/zuno-target-runtime-v2/`
 
-## Future Execution Phases
+## 后续执行 Phase
 
-### Phase 05: Memory Engine
+### Phase 05：记忆引擎
 
-Goal: mature the Context / Memory Engine without changing product claims before
-tests prove behavior.
+目标：成熟 Context / Memory Engine，但在测试证明前不改变产品声明。
 
-Scope:
+范围：
 
-- Raw Event Log append and replay contract.
-- L0 Working Context and L1 Recent Interaction Window policy.
-- L2 Task Summary Memory using Summary Compression.
-- L3 Structured Long-term Memory candidates using Structured Extraction.
-- `source_event_ids` preservation for summaries and structured memories.
-- ContextTrace for selection, eviction, and token budget decisions.
+- Raw Event Log 追加和回放契约。
+- L0 Working Context 与 L1 Recent Interaction Window 策略。
+- 基于 Summary Compression 的 L2 Task Summary Memory。
+- 基于 Structured Extraction 的 L3 Structured Long-term Memory 候选。
+- summary 和 structured memory 保留 `source_event_ids`。
+- ContextTrace 记录选择、淘汰和 token budget 决策。
 
-Non-scope:
+不在范围内：
 
-- database schema changes unless a later approved phase explicitly opens them.
-- product-level memory UX.
-- treating External Knowledge as Agent Memory.
+- 数据库 schema 变化，除非后续获批 phase 明确打开。
+- 产品级 memory UX。
+- 把 External Knowledge 当成 Agent Memory。
 
-Exit criteria:
+退出标准：
 
-- `prepare_context` can consume recent window, summaries, structured memory
-  candidates, and evidence without breaking the single `GeneralAgent` path.
-- post-turn memory commit preserves raw events before summaries.
-- tests prove Raw Event Log is not replaced by summary memory.
-- docs update Current / Foundation / Target wording after code is proven.
+- `prepare_context` 可以消费 recent window、summary、structured memory candidates 和 evidence，同时不破坏单一 `GeneralAgent` 路径。
+- post-turn memory commit 先保留 raw events，再生成 summary。
+- 测试证明 Raw Event Log 没有被 summary memory 替代。
+- 文档在代码证明后同步 Current / Foundation / Target 边界。
 
-Verification:
+验证：
 
-- focused memory/context tests.
+- 聚焦 memory/context 测试。
 - `python .agent/scripts/verify_agent_system.py`
 - `python .agent/scripts/verify_doc_boundaries.py`
 - `python tools/scripts/verify_repo_structure.py`
 - `git diff --check`
 
-### Phase 06: Capability / Tool Retrieval
+### Phase 06：能力与工具检索
 
-Goal: stop relying on broad all-tool schema injection by introducing a
-retrievable ToolCard layer.
+目标：引入可检索 ToolCard 层，减少一次性注入所有工具 schema 的做法。
 
-Scope:
+范围：
 
-- ToolCard registry contract.
-- keyword and alias exact lookup.
-- Native BM25 over ToolCard text.
-- optional vector capability retrieval behind an adapter boundary.
-- permission, health, side-effect, cost, and latency filtering.
-- `CapabilitySelectionTrace`.
+- ToolCard registry contract。
+- Knowledge、Action Tool、MCP、Skill 的统一 capability metadata。
+- capability selector 基于 task/context 做 keyword、permission、health、cost 过滤。
+- GeneralAgent trace 记录 requested / selected / rejected capabilities。
 
-Non-scope:
+不在范围内：
 
-- changing tool behavior itself.
-- adding new external dependencies for BM25.
-- making product-level dynamic orchestration claims before focused tests pass.
+- 新建 MCP server。
+- 新增外部工具市场。
+- 自动安装用户未授权工具。
 
-Exit criteria:
+退出标准：
 
-- selected ToolCards and injected schemas are traceable.
-- rejected capability candidates include reasons.
-- Native BM25 has deterministic scoring tests and `explain_score`.
-- all-tool injection remains available only as bounded fallback where needed.
+- Agent 可以按需选择 capability，而不是默认加载全部工具 schema。
+- 工具选择结果进入 trace。
+- 权限、健康状态和成本过滤有测试覆盖。
 
-Verification:
+验证：
 
-- focused capability selector tests.
-- Native BM25 unit tests for tokenization, idf, scoring, and ranking.
-- permission/filter trace tests.
-- documentation/verifier suite.
+- 聚焦 capability registry / selector 测试。
+- 受影响 Agent runtime 测试。
+- Agent/doc 边界验证。
 
-### Phase 07: Knowledge Retrieval / Fusion
+### Phase 07：知识检索与融合
 
-Goal: implement the target retrieval/fusion path around the existing
-`KnowledgeQueryService` and `GraphRAGQueryService` boundaries.
+目标：围绕现有 KnowledgeQueryService 和 GraphRAGQueryService 落地目标检索融合路径。
 
-Scope:
+范围：
 
-- Native BM25 document retriever.
-- multi-query variant generation in enhanced / expensive mode only.
-- multi-retriever recall across Native BM25, dense vector, graph local, and
-  community global sources.
-- stable-id deduplication.
-- RRF fusion with default `k = 60`.
-- optional rerank adapter boundary.
-- evidence bundle, citation coverage, fusion trace, and optional rerank trace.
-- GraphRAG methods `basic`, `local`, `global`, `drift`; `auto` remains a
-  router, not a fifth mode.
+- query method requested / resolved trace。
+- Basic、Local、Global、DRIFT 路由边界。
+- Native BM25、dense vector、graph local、community global 的候选融合。
+- RRF、dedup、optional rerank、evidence check、citation coverage。
+- GraphRAGProjectSnapshot 继续是内部查询配置，不变成 Agent memory。
 
-Non-scope:
+不在范围内：
 
-- replacing GraphRAG Project with Domain Pack.
-- treating Elasticsearch as the BM25 algorithm.
-- overwriting historical eval baselines.
+- 重新引入 Domain Pack 作为主线。
+- 新建第二套聊天 runtime。
+- 大规模重新跑正式 eval，除非该 phase 明确要求。
 
-Exit criteria:
+退出标准：
 
-- original query is preserved in trace when query variants are generated.
-- requested and resolved GraphRAG method are both recorded.
-- fallback reasons are explicit when graph/community assets are unavailable.
-- RRF and citation coverage are test-covered.
+- query method resolution 可追踪。
+- GraphRAG 是被选择的 Knowledge Capability，不是第二套聊天运行时。
+- evidence bundle、citation coverage、index/community/prompt versions 进入 trace。
 
-Verification:
+验证：
 
-- focused retrieval/fusion tests.
-- focused GraphRAG router tests.
-- selected eval smoke only when the phase explicitly needs it.
-- documentation/verifier suite.
+- 聚焦 retrieval/fusion 测试。
+- 需要时运行 stackless 或 eval smoke。
+- 文档边界验证。
 
-### Phase 08: GeneralAgent LangGraph Runtime
+### Phase 08：GeneralAgent LangGraph 运行时
 
-Goal: make the runtime graph explicit while preserving the single
-`GeneralAgent` conversational path.
+目标：显式化 runtime graph，同时保持单一 `GeneralAgent` 聊天主线。
 
-Scope:
+范围：
 
-- explicit `prepare_context -> agent_loop -> post_turn_commit` graph.
-- LangGraph checkpoint, resume, interrupt, and recovery boundaries.
-- LangChain model/message/tool/structured-output adapters.
-- per-step trace ids and context/capability/retrieval trace propagation.
-- streaming behavior compatibility.
+- `prepare_context -> agent_loop -> post_turn_commit` 的显式状态图。
+- checkpoint、interrupt、resume、stream 兼容性。
+- LangChain message / model / tool / structured output 抽象继续通过 Agent runtime 进入。
+- LangGraph 管状态循环，不负责业务知识检索策略。
 
-Non-scope:
+不在范围内：
 
-- restoring `DomainQAGraph`, `MultiAgentSupervisorGraph`, or `AgentRuntime`.
-- introducing default multi-agent chat behavior.
-- broad package moves.
+- 默认多 Agent supervisor。
+- 第二套 GraphRAG chat runtime。
+- 产品级自动任务编排。
 
-Exit criteria:
+退出标准：
 
-- old streaming behavior remains compatible.
-- one chat request enters exactly one `GeneralAgent` mainline.
-- LangGraph state transitions are test-covered.
-- post-turn commit is observable and failure-safe.
+- 单次聊天路径只进入一个 GeneralAgent runtime。
+- state、checkpoint、interrupt、resume、stream 有聚焦测试。
+- Context/Memory、Capability、Knowledge trace 在 runtime graph 内可见。
 
-Verification:
+验证：
 
-- focused GeneralAgent runtime tests.
-- streaming contract tests.
-- trace propagation tests.
-- documentation/verifier suite.
+- 聚焦 GeneralAgent runtime 测试。
+- 受影响 API/SSE 测试。
+- Agent/doc 边界验证。
 
-### Phase 09: Product Boundary / Trace / Eval Closure
+### Phase 09：产品边界、Trace 与 Eval 收口
 
-Goal: close the V2 implementation with user-facing boundaries, trace evidence,
-and eval documentation.
+目标：用用户可理解的产品边界、trace evidence 和文档归档关闭 V2 实施。
 
-Scope:
+范围：
 
-- typed API fields for context, capability, query method, evidence, citation,
-  trace, latency, and cost metadata.
-- frontend display boundaries for memory/capability/evidence state.
-- eval profile updates only when the phase explicitly authorizes them.
-- closure evidence for full selected test suite, targeted evals, and grep
-  classification.
-- front-path slimming closure for `docs/` and `.agent/`: active entrypoints stay
-  small, superseded plans/lessons/fragments stay reachable under
-  `docs/history/`, and transient screenshots/caches stay out of
-  git.
-- archive completed phase evidence under
-  `docs/history/programs/zuno-target-runtime-v2/`.
+- API 和前端展示 memory/capability/evidence 状态的边界。
+- trace JSONL 字段完整性。
+- eval baseline 是否需要更新由 evidence gate 决定。
+- 前台文档只保留 Current、Target、Roadmap、Evidence、Terminology。
+- 旧计划、旧 evidence、截图和临时产物归档或排除出前台。
 
-Non-scope:
+不在范围内：
 
-- full frontend redesign.
-- full pytest/eval reruns unless required for closure.
-- Java services, microservices, event workers, or default multi-agent mode.
+- 完整前端重设计。
+- 生产级动态 capability 市场。
+- 把 Future 方向提升为 Current。
 
-Exit criteria:
+退出标准：
 
-- product/API docs distinguish Current, Foundation, Target, Future, and History.
-- `docs/` and `.agent/` expose only the necessary current entrypoints,
-  executable workflow, target design, references, scripts, skills, templates,
-  and archived history pointers.
-- trace/eval evidence records prompt version, query prompt version, index
-  version, community version, latency, and nullable cost.
-- legacy grep has no unclassified active mainline hits.
-- active program surface remains slim after closure.
+- 产品/API 文档明确区分 Current、Foundation、Target、Future 和 History。
+- `.agent/` 保持精简：可执行 workflow、target design、references、scripts、templates 和归档指针。
+- `docs/` 保持精简：正式文档、证据、术语和 history index。
+- 完成 trace/eval closure evidence。
 
-Verification:
+验证：
 
-- selected docs/verifier suite.
-- focused API/frontend contract tests where touched.
-- targeted evals only when this phase opens eval scope.
-- final `git diff --check`, commit, and push.
+- 完整 Agent/doc/repo hygiene 验证。
+- 受影响 API/frontend contract 测试。
+- 必要时运行 eval closure 命令。
 
-## Cross-phase Guardrails
+## 停止条件
 
-- Do not move whole packages at once.
-- Do not rewrite `GeneralAgent.astream()` streaming behavior without focused
-  streaming tests.
-- Do not add database schema, dependency, Docker, or eval-runner changes unless
-  the current phase explicitly authorizes them.
-- Do not restore `DomainQAGraph`, `MultiAgentSupervisorGraph`, `AgentRuntime`,
-  root `domain-packs/`, or Domain Pack frontend pages.
-- Do not make `domain_pack_id` an active public target field.
-- Do not write Target behavior as Current until code and tests prove it.
+- 不要跳过 phase。
+- 不要在未授权 phase 修改 runtime、frontend、Docker、DB、eval runner 或依赖。
+- 不要恢复 root `domain-packs/`、Domain Pack frontend pages 或旧 DomainQAGraph。
+- 不要在代码和测试证明前把 Target 写成 Current。
 
-## Source Of Truth
-
-Implementation phases read the canonical target design first:
+## 参考
 
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
 - `.agent/architecture/near-term/01-target-runtime-architecture.md`
@@ -237,5 +196,7 @@ Implementation phases read the canonical target design first:
 - `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
 - `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
 - `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
+- `.agent/programs/zuno-target-runtime-v2/current-phase.md`
+- `.agent/programs/zuno-target-runtime-v2/closure-checklist.md`
 
-Completed evidence moves to history; active program docs stay small.
+完成证据移动到 history；active program 文档保持小而清晰。

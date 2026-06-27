@@ -1,10 +1,14 @@
-# Goal Mode Prompt
+# 目标模式提示模板
 
-You are working in `F:\internship-work\resume&resume project\02_projects\Zuno`.
+工作目录：
 
-Use goal mode from the task's acceptance gates. Do not revive old phase habits.
+```text
+F:\internship-work\resume&resume project\02_projects\Zuno
+```
 
-Read first:
+按任务验收闸门执行，不要复活旧 phase 习惯。
+
+## 先读
 
 1. `AGENTS.md`
 2. `docs/architecture/README.md`
@@ -15,13 +19,13 @@ Read first:
 7. `.agent/README.md`
 8. `.agent/references/current-program.md`
 
-Rules:
+## 规则
 
-1. If the target is unclear, clarify before editing.
-2. If the target is clear, execute the shortest path that satisfies the gates.
-3. Preserve completed Phase 0-6 truth.
-4. Put formal conclusions in `docs/`, not only in `.agent/`.
-5. Put Agent aids in `.agent/`.
-6. Move superseded plans to `docs/history/`; do not delete them.
-7. After modifications, run relevant verification.
-8. If verification passes, commit and push.
+1. 目标不清楚时，先澄清再编辑。
+2. 目标清楚时，用满足验收闸门的最短路径执行。
+3. 保留已完成的 Phase 0-6 历史事实。
+4. 正式结论写入 `docs/`，不要只写在 `.agent/`。
+5. Agent 辅助材料放在 `.agent/`。
+6. 被替换计划移动到 `docs/history/`，不要直接删除。
+7. 修改后运行相关验证。
+8. 验证通过后提交并推送。
