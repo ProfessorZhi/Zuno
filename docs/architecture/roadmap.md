@@ -12,6 +12,17 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 本 program 的 PHASE01-06 已完成并合入 `main`：公开封面与架构叙事收口、本地 Agent Skill System 收口、tools / tests 工作流防回归、后端六层 facade 分层、大文件轻拆只读审计与计划、架构图与 HTML 展示页。当前下一步不是继续加 feature，而是按 `.agent/programs/closure-checklist.md` 做 program closure、状态归档和后续 program 决策。
 
+## 近期四个目标
+
+这轮 `zuno-architecture-surface-cleanup-v1` 解决的是成熟项目外形，不是完整目标架构闭环。四个近期目标的当前判断如下：
+
+| 目标 | 当前判断 | 已完成内容 | 仍然不是 Current 的内容 |
+| --- | --- | --- | --- |
+| 目标架构清楚 | 基本完成 | `current-architecture.md`、`target-architecture.md`、`roadmap.md` 和三张架构图把 Current / Target / Future / History 分开；目标运行时、Memory、Capability、Knowledge / GraphRAG、Evidence / Trace / Eval 的边界已明确。 | 完整 LangGraph runtime、生产级 Memory DB、GraphRAG LLM entity extraction、动态 capability orchestration、frontend trace/evidence 产品闭环仍是 Target / Future。 |
+| 文件夹结构更清爽 | 部分完成 | 根目录与 `docs/architecture/` 前台收口；`src/backend/zuno/agent`、`memory`、`capability`、`knowledge`、`platform` 六层 facade 已落地，给未来物理迁移提供清晰入口。 | 旧 runtime 仍主要在 `core/`、`services/`、`database/` 等目录；PHASE04 是 re-export facade，不是旧代码已经完成物理搬迁。 |
+| 文档体系和本地工作流清楚、可自维护 | 基本完成 | `AGENTS.md` 是唯一入口；`.agent/programs/` 平铺当前计划；`.agent/references/` 是本地 skill / lesson / playbook；verifier 和 repo tests 覆盖 program、docs、repo hygiene、module boundaries。 | 还需要在 program closure 后把详细执行证据归档到 `docs/history/programs/`，并为下一个 program 重新从 PHASE01 开始。 |
+| 架构 HTML 清晰 | 完成第一版 | `docs/architecture/diagrams.md` 是 Mermaid 唯一维护源；`docs/architecture/overview.html` 和 `.agent/architecture/blueprint.html` 由 `tools/agent/render_architecture.py` 生成；verifier / tests 防止 HTML 与 Mermaid 漂移。 | HTML 仍是轻量展示页，Mermaid 渲染依赖 CDN runtime；它不是产品前端，也不替代正式 Markdown 架构文档。 |
+
 已被替换的 V2 目标运行时材料归档在：
 
 - `docs/history/programs/zuno-target-runtime-v2/`
