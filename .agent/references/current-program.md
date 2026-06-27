@@ -9,13 +9,15 @@
 后续执行顺序必须线性推进：
 
 ```text
-PHASE01：公开封面与架构叙事收口
-PHASE02：本地 Agent Skill System 收口
-PHASE03：tools / tests 工作流防回归
-PHASE04：后端六层 facade 分层
+PHASE01：公开封面与架构叙事收口（已完成）
+PHASE02：本地 Agent Skill System 收口（已完成）
+PHASE03：tools / tests 工作流防回归（已完成）
+PHASE04：后端六层 facade 分层（当前待打开）
 PHASE05：大文件轻拆
 PHASE06：架构图与 HTML 展示页
 ```
+
+当前执行焦点是 PHASE04。PHASE05 只能先做只读拆分审计和计划，PHASE06 可以并行做架构图/HTML 展示页，但主线程必须负责最终合并和集成验证。
 
 最新完成程序：
 
