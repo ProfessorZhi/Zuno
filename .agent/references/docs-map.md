@@ -1,6 +1,23 @@
-# 文档地图
+# 文档同步 Skill
 
-## 正式人类入口
+## When To Use
+
+当任务触碰 `docs/`、`.agent/`、`AGENTS.md`、history、README、架构叙事或术语边界时使用本 skill。
+
+## Mental Model
+
+```text
+docs/ = formal human truth
+.agent/references/ = local skills and lessons
+.agent/templates/ = execution skeletons
+.agent/programs/ = active execution plan
+.agent/architecture/ = target design workspace
+docs/history/ = archive and evidence
+```
+
+## Current Truth
+
+正式人类入口：
 
 - `README.md`：仓库总览和首读路径。
 - `docs/README.md`：文档入口。
@@ -13,43 +30,90 @@
 - `docs/architecture/decisions/`：仍然有效的正式 ADR。
 - `docs/history/`：历史档案。
 
-## Agent 工作流入口
+Agent 工作流入口：
 
-- `AGENTS.md`：仓库级 Agent 总入口。
-- `.agent/README.md`：Agent 工作流库说明。
-- `.agent/references/task-routing.md`：任务路由入口。
-- `.agent/references/workflow.md`：执行步骤、停止条件、验证和收尾。
-- `.agent/references/`：精简导航、任务路由、工作流和查表层。
-- `.agent/programs/current.md`：当前执行状态。
-- `.agent/programs/implementation-roadmap.md`：当前执行计划总目录。
-- `.agent/programs/PHASE*.md`：当前计划的平铺 phase 文件；每个新 program 从 `PHASE01` 开始。
-- `.agent/programs/closure-checklist.md`：当前 phase 收口清单。
+- `AGENTS.md`：仓库级 Agent bootloader。
+- `.agent/README.md`：Zuno Local Agent Skill System 说明。
+- `.agent/system.yaml`：路径到 skills、templates、docs_sync、verify 的路由。
+- `.agent/references/`：本地项目 skills、lessons、playbooks。
+- `.agent/templates/`：执行骨架。
+- `.agent/programs/`：当前 active program。
 - `.agent/architecture/near-term/`：近期目标架构详细设计。
-- `.agent/architecture/future/`：长期方向，不是当前实现目标。
-- `.agent/templates/`：可复用提示和报告。
-- `.agent/scripts/`：验证器和本地操作辅助。
+- `.agent/scripts/`：过渡期验证器。
 
-## 边界
+## Target Direction
 
-`docs/` 放稳定结论；`.agent/` 放可执行工作流和设计阶段细节；`docs/history/` 放过时或已完成材料。
+前台保持小而清楚：正式结论进入 `docs/`，可执行项目知识进入 `.agent/references/`，旧材料进入 `docs/history/`。不要用更多前台目录解决叙事不清。
 
-## 前台瘦身规则
+## Must Preserve
 
-保留小前台：
+- Current 只描述代码和测试已证明事实。
+- Target 只描述近期目标，不等于完成声明。
+- History 保留旧材料原文，不为了新叙事改写证据。
+- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 是 Target / Proposed 视觉蓝图，不是 Current truth。
 
-- `docs/`：current architecture、target architecture、roadmap、decisions、evidence、terminology、history index。
-- `.agent/`：workflow README、current program、near-term target design、references、scripts、templates。
-- `docs/history/`：old lessons、old phases、retired plans、old audits/specs/runbooks/prototypes、replaced fragments、completed programs。
+## Before Editing
 
-不要把 history folder、临时截图、generated cache、旧 phase fragment、旧 UI prototype 重新提升到前台。
+1. 读 `docs/architecture/README.md`、`current-architecture.md`、`target-architecture.md`、`roadmap.md`。
+2. 读 `.agent/README.md`、`.agent/system.yaml`、`task-routing.md`、`workflow.md`。
+3. 判断修改属于 Current、Target、Program、Skill、Template、History 哪一类。
+4. 搜索同一术语的前台命中，避免只改一个入口。
 
-## 目标架构视觉参考
+## Allowed Changes
 
-- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`：canonical Target / Proposed visual blueprint。
-- `.agent/architecture/near-term/01-target-runtime-architecture.md`
-- `.agent/architecture/near-term/02-context-memory-architecture.md`
-- `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
-- `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
-- `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
+- 同步 docs entrypoints、`.agent` maps、verifier/test 的路径和术语。
+- 将完成或被替换材料归档到 `docs/history/`。
+- 精简前台说明，保留决策所需信息。
 
-HTML 是 Target / Proposed，不是 Current Truth，也不是 `docs/` 前台路径。
+## Forbidden Changes
+
+- 不把一次性调查流水账写进 `docs/` 或 `.agent/references/`。
+- 不把模板改成项目知识库。
+- 不把 history 文件重写为当前事实。
+- 不恢复 `docs/architecture/phases/`、`docs/architecture/plans/`、`docs/architecture/programs/` 当前前台目录。
+
+## Common Failure Patterns
+
+- `docs/architecture/roadmap.md` 已更新，但 `.agent/references/current-program.md` 仍旧。
+- `AGENTS.md` 路由变了，但 `.agent/system.yaml` 未同步。
+- references skill 改了，但 `.agent/templates/README.md` 仍暗示模板保存项目知识。
+- HTML 蓝图被引用成 Current proof。
+
+## Debug Playbooks
+
+- Current/Target 冲突：以 runtime code、tests、trace evidence 决定 Current；未证明内容保留 Target。
+- 路径漂移：用 `git grep -n "<path-or-term>"` 找前台命中，历史目录只在必要时保留原文。
+- 归档不清：先建或使用 `docs/history/` 下明确目录，再更新入口和 verifier。
+
+## Focused Tests
+
+```powershell
+git diff --check
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
+pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+```
+
+## Docs Sync
+
+修改文档边界时检查：
+
+- `AGENTS.md`
+- `.agent/README.md`
+- `.agent/system.yaml`
+- `.agent/references/current-program.md`
+- `.agent/references/task-routing.md`
+- `.agent/references/workflow.md`
+- `.agent/references/verification-map.md`
+- `.agent/templates/README.md`
+- `docs/README.md`
+- `docs/architecture/README.md`
+- `docs/architecture/current-architecture.md`
+- `docs/architecture/target-architecture.md`
+- `docs/architecture/roadmap.md`
+- `docs/history/README.md`
+
+## Lessons Learned
+
+文档同步的本质不是“所有地方都写一遍”，而是每个 surface 只承载自己的真相层级，并且入口之间不互相矛盾。

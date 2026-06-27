@@ -137,6 +137,87 @@ def test_agent_readme_documents_workflow_library_boundaries() -> None:
         assert phrase in content, f"missing workflow-library phrase: {phrase}"
 
 
+def test_agent_system_yaml_routes_to_skills_templates_docs_sync_and_verify() -> None:
+    content = (REPO_ROOT / ".agent" / "system.yaml").read_text(encoding="utf-8")
+
+    required_phrases = [
+        "Zuno Local Agent Skill System",
+        "system_identity:",
+        "local_skills_root: \".agent/references\"",
+        "template_root: \".agent/templates\"",
+        "skill_file_contract:",
+        "template_rules:",
+        "skill_routes:",
+        "docs_sync:",
+        "verify:",
+        ".agent/references/task-routing.md",
+        ".agent/templates/phase-closure-report.md",
+        "python .agent/scripts/verify_agent_system.py",
+    ]
+
+    for phrase in required_phrases:
+        assert phrase in content, f"missing system route phrase: {phrase}"
+
+
+def test_agent_references_are_local_skills_not_plain_indexes() -> None:
+    references_readme = (REPO_ROOT / ".agent" / "references" / "README.md").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "本地项目 skill library",
+        "skills、lessons、playbooks",
+        "一次性调查流水账",
+        ".agent/templates/",
+    ]:
+        assert phrase in references_readme
+
+    required_sections = [
+        "When To Use",
+        "Mental Model",
+        "Current Truth",
+        "Target Direction",
+        "Must Preserve",
+        "Before Editing",
+        "Allowed Changes",
+        "Forbidden Changes",
+        "Common Failure Patterns",
+        "Debug Playbooks",
+        "Focused Tests",
+        "Docs Sync",
+        "Lessons Learned",
+    ]
+    skill_files = [
+        "task-routing.md",
+        "workflow.md",
+        "docs-map.md",
+        "verification-map.md",
+        "known-pitfalls.md",
+    ]
+
+    for file_name in skill_files:
+        content = (REPO_ROOT / ".agent" / "references" / file_name).read_text(
+            encoding="utf-8"
+        )
+        for section in required_sections:
+            assert section in content, f"{file_name} missing skill section: {section}"
+
+
+def test_agent_templates_keep_execution_skeleton_boundary() -> None:
+    content = (REPO_ROOT / ".agent" / "templates" / "README.md").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "只保存 skill 执行模板和报告骨架",
+        "不保存项目知识",
+        "Allowed Content",
+        "Forbidden Content",
+        "Lessons Learned",
+    ]:
+        assert phrase in content, f"missing template boundary phrase: {phrase}"
+
+
 def test_current_program_points_to_architecture_surface_and_archives_old_candidate() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(

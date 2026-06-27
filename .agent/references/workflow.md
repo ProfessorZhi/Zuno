@@ -1,67 +1,146 @@
-# 工作流
+# 工作流 Skill
 
-本文件替代旧 workflow 目录。Zuno 的本地工作流由 `AGENTS.md` 总入口、`.agent/system.yaml` 路由和 `.agent/references/` 本地 skills 共同组成。
+## When To Use
 
-## 通用执行流程
+当任务需要修改 docs、`.agent`、history、验证器、测试，或需要收尾 commit/push 时使用本 skill。
 
-1. 读 `AGENTS.md`，确认任务边界。
-2. 读 `.agent/system.yaml`，根据路径选择需要的 skills、templates 和 verify 命令。
-3. 按 `.agent/references/task-routing.md` 判断任务类型。
-4. 读 `docs/architecture/current-architecture.md`、`target-architecture.md`、`roadmap.md`。
-5. 读 `.agent/references/docs-map.md`、`code-map.md`、`verification-map.md`。
-6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
-7. 执行最小必要修改。
-8. 过时材料移动到 `docs/history/`，不留在前台路径。
-9. 同步验证器和测试。
-10. 运行最小有效验证。
-11. 修改任务完成后 commit 并 push，除非验证或 push 被阻塞。
+## Mental Model
 
-## 文档维护流程
+```text
+truth first
+  -> scope
+  -> minimal edit
+  -> sync maps/verifiers/tests
+  -> focused verification
+  -> commit and push
+```
 
-- 前台文档默认使用中文。
+Zuno 工作流不是模板化搬运。每一步都要能回答“这个文件为什么要改、它保护什么边界、验证证明了什么”。
+
+## Current Truth
+
+Zuno 的本地工作流由以下表面共同组成：
+
+- `AGENTS.md`：仓库唯一 bootloader。
+- `.agent/system.yaml`：路径到 skills、templates、docs_sync、verify 的机器可读路由。
+- `.agent/references/`：本地项目 skills / lessons / playbooks。
+- `.agent/templates/`：只保存执行骨架。
+- `.agent/programs/`：当前 active phase 计划。
+- `docs/`：正式人类文档真相。
+
+## Target Direction
+
+PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，防回归测试目标位置是 `tests/agent_system`。当前 `.agent/scripts` 是过渡期保留。
+
+## Must Preserve
+
+- 前台文档默认中文。
 - `docs/` 只放正式人类真相。
-- `.agent/` 只放本地 Agent Skill System：skills、目标设计、当前 program、模板和过渡期 verifier。
-- `docs/history/` 统一存放旧 audit、旧 spec、旧 runbook、旧 UI 原型、旧 phase、旧 program 和被替换设计。
-- 不把 transient screenshot、browser snapshot、cache 或 local report 提交到仓库。
+- `.agent/` 只放本地 Agent Skill System、目标设计、当前 program、模板和过渡期 verifier。
+- `docs/history/` 保存旧 audit、旧 spec、旧 runbook、旧 UI 原型、旧 phase、旧 program 和被替换设计。
+- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 是 Target / Proposed 视觉蓝图，不是 Current proof。
+- 修改任务必须验证、commit、push，除非验证或 push 被阻塞。
 
-## 仓库卫生流程
+## Before Editing
+
+1. `git status --short --branch`
+2. 读 `AGENTS.md` 和 `.agent/system.yaml`。
+3. 读 `task-routing.md` 选择 route。
+4. 读 Current / Target / Roadmap。
+5. 读需要的 reference skills：`docs-map.md`、`code-map.md`、`verification-map.md`、`known-pitfalls.md`。
+6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
+7. 确认任务允许范围和 forbidden paths。
+
+## Allowed Changes
+
+- 对准任务目标的最小文档、skill、template、verifier、test 同步。
+- 将过时材料移动到 `docs/history/`。
+- 更新 `.agent/system.yaml` 以保持 route、docs_sync、verify 一致。
+
+## Forbidden Changes
+
+- 不把 Target 行为写成 Current。
+- 不在文档/工作流任务里修改 runtime，除非任务明确授权。
+- 不提交 transient screenshot、browser snapshot、cache、local report。
+- 不创建 `.agent/skills/` 或 `.agent/workflows/`。
+- 不恢复旧 root-level Agent 入口。
+
+## Common Failure Patterns
+
+- 只改一个入口，漏掉 docs-map、current-program、tests 或 verifier。
+- 验证失败后先补丁绕过，而不是定位路径、词条或边界根因。
+- 把历史材料从前台删除但没有归档。
+- 模板和 references 同时保存项目知识，造成双真相。
+
+## Debug Playbooks
+
+### 文档漂移
+
+1. 搜索被改术语的所有前台命中。
+2. 分类为 Current、Target、History、Compatibility。
+3. 只同步 active surfaces；历史档案保留原文。
+4. 更新 verifier/test 的预期词条。
+
+### 仓库卫生
 
 1. `git status --short`
-2. 确认移动/删除目标在仓库内。
-3. 搜索所有引用。
-4. 移动到目标归档位置。
-5. 更新 docs、`.agent`、verifier、test。
+2. 搜索 imports、links、routes、scripts、evals、docs、tests。
+3. 确认移动目标仍在仓库内。
+4. 移动或归档。
+5. 同步 docs、`.agent`、verifier、test。
 6. 运行 `git diff --check` 和相关 verifier/test。
 
-## 架构重构流程
+### 架构重构
 
-1. 先读 Current / Target / Roadmap。
-2. 读 canonical HTML 和 near-term 设计。
-3. 明确 Current / Foundation / Target / Future / History。
-4. 目标设计放 `.agent/architecture/near-term/`。
-5. 正式结论放 `docs/architecture/`。
-6. 执行计划放 `.agent/programs/` 根层，当前状态、总目录、phase 文件和收口清单平铺，不再按 program 子目录嵌套。
-7. 每个新执行计划都从 `PHASE01` 开始，不能沿用被替换 program 的旧 phase 编号。
-8. 旧计划和旧设计放 `docs/history/`；如果执行计划被替换，旧 phase 文件从 `.agent/programs/` 当前前台移除。
+1. 明确 Current / Foundation / Target / Future / History。
+2. 目标设计放 `.agent/architecture/near-term/`。
+3. 正式结论放 `docs/architecture/`。
+4. 执行计划放 `.agent/programs/` 根层。
+5. 旧计划和旧设计归档到 `docs/history/`。
 
-## 具体执行步骤、停止条件、验证和收尾规则
+## Focused Tests
 
-- 如果修改范围触碰 forbidden path，停止并返回证据。
-- 如果 Target 与 Current 边界不清，先修正文档边界。
-- 如果当前验证器仍引用旧路径，先同步验证器和测试。
-- 如果验证失败，先追根因再修。
-- 修改任务收尾必须给出修改文件、验证结果、commit hash、push 结果和最终 `git status --short`。
-
-## 验证基线
+文档 / Agent workflow 最小基线：
 
 ```powershell
 git diff --check
 python .agent/scripts/verify_agent_system.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
+pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
+```
+
+较大收口可追加：
+
+```powershell
 python .agent/scripts/verify_doc_boundaries.py
 python .agent/scripts/verify_repo_hygiene.py
 python .agent/scripts/verify_module_boundaries.py
-powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
 pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/repo/test_agent_system.py tests/repo/test_repo_hygiene.py -p no:cacheprovider
 ```
+
+## Docs Sync
+
+每次 docs / `.agent` 修改都检查是否需要同步：
+
+- `AGENTS.md`
+- `.agent/README.md`
+- `.agent/system.yaml`
+- `.agent/references/README.md`
+- `.agent/references/current-program.md`
+- `.agent/references/docs-map.md`
+- `.agent/references/task-routing.md`
+- `.agent/references/verification-map.md`
+- `.agent/templates/README.md`
+- `docs/architecture/README.md`
+- `docs/architecture/current-architecture.md`
+- `docs/architecture/target-architecture.md`
+- `docs/architecture/roadmap.md`
+- verifier scripts and repo tests
+
+## Lessons Learned
+
+- 修改 surface 时，测试和 verifier 是同一变更的一部分，不是事后装饰。
+- 历史完成事实不能为了新叙事改写成未完成。
+- 最短路径通常是更新现有 skill，而不是新建更多目录。

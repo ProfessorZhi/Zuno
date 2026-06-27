@@ -78,6 +78,23 @@ def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
+SKILL_SECTIONS = [
+    "When To Use",
+    "Mental Model",
+    "Current Truth",
+    "Target Direction",
+    "Must Preserve",
+    "Before Editing",
+    "Allowed Changes",
+    "Forbidden Changes",
+    "Common Failure Patterns",
+    "Debug Playbooks",
+    "Focused Tests",
+    "Docs Sync",
+    "Lessons Learned",
+]
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -219,12 +236,50 @@ def main() -> int:
 
     system_yaml = _read(".agent/system.yaml")
     for phrase in [
+        "Zuno Local Agent Skill System",
+        "system_identity:",
         "new_program_first_phase: \"PHASE01\"",
+        "skill_file_contract:",
+        "template_rules:",
         "skill_routes:",
+        "docs_sync:",
+        "verify:",
         ".agent/references/workflow.md",
     ]:
         if phrase not in system_yaml:
             errors.append(f".agent/system.yaml missing route phrase: {phrase}")
+
+    references_readme = _read(".agent/references/README.md")
+    for phrase in [
+        "本地项目 skill library",
+        "skills、lessons、playbooks",
+        ".agent/templates/",
+        "一次性调查流水账",
+    ]:
+        if phrase not in references_readme:
+            errors.append(f".agent/references/README.md missing skill-system phrase: {phrase}")
+
+    for relative_path in [
+        ".agent/references/task-routing.md",
+        ".agent/references/workflow.md",
+        ".agent/references/docs-map.md",
+        ".agent/references/verification-map.md",
+        ".agent/references/known-pitfalls.md",
+    ]:
+        content = _read(relative_path)
+        for section in SKILL_SECTIONS:
+            if section not in content:
+                errors.append(f"{relative_path} missing local skill section: {section}")
+
+    templates_readme = _read(".agent/templates/README.md")
+    for phrase in [
+        "只保存 skill 执行模板和报告骨架",
+        "不保存项目知识",
+        "Forbidden Content",
+        "Lessons Learned",
+    ]:
+        if phrase not in templates_readme:
+            errors.append(f".agent/templates/README.md missing template-boundary phrase: {phrase}")
 
     if errors:
         for error in errors:
