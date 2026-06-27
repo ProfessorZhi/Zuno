@@ -7,8 +7,9 @@
 1. [当前架构](current-architecture.md)
 2. [目标架构](target-architecture.md)
 3. [路线图](roadmap.md)
-4. [公开证据](../evidence/public-demo.md)
-5. [架构决策](decisions/README.md)
+4. [架构图](diagrams.md)
+5. [公开证据](../evidence/public-demo.md)
+6. [架构决策](decisions/README.md)
 
 ## 当前执行程序
 
@@ -36,6 +37,7 @@ docs/architecture/
   current-architecture.md
   target-architecture.md
   roadmap.md
+  diagrams.md
   decisions/
 ```
 
@@ -43,9 +45,10 @@ docs/architecture/
 
 ## 边界
 
-- Current：仓库现在真实已经做到的行为。
-- Target：近期目标，不等于已经实现。
+- Current：仓库现在真实已经做到的行为，只写代码和测试已经证明的事实。
+- Target：近期目标，不等于已经实现；完整 LangGraph runtime、生产级 Memory DB 和完整 frontend trace 都属于这里。
 - Roadmap：当前状态、下一步、非目标和 Phase 执行顺序。
+- Diagrams：Current Runtime、Target Runtime 和 Maintenance Workflow 的简图，图中 Current / Target 必须分开。
 - Decisions：仍影响主线的正式架构决策。
 - History：完成或被替换的计划、程序、阶段、审计、规格和旧 Agent 工作流材料。
 

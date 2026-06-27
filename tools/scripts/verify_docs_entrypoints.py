@@ -83,6 +83,7 @@ def main() -> int:
     architecture_index = _read("docs/architecture/README.md")
     roadmap = _read("docs/architecture/roadmap.md")
     target = _read("docs/architecture/target-architecture.md")
+    diagrams = _read("docs/architecture/diagrams.md")
     evidence = _read("docs/evidence/public-demo.md")
     workflow = _read(".agent/references/workflow.md")
     agents = _read("AGENTS.md")
@@ -128,6 +129,7 @@ def main() -> int:
                 "current-architecture.md",
                 "target-architecture.md",
                 "roadmap.md",
+                "diagrams.md",
                 "../evidence/public-demo.md",
                 "docs/history/programs/official-graphrag-cleanup-v1/",
                 "docs/history/programs/zuno-target-architecture-migration-v1/",
@@ -149,6 +151,7 @@ def main() -> int:
                 "zuno-architecture-surface-cleanup-v1",
                 "PHASE01：公开封面与架构叙事收口",
                 "PHASE06：架构图与 HTML 展示页",
+                "docs/architecture/diagrams.md",
                 "docs/history/programs/zuno-target-architecture-migration-v1/",
                 "docs/history/programs/official-graphrag-cleanup-v1/",
             ],
@@ -166,6 +169,21 @@ def main() -> int:
                 "RRF",
                 "`auto` 是 router",
                 "新增或重写的前台文档使用中文",
+            ],
+        )
+    )
+    errors.extend(
+        _require(
+            "docs/architecture/diagrams.md",
+            diagrams,
+            [
+                "Current Runtime",
+                "Target Runtime",
+                "Maintenance Workflow",
+                "```mermaid",
+                "GeneralAgent single loop",
+                "Single GeneralAgent Runtime",
+                "Domain Pack 只允许作为历史或兼容语境出现",
             ],
         )
     )

@@ -11,6 +11,7 @@ def test_readme_exposes_short_first_reader_path() -> None:
         "./docs/architecture/current-architecture.md",
         "./docs/architecture/target-architecture.md",
         "./docs/architecture/roadmap.md",
+        "./docs/architecture/diagrams.md",
         "./docs/evidence/public-demo.md",
         "受限历史兼容",
         "Phase 11A",
@@ -42,6 +43,7 @@ def test_docs_front_path_is_small_and_chinese() -> None:
         "current-architecture.md",
         "target-architecture.md",
         "roadmap.md",
+        "diagrams.md",
         "../evidence/public-demo.md",
         "docs/history/programs/official-graphrag-cleanup-v1/",
         "docs/history/programs/zuno-target-architecture-migration-v1/",
@@ -103,6 +105,7 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "zuno-architecture-surface-cleanup-v1",
         "PHASE01：公开封面与架构叙事收口",
         "PHASE06：架构图与 HTML 展示页",
+        "docs/architecture/diagrams.md",
     ]:
         assert phrase in content
 
@@ -203,6 +206,23 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "PHASE06：架构图与 HTML 展示页",
     ]:
         assert phrase in roadmap
+
+
+def test_architecture_diagrams_expose_current_target_and_maintenance_workflow() -> None:
+    content = (REPO_ROOT / "docs" / "architecture" / "diagrams.md").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "Current Runtime",
+        "Target Runtime",
+        "Maintenance Workflow",
+        "```mermaid",
+        "GeneralAgent single loop",
+        "Single GeneralAgent Runtime",
+        "Domain Pack 只允许作为历史或兼容语境出现",
+    ]:
+        assert phrase in content
 
 
 def test_repository_docs_do_not_keep_local_download_reference() -> None:

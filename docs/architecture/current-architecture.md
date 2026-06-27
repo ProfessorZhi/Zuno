@@ -4,6 +4,12 @@
 
 这份文档只描述当前仓库已经由代码和测试证明的事实，不描述尚未实现的目标状态。
 
+当前一句话：
+
+```text
+Zuno current = monorepo + FastAPI backend + Single GeneralAgent Runtime + Knowledge / GraphRAG query path + evidence / citation / trace foundation
+```
+
 ## 当前仓库边界
 
 Zuno 当前是一个 monorepo，主要前台边界是：
@@ -55,6 +61,10 @@ Completion API
 
 Workspace knowledge prefetch、Workspace `search_knowledge_base` tool 和 `/knowledge/search` API service path 现在都通过 `KnowledgeQueryService`。
 
+当前 runtime 图见：
+
+- [diagrams.md](diagrams.md)
+
 ## 当前兼容边界
 
 `graphrag_project_id` 是 Agent 和 Knowledge public DTO 的目标身份字段。
@@ -91,6 +101,8 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - mature Context Orchestrator product behavior
 - product-level dynamic capability orchestration
 - 完整 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime
+- production-grade Memory DB
+- 完整 frontend trace 面板
 - Native BM25 capability search
 - multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
 
