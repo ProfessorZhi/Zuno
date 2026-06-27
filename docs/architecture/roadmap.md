@@ -12,16 +12,16 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 本 program 的 PHASE01-06 已完成并合入 `main`：公开封面与架构叙事收口、本地 Agent Skill System 收口、tools / tests 工作流防回归、后端六层 facade 分层、大文件轻拆只读审计与计划、架构图与 HTML 展示页。当前下一步不是继续加 feature，而是按 `.agent/programs/closure-checklist.md` 做 program closure、状态归档和后续 program 决策。
 
-## 近期四个目标
+## 短期四个改进目标
 
-这轮 `zuno-architecture-surface-cleanup-v1` 解决的是成熟项目外形，不是完整目标架构闭环。四个近期目标的当前判断如下：
+`zuno-architecture-surface-cleanup-v1` 已经把项目从恢复期推进到“可继续收口”的状态，但它不等于成熟项目封面已经完成。下一轮短期目标应继续围绕四件事推进：
 
-| 目标 | 当前判断 | 已完成内容 | 仍然不是 Current 的内容 |
+| 短期目标 | 为什么要做 | 当前不足 | 近期收口标准 |
 | --- | --- | --- | --- |
-| 目标架构清楚 | 基本完成 | `current-architecture.md`、`target-architecture.md`、`roadmap.md` 和三张架构图把 Current / Target / Future / History 分开；目标运行时、Memory、Capability、Knowledge / GraphRAG、Evidence / Trace / Eval 的边界已明确。 | 完整 LangGraph runtime、生产级 Memory DB、GraphRAG LLM entity extraction、动态 capability orchestration、frontend trace/evidence 产品闭环仍是 Target / Future。 |
-| 文件夹结构更清爽 | 部分完成 | 根目录与 `docs/architecture/` 前台收口；`src/backend/zuno/agent`、`memory`、`capability`、`knowledge`、`platform` 六层 facade 已落地，给未来物理迁移提供清晰入口。 | 旧 runtime 仍主要在 `core/`、`services/`、`database/` 等目录；PHASE04 是 re-export facade，不是旧代码已经完成物理搬迁。 |
-| 文档体系和本地工作流清楚、可自维护 | 基本完成 | `AGENTS.md` 是唯一入口；`.agent/programs/` 平铺当前计划；`.agent/references/` 是本地 skill / lesson / playbook；verifier 和 repo tests 覆盖 program、docs、repo hygiene、module boundaries。 | 还需要在 program closure 后把详细执行证据归档到 `docs/history/programs/`，并为下一个 program 重新从 PHASE01 开始。 |
-| 架构 HTML 清晰 | 完成第一版 | `docs/architecture/diagrams.md` 是 Mermaid 唯一维护源；`docs/architecture/overview.html` 和 `.agent/architecture/blueprint.html` 由 `tools/agent/render_architecture.py` 生成；verifier / tests 防止 HTML 与 Mermaid 漂移。 | HTML 仍是轻量展示页，Mermaid 渲染依赖 CDN runtime；它不是产品前端，也不替代正式 Markdown 架构文档。 |
+| 目标架构继续升版 | 让 Zuno 从恢复期 GraphRAG / Domain Pack 叙事，继续靠近成熟 Agent / RAG / GraphRAG 工程架构。 | 目标架构已经分清 Current / Target，但完整 LangGraph runtime、生产级 Memory、动态 Capability、GraphRAG LLM entity extraction、知识库多配置和 frontend trace/evidence 闭环还没有成为 Current。 | 更新 `target-architecture.md` 和图示，把 API / Agent / Memory / Capability / Knowledge / Platform / Trace 的边界讲清；明确 GraphRAG 实体抽取优先 LLM extraction，而不是正则/规则匹配；仍不能把未实现能力写成 Current。 |
+| 本地文档系统和工作流自洽 | 让仓库能由 Agent 按入口、skills、program、templates、verifiers 自助维护，而不是靠临时提示词记忆。 | `AGENTS.md`、`.agent/programs`、`.agent/references`、verifier 已有第一版，但 program closure、history 归档、skill 更新和 docs drift 防线还需要继续收紧。 | 新 program 从 `PHASE01` 开始；旧 active 计划归档；`.agent/references` 保持 skill / lesson / playbook，不膨胀成索引；修改 docs / agent workflow 时有对应 verifier 和 repo tests。 |
+| 文件夹继续分门别类 | 让第一次看仓库的人能从目录名直接读出架构，而不是在 `core`、`services`、`rag`、`retrieval`、`graphrag` 之间拼图。 | 六层 facade 已有，但旧 runtime 仍主要在 `core/`、`services/`、`database/` 等目录；PHASE04 只是 re-export 入口，不是物理迁移完成。 | 先做目录卫生和迁移计划，再小步物理迁移；根目录、`docs/`、`.agent/`、`tools/`、`tests/` 分工稳定；生成物和本地缓存不进入前台。 |
+| 架构 HTML 重做清晰 | 让 GitHub 访问者和面试场景能快速看懂架构，而不是只靠长文本解释。 | HTML 展示已有第一版，但仍偏工具型，视觉和信息层级不够成熟；Mermaid 渲染依赖 CDN；页面还不能完全承担“项目封面图”的展示任务。 | 保持 `docs/architecture/diagrams.md` 为唯一 Mermaid 源；继续优化 `overview.html` 的布局、层级、色彩和说明；图只保留 Current Runtime、Target Runtime、Maintenance Workflow 三张核心图；HTML 不能成为第二套架构真相。 |
 
 已被替换的 V2 目标运行时材料归档在：
 
@@ -41,7 +41,9 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 ## 下一步
 
-按当前 active `.agent/programs/` 平铺计划线性执行。每个新 program 都从 `PHASE01` 开始，旧 phase 文件从当前前台移除：
+当前 active `.agent/programs/` 的 PHASE01-06 已完成。下一步不应继续在旧 program 里追加 phase，而应先做 closure；如果继续推进上面的短期四目标，应打开新的 program，并从 `PHASE01` 重新编号。
+
+已完成的当前 program：
 
 1. PHASE01：公开封面与架构叙事收口（已完成）
 2. PHASE02：本地 Agent Skill System 收口（已完成）
