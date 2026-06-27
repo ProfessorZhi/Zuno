@@ -16,6 +16,8 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 
 执行时先按 `AGENTS.md` 路由，再进入 `.agent/references/task-routing.md` 和 `.agent/references/workflow.md`，然后按对应参考和验证命令执行。
 
+复杂任务默认优先考虑多线程 / 多 agent 协作：主线程做 coordinator，每个线程使用独立分支和目标模式，线程内可按范围开启多 agent 模式。这里的多 agent 是执行协作方式，不改变 Zuno runtime 的 Single GeneralAgent 主线。
+
 ## 语言规则
 
 - 新写或重写的 Agent 文档默认使用中文。
@@ -69,6 +71,8 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 - `.agent/references/` 承载可复用项目 skill，不写一次性调查流水账。
 - `.agent/programs/` 承载按 phase 的执行计划，不放进 `.agent/architecture/`。
 - 每个新执行计划都从 `PHASE01` 开始；旧 active phase 文件从 `.agent/programs/` 当前前台移除。
+- 大任务默认多用目标模式；可并行时优先拆成多线程，每个线程都必须带目标、范围、禁止范围、验收闸门和验证命令。
+- 多线程默认允许线程内多 agent 协作，但主线程负责审查 diff、合并冲突、跑集成验证和最终提交。
 - 修改任务必须验证、commit、push，除非被阻塞。
 - 只读侦察不 commit、不 push。
 

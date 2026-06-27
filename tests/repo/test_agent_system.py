@@ -115,6 +115,12 @@ def test_root_agents_routes_to_module_agents_and_references() -> None:
         ".agent/references/workflow.md",
         ".agent/programs/",
         "前台文档默认中文",
+        "## 并行执行规则",
+        "默认优先考虑多线程 / 多 agent 协作",
+        "每个线程都必须是目标模式",
+        "优先打开 Codex UI 的目标模式",
+        "线程内开启多 agent 模式",
+        "Single GeneralAgent",
     ]
 
     for phrase in required_phrases:
@@ -131,6 +137,8 @@ def test_agent_readme_documents_workflow_library_boundaries() -> None:
         "Zuno Local Agent Skill System",
         "本地 Agent Skill System",
         "新写或重写的 Agent 文档默认使用中文",
+        "默认优先考虑多线程 / 多 agent 协作",
+        "每个线程都必须带目标、范围、禁止范围、验收闸门和验证命令",
     ]
 
     for phrase in required_phrases:
@@ -150,6 +158,12 @@ def test_agent_system_yaml_routes_to_skills_templates_docs_sync_and_verify() -> 
         "skill_routes:",
         "docs_sync:",
         "verify:",
+        "parallel_execution:",
+        "require_target_mode: true",
+        "prefer_codex_ui_goal_mode: true",
+        "allow_multi_agent_inside_thread: true",
+        "require_disjoint_write_scope: true",
+        "runtime target remains Single GeneralAgent",
         ".agent/references/task-routing.md",
         ".agent/templates/phase-closure-report.md",
         "python .agent/scripts/verify_agent_system.py",
@@ -201,6 +215,22 @@ def test_agent_references_are_local_skills_not_plain_indexes() -> None:
         )
         for section in required_sections:
             assert section in content, f"{file_name} missing skill section: {section}"
+
+
+def test_workflow_documents_parallel_target_mode_contract() -> None:
+    content = (REPO_ROOT / ".agent" / "references" / "workflow.md").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "复杂任务默认优先考虑多线程 / 多 agent 协作",
+        "每个线程使用独立 `codex/` 分支",
+        "每个线程都必须是目标模式",
+        "线程内可以按范围开启多 agent 模式",
+        "不把执行工作流里的多 agent 写成 Zuno runtime 的当前架构",
+        "### 多线程目标模式",
+    ]:
+        assert phrase in content, f"missing parallel workflow phrase: {phrase}"
 
 
 def test_agent_templates_keep_execution_skeleton_boundary() -> None:

@@ -17,6 +17,18 @@ program_rules:
   new_program_first_phase: "PHASE01"
   replaced_program_policy: "remove old active phase files from .agent/programs; archive evidence under docs/history/programs"
 
+parallel_execution:
+  default_policy: "默认优先考虑多线程 / 多 agent 协作"
+  coordinator_thread: "main Codex thread"
+  branch_prefix: "codex/"
+  require_target_mode: true
+  prefer_codex_ui_goal_mode: true
+  allow_multi_agent_inside_thread: true
+  require_disjoint_write_scope: true
+  require_commit_and_push_before_merge: true
+  ui_goal_mode_fallback: "if tool API cannot toggle Codex UI goal mode, use target-mode prompt with explicit objective, allowed scope, forbidden scope, acceptance gates, verification, commit, and push"
+  runtime_boundary: "parallel agents are workflow execution helpers; Zuno runtime target remains Single GeneralAgent"
+
 skill_file_contract:
   recommended_sections:
     - "When To Use"

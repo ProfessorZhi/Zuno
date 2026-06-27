@@ -18,7 +18,7 @@ user task
 
 ## Current Truth
 
-`.agent/system.yaml` 是机器可读路由，本文是人工可读路由。二者必须保持一致：路径先映射到 skills，再映射到 docs_sync、templates 和 verify。
+`.agent/system.yaml` 是机器可读路由，本文是人工可读路由。本文是任务路由层，只决定先读什么、走哪条流程、何时停止；二者必须保持一致：路径先映射到 skills，再映射到 docs_sync、templates 和 verify。
 
 ## Target Direction
 

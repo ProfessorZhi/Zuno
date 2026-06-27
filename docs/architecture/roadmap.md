@@ -84,7 +84,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 - event workers
 - database migrations
 - dependency upgrades
-- default multi-agent mode
+- product/runtime default multi-agent mode
 
 ## Agent 执行来源
 

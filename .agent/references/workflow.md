@@ -17,6 +17,8 @@ truth first
 
 Zuno 工作流不是模板化搬运。每一步都要能回答“这个文件为什么要改、它保护什么边界、验证证明了什么”。
 
+本文负责具体执行步骤、停止条件、验证和收尾规则；任务先由 `task-routing.md` 分流，再进入本文执行。
+
 ## Current Truth
 
 Zuno 的本地工作流由以下表面共同组成：
@@ -28,9 +30,17 @@ Zuno 的本地工作流由以下表面共同组成：
 - `.agent/programs/`：当前 active phase 计划。
 - `docs/`：正式人类文档真相。
 
+前台文档默认使用中文；历史档案可以保留原文。
+
+复杂任务默认优先考虑多线程 / 多 agent 协作。主线程只做 coordinator；每个线程使用独立 `codex/` 分支、明确写入范围和目标模式提示词，线程内可以按范围开启多 agent 模式。
+
+这里的多 agent 是执行工作流，不是 Zuno runtime 架构目标。近期 runtime 仍保持 Single GeneralAgent，不能因为执行并行而把产品架构写成多 Agent。
+
 ## Target Direction
 
 PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，防回归测试目标位置是 `tests/agent_system`。当前 `.agent/scripts` 是过渡期保留。
+
+并行执行的目标方向是：能拆就拆、能并行就并行、每个线程都是目标模式，但合并必须集中到主线程完成。共享文件和冲突风险高的路径由主线程收口。
 
 ## Must Preserve
 
@@ -40,6 +50,9 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - `docs/history/` 保存旧 audit、旧 spec、旧 runbook、旧 UI 原型、旧 phase、旧 program 和被替换设计。
 - `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 是 Target / Proposed 视觉蓝图，不是 Current proof。
 - 修改任务必须验证、commit、push，除非验证或 push 被阻塞。
+- 多线程 / 多 agent 是默认可用工作方式；如果任务能拆成独立范围，优先使用。
+- 每个线程都必须是目标模式；优先打开 Codex UI 目标模式，工具不能直接切换时必须使用 `.agent/templates/target-mode-prompt.md` 写清目标、范围、验收和验证。
+- 过时材料移动到 `docs/history/`；旧 audit、旧 spec、旧 runbook、旧 UI 原型和旧 phase/program 不留在前台路径。
 
 ## Before Editing
 
@@ -50,12 +63,15 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 5. 读需要的 reference skills：`docs-map.md`、`code-map.md`、`verification-map.md`、`known-pitfalls.md`。
 6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
 7. 确认任务允许范围和 forbidden paths。
+8. 如果任务可以拆成独立范围，先规划多线程：每个线程一个分支、一个目标模式提示词、一个验收闸门。
 
 ## Allowed Changes
 
 - 对准任务目标的最小文档、skill、template、verifier、test 同步。
 - 将过时材料移动到 `docs/history/`。
 - 更新 `.agent/system.yaml` 以保持 route、docs_sync、verify 一致。
+- 启动多个独立线程或子 agent 处理互不重叠的范围。
+- 在线程内部使用多 agent 模式处理独立子任务。
 
 ## Forbidden Changes
 
@@ -64,6 +80,8 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - 不提交 transient screenshot、browser snapshot、cache、local report。
 - 不创建 `.agent/skills/` 或 `.agent/workflows/`。
 - 不恢复旧 root-level Agent 入口。
+- 不让多个线程同时编辑同一个共享文件，除非主线程明确负责最终合并。
+- 不把执行工作流里的多 agent 写成 Zuno runtime 的当前架构。
 
 ## Common Failure Patterns
 
@@ -97,6 +115,15 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 3. 正式结论放 `docs/architecture/`。
 4. 执行计划放 `.agent/programs/` 根层。
 5. 旧计划和旧设计归档到 `docs/history/`。
+
+### 多线程目标模式
+
+1. 主线程拆分任务，写清每个线程的目标、允许范围、禁止范围、验收闸门和验证命令。
+2. 每个线程使用独立 `codex/` 分支；能打开 Codex UI 目标模式时必须打开。
+3. 如果工具 API 不能直接打开 UI 目标模式，线程提示词必须显式使用目标模式结构。
+4. 每个线程默认可以使用多 agent 模式，但只能在自己的写入范围内协作。
+5. 线程完成后必须提交并推送；主线程读取 diff 和验证结果，不只信总结。
+6. 主线程按风险顺序合并，解决冲突后运行集成验证。
 
 ## Focused Tests
 

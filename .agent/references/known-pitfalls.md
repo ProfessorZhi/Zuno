@@ -22,6 +22,7 @@
 ## Must Preserve
 
 - Retired Domain Pack surfaces must not be restored into the target layout.
+- Do not restore retired Domain Pack surfaces into current runtime, target layout, or public documentation front paths.
 - 不恢复 root `domain-packs/`、`DomainQAGraph`、retired Domain Pack runtime sources、former `tests/compat/` holding area。
 - 不恢复 `docs/architecture/phases/`、`docs/architecture/plans/`、`docs/architecture/programs/` 当前前台目录。
 - 不提交 `data/`、`reports/`、`.local/`、`.codex/`、`node_modules/` 或 `.agent/local/*`。

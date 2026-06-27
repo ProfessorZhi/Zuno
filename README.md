@@ -32,11 +32,13 @@ Local-first Agent Workspace
 - `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。
 - 当前知识回答主线是 Single GeneralAgent Runtime。
 - 当前 GraphRAG / Knowledge 主线已经包含 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
+- Phase 0-6 架构收口仍是已完成的历史事实。
 - Phase 0-6 架构收口、Target Architecture Migration V1、Phase 11A / 11B / 11C 和 Phase 12 closure 都是已完成历史事实。
 - Phase 11A 已完成：项目查询 runtime 已引入 Knowledge / GraphRAG 查询边界。
 - Phase 11B 已完成：知识回答已经统一到 single `GeneralAgent` path。
 - Phase 11C 已完成：Domain Pack active runtime cleanup 已关闭。
 - Phase 12 已完成：closure evidence 已闭合。
+- 当前 active Agent 执行计划在 `.agent/programs/`，完成或替换后的 program 归档到 `docs/history/programs/`。
 
 当前主要调用链：
 
