@@ -179,11 +179,6 @@ def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
             "README.md",
             "current.md",
             "implementation-roadmap.md",
-            "PHASE01_workflow-doc-audit.md",
-            "PHASE02_agent-bootloader-routing.md",
-            "PHASE03_skill-template-program-system.md",
-            "PHASE04_workflow-verifiers-drift-tests.md",
-            "PHASE05_closure-history-archive.md",
             "closure-checklist.md",
         ]
     )
@@ -198,19 +193,20 @@ def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
+        "当前 `.agent/programs/` 处于等待状态",
         "zuno-workflow-doc-system-v1",
-        "PHASE01：工作流与文档系统只读审计",
-        "PHASE02：Agent bootloader 与 routing 收口",
-        "PHASE03：Skill / Template / Program 系统收口",
-        "PHASE04：Workflow verifier 与漂移测试",
-        "PHASE05：Program closure 与 history 归档",
         "zuno-target-architecture-refresh-v1",
+        "zuno-repo-layout-cleanup-v1",
     ]:
         assert phrase in roadmap
     phase03 = (
-        REPO_ROOT / ".agent/programs/PHASE03_skill-template-program-system.md"
+        REPO_ROOT / "docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md"
     ).read_text(encoding="utf-8")
     assert "本地 skill system" in phase03
+    program2 = (
+        REPO_ROOT / "docs/history/programs/zuno-target-architecture-refresh-v1/README.md"
+    ).read_text(encoding="utf-8")
+    assert "LLM extraction" in program2
 
 
 def test_architecture_diagram_generation_paths_are_pinned() -> None:

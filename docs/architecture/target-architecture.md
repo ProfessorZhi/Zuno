@@ -30,14 +30,16 @@ Local-first Agent Workspace
 
 ## 分层架构
 
-1. 产品入口层：Vue Web 和 Electron Desktop。
-2. API / Application 层：FastAPI routes、DTO、Auth、SSE 和 Application Services。
-3. Single GeneralAgent Runtime：`prepare_context -> agent_loop -> post_turn_commit`。
-4. Context / Memory 层：L0 Working Context、L1 Recent Window、L2 Task Summary、L3 Structured Long-term Memory、L4 External Knowledge、Raw Event Log。
-5. Capability / Tool Retrieval 层：ToolCard Registry、keyword / alias search、Native BM25 over ToolCards、optional vector search、permission / health / cost filter、CapabilitySelectionTrace。
-6. Knowledge / GraphRAG 层：`KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot`、LLM-first entity / relation extraction、`basic`、`local`、`global`、`drift`、`auto` router。
-7. Retrieval / Fusion / Evidence 层：query variants、Native BM25、dense vector、graph local、community global、deduplication、RRF、optional rerank、evidence check、citation、trace。
-8. Infrastructure / Eval 层：PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、optional Elasticsearch adapter、trace、eval、benchmark。
+近期目标用六个主层表达，Trace / Eval / Policy 作为横切治理层贯穿每个主层：
+
+1. API 层：FastAPI routes、DTO、Auth、SSE、typed request / response 和 Application Services。
+2. Agent 层：Single GeneralAgent Runtime，目标形态是 `prepare_context -> agent_loop -> post_turn_commit`。
+3. Memory 层：L0 Working Context、L1 Recent Window、L2 Task Summary、L3 Structured Long-term Memory、L4 External Knowledge boundary、Raw Event Log。
+4. Capability 层：ToolCard Registry、keyword / alias search、Native BM25 over ToolCards、optional vector search、permission / health / cost filter、CapabilitySelectionTrace。
+5. Knowledge 层：`KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot`、LLM-first entity / relation extraction、`basic`、`local`、`global`、`drift`、`auto` router、retrieval / fusion / evidence。
+6. Platform 层：PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、optional Elasticsearch adapter、model gateway、storage、background jobs。
+
+横切治理层：Evidence / Citation / Trace / Eval / Policy。它记录 trace_id、evidence bundle、citation coverage、latency、cost、permission decision、fallback reason 和 eval profile，但不单独拥有业务入口。
 
 ## 记忆目标边界
 
@@ -53,7 +55,7 @@ Local-first Agent Workspace
 - Native BM25 是本地 BM25 排序算法。
 - Elasticsearch 只是可选外部 adapter，不是 BM25 算法本体。
 - GraphRAG 实体抽取默认主路径是 LLM 抽取，不是规则匹配或正则表达式。
-- 知识库配置必须能选择 `model_refs.entity_extraction_llm_id`，用于 GraphRAG entity / relation extraction。
+- 知识库配置必须能选择 `graph_index_settings.entity_extraction_mode = llm`、`model_refs.entity_extraction_llm_id`、prompt / schema version、cost / latency policy 和 eval profile，用于 GraphRAG entity / relation extraction。
 - 规则、正则和词典只用于日期、金额、条款号等确定格式辅助、preprocessing、fallback 或 baseline test。
 - enhanced path 可以生成 query variants，但必须保留 original query。
 - multi-retriever recall 可使用 Native BM25、Dense Vector、Graph Local 和 Community Global。
@@ -123,19 +125,14 @@ Canonical near-term Markdown：
 
 只有已实现并通过测试证明的结论，才能从 `.agent/` 提升到正式 `docs/`。
 
-## 执行 Phase
+## 执行 Program
 
-当前执行计划：
+当前 `.agent/programs/` 没有 active `PHASE*.md`。近期 program 状态是：
 
-- `.agent/programs/implementation-roadmap.md`
+1. `zuno-workflow-doc-system-v1`：已完成并归档。
+2. `zuno-target-architecture-refresh-v1`：已完成并归档。
+3. `zuno-repo-layout-cleanup-v1`：queued，下一候选。
+4. `zuno-runtime-architecture-upgrade-v1`：queued。
+5. `zuno-architecture-visuals-v1`：queued。
 
-执行顺序：
-
-1. PHASE01：公开封面与架构叙事收口
-2. PHASE02：本地 Agent Skill System 收口
-3. PHASE03：tools / tests 工作流防回归
-4. PHASE04：后端六层 facade 分层
-5. PHASE05：大文件轻拆
-6. PHASE06：架构图与 HTML 展示页
-
-这些阶段在代码、测试、trace evidence 和文档边界更新证明前都保持 Target。
+这些目标在代码、测试、trace evidence 和文档边界更新证明前都保持 Target。

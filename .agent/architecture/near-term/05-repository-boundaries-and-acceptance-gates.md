@@ -91,7 +91,7 @@ Keep in the front path:
 | --- | --- | --- |
 | Root | `AGENTS.md`, `README.md`, package/test config | first-read and tooling contracts |
 | `docs/` | `README.md`, Current, Target, Roadmap, ADRs, Evidence, Terminology | formal human truth |
-| `.agent/` | `README.md`, active program, near-term target design, references, scripts, skills, templates, workflows | executable Agent workflow |
+| `.agent/` | `README.md`, optional active program, near-term target design, references, scripts, skills, templates, workflows | executable Agent workflow |
 | Runtime | `src/`, `apps/`, `tools/`, `tests/`, `infra/` | code and verification surfaces |
 
 Move or keep out of the front path:
@@ -160,27 +160,27 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_con
 Runtime phases add focused runtime tests. Eval phases add eval-specific commands
 and must not overwrite historical baselines.
 
-## Phase 执行计划
+## Program 执行计划
 
-The active `.agent/programs/` plan executes the target architecture in linear
-flat phase files. Current execution files stay visible at one directory level;
-completed or replaced detail moves to `docs/history/programs/`.
+When a program is active, `.agent/programs/` executes it through linear flat
+phase files. Current execution files stay visible at one directory level;
+completed or replaced detail moves to `docs/history/programs/`. When no program
+is active, `.agent/programs/` only keeps `README.md`, `current.md`,
+`implementation-roadmap.md`, and `closure-checklist.md`.
 
-| Phase | Target Slice | Main Owner | Exit Signal |
+| Future Program | Target Slice | Main Owner | Exit Signal |
 | --- | --- | --- | --- |
-| 05 | Memory Engine | `services/application/context`, `services/memory`, `core/agents` | Raw Event Log, Summary Compression, Structured Extraction, `source_event_ids`, and ContextTrace are test-covered. |
-| 06 | Capability / Tool Retrieval | `services/application/capabilities`, `core/agents` | ToolCard Registry, Native BM25 capability search, filters, and `CapabilitySelectionTrace` are test-covered. |
-| 07 | Knowledge Retrieval / Fusion | `services/retrieval`, `services/graphrag`, `services/application/knowledge` | Native BM25, multi-query, multi-retriever recall, deduplication, RRF `k=60`, optional rerank boundary, evidence, citation, and trace are test-covered. |
-| 08 | GeneralAgent LangGraph Runtime | `core/agents`, context, capability, retrieval boundaries | Explicit `prepare_context -> agent_loop -> post_turn_commit` graph preserves one chat runtime and streaming compatibility. |
-| 09 | Product Boundary / Trace / Eval Closure | API, frontend contract, eval docs, evidence docs | Typed API, frontend-facing state, trace/eval closure evidence, and archive hygiene are complete. |
+| `zuno-repo-layout-cleanup-v1` | Repository and facade layout | `docs`, `.agent`, `tools`, `tests`, backend facade boundaries | Directory truth is cleaner, generated/local artifacts stay out of front path, and verifier/tests pin the layout. |
+| `zuno-runtime-architecture-upgrade-v1` | Memory, Capability, Knowledge, Trace hardening | `core/agents`, memory, capability, retrieval boundaries | GraphRAG LLM extraction, extractor configs, memory/capability/trace hardening have code and tests. |
+| `zuno-architecture-visuals-v1` | Architecture HTML / Mermaid display | `docs/architecture`, `.agent/architecture`, `tools/agent` | Visuals are clearer, generated from one source, and do not become a second architecture truth. |
 
 Execution rule:
 
 ```text
-Phase 05 must close before Phase 06.
-Phase 06 must close before Phase 07.
-Phase 07 must close before Phase 08.
-Phase 08 must close before Phase 09.
+Open only one program at a time.
+Move queued files into .agent/programs before execution.
+Every new program starts at PHASE01.
+Archive completed programs under docs/history/programs.
 ```
 
 Each phase must update Current / Foundation / Target wording only for behavior

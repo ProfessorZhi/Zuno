@@ -105,8 +105,8 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "docs/development",
         "前台文档默认使用中文",
         "zuno-workflow-doc-system-v1",
-        "PHASE01：工作流与文档系统只读审计",
         "zuno-target-architecture-refresh-v1",
+        "zuno-repo-layout-cleanup-v1",
         "zuno-architecture-visuals-v1",
         "docs/architecture/diagrams.md",
     ]:
@@ -194,6 +194,8 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "ToolCard",
         "RRF",
         "`auto` 是 router",
+        "GraphRAG 实体抽取默认主路径是 LLM 抽取",
+        "六个主层",
         "新增或重写的前台文档使用中文",
     ]:
         assert phrase in target
@@ -205,8 +207,8 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "Phase 12：已通过 target migration closure evidence 关闭",
         "受限历史兼容",
         "zuno-workflow-doc-system-v1",
-        "PHASE01：工作流与文档系统只读审计",
         "zuno-target-architecture-refresh-v1",
+        "zuno-repo-layout-cleanup-v1",
         "zuno-architecture-visuals-v1",
     ]:
         assert phrase in roadmap

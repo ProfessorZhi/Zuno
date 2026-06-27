@@ -105,6 +105,9 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - 完整 frontend trace 面板
 - Native BM25 capability search
 - multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
+- GraphRAG LLM-first entity / relation extraction 的生产实现
+- 可由知识库选择的多套 extractor / config 治理
+- API / Agent / Memory / Capability / Knowledge / Platform 六个主层的完整物理迁移
 
 ## 历史完成事实
 

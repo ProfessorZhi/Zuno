@@ -118,27 +118,25 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。当前第一批先做本地文档系统、Agent 工作流和 program 自维护体系。
+当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1 和 Program 2 已完成；当前等待打开 Program 3。
 
 最新完成程序归档在：
 
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 - `docs/history/programs/zuno-architecture-surface-cleanup-v1/`
+- `docs/history/programs/zuno-workflow-doc-system-v1/`
+- `docs/history/programs/zuno-target-architecture-refresh-v1/`
 
 当前 program：
 
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/current.md`
-- `.agent/programs/PHASE01_workflow-doc-audit.md`
-- `.agent/programs/PHASE02_agent-bootloader-routing.md`
-- `.agent/programs/PHASE03_skill-template-program-system.md`
-- `.agent/programs/PHASE04_workflow-verifiers-drift-tests.md`
-- `.agent/programs/PHASE05_closure-history-archive.md`
 - `.agent/programs/closure-checklist.md`
+
+当前没有 active `PHASE*.md`。打开新 program 时，先从 queued draft 迁入 `.agent/programs/`，并从 `PHASE01` 开始。
 
 后续 queued programs：
 
-- `.agent/architecture/future/programs/zuno-target-architecture-refresh-v1/`
 - `.agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/`
 - `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
 - `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
@@ -149,6 +147,8 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `docs/history/programs/official-graphrag-cleanup-v1/`
 - `docs/history/programs/zuno-target-runtime-v2/`
 - `docs/history/programs/zuno-architecture-surface-cleanup-v1/`
+- `docs/history/programs/zuno-workflow-doc-system-v1/`
+- `docs/history/programs/zuno-target-architecture-refresh-v1/`
 
 目标架构设计工作集：
 

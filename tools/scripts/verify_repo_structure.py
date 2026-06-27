@@ -19,14 +19,8 @@ REQUIRED_PATHS = [
     ".agent/references/docs-map.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/PHASE01_workflow-doc-audit.md",
-    ".agent/programs/PHASE02_agent-bootloader-routing.md",
-    ".agent/programs/PHASE03_skill-template-program-system.md",
-    ".agent/programs/PHASE04_workflow-verifiers-drift-tests.md",
-    ".agent/programs/PHASE05_closure-history-archive.md",
     ".agent/programs/closure-checklist.md",
     ".agent/architecture/future/programs/README.md",
-    ".agent/architecture/future/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -65,6 +59,8 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/official-graphrag-cleanup-v1/README.md",
+    "docs/history/programs/zuno-workflow-doc-system-v1/README.md",
+    "docs/history/programs/zuno-target-architecture-refresh-v1/README.md",
     "docs/history/development/README.md",
     "docs/history/reference/migration.md",
     "docs/history/specs",
@@ -161,8 +157,8 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "Phase 12：已通过 target migration closure evidence 关闭",
         "受限历史兼容",
         "zuno-workflow-doc-system-v1",
-        "PHASE01：工作流与文档系统只读审计",
         "zuno-target-architecture-refresh-v1",
+        "zuno-repo-layout-cleanup-v1",
         "zuno-architecture-visuals-v1",
     ],
 }
@@ -246,25 +242,22 @@ def verify_target_architecture_html() -> list[str]:
 def verify_active_architecture_surface_phase_plan() -> list[str]:
     roadmap_path = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     if not roadmap_path.exists():
-        return ["missing active architecture surface implementation roadmap"]
+        return ["missing program wait-state implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
     errors = [
-        f"active architecture surface roadmap missing phase plan: {phrase}"
+        f"program wait-state roadmap missing phrase: {phrase}"
         for phrase in [
+            "当前 `.agent/programs/` 处于等待状态",
             "zuno-workflow-doc-system-v1",
-            "PHASE01：工作流与文档系统只读审计",
-            "PHASE02：Agent bootloader 与 routing 收口",
-            "PHASE03：Skill / Template / Program 系统收口",
-            "PHASE04：Workflow verifier 与漂移测试",
-            "PHASE05：Program closure 与 history 归档",
             "zuno-target-architecture-refresh-v1",
+            "zuno-repo-layout-cleanup-v1",
             "每次新 program 都从 `PHASE01` 开始编号",
         ]
         if phrase not in roadmap
     ]
-    phase03_path = REPO_ROOT / ".agent/programs/PHASE03_skill-template-program-system.md"
+    phase03_path = REPO_ROOT / "docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md"
     if not phase03_path.exists():
-        errors.append("missing active PHASE03 Skill / Template / Program plan")
+        errors.append("missing archived Program 1 PHASE03 Skill / Template / Program plan")
     else:
         phase03 = phase03_path.read_text(encoding="utf-8")
         for phrase in [
@@ -273,7 +266,17 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
             "queued program",
         ]:
             if phrase not in phase03:
-                errors.append(f"PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
+                errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
+    active_phase_files = sorted((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
+    if active_phase_files:
+        errors.append(
+            "wait-state .agent/programs must not contain active phase files: "
+            + ", ".join(path.name for path in active_phase_files)
+        )
+    for queued_path in sorted((REPO_ROOT / ".agent/architecture/future/programs").glob("*/*.md")):
+        content = queued_path.read_text(encoding="utf-8")
+        if "queued draft / not active" not in content:
+            errors.append(f"queued program file missing not-active banner: {queued_path.relative_to(REPO_ROOT).as_posix()}")
     system_yaml_path = REPO_ROOT / ".agent/system.yaml"
     if not system_yaml_path.exists():
         errors.append("missing .agent/system.yaml")

@@ -17,13 +17,15 @@
 
 - `.agent/programs/`
 
-当前 program 是 `zuno-workflow-doc-system-v1`。它是短期五个 program 的第一个，优先收口本地文档系统、Agent 工作流、program 平铺规则、skill/template 边界和 verifier 防漂移机制。
+当前没有 active program。`zuno-workflow-doc-system-v1` 和 `zuno-target-architecture-refresh-v1` 已完成并归档。
+
+下一候选 program 是 `zuno-repo-layout-cleanup-v1`，仍在 queued draft 中。
 
 后续 queued programs 存放在：
 
 - `.agent/architecture/future/programs/`
 
-顺序是：目标架构升版、仓库目录整理、runtime 架构升级、架构 HTML / Mermaid 展示收口。
+顺序是：仓库目录整理、runtime 架构升级、架构 HTML / Mermaid 展示收口。
 
 已完成或被替换的程序都归档在：
 
@@ -35,6 +37,8 @@
 - `docs/history/programs/official-graphrag-cleanup-v1/` 是已完成的 GraphRAG 清理证据。
 - `docs/history/programs/zuno-target-runtime-v2/` 保存已被当前 program 替换的目标运行时 V2 历史材料。
 - `docs/history/programs/zuno-architecture-surface-cleanup-v1/` 保存上一轮成熟项目封面化 program。
+- `docs/history/programs/zuno-workflow-doc-system-v1/` 保存已完成的本地文档系统和工作流 program。
+- `docs/history/programs/zuno-target-architecture-refresh-v1/` 保存已完成的目标架构升版 program。
 
 ## 当前前台结构
 

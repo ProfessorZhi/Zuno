@@ -37,7 +37,7 @@ Agent 工作流入口：
 - `.agent/system.yaml`：路径到 skills、templates、docs_sync、verify 的路由。
 - `.agent/references/`：本地项目 skills、lessons、playbooks。
 - `.agent/templates/`：执行骨架。
-- `.agent/programs/`：当前 active program。
+- `.agent/programs/`：当前执行入口；有 active program 时放平铺 phase，当前也可以处于无 active 的等待状态。
 - `.agent/architecture/near-term/`：近期目标架构详细设计。
 - `.agent/scripts/`：过渡期验证器。
 

@@ -25,6 +25,14 @@ and evidence, not the active Agent execution path.
   local Agent Skill System, guardrails, backend facade layers, large-file
   split planning, and architecture diagrams / HTML. It is replaced by the
   new five-program short-term queue.
+- `zuno-workflow-doc-system-v1/`: completed local documentation system and
+  Agent workflow program. It closed the Program 1 work for bootloader routing,
+  local skill/template boundaries, flat program rules, queued draft safeguards,
+  and verifier/test drift checks.
+- `zuno-target-architecture-refresh-v1/`: completed target architecture refresh
+  program. It closed the Program 2 documentation work for six primary layers,
+  GraphRAG LLM-first entity extraction, knowledge-base extractor configs, and
+  Memory / Capability / Trace target boundaries.
 
 ## Rule
 

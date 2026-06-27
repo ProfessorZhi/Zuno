@@ -32,14 +32,13 @@ REQUIRED_AGENT_PROGRAMS = [
     "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/PHASE01_workflow-doc-audit.md",
-    ".agent/programs/PHASE02_agent-bootloader-routing.md",
     ".agent/programs/closure-checklist.md",
     ".agent/architecture/future/programs/README.md",
-    ".agent/architecture/future/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-workflow-doc-system-v1/README.md",
+    "docs/history/programs/zuno-target-architecture-refresh-v1/README.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
@@ -79,9 +78,20 @@ def main() -> int:
         "RRF",
         "`auto` 是 router",
         "GraphRAG 实体抽取默认主路径是 LLM 抽取",
+        "知识库配置必须能选择 `graph_index_settings.entity_extraction_mode = llm`",
     ]:
         if phrase not in target:
             errors.append(f"target architecture missing canonical phrase: {phrase}")
+
+    current_program = _read(".agent/references/current-program.md")
+    for phrase in [
+        "当前没有 active program",
+        "zuno-workflow-doc-system-v1",
+        "zuno-target-architecture-refresh-v1",
+        "zuno-repo-layout-cleanup-v1",
+    ]:
+        if phrase not in current_program:
+            errors.append(f"current-program.md missing wait-state phrase: {phrase}")
 
     docs_front_path = ["README.md", "docs/README.md", "docs/architecture/README.md"]
     for relative_path in docs_front_path:

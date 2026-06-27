@@ -24,19 +24,17 @@ later. The goal is not to create more directories mechanically. The goal is to
 make every concept have one owner, every file have one home, and every runtime
 path be explainable through tests and traces.
 
-## 八层目标结构
+## 六个主层与横切治理
 
 ```text
-1. Product Layer
-   Vue Web / Electron Desktop
-
-2. API & Application Layer
+1. API Layer
    FastAPI routes / DTO / Application Services
 
-3. Single GeneralAgent Runtime
+2. Agent Layer
+   Single GeneralAgent Runtime
    prepare_context -> agent_loop -> post_turn_commit
 
-4. Context & Memory Layer
+3. Memory Layer
    L0 Working Context
    L1 Recent Interaction Window
    L2 Task Summary Memory
@@ -44,7 +42,7 @@ path be explainable through tests and traces.
    L4 External Knowledge
    Raw Event Log
 
-5. Capability / Tool Retrieval Layer
+4. Capability Layer
    ToolCard Registry
    Keyword / alias search
    Native BM25 over ToolCard
@@ -52,14 +50,13 @@ path be explainable through tests and traces.
    Permission / health / cost filter
    Capability selection trace
 
-6. Knowledge / GraphRAG Layer
+5. Knowledge Layer
    KnowledgeQueryService
    GraphRAGQueryService
    GraphRAGProjectSnapshot
+   LLM-first entity / relation extraction
    basic / local / global / drift
    auto router
-
-7. Retrieval / Fusion / Evidence Layer
    Query variants
    Native BM25
    Dense vector
@@ -70,13 +67,19 @@ path be explainable through tests and traces.
    Optional rerank
    Evidence check
    Citation
-   Trace
 
-8. Infrastructure / Observability / Eval
+6. Platform Layer
    PostgreSQL / Redis / RabbitMQ / MinIO
-   Milvus / Elasticsearch optional adapter / Neo4j
-   Trace / Eval / benchmark
+   Milvus / Neo4j / Elasticsearch optional adapter
+   model gateway / storage / background jobs
+
+Cross-cutting Governance
+   Evidence / Citation / Trace / Eval / Policy
+   latency / cost / permission / fallback metadata
 ```
+
+Product clients live in `apps/web` and `apps/desktop`. They are entry surfaces
+over the API layer, not a separate backend ownership layer.
 
 ## 产品层
 

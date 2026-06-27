@@ -38,17 +38,16 @@ REQUIRED_PATHS = [
     ".agent/programs/README.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/PHASE01_workflow-doc-audit.md",
-    ".agent/programs/PHASE02_agent-bootloader-routing.md",
-    ".agent/programs/PHASE03_skill-template-program-system.md",
-    ".agent/programs/PHASE04_workflow-verifiers-drift-tests.md",
-    ".agent/programs/PHASE05_closure-history-archive.md",
     ".agent/programs/closure-checklist.md",
     ".agent/architecture/future/programs/README.md",
-    ".agent/architecture/future/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-workflow-doc-system-v1/README.md",
+    "docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md",
+    "docs/history/programs/zuno-target-architecture-refresh-v1/README.md",
+    "docs/history/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-target-architecture-refresh-v1/PHASE03_graphrag-llm-entity-knowledge-config.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
@@ -73,6 +72,11 @@ FORBIDDEN_PATHS = [
     ".agent/programs/phase-07-graphrag-llm-entity-extraction.md",
     ".agent/programs/phase-08-langgraph-runtime.md",
     ".agent/programs/phase-09-product-trace-eval-closure.md",
+    ".agent/programs/PHASE01_workflow-doc-audit.md",
+    ".agent/programs/PHASE02_agent-bootloader-routing.md",
+    ".agent/programs/PHASE03_skill-template-program-system.md",
+    ".agent/programs/PHASE04_workflow-verifiers-drift-tests.md",
+    ".agent/programs/PHASE05_closure-history-archive.md",
     ".agent/notes",
     ".agent/tmp",
     ".agent/logs",
@@ -119,7 +123,11 @@ def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
         path.name for path in programs_root.iterdir() if path.is_file() and path.name.startswith("PHASE")
     )
     if not phase_files:
-        errors.append(".agent/programs has no PHASE files")
+        current_path = programs_root / "current.md"
+        if not current_path.exists() or "当前没有 active program" not in current_path.read_text(
+            encoding="utf-8"
+        ):
+            errors.append(".agent/programs has no PHASE files but current.md does not declare no active program")
         return errors
 
     phase_numbers: list[int] = []
@@ -432,27 +440,18 @@ def main() -> int:
             "README.md",
             "current.md",
             "implementation-roadmap.md",
-            "PHASE01_workflow-doc-audit.md",
-            "PHASE02_agent-bootloader-routing.md",
-            "PHASE03_skill-template-program-system.md",
-            "PHASE04_workflow-verifiers-drift-tests.md",
-            "PHASE05_closure-history-archive.md",
             "closure-checklist.md",
         ]
     )
     if active_program_files != expected_program_files:
-        errors.append(f"active program files are not flat canonical set: {active_program_files}")
+        errors.append(f"program wait-state files are not canonical set: {active_program_files}")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
+        "当前 `.agent/programs/` 处于等待状态",
         "zuno-workflow-doc-system-v1",
-        "PHASE01：工作流与文档系统只读审计",
-        "PHASE02：Agent bootloader 与 routing 收口",
-        "PHASE03：Skill / Template / Program 系统收口",
-        "PHASE04：Workflow verifier 与漂移测试",
-        "PHASE05：Program closure 与 history 归档",
-        "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-target-architecture-refresh-v1",
+        "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
         "zuno-architecture-visuals-v1",
@@ -460,14 +459,33 @@ def main() -> int:
         if phrase not in roadmap:
             errors.append(f"active architecture surface roadmap missing phrase: {phrase}")
 
-    phase03 = _read(".agent/programs/PHASE03_skill-template-program-system.md")
+    phase03 = _read("docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md")
     for phrase in [
         "本地 skill system",
         "skill / lesson / playbook",
         "queued program",
     ]:
         if phrase not in phase03:
-            errors.append(f"PHASE03 missing skill/template/program phrase: {phrase}")
+            errors.append(f"archived Program 1 PHASE03 missing skill/template/program phrase: {phrase}")
+
+    archived_program2 = _read("docs/history/programs/zuno-target-architecture-refresh-v1/README.md")
+    for phrase in [
+        "已完成并归档",
+        "LLM extraction",
+        "知识库支持多套 extractor / config 选择",
+        "Memory approval",
+    ]:
+        if phrase not in archived_program2:
+            errors.append(f"archived Program 2 README missing phrase: {phrase}")
+
+    future_program2 = REPO_ROOT / ".agent/architecture/future/programs/zuno-target-architecture-refresh-v1"
+    if future_program2.exists():
+        errors.append("Program 2 must not remain queued after archive: .agent/architecture/future/programs/zuno-target-architecture-refresh-v1")
+
+    for queued_path in sorted((REPO_ROOT / ".agent/architecture/future/programs").glob("*/*.md")):
+        content = queued_path.read_text(encoding="utf-8")
+        if "queued draft / not active" not in content:
+            errors.append(f"queued program file missing not-active banner: {queued_path.relative_to(REPO_ROOT).as_posix()}")
 
     system_yaml = _read(".agent/system.yaml")
     for phrase in [
