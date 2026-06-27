@@ -45,6 +45,8 @@ docs       = formal human truth
 3. 是否是当前 phase 计划；如果是，放 `.agent/programs/`。
 4. 是否能被 `.agent/system.yaml` 或 phase 文件引用。
 
+新增模板必须能被 `.agent/system.yaml` 或 phase 文件引用；不能被路由或执行计划引用的模板先不要放进前台。
+
 ## Docs Sync
 
 修改模板边界时检查：
