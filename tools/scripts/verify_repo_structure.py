@@ -20,14 +20,6 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    ".agent/programs/PHASE01_repo-layout-audit.md",
-    ".agent/programs/PHASE02_root-docs-hygiene.md",
-    ".agent/programs/PHASE03_backend-six-layer-migration-plan.md",
-    ".agent/programs/PHASE04_small-boundary-cleanups.md",
-    ".agent/programs/PHASE05_hygiene-verifier-closure.md",
-    ".agent/programs/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
-    ".agent/programs/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
-    ".agent/programs/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -68,6 +60,13 @@ REQUIRED_PATHS = [
     "docs/history/programs/official-graphrag-cleanup-v1/README.md",
     "docs/history/programs/zuno-workflow-doc-system-v1/README.md",
     "docs/history/programs/zuno-target-architecture-refresh-v1/README.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE01_repo-layout-audit.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE02_root-docs-hygiene.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_backend-six-layer-migration-plan.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_small-boundary-cleanups.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_hygiene-verifier-closure.md",
     "docs/history/development/README.md",
     "docs/history/reference/migration.md",
     "docs/history/specs",
@@ -312,14 +311,12 @@ def verify_target_architecture_html() -> list[str]:
 def verify_active_architecture_surface_phase_plan() -> list[str]:
     roadmap_path = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     if not roadmap_path.exists():
-        return ["missing active Program 3 implementation roadmap"]
+        return ["missing .agent/programs implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
     errors = [
-        f"active Program 3 roadmap missing phrase: {phrase}"
+        f"no-active program roadmap missing phrase: {phrase}"
         for phrase in [
-            "状态：active",
-            "必要目录 + 清晰职责 + 可验证边界",
-            "src/backend",
+            "当前没有 active program",
             "zuno-workflow-doc-system-v1",
             "zuno-target-architecture-refresh-v1",
             "zuno-repo-layout-cleanup-v1",
@@ -340,18 +337,24 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_files = sorted((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
-    expected_phase_files = [
-        "PHASE01_repo-layout-audit.md",
-        "PHASE02_root-docs-hygiene.md",
-        "PHASE03_backend-six-layer-migration-plan.md",
-        "PHASE04_small-boundary-cleanups.md",
-        "PHASE05_hygiene-verifier-closure.md",
-    ]
-    if [path.name for path in active_phase_files] != expected_phase_files:
+    if active_phase_files:
         errors.append(
-            "active Program 3 .agent/programs phase files are not canonical: "
+            ".agent/programs must not retain completed Program 3 phase files: "
             + ", ".join(path.name for path in active_phase_files)
         )
+    archived_program3 = REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md"
+    if not archived_program3.exists():
+        errors.append("missing archived Program 3 README")
+    else:
+        archived_text = archived_program3.read_text(encoding="utf-8")
+        for phrase in [
+            "已完成并归档",
+            "root/docs hygiene",
+            "backend 六层迁移计划",
+            "repo hygiene verifier",
+        ]:
+            if phrase not in archived_text:
+                errors.append(f"archived Program 3 README missing phrase: {phrase}")
     for queued_path in sorted((REPO_ROOT / ".agent/architecture/future/programs").glob("*/*.md")):
         content = queued_path.read_text(encoding="utf-8")
         if "queued draft / not active" not in content:

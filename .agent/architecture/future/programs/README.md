@@ -8,7 +8,7 @@
 
 - `zuno-workflow-doc-system-v1` 已完成，归档在 `docs/history/programs/zuno-workflow-doc-system-v1/`。
 - `zuno-target-architecture-refresh-v1` 已完成，归档在 `docs/history/programs/zuno-target-architecture-refresh-v1/`。
-- `zuno-repo-layout-cleanup-v1` 已打开为 active program，当前位置是 `.agent/programs/`。
+- `zuno-repo-layout-cleanup-v1` 已完成，归档在 `docs/history/programs/zuno-repo-layout-cleanup-v1/`。
 
 ## Queued 顺序
 

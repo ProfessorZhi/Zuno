@@ -33,15 +33,13 @@ Require-Path ".agent\system.yaml"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE01_repo-layout-audit.md"
-Require-Path ".agent\programs\PHASE02_root-docs-hygiene.md"
-Require-Path ".agent\programs\PHASE03_backend-six-layer-migration-plan.md"
-Require-Path ".agent\programs\PHASE04_small-boundary-cleanups.md"
-Require-Path ".agent\programs\PHASE05_hygiene-verifier-closure.md"
-Require-Path ".agent\programs\thread-prompts\THREAD_A_root-docs-agent-hygiene-prompt.md"
-Require-Path ".agent\programs\thread-prompts\THREAD_B_backend-six-layer-audit-prompt.md"
-Require-Path ".agent\programs\thread-prompts\THREAD_C_tools-tests-generated-artifacts-prompt.md"
 Require-Path ".agent\architecture\future\programs\README.md"
+Require-NoPath ".agent\programs\PHASE01_repo-layout-audit.md"
+Require-NoPath ".agent\programs\PHASE02_root-docs-hygiene.md"
+Require-NoPath ".agent\programs\PHASE03_backend-six-layer-migration-plan.md"
+Require-NoPath ".agent\programs\PHASE04_small-boundary-cleanups.md"
+Require-NoPath ".agent\programs\PHASE05_hygiene-verifier-closure.md"
+Require-NoPath ".agent\programs\thread-prompts"
 Require-NoPath ".agent\programs\PHASE01_workflow-doc-audit.md"
 Require-NoPath ".agent\programs\PHASE02_agent-bootloader-routing.md"
 Require-NoPath ".agent\programs\PHASE03_skill-template-program-system.md"
@@ -69,6 +67,10 @@ Require-Path "docs\history\programs\official-graphrag-cleanup-v1\README.md"
 Require-Path "docs\history\programs\context-memory-agent-runtime-v1\README.md"
 Require-Path "docs\history\programs\zuno-workflow-doc-system-v1\README.md"
 Require-Path "docs\history\programs\zuno-target-architecture-refresh-v1\README.md"
+Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\README.md"
+Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\implementation-roadmap.md"
+Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE01_repo-layout-audit.md"
+Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE05_hygiene-verifier-closure.md"
 Require-Path "docs\history\README.md"
 Require-Path "apps\web\AGENTS.md"
 Require-Path "src\backend\zuno\AGENTS.md"
@@ -99,14 +101,11 @@ $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md
 if ($currentProgram -notmatch "\.agent/programs/") {
     $failures.Add("current-program.md does not point to the flat active program directory")
 }
-if ($currentProgram -notmatch "当前 active program") {
-    $failures.Add("current-program.md must declare the active program")
+if ($currentProgram -notmatch "当前没有 active program") {
+    $failures.Add("current-program.md must declare no active program")
 }
 if ($currentProgram -notmatch "zuno-repo-layout-cleanup-v1") {
-    $failures.Add("current-program.md missing active repo layout cleanup program id")
-}
-if ($currentProgram -notmatch "PHASE01_repo-layout-audit.md") {
-    $failures.Add("current-program.md missing active Program 3 phase")
+    $failures.Add("current-program.md missing archived repo layout cleanup program id")
 }
 if ($currentProgram -notmatch "zuno-workflow-doc-system-v1" -or $currentProgram -notmatch "zuno-target-architecture-refresh-v1") {
     $failures.Add("current-program.md missing archived Program 1/2 ids")

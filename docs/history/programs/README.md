@@ -33,6 +33,10 @@ and evidence, not the active Agent execution path.
   program. It closed the Program 2 documentation work for six primary layers,
   GraphRAG LLM-first entity extraction, knowledge-base extractor configs, and
   Memory / Capability / Trace target boundaries.
+- `zuno-repo-layout-cleanup-v1/`: completed repo layout cleanup program. It
+  closed the Program 3 work for root/docs hygiene, backend six-layer migration
+  planning, layer boundary READMEs, generated-artifact hygiene, and repo
+  structure guardrails.
 
 ## Rule
 

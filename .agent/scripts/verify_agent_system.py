@@ -39,14 +39,6 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    ".agent/programs/PHASE01_repo-layout-audit.md",
-    ".agent/programs/PHASE02_root-docs-hygiene.md",
-    ".agent/programs/PHASE03_backend-six-layer-migration-plan.md",
-    ".agent/programs/PHASE04_small-boundary-cleanups.md",
-    ".agent/programs/PHASE05_hygiene-verifier-closure.md",
-    ".agent/programs/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
-    ".agent/programs/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
-    ".agent/programs/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -55,6 +47,16 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-target-architecture-refresh-v1/README.md",
     "docs/history/programs/zuno-target-architecture-refresh-v1/implementation-roadmap.md",
     "docs/history/programs/zuno-target-architecture-refresh-v1/PHASE03_graphrag-llm-entity-knowledge-config.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE01_repo-layout-audit.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE02_root-docs-hygiene.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_backend-six-layer-migration-plan.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_small-boundary-cleanups.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_hygiene-verifier-closure.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/README.md",
     "docs/history/programs/zuno-target-architecture-migration-v1/implementation-roadmap.md",
@@ -459,34 +461,23 @@ def main() -> int:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
-            "PHASE01_repo-layout-audit.md",
-            "PHASE02_root-docs-hygiene.md",
-            "PHASE03_backend-six-layer-migration-plan.md",
-            "PHASE04_small-boundary-cleanups.md",
-            "PHASE05_hygiene-verifier-closure.md",
         ]
     )
     if active_program_files != expected_program_files:
-        errors.append(f"active Program 3 files are not canonical set: {active_program_files}")
+        errors.append(f".agent/programs files are not canonical no-active set: {active_program_files}")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "状态：active",
-        "必要目录 + 清晰职责 + 可验证边界",
-        "src/backend",
-        "thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
-        "thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
-        "thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
-        "下一轮提示词更新时默认替换或清理旧提示词",
+        "当前没有 active program",
         "zuno-workflow-doc-system-v1",
         "zuno-target-architecture-refresh-v1",
-        "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
+        "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-runtime-architecture-upgrade-v1",
         "zuno-architecture-visuals-v1",
     ]:
         if phrase not in roadmap:
-            errors.append(f"active architecture surface roadmap missing phrase: {phrase}")
+            errors.append(f"no-active program roadmap missing phrase: {phrase}")
 
     phase03 = _read("docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md")
     for phrase in [
@@ -510,6 +501,16 @@ def main() -> int:
     future_program2 = REPO_ROOT / ".agent/architecture/future/programs/zuno-target-architecture-refresh-v1"
     if future_program2.exists():
         errors.append("Program 2 must not remain queued after archive: .agent/architecture/future/programs/zuno-target-architecture-refresh-v1")
+
+    archived_program3 = _read("docs/history/programs/zuno-repo-layout-cleanup-v1/README.md")
+    for phrase in [
+        "已完成并归档",
+        "root/docs hygiene",
+        "backend 六层迁移计划",
+        "repo hygiene verifier",
+    ]:
+        if phrase not in archived_program3:
+            errors.append(f"archived Program 3 README missing phrase: {phrase}")
 
     for queued_path in sorted((REPO_ROOT / ".agent/architecture/future/programs").glob("*/*.md")):
         content = queued_path.read_text(encoding="utf-8")
