@@ -361,6 +361,9 @@ def main() -> int:
         "用户在 UI 里手动创建目标模式线程",
         "线程内开启多 agent 模式",
         "Single GeneralAgent",
+        "## Program Closure 自维护审查",
+        "如果用户提醒“以后注意”，不能只留在对话里",
+        "verifier / tests 是否覆盖新规则",
     ]:
         if phrase not in agent_entry:
             errors.append(f"AGENTS.md missing routing phrase: {phrase}")
@@ -529,9 +532,22 @@ def main() -> int:
         "不把执行工作流里的多 agent 写成 Zuno runtime 的当前架构",
         "### 挂机模式",
         "### 多线程模式",
+        "### Program Closure 自维护审查",
+        "如果用户提醒“以后注意”，不能只留在对话里",
+        "能机器检查的规则是否已进入脚本或 repo tests",
     ]:
         if phrase not in workflow_skill:
             errors.append(f".agent/references/workflow.md missing parallel workflow phrase: {phrase}")
+
+    closure_checklist = _read(".agent/programs/closure-checklist.md")
+    for phrase in [
+        "## Program Closure 自维护审查",
+        "completed program 是否已归档到 `docs/history/programs/`",
+        "如果用户提醒“以后注意”，不能只留在对话里",
+        "verifier / tests 是否覆盖新规则",
+    ]:
+        if phrase not in closure_checklist:
+            errors.append(f".agent/programs/closure-checklist.md missing self-review phrase: {phrase}")
 
     references_readme = _read(".agent/references/README.md")
     for phrase in [

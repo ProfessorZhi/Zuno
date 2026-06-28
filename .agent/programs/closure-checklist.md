@@ -18,6 +18,23 @@
 - 旧 active program 先归档到 `docs/history/programs/`。
 - 修改 docs / agent workflow 后运行最小有效验证。
 
+## Program Closure 自维护审查
+
+每个 program 结束前必须完成这组检查：
+
+- `AGENTS.md` 是否需要更新。
+- `.agent/system.yaml` 的 route、docs_sync、verify 是否需要更新。
+- `.agent/references/` 是否沉淀了新的 skill、lesson、pitfall 或 debug playbook。
+- `.agent/templates/` 是否需要新增或修正模板。
+- `.agent/programs/` 是否只保留当前 active program，或处于明确等待状态。
+- completed program 是否已归档到 `docs/history/programs/`。
+- `docs/architecture/current-architecture.md` 是否仍只写 Current。
+- `docs/architecture/target-architecture.md` 是否需要吸收新的目标边界。
+- `docs/architecture/roadmap.md` 是否反映最新状态。
+- verifier / tests 是否覆盖新规则，避免下次漂移。
+
+如果用户提醒“以后注意”，不能只留在对话里；必须分类并沉淀到 `.agent/references/`、`AGENTS.md`、`.agent/system.yaml` 或 verifier/test。
+
 ## 必跑检查
 
 ```powershell

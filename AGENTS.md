@@ -189,6 +189,25 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - 不要保留旧的小写或点号形式 Agent 入口与 `AGENTS.md` 并行。
 - 只有根入口路由到的模块才允许有模块级 `AGENTS.md`。
 
+## Program Closure 自维护审查
+
+每个 program 结束前必须做一次 workflow / docs self-review。它不是可选总结，而是归档、提交和推送前的收尾闸门。
+
+必须检查：
+
+1. `AGENTS.md` 是否需要更新。
+2. `.agent/system.yaml` 的 route、docs_sync、verify 是否需要更新。
+3. `.agent/references/` 是否有新的 skill、lesson、pitfall 或 debug playbook 要沉淀。
+4. `.agent/templates/` 是否需要新增或修正执行骨架。
+5. `.agent/programs/` 是否只保留当前 active program，或处于明确等待状态。
+6. completed program 是否已归档到 `docs/history/programs/`。
+7. `docs/architecture/current-architecture.md` 是否仍只写 Current。
+8. `docs/architecture/target-architecture.md` 是否需要吸收新的目标边界。
+9. `docs/architecture/roadmap.md` 是否反映最新状态。
+10. verifier / tests 是否覆盖新规则，避免下次漂移。
+
+如果用户提醒“以后注意”，不能只留在对话里。要判断它属于临时提醒、可复用经验、稳定规则、任务路由、全仓硬规则还是机器可检查规则，并分别沉淀到 `.agent/local/`、`.agent/references/`、`AGENTS.md`、`.agent/system.yaml` 或 verifier/test。
+
 ## 范围规则
 
 本工作流文档不授权广泛代码修改。必须遵守任务给出的禁止路径。如果验证需要修改禁止路径，停止并返回证据，不扩大范围。

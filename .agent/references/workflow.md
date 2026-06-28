@@ -139,6 +139,25 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 8. 写入线程完成后必须提交并推送；只读审计线程返回报告和干净 `git status` 即可。主线程读取 diff、验证结果或审计证据，不只信总结。
 9. 主线程按风险顺序合并，解决冲突后运行集成验证。
 
+### Program Closure 自维护审查
+
+每个 program 结束前必须做 workflow / docs self-review。它的目的不是多写总结，而是确认这轮暴露出的新规则、新坑和新边界已经进入正确的长期位置。
+
+检查顺序：
+
+1. `AGENTS.md`：全仓硬规则、工作模式、收尾规则是否需要更新。
+2. `.agent/system.yaml`：route、docs_sync、verify 是否覆盖新工作流。
+3. `.agent/references/`：新的 skill、lesson、pitfall、debug playbook 是否已沉淀。
+4. `.agent/templates/`：是否需要新的目标模式提示词、phase 模板或 closure report 骨架。
+5. `.agent/programs/`：是否只保留当前 active program，或处于明确无 active program 的等待状态。
+6. `docs/history/programs/`：completed program 是否归档，旧 phase 是否离开当前前台。
+7. `docs/architecture/current-architecture.md`：是否仍只描述 Current。
+8. `docs/architecture/target-architecture.md`：是否需要吸收新的 Target 边界。
+9. `docs/architecture/roadmap.md`：是否反映最新 program 状态。
+10. verifier / tests：能机器检查的规则是否已进入脚本或 repo tests。
+
+如果用户提醒“以后注意”，不能只留在对话里。先分类：临时提醒进入 ignored local notes；可复用经验进入 `.agent/references/known-pitfalls.md` 或对应 skill；稳定操作规则进入 `workflow.md`；任务触发规则进入 `task-routing.md`；全仓硬规则进入 `AGENTS.md`；能机器检查的规则进入 verifier/test。
+
 ## Focused Tests
 
 文档 / Agent workflow 最小基线：
@@ -180,8 +199,11 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_con
 - `docs/architecture/roadmap.md`
 - verifier scripts and repo tests
 
+Program closure 还必须执行一次 Program Closure 自维护审查，确认本轮新增经验没有只停留在 final answer 或聊天上下文里。
+
 ## Lessons Learned
 
 - 修改 surface 时，测试和 verifier 是同一变更的一部分，不是事后装饰。
 - 历史完成事实不能为了新叙事改写成未完成。
 - 最短路径通常是更新现有 skill，而不是新建更多目录。
+- 自主维护靠“提醒分类、规则沉淀、验证自动化、历史归档”，不是靠 Codex 记住上一轮对话。

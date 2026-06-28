@@ -125,6 +125,9 @@ def test_root_agents_routes_to_module_agents_and_references() -> None:
         "用户在 UI 里手动创建目标模式线程",
         "线程内开启多 agent 模式",
         "Single GeneralAgent",
+        "## Program Closure 自维护审查",
+        "如果用户提醒“以后注意”，不能只留在对话里",
+        "verifier / tests 是否覆盖新规则",
     ]
 
     for phrase in required_phrases:
@@ -249,8 +252,26 @@ def test_workflow_documents_goal_work_modes_contract() -> None:
         "不把执行工作流里的多 agent 写成 Zuno runtime 的当前架构",
         "### 挂机模式",
         "### 多线程模式",
+        "### Program Closure 自维护审查",
+        "如果用户提醒“以后注意”，不能只留在对话里",
+        "能机器检查的规则是否已进入脚本或 repo tests",
     ]:
         assert phrase in content, f"missing parallel workflow phrase: {phrase}"
+
+
+def test_program_closure_checklist_requires_self_review() -> None:
+    content = (REPO_ROOT / ".agent" / "programs" / "closure-checklist.md").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "## Program Closure 自维护审查",
+        "completed program 是否已归档到 `docs/history/programs/`",
+        "如果用户提醒“以后注意”，不能只留在对话里",
+        "verifier / tests 是否覆盖新规则",
+        "docs/architecture/roadmap.md",
+    ]:
+        assert phrase in content, f"missing program closure self-review phrase: {phrase}"
 
 
 def test_agent_templates_keep_execution_skeleton_boundary() -> None:
