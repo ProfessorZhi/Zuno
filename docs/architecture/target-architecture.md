@@ -103,6 +103,12 @@ drift_like -> drift
 
 Domain Pack 只保留为历史或迁移兼容语境；公开目标身份字段是 `graphrag_project_id`。
 
+## 执行边界
+
+本文件不承担 active program、active phase 或 queued program 的执行入口。当前状态、下一步和队列顺序以 [roadmap.md](roadmap.md) 为正式人类入口；Agent 执行计划以 `.agent/programs/` 为准。
+
+目标架构进入 Current 的条件是：对应代码、测试、trace evidence 和文档边界都已证明；否则保持 Target。
+
 ## 详细设计
 
 详细目标设计放在：
@@ -124,15 +130,3 @@ Canonical near-term Markdown：
 - `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
 只有已实现并通过测试证明的结论，才能从 `.agent/` 提升到正式 `docs/`。
-
-## 执行 Program
-
-当前 active program 是 `zuno-repo-layout-cleanup-v1`。近期 program 状态是：
-
-1. `zuno-workflow-doc-system-v1`：已完成并归档。
-2. `zuno-target-architecture-refresh-v1`：已完成并归档。
-3. `zuno-repo-layout-cleanup-v1`：active，当前执行 `PHASE01_repo-layout-audit.md`。
-4. `zuno-runtime-architecture-upgrade-v1`：queued。
-5. `zuno-architecture-visuals-v1`：queued。
-
-这些目标在代码、测试、trace evidence 和文档边界更新证明前都保持 Target。
