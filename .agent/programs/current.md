@@ -18,6 +18,12 @@ zuno-repo-layout-cleanup-v1
 - `PHASE04_small-boundary-cleanups.md`：pending。
 - `PHASE05_hygiene-verifier-closure.md`：pending。
 
+## PHASE01 子线程提示词
+
+- `THREAD_A_root-docs-agent-hygiene-prompt.md`
+- `THREAD_B_backend-six-layer-audit-prompt.md`
+- `THREAD_C_tools-tests-generated-artifacts-prompt.md`
+
 ## 已清理的历史 Program
 
 - `docs/history/programs/zuno-workflow-doc-system-v1/`

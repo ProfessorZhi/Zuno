@@ -44,6 +44,9 @@ REQUIRED_PATHS = [
     ".agent/programs/PHASE03_backend-six-layer-migration-plan.md",
     ".agent/programs/PHASE04_small-boundary-cleanups.md",
     ".agent/programs/PHASE05_hygiene-verifier-closure.md",
+    ".agent/programs/THREAD_A_root-docs-agent-hygiene-prompt.md",
+    ".agent/programs/THREAD_B_backend-six-layer-audit-prompt.md",
+    ".agent/programs/THREAD_C_tools-tests-generated-artifacts-prompt.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -457,6 +460,9 @@ def main() -> int:
             "PHASE03_backend-six-layer-migration-plan.md",
             "PHASE04_small-boundary-cleanups.md",
             "PHASE05_hygiene-verifier-closure.md",
+            "THREAD_A_root-docs-agent-hygiene-prompt.md",
+            "THREAD_B_backend-six-layer-audit-prompt.md",
+            "THREAD_C_tools-tests-generated-artifacts-prompt.md",
         ]
     )
     if active_program_files != expected_program_files:
@@ -467,6 +473,9 @@ def main() -> int:
         "状态：active",
         "必要目录 + 清晰职责 + 可验证边界",
         "src/backend",
+        "THREAD_A_root-docs-agent-hygiene-prompt.md",
+        "THREAD_B_backend-six-layer-audit-prompt.md",
+        "THREAD_C_tools-tests-generated-artifacts-prompt.md",
         "zuno-workflow-doc-system-v1",
         "zuno-target-architecture-refresh-v1",
         "每次新 program 都从 `PHASE01` 开始编号",

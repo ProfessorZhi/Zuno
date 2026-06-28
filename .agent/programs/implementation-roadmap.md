@@ -44,6 +44,12 @@ infra/      Docker、DB、部署基础设施
 4. [PHASE04：小步边界清理](PHASE04_small-boundary-cleanups.md)
 5. [PHASE05：Repo hygiene verifier closure](PHASE05_hygiene-verifier-closure.md)
 
+## PHASE01 多线程提示词
+
+- [Thread A：Root / Docs / Agent Hygiene](THREAD_A_root-docs-agent-hygiene-prompt.md)
+- [Thread B：Backend / src Six-Layer Audit](THREAD_B_backend-six-layer-audit-prompt.md)
+- [Thread C：Tools / Tests / Generated Artifacts](THREAD_C_tools-tests-generated-artifacts-prompt.md)
+
 ## 禁止范围
 
 不做大搬家，不改 runtime 行为，不改 public API。

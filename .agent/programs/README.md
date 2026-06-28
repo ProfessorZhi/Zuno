@@ -27,6 +27,14 @@ PHASE04_small-boundary-cleanups.md
 PHASE05_hygiene-verifier-closure.md
 ```
 
+PHASE01 多线程提示词也平铺在 `.agent/programs/`，方便复制到对应 Codex 线程：
+
+```text
+THREAD_A_root-docs-agent-hygiene-prompt.md
+THREAD_B_backend-six-layer-audit-prompt.md
+THREAD_C_tools-tests-generated-artifacts-prompt.md
+```
+
 后续 queued programs 仍在：
 
 - `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
