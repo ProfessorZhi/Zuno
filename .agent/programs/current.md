@@ -12,11 +12,11 @@ zuno-repo-layout-cleanup-v1
 
 ## 当前 Phase
 
-- `PHASE01_repo-layout-audit.md`：active / 当前打开，适合按 root/docs、backend layout、tools/tests/generated artifacts 三个线程并行审计。
-- `PHASE02_root-docs-hygiene.md`：pending。
-- `PHASE03_backend-six-layer-migration-plan.md`：pending。
+- `PHASE01_repo-layout-audit.md`：active / 三线程审计已合并，作为 PHASE02 / PHASE03 / PHASE05 的输入。
+- `PHASE02_root-docs-hygiene.md`：pending，下一步优先执行。
+- `PHASE03_backend-six-layer-migration-plan.md`：pending，基于 Thread B 的 facade-first 结论执行。
 - `PHASE04_small-boundary-cleanups.md`：pending。
-- `PHASE05_hygiene-verifier-closure.md`：pending。
+- `PHASE05_hygiene-verifier-closure.md`：pending，基于 Thread C 的 guardrail 缺口执行。
 
 ## PHASE01 子线程提示词
 

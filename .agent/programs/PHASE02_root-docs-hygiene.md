@@ -9,6 +9,13 @@
 
 `docs/` 前台只承载正式真相；历史材料、旧计划、旧审计和生成报告进入 `docs/history/` 或被 `.gitignore` 排除。
 
+## PHASE01 输入
+
+- Thread A 确认根目录当前没有 `.codex/`、`.local/`、`.test-tmp/`、`node_modules/`、`reports/`、`data/` 实体，也没有 tracked 脏目录。
+- `reports/` 和 `data/` 不能盲删或整目录粗暴忽略，需要白名单语义：正式证据进 `docs/evidence/`，示例输入进 `examples/` 或 `tools/evals/`，运行生成物保持 local/ignored。
+- `docs/architecture/README.md` 和 `docs/architecture/target-architecture.md` 需要判断是否承载了过细的 active phase / queued program 执行状态。
+- `.agent/templates/goal-mode-prompt.md` 需要瘦身为模板骨架，不保存固定路径或历史 program 事实。
+
 ## 验收
 
 根目录职责清楚，docs 前台只保留 current / target / roadmap / diagrams / decisions。
