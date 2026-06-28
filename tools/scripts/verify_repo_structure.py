@@ -170,6 +170,39 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     ],
 }
 
+TOP_LEVEL_RESPONSIBILITY_DIRECTORIES = {
+    "tools": "维护脚本、验证器、eval、launcher、migration 和架构渲染工具",
+    "tests": "自动化测试源和仓库边界 guardrails",
+    "examples": "可运行示例和示例输入，不存放运行输出",
+    "infra": "数据库、Docker 和本地基础设施配置，不存放运行态 volume/cache",
+}
+
+ALLOWED_RESPONSIBILITY_SUBDIRS = {
+    "tools": ["agent", "cli", "evals", "launchers", "migrations", "scripts"],
+    "tests": [
+        "agent",
+        "agent_system",
+        "api",
+        "evals",
+        "frontend",
+        "graphrag",
+        "legacy_guards",
+        "repo",
+        "retrieval",
+        "storage",
+        "tools",
+    ],
+    "examples": ["graphrag-projects"],
+    "infra": ["db", "docker"],
+}
+
+ALLOWED_RESPONSIBILITY_FILES = {
+    "tools": ["__init__.py"],
+    "tests": ["README.md", "conftest.py"],
+    "examples": [],
+    "infra": [],
+}
+
 
 @dataclass
 class VerificationResult:
@@ -211,6 +244,36 @@ def verify_doc_phrases() -> list[str]:
         for phrase in phrases:
             if phrase not in content:
                 errors.append(f"{relative_path} missing phrase: {phrase}")
+    return errors
+
+
+def verify_first_class_directory_responsibilities() -> list[str]:
+    errors: list[str] = []
+    for directory, role in TOP_LEVEL_RESPONSIBILITY_DIRECTORIES.items():
+        root = REPO_ROOT / directory
+        if not root.exists():
+            errors.append(f"missing first-class responsibility directory: {directory}")
+            continue
+        if not role:
+            errors.append(f"first-class responsibility directory missing role: {directory}")
+        actual_subdirs = sorted(
+            path.name
+            for path in root.iterdir()
+            if path.is_dir() and not path.name.startswith("__pycache__")
+        )
+        actual_files = sorted(path.name for path in root.iterdir() if path.is_file())
+        expected_subdirs = ALLOWED_RESPONSIBILITY_SUBDIRS[directory]
+        expected_files = ALLOWED_RESPONSIBILITY_FILES[directory]
+        if actual_subdirs != expected_subdirs:
+            errors.append(
+                f"{directory}/ subdirectories drifted from responsibility allowlist: "
+                f"expected {expected_subdirs}, got {actual_subdirs}"
+            )
+        if actual_files != expected_files:
+            errors.append(
+                f"{directory}/ files drifted from responsibility allowlist: "
+                f"expected {expected_files}, got {actual_files}"
+            )
     return errors
 
 
@@ -372,6 +435,7 @@ def run_verification() -> VerificationResult:
             *verify_required_paths(),
             *verify_forbidden_current_paths(),
             *verify_doc_phrases(),
+            *verify_first_class_directory_responsibilities(),
             *verify_target_architecture_html(),
             *verify_active_architecture_surface_phase_plan(),
             *verify_architecture_diagram_outputs(),
