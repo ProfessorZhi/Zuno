@@ -17,15 +17,19 @@
 
 - `.agent/programs/`
 
-当前没有 active program。`zuno-workflow-doc-system-v1` 和 `zuno-target-architecture-refresh-v1` 已完成并归档。
+当前 active program 是 `zuno-repo-layout-cleanup-v1`。
 
-下一候选 program 是 `zuno-repo-layout-cleanup-v1`，仍在 queued draft 中。
+当前 active phase 是：
+
+- `.agent/programs/PHASE01_repo-layout-audit.md`
+
+`zuno-workflow-doc-system-v1` 和 `zuno-target-architecture-refresh-v1` 已完成并归档。
 
 后续 queued programs 存放在：
 
 - `.agent/architecture/future/programs/`
 
-顺序是：仓库目录整理、runtime 架构升级、架构 HTML / Mermaid 展示收口。
+顺序是：runtime 架构升级、架构 HTML / Mermaid 展示收口。
 
 已完成或被替换的程序都归档在：
 

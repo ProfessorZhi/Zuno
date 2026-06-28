@@ -1,33 +1,49 @@
-# 无 Active Program
+# Zuno Repo Layout Cleanup V1
+> 状态：active。当前平铺执行计划位于 `.agent/programs/`，从 `PHASE01` 开始。
 
-当前 `.agent/programs/` 处于等待状态，没有正在执行的 `PHASE*.md`。
+Program ID：`zuno-repo-layout-cleanup-v1`
 
-## 已关闭
+## 目标
 
-- `zuno-workflow-doc-system-v1`：已完成本地文档系统、Agent 工作流、program 平铺规则、skill/template 边界和 verifier 防漂移收口，归档到 `docs/history/programs/zuno-workflow-doc-system-v1/`。
-- `zuno-target-architecture-refresh-v1`：已完成目标架构升版文档收口，归档到 `docs/history/programs/zuno-target-architecture-refresh-v1/`。
+按升版后的目标架构整理目录和边界，让仓库更清爽、更可读。
 
-## 下一个候选
+Program 3 的核心不是零散删文件，而是把整个仓库整理成“必要目录 + 清晰职责 + 可验证边界”。第一次看仓库的人应该能从目录直接读出：
 
 ```text
-zuno-repo-layout-cleanup-v1
+apps/       产品入口
+src/        runtime 源码
+tests/      测试
+tools/      维护、verify、eval、render 工具
+docs/       正式人类文档真相
+examples/   可运行示例和示例数据
+infra/      Docker、DB、部署基础设施
+.agent/     本地 Agent Skill System
 ```
 
-候选源文件：
+`src/backend` 是本轮重点：目标方向是让 `src/backend/zuno` 逐步靠近 `api / agent / memory / capability / knowledge / platform` 六层表达；`src/backend` 顶层不应该堆很多无解释目录。任何保留的额外目录都必须能说明职责、来源和验证方式。
 
-- `.agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md`
-- `.agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/PHASE*.md`
+## 当前边界
 
-## 打开规则
+- Program 1 `zuno-workflow-doc-system-v1` 已完成并归档。
+- Program 2 `zuno-target-architecture-refresh-v1` 已完成并归档。
+- 每次新 program 都从 `PHASE01` 开始编号。
+- 本 program 只处理目录、文档前台、repo hygiene 和迁移计划，不做 runtime 行为修改。
+- 涉及 `src/backend/zuno` 时优先做审计、facade 计划和低风险边界清理，不做大搬家。
+- `.codex/`、`.local/`、`.test-tmp/`、`node_modules/`、`reports/`、临时 `data/` 这类本地产物或生成物先审计 tracked/untracked 和 `.gitignore`，不能盲删。
 
-1. 确认 `.agent/programs/` 只有 `README.md`、`current.md`、`implementation-roadmap.md` 和 `closure-checklist.md`。
-2. 把 queued program 的 roadmap 和 phase 文件迁入 `.agent/programs/`。
-3. 每次新 program 都从 `PHASE01` 开始编号。
-4. 更新 `docs/architecture/roadmap.md`、`.agent/references/current-program.md` 和相关 verifier/test。
-5. 完成后归档到 `docs/history/programs/`。
+后续 queued programs：
 
-## 仍在队列中
+- `zuno-runtime-architecture-upgrade-v1`
+- `zuno-architecture-visuals-v1`
 
-- Program 3：`zuno-repo-layout-cleanup-v1`
-- Program 4：`zuno-runtime-architecture-upgrade-v1`
-- Program 5：`zuno-architecture-visuals-v1`
+## Phase
+
+1. [PHASE01：Repo layout 审计](PHASE01_repo-layout-audit.md)
+2. [PHASE02：根目录与 docs hygiene](PHASE02_root-docs-hygiene.md)
+3. [PHASE03：后端六层迁移计划](PHASE03_backend-six-layer-migration-plan.md)
+4. [PHASE04：小步边界清理](PHASE04_small-boundary-cleanups.md)
+5. [PHASE05：Repo hygiene verifier closure](PHASE05_hygiene-verifier-closure.md)
+
+## 禁止范围
+
+不做大搬家，不改 runtime 行为，不改 public API。

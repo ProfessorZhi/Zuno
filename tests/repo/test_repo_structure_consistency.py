@@ -167,7 +167,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
+def test_active_program3_is_flat_and_old_phase_details_are_archived() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -176,6 +176,11 @@ def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
 
     assert active_files == sorted(
         [
+            "PHASE01_repo-layout-audit.md",
+            "PHASE02_root-docs-hygiene.md",
+            "PHASE03_backend-six-layer-migration-plan.md",
+            "PHASE04_small-boundary-cleanups.md",
+            "PHASE05_hygiene-verifier-closure.md",
             "README.md",
             "current.md",
             "implementation-roadmap.md",
@@ -193,7 +198,9 @@ def test_active_v2_program_is_slim_and_phase_details_are_archived() -> None:
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
-        "当前 `.agent/programs/` 处于等待状态",
+        "状态：active",
+        "必要目录 + 清晰职责 + 可验证边界",
+        "src/backend",
         "zuno-workflow-doc-system-v1",
         "zuno-target-architecture-refresh-v1",
         "zuno-repo-layout-cleanup-v1",

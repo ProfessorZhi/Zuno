@@ -127,11 +127,11 @@ Canonical near-term Markdown：
 
 ## 执行 Program
 
-当前 `.agent/programs/` 没有 active `PHASE*.md`。近期 program 状态是：
+当前 active program 是 `zuno-repo-layout-cleanup-v1`。近期 program 状态是：
 
 1. `zuno-workflow-doc-system-v1`：已完成并归档。
 2. `zuno-target-architecture-refresh-v1`：已完成并归档。
-3. `zuno-repo-layout-cleanup-v1`：queued，下一候选。
+3. `zuno-repo-layout-cleanup-v1`：active，当前执行 `PHASE01_repo-layout-audit.md`。
 4. `zuno-runtime-architecture-upgrade-v1`：queued。
 5. `zuno-architecture-visuals-v1`：queued。
 

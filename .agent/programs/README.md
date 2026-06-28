@@ -4,17 +4,33 @@
 
 ## 当前状态
 
-当前没有 active program。`zuno-workflow-doc-system-v1` 和 `zuno-target-architecture-refresh-v1` 已完成并归档。
-
-下一个候选 program 是：
+当前 active program：
 
 ```text
 zuno-repo-layout-cleanup-v1
 ```
 
-它仍然是 queued draft，位置是：
+这是短期四目标中的 Program 3：仓库目录和 repo hygiene 收口。
 
-- `.agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/`
+已完成并归档：
+
+- `docs/history/programs/zuno-workflow-doc-system-v1/`
+- `docs/history/programs/zuno-target-architecture-refresh-v1/`
+
+当前 phase 文件已平铺在 `.agent/programs/`：
+
+```text
+PHASE01_repo-layout-audit.md
+PHASE02_root-docs-hygiene.md
+PHASE03_backend-six-layer-migration-plan.md
+PHASE04_small-boundary-cleanups.md
+PHASE05_hygiene-verifier-closure.md
+```
+
+后续 queued programs 仍在：
+
+- `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
+- `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
 
 ## 打开新 Program 的规则
 
@@ -26,6 +42,6 @@ zuno-repo-layout-cleanup-v1
 
 ## 当前入口
 
-- [current.md](current.md)：当前无 active program 的状态面。
-- [implementation-roadmap.md](implementation-roadmap.md)：下一 program 的打开规则和等待状态。
+- [current.md](current.md)：当前 active program 和 phase 状态。
+- [implementation-roadmap.md](implementation-roadmap.md)：Program 3 执行路线图。
 - [closure-checklist.md](closure-checklist.md)：通用收口清单。

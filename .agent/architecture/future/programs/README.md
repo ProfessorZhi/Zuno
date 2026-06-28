@@ -8,12 +8,12 @@
 
 - `zuno-workflow-doc-system-v1` 已完成，归档在 `docs/history/programs/zuno-workflow-doc-system-v1/`。
 - `zuno-target-architecture-refresh-v1` 已完成，归档在 `docs/history/programs/zuno-target-architecture-refresh-v1/`。
+- `zuno-repo-layout-cleanup-v1` 已打开为 active program，当前位置是 `.agent/programs/`。
 
 ## Queued 顺序
 
-1. [zuno-repo-layout-cleanup-v1](zuno-repo-layout-cleanup-v1/implementation-roadmap.md)
-2. [zuno-runtime-architecture-upgrade-v1](zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md)
-3. [zuno-architecture-visuals-v1](zuno-architecture-visuals-v1/implementation-roadmap.md)
+1. [zuno-runtime-architecture-upgrade-v1](zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md)
+2. [zuno-architecture-visuals-v1](zuno-architecture-visuals-v1/implementation-roadmap.md)
 
 ## 使用规则
 

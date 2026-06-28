@@ -20,8 +20,12 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/programs/PHASE01_repo-layout-audit.md",
+    ".agent/programs/PHASE02_root-docs-hygiene.md",
+    ".agent/programs/PHASE03_backend-six-layer-migration-plan.md",
+    ".agent/programs/PHASE04_small-boundary-cleanups.md",
+    ".agent/programs/PHASE05_hygiene-verifier-closure.md",
     ".agent/architecture/future/programs/README.md",
-    ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
     ".agent/architecture/README.md",
@@ -242,12 +246,14 @@ def verify_target_architecture_html() -> list[str]:
 def verify_active_architecture_surface_phase_plan() -> list[str]:
     roadmap_path = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     if not roadmap_path.exists():
-        return ["missing program wait-state implementation roadmap"]
+        return ["missing active Program 3 implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
     errors = [
-        f"program wait-state roadmap missing phrase: {phrase}"
+        f"active Program 3 roadmap missing phrase: {phrase}"
         for phrase in [
-            "当前 `.agent/programs/` 处于等待状态",
+            "状态：active",
+            "必要目录 + 清晰职责 + 可验证边界",
+            "src/backend",
             "zuno-workflow-doc-system-v1",
             "zuno-target-architecture-refresh-v1",
             "zuno-repo-layout-cleanup-v1",
@@ -268,9 +274,16 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_files = sorted((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_files:
+    expected_phase_files = [
+        "PHASE01_repo-layout-audit.md",
+        "PHASE02_root-docs-hygiene.md",
+        "PHASE03_backend-six-layer-migration-plan.md",
+        "PHASE04_small-boundary-cleanups.md",
+        "PHASE05_hygiene-verifier-closure.md",
+    ]
+    if [path.name for path in active_phase_files] != expected_phase_files:
         errors.append(
-            "wait-state .agent/programs must not contain active phase files: "
+            "active Program 3 .agent/programs phase files are not canonical: "
             + ", ".join(path.name for path in active_phase_files)
         )
     for queued_path in sorted((REPO_ROOT / ".agent/architecture/future/programs").glob("*/*.md")):

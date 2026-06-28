@@ -39,8 +39,12 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/programs/PHASE01_repo-layout-audit.md",
+    ".agent/programs/PHASE02_root-docs-hygiene.md",
+    ".agent/programs/PHASE03_backend-six-layer-migration-plan.md",
+    ".agent/programs/PHASE04_small-boundary-cleanups.md",
+    ".agent/programs/PHASE05_hygiene-verifier-closure.md",
     ".agent/architecture/future/programs/README.md",
-    ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
     "docs/history/programs/zuno-workflow-doc-system-v1/README.md",
@@ -448,14 +452,21 @@ def main() -> int:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
+            "PHASE01_repo-layout-audit.md",
+            "PHASE02_root-docs-hygiene.md",
+            "PHASE03_backend-six-layer-migration-plan.md",
+            "PHASE04_small-boundary-cleanups.md",
+            "PHASE05_hygiene-verifier-closure.md",
         ]
     )
     if active_program_files != expected_program_files:
-        errors.append(f"program wait-state files are not canonical set: {active_program_files}")
+        errors.append(f"active Program 3 files are not canonical set: {active_program_files}")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "当前 `.agent/programs/` 处于等待状态",
+        "状态：active",
+        "必要目录 + 清晰职责 + 可验证边界",
+        "src/backend",
         "zuno-workflow-doc-system-v1",
         "zuno-target-architecture-refresh-v1",
         "每次新 program 都从 `PHASE01` 开始编号",

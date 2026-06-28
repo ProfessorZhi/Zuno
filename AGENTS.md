@@ -121,7 +121,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1 和 Program 2 已完成；当前等待打开 Program 3。
+当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1 和 Program 2 已完成；当前 active program 是 Program 3：`zuno-repo-layout-cleanup-v1`。
 
 最新完成程序归档在：
 
@@ -134,13 +134,17 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/current.md`
+- `.agent/programs/PHASE01_repo-layout-audit.md`
+- `.agent/programs/PHASE02_root-docs-hygiene.md`
+- `.agent/programs/PHASE03_backend-six-layer-migration-plan.md`
+- `.agent/programs/PHASE04_small-boundary-cleanups.md`
+- `.agent/programs/PHASE05_hygiene-verifier-closure.md`
 - `.agent/programs/closure-checklist.md`
 
-当前没有 active `PHASE*.md`。打开新 program 时，先从 queued draft 迁入 `.agent/programs/`，并从 `PHASE01` 开始。
+当前 active phase 是 `PHASE01_repo-layout-audit.md`。它适合按 root/docs、backend layout、tools/tests/generated artifacts 三个线程并行审计。
 
 后续 queued programs：
 
-- `.agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/`
 - `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
 - `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
 

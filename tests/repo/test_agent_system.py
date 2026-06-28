@@ -26,8 +26,12 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/programs/README.md",
         ".agent/programs/implementation-roadmap.md",
         ".agent/programs/closure-checklist.md",
+        ".agent/programs/PHASE01_repo-layout-audit.md",
+        ".agent/programs/PHASE02_root-docs-hygiene.md",
+        ".agent/programs/PHASE03_backend-six-layer-migration-plan.md",
+        ".agent/programs/PHASE04_small-boundary-cleanups.md",
+        ".agent/programs/PHASE05_hygiene-verifier-closure.md",
         ".agent/architecture/future/programs/README.md",
-        ".agent/architecture/future/programs/zuno-repo-layout-cleanup-v1/implementation-roadmap.md",
         ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
         ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
         "docs/history/programs/zuno-workflow-doc-system-v1/README.md",
@@ -301,7 +305,7 @@ def test_agent_templates_keep_execution_skeleton_boundary() -> None:
         assert phrase in content, f"missing template boundary phrase: {phrase}"
 
 
-def test_current_program_points_to_architecture_surface_and_archives_old_candidate() -> None:
+def test_current_program_points_to_active_repo_layout_program_and_archives_old_candidate() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -310,10 +314,11 @@ def test_current_program_points_to_architecture_surface_and_archives_old_candida
         encoding="utf-8"
     )
 
-    assert "当前没有 active program" in current
+    assert "当前 active program" in current
     assert "zuno-workflow-doc-system-v1" in current
     assert "zuno-target-architecture-refresh-v1" in current
     assert "zuno-repo-layout-cleanup-v1" in current
+    assert "PHASE01_repo-layout-audit.md" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
     assert "context-memory-agent-runtime-v1" not in programs_index
@@ -394,7 +399,7 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
 
 
-def test_program_wait_state_archives_completed_programs_and_keeps_next_queue() -> None:
+def test_program3_active_state_archives_completed_programs_and_keeps_next_queue() -> None:
     roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
         encoding="utf-8"
     )
@@ -414,10 +419,14 @@ def test_program_wait_state_archives_completed_programs_and_keeps_next_queue() -
         / "zuno-target-architecture-refresh-v1"
         / "README.md"
     ).read_text(encoding="utf-8")
-    active_phase_files = list((REPO_ROOT / ".agent" / "programs").glob("PHASE*.md"))
+    active_phase_files = sorted(
+        path.name for path in (REPO_ROOT / ".agent" / "programs").glob("PHASE*.md")
+    )
 
     for phrase in [
-        "当前 `.agent/programs/` 处于等待状态",
+        "状态：active",
+        "必要目录 + 清晰职责 + 可验证边界",
+        "src/backend",
         "zuno-workflow-doc-system-v1",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-target-architecture-refresh-v1",
@@ -425,7 +434,13 @@ def test_program_wait_state_archives_completed_programs_and_keeps_next_queue() -
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == []
+    assert active_phase_files == [
+        "PHASE01_repo-layout-audit.md",
+        "PHASE02_root-docs-hygiene.md",
+        "PHASE03_backend-six-layer-migration-plan.md",
+        "PHASE04_small-boundary-cleanups.md",
+        "PHASE05_hygiene-verifier-closure.md",
+    ]
     assert "本地 skill system" in phase03
     assert "skill / lesson / playbook" in phase03
     assert "queued program" in phase03
@@ -438,6 +453,9 @@ def test_queued_program_files_are_marked_not_active() -> None:
     assert queued_files
     assert not (
         REPO_ROOT / ".agent" / "architecture" / "future" / "programs" / "zuno-target-architecture-refresh-v1"
+    ).exists()
+    assert not (
+        REPO_ROOT / ".agent" / "architecture" / "future" / "programs" / "zuno-repo-layout-cleanup-v1"
     ).exists()
     for path in queued_files:
         content = path.read_text(encoding="utf-8")

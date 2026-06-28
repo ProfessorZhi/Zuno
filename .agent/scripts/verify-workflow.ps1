@@ -33,6 +33,11 @@ Require-Path ".agent\system.yaml"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
+Require-Path ".agent\programs\PHASE01_repo-layout-audit.md"
+Require-Path ".agent\programs\PHASE02_root-docs-hygiene.md"
+Require-Path ".agent\programs\PHASE03_backend-six-layer-migration-plan.md"
+Require-Path ".agent\programs\PHASE04_small-boundary-cleanups.md"
+Require-Path ".agent\programs\PHASE05_hygiene-verifier-closure.md"
 Require-Path ".agent\architecture\future\programs\README.md"
 Require-NoPath ".agent\programs\PHASE01_workflow-doc-audit.md"
 Require-NoPath ".agent\programs\PHASE02_agent-bootloader-routing.md"
@@ -40,6 +45,7 @@ Require-NoPath ".agent\programs\PHASE03_skill-template-program-system.md"
 Require-NoPath ".agent\programs\PHASE04_workflow-verifiers-drift-tests.md"
 Require-NoPath ".agent\programs\PHASE05_closure-history-archive.md"
 Require-NoPath ".agent\architecture\future\programs\zuno-target-architecture-refresh-v1"
+Require-NoPath ".agent\architecture\future\programs\zuno-repo-layout-cleanup-v1"
 Require-NoPath ".agent\programs\zuno-target-runtime-v2"
 Require-NoPath ".agent\programs\phase-05-memory-engine.md"
 Require-NoPath ".agent\programs\phase-06-capability-tool-retrieval.md"
@@ -90,11 +96,14 @@ $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md
 if ($currentProgram -notmatch "\.agent/programs/") {
     $failures.Add("current-program.md does not point to the flat active program directory")
 }
-if ($currentProgram -notmatch "当前没有 active program") {
-    $failures.Add("current-program.md must declare there is no active program")
+if ($currentProgram -notmatch "当前 active program") {
+    $failures.Add("current-program.md must declare the active program")
 }
 if ($currentProgram -notmatch "zuno-repo-layout-cleanup-v1") {
-    $failures.Add("current-program.md missing next queued repo layout cleanup program id")
+    $failures.Add("current-program.md missing active repo layout cleanup program id")
+}
+if ($currentProgram -notmatch "PHASE01_repo-layout-audit.md") {
+    $failures.Add("current-program.md missing active Program 3 phase")
 }
 if ($currentProgram -notmatch "zuno-workflow-doc-system-v1" -or $currentProgram -notmatch "zuno-target-architecture-refresh-v1") {
     $failures.Add("current-program.md missing archived Program 1/2 ids")
