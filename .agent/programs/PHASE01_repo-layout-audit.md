@@ -15,9 +15,9 @@
 
 ## 可并行线程
 
-- root/docs audit：`THREAD_A_root-docs-agent-hygiene-prompt.md`
-- backend layout audit：`THREAD_B_backend-six-layer-audit-prompt.md`
-- tools/tests/generated artifacts audit：`THREAD_C_tools-tests-generated-artifacts-prompt.md`
+- root/docs audit：`thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md`
+- backend layout audit：`thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md`
+- tools/tests/generated artifacts audit：`thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md`
 
 ## 验收
 

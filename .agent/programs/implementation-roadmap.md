@@ -46,9 +46,11 @@ infra/      Docker、DB、部署基础设施
 
 ## PHASE01 多线程提示词
 
-- [Thread A：Root / Docs / Agent Hygiene](THREAD_A_root-docs-agent-hygiene-prompt.md)
-- [Thread B：Backend / src Six-Layer Audit](THREAD_B_backend-six-layer-audit-prompt.md)
-- [Thread C：Tools / Tests / Generated Artifacts](THREAD_C_tools-tests-generated-artifacts-prompt.md)
+- [Thread A：Root / Docs / Agent Hygiene](thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md)
+- [Thread B：Backend / src Six-Layer Audit](thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md)
+- [Thread C：Tools / Tests / Generated Artifacts](thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md)
+
+`thread-prompts/` 只保存当前 program / 当前 phase 的可复制提示词。下一轮提示词更新时默认替换或清理旧提示词；只有用户明确要求归档时才归档。
 
 ## 禁止范围
 

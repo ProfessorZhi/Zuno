@@ -31,9 +31,9 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/programs/PHASE03_backend-six-layer-migration-plan.md",
         ".agent/programs/PHASE04_small-boundary-cleanups.md",
         ".agent/programs/PHASE05_hygiene-verifier-closure.md",
-        ".agent/programs/THREAD_A_root-docs-agent-hygiene-prompt.md",
-        ".agent/programs/THREAD_B_backend-six-layer-audit-prompt.md",
-        ".agent/programs/THREAD_C_tools-tests-generated-artifacts-prompt.md",
+        ".agent/programs/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
+        ".agent/programs/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
+        ".agent/programs/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
         ".agent/architecture/future/programs/README.md",
         ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
         ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -449,7 +449,7 @@ def test_program3_active_state_archives_completed_programs_and_keeps_next_queue(
         "THREAD_B_backend-six-layer-audit-prompt.md",
         "THREAD_C_tools-tests-generated-artifacts-prompt.md",
     ]:
-        assert (REPO_ROOT / ".agent" / "programs" / prompt).exists()
+        assert (REPO_ROOT / ".agent" / "programs" / "thread-prompts" / prompt).exists()
     assert "本地 skill system" in phase03
     assert "skill / lesson / playbook" in phase03
     assert "queued program" in phase03

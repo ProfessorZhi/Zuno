@@ -44,9 +44,9 @@ REQUIRED_PATHS = [
     ".agent/programs/PHASE03_backend-six-layer-migration-plan.md",
     ".agent/programs/PHASE04_small-boundary-cleanups.md",
     ".agent/programs/PHASE05_hygiene-verifier-closure.md",
-    ".agent/programs/THREAD_A_root-docs-agent-hygiene-prompt.md",
-    ".agent/programs/THREAD_B_backend-six-layer-audit-prompt.md",
-    ".agent/programs/THREAD_C_tools-tests-generated-artifacts-prompt.md",
+    ".agent/programs/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
+    ".agent/programs/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
+    ".agent/programs/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -123,8 +123,12 @@ def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
         return ["missing .agent/programs"]
 
     directories = sorted(path.name for path in programs_root.iterdir() if path.is_dir())
-    if directories:
-        errors.append(f".agent/programs must be flat; found directories: {directories}")
+    allowed_directories = ["thread-prompts"]
+    unexpected_directories = [name for name in directories if name not in allowed_directories]
+    if unexpected_directories:
+        errors.append(
+            f".agent/programs only allows thread-prompts as a helper directory; found: {unexpected_directories}"
+        )
 
     phase_files = sorted(
         path.name for path in programs_root.iterdir() if path.is_file() and path.name.startswith("PHASE")
@@ -460,9 +464,6 @@ def main() -> int:
             "PHASE03_backend-six-layer-migration-plan.md",
             "PHASE04_small-boundary-cleanups.md",
             "PHASE05_hygiene-verifier-closure.md",
-            "THREAD_A_root-docs-agent-hygiene-prompt.md",
-            "THREAD_B_backend-six-layer-audit-prompt.md",
-            "THREAD_C_tools-tests-generated-artifacts-prompt.md",
         ]
     )
     if active_program_files != expected_program_files:
@@ -473,9 +474,10 @@ def main() -> int:
         "状态：active",
         "必要目录 + 清晰职责 + 可验证边界",
         "src/backend",
-        "THREAD_A_root-docs-agent-hygiene-prompt.md",
-        "THREAD_B_backend-six-layer-audit-prompt.md",
-        "THREAD_C_tools-tests-generated-artifacts-prompt.md",
+        "thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
+        "thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
+        "thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
+        "下一轮提示词更新时默认替换或清理旧提示词",
         "zuno-workflow-doc-system-v1",
         "zuno-target-architecture-refresh-v1",
         "每次新 program 都从 `PHASE01` 开始编号",

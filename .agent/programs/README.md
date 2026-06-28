@@ -27,13 +27,16 @@ PHASE04_small-boundary-cleanups.md
 PHASE05_hygiene-verifier-closure.md
 ```
 
-PHASE01 多线程提示词也平铺在 `.agent/programs/`，方便复制到对应 Codex 线程：
+PHASE01 多线程提示词放在 `.agent/programs/thread-prompts/`，方便复制到对应 Codex 线程：
 
 ```text
-THREAD_A_root-docs-agent-hygiene-prompt.md
-THREAD_B_backend-six-layer-audit-prompt.md
-THREAD_C_tools-tests-generated-artifacts-prompt.md
+thread-prompts/
+  THREAD_A_root-docs-agent-hygiene-prompt.md
+  THREAD_B_backend-six-layer-audit-prompt.md
+  THREAD_C_tools-tests-generated-artifacts-prompt.md
 ```
+
+`thread-prompts/` 只保存当前 program / 当前 phase 的可复制提示词。下一轮提示词更新时默认替换或清理旧提示词；只有用户明确要求归档时才归档。
 
 后续 queued programs 仍在：
 

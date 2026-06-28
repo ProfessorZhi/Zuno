@@ -20,9 +20,11 @@ zuno-repo-layout-cleanup-v1
 
 ## PHASE01 子线程提示词
 
-- `THREAD_A_root-docs-agent-hygiene-prompt.md`
-- `THREAD_B_backend-six-layer-audit-prompt.md`
-- `THREAD_C_tools-tests-generated-artifacts-prompt.md`
+- `thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md`
+- `thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md`
+- `thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md`
+
+`thread-prompts/` 只保存当前 program / 当前 phase 的可复制提示词。下一轮提示词更新时默认替换或清理旧提示词；只有用户明确要求归档时才归档。
 
 ## 已清理的历史 Program
 
