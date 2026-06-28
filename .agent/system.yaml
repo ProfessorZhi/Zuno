@@ -38,6 +38,10 @@ work_modes:
     user_manual_goal_thread_creation: true
     child_threads_are_reusable_slots: true
     require_fresh_or_confirmed_worktree_branch_per_task: true
+    prefer_reuse_existing_thread_slots: true
+    create_new_threads_when_no_reusable_slot: true
+    rename_thread_after_assignment: true
+    child_prompt_must_default_multi_agent: true
     coarse_grained_child_tasks: true
     child_threads_allow_multi_agent: true
     require_disjoint_write_scope: true
