@@ -1,5 +1,5 @@
 # PHASE05：Repo Hygiene Verifier Closure
-> 状态：pending。等待 PHASE01-04 收口后执行。
+> 状态：completed in branch `codex/program3-phase05-hygiene-verifier-closure`。等待主线程集成审查。
 
 ## 目标
 
@@ -30,5 +30,17 @@ Thread C 的 guardrail 缺口：
 git diff --check
 python .agent/scripts/verify_repo_hygiene.py
 python tools/scripts/verify_repo_structure.py
+python .agent/scripts/verify_agent_system.py
 pytest -q tests/repo/test_repo_hygiene.py tests/repo/test_repo_structure_consistency.py -p no:cacheprovider
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 ```
+
+## 完成证据
+
+本线程把 PHASE01 Thread C 的 guardrail 缺口机器化：
+
+- `.gitignore` 已明确覆盖 `.test-tmp/`、`.pytest_cache/`、`tmp/`、`output/`、`apps/desktop/node_modules/`、`apps/web/node_modules/`、`apps/web/dist/`、`data/evals/multihop/*` 生成数据和 `reports/evals/multihop/*` runtime 报告。
+- `.agent/scripts/verify_repo_hygiene.py` 现在公开并执行 `REQUIRED_IGNORES`、`FORBIDDEN_TRACKED_PREFIXES`、`FORBIDDEN_TRACKED_PATTERNS` 和 `TRACKED_DATA_REPORTS_ALLOWLIST`，禁止 generated/cache/local path 被 tracked，并禁止粗暴忽略整个 `data/` 或 `reports/`。
+- `tools/scripts/verify_repo_structure.py` 现在公开并执行 `TOP_LEVEL_RESPONSIBILITY_DIRECTORIES`、`ALLOWED_RESPONSIBILITY_SUBDIRS` 和 `ALLOWED_RESPONSIBILITY_FILES`，固定 `tools/`、`tests/`、`examples/`、`infra/` 的一等职责和允许子目录。
+- `tests/repo/test_repo_hygiene.py` 增加生成物/cache required ignore、forbidden tracked prefix/pattern、`data/` / `reports/` 白名单语义断言。
+- `tests/repo/test_repo_structure_consistency.py` 增加目录职责常量、实际子目录允许集和 `run_verification()` 接线防绕过断言。

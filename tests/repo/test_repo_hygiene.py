@@ -1,8 +1,21 @@
 import json
+import importlib.util
+import sys
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _load_repo_hygiene_verifier():
+    module_path = REPO_ROOT / ".agent/scripts/verify_repo_hygiene.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_hygiene", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+    return verifier
 
 
 def test_ignore_files_match_current_structure() -> None:
@@ -24,6 +37,59 @@ def test_ignore_files_match_current_structure() -> None:
     assert "apps/web/node_modules" in dockerignore
     assert "apps/web/dist" in dockerignore
     assert "src/frontend" not in dockerignore
+
+
+def test_generated_cache_paths_are_ignored_and_forbidden_from_tracked_files() -> None:
+    gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    verifier = _load_repo_hygiene_verifier()
+
+    required_generated_ignores = [
+        ".test-tmp/",
+        ".pytest_cache/",
+        "tmp/",
+        "output/",
+        "apps/desktop/node_modules/",
+    ]
+    for entry in required_generated_ignores:
+        assert entry in gitignore
+        assert entry in verifier.REQUIRED_IGNORES
+        assert entry in verifier.FORBIDDEN_TRACKED_PREFIXES
+
+
+def test_data_and_reports_use_whitelist_semantics_for_generated_outputs() -> None:
+    gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    verifier = _load_repo_hygiene_verifier()
+
+    assert "\ndata/\n" not in f"\n{gitignore}\n"
+    assert "\nreports/\n" not in f"\n{gitignore}\n"
+    assert "data/" not in verifier.FORBIDDEN_TRACKED_PREFIXES
+    assert "reports/" not in verifier.FORBIDDEN_TRACKED_PREFIXES
+    assert verifier.TRACKED_DATA_REPORTS_ALLOWLIST == [
+        "data/evals/multihop/README.md",
+        "reports/README.md",
+    ]
+
+    for generated_prefix in [
+        "data/evals/multihop/raw/",
+        "data/evals/multihop/normalized/",
+        "data/evals/multihop/corpus/",
+        "data/evals/multihop/ingested/",
+        "reports/evals/multihop/real_runtime/",
+    ]:
+        assert generated_prefix in gitignore
+        assert generated_prefix in verifier.REQUIRED_IGNORES
+        assert generated_prefix in verifier.FORBIDDEN_TRACKED_PREFIXES
+
+    for generated_pattern in [
+        "data/evals/multihop/**/*.zip",
+        "data/evals/multihop/**/*.json",
+        "data/evals/multihop/**/*.jsonl",
+        "reports/evals/multihop/stackless_ingestion_smoke.json",
+        "reports/evals/multihop/stackless_ingestion_smoke_*.json",
+    ]:
+        assert generated_pattern in gitignore
+        assert generated_pattern in verifier.REQUIRED_IGNORES
+        assert generated_pattern in verifier.FORBIDDEN_TRACKED_PATTERNS
 
 
 def test_package_license_matches_root_license() -> None:

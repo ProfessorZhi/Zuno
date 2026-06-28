@@ -3,6 +3,7 @@ from __future__ import annotations
 import runpy
 import shlex
 import subprocess
+from fnmatch import fnmatch
 from pathlib import Path
 
 
@@ -12,11 +13,62 @@ REQUIRED_IGNORES = [
     ".local/",
     ".codex/",
     "node_modules/",
+    "apps/desktop/node_modules/",
     "apps/web/node_modules/",
     "apps/web/dist/",
+    ".pytest_cache/",
+    ".test-tmp/",
+    "tmp/",
+    "output/",
     "data/evals/multihop/raw/",
+    "data/evals/multihop/normalized/",
+    "data/evals/multihop/corpus/",
+    "data/evals/multihop/ingested/",
+    "data/evals/multihop/**/*.zip",
+    "data/evals/multihop/**/*.json",
+    "data/evals/multihop/**/*.jsonl",
+    "reports/evals/multihop/stackless_ingestion_smoke.json",
+    "reports/evals/multihop/stackless_ingestion_smoke_*.json",
     "reports/evals/multihop/real_runtime/",
     ".agent/local/*",
+]
+
+FORBIDDEN_BROAD_IGNORE_LINES = [
+    "data/",
+    "/data/",
+    "reports/",
+    "/reports/",
+]
+
+FORBIDDEN_TRACKED_PREFIXES = [
+    "node_modules/",
+    "apps/desktop/node_modules/",
+    "apps/web/node_modules/",
+    "apps/web/dist/",
+    ".local/",
+    ".codex/",
+    ".pytest_cache/",
+    ".test-tmp/",
+    "tmp/",
+    "output/",
+    "data/evals/multihop/raw/",
+    "data/evals/multihop/normalized/",
+    "data/evals/multihop/corpus/",
+    "data/evals/multihop/ingested/",
+    "reports/evals/multihop/real_runtime/",
+]
+
+FORBIDDEN_TRACKED_PATTERNS = [
+    "data/evals/multihop/**/*.zip",
+    "data/evals/multihop/**/*.json",
+    "data/evals/multihop/**/*.jsonl",
+    "reports/evals/multihop/stackless_ingestion_smoke.json",
+    "reports/evals/multihop/stackless_ingestion_smoke_*.json",
+]
+
+TRACKED_DATA_REPORTS_ALLOWLIST = [
+    "data/evals/multihop/README.md",
+    "reports/README.md",
 ]
 
 FORBIDDEN_IGNORE_LINES = [
@@ -136,6 +188,14 @@ def main() -> int:
     for entry in REQUIRED_IGNORES:
         if entry not in gitignore:
             errors.append(f".gitignore missing required ignore: {entry}")
+
+    gitignore_lines = {line.strip() for line in gitignore.splitlines() if line.strip()}
+    for line in FORBIDDEN_BROAD_IGNORE_LINES:
+        if line in gitignore_lines:
+            errors.append(
+                "data/ and reports/ must use whitelist semantics, not broad ignore lines: "
+                f"{line}"
+            )
 
     for line in FORBIDDEN_IGNORE_LINES:
         if line in gitignore or line in dockerignore:
@@ -442,21 +502,21 @@ def main() -> int:
             errors.append(f"retired current path exists: {path}")
 
     tracked = set(_tracked_files())
-    forbidden_tracked_prefixes = [
-        "node_modules/",
-        "apps/web/node_modules/",
-        "apps/web/dist/",
-        ".local/",
-        ".codex/",
-        "data/evals/multihop/raw/",
-        "reports/evals/multihop/real_runtime/",
-    ]
     for tracked_path in tracked:
         normalized = tracked_path.replace("\\", "/")
-        for prefix in forbidden_tracked_prefixes:
+        for prefix in FORBIDDEN_TRACKED_PREFIXES:
             if normalized.startswith(prefix):
                 errors.append(f"generated/local path is tracked: {normalized}")
                 break
+        for pattern in FORBIDDEN_TRACKED_PATTERNS:
+            if fnmatch(normalized, pattern):
+                errors.append(f"generated/local file is tracked: {normalized}")
+                break
+        if normalized.startswith(("data/", "reports/")) and normalized not in TRACKED_DATA_REPORTS_ALLOWLIST:
+            errors.append(
+                "data/ and reports/ tracked files must be explicit metadata allowlist entries: "
+                f"{normalized}"
+            )
 
     if errors:
         for error in errors:

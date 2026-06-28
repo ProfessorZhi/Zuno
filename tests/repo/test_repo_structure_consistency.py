@@ -78,6 +78,107 @@ def test_repo_structure_verifier_pins_current_front_path() -> None:
         assert relative_path in required_paths
 
 
+def test_repo_structure_verifier_pins_first_class_directory_responsibilities() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.TOP_LEVEL_RESPONSIBILITY_DIRECTORIES == {
+        "tools": "维护脚本、验证器、eval、launcher、migration 和架构渲染工具",
+        "tests": "自动化测试源和仓库边界 guardrails",
+        "examples": "可运行示例和示例输入，不存放运行输出",
+        "infra": "数据库、Docker 和本地基础设施配置，不存放运行态 volume/cache",
+    }
+    assert verifier.ALLOWED_RESPONSIBILITY_SUBDIRS == {
+        "tools": ["agent", "cli", "evals", "launchers", "migrations", "scripts"],
+        "tests": [
+            "agent",
+            "agent_system",
+            "api",
+            "evals",
+            "frontend",
+            "graphrag",
+            "legacy_guards",
+            "repo",
+            "retrieval",
+            "storage",
+            "tools",
+        ],
+        "examples": ["graphrag-projects"],
+        "infra": ["db", "docker"],
+    }
+
+
+def test_first_class_directory_subdirs_match_allowed_responsibilities() -> None:
+    allowed_subdirs = {
+        "tools": {"agent", "cli", "evals", "launchers", "migrations", "scripts"},
+        "tests": {
+            "agent",
+            "agent_system",
+            "api",
+            "evals",
+            "frontend",
+            "graphrag",
+            "legacy_guards",
+            "repo",
+            "retrieval",
+            "storage",
+            "tools",
+        },
+        "examples": {"graphrag-projects"},
+        "infra": {"db", "docker"},
+    }
+    allowed_files = {
+        "tools": {"__init__.py"},
+        "tests": {"README.md", "conftest.py"},
+        "examples": set(),
+        "infra": set(),
+    }
+
+    for directory, expected_subdirs in allowed_subdirs.items():
+        actual_subdirs = {
+            path.name
+            for path in (REPO_ROOT / directory).iterdir()
+            if path.is_dir() and not path.name.startswith("__pycache__")
+        }
+        actual_files = {
+            path.name
+            for path in (REPO_ROOT / directory).iterdir()
+            if path.is_file()
+        }
+        assert actual_subdirs == expected_subdirs
+        assert actual_files == allowed_files[directory]
+
+
+def test_repo_structure_verifier_runs_first_class_directory_responsibility_check(monkeypatch) -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    sentinel = "first-class responsibility check was called"
+
+    def fake_responsibility_check() -> list[str]:
+        return [sentinel]
+
+    monkeypatch.setattr(
+        verifier,
+        "verify_first_class_directory_responsibilities",
+        fake_responsibility_check,
+    )
+
+    result = verifier.run_verification()
+
+    assert sentinel in result.errors
+
+
 def test_retired_front_path_directories_are_not_current_paths() -> None:
     retired_paths = [
         "docs/architecture/history",
