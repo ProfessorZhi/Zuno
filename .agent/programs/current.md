@@ -2,8 +2,8 @@
 
 Program: `zuno-eight-deliverables-full-realization-v1`
 state: active
-current_phase: `PHASE01_program-boot-baseline.md`
-execution_mode: 主线程目标模式 + 默认开启线程内多 agent 协作；不是多线程模式
+current_phase: `PHASE03_architecture-docs-html-system.md`
+execution_mode: 主线程目标模式 + 默认开启线程内多 agent 协作；这是 Codex 执行协作，不是 Zuno runtime 架构；不是多线程模式
 
 ## 目标
 

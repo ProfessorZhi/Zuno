@@ -42,6 +42,7 @@ def test_required_current_paths_exist() -> None:
         ".agent/templates/architecture-doc-template.md",
         ".agent/templates/mermaid-diagram-template.md",
         ".agent/templates/architecture-change-note-template.md",
+        ".agent/templates/verification-report-template.md",
         ".agent/templates/workflow-change-note-template.md",
         ".agent/programs/current.md",
         ".agent/architecture/near-term/00-architecture-index.md",

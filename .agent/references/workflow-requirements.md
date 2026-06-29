@@ -45,7 +45,7 @@ Status: Current
 
 Requirement: 如果新工作流规则影响未来生成内容，必须同步更新 `.agent/templates`。
 
-Affected files: `.agent/templates/architecture-doc-template.md`、`.agent/templates/mermaid-diagram-template.md`、`.agent/templates/architecture-change-note-template.md`、`.agent/templates/workflow-change-note-template.md`。
+Affected files: `.agent/templates/architecture-doc-template.md`、`.agent/templates/mermaid-diagram-template.md`、`.agent/templates/architecture-change-note-template.md`、`.agent/templates/verification-report-template.md`、`.agent/templates/workflow-change-note-template.md`。
 
 ### WR-005: Final product definition uses five systems and eight deliverables
 
