@@ -144,7 +144,7 @@ def test_repo_hygiene_verifier_preserves_full_contract_review_history() -> None:
 
 def test_multi_agent_supervisor_source_stays_retired_from_current_backend() -> None:
     assert not (
-        REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py"
+        REPO_ROOT / "src/backend/zuno/agent/core/graphs/multi_agent_supervisor_graph.py"
     ).exists(), "MultiAgentSupervisorGraph should not remain as current backend source"
 
     verifier = (
@@ -155,10 +155,10 @@ def test_multi_agent_supervisor_source_stays_retired_from_current_backend() -> N
 
 def test_domain_qa_graph_source_stays_retired_from_current_backend() -> None:
     assert not (
-        REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py"
+        REPO_ROOT / "src/backend/zuno/agent/core/graphs/domain_qa_graph.py"
     ).exists(), "DomainQAGraph should not remain as current backend source"
     assert not (
-        REPO_ROOT / "src/backend/zuno/core/graphs/states.py"
+        REPO_ROOT / "src/backend/zuno/agent/core/graphs/states.py"
     ).exists(), "legacy graph states should not remain without current graph source"
 
     verifier = (
@@ -198,7 +198,7 @@ def test_domain_pack_api_wrapper_files_stay_retired() -> None:
 
 def test_domain_pack_runtime_service_stays_retired_from_current_backend() -> None:
     assert not (
-        REPO_ROOT / "src/backend/zuno/services/domain_pack"
+        REPO_ROOT / "src/backend/zuno/platform/services/domain_pack"
     ).exists(), "Domain Pack runtime service should not remain as current backend source"
 
     verifier = (
@@ -222,7 +222,7 @@ def test_knowledge_service_stays_off_domain_pack_loader_runtime_defaults() -> No
 
 def test_graph_retriever_stays_off_domain_pack_loader_policy_defaults() -> None:
     graph_retriever = (
-        REPO_ROOT / "src/backend/zuno/services/graphrag/retriever.py"
+        REPO_ROOT / "src/backend/zuno/platform/services/graphrag/retriever.py"
     ).read_text(encoding="utf-8")
     assert "from zuno.services.domain_pack.loader import DomainPackLoader" not in graph_retriever
     assert "DomainPackLoader().load" not in graph_retriever
@@ -273,17 +273,17 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
     ).read_text(encoding="utf-8")
     structured_extractor = (
         REPO_ROOT
-        / "src/backend/zuno/services/graphrag/extractors/structured_extractor.py"
+        / "src/backend/zuno/platform/services/graphrag/extractors/structured_extractor.py"
     ).read_text(encoding="utf-8")
     cached_extractor = (
         REPO_ROOT
-        / "src/backend/zuno/services/graphrag/extractors/cached_extractor.py"
+        / "src/backend/zuno/platform/services/graphrag/extractors/cached_extractor.py"
     ).read_text(encoding="utf-8")
     project_loader = (
-        REPO_ROOT / "src/backend/zuno/services/graphrag/project/loader.py"
+        REPO_ROOT / "src/backend/zuno/platform/services/graphrag/project/loader.py"
     ).read_text(encoding="utf-8")
     pipeline_manager = (
-        REPO_ROOT / "src/backend/zuno/services/pipeline/manager.py"
+        REPO_ROOT / "src/backend/zuno/platform/services/pipeline/manager.py"
     ).read_text(encoding="utf-8")
     knowledge_service = (
         REPO_ROOT / "src/backend/zuno/api/services/knowledge.py"
@@ -295,7 +295,7 @@ def test_graph_project_payload_is_primary_in_eval_and_graph_extractor_paths() ->
         REPO_ROOT / "tests/graphrag/test_structured_graph_extractor_contract.py"
     ).read_text(encoding="utf-8")
     graph_retrievers = (
-        REPO_ROOT / "src/backend/zuno/services/retrieval/retrievers.py"
+        REPO_ROOT / "src/backend/zuno/platform/services/retrieval/retrievers.py"
     ).read_text(encoding="utf-8")
 
     assert "project_payload=project_payload" in contract_eval
@@ -405,11 +405,11 @@ def test_active_public_release_tools_do_not_stage_retired_runtime_sources() -> N
     retired_runtime_sources = [
         "src/backend/zuno/api/v1/domain_packs.py",
         "src/backend/zuno/api/services/domain_pack.py",
-        "src/backend/zuno/core/graphs/domain_qa_graph.py",
-        "src/backend/zuno/core/graphs/states.py",
-        "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py",
-        "src/backend/zuno/core/runtime/agent_runtime.py",
-        "src/backend/zuno/services/domain_pack/",
+        "src/backend/zuno/agent/core/graphs/domain_qa_graph.py",
+        "src/backend/zuno/agent/core/graphs/states.py",
+        "src/backend/zuno/agent/core/graphs/multi_agent_supervisor_graph.py",
+        "src/backend/zuno/agent/core/runtime/agent_runtime.py",
+        "src/backend/zuno/platform/services/domain_pack/",
     ]
     active_public_release_tools = [
         "tools/scripts/preview_public_release_group.py",
@@ -444,7 +444,7 @@ def test_active_architecture_audits_do_not_list_retired_frontend_files_as_curren
 
 def test_workspace_knowledge_path_stays_off_legacy_agent_runtime() -> None:
     workspace_agent = (
-        REPO_ROOT / "src/backend/zuno/services/workspace/simple_agent.py"
+        REPO_ROOT / "src/backend/zuno/platform/services/workspace/simple_agent.py"
     ).read_text(encoding="utf-8")
     assert "from zuno.core.runtime.agent_runtime import AgentRuntime" not in workspace_agent
     assert "domain_qa_runtime" not in workspace_agent
@@ -458,13 +458,13 @@ def test_workspace_knowledge_path_stays_off_legacy_agent_runtime() -> None:
 
 
 def test_agent_runtime_facade_stays_retired() -> None:
-    assert not (REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py").exists()
+    assert not (REPO_ROOT / "src/backend/zuno/agent/core/runtime/agent_runtime.py").exists()
 
-    core_init = (REPO_ROOT / "src/backend/zuno/core/__init__.py").read_text(
+    core_init = (REPO_ROOT / "src/backend/zuno/agent/core/__init__.py").read_text(
         encoding="utf-8"
     )
     runtime_init = (
-        REPO_ROOT / "src/backend/zuno/core/runtime/__init__.py"
+        REPO_ROOT / "src/backend/zuno/agent/core/runtime/__init__.py"
     ).read_text(encoding="utf-8")
     assert '"AgentRuntime"' not in core_init
     assert "AgentRuntime" not in runtime_init
@@ -476,11 +476,11 @@ def test_agent_runtime_facade_stays_retired() -> None:
 
 
 def test_legacy_graphs_are_not_current_public_package_exports() -> None:
-    core_init = (REPO_ROOT / "src/backend/zuno/core/__init__.py").read_text(
+    core_init = (REPO_ROOT / "src/backend/zuno/agent/core/__init__.py").read_text(
         encoding="utf-8"
     )
     graphs_init = (
-        REPO_ROOT / "src/backend/zuno/core/graphs/__init__.py"
+        REPO_ROOT / "src/backend/zuno/agent/core/graphs/__init__.py"
     ).read_text(encoding="utf-8")
 
     for legacy_name in ["DomainQAGraph", "MultiAgentSupervisorGraph"]:

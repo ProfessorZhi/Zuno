@@ -65,12 +65,13 @@ def test_send_email_manifest_declares_cli_tool():
     manifest_path = (
         Path(__file__).resolve().parents[2]
         / "src"
-        / "backend"
-        / "zuno"
-        / "tools"
-        / "send_email"
-        / "manifest.yaml"
-    )
+            / "backend"
+            / "zuno"
+            / "capability"
+            / "tools"
+            / "send_email"
+            / "manifest.yaml"
+        )
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
 
     assert manifest["type"] == "cli"

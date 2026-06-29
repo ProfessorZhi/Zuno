@@ -75,7 +75,7 @@ def test_zuno_services_storage_import_prefers_package_contract():
     module_path = Path(module.__file__).as_posix()
 
     assert module.storage_client is not None
-    assert module_path.endswith("/zuno/services/storage/__init__.py")
+    assert module_path.endswith("/zuno/platform/services/storage/__init__.py")
 
 
 def test_zuno_api_alias_module_matrix_imports():
@@ -170,7 +170,7 @@ def test_zuno_service_imports_resolve_from_backend_runtime_surface():
         module = importlib.import_module(module_name)
         module_path = Path(module.__file__).as_posix()
         assert (
-            "/src/backend/zuno/services/" in module_path
+            "/src/backend/zuno/platform/services/" in module_path
             or module_path.endswith("/src/backend/zuno/middleware.py")
             or "/src/backend/zuno/platform/middleware/" in module_path
             or "/src/backend/zuno/capability/mcp/servers/" in module_path
@@ -267,9 +267,18 @@ def test_zuno_mcp_alias_module_imports():
 
 def test_zuno_visual_compatibility_aliases_are_module_files():
     modules = {
+        "zuno.compatibility": "/src/backend/zuno/compatibility.py",
+        "zuno.config": "/src/backend/zuno/config.py",
+        "zuno.core": "/src/backend/zuno/core.py",
+        "zuno.database": "/src/backend/zuno/database.py",
         "zuno.mcp_servers": "/src/backend/zuno/mcp_servers.py",
         "zuno.middleware": "/src/backend/zuno/middleware.py",
         "zuno.evals": "/src/backend/zuno/evals.py",
+        "zuno.resources": "/src/backend/zuno/resources.py",
+        "zuno.schema": "/src/backend/zuno/schema.py",
+        "zuno.services": "/src/backend/zuno/services.py",
+        "zuno.tools": "/src/backend/zuno/tools.py",
+        "zuno.utils": "/src/backend/zuno/utils.py",
     }
 
     for module_name, expected_suffix in modules.items():

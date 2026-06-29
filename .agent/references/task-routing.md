@@ -37,7 +37,7 @@ user task
 1. 读 `AGENTS.md`。
 2. 读 `.agent/system.yaml`。
 3. 按下表选择 task route。
-4. 读 route 对应 skills 和模块 `AGENTS.md`。
+4. 读 route 对应 skills；只有 route 明确列出模块 `AGENTS.md` 时才读取模块入口。
 5. 如果 route 需要修改用户禁止路径，停止并返回证据。
 
 ## Allowed Changes
@@ -61,14 +61,14 @@ user task
 | 文档、`.agent`、references、history | `workflow.md`、`docs-map.md`、`verification-map.md`、`known-pitfalls.md` | 文档维护流程；同步 verifiers/tests |
 | 目录移动、归档、ignore、缓存清理 | `workflow.md`、`docs-map.md`、`code-map.md`、`known-pitfalls.md` | 仓库卫生流程；先搜引用再移动 |
 | `apps/web` | `apps/web/AGENTS.md`、`code-map.md`、`verification-map.md` | 前端变更流程 |
-| `src/backend/zuno` | `src/backend/zuno/AGENTS.md`、`runtime-call-chain.md`、`code-map.md` | 后端变更流程 |
-| API / DTO / 前后端 contract | `code-map.md`、`runtime-call-chain.md`、模块 `AGENTS.md` | API contract 流程 |
+| `src/backend/zuno` | `runtime-call-chain.md`、`code-map.md`、`zuno-repo-hygiene.md` | 后端变更流程 |
+| API / DTO / 前后端 contract | `code-map.md`、`runtime-call-chain.md` | API contract 流程 |
 | 架构替换、GraphRAG 边界、仓库布局 | `.agent/architecture/near-term/*`、`.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`、`workflow.md`、`docs-map.md` | 架构重构流程；Current/Target 分开 |
 | eval tooling / datasets / metrics | `tools/evals/zuno/AGENTS.md`、`verification-map.md` | eval 变更流程 |
 
 ## Common Failure Patterns
 
-- 直接按文件名猜 owner，跳过模块 `AGENTS.md`。
+- 直接按文件名猜 owner，跳过 `.agent/references/code-map.md`。
 - 文档任务顺手改 runtime，让验证范围膨胀。
 - 只改 README，不同步 maps、verifier、tests。
 - 把 archived program 的旧 phase 编号恢复成 active program 编号。

@@ -10,11 +10,11 @@
 
 ## Current Truth
 
-Program 3 仍在 continuation。PHASE09 已把 `mcp_servers/`、`middleware/`、`evals/` 退成 alias module；PHASE01 active，用 `src/backend/zuno/DIRECTORY_MAP.md` 和 verifier 固定目录地图。
+Program 3 仍在 continuation。当前目标态要求 `src/backend/zuno` 顶层只保留 `api / agent / memory / capability / knowledge / platform` 六个目录；旧 runtime 入口只允许以 `.py` alias module 保留，例如 `services.py`、`core.py`、`database.py`、`schema.py`、`tools.py`、`utils.py`、`config.py`、`resources.py`、`compatibility.py`、`settings.py`、`mcp_servers.py`、`middleware.py`、`evals.py`。
 
 ## Target Direction
 
-最终目标是让 `src/backend/zuno` 一等目录只剩六层目标目录、必要资源/兼容入口、`main.py` 和 package 文件。旧 `core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/` 逐步变薄或迁出。
+最终目标是让 `src/backend/zuno` 一等目录只剩六层目标目录，顶层文件只保留 `__init__.py`、`main.py` 和受控 alias module。旧 `core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/`、`config/`、`resources/`、`compatibility/` 不能再作为顶层目录存在。
 
 ## Must Preserve
 
@@ -25,7 +25,7 @@ Program 3 仍在 continuation。PHASE09 已把 `mcp_servers/`、`middleware/`、
 
 ## Before Editing
 
-1. 读 `src/backend/zuno/DIRECTORY_MAP.md`。
+1. 读 `.agent/references/code-map.md` 的后端包根规则。
 2. 读 `docs/architecture/current-architecture.md` 和 `target-architecture.md`。
 3. 搜索待移动路径的 imports、tests、scripts 和 docs references。
 4. 先加 focused guard，再移动或退休目录。
@@ -38,10 +38,10 @@ Program 3 仍在 continuation。PHASE09 已把 `mcp_servers/`、`middleware/`、
 
 ## Forbidden Changes
 
-- 一次性搬空 `services/` 或 `core/`。
+- 重写 `services` 或 `core` 内部主循环行为。
 - 改 public API、DB schema、eval baseline 或 frontend 行为。
 - 恢复 `mcp_servers/`、`middleware/`、`evals/` 顶层目录。
-- 新增未经 `DIRECTORY_MAP.md` 和 verifier 登记的 runtime 一等目录。
+- 新增未经 verifier 登记的 runtime 一等目录或非 alias 顶层文件。
 
 ## Common Failure Patterns
 
@@ -53,8 +53,8 @@ Program 3 仍在 continuation。PHASE09 已把 `mcp_servers/`、`middleware/`、
 ## Debug Playbooks
 
 - 旧 import 失败：先查 alias module，再查 `tests/legacy_guards/test_zuno_alias_imports.py`。
-- 目录 verifier 失败：先查 `BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS`、`BACKEND_COMPATIBILITY_ALIAS_MODULES` 和 `BACKEND_RETIRED_TOP_LEVEL_PATHS`。
-- 不知道目录归属：先查 `src/backend/zuno/DIRECTORY_MAP.md`，再查 `.agent/references/code-map.md`。
+- 目录 verifier 失败：先查 `BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS`、`BACKEND_ZUNO_ALLOWED_TOP_LEVEL_FILES`、`BACKEND_COMPATIBILITY_ALIAS_MODULES` 和 `BACKEND_RETIRED_TOP_LEVEL_PATHS`。
+- 不知道目录归属：先查 `.agent/references/code-map.md`，再查 `.agent/references/runtime-call-chain.md`。
 
 ## Focused Tests
 
@@ -72,8 +72,8 @@ python .agent/scripts/verify_agent_system.py
 - `AGENTS.md`
 - `.agent/programs/current.md`
 - `.agent/references/current-program.md`
-- `src/backend/zuno/README.md`
-- `src/backend/zuno/DIRECTORY_MAP.md`
+- `.agent/references/code-map.md`
+- `.agent/references/zuno-repo-hygiene.md`
 - `docs/architecture/current-architecture.md`
 - `docs/architecture/roadmap.md`
 
@@ -81,4 +81,4 @@ python .agent/scripts/verify_agent_system.py
 
 - Program 3 的完成标准不能停在 facade 起步。
 - 目录迁移必须小步、可回滚、有旧 import guard。
-- 目录地图和 verifier 要一起更新，否则下一轮会继续漂移。
+- 后端包根不再放 README / DIRECTORY_MAP；目录规则进入 `.agent/references/code-map.md` 和 verifier。

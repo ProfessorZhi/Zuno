@@ -25,7 +25,7 @@ def test_phase4_docs_and_frontend_contract_expose_knowledge_config_v2() -> None:
         REPO_ROOT / "apps" / "web" / "src" / "utils" / "knowledge-config.ts"
     ).read_text(encoding="utf-8")
     backend_schema = (
-        REPO_ROOT / "src" / "backend" / "zuno" / "schema" / "knowledge.py"
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "dto" / "knowledge.py"
     ).read_text(encoding="utf-8")
 
     for phrase in [

@@ -8,7 +8,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def test_agent_system_required_paths_exist() -> None:
     required_paths = [
         "apps/web/AGENTS.md",
-        "src/backend/zuno/AGENTS.md",
         "tools/evals/zuno/AGENTS.md",
         ".agent/references/code-map.md",
         ".agent/references/task-routing.md",
@@ -28,12 +27,6 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/programs/current.md",
         ".agent/programs/implementation-roadmap.md",
         ".agent/programs/closure-checklist.md",
-        ".agent/programs/PHASE01_directory-closure-master-plan.md",
-        ".agent/programs/PHASE02_platform-foundation-directory-migration.md",
-        ".agent/programs/PHASE03_schema-tools-resources-directory-migration.md",
-        ".agent/programs/PHASE04_services-thinning-directory-migration.md",
-        ".agent/programs/PHASE05_core-agent-runtime-directory-migration.md",
-        ".agent/programs/PHASE06_final-six-layer-guard-and-closure.md",
         ".agent/architecture/future/programs/README.md",
         ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
         ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -52,6 +45,12 @@ def test_agent_system_required_paths_exist() -> None:
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE09_target-layout-visual-compat-shell-retirement.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE01_directory-closure-master-plan.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE02_platform-foundation-directory-migration.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_schema-tools-resources-directory-migration.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_services-thinning-directory-migration.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_core-agent-runtime-directory-migration.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE06_final-six-layer-guard-and-closure.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
@@ -132,7 +131,7 @@ def test_root_agents_routes_to_module_agents_and_references() -> None:
     required_phrases = [
         "## 任务路由",
         "apps/web/AGENTS.md",
-        "src/backend/zuno/AGENTS.md",
+        ".agent/references/code-map.md",
         "tools/evals/zuno/AGENTS.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
@@ -160,6 +159,8 @@ def test_root_agents_routes_to_module_agents_and_references() -> None:
 
     for phrase in required_phrases:
         assert phrase in content, f"missing root routing phrase: {phrase}"
+
+    assert "src/backend/zuno/AGENTS.md" not in content
 
 
 def test_agent_readme_documents_workflow_library_boundaries() -> None:
@@ -344,9 +345,8 @@ def test_current_program_declares_active_program3_continuation_and_latest_archiv
     )
 
     assert "Directory Surface Alignment" in current
-    assert "PHASE01_directory-closure-master-plan.md" in current
-    assert "MCP server implementations" in current
-    assert "HTTP middleware implementations" in current
+    assert "Program 3 completed" in current
+    assert "api / agent / memory / capability / knowledge / platform" in current
     assert "zuno-repo-layout-cleanup-v1" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
@@ -463,7 +463,7 @@ def test_program3_continuation_keeps_history_and_active_phase() -> None:
     )
 
     for phrase in [
-        "Program 3 continuation active",
+        "当前没有 active program",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
@@ -471,18 +471,9 @@ def test_program3_continuation_keeps_history_and_active_phase() -> None:
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == [
-        "PHASE01_directory-closure-master-plan.md",
-        "PHASE02_platform-foundation-directory-migration.md",
-        "PHASE03_schema-tools-resources-directory-migration.md",
-        "PHASE04_services-thinning-directory-migration.md",
-        "PHASE05_core-agent-runtime-directory-migration.md",
-        "PHASE06_final-six-layer-guard-and-closure.md",
-    ]
+    assert active_phase_files == []
     for prompt in [
-        "THREAD_A_root-docs-agent-hygiene-prompt.md",
-        "THREAD_B_backend-six-layer-audit-prompt.md",
-        "THREAD_C_tools-tests-generated-artifacts-prompt.md",
+        "PROGRAM3_DIRECTORY_CLOSURE_TARGET_MODE_PROMPT.md",
     ]:
         assert (
             REPO_ROOT

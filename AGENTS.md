@@ -77,7 +77,7 @@ docs/history/
 - `docs`、`.agent`、参考资料、历史档案 -> `.agent/references/workflow.md` 的文档维护流程。
 - 目录移动、删除、归档、忽略规则、生成物和本地缓存清理 -> `.agent/references/workflow.md` 的仓库卫生流程。
 - `apps/web` -> `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
-- `src/backend/zuno` -> `src/backend/zuno/AGENTS.md` 和 `.agent/references/runtime-call-chain.md`。
+- `src/backend/zuno` -> `.agent/references/code-map.md` 和 `.agent/references/runtime-call-chain.md`。
 - API、DTO、请求/响应、前后端契约 -> `.agent/references/code-map.md`。
 - 架构替换 -> `.agent/references/workflow.md` 的架构重构流程。
 - 架构替换、目录移动、上下文/记忆、GraphRAG 边界或仓库卫生任务还必须读 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
@@ -124,7 +124,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1 和 Program 2 已完成；Program 3 当前重新打开为 Directory Surface Alignment V1 continuation；Program 4/5 仍是 queued / not active。
+当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1、Program 2 和 Program 3 已完成；Program 4/5 仍是 queued / not active。
 
 最新完成程序归档在：
 
@@ -140,7 +140,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/current.md`
 - `.agent/programs/closure-checklist.md`
 
-当前 active phase set 是 `PHASE01` 到 `PHASE06`。Program 3 不能再写成“文件夹整理完成”：`src/backend/` 顶层只保留 `zuno/`；`fastapi_jwt_auth` 顶层 shell 已退休；MCP server implementations 和 HTTP middleware implementations 已完成低风险物理收敛；旧 `mcp_servers/`、`middleware/`、`evals/` 顶层兼容壳已退休为 `.py` alias module；但 `compatibility/`、`resources/`、`core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/`、`config/` 仍是 migration source。Program 3 最终 closure 要让 `src/backend/zuno` 顶层只剩 `api / agent / memory / capability / knowledge / platform` 六层目录。
+当前没有 active phase。Program 3 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；旧 runtime 顶层目录已下沉到六层内部；旧 public import path 通过受控 `.py` alias module 兼容。Program 4/5 不能写成 active，除非用户明确打开下一 program。
 
 后续 queued programs：
 
@@ -193,7 +193,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - 修改任务结束时提交并推送，除非验证或推送被阻塞。
 - 不要强制推送、带租约强制推送或修改旧提交，除非用户明确要求。
 - 不要保留旧的小写或点号形式 Agent 入口与 `AGENTS.md` 并行。
-- 只有根入口路由到的模块才允许有模块级 `AGENTS.md`。
+- 模块级 `AGENTS.md` 只保留在确实需要局部规则且不会污染目标目录表达的位置。
 
 ## Program Closure 自维护审查
 

@@ -6,9 +6,9 @@ import sys
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SERVICE_API_ROOT = REPO_ROOT / "src" / "backend"
 BACKEND_ROOT = REPO_ROOT / "src/backend"
-PLANNER_PATH = SERVICE_API_ROOT / "zuno/services/retrieval/planner.py"
-RETRIEVAL_MODELS_PATH = SERVICE_API_ROOT / "zuno/services/retrieval/models.py"
-GRAPHRAG_MODELS_PATH = BACKEND_ROOT / "zuno/services/graphrag/models.py"
+PLANNER_PATH = SERVICE_API_ROOT / "zuno/platform/services/retrieval/planner.py"
+RETRIEVAL_MODELS_PATH = SERVICE_API_ROOT / "zuno/platform/services/retrieval/models.py"
+GRAPHRAG_MODELS_PATH = BACKEND_ROOT / "zuno/platform/services/graphrag/models.py"
 CORE_ROOT = SERVICE_API_ROOT / "zuno/core"
 
 
@@ -116,10 +116,10 @@ def test_enhanced_retrieval_mode_degrades_to_normal_when_graph_is_unavailable():
 
 def test_project_query_runtime_preserves_knowledge_default_mode_contract():
     query_service = (
-        SERVICE_API_ROOT / "zuno/services/application/knowledge/query_service.py"
+        SERVICE_API_ROOT / "zuno/platform/services/application/knowledge/query_service.py"
     ).read_text(encoding="utf-8")
     graphrag_query_service = (
-        SERVICE_API_ROOT / "zuno/services/graphrag/query_service.py"
+        SERVICE_API_ROOT / "zuno/platform/services/graphrag/query_service.py"
     ).read_text(encoding="utf-8")
     planner = PLANNER_PATH.read_text(encoding="utf-8")
 
@@ -130,7 +130,7 @@ def test_project_query_runtime_preserves_knowledge_default_mode_contract():
 
 
 def test_enhanced_orchestrator_contract_keeps_graph_path_and_trace_metadata():
-    orchestrator = (SERVICE_API_ROOT / "zuno/services/retrieval/orchestrator.py").read_text(encoding="utf-8")
+    orchestrator = (SERVICE_API_ROOT / "zuno/platform/services/retrieval/orchestrator.py").read_text(encoding="utf-8")
     frontend_utils = (REPO_ROOT / "apps/web/src/utils/retrieval.ts").read_text(encoding="utf-8")
 
     assert 'if "graph" in plan.enabled_retrievers:' in orchestrator

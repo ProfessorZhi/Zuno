@@ -8,11 +8,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def test_zuno_config_resource_aliases_exist_and_match_zuno():
     resource_names = ["tool.json", "avatars.json", "mcp_server.json"]
     for resource_name in resource_names:
-        zuno_path = REPO_ROOT / "src/backend/zuno/config" / resource_name
-        zuno_path = REPO_ROOT / "src/backend/zuno/config" / resource_name
+        zuno_path = REPO_ROOT / "src/backend/zuno/platform/config" / resource_name
         assert zuno_path.exists()
 
-        zuno_payload = json.loads(zuno_path.read_text(encoding="utf-8"))
         zuno_payload = json.loads(zuno_path.read_text(encoding="utf-8"))
 
         if resource_name == "mcp_server.json":
@@ -24,7 +22,6 @@ def test_zuno_config_resource_aliases_exist_and_match_zuno():
 
 
 def test_zuno_config_example_exists_and_matches_zuno():
-    zuno_path = REPO_ROOT / "src/backend/zuno/config.example.yaml"
-    zuno_path = REPO_ROOT / "src/backend/zuno/config.example.yaml"
+    zuno_path = REPO_ROOT / "src/backend/zuno/platform/config/config.example.yaml"
     assert zuno_path.exists()
-    assert zuno_path.read_text(encoding="utf-8") == zuno_path.read_text(encoding="utf-8")
+    assert "database:" in zuno_path.read_text(encoding="utf-8")

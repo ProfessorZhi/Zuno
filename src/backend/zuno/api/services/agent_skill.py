@@ -45,7 +45,12 @@ class AgentSkillService:
     MAX_SKILL_RUNTIME_CHARS = 12000
     MAX_SKILL_EXTRA_FILES = 6
     HOST_SKILL_ROOT_ENV = "ZUNO_SKILLS_DIR"
-    SYSTEM_SKILL_ROOT = Path(__file__).resolve().parents[2] / "resources" / "system_skills"
+    SYSTEM_SKILL_ROOT = (
+        Path(__file__).resolve().parents[2]
+        / "platform"
+        / "resources"
+        / "system_skills"
+    )
     SYSTEM_SKILL_DEFINITIONS = (
         {
             "id": "system-skill-creator",

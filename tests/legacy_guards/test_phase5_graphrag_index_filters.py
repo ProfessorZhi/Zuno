@@ -62,7 +62,7 @@ def test_graph_writer_attaches_project_id_as_primary_graph_scope():
 
 
 def test_neo4j_client_uses_project_id_property_as_primary_graph_scope():
-    graph_client_content = (BACKEND_ROOT / "zuno/services/graphrag/client.py").read_text(encoding="utf-8")
+    graph_client_content = (BACKEND_ROOT / "zuno/platform/services/graphrag/client.py").read_text(encoding="utf-8")
 
     assert "e.graphrag_project_id = $graphrag_project_id" in graph_client_content
     assert "r.graphrag_project_id = $graphrag_project_id" in graph_client_content
@@ -101,7 +101,7 @@ def test_graph_retriever_adapter_forwards_scope_status_and_graph_index_version(m
     monkeypatch.setitem(sys.modules, "zuno.api.services", fake_api_services_package)
     monkeypatch.setitem(sys.modules, "zuno.api.services.knowledge", fake_knowledge_module)
 
-    module_path = BACKEND_ROOT / "zuno/services/retrieval/retrievers.py"
+    module_path = BACKEND_ROOT / "zuno/platform/services/retrieval/retrievers.py"
     spec = importlib.util.spec_from_file_location("phase5_test_retrievers", module_path)
     retrievers_module = importlib.util.module_from_spec(spec)
     assert spec is not None and spec.loader is not None
@@ -160,7 +160,7 @@ def test_graph_retriever_adapter_maps_project_scope_to_legacy_storage_filter(mon
     monkeypatch.setitem(sys.modules, "zuno.api.services", fake_api_services_package)
     monkeypatch.setitem(sys.modules, "zuno.api.services.knowledge", fake_knowledge_module)
 
-    module_path = BACKEND_ROOT / "zuno/services/retrieval/retrievers.py"
+    module_path = BACKEND_ROOT / "zuno/platform/services/retrieval/retrievers.py"
     spec = importlib.util.spec_from_file_location("phase5_project_scope_retrievers", module_path)
     retrievers_module = importlib.util.module_from_spec(spec)
     assert spec is not None and spec.loader is not None
@@ -230,7 +230,7 @@ def test_graph_retriever_passes_status_and_graph_index_version_to_client():
 
 
 def test_graph_pipeline_passes_index_version_and_status_into_writer():
-    content = (BACKEND_ROOT / "zuno/services/pipeline/manager.py").read_text(encoding="utf-8")
+    content = (BACKEND_ROOT / "zuno/platform/services/pipeline/manager.py").read_text(encoding="utf-8")
 
     assert 'graph_index_version = str(knowledge_config.get("graph_index_settings", {}).get("index_version") or "v1")' in content
     assert 'graph_status = str(knowledge_config.get("index_settings", {}).get("status") or "active")' in content
@@ -259,10 +259,10 @@ def test_graph_writer_attaches_source_file_metadata():
 
 
 def test_dynamic_reindex_pipeline_clears_old_file_documents_before_rebuild():
-    manager_content = (BACKEND_ROOT / "zuno/services/pipeline/manager.py").read_text(encoding="utf-8")
+    manager_content = (BACKEND_ROOT / "zuno/platform/services/pipeline/manager.py").read_text(encoding="utf-8")
     knowledge_file_service_content = (BACKEND_ROOT / "zuno/api/services/knowledge_file.py").read_text(encoding="utf-8")
-    rag_handler_content = (BACKEND_ROOT / "zuno/services/rag/handler.py").read_text(encoding="utf-8")
-    graph_client_content = (BACKEND_ROOT / "zuno/services/graphrag/client.py").read_text(encoding="utf-8")
+    rag_handler_content = (BACKEND_ROOT / "zuno/platform/services/rag/handler.py").read_text(encoding="utf-8")
+    graph_client_content = (BACKEND_ROOT / "zuno/platform/services/graphrag/client.py").read_text(encoding="utf-8")
 
     assert "await RagHandler.delete_documents_by_file(task.knowledge_file_id, task.knowledge_id)" in manager_content
     assert "await RagHandler.delete_documents_by_file(knowledge_file.id, knowledge_file.knowledge_id)" in knowledge_file_service_content
@@ -293,12 +293,12 @@ def test_chunk_model_exposes_document_hash_and_chunk_hash():
 
 
 def test_hash_fields_flow_through_vector_and_graph_runtime_contracts():
-    chunk_schema = (BACKEND_ROOT / "zuno/schema/chunk.py").read_text(encoding="utf-8")
-    search_schema = (BACKEND_ROOT / "zuno/schema/search.py").read_text(encoding="utf-8")
-    milvus_client = (BACKEND_ROOT / "zuno/services/rag/vector_db/milvus_lite_client.py").read_text(encoding="utf-8")
-    es_index = (BACKEND_ROOT / "zuno/config/es_index.py").read_text(encoding="utf-8")
-    graph_writer = (BACKEND_ROOT / "zuno/services/graphrag/graph_store/graph_writer.py").read_text(encoding="utf-8")
-    graph_extractor = (BACKEND_ROOT / "zuno/services/graphrag/extractor.py").read_text(encoding="utf-8")
+    chunk_schema = (BACKEND_ROOT / "zuno/api/dto/chunk.py").read_text(encoding="utf-8")
+    search_schema = (BACKEND_ROOT / "zuno/api/dto/search.py").read_text(encoding="utf-8")
+    milvus_client = (BACKEND_ROOT / "zuno/platform/services/rag/vector_db/milvus_lite_client.py").read_text(encoding="utf-8")
+    es_index = (BACKEND_ROOT / "zuno/platform/config/es_index.py").read_text(encoding="utf-8")
+    graph_writer = (BACKEND_ROOT / "zuno/platform/services/graphrag/graph_store/graph_writer.py").read_text(encoding="utf-8")
+    graph_extractor = (BACKEND_ROOT / "zuno/platform/services/graphrag/extractor.py").read_text(encoding="utf-8")
 
     assert '"document_hash": self.document_hash' in chunk_schema
     assert '"chunk_hash": self.chunk_hash' in chunk_schema
@@ -376,12 +376,12 @@ def test_source_chunk_id_is_stable_when_content_changes():
 
 
 def test_chunk_level_graph_refresh_contract_is_present():
-    manager_content = (BACKEND_ROOT / "zuno/services/pipeline/manager.py").read_text(encoding="utf-8")
-    graph_client_content = (BACKEND_ROOT / "zuno/services/graphrag/client.py").read_text(encoding="utf-8")
-    graph_writer_content = (BACKEND_ROOT / "zuno/services/graphrag/graph_store/graph_writer.py").read_text(encoding="utf-8")
-    graph_extractor_content = (BACKEND_ROOT / "zuno/services/graphrag/extractor.py").read_text(encoding="utf-8")
+    manager_content = (BACKEND_ROOT / "zuno/platform/services/pipeline/manager.py").read_text(encoding="utf-8")
+    graph_client_content = (BACKEND_ROOT / "zuno/platform/services/graphrag/client.py").read_text(encoding="utf-8")
+    graph_writer_content = (BACKEND_ROOT / "zuno/platform/services/graphrag/graph_store/graph_writer.py").read_text(encoding="utf-8")
+    graph_extractor_content = (BACKEND_ROOT / "zuno/platform/services/graphrag/extractor.py").read_text(encoding="utf-8")
     chunk_ids_content = (
-        REPO_ROOT / "src/backend/zuno/services/rag/doc_parser/chunk_ids.py"
+        REPO_ROOT / "src/backend/zuno/platform/services/rag/doc_parser/chunk_ids.py"
     ).read_text(encoding="utf-8")
 
     assert "await client.delete_by_source_chunk(task.knowledge_file_id, task.knowledge_id, source_chunk_id)" in manager_content

@@ -191,7 +191,9 @@ def test_phase2_graph_retriever_accepts_domain_policy_driven_graph_cues() -> Non
 
 
 def test_phase2_graph_retriever_runtime_no_longer_contains_contract_review_hardcoding() -> None:
-    content = (BACKEND_ROOT / "zuno" / "services" / "graphrag" / "retriever.py").read_text(encoding="utf-8")
+    content = (
+        BACKEND_ROOT / "zuno" / "platform" / "services" / "graphrag" / "retriever.py"
+    ).read_text(encoding="utf-8")
 
     assert "CONTRACT_REVIEW_SEED_CUES" not in content
     assert "CONTRACT_REVIEW_GRAPH_CUES" not in content

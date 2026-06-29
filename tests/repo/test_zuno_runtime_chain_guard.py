@@ -10,15 +10,15 @@ PHASE0_RUNTIME_TRUTH_FILES = [
     "api/router.py",
     "api/v1/__init__.py",
     "api/v1/workspace.py",
-    "database/init_data.py",
-    "database/session.py",
-    "database/metadata.py",
-    "services/retrieval/orchestrator.py",
-    "services/retrieval/planner.py",
-    "services/application/knowledge/query_service.py",
-    "services/graphrag/query_service.py",
-    "services/graphrag/project/loader.py",
-    "services/graphrag/retriever.py",
+    "platform/database/init_data.py",
+    "platform/database/session.py",
+    "platform/database/metadata.py",
+    "platform/services/retrieval/orchestrator.py",
+    "platform/services/retrieval/planner.py",
+    "platform/services/application/knowledge/query_service.py",
+    "platform/services/graphrag/query_service.py",
+    "platform/services/graphrag/project/loader.py",
+    "platform/services/graphrag/retriever.py",
     "settings.py",
 ]
 
@@ -30,7 +30,7 @@ def test_phase0_runtime_truth_lives_under_src_backend_zuno() -> None:
 
 def test_phase0_runtime_truth_no_longer_depends_on_services_api_import_bridge() -> None:
     zuno_package_init = (BACKEND_ROOT / "__init__.py").read_text(encoding="utf-8")
-    zuno_services_init = (BACKEND_ROOT / "services" / "__init__.py").read_text(
+    zuno_services_init = (BACKEND_ROOT / "platform" / "services" / "__init__.py").read_text(
         encoding="utf-8"
     )
 
@@ -41,7 +41,7 @@ def test_phase0_runtime_truth_no_longer_depends_on_services_api_import_bridge() 
 
 
 def test_agent_runtime_facade_no_longer_part_of_current_runtime_truth() -> None:
-    assert not (BACKEND_ROOT / "core/runtime/agent_runtime.py").exists()
+    assert not (BACKEND_ROOT / "agent/core/runtime/agent_runtime.py").exists()
 
 
 def test_phase0_runtime_truth_avoids_service_api_runtime_paths_in_active_tests() -> None:

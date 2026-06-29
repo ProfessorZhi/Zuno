@@ -115,17 +115,11 @@ skill_routes:
       - ".agent/programs/current.md"
       - ".agent/programs/implementation-roadmap.md"
       - ".agent/programs/closure-checklist.md"
-      - ".agent/programs/PHASE01_directory-closure-master-plan.md"
-      - ".agent/programs/PHASE02_platform-foundation-directory-migration.md"
-      - ".agent/programs/PHASE03_schema-tools-resources-directory-migration.md"
-      - ".agent/programs/PHASE04_services-thinning-directory-migration.md"
-      - ".agent/programs/PHASE05_core-agent-runtime-directory-migration.md"
-      - ".agent/programs/PHASE06_final-six-layer-guard-and-closure.md"
       - "docs/architecture/README.md"
       - "docs/architecture/current-architecture.md"
       - "docs/architecture/target-architecture.md"
       - "docs/architecture/roadmap.md"
-      - "src/backend/zuno/DIRECTORY_MAP.md"
+      - ".agent/references/code-map.md"
     verify:
       - "git diff --check"
       - "python .agent/scripts/verify_agent_system.py"
@@ -139,11 +133,11 @@ skill_routes:
         - "src/backend/zuno/agent/**"
         - "src/backend/zuno/services/memory/**"
         - "src/backend/zuno/memory/**"
-        - "src/backend/zuno/DIRECTORY_MAP.md"
+        - ".agent/references/zuno-repo-hygiene.md"
     skills:
-      - "src/backend/zuno/AGENTS.md"
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/code-map.md"
+      - ".agent/references/zuno-repo-hygiene.md"
       - ".agent/references/verification-map.md"
       - ".agent/references/zuno-repo-hygiene.md"
     templates:
@@ -167,7 +161,6 @@ skill_routes:
         - "src/backend/zuno/services/capability_registry.py"
         - "src/backend/zuno/capability/**"
     skills:
-      - "src/backend/zuno/AGENTS.md"
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"
     templates:
@@ -189,7 +182,6 @@ skill_routes:
         - "src/backend/zuno/services/graphrag/**"
         - "src/backend/zuno/knowledge/**"
     skills:
-      - "src/backend/zuno/AGENTS.md"
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"

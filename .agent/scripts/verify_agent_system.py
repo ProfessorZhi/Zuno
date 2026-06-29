@@ -10,7 +10,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_PATHS = [
     "AGENTS.md",
     "apps/web/AGENTS.md",
-    "src/backend/zuno/AGENTS.md",
     "tools/evals/zuno/AGENTS.md",
     ".agent/README.md",
     ".agent/system.yaml",
@@ -40,12 +39,6 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    ".agent/programs/PHASE01_directory-closure-master-plan.md",
-    ".agent/programs/PHASE02_platform-foundation-directory-migration.md",
-    ".agent/programs/PHASE03_schema-tools-resources-directory-migration.md",
-    ".agent/programs/PHASE04_services-thinning-directory-migration.md",
-    ".agent/programs/PHASE05_core-agent-runtime-directory-migration.md",
-    ".agent/programs/PHASE06_final-six-layer-guard-and-closure.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -383,7 +376,7 @@ def main() -> int:
         "这是仓库唯一的 Agent 入口",
         "## 任务路由",
         "apps/web/AGENTS.md",
-        "src/backend/zuno/AGENTS.md",
+        ".agent/references/code-map.md",
         "tools/evals/zuno/AGENTS.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
@@ -490,20 +483,16 @@ def main() -> int:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
-            "PHASE01_directory-closure-master-plan.md",
-            "PHASE02_platform-foundation-directory-migration.md",
-            "PHASE03_schema-tools-resources-directory-migration.md",
-            "PHASE04_services-thinning-directory-migration.md",
-            "PHASE05_core-agent-runtime-directory-migration.md",
-            "PHASE06_final-six-layer-guard-and-closure.md",
         ]
     )
     if active_program_files != expected_program_files:
-        errors.append(f".agent/programs files are not canonical Program 3 continuation set: {active_program_files}")
+        errors.append(
+            f".agent/programs files are not canonical no-active-program set: {active_program_files}"
+        )
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "Program 3 continuation active",
+        "当前没有 active program",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",

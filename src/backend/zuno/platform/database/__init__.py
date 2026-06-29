@@ -38,18 +38,28 @@ def _load_database_config() -> dict:
         return app_settings.database
 
     for package_path in __path__:
-        config_path = Path(package_path).resolve().parent / "config.yaml"
-        if config_path.exists():
-            with config_path.open("r", encoding="utf-8") as file:
-                data = yaml.safe_load(file) or {}
-            return data.get("database") or {}
+        package_root = Path(package_path).resolve().parent
+        for config_path in [
+            package_root / "config" / "config.yaml",
+            package_root / "config" / "config.example.yaml",
+            package_root / "config.yaml",
+        ]:
+            if config_path.exists():
+                with config_path.open("r", encoding="utf-8") as file:
+                    data = yaml.safe_load(file) or {}
+                return data.get("database") or {}
 
     for zuno_package_path in getattr(zuno_package, "__path__", []):
-        config_path = Path(zuno_package_path).resolve() / "config.yaml"
-        if config_path.exists():
-            with config_path.open("r", encoding="utf-8") as file:
-                data = yaml.safe_load(file) or {}
-            return data.get("database") or {}
+        package_root = Path(zuno_package_path).resolve()
+        for config_path in [
+            package_root / "platform" / "config" / "config.yaml",
+            package_root / "platform" / "config" / "config.example.yaml",
+            package_root / "config.yaml",
+        ]:
+            if config_path.exists():
+                with config_path.open("r", encoding="utf-8") as file:
+                    data = yaml.safe_load(file) or {}
+                return data.get("database") or {}
     return {}
 
 

@@ -71,12 +71,6 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE09_target-layout-visual-compat-shell-retirement.md",
-    ".agent/programs/PHASE01_directory-closure-master-plan.md",
-    ".agent/programs/PHASE02_platform-foundation-directory-migration.md",
-    ".agent/programs/PHASE03_schema-tools-resources-directory-migration.md",
-    ".agent/programs/PHASE04_services-thinning-directory-migration.md",
-    ".agent/programs/PHASE05_core-agent-runtime-directory-migration.md",
-    ".agent/programs/PHASE06_final-six-layer-guard-and-closure.md",
     "docs/history/development/README.md",
     "docs/history/reference/migration.md",
     "docs/history/specs",
@@ -90,9 +84,6 @@ REQUIRED_PATHS = [
     "infra/db",
     "infra/docker",
     "src/backend/zuno",
-    "src/backend/zuno/AGENTS.md",
-    "src/backend/zuno/README.md",
-    "src/backend/zuno/DIRECTORY_MAP.md",
     "src/backend/zuno/main.py",
     "tests",
     "tools",
@@ -221,21 +212,31 @@ BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS = {
     "capability": "target-layer",
     "knowledge": "target-layer",
     "platform": "target-layer",
-    "resources": "app-resource",
-    "compatibility": "compatibility-shell",
-    "config": "infrastructure",
-    "database": "infrastructure",
-    "schema": "migration-source",
-    "tools": "migration-source",
-    "core": "migration-source",
-    "services": "migration-source",
-    "utils": "migration-source",
 }
 
 BACKEND_COMPATIBILITY_ALIAS_MODULES = {
+    "src/backend/zuno/compatibility.py": "legacy zuno.compatibility imports route to zuno.platform.compatibility",
+    "src/backend/zuno/config.py": "legacy zuno.config imports route to zuno.platform.config",
+    "src/backend/zuno/core.py": "legacy zuno.core imports route to zuno.agent.core",
+    "src/backend/zuno/database.py": "legacy zuno.database imports route to zuno.platform.database",
     "src/backend/zuno/mcp_servers.py": "legacy zuno.mcp_servers imports route to zuno.capability.mcp.servers",
     "src/backend/zuno/middleware.py": "legacy zuno.middleware imports route to zuno.platform.middleware",
     "src/backend/zuno/evals.py": "legacy zuno.evals imports route to tools/evals/zuno",
+    "src/backend/zuno/resources.py": "legacy zuno.resources imports route to zuno.platform.resources",
+    "src/backend/zuno/schema.py": "legacy zuno.schema imports route to zuno.api.dto",
+    "src/backend/zuno/services.py": "legacy zuno.services imports route to zuno.platform.services",
+    "src/backend/zuno/settings.py": "legacy zuno.settings imports route to zuno.platform.settings",
+    "src/backend/zuno/tools.py": "legacy zuno.tools imports route to zuno.capability.tools",
+    "src/backend/zuno/utils.py": "legacy zuno.utils imports route to zuno.platform.common",
+}
+
+BACKEND_ZUNO_ALLOWED_TOP_LEVEL_FILES = {
+    "__init__.py": "package marker",
+    "main.py": "FastAPI application entrypoint",
+    **{
+        Path(relative_path).name: reason
+        for relative_path, reason in BACKEND_COMPATIBILITY_ALIAS_MODULES.items()
+    },
 }
 
 BACKEND_RETIRED_TOP_LEVEL_PATHS = {
@@ -248,6 +249,15 @@ BACKEND_RETIRED_TOP_LEVEL_PATHS = {
     "src/backend/zuno/mcp_servers": "MCP server compatibility shell retired to zuno/mcp_servers.py; implementations live in zuno/capability/mcp/servers",
     "src/backend/zuno/middleware": "HTTP middleware compatibility shell retired to zuno/middleware.py; implementations live in zuno/platform/middleware",
     "src/backend/zuno/evals": "eval compatibility shell retired to zuno/evals.py; implementations live in tools/evals/zuno",
+    "src/backend/zuno/compatibility": "compatibility implementation moved to zuno/platform/compatibility; zuno/compatibility.py remains as alias",
+    "src/backend/zuno/config": "configuration resources moved to zuno/platform/config; zuno/config.py remains as alias",
+    "src/backend/zuno/database": "database implementation moved to zuno/platform/database; zuno/database.py remains as alias",
+    "src/backend/zuno/resources": "runtime resources moved to zuno/platform/resources; zuno/resources.py remains as alias",
+    "src/backend/zuno/schema": "DTO schema implementation moved to zuno/api/dto; zuno/schema.py remains as alias",
+    "src/backend/zuno/tools": "runtime tools moved to zuno/capability/tools; zuno/tools.py remains as alias",
+    "src/backend/zuno/services": "legacy service implementation moved to zuno/platform/services; zuno/services.py remains as alias",
+    "src/backend/zuno/core": "legacy core implementation moved to zuno/agent/core; zuno/core.py remains as alias",
+    "src/backend/zuno/utils": "legacy utils moved to zuno/platform/common; zuno/utils.py remains as alias",
 }
 
 ROOT_LOCAL_ARTIFACT_DIRECTORIES = {
@@ -368,6 +378,17 @@ def verify_backend_zuno_directory_classifications() -> list[str]:
                 errors.append(
                     f"{readme.relative_to(REPO_ROOT).as_posix()} missing phrase: {phrase}"
                 )
+    actual_files = sorted(
+        path.name
+        for path in backend_root.iterdir()
+        if path.is_file()
+    )
+    expected_files = sorted(BACKEND_ZUNO_ALLOWED_TOP_LEVEL_FILES)
+    if actual_files != expected_files:
+        errors.append(
+            "backend zuno top-level files drifted from completion allowlist: "
+            f"expected {expected_files}, got {actual_files}"
+        )
     return errors
 
 
@@ -442,7 +463,7 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     errors = [
         f"active Program 3 roadmap missing phrase: {phrase}"
         for phrase in [
-            "Program 3 continuation active",
+            "当前没有 active program",
             "zuno-repo-layout-cleanup-v1",
             "每次新 program 都从 `PHASE01` 开始编号",
             "zuno-runtime-architecture-upgrade-v1",
@@ -462,22 +483,21 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
         ]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
-    active_phase_files = sorted((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
-    active_phase_names = [path.name for path in active_phase_files]
-    expected_active_phase_names = [
+    active_phase_names = sorted(
+        path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")
+    )
+    if active_phase_names:
+        errors.append(
+            ".agent/programs must not keep completed Program 3 phase files: "
+            + ", ".join(active_phase_names)
+        )
+    for phase_name in [
         "PHASE01_directory-closure-master-plan.md",
         "PHASE02_platform-foundation-directory-migration.md",
         "PHASE03_schema-tools-resources-directory-migration.md",
         "PHASE04_services-thinning-directory-migration.md",
         "PHASE05_core-agent-runtime-directory-migration.md",
         "PHASE06_final-six-layer-guard-and-closure.md",
-    ]
-    if active_phase_names != expected_active_phase_names:
-        errors.append(
-            ".agent/programs must keep only the active Program 3 continuation phase: "
-            + ", ".join(active_phase_names)
-        )
-    for phase_name in [
         "PHASE06_backend-directory-clarity-audit.md",
         "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
         "PHASE08_backend-physical-cleanup-slices.md",
@@ -494,6 +514,7 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
             "root/docs hygiene",
             "backend 六层迁移计划",
             "repo hygiene verifier",
+            "Directory Surface Alignment V1",
         ]:
             if phrase not in archived_text:
                 errors.append(f"archived Program 3 README missing phrase: {phrase}")

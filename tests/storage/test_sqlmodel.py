@@ -4,7 +4,15 @@ import yaml
 
 
 def test_config_uses_database_section_with_postgresql_urls():
-    config_path = Path(__file__).resolve().parents[2] / "src" / "backend" / "zuno" / "config.example.yaml"
+    config_path = (
+        Path(__file__).resolve().parents[2]
+        / "src"
+        / "backend"
+        / "zuno"
+        / "platform"
+        / "config"
+        / "config.example.yaml"
+    )
     with config_path.open("r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 

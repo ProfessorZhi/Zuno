@@ -10,12 +10,12 @@
 - `apps/desktop/`：Electron 桌面壳。
 - `src/backend/zuno/`：当前 Python 后端 runtime 真相。
 - `src/backend/zuno/api/`：HTTP routes、DTO、auth、response envelope、SSE。
-- `src/backend/zuno/services/application/`：应用用例边界。
-- `src/backend/zuno/core/`：单一 GeneralAgent runtime 和编排。
-- `src/backend/zuno/services/graphrag/`：GraphRAG Project 查询和索引概念。
-- `src/backend/zuno/services/retrieval/`：检索规划和 retriever adapters。
-- `src/backend/zuno/services/memory/`：记忆基础。
-- `src/backend/zuno/database/`：持久化模型和数据库 wiring。
+- `src/backend/zuno/api/`：HTTP routes、DTO、auth、response envelope、SSE。
+- `src/backend/zuno/agent/`：单一 GeneralAgent runtime 入口；旧 `zuno.core.*` 由顶层 alias module 兼容。
+- `src/backend/zuno/memory/`：目标 Memory 层入口。
+- `src/backend/zuno/capability/`：目标 Tool、Skill、MCP 和 capability registry 入口。
+- `src/backend/zuno/knowledge/`：目标 RAG / GraphRAG / Evidence / Citation 入口。
+- `src/backend/zuno/platform/`：配置、数据库、兼容、资源、middleware、model gateway、storage 和旧 services 的物理归属。
 - `tools/`：脚本、启动器、eval 和维护工具。
 - `tests/`：仓库级验证和聚焦回归测试。
 - `docs/`：正式人类文档。
@@ -39,12 +39,30 @@ Completion API
 
 ## 任务路由
 
-- 后端变更：读 `src/backend/zuno/AGENTS.md`。
+- 后端变更：读本文和 `.agent/references/runtime-call-chain.md`。
 - 前端变更：读 `apps/web/AGENTS.md`。
 - Eval 变更：读 `tools/evals/zuno/AGENTS.md`。
 - 文档或 Agent 工作流变更：读 `AGENTS.md`、`.agent/references/task-routing.md` 和 `.agent/references/workflow.md`。
 
 文档和工作流整理任务不得修改 runtime 代码。如果验证需要修改 runtime，先停止并返回证据。
+
+## 后端包根规则
+
+`src/backend/zuno` 顶层目录只允许六层：
+
+```text
+api / agent / memory / capability / knowledge / platform
+```
+
+旧入口只允许以 `.py` alias module 留在顶层，例如 `zuno.services`、`zuno.core`、`zuno.schema`、`zuno.database`、`zuno.config`、`zuno.resources`、`zuno.tools`、`zuno.utils`、`zuno.compatibility`、`zuno.settings`、`zuno.mcp_servers`、`zuno.middleware`、`zuno.evals`。
+
+后端实现规则：
+
+- 路由层不拥有业务逻辑或检索策略。
+- Application Service 负责用例编排。
+- Agent runtime 不能反向依赖 API 层。
+- 公共契约变化必须同步 DTO、前端类型和测试。
+- 检索、Agent、记忆和 GraphRAG 变更必须对齐对应参考文档和目标架构说明。
 
 ## 受保护边界
 

@@ -7,7 +7,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 COMPAT_ROOT = BACKEND_ROOT / "fastapi_jwt_auth"
 VENDORED_ROOT = (
-    BACKEND_ROOT / "zuno" / "compatibility" / "vendor" / "fastapi_jwt_auth"
+    BACKEND_ROOT
+    / "zuno"
+    / "platform"
+    / "compatibility"
+    / "vendor"
+    / "fastapi_jwt_auth"
 )
 
 
