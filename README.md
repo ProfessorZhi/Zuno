@@ -47,7 +47,7 @@ Local-first Agent Workspace
 - Phase 11B 已完成：知识回答已经统一到 single `GeneralAgent` path。
 - Phase 11C 已完成：Domain Pack active runtime cleanup 已关闭。
 - Phase 12 已完成：closure evidence 已闭合。
-- 当前 active Agent 执行计划在 `.agent/programs/`，完成或替换后的 program 归档到 `docs/history/programs/`。
+- 当前没有 active Agent program；`.agent/programs/` 处于等待态。最近完成的 `zuno-eight-deliverables-full-realization-v1` 已归档到 `docs/history/programs/`。
 
 当前主要调用链：
 

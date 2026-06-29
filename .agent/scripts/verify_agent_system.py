@@ -6,20 +6,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_CURRENT_PHASE = "PHASE10_validation-release-closure.md"
+COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
 COMPLETED_PROGRAM_PHASE_FILES = [
-    "PHASE01_program-boot-baseline.md",
-    "PHASE02_workflow-self-maintenance-system.md",
-    "PHASE03_architecture-docs-html-system.md",
-    "PHASE04_query-router-mode-policy.md",
-    "PHASE05_context-builder-memory-system.md",
-    "PHASE06_capability-toolcard-mcp-system.md",
-    "PHASE07_hooks-evidence-trace-artifact-system.md",
-    "PHASE08_graphrag-knowledge-runtime-system.md",
-    "PHASE09_runtime-upgrade-integration.md",
-]
-ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
     "PHASE03_architecture-docs-html-system.md",
@@ -37,6 +26,7 @@ ARCHIVED_PROGRAM_NAMES = [
     "zuno-architecture-surface-cleanup-v1",
     "zuno-repo-layout-cleanup-v1",
     "zuno-six-layer-internalization-v1",
+    "zuno-eight-deliverables-full-realization-v1",
     "zuno-target-architecture-migration-v1",
     "zuno-target-architecture-refresh-v1",
     "zuno-target-runtime-v2",
@@ -127,6 +117,12 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-six-layer-internalization-v1/PHASE05_agent-runtime-boundary-surfaces.md",
     "docs/history/programs/zuno-six-layer-internalization-v1/PHASE06_platform-boundary-hardening.md",
     "docs/history/programs/zuno-six-layer-internalization-v1/PHASE07_docs-verifier-and-closure.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/README.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/current.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/closure-summary.md",
+    *[f"{COMPLETED_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in COMPLETED_PROGRAM_PHASE_FILES],
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
@@ -601,7 +597,7 @@ def verify_templates_are_skeletons(repo_root: Path = REPO_ROOT) -> list[str]:
     forbidden_markers = [
         "C:\\",
         "F:\\",
-        ACTIVE_PROGRAM_NAME,
+        COMPLETED_PROGRAM_NAME,
         "state: active",
         "current_phase",
         "GeneralAgent",
@@ -623,7 +619,7 @@ def verify_templates_are_skeletons(repo_root: Path = REPO_ROOT) -> list[str]:
                 )
         if path.name not in route_reference_text:
             errors.append(
-                f".agent/templates/{path.name} must be referenced by .agent/system.yaml or active phase files"
+                f".agent/templates/{path.name} must be referenced by .agent/system.yaml or current program files"
             )
 
     return errors
@@ -632,15 +628,37 @@ def verify_templates_are_skeletons(repo_root: Path = REPO_ROOT) -> list[str]:
 def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
     surfaces = {
-        ".agent/programs/current.md": [ACTIVE_PROGRAM_NAME, "state: active", ACTIVE_CURRENT_PHASE],
-        ".agent/references/current-program.md": [
-            ACTIVE_PROGRAM_NAME,
-            "state: active",
-            ACTIVE_CURRENT_PHASE,
+        ".agent/programs/current.md": [
+            "当前没有 active program",
+            "state: no-active",
+            "current_phase: none",
+            COMPLETED_PROGRAM_NAME,
+            COMPLETED_PROGRAM_ARCHIVE,
         ],
-        ".agent/programs/implementation-roadmap.md": [ACTIVE_PROGRAM_NAME, "state: active"],
-        "docs/architecture/roadmap.md": [ACTIVE_PROGRAM_NAME, "active"],
-        "AGENTS.md": [ACTIVE_PROGRAM_NAME, ".agent/programs/"],
+        ".agent/references/current-program.md": [
+            "当前没有 active program",
+            "state: no-active",
+            "current_phase: none",
+            COMPLETED_PROGRAM_NAME,
+            COMPLETED_PROGRAM_ARCHIVE,
+        ],
+        ".agent/programs/implementation-roadmap.md": [
+            "state: no-active",
+            COMPLETED_PROGRAM_NAME,
+            COMPLETED_PROGRAM_ARCHIVE,
+            "每次新 program 都从 `PHASE01` 开始编号",
+        ],
+        "docs/architecture/roadmap.md": [
+            "当前没有 active program",
+            COMPLETED_PROGRAM_NAME,
+            "completed / archived",
+        ],
+        "AGENTS.md": [
+            "当前没有 active program",
+            COMPLETED_PROGRAM_NAME,
+            COMPLETED_PROGRAM_ARCHIVE,
+            ".agent/programs/",
+        ],
     }
     for relative_path, phrases in surfaces.items():
         content = _read(relative_path)
@@ -649,13 +667,9 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
                 errors.append(f"{relative_path} missing program lifecycle phrase: {phrase}")
 
     for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
-        content = _read(f".agent/programs/{phase_name}")
+        content = _read(f"{COMPLETED_PROGRAM_ARCHIVE}/{phase_name}")
         if "status: completed" not in content:
-            errors.append(f"{phase_name} must be completed in active lifecycle")
-
-    current_phase = _read(f".agent/programs/{ACTIVE_CURRENT_PHASE}")
-    if "status: active" not in current_phase:
-        errors.append(f"{ACTIVE_CURRENT_PHASE} must be active in active lifecycle")
+            errors.append(f"{phase_name} must be completed in archived lifecycle")
 
     active_programs_root = repo_root / ".agent" / "programs"
     for program_name in ARCHIVED_PROGRAM_NAMES:
@@ -986,48 +1000,40 @@ def main() -> int:
     if reference_files != expected_references:
         errors.append(f".agent/references files are not slim canonical set: {reference_files}")
 
-    active_program_files = sorted(
+    program_files = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").iterdir() if path.is_file()
     )
-    expected_program_files = sorted(
-        [
-            "README.md",
-            "current.md",
-            "implementation-roadmap.md",
-            "closure-checklist.md",
-            *ACTIVE_PROGRAM_PHASE_FILES,
-        ]
-    )
-    if active_program_files != expected_program_files:
+    expected_program_files = sorted(["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md"])
+    if program_files != expected_program_files:
         errors.append(
-            f".agent/programs files do not match active program set: {active_program_files}"
+            f".agent/programs files do not match no-active waiting set: {program_files}"
         )
     current_program_text = _read(".agent/programs/current.md")
     for phrase in [
-        ACTIVE_PROGRAM_NAME,
-        "state: active",
-        ACTIVE_CURRENT_PHASE,
+        "当前没有 active program",
+        "state: no-active",
+        "current_phase: none",
+        COMPLETED_PROGRAM_NAME,
+        COMPLETED_PROGRAM_ARCHIVE,
         "八个交付物",
-        "默认开启线程内多 agent",
         "Codex 执行协作",
         "不是 Zuno runtime 架构",
         "不是多线程模式",
     ]:
         if phrase not in current_program_text:
-            errors.append(f".agent/programs/current.md missing active program phrase: {phrase}")
+            errors.append(f".agent/programs/current.md missing no-active program phrase: {phrase}")
+    archived_program_root = REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE
+    for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        if not (archived_program_root / required_archive_file).exists():
+            errors.append(f"completed program archive missing file: {required_archive_file}")
     for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
-        phase_text = _read(f".agent/programs/{phase_name}")
-        if "status: completed" not in phase_text:
-            errors.append(f"{phase_name} must be marked completed before current phase advances")
-    current_phase_text = _read(f".agent/programs/{ACTIVE_CURRENT_PHASE}")
-    if "status: active" not in current_phase_text:
-        errors.append(f"{ACTIVE_CURRENT_PHASE} must be marked active")
-    for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
-        if phase_name == ACTIVE_CURRENT_PHASE or phase_name in COMPLETED_PROGRAM_PHASE_FILES:
+        phase_path = archived_program_root / phase_name
+        if not phase_path.exists():
+            errors.append(f"completed program archive missing phase file: {phase_name}")
             continue
-        phase_text = _read(f".agent/programs/{phase_name}")
-        if "status: planned" not in phase_text:
-            errors.append(f"{phase_name} must remain planned until it is current")
+        phase_text = phase_path.read_text(encoding="utf-8")
+        if "status: completed" not in phase_text:
+            errors.append(f"{phase_name} must be marked completed in archive")
     for relative_path in [
         ".agent/programs/current.md",
         ".agent/references/current-program.md",
@@ -1040,38 +1046,36 @@ def main() -> int:
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        ACTIVE_PROGRAM_NAME,
-        "state: active",
-        "zuno-six-layer-internalization-v1",
+        "state: no-active",
+        COMPLETED_PROGRAM_NAME,
+        COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",
-        "zuno-repo-layout-cleanup-v1",
-        "zuno-runtime-architecture-upgrade-v1",
-        "zuno-architecture-visuals-v1",
     ]:
         if phrase not in roadmap:
-            errors.append(f"program roadmap missing phrase: {phrase}")
+            errors.append(f"waiting program roadmap missing phrase: {phrase}")
 
     future_programs_readme = _read(".agent/architecture/future/programs/README.md")
     for phrase in [
-        ACTIVE_PROGRAM_NAME,
-        "吸收为参考输入",
+        "当前没有 active program",
+        COMPLETED_PROGRAM_NAME,
+        "已完成并归档",
+        "参考输入",
         "不是 active 执行入口",
         "zuno-six-layer-internalization-v1",
     ]:
         if phrase not in future_programs_readme:
-            errors.append(f"future programs README missing active program boundary phrase: {phrase}")
-    if "当前没有 active program" in future_programs_readme:
-        errors.append("future programs README must not claim there is no active program")
+            errors.append(f"future programs README missing no-active boundary phrase: {phrase}")
 
     repo_hygiene = _read(".agent/references/zuno-repo-hygiene.md")
     for phrase in [
         "zuno-six-layer-internalization-v1",
-        ACTIVE_PROGRAM_NAME,
+        COMPLETED_PROGRAM_NAME,
+        "已完成并归档",
         "runtime architecture upgrade",
         "不是当前独立 queued program",
     ]:
         if phrase not in repo_hygiene:
-            errors.append(f"zuno-repo-hygiene.md missing current Program 4 boundary phrase: {phrase}")
+            errors.append(f"zuno-repo-hygiene.md missing completed program boundary phrase: {phrase}")
     if "Program 4 runtime architecture upgrade 保持 queued / not active" in repo_hygiene:
         errors.append("zuno-repo-hygiene.md keeps stale Program 4 queued runtime-upgrade wording")
 

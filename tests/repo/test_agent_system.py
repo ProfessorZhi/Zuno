@@ -3,20 +3,9 @@
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_CURRENT_PHASE = "PHASE10_validation-release-closure.md"
+COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
 COMPLETED_PROGRAM_PHASE_FILES = [
-    "PHASE01_program-boot-baseline.md",
-    "PHASE02_workflow-self-maintenance-system.md",
-    "PHASE03_architecture-docs-html-system.md",
-    "PHASE04_query-router-mode-policy.md",
-    "PHASE05_context-builder-memory-system.md",
-    "PHASE06_capability-toolcard-mcp-system.md",
-    "PHASE07_hooks-evidence-trace-artifact-system.md",
-    "PHASE08_graphrag-knowledge-runtime-system.md",
-    "PHASE09_runtime-upgrade-integration.md",
-]
-ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
     "PHASE03_architecture-docs-html-system.md",
@@ -102,6 +91,21 @@ def test_agent_system_required_paths_exist() -> None:
     "docs/history/programs/zuno-six-layer-internalization-v1/PHASE05_agent-runtime-boundary-surfaces.md",
     "docs/history/programs/zuno-six-layer-internalization-v1/PHASE06_platform-boundary-hardening.md",
     "docs/history/programs/zuno-six-layer-internalization-v1/PHASE07_docs-verifier-and-closure.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/README.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/current.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/closure-checklist.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/closure-summary.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE01_program-boot-baseline.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE02_workflow-self-maintenance-system.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE03_architecture-docs-html-system.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE04_query-router-mode-policy.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE05_context-builder-memory-system.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE06_capability-toolcard-mcp-system.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE07_hooks-evidence-trace-artifact-system.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE08_graphrag-knowledge-runtime-system.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE09_runtime-upgrade-integration.md",
+    "docs/history/programs/zuno-eight-deliverables-full-realization-v1/PHASE10_validation-release-closure.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE01_directory-closure-master-plan.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE02_platform-foundation-directory-migration.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_schema-tools-resources-directory-migration.md",
@@ -463,7 +467,7 @@ def test_docs_agent_system_history_route_references_all_front_templates() -> Non
         assert file_name in system_yaml, f"template not routed in system.yaml: {file_name}"
 
 
-def test_current_program_declares_active_eight_deliverables_program() -> None:
+def test_current_program_declares_no_active_and_archived_eight_deliverables_program() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -476,18 +480,18 @@ def test_current_program_declares_active_eight_deliverables_program() -> None:
         path.name for path in (REPO_ROOT / ".agent" / "programs").glob("PHASE*.md")
     )
 
-    assert ACTIVE_PROGRAM_NAME in current
-    assert "state: active" in current
-    assert ACTIVE_CURRENT_PHASE in current
-    assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
+    assert "当前没有 active program" in current
+    assert "state: no-active" in current
+    assert "current_phase: none" in current
+    assert COMPLETED_PROGRAM_NAME in current
+    assert COMPLETED_PROGRAM_ARCHIVE in current
+    assert active_phase_files == []
     assert "八个交付物" in current
-    assert "默认开启线程内多 agent" in current
+    assert "Codex 执行协作" in current
     assert "不是多线程模式" in current
-    assert "zuno-six-layer-internalization-v1" in current
-    assert "Program 3 / `zuno-repo-layout-cleanup-v1` 已完成" in current
-    assert "api / agent / memory / capability / knowledge / platform" in current
-    assert "GeneralAgent 主循环" in current
-    assert ACTIVE_PROGRAM_NAME in programs_index
+    assert "State: no-active" in programs_index
+    assert COMPLETED_PROGRAM_NAME in history_index
+    assert f"{COMPLETED_PROGRAM_NAME}/" in history_index
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
     assert "context-memory-agent-runtime-v1" not in programs_index
@@ -498,23 +502,20 @@ def test_current_program_declares_active_eight_deliverables_program() -> None:
     assert "zuno-six-layer-internalization-v1/" in history_index
 
 
-def test_active_program_phase_status_lifecycle_is_machine_checkable() -> None:
+def test_completed_program_phase_status_lifecycle_is_machine_checkable() -> None:
     phase_statuses = {
         path.name: path.read_text(encoding="utf-8")
-        for path in (REPO_ROOT / ".agent" / "programs").glob("PHASE*.md")
+        for path in (REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE).glob("PHASE*.md")
     }
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(
         encoding="utf-8"
     )
 
-    assert f"current_phase: `{ACTIVE_CURRENT_PHASE}`" in current
+    assert "current_phase: none" in current
+    assert sorted(phase_statuses) == COMPLETED_PROGRAM_PHASE_FILES
     for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
         assert "status: completed" in phase_statuses[phase_name]
-    assert "status: active" in phase_statuses[ACTIVE_CURRENT_PHASE]
-    for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
-        if phase_name == ACTIVE_CURRENT_PHASE or phase_name in COMPLETED_PROGRAM_PHASE_FILES:
-            continue
-        assert "status: planned" in phase_statuses[phase_name], phase_name
+    assert not list((REPO_ROOT / ".agent" / "programs").glob("PHASE*.md"))
 
 
 def test_phase05_context_memory_focused_stack_is_routed() -> None:
@@ -646,11 +647,13 @@ def test_status_surfaces_do_not_keep_stale_no_active_or_program4_queue_claims() 
         encoding="utf-8"
     )
 
-    assert ACTIVE_PROGRAM_NAME in future_programs
+    assert COMPLETED_PROGRAM_NAME in future_programs
     assert "参考输入" in future_programs
-    assert "当前没有 active program" not in future_programs
+    assert "当前没有 active program" in future_programs
+    assert "已完成并归档" in future_programs
     assert "Program 4 runtime architecture upgrade 保持 queued / not active" not in repo_hygiene
     assert "zuno-six-layer-internalization-v1" in repo_hygiene
+    assert COMPLETED_PROGRAM_NAME in repo_hygiene
     assert "runtime architecture upgrade" in repo_hygiene
 
 
@@ -779,17 +782,16 @@ def test_six_layer_internalization_is_archived_and_active_program_is_open() -> N
     )
 
     for phrase in [
-        ACTIVE_PROGRAM_NAME,
-        "state: active",
-        "zuno-six-layer-internalization-v1",
+        COMPLETED_PROGRAM_NAME,
+        "state: no-active",
+        COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",
-        "zuno-repo-layout-cleanup-v1",
-        "zuno-runtime-architecture-upgrade-v1",
-        "zuno-architecture-visuals-v1",
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
+    assert active_phase_files == []
+    for phase in COMPLETED_PROGRAM_PHASE_FILES:
+        assert (REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE / phase).exists()
     for phase in [
         "PHASE01_six-layer-current-inventory.md",
         "PHASE02_memory-layer-foundation-surfaces.md",

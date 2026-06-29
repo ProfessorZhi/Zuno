@@ -5,8 +5,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_PROGRAM_PHASE_FILES = [
+COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
+COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
     "PHASE03_architecture-docs-html-system.md",
@@ -681,7 +682,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_program3_and_program4_closures_are_archived_with_current_active_program() -> None:
+def test_program3_program4_and_eight_deliverables_closures_are_archived_with_no_active_program() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -694,7 +695,6 @@ def test_program3_and_program4_closures_are_archived_with_current_active_program
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
-            *ACTIVE_PROGRAM_PHASE_FILES,
         ]
     )
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
@@ -708,15 +708,14 @@ def test_program3_and_program4_closures_are_archived_with_current_active_program
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
-        ACTIVE_PROGRAM_NAME,
-        "state: active",
-        "zuno-six-layer-internalization-v1",
+        COMPLETED_PROGRAM_NAME,
+        "state: no-active",
+        COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",
-        "zuno-repo-layout-cleanup-v1",
-        "zuno-runtime-architecture-upgrade-v1",
-        "zuno-architecture-visuals-v1",
     ]:
         assert phrase in roadmap
+    for phase in COMPLETED_PROGRAM_PHASE_FILES:
+        assert (REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE / phase).exists()
     program3 = (
         REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md"
     ).read_text(encoding="utf-8")

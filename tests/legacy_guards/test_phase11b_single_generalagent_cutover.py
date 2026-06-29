@@ -28,12 +28,22 @@ def test_general_agent_registers_search_knowledge_base_tool(monkeypatch):
 
     captured = {}
 
-    async def fake_query(self, *, user_id, knowledge_ids, query, query_method=None, top_k=None):
+    async def fake_query(
+        self,
+        *,
+        user_id,
+        knowledge_ids,
+        query,
+        product_mode="auto",
+        query_method=None,
+        top_k=None,
+    ):
         captured.update(
             {
                 "user_id": user_id,
                 "knowledge_ids": knowledge_ids,
                 "query": query,
+                "product_mode": product_mode,
                 "query_method": query_method,
                 "top_k": top_k,
             }
@@ -69,6 +79,7 @@ def test_general_agent_registers_search_knowledge_base_tool(monkeypatch):
     assert captured["user_id"] == "u_1"
     assert captured["knowledge_ids"] == ["kb_1"]
     assert captured["query"] == "这份合同是否约定违约责任？"
+    assert captured["product_mode"] == "auto"
     assert "第八条约定了违约责任" in result
     assert "citations: chunk-1" in result
     assert "resolved_query_method: local" in result
