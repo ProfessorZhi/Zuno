@@ -165,6 +165,25 @@ def test_backend_zuno_classified_directories_have_boundary_readmes() -> None:
             assert phrase in content, f"{readme.relative_to(REPO_ROOT)} missing phrase: {phrase}"
 
 
+def test_repo_structure_verifier_pins_root_local_artifact_directories() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.ROOT_LOCAL_ARTIFACT_DIRECTORIES == {
+        ".agents": "旧 Agent 入口或本地执行残留；当前唯一入口是 AGENTS.md",
+        ".local": "本地配置、eval 和运行态产物；可以存在于本机但不能挡住仓库根目录",
+        ".test-tmp": "测试 scratch 目录；可再生成且必须保持本地 ignored",
+        "__pycache__": "Python bytecode cache；可再生成且不属于仓库结构",
+        ".pytest_cache": "pytest 本地缓存；可再生成且不属于仓库结构",
+        "node_modules": "依赖安装产物；根目录不提交也不作为项目结构展示",
+    }
+
+
 def test_first_class_directory_subdirs_match_allowed_responsibilities() -> None:
     allowed_subdirs = {
         "tools": {"agent", "cli", "evals", "launchers", "migrations", "scripts"},
@@ -249,6 +268,31 @@ def test_repo_structure_verifier_runs_backend_zuno_directory_classification_chec
         verifier,
         "verify_backend_zuno_directory_classifications",
         fake_backend_classification_check,
+    )
+
+    result = verifier.run_verification()
+
+    assert sentinel in result.errors
+
+
+def test_repo_structure_verifier_runs_root_local_artifact_check(monkeypatch) -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    sentinel = "root local artifact check was called"
+
+    def fake_root_local_artifact_check() -> list[str]:
+        return [sentinel]
+
+    monkeypatch.setattr(
+        verifier,
+        "verify_root_local_artifacts_are_absent",
+        fake_root_local_artifact_check,
     )
 
     result = verifier.run_verification()

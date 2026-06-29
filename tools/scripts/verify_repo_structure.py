@@ -222,6 +222,15 @@ BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS = {
     "fixtures": "app-resource",
 }
 
+ROOT_LOCAL_ARTIFACT_DIRECTORIES = {
+    ".agents": "旧 Agent 入口或本地执行残留；当前唯一入口是 AGENTS.md",
+    ".local": "本地配置、eval 和运行态产物；可以存在于本机但不能挡住仓库根目录",
+    ".test-tmp": "测试 scratch 目录；可再生成且必须保持本地 ignored",
+    "__pycache__": "Python bytecode cache；可再生成且不属于仓库结构",
+    ".pytest_cache": "pytest 本地缓存；可再生成且不属于仓库结构",
+    "node_modules": "依赖安装产物；根目录不提交也不作为项目结构展示",
+}
+
 
 @dataclass
 class VerificationResult:
@@ -320,6 +329,17 @@ def verify_backend_zuno_directory_classifications() -> list[str]:
                 errors.append(
                     f"{readme.relative_to(REPO_ROOT).as_posix()} missing phrase: {phrase}"
                 )
+    return errors
+
+
+def verify_root_local_artifacts_are_absent() -> list[str]:
+    errors: list[str] = []
+    for relative_path, reason in ROOT_LOCAL_ARTIFACT_DIRECTORIES.items():
+        path = REPO_ROOT / relative_path
+        if path.exists():
+            errors.append(
+                f"root local artifact must not remain visible: {relative_path} ({reason})"
+            )
     return errors
 
 
@@ -494,6 +514,7 @@ def run_verification() -> VerificationResult:
             *verify_required_paths(),
             *verify_forbidden_current_paths(),
             *verify_doc_phrases(),
+            *verify_root_local_artifacts_are_absent(),
             *verify_first_class_directory_responsibilities(),
             *verify_backend_zuno_directory_classifications(),
             *verify_target_architecture_html(),
