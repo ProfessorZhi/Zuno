@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 from zuno.services.graphrag.models import normalize_retrieval_mode
-from zuno.services.retrieval.models import ProcessedQuery, RetrievalPlan, RetrievalRequest
+from zuno.services.retrieval.models import (
+    QUERY_METHODS,
+    ProcessedQuery,
+    RetrievalPlan,
+    RetrievalRequest,
+    normalize_product_mode,
+)
 
 
 class RetrievalPlanner:
@@ -45,6 +51,28 @@ class RetrievalPlanner:
             return normalized
         return legacy_map.get(requested_mode, "auto")
 
+    @staticmethod
+    def _resolve_product_mode(request: RetrievalRequest) -> str:
+        if request.product_mode is not None:
+            return normalize_product_mode(request.product_mode)
+        return normalize_product_mode(request.mode)
+
+    @staticmethod
+    def _router_decision(*, resolved_product_mode: str, resolved_query_method: str) -> str:
+        if resolved_product_mode == "normal" or resolved_query_method == "basic":
+            return "normal_basic"
+        if resolved_query_method in QUERY_METHODS:
+            return f"enhanced_{resolved_query_method}"
+        return "direct"
+
+    @staticmethod
+    def _resolved_product_mode(*, requested_product_mode: str, resolved_mode: str, resolved_query_method: str) -> str:
+        if requested_product_mode == "normal":
+            return "normal"
+        if resolved_query_method in {"local", "global", "drift"} or resolved_mode == "rag_graph_deep":
+            return "enhanced"
+        return "normal"
+
     def build_plan(
         self,
         request: RetrievalRequest,
@@ -53,8 +81,12 @@ class RetrievalPlanner:
         knowledge_capability: str = "rag",
         rerank_available: bool = True,
     ) -> RetrievalPlan:
+        requested_product_mode = self._resolve_product_mode(request)
         requested_mode = normalize_retrieval_mode(request.mode)
         requested_query_method = self._normalize_query_method(request.query_method, requested_mode)
+        product_mode_explicit = request.product_mode is not None or str(request.mode or "").strip().lower() == "normal"
+        if requested_product_mode == "normal" and product_mode_explicit and str(request.query_method or "").strip().lower() in {"", "auto"}:
+            requested_query_method = "auto"
         relation_question = bool(processed_query.query_features.get("relation_question"))
         global_question = bool(processed_query.query_features.get("global_question"))
         evidence_required = bool(processed_query.query_features.get("evidence_required"))
@@ -71,14 +103,20 @@ class RetrievalPlanner:
         graph_available = knowledge_capability == "rag_graph" and graph_health not in {"unavailable", "failed", "stale"}
         community_ready = community_health in {"ready", "active"}
 
-        if requested_mode == "auto":
+        if requested_product_mode == "normal":
+            resolved_mode = "rag"
+        elif requested_product_mode == "enhanced":
+            resolved_mode = "rag_graph_deep" if knowledge_capability == "rag_graph" else "rag"
+        elif requested_mode == "auto":
             resolved_mode = "rag_graph_deep" if knowledge_capability == "rag_graph" else "rag"
         else:
             resolved_mode = requested_mode
         if scope_status != "active":
             resolved_mode = "rag"
         resolved_query_method = requested_query_method
-        if resolved_query_method == "auto":
+        if requested_product_mode == "normal":
+            resolved_query_method = "basic"
+        elif resolved_query_method == "auto":
             if knowledge_capability != "rag_graph":
                 resolved_query_method = "basic"
             elif global_question and evidence_required:
@@ -100,8 +138,13 @@ class RetrievalPlanner:
             "graph_required": False,
             "community_required": False,
             "local_graph_required": False,
+            "requested_product_mode": requested_product_mode,
+            "resolved_product_mode": None,
             "requested_query_method": requested_query_method,
             "resolved_query_method": resolved_query_method,
+            "query_method_is_router": requested_query_method == "auto",
+            "query_method_options": sorted(QUERY_METHODS),
+            "router_decision": None,
             "fallback_reason": None,
         }
         if resolved_query_method == "drift":
@@ -138,7 +181,18 @@ class RetrievalPlanner:
             internal_route = "standard_rag"
             resolved_mode = "rag"
             resolved_query_method = "basic"
+        resolved_product_mode = self._resolved_product_mode(
+            requested_product_mode=requested_product_mode,
+            resolved_mode=resolved_mode,
+            resolved_query_method=resolved_query_method,
+        )
+        router_decision = self._router_decision(
+            resolved_product_mode=resolved_product_mode,
+            resolved_query_method=resolved_query_method,
+        )
+        route_trace["resolved_product_mode"] = resolved_product_mode
         route_trace["resolved_query_method"] = resolved_query_method
+        route_trace["router_decision"] = router_decision
 
         enabled_retrievers = [] if scope_status != "active" else ["vector"]
         if enabled_retrievers and self.enable_keyword_recall and (
@@ -158,6 +212,9 @@ class RetrievalPlanner:
             knowledge_capability=knowledge_capability,
         )
         budget_policy = {
+            "product_mode": requested_product_mode,
+            "resolved_product_mode": resolved_product_mode,
+            "query_method_router": requested_query_method == "auto",
             "top_k": request.top_k,
             "rerank_top_k": request.rerank_top_k or request.top_k,
             "graph_hop_limit": request.graph_hop_limit,
@@ -185,6 +242,10 @@ class RetrievalPlanner:
             "include_processed_query": True,
             "include_retriever_runs": True,
             "include_rounds": True,
+            "evidence_coverage": {
+                "required": evidence_required,
+                "metric": "citation_coverage",
+            },
         }
         trace_policy.update(request.trace_policy or {})
 
@@ -221,4 +282,7 @@ class RetrievalPlanner:
             index_health=index_health,
             requested_query_method=requested_query_method,
             resolved_query_method=resolved_query_method,
+            requested_product_mode=requested_product_mode,
+            resolved_product_mode=resolved_product_mode,
+            router_decision=router_decision,
         )

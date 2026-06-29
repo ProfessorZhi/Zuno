@@ -4,6 +4,13 @@
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+ACTIVE_CURRENT_PHASE = "PHASE05_context-builder-memory-system.md"
+COMPLETED_PROGRAM_PHASE_FILES = [
+    "PHASE01_program-boot-baseline.md",
+    "PHASE02_workflow-self-maintenance-system.md",
+    "PHASE03_architecture-docs-html-system.md",
+    "PHASE04_query-router-mode-policy.md",
+]
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -466,7 +473,7 @@ def test_current_program_declares_active_eight_deliverables_program() -> None:
 
     assert ACTIVE_PROGRAM_NAME in current
     assert "state: active" in current
-    assert "PHASE04_query-router-mode-policy.md" in current
+    assert ACTIVE_CURRENT_PHASE in current
     assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
     assert "八个交付物" in current
     assert "默认开启线程内多 agent" in current
@@ -495,12 +502,11 @@ def test_active_program_phase_status_lifecycle_is_machine_checkable() -> None:
         encoding="utf-8"
     )
 
-    assert "current_phase: `PHASE04_query-router-mode-policy.md`" in current
-    assert "status: completed" in phase_statuses["PHASE01_program-boot-baseline.md"]
-    assert "status: completed" in phase_statuses["PHASE02_workflow-self-maintenance-system.md"]
-    assert "status: completed" in phase_statuses["PHASE03_architecture-docs-html-system.md"]
-    assert "status: active" in phase_statuses["PHASE04_query-router-mode-policy.md"]
-    for phase_name in ACTIVE_PROGRAM_PHASE_FILES[4:]:
+    assert f"current_phase: `{ACTIVE_CURRENT_PHASE}`" in current
+    for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
+        assert "status: completed" in phase_statuses[phase_name]
+    assert "status: active" in phase_statuses[ACTIVE_CURRENT_PHASE]
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES[5:]:
         assert "status: planned" in phase_statuses[phase_name], phase_name
 
 

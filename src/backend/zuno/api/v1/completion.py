@@ -61,6 +61,8 @@ async def _create_chat_agent(req: CompletionReq, login_user_id: str):
     agent_config.user_id = login_user_id
     agent_config.dialog_id = req.dialog_id
     agent_config.multi_agent_enabled = bool(req.multi_agent_enabled)
+    agent_config.product_mode = req.product_mode
+    agent_config.query_method = req.query_method
 
     chat_agent = GeneralAgent(agent_config)
     await chat_agent.init_agent()

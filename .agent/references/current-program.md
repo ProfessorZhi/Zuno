@@ -4,7 +4,7 @@
 
 Active program: `zuno-eight-deliverables-full-realization-v1`
 state: active
-current_phase: `.agent/programs/PHASE04_query-router-mode-policy.md`
+current_phase: `.agent/programs/PHASE05_context-builder-memory-system.md`
 
 `.agent/programs/` 当前保留：
 
@@ -93,3 +93,12 @@ Architecture Documentation Governance 和 Agent Workflow Self-Maintenance 已登
 - `.agent/programs/` 是 execution state。
 - 当前不启用 `.agent/plans/`；如未来启用，必须先更新 AGENTS、system、verifier 和 tests。
 - 对外展示时，Zuno 最终成品是五个成熟系统；内部验收时，拆成八大交付物。
+
+## 最近完成事实：PHASE04
+
+PHASE04 / Query Router Mode Policy 已完成。当前代码和测试证明：
+
+- `product_mode = normal | enhanced | auto` 已贯通 completion DTO、AgentConfig、KnowledgeQueryService、GraphRAGQueryService 和 RetrievalPlanner。
+- `requested_query_method` 可为 `auto`，但 `resolved_query_method` 只落到 `basic | local | global | drift`。
+- Trace metadata 已记录 requested/resolved product mode、router decision、requested/resolved query method、fallback reason、budget policy、fallback policy、pipeline trace 和 citation coverage。
+- Eval mode metadata 已保留 `standard_retrieval / enhanced_retrieval` 兼容名，并新增 `normal / enhanced / auto` 产品名。

@@ -658,7 +658,9 @@ class KnowledgeService:
         user_id: str,
         knowledge_ids: List[str],
         query: str,
-        top_k: int,
+        product_mode: str = "auto",
+        query_method: str | None = None,
+        top_k: int = 5,
     ):
         from zuno.services.application.knowledge import KnowledgeQueryService
 
@@ -666,6 +668,8 @@ class KnowledgeService:
             user_id=user_id,
             knowledge_ids=list(knowledge_ids),
             query=query,
+            product_mode=product_mode,
+            query_method=query_method,
             top_k=top_k,
         )
         return cls._knowledge_query_result_to_search_payload(result)
@@ -677,6 +681,9 @@ class KnowledgeService:
         payload["content"] = result.answer
         payload["first_mode"] = trace_metadata.get("first_mode") or result.requested_query_method
         payload["final_mode"] = trace_metadata.get("final_mode") or result.resolved_query_method
+        payload["requested_product_mode"] = trace_metadata.get("requested_product_mode")
+        payload["resolved_product_mode"] = trace_metadata.get("resolved_product_mode")
+        payload["router_decision"] = trace_metadata.get("router_decision")
         payload["fallback_triggered"] = bool(
             trace_metadata.get("fallback_triggered") or result.fallback_reason
         )

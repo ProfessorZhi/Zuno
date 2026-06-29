@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -8,6 +8,14 @@ class CompletionReq(BaseModel):
     dialog_id: str = Field(description="对话 ID")
     file_url: Optional[str] = Field(None, description="对话上传文件的对象存储链接")
     multi_agent_enabled: bool = Field(False, description="是否显式启用 multi-agent runtime")
+    product_mode: Literal["normal", "enhanced", "auto"] = Field(
+        "auto",
+        description="产品检索模式：普通、增强或自动路由",
+    )
+    query_method: Optional[Literal["auto", "basic", "local", "global", "drift"]] = Field(
+        None,
+        description="内部检索方法；auto 表示交给路由器选择，不是第五种执行方法",
+    )
 
 
 class ToolCall(BaseModel):

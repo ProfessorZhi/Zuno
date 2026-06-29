@@ -369,11 +369,21 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
 
     captured = {}
 
-    async def fake_project_query(self, *, user_id, knowledge_ids, query, query_method=None, top_k=None):
+    async def fake_project_query(
+        self,
+        *,
+        user_id,
+        knowledge_ids,
+        query,
+        product_mode="auto",
+        query_method=None,
+        top_k=None,
+    ):
         captured["query"] = {
             "user_id": user_id,
             "knowledge_ids": knowledge_ids,
             "query": query,
+            "product_mode": product_mode,
             "query_method": query_method,
             "top_k": top_k,
         }
@@ -384,7 +394,7 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
             resolved_query_method="local",
             fallback_reason="too_few_documents",
             documents=[{"id": "doc-1", "score": 0.91}],
-            evidence={"chunks": ["doc-1"]},
+            evidence={"chunks": ["doc-1"], "citation_coverage": 1.0},
             citations=["doc-1#p1"],
             retrievers_used=["vector", "graph"],
             graph_paths=[],
@@ -394,6 +404,19 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
             index_version={"vector": "v1"},
             community_version="v0",
             trace_metadata={
+                "requested_product_mode": "enhanced",
+                "resolved_product_mode": "enhanced",
+                "router_decision": "enhanced_local",
+                "budget_policy": {"product_mode": "enhanced", "top_k": 5},
+                "fallback_policy": {"allow_retry": True},
+                "pipeline_trace": {
+                    "requested_product_mode": "enhanced",
+                    "resolved_product_mode": "enhanced",
+                    "requested_query_method": "global",
+                    "resolved_query_method": "local",
+                    "fallback_reason": "too_few_documents",
+                    "steps": [],
+                },
                 "second_pass_used": True,
                 "fallback_triggered": True,
             },
@@ -420,6 +443,8 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
         search_knowledge(
             query="请补充知识库内容",
             knowledge_ids=["k_test"],
+            product_mode="enhanced",
+            query_method="global",
             top_k=5,
             login_user=SimpleNamespace(user_id="u_test"),
         )
@@ -432,10 +457,18 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
     assert response.data["fallback_triggered"] is True
     assert response.data["fallback_reason"] == "too_few_documents"
     assert response.data["citations"] == ["doc-1#p1"]
+    assert response.data["requested_product_mode"] == "enhanced"
+    assert response.data["resolved_product_mode"] == "enhanced"
+    assert response.data["trace_metadata"]["router_decision"] == "enhanced_local"
+    assert response.data["trace_metadata"]["budget_policy"]["product_mode"] == "enhanced"
+    assert response.data["trace_metadata"]["fallback_policy"]["allow_retry"] is True
+    assert response.data["trace_metadata"]["pipeline_trace"]["resolved_query_method"] == "local"
+    assert response.data["evidence"]["citation_coverage"] == 1.0
     assert captured["query"] == {
         "user_id": "u_test",
         "knowledge_ids": ["k_test"],
         "query": "请补充知识库内容",
-        "query_method": None,
+        "product_mode": "enhanced",
+        "query_method": "global",
         "top_k": 5,
     }

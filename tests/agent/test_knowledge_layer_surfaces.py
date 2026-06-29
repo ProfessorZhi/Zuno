@@ -43,11 +43,15 @@ EXPECTED_EXPORTS = {
     ],
     "zuno.knowledge.retrieval": [
         "ProcessedQuery",
+        "PRODUCT_MODES",
+        "QUERY_METHODS",
+        "QUERY_METHOD_ROUTER",
         "RetrievalOrchestrator",
         "RetrievalPlan",
         "RetrievalPlanner",
         "RetrievalRequest",
         "RetrievedDocument",
+        "normalize_product_mode",
     ],
     "zuno.knowledge.fusion": [
         "FusionResult",

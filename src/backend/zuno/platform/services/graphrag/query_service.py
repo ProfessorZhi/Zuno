@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.services.retrieval.models import normalize_product_mode
 from zuno.services.retrieval.planner import RetrievalPlanner
 
 
@@ -88,16 +89,21 @@ class GraphRAGQueryService:
         query: str,
         knowledge_ids: list[str],
         snapshot: GraphRAGProjectSnapshot,
+        product_mode: str | None = None,
         query_method: str | None = None,
         top_k: int | None = None,
     ) -> KnowledgeQueryResult:
-        resolved_query_method = query_method or snapshot.default_query_method()
+        resolved_product_mode = normalize_product_mode(product_mode)
+        requested_query_method = query_method or snapshot.default_query_method()
+        if resolved_product_mode == "normal" and query_method is None:
+            requested_query_method = "auto"
         retrieval_settings = dict(snapshot.retrieval_settings)
         if top_k is not None:
             retrieval_settings["top_k"] = top_k
 
         retrieval_options = {
-            "query_method": resolved_query_method,
+            "product_mode": resolved_product_mode,
+            "query_method": requested_query_method,
             "requested_profile": retrieval_settings.get("profile", "auto"),
             "top_k": retrieval_settings.get("top_k"),
             "rerank_enabled": retrieval_settings.get("rerank_enabled"),
@@ -108,7 +114,7 @@ class GraphRAGQueryService:
             "knowledge_capability": snapshot.knowledge_capability,
             "graphrag_project": dict(snapshot.contract),
             "query_policy": dict(snapshot.query_policy),
-            "budget_policy": {},
+            "budget_policy": {"product_mode": resolved_product_mode},
             "fallback_policy": {},
             "trace_policy": {"enabled": True},
             "scope_policy": {
@@ -120,6 +126,10 @@ class GraphRAGQueryService:
             "index_health": dict(snapshot.index_health),
         }
         mode = "enhanced_retrieval" if snapshot.knowledge_capability == "rag_graph" else "standard_retrieval"
+        if resolved_product_mode == "normal":
+            mode = "standard_retrieval"
+        elif resolved_product_mode == "enhanced":
+            mode = "enhanced_retrieval"
         raw_result = await self.orchestrator.run(
             mode,
             query,

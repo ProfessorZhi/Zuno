@@ -11,6 +11,8 @@ def test_completion_passes_dialog_id_into_general_agent(monkeypatch):
     class FakeAgent:
         def __init__(self, agent_config):
             captured["dialog_id"] = agent_config.dialog_id
+            captured["product_mode"] = agent_config.product_mode
+            captured["query_method"] = agent_config.query_method
 
         async def init_agent(self):
             return None
@@ -59,6 +61,8 @@ def test_completion_passes_dialog_id_into_general_agent(monkeypatch):
     )
 
     assert captured["dialog_id"] == "dialog_42"
+    assert captured["product_mode"] == "auto"
+    assert captured["query_method"] is None
     assert response.media_type == "text/event-stream"
 
 
@@ -71,6 +75,8 @@ def test_completion_can_enable_multi_agent_runtime(monkeypatch):
     class FakeAgent:
         def __init__(self, agent_config):
             captured["multi_agent_enabled"] = agent_config.multi_agent_enabled
+            captured["product_mode"] = agent_config.product_mode
+            captured["query_method"] = agent_config.query_method
 
         async def init_agent(self):
             return None
@@ -118,10 +124,14 @@ def test_completion_can_enable_multi_agent_runtime(monkeypatch):
                 dialog_id="dialog_multi",
                 file_url=None,
                 multi_agent_enabled=True,
+                product_mode="enhanced",
+                query_method="local",
             ),
             login_user=SimpleNamespace(user_id="u_login"),
         )
     )
 
     assert captured["multi_agent_enabled"] is True
+    assert captured["product_mode"] == "enhanced"
+    assert captured["query_method"] == "local"
     assert response.media_type == "text/event-stream"

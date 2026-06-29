@@ -35,6 +35,7 @@ Local-first Agent Workspace
 - `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。
 - 当前知识回答主线是 Single GeneralAgent Runtime。
 - 当前 GraphRAG / Knowledge 主线已经包含 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
+- 当前 Query Router foundation 已贯通 `product_mode = normal | enhanced | auto` 与 `query_method = auto | basic | local | global | drift` 的请求、路由和 trace；`auto` 只表示 router，最终 `resolved_query_method` 不落到 `auto`。
 - Phase 0-6 架构收口仍是已完成的历史事实。
 - Phase 0-6 架构收口、Target Architecture Migration V1、Phase 11A / 11B / 11C 和 Phase 12 closure 都是已完成历史事实。
 - Phase 11A 已完成：项目查询 runtime 已引入 Knowledge / GraphRAG 查询边界。
@@ -76,6 +77,7 @@ Completion API
 - Capability 目标是 ToolCard Registry、keyword / alias lookup、Native BM25、optional vector search、permission / health / cost filter 和 capability selection trace。
 - Enhanced retrieval 目标包含 multi-query、multi-retriever recall、RRF coarse fusion `k=60`、optional rerank、evidence check、citation 和 trace。
 - GraphRAG query method 是 `basic`、`local`、`global`、`drift`；`auto` 是 router，不是第五种 query mode。
+- 产品模式是 `normal`、`enhanced`、`auto`；trace 中分开记录 product mode、router decision 和 query method。
 
 ## 受限历史兼容
 

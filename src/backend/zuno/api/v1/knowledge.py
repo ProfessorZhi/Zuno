@@ -211,6 +211,8 @@ async def search_knowledge(
     *,
     knowledge_ids: List[str] = Body(...),
     query: str = Body(...),
+    product_mode: str = Body(default="auto"),
+    query_method: str | None = Body(default=None),
     top_k: int = Body(default=5),
     login_user: UserPayload = Depends(get_login_user),
 ):
@@ -222,6 +224,8 @@ async def search_knowledge(
             user_id=login_user.user_id,
             knowledge_ids=knowledge_ids,
             query=query,
+            product_mode=product_mode,
+            query_method=query_method,
             top_k=top_k,
         )
         return resp_200(data=result)

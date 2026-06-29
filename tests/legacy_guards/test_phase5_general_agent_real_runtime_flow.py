@@ -45,12 +45,13 @@ def test_zuno_general_agent_knowledge_tool_uses_project_query_service(monkeypatc
 
     captured = {}
 
-    async def fake_query(self, *, user_id, knowledge_ids, query, query_method=None, top_k=None):
+    async def fake_query(self, *, user_id, knowledge_ids, query, product_mode="auto", query_method=None, top_k=None):
         captured.update(
             {
                 "user_id": user_id,
                 "knowledge_ids": knowledge_ids,
                 "query": query,
+                "product_mode": product_mode,
                 "query_method": query_method,
                 "top_k": top_k,
             }
@@ -82,6 +83,7 @@ def test_zuno_general_agent_knowledge_tool_uses_project_query_service(monkeypatc
 
     assert agent.tools[0].name == "search_knowledge_base"
     assert captured["knowledge_ids"] == ["kb_contract"]
+    assert captured["product_mode"] == "auto"
     assert "第八条 违约责任" in result
     assert "citations: contract_chunk_1" in result
     assert "resolved_query_method: local" in result

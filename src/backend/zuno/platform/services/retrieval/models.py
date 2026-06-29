@@ -4,11 +4,41 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
+PRODUCT_MODES = {"normal", "enhanced", "auto"}
+QUERY_METHODS = {"basic", "local", "global", "drift"}
+QUERY_METHOD_ROUTER = "auto"
+
+
+def normalize_product_mode(mode: str | None) -> str:
+    normalized = str(mode or "auto").strip().lower() or "auto"
+    alias_map = {
+        "standard": "normal",
+        "standard_retrieval": "normal",
+        "baseline_rag": "normal",
+        "rag": "normal",
+        "basic": "normal",
+        "normal": "normal",
+        "enhanced": "enhanced",
+        "enhanced_retrieval": "enhanced",
+        "rag_graph": "enhanced",
+        "rag_graph_deep": "enhanced",
+        "graphrag": "enhanced",
+        "local_graphrag": "enhanced",
+        "community_global": "enhanced",
+        "drift_like": "enhanced",
+        "deep_graphrag": "enhanced",
+        "auto": "auto",
+        "default": "auto",
+    }
+    return alias_map.get(normalized, "auto")
+
+
 @dataclass(slots=True)
 class RetrievalRequest:
     query: str
     knowledge_ids: list[str]
     mode: str = "auto"
+    product_mode: str | None = None
     query_method: str = "auto"
     requested_profile: str = "auto"
     top_k: int | None = None
@@ -59,6 +89,9 @@ class RetrievalPlan:
     graphrag_project: dict[str, Any] = field(default_factory=dict)
     requested_query_method: str = "auto"
     resolved_query_method: str = "basic"
+    requested_product_mode: str = "auto"
+    resolved_product_mode: str = "auto"
+    router_decision: str = "direct"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -81,6 +114,9 @@ class RetrievalPlan:
             "graphrag_project": self.graphrag_project,
             "requested_query_method": self.requested_query_method,
             "resolved_query_method": self.resolved_query_method,
+            "requested_product_mode": self.requested_product_mode,
+            "resolved_product_mode": self.resolved_product_mode,
+            "router_decision": self.router_decision,
         }
 
 

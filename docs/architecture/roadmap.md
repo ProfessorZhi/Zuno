@@ -28,8 +28,8 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 | 目标架构继续升版 | completed / archived | 让 Zuno 从恢复期 GraphRAG / Domain Pack 叙事，继续靠近成熟 Agent / RAG / GraphRAG 工程架构。 | 更新 `target-architecture.md` 和图示，把 API / Agent / Memory / Capability / Knowledge / Platform / Trace 的边界讲清；仍不能把未实现能力写成 Current。 |
 | 文件夹继续分门别类 | completed / archived | 让第一次看仓库的人能从目录名直接读出架构，而不是在 `core`、`services`、`rag`、`retrieval`、`graphrag` 之间拼图。 | `src/backend/zuno` 顶层目录已收敛到六层；根级 alias `.py` 文件收口到 legacy alias registry；verifier 和 repo tests 固定完成态。 |
 | 六层内部入口成熟化 | completed / archived | Program 3 只完成顶层封口；六层内部还需要从 facade 逐步长成可解释、可测试的目标层入口。 | 已完成 agent / memory / capability / knowledge / platform 的第一批无副作用薄入口，并证明新旧 import 边界和 no-eager-load 约束。 |
-| Query Router 与模式策略 | active program / planned phase | 先固定普通 / 增强 / 自动三种产品模式，以及 `basic / local / global / drift` 四种内部方法。 | `auto` 只作为 router；mode、query_method、fallback、budget 和 evidence coverage 进入 trace/eval contract。 |
-| Context Builder 与 Memory | active program / planned phase | Agentic RAG 需要稳定 Context Pack 和记忆边界，否则增强模式会退化成 prompt 拼接。 | 短期状态、工作记忆、语义记忆、情节记忆、程序性记忆有 owner、source ids、compression / extraction policy。 |
+| Query Router 与模式策略 | active program / PHASE04 completed | 先固定普通 / 增强 / 自动三种产品模式，以及 `basic / local / global / drift` 四种内部方法。 | `auto` 只作为 router；product mode、query_method、fallback、budget 和 evidence coverage 已进入 trace/eval contract，并有 focused tests。 |
+| Context Builder 与 Memory | active program / PHASE05 active | Agentic RAG 需要稳定 Context Pack 和记忆边界，否则增强模式会退化成 prompt 拼接。 | 短期状态、工作记忆、语义记忆、情节记忆、程序性记忆有 owner、source ids、compression / extraction policy。 |
 | Hooks / Evidence / Trace | active program / planned phase | 增强模式必须有权限、预算、fallback、evidence check、citation coverage 和 runtime events。 | hooks/event schema/evidence policy/artifact trace 有 focused tests 和文档边界。 |
 | Runtime 架构升级 | active program / planned phase | 在 mode、context、hooks 边界稳定后，再把关键 runtime slice 往成熟形态推进。 | 每个 runtime slice 必须有代码、测试、trace/eval 证据，不做大包式重构。 |
 | 架构 HTML 重做清晰 | active program / PHASE03 completed | 让 GitHub 访问者、老师、评审和面试官快速看懂架构。 | `docs/architecture.md` / `docs/architecture.html` 已由 renderer 和 verifier 检查同源；PHASE03 已完成边界措辞、视觉 QA、README 入口和最终验证收口。 |

@@ -296,10 +296,15 @@ class RetrievalOrchestrator:
     @staticmethod
     def _pipeline_trace(
         *,
+        requested_product_mode: str | None,
+        resolved_product_mode: str | None,
+        router_decision: str | None,
         requested_query_method: str | None,
         resolved_query_method: str | None,
         retrievers_used: list[str],
         fallback_reason: str | None,
+        budget_policy: dict | None,
+        fallback_policy: dict | None,
         rewritten_query_used: bool,
         requery_used: bool,
         fusion_used: bool,
@@ -332,9 +337,14 @@ class RetrievalOrchestrator:
             },
         ]
         return {
+            "requested_product_mode": requested_product_mode,
+            "resolved_product_mode": resolved_product_mode,
+            "router_decision": router_decision,
             "requested_query_method": requested_query_method,
             "resolved_query_method": resolved_query_method,
             "fallback_reason": fallback_reason,
+            "budget_policy": dict(budget_policy or {}),
+            "fallback_policy": dict(fallback_policy or {}),
             "retrievers_used": list(retrievers_used),
             "steps": steps,
         }
@@ -499,6 +509,7 @@ class RetrievalOrchestrator:
             query=query,
             knowledge_ids=knowledge_ids,
             mode=mode,
+            product_mode=retrieval_options.get("product_mode"),
             query_method=retrieval_options.get("query_method") or "auto",
             requested_profile=retrieval_options.get("requested_profile") or retrieval_options.get("profile") or "auto",
             top_k=retrieval_options.get("top_k"),
@@ -515,6 +526,7 @@ class RetrievalOrchestrator:
             scope_policy=dict(retrieval_options.get("scope_policy") or {}),
             index_version=dict(retrieval_options.get("index_version") or {}),
             index_health=dict(retrieval_options.get("index_health") or {}),
+            graphrag_project=dict(retrieval_options.get("graphrag_project") or {}),
         )
         knowledge_capability = retrieval_options.get("knowledge_capability") or ("rag_graph" if knowledge_ids else "rag")
         plan = self.planner.build_plan(
@@ -927,10 +939,15 @@ class RetrievalOrchestrator:
         rewritten_query_used = any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds)
         evidence_bundle = self._evidence_bundle(list(final_pass.get("documents") or []), citation_chunks)
         pipeline_trace = self._pipeline_trace(
+            requested_product_mode=first_plan.get("requested_product_mode"),
+            resolved_product_mode=final_plan.get("resolved_product_mode"),
+            router_decision=final_plan.get("router_decision"),
             requested_query_method=first_plan.get("requested_query_method"),
             resolved_query_method=final_plan.get("resolved_query_method"),
             retrievers_used=retrievers_used,
             fallback_reason=(final_plan.get("route_trace") or {}).get("fallback_reason"),
+            budget_policy=final_plan.get("budget_policy"),
+            fallback_policy=final_plan.get("fallback_policy"),
             rewritten_query_used=rewritten_query_used,
             requery_used=bool(requery_attempted or requery_used),
             fusion_used=bool((final_pass.get("documents") or []) or (final_pass.get("retriever_runs") or [])),
@@ -952,6 +969,9 @@ class RetrievalOrchestrator:
             "processed_query": processed_query_payload,
             "retriever_runs": final_pass.get("retriever_runs") or [],
             "requested_mode": first_plan.get("requested_mode"),
+            "requested_product_mode": first_plan.get("requested_product_mode"),
+            "resolved_product_mode": final_plan.get("resolved_product_mode"),
+            "router_decision": final_plan.get("router_decision"),
             "requested_query_method": first_plan.get("requested_query_method"),
             "resolved_query_method": final_plan.get("resolved_query_method"),
             "query_method_fallback_reason": (final_plan.get("route_trace") or {}).get("fallback_reason"),

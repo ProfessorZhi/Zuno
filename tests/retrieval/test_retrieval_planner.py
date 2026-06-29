@@ -2,7 +2,7 @@ from zuno.services.retrieval.models import ProcessedQuery, RetrievalRequest
 from zuno.services.retrieval.planner import RetrievalPlanner
 
 
-def _processed(query: str, *, relation: bool = False, keyword: bool = False):
+def _processed(query: str, *, relation: bool = False, keyword: bool = False, global_question: bool = False, evidence: bool = False):
     return ProcessedQuery(
         original_query=query,
         normalized_query=query,
@@ -11,6 +11,8 @@ def _processed(query: str, *, relation: bool = False, keyword: bool = False):
         query_features={
             "relation_question": relation,
             "keyword_heavy": keyword,
+            "global_question": global_question,
+            "evidence_required": evidence,
         },
         route_hints=[],
     )
@@ -195,3 +197,78 @@ def test_legacy_route_names_map_to_public_query_methods():
     assert plan.requested_query_method == "local"
     assert plan.resolved_query_method == "local"
     assert plan.internal_route == "local_graphrag"
+
+
+def test_product_normal_mode_forces_basic_query_method_trace():
+    planner = RetrievalPlanner(enable_keyword_recall=True)
+
+    plan = planner.build_plan(
+        RetrievalRequest(
+            query="只需要普通检索合同条款",
+            knowledge_ids=["kb_1"],
+            mode="normal",
+            query_method="auto",
+            product_mode="normal",
+        ),
+        _processed("只需要普通检索合同条款", relation=True, global_question=True, evidence=True),
+        knowledge_capability="rag_graph",
+    )
+
+    assert plan.requested_product_mode == "normal"
+    assert plan.resolved_product_mode == "normal"
+    assert plan.requested_query_method == "auto"
+    assert plan.resolved_query_method == "basic"
+    assert plan.internal_route == "standard_rag"
+    assert plan.route_trace["query_method_is_router"] is True
+    assert plan.route_trace["router_decision"] == "normal_basic"
+    assert plan.budget_policy["product_mode"] == "normal"
+    assert plan.trace_policy["evidence_coverage"]["required"] is True
+
+
+def test_product_auto_never_resolves_auto_as_query_method():
+    planner = RetrievalPlanner(enable_keyword_recall=True)
+
+    plan = planner.build_plan(
+        RetrievalRequest(
+            query="整体风险和证据覆盖情况",
+            knowledge_ids=["kb_1"],
+            mode="auto",
+            product_mode="auto",
+            query_method="auto",
+            index_health={"community": "ready"},
+        ),
+        _processed("整体风险和证据覆盖情况", global_question=True, evidence=True),
+        knowledge_capability="rag_graph",
+    )
+
+    assert plan.requested_product_mode == "auto"
+    assert plan.resolved_product_mode == "enhanced"
+    assert plan.requested_query_method == "auto"
+    assert plan.resolved_query_method in {"basic", "local", "global", "drift"}
+    assert plan.resolved_query_method != "auto"
+    assert plan.route_trace["query_method_is_router"] is True
+    assert plan.route_trace["router_decision"] == "enhanced_drift"
+
+
+def test_product_enhanced_explicit_global_method_falls_back_with_trace():
+    planner = RetrievalPlanner(enable_keyword_recall=True)
+
+    plan = planner.build_plan(
+        RetrievalRequest(
+            query="总结所有合同风险",
+            knowledge_ids=["kb_1"],
+            mode="enhanced",
+            product_mode="enhanced",
+            query_method="global",
+            index_health={"community": "not_built"},
+        ),
+        _processed("总结所有合同风险", global_question=True),
+        knowledge_capability="rag_graph",
+    )
+
+    assert plan.requested_product_mode == "enhanced"
+    assert plan.resolved_product_mode == "enhanced"
+    assert plan.requested_query_method == "global"
+    assert plan.resolved_query_method == "local"
+    assert plan.route_trace["fallback_reason"] == "community_not_ready"
+    assert plan.route_trace["router_decision"] == "enhanced_local"
