@@ -1,5 +1,5 @@
 # Zuno Repo Layout Cleanup V1
-> 状态：active。当前平铺执行计划位于 `.agent/programs/`，从 `PHASE01` 开始。
+> 状态：已完成并归档。此文件是 Program 3 历史路线图，不是当前 active plan。
 
 Program ID：`zuno-repo-layout-cleanup-v1`
 
@@ -43,6 +43,10 @@ infra/      Docker、DB、部署基础设施
 3. [PHASE03：后端六层迁移计划](PHASE03_backend-six-layer-migration-plan.md)
 4. [PHASE04：小步边界清理](PHASE04_small-boundary-cleanups.md)
 5. [PHASE05：Repo hygiene verifier closure](PHASE05_hygiene-verifier-closure.md)
+6. [PHASE06：Backend 目录清晰度审计](PHASE06_backend-directory-clarity-audit.md)
+7. [PHASE07：FastAPI JWT auth 顶层兼容壳退休](PHASE07_fastapi-jwt-auth-compat-retirement-plan.md)
+8. [PHASE08：Backend physical cleanup slices](PHASE08_backend-physical-cleanup-slices.md)
+9. [PHASE09：目标布局视觉兼容壳退休](PHASE09_target-layout-visual-compat-shell-retirement.md)
 
 ## PHASE01 多线程提示词
 

@@ -14,6 +14,7 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
         ".agent/references/verification-map.md",
+        ".agent/references/zuno-repo-hygiene.md",
         ".agent/architecture/README.md",
         ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
         ".agent/architecture/near-term/01-target-runtime-architecture.md",
@@ -27,6 +28,7 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/programs/current.md",
         ".agent/programs/implementation-roadmap.md",
         ".agent/programs/closure-checklist.md",
+        ".agent/programs/PHASE10_directory-surface-map-and-guardrails.md",
         ".agent/architecture/future/programs/README.md",
         ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
         ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -44,6 +46,7 @@ def test_agent_system_required_paths_exist() -> None:
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE06_backend-directory-clarity-audit.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE09_target-layout-visual-compat-shell-retirement.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
@@ -257,6 +260,7 @@ def test_agent_references_are_local_skills_not_plain_indexes() -> None:
         "docs-map.md",
         "verification-map.md",
         "known-pitfalls.md",
+        "zuno-repo-hygiene.md",
     ]
 
     for file_name in skill_files:
@@ -325,7 +329,7 @@ def test_agent_templates_keep_execution_skeleton_boundary() -> None:
         assert phrase in content, f"missing template boundary phrase: {phrase}"
 
 
-def test_current_program_declares_no_active_program_and_latest_archive() -> None:
+def test_current_program_declares_active_program3_continuation_and_latest_archive() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -334,8 +338,8 @@ def test_current_program_declares_no_active_program_and_latest_archive() -> None
         encoding="utf-8"
     )
 
-    assert "当前没有 active program" in current
-    assert "最新完成" in current
+    assert "Directory Surface Alignment" in current
+    assert "PHASE10_directory-surface-map-and-guardrails.md" in current
     assert "MCP server implementations" in current
     assert "HTTP middleware implementations" in current
     assert "zuno-repo-layout-cleanup-v1" in current
@@ -385,6 +389,7 @@ def test_agent_references_are_slim_navigation_set() -> None:
             "verification-map.md",
             "command-catalog.md",
             "known-pitfalls.md",
+            "zuno-repo-hygiene.md",
             "task-routing.md",
             "workflow.md",
         ]
@@ -420,7 +425,7 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
 
 
-def test_program3_closure_keeps_all_phases_archived_and_next_queue() -> None:
+def test_program3_continuation_keeps_history_and_active_phase() -> None:
     roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
         encoding="utf-8"
     )
@@ -453,7 +458,7 @@ def test_program3_closure_keeps_all_phases_archived_and_next_queue() -> None:
     )
 
     for phrase in [
-        "当前没有 active program",
+        "Program 3 continuation active",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
@@ -461,7 +466,7 @@ def test_program3_closure_keeps_all_phases_archived_and_next_queue() -> None:
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == []
+    assert active_phase_files == ["PHASE10_directory-surface-map-and-guardrails.md"]
     for prompt in [
         "THREAD_A_root-docs-agent-hygiene-prompt.md",
         "THREAD_B_backend-six-layer-audit-prompt.md",
@@ -481,7 +486,6 @@ def test_program3_closure_keeps_all_phases_archived_and_next_queue() -> None:
     assert "queued program" in phase03
     assert "LLM extraction" in program2
     assert "知识库支持多套 extractor / config 选择" in program2
-    assert "已完成并归档" in program3
     assert "repo hygiene verifier" in program3
     assert "capability/mcp/servers" in program3
     assert "platform/middleware" in program3
@@ -489,6 +493,7 @@ def test_program3_closure_keeps_all_phases_archived_and_next_queue() -> None:
         "PHASE06_backend-directory-clarity-audit.md",
         "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
         "PHASE08_backend-physical-cleanup-slices.md",
+        "PHASE09_target-layout-visual-compat-shell-retirement.md",
     ]:
         assert (
             REPO_ROOT

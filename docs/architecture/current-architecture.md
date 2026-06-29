@@ -34,11 +34,11 @@ docs
 - Runtime / core 层：`src/backend/zuno/core/`
 - Service 层：`src/backend/zuno/services/`
 - 持久化和设置：`src/backend/zuno/database/`、`src/backend/zuno/settings.py`
-- MCP server implementations：`src/backend/zuno/capability/mcp/servers/`，旧 `zuno.mcp_servers.*` 只作为 compatibility shell。
-- HTTP middleware implementations：`src/backend/zuno/platform/middleware/`，旧 `zuno.middleware.*` 只作为 compatibility shell。
+- MCP server implementations：`src/backend/zuno/capability/mcp/servers/`，旧 `zuno.mcp_servers.*` 由 `src/backend/zuno/mcp_servers.py` alias module 承接。
+- HTTP middleware implementations：`src/backend/zuno/platform/middleware/`，旧 `zuno.middleware.*` 由 `src/backend/zuno/middleware.py` alias module 承接。
 - Runtime 资源：`src/backend/zuno/resources/`
 - 兼容边界：`src/backend/zuno/compatibility/`
-- Eval 和维护工具：`tools/evals/zuno/`、`tools/scripts/`
+- Eval 和维护工具：`tools/evals/zuno/`、`tools/scripts/`；旧 `zuno.evals.*` 由 `src/backend/zuno/evals.py` alias module 承接。
 
 ## 当前 GraphRAG 与 Agent 主线
 
@@ -96,7 +96,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - Memory layer foundation contracts：`src/backend/zuno/services/memory/layers.py`
 - Capability System foundation contracts：`src/backend/zuno/services/application/capabilities/`
 - `GeneralAgent.astream()` 的 minimal runtime integration：准备 `ModelContextPacket`、传递 `context_trace`、选择有限 capability schema，并在 memory enabled 时提交 scoped raw event 与 task summary。
-- Program 3 backend layout cleanup：顶层 `src/backend/fastapi_jwt_auth/` 已退休；prompt、fixture、system skill 资源已进入 `src/backend/zuno/resources/`；legacy / vendor 兼容材料已进入 `src/backend/zuno/compatibility/`；MCP server implementations 已进入 `src/backend/zuno/capability/mcp/servers/`；HTTP middleware implementations 已进入 `src/backend/zuno/platform/middleware/`；仍保留的旧 runtime 顶层目录已由 README 和 repo structure verifier 固定分类。
+- Program 3 backend layout cleanup：顶层 `src/backend/fastapi_jwt_auth/` 已退休；prompt、fixture、system skill 资源已进入 `src/backend/zuno/resources/`；legacy / vendor 兼容材料已进入 `src/backend/zuno/compatibility/`；MCP server implementations 已进入 `src/backend/zuno/capability/mcp/servers/`；HTTP middleware implementations 已进入 `src/backend/zuno/platform/middleware/`；旧 `mcp_servers/`、`middleware/`、`evals/` 顶层兼容壳已降级为 `.py` alias module；仍保留的旧 runtime 顶层目录已由 README 和 repo structure verifier 固定分类。
 
 ## 不属于 Current
 
@@ -112,7 +112,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
 - GraphRAG LLM-first entity / relation extraction 的生产实现
 - 可由知识库选择的多套 extractor / config 治理
-- API / Agent / Memory / Capability / Knowledge / Platform 六个主层的完整物理迁移；当前只完成资源、兼容目录、MCP server implementations 和 HTTP middleware implementations 的低风险物理收敛
+- API / Agent / Memory / Capability / Knowledge / Platform 六个主层的完整物理迁移；当前只完成资源、兼容目录、MCP server implementations、HTTP middleware implementations 和视觉兼容壳 alias module 的低风险物理收敛
 
 ## 历史完成事实
 

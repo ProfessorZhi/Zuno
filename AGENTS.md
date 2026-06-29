@@ -124,7 +124,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1、Program 2 和 Program 3 已完成；当前没有 active program。
+当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1 和 Program 2 已完成；Program 3 当前重新打开为 Directory Surface Alignment V1 continuation；Program 4/5 仍是 queued / not active。
 
 最新完成程序归档在：
 
@@ -140,7 +140,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/current.md`
 - `.agent/programs/closure-checklist.md`
 
-当前没有 active phase。Program 3 已完成并归档：`src/backend/` 顶层只保留 `zuno/`；`fastapi_jwt_auth` 顶层 shell 已退休；resources / compatibility、MCP server implementations 和 HTTP middleware implementations 已完成低风险物理收敛；仍保留的旧 runtime 顶层目录有 README 分类和 verifier guard。
+当前 active phase 是 `PHASE10_directory-surface-map-and-guardrails.md`。Program 3 不能再写成“文件夹整理完成”：`src/backend/` 顶层只保留 `zuno/`；`fastapi_jwt_auth` 顶层 shell 已退休；resources / compatibility、MCP server implementations 和 HTTP middleware implementations 已完成低风险物理收敛；旧 `mcp_servers/`、`middleware/`、`evals/` 顶层兼容壳已退休为 `.py` alias module；但 `core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/`、`config/` 仍是 migration source，需要继续目录地图、facade 和 guardrails 收口。
 
 后续 queued programs：
 

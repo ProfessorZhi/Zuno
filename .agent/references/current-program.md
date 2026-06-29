@@ -2,22 +2,23 @@
 
 ## Current Truth
 
-当前没有 active program。
+当前 active program：`zuno-repo-layout-cleanup-v1` continuation / Directory Surface Alignment V1。
 
-`.agent/programs/` 只保留：
+`.agent/programs/` 当前保留：
 
 - `README.md`
 - `current.md`
 - `implementation-roadmap.md`
 - `closure-checklist.md`
+- `PHASE10_directory-surface-map-and-guardrails.md`
 
-最新完成并归档的 program：
+Program 3 PHASE01-09 历史归档：
 
 - `docs/history/programs/zuno-repo-layout-cleanup-v1/`
 
 ## 最近完成事实
 
-`zuno-repo-layout-cleanup-v1` 已完成：
+`zuno-repo-layout-cleanup-v1` 已完成的切片：
 
 - root/docs hygiene 和 repo hygiene guardrails。
 - `src/backend/` 顶层只保留 `zuno/`。
@@ -26,7 +27,8 @@
 - legacy / vendor 兼容材料已进入 `compatibility/`。
 - MCP server implementations 已进入 `capability/mcp/servers/`。
 - HTTP middleware implementations 已进入 `platform/middleware/`。
-- 仍保留的旧 runtime 顶层目录已有 README 分类和 verifier guard。
+- 旧 `mcp_servers/`、`middleware/`、`evals/` 顶层兼容壳已退休为 `.py` alias module。
+- 当前仍保留的 `core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/`、`config/` 说明 Program 3 尚未 closure，PHASE10 正在补目录地图和 guardrails。
 
 ## 等待打开
 

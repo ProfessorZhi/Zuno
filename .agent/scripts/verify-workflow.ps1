@@ -33,6 +33,7 @@ Require-Path ".agent\system.yaml"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
+Require-Path ".agent\programs\PHASE10_directory-surface-map-and-guardrails.md"
 Require-Path ".agent\architecture\future\programs\README.md"
 Require-Path ".agent\programs\thread-prompts\README.md"
 Require-NoPath ".agent\programs\thread-prompts\THREAD_D_resources-compatibility-physical-migration-prompt.md"
@@ -45,6 +46,7 @@ Require-NoPath ".agent\programs\PHASE05_closure-history-archive.md"
 Require-NoPath ".agent\programs\PHASE06_backend-directory-clarity-audit.md"
 Require-NoPath ".agent\programs\PHASE07_fastapi-jwt-auth-compat-retirement-plan.md"
 Require-NoPath ".agent\programs\PHASE08_backend-physical-cleanup-slices.md"
+Require-NoPath ".agent\programs\PHASE09_target-layout-visual-compat-shell-retirement.md"
 Require-NoPath ".agent\architecture\future\programs\zuno-target-architecture-refresh-v1"
 Require-NoPath ".agent\architecture\future\programs\zuno-repo-layout-cleanup-v1"
 Require-NoPath ".agent\programs\zuno-target-runtime-v2"
@@ -74,6 +76,7 @@ Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE05_hygiene-
 Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE06_backend-directory-clarity-audit.md"
 Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE07_fastapi-jwt-auth-compat-retirement-plan.md"
 Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE08_backend-physical-cleanup-slices.md"
+Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE09_target-layout-visual-compat-shell-retirement.md"
 Require-Path "docs\history\README.md"
 Require-Path "apps\web\AGENTS.md"
 Require-Path "src\backend\zuno\AGENTS.md"
@@ -101,8 +104,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw
-if ($currentProgram -notmatch "当前没有 active program") {
-    $failures.Add("current-program.md must declare no active program")
+if ($currentProgram -notmatch "Directory Surface Alignment") {
+    $failures.Add("current-program.md must declare active Program 3 Directory Surface Alignment")
 }
 if ($currentProgram -notmatch "\.agent/programs/") {
     $failures.Add("current-program.md does not point to the flat program directory")

@@ -35,6 +35,7 @@ docs/history/
   verification-map.md
   command-catalog.md
   known-pitfalls.md
+  zuno-repo-hygiene.md
 ```
 
 这些文件共同回答四件事：

@@ -4,13 +4,17 @@
 
 ## 当前状态
 
-当前没有 active program。
+当前 active program：`zuno-repo-layout-cleanup-v1` continuation / Directory Surface Alignment V1。
 
-`zuno-repo-layout-cleanup-v1` 已完成并归档到：
+当前 active phase：
+
+- `PHASE10_directory-surface-map-and-guardrails.md`
+
+Program 3 PHASE01-09 的历史证据归档到：
 
 - `docs/history/programs/zuno-repo-layout-cleanup-v1/`
 
-`.agent/programs/` 当前只保留入口、状态、路线图和收口清单，不保留已完成 program 的 `PHASE*.md`。
+`.agent/programs/` 当前只保留 Program 3 continuation 的 active phase，不恢复旧 PHASE01-09。
 
 ## 等待打开的 Program
 
@@ -19,7 +23,7 @@
 - `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
 - `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
 
-打开新 program 时必须从 `PHASE01` 开始，并先把 `.agent/programs/current.md`、`implementation-roadmap.md` 和相关 verifier/test 同步到新 active 状态。
+打开新 program 时必须从 `PHASE01` 开始，并先把 `.agent/programs/current.md`、`implementation-roadmap.md` 和相关 verifier/test 同步到新 active 状态。Program 3 continuation 使用延续编号，不等于打开 Program 4。
 
 ## 打开新 Program 的规则
 
@@ -33,3 +37,4 @@
 - [current.md](current.md)：当前程序状态。
 - [implementation-roadmap.md](implementation-roadmap.md)：短期 program 队列和下一步打开规则。
 - [closure-checklist.md](closure-checklist.md)：通用收口清单。
+- [PHASE10_directory-surface-map-and-guardrails.md](PHASE10_directory-surface-map-and-guardrails.md)：当前 active phase。

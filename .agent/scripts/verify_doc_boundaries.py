@@ -45,6 +45,7 @@ REQUIRED_AGENT_PROGRAMS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE06_backend-directory-clarity-audit.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE09_target-layout-visual-compat-shell-retirement.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
@@ -91,10 +92,11 @@ def main() -> int:
 
     current_program = _read(".agent/references/current-program.md")
     for phrase in [
-        "当前没有 active program",
-        "最新完成并归档的 program",
+        "当前 active program",
+        "PHASE10_directory-surface-map-and-guardrails.md",
         "MCP server implementations",
         "HTTP middleware implementations",
+        "Directory Surface Alignment",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
         "zuno-architecture-visuals-v1",

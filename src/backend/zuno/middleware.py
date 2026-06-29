@@ -1,9 +1,11 @@
-"""Compatibility package for legacy ``zuno.middleware`` imports."""
+"""Compatibility module for legacy ``zuno.middleware`` imports."""
 
 from __future__ import annotations
 
 import importlib
 import sys
+
+__path__: list[str] = []
 
 _trace_id_module = importlib.import_module("zuno.platform.middleware.trace_id_middleware")
 _white_list_module = importlib.import_module("zuno.platform.middleware.white_list_middleware")

@@ -1,23 +1,34 @@
 # Agent Program 路线图
 
-> 状态：当前没有 active program。每次新 program 都从 `PHASE01` 开始编号。
+> 状态：Program 3 continuation active。每次新 program 都从 `PHASE01` 开始编号；Program 3 continuation 使用延续 phase 编号。
 
-## 最新完成
+## 当前 Active
 
-`zuno-repo-layout-cleanup-v1` 已完成并归档：
+`zuno-repo-layout-cleanup-v1` 当前重新打开为 Directory Surface Alignment V1：
 
-- `docs/history/programs/zuno-repo-layout-cleanup-v1/`
+- active phase：`.agent/programs/PHASE10_directory-surface-map-and-guardrails.md`
+- 历史归档：`docs/history/programs/zuno-repo-layout-cleanup-v1/`
 
-Program 3 的最终完成事实：
+Program 3 不能再写成“文件夹整理完成”。当前完成事实是：
 
 - `src/backend/` 顶层只保留 `zuno/`。
 - `src/backend/fastapi_jwt_auth/` 顶层 compatibility shell 已退休。
 - `prompts/`、`fixtures/`、`system_skills/` 已迁入 `resources/`。
 - `legacy/`、`vendor/` 已迁入 `compatibility/`。
-- MCP server implementations 已迁入 `capability/mcp/servers/`，旧 `mcp_servers/` 只保留 compatibility shell。
-- HTTP middleware implementations 已迁入 `platform/middleware/`，旧 `middleware/` 只保留 compatibility shell。
-- `core/`、`services/`、`schema/`、`tools/`、`utils/`、`database/`、`config/`、`evals/` 等仍保留的目录都有 README 分类、目标归属、禁止事项和 focused tests。
-- `tools/scripts/verify_repo_structure.py` 和 repo tests 固定目录分类、retired paths、root local artifacts 和 first-class responsibility directories。
+- MCP server implementations 已迁入 `capability/mcp/servers/`，旧 `mcp_servers/` 顶层目录已退休为 `mcp_servers.py` alias module。
+- HTTP middleware implementations 已迁入 `platform/middleware/`，旧 `middleware/` 顶层目录已退休为 `middleware.py` alias module。
+- Eval tooling 仍在 `tools/evals/zuno/`，旧 `evals/` 顶层目录已退休为 `evals.py` alias module。
+- `core/`、`services/`、`schema/`、`tools/`、`utils/`、`database/`、`config/` 等仍保留目录还不是目标完成态，当前 PHASE10 负责目录地图和 guardrails。
+
+## Program 3 当前退出标准
+
+Program 3 closure 不能只看六层目录是否出现。后续完成前至少要满足：
+
+1. `src/backend/zuno/DIRECTORY_MAP.md` 固定每个一等目录的 `keep / migrate / facade / retire` 策略。
+2. `api / agent / memory / capability / knowledge / platform` 成为新代码正式入口。
+3. 新增 runtime 一等目录必须被 verifier 拦截，除非同步登记。
+4. 旧路径如果必须保留，只能作为 compatibility facade 或 alias module。
+5. docs / AGENTS / `.agent/references` 按六层指路，不把 Program 4 runtime upgrade 混进 Program 3。
 
 ## 等待打开的 Program
 

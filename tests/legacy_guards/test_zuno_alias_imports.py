@@ -171,7 +171,7 @@ def test_zuno_service_imports_resolve_from_backend_runtime_surface():
         module_path = Path(module.__file__).as_posix()
         assert (
             "/src/backend/zuno/services/" in module_path
-            or "/src/backend/zuno/middleware/" in module_path
+            or module_path.endswith("/src/backend/zuno/middleware.py")
             or "/src/backend/zuno/platform/middleware/" in module_path
             or "/src/backend/zuno/capability/mcp/servers/" in module_path
         ), module_path
@@ -263,6 +263,28 @@ def test_zuno_mcp_alias_module_imports():
     for module_name in modules:
         module = importlib.import_module(module_name)
         assert module is not None, module_name
+
+
+def test_zuno_visual_compatibility_aliases_are_module_files():
+    modules = {
+        "zuno.mcp_servers": "/src/backend/zuno/mcp_servers.py",
+        "zuno.middleware": "/src/backend/zuno/middleware.py",
+        "zuno.evals": "/src/backend/zuno/evals.py",
+    }
+
+    for module_name, expected_suffix in modules.items():
+        module = importlib.import_module(module_name)
+        module_path = Path(module.__file__).as_posix()
+        assert module_path.endswith(expected_suffix), module_path
+        assert hasattr(module, "__path__"), module_name
+
+
+def test_zuno_eval_alias_imports_tooling_namespace():
+    module = importlib.import_module("zuno.evals.rag_eval.run_stackless_local_eval")
+    module_path = Path(module.__file__).as_posix()
+
+    assert module is not None
+    assert module_path.endswith("/tools/evals/zuno/rag_eval/run_stackless_local_eval.py")
 
 
 def test_zuno_rag_package_exports_retrieval_module():

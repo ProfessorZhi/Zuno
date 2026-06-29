@@ -1,20 +1,37 @@
 # 当前程序
 
-当前没有 active program。
-
-## 最新完成
-
-最近完成并归档的 program：
+当前 active program：
 
 ```text
 zuno-repo-layout-cleanup-v1
 ```
 
-归档位置：
+模式：Program 3 continuation / Directory Surface Alignment V1。
+
+当前 active phase：
+
+- `.agent/programs/PHASE10_directory-surface-map-and-guardrails.md`
+
+## 当前判断
+
+Program 3 不能再写成“文件夹整理完成”。它已经完成六层 facade 起步、低风险资源/兼容目录物理收敛，以及 PHASE09 的视觉兼容壳退休；但 `core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/` 仍是当前 runtime 或 migration source，目录结构还没有完全契合目标架构。
+
+## 最新完成切片
+
+最近完成并归档的 Program 3 切片：
 
 - `docs/history/programs/zuno-repo-layout-cleanup-v1/`
 
-Program 3 已完成 root/docs hygiene、repo hygiene guardrails、`src/backend` 顶层收口、`fastapi_jwt_auth` 顶层 shell 退休、resources / compatibility 物理收敛、MCP server implementations 迁入 `capability/mcp/servers/`、HTTP middleware implementations 迁入 `platform/middleware/`，并为仍保留的旧 runtime 顶层目录补齐 README 分类和 verifier guard。
+- MCP server implementations 已进入 `capability/mcp/servers/`。
+- HTTP middleware implementations 已进入 `platform/middleware/`。
+- PHASE09：旧 `mcp_servers/`、`middleware/`、`evals/` 顶层兼容壳已退休为 `.py` alias module。
+
+## 当前 PHASE10 目标
+
+- 用 `src/backend/zuno/DIRECTORY_MAP.md` 固定一等目录的 `keep / migrate / facade / retire` 策略。
+- 用 `.agent/references/zuno-repo-hygiene.md` 固定目录迁移 skill。
+- 用 verifier/test 禁止新增未分类的一等 runtime 目录。
+- 保持 Program 4 queued / not active，不把 runtime architecture upgrade 混进 Program 3。
 
 ## 等待打开的 program
 
@@ -29,11 +46,14 @@ Program 3 已完成 root/docs hygiene、repo hygiene guardrails、`src/backend` 
 - `.agent/programs/current.md`
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/closure-checklist.md`
+- `.agent/programs/PHASE10_directory-surface-map-and-guardrails.md`
+- `.agent/references/zuno-repo-hygiene.md`
+- `src/backend/zuno/DIRECTORY_MAP.md`
 - `docs/architecture/roadmap.md`
 - `docs/history/programs/zuno-repo-layout-cleanup-v1/README.md`
 
 ## 历史边界
 
-之前的 Phase 0-6 closure、`zuno-architecture-surface-cleanup-v1`、`zuno-workflow-doc-system-v1`、`zuno-target-architecture-refresh-v1` 和 `zuno-repo-layout-cleanup-v1` 已完成，是历史事实。
+之前的 Phase 0-6 closure、`zuno-architecture-surface-cleanup-v1`、`zuno-workflow-doc-system-v1`、`zuno-target-architecture-refresh-v1` 和 Program 3 PHASE01-09 是历史事实。
 
-不要把 queued program 写成 active、completed 或 Current。打开下一 program 时必须先建立新的 active phase 文件，并从 `PHASE01` 开始。
+不要把 queued Program 4/5 写成 active、completed 或 Current。Program 3 completion 需要等目录地图、facade 补齐、低风险迁移和 verifier guardrails 收口后再判断。

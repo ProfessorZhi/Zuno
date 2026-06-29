@@ -43,6 +43,7 @@ def test_required_current_paths_exist() -> None:
         "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
         "src/backend/zuno/main.py",
         "src/backend/zuno/README.md",
+        "src/backend/zuno/DIRECTORY_MAP.md",
         "tools/agent/render_architecture.py",
         "tools/evals/zuno",
     ]
@@ -134,14 +135,11 @@ def test_repo_structure_verifier_pins_backend_zuno_directory_classifications() -
         "compatibility": "compatibility-shell",
         "config": "infrastructure",
         "database": "infrastructure",
-        "mcp_servers": "compatibility-shell",
-        "middleware": "compatibility-shell",
         "schema": "migration-source",
         "tools": "migration-source",
         "core": "migration-source",
         "services": "migration-source",
         "utils": "migration-source",
-        "evals": "compatibility-shell",
     }
 
 
@@ -157,14 +155,11 @@ def test_backend_zuno_classified_directories_have_boundary_readmes() -> None:
         "compatibility",
         "config",
         "database",
-        "mcp_servers",
-        "middleware",
         "schema",
         "tools",
         "core",
         "services",
         "utils",
-        "evals",
     ]
 
     for directory in classified_directories:
@@ -173,6 +168,40 @@ def test_backend_zuno_classified_directories_have_boundary_readmes() -> None:
         content = readme.read_text(encoding="utf-8")
         for phrase in ["当前角色", "Target role", "禁止事项", "Focused tests"]:
             assert phrase in content, f"{readme.relative_to(REPO_ROOT)} missing phrase: {phrase}"
+
+
+def test_backend_zuno_top_level_directories_match_classification_map() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    actual_directories = sorted(
+        path.name
+        for path in (REPO_ROOT / "src/backend/zuno").iterdir()
+        if path.is_dir() and path.name != "__pycache__"
+    )
+
+    assert actual_directories == sorted(verifier.BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS)
+
+
+def test_repo_structure_verifier_pins_backend_compatibility_alias_modules() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.BACKEND_COMPATIBILITY_ALIAS_MODULES == {
+        "src/backend/zuno/mcp_servers.py": "legacy zuno.mcp_servers imports route to zuno.capability.mcp.servers",
+        "src/backend/zuno/middleware.py": "legacy zuno.middleware imports route to zuno.platform.middleware",
+        "src/backend/zuno/evals.py": "legacy zuno.evals imports route to tools/evals/zuno",
+    }
 
 
 def test_repo_structure_verifier_pins_root_local_artifact_directories() -> None:
@@ -326,13 +355,9 @@ def test_repo_structure_verifier_pins_retired_backend_top_level_paths() -> None:
         "src/backend/zuno/system_skills": "runtime system skills moved to zuno/resources/system_skills",
         "src/backend/zuno/legacy": "legacy aliases moved to zuno/compatibility/legacy",
         "src/backend/zuno/vendor": "vendored dependencies moved to zuno/compatibility/vendor",
-        "src/backend/zuno/mcp_servers/arxiv": "MCP server implementations moved to zuno/capability/mcp/servers",
-        "src/backend/zuno/mcp_servers/lark_mcp": "MCP server implementations moved to zuno/capability/mcp/servers",
-        "src/backend/zuno/mcp_servers/qa_echo": "MCP server implementations moved to zuno/capability/mcp/servers",
-        "src/backend/zuno/mcp_servers/remote_proxy": "MCP server implementations moved to zuno/capability/mcp/servers",
-        "src/backend/zuno/mcp_servers/weather": "MCP server implementations moved to zuno/capability/mcp/servers",
-        "src/backend/zuno/middleware/trace_id_middleware.py": "HTTP middleware implementation moved to zuno/platform/middleware",
-        "src/backend/zuno/middleware/white_list_middleware.py": "HTTP middleware implementation moved to zuno/platform/middleware",
+        "src/backend/zuno/mcp_servers": "MCP server compatibility shell retired to zuno/mcp_servers.py; implementations live in zuno/capability/mcp/servers",
+        "src/backend/zuno/middleware": "HTTP middleware compatibility shell retired to zuno/middleware.py; implementations live in zuno/platform/middleware",
+        "src/backend/zuno/evals": "eval compatibility shell retired to zuno/evals.py; implementations live in tools/evals/zuno",
     }
 
 
@@ -396,6 +421,14 @@ def test_retired_front_path_directories_are_not_current_paths() -> None:
         assert not (REPO_ROOT / relative_path).exists(), f"retired path still current: {relative_path}"
 
 
+def test_backend_visual_compatibility_shells_are_modules_not_directories() -> None:
+    backend_root = REPO_ROOT / "src" / "backend" / "zuno"
+
+    for name in ["mcp_servers", "middleware", "evals"]:
+        assert not (backend_root / name).exists(), f"visual compatibility directory still exists: {name}"
+        assert (backend_root / f"{name}.py").exists(), f"missing compatibility module: {name}.py"
+
+
 def test_front_path_docs_link_current_entrypoints() -> None:
     architecture_index = (
         REPO_ROOT / "docs" / "architecture" / "README.md"
@@ -452,7 +485,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_program3_closure_leaves_no_active_phase_files() -> None:
+def test_program3_continuation_keeps_one_active_phase_file() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -465,6 +498,7 @@ def test_program3_closure_leaves_no_active_phase_files() -> None:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
+            "PHASE10_directory-surface-map-and-guardrails.md",
         ]
     )
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
@@ -478,7 +512,7 @@ def test_program3_closure_leaves_no_active_phase_files() -> None:
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
-        "当前没有 active program",
+        "Program 3 continuation active",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
@@ -488,7 +522,7 @@ def test_program3_closure_leaves_no_active_phase_files() -> None:
     program3 = (
         REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md"
     ).read_text(encoding="utf-8")
-    assert "已完成并归档" in program3
+    assert "PHASE10 active" in program3
     assert "repo hygiene verifier" in program3
     assert "capability/mcp/servers" in program3
     assert "platform/middleware" in program3
@@ -496,6 +530,7 @@ def test_program3_closure_leaves_no_active_phase_files() -> None:
         "PHASE06_backend-directory-clarity-audit.md",
         "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
         "PHASE08_backend-physical-cleanup-slices.md",
+        "PHASE09_target-layout-visual-compat-shell-retirement.md",
     ]:
         assert (
             REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1" / phase

@@ -20,6 +20,7 @@ REQUIRED_PATHS = [
     ".agent/references/code-map.md",
     ".agent/references/runtime-call-chain.md",
     ".agent/references/verification-map.md",
+    ".agent/references/zuno-repo-hygiene.md",
     ".agent/references/docs-map.md",
     ".agent/references/current-program.md",
     ".agent/references/command-catalog.md",
@@ -39,6 +40,7 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/programs/PHASE10_directory-surface-map-and-guardrails.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -57,6 +59,7 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE06_backend-directory-clarity-audit.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE09_target-layout-visual-compat-shell-retirement.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
@@ -163,7 +166,8 @@ def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
         or "Program 3 definition 修正" in current_text
         or "Program 3 定义修正" in current_text
     )
-    expected_start = 6 if continuation_mode else 1
+    directory_surface_mode = "Directory Surface Alignment" in current_text
+    expected_start = 10 if directory_surface_mode else 6 if continuation_mode else 1
     if phase_numbers and min(phase_numbers) != expected_start:
         errors.append(
             f"active program must start at PHASE{expected_start:02d}; found first PHASE{min(phase_numbers):02d}"
@@ -465,6 +469,7 @@ def main() -> int:
             "verification-map.md",
             "command-catalog.md",
             "known-pitfalls.md",
+            "zuno-repo-hygiene.md",
             "task-routing.md",
             "workflow.md",
         ]
@@ -481,21 +486,22 @@ def main() -> int:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
+            "PHASE10_directory-surface-map-and-guardrails.md",
         ]
     )
     if active_program_files != expected_program_files:
-        errors.append(f".agent/programs files are not canonical no-active-program set: {active_program_files}")
+        errors.append(f".agent/programs files are not canonical Program 3 continuation set: {active_program_files}")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "当前没有 active program",
+        "Program 3 continuation active",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
         "zuno-architecture-visuals-v1",
     ]:
         if phrase not in roadmap:
-            errors.append(f"no-active-program roadmap missing phrase: {phrase}")
+            errors.append(f"active Program 3 roadmap missing phrase: {phrase}")
 
     phase03 = _read("docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md")
     for phrase in [
@@ -508,7 +514,6 @@ def main() -> int:
 
     archived_program2 = _read("docs/history/programs/zuno-target-architecture-refresh-v1/README.md")
     for phrase in [
-        "已完成并归档",
         "LLM extraction",
         "知识库支持多套 extractor / config 选择",
         "Memory approval",
@@ -522,7 +527,6 @@ def main() -> int:
 
     archived_program3 = _read("docs/history/programs/zuno-repo-layout-cleanup-v1/README.md")
     for phrase in [
-        "已完成并归档",
         "root/docs hygiene",
         "backend 六层迁移计划",
         "repo hygiene verifier",
