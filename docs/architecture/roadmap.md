@@ -31,8 +31,8 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 | Query Router 与模式策略 | active program / PHASE04 completed | 先固定普通 / 增强 / 自动三种产品模式，以及 `basic / local / global / drift` 四种内部方法。 | `auto` 只作为 router；product mode、query_method、fallback、budget 和 evidence coverage 已进入 trace/eval contract，并有 focused tests。 |
 | Context Builder 与 Memory | active program / PHASE05 completed | Agentic RAG 需要稳定 Context Pack 和记忆边界，否则增强模式会退化成 prompt 拼接。 | Context Pack policy、source id coverage、五类记忆 taxonomy、review contract 和 `GeneralAgent` 轻量 readback 已有 focused tests；成熟 extraction / retrieval / consolidation 仍是 Target。 |
 | Capability ToolCard 与 MCP | active program / PHASE06 completed | 工具层必须能解释候选来源、权限、成本、健康状态和 fallback，而不是只暴露函数列表。 | ToolCard contract、Native BM25 ToolCard retrieval foundation、MCP/local policy trace 和 GeneralAgent internal trace bridge 已有 focused tests；生产级动态工具编排仍是 Target。 |
-| Hooks / Evidence / Trace | active program / PHASE07 active | 增强模式必须有权限、预算、fallback、evidence check、citation coverage 和 runtime events。 | hooks/event schema/evidence policy/artifact trace 有 focused tests 和文档边界。 |
-| Runtime 架构升级 | active program / planned phase | 在 mode、context、hooks 边界稳定后，再把关键 runtime slice 往成熟形态推进。 | 每个 runtime slice 必须有代码、测试、trace/eval 证据，不做大包式重构。 |
+| Hooks / Evidence / Trace | active program / PHASE07 completed | 增强模式必须有权限、预算、fallback、evidence check、citation coverage 和 runtime events。 | Hook event schema、evidence verdict、artifact manifest、GeneralAgent additive trace event、tool pre/post hook payload 和 eval diagnostics 已有 focused tests；完整 artifact storage、frontend trace panel 和生产级 hooks governance 仍是 Target。 |
+| GraphRAG Knowledge Runtime | active program / PHASE08 active | 在 mode、context、capability、hooks 边界稳定后推进 knowledge extraction、local/global/drift、fusion/rerank 和 citation/evidence closure。 | 每个 runtime slice 必须有代码、测试、trace/eval 证据，不做大包式重构。 |
 | 架构 HTML 重做清晰 | active program / PHASE03 completed | 让 GitHub 访问者、老师、评审和面试官快速看懂架构。 | `docs/architecture.md` / `docs/architecture.html` 已由 renderer 和 verifier 检查同源；PHASE03 已完成边界措辞、视觉 QA、README 入口和最终验证收口。 |
 
 ## 当前 Active Program

@@ -54,6 +54,7 @@ from zuno.services.memory import (
     TaskMemorySummary,
 )
 from zuno.services.mcp.manager import MCPManager
+from zuno.services.retrieval.trace_artifacts import HookPoint, RuntimeTraceEvent
 from zuno.services.user_defined_tool_runtime import build_user_defined_langchain_tools
 from zuno.tools import AgentToolsWithName
 from zuno.utils.convert import convert_mcp_config
@@ -107,6 +108,28 @@ class EmitEventAgentMiddleware(AgentMiddleware):
         self.mcp_id_resolver = mcp_id_resolver
         self.user_id = user_id
 
+    @staticmethod
+    def _tool_trace_event(
+        *,
+        tool_call_id: str,
+        tool_name: str,
+        hook: HookPoint,
+        status: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        trace_id = f"tool-{tool_call_id or tool_name}"
+        sequence = 1 if hook is HookPoint.PRE_TOOL else 2
+        event = RuntimeTraceEvent(
+            event_id=f"{trace_id}:{sequence:04d}:{hook.value}",
+            trace_id=trace_id,
+            sequence=sequence,
+            kind=hook,
+            status=status,
+            refs={"tool": (tool_name,)},
+            metadata=dict(metadata or {}),
+        )
+        return event.to_dict()
+
     async def aafter_model(
         self, state: StreamAgentState, runtime: Runtime
     ) -> dict[str, Any] | None:
@@ -139,6 +162,13 @@ class EmitEventAgentMiddleware(AgentMiddleware):
                 "status": "START",
                 "title": f"执行{tool_type}: {display_name}",
                 "message": f"正在调用 {display_name}...",
+                "runtime_trace_event": self._tool_trace_event(
+                    tool_call_id=str(request.tool_call.get("id") or ""),
+                    tool_name=tool_name,
+                    hook=HookPoint.PRE_TOOL,
+                    status="started",
+                    metadata={"tool_type": tool_type},
+                ),
             }
         )
 
@@ -158,6 +188,17 @@ class EmitEventAgentMiddleware(AgentMiddleware):
                         "status": "ERROR",
                         "title": f"执行{tool_type}: {display_name}",
                         "message": error_text,
+                        "runtime_trace_event": self._tool_trace_event(
+                            tool_call_id=str(request.tool_call.get("id") or ""),
+                            tool_name=tool_name,
+                            hook=HookPoint.POST_TOOL,
+                            status="error",
+                            metadata={
+                                "tool_type": tool_type,
+                                "error": error_text,
+                                "stage": "mcp_config",
+                            },
+                        ),
                     }
                 )
                 return ToolMessage(
@@ -173,6 +214,13 @@ class EmitEventAgentMiddleware(AgentMiddleware):
                     "status": "END",
                     "title": f"执行{tool_type}: {display_name}",
                     "message": getattr(tool_result, "content", str(tool_result)),
+                    "runtime_trace_event": self._tool_trace_event(
+                        tool_call_id=str(request.tool_call.get("id") or ""),
+                        tool_name=tool_name,
+                        hook=HookPoint.POST_TOOL,
+                        status="completed",
+                        metadata={"tool_type": tool_type},
+                    ),
                 }
             )
             return tool_result
@@ -183,6 +231,17 @@ class EmitEventAgentMiddleware(AgentMiddleware):
                     "status": "ERROR",
                     "title": f"执行{tool_type}: {display_name}",
                     "message": error_text,
+                    "runtime_trace_event": self._tool_trace_event(
+                        tool_call_id=str(request.tool_call.get("id") or ""),
+                        tool_name=tool_name,
+                        hook=HookPoint.POST_TOOL,
+                        status="error",
+                        metadata={
+                            "tool_type": tool_type,
+                            "error": error_text,
+                            "stage": "handler",
+                        },
+                    ),
                 }
             )
             return ToolMessage(
@@ -567,6 +626,7 @@ class GeneralAgent:
                 product_mode=self.agent_config.product_mode,
                 query_method=self.agent_config.query_method,
             )
+            self._emit_knowledge_trace_event(result)
             return self._format_knowledge_query_result(result)
 
         if self.agent_config.knowledge_ids:
@@ -577,6 +637,29 @@ class GeneralAgent:
             }
 
     @staticmethod
+    def _emit_knowledge_trace_event(result) -> None:
+        trace_metadata = dict(getattr(result, "trace_metadata", None) or {})
+        runtime_events = trace_metadata.get("runtime_trace_events")
+        evidence_verdict = trace_metadata.get("evidence_verdict")
+        artifact_manifest = trace_metadata.get("artifact_manifest")
+        if not (runtime_events or evidence_verdict or artifact_manifest):
+            return
+        try:
+            writer = get_stream_writer()
+        except RuntimeError:
+            return
+        writer(
+            {
+                "status": "TRACE",
+                "title": "知识库检索证据链",
+                "message": "已生成知识库检索 trace、证据检查和 artifact manifest。",
+                "runtime_trace_events": list(runtime_events or []),
+                "evidence_verdict": dict(evidence_verdict or {}),
+                "artifact_manifest": dict(artifact_manifest or {}),
+            }
+        )
+
+    @staticmethod
     def _format_knowledge_query_result(result) -> str:
         lines = [str(result.answer or "").strip()]
         if result.citations:
@@ -585,6 +668,13 @@ class GeneralAgent:
             lines.append(f"resolved_query_method: {result.resolved_query_method}")
         if result.retrievers_used:
             lines.append(f"retrievers_used: {', '.join(result.retrievers_used)}")
+        verdict = dict((getattr(result, "trace_metadata", None) or {}).get("evidence_verdict") or {})
+        if verdict and verdict.get("status") != "pass":
+            lines.append(f"evidence_status: {verdict.get('status')}")
+            lines.append(f"citation_coverage: {verdict.get('citation_coverage')}")
+            fallback_reason = verdict.get("fallback_reason") or getattr(result, "fallback_reason", None)
+            if fallback_reason:
+                lines.append(f"fallback_reason: {fallback_reason}")
         return "\n".join(line for line in lines if line)
 
     @staticmethod

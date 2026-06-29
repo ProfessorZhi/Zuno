@@ -233,6 +233,9 @@ skill_routes:
         - "src/backend/zuno/services/rag/**"
         - "src/backend/zuno/services/retrieval/**"
         - "src/backend/zuno/services/graphrag/**"
+        - "src/backend/zuno/platform/services/retrieval/**"
+        - "src/backend/zuno/platform/services/graphrag/**"
+        - "src/backend/zuno/platform/services/application/knowledge/**"
         - "src/backend/zuno/knowledge/**"
     skills:
       - ".agent/references/runtime-call-chain.md"
@@ -249,6 +252,7 @@ skill_routes:
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
     verify:
+      - "pytest -q tests/agent/test_hooks_evidence_trace_artifacts.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider"
       - "pytest -q tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider"
       - "pytest -q tests/retrieval/test_standard_retrieval_composition.py"
       - "pytest -q tests/retrieval/test_enhanced_retrieval_composition.py"

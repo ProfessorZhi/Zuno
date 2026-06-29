@@ -4,7 +4,7 @@
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_CURRENT_PHASE = "PHASE07_hooks-evidence-trace-artifact-system.md"
+ACTIVE_CURRENT_PHASE = "PHASE08_graphrag-knowledge-runtime-system.md"
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -12,6 +12,7 @@ COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE04_query-router-mode-policy.md",
     "PHASE05_context-builder-memory-system.md",
     "PHASE06_capability-toolcard-mcp-system.md",
+    "PHASE07_hooks-evidence-trace-artifact-system.md",
 ]
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
@@ -508,7 +509,7 @@ def test_active_program_phase_status_lifecycle_is_machine_checkable() -> None:
     for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
         assert "status: completed" in phase_statuses[phase_name]
     assert "status: active" in phase_statuses[ACTIVE_CURRENT_PHASE]
-    for phase_name in ACTIVE_PROGRAM_PHASE_FILES[7:]:
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES[8:]:
         assert "status: planned" in phase_statuses[phase_name], phase_name
 
 
@@ -543,6 +544,27 @@ def test_phase06_capability_toolcard_focused_stack_is_routed() -> None:
         "tests/agent/test_capability_registry.py",
         "tests/agent/test_capability_layer_surfaces.py",
         "tests/agent/test_generalagent_context_memory_runtime.py",
+        "tests/repo/test_backend_facade_layers.py",
+        "tests/repo/test_static_target_layer_imports.py",
+    ]
+
+    for relative_path in required_tests:
+        assert relative_path in system_yaml
+        assert relative_path in verification_map
+        assert (REPO_ROOT / relative_path).exists()
+
+
+def test_phase07_hooks_evidence_trace_focused_stack_is_routed() -> None:
+    system_yaml = (REPO_ROOT / ".agent" / "system.yaml").read_text(encoding="utf-8")
+    verification_map = (REPO_ROOT / ".agent" / "references" / "verification-map.md").read_text(
+        encoding="utf-8"
+    )
+    required_tests = [
+        "tests/agent/test_hooks_evidence_trace_artifacts.py",
+        "tests/agent/test_general_agent_project_query_runtime.py",
+        "tests/agent/test_knowledge_layer_surfaces.py",
+        "tests/api/test_knowledge_api_contract.py",
+        "tests/evals/test_multihop_eval_real_runtime_runner.py",
         "tests/repo/test_backend_facade_layers.py",
         "tests/repo/test_static_target_layer_imports.py",
     ]

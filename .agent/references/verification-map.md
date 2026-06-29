@@ -117,6 +117,12 @@ PHASE06 Capability / ToolCard / MCP foundation：
 pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_registry.py tests/agent/test_capability_layer_surfaces.py tests/agent/test_generalagent_context_memory_runtime.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
 ```
 
+PHASE07 Hooks / Evidence / Trace / Artifact foundation：
+
+```powershell
+pytest -q tests/agent/test_hooks_evidence_trace_artifacts.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
+```
+
 文档入口扩大验证：
 
 ```powershell

@@ -383,6 +383,9 @@ def extract_route_diagnostics(
     retriever_used = [str(run.get("source") or "").strip() for run in retriever_runs if str(run.get("source") or "").strip()]
     graph_result = dict(primary_pass.get("graph_result") or {})
     community_result = dict(primary_pass.get("community_result") or {})
+    evidence_verdict = dict(metadata.get("evidence_verdict") or {})
+    artifact_manifest = dict(metadata.get("artifact_manifest") or {})
+    runtime_trace_events = list(metadata.get("runtime_trace_events") or [])
     notes: list[str] = []
 
     seed_entities = metadata.get("seed_entities")
@@ -411,6 +414,10 @@ def extract_route_diagnostics(
         "community_report_count": len(list(community_result.get("used_communities") or [])) if community_result else None,
         "drift_followup_count": len(list(community_result.get("follow_up_questions") or [])) if community_result else None,
         "round_count": len(rounds) or None,
+        "evidence_verdict_status": evidence_verdict.get("status"),
+        "evidence_verdict_fallback_reason": evidence_verdict.get("fallback_reason"),
+        "artifact_manifest_trace_id": artifact_manifest.get("trace_id"),
+        "runtime_trace_event_count": len(runtime_trace_events) or None,
     }
     return diagnostics, notes
 

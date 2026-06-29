@@ -417,6 +417,30 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
                     "fallback_reason": "too_few_documents",
                     "steps": [],
                 },
+                "evidence_verdict": {
+                    "status": "pass",
+                    "citation_coverage": 1.0,
+                    "fallback_reason": None,
+                },
+                "runtime_trace_events": [
+                    {
+                        "event_id": "trace-api:0001:pre_retrieval",
+                        "kind": "pre_retrieval",
+                        "status": "started",
+                    },
+                    {
+                        "event_id": "trace-api:0002:post_answer",
+                        "kind": "post_answer",
+                        "status": "completed",
+                    },
+                ],
+                "artifact_manifest": {
+                    "trace_id": "trace-api",
+                    "input_refs": ["query:请补充知识库内容"],
+                    "retrieval_refs": ["doc-1"],
+                    "evidence_refs": ["doc-1#p1"],
+                    "output_refs": ["answer:trace-api"],
+                },
                 "second_pass_used": True,
                 "fallback_triggered": True,
             },
@@ -463,6 +487,9 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
     assert response.data["trace_metadata"]["budget_policy"]["product_mode"] == "enhanced"
     assert response.data["trace_metadata"]["fallback_policy"]["allow_retry"] is True
     assert response.data["trace_metadata"]["pipeline_trace"]["resolved_query_method"] == "local"
+    assert response.data["trace_metadata"]["evidence_verdict"]["status"] == "pass"
+    assert response.data["trace_metadata"]["runtime_trace_events"][0]["kind"] == "pre_retrieval"
+    assert response.data["trace_metadata"]["artifact_manifest"]["trace_id"] == "trace-api"
     assert response.data["evidence"]["citation_coverage"] == 1.0
     assert captured["query"] == {
         "user_id": "u_test",

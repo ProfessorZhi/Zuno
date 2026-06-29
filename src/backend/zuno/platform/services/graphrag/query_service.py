@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from zuno.platform.services.retrieval.trace_artifacts import enrich_trace_metadata_with_artifacts
 from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
 from zuno.services.retrieval.models import normalize_product_mode
 from zuno.services.retrieval.planner import RetrievalPlanner
@@ -136,13 +137,14 @@ class GraphRAGQueryService:
             knowledge_ids,
             retrieval_options=retrieval_options,
         )
-        return self._to_result(snapshot=snapshot, raw_result=raw_result)
+        return self._to_result(snapshot=snapshot, raw_result=raw_result, query=query)
 
     @staticmethod
     def _to_result(
         *,
         snapshot: GraphRAGProjectSnapshot,
         raw_result: dict[str, Any],
+        query: str = "",
     ) -> KnowledgeQueryResult:
         metadata = dict(raw_result.get("metadata") or {})
         final_pass = dict(raw_result.get("final_pass_result") or {})
@@ -150,12 +152,27 @@ class GraphRAGQueryService:
         citations = list(metadata.get("citation_chunks") or evidence.get("citation_chunks") or [])
         index_version = dict(metadata.get("index_version") or snapshot.index_version)
         contract = dict(snapshot.contract)
+        fallback_reason = metadata.get("query_method_fallback_reason") or metadata.get("fallback_reason")
+        trace_metadata = enrich_trace_metadata_with_artifacts(
+            trace_metadata=metadata,
+            query=query,
+            answer=str(raw_result.get("content") or ""),
+            documents=list(final_pass.get("documents") or []),
+            evidence_bundle=evidence,
+            citations=[str(item) for item in citations],
+            fallback_reason=fallback_reason,
+        )
+        verdict_fallback_reason = (
+            (trace_metadata.get("evidence_verdict") or {}).get("fallback_reason")
+            if isinstance(trace_metadata.get("evidence_verdict"), dict)
+            else None
+        )
         return KnowledgeQueryResult(
             graphrag_project_id=snapshot.graphrag_project_id,
             answer=str(raw_result.get("content") or ""),
             requested_query_method=str(metadata.get("requested_query_method") or snapshot.default_query_method()),
             resolved_query_method=str(metadata.get("resolved_query_method") or snapshot.default_query_method()),
-            fallback_reason=metadata.get("query_method_fallback_reason") or metadata.get("fallback_reason"),
+            fallback_reason=fallback_reason or verdict_fallback_reason or trace_metadata.get("fallback_reason"),
             documents=list(final_pass.get("documents") or []),
             evidence=evidence,
             citations=[str(item) for item in citations],
@@ -166,7 +183,7 @@ class GraphRAGQueryService:
             query_prompt_version=metadata.get("query_prompt_version") or contract.get("query_prompt_version"),
             index_version=index_version,
             community_version=contract.get("community_version"),
-            trace_metadata=metadata,
+            trace_metadata=trace_metadata,
             raw_result=dict(raw_result),
         )
 

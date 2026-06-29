@@ -38,8 +38,8 @@ state: active
 | PHASE04 | Query router + mode policy | 交付物 6、7、8 | completed：mode contract、router policy、trace/eval |
 | PHASE05 | Context builder + memory | 交付物 6、7、8 | completed：Context Pack、五类记忆、source ids、compression / extraction policy、review contract |
 | PHASE06 | Capability + ToolCard + MCP | 交付物 6、7、8 | completed：ToolCard contract、Native BM25 ToolCard retrieval foundation、MCP/local policy trace |
-| PHASE07 | Hooks + evidence + trace + artifact | 交付物 6、7、8 | active：hooks/event schema、evidence check、artifact trace |
-| PHASE08 | GraphRAG + knowledge runtime | 交付物 6、7、8 | extraction configs、retrieval fusion、drift/local/global |
+| PHASE07 | Hooks + evidence + trace + artifact | 交付物 6、7、8 | completed：hook event schema、evidence verdict、artifact manifest、GeneralAgent additive trace event、eval diagnostics |
+| PHASE08 | GraphRAG + knowledge runtime | 交付物 6、7、8 | active：extraction configs、retrieval fusion、drift/local/global |
 | PHASE09 | Runtime upgrade integration | 交付物 6、7、8 | GeneralAgent path、six-layer ownership、integration tests |
 | PHASE10 | Validation + release closure | 交付物 1-8 | full validation、docs sync、archive、commit/push |
 
