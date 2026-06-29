@@ -36,7 +36,9 @@ and evidence, not the active Agent execution path.
 - `zuno-repo-layout-cleanup-v1/`: completed repo layout cleanup program. It
   closed the Program 3 work for root/docs hygiene, backend six-layer migration
   planning, layer boundary READMEs, generated-artifact hygiene, and repo
-  structure guardrails.
+  structure guardrails. Its final alias surface closure retired root-level
+  `zuno/*.py` compatibility files into the legacy alias registry while keeping
+  old public imports working.
 
 ## Rule
 

@@ -140,7 +140,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/current.md`
 - `.agent/programs/closure-checklist.md`
 
-当前没有 active phase。Program 3 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；旧 runtime 顶层目录已下沉到六层内部；旧 public import path 通过受控 `.py` alias module 兼容。Program 4/5 不能写成 active，除非用户明确打开下一 program。
+当前没有 active phase。Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。Program 4/5 不能写成 active，除非用户明确打开下一 program。
 
 后续 queued programs：
 

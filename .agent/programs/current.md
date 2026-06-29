@@ -1,34 +1,35 @@
 # 当前程序
 
-当前 active program：无。当前没有 active program。no active program。
+当前没有 active program。
 
-最近完成的 program：
+最新完成 program：
 
 ```text
 zuno-repo-layout-cleanup-v1
 ```
 
-状态：Program 3 completed / archived。
+状态：Program 3 final alias surface closure 已完成并归档。
 
-## 完成事实
+## 当前判断
 
-Program 3 已完成 Directory Surface Alignment V1：`src/backend/zuno` 顶层目录只保留六层：
+Program 3 已完成 Directory Surface Alignment V1 和 final alias surface closure：`src/backend/zuno` 顶层目录只剩 `api / agent / memory / capability / knowledge / platform` 六层，根目录只保留 `__init__.py` 和 `main.py` 两个文件。旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 
-```text
-api / agent / memory / capability / knowledge / platform
-```
-
-旧 public import path 通过受控 `.py` alias module 保留，包括 `services.py`、`core.py`、`database.py`、`schema.py`、`tools.py`、`utils.py`、`config.py`、`resources.py`、`compatibility.py`、`settings.py`、`mcp_servers.py`、`middleware.py`、`evals.py`。
-
-PHASE01-06 已归档到：
+## 归档位置
 
 - `docs/history/programs/zuno-repo-layout-cleanup-v1/`
 
-## 等待打开的 program
+## 不属于本 Program
+
+- 不做 Program 4 runtime architecture upgrade。
+- 不改 API 行为。
+- 不改 DB schema。
+- 不改 frontend。
+- 不改 eval baseline。
+- 不删除旧 public import path；只能改变兼容实现方式。
+
+## 等待打开的 Program
 
 queued draft / not active：
 
 - Program 4：`.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
 - Program 5：`.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
-
-打开下一 program 前必须先更新本文件、`.agent/programs/implementation-roadmap.md`、`docs/architecture/roadmap.md` 和 verifier/test，并从 `PHASE01` 开始。

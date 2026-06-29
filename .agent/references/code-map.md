@@ -11,7 +11,7 @@
 - `src/backend/zuno/`：当前 Python 后端 runtime 真相。
 - `src/backend/zuno/api/`：HTTP routes、DTO、auth、response envelope、SSE。
 - `src/backend/zuno/api/`：HTTP routes、DTO、auth、response envelope、SSE。
-- `src/backend/zuno/agent/`：单一 GeneralAgent runtime 入口；旧 `zuno.core.*` 由顶层 alias module 兼容。
+- `src/backend/zuno/agent/`：单一 GeneralAgent runtime 入口；旧 `zuno.core.*` 由 legacy alias registry 兼容。
 - `src/backend/zuno/memory/`：目标 Memory 层入口。
 - `src/backend/zuno/capability/`：目标 Tool、Skill、MCP 和 capability registry 入口。
 - `src/backend/zuno/knowledge/`：目标 RAG / GraphRAG / Evidence / Citation 入口。
@@ -54,7 +54,7 @@ Completion API
 api / agent / memory / capability / knowledge / platform
 ```
 
-旧入口只允许以 `.py` alias module 留在顶层，例如 `zuno.services`、`zuno.core`、`zuno.schema`、`zuno.database`、`zuno.config`、`zuno.resources`、`zuno.tools`、`zuno.utils`、`zuno.compatibility`、`zuno.settings`、`zuno.mcp_servers`、`zuno.middleware`、`zuno.evals`。
+旧入口不允许继续以根级 `.py` alias 文件留在顶层；`zuno.services`、`zuno.core`、`zuno.schema`、`zuno.database`、`zuno.config`、`zuno.resources`、`zuno.tools`、`zuno.utils`、`zuno.compatibility`、`zuno.settings`、`zuno.mcp_servers`、`zuno.middleware`、`zuno.evals` 由 `platform/compatibility/legacy_aliases.py` 注册兼容。
 
 后端实现规则：
 

@@ -19,7 +19,7 @@ PHASE0_RUNTIME_TRUTH_FILES = [
     "platform/services/graphrag/query_service.py",
     "platform/services/graphrag/project/loader.py",
     "platform/services/graphrag/retriever.py",
-    "settings.py",
+    "platform/settings.py",
 ]
 
 

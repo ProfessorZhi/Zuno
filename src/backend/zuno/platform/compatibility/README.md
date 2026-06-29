@@ -8,7 +8,7 @@
 
 ## Target role
 
-目标是让 `src/backend/zuno` 顶层不再暴露 `legacy/`、`vendor/` 以及只剩历史 import 语义的目录。目录型兼容材料统一进入 `compatibility/legacy/` 或 `compatibility/vendor/`；只为保留 public import path 的入口使用同名 `.py` alias module，例如 `mcp_servers.py`、`middleware.py`、`evals.py`。
+目标是让 `src/backend/zuno` 顶层不再暴露 `legacy/`、`vendor/` 以及只剩历史 import 语义的目录或 `.py` alias 文件。目录型兼容材料统一进入 `compatibility/legacy/` 或 `compatibility/vendor/`；旧 public import path 由 `legacy_aliases.py` 注册，不再占用包根目录。
 
 ## 禁止事项
 

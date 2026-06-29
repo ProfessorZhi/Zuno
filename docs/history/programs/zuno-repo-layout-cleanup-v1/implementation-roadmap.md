@@ -47,6 +47,12 @@ infra/      Docker、DB、部署基础设施
 7. [PHASE07：FastAPI JWT auth 顶层兼容壳退休](PHASE07_fastapi-jwt-auth-compat-retirement-plan.md)
 8. [PHASE08：Backend physical cleanup slices](PHASE08_backend-physical-cleanup-slices.md)
 9. [PHASE09：目标布局视觉兼容壳退休](PHASE09_target-layout-visual-compat-shell-retirement.md)
+10. [PHASE10：Alias inventory and target contract](PHASE10_alias-inventory-and-target-contract.md)
+11. [PHASE11：Import smoke and compatibility registry design](PHASE11_import-smoke-and-compat-registry-design.md)
+12. [PHASE12：Low-risk alias surface cleanup](PHASE12_low-risk-alias-surface-cleanup.md)
+13. [PHASE13：Medium-risk alias surface cleanup](PHASE13_medium-risk-alias-surface-cleanup.md)
+14. [PHASE14：High-risk core/services/settings cleanup](PHASE14_high-risk-core-services-settings-cleanup.md)
+15. [PHASE15：Final root surface guard and closure](PHASE15_final-root-surface-guard-and-closure.md)
 
 ## PHASE01 多线程提示词
 

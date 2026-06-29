@@ -42,9 +42,15 @@ def test_agent_system_required_paths_exist() -> None:
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_small-boundary-cleanups.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_hygiene-verifier-closure.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE06_backend-directory-clarity-audit.md",
-        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
-        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
-        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE09_target-layout-visual-compat-shell-retirement.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE09_target-layout-visual-compat-shell-retirement.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE10_alias-inventory-and-target-contract.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE11_import-smoke-and-compat-registry-design.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE12_low-risk-alias-surface-cleanup.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE13_medium-risk-alias-surface-cleanup.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE14_high-risk-core-services-settings-cleanup.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE15_final-root-surface-guard-and-closure.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE01_directory-closure-master-plan.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE02_platform-foundation-directory-migration.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_schema-tools-resources-directory-migration.md",
@@ -344,8 +350,8 @@ def test_current_program_declares_active_program3_continuation_and_latest_archiv
         encoding="utf-8"
     )
 
-    assert "Directory Surface Alignment" in current
-    assert "Program 3 completed" in current
+    assert "当前没有 active program" in current
+    assert "Program 3 final alias surface closure 已完成并归档" in current
     assert "api / agent / memory / capability / knowledge / platform" in current
     assert "zuno-repo-layout-cleanup-v1" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
@@ -497,6 +503,12 @@ def test_program3_continuation_keeps_history_and_active_phase() -> None:
         "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
         "PHASE08_backend-physical-cleanup-slices.md",
         "PHASE09_target-layout-visual-compat-shell-retirement.md",
+        "PHASE10_alias-inventory-and-target-contract.md",
+        "PHASE11_import-smoke-and-compat-registry-design.md",
+        "PHASE12_low-risk-alias-surface-cleanup.md",
+        "PHASE13_medium-risk-alias-surface-cleanup.md",
+        "PHASE14_high-risk-core-services-settings-cleanup.md",
+        "PHASE15_final-root-surface-guard-and-closure.md",
     ]:
         assert (
             REPO_ROOT

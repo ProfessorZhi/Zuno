@@ -36,12 +36,12 @@ docs
 - Capability 层：`src/backend/zuno/capability/`
 - Knowledge 层：`src/backend/zuno/knowledge/`
 - Platform 层：`src/backend/zuno/platform/`
-- 旧 `core`、`services`、`database`、`schema`、`tools`、`utils`、`config`、`resources`、`compatibility` import path 由顶层 `.py` alias module 承接，真实实现位于六层内部。
-- MCP server implementations：`src/backend/zuno/capability/mcp/servers/`，旧 `zuno.mcp_servers.*` 由 `src/backend/zuno/mcp_servers.py` alias module 承接。
-- HTTP middleware implementations：`src/backend/zuno/platform/middleware/`，旧 `zuno.middleware.*` 由 `src/backend/zuno/middleware.py` alias module 承接。
+- 旧 `core`、`services`、`database`、`schema`、`tools`、`utils`、`config`、`resources`、`compatibility` import path 由 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容，真实实现位于六层内部。
+- MCP server implementations：`src/backend/zuno/capability/mcp/servers/`，旧 `zuno.mcp_servers.*` 由 legacy alias registry 承接。
+- HTTP middleware implementations：`src/backend/zuno/platform/middleware/`，旧 `zuno.middleware.*` 由 legacy alias registry 承接。
 - Runtime 资源：`src/backend/zuno/platform/resources/`
 - 兼容边界：`src/backend/zuno/platform/compatibility/`
-- Eval 和维护工具：`tools/evals/zuno/`、`tools/scripts/`；旧 `zuno.evals.*` 由 `src/backend/zuno/evals.py` alias module 承接。
+- Eval 和维护工具：`tools/evals/zuno/`、`tools/scripts/`；旧 `zuno.evals.*` 由 legacy alias registry 指向 `tools/evals/zuno/`。
 
 ## 当前 GraphRAG 与 Agent 主线
 
@@ -99,7 +99,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - Memory layer foundation contracts：当前经 `zuno.services.memory.layers` 兼容入口访问，物理位于 `src/backend/zuno/platform/services/memory/layers.py`。
 - Capability System foundation contracts：当前经 `zuno.services.application.capabilities` 兼容入口访问，物理位于 `src/backend/zuno/platform/services/application/capabilities/`。
 - `GeneralAgent.astream()` 的 minimal runtime integration：准备 `ModelContextPacket`、传递 `context_trace`、选择有限 capability schema，并在 memory enabled 时提交 scoped raw event 与 task summary。
-- Program 3 backend layout cleanup：顶层 `src/backend/fastapi_jwt_auth/` 已退休；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；旧 runtime 顶层目录已下沉到六层内部；旧 public import path 由受控 `.py` alias module 兼容；repo structure verifier 和 repo tests 固定该完成态。
+- Program 3 backend layout cleanup：顶层 `src/backend/fastapi_jwt_auth/` 已退休；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；旧 runtime 顶层目录已下沉到六层内部；根级 alias `.py` 文件退休；旧 public import path 由 legacy alias registry 兼容；repo structure verifier 和 repo tests 固定该完成态。
 
 ## 不属于 Current
 

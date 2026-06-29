@@ -281,7 +281,7 @@ def main() -> int:
         if (REPO_ROOT / relative_path).exists():
             errors.append(f"Retired Domain Pack frontend file must not remain: {relative_path}")
 
-    workspace_agent = _read("src/backend/zuno/services/workspace/simple_agent.py")
+    workspace_agent = _read("src/backend/zuno/platform/services/workspace/simple_agent.py")
     if "from zuno.core.runtime.agent_runtime import AgentRuntime" in workspace_agent:
         errors.append("Workspace knowledge path must not import AgentRuntime")
     if "domain_qa_runtime" in workspace_agent:
@@ -297,7 +297,7 @@ def main() -> int:
     if "DomainPackLoader().load" in knowledge_service:
         errors.append("KnowledgeService runtime settings must not load DomainPackLoader")
 
-    graph_retriever = _read("src/backend/zuno/services/graphrag/retriever.py")
+    graph_retriever = _read("src/backend/zuno/platform/services/graphrag/retriever.py")
     if "from zuno.services.domain_pack.loader import DomainPackLoader" in graph_retriever:
         errors.append("GraphRetriever policy defaults must not load DomainPackLoader")
     if "DomainPackLoader().load" in graph_retriever:
@@ -350,12 +350,12 @@ def main() -> int:
         errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
     if '"domain_pack": domain_pack' in knowledge_service:
         errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
-    pipeline_manager = _read("src/backend/zuno/services/pipeline/manager.py")
+    pipeline_manager = _read("src/backend/zuno/platform/services/pipeline/manager.py")
     if "domain_pack=domain_pack" in pipeline_manager:
         errors.append("Pipeline graph extraction must call extractors with project_payload")
     if 'runtime_settings.get("project_payload")' not in pipeline_manager:
         errors.append("Runtime settings must expose GraphRAG Project payload via project_payload")
-    project_loader = _read("src/backend/zuno/services/graphrag/project/loader.py")
+    project_loader = _read("src/backend/zuno/platform/services/graphrag/project/loader.py")
     if "def to_domain_pack_payload" in project_loader:
         errors.append("GraphRAG Project loader must expose only to_project_payload")
     structured_contract_test = _read("tests/graphrag/test_structured_graph_extractor_contract.py")
@@ -386,14 +386,14 @@ def main() -> int:
         if not (REPO_ROOT / relative_path).exists():
             errors.append("Root migration tests must use project or retirement naming")
 
-    structured_extractor = _read("src/backend/zuno/services/graphrag/extractors/structured_extractor.py")
-    cached_extractor = _read("src/backend/zuno/services/graphrag/extractors/cached_extractor.py")
+    structured_extractor = _read("src/backend/zuno/platform/services/graphrag/extractors/structured_extractor.py")
+    cached_extractor = _read("src/backend/zuno/platform/services/graphrag/extractors/cached_extractor.py")
     if "project_payload:" not in structured_extractor or "project_payload:" not in cached_extractor:
         errors.append("GraphRAG extractors must expose project_payload as the primary payload parameter")
     if "domain_pack:" in structured_extractor or "domain_pack:" in cached_extractor:
         errors.append("GraphRAG extractors must not expose domain_pack payload aliases")
 
-    graph_retrievers = _read("src/backend/zuno/services/retrieval/retrievers.py")
+    graph_retrievers = _read("src/backend/zuno/platform/services/retrieval/retrievers.py")
     if 'scope_policy.get("graphrag_project_id")' not in graph_retrievers:
         errors.append("GraphRetrieverAdapter must use GraphRAG Project scope from graphrag_project_id")
     if 'runtime_settings.get("project_payload")' not in graph_retrievers:
@@ -465,27 +465,27 @@ def main() -> int:
             "tools/scripts/print_public_release_stage_commands.py"
         )
 
-    agent_runtime_path = REPO_ROOT / "src/backend/zuno/core/runtime/agent_runtime.py"
+    agent_runtime_path = REPO_ROOT / "src/backend/zuno/agent/core/runtime/agent_runtime.py"
     if agent_runtime_path.exists():
         errors.append("AgentRuntime facade must not remain as current backend source")
-    core_init = _read("src/backend/zuno/core/__init__.py")
-    runtime_init = _read("src/backend/zuno/core/runtime/__init__.py")
+    core_init = _read("src/backend/zuno/agent/core/__init__.py")
+    runtime_init = _read("src/backend/zuno/agent/core/runtime/__init__.py")
     if '"AgentRuntime"' in core_init or "AgentRuntime" in runtime_init:
         errors.append("AgentRuntime facade must not be exported from current backend source")
-    graphs_init = _read("src/backend/zuno/core/graphs/__init__.py")
+    graphs_init = _read("src/backend/zuno/agent/core/graphs/__init__.py")
     legacy_graph_exports = ["DomainQAGraph", "MultiAgentSupervisorGraph"]
     if any(name in core_init or name in graphs_init for name in legacy_graph_exports):
         errors.append("Legacy graph facades must not be exported from current backend packages")
-    supervisor_graph_path = REPO_ROOT / "src/backend/zuno/core/graphs/multi_agent_supervisor_graph.py"
+    supervisor_graph_path = REPO_ROOT / "src/backend/zuno/agent/core/graphs/multi_agent_supervisor_graph.py"
     if supervisor_graph_path.exists():
         errors.append("MultiAgentSupervisorGraph source must not remain as current backend source")
-    domain_qa_graph_path = REPO_ROOT / "src/backend/zuno/core/graphs/domain_qa_graph.py"
+    domain_qa_graph_path = REPO_ROOT / "src/backend/zuno/agent/core/graphs/domain_qa_graph.py"
     if domain_qa_graph_path.exists():
         errors.append("DomainQAGraph source must not remain as current backend source")
-    legacy_graph_states_path = REPO_ROOT / "src/backend/zuno/core/graphs/states.py"
+    legacy_graph_states_path = REPO_ROOT / "src/backend/zuno/agent/core/graphs/states.py"
     if legacy_graph_states_path.exists():
         errors.append("Legacy graph states must not remain without current graph source")
-    domain_pack_service_path = REPO_ROOT / "src/backend/zuno/services/domain_pack"
+    domain_pack_service_path = REPO_ROOT / "src/backend/zuno/platform/services/domain_pack"
     if domain_pack_service_path.exists():
         errors.append("Domain Pack runtime service must not remain as current backend source")
 

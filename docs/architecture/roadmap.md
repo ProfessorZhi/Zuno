@@ -8,7 +8,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - `.agent/programs/`
 
-当前没有 active program。`zuno-repo-layout-cleanup-v1` / Program 3 已完成并归档：`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`，旧 runtime 顶层目录已下沉到六层内部，旧 public import path 由受控 `.py` alias module 兼容。Program 4/5 仍是 queued / not active。
+当前没有 active program。`zuno-repo-layout-cleanup-v1` / Program 3 final alias surface closure 已完成并归档：`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`，根级 alias `.py` 文件已收口到 `platform/compatibility/legacy_aliases.py`。Program 4/5 仍是 queued / not active。
 
 已完成并归档：
 
@@ -25,7 +25,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 | --- | --- | --- | --- |
 | 本地文档系统和工作流自洽 | completed / archived | 让仓库能由 Agent 按入口、skills、program、templates、verifiers 自助维护，而不是靠临时提示词记忆。 | 新 program 从 `PHASE01` 开始；旧 active 计划归档；修改 docs / agent workflow 时有对应 verifier 和 repo tests。 |
 | 目标架构继续升版 | completed / archived | 让 Zuno 从恢复期 GraphRAG / Domain Pack 叙事，继续靠近成熟 Agent / RAG / GraphRAG 工程架构。 | 更新 `target-architecture.md` 和图示，把 API / Agent / Memory / Capability / Knowledge / Platform / Trace 的边界讲清；仍不能把未实现能力写成 Current。 |
-| 文件夹继续分门别类 | completed / archived | 让第一次看仓库的人能从目录名直接读出架构，而不是在 `core`、`services`、`rag`、`retrieval`、`graphrag` 之间拼图。 | `src/backend/zuno` 顶层目录已收敛到六层；旧入口以 `.py` alias module 兼容；verifier 和 repo tests 固定完成态。 |
+| 文件夹继续分门别类 | completed / archived | 让第一次看仓库的人能从目录名直接读出架构，而不是在 `core`、`services`、`rag`、`retrieval`、`graphrag` 之间拼图。 | `src/backend/zuno` 顶层目录已收敛到六层；根级 alias `.py` 文件收口到 legacy alias registry；verifier 和 repo tests 固定完成态。 |
 | Runtime 架构升级 | queued / not active | 在目标架构和目录边界稳定后，再把关键 runtime slice 往成熟形态推进。 | 只在 Program 2/3 边界清楚后实现；每个 runtime slice 必须有代码、测试、trace/eval 证据，不做大包式重构。 |
 | 架构 HTML 重做清晰 | queued / not active | 让 GitHub 访问者和面试场景能快速看懂架构，而不是只靠长文本解释。 | 保持 `docs/architecture/diagrams.md` 为唯一 Mermaid 源；优化 `overview.html`；HTML 不能成为第二套架构真相。 |
 
@@ -35,7 +35,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 1. `zuno-workflow-doc-system-v1`：已完成，归档到 `docs/history/programs/zuno-workflow-doc-system-v1/`。
 2. `zuno-target-architecture-refresh-v1`：已完成，归档到 `docs/history/programs/zuno-target-architecture-refresh-v1/`。
-3. `zuno-repo-layout-cleanup-v1`：已完成，归档到 `docs/history/programs/zuno-repo-layout-cleanup-v1/`。
+3. `zuno-repo-layout-cleanup-v1`：已完成，归档到 `docs/history/programs/zuno-repo-layout-cleanup-v1/`；final alias surface closure 作为 PHASE10-15 保存。
 4. `zuno-runtime-architecture-upgrade-v1`：queued / not active。只在 Program 2/3 边界清楚后推进 runtime slice，重点是 GraphRAG LLM entity extraction、knowledge extractor configs、memory/capability/trace hardening。
 5. `zuno-architecture-visuals-v1`：queued / not active。重做架构 HTML / Mermaid 展示面，保持图形展示不成为第二套架构真相。
 
@@ -67,14 +67,14 @@ Program 3 已完成的边界：
 - `.agent/templates/goal-mode-prompt.md` 只保留目标模式提示骨架。
 - `data/` / `reports/` 使用白名单语义：正式证据进 `docs/evidence/`，示例输入进 `examples/` 或 `tools/evals/`，运行生成物保持 ignored/local。
 - `src/backend/zuno` 顶层目录已收敛到六层：`api / agent / memory / capability / knowledge / platform`。
-- 旧 runtime 顶层目录已下沉到六层内部，旧 import path 由受控 `.py` alias module 保留。
+- 旧 runtime 顶层目录已下沉到六层内部，旧 import path 由 legacy alias registry 保留。
 - `src/backend/zuno/api|agent|memory|capability|knowledge|platform/README.md` 已说明当前角色、目标角色、允许新增和禁止事项。
 - 生成物/cache/local path、`data/` / `reports/` 白名单、`tools/` / `tests/` / `examples/` / `infra/` 子目录职责已进入 verifier 和 repo tests。
 - `src/backend/fastapi_jwt_auth/` 顶层 shell 已退休。
 - `resources/` 与 `compatibility/` 已完成物理收敛。
 - MCP server implementations 已迁入 `src/backend/zuno/capability/mcp/servers/`。
 - HTTP middleware implementations 已迁入 `src/backend/zuno/platform/middleware/`。
-- 旧 `mcp_servers/`、`middleware/`、`evals/` 顶层目录已退休为 `.py` alias module。
+- 旧 `mcp_servers/`、`middleware/`、`evals/` 顶层目录和根级 alias 文件已退休，兼容由 `platform/compatibility/legacy_aliases.py` 承接。
 - repo structure verifier 和 repo tests 已禁止旧 runtime 顶层目录和非 alias 顶层文件回流。
 
 ## 已完成状态

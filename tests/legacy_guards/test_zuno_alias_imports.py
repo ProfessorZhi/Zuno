@@ -171,7 +171,6 @@ def test_zuno_service_imports_resolve_from_backend_runtime_surface():
         module_path = Path(module.__file__).as_posix()
         assert (
             "/src/backend/zuno/platform/services/" in module_path
-            or module_path.endswith("/src/backend/zuno/middleware.py")
             or "/src/backend/zuno/platform/middleware/" in module_path
             or "/src/backend/zuno/capability/mcp/servers/" in module_path
         ), module_path
@@ -265,27 +264,45 @@ def test_zuno_mcp_alias_module_imports():
         assert module is not None, module_name
 
 
-def test_zuno_visual_compatibility_aliases_are_module_files():
+def test_zuno_visual_compatibility_aliases_are_registry_backed_packages():
+    backend_root = Path(__file__).resolve().parents[2] / "src" / "backend" / "zuno"
     modules = {
-        "zuno.compatibility": "/src/backend/zuno/compatibility.py",
-        "zuno.config": "/src/backend/zuno/config.py",
-        "zuno.core": "/src/backend/zuno/core.py",
-        "zuno.database": "/src/backend/zuno/database.py",
-        "zuno.mcp_servers": "/src/backend/zuno/mcp_servers.py",
-        "zuno.middleware": "/src/backend/zuno/middleware.py",
-        "zuno.evals": "/src/backend/zuno/evals.py",
-        "zuno.resources": "/src/backend/zuno/resources.py",
-        "zuno.schema": "/src/backend/zuno/schema.py",
-        "zuno.services": "/src/backend/zuno/services.py",
-        "zuno.tools": "/src/backend/zuno/tools.py",
-        "zuno.utils": "/src/backend/zuno/utils.py",
+        "zuno.compatibility": "/src/backend/zuno/platform/compatibility",
+        "zuno.config": "/src/backend/zuno/platform/config",
+        "zuno.core": "/src/backend/zuno/agent/core",
+        "zuno.database": "/src/backend/zuno/platform/database",
+        "zuno.mcp_servers": "/src/backend/zuno/capability/mcp/servers",
+        "zuno.middleware": "/src/backend/zuno/platform/middleware",
+        "zuno.evals": "/tools/evals/zuno",
+        "zuno.resources": "/src/backend/zuno/platform/resources",
+        "zuno.schema": "/src/backend/zuno/api/dto",
+        "zuno.services": "/src/backend/zuno/platform/services",
+        "zuno.tools": "/src/backend/zuno/capability/tools",
+        "zuno.utils": "/src/backend/zuno/platform/common",
     }
 
-    for module_name, expected_suffix in modules.items():
+    for module_name, expected_path_fragment in modules.items():
         module = importlib.import_module(module_name)
-        module_path = Path(module.__file__).as_posix()
-        assert module_path.endswith(expected_suffix), module_path
         assert hasattr(module, "__path__"), module_name
+        module_paths = [Path(path).as_posix() for path in module.__path__]
+        assert any(expected_path_fragment in path for path in module_paths), module_paths
+
+    for alias in [
+        "compatibility",
+        "config",
+        "core",
+        "database",
+        "evals",
+        "mcp_servers",
+        "middleware",
+        "resources",
+        "schema",
+        "services",
+        "settings",
+        "tools",
+        "utils",
+    ]:
+        assert not (backend_root / f"{alias}.py").exists()
 
 
 def test_zuno_eval_alias_imports_tooling_namespace():

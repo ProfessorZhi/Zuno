@@ -24,19 +24,19 @@ STAGE_GROUPS = [
     (
         "backend_domain_runtime",
         [
-            "git add src/backend/zuno/core/ src/backend/zuno/services/runtime_registry.py src/backend/zuno/services/workspace/simple_agent.py src/backend/zuno/services/embedding/ src/backend/zuno/services/llm/ tools/evals/zuno/contract_review_eval/",
+            "git add src/backend/zuno/agent/core/ src/backend/zuno/platform/services/runtime_registry.py src/backend/zuno/platform/services/workspace/simple_agent.py src/backend/zuno/platform/services/embedding/ src/backend/zuno/platform/services/llm/ tools/evals/zuno/contract_review_eval/",
         ],
     ),
     (
         "backend_rag_graphrag_eval",
         [
-            "git add tools/evals/zuno/rag_eval/ src/backend/zuno/services/graphrag/ src/backend/zuno/services/pipeline/manager.py src/backend/zuno/services/retrieval/ src/backend/zuno/services/rag/",
+            "git add tools/evals/zuno/rag_eval/ src/backend/zuno/platform/services/graphrag/ src/backend/zuno/platform/services/pipeline/manager.py src/backend/zuno/platform/services/retrieval/ src/backend/zuno/platform/services/rag/",
         ],
     ),
     (
         "backend_public_entrypoints",
         [
-            "git add src/backend/zuno/main.py src/backend/zuno/settings.py src/backend/zuno/api/ src/backend/zuno/database/ src/backend/zuno/schema/ src/backend/zuno/tools/ src/backend/zuno/config/",
+            "git add src/backend/zuno/main.py src/backend/zuno/__init__.py src/backend/zuno/api/ src/backend/zuno/agent/ src/backend/zuno/memory/ src/backend/zuno/capability/ src/backend/zuno/knowledge/ src/backend/zuno/platform/",
         ],
     ),
     (
