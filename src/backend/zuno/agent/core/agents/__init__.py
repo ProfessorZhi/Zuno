@@ -1,5 +1,14 @@
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.agent.core.agents.general_agent import (
+        AgentConfig,
+        EmitEventAgentMiddleware,
+        GeneralAgent,
+        StreamAgentState,
+    )
+    from zuno.agent.core.agents.structured_response_agent import StructuredResponseAgent
 
 
 _EXPORT_TO_MODULE = {
@@ -10,7 +19,13 @@ _EXPORT_TO_MODULE = {
     "StructuredResponseAgent": "structured_response_agent",
 }
 
-__all__ = list(_EXPORT_TO_MODULE)
+__all__ = [
+    "AgentConfig",
+    "EmitEventAgentMiddleware",
+    "GeneralAgent",
+    "StreamAgentState",
+    "StructuredResponseAgent",
+]
 
 
 def __getattr__(name: str) -> Any:

@@ -1,7 +1,17 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.platform.services.retrieval.models import (
+        ProcessedQuery,
+        RetrievalPlan,
+        RetrievalRequest,
+        RetrievedDocument,
+    )
+    from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
+    from zuno.platform.services.retrieval.planner import RetrievalPlanner
 
 
 _EXPORT_TO_MODULE = {

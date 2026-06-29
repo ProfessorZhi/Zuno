@@ -1,7 +1,17 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.agent.context import (
+        AgentExecutionContext,
+        ContextOrchestrator,
+        ContextTrace,
+        ModelContextPacket,
+    )
+    from zuno.agent.runtime import AgentConfig, GeneralAgent
+    from zuno.agent.state import StreamAgentState
 
 
 _EXPORT_TO_MODULE = {

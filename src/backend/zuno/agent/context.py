@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.platform.services.application.context import (
+        AgentExecutionContext,
+        ContextOrchestrator,
+        ContextTrace,
+        ModelContextPacket,
+    )
 
 
 _EXPORT_TO_MODULE = {

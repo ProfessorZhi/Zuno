@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.platform.services.retrieval.models import FusionResult, RetrievedDocument
 
 
 _EXPORT_TO_MODULE = {

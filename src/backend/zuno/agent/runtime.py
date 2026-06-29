@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.agent.core.agents import AgentConfig, GeneralAgent
 
 
 _EXPORT_TO_MODULE = {

@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.platform.services.storage import (
+        LazyStorageClient,
+        MinioClient,
+        OSSClient,
+        storage_client,
+    )
 
 
 _EXPORT_TO_MODULE = {

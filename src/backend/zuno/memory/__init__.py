@@ -1,7 +1,19 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.memory.contracts import (
+        ExternalKnowledgeRecord,
+        MemoryCandidate,
+        MemoryLayer,
+        MemoryScope,
+        RawMemoryEvent,
+        TaskMemorySummary,
+    )
+    from zuno.memory.policy import RetentionPolicy
+    from zuno.memory.store import InMemoryLayerStore
 
 
 _EXPORT_TO_MODULE = {

@@ -1,7 +1,32 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.knowledge.contracts import (
+        GraphRAGProjectContract,
+        GraphRAGProjectLoader,
+        GraphRAGSettingsValidator,
+        LoadedGraphRAGProject,
+        ProjectReadiness,
+        normalize_retrieval_mode,
+    )
+    from zuno.knowledge.fusion import FusionResult, RetrievalFusion
+    from zuno.knowledge.query_service import (
+        GraphRAGProjectSnapshot,
+        GraphRAGQueryService,
+        KnowledgeQueryResult,
+        KnowledgeQueryService,
+    )
+    from zuno.knowledge.retrieval import (
+        ProcessedQuery,
+        RetrievalOrchestrator,
+        RetrievalPlan,
+        RetrievalPlanner,
+        RetrievalRequest,
+        RetrievedDocument,
+    )
 
 
 _LAZY_EXPORT_TO_MODULE = {

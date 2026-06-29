@@ -1,7 +1,23 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.capability.contracts import (
+        CapabilityCost,
+        CapabilityHealth,
+        CapabilityPermissions,
+        CapabilityRecord,
+        CapabilityType,
+    )
+    from zuno.capability.registry import CapabilityRegistry
+    from zuno.capability.selector import (
+        CapabilitySelectionRequest,
+        CapabilitySelectionResult,
+        DynamicCapabilitySelector,
+    )
+    from zuno.capability.trace import CapabilitySelectionTrace
 
 
 _EXPORT_TO_MODULE = {

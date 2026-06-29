@@ -1,7 +1,21 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from zuno.knowledge.contracts import (
+        GraphRAGProjectContract,
+        GraphRAGProjectLoader,
+        GraphRAGSettingsValidator,
+        LoadedGraphRAGProject,
+        ProjectReadiness,
+        normalize_retrieval_mode,
+    )
+    from zuno.platform.services.graphrag.query_service import (
+        GraphRAGProjectSnapshot,
+        GraphRAGQueryService,
+    )
 
 
 _EXPORT_TO_MODULE = {
