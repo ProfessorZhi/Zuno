@@ -52,4 +52,4 @@ Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档到：
 queued draft / not active：
 
 - `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
-- `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
+- `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`：target blueprint 已刷新为任务到交付物主链路；`overview.html` / Mermaid 生成展示仍是 queued follow-up。

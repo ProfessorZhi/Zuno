@@ -60,4 +60,4 @@ platform/
 ## Queued / Not Active
 
 - `zuno-runtime-architecture-upgrade-v1`
-- `zuno-architecture-visuals-v1`
+- `zuno-architecture-visuals-v1`：target blueprint 已刷新；`overview.html` / Mermaid 生成展示仍可作为后续 follow-up。

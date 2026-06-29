@@ -29,7 +29,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 | 文件夹继续分门别类 | completed / archived | 让第一次看仓库的人能从目录名直接读出架构，而不是在 `core`、`services`、`rag`、`retrieval`、`graphrag` 之间拼图。 | `src/backend/zuno` 顶层目录已收敛到六层；根级 alias `.py` 文件收口到 legacy alias registry；verifier 和 repo tests 固定完成态。 |
 | 六层内部入口成熟化 | completed / archived | Program 3 只完成顶层封口；六层内部还需要从 facade 逐步长成可解释、可测试的目标层入口。 | 已完成 agent / memory / capability / knowledge / platform 的第一批无副作用薄入口，并证明新旧 import 边界和 no-eager-load 约束。 |
 | Runtime 架构升级 | queued / not active | 在目标架构和目录边界稳定后，再把关键 runtime slice 往成熟形态推进。 | 只在 internalization 边界清楚后实现；每个 runtime slice 必须有代码、测试、trace/eval 证据，不做大包式重构。 |
-| 架构 HTML 重做清晰 | queued / not active | 让 GitHub 访问者和面试场景能快速看懂架构，而不是只靠长文本解释。 | 保持 `docs/architecture/diagrams.md` 为唯一 Mermaid 源；优化 `overview.html`；HTML 不能成为第二套架构真相。 |
+| 架构 HTML 重做清晰 | target blueprint refreshed / queued follow-up | 让 GitHub 访问者和面试场景能快速看懂架构，而不是只靠长文本解释。 | `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 已改成任务到交付物主链路；`overview.html` / Mermaid 生成页仍保持 queued follow-up；HTML 不能成为第二套架构真相。 |
 
 ## 短期 Program 队列
 
@@ -40,7 +40,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 3. `zuno-repo-layout-cleanup-v1`：已完成，归档到 `docs/history/programs/zuno-repo-layout-cleanup-v1/`；final alias surface closure 作为 PHASE10-15 保存。
 4. `zuno-six-layer-internalization-v1`：已完成，归档到 `docs/history/programs/zuno-six-layer-internalization-v1/`。六层内部已拥有第一批可解释、可测试、无副作用的目标层薄入口。
 5. `zuno-runtime-architecture-upgrade-v1`：queued / not active。只在 Program 2/3 和 internalization 边界清楚后推进 runtime slice，重点是 GraphRAG LLM entity extraction、knowledge extractor configs、memory/capability/trace hardening。
-6. `zuno-architecture-visuals-v1`：queued / not active。重做架构 HTML / Mermaid 展示面，保持图形展示不成为第二套架构真相。
+6. `zuno-architecture-visuals-v1`：target blueprint refreshed / queued follow-up。目标架构 HTML 已吸收任务到交付物主链路；后续仍可重做 `docs/architecture/overview.html` / Mermaid 生成展示面，保持图形展示不成为第二套架构真相。
 
 已被替换的 V2 目标运行时材料归档在：
 

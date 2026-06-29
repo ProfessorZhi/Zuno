@@ -24,11 +24,33 @@ later. The goal is not to create more directories mechanically. The goal is to
 make every concept have one owner, every file have one home, and every runtime
 path be explainable through tests and traces.
 
+DeepSearchAgents is useful as a product-closure reference, not as a replacement
+identity. Zuno should absorb its clear task flow, session workspace, uploaded
+file handling, artifact delivery, and observable long-running execution. Zuno
+should not absorb its fixed one-main-three-worker runtime as the default
+architecture.
+
+Target task-to-artifact flow:
+
+```text
+User Task
+  -> Typed API task / session
+  -> Session Workspace
+  -> Single GeneralAgent
+  -> Capability Selector
+  -> Web / structured data / GraphRAG-RAG adapter / uploaded file capabilities
+  -> Evidence / Citation / Trace
+  -> Answer / Markdown / PDF / Artifact
+  -> SSE or WebSocket event stream
+```
+
 ## 六个主层与横切治理
 
 ```text
 1. API Layer
    FastAPI routes / DTO / Application Services
+   task / session / upload / artifact list-download
+   SSE or WebSocket event stream
 
 2. Agent Layer
    Single GeneralAgent Runtime
@@ -49,6 +71,7 @@ path be explainable through tests and traces.
    Optional vector tool search
    Permission / health / cost filter
    Capability selection trace
+   Web search / structured data / GraphRAG-RAG adapter / file / artifact tools
 
 5. Knowledge Layer
    KnowledgeQueryService
@@ -67,11 +90,12 @@ path be explainable through tests and traces.
    Optional rerank
    Evidence check
    Citation
+   Multi-source evidence normalization
 
 6. Platform Layer
    PostgreSQL / Redis / RabbitMQ / MinIO
    Milvus / Neo4j / Elasticsearch optional adapter
-   model gateway / storage / background jobs
+   model gateway / session workspace / artifact store / storage / background jobs
 
 Cross-cutting Governance
    Evidence / Citation / Trace / Eval / Policy
@@ -106,6 +130,9 @@ FastAPI routes own HTTP boundaries only:
 Application services own use cases:
 
 - chat session creation and recovery
+- research task creation, cancellation, and progress state
+- upload handoff into session workspace
+- artifact list and download boundaries
 - knowledge query orchestration
 - project, memory, and capability commands
 - indexing job creation
@@ -115,6 +142,47 @@ Application services own use cases:
 Routes should call exactly one use-case boundary. They should not import
 concrete retrievers, GraphRAG traversal code, provider clients, or runtime graph
 internals.
+
+## 多来源 Evidence Channel
+
+Zuno's target equivalent of DeepSearchAgents' Tavily / MySQL / RAGFlow /
+uploaded-file split is provider-neutral:
+
+| Source channel | Zuno owner | Runtime output |
+| --- | --- | --- |
+| Public web | Web Search Capability | URL-backed evidence and trace |
+| Structured business data | Structured Data Capability | table / row evidence and permission trace |
+| Internal documents | Knowledge / GraphRAG or external RAG adapter | document evidence and citations |
+| Uploaded files | File Capability + Session Workspace | extracted file evidence and hash/path trace |
+| Generated reports | Artifact Capability + Platform storage | artifact id, download path, artifact_created event |
+
+All channels return evidence to the Agent. None of them become Agent Memory
+without Raw Event Log, Summary Compression, Structured Extraction, source ids,
+and permission checks.
+
+## 会话工作区与运行事件
+
+The target session workspace binds task id, session id, uploaded files,
+intermediate files, generated artifacts, event index, and trace id. A concrete
+implementation may use local filesystem storage, object storage, database rows,
+or a hybrid. `session_dir` and `ContextVar` are implementation options, not
+the architecture identity.
+
+Long tasks need a typed runtime event stream. The transport may be SSE or
+WebSocket. The event contract should cover at least:
+
+- `task_started`
+- `workspace_created`
+- `capability_selected`
+- `tool_call_started`
+- `evidence_ready`
+- `artifact_created`
+- `fallback_applied`
+- `task_cancelled`
+- `error`
+
+This stream is a Trace / Observability presentation boundary. It is not a new
+business layer and does not replace durable trace evidence.
 
 ## 单一 GeneralAgent 运行时
 
