@@ -1,5 +1,7 @@
 # Capability 层边界
 
+分类：`target-layer`
+
 ## 当前角色
 
 `src/backend/zuno/capability/` 目前是 capability metadata 和 selector foundation 的 facade，公开 CapabilityRecord、CapabilityRegistry、DynamicCapabilitySelector 和 selection trace 等 contract。真实实现仍在 `src/backend/zuno/services/application/capabilities/` 和相关 registry 路径。

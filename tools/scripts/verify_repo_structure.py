@@ -84,6 +84,7 @@ REQUIRED_PATHS = [
     "infra/docker",
     "src/backend/zuno",
     "src/backend/zuno/AGENTS.md",
+    "src/backend/zuno/README.md",
     "src/backend/zuno/main.py",
     "tests",
     "tools",
@@ -205,6 +206,22 @@ ALLOWED_RESPONSIBILITY_FILES = {
     "infra": [],
 }
 
+BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS = {
+    "api": "target-layer",
+    "agent": "target-layer",
+    "memory": "target-layer",
+    "capability": "target-layer",
+    "knowledge": "target-layer",
+    "platform": "target-layer",
+    "config": "infrastructure",
+    "database": "infrastructure",
+    "schema": "migration-source",
+    "tools": "migration-source",
+    "system_skills": "app-resource",
+    "prompts": "app-resource",
+    "fixtures": "app-resource",
+}
+
 
 @dataclass
 class VerificationResult:
@@ -276,6 +293,33 @@ def verify_first_class_directory_responsibilities() -> list[str]:
                 f"{directory}/ files drifted from responsibility allowlist: "
                 f"expected {expected_files}, got {actual_files}"
             )
+    return errors
+
+
+def verify_backend_zuno_directory_classifications() -> list[str]:
+    errors: list[str] = []
+    backend_root = REPO_ROOT / "src" / "backend" / "zuno"
+    for directory, classification in BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS.items():
+        path = backend_root / directory
+        if not path.is_dir():
+            errors.append(f"missing backend zuno classified directory: {directory}")
+            continue
+        readme = path / "README.md"
+        if not readme.exists():
+            errors.append(f"missing backend zuno boundary README: {directory}")
+            continue
+        content = readme.read_text(encoding="utf-8")
+        for phrase in [
+            f"分类：`{classification}`",
+            "当前角色",
+            "Target role",
+            "禁止事项",
+            "Focused tests",
+        ]:
+            if phrase not in content:
+                errors.append(
+                    f"{readme.relative_to(REPO_ROOT).as_posix()} missing phrase: {phrase}"
+                )
     return errors
 
 
@@ -451,6 +495,7 @@ def run_verification() -> VerificationResult:
             *verify_forbidden_current_paths(),
             *verify_doc_phrases(),
             *verify_first_class_directory_responsibilities(),
+            *verify_backend_zuno_directory_classifications(),
             *verify_target_architecture_html(),
             *verify_active_architecture_surface_phase_plan(),
             *verify_architecture_diagram_outputs(),
