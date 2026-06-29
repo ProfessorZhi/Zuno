@@ -18,14 +18,21 @@ EXPECTED_EXPORTS = {
     ],
     "zuno.agent.context": [
         "AgentExecutionContext",
+        "ContextItem",
         "ContextOrchestrator",
+        "ContextPackPolicy",
+        "ContextPreparationInput",
+        "ContextSelectionReason",
+        "ContextSource",
         "ContextTrace",
         "ModelContextPacket",
+        "TokenBudgetPolicy",
     ],
     "zuno.agent.post_turn": [
         "InMemoryLayerStore",
         "MemoryScope",
         "RawMemoryEvent",
+        "RuntimeTurnLedger",
         "TaskMemorySummary",
     ],
     "zuno.agent.state": [
@@ -50,9 +57,25 @@ def test_agent_layer_modules_expose_runtime_boundaries() -> None:
         assert module.__all__ == expected_exports
 
 
+def test_general_agent_core_uses_target_layer_contract_imports() -> None:
+    content = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "general_agent.py"
+    ).read_text(encoding="utf-8")
+    forbidden_imports = [
+        "from zuno.services.application.capabilities import",
+        "from zuno.services.application.context import",
+        "from zuno.services.application.knowledge import",
+        "from zuno.services.memory import",
+        "from zuno.services.retrieval.trace_artifacts import",
+    ]
+
+    assert [snippet for snippet in forbidden_imports if snippet in content] == []
+
+
 def test_agent_layer_modules_reuse_legacy_runtime_objects() -> None:
     from zuno.agent.context import ContextOrchestrator
     from zuno.agent.post_turn import RawMemoryEvent
+    from zuno.agent.post_turn import RuntimeTurnLedger
     from zuno.agent.runtime import GeneralAgent
     from zuno.agent.state import StreamAgentState
     from zuno.agent.tool_bridge import DynamicCapabilitySelector
@@ -68,6 +91,7 @@ def test_agent_layer_modules_reuse_legacy_runtime_objects() -> None:
     assert StreamAgentState is LegacyStreamAgentState
     assert ContextOrchestrator is LegacyContextOrchestrator
     assert RawMemoryEvent is LegacyRawMemoryEvent
+    assert RuntimeTurnLedger(trace_id="t").to_dict()["trace_id"] == "t"
     assert DynamicCapabilitySelector is LegacyDynamicCapabilitySelector
 
 

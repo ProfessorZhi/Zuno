@@ -130,6 +130,13 @@ pytest -q tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/agent/t
 python tools/evals/zuno/contract_review_eval/run_contract_eval.py --profiles dev_offline,dev_local,demo --output-dir .local/evals/zuno/phase08/contract_review
 ```
 
+PHASE09 Runtime Upgrade Integration foundation 验证：
+
+```powershell
+pytest -q tests/agent/test_agent_layer_surfaces.py tests/agent/test_generalagent_context_memory_runtime.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_hooks_evidence_trace_artifacts.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
+python .agent/scripts/verify_module_boundaries.py
+```
+
 文档入口扩大验证：
 
 ```powershell

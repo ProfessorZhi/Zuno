@@ -31,36 +31,35 @@ documentation surface. Historical material lives under
 
 ```text
 api/
-  HTTP routes, DTO boundary, auth, response envelopes, SSE
+  HTTP routes、DTO boundary、auth、response envelopes、SSE
 
-services/application/
-  use cases: chat, knowledge, context, memory, capability, project
+agent/
+  Single GeneralAgent runtime、context、post_turn、state、streaming、tool_bridge
 
-core/
-  GeneralAgent runtime, LangGraph/LangChain loop, model/tool orchestration
+memory/
+  raw events、summaries、structured memory、review、retrieval、rendering
 
-services/graphrag/
-  GraphRAG Project query/index/community/prompt concepts
+capability/
+  ToolCard、capability registry / selector / policy / execution / trace
 
-services/retrieval/
-  retrieval planning, retriever adapters, fusion, rerank, evidence
+knowledge/
+  KnowledgeQueryService、GraphRAG、evidence、citation、retrieval、fusion、trace
 
-services/memory/
-  raw events, summaries, structured memory, promotion policy
-
-database/ and services/storage/
-  durable persistence, object/file storage, versioned artifacts
+platform/
+  config、database、compatibility、middleware、model gateway、security、observability、storage
 ```
 
 Dependency direction:
 
 ```text
-api -> application services -> core/runtime -> providers/adapters
-services -> retrieval / graphrag / storage / persistence boundaries
+api -> agent / knowledge / capability / memory -> platform providers / adapters
+agent -> context / capability / knowledge / memory / trace contracts
 ```
 
-Core/runtime must not depend backward on API routes. API routes must not own
-business logic or retrieval strategy.
+`services/application`、`core`、`services/graphrag`、`services/retrieval`、`services/memory`
+可以作为物理实现或 legacy compatibility owner 保留在 `platform/` 或 legacy alias 语境中，
+但它们不再是目标前台所有权表达。Runtime 代码不能反向依赖 API routes；API routes
+不能拥有业务逻辑或检索策略。
 
 ## 前端与桌面端边界
 

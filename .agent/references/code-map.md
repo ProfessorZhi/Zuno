@@ -27,6 +27,7 @@ Completion API
   -> CompletionService
   -> GeneralAgent single loop
   -> prepare_context
+  -> capability selection trace
   -> ContextOrchestrator.prepare
   -> search_knowledge_base
   -> KnowledgeQueryService
@@ -34,7 +35,10 @@ Completion API
   -> RetrievalPlanner / RetrievalOrchestrator
   -> Evidence / Citation / Trace contract
   -> post_turn_commit
+  -> RuntimeTurnLedger
 ```
+
+这是 PHASE09 已验证的 foundation path。它证明当前轮 context / capability / knowledge / tool / post-turn evidence 可以被汇总，不表示完整产品级 model-visible context injection、动态工具编排、DB 持久化或前端 trace UI 已完成。
 
 ## 任务路由
 

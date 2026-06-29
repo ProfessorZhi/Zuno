@@ -6,27 +6,42 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from zuno.platform.services.application.context import (
         AgentExecutionContext,
+        ContextItem,
         ContextOrchestrator,
         ContextPackPolicy,
+        ContextPreparationInput,
+        ContextSelectionReason,
+        ContextSource,
         ContextTrace,
         ModelContextPacket,
+        TokenBudgetPolicy,
     )
 
 
 _EXPORT_TO_MODULE = {
     "AgentExecutionContext": "zuno.platform.services.application.context",
+    "ContextItem": "zuno.platform.services.application.context",
     "ContextOrchestrator": "zuno.platform.services.application.context",
     "ContextPackPolicy": "zuno.platform.services.application.context",
+    "ContextPreparationInput": "zuno.platform.services.application.context",
+    "ContextSelectionReason": "zuno.platform.services.application.context",
+    "ContextSource": "zuno.platform.services.application.context",
     "ContextTrace": "zuno.platform.services.application.context",
     "ModelContextPacket": "zuno.platform.services.application.context",
+    "TokenBudgetPolicy": "zuno.platform.services.application.context",
 }
 
 __all__ = [
     "AgentExecutionContext",
+    "ContextItem",
     "ContextOrchestrator",
     "ContextPackPolicy",
+    "ContextPreparationInput",
+    "ContextSelectionReason",
+    "ContextSource",
     "ContextTrace",
     "ModelContextPacket",
+    "TokenBudgetPolicy",
 ]
 
 

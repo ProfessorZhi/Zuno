@@ -137,6 +137,8 @@ Zuno 目标仍用六个主层承载代码和责任边界：
 
 Zuno 不是“用户问题直接丢给 Agent”。目标流程是先由 Context Builder 生成最小但足够的 Context Pack：
 
+PHASE09 当前已经证明的是 `RuntimeTurnLedger`、当前轮 trace reset、GeneralAgent 最小 evidence chain、post-turn evidence payload、六层目标入口 import guard 和 eval diagnostics。它还不是完整产品级 LangGraph runtime upgrade、成熟 model-visible context injection、生产级 memory retrieval / consolidation、动态工具编排或前端 trace UI。
+
 ```text
 system rules
 + user settings
@@ -278,7 +280,7 @@ drift_like -> drift
 
 这些内容即使出现在目标设计里，也不能写成 Current：
 
-- 完整 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime。
+- 完整产品级 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime。
 - 生产级 Memory DB、成熟 memory extraction / retrieval / consolidation。
 - 产品级动态 Capability Selector。
 - 完整 frontend trace 面板。

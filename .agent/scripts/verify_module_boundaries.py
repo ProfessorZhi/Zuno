@@ -21,6 +21,14 @@ CONCRETE_RETRIEVAL_IMPORTS = [
     "zuno.services.rag.retrieval",
 ]
 
+GENERAL_AGENT_FORBIDDEN_OWNER_IMPORTS = [
+    "from zuno.services.application.capabilities import",
+    "from zuno.services.application.context import",
+    "from zuno.services.application.knowledge import",
+    "from zuno.services.memory import",
+    "from zuno.services.retrieval.trace_artifacts import",
+]
+
 VAGUE_NEW_PACKAGE_NAMES = {"common", "helpers"}
 ALLOWED_EXISTING_VAGUE_PATHS = {
     "src/backend/zuno/utils",
@@ -118,6 +126,14 @@ def verify_knowledge_query_boundary(errors: list[str]) -> None:
                 errors.append(f"old KnowledgeQueryService import remains: {path.relative_to(REPO_ROOT)}")
 
 
+def verify_phase09_runtime_owner_imports(errors: list[str]) -> None:
+    path = REPO_ROOT / "src/backend/zuno/agent/core/agents/general_agent.py"
+    content = _read(path)
+    for phrase in GENERAL_AGENT_FORBIDDEN_OWNER_IMPORTS:
+        if phrase in content:
+            errors.append(f"GeneralAgent imports old owner instead of target layer surface: {phrase}")
+
+
 def main() -> int:
     errors: list[str] = []
     verify_retired_runtime_absent(errors)
@@ -125,6 +141,7 @@ def main() -> int:
     verify_core_does_not_import_api_routes(errors)
     verify_new_modules_do_not_add_vague_packages(errors)
     verify_knowledge_query_boundary(errors)
+    verify_phase09_runtime_owner_imports(errors)
 
     if errors:
         for error in errors:

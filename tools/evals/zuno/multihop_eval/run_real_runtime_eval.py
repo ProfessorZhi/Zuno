@@ -386,6 +386,9 @@ def extract_route_diagnostics(
     evidence_verdict = dict(metadata.get("evidence_verdict") or {})
     artifact_manifest = dict(metadata.get("artifact_manifest") or {})
     runtime_trace_events = list(metadata.get("runtime_trace_events") or [])
+    runtime_turn_ledger = dict(metadata.get("runtime_turn_ledger") or {})
+    runtime_turn_knowledge_trace = dict(runtime_turn_ledger.get("knowledge_trace") or {})
+    runtime_turn_tool_events = list(runtime_turn_ledger.get("tool_trace_events") or [])
     notes: list[str] = []
 
     seed_entities = metadata.get("seed_entities")
@@ -418,6 +421,11 @@ def extract_route_diagnostics(
         "evidence_verdict_fallback_reason": evidence_verdict.get("fallback_reason"),
         "artifact_manifest_trace_id": artifact_manifest.get("trace_id"),
         "runtime_trace_event_count": len(runtime_trace_events) or None,
+        "runtime_turn_stage_order": list(runtime_turn_ledger.get("stage_order") or []),
+        "runtime_turn_layers_touched": list(runtime_turn_ledger.get("layers_touched") or []),
+        "runtime_turn_post_memory_event_count": len(list(runtime_turn_ledger.get("post_turn_memory_event_ids") or [])) or None,
+        "runtime_turn_knowledge_trace_id": runtime_turn_knowledge_trace.get("trace_id"),
+        "runtime_turn_tool_trace_event_count": len(runtime_turn_tool_events) or None,
     }
     return diagnostics, notes
 

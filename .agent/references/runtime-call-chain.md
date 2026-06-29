@@ -13,6 +13,7 @@ HTTP route
   -> GeneralAgent prepare_context
   -> GeneralAgent ReAct loop
   -> post_turn_commit
+  -> RuntimeTurnLedger foundation evidence
   -> retrieval, GraphRAG, context contracts, memory, capabilities, tools, storage
   -> response DTO
 ```
@@ -33,7 +34,9 @@ GeneralAgent 还没有在每轮模型调用中完整注入 selected capabilities
 
 ## GeneralAgent 上下文运行时
 
-`GeneralAgent.astream()` 当前会准备 `ModelContextPacket`，把 `context_trace` 和 `model_context_packet` 放入单一 ReAct loop state，并在启用 memory 时写入 scoped raw event 和 task summary。
+`GeneralAgent.astream()` 当前会准备 `ModelContextPacket`，把 `context_trace` 和 `model_context_packet` 放入单一 ReAct loop state，重置当前轮 knowledge/tool trace buffer，并在启用 memory 时写入 scoped raw event、task summary 和 runtime evidence payload。PHASE09 还会生成 `RuntimeTurnLedger`，汇总 context trace、capability trace、knowledge trace、tool trace events 和 post-turn memory event ids。
+
+这只是已验证 foundation path。完整产品级 model-visible context injection、动态工具编排、生产级 memory retrieval / consolidation、API/SSE/DB/frontend trace 展示仍不是 Current。
 
 详细目标行为见：
 
