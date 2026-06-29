@@ -1,8 +1,12 @@
 # Platform 层边界
 
+分类：`target-layer`
+
 ## 当前角色
 
 `src/backend/zuno/platform/` 目前是平台能力的轻量 facade，当前只公开 execution policy 相关 contract 和 helper。真实 DB、settings、storage、queue、MCP、LLM、sandbox、vendor compat 等底座仍分布在旧路径中。
+
+`config/` 和 `database/` 本批保持 infrastructure source：前者保存配置资源和 helper，后者保存 DB session、metadata、DAO 和 models。它们是 Platform 的目标归属，不是已经完成物理迁移的证据。
 
 ## Target role
 

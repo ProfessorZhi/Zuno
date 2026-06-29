@@ -1,5 +1,7 @@
 # Memory 层边界
 
+分类：`target-layer`
+
 ## 当前角色
 
 `src/backend/zuno/memory/` 目前是 memory foundation 的轻量 facade，暴露 raw event、task summary、memory scope、retention policy 和 in-memory layer store 等基础 contract。真实实现仍在 `src/backend/zuno/services/memory/` 等旧路径中。

@@ -42,6 +42,7 @@ def test_required_current_paths_exist() -> None:
         "docs/history/specs",
         "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
         "src/backend/zuno/main.py",
+        "src/backend/zuno/README.md",
         "tools/agent/render_architecture.py",
         "tools/evals/zuno",
     ]
@@ -113,6 +114,57 @@ def test_repo_structure_verifier_pins_first_class_directory_responsibilities() -
     }
 
 
+def test_repo_structure_verifier_pins_backend_zuno_directory_classifications() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS == {
+        "api": "target-layer",
+        "agent": "target-layer",
+        "memory": "target-layer",
+        "capability": "target-layer",
+        "knowledge": "target-layer",
+        "platform": "target-layer",
+        "config": "infrastructure",
+        "database": "infrastructure",
+        "schema": "migration-source",
+        "tools": "migration-source",
+        "system_skills": "app-resource",
+        "prompts": "app-resource",
+        "fixtures": "app-resource",
+    }
+
+
+def test_backend_zuno_classified_directories_have_boundary_readmes() -> None:
+    classified_directories = [
+        "api",
+        "agent",
+        "memory",
+        "capability",
+        "knowledge",
+        "platform",
+        "config",
+        "database",
+        "schema",
+        "tools",
+        "system_skills",
+        "prompts",
+        "fixtures",
+    ]
+
+    for directory in classified_directories:
+        readme = REPO_ROOT / "src" / "backend" / "zuno" / directory / "README.md"
+        assert readme.exists(), f"missing backend zuno boundary README: {directory}"
+        content = readme.read_text(encoding="utf-8")
+        for phrase in ["当前角色", "Target role", "禁止事项", "Focused tests"]:
+            assert phrase in content, f"{readme.relative_to(REPO_ROOT)} missing phrase: {phrase}"
+
+
 def test_first_class_directory_subdirs_match_allowed_responsibilities() -> None:
     allowed_subdirs = {
         "tools": {"agent", "cli", "evals", "launchers", "migrations", "scripts"},
@@ -172,6 +224,31 @@ def test_repo_structure_verifier_runs_first_class_directory_responsibility_check
         verifier,
         "verify_first_class_directory_responsibilities",
         fake_responsibility_check,
+    )
+
+    result = verifier.run_verification()
+
+    assert sentinel in result.errors
+
+
+def test_repo_structure_verifier_runs_backend_zuno_directory_classification_check(monkeypatch) -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    sentinel = "backend zuno directory classification check was called"
+
+    def fake_backend_classification_check() -> list[str]:
+        return [sentinel]
+
+    monkeypatch.setattr(
+        verifier,
+        "verify_backend_zuno_directory_classifications",
+        fake_backend_classification_check,
     )
 
     result = verifier.run_verification()

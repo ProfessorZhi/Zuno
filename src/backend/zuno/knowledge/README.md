@@ -1,5 +1,7 @@
 # Knowledge 层边界
 
+分类：`target-layer`
+
 ## 当前角色
 
 `src/backend/zuno/knowledge/` 目前是 Knowledge / GraphRAG / retrieval 的 facade，部分稳定导出直接来自 GraphRAG contract，较重的 retrieval 和 query service 通过 lazy import 暴露。真实查询、GraphRAG、retrieval 和 RAG 实现仍在 `src/backend/zuno/services/application/knowledge.py`、`services/graphrag/`、`services/retrieval/` 和 `services/rag/`。

@@ -1,5 +1,7 @@
 # Agent 层边界
 
+分类：`target-layer`
+
 ## 当前角色
 
 `src/backend/zuno/agent/` 目前是轻量 facade，通过 `__all__` 和 lazy import 暴露 `GeneralAgent`、agent config、stream state，以及 context runtime contract。真实 Single GeneralAgent runtime 仍主要在 `src/backend/zuno/core/agents/` 和相关 application context 路径中。
