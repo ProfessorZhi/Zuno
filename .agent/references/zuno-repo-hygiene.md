@@ -20,7 +20,7 @@ Program 3 final alias surface closure 已完成。当前目标态要求 `src/bac
 
 - 旧 public import path 必须有测试保护。
 - Runtime 主线仍是 Single GeneralAgent。
-- Program 4 runtime architecture upgrade 保持 queued / not active。
+- Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档；runtime architecture upgrade 被当前 active program `zuno-eight-deliverables-full-realization-v1` 吸收为后续 phase 参考，不是当前独立 queued program。
 - Current 文档只能写已实现事实，不能把目标目录写成成熟 runtime。
 
 ## Before Editing

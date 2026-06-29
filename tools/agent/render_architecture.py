@@ -9,24 +9,117 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SOURCE_PATH = REPO_ROOT / "docs/architecture/diagrams.md"
-OUTPUTS = [
+SOURCE_PATH = REPO_ROOT / "docs/architecture.md"
+OUTPUT_PATH = REPO_ROOT / "docs/architecture.html"
+STALE_OUTPUTS = [
+    REPO_ROOT / "docs/architecture/architecture.html",
     REPO_ROOT / "docs/architecture/overview.html",
     REPO_ROOT / ".agent/architecture/blueprint.html",
 ]
 
 EXPECTED_DIAGRAMS = [
-    "Current Runtime",
-    "Target Runtime",
-    "Maintenance Workflow",
+    "Logical View",
+    "Development View",
+    "Process View",
+    "Physical View",
+    "Scenarios View",
+    "V&B Logical View",
+    "Component-and-Connector View",
+    "V&B Deployment View",
+    "Quality View",
+    "Agent Loop View",
 ]
 
+GROUPS = [
+    (
+        "一、4+1 View Model",
+        "4+1 用 Logical、Development、Process、Physical、Scenarios 五个视图解释同一个系统。",
+        [
+            "Logical View",
+            "Development View",
+            "Process View",
+            "Physical View",
+            "Scenarios View",
+        ],
+    ),
+    (
+        "二、View & Beyond",
+        "本页采用 Logical、Component-and-Connector、Deployment、Quality 四类工程视图。",
+        [
+            "V&B Logical View",
+            "Component-and-Connector View",
+            "V&B Deployment View",
+            "Quality View",
+        ],
+    ),
+    (
+        "三、Agent Loop 专题图",
+        "Agent Loop 是 Process View 的内部细化，但不等同于整个 Process View。",
+        [
+            "Agent Loop View",
+        ],
+    ),
+]
+
+VIEW_META = {
+    "Logical View": (
+        "4+1: Logical",
+        "View & Beyond: Logical",
+        "说明前端、API、Agent、Memory、Capability、Knowledge、Evidence、Platform 的职责分层。",
+    ),
+    "Development View": (
+        "4+1: Development",
+        "View & Beyond: Implementation",
+        "说明 apps、backend、docs、.agent、tools、tests 如何组织。",
+    ),
+    "Process View": (
+        "4+1: Process",
+        "View & Beyond: C&C",
+        "说明请求、服务、Agent runtime、外部能力和事件流如何运行。",
+    ),
+    "Physical View": (
+        "4+1: Physical",
+        "View & Beyond: Deployment",
+        "说明本地优先部署、FastAPI、Web/Desktop、存储和外部 provider 的关系。",
+    ),
+    "Scenarios View": (
+        "4+1: Scenarios / Process",
+        "View & Beyond: Runtime Scenario",
+        "说明一个 query 如何经过 Context、Mode Policy、Agentic RAG、Evidence 和 Trace。",
+    ),
+    "V&B Logical View": (
+        "4+1: Logical",
+        "View & Beyond: Logical",
+        "说明 Agent Workspace 的领域子系统和核心概念。",
+    ),
+    "Component-and-Connector View": (
+        "4+1: Logical / Process",
+        "View & Beyond: Component-and-Connector",
+        "说明 API、Agent、Memory、Tool、Retrieval、Evidence、Trace 的运行连接。",
+    ),
+    "V&B Deployment View": (
+        "4+1: Physical",
+        "View & Beyond: Deployment",
+        "说明可替换 provider、存储、模型、搜索和 MCP 的部署关系。",
+    ),
+    "Quality View": (
+        "4+1: Scenarios / Cross-cutting",
+        "View & Beyond: Quality",
+        "说明性能、可靠性、安全、可观测性、可修改性和评测如何落到机制。",
+    ),
+    "Agent Loop View": (
+        "4+1: Logical / Process",
+        "View & Beyond: C&C",
+        "说明主控 Agent 的 Plan、Act、Observe、Reflect、Replan 循环。",
+    ),
+}
+
 PALETTE = {
-    "background": "#f8f8fb",
-    "node": "#f6f3ff",
-    "border": "#a99cff",
-    "text": "#2c255f",
-    "line": "#9b8cff",
+    "background": "#f7f8fb",
+    "node": "#ffffff",
+    "border": "#b8c2cc",
+    "text": "#16202a",
+    "line": "#52616f",
 }
 
 
@@ -34,11 +127,12 @@ PALETTE = {
 class Diagram:
     title: str
     description: str
+    analysis: list[str]
     mermaid: str
 
 
 def _sections(content: str) -> dict[str, str]:
-    matches = list(re.finditer(r"^## (?P<title>[^\n]+)\n", content, re.M))
+    matches = list(re.finditer(r"^### (?P<title>[^\n]+)\n", content, re.M))
     sections: dict[str, str] = {}
     for index, match in enumerate(matches):
         start = match.end()
@@ -51,8 +145,24 @@ def _extract_section_description(section_body: str, title: str) -> str:
     body_before_mermaid = section_body.split("```mermaid", maxsplit=1)[0]
     if body_before_mermaid == section_body:
         raise ValueError(f"missing Mermaid block for {title}")
-    lines = [line.strip() for line in body_before_mermaid.strip().splitlines() if line.strip()]
+    lines = [
+        line.strip()
+        for line in body_before_mermaid.strip().splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
     return " ".join(lines)
+
+
+def _extract_analysis(section_body: str) -> list[str]:
+    match = re.search(r"#### 分析\n(?P<body>.*?)(?:\n## |\n### |\Z)", section_body, re.S)
+    if not match:
+        return []
+    analysis: list[str] = []
+    for line in match.group("body").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            analysis.append(stripped[2:].strip())
+    return analysis
 
 
 def _verify_palette(title: str, mermaid: str) -> None:
@@ -60,11 +170,17 @@ def _verify_palette(title: str, mermaid: str) -> None:
         f"fill:{PALETTE['node']}",
         f"stroke:{PALETTE['border']}",
         f"color:{PALETTE['text']}",
-        f"stroke:{PALETTE['line']}",
+        f'"lineColor": "{PALETTE["line"]}"',
     ]
     missing = [phrase for phrase in required if phrase not in mermaid]
     if missing:
         raise ValueError(f"{title} Mermaid palette is incomplete: {missing}")
+
+
+def _verify_render_safe(title: str, mermaid: str) -> None:
+    unsafe = re.findall(r"\[[^\]\"].*?[+/&:：].*?\]", mermaid)
+    if unsafe:
+        raise ValueError(f"{title} has unquoted Mermaid labels that may fail in browser: {unsafe[:3]}")
 
 
 def extract_diagrams(content: str) -> list[Diagram]:
@@ -81,35 +197,69 @@ def extract_diagrams(content: str) -> list[Diagram]:
             raise ValueError(f"missing Mermaid block for {title}")
         mermaid = match.group("code").strip()
         _verify_palette(title, mermaid)
+        _verify_render_safe(title, mermaid)
         diagrams.append(
             Diagram(
                 title=title,
                 description=_extract_section_description(section_body, title),
+                analysis=_extract_analysis(section_body),
                 mermaid=mermaid,
             )
         )
     return diagrams
 
 
-def _render_diagram_card(diagram: Diagram) -> str:
+def _render_diagram_card(diagram: Diagram, index: int) -> str:
     title = html.escape(diagram.title)
     description = html.escape(diagram.description)
     mermaid = html.escape(diagram.mermaid)
-    return f"""    <section>
-      <h2>{title}</h2>
-      <p>{description}</p>
-      <div class="mermaid">
+    four_plus, view_beyond, analysis = VIEW_META[diagram.title]
+    bullets = "\n".join(
+        f"          <li>{html.escape(item)}</li>" for item in (diagram.analysis or [analysis])
+    )
+    return f"""      <section class="diagram-section">
+        <h3>{index}. {title}</h3>
+        <p class="purpose">{description}</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>{html.escape(four_plus)}</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>{html.escape(view_beyond)}</dd></div>
+        </dl>
+        <ul class="analysis">
+{bullets}
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
 {mermaid}
-      </div>
-      <details>
-        <summary>Mermaid source</summary>
-        <pre><code>{mermaid}</code></pre>
-      </details>
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>{mermaid}</code></pre>
+        </details>
+      </section>"""
+
+
+def _render_diagrams_chapter(diagrams: list[Diagram]) -> str:
+    diagram_map = {diagram.title: diagram for diagram in diagrams}
+    html_sections: list[str] = []
+    index = 1
+    for heading, summary, titles in GROUPS:
+        cards: list[str] = []
+        for title in titles:
+            cards.append(_render_diagram_card(diagram_map[title], index))
+            index += 1
+        html_sections.append(
+            f"""    <section class="chapter">
+      <h2>{html.escape(heading)}</h2>
+      <p>{html.escape(summary)}</p>
+{chr(10).join(cards)}
     </section>"""
+        )
+    return "\n".join(html_sections)
 
 
 def render_html(diagrams: list[Diagram]) -> str:
-    diagram_cards = "\n".join(_render_diagram_card(diagram) for diagram in diagrams)
+    content = _render_diagrams_chapter(diagrams)
     palette_css = "\n".join(f"      --zuno-{name}: {value};" for name, value in PALETTE.items())
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -121,82 +271,172 @@ def render_html(diagrams: list[Diagram]) -> str:
     :root {{
 {palette_css}
       color-scheme: light;
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-family: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
     }}
     body {{
       margin: 0;
-      background: var(--zuno-background);
+      background: #ffffff;
       color: var(--zuno-text);
     }}
     main {{
-      max-width: 1120px;
+      max-width: 980px;
       margin: 0 auto;
-      padding: 40px 24px 56px;
+      padding: 52px 32px 70px;
     }}
     header {{
-      margin-bottom: 28px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--zuno-border);
     }}
     h1 {{
       margin: 0 0 10px;
-      font-size: 32px;
+      font-size: 34px;
       line-height: 1.2;
       letter-spacing: 0;
     }}
-    p {{
-      margin: 0;
-      line-height: 1.7;
-    }}
-    .sync {{
-      margin-top: 12px;
-      font-size: 14px;
-    }}
-    section {{
-      margin-top: 24px;
-      padding: 22px;
-      border: 1px solid var(--zuno-border);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.72);
-    }}
     h2 {{
-      margin: 0 0 8px;
-      font-size: 20px;
+      margin: 0 0 12px;
+      font-size: 24px;
+      line-height: 1.3;
       letter-spacing: 0;
     }}
-    .mermaid {{
-      margin-top: 18px;
-      padding: 18px;
-      overflow-x: auto;
+    h3 {{
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }}
+    p {{
+      margin: 0 0 10px;
+      line-height: 1.68;
+      font-size: 15px;
+    }}
+    code {{
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.92em;
+    }}
+    .sync {{
+      color: #52616f;
+      font-size: 14px;
+    }}
+    .purpose {{
+      color: #25313d;
+      font-size: 15px;
+    }}
+    .chapter {{
+      margin-top: 34px;
+    }}
+    .view-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }}
+    .view-grid article {{
       border: 1px solid var(--zuno-border);
-      border-radius: 8px;
+      border-radius: 6px;
+      padding: 14px;
       background: #ffffff;
     }}
+    .diagram-section {{
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #e3e7ec;
+      break-inside: avoid;
+    }}
+    .meta {{
+      display: grid;
+      gap: 8px;
+      margin: 12px 0 16px;
+      padding: 12px 14px;
+      border: 1px solid var(--zuno-border);
+      border-radius: 6px;
+      background: #f7f8fb;
+      font-size: 14px;
+    }}
+    .meta div {{
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 10px;
+    }}
+    dt {{
+      margin: 0;
+      font-weight: 650;
+    }}
+    dd {{
+      margin: 0;
+      line-height: 1.55;
+    }}
+    .analysis {{
+      margin: 10px 0 16px;
+      padding-left: 20px;
+      color: #25313d;
+      font-size: 14px;
+      line-height: 1.7;
+    }}
+    .analysis li {{
+      margin: 4px 0;
+    }}
+    .diagram-frame {{
+      margin: 16px auto 10px;
+      padding: 18px;
+      max-width: 780px;
+      overflow-x: auto;
+      border: 1px solid var(--zuno-border);
+      border-radius: 6px;
+      background: #ffffff;
+    }}
+    .mermaid {{
+      width: 100%;
+      min-height: 120px;
+      text-align: center;
+    }}
+    .mermaid svg {{
+      width: auto !important;
+      max-width: none;
+      min-width: 560px;
+      height: auto;
+    }}
     details {{
-      margin-top: 12px;
+      max-width: 780px;
+      margin: 8px auto 0;
       font-size: 13px;
+      color: #52616f;
     }}
     pre {{
       overflow-x: auto;
       padding: 14px;
-      border-radius: 8px;
-      background: #ffffff;
+      border-radius: 6px;
+      background: #f7f8fb;
       border: 1px solid var(--zuno-border);
+      color: var(--zuno-text);
     }}
   </style>
 </head>
 <body>
   <main>
     <header>
-      <h1>Zuno Architecture Overview</h1>
-      <p>三张核心图分别说明当前真实调用链、近期目标 runtime 和维护工作流。Current 与 Target 分开展示，避免把目标状态写成当前事实。</p>
-      <p class="sync">同步规则：Mermaid 源只维护在 <code>docs/architecture/diagrams.md</code>，本页由 <code>tools/agent/render_architecture.py</code> 生成。HTML 可用本地 <code>file://</code> 打开，图形渲染使用 CDN Mermaid runtime；离线时仍保留标题、说明和 Mermaid source。</p>
+      <h1>Zuno 架构总览 / Architecture Overview</h1>
+      <p>Zuno 是本地优先的 Agent Workspace。本文用 4+1、View &amp; Beyond 和 Agent Loop 专题图说明目标架构。</p>
+      <p class="sync">Source: <code>docs/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture.html</code>.</p>
+      <!-- View markers for verifier: V&B Logical View; V&B Deployment View -->
     </header>
-{diagram_cards}
+{content}
   </main>
   <script type="module">
     import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
     mermaid.initialize({{
+      startOnLoad: true,
       theme: "base",
       securityLevel: "strict",
+      flowchart: {{
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: "linear",
+        padding: 16,
+        nodeSpacing: 34,
+        rankSpacing: 44
+      }},
       themeVariables: {{
         background: "{PALETTE['background']}",
         mainBkg: "{PALETTE['node']}",
@@ -204,7 +444,8 @@ def render_html(diagrams: list[Diagram]) -> str:
         primaryBorderColor: "{PALETTE['border']}",
         primaryTextColor: "{PALETTE['text']}",
         lineColor: "{PALETTE['line']}",
-        textColor: "{PALETTE['text']}"
+        textColor: "{PALETTE['text']}",
+        fontFamily: "Inter, Segoe UI, Microsoft YaHei, Arial"
       }}
     }});
   </script>
@@ -221,35 +462,40 @@ def build_html() -> str:
 
 def write_outputs() -> None:
     rendered = build_html()
-    for output_path in OUTPUTS:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(rendered, encoding="utf-8", newline="\n")
-        print(f"wrote {output_path.relative_to(REPO_ROOT).as_posix()}")
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH.write_text(rendered, encoding="utf-8", newline="\n")
+    print(f"wrote {OUTPUT_PATH.relative_to(REPO_ROOT).as_posix()}")
+    for stale_path in STALE_OUTPUTS:
+        if stale_path.exists():
+            stale_path.unlink()
+            print(f"removed stale {stale_path.relative_to(REPO_ROOT).as_posix()}")
 
 
 def check_outputs() -> int:
     rendered = build_html()
     errors: list[str] = []
-    for output_path in OUTPUTS:
-        if not output_path.exists():
-            errors.append(f"missing generated output: {output_path.relative_to(REPO_ROOT).as_posix()}")
-            continue
-        current = output_path.read_text(encoding="utf-8")
-        if current != rendered:
-            errors.append(f"generated output is stale: {output_path.relative_to(REPO_ROOT).as_posix()}")
+    if not OUTPUT_PATH.exists():
+        errors.append(f"missing generated output: {OUTPUT_PATH.relative_to(REPO_ROOT).as_posix()}")
+    elif OUTPUT_PATH.read_text(encoding="utf-8") != rendered:
+        errors.append(f"generated output is stale: {OUTPUT_PATH.relative_to(REPO_ROOT).as_posix()}")
+
+    for stale_path in STALE_OUTPUTS:
+        if stale_path.exists():
+            errors.append(f"stale generated output still exists: {stale_path.relative_to(REPO_ROOT).as_posix()}")
+
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print("architecture HTML outputs are in sync with docs/architecture/diagrams.md")
+    print("architecture HTML output is in sync with docs/architecture.md")
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Render architecture Mermaid diagrams to lightweight HTML.")
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--write", action="store_true", help="write generated HTML files")
-    mode.add_argument("--check", action="store_true", help="verify generated HTML files are current")
+    mode.add_argument("--write", action="store_true", help="write generated HTML file")
+    mode.add_argument("--check", action="store_true", help="verify generated HTML file is current")
     args = parser.parse_args(argv)
 
     if args.write:

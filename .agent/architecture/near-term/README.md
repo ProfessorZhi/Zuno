@@ -13,7 +13,7 @@
 ```text
 .agent/architecture/near-term/
   README.md
-  zuno-ideal-architecture-and-repo-layout.html
+  00-architecture-index.md
   01-target-runtime-architecture.md
   02-context-memory-architecture.md
   03-capability-tool-retrieval-architecture.md
@@ -23,7 +23,7 @@
 
 ## 阅读顺序
 
-1. [Target / Proposed Visual Blueprint](zuno-ideal-architecture-and-repo-layout.html)
+1. [Target Architecture Index](00-architecture-index.md)
 2. [Target Runtime Architecture](01-target-runtime-architecture.md)
 3. [Context Memory Architecture](02-context-memory-architecture.md)
 4. [Capability Tool Retrieval Architecture](03-capability-tool-retrieval-architecture.md)
@@ -34,7 +34,7 @@
 
 near-term 指当前 Python/FastAPI、LangGraph、monorepo 内部可以逐步落地的目标架构。它不等于 Java 实现、microservice 拆分、event bus 全面 rollout，也不等于默认 multi-agent 行为。
 
-HTML 蓝图是唯一 canonical Target / Proposed visual blueprint。它不能复制到 `docs/`，也不能当作 Current evidence。
+本目录保持文字为主，便于转化为 `.agent/programs/` 下的执行计划。唯一架构 HTML 展示页是 `docs/architecture.html`；它不能当作 Current evidence。
 
 ## 执行计划放哪里
 
@@ -42,4 +42,4 @@ HTML 蓝图是唯一 canonical Target / Proposed visual blueprint。它不能复
 
 - `.agent/programs/implementation-roadmap.md`
 
-不要把 per-phase 文件加回 `.agent/architecture/near-term/`。执行 phase 文件平铺在 `.agent/programs/`，architecture 保持为本 README、一个 HTML 蓝图和五份 Markdown 设计文件。
+不要把 per-phase 文件加回 `.agent/architecture/near-term/`。执行 phase 文件平铺在 `.agent/programs/`，architecture 保持为本 README、一个文字索引和五份 Markdown 设计文件。

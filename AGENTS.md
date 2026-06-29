@@ -47,27 +47,82 @@ docs/history/
 
 正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。历史材料移动到 `docs/history/`，不要因为它不再当前有效就删除。
 
+项目根目录必须保持干净，只保留稳定项目入口和配置。临时截图、浏览器截图、PDF 预览、测试产物、本地报告和缓存不得遗留在根目录；正式附件放入对应 `docs/**/assets/`，临时调试产物放入 `.local/` 或 `tmp/`。
+
+## Architecture Documentation Governance
+
+Zuno 的架构文档由 `docs/architecture.md`、`docs/architecture/`、`docs/architecture.html` 和 `.agent/references/` 共同治理。
+
+- `docs/architecture/` 是人类可读的正式架构说明，也是 public architecture source。
+- `docs/` 应少而精，保留相对稳定、面向人的正式结论；不要把高频变化的执行细节、图清单、workflow change log 或 Agent 操作规则塞进 `docs/`。
+- `docs/architecture.md` 是 Obsidian 风格架构总览 Markdown，维护章节结构、十类 Mermaid 架构视图和简短分析。
+- `docs/architecture.html` 是唯一架构 HTML 展示页，不是唯一事实来源；它必须由 `docs/architecture.md` 和 `tools/agent/render_architecture.py` 生成，并与正式架构文档保持一致。
+- `.agent/references/` 是 Agent-facing operating memory，保存项目地图、文档治理、图清单、更新策略和 Current / Target / Future / History 规则，不替代正式文档。
+- `.agent/` 可以承载更细、更常变化的 Agent 工作流、执行计划、模板、治理索引和调试 playbook；这些内容不应和 `docs/` 重复展开。
+- `.agent/templates/` 是文档、图和变更记录的生成骨架，不保存项目事实。
+- `.agent/programs/` 是当前执行状态和 program 生命周期入口。仓库当前不启用 `.agent/plans/`；如未来引入，必须先更新 `AGENTS.md`、`.agent/system.yaml`、verifier 和 tests。
+
+涉及架构、Agent Runtime、RAG、GraphRAG、Memory、Tool Layer、Hooks、Trace、Eval、部署、中间件或前后端契约的改动，必须检查是否同步：
+
+1. `docs/architecture.md`
+2. `docs/architecture/*`
+3. `docs/architecture.html`
+4. `.agent/references/*`
+5. `.agent/templates/*`
+6. `.agent/programs/current.md` 或 `.agent/programs/implementation-roadmap.md`
+7. `README.md` 中的架构摘要
+
+架构结论必须区分 Current、Target、Future、History。Current 只写代码、测试和可复现结果已经证明的事实；Target 是近期目标；Future 是长期方向；History 是完成、过时或被替换的方案。禁止把 Target 或 Future 写成 Current。
+
+## Agent Workflow Self-Maintenance
+
+AGENTS.md 和 `.agent/references/` 共同组成 Zuno 的 Agent 工作流系统。AGENTS.md 是 boot entry 和规则路由层，应保持精炼；`.agent/references/` 是 operating memory，保存详细工作流规则、更新策略、图清单、模板边界和长期要求。
+
+工作流不是静态规则。当用户提出新的长期工作方式要求，例如 Agent 如何维护文档、更新架构图、同步 HTML、管理 Codex 轮次、保留证据、区分 Current / Target / Future / History，Agent 必须判断该要求是否需要写回：
+
+- `AGENTS.md`
+- `.agent/references/*`
+- `.agent/templates/*`
+- `.agent/programs/*`
+- `docs/architecture/*`
+- `docs/architecture.md`
+- `docs/architecture.html`
+
+Agent 必须区分一次性用户指令、可复用项目规则、架构治理规则、Codex 执行规则、文档模板规则和长期工作流规则。长期工作流规则必须沉淀到 `.agent/references/`；影响未来生成内容时，必须同步更新 `.agent/templates/`；能机器检查的规则必须同步 verifier 或 repo tests。
+
+最终成品按两个层次表达：对外是五个成熟系统：Agent 工作流文档系统、元工作流自我维护系统、正式架构文档系统、架构 HTML 展示系统、干净清晰且可验证的代码结构。内部验收拆成八大交付物：Agent 工作流文档系统、元工作流自我维护系统、模板与执行计划系统、正式架构文档系统、架构 HTML 展示系统、完善的 Zuno 目标架构、清晰干净的代码和目录、一致性与验证系统。
+
 ## 必读顺序
 
 架构、重构、新功能或工作流任务先读：
 
-1. `docs/architecture/README.md`
-2. `docs/architecture/current-architecture.md`
-3. `docs/architecture/target-architecture.md`
-4. `docs/architecture/roadmap.md`
-5. `.agent/README.md`
-6. `.agent/system.yaml`
-7. `.agent/references/current-program.md`
-8. `.agent/references/docs-map.md`
-9. `.agent/references/code-map.md`
-10. `.agent/references/task-routing.md`
-11. `.agent/references/workflow.md`
-12. `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
-13. `.agent/architecture/near-term/01-target-runtime-architecture.md`
-14. `.agent/architecture/near-term/02-context-memory-architecture.md`
-15. `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
-16. `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
-17. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
+1. `docs/architecture.md`
+2. `docs/architecture/README.md`
+3. `docs/architecture/current-architecture.md`
+4. `docs/architecture/target-architecture.md`
+5. `docs/architecture/roadmap.md`
+6. `.agent/README.md`
+7. `.agent/system.yaml`
+8. `.agent/references/current-program.md`
+9. `.agent/references/docs-map.md`
+10. `.agent/references/code-map.md`
+11. `.agent/references/task-routing.md`
+12. `.agent/references/workflow.md`
+13. `.agent/references/project-map.md`
+14. `.agent/references/architecture-docs-map.md`
+15. `.agent/references/documentation-governance.md`
+16. `.agent/references/architecture-update-policy.md`
+17. `.agent/references/diagram-inventory.md`
+18. `.agent/references/current-target-future-rules.md`
+19. `.agent/references/workflow-governance.md`
+20. `.agent/references/workflow-update-policy.md`
+21. `.agent/references/workflow-maintenance-checklist.md`
+22. `.agent/architecture/near-term/00-architecture-index.md`
+23. `.agent/architecture/near-term/01-target-runtime-architecture.md`
+24. `.agent/architecture/near-term/02-context-memory-architecture.md`
+25. `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
+26. `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md`
+27. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 
 实现任务在读完相关文档后再读代码。不要只凭文档推断 runtime 行为。
 
@@ -80,7 +135,7 @@ docs/history/
 - `src/backend/zuno` -> `.agent/references/code-map.md` 和 `.agent/references/runtime-call-chain.md`。
 - API、DTO、请求/响应、前后端契约 -> `.agent/references/code-map.md`。
 - 架构替换 -> `.agent/references/workflow.md` 的架构重构流程。
-- 架构替换、目录移动、上下文/记忆、GraphRAG 边界或仓库卫生任务还必须读 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
+- 架构替换、目录移动、上下文/记忆、GraphRAG 边界或仓库卫生任务还必须读 `.agent/architecture/near-term/00-architecture-index.md`。
 - Eval 工具、数据集、指标、配置档和报告 -> `tools/evals/zuno/AGENTS.md` 和 `.agent/references/verification-map.md`。
 
 ## 工作模式
@@ -124,7 +179,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前没有 active program。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是 Program 3 返工，也不是完整 runtime architecture upgrade。
+当前 active program 是 `zuno-eight-deliverables-full-realization-v1`。它不是 Program 3 返工，也不是只做 architecture markdown / HTML，而是把八大交付物完整落实到文档、目标架构、代码结构、runtime contracts、验证和收口证据中。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
 
 最新完成程序归档在：
 
@@ -137,6 +192,16 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 当前 `.agent/programs/`：
 
+- `.agent/programs/PHASE01_program-boot-baseline.md`
+- `.agent/programs/PHASE02_workflow-self-maintenance-system.md`
+- `.agent/programs/PHASE03_architecture-docs-html-system.md`
+- `.agent/programs/PHASE04_query-router-mode-policy.md`
+- `.agent/programs/PHASE05_context-builder-memory-system.md`
+- `.agent/programs/PHASE06_capability-toolcard-mcp-system.md`
+- `.agent/programs/PHASE07_hooks-evidence-trace-artifact-system.md`
+- `.agent/programs/PHASE08_graphrag-knowledge-runtime-system.md`
+- `.agent/programs/PHASE09_runtime-upgrade-integration.md`
+- `.agent/programs/PHASE10_validation-release-closure.md`
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/current.md`
 - `.agent/programs/closure-checklist.md`
@@ -145,8 +210,11 @@ Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留
 
 Program 4 已完成的边界：六层内部已有第一批无副作用薄入口、README、focused tests 和 verifier guard。它不表示 GeneralAgent 主循环、DB schema、API 行为、eval baseline、production memory、dynamic capability orchestration、retrieval fusion 或 model gateway runtime 已完成。
 
-后续 queued programs：
+后续 queued programs 已被当前 active program 吸收为参考输入，不再是当前执行入口：
 
+- `.agent/architecture/future/programs/zuno-query-router-and-mode-policy-v1/`
+- `.agent/architecture/future/programs/zuno-context-builder-and-memory-v1/`
+- `.agent/architecture/future/programs/zuno-hooks-evidence-trace-v1/`
 - `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
 - `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
 

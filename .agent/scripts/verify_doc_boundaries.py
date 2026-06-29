@@ -5,6 +5,20 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    ".agent/programs/PHASE01_program-boot-baseline.md",
+    ".agent/programs/PHASE02_workflow-self-maintenance-system.md",
+    ".agent/programs/PHASE03_architecture-docs-html-system.md",
+    ".agent/programs/PHASE04_query-router-mode-policy.md",
+    ".agent/programs/PHASE05_context-builder-memory-system.md",
+    ".agent/programs/PHASE06_capability-toolcard-mcp-system.md",
+    ".agent/programs/PHASE07_hooks-evidence-trace-artifact-system.md",
+    ".agent/programs/PHASE08_graphrag-knowledge-runtime-system.md",
+    ".agent/programs/PHASE09_runtime-upgrade-integration.md",
+    ".agent/programs/PHASE10_validation-release-closure.md",
+]
+
 FORBIDDEN_CURRENT_DIRS = [
     "docs/architecture/phases",
     "docs/architecture/plans",
@@ -33,6 +47,7 @@ REQUIRED_AGENT_PROGRAMS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    *ACTIVE_PROGRAM_PHASE_FILES,
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -64,7 +79,7 @@ REQUIRED_AGENT_PROGRAMS = [
     "docs/history/programs/zuno-six-layer-internalization-v1/PHASE07_docs-verifier-and-closure.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
-    ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+    ".agent/architecture/near-term/00-architecture-index.md",
 ]
 
 
@@ -108,7 +123,11 @@ def main() -> int:
 
     current_program = _read(".agent/references/current-program.md")
     for phrase in [
-        "当前没有 active program",
+        ACTIVE_PROGRAM_NAME,
+        "state: active",
+        "PHASE01_program-boot-baseline.md",
+        "八大交付物",
+        "默认开启线程内多 agent",
         "zuno-six-layer-internalization-v1",
         "docs/history/programs/zuno-six-layer-internalization-v1/",
         "final alias surface closure",
@@ -126,7 +145,7 @@ def main() -> int:
     for relative_path in docs_front_path:
         content = _read(relative_path)
         if "zuno-ideal-architecture-and-repo-layout.html" in content:
-            errors.append(f"{relative_path} must not place .agent target HTML in docs front path")
+            errors.append(f"{relative_path} must not place retired .agent target HTML in docs front path")
 
     forbidden_front_path_text = [
         "docs/architecture/phases/README.md",

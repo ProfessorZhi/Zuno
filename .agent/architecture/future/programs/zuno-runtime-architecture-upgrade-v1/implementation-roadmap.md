@@ -3,7 +3,7 @@
 
 ## 目标
 
-在文档系统和目录边界清楚后，再做真正 runtime 架构升级。
+在 Query Router、Context Builder、Hooks / Evidence / Trace 三个边界清楚后，再做真正 runtime 架构升级。
 
 ## Phase
 
@@ -16,3 +16,4 @@
 ## 禁止范围
 
 不恢复多 Agent runtime；Zuno runtime 目标仍是 Single GeneralAgent。
+不把 `auto` 写成第五种 query method；不绕过 Context Pack、Evidence Check 和 Trace contract。

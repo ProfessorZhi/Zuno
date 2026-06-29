@@ -49,10 +49,11 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 ## Must Preserve
 
 - 前台文档默认中文。
+- 项目根目录保持干净，只放稳定项目入口和配置；临时截图、浏览器截图、PDF 预览、测试产物、本地报告和缓存必须放入 `.local/`、`tmp/`、受控 reports 路径或正式 docs assets。
 - `docs/` 只放正式人类真相。
 - `.agent/` 只放本地 Agent Skill System、目标设计、当前 program、模板和过渡期 verifier。
 - `docs/history/` 保存旧 audit、旧 spec、旧 runbook、旧 UI 原型、旧 phase、旧 program 和被替换设计。
-- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 是 Target / Proposed 视觉蓝图，不是 Current proof。
+- `.agent/architecture/near-term/00-architecture-index.md` 是 Target / Proposed 视觉蓝图，不是 Current proof。
 - 修改任务必须验证、commit、push，除非验证或 push 被阻塞。
 - 两种默认工作模式是挂机模式和多线程模式；选择哪一种取决于任务能否拆成粗粒度、低冲突的独立范围。
 - 常驻线程只是执行工位；每轮任务必须以 worktree + `codex/` branch 作为隔离边界。
@@ -68,7 +69,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 3. 读 `task-routing.md` 选择 route。
 4. 读 Current / Target / Roadmap。
 5. 读需要的 reference skills：`docs-map.md`、`code-map.md`、`verification-map.md`、`known-pitfalls.md`。
-6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`。
+6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/00-architecture-index.md`。
 7. 确认任务允许范围和 forbidden paths。
 8. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个常驻线程绑定或切换一个本轮 worktree / `codex/` 分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建或确认真正的目标模式线程。
 
@@ -85,6 +86,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - 不把 Target 行为写成 Current。
 - 不在文档/工作流任务里修改 runtime，除非任务明确授权。
 - 不提交 transient screenshot、browser snapshot、cache、local report。
+- 不在项目根目录遗留临时图片、截图、PDF 预览、测试报告或导出物。
 - 不创建 `.agent/skills/` 或 `.agent/workflows/`。
 - 不恢复旧 root-level Agent 入口。
 - 不让多个线程同时编辑同一个共享文件，除非主线程明确负责最终合并。
@@ -110,11 +112,12 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 ### 仓库卫生
 
 1. `git status --short`
-2. 搜索 imports、links、routes、scripts、evals、docs、tests。
-3. 确认移动目标仍在仓库内。
-4. 移动或归档。
-5. 同步 docs、`.agent`、verifier、test。
-6. 运行 `git diff --check` 和相关 verifier/test。
+2. 检查根目录是否出现临时图片、截图、PDF 预览、测试报告、缓存或导出物。
+3. 搜索 imports、links、routes、scripts、evals、docs、tests。
+4. 确认移动目标仍在仓库内。
+5. 移动、归档或删除本轮生成物。
+6. 同步 docs、`.agent`、verifier、test。
+7. 运行 `git diff --check` 和相关 verifier/test。
 
 ### 架构重构
 
@@ -169,6 +172,18 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 10. verifier / tests：能机器检查的规则是否已进入脚本或 repo tests。
 
 如果用户提醒“以后注意”，不能只留在对话里。先分类：临时提醒进入 ignored local notes；可复用经验进入 `.agent/references/known-pitfalls.md` 或对应 skill；稳定操作规则进入 `workflow.md`；任务触发规则进入 `task-routing.md`；全仓硬规则进入 `AGENTS.md`；能机器检查的规则进入 verifier/test。
+
+## Architecture Documentation Governance
+
+涉及架构、Agent Runtime、RAG、GraphRAG、Memory、Tool Layer、Hooks、Trace、Eval、部署、中间件或前后端契约时，必须读取 `.agent/references/architecture-docs-map.md`、`.agent/references/documentation-governance.md`、`.agent/references/architecture-update-policy.md`、`.agent/references/diagram-inventory.md` 和 `.agent/references/current-target-future-rules.md`。
+
+`docs/architecture/` 是 human-facing formal architecture source；`docs/architecture.html` 是展示聚合页，不是唯一事实来源；`.agent/references/` 是 Agent-facing operating memory。不要只改其中一个表面。
+
+## Agent Workflow Self-Maintenance
+
+当用户提出新的长期工作方式要求时，不能只在本轮回答里说“以后注意”。必须按 `.agent/references/workflow-governance.md`、`.agent/references/workflow-update-policy.md` 和 `.agent/references/workflow-maintenance-checklist.md` 判断是否更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture.html`、verifier 或 tests。
+
+如果新规则影响未来生成内容，必须同步更新 `.agent/templates/`；如果规则需要防漂移，必须同步 verifier 或 repo tests。
 
 ## Focused Tests
 

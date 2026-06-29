@@ -66,6 +66,19 @@ FORBIDDEN_TRACKED_PATTERNS = [
     "reports/evals/multihop/stackless_ingestion_smoke_*.json",
 ]
 
+FORBIDDEN_ROOT_ARTIFACT_PATTERNS = [
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.webp",
+    "*.bmp",
+    "*.pdf",
+    "*.pid",
+    "*screenshot*",
+    "*preview*",
+]
+
 TRACKED_DATA_REPORTS_ALLOWLIST = [
     "data/evals/multihop/README.md",
     "reports/README.md",
@@ -184,6 +197,17 @@ def main() -> int:
     errors: list[str] = []
     gitignore = _read(".gitignore")
     dockerignore = _read(".dockerignore")
+
+    for path in sorted(REPO_ROOT.iterdir()):
+        if not path.is_file():
+            continue
+        for pattern in FORBIDDEN_ROOT_ARTIFACT_PATTERNS:
+            if fnmatch(path.name.lower(), pattern):
+                errors.append(
+                    "repository root must stay clean; move temporary artifacts to "
+                    f".local/, tmp/, or formal docs assets: {path.name}"
+                )
+                break
 
     for entry in REQUIRED_IGNORES:
         if entry not in gitignore:
@@ -489,13 +513,17 @@ def main() -> int:
     if domain_pack_service_path.exists():
         errors.append("Domain Pack runtime service must not remain as current backend source")
 
-    html_matches = [
+    retired_html_matches = [
         path
         for path in _tracked_files()
         if path.replace("\\", "/").endswith("zuno-ideal-architecture-and-repo-layout.html")
+        and (REPO_ROOT / path).exists()
     ]
-    if html_matches != [".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html"]:
-        errors.append("canonical target architecture HTML must be the only tracked copy")
+    if retired_html_matches:
+        errors.append(
+            "retired target architecture HTML must not be tracked: "
+            + ", ".join(path.replace("\\", "/") for path in retired_html_matches)
+        )
 
     for path in FORBIDDEN_CURRENT_PATHS:
         if (REPO_ROOT / path).exists():

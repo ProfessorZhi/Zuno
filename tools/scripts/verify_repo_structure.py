@@ -9,15 +9,44 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_program-boot-baseline.md",
+    "PHASE02_workflow-self-maintenance-system.md",
+    "PHASE03_architecture-docs-html-system.md",
+    "PHASE04_query-router-mode-policy.md",
+    "PHASE05_context-builder-memory-system.md",
+    "PHASE06_capability-toolcard-mcp-system.md",
+    "PHASE07_hooks-evidence-trace-artifact-system.md",
+    "PHASE08_graphrag-knowledge-runtime-system.md",
+    "PHASE09_runtime-upgrade-integration.md",
+    "PHASE10_validation-release-closure.md",
+]
+
 
 REQUIRED_PATHS = [
     "AGENTS.md",
     ".agent/README.md",
     ".agent/system.yaml",
     ".agent/references/README.md",
+    ".agent/references/project-map.md",
     ".agent/references/task-routing.md",
     ".agent/references/workflow.md",
     ".agent/references/docs-map.md",
+    ".agent/references/architecture-docs-map.md",
+    ".agent/references/documentation-governance.md",
+    ".agent/references/architecture-update-policy.md",
+    ".agent/references/diagram-inventory.md",
+    ".agent/references/current-target-future-rules.md",
+    ".agent/references/workflow-governance.md",
+    ".agent/references/workflow-update-policy.md",
+    ".agent/references/workflow-requirements.md",
+    ".agent/references/workflow-change-log.md",
+    ".agent/references/workflow-maintenance-checklist.md",
+    ".agent/templates/architecture-doc-template.md",
+    ".agent/templates/mermaid-diagram-template.md",
+    ".agent/templates/architecture-change-note-template.md",
+    ".agent/templates/workflow-change-note-template.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
@@ -25,10 +54,9 @@ REQUIRED_PATHS = [
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
     ".agent/architecture/README.md",
-    ".agent/architecture/blueprint.html",
     ".agent/architecture/future/README.md",
     ".agent/architecture/decisions/README.md",
-    ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+    ".agent/architecture/near-term/00-architecture-index.md",
     ".agent/architecture/near-term/01-target-runtime-architecture.md",
     ".agent/architecture/near-term/02-context-memory-architecture.md",
     ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
@@ -45,8 +73,9 @@ REQUIRED_PATHS = [
     "docs/architecture/current-architecture.md",
     "docs/architecture/target-architecture.md",
     "docs/architecture/roadmap.md",
-    "docs/architecture/diagrams.md",
-    "docs/architecture/overview.html",
+    "docs/architecture.md",
+    "docs/architecture.html",
+    "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
     "docs/architecture/decisions/README.md",
     "docs/evidence/README.md",
     "docs/evidence/public-demo.md",
@@ -163,6 +192,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "./architecture/current-architecture.md",
         "./architecture/target-architecture.md",
         "./architecture/roadmap.md",
+        "./deliverables.md",
         "./evidence/public-demo.md",
         "./history/README.md",
         "前台文档默认使用中文",
@@ -554,35 +584,35 @@ def verify_root_local_artifacts_are_absent() -> list[str]:
     return errors
 
 
-def verify_target_architecture_html() -> list[str]:
+def verify_near_term_architecture_index() -> list[str]:
     errors: list[str] = []
-    html_path = REPO_ROOT / ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html"
-    if not html_path.exists():
-        return ["missing canonical target architecture HTML"]
-    html = html_path.read_text(encoding="utf-8")
-    if "<html" not in html.lower() or "</html>" not in html.lower():
-        errors.append("canonical target architecture HTML is not valid HTML")
+    index_path = REPO_ROOT / ".agent/architecture/near-term/00-architecture-index.md"
+    if not index_path.exists():
+        return ["missing near-term architecture index"]
+    content = index_path.read_text(encoding="utf-8")
     for phrase in [
-        "Target / Proposed",
+        "目标架构设计工作集索引",
         "Native BM25",
         "RRF",
         "Summary Compression",
         "Structured Extraction",
         "ToolCard",
-        "Phase 05",
-        "Query Journey",
-        "产品入口层",
-        "RAG / GraphRAG 层",
+        "docs/architecture.md",
+        "docs/architecture.html",
+        "00-architecture-index.md",
     ]:
-        if phrase not in html:
-            errors.append(f"canonical target architecture HTML missing phrase: {phrase}")
-    html_refs = [
+        if phrase not in content:
+            errors.append(f"near-term architecture index missing phrase: {phrase}")
+    old_html_refs = [
         path
         for path in REPO_ROOT.glob(".agent/**/*.md")
         if "zuno-ideal-architecture-and-repo-layout.html" in path.read_text(encoding="utf-8")
     ]
-    if len(html_refs) < 5:
-        errors.append("target architecture HTML is under-referenced by Agent docs")
+    if old_html_refs:
+        errors.append(
+            "near-term Agent docs still reference retired architecture HTML: "
+            + ", ".join(path.relative_to(REPO_ROOT).as_posix() for path in old_html_refs)
+        )
     return errors
 
 
@@ -594,6 +624,8 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     errors = [
         f"program roadmap missing phrase: {phrase}"
         for phrase in [
+            ACTIVE_PROGRAM_NAME,
+            "state: active",
             "zuno-six-layer-internalization-v1",
             "zuno-repo-layout-cleanup-v1",
             "每次新 program 都从 `PHASE01` 开始编号",
@@ -617,16 +649,25 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     active_phase_names = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")
     )
-    if active_phase_names:
+    if active_phase_names != ACTIVE_PROGRAM_PHASE_FILES:
         errors.append(
-            ".agent/programs must not keep PHASE files after six-layer internalization archive: "
+            ".agent/programs active phase files do not match current program: "
             + ", ".join(active_phase_names)
         )
     current_path = REPO_ROOT / ".agent/programs/current.md"
     if not current_path.exists():
         errors.append("missing .agent/programs/current.md")
-    elif "当前没有 active program" not in current_path.read_text(encoding="utf-8"):
-        errors.append(".agent/programs/current.md must declare no active program")
+    else:
+        current_text = current_path.read_text(encoding="utf-8")
+        for phrase in [
+            ACTIVE_PROGRAM_NAME,
+            "state: active",
+            "PHASE01_program-boot-baseline.md",
+            "八个交付物",
+            "默认开启线程内多 agent",
+        ]:
+            if phrase not in current_text:
+                errors.append(f".agent/programs/current.md missing active program phrase: {phrase}")
     archived_program4 = REPO_ROOT / "docs/history/programs/zuno-six-layer-internalization-v1/README.md"
     if not archived_program4.exists():
         errors.append("missing archived Program 4 README")
@@ -693,39 +734,50 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
 
 def verify_architecture_diagram_outputs() -> list[str]:
     errors: list[str] = []
-    diagrams = _read_text("docs/architecture/diagrams.md")
+    architecture_source = _read_text("docs/architecture.md")
     for phrase in [
-        "Mermaid 源只维护在本文",
+        "Zuno 架构总览",
         "python tools/agent/render_architecture.py --check",
-        "#f8f8fb",
-        "#f6f3ff",
-        "#a99cff",
-        "#2c255f",
-        "#9b8cff",
+        "#f7f8fb",
+        "#ffffff",
+        "#b8c2cc",
+        "#16202a",
+        "#52616f",
     ]:
-        if phrase not in diagrams:
-            errors.append(f"docs/architecture/diagrams.md missing diagram sync phrase: {phrase}")
+        if phrase not in architecture_source:
+            errors.append(f"docs/architecture.md missing diagram sync phrase: {phrase}")
 
-    for relative_path in [
+    for stale_path in [
+        "docs/architecture/architecture.html",
         "docs/architecture/overview.html",
         ".agent/architecture/blueprint.html",
     ]:
+        if (REPO_ROOT / stale_path).exists():
+            errors.append(f"stale architecture HTML must not remain: {stale_path}")
+
+    for relative_path in ["docs/architecture.html"]:
         path = REPO_ROOT / relative_path
         if not path.exists():
             errors.append(f"missing architecture diagram HTML: {relative_path}")
             continue
         content = path.read_text(encoding="utf-8")
         for phrase in [
-            "docs/architecture/diagrams.md",
+            "docs/architecture.md",
             "tools/agent/render_architecture.py",
-            "Current Runtime",
-            "Target Runtime",
-            "Maintenance Workflow",
-            "#f8f8fb",
-            "#f6f3ff",
-            "#a99cff",
-            "#2c255f",
-            "#9b8cff",
+            "4+1 View Model",
+            "Component-and-Connector View",
+            "Deployment View",
+            "Quality View",
+            "Scenarios View",
+            "Process View",
+            "V&B Logical View",
+            "V&B Deployment View",
+            "Agent Loop View",
+            "#f7f8fb",
+            "#ffffff",
+            "#b8c2cc",
+            "#16202a",
+            "#52616f",
         ]:
             if phrase not in content:
                 errors.append(f"{relative_path} missing diagram HTML phrase: {phrase}")
@@ -739,10 +791,7 @@ def verify_architecture_diagram_outputs() -> list[str]:
             sys.modules[spec.name] = render_architecture
             spec.loader.exec_module(render_architecture)
             rendered = render_architecture.build_html()
-            for relative_path in [
-                "docs/architecture/overview.html",
-                ".agent/architecture/blueprint.html",
-            ]:
+            for relative_path in ["docs/architecture.html"]:
                 path = REPO_ROOT / relative_path
                 if path.exists() and path.read_text(encoding="utf-8") != rendered:
                     errors.append(f"generated architecture HTML is stale: {relative_path}")
@@ -761,7 +810,7 @@ def run_verification() -> VerificationResult:
             *verify_backend_layer_internal_surfaces(),
             *verify_backend_legacy_import_aliases(),
             *verify_backend_retired_top_level_paths_are_absent(),
-            *verify_target_architecture_html(),
+            *verify_near_term_architecture_index(),
             *verify_active_architecture_surface_phase_plan(),
             *verify_architecture_diagram_outputs(),
         ]

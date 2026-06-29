@@ -1,19 +1,24 @@
 # Queued Programs
 
-这里保存短期四目标拆出来的后续 program 草案。它们不是当前 active program，不能直接从这里执行。
+这里保存后续 program 草案。它们不是当前 active program，不能直接执行。打开某个独立 program 时，必须先迁入 `.agent/programs/`，并从 `PHASE01` 开始。
 
-当前没有 active program；`zuno-six-layer-internalization-v1` 已完成并归档。queued draft 仍只保存在本目录。下一次打开 program 时，active phase 文件只允许平铺在 `.agent/programs/` 根目录。
+当前 active program 是 `zuno-eight-deliverables-full-realization-v1`。本目录中的五个草案已被当前 active program 吸收为参考输入，不是 active 执行入口；`zuno-six-layer-internalization-v1` 已完成并归档。
 
-## 当前状态
+## 当前参考输入顺序
 
-- `zuno-workflow-doc-system-v1` 已完成，归档在 `docs/history/programs/zuno-workflow-doc-system-v1/`。
-- `zuno-target-architecture-refresh-v1` 已完成，归档在 `docs/history/programs/zuno-target-architecture-refresh-v1/`。
-- `zuno-repo-layout-cleanup-v1` 已完成，归档在 `docs/history/programs/zuno-repo-layout-cleanup-v1/`。
+1. [zuno-query-router-and-mode-policy-v1](zuno-query-router-and-mode-policy-v1/implementation-roadmap.md)
+2. [zuno-context-builder-and-memory-v1](zuno-context-builder-and-memory-v1/implementation-roadmap.md)
+3. [zuno-hooks-evidence-trace-v1](zuno-hooks-evidence-trace-v1/implementation-roadmap.md)
+4. [zuno-runtime-architecture-upgrade-v1](zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md)
+5. [zuno-architecture-visuals-v1](zuno-architecture-visuals-v1/implementation-roadmap.md)
 
-## Queued 顺序
+## 为什么这样排
 
-1. [zuno-runtime-architecture-upgrade-v1](zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md)
-2. [zuno-architecture-visuals-v1](zuno-architecture-visuals-v1/implementation-roadmap.md)
+- 先定产品三模式和内部 `query_method`，否则 runtime 改动没有稳定 contract。
+- 再做 Context Builder 与 Memory，因为 Agentic RAG 的每一步都依赖 Context Pack。
+- 再做 Hooks / Evidence / Trace，因为增强模式需要预算、权限、fallback 和 citation coverage。
+- 最后做 runtime slice，避免把 Target 直接写成 Current。
+- Visuals 已有三类 Mermaid 图，后续只做截图验证、README 展示和入口 polish。
 
 ## 使用规则
 

@@ -1,21 +1,49 @@
 ﻿from pathlib import Path
-import subprocess
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_program-boot-baseline.md",
+    "PHASE02_workflow-self-maintenance-system.md",
+    "PHASE03_architecture-docs-html-system.md",
+    "PHASE04_query-router-mode-policy.md",
+    "PHASE05_context-builder-memory-system.md",
+    "PHASE06_capability-toolcard-mcp-system.md",
+    "PHASE07_hooks-evidence-trace-artifact-system.md",
+    "PHASE08_graphrag-knowledge-runtime-system.md",
+    "PHASE09_runtime-upgrade-integration.md",
+    "PHASE10_validation-release-closure.md",
+]
 
 
 def test_agent_system_required_paths_exist() -> None:
     required_paths = [
         "apps/web/AGENTS.md",
         "tools/evals/zuno/AGENTS.md",
+        ".agent/references/project-map.md",
         ".agent/references/code-map.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
+        ".agent/references/architecture-docs-map.md",
+        ".agent/references/documentation-governance.md",
+        ".agent/references/architecture-update-policy.md",
+        ".agent/references/diagram-inventory.md",
+        ".agent/references/current-target-future-rules.md",
+        ".agent/references/workflow-governance.md",
+        ".agent/references/workflow-update-policy.md",
+        ".agent/references/workflow-requirements.md",
+        ".agent/references/workflow-change-log.md",
+        ".agent/references/workflow-maintenance-checklist.md",
         ".agent/references/verification-map.md",
         ".agent/references/zuno-repo-hygiene.md",
+        ".agent/templates/architecture-doc-template.md",
+        ".agent/templates/mermaid-diagram-template.md",
+        ".agent/templates/architecture-change-note-template.md",
+        ".agent/templates/workflow-change-note-template.md",
         ".agent/architecture/README.md",
-        ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+        ".agent/architecture/near-term/00-architecture-index.md",
         ".agent/architecture/near-term/01-target-runtime-architecture.md",
         ".agent/architecture/near-term/02-context-memory-architecture.md",
         ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
@@ -86,47 +114,35 @@ def test_retired_agent_skill_and_workflow_dirs_are_collapsed() -> None:
     assert not (REPO_ROOT / ".agent" / "workflows").exists()
 
 
-def test_target_architecture_html_is_canonical_and_referenced() -> None:
-    html_path = (
+def test_near_term_architecture_index_is_canonical_and_referenced() -> None:
+    index_path = (
         REPO_ROOT
         / ".agent"
         / "architecture"
         / "near-term"
-        / "zuno-ideal-architecture-and-repo-layout.html"
+        / "00-architecture-index.md"
     )
-    html = html_path.read_text(encoding="utf-8")
-    assert "<html" in html.lower()
-    assert "Zuno" in html
+    content = index_path.read_text(encoding="utf-8")
     for phrase in [
-        "Target / Proposed",
+        "目标架构设计工作集索引",
         "Native BM25",
         "RRF",
         "Summary Compression",
         "Structured Extraction",
         "ToolCard",
-        "Phase 05",
-        "Phase 09",
-        "Execution Contract",
-        "Query Journey",
-        "产品入口层",
-        "RAG / GraphRAG 层",
+        "docs/architecture.md",
+        "docs/architecture.html",
+        "00-architecture-index.md",
     ]:
-        assert phrase in html
+        assert phrase in content
 
-    tracked_html = [
-        path.replace("\\", "/")
-        for path in subprocess.run(
-            ["git", "ls-files", "*.html"],
-            cwd=REPO_ROOT,
-            text=True,
-            capture_output=True,
-            check=True,
-        ).stdout.splitlines()
-        if "zuno-ideal-architecture" in path
-    ]
-    assert tracked_html == [
-        ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html"
-    ]
+    assert not (
+        REPO_ROOT
+        / ".agent"
+        / "architecture"
+        / "near-term"
+        / "zuno-ideal-architecture-and-repo-layout.html"
+    ).exists()
 
     required_files = [
         "AGENTS.md",
@@ -137,8 +153,9 @@ def test_target_architecture_html_is_canonical_and_referenced() -> None:
         ".agent/references/workflow.md",
     ]
     for relative_path in required_files:
-        content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
-        assert "zuno-ideal-architecture-and-repo-layout.html" in content
+        file_content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+        assert "00-architecture-index.md" in file_content
+        assert "zuno-ideal-architecture-and-repo-layout.html" not in file_content
 
 
 def test_root_agents_routes_to_module_agents_and_references() -> None:
@@ -347,11 +364,13 @@ def test_agent_templates_keep_execution_skeleton_boundary() -> None:
         "Allowed Content",
         "Forbidden Content",
         "Lessons Learned",
+        "architecture-doc-template.md",
+        "workflow-change-note-template.md",
     ]:
         assert phrase in content, f"missing template boundary phrase: {phrase}"
 
 
-def test_current_program_declares_no_active_program_and_latest_archive() -> None:
+def test_current_program_declares_active_eight_deliverables_program() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -360,17 +379,22 @@ def test_current_program_declares_no_active_program_and_latest_archive() -> None
         encoding="utf-8"
     )
 
-    assert "当前没有 active program" in current
+    active_phase_files = sorted(
+        path.name for path in (REPO_ROOT / ".agent" / "programs").glob("PHASE*.md")
+    )
+
+    assert ACTIVE_PROGRAM_NAME in current
+    assert "state: active" in current
+    assert "PHASE01_program-boot-baseline.md" in current
+    assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
+    assert "八个交付物" in current
+    assert "默认开启线程内多 agent" in current
+    assert "不是多线程模式" in current
     assert "zuno-six-layer-internalization-v1" in current
-    assert "docs/history/programs/zuno-six-layer-internalization-v1/" in current
-    assert not list((REPO_ROOT / ".agent" / "programs").glob("PHASE*.md"))
-    assert "Program 3 已完成" in current
+    assert "Program 3 / `zuno-repo-layout-cleanup-v1` 已完成" in current
     assert "api / agent / memory / capability / knowledge / platform" in current
-    assert "agent/" in current
-    assert "capability/" in current
-    assert "knowledge/" in current
-    assert "platform/" in current
-    assert "production-grade memory extraction" in current
+    assert "GeneralAgent 主循环" in current
+    assert ACTIVE_PROGRAM_NAME in programs_index
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
     assert "context-memory-agent-runtime-v1" not in programs_index
@@ -379,6 +403,22 @@ def test_current_program_declares_no_active_program_and_latest_archive() -> None
     assert "zuno-target-architecture-refresh-v1/" in history_index
     assert "zuno-repo-layout-cleanup-v1/" in history_index
     assert "zuno-six-layer-internalization-v1/" in history_index
+
+
+def test_status_surfaces_do_not_keep_stale_no_active_or_program4_queue_claims() -> None:
+    future_programs = (
+        REPO_ROOT / ".agent" / "architecture" / "future" / "programs" / "README.md"
+    ).read_text(encoding="utf-8")
+    repo_hygiene = (REPO_ROOT / ".agent" / "references" / "zuno-repo-hygiene.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert ACTIVE_PROGRAM_NAME in future_programs
+    assert "参考输入" in future_programs
+    assert "当前没有 active program" not in future_programs
+    assert "Program 4 runtime architecture upgrade 保持 queued / not active" not in repo_hygiene
+    assert "zuno-six-layer-internalization-v1" in repo_hygiene
+    assert "runtime architecture upgrade" in repo_hygiene
 
 
 def test_near_term_architecture_uses_canonical_five_doc_set() -> None:
@@ -391,7 +431,7 @@ def test_near_term_architecture_uses_canonical_five_doc_set() -> None:
     assert files == sorted(
         [
             "README.md",
-            "zuno-ideal-architecture-and-repo-layout.html",
+            "00-architecture-index.md",
             "01-target-runtime-architecture.md",
             "02-context-memory-architecture.md",
             "03-capability-tool-retrieval-architecture.md",
@@ -401,7 +441,7 @@ def test_near_term_architecture_uses_canonical_five_doc_set() -> None:
     )
 
 
-def test_agent_references_are_slim_navigation_set() -> None:
+def test_agent_references_are_governance_navigation_set() -> None:
     files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "references").iterdir()
@@ -411,8 +451,19 @@ def test_agent_references_are_slim_navigation_set() -> None:
     assert files == sorted(
         [
             "README.md",
+            "project-map.md",
             "current-program.md",
             "docs-map.md",
+            "architecture-docs-map.md",
+            "documentation-governance.md",
+            "architecture-update-policy.md",
+            "diagram-inventory.md",
+            "current-target-future-rules.md",
+            "workflow-governance.md",
+            "workflow-update-policy.md",
+            "workflow-requirements.md",
+            "workflow-change-log.md",
+            "workflow-maintenance-checklist.md",
             "code-map.md",
             "runtime-call-chain.md",
             "verification-map.md",
@@ -454,7 +505,7 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
 
 
-def test_six_layer_internalization_is_archived_and_programs_are_no_active() -> None:
+def test_six_layer_internalization_is_archived_and_active_program_is_open() -> None:
     roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
         encoding="utf-8"
     )
@@ -495,6 +546,8 @@ def test_six_layer_internalization_is_archived_and_programs_are_no_active() -> N
     )
 
     for phrase in [
+        ACTIVE_PROGRAM_NAME,
+        "state: active",
         "zuno-six-layer-internalization-v1",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
@@ -503,7 +556,7 @@ def test_six_layer_internalization_is_archived_and_programs_are_no_active() -> N
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == []
+    assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
     for phase in [
         "PHASE01_six-layer-current-inventory.md",
         "PHASE02_memory-layer-foundation-surfaces.md",

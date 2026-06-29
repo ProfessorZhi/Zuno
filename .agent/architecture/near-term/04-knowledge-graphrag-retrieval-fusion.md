@@ -26,14 +26,16 @@ extends this with clearer retrieval/fusion components and stronger traces.
 
 ## GraphRAG 查询模式
 
-The real query modes are exactly:
+The internal query methods are exactly:
 
 - `basic`
 - `local`
 - `global`
 - `drift`
 
-`auto` is a router. It is not a fifth query mode.
+`auto` is a router. It is not a fifth query mode. Product users should see
+普通模式 / 增强模式 / 自动模式 first; only advanced users and traces need the
+internal `query_method` labels.
 
 Mode meanings:
 
@@ -45,15 +47,33 @@ local
   entity / relation / graph neighborhood / source chunks
 
 global
-  community reports / global summaries
+  community reports / global summaries / corpus-level prior
 
 drift
-  global community primer -> local follow-up retrieval -> evidence merge
+  global community primer -> follow-up questions -> local/basic evidence loop
 ```
 
 The router records requested method, resolved method, fallback reason, and
 method availability. If graph/community assets are not ready, the trace must
 show the fallback clearly.
+
+## 产品模式
+
+```text
+普通模式
+  fixed low-budget basic path
+
+增强模式
+  controlled Agentic RAG path
+  may use basic / local / global / drift
+
+自动模式
+  router decides direct / basic / enhanced
+```
+
+Manual override is allowed for debugging, eval, and advanced UI, but the
+default product path should not force users to understand every GraphRAG query
+method.
 
 ## GraphRAG 实体抽取目标
 
@@ -112,6 +132,42 @@ User Query
 Query variants are enhanced / expensive mode. They are not enabled by default
 for every query. The original query must always be preserved in the trace and
 included in the candidate set.
+
+## Global 与 BM25 的边界
+
+`global` should not be fused with BM25 top-k as if both were the same evidence
+type. Global search produces corpus-level or community-level priors. Basic and
+local search produce chunk, entity, relation, and source-span evidence.
+
+Target behavior:
+
+```text
+global
+  -> community reports / global summaries
+  -> candidate claims or themes
+  -> local/basic evidence grounding when citations are required
+```
+
+This means BM25 and vector retrieval are still useful, but they usually appear
+after the global primer as evidence grounding, not as a flat RRF list mixed
+directly with community reports.
+
+## DRIFT 边界
+
+`drift` is the explicit "global first, local next" path:
+
+```text
+community global primer
+  -> follow-up questions
+  -> local graph expansion
+  -> basic BM25/vector evidence backfill
+  -> evidence merge
+  -> answer synthesis
+```
+
+Use drift for architecture diagnosis, migration risk, priority suggestions,
+multi-hop explanation, and other tasks where the system needs both broad
+context and source-level proof.
 
 ## 面向知识的 Native BM25
 

@@ -50,7 +50,7 @@ Agent 工作流入口：
 - Current 只描述代码和测试已证明事实。
 - Target 只描述近期目标，不等于完成声明。
 - History 保留旧材料原文，不为了新叙事改写证据。
-- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 是 Target / Proposed 视觉蓝图，不是 Current truth。
+- `.agent/architecture/near-term/00-architecture-index.md` 是 Target / Proposed 视觉蓝图，不是 Current truth。
 
 ## Before Editing
 
@@ -84,6 +84,30 @@ Agent 工作流入口：
 - Current/Target 冲突：以 runtime code、tests、trace evidence 决定 Current；未证明内容保留 Target。
 - 路径漂移：用 `git grep -n "<path-or-term>"` 找前台命中，历史目录只在必要时保留原文。
 - 归档不清：先建或使用 `docs/history/` 下明确目录，再更新入口和 verifier。
+
+## Architecture Documentation Governance
+
+架构文档和展示页的专门索引已经拆到：
+
+- `.agent/references/architecture-docs-map.md`
+- `.agent/references/documentation-governance.md`
+- `.agent/references/architecture-update-policy.md`
+- `.agent/references/diagram-inventory.md`
+- `.agent/references/current-target-future-rules.md`
+
+这些文件说明 `docs/architecture/`、`docs/architecture.html`、`.agent/references/`、`.agent/templates/` 和 `.agent/programs/` 如何同步。涉及 architecture.html 或十类 Mermaid 架构视图时，不要只读本 docs map。
+
+## Agent Workflow Self-Maintenance
+
+工作流自我维护规则已经拆到：
+
+- `.agent/references/workflow-governance.md`
+- `.agent/references/workflow-update-policy.md`
+- `.agent/references/workflow-requirements.md`
+- `.agent/references/workflow-change-log.md`
+- `.agent/references/workflow-maintenance-checklist.md`
+
+当用户提出新的长期工作方式要求时，先用这些文件判断是否需要更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture.html`、verifier 或 tests。
 
 ## Focused Tests
 
