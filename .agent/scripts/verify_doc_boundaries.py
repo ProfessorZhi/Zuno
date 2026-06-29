@@ -33,6 +33,9 @@ REQUIRED_AGENT_PROGRAMS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/programs/PHASE06_backend-directory-clarity-audit.md",
+    ".agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+    ".agent/programs/PHASE08_backend-physical-cleanup-slices.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -88,7 +91,9 @@ def main() -> int:
 
     current_program = _read(".agent/references/current-program.md")
     for phrase in [
-        "当前没有 active program",
+        "当前 active program",
+        "Program 3 continuation",
+        "PHASE06_backend-directory-clarity-audit.md",
         "zuno-workflow-doc-system-v1",
         "zuno-target-architecture-refresh-v1",
         "zuno-repo-layout-cleanup-v1",

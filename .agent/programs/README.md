@@ -4,30 +4,36 @@
 
 ## 当前状态
 
-当前没有 active program。
+当前 active program：
 
-已完成并归档：
+```text
+zuno-repo-layout-cleanup-v1
+```
 
-- `docs/history/programs/zuno-workflow-doc-system-v1/`
-- `docs/history/programs/zuno-target-architecture-refresh-v1/`
+Program 3 已根据用户反馈修正 Definition of Done：不仅要有目录计划和 guardrails，还要让 `src/backend` 在 VS Code / Explorer 里看起来清爽、必要、分门别类。
+
+PHASE01-05 已归档为 Program 3 first slice：
+
 - `docs/history/programs/zuno-repo-layout-cleanup-v1/`
 
-后续 queued programs 仍在：
+当前 continuation phase 文件平铺在 `.agent/programs/`：
 
-- `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
-- `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
+```text
+PHASE06_backend-directory-clarity-audit.md
+PHASE07_fastapi-jwt-auth-compat-retirement-plan.md
+PHASE08_backend-physical-cleanup-slices.md
+```
 
 ## 打开新 Program 的规则
 
 - 每次只打开一个 program。
-- 打开前确认当前 `.agent/programs/` 没有残留旧 `PHASE*.md` 或 `thread-prompts/`。
-- 把 queued program 的 roadmap 和 phase 文件迁入 `.agent/programs/` 后，才算 active。
-- 每次新 program 都从 `PHASE01` 开始编号。
+- 新 program 从 `PHASE01` 开始编号。
+- 同一 program 被用户明确要求修正定义并继续时，可以从已完成 phase 后继续编号。
 - 被替换或完成的 program 归档到 `docs/history/programs/`。
 - 如果需要多线程执行，把本轮线程提示词放到 `.agent/programs/thread-prompts/`；下一轮提示词更新时默认替换或清理旧提示词，只有用户明确要求归档时才归档。
 
 ## 当前入口
 
 - [current.md](current.md)：当前程序状态。
-- [implementation-roadmap.md](implementation-roadmap.md)：无 active program 时的打开规则。
+- [implementation-roadmap.md](implementation-roadmap.md)：Program 3 continuation 路线图。
 - [closure-checklist.md](closure-checklist.md)：通用收口清单。

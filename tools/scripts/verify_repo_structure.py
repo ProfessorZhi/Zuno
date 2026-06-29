@@ -20,6 +20,9 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/programs/PHASE06_backend-directory-clarity-audit.md",
+    ".agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+    ".agent/programs/PHASE08_backend-physical-cleanup-slices.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -314,9 +317,13 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
         return ["missing .agent/programs implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
     errors = [
-        f"no-active program roadmap missing phrase: {phrase}"
+        f"Program 3 continuation roadmap missing phrase: {phrase}"
         for phrase in [
-            "当前没有 active program",
+            "状态：active / definition revised",
+            "VS Code / Explorer",
+            "fastapi_jwt_auth",
+            "backend physical layout cleanup",
+            "PHASE06",
             "zuno-workflow-doc-system-v1",
             "zuno-target-architecture-refresh-v1",
             "zuno-repo-layout-cleanup-v1",
@@ -337,9 +344,14 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_files = sorted((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_files:
+    expected_phase_files = [
+        "PHASE06_backend-directory-clarity-audit.md",
+        "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+        "PHASE08_backend-physical-cleanup-slices.md",
+    ]
+    if [path.name for path in active_phase_files] != expected_phase_files:
         errors.append(
-            ".agent/programs must not retain completed Program 3 phase files: "
+            "active Program 3 continuation phase files are not canonical: "
             + ", ".join(path.name for path in active_phase_files)
         )
     archived_program3 = REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md"

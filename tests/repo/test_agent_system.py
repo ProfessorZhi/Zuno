@@ -27,6 +27,9 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/programs/current.md",
         ".agent/programs/implementation-roadmap.md",
         ".agent/programs/closure-checklist.md",
+        ".agent/programs/PHASE06_backend-directory-clarity-audit.md",
+        ".agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+        ".agent/programs/PHASE08_backend-physical-cleanup-slices.md",
         ".agent/architecture/future/programs/README.md",
         ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
         ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -317,7 +320,7 @@ def test_agent_templates_keep_execution_skeleton_boundary() -> None:
         assert phrase in content, f"missing template boundary phrase: {phrase}"
 
 
-def test_current_program_declares_no_active_program_and_archives_old_candidate() -> None:
+def test_current_program_declares_program3_continuation_and_archives_first_slice() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -326,7 +329,9 @@ def test_current_program_declares_no_active_program_and_archives_old_candidate()
         encoding="utf-8"
     )
 
-    assert "当前没有 active program" in current
+    assert "当前 active program" in current
+    assert "Program 3 定义修正" in current
+    assert "PHASE06_backend-directory-clarity-audit.md" in current
     assert "zuno-workflow-doc-system-v1" in current
     assert "zuno-target-architecture-refresh-v1" in current
     assert "zuno-repo-layout-cleanup-v1" in current
@@ -411,7 +416,7 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
 
 
-def test_program3_archived_state_keeps_next_queue() -> None:
+def test_program3_continuation_keeps_first_slice_archived_and_next_queue() -> None:
     roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
         encoding="utf-8"
     )
@@ -444,15 +449,21 @@ def test_program3_archived_state_keeps_next_queue() -> None:
     )
 
     for phrase in [
-        "当前没有 active program",
+        "状态：active / definition revised",
         "zuno-workflow-doc-system-v1",
-        "每次新 program 都从 `PHASE01` 开始编号",
+        "PHASE06",
+        "fastapi_jwt_auth",
+        "backend physical layout cleanup",
         "zuno-target-architecture-refresh-v1",
         "zuno-repo-layout-cleanup-v1",
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == []
+    assert active_phase_files == [
+        "PHASE06_backend-directory-clarity-audit.md",
+        "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+        "PHASE08_backend-physical-cleanup-slices.md",
+    ]
     for prompt in [
         "THREAD_A_root-docs-agent-hygiene-prompt.md",
         "THREAD_B_backend-six-layer-audit-prompt.md",

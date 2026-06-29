@@ -268,7 +268,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_no_active_program_is_flat_and_program3_is_archived() -> None:
+def test_program3_continuation_is_flat_and_first_slice_is_archived() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -281,6 +281,9 @@ def test_no_active_program_is_flat_and_program3_is_archived() -> None:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
+            "PHASE06_backend-directory-clarity-audit.md",
+            "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+            "PHASE08_backend-physical-cleanup-slices.md",
         ]
     )
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
@@ -294,7 +297,10 @@ def test_no_active_program_is_flat_and_program3_is_archived() -> None:
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
-        "当前没有 active program",
+        "状态：active / definition revised",
+        "PHASE06",
+        "fastapi_jwt_auth",
+        "backend physical layout cleanup",
         "zuno-workflow-doc-system-v1",
         "zuno-target-architecture-refresh-v1",
         "zuno-repo-layout-cleanup-v1",

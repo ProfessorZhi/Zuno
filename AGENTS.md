@@ -122,7 +122,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1 和 Program 2 已完成；当前 active program 是 Program 3：`zuno-repo-layout-cleanup-v1`。
+当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1 和 Program 2 已完成；当前 active program 是 Program 3 continuation：`zuno-repo-layout-cleanup-v1`。
 
 最新完成程序归档在：
 
@@ -135,14 +135,12 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/current.md`
-- `.agent/programs/PHASE01_repo-layout-audit.md`
-- `.agent/programs/PHASE02_root-docs-hygiene.md`
-- `.agent/programs/PHASE03_backend-six-layer-migration-plan.md`
-- `.agent/programs/PHASE04_small-boundary-cleanups.md`
-- `.agent/programs/PHASE05_hygiene-verifier-closure.md`
+- `.agent/programs/PHASE06_backend-directory-clarity-audit.md`
+- `.agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md`
+- `.agent/programs/PHASE08_backend-physical-cleanup-slices.md`
 - `.agent/programs/closure-checklist.md`
 
-当前 active phase 是 `PHASE01_repo-layout-audit.md`。它适合按 root/docs、backend layout、tools/tests/generated artifacts 三个线程并行审计。
+当前 active phase 是 `PHASE06_backend-directory-clarity-audit.md`。它用于修正 Program 3 的 Definition of Done：不仅文档规则清楚，`src/backend` 和 `src/backend/zuno` 在 VS Code / Explorer 中也必须清楚。`PHASE07` 专门处理 `fastapi_jwt_auth` compatibility shell，`PHASE08` 再把 backend physical cleanup 拆成可验证小切片。
 
 后续 queued programs：
 

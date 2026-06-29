@@ -39,6 +39,9 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/programs/PHASE06_backend-directory-clarity-audit.md",
+    ".agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+    ".agent/programs/PHASE08_backend-physical-cleanup-slices.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -151,12 +154,26 @@ def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
             continue
         phase_numbers.append(int(match.group(1)))
 
-    if phase_numbers and min(phase_numbers) != 1:
-        errors.append(f"active program must start at PHASE01; found first PHASE{min(phase_numbers):02d}")
+    current_text = ""
+    current_path = programs_root / "current.md"
+    if current_path.exists():
+        current_text = current_path.read_text(encoding="utf-8")
+    continuation_mode = (
+        "Program 3 continuation" in current_text
+        or "Program 3 definition 修正" in current_text
+        or "Program 3 定义修正" in current_text
+    )
+    expected_start = 6 if continuation_mode else 1
+    if phase_numbers and min(phase_numbers) != expected_start:
+        errors.append(
+            f"active program must start at PHASE{expected_start:02d}; found first PHASE{min(phase_numbers):02d}"
+        )
     if phase_numbers:
-        expected = list(range(1, max(phase_numbers) + 1))
+        expected = list(range(expected_start, max(phase_numbers) + 1))
         if phase_numbers != expected:
-            errors.append(f"active phase numbers must be contiguous from PHASE01: {phase_numbers}")
+            errors.append(
+                f"active phase numbers must be contiguous from PHASE{expected_start:02d}: {phase_numbers}"
+            )
 
     retired_active_patterns = [
         "phase-05-memory-engine.md",
@@ -461,14 +478,21 @@ def main() -> int:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
+            "PHASE06_backend-directory-clarity-audit.md",
+            "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+            "PHASE08_backend-physical-cleanup-slices.md",
         ]
     )
     if active_program_files != expected_program_files:
-        errors.append(f".agent/programs files are not canonical no-active set: {active_program_files}")
+        errors.append(f".agent/programs files are not canonical Program 3 continuation set: {active_program_files}")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "当前没有 active program",
+        "状态：active / definition revised",
+        "VS Code / Explorer",
+        "fastapi_jwt_auth",
+        "backend physical layout cleanup",
+        "PHASE06",
         "zuno-workflow-doc-system-v1",
         "zuno-target-architecture-refresh-v1",
         "zuno-repo-layout-cleanup-v1",
@@ -477,7 +501,7 @@ def main() -> int:
         "zuno-architecture-visuals-v1",
     ]:
         if phrase not in roadmap:
-            errors.append(f"no-active program roadmap missing phrase: {phrase}")
+            errors.append(f"Program 3 continuation roadmap missing phrase: {phrase}")
 
     phase03 = _read("docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md")
     for phrase in [

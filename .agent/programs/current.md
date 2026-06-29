@@ -1,41 +1,50 @@
 # 当前程序
 
-当前没有 active program。
-
-Program 3 `zuno-repo-layout-cleanup-v1` 已完成并归档到：
+当前 active program：
 
 ```text
-docs/history/programs/zuno-repo-layout-cleanup-v1/
+zuno-repo-layout-cleanup-v1
 ```
 
-## 最近完成程序
+## Program 3 定义修正
 
-- `zuno-workflow-doc-system-v1`：已完成本地文档系统、Agent 工作流、program 平铺规则、skill/template 边界和 verifier 防漂移收口，归档到 `docs/history/programs/zuno-workflow-doc-system-v1/`。
-- `zuno-target-architecture-refresh-v1`：已完成目标架构升版文档收口，归档到 `docs/history/programs/zuno-target-architecture-refresh-v1/`。
-- `zuno-repo-layout-cleanup-v1`：已完成仓库目录、root/docs hygiene、backend 六层迁移计划、小边界说明和 repo hygiene verifier 收口，归档到 `docs/history/programs/zuno-repo-layout-cleanup-v1/`。
+Program 3 没有结束。之前归档的 PHASE01-05 只是 first slice，完成了审计、docs hygiene、六层迁移计划、六层 README 和 repo hygiene guardrails。
 
-## 等待打开的 program
+前置程序状态：
 
-后续 program 只作为 queued drafts 存放在 `.agent/architecture/future/programs/`，不能直接当作 active program 执行。打开其中任一 program 时，必须先确认 `.agent/programs/` 没有残留旧 `PHASE*.md`，再把对应 roadmap 和 phase 文件迁入 `.agent/programs/`，并从 `PHASE01` 重新开始。
+- `zuno-workflow-doc-system-v1`：已完成并归档。
+- `zuno-target-architecture-refresh-v1`：已完成并归档。
 
-- Program 4：`zuno-runtime-architecture-upgrade-v1`
-- Program 5：`zuno-architecture-visuals-v1`
+新的 Definition of Done 是：
 
-## 当前参考文件
+```text
+第一次打开 VS Code / Explorer 时，src/backend 目录也要清爽。
+```
 
-- `.agent/programs/README.md`
-- `.agent/programs/current.md`
-- `.agent/programs/implementation-roadmap.md`
-- `.agent/programs/closure-checklist.md`
-- `.agent/architecture/future/programs/README.md`
-- `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md`
-- `.agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md`
-- `docs/architecture/roadmap.md`
-- `docs/history/programs/zuno-repo-layout-cleanup-v1/README.md`
+这意味着 Program 3 继续处理 backend physical layout cleanup：解释或收拢 `fastapi_jwt_auth`，降低 `src/backend/zuno` 顶层目录拥挤感，把旧 runtime 目录逐步靠近 `api / agent / memory / capability / knowledge / platform` 六层表达。
+
+## 当前 Phase
+
+- `PHASE06_backend-directory-clarity-audit.md`：active。盘点 `src/backend` 和 `src/backend/zuno` 顶层目录，区分可删、可归档、必须兼容保留、可物理迁移和只能 future 处理的对象。
+- `PHASE07_fastapi-jwt-auth-compat-retirement-plan.md`：pending。专门处理 `src/backend/fastapi_jwt_auth` 兼容壳：为什么现在存在，如何让它不挡视野，何时能退休。
+- `PHASE08_backend-physical-cleanup-slices.md`：pending。把后端物理清理拆成可验证的小切片，不做一次性大搬家。
+
+## 已完成并归档的 Program 3 first slice
+
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE01_repo-layout-audit.md`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE02_root-docs-hygiene.md`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_backend-six-layer-migration-plan.md`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_small-boundary-cleanups.md`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_hygiene-verifier-closure.md`
+
+## 后续队列
+
+- `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
+- `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`
 
 ## 当前边界
 
-- 不继续追加 Program 1、Program 2 或 Program 3 的 phase。
-- 不把 Program 4 或 Program 5 的 queued draft 当成 active program。
-- 不实施 runtime、API、DB schema、frontend 或 eval baseline 修改，除非用户明确打开对应 program。
-- 不把目标架构能力写成 Current，除非代码和测试已经证明。
+- 不开新 program；这是 Program 3 definition 修正后的 continuation。
+- 不把 PHASE01-05 搬回 active 前台，它们是 first slice 历史证据。
+- 不做无测试的大搬家；每次目录移动都必须有 import / repo structure / focused tests。
+- 不删除 `fastapi_jwt_auth`，除非先证明 public import 和兼容测试可以安全迁移。

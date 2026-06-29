@@ -1,24 +1,84 @@
-# 当前执行计划占位
+# Zuno Repo Layout Cleanup V1
 
-> 状态：当前没有 active program。每次新 program 都从 `PHASE01` 开始编号。
+> 状态：active / definition revised。Program 3 first slice 已归档，当前从 `PHASE06` 继续。
 
-`.agent/programs/` 目前只保留入口和收口规则，不保存已完成 program 的 phase 文件。
+Program ID：`zuno-repo-layout-cleanup-v1`
 
-## 等待打开的 Program
+## Program 关系
 
-- `zuno-runtime-architecture-upgrade-v1`：queued / not active，位于 `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`。
-- `zuno-architecture-visuals-v1`：queued / not active，位于 `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`。
+- `zuno-workflow-doc-system-v1`：已完成并归档。
+- `zuno-target-architecture-refresh-v1`：已完成并归档。
+- `zuno-repo-layout-cleanup-v1`：当前 active / definition revised。
+- `zuno-runtime-architecture-upgrade-v1`：queued draft / not active。
+- `zuno-architecture-visuals-v1`：queued draft / not active。
 
-## 打开规则
+每次新 program 都从 `PHASE01` 开始编号。本次从 `PHASE06` 继续，不是新开 program，而是 Program 3 first slice 归档后按用户反馈修正 Definition of Done。
 
-1. 确认当前 `.agent/programs/` 没有 `PHASE*.md` 或旧 `thread-prompts/`。
-2. 从 `.agent/architecture/future/programs/` 迁入一个 queued program。
-3. 迁入后的 active program 必须从 `PHASE01` 开始，phase 文件平铺在 `.agent/programs/` 根目录。
-4. 多线程模式下，主线程先划分粗粒度任务，再把本轮线程提示词放到 `.agent/programs/thread-prompts/`。
-5. 完成后按 `closure-checklist.md` 自维护审查并归档到 `docs/history/programs/`。
+本轮 continuation 的核心是 backend physical layout cleanup：目录本身要表达架构，文档只能解释边界，不能替目录背锅。
 
-## 已完成归档
+## 为什么重新打开 Program 3
 
-- `docs/history/programs/zuno-workflow-doc-system-v1/`
-- `docs/history/programs/zuno-target-architecture-refresh-v1/`
-- `docs/history/programs/zuno-repo-layout-cleanup-v1/`
+用户反馈是准确的：PHASE01-05 让仓库规则、docs 和迁移计划变清楚了，但 `src/backend` 在 VS Code / Explorer 里仍然拥挤。`fastapi_jwt_auth`、`core`、`database`、`services`、`schema`、`tools`、`utils` 等目录仍然并列暴露，第一次看项目的人仍然需要靠文档解释才能理解。
+
+所以 Program 3 的 Definition of Done 改为：
+
+```text
+目录本身要表达架构；文档只能解释边界，不能替目录背锅。
+```
+
+## 目标
+
+让 `src/backend` 和 `src/backend/zuno` 更接近成熟项目封面：
+
+```text
+src/backend/
+  zuno/                 主 runtime 包
+  fastapi_jwt_auth/     兼容壳，必须有退休或隐藏计划
+
+src/backend/zuno/
+  api/
+  agent/
+  memory/
+  capability/
+  knowledge/
+  platform/
+  ...
+```
+
+其中 `...` 不能无限存在。每个额外目录必须被分类为：
+
+- current required：当前必须存在，并有明确职责。
+- compatibility shell：为了 public import 或历史配置暂留。
+- migration source：未来要迁入六层的旧 runtime 源。
+- local/generated：不该进入 repo 或不该出现在视野里。
+- future retirement：需要单独计划退休。
+
+## 当前边界
+
+- 不开新 program；这是 Program 3 continuation。
+- 不把 PHASE01-05 搬回 active 前台；它们保留在 `docs/history/programs/zuno-repo-layout-cleanup-v1/`。
+- 不做无测试的大搬家。
+- 不直接删除 `fastapi_jwt_auth`，因为它是 public import compatibility shell。
+- 不把 runtime 架构升级、GraphRAG LLM extractor、frontend、eval closure 混进本 program。
+
+## Phase
+
+1. [PHASE06：Backend directory clarity audit](PHASE06_backend-directory-clarity-audit.md)
+2. [PHASE07：FastAPI JWT compat retirement plan](PHASE07_fastapi-jwt-auth-compat-retirement-plan.md)
+3. [PHASE08：Backend physical cleanup slices](PHASE08_backend-physical-cleanup-slices.md)
+
+## 已完成 first slice
+
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE01_repo-layout-audit.md`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE02_root-docs-hygiene.md`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_backend-six-layer-migration-plan.md`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_small-boundary-cleanups.md`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_hygiene-verifier-closure.md`
+
+## 验收标准
+
+- `src/backend` 顶层为什么有 `fastapi_jwt_auth` 必须一眼能看懂，且有可执行 retirement path。
+- `src/backend/zuno` 顶层目录必须有 inventory 分类表和处理动作。
+- 可立即安全清理的 generated/local 目录必须清理或进入 ignore/verifier。
+- 不能马上搬的旧 runtime 目录必须有明确“迁入哪一层、何时迁、跑什么测试、如何回滚”。
+- verifier / tests 必须能防止 Program 3 又被误判为 completed while still visually messy。
