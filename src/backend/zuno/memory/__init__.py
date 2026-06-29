@@ -5,14 +5,14 @@ from typing import Any
 
 
 _EXPORT_TO_MODULE = {
-    "ExternalKnowledgeRecord": "zuno.services.memory.layers",
-    "InMemoryLayerStore": "zuno.services.memory.layers",
-    "MemoryCandidate": "zuno.services.memory.layers",
-    "MemoryLayer": "zuno.services.memory.layers",
-    "MemoryScope": "zuno.services.memory.layers",
-    "RawMemoryEvent": "zuno.services.memory.layers",
-    "RetentionPolicy": "zuno.services.memory.layers",
-    "TaskMemorySummary": "zuno.services.memory.layers",
+    "ExternalKnowledgeRecord": "zuno.memory.contracts",
+    "InMemoryLayerStore": "zuno.memory.store",
+    "MemoryCandidate": "zuno.memory.contracts",
+    "MemoryLayer": "zuno.memory.contracts",
+    "MemoryScope": "zuno.memory.contracts",
+    "RawMemoryEvent": "zuno.memory.contracts",
+    "RetentionPolicy": "zuno.memory.policy",
+    "TaskMemorySummary": "zuno.memory.contracts",
 }
 
 __all__ = [

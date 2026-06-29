@@ -1,5 +1,9 @@
-from . import client
-from zuno.services.memory.layers import (
+from __future__ import annotations
+
+from importlib import import_module
+from typing import Any
+
+from .layers import (
     ExternalKnowledgeRecord,
     InMemoryLayerStore,
     MemoryCandidate,
@@ -21,3 +25,11 @@ __all__ = [
     "TaskMemorySummary",
     "client",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    if name == "client":
+        module = import_module("zuno.services.memory.client")
+        globals()[name] = module
+        return module
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

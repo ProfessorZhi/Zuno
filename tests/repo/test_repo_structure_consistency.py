@@ -536,7 +536,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_program3_final_alias_closure_is_archived_without_active_phase_files() -> None:
+def test_program3_final_alias_closure_is_archived_with_active_internalization_files() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -545,6 +545,8 @@ def test_program3_final_alias_closure_is_archived_without_active_phase_files() -
 
     assert active_files == sorted(
         [
+            "PHASE01_six-layer-current-inventory.md",
+            "PHASE02_memory-layer-foundation-surfaces.md",
             "README.md",
             "current.md",
             "implementation-roadmap.md",
@@ -562,7 +564,7 @@ def test_program3_final_alias_closure_is_archived_without_active_phase_files() -
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
-        "当前没有 active program",
+        "zuno-six-layer-internalization-v1",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",

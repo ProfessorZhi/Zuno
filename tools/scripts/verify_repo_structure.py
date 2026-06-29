@@ -485,9 +485,9 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
         return ["missing .agent/programs implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
     errors = [
-        f"active Program 3 roadmap missing phrase: {phrase}"
+        f"active program roadmap missing phrase: {phrase}"
         for phrase in [
-            "当前没有 active program",
+            "zuno-six-layer-internalization-v1",
             "zuno-repo-layout-cleanup-v1",
             "每次新 program 都从 `PHASE01` 开始编号",
             "zuno-runtime-architecture-upgrade-v1",
@@ -510,9 +510,13 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     active_phase_names = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")
     )
-    if active_phase_names:
+    expected_active_phase_names = [
+        "PHASE01_six-layer-current-inventory.md",
+        "PHASE02_memory-layer-foundation-surfaces.md",
+    ]
+    if active_phase_names != expected_active_phase_names:
         errors.append(
-            ".agent/programs must not keep completed Program 3 phase files: "
+            ".agent/programs active phase files are not the expected six-layer internalization set: "
             + ", ".join(active_phase_names)
         )
     for phase_name in [

@@ -485,6 +485,8 @@ def main() -> int:
     )
     expected_program_files = sorted(
         [
+            "PHASE01_six-layer-current-inventory.md",
+            "PHASE02_memory-layer-foundation-surfaces.md",
             "README.md",
             "current.md",
             "implementation-roadmap.md",
@@ -493,19 +495,19 @@ def main() -> int:
     )
     if active_program_files != expected_program_files:
         errors.append(
-            f".agent/programs files are not canonical no-active-program set: {active_program_files}"
+            f".agent/programs files are not canonical active internalization set: {active_program_files}"
         )
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "当前没有 active program",
+        "zuno-six-layer-internalization-v1",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
         "zuno-architecture-visuals-v1",
     ]:
         if phrase not in roadmap:
-            errors.append(f"active Program 3 roadmap missing phrase: {phrase}")
+            errors.append(f"active program roadmap missing phrase: {phrase}")
 
     phase03 = _read("docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md")
     for phrase in [

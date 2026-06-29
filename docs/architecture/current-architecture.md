@@ -96,10 +96,11 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 这些是当前已经存在的基础切片，但不能写成成熟产品能力：
 
 - Typed Context Contract models 和 minimal pre-call `ContextOrchestrator`：当前经 `zuno.services.application.context` 兼容入口访问，物理位于 `src/backend/zuno/platform/services/application/context/`。
-- Memory layer foundation contracts：当前经 `zuno.services.memory.layers` 兼容入口访问，物理位于 `src/backend/zuno/platform/services/memory/layers.py`。
+- Memory layer foundation contracts：当前可经 `zuno.memory.contracts`、`zuno.memory.store`、`zuno.memory.policy`、`zuno.memory.review`、`zuno.memory.retrieval`、`zuno.memory.rendering` 和 `zuno.memory.engine` 这些目标层薄入口访问；旧 `zuno.services.memory.layers` 兼容入口仍保留。物理实现位于 `src/backend/zuno/platform/services/memory/layers.py`。
 - Capability System foundation contracts：当前经 `zuno.services.application.capabilities` 兼容入口访问，物理位于 `src/backend/zuno/platform/services/application/capabilities/`。
 - `GeneralAgent.astream()` 的 minimal runtime integration：准备 `ModelContextPacket`、传递 `context_trace`、选择有限 capability schema，并在 memory enabled 时提交 scoped raw event 与 task summary。
 - Program 3 backend layout cleanup：顶层 `src/backend/fastapi_jwt_auth/` 已退休；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；旧 runtime 顶层目录已下沉到六层内部；根级 alias `.py` 文件退休；旧 public import path 由 legacy alias registry 兼容；repo structure verifier 和 repo tests 固定该完成态。
+- Program `zuno-six-layer-internalization-v1` 已打开，当前先推进 Memory 层无副作用薄入口；这只表示目录表达和 import surface 更清楚，不表示 Memory runtime 已经生产化。
 
 ## 不属于 Current
 
@@ -115,7 +116,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
 - GraphRAG LLM-first entity / relation extraction 的生产实现
 - 可由知识库选择的多套 extractor / config 治理
-- API / Agent / Memory / Capability / Knowledge / Platform 六个主层的成熟 runtime 内聚；当前完成的是目录表层收口和兼容 alias，不等于 Program 4 runtime architecture upgrade 已完成。
+- API / Agent / Memory / Capability / Knowledge / Platform 六个主层的成熟 runtime 内聚；当前完成的是目录表层收口、兼容 alias 和 Memory foundation thin surfaces，不等于 Program 4 runtime architecture upgrade 已完成。
 
 ## 历史完成事实
 

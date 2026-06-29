@@ -113,8 +113,11 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw
-if ($currentProgram -notmatch "state: no-active-program") {
-    $failures.Add("current-program.md must declare no active program")
+if ($currentProgram -notmatch "state: active") {
+    $failures.Add("current-program.md must declare the active program")
+}
+if ($currentProgram -notmatch "zuno-six-layer-internalization-v1" -or $currentProgram -notmatch "PHASE02_memory-layer-foundation-surfaces.md") {
+    $failures.Add("current-program.md missing active six-layer internalization program facts")
 }
 if ($currentProgram -notmatch "\.agent/programs/") {
     $failures.Add("current-program.md does not point to the flat program directory")

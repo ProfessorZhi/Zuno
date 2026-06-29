@@ -341,7 +341,7 @@ def test_agent_templates_keep_execution_skeleton_boundary() -> None:
         assert phrase in content, f"missing template boundary phrase: {phrase}"
 
 
-def test_current_program_declares_active_program3_continuation_and_latest_archive() -> None:
+def test_current_program_declares_active_internalization_and_latest_archive() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -350,10 +350,14 @@ def test_current_program_declares_active_program3_continuation_and_latest_archiv
         encoding="utf-8"
     )
 
-    assert "当前没有 active program" in current
-    assert "Program 3 final alias surface closure 已完成并归档" in current
+    assert "zuno-six-layer-internalization-v1" in current
+    assert "状态：active" in current
+    assert "PHASE02_memory-layer-foundation-surfaces.md" in current
+    assert "Program 3 已完成" in current
     assert "api / agent / memory / capability / knowledge / platform" in current
     assert "zuno-repo-layout-cleanup-v1" in current
+    assert "contracts.py" in current
+    assert "production-grade memory extraction" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
     assert "context-memory-agent-runtime-v1" not in programs_index
@@ -436,7 +440,7 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
 
 
-def test_program3_continuation_keeps_history_and_active_phase() -> None:
+def test_six_layer_internalization_keeps_history_and_active_phase() -> None:
     roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
         encoding="utf-8"
     )
@@ -469,7 +473,7 @@ def test_program3_continuation_keeps_history_and_active_phase() -> None:
     )
 
     for phrase in [
-        "当前没有 active program",
+        "zuno-six-layer-internalization-v1",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
@@ -477,7 +481,10 @@ def test_program3_continuation_keeps_history_and_active_phase() -> None:
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == []
+    assert active_phase_files == [
+        "PHASE01_six-layer-current-inventory.md",
+        "PHASE02_memory-layer-foundation-surfaces.md",
+    ]
     for prompt in [
         "PROGRAM3_DIRECTORY_CLOSURE_TARGET_MODE_PROMPT.md",
     ]:

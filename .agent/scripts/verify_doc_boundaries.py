@@ -98,7 +98,9 @@ def main() -> int:
 
     current_program = _read(".agent/references/current-program.md")
     for phrase in [
-        "当前没有 active program",
+        "zuno-six-layer-internalization-v1",
+        "state: active",
+        "PHASE02_memory-layer-foundation-surfaces.md",
         "final alias surface closure",
         "legacy_aliases.py",
         "__init__.py",
@@ -108,7 +110,7 @@ def main() -> int:
         "zuno-architecture-visuals-v1",
     ]:
         if phrase not in current_program:
-            errors.append(f"current-program.md missing wait-state phrase: {phrase}")
+            errors.append(f"current-program.md missing active-program phrase: {phrase}")
 
     docs_front_path = ["README.md", "docs/README.md", "docs/architecture/README.md"]
     for relative_path in docs_front_path:

@@ -8,7 +8,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - `.agent/programs/`
 
-当前没有 active program。`zuno-repo-layout-cleanup-v1` / Program 3 final alias surface closure 已完成并归档：`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`，根级 alias `.py` 文件已收口到 `platform/compatibility/legacy_aliases.py`。Program 4/5 仍是 queued / not active。
+当前 active program 是 `zuno-six-layer-internalization-v1`。`zuno-repo-layout-cleanup-v1` / Program 3 final alias surface closure 已完成并归档：`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`，根级 alias `.py` 文件已收口到 `platform/compatibility/legacy_aliases.py`。当前 program 接续处理六层内部薄入口成熟化，不重写 runtime 主循环、DB schema、API 行为或 eval baseline。
 
 已完成并归档：
 
@@ -16,6 +16,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 - `zuno-workflow-doc-system-v1`
 - `zuno-target-architecture-refresh-v1`
 - `zuno-repo-layout-cleanup-v1`
+- `zuno-six-layer-internalization-v1`：active
 
 ## 短期五个改进目标
 
@@ -26,18 +27,20 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 | 本地文档系统和工作流自洽 | completed / archived | 让仓库能由 Agent 按入口、skills、program、templates、verifiers 自助维护，而不是靠临时提示词记忆。 | 新 program 从 `PHASE01` 开始；旧 active 计划归档；修改 docs / agent workflow 时有对应 verifier 和 repo tests。 |
 | 目标架构继续升版 | completed / archived | 让 Zuno 从恢复期 GraphRAG / Domain Pack 叙事，继续靠近成熟 Agent / RAG / GraphRAG 工程架构。 | 更新 `target-architecture.md` 和图示，把 API / Agent / Memory / Capability / Knowledge / Platform / Trace 的边界讲清；仍不能把未实现能力写成 Current。 |
 | 文件夹继续分门别类 | completed / archived | 让第一次看仓库的人能从目录名直接读出架构，而不是在 `core`、`services`、`rag`、`retrieval`、`graphrag` 之间拼图。 | `src/backend/zuno` 顶层目录已收敛到六层；根级 alias `.py` 文件收口到 legacy alias registry；verifier 和 repo tests 固定完成态。 |
-| Runtime 架构升级 | queued / not active | 在目标架构和目录边界稳定后，再把关键 runtime slice 往成熟形态推进。 | 只在 Program 2/3 边界清楚后实现；每个 runtime slice 必须有代码、测试、trace/eval 证据，不做大包式重构。 |
+| 六层内部入口成熟化 | active | Program 3 只完成顶层封口；六层内部还需要从 facade 逐步长成可解释、可测试的目标层入口。 | 从 `memory/` 开始，新增无副作用薄入口并证明新旧 import 对象一致；不改 runtime 语义。 |
+| Runtime 架构升级 | queued / not active | 在目标架构和目录边界稳定后，再把关键 runtime slice 往成熟形态推进。 | 只在 internalization 边界清楚后实现；每个 runtime slice 必须有代码、测试、trace/eval 证据，不做大包式重构。 |
 | 架构 HTML 重做清晰 | queued / not active | 让 GitHub 访问者和面试场景能快速看懂架构，而不是只靠长文本解释。 | 保持 `docs/architecture/diagrams.md` 为唯一 Mermaid 源；优化 `overview.html`；HTML 不能成为第二套架构真相。 |
 
 ## 短期 Program 队列
 
-当前没有 active program。后续 program 草案在 `.agent/architecture/future/programs/`。queued 只表示候选顺序，不表示 active。
+当前 active program 在 `.agent/programs/`。后续 program 草案在 `.agent/architecture/future/programs/`。queued 只表示候选顺序，不表示 active。
 
 1. `zuno-workflow-doc-system-v1`：已完成，归档到 `docs/history/programs/zuno-workflow-doc-system-v1/`。
 2. `zuno-target-architecture-refresh-v1`：已完成，归档到 `docs/history/programs/zuno-target-architecture-refresh-v1/`。
 3. `zuno-repo-layout-cleanup-v1`：已完成，归档到 `docs/history/programs/zuno-repo-layout-cleanup-v1/`；final alias surface closure 作为 PHASE10-15 保存。
-4. `zuno-runtime-architecture-upgrade-v1`：queued / not active。只在 Program 2/3 边界清楚后推进 runtime slice，重点是 GraphRAG LLM entity extraction、knowledge extractor configs、memory/capability/trace hardening。
-5. `zuno-architecture-visuals-v1`：queued / not active。重做架构 HTML / Mermaid 展示面，保持图形展示不成为第二套架构真相。
+4. `zuno-six-layer-internalization-v1`：active。先从 Memory 层薄入口开始，让六层内部逐步从 facade 变成可解释的目标层门面。
+5. `zuno-runtime-architecture-upgrade-v1`：queued / not active。只在 Program 2/3 和 internalization 边界清楚后推进 runtime slice，重点是 GraphRAG LLM entity extraction、knowledge extractor configs、memory/capability/trace hardening。
+6. `zuno-architecture-visuals-v1`：queued / not active。重做架构 HTML / Mermaid 展示面，保持图形展示不成为第二套架构真相。
 
 已被替换的 V2 目标运行时材料归档在：
 
@@ -96,7 +99,7 @@ Program 3 已完成的边界：
 ## 当前基础切片收口
 
 - V2 Context Contract foundation：`zuno.services.application.context` 兼容入口，物理位于 `src/backend/zuno/platform/services/application/context/`
-- V2 Memory Layer foundation：`zuno.services.memory.layers` 兼容入口，物理位于 `src/backend/zuno/platform/services/memory/layers.py`
+- V2 Memory Layer foundation：`zuno.memory.contracts` / `store` / `policy` / `review` / `retrieval` / `rendering` / `engine` 目标层薄入口，加上旧 `zuno.services.memory.layers` 兼容入口；物理位于 `src/backend/zuno/platform/services/memory/layers.py`
 - V2 Capability System foundation：`zuno.services.application.capabilities` 兼容入口，物理位于 `src/backend/zuno/platform/services/application/capabilities/`
 - V2 GeneralAgent runtime integration：`zuno.core.agents.general_agent` 兼容入口，物理位于 `src/backend/zuno/agent/core/agents/general_agent.py`
 

@@ -4,7 +4,9 @@
 
 ## 当前角色
 
-`src/backend/zuno/memory/` 目前是 memory foundation 的轻量 facade，暴露 raw event、task summary、memory scope、retention policy 和 in-memory layer store 等基础 contract。真实实现仍在 `src/backend/zuno/services/memory/` 等旧路径中。
+`src/backend/zuno/memory/` 目前是 memory foundation 的轻量入口层，已经提供 `contracts.py`、`store.py`、`policy.py`、`review.py`、`retrieval.py`、`rendering.py` 和 `engine.py` 这些无副作用的目标层门面。它们暴露 raw event、task summary、memory scope、retention policy、candidate review 和 in-memory layer store 等基础 contract。
+
+当前底层对象仍复用 legacy-compatible foundation：`zuno.services.memory.layers`；物理实现位于 `src/backend/zuno/platform/services/memory/layers.py`。这不是 production-grade memory engine，也不是 DB-backed memory 的物理迁移完成。
 
 ## Target role
 
@@ -13,7 +15,7 @@
 ## 允许新增内容
 
 - 无副作用的 memory contract、scope、policy、trace 类型。
-- 指向旧 `services/memory` owner 的 lazy facade 或 README 边界说明。
+- 指向 `platform/services/memory` foundation owner 的薄入口和 README 边界说明。
 - 不触碰持久化和 runtime 行为的小型 wrapper。
 
 ## 禁止事项
@@ -25,6 +27,7 @@
 ## Focused tests
 
 - `tests/repo/test_backend_facade_layers.py`
+- `tests/agent/test_memory_layer_surfaces.py`
 - `tests/agent/test_memory_layers.py`
 - `tests/agent/test_generalagent_context_memory_runtime.py`
 - `tests/legacy_guards/test_zuno_alias_imports.py`
