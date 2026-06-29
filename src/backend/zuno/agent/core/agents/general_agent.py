@@ -668,7 +668,14 @@ class GeneralAgent:
             lines.append(f"resolved_query_method: {result.resolved_query_method}")
         if result.retrievers_used:
             lines.append(f"retrievers_used: {', '.join(result.retrievers_used)}")
-        verdict = dict((getattr(result, "trace_metadata", None) or {}).get("evidence_verdict") or {})
+        trace_metadata = dict(getattr(result, "trace_metadata", None) or {})
+        query_contract = dict(trace_metadata.get("query_method_contract") or {})
+        if query_contract:
+            resolved_method = query_contract.get("resolved_query_method") or result.resolved_query_method
+            internal_route = query_contract.get("internal_route")
+            if resolved_method and internal_route:
+                lines.append(f"query_method_contract: {resolved_method} via {internal_route}")
+        verdict = dict(trace_metadata.get("evidence_verdict") or {})
         if verdict and verdict.get("status") != "pass":
             lines.append(f"evidence_status: {verdict.get('status')}")
             lines.append(f"citation_coverage: {verdict.get('citation_coverage')}")

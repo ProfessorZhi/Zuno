@@ -194,7 +194,10 @@ class RetrievalPlanner:
         route_trace["resolved_query_method"] = resolved_query_method
         route_trace["router_decision"] = router_decision
 
-        enabled_retrievers = [] if scope_status != "active" else ["vector"]
+        if scope_status != "active" or internal_route == "community_global":
+            enabled_retrievers = []
+        else:
+            enabled_retrievers = ["vector"]
         if enabled_retrievers and self.enable_keyword_recall and (
             internal_route in {"standard_rag", "local_graphrag"} or resolved_mode == "rag_graph_deep"
         ):

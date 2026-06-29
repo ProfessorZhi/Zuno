@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from zuno.platform.services.graphrag.models import GraphRAGProjectContract, normalize_retrieval_mode
+from zuno.platform.services.graphrag.models import (
+    GraphRAGExtractorConfig,
+    GraphRAGProjectContract,
+    normalize_retrieval_mode,
+)
 from zuno.platform.services.graphrag.project import (
     GraphRAGProjectLoader,
     GraphRAGSettingsValidator,
@@ -10,6 +14,7 @@ from zuno.platform.services.graphrag.project import (
 
 __all__ = [
     "GraphRAGProjectContract",
+    "GraphRAGExtractorConfig",
     "GraphRAGProjectLoader",
     "GraphRAGSettingsValidator",
     "LoadedGraphRAGProject",

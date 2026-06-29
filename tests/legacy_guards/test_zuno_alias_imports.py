@@ -25,9 +25,19 @@ def test_zuno_alias_modules_import():
     from zuno.platform.middleware.white_list_middleware import WhitelistMiddleware as PlatformWhitelistMiddleware
     from zuno.capability.mcp.servers.remote_proxy.main import main as capability_remote_proxy_main
     from zuno.schema.common import ModelConfig
+    from zuno.services.application.knowledge import KnowledgeQueryService
     from zuno.services.graphrag.extractor import GraphExtractor
     from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+    from zuno.services.graphrag.models import GraphRAGExtractorConfig
+    from zuno.services.graphrag.query_service import (
+        GraphRAGProjectSnapshot,
+        GraphRAGQueryService,
+        KnowledgeQueryResult,
+    )
     from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.services.retrieval.fusion import RetrievalFusion
+    from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
+    from zuno.services.retrieval.planner import RetrievalPlanner
     from zuno.services.queue.runner import main
     from zuno.services.rag.handler import RagHandler
     from zuno.services.rag.retrieval import MixRetrival
@@ -58,9 +68,17 @@ def test_zuno_alias_modules_import():
     assert WhitelistMiddleware is PlatformWhitelistMiddleware
     assert remote_proxy_main is capability_remote_proxy_main
     assert ModelConfig is not None
+    assert KnowledgeQueryService is not None
     assert GraphExtractor is not None
+    assert GraphRAGExtractorConfig is not None
+    assert GraphRAGProjectSnapshot is not None
+    assert GraphRAGQueryService is not None
+    assert KnowledgeQueryResult is not None
     assert StructuredGraphExtractor is not None
     assert GraphRetriever is not None
+    assert RetrievalFusion is not None
+    assert RetrievalOrchestrator is not None
+    assert RetrievalPlanner is not None
     assert main is not None
     assert RagHandler is not None
     assert MixRetrival is not None
@@ -161,7 +179,14 @@ def test_zuno_service_imports_resolve_from_backend_runtime_surface():
         "zuno.services.queue.client",
         "zuno.services.queue.runner",
         "zuno.services.retrieval",
+        "zuno.services.retrieval.fusion",
         "zuno.services.retrieval.orchestrator",
+        "zuno.services.retrieval.planner",
+        "zuno.services.graphrag",
+        "zuno.services.graphrag.models",
+        "zuno.services.graphrag.query_service",
+        "zuno.services.graphrag.project.loader",
+        "zuno.services.application.knowledge",
         "zuno.services.rewrite",
         "zuno.services.rewrite.query_write",
     ]

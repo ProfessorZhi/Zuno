@@ -39,6 +39,7 @@ Local-first Agent Workspace
 - 当前 Context / Memory foundation 已证明 Context Pack policy、source id coverage、五类记忆 taxonomy、review contract，以及 `GeneralAgent` 对同 scope task summary 和 approved structured memory 的轻量 readback；这不是 production-grade Memory DB 或成熟 memory retrieval / consolidation。
 - 当前 Capability foundation 已证明 ToolCard compact metadata、Native BM25 ToolCard retrieval、MCP/local tool policy trace、facade compatibility，以及 `GeneralAgent` 内部 capability selection trace bridge；这不是生产级动态工具编排或完整 runtime tool filtering。
 - 当前 Hooks / Evidence / Trace / Artifact foundation 已证明 hook event schema、evidence verdict、artifact manifest、`GeneralAgent` additive trace event、tool pre/post hook payload 和 eval diagnostics；这不是完整 artifact storage、frontend trace panel 或 production-grade hooks governance。
+- 当前 GraphRAG Knowledge Runtime foundation 已证明 LLM-first extractor config contract、GraphRAG snapshot 传播、query method / citation / retrieval fusion trace contract、global community-only prior 边界、GeneralAgent query method contract 文本和旧 import path 兼容；这不是生产级 LLM extraction、完整 RRF/rerank 治理或前端 trace 面板。
 - Phase 0-6 架构收口仍是已完成的历史事实。
 - Phase 0-6 架构收口、Target Architecture Migration V1、Phase 11A / 11B / 11C 和 Phase 12 closure 都是已完成历史事实。
 - Phase 11A 已完成：项目查询 runtime 已引入 Knowledge / GraphRAG 查询边界。
@@ -71,6 +72,7 @@ Completion API
 - production-grade memory extraction / retrieval / consolidation。
 - mature Context Orchestrator product behavior。
 - product-level dynamic capability orchestration。
+- production-grade LLM-first GraphRAG extraction、完整 RRF/rerank 治理和多套 extractor 编排。
 - 完整 frontend trace 面板。
 - Java 服务、微服务、事件 worker、产品级多 Agent 模式或 Coding Agent mode。
 

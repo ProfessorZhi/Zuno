@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from zuno.knowledge.contracts import (
+        GraphRAGExtractorConfig,
         GraphRAGProjectContract,
         GraphRAGProjectLoader,
         GraphRAGSettingsValidator,
@@ -43,6 +44,7 @@ _LAZY_EXPORT_TO_MODULE = {
     "EvidenceVerdict": "zuno.knowledge.trace",
     "FusionResult": "zuno.knowledge.fusion",
     "GraphRAGProjectContract": "zuno.knowledge.contracts",
+    "GraphRAGExtractorConfig": "zuno.knowledge.contracts",
     "GraphRAGProjectLoader": "zuno.knowledge.contracts",
     "GraphRAGProjectSnapshot": "zuno.knowledge.query_service",
     "GraphRAGQueryService": "zuno.knowledge.query_service",
@@ -70,6 +72,7 @@ __all__ = [
     "EvidenceChecker",
     "EvidenceVerdict",
     "FusionResult",
+    "GraphRAGExtractorConfig",
     "GraphRAGProjectContract",
     "GraphRAGProjectLoader",
     "GraphRAGProjectSnapshot",

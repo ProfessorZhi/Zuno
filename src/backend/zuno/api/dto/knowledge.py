@@ -17,12 +17,52 @@ class KnowledgeModelRefs(BaseModel):
     text_embedding_model_id: Optional[str] = Field(default=None, min_length=1)
     vl_embedding_model_id: Optional[str] = Field(default=None, min_length=1)
     rerank_model_id: Optional[str] = Field(default=None, min_length=1)
+    entity_extraction_llm_id: Optional[str] = Field(default=None, min_length=1)
+    graph_extraction_llm_id: Optional[str] = Field(default=None, min_length=1)
 
 
 class KnowledgeModelRefsPatch(BaseModel):
     text_embedding_model_id: Optional[str] = Field(default=None, min_length=1)
     vl_embedding_model_id: Optional[str] = Field(default=None, min_length=1)
     rerank_model_id: Optional[str] = Field(default=None, min_length=1)
+    entity_extraction_llm_id: Optional[str] = Field(default=None, min_length=1)
+    graph_extraction_llm_id: Optional[str] = Field(default=None, min_length=1)
+
+
+class KnowledgePromptRefs(BaseModel):
+    entity_extraction_prompt_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    extract_graph: Optional[str] = Field(default=None, min_length=1, max_length=512)
+
+
+class KnowledgePromptRefsPatch(BaseModel):
+    entity_extraction_prompt_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    extract_graph: Optional[str] = Field(default=None, min_length=1, max_length=512)
+
+
+class KnowledgeSchemaRefs(BaseModel):
+    entity_extraction_schema_version: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    graph_schema_version: Optional[str] = Field(default=None, min_length=1, max_length=128)
+
+
+class KnowledgeSchemaRefsPatch(BaseModel):
+    entity_extraction_schema_version: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    graph_schema_version: Optional[str] = Field(default=None, min_length=1, max_length=128)
+
+
+class KnowledgePolicyRefs(BaseModel):
+    entity_extraction_cost_latency_profile: Optional[str] = Field(default=None, min_length=1, max_length=64)
+
+
+class KnowledgePolicyRefsPatch(BaseModel):
+    entity_extraction_cost_latency_profile: Optional[str] = Field(default=None, min_length=1, max_length=64)
+
+
+class KnowledgeEvalRefs(BaseModel):
+    entity_extraction_eval_profile: Optional[str] = Field(default=None, min_length=1, max_length=128)
+
+
+class KnowledgeEvalRefsPatch(BaseModel):
+    entity_extraction_eval_profile: Optional[str] = Field(default=None, min_length=1, max_length=128)
 
 
 class KnowledgeIndexSettings(BaseModel):
@@ -63,6 +103,12 @@ class KnowledgeIndexSettingsPatch(BaseModel):
 
 class KnowledgeGraphIndexSettings(BaseModel):
     entity_extraction_mode: str = Field(default="rule_llm", pattern="^(rule|llm|rule_llm)$")
+    entity_extraction_fallback_mode: Optional[str] = Field(default="rule", pattern="^(rule|structured|fixture)$")
+    entity_extraction_llm_id: Optional[str] = Field(default=None, min_length=1)
+    entity_extraction_prompt_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    entity_extraction_schema_version: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    entity_extraction_cost_latency_profile: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    entity_extraction_eval_profile: Optional[str] = Field(default=None, min_length=1, max_length=128)
     relation_schema: str = Field(default="open", pattern="^(open|typed)$")
     entity_normalization: bool = Field(default=True)
     evidence_backlink: bool = Field(default=True)
@@ -78,6 +124,12 @@ class KnowledgeGraphIndexSettings(BaseModel):
 
 class KnowledgeGraphIndexSettingsPatch(BaseModel):
     entity_extraction_mode: Optional[str] = Field(default=None, pattern="^(rule|llm|rule_llm)$")
+    entity_extraction_fallback_mode: Optional[str] = Field(default=None, pattern="^(rule|structured|fixture)$")
+    entity_extraction_llm_id: Optional[str] = Field(default=None, min_length=1)
+    entity_extraction_prompt_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    entity_extraction_schema_version: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    entity_extraction_cost_latency_profile: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    entity_extraction_eval_profile: Optional[str] = Field(default=None, min_length=1, max_length=128)
     relation_schema: Optional[str] = Field(default=None, pattern="^(open|typed)$")
     entity_normalization: Optional[bool] = Field(default=None)
     evidence_backlink: Optional[bool] = Field(default=None)
@@ -121,6 +173,10 @@ class KnowledgeConfig(BaseModel):
     graphrag_project: Optional[GraphRAGProjectContract] = Field(default=None)
     eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: KnowledgeModelRefs = Field(default_factory=KnowledgeModelRefs)
+    prompt_refs: KnowledgePromptRefs = Field(default_factory=KnowledgePromptRefs)
+    schema_refs: KnowledgeSchemaRefs = Field(default_factory=KnowledgeSchemaRefs)
+    policy_refs: KnowledgePolicyRefs = Field(default_factory=KnowledgePolicyRefs)
+    eval_refs: KnowledgeEvalRefs = Field(default_factory=KnowledgeEvalRefs)
     index_settings: KnowledgeIndexSettings = Field(default_factory=KnowledgeIndexSettings)
     graph_index_settings: KnowledgeGraphIndexSettings = Field(default_factory=KnowledgeGraphIndexSettings)
     retrieval_settings: KnowledgeRetrievalSettings = Field(default_factory=KnowledgeRetrievalSettings)
@@ -137,6 +193,10 @@ class KnowledgeConfigPatch(BaseModel):
     graphrag_project: Optional[GraphRAGProjectContract] = Field(default=None)
     eval_profile_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
     model_refs: Optional[KnowledgeModelRefsPatch] = Field(default=None)
+    prompt_refs: Optional[KnowledgePromptRefsPatch] = Field(default=None)
+    schema_refs: Optional[KnowledgeSchemaRefsPatch] = Field(default=None)
+    policy_refs: Optional[KnowledgePolicyRefsPatch] = Field(default=None)
+    eval_refs: Optional[KnowledgeEvalRefsPatch] = Field(default=None)
     index_settings: Optional[KnowledgeIndexSettingsPatch] = Field(default=None)
     graph_index_settings: Optional[KnowledgeGraphIndexSettingsPatch] = Field(default=None)
     retrieval_settings: Optional[KnowledgeRetrievalSettingsPatch] = Field(default=None)
@@ -181,6 +241,14 @@ __all__ = [
     "KnowledgeIndexSettingsPatch",
     "KnowledgeModelRefs",
     "KnowledgeModelRefsPatch",
+    "KnowledgePromptRefs",
+    "KnowledgePromptRefsPatch",
+    "KnowledgeSchemaRefs",
+    "KnowledgeSchemaRefsPatch",
+    "KnowledgePolicyRefs",
+    "KnowledgePolicyRefsPatch",
+    "KnowledgeEvalRefs",
+    "KnowledgeEvalRefsPatch",
     "KnowledgeRetrievalSettings",
     "KnowledgeRetrievalSettingsPatch",
     "KnowledgeUpdateRequest",

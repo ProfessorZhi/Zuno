@@ -350,6 +350,63 @@ class RetrievalOrchestrator:
         }
 
     @staticmethod
+    def _query_method_contract(
+        *,
+        first_plan: dict,
+        final_plan: dict,
+        internal_route: str | None,
+    ) -> dict:
+        route_trace = dict(final_plan.get("route_trace") or {})
+        resolved_method = str(final_plan.get("resolved_query_method") or "auto")
+        return {
+            "requested_query_method": str(first_plan.get("requested_query_method") or "auto"),
+            "resolved_query_method": resolved_method,
+            "internal_route": str(internal_route or ""),
+            "local_graph_required": bool(route_trace.get("local_graph_required")),
+            "community_required": bool(route_trace.get("community_required")),
+            "fallback_reason": route_trace.get("fallback_reason"),
+        }
+
+    @staticmethod
+    def _citation_contract(evidence_bundle: dict, citation_chunks: list[str]) -> dict:
+        coverage = float(evidence_bundle.get("citation_coverage") or 0.0)
+        status = "missing"
+        if coverage >= 1.0 and citation_chunks:
+            status = "pass"
+        elif coverage > 0 or citation_chunks:
+            status = "partial"
+        return {
+            "status": status,
+            "citation_coverage": coverage,
+            "citation_chunks": list(citation_chunks),
+            "evidence_document_count": int(evidence_bundle.get("document_count") or 0),
+        }
+
+    @staticmethod
+    def _retrieval_fusion_contract(
+        *,
+        retrievers_used: list[str],
+        community_used: bool,
+        internal_route: str | None,
+        fusion_metadata: dict,
+        rerank_used: bool,
+        evidence_bundle: dict,
+    ) -> dict:
+        contract_retrievers = list(retrievers_used)
+        if not contract_retrievers and community_used:
+            contract_retrievers = ["community"]
+        fusion_strategy = fusion_metadata.get("strategy")
+        if str(internal_route or "") == "community_global":
+            fusion_strategy = "community_global"
+        return {
+            "retrievers_used": contract_retrievers,
+            "fusion_strategy": fusion_strategy,
+            "rerank_used": bool(rerank_used),
+            "evidence_document_count": int(evidence_bundle.get("document_count") or 0),
+            "citation_coverage": float(evidence_bundle.get("citation_coverage") or 0.0),
+        }
+
+    @staticmethod
     def _documents_include_source(documents: list[dict], source_name: str) -> bool:
         normalized = str(source_name or "").strip().lower()
         for item in documents:
@@ -938,6 +995,21 @@ class RetrievalOrchestrator:
         retrievers_used = self._source_names_from_runs(final_pass.get("retriever_runs") or [])
         rewritten_query_used = any(round_info["query"].strip().lower() != query.strip().lower() for round_info in rounds)
         evidence_bundle = self._evidence_bundle(list(final_pass.get("documents") or []), citation_chunks)
+        rerank_used = bool((final_plan.get("rerank_policy") or {}).get("enabled"))
+        query_method_contract = self._query_method_contract(
+            first_plan=first_plan,
+            final_plan=final_plan,
+            internal_route=final_internal_route,
+        )
+        citation_contract = self._citation_contract(evidence_bundle, citation_chunks)
+        retrieval_fusion_contract = self._retrieval_fusion_contract(
+            retrievers_used=retrievers_used,
+            community_used=community_used,
+            internal_route=final_internal_route,
+            fusion_metadata=fusion_metadata,
+            rerank_used=rerank_used,
+            evidence_bundle=evidence_bundle,
+        )
         pipeline_trace = self._pipeline_trace(
             requested_product_mode=first_plan.get("requested_product_mode"),
             resolved_product_mode=final_plan.get("resolved_product_mode"),
@@ -951,7 +1023,7 @@ class RetrievalOrchestrator:
             rewritten_query_used=rewritten_query_used,
             requery_used=bool(requery_attempted or requery_used),
             fusion_used=bool((final_pass.get("documents") or []) or (final_pass.get("retriever_runs") or [])),
-            rerank_used=bool((final_plan.get("rerank_policy") or {}).get("enabled")),
+            rerank_used=rerank_used,
             evidence_bundle=evidence_bundle,
         )
         trace_id = get_active_trace_id(default=f"retrieval-{int(time.time() * 1000)}")
@@ -979,6 +1051,10 @@ class RetrievalOrchestrator:
             "resolved_mode": final_plan.get("resolved_mode") or final_mode,
             "internal_route": final_internal_route,
             "route_trace": dict(final_plan.get("route_trace") or {}),
+            "extractor_config": dict(retrieval_options.get("extractor_config") or {}),
+            "query_method_contract": query_method_contract,
+            "citation_contract": citation_contract,
+            "retrieval_fusion_contract": retrieval_fusion_contract,
             "resolved_profile": final_plan.get("resolved_profile"),
             "enabled_retrievers": list(final_plan.get("enabled_retrievers") or []),
             "seed_entities": final_pass.get("seed_entities"),
@@ -995,7 +1071,7 @@ class RetrievalOrchestrator:
             "bm25_used": any(run.get("source") == "bm25" for run in (final_pass.get("retriever_runs") or [])),
             "graph_used": any(run.get("source") == "graph" for run in (final_pass.get("retriever_runs") or [])),
             "fusion_used": bool((final_pass.get("documents") or []) or (final_pass.get("retriever_runs") or [])),
-            "rerank_used": bool((final_plan.get("rerank_policy") or {}).get("enabled")),
+            "rerank_used": rerank_used,
             "bm25_available": bool(retrieval_options.get("bm25_available", False)),
             "rerank_available": bool(retrieval_options.get("rerank_available", True)),
             "bm25_fallback_reason": (
@@ -1057,7 +1133,7 @@ class RetrievalOrchestrator:
                 str(fusion_metadata.get("strategy") or "").strip().lower()
                 == "baseline_preserving"
             ),
-            "final_rerank_used": bool((final_plan.get("rerank_policy") or {}).get("enabled")),
+            "final_rerank_used": rerank_used,
             "route_selection_reason": route_selection_reason,
             "used_communities": list(final_pass.get("community_result", {}).get("used_communities") or []),
             "used_paths": list(final_pass.get("community_result", {}).get("used_paths") or final_pass.get("paths") or []),

@@ -7,7 +7,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_CURRENT_PHASE = "PHASE08_graphrag-knowledge-runtime-system.md"
+ACTIVE_CURRENT_PHASE = "PHASE09_runtime-upgrade-integration.md"
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -16,6 +16,7 @@ COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE05_context-builder-memory-system.md",
     "PHASE06_capability-toolcard-mcp-system.md",
     "PHASE07_hooks-evidence-trace-artifact-system.md",
+    "PHASE08_graphrag-knowledge-runtime-system.md",
 ]
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
@@ -740,6 +741,35 @@ def verify_phase07_hooks_evidence_trace_verification_map(repo_root: Path = REPO_
     return errors
 
 
+def verify_phase08_graphrag_knowledge_runtime_verification_map(repo_root: Path = REPO_ROOT) -> list[str]:
+    system_yaml = _read(".agent/system.yaml")
+    verification_map = _read(".agent/references/verification-map.md")
+    required_tests = [
+        "tests/agent/test_knowledge_graphrag_runtime_contracts.py",
+        "tests/agent/test_general_agent_project_query_runtime.py",
+        "tests/agent/test_knowledge_layer_surfaces.py",
+        "tests/api/test_knowledge_api_contract.py",
+        "tests/graphrag/test_graphrag_project_contracts.py",
+        "tests/graphrag/test_graphrag_project_loader.py",
+        "tests/graphrag/test_structured_graph_extractor_contract.py",
+        "tests/retrieval/test_enhanced_retrieval_composition.py",
+        "tests/evals/test_multihop_eval_real_runtime_runner.py",
+        "tests/repo/test_backend_facade_layers.py",
+        "tests/repo/test_static_target_layer_imports.py",
+    ]
+
+    errors: list[str] = []
+    for relative_path in required_tests:
+        if relative_path not in system_yaml:
+            errors.append(f".agent/system.yaml missing PHASE08 focused test: {relative_path}")
+        if relative_path not in verification_map:
+            errors.append(f"verification-map.md missing PHASE08 focused test: {relative_path}")
+        if not _repo_path(repo_root, relative_path).exists():
+            errors.append(f"PHASE08 focused test path is missing: {relative_path}")
+
+    return errors
+
+
 def verify_workflow_change_log_entries(repo_root: Path = REPO_ROOT) -> list[str]:
     content = _read(".agent/references/workflow-change-log.md")
     heading_pattern = re.compile(r"^### \d{4}-\d{2}-\d{2}: .+$", re.MULTILINE)
@@ -791,6 +821,7 @@ def main() -> int:
     errors.extend(verify_phase05_context_memory_verification_map())
     errors.extend(verify_phase06_capability_toolcard_verification_map())
     errors.extend(verify_phase07_hooks_evidence_trace_verification_map())
+    errors.extend(verify_phase08_graphrag_knowledge_runtime_verification_map())
     errors.extend(verify_workflow_change_log_entries())
 
     for relative_path in REQUIRED_PATHS:

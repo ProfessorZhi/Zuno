@@ -408,4 +408,5 @@ flowchart LR
 - 产品模式：normal、enhanced、auto。
 - 内部 query method：basic、local、global、drift。
 - Global 不和 BM25 chunk ranking 生硬混榜；它更适合作为 community-level prior，再由 local/basic 回补 supporting evidence。
+- PHASE08 当前已证明 extractor config contract、query method / citation / retrieval fusion trace contract 和 global community-only prior 边界；完整 LLM extraction、RRF/rerank 治理仍是 Target。
 - Domain Pack 只允许作为历史或兼容语境出现，不进入 Current 或 Target 主线图。

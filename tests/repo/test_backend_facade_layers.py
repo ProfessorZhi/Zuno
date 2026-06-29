@@ -56,6 +56,7 @@ FACADE_ALL = {
         "EvidenceChecker",
         "EvidenceVerdict",
         "FusionResult",
+        "GraphRAGExtractorConfig",
         "GraphRAGProjectContract",
         "GraphRAGProjectLoader",
         "GraphRAGProjectSnapshot",
@@ -117,6 +118,7 @@ SELECTED_EXPORTS = {
         "ToolCardRegistry": "zuno.services.application.capabilities",
     },
     "zuno.knowledge": {
+        "GraphRAGExtractorConfig": "zuno.services.graphrag.models",
         "GraphRAGProjectContract": "zuno.services.graphrag.models",
         "GraphRAGProjectLoader": "zuno.services.graphrag.project",
         "normalize_retrieval_mode": "zuno.services.graphrag.models",
