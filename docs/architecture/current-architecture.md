@@ -99,7 +99,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 
 - Typed Context Contract models 和 minimal pre-call `ContextOrchestrator`：当前经 `zuno.services.application.context` 兼容入口访问，物理位于 `src/backend/zuno/platform/services/application/context/`。PHASE05 已证明 `ContextPackPolicy`、`ModelContextPacket.context_policy`、source id coverage trace 和缺失 source id 检查这组 foundation contract。
 - Memory layer foundation contracts：当前可经 `zuno.memory.contracts`、`zuno.memory.store`、`zuno.memory.policy`、`zuno.memory.review`、`zuno.memory.retrieval`、`zuno.memory.rendering` 和 `zuno.memory.engine` 这些目标层薄入口访问；旧 `zuno.services.memory.layers` 兼容入口仍保留。物理实现位于 `src/backend/zuno/platform/services/memory/layers.py`。PHASE05 已证明五类 Agent memory taxonomy、structured memory pending review、approval / rejection decision、policy serialization 和 source id 要求。
-- Capability System foundation contracts：当前可经 `zuno.capability.contracts`、`zuno.capability.registry`、`zuno.capability.selector`、`zuno.capability.policy`、`zuno.capability.execution` 和 `zuno.capability.trace` 这些目标层薄入口访问；旧 `zuno.services.application.capabilities` 兼容入口仍保留。物理实现位于 `src/backend/zuno/platform/services/application/capabilities/`。
+- Capability System foundation contracts：当前可经 `zuno.capability.contracts`、`zuno.capability.registry`、`zuno.capability.selector`、`zuno.capability.policy`、`zuno.capability.execution`、`zuno.capability.trace` 和 `zuno.capability.retrieval` 这些目标层薄入口访问；旧 `zuno.services.application.capabilities` 和 `zuno.services.capability_registry` 兼容入口仍保留。物理实现位于 `src/backend/zuno/platform/services/application/capabilities/` 和 `src/backend/zuno/platform/services/capability_registry.py`。PHASE06 已证明 ToolCard compact metadata、Native BM25 ToolCard retrieval、type / health / permission / side-effect / cost filters、selection trace 和 GeneralAgent internal trace bridge 这组 foundation contract。
 - Knowledge foundation thin surfaces：当前可经 `zuno.knowledge.contracts`、`zuno.knowledge.query_service`、`zuno.knowledge.evidence`、`zuno.knowledge.citation`、`zuno.knowledge.trace`、`zuno.knowledge.retrieval`、`zuno.knowledge.fusion` 和 `zuno.knowledge.graphrag` 访问。`zuno.knowledge.retrieval` 暴露 PHASE04 的 product mode / query method contract 常量和 `normalize_product_mode`。真实 query / retrieval / GraphRAG 行为仍在既有 services owner 中。
 - Agent boundary thin surfaces：当前可经 `zuno.agent.runtime`、`zuno.agent.context`、`zuno.agent.post_turn`、`zuno.agent.state`、`zuno.agent.streaming` 和 `zuno.agent.tool_bridge` 访问。`GeneralAgent` 主循环仍由既有 runtime owner 承担。
 - Platform foundation thin surfaces：当前可经 `zuno.platform.model_gateway`、`zuno.platform.security`、`zuno.platform.observability` 和 `zuno.platform.storage` 访问。这些只是边界入口，不改变 provider、storage、settings 或 DB 默认行为。
@@ -118,7 +118,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - production-grade Memory DB
 - 完整 frontend trace 面板
 - 产品 UI 的三模式完整改名和所有前端入口统一
-- Native BM25 capability search
+- production-grade ToolCard retrieval、optional vector capability search 和完整 runtime tool filtering
 - multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
 - GraphRAG LLM-first entity / relation extraction 的生产实现
 - 可由知识库选择的多套 extractor / config 治理

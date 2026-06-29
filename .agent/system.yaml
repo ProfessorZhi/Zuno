@@ -208,8 +208,8 @@ skill_routes:
   - name: "capability-tool-retrieval"
     match:
       paths:
-        - "src/backend/zuno/services/application/capabilities/**"
-        - "src/backend/zuno/services/capability_registry.py"
+        - "src/backend/zuno/platform/services/application/capabilities/**"
+        - "src/backend/zuno/platform/services/capability_registry.py"
         - "src/backend/zuno/capability/**"
     skills:
       - ".agent/references/code-map.md"
@@ -222,6 +222,7 @@ skill_routes:
       - ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md"
       - ".agent/references/code-map.md"
     verify:
+      - "pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_registry.py tests/agent/test_capability_layer_surfaces.py tests/agent/test_generalagent_context_memory_runtime.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider"
       - "pytest -q tests/agent/test_capability_layer_surfaces.py -p no:cacheprovider"
       - "pytest -q tests/agent/test_capability_system.py"
       - "pytest -q tests/agent/test_capability_registry.py"

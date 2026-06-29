@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from zuno.platform.services.application.capabilities import (
-    CapabilityRecord,
-    CapabilityRegistry,
+    NativeBM25Retriever,
+    NativeBM25SearchResult,
+    ToolCard,
     ToolCardRegistry,
 )
 
 __all__ = [
-    "CapabilityRecord",
-    "CapabilityRegistry",
+    "NativeBM25Retriever",
+    "NativeBM25SearchResult",
+    "ToolCard",
     "ToolCardRegistry",
 ]

@@ -7,13 +7,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_CURRENT_PHASE = "PHASE06_capability-toolcard-mcp-system.md"
+ACTIVE_CURRENT_PHASE = "PHASE07_hooks-evidence-trace-artifact-system.md"
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
     "PHASE03_architecture-docs-html-system.md",
     "PHASE04_query-router-mode-policy.md",
     "PHASE05_context-builder-memory-system.md",
+    "PHASE06_capability-toolcard-mcp-system.md",
 ]
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
@@ -689,6 +690,30 @@ def verify_phase05_context_memory_verification_map(repo_root: Path = REPO_ROOT) 
     return errors
 
 
+def verify_phase06_capability_toolcard_verification_map(repo_root: Path = REPO_ROOT) -> list[str]:
+    system_yaml = _read(".agent/system.yaml")
+    verification_map = _read(".agent/references/verification-map.md")
+    required_tests = [
+        "tests/agent/test_capability_system.py",
+        "tests/agent/test_capability_registry.py",
+        "tests/agent/test_capability_layer_surfaces.py",
+        "tests/agent/test_generalagent_context_memory_runtime.py",
+        "tests/repo/test_backend_facade_layers.py",
+        "tests/repo/test_static_target_layer_imports.py",
+    ]
+
+    errors: list[str] = []
+    for relative_path in required_tests:
+        if relative_path not in system_yaml:
+            errors.append(f".agent/system.yaml missing PHASE06 focused test: {relative_path}")
+        if relative_path not in verification_map:
+            errors.append(f"verification-map.md missing PHASE06 focused test: {relative_path}")
+        if not _repo_path(repo_root, relative_path).exists():
+            errors.append(f"PHASE06 focused test path is missing: {relative_path}")
+
+    return errors
+
+
 def verify_workflow_change_log_entries(repo_root: Path = REPO_ROOT) -> list[str]:
     content = _read(".agent/references/workflow-change-log.md")
     heading_pattern = re.compile(r"^### \d{4}-\d{2}-\d{2}: .+$", re.MULTILINE)
@@ -738,6 +763,7 @@ def main() -> int:
     errors.extend(verify_templates_are_skeletons())
     errors.extend(verify_program_lifecycle_surfaces())
     errors.extend(verify_phase05_context_memory_verification_map())
+    errors.extend(verify_phase06_capability_toolcard_verification_map())
     errors.extend(verify_workflow_change_log_entries())
 
     for relative_path in REQUIRED_PATHS:

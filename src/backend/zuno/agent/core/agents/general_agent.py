@@ -249,6 +249,7 @@ class GeneralAgent:
             )
         )
         self.last_capability_selection = selected_capabilities
+        capability_selection_trace = selected_capabilities.trace.to_dict()
 
         capability_items: list[ContextItem] = []
         for capability in selected_capabilities.capabilities:
@@ -260,7 +261,10 @@ class GeneralAgent:
                     token_estimate=self._estimate_tokens(str(capability.schema)) + 20,
                     priority=70,
                     reason=ContextSelectionReason.CAPABILITY_SELECTED,
-                    metadata={"capability_type": capability.type.value},
+                    metadata={
+                        "capability_type": capability.type.value,
+                        "capability_selection_trace": capability_selection_trace,
+                    },
                 )
             )
 

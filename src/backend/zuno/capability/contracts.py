@@ -6,6 +6,7 @@ from zuno.platform.services.application.capabilities import (
     CapabilityPermissions,
     CapabilityRecord,
     CapabilityType,
+    ToolCard,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "CapabilityPermissions",
     "CapabilityRecord",
     "CapabilityType",
+    "ToolCard",
 ]

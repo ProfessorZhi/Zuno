@@ -37,6 +37,7 @@ Local-first Agent Workspace
 - 当前 GraphRAG / Knowledge 主线已经包含 `KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
 - 当前 Query Router foundation 已贯通 `product_mode = normal | enhanced | auto` 与 `query_method = auto | basic | local | global | drift` 的请求、路由和 trace；`auto` 只表示 router，最终 `resolved_query_method` 不落到 `auto`。
 - 当前 Context / Memory foundation 已证明 Context Pack policy、source id coverage、五类记忆 taxonomy、review contract，以及 `GeneralAgent` 对同 scope task summary 和 approved structured memory 的轻量 readback；这不是 production-grade Memory DB 或成熟 memory retrieval / consolidation。
+- 当前 Capability foundation 已证明 ToolCard compact metadata、Native BM25 ToolCard retrieval、MCP/local tool policy trace、facade compatibility，以及 `GeneralAgent` 内部 capability selection trace bridge；这不是生产级动态工具编排或完整 runtime tool filtering。
 - Phase 0-6 架构收口仍是已完成的历史事实。
 - Phase 0-6 架构收口、Target Architecture Migration V1、Phase 11A / 11B / 11C 和 Phase 12 closure 都是已完成历史事实。
 - Phase 11A 已完成：项目查询 runtime 已引入 Knowledge / GraphRAG 查询边界。
