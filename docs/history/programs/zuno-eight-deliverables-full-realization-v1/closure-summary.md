@@ -14,7 +14,7 @@ Status: completed / archived
 - PHASE07: https://github.com/ProfessorZhi/Zuno/pull/10
 - PHASE08: https://github.com/ProfessorZhi/Zuno/pull/11
 - PHASE09: https://github.com/ProfessorZhi/Zuno/pull/12
-- PHASE10: closure PR URL 由本 phase PR 创建后记录；创建前无法由同一提交自证 URL。
+- PHASE10: https://github.com/ProfessorZhi/Zuno/pull/13
 
 ## 八交付物证据
 

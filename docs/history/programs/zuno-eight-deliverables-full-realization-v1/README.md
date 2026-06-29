@@ -19,7 +19,7 @@
 | PHASE07 | Hooks / evidence / trace / artifact system | https://github.com/ProfessorZhi/Zuno/pull/10 |
 | PHASE08 | GraphRAG knowledge runtime system | https://github.com/ProfessorZhi/Zuno/pull/11 |
 | PHASE09 | Runtime upgrade integration | https://github.com/ProfessorZhi/Zuno/pull/12 |
-| PHASE10 | Validation release closure | 由 closure PR 记录；PR 创建后以主线程最终报告为准 |
+| PHASE10 | Validation release closure | https://github.com/ProfessorZhi/Zuno/pull/13 |
 
 ## 八交付物完成证据
 
