@@ -9,7 +9,7 @@ from zuno.api.services.mcp_user_config import MCPUserConfigService
 from zuno.core.agents.structured_response_agent import StructuredResponseAgent
 from zuno.database.dao.mcp_server import MCPServerDao
 from zuno.database.models.user import AdminUser, SystemUser
-from zuno.prompts.mcp import McpAsToolPrompt
+from zuno.resources.prompts.mcp import McpAsToolPrompt
 from zuno.schema.mcp import MCPResponseFormat
 from zuno.services.mcp.manager import MCPManager
 from zuno.utils.convert import convert_mcp_config

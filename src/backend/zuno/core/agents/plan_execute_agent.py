@@ -8,7 +8,7 @@ from langchain_core.tools import BaseTool
 from zuno.api.services.mcp_server import MCPService
 from zuno.api.services.mcp_user_config import MCPUserConfigService
 from zuno.core.models.manager import ModelManager
-from zuno.prompts.completion import FIX_JSON_PROMPT, PLAN_CALL_TOOL_PROMPT, SINGLE_PLAN_CALL_PROMPT
+from zuno.resources.prompts.completion import FIX_JSON_PROMPT, PLAN_CALL_TOOL_PROMPT, SINGLE_PLAN_CALL_PROMPT
 from zuno.schema.completion import PlanToolFlow
 from zuno.core.agents.structured_response_agent import StructuredResponseAgent
 from zuno.services.mcp.manager import MCPManager

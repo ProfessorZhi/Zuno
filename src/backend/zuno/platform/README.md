@@ -21,7 +21,7 @@
 ## 禁止事项
 
 - 禁止直接迁移 DB schema、DAO、settings defaults、MCP server、queue worker、storage、model gateway 或 vendor compat 包。
-- 禁止破坏 `zuno.database.*`、`zuno.settings`、`zuno.services.execution_policy`、`zuno.mcp_servers.*` 或 `fastapi_jwt_auth` 旧 import path。
+- 禁止破坏 `zuno.database.*`、`zuno.settings`、`zuno.services.execution_policy`、`zuno.mcp_servers.*` 或 `zuno.compatibility.vendor.fastapi_jwt_auth` 兼容 import path。
 - 禁止在 platform 中承载 API route、GeneralAgent loop、GraphRAG query behavior 或 product use case 编排。
 
 ## Focused tests

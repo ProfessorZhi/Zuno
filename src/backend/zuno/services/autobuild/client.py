@@ -12,7 +12,7 @@ from langgraph.graph import StateGraph, START, END
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from zuno.prompts.llm import agent_guide_word, auto_build_ask_prompt, auto_build_abstract_prompt, create_agent_prompt, \
+from zuno.resources.prompts.llm import agent_guide_word, auto_build_ask_prompt, auto_build_abstract_prompt, create_agent_prompt, \
     PROMPT_REACT_BASE
 from zuno.api.services.agent import AgentService
 from zuno.core.agents.general_agent import ChatService

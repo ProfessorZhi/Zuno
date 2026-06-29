@@ -11,7 +11,7 @@ from typing import Any
 from zuno.core.agents.structured_response_agent import StructuredResponseAgent
 from zuno.database.dao.agent_skill import AgentSkillDao
 from zuno.database.models.agent_skill import AgentSkill
-from zuno.prompts.skill import AgentSkillAsToolPrompt
+from zuno.resources.prompts.skill import AgentSkillAsToolPrompt
 from zuno.schema.agent_skill import (
     AgentSkillCreateReq,
     AgentSkillFile,
@@ -45,7 +45,7 @@ class AgentSkillService:
     MAX_SKILL_RUNTIME_CHARS = 12000
     MAX_SKILL_EXTRA_FILES = 6
     HOST_SKILL_ROOT_ENV = "ZUNO_SKILLS_DIR"
-    SYSTEM_SKILL_ROOT = Path(__file__).resolve().parents[2] / "system_skills"
+    SYSTEM_SKILL_ROOT = Path(__file__).resolve().parents[2] / "resources" / "system_skills"
     SYSTEM_SKILL_DEFINITIONS = (
         {
             "id": "system-skill-creator",

@@ -2,6 +2,8 @@
 
 > 状态：active。目标是把 `src/backend` 和 `src/backend/zuno` 的真实目录拥挤点审清楚，形成可执行分类表。
 
+> 更新：PHASE07 / PHASE08 已推进部分审计结论。`src/backend/fastapi_jwt_auth/` 已退休；`prompts/`、`fixtures/`、`system_skills/` 已迁入 `resources/`；`legacy/`、`vendor/` 已迁入 `compatibility/`。本文件保留原始盘点和风险判断。
+
 ## 目标
 
 回答一个问题：
@@ -57,7 +59,7 @@
 
 | path | current role | target bucket | action | risk | tests | rollback |
 | --- | --- | --- | --- | --- | --- | --- |
-| `src/backend/fastapi_jwt_auth/` | 旧 public import 的 compatibility shell，转接到 `zuno/vendor/fastapi_jwt_auth`。 | compatibility-shell | 进入 PHASE07，先说明存在原因，再评估替换 import 和退休路径。 | 直接删除会破坏 `from fastapi_jwt_auth import AuthJWT`。 | `pytest -q tests/api/test_fastapi_jwt_auth_compat.py -p no:cacheprovider` | 保留 shell 和现有兼容测试。 |
+| `src/backend/fastapi_jwt_auth/` | 旧 public import 的 compatibility shell，转接到 `zuno/vendor/fastapi_jwt_auth`。 | compatibility-shell | 进入 PHASE07，先说明存在原因，再评估替换 import 和退休路径。 | 直接删除会破坏 `from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT`。 | `pytest -q tests/api/test_fastapi_jwt_auth_compat.py -p no:cacheprovider` | 保留 shell 和现有兼容测试。 |
 | `src/backend/zuno/api/` | HTTP route、API service、DTO 入口。 | target-layer | 保留为六层之一，后续只整理内部 DTO / service 边界。 | API import 和前端契约漂移。 | API focused tests。 | 恢复旧 route / schema import。 |
 | `src/backend/zuno/agent/` | 新目标 agent facade 层。 | target-layer | 保留；未来承接 `core/agents` 的 runtime facade。 | 过早搬 runtime 会影响 streaming / memory commit。 | agent runtime tests。 | 旧 `core/agents` 继续作为来源。 |
 | `src/backend/zuno/capability/` | 新目标 capability facade 层。 | target-layer | 保留；未来承接 ToolCard / MCP / execution policy。 | ToolCard public import 变化。 | capability / toolcard tests。 | 旧 `services/application/capabilities` 继续 re-export。 |

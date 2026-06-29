@@ -130,13 +130,12 @@ def test_repo_structure_verifier_pins_backend_zuno_directory_classifications() -
         "capability": "target-layer",
         "knowledge": "target-layer",
         "platform": "target-layer",
+        "resources": "app-resource",
+        "compatibility": "compatibility-shell",
         "config": "infrastructure",
         "database": "infrastructure",
         "schema": "migration-source",
         "tools": "migration-source",
-        "system_skills": "app-resource",
-        "prompts": "app-resource",
-        "fixtures": "app-resource",
     }
 
 
@@ -148,13 +147,12 @@ def test_backend_zuno_classified_directories_have_boundary_readmes() -> None:
         "capability",
         "knowledge",
         "platform",
+        "resources",
+        "compatibility",
         "config",
         "database",
         "schema",
         "tools",
-        "system_skills",
-        "prompts",
-        "fixtures",
     ]
 
     for directory in classified_directories:
@@ -293,6 +291,52 @@ def test_repo_structure_verifier_runs_root_local_artifact_check(monkeypatch) -> 
         verifier,
         "verify_root_local_artifacts_are_absent",
         fake_root_local_artifact_check,
+    )
+
+    result = verifier.run_verification()
+
+    assert sentinel in result.errors
+
+
+def test_repo_structure_verifier_pins_retired_backend_top_level_paths() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.BACKEND_RETIRED_TOP_LEVEL_PATHS == {
+        "src/backend/fastapi_jwt_auth": "public FastAPI JWT shell retired; runtime imports use zuno.compatibility.vendor.fastapi_jwt_auth",
+        "src/backend/zuno/prompts": "runtime prompts moved to zuno/resources/prompts",
+        "src/backend/zuno/fixtures": "runtime fixtures moved to zuno/resources/fixtures",
+        "src/backend/zuno/system_skills": "runtime system skills moved to zuno/resources/system_skills",
+        "src/backend/zuno/legacy": "legacy aliases moved to zuno/compatibility/legacy",
+        "src/backend/zuno/vendor": "vendored dependencies moved to zuno/compatibility/vendor",
+    }
+
+
+def test_repo_structure_verifier_runs_retired_backend_top_level_path_check(
+    monkeypatch,
+) -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    sentinel = "retired backend path check was called"
+
+    def fake_retired_backend_path_check() -> list[str]:
+        return [sentinel]
+
+    monkeypatch.setattr(
+        verifier,
+        "verify_backend_retired_top_level_paths_are_absent",
+        fake_retired_backend_path_check,
     )
 
     result = verifier.run_verification()

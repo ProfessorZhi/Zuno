@@ -5,7 +5,7 @@ from loguru import logger
 
 from zuno.core.models.manager import ModelManager
 
-from zuno.prompts.rewrite import system_query_rewrite, user_query_write
+from zuno.resources.prompts.rewrite import system_query_rewrite, user_query_write
 
 
 class QueryRewrite:

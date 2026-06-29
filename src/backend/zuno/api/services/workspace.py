@@ -17,7 +17,7 @@ from zuno.api.services.tool import ToolService
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.database.models.workspace_session import WorkSpaceSessionCreate
-from zuno.prompts.completion import SYSTEM_PROMPT
+from zuno.resources.prompts.completion import SYSTEM_PROMPT
 from zuno.schema.schemas import resp_200
 from zuno.schema.usage_stats import UsageStatsAgentType
 from zuno.schema.workspace import WorkSpaceSimpleTask

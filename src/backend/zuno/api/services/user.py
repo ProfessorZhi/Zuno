@@ -6,7 +6,7 @@ from typing import Optional
 
 import rsa
 from fastapi import Depends, HTTPException, Request
-from fastapi_jwt_auth import AuthJWT
+from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
 from loguru import logger
 
 from zuno.api.errcode.user import UserNameAlreadyExistError

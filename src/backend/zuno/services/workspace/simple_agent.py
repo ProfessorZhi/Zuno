@@ -46,7 +46,7 @@ from zuno.database.models.workspace_session import (
     WorkSpaceSessionContext,
     WorkSpaceSessionCreate,
 )
-from zuno.prompts.completion import GenerateTitlePrompt
+from zuno.resources.prompts.completion import GenerateTitlePrompt
 from zuno.schema.usage_stats import UsageStatsAgentType
 from zuno.schema.workspace import WorkSpaceAgents, WorkspaceAgentStreamEvent
 from zuno.services.execution_policy import (

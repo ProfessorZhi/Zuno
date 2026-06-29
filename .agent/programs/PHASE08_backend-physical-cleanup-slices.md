@@ -1,6 +1,6 @@
 # PHASE08：Backend Physical Cleanup Slices
 
-> 状态：pending。目标是把 PHASE06 / PHASE07 的结论拆成可执行小切片。
+> 状态：active。目标是把 PHASE06 / PHASE07 的结论拆成可执行小切片。
 
 ## 目标
 
@@ -22,6 +22,7 @@
 | Slice D | `tools/`、`system_skills/` | 区分 runtime tools、local skills、system resources。 | tool tests / repo structure |
 | Slice E | `legacy/`、retired aliases | 只删除有 grep 和 tests 证明的 legacy。 | legacy guard tests |
 | Slice F | root local artifacts、generated cache、`data/`、`reports/` | 根目录不保留 `.agents`、`.local`、`.test-tmp`、`node_modules`、`__pycache__` 等本地产物；`data/` / `reports/` 继续使用白名单语义。 | repo structure / repo hygiene tests |
+| Slice G | `prompts/`、`fixtures/`、`system_skills/`、`legacy/`、`vendor/`、`fastapi_jwt_auth/` | 资源和兼容目录真实物理收敛。 | import tests / repo structure |
 
 ## 第一批落地：中层目录分类 README + verifier
 
@@ -83,6 +84,50 @@ python .agent/scripts/verify_agent_system.py
 ### docs / verifier 同步判断
 
 本批同步了 README、PHASE08、`verify_repo_structure.py` 和 `test_repo_structure_consistency.py`。暂不更新 `docs/architecture/current-architecture.md` 或 `target-architecture.md`，因为这批只把既有边界讲清并加入机器检查，没有把 Target 能力提升为 Current。
+
+## 第二批落地：Resources / Compatibility 物理迁移
+
+> 状态：in progress。本批做真实物理移动，但只碰资源和兼容边界，不移动 `core/`、`services/`、`database/`、`schema/` 或 `tools/`。
+
+### 变更文件列表
+
+- `src/backend/zuno/resources/`
+- `src/backend/zuno/compatibility/`
+- `src/backend/zuno/main.py`
+- `src/backend/zuno/api/v1/user.py`
+- `src/backend/zuno/api/services/user.py`
+- `src/backend/zuno/api/services/agent_skill.py`
+- `src/backend/zuno/services/autobuild/build.py`
+- prompt consumers under `api/`、`core/`、`services/`、`tools/`
+- `tests/api/test_fastapi_jwt_auth_compat.py`
+- `tools/scripts/verify_repo_structure.py`
+- `tests/repo/test_repo_structure_consistency.py`
+
+### 旧路径和新路径
+
+| 旧路径 | 新路径 | 说明 |
+| --- | --- | --- |
+| `src/backend/fastapi_jwt_auth/` | removed | runtime 直接使用 `zuno.compatibility.vendor.fastapi_jwt_auth`。 |
+| `src/backend/zuno/prompts/` | `src/backend/zuno/resources/prompts/` | prompt 资源统一进入 resources。 |
+| `src/backend/zuno/fixtures/` | `src/backend/zuno/resources/fixtures/` | runtime 内置 fixture 统一进入 resources。 |
+| `src/backend/zuno/system_skills/` | `src/backend/zuno/resources/system_skills/` | system skill resource 统一进入 resources。 |
+| `src/backend/zuno/legacy/` | `src/backend/zuno/compatibility/legacy/` | retired alias 进入 compatibility。 |
+| `src/backend/zuno/vendor/` | `src/backend/zuno/compatibility/vendor/` | vendored dependency 进入 compatibility。 |
+
+### focused tests
+
+```powershell
+pytest -q tests/api/test_fastapi_jwt_auth_compat.py tests/repo/test_repo_structure_consistency.py -p no:cacheprovider
+python tools/scripts/verify_repo_structure.py
+```
+
+### rollback plan
+
+如果 runtime import 失败，回滚本批移动并恢复 `src/backend/fastapi_jwt_auth/` shell；如果只是资源路径失败，先恢复对应 `resources/*` import 和 consumer path，不动 `core/`、`services/`、`database/`、`schema/`。
+
+### docs / verifier 同步判断
+
+本批同步 active PHASE07 / PHASE08、`src/backend/zuno/README.md`、resources / compatibility README、repo structure verifier 和 repo tests。它把“资源/兼容目录物理收敛”提升为 Current；不把 runtime 架构升级、GraphRAG LLM extraction 或完整六层物理迁移写成 Current。
 
 ## 禁止
 

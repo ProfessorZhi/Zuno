@@ -9,7 +9,7 @@ from langchain_core.tools import BaseTool
 from langchain_core.messages import BaseMessage, SystemMessage, ToolMessage, AIMessageChunk, AIMessage, HumanMessage
 
 from zuno.core.callbacks import usage_metadata_callback
-from zuno.prompts.completion import DEFAULT_CALL_PROMPT
+from zuno.resources.prompts.completion import DEFAULT_CALL_PROMPT
 
 
 # 定义流式事件的负载结构，增强类型安全性

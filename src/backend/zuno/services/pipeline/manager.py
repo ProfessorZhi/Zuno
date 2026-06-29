@@ -35,9 +35,11 @@ class KnowledgePipelineManager:
             return None
 
         candidate_roots = [
-            Path("/app/zuno/fixtures/knowledge_reindex"),
-            Path("/app/zuno/fixtures/knowledge_reindex"),
-            Path(__file__).resolve().parents[2] / "fixtures" / "knowledge_reindex",
+            Path("/app/zuno/resources/fixtures/knowledge_reindex"),
+            Path(__file__).resolve().parents[2]
+            / "resources"
+            / "fixtures"
+            / "knowledge_reindex",
         ]
         for root in candidate_roots:
             candidate = root / os.path.basename(file_name)

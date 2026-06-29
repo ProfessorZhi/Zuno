@@ -4,11 +4,11 @@
 
 ## 当前角色
 
-`src/backend/zuno/prompts/` 当前保存 completion、LLM、MCP、rewrite、skill、template 和 tool prompt 资源。它是 runtime prompt resource，不是 `.agent/templates/` 执行骨架。
+`src/backend/zuno/resources/prompts/` 当前保存 completion、LLM、MCP、rewrite、skill、template 和 tool prompt 资源。它是 runtime prompt resource，不是 `.agent/templates/` 执行骨架。
 
 ## Target role
 
-目标状态下，prompt 资源应按 Agent、Knowledge、Capability 或 Platform owner 被引用和版本化；短期内 `prompts/` 保留为 app-resource，先用 README 和 verifier 说明它不是新业务层。
+目标状态下，prompt 资源应按 Agent、Knowledge、Capability 或 Platform owner 被引用和版本化；短期内 `resources/prompts/` 作为 app-resource，由 README 和 verifier 说明它不是新业务层。
 
 ## 允许新增内容
 
@@ -18,9 +18,10 @@
 
 ## 禁止事项
 
-- 禁止修改 prompt 内容、prompt id、加载路径或默认模型行为。
+- 禁止修改 prompt 内容、prompt id 或默认模型行为。
 - 禁止把 `.agent/templates/` 的 Codex 执行模板放入 runtime prompts。
 - 禁止把 prompt 资源写成已完成的 mature memory/capability/knowledge product behavior。
+- 禁止恢复顶层 `src/backend/zuno/prompts/`。
 
 ## Focused tests
 

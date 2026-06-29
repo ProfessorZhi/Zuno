@@ -23,8 +23,8 @@ PHASE01-05 已完成并归档为 first slice，但 Program 3 继续执行 backen
 ## 当前 Program Phase
 
 - `PHASE06_backend-directory-clarity-audit.md`：first slice complete。
-- `PHASE07_fastapi-jwt-auth-compat-retirement-plan.md`：first slice complete。
-- `PHASE08_backend-physical-cleanup-slices.md`：active，当前执行 backend physical layout migration。
+- `PHASE07_fastapi-jwt-auth-compat-retirement-plan.md`：first slice complete，顶层 `fastapi_jwt_auth` shell 已退休。
+- `PHASE08_backend-physical-cleanup-slices.md`：active，当前执行 backend physical layout migration；本轮由主线程挂机模式收口。
 
 ## 已完成 Program 3 first slice
 

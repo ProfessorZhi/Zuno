@@ -6,8 +6,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi_jwt_auth import AuthJWT
-from fastapi_jwt_auth.exceptions import AuthJWTException
+from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
+from zuno.compatibility.vendor.fastapi_jwt_auth.exceptions import AuthJWTException
 
 from zuno.middleware.trace_id_middleware import TraceIDMiddleware
 from zuno.middleware.white_list_middleware import WhitelistMiddleware

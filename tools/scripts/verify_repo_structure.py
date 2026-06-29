@@ -213,13 +213,21 @@ BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS = {
     "capability": "target-layer",
     "knowledge": "target-layer",
     "platform": "target-layer",
+    "resources": "app-resource",
+    "compatibility": "compatibility-shell",
     "config": "infrastructure",
     "database": "infrastructure",
     "schema": "migration-source",
     "tools": "migration-source",
-    "system_skills": "app-resource",
-    "prompts": "app-resource",
-    "fixtures": "app-resource",
+}
+
+BACKEND_RETIRED_TOP_LEVEL_PATHS = {
+    "src/backend/fastapi_jwt_auth": "public FastAPI JWT shell retired; runtime imports use zuno.compatibility.vendor.fastapi_jwt_auth",
+    "src/backend/zuno/prompts": "runtime prompts moved to zuno/resources/prompts",
+    "src/backend/zuno/fixtures": "runtime fixtures moved to zuno/resources/fixtures",
+    "src/backend/zuno/system_skills": "runtime system skills moved to zuno/resources/system_skills",
+    "src/backend/zuno/legacy": "legacy aliases moved to zuno/compatibility/legacy",
+    "src/backend/zuno/vendor": "vendored dependencies moved to zuno/compatibility/vendor",
 }
 
 ROOT_LOCAL_ARTIFACT_DIRECTORIES = {
@@ -329,6 +337,17 @@ def verify_backend_zuno_directory_classifications() -> list[str]:
                 errors.append(
                     f"{readme.relative_to(REPO_ROOT).as_posix()} missing phrase: {phrase}"
                 )
+    return errors
+
+
+def verify_backend_retired_top_level_paths_are_absent() -> list[str]:
+    errors: list[str] = []
+    for relative_path, reason in BACKEND_RETIRED_TOP_LEVEL_PATHS.items():
+        path = REPO_ROOT / relative_path
+        if path.exists():
+            errors.append(
+                f"retired backend top-level path still exists: {relative_path} ({reason})"
+            )
     return errors
 
 
@@ -517,6 +536,7 @@ def run_verification() -> VerificationResult:
             *verify_root_local_artifacts_are_absent(),
             *verify_first_class_directory_responsibilities(),
             *verify_backend_zuno_directory_classifications(),
+            *verify_backend_retired_top_level_paths_are_absent(),
             *verify_target_architecture_html(),
             *verify_active_architecture_surface_phase_plan(),
             *verify_architecture_diagram_outputs(),

@@ -8,7 +8,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - `.agent/programs/`
 
-当前 active program 是 `zuno-repo-layout-cleanup-v1`。用户反馈指出 Program 3 原 Definition of Done 过窄：PHASE01-05 虽然完成了 root/docs hygiene、backend 六层迁移计划、六层 README 边界说明、repo hygiene verifier 和 repo tests 收口，但 `src/backend` 在 VS Code / Explorer 里仍然拥挤。因此 Program 3 重新打开为 continuation，从 PHASE06 继续做 backend physical layout cleanup。
+当前 active program 是 `zuno-repo-layout-cleanup-v1`。用户反馈指出 Program 3 原 Definition of Done 过窄：PHASE01-05 虽然完成了 root/docs hygiene、backend 六层迁移计划、六层 README 边界说明、repo hygiene verifier 和 repo tests 收口，但 `src/backend` 在 VS Code / Explorer 里仍然拥挤。因此 Program 3 重新打开为 continuation，从 PHASE06 继续做 backend physical layout cleanup。当前已退休 `src/backend/fastapi_jwt_auth` 顶层 shell，并把资源/兼容目录收敛到 `resources/` 与 `compatibility/`。
 
 已完成并归档：
 
@@ -73,8 +73,8 @@ Program 3 已完成的边界：
 Program 3 当前继续处理：
 
 - PHASE06：盘点 `src/backend` 和 `src/backend/zuno` 顶层目录，输出 current role / target bucket / action / risk / tests / rollback。
-- PHASE07：处理 `src/backend/fastapi_jwt_auth` 兼容壳，明确为什么存在、如何降噪、何时退休。
-- PHASE08：把后端物理清理拆成可验证小切片，避免一次性移动 `services/`、`core/`、`database/` 等高风险目录。
+- PHASE07：处理 `src/backend/fastapi_jwt_auth` 兼容壳；当前已退休顶层 shell。
+- PHASE08：把后端物理清理拆成可验证小切片；当前已完成 resources / compatibility 物理收敛，仍避免一次性移动 `services/`、`core/`、`database` 等高风险目录。
 
 ## 已完成状态
 

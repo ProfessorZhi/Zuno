@@ -18,7 +18,7 @@ Program ID：`zuno-repo-layout-cleanup-v1`
 
 ## 为什么重新打开 Program 3
 
-用户反馈是准确的：PHASE01-05 让仓库规则、docs 和迁移计划变清楚了，但 `src/backend` 在 VS Code / Explorer 里仍然拥挤。`fastapi_jwt_auth`、`core`、`database`、`services`、`schema`、`tools`、`utils` 等目录仍然并列暴露，第一次看项目的人仍然需要靠文档解释才能理解。
+用户反馈是准确的：PHASE01-05 让仓库规则、docs 和迁移计划变清楚了，但 `src/backend` 在 VS Code / Explorer 里仍然拥挤。当前已退休 `fastapi_jwt_auth` 顶层 compatibility shell，并把资源/兼容目录收敛到 `resources/` 与 `compatibility/`；`core`、`database`、`services`、`schema`、`tools`、`utils` 等旧 runtime 目录仍需后续小切片处理。
 
 所以 Program 3 的 Definition of Done 改为：
 
@@ -33,7 +33,6 @@ Program ID：`zuno-repo-layout-cleanup-v1`
 ```text
 src/backend/
   zuno/                 主 runtime 包
-  fastapi_jwt_auth/     兼容壳，必须有退休或隐藏计划
 
 src/backend/zuno/
   api/
@@ -42,6 +41,8 @@ src/backend/zuno/
   capability/
   knowledge/
   platform/
+  resources/
+  compatibility/
   ...
 ```
 
@@ -58,7 +59,7 @@ src/backend/zuno/
 - 不开新 program；这是 Program 3 continuation。
 - 不把 PHASE01-05 搬回 active 前台；它们保留在 `docs/history/programs/zuno-repo-layout-cleanup-v1/`。
 - 不做无测试的大搬家。
-- 不直接删除 `fastapi_jwt_auth`，因为它是 public import compatibility shell。
+- 不恢复 `fastapi_jwt_auth` 顶层 compatibility shell；runtime 使用 `zuno.compatibility.vendor.fastapi_jwt_auth`。
 - 不把 runtime 架构升级、GraphRAG LLM extractor、frontend、eval closure 混进本 program。
 
 ## Phase
@@ -77,7 +78,7 @@ src/backend/zuno/
 
 ## 验收标准
 
-- `src/backend` 顶层为什么有 `fastapi_jwt_auth` 必须一眼能看懂，且有可执行 retirement path。
+- `src/backend` 顶层只保留 `zuno/`；`fastapi_jwt_auth` 顶层 shell 的退休由测试和 verifier 固定。
 - `src/backend/zuno` 顶层目录必须有 inventory 分类表和处理动作。
 - 可立即安全清理的 generated/local 目录必须清理或进入 ignore/verifier。
 - 不能马上搬的旧 runtime 目录必须有明确“迁入哪一层、何时迁、跑什么测试、如何回滚”。

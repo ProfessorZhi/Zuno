@@ -6,7 +6,7 @@ import urllib.request
 from langchain.tools import tool
 from loguru import logger
 
-from zuno.prompts.tool import DELIVERY_PROMPT
+from zuno.resources.prompts.tool import DELIVERY_PROMPT
 from zuno.settings import app_settings
 
 

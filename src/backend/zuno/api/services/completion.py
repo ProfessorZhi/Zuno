@@ -4,7 +4,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
-from zuno.prompts.completion import SYSTEM_PROMPT
+from zuno.resources.prompts.completion import SYSTEM_PROMPT
 from zuno.schema.completion import CompletionReq
 from zuno.utils.helpers import (
     build_completion_history_messages,

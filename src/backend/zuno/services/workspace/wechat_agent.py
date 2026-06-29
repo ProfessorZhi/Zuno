@@ -18,7 +18,7 @@ from zuno.schema.usage_stats import UsageStatsAgentType
 from zuno.schema.workspace import WorkSpaceAgents
 from zuno.api.services.user import UserService
 from zuno.services.mcp.manager import MCPManager
-from zuno.prompts.completion import GenerateTitlePrompt
+from zuno.resources.prompts.completion import GenerateTitlePrompt
 from zuno.utils.convert import convert_mcp_config
 from zuno.core.models.manager import ModelManager
 from zuno.api.services.mcp_user_config import MCPUserConfigService

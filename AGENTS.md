@@ -142,7 +142,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/PHASE08_backend-physical-cleanup-slices.md`
 - `.agent/programs/closure-checklist.md`
 
-当前 active phase 是 `PHASE08_backend-physical-cleanup-slices.md`。`PHASE06` 已完成目录审计，`PHASE07` 已完成 `fastapi_jwt_auth` 第一轮降噪；当前要继续做真正的 backend physical layout migration，让 `src/backend/zuno` 逐步收敛到 `api / agent / memory / capability / knowledge / platform / resources / compatibility`。
+当前 active phase 是 `PHASE08_backend-physical-cleanup-slices.md`。`PHASE06` 已完成目录审计，`PHASE07` 已退休 `fastapi_jwt_auth` 顶层 compatibility shell；当前使用挂机模式继续做 backend physical layout migration，让 `src/backend/zuno` 逐步收敛到 `api / agent / memory / capability / knowledge / platform / resources / compatibility`。
 
 后续 queued programs：
 

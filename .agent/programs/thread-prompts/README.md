@@ -1,12 +1,10 @@
-# Program 3 Thread Prompts
+# Thread Prompts
 
-> 状态：active。这里保存当前多线程模式要投递到子线程的目标模式提示词。
+> 状态：idle。当前 Program 3 改为挂机模式，由主线程完成，不保留本轮子线程提示词。
 
-这些提示词属于当前 active program：
+本目录只在多线程模式启用时保存当前 active program 的子线程目标模式提示词。
 
-```text
-zuno-repo-layout-cleanup-v1
-```
+当前没有 active 子线程提示词。
 
 ## 使用规则
 
@@ -20,10 +18,10 @@ zuno-repo-layout-cleanup-v1
 
 ## 当前线程
 
-- `THREAD_D_resources-compatibility-physical-migration-prompt.md`
-- `THREAD_E_target-layer-physical-migration-prompt.md`
+无。
 
 ## 本轮线程盘点
 
-- `list_threads(query="Program3")`：上一轮 Thread A/B/C 已完成并合并，不复用为新迁移线程。
-- 决策：下一轮创建 2 个新的 Codex worktree 线程，每个线程绑定一个独立 `codex/` 分支，执行真正物理目录迁移。
+- 已归档上一轮 Program3 Thread A/B/C/D/E。
+- 已移除 D/E worktree，并删除本地非 `main` 分支。
+- 决策：Program 3 physical layout cleanup 改为挂机模式，由主线程统一执行、验证、提交和推送。
