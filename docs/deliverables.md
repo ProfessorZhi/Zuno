@@ -13,7 +13,7 @@
 | 3 | 模板与执行计划系统 | `.agent/templates/` 提供稳定输出骨架；`.agent/programs/` 只保留当前或明确等待状态。 | templates、current program、roadmap 和 closure checklist 不冲突。 |
 | 4 | 正式架构文档系统 | `docs/architecture/` 少而精，能清楚区分 Current、Target、Future、History。 | `docs/architecture/README.md`、current、target、roadmap、`docs/architecture.md` 同步。 |
 | 5 | 架构 HTML 展示系统 | `architecture.html` 用正式行文和十类架构视图展示 Zuno，不成为第二套事实源。 | 由 `tools/agent/render_architecture.py` 生成并通过 `--check`。 |
-| 6 | 完善的 Zuno 目标架构 | 目标架构讲清 Single Controller Agent、Agentic RAG、GraphRAG、Memory、Tool、Hooks、Evidence、Trace、Eval。 | `target-architecture.md`、`docs/architecture.md` 和 queued program 一致。 |
+| 6 | 完善的 Zuno 目标架构 | 目标架构讲清 Single Controller Agent、Agentic RAG、GraphRAG、Memory、Tool、Hooks、Evidence、Trace、Eval。 | `target-architecture.md`、`docs/architecture.md` 和 absorbed reference programs / roadmap reference inputs 一致。 |
 | 7 | 清晰干净的代码和目录 | 目录能表达职责，根目录保持干净，无临时截图、缓存、导出物和过时方案混在当前主线。 | repo hygiene verifier、git status、root artifact guard 通过。 |
 | 8 | 一致性与验证系统 | 代码、测试、Trace/Eval、README、docs、HTML、`.agent/references` 互相不打架。 | docs verifier、repo structure verifier、Agent verifier、相关 pytest 通过。 |
 
@@ -23,15 +23,15 @@
 
 | 编号 | 视图 | 对应理论 | 期望表达 |
 | --- | --- | --- | --- |
-| 1 | 4+1 Logical View | 4+1 Logical | 展示 Zuno 的核心职责分层：Frontend、API、Agent、Memory、Tool、Knowledge、Evidence、Platform。 |
-| 2 | 4+1 Development View | 4+1 Development | 展示 apps、src/backend/zuno、docs、.agent、tools、tests 的开发组织方式。 |
-| 3 | 4+1 Process View | 4+1 Process | 展示请求、服务、Agent runtime、工具/检索/LLM 调用、事件流和 trace 的运行关系。 |
-| 4 | 4+1 Physical View | 4+1 Physical | 展示本地优先部署、FastAPI、Web/Desktop、数据库、向量/图存储、LLM/MCP 外部依赖。 |
-| 5 | 4+1 Scenarios View | 4+1 Scenarios | 展示一个 query 如何经过 Context Builder、Mode Policy、Agentic RAG、Evidence Check、Citation、Trace。 |
+| 1 | Logical View | 4+1 Logical | 展示 Zuno 的核心职责分层：Frontend、API、Agent、Memory、Tool、Knowledge、Evidence、Platform。 |
+| 2 | Development View | 4+1 Development | 展示 apps、src/backend/zuno、docs、.agent、tools、tests 的开发组织方式。 |
+| 3 | Process View | 4+1 Process | 展示请求、服务、Agent runtime、工具/检索/LLM 调用、事件流和 trace 的运行关系。 |
+| 4 | Physical View | 4+1 Physical | 展示本地优先部署、FastAPI、Web/Desktop、数据库、向量/图存储、LLM/MCP 外部依赖。 |
+| 5 | Scenarios View | 4+1 Scenarios | 展示一个 query 如何经过 Context Builder、Mode Policy、Agentic RAG、Evidence Check、Citation、Trace。 |
 | 6 | V&B Logical View | View & Beyond Logical | 展示 Runtime、Memory、Tool、Retrieval、Evidence 等领域子系统。 |
-| 7 | V&B Component-and-Connector View | View & Beyond C&C | 展示 API、Controller Agent、Memory Manager、Tool Registry、Retrieval Router、Evidence、Trace 的运行连接。 |
+| 7 | Component-and-Connector View | View & Beyond C&C | 展示 API、Controller Agent、Memory Manager、Tool Registry、Retrieval Router、Evidence、Trace 的运行连接。 |
 | 8 | V&B Deployment View | View & Beyond Deployment | 展示 Local Storage、SQL、Vector Store、Graph Store、Model Gateway、Search、MCP 的可替换部署边界。 |
-| 9 | V&B Quality View | View & Beyond Quality | 展示性能、可靠性、安全性、可观测性、可修改性、评测和治理闸门如何落地。 |
+| 9 | Quality View | View & Beyond Quality | 展示性能、可靠性、安全性、可观测性、可修改性、评测和治理闸门如何落地。 |
 | 10 | Agent Loop View | Zuno 专题图 | 展示 Single Controller Agent 的 Plan、Act、Observe、Reflect、Replan 循环；它是 Process / C&C 的子系统放大图。 |
 
 ## 根目录清洁期望

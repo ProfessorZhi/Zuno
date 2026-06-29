@@ -1,18 +1,20 @@
 # Zuno
 
-Zuno 是本地优先的 Agent Workspace。它把 Vue Web、Electron Desktop、FastAPI 后端、Single GeneralAgent Runtime、Knowledge / RAG / GraphRAG、工具能力、MCP 语境和本地 Eval 放在一个 monorepo 里。
+Zuno 是本地优先的 Agent Workspace。它把 Vue Web、Electron Desktop、FastAPI 后端、当前 `GeneralAgent` 单循环主线、Knowledge / RAG / GraphRAG、工具能力、MCP 语境和本地 Eval 放在一个 monorepo 里。
 
 一句话目标：
 
 ```text
 Local-first Agent Workspace
-= Single GeneralAgent Runtime
+= Single Controller Agent
 + Context / Memory Engine
 + Capability / Tool Retrieval
 + Knowledge / GraphRAG Retrieval
 + Evidence / Citation / Trace / Eval
 + Typed API + Web/Desktop
 ```
+
+这里的 Single Controller Agent 是目标架构角色；当前实现主线是 `GeneralAgent` single loop。
 
 ## 5 分钟首读
 

@@ -68,7 +68,7 @@ Completion API
 
 Workspace knowledge prefetch、Workspace `search_knowledge_base` tool 和 `/knowledge/search` API service path 现在都通过 `KnowledgeQueryService`。
 
-当前 runtime 图见：
+上面的调用链是当前 runtime 事实。目标架构图见：
 
 - [architecture.md](../architecture.md)
 - [architecture.html](../architecture.html)

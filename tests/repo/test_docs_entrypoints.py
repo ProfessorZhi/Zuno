@@ -19,6 +19,8 @@ def test_readme_exposes_short_first_reader_path() -> None:
         "受限历史兼容",
         "Phase 11A",
         "Phase 11B",
+        "Single Controller Agent 是目标架构角色",
+        "当前实现主线是 `GeneralAgent` single loop",
         "Completion API -> CompletionService -> GeneralAgent single loop",
     ]:
         assert phrase in content
@@ -190,6 +192,7 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "以下仍是 Target，不是当前成熟事实",
         "Memory layer foundation contracts",
         "docs/history/domain-packs/root-contract-review/",
+        "上面的调用链是当前 runtime 事实。目标架构图见",
     ]:
         assert phrase in current
 
@@ -217,8 +220,29 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "zuno-target-architecture-refresh-v1",
         "zuno-repo-layout-cleanup-v1",
         "zuno-architecture-visuals-v1",
+        "PHASE03 completed",
+        "视觉 QA",
     ]:
         assert phrase in roadmap
+
+
+def test_doc_boundary_verifier_guards_future_only_terms() -> None:
+    content = (
+        REPO_ROOT / ".agent" / "scripts" / "verify_doc_boundaries.py"
+    ).read_text(encoding="utf-8")
+
+    for phrase in [
+        "verify_future_only_terms",
+        "Java",
+        "microservice",
+        "event-driven worker",
+        "product-level multi-agent",
+        "Coding Agent",
+        "不属于 Current",
+        "非近期目标",
+        "当前不是什么",
+    ]:
+        assert phrase in content
 
 
 def test_architecture_diagrams_expose_multi_view_target_architecture() -> None:
@@ -273,8 +297,9 @@ def test_architecture_html_is_generated_from_mermaid_source() -> None:
             "Quality View",
             "Scenarios View",
             "Process View",
-            "V&B Logical View",
-            "V&B Deployment View",
+            "View &amp; Beyond",
+            "V&amp;B Logical View",
+            "V&amp;B Deployment View",
             "Agent Loop View",
             "#f7f8fb",
             "#ffffff",
@@ -283,6 +308,64 @@ def test_architecture_html_is_generated_from_mermaid_source() -> None:
             "#52616f",
         ]:
             assert phrase in content
+
+
+def test_architecture_view_contract_is_shared_across_docs_and_renderer() -> None:
+    expected = [
+        (1, "Logical View", "4+1 Logical"),
+        (2, "Development View", "4+1 Development"),
+        (3, "Process View", "4+1 Process"),
+        (4, "Physical View", "4+1 Physical"),
+        (5, "Scenarios View", "4+1 Scenarios"),
+        (6, "V&B Logical View", "View & Beyond Logical"),
+        (7, "Component-and-Connector View", "View & Beyond C&C"),
+        (8, "V&B Deployment View", "View & Beyond Deployment"),
+        (9, "Quality View", "View & Beyond Quality"),
+        (10, "Agent Loop View", "Zuno 专题图"),
+    ]
+    module_path = REPO_ROOT / "tools" / "agent" / "render_architecture.py"
+    spec = importlib.util.spec_from_file_location("render_architecture", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    render_architecture = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = render_architecture
+    spec.loader.exec_module(render_architecture)
+
+    assert render_architecture.EXPECTED_DIAGRAMS == [title for _, title, _ in expected]
+
+    inventory = (REPO_ROOT / ".agent" / "references" / "diagram-inventory.md").read_text(
+        encoding="utf-8"
+    )
+    deliverables = (REPO_ROOT / "docs" / "deliverables.md").read_text(encoding="utf-8")
+    target = (
+        REPO_ROOT / "docs" / "architecture" / "target-architecture.md"
+    ).read_text(encoding="utf-8")
+    architecture_index = (
+        REPO_ROOT / "docs" / "architecture" / "README.md"
+    ).read_text(encoding="utf-8")
+    architecture_html = (REPO_ROOT / "docs" / "architecture.html").read_text(
+        encoding="utf-8"
+    )
+
+    for index, title, theory in expected:
+        assert f"| {index} | {title} | {theory} |" in inventory
+        assert f"| {index} | {title} | {theory} |" in deliverables
+        assert f"| {title} | {theory} |" in target
+        assert f"{index}. `{title}`" in architecture_index
+        html_title = title.replace("&", "&amp;")
+        assert f"<h3>{index}. {html_title}</h3>" in architecture_html
+
+    assert "absorbed reference programs / roadmap reference inputs" in deliverables
+    assert architecture_html.count('class="diagram-section"') == 10
+    assert architecture_html.count('<div class="mermaid">') == 10
+    assert architecture_html.count("<summary>Mermaid source</summary>") == 10
+    for phrase in [
+        "overflow-x: auto",
+        "min-width: 560px",
+        "securityLevel: \"strict\"",
+        "useMaxWidth: false",
+    ]:
+        assert phrase in architecture_html
 
 
 def test_architecture_html_matches_rendered_mermaid_source() -> None:

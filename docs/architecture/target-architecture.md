@@ -47,15 +47,15 @@ Local-first Agent Workspace
 
 | 图 | 对应视角 | 回答的问题 | 入口 |
 | --- | --- | --- | --- |
-| 4+1 Logical View | 4+1 Logical | Zuno 的核心职责如何分层？ | [architecture.md](../architecture.md#logical-view) |
-| 4+1 Development View | 4+1 Development | apps、backend、docs、.agent、tools、tests 如何组织？ | [architecture.md](../architecture.md#development-view) |
-| 4+1 Process View | 4+1 Process | 请求、Agent runtime、工具/检索/LLM 调用和事件流如何运行？ | [architecture.md](../architecture.md#process-view) |
-| 4+1 Physical View | 4+1 Physical | 本地优先部署和外部 provider 如何连接？ | [architecture.md](../architecture.md#physical-view) |
-| 4+1 Scenarios View | 4+1 Scenarios | 一个 query 如何经过 Agentic RAG 变成 answer？ | [architecture.md](../architecture.md#scenarios-view) |
+| Logical View | 4+1 Logical | Zuno 的核心职责如何分层？ | [architecture.md](../architecture.md#logical-view) |
+| Development View | 4+1 Development | apps、backend、docs、.agent、tools、tests 如何组织？ | [architecture.md](../architecture.md#development-view) |
+| Process View | 4+1 Process | 请求、Agent runtime、工具/检索/LLM 调用和事件流如何运行？ | [architecture.md](../architecture.md#process-view) |
+| Physical View | 4+1 Physical | 本地优先部署和外部 provider 如何连接？ | [architecture.md](../architecture.md#physical-view) |
+| Scenarios View | 4+1 Scenarios | 一个 query 如何经过 Agentic RAG 变成 answer？ | [architecture.md](../architecture.md#scenarios-view) |
 | V&B Logical View | View & Beyond Logical | Runtime、Memory、Tool、Retrieval、Evidence 等领域子系统如何组织？ | [architecture.md](../architecture.md#vb-logical-view) |
-| V&B Component-and-Connector View | View & Beyond C&C | API、Agent、Memory、Tool、Retrieval、Evidence、Trace 如何连接？ | [architecture.md](../architecture.md#component-and-connector-view) |
+| Component-and-Connector View | View & Beyond C&C | API、Agent、Memory、Tool、Retrieval、Evidence、Trace 如何连接？ | [architecture.md](../architecture.md#component-and-connector-view) |
 | V&B Deployment View | View & Beyond Deployment | 可替换 provider、存储、模型、搜索和 MCP 如何部署？ | [architecture.md](../architecture.md#vb-deployment-view) |
-| V&B Quality View | View & Beyond Quality | 性能、可靠性、安全、可观测性、可修改性和评测如何落地？ | [architecture.md](../architecture.md#quality-view) |
+| Quality View | View & Beyond Quality | 性能、可靠性、安全、可观测性、可修改性和评测如何落地？ | [architecture.md](../architecture.md#quality-view) |
 | Agent Loop View | Zuno 专题图 | Agent 如何规划、执行、观察、反思、重规划？ | [architecture.md](../architecture.md#agent-loop-view) |
 
 这十类图不是十张装饰图，也不是理论映射图。前九类来自两套架构描述理论；Agent Loop 可以归入 Process / C&C，但它是 Zuno Agentic RAG 内核，值得单独作为第十类专题图展开。

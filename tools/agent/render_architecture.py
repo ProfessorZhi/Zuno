@@ -134,10 +134,18 @@ class Diagram:
 def _sections(content: str) -> dict[str, str]:
     matches = list(re.finditer(r"^### (?P<title>[^\n]+)\n", content, re.M))
     sections: dict[str, str] = {}
+    seen: set[str] = set()
+    duplicates: list[str] = []
     for index, match in enumerate(matches):
+        title = match.group("title").strip()
+        if title in seen:
+            duplicates.append(title)
+        seen.add(title)
         start = match.end()
         end = matches[index + 1].start() if index + 1 < len(matches) else len(content)
-        sections[match.group("title").strip()] = content[start:end]
+        sections[title] = content[start:end]
+    if duplicates:
+        raise ValueError(f"duplicate Mermaid diagram sections: {duplicates}")
     return sections
 
 
@@ -188,6 +196,18 @@ def extract_diagrams(content: str) -> list[Diagram]:
     missing = [title for title in EXPECTED_DIAGRAMS if title not in sections]
     if missing:
         raise ValueError(f"missing Mermaid diagram sections: {missing}")
+    mermaid_block_count = len(re.findall(r"```mermaid\n", content))
+    if mermaid_block_count != len(EXPECTED_DIAGRAMS):
+        raise ValueError(
+            f"expected {len(EXPECTED_DIAGRAMS)} Mermaid blocks, found {mermaid_block_count}"
+        )
+    unknown = [
+        title
+        for title, section_body in sections.items()
+        if "```mermaid" in section_body and title not in EXPECTED_DIAGRAMS
+    ]
+    if unknown:
+        raise ValueError(f"unknown Mermaid diagram sections: {unknown}")
 
     diagrams: list[Diagram] = []
     for title in EXPECTED_DIAGRAMS:
@@ -419,7 +439,6 @@ def render_html(diagrams: list[Diagram]) -> str:
       <h1>Zuno 架构总览 / Architecture Overview</h1>
       <p>Zuno 是本地优先的 Agent Workspace。本文用 4+1、View &amp; Beyond 和 Agent Loop 专题图说明目标架构。</p>
       <p class="sync">Source: <code>docs/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture.html</code>.</p>
-      <!-- View markers for verifier: V&B Logical View; V&B Deployment View -->
     </header>
 {content}
   </main>
