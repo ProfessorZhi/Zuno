@@ -122,7 +122,9 @@ skill_routes:
       - ".agent/references/code-map.md"
     verify:
       - "git diff --check"
+      - "python tools/scripts/verify_repo_structure.py"
       - "python .agent/scripts/verify_agent_system.py"
+      - "python .agent/scripts/verify_doc_boundaries.py"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1"
       - "pytest -q tests/repo/test_agent_system.py -p no:cacheprovider"
 
@@ -151,6 +153,8 @@ skill_routes:
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
     verify:
+      - "pytest -q tests/agent/test_agent_layer_surfaces.py -p no:cacheprovider"
+      - "pytest -q tests/agent/test_memory_layer_surfaces.py -p no:cacheprovider"
       - "pytest -q tests/agent/test_general_agent_project_query_runtime.py"
       - "pytest -q tests/agent/test_generalagent_context_memory_runtime.py"
 
@@ -171,6 +175,7 @@ skill_routes:
       - ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md"
       - ".agent/references/code-map.md"
     verify:
+      - "pytest -q tests/agent/test_capability_layer_surfaces.py -p no:cacheprovider"
       - "pytest -q tests/agent/test_capability_system.py"
       - "pytest -q tests/agent/test_capability_registry.py"
 
@@ -196,9 +201,31 @@ skill_routes:
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
     verify:
+      - "pytest -q tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider"
       - "pytest -q tests/retrieval/test_standard_retrieval_composition.py"
       - "pytest -q tests/retrieval/test_enhanced_retrieval_composition.py"
       - "pytest -q tests/retrieval/test_retrieval_mode_semantics.py"
+
+  - name: "platform-foundation"
+    match:
+      paths:
+        - "src/backend/zuno/platform/**"
+    skills:
+      - ".agent/references/code-map.md"
+      - ".agent/references/verification-map.md"
+      - ".agent/references/zuno-repo-hygiene.md"
+    templates:
+      - ".agent/templates/spec-coding-checklist.md"
+      - ".agent/templates/phase-closure-report.md"
+    docs_sync:
+      - "docs/architecture/current-architecture.md"
+      - "docs/architecture/target-architecture.md"
+      - ".agent/references/code-map.md"
+      - ".agent/references/verification-map.md"
+    verify:
+      - "pytest -q tests/agent/test_platform_layer_surfaces.py -p no:cacheprovider"
+      - "pytest -q tests/repo/test_backend_facade_layers.py -p no:cacheprovider"
+      - "pytest -q tests/repo/test_static_target_layer_imports.py -p no:cacheprovider"
 
 stop_conditions:
   - "public API field rename"

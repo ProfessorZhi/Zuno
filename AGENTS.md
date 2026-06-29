@@ -124,7 +124,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前目标：在 Program 3 已完成 root / alias surface closure 后，继续推进六层内部成熟化。当前 active program 是 `zuno-six-layer-internalization-v1`，它不是 Program 3 返工，也不是完整 runtime architecture upgrade。
+当前没有 active program。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是 Program 3 返工，也不是完整 runtime architecture upgrade。
 
 最新完成程序归档在：
 
@@ -133,16 +133,17 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `docs/history/programs/zuno-workflow-doc-system-v1/`
 - `docs/history/programs/zuno-target-architecture-refresh-v1/`
 - `docs/history/programs/zuno-repo-layout-cleanup-v1/`
+- `docs/history/programs/zuno-six-layer-internalization-v1/`
 
 当前 `.agent/programs/`：
 
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/current.md`
-- `.agent/programs/PHASE01_six-layer-current-inventory.md`
-- `.agent/programs/PHASE02_memory-layer-foundation-surfaces.md`
 - `.agent/programs/closure-checklist.md`
 
-当前 active phase 是 `PHASE02_memory-layer-foundation-surfaces.md`。Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。当前 program 只推进无副作用薄入口、测试和文档，不重写 GeneralAgent 主循环、DB schema、API 行为或 eval baseline。
+Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
+
+Program 4 已完成的边界：六层内部已有第一批无副作用薄入口、README、focused tests 和 verifier guard。它不表示 GeneralAgent 主循环、DB schema、API 行为、eval baseline、production memory、dynamic capability orchestration、retrieval fusion 或 model gateway runtime 已完成。
 
 后续 queued programs：
 

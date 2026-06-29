@@ -31,3 +31,4 @@
 - `tests/agent/test_memory_layers.py`
 - `tests/agent/test_generalagent_context_memory_runtime.py`
 - `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_static_target_layer_imports.py`

@@ -16,11 +16,13 @@ changed surface
 
 ## Current Truth
 
-`.agent/scripts/` 是过渡期验证器位置。PHASE03 才会决定哪些脚本迁移到 `tools/agent` 或 `tools/verify`。当前本地 Agent Skill System 的最小验证基线是：
+`.agent/scripts/` 是过渡期验证器位置。当前本地 Agent Skill System 的最小验证基线是：
 
 ```powershell
 git diff --check
+python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
 ```
@@ -34,6 +36,7 @@ pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
 - 验证失败先追根因，不绕过检查。
 - 修改 docs / `.agent` 后必须至少跑结构 verifier 和 focused pytest。
 - Runtime、frontend、eval 任务要追加模块级验证；文档任务不主动扩大到 runtime。
+- 六层薄入口变更要追加对应 `tests/agent/test_*_layer_surfaces.py` 和 `tests/repo/test_static_target_layer_imports.py`。
 
 ## Before Editing
 
@@ -46,6 +49,7 @@ pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
 
 - 更新验证命令地图。
 - 同步 `.agent/scripts/verify_agent_system.py`、`.agent/scripts/verify-workflow.ps1`、`tests/repo/test_agent_system.py` 的 expected phrases。
+- 同步 `tools/scripts/verify_repo_structure.py`、`.agent/scripts/verify_doc_boundaries.py` 和 `tests/repo/test_repo_structure_consistency.py` 的 archive / no-active 断言。
 - 为新 skill 文件结构增加轻量断言。
 
 ## Forbidden Changes
@@ -87,9 +91,18 @@ pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
 
 ```powershell
 git diff --check
+python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
+```
+
+六层薄入口：
+
+```powershell
+pytest -q tests/agent/test_agent_layer_surfaces.py tests/agent/test_memory_layer_surfaces.py tests/agent/test_capability_layer_surfaces.py tests/agent/test_knowledge_layer_surfaces.py tests/agent/test_platform_layer_surfaces.py -p no:cacheprovider
+pytest -q tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
 ```
 
 文档入口扩大验证：
@@ -124,7 +137,10 @@ git grep -n "zuno-ideal-architecture-and-repo-layout.html"
 - `.agent/references/docs-map.md`
 - `.agent/scripts/verify_agent_system.py`
 - `.agent/scripts/verify-workflow.ps1`
+- `.agent/scripts/verify_doc_boundaries.py`
+- `tools/scripts/verify_repo_structure.py`
 - `tests/repo/test_agent_system.py`
+- `tests/repo/test_repo_structure_consistency.py`
 
 ## Lessons Learned
 

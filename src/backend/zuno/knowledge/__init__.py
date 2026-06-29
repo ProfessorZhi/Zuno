@@ -3,28 +3,26 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-from zuno.services.graphrag import GraphRAGProjectContract, normalize_retrieval_mode
-from zuno.services.graphrag.project import (
-    GraphRAGProjectLoader,
-    GraphRAGSettingsValidator,
-    LoadedGraphRAGProject,
-    ProjectReadiness,
-)
-
 
 _LAZY_EXPORT_TO_MODULE = {
-    "FusionResult": "zuno.services.retrieval.models",
-    "GraphRAGProjectSnapshot": "zuno.services.graphrag.query_service",
-    "GraphRAGQueryService": "zuno.services.graphrag.query_service",
-    "KnowledgeQueryResult": "zuno.services.graphrag.query_service",
-    "KnowledgeQueryService": "zuno.services.application.knowledge",
-    "ProcessedQuery": "zuno.services.retrieval.models",
-    "RetrievalFusion": "zuno.services.retrieval.fusion",
-    "RetrievalOrchestrator": "zuno.services.retrieval.orchestrator",
-    "RetrievalPlan": "zuno.services.retrieval.models",
-    "RetrievalPlanner": "zuno.services.retrieval.planner",
-    "RetrievalRequest": "zuno.services.retrieval.models",
-    "RetrievedDocument": "zuno.services.retrieval.models",
+    "FusionResult": "zuno.knowledge.fusion",
+    "GraphRAGProjectContract": "zuno.knowledge.contracts",
+    "GraphRAGProjectLoader": "zuno.knowledge.contracts",
+    "GraphRAGProjectSnapshot": "zuno.knowledge.query_service",
+    "GraphRAGQueryService": "zuno.knowledge.query_service",
+    "GraphRAGSettingsValidator": "zuno.knowledge.contracts",
+    "KnowledgeQueryResult": "zuno.knowledge.query_service",
+    "KnowledgeQueryService": "zuno.knowledge.query_service",
+    "LoadedGraphRAGProject": "zuno.knowledge.contracts",
+    "ProcessedQuery": "zuno.knowledge.retrieval",
+    "ProjectReadiness": "zuno.knowledge.contracts",
+    "RetrievalFusion": "zuno.knowledge.fusion",
+    "RetrievalOrchestrator": "zuno.knowledge.retrieval",
+    "RetrievalPlan": "zuno.knowledge.retrieval",
+    "RetrievalPlanner": "zuno.knowledge.retrieval",
+    "RetrievalRequest": "zuno.knowledge.retrieval",
+    "RetrievedDocument": "zuno.knowledge.retrieval",
+    "normalize_retrieval_mode": "zuno.knowledge.contracts",
 }
 
 __all__ = [

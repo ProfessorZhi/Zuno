@@ -1,4 +1,4 @@
-from zuno.services.graphrag.project.loader import (
+from zuno.platform.services.graphrag.project.loader import (
     GraphRAGProjectLoader,
     GraphRAGSettingsValidator,
     LoadedGraphRAGProject,

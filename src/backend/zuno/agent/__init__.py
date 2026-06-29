@@ -5,13 +5,13 @@ from typing import Any
 
 
 _EXPORT_TO_MODULE = {
-    "AgentConfig": "zuno.core.agents",
-    "AgentExecutionContext": "zuno.services.application.context",
-    "ContextOrchestrator": "zuno.services.application.context",
-    "ContextTrace": "zuno.services.application.context",
-    "GeneralAgent": "zuno.core.agents",
-    "ModelContextPacket": "zuno.services.application.context",
-    "StreamAgentState": "zuno.core.agents",
+    "AgentConfig": "zuno.agent.runtime",
+    "AgentExecutionContext": "zuno.agent.context",
+    "ContextOrchestrator": "zuno.agent.context",
+    "ContextTrace": "zuno.agent.context",
+    "GeneralAgent": "zuno.agent.runtime",
+    "ModelContextPacket": "zuno.agent.context",
+    "StreamAgentState": "zuno.agent.state",
 }
 
 __all__ = [

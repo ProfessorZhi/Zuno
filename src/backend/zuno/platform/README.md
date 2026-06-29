@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/platform/` 目前是平台能力的轻量 facade，当前只公开 execution policy 相关 contract 和 helper。真实 DB、settings、storage、queue、MCP、LLM、sandbox、vendor compat 等底座仍分布在旧路径中。
+`src/backend/zuno/platform/` 目前是平台能力的轻量 facade，当前公开 execution policy 相关 contract 和 helper，并提供 `model_gateway.py`、`security/`、`observability/` 和 `storage/` 这些无副作用目标层薄入口。真实 DB、settings、storage、queue、MCP、LLM、sandbox、vendor compat 等底座仍分布在旧路径中。
 
 `config/` 和 `database/` 本批保持 infrastructure source：前者保存配置资源和 helper，后者保存 DB session、metadata、DAO 和 models。它们是 Platform 的目标归属，不是已经完成物理迁移的证据。
 
@@ -27,6 +27,8 @@
 ## Focused tests
 
 - `tests/repo/test_backend_facade_layers.py`
+- `tests/agent/test_platform_layer_surfaces.py`
 - `tests/legacy_guards/test_zuno_alias_imports.py`
 - `tests/api/test_fastapi_jwt_auth_compat.py`
 - policy / tool / storage / queue focused tests
+- `tests/repo/test_static_target_layer_imports.py`

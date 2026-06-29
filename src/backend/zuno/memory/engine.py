@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zuno.services.memory.layers import (
+from zuno.platform.services.memory.layers import (
     InMemoryLayerStore,
     RawMemoryEvent,
     TaskMemorySummary,

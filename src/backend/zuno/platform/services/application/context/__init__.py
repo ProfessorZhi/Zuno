@@ -1,4 +1,4 @@
-from zuno.services.application.context.contracts import (
+from zuno.platform.services.application.context.contracts import (
     AgentExecutionContext,
     ContextItem,
     ContextPreparationInput,
@@ -9,7 +9,7 @@ from zuno.services.application.context.contracts import (
     ModelContextPacket,
     TokenBudgetPolicy,
 )
-from zuno.services.application.context.orchestrator import (
+from zuno.platform.services.application.context.orchestrator import (
     ContextOrchestrator,
     RecentWindowSelector,
 )

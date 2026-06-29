@@ -51,6 +51,16 @@ def test_agent_system_required_paths_exist() -> None:
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE13_medium-risk-alias-surface-cleanup.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE14_high-risk-core-services-settings-cleanup.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE15_final-root-surface-guard-and-closure.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/README.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/current.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE01_six-layer-current-inventory.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE02_memory-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE03_capability-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE04_knowledge-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE05_agent-runtime-boundary-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE06_platform-boundary-hardening.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE07_docs-verifier-and-closure.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE01_directory-closure-master-plan.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE02_platform-foundation-directory-migration.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_schema-tools-resources-directory-migration.md",
@@ -341,7 +351,7 @@ def test_agent_templates_keep_execution_skeleton_boundary() -> None:
         assert phrase in content, f"missing template boundary phrase: {phrase}"
 
 
-def test_current_program_declares_active_internalization_and_latest_archive() -> None:
+def test_current_program_declares_no_active_program_and_latest_archive() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -350,13 +360,16 @@ def test_current_program_declares_active_internalization_and_latest_archive() ->
         encoding="utf-8"
     )
 
+    assert "当前没有 active program" in current
     assert "zuno-six-layer-internalization-v1" in current
-    assert "状态：active" in current
-    assert "PHASE02_memory-layer-foundation-surfaces.md" in current
+    assert "docs/history/programs/zuno-six-layer-internalization-v1/" in current
+    assert not list((REPO_ROOT / ".agent" / "programs").glob("PHASE*.md"))
     assert "Program 3 已完成" in current
     assert "api / agent / memory / capability / knowledge / platform" in current
-    assert "zuno-repo-layout-cleanup-v1" in current
-    assert "contracts.py" in current
+    assert "agent/" in current
+    assert "capability/" in current
+    assert "knowledge/" in current
+    assert "platform/" in current
     assert "production-grade memory extraction" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
@@ -365,6 +378,7 @@ def test_current_program_declares_active_internalization_and_latest_archive() ->
     assert "zuno-workflow-doc-system-v1/" in history_index
     assert "zuno-target-architecture-refresh-v1/" in history_index
     assert "zuno-repo-layout-cleanup-v1/" in history_index
+    assert "zuno-six-layer-internalization-v1/" in history_index
 
 
 def test_near_term_architecture_uses_canonical_five_doc_set() -> None:
@@ -440,7 +454,7 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
 
 
-def test_six_layer_internalization_keeps_history_and_active_phase() -> None:
+def test_six_layer_internalization_is_archived_and_programs_are_no_active() -> None:
     roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
         encoding="utf-8"
     )
@@ -468,6 +482,14 @@ def test_six_layer_internalization_keeps_history_and_active_phase() -> None:
         / "zuno-repo-layout-cleanup-v1"
         / "README.md"
     ).read_text(encoding="utf-8")
+    program4 = (
+        REPO_ROOT
+        / "docs"
+        / "history"
+        / "programs"
+        / "zuno-six-layer-internalization-v1"
+        / "README.md"
+    ).read_text(encoding="utf-8")
     active_phase_files = sorted(
         path.name for path in (REPO_ROOT / ".agent" / "programs").glob("PHASE*.md")
     )
@@ -481,10 +503,26 @@ def test_six_layer_internalization_keeps_history_and_active_phase() -> None:
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == [
+    assert active_phase_files == []
+    for phase in [
         "PHASE01_six-layer-current-inventory.md",
         "PHASE02_memory-layer-foundation-surfaces.md",
-    ]
+        "PHASE03_capability-layer-foundation-surfaces.md",
+        "PHASE04_knowledge-layer-foundation-surfaces.md",
+        "PHASE05_agent-runtime-boundary-surfaces.md",
+        "PHASE06_platform-boundary-hardening.md",
+        "PHASE07_docs-verifier-and-closure.md",
+    ]:
+        assert (
+            REPO_ROOT
+            / "docs"
+            / "history"
+            / "programs"
+            / "zuno-six-layer-internalization-v1"
+            / phase
+        ).exists()
+    assert "completed / archived" in program4
+    assert "Capability tools 不按 CLI / API 拆成两棵顶层目录" in program4
     for prompt in [
         "PROGRAM3_DIRECTORY_CLOSURE_TARGET_MODE_PROMPT.md",
     ]:

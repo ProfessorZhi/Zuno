@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/agent/` 目前是轻量 facade，通过 `__all__` 和 lazy import 暴露 `GeneralAgent`、agent config、stream state，以及 context runtime contract。真实 Single GeneralAgent runtime 仍主要在 `src/backend/zuno/core/agents/` 和相关 application context 路径中。
+`src/backend/zuno/agent/` 目前是轻量 facade，通过 `__all__` 和 lazy import 暴露 `GeneralAgent`、agent config、stream state，以及 context runtime contract。当前已提供 `runtime.py`、`context.py`、`post_turn.py`、`state.py`、`streaming.py` 和 `tool_bridge.py` 这些无副作用目标层薄入口。真实 Single GeneralAgent runtime 仍主要在 `src/backend/zuno/agent/core/agents/` 和相关 application context 路径中。
 
 ## Target role
 
@@ -25,6 +25,8 @@
 ## Focused tests
 
 - `tests/repo/test_backend_facade_layers.py`
+- `tests/agent/test_agent_layer_surfaces.py`
 - `tests/agent/test_general_agent*`
 - `tests/agent/test_generalagent_context_memory_runtime.py`
 - `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_static_target_layer_imports.py`

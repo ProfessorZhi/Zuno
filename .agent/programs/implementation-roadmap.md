@@ -2,15 +2,11 @@
 
 ## 当前状态
 
-当前 active program：
+当前没有 active program。
 
-```text
-zuno-six-layer-internalization-v1
-```
+每次新 program 都从 `PHASE01` 开始编号；已完成 program 必须归档到 `docs/history/programs/`，并从 `.agent/programs/` 前台移除 `PHASE*.md` 文件。
 
-每次新 program 都从 `PHASE01` 开始编号；当前 program 也是从 `PHASE01` 重新开始，不沿用 Program 3 的 Phase 号。
-
-目标：在 Program 3 已经完成 root / alias surface closure 的基础上，让 `api / agent / memory / capability / knowledge / platform` 六层内部逐步拥有清晰、可测试、无副作用的目标层入口。
+`zuno-six-layer-internalization-v1` 已完成并归档；它在 Program 3 已经完成 root / alias surface closure 的基础上，让 `api / agent / memory / capability / knowledge / platform` 六层内部拥有了第一批清晰、可测试、无副作用的目标层入口。
 
 ## 总边界
 
@@ -31,23 +27,16 @@ zuno-six-layer-internalization-v1
 - 删除 `zuno.services.*`、`zuno.core.*`、`zuno.database.*` 等旧 public import path。
 - 把未完成的 production runtime 能力写成 Current。
 
-## Phase Plan
+## 已完成 Program
 
-1. `PHASE01_six-layer-current-inventory.md`：盘点六层内部成熟度，确认 Program 3 只完成顶层封口。
-2. `PHASE02_memory-layer-foundation-surfaces.md`：让 `memory/` 从纯 facade 变成 contract / store / policy / review / retrieval / rendering / engine 薄入口。
-3. `PHASE03_capability-layer-foundation-surfaces.md`：按 contracts / registry / selector / policy / execution / trace / mcp / tools 收口 capability 入口。
-4. `PHASE04_knowledge-layer-foundation-surfaces.md`：按 query_service / contracts / evidence / citation / retrieval / fusion / graphrag 收口 knowledge 入口。
-5. `PHASE05_agent-runtime-boundary-surfaces.md`：在不重写 GeneralAgent 的前提下，把 agent 层入口拆成 runtime / context / post_turn / state / tool_bridge。
-6. `PHASE06_platform-boundary-hardening.md`：收紧 platform 的 config / database / security / observability / compatibility / common 边界。
-7. `PHASE07_docs-verifier-and-closure.md`：同步 docs、AGENTS、verifier、tests，并归档当前 program。
-
-## 当前 Phase 状态
-
-- Phase 01：completed。
-- Phase 02：in progress。
-- Phase 03-07：pending。
+- `zuno-six-layer-internalization-v1`：完成六层内部第一批 thin surfaces、README 边界、focused tests、repo verifier 和 Agent verifier 收口。
+- `zuno-repo-layout-cleanup-v1`：完成 Program 3 root / alias surface closure。
 
 ## 最近完成历史
+
+Program 4 已完成并归档：
+
+- `docs/history/programs/zuno-six-layer-internalization-v1/`
 
 Program 3 已完成并归档：
 

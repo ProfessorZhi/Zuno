@@ -132,6 +132,90 @@ def test_repo_structure_verifier_pins_backend_zuno_directory_classifications() -
     }
 
 
+def test_repo_structure_verifier_pins_backend_layer_internal_surfaces() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.BACKEND_LAYER_INTERNAL_SURFACES == {
+        "api": {
+            "directories": ["dto", "errcode", "services", "v1"],
+            "files": ["JWT.py", "README.md", "__init__.py", "router.py"],
+        },
+        "agent": {
+            "directories": ["core"],
+            "files": [
+                "README.md",
+                "__init__.py",
+                "context.py",
+                "post_turn.py",
+                "runtime.py",
+                "state.py",
+                "streaming.py",
+                "tool_bridge.py",
+            ],
+        },
+        "memory": {
+            "directories": [],
+            "files": [
+                "README.md",
+                "__init__.py",
+                "contracts.py",
+                "engine.py",
+                "policy.py",
+                "rendering.py",
+                "retrieval.py",
+                "review.py",
+                "store.py",
+            ],
+        },
+        "capability": {
+            "directories": ["mcp", "tools"],
+            "files": [
+                "README.md",
+                "__init__.py",
+                "contracts.py",
+                "execution.py",
+                "policy.py",
+                "registry.py",
+                "selector.py",
+                "trace.py",
+            ],
+        },
+        "knowledge": {
+            "directories": ["fusion", "graphrag", "retrieval"],
+            "files": [
+                "README.md",
+                "__init__.py",
+                "citation.py",
+                "contracts.py",
+                "evidence.py",
+                "query_service.py",
+                "trace.py",
+            ],
+        },
+        "platform": {
+            "directories": [
+                "common",
+                "compatibility",
+                "config",
+                "database",
+                "middleware",
+                "observability",
+                "resources",
+                "security",
+                "services",
+                "storage",
+            ],
+            "files": ["README.md", "__init__.py", "model_gateway.py", "settings.py"],
+        },
+    }
+
+
 def test_backend_zuno_classified_directories_have_boundary_readmes() -> None:
     classified_directories = [
         "api",
@@ -300,6 +384,31 @@ def test_repo_structure_verifier_runs_backend_zuno_directory_classification_chec
         verifier,
         "verify_backend_zuno_directory_classifications",
         fake_backend_classification_check,
+    )
+
+    result = verifier.run_verification()
+
+    assert sentinel in result.errors
+
+
+def test_repo_structure_verifier_runs_backend_layer_internal_surface_check(monkeypatch) -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    sentinel = "backend layer internal surface check was called"
+
+    def fake_backend_internal_surface_check() -> list[str]:
+        return [sentinel]
+
+    monkeypatch.setattr(
+        verifier,
+        "verify_backend_layer_internal_surfaces",
+        fake_backend_internal_surface_check,
     )
 
     result = verifier.run_verification()
@@ -536,7 +645,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_program3_final_alias_closure_is_archived_with_active_internalization_files() -> None:
+def test_program3_and_program4_closures_are_archived_with_no_active_phase_files() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -545,8 +654,6 @@ def test_program3_final_alias_closure_is_archived_with_active_internalization_fi
 
     assert active_files == sorted(
         [
-            "PHASE01_six-layer-current-inventory.md",
-            "PHASE02_memory-layer-foundation-surfaces.md",
             "README.md",
             "current.md",
             "implementation-roadmap.md",
@@ -574,6 +681,23 @@ def test_program3_final_alias_closure_is_archived_with_active_internalization_fi
     program3 = (
         REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md"
     ).read_text(encoding="utf-8")
+    program4 = (
+        REPO_ROOT / "docs/history/programs/zuno-six-layer-internalization-v1/README.md"
+    ).read_text(encoding="utf-8")
+    assert "completed / archived" in program4
+    assert "Capability tools 不按 CLI / API 拆成两棵顶层目录" in program4
+    for phase in [
+        "PHASE01_six-layer-current-inventory.md",
+        "PHASE02_memory-layer-foundation-surfaces.md",
+        "PHASE03_capability-layer-foundation-surfaces.md",
+        "PHASE04_knowledge-layer-foundation-surfaces.md",
+        "PHASE05_agent-runtime-boundary-surfaces.md",
+        "PHASE06_platform-boundary-hardening.md",
+        "PHASE07_docs-verifier-and-closure.md",
+    ]:
+        assert (
+            REPO_ROOT / "docs/history/programs/zuno-six-layer-internalization-v1" / phase
+        ).exists()
     assert "Directory Surface Alignment V1" in program3
     assert "repo hygiene verifier" in program3
     assert "capability/mcp/servers" in program3

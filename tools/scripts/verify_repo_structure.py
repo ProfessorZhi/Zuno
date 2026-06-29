@@ -78,6 +78,16 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE13_medium-risk-alias-surface-cleanup.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE14_high-risk-core-services-settings-cleanup.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE15_final-root-surface-guard-and-closure.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/README.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/current.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE01_six-layer-current-inventory.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE02_memory-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE03_capability-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE04_knowledge-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE05_agent-runtime-boundary-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE06_platform-boundary-hardening.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE07_docs-verifier-and-closure.md",
     "docs/history/development/README.md",
     "docs/history/reference/migration.md",
     "docs/history/specs",
@@ -219,6 +229,80 @@ BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS = {
     "capability": "target-layer",
     "knowledge": "target-layer",
     "platform": "target-layer",
+}
+
+BACKEND_LAYER_INTERNAL_SURFACES = {
+    "api": {
+        "directories": ["dto", "errcode", "services", "v1"],
+        "files": ["JWT.py", "README.md", "__init__.py", "router.py"],
+    },
+    "agent": {
+        "directories": ["core"],
+        "files": [
+            "README.md",
+            "__init__.py",
+            "context.py",
+            "post_turn.py",
+            "runtime.py",
+            "state.py",
+            "streaming.py",
+            "tool_bridge.py",
+        ],
+    },
+    "memory": {
+        "directories": [],
+        "files": [
+            "README.md",
+            "__init__.py",
+            "contracts.py",
+            "engine.py",
+            "policy.py",
+            "rendering.py",
+            "retrieval.py",
+            "review.py",
+            "store.py",
+        ],
+    },
+    "capability": {
+        "directories": ["mcp", "tools"],
+        "files": [
+            "README.md",
+            "__init__.py",
+            "contracts.py",
+            "execution.py",
+            "policy.py",
+            "registry.py",
+            "selector.py",
+            "trace.py",
+        ],
+    },
+    "knowledge": {
+        "directories": ["fusion", "graphrag", "retrieval"],
+        "files": [
+            "README.md",
+            "__init__.py",
+            "citation.py",
+            "contracts.py",
+            "evidence.py",
+            "query_service.py",
+            "trace.py",
+        ],
+    },
+    "platform": {
+        "directories": [
+            "common",
+            "compatibility",
+            "config",
+            "database",
+            "middleware",
+            "observability",
+            "resources",
+            "security",
+            "services",
+            "storage",
+        ],
+        "files": ["README.md", "__init__.py", "model_gateway.py", "settings.py"],
+    },
 }
 
 BACKEND_LEGACY_IMPORT_ALIASES = {
@@ -408,6 +492,29 @@ def verify_backend_zuno_directory_classifications() -> list[str]:
     return errors
 
 
+def verify_backend_layer_internal_surfaces() -> list[str]:
+    errors: list[str] = []
+    backend_root = REPO_ROOT / "src" / "backend" / "zuno"
+    for layer_name, surface in BACKEND_LAYER_INTERNAL_SURFACES.items():
+        layer_root = backend_root / layer_name
+        if not layer_root.is_dir():
+            errors.append(f"missing backend layer directory: {layer_name}")
+            continue
+
+        for directory_name in surface["directories"]:
+            if not (layer_root / directory_name).is_dir():
+                errors.append(
+                    f"missing backend layer internal directory: {layer_name}/{directory_name}"
+                )
+
+        for file_name in surface["files"]:
+            if not (layer_root / file_name).is_file():
+                errors.append(
+                    f"missing backend layer internal file: {layer_name}/{file_name}"
+                )
+    return errors
+
+
 def verify_backend_legacy_import_aliases() -> list[str]:
     errors: list[str] = []
     registry = REPO_ROOT / "src/backend/zuno/platform/compatibility/legacy_aliases.py"
@@ -485,7 +592,7 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
         return ["missing .agent/programs implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
     errors = [
-        f"active program roadmap missing phrase: {phrase}"
+        f"program roadmap missing phrase: {phrase}"
         for phrase in [
             "zuno-six-layer-internalization-v1",
             "zuno-repo-layout-cleanup-v1",
@@ -510,15 +617,28 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     active_phase_names = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")
     )
-    expected_active_phase_names = [
-        "PHASE01_six-layer-current-inventory.md",
-        "PHASE02_memory-layer-foundation-surfaces.md",
-    ]
-    if active_phase_names != expected_active_phase_names:
+    if active_phase_names:
         errors.append(
-            ".agent/programs active phase files are not the expected six-layer internalization set: "
+            ".agent/programs must not keep PHASE files after six-layer internalization archive: "
             + ", ".join(active_phase_names)
         )
+    current_path = REPO_ROOT / ".agent/programs/current.md"
+    if not current_path.exists():
+        errors.append("missing .agent/programs/current.md")
+    elif "当前没有 active program" not in current_path.read_text(encoding="utf-8"):
+        errors.append(".agent/programs/current.md must declare no active program")
+    archived_program4 = REPO_ROOT / "docs/history/programs/zuno-six-layer-internalization-v1/README.md"
+    if not archived_program4.exists():
+        errors.append("missing archived Program 4 README")
+    else:
+        archived_text = archived_program4.read_text(encoding="utf-8")
+        for phrase in [
+            "completed / archived",
+            "Capability tools 不按 CLI / API 拆成两棵顶层目录",
+            "PHASE01-07",
+        ]:
+            if phrase not in archived_text:
+                errors.append(f"archived Program 4 README missing phrase: {phrase}")
     for phase_name in [
         "PHASE01_directory-closure-master-plan.md",
         "PHASE02_platform-foundation-directory-migration.md",
@@ -638,6 +758,7 @@ def run_verification() -> VerificationResult:
             *verify_root_local_artifacts_are_absent(),
             *verify_first_class_directory_responsibilities(),
             *verify_backend_zuno_directory_classifications(),
+            *verify_backend_layer_internal_surfaces(),
             *verify_backend_legacy_import_aliases(),
             *verify_backend_retired_top_level_paths_are_absent(),
             *verify_target_architecture_html(),

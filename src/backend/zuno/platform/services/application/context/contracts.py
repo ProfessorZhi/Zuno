@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot
+from zuno.platform.services.graphrag.query_service import GraphRAGProjectSnapshot
 
 
 class ContextSource(StrEnum):

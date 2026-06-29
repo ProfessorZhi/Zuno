@@ -39,6 +39,10 @@ and evidence, not the active Agent execution path.
   structure guardrails. Its final alias surface closure retired root-level
   `zuno/*.py` compatibility files into the legacy alias registry while keeping
   old public imports working.
+- `zuno-six-layer-internalization-v1/`: completed six-layer internalization
+  program. It added no-side-effect thin surfaces under Agent, Memory,
+  Capability, Knowledge, and Platform, kept legacy imports working, and closed
+  the docs / verifier / tests drift guardrails.
 
 ## Rule
 

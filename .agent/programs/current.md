@@ -1,52 +1,43 @@
 # 当前程序
 
-当前 active program：
+当前没有 active program。
 
-```text
-zuno-six-layer-internalization-v1
-```
+state: no-active
 
-状态：active。
+## 当前状态
 
-## 当前目标
+`zuno-six-layer-internalization-v1` 已完成并归档到：
 
-Program 3 已完成 `src/backend/zuno` 顶层目录收口；当前 program 不再处理 root alias surface，而是让六层内部逐步长出可解释的目标层入口。
+- `docs/history/programs/zuno-six-layer-internalization-v1/`
 
-Program 3 固定的六层顶层仍是：`api / agent / memory / capability / knowledge / platform`。
+`.agent/programs/` 当前只保留等待状态、通用路线入口和收口清单，不再保留任何 `PHASE*.md` active phase 文件。
 
-本轮先做低风险 internalization：
+## 已完成事实
 
-- 不改 API 行为。
-- 不改 DB schema。
-- 不改 frontend。
-- 不改 eval baseline。
-- 不重写 GeneralAgent 主循环。
-- 不删除旧 public import path。
-- 只做无副作用 facade、薄入口、文档、测试和 verifier 可证明的边界推进。
+Program 3 已完成 `src/backend/zuno` 顶层目录和 root alias surface closure；Program 3 固定的六层顶层仍是 `api / agent / memory / capability / knowledge / platform`。`src/backend/zuno` 顶层目录仍只允许：
 
-## Active Phase
+- `api/`
+- `agent/`
+- `memory/`
+- `capability/`
+- `knowledge/`
+- `platform/`
+- `__init__.py`
+- `main.py`
 
-- `PHASE01_six-layer-current-inventory.md`：completed。
-- `PHASE02_memory-layer-foundation-surfaces.md`：in progress。
+`zuno-six-layer-internalization-v1` 在不改 API 行为、DB schema、frontend、eval baseline 或 `GeneralAgent` 主循环的前提下，完成了六层内部无副作用薄入口：
 
-## 当前事实
+- `agent/`：`runtime.py`、`context.py`、`post_turn.py`、`state.py`、`streaming.py`、`tool_bridge.py`
+- `memory/`：`contracts.py`、`store.py`、`policy.py`、`review.py`、`retrieval.py`、`rendering.py`、`engine.py`
+- `capability/`：`contracts.py`、`registry.py`、`selector.py`、`policy.py`、`execution.py`、`trace.py`
+- `knowledge/`：`contracts.py`、`query_service.py`、`evidence.py`、`citation.py`、`trace.py`、`retrieval/`、`fusion/`、`graphrag/`
+- `platform/`：`model_gateway.py`、`security/`、`observability/`、`storage/`
 
-`src/backend/zuno/memory/` 已从只有 `README.md` / `__init__.py` 的纯 facade，推进为包含下列薄入口：
+这些入口复用现有 runtime owner 或 compatibility owner，不表示 production-grade memory extraction、dynamic capability orchestration、完整 retrieval fusion、DB-backed memory、model gateway 默认行为或 Runtime Architecture Upgrade 已完成。
 
-- `contracts.py`
-- `store.py`
-- `policy.py`
-- `review.py`
-- `retrieval.py`
-- `rendering.py`
-- `engine.py`
+## 等待打开
 
-这些文件仍复用 `zuno.services.memory.layers` 的 foundation objects；物理实现位于 `src/backend/zuno/platform/services/memory/layers.py`。这不等于 production-grade memory extraction、retrieval、consolidation 或 Memory DB 已完成。
+queued draft / not active：
 
-## 归档边界
-
-最新完成 program 仍是：
-
-- `docs/history/programs/zuno-repo-layout-cleanup-v1/`
-
-Program 3 不能被改写成未完成；它完成的是 root / alias surface closure。当前 program 接续处理六层内部成熟化。
+- `.agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/`
+- `.agent/architecture/future/programs/zuno-architecture-visuals-v1/`

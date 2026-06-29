@@ -30,3 +30,4 @@
 - `tests/api/**`
 - `tests/frontend/test_product_wiring_v1_api_contract.py`
 - `tests/repo/test_backend_facade_layers.py`
+- `tests/repo/test_static_target_layer_imports.py`

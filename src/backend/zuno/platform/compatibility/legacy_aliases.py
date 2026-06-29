@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import importlib.abc
 import importlib.machinery
+import importlib.util
 from pathlib import Path
 import sys
 import types
@@ -86,6 +87,12 @@ class _LegacyAliasFinder(importlib.abc.MetaPathFinder):
                 _TargetModuleAliasLoader(_EXACT_SUBMODULE_ALIASES[alias]),
                 is_package=False,
             )
+        package_submodule_spec = _find_package_submodule_alias_spec(
+            alias_name=fullname,
+            alias=alias,
+        )
+        if package_submodule_spec is not None:
+            return package_submodule_spec
         if alias in _PACKAGE_ALIASES:
             target_name, relative_path = _PACKAGE_ALIASES[alias]
             return importlib.machinery.ModuleSpec(
@@ -117,6 +124,65 @@ class _LegacyAliasFinder(importlib.abc.MetaPathFinder):
                 is_package=True,
             )
         return None
+
+
+def _find_package_submodule_alias_spec(
+    *,
+    alias_name: str,
+    alias: str,
+) -> importlib.machinery.ModuleSpec | None:
+    for legacy_root, (target_root, _relative_path) in _PACKAGE_ALIASES.items():
+        prefix = legacy_root + "."
+        if not alias.startswith(prefix):
+            continue
+
+        target_name = target_root + alias[len(legacy_root):]
+        try:
+            target_spec = importlib.util.find_spec(target_name)
+        except (AttributeError, ImportError, ModuleNotFoundError, ValueError):
+            target_spec = None
+        if target_spec is None:
+            return None
+
+        is_package = target_spec.submodule_search_locations is not None
+        alias_spec = importlib.machinery.ModuleSpec(
+            alias_name,
+            _TargetModuleAliasLoader(
+                target_name,
+                public_module_name=_public_module_name_for_alias(
+                    alias_name=alias_name,
+                    target_name=target_name,
+                ),
+            ),
+            is_package=is_package,
+        )
+        if target_spec.submodule_search_locations is not None:
+            alias_spec.submodule_search_locations = list(target_spec.submodule_search_locations)
+        return alias_spec
+    return None
+
+
+def _public_module_name_for_alias(*, alias_name: str, target_name: str) -> str | None:
+    if target_name.startswith("zuno.platform.compatibility.vendor.fastapi_jwt_auth"):
+        return alias_name
+    return None
+
+
+def _rewrite_public_module_names(
+    module: ModuleType,
+    *,
+    target_name: str,
+    public_module_name: str,
+) -> None:
+    for value in vars(module).values():
+        current_module = getattr(value, "__module__", None)
+        if not isinstance(current_module, str):
+            continue
+        if current_module == target_name:
+            value.__module__ = public_module_name
+        elif current_module.startswith(f"{target_name}."):
+            suffix = current_module[len(target_name):]
+            value.__module__ = f"{public_module_name}{suffix}"
 
 
 class _PackageAliasLoader(importlib.abc.Loader):
@@ -170,11 +236,19 @@ class _NamespaceAliasLoader(importlib.abc.Loader):
 
 
 class _TargetModuleAliasLoader(importlib.abc.Loader):
-    def __init__(self, target_name: str) -> None:
+    def __init__(self, target_name: str, public_module_name: str | None = None) -> None:
         self.target_name = target_name
+        self.public_module_name = public_module_name
 
     def create_module(self, spec: importlib.machinery.ModuleSpec) -> ModuleType:
-        return importlib.import_module(self.target_name)
+        module = importlib.import_module(self.target_name)
+        if self.public_module_name is not None:
+            _rewrite_public_module_names(
+                module,
+                target_name=self.target_name,
+                public_module_name=self.public_module_name,
+            )
+        return module
 
     def exec_module(self, module: ModuleType) -> None:
         return None

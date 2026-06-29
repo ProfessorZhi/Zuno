@@ -2,25 +2,15 @@
 
 ## Current Truth
 
-当前 active program：
+当前没有 active program。
 
-```text
-zuno-six-layer-internalization-v1
-```
-
-state: active
-
-当前 active phase：
-
-- `.agent/programs/PHASE02_memory-layer-foundation-surfaces.md`
+state: no-active
 
 `.agent/programs/` 当前保留：
 
 - `README.md`
 - `current.md`
 - `implementation-roadmap.md`
-- `PHASE01_six-layer-current-inventory.md`
-- `PHASE02_memory-layer-foundation-surfaces.md`
 - `closure-checklist.md`
 
 ## 最近完成事实
@@ -41,21 +31,21 @@ Program 3 / `zuno-repo-layout-cleanup-v1` 已完成六层顶层目录收口和 f
 
 旧 public import path 由 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 
-## 当前 Program 目标
+## 最近完成事实
 
-`zuno-six-layer-internalization-v1` 负责让六层内部逐步拥有清晰、可测试、无副作用的目标层入口。
+Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档到：
 
-当前先处理 `memory/`：
+- `docs/history/programs/zuno-six-layer-internalization-v1/`
 
-- `contracts.py`
-- `store.py`
-- `policy.py`
-- `review.py`
-- `retrieval.py`
-- `rendering.py`
-- `engine.py`
+它让六层内部拥有第一批清晰、可测试、无副作用的目标层入口：
 
-这些入口复用 `zuno.services.memory.layers` foundation objects；物理实现位于 `src/backend/zuno/platform/services/memory/layers.py`。这不表示 production-grade memory extraction、retrieval、consolidation 或 Memory DB 已完成。
+- `agent/`：runtime、context、post_turn、state、streaming、tool_bridge。
+- `memory/`：contracts、store、policy、review、retrieval、rendering、engine。
+- `capability/`：contracts、registry、selector、policy、execution、trace。
+- `knowledge/`：contracts、query_service、evidence、citation、trace、retrieval、fusion、graphrag。
+- `platform/`：model_gateway、security、observability、storage。
+
+这些入口复用现有 runtime owner 或 compatibility owner。这不表示 production-grade memory extraction、retrieval、consolidation、Memory DB、dynamic capability orchestration、retrieval fusion 或 Runtime Architecture Upgrade 已完成。
 
 ## 等待打开
 

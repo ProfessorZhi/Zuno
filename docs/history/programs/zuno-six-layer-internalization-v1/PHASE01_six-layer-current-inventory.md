@@ -15,10 +15,10 @@
 
 ## 结论
 
-下一步先从 `memory/` 开始，因为它是最小、最清楚、最能验证的内部成熟化切片。
+先从 `memory/` 开始，因为它是最小、最清楚、最能验证的内部成熟化切片；后续再按 capability、knowledge、agent、platform 完成同一类薄入口。
 
 ## 验收
 
-- `.agent/programs/current.md` 明确当前 active program。
+- `.agent/programs/current.md` 明确当时的 active program。
 - `.agent/programs/implementation-roadmap.md` 明确 Phase 从 1 重新开始。
 - `docs/architecture/current-architecture.md` 区分 Program 3 root closure 和当前 internalization。

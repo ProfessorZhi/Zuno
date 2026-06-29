@@ -68,13 +68,24 @@ FACADE_ALL = {
         "ACCESS_SCOPE_DEFINITIONS",
         "EXECUTION_MODE_DEFINITIONS",
         "AccessScope",
+        "EchoLLMProvider",
         "ExecutionMode",
+        "LLMProvider",
+        "LazyStorageClient",
+        "MinioClient",
+        "OSSClient",
+        "RedisKeys",
         "annotate_tool_execution_metadata",
+        "build_langchain_run_config",
+        "build_langsmith_metadata",
+        "configure_langsmith",
         "filter_tools_for_mode",
+        "get_active_trace_id",
         "get_execution_config_payload",
         "get_tool_runtime_type",
         "normalize_access_scope",
         "normalize_execution_mode",
+        "storage_client",
         "validate_tools_for_mode",
     ],
 }
@@ -140,7 +151,8 @@ def test_selected_backend_facade_exports_match_legacy_objects() -> None:
 
 def test_old_lightweight_import_paths_still_import() -> None:
     for module_name in OLD_IMPORT_PATHS:
-        assert importlib.import_module(module_name).__name__ == module_name
+        module = importlib.import_module(module_name)
+        assert sys.modules[module_name] is module
 
 
 def test_importing_facades_in_fresh_process_does_not_load_heavy_runtime_modules() -> None:

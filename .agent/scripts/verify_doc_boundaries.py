@@ -52,6 +52,16 @@ REQUIRED_AGENT_PROGRAMS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE13_medium-risk-alias-surface-cleanup.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE14_high-risk-core-services-settings-cleanup.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE15_final-root-surface-guard-and-closure.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/README.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/current.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE01_six-layer-current-inventory.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE02_memory-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE03_capability-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE04_knowledge-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE05_agent-runtime-boundary-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE06_platform-boundary-hardening.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE07_docs-verifier-and-closure.md",
     "docs/history/programs/zuno-target-runtime-v2/README.md",
     "docs/history/programs/official-graphrag-cleanup-v1/implementation-roadmap.md",
     ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
@@ -98,9 +108,9 @@ def main() -> int:
 
     current_program = _read(".agent/references/current-program.md")
     for phrase in [
+        "当前没有 active program",
         "zuno-six-layer-internalization-v1",
-        "state: active",
-        "PHASE02_memory-layer-foundation-surfaces.md",
+        "docs/history/programs/zuno-six-layer-internalization-v1/",
         "final alias surface closure",
         "legacy_aliases.py",
         "__init__.py",
@@ -110,7 +120,7 @@ def main() -> int:
         "zuno-architecture-visuals-v1",
     ]:
         if phrase not in current_program:
-            errors.append(f"current-program.md missing active-program phrase: {phrase}")
+            errors.append(f"current-program.md missing program-status phrase: {phrase}")
 
     docs_front_path = ["README.md", "docs/README.md", "docs/architecture/README.md"]
     for relative_path in docs_front_path:

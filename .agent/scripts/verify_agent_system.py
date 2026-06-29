@@ -64,6 +64,16 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE13_medium-risk-alias-surface-cleanup.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE14_high-risk-core-services-settings-cleanup.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE15_final-root-surface-guard-and-closure.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/README.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/current.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE01_six-layer-current-inventory.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE02_memory-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE03_capability-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE04_knowledge-layer-foundation-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE05_agent-runtime-boundary-surfaces.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE06_platform-boundary-hardening.md",
+    "docs/history/programs/zuno-six-layer-internalization-v1/PHASE07_docs-verifier-and-closure.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
@@ -485,8 +495,6 @@ def main() -> int:
     )
     expected_program_files = sorted(
         [
-            "PHASE01_six-layer-current-inventory.md",
-            "PHASE02_memory-layer-foundation-surfaces.md",
             "README.md",
             "current.md",
             "implementation-roadmap.md",
@@ -495,8 +503,13 @@ def main() -> int:
     )
     if active_program_files != expected_program_files:
         errors.append(
-            f".agent/programs files are not canonical active internalization set: {active_program_files}"
+            f".agent/programs files are not canonical no-active set: {active_program_files}"
         )
+    if list((REPO_ROOT / ".agent/programs").glob("PHASE*.md")):
+        errors.append(".agent/programs must not keep PHASE files after six-layer internalization archive")
+    current_program_text = _read(".agent/programs/current.md")
+    if "当前没有 active program" not in current_program_text:
+        errors.append(".agent/programs/current.md must declare no active program")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
@@ -507,7 +520,15 @@ def main() -> int:
         "zuno-architecture-visuals-v1",
     ]:
         if phrase not in roadmap:
-            errors.append(f"active program roadmap missing phrase: {phrase}")
+            errors.append(f"program roadmap missing phrase: {phrase}")
+    archived_program4 = _read("docs/history/programs/zuno-six-layer-internalization-v1/README.md")
+    for phrase in [
+        "completed / archived",
+        "Capability tools 不按 CLI / API 拆成两棵顶层目录",
+        "PHASE01-07",
+    ]:
+        if phrase not in archived_program4:
+            errors.append(f"archived Program 4 README missing phrase: {phrase}")
 
     phase03 = _read("docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md")
     for phrase in [

@@ -5,7 +5,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 
-from zuno.services.application.context.contracts import (
+from zuno.platform.services.application.context.contracts import (
     ContextItem,
     ContextPreparationInput,
     ContextPreparationResult,

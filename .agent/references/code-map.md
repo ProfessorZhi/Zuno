@@ -10,12 +10,11 @@
 - `apps/desktop/`：Electron 桌面壳。
 - `src/backend/zuno/`：当前 Python 后端 runtime 真相。
 - `src/backend/zuno/api/`：HTTP routes、DTO、auth、response envelope、SSE。
-- `src/backend/zuno/api/`：HTTP routes、DTO、auth、response envelope、SSE。
-- `src/backend/zuno/agent/`：单一 GeneralAgent runtime 入口；旧 `zuno.core.*` 由 legacy alias registry 兼容。
-- `src/backend/zuno/memory/`：目标 Memory 层入口。
-- `src/backend/zuno/capability/`：目标 Tool、Skill、MCP 和 capability registry 入口。
-- `src/backend/zuno/knowledge/`：目标 RAG / GraphRAG / Evidence / Citation 入口。
-- `src/backend/zuno/platform/`：配置、数据库、兼容、资源、middleware、model gateway、storage 和旧 services 的物理归属。
+- `src/backend/zuno/agent/`：单一 GeneralAgent runtime 入口和 runtime / context / post_turn / state / streaming / tool_bridge 薄入口；旧 `zuno.core.*` 由 legacy alias registry 兼容。
+- `src/backend/zuno/memory/`：Memory contracts / store / policy / review / retrieval / rendering / engine 薄入口。
+- `src/backend/zuno/capability/`：Tool、Skill、MCP、capability registry / selector / policy / execution / trace 薄入口。
+- `src/backend/zuno/knowledge/`：RAG / GraphRAG / Evidence / Citation / retrieval / fusion 薄入口。
+- `src/backend/zuno/platform/`：配置、数据库、兼容、资源、middleware、model gateway、security、observability、storage 和旧 services 的物理归属。
 - `tools/`：脚本、启动器、eval 和维护工具。
 - `tests/`：仓库级验证和聚焦回归测试。
 - `docs/`：正式人类文档。
@@ -63,6 +62,7 @@ api / agent / memory / capability / knowledge / platform
 - Agent runtime 不能反向依赖 API 层。
 - 公共契约变化必须同步 DTO、前端类型和测试。
 - 检索、Agent、记忆和 GraphRAG 变更必须对齐对应参考文档和目标架构说明。
+- 目标层新入口内部必须优先引用物理 owner，不从 `zuno.services`、`zuno.core` 等 legacy alias 路径反向取对象。
 
 ## 受保护边界
 
