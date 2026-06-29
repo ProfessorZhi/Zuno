@@ -165,10 +165,79 @@ python tools/scripts/verify_repo_structure.py
 
 - `tools/scripts/verify_repo_structure.py`：新增 `ROOT_LOCAL_ARTIFACT_DIRECTORIES` 和 `verify_root_local_artifacts_are_absent()`，把根目录本地产物可见噪音纳入结构验证。
 - `tests/repo/test_repo_structure_consistency.py`：新增测试 pin 常量和 `run_verification()` 调用链，防止规则漂移。
-- `.agent/programs/PHASE08_backend-physical-cleanup-slices.md`：记录 Slice F 的审计结论和验收边界。
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md`：记录 Slice F 的审计结论和验收边界。
 
 ### 验收与回滚
 
 - focused tests：`pytest -q tests/repo/test_repo_structure_consistency.py -p no:cacheprovider`。
 - program gate：`git diff --check`、`python tools/scripts/verify_repo_structure.py`、`python .agent/scripts/verify_agent_system.py`。
 - rollback plan：如 verifier 误伤正式样例或正式证据，先把该路径分类为 Current / History / Generated / Local，再调整 allowlist；不要直接放宽为 broad `data/`、`reports/` 或 `node_modules/` 规则。
+
+## 最终落地：MCP / Middleware 物理迁移与 Program3 关闭
+
+> 状态：completed。本批做真实物理移动，并关闭 Program3。
+
+### 变更文件列表
+
+- `src/backend/zuno/capability/mcp/`
+- `src/backend/zuno/platform/middleware/`
+- `src/backend/zuno/mcp_servers/`
+- `src/backend/zuno/middleware/`
+- `src/backend/zuno/config/mcp_server.json`
+- `src/backend/zuno/main.py`
+- `src/backend/zuno/README.md`
+- `src/backend/zuno/core/README.md`
+- `src/backend/zuno/services/README.md`
+- `src/backend/zuno/utils/README.md`
+- `src/backend/zuno/evals/README.md`
+- `tools/scripts/verify_repo_structure.py`
+- `tests/repo/test_repo_structure_consistency.py`
+- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/legacy_guards/test_zuno_config_resource_aliases.py`
+- `.agent/programs/`
+- `.agent/references/current-program.md`
+- `AGENTS.md`
+- `docs/architecture/current-architecture.md`
+- `docs/architecture/roadmap.md`
+
+### 旧路径和新路径
+
+| 旧路径 | 新路径 | 说明 |
+| --- | --- | --- |
+| `src/backend/zuno/mcp_servers/arxiv/` | `src/backend/zuno/capability/mcp/servers/arxiv/` | MCP server implementation 进入 Capability 层。 |
+| `src/backend/zuno/mcp_servers/lark_mcp/` | `src/backend/zuno/capability/mcp/servers/lark_mcp/` | MCP server implementation 进入 Capability 层。 |
+| `src/backend/zuno/mcp_servers/qa_echo/` | `src/backend/zuno/capability/mcp/servers/qa_echo/` | MCP server implementation 进入 Capability 层。 |
+| `src/backend/zuno/mcp_servers/remote_proxy/` | `src/backend/zuno/capability/mcp/servers/remote_proxy/` | 默认 MCP config JSON 改指向新 `remote_proxy/main.py`。 |
+| `src/backend/zuno/mcp_servers/weather/` | `src/backend/zuno/capability/mcp/servers/weather/` | MCP server implementation 进入 Capability 层。 |
+| `src/backend/zuno/middleware/trace_id_middleware.py` | `src/backend/zuno/platform/middleware/trace_id_middleware.py` | HTTP middleware implementation 进入 Platform 层。 |
+| `src/backend/zuno/middleware/white_list_middleware.py` | `src/backend/zuno/platform/middleware/white_list_middleware.py` | HTTP middleware implementation 进入 Platform 层。 |
+
+旧 `zuno.mcp_servers.*` 和 `zuno.middleware.*` import path 继续作为 compatibility shell 保留；它们不再承载实现。
+
+### 保留目录和理由
+
+| 目录 | 分类 | 保留理由 |
+| --- | --- | --- |
+| `core/` | migration-source | `GeneralAgent` 主循环、模型管理和 callbacks 当前仍是 runtime truth，必须在 Program4 通过 runtime slice 迁移。 |
+| `services/` | migration-source | 当前承载 application services、retrieval、GraphRAG、memory、storage、queue、MCP、pipeline 等实现，不能 bulk move。 |
+| `schema/` | migration-source | API DTO / public contract 被 API tests 和 runtime imports 固定，迁入 `api/dto` 需要单独 API contract slice。 |
+| `tools/` | migration-source | Runtime tools 和旧 `zuno.tools.*` public import 仍被 Agent/tools tests 使用。 |
+| `database/` | infrastructure | DB models、DAO、session lifecycle 是 public persistence surface，迁移会触碰 DB schema 风险。 |
+| `config/` | infrastructure | 配置资源和 `zuno.config.*`、container-style `zuno/config` path 仍被 init/default scripts 使用。 |
+| `utils/` | migration-source | 共享 helper 被 core/services/tools/tests 引用，必须按 owner 小切片迁移。 |
+| `evals/` | compatibility-shell | 只保留 namespace bridge，真实 eval 在 `tools/evals/zuno/`。 |
+
+### focused tests
+
+```powershell
+pytest -q tests/repo/test_repo_structure_consistency.py tests/legacy_guards/test_zuno_alias_imports.py tests/legacy_guards/test_zuno_config_resource_aliases.py -p no:cacheprovider
+python tools/scripts/verify_repo_structure.py
+```
+
+### rollback plan
+
+如果 MCP entrypoint 失败，先恢复 `src/backend/zuno/mcp_servers/*` 子目录并把 `config/mcp_server.json` 改回旧路径；如果 middleware import 失败，先恢复 `src/backend/zuno/middleware/*.py` 并把 `main.py` import 改回旧路径。因为本批不改 DB schema、API DTO 或 GraphRAG query semantics，rollback 不需要数据迁移。
+
+### docs / verifier 同步判断
+
+本批同步了 backend README、Program3 归档、roadmap、current architecture、repo structure verifier 和 repo tests。它把“低风险 backend physical cleanup”提升为 Current；不把 runtime architecture upgrade、完整六层物理迁移或成熟 Capability orchestration 写成 Current。

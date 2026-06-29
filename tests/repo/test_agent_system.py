@@ -27,9 +27,6 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/programs/current.md",
         ".agent/programs/implementation-roadmap.md",
         ".agent/programs/closure-checklist.md",
-        ".agent/programs/PHASE06_backend-directory-clarity-audit.md",
-        ".agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
-        ".agent/programs/PHASE08_backend-physical-cleanup-slices.md",
         ".agent/architecture/future/programs/README.md",
         ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
         ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -44,6 +41,9 @@ def test_agent_system_required_paths_exist() -> None:
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_backend-six-layer-migration-plan.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_small-boundary-cleanups.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_hygiene-verifier-closure.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE06_backend-directory-clarity-audit.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+        "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
         "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
@@ -325,7 +325,7 @@ def test_agent_templates_keep_execution_skeleton_boundary() -> None:
         assert phrase in content, f"missing template boundary phrase: {phrase}"
 
 
-def test_current_program_declares_program3_continuation_and_archives_first_slice() -> None:
+def test_current_program_declares_no_active_program_and_latest_archive() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -334,11 +334,10 @@ def test_current_program_declares_program3_continuation_and_archives_first_slice
         encoding="utf-8"
     )
 
-    assert "当前 active program" in current
-    assert "Program 3 定义修正" in current
-    assert "PHASE06_backend-directory-clarity-audit.md" in current
-    assert "zuno-workflow-doc-system-v1" in current
-    assert "zuno-target-architecture-refresh-v1" in current
+    assert "当前没有 active program" in current
+    assert "最新完成" in current
+    assert "MCP server implementations" in current
+    assert "HTTP middleware implementations" in current
     assert "zuno-repo-layout-cleanup-v1" in current
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
     assert "zuno-target-architecture-migration-v1/" in history_index
@@ -421,7 +420,7 @@ def test_domain_pack_grep_helper_tracks_all_phase11c_legacy_patterns() -> None:
     assert ".agent/scripts/grep-domain-pack.ps1" in verification_map
 
 
-def test_program3_continuation_keeps_first_slice_archived_and_next_queue() -> None:
+def test_program3_closure_keeps_all_phases_archived_and_next_queue() -> None:
     roadmap = (REPO_ROOT / ".agent" / "programs" / "implementation-roadmap.md").read_text(
         encoding="utf-8"
     )
@@ -454,21 +453,15 @@ def test_program3_continuation_keeps_first_slice_archived_and_next_queue() -> No
     )
 
     for phrase in [
-        "状态：active / definition revised",
-        "zuno-workflow-doc-system-v1",
-        "PHASE06",
-        "fastapi_jwt_auth",
-        "backend physical layout cleanup",
-        "zuno-target-architecture-refresh-v1",
+        "当前没有 active program",
+        "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
+        "zuno-runtime-architecture-upgrade-v1",
+        "zuno-architecture-visuals-v1",
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == [
-        "PHASE06_backend-directory-clarity-audit.md",
-        "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
-        "PHASE08_backend-physical-cleanup-slices.md",
-    ]
+    assert active_phase_files == []
     for prompt in [
         "THREAD_A_root-docs-agent-hygiene-prompt.md",
         "THREAD_B_backend-six-layer-audit-prompt.md",
@@ -490,6 +483,21 @@ def test_program3_continuation_keeps_first_slice_archived_and_next_queue() -> No
     assert "知识库支持多套 extractor / config 选择" in program2
     assert "已完成并归档" in program3
     assert "repo hygiene verifier" in program3
+    assert "capability/mcp/servers" in program3
+    assert "platform/middleware" in program3
+    for phase in [
+        "PHASE06_backend-directory-clarity-audit.md",
+        "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+        "PHASE08_backend-physical-cleanup-slices.md",
+    ]:
+        assert (
+            REPO_ROOT
+            / "docs"
+            / "history"
+            / "programs"
+            / "zuno-repo-layout-cleanup-v1"
+            / phase
+        ).exists()
 
 
 def test_queued_program_files_are_marked_not_active() -> None:

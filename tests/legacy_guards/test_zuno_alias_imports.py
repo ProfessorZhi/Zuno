@@ -21,6 +21,9 @@ def test_zuno_alias_modules_import():
     from zuno.middleware.trace_id_middleware import TraceIDMiddleware
     from zuno.middleware.white_list_middleware import WhitelistMiddleware
     from zuno.mcp_servers.remote_proxy.main import main as remote_proxy_main
+    from zuno.platform.middleware.trace_id_middleware import TraceIDMiddleware as PlatformTraceIDMiddleware
+    from zuno.platform.middleware.white_list_middleware import WhitelistMiddleware as PlatformWhitelistMiddleware
+    from zuno.capability.mcp.servers.remote_proxy.main import main as capability_remote_proxy_main
     from zuno.schema.common import ModelConfig
     from zuno.services.graphrag.extractor import GraphExtractor
     from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
@@ -51,6 +54,9 @@ def test_zuno_alias_modules_import():
     assert TraceIDMiddleware is not None
     assert WhitelistMiddleware is not None
     assert remote_proxy_main is not None
+    assert TraceIDMiddleware is PlatformTraceIDMiddleware
+    assert WhitelistMiddleware is PlatformWhitelistMiddleware
+    assert remote_proxy_main is capability_remote_proxy_main
     assert ModelConfig is not None
     assert GraphExtractor is not None
     assert StructuredGraphExtractor is not None
@@ -147,6 +153,10 @@ def test_zuno_service_imports_resolve_from_backend_runtime_surface():
         "zuno.middleware",
         "zuno.middleware.trace_id_middleware",
         "zuno.middleware.white_list_middleware",
+        "zuno.platform.middleware",
+        "zuno.platform.middleware.trace_id_middleware",
+        "zuno.platform.middleware.white_list_middleware",
+        "zuno.capability.mcp.servers.remote_proxy.main",
         "zuno.services.queue",
         "zuno.services.queue.client",
         "zuno.services.queue.runner",
@@ -162,6 +172,8 @@ def test_zuno_service_imports_resolve_from_backend_runtime_surface():
         assert (
             "/src/backend/zuno/services/" in module_path
             or "/src/backend/zuno/middleware/" in module_path
+            or "/src/backend/zuno/platform/middleware/" in module_path
+            or "/src/backend/zuno/capability/mcp/servers/" in module_path
         ), module_path
 
 
@@ -236,6 +248,16 @@ def test_zuno_queue_and_pipeline_alias_module_matrix_imports():
 def test_zuno_mcp_alias_module_imports():
     modules = [
         "zuno.services.mcp.manager",
+        "zuno.capability.mcp.servers.arxiv.mcp_arxiv",
+        "zuno.capability.mcp.servers.lark_mcp.main",
+        "zuno.capability.mcp.servers.qa_echo.main",
+        "zuno.capability.mcp.servers.remote_proxy.main",
+        "zuno.capability.mcp.servers.weather.mcp_weather",
+        "zuno.mcp_servers.arxiv.mcp_arxiv",
+        "zuno.mcp_servers.lark_mcp.main",
+        "zuno.mcp_servers.qa_echo.main",
+        "zuno.mcp_servers.remote_proxy.main",
+        "zuno.mcp_servers.weather.mcp_weather",
     ]
 
     for module_name in modules:

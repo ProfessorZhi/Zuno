@@ -33,9 +33,6 @@ Require-Path ".agent\system.yaml"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE06_backend-directory-clarity-audit.md"
-Require-Path ".agent\programs\PHASE07_fastapi-jwt-auth-compat-retirement-plan.md"
-Require-Path ".agent\programs\PHASE08_backend-physical-cleanup-slices.md"
 Require-Path ".agent\architecture\future\programs\README.md"
 Require-Path ".agent\programs\thread-prompts\README.md"
 Require-NoPath ".agent\programs\thread-prompts\THREAD_D_resources-compatibility-physical-migration-prompt.md"
@@ -45,6 +42,9 @@ Require-NoPath ".agent\programs\PHASE02_agent-bootloader-routing.md"
 Require-NoPath ".agent\programs\PHASE03_skill-template-program-system.md"
 Require-NoPath ".agent\programs\PHASE04_workflow-verifiers-drift-tests.md"
 Require-NoPath ".agent\programs\PHASE05_closure-history-archive.md"
+Require-NoPath ".agent\programs\PHASE06_backend-directory-clarity-audit.md"
+Require-NoPath ".agent\programs\PHASE07_fastapi-jwt-auth-compat-retirement-plan.md"
+Require-NoPath ".agent\programs\PHASE08_backend-physical-cleanup-slices.md"
 Require-NoPath ".agent\architecture\future\programs\zuno-target-architecture-refresh-v1"
 Require-NoPath ".agent\architecture\future\programs\zuno-repo-layout-cleanup-v1"
 Require-NoPath ".agent\programs\zuno-target-runtime-v2"
@@ -71,6 +71,9 @@ Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\README.md"
 Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\implementation-roadmap.md"
 Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE01_repo-layout-audit.md"
 Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE05_hygiene-verifier-closure.md"
+Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE06_backend-directory-clarity-audit.md"
+Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE07_fastapi-jwt-auth-compat-retirement-plan.md"
+Require-Path "docs\history\programs\zuno-repo-layout-cleanup-v1\PHASE08_backend-physical-cleanup-slices.md"
 Require-Path "docs\history\README.md"
 Require-Path "apps\web\AGENTS.md"
 Require-Path "src\backend\zuno\AGENTS.md"
@@ -98,20 +101,20 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw
-if ($currentProgram -notmatch "\.agent/programs/") {
-    $failures.Add("current-program.md does not point to the flat active program directory")
+if ($currentProgram -notmatch "当前没有 active program") {
+    $failures.Add("current-program.md must declare no active program")
 }
-if ($currentProgram -notmatch "当前 active program") {
-    $failures.Add("current-program.md must declare active program")
+if ($currentProgram -notmatch "\.agent/programs/") {
+    $failures.Add("current-program.md does not point to the flat program directory")
 }
 if ($currentProgram -notmatch "zuno-repo-layout-cleanup-v1") {
-    $failures.Add("current-program.md missing active repo layout cleanup program id")
+    $failures.Add("current-program.md missing completed repo layout cleanup program id")
 }
-if ($currentProgram -notmatch "PHASE08_backend-physical-cleanup-slices.md") {
-    $failures.Add("current-program.md missing active Program 3 continuation phase")
+if ($currentProgram -notmatch "zuno-runtime-architecture-upgrade-v1" -or $currentProgram -notmatch "zuno-architecture-visuals-v1") {
+    $failures.Add("current-program.md missing queued Program 4/5 ids")
 }
-if ($currentProgram -notmatch "zuno-workflow-doc-system-v1" -or $currentProgram -notmatch "zuno-target-architecture-refresh-v1") {
-    $failures.Add("current-program.md missing archived Program 1/2 ids")
+if ($currentProgram -notmatch "MCP server implementations" -or $currentProgram -notmatch "HTTP middleware implementations") {
+    $failures.Add("current-program.md missing Program 3 physical cleanup completion facts")
 }
 
 if ($failures.Count -gt 0) {

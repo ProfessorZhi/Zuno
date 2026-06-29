@@ -22,11 +22,23 @@ def _load_module(module_name: str, path: Path):
 
 
 def _load_planner_runtime():
+    original_graphrag_models = sys.modules.get("zuno.services.graphrag.models")
+    original_retrieval_models = sys.modules.get("zuno.services.retrieval.models")
     graphrag_models = _load_module("phase5_graphrag_models", GRAPHRAG_MODELS_PATH)
     retrieval_models = _load_module("phase5_retrieval_models", RETRIEVAL_MODELS_PATH)
-    sys.modules["zuno.services.graphrag.models"] = graphrag_models
-    sys.modules["zuno.services.retrieval.models"] = retrieval_models
-    planner_module = _load_module("phase5_retrieval_planner", PLANNER_PATH)
+    try:
+        sys.modules["zuno.services.graphrag.models"] = graphrag_models
+        sys.modules["zuno.services.retrieval.models"] = retrieval_models
+        planner_module = _load_module("phase5_retrieval_planner", PLANNER_PATH)
+    finally:
+        if original_graphrag_models is None:
+            sys.modules.pop("zuno.services.graphrag.models", None)
+        else:
+            sys.modules["zuno.services.graphrag.models"] = original_graphrag_models
+        if original_retrieval_models is None:
+            sys.modules.pop("zuno.services.retrieval.models", None)
+        else:
+            sys.modules["zuno.services.retrieval.models"] = original_retrieval_models
     return planner_module.RetrievalPlanner, retrieval_models.ProcessedQuery, retrieval_models.RetrievalRequest
 
 

@@ -124,7 +124,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1 和 Program 2 已完成；当前 active program 是 Program 3 continuation：`zuno-repo-layout-cleanup-v1`。
+当前目标：停止继续堆 runtime feature，先按短期五个 program 分批收口成熟项目封面。Program 1、Program 2 和 Program 3 已完成；当前没有 active program。
 
 最新完成程序归档在：
 
@@ -132,17 +132,15 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `docs/history/programs/zuno-architecture-surface-cleanup-v1/`
 - `docs/history/programs/zuno-workflow-doc-system-v1/`
 - `docs/history/programs/zuno-target-architecture-refresh-v1/`
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/`
 
-当前 program：
+当前 `.agent/programs/`：
 
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/current.md`
-- `.agent/programs/PHASE06_backend-directory-clarity-audit.md`
-- `.agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md`
-- `.agent/programs/PHASE08_backend-physical-cleanup-slices.md`
 - `.agent/programs/closure-checklist.md`
 
-当前 active phase 是 `PHASE08_backend-physical-cleanup-slices.md`。`PHASE06` 已完成目录审计，`PHASE07` 已退休 `fastapi_jwt_auth` 顶层 compatibility shell；当前使用挂机模式继续做 backend physical layout migration，让 `src/backend/zuno` 逐步收敛到 `api / agent / memory / capability / knowledge / platform / resources / compatibility`。
+当前没有 active phase。Program 3 已完成并归档：`src/backend/` 顶层只保留 `zuno/`；`fastapi_jwt_auth` 顶层 shell 已退休；resources / compatibility、MCP server implementations 和 HTTP middleware implementations 已完成低风险物理收敛；仍保留的旧 runtime 顶层目录有 README 分类和 verifier guard。
 
 后续 queued programs：
 

@@ -16,7 +16,9 @@ def test_zuno_config_resource_aliases_exist_and_match_zuno():
         zuno_payload = json.loads(zuno_path.read_text(encoding="utf-8"))
 
         if resource_name == "mcp_server.json":
-            assert all("zuno/mcp_servers/remote_proxy/main.py" in json.dumps(item, ensure_ascii=False) for item in zuno_payload)
+            serialized = json.dumps(zuno_payload, ensure_ascii=False)
+            assert "zuno/capability/mcp/servers/remote_proxy/main.py" in serialized
+            assert "zuno/mcp_servers/remote_proxy/main.py" not in serialized
         else:
             assert zuno_payload == zuno_payload
 

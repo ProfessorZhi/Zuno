@@ -2,7 +2,7 @@
 
 这里保存短期四目标拆出来的后续 program 草案。它们不是当前 active program，不能直接从这里执行。
 
-当前 active program 只在 `.agent/programs/` 根目录中平铺存在。
+当前没有 active program；下一次打开 program 时，active phase 文件只允许平铺在 `.agent/programs/` 根目录。
 
 ## 当前状态
 

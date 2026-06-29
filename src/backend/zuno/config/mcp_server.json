@@ -14,7 +14,7 @@
           "command": "python",
           "cwd": "/app",
           "args": [
-            "zuno/mcp_servers/remote_proxy/main.py",
+            "zuno/capability/mcp/servers/remote_proxy/main.py",
             "--server-name",
             "高德地图",
             "--transport",
@@ -43,7 +43,7 @@
           "command": "python",
           "cwd": "/app",
           "args": [
-            "zuno/mcp_servers/remote_proxy/main.py",
+            "zuno/capability/mcp/servers/remote_proxy/main.py",
             "--server-name",
             "必应搜索",
             "--transport",
@@ -83,7 +83,7 @@
           "command": "python",
           "cwd": "/app",
           "args": [
-            "zuno/mcp_servers/remote_proxy/main.py",
+            "zuno/capability/mcp/servers/remote_proxy/main.py",
             "--server-name",
             "飞书",
             "--transport",

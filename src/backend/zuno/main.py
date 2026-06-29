@@ -9,8 +9,8 @@ from fastapi.responses import JSONResponse
 from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
 from zuno.compatibility.vendor.fastapi_jwt_auth.exceptions import AuthJWTException
 
-from zuno.middleware.trace_id_middleware import TraceIDMiddleware
-from zuno.middleware.white_list_middleware import WhitelistMiddleware
+from zuno.platform.middleware.trace_id_middleware import TraceIDMiddleware
+from zuno.platform.middleware.white_list_middleware import WhitelistMiddleware
 from zuno.settings import app_settings, initialize_app_settings
 from zuno.utils.runtime_observability import configure_langsmith
 

@@ -39,9 +39,6 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    ".agent/programs/PHASE06_backend-directory-clarity-audit.md",
-    ".agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
-    ".agent/programs/PHASE08_backend-physical-cleanup-slices.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -57,6 +54,9 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_backend-six-layer-migration-plan.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_small-boundary-cleanups.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_hygiene-verifier-closure.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE06_backend-directory-clarity-audit.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_A_root-docs-agent-hygiene-prompt.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_B_backend-six-layer-audit-prompt.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/thread-prompts/THREAD_C_tools-tests-generated-artifacts-prompt.md",
@@ -481,30 +481,21 @@ def main() -> int:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
-            "PHASE06_backend-directory-clarity-audit.md",
-            "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
-            "PHASE08_backend-physical-cleanup-slices.md",
         ]
     )
     if active_program_files != expected_program_files:
-        errors.append(f".agent/programs files are not canonical Program 3 continuation set: {active_program_files}")
+        errors.append(f".agent/programs files are not canonical no-active-program set: {active_program_files}")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "状态：active / definition revised",
-        "VS Code / Explorer",
-        "fastapi_jwt_auth",
-        "backend physical layout cleanup",
-        "PHASE06",
-        "zuno-workflow-doc-system-v1",
-        "zuno-target-architecture-refresh-v1",
-        "zuno-repo-layout-cleanup-v1",
+        "当前没有 active program",
         "每次新 program 都从 `PHASE01` 开始编号",
+        "zuno-repo-layout-cleanup-v1",
         "zuno-runtime-architecture-upgrade-v1",
         "zuno-architecture-visuals-v1",
     ]:
         if phrase not in roadmap:
-            errors.append(f"Program 3 continuation roadmap missing phrase: {phrase}")
+            errors.append(f"no-active-program roadmap missing phrase: {phrase}")
 
     phase03 = _read("docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md")
     for phrase in [

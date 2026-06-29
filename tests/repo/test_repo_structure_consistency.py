@@ -134,8 +134,14 @@ def test_repo_structure_verifier_pins_backend_zuno_directory_classifications() -
         "compatibility": "compatibility-shell",
         "config": "infrastructure",
         "database": "infrastructure",
+        "mcp_servers": "compatibility-shell",
+        "middleware": "compatibility-shell",
         "schema": "migration-source",
         "tools": "migration-source",
+        "core": "migration-source",
+        "services": "migration-source",
+        "utils": "migration-source",
+        "evals": "compatibility-shell",
     }
 
 
@@ -151,8 +157,14 @@ def test_backend_zuno_classified_directories_have_boundary_readmes() -> None:
         "compatibility",
         "config",
         "database",
+        "mcp_servers",
+        "middleware",
         "schema",
         "tools",
+        "core",
+        "services",
+        "utils",
+        "evals",
     ]
 
     for directory in classified_directories:
@@ -314,6 +326,13 @@ def test_repo_structure_verifier_pins_retired_backend_top_level_paths() -> None:
         "src/backend/zuno/system_skills": "runtime system skills moved to zuno/resources/system_skills",
         "src/backend/zuno/legacy": "legacy aliases moved to zuno/compatibility/legacy",
         "src/backend/zuno/vendor": "vendored dependencies moved to zuno/compatibility/vendor",
+        "src/backend/zuno/mcp_servers/arxiv": "MCP server implementations moved to zuno/capability/mcp/servers",
+        "src/backend/zuno/mcp_servers/lark_mcp": "MCP server implementations moved to zuno/capability/mcp/servers",
+        "src/backend/zuno/mcp_servers/qa_echo": "MCP server implementations moved to zuno/capability/mcp/servers",
+        "src/backend/zuno/mcp_servers/remote_proxy": "MCP server implementations moved to zuno/capability/mcp/servers",
+        "src/backend/zuno/mcp_servers/weather": "MCP server implementations moved to zuno/capability/mcp/servers",
+        "src/backend/zuno/middleware/trace_id_middleware.py": "HTTP middleware implementation moved to zuno/platform/middleware",
+        "src/backend/zuno/middleware/white_list_middleware.py": "HTTP middleware implementation moved to zuno/platform/middleware",
     }
 
 
@@ -433,7 +452,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_program3_continuation_is_flat_and_first_slice_is_archived() -> None:
+def test_program3_closure_leaves_no_active_phase_files() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -446,9 +465,6 @@ def test_program3_continuation_is_flat_and_first_slice_is_archived() -> None:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
-            "PHASE06_backend-directory-clarity-audit.md",
-            "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
-            "PHASE08_backend-physical-cleanup-slices.md",
         ]
     )
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
@@ -462,13 +478,11 @@ def test_program3_continuation_is_flat_and_first_slice_is_archived() -> None:
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
-        "状态：active / definition revised",
-        "PHASE06",
-        "fastapi_jwt_auth",
-        "backend physical layout cleanup",
-        "zuno-workflow-doc-system-v1",
-        "zuno-target-architecture-refresh-v1",
+        "当前没有 active program",
+        "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
+        "zuno-runtime-architecture-upgrade-v1",
+        "zuno-architecture-visuals-v1",
     ]:
         assert phrase in roadmap
     program3 = (
@@ -476,6 +490,16 @@ def test_program3_continuation_is_flat_and_first_slice_is_archived() -> None:
     ).read_text(encoding="utf-8")
     assert "已完成并归档" in program3
     assert "repo hygiene verifier" in program3
+    assert "capability/mcp/servers" in program3
+    assert "platform/middleware" in program3
+    for phase in [
+        "PHASE06_backend-directory-clarity-audit.md",
+        "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+        "PHASE08_backend-physical-cleanup-slices.md",
+    ]:
+        assert (
+            REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1" / phase
+        ).exists()
     phase03 = (
         REPO_ROOT / "docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md"
     ).read_text(encoding="utf-8")

@@ -116,6 +116,7 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_con
 常用聚焦命令：
 
 ```powershell
+pytest -q tests/legacy_guards/test_phase0_runtime_recovery.py
 pytest -q tests/repo/test_repo_structure_consistency.py
 pytest -q tests/repo/test_publish_boundary.py
 ```
@@ -135,7 +136,7 @@ Zuno/
 ├─ infra/                  # Docker 和基础设施配置
 ├─ examples/               # GraphRAG Project 示例
 ├─ docs/                   # 正式文档
-│  ├─ architecture/        # Current / Target / Roadmap / Diagrams / ADR
+│  ├─ architecture/        # 当前架构、目标架构、路线图、正式决策
 │  ├─ evidence/            # 精选证据
 │  ├─ reference/           # 当前术语
 │  └─ history/             # 过时或已完成材料归档

@@ -20,9 +20,6 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    ".agent/programs/PHASE06_backend-directory-clarity-audit.md",
-    ".agent/programs/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
-    ".agent/programs/PHASE08_backend-physical-cleanup-slices.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -70,6 +67,9 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE03_backend-six-layer-migration-plan.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE04_small-boundary-cleanups.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE05_hygiene-verifier-closure.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE06_backend-directory-clarity-audit.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
+    "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
     "docs/history/development/README.md",
     "docs/history/reference/migration.md",
     "docs/history/specs",
@@ -217,8 +217,14 @@ BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS = {
     "compatibility": "compatibility-shell",
     "config": "infrastructure",
     "database": "infrastructure",
+    "mcp_servers": "compatibility-shell",
+    "middleware": "compatibility-shell",
     "schema": "migration-source",
     "tools": "migration-source",
+    "core": "migration-source",
+    "services": "migration-source",
+    "utils": "migration-source",
+    "evals": "compatibility-shell",
 }
 
 BACKEND_RETIRED_TOP_LEVEL_PATHS = {
@@ -228,6 +234,13 @@ BACKEND_RETIRED_TOP_LEVEL_PATHS = {
     "src/backend/zuno/system_skills": "runtime system skills moved to zuno/resources/system_skills",
     "src/backend/zuno/legacy": "legacy aliases moved to zuno/compatibility/legacy",
     "src/backend/zuno/vendor": "vendored dependencies moved to zuno/compatibility/vendor",
+    "src/backend/zuno/mcp_servers/arxiv": "MCP server implementations moved to zuno/capability/mcp/servers",
+    "src/backend/zuno/mcp_servers/lark_mcp": "MCP server implementations moved to zuno/capability/mcp/servers",
+    "src/backend/zuno/mcp_servers/qa_echo": "MCP server implementations moved to zuno/capability/mcp/servers",
+    "src/backend/zuno/mcp_servers/remote_proxy": "MCP server implementations moved to zuno/capability/mcp/servers",
+    "src/backend/zuno/mcp_servers/weather": "MCP server implementations moved to zuno/capability/mcp/servers",
+    "src/backend/zuno/middleware/trace_id_middleware.py": "HTTP middleware implementation moved to zuno/platform/middleware",
+    "src/backend/zuno/middleware/white_list_middleware.py": "HTTP middleware implementation moved to zuno/platform/middleware",
 }
 
 ROOT_LOCAL_ARTIFACT_DIRECTORIES = {
@@ -400,17 +413,13 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
         return ["missing .agent/programs implementation roadmap"]
     roadmap = roadmap_path.read_text(encoding="utf-8")
     errors = [
-        f"Program 3 continuation roadmap missing phrase: {phrase}"
+        f"no-active-program roadmap missing phrase: {phrase}"
         for phrase in [
-            "状态：active / definition revised",
-            "VS Code / Explorer",
-            "fastapi_jwt_auth",
-            "backend physical layout cleanup",
-            "PHASE06",
-            "zuno-workflow-doc-system-v1",
-            "zuno-target-architecture-refresh-v1",
+            "当前没有 active program",
             "zuno-repo-layout-cleanup-v1",
             "每次新 program 都从 `PHASE01` 开始编号",
+            "zuno-runtime-architecture-upgrade-v1",
+            "zuno-architecture-visuals-v1",
         ]
         if phrase not in roadmap
     ]
@@ -427,16 +436,18 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_files = sorted((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
-    expected_phase_files = [
+    if active_phase_files:
+        errors.append(
+            ".agent/programs must not keep completed Program 3 phase files after closure: "
+            + ", ".join(path.name for path in active_phase_files)
+        )
+    for phase_name in [
         "PHASE06_backend-directory-clarity-audit.md",
         "PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
         "PHASE08_backend-physical-cleanup-slices.md",
-    ]
-    if [path.name for path in active_phase_files] != expected_phase_files:
-        errors.append(
-            "active Program 3 continuation phase files are not canonical: "
-            + ", ".join(path.name for path in active_phase_files)
-        )
+    ]:
+        if not (REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1" / phase_name).exists():
+            errors.append(f"missing archived Program 3 continuation phase: {phase_name}")
     archived_program3 = REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md"
     if not archived_program3.exists():
         errors.append("missing archived Program 3 README")
