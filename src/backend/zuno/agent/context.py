@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from zuno.platform.services.application.context import (
         AgentExecutionContext,
         ContextOrchestrator,
+        ContextPackPolicy,
         ContextTrace,
         ModelContextPacket,
     )
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
 _EXPORT_TO_MODULE = {
     "AgentExecutionContext": "zuno.platform.services.application.context",
     "ContextOrchestrator": "zuno.platform.services.application.context",
+    "ContextPackPolicy": "zuno.platform.services.application.context",
     "ContextTrace": "zuno.platform.services.application.context",
     "ModelContextPacket": "zuno.platform.services.application.context",
 }
@@ -22,6 +24,7 @@ _EXPORT_TO_MODULE = {
 __all__ = [
     "AgentExecutionContext",
     "ContextOrchestrator",
+    "ContextPackPolicy",
     "ContextTrace",
     "ModelContextPacket",
 ]

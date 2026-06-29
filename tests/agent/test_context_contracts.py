@@ -117,8 +117,72 @@ def test_context_contract_exports_are_explicit_and_do_not_create_query_runtime()
         "AgentExecutionContext",
         "ModelContextPacket",
         "TokenBudgetPolicy",
+        "ContextPackPolicy",
         "ContextTrace",
         "ContextItem",
         "ContextSource",
         "ContextSelectionReason",
     }.issubset(set(contracts.__all__))
+
+
+def test_context_trace_records_source_coverage_and_pack_policy() -> None:
+    from zuno.services.application.context.contracts import (
+        AgentExecutionContext,
+        ContextItem,
+        ContextPackPolicy,
+        ContextSelectionReason,
+        ContextSource,
+        ContextTrace,
+        ModelContextPacket,
+        TokenBudgetPolicy,
+    )
+
+    sourced_memory = ContextItem(
+        item_id="memory_semantic_1",
+        source=ContextSource.MEMORY,
+        content="User prefers concise status updates.",
+        token_estimate=7,
+        priority=80,
+        reason=ContextSelectionReason.RELEVANT_MEMORY,
+        source_event_ids=("evt_preference_1",),
+        metadata={"memory_layer": "semantic_memory", "usage": "pre_model_context"},
+    )
+    unsourced_memory = ContextItem(
+        item_id="memory_missing_source",
+        source=ContextSource.MEMORY,
+        content="Untrusted remembered fact.",
+        token_estimate=5,
+        priority=20,
+        reason=ContextSelectionReason.RELEVANT_MEMORY,
+    )
+    token_budget = TokenBudgetPolicy(max_tokens=64, reserved_response_tokens=16)
+    pack_policy = ContextPackPolicy()
+    trace = ContextTrace.from_items(
+        trace_id="trace_context_policy",
+        policy=token_budget,
+        context_policy=pack_policy,
+        selected_items=(sourced_memory,),
+        dropped_items=(unsourced_memory,),
+    )
+    packet = ModelContextPacket(
+        execution_context=AgentExecutionContext(
+            trace_id="trace_context_policy",
+            user_id="u1",
+            agent_id="agent_1",
+            thread_id="thread_1",
+            project_id="project_1",
+            task="answer with memory",
+        ),
+        items=(sourced_memory,),
+        token_budget=token_budget,
+        context_policy=pack_policy,
+        trace=trace,
+    )
+
+    payload = packet.to_dict()
+
+    assert payload["context_policy"]["compression_strategy"] == "summary_compression"
+    assert payload["context_policy"]["extraction_strategy"] == "structured_extraction"
+    assert payload["trace"]["source_event_ids_by_item"]["memory_semantic_1"] == ["evt_preference_1"]
+    assert payload["trace"]["missing_source_event_item_ids"] == ["memory_missing_source"]
+    assert payload["items"][0]["metadata"]["usage"] == "pre_model_context"

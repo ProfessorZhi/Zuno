@@ -1,6 +1,7 @@
 from zuno.platform.services.application.context.contracts import (
     AgentExecutionContext,
     ContextItem,
+    ContextPackPolicy,
     ContextPreparationInput,
     ContextPreparationResult,
     ContextSelectionReason,
@@ -18,6 +19,7 @@ __all__ = [
     "AgentExecutionContext",
     "ContextOrchestrator",
     "ContextItem",
+    "ContextPackPolicy",
     "ContextPreparationInput",
     "ContextPreparationResult",
     "ContextSelectionReason",

@@ -7,10 +7,36 @@ from typing import Any
 
 class MemoryLayer(StrEnum):
     WORKING = "working_context"
+    SHORT_TERM_STATE = "short_term_state"
     SHORT_TERM = "short_term"
     TASK = "task_memory"
     LONG_TERM = "long_term"
+    SEMANTIC = "semantic_memory"
+    EPISODIC = "episodic_memory"
+    PROCEDURAL = "procedural_memory"
     EXTERNAL_KNOWLEDGE = "external_knowledge"
+
+
+class MemoryReviewStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+@dataclass(frozen=True, slots=True)
+class MemoryProcessingPolicy:
+    summary_strategy: str = "summary_compression"
+    extraction_strategy: str = "structured_extraction"
+    review_required: bool = True
+    preserve_raw_event_ids: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "summary_strategy": self.summary_strategy,
+            "extraction_strategy": self.extraction_strategy,
+            "review_required": self.review_required,
+            "preserve_raw_event_ids": self.preserve_raw_event_ids,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,11 +150,18 @@ class MemoryCandidate:
     source_event_ids: tuple[str, ...]
     dedupe_key: str
     retention_policy: RetentionPolicy
+    review_status: MemoryReviewStatus = MemoryReviewStatus.PENDING
+    requires_review: bool = True
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if self.layer is not MemoryLayer.LONG_TERM:
-            raise ValueError("MemoryCandidate must use MemoryLayer.LONG_TERM")
+        if self.layer not in {
+            MemoryLayer.LONG_TERM,
+            MemoryLayer.SEMANTIC,
+            MemoryLayer.EPISODIC,
+            MemoryLayer.PROCEDURAL,
+        }:
+            raise ValueError("MemoryCandidate must use a long-term memory layer")
         if not 0 <= self.confidence <= 1:
             raise ValueError("MemoryCandidate confidence must be between 0 and 1")
         if not self.source_event_ids:
@@ -173,6 +206,62 @@ class MemoryCandidate:
             "source_event_ids": list(self.source_event_ids),
             "dedupe_key": self.dedupe_key,
             "retention_policy": self.retention_policy.to_dict(),
+            "review_status": self.review_status.value,
+            "requires_review": self.requires_review,
+            "metadata": dict(self.metadata),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class MemoryReviewDecision:
+    candidate_id: str
+    status: MemoryReviewStatus
+    reviewer_id: str
+    reason: str
+    source_event_ids: tuple[str, ...]
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def approve(
+        cls,
+        *,
+        candidate: MemoryCandidate,
+        reviewer_id: str,
+        reason: str,
+    ) -> MemoryReviewDecision:
+        return cls(
+            candidate_id=candidate.candidate_id,
+            status=MemoryReviewStatus.APPROVED,
+            reviewer_id=reviewer_id,
+            reason=reason,
+            source_event_ids=candidate.source_event_ids,
+            metadata={"dedupe_key": candidate.dedupe_key, "layer": candidate.layer.value},
+        )
+
+    @classmethod
+    def reject(
+        cls,
+        *,
+        candidate: MemoryCandidate,
+        reviewer_id: str,
+        reason: str,
+    ) -> MemoryReviewDecision:
+        return cls(
+            candidate_id=candidate.candidate_id,
+            status=MemoryReviewStatus.REJECTED,
+            reviewer_id=reviewer_id,
+            reason=reason,
+            source_event_ids=candidate.source_event_ids,
+            metadata={"dedupe_key": candidate.dedupe_key, "layer": candidate.layer.value},
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "candidate_id": self.candidate_id,
+            "status": self.status.value,
+            "reviewer_id": self.reviewer_id,
+            "reason": self.reason,
+            "source_event_ids": list(self.source_event_ids),
             "metadata": dict(self.metadata),
         }
 
@@ -207,6 +296,9 @@ __all__ = [
     "InMemoryLayerStore",
     "MemoryCandidate",
     "MemoryLayer",
+    "MemoryProcessingPolicy",
+    "MemoryReviewDecision",
+    "MemoryReviewStatus",
     "MemoryScope",
     "RawMemoryEvent",
     "RetentionPolicy",

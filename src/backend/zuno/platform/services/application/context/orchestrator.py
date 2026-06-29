@@ -44,6 +44,7 @@ class RecentWindowSelector:
                             if explicit_constraint
                             else ContextSelectionReason.RECENT_USER_TURN
                         ),
+                        source_event_ids=(f"message:{index}",),
                         metadata={"message_role": "user"},
                     )
                 )
@@ -62,6 +63,7 @@ class RecentWindowSelector:
                             token_estimate=self.estimate_tokens(content),
                             priority=80,
                             reason=ContextSelectionReason.TOOL_RESULT_REQUIRED,
+                            source_event_ids=(f"message:{index}",),
                             metadata={"message_role": "assistant", "group_id": tool_group_id},
                         )
                     )
@@ -75,6 +77,7 @@ class RecentWindowSelector:
                             token_estimate=self.estimate_tokens(content),
                             priority=45,
                             reason=ContextSelectionReason.RECENT_ASSISTANT_TURN,
+                            source_event_ids=(f"message:{index}",),
                             metadata={"message_role": "assistant"},
                         )
                     )
@@ -90,7 +93,12 @@ class RecentWindowSelector:
                         token_estimate=self.estimate_tokens(content),
                         priority=80,
                         reason=ContextSelectionReason.TOOL_RESULT_REQUIRED,
-                        metadata={"message_role": "tool", "tool_call_id": call_id, "group_id": group_id},
+                        source_event_ids=(f"tool_call:{call_id}",),
+                        metadata={
+                            "message_role": "tool",
+                            "tool_call_id": call_id,
+                            "group_id": group_id,
+                        },
                     )
                 )
 
@@ -120,6 +128,7 @@ class ContextOrchestrator:
                     token_estimate=_estimate_tokens(system_instruction),
                     priority=100,
                     reason=ContextSelectionReason.PINNED_INSTRUCTION,
+                    source_event_ids=("system_prompt",),
                 )
             )
 
@@ -132,6 +141,7 @@ class ContextOrchestrator:
         trace = ContextTrace.from_items(
             trace_id=preparation_input.execution_context.trace_id,
             policy=preparation_input.token_budget,
+            context_policy=preparation_input.context_policy,
             selected_items=selected_items,
             dropped_items=dropped_items,
         )
@@ -139,6 +149,7 @@ class ContextOrchestrator:
             execution_context=preparation_input.execution_context,
             items=selected_items,
             token_budget=preparation_input.token_budget,
+            context_policy=preparation_input.context_policy,
             trace=trace,
         )
         return ContextPreparationResult(

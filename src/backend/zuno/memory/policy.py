@@ -1,5 +1,5 @@
 from __future__ import annotations
 
-from zuno.platform.services.memory.layers import RetentionPolicy
+from zuno.platform.services.memory.layers import MemoryProcessingPolicy, RetentionPolicy
 
-__all__ = ["RetentionPolicy"]
+__all__ = ["MemoryProcessingPolicy", "RetentionPolicy"]
