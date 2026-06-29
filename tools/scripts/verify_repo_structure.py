@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 import importlib.util
@@ -71,7 +71,12 @@ REQUIRED_PATHS = [
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE07_fastapi-jwt-auth-compat-retirement-plan.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE08_backend-physical-cleanup-slices.md",
     "docs/history/programs/zuno-repo-layout-cleanup-v1/PHASE09_target-layout-visual-compat-shell-retirement.md",
-    ".agent/programs/PHASE10_directory-surface-map-and-guardrails.md",
+    ".agent/programs/PHASE01_directory-closure-master-plan.md",
+    ".agent/programs/PHASE02_platform-foundation-directory-migration.md",
+    ".agent/programs/PHASE03_schema-tools-resources-directory-migration.md",
+    ".agent/programs/PHASE04_services-thinning-directory-migration.md",
+    ".agent/programs/PHASE05_core-agent-runtime-directory-migration.md",
+    ".agent/programs/PHASE06_final-six-layer-guard-and-closure.md",
     "docs/history/development/README.md",
     "docs/history/reference/migration.md",
     "docs/history/specs",
@@ -459,7 +464,15 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_files = sorted((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
     active_phase_names = [path.name for path in active_phase_files]
-    if active_phase_names != ["PHASE10_directory-surface-map-and-guardrails.md"]:
+    expected_active_phase_names = [
+        "PHASE01_directory-closure-master-plan.md",
+        "PHASE02_platform-foundation-directory-migration.md",
+        "PHASE03_schema-tools-resources-directory-migration.md",
+        "PHASE04_services-thinning-directory-migration.md",
+        "PHASE05_core-agent-runtime-directory-migration.md",
+        "PHASE06_final-six-layer-guard-and-closure.md",
+    ]
+    if active_phase_names != expected_active_phase_names:
         errors.append(
             ".agent/programs must keep only the active Program 3 continuation phase: "
             + ", ".join(active_phase_names)

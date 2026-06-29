@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 from pathlib import Path
@@ -40,7 +40,12 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    ".agent/programs/PHASE10_directory-surface-map-and-guardrails.md",
+    ".agent/programs/PHASE01_directory-closure-master-plan.md",
+    ".agent/programs/PHASE02_platform-foundation-directory-migration.md",
+    ".agent/programs/PHASE03_schema-tools-resources-directory-migration.md",
+    ".agent/programs/PHASE04_services-thinning-directory-migration.md",
+    ".agent/programs/PHASE05_core-agent-runtime-directory-migration.md",
+    ".agent/programs/PHASE06_final-six-layer-guard-and-closure.md",
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -166,8 +171,7 @@ def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
         or "Program 3 definition 修正" in current_text
         or "Program 3 定义修正" in current_text
     )
-    directory_surface_mode = "Directory Surface Alignment" in current_text
-    expected_start = 10 if directory_surface_mode else 6 if continuation_mode else 1
+    expected_start = 6 if continuation_mode and "Directory Surface Alignment" not in current_text else 1
     if phase_numbers and min(phase_numbers) != expected_start:
         errors.append(
             f"active program must start at PHASE{expected_start:02d}; found first PHASE{min(phase_numbers):02d}"
@@ -486,7 +490,12 @@ def main() -> int:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
-            "PHASE10_directory-surface-map-and-guardrails.md",
+            "PHASE01_directory-closure-master-plan.md",
+            "PHASE02_platform-foundation-directory-migration.md",
+            "PHASE03_schema-tools-resources-directory-migration.md",
+            "PHASE04_services-thinning-directory-migration.md",
+            "PHASE05_core-agent-runtime-directory-migration.md",
+            "PHASE06_final-six-layer-guard-and-closure.md",
         ]
     )
     if active_program_files != expected_program_files:

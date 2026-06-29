@@ -10,7 +10,12 @@
 - `current.md`
 - `implementation-roadmap.md`
 - `closure-checklist.md`
-- `PHASE10_directory-surface-map-and-guardrails.md`
+- `PHASE01_directory-closure-master-plan.md`
+- `PHASE02_platform-foundation-directory-migration.md`
+- `PHASE03_schema-tools-resources-directory-migration.md`
+- `PHASE04_services-thinning-directory-migration.md`
+- `PHASE05_core-agent-runtime-directory-migration.md`
+- `PHASE06_final-six-layer-guard-and-closure.md`
 
 Program 3 PHASE01-09 历史归档：
 
@@ -28,7 +33,20 @@ Program 3 PHASE01-09 历史归档：
 - MCP server implementations 已进入 `capability/mcp/servers/`。
 - HTTP middleware implementations 已进入 `platform/middleware/`。
 - 旧 `mcp_servers/`、`middleware/`、`evals/` 顶层兼容壳已退休为 `.py` alias module。
-- 当前仍保留的 `core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/`、`config/` 说明 Program 3 尚未 closure，PHASE10 正在补目录地图和 guardrails。
+- 当前仍保留的 `compatibility/`、`resources/`、`core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/`、`config/` 说明 Program 3 尚未 closure。PHASE01-06 将分 PR 下沉、迁出、变薄和 final guard。
+
+## Program 3 完成标准
+
+Program 3 结束时，`src/backend/zuno` 顶层目录只允许：
+
+- `api/`
+- `agent/`
+- `memory/`
+- `capability/`
+- `knowledge/`
+- `platform/`
+
+顶层文件只允许 `__init__.py`、`main.py` 和受控 alias module。
 
 ## 等待打开
 

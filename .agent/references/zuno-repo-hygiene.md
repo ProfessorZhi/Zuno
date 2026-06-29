@@ -10,7 +10,7 @@
 
 ## Current Truth
 
-Program 3 仍在 continuation。PHASE09 已把 `mcp_servers/`、`middleware/`、`evals/` 退成 alias module；PHASE10 active，用 `src/backend/zuno/DIRECTORY_MAP.md` 和 verifier 固定目录地图。
+Program 3 仍在 continuation。PHASE09 已把 `mcp_servers/`、`middleware/`、`evals/` 退成 alias module；PHASE01 active，用 `src/backend/zuno/DIRECTORY_MAP.md` 和 verifier 固定目录地图。
 
 ## Target Direction
 

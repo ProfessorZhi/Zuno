@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pathlib import Path
 
@@ -93,7 +93,7 @@ def main() -> int:
     current_program = _read(".agent/references/current-program.md")
     for phrase in [
         "当前 active program",
-        "PHASE10_directory-surface-map-and-guardrails.md",
+        "PHASE01_directory-closure-master-plan.md",
         "MCP server implementations",
         "HTTP middleware implementations",
         "Directory Surface Alignment",

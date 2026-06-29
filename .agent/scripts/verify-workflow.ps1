@@ -1,4 +1,4 @@
-Set-StrictMode -Version Latest
+﻿Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
@@ -33,7 +33,12 @@ Require-Path ".agent\system.yaml"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE10_directory-surface-map-and-guardrails.md"
+Require-Path ".agent\programs\PHASE01_directory-closure-master-plan.md"
+Require-Path ".agent\programs\PHASE02_platform-foundation-directory-migration.md"
+Require-Path ".agent\programs\PHASE03_schema-tools-resources-directory-migration.md"
+Require-Path ".agent\programs\PHASE04_services-thinning-directory-migration.md"
+Require-Path ".agent\programs\PHASE05_core-agent-runtime-directory-migration.md"
+Require-Path ".agent\programs\PHASE06_final-six-layer-guard-and-closure.md"
 Require-Path ".agent\architecture\future\programs\README.md"
 Require-Path ".agent\programs\thread-prompts\README.md"
 Require-NoPath ".agent\programs\thread-prompts\THREAD_D_resources-compatibility-physical-migration-prompt.md"

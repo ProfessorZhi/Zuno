@@ -1,4 +1,4 @@
-# 当前程序
+﻿# 当前程序
 
 当前 active program：
 
@@ -10,11 +10,20 @@ zuno-repo-layout-cleanup-v1
 
 当前 active phase：
 
-- `.agent/programs/PHASE10_directory-surface-map-and-guardrails.md`
+- `.agent/programs/PHASE01_directory-closure-master-plan.md`
+
+当前 active phase set：
+
+- `PHASE01_directory-closure-master-plan.md`：Program3 总控计划 / PR1
+- `PHASE02_platform-foundation-directory-migration.md`：platform 基础目录迁移 / PR2
+- `PHASE03_schema-tools-resources-directory-migration.md`：schema、tools、resources 收口 / PR3
+- `PHASE04_services-thinning-directory-migration.md`：services 变薄 / PR4
+- `PHASE05_core-agent-runtime-directory-migration.md`：core 变薄 / PR5
+- `PHASE06_final-six-layer-guard-and-closure.md`：六层 final guard / PR6
 
 ## 当前判断
 
-Program 3 不能再写成“文件夹整理完成”。它已经完成六层 facade 起步、低风险资源/兼容目录物理收敛，以及 PHASE09 的视觉兼容壳退休；但 `core/`、`services/`、`database/`、`schema/`、`tools/`、`utils/` 仍是当前 runtime 或 migration source，目录结构还没有完全契合目标架构。
+Program 3 不能再写成“文件夹整理完成”。它已经完成六层 facade 起步、低风险资源/兼容目录物理收敛，以及 PHASE09 的视觉兼容壳退休；但 `compatibility/`、`resources/`、`config/`、`database/`、`schema/`、`tools/`、`utils/`、`services/`、`core/` 仍在顶层，目录结构还没有完全契合目标架构。
 
 ## 最新完成切片
 
@@ -26,11 +35,11 @@ Program 3 不能再写成“文件夹整理完成”。它已经完成六层 fac
 - HTTP middleware implementations 已进入 `platform/middleware/`。
 - PHASE09：旧 `mcp_servers/`、`middleware/`、`evals/` 顶层兼容壳已退休为 `.py` alias module。
 
-## 当前 PHASE10 目标
+## 当前 PHASE01 目标
 
-- 用 `src/backend/zuno/DIRECTORY_MAP.md` 固定一等目录的 `keep / migrate / facade / retire` 策略。
-- 用 `.agent/references/zuno-repo-hygiene.md` 固定目录迁移 skill。
-- 用 verifier/test 禁止新增未分类的一等 runtime 目录。
+- 重写 Program3 为 PHASE01-06 / PR1-PR6 执行计划。
+- 最终退出标准固定为 `src/backend/zuno` 顶层只剩 `api / agent / memory / capability / knowledge / platform` 六层目录。
+- `compatibility/`、`resources/`、`config/`、`database/`、`schema/`、`tools/`、`utils/`、`services/`、`core/` 必须下沉、迁出、变薄或退休。
 - 保持 Program 4 queued / not active，不把 runtime architecture upgrade 混进 Program 3。
 
 ## 等待打开的 program
@@ -46,7 +55,12 @@ Program 3 不能再写成“文件夹整理完成”。它已经完成六层 fac
 - `.agent/programs/current.md`
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/closure-checklist.md`
-- `.agent/programs/PHASE10_directory-surface-map-and-guardrails.md`
+- `.agent/programs/PHASE01_directory-closure-master-plan.md`
+- `.agent/programs/PHASE02_platform-foundation-directory-migration.md`
+- `.agent/programs/PHASE03_schema-tools-resources-directory-migration.md`
+- `.agent/programs/PHASE04_services-thinning-directory-migration.md`
+- `.agent/programs/PHASE05_core-agent-runtime-directory-migration.md`
+- `.agent/programs/PHASE06_final-six-layer-guard-and-closure.md`
 - `.agent/references/zuno-repo-hygiene.md`
 - `src/backend/zuno/DIRECTORY_MAP.md`
 - `docs/architecture/roadmap.md`

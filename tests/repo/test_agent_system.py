@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 import subprocess
 
 
@@ -28,7 +28,12 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/programs/current.md",
         ".agent/programs/implementation-roadmap.md",
         ".agent/programs/closure-checklist.md",
-        ".agent/programs/PHASE10_directory-surface-map-and-guardrails.md",
+        ".agent/programs/PHASE01_directory-closure-master-plan.md",
+        ".agent/programs/PHASE02_platform-foundation-directory-migration.md",
+        ".agent/programs/PHASE03_schema-tools-resources-directory-migration.md",
+        ".agent/programs/PHASE04_services-thinning-directory-migration.md",
+        ".agent/programs/PHASE05_core-agent-runtime-directory-migration.md",
+        ".agent/programs/PHASE06_final-six-layer-guard-and-closure.md",
         ".agent/architecture/future/programs/README.md",
         ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
         ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -339,7 +344,7 @@ def test_current_program_declares_active_program3_continuation_and_latest_archiv
     )
 
     assert "Directory Surface Alignment" in current
-    assert "PHASE10_directory-surface-map-and-guardrails.md" in current
+    assert "PHASE01_directory-closure-master-plan.md" in current
     assert "MCP server implementations" in current
     assert "HTTP middleware implementations" in current
     assert "zuno-repo-layout-cleanup-v1" in current
@@ -466,7 +471,14 @@ def test_program3_continuation_keeps_history_and_active_phase() -> None:
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == ["PHASE10_directory-surface-map-and-guardrails.md"]
+    assert active_phase_files == [
+        "PHASE01_directory-closure-master-plan.md",
+        "PHASE02_platform-foundation-directory-migration.md",
+        "PHASE03_schema-tools-resources-directory-migration.md",
+        "PHASE04_services-thinning-directory-migration.md",
+        "PHASE05_core-agent-runtime-directory-migration.md",
+        "PHASE06_final-six-layer-guard-and-closure.md",
+    ]
     for prompt in [
         "THREAD_A_root-docs-agent-hygiene-prompt.md",
         "THREAD_B_backend-six-layer-audit-prompt.md",

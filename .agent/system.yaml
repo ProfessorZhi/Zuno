@@ -1,4 +1,4 @@
-version: 1
+﻿version: 1
 
 purpose: "Route Zuno tasks to local skills, templates, docs sync, and verification."
 
@@ -115,7 +115,12 @@ skill_routes:
       - ".agent/programs/current.md"
       - ".agent/programs/implementation-roadmap.md"
       - ".agent/programs/closure-checklist.md"
-      - ".agent/programs/PHASE10_directory-surface-map-and-guardrails.md"
+      - ".agent/programs/PHASE01_directory-closure-master-plan.md"
+      - ".agent/programs/PHASE02_platform-foundation-directory-migration.md"
+      - ".agent/programs/PHASE03_schema-tools-resources-directory-migration.md"
+      - ".agent/programs/PHASE04_services-thinning-directory-migration.md"
+      - ".agent/programs/PHASE05_core-agent-runtime-directory-migration.md"
+      - ".agent/programs/PHASE06_final-six-layer-guard-and-closure.md"
       - "docs/architecture/README.md"
       - "docs/architecture/current-architecture.md"
       - "docs/architecture/target-architecture.md"

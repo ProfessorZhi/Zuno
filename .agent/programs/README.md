@@ -1,4 +1,4 @@
-# Agent 执行计划
+﻿# Agent 执行计划
 
 `.agent/programs/` 只存放当前可执行计划。
 
@@ -6,9 +6,14 @@
 
 当前 active program：`zuno-repo-layout-cleanup-v1` continuation / Directory Surface Alignment V1。
 
-当前 active phase：
+当前 active phase set：
 
-- `PHASE10_directory-surface-map-and-guardrails.md`
+- `PHASE01_directory-closure-master-plan.md`
+- `PHASE02_platform-foundation-directory-migration.md`
+- `PHASE03_schema-tools-resources-directory-migration.md`
+- `PHASE04_services-thinning-directory-migration.md`
+- `PHASE05_core-agent-runtime-directory-migration.md`
+- `PHASE06_final-six-layer-guard-and-closure.md`
 
 Program 3 PHASE01-09 的历史证据归档到：
 
@@ -37,4 +42,9 @@ Program 3 PHASE01-09 的历史证据归档到：
 - [current.md](current.md)：当前程序状态。
 - [implementation-roadmap.md](implementation-roadmap.md)：短期 program 队列和下一步打开规则。
 - [closure-checklist.md](closure-checklist.md)：通用收口清单。
-- [PHASE10_directory-surface-map-and-guardrails.md](PHASE10_directory-surface-map-and-guardrails.md)：当前 active phase。
+- [PHASE01_directory-closure-master-plan.md](PHASE01_directory-closure-master-plan.md)：Program3 总控计划 / PR1。
+- [PHASE02_platform-foundation-directory-migration.md](PHASE02_platform-foundation-directory-migration.md)：platform 基础目录迁移 / PR2。
+- [PHASE03_schema-tools-resources-directory-migration.md](PHASE03_schema-tools-resources-directory-migration.md)：schema、tools、resources 收口 / PR3。
+- [PHASE04_services-thinning-directory-migration.md](PHASE04_services-thinning-directory-migration.md)：services 变薄 / PR4。
+- [PHASE05_core-agent-runtime-directory-migration.md](PHASE05_core-agent-runtime-directory-migration.md)：core 变薄 / PR5。
+- [PHASE06_final-six-layer-guard-and-closure.md](PHASE06_final-six-layer-guard-and-closure.md)：final six-layer guard / PR6。

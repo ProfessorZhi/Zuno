@@ -1,4 +1,4 @@
-import importlib.util
+﻿import importlib.util
 import sys
 from pathlib import Path
 
@@ -498,7 +498,12 @@ def test_program3_continuation_keeps_one_active_phase_file() -> None:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
-            "PHASE10_directory-surface-map-and-guardrails.md",
+            "PHASE01_directory-closure-master-plan.md",
+            "PHASE02_platform-foundation-directory-migration.md",
+            "PHASE03_schema-tools-resources-directory-migration.md",
+            "PHASE04_services-thinning-directory-migration.md",
+            "PHASE05_core-agent-runtime-directory-migration.md",
+            "PHASE06_final-six-layer-guard-and-closure.md",
         ]
     )
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
@@ -522,7 +527,7 @@ def test_program3_continuation_keeps_one_active_phase_file() -> None:
     program3 = (
         REPO_ROOT / "docs/history/programs/zuno-repo-layout-cleanup-v1/README.md"
     ).read_text(encoding="utf-8")
-    assert "PHASE10 active" in program3
+    assert "PHASE01 active" in program3
     assert "repo hygiene verifier" in program3
     assert "capability/mcp/servers" in program3
     assert "platform/middleware" in program3
