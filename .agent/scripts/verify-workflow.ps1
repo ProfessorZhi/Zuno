@@ -38,9 +38,8 @@ Require-Path ".agent\programs\PHASE07_fastapi-jwt-auth-compat-retirement-plan.md
 Require-Path ".agent\programs\PHASE08_backend-physical-cleanup-slices.md"
 Require-Path ".agent\architecture\future\programs\README.md"
 Require-Path ".agent\programs\thread-prompts\README.md"
-Require-Path ".agent\programs\thread-prompts\THREAD_A_fastapi-jwt-compat-prompt.md"
-Require-Path ".agent\programs\thread-prompts\THREAD_B_backend-zuno-directory-cleanup-prompt.md"
-Require-Path ".agent\programs\thread-prompts\THREAD_C_root-local-artifacts-cleanup-prompt.md"
+Require-Path ".agent\programs\thread-prompts\THREAD_D_resources-compatibility-physical-migration-prompt.md"
+Require-Path ".agent\programs\thread-prompts\THREAD_E_target-layer-physical-migration-prompt.md"
 Require-NoPath ".agent\programs\PHASE01_workflow-doc-audit.md"
 Require-NoPath ".agent\programs\PHASE02_agent-bootloader-routing.md"
 Require-NoPath ".agent\programs\PHASE03_skill-template-program-system.md"
@@ -108,7 +107,7 @@ if ($currentProgram -notmatch "当前 active program") {
 if ($currentProgram -notmatch "zuno-repo-layout-cleanup-v1") {
     $failures.Add("current-program.md missing active repo layout cleanup program id")
 }
-if ($currentProgram -notmatch "PHASE06_backend-directory-clarity-audit.md") {
+if ($currentProgram -notmatch "PHASE08_backend-physical-cleanup-slices.md") {
     $failures.Add("current-program.md missing active Program 3 continuation phase")
 }
 if ($currentProgram -notmatch "zuno-workflow-doc-system-v1" -or $currentProgram -notmatch "zuno-target-architecture-refresh-v1") {

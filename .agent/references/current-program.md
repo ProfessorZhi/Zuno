@@ -22,9 +22,9 @@ PHASE01-05 已完成并归档为 first slice，但 Program 3 继续执行 backen
 
 ## 当前 Program Phase
 
-- `PHASE06_backend-directory-clarity-audit.md`：active。
-- `PHASE07_fastapi-jwt-auth-compat-retirement-plan.md`：pending。
-- `PHASE08_backend-physical-cleanup-slices.md`：pending。
+- `PHASE06_backend-directory-clarity-audit.md`：first slice complete。
+- `PHASE07_fastapi-jwt-auth-compat-retirement-plan.md`：first slice complete。
+- `PHASE08_backend-physical-cleanup-slices.md`：active，当前执行 backend physical layout migration。
 
 ## 已完成 Program 3 first slice
 
@@ -57,6 +57,6 @@ PHASE01-05 已完成并归档为 first slice，但 Program 3 继续执行 backen
 
 之前的 Phase 0-6 closure、`zuno-architecture-surface-cleanup-v1`、`zuno-workflow-doc-system-v1` 和 `zuno-target-architecture-refresh-v1` 已完成，是历史事实。
 
-Program 3 PHASE01-05 是 first slice 历史证据；不要把它们搬回 `.agent/programs/` 当前前台。Program 3 continuation 从 PHASE06 开始。
+Program 3 PHASE01-05 是 first slice 历史证据；不要把它们搬回 `.agent/programs/` 当前前台。Program 3 continuation 从 PHASE06 开始，当前执行点是 PHASE08。
 
 不要把 V2 Target runtime 当作完全 Current，除非相关代码、测试和 trace evidence 已经证明。不要把 queued program 写成已经完成或已经 current。

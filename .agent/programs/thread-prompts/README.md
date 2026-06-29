@@ -20,12 +20,10 @@ zuno-repo-layout-cleanup-v1
 
 ## 当前线程
 
-- `THREAD_A_fastapi-jwt-compat-prompt.md`
-- `THREAD_B_backend-zuno-directory-cleanup-prompt.md`
-- `THREAD_C_root-local-artifacts-cleanup-prompt.md`
+- `THREAD_D_resources-compatibility-physical-migration-prompt.md`
+- `THREAD_E_target-layer-physical-migration-prompt.md`
 
 ## 本轮线程盘点
 
-- `list_threads(query="Program3")`：没有可复用 Program3 子线程。
-- `list_threads(query="Zuno")`：只有当前 Zuno 主线程处于 active，其它结果不是本轮 Program3 工位。
-- 决策：本轮创建 3 个新的 Codex worktree 线程，每个线程绑定一个独立 `codex/` 分支。
+- `list_threads(query="Program3")`：上一轮 Thread A/B/C 已完成并合并，不复用为新迁移线程。
+- 决策：下一轮创建 2 个新的 Codex worktree 线程，每个线程绑定一个独立 `codex/` 分支，执行真正物理目录迁移。
