@@ -33,16 +33,31 @@ Require-Path ".agent\system.yaml"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE01_program-boot-baseline.md"
-Require-Path ".agent\programs\PHASE02_workflow-self-maintenance-system.md"
-Require-Path ".agent\programs\PHASE03_architecture-docs-html-system.md"
-Require-Path ".agent\programs\PHASE04_query-router-mode-policy.md"
-Require-Path ".agent\programs\PHASE05_context-builder-memory-system.md"
-Require-Path ".agent\programs\PHASE06_capability-toolcard-mcp-system.md"
-Require-Path ".agent\programs\PHASE07_hooks-evidence-trace-artifact-system.md"
-Require-Path ".agent\programs\PHASE08_graphrag-knowledge-runtime-system.md"
-Require-Path ".agent\programs\PHASE09_runtime-upgrade-integration.md"
-Require-Path ".agent\programs\PHASE10_validation-release-closure.md"
+Require-NoPath ".agent\programs\PHASE01_program-boot-baseline.md"
+Require-NoPath ".agent\programs\PHASE02_workflow-self-maintenance-system.md"
+Require-NoPath ".agent\programs\PHASE03_architecture-docs-html-system.md"
+Require-NoPath ".agent\programs\PHASE04_query-router-mode-policy.md"
+Require-NoPath ".agent\programs\PHASE05_context-builder-memory-system.md"
+Require-NoPath ".agent\programs\PHASE06_capability-toolcard-mcp-system.md"
+Require-NoPath ".agent\programs\PHASE07_hooks-evidence-trace-artifact-system.md"
+Require-NoPath ".agent\programs\PHASE08_graphrag-knowledge-runtime-system.md"
+Require-NoPath ".agent\programs\PHASE09_runtime-upgrade-integration.md"
+Require-NoPath ".agent\programs\PHASE10_validation-release-closure.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\README.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\current.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\implementation-roadmap.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\closure-checklist.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\closure-summary.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE01_program-boot-baseline.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE02_workflow-self-maintenance-system.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE03_architecture-docs-html-system.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE04_query-router-mode-policy.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE05_context-builder-memory-system.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE06_capability-toolcard-mcp-system.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE07_hooks-evidence-trace-artifact-system.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE08_graphrag-knowledge-runtime-system.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE09_runtime-upgrade-integration.md"
+Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE10_validation-release-closure.md"
 Require-Path ".agent\architecture\future\programs\README.md"
 Require-NoPath ".agent\programs\thread-prompts\THREAD_D_resources-compatibility-physical-migration-prompt.md"
 Require-NoPath ".agent\programs\thread-prompts\THREAD_E_target-layer-physical-migration-prompt.md"
@@ -123,14 +138,14 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-eight-deliverables-full-realization-v1" -or $currentProgram -notmatch "state: active") {
-    $failures.Add("current-program.md must declare the active eight deliverables program")
+if ($currentProgram -notmatch "zuno-eight-deliverables-full-realization-v1" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "当前没有 active program") {
+    $failures.Add("current-program.md must declare no-active state and the completed eight deliverables program")
 }
 if ($currentProgram -notmatch "默认开启线程内多 agent") {
     $failures.Add("current-program.md must declare default in-thread multi-agent mode")
 }
-if ($currentProgram -notmatch "PHASE01_program-boot-baseline.md" -or $currentProgram -notmatch "PHASE10_validation-release-closure.md") {
-    $failures.Add("current-program.md missing active phase boundaries")
+if ($currentProgram -notmatch "PHASE01-PHASE10" -or $currentProgram -notmatch "docs/history/programs/zuno-eight-deliverables-full-realization-v1/") {
+    $failures.Add("current-program.md missing completed archive boundaries")
 }
 if ($currentProgram -notmatch "zuno-six-layer-internalization-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-six-layer-internalization-v1/") {
     $failures.Add("current-program.md missing archived six-layer internalization program facts")

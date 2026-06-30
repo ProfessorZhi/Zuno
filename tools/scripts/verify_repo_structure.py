@@ -9,8 +9,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_PROGRAM_PHASE_FILES = [
+COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
+COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
     "PHASE03_architecture-docs-html-system.md",
@@ -51,6 +52,12 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/README.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/current.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/closure-summary.md",
+    *[f"{COMPLETED_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in COMPLETED_PROGRAM_PHASE_FILES],
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -617,7 +624,7 @@ def verify_near_term_architecture_index() -> list[str]:
     return errors
 
 
-def verify_active_architecture_surface_phase_plan() -> list[str]:
+def verify_completed_architecture_surface_phase_plan() -> list[str]:
     roadmap_path = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     if not roadmap_path.exists():
         return ["missing .agent/programs implementation roadmap"]
@@ -625,13 +632,10 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     errors = [
         f"program roadmap missing phrase: {phrase}"
         for phrase in [
-            ACTIVE_PROGRAM_NAME,
-            "state: active",
-            "zuno-six-layer-internalization-v1",
-            "zuno-repo-layout-cleanup-v1",
+            "state: no-active",
+            COMPLETED_PROGRAM_NAME,
+            COMPLETED_PROGRAM_ARCHIVE,
             "每次新 program 都从 `PHASE01` 开始编号",
-            "zuno-runtime-architecture-upgrade-v1",
-            "zuno-architecture-visuals-v1",
         ]
         if phrase not in roadmap
     ]
@@ -650,9 +654,9 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     active_phase_names = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")
     )
-    if active_phase_names != ACTIVE_PROGRAM_PHASE_FILES:
+    if active_phase_names:
         errors.append(
-            ".agent/programs active phase files do not match current program: "
+            ".agent/programs must not keep PHASE files in no-active state: "
             + ", ".join(active_phase_names)
         )
     current_path = REPO_ROOT / ".agent/programs/current.md"
@@ -661,14 +665,26 @@ def verify_active_architecture_surface_phase_plan() -> list[str]:
     else:
         current_text = current_path.read_text(encoding="utf-8")
         for phrase in [
-            ACTIVE_PROGRAM_NAME,
-            "state: active",
-            "PHASE01_program-boot-baseline.md",
+            "当前没有 active program",
+            "state: no-active",
+            "current_phase: none",
+            COMPLETED_PROGRAM_NAME,
+            COMPLETED_PROGRAM_ARCHIVE,
             "八个交付物",
-            "默认开启线程内多 agent",
         ]:
             if phrase not in current_text:
-                errors.append(f".agent/programs/current.md missing active program phrase: {phrase}")
+                errors.append(f".agent/programs/current.md missing no-active phrase: {phrase}")
+    archive_root = REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE
+    for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        if not (archive_root / required_archive_file).exists():
+            errors.append(f"completed program archive missing file: {required_archive_file}")
+    for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
+        phase_path = archive_root / phase_name
+        if not phase_path.exists():
+            errors.append(f"completed program archive missing phase: {phase_name}")
+            continue
+        if "status: completed" not in phase_path.read_text(encoding="utf-8"):
+            errors.append(f"completed program archive phase missing completed status: {phase_name}")
     archived_program4 = REPO_ROOT / "docs/history/programs/zuno-six-layer-internalization-v1/README.md"
     if not archived_program4.exists():
         errors.append("missing archived Program 4 README")
@@ -812,7 +828,7 @@ def run_verification() -> VerificationResult:
             *verify_backend_legacy_import_aliases(),
             *verify_backend_retired_top_level_paths_are_absent(),
             *verify_near_term_architecture_index(),
-            *verify_active_architecture_surface_phase_plan(),
+            *verify_completed_architecture_surface_phase_plan(),
             *verify_architecture_diagram_outputs(),
         ]
     )

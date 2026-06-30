@@ -5,18 +5,19 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_PROGRAM_PHASE_FILES = [
-    ".agent/programs/PHASE01_program-boot-baseline.md",
-    ".agent/programs/PHASE02_workflow-self-maintenance-system.md",
-    ".agent/programs/PHASE03_architecture-docs-html-system.md",
-    ".agent/programs/PHASE04_query-router-mode-policy.md",
-    ".agent/programs/PHASE05_context-builder-memory-system.md",
-    ".agent/programs/PHASE06_capability-toolcard-mcp-system.md",
-    ".agent/programs/PHASE07_hooks-evidence-trace-artifact-system.md",
-    ".agent/programs/PHASE08_graphrag-knowledge-runtime-system.md",
-    ".agent/programs/PHASE09_runtime-upgrade-integration.md",
-    ".agent/programs/PHASE10_validation-release-closure.md",
+COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
+COMPLETED_PROGRAM_PHASE_FILES = [
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE01_program-boot-baseline.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE02_workflow-self-maintenance-system.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE03_architecture-docs-html-system.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE04_query-router-mode-policy.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE05_context-builder-memory-system.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE06_capability-toolcard-mcp-system.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE07_hooks-evidence-trace-artifact-system.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE08_graphrag-knowledge-runtime-system.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE09_runtime-upgrade-integration.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/PHASE10_validation-release-closure.md",
 ]
 
 FORBIDDEN_CURRENT_DIRS = [
@@ -47,7 +48,12 @@ REQUIRED_AGENT_PROGRAMS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    *ACTIVE_PROGRAM_PHASE_FILES,
+    f"{COMPLETED_PROGRAM_ARCHIVE}/README.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/current.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{COMPLETED_PROGRAM_ARCHIVE}/closure-summary.md",
+    *COMPLETED_PROGRAM_PHASE_FILES,
     ".agent/architecture/future/programs/README.md",
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
@@ -196,9 +202,12 @@ def main() -> int:
 
     current_program = _read(".agent/references/current-program.md")
     for phrase in [
-        ACTIVE_PROGRAM_NAME,
-        "state: active",
-        "PHASE01_program-boot-baseline.md",
+        "当前没有 active program",
+        "state: no-active",
+        "current_phase: none",
+        COMPLETED_PROGRAM_NAME,
+        COMPLETED_PROGRAM_ARCHIVE,
+        "PHASE01-PHASE10",
         "八大交付物",
         "默认开启线程内多 agent",
         "zuno-six-layer-internalization-v1",

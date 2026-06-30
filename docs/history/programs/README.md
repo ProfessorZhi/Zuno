@@ -43,6 +43,11 @@ and evidence, not the active Agent execution path.
   program. It added no-side-effect thin surfaces under Agent, Memory,
   Capability, Knowledge, and Platform, kept legacy imports working, and closed
   the docs / verifier / tests drift guardrails.
+- `zuno-eight-deliverables-full-realization-v1/`: completed eight-deliverables
+  realization program. It closed PHASE01-PHASE10 across Agent workflow docs,
+  workflow self-maintenance, templates / program lifecycle, formal architecture
+  docs, architecture HTML, target architecture, clean code / directories, and
+  verification evidence.
 
 ## Rule
 
