@@ -12,7 +12,9 @@ updated: 2026-06-30
 # Zuno 架构总览
 
 > [!abstract] 定位
-> Zuno 是本地优先的 Agent Workspace。本文用 **4+1 View Model**、**View & Beyond** 和 **Agent Loop 专题图**说明 Agentic RAG、GraphRAG、文档解析、安全治理与评测追踪的目标架构。
+> Zuno 是本地优先的企业私有知识库与多功能 Agent 助手。本文用 **4+1 View Model**、**View & Beyond** 和 **Agent Loop 专题图**说明 Agentic RAG、GraphRAG、文档解析、安全治理、沙箱边界与评测追踪的目标架构。
+
+主场景不是普通 RAG 问答，而是企业内部文档、合同、制度、项目资料、技术文档、HR / 简历资料和个人项目证据的私有知识工作流。完整场景定义见 [企业私有知识库与多功能 Agent 助手](architecture/product-scenario-enterprise-kb.md)，安全与沙箱边界见 [安全与沙箱目标架构](architecture/security-and-sandbox.md)。
 
 正式事实以 [[architecture/current-architecture|当前架构]] 为准。近期目标以 [[architecture/target-architecture|目标架构]] 为准。执行计划进入 `.agent/programs/`。
 

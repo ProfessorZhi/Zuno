@@ -7,7 +7,7 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 
 ## 目标
 
-本 program 先细化 Zuno 的目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Tool Control Plane、Document Ingestion、企业知识库场景、安全治理、Trace / Eval 和 LangSmith 适配。
+本 program 先细化 Zuno 的目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Tool Control Plane、Document Ingestion、企业私有知识库主叙事、安全 / 沙箱治理、Trace / Eval 和 LangSmith 适配。
 
 它不是 runtime feature implementation，不新增 API / DB schema / frontend 行为，不把 Target 写成 Current。
 
@@ -17,6 +17,8 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 
 - `docs/architecture.md`
 - `docs/architecture.html`
+- `docs/architecture/product-scenario-enterprise-kb.md`
+- `docs/architecture/security-and-sandbox.md`
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/README.md`
 - `docs/architecture/roadmap.md`
@@ -55,7 +57,7 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 1. `Document Ingestion / Parse Gateway`：多格式解析、Canonical Document IR、chunk/provenance、BM25/vector/graph indexing。
 2. `Runtime + Memory + Tool Plane`：Context Pack、summary compression、structured extraction、ToolCard manifest、executor registry、approval flow。
 3. `Eval / Observability`：LangSmith trace 映射、dataset、RAGAS / DeepEval 指标、citation coverage 和 CI regression gate。
-4. `Security + Enterprise Scenarios`：PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
+4. `Security + Enterprise Scenarios`：PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、Policy / Workspace / Execution / Network-Credential Sandbox、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
 
 ## 当前边界
 

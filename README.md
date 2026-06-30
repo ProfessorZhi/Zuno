@@ -1,11 +1,11 @@
 # Zuno
 
-Zuno 是本地优先的 Agent Workspace。它把 Vue Web、Electron Desktop、FastAPI 后端、当前 `GeneralAgent` 单循环主线、Knowledge / RAG / GraphRAG、工具能力、MCP 语境和本地 Eval 放在一个 monorepo 里。
+Zuno 是本地优先的企业私有知识库与多功能 Agent 助手。它把 Vue Web、Electron Desktop、FastAPI 后端、当前 `GeneralAgent` 单循环主线、Knowledge / RAG / GraphRAG、工具能力、MCP 语境和本地 Eval 放在一个 monorepo 里，目标是让企业私有文档从“可搜索”升级为“可理解、可追溯、可执行”。
 
 一句话目标：
 
 ```text
-Local-first Agent Workspace
+Local-first Enterprise Private Knowledge Agent Workspace
 = Single Controller Agent
 + Context / Memory Engine
 + Capability / Tool Retrieval
@@ -16,15 +16,23 @@ Local-first Agent Workspace
 
 这里的 Single Controller Agent 是目标架构角色；当前实现主线是 `GeneralAgent` single loop。
 
+## Zuno 是什么
+
+Zuno 的主场景不是普通 RAG 问答，而是企业内部文档知识库 + 多功能 Agent 助手。它面向企业内部文档、合同、制度、项目资料、技术文档、HR / 简历资料等私有数据场景，提供可引用问答、文档分析、合同审查、项目知识整理、报告生成和受控工具调用能力。
+
+Zuno 通过 Basic RAG、GraphRAG Local / Global / DRIFT、Evidence、Citation、Trace、Eval、Memory 和 Tool Governance 提升回答可信度与工具调用可控性。Security、Approval 和 Sandbox 是目标治理层；当前不能把成熟沙箱、credential broker、完整 DLP 或生产级工具审批写成 Current。
+
 ## 5 分钟首读
 
 1. 先看 [当前架构](./docs/architecture/current-architecture.md)：只写当前代码和测试已经证明的事实。
-2. 再看 [目标架构](./docs/architecture/target-architecture.md)：写近期目标，不代表已经完成。
-3. 看 [路线图](./docs/architecture/roadmap.md)：确认当前 program、下一步和非目标。
-4. 看 [交付物清单](./docs/deliverables.md)：确认八大交付物、十类架构视图和根目录清洁期望。
-5. 看 [架构总览 HTML](./docs/architecture.html) 或 [架构图源](./docs/architecture.md)：完整页面按 4+1 五类图、View & Beyond 四类图和 Agent Loop 专题图组织。
-6. 需要证据时看 [公开演示证据](./docs/evidence/public-demo.md)、[Eval Baseline](./docs/evidence/eval-baselines.md) 和 [术语表](./docs/reference/terminology.md)。
-7. Agent 执行任务先读 [AGENTS.md](./AGENTS.md)。
+2. 看 [企业私有知识库主叙事](./docs/architecture/product-scenario-enterprise-kb.md)：确认 Zuno 为什么不是普通 RAG demo。
+3. 再看 [目标架构](./docs/architecture/target-architecture.md)：写近期目标，不代表已经完成。
+4. 看 [安全与沙箱目标](./docs/architecture/security-and-sandbox.md)：确认 Policy Sandbox、Workspace Sandbox、Execution Sandbox 和 Network / Credential Sandbox 的边界。
+5. 看 [路线图](./docs/architecture/roadmap.md)：确认当前 program、下一步和非目标。
+6. 看 [交付物清单](./docs/deliverables.md)：确认八大交付物、十类架构视图和根目录清洁期望。
+7. 看 [架构总览 HTML](./docs/architecture.html) 或 [架构图源](./docs/architecture.md)：完整页面按 4+1 五类图、View & Beyond 四类图和 Agent Loop 专题图组织。
+8. 需要证据时看 [公开演示证据](./docs/evidence/public-demo.md)、[Eval Baseline](./docs/evidence/eval-baselines.md) 和 [术语表](./docs/reference/terminology.md)。
+9. Agent 执行任务先读 [AGENTS.md](./AGENTS.md)。
 
 ## 当前是什么
 

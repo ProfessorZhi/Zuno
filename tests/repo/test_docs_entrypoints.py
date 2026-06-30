@@ -11,7 +11,9 @@ def test_readme_exposes_short_first_reader_path() -> None:
 
     for phrase in [
         "./docs/architecture/current-architecture.md",
+        "./docs/architecture/product-scenario-enterprise-kb.md",
         "./docs/architecture/target-architecture.md",
+        "./docs/architecture/security-and-sandbox.md",
         "./docs/architecture/roadmap.md",
         "./docs/architecture.md",
         "./docs/architecture.html",
@@ -22,6 +24,9 @@ def test_readme_exposes_short_first_reader_path() -> None:
         "Single Controller Agent 是目标架构角色",
         "当前实现主线是 `GeneralAgent` single loop",
         "Completion API -> CompletionService -> GeneralAgent single loop",
+        "企业私有知识库与多功能 Agent 助手",
+        "普通 RAG 问答",
+        "Security、Approval 和 Sandbox 是目标治理层",
     ]:
         assert phrase in content
 
@@ -47,7 +52,9 @@ def test_docs_front_path_is_small_and_chinese() -> None:
     for phrase in [
         "架构文档",
         "current-architecture.md",
+        "product-scenario-enterprise-kb.md",
         "target-architecture.md",
+        "security-and-sandbox.md",
         "roadmap.md",
         "../architecture.md",
         "../architecture.html",
@@ -186,6 +193,12 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
     roadmap = (REPO_ROOT / "docs" / "architecture" / "roadmap.md").read_text(
         encoding="utf-8"
     )
+    product_scenario = (
+        REPO_ROOT / "docs" / "architecture" / "product-scenario-enterprise-kb.md"
+    ).read_text(encoding="utf-8")
+    security_sandbox = (
+        REPO_ROOT / "docs" / "architecture" / "security-and-sandbox.md"
+    ).read_text(encoding="utf-8")
 
     for phrase in [
         "当前架构",
@@ -207,6 +220,9 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "GraphRAG 实体抽取默认主路径是 LLM 抽取",
         "六个主层",
         "新增或重写的前台文档使用中文",
+        "企业私有知识库与多功能 Agent 助手",
+        "Policy Sandbox",
+        "Network / Credential Sandbox",
     ]:
         assert phrase in target
 
@@ -222,8 +238,35 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         "zuno-architecture-visuals-v1",
         "PHASE03 completed",
         "视觉 QA",
+        "zuno-document-ingestion-v1",
+        "zuno-security-enterprise-scenarios-v1",
     ]:
         assert phrase in roadmap
+
+    for phrase in [
+        "企业私有知识库与多功能 Agent 助手",
+        "普通 RAG 问答",
+        "企业内部文档",
+        "简历和候选人资料",
+        "Current",
+        "Target",
+        "Future",
+        "zuno-document-ingestion-v1",
+        "zuno-security-enterprise-scenarios-v1",
+    ]:
+        assert phrase in product_scenario
+
+    for phrase in [
+        "Policy Sandbox",
+        "Workspace Sandbox",
+        "Execution Sandbox",
+        "Network / Credential Sandbox",
+        "不能声称已经有成熟沙箱系统",
+        "ToolCard / MCP policy foundation",
+        "Target",
+        "Future",
+    ]:
+        assert phrase in security_sandbox
 
 
 def test_doc_boundary_verifier_guards_future_only_terms() -> None:
@@ -273,6 +316,8 @@ def test_architecture_diagrams_expose_multi_view_target_architecture() -> None:
         "Quality View",
         "Agentic RAG",
         "GraphRAG",
+        "企业私有知识库与多功能 Agent 助手",
+        "安全与沙箱目标架构",
         "Raw Event Log",
         "Memory Read Policy",
         "Memory Review Gate",

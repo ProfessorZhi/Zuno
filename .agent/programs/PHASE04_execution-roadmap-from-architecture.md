@@ -4,7 +4,7 @@ status: active
 
 ## 目标
 
-根据细化架构图和 2026-06-30 架构深度评估，生成后续产品化执行顺序。PHASE04 不再继续扩展总览图，而是把下一轮实现拆成四条可执行主线：文档摄取、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。
+根据细化架构图和 2026-06-30 架构深度评估，生成后续产品化执行顺序。PHASE04 不再继续扩展总览图，而是把 Zuno 主场景收束为“企业私有知识库与多功能 Agent 助手”，并把下一轮实现拆成四条可执行主线：文档摄取、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。
 
 ## 范围
 
@@ -13,6 +13,10 @@ status: active
 ## 需要修改的文件
 
 - `.agent/programs/implementation-roadmap.md`
+- `docs/architecture/product-scenario-enterprise-kb.md`
+- `docs/architecture/security-and-sandbox.md`
+- `docs/architecture/README.md`
+- `docs/architecture/target-architecture.md`
 - `docs/architecture/roadmap.md`
 - `README.md`
 
@@ -28,7 +32,7 @@ status: active
 - `Document Ingestion` 必须包括多格式解析、Canonical Document IR、chunk/provenance、BM25/vector/graph indexing 和 parser contract tests。
 - `Runtime + Memory + Tool Plane` 必须包括 Context Pack、summary compression、structured extraction、ToolCard manifest、executor registry 和 approval flow。
 - `Eval / Observability` 必须包括 LangSmith trace mapping、dataset versioning、RAGAS / DeepEval 指标、citation coverage、faithfulness、context recall 和 CI regression gate。
-- `Security + Enterprise Scenarios` 必须包括 PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
+- `Security + Enterprise Scenarios` 必须包括 PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、Policy / Workspace / Execution / Network-Credential Sandbox、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
 - README 只给精简入口，不堆完整执行细节。
 - roadmap 明确当前 program active，且不把后续实现写成 Current。
 
@@ -45,7 +49,7 @@ status: active
    - 边界：保留本地 pytest/eval runner 作为 release gate，不把第三方平台作为唯一真相。
 4. `zuno-security-enterprise-scenarios-v1`
    - 目标：围绕企业知识库和 HR 简历库建立输入、检索、工具、输出四道安全闸门。
-   - 边界：邮件发送、SSH、外部写操作默认 human approval；高风险场景必须有 audit trace。
+   - 边界：邮件发送、SSH、外部写操作默认 human approval；成熟 OS sandbox、credential broker、完整 DLP 和多租户隔离仍是 Target / Future，不能写成 Current。
 
 ## 验证命令
 

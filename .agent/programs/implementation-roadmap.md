@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再从图反推出 Memory Layer、Tool Control Plane、企业知识库、文档解析、安全和评测的后续执行计划。
+**Goal:** 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再把主场景收束为“企业私有知识库与多功能 Agent 助手”，从图反推出 Memory Layer、Tool Control Plane、文档解析、安全 / 沙箱和评测的后续执行计划。
 
-**Architecture:** 本 program 不改 runtime。它把 `Model / Agent Core Runtime / Memory / Tool / Knowledge / Document Ingestion / Security / Trace-Eval / Platform` 写进 Target 架构，并保持 Current / Target / Future / History 边界。Memory Layer 明确为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay 的 write-manage-read 子系统。Tool Layer 明确为 Tool Manifest、ToolCard Registry、Capability Selector、Tool Policy / Approval Gate、Executor Adapter、Sandbox、Result Normalizer、Tool Trace / Audit 的 Tool Control Plane。十类图仍保持十个 canonical title，但每张图展开到二级组件。
+**Architecture:** 本 program 不改 runtime。它把 `Enterprise Private Knowledge Agent Workspace / Model / Agent Core Runtime / Memory / Tool / Knowledge / Document Ingestion / Security / Sandbox / Trace-Eval / Platform` 写进 Target 架构，并保持 Current / Target / Future / History 边界。Memory Layer 明确为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay 的 write-manage-read 子系统。Tool Layer 明确为 Tool Manifest、ToolCard Registry、Capability Selector、Tool Policy / Approval Gate、Executor Adapter、Sandbox、Result Normalizer、Tool Trace / Audit 的 Tool Control Plane。Security / Sandbox 明确为 Policy、Workspace、Execution 和 Network-Credential 四层目标边界。十类图仍保持十个 canonical title，但每张图展开到二级组件。
 
 **Tech Stack:** Markdown、Mermaid、`tools/agent/render_architecture.py`、Zuno `.agent/programs` 生命周期、repo verifiers、pytest repo tests。
 
@@ -20,7 +20,9 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 
 ## 文件结构
 
-- 修改 `docs/architecture/target-architecture.md`：正式 Target 分层、Agent Core Runtime、Memory Layer、Document Ingestion、ToolCard adapter、安全和 LangSmith eval 边界。
+- 修改 `docs/architecture/product-scenario-enterprise-kb.md`：正式主场景叙事、数据类型、三层场景和 Current / Target / Future 边界。
+- 修改 `docs/architecture/security-and-sandbox.md`：Policy / Workspace / Execution / Network-Credential Sandbox 目标边界。
+- 修改 `docs/architecture/target-architecture.md`：正式 Target 分层、Agent Core Runtime、Memory Layer、Document Ingestion、ToolCard adapter、安全 / 沙箱和 LangSmith eval 边界。
 - 修改 `docs/architecture.md`：十类 Mermaid 图的唯一源，所有图保持 canonical title。
 - 生成 `docs/architecture.html`：由 renderer 输出，不手写。
 - 修改 `.agent/references/diagram-inventory.md`：登记十类图的二级组件要求和更新触发条件。
@@ -218,12 +220,12 @@ Each follow-up program must keep Current / Target strict:
 
 - Document Ingestion is target until parser contracts and tests exist.
 - LangSmith / RAGAS / DeepEval are target adapters until trace export and eval gates exist.
-- Security gates are target until policy checks, approval flow and regression tests exist.
+- Security gates and sandbox layers are target until policy checks, approval flow, executor isolation and regression tests exist.
 - Enterprise knowledge base / HR resume KB are product scenarios, not current runtime facts.
 
 - [ ] **Step 2: Preserve Current / Target boundary**
 
-Do not move Document Ingestion, LangSmith, security gates, enterprise scenarios or frontend trace into Current until code and tests prove them.
+Do not move Document Ingestion, LangSmith, security gates, sandbox layers, enterprise scenarios or frontend trace into Current until code and tests prove them.
 
 ### Task 5: Validation And Closure
 

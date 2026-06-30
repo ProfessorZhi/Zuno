@@ -264,6 +264,8 @@ def main() -> int:
     deliverables = _read("docs/deliverables.md")
     roadmap = _read("docs/architecture/roadmap.md")
     target = _read("docs/architecture/target-architecture.md")
+    product_scenario = _read("docs/architecture/product-scenario-enterprise-kb.md")
+    security_sandbox = _read("docs/architecture/security-and-sandbox.md")
     architecture_source = _read("docs/architecture.md")
     evidence = _read("docs/evidence/public-demo.md")
     workflow = _read(".agent/references/workflow.md")
@@ -276,10 +278,15 @@ def main() -> int:
             readme,
             [
                 "./docs/architecture/current-architecture.md",
+                "./docs/architecture/product-scenario-enterprise-kb.md",
                 "./docs/architecture/target-architecture.md",
+                "./docs/architecture/security-and-sandbox.md",
                 "./docs/architecture/roadmap.md",
                 "./docs/evidence/public-demo.md",
                 "受限历史兼容",
+                "企业私有知识库与多功能 Agent 助手",
+                "普通 RAG 问答",
+                "Security、Approval 和 Sandbox 是目标治理层",
                 "src/backend/zuno",
                 "Single Controller Agent 是目标架构角色",
                 "当前实现主线是 `GeneralAgent` single loop",
@@ -311,7 +318,9 @@ def main() -> int:
             architecture_index,
             [
                 "current-architecture.md",
+                "product-scenario-enterprise-kb.md",
                 "target-architecture.md",
+                "security-and-sandbox.md",
                 "roadmap.md",
                 "../architecture.md",
                 "../architecture.html",
@@ -359,6 +368,8 @@ def main() -> int:
                 "docs/deliverables.md",
                 "docs/history/programs/zuno-target-architecture-migration-v1/",
                 "docs/history/programs/official-graphrag-cleanup-v1/",
+                "zuno-document-ingestion-v1",
+                "zuno-security-enterprise-scenarios-v1",
             ],
         )
     )
@@ -376,6 +387,42 @@ def main() -> int:
                 "GraphRAG 实体抽取默认主路径是 LLM 抽取",
                 "六个主层",
                 "新增或重写的前台文档使用中文",
+                "企业私有知识库与多功能 Agent 助手",
+                "Policy Sandbox",
+                "Network / Credential Sandbox",
+            ],
+        )
+    )
+    errors.extend(
+        _require(
+            "docs/architecture/product-scenario-enterprise-kb.md",
+            product_scenario,
+            [
+                "企业私有知识库与多功能 Agent 助手",
+                "普通 RAG 问答",
+                "企业内部文档",
+                "简历和候选人资料",
+                "Current",
+                "Target",
+                "Future",
+                "zuno-document-ingestion-v1",
+                "zuno-security-enterprise-scenarios-v1",
+            ],
+        )
+    )
+    errors.extend(
+        _require(
+            "docs/architecture/security-and-sandbox.md",
+            security_sandbox,
+            [
+                "Policy Sandbox",
+                "Workspace Sandbox",
+                "Execution Sandbox",
+                "Network / Credential Sandbox",
+                "不能声称已经有成熟沙箱系统",
+                "ToolCard / MCP policy foundation",
+                "Target",
+                "Future",
             ],
         )
     )
@@ -402,6 +449,8 @@ def main() -> int:
                 "Quality View",
                 "Agentic RAG",
                 "GraphRAG",
+                "企业私有知识库与多功能 Agent 助手",
+                "安全与沙箱目标架构",
                 "Domain Pack 只允许作为历史或兼容语境出现",
             ],
         )

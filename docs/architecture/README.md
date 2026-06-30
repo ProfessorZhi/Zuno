@@ -28,13 +28,15 @@ Zuno 不只是代码项目，而是代码、架构文档、Agent 工作流、展
 ## 首读顺序
 
 1. `current-architecture.md`：当前实现事实，只写代码和测试已经证明的内容。
-2. `target-architecture.md`：近期目标架构，不冒充已完成。
-3. `roadmap.md`：当前状态、queued program、下一步和非目标。
-4. `../architecture.md`：Obsidian 风格架构总览，也是十类 Mermaid 架构视图的唯一源。
-5. `../architecture.html`：面向展示的唯一生成页。
-6. `assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf`：目标架构参考 PDF。
-7. `../evidence/public-demo.md`：公开证据入口。
-8. `decisions/README.md`：仍影响主线的架构决策。
+2. `product-scenario-enterprise-kb.md`：企业私有知识库与多功能 Agent 助手的主叙事。
+3. `target-architecture.md`：近期目标架构，不冒充已完成。
+4. `security-and-sandbox.md`：安全、审批和沙箱的 Target / Future 边界。
+5. `roadmap.md`：当前状态、queued program、下一步和非目标。
+6. `../architecture.md`：Obsidian 风格架构总览，也是十类 Mermaid 架构视图的唯一源。
+7. `../architecture.html`：面向展示的唯一生成页。
+8. `assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf`：目标架构参考 PDF。
+9. `../evidence/public-demo.md`：公开证据入口。
+10. `decisions/README.md`：仍影响主线的架构决策。
 
 ## 当前前台结构
 
@@ -42,7 +44,9 @@ Zuno 不只是代码项目，而是代码、架构文档、Agent 工作流、展
 docs/architecture/
   README.md
   current-architecture.md
+  product-scenario-enterprise-kb.md
   target-architecture.md
+  security-and-sandbox.md
   roadmap.md
   assets/
   decisions/

@@ -53,7 +53,7 @@ PHASE01-PHASE03 已完成 program boot、目标架构细化、十类 Mermaid / H
 1. `zuno-document-ingestion-v1`：多格式文档摄取、Canonical Document IR、chunk/provenance、BM25/vector/graph indexing。
 2. `zuno-runtime-memory-tool-plane-v1`：Context Pack、summary compression、structured extraction、ToolCard manifest、executor registry、approval flow。
 3. `zuno-eval-observability-v1`：LangSmith trace mapping、dataset versioning、RAGAS / DeepEval 指标、citation coverage 和 CI regression gate。
-4. `zuno-security-enterprise-scenarios-v1`：PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
+4. `zuno-security-enterprise-scenarios-v1`：PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、Policy / Workspace / Execution / Network-Credential Sandbox、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
 
 这些都是 Target implementation programs。只有对应代码、测试、verifier 和 eval evidence 完成后，才能写入 Current。
 

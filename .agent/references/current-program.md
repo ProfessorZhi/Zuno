@@ -9,7 +9,7 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 
 ## Program 目标
 
-本 program 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Tool Control Plane、Document Ingestion、企业知识库场景、安全治理、Trace / Eval 和 LangSmith 适配。
+本 program 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Tool Control Plane、Document Ingestion、企业私有知识库主叙事、安全 / 沙箱治理、Trace / Eval 和 LangSmith 适配。
 
 它不是 runtime feature implementation，不新增 API / DB schema / frontend 行为，不把 Target 写成 Current。Memory Layer 的生产级 Raw Event Log、DB-backed memory、read/write path、review / promotion / decay 和 memory eval 仍是 Target。
 
@@ -35,7 +35,7 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 - `PHASE04_execution-roadmap-from-architecture.md`：active。
 - `PHASE05_validation-and-closure.md`：pending。
 
-PHASE04 的本轮输入来自 2026-06-30 的架构深度评估：Zuno 已完成文档/工作流/验证闭环和 foundation slices，但下一阶段不应继续只扩展总览图，而应把 `Document Ingestion`、`Runtime + Memory + Tool Plane`、`Eval / Observability`、`Security + Enterprise Scenarios` 拆成后续 runtime implementation programs。
+PHASE04 的本轮输入来自 2026-06-30 的架构深度评估：Zuno 已完成文档/工作流/验证闭环和 foundation slices，但下一阶段不应继续只扩展总览图，而应把主场景收束为“企业私有知识库与多功能 Agent 助手”，并把 `Document Ingestion`、`Runtime + Memory + Tool Plane`、`Eval / Observability`、`Security + Enterprise Scenarios` 拆成后续 runtime implementation programs。
 
 ## 最近完成事实
 

@@ -203,7 +203,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/PHASE04_execution-roadmap-from-architecture.md`
 - `.agent/programs/PHASE05_validation-and-closure.md`
 
-当前阶段是 `PHASE04_execution-roadmap-from-architecture`。PHASE01-PHASE03 已完成 program boot、目标架构细化和 Mermaid / HTML 展示升级；PHASE04 把 2026-06-30 架构深度评估沉淀为后续 runtime implementation programs：Document Ingestion、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。本 program 从 `PHASE01` 开始，phase 文件平铺在 `.agent/programs/` 根目录。
+当前阶段是 `PHASE04_execution-roadmap-from-architecture`。PHASE01-PHASE03 已完成 program boot、目标架构细化和 Mermaid / HTML 展示升级；PHASE04 把 Zuno 主场景收束为“企业私有知识库与多功能 Agent 助手”，并把 2026-06-30 架构深度评估沉淀为后续 runtime implementation programs：Document Ingestion、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。本 program 从 `PHASE01` 开始，phase 文件平铺在 `.agent/programs/` 根目录。
 
 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 
