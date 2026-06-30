@@ -4,7 +4,7 @@
 
 Active program: `zuno-eight-deliverables-full-realization-v1`
 state: active
-current_phase: `.agent/programs/PHASE01_program-boot-baseline.md`
+current_phase: `.agent/programs/PHASE03_architecture-docs-html-system.md`
 
 `.agent/programs/` 当前保留：
 
@@ -23,7 +23,7 @@ current_phase: `.agent/programs/PHASE01_program-boot-baseline.md`
 - `PHASE09_runtime-upgrade-integration.md`
 - `PHASE10_validation-release-closure.md`
 
-本轮执行模式是主线程目标模式，默认开启线程内多 agent 协作；不是多线程模式，不生成 `.agent/programs/thread-prompts/` 子线程提示词。
+本轮执行模式是主线程目标模式，默认开启线程内多 agent 协作；这是 Codex 执行协作，不是 Zuno runtime 架构；不是多线程模式，不生成 `.agent/programs/thread-prompts/` 子线程提示词。
 
 ## Program 目标
 

@@ -41,6 +41,7 @@ def test_agent_system_required_paths_exist() -> None:
         ".agent/templates/architecture-doc-template.md",
         ".agent/templates/mermaid-diagram-template.md",
         ".agent/templates/architecture-change-note-template.md",
+        ".agent/templates/verification-report-template.md",
         ".agent/templates/workflow-change-note-template.md",
         ".agent/architecture/README.md",
         ".agent/architecture/near-term/00-architecture-index.md",
@@ -365,9 +366,89 @@ def test_agent_templates_keep_execution_skeleton_boundary() -> None:
         "Forbidden Content",
         "Lessons Learned",
         "architecture-doc-template.md",
+        "verification-report-template.md",
         "workflow-change-note-template.md",
     ]:
         assert phrase in content, f"missing template boundary phrase: {phrase}"
+
+
+def test_verification_report_template_exists_and_stays_a_skeleton() -> None:
+    content = (
+        REPO_ROOT / ".agent" / "templates" / "verification-report-template.md"
+    ).read_text(encoding="utf-8")
+
+    for phrase in [
+        "## Scope",
+        "## Commands",
+        "## Results",
+        "## Failure Analysis",
+        "## Evidence",
+        "## Remaining Risk",
+    ]:
+        assert phrase in content
+    assert "Zuno current =" not in content
+    assert "GraphRAGProjectSnapshot" not in content
+
+
+def test_phase_closure_template_requires_program_self_review() -> None:
+    content = (
+        REPO_ROOT / ".agent" / "templates" / "phase-closure-report.md"
+    ).read_text(encoding="utf-8")
+
+    for phrase in [
+        "## 自维护审查",
+        "AGENTS.md",
+        "`.agent/system.yaml`",
+        "`.agent/references/`",
+        "`.agent/templates/`",
+        "`.agent/programs/`",
+        "`docs/history/programs/`",
+        "`docs/architecture/current-architecture.md`",
+        "`docs/architecture/target-architecture.md`",
+        "`docs/architecture/roadmap.md`",
+        "verifier / tests",
+    ]:
+        assert phrase in content, f"missing phase closure self-review item: {phrase}"
+
+
+def test_agent_verifier_enforces_workflow_self_maintenance_contracts() -> None:
+    content = (REPO_ROOT / ".agent" / "scripts" / "verify_agent_system.py").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "verify_workflow_rule_writeback_route",
+        "verify_templates_are_skeletons",
+        "verify_program_lifecycle_surfaces",
+        "verify_workflow_change_log_entries",
+        "docs-agent-system-history",
+        "verification-report-template.md",
+        "workflow-change-log.md",
+        "docs/history/programs",
+        "## 自维护审查",
+    ]:
+        assert phrase in content, f"missing verifier self-maintenance guard: {phrase}"
+
+
+def test_docs_agent_system_history_route_references_all_front_templates() -> None:
+    system_yaml = (REPO_ROOT / ".agent" / "system.yaml").read_text(encoding="utf-8")
+
+    for file_name in [
+        "requirement-intake.md",
+        "readonly-audit-prompt.md",
+        "phase-plan.md",
+        "phase-closure-report.md",
+        "goal-mode-prompt.md",
+        "target-mode-prompt.md",
+        "codex-batch-prompt.md",
+        "spec-coding-checklist.md",
+        "architecture-doc-template.md",
+        "mermaid-diagram-template.md",
+        "architecture-change-note-template.md",
+        "verification-report-template.md",
+        "workflow-change-note-template.md",
+    ]:
+        assert file_name in system_yaml, f"template not routed in system.yaml: {file_name}"
 
 
 def test_current_program_declares_active_eight_deliverables_program() -> None:
@@ -385,7 +466,7 @@ def test_current_program_declares_active_eight_deliverables_program() -> None:
 
     assert ACTIVE_PROGRAM_NAME in current
     assert "state: active" in current
-    assert "PHASE01_program-boot-baseline.md" in current
+    assert "PHASE03_architecture-docs-html-system.md" in current
     assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
     assert "八个交付物" in current
     assert "默认开启线程内多 agent" in current
@@ -403,6 +484,34 @@ def test_current_program_declares_active_eight_deliverables_program() -> None:
     assert "zuno-target-architecture-refresh-v1/" in history_index
     assert "zuno-repo-layout-cleanup-v1/" in history_index
     assert "zuno-six-layer-internalization-v1/" in history_index
+
+
+def test_active_program_phase_status_lifecycle_is_machine_checkable() -> None:
+    phase_statuses = {
+        path.name: path.read_text(encoding="utf-8")
+        for path in (REPO_ROOT / ".agent" / "programs").glob("PHASE*.md")
+    }
+    current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "current_phase: `PHASE03_architecture-docs-html-system.md`" in current
+    assert "status: completed" in phase_statuses["PHASE01_program-boot-baseline.md"]
+    assert "status: completed" in phase_statuses["PHASE02_workflow-self-maintenance-system.md"]
+    assert "status: active" in phase_statuses["PHASE03_architecture-docs-html-system.md"]
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES[3:]:
+        assert "status: planned" in phase_statuses[phase_name], phase_name
+
+
+def test_multi_agent_status_text_keeps_codex_execution_boundary() -> None:
+    for relative_path in [
+        ".agent/programs/current.md",
+        ".agent/references/current-program.md",
+        "docs/architecture/roadmap.md",
+    ]:
+        content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+        assert "Codex 执行协作" in content, relative_path
+        assert "不是 Zuno runtime 架构" in content, relative_path
 
 
 def test_status_surfaces_do_not_keep_stale_no_active_or_program4_queue_claims() -> None:

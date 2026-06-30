@@ -7,6 +7,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+ACTIVE_CURRENT_PHASE = "PHASE03_architecture-docs-html-system.md"
+COMPLETED_PROGRAM_PHASE_FILES = [
+    "PHASE01_program-boot-baseline.md",
+    "PHASE02_workflow-self-maintenance-system.md",
+]
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -18,6 +23,17 @@ ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE08_graphrag-knowledge-runtime-system.md",
     "PHASE09_runtime-upgrade-integration.md",
     "PHASE10_validation-release-closure.md",
+]
+
+ARCHIVED_PROGRAM_NAMES = [
+    "official-graphrag-cleanup-v1",
+    "zuno-architecture-surface-cleanup-v1",
+    "zuno-repo-layout-cleanup-v1",
+    "zuno-six-layer-internalization-v1",
+    "zuno-target-architecture-migration-v1",
+    "zuno-target-architecture-refresh-v1",
+    "zuno-target-runtime-v2",
+    "zuno-workflow-doc-system-v1",
 ]
 
 
@@ -52,6 +68,7 @@ REQUIRED_PATHS = [
     ".agent/templates/architecture-doc-template.md",
     ".agent/templates/mermaid-diagram-template.md",
     ".agent/templates/architecture-change-note-template.md",
+    ".agent/templates/verification-report-template.md",
     ".agent/templates/workflow-change-note-template.md",
     ".agent/scripts/verify_module_boundaries.py",
     ".agent/architecture/README.md",
@@ -259,6 +276,50 @@ def _extract_system_yaml_entries(content: str, section: str) -> list[str]:
     return entries
 
 
+def _extract_named_route_block(content: str, route_name: str) -> str:
+    lines = content.splitlines()
+    start = None
+    for index, line in enumerate(lines):
+        if line.strip() == f'- name: "{route_name}"':
+            start = index
+            break
+    if start is None:
+        return ""
+
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        line = lines[index]
+        if line.startswith("  - name: "):
+            end = index
+            break
+        if line and not line.startswith(" ") and not line.startswith("-"):
+            end = index
+            break
+    return "\n".join(lines[start:end])
+
+
+def _extract_route_entries(route_block: str, section: str) -> list[str]:
+    entries: list[str] = []
+    lines = route_block.splitlines()
+    section_indent = None
+    for line in lines:
+        stripped = line.strip()
+        indent = len(line) - len(line.lstrip(" "))
+        if stripped == f"{section}:":
+            section_indent = indent
+            continue
+        if section_indent is None:
+            continue
+        if stripped and indent <= section_indent:
+            section_indent = None
+            continue
+        if stripped.startswith("- "):
+            value = stripped[2:].strip().strip('"').strip("'")
+            if value:
+                entries.append(value)
+    return entries
+
+
 def _command_path(command: str) -> str | None:
     parts = command.split()
     if not parts:
@@ -348,7 +409,10 @@ TEMPLATE_REQUIRED_SECTIONS = {
         "## 修改文件",
         "## 关键决策",
         "## 验证结果",
+        "## 多 agent 工作组结果",
+        "## 自维护审查",
         "## 剩余风险",
+        "## PR 信息",
         "## Git 同步",
     ],
     "requirement-intake.md": [
@@ -395,6 +459,14 @@ TEMPLATE_REQUIRED_SECTIONS = {
         "## Validation",
         "## Remaining Gaps",
     ],
+    "verification-report-template.md": [
+        "## Scope",
+        "## Commands",
+        "## Results",
+        "## Failure Analysis",
+        "## Evidence",
+        "## Remaining Risk",
+    ],
     "workflow-change-note-template.md": [
         "## Change Summary",
         "## Trigger",
@@ -434,12 +506,210 @@ def verify_templates_have_required_sections(repo_root: Path = REPO_ROOT) -> list
     return errors
 
 
+def verify_workflow_rule_writeback_route(repo_root: Path = REPO_ROOT) -> list[str]:
+    system_yaml = (repo_root / ".agent" / "system.yaml").read_text(encoding="utf-8")
+    route_block = _extract_named_route_block(system_yaml, "docs-agent-system-history")
+    if not route_block:
+        return ['.agent/system.yaml missing route: docs-agent-system-history']
+
+    errors: list[str] = []
+    required_by_section = {
+        "skills": [
+            ".agent/references/workflow.md",
+            ".agent/references/workflow-governance.md",
+            ".agent/references/workflow-update-policy.md",
+            ".agent/references/workflow-requirements.md",
+            ".agent/references/workflow-change-log.md",
+            ".agent/references/workflow-maintenance-checklist.md",
+            ".agent/references/verification-map.md",
+        ],
+        "templates": [
+            ".agent/templates/requirement-intake.md",
+            ".agent/templates/phase-plan.md",
+            ".agent/templates/phase-closure-report.md",
+            ".agent/templates/verification-report-template.md",
+            ".agent/templates/workflow-change-note-template.md",
+        ],
+        "docs_sync": [
+            "AGENTS.md",
+            ".agent/system.yaml",
+            ".agent/references/workflow.md",
+            ".agent/references/workflow-update-policy.md",
+            ".agent/references/workflow-requirements.md",
+            ".agent/references/workflow-change-log.md",
+            ".agent/references/workflow-maintenance-checklist.md",
+            ".agent/templates/README.md",
+            ".agent/templates/verification-report-template.md",
+            ".agent/programs/current.md",
+            ".agent/programs/implementation-roadmap.md",
+            ".agent/programs/closure-checklist.md",
+            "docs/architecture/roadmap.md",
+        ],
+        "verify": [
+            "git diff --check",
+            "python tools/scripts/verify_repo_structure.py",
+            "python .agent/scripts/verify_agent_system.py",
+            "python .agent/scripts/verify_doc_boundaries.py",
+            "powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1",
+            "pytest -q tests/repo/test_agent_system.py -p no:cacheprovider",
+        ],
+    }
+    for section, required_values in required_by_section.items():
+        entries = _extract_route_entries(route_block, section)
+        for value in required_values:
+            if value not in entries:
+                errors.append(f"docs-agent-system-history route missing {section} entry: {value}")
+
+    for section in ["skills", "templates", "docs_sync"]:
+        for relative_path in _extract_route_entries(route_block, section):
+            if "*" in relative_path:
+                continue
+            if not _repo_path(repo_root, relative_path).exists():
+                errors.append(
+                    f"docs-agent-system-history route references missing {section} path: {relative_path}"
+                )
+
+    for command in _extract_route_entries(route_block, "verify"):
+        path = _command_path(command)
+        if path and not _repo_path(repo_root, path).exists():
+            errors.append(
+                f"docs-agent-system-history route references missing verify command path: {path}"
+            )
+
+    return errors
+
+
+def verify_templates_are_skeletons(repo_root: Path = REPO_ROOT) -> list[str]:
+    templates_root = repo_root / ".agent" / "templates"
+    if not templates_root.exists():
+        return ["missing .agent/templates"]
+
+    errors: list[str] = []
+    system_yaml = _read(".agent/system.yaml")
+    phase_text = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((repo_root / ".agent" / "programs").glob("PHASE*.md"))
+    )
+    route_reference_text = system_yaml + "\n" + phase_text
+    forbidden_markers = [
+        "C:\\",
+        "F:\\",
+        ACTIVE_PROGRAM_NAME,
+        "state: active",
+        "current_phase",
+        "GeneralAgent",
+        "Domain Pack",
+        "src/backend/zuno",
+        "## Current Truth",
+        "## Debug Playbooks",
+        "## Lessons Learned",
+    ]
+
+    for path in sorted(templates_root.glob("*.md")):
+        if path.name == "README.md":
+            continue
+        content = path.read_text(encoding="utf-8")
+        for marker in forbidden_markers:
+            if marker in content:
+                errors.append(
+                    f".agent/templates/{path.name} contains project truth marker, not skeleton content: {marker}"
+                )
+        if path.name not in route_reference_text:
+            errors.append(
+                f".agent/templates/{path.name} must be referenced by .agent/system.yaml or active phase files"
+            )
+
+    return errors
+
+
+def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
+    errors: list[str] = []
+    surfaces = {
+        ".agent/programs/current.md": [ACTIVE_PROGRAM_NAME, "state: active", ACTIVE_CURRENT_PHASE],
+        ".agent/references/current-program.md": [
+            ACTIVE_PROGRAM_NAME,
+            "state: active",
+            ACTIVE_CURRENT_PHASE,
+        ],
+        ".agent/programs/implementation-roadmap.md": [ACTIVE_PROGRAM_NAME, "state: active"],
+        "docs/architecture/roadmap.md": [ACTIVE_PROGRAM_NAME, "active"],
+        "AGENTS.md": [ACTIVE_PROGRAM_NAME, ".agent/programs/"],
+    }
+    for relative_path, phrases in surfaces.items():
+        content = _read(relative_path)
+        for phrase in phrases:
+            if phrase not in content:
+                errors.append(f"{relative_path} missing program lifecycle phrase: {phrase}")
+
+    for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
+        content = _read(f".agent/programs/{phase_name}")
+        if "status: completed" not in content:
+            errors.append(f"{phase_name} must be completed in active lifecycle")
+
+    current_phase = _read(f".agent/programs/{ACTIVE_CURRENT_PHASE}")
+    if "status: active" not in current_phase:
+        errors.append(f"{ACTIVE_CURRENT_PHASE} must be active in active lifecycle")
+
+    active_programs_root = repo_root / ".agent" / "programs"
+    for program_name in ARCHIVED_PROGRAM_NAMES:
+        history_path = repo_root / "docs" / "history" / "programs" / program_name
+        if not history_path.exists():
+            errors.append(f"archived program missing history directory: {program_name}")
+        if (active_programs_root / program_name).exists():
+            errors.append(f"archived program must not remain in .agent/programs: {program_name}")
+
+    return errors
+
+
+def verify_workflow_change_log_entries(repo_root: Path = REPO_ROOT) -> list[str]:
+    content = _read(".agent/references/workflow-change-log.md")
+    heading_pattern = re.compile(r"^### \d{4}-\d{2}-\d{2}: .+$", re.MULTILINE)
+    matches = list(heading_pattern.finditer(content))
+    if not matches:
+        return [".agent/references/workflow-change-log.md must contain dated change log entries"]
+
+    errors: list[str] = []
+    required_labels = ["Summary:", "Reason:", "Affected files:", "Status:", "Validation:"]
+    for index, match in enumerate(matches):
+        entry_start = match.end()
+        entry_end = matches[index + 1].start() if index + 1 < len(matches) else len(content)
+        entry = content[entry_start:entry_end]
+        heading = match.group(0)
+        for label in required_labels:
+            if label not in entry:
+                errors.append(f"{heading} missing workflow change log label: {label}")
+
+        affected_match = re.search(
+            r"Affected files:\s*(?P<body>.*?)(?:\nStatus:|\nValidation:|\n### |\n## |\Z)",
+            entry,
+            re.DOTALL,
+        )
+        if not affected_match:
+            errors.append(f"{heading} missing affected file list")
+            continue
+        affected_paths = re.findall(r"`([^`]+)`", affected_match.group("body"))
+        if not affected_paths:
+            errors.append(f"{heading} affected file list must use backticked repo paths")
+            continue
+        for affected_path in affected_paths:
+            if "*" in affected_path:
+                continue
+            if not _repo_path(repo_root, affected_path).exists():
+                errors.append(f"{heading} references missing affected file: {affected_path}")
+
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
     errors.extend(verify_programs_flat())
     errors.extend(verify_system_yaml())
     errors.extend(verify_skill_links())
     errors.extend(verify_templates_have_required_sections())
+    errors.extend(verify_workflow_rule_writeback_route())
+    errors.extend(verify_templates_are_skeletons())
+    errors.extend(verify_program_lifecycle_surfaces())
+    errors.extend(verify_workflow_change_log_entries())
 
     for relative_path in REQUIRED_PATHS:
         if not (REPO_ROOT / relative_path).exists():
@@ -592,13 +862,37 @@ def main() -> int:
     for phrase in [
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "PHASE01_program-boot-baseline.md",
+        ACTIVE_CURRENT_PHASE,
         "八个交付物",
         "默认开启线程内多 agent",
+        "Codex 执行协作",
+        "不是 Zuno runtime 架构",
         "不是多线程模式",
     ]:
         if phrase not in current_program_text:
             errors.append(f".agent/programs/current.md missing active program phrase: {phrase}")
+    for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
+        phase_text = _read(f".agent/programs/{phase_name}")
+        if "status: completed" not in phase_text:
+            errors.append(f"{phase_name} must be marked completed before current phase advances")
+    current_phase_text = _read(f".agent/programs/{ACTIVE_CURRENT_PHASE}")
+    if "status: active" not in current_phase_text:
+        errors.append(f"{ACTIVE_CURRENT_PHASE} must be marked active")
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
+        if phase_name == ACTIVE_CURRENT_PHASE or phase_name in COMPLETED_PROGRAM_PHASE_FILES:
+            continue
+        phase_text = _read(f".agent/programs/{phase_name}")
+        if "status: planned" not in phase_text:
+            errors.append(f"{phase_name} must remain planned until it is current")
+    for relative_path in [
+        ".agent/programs/current.md",
+        ".agent/references/current-program.md",
+        "docs/architecture/roadmap.md",
+    ]:
+        content = _read(relative_path)
+        for phrase in ["Codex 执行协作", "不是 Zuno runtime 架构"]:
+            if phrase not in content:
+                errors.append(f"{relative_path} missing Codex execution boundary phrase: {phrase}")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [

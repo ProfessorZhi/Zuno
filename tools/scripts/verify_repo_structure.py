@@ -46,6 +46,7 @@ REQUIRED_PATHS = [
     ".agent/templates/architecture-doc-template.md",
     ".agent/templates/mermaid-diagram-template.md",
     ".agent/templates/architecture-change-note-template.md",
+    ".agent/templates/verification-report-template.md",
     ".agent/templates/workflow-change-note-template.md",
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",

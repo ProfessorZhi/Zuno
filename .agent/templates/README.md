@@ -24,6 +24,7 @@ docs       = formal human truth
 - `architecture-doc-template.md`：正式架构文档骨架。
 - `mermaid-diagram-template.md`：Mermaid 图文档骨架。
 - `architecture-change-note-template.md`：架构变更记录骨架。
+- `verification-report-template.md`：验证报告骨架。
 - `workflow-change-note-template.md`：工作流自我维护变更记录骨架。
 
 ## Allowed Content

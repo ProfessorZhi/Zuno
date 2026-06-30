@@ -8,7 +8,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - `.agent/programs/`
 
-当前 active program 是 `zuno-eight-deliverables-full-realization-v1`。它以主线程目标模式执行，默认开启线程内多 agent 协作，但不是多线程模式。Program 3 / `zuno-repo-layout-cleanup-v1` final alias surface closure 已完成并归档：`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`，根级 alias `.py` 文件已收口到 `platform/compatibility/legacy_aliases.py`。Program 4 / `zuno-six-layer-internalization-v1` 也已完成并归档：六层内部已有第一批无副作用薄入口、README、focused tests 和 verifier guard。
+当前 active program 是 `zuno-eight-deliverables-full-realization-v1`。它以主线程目标模式执行，默认开启线程内多 agent 协作；这是 Codex 执行协作，不是 Zuno runtime 架构，也不是多线程模式。Program 3 / `zuno-repo-layout-cleanup-v1` final alias surface closure 已完成并归档：`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`，根级 alias `.py` 文件已收口到 `platform/compatibility/legacy_aliases.py`。Program 4 / `zuno-six-layer-internalization-v1` 也已完成并归档：六层内部已有第一批无副作用薄入口、README、focused tests 和 verifier guard。
 
 已完成并归档：
 
