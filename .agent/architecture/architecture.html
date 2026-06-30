@@ -727,8 +727,9 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：用企业知识库场景验证架构。</li>
+          <li>Zuno 映射：这是 Agentic GraphRAG 产品链路。用户只选 `normal / enhanced / auto`；增强和自动模式下，Single Controller Agent / Query Router 再选择 `basic / local / global / drift`。</li>
           <li>Zuno 映射：文档解析层是企业知识库、GraphRAG、citation 和 eval 的共同前置依赖；parser router 把 native、Docling/PyMuPDF、MinerU/OCR/VLM、Unstructured/MarkItDown 收束为统一 Document IR。</li>
-          <li>边界：`auto` 是 router，不是第五种检索算法；`global` 是 community-level prior，不和 chunk-level BM25 直接生硬混榜。</li>
+          <li>边界：`auto` 是产品模式和路由策略，不是第五种最终检索算法；`global` 是 community-level prior，不和 chunk-level BM25 直接生硬混榜。</li>
         </ul>
         <div class="diagram-actions">
           <button type="button" class="diagram-open" data-diagram-title="Scenarios View">展开全屏查看</button>
@@ -756,8 +757,12 @@ flowchart TB
   CONTEXT[&quot;9 Context Builder&lt;br/&gt;query files memory&quot;]
   MEMORY[&quot;10 Selected Memory&lt;br/&gt;recent summary structured&quot;]
   AGENT[&quot;11 Controller Agent&quot;]:::accent
+  MODE{&quot;User Product Mode&quot;}:::decision
+  NORMAL[&quot;normal&lt;br/&gt;force basic&quot;]
+  ENHANCED[&quot;enhanced&lt;br/&gt;retrieval required&quot;]
+  AUTO[&quot;auto&lt;br/&gt;agent decides retrieval&quot;]
   NEED{&quot;Need Retrieval&quot;}:::decision
-  MODE{&quot;normal enhanced auto&quot;}:::decision
+  ROUTER[&quot;Agentic GraphRAG Router&lt;br/&gt;select channel by task evidence budget&quot;]:::accent
   BASIC[&quot;basic&lt;br/&gt;BM25 vector&quot;]
   LOCAL[&quot;local&lt;br/&gt;entity neighborhood&quot;]
   GLOBAL[&quot;global&lt;br/&gt;community prior&quot;]
@@ -778,19 +783,23 @@ flowchart TB
   ROUTEPARSE --&gt; MINERU --&gt; NORMALIZE
   ROUTEPARSE --&gt; UNSTRUCT --&gt; NORMALIZE
   NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
-  INDEX --&gt; QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
+  INDEX --&gt; QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; MODE
+  MODE --&gt; NORMAL --&gt; BASIC
+  MODE --&gt; ENHANCED --&gt; ROUTER
+  MODE --&gt; AUTO --&gt; NEED
   NEED --&gt;|No| ANSWER
-  NEED --&gt;|Yes| MODE
-  MODE --&gt; BASIC --&gt; FUSION
-  MODE --&gt; LOCAL --&gt; FUSION
-  MODE --&gt; GLOBAL --&gt; FUSION
-  MODE --&gt; DRIFT --&gt; FUSION
+  NEED --&gt;|Yes| ROUTER
+  ROUTER --&gt; BASIC --&gt; FUSION
+  ROUTER --&gt; LOCAL --&gt; FUSION
+  ROUTER --&gt; GLOBAL --&gt; FUSION
+  ROUTER --&gt; DRIFT --&gt; FUSION
   FUSION --&gt; EVID
   EVID --&gt;|retry| RETRY
+  RETRY --&gt; ROUTER
   EVID --&gt;|pass| ANSWER
   ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
   MEMSTORE --&gt; NEXTREAD
-  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
+  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
           </div>
         </figure>
         <details>
@@ -816,8 +825,12 @@ flowchart TB
   CONTEXT[&quot;9 Context Builder&lt;br/&gt;query files memory&quot;]
   MEMORY[&quot;10 Selected Memory&lt;br/&gt;recent summary structured&quot;]
   AGENT[&quot;11 Controller Agent&quot;]:::accent
+  MODE{&quot;User Product Mode&quot;}:::decision
+  NORMAL[&quot;normal&lt;br/&gt;force basic&quot;]
+  ENHANCED[&quot;enhanced&lt;br/&gt;retrieval required&quot;]
+  AUTO[&quot;auto&lt;br/&gt;agent decides retrieval&quot;]
   NEED{&quot;Need Retrieval&quot;}:::decision
-  MODE{&quot;normal enhanced auto&quot;}:::decision
+  ROUTER[&quot;Agentic GraphRAG Router&lt;br/&gt;select channel by task evidence budget&quot;]:::accent
   BASIC[&quot;basic&lt;br/&gt;BM25 vector&quot;]
   LOCAL[&quot;local&lt;br/&gt;entity neighborhood&quot;]
   GLOBAL[&quot;global&lt;br/&gt;community prior&quot;]
@@ -838,19 +851,23 @@ flowchart TB
   ROUTEPARSE --&gt; MINERU --&gt; NORMALIZE
   ROUTEPARSE --&gt; UNSTRUCT --&gt; NORMALIZE
   NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
-  INDEX --&gt; QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
+  INDEX --&gt; QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; MODE
+  MODE --&gt; NORMAL --&gt; BASIC
+  MODE --&gt; ENHANCED --&gt; ROUTER
+  MODE --&gt; AUTO --&gt; NEED
   NEED --&gt;|No| ANSWER
-  NEED --&gt;|Yes| MODE
-  MODE --&gt; BASIC --&gt; FUSION
-  MODE --&gt; LOCAL --&gt; FUSION
-  MODE --&gt; GLOBAL --&gt; FUSION
-  MODE --&gt; DRIFT --&gt; FUSION
+  NEED --&gt;|Yes| ROUTER
+  ROUTER --&gt; BASIC --&gt; FUSION
+  ROUTER --&gt; LOCAL --&gt; FUSION
+  ROUTER --&gt; GLOBAL --&gt; FUSION
+  ROUTER --&gt; DRIFT --&gt; FUSION
   FUSION --&gt; EVID
   EVID --&gt;|retry| RETRY
+  RETRY --&gt; ROUTER
   EVID --&gt;|pass| ANSWER
   ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
   MEMSTORE --&gt; NEXTREAD
-  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;</code></pre>
+  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;</code></pre>
         </details>
       </section>
     </section>

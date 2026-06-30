@@ -544,7 +544,7 @@ sandbox
 
 High-side-effect tools such as email send, external write, SSH, delete, overwrite and unrestricted CLI must require interrupt/approval/audit.
 
-## Task 8: RAG / GraphRAG / Evidence / Citation
+## Task 8: Agentic GraphRAG / Evidence / Citation
 
 Status: pending
 
@@ -556,17 +556,17 @@ Status: pending
 - Modify/Create: `tests/evals/**`
 - Modify: `docs/architecture/architecture.md`
 
-- [ ] **Step 1: Preserve product mode contract**
+- [ ] **Step 1: Preserve user-facing product mode contract**
 
 Product modes:
 
 ```text
-normal -> basic
-enhanced -> retrieval required, method selected by policy
-auto -> router decides if retrieval is needed, then resolves method
+normal -> force basic
+enhanced -> retrieval required, Agentic Retrieval Router selects method(s)
+auto -> Agent first decides if retrieval is needed, then selects method(s)
 ```
 
-- [ ] **Step 2: Preserve query method contract**
+- [ ] **Step 2: Preserve internal query method contract**
 
 Resolved query methods:
 
@@ -579,7 +579,11 @@ drift
 
 `auto` is never a final resolved query method.
 
-- [ ] **Step 3: Implement staged fusion**
+- [ ] **Step 3: Add Agentic Retrieval Router contract**
+
+Router input must include product mode, user query, workspace scope, context pack, ACL scope, budget, evidence state and fallback history. Router output must include candidate methods, resolved method(s), route reason, fallback reason and trace metadata.
+
+- [ ] **Step 4: Implement staged fusion**
 
 `global` acts as community-level prior. It must not be flattened directly into BM25 chunk ranking without evidence-stage design.
 
