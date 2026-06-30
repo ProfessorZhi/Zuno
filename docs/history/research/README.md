@@ -12,3 +12,5 @@
 ## 子目录
 
 - `chatgpt-research-mode-artifacts/`：用户提供或生成的高质量 ChatGPT 研究模式架构分析报告。
+
+最新详细度基准是 `chatgpt-research-mode-artifacts/zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.*`。正式吸收结果进入 `docs/architecture/architecture.md`，不要把 research archive 当作当前事实源。

@@ -87,6 +87,9 @@ Research archive surfaces:
 - Create/Modify: `docs/history/research/chatgpt-research-mode-artifacts/README.md`
 - Archive: `docs/history/research/chatgpt-research-mode-artifacts/zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.pdf`
 - Extract: `docs/history/research/chatgpt-research-mode-artifacts/zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.md`
+- Archive: `docs/history/research/chatgpt-research-mode-artifacts/zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.pdf`
+- Archive: `docs/history/research/chatgpt-research-mode-artifacts/zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.md`
+- Copy: `docs/architecture/assets/zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.pdf`
 
 Architecture surfaces:
 
@@ -130,14 +133,16 @@ Runtime implementation paths opened by later phases:
 
 本 program 可以使用主线程挂机模式，也可以拆成多 worktree 并行模式。若并行，推荐 workstreams：
 
-- `codex/zuno-layout-cleanup-v1`
-- `codex/zuno-ingestion-v1`
-- `codex/zuno-runtime-memory-tool-v1`
-- `codex/zuno-rag-graphrag-v1`
-- `codex/zuno-security-eval-v1`
-- `codex/zuno-architecture-display-v1`
+- A 线：`codex/zuno-architecture-doc-v2`，只碰 `docs/architecture/**`、`.agent/architecture/**`、少量 README / verifier，目标是把最新研究报告的九平面、十图、架构说明和 HTML 展示吸收进正式文档。
+- B 线：`codex/zuno-code-layout-rationalization-v1`，主要碰 `src/backend/zuno/**`、repo verifiers 和 repo tests，目标是 ownership matrix、compat 收缩、platform/services 瘦身、capability 内部归类和目标代码树 guard。
+- C 线：`codex/zuno-document-ingestion-v1`，集中在 `src/backend/zuno/knowledge/ingestion/**` 和 parser tests，目标是 parser router、Canonical Document IR、Docling / PyMuPDF4LLM / MinerU / Unstructured / native parser adapter、chunk/provenance/ACL。
+- D 线：`codex/zuno-runtime-memory-tool-plane-v1`，集中在 `src/backend/zuno/agent/**`、`src/backend/zuno/memory/**`、`src/backend/zuno/capability/**`，目标是 LangGraph-compatible runtime harness、Context Builder、ToolCard Registry、selector / policy / approval。
+- E 线：`codex/zuno-security-sandbox-v1`，集中在 `src/backend/zuno/platform/security/**`、tool policy 和 sandbox tests，目标是 Policy Sandbox、Workspace Sandbox、Execution Sandbox、Network / Credential Sandbox。
+- F 线：`codex/zuno-eval-observability-v1`，集中在 `src/backend/zuno/platform/observability/**`、`tools/evals/zuno/**` 和 eval tests，目标是 OTel-compatible span schema、LangSmith sink、offline / online eval、CI regression gate。
 
 共享文件如 `AGENTS.md`、`.agent/system.yaml`、`docs/architecture/architecture.md`、`tools/scripts/verify_repo_structure.py` 和核心 repo tests 由主线程最终收口。
+
+并行执行规则：每条线必须在独立 worktree + 独立 `codex/` 分支上工作；主线程负责 current-program 状态、架构源文档、verifier、tests 和 final integration。禁止多条线同时大改同一个热点目录。若某条线只处理局部目录，可以启用 sparse-checkout 降低扫描面，但不能改变仓库事实源。
 
 ## Verification Baseline
 
@@ -217,9 +222,19 @@ Expected:
 README.md
 zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.pdf
 zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.md
+zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.pdf
+zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.md
 ```
 
 The PDF is the preserved original. The Markdown file is the extracted research input used to expand architecture docs and future implementation plans.
+
+Also keep the latest blueprint PDF under:
+
+```text
+docs/architecture/assets/zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.pdf
+```
+
+This copy is an architecture attachment for human readers. It is not a second architecture source of truth.
 
 - [ ] **Step 5: Update active-program verifiers**
 

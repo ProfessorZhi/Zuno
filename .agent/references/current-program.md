@@ -66,7 +66,12 @@ current_phase: PHASE01_program-baseline-and-previous-closure
 
 - `docs/history/research/chatgpt-research-mode-artifacts/`
 
-其中 PDF 原件和 Markdown 抽取版都是 research input，不是 Current 事实源。吸收其结论时必须重新区分 Current、Target、Future 和 History；正式结论进入 `docs/architecture/architecture.md`，并通过 `python tools/agent/render_architecture.py --write` 同步 `.agent/architecture/architecture.md` 与两份 HTML。
+其中 PDF 原件和 Markdown 抽取版都是 research input，不是 Current 事实源。最新详细度基准是：
+
+- `zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.pdf`
+- `zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.md`
+
+吸收其结论时必须重新区分 Current、Target、Future 和 History；正式结论进入 `docs/architecture/architecture.md`，并通过 `python tools/agent/render_architecture.py --write` 同步 `.agent/architecture/architecture.md` 与两份 HTML。为了方便人类读者，最新 PDF 也复制到 `docs/architecture/assets/`；该附件不替代正式架构源。
 
 ## 最近完成归档
 
