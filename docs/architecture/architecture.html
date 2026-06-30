@@ -386,8 +386,8 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：开发者如何进入项目。</li>
-          <li>Zuno 映射：`docs/architecture/architecture.md` 是 Mermaid 图源；`.agent/programs/` 是当前执行计划；`tools/agent/render_architecture.py` 生成 HTML。</li>
-          <li>边界：高频执行细节进入 `.agent/programs/`，稳定结论进入 `docs/architecture/`。</li>
+          <li>Zuno 映射：`docs/architecture/architecture.md` 是 Mermaid 图源；`.agent/programs/` 是当前执行计划；`tools/agent/render_architecture.py` 生成 HTML；`docs/architecture/assets/` 保存人类阅读附件。</li>
+          <li>边界：高频执行细节进入 `.agent/programs/`，稳定结论进入 `docs/architecture/`；A-F 是工程交付 worktree，不是产品 runtime 多 Agent 架构。</li>
         </ul>
         <div class="diagram-actions">
           <button type="button" class="diagram-open" data-diagram-title="Development View">展开全屏查看</button>
@@ -399,6 +399,7 @@ flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+  classDef work fill:#f8fbff,stroke:#5b7fa3,stroke-width:1px,color:#16202a;
 
   R[&quot;Repository Root&quot;]:::accent
   R --&gt; APPS[&quot;apps&quot;]
@@ -413,15 +414,43 @@ flowchart TB
   BACKEND --&gt; CAP[&quot;capability&quot;]
   BACKEND --&gt; KNO[&quot;knowledge&quot;]
   BACKEND --&gt; PLA[&quot;platform&quot;]
-  DOCS --&gt; FORMAL[&quot;overall architecture docs&quot;]
+  API --&gt; APISTATE[&quot;session task artifact contracts&quot;]
+  AG --&gt; RUNTIME[&quot;state graph planning streaming&quot;]
+  MEM --&gt; MEMSYS[&quot;context builder memory stores&quot;]
+  CAP --&gt; TOOLSYS[&quot;ToolCard policy executors MCP&quot;]
+  KNO --&gt; KNOWSYS[&quot;ingestion retrieval GraphRAG evidence&quot;]
+  PLA --&gt; PLATSYS[&quot;model storage jobs security observability&quot;]
+  DOCS --&gt; FORMAL[&quot;architecture.md source&quot;]
   DOCS --&gt; HTML[&quot;architecture.html generated&quot;]
-  AGENT --&gt; PROGRAM[&quot;programs active phases&quot;]:::guard
+  DOCS --&gt; ASSETS[&quot;architecture assets PDFs&quot;]
+  AGENT --&gt; PROGRAM[&quot;programs PHASE01 to PHASE12&quot;]:::guard
   AGENT --&gt; REFS[&quot;references governance&quot;]
   AGENT --&gt; TPL[&quot;templates skeletons&quot;]
   TOOLS --&gt; RENDER[&quot;render architecture&quot;]
   TOOLS --&gt; VERIFY[&quot;verifiers&quot;]
   TESTS --&gt; REPO[&quot;repo tests&quot;]
-  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,FORMAL,HTML,REFS,TPL,RENDER,VERIFY,REPO node;
+
+  subgraph WORK[&quot;Parallel Delivery Worktrees&quot;]
+    direction TB
+    WA[&quot;A architecture docs v2&quot;]:::work
+    WB[&quot;B code layout rationalization&quot;]:::work
+    WC[&quot;C document ingestion&quot;]:::work
+    WD[&quot;D runtime memory tool plane&quot;]:::work
+    WE[&quot;E security sandbox&quot;]:::work
+    WF[&quot;F eval observability&quot;]:::work
+  end
+
+  PROGRAM --&gt; WORK
+  WA --&gt; FORMAL
+  WB --&gt; BACKEND
+  WC --&gt; KNO
+  WD --&gt; AG
+  WD --&gt; MEM
+  WD --&gt; CAP
+  WE --&gt; PLA
+  WF --&gt; PLA
+  WORK --&gt; VERIFY
+  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,APISTATE,RUNTIME,MEMSYS,TOOLSYS,KNOWSYS,PLATSYS,FORMAL,HTML,ASSETS,REFS,TPL,RENDER,VERIFY,REPO node;
           </div>
         </figure>
         <details>
@@ -431,6 +460,7 @@ flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+  classDef work fill:#f8fbff,stroke:#5b7fa3,stroke-width:1px,color:#16202a;
 
   R[&quot;Repository Root&quot;]:::accent
   R --&gt; APPS[&quot;apps&quot;]
@@ -445,15 +475,43 @@ flowchart TB
   BACKEND --&gt; CAP[&quot;capability&quot;]
   BACKEND --&gt; KNO[&quot;knowledge&quot;]
   BACKEND --&gt; PLA[&quot;platform&quot;]
-  DOCS --&gt; FORMAL[&quot;overall architecture docs&quot;]
+  API --&gt; APISTATE[&quot;session task artifact contracts&quot;]
+  AG --&gt; RUNTIME[&quot;state graph planning streaming&quot;]
+  MEM --&gt; MEMSYS[&quot;context builder memory stores&quot;]
+  CAP --&gt; TOOLSYS[&quot;ToolCard policy executors MCP&quot;]
+  KNO --&gt; KNOWSYS[&quot;ingestion retrieval GraphRAG evidence&quot;]
+  PLA --&gt; PLATSYS[&quot;model storage jobs security observability&quot;]
+  DOCS --&gt; FORMAL[&quot;architecture.md source&quot;]
   DOCS --&gt; HTML[&quot;architecture.html generated&quot;]
-  AGENT --&gt; PROGRAM[&quot;programs active phases&quot;]:::guard
+  DOCS --&gt; ASSETS[&quot;architecture assets PDFs&quot;]
+  AGENT --&gt; PROGRAM[&quot;programs PHASE01 to PHASE12&quot;]:::guard
   AGENT --&gt; REFS[&quot;references governance&quot;]
   AGENT --&gt; TPL[&quot;templates skeletons&quot;]
   TOOLS --&gt; RENDER[&quot;render architecture&quot;]
   TOOLS --&gt; VERIFY[&quot;verifiers&quot;]
   TESTS --&gt; REPO[&quot;repo tests&quot;]
-  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,FORMAL,HTML,REFS,TPL,RENDER,VERIFY,REPO node;</code></pre>
+
+  subgraph WORK[&quot;Parallel Delivery Worktrees&quot;]
+    direction TB
+    WA[&quot;A architecture docs v2&quot;]:::work
+    WB[&quot;B code layout rationalization&quot;]:::work
+    WC[&quot;C document ingestion&quot;]:::work
+    WD[&quot;D runtime memory tool plane&quot;]:::work
+    WE[&quot;E security sandbox&quot;]:::work
+    WF[&quot;F eval observability&quot;]:::work
+  end
+
+  PROGRAM --&gt; WORK
+  WA --&gt; FORMAL
+  WB --&gt; BACKEND
+  WC --&gt; KNO
+  WD --&gt; AG
+  WD --&gt; MEM
+  WD --&gt; CAP
+  WE --&gt; PLA
+  WF --&gt; PLA
+  WORK --&gt; VERIFY
+  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,APISTATE,RUNTIME,MEMSYS,TOOLSYS,KNOWSYS,PLATSYS,FORMAL,HTML,ASSETS,REFS,TPL,RENDER,VERIFY,REPO node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -669,7 +727,7 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：用企业知识库场景验证架构。</li>
-          <li>Zuno 映射：文档解析层是企业知识库、GraphRAG、citation 和 eval 的共同前置依赖。</li>
+          <li>Zuno 映射：文档解析层是企业知识库、GraphRAG、citation 和 eval 的共同前置依赖；parser router 把 native、Docling/PyMuPDF、MinerU/OCR/VLM、Unstructured/MarkItDown 收束为统一 Document IR。</li>
           <li>边界：`auto` 是 router，不是第五种检索算法；`global` 是 community-level prior，不和 chunk-level BM25 直接生硬混榜。</li>
         </ul>
         <div class="diagram-actions">
@@ -684,15 +742,20 @@ flowchart TB
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
 
   UPLOAD[&quot;1 Upload Enterprise Docs&lt;br/&gt;pdf docx pptx image code&quot;]
-  PARSE[&quot;2 Parse Gateway&quot;]
-  NORMALIZE[&quot;3 OCR Table Code Metadata&quot;]
-  CHUNK[&quot;4 Chunk and Evidence Anchor&quot;]
-  ACL[&quot;5 ACL Scope Sensitivity Tag&quot;]
-  INDEX[&quot;6 Index&lt;br/&gt;BM25 Vector Graph&quot;]
-  QUERY[&quot;7 User Query&quot;]
-  CONTEXT[&quot;8 Context Builder&lt;br/&gt;query files memory&quot;]
-  MEMORY[&quot;9 Selected Memory&lt;br/&gt;recent summary structured&quot;]
-  AGENT[&quot;10 Controller Agent&quot;]:::accent
+  TYPE[&quot;2 Type Detection&quot;]
+  ROUTEPARSE[&quot;3 Parser Router&quot;]
+  NATIVE[&quot;Native Parser&lt;br/&gt;txt md code html&quot;]
+  DOCLING[&quot;Docling PyMuPDF&lt;br/&gt;pdf table layout&quot;]
+  MINERU[&quot;MinerU OCR VLM&lt;br/&gt;scan formula figure&quot;]
+  UNSTRUCT[&quot;Unstructured MarkItDown&lt;br/&gt;office long tail&quot;]
+  NORMALIZE[&quot;4 Structured Markdown JSON IR&quot;]
+  CHUNK[&quot;5 Chunk Evidence Anchor&quot;]
+  ACL[&quot;6 ACL Scope Sensitivity Tag&quot;]
+  INDEX[&quot;7 Index&lt;br/&gt;BM25 Vector Graph&quot;]
+  QUERY[&quot;8 User Query&quot;]
+  CONTEXT[&quot;9 Context Builder&lt;br/&gt;query files memory&quot;]
+  MEMORY[&quot;10 Selected Memory&lt;br/&gt;recent summary structured&quot;]
+  AGENT[&quot;11 Controller Agent&quot;]:::accent
   NEED{&quot;Need Retrieval&quot;}:::decision
   MODE{&quot;normal enhanced auto&quot;}:::decision
   BASIC[&quot;basic&lt;br/&gt;BM25 vector&quot;]
@@ -709,7 +772,12 @@ flowchart TB
   MEMSTORE[&quot;Durable Memory&quot;]
   NEXTREAD[&quot;Next Turn Read Policy&quot;]
 
-  UPLOAD --&gt; PARSE --&gt; NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
+  UPLOAD --&gt; TYPE --&gt; ROUTEPARSE
+  ROUTEPARSE --&gt; NATIVE --&gt; NORMALIZE
+  ROUTEPARSE --&gt; DOCLING --&gt; NORMALIZE
+  ROUTEPARSE --&gt; MINERU --&gt; NORMALIZE
+  ROUTEPARSE --&gt; UNSTRUCT --&gt; NORMALIZE
+  NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
   INDEX --&gt; QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
   NEED --&gt;|No| ANSWER
   NEED --&gt;|Yes| MODE
@@ -722,7 +790,7 @@ flowchart TB
   EVID --&gt;|pass| ANSWER
   ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
   MEMSTORE --&gt; NEXTREAD
-  class UPLOAD,PARSE,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
+  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
           </div>
         </figure>
         <details>
@@ -734,15 +802,20 @@ flowchart TB
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
 
   UPLOAD[&quot;1 Upload Enterprise Docs&lt;br/&gt;pdf docx pptx image code&quot;]
-  PARSE[&quot;2 Parse Gateway&quot;]
-  NORMALIZE[&quot;3 OCR Table Code Metadata&quot;]
-  CHUNK[&quot;4 Chunk and Evidence Anchor&quot;]
-  ACL[&quot;5 ACL Scope Sensitivity Tag&quot;]
-  INDEX[&quot;6 Index&lt;br/&gt;BM25 Vector Graph&quot;]
-  QUERY[&quot;7 User Query&quot;]
-  CONTEXT[&quot;8 Context Builder&lt;br/&gt;query files memory&quot;]
-  MEMORY[&quot;9 Selected Memory&lt;br/&gt;recent summary structured&quot;]
-  AGENT[&quot;10 Controller Agent&quot;]:::accent
+  TYPE[&quot;2 Type Detection&quot;]
+  ROUTEPARSE[&quot;3 Parser Router&quot;]
+  NATIVE[&quot;Native Parser&lt;br/&gt;txt md code html&quot;]
+  DOCLING[&quot;Docling PyMuPDF&lt;br/&gt;pdf table layout&quot;]
+  MINERU[&quot;MinerU OCR VLM&lt;br/&gt;scan formula figure&quot;]
+  UNSTRUCT[&quot;Unstructured MarkItDown&lt;br/&gt;office long tail&quot;]
+  NORMALIZE[&quot;4 Structured Markdown JSON IR&quot;]
+  CHUNK[&quot;5 Chunk Evidence Anchor&quot;]
+  ACL[&quot;6 ACL Scope Sensitivity Tag&quot;]
+  INDEX[&quot;7 Index&lt;br/&gt;BM25 Vector Graph&quot;]
+  QUERY[&quot;8 User Query&quot;]
+  CONTEXT[&quot;9 Context Builder&lt;br/&gt;query files memory&quot;]
+  MEMORY[&quot;10 Selected Memory&lt;br/&gt;recent summary structured&quot;]
+  AGENT[&quot;11 Controller Agent&quot;]:::accent
   NEED{&quot;Need Retrieval&quot;}:::decision
   MODE{&quot;normal enhanced auto&quot;}:::decision
   BASIC[&quot;basic&lt;br/&gt;BM25 vector&quot;]
@@ -759,7 +832,12 @@ flowchart TB
   MEMSTORE[&quot;Durable Memory&quot;]
   NEXTREAD[&quot;Next Turn Read Policy&quot;]
 
-  UPLOAD --&gt; PARSE --&gt; NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
+  UPLOAD --&gt; TYPE --&gt; ROUTEPARSE
+  ROUTEPARSE --&gt; NATIVE --&gt; NORMALIZE
+  ROUTEPARSE --&gt; DOCLING --&gt; NORMALIZE
+  ROUTEPARSE --&gt; MINERU --&gt; NORMALIZE
+  ROUTEPARSE --&gt; UNSTRUCT --&gt; NORMALIZE
+  NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
   INDEX --&gt; QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
   NEED --&gt;|No| ANSWER
   NEED --&gt;|Yes| MODE
@@ -772,7 +850,7 @@ flowchart TB
   EVID --&gt;|pass| ANSWER
   ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
   MEMSTORE --&gt; NEXTREAD
-  class UPLOAD,PARSE,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;</code></pre>
+  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;</code></pre>
         </details>
       </section>
     </section>
@@ -1032,8 +1110,8 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：软件元素到运行环境的映射。</li>
-          <li>Zuno 映射：Provider 是边界，核心 runtime 不绑定单一 vendor。</li>
-          <li>边界：SDK、API、CLI、SSH、MCP 是 execution adapter 或 provider metadata，不是 Capability 的业务顶层分类。</li>
+          <li>Zuno 映射：Provider 是边界，核心 runtime 不绑定单一 vendor；OTel 是内部 trace 标准，LangSmith 是第一 sink。</li>
+          <li>边界：SDK、API、CLI、SSH、MCP 是 execution adapter 或 provider metadata，不是 Capability 的业务顶层分类；CLI、SSH、local MCP 和重文档解析必须经过 sandbox / network / credential 边界。</li>
         </ul>
         <div class="diagram-actions">
           <button type="button" class="diagram-open" data-diagram-title="V&amp;B Deployment View">展开全屏查看</button>
@@ -1047,31 +1125,42 @@ flowchart TB
   classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
   APP[&quot;Zuno App&quot;]:::accent
-  STORE[&quot;Local Storage&quot;]
+  STORE[&quot;Local Object Storage&quot;]
   SQL[&quot;SQL Database&quot;]
   VDB[&quot;Vector Store&quot;]
   GDB[&quot;Graph Store&quot;]
+  SEARCH[&quot;Sparse Search Index&quot;]
+  JOBS[&quot;Background Jobs&lt;br/&gt;ingest embed graph artifact&quot;]
   MODEL[&quot;Model Gateway&quot;]
-  SEARCH[&quot;Search Provider&quot;]
   MCP[&quot;MCP Provider&quot;]
   SDK[&quot;SDK Adapter&quot;]
   APIAD[&quot;API Adapter&quot;]
   CLI[&quot;CLI Adapter&quot;]
   SSH[&quot;SSH Adapter&quot;]:::guard
-  TRACE[&quot;Trace Eval Backend&quot;]
+  SANDBOX[&quot;Execution Sandbox&quot;]:::guard
+  NET[&quot;Network Proxy&quot;]:::guard
+  CREDS[&quot;Credential Broker&quot;]:::guard
+  OTEL[&quot;OTel Collector&lt;br/&gt;redaction routing&quot;]
+  TRACE[&quot;Local Trace Eval Backend&quot;]
+  LS[&quot;LangSmith Sink&quot;]
   APP --&gt; STORE
   APP --&gt; SQL
   APP --&gt; VDB
   APP --&gt; GDB
-  APP --&gt; MODEL
   APP --&gt; SEARCH
+  APP --&gt; JOBS
+  APP --&gt; MODEL
   APP --&gt; MCP
   APP --&gt; SDK
   APP --&gt; APIAD
-  APP --&gt; CLI
-  APP --&gt; SSH
-  APP --&gt; TRACE
-  class STORE,SQL,VDB,GDB,MODEL,SEARCH,MCP,SDK,APIAD,CLI,TRACE node;
+  APP --&gt; SANDBOX
+  SANDBOX --&gt; CLI
+  SANDBOX --&gt; SSH
+  SANDBOX --&gt; NET
+  SANDBOX --&gt; CREDS
+  APP --&gt; OTEL --&gt; TRACE
+  OTEL --&gt; LS
+  class STORE,SQL,VDB,GDB,SEARCH,JOBS,MODEL,MCP,SDK,APIAD,CLI,TRACE,LS node;
           </div>
         </figure>
         <details>
@@ -1083,31 +1172,42 @@ flowchart TB
   classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
   APP[&quot;Zuno App&quot;]:::accent
-  STORE[&quot;Local Storage&quot;]
+  STORE[&quot;Local Object Storage&quot;]
   SQL[&quot;SQL Database&quot;]
   VDB[&quot;Vector Store&quot;]
   GDB[&quot;Graph Store&quot;]
+  SEARCH[&quot;Sparse Search Index&quot;]
+  JOBS[&quot;Background Jobs&lt;br/&gt;ingest embed graph artifact&quot;]
   MODEL[&quot;Model Gateway&quot;]
-  SEARCH[&quot;Search Provider&quot;]
   MCP[&quot;MCP Provider&quot;]
   SDK[&quot;SDK Adapter&quot;]
   APIAD[&quot;API Adapter&quot;]
   CLI[&quot;CLI Adapter&quot;]
   SSH[&quot;SSH Adapter&quot;]:::guard
-  TRACE[&quot;Trace Eval Backend&quot;]
+  SANDBOX[&quot;Execution Sandbox&quot;]:::guard
+  NET[&quot;Network Proxy&quot;]:::guard
+  CREDS[&quot;Credential Broker&quot;]:::guard
+  OTEL[&quot;OTel Collector&lt;br/&gt;redaction routing&quot;]
+  TRACE[&quot;Local Trace Eval Backend&quot;]
+  LS[&quot;LangSmith Sink&quot;]
   APP --&gt; STORE
   APP --&gt; SQL
   APP --&gt; VDB
   APP --&gt; GDB
-  APP --&gt; MODEL
   APP --&gt; SEARCH
+  APP --&gt; JOBS
+  APP --&gt; MODEL
   APP --&gt; MCP
   APP --&gt; SDK
   APP --&gt; APIAD
-  APP --&gt; CLI
-  APP --&gt; SSH
-  APP --&gt; TRACE
-  class STORE,SQL,VDB,GDB,MODEL,SEARCH,MCP,SDK,APIAD,CLI,TRACE node;</code></pre>
+  APP --&gt; SANDBOX
+  SANDBOX --&gt; CLI
+  SANDBOX --&gt; SSH
+  SANDBOX --&gt; NET
+  SANDBOX --&gt; CREDS
+  APP --&gt; OTEL --&gt; TRACE
+  OTEL --&gt; LS
+  class STORE,SQL,VDB,GDB,SEARCH,JOBS,MODEL,MCP,SDK,APIAD,CLI,TRACE,LS node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -1119,8 +1219,8 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：性能、可靠性、安全、可观测性、可修改性和评测。</li>
-          <li>Zuno 映射：Trace、Eval、Evidence、permission、budget、DLP 和 verifier 共同约束质量。</li>
-          <li>边界：输出检查不能替代检索前 ACL 和工具前审批；安全必须贯穿输入、检索、工具和输出。</li>
+          <li>Zuno 映射：Trace、Eval、Evidence、permission、budget、DLP、sandbox、OTel span schema、LangSmith experiment 和 verifier 共同约束质量。</li>
+          <li>边界：输出检查不能替代检索前 ACL 和工具前审批；安全必须贯穿输入、检索、工具和输出；LangSmith 是 sink 和实验台，不是唯一 trace 事实源。</li>
         </ul>
         <div class="diagram-actions">
           <button type="button" class="diagram-open" data-diagram-title="Quality View">展开全屏查看</button>
@@ -1138,15 +1238,27 @@ flowchart TB
   ACL[&quot;Retrieval ACL Chunk Scope&quot;]
   TOOL[&quot;Tool Approval Side Effect Budget&quot;]
   OUTPUT[&quot;Output DLP Citation Format&quot;]
+  WSBOX[&quot;Workspace Sandbox&quot;]
+  EXEBOX[&quot;Execution Sandbox&quot;]
+  NETBOX[&quot;Network Credential Sandbox&quot;]
   REL[&quot;Reliability Timeout Retry Fallback&quot;]
-  OBS[&quot;Observability Trace Span Event&quot;]
+  OBS[&quot;OTel Span Schema&quot;]
+  COLLECT[&quot;Collector Redaction Routing&quot;]
+  LANG[&quot;LangSmith Experiments&quot;]
   EVAL[&quot;Eval Dataset Metric Baseline&quot;]
+  RAGMET[&quot;Retrieval Metrics&lt;br/&gt;recall mrr ndcg&quot;]
+  ANSMET[&quot;Answer Metrics&lt;br/&gt;faithfulness citation&quot;]
+  AGMET[&quot;Agent Metrics&lt;br/&gt;tool trajectory&quot;]
+  SECMET[&quot;Security Metrics&lt;br/&gt;block redaction sandbox&quot;]
   COST[&quot;Cost Latency Budget&quot;]
   GATE[&quot;Release Governance Gate&quot;]:::warn
   Q --&gt; INPUT
   Q --&gt; ACL
   Q --&gt; TOOL
   Q --&gt; OUTPUT
+  Q --&gt; WSBOX
+  Q --&gt; EXEBOX
+  Q --&gt; NETBOX
   Q --&gt; REL
   Q --&gt; OBS
   Q --&gt; EVAL
@@ -1155,11 +1267,20 @@ flowchart TB
   ACL --&gt; GATE
   TOOL --&gt; GATE
   OUTPUT --&gt; GATE
+  WSBOX --&gt; GATE
+  EXEBOX --&gt; GATE
+  NETBOX --&gt; GATE
   REL --&gt; GATE
-  OBS --&gt; GATE
+  OBS --&gt; COLLECT --&gt; LANG
+  COLLECT --&gt; GATE
+  LANG --&gt; EVAL
   EVAL --&gt; GATE
+  EVAL --&gt; RAGMET --&gt; GATE
+  EVAL --&gt; ANSMET --&gt; GATE
+  EVAL --&gt; AGMET --&gt; GATE
+  EVAL --&gt; SECMET --&gt; GATE
   COST --&gt; GATE
-  class INPUT,ACL,TOOL,OUTPUT,REL,OBS,EVAL,COST node;
+  class INPUT,ACL,TOOL,OUTPUT,WSBOX,EXEBOX,NETBOX,REL,OBS,COLLECT,LANG,EVAL,RAGMET,ANSMET,AGMET,SECMET,COST node;
           </div>
         </figure>
         <details>
@@ -1175,15 +1296,27 @@ flowchart TB
   ACL[&quot;Retrieval ACL Chunk Scope&quot;]
   TOOL[&quot;Tool Approval Side Effect Budget&quot;]
   OUTPUT[&quot;Output DLP Citation Format&quot;]
+  WSBOX[&quot;Workspace Sandbox&quot;]
+  EXEBOX[&quot;Execution Sandbox&quot;]
+  NETBOX[&quot;Network Credential Sandbox&quot;]
   REL[&quot;Reliability Timeout Retry Fallback&quot;]
-  OBS[&quot;Observability Trace Span Event&quot;]
+  OBS[&quot;OTel Span Schema&quot;]
+  COLLECT[&quot;Collector Redaction Routing&quot;]
+  LANG[&quot;LangSmith Experiments&quot;]
   EVAL[&quot;Eval Dataset Metric Baseline&quot;]
+  RAGMET[&quot;Retrieval Metrics&lt;br/&gt;recall mrr ndcg&quot;]
+  ANSMET[&quot;Answer Metrics&lt;br/&gt;faithfulness citation&quot;]
+  AGMET[&quot;Agent Metrics&lt;br/&gt;tool trajectory&quot;]
+  SECMET[&quot;Security Metrics&lt;br/&gt;block redaction sandbox&quot;]
   COST[&quot;Cost Latency Budget&quot;]
   GATE[&quot;Release Governance Gate&quot;]:::warn
   Q --&gt; INPUT
   Q --&gt; ACL
   Q --&gt; TOOL
   Q --&gt; OUTPUT
+  Q --&gt; WSBOX
+  Q --&gt; EXEBOX
+  Q --&gt; NETBOX
   Q --&gt; REL
   Q --&gt; OBS
   Q --&gt; EVAL
@@ -1192,11 +1325,20 @@ flowchart TB
   ACL --&gt; GATE
   TOOL --&gt; GATE
   OUTPUT --&gt; GATE
+  WSBOX --&gt; GATE
+  EXEBOX --&gt; GATE
+  NETBOX --&gt; GATE
   REL --&gt; GATE
-  OBS --&gt; GATE
+  OBS --&gt; COLLECT --&gt; LANG
+  COLLECT --&gt; GATE
+  LANG --&gt; EVAL
   EVAL --&gt; GATE
+  EVAL --&gt; RAGMET --&gt; GATE
+  EVAL --&gt; ANSMET --&gt; GATE
+  EVAL --&gt; AGMET --&gt; GATE
+  EVAL --&gt; SECMET --&gt; GATE
   COST --&gt; GATE
-  class INPUT,ACL,TOOL,OUTPUT,REL,OBS,EVAL,COST node;</code></pre>
+  class INPUT,ACL,TOOL,OUTPUT,WSBOX,EXEBOX,NETBOX,REL,OBS,COLLECT,LANG,EVAL,RAGMET,ANSMET,AGMET,SECMET,COST node;</code></pre>
         </details>
       </section>
     </section>

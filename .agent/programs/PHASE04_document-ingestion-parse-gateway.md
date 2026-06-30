@@ -6,18 +6,36 @@ status: pending
 
 把文档解析从“工具层隐含能力”提升为正式 Document Ingestion / Parse Gateway，支撑企业知识库、GraphRAG、citation 和 eval。
 
+企业知识库场景里，文档解析是后续所有能力的前置依赖。RAG 需要稳定 chunk，GraphRAG 需要实体和关系抽取输入，citation 需要页码、bbox、slide、sheet、line range，DLP 需要 block-level ACL 和敏感标签，eval 需要知道答案证据来自哪个解析器和哪个 source span。因此解析层不能只是“能读出一点文本”，而要输出可追踪、可评测、可重放的 Document IR。
+
+Parser router 目标矩阵：
+
+```text
+native parser       -> TXT / MD / Code / HTML / CSV / JSON
+Docling/PyMuPDF4LLM -> PDF, layout-heavy docs, tables, page anchors
+MinerU/OCR/VLM      -> scanned PDF, images, formulas, figures, low-quality OCR
+Unstructured/MarkItDown -> DOCX / PPTX / XLSX / long-tail office formats
+```
+
+所有 parser adapter 都必须归一到同一种结构化 Markdown / JSON IR，并保留 `document_id`、`workspace_id`、`source_uri`、`parser_id`、`parser_version`、`confidence`、`page`、`bbox`、`section_path`、`table_cell`、`slide`、`sheet`、`line_range`、`acl_scope` 和 `sensitivity_tags`。
+
 ## 步骤
 
 - [ ] 建立 Parser Capability Matrix，覆盖 PDF、DOCX、PPTX、XLSX、TXT、MD、CSV、JSON、HTML、图片/扫描件、代码文件。
 - [ ] 定义 Canonical Document IR，包含 document metadata、blocks、tables、figures、page/slide/line anchor、bbox、ACL、provenance。
 - [ ] 接入 parser router，区分 native parser、PDF/Office parser、OCR/VLM parser 和 long-tail fallback。
+- [ ] 为 native、Docling/PyMuPDF4LLM、MinerU/OCR/VLM、Unstructured/MarkItDown 分别定义 adapter contract、timeout、resource budget 和 fallback reason。
 - [ ] 定义 chunking、metadata、evidence anchor、index handoff。
+- [ ] 建立 parser golden fixtures：PDF 表格、扫描件、PPTX slide、DOCX heading/table、XLSX sheet、代码文件、Markdown 链接。
+- [ ] 将 parser result 接入 BM25/vector/GraphRAG/evidence/citation 的 handoff contract。
 - [ ] 写 focused tests 证明多格式解析 contract。
 
 ## 验收
 
 - 每个支持格式都有默认解析路径和 fallback 策略。
 - 解析结果能进入 BM25、vector、GraphRAG 和 citation。
+- 每个 chunk 都能回溯到原文件、页码/slide/sheet/line、parser 和 ACL scope。
+- parser 失败时返回结构化 failure reason，不吞异常、不伪造空文档。
 - OCR 和高成本 parser 有 timeout、resource budget 和 sandbox policy。
 
 ## 验证

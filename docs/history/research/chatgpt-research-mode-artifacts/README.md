@@ -14,6 +14,8 @@
 
 - `zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.pdf`：Zuno 企业私有知识 Agent Workspace 目标架构研究报告原件。
 - `zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.md`：同名 PDF 的文本抽取版。
+- `zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.pdf`：Zuno 目标架构深度研究与实施蓝图原件，是当前架构详细度基准输入。
+- `zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.md`：同名报告的可检索 Markdown 版。
 
 ## 使用规则
 

@@ -23,6 +23,8 @@ docs/architecture/
 
 研究输入归档在 `docs/history/research/chatgpt-research-mode-artifacts/`。这些 PDF / Markdown 抽取版用于补充架构论证，不替代当前正式架构源。
 
+当前最新详细度基准附件也保存在 `assets/zuno-target-architecture-deep-research-implementation-blueprint-2026-06-30.pdf`，方便从架构目录直接打开阅读。正式结论仍以 `architecture.md` 和由它生成的 HTML 为准。
+
 ## 已归档拆分文档
 
 以下拆分文档已经被 `architecture.md` 和 `architecture.html` 吸收，不再作为当前前台入口：
