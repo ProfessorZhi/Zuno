@@ -109,6 +109,23 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
                 {"kind": "pre_retrieval"},
                 {"kind": "post_answer"},
             ],
+            "runtime_turn_ledger": {
+                "stage_order": [
+                    "prepare_context",
+                    "capability_selection",
+                    "agent_loop",
+                    "knowledge_retrieval_trace",
+                    "tool_trace",
+                    "post_turn_commit",
+                ],
+                "layers_touched": ["agent", "context", "capability", "knowledge", "trace", "memory"],
+                "post_turn_memory_event_ids": ["ga-1:turn"],
+                "knowledge_trace": {"trace_id": "trace-eval-1"},
+                "tool_trace_events": [
+                    {"kind": "pre_tool"},
+                    {"kind": "post_tool"},
+                ],
+            },
         },
         "first_pass_result": {
             "graph_result": {
@@ -145,6 +162,18 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
     assert diagnostics["evidence_verdict_fallback_reason"] == "citation_coverage_below_threshold"
     assert diagnostics["artifact_manifest_trace_id"] == "trace-eval-1"
     assert diagnostics["runtime_trace_event_count"] == 2
+    assert diagnostics["runtime_turn_stage_order"] == [
+        "prepare_context",
+        "capability_selection",
+        "agent_loop",
+        "knowledge_retrieval_trace",
+        "tool_trace",
+        "post_turn_commit",
+    ]
+    assert diagnostics["runtime_turn_layers_touched"] == ["agent", "context", "capability", "knowledge", "trace", "memory"]
+    assert diagnostics["runtime_turn_post_memory_event_count"] == 1
+    assert diagnostics["runtime_turn_knowledge_trace_id"] == "trace-eval-1"
+    assert diagnostics["runtime_turn_tool_trace_event_count"] == 2
     assert "seed_entities not exposed by runtime metadata" not in notes
 
 

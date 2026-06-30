@@ -1,7 +1,7 @@
 # PHASE09 Runtime Upgrade Integration
 
 Program: `zuno-eight-deliverables-full-realization-v1`
-status: active
+status: completed
 
 ## 为什么
 
@@ -36,6 +36,15 @@ status: active
 - 六层目录不是空壳，关键 owner 有测试。
 - 不把未完成 feature 宣称为 Current。
 - full focused test stack 通过。
+
+## 完成证据
+
+- `RuntimeTurnLedger` 已进入 `zuno.agent.post_turn` / `zuno.agent`，能汇总 `prepare_context -> capability_selection -> agent_loop -> knowledge_retrieval_trace -> tool_trace -> post_turn_commit` 的当前轮证据。
+- `GeneralAgent.astream()` 每轮重置 knowledge/tool trace buffer，传递 `model_context_packet` / `context_trace` 到单一 ReAct loop，并在 finally 中生成 runtime turn ledger。
+- `search_knowledge_base` 的 `KnowledgeQueryService` trace metadata 会写入当前轮 knowledge trace；tool middleware 可记录 pre/post tool trace event；`post_turn_commit()` 的 raw memory event payload 保留 capability / knowledge / tool trace。
+- `GeneralAgent` 的 foundation contract imports 已收口到 `zuno.agent`、`zuno.capability`、`zuno.knowledge`、`zuno.memory` 目标层入口；`verify_module_boundaries.py` 和 focused tests 固定该边界。
+- Multihop eval diagnostics 已能读取 `runtime_turn_ledger` 的 stage order、layers touched、post-turn memory event count、knowledge trace id 和 tool trace event count。
+- 仍不属于 Current：生产级 Memory DB、成熟 memory retrieval / consolidation、完整动态工具编排、完整 model-visible context injection、API/SSE/DB/frontend 行为变化、frontend trace panel、产品级多 Agent runtime。
 
 ## PR 边界
 

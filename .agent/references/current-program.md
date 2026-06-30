@@ -4,7 +4,18 @@
 
 Active program: `zuno-eight-deliverables-full-realization-v1`
 state: active
-current_phase: `.agent/programs/PHASE09_runtime-upgrade-integration.md`
+current_phase: `.agent/programs/PHASE10_validation-release-closure.md`
+
+## 最近完成事实：PHASE09
+
+PHASE09 / Runtime Upgrade Integration 已完成 foundation slice。当前代码和测试证明：
+
+- `RuntimeTurnLedger` 已进入 Agent post-turn surface，并汇总当前轮 context trace、capability trace、knowledge trace、tool trace events、post-turn memory event ids 和 touched layers。
+- `GeneralAgent.astream()` 每轮重置 knowledge/tool trace buffer，传递 `model_context_packet` / `context_trace` 到单一 ReAct loop，finally 中生成 runtime turn ledger。
+- `search_knowledge_base` 会把 `KnowledgeQueryService` trace metadata 写入当前轮 knowledge trace；`post_turn_commit()` raw memory event payload 保存 capability / knowledge / tool trace evidence。
+- GeneralAgent foundation contracts 已改走 `zuno.agent`、`zuno.capability`、`zuno.knowledge`、`zuno.memory` 目标层入口；`verify_module_boundaries.py` 固定不回流旧 owner imports。
+- Multihop eval diagnostics 已能读取 runtime turn ledger 的 stage order、layers touched、post-turn memory event count、knowledge trace id 和 tool trace event count。
+- 这些事实不表示生产级 Memory DB、成熟 memory retrieval / consolidation、完整动态工具编排、完整 model-visible context injection、API/SSE/DB/frontend 行为变化、frontend trace panel 或产品级多 Agent runtime 已完成。
 
 ## 最近完成事实：PHASE08
 

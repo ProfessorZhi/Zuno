@@ -20,7 +20,7 @@ change area
 
 | Change Area | Affected docs | Examples |
 | --- | --- | --- |
-| Agent Runtime | `docs/architecture/target-architecture.md`, `docs/architecture.md`, `docs/architecture.html`, `.agent/references/diagram-inventory.md` | Planner、ReAct loop、Reflection、Replan、Task DAG、Todo、Checkpoint |
+| Agent Runtime | `docs/architecture/current-architecture.md`, `docs/architecture/target-architecture.md`, `docs/architecture/roadmap.md`, `docs/architecture.md`, `docs/architecture.html`, `README.md`, `.agent/references/current-program.md`, `.agent/references/code-map.md`, `.agent/references/runtime-call-chain.md`, `.agent/references/diagram-inventory.md` | Planner、ReAct loop、Reflection、Replan、Task DAG、Todo、Checkpoint、RuntimeTurnLedger、post-turn evidence |
 | RAG / GraphRAG | `docs/architecture/target-architecture.md`, `docs/architecture.md`, `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md` | product mode、query_method、basic / local / global / drift、Evidence Check、Conditional Requery |
 | Memory System | `docs/architecture/target-architecture.md`, `docs/architecture.md`, `.agent/architecture/near-term/02-context-memory-architecture.md` | Short-term、Working、Conversation、Project、Long-term、Graph Memory、Context Builder |
 | Tool Layer / Hooks / MCP | `docs/architecture/target-architecture.md`, `docs/architecture.md`, `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md` | Tool Registry、Tool Contract、MCP Adapter、before_tool、after_tool、Permission、Budget |

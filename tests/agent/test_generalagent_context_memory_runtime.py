@@ -96,6 +96,191 @@ def test_general_agent_astream_passes_context_trace_into_single_loop_and_commits
     assert summaries[0].metadata["compression_strategy"] == "summary_compression"
 
 
+def test_general_agent_runtime_turn_ledger_links_runtime_contracts() -> None:
+    from zuno.core.agents.general_agent import GeneralAgent
+
+    captured_input = {}
+
+    class FakeTool:
+        name = "search_knowledge_base"
+        description = "Search project knowledge base and GraphRAG evidence."
+        args = {"query": {"type": "string"}}
+
+    class FakeReactAgent:
+        async def astream(self, *args, **kwargs):
+            captured_input.update(kwargs["input"])
+            agent.record_knowledge_trace_metadata(
+                {
+                    "trace_id": "retrieval-trace-1",
+                    "runtime_trace_events": [
+                        {"event_id": "retrieval-trace-1:0001:pre_retrieval", "kind": "pre_retrieval"},
+                        {"event_id": "retrieval-trace-1:0003:post_answer", "kind": "post_answer"},
+                    ],
+                    "evidence_verdict": {
+                        "status": "pass",
+                        "citation_coverage": 1.0,
+                    },
+                    "artifact_manifest": {
+                        "trace_id": "retrieval-trace-1",
+                        "retrieval_refs": ["chunk-1"],
+                        "evidence_refs": ["chunk-1"],
+                    },
+                    "query_method_contract": {
+                        "resolved_query_method": "local",
+                        "internal_route": "local_graphrag",
+                    },
+                }
+            )
+            agent.record_tool_trace_event(
+                {
+                    "event_id": "tool-call_1:0001:pre_tool",
+                    "kind": "pre_tool",
+                    "refs": {"tool": ["search_knowledge_base"]},
+                }
+            )
+            yield "messages", [AIMessageChunk(content="integrated runtime answer")]
+
+    agent = GeneralAgent(_agent_config(enable_memory=True))
+    agent.tools = [FakeTool()]
+    agent.react_agent = FakeReactAgent()
+    agent.conversation_model = SimpleNamespace()
+    async def collect():
+        return [
+            event
+            async for event in agent.astream(
+                [HumanMessage(content="Search the project knowledge base for indemnity evidence")]
+            )
+        ]
+
+    events = asyncio.run(collect())
+
+    assert events[-1]["data"]["accumulated"] == "integrated runtime answer"
+    assert captured_input["context_trace"]["selected_item_ids"]
+    assert agent.last_runtime_turn_ledger is not None
+    ledger = agent.last_runtime_turn_ledger.to_dict()
+
+    assert ledger["stage_order"] == [
+        "prepare_context",
+        "capability_selection",
+        "agent_loop",
+        "knowledge_retrieval_trace",
+        "tool_trace",
+        "post_turn_commit",
+    ]
+    assert ledger["layers_touched"] == [
+        "agent",
+        "context",
+        "capability",
+        "knowledge",
+        "trace",
+        "memory",
+    ]
+    assert ledger["context_trace"]["selected_item_ids"]
+    assert ledger["capability_trace"]["selected_names"] == ["search_knowledge_base"]
+    assert ledger["knowledge_trace"]["query_method_contract"]["resolved_query_method"] == "local"
+    assert ledger["tool_trace_events"][0]["kind"] == "pre_tool"
+    assert ledger["post_turn_memory_event_ids"][0].endswith(":turn")
+    assert ledger["response_present"] is True
+
+
+def test_general_agent_runtime_turn_ledger_uses_current_knowledge_tool_trace(monkeypatch) -> None:
+    from zuno.core.agents import general_agent as ga
+    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.knowledge.query_service import KnowledgeQueryResult
+
+    captured_input = {}
+
+    async def fake_query(self, *, user_id, knowledge_ids, query, product_mode="auto", query_method=None, top_k=None):
+        del self, user_id, knowledge_ids, query, product_mode, query_method, top_k
+        return KnowledgeQueryResult(
+            graphrag_project_id="contract_review",
+            answer="fresh knowledge answer",
+            requested_query_method="local",
+            resolved_query_method="local",
+            fallback_reason=None,
+            documents=[{"chunk_id": "chunk-1"}],
+            evidence={"document_count": 1, "citation_coverage": 1.0},
+            citations=["chunk-1"],
+            retrievers_used=["vector", "graph"],
+            graph_paths=[],
+            communities=[],
+            prompt_version="extract-v2",
+            query_prompt_version="query-v3",
+            index_version={},
+            community_version=None,
+            trace_metadata={
+                "trace_id": "fresh-retrieval-trace",
+                "runtime_trace_events": [
+                    {"event_id": "fresh-retrieval-trace:0001:pre_retrieval", "kind": "pre_retrieval"},
+                    {"event_id": "fresh-retrieval-trace:0003:post_answer", "kind": "post_answer"},
+                ],
+                "evidence_verdict": {"status": "pass", "citation_coverage": 1.0},
+                "artifact_manifest": {
+                    "trace_id": "fresh-retrieval-trace",
+                    "retrieval_refs": ["chunk-1"],
+                    "evidence_refs": ["chunk-1"],
+                },
+                "query_method_contract": {
+                    "resolved_query_method": "local",
+                    "internal_route": "local_graphrag",
+                },
+            },
+        )
+
+    monkeypatch.setattr(ga.KnowledgeQueryService, "query", fake_query)
+
+    agent = GeneralAgent(_agent_config(enable_memory=True))
+    asyncio.run(agent.setup_knowledge_tool())
+    agent.last_knowledge_trace_metadata = {"trace_id": "stale-trace"}
+    agent.runtime_tool_trace_events = [{"kind": "stale_tool"}]
+
+    class FakeReactAgent:
+        async def astream(self, *args, **kwargs):
+            captured_input.update(kwargs["input"])
+            agent.record_tool_trace_event(
+                {
+                    "event_id": "tool-call_1:0001:pre_tool",
+                    "kind": "pre_tool",
+                    "refs": {"tool": ["search_knowledge_base"]},
+                }
+            )
+            result = await agent.tools[0].ainvoke({"query": "use current knowledge trace"})
+            yield "messages", [AIMessageChunk(content=result)]
+
+    agent.react_agent = FakeReactAgent()
+    agent.conversation_model = SimpleNamespace()
+
+    async def collect():
+        return [
+            event
+            async for event in agent.astream(
+                [HumanMessage(content="Search the project knowledge base for indemnity evidence")]
+            )
+        ]
+
+    events = asyncio.run(collect())
+
+    assert "fresh knowledge answer" in events[-1]["data"]["accumulated"]
+    assert captured_input["context_trace"]["selected_item_ids"]
+    assert agent.last_runtime_turn_ledger is not None
+    ledger = agent.last_runtime_turn_ledger.to_dict()
+    assert ledger["knowledge_trace"]["trace_id"] == "fresh-retrieval-trace"
+    assert ledger["tool_trace_events"] == [
+        {
+            "event_id": "tool-call_1:0001:pre_tool",
+            "kind": "pre_tool",
+            "refs": {"tool": ["search_knowledge_base"]},
+        }
+    ]
+    assert ledger["post_turn_memory_event_ids"][0].endswith(":turn")
+    assert "stale" not in str(ledger)
+
+    raw_event = agent.memory_layer_store.raw_events(agent._memory_scope())[0]
+    assert raw_event.payload["knowledge_trace"]["trace_id"] == "fresh-retrieval-trace"
+    assert raw_event.payload["tool_trace_events"][0]["kind"] == "pre_tool"
+    assert raw_event.payload["capability_trace"]["selected_names"] == ["search_knowledge_base"]
+
+
 def test_general_agent_reads_task_summary_and_approved_memory_into_context() -> None:
     from zuno.core.agents.general_agent import GeneralAgent
     from zuno.services.application.context import ContextSource

@@ -40,6 +40,7 @@ Local-first Agent Workspace
 - 当前 Capability foundation 已证明 ToolCard compact metadata、Native BM25 ToolCard retrieval、MCP/local tool policy trace、facade compatibility，以及 `GeneralAgent` 内部 capability selection trace bridge；这不是生产级动态工具编排或完整 runtime tool filtering。
 - 当前 Hooks / Evidence / Trace / Artifact foundation 已证明 hook event schema、evidence verdict、artifact manifest、`GeneralAgent` additive trace event、tool pre/post hook payload 和 eval diagnostics；这不是完整 artifact storage、frontend trace panel 或 production-grade hooks governance。
 - 当前 GraphRAG Knowledge Runtime foundation 已证明 LLM-first extractor config contract、GraphRAG snapshot 传播、query method / citation / retrieval fusion trace contract、global community-only prior 边界、GeneralAgent query method contract 文本和旧 import path 兼容；这不是生产级 LLM extraction、完整 RRF/rerank 治理或前端 trace 面板。
+- 当前 Runtime Upgrade Integration foundation 已证明 `RuntimeTurnLedger`、当前轮 trace reset、`prepare_context -> agent_loop -> post_turn_commit` 的最小证据链、knowledge/tool/post-turn trace evidence、六层目标入口 import guard 和 eval diagnostics；这不是完整产品级 runtime upgrade。
 - Phase 0-6 架构收口仍是已完成的历史事实。
 - Phase 0-6 架构收口、Target Architecture Migration V1、Phase 11A / 11B / 11C 和 Phase 12 closure 都是已完成历史事实。
 - Phase 11A 已完成：项目查询 runtime 已引入 Knowledge / GraphRAG 查询边界。
@@ -68,7 +69,7 @@ Completion API
 
 这些不能写成 Current：
 
-- 完整 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime。
+- 完整产品级 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime，包括成熟 model-visible context injection、动态工具编排和跨前后端 trace UI。
 - production-grade memory extraction / retrieval / consolidation。
 - mature Context Orchestrator product behavior。
 - product-level dynamic capability orchestration。

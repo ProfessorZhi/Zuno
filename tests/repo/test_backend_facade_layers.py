@@ -21,6 +21,7 @@ FACADE_ALL = {
         "ContextTrace",
         "GeneralAgent",
         "ModelContextPacket",
+        "RuntimeTurnLedger",
         "StreamAgentState",
     ],
     "zuno.memory": [

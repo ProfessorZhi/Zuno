@@ -4,7 +4,7 @@
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_CURRENT_PHASE = "PHASE09_runtime-upgrade-integration.md"
+ACTIVE_CURRENT_PHASE = "PHASE10_validation-release-closure.md"
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -14,6 +14,7 @@ COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE06_capability-toolcard-mcp-system.md",
     "PHASE07_hooks-evidence-trace-artifact-system.md",
     "PHASE08_graphrag-knowledge-runtime-system.md",
+    "PHASE09_runtime-upgrade-integration.md",
 ]
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
@@ -601,6 +602,29 @@ def test_phase08_graphrag_knowledge_runtime_focused_stack_is_routed() -> None:
         assert relative_path in system_yaml
         assert relative_path in verification_map
         assert (REPO_ROOT / relative_path).exists()
+
+
+def test_phase09_runtime_upgrade_integration_focused_stack_is_routed() -> None:
+    system_yaml = (REPO_ROOT / ".agent" / "system.yaml").read_text(encoding="utf-8")
+    verification_map = (REPO_ROOT / ".agent" / "references" / "verification-map.md").read_text(
+        encoding="utf-8"
+    )
+    required_tests = [
+        "tests/agent/test_agent_layer_surfaces.py",
+        "tests/agent/test_generalagent_context_memory_runtime.py",
+        "tests/agent/test_general_agent_project_query_runtime.py",
+        "tests/agent/test_hooks_evidence_trace_artifacts.py",
+        "tests/evals/test_multihop_eval_real_runtime_runner.py",
+        "tests/repo/test_backend_facade_layers.py",
+        "tests/repo/test_static_target_layer_imports.py",
+    ]
+
+    for relative_path in required_tests:
+        assert relative_path in system_yaml
+        assert relative_path in verification_map
+        assert (REPO_ROOT / relative_path).exists()
+    assert "python .agent/scripts/verify_module_boundaries.py" in system_yaml
+    assert "python .agent/scripts/verify_module_boundaries.py" in verification_map
 
 
 def test_multi_agent_status_text_keeps_codex_execution_boundary() -> None:

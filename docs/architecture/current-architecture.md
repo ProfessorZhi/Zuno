@@ -104,9 +104,10 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - Knowledge foundation thin surfaces：当前可经 `zuno.knowledge.contracts`、`zuno.knowledge.query_service`、`zuno.knowledge.evidence`、`zuno.knowledge.citation`、`zuno.knowledge.trace`、`zuno.knowledge.retrieval`、`zuno.knowledge.fusion` 和 `zuno.knowledge.graphrag` 访问。`zuno.knowledge.retrieval` 暴露 PHASE04 的 product mode / query method contract 常量和 `normalize_product_mode`。真实 query / retrieval / GraphRAG 行为仍在既有 services owner 中。
 - Hooks / Evidence / Trace / Artifact foundation contracts：PHASE07 已证明 `HookPoint`、`RuntimeTraceEvent`、`RuntimeTraceBuilder`、`EvidenceChecker`、`EvidenceVerdict` 和 `TraceArtifactManifest` 这组 trace artifact contract。`GraphRAGQueryService` 会在 query result trace metadata 中生成 runtime trace events、evidence verdict 和 artifact manifest；`GeneralAgent` 知识库工具会通过既有 custom event 通道发出 additive trace payload，并把低置信 evidence status 写入工具返回文本；tool middleware 会在既有 START / END / ERROR payload 内添加 pre-tool / post-tool trace event。Multihop eval diagnostics 已能读取这些 trace 字段。
 - GraphRAG Knowledge Runtime foundation contracts：PHASE08 已证明 Knowledge config 可以保留 LLM-first extractor refs、prompt / schema / policy / eval refs 和 rule fallback；GraphRAG snapshot、orchestrator metadata 和 query result trace 会携带 extractor config、query method contract、citation contract 与 retrieval fusion contract；global route 当前是 community-only prior，缺少 chunk/span grounding 时 citation contract 明确为 `missing`；local route 当前可证明 vector / BM25 / graph baseline-preserving fusion trace 和 rerank-used 标记。
-- Agent boundary thin surfaces：当前可经 `zuno.agent.runtime`、`zuno.agent.context`、`zuno.agent.post_turn`、`zuno.agent.state`、`zuno.agent.streaming` 和 `zuno.agent.tool_bridge` 访问。`GeneralAgent` 主循环仍由既有 runtime owner 承担。
+- Runtime Upgrade Integration foundation contracts：PHASE09 已证明 `RuntimeTurnLedger`、当前轮 knowledge/tool trace reset、`prepare_context -> capability_selection -> agent_loop -> knowledge_retrieval_trace -> tool_trace -> post_turn_commit` 的最小证据链、post-turn memory evidence payload、六层目标入口 import guard 和 eval diagnostics。
+- Agent boundary thin surfaces：当前可经 `zuno.agent.runtime`、`zuno.agent.context`、`zuno.agent.post_turn`、`zuno.agent.state`、`zuno.agent.streaming` 和 `zuno.agent.tool_bridge` 访问。`GeneralAgent` 主循环仍由既有 runtime owner 承担，但 foundation contracts 已优先经 `zuno.agent` / `zuno.capability` / `zuno.knowledge` / `zuno.memory` 目标层入口引用。
 - Platform foundation thin surfaces：当前可经 `zuno.platform.model_gateway`、`zuno.platform.security`、`zuno.platform.observability` 和 `zuno.platform.storage` 访问。这些只是边界入口，不改变 provider、storage、settings 或 DB 默认行为。
-- `GeneralAgent.astream()` 的 minimal runtime integration：准备 `ModelContextPacket`、传递 `context_trace`、选择有限 capability schema，并在 memory enabled 时提交 scoped raw event 与 task summary。PHASE05 只额外证明同 scope task summary 与 approved structured memory 可以作为本轮 context item 读入；这仍是 foundation slice，不是成熟 memory retrieval runtime。
+- `GeneralAgent.astream()` 的 minimal runtime integration：准备 `ModelContextPacket`、传递 `context_trace` / `model_context_packet`、选择有限 capability schema、保留 knowledge/tool trace、并在 memory enabled 时提交 scoped raw event、task summary 和 runtime evidence payload。PHASE09 只证明当前轮 foundation ledger，不是成熟 memory retrieval runtime 或完整 model-visible context injection。
 - Program 3 backend layout cleanup：顶层 `src/backend/fastapi_jwt_auth/` 已退休；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；旧 runtime 顶层目录已下沉到六层内部；根级 alias `.py` 文件退休；旧 public import path 由 legacy alias registry 兼容；repo structure verifier 和 repo tests 固定该完成态。
 - Program `zuno-six-layer-internalization-v1` 已完成并归档；这只表示六层内部第一批 import surface 更清楚，不表示 Runtime Architecture Upgrade 已经完成。
 
@@ -117,7 +118,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - production-grade memory extraction / retrieval / consolidation
 - mature Context Orchestrator product behavior
 - product-level dynamic capability orchestration
-- 完整 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime
+- 完整产品级 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime，包括成熟 model-visible context injection、动态工具编排和跨前后端 trace UI
 - production-grade Memory DB
 - 完整 frontend trace 面板
 - 完整 artifact storage / download flow
@@ -127,7 +128,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
 - GraphRAG LLM-first entity / relation extraction 的生产实现
 - 可由知识库选择的多套 extractor / config 治理、生产级 extractor orchestration 和 schema-constrained LLM 抽取执行
-- API / Agent / Memory / Capability / Knowledge / Platform 六个主层的成熟 runtime 内聚；当前完成的是目录表层收口、兼容 alias 和第一批六层 foundation thin surfaces，不等于 Runtime Architecture Upgrade 已完成。
+- API / Agent / Memory / Capability / Knowledge / Platform 六个主层的成熟 runtime 内聚；当前完成的是目录表层收口、兼容 alias、第一批六层 foundation thin surfaces 和 PHASE09 最小 runtime ledger，不等于 Runtime Architecture Upgrade 已完成。
 
 ## 历史完成事实
 

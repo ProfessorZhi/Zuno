@@ -1,7 +1,7 @@
 # PHASE10 Validation Release Closure
 
 Program: `zuno-eight-deliverables-full-realization-v1`
-status: planned
+status: active
 
 ## 为什么
 

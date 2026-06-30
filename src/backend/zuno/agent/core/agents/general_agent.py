@@ -22,7 +22,19 @@ from zuno.api.services.tool import ToolService
 from zuno.core.callbacks import usage_metadata_callback
 from zuno.core.models.manager import ModelManager
 from zuno.database import AgentSkill
-from zuno.services.application.capabilities import (
+from zuno.agent.context import (
+    AgentExecutionContext,
+    ContextItem,
+    ContextOrchestrator,
+    ContextPackPolicy,
+    ContextPreparationInput,
+    ContextSelectionReason,
+    ContextSource,
+    ModelContextPacket,
+    TokenBudgetPolicy,
+)
+from zuno.agent.post_turn import RuntimeTurnLedger
+from zuno.capability import (
     CapabilityCost,
     CapabilityHealth,
     CapabilityPermissions,
@@ -33,19 +45,9 @@ from zuno.services.application.capabilities import (
     CapabilityType,
     DynamicCapabilitySelector,
 )
-from zuno.services.application.context import (
-    AgentExecutionContext,
-    ContextOrchestrator,
-    ContextItem,
-    ContextPackPolicy,
-    ContextPreparationInput,
-    ContextSelectionReason,
-    ContextSource,
-    ModelContextPacket,
-    TokenBudgetPolicy,
-)
-from zuno.services.application.knowledge import KnowledgeQueryService
-from zuno.services.memory import (
+from zuno.knowledge.query_service import KnowledgeQueryService
+from zuno.knowledge.trace import HookPoint, RuntimeTraceEvent
+from zuno.memory import (
     InMemoryLayerStore,
     MemoryLayer,
     MemoryReviewStatus,
@@ -54,7 +56,6 @@ from zuno.services.memory import (
     TaskMemorySummary,
 )
 from zuno.services.mcp.manager import MCPManager
-from zuno.services.retrieval.trace_artifacts import HookPoint, RuntimeTraceEvent
 from zuno.services.user_defined_tool_runtime import build_user_defined_langchain_tools
 from zuno.tools import AgentToolsWithName
 from zuno.utils.convert import convert_mcp_config
@@ -101,12 +102,14 @@ class EmitEventAgentMiddleware(AgentMiddleware):
         mcp_checker: Callable[[str], bool],
         mcp_id_resolver: Callable[[str], str | None],
         user_id: str,
+        trace_event_sink: Callable[[dict[str, Any]], None] | None = None,
     ):
         super().__init__()
         self.name_resolver_func = name_resolver_func
         self.mcp_checker = mcp_checker
         self.mcp_id_resolver = mcp_id_resolver
         self.user_id = user_id
+        self.trace_event_sink = trace_event_sink
 
     @staticmethod
     def _tool_trace_event(
@@ -129,6 +132,10 @@ class EmitEventAgentMiddleware(AgentMiddleware):
             metadata=dict(metadata or {}),
         )
         return event.to_dict()
+
+    def _record_tool_trace_event(self, event: dict[str, Any]) -> None:
+        if self.trace_event_sink is not None:
+            self.trace_event_sink(dict(event))
 
     async def aafter_model(
         self, state: StreamAgentState, runtime: Runtime
@@ -157,18 +164,20 @@ class EmitEventAgentMiddleware(AgentMiddleware):
         writer = get_stream_writer()
         tool_name = request.tool_call["name"]
         tool_type, display_name = self.name_resolver_func(tool_name)
+        pre_tool_event = self._tool_trace_event(
+            tool_call_id=str(request.tool_call.get("id") or ""),
+            tool_name=tool_name,
+            hook=HookPoint.PRE_TOOL,
+            status="started",
+            metadata={"tool_type": tool_type},
+        )
+        self._record_tool_trace_event(pre_tool_event)
         writer(
             {
                 "status": "START",
                 "title": f"执行{tool_type}: {display_name}",
                 "message": f"正在调用 {display_name}...",
-                "runtime_trace_event": self._tool_trace_event(
-                    tool_call_id=str(request.tool_call.get("id") or ""),
-                    tool_name=tool_name,
-                    hook=HookPoint.PRE_TOOL,
-                    status="started",
-                    metadata={"tool_type": tool_type},
-                ),
+                "runtime_trace_event": pre_tool_event,
             }
         )
 
@@ -183,22 +192,24 @@ class EmitEventAgentMiddleware(AgentMiddleware):
                     request.tool_call["args"].update(mcp_config)
             except Exception as err:
                 error_text = str(err)
+                error_event = self._tool_trace_event(
+                    tool_call_id=str(request.tool_call.get("id") or ""),
+                    tool_name=tool_name,
+                    hook=HookPoint.POST_TOOL,
+                    status="error",
+                    metadata={
+                        "tool_type": tool_type,
+                        "error": error_text,
+                        "stage": "mcp_config",
+                    },
+                )
+                self._record_tool_trace_event(error_event)
                 writer(
                     {
                         "status": "ERROR",
                         "title": f"执行{tool_type}: {display_name}",
                         "message": error_text,
-                        "runtime_trace_event": self._tool_trace_event(
-                            tool_call_id=str(request.tool_call.get("id") or ""),
-                            tool_name=tool_name,
-                            hook=HookPoint.POST_TOOL,
-                            status="error",
-                            metadata={
-                                "tool_type": tool_type,
-                                "error": error_text,
-                                "stage": "mcp_config",
-                            },
-                        ),
+                        "runtime_trace_event": error_event,
                     }
                 )
                 return ToolMessage(
@@ -209,39 +220,43 @@ class EmitEventAgentMiddleware(AgentMiddleware):
 
         try:
             tool_result = await handler(request)
+            post_tool_event = self._tool_trace_event(
+                tool_call_id=str(request.tool_call.get("id") or ""),
+                tool_name=tool_name,
+                hook=HookPoint.POST_TOOL,
+                status="completed",
+                metadata={"tool_type": tool_type},
+            )
+            self._record_tool_trace_event(post_tool_event)
             writer(
                 {
                     "status": "END",
                     "title": f"执行{tool_type}: {display_name}",
                     "message": getattr(tool_result, "content", str(tool_result)),
-                    "runtime_trace_event": self._tool_trace_event(
-                        tool_call_id=str(request.tool_call.get("id") or ""),
-                        tool_name=tool_name,
-                        hook=HookPoint.POST_TOOL,
-                        status="completed",
-                        metadata={"tool_type": tool_type},
-                    ),
+                    "runtime_trace_event": post_tool_event,
                 }
             )
             return tool_result
         except Exception as err:
             error_text = str(err)
+            error_event = self._tool_trace_event(
+                tool_call_id=str(request.tool_call.get("id") or ""),
+                tool_name=tool_name,
+                hook=HookPoint.POST_TOOL,
+                status="error",
+                metadata={
+                    "tool_type": tool_type,
+                    "error": error_text,
+                    "stage": "handler",
+                },
+            )
+            self._record_tool_trace_event(error_event)
             writer(
                 {
                     "status": "ERROR",
                     "title": f"执行{tool_type}: {display_name}",
                     "message": error_text,
-                    "runtime_trace_event": self._tool_trace_event(
-                        tool_call_id=str(request.tool_call.get("id") or ""),
-                        tool_name=tool_name,
-                        hook=HookPoint.POST_TOOL,
-                        status="error",
-                        metadata={
-                            "tool_type": tool_type,
-                            "error": error_text,
-                            "stage": "handler",
-                        },
-                    ),
+                    "runtime_trace_event": error_event,
                 }
             )
             return ToolMessage(
@@ -266,6 +281,9 @@ class GeneralAgent:
         self.memory_layer_store = InMemoryLayerStore()
         self.last_model_context_packet: ModelContextPacket | None = None
         self.last_capability_selection: CapabilitySelectionResult | None = None
+        self.last_runtime_turn_ledger: RuntimeTurnLedger | None = None
+        self.last_knowledge_trace_metadata: dict[str, Any] = {}
+        self.runtime_tool_trace_events: list[dict[str, Any]] = []
 
         self.event_queue = asyncio.Queue()
         self.stop_streaming = False
@@ -348,9 +366,9 @@ class GeneralAgent:
         messages: List[BaseMessage],
         response: str,
         context_packet: ModelContextPacket,
-    ) -> None:
+    ) -> tuple[str, ...]:
         if not self.agent_config.enable_memory:
-            return
+            return ()
         event = RawMemoryEvent(
             event_id=f"{context_packet.execution_context.trace_id}:turn",
             scope=self._memory_scope(),
@@ -360,6 +378,13 @@ class GeneralAgent:
                 "response": response,
                 "context_trace": context_packet.trace.to_dict(),
                 "context_policy": context_packet.context_policy.to_dict(),
+                "capability_trace": (
+                    self.last_capability_selection.trace.to_dict()
+                    if self.last_capability_selection is not None
+                    else {}
+                ),
+                "knowledge_trace": dict(self.last_knowledge_trace_metadata),
+                "tool_trace_events": [dict(event) for event in self.runtime_tool_trace_events],
             },
             layer=MemoryLayer.WORKING,
         )
@@ -375,6 +400,13 @@ class GeneralAgent:
                 metadata={"compression_strategy": context_packet.context_policy.compression_strategy},
             )
         )
+        return (event.event_id,)
+
+    def record_knowledge_trace_metadata(self, trace_metadata: dict[str, Any] | None) -> None:
+        self.last_knowledge_trace_metadata = dict(trace_metadata or {})
+
+    def record_tool_trace_event(self, event: dict[str, Any]) -> None:
+        self.runtime_tool_trace_events.append(dict(event or {}))
 
     def _memory_context_items(self) -> list[ContextItem]:
         scope = self._memory_scope()
@@ -467,6 +499,7 @@ class GeneralAgent:
                 self.is_mcp_tool,
                 self.get_mcp_id_by_tool,
                 self.agent_config.user_id,
+                self.record_tool_trace_event,
             )
         ]
 
@@ -636,9 +669,9 @@ class GeneralAgent:
                 "type": "工具",
             }
 
-    @staticmethod
-    def _emit_knowledge_trace_event(result) -> None:
+    def _emit_knowledge_trace_event(self, result) -> None:
         trace_metadata = dict(getattr(result, "trace_metadata", None) or {})
+        self.record_knowledge_trace_metadata(trace_metadata)
         runtime_events = trace_metadata.get("runtime_trace_events")
         evidence_verdict = trace_metadata.get("evidence_verdict")
         artifact_manifest = trace_metadata.get("artifact_manifest")
@@ -646,7 +679,7 @@ class GeneralAgent:
             return
         try:
             writer = get_stream_writer()
-        except RuntimeError:
+        except (KeyError, RuntimeError):
             return
         writer(
             {
@@ -699,6 +732,9 @@ class GeneralAgent:
 
     async def astream(self, messages: List[BaseMessage]) -> AsyncGenerator[Dict[str, Any], None]:
         response_content = ""
+        self.last_runtime_turn_ledger = None
+        self.last_knowledge_trace_metadata = {}
+        self.runtime_tool_trace_events = []
         context_packet = self.prepare_context(messages)
         visible_messages = copy.deepcopy(
             normalize_messages_for_model(messages, model=self.conversation_model)
@@ -747,10 +783,18 @@ class GeneralAgent:
                 },
             }
         finally:
-            self.post_turn_commit(
+            post_turn_memory_event_ids = self.post_turn_commit(
                 messages=messages,
                 response=response_content,
                 context_packet=context_packet,
+            )
+            self.last_runtime_turn_ledger = RuntimeTurnLedger.from_runtime(
+                context_packet=context_packet,
+                capability_selection=self.last_capability_selection,
+                knowledge_trace=self.last_knowledge_trace_metadata,
+                tool_trace_events=tuple(self.runtime_tool_trace_events),
+                post_turn_memory_event_ids=post_turn_memory_event_ids,
+                response=response_content,
             )
 
     def stop_streaming_callback(self):
