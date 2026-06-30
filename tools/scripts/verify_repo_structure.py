@@ -66,19 +66,9 @@ REQUIRED_PATHS = [
     f"{COMPLETED_PROGRAM_ARCHIVE}/closure-checklist.md",
     f"{COMPLETED_PROGRAM_ARCHIVE}/closure-summary.md",
     *[f"{COMPLETED_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in COMPLETED_PROGRAM_PHASE_FILES],
-    ".agent/architecture/future/programs/README.md",
-    ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
-    ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
     ".agent/architecture/README.md",
-    ".agent/architecture/overall-architecture.md",
-    ".agent/architecture/future/README.md",
-    ".agent/architecture/decisions/README.md",
-    ".agent/architecture/near-term/00-architecture-index.md",
-    ".agent/architecture/near-term/01-target-runtime-architecture.md",
-    ".agent/architecture/near-term/02-context-memory-architecture.md",
-    ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
-    ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
-    ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
+    ".agent/architecture/architecture.md",
+    ".agent/architecture/architecture.html",
     ".agent/scripts/verify_agent_system.py",
     ".agent/scripts/verify_doc_boundaries.py",
     ".agent/scripts/verify_repo_hygiene.py",
@@ -87,14 +77,20 @@ REQUIRED_PATHS = [
     "apps/web/AGENTS.md",
     "docs/README.md",
     "docs/architecture/README.md",
-    "docs/architecture/overall-architecture.md",
-    "docs/architecture/current-architecture.md",
-    "docs/architecture/target-architecture.md",
-    "docs/architecture/roadmap.md",
     "docs/architecture/architecture.md",
     "docs/architecture/architecture.html",
     "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
     "docs/architecture/decisions/README.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/target-architecture.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/roadmap.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/product-scenario-enterprise-kb.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/security-and-sandbox.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/deliverables.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/README.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/README.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/decisions/README.md",
     "docs/evidence/README.md",
     "docs/evidence/public-demo.md",
     "docs/evidence/eval-baselines.md",
@@ -160,12 +156,25 @@ REQUIRED_PATHS = [
 FORBIDDEN_CURRENT_PATHS = [
     ".agent/skills",
     ".agent/workflows",
+    ".agent/architecture/near-term",
+    ".agent/architecture/future",
+    ".agent/architecture/decisions",
+    ".agent/architecture/00-architecture-index.md",
+    ".agent/architecture/glossary.md",
     "docs/architecture/history",
     "docs/architecture/audits",
     "docs/architecture/specs",
     "docs/architecture/phases",
     "docs/architecture/plans",
     "docs/architecture/programs",
+    "docs/architecture/current-architecture.md",
+    "docs/architecture/target-architecture.md",
+    "docs/architecture/roadmap.md",
+    "docs/architecture/product-scenario-enterprise-kb.md",
+    "docs/architecture/security-and-sandbox.md",
+    "docs/architecture/deliverables.md",
+    "docs/architecture/overall-architecture.md",
+    ".agent/architecture/overall-architecture.md",
     "docs/development",
     "docs/prototypes",
     "docs/ui-review",
@@ -207,46 +216,33 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "新写或重写的 Agent 文档默认使用中文",
     ],
     "docs/README.md": [
-        "./architecture/overall-architecture.md",
-        "./architecture/current-architecture.md",
-        "./architecture/target-architecture.md",
-        "./architecture/roadmap.md",
-        "./architecture/deliverables.md",
+        "./architecture/architecture.md",
+        "./architecture/architecture.html",
         "./evidence/public-demo.md",
         "./history/README.md",
         "前台文档默认使用中文",
     ],
     "docs/architecture/README.md": [
-        "overall-architecture.md",
-        "current-architecture.md",
-        "target-architecture.md",
-        "roadmap.md",
+        "architecture.md",
+        "architecture.html",
+        ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture.html",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/",
         "../evidence/public-demo.md",
-        "docs/history/programs/official-graphrag-cleanup-v1/",
-        "docs/history/programs/zuno-target-architecture-migration-v1/",
         "过时审计、旧规格、旧 phase、旧计划和旧 runbook",
     ],
-    "docs/architecture/overall-architecture.md": [
+    "docs/architecture/architecture.md": [
         "总架构文档",
         "本地优先的企业私有知识库与多功能 Agent 助手",
         "文字总架构文档",
         "架构 HTML",
         "docs/architecture/architecture.md",
         "docs/architecture/architecture.html",
+        ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture.html",
         "Document Ingestion / Parse Gateway",
         "Tool Control Plane",
         "LangSmith-compatible Trace / Eval",
-    ],
-    "docs/architecture/roadmap.md": [
-        "Phase 11A：已完成",
-        "Phase 11B：已完成",
-        "Phase 11C：active runtime cleanup 已完成",
-        "Phase 12：已通过 target migration closure evidence 关闭",
-        "受限历史兼容",
-        "zuno-workflow-doc-system-v1",
-        "zuno-target-architecture-refresh-v1",
-        "zuno-repo-layout-cleanup-v1",
-        "zuno-architecture-visuals-v1",
     ],
 }
 
@@ -615,35 +611,25 @@ def verify_root_local_artifacts_are_absent() -> list[str]:
     return errors
 
 
-def verify_near_term_architecture_index() -> list[str]:
+def verify_architecture_surface_cleanup_archive() -> list[str]:
     errors: list[str] = []
-    index_path = REPO_ROOT / ".agent/architecture/near-term/00-architecture-index.md"
-    if not index_path.exists():
-        return ["missing near-term architecture index"]
-    content = index_path.read_text(encoding="utf-8")
-    for phrase in [
-        "目标架构设计工作集索引",
-        "Native BM25",
-        "RRF",
-        "Summary Compression",
-        "Structured Extraction",
-        "ToolCard",
-        "docs/architecture/architecture.md",
-        "docs/architecture/architecture.html",
-        "00-architecture-index.md",
+    current_agent_files = sorted(
+        path.name for path in (REPO_ROOT / ".agent/architecture").iterdir() if path.is_file()
+    )
+    if current_agent_files != ["README.md", "architecture.html", "architecture.md"]:
+        errors.append(f".agent/architecture current files are not slim: {current_agent_files}")
+    archive_root = REPO_ROOT / "docs/history/architecture-surface-cleanup-2026-06-30"
+    for relative_path in [
+        "agent-architecture/near-term/00-architecture-index.md",
+        "agent-architecture/future/README.md",
+        "agent-architecture/decisions/README.md",
+        "docs-architecture/current-architecture.md",
+        "docs-architecture/target-architecture.md",
+        "docs-architecture/roadmap.md",
+        "docs-architecture/deliverables.md",
     ]:
-        if phrase not in content:
-            errors.append(f"near-term architecture index missing phrase: {phrase}")
-    old_html_refs = [
-        path
-        for path in REPO_ROOT.glob(".agent/**/*.md")
-        if "zuno-ideal-architecture-and-repo-layout.html" in path.read_text(encoding="utf-8")
-    ]
-    if old_html_refs:
-        errors.append(
-            "near-term Agent docs still reference retired architecture HTML: "
-            + ", ".join(path.relative_to(REPO_ROOT).as_posix() for path in old_html_refs)
-        )
+        if not (archive_root / relative_path).exists():
+            errors.append(f"missing architecture cleanup archive path: {relative_path}")
     return errors
 
 
@@ -755,10 +741,12 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         ]:
             if phrase not in archived_text:
                 errors.append(f"archived Program 3 README missing phrase: {phrase}")
-    for queued_path in sorted((REPO_ROOT / ".agent/architecture/future/programs").glob("*/*.md")):
-        content = queued_path.read_text(encoding="utf-8")
-        if "queued draft / not active" not in content:
-            errors.append(f"queued program file missing not-active banner: {queued_path.relative_to(REPO_ROOT).as_posix()}")
+    archived_future_programs = (
+        REPO_ROOT
+        / "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs"
+    )
+    if not archived_future_programs.exists():
+        errors.append("missing archived future architecture programs")
     system_yaml_path = REPO_ROOT / ".agent/system.yaml"
     if not system_yaml_path.exists():
         errors.append("missing .agent/system.yaml")
@@ -798,7 +786,7 @@ def verify_architecture_diagram_outputs() -> list[str]:
         if (REPO_ROOT / stale_path).exists():
             errors.append(f"stale architecture HTML must not remain: {stale_path}")
 
-    for relative_path in ["docs/architecture/architecture.html"]:
+    for relative_path in ["docs/architecture/architecture.html", ".agent/architecture/architecture.html"]:
         path = REPO_ROOT / relative_path
         if not path.exists():
             errors.append(f"missing architecture diagram HTML: {relative_path}")
@@ -838,6 +826,14 @@ def verify_architecture_diagram_outputs() -> list[str]:
                 path = REPO_ROOT / relative_path
                 if path.exists() and path.read_text(encoding="utf-8") != rendered:
                     errors.append(f"generated architecture HTML is stale: {relative_path}")
+            agent_source_path = REPO_ROOT / ".agent/architecture/architecture.md"
+            docs_source_path = REPO_ROOT / "docs/architecture/architecture.md"
+            if agent_source_path.exists() and agent_source_path.read_bytes() != docs_source_path.read_bytes():
+                errors.append(".agent/architecture/architecture.md is stale")
+            for relative_path in [".agent/architecture/architecture.html"]:
+                path = REPO_ROOT / relative_path
+                if path.exists() and path.read_text(encoding="utf-8") != rendered:
+                    errors.append(f"generated architecture HTML is stale: {relative_path}")
     return errors
 
 
@@ -853,7 +849,7 @@ def run_verification() -> VerificationResult:
             *verify_backend_layer_internal_surfaces(),
             *verify_backend_legacy_import_aliases(),
             *verify_backend_retired_top_level_paths_are_absent(),
-            *verify_near_term_architecture_index(),
+            *verify_architecture_surface_cleanup_archive(),
             *verify_completed_architecture_surface_phase_plan(),
             *verify_architecture_diagram_outputs(),
         ]

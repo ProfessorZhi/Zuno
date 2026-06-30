@@ -6,7 +6,7 @@
 
 **Architecture:** 本 program 不改 runtime。它把 `Enterprise Private Knowledge Agent Workspace / Model / Agent Core Runtime / Memory / Tool / Knowledge / Document Ingestion / Security / Sandbox / Trace-Eval / Platform` 写进 Target 架构，并保持 Current / Target / Future / History 边界。Memory Layer 明确为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay 的 write-manage-read 子系统。Tool Layer 明确为 Tool Manifest、ToolCard Registry、Capability Selector、Tool Policy / Approval Gate、Executor Adapter、Sandbox、Result Normalizer、Tool Trace / Audit 的 Tool Control Plane。Security / Sandbox 明确为 Policy、Workspace、Execution 和 Network-Credential 四层目标边界。十类图仍保持十个 canonical title，但每张图展开到二级组件。
 
-文字总架构文档放在 `docs/architecture/overall-architecture.md`；Agent 侧维护镜像放在 `.agent/architecture/overall-architecture.md`。两者必须一致。图形总览继续由 `docs/architecture/architecture.md` 生成到 `docs/architecture/architecture.html`。
+文字总架构文档放在 `docs/architecture/architecture.md`；Agent 侧维护镜像放在 `.agent/architecture/architecture.md`。两者必须一致。图形总览继续由 `docs/architecture/architecture.md` 生成到 `docs/architecture/architecture.html`。
 
 **Tech Stack:** Markdown、Mermaid、`tools/agent/render_architecture.py`、Zuno `.agent/programs` 生命周期、repo verifiers、pytest repo tests。
 
@@ -22,16 +22,16 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 
 ## 文件结构
 
-- 修改 `docs/architecture/product-scenario-enterprise-kb.md`：正式主场景叙事、数据类型、三层场景和 Current / Target / Future 边界。
-- 新增 `docs/architecture/overall-architecture.md`：正式文字总架构文档。
-- 新增 `.agent/architecture/overall-architecture.md`：Agent 侧总架构维护文档。
-- 修改 `docs/architecture/security-and-sandbox.md`：Policy / Workspace / Execution / Network-Credential Sandbox 目标边界。
-- 修改 `docs/architecture/target-architecture.md`：正式 Target 分层、Agent Core Runtime、Memory Layer、Document Ingestion、ToolCard adapter、安全 / 沙箱和 LangSmith eval 边界。
+- 修改 `docs/architecture/architecture.md`：正式主场景叙事、数据类型、三层场景和 Current / Target / Future 边界。
+- 新增 `docs/architecture/architecture.md`：正式文字总架构文档。
+- 新增 `.agent/architecture/architecture.md`：Agent 侧总架构维护文档。
+- 修改 `docs/architecture/architecture.md`：Policy / Workspace / Execution / Network-Credential Sandbox 目标边界。
+- 修改 `docs/architecture/architecture.md`：正式 Target 分层、Agent Core Runtime、Memory Layer、Document Ingestion、ToolCard adapter、安全 / 沙箱和 LangSmith eval 边界。
 - 修改 `docs/architecture/architecture.md`：十类 Mermaid 图的唯一源，所有图保持 canonical title。
 - 生成 `docs/architecture/architecture.html`：由 renderer 输出，不手写。
 - 修改 `.agent/references/diagram-inventory.md`：登记十类图的二级组件要求和更新触发条件。
 - 修改 `.agent/programs/*`：打开 active program、写 roadmap、phase 和 closure checklist。
-- 修改 `.agent/references/current-program.md`、`docs/architecture/roadmap.md`、`README.md`、`.agent/architecture/future/programs/README.md`：同步当前 active program。
+- 修改 `.agent/references/current-program.md`、`docs/architecture/architecture.md`、`README.md`、`docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/README.md`：同步当前 active program。
 - 修改 `AGENTS.md`、`docs/architecture/README.md`、`.agent/references/docs-map.md`、`.agent/references/architecture-docs-map.md`、`.agent/references/documentation-governance.md`、`.agent/references/architecture-update-policy.md`、`.agent/references/workflow.md`：同步架构治理入口、总架构文档一致性规则和图细化规则。
 - 修改 `tools/agent/render_architecture.py`：放宽图展示宽度以容纳二级组件图。
 - 修改 `.agent/scripts/verify_agent_system.py`、`.agent/scripts/verify_doc_boundaries.py`、`.agent/scripts/verify-workflow.ps1`、`tools/scripts/verify_docs_entrypoints.py`、`tools/scripts/verify_repo_structure.py`、`tests/repo/test_agent_system.py`、`tests/repo/test_docs_entrypoints.py`：让 verifier/test 固定 active program 与细化图契约。
@@ -44,10 +44,10 @@ Status: completed
 - Modify: `.agent/programs/current.md`
 - Modify: `.agent/programs/README.md`
 - Modify: `.agent/references/current-program.md`
-- Modify: `docs/architecture/roadmap.md`
+- Modify: `docs/architecture/architecture.md`
 - Modify: `README.md`
 - Modify: `AGENTS.md`
-- Modify: `.agent/architecture/future/programs/README.md`
+- Modify: `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/README.md`
 - Create: `.agent/programs/PHASE01_architecture-state-and-program-boot.md`
 
 - [x] **Step 1: Confirm git branch and clean scope**
@@ -87,7 +87,7 @@ Codex 执行协作
 Status: completed
 
 **Files:**
-- Modify: `docs/architecture/target-architecture.md`
+- Modify: `docs/architecture/architecture.md`
 
 - [x] **Step 1: Add target architecture detail layers**
 
@@ -195,13 +195,13 @@ Status: active
 
 **Files:**
 - Modify: `.agent/programs/implementation-roadmap.md`
-- Modify: `docs/architecture/roadmap.md`
+- Modify: `docs/architecture/architecture.md`
 - Modify: `README.md`
-- Create: `docs/architecture/overall-architecture.md`
-- Create: `.agent/architecture/overall-architecture.md`
+- Create: `docs/architecture/architecture.md`
+- Create: `.agent/architecture/architecture.md`
 - Modify: `docs/architecture/README.md`
 - Modify: `.agent/architecture/README.md`
-- Modify: `.agent/architecture/00-architecture-index.md`
+- Modify: `.agent/architecture/architecture.md`
 - Modify: `.agent/references/docs-map.md`
 - Modify: `.agent/references/architecture-docs-map.md`
 - Modify: `.agent/references/documentation-governance.md`
@@ -243,8 +243,8 @@ Each follow-up program must keep Current / Target strict:
 Create the text-first architecture source pair:
 
 ```text
-docs/architecture/overall-architecture.md
-.agent/architecture/overall-architecture.md
+docs/architecture/architecture.md
+.agent/architecture/architecture.md
 ```
 
 The docs version is the formal human source. The `.agent` version is the Agent maintenance mirror. Both must mention:

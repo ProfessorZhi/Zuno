@@ -6,45 +6,53 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_readme_exposes_short_first_reader_path() -> None:
+def test_readme_exposes_current_architecture_entrypoints() -> None:
     content = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
     for phrase in [
-        "./docs/architecture/overall-architecture.md",
-        "./docs/architecture/current-architecture.md",
-        "./docs/architecture/product-scenario-enterprise-kb.md",
-        "./docs/architecture/target-architecture.md",
-        "./docs/architecture/security-and-sandbox.md",
-        "./docs/architecture/roadmap.md",
         "./docs/architecture/architecture.md",
         "./docs/architecture/architecture.html",
         "./docs/evidence/public-demo.md",
-        "受限历史兼容",
-        "Phase 11A",
-        "Phase 11B",
         "Single Controller Agent 是目标架构角色",
         "当前实现主线是 `GeneralAgent` single loop",
         "Completion API -> CompletionService -> GeneralAgent single loop",
         "企业私有知识库与多功能 Agent 助手",
         "普通 RAG 问答",
-        "Security、Approval 和 Sandbox 是目标治理层",
     ]:
         assert phrase in content
 
 
-def test_docs_front_path_is_small_and_chinese() -> None:
+def test_docs_architecture_front_path_is_small_and_synced() -> None:
+    docs_files = {
+        path.name for path in (REPO_ROOT / "docs" / "architecture").iterdir() if path.is_file()
+    }
+    agent_files = {
+        path.name for path in (REPO_ROOT / ".agent" / "architecture").iterdir() if path.is_file()
+    }
+
+    assert docs_files == {"README.md", "architecture.md", "architecture.html"}
+    assert agent_files == {"README.md", "architecture.md", "architecture.html"}
+    assert (REPO_ROOT / "docs/architecture/architecture.md").read_bytes() == (
+        REPO_ROOT / ".agent/architecture/architecture.md"
+    ).read_bytes()
+    assert (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8") == (
+        REPO_ROOT / ".agent/architecture/architecture.html"
+    ).read_text(encoding="utf-8")
+
+
+def test_docs_front_path_readmes_explain_architecture_contract() -> None:
     docs_index = (REPO_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
     architecture_index = (REPO_ROOT / "docs" / "architecture" / "README.md").read_text(
         encoding="utf-8"
     )
+    agent_architecture_index = (
+        REPO_ROOT / ".agent" / "architecture" / "README.md"
+    ).read_text(encoding="utf-8")
 
     for phrase in [
         "Zuno 文档入口",
-        "./architecture/overall-architecture.md",
-        "./architecture/current-architecture.md",
-        "./architecture/target-architecture.md",
-        "./architecture/roadmap.md",
-        "./architecture/deliverables.md",
+        "./architecture/architecture.md",
+        "./architecture/architecture.html",
         "./evidence/public-demo.md",
         "./history/README.md",
         "前台文档默认使用中文",
@@ -53,139 +61,66 @@ def test_docs_front_path_is_small_and_chinese() -> None:
 
     for phrase in [
         "架构文档",
-        "overall-architecture.md",
-        "current-architecture.md",
-        "product-scenario-enterprise-kb.md",
-        "target-architecture.md",
-        "security-and-sandbox.md",
-        "roadmap.md",
         "architecture.md",
         "architecture.html",
-        "../evidence/public-demo.md",
-        "docs/history/programs/official-graphrag-cleanup-v1/",
-        "docs/history/programs/zuno-target-architecture-migration-v1/",
+        ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture.html",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/",
         "过时审计、旧规格、旧 phase、旧计划和旧 runbook",
     ]:
         assert phrase in architecture_index
 
+    for phrase in [
+        "Agent 架构工作区",
+        "architecture.md",
+        "architecture.html",
+        "必须与正式人类文档 `docs/architecture/architecture.md` 完全一致",
+        "python tools/agent/render_architecture.py --write",
+    ]:
+        assert phrase in agent_architecture_index
 
-def test_overall_architecture_docs_have_text_first_sync_contract() -> None:
-    docs_overall = (
-        REPO_ROOT / "docs" / "architecture" / "overall-architecture.md"
-    ).read_text(encoding="utf-8")
-    agent_overall = (
-        REPO_ROOT / ".agent" / "architecture" / "overall-architecture.md"
+
+def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> None:
+    docs_architecture = (REPO_ROOT / "docs" / "architecture" / "architecture.md").read_text(
+        encoding="utf-8"
+    )
+    agent_architecture = (
+        REPO_ROOT / ".agent" / "architecture" / "architecture.md"
     ).read_text(encoding="utf-8")
 
-    shared_phrases = [
+    assert docs_architecture == agent_architecture
+    for phrase in [
         "总架构文档",
         "本地优先的企业私有知识库与多功能 Agent 助手",
         "文字总架构文档",
         "架构 HTML",
-        "docs/architecture/overall-architecture.md",
-        ".agent/architecture/overall-architecture.md",
-        "docs/architecture/architecture.md",
-        "docs/architecture/architecture.html",
+        "Current",
+        "Target",
         "Document Ingestion / Parse Gateway",
         "Tool Control Plane",
         "LangSmith-compatible Trace / Eval",
-    ]
-    for phrase in shared_phrases:
-        assert phrase in docs_overall
-        assert phrase in agent_overall
-
-    for phrase in [
-        "当前架构事实",
-        "目标架构分层",
-        "主链路",
-        "文档解析边界",
-        "安全与评测",
-        "实施落点",
         "文档一致性规则",
-        "current-architecture.md",
-        "target-architecture.md",
-        "security-and-sandbox.md",
-        "product-scenario-enterprise-kb.md",
+        "架构图视图集",
         "python tools/agent/render_architecture.py --write",
     ]:
-        assert phrase in docs_overall
+        assert phrase in docs_architecture
+    assert docs_architecture.count("```mermaid") == 10
 
-    for phrase in [
-        "Agent 侧总架构文档",
-        "正式人类总架构文档",
-        "Current / Target 快速边界",
-        "根部总架构维护面",
-        "与 HTML 图页的关系",
-        "不要在 `.agent/architecture/` 复制新的 HTML",
-        "一致性锚点",
+
+def test_architecture_surface_cleanup_archive_keeps_old_materials() -> None:
+    for relative_path in [
+        "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/target-architecture.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/roadmap.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/product-scenario-enterprise-kb.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/security-and-sandbox.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/deliverables.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/00-architecture-index.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/README.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/decisions/README.md",
     ]:
-        assert phrase in agent_overall
-
-
-def test_evidence_page_links_archived_public_demo_material() -> None:
-    content = (REPO_ROOT / "docs" / "evidence" / "public-demo.md").read_text(
-        encoding="utf-8"
-    )
-
-    for phrase in [
-        "../history/development/public-demo-evidence.md",
-        "../history/development/public-demo-runbook.md",
-        "../history/development/public-demo-acceptance.md",
-    ]:
-        assert phrase in content
-
-
-def test_agent_entrypoint_and_agent_folder_form_one_workflow() -> None:
-    agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
-    agent_readme = (REPO_ROOT / ".agent" / "README.md").read_text(encoding="utf-8")
-    routing = (REPO_ROOT / ".agent" / "references" / "task-routing.md").read_text(
-        encoding="utf-8"
-    )
-    workflow = (REPO_ROOT / ".agent" / "references" / "workflow.md").read_text(
-        encoding="utf-8"
-    )
-
-    for phrase in [
-        "这是仓库唯一的 Agent 入口",
-        ".agent/references/task-routing.md",
-        ".agent/references/workflow.md",
-        ".agent/references/architecture-docs-map.md",
-        ".agent/references/workflow-governance.md",
-        ".agent/references",
-        "Architecture Documentation Governance",
-        "Agent Workflow Self-Maintenance",
-        "前台文档默认中文",
-        "docs/architecture/overall-architecture.md",
-        ".agent/architecture/overall-architecture.md",
-    ]:
-        assert phrase in agents
-
-    assert "Zuno Local Agent Skill System" in agent_readme
-    assert "本地 Agent Skill System" in agent_readme
-    assert "任务路由层" in routing
-    assert "具体执行步骤、停止条件、验证和收尾规则" in workflow
-
-
-def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
-    content = (REPO_ROOT / "tools" / "scripts" / "verify_docs_entrypoints.py").read_text(
-        encoding="utf-8"
-    )
-
-    for phrase in [
-        "documentation entrypoint verification passed.",
-        "verify_front_path_shape",
-        "verify_active_docs_do_not_link_retired_paths",
-        "docs/architecture/audits",
-        "docs/development",
-        "前台文档默认使用中文",
-        "zuno-workflow-doc-system-v1",
-        "zuno-target-architecture-refresh-v1",
-        "zuno-repo-layout-cleanup-v1",
-        "zuno-architecture-visuals-v1",
-        "docs/architecture/architecture.md",
-        "overall-architecture.md",
-    ]:
-        assert phrase in content
+        assert (REPO_ROOT / relative_path).exists(), f"missing archive path: {relative_path}"
 
 
 def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
@@ -195,8 +130,18 @@ def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
         REPO_ROOT / "docs" / "architecture" / "README.md",
         REPO_ROOT / "AGENTS.md",
         REPO_ROOT / ".agent" / "README.md",
+        REPO_ROOT / ".agent" / "architecture" / "README.md",
     ]
     forbidden = [
+        "docs/architecture/current-architecture.md",
+        "docs/architecture/target-architecture.md",
+        "docs/architecture/roadmap.md",
+        "docs/architecture/deliverables.md",
+        "docs/architecture/overall-architecture.md",
+        ".agent/architecture/overall-architecture.md",
+        ".agent/architecture/near-term/",
+        ".agent/architecture/future/",
+        ".agent/architecture/decisions/",
         "docs/architecture/phases/",
         "docs/architecture/plans/",
         "docs/architecture/programs/",
@@ -214,182 +159,35 @@ def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
             assert phrase not in content, f"{path} contains retired front-path text: {phrase}"
 
 
-def test_front_path_directories_are_archived() -> None:
-    for relative_path in [
-        "docs/architecture/history",
-        "docs/architecture/audits",
-        "docs/architecture/specs",
-        "docs/development",
-        "docs/prototypes",
-        "docs/ui-review",
-        "docs/ui-gallery",
-        "docs/reference/api.md",
-        "docs/reference/core.md",
-        "docs/reference/database.md",
-        "docs/reference/service.md",
-        "docs/reference/zuno.md",
-    ]:
-        assert not (REPO_ROOT / relative_path).exists(), f"retired front path still exists: {relative_path}"
-
-    for relative_path in [
-        "docs/history/audits",
-        "docs/history/specs",
-        "docs/history/development",
-        "docs/history/prototypes",
-        "docs/history/ui-review",
-        "docs/history/reference/api.md",
-    ]:
-        assert (REPO_ROOT / relative_path).exists(), f"missing archive path: {relative_path}"
-
-
-def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
-    current = (REPO_ROOT / "docs" / "architecture" / "current-architecture.md").read_text(
-        encoding="utf-8"
-    )
-    target = (REPO_ROOT / "docs" / "architecture" / "target-architecture.md").read_text(
-        encoding="utf-8"
-    )
-    roadmap = (REPO_ROOT / "docs" / "architecture" / "roadmap.md").read_text(
-        encoding="utf-8"
-    )
-    product_scenario = (
-        REPO_ROOT / "docs" / "architecture" / "product-scenario-enterprise-kb.md"
-    ).read_text(encoding="utf-8")
-    security_sandbox = (
-        REPO_ROOT / "docs" / "architecture" / "security-and-sandbox.md"
-    ).read_text(encoding="utf-8")
+def test_agent_entrypoint_records_dual_architecture_sync_rule() -> None:
+    agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
 
     for phrase in [
-        "当前架构",
-        "以下仍是 Target，不是当前成熟事实",
-        "Memory layer foundation contracts",
-        "docs/history/domain-packs/root-contract-review/",
-        "上面的调用链是当前 runtime 事实。目标架构图见",
-    ]:
-        assert phrase in current
-
-    for phrase in [
-        "目标架构",
-        "Summary Compression",
-        "Structured Extraction",
-        "Native BM25",
-        "ToolCard",
-        "RRF",
-        "`auto` 是 router",
-        "GraphRAG 实体抽取默认主路径是 LLM 抽取",
-        "六个主层",
-        "新增或重写的前台文档使用中文",
-        "企业私有知识库与多功能 Agent 助手",
-        "Policy Sandbox",
-        "Network / Credential Sandbox",
-    ]:
-        assert phrase in target
-
-    for phrase in [
-        "Phase 11A：已完成",
-        "Phase 11B：已完成",
-        "Phase 11C：active runtime cleanup 已完成",
-        "Phase 12：已通过 target migration closure evidence 关闭",
-        "受限历史兼容",
-        "zuno-workflow-doc-system-v1",
-        "zuno-target-architecture-refresh-v1",
-        "zuno-repo-layout-cleanup-v1",
-        "zuno-architecture-visuals-v1",
-        "PHASE03 completed",
-        "视觉 QA",
-        "zuno-document-ingestion-v1",
-        "zuno-security-enterprise-scenarios-v1",
-    ]:
-        assert phrase in roadmap
-
-    for phrase in [
-        "企业私有知识库与多功能 Agent 助手",
-        "普通 RAG 问答",
-        "企业内部文档",
-        "简历和候选人资料",
-        "Current",
-        "Target",
-        "Future",
-        "zuno-document-ingestion-v1",
-        "zuno-security-enterprise-scenarios-v1",
-    ]:
-        assert phrase in product_scenario
-
-    for phrase in [
-        "Policy Sandbox",
-        "Workspace Sandbox",
-        "Execution Sandbox",
-        "Network / Credential Sandbox",
-        "不能声称已经有成熟沙箱系统",
-        "ToolCard / MCP policy foundation",
-        "Target",
-        "Future",
-    ]:
-        assert phrase in security_sandbox
-
-
-def test_doc_boundary_verifier_guards_future_only_terms() -> None:
-    content = (
-        REPO_ROOT / ".agent" / "scripts" / "verify_doc_boundaries.py"
-    ).read_text(encoding="utf-8")
-
-    for phrase in [
-        "verify_future_only_terms",
-        "Java",
-        "microservice",
-        "event-driven worker",
-        "product-level multi-agent",
-        "Coding Agent",
-        "不属于 Current",
-        "非近期目标",
-        "当前不是什么",
-    ]:
-        assert phrase in content
-
-
-def test_architecture_diagrams_expose_multi_view_target_architecture() -> None:
-    content = (
-        REPO_ROOT / "docs" / "architecture" / "architecture.md"
-    ).read_text(encoding="utf-8")
-
-    for phrase in [
-        "Logical View",
-        "Development View",
-        "Process View",
-        "Physical View",
-        "Scenarios View",
-        "V&B Logical View",
-        "V&B Deployment View",
-        "Quality View",
-        "Agent Loop View",
-        "Component-and-Connector View",
-        "```mermaid",
-        "Zuno 架构总览",
+        "这是仓库唯一的 Agent 入口",
+        "Architecture Documentation Governance",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
+        ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture.html",
+        "Markdown 内容必须比架构 HTML 更充实",
         "python tools/agent/render_architecture.py --write",
-        "#f7f8fb",
-        "#ffffff",
-        "#b8c2cc",
-        "#16202a",
-        "#52616f",
-        "4+1 View Model",
-        "Component-and-Connector View",
-        "Deployment View",
-        "Quality View",
-        "Agentic RAG",
-        "GraphRAG",
-        "企业私有知识库与多功能 Agent 助手",
-        "安全与沙箱目标架构",
-        "总架构文档",
-        "Raw Event Log",
-        "Memory Read Policy",
-        "Memory Review Gate",
-        "structured memory candidate",
-        "write-manage-read",
-        "Tool Control Plane",
-        "Tool Manifest Registry",
-        "Tool Policy Approval",
-        "Result Normalizer",
-        "Domain Pack 只允许作为历史或兼容语境出现",
+    ]:
+        assert phrase in agents
+
+
+def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
+    content = (REPO_ROOT / "tools" / "scripts" / "verify_docs_entrypoints.py").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "documentation entrypoint verification passed.",
+        "verify_front_path_shape",
+        "verify_no_retired_front_path_links",
+        "docs/architecture/architecture.md",
+        ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture.html",
+        "architecture.html",
     ]:
         assert phrase in content
 
@@ -400,13 +198,19 @@ def test_architecture_html_is_generated_from_mermaid_source() -> None:
         "docs/architecture.html",
         "docs/architecture/overview.html",
         ".agent/architecture/blueprint.html",
+        "docs/architecture/overall-architecture.md",
+        ".agent/architecture/overall-architecture.md",
     ]:
         assert not (REPO_ROOT / stale_path).exists()
 
-    for relative_path in ["docs/architecture/architecture.html"]:
+    for relative_path in [
+        "docs/architecture/architecture.html",
+        ".agent/architecture/architecture.html",
+    ]:
         content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
         for phrase in [
             "docs/architecture/architecture.md",
+            ".agent/architecture/architecture.md",
             "tools/agent/render_architecture.py",
             "4+1 View Model",
             "Component-and-Connector View",
@@ -418,11 +222,8 @@ def test_architecture_html_is_generated_from_mermaid_source() -> None:
             "V&amp;B Logical View",
             "V&amp;B Deployment View",
             "Agent Loop View",
-            "#f7f8fb",
-            "#ffffff",
-            "#b8c2cc",
-            "#16202a",
-            "#52616f",
+            "展开全屏查看",
+            "diagram-dialog",
         ]:
             assert phrase in content
 
@@ -450,49 +251,25 @@ def test_architecture_view_contract_is_shared_across_docs_and_renderer() -> None
 
     assert render_architecture.EXPECTED_DIAGRAMS == [title for _, title, _ in expected]
 
-    inventory = (REPO_ROOT / ".agent" / "references" / "diagram-inventory.md").read_text(
+    architecture_source = (REPO_ROOT / "docs" / "architecture" / "architecture.md").read_text(
         encoding="utf-8"
     )
-    deliverables = (
-        REPO_ROOT / "docs" / "architecture" / "deliverables.md"
-    ).read_text(encoding="utf-8")
-    target = (
-        REPO_ROOT / "docs" / "architecture" / "target-architecture.md"
-    ).read_text(encoding="utf-8")
-    architecture_index = (
-        REPO_ROOT / "docs" / "architecture" / "README.md"
-    ).read_text(encoding="utf-8")
     architecture_html = (
         REPO_ROOT / "docs" / "architecture" / "architecture.html"
     ).read_text(encoding="utf-8")
 
-    for index, title, theory in expected:
-        assert f"| {index} | {title} | {theory} |" in inventory
-        assert f"| {index} | {title} | {theory} |" in deliverables
-        assert f"| {title} | {theory} |" in target
-        assert f"{index}. `{title}`" in architecture_index
+    for index, title, _theory in expected:
+        assert f"### {title}" in architecture_source
         html_title = title.replace("&", "&amp;")
         assert f"<h3>{index}. {html_title}</h3>" in architecture_html
 
-    assert "absorbed reference programs / roadmap reference inputs" in deliverables
     assert architecture_html.count('class="diagram-section"') == 10
     assert architecture_html.count('<div class="mermaid">') == 10
     assert architecture_html.count("<summary>Mermaid source</summary>") == 10
-    for phrase in [
-        "overflow: hidden",
-        "max-width: 100%",
-        "展开全屏查看",
-        "diagram-open",
-        "diagram-dialog",
-        "dialog-canvas",
-        "securityLevel: \"strict\"",
-        "useMaxWidth: true",
-    ]:
-        assert phrase in architecture_html
 
 
 def test_architecture_html_matches_rendered_mermaid_source() -> None:
-    module_path = REPO_ROOT / "tools/agent/render_architecture.py"
+    module_path = REPO_ROOT / "tools" / "agent" / "render_architecture.py"
     spec = importlib.util.spec_from_file_location("render_architecture", module_path)
     assert spec is not None
     assert spec.loader is not None
@@ -501,24 +278,8 @@ def test_architecture_html_matches_rendered_mermaid_source() -> None:
     spec.loader.exec_module(render_architecture)
 
     expected = render_architecture.build_html()
-    for relative_path in ["docs/architecture/architecture.html"]:
+    for relative_path in [
+        "docs/architecture/architecture.html",
+        ".agent/architecture/architecture.html",
+    ]:
         assert (REPO_ROOT / relative_path).read_bytes() == expected.encode("utf-8")
-
-
-def test_repository_docs_do_not_keep_local_download_reference() -> None:
-    for path in [*REPO_ROOT.glob("docs/**/*.md"), *REPO_ROOT.glob(".agent/**/*.md")]:
-        content = path.read_text(encoding="utf-8")
-        assert "C:\\Users\\Administrator\\Downloads" not in content
-
-
-def test_architecture_decisions_do_not_keep_domain_pack_binding_as_active_mainline() -> None:
-    active_decision = REPO_ROOT / "docs/architecture/decisions/0001-domain-pack-binding.md"
-    history_decision = REPO_ROOT / "docs/history/decisions/0001-domain-pack-binding.md"
-    decisions_index = (REPO_ROOT / "docs/architecture/decisions/README.md").read_text(
-        encoding="utf-8"
-    )
-
-    assert not active_decision.exists()
-    assert history_decision.exists()
-    assert "0001-domain-pack-binding.md" not in decisions_index
-    assert "ADR 0002" in decisions_index

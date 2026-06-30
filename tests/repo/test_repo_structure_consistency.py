@@ -54,23 +54,22 @@ def test_required_current_paths_exist() -> None:
         ".agent/templates/verification-report-template.md",
         ".agent/templates/workflow-change-note-template.md",
         ".agent/programs/current.md",
-        ".agent/architecture/overall-architecture.md",
-        ".agent/architecture/near-term/00-architecture-index.md",
-        ".agent/architecture/near-term/01-target-runtime-architecture.md",
-        ".agent/architecture/near-term/02-context-memory-architecture.md",
-        ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
-        ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
-        ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
+        ".agent/architecture/README.md",
+        ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture.html",
         "apps/desktop",
         "apps/web",
         "docs/README.md",
-        "docs/architecture/overall-architecture.md",
-        "docs/architecture/current-architecture.md",
-        "docs/architecture/target-architecture.md",
-        "docs/architecture/roadmap.md",
+        "docs/architecture/README.md",
         "docs/architecture/architecture.md",
         "docs/architecture/architecture.html",
         "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
+        "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/target-architecture.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/roadmap.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/deliverables.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/00-architecture-index.md",
         "docs/evidence/public-demo.md",
         "docs/reference/terminology.md",
         "docs/history/README.md",
@@ -109,12 +108,14 @@ def test_repo_structure_verifier_pins_current_front_path() -> None:
         ".agent/references/architecture-docs-map.md",
         ".agent/references/workflow-governance.md",
         "docs/README.md",
-        "docs/architecture/overall-architecture.md",
-        "docs/architecture/current-architecture.md",
-        "docs/architecture/target-architecture.md",
-        "docs/architecture/roadmap.md",
+        ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture.html",
+        "docs/architecture/README.md",
         "docs/architecture/architecture.md",
         "docs/architecture/architecture.html",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/target-architecture.md",
+        "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/roadmap.md",
         "docs/evidence/public-demo.md",
         "docs/reference/terminology.md",
         "docs/history/audits",
@@ -642,14 +643,15 @@ def test_front_path_docs_link_current_entrypoints() -> None:
     docs_index = (REPO_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "current-architecture.md" in architecture_index
-    assert "target-architecture.md" in architecture_index
-    assert "roadmap.md" in architecture_index
+    assert "architecture.md" in architecture_index
+    assert "architecture.html" in architecture_index
+    assert ".agent/architecture/architecture.md" in architecture_index
+    assert ".agent/architecture/architecture.html" in architecture_index
     assert "../evidence/public-demo.md" in architecture_index
-    assert "./architecture/roadmap.md" in docs_index
-    assert "./architecture/deliverables.md" in docs_index
-    assert "./docs/architecture/deliverables.md" in readme
-    assert "./docs/architecture/roadmap.md" in readme
+    assert "./architecture/architecture.md" in docs_index
+    assert "./architecture/architecture.html" in docs_index
+    assert "./docs/architecture/architecture.md" in readme
+    assert "./docs/architecture/architecture.html" in readme
 
 
 def test_phase_completion_truth_is_historical() -> None:
@@ -675,15 +677,12 @@ def test_readme_mentions_current_backend_start_and_focused_verification() -> Non
     for phrase in [
         "python tools/scripts/verify_docs_entrypoints.py",
         "python tools/scripts/verify_repo_structure.py",
-        "pytest -q tests/repo/test_repo_structure_consistency.py",
-        "pytest -q tests/repo/test_publish_boundary.py",
+        "python .agent/scripts/verify_agent_system.py",
+        "python .agent/scripts/verify_doc_boundaries.py",
+        "pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py",
         "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
-        "受限历史兼容",
-        "docs/history/domain-packs/root-contract-review/",
-        "Phase 11A",
-        "Phase 11B",
-        "Phase 11C",
-        "Phase 12",
+        "zuno-architecture-detail-and-execution-plan-v1",
+        ".agent/programs/",
     ]:
         assert phrase in readme
 

@@ -73,9 +73,9 @@ python .agent/scripts/verify_agent_system.py
 
 - `AGENTS.md`
 - `docs/architecture/README.md`
-- `docs/architecture/current-architecture.md`
-- `docs/architecture/target-architecture.md`
-- `docs/architecture/roadmap.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.md`
 
 ## Lessons Learned
 

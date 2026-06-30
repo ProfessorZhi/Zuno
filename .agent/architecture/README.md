@@ -1,57 +1,37 @@
-# Agent 架构设计工作集
+# Agent 架构工作区
 
-`.agent/architecture/` 存放目标架构设计，不存放按 phase 执行的计划。正式面向人的架构结论仍以 `docs/architecture/` 为准。
+`.agent/architecture/` 现在只保留 Agent 维护架构时需要的最小入口，并与 `docs/architecture/` 保持同名镜像。
 
-## 目录分工
+## 当前前台
 
 ```text
 .agent/architecture/
   README.md
-  00-architecture-index.md
-  overall-architecture.md
-  glossary.md
-  near-term/     近期理想架构
-  future/        未来方向
-  decisions/     架构决策摘要
+  architecture.md
+  architecture.html
 ```
 
-## 根部总架构
+`architecture.md` 是 Agent 侧总架构维护镜像，必须与正式人类文档 `docs/architecture/architecture.md` 完全一致。`architecture.html` 是 Agent 侧 HTML 镜像，必须与 `docs/architecture/architecture.html` 由同一 Markdown 源生成。
 
-`overall-architecture.md` 是 Agent 侧总架构文档，用来和正式 [docs/architecture/overall-architecture.md](../../docs/architecture/overall-architecture.md) 保持一致。它说明本地优先的企业私有知识库与多功能 Agent 助手、文字总架构文档、架构 HTML、Document Ingestion / Parse Gateway、Tool Control Plane 和 LangSmith-compatible Trace / Eval 的维护边界。
+## 已归档旧工作集
 
-文字总架构文档以 `docs/architecture/overall-architecture.md` 为正式人类来源；`.agent/architecture/overall-architecture.md` 是 Agent 维护镜像。图形总览仍只由 `docs/architecture/architecture.md` 生成到 `docs/architecture/architecture.html`，不要在 `.agent/architecture/` 复制 HTML。
+以下旧工作集已经被 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md`、`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html` 吸收：
 
-## 近期理想架构
+- 旧 near-term 工作集
+- 旧 future 工作集
+- 旧 decisions 工作集
+- 旧架构索引
+- 旧术语表
 
-`near-term/` 是当前最重要的目标架构工作集，描述短期内希望 Zuno 收敛到的分层形态。
+归档位置：
 
-核心文件：
+- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/`
 
-- `00-architecture-index.md`：近期目标架构文字入口，用于 program 转化。
-- `01-target-runtime-architecture.md`：Web/Electron -> FastAPI -> Application -> GeneralAgent 的主路径。
-- `02-context-memory-architecture.md`：Context Orchestrator、raw events、summary、structured memory。
-- `03-capability-tool-retrieval-architecture.md`：ToolCard、Capability Selector、MCP/Skill/Action Tool。
-- `04-knowledge-graphrag-retrieval-fusion.md`：BM25、Vector、GraphRAG Local/Global/DRIFT、RRF。
-- `05-repository-boundaries-and-acceptance-gates.md`：仓库边界、文档瘦身和验收门。
+## 边界
 
-## 未来方向
-
-`future/` 只记录更远的方向，例如 Java business services、microservices、event-driven workers、Coding Agent mode、multi-agent mode。它不是近期执行计划，也不是当前验收目标。
-
-## 架构决策：为什么这样设计
-
-`decisions/` 记录 Agent 侧的轻量决策摘要，用来回答：
-
-- 为什么近期仍然是 monorepo now, service-ready later。
-- 为什么同步聊天路径只进入一个 GeneralAgent。
-- 为什么 GraphRAG 是被选择的 Knowledge Capability，而不是第二套聊天 runtime。
-- 为什么执行计划不放在 architecture，而放在 `.agent/programs/`。
-
-正式 ADR 仍放在 `docs/architecture/decisions/`。
-
-## 和 programs 的边界
-
-- `.agent/architecture/`：描述目标形态和设计原则。
-- `.agent/programs/`：描述怎么按 phase 执行、怎么验收、当前卡在哪。
-
-如果一个文件写的是 Phase 05 / Phase 06 / Phase 07 这种执行顺序，它应该平铺在 `.agent/programs/`；如果写的是系统应该长什么样，它应该在 `.agent/architecture/`。
+- 正式人类架构结论进入 `docs/architecture/architecture.md`。
+- Agent 侧架构文档不手写分叉，必须通过 `python tools/agent/render_architecture.py --write` 同步。
+- 图形化展示由 `docs/architecture/architecture.md` 生成到两个 HTML：`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html`。
+- 执行计划进入 `.agent/programs/`。
+- Agent 操作规则、地图和验证清单进入 `.agent/references/`。
+- 不要把已归档的旧工作集重新放回 `.agent/architecture/`，除非先打开新的架构重组 program 并同步 verifier / tests。

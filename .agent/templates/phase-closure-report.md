@@ -25,9 +25,9 @@
 - `.agent/templates/`：
 - `.agent/programs/`：
 - `docs/history/programs/`：
-- `docs/architecture/current-architecture.md`：
-- `docs/architecture/target-architecture.md`：
-- `docs/architecture/roadmap.md`：
+- `docs/architecture/architecture.md`：
+- `docs/architecture/architecture.md`：
+- `docs/architecture/architecture.md`：
 - verifier / tests：
 
 ## 剩余风险

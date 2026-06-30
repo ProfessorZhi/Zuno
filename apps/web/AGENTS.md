@@ -3,12 +3,12 @@
 修改 `apps/web` 前先读：
 
 1. `.agent/references/code-map.md`
-2. `.agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
+2. `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
 3. `.agent/references/workflow.md`
 
 如果任务涉及前后端契约迁移、页面边界或仓库布局，还要读：
 
-- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`
+- `docs/architecture/architecture.html`
 
 ## 规则
 

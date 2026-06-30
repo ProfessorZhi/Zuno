@@ -26,7 +26,7 @@
 - 不恢复 root `domain-packs/`、`DomainQAGraph`、retired Domain Pack runtime sources、former `tests/compat/` holding area。
 - 不恢复 `docs/architecture/phases/`、`docs/architecture/plans/`、`docs/architecture/programs/` 当前前台目录。
 - 不提交 `data/`、`reports/`、`.local/`、`.codex/`、`node_modules/` 或 `.agent/local/*`。
-- 不把 `.agent/references/` 扩回长架构正文；详细目标设计属于 `.agent/architecture/near-term/`。
+- 不把 `.agent/references/` 扩回长架构正文；详细目标设计属于 `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/`。
 - 不把 Elasticsearch 称为 BM25 算法本体；Native BM25 是目标本地算法，Elasticsearch 是 optional adapter。
 
 ## Before Editing
@@ -60,7 +60,7 @@
 
 - Domain Pack 命中：跑 `.agent/scripts/grep-domain-pack.ps1`，分类为 compatibility、history、target reference 或 bug。
 - 旧路径命中：先判断是否在 `docs/history/`，历史命中一般保留。
-- 术语冲突：以 `docs/architecture/current-architecture.md` 和代码/测试证据判断 Current，以 `.agent/architecture/near-term/` 判断 Target。
+- 术语冲突：以 `docs/architecture/architecture.md` 和代码/测试证据判断 Current，以 `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/` 判断 Target。
 
 ## Focused Tests
 

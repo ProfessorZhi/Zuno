@@ -12,9 +12,9 @@
 - `.agent/references/current-program.md` 是否和 `.agent/programs/current.md` 一致。
 - `.agent/programs/` 是否只保留本 active program 的 PHASE01-05，或收口时已归档回等待态。
 - completed program 是否已归档到 `docs/history/programs/`。
-- `docs/architecture/current-architecture.md` 是否仍只写 Current。
-- `docs/architecture/target-architecture.md` 是否吸收新的目标边界。
-- `docs/architecture/roadmap.md` 是否反映最新 active program 状态。
+- `docs/architecture/architecture.md` 是否仍只写 Current。
+- `docs/architecture/architecture.md` 是否吸收新的目标边界。
+- `docs/architecture/architecture.md` 是否反映最新 active program 状态。
 - verifier / tests 是否覆盖新规则，包括 active program、十类图和生成 HTML 的新契约。
 
 如果用户提醒“以后注意”，不能只留在对话里；必须分类并沉淀到 `.agent/references/`、`AGENTS.md`、`.agent/system.yaml` 或 verifier/test。

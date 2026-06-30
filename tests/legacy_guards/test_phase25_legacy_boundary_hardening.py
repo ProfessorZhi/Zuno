@@ -42,7 +42,7 @@ def _ast_retired_compat_imports(path: Path) -> list[str]:
 
 def test_phase25_docs_mark_retired_compat_namespace_as_closed() -> None:
     _purge_retired_services_api_tree()
-    current_architecture = _read("docs/architecture/current-architecture.md")
+    current_architecture = _read("docs/architecture/architecture.md")
     transition_strategy = _read("docs/history/transition-strategy.md")
 
     assert "`src/backend/zuno` 是唯一当前 Python 后端 runtime 边界" in current_architecture

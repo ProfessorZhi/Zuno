@@ -23,26 +23,29 @@ def test_gitignore_matches_current_local_only_boundary() -> None:
 
 def test_readme_and_roadmap_share_current_program_truth() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    roadmap = (REPO_ROOT / "docs" / "architecture" / "roadmap.md").read_text(
+    architecture = (REPO_ROOT / "docs" / "architecture" / "architecture.md").read_text(
+        encoding="utf-8"
+    )
+    current_program = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(
         encoding="utf-8"
     )
 
     for phrase in [
-        "Phase 0-6 架构收口仍是已完成的历史事实",
         ".agent/programs/",
-        "受限历史兼容",
+        "zuno-architecture-detail-and-execution-plan-v1",
     ]:
         assert phrase in readme
 
     for phrase in [
-        "Phase 11A：已完成",
-        "Phase 11B：已完成",
-        "Phase 11C：active runtime cleanup 已完成",
-        "Phase 12：已通过 target migration closure evidence 关闭",
-        "Phase 01 到 Phase 10 已完成",
-        "受限历史兼容",
+        "Current",
+        "Target",
+        "Document Ingestion / Parse Gateway",
+        "Tool Control Plane",
+        "LangSmith-compatible Trace / Eval",
     ]:
-        assert phrase in roadmap
+        assert phrase in architecture
+    assert "当前 active program" in current_program
+    assert "PHASE04_execution-roadmap-from-architecture" in current_program
 
 
 def test_public_docs_keep_history_off_front_path_but_reachable() -> None:
@@ -54,8 +57,8 @@ def test_public_docs_keep_history_off_front_path_but_reachable() -> None:
         encoding="utf-8"
     )
 
-    assert "./docs/architecture/roadmap.md" in readme
-    assert "docs/history/programs/" in architecture_index
+    assert "./docs/architecture/architecture.md" in readme
+    assert "docs/history/architecture-surface-cleanup-2026-06-30/" in architecture_index
     assert "phases/" in history_index
     assert "plans/" in history_index
     assert "src/backend/zuno" in readme

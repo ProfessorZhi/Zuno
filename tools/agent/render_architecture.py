@@ -10,12 +10,18 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_PATH = REPO_ROOT / "docs/architecture/architecture.md"
-OUTPUT_PATH = REPO_ROOT / "docs/architecture/architecture.html"
+AGENT_SOURCE_PATH = REPO_ROOT / ".agent/architecture/architecture.md"
+OUTPUT_PATHS = [
+    REPO_ROOT / "docs/architecture/architecture.html",
+    REPO_ROOT / ".agent/architecture/architecture.html",
+]
 STALE_OUTPUTS = [
     REPO_ROOT / "docs/architecture/overview.html",
     REPO_ROOT / "docs/architecture.md",
     REPO_ROOT / "docs/architecture.html",
     REPO_ROOT / ".agent/architecture/blueprint.html",
+    REPO_ROOT / "docs/architecture/overall-architecture.md",
+    REPO_ROOT / ".agent/architecture/overall-architecture.md",
 ]
 
 EXPECTED_DIAGRAMS = [
@@ -513,7 +519,7 @@ def render_html(diagrams: list[Diagram]) -> str:
     <header>
       <h1>Zuno 架构总览 / Architecture Overview</h1>
       <p>Zuno 是本地优先的 Agent Workspace。本文用 4+1、View &amp; Beyond 和 Agent Loop 专题图说明目标架构。</p>
-      <p class="sync">Source: <code>docs/architecture/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture/architecture.html</code>.</p>
+      <p class="sync">Source: <code>docs/architecture/architecture.md</code>. Agent mirror: <code>.agent/architecture/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture/architecture.html</code> and <code>.agent/architecture/architecture.html</code>.</p>
     </header>
 {content}
     <dialog class="diagram-dialog" id="diagram-dialog">
@@ -590,9 +596,13 @@ def build_html() -> str:
 
 def write_outputs() -> None:
     rendered = build_html()
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(rendered, encoding="utf-8", newline="\n")
-    print(f"wrote {OUTPUT_PATH.relative_to(REPO_ROOT).as_posix()}")
+    AGENT_SOURCE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    AGENT_SOURCE_PATH.write_bytes(SOURCE_PATH.read_bytes())
+    print(f"wrote {AGENT_SOURCE_PATH.relative_to(REPO_ROOT).as_posix()}")
+    for output_path in OUTPUT_PATHS:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(rendered, encoding="utf-8", newline="\n")
+        print(f"wrote {output_path.relative_to(REPO_ROOT).as_posix()}")
     for stale_path in STALE_OUTPUTS:
         if stale_path.exists():
             stale_path.unlink()
@@ -602,10 +612,19 @@ def write_outputs() -> None:
 def check_outputs() -> int:
     rendered = build_html()
     errors: list[str] = []
-    if not OUTPUT_PATH.exists():
-        errors.append(f"missing generated output: {OUTPUT_PATH.relative_to(REPO_ROOT).as_posix()}")
-    elif OUTPUT_PATH.read_text(encoding="utf-8") != rendered:
-        errors.append(f"generated output is stale: {OUTPUT_PATH.relative_to(REPO_ROOT).as_posix()}")
+    if not AGENT_SOURCE_PATH.exists():
+        errors.append(
+            f"missing Agent architecture mirror: {AGENT_SOURCE_PATH.relative_to(REPO_ROOT).as_posix()}"
+        )
+    elif AGENT_SOURCE_PATH.read_bytes() != SOURCE_PATH.read_bytes():
+        errors.append(
+            f"Agent architecture mirror is stale: {AGENT_SOURCE_PATH.relative_to(REPO_ROOT).as_posix()}"
+        )
+    for output_path in OUTPUT_PATHS:
+        if not output_path.exists():
+            errors.append(f"missing generated output: {output_path.relative_to(REPO_ROOT).as_posix()}")
+        elif output_path.read_text(encoding="utf-8") != rendered:
+            errors.append(f"generated output is stale: {output_path.relative_to(REPO_ROOT).as_posix()}")
 
     for stale_path in STALE_OUTPUTS:
         if stale_path.exists():
@@ -615,7 +634,7 @@ def check_outputs() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print("architecture HTML output is in sync with docs/architecture/architecture.md")
+    print("architecture Markdown mirror and HTML outputs are in sync with docs/architecture/architecture.md")
     return 0
 
 

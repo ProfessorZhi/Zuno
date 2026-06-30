@@ -92,7 +92,7 @@ Lessons Learned
 - `.agent/references/` 保存可复用项目知识，不保存一次性调查流水账。
 - `.agent/templates/` 只保存执行骨架，不复制项目事实、目标架构正文或历史结论。
 - `.agent/programs/` 保存当前 active phase 计划；完成或被替换的程序进入 `docs/history/programs/`。
-- `.agent/architecture/near-term/` 保存目标架构细节；正式当前事实只能进入 `docs/`。
+- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/` 保存目标架构细节；正式当前事实只能进入 `docs/`。
 
 ## Before Editing
 

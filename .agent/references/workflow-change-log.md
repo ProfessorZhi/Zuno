@@ -84,9 +84,9 @@ Affected files:
 - `.agent/references/diagram-inventory.md`
 - `.agent/references/architecture-docs-map.md`
 - `.agent/scripts/verify_repo_hygiene.py`
-- `docs/architecture/deliverables.md`
+- `docs/architecture/architecture.md`
 - `docs/architecture/README.md`
-- `docs/architecture/target-architecture.md`
+- `docs/architecture/architecture.md`
 - `docs/architecture/architecture.md`
 - `tools/agent/render_architecture.py`
 

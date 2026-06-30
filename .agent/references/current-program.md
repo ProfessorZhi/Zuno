@@ -13,7 +13,7 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 
 它不是 runtime feature implementation，不新增 API / DB schema / frontend 行为，不把 Target 写成 Current。Memory Layer 的生产级 Raw Event Log、DB-backed memory、read/write path、review / promotion / decay 和 memory eval 仍是 Target。
 
-本 program 也负责收束总架构文档治理：`docs/architecture/overall-architecture.md` 是文字总架构文档，`.agent/architecture/overall-architecture.md` 是 Agent 侧总架构维护文档，两者必须和 `docs/architecture/architecture.md` / `docs/architecture/architecture.html` 的图形总览保持一致。
+本 program 也负责收束总架构文档治理：`docs/architecture/architecture.md` 是文字总架构文档，`.agent/architecture/architecture.md` 是 Agent 侧总架构维护文档，两者必须和 `docs/architecture/architecture.md` / `docs/architecture/architecture.html` 的图形总览保持一致。
 
 ## 当前执行入口
 
@@ -92,9 +92,9 @@ Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档到：
 Architecture Documentation Governance 和 Agent Workflow Self-Maintenance 已登记为当前工作流规则：
 
 - `docs/architecture/` 是 human-facing formal architecture source。
-- `docs/architecture/overall-architecture.md` 是文字总架构文档。
+- `docs/architecture/architecture.md` 是文字总架构文档。
 - `docs/architecture/architecture.html` 是生成展示页，不是唯一事实来源。
-- `.agent/architecture/overall-architecture.md` 是 Agent 侧总架构维护文档。
+- `.agent/architecture/architecture.md` 是 Agent 侧总架构维护文档。
 - `.agent/references/` 是 Agent-facing operating memory。
 - `.agent/templates/` 是 generation contract。
 - `.agent/programs/` 是 execution state。

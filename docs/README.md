@@ -1,32 +1,20 @@
 # Zuno 文档入口
 
-`docs/` 是 Zuno 面向人的正式文档入口，只保留当前仍会影响判断的核心文档。
-
-## 边界
-
-- 当前事实、目标架构、路线图、正式决策、精选证据和术语表放在这里。
-- Agent 工作流、可复用提示、脚本和执行辅助放在 `.agent/`。
-- 过时计划、旧阶段、旧审计、旧规格、旧 runbook、旧 UI 原型和被替换设计归档到 `docs/history/`。
-- 历史档案保留证据价值，不再作为默认阅读路径。
-- 前台文档默认使用中文；历史档案可保留原文。
+`docs/` 是 Zuno 面向人的正式文档入口，只保留当前仍会影响判断的核心文档。前台文档默认使用中文；历史档案可以保留原文。
 
 ## 首读路径
 
 1. [仓库 README](../README.md)
-2. [总架构文档](./architecture/overall-architecture.md)
-3. [当前架构](./architecture/current-architecture.md)
-4. [目标架构](./architecture/target-architecture.md)
-5. [路线图](./architecture/roadmap.md)
-6. [交付物清单](./architecture/deliverables.md)
-7. [架构总览 HTML](./architecture/architecture.html)
-8. [公开演示证据](./evidence/public-demo.md)
-9. [Eval Baseline](./evidence/eval-baselines.md)
-10. [术语表](./reference/terminology.md)
+2. [总架构文档](./architecture/architecture.md)
+3. [架构 HTML](./architecture/architecture.html)
+4. [公开演示证据](./evidence/public-demo.md)
+5. [Eval Baseline](./evidence/eval-baselines.md)
+6. [术语表](./reference/terminology.md)
+7. [历史档案](./history/README.md)
 
-## 目录
+## 当前目录
 
-- [architecture/](./architecture/README.md)：总架构文档、当前架构、目标架构、路线图和正式 ADR。
-- [deliverables.md](./architecture/deliverables.md)：八大交付物、十类架构视图和根目录清洁期望。
+- [architecture/](./architecture/README.md)：当前总架构 Markdown、生成 HTML、正式 ADR 和附件。
 - [evidence/](./evidence/README.md)：精选证据入口。
 - [reference/terminology.md](./reference/terminology.md)：仍然有效的公共术语。
 - [history/](./history/README.md)：历史档案，包含旧计划、旧规格、旧审计、旧 runbook 和被替换材料。
@@ -34,3 +22,7 @@
 ## 清理规则
 
 如果一个文档不再改变当前决策，把它移动到 `docs/history/`，并更新引用。不要把旧材料留在前台路径里制造“当前仍有效”的错觉。
+
+本轮架构前台瘦身归档在：
+
+- `docs/history/architecture-surface-cleanup-2026-06-30/`

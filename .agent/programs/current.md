@@ -11,21 +11,21 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 
 它不是 runtime feature implementation，不新增 API / DB schema / frontend 行为，不把 Target 写成 Current。
 
-本 program 还负责新增并登记总架构文档治理：`docs/architecture/overall-architecture.md` 作为正式文字总架构文档，`.agent/architecture/overall-architecture.md` 作为 Agent 侧总架构维护文档；图形总览继续由 `docs/architecture/architecture.md` 生成到 `docs/architecture/architecture.html`。
+本 program 还负责新增并登记总架构文档治理：`docs/architecture/architecture.md` 作为正式文字总架构文档，`.agent/architecture/architecture.md` 作为 Agent 侧总架构维护文档；图形总览继续由 `docs/architecture/architecture.md` 生成到 `docs/architecture/architecture.html`。
 
 ## 范围
 
 允许修改：
 
 - `docs/architecture/architecture.md`
-- `docs/architecture/overall-architecture.md`
+- `docs/architecture/architecture.md`
 - `docs/architecture/architecture.html`
-- `.agent/architecture/overall-architecture.md`
-- `docs/architecture/product-scenario-enterprise-kb.md`
-- `docs/architecture/security-and-sandbox.md`
-- `docs/architecture/target-architecture.md`
+- `.agent/architecture/architecture.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.md`
 - `docs/architecture/README.md`
-- `docs/architecture/roadmap.md`
+- `docs/architecture/architecture.md`
 - `AGENTS.md`
 - `README.md`
 - `.agent/programs/*`
@@ -36,7 +36,7 @@ current_phase: PHASE04_execution-roadmap-from-architecture
 - `.agent/references/architecture-update-policy.md`
 - `.agent/references/workflow.md`
 - `.agent/references/diagram-inventory.md`
-- `.agent/architecture/future/programs/README.md`
+- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/README.md`
 - `tools/agent/render_architecture.py`
 - `.agent/scripts/verify_agent_system.py`
 - `.agent/scripts/verify_doc_boundaries.py`

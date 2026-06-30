@@ -21,10 +21,10 @@ docs/history/ = archive and evidence
 
 - `README.md`：仓库总览和首读路径。
 - `docs/README.md`：文档入口。
-- `docs/architecture/overall-architecture.md`：总架构文档，文字说明当前事实、目标分层、主链路和实施落点。
-- `docs/architecture/current-architecture.md`：当前仓库事实。
-- `docs/architecture/target-architecture.md`：近期目标摘要。
-- `docs/architecture/roadmap.md`：当前状态和下一步。
+- `docs/architecture/architecture.md`：总架构文档，文字说明当前事实、目标分层、主链路和实施落点。
+- `docs/architecture/architecture.md`：当前仓库事实。
+- `docs/architecture/architecture.md`：近期目标摘要。
+- `docs/architecture/architecture.md`：当前状态和下一步。
 - `docs/evidence/public-demo.md`：精选公开证据入口。
 - `docs/evidence/eval-baselines.md`：Eval baseline 状态。
 - `docs/reference/terminology.md`：公共术语表。
@@ -39,8 +39,8 @@ Agent 工作流入口：
 - `.agent/references/`：本地项目 skills、lessons、playbooks。
 - `.agent/templates/`：执行骨架。
 - `.agent/programs/`：当前执行入口；有 active program 时放平铺 phase，当前也可以处于无 active 的等待状态。
-- `.agent/architecture/overall-architecture.md`：Agent 侧总架构维护文档，必须和正式总架构文档一致。
-- `.agent/architecture/near-term/`：近期目标架构详细设计。
+- `.agent/architecture/architecture.md`：Agent 侧总架构维护文档，必须和正式总架构文档一致。
+- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/`：近期目标架构详细设计。
 - `.agent/scripts/`：过渡期验证器。
 
 ## Target Direction
@@ -52,12 +52,12 @@ Agent 工作流入口：
 - Current 只描述代码和测试已证明事实。
 - Target 只描述近期目标，不等于完成声明。
 - History 保留旧材料原文，不为了新叙事改写证据。
-- `.agent/architecture/near-term/00-architecture-index.md` 是 Target / Proposed 视觉蓝图，不是 Current truth。
+- `.agent/architecture/architecture.md` 是 Target / Proposed 视觉蓝图，不是 Current truth。
 
 ## Before Editing
 
 1. 读 `docs/architecture/README.md`、`current-architecture.md`、`target-architecture.md`、`roadmap.md`。
-2. 架构任务先读 `docs/architecture/overall-architecture.md` 和 `.agent/architecture/overall-architecture.md`。
+2. 架构任务先读 `docs/architecture/architecture.md` 和 `.agent/architecture/architecture.md`。
 3. 读 `.agent/README.md`、`.agent/system.yaml`、`task-routing.md`、`workflow.md`。
 4. 判断修改属于 Current、Target、Program、Skill、Template、History 哪一类。
 5. 搜索同一术语的前台命中，避免只改一个入口。
@@ -77,7 +77,7 @@ Agent 工作流入口：
 
 ## Common Failure Patterns
 
-- `docs/architecture/roadmap.md` 已更新，但 `.agent/references/current-program.md` 仍旧。
+- `docs/architecture/architecture.md` 已更新，但 `.agent/references/current-program.md` 仍旧。
 - `AGENTS.md` 路由变了，但 `.agent/system.yaml` 未同步。
 - references skill 改了，但 `.agent/templates/README.md` 仍暗示模板保存项目知识。
 - HTML 蓝图被引用成 Current proof。
@@ -136,11 +136,11 @@ pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p
 - `.agent/templates/README.md`
 - `docs/README.md`
 - `docs/architecture/README.md`
-- `docs/architecture/overall-architecture.md`
-- `docs/architecture/current-architecture.md`
-- `docs/architecture/target-architecture.md`
-- `docs/architecture/roadmap.md`
-- `.agent/architecture/overall-architecture.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.md`
+- `.agent/architecture/architecture.md`
 - `docs/history/README.md`
 
 ## Lessons Learned

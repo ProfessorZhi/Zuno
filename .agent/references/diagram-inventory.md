@@ -56,7 +56,7 @@ Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector Vie
 
 ## Target Direction
 
-README 首页只给出精简入口。完整十类视图保留在 `docs/architecture/architecture.md` 和 `docs/architecture/architecture.html`。后续如需要更多 exploded views，优先把它们折叠进十类视图的二级组件；只有当新的图回答了十类视图无法承载的独立架构问题时，才更新 `EXPECTED_DIAGRAMS`、本文件、`docs/architecture/deliverables.md` 和 tests。
+README 首页只给出精简入口。完整十类视图保留在 `docs/architecture/architecture.md` 和 `docs/architecture/architecture.html`。后续如需要更多 exploded views，优先把它们折叠进十类视图的二级组件；只有当新的图回答了十类视图无法承载的独立架构问题时，才更新 `EXPECTED_DIAGRAMS`、本文件、`docs/architecture/architecture.md` 和 tests。
 
 ## Must Preserve
 
@@ -109,8 +109,8 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 修改本文件时检查：
 
 - `docs/architecture/architecture.md`
-- `docs/architecture/target-architecture.md`
-- `docs/architecture/deliverables.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.md`
 - `tools/agent/render_architecture.py`
 
 ## Lessons Learned

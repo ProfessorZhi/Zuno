@@ -12,11 +12,11 @@ status: completed
 
 ## 需要修改的文件
 
-- `docs/architecture/target-architecture.md`
+- `docs/architecture/architecture.md`
 
 ## 禁止修改的文件
 
-- `docs/architecture/current-architecture.md`，除非有代码和测试证明新的 Current 事实。
+- `docs/architecture/architecture.md`，除非有代码和测试证明新的 Current 事实。
 - `src/backend/zuno/**`
 - API / DB / frontend runtime 文件。
 

@@ -2,7 +2,7 @@
 
 ## 用途
 
-保持公开架构术语稳定、简短。详细 target contract 放在 `.agent/architecture/near-term/`。
+保持公开架构术语稳定、简短。详细 target contract 放在 `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/`。
 
 ## 状态标签
 

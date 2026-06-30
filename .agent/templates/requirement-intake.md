@@ -18,8 +18,8 @@
 3. 规格、ADR 或审计
 4. `docs/history/`
 5. `docs/architecture/README.md`
-6. `docs/architecture/current-architecture.md`
-7. `docs/architecture/target-architecture.md`
+6. `docs/architecture/architecture.md`
+7. `docs/architecture/architecture.md`
 8. `AGENTS.md`
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`

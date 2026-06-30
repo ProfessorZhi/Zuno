@@ -40,9 +40,9 @@ GeneralAgent 还没有在每轮模型调用中完整注入 selected capabilities
 
 详细目标行为见：
 
-- `.agent/architecture/near-term/01-target-runtime-architecture.md`
-- `.agent/architecture/near-term/02-context-memory-architecture.md`
-- `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md`
+- `.agent/architecture/architecture.md`
+- `.agent/architecture/architecture.md`
+- `.agent/architecture/architecture.md`
 
 ## GraphRAG 与知识路径
 

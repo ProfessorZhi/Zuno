@@ -15,9 +15,9 @@
 ## Current Truth
 
 - `docs/architecture` 是正式架构文档系统。
-- `docs/architecture/overall-architecture.md` 是文字总架构文档，负责用自然语言说清当前事实、目标分层、主链路和实施落点。
+- `docs/architecture/architecture.md` 是文字总架构文档，负责用自然语言说清当前事实、目标分层、主链路和实施落点。
 - `docs/architecture/architecture.html` 是架构 HTML 展示系统。
-- `.agent/architecture/overall-architecture.md` 是 Agent 侧总架构维护文档，必须与正式总架构文档保持一致。
+- `.agent/architecture/architecture.md` 是 Agent 侧总架构维护文档，必须与正式总架构文档保持一致。
 - `.agent/references` 是 Agent 工作流文档系统和元工作流自我维护系统。
 - `.agent/templates` 是模板与执行计划系统的一部分。
 - `.agent/programs` 是当前执行状态入口。
@@ -33,7 +33,7 @@ Zuno 最终不是单一 RAG Demo，而是代码、架构文档、Agent 工作流
 - 不允许只改代码不检查架构文档。
 - 不允许只改 `.agent` 不更新正式 docs 中的人类可读结论。
 - 不允许只改 `architecture.html` 不更新对应 `docs/architecture` 说明。
-- 不允许只改 `docs/architecture/overall-architecture.md` 不更新 `.agent/architecture/overall-architecture.md`，或反过来。
+- 不允许只改 `docs/architecture/architecture.md` 不更新 `.agent/architecture/architecture.md`，或反过来。
 - 不允许把 `.agent` 的高频维护细节重复堆进 `docs/`。
 - 不允许把 Target / Future 写成 Current。
 - 不允许把一次性对话要求误写成全仓长期规则。
@@ -91,8 +91,8 @@ python tools/agent/render_architecture.py --check
 - `.agent/references/workflow-governance.md`
 - `.agent/templates/README.md`
 - `docs/architecture/README.md`
-- `docs/architecture/overall-architecture.md`
-- `.agent/architecture/overall-architecture.md`
+- `docs/architecture/architecture.md`
+- `.agent/architecture/architecture.md`
 - `docs/architecture/architecture.html`
 
 ## Lessons Learned

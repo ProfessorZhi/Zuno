@@ -8,7 +8,7 @@ status: completed
 
 ## 范围
 
-允许修改 `.agent/programs/`、`.agent/references/current-program.md`、`docs/architecture/roadmap.md`、`README.md`、`.agent/architecture/future/programs/README.md` 和验证器中与 active program 状态相关的规则。
+允许修改 `.agent/programs/`、`.agent/references/current-program.md`、`docs/architecture/architecture.md`、`README.md`、`docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/README.md` 和验证器中与 active program 状态相关的规则。
 
 ## 需要修改的文件
 
@@ -17,9 +17,9 @@ status: completed
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/closure-checklist.md`
 - `.agent/references/current-program.md`
-- `docs/architecture/roadmap.md`
+- `docs/architecture/architecture.md`
 - `README.md`
-- `.agent/architecture/future/programs/README.md`
+- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/README.md`
 - `.agent/scripts/verify_agent_system.py`
 - `tests/repo/test_agent_system.py`
 

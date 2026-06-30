@@ -15,8 +15,8 @@
 
 总架构文档 pair 是：
 
-- `docs/architecture/overall-architecture.md`
-- `.agent/architecture/overall-architecture.md`
+- `docs/architecture/architecture.md`
+- `.agent/architecture/architecture.md`
 
 当前 PHASE04 的重点是把架构评估转成后续 runtime implementation programs：Document Ingestion、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。
 
@@ -47,4 +47,4 @@
 - 每次新 program 都从 `PHASE01` 开始编号。
 - active phase 文件必须平铺在 `.agent/programs/` 根目录。
 - completed program 必须归档到 `docs/history/programs/`。
-- `.agent/architecture/future/programs/` 中的 queued drafts 只能作为参考输入，不能被写成 active。
+- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/` 中的 queued drafts 只能作为参考输入，不能被写成 active。
