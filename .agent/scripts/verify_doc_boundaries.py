@@ -87,6 +87,79 @@ def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
+def _section_body(content: str, heading: str) -> str:
+    marker = f"## {heading}"
+    start = content.find(marker)
+    if start == -1:
+        return ""
+    next_heading = content.find("\n## ", start + len(marker))
+    if next_heading == -1:
+        return content[start:]
+    return content[start:next_heading]
+
+
+def verify_future_only_terms() -> list[str]:
+    errors: list[str] = []
+    future_terms = [
+        "Java",
+        "microservice",
+        "microservices",
+        "微服务",
+        "event-driven worker",
+        "event workers",
+        "事件驱动 worker",
+        "事件 worker",
+        "product-level multi-agent",
+        "product/runtime default multi-agent",
+        "产品级多 Agent",
+        "Coding Agent",
+    ]
+    allowed_context_markers = [
+        "Future",
+        "非近期目标",
+        "不属于 Current",
+        "当前不是什么",
+        "当前路线图不实施",
+        "不能写成 Current",
+        "不作为近期实现",
+        "不默认实施",
+        "不是当前",
+        "不是近期",
+        "不是默认",
+        "不是微服务",
+        "不实施",
+    ]
+    docs_to_scan = [
+        "README.md",
+        "docs/architecture/current-architecture.md",
+        "docs/architecture/target-architecture.md",
+        "docs/architecture/roadmap.md",
+        "docs/architecture.md",
+    ]
+
+    for relative_path in docs_to_scan:
+        content = _read(relative_path)
+        lines = content.splitlines()
+        for index, line in enumerate(lines, start=1):
+            if not any(term in line for term in future_terms):
+                continue
+            window = "\n".join(lines[max(0, index - 12) : min(len(lines), index + 3)])
+            if not any(marker in window for marker in allowed_context_markers):
+                errors.append(
+                    f"{relative_path}:{index} mentions future-only term outside explicit Future/not-Current context: {line.strip()}"
+                )
+
+    current = _read("docs/architecture/current-architecture.md")
+    not_current_section = _section_body(current, "不属于 Current")
+    for term in future_terms:
+        if term in current and term not in not_current_section:
+            errors.append(
+                f"current-architecture.md mentions future-only term outside 不属于 Current section: {term}"
+            )
+
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -186,6 +259,8 @@ def main() -> int:
                 errors.append(
                     f"{relative_path} links retired architecture current path: {phrase}"
                 )
+
+    errors.extend(verify_future_only_terms())
 
     if errors:
         for error in errors:

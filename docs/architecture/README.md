@@ -92,15 +92,15 @@ Zuno 的架构说明同时使用两套互补视角。
 
 完整十类图由 `docs/architecture.md` 维护，并由 `tools/agent/render_architecture.py` 生成到 `docs/architecture.html`。这里的“十类”指十个不同架构关注面，不是同一张图的多个排版。
 
-1. `4+1 Logical View`
-2. `4+1 Development View`
-3. `4+1 Process View`
-4. `4+1 Physical View`
-5. `4+1 Scenarios View`
+1. `Logical View`
+2. `Development View`
+3. `Process View`
+4. `Physical View`
+5. `Scenarios View`
 6. `V&B Logical View`
-7. `V&B Component-and-Connector View`
+7. `Component-and-Connector View`
 8. `V&B Deployment View`
-9. `V&B Quality View`
+9. `Quality View`
 10. `Agent Loop View`
 
 Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector View，但 Zuno 的核心价值正是 Agent 如何计划、检索、调工具、观察、反思和重试。因此它作为第十类专题图单独展示，用来放大解释 Zuno 的 Agentic RAG 内核。完整展示放在 `docs/architecture.html`。

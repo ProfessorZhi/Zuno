@@ -4,7 +4,7 @@
 
 Active program: `zuno-eight-deliverables-full-realization-v1`
 state: active
-current_phase: `.agent/programs/PHASE03_architecture-docs-html-system.md`
+current_phase: `.agent/programs/PHASE04_query-router-mode-policy.md`
 
 `.agent/programs/` 当前保留：
 

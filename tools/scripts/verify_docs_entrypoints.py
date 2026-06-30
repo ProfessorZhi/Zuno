@@ -1,9 +1,25 @@
 from __future__ import annotations
 
+import importlib.util
+import re
+import sys
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+ARCHITECTURE_VIEW_CONTRACT = [
+    (1, "Logical View", "4+1 Logical"),
+    (2, "Development View", "4+1 Development"),
+    (3, "Process View", "4+1 Process"),
+    (4, "Physical View", "4+1 Physical"),
+    (5, "Scenarios View", "4+1 Scenarios"),
+    (6, "V&B Logical View", "View & Beyond Logical"),
+    (7, "Component-and-Connector View", "View & Beyond C&C"),
+    (8, "V&B Deployment View", "View & Beyond Deployment"),
+    (9, "Quality View", "View & Beyond Quality"),
+    (10, "Agent Loop View", "Zuno 专题图"),
+]
 
 
 def _read(relative_path: str) -> str:
@@ -12,6 +28,17 @@ def _read(relative_path: str) -> str:
 
 def _require(name: str, content: str, phrases: list[str]) -> list[str]:
     return [f"{name} missing phrase: {phrase}" for phrase in phrases if phrase not in content]
+
+
+def _load_render_architecture_module():
+    module_path = REPO_ROOT / "tools" / "agent" / "render_architecture.py"
+    spec = importlib.util.spec_from_file_location("render_architecture", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load tools/agent/render_architecture.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def verify_architecture_decision_boundaries() -> list[str]:
@@ -82,6 +109,14 @@ def verify_architecture_html_sync() -> list[str]:
     for relative_path in ["docs/architecture.md", "docs/architecture.html", "tools/agent/render_architecture.py"]:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing architecture diagram sync path: {relative_path}")
+    if errors:
+        return errors
+
+    renderer = _load_render_architecture_module()
+    rendered = renderer.build_html()
+    html_path = REPO_ROOT / "docs" / "architecture.html"
+    if html_path.read_text(encoding="utf-8") != rendered:
+        errors.append("docs/architecture.html is stale; run python tools/agent/render_architecture.py --write")
 
     architecture_source = _read("docs/architecture.md")
     for phrase in [
@@ -118,8 +153,9 @@ def verify_architecture_html_sync() -> list[str]:
             "Quality View",
             "Scenarios View",
             "Process View",
-            "V&B Logical View",
-            "V&B Deployment View",
+            "View &amp; Beyond",
+            "V&amp;B Logical View",
+            "V&amp;B Deployment View",
             "Agent Loop View",
             "#f7f8fb",
             "#ffffff",
@@ -129,6 +165,82 @@ def verify_architecture_html_sync() -> list[str]:
         ]:
             if phrase not in content:
                 errors.append(f"{relative_path} missing architecture diagram phrase: {phrase}")
+    return errors
+
+
+def verify_architecture_view_contract() -> list[str]:
+    errors: list[str] = []
+    renderer = _load_render_architecture_module()
+    expected_titles = [title for _, title, _ in ARCHITECTURE_VIEW_CONTRACT]
+    if list(renderer.EXPECTED_DIAGRAMS) != expected_titles:
+        errors.append("render_architecture.py EXPECTED_DIAGRAMS does not match architecture view contract")
+    if len(expected_titles) != 10 or len(set(expected_titles)) != 10:
+        errors.append("architecture view contract must contain exactly ten unique view titles")
+
+    architecture_source = _read("docs/architecture.md")
+    try:
+        source_titles = [diagram.title for diagram in renderer.extract_diagrams(architecture_source)]
+    except Exception as exc:  # pragma: no cover - surfaced as verifier output
+        errors.append(f"docs/architecture.md cannot be parsed by renderer: {exc}")
+        source_titles = []
+    if source_titles and source_titles != expected_titles:
+        errors.append(f"docs/architecture.md diagram order drifted: {source_titles}")
+
+    inventory = _read(".agent/references/diagram-inventory.md")
+    deliverables = _read("docs/deliverables.md")
+    target = _read("docs/architecture/target-architecture.md")
+    architecture_index = _read("docs/architecture/README.md")
+    html_page = _read("docs/architecture.html")
+
+    for index, title, theory in ARCHITECTURE_VIEW_CONTRACT:
+        inventory_row = f"| {index} | {title} | {theory} |"
+        deliverables_row = f"| {index} | {title} | {theory} |"
+        if inventory_row not in inventory:
+            errors.append(f"diagram-inventory.md missing canonical row: {inventory_row}")
+        if deliverables_row not in deliverables:
+            errors.append(f"docs/deliverables.md missing canonical row: {deliverables_row}")
+        if f"| {title} | {theory} |" not in target:
+            errors.append(f"target-architecture.md missing canonical view/theory pair: {title} / {theory}")
+        if f"{index}. `{title}`" not in architecture_index:
+            errors.append(f"docs/architecture/README.md missing canonical ordered view: {index}. `{title}`")
+        html_title = title.replace("&", "&amp;")
+        if f"<h3>{index}. {html_title}</h3>" not in html_page:
+            errors.append(f"docs/architecture.html missing rendered view heading: {index}. {title}")
+
+    if html_page.count('class="diagram-section"') != 10:
+        errors.append("docs/architecture.html must render exactly ten diagram sections")
+    if html_page.count('<div class="mermaid">') != 10:
+        errors.append("docs/architecture.html must render exactly ten Mermaid containers")
+    if html_page.count("<summary>Mermaid source</summary>") != 10:
+        errors.append("docs/architecture.html must expose Mermaid source for each diagram")
+    for phrase in [
+        "overflow-x: auto",
+        "min-width: 560px",
+        "securityLevel: \"strict\"",
+        "useMaxWidth: false",
+    ]:
+        if phrase not in html_page:
+            errors.append(f"docs/architecture.html missing visual safety phrase: {phrase}")
+
+    forbidden_prefixed_titles = [
+        "4+1 Logical View",
+        "4+1 Development View",
+        "4+1 Process View",
+        "4+1 Physical View",
+        "4+1 Scenarios View",
+        "V&B Component-and-Connector View",
+        "V&B Quality View",
+    ]
+    for relative_path in [
+        "docs/deliverables.md",
+        "docs/architecture/README.md",
+        "docs/architecture/target-architecture.md",
+    ]:
+        content = _read(relative_path)
+        for title in forbidden_prefixed_titles:
+            if re.search(rf"`?{re.escape(title)}`?", content):
+                errors.append(f"{relative_path} keeps non-canonical view title: {title}")
+
     return errors
 
 
@@ -156,6 +268,8 @@ def main() -> int:
                 "./docs/evidence/public-demo.md",
                 "受限历史兼容",
                 "src/backend/zuno",
+                "Single Controller Agent 是目标架构角色",
+                "当前实现主线是 `GeneralAgent` single loop",
                 "Summary Compression",
                 "ToolCard",
                 "Native BM25",
@@ -204,7 +318,8 @@ def main() -> int:
                 "八大交付物",
                 "十类架构视图",
                 "根目录清洁期望",
-                "4+1 Logical View",
+                "absorbed reference programs / roadmap reference inputs",
+                "Logical View",
                 "V&B Logical View",
                 "Agent Loop View",
                 "Quality View",
@@ -225,6 +340,8 @@ def main() -> int:
                 "zuno-target-architecture-refresh-v1",
                 "zuno-repo-layout-cleanup-v1",
                 "zuno-architecture-visuals-v1",
+                "PHASE03 completed",
+                "视觉 QA",
                 "docs/architecture.md",
                 "docs/deliverables.md",
                 "docs/history/programs/zuno-target-architecture-migration-v1/",
@@ -259,6 +376,7 @@ def main() -> int:
                 "Process View",
                 "Physical View",
                 "Scenarios View",
+                "View & Beyond",
                 "V&B Logical View",
                 "V&B Deployment View",
                 "Quality View",
@@ -269,7 +387,7 @@ def main() -> int:
                 "Component-and-Connector View",
                 "Deployment View",
                 "Quality View",
-            "Agentic RAG",
+                "Agentic RAG",
                 "GraphRAG",
                 "Domain Pack 只允许作为历史或兼容语境出现",
             ],
@@ -320,6 +438,7 @@ def main() -> int:
     errors.extend(verify_active_docs_do_not_link_retired_paths())
     errors.extend(verify_front_path_shape())
     errors.extend(verify_architecture_html_sync())
+    errors.extend(verify_architecture_view_contract())
 
     if errors:
         for error in errors:

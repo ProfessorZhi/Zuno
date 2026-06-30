@@ -1,7 +1,7 @@
 # PHASE03 Architecture Docs And HTML System
 
 Program: `zuno-eight-deliverables-full-realization-v1`
-status: active
+status: completed
 
 ## 为什么
 
@@ -45,3 +45,13 @@ status: active
 ## PR 边界
 
 可以拆成 architecture source PR 和 HTML/render PR；最终必须保持同一事实源。
+
+## Phase Summary
+
+- Multi-agent: enabled in the main Codex goal-mode thread; Architecture / Docs、Runtime / Code、Verification、Integration Reviewer 工作组均已完成并关闭。
+- Result: canonical ten-view contract 已在 renderer、docs、deliverables、diagram inventory、HTML、docs verifier 和 repo tests 中同步；`docs/architecture.html` 由 `docs/architecture.md` 精确生成校验。
+- Current / Target / Future / History: 修正 current 文档中的目标图引用、README 目标角色命名、absorbed reference wording 和 future-only term guard，未把 Target/Future 写成 Current。
+- Visual QA: Playwright smoke 通过 desktop/mobile 检查，10 个 Mermaid SVG 渲染、0 Mermaid error、0 document-level horizontal overflow；截图通过 Playwright 工具捕获，不在仓库保留临时产物。
+- Runtime boundary: 未修改 runtime/API/DB/frontend/dependency；本 phase 只触碰 docs、renderer、verifier、repo tests 和 phase status surfaces。
+- Validation: full base verifier stack、architecture render check、workflow verifier、repo tests and Playwright visual smoke passed before commit.
+- PR: to be created as stacked PHASE03 PR after commit and push.

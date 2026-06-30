@@ -32,7 +32,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 | Context Builder 与 Memory | active program / planned phase | Agentic RAG 需要稳定 Context Pack 和记忆边界，否则增强模式会退化成 prompt 拼接。 | 短期状态、工作记忆、语义记忆、情节记忆、程序性记忆有 owner、source ids、compression / extraction policy。 |
 | Hooks / Evidence / Trace | active program / planned phase | 增强模式必须有权限、预算、fallback、evidence check、citation coverage 和 runtime events。 | hooks/event schema/evidence policy/artifact trace 有 focused tests 和文档边界。 |
 | Runtime 架构升级 | active program / planned phase | 在 mode、context、hooks 边界稳定后，再把关键 runtime slice 往成熟形态推进。 | 每个 runtime slice 必须有代码、测试、trace/eval 证据，不做大包式重构。 |
-| 架构 HTML 重做清晰 | active program / planned phase | 让 GitHub 访问者、老师、评审和面试官快速看懂架构。 | `docs/architecture.html` / Mermaid 已刷新为两个理论框架 + 十类架构视图；后续做源码同步、截图验证、README 展示和入口 polish。 |
+| 架构 HTML 重做清晰 | active program / PHASE03 completed | 让 GitHub 访问者、老师、评审和面试官快速看懂架构。 | `docs/architecture.md` / `docs/architecture.html` 已由 renderer 和 verifier 检查同源；PHASE03 已完成边界措辞、视觉 QA、README 入口和最终验证收口。 |
 
 ## 当前 Active Program
 
