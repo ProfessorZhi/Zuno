@@ -611,6 +611,7 @@ def write_outputs() -> None:
 
 def check_outputs() -> int:
     rendered = build_html()
+    rendered_bytes = rendered.encode("utf-8")
     errors: list[str] = []
     if not AGENT_SOURCE_PATH.exists():
         errors.append(
@@ -623,7 +624,7 @@ def check_outputs() -> int:
     for output_path in OUTPUT_PATHS:
         if not output_path.exists():
             errors.append(f"missing generated output: {output_path.relative_to(REPO_ROOT).as_posix()}")
-        elif output_path.read_text(encoding="utf-8") != rendered:
+        elif output_path.read_bytes() != rendered_bytes:
             errors.append(f"generated output is stale: {output_path.relative_to(REPO_ROOT).as_posix()}")
 
     for stale_path in STALE_OUTPUTS:

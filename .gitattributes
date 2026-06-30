@@ -1,3 +1,4 @@
-docs/architecture/overview.html text eol=lf
-docs/architecture.html text eol=lf
-.agent/architecture/blueprint.html text eol=lf
+docs/architecture/architecture.md text eol=lf
+docs/architecture/architecture.html text eol=lf
+.agent/architecture/architecture.md text eol=lf
+.agent/architecture/architecture.html text eol=lf
