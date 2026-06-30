@@ -1,6 +1,6 @@
 # PHASE03 Mermaid 与 HTML 展示升级
 
-status: pending
+status: completed
 
 ## 目标
 

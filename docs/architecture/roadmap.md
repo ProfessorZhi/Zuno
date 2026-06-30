@@ -41,10 +41,21 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 当前 active program：`zuno-architecture-detail-and-execution-plan-v1`。
 
-- 当前阶段：`PHASE01_architecture-state-and-program-boot`。
+- 当前阶段：`PHASE04_execution-roadmap-from-architecture`。
 - 当前入口：`.agent/programs/current.md`。
 - 执行计划：`.agent/programs/implementation-roadmap.md`。
 - 边界：只做架构文档、Mermaid/HTML、图清单、执行计划和 verifier/test 同步；不改 runtime 行为。
+
+PHASE01-PHASE03 已完成 program boot、目标架构细化、十类 Mermaid / HTML 展示升级。PHASE04 的任务是把 2026-06-30 架构深度评估转成后续 runtime implementation programs，而不是继续增加总览图。
+
+下一阶段优先级：
+
+1. `zuno-document-ingestion-v1`：多格式文档摄取、Canonical Document IR、chunk/provenance、BM25/vector/graph indexing。
+2. `zuno-runtime-memory-tool-plane-v1`：Context Pack、summary compression、structured extraction、ToolCard manifest、executor registry、approval flow。
+3. `zuno-eval-observability-v1`：LangSmith trace mapping、dataset versioning、RAGAS / DeepEval 指标、citation coverage 和 CI regression gate。
+4. `zuno-security-enterprise-scenarios-v1`：PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
+
+这些都是 Target implementation programs。只有对应代码、测试、verifier 和 eval evidence 完成后，才能写入 Current。
 
 后续 program 草案仍保留在 `.agent/architecture/future/programs/`，但它们不是 active。
 

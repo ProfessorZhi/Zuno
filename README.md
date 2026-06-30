@@ -47,7 +47,7 @@ Local-first Agent Workspace
 - Phase 11B 已完成：知识回答已经统一到 single `GeneralAgent` path。
 - Phase 11C 已完成：Domain Pack active runtime cleanup 已关闭。
 - Phase 12 已完成：closure evidence 已闭合。
-- 当前 active Agent program 是 `zuno-architecture-detail-and-execution-plan-v1`；它只细化架构文档、十类架构图、HTML 展示和后续执行计划，不实施 runtime feature。最近完成的 `zuno-eight-deliverables-full-realization-v1` 已归档到 `docs/history/programs/`。
+- 当前 active Agent program 是 `zuno-architecture-detail-and-execution-plan-v1`，当前阶段是 `PHASE04_execution-roadmap-from-architecture`；它只细化架构文档、十类架构图、HTML 展示和后续执行计划，不实施 runtime feature。最近完成的 `zuno-eight-deliverables-full-realization-v1` 已归档到 `docs/history/programs/`。下一轮实现优先级是 Document Ingestion、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。
 
 当前主要调用链：
 

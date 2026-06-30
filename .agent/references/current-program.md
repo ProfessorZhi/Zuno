@@ -5,7 +5,7 @@
 当前 active program：`zuno-architecture-detail-and-execution-plan-v1`
 
 state: active
-current_phase: PHASE01_architecture-state-and-program-boot
+current_phase: PHASE04_execution-roadmap-from-architecture
 
 ## Program 目标
 
@@ -29,7 +29,13 @@ current_phase: PHASE01_architecture-state-and-program-boot
 
 当前阶段：
 
-- `PHASE01_architecture-state-and-program-boot.md`：active。
+- `PHASE01_architecture-state-and-program-boot.md`：completed。
+- `PHASE02_target-architecture-detailing.md`：completed。
+- `PHASE03_mermaid-html-detail-refresh.md`：completed。
+- `PHASE04_execution-roadmap-from-architecture.md`：active。
+- `PHASE05_validation-and-closure.md`：pending。
+
+PHASE04 的本轮输入来自 2026-06-30 的架构深度评估：Zuno 已完成文档/工作流/验证闭环和 foundation slices，但下一阶段不应继续只扩展总览图，而应把 `Document Ingestion`、`Runtime + Memory + Tool Plane`、`Eval / Observability`、`Security + Enterprise Scenarios` 拆成后续 runtime implementation programs。
 
 ## 最近完成事实
 

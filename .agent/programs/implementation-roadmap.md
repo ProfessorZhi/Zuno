@@ -12,7 +12,7 @@
 
 state: active
 program: zuno-architecture-detail-and-execution-plan-v1
-current_phase: PHASE01_architecture-state-and-program-boot
+current_phase: PHASE04_execution-roadmap-from-architecture
 
 每次新 program 都从 `PHASE01` 开始编号。
 
@@ -32,6 +32,8 @@ current_phase: PHASE01_architecture-state-and-program-boot
 
 ### Task 1: Program Boot And State Surfaces
 
+Status: completed
+
 **Files:**
 - Modify: `.agent/programs/current.md`
 - Modify: `.agent/programs/README.md`
@@ -42,7 +44,7 @@ current_phase: PHASE01_architecture-state-and-program-boot
 - Modify: `.agent/architecture/future/programs/README.md`
 - Create: `.agent/programs/PHASE01_architecture-state-and-program-boot.md`
 
-- [ ] **Step 1: Confirm git branch and clean scope**
+- [x] **Step 1: Confirm git branch and clean scope**
 
 Run:
 
@@ -52,17 +54,17 @@ git status --short --branch
 
 Expected: branch is `codex/zuno-architecture-detail-plan-v1` and unrelated files are not dirty.
 
-- [ ] **Step 2: Open the active program**
+- [x] **Step 2: Open the active program**
 
 Update active state files to include:
 
 ```text
 program: zuno-architecture-detail-and-execution-plan-v1
 state: active
-current_phase: PHASE01_architecture-state-and-program-boot
+current_phase: PHASE04_execution-roadmap-from-architecture
 ```
 
-- [ ] **Step 3: Keep completed program evidence visible**
+- [x] **Step 3: Keep completed program evidence visible**
 
 Keep these phrases in state surfaces:
 
@@ -76,10 +78,12 @@ Codex 执行协作
 
 ### Task 2: Target Architecture Detailing
 
+Status: completed
+
 **Files:**
 - Modify: `docs/architecture/target-architecture.md`
 
-- [ ] **Step 1: Add target architecture detail layers**
+- [x] **Step 1: Add target architecture detail layers**
 
 Add the target table for:
 
@@ -110,7 +114,7 @@ review / promotion / decay
 memory eval
 ```
 
-- [ ] **Step 2: Define Planning and Runtime boundary**
+- [x] **Step 2: Define Planning and Runtime boundary**
 
 Document this contract:
 
@@ -120,7 +124,7 @@ LangGraph is a target implementation candidate for planning runtime orchestratio
 LangGraph is not the planning module itself.
 ```
 
-- [ ] **Step 3: Define ToolCard execution adapter boundary**
+- [x] **Step 3: Define ToolCard execution adapter boundary**
 
 Document `execution mode` values:
 
@@ -130,13 +134,15 @@ local_function | local_sdk | sdk_to_api | api | local_cli | cli_to_api | ssh | m
 
 ### Task 3: Mermaid And HTML Detail Refresh
 
+Status: completed
+
 **Files:**
 - Modify: `docs/architecture.md`
 - Modify: `.agent/references/diagram-inventory.md`
 - Modify: `tools/agent/render_architecture.py`
 - Generate: `docs/architecture.html`
 
-- [ ] **Step 1: Keep exactly ten canonical diagrams**
+- [x] **Step 1: Keep exactly ten canonical diagrams**
 
 Do not add an eleventh Mermaid block. Keep:
 
@@ -153,7 +159,7 @@ Quality View
 Agent Loop View
 ```
 
-- [ ] **Step 2: Expand each diagram to second-level components**
+- [x] **Step 2: Expand each diagram to second-level components**
 
 Each diagram must show at least one of:
 
@@ -166,7 +172,7 @@ Tool execution adapter
 Knowledge / GraphRAG
 ```
 
-- [ ] **Step 3: Generate HTML**
+- [x] **Step 3: Generate HTML**
 
 Run:
 
@@ -179,6 +185,8 @@ Expected: both commands pass.
 
 ### Task 4: Execution Roadmap From Architecture
 
+Status: active
+
 **Files:**
 - Modify: `.agent/programs/implementation-roadmap.md`
 - Modify: `docs/architecture/roadmap.md`
@@ -190,17 +198,32 @@ Record this dependency order:
 
 ```text
 architecture detail
--> Memory Layer write-manage-read contract
 -> Document Ingestion / Parse Gateway
--> Enterprise Knowledge Base scenario
--> Security / Policy gates
--> LangSmith trace and eval
+-> Runtime + Memory + Tool Plane
+-> Eval / Observability
+-> Security + Enterprise Scenarios
 -> frontend trace / artifact product loop
 ```
 
+The implementation programs derived from the architecture should be:
+
+```text
+zuno-document-ingestion-v1
+zuno-runtime-memory-tool-plane-v1
+zuno-eval-observability-v1
+zuno-security-enterprise-scenarios-v1
+```
+
+Each follow-up program must keep Current / Target strict:
+
+- Document Ingestion is target until parser contracts and tests exist.
+- LangSmith / RAGAS / DeepEval are target adapters until trace export and eval gates exist.
+- Security gates are target until policy checks, approval flow and regression tests exist.
+- Enterprise knowledge base / HR resume KB are product scenarios, not current runtime facts.
+
 - [ ] **Step 2: Preserve Current / Target boundary**
 
-Do not move Document Ingestion, LangSmith, security gates or frontend trace into Current until code and tests prove them.
+Do not move Document Ingestion, LangSmith, security gates, enterprise scenarios or frontend trace into Current until code and tests prove them.
 
 ### Task 5: Validation And Closure
 

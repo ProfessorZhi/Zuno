@@ -6,12 +6,14 @@
 
 - State: active
 - Active program: `zuno-architecture-detail-and-execution-plan-v1`
-- 当前阶段：[PHASE01_architecture-state-and-program-boot.md](PHASE01_architecture-state-and-program-boot.md)
+- 当前阶段：[PHASE04_execution-roadmap-from-architecture.md](PHASE04_execution-roadmap-from-architecture.md)
 - 当前入口：[current.md](current.md)
 
 ## Program 目标
 
 本 program 只做架构文档、架构图 HTML、图清单、program 状态和后续执行计划的细化，重点覆盖 Agent Core、Memory Layer、Tool Control Plane、Document Ingestion、安全、Trace / Eval 和企业知识库场景。它不实施 runtime feature，不新增 API / DB / frontend 行为。
+
+当前 PHASE04 的重点是把架构评估转成后续 runtime implementation programs：Document Ingestion、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。
 
 ## 前台文件
 

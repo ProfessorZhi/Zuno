@@ -205,7 +205,7 @@ def main() -> int:
         "当前 active program",
         "zuno-architecture-detail-and-execution-plan-v1",
         "state: active",
-        "current_phase: PHASE01_architecture-state-and-program-boot",
+        "current_phase: PHASE04_execution-roadmap-from-architecture",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "PHASE01-PHASE10",

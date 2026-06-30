@@ -1,6 +1,6 @@
 # PHASE01 架构状态与 Program 启动
 
-status: active
+status: completed
 
 ## 目标
 

@@ -491,7 +491,14 @@ def test_current_program_declares_active_architecture_program_and_archived_eight
     assert "当前 active program" in current
     assert ACTIVE_PROGRAM_NAME in current
     assert "state: active" in current
-    assert "current_phase: PHASE01_architecture-state-and-program-boot" in current
+    assert "current_phase: PHASE04_execution-roadmap-from-architecture" in current
+    for phrase in [
+        "Document Ingestion",
+        "Runtime + Memory + Tool Plane",
+        "Eval / Observability",
+        "Security + Enterprise Scenarios",
+    ]:
+        assert phrase in current
     assert COMPLETED_PROGRAM_NAME in current
     assert COMPLETED_PROGRAM_ARCHIVE in current
     assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
@@ -500,6 +507,16 @@ def test_current_program_declares_active_architecture_program_and_archived_eight
     assert "不是多线程模式" in current
     assert "State: active" in programs_index
     assert ACTIVE_PROGRAM_NAME in programs_index
+    roadmap = (REPO_ROOT / "docs" / "architecture" / "roadmap.md").read_text(
+        encoding="utf-8"
+    )
+    for phrase in [
+        "zuno-document-ingestion-v1",
+        "zuno-runtime-memory-tool-plane-v1",
+        "zuno-eval-observability-v1",
+        "zuno-security-enterprise-scenarios-v1",
+    ]:
+        assert phrase in roadmap
     assert COMPLETED_PROGRAM_NAME in history_index
     assert f"{COMPLETED_PROGRAM_NAME}/" in history_index
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
@@ -521,7 +538,7 @@ def test_completed_program_phase_status_lifecycle_is_machine_checkable() -> None
         encoding="utf-8"
     )
 
-    assert "current_phase: PHASE01_architecture-state-and-program-boot" in current
+    assert "current_phase: PHASE04_execution-roadmap-from-architecture" in current
     assert sorted(phase_statuses) == COMPLETED_PROGRAM_PHASE_FILES
     for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
         assert "status: completed" in phase_statuses[phase_name]

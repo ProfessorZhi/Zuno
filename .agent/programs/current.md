@@ -3,7 +3,7 @@
 当前 active program：`zuno-architecture-detail-and-execution-plan-v1`
 
 state: active
-current_phase: PHASE01_architecture-state-and-program-boot
+current_phase: PHASE04_execution-roadmap-from-architecture
 
 ## 目标
 
@@ -42,11 +42,20 @@ current_phase: PHASE01_architecture-state-and-program-boot
 
 ## 当前阶段
 
-- `PHASE01_architecture-state-and-program-boot.md`：active。
-- `PHASE02_target-architecture-detailing.md`：pending。
-- `PHASE03_mermaid-html-detail-refresh.md`：pending。
-- `PHASE04_execution-roadmap-from-architecture.md`：pending。
+- `PHASE01_architecture-state-and-program-boot.md`：completed。
+- `PHASE02_target-architecture-detailing.md`：completed。
+- `PHASE03_mermaid-html-detail-refresh.md`：completed。
+- `PHASE04_execution-roadmap-from-architecture.md`：active。
 - `PHASE05_validation-and-closure.md`：pending。
+
+## 下一阶段落点
+
+附件评估确认：继续堆总览图的边际收益已经不高，真正增量在把目标架构转成可执行产品 program。PHASE04 当前要把下一轮实现拆成四条可执行主线：
+
+1. `Document Ingestion / Parse Gateway`：多格式解析、Canonical Document IR、chunk/provenance、BM25/vector/graph indexing。
+2. `Runtime + Memory + Tool Plane`：Context Pack、summary compression、structured extraction、ToolCard manifest、executor registry、approval flow。
+3. `Eval / Observability`：LangSmith trace 映射、dataset、RAGAS / DeepEval 指标、citation coverage 和 CI regression gate。
+4. `Security + Enterprise Scenarios`：PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
 
 ## 当前边界
 
