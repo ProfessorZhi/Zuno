@@ -1,6 +1,6 @@
 # PHASE03 Enterprise Scenario And Product Loop
 
-status: pending
+status: active
 
 ## 目标
 

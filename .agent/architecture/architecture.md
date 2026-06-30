@@ -876,7 +876,7 @@ Eval 三层：
 
 近期平台层仍应保持模块化单体；微服务不是近期 Current，也不是默认路线。目标上，Platform 负责 model gateway、settings、database、object storage、vector store、graph store、search index、queue / worker、secrets、observability 和 provider adapter。文档解析、embedding、GraphRAG indexing、artifact rendering 和长任务可以先通过 background job / worker 抽象表达，不需要立刻引入完整分布式架构。
 
-代码布局上，`src/backend/zuno` 顶层六层已经正确：`api / agent / memory / capability / knowledge / platform`。下一阶段要整理的是六层内部。`platform/services` 不能继续变成所有旧业务逻辑的停车场；`capability/tools` 不能让 provider、adapter、domain tool、legacy alias 混在一起；`platform/compatibility` 应逐步收缩为 legacy import registry、vendor shim 和 migration notice；Document Ingestion 应进入 `knowledge/ingestion` 或等价知识摄取边界，而不是散落在工具目录。任何移动都必须先由 import matrix、focused tests 和 verifier 证明，不为了视觉清爽直接删兼容路径。
+代码布局上，`src/backend/zuno` 顶层六层已经正确：`api / agent / memory / capability / knowledge / platform`。PHASE02 已把六层内部的 owner baseline 写入 `docs/architecture/repo-ownership-matrix.md`，并用 `tools/scripts/verify_repo_structure.py` 固定 `platform/services`、`capability/tools`、`capability/mcp/servers`、`platform/compatibility` 和 `platform/vendor` 的边界。当前事实是：`platform/services` 仍是 migration source；`knowledge/ingestion`、`platform/security`、`platform/observability` 和 `platform/vendor` 只是 README + import guard；`fastapi_jwt_auth` 仍在 compatibility vendor 兼容路径。任何移动都必须先由 import matrix、focused tests 和 verifier 证明，不为了视觉清爽直接删兼容路径。
 
 目标代码树按最新报告收束为“业务语义拥有代码，platform 只承载跨层基础设施”：
 
@@ -901,7 +901,7 @@ src/backend/zuno/
     compatibility/             # legacy import registry only
 ```
 
-这个代码树不是 Current 承诺。它是 PHASE02 以后逐步收敛的 Target。兼容路径不能为了视觉清爽直接删除；每次移动都必须先有 import matrix、legacy guard tests、repo structure verifier 和 focused runtime tests。
+这个代码树不是 Current 承诺。它是 PHASE02 ownership baseline 之后逐步收敛的 Target。当前 Current 只包括六层顶层、ownership matrix、预留 import guard、compat/vendor guard 和 provider 分类 guard；真实 runtime 迁移仍要逐 phase 用 legacy guard tests、repo structure verifier 和 focused runtime tests 证明。
 
 ## 主链路
 
@@ -966,7 +966,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE02_project-folder-and-code-layout-cleanup`；`PHASE01_program-baseline-and-previous-closure` 已通过 verifier 和 focused repo tests 证明完成。PHASE02 只负责项目文件夹、代码 ownership、compat/vendor 边界和 repo structure guard，不在本阶段实现后续 runtime feature。
+当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE03_enterprise-scenario-and-product-loop`；`PHASE01_program-baseline-and-previous-closure` 与 `PHASE02_project-folder-and-code-layout-cleanup` 已通过 verifier 和 focused repo tests 证明完成。PHASE03 只负责企业私有知识库产品对象、task/session、artifact、event stream 和 feedback contract，不把未实现的 UI 或 backend 行为写成 Current。
 
 本 program 的十二个 phase：
 

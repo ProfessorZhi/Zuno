@@ -20,9 +20,15 @@ ARCHITECTURE_VIEW_CONTRACT = [
     (10, "Agent Loop View", "Zuno 专题图"),
 ]
 
-ACTIVE_ARCHITECTURE_FILES = {
+ACTIVE_DOCS_ARCHITECTURE_FILES = {
     "README.md",
     "architecture.md",
+    "architecture.html",
+    "repo-ownership-matrix.md",
+}
+
+ACTIVE_AGENT_ARCHITECTURE_FILES = {
+    "README.md",
     "architecture.md",
     "architecture.html",
 }
@@ -61,6 +67,7 @@ def verify_front_path_shape() -> list[str]:
         "docs/architecture/README.md",
         "docs/architecture/architecture.md",
         "docs/architecture/architecture.html",
+        "docs/architecture/repo-ownership-matrix.md",
         ".agent/architecture/README.md",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
@@ -74,10 +81,10 @@ def verify_front_path_shape() -> list[str]:
         for path in (REPO_ROOT / "docs" / "architecture").iterdir()
         if path.is_file()
     }
-    if current_docs_architecture_files != ACTIVE_ARCHITECTURE_FILES:
+    if current_docs_architecture_files != ACTIVE_DOCS_ARCHITECTURE_FILES:
         errors.append(
             "docs/architecture files must stay slim: "
-            f"expected {sorted(ACTIVE_ARCHITECTURE_FILES)}, got {sorted(current_docs_architecture_files)}"
+            f"expected {sorted(ACTIVE_DOCS_ARCHITECTURE_FILES)}, got {sorted(current_docs_architecture_files)}"
         )
 
     current_agent_architecture_files = {
@@ -85,10 +92,10 @@ def verify_front_path_shape() -> list[str]:
         for path in (REPO_ROOT / ".agent" / "architecture").iterdir()
         if path.is_file()
     }
-    if current_agent_architecture_files != ACTIVE_ARCHITECTURE_FILES:
+    if current_agent_architecture_files != ACTIVE_AGENT_ARCHITECTURE_FILES:
         errors.append(
             ".agent/architecture files must stay slim: "
-            f"expected {sorted(ACTIVE_ARCHITECTURE_FILES)}, got {sorted(current_agent_architecture_files)}"
+            f"expected {sorted(ACTIVE_AGENT_ARCHITECTURE_FILES)}, got {sorted(current_agent_architecture_files)}"
         )
 
     for name in ARCHIVED_ARCHITECTURE_SPLIT_DOCS:
@@ -154,6 +161,7 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in [
         "architecture.md",
         "architecture.html",
+        "repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/",

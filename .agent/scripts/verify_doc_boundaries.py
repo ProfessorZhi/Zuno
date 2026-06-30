@@ -6,7 +6,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ARCHIVE_ROOT = "docs/history/architecture-surface-cleanup-2026-06-30"
-DOCS_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture.html"}
+DOCS_ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture.html",
+    "repo-ownership-matrix.md",
+}
 AGENT_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture.html"}
 
 RETIRED_FRONT_PATHS = [

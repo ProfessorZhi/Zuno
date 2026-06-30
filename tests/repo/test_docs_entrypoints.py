@@ -30,7 +30,12 @@ def test_docs_architecture_front_path_is_small_and_synced() -> None:
         path.name for path in (REPO_ROOT / ".agent" / "architecture").iterdir() if path.is_file()
     }
 
-    assert docs_files == {"README.md", "architecture.md", "architecture.html"}
+    assert docs_files == {
+        "README.md",
+        "architecture.md",
+        "architecture.html",
+        "repo-ownership-matrix.md",
+    }
     assert agent_files == {"README.md", "architecture.md", "architecture.html"}
     assert (REPO_ROOT / "docs/architecture/architecture.md").read_bytes() == (
         REPO_ROOT / ".agent/architecture/architecture.md"
@@ -63,6 +68,7 @@ def test_docs_front_path_readmes_explain_architecture_contract() -> None:
         "架构文档",
         "architecture.md",
         "architecture.html",
+        "repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/",
@@ -185,6 +191,7 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "verify_front_path_shape",
         "verify_no_retired_front_path_links",
         "docs/architecture/architecture.md",
+        "docs/architecture/repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
         "architecture.html",

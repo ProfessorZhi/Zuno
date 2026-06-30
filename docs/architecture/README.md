@@ -9,6 +9,7 @@ docs/architecture/
   README.md
   architecture.md
   architecture.html
+  repo-ownership-matrix.md
   assets/
   decisions/
 ```
@@ -17,9 +18,10 @@ docs/architecture/
 
 1. `architecture.md`：总架构文档，正文详细说明 Current / Target 边界、企业私有知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；后半部分维护 Mermaid 图源。
 2. `architecture.html`：图形化展示页，适合快速看完整架构图，不替代 Markdown 正文。
-3. `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，必须由 `tools/agent/render_architecture.py --write` 同步。
-4. `decisions/README.md`：仍影响当前主线的正式架构决策。
-5. `../evidence/public-demo.md`：公开证据入口。
+3. `repo-ownership-matrix.md`：PHASE02 的目录 ownership、compat/vendor 边界和 provider 分类事实表；它是代码布局治理的正式 Current 证据。
+4. `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，必须由 `tools/agent/render_architecture.py --write` 同步。
+5. `decisions/README.md`：仍影响当前主线的正式架构决策。
+6. `../evidence/public-demo.md`：公开证据入口。
 
 研究输入归档在 `docs/history/research/chatgpt-research-mode-artifacts/`。这些 PDF / Markdown 抽取版用于补充架构论证，不替代当前正式架构源。
 

@@ -70,6 +70,7 @@ def test_required_current_paths_exist() -> None:
         "docs/architecture/README.md",
         "docs/architecture/architecture.md",
         "docs/architecture/architecture.html",
+        "docs/architecture/repo-ownership-matrix.md",
         "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
         "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
@@ -89,6 +90,10 @@ def test_required_current_paths_exist() -> None:
         "docs/history/specs",
         "docs/history/domain-packs/root-contract-review/contract_review/pack.yaml",
         "src/backend/zuno/main.py",
+        "src/backend/zuno/knowledge/ingestion/README.md",
+        "src/backend/zuno/platform/observability/README.md",
+        "src/backend/zuno/platform/security/README.md",
+        "src/backend/zuno/platform/vendor/README.md",
         "tools/agent/render_architecture.py",
         "tools/evals/zuno",
     ]
@@ -120,6 +125,7 @@ def test_repo_structure_verifier_pins_current_front_path() -> None:
         "docs/architecture/README.md",
         "docs/architecture/architecture.md",
         "docs/architecture/architecture.html",
+        "docs/architecture/repo-ownership-matrix.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/target-architecture.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/roadmap.md",
@@ -241,7 +247,7 @@ def test_repo_structure_verifier_pins_backend_layer_internal_surfaces() -> None:
             ],
         },
         "knowledge": {
-            "directories": ["fusion", "graphrag", "retrieval"],
+            "directories": ["fusion", "graphrag", "ingestion", "retrieval"],
             "files": [
                 "README.md",
                 "__init__.py",
@@ -264,9 +270,105 @@ def test_repo_structure_verifier_pins_backend_layer_internal_surfaces() -> None:
                 "security",
                 "services",
                 "storage",
+                "vendor",
             ],
             "files": ["README.md", "__init__.py", "model_gateway.py", "settings.py"],
         },
+    }
+
+
+def test_repo_structure_verifier_pins_phase02_ownership_contract() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.BACKEND_OWNERSHIP_MATRIX_PATH == "docs/architecture/repo-ownership-matrix.md"
+    assert verifier.BACKEND_OWNERSHIP_MATRIX_REQUIRED_COLUMNS == [
+        "current_path",
+        "current_role",
+        "target_owner",
+        "target_path",
+        "compat_path",
+        "migration_risk",
+        "tests",
+        "verifier",
+        "status",
+    ]
+    assert verifier.PHASE02_RESERVED_IMPORT_GUARD_PATHS == [
+        "src/backend/zuno/knowledge/ingestion",
+        "src/backend/zuno/platform/observability",
+        "src/backend/zuno/platform/security",
+        "src/backend/zuno/platform/vendor",
+    ]
+
+
+def test_repo_structure_verifier_pins_platform_services_target_owners() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.PLATFORM_SERVICES_TARGET_OWNERS == {
+        "application": "api / knowledge / workspace",
+        "autobuild": "capability / platform",
+        "convert_files": "knowledge/ingestion",
+        "deepsearch": "knowledge/retrieval",
+        "embedding": "knowledge/retrieval / platform/model_gateway",
+        "graphrag": "knowledge/graphrag",
+        "lingseek": "capability/tools",
+        "llm": "platform/model_gateway",
+        "mcp": "capability/mcp",
+        "mcp_openai": "capability/mcp",
+        "memory": "memory",
+        "pipeline": "knowledge/ingestion / platform/jobs",
+        "queue": "platform/jobs",
+        "rag": "knowledge/retrieval",
+        "retrieval": "knowledge/retrieval",
+        "rewrite": "knowledge/retrieval",
+        "sandbox": "platform/security",
+        "storage": "platform/storage",
+        "workspace": "agent / platform/workspace",
+    }
+
+
+def test_repo_structure_verifier_pins_capability_provider_classifications() -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    assert verifier.CAPABILITY_TOOL_PROVIDER_CLASSIFICATIONS == {
+        "arxiv": "builtin-provider",
+        "cli_tool": "executor-adapter",
+        "convert_to_docx": "builtin-converter",
+        "convert_to_pdf": "builtin-converter",
+        "crawl_web": "builtin-web-provider",
+        "delivery": "builtin-delivery-provider",
+        "get_weather": "builtin-provider",
+        "image2text": "model-provider-adapter",
+        "openapi_tool": "api-provider-adapter",
+        "resume_optimizer": "builtin-domain-tool",
+        "send_email": "provider-adapter",
+        "text2image": "model-provider-adapter",
+        "web_reader": "builtin-web-provider",
+        "web_search": "provider-adapter",
+    }
+    assert verifier.CAPABILITY_MCP_SERVER_CLASSIFICATIONS == {
+        "arxiv": "mcp-provider",
+        "lark_mcp": "mcp-provider",
+        "qa_echo": "mcp-smoke-server",
+        "remote_proxy": "mcp-compat-proxy",
+        "weather": "mcp-provider",
     }
 
 
@@ -468,6 +570,54 @@ def test_repo_structure_verifier_runs_backend_layer_internal_surface_check(monke
     result = verifier.run_verification()
 
     assert sentinel in result.errors
+
+
+def test_repo_structure_verifier_runs_phase02_ownership_checks(monkeypatch) -> None:
+    module_path = REPO_ROOT / "tools/scripts/verify_repo_structure.py"
+    spec = importlib.util.spec_from_file_location("verify_repo_structure", module_path)
+    assert spec is not None
+    verifier = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = verifier
+    spec.loader.exec_module(verifier)
+
+    sentinels = {
+        "phase02 ownership matrix check was called",
+        "phase02 service owner check was called",
+        "phase02 provider classification check was called",
+        "phase02 compat vendor boundary check was called",
+        "phase02 reserved import guard check was called",
+    }
+
+    monkeypatch.setattr(
+        verifier,
+        "verify_phase02_backend_ownership_matrix",
+        lambda: ["phase02 ownership matrix check was called"],
+    )
+    monkeypatch.setattr(
+        verifier,
+        "verify_phase02_platform_services_owner_guard",
+        lambda: ["phase02 service owner check was called"],
+    )
+    monkeypatch.setattr(
+        verifier,
+        "verify_phase02_capability_provider_guard",
+        lambda: ["phase02 provider classification check was called"],
+    )
+    monkeypatch.setattr(
+        verifier,
+        "verify_phase02_compatibility_vendor_boundary",
+        lambda: ["phase02 compat vendor boundary check was called"],
+    )
+    monkeypatch.setattr(
+        verifier,
+        "verify_phase02_reserved_import_guards",
+        lambda: ["phase02 reserved import guard check was called"],
+    )
+
+    result = verifier.run_verification()
+
+    assert sentinels.issubset(set(result.errors))
 
 
 def test_repo_structure_verifier_runs_root_local_artifact_check(monkeypatch) -> None:
@@ -728,7 +878,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     for phrase in [
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE02_project-folder-and-code-layout-cleanup",
+        "current_phase: PHASE03_enterprise-scenario-and-product-loop",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",

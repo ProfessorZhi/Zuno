@@ -4,13 +4,15 @@
 
 ## 当前角色
 
-`src/backend/zuno/platform/` 目前是平台能力的轻量 facade，当前公开 execution policy 相关 contract 和 helper，并提供 `model_gateway.py`、`security/`、`observability/` 和 `storage/` 这些无副作用目标层薄入口。真实 DB、settings、storage、queue、MCP、LLM、sandbox、vendor compat 等底座仍分布在旧路径中。
+`src/backend/zuno/platform/` 目前是平台能力的轻量 facade，当前公开 execution policy 相关 contract 和 helper，并提供 `model_gateway.py`、`security/`、`observability/`、`storage/` 和 PHASE02 新增的 `vendor/` import guard。真实 DB、settings、storage、queue、MCP、LLM、sandbox、vendor compat 等底座仍分布在旧路径中。
 
 `config/` 和 `database/` 本批保持 infrastructure source：前者保存配置资源和 helper，后者保存 DB session、metadata、DAO 和 models。它们是 Platform 的目标归属，不是已经完成物理迁移的证据。
 
 ## Target role
 
 目标状态下，Platform 层负责配置、数据库 wiring、外部 provider、存储、队列、MCP server、sandbox、vendor compatibility 和执行策略等底座能力。它支撑上层，不反向依赖 API 或 Agent 业务编排。
+
+`platform/vendor/` 是第三方 shim 的目标 owner；`platform/compatibility/` 是旧 import registry 和当前兼容路径。PHASE02 不移动 `fastapi_jwt_auth`，只固定两者的归属和 verifier guard。
 
 ## 允许新增内容
 

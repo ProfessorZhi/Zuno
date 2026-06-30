@@ -98,6 +98,7 @@ REQUIRED_PATHS = [
     "docs/architecture/README.md",
     "docs/architecture/architecture.md",
     "docs/architecture/architecture.html",
+    "docs/architecture/repo-ownership-matrix.md",
     "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
     "docs/architecture/decisions/README.md",
     "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
@@ -164,6 +165,10 @@ REQUIRED_PATHS = [
     "infra/docker",
     "src/backend/zuno",
     "src/backend/zuno/main.py",
+    "src/backend/zuno/knowledge/ingestion/README.md",
+    "src/backend/zuno/platform/observability/README.md",
+    "src/backend/zuno/platform/security/README.md",
+    "src/backend/zuno/platform/vendor/README.md",
     "tests",
     "tools",
     "tools/agent/render_architecture.py",
@@ -353,7 +358,7 @@ BACKEND_LAYER_INTERNAL_SURFACES = {
         ],
     },
     "knowledge": {
-        "directories": ["fusion", "graphrag", "retrieval"],
+        "directories": ["fusion", "graphrag", "ingestion", "retrieval"],
         "files": [
             "README.md",
             "__init__.py",
@@ -376,9 +381,84 @@ BACKEND_LAYER_INTERNAL_SURFACES = {
             "security",
             "services",
             "storage",
+            "vendor",
         ],
         "files": ["README.md", "__init__.py", "model_gateway.py", "settings.py"],
     },
+}
+
+BACKEND_OWNERSHIP_MATRIX_PATH = "docs/architecture/repo-ownership-matrix.md"
+BACKEND_OWNERSHIP_MATRIX_REQUIRED_COLUMNS = [
+    "current_path",
+    "current_role",
+    "target_owner",
+    "target_path",
+    "compat_path",
+    "migration_risk",
+    "tests",
+    "verifier",
+    "status",
+]
+
+PLATFORM_SERVICES_TARGET_OWNERS = {
+    "application": "api / knowledge / workspace",
+    "autobuild": "capability / platform",
+    "convert_files": "knowledge/ingestion",
+    "deepsearch": "knowledge/retrieval",
+    "embedding": "knowledge/retrieval / platform/model_gateway",
+    "graphrag": "knowledge/graphrag",
+    "lingseek": "capability/tools",
+    "llm": "platform/model_gateway",
+    "mcp": "capability/mcp",
+    "mcp_openai": "capability/mcp",
+    "memory": "memory",
+    "pipeline": "knowledge/ingestion / platform/jobs",
+    "queue": "platform/jobs",
+    "rag": "knowledge/retrieval",
+    "retrieval": "knowledge/retrieval",
+    "rewrite": "knowledge/retrieval",
+    "sandbox": "platform/security",
+    "storage": "platform/storage",
+    "workspace": "agent / platform/workspace",
+}
+
+CAPABILITY_TOOL_PROVIDER_CLASSIFICATIONS = {
+    "arxiv": "builtin-provider",
+    "cli_tool": "executor-adapter",
+    "convert_to_docx": "builtin-converter",
+    "convert_to_pdf": "builtin-converter",
+    "crawl_web": "builtin-web-provider",
+    "delivery": "builtin-delivery-provider",
+    "get_weather": "builtin-provider",
+    "image2text": "model-provider-adapter",
+    "openapi_tool": "api-provider-adapter",
+    "resume_optimizer": "builtin-domain-tool",
+    "send_email": "provider-adapter",
+    "text2image": "model-provider-adapter",
+    "web_reader": "builtin-web-provider",
+    "web_search": "provider-adapter",
+}
+
+CAPABILITY_MCP_SERVER_CLASSIFICATIONS = {
+    "arxiv": "mcp-provider",
+    "lark_mcp": "mcp-provider",
+    "qa_echo": "mcp-smoke-server",
+    "remote_proxy": "mcp-compat-proxy",
+    "weather": "mcp-provider",
+}
+
+PHASE02_RESERVED_IMPORT_GUARD_PATHS = [
+    "src/backend/zuno/knowledge/ingestion",
+    "src/backend/zuno/platform/observability",
+    "src/backend/zuno/platform/security",
+    "src/backend/zuno/platform/vendor",
+]
+
+PHASE02_RESERVED_IMPORT_MODULES = {
+    "src/backend/zuno/knowledge/ingestion": "zuno.knowledge.ingestion",
+    "src/backend/zuno/platform/observability": "zuno.platform.observability",
+    "src/backend/zuno/platform/security": "zuno.platform.security",
+    "src/backend/zuno/platform/vendor": "zuno.platform.vendor",
 }
 
 BACKEND_LEGACY_IMPORT_ALIASES = {
@@ -591,6 +671,291 @@ def verify_backend_layer_internal_surfaces() -> list[str]:
     return errors
 
 
+def _split_markdown_table_row(line: str) -> list[str]:
+    return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+
+def _is_markdown_separator_row(cells: list[str]) -> bool:
+    return bool(cells) and all(cell and set(cell) <= {"-", ":"} for cell in cells)
+
+
+def _parse_markdown_table(relative_path: str) -> tuple[list[str], list[dict[str, str]]]:
+    table_lines = [
+        line.strip()
+        for line in _read_text(relative_path).splitlines()
+        if line.strip().startswith("|") and line.strip().endswith("|")
+    ]
+    for index, line in enumerate(table_lines):
+        headers = _split_markdown_table_row(line)
+        if not set(BACKEND_OWNERSHIP_MATRIX_REQUIRED_COLUMNS).issubset(headers):
+            continue
+        rows: list[dict[str, str]] = []
+        for row_line in table_lines[index + 1 :]:
+            cells = _split_markdown_table_row(row_line)
+            if _is_markdown_separator_row(cells):
+                continue
+            if len(cells) != len(headers):
+                continue
+            rows.append(dict(zip(headers, cells)))
+        return headers, rows
+    raise ValueError("missing markdown table with backend ownership matrix columns")
+
+
+def _directory_names(relative_path: str) -> list[str]:
+    root = REPO_ROOT / relative_path
+    if not root.is_dir():
+        return []
+    return sorted(
+        path.name
+        for path in root.iterdir()
+        if path.is_dir() and path.name != "__pycache__"
+    )
+
+
+def verify_phase02_backend_ownership_matrix() -> list[str]:
+    errors: list[str] = []
+    matrix_path = REPO_ROOT / BACKEND_OWNERSHIP_MATRIX_PATH
+    if not matrix_path.exists():
+        return [f"missing backend ownership matrix: {BACKEND_OWNERSHIP_MATRIX_PATH}"]
+    try:
+        headers, rows = _parse_markdown_table(BACKEND_OWNERSHIP_MATRIX_PATH)
+    except ValueError as exc:
+        return [f"{BACKEND_OWNERSHIP_MATRIX_PATH}: {exc}"]
+
+    for column in BACKEND_OWNERSHIP_MATRIX_REQUIRED_COLUMNS:
+        if column not in headers:
+            errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} missing column: {column}")
+
+    rows_by_path: dict[str, dict[str, str]] = {}
+    for row in rows:
+        current_path = row.get("current_path", "")
+        if not current_path:
+            errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} row missing current_path")
+            continue
+        if current_path in rows_by_path:
+            errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} duplicate row: {current_path}")
+        rows_by_path[current_path] = row
+
+    required_top_layer_paths = [
+        f"src/backend/zuno/{directory}"
+        for directory in BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS
+    ]
+    required_service_paths = [
+        f"src/backend/zuno/platform/services/{service_name}"
+        for service_name in PLATFORM_SERVICES_TARGET_OWNERS
+    ]
+    required_tool_paths = [
+        f"src/backend/zuno/capability/tools/{tool_name}"
+        for tool_name in CAPABILITY_TOOL_PROVIDER_CLASSIFICATIONS
+    ]
+    required_mcp_paths = [
+        f"src/backend/zuno/capability/mcp/servers/{server_name}"
+        for server_name in CAPABILITY_MCP_SERVER_CLASSIFICATIONS
+    ]
+    required_boundary_paths = [
+        "src/backend/zuno/platform/compatibility/legacy_aliases.py",
+        "src/backend/zuno/platform/compatibility/vendor/fastapi_jwt_auth",
+        "src/backend/zuno/platform/vendor",
+    ]
+    for current_path in [
+        *required_top_layer_paths,
+        *required_service_paths,
+        *required_tool_paths,
+        *required_mcp_paths,
+        *required_boundary_paths,
+    ]:
+        row = rows_by_path.get(current_path)
+        if row is None:
+            errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} missing row: {current_path}")
+            continue
+        for column in ["target_owner", "target_path", "migration_risk", "tests", "verifier", "status"]:
+            if not row.get(column):
+                errors.append(
+                    f"{BACKEND_OWNERSHIP_MATRIX_PATH} row {current_path} missing {column}"
+                )
+
+    for service_name, target_owner in PLATFORM_SERVICES_TARGET_OWNERS.items():
+        current_path = f"src/backend/zuno/platform/services/{service_name}"
+        row = rows_by_path.get(current_path, {})
+        if row.get("target_owner") != target_owner:
+            errors.append(
+                f"{BACKEND_OWNERSHIP_MATRIX_PATH} service owner drift: "
+                f"{current_path} expected {target_owner}, got {row.get('target_owner')}"
+            )
+
+    for tool_name, classification in CAPABILITY_TOOL_PROVIDER_CLASSIFICATIONS.items():
+        current_path = f"src/backend/zuno/capability/tools/{tool_name}"
+        row = rows_by_path.get(current_path, {})
+        if row.get("current_role") != classification:
+            errors.append(
+                f"{BACKEND_OWNERSHIP_MATRIX_PATH} tool classification drift: "
+                f"{current_path} expected {classification}, got {row.get('current_role')}"
+            )
+        if row.get("target_owner") != "capability":
+            errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} tool owner drift: {current_path}")
+
+    for server_name, classification in CAPABILITY_MCP_SERVER_CLASSIFICATIONS.items():
+        current_path = f"src/backend/zuno/capability/mcp/servers/{server_name}"
+        row = rows_by_path.get(current_path, {})
+        if row.get("current_role") != classification:
+            errors.append(
+                f"{BACKEND_OWNERSHIP_MATRIX_PATH} MCP classification drift: "
+                f"{current_path} expected {classification}, got {row.get('current_role')}"
+            )
+        if row.get("target_owner") != "capability/mcp":
+            errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} MCP owner drift: {current_path}")
+
+    boundary_expectations = {
+        "src/backend/zuno/platform/compatibility/legacy_aliases.py": (
+            "legacy-import-registry",
+            "platform/compatibility",
+        ),
+        "src/backend/zuno/platform/compatibility/vendor/fastapi_jwt_auth": (
+            "vendor-shim-current-compat-path",
+            "platform/vendor",
+        ),
+        "src/backend/zuno/platform/vendor": (
+            "target-vendor-owner",
+            "platform/vendor",
+        ),
+    }
+    for current_path, (current_role, target_owner) in boundary_expectations.items():
+        row = rows_by_path.get(current_path, {})
+        if row.get("current_role") != current_role:
+            errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} boundary role drift: {current_path}")
+        if row.get("target_owner") != target_owner:
+            errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} boundary owner drift: {current_path}")
+
+    return errors
+
+
+def verify_phase02_platform_services_owner_guard() -> list[str]:
+    actual_services = _directory_names("src/backend/zuno/platform/services")
+    expected_services = sorted(PLATFORM_SERVICES_TARGET_OWNERS)
+    if actual_services != expected_services:
+        return [
+            "platform/services directories drifted from PHASE02 ownership map: "
+            f"expected {expected_services}, got {actual_services}"
+        ]
+    return []
+
+
+def verify_phase02_capability_provider_guard() -> list[str]:
+    errors: list[str] = []
+    actual_tools = _directory_names("src/backend/zuno/capability/tools")
+    expected_tools = sorted(CAPABILITY_TOOL_PROVIDER_CLASSIFICATIONS)
+    if actual_tools != expected_tools:
+        errors.append(
+            "capability/tools directories drifted from PHASE02 provider map: "
+            f"expected {expected_tools}, got {actual_tools}"
+        )
+    actual_servers = _directory_names("src/backend/zuno/capability/mcp/servers")
+    expected_servers = sorted(CAPABILITY_MCP_SERVER_CLASSIFICATIONS)
+    if actual_servers != expected_servers:
+        errors.append(
+            "capability/mcp/servers directories drifted from PHASE02 provider map: "
+            f"expected {expected_servers}, got {actual_servers}"
+        )
+    return errors
+
+
+def verify_phase02_compatibility_vendor_boundary() -> list[str]:
+    errors: list[str] = []
+    compatibility_root = REPO_ROOT / "src/backend/zuno/platform/compatibility"
+    if not compatibility_root.is_dir():
+        return ["missing platform compatibility boundary"]
+    actual_compat_dirs = sorted(
+        path.name
+        for path in compatibility_root.iterdir()
+        if path.is_dir() and path.name != "__pycache__"
+    )
+    if actual_compat_dirs != ["legacy", "vendor"]:
+        errors.append(
+            "platform/compatibility may only contain legacy registry and current vendor compat dirs: "
+            f"{actual_compat_dirs}"
+        )
+    actual_compat_files = sorted(path.name for path in compatibility_root.iterdir() if path.is_file())
+    if actual_compat_files != ["README.md", "__init__.py", "legacy_aliases.py"]:
+        errors.append(
+            "platform/compatibility files drifted from registry allowlist: "
+            f"{actual_compat_files}"
+        )
+
+    compatibility_vendor_root = compatibility_root / "vendor"
+    actual_current_vendor_dirs = sorted(
+        path.name
+        for path in compatibility_vendor_root.iterdir()
+        if path.is_dir() and path.name != "__pycache__"
+    )
+    if actual_current_vendor_dirs != ["fastapi_jwt_auth"]:
+        errors.append(
+            "compatibility/vendor is only allowed to hold the current fastapi_jwt_auth compat shim: "
+            f"{actual_current_vendor_dirs}"
+        )
+
+    target_vendor_root = REPO_ROOT / "src/backend/zuno/platform/vendor"
+    if not target_vendor_root.is_dir():
+        errors.append("missing target platform/vendor owner directory")
+    else:
+        actual_target_vendor_dirs = sorted(
+            path.name
+            for path in target_vendor_root.iterdir()
+            if path.is_dir() and path.name != "__pycache__"
+        )
+        actual_target_vendor_files = sorted(
+            path.name for path in target_vendor_root.iterdir() if path.is_file()
+        )
+        if actual_target_vendor_dirs:
+            errors.append(
+                "platform/vendor target owner must not receive runtime shims before compat tests move: "
+                f"{actual_target_vendor_dirs}"
+            )
+        if actual_target_vendor_files != ["README.md", "__init__.py"]:
+            errors.append(
+                "platform/vendor target owner must stay as README/import guard in PHASE02: "
+                f"{actual_target_vendor_files}"
+            )
+
+    compatibility_readme = compatibility_root / "README.md"
+    if compatibility_readme.exists():
+        content = compatibility_readme.read_text(encoding="utf-8")
+        for phrase in [
+            "legacy import registry only",
+            "platform/vendor",
+            "禁止把新的 vendor shim 写入 compatibility",
+        ]:
+            if phrase not in content:
+                errors.append(f"platform/compatibility README missing PHASE02 phrase: {phrase}")
+    return errors
+
+
+def verify_phase02_reserved_import_guards() -> list[str]:
+    errors: list[str] = []
+    backend_path = str(REPO_ROOT / "src/backend")
+    if backend_path not in sys.path:
+        sys.path.insert(0, backend_path)
+    for relative_path in PHASE02_RESERVED_IMPORT_GUARD_PATHS:
+        path = REPO_ROOT / relative_path
+        readme = path / "README.md"
+        init_file = path / "__init__.py"
+        if not readme.is_file():
+            errors.append(f"missing PHASE02 reserved README: {relative_path}/README.md")
+            continue
+        if not init_file.is_file():
+            errors.append(f"missing PHASE02 import guard: {relative_path}/__init__.py")
+            continue
+        content = readme.read_text(encoding="utf-8")
+        for phrase in ["PHASE02", "当前角色", "Target role", "禁止事项", "Focused tests"]:
+            if phrase not in content:
+                errors.append(f"{relative_path}/README.md missing phrase: {phrase}")
+        module_name = PHASE02_RESERVED_IMPORT_MODULES[relative_path]
+        try:
+            importlib.import_module(module_name)
+        except Exception as exc:
+            errors.append(f"PHASE02 reserved import guard failed: {module_name}: {exc}")
+    return errors
+
+
 def verify_backend_legacy_import_aliases() -> list[str]:
     errors: list[str] = []
     registry = REPO_ROOT / "src/backend/zuno/platform/compatibility/legacy_aliases.py"
@@ -697,7 +1062,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             "当前 active program",
             ACTIVE_PROGRAM_NAME,
             "state: active",
-            "current_phase: PHASE02_project-folder-and-code-layout-cleanup",
+            "current_phase: PHASE03_enterprise-scenario-and-product-loop",
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
             "八个方面产物",
@@ -866,6 +1231,11 @@ def run_verification() -> VerificationResult:
             *verify_first_class_directory_responsibilities(),
             *verify_backend_zuno_directory_classifications(),
             *verify_backend_layer_internal_surfaces(),
+            *verify_phase02_backend_ownership_matrix(),
+            *verify_phase02_platform_services_owner_guard(),
+            *verify_phase02_capability_provider_guard(),
+            *verify_phase02_compatibility_vendor_boundary(),
+            *verify_phase02_reserved_import_guards(),
             *verify_backend_legacy_import_aliases(),
             *verify_backend_retired_top_level_paths_are_absent(),
             *verify_architecture_surface_cleanup_archive(),

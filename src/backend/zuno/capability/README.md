@@ -8,11 +8,15 @@
 
 `capability/tools/` 不按 CLI / API 拆成两类顶层目录。CLI / API 是 execution adapter、runtime type 或 provider metadata，不是 capability 的主分类。
 
+PHASE02 的 provider 分类入口是 `docs/architecture/repo-ownership-matrix.md` 和 `CAPABILITY_TOOL_PROVIDER_CLASSIFICATIONS` / `CAPABILITY_MCP_SERVER_CLASSIFICATIONS`。新增 tool 或 MCP server 目录前，必须先声明分类、target owner、compat path、测试和 verifier。
+
 ## Target role
 
 目标状态下，Capability 层负责 ToolCard / capability metadata、权限、健康状态、成本提示、能力召回与 schema selection。它为 Agent 提供可选择能力，不直接拥有工具执行 runtime 或 API response shape。
 
 工具目录优先按能力语义和 owner 管理；CLI / API 只作为执行适配信息进入 ToolCard、manifest 或 runtime metadata。
+
+当前分类只表达目录治理，不改变 runtime 行为：`builtin-provider`、`provider-adapter`、`model-provider-adapter`、`api-provider-adapter`、`executor-adapter`、`builtin-converter`、`builtin-domain-tool`、`mcp-provider`、`mcp-smoke-server` 和 `mcp-compat-proxy` 都仍归 Capability 层管理。
 
 ## 允许新增内容
 

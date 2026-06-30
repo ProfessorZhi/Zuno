@@ -1,6 +1,6 @@
 # PHASE02 Project Folder And Code Layout Cleanup
 
-status: active
+status: completed
 
 ## 目标
 
@@ -37,16 +37,23 @@ src/backend/zuno/
 
 ## 步骤
 
-- [ ] 生成 backend ownership matrix，覆盖 `api / agent / memory / capability / knowledge / platform`。
-- [ ] 输出 `docs/architecture/repo-ownership-matrix.md`，列必须包含 `current_path`、`current_role`、`target_owner`、`target_path`、`compat_path`、`migration_risk`、`tests`、`verifier`、`status`。
-- [ ] 为每个当前“零碎目录”标注 target owner、迁移理由、迁移风险、旧 import path 和测试覆盖。
-- [ ] 清理未跟踪 `__pycache__`、`.pytest_cache` 和本地临时产物。
-- [ ] 盘点 `platform/services` 中每个子目录的 target owner。
-- [ ] 盘点 `capability/tools` 与 `capability/mcp/servers` 的 provider / builtin / compat 分类。
-- [ ] 设计 `compat import registry` 与 `platform/vendor` 分离方案。
-- [ ] 给 `knowledge/ingestion`、`platform/security`、`platform/observability` 预留 README 和 import guard，不提前搬运行时逻辑。
-- [ ] 更新 `tools/scripts/verify_repo_structure.py` 和 repo tests，固定新目录规则。
-- [ ] 增加 guard：禁止新增无 owner 的 `platform/services/*` 业务代码、禁止把 runtime code 放进 `platform/compatibility`、禁止 vendor shim 与 legacy alias registry 混写。
+- [x] 生成 backend ownership matrix，覆盖 `api / agent / memory / capability / knowledge / platform`。
+- [x] 输出 `docs/architecture/repo-ownership-matrix.md`，列必须包含 `current_path`、`current_role`、`target_owner`、`target_path`、`compat_path`、`migration_risk`、`tests`、`verifier`、`status`。
+- [x] 为每个当前“零碎目录”标注 target owner、迁移理由、迁移风险、旧 import path 和测试覆盖。
+- [x] 清理未跟踪 `__pycache__`、`.pytest_cache` 和本地临时产物。
+- [x] 盘点 `platform/services` 中每个子目录的 target owner。
+- [x] 盘点 `capability/tools` 与 `capability/mcp/servers` 的 provider / builtin / compat 分类。
+- [x] 设计 `compat import registry` 与 `platform/vendor` 分离方案。
+- [x] 给 `knowledge/ingestion`、`platform/security`、`platform/observability` 预留 README 和 import guard，不提前搬运行时逻辑。
+- [x] 更新 `tools/scripts/verify_repo_structure.py` 和 repo tests，固定新目录规则。
+- [x] 增加 guard：禁止新增无 owner 的 `platform/services/*` 业务代码、禁止把 runtime code 放进 `platform/compatibility`、禁止 vendor shim 与 legacy alias registry 混写。
+
+## 完成证据
+
+- `docs/architecture/repo-ownership-matrix.md` 已成为 PHASE02 ownership Current 事实表。
+- `knowledge/ingestion`、`platform/security`、`platform/observability` 和 `platform/vendor` 已有 README / import guard；真实 runtime 迁移仍保留在后续 phase。
+- `tools/scripts/verify_repo_structure.py` 已校验 services owner map、capability provider map、compat/vendor 边界和 reserved import guards。
+- `tests/repo/test_repo_structure_consistency.py` 已固定 PHASE02 目录规则。
 
 ## 输入 / 输出文件
 

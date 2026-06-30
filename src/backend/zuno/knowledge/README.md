@@ -4,11 +4,13 @@
 
 ## 当前角色
 
-`src/backend/zuno/knowledge/` 目前是 Knowledge / GraphRAG / retrieval 的 facade，部分稳定导出直接来自 GraphRAG contract，较重的 retrieval 和 query service 通过 lazy import 暴露。当前已提供 `contracts.py`、`query_service.py`、`evidence.py`、`citation.py`、`trace.py`、`retrieval/`、`fusion/` 和 `graphrag/` 这些无副作用目标层薄入口。`GraphRAGExtractorConfig` 当前是 extractor config contract，不是生产级 LLM 抽取执行器。真实查询、GraphRAG、retrieval 和 RAG 实现仍在 `src/backend/zuno/platform/services/application/knowledge.py`、`platform/services/graphrag/`、`platform/services/retrieval/` 和 `platform/services/rag/`。
+`src/backend/zuno/knowledge/` 目前是 Knowledge / GraphRAG / retrieval 的 facade，部分稳定导出直接来自 GraphRAG contract，较重的 retrieval 和 query service 通过 lazy import 暴露。当前已提供 `contracts.py`、`query_service.py`、`evidence.py`、`citation.py`、`trace.py`、`retrieval/`、`fusion/`、`graphrag/` 和 PHASE02 新增的 `ingestion/` import guard。`GraphRAGExtractorConfig` 当前是 extractor config contract，不是生产级 LLM 抽取执行器。真实查询、GraphRAG、retrieval、RAG、convert_files 和 pipeline 实现仍在 `src/backend/zuno/platform/services/application/knowledge.py`、`platform/services/graphrag/`、`platform/services/retrieval/`、`platform/services/rag/`、`platform/services/convert_files/` 和 `platform/services/pipeline/`。
 
 ## Target role
 
 目标状态下，Knowledge 层负责 KnowledgeQueryService、GraphRAGQueryService、retrieval planning、fusion、citation 和 evidence trace。GraphRAG 是被选择的 Knowledge Capability，不是第二套聊天 runtime。
+
+`knowledge/ingestion/` 是 Document Ingestion / Parse Gateway 的目标 owner，当前只证明边界存在，不证明 parser runtime 已经迁移。
 
 ## 允许新增内容
 

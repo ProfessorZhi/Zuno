@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-master-architecture-implementation-v1`
-- 当前阶段：[PHASE02_project-folder-and-code-layout-cleanup.md](PHASE02_project-folder-and-code-layout-cleanup.md)
+- 当前阶段：[PHASE03_enterprise-scenario-and-product-loop.md](PHASE03_enterprise-scenario-and-product-loop.md)
 - 当前入口：[current.md](current.md)
 
 ## Program 目标
@@ -32,8 +32,8 @@
 - [implementation-roadmap.md](implementation-roadmap.md)：大型执行计划总图、产物矩阵、phase 顺序和验收门。
 - [closure-checklist.md](closure-checklist.md)：program 收口前必须完成的检查。
 - [PHASE01_program-baseline-and-previous-closure.md](PHASE01_program-baseline-and-previous-closure.md)：completed，收口上一轮架构计划状态，固定新 program 基线。
-- [PHASE02_project-folder-and-code-layout-cleanup.md](PHASE02_project-folder-and-code-layout-cleanup.md)：active，项目文件夹、代码 ownership、compat/vendor 边界治理。
-- [PHASE03_enterprise-scenario-and-product-loop.md](PHASE03_enterprise-scenario-and-product-loop.md)：企业知识库主场景、workspace、task/session、artifact、event flow。
+- [PHASE02_project-folder-and-code-layout-cleanup.md](PHASE02_project-folder-and-code-layout-cleanup.md)：completed，项目文件夹、代码 ownership、compat/vendor 边界治理。
+- [PHASE03_enterprise-scenario-and-product-loop.md](PHASE03_enterprise-scenario-and-product-loop.md)：active，企业知识库主场景、workspace、task/session、artifact、event flow。
 - [PHASE04_document-ingestion-parse-gateway.md](PHASE04_document-ingestion-parse-gateway.md)：多格式解析、Canonical Document IR、chunk、provenance、ACL。
 - [PHASE05_agent-runtime-langgraph-harness.md](PHASE05_agent-runtime-langgraph-harness.md)：Single Controller Agent runtime、plan/ReAct/reflect/replan、checkpoint、streaming、interrupt。
 - [PHASE06_context-memory-system.md](PHASE06_context-memory-system.md)：raw event、recent window、summary、structured memory、promotion/decay。

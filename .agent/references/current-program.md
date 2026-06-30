@@ -5,7 +5,7 @@
 当前 active program：`zuno-master-architecture-implementation-v1`
 
 state: active
-current_phase: PHASE02_project-folder-and-code-layout-cleanup
+current_phase: PHASE03_enterprise-scenario-and-product-loop
 
 ## Program 目标
 
@@ -48,8 +48,8 @@ current_phase: PHASE02_project-folder-and-code-layout-cleanup
 当前阶段：
 
 - `PHASE01_program-baseline-and-previous-closure.md`：completed，已通过 program-state verifier 和 focused repo tests 证明基线一致。
-- `PHASE02_project-folder-and-code-layout-cleanup.md`：active。
-- `PHASE03_enterprise-scenario-and-product-loop.md`：pending。
+- `PHASE02_project-folder-and-code-layout-cleanup.md`：completed。
+- `PHASE03_enterprise-scenario-and-product-loop.md`：active。
 - `PHASE04_document-ingestion-parse-gateway.md`：pending。
 - `PHASE05_agent-runtime-langgraph-harness.md`：pending。
 - `PHASE06_context-memory-system.md`：pending。
