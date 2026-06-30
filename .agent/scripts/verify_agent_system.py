@@ -8,6 +8,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
 COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
+ACTIVE_PROGRAM_NAME = "zuno-architecture-detail-and-execution-plan-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_architecture-state-and-program-boot.md",
+    "PHASE02_target-architecture-detailing.md",
+    "PHASE03_mermaid-html-detail-refresh.md",
+    "PHASE04_execution-roadmap-from-architecture.md",
+    "PHASE05_validation-and-closure.md",
+]
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -629,32 +637,37 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
     surfaces = {
         ".agent/programs/current.md": [
-            "当前没有 active program",
-            "state: no-active",
-            "current_phase: none",
+            "当前 active program",
+            ACTIVE_PROGRAM_NAME,
+            "state: active",
+            "current_phase: PHASE01_architecture-state-and-program-boot",
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
         ],
         ".agent/references/current-program.md": [
-            "当前没有 active program",
-            "state: no-active",
-            "current_phase: none",
+            "当前 active program",
+            ACTIVE_PROGRAM_NAME,
+            "state: active",
+            "current_phase: PHASE01_architecture-state-and-program-boot",
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
         ],
         ".agent/programs/implementation-roadmap.md": [
-            "state: no-active",
+            "state: active",
+            ACTIVE_PROGRAM_NAME,
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
             "每次新 program 都从 `PHASE01` 开始编号",
         ],
         "docs/architecture/roadmap.md": [
-            "当前没有 active program",
+            "当前 active program",
+            ACTIVE_PROGRAM_NAME,
             COMPLETED_PROGRAM_NAME,
             "completed / archived",
         ],
         "AGENTS.md": [
-            "当前没有 active program",
+            "当前 active program",
+            ACTIVE_PROGRAM_NAME,
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
             ".agent/programs/",
@@ -1003,16 +1016,25 @@ def main() -> int:
     program_files = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").iterdir() if path.is_file()
     )
-    expected_program_files = sorted(["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md"])
+    expected_program_files = sorted(
+        [
+            "README.md",
+            "current.md",
+            "implementation-roadmap.md",
+            "closure-checklist.md",
+            *ACTIVE_PROGRAM_PHASE_FILES,
+        ]
+    )
     if program_files != expected_program_files:
         errors.append(
-            f".agent/programs files do not match no-active waiting set: {program_files}"
+            f".agent/programs files do not match active architecture program set: {program_files}"
         )
     current_program_text = _read(".agent/programs/current.md")
     for phrase in [
-        "当前没有 active program",
-        "state: no-active",
-        "current_phase: none",
+        "当前 active program",
+        ACTIVE_PROGRAM_NAME,
+        "state: active",
+        "current_phase: PHASE01_architecture-state-and-program-boot",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "八个交付物",
@@ -1021,7 +1043,7 @@ def main() -> int:
         "不是多线程模式",
     ]:
         if phrase not in current_program_text:
-            errors.append(f".agent/programs/current.md missing no-active program phrase: {phrase}")
+            errors.append(f".agent/programs/current.md missing active program phrase: {phrase}")
     archived_program_root = REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE
     for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
         if not (archived_program_root / required_archive_file).exists():
@@ -1046,17 +1068,19 @@ def main() -> int:
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
-        "state: no-active",
+        "state: active",
+        ACTIVE_PROGRAM_NAME,
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",
     ]:
         if phrase not in roadmap:
-            errors.append(f"waiting program roadmap missing phrase: {phrase}")
+            errors.append(f"active program roadmap missing phrase: {phrase}")
 
     future_programs_readme = _read(".agent/architecture/future/programs/README.md")
     for phrase in [
-        "当前没有 active program",
+        "当前 active program",
+        ACTIVE_PROGRAM_NAME,
         COMPLETED_PROGRAM_NAME,
         "已完成并归档",
         "参考输入",

@@ -5,6 +5,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
 COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
+ACTIVE_PROGRAM_NAME = "zuno-architecture-detail-and-execution-plan-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_architecture-state-and-program-boot.md",
+    "PHASE02_target-architecture-detailing.md",
+    "PHASE03_mermaid-html-detail-refresh.md",
+    "PHASE04_execution-roadmap-from-architecture.md",
+    "PHASE05_validation-and-closure.md",
+]
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -467,7 +475,7 @@ def test_docs_agent_system_history_route_references_all_front_templates() -> Non
         assert file_name in system_yaml, f"template not routed in system.yaml: {file_name}"
 
 
-def test_current_program_declares_no_active_and_archived_eight_deliverables_program() -> None:
+def test_current_program_declares_active_architecture_program_and_archived_eight_deliverables_program() -> None:
     current = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     programs_index = (REPO_ROOT / ".agent" / "programs" / "README.md").read_text(
         encoding="utf-8"
@@ -480,16 +488,18 @@ def test_current_program_declares_no_active_and_archived_eight_deliverables_prog
         path.name for path in (REPO_ROOT / ".agent" / "programs").glob("PHASE*.md")
     )
 
-    assert "当前没有 active program" in current
-    assert "state: no-active" in current
-    assert "current_phase: none" in current
+    assert "当前 active program" in current
+    assert ACTIVE_PROGRAM_NAME in current
+    assert "state: active" in current
+    assert "current_phase: PHASE01_architecture-state-and-program-boot" in current
     assert COMPLETED_PROGRAM_NAME in current
     assert COMPLETED_PROGRAM_ARCHIVE in current
-    assert active_phase_files == []
+    assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
     assert "八个交付物" in current
     assert "Codex 执行协作" in current
     assert "不是多线程模式" in current
-    assert "State: no-active" in programs_index
+    assert "State: active" in programs_index
+    assert ACTIVE_PROGRAM_NAME in programs_index
     assert COMPLETED_PROGRAM_NAME in history_index
     assert f"{COMPLETED_PROGRAM_NAME}/" in history_index
     assert "zuno-target-architecture-migration-v1/README.md" not in programs_index
@@ -511,11 +521,13 @@ def test_completed_program_phase_status_lifecycle_is_machine_checkable() -> None
         encoding="utf-8"
     )
 
-    assert "current_phase: none" in current
+    assert "current_phase: PHASE01_architecture-state-and-program-boot" in current
     assert sorted(phase_statuses) == COMPLETED_PROGRAM_PHASE_FILES
     for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
         assert "status: completed" in phase_statuses[phase_name]
-    assert not list((REPO_ROOT / ".agent" / "programs").glob("PHASE*.md"))
+    assert sorted(
+        path.name for path in (REPO_ROOT / ".agent" / "programs").glob("PHASE*.md")
+    ) == ACTIVE_PROGRAM_PHASE_FILES
 
 
 def test_phase05_context_memory_focused_stack_is_routed() -> None:
@@ -649,7 +661,8 @@ def test_status_surfaces_do_not_keep_stale_no_active_or_program4_queue_claims() 
 
     assert COMPLETED_PROGRAM_NAME in future_programs
     assert "参考输入" in future_programs
-    assert "当前没有 active program" in future_programs
+    assert "当前 active program" in future_programs
+    assert ACTIVE_PROGRAM_NAME in future_programs
     assert "已完成并归档" in future_programs
     assert "Program 4 runtime architecture upgrade 保持 queued / not active" not in repo_hygiene
     assert "zuno-six-layer-internalization-v1" in repo_hygiene
@@ -782,14 +795,15 @@ def test_six_layer_internalization_is_archived_and_active_program_is_open() -> N
     )
 
     for phrase in [
+        ACTIVE_PROGRAM_NAME,
         COMPLETED_PROGRAM_NAME,
-        "state: no-active",
+        "state: active",
         COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",
     ]:
         assert phrase in roadmap
 
-    assert active_phase_files == []
+    assert active_phase_files == ACTIVE_PROGRAM_PHASE_FILES
     for phase in COMPLETED_PROGRAM_PHASE_FILES:
         assert (REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE / phase).exists()
     for phase in [

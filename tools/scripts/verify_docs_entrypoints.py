@@ -127,6 +127,11 @@ def verify_architecture_html_sync() -> list[str]:
         "#b8c2cc",
         "#16202a",
         "#52616f",
+        "Raw Event Log",
+        "Memory Read Policy",
+        "Memory Review Gate",
+        "structured memory candidate",
+        "write-manage-read",
     ]:
         if phrase not in architecture_source:
             errors.append(f"docs/architecture.md missing diagram sync phrase: {phrase}")
@@ -215,7 +220,7 @@ def verify_architecture_view_contract() -> list[str]:
         errors.append("docs/architecture.html must expose Mermaid source for each diagram")
     for phrase in [
         "overflow-x: auto",
-        "min-width: 560px",
+        "min-width: 760px",
         "securityLevel: \"strict\"",
         "useMaxWidth: false",
     ]:

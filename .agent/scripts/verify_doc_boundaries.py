@@ -202,9 +202,10 @@ def main() -> int:
 
     current_program = _read(".agent/references/current-program.md")
     for phrase in [
-        "当前没有 active program",
-        "state: no-active",
-        "current_phase: none",
+        "当前 active program",
+        "zuno-architecture-detail-and-execution-plan-v1",
+        "state: active",
+        "current_phase: PHASE01_architecture-state-and-program-boot",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "PHASE01-PHASE10",

@@ -2,7 +2,7 @@
 
 这里保存后续 program 草案。它们不是当前 active program，不能直接执行。打开某个独立 program 时，必须先迁入 `.agent/programs/`，并从 `PHASE01` 开始。
 
-当前没有 active program。`zuno-eight-deliverables-full-realization-v1` 已完成并归档；本目录中的五个草案已被该 program 吸收为近期实现参考，但仍可作为未来参考输入，不是 active 执行入口；`zuno-six-layer-internalization-v1` 已完成并归档。
+当前 active program 是 `zuno-architecture-detail-and-execution-plan-v1`，执行入口在 `.agent/programs/`。`zuno-eight-deliverables-full-realization-v1` 已完成并归档；本目录中的五个草案已被该 program 吸收为近期实现参考，但仍可作为未来参考输入，不是 active 执行入口；`zuno-six-layer-internalization-v1` 已完成并归档。
 
 ## 当前参考输入顺序
 

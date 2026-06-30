@@ -138,8 +138,11 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-eight-deliverables-full-realization-v1" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "当前没有 active program") {
-    $failures.Add("current-program.md must declare no-active state and the completed eight deliverables program")
+if ($currentProgram -notmatch "zuno-architecture-detail-and-execution-plan-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "current_phase: PHASE01_architecture-state-and-program-boot") {
+    $failures.Add("current-program.md must declare the active architecture detail program and PHASE01 state")
+}
+if ($currentProgram -notmatch "zuno-eight-deliverables-full-realization-v1") {
+    $failures.Add("current-program.md must keep the completed eight deliverables program visible")
 }
 if ($currentProgram -notmatch "默认开启线程内多 agent") {
     $failures.Add("current-program.md must declare default in-thread multi-agent mode")

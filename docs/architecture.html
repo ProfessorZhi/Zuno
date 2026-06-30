@@ -121,7 +121,7 @@
     .diagram-frame {
       margin: 16px auto 10px;
       padding: 18px;
-      max-width: 780px;
+      max-width: 1120px;
       overflow-x: auto;
       border: 1px solid var(--zuno-border);
       border-radius: 6px;
@@ -135,7 +135,7 @@
     .mermaid svg {
       width: auto !important;
       max-width: none;
-      min-width: 560px;
+      min-width: 760px;
       height: auto;
     }
     details {
@@ -166,15 +166,16 @@
       <p>4+1 用 Logical、Development、Process、Physical、Scenarios 五个视图解释同一个系统。</p>
       <section class="diagram-section">
         <h3>1. Logical View</h3>
-        <p class="purpose">该图回答：Zuno 的核心职责如何分层。</p>
+        <p class="purpose">该图回答：Zuno 的目标职责如何分层，以及哪些能力是顶层模块、哪些能力是横切治理。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Logical</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Logical</dd></div>
         </dl>
         <ul class="analysis">
           <li>关注点：系统职责，而不是物理目录。</li>
-          <li>Zuno 映射：默认主线是 Single Controller Agent。</li>
-          <li>边界：Memory、Tool、Knowledge 是能力层，不是默认多 Agent runtime。</li>
+          <li>Zuno 映射：默认主线仍是 Single Controller Agent；`Agent Core Runtime` 是 `Single Controller Agent` 的二级展开；Memory 展开为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory 和 Context Pack。</li>
+          <li>边界：Knowledge 可以作为 capability 被调用，但在架构上单独成层，因为 GraphRAG、retrieval fusion、citation 和 evidence contract 有独立生命周期。</li>
+          <li>边界：Security、Trace 和 Eval 是横切治理层，不是业务入口。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -182,24 +183,51 @@
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+  classDef mem fill:#f8fbff,stroke:#5b7fa3,stroke-width:1px,color:#16202a;
 
-  FE[&quot;Frontend&quot;]
-  API[&quot;Backend API&quot;]
-  AG[&quot;Single Controller Agent&quot;]:::accent
-  MEM[&quot;Context and Memory&quot;]
-  CAP[&quot;Capability and Tool&quot;]
+  USER[&quot;User Workspace&quot;]
+  API[&quot;API and Session Layer&quot;]
+  MODEL[&quot;Model Gateway and Policy&quot;]
+  CORE[&quot;Agent Core Runtime&quot;]:::accent
+  MEMORY[&quot;Context and Memory&quot;]
+  RAW[&quot;Raw Event Log&quot;]:::mem
+  RECENT[&quot;Recent Window&quot;]:::mem
+  SUMMARY[&quot;Task Summary&quot;]:::mem
+  STRUCT[&quot;Structured Long Term Memory&quot;]:::mem
+  PACK[&quot;Model Context Packet&quot;]:::mem
+  POST[&quot;PostTurn Memory Pipeline&quot;]:::mem
+  TOOL[&quot;Capability and Tool&quot;]
   KNOW[&quot;Knowledge and Retrieval&quot;]
-  GOV[&quot;Evidence Citation Trace Eval&quot;]
-  PLAT[&quot;Platform Infrastructure&quot;]
-  FE --&gt; API --&gt; AG
-  AG --&gt; MEM
-  AG --&gt; CAP
-  AG --&gt; KNOW
-  MEM --&gt; GOV
-  CAP --&gt; GOV
-  KNOW --&gt; GOV
-  GOV --&gt; PLAT
-  class FE,API,MEM,CAP,KNOW,GOV,PLAT node;
+  INGEST[&quot;Document Ingestion&quot;]
+  PLATFORM[&quot;Platform Infrastructure&quot;]
+  SECURITY[&quot;Security and Policy&quot;]:::guard
+  EVAL[&quot;Trace and Eval&quot;]:::guard
+  ART[&quot;Artifact and Workspace&quot;]
+  USER --&gt; API --&gt; CORE
+  MODEL --&gt; CORE
+  CORE --&gt; MEMORY
+  MEMORY --&gt; RAW
+  MEMORY --&gt; RECENT
+  MEMORY --&gt; SUMMARY
+  MEMORY --&gt; STRUCT
+  MEMORY --&gt; PACK
+  CORE --&gt; POST --&gt; MEMORY
+  CORE --&gt; TOOL
+  CORE --&gt; KNOW
+  INGEST --&gt; KNOW
+  API --&gt; ART
+  TOOL --&gt; ART
+  CORE --&gt; SECURITY
+  MEMORY --&gt; SECURITY
+  TOOL --&gt; SECURITY
+  KNOW --&gt; SECURITY
+  CORE --&gt; EVAL
+  SECURITY --&gt; EVAL
+  ART --&gt; PLATFORM
+  MEMORY --&gt; PLATFORM
+  KNOW --&gt; PLATFORM
+  class USER,API,MODEL,MEMORY,TOOL,KNOW,INGEST,PLATFORM,ART node;
           </div>
         </figure>
         <details>
@@ -208,37 +236,64 @@ flowchart TB
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+  classDef mem fill:#f8fbff,stroke:#5b7fa3,stroke-width:1px,color:#16202a;
 
-  FE[&quot;Frontend&quot;]
-  API[&quot;Backend API&quot;]
-  AG[&quot;Single Controller Agent&quot;]:::accent
-  MEM[&quot;Context and Memory&quot;]
-  CAP[&quot;Capability and Tool&quot;]
+  USER[&quot;User Workspace&quot;]
+  API[&quot;API and Session Layer&quot;]
+  MODEL[&quot;Model Gateway and Policy&quot;]
+  CORE[&quot;Agent Core Runtime&quot;]:::accent
+  MEMORY[&quot;Context and Memory&quot;]
+  RAW[&quot;Raw Event Log&quot;]:::mem
+  RECENT[&quot;Recent Window&quot;]:::mem
+  SUMMARY[&quot;Task Summary&quot;]:::mem
+  STRUCT[&quot;Structured Long Term Memory&quot;]:::mem
+  PACK[&quot;Model Context Packet&quot;]:::mem
+  POST[&quot;PostTurn Memory Pipeline&quot;]:::mem
+  TOOL[&quot;Capability and Tool&quot;]
   KNOW[&quot;Knowledge and Retrieval&quot;]
-  GOV[&quot;Evidence Citation Trace Eval&quot;]
-  PLAT[&quot;Platform Infrastructure&quot;]
-  FE --&gt; API --&gt; AG
-  AG --&gt; MEM
-  AG --&gt; CAP
-  AG --&gt; KNOW
-  MEM --&gt; GOV
-  CAP --&gt; GOV
-  KNOW --&gt; GOV
-  GOV --&gt; PLAT
-  class FE,API,MEM,CAP,KNOW,GOV,PLAT node;</code></pre>
+  INGEST[&quot;Document Ingestion&quot;]
+  PLATFORM[&quot;Platform Infrastructure&quot;]
+  SECURITY[&quot;Security and Policy&quot;]:::guard
+  EVAL[&quot;Trace and Eval&quot;]:::guard
+  ART[&quot;Artifact and Workspace&quot;]
+  USER --&gt; API --&gt; CORE
+  MODEL --&gt; CORE
+  CORE --&gt; MEMORY
+  MEMORY --&gt; RAW
+  MEMORY --&gt; RECENT
+  MEMORY --&gt; SUMMARY
+  MEMORY --&gt; STRUCT
+  MEMORY --&gt; PACK
+  CORE --&gt; POST --&gt; MEMORY
+  CORE --&gt; TOOL
+  CORE --&gt; KNOW
+  INGEST --&gt; KNOW
+  API --&gt; ART
+  TOOL --&gt; ART
+  CORE --&gt; SECURITY
+  MEMORY --&gt; SECURITY
+  TOOL --&gt; SECURITY
+  KNOW --&gt; SECURITY
+  CORE --&gt; EVAL
+  SECURITY --&gt; EVAL
+  ART --&gt; PLATFORM
+  MEMORY --&gt; PLATFORM
+  KNOW --&gt; PLATFORM
+  class USER,API,MODEL,MEMORY,TOOL,KNOW,INGEST,PLATFORM,ART node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
         <h3>2. Development View</h3>
-        <p class="purpose">该图回答：代码、正式文档和 Agent 工作流如何组织。</p>
+        <p class="purpose">该图回答：代码、正式文档和 Agent 工作流如何组织，并说明新增架构细化 program 放在哪里。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Development</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Implementation</dd></div>
         </dl>
         <ul class="analysis">
           <li>关注点：开发者如何进入项目。</li>
-          <li>Zuno 映射：docs 保持少而精，.agent 承载高频变化的执行设计。</li>
-          <li>边界：展示页只有 docs/architecture.html；.agent 不再保存架构 HTML。</li>
+          <li>Zuno 映射：`docs/architecture.md` 是 Mermaid 图源；`.agent/programs/` 是当前执行计划；`tools/agent/render_architecture.py` 生成 HTML。</li>
+          <li>边界：高频执行细节进入 `.agent/programs/`，稳定结论进入 `docs/architecture/`。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -246,19 +301,30 @@ flowchart TB
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
   R[&quot;Repository Root&quot;]:::accent
-  R --&gt; APP[&quot;apps&quot;]
-  R --&gt; BE[&quot;src backend zuno&quot;]
-  R --&gt; DOC[&quot;docs&quot;]
+  R --&gt; APPS[&quot;apps&quot;]
+  R --&gt; BACKEND[&quot;src/backend/zuno&quot;]
+  R --&gt; DOCS[&quot;docs&quot;]
   R --&gt; AGENT[&quot;.agent&quot;]
-  R --&gt; TOOL[&quot;tools&quot;]
-  R --&gt; TEST[&quot;tests&quot;]
-  BE --&gt; L1[&quot;api agent memory&quot;]
-  BE --&gt; L2[&quot;capability knowledge platform&quot;]
-  DOC --&gt; DOCS[&quot;stable human docs&quot;]
-  AGENT --&gt; AGS[&quot;workflow programs templates&quot;]
-  class APP,BE,DOC,AGENT,TOOL,TEST,L1,L2,DOCS,AGS node;
+  R --&gt; TOOLS[&quot;tools&quot;]
+  R --&gt; TESTS[&quot;tests&quot;]
+  BACKEND --&gt; API[&quot;api&quot;]
+  BACKEND --&gt; AG[&quot;agent&quot;]
+  BACKEND --&gt; MEM[&quot;memory&quot;]
+  BACKEND --&gt; CAP[&quot;capability&quot;]
+  BACKEND --&gt; KNO[&quot;knowledge&quot;]
+  BACKEND --&gt; PLA[&quot;platform&quot;]
+  DOCS --&gt; FORMAL[&quot;architecture current target roadmap&quot;]
+  DOCS --&gt; HTML[&quot;architecture.html generated&quot;]
+  AGENT --&gt; PROGRAM[&quot;programs active phases&quot;]:::guard
+  AGENT --&gt; REFS[&quot;references governance&quot;]
+  AGENT --&gt; TPL[&quot;templates skeletons&quot;]
+  TOOLS --&gt; RENDER[&quot;render architecture&quot;]
+  TOOLS --&gt; VERIFY[&quot;verifiers&quot;]
+  TESTS --&gt; REPO[&quot;repo tests&quot;]
+  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,FORMAL,HTML,REFS,TPL,RENDER,VERIFY,REPO node;
           </div>
         </figure>
         <details>
@@ -267,32 +333,43 @@ flowchart TB
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
   R[&quot;Repository Root&quot;]:::accent
-  R --&gt; APP[&quot;apps&quot;]
-  R --&gt; BE[&quot;src backend zuno&quot;]
-  R --&gt; DOC[&quot;docs&quot;]
+  R --&gt; APPS[&quot;apps&quot;]
+  R --&gt; BACKEND[&quot;src/backend/zuno&quot;]
+  R --&gt; DOCS[&quot;docs&quot;]
   R --&gt; AGENT[&quot;.agent&quot;]
-  R --&gt; TOOL[&quot;tools&quot;]
-  R --&gt; TEST[&quot;tests&quot;]
-  BE --&gt; L1[&quot;api agent memory&quot;]
-  BE --&gt; L2[&quot;capability knowledge platform&quot;]
-  DOC --&gt; DOCS[&quot;stable human docs&quot;]
-  AGENT --&gt; AGS[&quot;workflow programs templates&quot;]
-  class APP,BE,DOC,AGENT,TOOL,TEST,L1,L2,DOCS,AGS node;</code></pre>
+  R --&gt; TOOLS[&quot;tools&quot;]
+  R --&gt; TESTS[&quot;tests&quot;]
+  BACKEND --&gt; API[&quot;api&quot;]
+  BACKEND --&gt; AG[&quot;agent&quot;]
+  BACKEND --&gt; MEM[&quot;memory&quot;]
+  BACKEND --&gt; CAP[&quot;capability&quot;]
+  BACKEND --&gt; KNO[&quot;knowledge&quot;]
+  BACKEND --&gt; PLA[&quot;platform&quot;]
+  DOCS --&gt; FORMAL[&quot;architecture current target roadmap&quot;]
+  DOCS --&gt; HTML[&quot;architecture.html generated&quot;]
+  AGENT --&gt; PROGRAM[&quot;programs active phases&quot;]:::guard
+  AGENT --&gt; REFS[&quot;references governance&quot;]
+  AGENT --&gt; TPL[&quot;templates skeletons&quot;]
+  TOOLS --&gt; RENDER[&quot;render architecture&quot;]
+  TOOLS --&gt; VERIFY[&quot;verifiers&quot;]
+  TESTS --&gt; REPO[&quot;repo tests&quot;]
+  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,FORMAL,HTML,REFS,TPL,RENDER,VERIFY,REPO node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
         <h3>3. Process View</h3>
-        <p class="purpose">该图回答：一次请求在运行时如何经过同步入口、异步能力和观测链路。</p>
+        <p class="purpose">该图回答：一次请求如何经过 API、Context、Agent Core、工具/检索、事件流和评测追踪。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Process</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: C&amp;C</dd></div>
         </dl>
         <ul class="analysis">
           <li>关注点：运行时控制流、事件流和外部调用。</li>
-          <li>Zuno 映射：Process View 覆盖 API、Agent runtime、工具调用、检索和 trace。</li>
-          <li>边界：Agent Loop 是 runtime 内部循环，单独放在第三章。</li>
+          <li>Zuno 映射：Process View 覆盖 API、Agent runtime、工具调用、检索、memory read/write、trace 和 eval。</li>
+          <li>边界：SSE / WebSocket 是事件传输通道；trace / eval contract 才是可观测事实。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -302,20 +379,32 @@ flowchart LR
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef event fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
-  UI[&quot;User Interface&quot;]
-  API[&quot;FastAPI Request&quot;]
-  SVC[&quot;Application Service&quot;]
-  RUN[&quot;Agent Runtime&quot;]:::accent
-  IO[&quot;Tools Retrieval LLM&quot;]
-  EVT[&quot;Runtime Events&quot;]:::event
-  OUT[&quot;Response Stream&quot;]
-  TRACE[&quot;Trace Store&quot;]
-  UI --&gt; API --&gt; SVC --&gt; RUN
-  RUN --&gt; IO --&gt; RUN
-  RUN --&gt; EVT --&gt; OUT
-  RUN --&gt; TRACE
+  UI[&quot;Web or Desktop UI&quot;]
+  HTTP[&quot;HTTP Command Channel&quot;]
+  STREAM[&quot;SSE or WebSocket Stream&quot;]
+  SESSION[&quot;Session Manager&quot;]
+  CONTEXT[&quot;Context Builder&quot;]
+  MEMORY[&quot;Memory Read Path&lt;br/&gt;recent summary structured&quot;]
+  CORE[&quot;Agent Core Runtime&quot;]:::accent
+  ROUTER[&quot;Mode and Intent Router&quot;]
+  DISPATCH[&quot;Tool Retrieval Dispatch&quot;]
+  OBS[&quot;Observation Collector&quot;]
+  POST[&quot;PostTurn Pipeline&quot;]
+  WRITE[&quot;Memory Write Gate&lt;br/&gt;candidate review promote&quot;]
+  TRACE[&quot;Trace Event Builder&quot;]:::event
+  EVAL[&quot;Eval Metadata Writer&quot;]:::event
+  OUT[&quot;Answer or Artifact&quot;]
+  UI --&gt; HTTP --&gt; SESSION --&gt; CONTEXT --&gt; CORE
+  CONTEXT --&gt; MEMORY --&gt; CONTEXT
+  CORE --&gt; ROUTER --&gt; DISPATCH
+  DISPATCH --&gt; OBS --&gt; CORE
+  OBS --&gt; POST --&gt; WRITE --&gt; MEMORY
+  POST --&gt; TRACE
+  CORE --&gt; TRACE --&gt; STREAM --&gt; UI
+  CORE --&gt; EVAL
+  CORE --&gt; OUT --&gt; HTTP
   OUT --&gt; UI
-  class UI,API,SVC,IO,OUT,TRACE node;
+  class UI,HTTP,STREAM,SESSION,CONTEXT,MEMORY,ROUTER,DISPATCH,OBS,POST,WRITE,OUT node;
           </div>
         </figure>
         <details>
@@ -326,32 +415,44 @@ flowchart LR
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef event fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
-  UI[&quot;User Interface&quot;]
-  API[&quot;FastAPI Request&quot;]
-  SVC[&quot;Application Service&quot;]
-  RUN[&quot;Agent Runtime&quot;]:::accent
-  IO[&quot;Tools Retrieval LLM&quot;]
-  EVT[&quot;Runtime Events&quot;]:::event
-  OUT[&quot;Response Stream&quot;]
-  TRACE[&quot;Trace Store&quot;]
-  UI --&gt; API --&gt; SVC --&gt; RUN
-  RUN --&gt; IO --&gt; RUN
-  RUN --&gt; EVT --&gt; OUT
-  RUN --&gt; TRACE
+  UI[&quot;Web or Desktop UI&quot;]
+  HTTP[&quot;HTTP Command Channel&quot;]
+  STREAM[&quot;SSE or WebSocket Stream&quot;]
+  SESSION[&quot;Session Manager&quot;]
+  CONTEXT[&quot;Context Builder&quot;]
+  MEMORY[&quot;Memory Read Path&lt;br/&gt;recent summary structured&quot;]
+  CORE[&quot;Agent Core Runtime&quot;]:::accent
+  ROUTER[&quot;Mode and Intent Router&quot;]
+  DISPATCH[&quot;Tool Retrieval Dispatch&quot;]
+  OBS[&quot;Observation Collector&quot;]
+  POST[&quot;PostTurn Pipeline&quot;]
+  WRITE[&quot;Memory Write Gate&lt;br/&gt;candidate review promote&quot;]
+  TRACE[&quot;Trace Event Builder&quot;]:::event
+  EVAL[&quot;Eval Metadata Writer&quot;]:::event
+  OUT[&quot;Answer or Artifact&quot;]
+  UI --&gt; HTTP --&gt; SESSION --&gt; CONTEXT --&gt; CORE
+  CONTEXT --&gt; MEMORY --&gt; CONTEXT
+  CORE --&gt; ROUTER --&gt; DISPATCH
+  DISPATCH --&gt; OBS --&gt; CORE
+  OBS --&gt; POST --&gt; WRITE --&gt; MEMORY
+  POST --&gt; TRACE
+  CORE --&gt; TRACE --&gt; STREAM --&gt; UI
+  CORE --&gt; EVAL
+  CORE --&gt; OUT --&gt; HTTP
   OUT --&gt; UI
-  class UI,API,SVC,IO,OUT,TRACE node;</code></pre>
+  class UI,HTTP,STREAM,SESSION,CONTEXT,MEMORY,ROUTER,DISPATCH,OBS,POST,WRITE,OUT node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
         <h3>4. Physical View</h3>
-        <p class="purpose">该图回答：Zuno 在本地优先部署中连接哪些节点。</p>
+        <p class="purpose">该图回答：Zuno 在本地优先部署中连接哪些节点，以及哪些 provider 是可替换边界。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Physical</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Deployment</dd></div>
         </dl>
         <ul class="analysis">
           <li>关注点：部署节点和外部依赖。</li>
-          <li>Zuno 映射：本地文件、数据库、向量/图存储、模型 provider 和 MCP 都是可替换边界。</li>
+          <li>Zuno 映射：本地文件、数据库、向量/图存储、模型 provider、MCP 和 trace backend 都是可替换边界。</li>
           <li>边界：近期仍是模块化单体，不是微服务拆分。</li>
         </ul>
         <figure class="diagram-frame">
@@ -360,26 +461,33 @@ flowchart LR
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
-  DEV[&quot;Local Machine&quot;]:::accent
-  WEB[&quot;Web App&quot;]
-  DESK[&quot;Desktop App&quot;]
+  LOCAL[&quot;Local Machine&quot;]:::accent
+  WEB[&quot;Vue Web App&quot;]
+  DESKTOP[&quot;Electron Desktop&quot;]
   API[&quot;FastAPI Backend&quot;]
-  FS[&quot;Local Workspace Files&quot;]
-  DB[&quot;Database&quot;]
-  VEC[&quot;Vector and Graph Store&quot;]
-  LLM[&quot;LLM Provider or Local Model&quot;]
+  WORKSPACE[&quot;Workspace Files&quot;]
+  ARTIFACT[&quot;Artifact Store&quot;]
+  SQL[&quot;SQL Database&quot;]
+  VECTOR[&quot;Vector Store&quot;]
+  GRAPH[&quot;Graph Store&quot;]
+  MODEL[&quot;Model Provider or Local Model&quot;]
   MCP[&quot;MCP Servers&quot;]
-  DEV --&gt; WEB
-  DEV --&gt; DESK
+  LANGSMITH[&quot;LangSmith or Trace Backend&quot;]:::guard
+  LOCAL --&gt; WEB
+  LOCAL --&gt; DESKTOP
   WEB --&gt; API
-  DESK --&gt; API
-  API --&gt; FS
-  API --&gt; DB
-  API --&gt; VEC
-  API --&gt; LLM
+  DESKTOP --&gt; API
+  API --&gt; WORKSPACE
+  API --&gt; ARTIFACT
+  API --&gt; SQL
+  API --&gt; VECTOR
+  API --&gt; GRAPH
+  API --&gt; MODEL
   API --&gt; MCP
-  class WEB,DESK,API,FS,DB,VEC,LLM,MCP node;
+  API --&gt; LANGSMITH
+  class WEB,DESKTOP,API,WORKSPACE,ARTIFACT,SQL,VECTOR,GRAPH,MODEL,MCP node;
           </div>
         </figure>
         <details>
@@ -388,39 +496,46 @@ flowchart TB
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
-  DEV[&quot;Local Machine&quot;]:::accent
-  WEB[&quot;Web App&quot;]
-  DESK[&quot;Desktop App&quot;]
+  LOCAL[&quot;Local Machine&quot;]:::accent
+  WEB[&quot;Vue Web App&quot;]
+  DESKTOP[&quot;Electron Desktop&quot;]
   API[&quot;FastAPI Backend&quot;]
-  FS[&quot;Local Workspace Files&quot;]
-  DB[&quot;Database&quot;]
-  VEC[&quot;Vector and Graph Store&quot;]
-  LLM[&quot;LLM Provider or Local Model&quot;]
+  WORKSPACE[&quot;Workspace Files&quot;]
+  ARTIFACT[&quot;Artifact Store&quot;]
+  SQL[&quot;SQL Database&quot;]
+  VECTOR[&quot;Vector Store&quot;]
+  GRAPH[&quot;Graph Store&quot;]
+  MODEL[&quot;Model Provider or Local Model&quot;]
   MCP[&quot;MCP Servers&quot;]
-  DEV --&gt; WEB
-  DEV --&gt; DESK
+  LANGSMITH[&quot;LangSmith or Trace Backend&quot;]:::guard
+  LOCAL --&gt; WEB
+  LOCAL --&gt; DESKTOP
   WEB --&gt; API
-  DESK --&gt; API
-  API --&gt; FS
-  API --&gt; DB
-  API --&gt; VEC
-  API --&gt; LLM
+  DESKTOP --&gt; API
+  API --&gt; WORKSPACE
+  API --&gt; ARTIFACT
+  API --&gt; SQL
+  API --&gt; VECTOR
+  API --&gt; GRAPH
+  API --&gt; MODEL
   API --&gt; MCP
-  class WEB,DESK,API,FS,DB,VEC,LLM,MCP node;</code></pre>
+  API --&gt; LANGSMITH
+  class WEB,DESKTOP,API,WORKSPACE,ARTIFACT,SQL,VECTOR,GRAPH,MODEL,MCP node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
         <h3>5. Scenarios View</h3>
-        <p class="purpose">该图回答：用户 query 如何被验证为一个完整场景。</p>
+        <p class="purpose">该图回答：企业知识库场景中，文档如何进入知识空间，并如何变成可引用回答或报告。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Scenarios / Process</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Runtime Scenario</dd></div>
         </dl>
         <ul class="analysis">
-          <li>关注点：用场景验证架构。</li>
-          <li>Zuno 映射：Agent 可决定是否检索，以及使用 normal、enhanced 或 auto。</li>
-          <li>边界：auto 是 router，不是第五种检索算法。</li>
+          <li>关注点：用企业知识库场景验证架构。</li>
+          <li>Zuno 映射：文档解析层是企业知识库、GraphRAG、citation 和 eval 的共同前置依赖。</li>
+          <li>边界：`auto` 是 router，不是第五种检索算法；`global` 是 community-level prior，不和 chunk-level BM25 直接生硬混榜。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -430,25 +545,42 @@ flowchart LR
   classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
 
-  Q[&quot;User Query&quot;]
-  C[&quot;Context Builder&quot;]
-  A[&quot;Controller Agent&quot;]
-  R{&quot;Need Retrieval&quot;}:::decision
-  M{&quot;Mode Policy&quot;}:::decision
-  BASIC[&quot;normal basic&quot;]
-  ENH[&quot;enhanced agentic&quot;]
-  AUTO[&quot;auto router&quot;]
-  EV[&quot;Evidence Check&quot;]
-  AN[&quot;Answer Citation Trace&quot;]:::accent
-  Q --&gt; C --&gt; A --&gt; R
-  R --&gt;|No| AN
-  R --&gt;|Yes| M
-  M --&gt; BASIC --&gt; EV
-  M --&gt; ENH --&gt; EV
-  M --&gt; AUTO --&gt; EV
-  EV --&gt;|retry| C
-  EV --&gt;|pass| AN
-  class Q,C,A,BASIC,ENH,AUTO,EV node;
+  UPLOAD[&quot;Upload Enterprise Docs&quot;]
+  PARSE[&quot;Parse Gateway&quot;]
+  CHUNK[&quot;Chunk Metadata ACL&quot;]
+  INDEX[&quot;Index BM25 Vector Graph&quot;]
+  QUERY[&quot;User Query&quot;]
+  CONTEXT[&quot;Context Builder&quot;]
+  MEMORY[&quot;Selected Memory&lt;br/&gt;summary structured&quot;]
+  AGENT[&quot;Controller Agent&quot;]:::accent
+  NEED{&quot;Need Retrieval&quot;}:::decision
+  MODE{&quot;normal enhanced auto&quot;}:::decision
+  BASIC[&quot;basic&quot;]
+  LOCAL[&quot;local&quot;]
+  GLOBAL[&quot;global&quot;]
+  DRIFT[&quot;drift&quot;]
+  EVID[&quot;Evidence and Citation Check&quot;]
+  ANSWER[&quot;Answer Report Artifact&quot;]:::accent
+  TRACE[&quot;Trace Eval Raw Event&quot;]
+  MEMCAND[&quot;Memory Candidate&quot;]
+  REVIEW[&quot;Review Promote Decay&quot;]
+  MEMSTORE[&quot;Durable Memory&quot;]
+  UPLOAD --&gt; PARSE --&gt; CHUNK --&gt; INDEX
+  MEMSTORE --&gt; CONTEXT
+  QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
+  NEED --&gt;|No| ANSWER
+  NEED --&gt;|Yes| MODE
+  MODE --&gt; BASIC --&gt; EVID
+  MODE --&gt; LOCAL --&gt; EVID
+  MODE --&gt; GLOBAL --&gt; EVID
+  MODE --&gt; DRIFT --&gt; EVID
+  INDEX --&gt; BASIC
+  INDEX --&gt; LOCAL
+  INDEX --&gt; GLOBAL
+  INDEX --&gt; DRIFT
+  EVID --&gt;|retry| CONTEXT
+  EVID --&gt;|pass| ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
+  class UPLOAD,PARSE,CHUNK,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE node;
           </div>
         </figure>
         <details>
@@ -459,25 +591,42 @@ flowchart LR
   classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
 
-  Q[&quot;User Query&quot;]
-  C[&quot;Context Builder&quot;]
-  A[&quot;Controller Agent&quot;]
-  R{&quot;Need Retrieval&quot;}:::decision
-  M{&quot;Mode Policy&quot;}:::decision
-  BASIC[&quot;normal basic&quot;]
-  ENH[&quot;enhanced agentic&quot;]
-  AUTO[&quot;auto router&quot;]
-  EV[&quot;Evidence Check&quot;]
-  AN[&quot;Answer Citation Trace&quot;]:::accent
-  Q --&gt; C --&gt; A --&gt; R
-  R --&gt;|No| AN
-  R --&gt;|Yes| M
-  M --&gt; BASIC --&gt; EV
-  M --&gt; ENH --&gt; EV
-  M --&gt; AUTO --&gt; EV
-  EV --&gt;|retry| C
-  EV --&gt;|pass| AN
-  class Q,C,A,BASIC,ENH,AUTO,EV node;</code></pre>
+  UPLOAD[&quot;Upload Enterprise Docs&quot;]
+  PARSE[&quot;Parse Gateway&quot;]
+  CHUNK[&quot;Chunk Metadata ACL&quot;]
+  INDEX[&quot;Index BM25 Vector Graph&quot;]
+  QUERY[&quot;User Query&quot;]
+  CONTEXT[&quot;Context Builder&quot;]
+  MEMORY[&quot;Selected Memory&lt;br/&gt;summary structured&quot;]
+  AGENT[&quot;Controller Agent&quot;]:::accent
+  NEED{&quot;Need Retrieval&quot;}:::decision
+  MODE{&quot;normal enhanced auto&quot;}:::decision
+  BASIC[&quot;basic&quot;]
+  LOCAL[&quot;local&quot;]
+  GLOBAL[&quot;global&quot;]
+  DRIFT[&quot;drift&quot;]
+  EVID[&quot;Evidence and Citation Check&quot;]
+  ANSWER[&quot;Answer Report Artifact&quot;]:::accent
+  TRACE[&quot;Trace Eval Raw Event&quot;]
+  MEMCAND[&quot;Memory Candidate&quot;]
+  REVIEW[&quot;Review Promote Decay&quot;]
+  MEMSTORE[&quot;Durable Memory&quot;]
+  UPLOAD --&gt; PARSE --&gt; CHUNK --&gt; INDEX
+  MEMSTORE --&gt; CONTEXT
+  QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
+  NEED --&gt;|No| ANSWER
+  NEED --&gt;|Yes| MODE
+  MODE --&gt; BASIC --&gt; EVID
+  MODE --&gt; LOCAL --&gt; EVID
+  MODE --&gt; GLOBAL --&gt; EVID
+  MODE --&gt; DRIFT --&gt; EVID
+  INDEX --&gt; BASIC
+  INDEX --&gt; LOCAL
+  INDEX --&gt; GLOBAL
+  INDEX --&gt; DRIFT
+  EVID --&gt;|retry| CONTEXT
+  EVID --&gt;|pass| ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
+  class UPLOAD,PARSE,CHUNK,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE node;</code></pre>
         </details>
       </section>
     </section>
@@ -486,15 +635,15 @@ flowchart LR
       <p>本页采用 Logical、Component-and-Connector、Deployment、Quality 四类工程视图。</p>
       <section class="diagram-section">
         <h3>6. V&amp;B Logical View</h3>
-        <p class="purpose">该图回答：领域子系统如何组成一个 Agent Workspace。</p>
+        <p class="purpose">该图回答：领域子系统如何组成一个 Agent Workspace，并区分顶层能力和横切治理。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Logical</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Logical</dd></div>
         </dl>
         <ul class="analysis">
           <li>关注点：领域对象和职责。</li>
-          <li>Zuno 映射：Runtime、Memory、Tool、Retrieval、Evidence 是稳定概念。</li>
-          <li>边界：GraphRAG 补充 BM25 和向量检索，不替代它们。</li>
+          <li>Zuno 映射：Runtime、Memory、Tool、Knowledge、Ingestion、Workspace 和 Policy 是目标领域子系统；Memory 是 write-manage-read 子系统，不是聊天历史拼接。</li>
+          <li>边界：GraphRAG 补充 BM25 和向量检索，不替代它们；文档解析是 Knowledge 的上游，不等同于 Memory。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -502,18 +651,36 @@ flowchart LR
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
-  Z[&quot;Zuno Domain&quot;]:::accent
-  Z --&gt; RUNTIME[&quot;Agent Runtime&quot;]
-  Z --&gt; MEMORY[&quot;Memory System&quot;]
-  Z --&gt; TOOL[&quot;Tool Layer&quot;]
-  Z --&gt; RET[&quot;Retrieval GraphRAG&quot;]
-  Z --&gt; EVID[&quot;Evidence System&quot;]
-  MEMORY --&gt; CP[&quot;Context Pack&quot;]
-  TOOL --&gt; TC[&quot;ToolCard Registry&quot;]
-  RET --&gt; EB[&quot;Evidence Bundle&quot;]
-  EVID --&gt; CT[&quot;Citation Trace Eval&quot;]
-  class RUNTIME,MEMORY,TOOL,RET,EVID,CP,TC,EB,CT node;
+  DOMAIN[&quot;Zuno Domain&quot;]:::accent
+  DOMAIN --&gt; RUNTIME[&quot;Agent Core Runtime&quot;]
+  DOMAIN --&gt; MEMORY[&quot;Context Memory System&quot;]
+  DOMAIN --&gt; CAPABILITY[&quot;Capability Tool System&quot;]
+  DOMAIN --&gt; KNOWLEDGE[&quot;Knowledge GraphRAG System&quot;]
+  DOMAIN --&gt; INGESTION[&quot;Document Ingestion System&quot;]
+  DOMAIN --&gt; WORKSPACE[&quot;Workspace Artifact System&quot;]
+  RUNTIME --&gt; PLAN[&quot;Planner ReAct Reflection Replan&quot;]
+  MEMORY --&gt; RAW[&quot;Raw Event Log&quot;]
+  MEMORY --&gt; WINDOW[&quot;Recent Window&quot;]
+  MEMORY --&gt; SUMMARY[&quot;Task Summary&quot;]
+  MEMORY --&gt; STRUCT[&quot;Structured Memory&quot;]
+  STRUCT --&gt; TYPES[&quot;Semantic Episodic Procedural&quot;]
+  MEMORY --&gt; PACK[&quot;Model Context Packet&quot;]
+  MEMORY --&gt; GOV[&quot;Review Promote Decay&quot;]
+  CAPABILITY --&gt; CARD[&quot;ToolCard Registry&quot;]
+  CAPABILITY --&gt; EXEC[&quot;Execution Adapter&quot;]
+  KNOWLEDGE --&gt; RET[&quot;Retrieval Fusion Evidence&quot;]
+  INGESTION --&gt; DOC[&quot;Parser Registry Chunk ACL&quot;]
+  WORKSPACE --&gt; ART[&quot;File Artifact Download&quot;]
+  POLICY[&quot;Policy Security Trace Eval&quot;]:::guard
+  PLAN --&gt; POLICY
+  CARD --&gt; POLICY
+  RET --&gt; POLICY
+  DOC --&gt; POLICY
+  ART --&gt; POLICY
+  GOV --&gt; POLICY
+  class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,CARD,EXEC,RET,DOC,ART node;
           </div>
         </figure>
         <details>
@@ -522,31 +689,49 @@ flowchart TB
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
-  Z[&quot;Zuno Domain&quot;]:::accent
-  Z --&gt; RUNTIME[&quot;Agent Runtime&quot;]
-  Z --&gt; MEMORY[&quot;Memory System&quot;]
-  Z --&gt; TOOL[&quot;Tool Layer&quot;]
-  Z --&gt; RET[&quot;Retrieval GraphRAG&quot;]
-  Z --&gt; EVID[&quot;Evidence System&quot;]
-  MEMORY --&gt; CP[&quot;Context Pack&quot;]
-  TOOL --&gt; TC[&quot;ToolCard Registry&quot;]
-  RET --&gt; EB[&quot;Evidence Bundle&quot;]
-  EVID --&gt; CT[&quot;Citation Trace Eval&quot;]
-  class RUNTIME,MEMORY,TOOL,RET,EVID,CP,TC,EB,CT node;</code></pre>
+  DOMAIN[&quot;Zuno Domain&quot;]:::accent
+  DOMAIN --&gt; RUNTIME[&quot;Agent Core Runtime&quot;]
+  DOMAIN --&gt; MEMORY[&quot;Context Memory System&quot;]
+  DOMAIN --&gt; CAPABILITY[&quot;Capability Tool System&quot;]
+  DOMAIN --&gt; KNOWLEDGE[&quot;Knowledge GraphRAG System&quot;]
+  DOMAIN --&gt; INGESTION[&quot;Document Ingestion System&quot;]
+  DOMAIN --&gt; WORKSPACE[&quot;Workspace Artifact System&quot;]
+  RUNTIME --&gt; PLAN[&quot;Planner ReAct Reflection Replan&quot;]
+  MEMORY --&gt; RAW[&quot;Raw Event Log&quot;]
+  MEMORY --&gt; WINDOW[&quot;Recent Window&quot;]
+  MEMORY --&gt; SUMMARY[&quot;Task Summary&quot;]
+  MEMORY --&gt; STRUCT[&quot;Structured Memory&quot;]
+  STRUCT --&gt; TYPES[&quot;Semantic Episodic Procedural&quot;]
+  MEMORY --&gt; PACK[&quot;Model Context Packet&quot;]
+  MEMORY --&gt; GOV[&quot;Review Promote Decay&quot;]
+  CAPABILITY --&gt; CARD[&quot;ToolCard Registry&quot;]
+  CAPABILITY --&gt; EXEC[&quot;Execution Adapter&quot;]
+  KNOWLEDGE --&gt; RET[&quot;Retrieval Fusion Evidence&quot;]
+  INGESTION --&gt; DOC[&quot;Parser Registry Chunk ACL&quot;]
+  WORKSPACE --&gt; ART[&quot;File Artifact Download&quot;]
+  POLICY[&quot;Policy Security Trace Eval&quot;]:::guard
+  PLAN --&gt; POLICY
+  CARD --&gt; POLICY
+  RET --&gt; POLICY
+  DOC --&gt; POLICY
+  ART --&gt; POLICY
+  GOV --&gt; POLICY
+  class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,CARD,EXEC,RET,DOC,ART node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
         <h3>7. Component-and-Connector View</h3>
-        <p class="purpose">该图回答：运行时组件如何连接和通信。</p>
+        <p class="purpose">该图回答：运行时组件如何连接、由谁调度、在哪些节点做权限和证据检查。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Logical / Process</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Component-and-Connector</dd></div>
         </dl>
         <ul class="analysis">
           <li>关注点：组件和连接器。</li>
-          <li>Zuno 映射：控制由 Agent 集中，能力通过 registry、router 和 checker 进入结果。</li>
-          <li>边界：WebSocket 或 SSE 是事件通道，不是架构真相来源。</li>
+          <li>Zuno 映射：控制由 Agent 集中；能力通过 registry、retrieval router、policy guard 和 evidence checker 进入结果；Memory 通过 read policy 进入 Context Pack，通过 post-turn write path 进入 durable memory。</li>
+          <li>边界：Planner 是 Agent Core Runtime 的内部控制点，不是一个独立顶层业务层。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -557,23 +742,40 @@ flowchart LR
   classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
   API[&quot;API Controller&quot;]
-  AG[&quot;Controller Agent&quot;]:::accent
-  MEM[&quot;Memory Manager&quot;]
-  TOOL[&quot;Tool Registry&quot;]
-  RET[&quot;Retrieval Router&quot;]
-  EV[&quot;Evidence Checker&quot;]:::warn
+  SESSION[&quot;Session Workspace&quot;]
+  CONTEXT[&quot;Context Builder&quot;]
+  MEMREAD[&quot;Memory Read Policy&lt;br/&gt;scope budget scoring&quot;]
+  MEMSTORE[&quot;Memory Stores&lt;br/&gt;SQL Redis Vector Graph&quot;]
+  MEMWRITE[&quot;Memory Write Path&lt;br/&gt;raw summary candidate&quot;]
+  MEMREVIEW[&quot;Memory Review Gate&lt;br/&gt;dedupe conflict retention&quot;]:::warn
+  AGENT[&quot;Controller Agent&quot;]:::accent
+  PLANNER[&quot;Planner&quot;]
+  REACT[&quot;ReAct Executor&quot;]
+  TOOLSEL[&quot;Capability Selector&quot;]
+  TOOLREG[&quot;ToolCard Registry&quot;]
+  RETROUTER[&quot;Retrieval Router&quot;]
+  INGEST[&quot;Parse Gateway&quot;]
+  POLICY[&quot;Policy Guard&quot;]:::warn
+  OBS[&quot;Observation Collector&quot;]
+  EVID[&quot;Evidence Checker&quot;]:::warn
   CIT[&quot;Citation Builder&quot;]
-  TR[&quot;Trace Logger&quot;]
-  API --&gt; AG
-  AG --&gt; MEM
-  AG --&gt; TOOL
-  AG --&gt; RET
-  MEM --&gt; EV
-  TOOL --&gt; EV
-  RET --&gt; EV
-  EV --&gt; CIT
-  EV --&gt; TR
-  class API,MEM,TOOL,RET,CIT,TR node;
+  TRACE[&quot;Trace Eval Logger&quot;]
+  API --&gt; SESSION --&gt; CONTEXT
+  CONTEXT --&gt; MEMREAD --&gt; MEMSTORE --&gt; CONTEXT
+  CONTEXT --&gt; AGENT
+  AGENT --&gt; PLANNER --&gt; REACT
+  REACT --&gt; TOOLSEL --&gt; TOOLREG
+  REACT --&gt; RETROUTER
+  INGEST --&gt; RETROUTER
+  TOOLREG --&gt; POLICY
+  RETROUTER --&gt; POLICY
+  POLICY --&gt; OBS --&gt; AGENT
+  OBS --&gt; MEMWRITE --&gt; MEMREVIEW --&gt; MEMSTORE
+  OBS --&gt; EVID --&gt; CIT
+  EVID --&gt; TRACE
+  MEMREVIEW --&gt; TRACE
+  AGENT --&gt; TRACE
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,RETROUTER,INGEST,OBS,CIT,TRACE node;
           </div>
         </figure>
         <details>
@@ -585,28 +787,45 @@ flowchart LR
   classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
   API[&quot;API Controller&quot;]
-  AG[&quot;Controller Agent&quot;]:::accent
-  MEM[&quot;Memory Manager&quot;]
-  TOOL[&quot;Tool Registry&quot;]
-  RET[&quot;Retrieval Router&quot;]
-  EV[&quot;Evidence Checker&quot;]:::warn
+  SESSION[&quot;Session Workspace&quot;]
+  CONTEXT[&quot;Context Builder&quot;]
+  MEMREAD[&quot;Memory Read Policy&lt;br/&gt;scope budget scoring&quot;]
+  MEMSTORE[&quot;Memory Stores&lt;br/&gt;SQL Redis Vector Graph&quot;]
+  MEMWRITE[&quot;Memory Write Path&lt;br/&gt;raw summary candidate&quot;]
+  MEMREVIEW[&quot;Memory Review Gate&lt;br/&gt;dedupe conflict retention&quot;]:::warn
+  AGENT[&quot;Controller Agent&quot;]:::accent
+  PLANNER[&quot;Planner&quot;]
+  REACT[&quot;ReAct Executor&quot;]
+  TOOLSEL[&quot;Capability Selector&quot;]
+  TOOLREG[&quot;ToolCard Registry&quot;]
+  RETROUTER[&quot;Retrieval Router&quot;]
+  INGEST[&quot;Parse Gateway&quot;]
+  POLICY[&quot;Policy Guard&quot;]:::warn
+  OBS[&quot;Observation Collector&quot;]
+  EVID[&quot;Evidence Checker&quot;]:::warn
   CIT[&quot;Citation Builder&quot;]
-  TR[&quot;Trace Logger&quot;]
-  API --&gt; AG
-  AG --&gt; MEM
-  AG --&gt; TOOL
-  AG --&gt; RET
-  MEM --&gt; EV
-  TOOL --&gt; EV
-  RET --&gt; EV
-  EV --&gt; CIT
-  EV --&gt; TR
-  class API,MEM,TOOL,RET,CIT,TR node;</code></pre>
+  TRACE[&quot;Trace Eval Logger&quot;]
+  API --&gt; SESSION --&gt; CONTEXT
+  CONTEXT --&gt; MEMREAD --&gt; MEMSTORE --&gt; CONTEXT
+  CONTEXT --&gt; AGENT
+  AGENT --&gt; PLANNER --&gt; REACT
+  REACT --&gt; TOOLSEL --&gt; TOOLREG
+  REACT --&gt; RETROUTER
+  INGEST --&gt; RETROUTER
+  TOOLREG --&gt; POLICY
+  RETROUTER --&gt; POLICY
+  POLICY --&gt; OBS --&gt; AGENT
+  OBS --&gt; MEMWRITE --&gt; MEMREVIEW --&gt; MEMSTORE
+  OBS --&gt; EVID --&gt; CIT
+  EVID --&gt; TRACE
+  MEMREVIEW --&gt; TRACE
+  AGENT --&gt; TRACE
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,RETROUTER,INGEST,OBS,CIT,TRACE node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
         <h3>8. V&amp;B Deployment View</h3>
-        <p class="purpose">该图回答：工程部署时哪些资源应保持可替换。</p>
+        <p class="purpose">该图回答：工程部署时哪些资源应保持可替换，以及工具执行方式如何作为 adapter 进入系统。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Physical</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Deployment</dd></div>
@@ -614,7 +833,7 @@ flowchart LR
         <ul class="analysis">
           <li>关注点：软件元素到运行环境的映射。</li>
           <li>Zuno 映射：Provider 是边界，核心 runtime 不绑定单一 vendor。</li>
-          <li>边界：Tavily、RAGFlow、MySQL 可以作为集成参考，不写死为唯一实现。</li>
+          <li>边界：SDK、API、CLI、SSH、MCP 是 execution adapter 或 provider metadata，不是 Capability 的业务顶层分类。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -622,6 +841,7 @@ flowchart LR
 flowchart LR
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
   APP[&quot;Zuno App&quot;]:::accent
   STORE[&quot;Local Storage&quot;]
@@ -631,6 +851,11 @@ flowchart LR
   MODEL[&quot;Model Gateway&quot;]
   SEARCH[&quot;Search Provider&quot;]
   MCP[&quot;MCP Provider&quot;]
+  SDK[&quot;SDK Adapter&quot;]
+  APIAD[&quot;API Adapter&quot;]
+  CLI[&quot;CLI Adapter&quot;]
+  SSH[&quot;SSH Adapter&quot;]:::guard
+  TRACE[&quot;Trace Eval Backend&quot;]
   APP --&gt; STORE
   APP --&gt; SQL
   APP --&gt; VDB
@@ -638,7 +863,12 @@ flowchart LR
   APP --&gt; MODEL
   APP --&gt; SEARCH
   APP --&gt; MCP
-  class STORE,SQL,VDB,GDB,MODEL,SEARCH,MCP node;
+  APP --&gt; SDK
+  APP --&gt; APIAD
+  APP --&gt; CLI
+  APP --&gt; SSH
+  APP --&gt; TRACE
+  class STORE,SQL,VDB,GDB,MODEL,SEARCH,MCP,SDK,APIAD,CLI,TRACE node;
           </div>
         </figure>
         <details>
@@ -647,6 +877,7 @@ flowchart LR
 flowchart LR
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
   APP[&quot;Zuno App&quot;]:::accent
   STORE[&quot;Local Storage&quot;]
@@ -656,6 +887,11 @@ flowchart LR
   MODEL[&quot;Model Gateway&quot;]
   SEARCH[&quot;Search Provider&quot;]
   MCP[&quot;MCP Provider&quot;]
+  SDK[&quot;SDK Adapter&quot;]
+  APIAD[&quot;API Adapter&quot;]
+  CLI[&quot;CLI Adapter&quot;]
+  SSH[&quot;SSH Adapter&quot;]:::guard
+  TRACE[&quot;Trace Eval Backend&quot;]
   APP --&gt; STORE
   APP --&gt; SQL
   APP --&gt; VDB
@@ -663,20 +899,25 @@ flowchart LR
   APP --&gt; MODEL
   APP --&gt; SEARCH
   APP --&gt; MCP
-  class STORE,SQL,VDB,GDB,MODEL,SEARCH,MCP node;</code></pre>
+  APP --&gt; SDK
+  APP --&gt; APIAD
+  APP --&gt; CLI
+  APP --&gt; SSH
+  APP --&gt; TRACE
+  class STORE,SQL,VDB,GDB,MODEL,SEARCH,MCP,SDK,APIAD,CLI,TRACE node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
         <h3>9. Quality View</h3>
-        <p class="purpose">该图回答：质量属性通过哪些机制落地。</p>
+        <p class="purpose">该图回答：质量属性、安全、稳定性、观测和自动化评测如何作为治理闭环落地。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Scenarios / Cross-cutting</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Quality</dd></div>
         </dl>
         <ul class="analysis">
           <li>关注点：性能、可靠性、安全、可观测性、可修改性和评测。</li>
-          <li>Zuno 映射：Trace、Eval、Evidence、permission、budget 和 verifier 共同约束质量。</li>
-          <li>边界：异常捕获不是熔断；熔断必须有阈值、状态和降级策略。</li>
+          <li>Zuno 映射：Trace、Eval、Evidence、permission、budget、DLP 和 verifier 共同约束质量。</li>
+          <li>边界：输出检查不能替代检索前 ACL 和工具前审批；安全必须贯穿输入、检索、工具和输出。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -686,27 +927,33 @@ flowchart TB
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
-  Q[&quot;Quality Attributes&quot;]:::accent
-  PERF[&quot;Performance Budget Cache&quot;]
+  Q[&quot;Quality Governance&quot;]:::accent
+  INPUT[&quot;Input Guard Format PII Injection&quot;]
+  ACL[&quot;Retrieval ACL Chunk Scope&quot;]
+  TOOL[&quot;Tool Approval Side Effect Budget&quot;]
+  OUTPUT[&quot;Output DLP Citation Format&quot;]
   REL[&quot;Reliability Timeout Retry Fallback&quot;]
-  SEC[&quot;Security Permission Whitelist&quot;]
-  OBS[&quot;Observability Trace Events&quot;]
-  MOD[&quot;Modifiability Layered Contracts&quot;]
-  EVAL[&quot;Evaluation Tests Baseline&quot;]
-  GOV[&quot;Governance Gate&quot;]:::warn
-  Q --&gt; PERF
+  OBS[&quot;Observability Trace Span Event&quot;]
+  EVAL[&quot;Eval Dataset Metric Baseline&quot;]
+  COST[&quot;Cost Latency Budget&quot;]
+  GATE[&quot;Release Governance Gate&quot;]:::warn
+  Q --&gt; INPUT
+  Q --&gt; ACL
+  Q --&gt; TOOL
+  Q --&gt; OUTPUT
   Q --&gt; REL
-  Q --&gt; SEC
   Q --&gt; OBS
-  Q --&gt; MOD
   Q --&gt; EVAL
-  PERF --&gt; GOV
-  REL --&gt; GOV
-  SEC --&gt; GOV
-  OBS --&gt; GOV
-  MOD --&gt; GOV
-  EVAL --&gt; GOV
-  class PERF,REL,SEC,OBS,MOD,EVAL node;
+  Q --&gt; COST
+  INPUT --&gt; GATE
+  ACL --&gt; GATE
+  TOOL --&gt; GATE
+  OUTPUT --&gt; GATE
+  REL --&gt; GATE
+  OBS --&gt; GATE
+  EVAL --&gt; GATE
+  COST --&gt; GATE
+  class INPUT,ACL,TOOL,OUTPUT,REL,OBS,EVAL,COST node;
           </div>
         </figure>
         <details>
@@ -717,27 +964,33 @@ flowchart TB
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
 
-  Q[&quot;Quality Attributes&quot;]:::accent
-  PERF[&quot;Performance Budget Cache&quot;]
+  Q[&quot;Quality Governance&quot;]:::accent
+  INPUT[&quot;Input Guard Format PII Injection&quot;]
+  ACL[&quot;Retrieval ACL Chunk Scope&quot;]
+  TOOL[&quot;Tool Approval Side Effect Budget&quot;]
+  OUTPUT[&quot;Output DLP Citation Format&quot;]
   REL[&quot;Reliability Timeout Retry Fallback&quot;]
-  SEC[&quot;Security Permission Whitelist&quot;]
-  OBS[&quot;Observability Trace Events&quot;]
-  MOD[&quot;Modifiability Layered Contracts&quot;]
-  EVAL[&quot;Evaluation Tests Baseline&quot;]
-  GOV[&quot;Governance Gate&quot;]:::warn
-  Q --&gt; PERF
+  OBS[&quot;Observability Trace Span Event&quot;]
+  EVAL[&quot;Eval Dataset Metric Baseline&quot;]
+  COST[&quot;Cost Latency Budget&quot;]
+  GATE[&quot;Release Governance Gate&quot;]:::warn
+  Q --&gt; INPUT
+  Q --&gt; ACL
+  Q --&gt; TOOL
+  Q --&gt; OUTPUT
   Q --&gt; REL
-  Q --&gt; SEC
   Q --&gt; OBS
-  Q --&gt; MOD
   Q --&gt; EVAL
-  PERF --&gt; GOV
-  REL --&gt; GOV
-  SEC --&gt; GOV
-  OBS --&gt; GOV
-  MOD --&gt; GOV
-  EVAL --&gt; GOV
-  class PERF,REL,SEC,OBS,MOD,EVAL node;</code></pre>
+  Q --&gt; COST
+  INPUT --&gt; GATE
+  ACL --&gt; GATE
+  TOOL --&gt; GATE
+  OUTPUT --&gt; GATE
+  REL --&gt; GATE
+  OBS --&gt; GATE
+  EVAL --&gt; GATE
+  COST --&gt; GATE
+  class INPUT,ACL,TOOL,OUTPUT,REL,OBS,EVAL,COST node;</code></pre>
         </details>
       </section>
     </section>
@@ -746,15 +999,16 @@ flowchart TB
       <p>Agent Loop 是 Process View 的内部细化，但不等同于整个 Process View。</p>
       <section class="diagram-section">
         <h3>10. Agent Loop View</h3>
-        <p class="purpose">该图回答：主控 Agent 如何计划、执行、观察和重规划。</p>
+        <p class="purpose">该图回答：主控 Agent 如何在一个可观测的 runtime harness 中计划、执行、观察、反思、重规划并提交 trace / memory / eval。</p>
         <dl class="meta">
           <div><dt>4+1</dt><dd>4+1: Logical / Process</dd></div>
           <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: C&amp;C</dd></div>
         </dl>
         <ul class="analysis">
           <li>关注点：Agent 内部决策循环。</li>
-          <li>Zuno 映射：Plan、Act、Observation、Working Memory、Reflection 共同形成可追踪执行。</li>
-          <li>边界：Reflection 是门控动作，不是每一步强制执行。</li>
+          <li>Zuno 映射：Planning 是 Agent Core Runtime 的控制能力；runtime harness 负责状态、checkpoint、streaming、interrupt、trace、memory read/write 和失败处理。</li>
+          <li>边界：LangGraph 是目标实现候选，用于 state graph、checkpoint、durable execution、human-in-the-loop、streaming 和 resume；它不是“规划模块本身”。</li>
+          <li>边界：Reflection 是门控动作，不是每一步强制执行；ToT / LATS 只作为 Future 或离线困难模式，不进入近期默认路径。</li>
         </ul>
         <figure class="diagram-frame">
           <div class="mermaid">
@@ -764,19 +1018,33 @@ flowchart LR
   classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
 
-  G[&quot;Goal&quot;]
-  C[&quot;Context Pack&quot;]
-  P[&quot;Plan&quot;]
-  A[&quot;Act&quot;]
-  O[&quot;Observation&quot;]
-  W[&quot;Working Memory&quot;]
-  R{&quot;Reflect Replan&quot;}:::decision
-  F[&quot;Final Answer&quot;]:::accent
-  G --&gt; C --&gt; P --&gt; A --&gt; O --&gt; W --&gt; R
-  R --&gt;|continue| A
-  R --&gt;|replan| P
-  R --&gt;|finish| F
-  class G,C,P,A,O,W node;
+  GOAL[&quot;Goal&quot;]
+  PREP[&quot;prepare_context&quot;]
+  READMEM[&quot;memory read&lt;br/&gt;recent task structured&quot;]
+  ROUTE[&quot;intent and mode router&quot;]
+  PLAN[&quot;plan&quot;]
+  STEP[&quot;ReAct step&quot;]
+  CALL[&quot;tool or retrieval dispatch&quot;]
+  OBS[&quot;observation&quot;]
+  RAW[&quot;raw event append&quot;]
+  WORK[&quot;working memory&quot;]
+  REFLECT{&quot;reflection gate&quot;}:::decision
+  REPLAN[&quot;replan&quot;]
+  FINAL[&quot;final answer&quot;]:::accent
+  COMMIT[&quot;post_turn_commit trace memory eval&quot;]
+  SUMMARY[&quot;task summary update&quot;]
+  CAND[&quot;structured memory candidate&quot;]
+  REVIEW[&quot;review promote decay&quot;]:::decision
+  LONG[&quot;semantic episodic procedural memory&quot;]
+  GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN --&gt; STEP --&gt; CALL --&gt; OBS --&gt; RAW --&gt; WORK --&gt; REFLECT
+  REFLECT --&gt;|continue| STEP
+  REFLECT --&gt;|replan| REPLAN --&gt; PLAN
+  REFLECT --&gt;|finish| FINAL --&gt; COMMIT
+  COMMIT --&gt; SUMMARY
+  COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
+  SUMMARY -. next turn .-&gt; READMEM
+  LONG -. next turn .-&gt; READMEM
+  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,SUMMARY,CAND,LONG node;
           </div>
         </figure>
         <details>
@@ -787,19 +1055,33 @@ flowchart LR
   classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
 
-  G[&quot;Goal&quot;]
-  C[&quot;Context Pack&quot;]
-  P[&quot;Plan&quot;]
-  A[&quot;Act&quot;]
-  O[&quot;Observation&quot;]
-  W[&quot;Working Memory&quot;]
-  R{&quot;Reflect Replan&quot;}:::decision
-  F[&quot;Final Answer&quot;]:::accent
-  G --&gt; C --&gt; P --&gt; A --&gt; O --&gt; W --&gt; R
-  R --&gt;|continue| A
-  R --&gt;|replan| P
-  R --&gt;|finish| F
-  class G,C,P,A,O,W node;</code></pre>
+  GOAL[&quot;Goal&quot;]
+  PREP[&quot;prepare_context&quot;]
+  READMEM[&quot;memory read&lt;br/&gt;recent task structured&quot;]
+  ROUTE[&quot;intent and mode router&quot;]
+  PLAN[&quot;plan&quot;]
+  STEP[&quot;ReAct step&quot;]
+  CALL[&quot;tool or retrieval dispatch&quot;]
+  OBS[&quot;observation&quot;]
+  RAW[&quot;raw event append&quot;]
+  WORK[&quot;working memory&quot;]
+  REFLECT{&quot;reflection gate&quot;}:::decision
+  REPLAN[&quot;replan&quot;]
+  FINAL[&quot;final answer&quot;]:::accent
+  COMMIT[&quot;post_turn_commit trace memory eval&quot;]
+  SUMMARY[&quot;task summary update&quot;]
+  CAND[&quot;structured memory candidate&quot;]
+  REVIEW[&quot;review promote decay&quot;]:::decision
+  LONG[&quot;semantic episodic procedural memory&quot;]
+  GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN --&gt; STEP --&gt; CALL --&gt; OBS --&gt; RAW --&gt; WORK --&gt; REFLECT
+  REFLECT --&gt;|continue| STEP
+  REFLECT --&gt;|replan| REPLAN --&gt; PLAN
+  REFLECT --&gt;|finish| FINAL --&gt; COMMIT
+  COMMIT --&gt; SUMMARY
+  COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
+  SUMMARY -. next turn .-&gt; READMEM
+  LONG -. next turn .-&gt; READMEM
+  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,SUMMARY,CAND,LONG node;</code></pre>
         </details>
       </section>
     </section>

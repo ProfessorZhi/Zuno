@@ -2,10 +2,36 @@
 
 ## Current Truth
 
-当前没有 active program。
+当前 active program：`zuno-architecture-detail-and-execution-plan-v1`
 
-state: no-active
-current_phase: none
+state: active
+current_phase: PHASE01_architecture-state-and-program-boot
+
+## Program 目标
+
+本 program 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Document Ingestion、企业知识库场景、安全治理、Trace / Eval 和 LangSmith 适配。
+
+它不是 runtime feature implementation，不新增 API / DB schema / frontend 行为，不把 Target 写成 Current。Memory Layer 的生产级 Raw Event Log、DB-backed memory、read/write path、review / promotion / decay 和 memory eval 仍是 Target。
+
+## 当前执行入口
+
+`.agent/programs/` 当前保存 active program：
+
+- `README.md`
+- `current.md`
+- `implementation-roadmap.md`
+- `closure-checklist.md`
+- `PHASE01_architecture-state-and-program-boot.md`
+- `PHASE02_target-architecture-detailing.md`
+- `PHASE03_mermaid-html-detail-refresh.md`
+- `PHASE04_execution-roadmap-from-architecture.md`
+- `PHASE05_validation-and-closure.md`
+
+当前阶段：
+
+- `PHASE01_architecture-state-and-program-boot.md`：active。
+
+## 最近完成事实
 
 最近完成并归档的 program：`zuno-eight-deliverables-full-realization-v1`
 
@@ -13,17 +39,6 @@ current_phase: none
 - 范围：PHASE01-PHASE10。
 - 状态：completed / archived。
 - 执行方式：主线程目标模式 + 默认开启线程内多 agent 协作；这是 Codex 执行协作，不是 Zuno runtime 架构；不是多线程模式。
-
-`.agent/programs/` 当前保留等待态入口：
-
-- `README.md`
-- `current.md`
-- `implementation-roadmap.md`
-- `closure-checklist.md`
-
-前台没有 `PHASE*.md`。打开下一轮 program 时，必须先迁入新的 roadmap 和 phase 文件，并从 `PHASE01` 开始。
-
-## 最近完成事实：zuno-eight-deliverables-full-realization-v1
 
 这个 program 完整落实八大交付物：
 
@@ -36,23 +51,11 @@ current_phase: none
 7. 清晰干净的代码和目录。
 8. 一致性与验证系统。
 
-PHASE04 / Query Router Mode Policy 已完成。当前代码和测试证明 `product_mode = normal | enhanced | auto` 和 `query_method = auto | basic | local | global | drift` 已进入 DTO、AgentConfig、KnowledgeQueryService、GraphRAGQueryService、RetrievalPlanner、trace metadata 和 eval mode metadata；`auto` 只作为 router，不是第五种最终 query mode。
-
-PHASE05 / Context Builder Memory System 已完成 foundation slice。当前代码和测试证明 Context Pack policy、source id coverage、五类记忆 taxonomy、review contract、同 scope task summary 和 approved structured memory 轻量 readback 已存在；这不表示 production-grade Memory DB、成熟 long-term memory retrieval / consolidation 或完整 PostTurnPipeline 已完成。
-
-PHASE06 / Capability ToolCard MCP System 已完成 foundation slice。当前代码和测试证明 ToolCard compact retrieval metadata、Native BM25 ToolCard retrieval、MCP/local policy trace、candidate / selected / rejected ToolCard trace 和 GeneralAgent internal trace bridge 已存在；这不表示 production-grade dynamic capability orchestration、optional vector capability search 或完整 runtime tool filtering 已完成。
-
-PHASE07 / Hooks Evidence Trace Artifact System 已完成 foundation slice。当前代码和测试证明 Hook event schema、EvidenceVerdict、TraceArtifactManifest、GraphRAG trace enrichment、GeneralAgent additive trace event、tool pre/post hook payload 和 eval diagnostics 已存在；这不表示完整 artifact storage / download flow、frontend trace panel 或 production-grade hooks governance 已完成。
-
-PHASE08 / GraphRAG Knowledge Runtime System 已完成 foundation slice。当前代码和测试证明 `GraphRAGExtractorConfig`、snapshot propagation、query method / citation / retrieval fusion trace contract、显式 global community-only prior、GeneralAgent query method contract 文本和旧 `zuno.services.*` import compatibility 已存在；这不表示生产级 schema-constrained LLM extraction、完整 RRF/rerank 治理、多套 extractor orchestration、DB schema 迁移或前端 trace 面板已完成。
-
-PHASE09 / Runtime Upgrade Integration 已完成 foundation slice。当前代码和测试证明 `RuntimeTurnLedger`、当前轮 trace reset、knowledge/tool/post-turn evidence、六层目标入口 import guard、`prepare_context -> agent_loop -> post_turn_commit` 最小证据链和 eval diagnostics 已存在；这不表示完整产品级 runtime upgrade，也未改 API/SSE/DB/frontend。
-
-PHASE10 / Validation Release Closure 已完成归档、no-active 前台状态、docs / `.agent` / verifier / tests 同步和 release closure PR 边界。
+PHASE04-PHASE09 形成了 query router / mode policy、Context Pack / Memory foundation、Capability ToolCard / MCP policy、Hooks / Evidence / Trace、GraphRAG knowledge runtime contract 和 RuntimeTurnLedger integration 的 foundation slices。它们是当前代码和测试已经证明的事实；生产级 DB schema 迁移、前端 trace panel、完整动态工具编排、完整 model-visible context injection、完整 RRF/rerank 治理、Java / 微服务 / event worker 和 Zuno runtime 多 Agent 架构仍不是 Current。
 
 ## 最近完成事实：Program 3
 
-Program 3 / `zuno-repo-layout-cleanup-v1` 已完成六层顶层目录收口和 final alias surface closure。`src/backend/zuno` 顶层目录已经收敛为：
+Program 3 / `zuno-repo-layout-cleanup-v1` 已完成 final alias surface closure。`src/backend/zuno` 顶层目录已经收敛为：
 
 - `api/`
 - `agent/`
@@ -74,15 +77,7 @@ Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档到：
 
 - `docs/history/programs/zuno-six-layer-internalization-v1/`
 
-它让六层内部拥有第一批清晰、可测试、无副作用的目标层入口：
-
-- `agent/`：runtime、context、post_turn、state、streaming、tool_bridge。
-- `memory/`：contracts、store、policy、review、retrieval、rendering、engine。
-- `capability/`：contracts、registry、selector、policy、execution、trace。
-- `knowledge/`：contracts、query_service、evidence、citation、trace、retrieval、fusion、graphrag。
-- `platform/`：model_gateway、security、observability、storage。
-
-这些入口复用现有 runtime owner 或 compatibility owner。这不表示 production-grade memory extraction、retrieval consolidation、Memory DB、dynamic capability orchestration、retrieval fusion 或 full Runtime Architecture Upgrade 已完成。
+它让六层内部拥有第一批清晰、可测试、无副作用的目标层入口。它不表示 production-grade memory extraction、retrieval consolidation、Memory DB、dynamic capability orchestration、retrieval fusion 或 full Runtime Architecture Upgrade 已完成。
 
 ## 当前工作流治理事实
 
@@ -98,7 +93,7 @@ Architecture Documentation Governance 和 Agent Workflow Self-Maintenance 已登
 
 ## 参考输入
 
-以下 queued drafts 已被 `zuno-eight-deliverables-full-realization-v1` 吸收为本轮实现参考，但仍保留为未来参考输入，不是 active 执行入口：
+以下 queued drafts 已被 `zuno-eight-deliverables-full-realization-v1` 吸收为近期实现参考，但仍保留为未来参考输入，不是 active 执行入口：
 
 - `zuno-query-router-and-mode-policy-v1`
 - `zuno-context-builder-and-memory-v1`

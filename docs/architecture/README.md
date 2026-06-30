@@ -90,7 +90,7 @@ Zuno 的架构说明同时使用两套互补视角。
 
 ## 十类架构视图
 
-完整十类图由 `docs/architecture.md` 维护，并由 `tools/agent/render_architecture.py` 生成到 `docs/architecture.html`。这里的“十类”指十个不同架构关注面，不是同一张图的多个排版。
+完整十类图由 `docs/architecture.md` 维护，并由 `tools/agent/render_architecture.py` 生成到 `docs/architecture.html`。这里的“十类”指十个不同架构关注面，不是同一张图的多个排版。每张图应展开到二级组件，覆盖 Agent Core Runtime、Memory、Tool、Knowledge、Document Ingestion、Security、Trace / Eval 和 Platform 的关键连接。
 
 1. `Logical View`
 2. `Development View`

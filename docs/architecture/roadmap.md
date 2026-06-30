@@ -8,7 +8,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 - `.agent/programs/`
 
-当前没有 active program。最近完成并归档的 program 是 `zuno-eight-deliverables-full-realization-v1`。它以主线程目标模式执行，默认开启线程内多 agent 协作；这是 Codex 执行协作，不是 Zuno runtime 架构，也不是多线程模式。Program 3 / `zuno-repo-layout-cleanup-v1` final alias surface closure 已完成并归档：`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`，根级 alias `.py` 文件已收口到 `platform/compatibility/legacy_aliases.py`。Program 4 / `zuno-six-layer-internalization-v1` 也已完成并归档：六层内部已有第一批无副作用薄入口、README、focused tests 和 verifier guard。
+当前 active program 是 `zuno-architecture-detail-and-execution-plan-v1`。它只细化目标架构文档、十类 Mermaid 架构图、生成 HTML 和后续执行计划，不实施 runtime feature，不新增 API / DB schema / frontend 行为。最近完成并归档的 program 是 `zuno-eight-deliverables-full-realization-v1`。它以主线程目标模式执行，默认开启线程内多 agent 协作；这是 Codex 执行协作，不是 Zuno runtime 架构，也不是多线程模式。Program 3 / `zuno-repo-layout-cleanup-v1` final alias surface closure 已完成并归档：`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`，根级 alias `.py` 文件已收口到 `platform/compatibility/legacy_aliases.py`。Program 4 / `zuno-six-layer-internalization-v1` 也已完成并归档：六层内部已有第一批无副作用薄入口、README、focused tests 和 verifier guard。
 
 已完成并归档：
 
@@ -39,7 +39,14 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 
 ## 当前 Program 状态
 
-当前没有 active program。`.agent/programs/` 只保留等待态入口；后续 program 草案仍保留在 `.agent/architecture/future/programs/`，但它们不是 active。
+当前 active program：`zuno-architecture-detail-and-execution-plan-v1`。
+
+- 当前阶段：`PHASE01_architecture-state-and-program-boot`。
+- 当前入口：`.agent/programs/current.md`。
+- 执行计划：`.agent/programs/implementation-roadmap.md`。
+- 边界：只做架构文档、Mermaid/HTML、图清单、执行计划和 verifier/test 同步；不改 runtime 行为。
+
+后续 program 草案仍保留在 `.agent/architecture/future/programs/`，但它们不是 active。
 
 1. `zuno-workflow-doc-system-v1`：已完成，归档到 `docs/history/programs/zuno-workflow-doc-system-v1/`。
 2. `zuno-target-architecture-refresh-v1`：已完成，归档到 `docs/history/programs/zuno-target-architecture-refresh-v1/`。
@@ -51,6 +58,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 8. `zuno-hooks-evidence-trace-v1`：absorbed as reference。固定 Hooks / Policy / Budget / Fallback / Evidence Check / Citation Coverage / Trace Event。
 9. `zuno-runtime-architecture-upgrade-v1`：absorbed as reference。只在 mode、context、hooks 边界清楚后推进 runtime slice，重点是 GraphRAG LLM entity extraction、knowledge extractor configs、memory/capability/trace hardening。
 10. `zuno-architecture-visuals-v1`：absorbed as reference。目标架构 HTML 已刷新为两个理论框架 + 十类架构视图；后续保持图形展示不成为第二套架构真相。
+11. `zuno-architecture-detail-and-execution-plan-v1`：active。细化十类图、Document Ingestion、Tool adapter、Agent Core Runtime、Security / Policy 和 LangSmith trace / eval 的目标架构表达，并从图反推出下一阶段执行顺序。
 
 已被替换的 V2 目标运行时材料归档在：
 

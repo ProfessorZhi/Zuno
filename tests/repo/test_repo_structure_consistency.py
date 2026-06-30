@@ -19,6 +19,14 @@ COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE09_runtime-upgrade-integration.md",
     "PHASE10_validation-release-closure.md",
 ]
+ACTIVE_PROGRAM_NAME = "zuno-architecture-detail-and-execution-plan-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_architecture-state-and-program-boot.md",
+    "PHASE02_target-architecture-detailing.md",
+    "PHASE03_mermaid-html-detail-refresh.md",
+    "PHASE04_execution-roadmap-from-architecture.md",
+    "PHASE05_validation-and-closure.md",
+]
 
 
 def test_required_current_paths_exist() -> None:
@@ -682,7 +690,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_program3_program4_and_eight_deliverables_closures_are_archived_with_no_active_program() -> None:
+def test_active_program_and_archived_program_closures_are_consistent() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -695,6 +703,7 @@ def test_program3_program4_and_eight_deliverables_closures_are_archived_with_no_
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
+            *ACTIVE_PROGRAM_PHASE_FILES,
         ]
     )
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
@@ -708,8 +717,10 @@ def test_program3_program4_and_eight_deliverables_closures_are_archived_with_no_
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
+        ACTIVE_PROGRAM_NAME,
+        "state: active",
+        "current_phase: PHASE01_architecture-state-and-program-boot",
         COMPLETED_PROGRAM_NAME,
-        "state: no-active",
         COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",
     ]:

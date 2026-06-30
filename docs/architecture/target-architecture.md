@@ -18,9 +18,12 @@ Zuno 的目标不是把普通 RAG 聊天框做厚，也不是默认改成多 Age
 Local-first Agent Workspace
 = Single Controller Agent
 + Context Builder
++ Agent Core Runtime / Planning Harness
 + Agentic RAG Controller
 + GraphRAG Knowledge Base
++ Document Ingestion / Parse Gateway
 + ToolCard / MCP Tool Layer
++ Security / Policy Guard
 + Hooks / Policy / Budget / Fallback
 + Evidence / Citation / Trace / Eval
 + Session Workspace / Artifact Flow
@@ -35,6 +38,24 @@ Local-first Agent Workspace
 - Single Controller Agent，而不是默认产品级多 Agent。
 - Agentic RAG + GraphRAG，而不是固定“先 RAG 再回答”。
 - Current / Target / History 严格分开。
+
+## 目标架构细化分层
+
+Zuno 下一阶段的架构表达不再只停留在“大模块名”，而要把企业知识库、文档解析、安全和评测这些产品级能力放进同一张可执行蓝图。目标分层如下：
+
+| 层 | 目标职责 | 近期边界 |
+| --- | --- | --- |
+| Model / Gateway | 管理模型 provider、本地模型、模型选择、上下文窗口、成本和延迟策略。 | 作为 Platform 能力进入目标图，不把某个 vendor 写死为 Current。 |
+| Agent Core Runtime | 承载 `prepare_context -> plan -> ReAct -> observe -> reflect -> replan -> post_turn_commit` 的控制循环。 | Planning 是 runtime 内部控制能力，不是独立顶层业务层。 |
+| Context / Memory | 生成 Context Pack，管理 Raw Event Log、recent window、task summary、长期语义/情节/程序性记忆、graph memory 和 review / promotion / decay 流。 | 目标是生产级 write-manage-read 记忆系统；当前仍是 foundation。 |
+| Capability / Tool | 用 ToolCard 管理工具语义、权限、成本、健康状态、side effect 和执行 adapter。 | SDK / API / CLI / SSH / MCP 是 execution mode，不是业务顶层分类。 |
+| Knowledge / Retrieval | 管理 `basic / local / global / drift`、GraphRAG、retrieval fusion、evidence、citation。 | Knowledge 可作为 capability 被 Agent 调用，但架构上单独成层。 |
+| Document Ingestion | 管理 upload、format detection、parser registry、OCR/VLM、chunk metadata、ACL 继承和 indexing handoff。 | 企业知识库场景的前置层，不能继续隐含在普通工具调用里。 |
+| Security / Policy | 管理输入检查、PII/商业秘密脱敏、prompt injection 防护、chunk 级权限、工具审批和输出 DLP。 | 横切层，必须覆盖输入、检索、工具和输出。 |
+| Trace / Eval | 管理 runtime trace、LangSmith 映射、offline/online eval、retrieval quality、tool trajectory、latency/cost。 | 当前已有本地 trace/eval foundation；LangSmith 产品化仍是 Target。 |
+| Platform / Workspace | 管理 session workspace、artifact store、数据库、向量库、图存储、background jobs 和 provider。 | 近期保持模块化单体，不是微服务拆分。 |
+
+这组分层是 Target。它用于指导后续 program，不表示上述所有能力都已经成为 Current。
 
 ## 架构视图目录
 
@@ -120,20 +141,50 @@ User Query
 
 这个链路吸收 DeepSearchAgents 的清晰工程表达：任务入口、会话目录、上传附件、工具调用、运行事件、Markdown / PDF 产物和前后端闭环。但 Zuno 不把 Tavily、MySQL、RAGFlow 或固定三助手写成身份；它们只应该表现为可替换 capability 或 adapter。
 
-## 六个主层
+## 六个代码主层与目标能力映射
 
 Zuno 目标仍用六个主层承载代码和责任边界：
 
 1. API 层：FastAPI routes、DTO、Auth、SSE / WebSocket event stream、task / session、upload、artifact list / download。
-2. Agent 层：Single Controller Agent，目标形态是 `prepare_context -> agent_loop -> post_turn_commit`。
+2. Agent 层：Single Controller Agent，目标形态是 `prepare_context -> agent_loop -> post_turn_commit`，内部细化为 Agent Core Runtime / Planning Harness。
 3. Memory 层：短期状态、工作记忆、长期语义记忆、长期情节记忆、程序性记忆、Raw Event Log。
-4. Capability 层：ToolCard Registry、keyword / alias search、Native BM25 over ToolCards、optional vector tool search、permission / health / cost filter、CapabilitySelectionTrace、MCP adapter。
-5. Knowledge 层：`KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot`、LLM-first entity / relation extraction、`basic / local / global / drift`、retrieval / fusion / evidence。
-6. Platform 层：PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、optional Elasticsearch adapter、model gateway、session workspace、artifact store、storage、background jobs 和 observability。
+4. Capability 层：ToolCard Registry、keyword / alias search、Native BM25 over ToolCards、optional vector tool search、permission / health / cost filter、CapabilitySelectionTrace、MCP adapter 和 execution adapter metadata。
+5. Knowledge 层：`KnowledgeQueryService`、`GraphRAGQueryService`、`GraphRAGProjectSnapshot`、LLM-first entity / relation extraction、`basic / local / global / drift`、retrieval / fusion / evidence，以及 Document Ingestion handoff。
+6. Platform 层：PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、optional Elasticsearch adapter、model gateway、session workspace、artifact store、storage、background jobs、observability 和 LangSmith / trace backend adapter。
 
 横切治理层是 Evidence / Citation / Trace / Eval / Policy。它记录 trace_id、evidence bundle、citation coverage、latency、cost、permission decision、fallback reason 和 eval profile，但不单独拥有业务入口。
 
+## Document Ingestion 与企业知识库
+
+企业知识库不是“上传文件后直接丢给 RAG”。目标链路是：
+
+```text
+upload
+  -> file validation
+  -> format detection
+  -> parser registry
+  -> OCR / VLM / structure extraction
+  -> chunk metadata
+  -> ACL inheritance
+  -> BM25 / vector / graph index handoff
+  -> parse trace / eval sample
+```
+
+目标 Parser Capability Matrix 至少要覆盖：
+
+| 类型 | 目标处理方式 | 关键证据锚点 |
+| --- | --- | --- |
+| PDF | PyMuPDF4LLM / Docling 路径，保留 page、text span、image/table metadata。 | page number、span、image id、table id。 |
+| DOCX / PPTX / XLSX | Office parser 或 convert-to-PDF fallback，保留 heading、slide、sheet、table。 | document id、section、slide、sheet、row/column。 |
+| TXT / MD / CSV / JSON / HTML | 轻量 text loader，加结构化 metadata。 | line range、heading、row id、DOM section。 |
+| 图片 / 扫描件 | OCR / VLM 路径，输出视觉描述和 OCR 文本。 | image id、bbox、OCR confidence。 |
+| 代码文件 | code-aware chunking，保留语言、symbol、line range。 | language、path、symbol、line range。 |
+
+当前仓库已有部分 parser foundation 和多模态路径，但统一 Parse Gateway、格式矩阵、代码文件解析、ACL 继承和 parser eval 仍是 Target。
+
 ## Context Builder 与记忆
+
+Zuno 的记忆层不等于聊天历史拼接，也不等于把所有知识库证据塞进向量库。目标 Memory Layer 是一个 write-manage-read 子系统：先把运行事件作为事实源保存，再通过摘要压缩和结构化抽取生成候选记忆，经过 review / promotion / decay 后进入长期层，最后由 Context Builder 按任务、权限、预算和相关性选入 Context Pack。
 
 Zuno 不是“用户问题直接丢给 Agent”。目标流程是先由 Context Builder 生成最小但足够的 Context Pack：
 
@@ -153,15 +204,61 @@ system rules
 
 记忆目标边界：
 
-- 短期状态：本轮意图、query_method、当前 plan、最近工具结果、trace id。
-- 工作记忆：候选证据包、已打开文件、临时摘要、待验证结论、未完成 todo。
-- 长期语义记忆：用户偏好、项目术语、固定约束、架构基线。
-- 长期情节记忆：过去任务为什么选择某条检索路径、某次失败如何修正。
-- 程序性记忆：Current / Target / Future / History 规则、引用规则、预算和权限规则。
+| 层级 | 目标职责 | 进入模型方式 |
+| --- | --- | --- |
+| Raw Event Log | append-only 保存用户、Agent、工具、检索、文件解析和输出事件，是审计、回放、重总结和评测事实源。 | 默认不直接进入模型，只通过 summary、retrieval 或 debug trace 间接进入。 |
+| L0 Working Context | 本轮真正 model-visible 的上下文包，包含当前目标、约束、证据、工具状态和少量选中记忆。 | 由 Context Builder 装配为 `ModelContextPacket`。 |
+| L1 Recent Window | 最近连续对话和完整 tool call / result group，保护本轮 coherence。 | 按 token budget 裁剪，不能打断未闭合工具组。 |
+| L2 Task Summary | 当前 task / thread 的 goals、constraints、decisions、TODO、artifact refs、open questions。 | 优先作为长期任务连续性的压缩表示进入 Context Pack。 |
+| L3 Structured Long-term Memory | semantic / episodic / procedural memory：用户偏好、项目术语、失败修正、成功路径、规则和策略。 | 通过 scope、relevance、importance、recency、confidence、privacy risk 过滤后进入。 |
+| L4 Graph Memory | 实体、关系、社区、历史决策和项目对象的图式记忆。 | Target 扩展；用于 local/global/drift 线索，不与 chunk 证据硬混排。 |
+
+长期记忆内容类型：
+
+- 语义记忆：用户偏好、项目术语、固定约束、架构基线和业务实体事实。
+- 情节记忆：过去任务为什么选择某条检索路径、某次失败如何修正、某轮工具轨迹带来的经验。
+- 程序性记忆：Current / Target / Future / History 规则、引用规则、预算、权限、审批和安全策略。
 
 目标策略是 Summary Compression + Structured Extraction。Summary 不能替代 Raw Event Log；structured memory 必须保留 `source_event_ids`。Prompt Caching 是 compute-layer hint，不是 memory compression。
 
 Context Pack 的目标 contract 必须同时携带内容、来源、预算和策略：每个 item 至少能追溯 `source_event_ids`、`ContextSource`、token estimate、priority 和 dropped reason；整体 packet 必须说明 compression strategy、structured extraction strategy、review requirement 和缺失 source id 风险。短期状态与工作记忆可以服务本轮调用；语义、情节和程序性记忆进入长期层前必须经过 review / approval，并保留 scope、dedupe key、confidence、retention policy 和来源事件。
+
+目标 read path：
+
+```text
+query / step
+  -> retrieval-or-not gating
+  -> scope and permission filter
+  -> recent window + task summary + structured memory recall
+  -> relevance / importance / recency / confidence scoring
+  -> token budget and eviction
+  -> ModelContextPacket with provenance
+```
+
+目标 write path：
+
+```text
+turn events
+  -> Raw Event Log append
+  -> summary compression
+  -> structured memory candidate extraction
+  -> dedupe / conflict check
+  -> privacy and retention policy
+  -> review / approval
+  -> promotion to task summary, semantic, episodic, procedural or graph memory
+```
+
+记忆压缩不只发生在 prompt 前。滑动窗口只保护最近上下文，摘要压缩负责长期任务连续性，重要性过滤负责写入和读取阶段，结构化抽取负责可检索 durable memory。Prompt caching 只降低重复前缀成本和延迟，不解决“该记住什么”的问题。
+
+目标存储映射：
+
+| 存储 | Memory 角色 | 边界 |
+| --- | --- | --- |
+| PostgreSQL | Raw Event Log、memory metadata、review state、provenance、retention policy 的真相源。 | 不把全文检索和向量搜索都塞进 SQL。 |
+| Redis | thread state、hot summary、TTL、checkpoint cache 和 write-behind buffer。 | 不是长期审计真相源。 |
+| Vector store | semantic / episodic memory candidate recall。 | 必须回连 PostgreSQL metadata 和 `source_event_ids`。 |
+| Graph store | graph memory、entity/relation、community memory 和项目对象关系。 | Target 扩展，不把知识库 GraphRAG 与 Agent Memory 混成一个无边界图。 |
+| Optional lexical index | exact match、术语、错误码、文件名、字段过滤。 | 作为 adapter，不是 Memory 层唯一检索方式。 |
 
 ## 检索与 GraphRAG
 
@@ -198,18 +295,69 @@ PHASE08 当前已经证明的是 extractor config contract、snapshot 传播、q
 
 ## Plan、ReAct 与 Reflection
 
-Zuno 的规划范式不是三套框架硬拼，而是：
+Zuno 的规划范式不是三套框架硬拼。Planning 是 Agent Core Runtime 的核心控制能力，runtime / harness 负责把状态、工具、记忆、安全、trace 和失败恢复串起来。
+
+目标链路是：
 
 ```text
-粗计划
-  -> ReAct 执行
-  -> 门控 Reflection
-  -> 局部重规划
+prepare_context
+  -> intent / mode router
+  -> coarse plan
+  -> ReAct step
+  -> tool / retrieval dispatch
+  -> observation
+  -> gated reflection
+  -> replan or finish
+  -> post_turn_commit
 ```
 
-Planner 只负责把用户目标拆成有限个可检查步骤。ReAct 层负责每轮决定是否检索、调用哪个 capability、是否重写 query、是否补证据。Reflection 只在证据不足、检索冲突、回答覆盖率低、结构化输出不合格或连续两轮没有增量收益时触发。
+Planner 只负责把用户目标拆成有限个可检查步骤。ReAct 层负责每轮决定是否检索、调用哪个 capability、是否重写 query、是否补证据。Reflection 只在证据不足、检索冲突、回答覆盖率低、结构化输出不合格或连续两轮没有增量收益时触发。Replan 只改写剩余计划，不抹掉已验证证据。
+
+LangGraph 是这个 Agent Core Runtime 的目标实现候选：它适合承载 state graph、checkpoint、durable execution、streaming、interrupt / human-in-the-loop 和 resume。它不是“规划模块本身”，而是把 planning runtime 工程化的框架。
 
 ToT / LATS 这类高成本树搜索不作为产品默认路径；它们只能作为未来困难模式或离线分析路径。
+
+## ToolCard 与 execution adapter
+
+工具层按能力语义治理，不按接入方式拆顶层目录。目标 ToolCard 至少描述：
+
+```text
+capability type: search | document | email | database | artifact | code | ssh
+execution mode: local_function | local_sdk | sdk_to_api | api | local_cli | cli_to_api | ssh | mcp_local | mcp_remote
+permission level
+side effect level
+cost / latency / timeout
+approval policy
+health and fallback policy
+result normalization contract
+```
+
+MCP 可以包装本地函数、SDK、CLI、API、数据库、文件系统或 SSH。CLI 本身通常是本地入口，但它背后可以是本地程序、远程 API 或 SSH 远程 shell。Zuno 不把这些接入方式写成业务顶层分类，而是把它们放进 ToolCard / execution adapter metadata，让 runtime 能统一做权限、预算、审计和 fallback。
+
+高副作用能力，例如邮件发送、SSH、外部写操作、删除/覆盖类工具，默认需要 approval / interrupt / audit trace。
+
+## Security、Trace 与 Eval
+
+安全与评测必须是同一条链路上的治理能力，而不是事后补丁。
+
+目标安全闸门：
+
+1. 输入闸门：鉴权、限流、文件类型/大小/hash 检查、PII / 商业秘密识别、prompt injection 识别。
+2. 解析闸门：恶意文档隔离、OCR/VLM 输出标记、parser failure trace、来源 metadata 固化。
+3. 检索闸门：chunk 级 ACL、workspace/project scope、document trust label、retrieval result sanitization。
+4. 工具闸门：side effect 分级、permission decision、approval gate、timeout、working directory / host allowlist。
+5. 输出闸门：DLP scan、citation coverage、format validation、sensitive field redaction。
+
+目标评测面：
+
+- Parser eval：格式支持率、解析失败率、OCR confidence、chunk metadata coverage。
+- Retrieval eval：Recall@k、MRR、nDCG、retrieval relevance、citation coverage。
+- Memory eval：memory pollution rate、wrong-promotion rate、stale-memory hit rate、duplicate-memory ratio、forgotten-needed-memory rate、cross-session recall benefit。
+- Answer eval：correctness、faithfulness / groundedness、answer relevance、format validity。
+- Agent eval：tool selection、argument correctness、trajectory quality、approval rate、fallback rate。
+- Product eval：latency、cost、retry rate、user feedback、online regression。
+
+LangSmith 作为目标 observability / evaluation adapter，用于映射 Zuno runtime trace、dataset、evaluator、experiment 和 dashboard。本地 pytest / eval runner 仍保留为 release gate。
 
 ## Hooks、Policy 与运行事件
 

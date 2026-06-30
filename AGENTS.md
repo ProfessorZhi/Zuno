@@ -179,7 +179,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前没有 active program。最近完成并归档的 program 是 `zuno-eight-deliverables-full-realization-v1`。它不是 Program 3 返工，也不是只做 architecture markdown / HTML，而是把八大交付物完整落实到文档、目标架构、代码结构、runtime contracts、验证和收口证据中。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
+当前 active program 是 `zuno-architecture-detail-and-execution-plan-v1`。它只细化目标架构文档、十类 Mermaid 架构图、生成 HTML 和后续执行计划，不实施 runtime feature，不新增 API / DB schema / frontend 行为。最近完成并归档的 program 是 `zuno-eight-deliverables-full-realization-v1`。它不是 Program 3 返工，也不是只做 architecture markdown / HTML，而是把八大交付物完整落实到文档、目标架构、代码结构、runtime contracts、验证和收口证据中。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
 
 最新完成程序归档在：
 
@@ -197,8 +197,13 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/closure-checklist.md`
 - `.agent/programs/README.md`
+- `.agent/programs/PHASE01_architecture-state-and-program-boot.md`
+- `.agent/programs/PHASE02_target-architecture-detailing.md`
+- `.agent/programs/PHASE03_mermaid-html-detail-refresh.md`
+- `.agent/programs/PHASE04_execution-roadmap-from-architecture.md`
+- `.agent/programs/PHASE05_validation-and-closure.md`
 
-前台没有 `PHASE*.md`。打开下一轮 program 时，必须迁入新的 roadmap 和 phase 文件，并从 `PHASE01` 开始。
+当前阶段是 `PHASE01_architecture-state-and-program-boot`。本 program 从 `PHASE01` 开始，phase 文件平铺在 `.agent/programs/` 根目录。
 
 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 

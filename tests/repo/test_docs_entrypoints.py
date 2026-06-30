@@ -273,6 +273,11 @@ def test_architecture_diagrams_expose_multi_view_target_architecture() -> None:
         "Quality View",
         "Agentic RAG",
         "GraphRAG",
+        "Raw Event Log",
+        "Memory Read Policy",
+        "Memory Review Gate",
+        "structured memory candidate",
+        "write-manage-read",
         "Domain Pack 只允许作为历史或兼容语境出现",
     ]:
         assert phrase in content
@@ -361,7 +366,7 @@ def test_architecture_view_contract_is_shared_across_docs_and_renderer() -> None
     assert architecture_html.count("<summary>Mermaid source</summary>") == 10
     for phrase in [
         "overflow-x: auto",
-        "min-width: 560px",
+        "min-width: 760px",
         "securityLevel: \"strict\"",
         "useMaxWidth: false",
     ]:

@@ -1,18 +1,28 @@
 # Agent 执行计划
 
-`.agent/programs/` 只保存当前可执行计划或等待态入口。当前没有 active program；已完成的 program 必须整体归档到 `docs/history/programs/`，不要把旧 phase 文件留在前台路径。
+`.agent/programs/` 只保存当前可执行计划或等待态入口。已完成的 program 必须整体归档到 `docs/history/programs/`，不要把旧 phase 文件留在前台路径。
 
 ## 当前状态
 
-- State: no-active
+- State: active
+- Active program: `zuno-architecture-detail-and-execution-plan-v1`
+- 当前阶段：[PHASE01_architecture-state-and-program-boot.md](PHASE01_architecture-state-and-program-boot.md)
 - 当前入口：[current.md](current.md)
-- 下一 program 还没有打开。
+
+## Program 目标
+
+本 program 只做架构文档、架构图 HTML、图清单、program 状态和后续执行计划的细化，重点覆盖 Agent Core、Memory Layer、Document Ingestion、安全、Trace / Eval 和企业知识库场景。它不实施 runtime feature，不新增 API / DB / frontend 行为。
 
 ## 前台文件
 
-- [current.md](current.md)：说明当前没有 active program，并指向最近完成归档。
-- [implementation-roadmap.md](implementation-roadmap.md)：等待态路线骨架；打开新 program 时替换为新 program roadmap。
-- [closure-checklist.md](closure-checklist.md)：通用收口闸门；打开新 program 时可复用或替换为新 program checklist。
+- [current.md](current.md)：当前 active program 和边界。
+- [implementation-roadmap.md](implementation-roadmap.md)：本 program 的阶段路线和验收。
+- [closure-checklist.md](closure-checklist.md)：本 program 的收口闸门。
+- [PHASE01_architecture-state-and-program-boot.md](PHASE01_architecture-state-and-program-boot.md)：架构状态与 program 启动。
+- [PHASE02_target-architecture-detailing.md](PHASE02_target-architecture-detailing.md)：目标架构细化。
+- [PHASE03_mermaid-html-detail-refresh.md](PHASE03_mermaid-html-detail-refresh.md)：Mermaid 与 HTML 展示升级。
+- [PHASE04_execution-roadmap-from-architecture.md](PHASE04_execution-roadmap-from-architecture.md)：从架构图反推执行计划。
+- [PHASE05_validation-and-closure.md](PHASE05_validation-and-closure.md)：验证、同步和归档准备。
 
 ## 最近归档
 
@@ -27,7 +37,7 @@
 ## 使用规则
 
 - 每次只打开一个 active program。
-- 新 program 必须从 `PHASE01` 开始编号。
+- 每次新 program 都从 `PHASE01` 开始编号。
 - active phase 文件必须平铺在 `.agent/programs/` 根目录。
 - completed program 必须归档到 `docs/history/programs/`。
 - `.agent/architecture/future/programs/` 中的 queued drafts 只能作为参考输入，不能被写成 active。

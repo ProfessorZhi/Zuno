@@ -1,45 +1,60 @@
 # 当前程序
 
-当前没有 active program。
+当前 active program：`zuno-architecture-detail-and-execution-plan-v1`
 
-state: no-active
-current_phase: none
+state: active
+current_phase: PHASE01_architecture-state-and-program-boot
 
-## 最近完成
+## 目标
 
-最近完成并归档的 program 是 `zuno-eight-deliverables-full-realization-v1`：
+本 program 先细化 Zuno 的目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Document Ingestion、企业知识库场景、安全治理、Trace / Eval 和 LangSmith 适配。
+
+它不是 runtime feature implementation，不新增 API / DB schema / frontend 行为，不把 Target 写成 Current。
+
+## 范围
+
+允许修改：
+
+- `docs/architecture.md`
+- `docs/architecture.html`
+- `docs/architecture/target-architecture.md`
+- `docs/architecture/README.md`
+- `docs/architecture/roadmap.md`
+- `AGENTS.md`
+- `README.md`
+- `.agent/programs/*`
+- `.agent/references/current-program.md`
+- `.agent/references/diagram-inventory.md`
+- `.agent/architecture/future/programs/README.md`
+- `tools/agent/render_architecture.py`
+- `.agent/scripts/verify_agent_system.py`
+- `.agent/scripts/verify_doc_boundaries.py`
+- `tools/scripts/verify_docs_entrypoints.py`
+- `tools/scripts/verify_repo_structure.py`
+- `tests/repo/test_agent_system.py`
+- `tests/repo/test_docs_entrypoints.py`
+
+禁止修改：
+
+- Runtime 代码、API 行为、DB schema、frontend product flow。
+- `src/backend/zuno/**`，除非后续单独打开实现 program。
+- 历史归档内容，除非本 program 收口时归档自身。
+
+## 当前阶段
+
+- `PHASE01_architecture-state-and-program-boot.md`：active。
+- `PHASE02_target-architecture-detailing.md`：pending。
+- `PHASE03_mermaid-html-detail-refresh.md`：pending。
+- `PHASE04_execution-roadmap-from-architecture.md`：pending。
+- `PHASE05_validation-and-closure.md`：pending。
+
+## 当前边界
+
+最近完成并归档的 program 仍是 `zuno-eight-deliverables-full-realization-v1`，它完整落实八个交付物：
 
 - 历史目录：`docs/history/programs/zuno-eight-deliverables-full-realization-v1/`
 - 范围：PHASE01-PHASE10。
 - 状态：completed / archived。
 - 执行方式：主线程目标模式 + 线程内多 agent 协作；这是 Codex 执行协作，不是 Zuno runtime 架构；不是多线程模式。
 
-## 完成事实
-
-这个 program 完整落实八个交付物：
-
-1. Agent 工作流文档系统。
-2. 元工作流自我维护系统。
-3. 模板与执行计划系统。
-4. 正式架构文档系统。
-5. 架构 HTML 展示系统。
-6. 完善的 Zuno 目标架构。
-7. 清晰干净的代码和目录。
-8. 一致性与验证系统。
-
-PHASE04-PHASE09 形成了 query router / mode policy、Context Pack / Memory foundation、Capability ToolCard / MCP policy、Hooks / Evidence / Trace、GraphRAG knowledge runtime contract 和 RuntimeTurnLedger integration 的 foundation slices。它们都是当前代码和测试已经证明的事实；生产级 DB schema 迁移、前端 trace panel、完整动态工具编排、完整 model-visible context injection、完整 RRF/rerank 治理、Java / 微服务 / event worker 和 Zuno runtime 多 Agent 架构仍不是 Current。
-
-## 前台状态
-
-`.agent/programs/` 当前只保留等待态入口：
-
-- `README.md`
-- `current.md`
-- `implementation-roadmap.md`
-- `closure-checklist.md`
-
-没有前台 `PHASE*.md`。打开下一轮 program 时，必须先迁入新的 roadmap 和 phase 文件，并从 `PHASE01` 开始。
-
-## 参考输入
-
-`.agent/architecture/future/programs/` 中的 queued drafts 仍是未来参考输入，不是 active 执行入口。
+本 program 继承上一个 program 的 Current / Target 纪律：PHASE04-PHASE09 foundation slices 是当前已证明事实；完整产品级 LangGraph runtime、生产级 Memory DB、成熟 memory read/write/promotion/decay、动态工具编排、完整 parser gateway、LangSmith 产品化、安全闸门和前端 trace 面板仍是 Target。

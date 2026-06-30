@@ -400,7 +400,7 @@ def render_html(diagrams: list[Diagram]) -> str:
     .diagram-frame {{
       margin: 16px auto 10px;
       padding: 18px;
-      max-width: 780px;
+      max-width: 1120px;
       overflow-x: auto;
       border: 1px solid var(--zuno-border);
       border-radius: 6px;
@@ -414,7 +414,7 @@ def render_html(diagrams: list[Diagram]) -> str:
     .mermaid svg {{
       width: auto !important;
       max-width: none;
-      min-width: 560px;
+      min-width: 760px;
       height: auto;
     }}
     details {{
