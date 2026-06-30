@@ -25,6 +25,7 @@ MASTER_PROGRAM_PHASE_FILES = [
     "PHASE12_validation-release-closure.md",
 ]
 RUNTIME_PROGRAM_NAME = "zuno-target-architecture-runtime-full-implementation-v1"
+RUNTIME_PROGRAM_ARCHIVE = f"docs/history/programs/{RUNTIME_PROGRAM_NAME}"
 RUNTIME_PROGRAM_PHASE_FILES = [
     "PHASE01_program-reopen-and-truth-source-freeze.md",
     "PHASE02_runtime-migration-map-and-repo-ownership-lock.md",
@@ -41,10 +42,7 @@ RUNTIME_PROGRAM_PHASE_FILES = [
 ]
 RUNTIME_PROGRAM_FILES = [
     "README.md",
-    "closure-checklist.md",
     "current.md",
-    "implementation-roadmap.md",
-    *RUNTIME_PROGRAM_PHASE_FILES,
 ]
 
 REQUIRED_PATHS = [
@@ -97,9 +95,12 @@ REQUIRED_PATHS = [
     "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/decisions/README.md",
     ".agent/programs/README.md",
     ".agent/programs/current.md",
-    ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/closure-checklist.md",
-    *[f".agent/programs/{phase_name}" for phase_name in RUNTIME_PROGRAM_PHASE_FILES],
+    f"{RUNTIME_PROGRAM_ARCHIVE}/README.md",
+    f"{RUNTIME_PROGRAM_ARCHIVE}/current.md",
+    f"{RUNTIME_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{RUNTIME_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{RUNTIME_PROGRAM_ARCHIVE}/closure-summary.md",
+    *[f"{RUNTIME_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in RUNTIME_PROGRAM_PHASE_FILES],
     "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/README.md",
     "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/current.md",
     "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/implementation-roadmap.md",
@@ -208,7 +209,7 @@ def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
         return ["missing .agent/programs"]
     program_files = sorted(path.name for path in programs_root.iterdir() if path.is_file())
     if program_files != sorted(RUNTIME_PROGRAM_FILES):
-        errors.append(f".agent/programs active runtime program files drifted: {program_files}")
+        errors.append(f".agent/programs no-active files drifted: {program_files}")
     for name in RUNTIME_PROGRAM_FILES:
         if not (programs_root / name).exists():
             errors.append(f"missing .agent/programs/{name}")
@@ -310,44 +311,40 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
     current = (repo_root / ".agent/programs/current.md").read_text(encoding="utf-8")
     readme = (repo_root / ".agent/programs/README.md").read_text(encoding="utf-8")
-    roadmap = (repo_root / ".agent/programs/implementation-roadmap.md").read_text(encoding="utf-8")
     current_reference = (repo_root / ".agent/references/current-program.md").read_text(encoding="utf-8")
+    runtime_archive_root = repo_root / RUNTIME_PROGRAM_ARCHIVE
+    runtime_archive_text = (
+        (runtime_archive_root / "current.md").read_text(encoding="utf-8")
+        + (runtime_archive_root / "README.md").read_text(encoding="utf-8")
+        + (runtime_archive_root / "closure-summary.md").read_text(encoding="utf-8")
+    )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: active",
-        f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE12_release-gate-full-e2e-closure",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        RUNTIME_PROGRAM_NAME,
+        RUNTIME_PROGRAM_ARCHIVE,
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
     ]:
-        if phrase not in current + readme + roadmap + current_reference:
-            errors.append(f"program lifecycle surface missing active runtime phrase: {phrase}")
+        if phrase not in current + readme + current_reference + runtime_archive_text:
+            errors.append(f"program lifecycle surface missing no-active runtime phrase: {phrase}")
     for phase_index, phase_name in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
-        phase_path = repo_root / ".agent/programs" / phase_name
+        phase_path = runtime_archive_root / phase_name
         if not phase_path.exists():
-            errors.append(f"active runtime program missing phase: {phase_name}")
+            errors.append(f"runtime program archive missing phase: {phase_name}")
             continue
         phase_content = phase_path.read_text(encoding="utf-8")
-        expected_status = {
-            1: "status: completed",
-            2: "status: completed",
-            3: "status: completed",
-            4: "status: completed",
-            5: "status: completed",
-            6: "status: completed",
-            7: "status: completed",
-            8: "status: completed",
-            9: "status: completed",
-            10: "status: completed",
-            11: "status: completed",
-            12: "status: active",
-        }.get(phase_index, "status: pending")
-        if expected_status not in phase_content:
-            errors.append(f"active runtime program phase status drifted: {phase_name}")
+        if "status: completed" not in phase_content:
+            errors.append(f"runtime program archive phase status drifted: {phase_name}")
         for required in ["## 目标", "## 范围", "## 禁止范围", "## 验收闸门", "## 验证命令"]:
             if required not in phase_content:
-                errors.append(f"active runtime program phase missing section {required}: {phase_name}")
+                errors.append(f"runtime program archive phase missing section {required}: {phase_name}")
+    for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        if not (runtime_archive_root / required_archive_file).exists():
+            errors.append(f"runtime program archive missing file: {required_archive_file}")
     for phrase in [
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,

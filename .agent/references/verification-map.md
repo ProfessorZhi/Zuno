@@ -142,9 +142,9 @@ pytest -q tests/security tests/tools tests/agent/test_capability_system.py tests
 pytest -q tests/evals tools/evals/zuno -p no:cacheprovider
 ```
 
-PHASE10 关闭后，当前 active phase 必须推进到 `PHASE11_architecture-docs-html-refresh`，并同步 `.agent/scripts/verify_agent_system.py`、`.agent/scripts/verify-workflow.ps1`、`tools/scripts/verify_repo_structure.py`、`tests/repo/test_agent_system.py`、`tests/repo/test_repo_structure_consistency.py` 和 `tests/repo/test_publish_boundary.py`。`.agent/programs/` 只有 PHASE12 完成并归档后才进入 no-active 或下一个用户批准的 program。
+`zuno-target-architecture-runtime-full-implementation-v1` 已完成 PHASE12 并归档到 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。当前 `.agent/programs/` 处于 no-active 等待态，只保留 `README.md` 和 `current.md`；front path 不再保留 active phase 文件、roadmap、closure checklist 或 thread prompts。
 
-PHASE11 关闭后，当前 active phase 必须推进到 `PHASE12_validation-release-closure`，并同步同一组 active-phase verifier / repo tests。PHASE12 负责全量验证、closure summary、历史归档和 release metadata。
+后续如打开新 active program，必须从 `PHASE01` 重新建立 program truth，并同步 `.agent/scripts/verify_agent_system.py`、`.agent/scripts/verify-workflow.ps1`、`tools/scripts/verify_repo_structure.py`、`tests/repo/test_agent_system.py`、`tests/repo/test_repo_structure_consistency.py` 和 `tests/repo/test_publish_boundary.py`。已归档 program 的 phase status 只能作为历史证据，不能被 verifier 当作当前 active state。
 
 文档入口扩大验证：
 

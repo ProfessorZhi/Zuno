@@ -1,6 +1,6 @@
 # PHASE12 release-gate-full-e2e-closure
 
-status: active
+status: completed
 
 ## 目标
 

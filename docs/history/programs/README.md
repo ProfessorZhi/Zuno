@@ -48,6 +48,12 @@ and evidence, not the active Agent execution path.
   workflow self-maintenance, templates / program lifecycle, formal architecture
   docs, architecture HTML, target architecture, clean code / directories, and
   verification evidence.
+- `zuno-target-architecture-runtime-full-implementation-v1/`: completed
+  runtime-first target architecture implementation program. It closed
+  PHASE01-PHASE12 across workspace task runtime, document ingestion, index jobs,
+  durable controller runtime, memory DB, tool control plane, agentic retrieval,
+  security / observability / eval, Web product surface, release gate, archive,
+  and no-active closure.
 
 ## Rule
 

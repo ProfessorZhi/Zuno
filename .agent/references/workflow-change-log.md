@@ -17,6 +17,27 @@ date
 
 ## Current Truth
 
+### 2026-06-30: runtime-full program archived and no-active restored
+
+Summary: 完成 `zuno-target-architecture-runtime-full-implementation-v1` 的 PHASE01-PHASE12，归档 program，并把 `.agent/programs/` 切回 no-active 等待态。
+
+Reason: 本轮已经以完整 vertical slice 证明第一版 runtime 闭环，不应继续把历史 phase 文件留在前台作为 active 执行入口；下一轮 program 必须由用户明确打开并从 PHASE01 重新冻结事实源。
+
+Affected files:
+
+- `.agent/programs/README.md`
+- `.agent/programs/current.md`
+- `.agent/references/current-program.md`
+- `.agent/references/verification-map.md`
+- `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
+- `docs/architecture/architecture.md`
+- `.agent/architecture/architecture.md`
+- verifier and repo tests
+
+Status: Current workflow truth after PHASE12 release closure.
+
+Validation: 本条随 PHASE12 由 full pytest、architecture renderer check、docs / repo / agent / workflow verifier、contract eval 和 `git diff --check` 验证。
+
 ### 2026-06-30: runtime-first active program acceptance
 
 Summary: 打开 `zuno-target-architecture-runtime-full-implementation-v1`，把下一轮验收口径从 contract foundation 改为 runtime-first / vertical-slice-first。

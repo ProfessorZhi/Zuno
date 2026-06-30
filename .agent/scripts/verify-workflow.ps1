@@ -38,20 +38,21 @@ Require-Path "docs\architecture\architecture.md"
 Require-Path "docs\architecture\architecture.html"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
-Require-Path ".agent\programs\implementation-roadmap.md"
-Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE01_program-reopen-and-truth-source-freeze.md"
-Require-Path ".agent\programs\PHASE02_runtime-migration-map-and-repo-ownership-lock.md"
-Require-Path ".agent\programs\PHASE03_task-session-artifact-event-runtime.md"
-Require-Path ".agent\programs\PHASE04_document-ingestion-parse-runtime.md"
-Require-Path ".agent\programs\PHASE05_index-jobs-and-knowledge-space-runtime.md"
-Require-Path ".agent\programs\PHASE06_durable-single-controller-runtime.md"
-Require-Path ".agent\programs\PHASE07_memory-db-and-context-governance.md"
-Require-Path ".agent\programs\PHASE08_tool-control-plane-approval-and-sandbox-runtime.md"
-Require-Path ".agent\programs\PHASE09_agentic-retrieval-evidence-citation-runtime.md"
-Require-Path ".agent\programs\PHASE10_security-observability-and-online-eval.md"
-Require-Path ".agent\programs\PHASE11_web-desktop-surface-and-feedback-loop.md"
-Require-Path ".agent\programs\PHASE12_release-gate-full-e2e-closure.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\implementation-roadmap.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\closure-checklist.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\closure-summary.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE01_program-reopen-and-truth-source-freeze.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE02_runtime-migration-map-and-repo-ownership-lock.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE03_task-session-artifact-event-runtime.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE04_document-ingestion-parse-runtime.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE05_index-jobs-and-knowledge-space-runtime.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE06_durable-single-controller-runtime.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE07_memory-db-and-context-governance.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE08_tool-control-plane-approval-and-sandbox-runtime.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE09_agentic-retrieval-evidence-citation-runtime.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE10_security-observability-and-online-eval.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE11_web-desktop-surface-and-feedback-loop.md"
+Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\PHASE12_release-gate-full-e2e-closure.md"
 Require-NoPath ".agent\programs\PHASE01_program-baseline-and-previous-closure.md"
 Require-NoPath ".agent\programs\PHASE02_project-folder-and-code-layout-cleanup.md"
 Require-NoPath ".agent\programs\PHASE03_enterprise-scenario-and-product-loop.md"
@@ -213,8 +214,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "current_phase: PHASE12_release-gate-full-e2e-closure") {
-    $failures.Add("current-program.md must declare active runtime full implementation program")
+if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none") {
+    $failures.Add("current-program.md must declare no-active state and latest runtime full implementation archive")
 }
 if ($currentProgram -notmatch "runtime-first / vertical-slice-first" -or $currentProgram -notmatch "只写 contract、schema 或 README 不能关闭 runtime phase") {
     $failures.Add("current-program.md missing runtime-first closure guard")

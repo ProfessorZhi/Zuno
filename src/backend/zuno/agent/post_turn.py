@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from zuno.memory.contracts import MemoryScope, RawMemoryEvent, TaskMemorySummary
-from zuno.memory.store import InMemoryLayerStore
+from zuno.platform.services.memory.layers import InMemoryLayerStore
 
 
 @dataclass(frozen=True, slots=True)

@@ -36,23 +36,25 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-target-architecture-runtime-full-implementation-v1`，阶段是 `PHASE12_release-gate-full-e2e-closure`。
+当前没有 active Agent program。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`：
 
-本轮 program 不再继续做架构细化或 contract foundation，而是把目标架构推进到第一版真实 runtime 闭环：
+- `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
+
+该 program 不再继续做架构细化或 contract foundation，而是把目标架构推进到第一版真实 runtime 闭环：
 
 ```text
 上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback
 ```
 
-最近完成并归档的 foundation program 是 `zuno-master-architecture-implementation-v1`：
+上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`：
 
 - `docs/history/programs/zuno-master-architecture-implementation-v1/`
 
 它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。
 
-执行状态入口在 `.agent/programs/`。本轮每个 phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
+执行状态入口在 `.agent/programs/`，当前处于 no-active 等待态。打开下一轮 program 前必须重新确认 worktree、branch、允许范围和禁止范围，并从 `PHASE01` 开始。
 
-PHASE03 已完成 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface；PHASE04 已完成 Document Ingestion / Parse Gateway runtime owner surface；PHASE05 已完成本地 BM25 / vector / graph index job runtime；PHASE06 已完成 controller-node 级 durable Single Controller runtime surface；PHASE07 已完成 snapshot / SQLModel-backed memory runtime 与 GeneralAgent 接入；PHASE08 已完成本地 deterministic Tool Control Plane、工具级 approval / sandbox / credential ref / audit runtime 和最小前端审批入口；PHASE09 已完成 Agentic Retrieval / Evidence / Citation runtime 与 cited artifact 闭环；PHASE10 已完成 Security、Observability 与 release eval 在 workspace task runtime 的闭环；PHASE11 已把 Web workspace Agent 模式接入 file / ingest / task / SSE / approval / artifact / trace-eval / feedback 产品闭环；当前 PHASE12 进入 release gate 与归档闭环。
+PHASE03 已完成 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface；PHASE04 已完成 Document Ingestion / Parse Gateway runtime owner surface；PHASE05 已完成本地 BM25 / vector / graph index job runtime；PHASE06 已完成 controller-node 级 durable Single Controller runtime surface；PHASE07 已完成 snapshot / SQLModel-backed memory runtime 与 GeneralAgent 接入；PHASE08 已完成本地 deterministic Tool Control Plane、工具级 approval / sandbox / credential ref / audit runtime 和最小前端审批入口；PHASE09 已完成 Agentic Retrieval / Evidence / Citation runtime 与 cited artifact 闭环；PHASE10 已完成 Security、Observability 与 release eval 在 workspace task runtime 的闭环；PHASE11 已把 Web workspace Agent 模式接入 file / ingest / task / SSE / approval / artifact / trace-eval / feedback 产品闭环；PHASE12 已完成 release gate、归档和 no-active 收口。
 
 本轮大型 program 的八个方面产物：
 

@@ -30,7 +30,7 @@
 | PHASE09 | agentic-retrieval-evidence-citation-runtime | completed | 已让 Agentic retrieval 消费新 index runtime，输出 citation-rich answer，并把 evidence / citation / unsupported claim 指标写入 task retrieval event。 |
 | PHASE10 | security-observability-and-online-eval | completed | 已将 input / retrieval / tool / output gates、ZunoSpan、task observability snapshot、trace replay 和 release baseline 接入 workspace task runtime。 |
 | PHASE11 | web-desktop-surface-and-feedback-loop | completed | 已把 Web workspace Agent 模式接入 file / ingest / task / SSE / approval / artifact / trace-eval / feedback 产品闭环；Desktop 当前复用 API / bridge，不写成生产桌面闭环。 |
-| PHASE12 | release-gate-full-e2e-closure | active | 以完整 vertical slice 做 release closure、归档、验证、commit、merge 和 push。 |
+| PHASE12 | release-gate-full-e2e-closure | completed | 已完成完整 vertical slice release closure、归档、验证、commit 和 push 收口。 |
 
 ## 黄金脊柱
 

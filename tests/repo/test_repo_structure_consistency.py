@@ -36,6 +36,7 @@ MASTER_PROGRAM_PHASE_FILES = [
     "PHASE12_validation-release-closure.md",
 ]
 RUNTIME_PROGRAM_NAME = "zuno-target-architecture-runtime-full-implementation-v1"
+RUNTIME_PROGRAM_ARCHIVE = f"docs/history/programs/{RUNTIME_PROGRAM_NAME}"
 RUNTIME_PROGRAM_PHASE_FILES = [
     "PHASE01_program-reopen-and-truth-source-freeze.md",
     "PHASE02_runtime-migration-map-and-repo-ownership-lock.md",
@@ -52,10 +53,7 @@ RUNTIME_PROGRAM_PHASE_FILES = [
 ]
 RUNTIME_PROGRAM_FILES = [
     "README.md",
-    "closure-checklist.md",
     "current.md",
-    "implementation-roadmap.md",
-    *RUNTIME_PROGRAM_PHASE_FILES,
 ]
 
 
@@ -954,42 +952,35 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
 
     current = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
     readme = (REPO_ROOT / ".agent/programs/README.md").read_text(encoding="utf-8")
-    roadmap = (REPO_ROOT / ".agent/programs/implementation-roadmap.md").read_text(
-        encoding="utf-8"
-    )
     current_reference = (REPO_ROOT / ".agent/references/current-program.md").read_text(
         encoding="utf-8"
     )
+    runtime_archive = REPO_ROOT / RUNTIME_PROGRAM_ARCHIVE
+    archive_text = (
+        (runtime_archive / "current.md").read_text(encoding="utf-8")
+        + (runtime_archive / "README.md").read_text(encoding="utf-8")
+        + (runtime_archive / "closure-summary.md").read_text(encoding="utf-8")
+    )
     for phrase in [
         RUNTIME_PROGRAM_NAME,
-        "state: active",
-        f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE12_release-gate-full-e2e-closure",
+        RUNTIME_PROGRAM_ARCHIVE,
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
     ]:
-        assert phrase in current + readme + roadmap + current_reference
+        assert phrase in current + readme + current_reference + archive_text
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == []
     for index, phase in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
-        phase_path = REPO_ROOT / ".agent/programs" / phase
+        phase_path = runtime_archive / phase
         assert phase_path.exists()
         phase_text = phase_path.read_text(encoding="utf-8")
-        expected_status = {
-            1: "status: completed",
-            2: "status: completed",
-            3: "status: completed",
-            4: "status: completed",
-            5: "status: completed",
-            6: "status: completed",
-            7: "status: completed",
-            8: "status: completed",
-            9: "status: completed",
-            10: "status: completed",
-            11: "status: completed",
-            12: "status: active",
-        }.get(index, "status: pending")
-        assert expected_status in phase_text
+        assert "status: completed" in phase_text
+    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        assert (runtime_archive / archive_file).exists()
     for phase in MASTER_PROGRAM_PHASE_FILES:
         assert (REPO_ROOT / MASTER_PROGRAM_ARCHIVE / phase).exists()
     for phase in COMPLETED_PROGRAM_PHASE_FILES:
