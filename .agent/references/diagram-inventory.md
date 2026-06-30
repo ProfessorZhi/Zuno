@@ -17,7 +17,7 @@ docs/architecture/architecture.html
 
 ## Current Truth
 
-Zuno 当前固定登记十类架构视图。十类图不是十张装饰图，也不是十张粗粒度模块示意图，而是十个不同架构关注面。每张图都应至少展开到二级组件，让读者能看出 Agent Core、Memory、Tool、Knowledge、Document Ingestion、Security、Trace / Eval 与 Platform 的连接关系。Memory 图层必须体现 write-manage-read：Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay。Tool 图层必须体现 Tool Control Plane：Tool Manifest、ToolCard Registry、Capability Selector、Policy / Approval Gate、Executor Adapter、Sandbox、Result Normalizer、Tool Trace / Audit。
+Zuno 当前固定登记十类架构视图。十类图不是十张装饰图，也不是十张粗粒度模块示意图，而是十个不同架构关注面。每张图都应至少展开到二级组件，让读者能看出 Agent Core、Memory、Tool、Knowledge、Document Ingestion、Security、Trace / Eval 与 Platform 的连接关系。Memory 图层必须体现 write-manage-read：Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay。Tool 图层必须体现 Tool Control Plane：Tool Manifest、ToolCard Registry、Capability Selector、Policy / Approval Gate、Executor Adapter、Sandbox、Result Normalizer、Tool Trace / Audit。PHASE11 刷新后的图还必须体现 PHASE10 的 `ZunoSpan`、redacted export、release baseline 和 sandbox audit span bridge，但不能把 LangSmith 产品化写入、online eval 或持久 trace store 画成 Current。
 
 ```text
 4+1 View Model 五类图

@@ -66,6 +66,7 @@ Current 只写代码、测试和可复现结果已经证明的事实：
 - 当前已证明 `product_mode = normal | enhanced | auto` 与 `query_method = basic | local | global | drift` 的 PHASE08 contract：`normal` 强制 basic，`enhanced` 必检索并由 Agent 选通道，`auto` 先判断是否需要检索再选通道；`auto` 是 router，不是第五种最终检索方法。
 - 当前 `zuno.knowledge.agentic_graphrag` 已提供 Agentic Retrieval Router、StagedFusionPlan、EvidenceBundle、CitationBuilder、UnsupportedClaimChecker、GraphRAGIndexPipelineContract 和 AgenticGraphRAGTrace。
 - 当前 `zuno.platform.security.governance` 已提供 input / retrieval / tool / output gate contract、ToolSecurityProfile、SandboxAuditEvent、policy decision trace 和 secret / PII redaction helper。
+- 当前 `zuno.platform.observability.trace_eval` 已提供 OTel / LangSmith-compatible `ZunoSpan` schema、redacted span builder、LangSmith export adapter、eval dataset case、metric threshold、release baseline 和 sandbox audit span bridge。
 - 当前 Memory、Tool、Hooks、GraphRAG 和 Runtime Upgrade 都是 foundation slice，不是成熟产品能力。
 - 当前 `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界，没有 active root-level `services/` 后端树。
 
@@ -81,7 +82,7 @@ Current 只写代码、测试和可复现结果已经证明的事实：
 | Knowledge / Retrieval | Agentic GraphRAG mode policy、Basic RAG、GraphRAG local/global/drift、retrieval fusion、evidence、citation。 | 当前已有 PHASE08 Agentic Retrieval Router、staged fusion、EvidenceBundle、CitationBuilder、unsupported claim check 和 GraphRAG index pipeline contract；生产级 extraction / RRF / rerank / index job 仍是 Target。 |
 | Document Ingestion | 多格式解析、OCR/VLM、chunk metadata、ACL 继承、BM25/vector/graph index handoff。 | PHASE04 已固定 parser matrix、Document IR 和 index handoff contract；生产 parser runtime 仍是后续目标。 |
 | Security / Governance | 输入检查、PII / 商业机密脱敏、prompt injection 防护、权限、审批、输出 DLP、审计。 | 当前已有 PHASE09 security governance contract；真实 sandbox runtime、approval UI、credential broker 和生产级 DLP 仍是 Target / Future。 |
-| Trace / Eval | runtime trace、LangSmith 映射、dataset、offline / online eval、retrieval / answer / tool / security 指标。 | 当前有本地 trace/eval foundation；LangSmith 产品化仍是 Target。 |
+| Trace / Eval | runtime trace、LangSmith 映射、dataset、offline / online eval、retrieval / answer / tool / security 指标。 | 当前有 PHASE10 `ZunoSpan`、LangSmith export adapter、dataset / baseline contract 和 redacted failure evidence；LangSmith 产品化、在线采样和持久 trace store 仍是 Target。 |
 | Platform | storage、model gateway、worker、artifact、observability 和 provider。 | 近期保持模块化单体，不写成微服务 Current。 |
 
 ## 目标架构细化
@@ -141,7 +142,7 @@ Zuno 的目标架构必须围绕企业工作空间里的对象组织，而不是
 | `RetrievalDecision` | Agentic GraphRAG 的路由结果。 | product_mode、candidate_methods、resolved_methods、route_reason、fallback_reason、budget_used。 | Knowledge、Trace |
 | `EvidenceBundle` | 进入答案合成的证据包。 | evidence_id、source_blocks、scores、trust_label、citation_refs、unsupported_claims。 | Knowledge、Eval |
 | `Artifact` | 任务生成的 Markdown、PDF、JSON、citation bundle 或 trace report。 | artifact_id、task_id、kind、uri、hash、created_by、download_policy。 | API / Artifact、Platform |
-| `TraceSpan` | 一次运行的可观测事实单元。 | trace_id、run_id、parent_run_id、run_type、name、inputs、outputs、latency、cost、status。 | Eval / Observability |
+| `TraceSpan` | 一次运行的可观测事实单元。 | trace_id、session_id、thread_id、task_id、turn_id、run_id、parent_run_id、run_type、span_kind、inputs、outputs、redacted_payload、latency、cost、policy_decision。 | Eval / Observability、Security |
 | `ApprovalDecision` | 高风险工具或输出的人工 / 策略批准记录。 | approval_id、task_id、tool_call_id、risk_reason、decision、approver、audit_note。 | Security、Capability |
 | `MemoryCandidate` | 可能进入长期记忆的结构化候选。 | candidate_id、source_trace_id、kind、content、confidence、privacy_label、review_status。 | Memory、Security |
 
@@ -813,7 +814,7 @@ PHASE09 的 security tests 至少覆盖：直接 prompt injection、间接 promp
 
 指标分四层。检索层看 Recall@k、MRR、nDCG、retrieval relevance、context precision / recall、community report hit rate 和 citation coverage。回答层看 correctness、faithfulness / groundedness、answer relevance、format validity 和 hallucination risk。Agent 层看 tool selection、argument correctness、trajectory quality、fallback rate、retry rate、approval rate、task completion rate 和 P50 / P95 latency。安全层看 prompt injection block rate、redaction miss rate、sandbox violation、unauthorized retrieval block 和 output DLP violation。
 
-当前 Zuno 有本地 eval baseline、trace/eval foundation 和 Contract Review eval 证据，但 LangSmith 驱动的持续评测平台仍是 Target。实施时应先做 schema mapping 和离线 dataset，再接 online monitoring。这样未来简历或 demo 里可以写出真实数字，而不是只说“做了 RAG 评测”。
+当前 Zuno 有本地 eval baseline、trace/eval foundation、Contract Review eval 证据，以及 PHASE10 的 `ZunoSpan` / `LangSmithExportAdapter` / `ReleaseEvalBaseline` contract。LangSmith 驱动的持续评测平台、在线采样、持久 trace store 和完整 CI release gate 仍是 Target。实施时应先做 schema mapping 和离线 dataset，再接 online monitoring。这样未来简历或 demo 里可以写出真实数字，而不是只说“做了 RAG 评测”。
 
 最新报告把 observability 的内部标准进一步定为 OTel-compatible span schema，LangSmith 只是第一接收端和实验台，不是唯一事实源。推荐路径是：Zuno runtime 先生成 OTel / LangSmith-compatible spans；OTel Collector 负责 redaction、routing 和 sampling；本地 JSONL / database 保留 release gate 证据；LangSmith sink 承担 trace browser、dataset、offline / online experiment；Prometheus / OpenTelemetry-native backend 承担 latency、error、cost 和 security metrics。这样既能用 LangSmith，又不会把 Zuno 的 trace 数据结构锁死在单一 vendor。
 
@@ -975,7 +976,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE11_architecture-docs-html-refresh`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval`、`PHASE08_rag-graphrag-evidence-citation`、`PHASE09_security-governance-sandbox` 与 `PHASE10_eval-observability-langsmith` 已通过 verifier 和 focused tests 证明完成。PHASE10 已完成 LangSmith-compatible trace / eval contract、redacted export adapter、release baseline schema 和 sandbox audit span bridge；完整 LangSmith 产品化平台、在线采样平台和持久化 trace store 仍是 Target。
+当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE12_validation-release-closure`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval`、`PHASE08_rag-graphrag-evidence-citation`、`PHASE09_security-governance-sandbox`、`PHASE10_eval-observability-langsmith` 与 `PHASE11_architecture-docs-html-refresh` 已通过 verifier 和 focused tests 证明完成。PHASE10 已完成 LangSmith-compatible trace / eval contract、redacted export adapter、release baseline schema 和 sandbox audit span bridge；PHASE11 已完成正式架构 Markdown / HTML 和十类图刷新；完整 LangSmith 产品化平台、在线采样平台和持久化 trace store 仍是 Target。
 
 本 program 的十二个 phase：
 
@@ -989,8 +990,8 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 8. `PHASE08_rag-graphrag-evidence-citation`：已完成 Agentic Retrieval Router、basic/local/global/drift 边界、staged fusion、EvidenceBundle、CitationBuilder、unsupported claim check、GraphRAG index pipeline contract 和 trace coverage；生产级 extraction / fusion / rerank 仍是 Target。
 9. `PHASE09_security-governance-sandbox`：已完成输入闸门、检索闸门、工具闸门、输出闸门、ToolSecurityProfile、SandboxAuditEvent、secret redaction 和跨 workspace guard contract；真实 sandbox runtime / credential broker / approval UI 仍是 Target。
 10. `PHASE10_eval-observability-langsmith`：已建立 LangSmith-compatible trace schema、redacted export adapter、dataset / release baseline contract、sandbox audit span bridge 和 focused regression tests。
-11. `PHASE11_architecture-docs-html-refresh`：当前阶段，根据已落地事实更新 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两份 `architecture.html`，保证 Markdown 比 HTML 更详细，HTML 图为主。
-12. `PHASE12_validation-release-closure`：运行 repo verifiers、focused tests、必要的 full pytest、文档 self-review、program closure、历史归档、commit 和 push。
+11. `PHASE11_architecture-docs-html-refresh`：已根据已落地事实更新 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两份 `architecture.html`，保证 Markdown 比 HTML 更详细，HTML 图为主。
+12. `PHASE12_validation-release-closure`：当前阶段，运行 repo verifiers、focused tests、必要的 full pytest、文档 self-review、program closure、历史归档、commit 和 push。
 
 这十二个 phase 可以在后续按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。
 
@@ -1077,6 +1078,8 @@ flowchart TB
   CORE["Agent Core<br/>Runtime"]:::accent
   POST["PostTurn<br/>Pipeline"]:::mem
   GOV["Governance Plane<br/>security approval trace eval"]:::guard
+  SPAN["ZunoSpan Contract<br/>redacted payload"]:::guard
+  BASELINE["Release Baseline<br/>dataset metrics"]:::guard
   PLATFORM["Platform<br/>Infrastructure"]
 
   subgraph MEMSYS["Context and Memory"]
@@ -1119,7 +1122,7 @@ flowchart TB
   PACK --> GOV
   NORM --> GOV
   KNOW --> GOV
-  GOV --> PLATFORM
+  GOV --> SPAN --> BASELINE --> PLATFORM
   RAW --> PLATFORM
   ART --> PLATFORM
   class USER,API,MODEL,PLATFORM node;
@@ -1130,7 +1133,7 @@ flowchart TB
 - 关注点：系统职责，而不是物理目录。
 - Zuno 映射：默认主线仍是 Single Controller Agent；`Agent Core Runtime` 是 `Single Controller Agent` 的二级展开；Memory 展开为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory 和 Context Pack。
 - 边界：Knowledge 可以作为 capability 被调用，但在架构上单独成层，因为 GraphRAG、retrieval fusion、citation 和 evidence contract 有独立生命周期。
-- 边界：Security、Trace 和 Eval 收束为 Governance Plane；Tool Control Plane 以 ToolCard/manifest、selector、policy、executor、result normalizer 和 trace 为目标链路。
+- 边界：Security、Trace 和 Eval 收束为 Governance Plane；PHASE10 已把 `ZunoSpan`、redacted payload 和 release baseline contract 做成 Current，外部 sink runtime 仍是 Target。
 
 ### Development View
 
@@ -1164,11 +1167,11 @@ flowchart TB
   MEM --> MEMSYS["context builder memory stores"]
   CAP --> TOOLSYS["ToolCard policy executors MCP"]
   KNO --> KNOWSYS["ingestion retrieval GraphRAG evidence"]
-  PLA --> PLATSYS["model storage jobs security observability"]
+  PLA --> PLATSYS["model storage jobs security observability<br/>trace_eval contract"]
   DOCS --> FORMAL["architecture.md source"]
   DOCS --> HTML["architecture.html generated"]
   DOCS --> ASSETS["architecture assets PDFs"]
-  AGENT --> PROGRAM["programs PHASE01 to PHASE12"]:::guard
+  AGENT --> PROGRAM["programs PHASE01 to PHASE12<br/>active PHASE11"]:::guard
   AGENT --> REFS["references governance"]
   AGENT --> TPL["templates skeletons"]
   TOOLS --> RENDER["render architecture"]
@@ -1229,8 +1232,9 @@ flowchart TB
   OBS["Observation Collector"]
   POST["PostTurn Pipeline"]
   WRITE["Memory Write Gate<br/>candidate review promote"]
-  TRACE["Trace Event Builder"]:::event
-  EVAL["Eval Metadata Writer"]:::event
+  TRACE["ZunoSpan Builder<br/>redacted payload"]:::event
+  EVAL["Release Baseline Writer"]:::event
+  AUDIT["Sandbox Audit Span"]:::event
   OUT["Answer or Artifact"]
 
   subgraph IN["Request Stage"]
@@ -1251,11 +1255,13 @@ flowchart TB
     POST --> TRACE
     TRACE --> STREAM --> UI
     EVAL --> TRACE
+    AUDIT --> TRACE
     OUT --> HTTP
   end
 
   CONTEXT --> CORE
   OBS --> POST
+  DISPATCH --> AUDIT
   CORE --> EVAL
   CORE --> OUT
   class UI,HTTP,STREAM,SESSION,CONTEXT,MEMORY,ROUTER,DISPATCH,OBS,POST,WRITE,OUT node;
@@ -1291,7 +1297,8 @@ flowchart TB
   GRAPH["Graph Store"]
   MODEL["Model Provider or Local Model"]
   MCP["MCP Servers"]
-  LANGSMITH["LangSmith or Trace Backend"]:::guard
+  LOCALTRACE["Local Release Evidence"]
+  LANGSMITH["LangSmith or Trace Backend<br/>target sink"]:::guard
   LOCAL --> WEB
   LOCAL --> DESKTOP
   WEB --> API
@@ -1303,8 +1310,9 @@ flowchart TB
   API --> GRAPH
   API --> MODEL
   API --> MCP
+  API --> LOCALTRACE
   API --> LANGSMITH
-  class WEB,DESKTOP,API,WORKSPACE,ARTIFACT,SQL,VECTOR,GRAPH,MODEL,MCP node;
+  class WEB,DESKTOP,API,WORKSPACE,ARTIFACT,SQL,VECTOR,GRAPH,MODEL,MCP,LOCALTRACE node;
 ```
 
 #### 分析
@@ -1356,7 +1364,8 @@ flowchart TB
   EVID["Evidence and Citation Check"]
   RETRY["Retry or Replan Path"]:::decision
   ANSWER["Answer Report Artifact"]:::accent
-  TRACE["Trace Eval Raw Event"]
+  TRACE["ZunoSpan Trace Eval Event"]
+  BASELINE["Release Baseline Evidence"]
   MEMCAND["Memory Candidate"]
   REVIEW["Review Promote Decay"]
   MEMSTORE["Durable Memory"]
@@ -1382,9 +1391,9 @@ flowchart TB
   EVID -->|retry| RETRY
   RETRY --> ROUTER
   EVID -->|pass| ANSWER
-  ANSWER --> TRACE --> MEMCAND --> REVIEW --> MEMSTORE
+  ANSWER --> TRACE --> BASELINE --> MEMCAND --> REVIEW --> MEMSTORE
   MEMSTORE --> NEXTREAD
-  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,PRODUCT,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
+  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,PRODUCT,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,BASELINE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
 ```
 
 #### 分析
@@ -1443,6 +1452,8 @@ flowchart TB
   DOC --> POLICY
   ART --> POLICY
   GOV --> POLICY
+  SPAN["ZunoSpan Release Baseline"]:::guard
+  POLICY --> SPAN
   class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;
 ```
 
@@ -1487,7 +1498,8 @@ flowchart TB
   OBS["Observation Collector"]
   EVID["Evidence Checker"]:::warn
   CIT["Citation Builder"]
-  TRACE["Trace Eval Logger"]
+  TRACE["ZunoSpan Builder"]
+  BASELINE["Release Baseline Contract"]
 
   subgraph ENTRY["Entry and Context"]
     direction TB
@@ -1517,8 +1529,10 @@ flowchart TB
   CONTEXT --> AGENT
   CIT --> TRACE
   MEMREVIEW --> TRACE
+  SANDBOX --> TRACE
   AGENT --> TRACE
-  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE node;
+  TRACE --> BASELINE
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE,BASELINE node;
 ```
 
 #### 分析
@@ -1556,9 +1570,10 @@ flowchart TB
   SANDBOX["Execution Sandbox"]:::guard
   NET["Network Proxy"]:::guard
   CREDS["Credential Broker"]:::guard
-  OTEL["OTel Collector<br/>redaction routing"]
+  OTEL["OTel Contract<br/>redaction routing"]
   TRACE["Local Trace Eval Backend"]
-  LS["LangSmith Sink"]
+  BASELINE["Release Baseline Evidence"]
+  LS["LangSmith Sink<br/>target adapter"]
   APP --> STORE
   APP --> SQL
   APP --> VDB
@@ -1574,9 +1589,9 @@ flowchart TB
   SANDBOX --> SSH
   SANDBOX --> NET
   SANDBOX --> CREDS
-  APP --> OTEL --> TRACE
+  APP --> OTEL --> TRACE --> BASELINE
   OTEL --> LS
-  class STORE,SQL,VDB,GDB,SEARCH,JOBS,MODEL,MCP,SDK,APIAD,CLI,TRACE,LS node;
+  class STORE,SQL,VDB,GDB,SEARCH,JOBS,MODEL,MCP,SDK,APIAD,CLI,TRACE,BASELINE,LS node;
 ```
 
 #### 分析
@@ -1607,10 +1622,10 @@ flowchart TB
   EXEBOX["Execution Sandbox"]
   NETBOX["Network Credential Sandbox"]
   REL["Reliability Timeout Retry Fallback"]
-  OBS["OTel Span Schema"]
-  COLLECT["Collector Redaction Routing"]
+  OBS["ZunoSpan Schema"]
+  COLLECT["Redacted Export Routing"]
   LANG["LangSmith Experiments"]
-  EVAL["Eval Dataset Metric Baseline"]
+  EVAL["Release Baseline Contract"]
   RAGMET["Retrieval Metrics<br/>recall mrr ndcg"]
   ANSMET["Answer Metrics<br/>faithfulness citation"]
   AGMET["Agent Metrics<br/>tool trajectory"]
@@ -1684,7 +1699,8 @@ flowchart LR
   REFLECT{"reflection gate"}:::decision
   REPLAN["replan"]
   FINAL["final answer"]:::accent
-  COMMIT["post_turn_commit trace memory eval"]
+  COMMIT["post_turn_commit<br/>trace memory eval"]
+  AUDIT["security audit span"]
   SUMMARY["task summary update"]
   CAND["structured memory candidate"]
   REVIEW["review promote decay"]:::decision
@@ -1703,6 +1719,7 @@ flowchart LR
   subgraph POSTTURN["Post Turn"]
     direction TB
     FINAL --> COMMIT
+    COMMIT --> AUDIT
     COMMIT --> SUMMARY
     COMMIT --> CAND --> REVIEW --> LONG
   end
@@ -1713,7 +1730,7 @@ flowchart LR
   REFLECT -->|finish| FINAL
   SUMMARY -. next turn .-> READMEM
   LONG -. next turn .-> READMEM
-  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,SUMMARY,CAND,LONG node;
+  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,AUDIT,SUMMARY,CAND,LONG node;
 ```
 
 #### 分析
@@ -1732,8 +1749,9 @@ flowchart LR
 - 内部 query method：basic、local、global、drift，由 Agentic Retrieval Router 在 enhanced / auto 模式下解析，不直接作为普通用户主入口。
 - Normal 强制 basic；enhanced 一定检索并由 Agent 选通道；auto 先判断是否需要检索，再由 Agent 选通道。
 - Global 不和 BM25 chunk ranking 生硬混榜；它更适合作为 community-level prior，再由 local/basic 回补 supporting evidence。
-- Document Ingestion runtime、LangSmith trace / eval、企业知识库完整 UI 闭环、真实 sandbox runtime、credential broker 和生产级 DLP 是本轮目标架构细化和后续执行计划，不是成熟 Current。
+- Document Ingestion runtime、生产级 LangSmith trace / eval、在线采样、持久 trace store、企业知识库完整 UI 闭环、真实 sandbox runtime、credential broker 和生产级 DLP 是本轮目标架构细化和后续执行计划，不是成熟 Current。
 - PHASE08 当前已证明 Agentic Retrieval Router、query method / citation / evidence trace contract、GraphRAG index pipeline contract 和 global community-only prior 边界；完整 LLM extraction、RRF/rerank 治理和 index job runtime 仍是 Target。
 - 当前已有 RuntimeTurnLedger、当前轮 trace reset、GeneralAgent 最小 evidence chain、post-turn evidence payload、六层目标入口 import guard 和 eval diagnostics；完整产品级 runtime upgrade 仍是 Target。
 - PHASE09 当前已证明 security governance contract：input/retrieval/tool/output gate、ToolSecurityProfile、SandboxAuditEvent、redaction 和 policy decision trace；真实 rootless/gVisor/Firecracker sandbox、credential broker、approval UI 和生产级 DLP 仍是 Target。
+- PHASE10 当前已证明 trace/eval contract：ZunoSpan schema、redacted LangSmith export payload、EvalDatasetCase、MetricThreshold、ReleaseEvalBaseline 和 SandboxAuditEvent 到 sandbox span 的桥接；外部 sink runtime、online eval 和完整 CI gate 仍是 Target。
 - Domain Pack 只允许作为历史或兼容语境出现，不进入 Current 或 Target 主线图。

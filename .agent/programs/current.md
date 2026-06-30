@@ -3,7 +3,7 @@
 当前 active program：`zuno-master-architecture-implementation-v1`
 
 state: active
-current_phase: PHASE11_architecture-docs-html-refresh
+current_phase: PHASE12_validation-release-closure
 
 ## 目标
 
@@ -40,8 +40,8 @@ current_phase: PHASE11_architecture-docs-html-refresh
 - `PHASE08_rag-graphrag-evidence-citation.md`：completed。
 - `PHASE09_security-governance-sandbox.md`：completed。
 - `PHASE10_eval-observability-langsmith.md`：completed。
-- `PHASE11_architecture-docs-html-refresh.md`：active。
-- `PHASE12_validation-release-closure.md`：pending。
+- `PHASE11_architecture-docs-html-refresh.md`：completed。
+- `PHASE12_validation-release-closure.md`：active。
 
 ## 当前边界
 

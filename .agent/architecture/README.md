@@ -2,6 +2,8 @@
 
 `.agent/architecture/` 现在只保留 Agent 维护架构时需要的最小入口，并与 `docs/architecture/` 保持同名镜像。
 
+PHASE11 的当前职责是跟随 `docs/architecture/architecture.md` 刷新 Agent 侧镜像和 HTML，不单独承载事实。PHASE02-PHASE10 的已验证 contract 可以写入 Current；未实现的生产级 LangSmith、online eval、sandbox runtime、credential broker 和 UI trace panel 仍保持 Target。
+
 ## 当前前台
 
 ```text

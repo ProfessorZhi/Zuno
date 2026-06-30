@@ -1,6 +1,6 @@
 # PHASE11 Architecture Docs HTML Refresh
 
-status: active
+status: completed
 
 ## 目标
 
@@ -8,12 +8,12 @@ status: active
 
 ## 步骤
 
-- [ ] 更新 `docs/architecture/architecture.md` 的 Current / Target / Future。
-- [ ] 更新十类 Mermaid 图，展示文件夹治理、企业场景、Document Ingestion、Runtime、Memory、Tool、GraphRAG、安全、Eval。
-- [ ] 更新图前正文，让 Markdown 内容比 HTML 更详细；HTML 只负责图形展示和简短分析。
-- [ ] 运行 renderer 同步 `.agent/architecture/architecture.md` 和两个 HTML。
-- [ ] 更新 README 当前架构和 active program 状态。
-- [ ] 更新 AGENTS.md 工作流和读文档顺序。
+- [x] 更新 `docs/architecture/architecture.md` 的 Current / Target / Future。
+- [x] 更新十类 Mermaid 图，展示文件夹治理、企业场景、Document Ingestion、Runtime、Memory、Tool、GraphRAG、安全、Eval。
+- [x] 更新图前正文，让 Markdown 内容比 HTML 更详细；HTML 只负责图形展示和简短分析。
+- [x] 运行 renderer 同步 `.agent/architecture/architecture.md` 和两个 HTML。
+- [x] 更新 README 当前架构和 active program 状态。
+- [x] 更新 AGENTS.md 工作流和读文档顺序。
 
 ## 十类图更新清单
 
@@ -70,6 +70,13 @@ status: active
 - HTML 以图为主，可以展示各模块二级细节。
 - docs 和 agent architecture mirrors byte-consistent。
 - Mermaid 图比例、全屏查看、线条可读性必须由 HTML renderer 保持；如果视觉不合格，先修 renderer / 图结构，再声称完成。
+
+## 完成事实
+
+- `docs/architecture/architecture.md` 已吸收 PHASE02-PHASE10 已验证事实，并继续把生产级 LangSmith 写入、online eval、持久 trace store、真实 sandbox runtime、credential broker 和完整 UI 闭环保留为 Target。
+- 十类 Mermaid 图已显示 `ZunoSpan`、redacted export、release baseline、sandbox audit span bridge、PHASE11 active program、Tool Control Plane、Memory write-manage-read、Document IR、Agentic GraphRAG 和安全治理。
+- `python tools/agent/render_architecture.py --write` 已同步 `.agent/architecture/architecture.md`、`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html`。
+- `docs/architecture/README.md`、`.agent/architecture/README.md` 和 `.agent/references/diagram-inventory.md` 已同步 PHASE11 刷新边界。
 
 ## 验证
 

@@ -246,7 +246,7 @@
           <li>关注点：系统职责，而不是物理目录。</li>
           <li>Zuno 映射：默认主线仍是 Single Controller Agent；`Agent Core Runtime` 是 `Single Controller Agent` 的二级展开；Memory 展开为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory 和 Context Pack。</li>
           <li>边界：Knowledge 可以作为 capability 被调用，但在架构上单独成层，因为 GraphRAG、retrieval fusion、citation 和 evidence contract 有独立生命周期。</li>
-          <li>边界：Security、Trace 和 Eval 收束为 Governance Plane；Tool Control Plane 以 ToolCard/manifest、selector、policy、executor、result normalizer 和 trace 为目标链路。</li>
+          <li>边界：Security、Trace 和 Eval 收束为 Governance Plane；PHASE10 已把 `ZunoSpan`、redacted payload 和 release baseline contract 做成 Current，外部 sink runtime 仍是 Target。</li>
         </ul>
         <div class="diagram-actions">
           <button type="button" class="diagram-open" data-diagram-title="Logical View">展开全屏查看</button>
@@ -266,6 +266,8 @@ flowchart TB
   CORE[&quot;Agent Core&lt;br/&gt;Runtime&quot;]:::accent
   POST[&quot;PostTurn&lt;br/&gt;Pipeline&quot;]:::mem
   GOV[&quot;Governance Plane&lt;br/&gt;security approval trace eval&quot;]:::guard
+  SPAN[&quot;ZunoSpan Contract&lt;br/&gt;redacted payload&quot;]:::guard
+  BASELINE[&quot;Release Baseline&lt;br/&gt;dataset metrics&quot;]:::guard
   PLATFORM[&quot;Platform&lt;br/&gt;Infrastructure&quot;]
 
   subgraph MEMSYS[&quot;Context and Memory&quot;]
@@ -308,7 +310,7 @@ flowchart TB
   PACK --&gt; GOV
   NORM --&gt; GOV
   KNOW --&gt; GOV
-  GOV --&gt; PLATFORM
+  GOV --&gt; SPAN --&gt; BASELINE --&gt; PLATFORM
   RAW --&gt; PLATFORM
   ART --&gt; PLATFORM
   class USER,API,MODEL,PLATFORM node;
@@ -329,6 +331,8 @@ flowchart TB
   CORE[&quot;Agent Core&lt;br/&gt;Runtime&quot;]:::accent
   POST[&quot;PostTurn&lt;br/&gt;Pipeline&quot;]:::mem
   GOV[&quot;Governance Plane&lt;br/&gt;security approval trace eval&quot;]:::guard
+  SPAN[&quot;ZunoSpan Contract&lt;br/&gt;redacted payload&quot;]:::guard
+  BASELINE[&quot;Release Baseline&lt;br/&gt;dataset metrics&quot;]:::guard
   PLATFORM[&quot;Platform&lt;br/&gt;Infrastructure&quot;]
 
   subgraph MEMSYS[&quot;Context and Memory&quot;]
@@ -371,7 +375,7 @@ flowchart TB
   PACK --&gt; GOV
   NORM --&gt; GOV
   KNOW --&gt; GOV
-  GOV --&gt; PLATFORM
+  GOV --&gt; SPAN --&gt; BASELINE --&gt; PLATFORM
   RAW --&gt; PLATFORM
   ART --&gt; PLATFORM
   class USER,API,MODEL,PLATFORM node;</code></pre>
@@ -419,11 +423,11 @@ flowchart TB
   MEM --&gt; MEMSYS[&quot;context builder memory stores&quot;]
   CAP --&gt; TOOLSYS[&quot;ToolCard policy executors MCP&quot;]
   KNO --&gt; KNOWSYS[&quot;ingestion retrieval GraphRAG evidence&quot;]
-  PLA --&gt; PLATSYS[&quot;model storage jobs security observability&quot;]
+  PLA --&gt; PLATSYS[&quot;model storage jobs security observability&lt;br/&gt;trace_eval contract&quot;]
   DOCS --&gt; FORMAL[&quot;architecture.md source&quot;]
   DOCS --&gt; HTML[&quot;architecture.html generated&quot;]
   DOCS --&gt; ASSETS[&quot;architecture assets PDFs&quot;]
-  AGENT --&gt; PROGRAM[&quot;programs PHASE01 to PHASE12&quot;]:::guard
+  AGENT --&gt; PROGRAM[&quot;programs PHASE01 to PHASE12&lt;br/&gt;active PHASE11&quot;]:::guard
   AGENT --&gt; REFS[&quot;references governance&quot;]
   AGENT --&gt; TPL[&quot;templates skeletons&quot;]
   TOOLS --&gt; RENDER[&quot;render architecture&quot;]
@@ -480,11 +484,11 @@ flowchart TB
   MEM --&gt; MEMSYS[&quot;context builder memory stores&quot;]
   CAP --&gt; TOOLSYS[&quot;ToolCard policy executors MCP&quot;]
   KNO --&gt; KNOWSYS[&quot;ingestion retrieval GraphRAG evidence&quot;]
-  PLA --&gt; PLATSYS[&quot;model storage jobs security observability&quot;]
+  PLA --&gt; PLATSYS[&quot;model storage jobs security observability&lt;br/&gt;trace_eval contract&quot;]
   DOCS --&gt; FORMAL[&quot;architecture.md source&quot;]
   DOCS --&gt; HTML[&quot;architecture.html generated&quot;]
   DOCS --&gt; ASSETS[&quot;architecture assets PDFs&quot;]
-  AGENT --&gt; PROGRAM[&quot;programs PHASE01 to PHASE12&quot;]:::guard
+  AGENT --&gt; PROGRAM[&quot;programs PHASE01 to PHASE12&lt;br/&gt;active PHASE11&quot;]:::guard
   AGENT --&gt; REFS[&quot;references governance&quot;]
   AGENT --&gt; TPL[&quot;templates skeletons&quot;]
   TOOLS --&gt; RENDER[&quot;render architecture&quot;]
@@ -549,8 +553,9 @@ flowchart TB
   OBS[&quot;Observation Collector&quot;]
   POST[&quot;PostTurn Pipeline&quot;]
   WRITE[&quot;Memory Write Gate&lt;br/&gt;candidate review promote&quot;]
-  TRACE[&quot;Trace Event Builder&quot;]:::event
-  EVAL[&quot;Eval Metadata Writer&quot;]:::event
+  TRACE[&quot;ZunoSpan Builder&lt;br/&gt;redacted payload&quot;]:::event
+  EVAL[&quot;Release Baseline Writer&quot;]:::event
+  AUDIT[&quot;Sandbox Audit Span&quot;]:::event
   OUT[&quot;Answer or Artifact&quot;]
 
   subgraph IN[&quot;Request Stage&quot;]
@@ -571,11 +576,13 @@ flowchart TB
     POST --&gt; TRACE
     TRACE --&gt; STREAM --&gt; UI
     EVAL --&gt; TRACE
+    AUDIT --&gt; TRACE
     OUT --&gt; HTTP
   end
 
   CONTEXT --&gt; CORE
   OBS --&gt; POST
+  DISPATCH --&gt; AUDIT
   CORE --&gt; EVAL
   CORE --&gt; OUT
   class UI,HTTP,STREAM,SESSION,CONTEXT,MEMORY,ROUTER,DISPATCH,OBS,POST,WRITE,OUT node;
@@ -601,8 +608,9 @@ flowchart TB
   OBS[&quot;Observation Collector&quot;]
   POST[&quot;PostTurn Pipeline&quot;]
   WRITE[&quot;Memory Write Gate&lt;br/&gt;candidate review promote&quot;]
-  TRACE[&quot;Trace Event Builder&quot;]:::event
-  EVAL[&quot;Eval Metadata Writer&quot;]:::event
+  TRACE[&quot;ZunoSpan Builder&lt;br/&gt;redacted payload&quot;]:::event
+  EVAL[&quot;Release Baseline Writer&quot;]:::event
+  AUDIT[&quot;Sandbox Audit Span&quot;]:::event
   OUT[&quot;Answer or Artifact&quot;]
 
   subgraph IN[&quot;Request Stage&quot;]
@@ -623,11 +631,13 @@ flowchart TB
     POST --&gt; TRACE
     TRACE --&gt; STREAM --&gt; UI
     EVAL --&gt; TRACE
+    AUDIT --&gt; TRACE
     OUT --&gt; HTTP
   end
 
   CONTEXT --&gt; CORE
   OBS --&gt; POST
+  DISPATCH --&gt; AUDIT
   CORE --&gt; EVAL
   CORE --&gt; OUT
   class UI,HTTP,STREAM,SESSION,CONTEXT,MEMORY,ROUTER,DISPATCH,OBS,POST,WRITE,OUT node;</code></pre>
@@ -667,7 +677,8 @@ flowchart TB
   GRAPH[&quot;Graph Store&quot;]
   MODEL[&quot;Model Provider or Local Model&quot;]
   MCP[&quot;MCP Servers&quot;]
-  LANGSMITH[&quot;LangSmith or Trace Backend&quot;]:::guard
+  LOCALTRACE[&quot;Local Release Evidence&quot;]
+  LANGSMITH[&quot;LangSmith or Trace Backend&lt;br/&gt;target sink&quot;]:::guard
   LOCAL --&gt; WEB
   LOCAL --&gt; DESKTOP
   WEB --&gt; API
@@ -679,8 +690,9 @@ flowchart TB
   API --&gt; GRAPH
   API --&gt; MODEL
   API --&gt; MCP
+  API --&gt; LOCALTRACE
   API --&gt; LANGSMITH
-  class WEB,DESKTOP,API,WORKSPACE,ARTIFACT,SQL,VECTOR,GRAPH,MODEL,MCP node;
+  class WEB,DESKTOP,API,WORKSPACE,ARTIFACT,SQL,VECTOR,GRAPH,MODEL,MCP,LOCALTRACE node;
           </div>
         </figure>
         <details>
@@ -702,7 +714,8 @@ flowchart TB
   GRAPH[&quot;Graph Store&quot;]
   MODEL[&quot;Model Provider or Local Model&quot;]
   MCP[&quot;MCP Servers&quot;]
-  LANGSMITH[&quot;LangSmith or Trace Backend&quot;]:::guard
+  LOCALTRACE[&quot;Local Release Evidence&quot;]
+  LANGSMITH[&quot;LangSmith or Trace Backend&lt;br/&gt;target sink&quot;]:::guard
   LOCAL --&gt; WEB
   LOCAL --&gt; DESKTOP
   WEB --&gt; API
@@ -714,8 +727,9 @@ flowchart TB
   API --&gt; GRAPH
   API --&gt; MODEL
   API --&gt; MCP
+  API --&gt; LOCALTRACE
   API --&gt; LANGSMITH
-  class WEB,DESKTOP,API,WORKSPACE,ARTIFACT,SQL,VECTOR,GRAPH,MODEL,MCP node;</code></pre>
+  class WEB,DESKTOP,API,WORKSPACE,ARTIFACT,SQL,VECTOR,GRAPH,MODEL,MCP,LOCALTRACE node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -772,7 +786,8 @@ flowchart TB
   EVID[&quot;Evidence and Citation Check&quot;]
   RETRY[&quot;Retry or Replan Path&quot;]:::decision
   ANSWER[&quot;Answer Report Artifact&quot;]:::accent
-  TRACE[&quot;Trace Eval Raw Event&quot;]
+  TRACE[&quot;ZunoSpan Trace Eval Event&quot;]
+  BASELINE[&quot;Release Baseline Evidence&quot;]
   MEMCAND[&quot;Memory Candidate&quot;]
   REVIEW[&quot;Review Promote Decay&quot;]
   MEMSTORE[&quot;Durable Memory&quot;]
@@ -798,9 +813,9 @@ flowchart TB
   EVID --&gt;|retry| RETRY
   RETRY --&gt; ROUTER
   EVID --&gt;|pass| ANSWER
-  ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
+  ANSWER --&gt; TRACE --&gt; BASELINE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
   MEMSTORE --&gt; NEXTREAD
-  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,PRODUCT,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
+  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,PRODUCT,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,BASELINE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
           </div>
         </figure>
         <details>
@@ -841,7 +856,8 @@ flowchart TB
   EVID[&quot;Evidence and Citation Check&quot;]
   RETRY[&quot;Retry or Replan Path&quot;]:::decision
   ANSWER[&quot;Answer Report Artifact&quot;]:::accent
-  TRACE[&quot;Trace Eval Raw Event&quot;]
+  TRACE[&quot;ZunoSpan Trace Eval Event&quot;]
+  BASELINE[&quot;Release Baseline Evidence&quot;]
   MEMCAND[&quot;Memory Candidate&quot;]
   REVIEW[&quot;Review Promote Decay&quot;]
   MEMSTORE[&quot;Durable Memory&quot;]
@@ -867,9 +883,9 @@ flowchart TB
   EVID --&gt;|retry| RETRY
   RETRY --&gt; ROUTER
   EVID --&gt;|pass| ANSWER
-  ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
+  ANSWER --&gt; TRACE --&gt; BASELINE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
   MEMSTORE --&gt; NEXTREAD
-  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,PRODUCT,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;</code></pre>
+  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,PRODUCT,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,BASELINE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;</code></pre>
         </details>
       </section>
     </section>
@@ -931,6 +947,8 @@ flowchart TB
   DOC --&gt; POLICY
   ART --&gt; POLICY
   GOV --&gt; POLICY
+  SPAN[&quot;ZunoSpan Release Baseline&quot;]:::guard
+  POLICY --&gt; SPAN
   class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;
           </div>
         </figure>
@@ -974,6 +992,8 @@ flowchart TB
   DOC --&gt; POLICY
   ART --&gt; POLICY
   GOV --&gt; POLICY
+  SPAN[&quot;ZunoSpan Release Baseline&quot;]:::guard
+  POLICY --&gt; SPAN
   class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;</code></pre>
         </details>
       </section>
@@ -1022,7 +1042,8 @@ flowchart TB
   OBS[&quot;Observation Collector&quot;]
   EVID[&quot;Evidence Checker&quot;]:::warn
   CIT[&quot;Citation Builder&quot;]
-  TRACE[&quot;Trace Eval Logger&quot;]
+  TRACE[&quot;ZunoSpan Builder&quot;]
+  BASELINE[&quot;Release Baseline Contract&quot;]
 
   subgraph ENTRY[&quot;Entry and Context&quot;]
     direction TB
@@ -1052,8 +1073,10 @@ flowchart TB
   CONTEXT --&gt; AGENT
   CIT --&gt; TRACE
   MEMREVIEW --&gt; TRACE
+  SANDBOX --&gt; TRACE
   AGENT --&gt; TRACE
-  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE node;
+  TRACE --&gt; BASELINE
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE,BASELINE node;
           </div>
         </figure>
         <details>
@@ -1086,7 +1109,8 @@ flowchart TB
   OBS[&quot;Observation Collector&quot;]
   EVID[&quot;Evidence Checker&quot;]:::warn
   CIT[&quot;Citation Builder&quot;]
-  TRACE[&quot;Trace Eval Logger&quot;]
+  TRACE[&quot;ZunoSpan Builder&quot;]
+  BASELINE[&quot;Release Baseline Contract&quot;]
 
   subgraph ENTRY[&quot;Entry and Context&quot;]
     direction TB
@@ -1116,8 +1140,10 @@ flowchart TB
   CONTEXT --&gt; AGENT
   CIT --&gt; TRACE
   MEMREVIEW --&gt; TRACE
+  SANDBOX --&gt; TRACE
   AGENT --&gt; TRACE
-  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE node;</code></pre>
+  TRACE --&gt; BASELINE
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE,BASELINE node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -1159,9 +1185,10 @@ flowchart TB
   SANDBOX[&quot;Execution Sandbox&quot;]:::guard
   NET[&quot;Network Proxy&quot;]:::guard
   CREDS[&quot;Credential Broker&quot;]:::guard
-  OTEL[&quot;OTel Collector&lt;br/&gt;redaction routing&quot;]
+  OTEL[&quot;OTel Contract&lt;br/&gt;redaction routing&quot;]
   TRACE[&quot;Local Trace Eval Backend&quot;]
-  LS[&quot;LangSmith Sink&quot;]
+  BASELINE[&quot;Release Baseline Evidence&quot;]
+  LS[&quot;LangSmith Sink&lt;br/&gt;target adapter&quot;]
   APP --&gt; STORE
   APP --&gt; SQL
   APP --&gt; VDB
@@ -1177,9 +1204,9 @@ flowchart TB
   SANDBOX --&gt; SSH
   SANDBOX --&gt; NET
   SANDBOX --&gt; CREDS
-  APP --&gt; OTEL --&gt; TRACE
+  APP --&gt; OTEL --&gt; TRACE --&gt; BASELINE
   OTEL --&gt; LS
-  class STORE,SQL,VDB,GDB,SEARCH,JOBS,MODEL,MCP,SDK,APIAD,CLI,TRACE,LS node;
+  class STORE,SQL,VDB,GDB,SEARCH,JOBS,MODEL,MCP,SDK,APIAD,CLI,TRACE,BASELINE,LS node;
           </div>
         </figure>
         <details>
@@ -1206,9 +1233,10 @@ flowchart TB
   SANDBOX[&quot;Execution Sandbox&quot;]:::guard
   NET[&quot;Network Proxy&quot;]:::guard
   CREDS[&quot;Credential Broker&quot;]:::guard
-  OTEL[&quot;OTel Collector&lt;br/&gt;redaction routing&quot;]
+  OTEL[&quot;OTel Contract&lt;br/&gt;redaction routing&quot;]
   TRACE[&quot;Local Trace Eval Backend&quot;]
-  LS[&quot;LangSmith Sink&quot;]
+  BASELINE[&quot;Release Baseline Evidence&quot;]
+  LS[&quot;LangSmith Sink&lt;br/&gt;target adapter&quot;]
   APP --&gt; STORE
   APP --&gt; SQL
   APP --&gt; VDB
@@ -1224,9 +1252,9 @@ flowchart TB
   SANDBOX --&gt; SSH
   SANDBOX --&gt; NET
   SANDBOX --&gt; CREDS
-  APP --&gt; OTEL --&gt; TRACE
+  APP --&gt; OTEL --&gt; TRACE --&gt; BASELINE
   OTEL --&gt; LS
-  class STORE,SQL,VDB,GDB,SEARCH,JOBS,MODEL,MCP,SDK,APIAD,CLI,TRACE,LS node;</code></pre>
+  class STORE,SQL,VDB,GDB,SEARCH,JOBS,MODEL,MCP,SDK,APIAD,CLI,TRACE,BASELINE,LS node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -1261,10 +1289,10 @@ flowchart TB
   EXEBOX[&quot;Execution Sandbox&quot;]
   NETBOX[&quot;Network Credential Sandbox&quot;]
   REL[&quot;Reliability Timeout Retry Fallback&quot;]
-  OBS[&quot;OTel Span Schema&quot;]
-  COLLECT[&quot;Collector Redaction Routing&quot;]
+  OBS[&quot;ZunoSpan Schema&quot;]
+  COLLECT[&quot;Redacted Export Routing&quot;]
   LANG[&quot;LangSmith Experiments&quot;]
-  EVAL[&quot;Eval Dataset Metric Baseline&quot;]
+  EVAL[&quot;Release Baseline Contract&quot;]
   RAGMET[&quot;Retrieval Metrics&lt;br/&gt;recall mrr ndcg&quot;]
   ANSMET[&quot;Answer Metrics&lt;br/&gt;faithfulness citation&quot;]
   AGMET[&quot;Agent Metrics&lt;br/&gt;tool trajectory&quot;]
@@ -1319,10 +1347,10 @@ flowchart TB
   EXEBOX[&quot;Execution Sandbox&quot;]
   NETBOX[&quot;Network Credential Sandbox&quot;]
   REL[&quot;Reliability Timeout Retry Fallback&quot;]
-  OBS[&quot;OTel Span Schema&quot;]
-  COLLECT[&quot;Collector Redaction Routing&quot;]
+  OBS[&quot;ZunoSpan Schema&quot;]
+  COLLECT[&quot;Redacted Export Routing&quot;]
   LANG[&quot;LangSmith Experiments&quot;]
-  EVAL[&quot;Eval Dataset Metric Baseline&quot;]
+  EVAL[&quot;Release Baseline Contract&quot;]
   RAGMET[&quot;Retrieval Metrics&lt;br/&gt;recall mrr ndcg&quot;]
   ANSMET[&quot;Answer Metrics&lt;br/&gt;faithfulness citation&quot;]
   AGMET[&quot;Agent Metrics&lt;br/&gt;tool trajectory&quot;]
@@ -1401,7 +1429,8 @@ flowchart LR
   REFLECT{&quot;reflection gate&quot;}:::decision
   REPLAN[&quot;replan&quot;]
   FINAL[&quot;final answer&quot;]:::accent
-  COMMIT[&quot;post_turn_commit trace memory eval&quot;]
+  COMMIT[&quot;post_turn_commit&lt;br/&gt;trace memory eval&quot;]
+  AUDIT[&quot;security audit span&quot;]
   SUMMARY[&quot;task summary update&quot;]
   CAND[&quot;structured memory candidate&quot;]
   REVIEW[&quot;review promote decay&quot;]:::decision
@@ -1420,6 +1449,7 @@ flowchart LR
   subgraph POSTTURN[&quot;Post Turn&quot;]
     direction TB
     FINAL --&gt; COMMIT
+    COMMIT --&gt; AUDIT
     COMMIT --&gt; SUMMARY
     COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
   end
@@ -1430,7 +1460,7 @@ flowchart LR
   REFLECT --&gt;|finish| FINAL
   SUMMARY -. next turn .-&gt; READMEM
   LONG -. next turn .-&gt; READMEM
-  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,SUMMARY,CAND,LONG node;
+  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,AUDIT,SUMMARY,CAND,LONG node;
           </div>
         </figure>
         <details>
@@ -1454,7 +1484,8 @@ flowchart LR
   REFLECT{&quot;reflection gate&quot;}:::decision
   REPLAN[&quot;replan&quot;]
   FINAL[&quot;final answer&quot;]:::accent
-  COMMIT[&quot;post_turn_commit trace memory eval&quot;]
+  COMMIT[&quot;post_turn_commit&lt;br/&gt;trace memory eval&quot;]
+  AUDIT[&quot;security audit span&quot;]
   SUMMARY[&quot;task summary update&quot;]
   CAND[&quot;structured memory candidate&quot;]
   REVIEW[&quot;review promote decay&quot;]:::decision
@@ -1473,6 +1504,7 @@ flowchart LR
   subgraph POSTTURN[&quot;Post Turn&quot;]
     direction TB
     FINAL --&gt; COMMIT
+    COMMIT --&gt; AUDIT
     COMMIT --&gt; SUMMARY
     COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
   end
@@ -1483,7 +1515,7 @@ flowchart LR
   REFLECT --&gt;|finish| FINAL
   SUMMARY -. next turn .-&gt; READMEM
   LONG -. next turn .-&gt; READMEM
-  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,SUMMARY,CAND,LONG node;</code></pre>
+  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,AUDIT,SUMMARY,CAND,LONG node;</code></pre>
         </details>
       </section>
     </section>

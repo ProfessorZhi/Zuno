@@ -1,6 +1,6 @@
 # PHASE12 Validation Release Closure
 
-status: pending
+status: active
 
 ## 目标
 

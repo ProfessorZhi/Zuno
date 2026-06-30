@@ -12,7 +12,7 @@
 
 state: active
 program: zuno-master-architecture-implementation-v1
-current_phase: PHASE11_architecture-docs-html-refresh
+current_phase: PHASE12_validation-release-closure
 
 每次新 program 都从 `PHASE01` 开始编号。
 
@@ -128,8 +128,8 @@ Runtime implementation paths opened by later phases:
 | PHASE08 | completed | Agentic Retrieval Router、staged fusion、EvidenceBundle、Citation Builder、unsupported claim check、GraphRAG index pipeline contract。 |
 | PHASE09 | completed | Security governance、input/retrieval/tool/output gates、sandbox audit、secret redaction。 |
 | PHASE10 | completed | LangSmith-compatible trace/eval contract、LangSmith adapter、release baseline schema、sandbox audit span bridge。 |
-| PHASE11 | active | 架构 Markdown、HTML、README、图集和展示文档更新。 |
-| PHASE12 | pending | 全量验证、release baseline、归档和推送。 |
+| PHASE11 | completed | 架构 Markdown、HTML、README、图集和展示文档更新。 |
+| PHASE12 | active | 全量验证、release baseline、归档和推送。 |
 
 ## Phase Dependency Gates
 
@@ -229,7 +229,7 @@ Set these state values in `.agent/programs/current.md`, `.agent/programs/impleme
 ```text
 program: zuno-master-architecture-implementation-v1
 state: active
-current_phase: PHASE11_architecture-docs-html-refresh
+current_phase: PHASE12_validation-release-closure
 ```
 
 - [ ] **Step 4: Archive ChatGPT research mode artifacts**
@@ -278,7 +278,7 @@ Expected: all pass.
 
 ## Task 2: Project Folder And Code Layout Cleanup
 
-Status: active
+Status: completed
 
 **Files:**
 - Modify: `src/backend/zuno/**`
@@ -714,11 +714,11 @@ Status: active
 - Modify: `AGENTS.md`
 - Modify: `.agent/references/diagram-inventory.md`
 
-- [ ] **Step 1: Update Current / Target facts**
+- [x] **Step 1: Update Current / Target facts**
 
 Only completed and verified phase outputs move to Current. Unimplemented runtime target remains Target.
 
-- [ ] **Step 2: Update diagrams**
+- [x] **Step 2: Update diagrams**
 
 Architecture HTML must show:
 
@@ -735,7 +735,7 @@ trace/eval
 release governance
 ```
 
-- [ ] **Step 3: Regenerate HTML**
+- [x] **Step 3: Regenerate HTML**
 
 Run:
 
@@ -746,9 +746,11 @@ python tools/agent/render_architecture.py --check
 
 Expected: both pass and docs/agent mirrors are byte-consistent.
 
+PHASE11 Current result: `docs/architecture/architecture.md` now records PHASE02-PHASE10 Current facts and remaining Target boundaries, ten Mermaid diagrams show the same facts including `ZunoSpan`, redacted export, release baseline and sandbox audit span bridge, and `tools/agent/render_architecture.py --write` regenerated `.agent/architecture/architecture.md` plus both HTML outputs.
+
 ## Task 12: Validation / Release Closure
 
-Status: pending
+Status: active
 
 **Files:**
 - Modify: `.agent/programs/closure-checklist.md`

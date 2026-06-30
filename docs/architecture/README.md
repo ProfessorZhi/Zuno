@@ -2,6 +2,8 @@
 
 `docs/architecture/` 是 Zuno 当前面向人的正式架构入口。这里保持少而精：一个充实的总架构 Markdown、一个由它生成的 HTML 展示页、正式附件和仍然生效的 ADR。
 
+PHASE11 已将 PHASE02-PHASE10 的已验证事实写入总架构：目录 ownership、企业知识库产品闭环、Document IR、Single Controller runtime harness、MemoryEngine、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、`ZunoSpan` / release baseline contract。生产级 LangSmith 写入、在线 eval、持久 trace store、真实 sandbox runtime 和完整 UI 闭环仍是 Target。
+
 ## 当前前台
 
 ```text
