@@ -38,6 +38,7 @@ src/backend/zuno/
 ## 步骤
 
 - [ ] 生成 backend ownership matrix，覆盖 `api / agent / memory / capability / knowledge / platform`。
+- [ ] 输出 `docs/architecture/repo-ownership-matrix.md`，列必须包含 `current_path`、`current_role`、`target_owner`、`target_path`、`compat_path`、`migration_risk`、`tests`、`verifier`、`status`。
 - [ ] 为每个当前“零碎目录”标注 target owner、迁移理由、迁移风险、旧 import path 和测试覆盖。
 - [ ] 清理未跟踪 `__pycache__`、`.pytest_cache` 和本地临时产物。
 - [ ] 盘点 `platform/services` 中每个子目录的 target owner。
@@ -45,6 +46,31 @@ src/backend/zuno/
 - [ ] 设计 `compat import registry` 与 `platform/vendor` 分离方案。
 - [ ] 给 `knowledge/ingestion`、`platform/security`、`platform/observability` 预留 README 和 import guard，不提前搬运行时逻辑。
 - [ ] 更新 `tools/scripts/verify_repo_structure.py` 和 repo tests，固定新目录规则。
+- [ ] 增加 guard：禁止新增无 owner 的 `platform/services/*` 业务代码、禁止把 runtime code 放进 `platform/compatibility`、禁止 vendor shim 与 legacy alias registry 混写。
+
+## 输入 / 输出文件
+
+输入：
+
+- `src/backend/zuno/**`
+- `src/backend/zuno/*/README.md`
+- `tools/scripts/verify_repo_structure.py`
+- `.agent/scripts/verify_repo_hygiene.py`
+- `tests/repo/test_repo_structure_consistency.py`
+- `tests/legacy_guards/test_zuno_alias_imports.py`
+
+输出：
+
+- `docs/architecture/repo-ownership-matrix.md`
+- 更新后的六层 README ownership 描述。
+- 更新后的 repo structure verifier / repo tests。
+- 可审计的 compat/vendor 分离方案。
+
+## 依赖与阻塞
+
+- 本 phase 是 PHASE03-PHASE10 的代码写入前置门。
+- 在 ownership matrix 生成前，后续 phase 不应新增 runtime 目录或大规模移动文件。
+- 任何兼容路径退役都必须先保留 old import path 的测试证据；不能为了视觉清爽直接删除。
 
 ## 验收
 
@@ -55,6 +81,7 @@ src/backend/zuno/
 - 本地缓存不出现在 VS Code 项目树的结构判断中。
 - 旧 import path 不被破坏。
 - 新 runtime 代码不会继续写入 compatibility。
+- 只有本 phase 的 verifier 和 legacy import tests 通过后，才允许把“代码布局治理”写入 Current；目标代码树在此之前仍是 Target。
 
 ## 验证
 

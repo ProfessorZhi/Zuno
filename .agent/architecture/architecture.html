@@ -261,11 +261,11 @@ flowchart TB
   classDef mem fill:#f8fbff,stroke:#5b7fa3,stroke-width:1px,color:#16202a;
 
   USER[&quot;User&lt;br/&gt;Workspace&quot;]
-  API[&quot;API and&lt;br/&gt;Session&quot;]
+  API[&quot;API Session&lt;br/&gt;Task Event Artifact&quot;]
   MODEL[&quot;Model Gateway&lt;br/&gt;and Policy&quot;]
   CORE[&quot;Agent Core&lt;br/&gt;Runtime&quot;]:::accent
   POST[&quot;PostTurn&lt;br/&gt;Pipeline&quot;]:::mem
-  GOV[&quot;Governance Plane&lt;br/&gt;security trace eval&quot;]:::guard
+  GOV[&quot;Governance Plane&lt;br/&gt;security approval trace eval&quot;]:::guard
   PLATFORM[&quot;Platform&lt;br/&gt;Infrastructure&quot;]
 
   subgraph MEMSYS[&quot;Context and Memory&quot;]
@@ -273,7 +273,7 @@ flowchart TB
     PACK[&quot;Context Pack&quot;]:::mem
     RECENT[&quot;Recent Window&quot;]:::mem
     SUMMARY[&quot;Task Summary&quot;]:::mem
-    STRUCT[&quot;Structured Memory&quot;]:::mem
+    STRUCT[&quot;Structured Memory&lt;br/&gt;episodic semantic procedural&quot;]:::mem
     RAW[&quot;Raw Event Log&quot;]:::mem
     PACK --&gt; RECENT
     PACK --&gt; SUMMARY
@@ -283,8 +283,8 @@ flowchart TB
 
   subgraph KNOWSYS[&quot;Knowledge and Ingestion&quot;]
     direction TB
-    INGEST[&quot;Document Ingestion&quot;]
-    KNOW[&quot;Knowledge Retrieval&quot;]
+    INGEST[&quot;Document Ingestion&lt;br/&gt;Document IR&quot;]
+    KNOW[&quot;Agentic GraphRAG&lt;br/&gt;Evidence Citation&quot;]
     INGEST --&gt; KNOW
   end
 
@@ -324,11 +324,11 @@ flowchart TB
   classDef mem fill:#f8fbff,stroke:#5b7fa3,stroke-width:1px,color:#16202a;
 
   USER[&quot;User&lt;br/&gt;Workspace&quot;]
-  API[&quot;API and&lt;br/&gt;Session&quot;]
+  API[&quot;API Session&lt;br/&gt;Task Event Artifact&quot;]
   MODEL[&quot;Model Gateway&lt;br/&gt;and Policy&quot;]
   CORE[&quot;Agent Core&lt;br/&gt;Runtime&quot;]:::accent
   POST[&quot;PostTurn&lt;br/&gt;Pipeline&quot;]:::mem
-  GOV[&quot;Governance Plane&lt;br/&gt;security trace eval&quot;]:::guard
+  GOV[&quot;Governance Plane&lt;br/&gt;security approval trace eval&quot;]:::guard
   PLATFORM[&quot;Platform&lt;br/&gt;Infrastructure&quot;]
 
   subgraph MEMSYS[&quot;Context and Memory&quot;]
@@ -336,7 +336,7 @@ flowchart TB
     PACK[&quot;Context Pack&quot;]:::mem
     RECENT[&quot;Recent Window&quot;]:::mem
     SUMMARY[&quot;Task Summary&quot;]:::mem
-    STRUCT[&quot;Structured Memory&quot;]:::mem
+    STRUCT[&quot;Structured Memory&lt;br/&gt;episodic semantic procedural&quot;]:::mem
     RAW[&quot;Raw Event Log&quot;]:::mem
     PACK --&gt; RECENT
     PACK --&gt; SUMMARY
@@ -346,8 +346,8 @@ flowchart TB
 
   subgraph KNOWSYS[&quot;Knowledge and Ingestion&quot;]
     direction TB
-    INGEST[&quot;Document Ingestion&quot;]
-    KNOW[&quot;Knowledge Retrieval&quot;]
+    INGEST[&quot;Document Ingestion&lt;br/&gt;Document IR&quot;]
+    KNOW[&quot;Agentic GraphRAG&lt;br/&gt;Evidence Citation&quot;]
     INGEST --&gt; KNOW
   end
 

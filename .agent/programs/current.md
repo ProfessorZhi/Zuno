@@ -7,24 +7,26 @@ current_phase: PHASE01_program-baseline-and-previous-closure
 
 ## 目标
 
-本 program 把 Zuno 从“目标架构文档与架构图已经成型”推进到“目标架构分阶段落地”。它先整理项目文件夹和代码分布，再围绕企业私有知识库与多功能 Agent 助手交付八个方面产物，并同步架构 Markdown、架构 HTML、README、verifier、tests 和历史归档。
+本 program 把 Zuno 从“目标架构文档与架构图已经成型”推进到“目标架构分阶段实现”。它先整理项目文件夹和代码分布，再围绕企业私有知识库与多功能 Agent 助手计划交付八个方面目标产物，并同步架构 Markdown、架构 HTML、README、verifier、tests 和历史归档。
 
 ## 为什么先做文件夹整理
 
 当前 `src/backend/zuno` 顶层已经收口为 `api / agent / memory / capability / knowledge / platform` 六层，但六层内部仍有 facade、旧 implementation、compat import、vendor、provider tools 和平台 services 混住的问题。直接实现 runtime feature 会继续把旧目录越堆越厚，所以本 program 第一段必须先完成 ownership matrix、compat/vendor 边界、可再生成缓存清理和 verifier 固定。
 
-## 八个方面产物
+## 八个方面产物（目标产物）
 
 | 编号 | 产物面 | 目标 |
 | --- | --- | --- |
 | D1 | 项目文件夹与代码布局治理 | 让目录能表达责任边界，减少 platform/services 和 capability/tools 的视觉噪音。 |
 | D2 | 企业私有知识库场景与产品闭环 | 明确 workspace、task/session、upload、artifact、SSE/WebSocket、trace panel 的产品链路。 |
-| D3 | Document Ingestion / Parse Gateway | 支持 PDF、Office、图片、代码、TXT、MD、HTML 等常见文件，统一输出 Canonical Document IR。 |
-| D4 | Single Controller Agent Runtime | 用 LangGraph-compatible harness 落地 prepare_context、plan、ReAct、reflect、replan、post_turn_commit。 |
-| D5 | Context / Memory 系统 | 落地 Raw Event Log、Recent Window、Task Summary、Structured Memory、promotion/decay。 |
-| D6 | Tool Control Plane | 落地 ToolCard manifest、selector、policy、approval、executor adapter、MCP 和 sandbox。 |
-| D7 | RAG / GraphRAG 知识系统 | 落地 basic/local/global/drift、retrieval fusion、GraphRAG indexing/query、Evidence/Citation。 |
-| D8 | 安全、评测、观测、文档展示闭环 | 落地 security gates、LangSmith-compatible trace/eval、architecture.md/html 更新和 release gate。 |
+| D3 | Document Ingestion / Parse Gateway | 计划支持 PDF、Office、图片、代码、TXT、MD、HTML 等常见文件，统一输出 Canonical Document IR。 |
+| D4 | Single Controller Agent Runtime | 计划用 LangGraph-compatible harness 实现 prepare_context、plan、ReAct、reflect、replan、post_turn_commit。 |
+| D5 | Context / Memory 系统 | 计划实现 Raw Event Log、Recent Window、Task Summary、Structured Memory、promotion/decay。 |
+| D6 | Tool Control Plane | 计划实现 ToolCard manifest、selector、policy、approval、executor adapter、MCP 和 sandbox。 |
+| D7 | RAG / GraphRAG 知识系统 | 计划实现 basic/local/global/drift、retrieval fusion、GraphRAG indexing/query、Evidence/Citation。 |
+| D8 | 安全、评测、观测、文档展示闭环 | 计划实现 security gates、LangSmith-compatible trace/eval、architecture.md/html 更新和 release gate。 |
+
+这些是本 program 的目标产物，不表示当前已经完成。每个产物只有在对应 phase 的 tests、verifier、eval evidence 或可复现 trace 通过后，才能从 Target 写入 Current。
 
 ## 当前阶段
 

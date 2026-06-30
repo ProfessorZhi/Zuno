@@ -37,7 +37,60 @@ Network / Credential Sandbox
 - [ ] 建立 ToolCard security fields：`risk_level`、`side_effect_level`、`approval_required`、`sandbox_required`、`network_policy`、`credential_policy`、`audit_required`。
 - [ ] 建立 approval interrupt / resume contract，覆盖 `send_email`、SSH、CLI、删除/覆盖、外部写操作和跨 workspace 读取。
 - [ ] 建立 sandbox audit event schema，进入 trace/eval，以便回放 policy decision。
+- [ ] 建立 `model_intent` 与 `final_decision` 分离日志，证明模型建议和系统执行决策不是一回事。
+- [ ] 增加 verifier 或 tests：secrets 不进入 prompt、trace 明文、artifact、sandbox filesystem。
 - [ ] 写 prompt injection、data exfiltration、cross-workspace leakage 和 unauthorized tool call tests。
+
+## 输入 / 输出文件
+
+输入：
+
+- PHASE03 workspace / task / event contract。
+- PHASE07 ToolCard risk matrix。
+- `src/backend/zuno/platform/security/**`
+- `src/backend/zuno/capability/**`
+- `tests/security/**`
+
+输出：
+
+- Security gate contracts。
+- approval audit schema。
+- sandbox profile mapping。
+- prompt injection / DLP / cross-workspace regression tests。
+
+## Sandbox Level 到 ToolCard Risk 映射
+
+| Tool risk | 默认 approval | 默认 sandbox | 必测项 |
+| --- | --- | --- | --- |
+| none | never | none | schema validity。 |
+| read | on ACL-sensitive read | workspace_ro | path scope、ACL、audit。 |
+| write_local | on overwrite | workspace_rw_artifacts | artifact-only write、no source overwrite。 |
+| write_external | always or on_high_risk | network_limited | approval、credential broker、domain allowlist。 |
+| destructive | admin_only / disabled | execution_restricted or disabled | 默认不可自动执行。 |
+
+## Approval Audit Schema
+
+```json
+{
+  "approval_id": "appr_xxx",
+  "task_id": "task_xxx",
+  "tool_call_id": "tool_xxx",
+  "model_intent": "发送候选人评估邮件",
+  "risk_reason": ["external_write", "pii_possible"],
+  "proposed_args_redacted": {},
+  "policy_decision": "require_approval",
+  "final_decision": "approved|denied|expired",
+  "approver": "user_or_admin",
+  "timestamp": "ISO8601",
+  "audit_ref": "audit_xxx"
+}
+```
+
+## Current / Target 防线
+
+- rootless container、gVisor、Firecracker、full credential broker 都是候选或 Target；只有实现和测试后才能写 Current。
+- 输出 DLP 不等于安全完成；必须同时有输入、检索、工具、输出四道 gate。
+- 本地模型只改善数据驻留，不自动解决 prompt injection、越权工具和 secret 泄露。
 
 ## 验收
 
@@ -47,6 +100,7 @@ Network / Credential Sandbox
 - 任意检索结果、附件和外部网页都被视为不可信输入，不能直接提升为系统指令。
 - 每次高风险动作都有 policy decision、approval state、actor、target、result 和 audit id。
 - 本地模型只代表数据驻留边界，不替代 sandbox 和 approval。
+- approval escape count 必须为 0；否则本 phase 不可关闭。
 
 ## 验证
 

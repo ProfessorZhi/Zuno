@@ -22,7 +22,9 @@ current_phase: PHASE01_program-baseline-and-previous-closure
 
 先整理文件夹，是因为当前顶层六层已经清楚，但 `platform/services`、`capability/tools`、`capability/mcp/servers`、`platform/compatibility` 和旧 import alias 仍让读者觉得零碎。没有 ownership matrix 和兼容矩阵，后续 runtime feature 会继续堆在旧位置。
 
-## 八个方面产物矩阵
+## 八个方面目标产物矩阵
+
+下表是本 program 的目标产物，不是当前完成事实。每一项只有在对应 phase 的 tests、verifier、eval evidence 或可复现 trace 通过后，才能写入 Current。
 
 | 产物 | 产物名称 | 主要路径 | 验收方式 |
 | --- | --- | --- | --- |
@@ -129,6 +131,19 @@ Runtime implementation paths opened by later phases:
 | PHASE11 | pending | 架构 Markdown、HTML、README、图集和展示文档更新。 |
 | PHASE12 | pending | 全量验证、release baseline、归档和推送。 |
 
+## Phase Dependency Gates
+
+| Gate | 依赖 | 被阻塞的 phase | 硬规则 |
+| --- | --- | --- | --- |
+| G1: ownership baseline | PHASE02 ownership matrix、compat/vendor 边界、repo structure guard。 | PHASE03-PHASE10 代码实现。 | 任何新增 runtime 代码必须先能说明 target owner，不能继续堆进 `platform/services` 或 compatibility。 |
+| G2: product task model | PHASE03 task/session/artifact/event contract。 | PHASE05 runtime、PHASE10 trace/eval、PHASE12 closure。 | Runtime、trace、artifact 必须共享 task_id / session_id / trace_id。 |
+| G3: Document IR | PHASE04 Canonical Document IR、parser matrix、source span。 | PHASE08 GraphRAG / Evidence / Citation、PHASE09 DLP、PHASE10 retrieval eval。 | GraphRAG、citation、DLP 不直接消费 parser 原始输出，只消费统一 IR 或 handoff payload。 |
+| G4: runtime state | PHASE05 state model、node contract、event stream。 | PHASE06 memory、PHASE07 tool approval、PHASE09 interrupt/resume。 | Memory、tool、security 必须挂在同一个 runtime state / trace 上。 |
+| G5: ToolCard risk | PHASE07 ToolCard v1、side-effect matrix、executor adapter。 | PHASE09 sandbox、PHASE10 tool trajectory eval。 | 高风险工具没有 ToolCard policy 不允许上线。 |
+| G6: evidence contract | PHASE08 EvidenceBundle、Citation Builder、unsupported claim check。 | PHASE10 faithfulness / citation eval、PHASE11 Current 更新。 | 没有 evidence/citation 证据的 GraphRAG 能力不能写成成熟 Current。 |
+| G7: security gate | PHASE09 input/retrieval/tool/output gates。 | PHASE10 online eval、PHASE12 release closure。 | 高风险动作 approval escape 必须为 0。 |
+| G8: eval baseline | PHASE10 dataset、metric thresholds、release baseline。 | PHASE11/PHASE12。 | 文档更新 Current 前必须有 eval 或 focused test 证据。 |
+
 ## Execution Model
 
 本 program 可以使用主线程挂机模式，也可以拆成多 worktree 并行模式。若并行，推荐 workstreams：
@@ -143,6 +158,15 @@ Runtime implementation paths opened by later phases:
 共享文件如 `AGENTS.md`、`.agent/system.yaml`、`docs/architecture/architecture.md`、`tools/scripts/verify_repo_structure.py` 和核心 repo tests 由主线程最终收口。
 
 并行执行规则：每条线必须在独立 worktree + 独立 `codex/` 分支上工作；主线程负责 current-program 状态、架构源文档、verifier、tests 和 final integration。禁止多条线同时大改同一个热点目录。若某条线只处理局部目录，可以启用 sparse-checkout 降低扫描面，但不能改变仓库事实源。
+
+可并行性规则：
+
+- PHASE02 是所有 runtime 代码移动和新增目录的前置门，不能跳过。
+- PHASE03 和 PHASE04 可以在 PHASE02 ownership baseline 后并行，但 PHASE05 必须读取 PHASE03 的 task/session contract。
+- PHASE06、PHASE07、PHASE08 可以在 PHASE05 state model 固定后分工并行，但都必须写入同一 trace/span contract。
+- PHASE09 依赖 PHASE07 ToolCard risk matrix 和 PHASE03 workspace scope。
+- PHASE10 可以提前设计 schema，但 release gate 阈值必须等 PHASE08/09 的输出字段固定。
+- PHASE11 和 PHASE12 由主线程收口，不建议分给独立 worker 直接修改 shared architecture source。
 
 ## Verification Baseline
 
