@@ -136,7 +136,7 @@ def verify_entrypoint_text() -> list[str]:
         "./docs/architecture/architecture.md",
         "./docs/architecture/architecture.html",
         "GeneralAgent` single loop",
-        "zuno-document-ingestion-v1",
+        "zuno-master-architecture-implementation-v1",
         "docs/history/architecture-surface-cleanup-2026-06-30/",
     ]:
         if phrase not in readme:
@@ -186,7 +186,7 @@ def verify_entrypoint_text() -> list[str]:
         "Target",
         "Document Ingestion",
         "Security / Governance",
-        "zuno-security-enterprise-scenarios-v1",
+        "PHASE09_security-governance-sandbox",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/",
     ]:
         if phrase not in docs_architecture:

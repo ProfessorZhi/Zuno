@@ -3,13 +3,20 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-ACTIVE_PROGRAM_NAME = "zuno-architecture-detail-and-execution-plan-v1"
+ACTIVE_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
 ACTIVE_PROGRAM_PHASE_FILES = [
-    "PHASE01_architecture-state-and-program-boot.md",
-    "PHASE02_target-architecture-detailing.md",
-    "PHASE03_mermaid-html-detail-refresh.md",
-    "PHASE04_execution-roadmap-from-architecture.md",
-    "PHASE05_validation-and-closure.md",
+    "PHASE01_program-baseline-and-previous-closure.md",
+    "PHASE02_project-folder-and-code-layout-cleanup.md",
+    "PHASE03_enterprise-scenario-and-product-loop.md",
+    "PHASE04_document-ingestion-parse-gateway.md",
+    "PHASE05_agent-runtime-langgraph-harness.md",
+    "PHASE06_context-memory-system.md",
+    "PHASE07_tool-control-plane-mcp-approval.md",
+    "PHASE08_rag-graphrag-evidence-citation.md",
+    "PHASE09_security-governance-sandbox.md",
+    "PHASE10_eval-observability-langsmith.md",
+    "PHASE11_architecture-docs-html-refresh.md",
+    "PHASE12_validation-release-closure.md",
 ]
 COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
 COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
@@ -136,10 +143,10 @@ def test_agent_program_surface_matches_active_architecture_program() -> None:
         "当前 active program",
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE04_execution-roadmap-from-architecture",
+        "current_phase: PHASE01_program-baseline-and-previous-closure",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
-        "八个交付物",
+        "八个方面产物",
     ]:
         assert phrase in current_program + roadmap
 

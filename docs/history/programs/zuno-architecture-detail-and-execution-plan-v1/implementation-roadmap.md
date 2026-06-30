@@ -1,0 +1,317 @@
+# Zuno Architecture Detail And Execution Plan Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** 先细化 Zuno 目标架构文档、总架构文档、十类 Mermaid 架构图和生成 HTML，再把主场景收束为“企业私有知识库与多功能 Agent 助手”，从图反推出 Memory Layer、Tool Control Plane、文档解析、安全 / 沙箱和评测的后续执行计划。
+
+**Architecture:** 本 program 不改 runtime。它把 `Enterprise Private Knowledge Agent Workspace / Model / Agent Core Runtime / Memory / Tool / Knowledge / Document Ingestion / Security / Sandbox / Trace-Eval / Platform` 写进 Target 架构，并保持 Current / Target / Future / History 边界。Memory Layer 明确为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay 的 write-manage-read 子系统。Tool Layer 明确为 Tool Manifest、ToolCard Registry、Capability Selector、Tool Policy / Approval Gate、Executor Adapter、Sandbox、Result Normalizer、Tool Trace / Audit 的 Tool Control Plane。Security / Sandbox 明确为 Policy、Workspace、Execution 和 Network-Credential 四层目标边界。十类图仍保持十个 canonical title，但每张图展开到二级组件。
+
+文字总架构文档放在 `docs/architecture/architecture.md`；Agent 侧维护镜像放在 `.agent/architecture/architecture.md`。两者必须一致。图形总览继续由 `docs/architecture/architecture.md` 生成到 `docs/architecture/architecture.html`。
+
+**Tech Stack:** Markdown、Mermaid、`tools/agent/render_architecture.py`、Zuno `.agent/programs` 生命周期、repo verifiers、pytest repo tests。
+
+---
+
+state: active
+program: zuno-architecture-detail-and-execution-plan-v1
+current_phase: PHASE04_execution-roadmap-from-architecture
+
+每次新 program 都从 `PHASE01` 开始编号。
+
+最近完成归档仍是 `zuno-eight-deliverables-full-realization-v1`，归档路径是 `docs/history/programs/zuno-eight-deliverables-full-realization-v1/`。
+
+## 文件结构
+
+- 修改 `docs/architecture/architecture.md`：正式主场景叙事、数据类型、三层场景和 Current / Target / Future 边界。
+- 新增 `docs/architecture/architecture.md`：正式文字总架构文档。
+- 新增 `.agent/architecture/architecture.md`：Agent 侧总架构维护文档。
+- 修改 `docs/architecture/architecture.md`：Policy / Workspace / Execution / Network-Credential Sandbox 目标边界。
+- 修改 `docs/architecture/architecture.md`：正式 Target 分层、Agent Core Runtime、Memory Layer、Document Ingestion、ToolCard adapter、安全 / 沙箱和 LangSmith eval 边界。
+- 修改 `docs/architecture/architecture.md`：十类 Mermaid 图的唯一源，所有图保持 canonical title。
+- 生成 `docs/architecture/architecture.html`：由 renderer 输出，不手写。
+- 修改 `.agent/references/diagram-inventory.md`：登记十类图的二级组件要求和更新触发条件。
+- 修改 `.agent/programs/*`：打开 active program、写 roadmap、phase 和 closure checklist。
+- 修改 `.agent/references/current-program.md`、`docs/architecture/architecture.md`、`README.md`、`docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/README.md`：同步当前 active program。
+- 修改 `AGENTS.md`、`docs/architecture/README.md`、`.agent/references/docs-map.md`、`.agent/references/architecture-docs-map.md`、`.agent/references/documentation-governance.md`、`.agent/references/architecture-update-policy.md`、`.agent/references/workflow.md`：同步架构治理入口、总架构文档一致性规则和图细化规则。
+- 修改 `tools/agent/render_architecture.py`：放宽图展示宽度以容纳二级组件图。
+- 修改 `.agent/scripts/verify_agent_system.py`、`.agent/scripts/verify_doc_boundaries.py`、`.agent/scripts/verify-workflow.ps1`、`tools/scripts/verify_docs_entrypoints.py`、`tools/scripts/verify_repo_structure.py`、`tests/repo/test_agent_system.py`、`tests/repo/test_docs_entrypoints.py`：让 verifier/test 固定 active program 与细化图契约。
+
+### Task 1: Program Boot And State Surfaces
+
+Status: completed
+
+**Files:**
+- Modify: `.agent/programs/current.md`
+- Modify: `.agent/programs/README.md`
+- Modify: `.agent/references/current-program.md`
+- Modify: `docs/architecture/architecture.md`
+- Modify: `README.md`
+- Modify: `AGENTS.md`
+- Modify: `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/README.md`
+- Create: `.agent/programs/PHASE01_architecture-state-and-program-boot.md`
+
+- [x] **Step 1: Confirm git branch and clean scope**
+
+Run:
+
+```powershell
+git status --short --branch
+```
+
+Expected: branch is `codex/zuno-architecture-detail-plan-v1` and unrelated files are not dirty.
+
+- [x] **Step 2: Open the active program**
+
+Update active state files to include:
+
+```text
+program: zuno-architecture-detail-and-execution-plan-v1
+state: active
+current_phase: PHASE04_execution-roadmap-from-architecture
+```
+
+- [x] **Step 3: Keep completed program evidence visible**
+
+Keep these phrases in state surfaces:
+
+```text
+zuno-eight-deliverables-full-realization-v1
+docs/history/programs/zuno-eight-deliverables-full-realization-v1/
+Codex 执行协作
+不是 Zuno runtime 架构
+不是多线程模式
+```
+
+### Task 2: Target Architecture Detailing
+
+Status: completed
+
+**Files:**
+- Modify: `docs/architecture/architecture.md`
+
+- [x] **Step 1: Add target architecture detail layers**
+
+Add the target table for:
+
+```text
+Model / Gateway
+Agent Core Runtime
+Context / Memory
+Capability / Tool
+Knowledge / Retrieval
+Document Ingestion
+Security / Policy
+Trace / Eval
+Platform / Workspace
+```
+
+Memory Layer 必须展开为：
+
+```text
+Raw Event Log
+L0 Working Context
+L1 Recent Window
+L2 Task Summary
+L3 Structured Long-term Memory
+L4 Graph Memory
+read path
+write path
+review / promotion / decay
+memory eval
+```
+
+- [x] **Step 2: Define Planning and Runtime boundary**
+
+Document this contract:
+
+```text
+Planning is an Agent Core Runtime control capability.
+LangGraph is a target implementation candidate for planning runtime orchestration.
+LangGraph is not the planning module itself.
+```
+
+- [x] **Step 3: Define ToolCard execution adapter boundary**
+
+Document `execution mode` values:
+
+```text
+local_function | local_sdk | sdk_to_api | api | local_cli | cli_to_api | ssh | mcp_local | mcp_remote
+```
+
+### Task 3: Mermaid And HTML Detail Refresh
+
+Status: completed
+
+**Files:**
+- Modify: `docs/architecture/architecture.md`
+- Modify: `.agent/references/diagram-inventory.md`
+- Modify: `tools/agent/render_architecture.py`
+- Generate: `docs/architecture/architecture.html`
+
+- [x] **Step 1: Keep exactly ten canonical diagrams**
+
+Do not add an eleventh Mermaid block. Keep:
+
+```text
+Logical View
+Development View
+Process View
+Physical View
+Scenarios View
+V&B Logical View
+Component-and-Connector View
+V&B Deployment View
+Quality View
+Agent Loop View
+```
+
+- [x] **Step 2: Expand each diagram to second-level components**
+
+Each diagram must show at least one of:
+
+```text
+Agent Core Runtime
+Document Ingestion
+Security / Policy
+Trace / Eval
+Tool execution adapter
+Knowledge / GraphRAG
+```
+
+- [x] **Step 3: Generate HTML**
+
+Run:
+
+```powershell
+python tools/agent/render_architecture.py --write
+python tools/agent/render_architecture.py --check
+```
+
+Expected: both commands pass.
+
+### Task 4: Execution Roadmap From Architecture
+
+Status: active
+
+**Files:**
+- Modify: `.agent/programs/implementation-roadmap.md`
+- Modify: `docs/architecture/architecture.md`
+- Modify: `README.md`
+- Create: `docs/architecture/architecture.md`
+- Create: `.agent/architecture/architecture.md`
+- Modify: `docs/architecture/README.md`
+- Modify: `.agent/architecture/README.md`
+- Modify: `.agent/architecture/architecture.md`
+- Modify: `.agent/references/docs-map.md`
+- Modify: `.agent/references/architecture-docs-map.md`
+- Modify: `.agent/references/documentation-governance.md`
+- Modify: `.agent/references/architecture-update-policy.md`
+- Modify: `.agent/references/workflow.md`
+- Modify: `.agent/system.yaml`
+
+- [ ] **Step 1: Derive follow-up implementation order**
+
+Record this dependency order:
+
+```text
+architecture detail
+-> Document Ingestion / Parse Gateway
+-> Runtime + Memory + Tool Plane
+-> Eval / Observability
+-> Security + Enterprise Scenarios
+-> frontend trace / artifact product loop
+```
+
+The implementation programs derived from the architecture should be:
+
+```text
+zuno-document-ingestion-v1
+zuno-runtime-memory-tool-plane-v1
+zuno-eval-observability-v1
+zuno-security-enterprise-scenarios-v1
+```
+
+Each follow-up program must keep Current / Target strict:
+
+- Document Ingestion is target until parser contracts and tests exist.
+- LangSmith / RAGAS / DeepEval are target adapters until trace export and eval gates exist.
+- Security gates and sandbox layers are target until policy checks, approval flow, executor isolation and regression tests exist.
+- Enterprise knowledge base / HR resume KB are product scenarios, not current runtime facts.
+
+- [ ] **Step 2: Add overall architecture document pair**
+
+Create the text-first architecture source pair:
+
+```text
+docs/architecture/architecture.md
+.agent/architecture/architecture.md
+```
+
+The docs version is the formal human source. The `.agent` version is the Agent maintenance mirror. Both must mention:
+
+```text
+总架构文档
+本地优先的企业私有知识库与多功能 Agent 助手
+文字总架构文档
+架构 HTML
+docs/architecture/architecture.md
+docs/architecture/architecture.html
+Document Ingestion / Parse Gateway
+Tool Control Plane
+LangSmith-compatible Trace / Eval
+```
+
+- [ ] **Step 3: Preserve Current / Target boundary**
+
+Do not move Document Ingestion, LangSmith, security gates, sandbox layers, enterprise scenarios or frontend trace into Current until code and tests prove them.
+
+### Task 5: Validation And Closure
+
+**Files:**
+- Modify: `.agent/scripts/verify_agent_system.py`
+- Modify: `.agent/scripts/verify_doc_boundaries.py`
+- Modify: `.agent/scripts/verify-workflow.ps1`
+- Modify: `tools/scripts/verify_docs_entrypoints.py`
+- Modify: `tools/scripts/verify_repo_structure.py`
+- Modify: `tests/repo/test_agent_system.py`
+- Modify: `tests/repo/test_docs_entrypoints.py`
+- Modify: `.agent/programs/closure-checklist.md`
+
+- [ ] **Step 1: Update verifiers for active program**
+
+Verifier must accept:
+
+```text
+state: active
+zuno-architecture-detail-and-execution-plan-v1
+PHASE01_architecture-state-and-program-boot.md
+PHASE05_validation-and-closure.md
+```
+
+- [ ] **Step 2: Run validation**
+
+Run:
+
+```powershell
+git diff --check
+python tools/agent/render_architecture.py --check
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+python .agent/scripts/verify_repo_hygiene.py
+python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_repo_structure.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_agent_system.py -p no:cacheprovider
+```
+
+Expected: all pass.
+
+- [ ] **Step 3: Commit and push**
+
+Run:
+
+```powershell
+git add .
+git commit -m "docs: detail zuno architecture program"
+git push -u origin codex/zuno-architecture-detail-plan-v1
+```

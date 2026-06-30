@@ -19,13 +19,20 @@ COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE09_runtime-upgrade-integration.md",
     "PHASE10_validation-release-closure.md",
 ]
-ACTIVE_PROGRAM_NAME = "zuno-architecture-detail-and-execution-plan-v1"
+ACTIVE_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
 ACTIVE_PROGRAM_PHASE_FILES = [
-    "PHASE01_architecture-state-and-program-boot.md",
-    "PHASE02_target-architecture-detailing.md",
-    "PHASE03_mermaid-html-detail-refresh.md",
-    "PHASE04_execution-roadmap-from-architecture.md",
-    "PHASE05_validation-and-closure.md",
+    "PHASE01_program-baseline-and-previous-closure.md",
+    "PHASE02_project-folder-and-code-layout-cleanup.md",
+    "PHASE03_enterprise-scenario-and-product-loop.md",
+    "PHASE04_document-ingestion-parse-gateway.md",
+    "PHASE05_agent-runtime-langgraph-harness.md",
+    "PHASE06_context-memory-system.md",
+    "PHASE07_tool-control-plane-mcp-approval.md",
+    "PHASE08_rag-graphrag-evidence-citation.md",
+    "PHASE09_security-governance-sandbox.md",
+    "PHASE10_eval-observability-langsmith.md",
+    "PHASE11_architecture-docs-html-refresh.md",
+    "PHASE12_validation-release-closure.md",
 ]
 
 
@@ -681,7 +688,7 @@ def test_readme_mentions_current_backend_start_and_focused_verification() -> Non
         "python .agent/scripts/verify_doc_boundaries.py",
         "pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py",
         "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860",
-        "zuno-architecture-detail-and-execution-plan-v1",
+        "zuno-master-architecture-implementation-v1",
         ".agent/programs/",
     ]:
         assert phrase in readme
@@ -721,7 +728,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     for phrase in [
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE04_execution-roadmap-from-architecture",
+        "current_phase: PHASE01_program-baseline-and-previous-closure",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",
