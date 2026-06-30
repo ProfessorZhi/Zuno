@@ -201,6 +201,7 @@ def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monke
             "mime_type": "text/markdown",
             "hash": "sha256-contract-full",
             "uri": "memory://workspace/workspace_phase03_full/files/file_contract_full",
+            "content": "Create a cited risk memo after approval using renewal and liability evidence.",
         },
     )
     assert file_response.status_code == 200

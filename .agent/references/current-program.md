@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE10_security-observability-and-online-eval
+current_phase: PHASE11_web-desktop-surface-and-feedback-loop
 
 `.agent/programs/` 当前保存 active runtime implementation program：
 
@@ -55,8 +55,8 @@ current_phase: PHASE10_security-observability-and-online-eval
 - `PHASE07_memory-db-and-context-governance.md`：completed，已提供 snapshot/local replay、SQLModel-backed DatabaseMemoryStore、GeneralAgent memory 接入、governance ledger、sensitive exclusion、promotion、decay、consolidation 和 Context Pack reasons。
 - `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：completed，已接通本地 deterministic executor、tool approval API/UI bridge、credential ref broker、sandbox context 和 audit trace。
 - `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：completed，已让 Agentic retrieval 消费新 index runtime，输出 citation-rich answer，并把 evidence / citation / unsupported claim 指标写入 task retrieval event。
-- `PHASE10_security-observability-and-online-eval.md`：active，正在将 security gates、ZunoSpan、eval baseline 接入真实运行时。
-- `PHASE11_web-desktop-surface-and-feedback-loop.md`：pending。
+- `PHASE10_security-observability-and-online-eval.md`：completed，已将 security gates、ZunoSpan、task observability snapshot、trace replay 和 release baseline 接入 workspace task runtime。
+- `PHASE11_web-desktop-surface-and-feedback-loop.md`：active，正在完成用户可感知的上传、事件流、审批、artifact、citation、trace 和 feedback UI。
 - `PHASE12_release-gate-full-e2e-closure.md`：pending。
 
 ## Current / Target 边界

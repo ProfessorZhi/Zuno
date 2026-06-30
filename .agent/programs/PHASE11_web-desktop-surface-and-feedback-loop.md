@@ -1,6 +1,6 @@
 # PHASE11 web-desktop-surface-and-feedback-loop
 
-status: pending
+status: active
 
 ## 目标
 
@@ -31,4 +31,3 @@ git diff --check
 pytest -q tests/frontend tests/api -p no:cacheprovider
 npm --prefix apps/web test -- --run
 ```
-

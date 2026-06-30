@@ -28,8 +28,8 @@
 | PHASE07 | memory-db-and-context-governance | completed | 已提供 snapshot/local replay 与 SQLModel-backed DatabaseMemoryStore，接入 GeneralAgent post-turn write / pre-context read，并覆盖 governance ledger、sensitive exclusion、promotion、decay、consolidation 和 Context Pack reasons。 |
 | PHASE08 | tool-control-plane-approval-and-sandbox-runtime | completed | 已提供本地 deterministic ToolControlPlaneRuntime，接通只读工具自动执行、高副作用工具审批等待 / 批准后执行、credential ref broker、sandbox context、audit trace、workspace task event stream 和最小前端审批卡。 |
 | PHASE09 | agentic-retrieval-evidence-citation-runtime | completed | 已让 Agentic retrieval 消费新 index runtime，输出 citation-rich answer，并把 evidence / citation / unsupported claim 指标写入 task retrieval event。 |
-| PHASE10 | security-observability-and-online-eval | active | 将 security gates、ZunoSpan、eval baseline 接入真实运行时。 |
-| PHASE11 | web-desktop-surface-and-feedback-loop | pending | 完成用户可感知的上传、事件流、审批、artifact、citation、trace 和 feedback UI。 |
+| PHASE10 | security-observability-and-online-eval | completed | 已将 input / retrieval / tool / output gates、ZunoSpan、task observability snapshot、trace replay 和 release baseline 接入 workspace task runtime。 |
+| PHASE11 | web-desktop-surface-and-feedback-loop | active | 完成用户可感知的上传、事件流、审批、artifact、citation、trace 和 feedback UI。 |
 | PHASE12 | release-gate-full-e2e-closure | pending | 以完整 vertical slice 做 release closure、归档、验证、commit、merge 和 push。 |
 
 ## 黄金脊柱

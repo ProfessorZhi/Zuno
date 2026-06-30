@@ -234,6 +234,7 @@ export interface WorkspaceTaskCreateResponse {
   artifact_ids: string[]
   artifacts: ArtifactContract[]
   runtime?: WorkspaceRuntimeSnapshot
+  observability?: WorkspaceObservabilitySnapshot
 }
 
 export interface WorkspaceArtifactResponse {
@@ -312,6 +313,17 @@ export interface WorkspaceRuntimeSnapshot {
   pending_interrupt?: Record<string, any> | null
   failure?: Record<string, any> | null
   events: Array<Record<string, any>>
+}
+
+export interface WorkspaceObservabilitySnapshot {
+  spans: Array<Record<string, any>>
+  release_eval?: Record<string, any> | null
+  trace_replay: {
+    source_refs: string[]
+    event_ids?: string[]
+    trace_id?: string
+    task_id?: string
+  }
 }
 
 export interface WorkspaceAttachment {

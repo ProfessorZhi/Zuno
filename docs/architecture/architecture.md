@@ -982,7 +982,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-target-architecture-runtime-full-implementation-v1`，当前阶段是 `PHASE10_security-observability-and-online-eval`。它承接 `zuno-master-architecture-implementation-v1` 的 contract foundation，不推翻目标架构，而是把目标架构推进到第一版真实 runtime 闭环。上一轮完成并归档的 program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`；它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。
+当前 active program 是 `zuno-target-architecture-runtime-full-implementation-v1`，当前阶段是 `PHASE11_web-desktop-surface-and-feedback-loop`。它承接 `zuno-master-architecture-implementation-v1` 的 contract foundation，不推翻目标架构，而是把目标架构推进到第一版真实 runtime 闭环。上一轮完成并归档的 program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`；它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。
 
 本轮 runtime-first program 的核心闭环是：
 
@@ -1001,8 +1001,8 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 7. `PHASE07_memory-db-and-context-governance`：已将 MemoryEngine 升级为 snapshot / SQLModel-backed memory runtime，并接入 GeneralAgent。
 8. `PHASE08_tool-control-plane-approval-and-sandbox-runtime`：已接通本地 deterministic executor、approval API/UI bridge、credential ref broker、sandbox context、audit trace 和 workspace event stream。
 9. `PHASE09_agentic-retrieval-evidence-citation-runtime`：已让 Agentic retrieval 消费新 index runtime，输出 citation-rich answer，并把 evidence / citation / unsupported claim 指标写入 task retrieval event。
-10. `PHASE10_security-observability-and-online-eval`：当前阶段，将 security gates、ZunoSpan、eval baseline 接入真实运行时。
-11. `PHASE11_web-desktop-surface-and-feedback-loop`：完成用户可感知的上传、事件流、审批、artifact、citation、trace 和 feedback UI。
+10. `PHASE10_security-observability-and-online-eval`：已将 security gates、ZunoSpan、task observability snapshot、trace replay 和 release baseline 接入 workspace task runtime。
+11. `PHASE11_web-desktop-surface-and-feedback-loop`：当前阶段，完成用户可感知的上传、事件流、审批、artifact、citation、trace 和 feedback UI。
 12. `PHASE12_release-gate-full-e2e-closure`：以完整 vertical slice 做 release closure、归档、验证、commit、merge 和 push。
 
 这十二个 phase 可以按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。

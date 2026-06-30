@@ -213,7 +213,7 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "current_phase: PHASE10_security-observability-and-online-eval") {
+if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "current_phase: PHASE11_web-desktop-surface-and-feedback-loop") {
     $failures.Add("current-program.md must declare active runtime full implementation program")
 }
 if ($currentProgram -notmatch "runtime-first / vertical-slice-first" -or $currentProgram -notmatch "只写 contract、schema 或 README 不能关闭 runtime phase") {

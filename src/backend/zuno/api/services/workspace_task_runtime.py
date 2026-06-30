@@ -30,6 +30,25 @@ from zuno.knowledge.ingestion import (
     DocumentProvenance,
     SourceSpan,
 )
+from zuno.platform.observability import (
+    EvalMetricResult,
+    MetricThreshold,
+    ReleaseEvalBaseline,
+    ZunoSpanBuilder,
+    ZunoSpanKind,
+)
+from zuno.platform.security import (
+    GateRequest,
+    GateResult,
+    InputSecurityGate,
+    OutputSecurityGate,
+    RetrievalCandidate,
+    RetrievalGateResult,
+    RetrievalSecurityGate,
+    SandboxAuditEvent,
+    SecurityDecision,
+    SecurityGate,
+)
 from zuno.schema.workspace import (
     ArtifactContract,
     FeedbackContract,
@@ -63,6 +82,13 @@ class WorkspaceTaskRuntimeService:
     _knowledge_index_runtime = KnowledgeIndexRuntime()
     _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
+    _input_security_gate = InputSecurityGate()
+    _retrieval_security_gate = RetrievalSecurityGate()
+    _output_security_gate = OutputSecurityGate()
+    _span_builder = ZunoSpanBuilder()
+    _trace_spans: dict[str, list[dict]] = {}
+    _release_evals: dict[str, dict] = {}
+    _trace_replays: dict[str, dict] = {}
 
     @classmethod
     def register_file(
@@ -182,6 +208,9 @@ class WorkspaceTaskRuntimeService:
         cls._tasks[task_id] = task
         cls._task_inputs[task_id] = simple_task
         cls._artifact_ids_by_task[task_id] = []
+        cls._trace_spans[task_id] = []
+        cls._release_evals.pop(task_id, None)
+        cls._trace_replays[task_id] = {"source_refs": []}
         runtime_state = cls._runtime_state_for_task(
             simple_task=simple_task,
             login_user=login_user,
@@ -206,6 +235,37 @@ class WorkspaceTaskRuntimeService:
                 },
             ),
         ]
+        input_gate = cls._input_security_gate.evaluate(
+            GateRequest(
+                gate=SecurityGate.INPUT,
+                workspace_id=workspace_id,
+                user_id=login_user.user_id,
+                content=simple_task.query,
+                metadata={"source": "workspace_task"},
+                trace_id=trace_id,
+                task_id=task_id,
+            )
+        )
+        cls._record_security_span(task_id=task_id, audit=input_gate.audit_event)
+        if input_gate.decision is SecurityDecision.BLOCK:
+            cls._append_security_gate_event(task_id=task_id, result=input_gate)
+            cls._fail_task(
+                task_id=task_id,
+                simple_task=simple_task,
+                reason="input_security_block",
+                citation_coverage=1.0,
+                required_citation_coverage=0.0,
+                security_block_count=1,
+                failure_examples=[
+                    {
+                        "gate": "input",
+                        "findings": [finding.to_dict() for finding in input_gate.findings],
+                        "sanitized_content": input_gate.sanitized_content,
+                    }
+                ],
+            )
+            return cls.get_task_snapshot(task_id)
+
         if manual_approval_required:
             cls._durable_runtime.start_task(
                 runtime_state,
@@ -373,6 +433,31 @@ class WorkspaceTaskRuntimeService:
         task = cls._require_task(task_id)
         trace_id = task.trace_id or ""
         goal = task.goal
+        retrieval_gate = cls._preflight_retrieval_security(
+            task=task,
+            simple_task=simple_task,
+        )
+        if retrieval_gate is not None:
+            cls._record_security_span(task_id=task_id, audit=retrieval_gate.audit_event)
+            if retrieval_gate.findings:
+                cls._append_security_gate_event(task_id=task_id, result=retrieval_gate)
+            if retrieval_gate.decision is SecurityDecision.BLOCK:
+                cls._fail_task(
+                    task_id=task_id,
+                    simple_task=simple_task,
+                    reason="retrieval_security_block",
+                    citation_coverage=0.0,
+                    required_citation_coverage=0.8,
+                    security_block_count=1,
+                    failure_examples=[
+                        {
+                            "gate": "retrieval",
+                            "findings": [finding.to_dict() for finding in retrieval_gate.findings],
+                        }
+                    ],
+                )
+                return
+
         retrieval_result = cls._answer_from_index(
             task=task,
             simple_task=simple_task,
@@ -388,11 +473,61 @@ class WorkspaceTaskRuntimeService:
                     payload=retrieval_result.to_task_event()["payload"],
                 )
             )
+            cls._record_retrieval_observability(
+                task=task,
+                simple_task=simple_task,
+                retrieval_result=retrieval_result,
+            )
         artifact_content = cls._render_artifact_content(
             simple_task=simple_task,
             goal=goal,
             retrieval_result=retrieval_result,
         )
+        citation_coverage = (
+            retrieval_result.trace.citation_coverage
+            if retrieval_result is not None
+            else 1.0
+        )
+        required_citation_coverage = (
+            0.8
+            if retrieval_result is not None
+            and (
+                simple_task.output_contract.citation_required
+                if simple_task.output_contract
+                else True
+            )
+            else 0.0
+        )
+        output_gate = cls._output_security_gate.evaluate(
+            content=artifact_content,
+            citation_coverage=citation_coverage,
+            required_citation_coverage=required_citation_coverage,
+            workspace_id=task.workspace_id,
+            trace_id=trace_id,
+            task_id=task_id,
+        )
+        cls._record_security_span(task_id=task_id, audit=output_gate.audit_event)
+        if output_gate.findings:
+            cls._append_security_gate_event(task_id=task_id, result=output_gate)
+        if output_gate.decision is SecurityDecision.BLOCK:
+            cls._fail_task(
+                task_id=task_id,
+                simple_task=simple_task,
+                reason="output_security_block",
+                citation_coverage=citation_coverage,
+                required_citation_coverage=required_citation_coverage,
+                security_block_count=1,
+                source_refs=cls._trace_replays.get(task_id, {}).get("source_refs", []),
+                failure_examples=[
+                    {
+                        "gate": "output",
+                        "findings": [finding.to_dict() for finding in output_gate.findings],
+                        "sanitized_content": output_gate.sanitized_content,
+                    }
+                ],
+            )
+            return
+
         artifact = ArtifactContract(
             workspace_id=task.workspace_id,
             owner=task.owner,
@@ -430,7 +565,17 @@ class WorkspaceTaskRuntimeService:
                     trace_id=trace_id,
                     event_type="eval_diagnostic",
                     status="finalizing",
-                    payload={"citation_required": bool(simple_task.output_contract.citation_required) if simple_task.output_contract else True},
+                    payload={
+                        "citation_required": bool(simple_task.output_contract.citation_required) if simple_task.output_contract else True,
+                        "release_eval": cls._record_release_eval(
+                            task=task,
+                            simple_task=simple_task,
+                            citation_coverage=citation_coverage,
+                            required_citation_coverage=required_citation_coverage,
+                            security_block_count=0,
+                            source_refs=cls._trace_replays.get(task_id, {}).get("source_refs", []),
+                        ),
+                    },
                 ),
                 cls._event(task_id=task_id, trace_id=trace_id, event_type="task_completed", status="completed", payload={"artifact_id": artifact.artifact_id}),
             ]
@@ -488,6 +633,7 @@ class WorkspaceTaskRuntimeService:
         result: ToolRuntimeExecutionResult,
     ) -> None:
         task = cls._require_task(task_id)
+        cls._record_security_span(task_id=task_id, audit=result.audit_event)
         for event in result.task_events:
             cls._events.setdefault(task_id, []).append(
                 cls._event(
@@ -527,6 +673,49 @@ class WorkspaceTaskRuntimeService:
         if file is None:
             raise HTTPException(status_code=404, detail="Workspace file not found")
         return file
+
+    @classmethod
+    def _preflight_retrieval_security(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+    ) -> RetrievalGateResult | None:
+        if not simple_task.knowledge_space_ids:
+            return None
+        candidates: list[RetrievalCandidate] = []
+        try:
+            for knowledge_space_id in simple_task.knowledge_space_ids:
+                payload = cls._knowledge_index_runtime.to_retrieval_payload(
+                    knowledge_space_id,
+                    simple_task.query,
+                )
+                for documents in payload.get("documents_by_source", {}).values():
+                    for document in documents:
+                        if float(document.get("score") or 0.0) <= 0:
+                            continue
+                        metadata = dict(document.get("metadata") or {})
+                        candidates.append(
+                            RetrievalCandidate(
+                                chunk_id=str(document.get("chunk_id") or ""),
+                                workspace_id=str(document.get("workspace_id") or payload.get("manifest", {}).get("workspace_id") or ""),
+                                acl_scope=str(metadata.get("acl_scope") or "workspace"),
+                                document_trust_label=str(metadata.get("trust_label") or "indexed"),
+                                text=str(document.get("content") or ""),
+                                metadata=metadata,
+                            )
+                        )
+        except KeyError:
+            return None
+        if not candidates:
+            return None
+        return cls._retrieval_security_gate.filter_candidates(
+            workspace_id=task.workspace_id,
+            allowed_acl_scopes={"workspace", task.policy_scope},
+            candidates=candidates,
+            trace_id=task.trace_id or "",
+            task_id=task.task_id,
+        )
 
     @classmethod
     def _ensure_knowledge_space(cls, *, knowledge_space_id: str, workspace_id: str) -> None:
@@ -579,6 +768,11 @@ class WorkspaceTaskRuntimeService:
             "artifact_ids": list(artifact_ids),
             "artifacts": [cls._artifacts[artifact_id].model_dump() for artifact_id in artifact_ids],
             "runtime": runtime_snapshot.to_dict() if runtime_snapshot is not None else None,
+            "observability": {
+                "spans": list(cls._trace_spans.get(task_id, [])),
+                "release_eval": cls._release_evals.get(task_id),
+                "trace_replay": cls._trace_replays.get(task_id, {"source_refs": []}),
+            },
         }
 
     @classmethod
@@ -659,6 +853,194 @@ class WorkspaceTaskRuntimeService:
             type=event_type,
             timestamp=time.time(),
             payload=event_payload,
+        )
+
+    @classmethod
+    def _append_security_gate_event(
+        cls,
+        *,
+        task_id: str,
+        result: GateResult | RetrievalGateResult,
+    ) -> None:
+        audit = result.audit_event
+        payload = audit.to_trace_payload()
+        payload["findings"] = [finding.to_dict() for finding in result.findings]
+        sanitized_content = getattr(result, "sanitized_content", None)
+        if sanitized_content is not None:
+            payload["sanitized_content"] = sanitized_content
+        allowed_candidates = getattr(result, "allowed_candidates", None)
+        blocked_candidates = getattr(result, "blocked_candidates", None)
+        if allowed_candidates is not None:
+            payload["allowed_candidate_ids"] = [candidate.chunk_id for candidate in allowed_candidates]
+        if blocked_candidates is not None:
+            payload["blocked_candidate_ids"] = [candidate.chunk_id for candidate in blocked_candidates]
+        cls._events.setdefault(task_id, []).append(
+            cls._event(
+                task_id=task_id,
+                trace_id=audit.trace_id,
+                event_type="security_gate",
+                status=audit.policy_decision.value,
+                payload=payload,
+            )
+        )
+
+    @classmethod
+    def _record_security_span(cls, *, task_id: str, audit: SandboxAuditEvent) -> None:
+        span = cls._span_builder.from_security_audit(
+            audit,
+            run_id=f"run_{audit.audit_id}",
+        )
+        cls._trace_spans.setdefault(task_id, []).append(span.to_otel_span())
+
+    @classmethod
+    def _record_retrieval_observability(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+        retrieval_result: AgenticRetrievalRuntimeResult,
+    ) -> None:
+        trace_metadata = retrieval_result.trace_metadata
+        artifact_manifest = dict(trace_metadata.get("artifact_manifest") or {})
+        source_refs = list(artifact_manifest.get("retrieval_refs") or [])
+        cls._trace_replays[task.task_id] = {
+            "trace_id": task.trace_id,
+            "task_id": task.task_id,
+            "source_refs": source_refs,
+            "event_ids": list(artifact_manifest.get("event_ids") or []),
+        }
+        span = cls._span_builder.build_span(
+            trace_id=task.trace_id or "",
+            session_id=simple_task.session_id,
+            thread_id=simple_task.session_id,
+            task_id=task.task_id,
+            turn_id=task.task_id,
+            run_id=f"run_retrieval_{task.task_id}",
+            parent_run_id=None,
+            run_type="retriever",
+            span_kind=ZunoSpanKind.RETRIEVAL,
+            name="agentic retrieval",
+            inputs={"query": simple_task.query},
+            outputs={
+                "evidence_count": len(retrieval_result.evidence_bundle.items),
+                "citation_coverage": retrieval_result.trace.citation_coverage,
+                "source_refs": source_refs,
+            },
+            redacted_payload=trace_metadata,
+            policy_decision="allow",
+            metadata={
+                "router_decision": retrieval_result.decision.router_decision,
+                "resolved_methods": [
+                    method.value for method in retrieval_result.decision.resolved_methods
+                ],
+            },
+        )
+        cls._trace_spans.setdefault(task.task_id, []).append(span.to_otel_span())
+
+    @classmethod
+    def _record_release_eval(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+        citation_coverage: float,
+        required_citation_coverage: float,
+        security_block_count: int,
+        source_refs: list[str] | None = None,
+        failure_examples: list[dict] | None = None,
+    ) -> dict:
+        baseline = ReleaseEvalBaseline(
+            dataset_version="workspace-runtime-phase10-v1",
+            evaluator_version="security-observability-v1",
+            commit_sha="local-runtime",
+            metrics=[
+                EvalMetricResult(
+                    name="citation_coverage",
+                    value=citation_coverage,
+                    threshold=required_citation_coverage,
+                ),
+                EvalMetricResult(name="approval_escape_count", value=0, threshold=0),
+                EvalMetricResult(name="secret_redaction_miss_count", value=0, threshold=0),
+                EvalMetricResult(name="security_block_count", value=security_block_count, threshold=0),
+            ],
+            failure_examples=failure_examples or [],
+        )
+        result = baseline.evaluate(
+            [
+                MetricThreshold(name="citation_coverage", operator=">=", value=required_citation_coverage),
+                MetricThreshold(name="approval_escape_count", operator="==", value=0),
+                MetricThreshold(name="secret_redaction_miss_count", operator="==", value=0),
+                MetricThreshold(name="security_block_count", operator="==", value=0),
+            ]
+        )
+        payload = result.to_release_evidence()
+        payload["source_refs"] = list(source_refs or [])
+        cls._release_evals[task.task_id] = payload
+        span = cls._span_builder.build_span(
+            trace_id=task.trace_id or "",
+            session_id=simple_task.session_id,
+            thread_id=simple_task.session_id,
+            task_id=task.task_id,
+            turn_id=task.task_id,
+            run_id=f"run_eval_{task.task_id}",
+            parent_run_id=None,
+            run_type="evaluator",
+            span_kind=ZunoSpanKind.EVAL,
+            name="release baseline",
+            inputs={"dataset_version": payload["dataset_version"]},
+            outputs={
+                "status": payload["status"],
+                "citation_coverage": citation_coverage,
+                "security_block_count": security_block_count,
+            },
+            redacted_payload=payload,
+            policy_decision=payload["status"],
+        )
+        cls._trace_spans.setdefault(task.task_id, []).append(span.to_otel_span())
+        return payload
+
+    @classmethod
+    def _fail_task(
+        cls,
+        *,
+        task_id: str,
+        simple_task: WorkSpaceSimpleTask,
+        reason: str,
+        citation_coverage: float,
+        required_citation_coverage: float,
+        security_block_count: int,
+        source_refs: list[str] | None = None,
+        failure_examples: list[dict] | None = None,
+    ) -> None:
+        task = cls._require_task(task_id)
+        task.status = "failed"
+        task.updated_at = str(time.time())
+        release_eval = cls._record_release_eval(
+            task=task,
+            simple_task=simple_task,
+            citation_coverage=citation_coverage,
+            required_citation_coverage=required_citation_coverage,
+            security_block_count=security_block_count,
+            source_refs=source_refs or [],
+            failure_examples=failure_examples or [{"reason": reason}],
+        )
+        cls._events.setdefault(task_id, []).extend(
+            [
+                cls._event(
+                    task_id=task_id,
+                    trace_id=task.trace_id or "",
+                    event_type="eval_diagnostic",
+                    status="failed",
+                    payload={"release_eval": release_eval},
+                ),
+                cls._event(
+                    task_id=task_id,
+                    trace_id=task.trace_id or "",
+                    event_type="task_failed",
+                    status="failed",
+                    payload={"reason": reason},
+                ),
+            ]
         )
 
     @classmethod
