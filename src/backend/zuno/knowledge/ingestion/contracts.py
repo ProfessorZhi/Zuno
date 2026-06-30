@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -98,6 +98,27 @@ class ParserFailure(BaseModel):
     retryable: bool = False
 
 
+class ParserDiagnostic(BaseModel):
+    code: str
+    message: str
+    severity: Literal["info", "warning", "error"] = "info"
+    parser_id: str | None = None
+    format: str | None = None
+
+
+class ParseDocumentRequest(BaseModel):
+    document_id: str
+    workspace_id: str
+    source_uri: str
+    mime_type: str
+    source_text: str | None = None
+    source_bytes: bytes | None = None
+    hash: str | None = None
+    acl_scope: str = "workspace"
+    sensitivity_tags: list[str] = Field(default_factory=list)
+    parser_version: str = "phase04-runtime-v1"
+
+
 class IndexHandoffPayload(BaseModel):
     document_id: str
     workspace_id: str
@@ -109,6 +130,15 @@ class IndexHandoffPayload(BaseModel):
     citation_items: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class ParseDocumentResult(BaseModel):
+    job_id: str
+    status: Literal["succeeded", "failed"]
+    document: CanonicalDocumentIR | None = None
+    failure: ParserFailure | None = None
+    diagnostics: list[ParserDiagnostic] = Field(default_factory=list)
+    index_handoff: IndexHandoffPayload | None = None
+
+
 __all__ = [
     "CanonicalDocumentIR",
     "DocumentBlock",
@@ -117,8 +147,11 @@ __all__ = [
     "DocumentProvenance",
     "DocumentTable",
     "IndexHandoffPayload",
+    "ParseDocumentRequest",
+    "ParseDocumentResult",
     "ParserAdapterContract",
     "ParserCapability",
+    "ParserDiagnostic",
     "ParserFailure",
     "SourceSpan",
 ]

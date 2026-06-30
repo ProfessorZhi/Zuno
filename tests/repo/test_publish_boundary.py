@@ -48,7 +48,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         assert phrase in architecture
     assert "state: active" in current_program
     assert "active_program: zuno-target-architecture-runtime-full-implementation-v1" in current_program
-    assert "current_phase: PHASE04_document-ingestion-parse-runtime" in current_program
+    assert "current_phase: PHASE05_index-jobs-and-knowledge-space-runtime" in current_program
     assert "zuno-master-architecture-implementation-v1" in current_program
     assert "docs/history/programs/zuno-master-architecture-implementation-v1/" in current_program
 

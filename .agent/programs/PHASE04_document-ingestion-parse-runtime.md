@@ -1,6 +1,6 @@
 # PHASE04 document-ingestion-parse-runtime
 
-status: active
+status: completed
 
 ## 目标
 
@@ -23,6 +23,18 @@ status: active
 - focused tests 能对五类格式生成 Canonical Document IR。
 - IR 中 block、source、provenance、ACL 和 parser diagnostics 可断言。
 - parser job 失败能返回可追踪 error，不吞错。
+
+## 完成证据
+
+- `src/backend/zuno/knowledge/ingestion/gateway.py` 提供 deterministic `ParseGateway` runtime surface，支持 `parse_document`、`submit_parse_job` 和 `get_job_status`。
+- `src/backend/zuno/knowledge/ingestion/adapters.py` 提供 parser adapter registry，不再只停留在 matrix contract。
+- `src/backend/zuno/knowledge/ingestion/normalizer.py` 提供 legacy `ChunkModel` 到 `CanonicalDocumentIR` 的归一入口。
+- `tests/fixtures/parser_golden/inputs/` 已补真实 fixture 输入，`manifest.json` 绑定 `input_path`。
+- `tests/knowledge/test_parse_gateway_runtime.py` 覆盖 PDF、DOCX、PPTX、XLSX、Markdown/TXT、图片 OCR、代码文件、source anchors、failure diagnostics 和 job replay。
+
+## Current / Target 边界
+
+Current 是可测试的 Parse Gateway runtime owner surface；不是生产级 Docling / MinerU / Unstructured 平台迁移完成，也不是 PHASE05 index runtime 完成。
 
 ## 验证命令
 

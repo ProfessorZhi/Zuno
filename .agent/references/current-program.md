@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE04_document-ingestion-parse-runtime
+current_phase: PHASE05_index-jobs-and-knowledge-space-runtime
 
 `.agent/programs/` 当前保存 active runtime implementation program：
 
@@ -49,8 +49,8 @@ current_phase: PHASE04_document-ingestion-parse-runtime
 - `PHASE01_program-reopen-and-truth-source-freeze.md`：completed，已冻结事实源、验收口径和 verifier/test 期望。
 - `PHASE02_runtime-migration-map-and-repo-ownership-lock.md`：completed，已固定旧 runtime 与六层 target owner 的迁移图和兼容策略。
 - `PHASE03_task-session-artifact-event-runtime.md`：completed，已打通 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface。
-- `PHASE04_document-ingestion-parse-runtime.md`：active，正在把 `knowledge/ingestion` 从 contract owner 推进到 parser runtime owner。
-- `PHASE05_index-jobs-and-knowledge-space-runtime.md`：pending。
+- `PHASE04_document-ingestion-parse-runtime.md`：completed，已把 `knowledge/ingestion` 推进为 Parse Gateway runtime owner surface。
+- `PHASE05_index-jobs-and-knowledge-space-runtime.md`：active，正在将 Document IR 送入 BM25 / vector / graph index job runtime。
 - `PHASE06_durable-single-controller-runtime.md`：pending。
 - `PHASE07_memory-db-and-context-governance.md`：pending。
 - `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：pending。
@@ -61,7 +61,7 @@ current_phase: PHASE04_document-ingestion-parse-runtime
 
 ## Current / Target 边界
 
-`zuno-master-architecture-implementation-v1` 已完成目标架构分阶段 contract foundation，但 production-grade Parse Gateway runtime、durable LangGraph-compatible runtime、production Memory DB、真实 Tool approval / sandbox、生产级 GraphRAG extraction / fusion / index job、LangSmith / OTel 产品化 trace/eval、online eval、rootless / gVisor / Firecracker sandbox、credential broker、完整 UI trace panel 仍是 Target。
+`zuno-master-architecture-implementation-v1` 已完成目标架构分阶段 contract foundation，但 production-grade parser platform、durable LangGraph-compatible runtime、production Memory DB、真实 Tool approval / sandbox、生产级 GraphRAG extraction / fusion / index job、LangSmith / OTel 产品化 trace/eval、online eval、rootless / gVisor / Firecracker sandbox、credential broker、完整 UI trace panel 仍是 Target。
 
 本 program 的任务是把这些 Target 沿一条真实 vertical slice 推进到 Current；推进条件是代码、测试、trace、eval 或 verifier 证据，不是计划文字。
 

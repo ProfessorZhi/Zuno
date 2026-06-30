@@ -1,5 +1,6 @@
 """Document Ingestion / Parse Gateway contracts."""
 
+from .adapters import PARSER_ADAPTER_REGISTRY, ParserAdapter, get_parser_adapter
 from .contracts import (
     CanonicalDocumentIR,
     DocumentBlock,
@@ -8,11 +9,16 @@ from .contracts import (
     DocumentProvenance,
     DocumentTable,
     IndexHandoffPayload,
+    ParseDocumentRequest,
+    ParseDocumentResult,
     ParserAdapterContract,
     ParserCapability,
+    ParserDiagnostic,
     ParserFailure,
     SourceSpan,
 )
+from .gateway import ParseGateway
+from .normalizer import normalize_legacy_chunks_to_ir
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
     PARSER_CAPABILITY_MATRIX,
@@ -29,11 +35,19 @@ __all__ = [
     "DocumentTable",
     "IndexHandoffPayload",
     "PARSER_ADAPTER_CONTRACTS",
+    "PARSER_ADAPTER_REGISTRY",
     "PARSER_CAPABILITY_MATRIX",
+    "ParseDocumentRequest",
+    "ParseDocumentResult",
+    "ParseGateway",
     "ParserAdapterContract",
+    "ParserAdapter",
     "ParserCapability",
+    "ParserDiagnostic",
     "ParserFailure",
     "SourceSpan",
     "build_index_handoff_payload",
+    "get_parser_adapter",
+    "normalize_legacy_chunks_to_ir",
     "select_parser_for_format",
 ]

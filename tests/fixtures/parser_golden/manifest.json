@@ -5,6 +5,7 @@
     {
       "case_id": "pdf_table",
       "format": "pdf",
+      "input_path": "inputs/pdf_table.pdf",
       "default_parser": "docling_pymupdf",
       "fallback": "mineru_ocr_vlm",
       "evidence_anchor": ["page", "bbox", "table_cell"],
@@ -13,6 +14,7 @@
     {
       "case_id": "scanned_image",
       "format": "scanned",
+      "input_path": "inputs/scanned_image.png",
       "default_parser": "mineru_ocr_vlm",
       "fallback": "docling_pymupdf",
       "evidence_anchor": ["page", "bbox", "confidence"],
@@ -21,6 +23,7 @@
     {
       "case_id": "pptx_slide",
       "format": "pptx",
+      "input_path": "inputs/pptx_slide.pptx",
       "default_parser": "unstructured_markitdown",
       "fallback": "mineru_ocr_vlm",
       "evidence_anchor": ["slide", "bbox"],
@@ -29,6 +32,7 @@
     {
       "case_id": "docx_heading_table",
       "format": "docx",
+      "input_path": "inputs/xlsx_sheet.xlsx",
       "default_parser": "unstructured_markitdown",
       "fallback": "native",
       "evidence_anchor": ["section_path", "table_cell"],
@@ -37,6 +41,7 @@
     {
       "case_id": "xlsx_sheet",
       "format": "xlsx",
+      "input_path": "inputs/docx_heading_table.docx",
       "default_parser": "unstructured_markitdown",
       "fallback": "native",
       "evidence_anchor": ["sheet", "table_cell"],
@@ -45,6 +50,7 @@
     {
       "case_id": "code_file",
       "format": "code",
+      "input_path": "inputs/code_file.py",
       "default_parser": "native",
       "fallback": "unstructured_markitdown",
       "evidence_anchor": ["line_range"],
@@ -53,6 +59,7 @@
     {
       "case_id": "markdown_link",
       "format": "md",
+      "input_path": "inputs/markdown_link.md",
       "default_parser": "native",
       "fallback": "unstructured_markitdown",
       "evidence_anchor": ["line_range", "section_path"],

@@ -1,6 +1,6 @@
 # PHASE05 index-jobs-and-knowledge-space-runtime
 
-status: pending
+status: active
 
 ## 目标
 
@@ -30,4 +30,3 @@ status: pending
 git diff --check
 pytest -q tests/knowledge tests/retrieval tests/graphrag -p no:cacheprovider
 ```
-

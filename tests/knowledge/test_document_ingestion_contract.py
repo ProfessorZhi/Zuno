@@ -160,5 +160,6 @@ def test_parser_golden_fixture_manifest_is_complete() -> None:
         "markdown_link",
     }
     for case in manifest["cases"]:
-        for field in ["format", "default_parser", "evidence_anchor", "expected_blocks"]:
+        for field in ["format", "input_path", "default_parser", "evidence_anchor", "expected_blocks"]:
             assert case[field], f"{case['case_id']} missing {field}"
+        assert (manifest_path.parent / case["input_path"]).exists()
