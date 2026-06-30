@@ -4,6 +4,8 @@
 
 PHASE11 的当前职责是跟随 `docs/architecture/architecture.md` 刷新 Agent 侧镜像和 HTML，不单独承载事实。PHASE02-PHASE10 的已验证 contract 可以写入 Current；未实现的生产级 LangSmith、online eval、sandbox runtime、credential broker 和 UI trace panel 仍保持 Target。
 
+当前 active program 是 `zuno-target-architecture-runtime-full-implementation-v1`。本轮只在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后，才把 Target 能力推进到 Current。
+
 ## 当前前台
 
 ```text

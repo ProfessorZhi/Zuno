@@ -32,6 +32,8 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
 
     for phrase in [
         ".agent/programs/",
+        "zuno-target-architecture-runtime-full-implementation-v1",
+        "只写 contract、schema 或 README 不能关闭 runtime phase",
         "zuno-master-architecture-implementation-v1",
     ]:
         assert phrase in readme
@@ -44,7 +46,9 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "LangSmith-compatible Trace / Eval",
     ]:
         assert phrase in architecture
-    assert "state: no-active" in current_program
+    assert "state: active" in current_program
+    assert "active_program: zuno-target-architecture-runtime-full-implementation-v1" in current_program
+    assert "current_phase: PHASE01_program-reopen-and-truth-source-freeze" in current_program
     assert "zuno-master-architecture-implementation-v1" in current_program
     assert "docs/history/programs/zuno-master-architecture-implementation-v1/" in current_program
 

@@ -194,7 +194,9 @@ def verify_entrypoint_text() -> list[str]:
         "Target",
         "Document Ingestion",
         "Security / Governance",
-        "PHASE09_security-governance-sandbox",
+        "zuno-target-architecture-runtime-full-implementation-v1",
+        "PHASE09_agentic-retrieval-evidence-citation-runtime",
+        "zuno-master-architecture-implementation-v1",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/",
     ]:
         if phrase not in docs_architecture:

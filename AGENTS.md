@@ -181,7 +181,9 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前没有 active program。最近完成并归档的 program 是 `zuno-master-architecture-implementation-v1`；它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`。`zuno-architecture-detail-and-execution-plan-v1` 已完成架构文档、架构图、HTML 和执行计划细化。`zuno-eight-deliverables-full-realization-v1` 仍是八大交付物闭环的历史完成事实。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
+当前 active program 是 `zuno-target-architecture-runtime-full-implementation-v1`，当前阶段是 `PHASE01_program-reopen-and-truth-source-freeze`。它不是继续细化架构，也不是再做一轮 contract foundation，而是把 Zuno 从“目标架构已定义、contracts 已成型”推进到“目标架构第一版 runtime 闭环真实可跑”。核心闭环是：上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
+
+最近完成并归档的 program 是 `zuno-master-architecture-implementation-v1`；它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`。`zuno-architecture-detail-and-execution-plan-v1` 已完成架构文档、架构图、HTML 和执行计划细化。`zuno-eight-deliverables-full-realization-v1` 仍是八大交付物闭环的历史完成事实。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
 
 最新完成程序归档在：
 
@@ -193,12 +195,26 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `docs/history/programs/zuno-six-layer-internalization-v1/`
 - `docs/history/programs/zuno-eight-deliverables-full-realization-v1/`
 
-当前 `.agent/programs/` 处于 no-active 等待态，只保留：
+当前 `.agent/programs/` 保存 active program：
 
 - `.agent/programs/current.md`
 - `.agent/programs/README.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/closure-checklist.md`
+- `.agent/programs/PHASE01_program-reopen-and-truth-source-freeze.md`
+- `.agent/programs/PHASE02_runtime-migration-map-and-repo-ownership-lock.md`
+- `.agent/programs/PHASE03_task-session-artifact-event-runtime.md`
+- `.agent/programs/PHASE04_document-ingestion-parse-runtime.md`
+- `.agent/programs/PHASE05_index-jobs-and-knowledge-space-runtime.md`
+- `.agent/programs/PHASE06_durable-single-controller-runtime.md`
+- `.agent/programs/PHASE07_memory-db-and-context-governance.md`
+- `.agent/programs/PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`
+- `.agent/programs/PHASE09_agentic-retrieval-evidence-citation-runtime.md`
+- `.agent/programs/PHASE10_security-observability-and-online-eval.md`
+- `.agent/programs/PHASE11_web-desktop-surface-and-feedback-loop.md`
+- `.agent/programs/PHASE12_release-gate-full-e2e-closure.md`
 
-最近完成的 `zuno-master-architecture-implementation-v1` 已归档。打开下一轮 program 前必须重新确认 worktree、branch、`git status --short --branch`、允许范围和禁止范围，并从 `PHASE01` 开始。
+最近完成的 `zuno-master-architecture-implementation-v1` 已归档。本轮从 `PHASE01` 开始，先冻结事实源、验收口径和 verifier/test 期望。
 
 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 

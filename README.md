@@ -36,13 +36,21 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前没有 active Agent program。最近完成并归档的 program 是 `zuno-master-architecture-implementation-v1`：
+当前 active Agent program 是 `zuno-target-architecture-runtime-full-implementation-v1`，阶段是 `PHASE01_program-reopen-and-truth-source-freeze`。
+
+本轮 program 不再继续做架构细化或 contract foundation，而是把目标架构推进到第一版真实 runtime 闭环：
+
+```text
+上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback
+```
+
+最近完成并归档的 foundation program 是 `zuno-master-architecture-implementation-v1`：
 
 - `docs/history/programs/zuno-master-architecture-implementation-v1/`
 
 它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。
 
-执行状态入口在 `.agent/programs/`，当前处于 no-active 等待态。打开下一轮 program 前必须重新确认 worktree、branch、允许范围和禁止范围，并从 `PHASE01` 开始。
+执行状态入口在 `.agent/programs/`。本轮每个 phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
 
 本轮大型 program 的八个方面产物：
 

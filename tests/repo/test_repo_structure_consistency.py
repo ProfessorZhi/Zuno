@@ -35,6 +35,28 @@ MASTER_PROGRAM_PHASE_FILES = [
     "PHASE11_architecture-docs-html-refresh.md",
     "PHASE12_validation-release-closure.md",
 ]
+RUNTIME_PROGRAM_NAME = "zuno-target-architecture-runtime-full-implementation-v1"
+RUNTIME_PROGRAM_PHASE_FILES = [
+    "PHASE01_program-reopen-and-truth-source-freeze.md",
+    "PHASE02_runtime-migration-map-and-repo-ownership-lock.md",
+    "PHASE03_task-session-artifact-event-runtime.md",
+    "PHASE04_document-ingestion-parse-runtime.md",
+    "PHASE05_index-jobs-and-knowledge-space-runtime.md",
+    "PHASE06_durable-single-controller-runtime.md",
+    "PHASE07_memory-db-and-context-governance.md",
+    "PHASE08_tool-control-plane-approval-and-sandbox-runtime.md",
+    "PHASE09_agentic-retrieval-evidence-citation-runtime.md",
+    "PHASE10_security-observability-and-online-eval.md",
+    "PHASE11_web-desktop-surface-and-feedback-loop.md",
+    "PHASE12_release-gate-full-e2e-closure.md",
+]
+RUNTIME_PROGRAM_FILES = [
+    "README.md",
+    "closure-checklist.md",
+    "current.md",
+    "implementation-roadmap.md",
+    *RUNTIME_PROGRAM_PHASE_FILES,
+]
 
 
 def test_required_current_paths_exist() -> None:
@@ -862,7 +884,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         if path.is_file()
     )
 
-    assert active_files == ["README.md", "current.md"]
+    assert active_files == sorted(RUNTIME_PROGRAM_FILES)
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
     assert not (REPO_ROOT / ".agent/programs/implementation-phases").exists()
     assert (
@@ -872,14 +894,28 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
 
     current = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
     readme = (REPO_ROOT / ".agent/programs/README.md").read_text(encoding="utf-8")
+    roadmap = (REPO_ROOT / ".agent/programs/implementation-roadmap.md").read_text(
+        encoding="utf-8"
+    )
+    current_reference = (REPO_ROOT / ".agent/references/current-program.md").read_text(
+        encoding="utf-8"
+    )
     for phrase in [
+        RUNTIME_PROGRAM_NAME,
+        "state: active",
+        f"active_program: {RUNTIME_PROGRAM_NAME}",
+        "current_phase: PHASE01_program-reopen-and-truth-source-freeze",
+        "runtime-first / vertical-slice-first",
+        "只写 contract、schema 或 README 不能关闭 runtime phase",
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
     ]:
-        assert phrase in current + readme
+        assert phrase in current + readme + roadmap + current_reference
+    for index, phase in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
+        phase_path = REPO_ROOT / ".agent/programs" / phase
+        assert phase_path.exists()
+        phase_text = phase_path.read_text(encoding="utf-8")
+        assert ("status: active" if index == 1 else "status: pending") in phase_text
     for phase in MASTER_PROGRAM_PHASE_FILES:
         assert (REPO_ROOT / MASTER_PROGRAM_ARCHIVE / phase).exists()
     for phase in COMPLETED_PROGRAM_PHASE_FILES:

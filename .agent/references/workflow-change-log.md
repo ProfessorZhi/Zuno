@@ -17,6 +17,30 @@ date
 
 ## Current Truth
 
+### 2026-06-30: runtime-first active program acceptance
+
+Summary: 打开 `zuno-target-architecture-runtime-full-implementation-v1`，把下一轮验收口径从 contract foundation 改为 runtime-first / vertical-slice-first。
+
+Reason: 用户明确指出上一轮“完整执行 program”仍以最小可测 contract 关闭，未等同于完整目标架构 runtime。新 program 必须以“上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback”的真实闭环作为主线，不能只靠 schema、README 或 contract 关闭 runtime phase。
+
+Affected files:
+
+- `.agent/programs/README.md`
+- `.agent/programs/current.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/closure-checklist.md`
+- `.agent/programs/PHASE01_program-reopen-and-truth-source-freeze.md`
+- `.agent/references/current-program.md`
+- `AGENTS.md`
+- `README.md`
+- `docs/architecture/architecture.md`
+- `.agent/architecture/architecture.md`
+- verifier and repo tests
+
+Status: Active workflow truth for `zuno-target-architecture-runtime-full-implementation-v1`.
+
+Validation: 本条随 PHASE01 由 `git diff --check`、`python .agent/scripts/verify_agent_system.py`、`python tools/scripts/verify_repo_structure.py`、`powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1` 和相关 repo tests 验证。
+
 ### 2026-06-30: Architecture Documentation Governance and Agent Workflow Self-Maintenance
 
 Summary: 建立架构文档治理工作流和元工作流自我维护机制，并明确最终成品的五个成熟系统与八大交付物。

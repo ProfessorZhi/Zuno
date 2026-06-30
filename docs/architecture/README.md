@@ -4,6 +4,8 @@
 
 PHASE11 已将 PHASE02-PHASE10 的已验证事实写入总架构：目录 ownership、企业知识库产品闭环、Document IR、Single Controller runtime harness、MemoryEngine、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、`ZunoSpan` / release baseline contract。生产级 LangSmith 写入、在线 eval、持久 trace store、真实 sandbox runtime 和完整 UI 闭环仍是 Target。
 
+当前 active program 是 `zuno-target-architecture-runtime-full-implementation-v1`，它把这些 Target 沿“上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback”的 vertical slice 推进到真实 runtime。只写 contract、schema 或 README 不能关闭 runtime phase。
+
 ## 当前前台
 
 ```text

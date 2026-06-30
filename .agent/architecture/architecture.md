@@ -976,24 +976,30 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前没有 active program。最近完成并归档的 program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`。它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。PHASE10 已完成 LangSmith-compatible trace / eval contract、redacted export adapter、release baseline schema 和 sandbox audit span bridge；PHASE11 已完成正式架构 Markdown / HTML 和十类图刷新；PHASE12 已完成 release closure 和历史归档。完整 LangSmith 产品化平台、在线采样平台和持久化 trace store 仍是 Target。
+当前 active program 是 `zuno-target-architecture-runtime-full-implementation-v1`，当前阶段是 `PHASE01_program-reopen-and-truth-source-freeze`。它承接 `zuno-master-architecture-implementation-v1` 的 contract foundation，不推翻目标架构，而是把目标架构推进到第一版真实 runtime 闭环。上一轮完成并归档的 program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`；它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。
 
-本 program 的十二个 phase：
+本轮 runtime-first program 的核心闭环是：
 
-1. `PHASE01_program-baseline-and-previous-closure`：收口上一轮架构细化 program，打开本大型 implementation program，归档 ChatGPT 研究模式产物，固定 README、AGENTS、`.agent/references/current-program.md`、verifier 和 tests 的 active 状态。
-2. `PHASE02_project-folder-and-code-layout-cleanup`：先处理用户指出的项目文件夹混乱问题，建立 ownership matrix、compat / vendor / provider 边界、缓存清理规则、legacy import matrix 和 repo structure guard。
-3. `PHASE03_enterprise-scenario-and-product-loop`：把企业私有知识库场景落成 workspace、task / session、upload、artifact、SSE / WebSocket、trace panel 和 user feedback contracts。
-4. `PHASE04_document-ingestion-parse-gateway`：实现多格式文档解析目标层，覆盖 PDF、Office、图片、代码、TXT、MD、HTML 等常见格式，输出 Canonical Document IR、chunk metadata、provenance 和 ACL。
-5. `PHASE05_agent-runtime-langgraph-harness`：把 Single Controller Agent Runtime 从目标状态机推进到 LangGraph-compatible harness，形成 prepare_context、plan、ReAct、observe、reflect、replan 和 post_turn_commit 的最小闭环。
-6. `PHASE06_context-memory-system`：落地 Raw Event Log、Recent Window、Task Summary、Structured Memory、Context Pack、review / promotion / decay 和 memory eval 的可测试路径。
-7. `PHASE07_tool-control-plane-mcp-approval`：落地 ToolCard manifest、selector、policy、approval、executor adapter、MCP trust、credential broker 和 sandbox 的第一版。
-8. `PHASE08_rag-graphrag-evidence-citation`：已完成 Agentic Retrieval Router、basic/local/global/drift 边界、staged fusion、EvidenceBundle、CitationBuilder、unsupported claim check、GraphRAG index pipeline contract 和 trace coverage；生产级 extraction / fusion / rerank 仍是 Target。
-9. `PHASE09_security-governance-sandbox`：已完成输入闸门、检索闸门、工具闸门、输出闸门、ToolSecurityProfile、SandboxAuditEvent、secret redaction 和跨 workspace guard contract；真实 sandbox runtime / credential broker / approval UI 仍是 Target。
-10. `PHASE10_eval-observability-langsmith`：已建立 LangSmith-compatible trace schema、redacted export adapter、dataset / release baseline contract、sandbox audit span bridge 和 focused regression tests。
-11. `PHASE11_architecture-docs-html-refresh`：已根据已落地事实更新 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两份 `architecture.html`，保证 Markdown 比 HTML 更详细，HTML 图为主。
-12. `PHASE12_validation-release-closure`：已完成 repo verifiers、full pytest、文档 self-review、program closure、历史归档、commit 和 push。
+```text
+上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback
+```
 
-这十二个 phase 可以在后续按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。
+本轮的十二个 phase：
+
+1. `PHASE01_program-reopen-and-truth-source-freeze`：打开新 active program，冻结 runtime-first 验收口径和事实源。
+2. `PHASE02_runtime-migration-map-and-repo-ownership-lock`：固定旧 runtime 与六层 target owner 的迁移图和兼容策略。
+3. `PHASE03_task-session-artifact-event-runtime`：打通 workspace / session / task / event / artifact / feedback 后端最小闭环。
+4. `PHASE04_document-ingestion-parse-runtime`：让 `knowledge/ingestion` 从 contract owner 进入 parser runtime owner。
+5. `PHASE05_index-jobs-and-knowledge-space-runtime`：将 Document IR 送入 BM25 / vector / graph index job。
+6. `PHASE06_durable-single-controller-runtime`：让 Single Controller runtime 支持 durable checkpoint、interrupt、resume 和 replan。
+7. `PHASE07_memory-db-and-context-governance`：将 MemoryEngine 升级为可持久化、可审查、可治理的 memory runtime。
+8. `PHASE08_tool-control-plane-approval-and-sandbox-runtime`：接通真实 executor、approval API/UI、credential broker 和 sandbox profile。
+9. `PHASE09_agentic-retrieval-evidence-citation-runtime`：让 Agentic retrieval 消费新 index runtime 并输出稳定 citation。
+10. `PHASE10_security-observability-and-online-eval`：将 security gates、ZunoSpan、eval baseline 接入真实运行时。
+11. `PHASE11_web-desktop-surface-and-feedback-loop`：完成用户可感知的上传、事件流、审批、artifact、citation、trace 和 feedback UI。
+12. `PHASE12_release-gate-full-e2e-closure`：以完整 vertical slice 做 release closure、归档、验证、commit、merge 和 push。
+
+这十二个 phase 可以按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
 
 ## 研究产物归档
 
@@ -1171,7 +1177,7 @@ flowchart TB
   DOCS --> FORMAL["architecture.md source"]
   DOCS --> HTML["architecture.html generated"]
   DOCS --> ASSETS["architecture assets PDFs"]
-  AGENT --> PROGRAM["programs no-active<br/>latest archive PHASE01 to PHASE12"]:::guard
+  AGENT --> PROGRAM["programs active<br/>runtime full implementation PHASE01 to PHASE12"]:::guard
   AGENT --> REFS["references governance"]
   AGENT --> TPL["templates skeletons"]
   TOOLS --> RENDER["render architecture"]
