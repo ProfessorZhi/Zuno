@@ -181,7 +181,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`。它先整理项目文件夹和代码布局，再按八个方面产物推进企业私有知识库 Agent Workspace 的目标架构落地，并同步正式架构 Markdown、架构 HTML、README、verifier、tests 和历史归档。当前阶段是 `PHASE01_program-baseline-and-previous-closure`，本阶段只做上一轮 program 归档、状态面修正、研究产物归档和文档 / verifier 同步，不实现 runtime feature。最近完成并归档的 program 是 `zuno-architecture-detail-and-execution-plan-v1`；它完成架构文档、架构图、HTML 和执行计划细化。`zuno-eight-deliverables-full-realization-v1` 仍是八大交付物闭环的历史完成事实。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
+当前 active program 是 `zuno-master-architecture-implementation-v1`。它先整理项目文件夹和代码布局，再按八个方面产物推进企业私有知识库 Agent Workspace 的目标架构落地，并同步正式架构 Markdown、架构 HTML、README、verifier、tests 和历史归档。当前阶段是 `PHASE02_project-folder-and-code-layout-cleanup`；`PHASE01_program-baseline-and-previous-closure` 已通过 verifier 和 focused repo tests 证明完成。本阶段只做项目文件夹、代码 ownership、compat/vendor 边界和 repo structure guard，不实现后续 runtime feature。最近完成并归档的 program 是 `zuno-architecture-detail-and-execution-plan-v1`；它完成架构文档、架构图、HTML 和执行计划细化。`zuno-eight-deliverables-full-realization-v1` 仍是八大交付物闭环的历史完成事实。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
 
 最新完成程序归档在：
 
@@ -212,7 +212,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/PHASE11_architecture-docs-html-refresh.md`
 - `.agent/programs/PHASE12_validation-release-closure.md`
 
-当前阶段是 `PHASE01_program-baseline-and-previous-closure`。PHASE02 先做项目文件夹和代码布局治理；PHASE03-PHASE10 依次推进企业知识库产品闭环、文档解析、Agent Runtime、Memory、Tool Control Plane、RAG / GraphRAG、安全和 LangSmith-compatible eval / trace；PHASE11 更新架构 Markdown / HTML；PHASE12 做验证、归档和 release closure。本 program 从 `PHASE01` 开始，phase 文件平铺在 `.agent/programs/` 根目录。
+当前阶段是 `PHASE02_project-folder-and-code-layout-cleanup`。PHASE01 已完成基线和上一轮 program closure；PHASE02 先做项目文件夹和代码布局治理；PHASE03-PHASE10 依次推进企业知识库产品闭环、文档解析、Agent Runtime、Memory、Tool Control Plane、RAG / GraphRAG、安全和 LangSmith-compatible eval / trace；PHASE11 更新架构 Markdown / HTML；PHASE12 做验证、归档和 release closure。本 program 从 `PHASE01` 开始，phase 文件平铺在 `.agent/programs/` 根目录。
 
 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 

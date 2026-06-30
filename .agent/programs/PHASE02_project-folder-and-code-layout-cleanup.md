@@ -1,6 +1,6 @@
 # PHASE02 Project Folder And Code Layout Cleanup
 
-status: pending
+status: active
 
 ## 目标
 

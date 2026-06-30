@@ -1,6 +1,6 @@
 # PHASE01 Program Baseline And Previous Closure
 
-status: active
+status: completed
 
 ## 目标
 

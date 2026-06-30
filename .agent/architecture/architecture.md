@@ -966,7 +966,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE01_program-baseline-and-previous-closure`，只负责归档上一轮 program、修正状态面、归档研究产物、扩写架构源文档和同步 verifier / tests，不在本阶段实现 runtime feature。
+当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE02_project-folder-and-code-layout-cleanup`；`PHASE01_program-baseline-and-previous-closure` 已通过 verifier 和 focused repo tests 证明完成。PHASE02 只负责项目文件夹、代码 ownership、compat/vendor 边界和 repo structure guard，不在本阶段实现后续 runtime feature。
 
 本 program 的十二个 phase：
 

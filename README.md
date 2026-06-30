@@ -35,7 +35,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 active program
 
-当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE01_program-baseline-and-previous-closure`。它先归档上一轮架构细化计划并固定新的大型执行计划，然后按十二个 phase 推进项目文件夹整理、八个方面产物交付、目标架构 runtime 落地、正式架构 Markdown / HTML 更新和 release 验证。
+当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE02_project-folder-and-code-layout-cleanup`。`PHASE01_program-baseline-and-previous-closure` 已通过 verifier 和 focused repo tests 证明完成；本阶段先治理项目文件夹、代码 ownership、compat/vendor 边界和 repo structure guard，然后再进入后续 runtime phase。
 
 执行状态入口在 `.agent/programs/`。
 
