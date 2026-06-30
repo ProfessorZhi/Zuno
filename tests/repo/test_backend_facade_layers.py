@@ -91,6 +91,9 @@ FACADE_ALL = {
     ],
     "zuno.knowledge": [
         "AgenticGraphRAGTrace",
+        "AgenticRetrievalRuntime",
+        "AgenticRetrievalRuntimeRequest",
+        "AgenticRetrievalRuntimeResult",
         "AgenticRetrievalRouter",
         "Citation",
         "CitationBuilder",

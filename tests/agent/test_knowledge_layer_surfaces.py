@@ -14,6 +14,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_EXPORTS = {
     "zuno.knowledge.agentic_graphrag": [
         "AgenticGraphRAGTrace",
+        "AgenticRetrievalRuntime",
+        "AgenticRetrievalRuntimeRequest",
+        "AgenticRetrievalRuntimeResult",
         "AgenticRetrievalRouter",
         "Citation",
         "CitationBuilder",

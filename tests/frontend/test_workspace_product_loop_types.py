@@ -58,6 +58,7 @@ def test_workspace_api_exposes_phase03_task_runtime_calls() -> None:
 
     for phrase in [
         "export interface WorkspaceFileCreateRequest",
+        "content?: string",
         "export interface WorkspaceFileCreateResponse",
         "export interface WorkspaceIngestRequest",
         "export interface WorkspaceIngestResponse",

@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-target-architecture-runtime-full-implementation-v1`
-- Current phase: `PHASE09_agentic-retrieval-evidence-citation-runtime`
+- Current phase: `PHASE10_security-observability-and-online-eval`
 - 最近完成 program: `zuno-master-architecture-implementation-v1`
 - 最近完成归档: `docs/history/programs/zuno-master-architecture-implementation-v1/`
 

@@ -35,6 +35,7 @@ class WorkspaceFileBody(BaseModel):
     mime_type: str
     hash: str | None = None
     uri: str | None = None
+    content: str | None = None
     trace_id: str | None = None
     security_label: str = "internal"
 
@@ -157,6 +158,7 @@ async def register_workspace_file(
             uri=payload.uri,
             trace_id=payload.trace_id,
             security_label=payload.security_label,
+            content=payload.content,
         )
     )
 

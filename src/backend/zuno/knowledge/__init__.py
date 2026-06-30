@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from zuno.knowledge.agentic_graphrag import (
         AgenticGraphRAGTrace,
+        AgenticRetrievalRuntime,
+        AgenticRetrievalRuntimeRequest,
+        AgenticRetrievalRuntimeResult,
         AgenticRetrievalRouter,
         Citation,
         CitationBuilder,
@@ -64,6 +67,9 @@ if TYPE_CHECKING:
 
 _LAZY_EXPORT_TO_MODULE = {
     "AgenticGraphRAGTrace": "zuno.knowledge.agentic_graphrag",
+    "AgenticRetrievalRuntime": "zuno.knowledge.agentic_graphrag",
+    "AgenticRetrievalRuntimeRequest": "zuno.knowledge.agentic_graphrag",
+    "AgenticRetrievalRuntimeResult": "zuno.knowledge.agentic_graphrag",
     "AgenticRetrievalRouter": "zuno.knowledge.agentic_graphrag",
     "Citation": "zuno.knowledge.agentic_graphrag",
     "CitationBuilder": "zuno.knowledge.agentic_graphrag",
@@ -112,6 +118,9 @@ _LAZY_EXPORT_TO_MODULE = {
 
 __all__ = [
     "AgenticGraphRAGTrace",
+    "AgenticRetrievalRuntime",
+    "AgenticRetrievalRuntimeRequest",
+    "AgenticRetrievalRuntimeResult",
     "AgenticRetrievalRouter",
     "Citation",
     "CitationBuilder",

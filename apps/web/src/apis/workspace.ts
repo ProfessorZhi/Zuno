@@ -256,6 +256,7 @@ export interface WorkspaceFileCreateRequest {
   mime_type: string
   hash?: string
   uri?: string
+  content?: string
   trace_id?: string
   security_label?: string
 }

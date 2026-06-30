@@ -219,9 +219,15 @@ def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monke
     )
     assert ingest_response.status_code == 200
     ingest_payload = ingest_response.json()["data"]
-    assert ingest_payload["file"]["parse_status"] == "ingest_accepted"
+    assert ingest_payload["file"]["parse_status"] == "indexed"
     assert ingest_payload["ingest_task_id"].startswith("ingest_")
     assert ingest_payload["trace_id"].startswith("trace_")
+    assert ingest_payload["index_job"]["status"] == "succeeded"
+    assert ingest_payload["index_job"]["target_status"] == {
+        "bm25": "ready",
+        "vector": "ready",
+        "graph": "ready",
+    }
 
     create_response = client.post(
         "/api/v1/workspace/task",
@@ -282,6 +288,7 @@ def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monke
         "approval_required",
         "approval_decision",
         "resuming",
+        "retrieval",
         "answer",
         "artifact_created",
         "eval_diagnostic",
@@ -562,3 +569,75 @@ def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_to
     assert tool_result["payload"]["result"]["data"]["message_id"].startswith("msg_")
     assert tool_result["payload"]["credential_refs"] == ["credref://workspace_phase08/mail.send"]
     assert "raw-secret" not in repr(approved_events)
+
+
+def test_workspace_task_runtime_answers_from_ingested_index_with_citations() -> None:
+    client = _client()
+
+    file_response = client.post(
+        "/api/v1/workspace/file",
+        json={
+            "workspace_id": "workspace_phase09",
+            "file_id": "file_contract_phase09",
+            "name": "renewal-contract.md",
+            "mime_type": "text/markdown",
+            "hash": "sha256-phase09",
+            "uri": "memory://workspace/workspace_phase09/files/file_contract_phase09",
+            "content": "Renewal notice must be sent 30 days before the contract anniversary.",
+        },
+    )
+    assert file_response.status_code == 200
+
+    ingest_response = client.post(
+        "/api/v1/workspace/ingest",
+        json={
+            "workspace_id": "workspace_phase09",
+            "file_id": "file_contract_phase09",
+            "knowledge_space_id": "ks_phase09_contracts",
+            "trace_id": "trace_phase09_ingest",
+        },
+    )
+    assert ingest_response.status_code == 200
+    ingest = ingest_response.json()["data"]
+    assert ingest["index_job"]["status"] == "succeeded"
+    assert ingest["index_job"]["target_status"] == {
+        "bm25": "ready",
+        "vector": "ready",
+        "graph": "ready",
+    }
+
+    create_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "What is the renewal notice requirement?",
+            "model_id": "model-local",
+            "session_id": "session_phase09",
+            "workspace_id": "workspace_phase09",
+            "task_id": "task_phase09_retrieval",
+            "trace_id": "trace_phase09_retrieval",
+            "goal": "cited renewal answer",
+            "product_mode": "contract_review",
+            "knowledge_space_ids": ["ks_phase09_contracts"],
+            "uploaded_file_ids": ["file_contract_phase09"],
+            "plugins": [],
+            "mcp_servers": [],
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()["data"]
+    artifact = created["artifacts"][0]
+    assert created["task"]["status"] == "completed"
+
+    events = client.get("/api/v1/workspace/task/task_phase09_retrieval/events").json()["data"]
+    retrieval_events = [event for event in events if event["type"] == "retrieval"]
+    assert retrieval_events[-1]["payload"]["citation_ids"] == ["[1]"]
+    assert retrieval_events[-1]["payload"]["resolved_methods"] == ["local", "basic"]
+    assert retrieval_events[-1]["payload"]["evidence_coverage"] == 1.0
+    assert retrieval_events[-1]["payload"]["citation_coverage"] == 1.0
+
+    artifact_response = client.get(f"/api/v1/workspace/artifact/{artifact['artifact_id']}")
+    assert artifact_response.status_code == 200
+    content = artifact_response.json()["data"]["content"]
+    assert "Renewal notice must be sent 30 days" in content
+    assert "[1]" in content

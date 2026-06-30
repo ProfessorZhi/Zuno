@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE09_agentic-retrieval-evidence-citation-runtime
+current_phase: PHASE10_security-observability-and-online-eval
 
 ## 目标
 
@@ -31,8 +31,8 @@ upload document
 - `PHASE06_durable-single-controller-runtime.md`：completed。
 - `PHASE07_memory-db-and-context-governance.md`：completed。
 - `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：completed。
-- `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：active。
-- `PHASE10_security-observability-and-online-eval.md`：pending。
+- `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：completed。
+- `PHASE10_security-observability-and-online-eval.md`：active。
 - `PHASE11_web-desktop-surface-and-feedback-loop.md`：pending。
 - `PHASE12_release-gate-full-e2e-closure.md`：pending。
 

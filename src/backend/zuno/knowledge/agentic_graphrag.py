@@ -385,6 +385,302 @@ class UnsupportedClaimChecker:
         )
 
 
+class AgenticRetrievalRuntimeRequest(BaseModel):
+    query: str
+    workspace_id: str
+    knowledge_space_ids: list[str] = Field(default_factory=list)
+    product_mode: ProductMode = ProductMode.AUTO
+    context_pack: dict[str, Any] = Field(default_factory=dict)
+    budget: dict[str, Any] = Field(default_factory=dict)
+    allowed_acl_scopes: set[str] = Field(default_factory=lambda: {"workspace"})
+    evidence_state: dict[str, Any] = Field(default_factory=dict)
+    fallback_history: list[str] = Field(default_factory=list)
+    claims: list[str] = Field(default_factory=list)
+    trace_id: str
+    task_id: str
+
+
+class AgenticRetrievalRuntimeResult(BaseModel):
+    answer: str
+    decision: RetrievalRouterDecision
+    fusion_plan: StagedFusionPlan
+    evidence_bundle: EvidenceBundle
+    citations: list[Citation] = Field(default_factory=list)
+    unsupported_claim_check: UnsupportedClaimCheck
+    trace: AgenticGraphRAGTrace
+    index_payloads: list[dict[str, Any]] = Field(default_factory=list)
+    trace_metadata: dict[str, Any] = Field(default_factory=dict)
+
+    def to_task_event(self) -> dict[str, Any]:
+        trace = self.trace.to_dict()
+        runtime_trace_events = [
+            dict(event)
+            for event in self.trace_metadata.get("runtime_trace_events", [])
+            if isinstance(event, dict)
+        ]
+        return {
+            "type": "retrieval",
+            "status": "completed" if self.decision.retrieval_required else "skipped",
+            "payload": {
+                "status": "completed" if self.decision.retrieval_required else "skipped",
+                "message": "Retrieved cited evidence." if self.decision.retrieval_required else "No retrieval required.",
+                "resolved_methods": [method.value for method in self.decision.resolved_methods],
+                "candidate_methods": [method.value for method in self.decision.candidate_methods],
+                "router_decision": self.decision.router_decision,
+                "fallback_reason": self.decision.fallback_reason or self.trace_metadata.get("fallback_reason"),
+                "no_retrieval_reason": self.decision.no_retrieval_reason,
+                "evidence_coverage": trace["evidence_coverage"],
+                "citation_coverage": trace["citation_coverage"],
+                "citation_ids": [citation.label for citation in self.citations],
+                "unsupported_claims": list(self.unsupported_claim_check.unsupported_claims),
+                "dropped_evidence_ids": list(self.evidence_bundle.dropped_evidence_ids),
+                "evidence_verdict": dict(self.trace_metadata.get("evidence_verdict") or {}),
+                "artifact_manifest": dict(self.trace_metadata.get("artifact_manifest") or {}),
+                "runtime_trace_event_ids": [
+                    str(event.get("event_id"))
+                    for event in runtime_trace_events
+                    if event.get("event_id")
+                ],
+                "retrievers_used": sorted(
+                    {
+                        retriever
+                        for payload in self.index_payloads
+                        for retriever in payload.get("retrievers_used", [])
+                    }
+                ),
+            },
+        }
+
+
+class AgenticRetrievalRuntime:
+    """PHASE09 runtime bridge from Agentic Router to local index jobs."""
+
+    def __init__(self, *, index_runtime: Any) -> None:
+        self.index_runtime = index_runtime
+        self.router = AgenticRetrievalRouter()
+        self.citation_builder = CitationBuilder()
+        self.claim_checker = UnsupportedClaimChecker()
+
+    def answer(self, request: AgenticRetrievalRuntimeRequest) -> AgenticRetrievalRuntimeResult:
+        decision = self.router.decide(
+            RetrievalRouterInput(
+                query=request.query,
+                workspace_id=request.workspace_id,
+                context_pack=request.context_pack,
+                product_mode=request.product_mode,
+                budget=request.budget,
+                acl_scope={"workspace_id": request.workspace_id},
+                evidence_state=request.evidence_state,
+                fallback_history=request.fallback_history,
+                trace_id=request.trace_id,
+                task_id=request.task_id,
+            )
+        )
+        fusion_plan = StagedFusionPlan.from_decision(decision)
+        if not decision.retrieval_required:
+            empty_bundle = EvidenceBundle()
+            unsupported = UnsupportedClaimCheck()
+            trace = AgenticGraphRAGTrace.from_decision(
+                decision=decision,
+                evidence_bundle=empty_bundle,
+                citations=[],
+                unsupported_claims=[],
+            )
+            return AgenticRetrievalRuntimeResult(
+                answer="No retrieval was required for this request.",
+                decision=decision,
+                fusion_plan=fusion_plan,
+                evidence_bundle=empty_bundle,
+                citations=[],
+                unsupported_claim_check=unsupported,
+                trace=trace,
+                index_payloads=[],
+                trace_metadata=self._trace_metadata(
+                    request=request,
+                    decision=decision,
+                    evidence_bundle=empty_bundle,
+                    citations=[],
+                    answer="No retrieval was required for this request.",
+                    index_payloads=[],
+                ),
+            )
+
+        index_payloads = [
+            self.index_runtime.to_retrieval_payload(knowledge_space_id, request.query)
+            for knowledge_space_id in request.knowledge_space_ids
+        ]
+        candidates = self._evidence_candidates(
+            decision=decision,
+            index_payloads=index_payloads,
+        )
+        bundle = EvidenceBundle.from_candidates(candidates, request.allowed_acl_scopes)
+        citations = self.citation_builder.build(bundle)
+        unsupported = self.claim_checker.check(request.claims, bundle)
+        trace = AgenticGraphRAGTrace.from_decision(
+            decision=decision,
+            evidence_bundle=bundle,
+            citations=citations,
+            unsupported_claims=unsupported.unsupported_claims,
+        )
+        answer = self._answer_from_evidence(bundle, citations)
+        return AgenticRetrievalRuntimeResult(
+            answer=answer,
+            decision=decision,
+            fusion_plan=fusion_plan,
+            evidence_bundle=bundle,
+            citations=citations,
+            unsupported_claim_check=unsupported,
+            trace=trace,
+            index_payloads=index_payloads,
+            trace_metadata=self._trace_metadata(
+                request=request,
+                decision=decision,
+                evidence_bundle=bundle,
+                citations=citations,
+                answer=answer,
+                index_payloads=index_payloads,
+            ),
+        )
+
+    def _evidence_candidates(
+        self,
+        *,
+        decision: RetrievalRouterDecision,
+        index_payloads: list[dict[str, Any]],
+    ) -> list[EvidenceItem]:
+        candidates: list[EvidenceItem] = []
+        seen_chunks: set[str] = set()
+        citation_index = 1
+        for method in decision.resolved_methods:
+            for payload in index_payloads:
+                for source_name in self._sources_for_method(method):
+                    for document in payload.get("documents_by_source", {}).get(source_name, []):
+                        chunk_id = str(document.get("chunk_id") or "")
+                        if not chunk_id or chunk_id in seen_chunks:
+                            continue
+                        if float(document.get("score") or 0.0) <= 0:
+                            continue
+                        metadata = dict(document.get("metadata") or {})
+                        seen_chunks.add(chunk_id)
+                        candidates.append(
+                            EvidenceItem(
+                                evidence_id=f"ev:{method.value}:{chunk_id}",
+                                document_id=str(document.get("document_id") or metadata.get("document_id") or ""),
+                                block_id=chunk_id.split("::", 1)[-1],
+                                retrieval_method=method,
+                                score=float(document.get("score") or 0.0),
+                                source_span=dict(metadata.get("source_span") or {}),
+                                citation_label=f"[{citation_index}]",
+                                trust_label=str(metadata.get("trust_label") or "indexed"),
+                                acl_scope=str(metadata.get("acl_scope") or "workspace"),
+                                text=str(document.get("content") or ""),
+                            )
+                        )
+                        citation_index += 1
+        return candidates
+
+    @staticmethod
+    def _sources_for_method(method: QueryMethod) -> tuple[str, ...]:
+        if method is QueryMethod.BASIC:
+            return ("bm25",)
+        if method is QueryMethod.LOCAL:
+            return ("graph", "vector")
+        if method is QueryMethod.GLOBAL:
+            return ("graph",)
+        if method is QueryMethod.DRIFT:
+            return ("bm25", "graph")
+        return ("bm25",)
+
+    def _trace_metadata(
+        self,
+        *,
+        request: AgenticRetrievalRuntimeRequest,
+        decision: RetrievalRouterDecision,
+        evidence_bundle: EvidenceBundle,
+        citations: list[Citation],
+        answer: str,
+        index_payloads: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        from zuno.knowledge.trace import enrich_trace_metadata_with_artifacts
+
+        evidence_refs = [_evidence_ref(item) for item in evidence_bundle.items]
+        citation_refs = [_citation_ref(citation) for citation in citations]
+        metadata = {
+            **decision.to_trace(),
+            "requested_product_mode": decision.requested_product_mode.value,
+            "resolved_product_mode": decision.requested_product_mode.value,
+            "requested_query_method": ",".join(method.value for method in decision.candidate_methods),
+            "resolved_query_method": ",".join(method.value for method in decision.resolved_methods),
+            "retrievers_used": sorted(
+                {
+                    retriever
+                    for payload in index_payloads
+                    for retriever in payload.get("retrievers_used", [])
+                }
+            ),
+            "evidence_bundle": {
+                "document_count": len(evidence_bundle.items),
+                "chunk_ids": evidence_refs,
+                "citation_chunks": citation_refs,
+                "citation_coverage": (
+                    len(citation_refs) / len(evidence_bundle.items)
+                    if evidence_bundle.items
+                    else 0.0
+                ),
+                "dropped_evidence_ids": list(evidence_bundle.dropped_evidence_ids),
+            },
+            "citation_chunks": citation_refs,
+            "pipeline_trace": {
+                "steps": [
+                    {
+                        "name": "agentic_retrieval",
+                        "status": "completed" if decision.retrieval_required else "skipped",
+                        "detail": {
+                            "router_decision": decision.router_decision,
+                            "resolved_methods": [method.value for method in decision.resolved_methods],
+                        },
+                    }
+                ]
+            },
+        }
+        return enrich_trace_metadata_with_artifacts(
+            trace_metadata=metadata,
+            query=request.query,
+            answer=answer,
+            documents=[
+                {
+                    "chunk_id": ref,
+                    "document_id": item.document_id,
+                    "block_id": item.block_id,
+                    "source_type": item.retrieval_method.value,
+                }
+                for item, ref in zip(evidence_bundle.items, evidence_refs)
+            ],
+            evidence_bundle=metadata["evidence_bundle"],
+            citations=citation_refs,
+            fallback_reason=decision.fallback_reason,
+        )
+
+    @staticmethod
+    def _answer_from_evidence(bundle: EvidenceBundle, citations: list[Citation]) -> str:
+        if not bundle.items:
+            return "No indexed evidence matched this request."
+        citation_by_evidence = {citation.evidence_id: citation.label for citation in citations}
+        lines = [
+            f"{item.text} {citation_by_evidence.get(item.evidence_id, item.citation_label)}"
+            for item in bundle.items
+        ]
+        return "\n".join(lines)
+
+
+def _evidence_ref(item: EvidenceItem) -> str:
+    return f"{item.document_id}::{item.block_id}"
+
+
+def _citation_ref(citation: Citation) -> str:
+    return f"{citation.document_id}::{citation.block_id}"
+
+
 class GraphRAGIndexPipelineContract(BaseModel):
     input_document_id: str
     workspace_id: str
@@ -484,6 +780,9 @@ class AgenticGraphRAGTrace(BaseModel):
 
 __all__ = [
     "AgenticGraphRAGTrace",
+    "AgenticRetrievalRuntime",
+    "AgenticRetrievalRuntimeRequest",
+    "AgenticRetrievalRuntimeResult",
     "AgenticRetrievalRouter",
     "Citation",
     "CitationBuilder",

@@ -16,6 +16,20 @@ from zuno.capability.runtime import (
     ToolRuntimeRequest,
     build_default_tool_control_plane_runtime,
 )
+from zuno.knowledge.agentic_graphrag import (
+    AgenticRetrievalRuntime,
+    AgenticRetrievalRuntimeRequest,
+    AgenticRetrievalRuntimeResult,
+    ProductMode,
+)
+from zuno.knowledge.indexing import KnowledgeIndexRuntime
+from zuno.knowledge.ingestion import (
+    CanonicalDocumentIR,
+    DocumentBlock,
+    DocumentMetadata,
+    DocumentProvenance,
+    SourceSpan,
+)
 from zuno.schema.workspace import (
     ArtifactContract,
     FeedbackContract,
@@ -38,6 +52,7 @@ class WorkspaceTaskRuntimeService:
     _task_inputs: dict[str, WorkSpaceSimpleTask] = {}
     _events: dict[str, list[TraceEventContract]] = {}
     _files: dict[str, UploadedFileContract] = {}
+    _file_text: dict[str, str] = {}
     _ingest_jobs: dict[str, dict] = {}
     _artifacts: dict[str, ArtifactContract] = {}
     _artifact_content: dict[str, str] = {}
@@ -45,6 +60,8 @@ class WorkspaceTaskRuntimeService:
     _feedback: dict[str, FeedbackContract] = {}
     _durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
     _tool_runtime = build_default_tool_control_plane_runtime()
+    _knowledge_index_runtime = KnowledgeIndexRuntime()
+    _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
 
     @classmethod
@@ -60,6 +77,7 @@ class WorkspaceTaskRuntimeService:
         uri: str | None,
         trace_id: str | None,
         security_label: str,
+        content: str | None = None,
     ) -> dict:
         normalized_file_id = file_id or f"file_{uuid4().hex[:12]}"
         normalized_hash = file_hash or hashlib.sha256(
@@ -79,6 +97,7 @@ class WorkspaceTaskRuntimeService:
             updated_at=str(time.time()),
         )
         cls._files[file.file_id] = file
+        cls._file_text[file.file_id] = content or f"{name or normalized_file_id} was uploaded to workspace {workspace_id}."
         return {
             "file": file.model_dump(),
             "name": name,
@@ -103,6 +122,18 @@ class WorkspaceTaskRuntimeService:
         normalized_trace_id = trace_id or file.trace_id or f"trace_{uuid4().hex[:12]}"
         file.trace_id = normalized_trace_id
         ingest_task_id = f"ingest_{uuid4().hex[:12]}"
+        cls._ensure_knowledge_space(
+            knowledge_space_id=knowledge_space_id,
+            workspace_id=workspace_id,
+        )
+        document = cls._document_from_file(file=file, content=cls._file_text.get(file_id, ""))
+        index_job = cls._knowledge_index_runtime.index_document(
+            knowledge_space_id,
+            document,
+            targets=["bm25", "vector", "graph"],
+        )
+        file.parse_status = "indexed"
+        file.updated_at = str(time.time())
         job = {
             "ingest_task_id": ingest_task_id,
             "workspace_id": workspace_id,
@@ -112,6 +143,7 @@ class WorkspaceTaskRuntimeService:
             "trace_id": normalized_trace_id,
             "status": "accepted",
             "file": file.model_dump(),
+            "index_job": index_job.model_dump(),
         }
         cls._ingest_jobs[ingest_task_id] = job
         return job
@@ -341,7 +373,26 @@ class WorkspaceTaskRuntimeService:
         task = cls._require_task(task_id)
         trace_id = task.trace_id or ""
         goal = task.goal
-        artifact_content = cls._render_artifact_content(simple_task=simple_task, goal=goal)
+        retrieval_result = cls._answer_from_index(
+            task=task,
+            simple_task=simple_task,
+            goal=goal,
+        )
+        if retrieval_result is not None:
+            cls._events.setdefault(task_id, []).append(
+                cls._event(
+                    task_id=task_id,
+                    trace_id=trace_id,
+                    event_type="retrieval",
+                    status="completed",
+                    payload=retrieval_result.to_task_event()["payload"],
+                )
+            )
+        artifact_content = cls._render_artifact_content(
+            simple_task=simple_task,
+            goal=goal,
+            retrieval_result=retrieval_result,
+        )
         artifact = ArtifactContract(
             workspace_id=task.workspace_id,
             owner=task.owner,
@@ -478,6 +529,47 @@ class WorkspaceTaskRuntimeService:
         return file
 
     @classmethod
+    def _ensure_knowledge_space(cls, *, knowledge_space_id: str, workspace_id: str) -> None:
+        try:
+            cls._knowledge_index_runtime.to_retrieval_payload(knowledge_space_id, "__health__")
+        except KeyError:
+            cls._knowledge_index_runtime.create_knowledge_space(
+                knowledge_space_id=knowledge_space_id,
+                workspace_id=workspace_id,
+                graph_project_id=f"graph_{knowledge_space_id}",
+            )
+
+    @staticmethod
+    def _document_from_file(*, file: UploadedFileContract, content: str) -> CanonicalDocumentIR:
+        return CanonicalDocumentIR(
+            metadata=DocumentMetadata(
+                document_id=file.file_id,
+                workspace_id=file.workspace_id,
+                source_uri=f"memory://workspace/{file.workspace_id}/files/{file.file_id}",
+                mime_type=file.mime_type,
+                hash=file.hash,
+                parser_id="workspace_text_runtime",
+                parser_version="phase09-runtime-v1",
+                acl_scope=file.policy_scope,
+            ),
+            blocks=[
+                DocumentBlock(
+                    block_id="block_1",
+                    type="paragraph",
+                    text=content or f"Uploaded file {file.file_id}.",
+                    source_span=SourceSpan(line_range=[1, 1]),
+                    acl_scope=file.policy_scope,
+                )
+            ],
+            provenance=DocumentProvenance(
+                parser_id="workspace_text_runtime",
+                parser_version="phase09-runtime-v1",
+                source_uri=f"memory://workspace/{file.workspace_id}/files/{file.file_id}",
+                confidence=1.0,
+            ),
+        )
+
+    @classmethod
     def get_task_snapshot(cls, task_id: str) -> dict:
         task = cls._require_task(task_id)
         artifact_ids = cls._artifact_ids_by_task.get(task_id, [])
@@ -569,8 +661,56 @@ class WorkspaceTaskRuntimeService:
             payload=event_payload,
         )
 
+    @classmethod
+    def _answer_from_index(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+        goal: str,
+    ) -> AgenticRetrievalRuntimeResult | None:
+        if not simple_task.knowledge_space_ids:
+            return None
+        try:
+            return cls._agentic_retrieval_runtime.answer(
+                AgenticRetrievalRuntimeRequest(
+                    query=simple_task.query,
+                    workspace_id=task.workspace_id,
+                    knowledge_space_ids=list(simple_task.knowledge_space_ids),
+                    product_mode=_product_mode_for_retrieval(simple_task.product_mode),
+                    context_pack={
+                        "goal": goal,
+                        "session_id": simple_task.session_id,
+                        "uploaded_file_ids": list(simple_task.uploaded_file_ids),
+                    },
+                    allowed_acl_scopes={"workspace", task.policy_scope},
+                    trace_id=task.trace_id or "",
+                    task_id=task.task_id,
+                )
+            )
+        except KeyError:
+            return None
+
     @staticmethod
-    def _render_artifact_content(*, simple_task: WorkSpaceSimpleTask, goal: str) -> str:
+    def _render_artifact_content(
+        *,
+        simple_task: WorkSpaceSimpleTask,
+        goal: str,
+        retrieval_result: AgenticRetrievalRuntimeResult | None = None,
+    ) -> str:
+        answer_lines = []
+        if retrieval_result is not None:
+            answer_lines = [
+                "",
+                "## Answer",
+                retrieval_result.answer,
+                "",
+                "## Citations",
+                *[
+                    f"- {citation.label} {citation.document_id}::{citation.block_id}"
+                    for citation in retrieval_result.citations
+                ],
+            ]
         return "\n".join(
             [
                 f"# {goal}",
@@ -579,6 +719,7 @@ class WorkspaceTaskRuntimeService:
                 f"Product mode: {simple_task.product_mode}",
                 f"Uploaded files: {', '.join(simple_task.uploaded_file_ids) or 'none'}",
                 f"Knowledge spaces: {', '.join(simple_task.knowledge_space_ids) or 'none'}",
+                *answer_lines,
             ]
         )
 
@@ -624,6 +765,15 @@ class WorkspaceTaskRuntimeService:
             "timestamp": event.timestamp,
             "data": data,
         }
+
+
+def _product_mode_for_retrieval(product_mode: str) -> ProductMode:
+    normalized = product_mode.strip().lower()
+    if normalized in {"normal"}:
+        return ProductMode.NORMAL
+    if normalized in {"enhanced", "enterprise_kb", "hr_resume", "contract_review"}:
+        return ProductMode.ENHANCED
+    return ProductMode.AUTO
 
 
 __all__ = ["WorkspaceTaskRuntimeService"]

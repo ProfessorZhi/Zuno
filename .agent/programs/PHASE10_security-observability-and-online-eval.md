@@ -1,6 +1,6 @@
 # PHASE10 security-observability-and-online-eval
 
-status: pending
+status: active
 
 ## 目标
 
@@ -30,4 +30,3 @@ status: pending
 git diff --check
 pytest -q tests/security tests/evals tools/evals/zuno -p no:cacheprovider
 ```
-

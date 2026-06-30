@@ -158,7 +158,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phrase in [
         "state: active",
         f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE09_agentic-retrieval-evidence-citation-runtime",
+        "current_phase: PHASE10_security-observability-and-online-eval",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
@@ -179,7 +179,8 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
             6: "status: completed",
             7: "status: completed",
             8: "status: completed",
-            9: "status: active",
+            9: "status: completed",
+            10: "status: active",
         }.get(index, "status: pending")
         assert expected_status in phase_text
         for section in ["## 目标", "## 范围", "## 禁止范围", "## 验收闸门", "## 验证命令"]:
