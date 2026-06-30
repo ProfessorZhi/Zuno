@@ -248,6 +248,49 @@ export interface WorkspaceFeedbackRequest {
   dataset_candidate?: boolean
 }
 
+export interface WorkspaceFileCreateRequest {
+  workspace_id: string
+  file_id?: string
+  name?: string
+  mime_type: string
+  hash?: string
+  uri?: string
+  trace_id?: string
+  security_label?: string
+}
+
+export interface WorkspaceFileCreateResponse {
+  file: UploadedFileContract
+  name?: string
+  uri?: string
+}
+
+export interface WorkspaceIngestRequest {
+  workspace_id: string
+  file_id: string
+  knowledge_space_id: string
+  session_id?: string
+  trace_id?: string
+}
+
+export interface WorkspaceIngestResponse {
+  ingest_task_id: string
+  workspace_id: string
+  file_id: string
+  knowledge_space_id: string
+  session_id?: string
+  trace_id: string
+  status: string
+  file: UploadedFileContract
+}
+
+export interface WorkspaceApprovalRequest {
+  decision: 'approved' | 'rejected'
+  comment?: string
+}
+
+export interface WorkspaceApprovalResponse extends WorkspaceTaskCreateResponse {}
+
 export interface WorkspaceAttachment {
   name: string
   url: string
@@ -375,6 +418,22 @@ export const createWorkspaceTaskAPI = async (data: WorkSpaceSimpleTask) => {
   })
 }
 
+export const createWorkspaceFileAPI = async (data: WorkspaceFileCreateRequest) => {
+  return request({
+    url: '/api/v1/workspace/file',
+    method: 'post',
+    data,
+  })
+}
+
+export const createWorkspaceIngestAPI = async (data: WorkspaceIngestRequest) => {
+  return request({
+    url: '/api/v1/workspace/ingest',
+    method: 'post',
+    data,
+  })
+}
+
 export const getWorkspaceTaskAPI = async (taskId: string) => {
   return request({
     url: `/api/v1/workspace/task/${taskId}`,
@@ -444,6 +503,14 @@ export const workspaceTaskEventsStreamAPI = async (
       handlers.onError?.(error)
     }
   }
+}
+
+export const approveWorkspaceTaskAPI = async (taskId: string, data: WorkspaceApprovalRequest) => {
+  return request({
+    url: `/api/v1/workspace/task/${taskId}/approve`,
+    method: 'post',
+    data,
+  })
 }
 
 export const getWorkspaceArtifactAPI = async (artifactId: string) => {

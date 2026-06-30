@@ -1,6 +1,6 @@
 # PHASE04 document-ingestion-parse-runtime
 
-status: pending
+status: active
 
 ## 目标
 
@@ -31,4 +31,3 @@ git diff --check
 pytest -q tests/knowledge tests/fixtures/parser_golden -p no:cacheprovider
 python tools/scripts/verify_repo_structure.py
 ```
-

@@ -28,6 +28,30 @@ class WorkspaceFeedbackBody(BaseModel):
     dataset_candidate: bool = False
 
 
+class WorkspaceFileBody(BaseModel):
+    workspace_id: str
+    file_id: str | None = None
+    name: str | None = None
+    mime_type: str
+    hash: str | None = None
+    uri: str | None = None
+    trace_id: str | None = None
+    security_label: str = "internal"
+
+
+class WorkspaceIngestBody(BaseModel):
+    workspace_id: str
+    file_id: str
+    knowledge_space_id: str
+    session_id: str | None = None
+    trace_id: str | None = None
+
+
+class WorkspaceApprovalBody(BaseModel):
+    decision: str
+    comment: str | None = None
+
+
 @router.get("/plugins", summary="Get workspace tools")
 async def get_workspace_plugins(
     execution_mode: str = "tool",
@@ -110,6 +134,43 @@ async def workspace_simple_chat(
     )
 
 
+@router.post("/file", summary="Register workspace file")
+async def register_workspace_file(
+    payload: WorkspaceFileBody,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.register_file(
+            workspace_id=payload.workspace_id,
+            login_user=login_user,
+            file_id=payload.file_id,
+            mime_type=payload.mime_type,
+            file_hash=payload.hash,
+            name=payload.name,
+            uri=payload.uri,
+            trace_id=payload.trace_id,
+            security_label=payload.security_label,
+        )
+    )
+
+
+@router.post("/ingest", summary="Create workspace ingest job")
+async def create_workspace_ingest(
+    payload: WorkspaceIngestBody,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.create_ingest_job(
+            workspace_id=payload.workspace_id,
+            file_id=payload.file_id,
+            knowledge_space_id=payload.knowledge_space_id,
+            session_id=payload.session_id,
+            trace_id=payload.trace_id,
+        )
+    )
+
+
 @router.post("/task", summary="Create workspace task")
 async def create_workspace_task(
     simple_task: WorkSpaceSimpleTask,
@@ -139,6 +200,22 @@ async def get_workspace_task_events(
 ):
     _ = login_user
     return resp_200(data=WorkspaceTaskRuntimeService.list_task_events(task_id))
+
+
+@router.post("/task/{task_id}/approve", summary="Approve workspace task")
+async def approve_workspace_task(
+    task_id: str,
+    payload: WorkspaceApprovalBody,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.approve_task(
+            task_id=task_id,
+            decision=payload.decision,
+            comment=payload.comment,
+        )
+    )
 
 
 @router.get("/task/{task_id}/events/stream", summary="Stream workspace task events")
@@ -186,7 +263,12 @@ async def create_workspace_feedback(
 
 __all__ = [
     "WorkSpaceSessionCreateBody",
+    "WorkspaceApprovalBody",
     "WorkspaceFeedbackBody",
+    "WorkspaceFileBody",
+    "WorkspaceIngestBody",
+    "approve_workspace_task",
+    "create_workspace_ingest",
     "create_workspace_session",
     "create_workspace_feedback",
     "create_workspace_task",
@@ -197,6 +279,7 @@ __all__ = [
     "get_workspace_sessions",
     "get_workspace_task",
     "get_workspace_task_events",
+    "register_workspace_file",
     "router",
     "stream_workspace_task_events",
     "workspace_session_info",

@@ -36,7 +36,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-target-architecture-runtime-full-implementation-v1`，阶段是 `PHASE03_task-session-artifact-event-runtime`。
+当前 active Agent program 是 `zuno-target-architecture-runtime-full-implementation-v1`，阶段是 `PHASE04_document-ingestion-parse-runtime`。
 
 本轮 program 不再继续做架构细化或 contract foundation，而是把目标架构推进到第一版真实 runtime 闭环：
 
@@ -51,6 +51,8 @@ Local-first Enterprise Private Knowledge Agent Workspace
 它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。
 
 执行状态入口在 `.agent/programs/`。本轮每个 phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
+
+PHASE03 已完成 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface；当前 PHASE04 进入 Document Ingestion / Parse Gateway runtime。
 
 本轮大型 program 的八个方面产物：
 

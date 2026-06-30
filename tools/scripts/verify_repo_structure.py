@@ -1151,7 +1151,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE03_task-session-artifact-event-runtime",
+        "current_phase: PHASE04_document-ingestion-parse-runtime",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
@@ -1189,7 +1189,8 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         expected_status = {
             1: "status: completed",
             2: "status: completed",
-            3: "status: active",
+            3: "status: completed",
+            4: "status: active",
         }.get(phase_index, "status: pending")
         if expected_status not in phase_content:
             errors.append(f"active runtime program phase status drifted: {phase_name}")

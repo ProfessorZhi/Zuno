@@ -159,3 +159,160 @@ def test_workspace_task_event_stream_emits_frontend_trace_payloads() -> None:
     artifact_event = next(payload for payload in streamed_payloads if payload["event"] == "artifact_created")
     assert artifact_event["data"]["artifact_id"] == artifact_id
     assert artifact_event["data"]["status"] == "finalizing"
+
+
+def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monkeypatch) -> None:
+    async def fake_create_workspace_session(payload):
+        return {
+            "session_id": payload.session_id,
+            "user_id": payload.user_id,
+            "agent": payload.agent,
+            "contexts": payload.contexts,
+        }
+
+    monkeypatch.setattr(
+        "zuno.api.v1.workspace.WorkSpaceSessionService.create_workspace_session",
+        fake_create_workspace_session,
+    )
+
+    client = _client()
+
+    session_response = client.post(
+        "/api/v1/workspace/session",
+        json={
+            "title": "PHASE03 product loop",
+            "session_id": "session_phase03_full",
+            "agent": "simple",
+            "workspace_mode": "normal",
+            "contexts": [],
+        },
+    )
+    assert session_response.status_code == 200
+    session = session_response.json()["data"]
+    assert session["session_id"] == "session_phase03_full"
+    assert session["user_id"] == "user_phase03"
+
+    file_response = client.post(
+        "/api/v1/workspace/file",
+        json={
+            "workspace_id": "workspace_phase03_full",
+            "file_id": "file_contract_full",
+            "name": "supplier-contract.md",
+            "mime_type": "text/markdown",
+            "hash": "sha256-contract-full",
+            "uri": "memory://workspace/workspace_phase03_full/files/file_contract_full",
+        },
+    )
+    assert file_response.status_code == 200
+    registered_file = file_response.json()["data"]["file"]
+    assert registered_file["file_id"] == "file_contract_full"
+    assert registered_file["parse_status"] == "uploaded"
+
+    ingest_response = client.post(
+        "/api/v1/workspace/ingest",
+        json={
+            "workspace_id": "workspace_phase03_full",
+            "file_id": "file_contract_full",
+            "knowledge_space_id": "ks_contracts_full",
+            "session_id": "session_phase03_full",
+        },
+    )
+    assert ingest_response.status_code == 200
+    ingest_payload = ingest_response.json()["data"]
+    assert ingest_payload["file"]["parse_status"] == "ingest_accepted"
+    assert ingest_payload["ingest_task_id"].startswith("ingest_")
+    assert ingest_payload["trace_id"].startswith("trace_")
+
+    create_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Create a cited risk memo after approval",
+            "model_id": "model-local",
+            "session_id": "session_phase03_full",
+            "workspace_id": "workspace_phase03_full",
+            "goal": "approved contract memo",
+            "product_mode": "contract_review",
+            "uploaded_file_ids": ["file_contract_full"],
+            "knowledge_space_ids": ["ks_contracts_full"],
+            "approval_mode": "manual",
+            "plugins": ["filesystem.read"],
+            "mcp_servers": [],
+        },
+    )
+    assert create_response.status_code == 200
+    created = create_response.json()["data"]
+    task = created["task"]
+    task_id = task["task_id"]
+    trace_id = task["trace_id"]
+    assert task["status"] == "approval_waiting"
+    assert created["artifact_ids"] == []
+
+    waiting_events = client.get(f"/api/v1/workspace/task/{task_id}/events").json()["data"]
+    assert [event["type"] for event in waiting_events] == [
+        "task_started",
+        "planning",
+        "retrieval",
+        "approval_required",
+    ]
+    assert waiting_events[-1]["payload"]["approval_mode"] == "manual"
+    assert waiting_events[-1]["trace_id"] == trace_id
+
+    approve_response = client.post(
+        f"/api/v1/workspace/task/{task_id}/approve",
+        json={
+            "decision": "approved",
+            "comment": "Approved for PHASE03 runtime closure.",
+        },
+    )
+    assert approve_response.status_code == 200
+    approved = approve_response.json()["data"]
+    approved_task = approved["task"]
+    artifact = approved["artifacts"][0]
+    assert approved_task["status"] == "completed"
+    assert approved_task["trace_id"] == trace_id
+    assert artifact["task_id"] == task_id
+    assert artifact["trace_id"] == trace_id
+
+    approved_events = client.get(f"/api/v1/workspace/task/{task_id}/events").json()["data"]
+    approved_event_types = [event["type"] for event in approved_events]
+    assert approved_event_types == [
+        "task_started",
+        "planning",
+        "retrieval",
+        "approval_required",
+        "approval_decision",
+        "resuming",
+        "answer",
+        "artifact_created",
+        "eval_diagnostic",
+        "task_completed",
+    ]
+    assert {event["trace_id"] for event in approved_events} == {trace_id}
+
+    rejected_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Try a risky write without approval",
+            "model_id": "model-local",
+            "session_id": "session_phase03_reject",
+            "workspace_id": "workspace_phase03_full",
+            "goal": "rejected risky task",
+            "product_mode": "general_agent",
+            "approval_mode": "manual",
+            "plugins": ["filesystem.write"],
+            "mcp_servers": [],
+        },
+    )
+    rejected_task = rejected_response.json()["data"]["task"]
+    reject_approval = client.post(
+        f"/api/v1/workspace/task/{rejected_task['task_id']}/approve",
+        json={"decision": "rejected", "comment": "Risk not approved."},
+    )
+    assert reject_approval.status_code == 200
+    failed_snapshot = reject_approval.json()["data"]
+    assert failed_snapshot["task"]["status"] == "failed"
+
+    failed_events = client.get(f"/api/v1/workspace/task/{rejected_task['task_id']}/events").json()["data"]
+    assert failed_events[-1]["type"] == "failure"
+    assert failed_events[-1]["payload"]["status"] == "failed"
+    assert "Risk not approved" in failed_events[-1]["payload"]["error"]

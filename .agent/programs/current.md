@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE03_task-session-artifact-event-runtime
+current_phase: PHASE04_document-ingestion-parse-runtime
 
 ## 目标
 
@@ -25,8 +25,8 @@ upload document
 
 - `PHASE01_program-reopen-and-truth-source-freeze.md`：completed。
 - `PHASE02_runtime-migration-map-and-repo-ownership-lock.md`：completed。
-- `PHASE03_task-session-artifact-event-runtime.md`：active。
-- `PHASE04_document-ingestion-parse-runtime.md`：pending。
+- `PHASE03_task-session-artifact-event-runtime.md`：completed。
+- `PHASE04_document-ingestion-parse-runtime.md`：active。
 - `PHASE05_index-jobs-and-knowledge-space-runtime.md`：pending。
 - `PHASE06_durable-single-controller-runtime.md`：pending。
 - `PHASE07_memory-db-and-context-governance.md`：pending。
