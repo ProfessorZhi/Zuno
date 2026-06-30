@@ -45,6 +45,11 @@ def test_general_agent_prepares_context_packet_and_selected_capability_trace() -
     assert agent.last_capability_selection is not None
     assert agent.last_capability_selection.trace.selected_names == ("search_knowledge_base",)
     assert "search_knowledge_base" in packet.trace.selected_item_ids
+    capability_item = next(item for item in packet.items if item.item_id == "search_knowledge_base")
+    selection_trace = capability_item.metadata["capability_selection_trace"]
+    assert selection_trace["selected_tool_card_ids"] == ["Knowledge:search_knowledge_base"]
+    assert selection_trace["candidate_tool_card_ids"] == ["Knowledge:search_knowledge_base"]
+    assert selection_trace["injected_schema_ids"] == []
 
 
 def test_general_agent_astream_passes_context_trace_into_single_loop_and_commits_memory() -> None:

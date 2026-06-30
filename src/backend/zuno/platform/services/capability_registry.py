@@ -8,7 +8,9 @@ from zuno.services.application.capabilities import (
     CapabilityCost,
     CapabilityHealth,
     CapabilityPermissions,
+    CapabilityRecord,
     CapabilityType,
+    ToolCard,
 )
 
 CapabilityKind = Literal["tool", "skill", "mcp_server", "mcp_tool"]
@@ -91,6 +93,13 @@ class CapabilityRegistryService:
         for server in mcp_servers:
             capabilities.extend(cls._mcp_capabilities(server))
         return capabilities
+
+    @classmethod
+    async def list_tool_cards(cls, user_id: str) -> list[ToolCard]:
+        return [
+            ToolCard.from_capability_record(cls._record_from_capability_dict(capability))
+            for capability in await cls.list_capabilities(user_id)
+        ]
 
     @classmethod
     def _tool_capability(cls, tool: dict[str, Any]) -> dict[str, Any]:
@@ -242,6 +251,42 @@ class CapabilityRegistryService:
             "invoke_ref": invoke_ref,
             "metadata": metadata,
         }
+
+    @classmethod
+    def _record_from_capability_dict(cls, capability: dict[str, Any]) -> CapabilityRecord:
+        metadata = dict(capability.get("metadata") or {})
+        metadata.update(
+            {
+                "aliases": list(capability.get("aliases") or []),
+                "display_name": capability.get("display_name"),
+                "invoke_ref": dict(capability.get("invoke_ref") or {}),
+                "kind": capability.get("kind"),
+                "status": capability.get("status"),
+                "status_message": capability.get("status_message"),
+            }
+        )
+        cost = capability.get("cost") or {}
+        permissions = capability.get("permissions") or {}
+        return CapabilityRecord(
+            name=str(capability.get("name") or ""),
+            type=CapabilityType(str(capability.get("type") or CapabilityType.ACTION_TOOL.value)),
+            description=str(capability.get("description") or ""),
+            schema=dict(capability.get("schema") or {}),
+            permissions=CapabilityPermissions(
+                scopes=tuple(permissions.get("scopes") or ()),
+                side_effects=bool(permissions.get("side_effects")),
+            ),
+            cost=CapabilityCost(
+                token_estimate=int(cost.get("token_estimate") or 0),
+                latency_ms=cost.get("latency_ms"),
+                unit_cost=cost.get("unit_cost"),
+            ),
+            health=CapabilityHealth(str(capability.get("health") or CapabilityHealth.DEGRADED.value)),
+            source=str(capability.get("source") or ""),
+            owner=str(capability.get("owner") or ""),
+            tags=tuple(str(tag) for tag in capability.get("tags") or ()),
+            metadata=metadata,
+        )
 
     @staticmethod
     def _iter_mcp_tool_defs(server: dict[str, Any]) -> list[dict[str, Any]]:

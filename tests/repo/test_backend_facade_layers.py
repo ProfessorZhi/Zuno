@@ -47,6 +47,10 @@ FACADE_ALL = {
         "CapabilitySelectionTrace",
         "CapabilityType",
         "DynamicCapabilitySelector",
+        "NativeBM25Retriever",
+        "NativeBM25SearchResult",
+        "ToolCard",
+        "ToolCardRegistry",
     ],
     "zuno.knowledge": [
         "FusionResult",
@@ -102,6 +106,8 @@ SELECTED_EXPORTS = {
         "CapabilityRecord": "zuno.services.application.capabilities",
         "CapabilityRegistry": "zuno.services.application.capabilities",
         "DynamicCapabilitySelector": "zuno.services.application.capabilities",
+        "ToolCard": "zuno.services.application.capabilities",
+        "ToolCardRegistry": "zuno.services.application.capabilities",
     },
     "zuno.knowledge": {
         "GraphRAGProjectContract": "zuno.services.graphrag.models",

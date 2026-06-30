@@ -10,8 +10,10 @@ if TYPE_CHECKING:
         CapabilityPermissions,
         CapabilityRecord,
         CapabilityType,
+        ToolCard,
     )
-    from zuno.capability.registry import CapabilityRegistry
+    from zuno.capability.registry import CapabilityRegistry, ToolCardRegistry
+    from zuno.capability.retrieval import NativeBM25Retriever, NativeBM25SearchResult
     from zuno.capability.selector import (
         CapabilitySelectionRequest,
         CapabilitySelectionResult,
@@ -31,6 +33,10 @@ _EXPORT_TO_MODULE = {
     "CapabilitySelectionTrace": "zuno.capability.trace",
     "CapabilityType": "zuno.capability.contracts",
     "DynamicCapabilitySelector": "zuno.capability.selector",
+    "NativeBM25Retriever": "zuno.capability.retrieval",
+    "NativeBM25SearchResult": "zuno.capability.retrieval",
+    "ToolCard": "zuno.capability.contracts",
+    "ToolCardRegistry": "zuno.capability.registry",
 }
 
 __all__ = [
@@ -44,6 +50,10 @@ __all__ = [
     "CapabilitySelectionTrace",
     "CapabilityType",
     "DynamicCapabilitySelector",
+    "NativeBM25Retriever",
+    "NativeBM25SearchResult",
+    "ToolCard",
+    "ToolCardRegistry",
 ]
 
 

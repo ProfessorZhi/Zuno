@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/capability/` 目前是 capability metadata 和 selector foundation 的 facade，公开 CapabilityRecord、CapabilityRegistry、DynamicCapabilitySelector 和 selection trace 等 contract。当前已提供 `contracts.py`、`registry.py`、`selector.py`、`policy.py`、`execution.py` 和 `trace.py` 这些无副作用目标层薄入口。真实实现仍在 `src/backend/zuno/platform/services/application/capabilities/` 和相关 registry 路径。
+`src/backend/zuno/capability/` 目前是 capability metadata、ToolCard retrieval 和 selector foundation 的 facade，公开 CapabilityRecord、ToolCard、CapabilityRegistry、ToolCardRegistry、NativeBM25Retriever、DynamicCapabilitySelector 和 selection trace 等 contract。当前已提供 `contracts.py`、`registry.py`、`selector.py`、`policy.py`、`execution.py`、`trace.py` 和 `retrieval.py` 这些无副作用目标层薄入口。真实实现仍在 `src/backend/zuno/platform/services/application/capabilities/` 和相关 registry 路径。
 
 `capability/tools/` 不按 CLI / API 拆成两类顶层目录。CLI / API 是 execution adapter、runtime type 或 provider metadata，不是 capability 的主分类。
 
@@ -22,7 +22,7 @@
 
 ## 禁止事项
 
-- 禁止把 ToolCard retrieval、Native BM25 capability search 或生产级 dynamic orchestration 写成已完成 Current。
+- 禁止把生产级 ToolCard retrieval、optional vector capability search、完整 runtime tool filtering 或生产级 dynamic orchestration 写成已完成 Current。
 - 禁止直接迁移或删除 `zuno.services.application.capabilities`、`zuno.services.capability_registry` 等旧 import path。
 - 禁止改变工具权限、执行模式、API capability search response key 或 runtime tool wiring。
 - 禁止把 `capability/tools/` 按 CLI / API 二分为顶层分类，除非后续有独立 ToolCard / execution adapter 迁移计划。

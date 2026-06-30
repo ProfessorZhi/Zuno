@@ -18,6 +18,7 @@ STATIC_TARGET_SURFACES = [
     "src/backend/zuno/capability/execution.py",
     "src/backend/zuno/capability/policy.py",
     "src/backend/zuno/capability/registry.py",
+    "src/backend/zuno/capability/retrieval.py",
     "src/backend/zuno/capability/selector.py",
     "src/backend/zuno/capability/trace.py",
     "src/backend/zuno/knowledge/__init__.py",

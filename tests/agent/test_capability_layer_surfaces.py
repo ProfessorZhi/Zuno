@@ -18,10 +18,12 @@ EXPECTED_EXPORTS = {
         "CapabilityPermissions",
         "CapabilityRecord",
         "CapabilityType",
+        "ToolCard",
     ],
     "zuno.capability.registry": [
         "CapabilityRecord",
         "CapabilityRegistry",
+        "ToolCardRegistry",
     ],
     "zuno.capability.selector": [
         "CapabilitySelectionRequest",
@@ -30,6 +32,7 @@ EXPECTED_EXPORTS = {
         "DynamicCapabilitySelector",
     ],
     "zuno.capability.policy": [
+        "CapabilityPolicyDecision",
         "CapabilityCost",
         "CapabilityHealth",
         "CapabilityPermissions",
@@ -42,6 +45,12 @@ EXPECTED_EXPORTS = {
     "zuno.capability.trace": [
         "CapabilitySelectionTrace",
     ],
+    "zuno.capability.retrieval": [
+        "NativeBM25Retriever",
+        "NativeBM25SearchResult",
+        "ToolCard",
+        "ToolCardRegistry",
+    ],
 }
 
 
@@ -53,14 +62,18 @@ def test_capability_layer_modules_expose_target_boundaries() -> None:
 
 def test_capability_layer_modules_reuse_legacy_foundation_objects() -> None:
     from zuno.capability.contracts import CapabilityRecord, CapabilityType
-    from zuno.capability.registry import CapabilityRegistry
+    from zuno.capability.registry import CapabilityRegistry, ToolCardRegistry
+    from zuno.capability.retrieval import NativeBM25Retriever, ToolCard
     from zuno.capability.selector import DynamicCapabilitySelector
     from zuno.capability.trace import CapabilitySelectionTrace
     from zuno.services.application import capabilities as legacy
 
     assert CapabilityRecord is legacy.CapabilityRecord
     assert CapabilityType is legacy.CapabilityType
+    assert ToolCard is legacy.ToolCard
     assert CapabilityRegistry is legacy.CapabilityRegistry
+    assert ToolCardRegistry is legacy.ToolCardRegistry
+    assert NativeBM25Retriever is legacy.NativeBM25Retriever
     assert DynamicCapabilitySelector is legacy.DynamicCapabilitySelector
     assert CapabilitySelectionTrace is legacy.CapabilitySelectionTrace
 

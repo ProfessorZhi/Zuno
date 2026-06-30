@@ -106,6 +106,63 @@ def test_capability_registry_reports_unconfigured_mcp(monkeypatch):
     assert results[0]["status_message"] == "缺少 App Secret"
 
 
+def test_capability_registry_can_build_toolcards_without_changing_search_shape(monkeypatch):
+    from zuno.services.capability_registry import CapabilityRegistryService
+
+    async def fake_tools(user_id):
+        return [
+            {
+                "tool_id": "tool-email",
+                "name": "send_email",
+                "display_name": "发送邮件",
+                "description": "通过 SMTP 发送邮件",
+                "runtime_type": "cli",
+                "is_user_defined": False,
+                "user_id": "system",
+            }
+        ]
+
+    async def fake_skills(user_id):
+        return []
+
+    async def fake_mcps(user_id):
+        return [
+            {
+                "mcp_server_id": "mcp-lark",
+                "server_name": "飞书",
+                "mcp_as_tool_name": "lark",
+                "description": "飞书 MCP 服务",
+                "type": "stdio",
+                "tools": ["send_message"],
+                "params": [
+                    {
+                        "name": "send_message",
+                        "description": "给飞书联系人发送消息",
+                        "input_schema": {"type": "object", "properties": {"text": {"type": "string"}}},
+                    }
+                ],
+                "test_status": {"success": True, "tools": ["send_message"]},
+            }
+        ]
+
+    monkeypatch.setattr("zuno.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
+    monkeypatch.setattr("zuno.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
+    monkeypatch.setattr("zuno.services.capability_registry.MCPService.get_all_servers", fake_mcps)
+
+    search_results = asyncio.run(CapabilityRegistryService.search("飞书 发消息", user_id="u1"))
+    cards = asyncio.run(CapabilityRegistryService.list_tool_cards("u1"))
+
+    assert "tool_card" not in search_results[0]
+    assert [card.id for card in cards] == [
+        "ActionTool:send_email",
+        "MCPResource:飞书",
+        "MCPTool:send_message",
+    ]
+    assert cards[0].permissions.scopes == ("tool:invoke",)
+    assert cards[2].permissions.scopes == ("mcp:tool:invoke",)
+    assert cards[2].side_effects is True
+
+
 def test_capability_search_route_uses_login_user(monkeypatch):
     from zuno.api.v1.capability import search_capabilities
     from zuno.schema.capability import CapabilitySearchReq

@@ -133,7 +133,11 @@ The result is a `CapabilitySelectionTrace` with:
 
 ## 当前与目标边界
 
-Current code has capability metadata and a minimal selector foundation. The full
-ToolCard retrieval system, Native BM25 over ToolCards, optional vector
-capability search, production permission/health/cost filter, and complete
-selection trace are Target.
+Current code has capability metadata, ToolCard compact retrieval contracts,
+Native BM25 over ToolCards, policy filter reason codes, and a focused
+CapabilitySelectionTrace foundation. It also keeps MCP/local/skill catalog
+search response shape stable while allowing internal ToolCard construction.
+
+The production ToolCard retrieval system, optional vector capability search,
+complete runtime tool filtering, product-facing trace UI, and production
+permission/health/cost governance remain Target.
