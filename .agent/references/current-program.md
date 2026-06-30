@@ -4,7 +4,19 @@
 
 Active program: `zuno-eight-deliverables-full-realization-v1`
 state: active
-current_phase: `.agent/programs/PHASE08_graphrag-knowledge-runtime-system.md`
+current_phase: `.agent/programs/PHASE09_runtime-upgrade-integration.md`
+
+## 最近完成事实：PHASE08
+
+PHASE08 / GraphRAG Knowledge Runtime System 已完成 foundation slice。当前代码和测试证明：
+
+- `GraphRAGExtractorConfig` 已进入 GraphRAG contract，能表达 LLM-first extractor mode、rule fallback、model / prompt / schema / policy / eval refs。
+- `KnowledgeQueryService.build_project_snapshot()` 会把现有 `knowledge_config` JSON 转成 `GraphRAGProjectSnapshot.extractor_config`，不新增 DB schema。
+- `GraphRAGQueryService` 和 `RetrievalOrchestrator` 会在 trace metadata 中暴露 `query_method_contract`、`citation_contract` 和 `retrieval_fusion_contract`。
+- 显式 `global` 当前走 `community_global`，不与 vector / BM25 chunk-level retrievers 扁平混榜；缺少 chunk/span grounding 时 citation contract 保持 `missing`。
+- `GeneralAgent` 知识库工具返回文本会暴露 `query_method_contract: <method> via <internal_route>`，旧 `zuno.services.*` import path 继续可用。
+- Contract Review eval comparison 已用 `dev_offline,dev_local,demo` 三 profile 跑通；缺少 `.local` contract-review corpus manifest 的 stackless matrix 和依赖本地模型 registry 的 real-runtime multihop runner 不写成 Current。
+- 这些事实不表示生产级 schema-constrained LLM extraction、完整 RRF/rerank 治理、多套 extractor orchestration、DB schema 迁移或前端 trace 面板已经完成。
 
 `.agent/programs/` 当前保留：
 

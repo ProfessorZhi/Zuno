@@ -120,3 +120,28 @@ def test_retrieval_contracts_can_carry_graphrag_project_metadata():
 
     assert request.graphrag_project["graphrag_project_id"] == "legal"
     assert plan.to_dict()["graphrag_project"] == project
+
+
+def test_graphrag_extractor_config_is_llm_first_with_rule_fallback():
+    from zuno.services.graphrag.models import GraphRAGExtractorConfig
+
+    config = GraphRAGExtractorConfig.from_knowledge_config(
+        graph_index_settings={
+            "entity_extraction_mode": "rule_llm",
+            "entity_extraction_schema_version": "contract-v2",
+            "entity_extraction_prompt_id": "extract-contract-v2",
+        },
+        model_refs={"entity_extraction_llm_id": "llm_contract_extract"},
+        policy_refs={"entity_extraction_cost_latency_profile": "balanced"},
+        eval_refs={"entity_extraction_eval_profile": "contract-review-local"},
+    )
+
+    assert config.requested_mode == "rule_llm"
+    assert config.resolved_mode == "llm"
+    assert config.fallback_mode == "rule"
+    assert config.model_ref == "llm_contract_extract"
+    assert config.prompt_ref == "extract-contract-v2"
+    assert config.schema_version == "contract-v2"
+    assert config.cost_latency_profile == "balanced"
+    assert config.eval_profile == "contract-review-local"
+    assert config.to_trace()["llm_first"] is True

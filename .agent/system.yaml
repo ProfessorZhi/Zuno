@@ -252,10 +252,12 @@ skill_routes:
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
     verify:
-      - "pytest -q tests/agent/test_hooks_evidence_trace_artifacts.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider"
+      - "pytest -q tests/agent/test_hooks_evidence_trace_artifacts.py tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/graphrag/test_graphrag_project_contracts.py tests/graphrag/test_graphrag_project_loader.py tests/graphrag/test_structured_graph_extractor_contract.py tests/retrieval/test_enhanced_retrieval_composition.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider"
       - "pytest -q tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider"
+      - "pytest -q tests/agent/test_knowledge_graphrag_runtime_contracts.py -p no:cacheprovider"
       - "pytest -q tests/retrieval/test_standard_retrieval_composition.py"
       - "pytest -q tests/retrieval/test_enhanced_retrieval_composition.py"
+      - "pytest -q tests/graphrag/test_graphrag_project_contracts.py tests/graphrag/test_structured_graph_extractor_contract.py -p no:cacheprovider"
       - "pytest -q tests/retrieval/test_retrieval_mode_semantics.py"
 
   - name: "platform-foundation"

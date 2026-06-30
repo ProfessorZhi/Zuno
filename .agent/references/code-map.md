@@ -13,7 +13,7 @@
 - `src/backend/zuno/agent/`：单一 GeneralAgent runtime 入口和 runtime / context / post_turn / state / streaming / tool_bridge 薄入口；旧 `zuno.core.*` 由 legacy alias registry 兼容。
 - `src/backend/zuno/memory/`：Memory contracts / store / policy / review / retrieval / rendering / engine 薄入口。
 - `src/backend/zuno/capability/`：Tool、Skill、MCP、capability registry / selector / policy / execution / trace 薄入口。
-- `src/backend/zuno/knowledge/`：RAG / GraphRAG / Evidence / Citation / retrieval / fusion 薄入口。
+- `src/backend/zuno/knowledge/`：RAG / GraphRAG / Evidence / Citation / retrieval / fusion 薄入口；PHASE08 起也暴露 `GraphRAGExtractorConfig` 这类 extractor config contract。
 - `src/backend/zuno/platform/`：配置、数据库、兼容、资源、middleware、model gateway、security、observability、storage 和旧 services 的物理归属。
 - `tools/`：脚本、启动器、eval 和维护工具。
 - `tests/`：仓库级验证和聚焦回归测试。
@@ -32,7 +32,7 @@ Completion API
   -> KnowledgeQueryService
   -> GraphRAGQueryService
   -> RetrievalPlanner / RetrievalOrchestrator
-  -> Evidence / Citation / Trace
+  -> Evidence / Citation / Trace contract
   -> post_turn_commit
 ```
 

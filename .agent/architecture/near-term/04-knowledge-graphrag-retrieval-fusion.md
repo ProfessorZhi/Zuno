@@ -20,9 +20,17 @@ GeneralAgent
   -> GeneralAgent answer with citations
 ```
 
-Current code already has `KnowledgeQueryService`, `GraphRAGQueryService`,
-`GraphRAGProjectSnapshot`, and `KnowledgeQueryResult`. The target architecture
-extends this with clearer retrieval/fusion components and stronger traces.
+当前代码已经有 `KnowledgeQueryService`、`GraphRAGQueryService`、
+`GraphRAGProjectSnapshot` 和 `KnowledgeQueryResult`。
+
+PHASE08 当前新增并已由测试证明的事实是：
+
+- `GraphRAGExtractorConfig` 能表达 LLM-first extractor config、rule fallback、model / prompt / schema / policy / eval refs。
+- `KnowledgeQueryService.build_project_snapshot()` 会把现有 `knowledge_config` JSON 转成 `GraphRAGProjectSnapshot.extractor_config`。
+- `GraphRAGQueryService` 和 `RetrievalOrchestrator` 会在 trace metadata 中暴露 `query_method_contract`、`citation_contract` 和 `retrieval_fusion_contract`。
+- 显式 `global` 当前走 `community_global`，不与 vector / BM25 chunk-level retrievers 扁平混榜；缺少 chunk/span grounding 时 citation contract 必须保持 `missing`。
+
+仍在 Target 的内容包括生产级 schema-constrained LLM 抽取执行、完整 RRF、成熟 rerank 治理、多套 extractor orchestration 和前端 trace 面板。
 
 ## GraphRAG 查询模式
 

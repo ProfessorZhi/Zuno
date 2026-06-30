@@ -9,10 +9,68 @@ from zuno.services.retrieval.models import normalize_product_mode
 from zuno.services.retrieval.planner import RetrievalPlanner
 
 
+def _query_method_contract(
+    *,
+    metadata: dict[str, Any],
+    snapshot: "GraphRAGProjectSnapshot",
+) -> dict[str, Any]:
+    resolved_method = str(metadata.get("resolved_query_method") or snapshot.default_query_method())
+    internal_route = str(metadata.get("internal_route") or "")
+    route_trace = dict(metadata.get("route_trace") or {})
+    if not route_trace:
+        route_trace = {
+            "local_graph_required": resolved_method in {"local", "drift"},
+            "community_required": resolved_method in {"global", "drift"},
+            "fallback_reason": metadata.get("query_method_fallback_reason") or metadata.get("fallback_reason"),
+        }
+    return {
+        "requested_query_method": str(metadata.get("requested_query_method") or snapshot.default_query_method()),
+        "resolved_query_method": resolved_method,
+        "internal_route": internal_route,
+        "local_graph_required": bool(route_trace.get("local_graph_required")),
+        "community_required": bool(route_trace.get("community_required")),
+        "fallback_reason": route_trace.get("fallback_reason"),
+    }
+
+
+def _citation_contract(
+    *,
+    evidence_bundle: dict[str, Any],
+    citations: list[Any],
+) -> dict[str, Any]:
+    coverage = float(evidence_bundle.get("citation_coverage") or 0.0)
+    status = "missing"
+    if coverage >= 1.0 and citations:
+        status = "pass"
+    elif coverage > 0 or citations:
+        status = "partial"
+    return {
+        "status": status,
+        "citation_coverage": coverage,
+        "citation_chunks": [str(item) for item in citations],
+        "evidence_document_count": int(evidence_bundle.get("document_count") or 0),
+    }
+
+
+def _retrieval_fusion_contract(
+    *,
+    metadata: dict[str, Any],
+    evidence_bundle: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "retrievers_used": list(metadata.get("retrievers_used") or []),
+        "fusion_strategy": metadata.get("fusion_strategy"),
+        "rerank_used": bool(metadata.get("rerank_used") or metadata.get("final_rerank_used")),
+        "evidence_document_count": int(evidence_bundle.get("document_count") or 0),
+        "citation_coverage": float(evidence_bundle.get("citation_coverage") or 0.0),
+    }
+
+
 @dataclass(slots=True)
 class GraphRAGProjectSnapshot:
     graphrag_project_id: str | None
     contract: dict[str, Any] = field(default_factory=dict)
+    extractor_config: dict[str, Any] = field(default_factory=dict)
     readiness: dict[str, Any] = field(default_factory=dict)
     prompt_categories: list[str] = field(default_factory=list)
     retrieval_settings: dict[str, Any] = field(default_factory=dict)
@@ -30,6 +88,7 @@ class GraphRAGProjectSnapshot:
         return {
             "graphrag_project_id": self.graphrag_project_id,
             "contract": dict(self.contract),
+            "extractor_config": dict(self.extractor_config),
             "readiness": dict(self.readiness),
             "prompt_categories": list(self.prompt_categories),
             "index_version": dict(self.index_version),
@@ -114,6 +173,7 @@ class GraphRAGQueryService:
             "max_paths_per_entity": retrieval_settings.get("max_paths_per_entity", 10),
             "knowledge_capability": snapshot.knowledge_capability,
             "graphrag_project": dict(snapshot.contract),
+            "extractor_config": dict(snapshot.extractor_config),
             "query_policy": dict(snapshot.query_policy),
             "budget_policy": {"product_mode": resolved_product_mode},
             "fallback_policy": {},
@@ -153,6 +213,10 @@ class GraphRAGQueryService:
         index_version = dict(metadata.get("index_version") or snapshot.index_version)
         contract = dict(snapshot.contract)
         fallback_reason = metadata.get("query_method_fallback_reason") or metadata.get("fallback_reason")
+        metadata.setdefault("extractor_config", dict(snapshot.extractor_config))
+        metadata.setdefault("query_method_contract", _query_method_contract(metadata=metadata, snapshot=snapshot))
+        metadata.setdefault("citation_contract", _citation_contract(evidence_bundle=evidence, citations=citations))
+        metadata.setdefault("retrieval_fusion_contract", _retrieval_fusion_contract(metadata=metadata, evidence_bundle=evidence))
         trace_metadata = enrich_trace_metadata_with_artifacts(
             trace_metadata=metadata,
             query=query,

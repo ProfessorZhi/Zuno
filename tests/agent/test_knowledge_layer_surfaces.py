@@ -14,6 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_EXPORTS = {
     "zuno.knowledge.contracts": [
         "GraphRAGProjectContract",
+        "GraphRAGExtractorConfig",
         "GraphRAGProjectLoader",
         "GraphRAGSettingsValidator",
         "LoadedGraphRAGProject",
@@ -66,6 +67,7 @@ EXPECTED_EXPORTS = {
         "RetrievedDocument",
     ],
     "zuno.knowledge.graphrag": [
+        "GraphRAGExtractorConfig",
         "GraphRAGProjectContract",
         "GraphRAGProjectLoader",
         "GraphRAGProjectSnapshot",
@@ -85,16 +87,18 @@ def test_knowledge_layer_modules_expose_target_boundaries() -> None:
 
 
 def test_knowledge_layer_modules_reuse_legacy_foundation_objects() -> None:
-    from zuno.knowledge.contracts import GraphRAGProjectContract
+    from zuno.knowledge.contracts import GraphRAGExtractorConfig, GraphRAGProjectContract
     from zuno.knowledge.fusion import RetrievalFusion
     from zuno.knowledge.query_service import KnowledgeQueryService
     from zuno.knowledge.retrieval import RetrievalPlanner
     from zuno.services.application.knowledge import KnowledgeQueryService as LegacyKnowledgeQueryService
+    from zuno.services.graphrag.models import GraphRAGExtractorConfig as LegacyExtractorConfig
     from zuno.services.graphrag.models import GraphRAGProjectContract as LegacyContract
     from zuno.services.retrieval.fusion import RetrievalFusion as LegacyFusion
     from zuno.services.retrieval.planner import RetrievalPlanner as LegacyPlanner
 
     assert GraphRAGProjectContract is LegacyContract
+    assert GraphRAGExtractorConfig is LegacyExtractorConfig
     assert KnowledgeQueryService is LegacyKnowledgeQueryService
     assert RetrievalFusion is LegacyFusion
     assert RetrievalPlanner is LegacyPlanner
@@ -102,11 +106,12 @@ def test_knowledge_layer_modules_reuse_legacy_foundation_objects() -> None:
 
 def test_knowledge_package_facade_points_at_layer_modules() -> None:
     import zuno.knowledge as knowledge
-    from zuno.knowledge.contracts import GraphRAGProjectContract
+    from zuno.knowledge.contracts import GraphRAGExtractorConfig, GraphRAGProjectContract
     from zuno.knowledge.query_service import KnowledgeQueryService
     from zuno.knowledge.retrieval import RetrievalPlanner
 
     assert knowledge.GraphRAGProjectContract is GraphRAGProjectContract
+    assert knowledge.GraphRAGExtractorConfig is GraphRAGExtractorConfig
     assert knowledge.KnowledgeQueryService is KnowledgeQueryService
     assert knowledge.RetrievalPlanner is RetrievalPlanner
 

@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/knowledge/` 目前是 Knowledge / GraphRAG / retrieval 的 facade，部分稳定导出直接来自 GraphRAG contract，较重的 retrieval 和 query service 通过 lazy import 暴露。当前已提供 `contracts.py`、`query_service.py`、`evidence.py`、`citation.py`、`trace.py`、`retrieval/`、`fusion/` 和 `graphrag/` 这些无副作用目标层薄入口。真实查询、GraphRAG、retrieval 和 RAG 实现仍在 `src/backend/zuno/platform/services/application/knowledge.py`、`platform/services/graphrag/`、`platform/services/retrieval/` 和 `platform/services/rag/`。
+`src/backend/zuno/knowledge/` 目前是 Knowledge / GraphRAG / retrieval 的 facade，部分稳定导出直接来自 GraphRAG contract，较重的 retrieval 和 query service 通过 lazy import 暴露。当前已提供 `contracts.py`、`query_service.py`、`evidence.py`、`citation.py`、`trace.py`、`retrieval/`、`fusion/` 和 `graphrag/` 这些无副作用目标层薄入口。`GraphRAGExtractorConfig` 当前是 extractor config contract，不是生产级 LLM 抽取执行器。真实查询、GraphRAG、retrieval 和 RAG 实现仍在 `src/backend/zuno/platform/services/application/knowledge.py`、`platform/services/graphrag/`、`platform/services/retrieval/` 和 `platform/services/rag/`。
 
 ## Target role
 
@@ -26,6 +26,8 @@
 
 - `tests/repo/test_backend_facade_layers.py`
 - `tests/agent/test_knowledge_layer_surfaces.py`
+- `tests/agent/test_knowledge_graphrag_runtime_contracts.py`
+- `tests/api/test_knowledge_api_contract.py`
 - `tests/graphrag/**`
 - `tests/retrieval/**`
 - `tests/agent/test_general_agent_project_query_runtime.py`

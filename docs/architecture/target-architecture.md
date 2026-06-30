@@ -192,6 +192,8 @@ drift
 
 GraphRAG 实体抽取默认主路径是 LLM 抽取。知识库配置必须能选择 `graph_index_settings.entity_extraction_mode = llm`、`model_refs.entity_extraction_llm_id`、prompt / schema version、cost / latency policy 和 eval profile。规则、正则和词典只用于日期、金额、条款号等确定格式辅助、preprocessing、fallback 或 baseline test。
 
+PHASE08 当前已经证明的是 extractor config contract、snapshot 传播、query method / citation / retrieval fusion trace contract、global community-only prior 边界和 GeneralAgent 工具文本暴露。它还不是生产级 LLM entity / relation extraction、完整 RRF 实现或成熟 rerank 治理；这些仍留在 Target。
+
 ## Plan、ReAct 与 Reflection
 
 Zuno 的规划范式不是三套框架硬拼，而是：

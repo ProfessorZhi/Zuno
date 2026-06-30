@@ -176,6 +176,10 @@ def test_general_agent_knowledge_tool_emits_trace_artifact_event(monkeypatch):
                     "retrieval_refs": ["chunk-1", "chunk-2"],
                     "evidence_refs": ["chunk-1"],
                 },
+                "query_method_contract": {
+                    "resolved_query_method": "local",
+                    "internal_route": "local_graphrag",
+                },
             },
         )
 
@@ -210,6 +214,7 @@ def test_general_agent_knowledge_tool_emits_trace_artifact_event(monkeypatch):
     assert "evidence_status: low_confidence" in result
     assert "citation_coverage: 0.5" in result
     assert "fallback_reason: citation_coverage_below_threshold" in result
+    assert "query_method_contract: local via local_graphrag" in result
 
 
 def test_general_agent_astream_uses_single_react_loop_when_project_is_bound():

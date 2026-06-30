@@ -243,6 +243,50 @@ def test_enhanced_retrieval_reports_available_drift_route_when_ready():
     assert _step_status(metadata, "citation_answer") == "used"
 
 
+def test_enhanced_retrieval_reports_global_route_without_chunk_level_fusion() -> None:
+    orchestrator = RetrievalOrchestrator(
+        rag_retriever=_FakeRetriever(_vector_payload()),
+        keyword_retriever=_FakeRetriever(_bm25_payload()),
+        graph_retriever=_FakeRetriever(_graph_payload()),
+        query_expander=_FakeExpander(),
+        planner=RetrievalPlanner(enable_keyword_recall=True),
+        query_processor=_GlobalEvidenceProcessor(),
+        community_service=_FakeCommunityService(),
+    )
+
+    result = asyncio.run(
+        orchestrator.run(
+            mode="enhanced_retrieval",
+            query="这批合同整体有哪些风险",
+            knowledge_ids=["kb_1"],
+            retrieval_options={
+                "query_method": "global",
+                "knowledge_capability": "rag_graph",
+                "index_health": {"graph": "ready", "community": "ready"},
+                "trace_policy": {"enabled": True},
+                "bm25_available": True,
+                "rerank_available": True,
+                "rerank_enabled": True,
+                "top_k": 5,
+                "extractor_config": {"resolved_mode": "llm", "schema_version": "contract-v2"},
+            },
+        )
+    )
+
+    metadata = result["metadata"]
+
+    assert metadata["resolved_query_method"] == "global"
+    assert metadata["internal_route"] == "community_global"
+    assert metadata["community_used"] is True
+    assert metadata["drift_used"] is False
+    assert metadata["retrieval_fusion_contract"]["retrievers_used"] == ["community"]
+    assert metadata["retrieval_fusion_contract"]["fusion_strategy"] == "community_global"
+    assert metadata["query_method_contract"]["community_required"] is True
+    assert metadata["query_method_contract"]["local_graph_required"] is False
+    assert metadata["extractor_config"]["resolved_mode"] == "llm"
+    assert metadata["citation_contract"]["status"] == "missing"
+
+
 def test_explicit_basic_query_method_keeps_enhanced_mode_on_standard_pipeline():
     orchestrator = RetrievalOrchestrator(
         rag_retriever=_FakeRetriever(_vector_payload()),

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from zuno.services.graphrag.models import GraphRAGExtractorConfig
 from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
 from zuno.services.graphrag.prompts.registry import GraphRAGPromptRegistry
 from zuno.services.graphrag.query_service import (
@@ -84,6 +85,24 @@ class KnowledgeQueryService:
         retrieval_settings = dict(config.get("retrieval_settings") or {})
         index_settings = dict(config.get("index_settings") or {})
         graph_settings = dict(config.get("graph_index_settings") or {})
+        model_refs = dict(config.get("model_refs") or {})
+        prompt_refs = dict(config.get("prompt_refs") or {})
+        schema_refs = dict(config.get("schema_refs") or {})
+        policy_refs = dict(config.get("policy_refs") or {})
+        eval_refs = dict(config.get("eval_refs") or {})
+        if project:
+            for name, path in project.prompt_paths.items():
+                prompt_refs.setdefault(name, path)
+        if config.get("eval_profile_id"):
+            eval_refs.setdefault("entity_extraction_eval_profile", config.get("eval_profile_id"))
+        extractor_config = GraphRAGExtractorConfig.from_knowledge_config(
+            graph_index_settings=graph_settings,
+            model_refs=model_refs,
+            prompt_refs=prompt_refs,
+            schema_refs=schema_refs,
+            policy_refs=policy_refs,
+            eval_refs=eval_refs,
+        )
         community_status = (
             graph_settings.get("community_report_status")
             or graph_settings.get("community_detection_status")
@@ -101,6 +120,7 @@ class KnowledgeQueryService:
         return GraphRAGProjectSnapshot(
             graphrag_project_id=str(project_id) if project_id else None,
             contract=contract,
+            extractor_config=extractor_config.to_trace(),
             readiness=readiness,
             prompt_categories=prompt_categories,
             retrieval_settings=retrieval_settings,

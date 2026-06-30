@@ -18,6 +18,22 @@ DEFAULT_KNOWLEDGE_CONFIG = {
         "text_embedding_model_id": None,
         "vl_embedding_model_id": None,
         "rerank_model_id": None,
+        "entity_extraction_llm_id": None,
+        "graph_extraction_llm_id": None,
+    },
+    "prompt_refs": {
+        "entity_extraction_prompt_id": None,
+        "extract_graph": None,
+    },
+    "schema_refs": {
+        "entity_extraction_schema_version": None,
+        "graph_schema_version": None,
+    },
+    "policy_refs": {
+        "entity_extraction_cost_latency_profile": None,
+    },
+    "eval_refs": {
+        "entity_extraction_eval_profile": None,
     },
     "index_settings": {
         "chunk_mode": "general",
@@ -38,6 +54,12 @@ DEFAULT_KNOWLEDGE_CONFIG = {
     },
     "graph_index_settings": {
         "entity_extraction_mode": "rule_llm",
+        "entity_extraction_fallback_mode": "rule",
+        "entity_extraction_llm_id": None,
+        "entity_extraction_prompt_id": None,
+        "entity_extraction_schema_version": None,
+        "entity_extraction_cost_latency_profile": None,
+        "entity_extraction_eval_profile": None,
         "relation_schema": "open",
         "entity_normalization": True,
         "evidence_backlink": True,
@@ -161,6 +183,8 @@ class KnowledgeService:
                 "eval_profile_id",
                 "model_refs.rerank_model_id",
                 "graphrag_project.query_prompt_version",
+                "graph_index_settings.entity_extraction_cost_latency_profile",
+                "policy_refs.entity_extraction_cost_latency_profile",
             }
         )
 
@@ -193,6 +217,18 @@ class KnowledgeService:
             "domain_pack_id",
             "graphrag_project.prompt_version",
             "graph_index_settings.entity_extraction_mode",
+            "graph_index_settings.entity_extraction_fallback_mode",
+            "graph_index_settings.entity_extraction_llm_id",
+            "graph_index_settings.entity_extraction_prompt_id",
+            "graph_index_settings.entity_extraction_schema_version",
+            "graph_index_settings.entity_extraction_eval_profile",
+            "model_refs.entity_extraction_llm_id",
+            "model_refs.graph_extraction_llm_id",
+            "prompt_refs.entity_extraction_prompt_id",
+            "prompt_refs.extract_graph",
+            "schema_refs.entity_extraction_schema_version",
+            "schema_refs.graph_schema_version",
+            "eval_refs.entity_extraction_eval_profile",
             "graph_index_settings.relation_schema",
             "graph_index_settings.entity_normalization",
             "graph_index_settings.evidence_backlink",

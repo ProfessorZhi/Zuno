@@ -9,6 +9,19 @@ def _sample_knowledge_config():
             "text_embedding_model_id": "llm_embed_text",
             "vl_embedding_model_id": "llm_embed_vl",
             "rerank_model_id": "llm_rerank",
+            "entity_extraction_llm_id": "llm_extract_contract",
+        },
+        "prompt_refs": {
+            "entity_extraction_prompt_id": "extract-contract-v2",
+        },
+        "schema_refs": {
+            "entity_extraction_schema_version": "contract-schema-v2",
+        },
+        "policy_refs": {
+            "entity_extraction_cost_latency_profile": "low_cost",
+        },
+        "eval_refs": {
+            "entity_extraction_eval_profile": "contract-local",
         },
         "index_settings": {
             "chunk_mode": "parent_child",
@@ -25,6 +38,8 @@ def _sample_knowledge_config():
         },
         "graph_index_settings": {
             "entity_extraction_mode": "rule_llm",
+            "entity_extraction_fallback_mode": "rule",
+            "entity_extraction_prompt_id": "extract-contract-override",
             "relation_schema": "open",
             "entity_normalization": True,
             "evidence_backlink": True,
@@ -79,6 +94,22 @@ def test_knowledge_config_prefers_graphrag_project_id_without_public_legacy_outp
 
     assert normalized["graphrag_project_id"] == "contract_review_project"
     assert "domain_pack_id" not in normalized
+
+
+def test_knowledge_config_preserves_llm_first_extractor_refs():
+    from zuno.api.services.knowledge import KnowledgeService
+    from zuno.schema.knowledge import KnowledgeConfig
+
+    dumped = KnowledgeConfig.model_validate(_sample_knowledge_config()).model_dump()
+    normalized = KnowledgeService._normalize_knowledge_config(dumped)
+
+    assert normalized["model_refs"]["entity_extraction_llm_id"] == "llm_extract_contract"
+    assert normalized["prompt_refs"]["entity_extraction_prompt_id"] == "extract-contract-v2"
+    assert normalized["schema_refs"]["entity_extraction_schema_version"] == "contract-schema-v2"
+    assert normalized["policy_refs"]["entity_extraction_cost_latency_profile"] == "low_cost"
+    assert normalized["eval_refs"]["entity_extraction_eval_profile"] == "contract-local"
+    assert normalized["graph_index_settings"]["entity_extraction_fallback_mode"] == "rule"
+    assert normalized["graph_index_settings"]["entity_extraction_prompt_id"] == "extract-contract-override"
 
 
 def test_legacy_domain_pack_id_is_bounded_migration_input_for_project_id():

@@ -4,7 +4,7 @@
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_CURRENT_PHASE = "PHASE08_graphrag-knowledge-runtime-system.md"
+ACTIVE_CURRENT_PHASE = "PHASE09_runtime-upgrade-integration.md"
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -13,6 +13,7 @@ COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE05_context-builder-memory-system.md",
     "PHASE06_capability-toolcard-mcp-system.md",
     "PHASE07_hooks-evidence-trace-artifact-system.md",
+    "PHASE08_graphrag-knowledge-runtime-system.md",
 ]
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
@@ -509,7 +510,9 @@ def test_active_program_phase_status_lifecycle_is_machine_checkable() -> None:
     for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
         assert "status: completed" in phase_statuses[phase_name]
     assert "status: active" in phase_statuses[ACTIVE_CURRENT_PHASE]
-    for phase_name in ACTIVE_PROGRAM_PHASE_FILES[8:]:
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
+        if phase_name == ACTIVE_CURRENT_PHASE or phase_name in COMPLETED_PROGRAM_PHASE_FILES:
+            continue
         assert "status: planned" in phase_statuses[phase_name], phase_name
 
 
@@ -564,6 +567,31 @@ def test_phase07_hooks_evidence_trace_focused_stack_is_routed() -> None:
         "tests/agent/test_general_agent_project_query_runtime.py",
         "tests/agent/test_knowledge_layer_surfaces.py",
         "tests/api/test_knowledge_api_contract.py",
+        "tests/evals/test_multihop_eval_real_runtime_runner.py",
+        "tests/repo/test_backend_facade_layers.py",
+        "tests/repo/test_static_target_layer_imports.py",
+    ]
+
+    for relative_path in required_tests:
+        assert relative_path in system_yaml
+        assert relative_path in verification_map
+        assert (REPO_ROOT / relative_path).exists()
+
+
+def test_phase08_graphrag_knowledge_runtime_focused_stack_is_routed() -> None:
+    system_yaml = (REPO_ROOT / ".agent" / "system.yaml").read_text(encoding="utf-8")
+    verification_map = (REPO_ROOT / ".agent" / "references" / "verification-map.md").read_text(
+        encoding="utf-8"
+    )
+    required_tests = [
+        "tests/agent/test_knowledge_graphrag_runtime_contracts.py",
+        "tests/agent/test_general_agent_project_query_runtime.py",
+        "tests/agent/test_knowledge_layer_surfaces.py",
+        "tests/api/test_knowledge_api_contract.py",
+        "tests/graphrag/test_graphrag_project_contracts.py",
+        "tests/graphrag/test_graphrag_project_loader.py",
+        "tests/graphrag/test_structured_graph_extractor_contract.py",
+        "tests/retrieval/test_enhanced_retrieval_composition.py",
         "tests/evals/test_multihop_eval_real_runtime_runner.py",
         "tests/repo/test_backend_facade_layers.py",
         "tests/repo/test_static_target_layer_imports.py",
