@@ -106,7 +106,7 @@ def verify_front_path_shape() -> list[str]:
 
 def verify_architecture_html_sync() -> list[str]:
     errors: list[str] = []
-    for relative_path in ["docs/architecture.md", "docs/architecture.html", "tools/agent/render_architecture.py"]:
+    for relative_path in ["docs/architecture/architecture.md", "docs/architecture/architecture.html", "tools/agent/render_architecture.py"]:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing architecture diagram sync path: {relative_path}")
     if errors:
@@ -114,11 +114,11 @@ def verify_architecture_html_sync() -> list[str]:
 
     renderer = _load_render_architecture_module()
     rendered = renderer.build_html()
-    html_path = REPO_ROOT / "docs" / "architecture.html"
+    html_path = REPO_ROOT / "docs" / "architecture" / "architecture.html"
     if html_path.read_text(encoding="utf-8") != rendered:
-        errors.append("docs/architecture.html is stale; run python tools/agent/render_architecture.py --write")
+        errors.append("docs/architecture/architecture.html is stale; run python tools/agent/render_architecture.py --write")
 
-    architecture_source = _read("docs/architecture.md")
+    architecture_source = _read("docs/architecture/architecture.md")
     for phrase in [
         "Zuno 架构总览",
         "python tools/agent/render_architecture.py --write",
@@ -138,23 +138,24 @@ def verify_architecture_html_sync() -> list[str]:
         "Result Normalizer",
     ]:
         if phrase not in architecture_source:
-            errors.append(f"docs/architecture.md missing diagram sync phrase: {phrase}")
+            errors.append(f"docs/architecture/architecture.md missing diagram sync phrase: {phrase}")
 
     for stale_path in [
-        "docs/architecture/architecture.html",
+        "docs/architecture.md",
+        "docs/architecture.html",
         "docs/architecture/overview.html",
         ".agent/architecture/blueprint.html",
     ]:
         if (REPO_ROOT / stale_path).exists():
             errors.append(f"stale architecture HTML must not remain: {stale_path}")
 
-    for relative_path in ["docs/architecture.html"]:
+    for relative_path in ["docs/architecture/architecture.html"]:
         path = REPO_ROOT / relative_path
         if not path.exists():
             continue
         content = path.read_text(encoding="utf-8")
         for phrase in [
-            "docs/architecture.md",
+            "docs/architecture/architecture.md",
             "tools/agent/render_architecture.py",
             "4+1 View Model",
             "Component-and-Connector View",
@@ -177,6 +178,50 @@ def verify_architecture_html_sync() -> list[str]:
     return errors
 
 
+def verify_overall_architecture_docs_sync() -> list[str]:
+    errors: list[str] = []
+    docs_overall = _read("docs/architecture/overall-architecture.md")
+    agent_overall = _read(".agent/architecture/overall-architecture.md")
+
+    shared_phrases = [
+        "总架构文档",
+        "本地优先的企业私有知识库与多功能 Agent 助手",
+        "文字总架构文档",
+        "架构 HTML",
+        "docs/architecture/overall-architecture.md",
+        ".agent/architecture/overall-architecture.md",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
+        "Document Ingestion / Parse Gateway",
+        "Tool Control Plane",
+        "LangSmith-compatible Trace / Eval",
+    ]
+    for phrase in shared_phrases:
+        if phrase not in docs_overall:
+            errors.append(f"docs/architecture/overall-architecture.md missing sync phrase: {phrase}")
+        if phrase not in agent_overall:
+            errors.append(f".agent/architecture/overall-architecture.md missing sync phrase: {phrase}")
+
+    for phrase in [
+        "current-architecture.md",
+        "target-architecture.md",
+        "security-and-sandbox.md",
+        "product-scenario-enterprise-kb.md",
+        "python tools/agent/render_architecture.py --write",
+    ]:
+        if phrase not in docs_overall:
+            errors.append(f"docs/architecture/overall-architecture.md missing governance phrase: {phrase}")
+
+    for phrase in [
+        "不要在 `.agent/architecture/` 复制新的 HTML",
+        "如果两者冲突，以 `docs/architecture/overall-architecture.md` 为准",
+        "一致性锚点",
+    ]:
+        if phrase not in agent_overall:
+            errors.append(f".agent/architecture/overall-architecture.md missing governance phrase: {phrase}")
+    return errors
+
+
 def verify_architecture_view_contract() -> list[str]:
     errors: list[str] = []
     renderer = _load_render_architecture_module()
@@ -186,20 +231,20 @@ def verify_architecture_view_contract() -> list[str]:
     if len(expected_titles) != 10 or len(set(expected_titles)) != 10:
         errors.append("architecture view contract must contain exactly ten unique view titles")
 
-    architecture_source = _read("docs/architecture.md")
+    architecture_source = _read("docs/architecture/architecture.md")
     try:
         source_titles = [diagram.title for diagram in renderer.extract_diagrams(architecture_source)]
     except Exception as exc:  # pragma: no cover - surfaced as verifier output
-        errors.append(f"docs/architecture.md cannot be parsed by renderer: {exc}")
+        errors.append(f"docs/architecture/architecture.md cannot be parsed by renderer: {exc}")
         source_titles = []
     if source_titles and source_titles != expected_titles:
-        errors.append(f"docs/architecture.md diagram order drifted: {source_titles}")
+        errors.append(f"docs/architecture/architecture.md diagram order drifted: {source_titles}")
 
     inventory = _read(".agent/references/diagram-inventory.md")
-    deliverables = _read("docs/deliverables.md")
+    deliverables = _read("docs/architecture/deliverables.md")
     target = _read("docs/architecture/target-architecture.md")
     architecture_index = _read("docs/architecture/README.md")
-    html_page = _read("docs/architecture.html")
+    html_page = _read("docs/architecture/architecture.html")
 
     for index, title, theory in ARCHITECTURE_VIEW_CONTRACT:
         inventory_row = f"| {index} | {title} | {theory} |"
@@ -207,21 +252,21 @@ def verify_architecture_view_contract() -> list[str]:
         if inventory_row not in inventory:
             errors.append(f"diagram-inventory.md missing canonical row: {inventory_row}")
         if deliverables_row not in deliverables:
-            errors.append(f"docs/deliverables.md missing canonical row: {deliverables_row}")
+            errors.append(f"docs/architecture/deliverables.md missing canonical row: {deliverables_row}")
         if f"| {title} | {theory} |" not in target:
             errors.append(f"target-architecture.md missing canonical view/theory pair: {title} / {theory}")
         if f"{index}. `{title}`" not in architecture_index:
             errors.append(f"docs/architecture/README.md missing canonical ordered view: {index}. `{title}`")
         html_title = title.replace("&", "&amp;")
         if f"<h3>{index}. {html_title}</h3>" not in html_page:
-            errors.append(f"docs/architecture.html missing rendered view heading: {index}. {title}")
+            errors.append(f"docs/architecture/architecture.html missing rendered view heading: {index}. {title}")
 
     if html_page.count('class="diagram-section"') != 10:
-        errors.append("docs/architecture.html must render exactly ten diagram sections")
+        errors.append("docs/architecture/architecture.html must render exactly ten diagram sections")
     if html_page.count('<div class="mermaid">') != 10:
-        errors.append("docs/architecture.html must render exactly ten Mermaid containers")
+        errors.append("docs/architecture/architecture.html must render exactly ten Mermaid containers")
     if html_page.count("<summary>Mermaid source</summary>") != 10:
-        errors.append("docs/architecture.html must expose Mermaid source for each diagram")
+        errors.append("docs/architecture/architecture.html must expose Mermaid source for each diagram")
     for phrase in [
         "overflow: hidden",
         "max-width: 100%",
@@ -233,7 +278,7 @@ def verify_architecture_view_contract() -> list[str]:
         "useMaxWidth: true",
     ]:
         if phrase not in html_page:
-            errors.append(f"docs/architecture.html missing visual safety phrase: {phrase}")
+            errors.append(f"docs/architecture/architecture.html missing visual safety phrase: {phrase}")
 
     forbidden_prefixed_titles = [
         "4+1 Logical View",
@@ -245,7 +290,7 @@ def verify_architecture_view_contract() -> list[str]:
         "V&B Quality View",
     ]
     for relative_path in [
-        "docs/deliverables.md",
+        "docs/architecture/deliverables.md",
         "docs/architecture/README.md",
         "docs/architecture/target-architecture.md",
     ]:
@@ -261,14 +306,16 @@ def main() -> int:
     readme = _read("README.md")
     docs_index = _read("docs/README.md")
     architecture_index = _read("docs/architecture/README.md")
-    deliverables = _read("docs/deliverables.md")
+    overall = _read("docs/architecture/overall-architecture.md")
+    deliverables = _read("docs/architecture/deliverables.md")
     roadmap = _read("docs/architecture/roadmap.md")
     target = _read("docs/architecture/target-architecture.md")
     product_scenario = _read("docs/architecture/product-scenario-enterprise-kb.md")
     security_sandbox = _read("docs/architecture/security-and-sandbox.md")
-    architecture_source = _read("docs/architecture.md")
+    architecture_source = _read("docs/architecture/architecture.md")
     evidence = _read("docs/evidence/public-demo.md")
     workflow = _read(".agent/references/workflow.md")
+    agent_overall = _read(".agent/architecture/overall-architecture.md")
     agents = _read("AGENTS.md")
 
     errors: list[str] = []
@@ -278,6 +325,7 @@ def main() -> int:
             readme,
             [
                 "./docs/architecture/current-architecture.md",
+                "./docs/architecture/overall-architecture.md",
                 "./docs/architecture/product-scenario-enterprise-kb.md",
                 "./docs/architecture/target-architecture.md",
                 "./docs/architecture/security-and-sandbox.md",
@@ -303,9 +351,10 @@ def main() -> int:
             docs_index,
             [
                 "./architecture/current-architecture.md",
+                "./architecture/overall-architecture.md",
                 "./architecture/target-architecture.md",
                 "./architecture/roadmap.md",
-                "./deliverables.md",
+                "./architecture/deliverables.md",
                 "./evidence/public-demo.md",
                 "./history/README.md",
                 "前台文档默认使用中文",
@@ -318,12 +367,13 @@ def main() -> int:
             architecture_index,
             [
                 "current-architecture.md",
+                "overall-architecture.md",
                 "product-scenario-enterprise-kb.md",
                 "target-architecture.md",
                 "security-and-sandbox.md",
                 "roadmap.md",
-                "../architecture.md",
-                "../architecture.html",
+                "architecture.md",
+                "architecture.html",
                 "../evidence/public-demo.md",
                 "docs/history/programs/official-graphrag-cleanup-v1/",
                 "docs/history/programs/zuno-target-architecture-migration-v1/",
@@ -334,7 +384,7 @@ def main() -> int:
     )
     errors.extend(
         _require(
-            "docs/deliverables.md",
+            "docs/architecture/deliverables.md",
             deliverables,
             [
                 "八大交付物",
@@ -364,12 +414,31 @@ def main() -> int:
                 "zuno-architecture-visuals-v1",
                 "PHASE03 completed",
                 "视觉 QA",
-                "docs/architecture.md",
-                "docs/deliverables.md",
+                "docs/architecture/architecture.md",
+                "docs/architecture/deliverables.md",
                 "docs/history/programs/zuno-target-architecture-migration-v1/",
                 "docs/history/programs/official-graphrag-cleanup-v1/",
                 "zuno-document-ingestion-v1",
                 "zuno-security-enterprise-scenarios-v1",
+            ],
+        )
+    )
+    errors.extend(
+        _require(
+            "docs/architecture/overall-architecture.md",
+            overall,
+            [
+                "总架构文档",
+                "当前架构事实",
+                "目标架构分层",
+                "主链路",
+                "文档解析边界",
+                "安全与评测",
+                "实施落点",
+                "文档一致性规则",
+                "Document Ingestion / Parse Gateway",
+                "Tool Control Plane",
+                "LangSmith-compatible Trace / Eval",
             ],
         )
     )
@@ -428,7 +497,7 @@ def main() -> int:
     )
     errors.extend(
         _require(
-            "docs/architecture.md",
+            "docs/architecture/architecture.md",
             architecture_source,
             [
                 "Logical View",
@@ -451,6 +520,7 @@ def main() -> int:
                 "GraphRAG",
                 "企业私有知识库与多功能 Agent 助手",
                 "安全与沙箱目标架构",
+                "总架构文档",
                 "Domain Pack 只允许作为历史或兼容语境出现",
             ],
         )
@@ -474,6 +544,24 @@ def main() -> int:
                 "前台文档默认使用中文",
                 "过时材料移动到 `docs/history/`",
                 "旧 audit、旧 spec、旧 runbook、旧 UI 原型",
+                "docs/architecture/overall-architecture.md",
+                ".agent/architecture/overall-architecture.md",
+            ],
+        )
+    )
+    errors.extend(
+        _require(
+            ".agent/architecture/overall-architecture.md",
+            agent_overall,
+            [
+                "Agent 侧总架构文档",
+                "正式人类总架构文档",
+                "Current / Target 快速边界",
+                "根部总架构维护面",
+                "与 HTML 图页的关系",
+                "一致性锚点",
+                "docs/architecture/overall-architecture.md",
+                "docs/architecture/architecture.html",
             ],
         )
     )
@@ -492,6 +580,8 @@ def main() -> int:
                 "Architecture Documentation Governance",
                 "Agent Workflow Self-Maintenance",
                 "前台文档默认中文",
+                "docs/architecture/overall-architecture.md",
+                ".agent/architecture/overall-architecture.md",
             ],
         )
     )
@@ -500,6 +590,7 @@ def main() -> int:
     errors.extend(verify_active_docs_do_not_link_retired_paths())
     errors.extend(verify_front_path_shape())
     errors.extend(verify_architecture_html_sync())
+    errors.extend(verify_overall_architecture_docs_sync())
     errors.extend(verify_architecture_view_contract())
 
     if errors:

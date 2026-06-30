@@ -30,7 +30,7 @@ new work
 - 是否影响 `.agent/references`？
 - 是否影响 `.agent/templates`？
 - 是否影响 `docs/architecture`？
-- 是否影响 `docs/architecture.html`？
+- 是否影响 `docs/architecture/architecture.html`？
 - 是否影响 `.agent/programs`？
 - 是否影响 verifier 或 tests？
 - 是否在根目录生成了临时图片、截图、PDF 预览、测试报告、本地导出物或缓存？

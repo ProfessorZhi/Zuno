@@ -60,7 +60,7 @@ Current / Target / Future / History
 ## Docs Sync
 
 - `docs/architecture/README.md`
-- `docs/architecture.md`
-- `docs/architecture.html`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.html`
 - `.agent/references/architecture-docs-map.md`
 - `.agent/references/diagram-inventory.md`

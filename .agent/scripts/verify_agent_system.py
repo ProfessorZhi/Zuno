@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 from pathlib import Path
@@ -956,8 +956,8 @@ def main() -> int:
         "ToolCard",
         "Native BM25",
         "RRF",
-        "docs/architecture.md",
-        "docs/architecture.html",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
         "00-architecture-index.md",
     ]:
         if phrase not in index:

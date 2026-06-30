@@ -24,15 +24,16 @@ Zuno 通过 Basic RAG、GraphRAG Local / Global / DRIFT、Evidence、Citation、
 
 ## 5 分钟首读
 
-1. 先看 [当前架构](./docs/architecture/current-architecture.md)：只写当前代码和测试已经证明的事实。
-2. 看 [企业私有知识库主叙事](./docs/architecture/product-scenario-enterprise-kb.md)：确认 Zuno 为什么不是普通 RAG demo。
-3. 再看 [目标架构](./docs/architecture/target-architecture.md)：写近期目标，不代表已经完成。
-4. 看 [安全与沙箱目标](./docs/architecture/security-and-sandbox.md)：确认 Policy Sandbox、Workspace Sandbox、Execution Sandbox 和 Network / Credential Sandbox 的边界。
-5. 看 [路线图](./docs/architecture/roadmap.md)：确认当前 program、下一步和非目标。
-6. 看 [交付物清单](./docs/deliverables.md)：确认八大交付物、十类架构视图和根目录清洁期望。
-7. 看 [架构总览 HTML](./docs/architecture.html) 或 [架构图源](./docs/architecture.md)：完整页面按 4+1 五类图、View & Beyond 四类图和 Agent Loop 专题图组织。
-8. 需要证据时看 [公开演示证据](./docs/evidence/public-demo.md)、[Eval Baseline](./docs/evidence/eval-baselines.md) 和 [术语表](./docs/reference/terminology.md)。
-9. Agent 执行任务先读 [AGENTS.md](./AGENTS.md)。
+1. 先看 [总架构文档](./docs/architecture/overall-architecture.md)：文字说明 Zuno 当前事实、目标分层、主链路和实施落点。
+2. 再看 [当前架构](./docs/architecture/current-architecture.md)：只写当前代码和测试已经证明的事实。
+3. 看 [企业私有知识库主叙事](./docs/architecture/product-scenario-enterprise-kb.md)：确认 Zuno 为什么不是普通 RAG demo。
+4. 看 [目标架构](./docs/architecture/target-architecture.md)：写近期目标，不代表已经完成。
+5. 看 [安全与沙箱目标](./docs/architecture/security-and-sandbox.md)：确认 Policy Sandbox、Workspace Sandbox、Execution Sandbox 和 Network / Credential Sandbox 的边界。
+6. 看 [路线图](./docs/architecture/roadmap.md)：确认当前 program、下一步和非目标。
+7. 看 [交付物清单](./docs/architecture/deliverables.md)：确认八大交付物、十类架构视图和根目录清洁期望。
+8. 看 [架构总览 HTML](./docs/architecture/architecture.html) 或 [架构图源](./docs/architecture/architecture.md)：完整页面按 4+1 五类图、View & Beyond 四类图和 Agent Loop 专题图组织。
+9. 需要证据时看 [公开演示证据](./docs/evidence/public-demo.md)、[Eval Baseline](./docs/evidence/eval-baselines.md) 和 [术语表](./docs/reference/terminology.md)。
+10. Agent 执行任务先读 [AGENTS.md](./AGENTS.md)。
 
 ## 当前是什么
 

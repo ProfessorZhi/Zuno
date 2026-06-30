@@ -8,11 +8,18 @@
 .agent/architecture/
   README.md
   00-architecture-index.md
+  overall-architecture.md
   glossary.md
   near-term/     近期理想架构
   future/        未来方向
   decisions/     架构决策摘要
 ```
+
+## 根部总架构
+
+`overall-architecture.md` 是 Agent 侧总架构文档，用来和正式 [docs/architecture/overall-architecture.md](../../docs/architecture/overall-architecture.md) 保持一致。它说明本地优先的企业私有知识库与多功能 Agent 助手、文字总架构文档、架构 HTML、Document Ingestion / Parse Gateway、Tool Control Plane 和 LangSmith-compatible Trace / Eval 的维护边界。
+
+文字总架构文档以 `docs/architecture/overall-architecture.md` 为正式人类来源；`.agent/architecture/overall-architecture.md` 是 Agent 维护镜像。图形总览仍只由 `docs/architecture/architecture.md` 生成到 `docs/architecture/architecture.html`，不要在 `.agent/architecture/` 复制 HTML。
 
 ## 近期理想架构
 

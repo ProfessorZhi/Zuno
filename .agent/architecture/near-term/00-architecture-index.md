@@ -2,7 +2,7 @@
 
 ## 用途
 
-本文件替代旧的 near-term HTML 蓝图，作为 `.agent/architecture/near-term/` 的文字入口。它面向 Agent 执行，不面向展示；正式展示页只有 `docs/architecture.html`。
+本文件替代旧的 near-term HTML 蓝图，作为 `.agent/architecture/near-term/` 的文字入口。它面向 Agent 执行，不面向展示；正式展示页只有 `docs/architecture/architecture.html`。
 
 ## 目标形态
 
@@ -29,8 +29,8 @@ Local-first Agent Workspace
 
 ## 与展示页的关系
 
-- `docs/architecture.html`：唯一架构 HTML 展示页，适合人快速浏览。
-- `docs/architecture.md`：十类架构视图的 Mermaid 源。
+- `docs/architecture/architecture.html`：唯一架构 HTML 展示页，适合人快速浏览。
+- `docs/architecture/architecture.md`：十类架构视图的 Mermaid 源。
 - `.agent/architecture/near-term/*.md`：面向 Agent 的目标设计文本，用于拆 program 和验收。
 
 ## Program 转化规则
@@ -52,5 +52,5 @@ Local-first Agent Workspace
 
 - 不把 Zuno 近期默认改成多 Agent runtime。
 - 不把微服务、event-driven worker、Coding Agent mode 写成 Current。
-- 不把 `docs/architecture.html` 的展示图当作 Current 证据。
+- 不把 `docs/architecture/architecture.html` 的展示图当作 Current 证据。
 - 不在 `.agent/architecture/` 保存新的 HTML 展示页。

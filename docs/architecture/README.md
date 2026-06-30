@@ -1,6 +1,6 @@
 # 架构文档
 
-这里是 Zuno 的正式架构文档入口。`docs/architecture/` 是人类可读的正式架构说明，应该少而精、相对稳定；`docs/architecture.html` 是面向展示的唯一架构 HTML；`.agent/references/` 是 Agent-facing operating memory，用来维护高频变化的规则、索引、图清单和工作流，不替代正式文档。
+这里是 Zuno 的正式架构文档入口。`docs/architecture/` 是人类可读的正式架构说明，应该少而精、相对稳定；`docs/architecture/architecture.html` 是面向展示的唯一架构 HTML；`.agent/references/` 是 Agent-facing operating memory，用来维护高频变化的规则、索引、图清单和工作流，不替代正式文档。
 
 ## 最终成品定义
 
@@ -27,27 +27,32 @@ Zuno 不只是代码项目，而是代码、架构文档、Agent 工作流、展
 
 ## 首读顺序
 
-1. `current-architecture.md`：当前实现事实，只写代码和测试已经证明的内容。
-2. `product-scenario-enterprise-kb.md`：企业私有知识库与多功能 Agent 助手的主叙事。
-3. `target-architecture.md`：近期目标架构，不冒充已完成。
-4. `security-and-sandbox.md`：安全、审批和沙箱的 Target / Future 边界。
-5. `roadmap.md`：当前状态、queued program、下一步和非目标。
-6. `../architecture.md`：Obsidian 风格架构总览，也是十类 Mermaid 架构视图的唯一源。
-7. `../architecture.html`：面向展示的唯一生成页。
-8. `assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf`：目标架构参考 PDF。
-9. `../evidence/public-demo.md`：公开证据入口。
-10. `decisions/README.md`：仍影响主线的架构决策。
+1. `overall-architecture.md`：总架构文档，文字说明当前事实、目标分层、主链路和实施落点。
+2. `current-architecture.md`：当前实现事实，只写代码和测试已经证明的内容。
+3. `product-scenario-enterprise-kb.md`：企业私有知识库与多功能 Agent 助手的主叙事。
+4. `target-architecture.md`：近期目标架构，不冒充已完成。
+5. `security-and-sandbox.md`：安全、审批和沙箱的 Target / Future 边界。
+6. `roadmap.md`：当前状态、queued program、下一步和非目标。
+7. `architecture.md`：Obsidian 风格架构总览，也是十类 Mermaid 架构视图的唯一源。
+8. `architecture.html`：面向展示的唯一生成页。
+9. `assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf`：目标架构参考 PDF。
+10. `../evidence/public-demo.md`：公开证据入口。
+11. `decisions/README.md`：仍影响主线的架构决策。
 
 ## 当前前台结构
 
 ```text
 docs/architecture/
   README.md
+  overall-architecture.md
+  architecture.md
+  architecture.html
   current-architecture.md
   product-scenario-enterprise-kb.md
   target-architecture.md
   security-and-sandbox.md
   roadmap.md
+  deliverables.md
   assets/
   decisions/
 ```
@@ -94,7 +99,7 @@ Zuno 的架构说明同时使用两套互补视角。
 
 ## 十类架构视图
 
-完整十类图由 `docs/architecture.md` 维护，并由 `tools/agent/render_architecture.py` 生成到 `docs/architecture.html`。这里的“十类”指十个不同架构关注面，不是同一张图的多个排版。每张图应展开到二级组件，覆盖 Agent Core Runtime、Memory、Tool、Knowledge、Document Ingestion、Security、Trace / Eval 和 Platform 的关键连接。
+完整十类图由 `docs/architecture/architecture.md` 维护，并由 `tools/agent/render_architecture.py` 生成到 `docs/architecture/architecture.html`。这里的“十类”指十个不同架构关注面，不是同一张图的多个排版。每张图应展开到二级组件，覆盖 Agent Core Runtime、Memory、Tool、Knowledge、Document Ingestion、Security、Trace / Eval 和 Platform 的关键连接。
 
 1. `Logical View`
 2. `Development View`
@@ -107,7 +112,7 @@ Zuno 的架构说明同时使用两套互补视角。
 9. `Quality View`
 10. `Agent Loop View`
 
-Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector View，但 Zuno 的核心价值正是 Agent 如何计划、检索、调工具、观察、反思和重试。因此它作为第十类专题图单独展示，用来放大解释 Zuno 的 Agentic RAG 内核。完整展示放在 `docs/architecture.html`。
+Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector View，但 Zuno 的核心价值正是 Agent 如何计划、检索、调工具、观察、反思和重试。因此它作为第十类专题图单独展示，用来放大解释 Zuno 的 Agentic RAG 内核。完整展示放在 `docs/architecture/architecture.html`。
 
 ## Current / Target / Future / History
 
@@ -123,8 +128,10 @@ Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector Vie
 涉及架构、Agent Runtime、RAG、GraphRAG、Memory、Tool Layer、Hooks、Trace、Eval、部署、中间件或前后端契约时，必须同步检查：
 
 - `docs/architecture/*`
-- `docs/architecture.md`
-- `docs/architecture.html`
+- `docs/architecture/overall-architecture.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.html`
+- `.agent/architecture/overall-architecture.md`
 - `.agent/references/architecture-docs-map.md`
 - `.agent/references/documentation-governance.md`
 - `.agent/references/architecture-update-policy.md`
@@ -132,7 +139,7 @@ Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector Vie
 - `.agent/references/current-target-future-rules.md`
 - `.agent/programs/current.md` 或 `.agent/programs/implementation-roadmap.md`
 
-`docs/architecture.html` 是展示页，不是唯一事实来源。不要只改 HTML；应先更新正式 docs 或 Mermaid source，再重新生成 HTML。高频变化的执行细节、workflow change log、图清单和 Agent 操作规则留在 `.agent/references/`，不要重复堆进 `docs/architecture/`。
+`overall-architecture.md` 是文字总架构文档，`docs/architecture/architecture.html` 是图形展示页。不要只改 HTML；应先更新正式 docs 或 Mermaid source，再重新生成 HTML。高频变化的执行细节、workflow change log、图清单和 Agent 操作规则留在 `.agent/references/`，不要重复堆进 `docs/architecture/`。
 
 ## Agent Workflow Self-Maintenance
 
@@ -143,7 +150,7 @@ Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector Vie
 - `.agent/templates/*`
 - `.agent/programs/*`
 - `docs/architecture/*`
-- `docs/architecture.html`
+- `docs/architecture/architecture.html`
 - verifier / tests
 
 工作流自我维护规则记录在 `.agent/references/workflow-governance.md`、`.agent/references/workflow-update-policy.md`、`.agent/references/workflow-requirements.md`、`.agent/references/workflow-change-log.md` 和 `.agent/references/workflow-maintenance-checklist.md`。

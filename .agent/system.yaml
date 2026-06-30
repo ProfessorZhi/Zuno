@@ -1,4 +1,4 @@
-﻿version: 1
+version: 1
 
 purpose: "Route Zuno tasks to local skills, templates, docs sync, and verification."
 
@@ -160,11 +160,13 @@ skill_routes:
       - ".agent/programs/implementation-roadmap.md"
       - ".agent/programs/closure-checklist.md"
       - "docs/architecture/README.md"
+      - "docs/architecture/overall-architecture.md"
       - "docs/architecture/current-architecture.md"
       - "docs/architecture/target-architecture.md"
       - "docs/architecture/roadmap.md"
-      - "docs/architecture.md"
-      - "docs/architecture.html"
+      - "docs/architecture/architecture.md"
+      - "docs/architecture/architecture.html"
+      - ".agent/architecture/overall-architecture.md"
       - ".agent/references/code-map.md"
     verify:
       - "git diff --check"
@@ -193,8 +195,10 @@ skill_routes:
       - ".agent/templates/phase-closure-report.md"
     docs_sync:
       - "docs/architecture/current-architecture.md"
+      - "docs/architecture/overall-architecture.md"
       - "docs/architecture/target-architecture.md"
       - "docs/architecture/roadmap.md"
+      - ".agent/architecture/overall-architecture.md"
       - ".agent/references/code-map.md"
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
@@ -220,7 +224,9 @@ skill_routes:
       - ".agent/templates/spec-coding-checklist.md"
     docs_sync:
       - "docs/architecture/current-architecture.md"
+      - "docs/architecture/overall-architecture.md"
       - "docs/architecture/target-architecture.md"
+      - ".agent/architecture/overall-architecture.md"
       - ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md"
       - ".agent/references/code-map.md"
     verify:
@@ -249,7 +255,9 @@ skill_routes:
       - ".agent/templates/phase-closure-report.md"
     docs_sync:
       - "docs/architecture/current-architecture.md"
+      - "docs/architecture/overall-architecture.md"
       - "docs/architecture/target-architecture.md"
+      - ".agent/architecture/overall-architecture.md"
       - ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md"
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
@@ -275,7 +283,9 @@ skill_routes:
       - ".agent/templates/phase-closure-report.md"
     docs_sync:
       - "docs/architecture/current-architecture.md"
+      - "docs/architecture/overall-architecture.md"
       - "docs/architecture/target-architecture.md"
+      - ".agent/architecture/overall-architecture.md"
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"
     verify:

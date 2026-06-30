@@ -11,15 +11,15 @@
 | 1 | Agent 工作流文档系统 | Agent 进入仓库后能从 `AGENTS.md` 和 `.agent/references/` 明确读取任务路由、边界、验证和收尾规则。 | `AGENTS.md`、`.agent/references/*`、Agent verifier 和 repo tests 一致。 |
 | 2 | 元工作流自我维护系统 | 用户提出长期规则后，Agent 能判断是否更新 workflow requirements、change log、templates、programs 和 verifier。 | `.agent/references/workflow-*` 有规则和变更记录；相关 verifier 通过。 |
 | 3 | 模板与执行计划系统 | `.agent/templates/` 提供稳定输出骨架；`.agent/programs/` 只保留当前或明确等待状态。 | templates、current program、roadmap 和 closure checklist 不冲突。 |
-| 4 | 正式架构文档系统 | `docs/architecture/` 少而精，能清楚区分 Current、Target、Future、History。 | `docs/architecture/README.md`、current、target、roadmap、`docs/architecture.md` 同步。 |
+| 4 | 正式架构文档系统 | `docs/architecture/` 少而精，能清楚区分 Current、Target、Future、History。 | `docs/architecture/README.md`、current、target、roadmap、`docs/architecture/architecture.md` 同步。 |
 | 5 | 架构 HTML 展示系统 | `architecture.html` 用正式行文和十类架构视图展示 Zuno，不成为第二套事实源。 | 由 `tools/agent/render_architecture.py` 生成并通过 `--check`。 |
-| 6 | 完善的 Zuno 目标架构 | 目标架构讲清 Single Controller Agent、Agentic RAG、GraphRAG、Memory、Tool、Hooks、Evidence、Trace、Eval。 | `target-architecture.md`、`docs/architecture.md` 和 absorbed reference programs / roadmap reference inputs 一致。 |
+| 6 | 完善的 Zuno 目标架构 | 目标架构讲清 Single Controller Agent、Agentic RAG、GraphRAG、Memory、Tool、Hooks、Evidence、Trace、Eval。 | `target-architecture.md`、`docs/architecture/architecture.md` 和 absorbed reference programs / roadmap reference inputs 一致。 |
 | 7 | 清晰干净的代码和目录 | 目录能表达职责，根目录保持干净，无临时截图、缓存、导出物和过时方案混在当前主线。 | repo hygiene verifier、git status、root artifact guard 通过。 |
 | 8 | 一致性与验证系统 | 代码、测试、Trace/Eval、README、docs、HTML、`.agent/references` 互相不打架。 | docs verifier、repo structure verifier、Agent verifier、相关 pytest 通过。 |
 
 ## 十类架构视图
 
-十类图不是十张装饰图，而是十个不同架构关注面。每类图都必须回答一个具体问题，并在 `docs/architecture.md` 中维护 Mermaid 源。
+十类图不是十张装饰图，而是十个不同架构关注面。每类图都必须回答一个具体问题，并在 `docs/architecture/architecture.md` 中维护 Mermaid 源。
 
 | 编号 | 视图 | 对应理论 | 期望表达 |
 | --- | --- | --- | --- |

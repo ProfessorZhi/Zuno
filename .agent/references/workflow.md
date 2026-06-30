@@ -53,6 +53,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - `docs/` 只放正式人类真相。
 - `.agent/` 只放本地 Agent Skill System、目标设计、当前 program、模板和过渡期 verifier。
 - `docs/history/` 保存旧 audit、旧 spec、旧 runbook、旧 UI 原型、旧 phase、旧 program 和被替换设计。
+- `docs/architecture/overall-architecture.md` 是文字总架构文档；`.agent/architecture/overall-architecture.md` 是 Agent 侧总架构维护文档，两者必须一起维护。
 - `.agent/architecture/near-term/00-architecture-index.md` 是 Target / Proposed 视觉蓝图，不是 Current proof。
 - 修改任务必须验证、commit、push，除非验证或 push 被阻塞。
 - 两种默认工作模式是挂机模式和多线程模式；选择哪一种取决于任务能否拆成粗粒度、低冲突的独立范围。
@@ -67,11 +68,12 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 1. `git status --short --branch`
 2. 读 `AGENTS.md` 和 `.agent/system.yaml`。
 3. 读 `task-routing.md` 选择 route。
-4. 读 Current / Target / Roadmap。
-5. 读需要的 reference skills：`docs-map.md`、`code-map.md`、`verification-map.md`、`known-pitfalls.md`。
-6. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/00-architecture-index.md`。
-7. 确认任务允许范围和 forbidden paths。
-8. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个常驻线程绑定或切换一个本轮 worktree / `codex/` 分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建或确认真正的目标模式线程。
+4. 架构任务先读 `docs/architecture/overall-architecture.md` 和 `.agent/architecture/overall-architecture.md`。
+5. 读 Current / Target / Roadmap。
+6. 读需要的 reference skills：`docs-map.md`、`code-map.md`、`verification-map.md`、`known-pitfalls.md`。
+7. 如果涉及目标架构，读 `.agent/architecture/near-term/` 和 `.agent/architecture/near-term/00-architecture-index.md`。
+8. 确认任务允许范围和 forbidden paths。
+9. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个常驻线程绑定或切换一个本轮 worktree / `codex/` 分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建或确认真正的目标模式线程。
 
 ## Allowed Changes
 
@@ -122,10 +124,11 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 ### 架构重构
 
 1. 明确 Current / Foundation / Target / Future / History。
-2. 目标设计放 `.agent/architecture/near-term/`。
-3. 正式结论放 `docs/architecture/`。
-4. 执行计划放 `.agent/programs/` 根层。
-5. 旧计划和旧设计归档到 `docs/history/`。
+2. 总架构文字同步到 `docs/architecture/overall-architecture.md` 和 `.agent/architecture/overall-architecture.md`。
+3. 目标设计放 `.agent/architecture/near-term/`。
+4. 正式结论放 `docs/architecture/`。
+5. 执行计划放 `.agent/programs/` 根层。
+6. 旧计划和旧设计归档到 `docs/history/`。
 
 ### 挂机模式
 
@@ -177,11 +180,13 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 
 涉及架构、Agent Runtime、RAG、GraphRAG、Memory、Tool Layer、Hooks、Trace、Eval、部署、中间件或前后端契约时，必须读取 `.agent/references/architecture-docs-map.md`、`.agent/references/documentation-governance.md`、`.agent/references/architecture-update-policy.md`、`.agent/references/diagram-inventory.md` 和 `.agent/references/current-target-future-rules.md`。
 
-`docs/architecture/` 是 human-facing formal architecture source；`docs/architecture.html` 是展示聚合页，不是唯一事实来源；`.agent/references/` 是 Agent-facing operating memory。不要只改其中一个表面。
+`docs/architecture/` 是 human-facing formal architecture source；`docs/architecture/architecture.html` 是展示聚合页，不是唯一事实来源；`.agent/references/` 是 Agent-facing operating memory。不要只改其中一个表面。
+
+`docs/architecture/overall-architecture.md` 是文字总架构文档，`.agent/architecture/overall-architecture.md` 是 Agent 维护镜像。架构 HTML 图为主，但必须继续由 `docs/architecture/architecture.md` 生成，不在 `.agent/architecture/` 复制第二个 HTML。
 
 ## Agent Workflow Self-Maintenance
 
-当用户提出新的长期工作方式要求时，不能只在本轮回答里说“以后注意”。必须按 `.agent/references/workflow-governance.md`、`.agent/references/workflow-update-policy.md` 和 `.agent/references/workflow-maintenance-checklist.md` 判断是否更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture.html`、verifier 或 tests。
+当用户提出新的长期工作方式要求时，不能只在本轮回答里说“以后注意”。必须按 `.agent/references/workflow-governance.md`、`.agent/references/workflow-update-policy.md` 和 `.agent/references/workflow-maintenance-checklist.md` 判断是否更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture/architecture.html`、verifier 或 tests。
 
 如果新规则影响未来生成内容，必须同步更新 `.agent/templates/`；如果规则需要防漂移，必须同步 verifier 或 repo tests。
 
@@ -221,9 +226,11 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_con
 - `.agent/references/verification-map.md`
 - `.agent/templates/README.md`
 - `docs/architecture/README.md`
+- `docs/architecture/overall-architecture.md`
 - `docs/architecture/current-architecture.md`
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/roadmap.md`
+- `.agent/architecture/overall-architecture.md`
 - verifier scripts and repo tests
 
 Program closure 还必须执行一次 Program Closure 自维护审查，确认本轮新增经验没有只停留在 final answer 或聊天上下文里。

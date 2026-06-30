@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -155,8 +155,8 @@ def test_near_term_architecture_index_is_canonical_and_referenced() -> None:
         "Summary Compression",
         "Structured Extraction",
         "ToolCard",
-        "docs/architecture.md",
-        "docs/architecture.html",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
         "00-architecture-index.md",
     ]:
         assert phrase in content

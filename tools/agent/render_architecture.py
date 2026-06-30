@@ -9,11 +9,12 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SOURCE_PATH = REPO_ROOT / "docs/architecture.md"
-OUTPUT_PATH = REPO_ROOT / "docs/architecture.html"
+SOURCE_PATH = REPO_ROOT / "docs/architecture/architecture.md"
+OUTPUT_PATH = REPO_ROOT / "docs/architecture/architecture.html"
 STALE_OUTPUTS = [
-    REPO_ROOT / "docs/architecture/architecture.html",
     REPO_ROOT / "docs/architecture/overview.html",
+    REPO_ROOT / "docs/architecture.md",
+    REPO_ROOT / "docs/architecture.html",
     REPO_ROOT / ".agent/architecture/blueprint.html",
 ]
 
@@ -512,7 +513,7 @@ def render_html(diagrams: list[Diagram]) -> str:
     <header>
       <h1>Zuno 架构总览 / Architecture Overview</h1>
       <p>Zuno 是本地优先的 Agent Workspace。本文用 4+1、View &amp; Beyond 和 Agent Loop 专题图说明目标架构。</p>
-      <p class="sync">Source: <code>docs/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture.html</code>.</p>
+      <p class="sync">Source: <code>docs/architecture/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture/architecture.html</code>.</p>
     </header>
 {content}
     <dialog class="diagram-dialog" id="diagram-dialog">
@@ -614,7 +615,7 @@ def check_outputs() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print("architecture HTML output is in sync with docs/architecture.md")
+    print("architecture HTML output is in sync with docs/architecture/architecture.md")
     return 0
 
 

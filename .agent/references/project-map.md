@@ -17,7 +17,7 @@ AGENTS.md
   -> current execution state and program lifecycle
 docs/architecture/
   -> human-facing architecture source
-docs/architecture.html
+docs/architecture/architecture.html
   -> generated presentation page
 src/backend/zuno/
   -> backend runtime code
@@ -33,7 +33,7 @@ tools/ and tests/
 - `.agent/references/` 是当前唯一 Agent operating memory 目录；不要新增 `.agent/reference/` 单数目录。
 - `.agent/programs/` 是当前执行计划和状态入口；仓库当前不启用 `.agent/plans/`。
 - `docs/architecture/` 是正式架构文档源。
-- `docs/architecture.html`、`docs/architecture.html`、`docs/architecture.html` 由 `tools/agent/render_architecture.py` 从 `docs/architecture.md` 生成。
+- `docs/architecture/architecture.html`、`docs/architecture/architecture.html`、`docs/architecture/architecture.html` 由 `tools/agent/render_architecture.py` 从 `docs/architecture/architecture.md` 生成。
 - `src/backend/zuno` 当前顶层只保留 `api / agent / memory / capability / knowledge / platform` 加 `__init__.py` 和 `main.py`。
 - `docs/` 应少而精，保留稳定的人类正式结论；`.agent/` 保留更细、更常变化的 Agent 操作记忆、计划、模板和治理细则。
 

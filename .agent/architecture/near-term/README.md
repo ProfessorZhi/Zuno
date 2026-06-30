@@ -34,7 +34,7 @@
 
 near-term 指当前 Python/FastAPI、LangGraph、monorepo 内部可以逐步落地的目标架构。它不等于 Java 实现、microservice 拆分、event bus 全面 rollout，也不等于默认 multi-agent 行为。
 
-本目录保持文字为主，便于转化为 `.agent/programs/` 下的执行计划。唯一架构 HTML 展示页是 `docs/architecture.html`；它不能当作 Current evidence。
+本目录保持文字为主，便于转化为 `.agent/programs/` 下的执行计划。唯一架构 HTML 展示页是 `docs/architecture/architecture.html`；它不能当作 Current evidence。
 
 ## 执行计划放哪里
 

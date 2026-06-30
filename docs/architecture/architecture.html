@@ -230,7 +230,7 @@
     <header>
       <h1>Zuno 架构总览 / Architecture Overview</h1>
       <p>Zuno 是本地优先的 Agent Workspace。本文用 4+1、View &amp; Beyond 和 Agent Loop 专题图说明目标架构。</p>
-      <p class="sync">Source: <code>docs/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture.html</code>.</p>
+      <p class="sync">Source: <code>docs/architecture/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture/architecture.html</code>.</p>
     </header>
     <section class="chapter">
       <h2>一、4+1 View Model</h2>
@@ -386,7 +386,7 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：开发者如何进入项目。</li>
-          <li>Zuno 映射：`docs/architecture.md` 是 Mermaid 图源；`.agent/programs/` 是当前执行计划；`tools/agent/render_architecture.py` 生成 HTML。</li>
+          <li>Zuno 映射：`docs/architecture/architecture.md` 是 Mermaid 图源；`.agent/programs/` 是当前执行计划；`tools/agent/render_architecture.py` 生成 HTML。</li>
           <li>边界：高频执行细节进入 `.agent/programs/`，稳定结论进入 `docs/architecture/`。</li>
         </ul>
         <div class="diagram-actions">

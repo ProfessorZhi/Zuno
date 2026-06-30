@@ -1,4 +1,4 @@
-﻿# 架构路线图
+# 架构路线图
 
 ## 当前状态
 
@@ -35,7 +35,7 @@ Phase 0-6 架构收口仍是已完成的历史事实。
 | Hooks / Evidence / Trace | completed / archived | 增强模式必须有权限、预算、fallback、evidence check、citation coverage 和 runtime events。 | Hook event schema、evidence verdict、artifact manifest、GeneralAgent additive trace event、tool pre/post hook payload 和 eval diagnostics 已有 focused tests；完整 artifact storage、frontend trace panel 和生产级 hooks governance 仍是 Target。 |
 | GraphRAG Knowledge Runtime | completed / archived | 在 mode、context、capability、hooks 边界稳定后推进 knowledge extraction、local/global/drift、fusion/rerank 和 citation/evidence closure。 | LLM-first extractor config contract、snapshot propagation、query method / citation / retrieval fusion trace contract、global community-only prior 和 legacy import guard 已有代码与测试证据；生产级 LLM extraction、完整 RRF/rerank 治理仍是 Target。 |
 | Runtime Upgrade Integration | completed / archived | 把前面各 foundation slice 收束进 GeneralAgent 主路径和六层 owner 边界，而不是停留在漂亮 facade。 | RuntimeTurnLedger、当前轮 trace reset、knowledge/tool/post-turn evidence、六层目标入口 import guard 和 eval diagnostics 已有 focused tests；不等于完整产品级 runtime upgrade，也未改 API/SSE/DB/frontend。 |
-| 架构 HTML 重做清晰 | completed / archived | 让 GitHub 访问者、老师、评审和面试官快速看懂架构。 | `docs/architecture.md` / `docs/architecture.html` 已由 renderer 和 verifier 检查同源；PHASE03 completed / archived，已完成边界措辞、视觉 QA、README 入口和最终验证收口。 |
+| 架构 HTML 重做清晰 | completed / archived | 让 GitHub 访问者、老师、评审和面试官快速看懂架构。 | `docs/architecture/architecture.md` / `docs/architecture/architecture.html` 已由 renderer 和 verifier 检查同源；PHASE03 completed / archived，已完成边界措辞、视觉 QA、README 入口和最终验证收口。 |
 
 ## 当前 Program 状态
 
@@ -165,8 +165,8 @@ Program 3 已完成的边界：
 - `docs/history/programs/zuno-six-layer-internalization-v1/`
 - `docs/history/programs/zuno-repo-layout-cleanup-v1/`
 - `.agent/architecture/future/programs/`
-- `docs/architecture.md`
-- `docs/deliverables.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/deliverables.md`
 - `docs/history/programs/zuno-target-runtime-v2/`
 - `docs/history/programs/zuno-target-architecture-migration-v1/`
 - `docs/history/programs/official-graphrag-cleanup-v1/`

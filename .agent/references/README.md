@@ -59,11 +59,11 @@ docs/history/
 
 ## Architecture Documentation Governance
 
-`docs/architecture/` 是正式的人类可读架构说明；`docs/architecture.html` 是由 Mermaid 源生成的展示页；`.agent/references/` 是 Agent-facing operating memory。架构相关改动必须检查 `architecture-docs-map.md`、`documentation-governance.md`、`architecture-update-policy.md`、`diagram-inventory.md` 和 `current-target-future-rules.md`。
+`docs/architecture/` 是正式的人类可读架构说明；`docs/architecture/architecture.html` 是由 Mermaid 源生成的展示页；`.agent/references/` 是 Agent-facing operating memory。架构相关改动必须检查 `architecture-docs-map.md`、`documentation-governance.md`、`architecture-update-policy.md`、`diagram-inventory.md` 和 `current-target-future-rules.md`。
 
 ## Agent Workflow Self-Maintenance
 
-工作流不是静态规则。当用户提出新的长期要求时，Agent 必须判断是否需要更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture.html` 和 verifier。详细规则在 `workflow-governance.md`、`workflow-update-policy.md`、`workflow-requirements.md`、`workflow-change-log.md` 和 `workflow-maintenance-checklist.md`。
+工作流不是静态规则。当用户提出新的长期要求时，Agent 必须判断是否需要更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture/architecture.html` 和 verifier。详细规则在 `workflow-governance.md`、`workflow-update-policy.md`、`workflow-requirements.md`、`workflow-change-log.md` 和 `workflow-maintenance-checklist.md`。
 
 对外展示时，Zuno 的最终成品是五个成熟系统；内部验收时，拆成八大交付物。这个定义记录在 `project-map.md` 和 `workflow-requirements.md`。
 

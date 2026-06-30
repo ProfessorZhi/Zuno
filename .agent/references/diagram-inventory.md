@@ -7,11 +7,11 @@
 ## Mental Model
 
 ```text
-docs/architecture.md
+docs/architecture/architecture.md
   -> ten architecture view source blocks with second-level component detail
 tools/agent/render_architecture.py
   -> validates EXPECTED_DIAGRAMS and renders HTML
-docs/architecture.html
+docs/architecture/architecture.html
   -> generated presentation page
 ```
 
@@ -30,16 +30,16 @@ Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector Vie
 
 | # | Diagram | Type | Theory Scope | Source docs | HTML |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Logical View | 4+1 Logical | Model、Agent Core、Memory、Tool、Knowledge、Ingestion、Security、Eval、Platform 的职责分层；Memory 展开 Raw Event Log / Recent Window / Task Summary / Structured Memory / Context Pack；Tool 展开 Tool Control Plane | `docs/architecture.md` | yes |
-| 2 | Development View | 4+1 Development | 代码、文档、`.agent` program、renderer、verifier 和 tests 如何组织 | `docs/architecture.md` | yes |
-| 3 | Process View | 4+1 Process | API、Context、Agent Core、工具/检索、memory read/write、事件流和 eval trace 如何运行 | `docs/architecture.md` | yes |
-| 4 | Physical View | 4+1 Physical | 本地优先部署、存储、模型、MCP、LangSmith / trace backend 和外部依赖节点 | `docs/architecture.md` | yes |
-| 5 | Scenarios View | 4+1 Scenarios | 企业知识库从 upload / parse / index 到 answer / artifact，再到 memory candidate / review / durable memory 的场景贯通 | `docs/architecture.md` | yes |
-| 6 | V&B Logical View | View & Beyond Logical | Runtime、Memory、Capability、Knowledge、Ingestion、Workspace、Policy 等领域子系统；Memory 是 write-manage-read 子系统，Tool 是 manifest-driven control plane | `docs/architecture.md` | yes |
-| 7 | Component-and-Connector View | View & Beyond C&C | Planner、ReAct Executor、Memory Read Policy、Memory Stores、Memory Review Gate、Tool Manifest Registry、Capability Selector、Tool Policy Approval、Executor Adapter、Sandbox、Result Normalizer、Retrieval Router、Parse Gateway、Policy、Evidence、Trace 的连接 | `docs/architecture.md` | yes |
-| 8 | V&B Deployment View | View & Beyond Deployment | SDK、API、CLI、SSH、MCP、Model、Search、Vector、Graph、Trace backend 的可替换 provider 边界 | `docs/architecture.md` | yes |
-| 9 | Quality View | View & Beyond Quality | 输入、检索、工具、输出、安全、稳定性、观测、评测、成本和 release gate | `docs/architecture.md` | yes |
-| 10 | Agent Loop View | Zuno 专题图 | prepare_context / memory read / plan / ReAct / observe / raw event append / reflect / replan / post_turn_commit / memory promotion | `docs/architecture.md` | yes |
+| 1 | Logical View | 4+1 Logical | Model、Agent Core、Memory、Tool、Knowledge、Ingestion、Security、Eval、Platform 的职责分层；Memory 展开 Raw Event Log / Recent Window / Task Summary / Structured Memory / Context Pack；Tool 展开 Tool Control Plane | `docs/architecture/architecture.md` | yes |
+| 2 | Development View | 4+1 Development | 代码、文档、`.agent` program、renderer、verifier 和 tests 如何组织 | `docs/architecture/architecture.md` | yes |
+| 3 | Process View | 4+1 Process | API、Context、Agent Core、工具/检索、memory read/write、事件流和 eval trace 如何运行 | `docs/architecture/architecture.md` | yes |
+| 4 | Physical View | 4+1 Physical | 本地优先部署、存储、模型、MCP、LangSmith / trace backend 和外部依赖节点 | `docs/architecture/architecture.md` | yes |
+| 5 | Scenarios View | 4+1 Scenarios | 企业知识库从 upload / parse / index 到 answer / artifact，再到 memory candidate / review / durable memory 的场景贯通 | `docs/architecture/architecture.md` | yes |
+| 6 | V&B Logical View | View & Beyond Logical | Runtime、Memory、Capability、Knowledge、Ingestion、Workspace、Policy 等领域子系统；Memory 是 write-manage-read 子系统，Tool 是 manifest-driven control plane | `docs/architecture/architecture.md` | yes |
+| 7 | Component-and-Connector View | View & Beyond C&C | Planner、ReAct Executor、Memory Read Policy、Memory Stores、Memory Review Gate、Tool Manifest Registry、Capability Selector、Tool Policy Approval、Executor Adapter、Sandbox、Result Normalizer、Retrieval Router、Parse Gateway、Policy、Evidence、Trace 的连接 | `docs/architecture/architecture.md` | yes |
+| 8 | V&B Deployment View | View & Beyond Deployment | SDK、API、CLI、SSH、MCP、Model、Search、Vector、Graph、Trace backend 的可替换 provider 边界 | `docs/architecture/architecture.md` | yes |
+| 9 | Quality View | View & Beyond Quality | 输入、检索、工具、输出、安全、稳定性、观测、评测、成本和 release gate | `docs/architecture/architecture.md` | yes |
+| 10 | Agent Loop View | Zuno 专题图 | prepare_context / memory read / plan / ReAct / observe / raw event append / reflect / replan / post_turn_commit / memory promotion | `docs/architecture/architecture.md` | yes |
 
 ## Update Triggers
 
@@ -56,12 +56,12 @@ Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector Vie
 
 ## Target Direction
 
-README 首页只给出精简入口。完整十类视图保留在 `docs/architecture.md` 和 `docs/architecture.html`。后续如需要更多 exploded views，优先把它们折叠进十类视图的二级组件；只有当新的图回答了十类视图无法承载的独立架构问题时，才更新 `EXPECTED_DIAGRAMS`、本文件、`docs/deliverables.md` 和 tests。
+README 首页只给出精简入口。完整十类视图保留在 `docs/architecture/architecture.md` 和 `docs/architecture/architecture.html`。后续如需要更多 exploded views，优先把它们折叠进十类视图的二级组件；只有当新的图回答了十类视图无法承载的独立架构问题时，才更新 `EXPECTED_DIAGRAMS`、本文件、`docs/architecture/deliverables.md` 和 tests。
 
 ## Must Preserve
 
 - 图名必须和 `tools/agent/render_architecture.py` 的 `EXPECTED_DIAGRAMS` 一致。
-- Mermaid 源只维护在 `docs/architecture.md`。
+- Mermaid 源只维护在 `docs/architecture/architecture.md`。
 - HTML 生成后必须保持 `python tools/agent/render_architecture.py --check` 通过。
 - 不把理论映射图当成架构本体图。
 - 不把 Agent Loop 误写成整个 Process View；它是 Process / C&C 的子系统放大图。
@@ -69,7 +69,7 @@ README 首页只给出精简入口。完整十类视图保留在 `docs/architect
 
 ## Before Editing
 
-1. 修改 `docs/architecture.md`。
+1. 修改 `docs/architecture/architecture.md`。
 2. 如需新增或重命名视图，先更新本文件和 `EXPECTED_DIAGRAMS`。
 3. 运行 `python tools/agent/render_architecture.py --write`。
 4. 运行 verifier 和相关 tests。
@@ -87,7 +87,7 @@ README 首页只给出精简入口。完整十类视图保留在 `docs/architect
 ## Common Failure Patterns
 
 - 图源改了但 HTML 没重新生成。
-- HTML 更新了但 `docs/architecture.md` 没变。
+- HTML 更新了但 `docs/architecture/architecture.md` 没变。
 - 新模式写进图但没写进 `target-architecture.md`。
 - 为了凑数量把理论映射图算成架构图。
 
@@ -108,9 +108,9 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 
 修改本文件时检查：
 
-- `docs/architecture.md`
+- `docs/architecture/architecture.md`
 - `docs/architecture/target-architecture.md`
-- `docs/deliverables.md`
+- `docs/architecture/deliverables.md`
 - `tools/agent/render_architecture.py`
 
 ## Lessons Learned

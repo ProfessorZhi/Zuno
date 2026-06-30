@@ -3,7 +3,7 @@
 
 ## 目标
 
-在不改变 Mermaid 源语义的前提下 polish `docs/architecture.html`，让两个理论框架和十类架构视图更适合 GitHub、面试和评审展示。
+在不改变 Mermaid 源语义的前提下 polish `docs/architecture/architecture.html`，让两个理论框架和十类架构视图更适合 GitHub、面试和评审展示。
 
 ## 验收
 

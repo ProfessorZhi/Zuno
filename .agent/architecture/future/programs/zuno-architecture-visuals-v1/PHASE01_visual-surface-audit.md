@@ -3,7 +3,7 @@
 
 ## 目标
 
-审计当前 `docs/architecture.md`、`docs/architecture.html` 和 render 脚本的展示问题。
+审计当前 `docs/architecture/architecture.md`、`docs/architecture/architecture.html` 和 render 脚本的展示问题。
 
 ## 验收
 

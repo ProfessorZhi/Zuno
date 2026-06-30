@@ -4,7 +4,7 @@ status: active
 
 ## 目标
 
-根据细化架构图和 2026-06-30 架构深度评估，生成后续产品化执行顺序。PHASE04 不再继续扩展总览图，而是把 Zuno 主场景收束为“企业私有知识库与多功能 Agent 助手”，并把下一轮实现拆成四条可执行主线：文档摄取、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。
+根据细化架构图和 2026-06-30 架构深度评估，生成后续产品化执行顺序。PHASE04 不再继续扩展总览图，而是把 Zuno 主场景收束为“企业私有知识库与多功能 Agent 助手”，并把下一轮实现拆成四条可执行主线：文档摄取、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。同时新增总架构文档治理：文字总架构文档放在 `docs/architecture/overall-architecture.md`，Agent 侧维护镜像放在 `.agent/architecture/overall-architecture.md`。
 
 ## 范围
 
@@ -13,12 +13,20 @@ status: active
 ## 需要修改的文件
 
 - `.agent/programs/implementation-roadmap.md`
+- `docs/architecture/overall-architecture.md`
+- `.agent/architecture/overall-architecture.md`
 - `docs/architecture/product-scenario-enterprise-kb.md`
 - `docs/architecture/security-and-sandbox.md`
 - `docs/architecture/README.md`
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/roadmap.md`
 - `README.md`
+- `.agent/references/docs-map.md`
+- `.agent/references/architecture-docs-map.md`
+- `.agent/references/documentation-governance.md`
+- `.agent/references/architecture-update-policy.md`
+- `.agent/references/workflow.md`
+- `.agent/system.yaml`
 
 ## 禁止修改的文件
 
@@ -35,6 +43,8 @@ status: active
 - `Security + Enterprise Scenarios` 必须包括 PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、Policy / Workspace / Execution / Network-Credential Sandbox、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
 - README 只给精简入口，不堆完整执行细节。
 - roadmap 明确当前 program active，且不把后续实现写成 Current。
+- 总架构文档必须说明当前事实、目标分层、主链路、文档解析、安全评测和实施落点。
+- `docs/architecture/overall-architecture.md` 与 `.agent/architecture/overall-architecture.md` 必须登记为同步维护面；`docs/architecture/architecture.html` 仍由 `docs/architecture/architecture.md` 生成，不复制到 `.agent/architecture/`。
 
 ## 后续 Program 切分建议
 

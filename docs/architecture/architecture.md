@@ -14,7 +14,7 @@ updated: 2026-06-30
 > [!abstract] 定位
 > Zuno 是本地优先的企业私有知识库与多功能 Agent 助手。本文用 **4+1 View Model**、**View & Beyond** 和 **Agent Loop 专题图**说明 Agentic RAG、GraphRAG、文档解析、安全治理、沙箱边界与评测追踪的目标架构。
 
-主场景不是普通 RAG 问答，而是企业内部文档、合同、制度、项目资料、技术文档、HR / 简历资料和个人项目证据的私有知识工作流。完整场景定义见 [企业私有知识库与多功能 Agent 助手](architecture/product-scenario-enterprise-kb.md)，安全与沙箱边界见 [安全与沙箱目标架构](architecture/security-and-sandbox.md)。
+主场景不是普通 RAG 问答，而是企业内部文档、合同、制度、项目资料、技术文档、HR / 简历资料和个人项目证据的私有知识工作流。文字总架构文档见 [总架构文档](overall-architecture.md)，完整场景定义见 [企业私有知识库与多功能 Agent 助手](product-scenario-enterprise-kb.md)，安全与沙箱边界见 [安全与沙箱目标架构](security-and-sandbox.md)。
 
 正式事实以 [[architecture/current-architecture|当前架构]] 为准。近期目标以 [[architecture/target-architecture|目标架构]] 为准。执行计划进入 `.agent/programs/`。
 
@@ -144,7 +144,7 @@ flowchart TB
 #### 分析
 
 - 关注点：开发者如何进入项目。
-- Zuno 映射：`docs/architecture.md` 是 Mermaid 图源；`.agent/programs/` 是当前执行计划；`tools/agent/render_architecture.py` 生成 HTML。
+- Zuno 映射：`docs/architecture/architecture.md` 是 Mermaid 图源；`.agent/programs/` 是当前执行计划；`tools/agent/render_architecture.py` 生成 HTML。
 - 边界：高频执行细节进入 `.agent/programs/`，稳定结论进入 `docs/architecture/`。
 
 ### Process View

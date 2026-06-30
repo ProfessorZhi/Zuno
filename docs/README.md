@@ -13,19 +13,20 @@
 ## 首读路径
 
 1. [仓库 README](../README.md)
-2. [当前架构](./architecture/current-architecture.md)
-3. [目标架构](./architecture/target-architecture.md)
-4. [路线图](./architecture/roadmap.md)
-5. [交付物清单](./deliverables.md)
-6. [架构总览 HTML](./architecture.html)
-7. [公开演示证据](./evidence/public-demo.md)
-8. [Eval Baseline](./evidence/eval-baselines.md)
-9. [术语表](./reference/terminology.md)
+2. [总架构文档](./architecture/overall-architecture.md)
+3. [当前架构](./architecture/current-architecture.md)
+4. [目标架构](./architecture/target-architecture.md)
+5. [路线图](./architecture/roadmap.md)
+6. [交付物清单](./architecture/deliverables.md)
+7. [架构总览 HTML](./architecture/architecture.html)
+8. [公开演示证据](./evidence/public-demo.md)
+9. [Eval Baseline](./evidence/eval-baselines.md)
+10. [术语表](./reference/terminology.md)
 
 ## 目录
 
-- [architecture/](./architecture/README.md)：当前架构、目标架构、路线图和正式 ADR。
-- [deliverables.md](./deliverables.md)：八大交付物、十类架构视图和根目录清洁期望。
+- [architecture/](./architecture/README.md)：总架构文档、当前架构、目标架构、路线图和正式 ADR。
+- [deliverables.md](./architecture/deliverables.md)：八大交付物、十类架构视图和根目录清洁期望。
 - [evidence/](./evidence/README.md)：精选证据入口。
 - [reference/terminology.md](./reference/terminology.md)：仍然有效的公共术语。
 - [history/](./history/README.md)：历史档案，包含旧计划、旧规格、旧审计、旧 runbook 和被替换材料。

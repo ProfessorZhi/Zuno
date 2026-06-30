@@ -39,7 +39,7 @@ new user requirement
 | `.agent/templates/*` | 新规则影响未来生成内容的格式 |
 | `.agent/programs/*` | 当前状态、queued program、收口清单、执行计划变化 |
 | `docs/architecture/*` | 人类可读架构结论变化 |
-| `docs/architecture.html` | 展示页内容或十类架构视图聚合变化 |
+| `docs/architecture/architecture.html` | 展示页内容或十类架构视图聚合变化 |
 | verifier / tests | 规则需要机器检查或防漂移 |
 
 ## Target Direction

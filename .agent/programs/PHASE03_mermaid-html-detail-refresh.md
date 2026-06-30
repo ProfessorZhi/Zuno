@@ -4,7 +4,7 @@ status: completed
 
 ## 目标
 
-保留十类 canonical 架构图，但把每张图从粗粒度模块图升级为二级组件图，并重新生成 `docs/architecture.html`。
+保留十类 canonical 架构图，但把每张图从粗粒度模块图升级为二级组件图，并重新生成 `docs/architecture/architecture.html`。
 
 ## 范围
 
@@ -12,8 +12,8 @@ status: completed
 
 ## 需要修改的文件
 
-- `docs/architecture.md`
-- `docs/architecture.html`
+- `docs/architecture/architecture.md`
+- `docs/architecture/architecture.html`
 - `.agent/references/diagram-inventory.md`
 - `tools/agent/render_architecture.py`
 - `tools/scripts/verify_docs_entrypoints.py`
@@ -22,12 +22,12 @@ status: completed
 ## 禁止修改的文件
 
 - 不新增第 11 张 Mermaid 图，除非同步更新 `EXPECTED_DIAGRAMS`、deliverables、inventory 和 tests。
-- 不手写 `docs/architecture.html`。
+- 不手写 `docs/architecture/architecture.html`。
 
 ## 验收闸门
 
-- `docs/architecture.md` 仍只有十个 Mermaid block。
-- `docs/architecture.html` 由 renderer 生成。
+- `docs/architecture/architecture.md` 仍只有十个 Mermaid block。
+- `docs/architecture/architecture.html` 由 renderer 生成。
 - 十类图展示 Agent Core、Memory read/write、Tool Control Plane、Document Ingestion、Security、Trace / Eval、Tool adapter 和 GraphRAG 的二级组件。
 
 ## 验证命令

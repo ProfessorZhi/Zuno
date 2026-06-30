@@ -72,8 +72,8 @@ Workspace knowledge prefetch、Workspace `search_knowledge_base` tool 和 `/know
 
 上面的调用链是当前 runtime 事实。目标架构图见：
 
-- [architecture.md](../architecture.md)
-- [architecture.html](../architecture.html)
+- [architecture.md](architecture.md)
+- [architecture.html](architecture.html)
 
 ## 当前兼容边界
 

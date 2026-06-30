@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -140,7 +140,7 @@ def verify_future_only_terms() -> list[str]:
         "docs/architecture/current-architecture.md",
         "docs/architecture/target-architecture.md",
         "docs/architecture/roadmap.md",
-        "docs/architecture.md",
+        "docs/architecture/architecture.md",
     ]
 
     for relative_path in docs_to_scan:

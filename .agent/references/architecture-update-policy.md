@@ -20,14 +20,14 @@ change area
 
 | Change Area | Affected docs | Examples |
 | --- | --- | --- |
-| Agent Runtime | `docs/architecture/current-architecture.md`, `docs/architecture/target-architecture.md`, `docs/architecture/roadmap.md`, `docs/architecture.md`, `docs/architecture.html`, `README.md`, `.agent/references/current-program.md`, `.agent/references/code-map.md`, `.agent/references/runtime-call-chain.md`, `.agent/references/diagram-inventory.md` | Planner、ReAct loop、Reflection、Replan、Task DAG、Todo、Checkpoint、RuntimeTurnLedger、post-turn evidence |
-| RAG / GraphRAG | `docs/architecture/target-architecture.md`, `docs/architecture.md`, `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md` | product mode、query_method、basic / local / global / drift、Evidence Check、Conditional Requery |
-| Memory System | `docs/architecture/target-architecture.md`, `docs/architecture.md`, `.agent/architecture/near-term/02-context-memory-architecture.md` | Short-term、Working、Conversation、Project、Long-term、Graph Memory、Context Builder |
-| Tool Layer / Hooks / MCP | `docs/architecture/target-architecture.md`, `docs/architecture.md`, `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md` | Tool Registry、Tool Contract、MCP Adapter、before_tool、after_tool、Permission、Budget |
+| Agent Runtime | `docs/architecture/overall-architecture.md`, `.agent/architecture/overall-architecture.md`, `docs/architecture/current-architecture.md`, `docs/architecture/target-architecture.md`, `docs/architecture/roadmap.md`, `docs/architecture/architecture.md`, `docs/architecture/architecture.html`, `README.md`, `.agent/references/current-program.md`, `.agent/references/code-map.md`, `.agent/references/runtime-call-chain.md`, `.agent/references/diagram-inventory.md` | Planner、ReAct loop、Reflection、Replan、Task DAG、Todo、Checkpoint、RuntimeTurnLedger、post-turn evidence |
+| RAG / GraphRAG | `docs/architecture/target-architecture.md`, `docs/architecture/architecture.md`, `.agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md` | product mode、query_method、basic / local / global / drift、Evidence Check、Conditional Requery |
+| Memory System | `docs/architecture/target-architecture.md`, `docs/architecture/architecture.md`, `.agent/architecture/near-term/02-context-memory-architecture.md` | Short-term、Working、Conversation、Project、Long-term、Graph Memory、Context Builder |
+| Tool Layer / Hooks / MCP | `docs/architecture/target-architecture.md`, `docs/architecture/architecture.md`, `.agent/architecture/near-term/03-capability-tool-retrieval-architecture.md` | Tool Registry、Tool Contract、MCP Adapter、before_tool、after_tool、Permission、Budget |
 | Evidence / Citation / Trace / Eval | `docs/architecture/current-architecture.md`, `docs/architecture/target-architecture.md`, `docs/architecture/roadmap.md` | Evidence Bundle、Citation Builder、Trace Event、Eval baseline、contract review |
 | Frontend / Backend Contract | `docs/architecture/current-architecture.md`, `docs/architecture/target-architecture.md`, `README.md` | API schema、event schema、SSE / WebSocket、request / response DTO |
-| Deployment / Infrastructure | `docs/architecture/target-architecture.md`, `docs/architecture/roadmap.md`, `docs/architecture.md` | database、vector store、graph store、worker、Redis、RabbitMQ、deployment topology |
-| Quality Attributes | `docs/architecture/target-architecture.md`, `docs/architecture.md`, `docs/architecture.html` | performance、reliability、security、observability、modifiability、evaluation |
+| Deployment / Infrastructure | `docs/architecture/target-architecture.md`, `docs/architecture/roadmap.md`, `docs/architecture/architecture.md` | database、vector store、graph store、worker、Redis、RabbitMQ、deployment topology |
+| Quality Attributes | `docs/architecture/overall-architecture.md`, `.agent/architecture/overall-architecture.md`, `docs/architecture/target-architecture.md`, `docs/architecture/architecture.md`, `docs/architecture/architecture.html` | performance、reliability、security、observability、modifiability、evaluation |
 
 ## Target Direction
 
@@ -49,7 +49,8 @@ change area
 1. 确认变更区域。
 2. 查上表列出受影响 docs。
 3. 查 `diagram-inventory.md` 决定是否更新十类架构视图。
-4. 需要 HTML 更新时只改 `docs/architecture.md` 或 `tools/agent/render_architecture.py`，再生成。
+4. 需要文字总架构更新时，同步 `docs/architecture/overall-architecture.md` 和 `.agent/architecture/overall-architecture.md`。
+5. 需要 HTML 更新时只改 `docs/architecture/architecture.md` 或 `tools/agent/render_architecture.py`，再生成。
 
 ## Allowed Changes
 
@@ -86,6 +87,8 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 
 - `.agent/references/diagram-inventory.md`
 - `docs/architecture/README.md`
+- `docs/architecture/overall-architecture.md`
+- `.agent/architecture/overall-architecture.md`
 - `tools/scripts/verify_docs_entrypoints.py`
 
 ## Lessons Learned

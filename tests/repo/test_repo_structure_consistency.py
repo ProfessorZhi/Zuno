@@ -1,4 +1,4 @@
-﻿import importlib.util
+import importlib.util
 import sys
 from pathlib import Path
 
@@ -54,6 +54,7 @@ def test_required_current_paths_exist() -> None:
         ".agent/templates/verification-report-template.md",
         ".agent/templates/workflow-change-note-template.md",
         ".agent/programs/current.md",
+        ".agent/architecture/overall-architecture.md",
         ".agent/architecture/near-term/00-architecture-index.md",
         ".agent/architecture/near-term/01-target-runtime-architecture.md",
         ".agent/architecture/near-term/02-context-memory-architecture.md",
@@ -63,11 +64,12 @@ def test_required_current_paths_exist() -> None:
         "apps/desktop",
         "apps/web",
         "docs/README.md",
+        "docs/architecture/overall-architecture.md",
         "docs/architecture/current-architecture.md",
         "docs/architecture/target-architecture.md",
         "docs/architecture/roadmap.md",
-        "docs/architecture.md",
-        "docs/architecture.html",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
         "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
         "docs/evidence/public-demo.md",
         "docs/reference/terminology.md",
@@ -107,11 +109,12 @@ def test_repo_structure_verifier_pins_current_front_path() -> None:
         ".agent/references/architecture-docs-map.md",
         ".agent/references/workflow-governance.md",
         "docs/README.md",
+        "docs/architecture/overall-architecture.md",
         "docs/architecture/current-architecture.md",
         "docs/architecture/target-architecture.md",
         "docs/architecture/roadmap.md",
-        "docs/architecture.md",
-        "docs/architecture.html",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
         "docs/evidence/public-demo.md",
         "docs/reference/terminology.md",
         "docs/history/audits",
@@ -644,8 +647,8 @@ def test_front_path_docs_link_current_entrypoints() -> None:
     assert "roadmap.md" in architecture_index
     assert "../evidence/public-demo.md" in architecture_index
     assert "./architecture/roadmap.md" in docs_index
-    assert "./deliverables.md" in docs_index
-    assert "./docs/deliverables.md" in readme
+    assert "./architecture/deliverables.md" in docs_index
+    assert "./docs/architecture/deliverables.md" in readme
     assert "./docs/architecture/roadmap.md" in readme
 
 
@@ -788,8 +791,8 @@ def test_architecture_diagram_generation_paths_are_pinned() -> None:
     )
 
     for phrase in [
-        "docs/architecture.md",
-        "docs/architecture.html",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
         "00-architecture-index.md",
         "tools/agent/render_architecture.py",
         "verify_architecture_diagram_outputs",

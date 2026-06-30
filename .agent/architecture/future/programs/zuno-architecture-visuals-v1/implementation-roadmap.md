@@ -3,7 +3,7 @@
 
 ## 目标
 
-在 `docs/architecture.html` 已经拥有两个理论框架、十类架构视图和唯一 HTML 展示入口后，做截图验证、README 精简入口和移动端可读性收口。
+在 `docs/architecture/architecture.html` 已经拥有两个理论框架、十类架构视图和唯一 HTML 展示入口后，做截图验证、README 精简入口和移动端可读性收口。
 
 ## Phase
 
@@ -15,4 +15,4 @@
 
 ## 禁止范围
 
-HTML 不能成为第二套架构真相；Mermaid 源仍以 `docs/architecture.md` 为准。
+HTML 不能成为第二套架构真相；Mermaid 源仍以 `docs/architecture/architecture.md` 为准。

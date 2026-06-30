@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 import importlib
@@ -70,6 +70,7 @@ REQUIRED_PATHS = [
     ".agent/architecture/future/programs/zuno-runtime-architecture-upgrade-v1/implementation-roadmap.md",
     ".agent/architecture/future/programs/zuno-architecture-visuals-v1/implementation-roadmap.md",
     ".agent/architecture/README.md",
+    ".agent/architecture/overall-architecture.md",
     ".agent/architecture/future/README.md",
     ".agent/architecture/decisions/README.md",
     ".agent/architecture/near-term/00-architecture-index.md",
@@ -86,11 +87,12 @@ REQUIRED_PATHS = [
     "apps/web/AGENTS.md",
     "docs/README.md",
     "docs/architecture/README.md",
+    "docs/architecture/overall-architecture.md",
     "docs/architecture/current-architecture.md",
     "docs/architecture/target-architecture.md",
     "docs/architecture/roadmap.md",
-    "docs/architecture.md",
-    "docs/architecture.html",
+    "docs/architecture/architecture.md",
+    "docs/architecture/architecture.html",
     "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
     "docs/architecture/decisions/README.md",
     "docs/evidence/README.md",
@@ -205,15 +207,17 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "新写或重写的 Agent 文档默认使用中文",
     ],
     "docs/README.md": [
+        "./architecture/overall-architecture.md",
         "./architecture/current-architecture.md",
         "./architecture/target-architecture.md",
         "./architecture/roadmap.md",
-        "./deliverables.md",
+        "./architecture/deliverables.md",
         "./evidence/public-demo.md",
         "./history/README.md",
         "前台文档默认使用中文",
     ],
     "docs/architecture/README.md": [
+        "overall-architecture.md",
         "current-architecture.md",
         "target-architecture.md",
         "roadmap.md",
@@ -221,6 +225,17 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "docs/history/programs/official-graphrag-cleanup-v1/",
         "docs/history/programs/zuno-target-architecture-migration-v1/",
         "过时审计、旧规格、旧 phase、旧计划和旧 runbook",
+    ],
+    "docs/architecture/overall-architecture.md": [
+        "总架构文档",
+        "本地优先的企业私有知识库与多功能 Agent 助手",
+        "文字总架构文档",
+        "架构 HTML",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
+        "Document Ingestion / Parse Gateway",
+        "Tool Control Plane",
+        "LangSmith-compatible Trace / Eval",
     ],
     "docs/architecture/roadmap.md": [
         "Phase 11A：已完成",
@@ -613,8 +628,8 @@ def verify_near_term_architecture_index() -> list[str]:
         "Summary Compression",
         "Structured Extraction",
         "ToolCard",
-        "docs/architecture.md",
-        "docs/architecture.html",
+        "docs/architecture/architecture.md",
+        "docs/architecture/architecture.html",
         "00-architecture-index.md",
     ]:
         if phrase not in content:
@@ -761,7 +776,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
 
 def verify_architecture_diagram_outputs() -> list[str]:
     errors: list[str] = []
-    architecture_source = _read_text("docs/architecture.md")
+    architecture_source = _read_text("docs/architecture/architecture.md")
     for phrase in [
         "Zuno 架构总览",
         "python tools/agent/render_architecture.py --check",
@@ -772,24 +787,25 @@ def verify_architecture_diagram_outputs() -> list[str]:
         "#52616f",
     ]:
         if phrase not in architecture_source:
-            errors.append(f"docs/architecture.md missing diagram sync phrase: {phrase}")
+            errors.append(f"docs/architecture/architecture.md missing diagram sync phrase: {phrase}")
 
     for stale_path in [
-        "docs/architecture/architecture.html",
+        "docs/architecture.md",
+        "docs/architecture.html",
         "docs/architecture/overview.html",
         ".agent/architecture/blueprint.html",
     ]:
         if (REPO_ROOT / stale_path).exists():
             errors.append(f"stale architecture HTML must not remain: {stale_path}")
 
-    for relative_path in ["docs/architecture.html"]:
+    for relative_path in ["docs/architecture/architecture.html"]:
         path = REPO_ROOT / relative_path
         if not path.exists():
             errors.append(f"missing architecture diagram HTML: {relative_path}")
             continue
         content = path.read_text(encoding="utf-8")
         for phrase in [
-            "docs/architecture.md",
+            "docs/architecture/architecture.md",
             "tools/agent/render_architecture.py",
             "4+1 View Model",
             "Component-and-Connector View",
@@ -818,7 +834,7 @@ def verify_architecture_diagram_outputs() -> list[str]:
             sys.modules[spec.name] = render_architecture
             spec.loader.exec_module(render_architecture)
             rendered = render_architecture.build_html()
-            for relative_path in ["docs/architecture.html"]:
+            for relative_path in ["docs/architecture/architecture.html"]:
                 path = REPO_ROOT / relative_path
                 if path.exists() and path.read_text(encoding="utf-8") != rendered:
                     errors.append(f"generated architecture HTML is stale: {relative_path}")

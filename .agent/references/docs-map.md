@@ -21,6 +21,7 @@ docs/history/ = archive and evidence
 
 - `README.md`：仓库总览和首读路径。
 - `docs/README.md`：文档入口。
+- `docs/architecture/overall-architecture.md`：总架构文档，文字说明当前事实、目标分层、主链路和实施落点。
 - `docs/architecture/current-architecture.md`：当前仓库事实。
 - `docs/architecture/target-architecture.md`：近期目标摘要。
 - `docs/architecture/roadmap.md`：当前状态和下一步。
@@ -38,6 +39,7 @@ Agent 工作流入口：
 - `.agent/references/`：本地项目 skills、lessons、playbooks。
 - `.agent/templates/`：执行骨架。
 - `.agent/programs/`：当前执行入口；有 active program 时放平铺 phase，当前也可以处于无 active 的等待状态。
+- `.agent/architecture/overall-architecture.md`：Agent 侧总架构维护文档，必须和正式总架构文档一致。
 - `.agent/architecture/near-term/`：近期目标架构详细设计。
 - `.agent/scripts/`：过渡期验证器。
 
@@ -55,9 +57,10 @@ Agent 工作流入口：
 ## Before Editing
 
 1. 读 `docs/architecture/README.md`、`current-architecture.md`、`target-architecture.md`、`roadmap.md`。
-2. 读 `.agent/README.md`、`.agent/system.yaml`、`task-routing.md`、`workflow.md`。
-3. 判断修改属于 Current、Target、Program、Skill、Template、History 哪一类。
-4. 搜索同一术语的前台命中，避免只改一个入口。
+2. 架构任务先读 `docs/architecture/overall-architecture.md` 和 `.agent/architecture/overall-architecture.md`。
+3. 读 `.agent/README.md`、`.agent/system.yaml`、`task-routing.md`、`workflow.md`。
+4. 判断修改属于 Current、Target、Program、Skill、Template、History 哪一类。
+5. 搜索同一术语的前台命中，避免只改一个入口。
 
 ## Allowed Changes
 
@@ -95,7 +98,7 @@ Agent 工作流入口：
 - `.agent/references/diagram-inventory.md`
 - `.agent/references/current-target-future-rules.md`
 
-这些文件说明 `docs/architecture/`、`docs/architecture.html`、`.agent/references/`、`.agent/templates/` 和 `.agent/programs/` 如何同步。涉及 architecture.html 或十类 Mermaid 架构视图时，不要只读本 docs map。
+这些文件说明 `docs/architecture/`、`docs/architecture/architecture.html`、`.agent/references/`、`.agent/templates/` 和 `.agent/programs/` 如何同步。涉及 architecture.html 或十类 Mermaid 架构视图时，不要只读本 docs map。
 
 ## Agent Workflow Self-Maintenance
 
@@ -107,7 +110,7 @@ Agent 工作流入口：
 - `.agent/references/workflow-change-log.md`
 - `.agent/references/workflow-maintenance-checklist.md`
 
-当用户提出新的长期工作方式要求时，先用这些文件判断是否需要更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture.html`、verifier 或 tests。
+当用户提出新的长期工作方式要求时，先用这些文件判断是否需要更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture/architecture.html`、verifier 或 tests。
 
 ## Focused Tests
 
@@ -133,9 +136,11 @@ pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p
 - `.agent/templates/README.md`
 - `docs/README.md`
 - `docs/architecture/README.md`
+- `docs/architecture/overall-architecture.md`
 - `docs/architecture/current-architecture.md`
 - `docs/architecture/target-architecture.md`
 - `docs/architecture/roadmap.md`
+- `.agent/architecture/overall-architecture.md`
 - `docs/history/README.md`
 
 ## Lessons Learned

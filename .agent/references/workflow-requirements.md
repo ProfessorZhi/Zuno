@@ -35,7 +35,7 @@ Affected files: `.agent/references/workflow-update-policy.md`、`.agent/referenc
 
 Status: Current
 
-Requirement: 架构相关变更必须检查并同步 `docs/architecture`、`docs/architecture.html`、`.agent/references`、`.agent/templates` 和 `.agent/programs`。
+Requirement: 架构相关变更必须检查并同步 `docs/architecture`、`docs/architecture/architecture.html`、`.agent/references`、`.agent/templates` 和 `.agent/programs`。
 
 Affected files: `.agent/references/architecture-docs-map.md`、`.agent/references/documentation-governance.md`、`.agent/references/architecture-update-policy.md`、`.agent/references/diagram-inventory.md`。
 
@@ -69,7 +69,7 @@ Status: Current
 
 Requirement: 项目根目录只保留稳定项目入口和配置。临时截图、浏览器截图、PDF 预览、测试产物、本地报告、缓存和导出物不得遗留在根目录。正式附件进入对应 `docs/**/assets/`；临时调试产物进入 `.local/` 或 `tmp/`；可复现报告进入受控 `reports/` 路径。
 
-Affected files: `AGENTS.md`、`.agent/references/workflow.md`、`.agent/references/workflow-maintenance-checklist.md`、`.agent/scripts/verify_repo_hygiene.py`、`docs/deliverables.md`。
+Affected files: `AGENTS.md`、`.agent/references/workflow.md`、`.agent/references/workflow-maintenance-checklist.md`、`.agent/scripts/verify_repo_hygiene.py`、`docs/architecture/deliverables.md`。
 
 ## Target Direction
 
