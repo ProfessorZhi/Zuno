@@ -1,80 +1,57 @@
 # 当前程序
 
-当前 active program：`zuno-architecture-detail-and-execution-plan-v1`
+当前 active program：`zuno-master-architecture-implementation-v1`
 
 state: active
-current_phase: PHASE04_execution-roadmap-from-architecture
+current_phase: PHASE01_program-baseline-and-previous-closure
 
 ## 目标
 
-本 program 先细化 Zuno 的目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Tool Control Plane、Document Ingestion、企业私有知识库主叙事、安全 / 沙箱治理、Trace / Eval 和 LangSmith 适配。
+本 program 把 Zuno 从“目标架构文档与架构图已经成型”推进到“目标架构分阶段落地”。它先整理项目文件夹和代码分布，再围绕企业私有知识库与多功能 Agent 助手交付八个方面产物，并同步架构 Markdown、架构 HTML、README、verifier、tests 和历史归档。
 
-它不是 runtime feature implementation，不新增 API / DB schema / frontend 行为，不把 Target 写成 Current。
+## 为什么先做文件夹整理
 
-本 program 还负责新增并登记总架构文档治理：`docs/architecture/architecture.md` 作为正式文字总架构文档，`.agent/architecture/architecture.md` 作为 Agent 侧总架构维护文档；图形总览继续由 `docs/architecture/architecture.md` 生成到 `docs/architecture/architecture.html`。
+当前 `src/backend/zuno` 顶层已经收口为 `api / agent / memory / capability / knowledge / platform` 六层，但六层内部仍有 facade、旧 implementation、compat import、vendor、provider tools 和平台 services 混住的问题。直接实现 runtime feature 会继续把旧目录越堆越厚，所以本 program 第一段必须先完成 ownership matrix、compat/vendor 边界、可再生成缓存清理和 verifier 固定。
 
-## 范围
+## 八个方面产物
 
-允许修改：
-
-- `docs/architecture/architecture.md`
-- `docs/architecture/architecture.md`
-- `docs/architecture/architecture.html`
-- `.agent/architecture/architecture.md`
-- `docs/architecture/architecture.md`
-- `docs/architecture/architecture.md`
-- `docs/architecture/architecture.md`
-- `docs/architecture/README.md`
-- `docs/architecture/architecture.md`
-- `AGENTS.md`
-- `README.md`
-- `.agent/programs/*`
-- `.agent/references/current-program.md`
-- `.agent/references/docs-map.md`
-- `.agent/references/architecture-docs-map.md`
-- `.agent/references/documentation-governance.md`
-- `.agent/references/architecture-update-policy.md`
-- `.agent/references/workflow.md`
-- `.agent/references/diagram-inventory.md`
-- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/future/programs/README.md`
-- `tools/agent/render_architecture.py`
-- `.agent/scripts/verify_agent_system.py`
-- `.agent/scripts/verify_doc_boundaries.py`
-- `tools/scripts/verify_docs_entrypoints.py`
-- `tools/scripts/verify_repo_structure.py`
-- `tests/repo/test_agent_system.py`
-- `tests/repo/test_docs_entrypoints.py`
-
-禁止修改：
-
-- Runtime 代码、API 行为、DB schema、frontend product flow。
-- `src/backend/zuno/**`，除非后续单独打开实现 program。
-- 历史归档内容，除非本 program 收口时归档自身。
+| 编号 | 产物面 | 目标 |
+| --- | --- | --- |
+| D1 | 项目文件夹与代码布局治理 | 让目录能表达责任边界，减少 platform/services 和 capability/tools 的视觉噪音。 |
+| D2 | 企业私有知识库场景与产品闭环 | 明确 workspace、task/session、upload、artifact、SSE/WebSocket、trace panel 的产品链路。 |
+| D3 | Document Ingestion / Parse Gateway | 支持 PDF、Office、图片、代码、TXT、MD、HTML 等常见文件，统一输出 Canonical Document IR。 |
+| D4 | Single Controller Agent Runtime | 用 LangGraph-compatible harness 落地 prepare_context、plan、ReAct、reflect、replan、post_turn_commit。 |
+| D5 | Context / Memory 系统 | 落地 Raw Event Log、Recent Window、Task Summary、Structured Memory、promotion/decay。 |
+| D6 | Tool Control Plane | 落地 ToolCard manifest、selector、policy、approval、executor adapter、MCP 和 sandbox。 |
+| D7 | RAG / GraphRAG 知识系统 | 落地 basic/local/global/drift、retrieval fusion、GraphRAG indexing/query、Evidence/Citation。 |
+| D8 | 安全、评测、观测、文档展示闭环 | 落地 security gates、LangSmith-compatible trace/eval、architecture.md/html 更新和 release gate。 |
 
 ## 当前阶段
 
-- `PHASE01_architecture-state-and-program-boot.md`：completed。
-- `PHASE02_target-architecture-detailing.md`：completed。
-- `PHASE03_mermaid-html-detail-refresh.md`：completed。
-- `PHASE04_execution-roadmap-from-architecture.md`：active。
-- `PHASE05_validation-and-closure.md`：pending。
-
-## 下一阶段落点
-
-附件评估确认：继续堆总览图的边际收益已经不高，真正增量在把目标架构转成可执行产品 program。PHASE04 当前要把下一轮实现拆成四条可执行主线：
-
-1. `Document Ingestion / Parse Gateway`：多格式解析、Canonical Document IR、chunk/provenance、BM25/vector/graph indexing。
-2. `Runtime + Memory + Tool Plane`：Context Pack、summary compression、structured extraction、ToolCard manifest、executor registry、approval flow。
-3. `Eval / Observability`：LangSmith trace 映射、dataset、RAGAS / DeepEval 指标、citation coverage 和 CI regression gate。
-4. `Security + Enterprise Scenarios`：PII / 商业秘密脱敏、prompt injection 防护、ACL、输出 DLP、Policy / Workspace / Execution / Network-Credential Sandbox、高风险工具人工审批，以及企业知识库 / HR 简历库场景。
+- `PHASE01_program-baseline-and-previous-closure.md`：active。
+- `PHASE02_project-folder-and-code-layout-cleanup.md`：pending。
+- `PHASE03_enterprise-scenario-and-product-loop.md`：pending。
+- `PHASE04_document-ingestion-parse-gateway.md`：pending。
+- `PHASE05_agent-runtime-langgraph-harness.md`：pending。
+- `PHASE06_context-memory-system.md`：pending。
+- `PHASE07_tool-control-plane-mcp-approval.md`：pending。
+- `PHASE08_rag-graphrag-evidence-citation.md`：pending。
+- `PHASE09_security-governance-sandbox.md`：pending。
+- `PHASE10_eval-observability-langsmith.md`：pending。
+- `PHASE11_architecture-docs-html-refresh.md`：pending。
+- `PHASE12_validation-release-closure.md`：pending。
 
 ## 当前边界
 
-最近完成并归档的 program 仍是 `zuno-eight-deliverables-full-realization-v1`，它完整落实八个交付物：
+- 本 program 可以创建和修改计划、文档、verifier、tests，并在对应 phase 中逐步修改 runtime code。
+- 任何 runtime phase 必须先写或更新 focused tests，再做实现。
+- 兼容路径不能为了视觉清爽直接删除；必须先由 import matrix 和 tests 证明替代路径可用。
+- `Document Ingestion`、`LangGraph runtime`、`Memory DB`、`Tool approval`、`GraphRAG extraction/fusion`、`LangSmith trace/eval` 和 `security sandbox` 在对应 phase 完成前仍是 Target。
+- 产品 runtime 默认仍是 Single Controller Agent；Codex 多线程和多 worktree 只属于工程交付方式。
 
-- 历史目录：`docs/history/programs/zuno-eight-deliverables-full-realization-v1/`
-- 范围：PHASE01-PHASE10。
-- 状态：completed / archived。
-- 执行方式：主线程目标模式 + 线程内多 agent 协作；这是 Codex 执行协作，不是 Zuno runtime 架构；不是多线程模式。
+## 最近完成归档
 
-本 program 继承上一个 program 的 Current / Target 纪律：PHASE04-PHASE09 foundation slices 是当前已证明事实；完整产品级 LangGraph runtime、生产级 Memory DB、成熟 memory read/write/promotion/decay、动态工具编排、完整 parser gateway、LangSmith 产品化、安全闸门和前端 trace 面板仍是 Target。
+- `docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/`：完成架构文档、架构图、HTML 和后续执行计划细化。
+- `docs/history/programs/zuno-eight-deliverables-full-realization-v1/`：完成上一轮八大交付物闭环。
+- `docs/history/programs/zuno-six-layer-internalization-v1/`：完成六层内部第一批 foundation surfaces。
+- `docs/history/programs/zuno-repo-layout-cleanup-v1/`：完成顶层六层目录和 legacy alias surface closure。

@@ -35,16 +35,20 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 active program
 
-当前 active Agent program 是 `zuno-architecture-detail-and-execution-plan-v1`，阶段是 `PHASE04_execution-roadmap-from-architecture`。它只收口架构文档、架构图、HTML 和后续执行计划，不实现 runtime feature。
+当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE01_program-baseline-and-previous-closure`。它先归档上一轮架构细化计划并固定新的大型执行计划，然后按十二个 phase 推进项目文件夹整理、八个方面产物交付、目标架构 runtime 落地、正式架构 Markdown / HTML 更新和 release 验证。
 
 执行状态入口在 `.agent/programs/`。
 
-下一轮实现优先级：
+本轮大型 program 的八个方面产物：
 
-1. `zuno-document-ingestion-v1`
-2. `zuno-runtime-memory-tool-plane-v1`
-3. `zuno-eval-observability-v1`
-4. `zuno-security-enterprise-scenarios-v1`
+1. 项目文件夹与代码布局治理。
+2. 企业私有知识库场景与产品闭环。
+3. Document Ingestion / Parse Gateway。
+4. Single Controller Agent Runtime。
+5. Context / Memory 系统。
+6. Tool Control Plane。
+7. RAG / GraphRAG 知识系统。
+8. 安全、评测、观测、文档展示闭环。
 
 ## 运行示例
 

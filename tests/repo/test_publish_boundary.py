@@ -32,7 +32,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
 
     for phrase in [
         ".agent/programs/",
-        "zuno-architecture-detail-and-execution-plan-v1",
+        "zuno-master-architecture-implementation-v1",
     ]:
         assert phrase in readme
 
@@ -45,7 +45,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
     ]:
         assert phrase in architecture
     assert "当前 active program" in current_program
-    assert "PHASE04_execution-roadmap-from-architecture" in current_program
+    assert "PHASE01_program-baseline-and-previous-closure" in current_program
 
 
 def test_public_docs_keep_history_off_front_path_but_reachable() -> None:

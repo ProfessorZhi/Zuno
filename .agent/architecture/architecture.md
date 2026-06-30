@@ -82,6 +82,97 @@ Current 只写代码、测试和可复现结果已经证明的事实：
 | Trace / Eval | runtime trace、LangSmith 映射、dataset、offline / online eval、retrieval / answer / tool / security 指标。 | 当前有本地 trace/eval foundation；LangSmith 产品化仍是 Target。 |
 | Platform | storage、model gateway、worker、artifact、observability 和 provider。 | 近期保持模块化单体，不写成微服务 Current。 |
 
+## 目标架构细化
+
+Zuno 的目标架构可以理解为“单控制器运行时 + 多平面支撑”。单控制器不是简单聊天循环，而是一个能在企业知识库场景里持续做上下文准备、任务规划、工具选择、检索决策、证据检查、质量反思、计划修正和结果提交的运行时。多平面支撑不是微服务拆分，而是把文档解析、知识检索、记忆、工具、安全、评测和平台基础设施各自的责任边界讲清楚。近期实现仍应保持模块化单体，先把内部 contracts、tests、trace 和 verifier 做稳，再决定哪些能力需要 worker、队列或独立服务。
+
+### 企业私有知识场景平面
+
+产品主场景是企业内部文档知识库与多功能 Agent 助手。它不是“用户问一句，向量库召回几段，然后模型回答”的普通 RAG demo，而是围绕企业工作空间组织知识、任务、权限、文件、产物和审计。一个 workspace 可以绑定部门、项目、合同库、简历库、制度库或研发知识库；一个 knowledge space 管理文档集合、GraphRAG project、索引版本、ACL 和 citation policy；一个 tool space 管理搜索、数据库、邮件、文件、浏览器、CLI、MCP 和内部 API 等动作能力。
+
+这个场景决定了 Zuno 不能只优化答案质量，还要关心文件从哪里来、谁有权看、解析是否保留页码和表格、检索结果是否可引用、工具动作是否需要审批、输出是否泄露隐私或商业机密、trace 能不能复盘。企业用户真正需要的是“可理解、可追溯、可执行、可评测、可治理”的知识工作台。问答只是入口，后续还要支持制度解释、文档对比、合同审查、候选人简历匹配、项目复盘摘要、竞品报告、邮件草拟、表单填充和报告产物下载。
+
+### API / Session / Artifact 平面
+
+API 层的目标不是只提供 completion endpoint，而是形成 task / session / artifact / event 的产品闭环。任务启动时，API 应创建会话、绑定 workspace scope、记录用户身份和权限上下文，并把上传文件、选定知识库、product mode、query method preference、工具授权策略写入 request envelope。运行过程中，SSE 或 WebSocket 推送 planning、retrieval、tool_call、approval_required、artifact_created、eval_diagnostic 和 error 等事件。运行结束后，artifact list / download 提供 Markdown、PDF、JSON、citation bundle 和 trace report。
+
+这个平面是 deepsearch 类产品看起来“完整”的原因，也是 Zuno 下一阶段补产品感的关键。它不是近期 Current，也不要求立即做复杂微服务；但要求后端 contracts 把 session id、task id、trace id、artifact id、workspace id 和 graph project id 串起来。没有这层，LangSmith trace、文档解析、工具审批和产物下载都会各自存在，不能形成用户能感知的闭环。
+
+### Single Controller Agent Runtime 平面
+
+规划模块在 Zuno 里不应被画成独立于 Agent 的第五个大脑，而应落在 Single Controller Agent Runtime 内部。目标状态机是：
+
+```text
+prepare_context
+  -> intent_and_policy_route
+  -> plan
+  -> act_react_loop
+  -> observe
+  -> evidence_check
+  -> reflect
+  -> replan_if_needed
+  -> answer_or_artifact
+  -> post_turn_commit
+```
+
+`plan` 负责把复杂目标拆成可执行步骤；`act_react_loop` 负责单步工具调用、检索和观察；`reflect` 负责检查当前答案是否有足够证据、格式是否正确、是否可能泄密或越权；`replan_if_needed` 在检索不足、工具失败或用户目标变化时重写剩余步骤；`post_turn_commit` 把 trace、artifact、memory candidate、eval diagnostics 和安全审计写回。LangGraph 适合承载这类 runtime，不是因为项目需要“装了 LangGraph”，而是因为 durable execution、interrupt / approval、streaming、checkpoint、resume 和状态图正好对应企业任务运行时的需求。
+
+当前 Zuno 只能说已经有 `GeneralAgent` single loop、RuntimeTurnLedger 和最小 evidence chain foundation。完整 LangGraph-compatible runtime 仍是 Target。近期最短路径不是一开始就做多 Agent，而是先把单控制器的状态、输入输出、事件、失败恢复和审批点做稳。未来如果引入子 Agent，也应该作为工具或 delegated worker，由单控制器管理，而不是让产品架构默认变成多 Agent 混战。
+
+### Context / Memory 平面
+
+Memory 不是“把历史聊天塞进 prompt”。Zuno 的目标记忆层至少分五类：Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory 和 Model Context Pack。Raw Event Log 是可审计的原始事件账本；Recent Window 是当前任务短期上下文；Task Summary 是压缩后的阶段状态；Structured Memory 是经过 review / promotion 的长期事实、偏好、项目状态或经验；Model Context Pack 是每轮真正喂给模型的受控上下文包。
+
+记忆压缩应按风险和用途分层。滑动窗口只解决 token 预算；摘要压缩解决长任务连续性；结构化抽取解决可检索、可审计和可更新；反思型记忆解决失败经验和工具偏好沉淀。企业场景里，长期记忆还必须绑定 workspace、user、project、source、confidence、privacy label、retention policy 和 last_verified_at。敏感记忆不能因为“对回答有用”就自动进入 prompt；它必须经过权限检查、脱敏策略和上下文预算策略。
+
+当前 Zuno 的 Context / Memory foundation 已有 taxonomy、Context Pack policy、source id coverage 和 review contract，但 production-grade memory retrieval / consolidation / decay 仍是 Target。实施时应先做 read-write-manage 的最小闭环：事件可写、近期窗口可构造、摘要可生成、候选记忆可 review、结构化记忆可检索、Context Pack 可解释为何包含或排除某条记忆。
+
+### Document Ingestion / Parse Gateway 平面
+
+企业知识库的质量首先取决于文档摄取，而不是检索算法。目标 Parse Gateway 应负责格式识别、parser routing、OCR / layout、结构抽取、chunk、metadata、ACL 继承、provenance 和 index handoff。它的输出不应是一段裸文本，而应是 Canonical Document IR，例如 document、section、page、paragraph、table、image、code_block、metadata、source_span 和 acl_scope 组成的结构化对象。
+
+最低支持矩阵应覆盖 PDF、DOCX、PPTX、XLSX、TXT、MD、HTML、CSV / JSON、图片 / 扫描件和代码文件。PDF 需要页码、bbox、表格和 OCR fallback；Office 文件需要 heading、slide、sheet、table 和批注；Markdown / HTML 需要标题层级和链接；代码文件需要语言、路径、symbol、line range 和代码感知切块；图片需要 OCR 文本、视觉描述、bbox 和 confidence。Docling、PyMuPDF4LLM、MarkItDown、Unstructured、OCR / VLM 可以作为 adapter 候选，但 Zuno 自己要维护统一的 ParseRequest、ParseResult、Document IR、parser capability matrix 和 golden tests。
+
+这就是为什么 Document Ingestion 不能继续隐含在工具层里。工具层负责“怎么调用解析器”，但知识系统需要“解析后的结构如何进入 BM25、vector、graph、citation 和 eval”。如果解析阶段没有保留 page、table、source span 和 ACL，后面的 citation、DLP、GraphRAG entity extraction 和 answer grounding 都会变弱。
+
+### Tool Control Plane 平面
+
+工具层按 capability domain 治理，不按 API / SDK / CLI / MCP 这些执行方式拆顶层业务分类。搜索、文件、数据库、邮件、浏览器、代码执行、知识库查询和内部系统访问是 capability；local function、SDK、HTTP API、CLI、SSH、MCP stdio、MCP HTTP 是 executor adapter。ToolCard 是工具的声明式身份证，运行时代码只是其中一个执行后端。
+
+目标 ToolCard 至少需要 tool_id、display_name、description、input_schema、output_schema、capability_tags、execution_mode、trust_tier、side_effect_level、permissions_required、workspace_scope、rate_limit、timeout、cost_hint、secrets_required、approval_policy、audit_policy、failure_modes 和 result_normalizer。Tool Router 的顺序应是作用域过滤、权限过滤、trust tier 过滤、side-effect 分级、健康检查、成本 / 延迟策略、schema compatibility 和 fallback。高副作用工具，例如 send_email、外部写数据库、SSH、删除文件或覆盖产物，默认进入 approval / interrupt / resume 流程。
+
+当前已有 ToolCard compact metadata、Native BM25 ToolCard retrieval、MCP/local tool policy trace 和 capability selection trace bridge。完整动态工具编排、approval UI、executor sandbox、credential broker 和 MCP trust governance 仍是 Target。
+
+### Knowledge / RAG / GraphRAG 平面
+
+Knowledge 平面需要同时保留 Basic RAG 和 GraphRAG，而不是把 GraphRAG 当成所有问题的默认解。`basic` 适合精确片段问答、合同条款查找、制度定位和低延迟回答，目标是 BM25 + dense vector + metadata filter + RRF + optional rerank。`local` 适合围绕实体、关系、人物、项目、条款或组织局部邻域的问题。`global` 适合跨文档主题、社群摘要和全局 sensemaking，它应作为 community-level prior，而不是和 chunk-level BM25 结果直接硬混排。`drift` 适合复杂研究，先用 global primer 形成主题和子问题，再用 local / basic 回补可引用证据。
+
+Evidence / Citation 是 RAG 产品化的底座。检索结果进入答案前，应经过 evidence bundle 构造、citation coverage 检查、source trust label、ACL check、freshness check 和 answer grounding check。没有证据的答案可以草拟，但不能伪装成已引用知识库结论。对于企业知识库，引用不仅是“好看”，还是审计、合规、复盘和 eval 的入口。
+
+当前 Zuno 有 KnowledgeQueryService、GraphRAGQueryService、GraphRAGProjectSnapshot、KnowledgeQueryResult、query_method trace 和 citation contract foundation。生产级 LLM-first entity / relation extraction、多套 extractor config、community report 生成、完整 RRF / rerank 和 GraphRAG index pipeline 仍是 Target。
+
+### Security / Governance 平面
+
+企业私有知识场景的安全问题主要分四类：稳定性、安全性、隐私和商业机密。稳定性是任务不要乱跑、工具不要误调用、失败要可恢复；安全性是 prompt injection、tool abuse、越权访问、恶意文件和不可信 MCP server 不应突破边界；隐私是 PII、候选人资料、员工信息、客户数据不能被误写入不该去的上下文或输出；商业机密是合同、报价、技术方案、内部策略、源代码和密钥不能被泄露、混入公开 provider 或输出给无权用户。
+
+目标安全链路有四道闸：输入闸门、检索闸门、工具闸门、输出闸门。输入闸门做鉴权、限流、文件校验、PII / secret / injection 检测；检索闸门做 workspace / project scope、chunk ACL、document trust label 和恶意指令净化；工具闸门做 permission decision、side-effect approval、secret broker、network / cwd / host allowlist、timeout 和 sandbox；输出闸门做 DLP scan、citation coverage、敏感字段脱敏、格式校验和 policy violation report。
+
+安全不是单独一个 endpoint，而是横切 runtime。每次检索、每次工具调用、每次输出都要能产出 policy decision 和 audit trace。LangGraph 的 interrupt / resume 可以承载审批恢复点；平台层的 sandbox 和 credential broker 负责把“模型建议调用工具”与“代码真正执行工具”隔开。
+
+### Eval / Observability 平面
+
+评测与观测不是上线后才补的看板，而是 Zuno 能否证明自己进步的质量系统。目标 trace schema 应兼容 LangSmith 的 run / span / thread / dataset / experiment 组织方式，同时保留本地 JSONL 和 pytest / eval runner 作为 release gate。每次请求至少要关联 trace_id、session_id、workspace_id、requested_query_method、resolved_query_method、retrieval events、tool events、evidence bundle、citation coverage、latency、cost、fallback reason、approval decision 和 policy diagnostics。
+
+指标分四层。检索层看 Recall@k、MRR、nDCG、retrieval relevance、context precision / recall、community report hit rate 和 citation coverage。回答层看 correctness、faithfulness / groundedness、answer relevance、format validity 和 hallucination risk。Agent 层看 tool selection、argument correctness、trajectory quality、fallback rate、retry rate、approval rate、task completion rate 和 P50 / P95 latency。安全层看 prompt injection block rate、redaction miss rate、sandbox violation、unauthorized retrieval block 和 output DLP violation。
+
+当前 Zuno 有本地 eval baseline、trace/eval foundation 和 Contract Review eval 证据，但 LangSmith 驱动的持续评测平台仍是 Target。实施时应先做 schema mapping 和离线 dataset，再接 online monitoring。这样未来简历或 demo 里可以写出真实数字，而不是只说“做了 RAG 评测”。
+
+### Platform / Storage / Worker 平面
+
+近期平台层仍应保持模块化单体；微服务不是近期 Current，也不是默认路线。目标上，Platform 负责 model gateway、settings、database、object storage、vector store、graph store、search index、queue / worker、secrets、observability 和 provider adapter。文档解析、embedding、GraphRAG indexing、artifact rendering 和长任务可以先通过 background job / worker 抽象表达，不需要立刻引入完整分布式架构。
+
+代码布局上，`src/backend/zuno` 顶层六层已经正确：`api / agent / memory / capability / knowledge / platform`。下一阶段要整理的是六层内部。`platform/services` 不能继续变成所有旧业务逻辑的停车场；`capability/tools` 不能让 provider、adapter、domain tool、legacy alias 混在一起；`platform/compatibility` 应逐步收缩为 legacy import registry、vendor shim 和 migration notice；Document Ingestion 应进入 `knowledge/ingestion` 或等价知识摄取边界，而不是散落在工具目录。任何移动都必须先由 import matrix、focused tests 和 verifier 证明，不为了视觉清爽直接删兼容路径。
+
 ## 主链路
 
 ```text
@@ -144,12 +235,33 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 只做架构文档、架构图、HTML 和执行计划收口，不实现 runtime feature。下一轮实现应拆成四个 program：
+当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE01_program-baseline-and-previous-closure`，只负责归档上一轮 program、修正状态面、归档研究产物、扩写架构源文档和同步 verifier / tests，不在本阶段实现 runtime feature。
 
-1. `zuno-document-ingestion-v1`：多格式解析、Canonical Document IR、chunk / provenance、BM25 / vector / graph indexing。
-2. `zuno-runtime-memory-tool-plane-v1`：Context Pack、summary compression、structured extraction、ToolCard manifest、executor registry、approval flow。
-3. `zuno-eval-observability-v1`：LangSmith trace 映射、dataset、RAGAS / DeepEval 指标、citation coverage 和 CI regression gate。
-4. `zuno-security-enterprise-scenarios-v1`：PII / 商业机密脱敏、prompt injection 防护、ACL、输出 DLP、四层 sandbox、企业知识库 / HR 简历库场景。
+本 program 的十二个 phase：
+
+1. `PHASE01_program-baseline-and-previous-closure`：收口上一轮架构细化 program，打开本大型 implementation program，归档 ChatGPT 研究模式产物，固定 README、AGENTS、`.agent/references/current-program.md`、verifier 和 tests 的 active 状态。
+2. `PHASE02_project-folder-and-code-layout-cleanup`：先处理用户指出的项目文件夹混乱问题，建立 ownership matrix、compat / vendor / provider 边界、缓存清理规则、legacy import matrix 和 repo structure guard。
+3. `PHASE03_enterprise-scenario-and-product-loop`：把企业私有知识库场景落成 workspace、task / session、upload、artifact、SSE / WebSocket、trace panel 和 user feedback contracts。
+4. `PHASE04_document-ingestion-parse-gateway`：实现多格式文档解析目标层，覆盖 PDF、Office、图片、代码、TXT、MD、HTML 等常见格式，输出 Canonical Document IR、chunk metadata、provenance 和 ACL。
+5. `PHASE05_agent-runtime-langgraph-harness`：把 Single Controller Agent Runtime 从目标状态机推进到 LangGraph-compatible harness，形成 prepare_context、plan、ReAct、observe、reflect、replan 和 post_turn_commit 的最小闭环。
+6. `PHASE06_context-memory-system`：落地 Raw Event Log、Recent Window、Task Summary、Structured Memory、Context Pack、review / promotion / decay 和 memory eval 的可测试路径。
+7. `PHASE07_tool-control-plane-mcp-approval`：落地 ToolCard manifest、selector、policy、approval、executor adapter、MCP trust、credential broker 和 sandbox 的第一版。
+8. `PHASE08_rag-graphrag-evidence-citation`：深化 basic / local / global / drift，补齐 retrieval fusion、GraphRAG indexing/query、evidence bundle、citation coverage 和 rerank / fallback trace。
+9. `PHASE09_security-governance-sandbox`：实现输入闸门、检索闸门、工具闸门、输出闸门，覆盖 prompt injection、PII / 商业机密脱敏、ACL、DLP、side-effect approval 和 audit trace。
+10. `PHASE10_eval-observability-langsmith`：建立 LangSmith-compatible trace schema、dataset、offline / online eval、RAG / answer / agent / security metrics 和 CI regression gate。
+11. `PHASE11_architecture-docs-html-refresh`：根据已落地事实更新 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两份 `architecture.html`，保证 Markdown 比 HTML 更详细，HTML 图为主。
+12. `PHASE12_validation-release-closure`：运行 repo verifiers、focused tests、必要的 full pytest、文档 self-review、program closure、历史归档、commit 和 push。
+
+这十二个 phase 可以在后续按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。
+
+## 研究产物归档
+
+用户提供的高质量架构 PDF 已作为 research input 归档到：
+
+- `docs/history/research/chatgpt-research-mode-artifacts/zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.pdf`
+- `docs/history/research/chatgpt-research-mode-artifacts/zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.md`
+
+这个目录使用英文名 `chatgpt-research-mode-artifacts`，专门保存 ChatGPT 研究模式产物。它不是当前架构事实源。正式架构事实源仍是本文；HTML 展示仍由本文生成。吸收研究报告时，必须重新判断哪些是 Current，哪些是 Target，哪些只能作为 Future 或 History。
 
 ## 当前前台文档边界
 

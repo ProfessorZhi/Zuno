@@ -181,7 +181,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前 active program 是 `zuno-architecture-detail-and-execution-plan-v1`。它只细化目标架构文档、十类 Mermaid 架构图、生成 HTML 和后续执行计划，不实施 runtime feature，不新增 API / DB schema / frontend 行为。最近完成并归档的 program 是 `zuno-eight-deliverables-full-realization-v1`。它不是 Program 3 返工，也不是只做 architecture markdown / HTML，而是把八大交付物完整落实到文档、目标架构、代码结构、runtime contracts、验证和收口证据中。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
+当前 active program 是 `zuno-master-architecture-implementation-v1`。它先整理项目文件夹和代码布局，再按八个方面产物推进企业私有知识库 Agent Workspace 的目标架构落地，并同步正式架构 Markdown、架构 HTML、README、verifier、tests 和历史归档。当前阶段是 `PHASE01_program-baseline-and-previous-closure`，本阶段只做上一轮 program 归档、状态面修正、研究产物归档和文档 / verifier 同步，不实现 runtime feature。最近完成并归档的 program 是 `zuno-architecture-detail-and-execution-plan-v1`；它完成架构文档、架构图、HTML 和执行计划细化。`zuno-eight-deliverables-full-realization-v1` 仍是八大交付物闭环的历史完成事实。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
 
 最新完成程序归档在：
 
@@ -199,13 +199,20 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/closure-checklist.md`
 - `.agent/programs/README.md`
-- `.agent/programs/PHASE01_architecture-state-and-program-boot.md`
-- `.agent/programs/PHASE02_target-architecture-detailing.md`
-- `.agent/programs/PHASE03_mermaid-html-detail-refresh.md`
-- `.agent/programs/PHASE04_execution-roadmap-from-architecture.md`
-- `.agent/programs/PHASE05_validation-and-closure.md`
+- `.agent/programs/PHASE01_program-baseline-and-previous-closure.md`
+- `.agent/programs/PHASE02_project-folder-and-code-layout-cleanup.md`
+- `.agent/programs/PHASE03_enterprise-scenario-and-product-loop.md`
+- `.agent/programs/PHASE04_document-ingestion-parse-gateway.md`
+- `.agent/programs/PHASE05_agent-runtime-langgraph-harness.md`
+- `.agent/programs/PHASE06_context-memory-system.md`
+- `.agent/programs/PHASE07_tool-control-plane-mcp-approval.md`
+- `.agent/programs/PHASE08_rag-graphrag-evidence-citation.md`
+- `.agent/programs/PHASE09_security-governance-sandbox.md`
+- `.agent/programs/PHASE10_eval-observability-langsmith.md`
+- `.agent/programs/PHASE11_architecture-docs-html-refresh.md`
+- `.agent/programs/PHASE12_validation-release-closure.md`
 
-当前阶段是 `PHASE04_execution-roadmap-from-architecture`。PHASE01-PHASE03 已完成 program boot、目标架构细化和 Mermaid / HTML 展示升级；PHASE04 把 Zuno 主场景收束为“企业私有知识库与多功能 Agent 助手”，并把 2026-06-30 架构深度评估沉淀为后续 runtime implementation programs：Document Ingestion、Runtime + Memory + Tool Plane、Eval / Observability、安全与企业场景。本 program 从 `PHASE01` 开始，phase 文件平铺在 `.agent/programs/` 根目录。
+当前阶段是 `PHASE01_program-baseline-and-previous-closure`。PHASE02 先做项目文件夹和代码布局治理；PHASE03-PHASE10 依次推进企业知识库产品闭环、文档解析、Agent Runtime、Memory、Tool Control Plane、RAG / GraphRAG、安全和 LangSmith-compatible eval / trace；PHASE11 更新架构 Markdown / HTML；PHASE12 做验证、归档和 release closure。本 program 从 `PHASE01` 开始，phase 文件平铺在 `.agent/programs/` 根目录。
 
 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 

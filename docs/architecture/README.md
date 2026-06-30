@@ -21,6 +21,8 @@ docs/architecture/
 4. `decisions/README.md`：仍影响当前主线的正式架构决策。
 5. `../evidence/public-demo.md`：公开证据入口。
 
+研究输入归档在 `docs/history/research/chatgpt-research-mode-artifacts/`。这些 PDF / Markdown 抽取版用于补充架构论证，不替代当前正式架构源。
+
 ## 已归档拆分文档
 
 以下拆分文档已经被 `architecture.md` 和 `architecture.html` 吸收，不再作为当前前台入口：

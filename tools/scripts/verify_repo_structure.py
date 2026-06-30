@@ -11,13 +11,20 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
 COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
-ACTIVE_PROGRAM_NAME = "zuno-architecture-detail-and-execution-plan-v1"
+ACTIVE_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
 ACTIVE_PROGRAM_PHASE_FILES = [
-    "PHASE01_architecture-state-and-program-boot.md",
-    "PHASE02_target-architecture-detailing.md",
-    "PHASE03_mermaid-html-detail-refresh.md",
-    "PHASE04_execution-roadmap-from-architecture.md",
-    "PHASE05_validation-and-closure.md",
+    "PHASE01_program-baseline-and-previous-closure.md",
+    "PHASE02_project-folder-and-code-layout-cleanup.md",
+    "PHASE03_enterprise-scenario-and-product-loop.md",
+    "PHASE04_document-ingestion-parse-gateway.md",
+    "PHASE05_agent-runtime-langgraph-harness.md",
+    "PHASE06_context-memory-system.md",
+    "PHASE07_tool-control-plane-mcp-approval.md",
+    "PHASE08_rag-graphrag-evidence-citation.md",
+    "PHASE09_security-governance-sandbox.md",
+    "PHASE10_eval-observability-langsmith.md",
+    "PHASE11_architecture-docs-html-refresh.md",
+    "PHASE12_validation-release-closure.md",
 ]
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
@@ -60,6 +67,15 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/README.md",
+    "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/current.md",
+    "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/implementation-roadmap.md",
+    "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/closure-checklist.md",
+    "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/closure-summary.md",
+    "docs/history/research/README.md",
+    "docs/history/research/chatgpt-research-mode-artifacts/README.md",
+    "docs/history/research/chatgpt-research-mode-artifacts/zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.pdf",
+    "docs/history/research/chatgpt-research-mode-artifacts/zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.md",
     f"{COMPLETED_PROGRAM_ARCHIVE}/README.md",
     f"{COMPLETED_PROGRAM_ARCHIVE}/current.md",
     f"{COMPLETED_PROGRAM_ARCHIVE}/implementation-roadmap.md",
@@ -666,7 +682,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     )
     if active_phase_names != ACTIVE_PROGRAM_PHASE_FILES:
         errors.append(
-            ".agent/programs active phase files do not match architecture-detail program: "
+            ".agent/programs active phase files do not match master architecture implementation program: "
             + ", ".join(active_phase_names)
         )
     current_path = REPO_ROOT / ".agent/programs/current.md"
@@ -678,10 +694,10 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             "当前 active program",
             ACTIVE_PROGRAM_NAME,
             "state: active",
-            "current_phase: PHASE04_execution-roadmap-from-architecture",
+            "current_phase: PHASE01_program-baseline-and-previous-closure",
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
-            "八个交付物",
+            "八个方面产物",
         ]:
             if phrase not in current_text:
                 errors.append(f".agent/programs/current.md missing active program phrase: {phrase}")

@@ -9,10 +9,9 @@ Use it for historical context, not current acceptance criteria.
 
 Current architecture readers should start from:
 
-- [Architecture README](../README.md)
-- [Current Architecture](../current-architecture.md)
-- [Target Architecture](../target-architecture.md)
-- [Roadmap](../roadmap.md)
+- [Architecture README](../architecture/README.md)
+- [Architecture Source](../architecture/architecture.md)
+- [Architecture HTML](../architecture/architecture.html)
 
 ## Contents
 
@@ -41,6 +40,8 @@ Current architecture readers should start from:
   notes that are not active engineering guidance.
 - `domain-packs/`: retired Domain Pack asset copies preserved as history, not
   current runtime input.
+- `research/`: research inputs and ChatGPT research mode artifacts. They are
+  not current architecture truth; absorb them through `docs/architecture/architecture.md`.
 
 ## Archived Programs
 

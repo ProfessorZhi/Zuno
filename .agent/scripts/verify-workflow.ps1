@@ -39,6 +39,18 @@ Require-Path "docs\architecture\architecture.html"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
+Require-Path ".agent\programs\PHASE01_program-baseline-and-previous-closure.md"
+Require-Path ".agent\programs\PHASE02_project-folder-and-code-layout-cleanup.md"
+Require-Path ".agent\programs\PHASE03_enterprise-scenario-and-product-loop.md"
+Require-Path ".agent\programs\PHASE04_document-ingestion-parse-gateway.md"
+Require-Path ".agent\programs\PHASE05_agent-runtime-langgraph-harness.md"
+Require-Path ".agent\programs\PHASE06_context-memory-system.md"
+Require-Path ".agent\programs\PHASE07_tool-control-plane-mcp-approval.md"
+Require-Path ".agent\programs\PHASE08_rag-graphrag-evidence-citation.md"
+Require-Path ".agent\programs\PHASE09_security-governance-sandbox.md"
+Require-Path ".agent\programs\PHASE10_eval-observability-langsmith.md"
+Require-Path ".agent\programs\PHASE11_architecture-docs-html-refresh.md"
+Require-Path ".agent\programs\PHASE12_validation-release-closure.md"
 Require-NoPath ".agent\programs\PHASE01_program-boot-baseline.md"
 Require-NoPath ".agent\programs\PHASE02_workflow-self-maintenance-system.md"
 Require-NoPath ".agent\programs\PHASE03_architecture-docs-html-system.md"
@@ -64,6 +76,15 @@ Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\
 Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE08_graphrag-knowledge-runtime-system.md"
 Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE09_runtime-upgrade-integration.md"
 Require-Path "docs\history\programs\zuno-eight-deliverables-full-realization-v1\PHASE10_validation-release-closure.md"
+Require-Path "docs\history\programs\zuno-architecture-detail-and-execution-plan-v1\README.md"
+Require-Path "docs\history\programs\zuno-architecture-detail-and-execution-plan-v1\current.md"
+Require-Path "docs\history\programs\zuno-architecture-detail-and-execution-plan-v1\implementation-roadmap.md"
+Require-Path "docs\history\programs\zuno-architecture-detail-and-execution-plan-v1\closure-checklist.md"
+Require-Path "docs\history\programs\zuno-architecture-detail-and-execution-plan-v1\closure-summary.md"
+Require-Path "docs\history\research\README.md"
+Require-Path "docs\history\research\chatgpt-research-mode-artifacts\README.md"
+Require-Path "docs\history\research\chatgpt-research-mode-artifacts\zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.pdf"
+Require-Path "docs\history\research\chatgpt-research-mode-artifacts\zuno-enterprise-private-knowledge-agent-workspace-target-architecture-research-2026-06-30.md"
 Require-Path "docs\history\architecture-surface-cleanup-2026-06-30\README.md"
 Require-Path "docs\history\architecture-surface-cleanup-2026-06-30\docs-architecture\current-architecture.md"
 Require-Path "docs\history\architecture-surface-cleanup-2026-06-30\docs-architecture\target-architecture.md"
@@ -159,8 +180,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-architecture-detail-and-execution-plan-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "current_phase: PHASE04_execution-roadmap-from-architecture") {
-    $failures.Add("current-program.md must declare the active architecture detail program and PHASE01 state")
+if ($currentProgram -notmatch "zuno-master-architecture-implementation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "current_phase: PHASE01_program-baseline-and-previous-closure") {
+    $failures.Add("current-program.md must declare the active master architecture implementation program and PHASE01 state")
 }
 if ($currentProgram -notmatch "zuno-eight-deliverables-full-realization-v1") {
     $failures.Add("current-program.md must keep the completed eight deliverables program visible")
