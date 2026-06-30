@@ -1212,6 +1212,114 @@
   opacity: 0.58;
 }
 
+.runtime-failure-panel,
+.runtime-artifact-panel,
+.runtime-observability-panel,
+.runtime-feedback-panel {
+  display: grid;
+  gap: 7px;
+  margin: 8px 0;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(226, 214, 202, 0.92);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.runtime-failure-panel {
+  border-color: rgba(207, 92, 79, 0.34);
+  background: rgba(255, 244, 242, 0.86);
+}
+
+.runtime-artifact-panel {
+  border-color: rgba(74, 145, 133, 0.28);
+  background: rgba(239, 249, 247, 0.78);
+}
+
+.runtime-observability-panel {
+  border-color: rgba(122, 112, 196, 0.26);
+  background: rgba(247, 245, 255, 0.76);
+}
+
+.runtime-feedback-panel {
+  border-color: rgba(201, 108, 45, 0.24);
+  background: rgba(255, 249, 243, 0.78);
+}
+
+.runtime-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.runtime-panel-head strong,
+.runtime-panel-head span,
+.runtime-panel-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.runtime-panel-head strong {
+  color: #3f3025;
+  font-size: 12.5px;
+}
+
+.runtime-panel-head span,
+.runtime-panel-copy,
+.runtime-panel-metrics {
+  color: rgba(68, 52, 40, 0.72);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.runtime-panel-metrics,
+.runtime-citation-row,
+.runtime-trace-meta,
+.runtime-feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.release-eval,
+.runtime-citation-chip,
+.runtime-panel-metrics span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(214, 198, 183, 0.72);
+  color: #6f543d;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.runtime-citation-chip {
+  border-color: rgba(74, 145, 133, 0.3);
+  color: #27655d;
+}
+
+.runtime-feedback-button {
+  min-width: 72px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(201, 108, 45, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #805532;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.runtime-feedback-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .loading-event.answer,
 .trace-item.answer {
   background: linear-gradient(135deg, rgba(255, 246, 235, 0.96), rgba(255, 252, 248, 0.92));

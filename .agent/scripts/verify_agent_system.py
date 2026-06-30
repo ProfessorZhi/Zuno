@@ -316,7 +316,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE11_web-desktop-surface-and-feedback-loop",
+        "current_phase: PHASE12_release-gate-full-e2e-closure",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
@@ -340,7 +340,8 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
             8: "status: completed",
             9: "status: completed",
             10: "status: completed",
-            11: "status: active",
+            11: "status: completed",
+            12: "status: active",
         }.get(phase_index, "status: pending")
         if expected_status not in phase_content:
             errors.append(f"active runtime program phase status drifted: {phase_name}")

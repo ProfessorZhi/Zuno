@@ -55,3 +55,33 @@ def test_workspace_page_exposes_tool_approval_runtime_surface():
         "audit_ref",
     ]:
         assert phrase in workspace_page or phrase in workspace_api
+
+
+def test_workspace_agent_mode_uses_task_runtime_product_loop():
+    workspace_page = (REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue").read_text(encoding="utf-8")
+
+    for phrase in [
+        "createWorkspaceFileAPI",
+        "createWorkspaceIngestAPI",
+        "createWorkspaceTaskAPI",
+        "workspaceTaskEventsStreamAPI",
+        "getWorkspaceTaskAPI",
+        "getWorkspaceArtifactAPI",
+        "createWorkspaceFeedbackAPI",
+        "submitAgentRuntimeTask",
+        "registerRuntimeAttachments",
+        "streamWorkspaceTaskEvents",
+        "loadWorkspaceArtifact",
+        "submitWorkspaceFeedback",
+        "buildRuntimeAssistantMessage",
+        "runtime-artifact-panel",
+        "runtime-observability-panel",
+        "runtime-feedback-panel",
+        "runtime-failure-panel",
+        "release-eval",
+        "security_gate",
+        "eval_diagnostic",
+        "artifact_created",
+        "if (isAgentMode.value) return await submitAgentRuntimeTask",
+    ]:
+        assert phrase in workspace_page

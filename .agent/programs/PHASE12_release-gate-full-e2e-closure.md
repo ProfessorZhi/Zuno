@@ -1,6 +1,6 @@
 # PHASE12 release-gate-full-e2e-closure
 
-status: pending
+status: active
 
 ## 目标
 
@@ -37,4 +37,3 @@ python .agent/scripts/verify_repo_hygiene.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 pytest -q -p no:cacheprovider
 ```
-

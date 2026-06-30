@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE11_web-desktop-surface-and-feedback-loop
+current_phase: PHASE12_release-gate-full-e2e-closure
 
 `.agent/programs/` 当前保存 active runtime implementation program：
 
@@ -56,12 +56,12 @@ current_phase: PHASE11_web-desktop-surface-and-feedback-loop
 - `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：completed，已接通本地 deterministic executor、tool approval API/UI bridge、credential ref broker、sandbox context 和 audit trace。
 - `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：completed，已让 Agentic retrieval 消费新 index runtime，输出 citation-rich answer，并把 evidence / citation / unsupported claim 指标写入 task retrieval event。
 - `PHASE10_security-observability-and-online-eval.md`：completed，已将 security gates、ZunoSpan、task observability snapshot、trace replay 和 release baseline 接入 workspace task runtime。
-- `PHASE11_web-desktop-surface-and-feedback-loop.md`：active，正在完成用户可感知的上传、事件流、审批、artifact、citation、trace 和 feedback UI。
-- `PHASE12_release-gate-full-e2e-closure.md`：pending。
+- `PHASE11_web-desktop-surface-and-feedback-loop.md`：completed，已把 Web workspace Agent 模式接入 file / ingest / task / SSE / approval / artifact / trace-eval / feedback 产品闭环；Desktop 当前复用 API / bridge，不写成生产桌面闭环。
+- `PHASE12_release-gate-full-e2e-closure.md`：active，正在做完整 vertical slice release closure、归档、验证、commit、merge 和 push。
 
 ## Current / Target 边界
 
-`zuno-master-architecture-implementation-v1` 已完成目标架构分阶段 contract foundation，但 production-grade parser platform、durable LangGraph-compatible runtime、production Memory DB、真实 Tool approval / sandbox、生产级 GraphRAG extraction / fusion / index job、LangSmith / OTel 产品化 trace/eval、online eval、rootless / gVisor / Firecracker sandbox、credential broker、完整 UI trace panel 仍是 Target。
+`zuno-master-architecture-implementation-v1` 已完成目标架构分阶段 contract foundation；本 program 已完成 PHASE01-PHASE11 的第一版 runtime surface 和 Web 产品闭环。但 production-grade parser platform、durable LangGraph-compatible runtime、production Memory DB、生产级 GraphRAG extraction / fusion / index job、LangSmith / OTel 产品化 trace/eval、online eval、rootless / gVisor / Firecracker sandbox、外部 credential broker 和生产级 Desktop 闭环仍是 Target。
 
 本 program 的任务是把这些 Target 沿一条真实 vertical slice 推进到 Current；推进条件是代码、测试、trace、eval 或 verifier 证据，不是计划文字。
 

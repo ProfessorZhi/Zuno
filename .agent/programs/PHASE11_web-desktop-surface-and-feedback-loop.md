@@ -1,6 +1,6 @@
 # PHASE11 web-desktop-surface-and-feedback-loop
 
-status: active
+status: completed
 
 ## 目标
 
@@ -23,6 +23,24 @@ status: active
 - 前端测试或可复现手动脚本覆盖上传、事件流、审批、answer/citation、artifact、feedback。
 - UI 中能定位 task id、trace id、artifact id。
 - failure / blocked / approval_required 状态可见。
+
+## 完成证据
+
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue` 在 Agent 模式中改走 workspace task runtime：注册文件、触发 ingest、创建 task、订阅 SSE、审批后刷新 snapshot / artifact，并提交 feedback。
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue` 的 trace 面板现在显示 runtime failure、artifact id、citation id、trace / eval snapshot、source refs 和 feedback 状态；普通聊天仍保留 `workspaceSimpleChatStreamAPI`。
+- `apps/web/src/apis/workspace.ts` 的 PHASE03-PHASE10 类型和 API 已被 Web 产品面实际消费，Desktop 当前仍是 API / bridge 复用，不写成生产级桌面闭环。
+- `tests/frontend/test_frontend_workspace_features.py` 增加 PHASE11 静态验收，固定 upload / ingest / task / SSE / artifact / trace / eval / feedback UI 触点。
+
+## 已运行验证
+
+```powershell
+pytest -q tests\frontend\test_frontend_workspace_features.py tests\frontend\test_workspace_product_loop_types.py -p no:cacheprovider
+pytest -q tests\frontend\test_frontend_workspace_features.py tests\frontend\test_workspace_product_loop_types.py tests\api\test_workspace_task_runtime.py tests\api\test_workspace_security_observability_runtime.py -p no:cacheprovider
+git diff --check
+python .agent\scripts\verify_agent_system.py
+```
+
+`npm run lint` 和 `npm run build` 在 `apps/web` 入口未进入编译：当前 checkout 没有 root `node_modules`，脚本无法加载 `vue-tsc` 和 `vite`。该阻塞不是代码失败，但 PHASE12 需要在 release evidence 中记录。
 
 ## 验证命令
 

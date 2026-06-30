@@ -7,16 +7,26 @@ import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import {
   approveWorkspaceTaskAPI,
+  createWorkspaceFeedbackAPI,
+  createWorkspaceFileAPI,
+  createWorkspaceIngestAPI,
+  createWorkspaceTaskAPI,
   createWorkspaceSessionAPI,
   deleteWorkspaceSessionAPI,
+  getWorkspaceArtifactAPI,
   getWorkspaceExecutionModesAPI,
   getWorkspacePluginsByModeAPI,
   getWorkspaceSessionInfoAPI,
+  getWorkspaceTaskAPI,
   workspaceSimpleChatStreamAPI,
+  workspaceTaskEventsStreamAPI,
   type AccessScopeDefinition,
   type ExecutionModeDefinition,
+  type WorkspaceArtifactResponse,
   type WorkspaceExecutionConfig,
+  type WorkspaceObservabilitySnapshot,
   type WorkspaceStreamEvent,
+  type WorkspaceTaskCreateResponse,
   type WorkSpaceSimpleTask,
 } from '../../../apis/workspace'
 import { uploadFile } from '../../../apis/chat'
@@ -108,6 +118,19 @@ const pendingToolApproval = ref<{
   toolCallId: string
   auditRef: string
 } | null>(null)
+const activeRuntimeTaskId = ref('')
+const activeRuntimeArtifact = ref<{
+  artifactId: string
+  content: string
+  citations: string[]
+  uri: string
+} | null>(null)
+const activeRuntimeCitationIds = ref<string[]>([])
+const activeRuntimeObservability = ref<WorkspaceObservabilitySnapshot | null>(null)
+const runtimeFailure = ref<{ title: string; detail: string } | null>(null)
+const feedbackSubmitting = ref(false)
+const feedbackSent = ref(false)
+const runtimeFeedbackLabel = ref('')
 const toolApprovalSubmitting = ref(false)
 const executionModes = ref<ExecutionModeDefinition[]>([])
 const accessScopes = ref<AccessScopeDefinition[]>([])
@@ -436,6 +459,18 @@ const progressDetail = computed(() => {
   return latestTraceRecord.value?.detail || `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value}`
 })
 const liveProgressEvents = computed(() => executionEvents.value.slice(-3))
+const runtimeSpanCount = computed(() => activeRuntimeObservability.value?.spans?.length || 0)
+const runtimeTraceSourceRefs = computed(() => activeRuntimeObservability.value?.trace_replay?.source_refs || [])
+const runtimeReleaseEvalStatus = computed(() => String(
+  activeRuntimeObservability.value?.release_eval?.status
+  || activeRuntimeObservability.value?.release_eval?.overall_status
+  || activeRuntimeObservability.value?.release_eval?.verdict
+  || 'pending'
+))
+const runtimeFeedbackCopy = computed(() => {
+  if (!feedbackSent.value) return '等待反馈。'
+  return runtimeFeedbackLabel.value === 'helpful' ? '已记录为可用结果。' : '已记录为需要调整。'
+})
 
 const safeQueryValue = (value: unknown, fallback: string) => Array.isArray(value) ? String(value[0] || fallback) : (typeof value === 'string' && value.trim() ? value : fallback)
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || ''
@@ -979,6 +1014,16 @@ const handleSettingsThreadBack = async (thread: SettingsThreadItem) => {
     throw error
   }
 }
+const resetRuntimeSurface = () => {
+  activeRuntimeTaskId.value = ''
+  activeRuntimeArtifact.value = null
+  activeRuntimeCitationIds.value = []
+  activeRuntimeObservability.value = null
+  runtimeFailure.value = null
+  feedbackSubmitting.value = false
+  feedbackSent.value = false
+  runtimeFeedbackLabel.value = ''
+}
 const clearConversationState = (options?: { keepSessionHistoryLoading?: boolean }) => {
   inputMessage.value = ''
   clearMessageMotionTimers()
@@ -994,6 +1039,7 @@ const clearConversationState = (options?: { keepSessionHistoryLoading?: boolean 
   executionEvents.value = []
   pendingToolApproval.value = null
   toolApprovalSubmitting.value = false
+  resetRuntimeSurface()
   pendingAttachments.value = []
   attachmentsUploading.value = false
   isGenerating.value = false
@@ -1214,6 +1260,57 @@ const buildRetrievalTraceDetail = (data: Record<string, any>, retrievalMode: str
   }
   return parts.join('')
 }
+const normalizeStringList = (value: unknown): string[] => {
+  if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean)
+  if (typeof value === 'string' && value.trim()) return [value.trim()]
+  return []
+}
+const mergeRuntimeCitationIds = (ids: string[]) => {
+  const merged = Array.from(new Set([...activeRuntimeCitationIds.value, ...ids].filter(Boolean)))
+  activeRuntimeCitationIds.value = merged
+  if (activeRuntimeArtifact.value) {
+    activeRuntimeArtifact.value = {
+      ...activeRuntimeArtifact.value,
+      citations: Array.from(new Set([...activeRuntimeArtifact.value.citations, ...merged])),
+    }
+  }
+}
+const buildEvalDiagnosticDetail = (data: Record<string, any>) => {
+  const releaseEval = data.release_eval || data.eval || data
+  const status = String(releaseEval.status || releaseEval.overall_status || releaseEval.verdict || data.status || 'unknown')
+  const metrics = Array.isArray(releaseEval.metrics)
+    ? releaseEval.metrics
+    : Object.entries(releaseEval.metrics || {}).map(([name, value]) => ({ name, value }))
+  const metricCopy = metrics
+    .slice(0, 3)
+    .map((metric: any) => `${metric.name || metric.metric || 'metric'}=${metric.value ?? metric.score ?? metric.status ?? ''}`.replace(/=$/, ''))
+    .filter(Boolean)
+    .join('，')
+  return metricCopy ? `release_eval=${status}；${metricCopy}` : `release_eval=${status}`
+}
+const captureRuntimeEventSurface = (event: WorkspaceStreamEvent) => {
+  const data = event.data || {}
+  const citationIds = normalizeStringList(event.citation_ids || data.citation_ids)
+  if (citationIds.length > 0) mergeRuntimeCitationIds(citationIds)
+  const artifactId = String(event.artifact_id || data.artifact_id || '')
+  if (artifactId && !activeRuntimeArtifact.value) {
+    activeRuntimeArtifact.value = {
+      artifactId,
+      content: '',
+      citations: citationIds,
+      uri: '',
+    }
+  }
+  const failed = event.type === 'task_failed'
+    || String(data.status || '').toLowerCase() === 'failed'
+    || String(data.phase || '').toLowerCase().includes('failed')
+  if (failed) {
+    runtimeFailure.value = {
+      title: '任务失败',
+      detail: String(data.error || data.message || event.detail || '任务未能完成。'),
+    }
+  }
+}
 
 const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
   const data = event.data || {}
@@ -1223,6 +1320,9 @@ const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
   const retrieval = buildRetrievalTrace(data, retrievalMode)
   const toolName = String(data.tool_name || '')
   const toolResult = String(data.result || data.message || '')
+  const artifactId = String(event.artifact_id || data.artifact_id || '')
+  const citationIds = normalizeStringList(event.citation_ids || data.citation_ids)
+  const sourceRefs = normalizeStringList(data.source_refs || data.source_event_ids)
   const isToolCreation = event.type === 'tool_result' && ['create_remote_api_tool', 'create_cli_tool'].includes(toolName)
   if (event.type === 'approval_required') {
     return {
@@ -1234,6 +1334,77 @@ const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
       status: status || 'approval_waiting',
       accent: 'tool',
       retrieval,
+    }
+  }
+  if (event.type === 'security_gate') {
+    const decision = String(data.action || data.decision?.action || status || 'review')
+    const blocked = ['block', 'blocked', 'failed', 'deny'].some((token) => decision.toLowerCase().includes(token))
+    return {
+      id: event.id || crypto.randomUUID(),
+      title: blocked ? '安全策略已阻断' : '安全检查通过',
+      detail: String(data.message || data.reason || event.detail || decision),
+      at: new Date().toLocaleTimeString(),
+      phase: phase || 'security_gate',
+      status: status || decision,
+      accent: blocked ? 'error' : 'tool',
+      retrieval,
+      sourceRefs,
+    }
+  }
+  if (event.type === 'eval_diagnostic') {
+    return {
+      id: event.id || crypto.randomUUID(),
+      title: '评测诊断',
+      detail: buildEvalDiagnosticDetail(data),
+      at: new Date().toLocaleTimeString(),
+      phase: phase || 'eval_diagnostic',
+      status,
+      accent: String(data.status || '').toLowerCase().includes('fail') ? 'error' : 'answer',
+      retrieval,
+      sourceRefs,
+    }
+  }
+  if (event.type === 'artifact_created') {
+    return {
+      id: event.id || crypto.randomUUID(),
+      title: 'Artifact 已创建',
+      detail: artifactId ? `artifact_id=${artifactId}` : '任务产物已生成。',
+      at: new Date().toLocaleTimeString(),
+      phase: phase || 'artifact',
+      status: status || 'created',
+      accent: 'answer',
+      retrieval,
+      artifactId,
+      citationIds,
+      sourceRefs,
+    }
+  }
+  if (event.type === 'task_failed') {
+    return {
+      id: event.id || crypto.randomUUID(),
+      title: '任务失败',
+      detail: String(data.error || data.message || event.detail || '任务未能完成。'),
+      at: new Date().toLocaleTimeString(),
+      phase: phase || 'failed',
+      status: status || 'failed',
+      accent: 'error',
+      retrieval,
+      sourceRefs,
+    }
+  }
+  if (event.type === 'task_completed') {
+    return {
+      id: event.id || crypto.randomUUID(),
+      title: '任务完成',
+      detail: artifactId ? `已生成 artifact：${artifactId}` : String(data.message || '完整 task runtime 已完成。'),
+      at: new Date().toLocaleTimeString(),
+      phase: phase || 'complete',
+      status: status || 'completed',
+      accent: 'answer',
+      retrieval,
+      artifactId,
+      citationIds,
+      sourceRefs,
     }
   }
   if (event.type === 'tool_call') {
@@ -1289,9 +1460,13 @@ const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
     status,
     accent,
     retrieval,
+    artifactId,
+    citationIds,
+    sourceRefs,
   }
 }
 const pushTraceEvent = (event: WorkspaceStreamEvent) => {
+  captureRuntimeEventSurface(event)
   const nextRecord = buildTraceRecord(event)
   const lastRecord = executionEvents.value[executionEvents.value.length - 1]
   if (lastRecord && lastRecord.title === nextRecord.title && lastRecord.detail === nextRecord.detail) return
@@ -1318,6 +1493,154 @@ const capturePendingToolApproval = (event: WorkspaceStreamEvent) => {
   assistantTextStreaming.value = false
 }
 
+const unwrapWorkspaceTaskResponse = (response: any): WorkspaceTaskCreateResponse | null => (
+  response?.data?.data || response?.data || response || null
+)
+const unwrapWorkspaceArtifactResponse = (response: any): WorkspaceArtifactResponse | null => (
+  response?.data?.data || response?.data || response || null
+)
+const normalizeRuntimeSlug = (value: string, prefix: string) => {
+  const slug = value
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_+/g, '_')
+    .slice(0, 72)
+  return `${prefix}_${slug || crypto.randomUUID()}`
+}
+const buildRuntimeAttachmentContent = (attachment: PendingAttachment, query: string) => [
+  `# ${attachment.name}`,
+  '',
+  `用户任务：${query}`,
+  `文件名：${attachment.name}`,
+  `MIME：${attachment.mime_type || 'application/octet-stream'}`,
+  `大小：${formatAttachmentSize(attachment.size || 0)}`,
+  `来源：${attachment.url}`,
+  '',
+  '该内容由 Web workspace 注册给 Parse Gateway。后端 ingestion runtime 会继续保留 file uri、provenance、index handoff 和 citation 证据链。',
+].join('\n')
+const registerRuntimeAttachments = async (workspaceId: string, query: string, attachmentsForRequest: PendingAttachment[]) => {
+  const registered: Array<{ fileId: string; knowledgeSpaceId: string }> = []
+  for (const attachment of attachmentsForRequest) {
+    const fileId = normalizeRuntimeSlug(attachment.id || attachment.name || Date.now().toString(), 'web_file')
+    const knowledgeSpaceId = normalizeRuntimeSlug(`${fileId}_ks`, 'ks')
+    await createWorkspaceFileAPI({
+      workspace_id: workspaceId,
+      file_id: fileId,
+      name: attachment.name,
+      mime_type: attachment.mime_type || 'application/octet-stream',
+      uri: attachment.url,
+      content: buildRuntimeAttachmentContent(attachment, query),
+      security_label: 'workspace-upload',
+    })
+    await createWorkspaceIngestAPI({
+      workspace_id: workspaceId,
+      file_id: fileId,
+      knowledge_space_id: knowledgeSpaceId,
+      session_id: currentSessionId.value,
+    })
+    registered.push({ fileId, knowledgeSpaceId })
+  }
+  return registered
+}
+const buildRuntimeAssistantMessage = () => {
+  if (runtimeFailure.value) return `**${runtimeFailure.value.title}**\n\n${runtimeFailure.value.detail}`
+  if (activeRuntimeArtifact.value?.content) return activeRuntimeArtifact.value.content
+  return buildLiveAssistantProgress()
+}
+const loadWorkspaceArtifact = async (artifactId: string, assistantIndex = -1) => {
+  if (!artifactId) return
+  const response = await getWorkspaceArtifactAPI(artifactId)
+  const data = unwrapWorkspaceArtifactResponse(response)
+  const artifact = data?.artifact
+  const content = String(data?.content || '')
+  activeRuntimeArtifact.value = {
+    artifactId,
+    content,
+    citations: activeRuntimeCitationIds.value,
+    uri: String(artifact?.uri || ''),
+  }
+  if (content && assistantIndex >= 0 && messages.value[assistantIndex]) {
+    messages.value[assistantIndex].content = content
+    assistantTextStreaming.value = false
+    setMessageMotion(messages.value[assistantIndex], 'complete', 1100)
+    await scrollToBottom()
+  }
+}
+const applyWorkspaceTaskSnapshot = async (snapshot: WorkspaceTaskCreateResponse | null, assistantIndex = -1) => {
+  if (!snapshot?.task) return
+  activeRuntimeTaskId.value = snapshot.task.task_id
+  if (snapshot.observability) activeRuntimeObservability.value = snapshot.observability
+  const runtimeEvents = Array.isArray(snapshot.runtime?.events) ? snapshot.runtime?.events || [] : []
+  const runtimeCitationIds = runtimeEvents.flatMap((event: any) => normalizeStringList(event?.citation_ids || event?.payload?.citation_ids))
+  if (runtimeCitationIds.length > 0) mergeRuntimeCitationIds(runtimeCitationIds)
+  const artifactIds = [
+    ...normalizeStringList(snapshot.artifact_ids),
+    ...(snapshot.artifacts || []).map((artifact) => artifact.artifact_id).filter(Boolean),
+  ]
+  if (artifactIds[0]) await loadWorkspaceArtifact(artifactIds[0], assistantIndex)
+  const status = String(snapshot.task.status || snapshot.runtime?.status || '').toLowerCase()
+  const failure = snapshot.runtime?.failure || snapshot.runtime?.state?.failure
+  if (status === 'failed' || status === 'cancelled' || failure) {
+    runtimeFailure.value = {
+      title: status === 'cancelled' ? '任务已取消' : '任务失败',
+      detail: String(failure?.message || failure?.reason || failure?.error || '任务未能完成。'),
+    }
+    if (assistantIndex >= 0 && messages.value[assistantIndex] && !activeRuntimeArtifact.value?.content) {
+      messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
+      setMessageMotion(messages.value[assistantIndex], 'error', 1800)
+      await scrollToBottom()
+    }
+  }
+}
+const streamWorkspaceTaskEvents = async (taskId: string, assistantIndex: number, renderAgentProgress: () => Promise<void>) => {
+  let streamError: any = null
+  await workspaceTaskEventsStreamAPI(taskId, {
+    onEvent: (event) => {
+      pushTraceEvent(event)
+      capturePendingToolApproval(event)
+      void refreshToolSelectionsAfterCreation(event)
+      void renderAgentProgress()
+    },
+    onError: (error) => {
+      streamError = error
+    },
+  })
+  if (streamError) throw streamError
+  const response = await getWorkspaceTaskAPI(taskId)
+  await applyWorkspaceTaskSnapshot(unwrapWorkspaceTaskResponse(response), assistantIndex)
+}
+const submitWorkspaceFeedback = async (label: 'helpful' | 'needs_revision') => {
+  if (!activeRuntimeTaskId.value || feedbackSubmitting.value) return
+  feedbackSubmitting.value = true
+  try {
+    await createWorkspaceFeedbackAPI({
+      task_id: activeRuntimeTaskId.value,
+      rating: label === 'helpful' ? 5 : 2,
+      label,
+      comment: label === 'helpful' ? 'Workspace user marked the artifact as useful.' : 'Workspace user requested revision.',
+      dataset_candidate: label !== 'helpful',
+    })
+    feedbackSent.value = true
+    runtimeFeedbackLabel.value = label
+    executionEvents.value.push({
+      id: crypto.randomUUID(),
+      title: '反馈已记录',
+      detail: label === 'helpful' ? '这次 artifact 已记录为可用样本。' : '这次 artifact 已记录为需要调整。',
+      at: new Date().toLocaleTimeString(),
+      phase: 'feedback',
+      status: 'submitted',
+      accent: 'answer',
+    })
+    ElMessage.success('反馈已提交。')
+  } catch (error) {
+    console.error('反馈提交失败', error)
+    ElMessage.error('反馈提交失败，请稍后重试')
+  } finally {
+    feedbackSubmitting.value = false
+  }
+}
+
 const submitToolApproval = async (decision: 'approved' | 'rejected') => {
   const pending = pendingToolApproval.value
   if (!pending || toolApprovalSubmitting.value) return
@@ -1332,7 +1655,9 @@ const submitToolApproval = async (decision: 'approved' | 'rejected') => {
     })
     pendingToolApproval.value = null
     ElMessage.success(decision === 'approved' ? '工具调用已批准。' : '工具调用已拒绝。')
-    const task = response.data?.data?.task
+    const taskSnapshot = unwrapWorkspaceTaskResponse(response)
+    await applyWorkspaceTaskSnapshot(taskSnapshot, activeAssistantMessageIndex.value)
+    const task = taskSnapshot?.task
     if (task?.status === 'completed') {
       executionEvents.value.push({
         id: crypto.randomUUID(),
@@ -1814,6 +2139,111 @@ const buildPayload = (query: string): WorkSpaceSimpleTask => ({
   attachments: pendingAttachments.value.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment),
 })
 
+const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: PendingAttachment[], assistantIndex: number) => {
+  let generationFailed = false
+  let shouldRestoreAttachments = false
+  const renderAgentProgress = async () => {
+    if (!messages.value[assistantIndex] || activeRuntimeArtifact.value?.content) return
+    messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
+    await scrollToBottom()
+  }
+  try {
+    const workspaceId = currentSessionId.value || normalizeRuntimeSlug('workspace', 'workspace')
+    const registered = await registerRuntimeAttachments(workspaceId, query, attachmentsForRequest)
+    const payload = buildPayload(query)
+    payload.workspace_id = workspaceId
+    payload.goal = query
+    payload.product_mode = registered.length > 0 ? 'enterprise_kb' : 'general_agent'
+    payload.uploaded_file_ids = registered.map((item) => item.fileId)
+    payload.knowledge_space_ids = registered.map((item) => item.knowledgeSpaceId)
+    payload.approval_mode = 'runtime'
+    payload.output_contract = {
+      artifact_kinds: ['markdown'],
+      citation_required: registered.length > 0,
+      trace_required: true,
+      format: 'markdown',
+    }
+    payload.budget = {
+      max_steps: 10,
+      timeout_seconds: 180,
+    }
+    payload.attachments = attachmentsForRequest.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment)
+    if (registered.length > 0) {
+      executionEvents.value.push({
+        id: crypto.randomUUID(),
+        title: '文档已进入解析与索引',
+        detail: registered.map((item) => `${item.fileId} -> ${item.knowledgeSpaceId}`).join('\n'),
+        at: new Date().toLocaleTimeString(),
+        phase: 'ingest',
+        status: 'indexed',
+        accent: 'retrieval',
+      })
+      await renderAgentProgress()
+    }
+    const response = await createWorkspaceTaskAPI(payload)
+    const taskSnapshot = unwrapWorkspaceTaskResponse(response)
+    await applyWorkspaceTaskSnapshot(taskSnapshot, assistantIndex)
+    const taskId = taskSnapshot?.task?.task_id || ''
+    const traceId = taskSnapshot?.task?.trace_id || taskSnapshot?.runtime?.trace_id || ''
+    if (!taskId) throw new Error('Workspace task runtime did not return task_id.')
+    executionEvents.value.push({
+      id: crypto.randomUUID(),
+      title: 'Task 已创建',
+      detail: `task_id=${taskId}${traceId ? ` / trace_id=${traceId}` : ''}`,
+      at: new Date().toLocaleTimeString(),
+      phase: 'task',
+      status: taskSnapshot?.task?.status || 'created',
+      accent: 'default',
+    })
+    await renderAgentProgress()
+    await streamWorkspaceTaskEvents(taskId, assistantIndex, renderAgentProgress)
+    const hasPendingApproval = Boolean(pendingToolApproval.value)
+    if (runtimeFailure.value) {
+      generationFailed = true
+      if (messages.value[assistantIndex]) {
+        messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
+        setMessageMotion(messages.value[assistantIndex], 'error', 1800)
+      }
+      pulsePetMood('error', 1800)
+    } else if (hasPendingApproval) {
+      if (messages.value[assistantIndex]) {
+        messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
+        setMessageMotion(messages.value[assistantIndex], 'thinking')
+      }
+      pulsePetMood('thinking', 1200)
+    } else {
+      if (messages.value[assistantIndex] && !activeRuntimeArtifact.value?.content) {
+        messages.value[assistantIndex].content = buildRuntimeAssistantMessage() || buildFallbackAssistantMessage()
+      }
+      setMessageMotion(messages.value[assistantIndex], 'complete', 1100)
+      pulsePetMood('success', 1300)
+    }
+    isGenerating.value = false
+    assistantTextStreaming.value = false
+    emitSessionUpdated()
+    return !generationFailed
+  } catch (error) {
+    console.error('Workspace runtime task failed', error)
+    runtimeFailure.value = {
+      title: '任务异常',
+      detail: buildChatErrorMessage(error instanceof Error ? error.message : String(error || 'unknown error')),
+    }
+    shouldRestoreAttachments = true
+    pendingAttachments.value = attachmentsForRequest
+    if (messages.value[assistantIndex]) {
+      messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
+      setMessageMotion(messages.value[assistantIndex], 'error', 1800)
+    }
+    assistantTextStreaming.value = false
+    pulsePetMood('error', 1800)
+    ElMessage.error('任务运行失败，请稍后重试')
+    isGenerating.value = false
+    return false
+  } finally {
+    if (!shouldRestoreAttachments) attachmentsForRequest.forEach(revokeAttachmentPreview)
+  }
+}
+
 const submitMessage = async () => {
   const query = inputMessage.value.trim() || (pendingAttachments.value.length > 0 ? '请分析我上传的附件。' : '')
   if (!query) { ElMessage.warning('请输入内容。'); return false }
@@ -1862,7 +2292,8 @@ const submitMessage = async () => {
   composerFocused.value = false
   isGenerating.value = true
   executionEvents.value = []
-  showTracePanel.value = false
+  resetRuntimeSurface()
+  showTracePanel.value = isAgentMode.value
   const attachmentsForRequest = [...pendingAttachments.value]
   pendingAttachments.value = []
   const attachmentsForMessage = attachmentsForRequest.map((attachment) => ({
@@ -1882,6 +2313,7 @@ const submitMessage = async () => {
   await scrollToBottom(true)
   await syncRouteState({ preserveConversation: true })
   if (isAgentMode.value) executionEvents.value.push({ id: crypto.randomUUID(), title: '开始执行', detail: `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value} / ${effectiveRetrievalModeLabel.value}`, at: new Date().toLocaleTimeString(), phase: 'start', status: 'START', accent: 'default' })
+  if (isAgentMode.value) return await submitAgentRuntimeTask(query, attachmentsForRequest, assistantIndex)
   let assistantHasRealContent = false
   let generationFailed = false
   const renderAgentProgress = async () => {
@@ -2453,6 +2885,47 @@ onBeforeUnmount(() => {
                 <button type="button" class="tool-approval-button approve" :disabled="toolApprovalSubmitting" @click="submitToolApproval('approved')">批准</button>
               </div>
             </div>
+            <div v-if="runtimeFailure" class="runtime-failure-panel" aria-label="任务失败">
+              <div class="runtime-panel-head">
+                <strong>{{ runtimeFailure.title }}</strong>
+                <span>{{ activeRuntimeTaskId ? `task_id=${activeRuntimeTaskId}` : 'runtime' }}</span>
+              </div>
+              <div class="runtime-panel-copy">{{ runtimeFailure.detail }}</div>
+            </div>
+            <div v-if="activeRuntimeArtifact" class="runtime-artifact-panel" aria-label="Artifact">
+              <div class="runtime-panel-head">
+                <strong>Artifact</strong>
+                <span>{{ activeRuntimeArtifact.artifactId }}</span>
+              </div>
+              <div v-if="activeRuntimeArtifact.uri" class="runtime-panel-copy">{{ activeRuntimeArtifact.uri }}</div>
+              <div v-if="activeRuntimeArtifact.citations.length > 0 || activeRuntimeCitationIds.length > 0" class="runtime-citation-row">
+                <span
+                  v-for="citationId in (activeRuntimeArtifact.citations.length > 0 ? activeRuntimeArtifact.citations : activeRuntimeCitationIds)"
+                  :key="citationId"
+                  class="runtime-citation-chip"
+                >
+                  {{ citationId }}
+                </span>
+              </div>
+            </div>
+            <div v-if="activeRuntimeObservability" class="runtime-observability-panel" aria-label="Trace Eval">
+              <div class="runtime-panel-head">
+                <strong>Trace / Eval</strong>
+                <span class="release-eval">{{ runtimeReleaseEvalStatus }}</span>
+              </div>
+              <div class="runtime-panel-metrics">
+                <span>{{ runtimeSpanCount }} spans</span>
+                <span v-if="activeRuntimeObservability.trace_replay?.trace_id">{{ activeRuntimeObservability.trace_replay.trace_id }}</span>
+                <span v-if="runtimeTraceSourceRefs.length > 0">{{ runtimeTraceSourceRefs.length }} source refs</span>
+              </div>
+            </div>
+            <div v-if="activeRuntimeTaskId && (activeRuntimeArtifact || runtimeFailure)" class="runtime-feedback-panel" aria-label="Feedback">
+              <div class="runtime-panel-copy">{{ runtimeFeedbackCopy }}</div>
+              <div class="runtime-feedback-actions">
+                <button type="button" class="runtime-feedback-button" :disabled="feedbackSubmitting || feedbackSent" @click="submitWorkspaceFeedback('helpful')">有帮助</button>
+                <button type="button" class="runtime-feedback-button" :disabled="feedbackSubmitting || feedbackSent" @click="submitWorkspaceFeedback('needs_revision')">需要调整</button>
+              </div>
+            </div>
             <div v-if="executionEvents.length === 0" class="empty-copy">正在等待新的执行事件...</div>
             <div v-else class="trace-list">
               <div v-for="event in executionEvents" :key="event.id" class="trace-item" :class="event.accent || 'default'">
@@ -2461,6 +2934,11 @@ onBeforeUnmount(() => {
                   <span>{{ event.at }}</span>
                 </div>
                 <div v-if="event.detail" class="trace-detail">{{ event.detail }}</div>
+                <div v-if="event.artifactId || event.citationIds?.length || event.sourceRefs?.length" class="runtime-trace-meta">
+                  <span v-if="event.artifactId" class="trace-pill">artifact {{ event.artifactId }}</span>
+                  <span v-for="citationId in event.citationIds || []" :key="`${event.id}-${citationId}`" class="trace-pill">citation {{ citationId }}</span>
+                  <span v-if="event.sourceRefs?.length" class="trace-pill">{{ event.sourceRefs.length }} source refs</span>
+                </div>
                 <div v-if="event.retrieval" class="retrieval-trace">
                   <div class="retrieval-meta">
                     <span class="trace-pill strong">首轮 {{ getRetrievalModeLabel(event.retrieval.firstMode) }}</span>

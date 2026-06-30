@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE11_web-desktop-surface-and-feedback-loop
+current_phase: PHASE12_release-gate-full-e2e-closure
 
 ## 目标
 
@@ -33,8 +33,8 @@ upload document
 - `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：completed。
 - `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：completed。
 - `PHASE10_security-observability-and-online-eval.md`：completed。
-- `PHASE11_web-desktop-surface-and-feedback-loop.md`：active。
-- `PHASE12_release-gate-full-e2e-closure.md`：pending。
+- `PHASE11_web-desktop-surface-and-feedback-loop.md`：completed。
+- `PHASE12_release-gate-full-e2e-closure.md`：active。
 
 ## 最近完成归档
 

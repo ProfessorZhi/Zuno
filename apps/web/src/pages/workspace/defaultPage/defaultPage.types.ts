@@ -79,6 +79,9 @@ export interface TraceRecord {
   status?: string
   accent?: 'default' | 'tool' | 'graph' | 'retrieval' | 'answer' | 'error'
   retrieval?: RetrievalTraceSummary | null
+  artifactId?: string
+  citationIds?: string[]
+  sourceRefs?: string[]
 }
 
 export interface PendingAttachment extends WorkspaceAttachment {
