@@ -49,3 +49,25 @@ def test_workspace_stream_normalizer_preserves_product_trace_ids() -> None:
         "citation_ids: parsed?.data?.citation_ids",
     ]:
         assert phrase in workspace_api
+
+
+def test_workspace_api_exposes_phase03_task_runtime_calls() -> None:
+    workspace_api = (REPO_ROOT / "apps/web/src/apis/workspace.ts").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "export const createWorkspaceTaskAPI",
+        "url: '/api/v1/workspace/task'",
+        "export const getWorkspaceTaskAPI",
+        "url: `/api/v1/workspace/task/${taskId}`",
+        "export const getWorkspaceTaskEventsAPI",
+        "url: `/api/v1/workspace/task/${taskId}/events`",
+        "export const workspaceTaskEventsStreamAPI",
+        "apiUrl(`/api/v1/workspace/task/${taskId}/events/stream`)",
+        "export const getWorkspaceArtifactAPI",
+        "url: `/api/v1/workspace/artifact/${artifactId}`",
+        "export const createWorkspaceFeedbackAPI",
+        "url: '/api/v1/workspace/feedback'",
+    ]:
+        assert phrase in workspace_api

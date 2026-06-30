@@ -229,6 +229,25 @@ export interface WorkSpaceSimpleTask {
   attachments?: WorkspaceAttachment[]
 }
 
+export interface WorkspaceTaskCreateResponse {
+  task: WorkspaceTaskContract
+  artifact_ids: string[]
+  artifacts: ArtifactContract[]
+}
+
+export interface WorkspaceArtifactResponse {
+  artifact: ArtifactContract
+  content: string
+}
+
+export interface WorkspaceFeedbackRequest {
+  task_id: string
+  rating?: number
+  label?: string
+  comment?: string
+  dataset_candidate?: boolean
+}
+
 export interface WorkspaceAttachment {
   name: string
   url: string
@@ -346,4 +365,98 @@ export const workspaceSimpleChatStreamAPI = async (
       handlers.onError?.(error)
     }
   }
+}
+
+export const createWorkspaceTaskAPI = async (data: WorkSpaceSimpleTask) => {
+  return request({
+    url: '/api/v1/workspace/task',
+    method: 'post',
+    data,
+  })
+}
+
+export const getWorkspaceTaskAPI = async (taskId: string) => {
+  return request({
+    url: `/api/v1/workspace/task/${taskId}`,
+    method: 'get',
+  })
+}
+
+export const getWorkspaceTaskEventsAPI = async (taskId: string) => {
+  return request({
+    url: `/api/v1/workspace/task/${taskId}/events`,
+    method: 'get',
+  })
+}
+
+export const workspaceTaskEventsStreamAPI = async (
+  taskId: string,
+  handlers: {
+    onEvent?: (event: WorkspaceStreamEvent) => void
+    onError?: (err: any) => void
+    onClose?: () => void
+  }
+) => {
+  const token = localStorage.getItem('token')
+  const ctrl = new AbortController()
+  const streamUrl = apiUrl(`/api/v1/workspace/task/${taskId}/events/stream`)
+
+  try {
+    await fetchEventSource(streamUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      signal: ctrl.signal,
+      openWhenHidden: true,
+      onmessage(event) {
+        if (!event.data) return
+        try {
+          const parsed = JSON.parse(event.data)
+          const normalized: WorkspaceStreamEvent = {
+            id: String(parsed?.data?.event_id || crypto.randomUUID()),
+            type: String(parsed?.event || parsed?.data?.phase || 'event'),
+            title: String(parsed?.data?.message || parsed?.event || 'event'),
+            detail: String(parsed?.data?.result || parsed?.data?.error || parsed?.data?.chunk || ''),
+            isFinal: parsed?.event === 'task_completed' || parsed?.data?.status === 'completed',
+            task_id: parsed?.data?.task_id,
+            trace_id: parsed?.data?.trace_id,
+            artifact_id: parsed?.data?.artifact_id,
+            citation_ids: parsed?.data?.citation_ids,
+            data: parsed?.data || {},
+            raw: parsed,
+          }
+          handlers.onEvent?.(normalized)
+        } catch (err) {
+          handlers.onError?.(err)
+        }
+      },
+      onerror(err) {
+        handlers.onError?.(err)
+        ctrl.abort()
+      },
+      onclose() {
+        handlers.onClose?.()
+      },
+    })
+  } catch (error: any) {
+    if (error?.name !== 'AbortError') {
+      handlers.onError?.(error)
+    }
+  }
+}
+
+export const getWorkspaceArtifactAPI = async (artifactId: string) => {
+  return request({
+    url: `/api/v1/workspace/artifact/${artifactId}`,
+    method: 'get',
+  })
+}
+
+export const createWorkspaceFeedbackAPI = async (data: WorkspaceFeedbackRequest) => {
+  return request({
+    url: '/api/v1/workspace/feedback',
+    method: 'post',
+    data,
+  })
 }
