@@ -80,7 +80,16 @@ HTML 生成页：
 basic | local | global | drift
 ```
 
-`auto` 是 router，用来选择 direct、basic、enhanced，以及在增强路径里选择 `basic / local / global / drift`。`auto` 不是第五种 GraphRAG query mode。
+`auto` 是 router，用来选择 direct、normal basic、enhanced agentic，以及在增强路径里选择 `basic / local / global / drift`。`auto` 不是第五种 GraphRAG query mode，也不能作为最终 `resolved_query_method`。
+
+Trace / eval contract 必须明确分开三层字段：
+
+| 字段 | 枚举 | 含义 |
+| --- | --- | --- |
+| `requested_product_mode` / `resolved_product_mode` | `normal / enhanced / auto` | 用户请求和系统最终采用的产品模式。 |
+| `router_decision` | `normal_basic / enhanced_basic / enhanced_local / enhanced_global / enhanced_drift / direct` | Router 为什么选择当前路径。 |
+| `requested_query_method` / `resolved_query_method` | requested 可为 `auto`；resolved 只允许 `basic / local / global / drift` | 内部检索方法；`auto` 只表示交给 router。 |
+| `fallback_reason`、`budget_policy`、`fallback_policy`、`citation_coverage` | trace fields | 解释预算、降级和证据覆盖率。 |
 
 | 产品选择 | 系统行为 | 适合场景 |
 | --- | --- | --- |
@@ -99,7 +108,8 @@ User Query
   -> Session Manager
   -> Context Builder
   -> Single Controller Agent
-  -> Route: direct / basic / enhanced / auto
+  -> Product Mode Policy: normal / enhanced / auto
+  -> Router Decision: direct / normal_basic / enhanced_basic|local|global|drift
   -> Retrieval: basic / local / global / drift
   -> Evidence Check
   -> Answer Synthesizer

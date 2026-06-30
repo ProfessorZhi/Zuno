@@ -2,10 +2,10 @@ import asyncio
 from types import SimpleNamespace
 
 
-def _agent_config():
+def _agent_config(**overrides):
     from zuno.core.agents.general_agent import AgentConfig
 
-    return AgentConfig(
+    data = dict(
         user_id="u_1",
         llm_id="",
         mcp_ids=[],
@@ -17,6 +17,8 @@ def _agent_config():
         system_prompt="review contract",
         name="contract-agent",
     )
+    data.update(overrides)
+    return AgentConfig(**data)
 
 
 def test_general_agent_legacy_runtime_symbols_are_retired():
@@ -34,12 +36,13 @@ def test_general_agent_knowledge_tool_uses_project_query_runtime(monkeypatch):
 
     captured = {}
 
-    async def fake_query(self, *, user_id, knowledge_ids, query, query_method=None, top_k=None):
+    async def fake_query(self, *, user_id, knowledge_ids, query, product_mode="auto", query_method=None, top_k=None):
         captured.update(
             {
                 "user_id": user_id,
                 "knowledge_ids": knowledge_ids,
                 "query": query,
+                "product_mode": product_mode,
                 "query_method": query_method,
                 "top_k": top_k,
             }
@@ -73,9 +76,64 @@ def test_general_agent_knowledge_tool_uses_project_query_runtime(monkeypatch):
     assert captured["user_id"] == "u_1"
     assert captured["knowledge_ids"] == ["kb_1"]
     assert captured["query"] == "这份合同是否约定违约责任？"
+    assert captured["product_mode"] == "auto"
+    assert captured["query_method"] is None
     assert "第八条约定了违约责任" in result
     assert "citations: chunk-1" in result
     assert "resolved_query_method: local" in result
+
+
+def test_general_agent_forwards_product_mode_and_query_method(monkeypatch):
+    from zuno.core.agents import general_agent as ga
+    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+
+    captured = {}
+
+    async def fake_query(self, *, user_id, knowledge_ids, query, product_mode="auto", query_method=None, top_k=None):
+        del self, top_k
+        captured.update(
+            {
+                "user_id": user_id,
+                "knowledge_ids": knowledge_ids,
+                "query": query,
+                "product_mode": product_mode,
+                "query_method": query_method,
+            }
+        )
+        return KnowledgeQueryResult(
+            graphrag_project_id="contract_review",
+            answer="增强模式命中本地图谱。",
+            requested_query_method="local",
+            resolved_query_method="local",
+            fallback_reason=None,
+            documents=[],
+            evidence={"document_count": 0, "citation_coverage": 0.0},
+            citations=[],
+            retrievers_used=["vector", "graph"],
+            graph_paths=[],
+            communities=[],
+            prompt_version="extract-v2",
+            query_prompt_version="query-v3",
+            index_version={},
+            community_version=None,
+            trace_metadata={"requested_product_mode": "enhanced", "resolved_query_method": "local"},
+        )
+
+    monkeypatch.setattr(ga.KnowledgeQueryService, "query", fake_query)
+
+    agent = GeneralAgent(_agent_config(product_mode="enhanced", query_method="local"))
+    asyncio.run(agent.setup_knowledge_tool())
+    result = asyncio.run(agent.tools[0].ainvoke({"query": "用图谱解释合同关系"}))
+
+    assert captured == {
+        "user_id": "u_1",
+        "knowledge_ids": ["kb_1"],
+        "query": "用图谱解释合同关系",
+        "product_mode": "enhanced",
+        "query_method": "local",
+    }
+    assert "增强模式命中本地图谱" in result
 
 
 def test_general_agent_astream_uses_single_react_loop_when_project_is_bound():

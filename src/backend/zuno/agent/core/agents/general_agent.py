@@ -84,6 +84,8 @@ class AgentConfig(BaseModel):
     enable_memory: bool = False
     name: str | None = None
     retrieval_profile: str | None = None
+    product_mode: str = "auto"
+    query_method: str | None = None
     eval_profile_id: str | None = None
     graph_capability: str | None = None
     multi_agent_enabled: bool = False
@@ -508,6 +510,8 @@ class GeneralAgent:
                 user_id=self.agent_config.user_id,
                 knowledge_ids=self.agent_config.knowledge_ids,
                 query=query,
+                product_mode=self.agent_config.product_mode,
+                query_method=self.agent_config.query_method,
             )
             return self._format_knowledge_query_result(result)
 

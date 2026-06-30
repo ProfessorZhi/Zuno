@@ -39,6 +39,7 @@ class KnowledgeQueryService:
         user_id: str,
         knowledge_ids: list[str],
         query: str,
+        product_mode: str | None = None,
         query_method: str | None = None,
         top_k: int | None = None,
     ) -> KnowledgeQueryResult:
@@ -52,6 +53,7 @@ class KnowledgeQueryService:
             query=query,
             knowledge_ids=knowledge_ids,
             snapshot=snapshot,
+            product_mode=product_mode,
             query_method=query_method,
             top_k=top_k,
         )

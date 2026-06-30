@@ -7,4 +7,4 @@
 
 ## 验收
 
-列出当前 direct / basic / enhanced / auto 的真实入口、缺口、兼容 alias、风险和最小实现顺序。
+列出当前 product mode、router decision、query_method 的真实入口、缺口、兼容 alias、风险和最小实现顺序；不要再把 direct / basic / enhanced / auto 混写成同一层级。

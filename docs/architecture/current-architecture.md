@@ -65,6 +65,7 @@ Completion API
 - Phase 11B：已完成。`GeneralAgent.astream()` 使用单一会话路径，`search_knowledge_base` 调用 `KnowledgeQueryService`。
 - Phase 11C：active runtime cleanup 已完成。`DomainQAGraph`、`MultiAgentSupervisorGraph`、`AgentRuntime`、legacy graph states 和 `zuno.services.domain_pack` 不再是当前后端主线。
 - Phase 12：已通过 target migration closure evidence 关闭。full pytest、Contract Review eval、stackless baseline comparison、trace metadata、legacy grep classification 和 docs/evidence sync 已完成。
+- PHASE04 Query Router foundation：`CompletionReq`、`AgentConfig`、`KnowledgeQueryService`、`GraphRAGQueryService`、`RetrievalRequest`、`RetrievalPlan`、`RetrievalPlanner` 和 `RetrievalOrchestrator` 已经贯通 `product_mode = normal | enhanced | auto` 与 `query_method = auto | basic | local | global | drift` 的请求/路由/trace 基础。`auto` 在 trace 中表示 router；`resolved_query_method` 只落到 `basic | local | global | drift`。当前 trace metadata 已包含 requested/resolved product mode、requested/resolved query method、router decision、fallback reason、budget policy、fallback policy、evidence coverage 和 retrievers used。
 
 Workspace knowledge prefetch、Workspace `search_knowledge_base` tool 和 `/knowledge/search` API service path 现在都通过 `KnowledgeQueryService`。
 
@@ -99,7 +100,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - Typed Context Contract models 和 minimal pre-call `ContextOrchestrator`：当前经 `zuno.services.application.context` 兼容入口访问，物理位于 `src/backend/zuno/platform/services/application/context/`。
 - Memory layer foundation contracts：当前可经 `zuno.memory.contracts`、`zuno.memory.store`、`zuno.memory.policy`、`zuno.memory.review`、`zuno.memory.retrieval`、`zuno.memory.rendering` 和 `zuno.memory.engine` 这些目标层薄入口访问；旧 `zuno.services.memory.layers` 兼容入口仍保留。物理实现位于 `src/backend/zuno/platform/services/memory/layers.py`。
 - Capability System foundation contracts：当前可经 `zuno.capability.contracts`、`zuno.capability.registry`、`zuno.capability.selector`、`zuno.capability.policy`、`zuno.capability.execution` 和 `zuno.capability.trace` 这些目标层薄入口访问；旧 `zuno.services.application.capabilities` 兼容入口仍保留。物理实现位于 `src/backend/zuno/platform/services/application/capabilities/`。
-- Knowledge foundation thin surfaces：当前可经 `zuno.knowledge.contracts`、`zuno.knowledge.query_service`、`zuno.knowledge.evidence`、`zuno.knowledge.citation`、`zuno.knowledge.trace`、`zuno.knowledge.retrieval`、`zuno.knowledge.fusion` 和 `zuno.knowledge.graphrag` 访问。真实 query / retrieval / GraphRAG 行为仍在既有 services owner 中。
+- Knowledge foundation thin surfaces：当前可经 `zuno.knowledge.contracts`、`zuno.knowledge.query_service`、`zuno.knowledge.evidence`、`zuno.knowledge.citation`、`zuno.knowledge.trace`、`zuno.knowledge.retrieval`、`zuno.knowledge.fusion` 和 `zuno.knowledge.graphrag` 访问。`zuno.knowledge.retrieval` 暴露 PHASE04 的 product mode / query method contract 常量和 `normalize_product_mode`。真实 query / retrieval / GraphRAG 行为仍在既有 services owner 中。
 - Agent boundary thin surfaces：当前可经 `zuno.agent.runtime`、`zuno.agent.context`、`zuno.agent.post_turn`、`zuno.agent.state`、`zuno.agent.streaming` 和 `zuno.agent.tool_bridge` 访问。`GeneralAgent` 主循环仍由既有 runtime owner 承担。
 - Platform foundation thin surfaces：当前可经 `zuno.platform.model_gateway`、`zuno.platform.security`、`zuno.platform.observability` 和 `zuno.platform.storage` 访问。这些只是边界入口，不改变 provider、storage、settings 或 DB 默认行为。
 - `GeneralAgent.astream()` 的 minimal runtime integration：准备 `ModelContextPacket`、传递 `context_trace`、选择有限 capability schema，并在 memory enabled 时提交 scoped raw event 与 task summary。
@@ -116,6 +117,7 @@ Docker 不再复制或挂载 `/app/domain-packs`。
 - 完整 `prepare_context -> agent_loop -> post_turn_commit` LangGraph runtime
 - production-grade Memory DB
 - 完整 frontend trace 面板
+- 产品 UI 的三模式完整改名和所有前端入口统一
 - Native BM25 capability search
 - multi-query / multi-retriever / RRF / optional rerank 的完整 retrieval fusion
 - GraphRAG LLM-first entity / relation extraction 的生产实现

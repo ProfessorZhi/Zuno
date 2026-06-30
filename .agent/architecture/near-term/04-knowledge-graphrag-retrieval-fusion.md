@@ -57,6 +57,17 @@ The router records requested method, resolved method, fallback reason, and
 method availability. If graph/community assets are not ready, the trace must
 show the fallback clearly.
 
+PHASE04 已落地的当前 trace contract 名称：
+
+| 字段 | 当前含义 |
+| --- | --- |
+| `requested_product_mode` / `resolved_product_mode` | `normal / enhanced / auto` 产品模式。 |
+| `router_decision` | `normal_basic` 或 `enhanced_basic|local|global|drift` 路由解释。 |
+| `requested_query_method` / `resolved_query_method` | requested 可为 `auto`；resolved 只允许 `basic / local / global / drift`。 |
+| `fallback_reason` | graph/community/fallback 触发原因。 |
+| `budget_policy` / `fallback_policy` | top-k、rewrite、retry、route broadening 等策略证据。 |
+| `citation_coverage` / `retrievers_used` | 证据覆盖率和实际检索器。 |
+
 ## 产品模式
 
 ```text
