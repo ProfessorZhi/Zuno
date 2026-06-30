@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-master-architecture-implementation-v1`
-- 当前阶段：[PHASE06_context-memory-system.md](PHASE06_context-memory-system.md)
+- 当前阶段：[PHASE07_tool-control-plane-mcp-approval.md](PHASE07_tool-control-plane-mcp-approval.md)
 - 当前入口：[current.md](current.md)
 
 ## Program 目标
@@ -36,8 +36,8 @@
 - [PHASE03_enterprise-scenario-and-product-loop.md](PHASE03_enterprise-scenario-and-product-loop.md)：completed，企业知识库主场景、workspace、task/session、artifact、event flow。
 - [PHASE04_document-ingestion-parse-gateway.md](PHASE04_document-ingestion-parse-gateway.md)：completed，多格式解析 contract、Canonical Document IR、parser router、index handoff 和 parser golden fixtures。
 - [PHASE05_agent-runtime-langgraph-harness.md](PHASE05_agent-runtime-langgraph-harness.md)：completed，Single Controller runtime harness contract、node table、checkpoint、interrupt/resume 和 stream event bridge。
-- [PHASE06_context-memory-system.md](PHASE06_context-memory-system.md)：active，raw event、recent window、summary、structured memory、promotion/decay。
-- [PHASE07_tool-control-plane-mcp-approval.md](PHASE07_tool-control-plane-mcp-approval.md)：ToolCard、manifest、selector、executor adapter、MCP、approval、sandbox。
+- [PHASE06_context-memory-system.md](PHASE06_context-memory-system.md)：completed，MemoryEngine、九类 taxonomy、read/write/manage API、Context Pack renderer 和 memory eval policy。
+- [PHASE07_tool-control-plane-mcp-approval.md](PHASE07_tool-control-plane-mcp-approval.md)：active，ToolCard、manifest、selector、executor adapter、MCP、approval、sandbox。
 - [PHASE08_rag-graphrag-evidence-citation.md](PHASE08_rag-graphrag-evidence-citation.md)：basic/local/global/drift、retrieval fusion、GraphRAG indexing/query、citation。
 - [PHASE09_security-governance-sandbox.md](PHASE09_security-governance-sandbox.md)：输入、检索、工具、输出四道安全闸和沙箱治理。
 - [PHASE10_eval-observability-langsmith.md](PHASE10_eval-observability-langsmith.md)：trace schema、LangSmith adapter、offline/online eval、CI regression gate。

@@ -3,7 +3,7 @@
 当前 active program：`zuno-master-architecture-implementation-v1`
 
 state: active
-current_phase: PHASE06_context-memory-system
+current_phase: PHASE07_tool-control-plane-mcp-approval
 
 ## 目标
 
@@ -35,8 +35,8 @@ current_phase: PHASE06_context-memory-system
 - `PHASE03_enterprise-scenario-and-product-loop.md`：completed。
 - `PHASE04_document-ingestion-parse-gateway.md`：completed。
 - `PHASE05_agent-runtime-langgraph-harness.md`：completed。
-- `PHASE06_context-memory-system.md`：active。
-- `PHASE07_tool-control-plane-mcp-approval.md`：pending。
+- `PHASE06_context-memory-system.md`：completed。
+- `PHASE07_tool-control-plane-mcp-approval.md`：active。
 - `PHASE08_rag-graphrag-evidence-citation.md`：pending。
 - `PHASE09_security-governance-sandbox.md`：pending。
 - `PHASE10_eval-observability-langsmith.md`：pending。
@@ -48,7 +48,7 @@ current_phase: PHASE06_context-memory-system
 - 本 program 可以创建和修改计划、文档、verifier、tests，并在对应 phase 中逐步修改 runtime code。
 - 任何 runtime phase 必须先写或更新 focused tests，再做实现。
 - 兼容路径不能为了视觉清爽直接删除；必须先由 import matrix 和 tests 证明替代路径可用。
-- 生产级 Parse Gateway runtime、production-grade durable `LangGraph runtime`、`Memory DB`、`Tool approval`、`GraphRAG extraction/fusion`、`LangSmith trace/eval` 和 `security sandbox` 在对应 phase 完成前仍是 Target。
+- 生产级 Parse Gateway runtime、production-grade durable `LangGraph runtime`、production-grade `Memory DB`、`Tool approval`、`GraphRAG extraction/fusion`、`LangSmith trace/eval` 和 `security sandbox` 在对应 phase 完成前仍是 Target。
 - 产品 runtime 默认仍是 Single Controller Agent；Codex 多线程和多 worktree 只属于工程交付方式。
 
 ## 最近完成归档

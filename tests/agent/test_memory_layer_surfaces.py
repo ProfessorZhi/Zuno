@@ -26,7 +26,15 @@ def test_memory_layer_modules_expose_target_boundaries() -> None:
         },
         "zuno.memory.retrieval": {"InMemoryLayerStore", "MemoryCandidate", "MemoryScope"},
         "zuno.memory.rendering": {"RawMemoryEvent", "TaskMemorySummary"},
-        "zuno.memory.engine": {"InMemoryLayerStore", "RawMemoryEvent", "TaskMemorySummary"},
+        "zuno.memory.engine": {
+            "InMemoryLayerStore",
+            "MEMORY_TAXONOMY",
+            "MemoryEngine",
+            "MemoryEvalPolicy",
+            "MemoryTaxonomyEntry",
+            "RawMemoryEvent",
+            "TaskMemorySummary",
+        },
     }
 
     for module_name, exports in expected_exports.items():
@@ -63,7 +71,9 @@ def test_memory_package_facade_points_at_layer_modules() -> None:
     from zuno.memory.contracts import MemoryLayer
     from zuno.memory.policy import RetentionPolicy
     from zuno.memory.store import InMemoryLayerStore
+    from zuno.memory.engine import MemoryEngine
 
     assert memory.MemoryLayer is MemoryLayer
     assert memory.RetentionPolicy is RetentionPolicy
     assert memory.InMemoryLayerStore is InMemoryLayerStore
+    assert memory.MemoryEngine is MemoryEngine

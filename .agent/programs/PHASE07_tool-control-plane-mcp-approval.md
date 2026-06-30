@@ -1,6 +1,6 @@
 # PHASE07 Tool Control Plane MCP Approval
 
-status: pending
+status: active
 
 ## 目标
 

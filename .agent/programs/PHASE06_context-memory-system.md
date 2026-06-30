@@ -1,6 +1,6 @@
 # PHASE06 Context Memory System
 
-status: active
+status: completed
 
 ## 目标
 
@@ -8,14 +8,14 @@ status: active
 
 ## 步骤
 
-- [ ] 定义 Raw Event Log、Working Context、Recent Window、Task Summary、Structured Long-term Memory、Graph Memory candidate。
-- [ ] 扩展为九类 memory taxonomy：Raw Event Log、Working Memory、Recent Window、Task Summary、Episodic Memory、Semantic Memory、Procedural Memory、Graph Memory Candidate、Model Context Pack。
-- [ ] 定义 Context Pack renderer 和 budget policy。
-- [ ] 定义 Memory API：`append_event`、`build_recent_window`、`summarize_task`、`extract_memory_candidates`、`review_memory_candidate`、`retrieve_memory`、`render_context_pack`。
-- [ ] 定义 storage mapping：哪些只进 trace/event log，哪些能进入 searchable store，哪些能进入下一轮 context。
-- [ ] 定义 post-turn extraction、dedupe/conflict、review、promotion、decay、discard。
-- [ ] 增加敏感信息过滤和 memory eval。
-- [ ] 写 memory layer tests。
+- [x] 定义 Raw Event Log、Working Context、Recent Window、Task Summary、Structured Long-term Memory、Graph Memory candidate。
+- [x] 扩展为九类 memory taxonomy：Raw Event Log、Working Memory、Recent Window、Task Summary、Episodic Memory、Semantic Memory、Procedural Memory、Graph Memory Candidate、Model Context Pack。
+- [x] 定义 Context Pack renderer 和 budget policy。
+- [x] 定义 Memory API：`append_event`、`build_recent_window`、`summarize_task`、`extract_memory_candidates`、`review_memory_candidate`、`retrieve_memory`、`render_context_pack`。
+- [x] 定义 storage mapping：哪些只进 trace/event log，哪些能进入 searchable store，哪些能进入下一轮 context。
+- [x] 定义 post-turn extraction、dedupe/conflict、review、promotion、decay、discard。
+- [x] 增加敏感信息过滤和 memory eval。
+- [x] 写 memory layer tests。
 
 ## 输入 / 输出文件
 
@@ -59,3 +59,12 @@ status: active
 ```powershell
 pytest -q tests/agent/test_memory_layers.py tests/agent/test_memory_layer_surfaces.py tests/agent/test_context_orchestrator.py -p no:cacheprovider
 ```
+
+## 完成证据
+
+- `src/backend/zuno/memory/engine.py` 定义 `MEMORY_TAXONOMY`、`MemoryTaxonomyEntry`、`MemoryEvalPolicy` 和 `MemoryEngine`。
+- `MemoryEngine` 提供 `append_event`、`build_recent_window`、`summarize_task`、`extract_memory_candidates`、`review_memory_candidate`、`retrieve_memory`、`render_context_pack` 七个 read/write/manage API。
+- Context Pack renderer 输出 `trace_id`、`task_id`、`source_event_ids_by_item` 和 `memory_read_span`。
+- 敏感候选默认阻断 `credential`、`pii`、`secret`，不直接进入长期记忆。
+- `tests/agent/test_memory_system_contract.py` 覆盖 taxonomy、API 流程、review/retrieve、context pack trace 和 memory eval policy。
+- Current 边界：PHASE06 完成 MemoryEngine contract，不表示生产级 Memory DB、长期 decay job 或持久化 retrieval consolidation 已完成。

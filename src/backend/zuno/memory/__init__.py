@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         RawMemoryEvent,
         TaskMemorySummary,
     )
+    from zuno.memory.engine import MemoryEngine
     from zuno.memory.policy import RetentionPolicy
     from zuno.memory.store import InMemoryLayerStore
 
@@ -23,6 +24,7 @@ _EXPORT_TO_MODULE = {
     "ExternalKnowledgeRecord": "zuno.memory.contracts",
     "InMemoryLayerStore": "zuno.memory.store",
     "MemoryCandidate": "zuno.memory.contracts",
+    "MemoryEngine": "zuno.memory.engine",
     "MemoryLayer": "zuno.memory.contracts",
     "MemoryProcessingPolicy": "zuno.memory.policy",
     "MemoryReviewDecision": "zuno.memory.review",
@@ -37,6 +39,7 @@ __all__ = [
     "ExternalKnowledgeRecord",
     "InMemoryLayerStore",
     "MemoryCandidate",
+    "MemoryEngine",
     "MemoryLayer",
     "MemoryProcessingPolicy",
     "MemoryReviewDecision",
