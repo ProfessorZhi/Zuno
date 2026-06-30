@@ -12,7 +12,7 @@
 
 state: active
 program: zuno-master-architecture-implementation-v1
-current_phase: PHASE10_eval-observability-langsmith
+current_phase: PHASE11_architecture-docs-html-refresh
 
 每次新 program 都从 `PHASE01` 开始编号。
 
@@ -127,8 +127,8 @@ Runtime implementation paths opened by later phases:
 | PHASE07 | completed | Tool Control Plane、MCP、approval、executor adapter、sandbox。 |
 | PHASE08 | completed | Agentic Retrieval Router、staged fusion、EvidenceBundle、Citation Builder、unsupported claim check、GraphRAG index pipeline contract。 |
 | PHASE09 | completed | Security governance、input/retrieval/tool/output gates、sandbox audit、secret redaction。 |
-| PHASE10 | active | LangSmith-compatible trace/eval、offline/online eval、CI gate。 |
-| PHASE11 | pending | 架构 Markdown、HTML、README、图集和展示文档更新。 |
+| PHASE10 | completed | LangSmith-compatible trace/eval contract、LangSmith adapter、release baseline schema、sandbox audit span bridge。 |
+| PHASE11 | active | 架构 Markdown、HTML、README、图集和展示文档更新。 |
 | PHASE12 | pending | 全量验证、release baseline、归档和推送。 |
 
 ## Phase Dependency Gates
@@ -229,7 +229,7 @@ Set these state values in `.agent/programs/current.md`, `.agent/programs/impleme
 ```text
 program: zuno-master-architecture-implementation-v1
 state: active
-current_phase: PHASE10_eval-observability-langsmith
+current_phase: PHASE11_architecture-docs-html-refresh
 ```
 
 - [ ] **Step 4: Archive ChatGPT research mode artifacts**
@@ -650,7 +650,7 @@ PHASE09 Current result: `src/backend/zuno/platform/security/governance.py` fixes
 
 ## Task 10: Eval / Observability / LangSmith
 
-Status: active
+Status: completed
 
 **Files:**
 - Modify/Create: `src/backend/zuno/platform/observability/**`
@@ -659,7 +659,7 @@ Status: active
 - Modify: `docs/evidence/eval-baselines.md`
 - Modify: `docs/architecture/architecture.md`
 
-- [ ] **Step 1: Define trace schema**
+- [x] **Step 1: Define trace schema**
 
 Trace fields:
 
@@ -685,7 +685,7 @@ security_events
 failure_reason
 ```
 
-- [ ] **Step 2: Define eval layers**
+- [x] **Step 2: Define eval layers**
 
 ```text
 retrieval eval
@@ -695,13 +695,15 @@ security eval
 business scenario eval
 ```
 
-- [ ] **Step 3: Keep local gate and LangSmith adapter**
+- [x] **Step 3: Keep local gate and LangSmith adapter**
 
 Local pytest/eval runners remain release gates. LangSmith-compatible export is a target sink, not the only source of truth.
 
+PHASE10 Current result: `src/backend/zuno/platform/observability/trace_eval.py` fixes OTel / LangSmith-compatible `ZunoSpan` schema, redacted `ZunoSpanBuilder`, `LangSmithExportAdapter`, `EvalDatasetCase`, `MetricThreshold`, `ReleaseEvalBaseline` and PHASE09 `SandboxAuditEvent` -> sandbox span bridge. Production-grade external LangSmith write path, online sampling platform, durable trace store, full eval dataset and CI release gate remain Target.
+
 ## Task 11: Architecture Docs / HTML Refresh
 
-Status: pending
+Status: active
 
 **Files:**
 - Modify: `docs/architecture/architecture.md`

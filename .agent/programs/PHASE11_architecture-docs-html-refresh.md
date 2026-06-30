@@ -1,6 +1,6 @@
 # PHASE11 Architecture Docs HTML Refresh
 
-status: pending
+status: active
 
 ## 目标
 

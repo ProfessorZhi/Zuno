@@ -35,7 +35,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 active program
 
-当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE10_eval-observability-langsmith`。`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval`、`PHASE08_rag-graphrag-evidence-citation` 与 `PHASE09_security-governance-sandbox` 已通过 verifier 和 focused tests 证明完成；本阶段推进 LangSmith-compatible trace / eval、offline / online eval 和 CI regression gate。
+当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE11_architecture-docs-html-refresh`。`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval`、`PHASE08_rag-graphrag-evidence-citation`、`PHASE09_security-governance-sandbox` 与 `PHASE10_eval-observability-langsmith` 已通过 verifier 和 focused tests 证明完成；本阶段刷新正式架构 Markdown、Agent 架构镜像、架构 HTML、README 和图集。
 
 执行状态入口在 `.agent/programs/`。
 

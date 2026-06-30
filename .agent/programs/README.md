@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-master-architecture-implementation-v1`
-- 当前阶段：[PHASE10_eval-observability-langsmith.md](PHASE10_eval-observability-langsmith.md)
+- 当前阶段：[PHASE11_architecture-docs-html-refresh.md](PHASE11_architecture-docs-html-refresh.md)
 - 当前入口：[current.md](current.md)
 
 ## Program 目标
@@ -40,8 +40,8 @@
 - [PHASE07_tool-control-plane-mcp-approval.md](PHASE07_tool-control-plane-mcp-approval.md)：completed，ToolCard manifest、executor registry、side-effect matrix、approval gate、MCP trust 和 result normalizer。
 - [PHASE08_rag-graphrag-evidence-citation.md](PHASE08_rag-graphrag-evidence-citation.md)：completed，Agentic Retrieval Router、basic/local/global/drift、staged fusion、EvidenceBundle、Citation Builder、unsupported claim check 和 GraphRAG index pipeline contract。
 - [PHASE09_security-governance-sandbox.md](PHASE09_security-governance-sandbox.md)：completed，输入、检索、工具、输出四道安全闸、Tool security profile、sandbox audit event 和 secret redaction contract。
-- [PHASE10_eval-observability-langsmith.md](PHASE10_eval-observability-langsmith.md)：active，trace schema、LangSmith adapter、offline/online eval、CI regression gate。
-- [PHASE11_architecture-docs-html-refresh.md](PHASE11_architecture-docs-html-refresh.md)：正式架构 Markdown、Agent 镜像、HTML 展示和图集更新。
+- [PHASE10_eval-observability-langsmith.md](PHASE10_eval-observability-langsmith.md)：completed，trace/span schema、LangSmith adapter、eval dataset / release baseline contract 和 sandbox audit span bridge。
+- [PHASE11_architecture-docs-html-refresh.md](PHASE11_architecture-docs-html-refresh.md)：active，正式架构 Markdown、Agent 镜像、HTML 展示和图集更新。
 - [PHASE12_validation-release-closure.md](PHASE12_validation-release-closure.md)：全量验证、归档、README 状态和发布证据。
 
 ## 最近归档

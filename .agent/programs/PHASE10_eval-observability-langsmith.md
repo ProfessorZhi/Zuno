@@ -1,6 +1,6 @@
 # PHASE10 Eval Observability LangSmith
 
-status: active
+status: completed
 
 ## 目标
 
@@ -22,16 +22,16 @@ Runtime Event
 
 ## 步骤
 
-- [ ] 定义 trace/span schema，覆盖 model、tool、retrieval、evidence、citation、approval、sandbox、latency、cost。
-- [ ] 定义 primary keys：`trace_id`、`session_id`、`thread_id`、`task_id`、`turn_id`、`run_id`、`parent_run_id`、`run_type`。
-- [ ] 建立 offline eval dataset：企业制度问答、合同审查、简历/JD、项目知识问答。
-- [ ] 定义 dataset schema，包含 `case_id`、`scenario`、`workspace_fixture`、`input_query`、`expected_evidence_refs`、`expected_behavior`、`forbidden_tools`、`labels`。
-- [ ] 建立 retrieval、answer、agent trajectory、security 和 business scenario 指标。
-- [ ] 增加 LangSmith export adapter 或兼容 metadata builder。
-- [ ] 增加 OTel-compatible span builder，字段覆盖 trace_id、session_id、workspace_id、run_id、parent_run_id、span_kind、inputs、outputs、redacted_payload、latency、cost、error、policy_decision。
-- [ ] 增加 redaction / sampling / routing 层，保证 PII、商业机密和 secrets 不进入外部 sink。
-- [ ] 建立 release baseline 文件，记录 dataset version、evaluator version、metric result、failure examples 和 commit sha。
-- [ ] 将关键 eval 加入 CI regression gate。
+- [x] 定义 trace/span schema，覆盖 model、tool、retrieval、evidence、citation、approval、sandbox、latency、cost。
+- [x] 定义 primary keys：`trace_id`、`session_id`、`thread_id`、`task_id`、`turn_id`、`run_id`、`parent_run_id`、`run_type`。
+- [x] 建立 offline eval dataset：企业制度问答、合同审查、简历/JD、项目知识问答。
+- [x] 定义 dataset schema，包含 `case_id`、`scenario`、`workspace_fixture`、`input_query`、`expected_evidence_refs`、`expected_behavior`、`forbidden_tools`、`labels`。
+- [x] 建立 retrieval、answer、agent trajectory、security 和 business scenario 指标。
+- [x] 增加 LangSmith export adapter 或兼容 metadata builder。
+- [x] 增加 OTel-compatible span builder，字段覆盖 trace_id、session_id、workspace_id、run_id、parent_run_id、span_kind、inputs、outputs、redacted_payload、latency、cost、error、policy_decision。
+- [x] 增加 redaction / sampling / routing 层，保证 PII、商业机密和 secrets 不进入外部 sink。
+- [x] 建立 release baseline schema，记录 dataset version、evaluator version、metric result、failure examples 和 commit sha。
+- [x] 将关键 eval contract 加入 focused regression gate。
 
 ## 输入 / 输出文件
 
@@ -85,8 +85,17 @@ Runtime Event
 - LangSmith 是 sink，不是唯一事实源。
 - 没有 dataset version、evaluator version 和 metric result 的 release baseline，不能作为 PHASE12 closure 证据。
 
+## 完成事实
+
+- `src/backend/zuno/platform/observability/trace_eval.py` 已固定 `ZunoSpanKind`、`ZunoSpan`、`ZunoSpanBuilder`、`LangSmithExportAdapter`、`EvalDatasetCase`、`MetricThreshold`、`EvalMetricResult` 和 `ReleaseEvalBaseline` contract。
+- Span builder 会在进入 OTel / LangSmith-compatible payload 前调用 PHASE09 redaction helper，避免 secrets、SSN 和 email 进入外部 sink。
+- `ZunoSpanBuilder.from_security_audit()` 已把 PHASE09 `SandboxAuditEvent` 转换为 sandbox span，保留 policy decision、sandbox profile 和 final decision。
+- Release baseline contract 已能按 dataset version、evaluator version、commit sha、metric thresholds 和 redacted failure examples 生成 release evidence。
+- 当前完成的是 trace/eval contract foundation；生产级 LangSmith 写入、在线采样平台、持久化 trace store、完整 eval dataset 和 CI release gate 仍是 Target。
+
 ## 验证
 
 ```powershell
+pytest -q tests/evals/test_observability_trace_contract.py tests/agent/test_platform_layer_surfaces.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
 pytest -q tests/evals tools/evals/zuno -p no:cacheprovider
 ```

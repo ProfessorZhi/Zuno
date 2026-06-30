@@ -290,7 +290,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "当前 active program",
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE10_eval-observability-langsmith",
+        "current_phase: PHASE11_architecture-docs-html-refresh",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
     ]:

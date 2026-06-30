@@ -1064,7 +1064,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             "当前 active program",
             ACTIVE_PROGRAM_NAME,
             "state: active",
-            "current_phase: PHASE10_eval-observability-langsmith",
+            "current_phase: PHASE11_architecture-docs-html-refresh",
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
             "八个方面产物",

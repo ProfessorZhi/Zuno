@@ -118,7 +118,7 @@ Zuno 的目标架构可以理解为“单控制器运行时 + 多平面支撑”
 | Knowledge / Agentic GraphRAG | PHASE08 已有 `AgenticRetrievalRouter`、`ProductMode` / `QueryMethod`、`StagedFusionPlan`、`EvidenceBundle`、`CitationBuilder`、`UnsupportedClaimChecker`、`GraphRAGIndexPipelineContract` 和 trace payload contract。 | 生产级 multi-channel retrieval、GraphRAG extraction、community report、RRF / rerank、index job runtime、retrieval / citation eval baseline。 | 中等差距；contract 已定，但 index / fusion / rerank / eval runtime 未成熟。 | PHASE09/10 消费 PHASE08 的 evidence、citation、ACL 和 trace 字段。 |
 | Document Ingestion | PHASE04 已有 Parser Capability Matrix、Canonical Document IR、router contract、index handoff 和 parser golden fixture manifest；真实 parser runtime 仍在旧 services。 | 多格式 parser adapter runtime、OCR/layout/table/code chunk、ACL/provenance、index job 和 parser metrics。 | 中大差距；contract 已定，runtime 迁移和 adapter 执行仍未完成。 | PHASE08/PHASE09/PHASE10 消费 Document IR 与 handoff payload。 |
 | Security / Governance | PHASE09 已有 `InputSecurityGate`、`RetrievalSecurityGate`、`ToolSecurityGate`、`OutputSecurityGate`、`ToolSecurityProfile`、`SandboxAuditEvent` 和 redaction helper。 | 真实 sandbox runtime、approval UI、credential broker、network proxy、生产级 DLP、security eval baseline。 | 中等差距；contract 已定，但隔离执行和外部治理平台未完成。 | PHASE10 消费 policy / sandbox / approval events，PHASE12 做 release gate。 |
-| Eval / Observability | 本地 trace/eval foundation、Contract Review eval 和 repo verifier 已有。 | OTel/LangSmith-compatible spans、offline/online eval、RAG/answer/agent/security metrics、CI gates。 | 中大差距；缺持续评测台和统一指标面。 | PHASE10 先做 span schema、dataset、offline eval、LangSmith sink。 |
+| Eval / Observability | PHASE10 已有 OTel / LangSmith-compatible `ZunoSpan` schema、redacted `ZunoSpanBuilder`、`LangSmithExportAdapter`、`EvalDatasetCase`、`ReleaseEvalBaseline` 和 sandbox audit span bridge；本地 trace/eval foundation、Contract Review eval 和 repo verifier 已有。 | 生产级 LangSmith / OTel sink、在线采样平台、持久化 trace store、完整 RAG/answer/agent/security eval dataset、CI release gates。 | 中等差距；contract 已定，但持续评测台、统一指标面和外部 sink runtime 未完成。 | PHASE11 把已验证 trace/eval contract 写入架构 Markdown / HTML，PHASE12 做 release gate。 |
 | Platform / Worker | 模块化单体基础存在；完整 worker/object/vector/graph/provider abstraction 未成熟。 | Local-first modular monolith + optional workers + replaceable storage/model/MCP providers。 | 中等差距；worker / 微服务只能作为 Target/Future 候选，不能写成 Current。 | PHASE02/03/04/10 分别把 storage、jobs、artifact、observability 边界拉清。 |
 
 这张矩阵决定实施顺序：先整理目录和 ownership，再建立产品闭环；先把文档解析和 runtime state 做成可测 contract，再扩大 GraphRAG、Memory、Tool、安全和 eval；最后才把完成事实写回 Current。
@@ -879,13 +879,13 @@ Eval 三层：
 | `p95_latency_budget_hit` | >= 0.90 | 场景级预算，不是全局硬值。 |
 | `prompt_injection_attack_pass_rate` | >= 0.95 | 模拟攻击阻断率。 |
 
-这些阈值是 Target 初稿，不代表当前仓库已达到。PHASE10 要做的是让这些指标可计算、可追踪、可调整，而不是立刻承诺全部达标。
+这些阈值是 Target 初稿，不代表当前仓库已达到。PHASE10 已把 dataset case、metric threshold、metric result、release baseline 和 redacted failure examples 做成可测试 contract；完整 dataset、nightly eval、CI release gate 和在线采样平台仍是 Target。
 
 ### Platform / Storage / Worker 平面
 
 近期平台层仍应保持模块化单体；微服务不是近期 Current，也不是默认路线。目标上，Platform 负责 model gateway、settings、database、object storage、vector store、graph store、search index、queue / worker、secrets、observability 和 provider adapter。文档解析、embedding、GraphRAG indexing、artifact rendering 和长任务可以先通过 background job / worker 抽象表达，不需要立刻引入完整分布式架构。
 
-代码布局上，`src/backend/zuno` 顶层六层已经正确：`api / agent / memory / capability / knowledge / platform`。PHASE02 已把六层内部的 owner baseline 写入 `docs/architecture/repo-ownership-matrix.md`，并用 `tools/scripts/verify_repo_structure.py` 固定 `platform/services`、`capability/tools`、`capability/mcp/servers`、`platform/compatibility` 和 `platform/vendor` 的边界。当前事实是：`platform/services` 仍是 migration source；`knowledge/ingestion`、`platform/security`、`platform/observability` 和 `platform/vendor` 只是 README + import guard；`fastapi_jwt_auth` 仍在 compatibility vendor 兼容路径。任何移动都必须先由 import matrix、focused tests 和 verifier 证明，不为了视觉清爽直接删兼容路径。
+代码布局上，`src/backend/zuno` 顶层六层已经正确：`api / agent / memory / capability / knowledge / platform`。PHASE02 已把六层内部的 owner baseline 写入 `docs/architecture/repo-ownership-matrix.md`，并用 `tools/scripts/verify_repo_structure.py` 固定 `platform/services`、`capability/tools`、`capability/mcp/servers`、`platform/compatibility` 和 `platform/vendor` 的边界。当前事实是：`platform/services` 仍是 migration source；`knowledge/ingestion`、`platform/security`、`platform/observability` 和 `platform/vendor` 已有 README / import guard，且 `platform/security/governance.py` 与 `platform/observability/trace_eval.py` 分别提供 security 与 trace/eval contract foundation；`fastapi_jwt_auth` 仍在 compatibility vendor 兼容路径。任何移动都必须先由 import matrix、focused tests 和 verifier 证明，不为了视觉清爽直接删兼容路径。
 
 目标代码树按最新报告收束为“业务语义拥有代码，platform 只承载跨层基础设施”：
 
@@ -975,7 +975,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE10_eval-observability-langsmith`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval`、`PHASE08_rag-graphrag-evidence-citation` 与 `PHASE09_security-governance-sandbox` 已通过 verifier 和 focused tests 证明完成。PHASE10 负责 LangSmith-compatible trace / eval、offline / online eval 和 CI regression gate；完整 LangSmith 产品化平台在本 phase 验证前仍是 Target。
+当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE11_architecture-docs-html-refresh`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval`、`PHASE08_rag-graphrag-evidence-citation`、`PHASE09_security-governance-sandbox` 与 `PHASE10_eval-observability-langsmith` 已通过 verifier 和 focused tests 证明完成。PHASE10 已完成 LangSmith-compatible trace / eval contract、redacted export adapter、release baseline schema 和 sandbox audit span bridge；完整 LangSmith 产品化平台、在线采样平台和持久化 trace store 仍是 Target。
 
 本 program 的十二个 phase：
 
@@ -988,8 +988,8 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 7. `PHASE07_tool-control-plane-mcp-approval`：落地 ToolCard manifest、selector、policy、approval、executor adapter、MCP trust、credential broker 和 sandbox 的第一版。
 8. `PHASE08_rag-graphrag-evidence-citation`：已完成 Agentic Retrieval Router、basic/local/global/drift 边界、staged fusion、EvidenceBundle、CitationBuilder、unsupported claim check、GraphRAG index pipeline contract 和 trace coverage；生产级 extraction / fusion / rerank 仍是 Target。
 9. `PHASE09_security-governance-sandbox`：已完成输入闸门、检索闸门、工具闸门、输出闸门、ToolSecurityProfile、SandboxAuditEvent、secret redaction 和跨 workspace guard contract；真实 sandbox runtime / credential broker / approval UI 仍是 Target。
-10. `PHASE10_eval-observability-langsmith`：建立 LangSmith-compatible trace schema、dataset、offline / online eval、RAG / answer / agent / security metrics 和 CI regression gate。
-11. `PHASE11_architecture-docs-html-refresh`：根据已落地事实更新 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两份 `architecture.html`，保证 Markdown 比 HTML 更详细，HTML 图为主。
+10. `PHASE10_eval-observability-langsmith`：已建立 LangSmith-compatible trace schema、redacted export adapter、dataset / release baseline contract、sandbox audit span bridge 和 focused regression tests。
+11. `PHASE11_architecture-docs-html-refresh`：当前阶段，根据已落地事实更新 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两份 `architecture.html`，保证 Markdown 比 HTML 更详细，HTML 图为主。
 12. `PHASE12_validation-release-closure`：运行 repo verifiers、focused tests、必要的 full pytest、文档 self-review、program closure、历史归档、commit 和 push。
 
 这十二个 phase 可以在后续按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。

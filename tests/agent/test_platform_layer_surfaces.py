@@ -56,11 +56,31 @@ EXPECTED_EXPORTS = {
         "redact_sensitive_text",
     ],
     "zuno.platform.observability": [
+        "EvalDatasetCase",
+        "EvalMetricResult",
+        "LangSmithExportAdapter",
+        "MetricThreshold",
         "RedisKeys",
+        "ReleaseEvalBaseline",
+        "ReleaseEvalBaselineResult",
+        "ZunoSpan",
+        "ZunoSpanBuilder",
+        "ZunoSpanKind",
         "build_langchain_run_config",
         "build_langsmith_metadata",
         "configure_langsmith",
         "get_active_trace_id",
+    ],
+    "zuno.platform.observability.trace_eval": [
+        "EvalDatasetCase",
+        "EvalMetricResult",
+        "LangSmithExportAdapter",
+        "MetricThreshold",
+        "ReleaseEvalBaseline",
+        "ReleaseEvalBaselineResult",
+        "ZunoSpan",
+        "ZunoSpanBuilder",
+        "ZunoSpanKind",
     ],
     "zuno.platform.storage": [
         "LazyStorageClient",
@@ -100,11 +120,13 @@ def test_platform_layer_modules_reuse_legacy_foundation_objects() -> None:
 def test_platform_package_facade_points_at_target_modules() -> None:
     import zuno.platform as platform
     from zuno.platform.model_gateway import LLMProvider
+    from zuno.platform.observability import ZunoSpanBuilder
     from zuno.platform.security import AccessScope, SecurityGate
 
     assert platform.AccessScope is AccessScope
     assert platform.SecurityGate is SecurityGate
     assert platform.LLMProvider is LLMProvider
+    assert platform.ZunoSpanBuilder is ZunoSpanBuilder
 
 
 def test_importing_platform_surfaces_does_not_load_database_or_vector_runtime() -> None:

@@ -41,6 +41,7 @@ STATIC_TARGET_SURFACES = [
     "src/backend/zuno/platform/__init__.py",
     "src/backend/zuno/platform/model_gateway.py",
     "src/backend/zuno/platform/observability/__init__.py",
+    "src/backend/zuno/platform/observability/trace_eval.py",
     "src/backend/zuno/platform/security/__init__.py",
     "src/backend/zuno/platform/security/governance.py",
     "src/backend/zuno/platform/storage/__init__.py",
