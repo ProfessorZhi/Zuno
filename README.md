@@ -1,6 +1,6 @@
 # Zuno
 
-Zuno 是本地优先的企业私有知识库与多功能 Agent 助手，不是普通 RAG 问答 demo。它把 Vue Web、Electron Desktop、FastAPI 后端、当前 `GeneralAgent` 单循环主线、Knowledge / RAG / GraphRAG、工具能力、MCP 语境和本地 Eval 放在一个 monorepo 里，目标是让企业私有文档从“可搜索”升级为“可理解、可追溯、可执行、可评测、可治理”。
+Zuno 是本地优先的 Agent Workspace，也是企业私有知识库与多功能 Agent 助手，不是普通 RAG 问答 demo。它把 Vue Web、Electron Desktop、FastAPI 后端、当前 `GeneralAgent` 单循环主线、Knowledge / RAG / GraphRAG、工具能力、MCP 语境和本地 Eval 放在一个 monorepo 里，目标是让企业私有文档从“可搜索”升级为“可理解、可追溯、可执行、可评测、可治理”。
 
 ```text
 Local-first Enterprise Private Knowledge Agent Workspace
@@ -32,12 +32,17 @@ Local-first Enterprise Private Knowledge Agent Workspace
 - 当前知识回答主线是 `Completion API -> CompletionService -> GeneralAgent single loop -> search_knowledge_base -> KnowledgeQueryService -> GraphRAGQueryService -> RetrievalPlanner / RetrievalOrchestrator -> Evidence / Citation / Trace -> GeneralAgent answer`。
 - 当前已有 Query Router、Context / Memory、ToolCard、GraphRAG、Evidence / Citation / Trace / Eval foundation。
 - 当前不是完整产品级 LangGraph runtime，不是生产级 Memory DB，不是成熟安全沙箱，也不是默认多 Agent runtime。
+- Phase 0-6 架构收口仍是已完成的历史事实。
 
-## 当前 active program
+## 当前 program 状态
 
-当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE12_validation-release-closure`。`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval`、`PHASE08_rag-graphrag-evidence-citation`、`PHASE09_security-governance-sandbox`、`PHASE10_eval-observability-langsmith` 与 `PHASE11_architecture-docs-html-refresh` 已通过 verifier 和 focused tests 证明完成；本阶段执行全量验证、closure summary、历史归档和发布证据收口。
+当前没有 active Agent program。最近完成并归档的 program 是 `zuno-master-architecture-implementation-v1`：
 
-执行状态入口在 `.agent/programs/`。
+- `docs/history/programs/zuno-master-architecture-implementation-v1/`
+
+它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。
+
+执行状态入口在 `.agent/programs/`，当前处于 no-active 等待态。打开下一轮 program 前必须重新确认 worktree、branch、允许范围和禁止范围，并从 `PHASE01` 开始。
 
 本轮大型 program 的八个方面产物：
 
@@ -73,6 +78,7 @@ python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
+pytest -q tests/legacy_guards/test_phase0_runtime_recovery.py
 pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_agent_system.py -p no:cacheprovider
 ```
 
@@ -81,13 +87,13 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_con
 ```text
 Zuno/
 ├─ apps/                  # Web / Desktop 工作区
-├─ src/backend/zuno/      # 当前后端 runtime truth
+├─ src/backend/zuno/       # 当前后端 runtime truth
 ├─ tools/                 # 启动器、维护脚本和 eval 工具
 ├─ tests/                 # 仓库级验证和回归测试
 ├─ infra/                 # Docker 和基础设施配置
 ├─ examples/              # GraphRAG Project 示例
 ├─ docs/                  # 正式文档
-│  ├─ architecture/        # 当前总架构、图源、HTML、ADR
+│  ├─ architecture/        # 当前架构、目标架构、路线图、正式决策
 │  ├─ evidence/            # 精选证据
 │  ├─ reference/           # 当前术语
 │  └─ history/             # 过时或已完成材料归档

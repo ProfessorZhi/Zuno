@@ -19,8 +19,9 @@ COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE09_runtime-upgrade-integration.md",
     "PHASE10_validation-release-closure.md",
 ]
-ACTIVE_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
-ACTIVE_PROGRAM_PHASE_FILES = [
+MASTER_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
+MASTER_PROGRAM_ARCHIVE = f"docs/history/programs/{MASTER_PROGRAM_NAME}"
+MASTER_PROGRAM_PHASE_FILES = [
     "PHASE01_program-baseline-and-previous-closure.md",
     "PHASE02_project-folder-and-code-layout-cleanup.md",
     "PHASE03_enterprise-scenario-and-product-loop.md",
@@ -861,15 +862,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         if path.is_file()
     )
 
-    assert active_files == sorted(
-        [
-            "README.md",
-            "current.md",
-            "implementation-roadmap.md",
-            "closure-checklist.md",
-            *ACTIVE_PROGRAM_PHASE_FILES,
-        ]
-    )
+    assert active_files == ["README.md", "current.md"]
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
     assert not (REPO_ROOT / ".agent/programs/implementation-phases").exists()
     assert (
@@ -877,18 +870,18 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         / "docs/history/programs/zuno-target-runtime-v2/implementation-phases/README.md"
     ).exists()
 
-    roadmap = (
-        REPO_ROOT / ".agent/programs/implementation-roadmap.md"
-    ).read_text(encoding="utf-8")
+    current = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
+    readme = (REPO_ROOT / ".agent/programs/README.md").read_text(encoding="utf-8")
     for phrase in [
-        ACTIVE_PROGRAM_NAME,
-        "state: active",
-        "current_phase: PHASE12_validation-release-closure",
-        COMPLETED_PROGRAM_NAME,
-        COMPLETED_PROGRAM_ARCHIVE,
-        "每次新 program 都从 `PHASE01` 开始编号",
+        MASTER_PROGRAM_NAME,
+        MASTER_PROGRAM_ARCHIVE,
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
     ]:
-        assert phrase in roadmap
+        assert phrase in current + readme
+    for phase in MASTER_PROGRAM_PHASE_FILES:
+        assert (REPO_ROOT / MASTER_PROGRAM_ARCHIVE / phase).exists()
     for phase in COMPLETED_PROGRAM_PHASE_FILES:
         assert (REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE / phase).exists()
     program3 = (

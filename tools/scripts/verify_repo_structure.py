@@ -11,8 +11,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
 COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
-ACTIVE_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
-ACTIVE_PROGRAM_PHASE_FILES = [
+MASTER_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
+MASTER_PROGRAM_ARCHIVE = f"docs/history/programs/{MASTER_PROGRAM_NAME}"
+MASTER_PROGRAM_PHASE_FILES = [
     "PHASE01_program-baseline-and-previous-closure.md",
     "PHASE02_project-folder-and-code-layout-cleanup.md",
     "PHASE03_enterprise-scenario-and-product-loop.md",
@@ -65,8 +66,7 @@ REQUIRED_PATHS = [
     ".agent/templates/verification-report-template.md",
     ".agent/templates/workflow-change-note-template.md",
     ".agent/programs/current.md",
-    ".agent/programs/implementation-roadmap.md",
-    ".agent/programs/closure-checklist.md",
+    ".agent/programs/README.md",
     "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/README.md",
     "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/current.md",
     "docs/history/programs/zuno-architecture-detail-and-execution-plan-v1/implementation-roadmap.md",
@@ -1020,21 +1020,24 @@ def verify_architecture_surface_cleanup_archive() -> list[str]:
 
 
 def verify_completed_architecture_surface_phase_plan() -> list[str]:
-    roadmap_path = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
-    if not roadmap_path.exists():
-        return ["missing .agent/programs implementation roadmap"]
-    roadmap = roadmap_path.read_text(encoding="utf-8")
-    errors = [
-        f"program roadmap missing phrase: {phrase}"
-        for phrase in [
-            "state: active",
-            ACTIVE_PROGRAM_NAME,
-            COMPLETED_PROGRAM_NAME,
-            COMPLETED_PROGRAM_ARCHIVE,
-            "每次新 program 都从 `PHASE01` 开始编号",
-        ]
-        if phrase not in roadmap
-    ]
+    errors: list[str] = []
+    programs_root = REPO_ROOT / ".agent/programs"
+    program_files = sorted(path.name for path in programs_root.iterdir() if path.is_file())
+    if program_files != ["README.md", "current.md"]:
+        errors.append(f".agent/programs no-active files drifted: {program_files}")
+    current_path = programs_root / "current.md"
+    readme_path = programs_root / "README.md"
+    current_readme = current_path.read_text(encoding="utf-8") + readme_path.read_text(encoding="utf-8")
+    for phrase in [
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        MASTER_PROGRAM_NAME,
+        MASTER_PROGRAM_ARCHIVE,
+        "PHASE01-PHASE12",
+    ]:
+        if phrase not in current_readme:
+            errors.append(f".agent/programs no-active surface missing phrase: {phrase}")
     phase03_path = REPO_ROOT / "docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md"
     if not phase03_path.exists():
         errors.append("missing archived Program 1 PHASE03 Skill / Template / Program plan")
@@ -1050,27 +1053,19 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     active_phase_names = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")
     )
-    if active_phase_names != ACTIVE_PROGRAM_PHASE_FILES:
-        errors.append(
-            ".agent/programs active phase files do not match master architecture implementation program: "
-            + ", ".join(active_phase_names)
-        )
-    current_path = REPO_ROOT / ".agent/programs/current.md"
-    if not current_path.exists():
-        errors.append("missing .agent/programs/current.md")
-    else:
-        current_text = current_path.read_text(encoding="utf-8")
-        for phrase in [
-            "当前 active program",
-            ACTIVE_PROGRAM_NAME,
-            "state: active",
-            "current_phase: PHASE12_validation-release-closure",
-            COMPLETED_PROGRAM_NAME,
-            COMPLETED_PROGRAM_ARCHIVE,
-            "八个方面产物",
-        ]:
-            if phrase not in current_text:
-                errors.append(f".agent/programs/current.md missing active program phrase: {phrase}")
+    if active_phase_names:
+        errors.append(".agent/programs must not contain active PHASE files in no-active state: " + ", ".join(active_phase_names))
+    master_archive_root = REPO_ROOT / MASTER_PROGRAM_ARCHIVE
+    for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        if not (master_archive_root / required_archive_file).exists():
+            errors.append(f"master program archive missing file: {required_archive_file}")
+    for phase_name in MASTER_PROGRAM_PHASE_FILES:
+        phase_path = master_archive_root / phase_name
+        if not phase_path.exists():
+            errors.append(f"master program archive missing phase: {phase_name}")
+            continue
+        if "status: completed" not in phase_path.read_text(encoding="utf-8"):
+            errors.append(f"master program archive phase missing completed status: {phase_name}")
     archive_root = REPO_ROOT / COMPLETED_PROGRAM_ARCHIVE
     for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
         if not (archive_root / required_archive_file).exists():

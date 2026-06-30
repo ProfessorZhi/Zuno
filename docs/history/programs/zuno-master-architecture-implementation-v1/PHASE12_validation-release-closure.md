@@ -1,6 +1,6 @@
 # PHASE12 Validation Release Closure
 
-status: active
+status: completed
 
 ## 目标
 
@@ -8,12 +8,12 @@ status: active
 
 ## 步骤
 
-- [ ] 运行全量 verifier 和 pytest。
-- [ ] 生成 closure summary。
-- [ ] 检查所有 Target / Future 未被误写成 Current。
-- [ ] 检查 `.agent/programs/` 只保留当前 active program 或在 closure 后切换到 no-active。
-- [ ] 归档本 program 到 `docs/history/programs/zuno-master-architecture-implementation-v1/`。
-- [ ] 提交并推送。
+- [x] 运行全量 verifier 和 pytest。
+- [x] 生成 closure summary。
+- [x] 检查所有 Target / Future 未被误写成 Current。
+- [x] 检查 `.agent/programs/` 只保留当前 active program 或在 closure 后切换到 no-active。
+- [x] 归档本 program 到 `docs/history/programs/zuno-master-architecture-implementation-v1/`。
+- [x] 提交并推送。
 
 ## Closure Evidence 模板
 

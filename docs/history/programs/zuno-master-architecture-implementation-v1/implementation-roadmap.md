@@ -10,9 +10,11 @@
 
 ---
 
-state: active
+state: completed / archived
 program: zuno-master-architecture-implementation-v1
-current_phase: PHASE12_validation-release-closure
+current_phase: none
+
+> 归档说明：此文件是 `zuno-master-architecture-implementation-v1` 关闭时保存的历史 roadmap，不代表当前 active program。
 
 每次新 program 都从 `PHASE01` 开始编号。
 

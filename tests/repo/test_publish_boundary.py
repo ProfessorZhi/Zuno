@@ -44,8 +44,9 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "LangSmith-compatible Trace / Eval",
     ]:
         assert phrase in architecture
-    assert "当前 active program" in current_program
-    assert "PHASE12_validation-release-closure" in current_program
+    assert "state: no-active" in current_program
+    assert "zuno-master-architecture-implementation-v1" in current_program
+    assert "docs/history/programs/zuno-master-architecture-implementation-v1/" in current_program
 
 
 def test_public_docs_keep_history_off_front_path_but_reachable() -> None:

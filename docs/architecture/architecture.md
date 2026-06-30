@@ -976,7 +976,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE12_validation-release-closure`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval`、`PHASE08_rag-graphrag-evidence-citation`、`PHASE09_security-governance-sandbox`、`PHASE10_eval-observability-langsmith` 与 `PHASE11_architecture-docs-html-refresh` 已通过 verifier 和 focused tests 证明完成。PHASE10 已完成 LangSmith-compatible trace / eval contract、redacted export adapter、release baseline schema 和 sandbox audit span bridge；PHASE11 已完成正式架构 Markdown / HTML 和十类图刷新；完整 LangSmith 产品化平台、在线采样平台和持久化 trace store 仍是 Target。
+当前没有 active program。最近完成并归档的 program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`。它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。PHASE10 已完成 LangSmith-compatible trace / eval contract、redacted export adapter、release baseline schema 和 sandbox audit span bridge；PHASE11 已完成正式架构 Markdown / HTML 和十类图刷新；PHASE12 已完成 release closure 和历史归档。完整 LangSmith 产品化平台、在线采样平台和持久化 trace store 仍是 Target。
 
 本 program 的十二个 phase：
 
@@ -991,7 +991,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 9. `PHASE09_security-governance-sandbox`：已完成输入闸门、检索闸门、工具闸门、输出闸门、ToolSecurityProfile、SandboxAuditEvent、secret redaction 和跨 workspace guard contract；真实 sandbox runtime / credential broker / approval UI 仍是 Target。
 10. `PHASE10_eval-observability-langsmith`：已建立 LangSmith-compatible trace schema、redacted export adapter、dataset / release baseline contract、sandbox audit span bridge 和 focused regression tests。
 11. `PHASE11_architecture-docs-html-refresh`：已根据已落地事实更新 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两份 `architecture.html`，保证 Markdown 比 HTML 更详细，HTML 图为主。
-12. `PHASE12_validation-release-closure`：当前阶段，运行 repo verifiers、focused tests、必要的 full pytest、文档 self-review、program closure、历史归档、commit 和 push。
+12. `PHASE12_validation-release-closure`：已完成 repo verifiers、full pytest、文档 self-review、program closure、历史归档、commit 和 push。
 
 这十二个 phase 可以在后续按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。
 
@@ -1171,7 +1171,7 @@ flowchart TB
   DOCS --> FORMAL["architecture.md source"]
   DOCS --> HTML["architecture.html generated"]
   DOCS --> ASSETS["architecture assets PDFs"]
-  AGENT --> PROGRAM["programs PHASE01 to PHASE12<br/>active PHASE11"]:::guard
+  AGENT --> PROGRAM["programs no-active<br/>latest archive PHASE01 to PHASE12"]:::guard
   AGENT --> REFS["references governance"]
   AGENT --> TPL["templates skeletons"]
   TOOLS --> RENDER["render architecture"]

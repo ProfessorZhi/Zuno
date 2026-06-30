@@ -3,8 +3,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-ACTIVE_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
-ACTIVE_PROGRAM_PHASE_FILES = [
+MASTER_PROGRAM_NAME = "zuno-master-architecture-implementation-v1"
+MASTER_PROGRAM_ARCHIVE = f"docs/history/programs/{MASTER_PROGRAM_NAME}"
+MASTER_PROGRAM_PHASE_FILES = [
     "PHASE01_program-baseline-and-previous-closure.md",
     "PHASE02_project-folder-and-code-layout-cleanup.md",
     "PHASE03_enterprise-scenario-and-product-loop.md",
@@ -120,43 +121,39 @@ def test_agent_architecture_docs_map_explains_dual_mirror_rule() -> None:
         assert phrase in content
 
 
-def test_agent_program_surface_matches_active_architecture_program() -> None:
+def test_agent_program_surface_records_no_active_waiting_state() -> None:
     program_files = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").iterdir() if path.is_file()
     )
-    expected_program_files = sorted(
-        [
-            "README.md",
-            "current.md",
-            "implementation-roadmap.md",
-            "closure-checklist.md",
-            *ACTIVE_PROGRAM_PHASE_FILES,
-        ]
-    )
-    assert program_files == expected_program_files
+    assert program_files == ["README.md", "current.md"]
 
     current_program = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
-    roadmap = (REPO_ROOT / ".agent/programs/implementation-roadmap.md").read_text(
-        encoding="utf-8"
-    )
+    readme = (REPO_ROOT / ".agent/programs/README.md").read_text(encoding="utf-8")
     for phrase in [
-        "当前 active program",
-        ACTIVE_PROGRAM_NAME,
-        "state: active",
-        "current_phase: PHASE12_validation-release-closure",
-        COMPLETED_PROGRAM_NAME,
-        COMPLETED_PROGRAM_ARCHIVE,
-        "八个方面产物",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        MASTER_PROGRAM_NAME,
+        MASTER_PROGRAM_ARCHIVE,
+        "PHASE01-PHASE12",
     ]:
-        assert phrase in current_program + roadmap
+        assert phrase in current_program + readme
+    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        assert (REPO_ROOT / MASTER_PROGRAM_ARCHIVE / archive_file).exists()
+    for phase in MASTER_PROGRAM_PHASE_FILES:
+        phase_path = REPO_ROOT / MASTER_PROGRAM_ARCHIVE / phase
+        assert phase_path.exists()
+        assert "status: completed" in phase_path.read_text(encoding="utf-8")
 
 
 def test_closure_checklist_keeps_self_maintenance_gate() -> None:
-    content = (REPO_ROOT / ".agent/programs/closure-checklist.md").read_text(encoding="utf-8")
+    content = (
+        REPO_ROOT / MASTER_PROGRAM_ARCHIVE / "closure-checklist.md"
+    ).read_text(encoding="utf-8")
 
     for phrase in [
         "## Program Closure 自维护审查",
-        "completed program 是否已归档到 `docs/history/programs/`",
+        "completed program 已归档到 `docs/history/programs/`",
         "如果用户提醒“以后注意”，不能只留在对话里",
         "verifier / tests 是否覆盖新规则",
     ]:
