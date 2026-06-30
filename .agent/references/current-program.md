@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE07_memory-db-and-context-governance
+current_phase: PHASE08_tool-control-plane-approval-and-sandbox-runtime
 
 `.agent/programs/` 当前保存 active runtime implementation program：
 
@@ -52,8 +52,8 @@ current_phase: PHASE07_memory-db-and-context-governance
 - `PHASE04_document-ingestion-parse-runtime.md`：completed，已把 `knowledge/ingestion` 推进为 Parse Gateway runtime owner surface。
 - `PHASE05_index-jobs-and-knowledge-space-runtime.md`：completed，已将 Document IR 送入本地 BM25 / vector / graph index job runtime。
 - `PHASE06_durable-single-controller-runtime.md`：completed，已把 Single Controller harness 推进为 controller-node 级 durable checkpoint / interrupt / resume / cancel runtime surface，并接入 workspace task。
-- `PHASE07_memory-db-and-context-governance.md`：active，正在把 MemoryEngine 推进为可持久化、可审查、可治理的 memory runtime。
-- `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：pending。
+- `PHASE07_memory-db-and-context-governance.md`：completed，已提供 snapshot/local replay、SQLModel-backed DatabaseMemoryStore、GeneralAgent memory 接入、governance ledger、sensitive exclusion、promotion、decay、consolidation 和 Context Pack reasons。
+- `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：active，正在接通真实 executor、approval API/UI、credential broker、sandbox profile 和 audit trace。
 - `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：pending。
 - `PHASE10_security-observability-and-online-eval.md`：pending。
 - `PHASE11_web-desktop-surface-and-feedback-loop.md`：pending。

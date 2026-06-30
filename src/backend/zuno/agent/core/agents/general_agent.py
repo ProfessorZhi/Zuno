@@ -49,11 +49,9 @@ from zuno.knowledge.query_service import KnowledgeQueryService
 from zuno.knowledge.trace import HookPoint, RuntimeTraceEvent
 from zuno.memory import (
     InMemoryLayerStore,
-    MemoryLayer,
+    MemoryEngine,
     MemoryReviewStatus,
     MemoryScope,
-    RawMemoryEvent,
-    TaskMemorySummary,
 )
 from zuno.services.mcp.manager import MCPManager
 from zuno.services.user_defined_tool_runtime import build_user_defined_langchain_tools
@@ -278,7 +276,8 @@ class GeneralAgent:
         self.middlewares: list[AgentMiddleware] = []
         self.tool_metadata_map: Dict[str, Dict[str, str]] = {}
         self.mcp_tool_server_map: Dict[str, str] = {}
-        self.memory_layer_store = InMemoryLayerStore()
+        self.memory_engine = MemoryEngine()
+        self.memory_layer_store = self.memory_engine.store
         self.last_model_context_packet: ModelContextPacket | None = None
         self.last_capability_selection: CapabilitySelectionResult | None = None
         self.last_runtime_turn_ledger: RuntimeTurnLedger | None = None
@@ -287,6 +286,10 @@ class GeneralAgent:
 
         self.event_queue = asyncio.Queue()
         self.stop_streaming = False
+
+    def set_memory_store(self, memory_store: InMemoryLayerStore) -> None:
+        self.memory_engine = MemoryEngine(store=memory_store)
+        self.memory_layer_store = self.memory_engine.store
 
     def wrap_event(self, data: Dict[Any, Any]):
         return {
@@ -369,12 +372,13 @@ class GeneralAgent:
     ) -> tuple[str, ...]:
         if not self.agent_config.enable_memory:
             return ()
-        event = RawMemoryEvent(
-            event_id=f"{context_packet.execution_context.trace_id}:turn",
+        task = self._extract_latest_user_query(messages)
+        event = self.memory_engine.append_event(
             scope=self._memory_scope(),
+            event_id=f"{context_packet.execution_context.trace_id}:turn",
             event_type="agent_turn",
             payload={
-                "task": self._extract_latest_user_query(messages),
+                "task": task,
                 "response": response,
                 "context_trace": context_packet.trace.to_dict(),
                 "context_policy": context_packet.context_policy.to_dict(),
@@ -386,19 +390,16 @@ class GeneralAgent:
                 "knowledge_trace": dict(self.last_knowledge_trace_metadata),
                 "tool_trace_events": [dict(event) for event in self.runtime_tool_trace_events],
             },
-            layer=MemoryLayer.WORKING,
+            trace_id=context_packet.execution_context.trace_id,
+            task_id=context_packet.execution_context.task,
         )
-        self.memory_layer_store.append_raw_event(event)
-        self.memory_layer_store.save_task_summary(
-            TaskMemorySummary(
-                summary_id=f"{event.event_id}:summary",
-                scope=event.scope,
-                layer=MemoryLayer.TASK,
-                content=response or event.payload["task"],
-                source_event_ids=(event.event_id,),
-                token_count=self._estimate_tokens(response or event.payload["task"]),
-                metadata={"compression_strategy": context_packet.context_policy.compression_strategy},
-            )
+        self.memory_engine.summarize_task(
+            scope=event.scope,
+            summary_id=f"{event.event_id}:summary",
+            content=response or task,
+            source_event_ids=(event.event_id,),
+            token_count=self._estimate_tokens(response or task),
+            metadata={"compression_strategy": context_packet.context_policy.compression_strategy},
         )
         return (event.event_id,)
 

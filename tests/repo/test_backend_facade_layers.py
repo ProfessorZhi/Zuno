@@ -35,10 +35,13 @@ FACADE_ALL = {
         "build_single_controller_runtime_harness",
     ],
     "zuno.memory": [
+        "DatabaseMemoryStore",
+        "DurableMemoryStore",
         "ExternalKnowledgeRecord",
         "InMemoryLayerStore",
         "MemoryCandidate",
         "MemoryEngine",
+        "MemoryGovernanceLedgerEntry",
         "MemoryLayer",
         "MemoryProcessingPolicy",
         "MemoryReviewDecision",
@@ -46,6 +49,7 @@ FACADE_ALL = {
         "MemoryScope",
         "RawMemoryEvent",
         "RetentionPolicy",
+        "MemoryStoreSnapshot",
         "TaskMemorySummary",
     ],
     "zuno.capability": [

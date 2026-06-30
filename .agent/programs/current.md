@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE07_memory-db-and-context-governance
+current_phase: PHASE08_tool-control-plane-approval-and-sandbox-runtime
 
 ## 目标
 
@@ -29,8 +29,8 @@ upload document
 - `PHASE04_document-ingestion-parse-runtime.md`：completed。
 - `PHASE05_index-jobs-and-knowledge-space-runtime.md`：completed。
 - `PHASE06_durable-single-controller-runtime.md`：completed。
-- `PHASE07_memory-db-and-context-governance.md`：active。
-- `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：pending。
+- `PHASE07_memory-db-and-context-governance.md`：completed。
+- `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：active。
 - `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：pending。
 - `PHASE10_security-observability-and-online-eval.md`：pending。
 - `PHASE11_web-desktop-surface-and-feedback-loop.md`：pending。

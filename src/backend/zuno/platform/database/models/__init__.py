@@ -15,6 +15,13 @@ from zuno.database.models.mcp_agent import MCPAgentTable
 from zuno.database.models.mcp_server import MCPServerStdioTable, MCPServerTable
 from zuno.database.models.mcp_user_config import MCPUserConfigTable
 from zuno.database.models.memory_history import MemoryHistoryTable
+from zuno.database.models.memory_runtime import (
+    MemoryCandidateTable,
+    MemoryGovernanceLedgerTable,
+    MemoryRawEventTable,
+    MemoryReviewDecisionTable,
+    MemoryTaskSummaryTable,
+)
 from zuno.database.models.message import MessageDownTable, MessageLikeTable
 from zuno.database.models.role import Role
 from zuno.database.models.tool import ToolTable
@@ -39,6 +46,11 @@ __all__ = [
     "MCPServerTable",
     "MCPUserConfigTable",
     "MemoryHistoryTable",
+    "MemoryCandidateTable",
+    "MemoryGovernanceLedgerTable",
+    "MemoryRawEventTable",
+    "MemoryReviewDecisionTable",
+    "MemoryTaskSummaryTable",
     "MessageDownTable",
     "MessageLikeTable",
     "Role",

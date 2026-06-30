@@ -1,6 +1,6 @@
 # PHASE08 tool-control-plane-approval-and-sandbox-runtime
 
-status: pending
+status: active
 
 ## 目标
 
@@ -30,4 +30,3 @@ status: pending
 git diff --check
 pytest -q tests/agent/test_tool_control_plane_contract.py tests/security tests/agent/test_capability_layer_surfaces.py -p no:cacheprovider
 ```
-

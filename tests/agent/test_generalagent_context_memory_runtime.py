@@ -335,3 +335,63 @@ def test_general_agent_reads_task_summary_and_approved_memory_into_context() -> 
     assert sources["memory_candidate_0"].source is ContextSource.MEMORY
     assert sources["memory_candidate_0"].metadata["review_status"] == "approved"
     assert packet.trace.source_event_ids_by_item["memory_candidate_0"] == ("evt_preference",)
+
+
+def test_general_agent_persists_post_turn_memory_across_database_store_instances() -> None:
+    from sqlalchemy.pool import StaticPool
+    from sqlmodel import SQLModel, Session, create_engine
+
+    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.memory.contracts import ExternalKnowledgeRecord
+    from zuno.memory.policy import RetentionPolicy
+    from zuno.memory.store import DatabaseMemoryStore
+    from zuno.platform.database.models.memory_runtime import MemoryRawEventTable
+    from zuno.services.application.context import ContextSource
+
+    sql_engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    SQLModel.metadata.create_all(sql_engine)
+
+    def session_factory() -> Session:
+        return Session(sql_engine)
+
+    writer = GeneralAgent(_agent_config(enable_memory=True))
+    writer.set_memory_store(DatabaseMemoryStore(session_factory=session_factory))
+    packet = writer.prepare_context([HumanMessage(content="Capture this durable memory")])
+    event_ids = writer.post_turn_commit(
+        messages=[HumanMessage(content="Capture this durable memory")],
+        response="Persisted cross-agent memory summary.",
+        context_packet=packet,
+    )
+    writer.memory_engine.promote_external_knowledge(
+        ExternalKnowledgeRecord(
+            record_id="kb_memory_pref",
+            scope=writer._memory_scope(),
+            content="User wants memory evidence to survive across agent instances.",
+            source_uri="memory-runtime://preference/cross-agent",
+            citation_ids=("citation_memory_pref",),
+        ),
+        candidate_id="memory_cross_agent_pref",
+        retention_policy=RetentionPolicy(ttl_days=365),
+        reviewer_id="reviewer_memory",
+        reason="explicit durable memory preference",
+        auto_approve=True,
+    )
+
+    reader = GeneralAgent(_agent_config(enable_memory=True))
+    reader.set_memory_store(DatabaseMemoryStore(session_factory=session_factory))
+    reader_packet = reader.prepare_context([HumanMessage(content="Continue with memory evidence")])
+    sources = {item.item_id: item for item in reader_packet.items}
+
+    assert MemoryRawEventTable.__tablename__ in SQLModel.metadata.tables
+    assert event_ids[0].endswith(":turn")
+    assert sources["task_summary_0"].source is ContextSource.TASK_SUMMARY
+    assert sources["task_summary_0"].content == "Persisted cross-agent memory summary."
+    assert sources["memory_candidate_0"].source is ContextSource.MEMORY
+    assert sources["memory_candidate_0"].source_event_ids == ("kb_memory_pref",)
+    assert reader_packet.trace.source_event_ids_by_item["memory_candidate_0"] == (
+        "kb_memory_pref",
+    )

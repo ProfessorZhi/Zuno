@@ -16,7 +16,13 @@ def test_memory_layer_modules_expose_target_boundaries() -> None:
             "RawMemoryEvent",
             "TaskMemorySummary",
         },
-        "zuno.memory.store": {"InMemoryLayerStore"},
+        "zuno.memory.store": {
+            "DatabaseMemoryStore",
+            "DurableMemoryStore",
+            "InMemoryLayerStore",
+            "MemoryGovernanceLedgerEntry",
+            "MemoryStoreSnapshot",
+        },
         "zuno.memory.policy": {"MemoryProcessingPolicy", "RetentionPolicy"},
         "zuno.memory.review": {
             "ExternalKnowledgeRecord",
@@ -32,6 +38,8 @@ def test_memory_layer_modules_expose_target_boundaries() -> None:
             "MemoryEngine",
             "MemoryEvalPolicy",
             "MemoryTaxonomyEntry",
+            "DatabaseMemoryStore",
+            "DurableMemoryStore",
             "RawMemoryEvent",
             "TaskMemorySummary",
         },
@@ -46,7 +54,7 @@ def test_memory_layer_modules_reuse_legacy_foundation_objects() -> None:
     from zuno.memory.contracts import MemoryLayer, MemoryScope, RawMemoryEvent
     from zuno.memory.policy import MemoryProcessingPolicy, RetentionPolicy
     from zuno.memory.review import MemoryReviewDecision
-    from zuno.memory.store import InMemoryLayerStore
+    from zuno.memory.store import DatabaseMemoryStore, DurableMemoryStore, InMemoryLayerStore
     from zuno.services.memory.layers import (
         InMemoryLayerStore as LegacyStore,
         MemoryLayer as LegacyLayer,
@@ -64,6 +72,8 @@ def test_memory_layer_modules_reuse_legacy_foundation_objects() -> None:
     assert MemoryReviewDecision is LegacyReviewDecision
     assert RetentionPolicy is LegacyPolicy
     assert InMemoryLayerStore is LegacyStore
+    assert issubclass(DurableMemoryStore, LegacyStore)
+    assert issubclass(DatabaseMemoryStore, LegacyStore)
 
 
 def test_memory_package_facade_points_at_layer_modules() -> None:

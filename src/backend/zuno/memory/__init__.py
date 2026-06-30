@@ -17,14 +17,23 @@ if TYPE_CHECKING:
     )
     from zuno.memory.engine import MemoryEngine
     from zuno.memory.policy import RetentionPolicy
-    from zuno.memory.store import InMemoryLayerStore
+    from zuno.memory.store import (
+        DatabaseMemoryStore,
+        DurableMemoryStore,
+        InMemoryLayerStore,
+        MemoryGovernanceLedgerEntry,
+        MemoryStoreSnapshot,
+    )
 
 
 _EXPORT_TO_MODULE = {
+    "DatabaseMemoryStore": "zuno.memory.store",
+    "DurableMemoryStore": "zuno.memory.store",
     "ExternalKnowledgeRecord": "zuno.memory.contracts",
     "InMemoryLayerStore": "zuno.memory.store",
     "MemoryCandidate": "zuno.memory.contracts",
     "MemoryEngine": "zuno.memory.engine",
+    "MemoryGovernanceLedgerEntry": "zuno.memory.store",
     "MemoryLayer": "zuno.memory.contracts",
     "MemoryProcessingPolicy": "zuno.memory.policy",
     "MemoryReviewDecision": "zuno.memory.review",
@@ -32,14 +41,18 @@ _EXPORT_TO_MODULE = {
     "MemoryScope": "zuno.memory.contracts",
     "RawMemoryEvent": "zuno.memory.contracts",
     "RetentionPolicy": "zuno.memory.policy",
+    "MemoryStoreSnapshot": "zuno.memory.store",
     "TaskMemorySummary": "zuno.memory.contracts",
 }
 
 __all__ = [
+    "DatabaseMemoryStore",
+    "DurableMemoryStore",
     "ExternalKnowledgeRecord",
     "InMemoryLayerStore",
     "MemoryCandidate",
     "MemoryEngine",
+    "MemoryGovernanceLedgerEntry",
     "MemoryLayer",
     "MemoryProcessingPolicy",
     "MemoryReviewDecision",
@@ -47,6 +60,7 @@ __all__ = [
     "MemoryScope",
     "RawMemoryEvent",
     "RetentionPolicy",
+    "MemoryStoreSnapshot",
     "TaskMemorySummary",
 ]
 
