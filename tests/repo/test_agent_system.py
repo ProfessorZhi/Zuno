@@ -4,12 +4,13 @@
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
-ACTIVE_CURRENT_PHASE = "PHASE05_context-builder-memory-system.md"
+ACTIVE_CURRENT_PHASE = "PHASE06_capability-toolcard-mcp-system.md"
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
     "PHASE03_architecture-docs-html-system.md",
     "PHASE04_query-router-mode-policy.md",
+    "PHASE05_context-builder-memory-system.md",
 ]
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
@@ -506,8 +507,29 @@ def test_active_program_phase_status_lifecycle_is_machine_checkable() -> None:
     for phase_name in COMPLETED_PROGRAM_PHASE_FILES:
         assert "status: completed" in phase_statuses[phase_name]
     assert "status: active" in phase_statuses[ACTIVE_CURRENT_PHASE]
-    for phase_name in ACTIVE_PROGRAM_PHASE_FILES[5:]:
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES[6:]:
         assert "status: planned" in phase_statuses[phase_name], phase_name
+
+
+def test_phase05_context_memory_focused_stack_is_routed() -> None:
+    system_yaml = (REPO_ROOT / ".agent" / "system.yaml").read_text(encoding="utf-8")
+    verification_map = (REPO_ROOT / ".agent" / "references" / "verification-map.md").read_text(
+        encoding="utf-8"
+    )
+    required_tests = [
+        "tests/agent/test_context_contracts.py",
+        "tests/agent/test_context_orchestrator.py",
+        "tests/agent/test_memory_layers.py",
+        "tests/agent/test_memory_layer_surfaces.py",
+        "tests/agent/test_generalagent_context_memory_runtime.py",
+        "tests/repo/test_backend_facade_layers.py",
+        "tests/repo/test_static_target_layer_imports.py",
+    ]
+
+    for relative_path in required_tests:
+        assert relative_path in system_yaml
+        assert relative_path in verification_map
+        assert (REPO_ROOT / relative_path).exists()
 
 
 def test_multi_agent_status_text_keeps_codex_execution_boundary() -> None:

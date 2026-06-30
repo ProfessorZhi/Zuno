@@ -122,3 +122,68 @@ def test_memory_layer_exports_do_not_import_live_memory_client() -> None:
         "RetentionPolicy",
         "InMemoryLayerStore",
     }.issubset(set(layers.__all__))
+
+
+def test_memory_taxonomy_separates_five_agent_memory_layers() -> None:
+    from zuno.services.memory.layers import MemoryLayer
+
+    assert MemoryLayer.SHORT_TERM_STATE.value == "short_term_state"
+    assert MemoryLayer.WORKING.value == "working_context"
+    assert MemoryLayer.SEMANTIC.value == "semantic_memory"
+    assert MemoryLayer.EPISODIC.value == "episodic_memory"
+    assert MemoryLayer.PROCEDURAL.value == "procedural_memory"
+    assert MemoryLayer.EXTERNAL_KNOWLEDGE.value == "external_knowledge"
+
+
+def test_structured_memory_candidate_requires_review_and_source_events() -> None:
+    from zuno.services.memory.layers import (
+        MemoryCandidate,
+        MemoryLayer,
+        MemoryReviewDecision,
+        MemoryReviewStatus,
+        MemoryScope,
+        RetentionPolicy,
+    )
+
+    scope = MemoryScope(user_id="u1", agent_id="a1", project_id="p1", thread_id="t1")
+    candidate = MemoryCandidate(
+        candidate_id="semantic_1",
+        scope=scope,
+        layer=MemoryLayer.SEMANTIC,
+        content="User prefers short status summaries.",
+        confidence=0.9,
+        source_event_ids=("evt_1",),
+        dedupe_key="preference:short-status",
+        retention_policy=RetentionPolicy(ttl_days=180),
+    )
+
+    assert candidate.review_status is MemoryReviewStatus.PENDING
+    assert candidate.requires_review is True
+
+    decision = MemoryReviewDecision.approve(
+        candidate=candidate,
+        reviewer_id="reviewer_1",
+        reason="explicit user preference",
+    )
+
+    assert decision.status is MemoryReviewStatus.APPROVED
+    assert decision.source_event_ids == ("evt_1",)
+    assert decision.to_dict()["candidate_id"] == "semantic_1"
+
+
+def test_memory_processing_policy_documents_summary_and_extraction_rules() -> None:
+    from zuno.services.memory.layers import MemoryProcessingPolicy
+
+    policy = MemoryProcessingPolicy(
+        summary_strategy="summary_compression",
+        extraction_strategy="structured_extraction",
+        review_required=True,
+        preserve_raw_event_ids=True,
+    )
+
+    payload = policy.to_dict()
+
+    assert payload["summary_strategy"] == "summary_compression"
+    assert payload["extraction_strategy"] == "structured_extraction"
+    assert payload["review_required"] is True
+    assert payload["preserve_raw_event_ids"] is True

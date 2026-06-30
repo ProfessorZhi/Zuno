@@ -4,7 +4,7 @@
 
 Active program: `zuno-eight-deliverables-full-realization-v1`
 state: active
-current_phase: `.agent/programs/PHASE05_context-builder-memory-system.md`
+current_phase: `.agent/programs/PHASE06_capability-toolcard-mcp-system.md`
 
 `.agent/programs/` 当前保留：
 
@@ -102,3 +102,13 @@ PHASE04 / Query Router Mode Policy 已完成。当前代码和测试证明：
 - `requested_query_method` 可为 `auto`，但 `resolved_query_method` 只落到 `basic | local | global | drift`。
 - Trace metadata 已记录 requested/resolved product mode、router decision、requested/resolved query method、fallback reason、budget policy、fallback policy、pipeline trace 和 citation coverage。
 - Eval mode metadata 已保留 `standard_retrieval / enhanced_retrieval` 兼容名，并新增 `normal / enhanced / auto` 产品名。
+
+## 最近完成事实：PHASE05
+
+PHASE05 / Context Builder Memory System 已完成 foundation slice。当前代码和测试证明：
+
+- Context Pack contract 已包含 `ContextPackPolicy`、`ModelContextPacket.context_policy`、token budget、compression / extraction policy 和 source id 覆盖率 trace。
+- `ContextOrchestrator` 会为 system prompt、recent messages 和 tool call/result items 生成可复现 `source_event_ids`，并记录缺失 source id 的 memory / task / knowledge item。
+- Memory foundation 已区分短期状态、工作记忆、语义记忆、情节记忆和程序性记忆；structured memory candidate 默认 pending review，approval / rejection decision 保留 reviewer、reason、layer 和 source ids。
+- `GeneralAgent.prepare_context()` 只接入同 scope task summary 与 approved structured memory 的轻量 readback；`post_turn_commit()` 继续只写 scoped raw event 和 task summary。
+- 这些事实不表示 production-grade Memory DB、成熟 long-term memory retrieval / consolidation、完整 PostTurnPipeline 或 mature Context Orchestrator product behavior 已完成。

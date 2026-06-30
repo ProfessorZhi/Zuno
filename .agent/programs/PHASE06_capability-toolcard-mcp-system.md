@@ -1,7 +1,7 @@
 # PHASE06 Capability ToolCard MCP System
 
 Program: `zuno-eight-deliverables-full-realization-v1`
-status: planned
+status: active
 
 ## 为什么
 

@@ -36,8 +36,8 @@ state: active
 | PHASE02 | Workflow self-maintenance | 交付物 1、2、3、8 | AGENTS / references / templates / self-review guard |
 | PHASE03 | Architecture docs + HTML | 交付物 4、5、6、8 | docs architecture、HTML render、visual/source sync |
 | PHASE04 | Query router + mode policy | 交付物 6、7、8 | completed：mode contract、router policy、trace/eval |
-| PHASE05 | Context builder + memory | 交付物 6、7、8 | active：Context Pack、五类记忆、compression/extraction |
-| PHASE06 | Capability + ToolCard + MCP | 交付物 6、7、8 | ToolCard registry、Native BM25、MCP/tool policy |
+| PHASE05 | Context builder + memory | 交付物 6、7、8 | completed：Context Pack、五类记忆、source ids、compression / extraction policy、review contract |
+| PHASE06 | Capability + ToolCard + MCP | 交付物 6、7、8 | active：ToolCard registry、Native BM25、MCP/tool policy |
 | PHASE07 | Hooks + evidence + trace + artifact | 交付物 6、7、8 | hooks/event schema、evidence check、artifact trace |
 | PHASE08 | GraphRAG + knowledge runtime | 交付物 6、7、8 | extraction configs、retrieval fusion、drift/local/global |
 | PHASE09 | Runtime upgrade integration | 交付物 6、7、8 | GeneralAgent path、six-layer ownership、integration tests |

@@ -105,6 +105,12 @@ pytest -q tests/agent/test_agent_layer_surfaces.py tests/agent/test_memory_layer
 pytest -q tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
 ```
 
+PHASE05 Context / Memory foundation：
+
+```powershell
+pytest -q tests/agent/test_context_contracts.py tests/agent/test_context_orchestrator.py tests/agent/test_memory_layers.py tests/agent/test_memory_layer_surfaces.py tests/agent/test_generalagent_context_memory_runtime.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
+```
+
 文档入口扩大验证：
 
 ```powershell

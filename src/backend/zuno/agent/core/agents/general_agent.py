@@ -37,6 +37,7 @@ from zuno.services.application.context import (
     AgentExecutionContext,
     ContextOrchestrator,
     ContextItem,
+    ContextPackPolicy,
     ContextPreparationInput,
     ContextSelectionReason,
     ContextSource,
@@ -47,6 +48,7 @@ from zuno.services.application.knowledge import KnowledgeQueryService
 from zuno.services.memory import (
     InMemoryLayerStore,
     MemoryLayer,
+    MemoryReviewStatus,
     MemoryScope,
     RawMemoryEvent,
     TaskMemorySummary,
@@ -228,6 +230,7 @@ class GeneralAgent:
     def prepare_context(self, messages: List[BaseMessage]) -> ModelContextPacket:
         task = self._extract_latest_user_query(messages)
         token_budget = TokenBudgetPolicy(max_tokens=4000, reserved_response_tokens=800)
+        context_policy = ContextPackPolicy()
         execution_context = AgentExecutionContext(
             trace_id=f"ga-{int(time.time() * 1000)}",
             user_id=self.agent_config.user_id,
@@ -261,12 +264,15 @@ class GeneralAgent:
                 )
             )
 
+        memory_items = self._memory_context_items()
         packet = ContextOrchestrator().prepare(
             ContextPreparationInput(
                 execution_context=execution_context,
                 messages=tuple(messages),
                 system_instruction=self.agent_config.system_prompt,
                 token_budget=token_budget,
+                context_policy=context_policy,
+                memory_items=tuple(memory_items),
                 capability_items=tuple(capability_items),
             )
         ).packet
@@ -290,6 +296,7 @@ class GeneralAgent:
                 "task": self._extract_latest_user_query(messages),
                 "response": response,
                 "context_trace": context_packet.trace.to_dict(),
+                "context_policy": context_packet.context_policy.to_dict(),
             },
             layer=MemoryLayer.WORKING,
         )
@@ -302,8 +309,51 @@ class GeneralAgent:
                 content=response or event.payload["task"],
                 source_event_ids=(event.event_id,),
                 token_count=self._estimate_tokens(response or event.payload["task"]),
+                metadata={"compression_strategy": context_packet.context_policy.compression_strategy},
             )
         )
+
+    def _memory_context_items(self) -> list[ContextItem]:
+        scope = self._memory_scope()
+        items: list[ContextItem] = []
+        for index, summary in enumerate(self.memory_layer_store.task_summaries(scope)):
+            items.append(
+                ContextItem(
+                    item_id=f"task_summary_{index}",
+                    source=ContextSource.TASK_SUMMARY,
+                    content=summary.content,
+                    token_estimate=summary.token_count,
+                    priority=75,
+                    reason=ContextSelectionReason.RELEVANT_MEMORY,
+                    source_event_ids=summary.source_event_ids,
+                    metadata={
+                        "memory_layer": summary.layer.value,
+                        "summary_id": summary.summary_id,
+                        "usage": "pre_model_context",
+                    },
+                )
+            )
+        for index, candidate in enumerate(self.memory_layer_store.memory_candidates(scope)):
+            if candidate.review_status is not MemoryReviewStatus.APPROVED:
+                continue
+            items.append(
+                ContextItem(
+                    item_id=f"memory_candidate_{index}",
+                    source=ContextSource.MEMORY,
+                    content=candidate.content,
+                    token_estimate=self._estimate_tokens(candidate.content),
+                    priority=70,
+                    reason=ContextSelectionReason.RELEVANT_MEMORY,
+                    source_event_ids=candidate.source_event_ids,
+                    metadata={
+                        "memory_layer": candidate.layer.value,
+                        "candidate_id": candidate.candidate_id,
+                        "review_status": candidate.review_status.value,
+                        "usage": "pre_model_context",
+                    },
+                )
+            )
+        return items
 
     def _available_capability_records(self) -> list[CapabilityRecord]:
         records: list[CapabilityRecord] = []

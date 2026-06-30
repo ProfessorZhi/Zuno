@@ -159,6 +159,8 @@ system rules
 
 目标策略是 Summary Compression + Structured Extraction。Summary 不能替代 Raw Event Log；structured memory 必须保留 `source_event_ids`。Prompt Caching 是 compute-layer hint，不是 memory compression。
 
+Context Pack 的目标 contract 必须同时携带内容、来源、预算和策略：每个 item 至少能追溯 `source_event_ids`、`ContextSource`、token estimate、priority 和 dropped reason；整体 packet 必须说明 compression strategy、structured extraction strategy、review requirement 和缺失 source id 风险。短期状态与工作记忆可以服务本轮调用；语义、情节和程序性记忆进入长期层前必须经过 review / approval，并保留 scope、dedupe key、confidence、retention policy 和来源事件。
+
 ## 检索与 GraphRAG
 
 四个内部方法：

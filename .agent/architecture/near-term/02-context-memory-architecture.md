@@ -30,10 +30,10 @@ External Knowledge
 
 | 层级 | 名称 | 含义 | 当前状态 |
 | --- | --- | --- | --- |
-| L0 | Working Context | Exact content visible to one model call. | Minimal foundation current. |
-| L1 | Recent Interaction Window | Recent coherent messages and incomplete tool groups. | Target policy; basic windowing current through ContextOrchestrator. |
-| L2 | Task Summary Memory | Compressed session/task state: goals, constraints, decisions, TODOs, artifact refs, open questions. | Foundation current, mature extraction target. |
-| L3 | Structured Long-term Memory | Cross-session semantic, episodic, and procedural memory scoped by user/agent/project/thread. | Target. |
+| L0 | Working Context | Exact content visible to one model call. | Foundation current: Context Pack policy, source ids, token budget and trace are tested. |
+| L1 | Recent Interaction Window | Recent coherent messages and incomplete tool groups. | Basic windowing current through ContextOrchestrator; mature selection policy remains Target. |
+| L2 | Task Summary Memory | Compressed session/task state: goals, constraints, decisions, TODOs, artifact refs, open questions. | Foundation current: same-scope summaries can enter context; mature compression/extraction remains Target. |
+| L3 | Structured Long-term Memory | Cross-session semantic, episodic, and procedural memory scoped by user/agent/project/thread. | Contract foundation current for pending/reviewed candidates; production retrieval and promotion remain Target. |
 | L4 | External Knowledge | RAG, GraphRAG, files, and web evidence. | Current query runtime exists; not Agent memory. |
 | Source | Raw Event Log | Append-only messages, model outputs, tool calls/results, interrupts, memory updates. | Foundation current; mature use target. |
 
@@ -92,6 +92,11 @@ ContextOrchestrator.prepare(step)
 
 The current minimal `ContextOrchestrator` is a foundation slice. Mature
 retrieval, summarization, conflict resolution, and memory promotion are Target.
+
+PHASE05 current proof covers source-id-preserving Context Pack construction,
+policy serialization, and same-scope readback of task summaries plus approved
+structured memory candidates. It does not implement production-grade memory DB,
+long-term retrieval/consolidation, or the full post-turn pipeline.
 
 ## 轮次后流水线
 

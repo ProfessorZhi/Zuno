@@ -6,6 +6,7 @@ from zuno.services.application.context import (
     AgentExecutionContext,
     ContextItem,
     ContextOrchestrator,
+    ContextPackPolicy,
     ContextSelectionReason,
     ContextSource,
     TokenBudgetPolicy,
@@ -43,6 +44,7 @@ def _prepare(**kwargs):
             memory_items=tuple(kwargs.get("memory_items", ())),
             knowledge_evidence_items=tuple(kwargs.get("knowledge_evidence_items", ())),
             capability_items=tuple(kwargs.get("capability_items", ())),
+            context_policy=kwargs.get("context_policy", ContextPackPolicy()),
         )
     )
 
@@ -226,3 +228,32 @@ def test_memory_and_knowledge_context_are_separate_and_optional():
     sources = {item.item_id: item.source for item in result.selected_items}
     assert sources["memory-1"] == ContextSource.MEMORY
     assert sources["evidence-1"] == ContextSource.KNOWLEDGE_EVIDENCE
+
+
+def test_context_orchestrator_preserves_source_ids_and_policy_trace():
+    memory_item = ContextItem(
+        item_id="semantic-memory-1",
+        source=ContextSource.MEMORY,
+        content="User prefers short architecture summaries.",
+        token_estimate=8,
+        priority=85,
+        reason=ContextSelectionReason.RELEVANT_MEMORY,
+        source_event_ids=("evt_memory_1", "evt_memory_2"),
+        metadata={"memory_layer": "semantic_memory"},
+    )
+
+    result = _prepare(
+        system_instruction="Use concise Chinese.",
+        messages=(HumanMessage(content="必须解释 Context Pack 来源"),),
+        memory_items=(memory_item,),
+        context_policy=ContextPackPolicy(review_required=True),
+    )
+    payload = result.packet.to_dict()
+
+    assert payload["context_policy"]["review_required"] is True
+    assert payload["trace"]["source_event_ids_by_item"]["semantic-memory-1"] == [
+        "evt_memory_1",
+        "evt_memory_2",
+    ]
+    assert payload["trace"]["source_event_ids_by_item"]["message_0"] == ["message:0"]
+    assert payload["trace"]["missing_source_event_item_ids"] == []

@@ -30,6 +30,22 @@ class ContextSelectionReason(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class ContextPackPolicy:
+    compression_strategy: str = "summary_compression"
+    extraction_strategy: str = "structured_extraction"
+    require_source_event_ids: bool = True
+    review_required: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "compression_strategy": self.compression_strategy,
+            "extraction_strategy": self.extraction_strategy,
+            "require_source_event_ids": self.require_source_event_ids,
+            "review_required": self.review_required,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ContextItem:
     item_id: str
     source: ContextSource
@@ -141,6 +157,9 @@ class ContextTrace:
     used_tokens: int
     remaining_tokens: int
     token_budget: TokenBudgetPolicy
+    context_policy: ContextPackPolicy = field(default_factory=ContextPackPolicy)
+    source_event_ids_by_item: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    missing_source_event_item_ids: tuple[str, ...] = ()
 
     @classmethod
     def from_items(
@@ -148,14 +167,27 @@ class ContextTrace:
         *,
         trace_id: str,
         policy: TokenBudgetPolicy,
+        context_policy: ContextPackPolicy | None = None,
         selected_items: tuple[ContextItem, ...],
         dropped_items: tuple[ContextItem, ...],
     ) -> ContextTrace:
         used_tokens = sum(item.token_estimate for item in selected_items)
+        all_items = (*selected_items, *dropped_items)
         reasons = {
             item.item_id: item.reason.value
-            for item in (*selected_items, *dropped_items)
+            for item in all_items
         }
+        source_event_ids_by_item = {
+            item.item_id: tuple(item.source_event_ids)
+            for item in all_items
+            if item.source_event_ids
+        }
+        missing_source_event_item_ids = tuple(
+            item.item_id
+            for item in all_items
+            if item.source in {ContextSource.MEMORY, ContextSource.TASK_SUMMARY, ContextSource.KNOWLEDGE_EVIDENCE}
+            and not item.source_event_ids
+        )
         return cls(
             trace_id=trace_id,
             selected_item_ids=tuple(item.item_id for item in selected_items),
@@ -164,6 +196,9 @@ class ContextTrace:
             used_tokens=used_tokens,
             remaining_tokens=policy.remaining_after(used_tokens),
             token_budget=policy,
+            context_policy=context_policy or ContextPackPolicy(),
+            source_event_ids_by_item=source_event_ids_by_item,
+            missing_source_event_item_ids=missing_source_event_item_ids,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -175,6 +210,12 @@ class ContextTrace:
             "used_tokens": self.used_tokens,
             "remaining_tokens": self.remaining_tokens,
             "token_budget": self.token_budget.to_dict(used_tokens=self.used_tokens),
+            "context_policy": self.context_policy.to_dict(),
+            "source_event_ids_by_item": {
+                item_id: list(source_event_ids)
+                for item_id, source_event_ids in self.source_event_ids_by_item.items()
+            },
+            "missing_source_event_item_ids": list(self.missing_source_event_item_ids),
         }
 
 
@@ -212,12 +253,14 @@ class ModelContextPacket:
     items: tuple[ContextItem, ...]
     token_budget: TokenBudgetPolicy
     trace: ContextTrace
+    context_policy: ContextPackPolicy = field(default_factory=ContextPackPolicy)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "execution_context": self.execution_context.to_dict(),
             "items": [item.to_dict() for item in self.items],
             "token_budget": self.token_budget.to_dict(used_tokens=self.trace.used_tokens),
+            "context_policy": self.context_policy.to_dict(),
             "trace": self.trace.to_dict(),
         }
 
@@ -236,6 +279,7 @@ class ContextPreparationInput:
     memory_items: tuple[ContextItem, ...] = ()
     knowledge_evidence_items: tuple[ContextItem, ...] = ()
     capability_items: tuple[ContextItem, ...] = ()
+    context_policy: ContextPackPolicy = field(default_factory=ContextPackPolicy)
 
 
 @dataclass(frozen=True, slots=True)
@@ -255,6 +299,7 @@ class ContextPreparationResult:
 __all__ = [
     "AgentExecutionContext",
     "ContextItem",
+    "ContextPackPolicy",
     "ContextPreparationInput",
     "ContextPreparationResult",
     "ContextSelectionReason",
