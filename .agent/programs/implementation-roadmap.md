@@ -19,8 +19,8 @@
 
 | Phase | 名称 | 状态 | 目标 |
 | --- | --- | --- | --- |
-| PHASE01 | program-reopen-and-truth-source-freeze | active | 打开新 active program，冻结 runtime-first 验收口径和事实源。 |
-| PHASE02 | runtime-migration-map-and-repo-ownership-lock | pending | 固定旧 runtime 与六层 target owner 的迁移图和兼容策略。 |
+| PHASE01 | program-reopen-and-truth-source-freeze | completed | 打开新 active program，冻结 runtime-first 验收口径和事实源。 |
+| PHASE02 | runtime-migration-map-and-repo-ownership-lock | active | 固定旧 runtime 与六层 target owner 的迁移图和兼容策略。 |
 | PHASE03 | task-session-artifact-event-runtime | pending | 打通 workspace / session / task / event / artifact / feedback 后端最小闭环。 |
 | PHASE04 | document-ingestion-parse-runtime | pending | 让 `knowledge/ingestion` 从 contract owner 进入 parser runtime owner。 |
 | PHASE05 | index-jobs-and-knowledge-space-runtime | pending | 将 Document IR 送入 BM25 / vector / graph index job。 |
@@ -72,4 +72,3 @@ pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
 ```
 
 涉及 runtime 的 phase 必须追加对应 focused tests；PHASE12 必须追加完整 e2e 回放、parser golden、retrieval/eval/security baseline 和 full repo verification。
-

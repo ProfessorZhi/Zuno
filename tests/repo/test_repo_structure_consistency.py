@@ -904,7 +904,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         RUNTIME_PROGRAM_NAME,
         "state: active",
         f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE01_program-reopen-and-truth-source-freeze",
+        "current_phase: PHASE02_runtime-migration-map-and-repo-ownership-lock",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         MASTER_PROGRAM_NAME,
@@ -915,7 +915,11 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         phase_path = REPO_ROOT / ".agent/programs" / phase
         assert phase_path.exists()
         phase_text = phase_path.read_text(encoding="utf-8")
-        assert ("status: active" if index == 1 else "status: pending") in phase_text
+        expected_status = {
+            1: "status: completed",
+            2: "status: active",
+        }.get(index, "status: pending")
+        assert expected_status in phase_text
     for phase in MASTER_PROGRAM_PHASE_FILES:
         assert (REPO_ROOT / MASTER_PROGRAM_ARCHIVE / phase).exists()
     for phase in COMPLETED_PROGRAM_PHASE_FILES:

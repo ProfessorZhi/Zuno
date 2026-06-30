@@ -316,7 +316,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE01_program-reopen-and-truth-source-freeze",
+        "current_phase: PHASE02_runtime-migration-map-and-repo-ownership-lock",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
@@ -329,7 +329,10 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
             errors.append(f"active runtime program missing phase: {phase_name}")
             continue
         phase_content = phase_path.read_text(encoding="utf-8")
-        expected_status = "status: active" if phase_index == 1 else "status: pending"
+        expected_status = {
+            1: "status: completed",
+            2: "status: active",
+        }.get(phase_index, "status: pending")
         if expected_status not in phase_content:
             errors.append(f"active runtime program phase status drifted: {phase_name}")
         for required in ["## 目标", "## 范围", "## 禁止范围", "## 验收闸门", "## 验证命令"]:

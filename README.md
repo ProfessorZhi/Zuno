@@ -36,7 +36,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-target-architecture-runtime-full-implementation-v1`，阶段是 `PHASE01_program-reopen-and-truth-source-freeze`。
+当前 active Agent program 是 `zuno-target-architecture-runtime-full-implementation-v1`，阶段是 `PHASE02_runtime-migration-map-and-repo-ownership-lock`。
 
 本轮 program 不再继续做架构细化或 contract foundation，而是把目标架构推进到第一版真实 runtime 闭环：
 

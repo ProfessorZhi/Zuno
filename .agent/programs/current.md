@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE01_program-reopen-and-truth-source-freeze
+current_phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
 
 ## 目标
 
@@ -23,8 +23,8 @@ upload document
 
 ## 当前阶段
 
-- `PHASE01_program-reopen-and-truth-source-freeze.md`：active。
-- `PHASE02_runtime-migration-map-and-repo-ownership-lock.md`：pending。
+- `PHASE01_program-reopen-and-truth-source-freeze.md`：completed。
+- `PHASE02_runtime-migration-map-and-repo-ownership-lock.md`：active。
 - `PHASE03_task-session-artifact-event-runtime.md`：pending。
 - `PHASE04_document-ingestion-parse-runtime.md`：pending。
 - `PHASE05_index-jobs-and-knowledge-space-runtime.md`：pending。

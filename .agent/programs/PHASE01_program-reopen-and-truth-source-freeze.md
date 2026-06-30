@@ -1,6 +1,6 @@
 # PHASE01 program-reopen-and-truth-source-freeze
 
-status: active
+status: completed
 
 ## 目标
 
@@ -36,3 +36,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workfl
 pytest -q tests/repo/test_agent_system.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py -p no:cacheprovider
 ```
 
+## 关闭证据
+
+- Active program 已切换为 `zuno-target-architecture-runtime-full-implementation-v1`。
+- `.agent/programs/current.md`、`.agent/references/current-program.md`、README、AGENTS 和 architecture 摘要已同步 runtime-first / vertical-slice-first 口径。
+- Verifier 和 repo tests 已覆盖 active program、12 个 phase 文件和“只写 contract、schema 或 README 不能关闭 runtime phase”规则。
+- 本 phase 不实现 runtime feature；PHASE02 进入 active，负责 runtime migration map 与 ownership lock。

@@ -1,6 +1,6 @@
 # PHASE02 runtime-migration-map-and-repo-ownership-lock
 
-status: pending
+status: active
 
 ## 目标
 
@@ -31,4 +31,3 @@ git diff --check
 python tools/scripts/verify_repo_structure.py
 pytest -q tests/repo/test_repo_structure_consistency.py tests/repo/test_backend_facade_layers.py -p no:cacheprovider
 ```
-
