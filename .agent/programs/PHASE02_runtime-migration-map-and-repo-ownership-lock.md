@@ -1,6 +1,6 @@
 # PHASE02 runtime-migration-map-and-repo-ownership-lock
 
-status: active
+status: completed
 
 ## 目标
 
@@ -31,3 +31,11 @@ git diff --check
 python tools/scripts/verify_repo_structure.py
 pytest -q tests/repo/test_repo_structure_consistency.py tests/repo/test_backend_facade_layers.py -p no:cacheprovider
 ```
+
+## 关闭证据
+
+- `docs/architecture/repo-ownership-matrix.md` 已升级到当前 `zuno-target-architecture-runtime-full-implementation-v1` / `PHASE02_runtime-migration-map-and-repo-ownership-lock`。
+- Runtime domain coverage 已覆盖 parser、retrieval、GraphRAG、memory、tool、database、workspace、storage、queue 和 sandbox。
+- Matrix 已显式记录 `zuno.schema.*`、`zuno.database.*`、`zuno.services.*` legacy alias rows，以及 `api/dto`、`platform/database`、`platform/storage` 物理 owner。
+- `tools/scripts/verify_repo_structure.py` 和 `tests/repo/test_repo_structure_consistency.py` 已固定 runtime domain coverage 与 legacy alias matrix rows。
+- `api/dto`、`platform/database`、`platform/services` README 已修正旧物理路径表述，避免把 alias 当成当前 owner。

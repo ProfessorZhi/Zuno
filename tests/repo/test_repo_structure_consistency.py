@@ -324,6 +324,66 @@ def test_repo_structure_verifier_pins_phase02_ownership_contract() -> None:
         "verifier",
         "status",
     ]
+    assert verifier.PHASE02_LEGACY_ALIAS_MATRIX_ROWS == {
+        "zuno.schema.*": ("api/dto", "src/backend/zuno/api/dto", "legacy-alias-current"),
+        "zuno.database.*": (
+            "platform/database",
+            "src/backend/zuno/platform/database",
+            "legacy-alias-current",
+        ),
+        "zuno.services.*": (
+            "platform/services",
+            "src/backend/zuno/platform/services",
+            "legacy-alias-current",
+        ),
+    }
+    assert verifier.PHASE02_RUNTIME_DOMAIN_MATRIX_REQUIREMENTS == {
+        "parser": [
+            "src/backend/zuno/knowledge/ingestion",
+            "src/backend/zuno/platform/services/convert_files",
+            "src/backend/zuno/platform/services/pipeline",
+        ],
+        "retrieval": [
+            "src/backend/zuno/knowledge",
+            "src/backend/zuno/platform/services/rag",
+            "src/backend/zuno/platform/services/retrieval",
+            "src/backend/zuno/platform/services/deepsearch",
+            "src/backend/zuno/platform/services/rewrite",
+        ],
+        "graphrag": [
+            "src/backend/zuno/knowledge",
+            "src/backend/zuno/platform/services/graphrag",
+        ],
+        "memory": [
+            "src/backend/zuno/memory",
+            "src/backend/zuno/platform/services/memory",
+        ],
+        "tool": [
+            "src/backend/zuno/capability",
+            "src/backend/zuno/platform/services/mcp",
+            "src/backend/zuno/platform/services/mcp_openai",
+            "src/backend/zuno/platform/services/sandbox",
+        ],
+        "database": [
+            "src/backend/zuno/platform/database",
+            "zuno.database.*",
+        ],
+        "workspace": [
+            "src/backend/zuno/api",
+            "src/backend/zuno/platform/services/workspace",
+        ],
+        "storage": [
+            "src/backend/zuno/platform/storage",
+            "src/backend/zuno/platform/services/storage",
+        ],
+        "queue": [
+            "src/backend/zuno/platform/services/queue",
+        ],
+        "sandbox": [
+            "src/backend/zuno/platform/security",
+            "src/backend/zuno/platform/services/sandbox",
+        ],
+    }
     assert verifier.PHASE02_RESERVED_IMPORT_GUARD_PATHS == [
         "src/backend/zuno/platform/observability",
         "src/backend/zuno/platform/security",
@@ -904,7 +964,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         RUNTIME_PROGRAM_NAME,
         "state: active",
         f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE02_runtime-migration-map-and-repo-ownership-lock",
+        "current_phase: PHASE03_task-session-artifact-event-runtime",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         MASTER_PROGRAM_NAME,
@@ -917,7 +977,8 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         phase_text = phase_path.read_text(encoding="utf-8")
         expected_status = {
             1: "status: completed",
-            2: "status: active",
+            2: "status: completed",
+            3: "status: active",
         }.get(index, "status: pending")
         assert expected_status in phase_text
     for phase in MASTER_PROGRAM_PHASE_FILES:

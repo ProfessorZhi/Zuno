@@ -1,6 +1,6 @@
 # PHASE03 task-session-artifact-event-runtime
 
-status: pending
+status: active
 
 ## 目标
 
@@ -31,4 +31,3 @@ git diff --check
 pytest -q tests/api tests/frontend -p no:cacheprovider
 python .agent/scripts/verify_agent_system.py
 ```
-

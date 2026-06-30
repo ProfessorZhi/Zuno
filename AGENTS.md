@@ -181,7 +181,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前 active program 是 `zuno-target-architecture-runtime-full-implementation-v1`，当前阶段是 `PHASE02_runtime-migration-map-and-repo-ownership-lock`。它不是继续细化架构，也不是再做一轮 contract foundation，而是把 Zuno 从“目标架构已定义、contracts 已成型”推进到“目标架构第一版 runtime 闭环真实可跑”。核心闭环是：上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
+当前 active program 是 `zuno-target-architecture-runtime-full-implementation-v1`，当前阶段是 `PHASE03_task-session-artifact-event-runtime`。它不是继续细化架构，也不是再做一轮 contract foundation，而是把 Zuno 从“目标架构已定义、contracts 已成型”推进到“目标架构第一版 runtime 闭环真实可跑”。核心闭环是：上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
 
 最近完成并归档的 program 是 `zuno-master-architecture-implementation-v1`；它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`。`zuno-architecture-detail-and-execution-plan-v1` 已完成架构文档、架构图、HTML 和执行计划细化。`zuno-eight-deliverables-full-realization-v1` 仍是八大交付物闭环的历史完成事实。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。
 

@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-target-architecture-runtime-full-implementation-v1`
-- Current phase: `PHASE02_runtime-migration-map-and-repo-ownership-lock`
+- Current phase: `PHASE03_task-session-artifact-event-runtime`
 - 最近完成 program: `zuno-master-architecture-implementation-v1`
 - 最近完成归档: `docs/history/programs/zuno-master-architecture-implementation-v1/`
 

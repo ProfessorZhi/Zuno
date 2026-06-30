@@ -1,19 +1,35 @@
 # Repository Ownership Matrix
 
 status: current
-program: zuno-master-architecture-implementation-v1
-phase: PHASE02_project-folder-and-code-layout-cleanup
+program: zuno-target-architecture-runtime-full-implementation-v1
+phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
 
 ## 目标
 
-本文件是 PHASE02 的代码归属矩阵。它只把当前目录、目标 owner、兼容路径、迁移风险和验证入口说清楚，不把后续 runtime feature 提前写成 Current。
+本文件是当前 runtime-first program 的 PHASE02 代码归属和 runtime 迁移矩阵。它只把当前目录、目标 owner、兼容路径、迁移风险和验证入口说清楚，不把后续 runtime feature 提前写成 Current。
 
 当前事实：
 
 - `src/backend/zuno` 顶层只有 `api / agent / memory / capability / knowledge / platform` 六层。
 - `platform/services` 仍是主要 migration source，不能 bulk move。
+- `zuno.schema.*`、`zuno.database.*` 和 `zuno.services.*` 是 public legacy import aliases，当前分别指向 `api/dto`、`platform/database` 和 `platform/services`，不能直接删除。
 - `platform/compatibility/vendor/fastapi_jwt_auth` 仍是当前兼容路径，`platform/vendor` 只是 PHASE02 建立的目标 owner 和 import guard。
 - 新增 runtime 代码不得写入 `platform/compatibility`。compatibility 只保留 legacy import registry 和当前已存在的兼容 vendor 路径。
+
+## Runtime Domain Coverage
+
+| runtime_domain | required current paths | target owner | next runtime phase |
+| --- | --- | --- | --- |
+| parser | `knowledge/ingestion`; `platform/services/convert_files`; `platform/services/pipeline` | knowledge/ingestion | PHASE04 |
+| retrieval | `knowledge`; `platform/services/rag`; `platform/services/retrieval`; `platform/services/deepsearch`; `platform/services/rewrite` | knowledge/retrieval | PHASE09 |
+| GraphRAG | `knowledge`; `platform/services/graphrag` | knowledge/graphrag | PHASE05 / PHASE09 |
+| memory | `memory`; `platform/services/memory` | memory | PHASE07 |
+| tool | `capability`; `platform/services/mcp`; `platform/services/mcp_openai`; `platform/services/sandbox` | capability / platform/security | PHASE08 |
+| database | `platform/database`; `zuno.database.*` | platform/database | PHASE03 / PHASE07 |
+| workspace | `api`; `platform/services/workspace` | api / agent / platform/workspace | PHASE03 / PHASE06 |
+| storage | `platform/storage`; `platform/services/storage` | platform/storage | PHASE03 / PHASE05 |
+| queue | `platform/services/queue` | platform/jobs | PHASE05 / PHASE06 |
+| sandbox | `platform/security`; `platform/services/sandbox` | platform/security | PHASE08 / PHASE10 |
 
 ## Matrix
 
@@ -25,6 +41,12 @@ phase: PHASE02_project-folder-and-code-layout-cleanup
 | src/backend/zuno/capability | target-layer | capability | src/backend/zuno/capability | zuno.tools.* and zuno.mcp_servers.* aliases | medium | tests/tools; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | current |
 | src/backend/zuno/knowledge | target-layer | knowledge | src/backend/zuno/knowledge | zuno.services.graphrag.* and zuno.services.retrieval.* aliases | high | tests/graphrag; tests/retrieval; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | current |
 | src/backend/zuno/platform | target-layer | platform | src/backend/zuno/platform | zuno.services.* zuno.database.* zuno.settings aliases | high | tests/storage; tests/tools; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | current |
+| src/backend/zuno/api/dto | physical-dto-owner | api/dto | src/backend/zuno/api/dto | zuno.schema.* | high | tests/api; tests/api/test_workspace_product_loop_contract.py; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | current-owned |
+| src/backend/zuno/platform/database | physical-database-owner | platform/database | src/backend/zuno/platform/database | zuno.database.* | high | tests/storage; tests/repo/test_repo_structure_consistency.py; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | current-owned |
+| src/backend/zuno/platform/storage | physical-storage-owner | platform/storage | src/backend/zuno/platform/storage | zuno.services.storage.* during migration | high | tests/storage; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | current-owned |
+| zuno.schema.* | legacy-public-alias | api/dto | src/backend/zuno/api/dto | src/backend/zuno/platform/compatibility/legacy_aliases.py | high | tests/api; tests/api/test_workspace_product_loop_contract.py; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | legacy-alias-current |
+| zuno.database.* | legacy-public-alias | platform/database | src/backend/zuno/platform/database | src/backend/zuno/platform/compatibility/legacy_aliases.py | high | tests/storage; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | legacy-alias-current |
+| zuno.services.* | legacy-public-alias | platform/services | src/backend/zuno/platform/services | src/backend/zuno/platform/compatibility/legacy_aliases.py | high | tests/agent; tests/api; tests/retrieval; tests/tools; tests/legacy_guards/test_zuno_alias_imports.py | python tools/scripts/verify_repo_structure.py | legacy-alias-current |
 | src/backend/zuno/knowledge/ingestion | reserved-import-guard | knowledge/ingestion | src/backend/zuno/knowledge/ingestion | platform/services/convert_files and pipeline remain current | high | tests/repo/test_repo_structure_consistency.py | python tools/scripts/verify_repo_structure.py | target-owner-reserved |
 | src/backend/zuno/platform/security | reserved-import-guard | platform/security | src/backend/zuno/platform/security | zuno.services.sandbox and execution_policy remain current | high | tests/tools; tests/repo/test_repo_structure_consistency.py | python tools/scripts/verify_repo_structure.py | target-owner-reserved |
 | src/backend/zuno/platform/observability | reserved-import-guard | platform/observability | src/backend/zuno/platform/observability | zuno.utils.runtime_observability alias remains current | medium | tests/agent; tests/repo/test_repo_structure_consistency.py | python tools/scripts/verify_repo_structure.py | target-owner-reserved |

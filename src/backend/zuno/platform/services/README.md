@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/services/` 当前仍承载 application services、GraphRAG / retrieval、memory foundation、capability foundation、storage、queue、MCP、pipeline 和 workspace runtime 实现。它是最大旧 runtime 来源，不能用一次性目录移动替代架构切片。
+`src/backend/zuno/platform/services/` 当前仍承载 application services、GraphRAG / retrieval、memory foundation、capability foundation、storage、queue、MCP、pipeline 和 workspace runtime 实现。旧 public import path `zuno.services.*` 由 `platform/compatibility/legacy_aliases.py` 映射到这里。它是最大旧 runtime 来源，不能用一次性目录移动替代架构切片。
 
 PHASE02 的当前 owner 入口是 `docs/architecture/repo-ownership-matrix.md`。新增 `platform/services/*` 子目录前，必须先在 `PLATFORM_SERVICES_TARGET_OWNERS` 和 ownership matrix 中声明 target owner、compat path、测试和 verifier；否则 repo structure verifier 会失败。
 

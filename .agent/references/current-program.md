@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
+current_phase: PHASE03_task-session-artifact-event-runtime
 
 `.agent/programs/` 当前保存 active runtime implementation program：
 
@@ -47,8 +47,8 @@ current_phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
 ## 当前阶段
 
 - `PHASE01_program-reopen-and-truth-source-freeze.md`：completed，已冻结事实源、验收口径和 verifier/test 期望。
-- `PHASE02_runtime-migration-map-and-repo-ownership-lock.md`：active，正在固定旧 runtime 与六层 target owner 的迁移图和兼容策略。
-- `PHASE03_task-session-artifact-event-runtime.md`：pending。
+- `PHASE02_runtime-migration-map-and-repo-ownership-lock.md`：completed，已固定旧 runtime 与六层 target owner 的迁移图和兼容策略。
+- `PHASE03_task-session-artifact-event-runtime.md`：active，正在打通 workspace / session / task / event / artifact / feedback 后端 runtime 闭环。
 - `PHASE04_document-ingestion-parse-runtime.md`：pending。
 - `PHASE05_index-jobs-and-knowledge-space-runtime.md`：pending。
 - `PHASE06_durable-single-controller-runtime.md`：pending。

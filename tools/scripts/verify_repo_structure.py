@@ -428,6 +428,68 @@ BACKEND_OWNERSHIP_MATRIX_REQUIRED_COLUMNS = [
     "status",
 ]
 
+PHASE02_RUNTIME_DOMAIN_MATRIX_REQUIREMENTS = {
+    "parser": [
+        "src/backend/zuno/knowledge/ingestion",
+        "src/backend/zuno/platform/services/convert_files",
+        "src/backend/zuno/platform/services/pipeline",
+    ],
+    "retrieval": [
+        "src/backend/zuno/knowledge",
+        "src/backend/zuno/platform/services/rag",
+        "src/backend/zuno/platform/services/retrieval",
+        "src/backend/zuno/platform/services/deepsearch",
+        "src/backend/zuno/platform/services/rewrite",
+    ],
+    "graphrag": [
+        "src/backend/zuno/knowledge",
+        "src/backend/zuno/platform/services/graphrag",
+    ],
+    "memory": [
+        "src/backend/zuno/memory",
+        "src/backend/zuno/platform/services/memory",
+    ],
+    "tool": [
+        "src/backend/zuno/capability",
+        "src/backend/zuno/platform/services/mcp",
+        "src/backend/zuno/platform/services/mcp_openai",
+        "src/backend/zuno/platform/services/sandbox",
+    ],
+    "database": [
+        "src/backend/zuno/platform/database",
+        "zuno.database.*",
+    ],
+    "workspace": [
+        "src/backend/zuno/api",
+        "src/backend/zuno/platform/services/workspace",
+    ],
+    "storage": [
+        "src/backend/zuno/platform/storage",
+        "src/backend/zuno/platform/services/storage",
+    ],
+    "queue": [
+        "src/backend/zuno/platform/services/queue",
+    ],
+    "sandbox": [
+        "src/backend/zuno/platform/security",
+        "src/backend/zuno/platform/services/sandbox",
+    ],
+}
+
+PHASE02_LEGACY_ALIAS_MATRIX_ROWS = {
+    "zuno.schema.*": ("api/dto", "src/backend/zuno/api/dto", "legacy-alias-current"),
+    "zuno.database.*": (
+        "platform/database",
+        "src/backend/zuno/platform/database",
+        "legacy-alias-current",
+    ),
+    "zuno.services.*": (
+        "platform/services",
+        "src/backend/zuno/platform/services",
+        "legacy-alias-current",
+    ),
+}
+
 PLATFORM_SERVICES_TARGET_OWNERS = {
     "application": "api / knowledge / workspace",
     "autobuild": "capability / platform",
@@ -779,9 +841,12 @@ def verify_phase02_backend_ownership_matrix() -> list[str]:
         for server_name in CAPABILITY_MCP_SERVER_CLASSIFICATIONS
     ]
     required_boundary_paths = [
+        "src/backend/zuno/api/dto",
+        "src/backend/zuno/platform/database",
         "src/backend/zuno/platform/compatibility/legacy_aliases.py",
         "src/backend/zuno/platform/compatibility/vendor/fastapi_jwt_auth",
         "src/backend/zuno/platform/vendor",
+        *PHASE02_LEGACY_ALIAS_MATRIX_ROWS,
     ]
     for current_path in [
         *required_top_layer_paths,
@@ -851,6 +916,29 @@ def verify_phase02_backend_ownership_matrix() -> list[str]:
             errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} boundary role drift: {current_path}")
         if row.get("target_owner") != target_owner:
             errors.append(f"{BACKEND_OWNERSHIP_MATRIX_PATH} boundary owner drift: {current_path}")
+
+    for current_path, (target_owner, target_path, status) in PHASE02_LEGACY_ALIAS_MATRIX_ROWS.items():
+        row = rows_by_path.get(current_path, {})
+        if row.get("target_owner") != target_owner:
+            errors.append(
+                f"{BACKEND_OWNERSHIP_MATRIX_PATH} legacy alias owner drift: {current_path}"
+            )
+        if row.get("target_path") != target_path:
+            errors.append(
+                f"{BACKEND_OWNERSHIP_MATRIX_PATH} legacy alias target path drift: {current_path}"
+            )
+        if row.get("status") != status:
+            errors.append(
+                f"{BACKEND_OWNERSHIP_MATRIX_PATH} legacy alias status drift: {current_path}"
+            )
+
+    for domain, required_paths in PHASE02_RUNTIME_DOMAIN_MATRIX_REQUIREMENTS.items():
+        missing_paths = [path for path in required_paths if path not in rows_by_path]
+        if missing_paths:
+            errors.append(
+                f"{BACKEND_OWNERSHIP_MATRIX_PATH} missing PHASE02 runtime domain {domain}: "
+                f"{missing_paths}"
+            )
 
     return errors
 
@@ -1063,7 +1151,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {RUNTIME_PROGRAM_NAME}",
-        "current_phase: PHASE02_runtime-migration-map-and-repo-ownership-lock",
+        "current_phase: PHASE03_task-session-artifact-event-runtime",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
@@ -1100,7 +1188,8 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         expected_status = {
             1: "status: completed",
-            2: "status: active",
+            2: "status: completed",
+            3: "status: active",
         }.get(phase_index, "status: pending")
         if expected_status not in phase_content:
             errors.append(f"active runtime program phase status drifted: {phase_name}")
