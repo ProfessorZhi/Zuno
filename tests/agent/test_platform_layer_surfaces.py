@@ -15,9 +15,45 @@ EXPECTED_EXPORTS = {
     "zuno.platform.security": [
         "AccessScope",
         "ExecutionMode",
+        "GateRequest",
+        "GateResult",
+        "InputSecurityGate",
+        "OutputSecurityGate",
+        "RetrievalCandidate",
+        "RetrievalGateResult",
+        "RetrievalSecurityGate",
+        "SandboxAuditEvent",
+        "SandboxProfile",
+        "SecurityDecision",
+        "SecurityFinding",
+        "SecurityGate",
+        "ToolGateResult",
+        "ToolSecurityGate",
+        "ToolSecurityProfile",
         "normalize_access_scope",
         "normalize_execution_mode",
+        "redact_sensitive_payload",
+        "redact_sensitive_text",
         "validate_tools_for_mode",
+    ],
+    "zuno.platform.security.governance": [
+        "GateRequest",
+        "GateResult",
+        "InputSecurityGate",
+        "OutputSecurityGate",
+        "RetrievalCandidate",
+        "RetrievalGateResult",
+        "RetrievalSecurityGate",
+        "SandboxAuditEvent",
+        "SandboxProfile",
+        "SecurityDecision",
+        "SecurityFinding",
+        "SecurityGate",
+        "ToolGateResult",
+        "ToolSecurityGate",
+        "ToolSecurityProfile",
+        "redact_sensitive_payload",
+        "redact_sensitive_text",
     ],
     "zuno.platform.observability": [
         "RedisKeys",
@@ -64,9 +100,10 @@ def test_platform_layer_modules_reuse_legacy_foundation_objects() -> None:
 def test_platform_package_facade_points_at_target_modules() -> None:
     import zuno.platform as platform
     from zuno.platform.model_gateway import LLMProvider
-    from zuno.platform.security import AccessScope
+    from zuno.platform.security import AccessScope, SecurityGate
 
     assert platform.AccessScope is AccessScope
+    assert platform.SecurityGate is SecurityGate
     assert platform.LLMProvider is LLMProvider
 
 

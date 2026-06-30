@@ -1,6 +1,6 @@
 # PHASE10 Eval Observability LangSmith
 
-status: pending
+status: active
 
 ## 目标
 

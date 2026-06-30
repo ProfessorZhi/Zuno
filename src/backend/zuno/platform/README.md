@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/platform/` 目前是平台能力的轻量 facade，当前公开 execution policy 相关 contract 和 helper，并提供 `model_gateway.py`、`security/`、`observability/`、`storage/` 和 PHASE02 新增的 `vendor/` import guard。真实 DB、settings、storage、queue、MCP、LLM、sandbox、vendor compat 等底座仍分布在旧路径中。
+`src/backend/zuno/platform/` 目前是平台能力的轻量 facade，当前公开 execution policy 相关 contract 和 helper，并提供 `model_gateway.py`、`security/`、`observability/`、`storage/` 和 `vendor/` import guard。PHASE09 已在 `security/governance.py` 固定 input / retrieval / tool / output gate、ToolSecurityProfile、SandboxAuditEvent 和 redaction contract。真实 DB、settings、storage、queue、MCP、LLM、rootless/gVisor/Firecracker sandbox、vendor compat 等底座仍分布在旧路径或仍是 Target。
 
 `config/` 和 `database/` 本批保持 infrastructure source：前者保存配置资源和 helper，后者保存 DB session、metadata、DAO 和 models。它们是 Platform 的目标归属，不是已经完成物理迁移的证据。
 
@@ -17,6 +17,7 @@
 ## 允许新增内容
 
 - 无副作用的 platform contract、execution policy helper、compat facade 和边界说明。
+- Security governance contract、policy decision schema、sandbox audit event、redaction helper。
 - 指向旧 settings、database、vendor、MCP、storage owner 的迁移说明。
 - 不改变默认配置、schema 或外部 entrypoint 的 wrapper。
 

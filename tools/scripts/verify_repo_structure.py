@@ -291,6 +291,7 @@ ALLOWED_RESPONSIBILITY_SUBDIRS = {
         "legacy_guards",
         "repo",
         "retrieval",
+        "security",
         "storage",
         "tools",
     ],
@@ -945,7 +946,8 @@ def verify_phase02_reserved_import_guards() -> list[str]:
             errors.append(f"missing PHASE02 import guard: {relative_path}/__init__.py")
             continue
         content = readme.read_text(encoding="utf-8")
-        for phrase in ["PHASE02", "当前角色", "Target role", "禁止事项", "Focused tests"]:
+        phase_phrase = "PHASE09" if relative_path == "src/backend/zuno/platform/security" else "PHASE02"
+        for phrase in [phase_phrase, "当前角色", "Target role", "禁止事项", "Focused tests"]:
             if phrase not in content:
                 errors.append(f"{relative_path}/README.md missing phrase: {phrase}")
         module_name = PHASE02_RESERVED_IMPORT_MODULES[relative_path]
@@ -1062,7 +1064,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             "当前 active program",
             ACTIVE_PROGRAM_NAME,
             "state: active",
-            "current_phase: PHASE09_security-governance-sandbox",
+            "current_phase: PHASE10_eval-observability-langsmith",
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
             "八个方面产物",

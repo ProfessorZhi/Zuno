@@ -130,27 +130,16 @@ pytest -q tests/agent/test_agentic_graphrag_contract.py tests/agent/test_knowled
 python tools/evals/zuno/contract_review_eval/run_contract_eval.py --profiles dev_offline,dev_local,demo --output-dir .local/evals/zuno/phase08/contract_review
 ```
 
-PHASE09 Runtime Upgrade Integration foundation 验证：
+PHASE09 Security / Governance / Sandbox contract 验证：
 
 ```powershell
-pytest -q tests/agent/test_agent_layer_surfaces.py tests/agent/test_generalagent_context_memory_runtime.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_hooks_evidence_trace_artifacts.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
-python .agent/scripts/verify_module_boundaries.py
+pytest -q tests/security tests/tools tests/agent/test_capability_system.py tests/agent/test_platform_layer_surfaces.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
 ```
 
-PHASE10 Validation Release Closure 验证：
+PHASE10 Eval / Observability / LangSmith-compatible trace 验证：
 
 ```powershell
-git diff --check
-python tools/agent/render_architecture.py --check
-python .agent/scripts/verify_agent_system.py
-python .agent/scripts/verify_doc_boundaries.py
-python .agent/scripts/verify_repo_hygiene.py
-python tools/scripts/verify_docs_entrypoints.py
-python tools/scripts/verify_repo_structure.py
-powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
-pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_agent_system.py -p no:cacheprovider
-pytest -q tests/agent/test_agent_layer_surfaces.py tests/agent/test_generalagent_context_memory_runtime.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_hooks_evidence_trace_artifacts.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
-python tools/evals/zuno/contract_review_eval/run_contract_eval.py --profiles dev_offline,dev_local,demo --output-dir .local/evals/zuno/phase10/contract_review
+pytest -q tests/evals tools/evals/zuno -p no:cacheprovider
 ```
 
 PHASE10 关闭后，`.agent/programs/` 必须处于 no-active 等待态，PHASE01-PHASE10 必须在 `docs/history/programs/zuno-eight-deliverables-full-realization-v1/` 中保留 completed 证据；同步检查点是 `.agent/scripts/verify_agent_system.py`、`.agent/scripts/verify_doc_boundaries.py`、`.agent/scripts/verify-workflow.ps1`、`tools/scripts/verify_repo_structure.py`、`tests/repo/test_agent_system.py` 和 `tests/repo/test_repo_structure_consistency.py`。

@@ -1,6 +1,6 @@
 # PHASE09 Security Governance Sandbox
 
-status: active
+status: completed
 
 ## 目标
 
@@ -30,16 +30,16 @@ Network / Credential Sandbox
 
 ## 步骤
 
-- [ ] 建立 input gate：auth、rate limit、file validation、PII/business secret scan、prompt injection scan。
-- [ ] 建立 retrieval gate：chunk ACL、workspace scope、document trust label、retrieval result sanitization。
-- [ ] 建立 tool gate：side effect policy、approval、timeout、cwd/network/credential allowlist。
-- [ ] 建立 output gate：DLP、citation coverage、format validation、redaction。
-- [ ] 建立 ToolCard security fields：`risk_level`、`side_effect_level`、`approval_required`、`sandbox_required`、`network_policy`、`credential_policy`、`audit_required`。
-- [ ] 建立 approval interrupt / resume contract，覆盖 `send_email`、SSH、CLI、删除/覆盖、外部写操作和跨 workspace 读取。
-- [ ] 建立 sandbox audit event schema，进入 trace/eval，以便回放 policy decision。
-- [ ] 建立 `model_intent` 与 `final_decision` 分离日志，证明模型建议和系统执行决策不是一回事。
-- [ ] 增加 verifier 或 tests：secrets 不进入 prompt、trace 明文、artifact、sandbox filesystem。
-- [ ] 写 prompt injection、data exfiltration、cross-workspace leakage 和 unauthorized tool call tests。
+- [x] 建立 input gate：auth、rate limit、file validation、PII/business secret scan、prompt injection scan。
+- [x] 建立 retrieval gate：chunk ACL、workspace scope、document trust label、retrieval result sanitization。
+- [x] 建立 tool gate：side effect policy、approval、timeout、cwd/network/credential allowlist。
+- [x] 建立 output gate：DLP、citation coverage、format validation、redaction。
+- [x] 建立 ToolCard security fields：`risk_level`、`side_effect_level`、`approval_required`、`sandbox_required`、`network_policy`、`credential_policy`、`audit_required`。
+- [x] 建立 approval interrupt / resume contract，覆盖 `send_email`、SSH、CLI、删除/覆盖、外部写操作和跨 workspace 读取。
+- [x] 建立 sandbox audit event schema，进入 trace/eval，以便回放 policy decision。
+- [x] 建立 `model_intent` 与 `final_decision` 分离日志，证明模型建议和系统执行决策不是一回事。
+- [x] 增加 verifier 或 tests：secrets 不进入 prompt、trace 明文、artifact、sandbox filesystem。
+- [x] 写 prompt injection、data exfiltration、cross-workspace leakage 和 unauthorized tool call tests。
 
 ## 输入 / 输出文件
 
@@ -92,6 +92,18 @@ Network / Credential Sandbox
 - 输出 DLP 不等于安全完成；必须同时有输入、检索、工具、输出四道 gate。
 - 本地模型只改善数据驻留，不自动解决 prompt injection、越权工具和 secret 泄露。
 
+## 完成事实
+
+Current 已完成：
+
+- `src/backend/zuno/platform/security/governance.py` 提供 `InputSecurityGate`、`RetrievalSecurityGate`、`ToolSecurityGate`、`OutputSecurityGate`、`ToolSecurityProfile`、`SandboxAuditEvent`、`SecurityFinding` 和 secret/PII redaction helper。
+- `tests/security/test_security_governance_contract.py` 覆盖直接 prompt injection、PII/secret redaction、跨 workspace chunk 阻断、ACL scope 阻断、retrieval result sanitization、高风险工具 approval/sandbox mapping、`model_intent` 与 `final_decision` 分离、低 citation coverage 输出阻断和 trace payload 不泄露 raw secret。
+- `zuno.platform.security` 和 `zuno.platform` facade 已暴露 PHASE09 contract，不加载 DB、vector runtime 或真实 sandbox runtime。
+
+仍是 Target：
+
+- rootless container、gVisor / Firecracker、完整 credential broker、真实 execution sandbox、approval UI、网络代理和生产级 DLP 扫描器。
+
 ## 验收
 
 - 安全不是输出端单点检测，而是贯穿输入、检索、工具和输出。
@@ -105,5 +117,5 @@ Network / Credential Sandbox
 ## 验证
 
 ```powershell
-pytest -q tests/security tests/tools tests/agent/test_capability_system.py -p no:cacheprovider
+pytest -q tests/security tests/tools tests/agent/test_capability_system.py tests/agent/test_platform_layer_surfaces.py tests/repo/test_backend_facade_layers.py -p no:cacheprovider
 ```

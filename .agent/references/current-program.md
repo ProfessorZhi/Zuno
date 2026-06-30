@@ -5,7 +5,7 @@
 当前 active program：`zuno-master-architecture-implementation-v1`
 
 state: active
-current_phase: PHASE09_security-governance-sandbox
+current_phase: PHASE10_eval-observability-langsmith
 
 ## Program 目标
 
@@ -22,7 +22,7 @@ current_phase: PHASE09_security-governance-sandbox
 7. RAG / GraphRAG 知识系统。
 8. 安全、评测、观测、文档展示闭环。
 
-它仍然遵守 Current / Target / Future / History 边界：未由代码、测试、trace、eval 或 verifier 证明的能力不能写成 Current。生产级 Parse Gateway runtime、production-grade durable LangGraph runtime、production-grade Memory DB、完整 Tool approval / sandbox 平台、生产级 GraphRAG extraction / fusion / index job、LangSmith trace / eval 和完整安全沙箱在对应 phase 完成前仍是 Target。
+它仍然遵守 Current / Target / Future / History 边界：未由代码、测试、trace、eval 或 verifier 证明的能力不能写成 Current。生产级 Parse Gateway runtime、production-grade durable LangGraph runtime、production-grade Memory DB、完整 Tool approval / sandbox 平台、生产级 GraphRAG extraction / fusion / index job、LangSmith trace / eval、rootless / gVisor / Firecracker sandbox 和完整 credential broker 在对应 phase 完成前仍是 Target。
 
 ## 当前执行入口
 
@@ -55,8 +55,8 @@ current_phase: PHASE09_security-governance-sandbox
 - `PHASE06_context-memory-system.md`：completed。
 - `PHASE07_tool-control-plane-mcp-approval.md`：completed。
 - `PHASE08_rag-graphrag-evidence-citation.md`：completed。
-- `PHASE09_security-governance-sandbox.md`：active。
-- `PHASE10_eval-observability-langsmith.md`：pending。
+- `PHASE09_security-governance-sandbox.md`：completed。
+- `PHASE10_eval-observability-langsmith.md`：active。
 - `PHASE11_architecture-docs-html-refresh.md`：pending。
 - `PHASE12_validation-release-closure.md`：pending。
 

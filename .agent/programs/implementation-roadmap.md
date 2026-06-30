@@ -12,7 +12,7 @@
 
 state: active
 program: zuno-master-architecture-implementation-v1
-current_phase: PHASE09_security-governance-sandbox
+current_phase: PHASE10_eval-observability-langsmith
 
 每次新 program 都从 `PHASE01` 开始编号。
 
@@ -126,8 +126,8 @@ Runtime implementation paths opened by later phases:
 | PHASE06 | completed | Context / Memory read-write-manage 系统。 |
 | PHASE07 | completed | Tool Control Plane、MCP、approval、executor adapter、sandbox。 |
 | PHASE08 | completed | Agentic Retrieval Router、staged fusion、EvidenceBundle、Citation Builder、unsupported claim check、GraphRAG index pipeline contract。 |
-| PHASE09 | active | Security governance、DLP、prompt injection 防护、sandbox。 |
-| PHASE10 | pending | LangSmith-compatible trace/eval、offline/online eval、CI gate。 |
+| PHASE09 | completed | Security governance、input/retrieval/tool/output gates、sandbox audit、secret redaction。 |
+| PHASE10 | active | LangSmith-compatible trace/eval、offline/online eval、CI gate。 |
 | PHASE11 | pending | 架构 Markdown、HTML、README、图集和展示文档更新。 |
 | PHASE12 | pending | 全量验证、release baseline、归档和推送。 |
 
@@ -229,7 +229,7 @@ Set these state values in `.agent/programs/current.md`, `.agent/programs/impleme
 ```text
 program: zuno-master-architecture-implementation-v1
 state: active
-current_phase: PHASE09_security-governance-sandbox
+current_phase: PHASE10_eval-observability-langsmith
 ```
 
 - [ ] **Step 4: Archive ChatGPT research mode artifacts**
@@ -615,7 +615,7 @@ PHASE08 Current result: `src/backend/zuno/knowledge/agentic_graphrag.py` fixes t
 
 ## Task 9: Security / Governance / Sandbox
 
-Status: active
+Status: completed
 
 **Files:**
 - Modify/Create: `src/backend/zuno/platform/security/**`
@@ -624,7 +624,7 @@ Status: active
 - Modify/Create: `tests/tools/**`
 - Modify: `docs/architecture/architecture.md`
 
-- [ ] **Step 1: Define four security gates**
+- [x] **Step 1: Define four security gates**
 
 ```text
 input gate -> auth, file validation, PII/business secret scan, prompt injection scan
@@ -633,7 +633,7 @@ tool gate -> side-effect policy, approval, timeout, cwd/network/credential scope
 output gate -> DLP, citation coverage, format validation, redaction
 ```
 
-- [ ] **Step 2: Define sandbox levels**
+- [x] **Step 2: Define sandbox levels**
 
 ```text
 policy sandbox
@@ -642,13 +642,15 @@ execution sandbox
 network / credential sandbox
 ```
 
-- [ ] **Step 3: Add security eval cases**
+- [x] **Step 3: Add security eval cases**
 
 Security regression must include prompt injection, indirect prompt injection, secret exfiltration, cross-workspace leakage and unauthorized tool call attempts.
 
+PHASE09 Current result: `src/backend/zuno/platform/security/governance.py` fixes input / retrieval / tool / output gate contracts, ToolSecurityProfile mapping, SandboxAuditEvent trace payload, model intent vs final decision separation, and secret / PII redaction. Rootless containers, Firecracker/gVisor, full credential broker, approval UI, real network proxy and production DLP remain Target.
+
 ## Task 10: Eval / Observability / LangSmith
 
-Status: pending
+Status: active
 
 **Files:**
 - Modify/Create: `src/backend/zuno/platform/observability/**`
