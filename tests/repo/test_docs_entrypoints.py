@@ -278,6 +278,10 @@ def test_architecture_diagrams_expose_multi_view_target_architecture() -> None:
         "Memory Review Gate",
         "structured memory candidate",
         "write-manage-read",
+        "Tool Control Plane",
+        "Tool Manifest Registry",
+        "Tool Policy Approval",
+        "Result Normalizer",
         "Domain Pack 只允许作为历史或兼容语境出现",
     ]:
         assert phrase in content
@@ -365,10 +369,14 @@ def test_architecture_view_contract_is_shared_across_docs_and_renderer() -> None
     assert architecture_html.count('<div class="mermaid">') == 10
     assert architecture_html.count("<summary>Mermaid source</summary>") == 10
     for phrase in [
-        "overflow-x: auto",
-        "min-width: 760px",
+        "overflow: hidden",
+        "max-width: 100%",
+        "展开全屏查看",
+        "diagram-open",
+        "diagram-dialog",
+        "dialog-canvas",
         "securityLevel: \"strict\"",
-        "useMaxWidth: false",
+        "useMaxWidth: true",
     ]:
         assert phrase in architecture_html
 

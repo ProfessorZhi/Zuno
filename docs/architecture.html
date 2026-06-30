@@ -20,7 +20,7 @@
       color: var(--zuno-text);
     }
     main {
-      max-width: 980px;
+      max-width: 1180px;
       margin: 0 auto;
       padding: 52px 32px 70px;
     }
@@ -120,26 +120,97 @@
     }
     .diagram-frame {
       margin: 16px auto 10px;
-      padding: 18px;
-      max-width: 1120px;
-      overflow-x: auto;
+      box-sizing: border-box;
+      width: 100%;
+      padding: 14px;
+      max-width: 100%;
+      overflow: hidden;
       border: 1px solid var(--zuno-border);
       border-radius: 6px;
       background: #ffffff;
     }
+    .diagram-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin: 6px 0 8px;
+    }
+    .diagram-actions button,
+    .diagram-dialog button {
+      border: 1px solid var(--zuno-border);
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--zuno-text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      line-height: 1.2;
+      padding: 7px 12px;
+    }
+    .diagram-actions button:hover,
+    .diagram-dialog button:hover {
+      background: #f7f8fb;
+    }
     .mermaid {
       width: 100%;
       min-height: 120px;
+      display: flex;
+      justify-content: center;
       text-align: center;
     }
     .mermaid svg {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      min-width: 0;
+      height: auto !important;
+    }
+    .diagram-dialog {
+      width: min(96vw, 1500px);
+      height: min(92vh, 980px);
+      padding: 0;
+      border: 1px solid var(--zuno-border);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--zuno-text);
+    }
+    .diagram-dialog::backdrop {
+      background: rgba(22, 32, 42, 0.42);
+    }
+    .dialog-shell {
+      box-sizing: border-box;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      height: 100%;
+      padding: 14px;
+    }
+    .dialog-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #e3e7ec;
+      padding-bottom: 10px;
+    }
+    .dialog-title {
+      font-size: 16px;
+      font-weight: 650;
+    }
+    .dialog-canvas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .dialog-canvas svg {
       width: auto !important;
-      max-width: none;
-      min-width: 760px;
-      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      height: auto !important;
     }
     details {
-      max-width: 780px;
+      max-width: 100%;
       margin: 8px auto 0;
       font-size: 13px;
       color: #52616f;
@@ -175,8 +246,11 @@
           <li>关注点：系统职责，而不是物理目录。</li>
           <li>Zuno 映射：默认主线仍是 Single Controller Agent；`Agent Core Runtime` 是 `Single Controller Agent` 的二级展开；Memory 展开为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory 和 Context Pack。</li>
           <li>边界：Knowledge 可以作为 capability 被调用，但在架构上单独成层，因为 GraphRAG、retrieval fusion、citation 和 evidence contract 有独立生命周期。</li>
-          <li>边界：Security、Trace 和 Eval 是横切治理层，不是业务入口。</li>
+          <li>边界：Security、Trace 和 Eval 收束为 Governance Plane；Tool Control Plane 以 ToolCard/manifest、selector、policy、executor、result normalizer 和 trace 为目标链路。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="Logical View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
@@ -186,48 +260,58 @@ flowchart TB
   classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
   classDef mem fill:#f8fbff,stroke:#5b7fa3,stroke-width:1px,color:#16202a;
 
-  USER[&quot;User Workspace&quot;]
-  API[&quot;API and Session Layer&quot;]
-  MODEL[&quot;Model Gateway and Policy&quot;]
-  CORE[&quot;Agent Core Runtime&quot;]:::accent
-  MEMORY[&quot;Context and Memory&quot;]
-  RAW[&quot;Raw Event Log&quot;]:::mem
-  RECENT[&quot;Recent Window&quot;]:::mem
-  SUMMARY[&quot;Task Summary&quot;]:::mem
-  STRUCT[&quot;Structured Long Term Memory&quot;]:::mem
-  PACK[&quot;Model Context Packet&quot;]:::mem
-  POST[&quot;PostTurn Memory Pipeline&quot;]:::mem
-  TOOL[&quot;Capability and Tool&quot;]
-  KNOW[&quot;Knowledge and Retrieval&quot;]
-  INGEST[&quot;Document Ingestion&quot;]
-  PLATFORM[&quot;Platform Infrastructure&quot;]
-  SECURITY[&quot;Security and Policy&quot;]:::guard
-  EVAL[&quot;Trace and Eval&quot;]:::guard
-  ART[&quot;Artifact and Workspace&quot;]
+  USER[&quot;User&lt;br/&gt;Workspace&quot;]
+  API[&quot;API and&lt;br/&gt;Session&quot;]
+  MODEL[&quot;Model Gateway&lt;br/&gt;and Policy&quot;]
+  CORE[&quot;Agent Core&lt;br/&gt;Runtime&quot;]:::accent
+  POST[&quot;PostTurn&lt;br/&gt;Pipeline&quot;]:::mem
+  GOV[&quot;Governance Plane&lt;br/&gt;security trace eval&quot;]:::guard
+  PLATFORM[&quot;Platform&lt;br/&gt;Infrastructure&quot;]
+
+  subgraph MEMSYS[&quot;Context and Memory&quot;]
+    direction TB
+    PACK[&quot;Context Pack&quot;]:::mem
+    RECENT[&quot;Recent Window&quot;]:::mem
+    SUMMARY[&quot;Task Summary&quot;]:::mem
+    STRUCT[&quot;Structured Memory&quot;]:::mem
+    RAW[&quot;Raw Event Log&quot;]:::mem
+    PACK --&gt; RECENT
+    PACK --&gt; SUMMARY
+    PACK --&gt; STRUCT
+    STRUCT --&gt; RAW
+  end
+
+  subgraph KNOWSYS[&quot;Knowledge and Ingestion&quot;]
+    direction TB
+    INGEST[&quot;Document Ingestion&quot;]
+    KNOW[&quot;Knowledge Retrieval&quot;]
+    INGEST --&gt; KNOW
+  end
+
+  subgraph ACTSYS[&quot;Action and Output&quot;]
+    direction LR
+    TOOL[&quot;Tool Control Plane&quot;]
+    REG[&quot;Manifest Registry&quot;]:::guard
+    SELECT[&quot;Capability Selector&quot;]:::guard
+    EXEC[&quot;Execution Adapter&quot;]:::guard
+    NORM[&quot;Result Normalizer&quot;]:::guard
+    ART[&quot;Artifact Workspace&quot;]
+    TOOL --&gt; REG --&gt; SELECT --&gt; EXEC --&gt; NORM --&gt; ART
+  end
+
   USER --&gt; API --&gt; CORE
   MODEL --&gt; CORE
-  CORE --&gt; MEMORY
-  MEMORY --&gt; RAW
-  MEMORY --&gt; RECENT
-  MEMORY --&gt; SUMMARY
-  MEMORY --&gt; STRUCT
-  MEMORY --&gt; PACK
-  CORE --&gt; POST --&gt; MEMORY
+  CORE --&gt; PACK
   CORE --&gt; TOOL
   CORE --&gt; KNOW
-  INGEST --&gt; KNOW
-  API --&gt; ART
-  TOOL --&gt; ART
-  CORE --&gt; SECURITY
-  MEMORY --&gt; SECURITY
-  TOOL --&gt; SECURITY
-  KNOW --&gt; SECURITY
-  CORE --&gt; EVAL
-  SECURITY --&gt; EVAL
+  CORE --&gt; POST --&gt; RAW
+  PACK --&gt; GOV
+  NORM --&gt; GOV
+  KNOW --&gt; GOV
+  GOV --&gt; PLATFORM
+  RAW --&gt; PLATFORM
   ART --&gt; PLATFORM
-  MEMORY --&gt; PLATFORM
-  KNOW --&gt; PLATFORM
-  class USER,API,MODEL,MEMORY,TOOL,KNOW,INGEST,PLATFORM,ART node;
+  class USER,API,MODEL,PLATFORM node;
           </div>
         </figure>
         <details>
@@ -239,48 +323,58 @@ flowchart TB
   classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
   classDef mem fill:#f8fbff,stroke:#5b7fa3,stroke-width:1px,color:#16202a;
 
-  USER[&quot;User Workspace&quot;]
-  API[&quot;API and Session Layer&quot;]
-  MODEL[&quot;Model Gateway and Policy&quot;]
-  CORE[&quot;Agent Core Runtime&quot;]:::accent
-  MEMORY[&quot;Context and Memory&quot;]
-  RAW[&quot;Raw Event Log&quot;]:::mem
-  RECENT[&quot;Recent Window&quot;]:::mem
-  SUMMARY[&quot;Task Summary&quot;]:::mem
-  STRUCT[&quot;Structured Long Term Memory&quot;]:::mem
-  PACK[&quot;Model Context Packet&quot;]:::mem
-  POST[&quot;PostTurn Memory Pipeline&quot;]:::mem
-  TOOL[&quot;Capability and Tool&quot;]
-  KNOW[&quot;Knowledge and Retrieval&quot;]
-  INGEST[&quot;Document Ingestion&quot;]
-  PLATFORM[&quot;Platform Infrastructure&quot;]
-  SECURITY[&quot;Security and Policy&quot;]:::guard
-  EVAL[&quot;Trace and Eval&quot;]:::guard
-  ART[&quot;Artifact and Workspace&quot;]
+  USER[&quot;User&lt;br/&gt;Workspace&quot;]
+  API[&quot;API and&lt;br/&gt;Session&quot;]
+  MODEL[&quot;Model Gateway&lt;br/&gt;and Policy&quot;]
+  CORE[&quot;Agent Core&lt;br/&gt;Runtime&quot;]:::accent
+  POST[&quot;PostTurn&lt;br/&gt;Pipeline&quot;]:::mem
+  GOV[&quot;Governance Plane&lt;br/&gt;security trace eval&quot;]:::guard
+  PLATFORM[&quot;Platform&lt;br/&gt;Infrastructure&quot;]
+
+  subgraph MEMSYS[&quot;Context and Memory&quot;]
+    direction TB
+    PACK[&quot;Context Pack&quot;]:::mem
+    RECENT[&quot;Recent Window&quot;]:::mem
+    SUMMARY[&quot;Task Summary&quot;]:::mem
+    STRUCT[&quot;Structured Memory&quot;]:::mem
+    RAW[&quot;Raw Event Log&quot;]:::mem
+    PACK --&gt; RECENT
+    PACK --&gt; SUMMARY
+    PACK --&gt; STRUCT
+    STRUCT --&gt; RAW
+  end
+
+  subgraph KNOWSYS[&quot;Knowledge and Ingestion&quot;]
+    direction TB
+    INGEST[&quot;Document Ingestion&quot;]
+    KNOW[&quot;Knowledge Retrieval&quot;]
+    INGEST --&gt; KNOW
+  end
+
+  subgraph ACTSYS[&quot;Action and Output&quot;]
+    direction LR
+    TOOL[&quot;Tool Control Plane&quot;]
+    REG[&quot;Manifest Registry&quot;]:::guard
+    SELECT[&quot;Capability Selector&quot;]:::guard
+    EXEC[&quot;Execution Adapter&quot;]:::guard
+    NORM[&quot;Result Normalizer&quot;]:::guard
+    ART[&quot;Artifact Workspace&quot;]
+    TOOL --&gt; REG --&gt; SELECT --&gt; EXEC --&gt; NORM --&gt; ART
+  end
+
   USER --&gt; API --&gt; CORE
   MODEL --&gt; CORE
-  CORE --&gt; MEMORY
-  MEMORY --&gt; RAW
-  MEMORY --&gt; RECENT
-  MEMORY --&gt; SUMMARY
-  MEMORY --&gt; STRUCT
-  MEMORY --&gt; PACK
-  CORE --&gt; POST --&gt; MEMORY
+  CORE --&gt; PACK
   CORE --&gt; TOOL
   CORE --&gt; KNOW
-  INGEST --&gt; KNOW
-  API --&gt; ART
-  TOOL --&gt; ART
-  CORE --&gt; SECURITY
-  MEMORY --&gt; SECURITY
-  TOOL --&gt; SECURITY
-  KNOW --&gt; SECURITY
-  CORE --&gt; EVAL
-  SECURITY --&gt; EVAL
+  CORE --&gt; POST --&gt; RAW
+  PACK --&gt; GOV
+  NORM --&gt; GOV
+  KNOW --&gt; GOV
+  GOV --&gt; PLATFORM
+  RAW --&gt; PLATFORM
   ART --&gt; PLATFORM
-  MEMORY --&gt; PLATFORM
-  KNOW --&gt; PLATFORM
-  class USER,API,MODEL,MEMORY,TOOL,KNOW,INGEST,PLATFORM,ART node;</code></pre>
+  class USER,API,MODEL,PLATFORM node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -295,6 +389,9 @@ flowchart TB
           <li>Zuno 映射：`docs/architecture.md` 是 Mermaid 图源；`.agent/programs/` 是当前执行计划；`tools/agent/render_architecture.py` 生成 HTML。</li>
           <li>边界：高频执行细节进入 `.agent/programs/`，稳定结论进入 `docs/architecture/`。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="Development View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
@@ -371,10 +468,13 @@ flowchart TB
           <li>Zuno 映射：Process View 覆盖 API、Agent runtime、工具调用、检索、memory read/write、trace 和 eval。</li>
           <li>边界：SSE / WebSocket 是事件传输通道；trace / eval contract 才是可观测事实。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="Process View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
+flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef event fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
@@ -394,23 +494,39 @@ flowchart LR
   TRACE[&quot;Trace Event Builder&quot;]:::event
   EVAL[&quot;Eval Metadata Writer&quot;]:::event
   OUT[&quot;Answer or Artifact&quot;]
-  UI --&gt; HTTP --&gt; SESSION --&gt; CONTEXT --&gt; CORE
-  CONTEXT --&gt; MEMORY --&gt; CONTEXT
-  CORE --&gt; ROUTER --&gt; DISPATCH
-  DISPATCH --&gt; OBS --&gt; CORE
-  OBS --&gt; POST --&gt; WRITE --&gt; MEMORY
-  POST --&gt; TRACE
-  CORE --&gt; TRACE --&gt; STREAM --&gt; UI
+
+  subgraph IN[&quot;Request Stage&quot;]
+    direction TB
+    UI --&gt; HTTP --&gt; SESSION --&gt; CONTEXT
+    MEMORY --&gt; CONTEXT
+  end
+
+  subgraph RUN[&quot;Runtime Stage&quot;]
+    direction TB
+    CORE --&gt; ROUTER --&gt; DISPATCH --&gt; OBS
+    OBS -. next step .-&gt; CORE
+  end
+
+  subgraph AFTER[&quot;Commit and Delivery&quot;]
+    direction TB
+    POST --&gt; WRITE --&gt; MEMORY
+    POST --&gt; TRACE
+    TRACE --&gt; STREAM --&gt; UI
+    EVAL --&gt; TRACE
+    OUT --&gt; HTTP
+  end
+
+  CONTEXT --&gt; CORE
+  OBS --&gt; POST
   CORE --&gt; EVAL
-  CORE --&gt; OUT --&gt; HTTP
-  OUT --&gt; UI
+  CORE --&gt; OUT
   class UI,HTTP,STREAM,SESSION,CONTEXT,MEMORY,ROUTER,DISPATCH,OBS,POST,WRITE,OUT node;
           </div>
         </figure>
         <details>
           <summary>Mermaid source</summary>
           <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
+flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef event fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
@@ -430,16 +546,32 @@ flowchart LR
   TRACE[&quot;Trace Event Builder&quot;]:::event
   EVAL[&quot;Eval Metadata Writer&quot;]:::event
   OUT[&quot;Answer or Artifact&quot;]
-  UI --&gt; HTTP --&gt; SESSION --&gt; CONTEXT --&gt; CORE
-  CONTEXT --&gt; MEMORY --&gt; CONTEXT
-  CORE --&gt; ROUTER --&gt; DISPATCH
-  DISPATCH --&gt; OBS --&gt; CORE
-  OBS --&gt; POST --&gt; WRITE --&gt; MEMORY
-  POST --&gt; TRACE
-  CORE --&gt; TRACE --&gt; STREAM --&gt; UI
+
+  subgraph IN[&quot;Request Stage&quot;]
+    direction TB
+    UI --&gt; HTTP --&gt; SESSION --&gt; CONTEXT
+    MEMORY --&gt; CONTEXT
+  end
+
+  subgraph RUN[&quot;Runtime Stage&quot;]
+    direction TB
+    CORE --&gt; ROUTER --&gt; DISPATCH --&gt; OBS
+    OBS -. next step .-&gt; CORE
+  end
+
+  subgraph AFTER[&quot;Commit and Delivery&quot;]
+    direction TB
+    POST --&gt; WRITE --&gt; MEMORY
+    POST --&gt; TRACE
+    TRACE --&gt; STREAM --&gt; UI
+    EVAL --&gt; TRACE
+    OUT --&gt; HTTP
+  end
+
+  CONTEXT --&gt; CORE
+  OBS --&gt; POST
   CORE --&gt; EVAL
-  CORE --&gt; OUT --&gt; HTTP
-  OUT --&gt; UI
+  CORE --&gt; OUT
   class UI,HTTP,STREAM,SESSION,CONTEXT,MEMORY,ROUTER,DISPATCH,OBS,POST,WRITE,OUT node;</code></pre>
         </details>
       </section>
@@ -455,6 +587,9 @@ flowchart LR
           <li>Zuno 映射：本地文件、数据库、向量/图存储、模型 provider、MCP 和 trace backend 都是可替换边界。</li>
           <li>边界：近期仍是模块化单体，不是微服务拆分。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="Physical View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
@@ -537,96 +672,107 @@ flowchart TB
           <li>Zuno 映射：文档解析层是企业知识库、GraphRAG、citation 和 eval 的共同前置依赖。</li>
           <li>边界：`auto` 是 router，不是第五种检索算法；`global` 是 community-level prior，不和 chunk-level BM25 直接生硬混榜。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="Scenarios View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
+flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
 
-  UPLOAD[&quot;Upload Enterprise Docs&quot;]
-  PARSE[&quot;Parse Gateway&quot;]
-  CHUNK[&quot;Chunk Metadata ACL&quot;]
-  INDEX[&quot;Index BM25 Vector Graph&quot;]
-  QUERY[&quot;User Query&quot;]
-  CONTEXT[&quot;Context Builder&quot;]
-  MEMORY[&quot;Selected Memory&lt;br/&gt;summary structured&quot;]
-  AGENT[&quot;Controller Agent&quot;]:::accent
+  UPLOAD[&quot;1 Upload Enterprise Docs&lt;br/&gt;pdf docx pptx image code&quot;]
+  PARSE[&quot;2 Parse Gateway&quot;]
+  NORMALIZE[&quot;3 OCR Table Code Metadata&quot;]
+  CHUNK[&quot;4 Chunk and Evidence Anchor&quot;]
+  ACL[&quot;5 ACL Scope Sensitivity Tag&quot;]
+  INDEX[&quot;6 Index&lt;br/&gt;BM25 Vector Graph&quot;]
+  QUERY[&quot;7 User Query&quot;]
+  CONTEXT[&quot;8 Context Builder&lt;br/&gt;query files memory&quot;]
+  MEMORY[&quot;9 Selected Memory&lt;br/&gt;recent summary structured&quot;]
+  AGENT[&quot;10 Controller Agent&quot;]:::accent
   NEED{&quot;Need Retrieval&quot;}:::decision
   MODE{&quot;normal enhanced auto&quot;}:::decision
-  BASIC[&quot;basic&quot;]
-  LOCAL[&quot;local&quot;]
-  GLOBAL[&quot;global&quot;]
-  DRIFT[&quot;drift&quot;]
+  BASIC[&quot;basic&lt;br/&gt;BM25 vector&quot;]
+  LOCAL[&quot;local&lt;br/&gt;entity neighborhood&quot;]
+  GLOBAL[&quot;global&lt;br/&gt;community prior&quot;]
+  DRIFT[&quot;drift&lt;br/&gt;global primer local loop&quot;]
+  FUSION[&quot;Fusion Rerank&lt;br/&gt;Evidence Bundle&quot;]
   EVID[&quot;Evidence and Citation Check&quot;]
+  RETRY[&quot;Retry or Replan Path&quot;]:::decision
   ANSWER[&quot;Answer Report Artifact&quot;]:::accent
   TRACE[&quot;Trace Eval Raw Event&quot;]
   MEMCAND[&quot;Memory Candidate&quot;]
   REVIEW[&quot;Review Promote Decay&quot;]
   MEMSTORE[&quot;Durable Memory&quot;]
-  UPLOAD --&gt; PARSE --&gt; CHUNK --&gt; INDEX
-  MEMSTORE --&gt; CONTEXT
-  QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
+  NEXTREAD[&quot;Next Turn Read Policy&quot;]
+
+  UPLOAD --&gt; PARSE --&gt; NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
+  INDEX --&gt; QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
   NEED --&gt;|No| ANSWER
   NEED --&gt;|Yes| MODE
-  MODE --&gt; BASIC --&gt; EVID
-  MODE --&gt; LOCAL --&gt; EVID
-  MODE --&gt; GLOBAL --&gt; EVID
-  MODE --&gt; DRIFT --&gt; EVID
-  INDEX --&gt; BASIC
-  INDEX --&gt; LOCAL
-  INDEX --&gt; GLOBAL
-  INDEX --&gt; DRIFT
-  EVID --&gt;|retry| CONTEXT
-  EVID --&gt;|pass| ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
-  class UPLOAD,PARSE,CHUNK,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE node;
+  MODE --&gt; BASIC --&gt; FUSION
+  MODE --&gt; LOCAL --&gt; FUSION
+  MODE --&gt; GLOBAL --&gt; FUSION
+  MODE --&gt; DRIFT --&gt; FUSION
+  FUSION --&gt; EVID
+  EVID --&gt;|retry| RETRY
+  EVID --&gt;|pass| ANSWER
+  ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
+  MEMSTORE --&gt; NEXTREAD
+  class UPLOAD,PARSE,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
           </div>
         </figure>
         <details>
           <summary>Mermaid source</summary>
           <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
+flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
 
-  UPLOAD[&quot;Upload Enterprise Docs&quot;]
-  PARSE[&quot;Parse Gateway&quot;]
-  CHUNK[&quot;Chunk Metadata ACL&quot;]
-  INDEX[&quot;Index BM25 Vector Graph&quot;]
-  QUERY[&quot;User Query&quot;]
-  CONTEXT[&quot;Context Builder&quot;]
-  MEMORY[&quot;Selected Memory&lt;br/&gt;summary structured&quot;]
-  AGENT[&quot;Controller Agent&quot;]:::accent
+  UPLOAD[&quot;1 Upload Enterprise Docs&lt;br/&gt;pdf docx pptx image code&quot;]
+  PARSE[&quot;2 Parse Gateway&quot;]
+  NORMALIZE[&quot;3 OCR Table Code Metadata&quot;]
+  CHUNK[&quot;4 Chunk and Evidence Anchor&quot;]
+  ACL[&quot;5 ACL Scope Sensitivity Tag&quot;]
+  INDEX[&quot;6 Index&lt;br/&gt;BM25 Vector Graph&quot;]
+  QUERY[&quot;7 User Query&quot;]
+  CONTEXT[&quot;8 Context Builder&lt;br/&gt;query files memory&quot;]
+  MEMORY[&quot;9 Selected Memory&lt;br/&gt;recent summary structured&quot;]
+  AGENT[&quot;10 Controller Agent&quot;]:::accent
   NEED{&quot;Need Retrieval&quot;}:::decision
   MODE{&quot;normal enhanced auto&quot;}:::decision
-  BASIC[&quot;basic&quot;]
-  LOCAL[&quot;local&quot;]
-  GLOBAL[&quot;global&quot;]
-  DRIFT[&quot;drift&quot;]
+  BASIC[&quot;basic&lt;br/&gt;BM25 vector&quot;]
+  LOCAL[&quot;local&lt;br/&gt;entity neighborhood&quot;]
+  GLOBAL[&quot;global&lt;br/&gt;community prior&quot;]
+  DRIFT[&quot;drift&lt;br/&gt;global primer local loop&quot;]
+  FUSION[&quot;Fusion Rerank&lt;br/&gt;Evidence Bundle&quot;]
   EVID[&quot;Evidence and Citation Check&quot;]
+  RETRY[&quot;Retry or Replan Path&quot;]:::decision
   ANSWER[&quot;Answer Report Artifact&quot;]:::accent
   TRACE[&quot;Trace Eval Raw Event&quot;]
   MEMCAND[&quot;Memory Candidate&quot;]
   REVIEW[&quot;Review Promote Decay&quot;]
   MEMSTORE[&quot;Durable Memory&quot;]
-  UPLOAD --&gt; PARSE --&gt; CHUNK --&gt; INDEX
-  MEMSTORE --&gt; CONTEXT
-  QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
+  NEXTREAD[&quot;Next Turn Read Policy&quot;]
+
+  UPLOAD --&gt; PARSE --&gt; NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
+  INDEX --&gt; QUERY --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; NEED
   NEED --&gt;|No| ANSWER
   NEED --&gt;|Yes| MODE
-  MODE --&gt; BASIC --&gt; EVID
-  MODE --&gt; LOCAL --&gt; EVID
-  MODE --&gt; GLOBAL --&gt; EVID
-  MODE --&gt; DRIFT --&gt; EVID
-  INDEX --&gt; BASIC
-  INDEX --&gt; LOCAL
-  INDEX --&gt; GLOBAL
-  INDEX --&gt; DRIFT
-  EVID --&gt;|retry| CONTEXT
-  EVID --&gt;|pass| ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
-  class UPLOAD,PARSE,CHUNK,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE node;</code></pre>
+  MODE --&gt; BASIC --&gt; FUSION
+  MODE --&gt; LOCAL --&gt; FUSION
+  MODE --&gt; GLOBAL --&gt; FUSION
+  MODE --&gt; DRIFT --&gt; FUSION
+  FUSION --&gt; EVID
+  EVID --&gt;|retry| RETRY
+  EVID --&gt;|pass| ANSWER
+  ANSWER --&gt; TRACE --&gt; MEMCAND --&gt; REVIEW --&gt; MEMSTORE
+  MEMSTORE --&gt; NEXTREAD
+  class UPLOAD,PARSE,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;</code></pre>
         </details>
       </section>
     </section>
@@ -642,9 +788,12 @@ flowchart LR
         </dl>
         <ul class="analysis">
           <li>关注点：领域对象和职责。</li>
-          <li>Zuno 映射：Runtime、Memory、Tool、Knowledge、Ingestion、Workspace 和 Policy 是目标领域子系统；Memory 是 write-manage-read 子系统，不是聊天历史拼接。</li>
+          <li>Zuno 映射：Runtime、Memory、Tool、Knowledge、Ingestion、Workspace 和 Policy 是目标领域子系统；Memory 是 write-manage-read 子系统，Tool 是 manifest-driven control plane，不是临时函数列表。</li>
           <li>边界：GraphRAG 补充 BM25 和向量检索，不替代它们；文档解析是 Knowledge 的上游，不等同于 Memory。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="V&amp;B Logical View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
@@ -668,19 +817,24 @@ flowchart TB
   STRUCT --&gt; TYPES[&quot;Semantic Episodic Procedural&quot;]
   MEMORY --&gt; PACK[&quot;Model Context Packet&quot;]
   MEMORY --&gt; GOV[&quot;Review Promote Decay&quot;]
-  CAPABILITY --&gt; CARD[&quot;ToolCard Registry&quot;]
-  CAPABILITY --&gt; EXEC[&quot;Execution Adapter&quot;]
+  CAPABILITY --&gt; MANIFEST[&quot;Tool Manifest&quot;]
+  MANIFEST --&gt; CARD[&quot;ToolCard Registry&quot;]
+  CARD --&gt; SELECT[&quot;Capability Selector&quot;]
+  SELECT --&gt; TOOLPOL[&quot;Tool Policy Gate&quot;]
+  TOOLPOL --&gt; EXEC[&quot;Execution Adapter&quot;]
+  EXEC --&gt; NORMAL[&quot;Result Normalizer&quot;]
+  NORMAL --&gt; TOOLTRACE[&quot;Tool Trace&quot;]
   KNOWLEDGE --&gt; RET[&quot;Retrieval Fusion Evidence&quot;]
   INGESTION --&gt; DOC[&quot;Parser Registry Chunk ACL&quot;]
   WORKSPACE --&gt; ART[&quot;File Artifact Download&quot;]
   POLICY[&quot;Policy Security Trace Eval&quot;]:::guard
   PLAN --&gt; POLICY
-  CARD --&gt; POLICY
+  TOOLTRACE --&gt; POLICY
   RET --&gt; POLICY
   DOC --&gt; POLICY
   ART --&gt; POLICY
   GOV --&gt; POLICY
-  class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,CARD,EXEC,RET,DOC,ART node;
+  class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;
           </div>
         </figure>
         <details>
@@ -706,19 +860,24 @@ flowchart TB
   STRUCT --&gt; TYPES[&quot;Semantic Episodic Procedural&quot;]
   MEMORY --&gt; PACK[&quot;Model Context Packet&quot;]
   MEMORY --&gt; GOV[&quot;Review Promote Decay&quot;]
-  CAPABILITY --&gt; CARD[&quot;ToolCard Registry&quot;]
-  CAPABILITY --&gt; EXEC[&quot;Execution Adapter&quot;]
+  CAPABILITY --&gt; MANIFEST[&quot;Tool Manifest&quot;]
+  MANIFEST --&gt; CARD[&quot;ToolCard Registry&quot;]
+  CARD --&gt; SELECT[&quot;Capability Selector&quot;]
+  SELECT --&gt; TOOLPOL[&quot;Tool Policy Gate&quot;]
+  TOOLPOL --&gt; EXEC[&quot;Execution Adapter&quot;]
+  EXEC --&gt; NORMAL[&quot;Result Normalizer&quot;]
+  NORMAL --&gt; TOOLTRACE[&quot;Tool Trace&quot;]
   KNOWLEDGE --&gt; RET[&quot;Retrieval Fusion Evidence&quot;]
   INGESTION --&gt; DOC[&quot;Parser Registry Chunk ACL&quot;]
   WORKSPACE --&gt; ART[&quot;File Artifact Download&quot;]
   POLICY[&quot;Policy Security Trace Eval&quot;]:::guard
   PLAN --&gt; POLICY
-  CARD --&gt; POLICY
+  TOOLTRACE --&gt; POLICY
   RET --&gt; POLICY
   DOC --&gt; POLICY
   ART --&gt; POLICY
   GOV --&gt; POLICY
-  class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,CARD,EXEC,RET,DOC,ART node;</code></pre>
+  class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -730,13 +889,16 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：组件和连接器。</li>
-          <li>Zuno 映射：控制由 Agent 集中；能力通过 registry、retrieval router、policy guard 和 evidence checker 进入结果；Memory 通过 read policy 进入 Context Pack，通过 post-turn write path 进入 durable memory。</li>
+          <li>Zuno 映射：控制由 Agent 集中；能力通过 Tool Manifest Registry、Capability Selector、Tool Policy Approval、Executor Adapter、Sandbox、Result Normalizer 和 Retrieval Router 进入结果；Memory 通过 read policy 进入 Context Pack，通过 post-turn write path 进入 durable memory。</li>
           <li>边界：Planner 是 Agent Core Runtime 的内部控制点，不是一个独立顶层业务层。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="Component-and-Connector View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
+flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
@@ -752,7 +914,11 @@ flowchart LR
   PLANNER[&quot;Planner&quot;]
   REACT[&quot;ReAct Executor&quot;]
   TOOLSEL[&quot;Capability Selector&quot;]
-  TOOLREG[&quot;ToolCard Registry&quot;]
+  TOOLREG[&quot;Tool Manifest Registry&quot;]
+  TOOLPOL[&quot;Tool Policy Approval&quot;]:::warn
+  EXECAD[&quot;Executor Adapter&lt;br/&gt;SDK API CLI SSH MCP&quot;]
+  SANDBOX[&quot;Sandbox Budget Timeout&quot;]:::warn
+  NORMAL[&quot;Result Normalizer&quot;]
   RETROUTER[&quot;Retrieval Router&quot;]
   INGEST[&quot;Parse Gateway&quot;]
   POLICY[&quot;Policy Guard&quot;]:::warn
@@ -760,28 +926,43 @@ flowchart LR
   EVID[&quot;Evidence Checker&quot;]:::warn
   CIT[&quot;Citation Builder&quot;]
   TRACE[&quot;Trace Eval Logger&quot;]
-  API --&gt; SESSION --&gt; CONTEXT
-  CONTEXT --&gt; MEMREAD --&gt; MEMSTORE --&gt; CONTEXT
+
+  subgraph ENTRY[&quot;Entry and Context&quot;]
+    direction TB
+    API --&gt; SESSION --&gt; CONTEXT
+    MEMSTORE --&gt; MEMREAD --&gt; CONTEXT
+  end
+
+  subgraph RUNTIME[&quot;Agent Runtime&quot;]
+    direction TB
+    AGENT --&gt; PLANNER --&gt; REACT
+    OBS -. next step .-&gt; AGENT
+  end
+
+  subgraph CAP[&quot;Capability and Evidence&quot;]
+    direction TB
+    REACT --&gt; TOOLSEL --&gt; TOOLREG --&gt; TOOLPOL --&gt; EXECAD --&gt; SANDBOX --&gt; NORMAL --&gt; POLICY
+    REACT --&gt; RETROUTER --&gt; POLICY
+    INGEST --&gt; RETROUTER
+    POLICY --&gt; OBS --&gt; EVID --&gt; CIT
+  end
+
+  subgraph MEMORYC[&quot;Memory Commit&quot;]
+    direction TB
+    OBS --&gt; MEMWRITE --&gt; MEMREVIEW --&gt; MEMSTORE
+  end
+
   CONTEXT --&gt; AGENT
-  AGENT --&gt; PLANNER --&gt; REACT
-  REACT --&gt; TOOLSEL --&gt; TOOLREG
-  REACT --&gt; RETROUTER
-  INGEST --&gt; RETROUTER
-  TOOLREG --&gt; POLICY
-  RETROUTER --&gt; POLICY
-  POLICY --&gt; OBS --&gt; AGENT
-  OBS --&gt; MEMWRITE --&gt; MEMREVIEW --&gt; MEMSTORE
-  OBS --&gt; EVID --&gt; CIT
-  EVID --&gt; TRACE
+  CIT --&gt; TRACE
   MEMREVIEW --&gt; TRACE
   AGENT --&gt; TRACE
-  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,RETROUTER,INGEST,OBS,CIT,TRACE node;
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE node;
           </div>
         </figure>
         <details>
           <summary>Mermaid source</summary>
           <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
+flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
@@ -797,7 +978,11 @@ flowchart LR
   PLANNER[&quot;Planner&quot;]
   REACT[&quot;ReAct Executor&quot;]
   TOOLSEL[&quot;Capability Selector&quot;]
-  TOOLREG[&quot;ToolCard Registry&quot;]
+  TOOLREG[&quot;Tool Manifest Registry&quot;]
+  TOOLPOL[&quot;Tool Policy Approval&quot;]:::warn
+  EXECAD[&quot;Executor Adapter&lt;br/&gt;SDK API CLI SSH MCP&quot;]
+  SANDBOX[&quot;Sandbox Budget Timeout&quot;]:::warn
+  NORMAL[&quot;Result Normalizer&quot;]
   RETROUTER[&quot;Retrieval Router&quot;]
   INGEST[&quot;Parse Gateway&quot;]
   POLICY[&quot;Policy Guard&quot;]:::warn
@@ -805,22 +990,37 @@ flowchart LR
   EVID[&quot;Evidence Checker&quot;]:::warn
   CIT[&quot;Citation Builder&quot;]
   TRACE[&quot;Trace Eval Logger&quot;]
-  API --&gt; SESSION --&gt; CONTEXT
-  CONTEXT --&gt; MEMREAD --&gt; MEMSTORE --&gt; CONTEXT
+
+  subgraph ENTRY[&quot;Entry and Context&quot;]
+    direction TB
+    API --&gt; SESSION --&gt; CONTEXT
+    MEMSTORE --&gt; MEMREAD --&gt; CONTEXT
+  end
+
+  subgraph RUNTIME[&quot;Agent Runtime&quot;]
+    direction TB
+    AGENT --&gt; PLANNER --&gt; REACT
+    OBS -. next step .-&gt; AGENT
+  end
+
+  subgraph CAP[&quot;Capability and Evidence&quot;]
+    direction TB
+    REACT --&gt; TOOLSEL --&gt; TOOLREG --&gt; TOOLPOL --&gt; EXECAD --&gt; SANDBOX --&gt; NORMAL --&gt; POLICY
+    REACT --&gt; RETROUTER --&gt; POLICY
+    INGEST --&gt; RETROUTER
+    POLICY --&gt; OBS --&gt; EVID --&gt; CIT
+  end
+
+  subgraph MEMORYC[&quot;Memory Commit&quot;]
+    direction TB
+    OBS --&gt; MEMWRITE --&gt; MEMREVIEW --&gt; MEMSTORE
+  end
+
   CONTEXT --&gt; AGENT
-  AGENT --&gt; PLANNER --&gt; REACT
-  REACT --&gt; TOOLSEL --&gt; TOOLREG
-  REACT --&gt; RETROUTER
-  INGEST --&gt; RETROUTER
-  TOOLREG --&gt; POLICY
-  RETROUTER --&gt; POLICY
-  POLICY --&gt; OBS --&gt; AGENT
-  OBS --&gt; MEMWRITE --&gt; MEMREVIEW --&gt; MEMSTORE
-  OBS --&gt; EVID --&gt; CIT
-  EVID --&gt; TRACE
+  CIT --&gt; TRACE
   MEMREVIEW --&gt; TRACE
   AGENT --&gt; TRACE
-  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,RETROUTER,INGEST,OBS,CIT,TRACE node;</code></pre>
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -835,10 +1035,13 @@ flowchart LR
           <li>Zuno 映射：Provider 是边界，核心 runtime 不绑定单一 vendor。</li>
           <li>边界：SDK、API、CLI、SSH、MCP 是 execution adapter 或 provider metadata，不是 Capability 的业务顶层分类。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="V&amp;B Deployment View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
+flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
@@ -874,7 +1077,7 @@ flowchart LR
         <details>
           <summary>Mermaid source</summary>
           <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
+flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
   classDef guard fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
@@ -919,6 +1122,9 @@ flowchart LR
           <li>Zuno 映射：Trace、Eval、Evidence、permission、budget、DLP 和 verifier 共同约束质量。</li>
           <li>边界：输出检查不能替代检索前 ACL 和工具前审批；安全必须贯穿输入、检索、工具和输出。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="Quality View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
@@ -1010,6 +1216,9 @@ flowchart TB
           <li>边界：LangGraph 是目标实现候选，用于 state graph、checkpoint、durable execution、human-in-the-loop、streaming 和 resume；它不是“规划模块本身”。</li>
           <li>边界：Reflection 是门控动作，不是每一步强制执行；ToT / LATS 只作为 Future 或离线困难模式，不进入近期默认路径。</li>
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="Agent Loop View">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
@@ -1036,12 +1245,28 @@ flowchart LR
   CAND[&quot;structured memory candidate&quot;]
   REVIEW[&quot;review promote decay&quot;]:::decision
   LONG[&quot;semantic episodic procedural memory&quot;]
-  GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN --&gt; STEP --&gt; CALL --&gt; OBS --&gt; RAW --&gt; WORK --&gt; REFLECT
+
+  subgraph PREPARE[&quot;Prepare&quot;]
+    direction TB
+    GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN
+  end
+
+  subgraph EXECUTE[&quot;Execute&quot;]
+    direction TB
+    STEP --&gt; CALL --&gt; OBS --&gt; RAW --&gt; WORK --&gt; REFLECT
+  end
+
+  subgraph POSTTURN[&quot;Post Turn&quot;]
+    direction TB
+    FINAL --&gt; COMMIT
+    COMMIT --&gt; SUMMARY
+    COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
+  end
+
+  PLAN --&gt; STEP
   REFLECT --&gt;|continue| STEP
   REFLECT --&gt;|replan| REPLAN --&gt; PLAN
-  REFLECT --&gt;|finish| FINAL --&gt; COMMIT
-  COMMIT --&gt; SUMMARY
-  COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
+  REFLECT --&gt;|finish| FINAL
   SUMMARY -. next turn .-&gt; READMEM
   LONG -. next turn .-&gt; READMEM
   class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,SUMMARY,CAND,LONG node;
@@ -1073,18 +1298,43 @@ flowchart LR
   CAND[&quot;structured memory candidate&quot;]
   REVIEW[&quot;review promote decay&quot;]:::decision
   LONG[&quot;semantic episodic procedural memory&quot;]
-  GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN --&gt; STEP --&gt; CALL --&gt; OBS --&gt; RAW --&gt; WORK --&gt; REFLECT
+
+  subgraph PREPARE[&quot;Prepare&quot;]
+    direction TB
+    GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN
+  end
+
+  subgraph EXECUTE[&quot;Execute&quot;]
+    direction TB
+    STEP --&gt; CALL --&gt; OBS --&gt; RAW --&gt; WORK --&gt; REFLECT
+  end
+
+  subgraph POSTTURN[&quot;Post Turn&quot;]
+    direction TB
+    FINAL --&gt; COMMIT
+    COMMIT --&gt; SUMMARY
+    COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
+  end
+
+  PLAN --&gt; STEP
   REFLECT --&gt;|continue| STEP
   REFLECT --&gt;|replan| REPLAN --&gt; PLAN
-  REFLECT --&gt;|finish| FINAL --&gt; COMMIT
-  COMMIT --&gt; SUMMARY
-  COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
+  REFLECT --&gt;|finish| FINAL
   SUMMARY -. next turn .-&gt; READMEM
   LONG -. next turn .-&gt; READMEM
   class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,SUMMARY,CAND,LONG node;</code></pre>
         </details>
       </section>
     </section>
+    <dialog class="diagram-dialog" id="diagram-dialog">
+      <div class="dialog-shell">
+        <div class="dialog-toolbar">
+          <div class="dialog-title" id="diagram-dialog-title">Diagram</div>
+          <button type="button" id="diagram-dialog-close">关闭</button>
+        </div>
+        <div class="dialog-canvas" id="diagram-dialog-canvas"></div>
+      </div>
+    </dialog>
   </main>
   <script type="module">
     import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
@@ -1093,12 +1343,12 @@ flowchart LR
       theme: "base",
       securityLevel: "strict",
       flowchart: {
-        useMaxWidth: false,
+        useMaxWidth: true,
         htmlLabels: true,
-        curve: "linear",
-        padding: 16,
-        nodeSpacing: 34,
-        rankSpacing: 44
+        curve: "basis",
+        padding: 10,
+        nodeSpacing: 24,
+        rankSpacing: 34
       },
       themeVariables: {
         background: "#f7f8fb",
@@ -1109,6 +1359,31 @@ flowchart LR
         lineColor: "#52616f",
         textColor: "#16202a",
         fontFamily: "Inter, Segoe UI, Microsoft YaHei, Arial"
+      }
+    });
+    const dialog = document.getElementById("diagram-dialog");
+    const dialogTitle = document.getElementById("diagram-dialog-title");
+    const dialogCanvas = document.getElementById("diagram-dialog-canvas");
+    const closeButton = document.getElementById("diagram-dialog-close");
+
+    function openDiagram(button) {
+      const section = button.closest(".diagram-section");
+      const sourceSvg = section?.querySelector(".mermaid svg");
+      if (!section || !sourceSvg || !dialog || !dialogCanvas || !dialogTitle) {
+        return;
+      }
+      dialogTitle.textContent = button.dataset.diagramTitle || "Diagram";
+      dialogCanvas.replaceChildren(sourceSvg.cloneNode(true));
+      dialog.showModal();
+    }
+
+    document.querySelectorAll(".diagram-open").forEach((button) => {
+      button.addEventListener("click", () => openDiagram(button));
+    });
+    closeButton?.addEventListener("click", () => dialog?.close());
+    dialog?.addEventListener("click", (event) => {
+      if (event.target === dialog) {
+        dialog.close();
       }
     });
   </script>

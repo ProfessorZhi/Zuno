@@ -17,7 +17,7 @@ docs/architecture.html
 
 ## Current Truth
 
-Zuno 当前固定登记十类架构视图。十类图不是十张装饰图，也不是十张粗粒度模块示意图，而是十个不同架构关注面。每张图都应至少展开到二级组件，让读者能看出 Agent Core、Memory、Tool、Knowledge、Document Ingestion、Security、Trace / Eval 与 Platform 的连接关系。Memory 图层必须体现 write-manage-read：Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay。
+Zuno 当前固定登记十类架构视图。十类图不是十张装饰图，也不是十张粗粒度模块示意图，而是十个不同架构关注面。每张图都应至少展开到二级组件，让读者能看出 Agent Core、Memory、Tool、Knowledge、Document Ingestion、Security、Trace / Eval 与 Platform 的连接关系。Memory 图层必须体现 write-manage-read：Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay。Tool 图层必须体现 Tool Control Plane：Tool Manifest、ToolCard Registry、Capability Selector、Policy / Approval Gate、Executor Adapter、Sandbox、Result Normalizer、Tool Trace / Audit。
 
 ```text
 4+1 View Model 五类图
@@ -30,27 +30,27 @@ Agent Loop 在理论上可以归入 Process View 或 Component-and-Connector Vie
 
 | # | Diagram | Type | Theory Scope | Source docs | HTML |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Logical View | 4+1 Logical | Model、Agent Core、Memory、Tool、Knowledge、Ingestion、Security、Eval、Platform 的职责分层；Memory 展开 Raw Event Log / Recent Window / Task Summary / Structured Memory / Context Pack | `docs/architecture.md` | yes |
+| 1 | Logical View | 4+1 Logical | Model、Agent Core、Memory、Tool、Knowledge、Ingestion、Security、Eval、Platform 的职责分层；Memory 展开 Raw Event Log / Recent Window / Task Summary / Structured Memory / Context Pack；Tool 展开 Tool Control Plane | `docs/architecture.md` | yes |
 | 2 | Development View | 4+1 Development | 代码、文档、`.agent` program、renderer、verifier 和 tests 如何组织 | `docs/architecture.md` | yes |
 | 3 | Process View | 4+1 Process | API、Context、Agent Core、工具/检索、memory read/write、事件流和 eval trace 如何运行 | `docs/architecture.md` | yes |
 | 4 | Physical View | 4+1 Physical | 本地优先部署、存储、模型、MCP、LangSmith / trace backend 和外部依赖节点 | `docs/architecture.md` | yes |
 | 5 | Scenarios View | 4+1 Scenarios | 企业知识库从 upload / parse / index 到 answer / artifact，再到 memory candidate / review / durable memory 的场景贯通 | `docs/architecture.md` | yes |
-| 6 | V&B Logical View | View & Beyond Logical | Runtime、Memory、Capability、Knowledge、Ingestion、Workspace、Policy 等领域子系统；Memory 是 write-manage-read 子系统 | `docs/architecture.md` | yes |
-| 7 | Component-and-Connector View | View & Beyond C&C | Planner、ReAct Executor、Memory Read Policy、Memory Stores、Memory Review Gate、Tool Registry、Retrieval Router、Parse Gateway、Policy、Evidence、Trace 的连接 | `docs/architecture.md` | yes |
+| 6 | V&B Logical View | View & Beyond Logical | Runtime、Memory、Capability、Knowledge、Ingestion、Workspace、Policy 等领域子系统；Memory 是 write-manage-read 子系统，Tool 是 manifest-driven control plane | `docs/architecture.md` | yes |
+| 7 | Component-and-Connector View | View & Beyond C&C | Planner、ReAct Executor、Memory Read Policy、Memory Stores、Memory Review Gate、Tool Manifest Registry、Capability Selector、Tool Policy Approval、Executor Adapter、Sandbox、Result Normalizer、Retrieval Router、Parse Gateway、Policy、Evidence、Trace 的连接 | `docs/architecture.md` | yes |
 | 8 | V&B Deployment View | View & Beyond Deployment | SDK、API、CLI、SSH、MCP、Model、Search、Vector、Graph、Trace backend 的可替换 provider 边界 | `docs/architecture.md` | yes |
 | 9 | Quality View | View & Beyond Quality | 输入、检索、工具、输出、安全、稳定性、观测、评测、成本和 release gate | `docs/architecture.md` | yes |
 | 10 | Agent Loop View | Zuno 专题图 | prepare_context / memory read / plan / ReAct / observe / raw event append / reflect / replan / post_turn_commit / memory promotion | `docs/architecture.md` | yes |
 
 ## Update Triggers
 
-- Logical View：职责分层、Model Gateway、Agent Runtime、Memory、Capability、Knowledge、Document Ingestion、Security、Trace / Eval、Platform 边界变化；Memory tier 或 write/read 责任变化。
+- Logical View：职责分层、Model Gateway、Agent Runtime、Memory、Capability、Knowledge、Document Ingestion、Security、Trace / Eval、Platform 边界变化；Memory tier 或 write/read 责任变化；Tool Control Plane 责任变化。
 - Development View：repo 目录、backend 六层、docs / `.agent` 边界、active program、renderer、verifier、tools / tests 组织变化。
 - Process View：API、application service、Context Builder、Agent runtime、工具调用、检索、memory read/write、LLM 调用、事件流、trace / eval 关系变化。
 - Physical View：本地部署、FastAPI、Web/Desktop、数据库、向量库、图存储、LLM/MCP、LangSmith / trace backend 外部依赖变化。
 - Scenarios View：enterprise knowledge base、upload、parse、index、product mode、Context Builder、Basic / Enhanced / Auto、Evidence Check、Citation、Trace、memory candidate / review / promotion 流程变化。
 - V&B Logical View：Runtime、Memory、Tool、Knowledge、Document Ingestion、Workspace、Policy 等领域子系统变化。
-- Component-and-Connector View：API、Controller Agent、Planner、ReAct Executor、Memory Read Policy、Memory Stores、Memory Write Path、Memory Review Gate、Tool Registry、Retrieval Router、Parse Gateway、Policy Guard、Evidence Checker、Citation Builder、Trace Logger 连接变化。
-- V&B Deployment View：Local Storage、SQL、Vector Store、Graph Store、Model Gateway、Search、SDK/API/CLI/SSH/MCP provider 变化。
+- Component-and-Connector View：API、Controller Agent、Planner、ReAct Executor、Memory Read Policy、Memory Stores、Memory Write Path、Memory Review Gate、Tool Manifest Registry、Capability Selector、Tool Policy Approval、Executor Adapter、Sandbox、Result Normalizer、Retrieval Router、Parse Gateway、Policy Guard、Evidence Checker、Citation Builder、Trace Logger 连接变化。
+- V&B Deployment View：Local Storage、SQL、Vector Store、Graph Store、Model Gateway、Search、SDK/API/CLI/SSH/MCP provider、executor adapter、sandbox / approval boundary 变化。
 - Quality View：performance、reliability、security、DLP、permission、observability、evaluation、cost、resilience、governance gate 变化。
 - Agent Loop View：prepare_context、memory read、intent/router、Plan、ReAct、tool/retrieval dispatch、Observation、raw event append、Working Memory、Reflection、Replan、post_turn_commit、summary update、structured memory candidate / promotion 循环变化。
 

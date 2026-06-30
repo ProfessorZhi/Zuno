@@ -28,7 +28,7 @@ status: pending
 
 - `docs/architecture.md` 仍只有十个 Mermaid block。
 - `docs/architecture.html` 由 renderer 生成。
-- 十类图展示 Agent Core、Memory read/write、Document Ingestion、Security、Trace / Eval、Tool adapter 和 GraphRAG 的二级组件。
+- 十类图展示 Agent Core、Memory read/write、Tool Control Plane、Document Ingestion、Security、Trace / Eval、Tool adapter 和 GraphRAG 的二级组件。
 
 ## 验证命令
 

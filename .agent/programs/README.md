@@ -11,7 +11,7 @@
 
 ## Program 目标
 
-本 program 只做架构文档、架构图 HTML、图清单、program 状态和后续执行计划的细化，重点覆盖 Agent Core、Memory Layer、Document Ingestion、安全、Trace / Eval 和企业知识库场景。它不实施 runtime feature，不新增 API / DB / frontend 行为。
+本 program 只做架构文档、架构图 HTML、图清单、program 状态和后续执行计划的细化，重点覆盖 Agent Core、Memory Layer、Tool Control Plane、Document Ingestion、安全、Trace / Eval 和企业知识库场景。它不实施 runtime feature，不新增 API / DB / frontend 行为。
 
 ## 前台文件
 

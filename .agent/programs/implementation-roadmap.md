@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再从图反推出 Memory Layer、企业知识库、文档解析、安全和评测的后续执行计划。
+**Goal:** 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再从图反推出 Memory Layer、Tool Control Plane、企业知识库、文档解析、安全和评测的后续执行计划。
 
-**Architecture:** 本 program 不改 runtime。它把 `Model / Agent Core Runtime / Memory / Tool / Knowledge / Document Ingestion / Security / Trace-Eval / Platform` 写进 Target 架构，并保持 Current / Target / Future / History 边界。Memory Layer 明确为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay 的 write-manage-read 子系统。十类图仍保持十个 canonical title，但每张图展开到二级组件。
+**Architecture:** 本 program 不改 runtime。它把 `Model / Agent Core Runtime / Memory / Tool / Knowledge / Document Ingestion / Security / Trace-Eval / Platform` 写进 Target 架构，并保持 Current / Target / Future / History 边界。Memory Layer 明确为 Raw Event Log、Recent Window、Task Summary、Structured Long-term Memory、Context Pack、PostTurn Pipeline、review / promotion / decay 的 write-manage-read 子系统。Tool Layer 明确为 Tool Manifest、ToolCard Registry、Capability Selector、Tool Policy / Approval Gate、Executor Adapter、Sandbox、Result Normalizer、Tool Trace / Audit 的 Tool Control Plane。十类图仍保持十个 canonical title，但每张图展开到二级组件。
 
 **Tech Stack:** Markdown、Mermaid、`tools/agent/render_architecture.py`、Zuno `.agent/programs` 生命周期、repo verifiers、pytest repo tests。
 

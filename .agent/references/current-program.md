@@ -9,7 +9,7 @@ current_phase: PHASE01_architecture-state-and-program-boot
 
 ## Program 目标
 
-本 program 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Document Ingestion、企业知识库场景、安全治理、Trace / Eval 和 LangSmith 适配。
+本 program 先细化 Zuno 目标架构文档、十类 Mermaid 架构图和生成 HTML，再从细化后的架构图反推出下一阶段执行计划。细化重点包括 Agent Core Runtime、Memory Layer、Tool Control Plane、Document Ingestion、企业知识库场景、安全治理、Trace / Eval 和 LangSmith 适配。
 
 它不是 runtime feature implementation，不新增 API / DB schema / frontend 行为，不把 Target 写成 Current。Memory Layer 的生产级 Raw Event Log、DB-backed memory、read/write path、review / promotion / decay 和 memory eval 仍是 Target。
 

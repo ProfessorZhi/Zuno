@@ -132,6 +132,10 @@ def verify_architecture_html_sync() -> list[str]:
         "Memory Review Gate",
         "structured memory candidate",
         "write-manage-read",
+        "Tool Control Plane",
+        "Tool Manifest Registry",
+        "Tool Policy Approval",
+        "Result Normalizer",
     ]:
         if phrase not in architecture_source:
             errors.append(f"docs/architecture.md missing diagram sync phrase: {phrase}")
@@ -219,10 +223,14 @@ def verify_architecture_view_contract() -> list[str]:
     if html_page.count("<summary>Mermaid source</summary>") != 10:
         errors.append("docs/architecture.html must expose Mermaid source for each diagram")
     for phrase in [
-        "overflow-x: auto",
-        "min-width: 760px",
+        "overflow: hidden",
+        "max-width: 100%",
+        "展开全屏查看",
+        "diagram-open",
+        "diagram-dialog",
+        "dialog-canvas",
         "securityLevel: \"strict\"",
-        "useMaxWidth: false",
+        "useMaxWidth: true",
     ]:
         if phrase not in html_page:
             errors.append(f"docs/architecture.html missing visual safety phrase: {phrase}")

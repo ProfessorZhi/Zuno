@@ -247,6 +247,9 @@ def _render_diagram_card(diagram: Diagram, index: int) -> str:
         <ul class="analysis">
 {bullets}
         </ul>
+        <div class="diagram-actions">
+          <button type="button" class="diagram-open" data-diagram-title="{title}">展开全屏查看</button>
+        </div>
         <figure class="diagram-frame">
           <div class="mermaid">
 {mermaid}
@@ -299,7 +302,7 @@ def render_html(diagrams: list[Diagram]) -> str:
       color: var(--zuno-text);
     }}
     main {{
-      max-width: 980px;
+      max-width: 1180px;
       margin: 0 auto;
       padding: 52px 32px 70px;
     }}
@@ -399,26 +402,97 @@ def render_html(diagrams: list[Diagram]) -> str:
     }}
     .diagram-frame {{
       margin: 16px auto 10px;
-      padding: 18px;
-      max-width: 1120px;
-      overflow-x: auto;
+      box-sizing: border-box;
+      width: 100%;
+      padding: 14px;
+      max-width: 100%;
+      overflow: hidden;
       border: 1px solid var(--zuno-border);
       border-radius: 6px;
       background: #ffffff;
     }}
+    .diagram-actions {{
+      display: flex;
+      justify-content: flex-end;
+      margin: 6px 0 8px;
+    }}
+    .diagram-actions button,
+    .diagram-dialog button {{
+      border: 1px solid var(--zuno-border);
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--zuno-text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      line-height: 1.2;
+      padding: 7px 12px;
+    }}
+    .diagram-actions button:hover,
+    .diagram-dialog button:hover {{
+      background: #f7f8fb;
+    }}
     .mermaid {{
       width: 100%;
       min-height: 120px;
+      display: flex;
+      justify-content: center;
       text-align: center;
     }}
     .mermaid svg {{
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      min-width: 0;
+      height: auto !important;
+    }}
+    .diagram-dialog {{
+      width: min(96vw, 1500px);
+      height: min(92vh, 980px);
+      padding: 0;
+      border: 1px solid var(--zuno-border);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--zuno-text);
+    }}
+    .diagram-dialog::backdrop {{
+      background: rgba(22, 32, 42, 0.42);
+    }}
+    .dialog-shell {{
+      box-sizing: border-box;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      height: 100%;
+      padding: 14px;
+    }}
+    .dialog-toolbar {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #e3e7ec;
+      padding-bottom: 10px;
+    }}
+    .dialog-title {{
+      font-size: 16px;
+      font-weight: 650;
+    }}
+    .dialog-canvas {{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      overflow: hidden;
+    }}
+    .dialog-canvas svg {{
       width: auto !important;
-      max-width: none;
-      min-width: 760px;
-      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      height: auto !important;
     }}
     details {{
-      max-width: 780px;
+      max-width: 100%;
       margin: 8px auto 0;
       font-size: 13px;
       color: #52616f;
@@ -441,6 +515,15 @@ def render_html(diagrams: list[Diagram]) -> str:
       <p class="sync">Source: <code>docs/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture.html</code>.</p>
     </header>
 {content}
+    <dialog class="diagram-dialog" id="diagram-dialog">
+      <div class="dialog-shell">
+        <div class="dialog-toolbar">
+          <div class="dialog-title" id="diagram-dialog-title">Diagram</div>
+          <button type="button" id="diagram-dialog-close">关闭</button>
+        </div>
+        <div class="dialog-canvas" id="diagram-dialog-canvas"></div>
+      </div>
+    </dialog>
   </main>
   <script type="module">
     import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
@@ -449,12 +532,12 @@ def render_html(diagrams: list[Diagram]) -> str:
       theme: "base",
       securityLevel: "strict",
       flowchart: {{
-        useMaxWidth: false,
+        useMaxWidth: true,
         htmlLabels: true,
-        curve: "linear",
-        padding: 16,
-        nodeSpacing: 34,
-        rankSpacing: 44
+        curve: "basis",
+        padding: 10,
+        nodeSpacing: 24,
+        rankSpacing: 34
       }},
       themeVariables: {{
         background: "{PALETTE['background']}",
@@ -465,6 +548,31 @@ def render_html(diagrams: list[Diagram]) -> str:
         lineColor: "{PALETTE['line']}",
         textColor: "{PALETTE['text']}",
         fontFamily: "Inter, Segoe UI, Microsoft YaHei, Arial"
+      }}
+    }});
+    const dialog = document.getElementById("diagram-dialog");
+    const dialogTitle = document.getElementById("diagram-dialog-title");
+    const dialogCanvas = document.getElementById("diagram-dialog-canvas");
+    const closeButton = document.getElementById("diagram-dialog-close");
+
+    function openDiagram(button) {{
+      const section = button.closest(".diagram-section");
+      const sourceSvg = section?.querySelector(".mermaid svg");
+      if (!section || !sourceSvg || !dialog || !dialogCanvas || !dialogTitle) {{
+        return;
+      }}
+      dialogTitle.textContent = button.dataset.diagramTitle || "Diagram";
+      dialogCanvas.replaceChildren(sourceSvg.cloneNode(true));
+      dialog.showModal();
+    }}
+
+    document.querySelectorAll(".diagram-open").forEach((button) => {{
+      button.addEventListener("click", () => openDiagram(button));
+    }});
+    closeButton?.addEventListener("click", () => dialog?.close());
+    dialog?.addEventListener("click", (event) => {{
+      if (event.target === dialog) {{
+        dialog.close();
       }}
     }});
   </script>

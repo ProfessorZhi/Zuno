@@ -48,7 +48,7 @@ Zuno 下一阶段的架构表达不再只停留在“大模块名”，而要把
 | Model / Gateway | 管理模型 provider、本地模型、模型选择、上下文窗口、成本和延迟策略。 | 作为 Platform 能力进入目标图，不把某个 vendor 写死为 Current。 |
 | Agent Core Runtime | 承载 `prepare_context -> plan -> ReAct -> observe -> reflect -> replan -> post_turn_commit` 的控制循环。 | Planning 是 runtime 内部控制能力，不是独立顶层业务层。 |
 | Context / Memory | 生成 Context Pack，管理 Raw Event Log、recent window、task summary、长期语义/情节/程序性记忆、graph memory 和 review / promotion / decay 流。 | 目标是生产级 write-manage-read 记忆系统；当前仍是 foundation。 |
-| Capability / Tool | 用 ToolCard 管理工具语义、权限、成本、健康状态、side effect 和执行 adapter。 | SDK / API / CLI / SSH / MCP 是 execution mode，不是业务顶层分类。 |
+| Capability / Tool | 用 ToolCard / manifest 管理工具语义、权限、成本、健康状态、side effect、approval、executor adapter、result normalization 和 tool trace。 | SDK / API / CLI / SSH / MCP 是 execution mode，不是业务顶层分类。 |
 | Knowledge / Retrieval | 管理 `basic / local / global / drift`、GraphRAG、retrieval fusion、evidence、citation。 | Knowledge 可作为 capability 被 Agent 调用，但架构上单独成层。 |
 | Document Ingestion | 管理 upload、format detection、parser registry、OCR/VLM、chunk metadata、ACL 继承和 indexing handoff。 | 企业知识库场景的前置层，不能继续隐含在普通工具调用里。 |
 | Security / Policy | 管理输入检查、PII/商业秘密脱敏、prompt injection 防护、chunk 级权限、工具审批和输出 DLP。 | 横切层，必须覆盖输入、检索、工具和输出。 |
@@ -317,24 +317,55 @@ LangGraph 是这个 Agent Core Runtime 的目标实现候选：它适合承载 s
 
 ToT / LATS 这类高成本树搜索不作为产品默认路径；它们只能作为未来困难模式或离线分析路径。
 
-## ToolCard 与 execution adapter
+## ToolCard、manifest 与 Tool Control Plane
 
-工具层按能力语义治理，不按接入方式拆顶层目录。目标 ToolCard 至少描述：
+工具层按能力语义治理，不按接入方式拆顶层目录。目标形态是 Tool Control Plane：
 
 ```text
-capability type: search | document | email | database | artifact | code | ssh
-execution mode: local_function | local_sdk | sdk_to_api | api | local_cli | cli_to_api | ssh | mcp_local | mcp_remote
+Tool Manifest
+  -> ToolCard Registry
+  -> Capability Selector
+  -> Tool Policy / Approval Gate
+  -> Executor Adapter
+  -> Sandbox / Budget / Timeout
+  -> Result Normalizer
+  -> Tool Trace / Audit Event
+```
+
+Tool Manifest 是工具注册真相源，ToolCard 是给检索和模型选择使用的 compact projection。Runtime 先检索 compact ToolCard，选中后再加载 full input/output schema 和 executor metadata，避免每轮把所有工具完整 schema 塞进上下文。
+
+目标 ToolCard / manifest 至少描述：
+
+```text
+tool name / aliases / owner
+capability type: search | document | email | database | artifact | code | ssh | retrieval
+execution mode: local_function | local_sdk | sdk_to_api | api | local_cli | cli_to_api | ssh | mcp_local | mcp_remote | graph_retrieval
+input_schema / output_schema
 permission level
 side effect level
 cost / latency / timeout
 approval policy
 health and fallback policy
 result normalization contract
+audit and trace contract
 ```
 
 MCP 可以包装本地函数、SDK、CLI、API、数据库、文件系统或 SSH。CLI 本身通常是本地入口，但它背后可以是本地程序、远程 API 或 SSH 远程 shell。Zuno 不把这些接入方式写成业务顶层分类，而是把它们放进 ToolCard / execution adapter metadata，让 runtime 能统一做权限、预算、审计和 fallback。
 
 高副作用能力，例如邮件发送、SSH、外部写操作、删除/覆盖类工具，默认需要 approval / interrupt / audit trace。
+
+目标执行器边界：
+
+| Executor | 目标作用 | 必要治理 |
+| --- | --- | --- |
+| `LocalFunctionExecutor` / `LocalSdkExecutor` | 调用进程内函数或本地 SDK。 | input schema、timeout、异常标准化、trace span。 |
+| `ApiExecutor` / `RemoteSdkExecutor` | 调用 HTTP / SDK 封装的远程服务。 | auth ref、retry、network policy、cost/latency trace。 |
+| `CliExecutor` | 执行本机 CLI。 | command allowlist、cwd/env policy、shell injection 防护、output truncation。 |
+| `SshExecutor` | 在远程主机执行受控命令。 | host/user allowlist、approval、timeout、non-root policy、audit event。 |
+| `McpExecutor` | 调用 stdio 或 HTTP MCP server 暴露的 tools/resources/prompts。 | transport、server trust profile、auth/audience、session policy、tool allowlist。 |
+| `GraphRetrievalExecutor` | 调用 Knowledge / GraphRAG 检索能力。 | product mode、query method、budget、evidence/citation policy。 |
+
+Tool result 不直接作为 final answer。Result Normalizer 必须输出统一对象：`tool_name`、`executor_type`、`ok/error_code`、`latency_ms`、`cost`、`artifact_refs`、`evidence_refs`、`sanitized_content`、`raw_result_ref`、`trace_id`。模型只消费 sanitized content 和必要 evidence refs；raw result 进入受控 artifact / trace 存储。
 
 ## Security、Trace 与 Eval
 
