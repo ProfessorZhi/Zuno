@@ -12,6 +12,23 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 EXPECTED_EXPORTS = {
+    "zuno.knowledge.agentic_graphrag": [
+        "AgenticGraphRAGTrace",
+        "AgenticRetrievalRouter",
+        "Citation",
+        "CitationBuilder",
+        "EvidenceBundle",
+        "EvidenceItem",
+        "FusionStage",
+        "GraphRAGIndexPipelineContract",
+        "ProductMode",
+        "QueryMethod",
+        "RetrievalRouterDecision",
+        "RetrievalRouterInput",
+        "StagedFusionPlan",
+        "UnsupportedClaimCheck",
+        "UnsupportedClaimChecker",
+    ],
     "zuno.knowledge.contracts": [
         "GraphRAGProjectContract",
         "GraphRAGExtractorConfig",
@@ -106,10 +123,13 @@ def test_knowledge_layer_modules_reuse_legacy_foundation_objects() -> None:
 
 def test_knowledge_package_facade_points_at_layer_modules() -> None:
     import zuno.knowledge as knowledge
+    from zuno.knowledge.agentic_graphrag import AgenticRetrievalRouter, ProductMode
     from zuno.knowledge.contracts import GraphRAGExtractorConfig, GraphRAGProjectContract
     from zuno.knowledge.query_service import KnowledgeQueryService
     from zuno.knowledge.retrieval import RetrievalPlanner
 
+    assert knowledge.AgenticRetrievalRouter is AgenticRetrievalRouter
+    assert knowledge.ProductMode is ProductMode
     assert knowledge.GraphRAGProjectContract is GraphRAGProjectContract
     assert knowledge.GraphRAGExtractorConfig is GraphRAGExtractorConfig
     assert knowledge.KnowledgeQueryService is KnowledgeQueryService

@@ -12,7 +12,7 @@
 
 state: active
 program: zuno-master-architecture-implementation-v1
-current_phase: PHASE08_rag-graphrag-evidence-citation
+current_phase: PHASE09_security-governance-sandbox
 
 每次新 program 都从 `PHASE01` 开始编号。
 
@@ -125,8 +125,8 @@ Runtime implementation paths opened by later phases:
 | PHASE05 | completed | Single Controller Agent Runtime / LangGraph-compatible harness。 |
 | PHASE06 | completed | Context / Memory read-write-manage 系统。 |
 | PHASE07 | completed | Tool Control Plane、MCP、approval、executor adapter、sandbox。 |
-| PHASE08 | active | RAG/GraphRAG、retrieval fusion、evidence/citation。 |
-| PHASE09 | pending | Security governance、DLP、prompt injection 防护、sandbox。 |
+| PHASE08 | completed | Agentic Retrieval Router、staged fusion、EvidenceBundle、Citation Builder、unsupported claim check、GraphRAG index pipeline contract。 |
+| PHASE09 | active | Security governance、DLP、prompt injection 防护、sandbox。 |
 | PHASE10 | pending | LangSmith-compatible trace/eval、offline/online eval、CI gate。 |
 | PHASE11 | pending | 架构 Markdown、HTML、README、图集和展示文档更新。 |
 | PHASE12 | pending | 全量验证、release baseline、归档和推送。 |
@@ -229,7 +229,7 @@ Set these state values in `.agent/programs/current.md`, `.agent/programs/impleme
 ```text
 program: zuno-master-architecture-implementation-v1
 state: active
-current_phase: PHASE08_rag-graphrag-evidence-citation
+current_phase: PHASE09_security-governance-sandbox
 ```
 
 - [ ] **Step 4: Archive ChatGPT research mode artifacts**
@@ -570,7 +570,7 @@ High-side-effect tools such as email send, external write, SSH, delete, overwrit
 
 ## Task 8: Agentic GraphRAG / Evidence / Citation
 
-Status: pending
+Status: completed
 
 **Files:**
 - Modify/Create: `src/backend/zuno/knowledge/**`
@@ -580,7 +580,7 @@ Status: pending
 - Modify/Create: `tests/evals/**`
 - Modify: `docs/architecture/architecture.md`
 
-- [ ] **Step 1: Preserve user-facing product mode contract**
+- [x] **Step 1: Preserve user-facing product mode contract**
 
 Product modes:
 
@@ -590,7 +590,7 @@ enhanced -> retrieval required, Agentic Retrieval Router selects method(s)
 auto -> Agent first decides if retrieval is needed, then selects method(s)
 ```
 
-- [ ] **Step 2: Preserve internal query method contract**
+- [x] **Step 2: Preserve internal query method contract**
 
 Resolved query methods:
 
@@ -603,17 +603,19 @@ drift
 
 `auto` is never a final resolved query method.
 
-- [ ] **Step 3: Add Agentic Retrieval Router contract**
+- [x] **Step 3: Add Agentic Retrieval Router contract**
 
 Router input must include product mode, user query, workspace scope, context pack, ACL scope, budget, evidence state and fallback history. Router output must include candidate methods, resolved method(s), route reason, fallback reason and trace metadata.
 
-- [ ] **Step 4: Implement staged fusion**
+- [x] **Step 4: Implement staged fusion**
 
 `global` acts as community-level prior. It must not be flattened directly into BM25 chunk ranking without evidence-stage design.
 
+PHASE08 Current result: `src/backend/zuno/knowledge/agentic_graphrag.py` fixes the product mode policy, internal method set, router decision trace, staged fusion contract, EvidenceBundle / CitationBuilder / UnsupportedClaimChecker and Document IR -> GraphRAG index pipeline contract. Production-grade extraction, RRF/rerank runtime, community report generation and index jobs remain Target.
+
 ## Task 9: Security / Governance / Sandbox
 
-Status: pending
+Status: active
 
 **Files:**
 - Modify/Create: `src/backend/zuno/platform/security/**`

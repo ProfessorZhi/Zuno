@@ -126,7 +126,7 @@ pytest -q tests/agent/test_hooks_evidence_trace_artifacts.py tests/agent/test_ge
 PHASE08 GraphRAG 知识运行时基础验证：
 
 ```powershell
-pytest -q tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/graphrag/test_graphrag_project_contracts.py tests/graphrag/test_graphrag_project_loader.py tests/graphrag/test_structured_graph_extractor_contract.py tests/retrieval/test_enhanced_retrieval_composition.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
+pytest -q tests/agent/test_agentic_graphrag_contract.py tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/graphrag/test_graphrag_project_contracts.py tests/graphrag/test_graphrag_project_loader.py tests/graphrag/test_structured_graph_extractor_contract.py tests/retrieval/test_enhanced_retrieval_composition.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider
 python tools/evals/zuno/contract_review_eval/run_contract_eval.py --profiles dev_offline,dev_local,demo --output-dir .local/evals/zuno/phase08/contract_review
 ```
 

@@ -1,6 +1,6 @@
 # PHASE09 Security Governance Sandbox
 
-status: pending
+status: active
 
 ## 目标
 

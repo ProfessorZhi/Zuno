@@ -1,6 +1,6 @@
 # PHASE08 RAG GraphRAG Evidence Citation
 
-status: active
+status: completed
 
 ## 目标
 
@@ -10,19 +10,19 @@ status: active
 
 ## 步骤
 
-- [ ] 保持 product mode：normal、enhanced、auto。
-- [ ] 明确 mode policy：`normal -> basic`；`enhanced -> retrieval required, Agent selects method(s)`；`auto -> Agent first decides retrieval need, then selects method(s)`。
-- [ ] 保持 resolved query method：basic、local、global、drift；`auto` 不允许成为最终 resolved query method。
-- [ ] 建立 Agentic Retrieval Router contract，输入包含 query、workspace、context pack、product mode、budget、ACL、evidence state 和 fallback history。
-- [ ] 实现或强化 BM25 + dense vector + RRF + optional rerank。
-- [ ] 实现 GraphRAG extraction、community report、local/global/drift query 的成熟路径；`local/global/drift` 是 GraphRAG channel，`basic` 是非图谱混合检索 baseline。
-- [ ] 建立 staged fusion：`global` 先产出 community-level prior / theme / subquestions，再由 `local` 或 `basic` 回补 chunk-level evidence。
-- [ ] 建立 Evidence Bundle、Citation Builder、unsupported claim check。
-- [ ] 定义 GraphRAG index pipeline：Document IR -> TextUnit/Block -> entity/relation extraction -> entity resolution -> graph upsert -> community detection -> community report -> embeddings/search index -> index manifest。
-- [ ] 定义 EvidenceBundle schema，包含 evidence_id、document_id、block_id、retrieval_method、score、source_span、citation_label、trust_label。
-- [ ] 定义 unsupported claim 失败处理：rewrite、retrieve more、ask user、evidence-limited answer、block high-risk confident wording。
-- [ ] 在 trace 中记录 requested product mode、router decision、candidate methods、resolved method(s)、fallback reason、evidence coverage 和 citation coverage。
-- [ ] 写 retrieval/eval tests。
+- [x] 保持 product mode：normal、enhanced、auto。
+- [x] 明确 mode policy：`normal -> basic`；`enhanced -> retrieval required, Agent selects method(s)`；`auto -> Agent first decides retrieval need, then selects method(s)`。
+- [x] 保持 resolved query method：basic、local、global、drift；`auto` 不允许成为最终 resolved query method。
+- [x] 建立 Agentic Retrieval Router contract，输入包含 query、workspace、context pack、product mode、budget、ACL、evidence state 和 fallback history。
+- [x] 固定 BM25 + dense vector + RRF + optional rerank 的目标边界；本 phase 不把生产级融合写成 Current。
+- [x] 固定 GraphRAG extraction、community report、local/global/drift query 的成熟目标路径；本 phase 只完成可测 contract。
+- [x] 建立 staged fusion：`global` 先产出 community-level prior / theme / subquestions，再由 `local` 或 `basic` 回补 chunk-level evidence。
+- [x] 建立 Evidence Bundle、Citation Builder、unsupported claim check。
+- [x] 定义 GraphRAG index pipeline：Document IR -> TextUnit/Block -> entity/relation extraction -> entity resolution -> graph upsert -> community detection -> community report -> embeddings/search index -> index manifest。
+- [x] 定义 EvidenceBundle schema，包含 evidence_id、document_id、block_id、retrieval_method、score、source_span、citation_label、trust_label。
+- [x] 定义 unsupported claim 失败处理：rewrite、retrieve more、ask user、evidence-limited answer、block high-risk confident wording。
+- [x] 在 trace 中记录 requested product mode、router decision、candidate methods、resolved method(s)、fallback reason、evidence coverage 和 citation coverage。
+- [x] 写 retrieval/eval tests。
 
 ## 输入 / 输出文件
 
@@ -71,8 +71,20 @@ status: active
 - 每个答案可以追溯 evidence 和 citation。
 - 生产级 extraction、community report、fusion/rerank 未完成前，只能写 Target；不能把 query contract foundation 写成成熟 Agentic GraphRAG Current。
 
+## 完成事实
+
+Current 已完成：
+
+- `src/backend/zuno/knowledge/agentic_graphrag.py` 提供 Agentic Retrieval Router、ProductMode、QueryMethod、StagedFusionPlan、EvidenceBundle、CitationBuilder、UnsupportedClaimChecker、GraphRAGIndexPipelineContract 和 AgenticGraphRAGTrace。
+- `tests/agent/test_agentic_graphrag_contract.py` 覆盖 product mode 与 internal method 分离、`auto` 不作为最终 resolved method、global staged fusion、ACL-filtered evidence、citation coverage、unsupported claim actions 和 Document IR 到 GraphRAG index pipeline 的 source span handoff。
+- `zuno.knowledge` facade 已 lazy 暴露 PHASE08 contract，不 eager load DB、vector runtime 或 provider client。
+
+仍是 Target：
+
+- 生产级 LLM entity / relation extraction、community report 生成、RRF / rerank 策略治理、GraphRAG index job runtime 和线上 retrieval eval baseline。
+
 ## 验证
 
 ```powershell
-pytest -q tests/graphrag tests/retrieval tests/evals -p no:cacheprovider
+pytest -q tests/agent/test_agentic_graphrag_contract.py tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/agent/test_knowledge_layer_surfaces.py tests/graphrag tests/retrieval tests/evals -p no:cacheprovider
 ```

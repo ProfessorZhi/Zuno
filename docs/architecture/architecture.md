@@ -30,9 +30,9 @@ updated: 2026-06-30
 
 Zuno 的主叙事是 **本地优先的企业私有知识库与多功能 Agent 助手**，不是普通 RAG 问答 demo，也不是默认多 Agent 平台。
 
-当前仓库已经完成的是架构治理、文档系统、六层后端边界、`GeneralAgent` 单循环主线、Query Router foundation、Context / Memory foundation、ToolCard foundation、GraphRAG query contract、Evidence / Citation / Trace / Eval foundation。
+当前仓库已经完成的是架构治理、文档系统、六层后端边界、`GeneralAgent` 单循环主线、Query Router foundation、Context / Memory foundation、ToolCard foundation、GraphRAG query contract、PHASE08 Agentic Retrieval Router / Evidence / Citation contract、Trace / Eval foundation。
 
-仍然不能写成 Current 的能力包括：生产级 LangGraph runtime、成熟 Memory DB、完整 dynamic tool orchestration、统一 Parse Gateway、LangSmith 产品化评测、完整安全沙箱、credential broker、输出 DLP、前端 trace 面板和默认产品级多 Agent runtime。
+仍然不能写成 Current 的能力包括：生产级 LangGraph runtime、成熟 Memory DB、完整 dynamic tool orchestration、统一 Parse Gateway runtime、生产级 GraphRAG extraction / fusion / index job、LangSmith 产品化评测、完整安全沙箱、credential broker、输出 DLP、前端 trace 面板和默认产品级多 Agent runtime。
 
 ```text
 Zuno current
@@ -63,7 +63,8 @@ Current 只写代码、测试和可复现结果已经证明的事实：
 - 当前后端目标层已经收口为 `api / agent / memory / capability / knowledge / platform` 六层。
 - 当前主线是 `GeneralAgent` single loop，不是完整产品级 LangGraph runtime，也不是默认多 Agent runtime。
 - 当前知识问答链路是 `Completion API -> CompletionService -> GeneralAgent single loop -> search_knowledge_base -> KnowledgeQueryService -> GraphRAGQueryService -> RetrievalPlanner / RetrievalOrchestrator -> Evidence / Citation / Trace -> answer`。
-- 当前已证明 `product_mode = normal | enhanced | auto` 与 `query_method = auto | basic | local | global | drift` 的请求、路由和 trace foundation；`auto` 是 router，不是第五种最终检索方法。
+- 当前已证明 `product_mode = normal | enhanced | auto` 与 `query_method = basic | local | global | drift` 的 PHASE08 contract：`normal` 强制 basic，`enhanced` 必检索并由 Agent 选通道，`auto` 先判断是否需要检索再选通道；`auto` 是 router，不是第五种最终检索方法。
+- 当前 `zuno.knowledge.agentic_graphrag` 已提供 Agentic Retrieval Router、StagedFusionPlan、EvidenceBundle、CitationBuilder、UnsupportedClaimChecker、GraphRAGIndexPipelineContract 和 AgenticGraphRAGTrace。
 - 当前 Memory、Tool、Hooks、GraphRAG 和 Runtime Upgrade 都是 foundation slice，不是成熟产品能力。
 - 当前 `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界，没有 active root-level `services/` 后端树。
 
@@ -76,7 +77,7 @@ Current 只写代码、测试和可复现结果已经证明的事实：
 | Agent Core Runtime | `prepare_context -> plan -> ReAct -> observe -> reflect -> replan -> post_turn_commit`。 | 当前是 `GeneralAgent` single loop + RuntimeTurnLedger + PHASE05 Single Controller harness contract，不是完整 LangGraph runtime。 |
 | Context / Memory | Raw Event Log、recent window、task summary、structured memory、Context Pack、review / promotion / decay。 | 当前有 PHASE06 MemoryEngine contract、九类 taxonomy、Context Pack renderer、敏感候选过滤和 eval policy，不是生产级 Memory DB。 |
 | Capability / Tool | ToolCard / manifest、capability retrieval、policy、approval、executor adapter、sandbox、result normalization。 | 当前有 PHASE07 Tool Control Plane contract：ToolCardManifest、executor registry、side-effect matrix、approval gate、MCP trust 和 result normalizer；真实 tool runtime / sandbox 平台仍是 Target。 |
-| Knowledge / Retrieval | Agentic GraphRAG mode policy、Basic RAG、GraphRAG local/global/drift、retrieval fusion、evidence、citation。 | 当前已有 product mode / query method / GraphRAG query contract；生产级 extraction / RRF / rerank 仍是 Target。 |
+| Knowledge / Retrieval | Agentic GraphRAG mode policy、Basic RAG、GraphRAG local/global/drift、retrieval fusion、evidence、citation。 | 当前已有 PHASE08 Agentic Retrieval Router、staged fusion、EvidenceBundle、CitationBuilder、unsupported claim check 和 GraphRAG index pipeline contract；生产级 extraction / RRF / rerank / index job 仍是 Target。 |
 | Document Ingestion | 多格式解析、OCR/VLM、chunk metadata、ACL 继承、BM25/vector/graph index handoff。 | PHASE04 已固定 parser matrix、Document IR 和 index handoff contract；生产 parser runtime 仍是后续目标。 |
 | Security / Governance | 输入检查、PII / 商业机密脱敏、prompt injection 防护、权限、审批、输出 DLP、审计。 | 当前不能声称成熟沙箱系统；完整治理仍是 Target / Future。 |
 | Trace / Eval | runtime trace、LangSmith 映射、dataset、offline / online eval、retrieval / answer / tool / security 指标。 | 当前有本地 trace/eval foundation；LangSmith 产品化仍是 Target。 |
@@ -113,7 +114,7 @@ Zuno 的目标架构可以理解为“单控制器运行时 + 多平面支撑”
 | Agent Runtime | `GeneralAgent` single loop、RuntimeTurnLedger、最小 evidence chain、PHASE05 `zuno.agent.harness` state / node / checkpoint / interrupt / stream event contract 已有。 | LangGraph-compatible durable runtime：durable checkpoint、真实 interrupt/resume、streaming、plan/replan/reflection 执行。 | 中等差距；contract 已定，但不是 production-grade LangGraph current。 | PHASE06/07/08/09 必须消费同一 runtime state / trace contract。 |
 | Memory / Context | PHASE06 已有 `MemoryEngine`、九类 taxonomy、Raw Event Log、Recent Window、Task Summary、candidate extraction、review/retrieve、Context Pack renderer 和 memory eval policy contract。 | 持久化 Memory DB、跨任务 retrieval consolidation、真实 decay/promotion job、敏感信息深度脱敏和 memory eval baseline。 | 中等差距；contract 已定，生产存储和长期治理仍未完成。 | PHASE07/08/09/10 继续消费同一 `trace_id` / `task_id` / source event contract。 |
 | Tool Control Plane | PHASE07 已有 ToolCardManifest、executor adapter registry、side-effect risk matrix、ApprovalGate、MCPTrustContract、NormalizedToolResult 和 result normalizer contract。 | 真实 runtime tool filtering、approval UI、credential broker、execution sandbox、network sandbox、tool trajectory eval。 | 中等差距；control-plane contract 已定，执行平台仍未完成。 | PHASE09/PHASE10 消费 side-effect、approval、audit 和 trace 字段。 |
-| Knowledge / Agentic GraphRAG | `basic/local/global/drift` query method contract、GraphRAG query service foundation、citation trace contract 已有。 | Agentic Retrieval Router、multi-channel staged fusion、GraphRAG index pipeline、evidence bundle、citation coverage、eval。 | 中大差距；query side 有 foundation，index / fusion / rerank / eval 未成熟。 | PHASE08 固定 product mode 与 internal method 边界，补 router/evidence/fusion tests。 |
+| Knowledge / Agentic GraphRAG | PHASE08 已有 `AgenticRetrievalRouter`、`ProductMode` / `QueryMethod`、`StagedFusionPlan`、`EvidenceBundle`、`CitationBuilder`、`UnsupportedClaimChecker`、`GraphRAGIndexPipelineContract` 和 trace payload contract。 | 生产级 multi-channel retrieval、GraphRAG extraction、community report、RRF / rerank、index job runtime、retrieval / citation eval baseline。 | 中等差距；contract 已定，但 index / fusion / rerank / eval runtime 未成熟。 | PHASE09/10 消费 PHASE08 的 evidence、citation、ACL 和 trace 字段。 |
 | Document Ingestion | PHASE04 已有 Parser Capability Matrix、Canonical Document IR、router contract、index handoff 和 parser golden fixture manifest；真实 parser runtime 仍在旧 services。 | 多格式 parser adapter runtime、OCR/layout/table/code chunk、ACL/provenance、index job 和 parser metrics。 | 中大差距；contract 已定，runtime 迁移和 adapter 执行仍未完成。 | PHASE08/PHASE09/PHASE10 消费 Document IR 与 handoff payload。 |
 | Security / Governance | 有 policy trace foundation；完整沙箱和 DLP 不是 Current。 | 输入、检索、工具、输出四道闸；policy/workspace/execution/network sandbox；approval/audit。 | 大差距；企业私有知识上生产前必须补。 | PHASE09 定义 gates、sandbox levels、security eval。 |
 | Eval / Observability | 本地 trace/eval foundation、Contract Review eval 和 repo verifier 已有。 | OTel/LangSmith-compatible spans、offline/online eval、RAG/answer/agent/security metrics、CI gates。 | 中大差距；缺持续评测台和统一指标面。 | PHASE10 先做 span schema、dataset、offline eval、LangSmith sink。 |
@@ -702,7 +703,7 @@ Zuno 的目标不是“普通 RAG 加一个 GraphRAG 按钮”，而是 **Agenti
 
 Evidence / Citation 是 RAG 产品化的底座。检索结果进入答案前，应经过 evidence bundle 构造、citation coverage 检查、source trust label、ACL check、freshness check 和 answer grounding check。没有证据的答案可以草拟，但不能伪装成已引用知识库结论。对于企业知识库，引用不仅是“好看”，还是审计、合规、复盘和 eval 的入口。
 
-当前 Zuno 有 KnowledgeQueryService、GraphRAGQueryService、GraphRAGProjectSnapshot、KnowledgeQueryResult、query_method trace 和 citation contract foundation。生产级 LLM-first entity / relation extraction、多套 extractor config、community report 生成、完整 RRF / rerank 和 GraphRAG index pipeline 仍是 Target。
+当前 Zuno 有 KnowledgeQueryService、GraphRAGQueryService、GraphRAGProjectSnapshot、KnowledgeQueryResult、query_method trace、citation contract foundation，以及 PHASE08 的 `AgenticRetrievalRouter`、`StagedFusionPlan`、`EvidenceBundle`、`CitationBuilder`、`UnsupportedClaimChecker`、`GraphRAGIndexPipelineContract` 和 `AgenticGraphRAGTrace`。生产级 LLM-first entity / relation extraction、community report 生成、完整 RRF / rerank、GraphRAG index job runtime 和 eval baseline 仍是 Target。
 
 #### GraphRAG Index Pipeline、Evidence Bundle 与 Citation Schema
 
@@ -754,7 +755,7 @@ unsupported_claims > threshold -> ask user or return evidence-limited answer
 high_risk_claim unsupported -> block confident wording
 ```
 
-EvidenceBundle schema 已在前文定义。PHASE08 应把它落实到 tests：同一 query 的 `resolved_methods`、`evidence_count`、`citation_coverage`、`unsupported_claims` 和 `fallback_reason` 必须可断言。
+EvidenceBundle schema 已由 PHASE08 contract 和 tests 固定：同一 query 的 `resolved_methods`、evidence coverage、citation coverage、`unsupported_claims` 和 `fallback_reason` 必须可断言。生产级检索排序和 GraphRAG index job 仍然必须等后续 runtime / eval 证明后才能写入 Current。
 
 ### Security / Governance 平面
 
@@ -971,7 +972,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE08_rag-graphrag-evidence-citation`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system` 与 `PHASE07_tool-control-plane-mcp-approval` 已通过 verifier 和 focused tests 证明完成。PHASE08 只负责 Agentic Retrieval Router、basic/local/global/drift 边界、staged fusion、EvidenceBundle、Citation Builder、unsupported claim check 和 GraphRAG index pipeline contract，不把完整生产级 GraphRAG extraction / fusion / rerank 写成 Current。
+当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE09_security-governance-sandbox`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system`、`PHASE07_tool-control-plane-mcp-approval` 与 `PHASE08_rag-graphrag-evidence-citation` 已通过 verifier 和 focused tests 证明完成。PHASE09 负责输入、检索、工具、输出四道安全闸和 sandbox governance contract；完整安全沙箱、credential broker 和输出 DLP 在本 phase 验证前仍是 Target。
 
 本 program 的十二个 phase：
 
@@ -982,7 +983,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 5. `PHASE05_agent-runtime-langgraph-harness`：把 Single Controller Agent Runtime 从目标状态机推进到 LangGraph-compatible harness，形成 prepare_context、plan、ReAct、observe、reflect、replan 和 post_turn_commit 的最小闭环。
 6. `PHASE06_context-memory-system`：落地 Raw Event Log、Recent Window、Task Summary、Structured Memory、Context Pack、review / promotion / decay 和 memory eval 的可测试路径。
 7. `PHASE07_tool-control-plane-mcp-approval`：落地 ToolCard manifest、selector、policy、approval、executor adapter、MCP trust、credential broker 和 sandbox 的第一版。
-8. `PHASE08_rag-graphrag-evidence-citation`：深化 basic / local / global / drift，补齐 retrieval fusion、GraphRAG indexing/query、evidence bundle、citation coverage 和 rerank / fallback trace。
+8. `PHASE08_rag-graphrag-evidence-citation`：已完成 Agentic Retrieval Router、basic/local/global/drift 边界、staged fusion、EvidenceBundle、CitationBuilder、unsupported claim check、GraphRAG index pipeline contract 和 trace coverage；生产级 extraction / fusion / rerank 仍是 Target。
 9. `PHASE09_security-governance-sandbox`：实现输入闸门、检索闸门、工具闸门、输出闸门，覆盖 prompt injection、PII / 商业机密脱敏、ACL、DLP、side-effect approval 和 audit trace。
 10. `PHASE10_eval-observability-langsmith`：建立 LangSmith-compatible trace schema、dataset、offline / online eval、RAG / answer / agent / security metrics 和 CI regression gate。
 11. `PHASE11_architecture-docs-html-refresh`：根据已落地事实更新 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两份 `architecture.html`，保证 Markdown 比 HTML 更详细，HTML 图为主。
@@ -1728,7 +1729,8 @@ flowchart LR
 - 内部 query method：basic、local、global、drift，由 Agentic Retrieval Router 在 enhanced / auto 模式下解析，不直接作为普通用户主入口。
 - Normal 强制 basic；enhanced 一定检索并由 Agent 选通道；auto 先判断是否需要检索，再由 Agent 选通道。
 - Global 不和 BM25 chunk ranking 生硬混榜；它更适合作为 community-level prior，再由 local/basic 回补 supporting evidence。
-- Document Ingestion、Security / Policy、LangSmith trace / eval、企业知识库产品闭环是本轮目标架构细化和后续执行计划，不是 Current。
-- PHASE08 当前已证明 extractor config contract、query method / citation / retrieval fusion trace contract 和 global community-only prior 边界；完整 LLM extraction、RRF/rerank 治理仍是 Target。
-- PHASE09 当前已证明 RuntimeTurnLedger、当前轮 trace reset、GeneralAgent 最小 evidence chain、post-turn evidence payload、六层目标入口 import guard 和 eval diagnostics；完整产品级 runtime upgrade 仍是 Target。
+- Document Ingestion runtime、Security / Policy、LangSmith trace / eval、企业知识库完整 UI 闭环是本轮目标架构细化和后续执行计划，不是成熟 Current。
+- PHASE08 当前已证明 Agentic Retrieval Router、query method / citation / evidence trace contract、GraphRAG index pipeline contract 和 global community-only prior 边界；完整 LLM extraction、RRF/rerank 治理和 index job runtime 仍是 Target。
+- 当前已有 RuntimeTurnLedger、当前轮 trace reset、GeneralAgent 最小 evidence chain、post-turn evidence payload、六层目标入口 import guard 和 eval diagnostics；完整产品级 runtime upgrade 仍是 Target。
+- PHASE09 当前 active，安全闸门和 sandbox governance 通过测试前不能写成 Current。
 - Domain Pack 只允许作为历史或兼容语境出现，不进入 Current 或 Target 主线图。
