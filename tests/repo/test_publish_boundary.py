@@ -45,7 +45,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
     ]:
         assert phrase in architecture
     assert "当前 active program" in current_program
-    assert "PHASE03_enterprise-scenario-and-product-loop" in current_program
+    assert "PHASE04_document-ingestion-parse-gateway" in current_program
 
 
 def test_public_docs_keep_history_off_front_path_but_reachable() -> None:

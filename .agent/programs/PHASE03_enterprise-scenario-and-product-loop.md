@@ -1,6 +1,6 @@
 # PHASE03 Enterprise Scenario And Product Loop
 
-status: active
+status: completed
 
 ## 目标
 
@@ -8,15 +8,22 @@ status: active
 
 ## 步骤
 
-- [ ] 定义 Workspace、Knowledge Space、Session、Task、Uploaded File、Artifact、Trace Event、Citation 和 Feedback 的 contract。
-- [ ] 为每个产品对象写字段表：`id`、`workspace_id`、`owner`、`status`、`policy_scope`、`trace_id`、`created_at`、`updated_at`、`retention_policy`。
-- [ ] 定义 upload -> parse/index -> ask -> event stream -> answer/report -> artifact download -> feedback/eval 的链路。
-- [ ] 固定第一版事件流协议：优先 SSE；WebSocket 作为 Target 后续增强，除非本 phase 明确实现双向审批。
-- [ ] 定义 task 状态机：`created -> context_building -> planning -> running -> approval_waiting -> resuming -> finalizing -> completed | failed | cancelled`。
-- [ ] 定义 runtime request envelope，包含 `workspace_id`、`session_id`、`user_id`、`goal`、`product_mode`、`knowledge_space_ids`、`uploaded_file_ids`、`approval_mode`、`budget` 和 `output_contract`。
-- [ ] 明确企业知识库、HR 简历库、合同/审查报告三个首批场景。
-- [ ] 更新 API / frontend contract tests。
-- [ ] 更新架构文档中的 Scenarios View。
+- [x] 定义 Workspace、Knowledge Space、Session、Task、Uploaded File、Artifact、Trace Event、Citation 和 Feedback 的 contract。
+- [x] 为每个产品对象写字段表：`id`、`workspace_id`、`owner`、`status`、`policy_scope`、`trace_id`、`created_at`、`updated_at`、`retention_policy`。
+- [x] 定义 upload -> parse/index -> ask -> event stream -> answer/report -> artifact download -> feedback/eval 的链路。
+- [x] 固定第一版事件流协议：优先 SSE；WebSocket 作为 Target 后续增强，除非本 phase 明确实现双向审批。
+- [x] 定义 task 状态机：`created -> context_building -> planning -> running -> approval_waiting -> resuming -> finalizing -> completed | failed | cancelled`。
+- [x] 定义 runtime request envelope，包含 `workspace_id`、`session_id`、`user_id`、`goal`、`product_mode`、`knowledge_space_ids`、`uploaded_file_ids`、`approval_mode`、`budget` 和 `output_contract`。
+- [x] 明确企业知识库、HR 简历库、合同/审查报告三个首批场景。
+- [x] 更新 API / frontend contract tests。
+- [x] 更新架构文档中的 Scenarios View。
+
+## 完成证据
+
+- 后端 `zuno.schema.workspace` 已提供 Workspace、KnowledgeSpace、Session、Task、UploadedFile、Artifact、TraceEvent、Citation 和 Feedback contract。
+- `WorkSpaceSimpleTask` 已包含 PHASE03 runtime request envelope 字段，且保持旧 workspace chat endpoint 行为不变。
+- 前端 `apps/web/src/apis/workspace.ts` 已同步 product loop 类型，并保留 task_id / trace_id / artifact_id / citation_ids 的 stream normalizer 透传。
+- `docs/architecture/architecture.md` 已更新核心对象模型、request envelope 示例和 Scenarios View。
 
 ## 产品对象契约
 

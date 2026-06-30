@@ -87,9 +87,131 @@ export const deleteWorkspaceSessionAPI = async (sessionId: string) => {
   })
 }
 
+export type WorkspaceProductMode = 'enterprise_kb' | 'hr_resume' | 'contract_review' | 'general_agent'
+
+export type WorkspaceTaskStatus =
+  | 'created'
+  | 'context_building'
+  | 'planning'
+  | 'running'
+  | 'approval_waiting'
+  | 'resuming'
+  | 'finalizing'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+
+export interface WorkspaceTaskBudget {
+  max_steps?: number
+  max_tokens?: number
+  timeout_seconds?: number
+  cost_ceiling?: number
+}
+
+export interface WorkspaceOutputContract {
+  artifact_kinds: string[]
+  citation_required: boolean
+  trace_required: boolean
+  format?: string
+}
+
+export interface WorkspaceProductObjectBase {
+  workspace_id: string
+  owner?: string
+  status: string
+  policy_scope?: string
+  trace_id?: string
+  created_at?: string
+  updated_at?: string
+  retention_policy?: string
+}
+
+export interface WorkspaceContract extends WorkspaceProductObjectBase {
+  members: string[]
+}
+
+export interface KnowledgeSpaceContract extends WorkspaceProductObjectBase {
+  knowledge_space_id: string
+  graph_project_id?: string
+  index_version?: string
+  acl_policy?: string
+}
+
+export interface WorkspaceSessionContract extends WorkspaceProductObjectBase {
+  session_id: string
+  user_id: string
+  thread_id?: string
+  active_task_id?: string
+}
+
+export interface WorkspaceTaskContract extends WorkspaceProductObjectBase {
+  task_id: string
+  session_id: string
+  goal: string
+  product_mode: WorkspaceProductMode
+  status: WorkspaceTaskStatus
+  budget?: WorkspaceTaskBudget
+}
+
+export interface UploadedFileContract extends WorkspaceProductObjectBase {
+  file_id: string
+  mime_type: string
+  hash: string
+  security_label?: string
+  parse_status: string
+}
+
+export interface ArtifactContract extends WorkspaceProductObjectBase {
+  artifact_id: string
+  task_id: string
+  kind: string
+  uri: string
+  hash?: string
+  download_policy?: string
+}
+
+export interface TraceEventContract {
+  event_id: string
+  task_id: string
+  trace_id: string
+  type: string
+  timestamp: number
+  payload: Record<string, any>
+}
+
+export interface CitationContract {
+  citation_id: string
+  evidence_id: string
+  document_id: string
+  block_id: string
+  source_span: Record<string, any>
+  created_at?: string
+}
+
+export interface FeedbackContract {
+  feedback_id: string
+  task_id: string
+  rating?: number
+  label?: string
+  comment?: string
+  dataset_candidate?: boolean
+  created_at?: string
+}
+
 export interface WorkSpaceSimpleTask {
   query: string
   model_id: string
+  workspace_id?: string
+  user_id?: string
+  task_id?: string
+  trace_id?: string
+  goal?: string
+  product_mode?: WorkspaceProductMode
+  knowledge_space_ids?: string[]
+  uploaded_file_ids?: string[]
+  approval_mode?: string
+  budget?: WorkspaceTaskBudget
+  output_contract?: WorkspaceOutputContract
   workspace_mode?: string
   agent_name?: string
   agent_id?: string
@@ -120,6 +242,10 @@ export interface WorkspaceStreamEvent {
   title: string
   detail: string
   isFinal?: boolean
+  task_id?: string
+  trace_id?: string
+  artifact_id?: string
+  citation_ids?: string[]
   data?: Record<string, any>
   raw?: any
 }
@@ -172,6 +298,10 @@ export const workspaceSimpleChatStreamAPI = async (
                   ''
               ),
               isFinal: parsed?.event === 'final',
+              task_id: parsed?.data?.task_id,
+              trace_id: parsed?.data?.trace_id,
+              artifact_id: parsed?.data?.artifact_id,
+              citation_ids: parsed?.data?.citation_ids,
               data: parsed?.data || {},
               raw: parsed,
             }

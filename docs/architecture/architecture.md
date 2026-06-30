@@ -109,7 +109,7 @@ Zuno 的目标架构可以理解为“单控制器运行时 + 多平面支撑”
 | --- | --- | --- | --- | --- |
 | 文档 / 工作流治理 | `AGENTS.md`、`.agent/`、`docs/architecture/`、历史归档和 verifiers 已形成闭环。 | 文档、计划、HTML、verifier 和 release evidence 随每个 program 自维护。 | 高完成度，但仍要防止研究 PDF 与正式文档脱节。 | 本文与 `.agent/architecture/architecture.md`、HTML 同源；program phase 固定更新规则。 |
 | 代码布局治理 | `src/backend/zuno` 顶层六层已收口；legacy alias surface 已集中。 | 六层内部也能表达 ownership，`platform/services`、compat、vendor 和 provider tree 不再混住。 | 中等差距；读者仍会觉得零碎和历史包袱重。 | PHASE02 ownership matrix、compat/vendor 分离、repo structure guard。 |
-| API / 产品闭环 | Completion / knowledge query path foundation 存在。 | Workspace、task/session、upload、artifact、SSE/WS、download、feedback、trace panel 闭环。 | 当前还不像完整产品后端。 | PHASE03 定义产品对象和事件契约，先做最小 task/session/event flow。 |
+| API / 产品闭环 | Completion / knowledge query path foundation 存在；PHASE03 已补 workspace product object、request envelope 和 stream id contract。 | Workspace、task/session、upload、artifact、SSE/WS、download、feedback、trace panel 闭环。 | 当前只有 contract，完整产品后端和 UI 仍是 Target。 | PHASE03 定义产品对象和事件契约，先做最小 task/session/event flow。 |
 | Agent Runtime | `GeneralAgent` single loop、RuntimeTurnLedger、最小 evidence chain 已有。 | LangGraph-compatible durable runtime：checkpoint、interrupt、resume、streaming、plan/replan/reflection。 | 中大差距；不是 deep LangGraph current。 | PHASE05 定义 state model 与最小 state graph harness。 |
 | Memory / Context | foundation taxonomy、Context Pack policy 和 lightweight readback 已有。 | Raw Event Log、Recent Window、Task Summary、Structured Memory、promotion/decay、memory eval。 | 中大差距；未形成生产级 read-write-manage。 | PHASE06 先做事件账本、摘要、候选记忆和 review gate。 |
 | Tool Control Plane | ToolCard metadata、MCP/local tool policy trace 和 capability selection trace bridge 已有。 | ToolCard registry、selector、policy、approval、executor adapters、credential broker、sandbox、audit。 | 中大差距；还不是受控工具平台。 | PHASE07 先落 ToolCard schema、side-effect policy 和 approval gate。 |
@@ -145,6 +145,8 @@ Zuno 的目标架构必须围绕企业工作空间里的对象组织，而不是
 
 这些对象之间的关系决定了实现路线。`DocumentBlock` 是 retrieval、citation、DLP 和 eval 的共同锚点；`Task` 是 runtime、streaming、artifact 和 trace 的共同锚点；`ToolCard` 是 capability、approval、sandbox 和 audit 的共同锚点；`TraceSpan` 是 eval、debug、release gate 和 resume metric 的共同锚点。缺少这些对象，后续功能会退化成散落的 service 文件。
 
+PHASE03 的 Current 事实只到 contract：后端 `zuno.schema.workspace` 已暴露 `WorkspaceContract`、`KnowledgeSpaceContract`、`WorkspaceSessionContract`、`WorkspaceTaskContract`、`UploadedFileContract`、`ArtifactContract`、`TraceEventContract`、`CitationContract`、`FeedbackContract`、`WorkspaceTaskBudget`、`WorkspaceOutputContract` 和 `WorkspaceProductStreamEvent`；前端 `apps/web/src/apis/workspace.ts` 已同步同名类型和 task / trace / artifact / citation id 透传。完整 task API、trace panel、artifact 下载和 feedback UI 仍是 Target。
+
 ### Runtime 契约与事件模型
 
 目标 runtime 不应该只暴露“同步返回一个 answer”的函数。企业知识任务需要被建模为可观测、可暂停、可恢复的任务流。
@@ -157,20 +159,20 @@ Zuno 的目标架构必须围绕企业工作空间里的对象组织，而不是
   "session_id": "sess_20260630_001",
   "user_id": "user_hr_01",
   "goal": "对比这 12 份候选人简历和岗位 JD，生成面试优先级和引用依据",
-  "product_mode": "enhanced",
-  "requested_query_method": "auto",
+  "product_mode": "contract_review",
   "knowledge_space_ids": ["ks_resume_2026", "ks_jd_backend"],
   "uploaded_file_ids": ["file_resume_batch_001"],
-  "approval_mode": "on_high_risk",
+  "approval_mode": "required_for_risky_tools",
   "budget": {
     "max_steps": 12,
-    "max_tool_calls": 8,
     "max_tokens": 80000,
-    "max_cost_usd": 2.5
+    "timeout_seconds": 300,
+    "cost_ceiling": 2.5
   },
   "output_contract": {
     "format": "markdown",
-    "requires_citations": true,
+    "citation_required": true,
+    "trace_required": true,
     "artifact_kinds": ["markdown", "pdf", "citation_bundle"]
   }
 }
@@ -207,6 +209,7 @@ Zuno 的目标架构必须围绕企业工作空间里的对象组织，而不是
 事件流不等于 trace 全量数据。事件流是用户和前端可感知的增量状态；trace 是事后可回放的事实表。推荐第一版事件包括：
 
 - `task_started`：任务创建，返回 task_id、trace_id、workspace_id。
+- `context_building`：任务状态进入上下文构建阶段，和 `WORKSPACE_TASK_STATUS_FLOW` 对齐。
 - `context_built`：Context Pack 完成，包含 selected memory count、retrieval preview count、policy notes。
 - `plan_created`：计划生成，包含 step count、expected artifacts、risk notes。
 - `retrieval_started` / `retrieval_completed`：包含 product_mode、candidate methods、resolved method、evidence count、fallback reason。
@@ -966,7 +969,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE03_enterprise-scenario-and-product-loop`；`PHASE01_program-baseline-and-previous-closure` 与 `PHASE02_project-folder-and-code-layout-cleanup` 已通过 verifier 和 focused repo tests 证明完成。PHASE03 只负责企业私有知识库产品对象、task/session、artifact、event stream 和 feedback contract，不把未实现的 UI 或 backend 行为写成 Current。
+当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE04_document-ingestion-parse-gateway`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup` 与 `PHASE03_enterprise-scenario-and-product-loop` 已通过 verifier 和 focused tests 证明完成。PHASE04 只负责 Document Ingestion / Parse Gateway contract、Document IR、chunk/provenance 和 parser golden tests，不把完整生产解析平台写成 Current。
 
 本 program 的十二个 phase：
 
@@ -1329,12 +1332,13 @@ flowchart TB
   ACL["6 ACL Scope Sensitivity Tag"]
   INDEX["7 Index<br/>BM25 Vector Graph"]
   QUERY["8 User Query"]
-  CONTEXT["9 Context Builder<br/>query files memory"]
-  MEMORY["10 Selected Memory<br/>recent summary structured"]
-  AGENT["11 Controller Agent"]:::accent
-  MODE{"User Product Mode"}:::decision
-  NORMAL["normal<br/>force basic"]
-  ENHANCED["enhanced<br/>retrieval required"]
+  PRODUCT["9 Task Envelope<br/>workspace session product_mode"]
+  CONTEXT["10 Context Builder<br/>query files memory"]
+  MEMORY["11 Selected Memory<br/>recent summary structured"]
+  AGENT["12 Controller Agent"]:::accent
+  MODE{"Retrieval Policy"}:::decision
+  NORMAL["basic<br/>force simple retrieval"]
+  ENHANCED["graph_required<br/>retrieval required"]
   AUTO["auto<br/>agent decides retrieval"]
   NEED{"Need Retrieval"}:::decision
   ROUTER["Agentic GraphRAG Router<br/>select channel by task evidence budget"]:::accent
@@ -1358,7 +1362,7 @@ flowchart TB
   ROUTEPARSE --> MINERU --> NORMALIZE
   ROUTEPARSE --> UNSTRUCT --> NORMALIZE
   NORMALIZE --> CHUNK --> ACL --> INDEX
-  INDEX --> QUERY --> CONTEXT --> MEMORY --> AGENT --> MODE
+  INDEX --> QUERY --> PRODUCT --> CONTEXT --> MEMORY --> AGENT --> MODE
   MODE --> NORMAL --> BASIC
   MODE --> ENHANCED --> ROUTER
   MODE --> AUTO --> NEED
@@ -1374,13 +1378,13 @@ flowchart TB
   EVID -->|pass| ANSWER
   ANSWER --> TRACE --> MEMCAND --> REVIEW --> MEMSTORE
   MEMSTORE --> NEXTREAD
-  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
+  class UPLOAD,TYPE,ROUTEPARSE,NATIVE,DOCLING,MINERU,UNSTRUCT,NORMALIZE,CHUNK,ACL,INDEX,QUERY,PRODUCT,CONTEXT,MEMORY,NORMAL,ENHANCED,AUTO,BASIC,LOCAL,GLOBAL,DRIFT,FUSION,EVID,TRACE,MEMCAND,REVIEW,MEMSTORE,NEXTREAD node;
 ```
 
 #### 分析
 
 - 关注点：用企业知识库场景验证架构。
-- Zuno 映射：这是 Agentic GraphRAG 产品链路。用户只选 `normal / enhanced / auto`；增强和自动模式下，Single Controller Agent / Query Router 再选择 `basic / local / global / drift`。
+- Zuno 映射：这是 Agentic GraphRAG 产品链路。PHASE03 request envelope 用 `enterprise_kb / hr_resume / contract_review / general_agent` 表达产品场景；retrieval policy 再决定 `basic / local / global / drift` 等知识通道。
 - Zuno 映射：文档解析层是企业知识库、GraphRAG、citation 和 eval 的共同前置依赖；parser router 把 native、Docling/PyMuPDF、MinerU/OCR/VLM、Unstructured/MarkItDown 收束为统一 Document IR。
 - 边界：`auto` 是产品模式和路由策略，不是第五种最终检索算法；`global` 是 community-level prior，不和 chunk-level BM25 直接生硬混榜。
 

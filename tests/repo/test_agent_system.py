@@ -143,7 +143,7 @@ def test_agent_program_surface_matches_active_architecture_program() -> None:
         "当前 active program",
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE03_enterprise-scenario-and-product-loop",
+        "current_phase: PHASE04_document-ingestion-parse-gateway",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "八个方面产物",

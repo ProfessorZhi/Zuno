@@ -1,6 +1,6 @@
 # PHASE04 Document Ingestion Parse Gateway
 
-status: pending
+status: active
 
 ## 目标
 

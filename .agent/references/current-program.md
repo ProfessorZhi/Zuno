@@ -5,7 +5,7 @@
 当前 active program：`zuno-master-architecture-implementation-v1`
 
 state: active
-current_phase: PHASE03_enterprise-scenario-and-product-loop
+current_phase: PHASE04_document-ingestion-parse-gateway
 
 ## Program 目标
 
@@ -49,8 +49,8 @@ current_phase: PHASE03_enterprise-scenario-and-product-loop
 
 - `PHASE01_program-baseline-and-previous-closure.md`：completed，已通过 program-state verifier 和 focused repo tests 证明基线一致。
 - `PHASE02_project-folder-and-code-layout-cleanup.md`：completed。
-- `PHASE03_enterprise-scenario-and-product-loop.md`：active。
-- `PHASE04_document-ingestion-parse-gateway.md`：pending。
+- `PHASE03_enterprise-scenario-and-product-loop.md`：completed。
+- `PHASE04_document-ingestion-parse-gateway.md`：active。
 - `PHASE05_agent-runtime-langgraph-harness.md`：pending。
 - `PHASE06_context-memory-system.md`：pending。
 - `PHASE07_tool-control-plane-mcp-approval.md`：pending。

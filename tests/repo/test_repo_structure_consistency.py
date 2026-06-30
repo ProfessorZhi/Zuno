@@ -878,7 +878,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     for phrase in [
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE03_enterprise-scenario-and-product-loop",
+        "current_phase: PHASE04_document-ingestion-parse-gateway",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",
