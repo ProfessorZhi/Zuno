@@ -1,6 +1,6 @@
 # PHASE07 Tool Control Plane MCP Approval
 
-status: active
+status: completed
 
 ## 目标
 
@@ -8,15 +8,15 @@ status: active
 
 ## 步骤
 
-- [ ] 定义 ToolCard manifest 字段和执行模式。
-- [ ] ToolCard 字段至少包含：`tool_id`、`owner`、`capability_domain`、`description_for_model`、`input_schema`、`output_schema`、`execution_mode`、`trust_tier`、`side_effect_level`、`approval_policy`、`sandbox_profile`、`credential_policy`、`network_policy`、`audit_policy`、`budget`、`failure_modes`。
-- [ ] 区分 capability domain 与 execution adapter。
-- [ ] 建立 executor registry，支持 local function、SDK、API、CLI、SSH、MCP local、MCP remote 和 sandbox。
-- [ ] 建立 side-effect 风险矩阵：`none`、`read`、`write_local`、`write_external`、`destructive`。
-- [ ] 对高副作用工具建立 approval gate。
-- [ ] 定义 MCP trust governance：server trust list、transport、auth、allowed tools、scope、origin / network policy、credential broker、untrusted content labeling。
-- [ ] 定义 result normalizer，所有 executor 输出统一成 `status`、`data`、`summary`、`error`、`audit_ref`、`trace_span_id`。
-- [ ] 更新 send_email、CLI、OpenAPI、MCP provider 的测试。
+- [x] 定义 ToolCard manifest 字段和执行模式。
+- [x] ToolCard 字段至少包含：`tool_id`、`owner`、`capability_domain`、`description_for_model`、`input_schema`、`output_schema`、`execution_mode`、`trust_tier`、`side_effect_level`、`approval_policy`、`sandbox_profile`、`credential_policy`、`network_policy`、`audit_policy`、`budget`、`failure_modes`。
+- [x] 区分 capability domain 与 execution adapter。
+- [x] 建立 executor registry，支持 local function、SDK、API、CLI、SSH、MCP local、MCP remote 和 sandbox。
+- [x] 建立 side-effect 风险矩阵：`none`、`read`、`write_local`、`write_external`、`destructive`。
+- [x] 对高副作用工具建立 approval gate。
+- [x] 定义 MCP trust governance：server trust list、transport、auth、allowed tools、scope、origin / network policy、credential broker、untrusted content labeling。
+- [x] 定义 result normalizer，所有 executor 输出统一成 `status`、`data`、`summary`、`error`、`audit_ref`、`trace_span_id`。
+- [x] 更新 send_email、CLI、OpenAPI、MCP provider 的测试。
 
 ## 输入 / 输出文件
 
@@ -61,3 +61,12 @@ status: active
 ```powershell
 pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_layer_surfaces.py tests/tools -p no:cacheprovider
 ```
+
+## 完成证据
+
+- `src/backend/zuno/capability/control_plane.py` 定义 `ToolCardManifest`、`ExecutorAdapterContract`、`ExecutorRegistry`、`ApprovalGate`、`MCPTrustContract`、`NormalizedToolResult`、`ToolResultNormalizer` 和 side-effect risk matrix。
+- `ApprovalGate` 会为高副作用工具生成绑定 PHASE05 runtime state 的 interrupt envelope。
+- `MCPTrustContract` 固定 server transport、trust tier、auth、allowed tools、scope、network policy、credential policy 和 untrusted content label。
+- `ToolResultNormalizer` 统一输出 `status`、`data`、`summary`、`error`、`audit_ref` 和 `trace_span_id`。
+- `tests/agent/test_tool_control_plane_contract.py` 覆盖 ToolCard manifest、executor registry、approval gate、MCP trust 和 result normalization。
+- Current 边界：PHASE07 完成 control-plane contract，不表示 approval UI、credential broker、execution sandbox 或完整 runtime tool filtering 已完成。

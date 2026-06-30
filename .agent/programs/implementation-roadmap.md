@@ -12,7 +12,7 @@
 
 state: active
 program: zuno-master-architecture-implementation-v1
-current_phase: PHASE07_tool-control-plane-mcp-approval
+current_phase: PHASE08_rag-graphrag-evidence-citation
 
 每次新 program 都从 `PHASE01` 开始编号。
 
@@ -124,8 +124,8 @@ Runtime implementation paths opened by later phases:
 | PHASE04 | completed | Document Ingestion / Parse Gateway 和多格式解析矩阵。 |
 | PHASE05 | completed | Single Controller Agent Runtime / LangGraph-compatible harness。 |
 | PHASE06 | completed | Context / Memory read-write-manage 系统。 |
-| PHASE07 | active | Tool Control Plane、MCP、approval、executor adapter、sandbox。 |
-| PHASE08 | pending | RAG/GraphRAG、retrieval fusion、evidence/citation。 |
+| PHASE07 | completed | Tool Control Plane、MCP、approval、executor adapter、sandbox。 |
+| PHASE08 | active | RAG/GraphRAG、retrieval fusion、evidence/citation。 |
 | PHASE09 | pending | Security governance、DLP、prompt injection 防护、sandbox。 |
 | PHASE10 | pending | LangSmith-compatible trace/eval、offline/online eval、CI gate。 |
 | PHASE11 | pending | 架构 Markdown、HTML、README、图集和展示文档更新。 |
@@ -229,7 +229,7 @@ Set these state values in `.agent/programs/current.md`, `.agent/programs/impleme
 ```text
 program: zuno-master-architecture-implementation-v1
 state: active
-current_phase: PHASE07_tool-control-plane-mcp-approval
+current_phase: PHASE08_rag-graphrag-evidence-citation
 ```
 
 - [ ] **Step 4: Archive ChatGPT research mode artifacts**

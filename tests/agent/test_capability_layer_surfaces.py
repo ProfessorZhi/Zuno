@@ -20,6 +20,21 @@ EXPECTED_EXPORTS = {
         "CapabilityType",
         "ToolCard",
     ],
+    "zuno.capability.control_plane": [
+        "ApprovalGate",
+        "ExecutorAdapterContract",
+        "ExecutorRegistry",
+        "MCPTrustContract",
+        "NormalizedToolResult",
+        "SIDE_EFFECT_RISK_MATRIX",
+        "ToolApprovalDecision",
+        "ToolApprovalPolicy",
+        "ToolCardManifest",
+        "ToolExecutionMode",
+        "ToolResultNormalizer",
+        "ToolSideEffectLevel",
+        "ToolTrustTier",
+    ],
     "zuno.capability.registry": [
         "CapabilityRecord",
         "CapabilityRegistry",
@@ -80,6 +95,7 @@ def test_capability_layer_modules_reuse_legacy_foundation_objects() -> None:
 
 def test_capability_package_facade_points_at_layer_modules() -> None:
     import zuno.capability as capability
+    from zuno.capability.control_plane import ToolCardManifest
     from zuno.capability.contracts import CapabilityRecord
     from zuno.capability.registry import CapabilityRegistry
     from zuno.capability.selector import DynamicCapabilitySelector
@@ -87,6 +103,7 @@ def test_capability_package_facade_points_at_layer_modules() -> None:
     assert capability.CapabilityRecord is CapabilityRecord
     assert capability.CapabilityRegistry is CapabilityRegistry
     assert capability.DynamicCapabilitySelector is DynamicCapabilitySelector
+    assert capability.ToolCardManifest is ToolCardManifest
 
 
 def test_importing_capability_surfaces_does_not_load_heavy_runtime_modules() -> None:

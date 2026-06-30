@@ -1,6 +1,6 @@
 # PHASE08 RAG GraphRAG Evidence Citation
 
-status: pending
+status: active
 
 ## 目标
 

@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/capability/` 目前是 capability metadata、ToolCard retrieval 和 selector foundation 的 facade，公开 CapabilityRecord、ToolCard、CapabilityRegistry、ToolCardRegistry、NativeBM25Retriever、DynamicCapabilitySelector 和 selection trace 等 contract。当前已提供 `contracts.py`、`registry.py`、`selector.py`、`policy.py`、`execution.py`、`trace.py` 和 `retrieval.py` 这些无副作用目标层薄入口。真实实现仍在 `src/backend/zuno/platform/services/application/capabilities/` 和相关 registry 路径。
+`src/backend/zuno/capability/` 目前是 capability metadata、ToolCard retrieval、selector foundation 和 PHASE07 Tool Control Plane contract 的 facade，公开 CapabilityRecord、ToolCard、CapabilityRegistry、ToolCardRegistry、NativeBM25Retriever、DynamicCapabilitySelector、selection trace、ToolCardManifest、ExecutorRegistry、ApprovalGate、MCPTrustContract 和 ToolResultNormalizer 等 contract。当前已提供 `contracts.py`、`registry.py`、`selector.py`、`policy.py`、`execution.py`、`trace.py`、`retrieval.py` 和 `control_plane.py` 这些无副作用目标层入口。真实 provider 实现仍在 `src/backend/zuno/platform/services/application/capabilities/` 和相关 registry 路径。
 
 `capability/tools/` 不按 CLI / API 拆成两类顶层目录。CLI / API 是 execution adapter、runtime type 或 provider metadata，不是 capability 的主分类。
 
@@ -12,7 +12,7 @@ PHASE02 的 provider 分类入口是 `docs/architecture/repo-ownership-matrix.md
 
 ## Target role
 
-目标状态下，Capability 层负责 ToolCard / capability metadata、权限、健康状态、成本提示、能力召回与 schema selection。它为 Agent 提供可选择能力，不直接拥有工具执行 runtime 或 API response shape。
+目标状态下，Capability 层负责 ToolCard / capability metadata、权限、健康状态、成本提示、能力召回与 schema selection，并通过 Tool Control Plane contract 管理 execution adapter、side-effect risk、approval、MCP trust、result normalization 和 audit trace。它为 Agent 提供可选择且可治理的能力，不直接拥有具体工具 provider runtime 或 API response shape。
 
 工具目录优先按能力语义和 owner 管理；CLI / API 只作为执行适配信息进入 ToolCard、manifest 或 runtime metadata。
 
@@ -37,5 +37,6 @@ PHASE02 的 provider 分类入口是 `docs/architecture/repo-ownership-matrix.md
 - `tests/agent/test_capability_layer_surfaces.py`
 - `tests/agent/test_capability_system.py`
 - `tests/agent/test_capability_registry.py`
+- `tests/agent/test_tool_control_plane_contract.py`
 - `tests/legacy_guards/test_zuno_alias_imports.py`
 - `tests/repo/test_static_target_layer_imports.py`

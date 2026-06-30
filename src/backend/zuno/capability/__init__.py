@@ -12,6 +12,20 @@ if TYPE_CHECKING:
         CapabilityType,
         ToolCard,
     )
+    from zuno.capability.control_plane import (
+        ApprovalGate,
+        ExecutorAdapterContract,
+        ExecutorRegistry,
+        MCPTrustContract,
+        NormalizedToolResult,
+        ToolApprovalDecision,
+        ToolApprovalPolicy,
+        ToolCardManifest,
+        ToolExecutionMode,
+        ToolResultNormalizer,
+        ToolSideEffectLevel,
+        ToolTrustTier,
+    )
     from zuno.capability.registry import CapabilityRegistry, ToolCardRegistry
     from zuno.capability.retrieval import NativeBM25Retriever, NativeBM25SearchResult
     from zuno.capability.selector import (
@@ -33,13 +47,26 @@ _EXPORT_TO_MODULE = {
     "CapabilitySelectionTrace": "zuno.capability.trace",
     "CapabilityType": "zuno.capability.contracts",
     "DynamicCapabilitySelector": "zuno.capability.selector",
+    "ApprovalGate": "zuno.capability.control_plane",
+    "ExecutorAdapterContract": "zuno.capability.control_plane",
+    "ExecutorRegistry": "zuno.capability.control_plane",
+    "MCPTrustContract": "zuno.capability.control_plane",
     "NativeBM25Retriever": "zuno.capability.retrieval",
     "NativeBM25SearchResult": "zuno.capability.retrieval",
+    "NormalizedToolResult": "zuno.capability.control_plane",
+    "ToolApprovalDecision": "zuno.capability.control_plane",
+    "ToolApprovalPolicy": "zuno.capability.control_plane",
     "ToolCard": "zuno.capability.contracts",
+    "ToolCardManifest": "zuno.capability.control_plane",
     "ToolCardRegistry": "zuno.capability.registry",
+    "ToolExecutionMode": "zuno.capability.control_plane",
+    "ToolResultNormalizer": "zuno.capability.control_plane",
+    "ToolSideEffectLevel": "zuno.capability.control_plane",
+    "ToolTrustTier": "zuno.capability.control_plane",
 }
 
 __all__ = [
+    "ApprovalGate",
     "CapabilityCost",
     "CapabilityHealth",
     "CapabilityPermissions",
@@ -50,10 +77,21 @@ __all__ = [
     "CapabilitySelectionTrace",
     "CapabilityType",
     "DynamicCapabilitySelector",
+    "ExecutorAdapterContract",
+    "ExecutorRegistry",
+    "MCPTrustContract",
     "NativeBM25Retriever",
     "NativeBM25SearchResult",
+    "NormalizedToolResult",
+    "ToolApprovalDecision",
+    "ToolApprovalPolicy",
     "ToolCard",
+    "ToolCardManifest",
     "ToolCardRegistry",
+    "ToolExecutionMode",
+    "ToolResultNormalizer",
+    "ToolSideEffectLevel",
+    "ToolTrustTier",
 ]
 
 

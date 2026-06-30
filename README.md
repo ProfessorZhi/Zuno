@@ -35,7 +35,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 active program
 
-当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE07_tool-control-plane-mcp-approval`。`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness` 与 `PHASE06_context-memory-system` 已通过 verifier 和 focused tests 证明完成；本阶段推进 ToolCard manifest、executor adapter contract、side-effect risk matrix、approval gate、MCP trust governance 和 result normalizer。
+当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE08_rag-graphrag-evidence-citation`。`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway`、`PHASE05_agent-runtime-langgraph-harness`、`PHASE06_context-memory-system` 与 `PHASE07_tool-control-plane-mcp-approval` 已通过 verifier 和 focused tests 证明完成；本阶段推进 Agentic Retrieval Router、basic/local/global/drift 边界、staged fusion、EvidenceBundle、Citation Builder、unsupported claim check 和 GraphRAG index pipeline contract。
 
 执行状态入口在 `.agent/programs/`。
 
