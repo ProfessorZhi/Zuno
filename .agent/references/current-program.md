@@ -5,7 +5,7 @@
 当前 active program：`zuno-master-architecture-implementation-v1`
 
 state: active
-current_phase: PHASE04_document-ingestion-parse-gateway
+current_phase: PHASE05_agent-runtime-langgraph-harness
 
 ## Program 目标
 
@@ -22,7 +22,7 @@ current_phase: PHASE04_document-ingestion-parse-gateway
 7. RAG / GraphRAG 知识系统。
 8. 安全、评测、观测、文档展示闭环。
 
-它仍然遵守 Current / Target / Future / History 边界：未由代码、测试、trace、eval 或 verifier 证明的能力不能写成 Current。`Document Ingestion`、生产级 LangGraph runtime、Memory DB、Tool approval、GraphRAG extraction / fusion、LangSmith trace / eval 和完整安全沙箱在对应 phase 完成前仍是 Target。
+它仍然遵守 Current / Target / Future / History 边界：未由代码、测试、trace、eval 或 verifier 证明的能力不能写成 Current。生产级 Parse Gateway runtime、生产级 LangGraph runtime、Memory DB、Tool approval、GraphRAG extraction / fusion、LangSmith trace / eval 和完整安全沙箱在对应 phase 完成前仍是 Target。
 
 ## 当前执行入口
 
@@ -50,8 +50,8 @@ current_phase: PHASE04_document-ingestion-parse-gateway
 - `PHASE01_program-baseline-and-previous-closure.md`：completed，已通过 program-state verifier 和 focused repo tests 证明基线一致。
 - `PHASE02_project-folder-and-code-layout-cleanup.md`：completed。
 - `PHASE03_enterprise-scenario-and-product-loop.md`：completed。
-- `PHASE04_document-ingestion-parse-gateway.md`：active。
-- `PHASE05_agent-runtime-langgraph-harness.md`：pending。
+- `PHASE04_document-ingestion-parse-gateway.md`：completed。
+- `PHASE05_agent-runtime-langgraph-harness.md`：active。
 - `PHASE06_context-memory-system.md`：pending。
 - `PHASE07_tool-control-plane-mcp-approval.md`：pending。
 - `PHASE08_rag-graphrag-evidence-citation.md`：pending。

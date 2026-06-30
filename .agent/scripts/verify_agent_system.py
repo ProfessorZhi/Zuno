@@ -290,7 +290,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "当前 active program",
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE04_document-ingestion-parse-gateway",
+        "current_phase: PHASE05_agent-runtime-langgraph-harness",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
     ]:

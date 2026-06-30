@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-master-architecture-implementation-v1`
-- 当前阶段：[PHASE04_document-ingestion-parse-gateway.md](PHASE04_document-ingestion-parse-gateway.md)
+- 当前阶段：[PHASE05_agent-runtime-langgraph-harness.md](PHASE05_agent-runtime-langgraph-harness.md)
 - 当前入口：[current.md](current.md)
 
 ## Program 目标
@@ -34,8 +34,8 @@
 - [PHASE01_program-baseline-and-previous-closure.md](PHASE01_program-baseline-and-previous-closure.md)：completed，收口上一轮架构计划状态，固定新 program 基线。
 - [PHASE02_project-folder-and-code-layout-cleanup.md](PHASE02_project-folder-and-code-layout-cleanup.md)：completed，项目文件夹、代码 ownership、compat/vendor 边界治理。
 - [PHASE03_enterprise-scenario-and-product-loop.md](PHASE03_enterprise-scenario-and-product-loop.md)：completed，企业知识库主场景、workspace、task/session、artifact、event flow。
-- [PHASE04_document-ingestion-parse-gateway.md](PHASE04_document-ingestion-parse-gateway.md)：active，多格式解析、Canonical Document IR、chunk、provenance、ACL。
-- [PHASE05_agent-runtime-langgraph-harness.md](PHASE05_agent-runtime-langgraph-harness.md)：Single Controller Agent runtime、plan/ReAct/reflect/replan、checkpoint、streaming、interrupt。
+- [PHASE04_document-ingestion-parse-gateway.md](PHASE04_document-ingestion-parse-gateway.md)：completed，多格式解析 contract、Canonical Document IR、parser router、index handoff 和 parser golden fixtures。
+- [PHASE05_agent-runtime-langgraph-harness.md](PHASE05_agent-runtime-langgraph-harness.md)：active，Single Controller Agent runtime、plan/ReAct/reflect/replan、checkpoint、streaming、interrupt。
 - [PHASE06_context-memory-system.md](PHASE06_context-memory-system.md)：raw event、recent window、summary、structured memory、promotion/decay。
 - [PHASE07_tool-control-plane-mcp-approval.md](PHASE07_tool-control-plane-mcp-approval.md)：ToolCard、manifest、selector、executor adapter、MCP、approval、sandbox。
 - [PHASE08_rag-graphrag-evidence-citation.md](PHASE08_rag-graphrag-evidence-citation.md)：basic/local/global/drift、retrieval fusion、GraphRAG indexing/query、citation。

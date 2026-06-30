@@ -160,8 +160,10 @@ def test_repo_structure_verifier_pins_first_class_directory_responsibilities() -
             "agent_system",
             "api",
             "evals",
+            "fixtures",
             "frontend",
             "graphrag",
+            "knowledge",
             "legacy_guards",
             "repo",
             "retrieval",
@@ -299,7 +301,6 @@ def test_repo_structure_verifier_pins_phase02_ownership_contract() -> None:
         "status",
     ]
     assert verifier.PHASE02_RESERVED_IMPORT_GUARD_PATHS == [
-        "src/backend/zuno/knowledge/ingestion",
         "src/backend/zuno/platform/observability",
         "src/backend/zuno/platform/security",
         "src/backend/zuno/platform/vendor",
@@ -464,8 +465,10 @@ def test_first_class_directory_subdirs_match_allowed_responsibilities() -> None:
             "agent_system",
             "api",
             "evals",
+            "fixtures",
             "frontend",
             "graphrag",
+            "knowledge",
             "legacy_guards",
             "repo",
             "retrieval",
@@ -878,7 +881,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     for phrase in [
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE04_document-ingestion-parse-gateway",
+        "current_phase: PHASE05_agent-runtime-langgraph-harness",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "每次新 program 都从 `PHASE01` 开始编号",

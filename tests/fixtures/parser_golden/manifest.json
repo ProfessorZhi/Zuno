@@ -1,0 +1,62 @@
+{
+  "version": "phase04-contract-v1",
+  "purpose": "Parser golden fixture index for Document Ingestion contract tests.",
+  "cases": [
+    {
+      "case_id": "pdf_table",
+      "format": "pdf",
+      "default_parser": "docling_pymupdf",
+      "fallback": "mineru_ocr_vlm",
+      "evidence_anchor": ["page", "bbox", "table_cell"],
+      "expected_blocks": ["paragraph", "table"]
+    },
+    {
+      "case_id": "scanned_image",
+      "format": "scanned",
+      "default_parser": "mineru_ocr_vlm",
+      "fallback": "docling_pymupdf",
+      "evidence_anchor": ["page", "bbox", "confidence"],
+      "expected_blocks": ["ocr_text", "figure"]
+    },
+    {
+      "case_id": "pptx_slide",
+      "format": "pptx",
+      "default_parser": "unstructured_markitdown",
+      "fallback": "mineru_ocr_vlm",
+      "evidence_anchor": ["slide", "bbox"],
+      "expected_blocks": ["slide_title", "slide_body", "figure"]
+    },
+    {
+      "case_id": "docx_heading_table",
+      "format": "docx",
+      "default_parser": "unstructured_markitdown",
+      "fallback": "native",
+      "evidence_anchor": ["section_path", "table_cell"],
+      "expected_blocks": ["heading", "paragraph", "table"]
+    },
+    {
+      "case_id": "xlsx_sheet",
+      "format": "xlsx",
+      "default_parser": "unstructured_markitdown",
+      "fallback": "native",
+      "evidence_anchor": ["sheet", "table_cell"],
+      "expected_blocks": ["sheet", "table"]
+    },
+    {
+      "case_id": "code_file",
+      "format": "code",
+      "default_parser": "native",
+      "fallback": "unstructured_markitdown",
+      "evidence_anchor": ["line_range"],
+      "expected_blocks": ["code_block"]
+    },
+    {
+      "case_id": "markdown_link",
+      "format": "md",
+      "default_parser": "native",
+      "fallback": "unstructured_markitdown",
+      "evidence_anchor": ["line_range", "section_path"],
+      "expected_blocks": ["heading", "paragraph", "link"]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # PHASE05 Agent Runtime LangGraph Harness
 
-status: pending
+status: active
 
 ## 目标
 

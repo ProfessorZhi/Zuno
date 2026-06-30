@@ -1,6 +1,6 @@
 # PHASE04 Document Ingestion Parse Gateway
 
-status: active
+status: completed
 
 ## 目标
 
@@ -21,15 +21,15 @@ Unstructured/MarkItDown -> DOCX / PPTX / XLSX / long-tail office formats
 
 ## 步骤
 
-- [ ] 建立 Parser Capability Matrix，覆盖 PDF、DOCX、PPTX、XLSX、TXT、MD、CSV、JSON、HTML、图片/扫描件、代码文件。
-- [ ] 输出 `docs/architecture/parser-capability-matrix.md` 或在正式架构文档中加入同等表格，列出 `format`、`default_parser`、`fallback`、`structure_kept`、`evidence_anchor`、`tests`。
-- [ ] 定义 Canonical Document IR，包含 document metadata、blocks、tables、figures、page/slide/line anchor、bbox、ACL、provenance。
-- [ ] 接入 parser router，区分 native parser、PDF/Office parser、OCR/VLM parser 和 long-tail fallback。
-- [ ] 为 native、Docling/PyMuPDF4LLM、MinerU/OCR/VLM、Unstructured/MarkItDown 分别定义 adapter contract、timeout、resource budget 和 fallback reason。
-- [ ] 定义 chunking、metadata、evidence anchor、index handoff。
-- [ ] 建立 parser golden fixtures：PDF 表格、扫描件、PPTX slide、DOCX heading/table、XLSX sheet、代码文件、Markdown 链接。
-- [ ] 将 parser result 接入 BM25/vector/GraphRAG/evidence/citation 的 handoff contract。
-- [ ] 写 focused tests 证明多格式解析 contract。
+- [x] 建立 Parser Capability Matrix，覆盖 PDF、DOCX、PPTX、XLSX、TXT、MD、CSV、JSON、HTML、图片/扫描件、代码文件。
+- [x] 输出 `docs/architecture/parser-capability-matrix.md` 或在正式架构文档中加入同等表格，列出 `format`、`default_parser`、`fallback`、`structure_kept`、`evidence_anchor`、`tests`。
+- [x] 定义 Canonical Document IR，包含 document metadata、blocks、tables、figures、page/slide/line anchor、bbox、ACL、provenance。
+- [x] 接入 parser router，区分 native parser、PDF/Office parser、OCR/VLM parser 和 long-tail fallback。
+- [x] 为 native、Docling/PyMuPDF4LLM、MinerU/OCR/VLM、Unstructured/MarkItDown 分别定义 adapter contract、timeout、resource budget 和 fallback reason。
+- [x] 定义 chunking、metadata、evidence anchor、index handoff。
+- [x] 建立 parser golden fixtures：PDF 表格、扫描件、PPTX slide、DOCX heading/table、XLSX sheet、代码文件、Markdown 链接。
+- [x] 将 parser result 接入 BM25/vector/GraphRAG/evidence/citation 的 handoff contract。
+- [x] 写 focused tests 证明多格式解析 contract。
 
 ## 输入 / 输出文件
 
@@ -69,3 +69,11 @@ Unstructured/MarkItDown -> DOCX / PPTX / XLSX / long-tail office formats
 pytest -q tests/knowledge tests/api -p no:cacheprovider
 python tools/scripts/verify_repo_structure.py
 ```
+
+## 完成证据
+
+- `src/backend/zuno/knowledge/ingestion/contracts.py` 定义 Parser Capability、Canonical Document IR、source span、provenance、failure 和 index handoff payload。
+- `src/backend/zuno/knowledge/ingestion/router.py` 定义 native、Docling/PyMuPDF、MinerU/OCR/VLM、Unstructured/MarkItDown 四类 adapter contract 和格式路由。
+- `tests/fixtures/parser_golden/manifest.json` 登记 PDF 表格、扫描件、PPTX、DOCX、XLSX、代码和 Markdown 链接的 golden fixture 索引。
+- `tests/knowledge/test_document_ingestion_contract.py` 覆盖 matrix、router、IR、handoff 和 manifest。
+- Current 边界：PHASE04 完成 contract 与测试入口，不表示生产 parser runtime 已迁移完成。

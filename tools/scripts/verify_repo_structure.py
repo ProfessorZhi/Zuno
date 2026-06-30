@@ -284,8 +284,10 @@ ALLOWED_RESPONSIBILITY_SUBDIRS = {
         "agent_system",
         "api",
         "evals",
+        "fixtures",
         "frontend",
         "graphrag",
+        "knowledge",
         "legacy_guards",
         "repo",
         "retrieval",
@@ -448,14 +450,12 @@ CAPABILITY_MCP_SERVER_CLASSIFICATIONS = {
 }
 
 PHASE02_RESERVED_IMPORT_GUARD_PATHS = [
-    "src/backend/zuno/knowledge/ingestion",
     "src/backend/zuno/platform/observability",
     "src/backend/zuno/platform/security",
     "src/backend/zuno/platform/vendor",
 ]
 
 PHASE02_RESERVED_IMPORT_MODULES = {
-    "src/backend/zuno/knowledge/ingestion": "zuno.knowledge.ingestion",
     "src/backend/zuno/platform/observability": "zuno.platform.observability",
     "src/backend/zuno/platform/security": "zuno.platform.security",
     "src/backend/zuno/platform/vendor": "zuno.platform.vendor",
@@ -1062,7 +1062,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             "当前 active program",
             ACTIVE_PROGRAM_NAME,
             "state: active",
-            "current_phase: PHASE04_document-ingestion-parse-gateway",
+            "current_phase: PHASE05_agent-runtime-langgraph-harness",
             COMPLETED_PROGRAM_NAME,
             COMPLETED_PROGRAM_ARCHIVE,
             "八个方面产物",
