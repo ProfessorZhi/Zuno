@@ -367,6 +367,10 @@ Important:
 - only the audit summary belongs in Git
 - local graph or deep routes may legitimately degrade if graph or community
   capability is not actually exercised by the runtime
+- PHASE07 trace diagnostics read `evidence_verdict.status`,
+  `evidence_verdict.fallback_reason`, `artifact_manifest.trace_id`, and
+  `runtime_trace_events` count so eval reports can distinguish retrieval
+  fallback from low-confidence evidence fallback.
 
 ## Current Runner Wiring
 

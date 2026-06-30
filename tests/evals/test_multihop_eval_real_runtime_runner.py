@@ -98,6 +98,17 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
                 {"source": "graph"},
             ],
             "rounds": [{"round": 1}, {"round": 2}],
+            "evidence_verdict": {
+                "status": "low_confidence",
+                "fallback_reason": "citation_coverage_below_threshold",
+            },
+            "artifact_manifest": {
+                "trace_id": "trace-eval-1",
+            },
+            "runtime_trace_events": [
+                {"kind": "pre_retrieval"},
+                {"kind": "post_answer"},
+            ],
         },
         "first_pass_result": {
             "graph_result": {
@@ -130,6 +141,10 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
     assert diagnostics["drift_followup_count"] == 1
     assert diagnostics["seed_entities"] == ["Scott Derrickson", "Ed Wood"]
     assert diagnostics["seed_entity_count"] == 2
+    assert diagnostics["evidence_verdict_status"] == "low_confidence"
+    assert diagnostics["evidence_verdict_fallback_reason"] == "citation_coverage_below_threshold"
+    assert diagnostics["artifact_manifest_trace_id"] == "trace-eval-1"
+    assert diagnostics["runtime_trace_event_count"] == 2
     assert "seed_entities not exposed by runtime metadata" not in notes
 
 

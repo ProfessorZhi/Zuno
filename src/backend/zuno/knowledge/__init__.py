@@ -27,15 +27,27 @@ if TYPE_CHECKING:
         RetrievalRequest,
         RetrievedDocument,
     )
+    from zuno.knowledge.trace import (
+        EvidenceChecker,
+        EvidenceVerdict,
+        HookPoint,
+        RuntimeTraceBuilder,
+        RuntimeTraceEvent,
+        TraceArtifactManifest,
+        enrich_trace_metadata_with_artifacts,
+    )
 
 
 _LAZY_EXPORT_TO_MODULE = {
+    "EvidenceChecker": "zuno.knowledge.trace",
+    "EvidenceVerdict": "zuno.knowledge.trace",
     "FusionResult": "zuno.knowledge.fusion",
     "GraphRAGProjectContract": "zuno.knowledge.contracts",
     "GraphRAGProjectLoader": "zuno.knowledge.contracts",
     "GraphRAGProjectSnapshot": "zuno.knowledge.query_service",
     "GraphRAGQueryService": "zuno.knowledge.query_service",
     "GraphRAGSettingsValidator": "zuno.knowledge.contracts",
+    "HookPoint": "zuno.knowledge.trace",
     "KnowledgeQueryResult": "zuno.knowledge.query_service",
     "KnowledgeQueryService": "zuno.knowledge.query_service",
     "LoadedGraphRAGProject": "zuno.knowledge.contracts",
@@ -47,16 +59,23 @@ _LAZY_EXPORT_TO_MODULE = {
     "RetrievalPlanner": "zuno.knowledge.retrieval",
     "RetrievalRequest": "zuno.knowledge.retrieval",
     "RetrievedDocument": "zuno.knowledge.retrieval",
+    "RuntimeTraceBuilder": "zuno.knowledge.trace",
+    "RuntimeTraceEvent": "zuno.knowledge.trace",
+    "TraceArtifactManifest": "zuno.knowledge.trace",
+    "enrich_trace_metadata_with_artifacts": "zuno.knowledge.trace",
     "normalize_retrieval_mode": "zuno.knowledge.contracts",
 }
 
 __all__ = [
+    "EvidenceChecker",
+    "EvidenceVerdict",
     "FusionResult",
     "GraphRAGProjectContract",
     "GraphRAGProjectLoader",
     "GraphRAGProjectSnapshot",
     "GraphRAGQueryService",
     "GraphRAGSettingsValidator",
+    "HookPoint",
     "KnowledgeQueryResult",
     "KnowledgeQueryService",
     "LoadedGraphRAGProject",
@@ -68,6 +87,10 @@ __all__ = [
     "RetrievalPlanner",
     "RetrievalRequest",
     "RetrievedDocument",
+    "RuntimeTraceBuilder",
+    "RuntimeTraceEvent",
+    "TraceArtifactManifest",
+    "enrich_trace_metadata_with_artifacts",
     "normalize_retrieval_mode",
 ]
 

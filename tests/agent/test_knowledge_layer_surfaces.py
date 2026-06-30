@@ -36,10 +36,17 @@ EXPECTED_EXPORTS = {
         "RetrievedDocument",
     ],
     "zuno.knowledge.trace": [
+        "EvidenceChecker",
+        "EvidenceVerdict",
         "GraphRAGProjectSnapshot",
+        "HookPoint",
         "KnowledgeQueryResult",
         "ProcessedQuery",
         "RetrievalPlan",
+        "RuntimeTraceBuilder",
+        "RuntimeTraceEvent",
+        "TraceArtifactManifest",
+        "enrich_trace_metadata_with_artifacts",
     ],
     "zuno.knowledge.retrieval": [
         "ProcessedQuery",
