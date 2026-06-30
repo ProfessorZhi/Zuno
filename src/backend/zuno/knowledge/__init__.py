@@ -31,6 +31,12 @@ if TYPE_CHECKING:
         normalize_retrieval_mode,
     )
     from zuno.knowledge.fusion import FusionResult, RetrievalFusion
+    from zuno.knowledge.indexing import (
+        IndexJobManifest,
+        IndexQueryResult,
+        KnowledgeIndexRuntime,
+        KnowledgeSpaceManifest,
+    )
     from zuno.knowledge.query_service import (
         GraphRAGProjectSnapshot,
         GraphRAGQueryService,
@@ -75,8 +81,12 @@ _LAZY_EXPORT_TO_MODULE = {
     "GraphRAGQueryService": "zuno.knowledge.query_service",
     "GraphRAGSettingsValidator": "zuno.knowledge.contracts",
     "HookPoint": "zuno.knowledge.trace",
+    "IndexJobManifest": "zuno.knowledge.indexing",
+    "IndexQueryResult": "zuno.knowledge.indexing",
     "KnowledgeQueryResult": "zuno.knowledge.query_service",
     "KnowledgeQueryService": "zuno.knowledge.query_service",
+    "KnowledgeIndexRuntime": "zuno.knowledge.indexing",
+    "KnowledgeSpaceManifest": "zuno.knowledge.indexing",
     "LoadedGraphRAGProject": "zuno.knowledge.contracts",
     "ProcessedQuery": "zuno.knowledge.retrieval",
     "ProductMode": "zuno.knowledge.agentic_graphrag",
@@ -119,8 +129,12 @@ __all__ = [
     "GraphRAGQueryService",
     "GraphRAGSettingsValidator",
     "HookPoint",
+    "IndexJobManifest",
+    "IndexQueryResult",
     "KnowledgeQueryResult",
     "KnowledgeQueryService",
+    "KnowledgeIndexRuntime",
+    "KnowledgeSpaceManifest",
     "LoadedGraphRAGProject",
     "ProductMode",
     "ProcessedQuery",

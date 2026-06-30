@@ -94,6 +94,13 @@ EXPECTED_EXPORTS = {
         "ProjectReadiness",
         "normalize_retrieval_mode",
     ],
+    "zuno.knowledge.indexing": [
+        "IndexJobManifest",
+        "IndexQueryResult",
+        "IndexTarget",
+        "KnowledgeIndexRuntime",
+        "KnowledgeSpaceManifest",
+    ],
 }
 
 
@@ -125,6 +132,7 @@ def test_knowledge_package_facade_points_at_layer_modules() -> None:
     import zuno.knowledge as knowledge
     from zuno.knowledge.agentic_graphrag import AgenticRetrievalRouter, ProductMode
     from zuno.knowledge.contracts import GraphRAGExtractorConfig, GraphRAGProjectContract
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
     from zuno.knowledge.query_service import KnowledgeQueryService
     from zuno.knowledge.retrieval import RetrievalPlanner
 
@@ -133,6 +141,7 @@ def test_knowledge_package_facade_points_at_layer_modules() -> None:
     assert knowledge.GraphRAGProjectContract is GraphRAGProjectContract
     assert knowledge.GraphRAGExtractorConfig is GraphRAGExtractorConfig
     assert knowledge.KnowledgeQueryService is KnowledgeQueryService
+    assert knowledge.KnowledgeIndexRuntime is KnowledgeIndexRuntime
     assert knowledge.RetrievalPlanner is RetrievalPlanner
 
 

@@ -1,6 +1,6 @@
 # PHASE05 index-jobs-and-knowledge-space-runtime
 
-status: active
+status: completed
 
 ## 目标
 
@@ -23,6 +23,18 @@ status: active
 - tests 能从 Document IR 建立可查询 index。
 - job manifest 记录 source、version、status、error、retry 和 graph project reference。
 - retrieval phase 能消费该 index runtime。
+
+## 完成证据
+
+- `src/backend/zuno/knowledge/indexing/` 新增 PHASE05 runtime owner surface。
+- `KnowledgeIndexRuntime` 支持 knowledge space、index job、BM25 / vector / graph 本地 index、query、retrieval payload、job manifest replay 和 failed job retry。
+- `IndexJobManifest` 记录 source、index version、targets、target status、error、retry、previous job、graph project reference 和 source block ids。
+- `tests/knowledge/test_index_jobs_runtime.py` 证明 Document IR 可建立可查询 index、失败和重试可回放、retrieval payload 可消费。
+- `pytest -q tests/knowledge tests/retrieval tests/graphrag -p no:cacheprovider` 通过。
+
+## Current / Target 边界
+
+Current 是本地 deterministic index job runtime surface；不是生产级 Elasticsearch / Milvus / Neo4j，也不是完整 GraphRAG extraction / community report runtime。
 
 ## 验证命令
 

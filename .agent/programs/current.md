@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE05_index-jobs-and-knowledge-space-runtime
+current_phase: PHASE06_durable-single-controller-runtime
 
 ## 目标
 
@@ -27,8 +27,8 @@ upload document
 - `PHASE02_runtime-migration-map-and-repo-ownership-lock.md`：completed。
 - `PHASE03_task-session-artifact-event-runtime.md`：completed。
 - `PHASE04_document-ingestion-parse-runtime.md`：completed。
-- `PHASE05_index-jobs-and-knowledge-space-runtime.md`：active。
-- `PHASE06_durable-single-controller-runtime.md`：pending。
+- `PHASE05_index-jobs-and-knowledge-space-runtime.md`：completed。
+- `PHASE06_durable-single-controller-runtime.md`：active。
 - `PHASE07_memory-db-and-context-governance.md`：pending。
 - `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：pending。
 - `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：pending。

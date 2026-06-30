@@ -1,6 +1,6 @@
 # PHASE06 durable-single-controller-runtime
 
-status: pending
+status: active
 
 ## 目标
 
@@ -30,4 +30,3 @@ status: pending
 git diff --check
 pytest -q tests/agent/test_single_controller_runtime_harness.py tests/agent -p no:cacheprovider
 ```
-
