@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/agent/` 目前是轻量 facade，通过 `__all__` 和 lazy import 暴露 `GeneralAgent`、agent config、stream state、context runtime contract，以及 PHASE05 的 Single Controller runtime harness contract。当前已提供 `runtime.py`、`context.py`、`post_turn.py`、`state.py`、`streaming.py`、`tool_bridge.py` 和 `harness.py` 这些无副作用目标层入口。真实 Single GeneralAgent runtime 仍主要在 `src/backend/zuno/agent/core/agents/` 和相关 application context 路径中。
+`src/backend/zuno/agent/` 目前是轻量 facade，通过 `__all__` 和 lazy import 暴露 `GeneralAgent`、agent config、stream state、context runtime contract、PHASE05 的 Single Controller runtime harness contract，以及 PHASE06 的 durable checkpoint / resume / interrupt runtime surface。当前已提供 `runtime.py`、`context.py`、`post_turn.py`、`state.py`、`streaming.py`、`tool_bridge.py`、`harness.py` 和 `durable_runtime.py` 这些目标层入口。真实 Single GeneralAgent runtime 仍主要在 `src/backend/zuno/agent/core/agents/` 和相关 application context 路径中；PHASE06 durable runtime 是 controller-node 级状态机，不是生产级 LangGraph checkpointer。
 
 ## Target role
 
@@ -12,7 +12,7 @@
 
 ## 允许新增内容
 
-- 小而纯的 agent contract、dataclass、enum、harness contract 或 lazy re-export。
+- 小而纯的 agent contract、dataclass、enum、harness contract、durable runtime surface 或 lazy re-export。
 - 指向旧 runtime owner 的边界说明和迁移注释。
 - 不改变执行顺序的 facade 层补充。
 

@@ -1,6 +1,6 @@
 # PHASE06 durable-single-controller-runtime
 
-status: active
+status: completed
 
 ## 目标
 
@@ -23,6 +23,19 @@ status: active
 - focused tests 能启动任务、写 checkpoint、模拟中断、恢复并继续输出 event。
 - RuntimeTurnLedger、trace id、task id 在 resume 前后保持一致。
 - recoverable failure 与 non-recoverable failure 可区分。
+
+## 完成证据
+
+- `src/backend/zuno/agent/durable_runtime.py` 新增 PHASE06 durable runtime owner surface。
+- `SingleControllerDurableRuntime` 支持 start_task、checkpoint、approval interrupt、resume、cancel、recoverable / non-recoverable failure 和 store snapshot。
+- `WorkspaceTaskRuntimeService` 已把 task_id、session_id/thread_id、trace_id、approval、cancel 和 runtime snapshot 接到 durable runtime。
+- `/api/v1/workspace/task/{task_id}/cancel` 与前端 `cancelWorkspaceTaskAPI` 已补齐。
+- `tests/agent/test_single_controller_durable_runtime.py` 证明 checkpoint / resume / cancel / failure 和新 runtime 实例复用同一 store。
+- `tests/api/test_workspace_task_runtime.py` 证明 workspace approval resume、cancel 和 SSE trace 回放。
+
+## Current / Target 边界
+
+Current 是 controller-node 级 in-process durable runtime surface；不是生产 LangGraph checkpointer，不是进程重启后的持久恢复，不保证 exactly-once tool execution，也不把产品 runtime 改成默认多 Agent。
 
 ## 验证命令
 

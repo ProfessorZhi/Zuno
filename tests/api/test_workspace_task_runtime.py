@@ -316,3 +316,127 @@ def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monke
     assert failed_events[-1]["type"] == "failure"
     assert failed_events[-1]["payload"]["status"] == "failed"
     assert "Risk not approved" in failed_events[-1]["payload"]["error"]
+
+
+def test_workspace_task_runtime_exposes_durable_runtime_resume_and_cancel(monkeypatch) -> None:
+    async def fake_create_workspace_session(payload):
+        return {
+            "session_id": payload.session_id,
+            "user_id": payload.user_id,
+            "agent": payload.agent,
+            "contexts": payload.contexts,
+        }
+
+    monkeypatch.setattr(
+        "zuno.api.v1.workspace.WorkSpaceSessionService.create_workspace_session",
+        fake_create_workspace_session,
+    )
+
+    client = _client()
+    session_response = client.post(
+        "/api/v1/workspace/session",
+        json={
+            "title": "PHASE06 durable runtime",
+            "session_id": "session_phase06_runtime",
+            "agent": "simple",
+            "workspace_mode": "normal",
+            "contexts": [],
+        },
+    )
+    assert session_response.status_code == 200
+
+    create_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Pause for durable approval",
+            "model_id": "model-local",
+            "session_id": "session_phase06_runtime",
+            "workspace_id": "workspace_phase06",
+            "task_id": "task_phase06_runtime",
+            "trace_id": "trace_phase06_runtime",
+            "goal": "durable approved task",
+            "product_mode": "general_agent",
+            "approval_mode": "manual",
+            "plugins": ["mail.send"],
+            "mcp_servers": [],
+        },
+    )
+    assert create_response.status_code == 200
+    created = create_response.json()["data"]
+    runtime = created["runtime"]
+    assert created["task"]["status"] == "approval_waiting"
+    assert runtime["status"] == "approval_waiting"
+    assert runtime["task_id"] == "task_phase06_runtime"
+    assert runtime["trace_id"] == "trace_phase06_runtime"
+    assert runtime["pending_interrupt"]["node"] == "act_react_loop"
+    assert runtime["latest_checkpoint"]["node"] == "act_react_loop"
+
+    approve_response = client.post(
+        "/api/v1/workspace/task/task_phase06_runtime/approve",
+        json={"decision": "approved", "comment": "Resume from PHASE06 checkpoint."},
+    )
+    assert approve_response.status_code == 200
+    approved = approve_response.json()["data"]
+    approved_runtime = approved["runtime"]
+    assert approved["task"]["status"] == "completed"
+    assert approved_runtime["status"] == "completed"
+    assert approved_runtime["pending_interrupt"] is None
+    assert approved_runtime["latest_checkpoint"]["node"] == "post_turn_commit"
+    assert approved_runtime["trace_id"] == "trace_phase06_runtime"
+    assert "runtime_resumed" in [event["type"] for event in approved_runtime["events"]]
+
+    stream_response = client.get("/api/v1/workspace/task/task_phase06_runtime/events/stream")
+    assert stream_response.status_code == 200
+    streamed_payloads = [
+        json.loads(line.removeprefix("data: "))
+        for line in stream_response.text.splitlines()
+        if line.startswith("data: ")
+    ]
+    assert {payload["data"]["trace_id"] for payload in streamed_payloads} == {
+        "trace_phase06_runtime"
+    }
+    assert "resuming" in [payload["event"] for payload in streamed_payloads]
+
+    cancel_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Pause then cancel",
+            "model_id": "model-local",
+            "session_id": "session_phase06_runtime",
+            "workspace_id": "workspace_phase06",
+            "task_id": "task_phase06_cancel",
+            "trace_id": "trace_phase06_cancel",
+            "goal": "durable cancelled task",
+            "product_mode": "general_agent",
+            "approval_mode": "manual",
+            "plugins": ["filesystem.write"],
+            "mcp_servers": [],
+        },
+    )
+    assert cancel_response.status_code == 200
+
+    cancelled_response = client.post(
+        "/api/v1/workspace/task/task_phase06_cancel/cancel",
+        json={"reason": "user_cancelled"},
+    )
+    assert cancelled_response.status_code == 200
+    cancelled = cancelled_response.json()["data"]
+    assert cancelled["task"]["status"] == "cancelled"
+    assert cancelled["runtime"]["status"] == "cancelled"
+    assert cancelled["runtime"]["events"][-1]["type"] == "runtime_cancelled"
+
+    cancelled_events = client.get("/api/v1/workspace/task/task_phase06_cancel/events").json()["data"]
+    assert cancelled_events[-1]["type"] == "task_cancelled"
+    assert cancelled_events[-1]["payload"]["reason"] == "user_cancelled"
+
+    cancelled_stream = client.get("/api/v1/workspace/task/task_phase06_cancel/events/stream")
+    assert cancelled_stream.status_code == 200
+    cancel_payloads = [
+        json.loads(line.removeprefix("data: "))
+        for line in cancelled_stream.text.splitlines()
+        if line.startswith("data: ")
+    ]
+    assert {payload["data"]["trace_id"] for payload in cancel_payloads} == {
+        "trace_phase06_cancel"
+    }
+    assert cancel_payloads[-1]["event"] == "task_cancelled"

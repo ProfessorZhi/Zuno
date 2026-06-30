@@ -8,6 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 STATIC_TARGET_SURFACES = [
     "src/backend/zuno/agent/__init__.py",
     "src/backend/zuno/agent/context.py",
+    "src/backend/zuno/agent/durable_runtime.py",
     "src/backend/zuno/agent/post_turn.py",
     "src/backend/zuno/agent/runtime.py",
     "src/backend/zuno/agent/state.py",

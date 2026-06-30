@@ -24,8 +24,8 @@
 | PHASE03 | task-session-artifact-event-runtime | completed | 已打通 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface。 |
 | PHASE04 | document-ingestion-parse-runtime | completed | 已让 `knowledge/ingestion` 拥有 Parse Gateway runtime owner surface、adapter registry、fixture replay、job status 和 legacy chunk normalizer。 |
 | PHASE05 | index-jobs-and-knowledge-space-runtime | completed | 已将 Document IR 送入本地 BM25 / vector / graph index job runtime，并提供 manifest、失败重试、回放和 retrieval payload。 |
-| PHASE06 | durable-single-controller-runtime | active | 让 Single Controller runtime 支持 durable checkpoint、interrupt、resume 和 replan。 |
-| PHASE07 | memory-db-and-context-governance | pending | 将 MemoryEngine 升级为可持久化、可审查、可治理的 memory runtime。 |
+| PHASE06 | durable-single-controller-runtime | completed | 已在 Single Controller harness 之上提供 durable checkpoint / interrupt / resume / cancel / failure runtime surface，并接入 workspace task snapshot / approval / cancel API。 |
+| PHASE07 | memory-db-and-context-governance | active | 将 MemoryEngine 升级为可持久化、可审查、可治理的 memory runtime。 |
 | PHASE08 | tool-control-plane-approval-and-sandbox-runtime | pending | 接通真实 executor、approval API/UI、credential broker 和 sandbox profile。 |
 | PHASE09 | agentic-retrieval-evidence-citation-runtime | pending | 让 Agentic retrieval 消费新 index runtime 并输出稳定 citation。 |
 | PHASE10 | security-observability-and-online-eval | pending | 将 security gates、ZunoSpan、eval baseline 接入真实运行时。 |

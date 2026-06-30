@@ -52,6 +52,10 @@ class WorkspaceApprovalBody(BaseModel):
     comment: str | None = None
 
 
+class WorkspaceCancelBody(BaseModel):
+    reason: str | None = None
+
+
 @router.get("/plugins", summary="Get workspace tools")
 async def get_workspace_plugins(
     execution_mode: str = "tool",
@@ -218,6 +222,21 @@ async def approve_workspace_task(
     )
 
 
+@router.post("/task/{task_id}/cancel", summary="Cancel workspace task")
+async def cancel_workspace_task(
+    task_id: str,
+    payload: WorkspaceCancelBody,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.cancel_task(
+            task_id=task_id,
+            reason=payload.reason,
+        )
+    )
+
+
 @router.get("/task/{task_id}/events/stream", summary="Stream workspace task events")
 async def stream_workspace_task_events(
     task_id: str,
@@ -264,10 +283,12 @@ async def create_workspace_feedback(
 __all__ = [
     "WorkSpaceSessionCreateBody",
     "WorkspaceApprovalBody",
+    "WorkspaceCancelBody",
     "WorkspaceFeedbackBody",
     "WorkspaceFileBody",
     "WorkspaceIngestBody",
     "approve_workspace_task",
+    "cancel_workspace_task",
     "create_workspace_ingest",
     "create_workspace_session",
     "create_workspace_feedback",

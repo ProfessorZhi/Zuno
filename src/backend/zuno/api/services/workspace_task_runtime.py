@@ -7,6 +7,8 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
+from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
+from zuno.agent.harness import ControllerRuntimeState
 from zuno.api.services.user import UserPayload
 from zuno.schema.workspace import (
     ArtifactContract,
@@ -35,6 +37,7 @@ class WorkspaceTaskRuntimeService:
     _artifact_content: dict[str, str] = {}
     _artifact_ids_by_task: dict[str, list[str]] = {}
     _feedback: dict[str, FeedbackContract] = {}
+    _durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
 
     @classmethod
     def register_file(
@@ -139,6 +142,14 @@ class WorkspaceTaskRuntimeService:
         cls._tasks[task_id] = task
         cls._task_inputs[task_id] = simple_task
         cls._artifact_ids_by_task[task_id] = []
+        runtime_state = cls._runtime_state_for_task(
+            simple_task=simple_task,
+            login_user=login_user,
+            task_id=task_id,
+            trace_id=trace_id,
+            workspace_id=workspace_id,
+            goal=goal,
+        )
         cls._events[task_id] = [
             cls._event(task_id=task_id, trace_id=trace_id, event_type="task_started", status="created", payload={"session_id": task.session_id}),
             cls._event(task_id=task_id, trace_id=trace_id, event_type="planning", status="planning", payload={"goal": goal}),
@@ -156,6 +167,16 @@ class WorkspaceTaskRuntimeService:
             ),
         ]
         if approval_required:
+            cls._durable_runtime.start_task(
+                runtime_state,
+                interrupt_at_node="act_react_loop",
+                required_approval=simple_task.approval_mode,
+                interrupt_payload={
+                    "approval_mode": simple_task.approval_mode,
+                    "plugins": list(simple_task.plugins),
+                    "mcp_servers": list(simple_task.mcp_servers),
+                },
+            )
             cls._events[task_id].append(
                 cls._event(
                     task_id=task_id,
@@ -171,6 +192,7 @@ class WorkspaceTaskRuntimeService:
             )
             return cls.get_task_snapshot(task_id)
 
+        cls._durable_runtime.start_task(runtime_state)
         cls._complete_task(
             task_id=task_id,
             simple_task=simple_task,
@@ -198,6 +220,11 @@ class WorkspaceTaskRuntimeService:
         )
 
         if normalized_decision == "rejected":
+            cls._durable_runtime.resume_task(
+                task_id=task_id,
+                approval_decision="rejected",
+                comment=comment,
+            )
             task.status = "failed"
             task.updated_at = str(time.time())
             cls._events[task_id].append(
@@ -211,6 +238,11 @@ class WorkspaceTaskRuntimeService:
             )
             return cls.get_task_snapshot(task_id)
 
+        cls._durable_runtime.resume_task(
+            task_id=task_id,
+            approval_decision="approved",
+            comment=comment,
+        )
         simple_task = cls._task_inputs[task_id]
         artifact_kind = (
             simple_task.output_contract.artifact_kinds[0]
@@ -232,6 +264,29 @@ class WorkspaceTaskRuntimeService:
             task_id=task_id,
             simple_task=simple_task,
             artifact_kind=artifact_kind,
+        )
+        return cls.get_task_snapshot(task_id)
+
+    @classmethod
+    def cancel_task(cls, *, task_id: str, reason: str | None) -> dict:
+        task = cls._require_task(task_id)
+        if task.status in {"completed", "failed", "cancelled"}:
+            raise HTTPException(status_code=409, detail="Workspace task cannot be cancelled")
+        normalized_reason = reason or "cancelled"
+        try:
+            cls._durable_runtime.cancel_task(task_id, reason=normalized_reason)
+        except ValueError as err:
+            raise HTTPException(status_code=409, detail=str(err))
+        task.status = "cancelled"
+        task.updated_at = str(time.time())
+        cls._events.setdefault(task_id, []).append(
+            cls._event(
+                task_id=task_id,
+                trace_id=task.trace_id or "",
+                event_type="task_cancelled",
+                status="cancelled",
+                payload={"reason": normalized_reason},
+            )
         )
         return cls.get_task_snapshot(task_id)
 
@@ -311,10 +366,12 @@ class WorkspaceTaskRuntimeService:
     def get_task_snapshot(cls, task_id: str) -> dict:
         task = cls._require_task(task_id)
         artifact_ids = cls._artifact_ids_by_task.get(task_id, [])
+        runtime_snapshot = cls._durable_runtime.get_task_snapshot(task_id)
         return {
             "task": task.model_dump(),
             "artifact_ids": list(artifact_ids),
             "artifacts": [cls._artifacts[artifact_id].model_dump() for artifact_id in artifact_ids],
+            "runtime": runtime_snapshot.to_dict() if runtime_snapshot is not None else None,
         }
 
     @classmethod
@@ -408,6 +465,32 @@ class WorkspaceTaskRuntimeService:
                 f"Uploaded files: {', '.join(simple_task.uploaded_file_ids) or 'none'}",
                 f"Knowledge spaces: {', '.join(simple_task.knowledge_space_ids) or 'none'}",
             ]
+        )
+
+    @staticmethod
+    def _runtime_state_for_task(
+        *,
+        simple_task: WorkSpaceSimpleTask,
+        login_user: UserPayload,
+        task_id: str,
+        trace_id: str,
+        workspace_id: str,
+        goal: str,
+    ) -> ControllerRuntimeState:
+        return ControllerRuntimeState(
+            thread_id=simple_task.session_id or f"thread_{task_id}",
+            workspace_id=workspace_id,
+            user_id=login_user.user_id,
+            task_id=task_id,
+            trace_id=trace_id,
+            goal=goal,
+            context_pack={
+                "session_id": simple_task.session_id,
+                "product_mode": simple_task.product_mode,
+                "knowledge_space_ids": list(simple_task.knowledge_space_ids),
+                "uploaded_file_ids": list(simple_task.uploaded_file_ids),
+                "retrieval_mode": simple_task.retrieval_mode,
+            },
         )
 
     @staticmethod

@@ -19,6 +19,12 @@ if TYPE_CHECKING:
         SingleControllerRuntimeHarness,
         build_single_controller_runtime_harness,
     )
+    from zuno.agent.durable_runtime import (
+        DurableRuntimeEvent,
+        DurableRuntimeTaskSnapshot,
+        InMemoryDurableRuntimeStore,
+        SingleControllerDurableRuntime,
+    )
     from zuno.agent.post_turn import RuntimeTurnLedger
     from zuno.agent.runtime import AgentConfig, GeneralAgent
     from zuno.agent.state import StreamAgentState
@@ -31,13 +37,17 @@ _EXPORT_TO_MODULE = {
     "ContextPackPolicy": "zuno.agent.context",
     "ContextTrace": "zuno.agent.context",
     "ControllerRuntimeState": "zuno.agent.harness",
+    "DurableRuntimeEvent": "zuno.agent.durable_runtime",
+    "DurableRuntimeTaskSnapshot": "zuno.agent.durable_runtime",
     "GeneralAgent": "zuno.agent.runtime",
+    "InMemoryDurableRuntimeStore": "zuno.agent.durable_runtime",
     "ModelContextPacket": "zuno.agent.context",
     "RuntimeCheckpoint": "zuno.agent.harness",
     "RuntimeInterrupt": "zuno.agent.harness",
     "RuntimeNodeContract": "zuno.agent.harness",
     "RuntimeTurnLedger": "zuno.agent.post_turn",
     "SingleControllerRuntimeHarness": "zuno.agent.harness",
+    "SingleControllerDurableRuntime": "zuno.agent.durable_runtime",
     "StreamAgentState": "zuno.agent.state",
     "build_single_controller_runtime_harness": "zuno.agent.harness",
 }
@@ -49,13 +59,17 @@ __all__ = [
     "ContextPackPolicy",
     "ContextTrace",
     "ControllerRuntimeState",
+    "DurableRuntimeEvent",
+    "DurableRuntimeTaskSnapshot",
     "GeneralAgent",
+    "InMemoryDurableRuntimeStore",
     "ModelContextPacket",
     "RuntimeCheckpoint",
     "RuntimeInterrupt",
     "RuntimeNodeContract",
     "RuntimeTurnLedger",
     "SingleControllerRuntimeHarness",
+    "SingleControllerDurableRuntime",
     "StreamAgentState",
     "build_single_controller_runtime_harness",
 ]

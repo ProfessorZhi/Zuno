@@ -1,6 +1,6 @@
 # PHASE07 memory-db-and-context-governance
 
-status: pending
+status: active
 
 ## 目标
 
@@ -30,4 +30,3 @@ status: pending
 git diff --check
 pytest -q tests/agent/test_memory_system_contract.py tests/agent/test_memory_layer_surfaces.py tests/agent/test_generalagent_context_memory_runtime.py -p no:cacheprovider
 ```
-

@@ -233,6 +233,7 @@ export interface WorkspaceTaskCreateResponse {
   task: WorkspaceTaskContract
   artifact_ids: string[]
   artifacts: ArtifactContract[]
+  runtime?: WorkspaceRuntimeSnapshot
 }
 
 export interface WorkspaceArtifactResponse {
@@ -290,6 +291,24 @@ export interface WorkspaceApprovalRequest {
 }
 
 export interface WorkspaceApprovalResponse extends WorkspaceTaskCreateResponse {}
+
+export interface WorkspaceCancelRequest {
+  reason?: string
+}
+
+export interface WorkspaceRuntimeSnapshot {
+  task_id: string
+  trace_id: string
+  thread_id: string
+  workspace_id: string
+  status: WorkspaceTaskStatus | string
+  state: Record<string, any>
+  checkpoint_ids: string[]
+  latest_checkpoint?: Record<string, any> | null
+  pending_interrupt?: Record<string, any> | null
+  failure?: Record<string, any> | null
+  events: Array<Record<string, any>>
+}
 
 export interface WorkspaceAttachment {
   name: string
@@ -508,6 +527,14 @@ export const workspaceTaskEventsStreamAPI = async (
 export const approveWorkspaceTaskAPI = async (taskId: string, data: WorkspaceApprovalRequest) => {
   return request({
     url: `/api/v1/workspace/task/${taskId}/approve`,
+    method: 'post',
+    data,
+  })
+}
+
+export const cancelWorkspaceTaskAPI = async (taskId: string, data: WorkspaceCancelRequest) => {
+  return request({
+    url: `/api/v1/workspace/task/${taskId}/cancel`,
     method: 'post',
     data,
   })

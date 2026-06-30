@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-target-architecture-runtime-full-implementation-v1
-current_phase: PHASE06_durable-single-controller-runtime
+current_phase: PHASE07_memory-db-and-context-governance
 
 `.agent/programs/` 当前保存 active runtime implementation program：
 
@@ -51,8 +51,8 @@ current_phase: PHASE06_durable-single-controller-runtime
 - `PHASE03_task-session-artifact-event-runtime.md`：completed，已打通 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface。
 - `PHASE04_document-ingestion-parse-runtime.md`：completed，已把 `knowledge/ingestion` 推进为 Parse Gateway runtime owner surface。
 - `PHASE05_index-jobs-and-knowledge-space-runtime.md`：completed，已将 Document IR 送入本地 BM25 / vector / graph index job runtime。
-- `PHASE06_durable-single-controller-runtime.md`：active，正在把 Single Controller runtime 推进为 durable checkpoint / resume / interrupt 状态机。
-- `PHASE07_memory-db-and-context-governance.md`：pending。
+- `PHASE06_durable-single-controller-runtime.md`：completed，已把 Single Controller harness 推进为 controller-node 级 durable checkpoint / interrupt / resume / cancel runtime surface，并接入 workspace task。
+- `PHASE07_memory-db-and-context-governance.md`：active，正在把 MemoryEngine 推进为可持久化、可审查、可治理的 memory runtime。
 - `PHASE08_tool-control-plane-approval-and-sandbox-runtime.md`：pending。
 - `PHASE09_agentic-retrieval-evidence-citation-runtime.md`：pending。
 - `PHASE10_security-observability-and-online-eval.md`：pending。
