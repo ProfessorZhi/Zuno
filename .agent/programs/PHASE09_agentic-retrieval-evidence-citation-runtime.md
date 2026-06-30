@@ -1,6 +1,6 @@
 # PHASE09 agentic-retrieval-evidence-citation-runtime
 
-status: pending
+status: active
 
 ## 目标
 
@@ -30,4 +30,3 @@ status: pending
 git diff --check
 pytest -q tests/agent/test_agentic_graphrag_contract.py tests/retrieval tests/graphrag tests/evals -p no:cacheprovider
 ```
-

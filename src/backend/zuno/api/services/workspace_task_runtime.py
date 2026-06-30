@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import hashlib
 import json
 import time
@@ -10,6 +11,11 @@ from fastapi import HTTPException
 from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
 from zuno.agent.harness import ControllerRuntimeState
 from zuno.api.services.user import UserPayload
+from zuno.capability.runtime import (
+    ToolRuntimeExecutionResult,
+    ToolRuntimeRequest,
+    build_default_tool_control_plane_runtime,
+)
 from zuno.schema.workspace import (
     ArtifactContract,
     FeedbackContract,
@@ -38,6 +44,8 @@ class WorkspaceTaskRuntimeService:
     _artifact_ids_by_task: dict[str, list[str]] = {}
     _feedback: dict[str, FeedbackContract] = {}
     _durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
+    _tool_runtime = build_default_tool_control_plane_runtime()
+    _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
 
     @classmethod
     def register_file(
@@ -124,12 +132,12 @@ class WorkspaceTaskRuntimeService:
             if simple_task.output_contract and simple_task.output_contract.artifact_kinds
             else "markdown"
         )
-        approval_required = simple_task.approval_mode not in {"", "auto", "none"}
+        manual_approval_required = simple_task.approval_mode not in {"", "auto", "none"}
 
         task = WorkspaceTaskContract(
             workspace_id=workspace_id,
             owner=login_user.user_id,
-            status="approval_waiting" if approval_required else "completed",
+            status="approval_waiting" if manual_approval_required else "running",
             trace_id=trace_id,
             task_id=task_id,
             session_id=simple_task.session_id,
@@ -166,7 +174,7 @@ class WorkspaceTaskRuntimeService:
                 },
             ),
         ]
-        if approval_required:
+        if manual_approval_required:
             cls._durable_runtime.start_task(
                 runtime_state,
                 interrupt_at_node="act_react_loop",
@@ -190,6 +198,27 @@ class WorkspaceTaskRuntimeService:
                     },
                 )
             )
+            return cls.get_task_snapshot(task_id)
+
+        pending_tool_result = cls._run_workspace_tools_until_interrupt(
+            task_id=task_id,
+            simple_task=simple_task,
+            login_user=login_user,
+            runtime_state=runtime_state,
+        )
+        if pending_tool_result is not None:
+            cls._durable_runtime.start_task(
+                runtime_state,
+                interrupt_at_node="act_react_loop",
+                required_approval=f"tool:{pending_tool_result.tool_id}",
+                interrupt_payload={
+                    "tool_id": pending_tool_result.tool_id,
+                    "approval_decision": pending_tool_result.approval_decision,
+                    "audit_ref": pending_tool_result.audit_event.audit_id,
+                },
+            )
+            task.status = "approval_waiting"
+            task.updated_at = str(time.time())
             return cls.get_task_snapshot(task_id)
 
         cls._durable_runtime.start_task(runtime_state)
@@ -219,6 +248,8 @@ class WorkspaceTaskRuntimeService:
             )
         )
 
+        pending_tool_request = cls._pending_tool_requests.pop(task_id, None)
+
         if normalized_decision == "rejected":
             cls._durable_runtime.resume_task(
                 task_id=task_id,
@@ -244,11 +275,6 @@ class WorkspaceTaskRuntimeService:
             comment=comment,
         )
         simple_task = cls._task_inputs[task_id]
-        artifact_kind = (
-            simple_task.output_contract.artifact_kinds[0]
-            if simple_task.output_contract and simple_task.output_contract.artifact_kinds
-            else "markdown"
-        )
         task.status = "completed"
         task.updated_at = str(time.time())
         cls._events[task_id].append(
@@ -259,6 +285,20 @@ class WorkspaceTaskRuntimeService:
                 status="resuming",
                 payload={"approval": "approved"},
             )
+        )
+        if pending_tool_request is not None:
+            approved_tool = cls._tool_runtime.execute(
+                replace(
+                    pending_tool_request,
+                    approved=True,
+                    approval_comment=comment or "",
+                )
+            )
+            cls._append_tool_runtime_events(task_id=task_id, result=approved_tool)
+        artifact_kind = (
+            simple_task.output_contract.artifact_kinds[0]
+            if simple_task.output_contract and simple_task.output_contract.artifact_kinds
+            else "markdown"
         )
         cls._complete_task(
             task_id=task_id,
@@ -354,6 +394,81 @@ class WorkspaceTaskRuntimeService:
             for file_id in uploaded_file_ids
             if file_id in cls._files
         ]
+
+    @classmethod
+    def _run_workspace_tools_until_interrupt(
+        cls,
+        *,
+        task_id: str,
+        simple_task: WorkSpaceSimpleTask,
+        login_user: UserPayload,
+        runtime_state: ControllerRuntimeState,
+    ) -> ToolRuntimeExecutionResult | None:
+        for tool_id in simple_task.plugins:
+            if cls._tool_runtime.get_manifest(tool_id) is None:
+                continue
+            request = ToolRuntimeRequest(
+                tool_id=tool_id,
+                arguments=cls._tool_arguments(simple_task=simple_task, tool_id=tool_id),
+                workspace_id=simple_task.workspace_id or "workspace_default",
+                user_id=login_user.user_id,
+                task_id=task_id,
+                trace_id=simple_task.trace_id or runtime_state.trace_id,
+                model_intent=simple_task.query,
+                runtime_state=runtime_state,
+            )
+            result = cls._tool_runtime.execute(request)
+            cls._append_tool_runtime_events(task_id=task_id, result=result)
+            if result.approval_required:
+                cls._pending_tool_requests[task_id] = request
+                return result
+            if result.status == "blocked":
+                task = cls._require_task(task_id)
+                task.status = "failed"
+                task.updated_at = str(time.time())
+                return result
+        return None
+
+    @classmethod
+    def _append_tool_runtime_events(
+        cls,
+        *,
+        task_id: str,
+        result: ToolRuntimeExecutionResult,
+    ) -> None:
+        task = cls._require_task(task_id)
+        for event in result.task_events:
+            cls._events.setdefault(task_id, []).append(
+                cls._event(
+                    task_id=task_id,
+                    trace_id=task.trace_id or "",
+                    event_type=str(event["type"]),
+                    status=str(event["status"]),
+                    payload=dict(event["payload"]),
+                )
+            )
+
+    @staticmethod
+    def _tool_arguments(*, simple_task: WorkSpaceSimpleTask, tool_id: str) -> dict:
+        if tool_id == "filesystem.read":
+            target = (
+                simple_task.uploaded_file_ids[0]
+                if simple_task.uploaded_file_ids
+                else "workspace://current"
+            )
+            return {"path": target, "query": simple_task.query}
+        if tool_id == "filesystem.write":
+            return {
+                "path": f"artifacts/{simple_task.task_id or 'task'}.md",
+                "content": simple_task.query,
+            }
+        if tool_id == "mail.send":
+            return {
+                "to": "workspace-review@example.com",
+                "subject": simple_task.goal or "Zuno task update",
+                "body": simple_task.query,
+            }
+        return {"query": simple_task.query}
 
     @classmethod
     def _require_file(cls, file_id: str) -> UploadedFileContract:

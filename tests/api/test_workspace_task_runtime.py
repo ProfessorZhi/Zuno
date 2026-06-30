@@ -440,3 +440,125 @@ def test_workspace_task_runtime_exposes_durable_runtime_resume_and_cancel(monkey
         "trace_phase06_cancel"
     }
     assert cancel_payloads[-1]["event"] == "task_cancelled"
+
+
+def test_workspace_task_runtime_runs_read_only_tool_and_streams_audit_events() -> None:
+    client = _client()
+
+    create_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Read the uploaded workspace note",
+            "model_id": "model-local",
+            "session_id": "session_phase08_read",
+            "workspace_id": "workspace_phase08",
+            "task_id": "task_phase08_read",
+            "trace_id": "trace_phase08_read",
+            "goal": "tool read closure",
+            "product_mode": "general_agent",
+            "plugins": ["filesystem.read"],
+            "mcp_servers": [],
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()["data"]
+    assert created["task"]["status"] == "completed"
+
+    events = client.get("/api/v1/workspace/task/task_phase08_read/events").json()["data"]
+    event_types = [event["type"] for event in events]
+    assert "tool_call" in event_types
+    assert "sandbox_audit" in event_types
+    assert "tool_result" in event_types
+    tool_result = next(event for event in events if event["type"] == "tool_result")
+    assert tool_result["payload"]["tool_id"] == "filesystem.read"
+    assert tool_result["payload"]["result"]["audit_ref"].startswith("audit_")
+    audit_event = next(event for event in events if event["type"] == "sandbox_audit")
+    assert audit_event["payload"]["audit"]["sandbox_profile"] == "workspace_ro"
+    assert audit_event["payload"]["audit"]["policy_decision"] == "allow"
+
+    stream_response = client.get("/api/v1/workspace/task/task_phase08_read/events/stream")
+    assert stream_response.status_code == 200
+    streamed_payloads = [
+        json.loads(line.removeprefix("data: "))
+        for line in stream_response.text.splitlines()
+        if line.startswith("data: ")
+    ]
+    assert "tool_result" in [payload["event"] for payload in streamed_payloads]
+    streamed_tool = next(payload for payload in streamed_payloads if payload["event"] == "tool_result")
+    assert streamed_tool["data"]["tool_id"] == "filesystem.read"
+    assert streamed_tool["data"]["audit_ref"].startswith("audit_")
+
+
+def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_tool() -> None:
+    client = _client()
+
+    create_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Send the approved project email",
+            "model_id": "model-local",
+            "session_id": "session_phase08_mail",
+            "workspace_id": "workspace_phase08",
+            "task_id": "task_phase08_mail",
+            "trace_id": "trace_phase08_mail",
+            "goal": "tool approval closure",
+            "product_mode": "general_agent",
+            "plugins": ["mail.send"],
+            "mcp_servers": [],
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()["data"]
+    assert created["task"]["status"] == "approval_waiting"
+    assert created["artifact_ids"] == []
+    assert created["runtime"]["pending_interrupt"]["required_approval"] == "tool:mail.send"
+
+    waiting_events = client.get("/api/v1/workspace/task/task_phase08_mail/events").json()["data"]
+    assert [event["type"] for event in waiting_events] == [
+        "task_started",
+        "planning",
+        "retrieval",
+        "tool_call",
+        "sandbox_audit",
+        "approval_required",
+    ]
+    approval_event = waiting_events[-1]
+    assert approval_event["payload"]["required_approval"] == "tool:mail.send"
+    assert approval_event["payload"]["tool_id"] == "mail.send"
+    assert "raw-secret" not in repr(waiting_events)
+
+    approve_response = client.post(
+        "/api/v1/workspace/task/task_phase08_mail/approve",
+        json={"decision": "approved", "comment": "Approve PHASE08 tool execution."},
+    )
+    assert approve_response.status_code == 200
+    approved = approve_response.json()["data"]
+    assert approved["task"]["status"] == "completed"
+    assert approved["artifacts"][0]["task_id"] == "task_phase08_mail"
+
+    approved_events = client.get("/api/v1/workspace/task/task_phase08_mail/events").json()["data"]
+    approved_types = [event["type"] for event in approved_events]
+    assert approved_types == [
+        "task_started",
+        "planning",
+        "retrieval",
+        "tool_call",
+        "sandbox_audit",
+        "approval_required",
+        "approval_decision",
+        "resuming",
+        "tool_call",
+        "sandbox_audit",
+        "tool_result",
+        "answer",
+        "artifact_created",
+        "eval_diagnostic",
+        "task_completed",
+    ]
+    tool_result = next(event for event in approved_events if event["type"] == "tool_result")
+    assert tool_result["payload"]["tool_id"] == "mail.send"
+    assert tool_result["payload"]["result"]["data"]["message_id"].startswith("msg_")
+    assert tool_result["payload"]["credential_refs"] == ["credref://workspace_phase08/mail.send"]
+    assert "raw-secret" not in repr(approved_events)

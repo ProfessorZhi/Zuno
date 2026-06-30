@@ -288,6 +288,9 @@ export interface WorkspaceIngestResponse {
 export interface WorkspaceApprovalRequest {
   decision: 'approved' | 'rejected'
   comment?: string
+  approval_id?: string
+  tool_call_id?: string
+  required_approval?: string
 }
 
 export interface WorkspaceApprovalResponse extends WorkspaceTaskCreateResponse {}
@@ -327,6 +330,11 @@ export interface WorkspaceStreamEvent {
   trace_id?: string
   artifact_id?: string
   citation_ids?: string[]
+  tool_id?: string
+  tool_call_id?: string
+  approval_id?: string
+  required_approval?: string
+  audit_ref?: string
   data?: Record<string, any>
   raw?: any
 }
@@ -383,6 +391,11 @@ export const workspaceSimpleChatStreamAPI = async (
               trace_id: parsed?.data?.trace_id,
               artifact_id: parsed?.data?.artifact_id,
               citation_ids: parsed?.data?.citation_ids,
+              tool_id: parsed?.data?.tool_id,
+              tool_call_id: parsed?.data?.tool_call_id,
+              approval_id: parsed?.data?.approval_id,
+              required_approval: parsed?.data?.required_approval,
+              audit_ref: parsed?.data?.audit_ref,
               data: parsed?.data || {},
               raw: parsed,
             }
@@ -501,6 +514,11 @@ export const workspaceTaskEventsStreamAPI = async (
             trace_id: parsed?.data?.trace_id,
             artifact_id: parsed?.data?.artifact_id,
             citation_ids: parsed?.data?.citation_ids,
+            tool_id: parsed?.data?.tool_id,
+            tool_call_id: parsed?.data?.tool_call_id,
+            approval_id: parsed?.data?.approval_id,
+            required_approval: parsed?.data?.required_approval,
+            audit_ref: parsed?.data?.audit_ref,
             data: parsed?.data || {},
             raw: parsed,
           }

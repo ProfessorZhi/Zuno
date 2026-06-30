@@ -1145,6 +1145,73 @@
   border-color: rgba(122, 112, 196, 0.28);
 }
 
+.tool-approval-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(122, 112, 196, 0.28);
+  border-radius: 8px;
+  background: rgba(250, 249, 255, 0.96);
+}
+
+.tool-approval-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.tool-approval-copy strong,
+.tool-approval-copy small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tool-approval-copy strong {
+  color: #272332;
+  font-size: 13px;
+}
+
+.tool-approval-copy small {
+  color: rgba(39, 35, 50, 0.62);
+  font-size: 11px;
+}
+
+.tool-approval-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.tool-approval-button {
+  min-width: 52px;
+  height: 30px;
+  border: 1px solid rgba(39, 35, 50, 0.12);
+  border-radius: 8px;
+  background: #fff;
+  color: #272332;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tool-approval-button.approve {
+  border-color: rgba(74, 145, 133, 0.36);
+  background: rgba(236, 247, 245, 0.96);
+  color: #27655d;
+}
+
+.tool-approval-button.reject {
+  border-color: rgba(207, 92, 79, 0.3);
+  color: #9b3f36;
+}
+
+.tool-approval-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .loading-event.answer,
 .trace-item.answer {
   background: linear-gradient(135deg, rgba(255, 246, 235, 0.96), rgba(255, 252, 248, 0.92));

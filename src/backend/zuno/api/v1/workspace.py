@@ -50,6 +50,9 @@ class WorkspaceIngestBody(BaseModel):
 class WorkspaceApprovalBody(BaseModel):
     decision: str
     comment: str | None = None
+    approval_id: str | None = None
+    tool_call_id: str | None = None
+    required_approval: str | None = None
 
 
 class WorkspaceCancelBody(BaseModel):

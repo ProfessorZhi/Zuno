@@ -6,6 +6,7 @@ import { ArrowDown, ArrowLeft, ArrowUp, CopyDocument, Plus } from '@element-plus
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import {
+  approveWorkspaceTaskAPI,
   createWorkspaceSessionAPI,
   deleteWorkspaceSessionAPI,
   getWorkspaceExecutionModesAPI,
@@ -99,6 +100,15 @@ const consumedInitialMessageKey = ref('')
 const initialRouteMessageInFlightKey = ref('')
 const messages = ref<ChatMessage[]>([])
 const executionEvents = ref<TraceRecord[]>([])
+const pendingToolApproval = ref<{
+  taskId: string
+  toolId: string
+  requiredApproval: string
+  approvalId: string
+  toolCallId: string
+  auditRef: string
+} | null>(null)
+const toolApprovalSubmitting = ref(false)
 const executionModes = ref<ExecutionModeDefinition[]>([])
 const accessScopes = ref<AccessScopeDefinition[]>([])
 const selectedExecutionMode = ref('tool')
@@ -982,6 +992,8 @@ const clearConversationState = (options?: { keepSessionHistoryLoading?: boolean 
   composerFocused.value = false
   clearTransientPetMood()
   executionEvents.value = []
+  pendingToolApproval.value = null
+  toolApprovalSubmitting.value = false
   pendingAttachments.value = []
   attachmentsUploading.value = false
   isGenerating.value = false
@@ -998,6 +1010,7 @@ const isCurrentSessionDisposable = () => (
   Boolean(currentSessionId.value)
   && messages.value.length === 0
   && executionEvents.value.length === 0
+  && !pendingToolApproval.value
   && pendingAttachments.value.length === 0
 )
 
@@ -1211,8 +1224,20 @@ const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
   const toolName = String(data.tool_name || '')
   const toolResult = String(data.result || data.message || '')
   const isToolCreation = event.type === 'tool_result' && ['create_remote_api_tool', 'create_cli_tool'].includes(toolName)
+  if (event.type === 'approval_required') {
+    return {
+      id: event.id || crypto.randomUUID(),
+      title: '等待工具审批',
+      detail: String(data.tool_id || event.tool_id || data.required_approval || event.required_approval || '需要确认后继续执行'),
+      at: new Date().toLocaleTimeString(),
+      phase: phase || 'approval',
+      status: status || 'approval_waiting',
+      accent: 'tool',
+      retrieval,
+    }
+  }
   if (event.type === 'tool_call') {
-    return { id: event.id || crypto.randomUUID(), title: '正在调用工具', detail: String(data.tool_name || data.message || '正在执行外部能力'), at: new Date().toLocaleTimeString(), phase, status, accent: 'tool', retrieval }
+    return { id: event.id || crypto.randomUUID(), title: '正在调用工具', detail: String(data.tool_id || data.tool_name || data.message || '正在执行外部能力'), at: new Date().toLocaleTimeString(), phase, status, accent: 'tool', retrieval }
   }
   if (event.type === 'tool_result') {
     const failed = data.ok === false
@@ -1272,6 +1297,59 @@ const pushTraceEvent = (event: WorkspaceStreamEvent) => {
   if (lastRecord && lastRecord.title === nextRecord.title && lastRecord.detail === nextRecord.detail) return
   executionEvents.value.push(nextRecord)
   if (executionEvents.value.length > 24) executionEvents.value.splice(0, executionEvents.value.length - 24)
+}
+
+const capturePendingToolApproval = (event: WorkspaceStreamEvent) => {
+  if (event.type !== 'approval_required') return
+  const data = event.data || {}
+  const taskId = String(event.task_id || data.task_id || '')
+  const requiredApproval = String(event.required_approval || data.required_approval || '')
+  const toolId = String(event.tool_id || data.tool_id || requiredApproval.replace(/^tool:/, ''))
+  if (!taskId || !requiredApproval.startsWith('tool:')) return
+  pendingToolApproval.value = {
+    taskId,
+    toolId,
+    requiredApproval,
+    approvalId: String(event.approval_id || data.approval_id || requiredApproval),
+    toolCallId: String(event.tool_call_id || data.tool_call_id || toolId),
+    auditRef: String(event.audit_ref || data.audit_ref || ''),
+  }
+  isGenerating.value = false
+  assistantTextStreaming.value = false
+}
+
+const submitToolApproval = async (decision: 'approved' | 'rejected') => {
+  const pending = pendingToolApproval.value
+  if (!pending || toolApprovalSubmitting.value) return
+  toolApprovalSubmitting.value = true
+  try {
+    const response = await approveWorkspaceTaskAPI(pending.taskId, {
+      decision,
+      comment: decision === 'approved' ? 'Approved from workspace approval panel.' : 'Rejected from workspace approval panel.',
+      approval_id: pending.approvalId,
+      tool_call_id: pending.toolCallId,
+      required_approval: pending.requiredApproval,
+    })
+    pendingToolApproval.value = null
+    ElMessage.success(decision === 'approved' ? '工具调用已批准。' : '工具调用已拒绝。')
+    const task = response.data?.data?.task
+    if (task?.status === 'completed') {
+      executionEvents.value.push({
+        id: crypto.randomUUID(),
+        title: '工具审批已处理',
+        detail: `${pending.toolId} 已继续执行。`,
+        at: new Date().toLocaleTimeString(),
+        phase: 'approval',
+        status: 'completed',
+        accent: 'tool',
+      })
+    }
+  } catch (error) {
+    console.error('工具审批失败', error)
+    ElMessage.error('工具审批失败，请稍后重试')
+  } finally {
+    toolApprovalSubmitting.value = false
+  }
 }
 
 const parseCreatedToolId = (text: string) => {
@@ -1854,6 +1932,7 @@ const submitMessage = async () => {
         }
         if (!isAgentMode.value) return
         pushTraceEvent(event)
+        capturePendingToolApproval(event)
         await refreshToolSelectionsAfterCreation(event)
         await renderAgentProgress()
       },
@@ -2364,6 +2443,16 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <div class="picker-head"><div class="trace-head-copy"><strong>执行进展</strong><small>{{ selectedToolCount > 0 ? `已启用 ${selectedToolCount} 项能力` : '未启用额外工具' }}</small></div></div>
+            <div v-if="pendingToolApproval" class="tool-approval-card" aria-label="工具审批">
+              <div class="tool-approval-copy">
+                <strong>{{ pendingToolApproval.toolId }}</strong>
+                <small>{{ pendingToolApproval.auditRef ? `审计：${pendingToolApproval.auditRef}` : pendingToolApproval.requiredApproval }}</small>
+              </div>
+              <div class="tool-approval-actions">
+                <button type="button" class="tool-approval-button reject" :disabled="toolApprovalSubmitting" @click="submitToolApproval('rejected')">拒绝</button>
+                <button type="button" class="tool-approval-button approve" :disabled="toolApprovalSubmitting" @click="submitToolApproval('approved')">批准</button>
+              </div>
+            </div>
             <div v-if="executionEvents.length === 0" class="empty-copy">正在等待新的执行事件...</div>
             <div v-else class="trace-list">
               <div v-for="event in executionEvents" :key="event.id" class="trace-item" :class="event.accent || 'default'">

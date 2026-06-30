@@ -36,7 +36,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-target-architecture-runtime-full-implementation-v1`，阶段是 `PHASE08_tool-control-plane-approval-and-sandbox-runtime`。
+当前 active Agent program 是 `zuno-target-architecture-runtime-full-implementation-v1`，阶段是 `PHASE09_agentic-retrieval-evidence-citation-runtime`。
 
 本轮 program 不再继续做架构细化或 contract foundation，而是把目标架构推进到第一版真实 runtime 闭环：
 
@@ -52,7 +52,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 执行状态入口在 `.agent/programs/`。本轮每个 phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
 
-PHASE03 已完成 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface；PHASE04 已完成 Document Ingestion / Parse Gateway runtime owner surface；PHASE05 已完成本地 BM25 / vector / graph index job runtime；PHASE06 已完成 controller-node 级 durable Single Controller runtime surface；PHASE07 已完成 snapshot / SQLModel-backed memory runtime 与 GeneralAgent 接入；当前 PHASE08 进入 Tool Control Plane、approval 与 sandbox runtime。
+PHASE03 已完成 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface；PHASE04 已完成 Document Ingestion / Parse Gateway runtime owner surface；PHASE05 已完成本地 BM25 / vector / graph index job runtime；PHASE06 已完成 controller-node 级 durable Single Controller runtime surface；PHASE07 已完成 snapshot / SQLModel-backed memory runtime 与 GeneralAgent 接入；PHASE08 已完成本地 deterministic Tool Control Plane、工具级 approval / sandbox / credential ref / audit runtime 和最小前端审批入口；当前 PHASE09 进入 Agentic Retrieval、Evidence 与 Citation runtime。
 
 本轮大型 program 的八个方面产物：
 

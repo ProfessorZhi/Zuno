@@ -57,6 +57,17 @@ EXPECTED_EXPORTS = {
         "CapabilitySelectionResult",
         "CapabilityType",
     ],
+    "zuno.capability.runtime": [
+        "CredentialGrant",
+        "InMemoryCredentialBroker",
+        "SandboxPolicyEnforcer",
+        "ToolControlPlaneRuntime",
+        "ToolExecutionContext",
+        "ToolRuntimeExecutionResult",
+        "ToolRuntimeRequest",
+        "ToolSandboxContext",
+        "build_default_tool_control_plane_runtime",
+    ],
     "zuno.capability.trace": [
         "CapabilitySelectionTrace",
     ],
@@ -98,12 +109,14 @@ def test_capability_package_facade_points_at_layer_modules() -> None:
     from zuno.capability.control_plane import ToolCardManifest
     from zuno.capability.contracts import CapabilityRecord
     from zuno.capability.registry import CapabilityRegistry
+    from zuno.capability.runtime import ToolControlPlaneRuntime
     from zuno.capability.selector import DynamicCapabilitySelector
 
     assert capability.CapabilityRecord is CapabilityRecord
     assert capability.CapabilityRegistry is CapabilityRegistry
     assert capability.DynamicCapabilitySelector is DynamicCapabilitySelector
     assert capability.ToolCardManifest is ToolCardManifest
+    assert capability.ToolControlPlaneRuntime is ToolControlPlaneRuntime
 
 
 def test_importing_capability_surfaces_does_not_load_heavy_runtime_modules() -> None:
