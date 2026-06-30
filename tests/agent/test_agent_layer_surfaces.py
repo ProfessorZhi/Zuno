@@ -28,6 +28,14 @@ EXPECTED_EXPORTS = {
         "ModelContextPacket",
         "TokenBudgetPolicy",
     ],
+    "zuno.agent.harness": [
+        "ControllerRuntimeState",
+        "RuntimeCheckpoint",
+        "RuntimeInterrupt",
+        "RuntimeNodeContract",
+        "SingleControllerRuntimeHarness",
+        "build_single_controller_runtime_harness",
+    ],
     "zuno.agent.post_turn": [
         "InMemoryLayerStore",
         "MemoryScope",
@@ -98,12 +106,14 @@ def test_agent_layer_modules_reuse_legacy_runtime_objects() -> None:
 def test_agent_package_facade_points_at_layer_modules() -> None:
     import zuno.agent as agent
     from zuno.agent.context import ContextOrchestrator
+    from zuno.agent.harness import ControllerRuntimeState
     from zuno.agent.runtime import GeneralAgent
     from zuno.agent.state import StreamAgentState
 
     assert agent.GeneralAgent is GeneralAgent
     assert agent.ContextOrchestrator is ContextOrchestrator
     assert agent.StreamAgentState is StreamAgentState
+    assert agent.ControllerRuntimeState is ControllerRuntimeState
 
 
 def test_importing_agent_surfaces_does_not_load_heavy_runtime_modules() -> None:

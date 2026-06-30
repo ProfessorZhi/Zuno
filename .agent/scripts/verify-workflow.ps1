@@ -183,7 +183,7 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-master-architecture-implementation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "current_phase: PHASE05_agent-runtime-langgraph-harness") {
+if ($currentProgram -notmatch "zuno-master-architecture-implementation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "current_phase: PHASE06_context-memory-system") {
     $failures.Add("current-program.md must declare the active master architecture implementation program and PHASE02 state")
 }
 if ($currentProgram -notmatch "zuno-eight-deliverables-full-realization-v1") {

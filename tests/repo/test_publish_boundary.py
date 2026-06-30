@@ -45,7 +45,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
     ]:
         assert phrase in architecture
     assert "当前 active program" in current_program
-    assert "PHASE05_agent-runtime-langgraph-harness" in current_program
+    assert "PHASE06_context-memory-system" in current_program
 
 
 def test_public_docs_keep_history_off_front_path_but_reachable() -> None:

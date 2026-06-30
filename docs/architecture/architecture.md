@@ -73,7 +73,7 @@ Current 只写代码、测试和可复现结果已经证明的事实：
 | --- | --- | --- |
 | Presentation / Workspace | Web、Desktop、会话、上传、产物、trace 面板和用户反馈。 | 当前已有 Web / Desktop 工作区；完整产品闭环仍是 Target。 |
 | API / Session | FastAPI routes、DTO、Auth、task / session、SSE / WebSocket、upload / download。 | 当前 API 基础存在；完整 task/session/event flow 仍是 Target。 |
-| Agent Core Runtime | `prepare_context -> plan -> ReAct -> observe -> reflect -> replan -> post_turn_commit`。 | 当前是 `GeneralAgent` single loop + 最小 ledger，不是完整 LangGraph runtime。 |
+| Agent Core Runtime | `prepare_context -> plan -> ReAct -> observe -> reflect -> replan -> post_turn_commit`。 | 当前是 `GeneralAgent` single loop + RuntimeTurnLedger + PHASE05 Single Controller harness contract，不是完整 LangGraph runtime。 |
 | Context / Memory | Raw Event Log、recent window、task summary、structured memory、Context Pack、review / promotion / decay。 | 当前是 foundation contracts 和轻量 readback。 |
 | Capability / Tool | ToolCard / manifest、capability retrieval、policy、approval、executor adapter、sandbox、result normalization。 | 当前已有 ToolCard foundation；动态编排和审批闭环仍是 Target。 |
 | Knowledge / Retrieval | Agentic GraphRAG mode policy、Basic RAG、GraphRAG local/global/drift、retrieval fusion、evidence、citation。 | 当前已有 product mode / query method / GraphRAG query contract；生产级 extraction / RRF / rerank 仍是 Target。 |
@@ -110,7 +110,7 @@ Zuno 的目标架构可以理解为“单控制器运行时 + 多平面支撑”
 | 文档 / 工作流治理 | `AGENTS.md`、`.agent/`、`docs/architecture/`、历史归档和 verifiers 已形成闭环。 | 文档、计划、HTML、verifier 和 release evidence 随每个 program 自维护。 | 高完成度，但仍要防止研究 PDF 与正式文档脱节。 | 本文与 `.agent/architecture/architecture.md`、HTML 同源；program phase 固定更新规则。 |
 | 代码布局治理 | `src/backend/zuno` 顶层六层已收口；legacy alias surface 已集中。 | 六层内部也能表达 ownership，`platform/services`、compat、vendor 和 provider tree 不再混住。 | 中等差距；读者仍会觉得零碎和历史包袱重。 | PHASE02 ownership matrix、compat/vendor 分离、repo structure guard。 |
 | API / 产品闭环 | Completion / knowledge query path foundation 存在；PHASE03 已补 workspace product object、request envelope 和 stream id contract。 | Workspace、task/session、upload、artifact、SSE/WS、download、feedback、trace panel 闭环。 | 当前只有 contract，完整产品后端和 UI 仍是 Target。 | PHASE03 定义产品对象和事件契约，先做最小 task/session/event flow。 |
-| Agent Runtime | `GeneralAgent` single loop、RuntimeTurnLedger、最小 evidence chain 已有。 | LangGraph-compatible durable runtime：checkpoint、interrupt、resume、streaming、plan/replan/reflection。 | 中大差距；不是 deep LangGraph current。 | PHASE05 定义 state model 与最小 state graph harness。 |
+| Agent Runtime | `GeneralAgent` single loop、RuntimeTurnLedger、最小 evidence chain、PHASE05 `zuno.agent.harness` state / node / checkpoint / interrupt / stream event contract 已有。 | LangGraph-compatible durable runtime：durable checkpoint、真实 interrupt/resume、streaming、plan/replan/reflection 执行。 | 中等差距；contract 已定，但不是 production-grade LangGraph current。 | PHASE06/07/08/09 必须消费同一 runtime state / trace contract。 |
 | Memory / Context | foundation taxonomy、Context Pack policy 和 lightweight readback 已有。 | Raw Event Log、Recent Window、Task Summary、Structured Memory、promotion/decay、memory eval。 | 中大差距；未形成生产级 read-write-manage。 | PHASE06 先做事件账本、摘要、候选记忆和 review gate。 |
 | Tool Control Plane | ToolCard metadata、MCP/local tool policy trace 和 capability selection trace bridge 已有。 | ToolCard registry、selector、policy、approval、executor adapters、credential broker、sandbox、audit。 | 中大差距；还不是受控工具平台。 | PHASE07 先落 ToolCard schema、side-effect policy 和 approval gate。 |
 | Knowledge / Agentic GraphRAG | `basic/local/global/drift` query method contract、GraphRAG query service foundation、citation trace contract 已有。 | Agentic Retrieval Router、multi-channel staged fusion、GraphRAG index pipeline、evidence bundle、citation coverage、eval。 | 中大差距；query side 有 foundation，index / fusion / rerank / eval 未成熟。 | PHASE08 固定 product mode 与 internal method 边界，补 router/evidence/fusion tests。 |
@@ -487,7 +487,7 @@ prepare_context
 
 `plan` 负责把复杂目标拆成可执行步骤；`act_react_loop` 负责单步工具调用、检索和观察；`reflect` 负责检查当前答案是否有足够证据、格式是否正确、是否可能泄密或越权；`replan_if_needed` 在检索不足、工具失败或用户目标变化时重写剩余步骤；`post_turn_commit` 把 trace、artifact、memory candidate、eval diagnostics 和安全审计写回。LangGraph 适合承载这类 runtime，不是因为项目需要“装了 LangGraph”，而是因为 durable execution、interrupt / approval、streaming、checkpoint、resume 和状态图正好对应企业任务运行时的需求。
 
-当前 Zuno 只能说已经有 `GeneralAgent` single loop、RuntimeTurnLedger 和最小 evidence chain foundation。完整 LangGraph-compatible runtime 仍是 Target。近期最短路径不是一开始就做多 Agent，而是先把单控制器的状态、输入输出、事件、失败恢复和审批点做稳。未来如果引入子 Agent，也应该作为工具或 delegated worker，由单控制器管理，而不是让产品架构默认变成多 Agent 混战。
+当前 Zuno 可以说已经有 `GeneralAgent` single loop、RuntimeTurnLedger、最小 evidence chain foundation，以及 `zuno.agent.harness` 中的 Single Controller runtime contract。PHASE05 固定了 `ControllerRuntimeState`、十个 runtime node contract、checkpoint snapshot、interrupt/resume envelope 和 traceable stream event bridge。完整 production-grade LangGraph runtime 仍是 Target：现在的 Current 是可测试 contract，不是已经替换主循环的 durable execution engine。近期最短路径不是一开始就做多 Agent，而是先把单控制器的状态、输入输出、事件、失败恢复和审批点做稳。未来如果引入子 Agent，也应该作为工具或 delegated worker，由单控制器管理，而不是让产品架构默认变成多 Agent 混战。
 
 #### Model Gateway 与模型路由策略
 
@@ -517,7 +517,7 @@ Model Gateway 的职责是把 provider、模型配置、成本预算、超时、
 | `reflect` | observations、draft、policy、budget。 | continue / replan / finish / ask_user。 | `llm:critic`。 | critic fail 不直接放行高风险输出。 |
 | `post_turn_commit` | final answer、trace、artifact refs、memory candidates。 | committed trace、memory review items、artifact metadata。 | `chain:post_turn_commit`。 | commit fail 可返回答案但标记 partial_commit。 |
 
-LangGraph-compatible harness 的价值在这里：这些节点可以成为 state graph nodes，checkpoint 负责长任务恢复，interrupt 负责审批，streaming 负责事件回传，resume 负责 approval 后继续执行。但这仍是 Target，不能因依赖存在就写成 Current。
+PHASE05 已把 LangGraph-compatible harness 的最小契约落到 `src/backend/zuno/agent/harness.py`：这些节点可以成为 state graph nodes，checkpoint snapshot 绑定 `trace_id` / `task_id` / `thread_id`，interrupt envelope 绑定 approval reason，stream event bridge 统一输出 runtime node event。仍然不能把它写成完整生产 runtime；真实 durable persistence、approval 后恢复执行和主循环深度切换仍是后续 Target。
 
 ### Context / Memory 平面
 
@@ -971,7 +971,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE05_agent-runtime-langgraph-harness`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop` 与 `PHASE04_document-ingestion-parse-gateway` 已通过 verifier 和 focused tests 证明完成。PHASE05 只负责 Single Controller Agent Runtime 的 state model、node contract、minimal harness、streaming/checkpoint/interrupt contract，不把完整 production-grade LangGraph runtime 写成 Current。
+当前 active program 是 `zuno-master-architecture-implementation-v1`，不是上一轮只做图和执行计划的文档 program。它的目标是把目标架构分阶段落地，同时仍然遵守 Current / Target 边界。当前阶段是 `PHASE06_context-memory-system`；`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway` 与 `PHASE05_agent-runtime-langgraph-harness` 已通过 verifier 和 focused tests 证明完成。PHASE06 只负责 Context / Memory 的 taxonomy、read/write/manage contract、context renderer、review/promotion/decay policy 和 memory eval fixture，不把生产级 Memory DB 写成 Current。
 
 本 program 的十二个 phase：
 

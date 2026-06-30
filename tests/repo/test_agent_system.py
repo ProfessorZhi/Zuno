@@ -143,7 +143,7 @@ def test_agent_program_surface_matches_active_architecture_program() -> None:
         "当前 active program",
         ACTIVE_PROGRAM_NAME,
         "state: active",
-        "current_phase: PHASE05_agent-runtime-langgraph-harness",
+        "current_phase: PHASE06_context-memory-system",
         COMPLETED_PROGRAM_NAME,
         COMPLETED_PROGRAM_ARCHIVE,
         "八个方面产物",

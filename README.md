@@ -35,7 +35,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 active program
 
-当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE05_agent-runtime-langgraph-harness`。`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop` 与 `PHASE04_document-ingestion-parse-gateway` 已通过 verifier 和 focused tests 证明完成；本阶段推进 Single Controller Agent Runtime、LangGraph-compatible harness、runtime state、checkpoint、streaming 和 interrupt / resume contract。
+当前 active Agent program 是 `zuno-master-architecture-implementation-v1`，阶段是 `PHASE06_context-memory-system`。`PHASE01_program-baseline-and-previous-closure`、`PHASE02_project-folder-and-code-layout-cleanup`、`PHASE03_enterprise-scenario-and-product-loop`、`PHASE04_document-ingestion-parse-gateway` 与 `PHASE05_agent-runtime-langgraph-harness` 已通过 verifier 和 focused tests 证明完成；本阶段推进 Context / Memory taxonomy、read/write/manage contract、context renderer、review/promotion/decay policy 和 memory eval fixture。
 
 执行状态入口在 `.agent/programs/`。
 

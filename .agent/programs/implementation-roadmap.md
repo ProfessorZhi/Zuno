@@ -12,7 +12,7 @@
 
 state: active
 program: zuno-master-architecture-implementation-v1
-current_phase: PHASE05_agent-runtime-langgraph-harness
+current_phase: PHASE06_context-memory-system
 
 每次新 program 都从 `PHASE01` 开始编号。
 
@@ -122,8 +122,8 @@ Runtime implementation paths opened by later phases:
 | PHASE02 | completed | 项目文件夹、代码 ownership、compat/vendor、缓存和 repo structure 治理。 |
 | PHASE03 | completed | 企业知识库场景、workspace、task/session、upload/artifact/event flow。 |
 | PHASE04 | completed | Document Ingestion / Parse Gateway 和多格式解析矩阵。 |
-| PHASE05 | active | Single Controller Agent Runtime / LangGraph-compatible harness。 |
-| PHASE06 | pending | Context / Memory read-write-manage 系统。 |
+| PHASE05 | completed | Single Controller Agent Runtime / LangGraph-compatible harness。 |
+| PHASE06 | active | Context / Memory read-write-manage 系统。 |
 | PHASE07 | pending | Tool Control Plane、MCP、approval、executor adapter、sandbox。 |
 | PHASE08 | pending | RAG/GraphRAG、retrieval fusion、evidence/citation。 |
 | PHASE09 | pending | Security governance、DLP、prompt injection 防护、sandbox。 |
@@ -229,7 +229,7 @@ Set these state values in `.agent/programs/current.md`, `.agent/programs/impleme
 ```text
 program: zuno-master-architecture-implementation-v1
 state: active
-current_phase: PHASE05_agent-runtime-langgraph-harness
+current_phase: PHASE06_context-memory-system
 ```
 
 - [ ] **Step 4: Archive ChatGPT research mode artifacts**

@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/agent/` 目前是轻量 facade，通过 `__all__` 和 lazy import 暴露 `GeneralAgent`、agent config、stream state，以及 context runtime contract。当前已提供 `runtime.py`、`context.py`、`post_turn.py`、`state.py`、`streaming.py` 和 `tool_bridge.py` 这些无副作用目标层薄入口。真实 Single GeneralAgent runtime 仍主要在 `src/backend/zuno/agent/core/agents/` 和相关 application context 路径中。
+`src/backend/zuno/agent/` 目前是轻量 facade，通过 `__all__` 和 lazy import 暴露 `GeneralAgent`、agent config、stream state、context runtime contract，以及 PHASE05 的 Single Controller runtime harness contract。当前已提供 `runtime.py`、`context.py`、`post_turn.py`、`state.py`、`streaming.py`、`tool_bridge.py` 和 `harness.py` 这些无副作用目标层入口。真实 Single GeneralAgent runtime 仍主要在 `src/backend/zuno/agent/core/agents/` 和相关 application context 路径中。
 
 ## Target role
 
@@ -12,7 +12,7 @@
 
 ## 允许新增内容
 
-- 小而纯的 agent contract、dataclass、enum 或 lazy re-export。
+- 小而纯的 agent contract、dataclass、enum、harness contract 或 lazy re-export。
 - 指向旧 runtime owner 的边界说明和迁移注释。
 - 不改变执行顺序的 facade 层补充。
 
@@ -26,6 +26,7 @@
 
 - `tests/repo/test_backend_facade_layers.py`
 - `tests/agent/test_agent_layer_surfaces.py`
+- `tests/agent/test_single_controller_runtime_harness.py`
 - `tests/agent/test_general_agent*`
 - `tests/agent/test_generalagent_context_memory_runtime.py`
 - `tests/legacy_guards/test_zuno_alias_imports.py`
