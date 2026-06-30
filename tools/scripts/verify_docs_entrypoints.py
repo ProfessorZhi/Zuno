@@ -79,46 +79,53 @@ def verify_front_path_shape() -> list[str]:
 
 def verify_architecture_html_sync() -> list[str]:
     errors: list[str] = []
-    for relative_path in [
-        "docs/architecture/overview.html",
-        ".agent/architecture/blueprint.html",
-        "tools/agent/render_architecture.py",
-    ]:
+    for relative_path in ["docs/architecture.md", "docs/architecture.html", "tools/agent/render_architecture.py"]:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing architecture diagram sync path: {relative_path}")
 
-    diagrams = _read("docs/architecture/diagrams.md")
+    architecture_source = _read("docs/architecture.md")
     for phrase in [
-        "Mermaid 源只维护在本文",
+        "Zuno 架构总览",
         "python tools/agent/render_architecture.py --write",
-        "#f8f8fb",
-        "#f6f3ff",
-        "#a99cff",
-        "#2c255f",
-        "#9b8cff",
+        "#f7f8fb",
+        "#ffffff",
+        "#b8c2cc",
+        "#16202a",
+        "#52616f",
     ]:
-        if phrase not in diagrams:
-            errors.append(f"docs/architecture/diagrams.md missing diagram sync phrase: {phrase}")
+        if phrase not in architecture_source:
+            errors.append(f"docs/architecture.md missing diagram sync phrase: {phrase}")
 
-    for relative_path in [
+    for stale_path in [
+        "docs/architecture/architecture.html",
         "docs/architecture/overview.html",
         ".agent/architecture/blueprint.html",
     ]:
+        if (REPO_ROOT / stale_path).exists():
+            errors.append(f"stale architecture HTML must not remain: {stale_path}")
+
+    for relative_path in ["docs/architecture.html"]:
         path = REPO_ROOT / relative_path
         if not path.exists():
             continue
         content = path.read_text(encoding="utf-8")
         for phrase in [
-            "docs/architecture/diagrams.md",
+            "docs/architecture.md",
             "tools/agent/render_architecture.py",
-            "Current Runtime",
-            "Target Runtime",
-            "Maintenance Workflow",
-            "#f8f8fb",
-            "#f6f3ff",
-            "#a99cff",
-            "#2c255f",
-            "#9b8cff",
+            "4+1 View Model",
+            "Component-and-Connector View",
+            "Deployment View",
+            "Quality View",
+            "Scenarios View",
+            "Process View",
+            "V&B Logical View",
+            "V&B Deployment View",
+            "Agent Loop View",
+            "#f7f8fb",
+            "#ffffff",
+            "#b8c2cc",
+            "#16202a",
+            "#52616f",
         ]:
             if phrase not in content:
                 errors.append(f"{relative_path} missing architecture diagram phrase: {phrase}")
@@ -129,9 +136,10 @@ def main() -> int:
     readme = _read("README.md")
     docs_index = _read("docs/README.md")
     architecture_index = _read("docs/architecture/README.md")
+    deliverables = _read("docs/deliverables.md")
     roadmap = _read("docs/architecture/roadmap.md")
     target = _read("docs/architecture/target-architecture.md")
-    diagrams = _read("docs/architecture/diagrams.md")
+    architecture_source = _read("docs/architecture.md")
     evidence = _read("docs/evidence/public-demo.md")
     workflow = _read(".agent/references/workflow.md")
     agents = _read("AGENTS.md")
@@ -163,6 +171,7 @@ def main() -> int:
                 "./architecture/current-architecture.md",
                 "./architecture/target-architecture.md",
                 "./architecture/roadmap.md",
+                "./deliverables.md",
                 "./evidence/public-demo.md",
                 "./history/README.md",
                 "前台文档默认使用中文",
@@ -177,12 +186,28 @@ def main() -> int:
                 "current-architecture.md",
                 "target-architecture.md",
                 "roadmap.md",
-                "diagrams.md",
+                "../architecture.md",
+                "../architecture.html",
                 "../evidence/public-demo.md",
                 "docs/history/programs/official-graphrag-cleanup-v1/",
                 "docs/history/programs/zuno-target-architecture-migration-v1/",
                 "zuno-target-runtime-v2",
                 "过时审计、旧规格、旧 phase、旧计划和旧 runbook",
+            ],
+        )
+    )
+    errors.extend(
+        _require(
+            "docs/deliverables.md",
+            deliverables,
+            [
+                "八大交付物",
+                "十类架构视图",
+                "根目录清洁期望",
+                "4+1 Logical View",
+                "V&B Logical View",
+                "Agent Loop View",
+                "Quality View",
             ],
         )
     )
@@ -200,7 +225,8 @@ def main() -> int:
                 "zuno-target-architecture-refresh-v1",
                 "zuno-repo-layout-cleanup-v1",
                 "zuno-architecture-visuals-v1",
-                "docs/architecture/diagrams.md",
+                "docs/architecture.md",
+                "docs/deliverables.md",
                 "docs/history/programs/zuno-target-architecture-migration-v1/",
                 "docs/history/programs/official-graphrag-cleanup-v1/",
             ],
@@ -225,15 +251,26 @@ def main() -> int:
     )
     errors.extend(
         _require(
-            "docs/architecture/diagrams.md",
-            diagrams,
+            "docs/architecture.md",
+            architecture_source,
             [
-                "Current Runtime",
-                "Target Runtime",
-                "Maintenance Workflow",
+                "Logical View",
+                "Development View",
+                "Process View",
+                "Physical View",
+                "Scenarios View",
+                "V&B Logical View",
+                "V&B Deployment View",
+                "Quality View",
+                "Agent Loop View",
+                "Component-and-Connector View",
                 "```mermaid",
-                "GeneralAgent single loop",
-                "Single GeneralAgent Runtime",
+                "4+1 View Model",
+                "Component-and-Connector View",
+                "Deployment View",
+                "Quality View",
+            "Agentic RAG",
+                "GraphRAG",
                 "Domain Pack 只允许作为历史或兼容语境出现",
             ],
         )
@@ -268,8 +305,12 @@ def main() -> int:
                 "这是仓库唯一的 Agent 入口",
                 ".agent/references/task-routing.md",
                 ".agent/references/workflow.md",
+                ".agent/references/architecture-docs-map.md",
+                ".agent/references/workflow-governance.md",
                 ".agent/programs/",
                 ".agent/architecture/",
+                "Architecture Documentation Governance",
+                "Agent Workflow Self-Maintenance",
                 "前台文档默认中文",
             ],
         )

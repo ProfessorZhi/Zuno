@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zuno Architecture Overview</title>
+  <style>
+    :root {
+      --zuno-background: #f7f8fb;
+      --zuno-node: #ffffff;
+      --zuno-border: #b8c2cc;
+      --zuno-text: #16202a;
+      --zuno-line: #52616f;
+      color-scheme: light;
+      font-family: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+    body {
+      margin: 0;
+      background: #ffffff;
+      color: var(--zuno-text);
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 52px 32px 70px;
+    }
+    header {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--zuno-border);
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+    h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 0 0 10px;
+      line-height: 1.68;
+      font-size: 15px;
+    }
+    code {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.92em;
+    }
+    .sync {
+      color: #52616f;
+      font-size: 14px;
+    }
+    .purpose {
+      color: #25313d;
+      font-size: 15px;
+    }
+    .chapter {
+      margin-top: 34px;
+    }
+    .view-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .view-grid article {
+      border: 1px solid var(--zuno-border);
+      border-radius: 6px;
+      padding: 14px;
+      background: #ffffff;
+    }
+    .diagram-section {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #e3e7ec;
+      break-inside: avoid;
+    }
+    .meta {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0 16px;
+      padding: 12px 14px;
+      border: 1px solid var(--zuno-border);
+      border-radius: 6px;
+      background: #f7f8fb;
+      font-size: 14px;
+    }
+    .meta div {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 10px;
+    }
+    dt {
+      margin: 0;
+      font-weight: 650;
+    }
+    dd {
+      margin: 0;
+      line-height: 1.55;
+    }
+    .analysis {
+      margin: 10px 0 16px;
+      padding-left: 20px;
+      color: #25313d;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .analysis li {
+      margin: 4px 0;
+    }
+    .diagram-frame {
+      margin: 16px auto 10px;
+      padding: 18px;
+      max-width: 780px;
+      overflow-x: auto;
+      border: 1px solid var(--zuno-border);
+      border-radius: 6px;
+      background: #ffffff;
+    }
+    .mermaid {
+      width: 100%;
+      min-height: 120px;
+      text-align: center;
+    }
+    .mermaid svg {
+      width: auto !important;
+      max-width: none;
+      min-width: 560px;
+      height: auto;
+    }
+    details {
+      max-width: 780px;
+      margin: 8px auto 0;
+      font-size: 13px;
+      color: #52616f;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 14px;
+      border-radius: 6px;
+      background: #f7f8fb;
+      border: 1px solid var(--zuno-border);
+      color: var(--zuno-text);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Zuno 架构总览 / Architecture Overview</h1>
+      <p>Zuno 是本地优先的 Agent Workspace。本文用 4+1、View &amp; Beyond 和 Agent Loop 专题图说明目标架构。</p>
+      <p class="sync">Source: <code>docs/architecture.md</code>. Generator: <code>tools/agent/render_architecture.py</code>. Output: <code>docs/architecture.html</code>.</p>
+      <!-- View markers for verifier: V&B Logical View; V&B Deployment View -->
+    </header>
+    <section class="chapter">
+      <h2>一、4+1 View Model</h2>
+      <p>4+1 用 Logical、Development、Process、Physical、Scenarios 五个视图解释同一个系统。</p>
+      <section class="diagram-section">
+        <h3>1. Logical View</h3>
+        <p class="purpose">该图回答：Zuno 的核心职责如何分层。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Logical</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Logical</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：系统职责，而不是物理目录。</li>
+          <li>Zuno 映射：默认主线是 Single Controller Agent。</li>
+          <li>边界：Memory、Tool、Knowledge 是能力层，不是默认多 Agent runtime。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  FE[&quot;Frontend&quot;]
+  API[&quot;Backend API&quot;]
+  AG[&quot;Single Controller Agent&quot;]:::accent
+  MEM[&quot;Context and Memory&quot;]
+  CAP[&quot;Capability and Tool&quot;]
+  KNOW[&quot;Knowledge and Retrieval&quot;]
+  GOV[&quot;Evidence Citation Trace Eval&quot;]
+  PLAT[&quot;Platform Infrastructure&quot;]
+  FE --&gt; API --&gt; AG
+  AG --&gt; MEM
+  AG --&gt; CAP
+  AG --&gt; KNOW
+  MEM --&gt; GOV
+  CAP --&gt; GOV
+  KNOW --&gt; GOV
+  GOV --&gt; PLAT
+  class FE,API,MEM,CAP,KNOW,GOV,PLAT node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  FE[&quot;Frontend&quot;]
+  API[&quot;Backend API&quot;]
+  AG[&quot;Single Controller Agent&quot;]:::accent
+  MEM[&quot;Context and Memory&quot;]
+  CAP[&quot;Capability and Tool&quot;]
+  KNOW[&quot;Knowledge and Retrieval&quot;]
+  GOV[&quot;Evidence Citation Trace Eval&quot;]
+  PLAT[&quot;Platform Infrastructure&quot;]
+  FE --&gt; API --&gt; AG
+  AG --&gt; MEM
+  AG --&gt; CAP
+  AG --&gt; KNOW
+  MEM --&gt; GOV
+  CAP --&gt; GOV
+  KNOW --&gt; GOV
+  GOV --&gt; PLAT
+  class FE,API,MEM,CAP,KNOW,GOV,PLAT node;</code></pre>
+        </details>
+      </section>
+      <section class="diagram-section">
+        <h3>2. Development View</h3>
+        <p class="purpose">该图回答：代码、正式文档和 Agent 工作流如何组织。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Development</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Implementation</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：开发者如何进入项目。</li>
+          <li>Zuno 映射：docs 保持少而精，.agent 承载高频变化的执行设计。</li>
+          <li>边界：展示页只有 docs/architecture.html；.agent 不再保存架构 HTML。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  R[&quot;Repository Root&quot;]:::accent
+  R --&gt; APP[&quot;apps&quot;]
+  R --&gt; BE[&quot;src backend zuno&quot;]
+  R --&gt; DOC[&quot;docs&quot;]
+  R --&gt; AGENT[&quot;.agent&quot;]
+  R --&gt; TOOL[&quot;tools&quot;]
+  R --&gt; TEST[&quot;tests&quot;]
+  BE --&gt; L1[&quot;api agent memory&quot;]
+  BE --&gt; L2[&quot;capability knowledge platform&quot;]
+  DOC --&gt; DOCS[&quot;stable human docs&quot;]
+  AGENT --&gt; AGS[&quot;workflow programs templates&quot;]
+  class APP,BE,DOC,AGENT,TOOL,TEST,L1,L2,DOCS,AGS node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  R[&quot;Repository Root&quot;]:::accent
+  R --&gt; APP[&quot;apps&quot;]
+  R --&gt; BE[&quot;src backend zuno&quot;]
+  R --&gt; DOC[&quot;docs&quot;]
+  R --&gt; AGENT[&quot;.agent&quot;]
+  R --&gt; TOOL[&quot;tools&quot;]
+  R --&gt; TEST[&quot;tests&quot;]
+  BE --&gt; L1[&quot;api agent memory&quot;]
+  BE --&gt; L2[&quot;capability knowledge platform&quot;]
+  DOC --&gt; DOCS[&quot;stable human docs&quot;]
+  AGENT --&gt; AGS[&quot;workflow programs templates&quot;]
+  class APP,BE,DOC,AGENT,TOOL,TEST,L1,L2,DOCS,AGS node;</code></pre>
+        </details>
+      </section>
+      <section class="diagram-section">
+        <h3>3. Process View</h3>
+        <p class="purpose">该图回答：一次请求在运行时如何经过同步入口、异步能力和观测链路。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Process</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: C&amp;C</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：运行时控制流、事件流和外部调用。</li>
+          <li>Zuno 映射：Process View 覆盖 API、Agent runtime、工具调用、检索和 trace。</li>
+          <li>边界：Agent Loop 是 runtime 内部循环，单独放在第三章。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef event fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+
+  UI[&quot;User Interface&quot;]
+  API[&quot;FastAPI Request&quot;]
+  SVC[&quot;Application Service&quot;]
+  RUN[&quot;Agent Runtime&quot;]:::accent
+  IO[&quot;Tools Retrieval LLM&quot;]
+  EVT[&quot;Runtime Events&quot;]:::event
+  OUT[&quot;Response Stream&quot;]
+  TRACE[&quot;Trace Store&quot;]
+  UI --&gt; API --&gt; SVC --&gt; RUN
+  RUN --&gt; IO --&gt; RUN
+  RUN --&gt; EVT --&gt; OUT
+  RUN --&gt; TRACE
+  OUT --&gt; UI
+  class UI,API,SVC,IO,OUT,TRACE node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef event fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+
+  UI[&quot;User Interface&quot;]
+  API[&quot;FastAPI Request&quot;]
+  SVC[&quot;Application Service&quot;]
+  RUN[&quot;Agent Runtime&quot;]:::accent
+  IO[&quot;Tools Retrieval LLM&quot;]
+  EVT[&quot;Runtime Events&quot;]:::event
+  OUT[&quot;Response Stream&quot;]
+  TRACE[&quot;Trace Store&quot;]
+  UI --&gt; API --&gt; SVC --&gt; RUN
+  RUN --&gt; IO --&gt; RUN
+  RUN --&gt; EVT --&gt; OUT
+  RUN --&gt; TRACE
+  OUT --&gt; UI
+  class UI,API,SVC,IO,OUT,TRACE node;</code></pre>
+        </details>
+      </section>
+      <section class="diagram-section">
+        <h3>4. Physical View</h3>
+        <p class="purpose">该图回答：Zuno 在本地优先部署中连接哪些节点。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Physical</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Deployment</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：部署节点和外部依赖。</li>
+          <li>Zuno 映射：本地文件、数据库、向量/图存储、模型 provider 和 MCP 都是可替换边界。</li>
+          <li>边界：近期仍是模块化单体，不是微服务拆分。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  DEV[&quot;Local Machine&quot;]:::accent
+  WEB[&quot;Web App&quot;]
+  DESK[&quot;Desktop App&quot;]
+  API[&quot;FastAPI Backend&quot;]
+  FS[&quot;Local Workspace Files&quot;]
+  DB[&quot;Database&quot;]
+  VEC[&quot;Vector and Graph Store&quot;]
+  LLM[&quot;LLM Provider or Local Model&quot;]
+  MCP[&quot;MCP Servers&quot;]
+  DEV --&gt; WEB
+  DEV --&gt; DESK
+  WEB --&gt; API
+  DESK --&gt; API
+  API --&gt; FS
+  API --&gt; DB
+  API --&gt; VEC
+  API --&gt; LLM
+  API --&gt; MCP
+  class WEB,DESK,API,FS,DB,VEC,LLM,MCP node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  DEV[&quot;Local Machine&quot;]:::accent
+  WEB[&quot;Web App&quot;]
+  DESK[&quot;Desktop App&quot;]
+  API[&quot;FastAPI Backend&quot;]
+  FS[&quot;Local Workspace Files&quot;]
+  DB[&quot;Database&quot;]
+  VEC[&quot;Vector and Graph Store&quot;]
+  LLM[&quot;LLM Provider or Local Model&quot;]
+  MCP[&quot;MCP Servers&quot;]
+  DEV --&gt; WEB
+  DEV --&gt; DESK
+  WEB --&gt; API
+  DESK --&gt; API
+  API --&gt; FS
+  API --&gt; DB
+  API --&gt; VEC
+  API --&gt; LLM
+  API --&gt; MCP
+  class WEB,DESK,API,FS,DB,VEC,LLM,MCP node;</code></pre>
+        </details>
+      </section>
+      <section class="diagram-section">
+        <h3>5. Scenarios View</h3>
+        <p class="purpose">该图回答：用户 query 如何被验证为一个完整场景。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Scenarios / Process</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Runtime Scenario</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：用场景验证架构。</li>
+          <li>Zuno 映射：Agent 可决定是否检索，以及使用 normal、enhanced 或 auto。</li>
+          <li>边界：auto 是 router，不是第五种检索算法。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  Q[&quot;User Query&quot;]
+  C[&quot;Context Builder&quot;]
+  A[&quot;Controller Agent&quot;]
+  R{&quot;Need Retrieval&quot;}:::decision
+  M{&quot;Mode Policy&quot;}:::decision
+  BASIC[&quot;normal basic&quot;]
+  ENH[&quot;enhanced agentic&quot;]
+  AUTO[&quot;auto router&quot;]
+  EV[&quot;Evidence Check&quot;]
+  AN[&quot;Answer Citation Trace&quot;]:::accent
+  Q --&gt; C --&gt; A --&gt; R
+  R --&gt;|No| AN
+  R --&gt;|Yes| M
+  M --&gt; BASIC --&gt; EV
+  M --&gt; ENH --&gt; EV
+  M --&gt; AUTO --&gt; EV
+  EV --&gt;|retry| C
+  EV --&gt;|pass| AN
+  class Q,C,A,BASIC,ENH,AUTO,EV node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  Q[&quot;User Query&quot;]
+  C[&quot;Context Builder&quot;]
+  A[&quot;Controller Agent&quot;]
+  R{&quot;Need Retrieval&quot;}:::decision
+  M{&quot;Mode Policy&quot;}:::decision
+  BASIC[&quot;normal basic&quot;]
+  ENH[&quot;enhanced agentic&quot;]
+  AUTO[&quot;auto router&quot;]
+  EV[&quot;Evidence Check&quot;]
+  AN[&quot;Answer Citation Trace&quot;]:::accent
+  Q --&gt; C --&gt; A --&gt; R
+  R --&gt;|No| AN
+  R --&gt;|Yes| M
+  M --&gt; BASIC --&gt; EV
+  M --&gt; ENH --&gt; EV
+  M --&gt; AUTO --&gt; EV
+  EV --&gt;|retry| C
+  EV --&gt;|pass| AN
+  class Q,C,A,BASIC,ENH,AUTO,EV node;</code></pre>
+        </details>
+      </section>
+    </section>
+    <section class="chapter">
+      <h2>二、View &amp; Beyond</h2>
+      <p>本页采用 Logical、Component-and-Connector、Deployment、Quality 四类工程视图。</p>
+      <section class="diagram-section">
+        <h3>6. V&amp;B Logical View</h3>
+        <p class="purpose">该图回答：领域子系统如何组成一个 Agent Workspace。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Logical</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Logical</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：领域对象和职责。</li>
+          <li>Zuno 映射：Runtime、Memory、Tool、Retrieval、Evidence 是稳定概念。</li>
+          <li>边界：GraphRAG 补充 BM25 和向量检索，不替代它们。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  Z[&quot;Zuno Domain&quot;]:::accent
+  Z --&gt; RUNTIME[&quot;Agent Runtime&quot;]
+  Z --&gt; MEMORY[&quot;Memory System&quot;]
+  Z --&gt; TOOL[&quot;Tool Layer&quot;]
+  Z --&gt; RET[&quot;Retrieval GraphRAG&quot;]
+  Z --&gt; EVID[&quot;Evidence System&quot;]
+  MEMORY --&gt; CP[&quot;Context Pack&quot;]
+  TOOL --&gt; TC[&quot;ToolCard Registry&quot;]
+  RET --&gt; EB[&quot;Evidence Bundle&quot;]
+  EVID --&gt; CT[&quot;Citation Trace Eval&quot;]
+  class RUNTIME,MEMORY,TOOL,RET,EVID,CP,TC,EB,CT node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  Z[&quot;Zuno Domain&quot;]:::accent
+  Z --&gt; RUNTIME[&quot;Agent Runtime&quot;]
+  Z --&gt; MEMORY[&quot;Memory System&quot;]
+  Z --&gt; TOOL[&quot;Tool Layer&quot;]
+  Z --&gt; RET[&quot;Retrieval GraphRAG&quot;]
+  Z --&gt; EVID[&quot;Evidence System&quot;]
+  MEMORY --&gt; CP[&quot;Context Pack&quot;]
+  TOOL --&gt; TC[&quot;ToolCard Registry&quot;]
+  RET --&gt; EB[&quot;Evidence Bundle&quot;]
+  EVID --&gt; CT[&quot;Citation Trace Eval&quot;]
+  class RUNTIME,MEMORY,TOOL,RET,EVID,CP,TC,EB,CT node;</code></pre>
+        </details>
+      </section>
+      <section class="diagram-section">
+        <h3>7. Component-and-Connector View</h3>
+        <p class="purpose">该图回答：运行时组件如何连接和通信。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Logical / Process</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Component-and-Connector</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：组件和连接器。</li>
+          <li>Zuno 映射：控制由 Agent 集中，能力通过 registry、router 和 checker 进入结果。</li>
+          <li>边界：WebSocket 或 SSE 是事件通道，不是架构真相来源。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+
+  API[&quot;API Controller&quot;]
+  AG[&quot;Controller Agent&quot;]:::accent
+  MEM[&quot;Memory Manager&quot;]
+  TOOL[&quot;Tool Registry&quot;]
+  RET[&quot;Retrieval Router&quot;]
+  EV[&quot;Evidence Checker&quot;]:::warn
+  CIT[&quot;Citation Builder&quot;]
+  TR[&quot;Trace Logger&quot;]
+  API --&gt; AG
+  AG --&gt; MEM
+  AG --&gt; TOOL
+  AG --&gt; RET
+  MEM --&gt; EV
+  TOOL --&gt; EV
+  RET --&gt; EV
+  EV --&gt; CIT
+  EV --&gt; TR
+  class API,MEM,TOOL,RET,CIT,TR node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+
+  API[&quot;API Controller&quot;]
+  AG[&quot;Controller Agent&quot;]:::accent
+  MEM[&quot;Memory Manager&quot;]
+  TOOL[&quot;Tool Registry&quot;]
+  RET[&quot;Retrieval Router&quot;]
+  EV[&quot;Evidence Checker&quot;]:::warn
+  CIT[&quot;Citation Builder&quot;]
+  TR[&quot;Trace Logger&quot;]
+  API --&gt; AG
+  AG --&gt; MEM
+  AG --&gt; TOOL
+  AG --&gt; RET
+  MEM --&gt; EV
+  TOOL --&gt; EV
+  RET --&gt; EV
+  EV --&gt; CIT
+  EV --&gt; TR
+  class API,MEM,TOOL,RET,CIT,TR node;</code></pre>
+        </details>
+      </section>
+      <section class="diagram-section">
+        <h3>8. V&amp;B Deployment View</h3>
+        <p class="purpose">该图回答：工程部署时哪些资源应保持可替换。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Physical</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Deployment</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：软件元素到运行环境的映射。</li>
+          <li>Zuno 映射：Provider 是边界，核心 runtime 不绑定单一 vendor。</li>
+          <li>边界：Tavily、RAGFlow、MySQL 可以作为集成参考，不写死为唯一实现。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  APP[&quot;Zuno App&quot;]:::accent
+  STORE[&quot;Local Storage&quot;]
+  SQL[&quot;SQL Database&quot;]
+  VDB[&quot;Vector Store&quot;]
+  GDB[&quot;Graph Store&quot;]
+  MODEL[&quot;Model Gateway&quot;]
+  SEARCH[&quot;Search Provider&quot;]
+  MCP[&quot;MCP Provider&quot;]
+  APP --&gt; STORE
+  APP --&gt; SQL
+  APP --&gt; VDB
+  APP --&gt; GDB
+  APP --&gt; MODEL
+  APP --&gt; SEARCH
+  APP --&gt; MCP
+  class STORE,SQL,VDB,GDB,MODEL,SEARCH,MCP node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  APP[&quot;Zuno App&quot;]:::accent
+  STORE[&quot;Local Storage&quot;]
+  SQL[&quot;SQL Database&quot;]
+  VDB[&quot;Vector Store&quot;]
+  GDB[&quot;Graph Store&quot;]
+  MODEL[&quot;Model Gateway&quot;]
+  SEARCH[&quot;Search Provider&quot;]
+  MCP[&quot;MCP Provider&quot;]
+  APP --&gt; STORE
+  APP --&gt; SQL
+  APP --&gt; VDB
+  APP --&gt; GDB
+  APP --&gt; MODEL
+  APP --&gt; SEARCH
+  APP --&gt; MCP
+  class STORE,SQL,VDB,GDB,MODEL,SEARCH,MCP node;</code></pre>
+        </details>
+      </section>
+      <section class="diagram-section">
+        <h3>9. Quality View</h3>
+        <p class="purpose">该图回答：质量属性通过哪些机制落地。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Scenarios / Cross-cutting</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: Quality</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：性能、可靠性、安全、可观测性、可修改性和评测。</li>
+          <li>Zuno 映射：Trace、Eval、Evidence、permission、budget 和 verifier 共同约束质量。</li>
+          <li>边界：异常捕获不是熔断；熔断必须有阈值、状态和降级策略。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+
+  Q[&quot;Quality Attributes&quot;]:::accent
+  PERF[&quot;Performance Budget Cache&quot;]
+  REL[&quot;Reliability Timeout Retry Fallback&quot;]
+  SEC[&quot;Security Permission Whitelist&quot;]
+  OBS[&quot;Observability Trace Events&quot;]
+  MOD[&quot;Modifiability Layered Contracts&quot;]
+  EVAL[&quot;Evaluation Tests Baseline&quot;]
+  GOV[&quot;Governance Gate&quot;]:::warn
+  Q --&gt; PERF
+  Q --&gt; REL
+  Q --&gt; SEC
+  Q --&gt; OBS
+  Q --&gt; MOD
+  Q --&gt; EVAL
+  PERF --&gt; GOV
+  REL --&gt; GOV
+  SEC --&gt; GOV
+  OBS --&gt; GOV
+  MOD --&gt; GOV
+  EVAL --&gt; GOV
+  class PERF,REL,SEC,OBS,MOD,EVAL node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+  classDef warn fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+
+  Q[&quot;Quality Attributes&quot;]:::accent
+  PERF[&quot;Performance Budget Cache&quot;]
+  REL[&quot;Reliability Timeout Retry Fallback&quot;]
+  SEC[&quot;Security Permission Whitelist&quot;]
+  OBS[&quot;Observability Trace Events&quot;]
+  MOD[&quot;Modifiability Layered Contracts&quot;]
+  EVAL[&quot;Evaluation Tests Baseline&quot;]
+  GOV[&quot;Governance Gate&quot;]:::warn
+  Q --&gt; PERF
+  Q --&gt; REL
+  Q --&gt; SEC
+  Q --&gt; OBS
+  Q --&gt; MOD
+  Q --&gt; EVAL
+  PERF --&gt; GOV
+  REL --&gt; GOV
+  SEC --&gt; GOV
+  OBS --&gt; GOV
+  MOD --&gt; GOV
+  EVAL --&gt; GOV
+  class PERF,REL,SEC,OBS,MOD,EVAL node;</code></pre>
+        </details>
+      </section>
+    </section>
+    <section class="chapter">
+      <h2>三、Agent Loop 专题图</h2>
+      <p>Agent Loop 是 Process View 的内部细化，但不等同于整个 Process View。</p>
+      <section class="diagram-section">
+        <h3>10. Agent Loop View</h3>
+        <p class="purpose">该图回答：主控 Agent 如何计划、执行、观察和重规划。</p>
+        <dl class="meta">
+          <div><dt>4+1</dt><dd>4+1: Logical / Process</dd></div>
+          <div><dt>View &amp; Beyond</dt><dd>View &amp; Beyond: C&amp;C</dd></div>
+        </dl>
+        <ul class="analysis">
+          <li>关注点：Agent 内部决策循环。</li>
+          <li>Zuno 映射：Plan、Act、Observation、Working Memory、Reflection 共同形成可追踪执行。</li>
+          <li>边界：Reflection 是门控动作，不是每一步强制执行。</li>
+        </ul>
+        <figure class="diagram-frame">
+          <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  G[&quot;Goal&quot;]
+  C[&quot;Context Pack&quot;]
+  P[&quot;Plan&quot;]
+  A[&quot;Act&quot;]
+  O[&quot;Observation&quot;]
+  W[&quot;Working Memory&quot;]
+  R{&quot;Reflect Replan&quot;}:::decision
+  F[&quot;Final Answer&quot;]:::accent
+  G --&gt; C --&gt; P --&gt; A --&gt; O --&gt; W --&gt; R
+  R --&gt;|continue| A
+  R --&gt;|replan| P
+  R --&gt;|finish| F
+  class G,C,P,A,O,W node;
+          </div>
+        </figure>
+        <details>
+          <summary>Mermaid source</summary>
+          <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef decision fill:#fff8e8,stroke:#c59b43,stroke-width:1px,color:#16202a;
+  classDef accent fill:#eef6f3,stroke:#7aa59a,stroke-width:1px,color:#16202a;
+
+  G[&quot;Goal&quot;]
+  C[&quot;Context Pack&quot;]
+  P[&quot;Plan&quot;]
+  A[&quot;Act&quot;]
+  O[&quot;Observation&quot;]
+  W[&quot;Working Memory&quot;]
+  R{&quot;Reflect Replan&quot;}:::decision
+  F[&quot;Final Answer&quot;]:::accent
+  G --&gt; C --&gt; P --&gt; A --&gt; O --&gt; W --&gt; R
+  R --&gt;|continue| A
+  R --&gt;|replan| P
+  R --&gt;|finish| F
+  class G,C,P,A,O,W node;</code></pre>
+        </details>
+      </section>
+    </section>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      securityLevel: "strict",
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: "linear",
+        padding: 16,
+        nodeSpacing: 34,
+        rankSpacing: 44
+      },
+      themeVariables: {
+        background: "#f7f8fb",
+        mainBkg: "#ffffff",
+        primaryColor: "#ffffff",
+        primaryBorderColor: "#b8c2cc",
+        primaryTextColor: "#16202a",
+        lineColor: "#52616f",
+        textColor: "#16202a",
+        fontFamily: "Inter, Segoe UI, Microsoft YaHei, Arial"
+      }
+    });
+  </script>
+</body>
+</html>

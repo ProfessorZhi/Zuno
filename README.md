@@ -19,9 +19,10 @@ Local-first Agent Workspace
 1. 先看 [当前架构](./docs/architecture/current-architecture.md)：只写当前代码和测试已经证明的事实。
 2. 再看 [目标架构](./docs/architecture/target-architecture.md)：写近期目标，不代表已经完成。
 3. 看 [路线图](./docs/architecture/roadmap.md)：确认当前 program、下一步和非目标。
-4. 看 [架构图](./docs/architecture/diagrams.md)：用三张 Mermaid 图理解 Current Runtime、Target Runtime 和 Maintenance Workflow。
-5. 需要证据时看 [公开演示证据](./docs/evidence/public-demo.md)、[Eval Baseline](./docs/evidence/eval-baselines.md) 和 [术语表](./docs/reference/terminology.md)。
-6. Agent 执行任务先读 [AGENTS.md](./AGENTS.md)。
+4. 看 [交付物清单](./docs/deliverables.md)：确认八大交付物、十类架构视图和根目录清洁期望。
+5. 看 [架构总览 HTML](./docs/architecture.html) 或 [架构图源](./docs/architecture.md)：完整页面按 4+1 五类图、View & Beyond 四类图和 Agent Loop 专题图组织。
+6. 需要证据时看 [公开演示证据](./docs/evidence/public-demo.md)、[Eval Baseline](./docs/evidence/eval-baselines.md) 和 [术语表](./docs/reference/terminology.md)。
+7. Agent 执行任务先读 [AGENTS.md](./AGENTS.md)。
 
 ## 当前是什么
 

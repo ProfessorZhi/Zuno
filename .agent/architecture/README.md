@@ -20,7 +20,7 @@
 
 核心文件：
 
-- `zuno-ideal-architecture-and-repo-layout.html`：交互式目标架构蓝图。
+- `00-architecture-index.md`：近期目标架构文字入口，用于 program 转化。
 - `01-target-runtime-architecture.md`：Web/Electron -> FastAPI -> Application -> GeneralAgent 的主路径。
 - `02-context-memory-architecture.md`：Context Orchestrator、raw events、summary、structured memory。
 - `03-capability-tool-retrieval-architecture.md`：ToolCard、Capability Selector、MCP/Skill/Action Tool。

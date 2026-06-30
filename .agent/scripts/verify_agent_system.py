@@ -6,6 +6,20 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_program-boot-baseline.md",
+    "PHASE02_workflow-self-maintenance-system.md",
+    "PHASE03_architecture-docs-html-system.md",
+    "PHASE04_query-router-mode-policy.md",
+    "PHASE05_context-builder-memory-system.md",
+    "PHASE06_capability-toolcard-mcp-system.md",
+    "PHASE07_hooks-evidence-trace-artifact-system.md",
+    "PHASE08_graphrag-knowledge-runtime-system.md",
+    "PHASE09_runtime-upgrade-integration.md",
+    "PHASE10_validation-release-closure.md",
+]
+
 
 REQUIRED_PATHS = [
     "AGENTS.md",
@@ -14,6 +28,7 @@ REQUIRED_PATHS = [
     ".agent/README.md",
     ".agent/system.yaml",
     ".agent/references/README.md",
+    ".agent/references/project-map.md",
     ".agent/references/task-routing.md",
     ".agent/references/workflow.md",
     ".agent/references/code-map.md",
@@ -21,15 +36,29 @@ REQUIRED_PATHS = [
     ".agent/references/verification-map.md",
     ".agent/references/zuno-repo-hygiene.md",
     ".agent/references/docs-map.md",
+    ".agent/references/architecture-docs-map.md",
+    ".agent/references/documentation-governance.md",
+    ".agent/references/architecture-update-policy.md",
+    ".agent/references/diagram-inventory.md",
+    ".agent/references/current-target-future-rules.md",
+    ".agent/references/workflow-governance.md",
+    ".agent/references/workflow-update-policy.md",
+    ".agent/references/workflow-requirements.md",
+    ".agent/references/workflow-change-log.md",
+    ".agent/references/workflow-maintenance-checklist.md",
     ".agent/references/current-program.md",
     ".agent/references/command-catalog.md",
     ".agent/references/known-pitfalls.md",
+    ".agent/templates/architecture-doc-template.md",
+    ".agent/templates/mermaid-diagram-template.md",
+    ".agent/templates/architecture-change-note-template.md",
+    ".agent/templates/workflow-change-note-template.md",
     ".agent/scripts/verify_module_boundaries.py",
     ".agent/architecture/README.md",
     ".agent/architecture/decisions/README.md",
     ".agent/architecture/future/README.md",
     ".agent/architecture/near-term/README.md",
-    ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+    ".agent/architecture/near-term/00-architecture-index.md",
     ".agent/architecture/near-term/01-target-runtime-architecture.md",
     ".agent/architecture/near-term/02-context-memory-architecture.md",
     ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
@@ -337,6 +366,45 @@ TEMPLATE_REQUIRED_SECTIONS = {
     "target-mode-prompt.md": [
         "## 规则",
     ],
+    "architecture-doc-template.md": [
+        "## Status",
+        "## Purpose",
+        "## Scope",
+        "## Related Code",
+        "## Related Tests",
+        "## Related Diagrams",
+        "## Current Behavior",
+        "## Target Design",
+        "## Open Questions",
+        "## Validation",
+    ],
+    "mermaid-diagram-template.md": [
+        "## Diagram Name",
+        "## Diagram Type",
+        "## Source of Truth",
+        "## Mermaid Block",
+        "## Explanation",
+        "## Update Triggers",
+        "## Validation",
+    ],
+    "architecture-change-note-template.md": [
+        "## Change Summary",
+        "## Affected Areas",
+        "## Docs Updated",
+        "## Diagrams Updated",
+        "## Validation",
+        "## Remaining Gaps",
+    ],
+    "workflow-change-note-template.md": [
+        "## Change Summary",
+        "## Trigger",
+        "## Requirement Type",
+        "## Affected Workflow Files",
+        "## Affected Human Docs",
+        "## Templates Updated",
+        "## Validation",
+        "## Remaining Gaps",
+    ],
 }
 
 
@@ -396,10 +464,15 @@ def main() -> int:
         "tools/evals/zuno/AGENTS.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
+        ".agent/references/architecture-docs-map.md",
+        ".agent/references/workflow-governance.md",
         ".agent/system.yaml",
         ".agent/programs/",
-        "zuno-ideal-architecture-and-repo-layout.html",
+        "00-architecture-index.md",
         "前台文档默认中文",
+        "Architecture Documentation Governance",
+        "Agent Workflow Self-Maintenance",
+        "八大交付物",
         "## 工作模式",
         "### 挂机模式",
         "### 多线程模式",
@@ -422,25 +495,20 @@ def main() -> int:
         if phrase not in agent_entry:
             errors.append(f"AGENTS.md missing routing phrase: {phrase}")
 
-    html = _read(".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html")
-    if "<html" not in html.lower() or "</html>" not in html.lower():
-        errors.append("target architecture HTML is not valid HTML")
+    index = _read(".agent/architecture/near-term/00-architecture-index.md")
     for phrase in [
-        "Target / Proposed",
+        "目标架构设计工作集索引",
         "Summary Compression",
         "Structured Extraction",
         "ToolCard",
         "Native BM25",
         "RRF",
-        "auto 是 router",
-        "Phase 05",
-        "Execution Contract",
-        "Query Journey",
-        "产品入口层",
-        "RAG / GraphRAG 层",
+        "docs/architecture.md",
+        "docs/architecture.html",
+        "00-architecture-index.md",
     ]:
-        if phrase not in html:
-            errors.append(f"target architecture HTML missing canonical phrase: {phrase}")
+        if phrase not in index:
+            errors.append(f"near-term architecture index missing canonical phrase: {phrase}")
 
     for relative_path in [
         "AGENTS.md",
@@ -450,8 +518,11 @@ def main() -> int:
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
     ]:
-        if "zuno-ideal-architecture-and-repo-layout.html" not in _read(relative_path):
-            errors.append(f"{relative_path} missing target architecture HTML reference")
+        content = _read(relative_path)
+        if "00-architecture-index.md" not in content:
+            errors.append(f"{relative_path} missing near-term architecture index reference")
+        if "zuno-ideal-architecture-and-repo-layout.html" in content:
+            errors.append(f"{relative_path} still references retired target architecture HTML")
 
     agent_readme = _read(".agent/README.md")
     for phrase in [
@@ -475,8 +546,19 @@ def main() -> int:
     expected_references = sorted(
         [
             "README.md",
+            "project-map.md",
             "current-program.md",
             "docs-map.md",
+            "architecture-docs-map.md",
+            "documentation-governance.md",
+            "architecture-update-policy.md",
+            "diagram-inventory.md",
+            "current-target-future-rules.md",
+            "workflow-governance.md",
+            "workflow-update-policy.md",
+            "workflow-requirements.md",
+            "workflow-change-log.md",
+            "workflow-maintenance-checklist.md",
             "code-map.md",
             "runtime-call-chain.md",
             "verification-map.md",
@@ -499,20 +581,29 @@ def main() -> int:
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
+            *ACTIVE_PROGRAM_PHASE_FILES,
         ]
     )
     if active_program_files != expected_program_files:
         errors.append(
-            f".agent/programs files are not canonical no-active set: {active_program_files}"
+            f".agent/programs files do not match active program set: {active_program_files}"
         )
-    if list((REPO_ROOT / ".agent/programs").glob("PHASE*.md")):
-        errors.append(".agent/programs must not keep PHASE files after six-layer internalization archive")
     current_program_text = _read(".agent/programs/current.md")
-    if "当前没有 active program" not in current_program_text:
-        errors.append(".agent/programs/current.md must declare no active program")
+    for phrase in [
+        ACTIVE_PROGRAM_NAME,
+        "state: active",
+        "PHASE01_program-boot-baseline.md",
+        "八个交付物",
+        "默认开启线程内多 agent",
+        "不是多线程模式",
+    ]:
+        if phrase not in current_program_text:
+            errors.append(f".agent/programs/current.md missing active program phrase: {phrase}")
 
     roadmap = _read(".agent/programs/implementation-roadmap.md")
     for phrase in [
+        ACTIVE_PROGRAM_NAME,
+        "state: active",
         "zuno-six-layer-internalization-v1",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
@@ -521,6 +612,31 @@ def main() -> int:
     ]:
         if phrase not in roadmap:
             errors.append(f"program roadmap missing phrase: {phrase}")
+
+    future_programs_readme = _read(".agent/architecture/future/programs/README.md")
+    for phrase in [
+        ACTIVE_PROGRAM_NAME,
+        "吸收为参考输入",
+        "不是 active 执行入口",
+        "zuno-six-layer-internalization-v1",
+    ]:
+        if phrase not in future_programs_readme:
+            errors.append(f"future programs README missing active program boundary phrase: {phrase}")
+    if "当前没有 active program" in future_programs_readme:
+        errors.append("future programs README must not claim there is no active program")
+
+    repo_hygiene = _read(".agent/references/zuno-repo-hygiene.md")
+    for phrase in [
+        "zuno-six-layer-internalization-v1",
+        ACTIVE_PROGRAM_NAME,
+        "runtime architecture upgrade",
+        "不是当前独立 queued program",
+    ]:
+        if phrase not in repo_hygiene:
+            errors.append(f"zuno-repo-hygiene.md missing current Program 4 boundary phrase: {phrase}")
+    if "Program 4 runtime architecture upgrade 保持 queued / not active" in repo_hygiene:
+        errors.append("zuno-repo-hygiene.md keeps stale Program 4 queued runtime-upgrade wording")
+
     archived_program4 = _read("docs/history/programs/zuno-six-layer-internalization-v1/README.md")
     for phrase in [
         "completed / archived",
@@ -603,6 +719,9 @@ def main() -> int:
         "require_disjoint_write_scope: true",
         "runtime target remains Single GeneralAgent",
         ".agent/references/workflow.md",
+        ".agent/references/architecture-docs-map.md",
+        ".agent/references/workflow-governance.md",
+        ".agent/templates/workflow-change-note-template.md",
     ]:
         if phrase not in system_yaml:
             errors.append(f".agent/system.yaml missing route phrase: {phrase}")
@@ -647,14 +766,28 @@ def main() -> int:
         "skills、lessons、playbooks",
         ".agent/templates/",
         "一次性调查流水账",
+        "Architecture Documentation Governance",
+        "Agent Workflow Self-Maintenance",
+        "八大交付物",
     ]:
         if phrase not in references_readme:
             errors.append(f".agent/references/README.md missing skill-system phrase: {phrase}")
 
     for relative_path in [
+        ".agent/references/project-map.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
         ".agent/references/docs-map.md",
+        ".agent/references/architecture-docs-map.md",
+        ".agent/references/documentation-governance.md",
+        ".agent/references/architecture-update-policy.md",
+        ".agent/references/diagram-inventory.md",
+        ".agent/references/current-target-future-rules.md",
+        ".agent/references/workflow-governance.md",
+        ".agent/references/workflow-update-policy.md",
+        ".agent/references/workflow-requirements.md",
+        ".agent/references/workflow-change-log.md",
+        ".agent/references/workflow-maintenance-checklist.md",
         ".agent/references/verification-map.md",
         ".agent/references/known-pitfalls.md",
     ]:
@@ -669,6 +802,8 @@ def main() -> int:
         "不保存项目知识",
         "Forbidden Content",
         "Lessons Learned",
+        "architecture-doc-template.md",
+        "workflow-change-note-template.md",
     ]:
         if phrase not in templates_readme:
             errors.append(f".agent/templates/README.md missing template-boundary phrase: {phrase}")

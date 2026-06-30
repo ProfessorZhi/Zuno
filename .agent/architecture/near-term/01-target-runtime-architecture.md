@@ -2,47 +2,64 @@
 
 ## 用途
 
-Define the canonical near-term Zuno target runtime without claiming it is fully
-current. This file replaces the old fragmented overview, system context,
-container/component, layering, FastAPI service, LangGraph, LangChain adapter,
-and observability notes.
+定义 Zuno 近期目标 runtime。本文是 Target / Proposed，不是 Current truth。Current 必须回到 `docs/architecture/current-architecture.md` 和代码/测试证明。
 
 ## 目标摘要
 
 ```text
 Local-first Agent Workspace
-= Single GeneralAgent Runtime
-+ Context / Memory Engine
-+ Capability / Tool Retrieval
-+ Knowledge / GraphRAG Retrieval
+= Single Controller Agent
++ Context Builder
++ Agentic RAG Controller
++ GraphRAG Knowledge Base
++ ToolCard / MCP Tool Layer
++ Hooks / Policy / Budget / Fallback
 + Evidence / Citation / Trace / Eval
-+ Typed API + Web/Desktop
++ Session Workspace / Artifact Flow
 ```
 
-Zuno stays a Python/FastAPI modular monolith now and remains service-ready
-later. The goal is not to create more directories mechanically. The goal is to
-make every concept have one owner, every file have one home, and every runtime
-path be explainable through tests and traces.
+Zuno 近期保持 Python/FastAPI modular monolith。目标不是机械增加目录，而是让每个概念有 owner、每个 runtime 决策有 trace、每个答案能回到 evidence。
 
-DeepSearchAgents is useful as a product-closure reference, not as a replacement
-identity. Zuno should absorb its clear task flow, session workspace, uploaded
-file handling, artifact delivery, and observable long-running execution. Zuno
-should not absorb its fixed one-main-three-worker runtime as the default
-architecture.
-
-Target task-to-artifact flow:
+## 主链路
 
 ```text
-User Task
-  -> Typed API task / session
-  -> Session Workspace
-  -> Single GeneralAgent
-  -> Capability Selector
-  -> Web / structured data / GraphRAG-RAG adapter / uploaded file capabilities
-  -> Evidence / Citation / Trace
-  -> Answer / Markdown / PDF / Artifact
-  -> SSE or WebSocket event stream
+User Query
+  -> Session Manager
+  -> Context Builder
+  -> Single Controller Agent
+  -> Route: direct / basic / enhanced / auto
+  -> Retrieval: basic / local / global / drift
+  -> Evidence Check
+  -> Answer Synthesizer
+  -> Citation Builder
+  -> Trace / Eval / Memory Write
+  -> Answer / Report / Artifact
 ```
+
+DeepSearchAgents 值得吸收的是任务闭环表达、session workspace、上传附件、artifact delivery、长任务事件流和 README 展示方式。Zuno 不吸收它的固定一主三从默认 runtime。
+
+## 产品层三模式
+
+```text
+普通模式 = low-budget basic path
+增强模式 = controlled Agentic RAG path
+自动模式 = router decides direct / basic / enhanced
+```
+
+普通用户默认走自动模式。高级用户和调试场景可以手动指定内部 `query_method`。
+
+## 内部四方法
+
+```text
+query_method = basic | local | global | drift
+```
+
+`auto` 是 router，不是第五种 query method。
+
+- `basic`：Native BM25 + Dense Vector + RRF + optional rerank。
+- `local`：entity / relation / graph neighborhood / source chunks。
+- `global`：community reports / global summaries / map-reduce style synthesis。
+- `drift`：global primer -> follow-up questions -> local/basic evidence loop。
 
 ## 六个主层与横切治理
 
@@ -53,25 +70,25 @@ User Task
    SSE or WebSocket event stream
 
 2. Agent Layer
-   Single GeneralAgent Runtime
+   Single Controller Agent
    prepare_context -> agent_loop -> post_turn_commit
+   Plan + ReAct + gated Reflection
 
 3. Memory Layer
-   L0 Working Context
-   L1 Recent Interaction Window
-   L2 Task Summary Memory
-   L3 Structured Long-term Memory
-   L4 External Knowledge
+   short-term state
+   working memory
+   semantic memory
+   episodic memory
+   procedural memory
    Raw Event Log
 
 4. Capability Layer
    ToolCard Registry
-   Keyword / alias search
+   keyword / alias search
    Native BM25 over ToolCard
-   Optional vector tool search
-   Permission / health / cost filter
-   Capability selection trace
-   Web search / structured data / GraphRAG-RAG adapter / file / artifact tools
+   optional vector tool search
+   permission / health / cost filter
+   MCP / connector adapter
 
 5. Knowledge Layer
    KnowledgeQueryService
@@ -79,74 +96,51 @@ User Task
    GraphRAGProjectSnapshot
    LLM-first entity / relation extraction
    basic / local / global / drift
-   auto router
-   Query variants
-   Native BM25
-   Dense vector
-   Graph local
-   Community global
-   Deduplication
-   RRF fusion
-   Optional rerank
-   Evidence check
-   Citation
-   Multi-source evidence normalization
+   retrieval / fusion / evidence
 
 6. Platform Layer
    PostgreSQL / Redis / RabbitMQ / MinIO
-   Milvus / Neo4j / Elasticsearch optional adapter
-   model gateway / session workspace / artifact store / storage / background jobs
+   Milvus / Neo4j / optional Elasticsearch adapter
+   model gateway / session workspace / artifact store / background jobs
 
 Cross-cutting Governance
    Evidence / Citation / Trace / Eval / Policy
    latency / cost / permission / fallback metadata
 ```
 
-Product clients live in `apps/web` and `apps/desktop`. They are entry surfaces
-over the API layer, not a separate backend ownership layer.
+Product clients live in `apps/web` and `apps/desktop`. They are entry surfaces over API, not backend ownership layers.
 
-## 产品层
+## Context Builder
 
-`apps/web` and `apps/desktop` own product interaction. They display chats,
-knowledge projects, GraphRAG Project settings, capability state, memory
-surfaces, evidence, citations, and trace summaries.
+The model should not receive the raw repository, raw memory, raw retrieval output, and all tools at once. Target context preparation is:
 
-They must not own graph traversal, provider calls, rerank policy, prompt
-versioning, database writes, or migration-only fields such as active public
-`domain_pack_id`.
+```text
+system rules
++ user settings
++ session state
++ task state
++ selected memory
++ selected evidence
++ selected ToolCards
++ uploaded file summaries
+-> Context Pack
+```
 
-## API 与应用层
+Context Builder owns context selection, compression, eviction reasons, and trace metadata. It does not own retrieval semantics or final answer generation.
 
-FastAPI routes own HTTP boundaries only:
+## Hooks / Middleware
 
-- route registration
-- request/response DTOs
-- auth and permission boundary
-- validation
-- streaming/SSE boundary
-- request/trace id propagation
-- error mapping
+Hooks are runtime governance points, not just logging:
 
-Application services own use cases:
+- before agent: inject thread metadata, route policy, budget.
+- before model: trim context, choose model, limit tool surface.
+- around tool: permission, cache, metering, fallback, result normalization.
+- before final answer: citation coverage, evidence coverage, output shape.
+- post turn: trace write, memory candidate, artifact event, eval metadata.
 
-- chat session creation and recovery
-- research task creation, cancellation, and progress state
-- upload handoff into session workspace
-- artifact list and download boundaries
-- knowledge query orchestration
-- project, memory, and capability commands
-- indexing job creation
-- DTO-to-runtime command mapping
-- transaction and permission checks
+## Multi-source Evidence Channel
 
-Routes should call exactly one use-case boundary. They should not import
-concrete retrievers, GraphRAG traversal code, provider clients, or runtime graph
-internals.
-
-## 多来源 Evidence Channel
-
-Zuno's target equivalent of DeepSearchAgents' Tavily / MySQL / RAGFlow /
-uploaded-file split is provider-neutral:
+Zuno 的目标等价于 DeepSearchAgents 的 Tavily / MySQL / RAGFlow / uploaded-file 分工，但边界必须 provider-neutral：
 
 | Source channel | Zuno owner | Runtime output |
 | --- | --- | --- |
@@ -156,20 +150,11 @@ uploaded-file split is provider-neutral:
 | Uploaded files | File Capability + Session Workspace | extracted file evidence and hash/path trace |
 | Generated reports | Artifact Capability + Platform storage | artifact id, download path, artifact_created event |
 
-All channels return evidence to the Agent. None of them become Agent Memory
-without Raw Event Log, Summary Compression, Structured Extraction, source ids,
-and permission checks.
+All channels return evidence to Agent Context. None become Agent Memory without Raw Event Log, Summary Compression, Structured Extraction, source ids, and permission checks.
 
-## 会话工作区与运行事件
+## Runtime events
 
-The target session workspace binds task id, session id, uploaded files,
-intermediate files, generated artifacts, event index, and trace id. A concrete
-implementation may use local filesystem storage, object storage, database rows,
-or a hybrid. `session_dir` and `ContextVar` are implementation options, not
-the architecture identity.
-
-Long tasks need a typed runtime event stream. The transport may be SSE or
-WebSocket. The event contract should cover at least:
+Target event stream covers:
 
 - `task_started`
 - `workspace_created`
@@ -181,83 +166,12 @@ WebSocket. The event contract should cover at least:
 - `task_cancelled`
 - `error`
 
-This stream is a Trace / Observability presentation boundary. It is not a new
-business layer and does not replace durable trace evidence.
+The transport may be SSE or WebSocket. This is Trace / Observability presentation, not a new business layer.
 
-## 单一 GeneralAgent 运行时
+## Current / Target / Future
 
-All conversational requests enter one `GeneralAgent` mainline:
+- Current: single GeneralAgent mainline, GraphRAG Project query runtime, KnowledgeQueryService, minimal ContextOrchestrator, context/memory/capability foundations.
+- Target: mature Context Builder, ToolCard retrieval, dynamic capability selection, full `prepare_context -> agent_loop -> post_turn_commit`, retrieval/fusion/evidence trace closure.
+- Future: Java business services, microservices, event workers, product-level multi-agent mode, Coding Agent mode, default tree-search reasoning.
 
-```text
-prepare_context
-  -> agent_loop
-  -> post_turn_commit
-```
-
-The current code already has the single GeneralAgent path, minimal
-`ContextOrchestrator`, `ModelContextPacket`, capability foundation, and memory
-foundation. The target is the mature form:
-
-- `prepare_context`: builds model-visible context from pinned instructions,
-  recent window, task summaries, structured memories, knowledge evidence, tool
-  results, and selected ToolCards.
-- `agent_loop`: executes the LangGraph/LangChain model and tool loop through
-  one runtime, not through parallel conversational agents.
-- `post_turn_commit`: appends raw events, writes checkpoints, updates task
-  summaries, extracts structured memory candidates, records traces, and schedules
-  async work when needed.
-
-## LangChain 与 LangGraph 的职责
-
-LangChain provides provider/model/tool/message abstractions:
-
-- model adapter
-- message adapter
-- tool schema and invocation adapter
-- structured output adapter
-- prompt rendering adapter
-
-LangGraph provides stateful runtime control:
-
-- state loop
-- checkpoint and resume
-- interrupt and recovery
-- conditional routing
-- step trace
-
-LangGraph should orchestrate the single GeneralAgent runtime. It should not
-restore a second chat agent, `DomainQAGraph`, or a default multi-agent runtime.
-
-## 可观测性与 Eval
-
-Every important query path should be explainable through:
-
-- `trace_id`
-- requested and resolved query method
-- selected capabilities
-- context selection and eviction reasons
-- retrievers used
-- fusion and optional rerank trace
-- evidence bundle
-- citation coverage
-- prompt and query prompt version
-- index and community version
-- latency and cost metadata when available
-
-Eval and benchmark surfaces live under `tools/evals/zuno/` and curated evidence
-under `docs/evidence/`. Generated local reports stay out of the front path until
-explicitly promoted.
-
-## 当前、基础、目标与未来边界
-
-- Current: single GeneralAgent mainline, GraphRAG Project query runtime,
-  KnowledgeQueryService, minimal ContextOrchestrator, context/memory/capability
-  foundations.
-- Target: mature Context & Memory Engine, ToolCard retrieval, dynamic
-  capability selection, full `prepare_context -> agent_loop -> post_turn_commit`
-  LangGraph runtime, retrieval/fusion/evidence trace closure.
-- Future: Java business services, microservices, event workers, product-level
-  multi-agent mode, and Coding Agent mode.
-
-Do not promote Target or Future behavior to Current until code, tests,
-verifiers, and evidence prove it.
+Do not promote Target or Future behavior to Current until code, tests, verifiers, and evidence prove it.

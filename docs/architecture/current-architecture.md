@@ -70,7 +70,8 @@ Workspace knowledge prefetch、Workspace `search_knowledge_base` tool 和 `/know
 
 当前 runtime 图见：
 
-- [diagrams.md](diagrams.md)
+- [architecture.md](../architecture.md)
+- [architecture.html](../architecture.html)
 
 ## 当前兼容边界
 

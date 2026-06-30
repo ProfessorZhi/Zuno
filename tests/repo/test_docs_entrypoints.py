@@ -13,7 +13,8 @@ def test_readme_exposes_short_first_reader_path() -> None:
         "./docs/architecture/current-architecture.md",
         "./docs/architecture/target-architecture.md",
         "./docs/architecture/roadmap.md",
-        "./docs/architecture/diagrams.md",
+        "./docs/architecture.md",
+        "./docs/architecture.html",
         "./docs/evidence/public-demo.md",
         "受限历史兼容",
         "Phase 11A",
@@ -34,6 +35,7 @@ def test_docs_front_path_is_small_and_chinese() -> None:
         "./architecture/current-architecture.md",
         "./architecture/target-architecture.md",
         "./architecture/roadmap.md",
+        "./deliverables.md",
         "./evidence/public-demo.md",
         "./history/README.md",
         "前台文档默认使用中文",
@@ -45,7 +47,8 @@ def test_docs_front_path_is_small_and_chinese() -> None:
         "current-architecture.md",
         "target-architecture.md",
         "roadmap.md",
-        "diagrams.md",
+        "../architecture.md",
+        "../architecture.html",
         "../evidence/public-demo.md",
         "docs/history/programs/official-graphrag-cleanup-v1/",
         "docs/history/programs/zuno-target-architecture-migration-v1/",
@@ -81,7 +84,11 @@ def test_agent_entrypoint_and_agent_folder_form_one_workflow() -> None:
         "这是仓库唯一的 Agent 入口",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
+        ".agent/references/architecture-docs-map.md",
+        ".agent/references/workflow-governance.md",
         ".agent/references",
+        "Architecture Documentation Governance",
+        "Agent Workflow Self-Maintenance",
         "前台文档默认中文",
     ]:
         assert phrase in agents
@@ -108,7 +115,7 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "zuno-target-architecture-refresh-v1",
         "zuno-repo-layout-cleanup-v1",
         "zuno-architecture-visuals-v1",
-        "docs/architecture/diagrams.md",
+        "docs/architecture.md",
     ]:
         assert phrase in content
 
@@ -214,48 +221,66 @@ def test_current_target_and_roadmap_keep_current_target_boundary() -> None:
         assert phrase in roadmap
 
 
-def test_architecture_diagrams_expose_current_target_and_maintenance_workflow() -> None:
-    content = (REPO_ROOT / "docs" / "architecture" / "diagrams.md").read_text(
-        encoding="utf-8"
-    )
+def test_architecture_diagrams_expose_multi_view_target_architecture() -> None:
+    content = (REPO_ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
 
     for phrase in [
-        "Current Runtime",
-        "Target Runtime",
-        "Maintenance Workflow",
+        "Logical View",
+        "Development View",
+        "Process View",
+        "Physical View",
+        "Scenarios View",
+        "V&B Logical View",
+        "V&B Deployment View",
+        "Quality View",
+        "Agent Loop View",
+        "Component-and-Connector View",
         "```mermaid",
-        "Mermaid 源只维护在本文",
+        "Zuno 架构总览",
         "python tools/agent/render_architecture.py --write",
-        "#f8f8fb",
-        "#f6f3ff",
-        "#a99cff",
-        "#2c255f",
-        "#9b8cff",
-        "GeneralAgent single loop",
-        "Single GeneralAgent Runtime",
+        "#f7f8fb",
+        "#ffffff",
+        "#b8c2cc",
+        "#16202a",
+        "#52616f",
+        "4+1 View Model",
+        "Component-and-Connector View",
+        "Deployment View",
+        "Quality View",
+        "Agentic RAG",
+        "GraphRAG",
         "Domain Pack 只允许作为历史或兼容语境出现",
     ]:
         assert phrase in content
 
 
 def test_architecture_html_is_generated_from_mermaid_source() -> None:
-    for relative_path in [
+    for stale_path in [
+        "docs/architecture/architecture.html",
         "docs/architecture/overview.html",
         ".agent/architecture/blueprint.html",
     ]:
+        assert not (REPO_ROOT / stale_path).exists()
+
+    for relative_path in ["docs/architecture.html"]:
         content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
         for phrase in [
-            "docs/architecture/diagrams.md",
+            "docs/architecture.md",
             "tools/agent/render_architecture.py",
-            "CDN Mermaid runtime",
-            "Current Runtime",
-            "Target Runtime",
-            "Maintenance Workflow",
-            "#f8f8fb",
-            "#f6f3ff",
-            "#a99cff",
-            "#2c255f",
-            "#9b8cff",
+            "4+1 View Model",
+            "Component-and-Connector View",
+            "Deployment View",
+            "Quality View",
+            "Scenarios View",
+            "Process View",
+            "V&B Logical View",
+            "V&B Deployment View",
+            "Agent Loop View",
+            "#f7f8fb",
+            "#ffffff",
+            "#b8c2cc",
+            "#16202a",
+            "#52616f",
         ]:
             assert phrase in content
 
@@ -270,10 +295,7 @@ def test_architecture_html_matches_rendered_mermaid_source() -> None:
     spec.loader.exec_module(render_architecture)
 
     expected = render_architecture.build_html()
-    for relative_path in [
-        "docs/architecture/overview.html",
-        ".agent/architecture/blueprint.html",
-    ]:
+    for relative_path in ["docs/architecture.html"]:
         assert (REPO_ROOT / relative_path).read_bytes() == expected.encode("utf-8")
 
 

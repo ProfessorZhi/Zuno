@@ -26,8 +26,19 @@ docs/history/
 ```text
 .agent/references/
   README.md
+  project-map.md
   current-program.md
   docs-map.md
+  architecture-docs-map.md
+  documentation-governance.md
+  architecture-update-policy.md
+  diagram-inventory.md
+  current-target-future-rules.md
+  workflow-governance.md
+  workflow-update-policy.md
+  workflow-requirements.md
+  workflow-change-log.md
+  workflow-maintenance-checklist.md
   task-routing.md
   workflow.md
   code-map.md
@@ -44,6 +55,17 @@ docs/history/
 - 修改前必须保护哪些边界。
 - 出问题时先查哪一层。
 - 收尾时跑哪些最小有效验证并同步哪些文档。
+- 架构文档、architecture.html、模板、program 和工作流长期规则如何自我维护。
+
+## Architecture Documentation Governance
+
+`docs/architecture/` 是正式的人类可读架构说明；`docs/architecture.html` 是由 Mermaid 源生成的展示页；`.agent/references/` 是 Agent-facing operating memory。架构相关改动必须检查 `architecture-docs-map.md`、`documentation-governance.md`、`architecture-update-policy.md`、`diagram-inventory.md` 和 `current-target-future-rules.md`。
+
+## Agent Workflow Self-Maintenance
+
+工作流不是静态规则。当用户提出新的长期要求时，Agent 必须判断是否需要更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture.html` 和 verifier。详细规则在 `workflow-governance.md`、`workflow-update-policy.md`、`workflow-requirements.md`、`workflow-change-log.md` 和 `workflow-maintenance-checklist.md`。
+
+对外展示时，Zuno 的最终成品是五个成熟系统；内部验收时，拆成八大交付物。这个定义记录在 `project-map.md` 和 `workflow-requirements.md`。
 
 ## Skill 文件标准
 

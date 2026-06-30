@@ -58,7 +58,7 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 
 - `.agent/references/`：本地 skill library。这里放类似 skill 的任务路由、统一工作流、文档地图、代码地图、验证地图、常见坑、debug playbook 和 lessons learned。
 - `.agent/programs/`：执行计划。按 phase 推进的 active program 放这里，完成后归档到 `docs/history/programs/`。
-- `.agent/architecture/near-term/`：近期目标架构设计，包含 `zuno-ideal-architecture-and-repo-layout.html` 和五份 canonical Markdown。
+- `.agent/architecture/near-term/`：近期目标架构设计，包含 `00-architecture-index.md` 和五份 canonical Markdown。
 - `.agent/architecture/future/`：未来方向，只记录 Java、microservices、event/workers、multi-agent 等 horizon，不作为近期验收目标。
 - `.agent/architecture/decisions/`：Agent 侧轻量决策摘要，说明为什么这样分层、为什么暂不做某些方向；正式 ADR 仍在 `docs/architecture/decisions/`。
 - `.agent/templates/`：skill 执行骨架，只放格式，不沉淀项目知识。

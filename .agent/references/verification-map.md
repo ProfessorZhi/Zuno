@@ -124,7 +124,7 @@ pytest -q tests/repo/test_repo_structure_consistency.py tests/repo/test_repo_hyg
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/grep-domain-pack.ps1
-git grep -n "zuno-ideal-architecture-and-repo-layout.html"
+git grep -n "00-architecture-index.md"
 ```
 
 ## Docs Sync

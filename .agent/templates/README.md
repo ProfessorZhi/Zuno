@@ -21,6 +21,10 @@ docs       = formal human truth
 - `target-mode-prompt.md`：目标模式批处理骨架。
 - `codex-batch-prompt.md`：Codex 批处理骨架。
 - `spec-coding-checklist.md`：规格实现检查骨架。
+- `architecture-doc-template.md`：正式架构文档骨架。
+- `mermaid-diagram-template.md`：Mermaid 图文档骨架。
+- `architecture-change-note-template.md`：架构变更记录骨架。
+- `workflow-change-note-template.md`：工作流自我维护变更记录骨架。
 
 ## Allowed Content
 
@@ -46,6 +50,8 @@ docs       = formal human truth
 4. 是否能被 `.agent/system.yaml` 或 phase 文件引用。
 
 新增模板必须能被 `.agent/system.yaml` 或 phase 文件引用；不能被路由或执行计划引用的模板先不要放进前台。
+
+如果用户提出新的长期工作流规则，并且该规则会影响未来生成内容，必须同步检查并更新相关模板。模板更新后还要检查 `.agent/references/workflow-update-policy.md`、`.agent/references/workflow-requirements.md` 和 `.agent/references/workflow-change-log.md`。
 
 ## Docs Sync
 

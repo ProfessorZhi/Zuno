@@ -29,7 +29,7 @@ user task
 - 目标不清时先做只读审计，不修改、不提交。
 - 文档和工作流任务不得越界修改 runtime。
 - 架构替换要保留 `Current / Target / Future / History` 边界。
-- `.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html` 是 Target / Proposed 视觉蓝图，不是 Current proof。
+- `.agent/architecture/near-term/00-architecture-index.md` 是 Target / Proposed 视觉蓝图，不是 Current proof。
 - 历史材料进入 `docs/history/`，不要因为它过时就删除。
 
 ## Before Editing
@@ -63,7 +63,7 @@ user task
 | `apps/web` | `apps/web/AGENTS.md`、`code-map.md`、`verification-map.md` | 前端变更流程 |
 | `src/backend/zuno` | `runtime-call-chain.md`、`code-map.md`、`zuno-repo-hygiene.md` | 后端变更流程 |
 | API / DTO / 前后端 contract | `code-map.md`、`runtime-call-chain.md` | API contract 流程 |
-| 架构替换、GraphRAG 边界、仓库布局 | `.agent/architecture/near-term/*`、`.agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html`、`workflow.md`、`docs-map.md` | 架构重构流程；Current/Target 分开 |
+| 架构替换、GraphRAG 边界、仓库布局 | `.agent/architecture/near-term/*`、`.agent/architecture/near-term/00-architecture-index.md`、`workflow.md`、`docs-map.md` | 架构重构流程；Current/Target 分开 |
 | eval tooling / datasets / metrics | `tools/evals/zuno/AGENTS.md`、`verification-map.md` | eval 变更流程 |
 
 ## Common Failure Patterns

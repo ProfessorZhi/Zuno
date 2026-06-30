@@ -5,31 +5,60 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+ACTIVE_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_program-boot-baseline.md",
+    "PHASE02_workflow-self-maintenance-system.md",
+    "PHASE03_architecture-docs-html-system.md",
+    "PHASE04_query-router-mode-policy.md",
+    "PHASE05_context-builder-memory-system.md",
+    "PHASE06_capability-toolcard-mcp-system.md",
+    "PHASE07_hooks-evidence-trace-artifact-system.md",
+    "PHASE08_graphrag-knowledge-runtime-system.md",
+    "PHASE09_runtime-upgrade-integration.md",
+    "PHASE10_validation-release-closure.md",
+]
+
 
 def test_required_current_paths_exist() -> None:
     required_paths = [
         "AGENTS.md",
         ".agent/README.md",
         ".agent/references/README.md",
+        ".agent/references/project-map.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
         ".agent/references/docs-map.md",
+        ".agent/references/architecture-docs-map.md",
+        ".agent/references/documentation-governance.md",
+        ".agent/references/architecture-update-policy.md",
+        ".agent/references/diagram-inventory.md",
+        ".agent/references/current-target-future-rules.md",
+        ".agent/references/workflow-governance.md",
+        ".agent/references/workflow-update-policy.md",
+        ".agent/references/workflow-requirements.md",
+        ".agent/references/workflow-change-log.md",
+        ".agent/references/workflow-maintenance-checklist.md",
+        ".agent/templates/architecture-doc-template.md",
+        ".agent/templates/mermaid-diagram-template.md",
+        ".agent/templates/architecture-change-note-template.md",
+        ".agent/templates/workflow-change-note-template.md",
         ".agent/programs/current.md",
-        ".agent/architecture/near-term/zuno-ideal-architecture-and-repo-layout.html",
+        ".agent/architecture/near-term/00-architecture-index.md",
         ".agent/architecture/near-term/01-target-runtime-architecture.md",
         ".agent/architecture/near-term/02-context-memory-architecture.md",
         ".agent/architecture/near-term/03-capability-tool-retrieval-architecture.md",
         ".agent/architecture/near-term/04-knowledge-graphrag-retrieval-fusion.md",
         ".agent/architecture/near-term/05-repository-boundaries-and-acceptance-gates.md",
-        ".agent/architecture/blueprint.html",
         "apps/desktop",
         "apps/web",
         "docs/README.md",
         "docs/architecture/current-architecture.md",
         "docs/architecture/target-architecture.md",
         "docs/architecture/roadmap.md",
-        "docs/architecture/diagrams.md",
-        "docs/architecture/overview.html",
+        "docs/architecture.md",
+        "docs/architecture.html",
+        "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
         "docs/evidence/public-demo.md",
         "docs/reference/terminology.md",
         "docs/history/README.md",
@@ -62,13 +91,17 @@ def test_repo_structure_verifier_pins_current_front_path() -> None:
     required_paths = set(verifier.REQUIRED_PATHS)
     for relative_path in [
         "AGENTS.md",
+        ".agent/references/project-map.md",
         ".agent/references/task-routing.md",
         ".agent/references/workflow.md",
+        ".agent/references/architecture-docs-map.md",
+        ".agent/references/workflow-governance.md",
         "docs/README.md",
         "docs/architecture/current-architecture.md",
         "docs/architecture/target-architecture.md",
         "docs/architecture/roadmap.md",
-        "docs/architecture/overview.html",
+        "docs/architecture.md",
+        "docs/architecture.html",
         "docs/evidence/public-demo.md",
         "docs/reference/terminology.md",
         "docs/history/audits",
@@ -601,6 +634,8 @@ def test_front_path_docs_link_current_entrypoints() -> None:
     assert "roadmap.md" in architecture_index
     assert "../evidence/public-demo.md" in architecture_index
     assert "./architecture/roadmap.md" in docs_index
+    assert "./deliverables.md" in docs_index
+    assert "./docs/deliverables.md" in readme
     assert "./docs/architecture/roadmap.md" in readme
 
 
@@ -645,7 +680,7 @@ def test_reference_migration_doc_is_archived_out_of_front_path() -> None:
     assert (REPO_ROOT / "docs" / "history" / "reference" / "migration.md").exists()
 
 
-def test_program3_and_program4_closures_are_archived_with_no_active_phase_files() -> None:
+def test_program3_and_program4_closures_are_archived_with_current_active_program() -> None:
     active_files = sorted(
         path.name
         for path in (REPO_ROOT / ".agent" / "programs").iterdir()
@@ -658,6 +693,7 @@ def test_program3_and_program4_closures_are_archived_with_no_active_phase_files(
             "current.md",
             "implementation-roadmap.md",
             "closure-checklist.md",
+            *ACTIVE_PROGRAM_PHASE_FILES,
         ]
     )
     assert not (REPO_ROOT / ".agent/programs/zuno-target-runtime-v2").exists()
@@ -671,6 +707,8 @@ def test_program3_and_program4_closures_are_archived_with_no_active_phase_files(
         REPO_ROOT / ".agent/programs/implementation-roadmap.md"
     ).read_text(encoding="utf-8")
     for phrase in [
+        ACTIVE_PROGRAM_NAME,
+        "state: active",
         "zuno-six-layer-internalization-v1",
         "每次新 program 都从 `PHASE01` 开始编号",
         "zuno-repo-layout-cleanup-v1",
@@ -739,9 +777,9 @@ def test_architecture_diagram_generation_paths_are_pinned() -> None:
     )
 
     for phrase in [
-        "docs/architecture/diagrams.md",
-        "docs/architecture/overview.html",
-        ".agent/architecture/blueprint.html",
+        "docs/architecture.md",
+        "docs/architecture.html",
+        "00-architecture-index.md",
         "tools/agent/render_architecture.py",
         "verify_architecture_diagram_outputs",
     ]:
