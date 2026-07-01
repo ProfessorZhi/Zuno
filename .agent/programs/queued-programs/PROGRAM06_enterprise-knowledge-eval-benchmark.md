@@ -6,7 +6,7 @@ depends_on: zuno-agent-planning-integration-v1
 
 ## 目标
 
-建设企业内部知识库问答系统的自动化评测体系，评估 Zuno 的 Agentic GraphRAG 是否相比 Basic RAG 和 Static GraphRAG baseline 在召回、答案质量、引用质量、低幻觉、安全和可观测性上有实质提升。
+建设企业内部知识库问答系统的自动化评测体系，评估 Zuno 的 Agentic GraphRAG 是否相比 Basic RAG、Static GraphRAG baseline、标准检索 profile 和深度检索 profile 在召回、答案质量、引用质量、低幻觉、安全和可观测性上有实质提升。
 
 ## 场景边界
 
@@ -78,13 +78,15 @@ Question types：
 
 - Basic RAG baseline runner。
 - Static GraphRAG baseline runner。
+- Standard retrieval profile runner：模拟用户在知识库选择处选择标准检索。
+- Deep retrieval profile runner：模拟用户在知识库选择处选择深度检索。
 - Agentic GraphRAG target runner。
 - Optional ablation：no-memory、no-replan、no-rerank。
 
 验收：
 
-- 三个 runner 使用同一 corpus、同一 question set、同一 metric interface。
-- runner 输出 run id、trace id、retrieved block ids、answer、citations、latency。
+- 所有 runner 使用同一 corpus、同一 question set、同一 metric interface。
+- runner 输出 run id、trace id、requested_profile、effective_profile、fallback_reason、retrieved block ids、answer、citations、latency。
 
 ## PHASE05 Retrieval Metrics
 
@@ -142,7 +144,9 @@ Question types：
 建议门槛：
 
 - lookup 问题不得明显退化。
-- multi-hop / compare 的 recall@5 或 NDCG 应明显高于 Basic RAG。
+- 标准检索在 lookup / single-doc fact 问题上不得明显慢于或差于 Basic RAG。
+- 深度检索在 multi-hop / compare / report 问题上的 recall@5、NDCG 或 citation coverage 应高于标准检索和 Basic RAG。
+- graph index 未就绪时，深度检索应记录 `effective_profile=deep_without_graph` 和 fallback reason，且不能假装 GraphRAG 已生效。
 - citation coverage 达到 release threshold。
 - unsupported claim rate 低于 baseline。
 - trace completeness 达到 release threshold。

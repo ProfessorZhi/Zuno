@@ -741,9 +741,9 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：用企业知识库场景验证架构。</li>
-          <li>Zuno 映射：这是 Agentic GraphRAG 产品链路。PHASE03 request envelope 用 `enterprise_kb / hr_resume / contract_review / general_agent` 表达产品场景；retrieval policy 再决定 `basic / local / global / drift` 等知识通道。</li>
+          <li>Zuno 映射：这是 AgentChat 驱动的 Agentic GraphRAG 产品链路。PHASE03 request envelope 用 `enterprise_kb / hr_resume / contract_review / general_agent` 表达产品场景；Agentic Retrieval Planner 再生成内部查询、选择 retrieval tools，并决定是否使用 `basic / local / global / drift` 等知识通道。</li>
           <li>Zuno 映射：文档解析层是企业知识库、GraphRAG、citation 和 eval 的共同前置依赖；parser router 把 native、Docling/PyMuPDF、MinerU/OCR/VLM、Unstructured/MarkItDown 收束为统一 Document IR。</li>
-          <li>边界：`auto` 是产品模式和路由策略，不是第五种最终检索算法；`global` 是 community-level prior，不和 chunk-level BM25 直接生硬混榜。</li>
+          <li>边界：`auto` 是内部路由策略，不是第五种最终检索算法；`global` 是 community-level prior，不和 chunk-level BM25 直接生硬混榜。用户不直接选择 GraphRAG 子模式，Agent 自己决定是否需要 GraphRAG。</li>
         </ul>
         <div class="diagram-actions">
           <button type="button" class="diagram-open" data-diagram-title="Scenarios View">展开全屏查看</button>
@@ -767,17 +767,17 @@ flowchart TB
   CHUNK[&quot;5 Chunk Evidence Anchor&quot;]
   ACL[&quot;6 ACL Scope Sensitivity Tag&quot;]
   INDEX[&quot;7 Index&lt;br/&gt;BM25 Vector Graph&quot;]
-  QUERY[&quot;8 User Query&quot;]
-  PRODUCT[&quot;9 Task Envelope&lt;br/&gt;workspace session product_mode&quot;]
+  QUERY[&quot;8 AgentChat Goal&quot;]
+  PRODUCT[&quot;9 Knowledge Selection&lt;br/&gt;standard deep profile&quot;]
   CONTEXT[&quot;10 Context Builder&lt;br/&gt;query files memory&quot;]
   MEMORY[&quot;11 Selected Memory&lt;br/&gt;recent summary structured&quot;]
   AGENT[&quot;12 Controller Agent&quot;]:::accent
-  MODE{&quot;Retrieval Policy&quot;}:::decision
-  NORMAL[&quot;basic&lt;br/&gt;force simple retrieval&quot;]
-  ENHANCED[&quot;graph_required&lt;br/&gt;retrieval required&quot;]
-  AUTO[&quot;auto&lt;br/&gt;agent decides retrieval&quot;]
+  MODE[&quot;Agentic Retrieval Planner&lt;br/&gt;profile capability evidence budget&quot;]:::accent
+  NORMAL[&quot;BM25 Vector&lt;br/&gt;precise lookup&quot;]
+  ENHANCED[&quot;GraphRAG&lt;br/&gt;local global drift&quot;]
+  AUTO[&quot;Table Code Memory Tool&lt;br/&gt;specialized retrieval&quot;]
   NEED{&quot;Need Retrieval&quot;}:::decision
-  ROUTER[&quot;Agentic GraphRAG Router&lt;br/&gt;select channel by task evidence budget&quot;]:::accent
+  ROUTER[&quot;Retriever Router&lt;br/&gt;select tools by evidence budget&quot;]:::accent
   BASIC[&quot;basic&lt;br/&gt;BM25 vector&quot;]
   LOCAL[&quot;local&lt;br/&gt;entity neighborhood&quot;]
   GLOBAL[&quot;global&lt;br/&gt;community prior&quot;]
@@ -799,10 +799,10 @@ flowchart TB
   ROUTEPARSE --&gt; MINERU --&gt; NORMALIZE
   ROUTEPARSE --&gt; UNSTRUCT --&gt; NORMALIZE
   NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
-  INDEX --&gt; QUERY --&gt; PRODUCT --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; MODE
-  MODE --&gt; NORMAL --&gt; BASIC
+  INDEX --&gt; QUERY --&gt; PRODUCT --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; MODE --&gt; NEED
+  MODE --&gt; NORMAL --&gt; ROUTER
   MODE --&gt; ENHANCED --&gt; ROUTER
-  MODE --&gt; AUTO --&gt; NEED
+  MODE --&gt; AUTO --&gt; ROUTER
   NEED --&gt;|No| ANSWER
   NEED --&gt;|Yes| ROUTER
   ROUTER --&gt; BASIC --&gt; FUSION
@@ -837,17 +837,17 @@ flowchart TB
   CHUNK[&quot;5 Chunk Evidence Anchor&quot;]
   ACL[&quot;6 ACL Scope Sensitivity Tag&quot;]
   INDEX[&quot;7 Index&lt;br/&gt;BM25 Vector Graph&quot;]
-  QUERY[&quot;8 User Query&quot;]
-  PRODUCT[&quot;9 Task Envelope&lt;br/&gt;workspace session product_mode&quot;]
+  QUERY[&quot;8 AgentChat Goal&quot;]
+  PRODUCT[&quot;9 Knowledge Selection&lt;br/&gt;standard deep profile&quot;]
   CONTEXT[&quot;10 Context Builder&lt;br/&gt;query files memory&quot;]
   MEMORY[&quot;11 Selected Memory&lt;br/&gt;recent summary structured&quot;]
   AGENT[&quot;12 Controller Agent&quot;]:::accent
-  MODE{&quot;Retrieval Policy&quot;}:::decision
-  NORMAL[&quot;basic&lt;br/&gt;force simple retrieval&quot;]
-  ENHANCED[&quot;graph_required&lt;br/&gt;retrieval required&quot;]
-  AUTO[&quot;auto&lt;br/&gt;agent decides retrieval&quot;]
+  MODE[&quot;Agentic Retrieval Planner&lt;br/&gt;profile capability evidence budget&quot;]:::accent
+  NORMAL[&quot;BM25 Vector&lt;br/&gt;precise lookup&quot;]
+  ENHANCED[&quot;GraphRAG&lt;br/&gt;local global drift&quot;]
+  AUTO[&quot;Table Code Memory Tool&lt;br/&gt;specialized retrieval&quot;]
   NEED{&quot;Need Retrieval&quot;}:::decision
-  ROUTER[&quot;Agentic GraphRAG Router&lt;br/&gt;select channel by task evidence budget&quot;]:::accent
+  ROUTER[&quot;Retriever Router&lt;br/&gt;select tools by evidence budget&quot;]:::accent
   BASIC[&quot;basic&lt;br/&gt;BM25 vector&quot;]
   LOCAL[&quot;local&lt;br/&gt;entity neighborhood&quot;]
   GLOBAL[&quot;global&lt;br/&gt;community prior&quot;]
@@ -869,10 +869,10 @@ flowchart TB
   ROUTEPARSE --&gt; MINERU --&gt; NORMALIZE
   ROUTEPARSE --&gt; UNSTRUCT --&gt; NORMALIZE
   NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
-  INDEX --&gt; QUERY --&gt; PRODUCT --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; MODE
-  MODE --&gt; NORMAL --&gt; BASIC
+  INDEX --&gt; QUERY --&gt; PRODUCT --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; MODE --&gt; NEED
+  MODE --&gt; NORMAL --&gt; ROUTER
   MODE --&gt; ENHANCED --&gt; ROUTER
-  MODE --&gt; AUTO --&gt; NEED
+  MODE --&gt; AUTO --&gt; ROUTER
   NEED --&gt;|No| ANSWER
   NEED --&gt;|Yes| ROUTER
   ROUTER --&gt; BASIC --&gt; FUSION

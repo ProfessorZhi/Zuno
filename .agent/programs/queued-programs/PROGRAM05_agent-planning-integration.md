@@ -8,10 +8,14 @@ depends_on: zuno-runtime-subsystems-parallel-v1
 
 把 Program 4 的 Memory、Tool、安全和 GraphRAG 成果合并进 Single Controller Agent，实现真实 `prepare_context -> plan -> ReAct -> observe -> reflect -> replan -> post_turn_commit`。Program 5 是 Zuno 从“能检索回答”走向“能计划、执行、反思、重规划”的关键 program。
 
+产品口径必须固定：用户在 AgentChat 提目标，在勾选知识库时选择标准检索 / 深度检索；用户不手动选择 RAG、GraphRAG、local、global 或 drift。Program 5 的核心是 Agentic Retrieval Planner：它读取每个知识库的 requested profile、index capability、ACL、证据质量和预算，自动决定 query rewrite、retriever selection、GraphRAG expansion、re-query、rerank、reflection 和 final cited answer。
+
 ## 核心边界
 
 - 仍然是 Single Controller / Single `GeneralAgent` 主线。
 - Planner、Reflection、Replan 是 Agent Core Runtime 内部控制点，不是产品多 Agent。
+- 标准检索 / 深度检索是知识库级 retrieval profile，不是全局 Agent 工作模式。
+- GraphRAG 是 Agent 可调用的 retrieval tool，不是用户可见主模式。
 - LangGraph-compatible DB persistence 仍是 Production Target，除非本 program 真实接入 DB checkpointer 和跨 worker recovery。
 
 ## PHASE01 合并准备
@@ -33,6 +37,7 @@ depends_on: zuno-runtime-subsystems-parallel-v1
 
 - 定义 `PlanStep`、`PlanState`、`PlannerOutput`、`ReflectionVerdict`、`ReplanDecision`。
 - 每个 plan step 包含目标、所需证据、允许工具、预算、失败条件、停止条件。
+- 定义 `RetrievalPlan` 或等价 contract，包含 `knowledge_retrieval_profiles`、`requested_profile`、`effective_profile`、`fallback_reason`、`retrievers`、`max_rounds`、`evidence_requirements` 和 `citation_required`。
 
 候选路径：
 
@@ -50,6 +55,7 @@ depends_on: zuno-runtime-subsystems-parallel-v1
 目标：
 
 - 输入用户问题、Context Pack、Memory、document metadata、security policy。
+- 输入被勾选的 knowledge spaces、每个 knowledge space 的标准检索 / 深度检索 profile、index capability 和 ACL scope。
 - 输出可执行 plan。
 - 能区分 lookup、多跳、跨文档对比、表格查询、不可回答问题、需要澄清问题。
 
@@ -57,18 +63,20 @@ depends_on: zuno-runtime-subsystems-parallel-v1
 
 - 对不同 question type 产生不同 plan。
 - plan 中声明 retrieval / tool / memory / ask-user 的使用条件。
+- 深度检索不会一上来强制跑所有通道；它必须表现为 staged retrieval：先便宜召回，证据不足才 graph expand / re-query / strong rerank。
 
 ## PHASE04 ReAct Step Runner
 
 目标：
 
 - 每个 plan step 可进入 `think / action / observe`。
-- action 可调 retrieval、GraphRAG expansion、tool、memory lookup 或 ask-user。
+- action 可调 standard retrieval、deep retrieval、GraphRAG expansion、tool、memory lookup 或 ask-user。
 
 验收：
 
 - step observation 可进入 trace。
 - tool / retrieval failure 不直接导致最终胡答。
+- trace 记录每个知识库的 `requested_profile`、`effective_profile` 和 `fallback_reason`。
 
 ## PHASE05 Reflection Gate
 
@@ -114,6 +122,7 @@ depends_on: zuno-runtime-subsystems-parallel-v1
 验收：
 
 - 至少覆盖 lookup、多跳、跨文档、不可回答四类问题。
+- 至少覆盖：标准检索单文档事实、深度检索跨文档分析、深度检索但 graph index 未就绪时 `deep_without_graph` 降级。
 - trace 中可看到 plan_created、step_completed、reflection_completed、replan_created、answer_finalized。
 
 ## 验证基线

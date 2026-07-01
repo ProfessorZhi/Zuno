@@ -8,6 +8,8 @@ depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 
 在 Program 1 固定 Document IR、Program 2 完成 durable ingestion Product V1，且 Program 3 完成 enterprise ingestion async infrastructure baseline 之后，使用多线程模式并行推进四个低耦合子系统：Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。Program 4 的目标是产出可被 Program 5 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环，也不回退到 in-memory 产品事实源。
 
+产品口径必须固定：用户不选择 Basic RAG / GraphRAG，也不选择全局 Agent 快速 / 深度模式。用户在勾选具体知识库时选择本次检索策略：标准检索或深度检索。建库时决定知识库是否具备基础索引、图谱增强索引、OCR / 多模态解析能力；查询时只决定本次用多深。Program 4 只准备这些能力和 contract，Program 5 再由 Agentic Retrieval Planner 消费它们。
+
 ## 为什么可以并行
 
 这四块写入范围可以相对隔离：
@@ -114,12 +116,16 @@ depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 
 1. 固定 enterprise knowledge schema 和 EvidenceBundle 字段。
 2. 增强 local RRF / rerank trace。
-3. 提供 Static GraphRAG baseline runner，为 Program 6 对照组准备。
-4. 继续把外部 Elasticsearch / Milvus / Neo4j 写成 adapter boundary 和 Target，不伪装 Current。
+3. 定义 knowledge retrieval profile contract：`standard` = 标准检索，`deep` = 深度检索。
+4. 定义 index capability contract：基础索引必选，图谱增强索引与 OCR / 多模态解析可选。
+5. 提供 `deep_without_graph` 降级语义：深度检索请求遇到 graph index 未就绪时，不报错，改用基础索引、多轮重查、强 rerank 和 citation coverage check。
+6. 提供 Static GraphRAG baseline runner，为 Program 6 对照组准备。
+7. 继续把外部 Elasticsearch / Milvus / Neo4j 写成 adapter boundary 和 Target，不伪装 Current。
 
 验收：
 
 - 同一 query 能产生 retrieval trace、evidence bundle 和 citation source tracing。
+- trace 能记录 `requested_profile`、`effective_profile` 和 `fallback_reason`。
 - GraphRAG baseline runner 可被 Program 6 eval 调用。
 - unsupported claim metrics 可读。
 
