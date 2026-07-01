@@ -5,7 +5,7 @@ state: active
 
 ## Phase 顺序
 
-- [ ] PHASE01 production maturity gap audit
+- [x] PHASE01 production maturity gap audit
 - [ ] PHASE02 program truth source and execution system
 - [ ] PHASE03 workflow self maintenance automation
 - [ ] PHASE04 documentation dedup architecture clarity
@@ -51,7 +51,7 @@ state: active
 
 ## 必须归档的证据
 
-- [ ] PHASE01 maturity gap audit。
+- [x] PHASE01 maturity gap audit。
 - [ ] 四大总交付物 closure table。
 - [ ] 八类 runtime-first deliverables closure table。
 - [ ] owner map 和 import matrix。

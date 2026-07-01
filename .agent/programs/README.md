@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-production-architecture-and-deliverables-completion-v1`
-- Current phase: `PHASE01_production-maturity-gap-audit`
+- Current phase: `PHASE02_program-truth-source-and-execution-system`
 - 最近完成 program: `zuno-target-architecture-runtime-full-implementation-v1`
 - 最近完成归档位置: `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 

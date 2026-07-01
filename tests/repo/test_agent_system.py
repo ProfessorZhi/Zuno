@@ -191,7 +191,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phrase in [
         "state: active",
         f"active_program: {ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE01_production-maturity-gap-audit",
+        "current_phase: PHASE02_program-truth-source-and-execution-system",
         ACTIVE_PROGRAM_NAME,
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",

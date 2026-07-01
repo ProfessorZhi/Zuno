@@ -4,7 +4,7 @@
 
 架构正文以 `architecture.md` 为准；四大总交付物、成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。本 README 只做入口导航，不重复 phase 清单、四大总交付物展开或 Production Target 清单。
 
-当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE01_production-maturity-gap-audit`。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`，它已把“上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback”的 vertical slice 推进到第一版真实 runtime；只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
+当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE02_program-truth-source-and-execution-system`。PHASE01 已完成生产成熟度差距审计。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`，它已把“上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback”的 vertical slice 推进到第一版真实 runtime；只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
 
 ## 当前前台
 

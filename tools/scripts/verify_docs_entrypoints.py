@@ -201,7 +201,7 @@ def verify_entrypoint_text() -> list[str]:
         "Document Ingestion",
         "Security / Governance",
         "zuno-production-architecture-and-deliverables-completion-v1",
-        "PHASE01_production-maturity-gap-audit",
+        "PHASE02_program-truth-source-and-execution-system",
         "成熟目标架构和四大总交付物完成",
         "zuno-target-architecture-runtime-full-implementation-v1",
         "PHASE09_agentic-retrieval-evidence-citation-runtime",

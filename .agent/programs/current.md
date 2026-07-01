@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE01_production-maturity-gap-audit
+current_phase: PHASE02_program-truth-source-and-execution-system
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE01_production-maturity-gap-audit
 
 ## 当前阶段
 
-- 当前 phase：`PHASE01_production-maturity-gap-audit`
-- 当前动作：先做生产成熟度差距审计，逐项核对 Current / Target / Future / History，不直接把 Target 写成 Current。
-- 当前验收：PHASE01 只有在差距清单、owner map、验证矩阵、执行拆分和停止条件都写清后才能关闭。
+- 当前 phase：`PHASE02_program-truth-source-and-execution-system`
+- 当前动作：冻结 active program 真相源、phase gate、单线程挂机执行边界、verifier 期望和 commit/push 节奏。
+- 当前验收：PHASE02 只有在 active program 文件集、phase 顺序、共享文件 owner、verifier/test 覆盖和单线程执行规则都一致后才能关闭。
 
 ## 最近完成基线
 

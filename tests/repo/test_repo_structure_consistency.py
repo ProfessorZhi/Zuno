@@ -1002,7 +1002,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         ACTIVE_PROGRAM_NAME,
         "state: active",
         f"active_program: {ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE01_production-maturity-gap-audit",
+        "current_phase: PHASE02_program-truth-source-and-execution-system",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",

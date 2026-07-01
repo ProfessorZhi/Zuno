@@ -113,7 +113,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
         "Tool Control Plane",
         "LangSmith-compatible Trace / Eval",
         "zuno-production-architecture-and-deliverables-completion-v1",
-        "PHASE01_production-maturity-gap-audit",
+        "PHASE02_program-truth-source-and-execution-system",
         "成熟目标架构和四大总交付物完成",
         "文档一致性规则",
         "架构图视图集",

@@ -2,7 +2,7 @@
 
 program: `zuno-production-architecture-and-deliverables-completion-v1`
 state: active
-current_phase: `PHASE01_production-maturity-gap-audit`
+current_phase: `PHASE02_program-truth-source-and-execution-system`
 
 ## 核心目标
 
@@ -36,6 +36,16 @@ current_phase: `PHASE01_production-maturity-gap-audit`
 | PHASE10 | tool sandbox vault network runtime | 完成真实隔离 sandbox、外部 vault/OAuth broker、网络代理、持久 approval DB 和 audit。 |
 | PHASE11 | production graphrag evidence citation | 完成 GraphRAG extraction、community report、RRF/rerank、外部图索引、unsupported claim guard 和 evidence eval。 |
 | PHASE12 | security trace eval release closure | 完成外部 trace/eval、online eval、CI release gate、生产运维证据归档、全量验证和 program 归档。 |
+
+## PHASE01 审计结果
+
+PHASE01 已完成生产成熟度差距审计。后续执行必须以 `.agent/programs/PHASE01_production-maturity-gap-audit.md` 中的四大总交付物 gap 表、八类 runtime-first gap 表、owner map、external dependency matrix 和 PHASE02-PHASE12 风险排序为 gate。
+
+PHASE01 结论：
+
+- Current 只包括第一版 in-process runtime slice、Web workspace Agent 产品闭环、本地 deterministic parse / index / retrieval / tool / trace / eval surface、focused tests、repo verifiers 和历史 release evidence。
+- Production Target 仍包括 production Desktop、parser queue、深度解析、外部索引、production persistence、semantic/vector memory、真实 sandbox、外部 vault、外部 trace/eval 和 CI release gate operations。
+- 外部服务、凭据或真实隔离运行时不可用时，后续 phase 只能交付 adapter、local fallback、blocked evidence 和 Remaining Target，不能写成 Current。
 
 ## 一次性交付定义
 

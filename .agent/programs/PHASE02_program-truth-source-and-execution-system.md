@@ -1,6 +1,6 @@
 # PHASE02 Program Truth Source and Execution System
 
-status: pending
+status: active
 
 ## 目标
 
