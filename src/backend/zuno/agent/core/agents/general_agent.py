@@ -348,7 +348,7 @@ class GeneralAgent:
                 )
             )
 
-        memory_items = self._memory_context_items()
+        memory_items = self._memory_context_items(query=task)
         packet = ContextOrchestrator().prepare(
             ContextPreparationInput(
                 execution_context=execution_context,
@@ -409,7 +409,7 @@ class GeneralAgent:
     def record_tool_trace_event(self, event: dict[str, Any]) -> None:
         self.runtime_tool_trace_events.append(dict(event or {}))
 
-    def _memory_context_items(self) -> list[ContextItem]:
+    def _memory_context_items(self, *, query: str = "") -> list[ContextItem]:
         scope = self._memory_scope()
         items: list[ContextItem] = []
         for index, summary in enumerate(self.memory_layer_store.task_summaries(scope)):
@@ -429,9 +429,38 @@ class GeneralAgent:
                     },
                 )
             )
-        for index, candidate in enumerate(self.memory_layer_store.memory_candidates(scope)):
-            if candidate.review_status is not MemoryReviewStatus.APPROVED:
-                continue
+        search_results = self.memory_engine.search_semantic_memory(
+            scope=scope,
+            query=query,
+            limit=5,
+        )
+        if search_results:
+            candidates_with_metadata = tuple(
+                (
+                    result.candidate,
+                    {
+                        "semantic_adapter_id": result.adapter_id,
+                        "semantic_score": result.score,
+                        "vector_ref": result.vector_ref,
+                        "semantic_match": "query_match",
+                    },
+                )
+                for result in search_results
+            )
+        else:
+            candidates_with_metadata = tuple(
+                (
+                    candidate,
+                    {
+                        "semantic_adapter_id": self.memory_engine.semantic_adapter.adapter_id,
+                        "semantic_score": 0.0,
+                        "vector_ref": f"local-vector:{candidate.candidate_id}:fallback",
+                        "semantic_match": "fallback_no_query_match",
+                    },
+                )
+                for candidate in self.memory_engine.retrieve_memory(scope=scope, query="", limit=5)
+            )[:5]
+        for index, (candidate, semantic_metadata) in enumerate(candidates_with_metadata):
             items.append(
                 ContextItem(
                     item_id=f"memory_candidate_{index}",
@@ -446,6 +475,7 @@ class GeneralAgent:
                         "candidate_id": candidate.candidate_id,
                         "review_status": candidate.review_status.value,
                         "usage": "pre_model_context",
+                        **semantic_metadata,
                     },
                 )
             )

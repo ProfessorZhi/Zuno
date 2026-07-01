@@ -2,7 +2,7 @@
 
 program: `zuno-production-architecture-and-deliverables-completion-v1`
 state: active
-current_phase: `PHASE09_memory-context-production-governance`
+current_phase: `PHASE10_tool-sandbox-vault-network-runtime`
 
 ## 核心目标
 
@@ -43,8 +43,8 @@ PHASE01 已完成生产成熟度差距审计。后续执行必须以 `.agent/pro
 
 PHASE01 结论：
 
-- Current 只包括第一版 in-process runtime slice、Web workspace Agent 产品闭环、本地 deterministic parse / index / retrieval / tool / trace / eval surface、PHASE07 本地 parser queue / index adapter boundary、PHASE08 local durable store round-trip / exactly-once id boundary、focused tests、repo verifiers 和历史 release evidence。
-- Production Target 仍包括 production Desktop、生产 parser worker queue、深度解析平台、外部索引、production LangGraph / DB persistence、semantic/vector memory、真实 sandbox、外部 vault、外部 trace/eval 和 CI release gate operations。
+- Current 只包括第一版 in-process runtime slice、Web workspace Agent 产品闭环、本地 deterministic parse / index / retrieval / tool / trace / eval surface、PHASE07 本地 parser queue / index adapter boundary、PHASE08 local durable store round-trip / exactly-once id boundary、PHASE09 local semantic fallback / privacy delete / memory eval baseline、focused tests、repo verifiers 和历史 release evidence。
+- Production Target 仍包括 production Desktop、生产 parser worker queue、深度解析平台、外部索引、production LangGraph / DB persistence、生产级 semantic/vector memory DB、真实 sandbox、外部 vault、外部 trace/eval 和 CI release gate operations。
 - 外部服务、凭据或真实隔离运行时不可用时，后续 phase 只能交付 adapter、local fallback、blocked evidence 和 Remaining Target，不能写成 Current。
 
 ## 一次性交付定义

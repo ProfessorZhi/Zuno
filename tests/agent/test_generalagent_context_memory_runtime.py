@@ -337,6 +337,71 @@ def test_general_agent_reads_task_summary_and_approved_memory_into_context() -> 
     assert packet.trace.source_event_ids_by_item["memory_candidate_0"] == ("evt_preference",)
 
 
+def test_general_agent_context_uses_semantic_memory_search_and_excludes_irrelevant_items() -> None:
+    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.services.application.context import ContextSource
+    from zuno.services.memory import (
+        MemoryCandidate,
+        MemoryLayer,
+        MemoryReviewStatus,
+        RetentionPolicy,
+    )
+
+    agent = GeneralAgent(_agent_config(enable_memory=True))
+    scope = agent._memory_scope()
+    agent.memory_layer_store.save_memory_candidate(
+        MemoryCandidate(
+            candidate_id="release_gate_memory",
+            scope=scope,
+            layer=MemoryLayer.SEMANTIC,
+            content="Release gate memory evidence must include privacy deletion proof.",
+            confidence=0.93,
+            source_event_ids=("evt_release_gate",),
+            dedupe_key="semantic:release-gate",
+            retention_policy=RetentionPolicy(ttl_days=180),
+            review_status=MemoryReviewStatus.APPROVED,
+            requires_review=False,
+        )
+    )
+    agent.memory_layer_store.save_memory_candidate(
+        MemoryCandidate(
+            candidate_id="unrelated_memory",
+            scope=scope,
+            layer=MemoryLayer.SEMANTIC,
+            content="The team lunch order is noodles.",
+            confidence=0.9,
+            source_event_ids=("evt_lunch",),
+            dedupe_key="semantic:lunch",
+            retention_policy=RetentionPolicy(ttl_days=180),
+            review_status=MemoryReviewStatus.APPROVED,
+            requires_review=False,
+        )
+    )
+    agent.memory_layer_store.save_memory_candidate(
+        MemoryCandidate(
+            candidate_id="pending_secret",
+            scope=scope,
+            layer=MemoryLayer.SEMANTIC,
+            content="raw-secret-token should never be visible",
+            confidence=0.98,
+            source_event_ids=("evt_secret",),
+            dedupe_key="semantic:secret",
+            retention_policy=RetentionPolicy(ttl_days=180),
+            review_status=MemoryReviewStatus.PENDING,
+        )
+    )
+
+    packet = agent.prepare_context([HumanMessage(content="Use release gate memory evidence")])
+    memory_items = [item for item in packet.items if item.source is ContextSource.MEMORY]
+
+    assert [item.metadata["candidate_id"] for item in memory_items] == ["release_gate_memory"]
+    assert memory_items[0].metadata["semantic_adapter_id"] == "local_deterministic_semantic_v1"
+    assert memory_items[0].metadata["semantic_score"] > 0
+    assert packet.trace.source_event_ids_by_item["memory_candidate_0"] == ("evt_release_gate",)
+    assert "raw-secret-token" not in repr(packet.to_dict())
+    assert "team lunch" not in repr(packet.to_dict())
+
+
 def test_general_agent_persists_post_turn_memory_across_database_store_instances() -> None:
     from sqlalchemy.pool import StaticPool
     from sqlmodel import SQLModel, Session, create_engine

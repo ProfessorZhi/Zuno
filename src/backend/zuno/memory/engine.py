@@ -3,6 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from zuno.memory.retrieval import (
+    DeterministicSemanticMemoryAdapter,
+    SemanticMemorySearchResult,
+)
 from zuno.platform.services.memory.layers import (
     ExternalKnowledgeRecord,
     InMemoryLayerStore,
@@ -51,6 +55,50 @@ class MemoryEvalPolicy:
         return {
             "metrics": list(self.metrics),
             "sensitive_tags_blocked": list(self.sensitive_tags_blocked),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class MemoryPrivacyDeleteReport:
+    scope: MemoryScope
+    actor_id: str
+    reason: str
+    deleted_counts: dict[str, int]
+    ledger_entry_id: str
+    status: str = "completed"
+    report_version: str = "phase09-memory-privacy-delete-v1"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "report_version": self.report_version,
+            "status": self.status,
+            "scope": self.scope.to_dict(),
+            "actor_id": self.actor_id,
+            "reason": self.reason,
+            "deleted_counts": dict(self.deleted_counts),
+            "ledger_entry_id": self.ledger_entry_id,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class MemoryEvalBaselineResult:
+    scope: MemoryScope
+    query: str
+    release_gate_status: str
+    metrics: dict[str, dict[str, Any]]
+    adapter: dict[str, Any]
+    context_pack: dict[str, Any]
+    result_version: str = "phase09-memory-eval-baseline-v1"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "result_version": self.result_version,
+            "scope": self.scope.to_dict(),
+            "query": self.query,
+            "release_gate_status": self.release_gate_status,
+            "metrics": {name: dict(value) for name, value in self.metrics.items()},
+            "adapter": dict(self.adapter),
+            "context_pack": dict(self.context_pack),
         }
 
 
@@ -116,6 +164,9 @@ MEMORY_TAXONOMY = {
 class MemoryEngine:
     store: InMemoryLayerStore = field(default_factory=DurableMemoryStore)
     memory_eval_policy: MemoryEvalPolicy = field(default_factory=MemoryEvalPolicy)
+    semantic_adapter: DeterministicSemanticMemoryAdapter = field(
+        default_factory=DeterministicSemanticMemoryAdapter
+    )
 
     def append_event(
         self,
@@ -447,21 +498,129 @@ class MemoryEngine:
         query: str,
         limit: int = 5,
     ) -> tuple[MemoryCandidate, ...]:
-        if limit <= 0:
-            return ()
-        normalized_query = str(query or "").lower()
-        results = []
-        for candidate in self.store.memory_candidates(scope):
-            if candidate.review_status is not MemoryReviewStatus.APPROVED:
-                continue
-            if normalized_query and normalized_query not in candidate.content.lower():
-                query_terms = {term for term in normalized_query.split() if term}
-                if not query_terms.intersection(candidate.content.lower().split()):
-                    continue
-            results.append(candidate)
-            if len(results) >= limit:
-                break
-        return tuple(results)
+        semantic_results = self.search_semantic_memory(scope=scope, query=query, limit=limit)
+        if semantic_results:
+            return tuple(result.candidate for result in semantic_results)
+        return tuple(self._approved_memory_candidates(scope=scope)[:limit])
+
+    def search_semantic_memory(
+        self,
+        *,
+        scope: MemoryScope,
+        query: str,
+        limit: int = 5,
+    ) -> tuple[SemanticMemorySearchResult, ...]:
+        return self.semantic_adapter.search(
+            scope=scope,
+            query=query,
+            candidates=self._approved_memory_candidates(scope=scope),
+            limit=limit,
+        )
+
+    def privacy_delete_scope(
+        self,
+        *,
+        scope: MemoryScope,
+        actor_id: str,
+        reason: str,
+    ) -> MemoryPrivacyDeleteReport:
+        if not hasattr(self.store, "delete_scope_memory"):
+            raise RuntimeError("memory store does not support privacy delete")
+        safe_reason = "privacy_delete_request"
+        deleted_counts, ledger_entry = self.store.delete_scope_memory(
+            scope=scope,
+            actor_id=actor_id,
+            reason=safe_reason,
+        )
+        return MemoryPrivacyDeleteReport(
+            scope=scope,
+            actor_id=actor_id,
+            reason=safe_reason,
+            deleted_counts=dict(deleted_counts),
+            ledger_entry_id=ledger_entry.entry_id,
+        )
+
+    def evaluate_memory_baseline(
+        self,
+        *,
+        scope: MemoryScope,
+        query: str,
+        task_id: str,
+        trace_id: str,
+        expected_source_event_ids: tuple[str, ...] = (),
+        budget_tokens: int = 4000,
+    ) -> MemoryEvalBaselineResult:
+        context_pack = self.render_context_pack(
+            scope=scope,
+            task_id=task_id,
+            trace_id=trace_id,
+            query=query,
+            budget_tokens=budget_tokens,
+        )
+        included_source_event_ids = {
+            event_id
+            for source_event_ids in context_pack["trace"]["source_event_ids_by_item"].values()
+            for event_id in source_event_ids
+        }
+        expected_ids = {str(event_id) for event_id in expected_source_event_ids}
+        retrieval_status = "pass" if expected_ids.issubset(included_source_event_ids) else "fail"
+        sensitive_excluded_ids = {
+            source_event_id
+            for item in context_pack["context_policy"]["excluded_items"]
+            if "sensitive" in str(item.get("reason", ""))
+            for source_event_id in item.get("source_event_ids", [])
+        }
+        privacy_status = (
+            "pass"
+            if not sensitive_excluded_ids.intersection(included_source_event_ids)
+            else "fail"
+        )
+        estimated_tokens = sum(
+            max(1, len(str(item.get("content") or "")) // 4)
+            for item in context_pack["items"]
+        )
+        compression_status = "pass" if estimated_tokens <= budget_tokens else "fail"
+        metrics = {
+            "retrieval_relevance": {
+                "status": retrieval_status,
+                "expected_source_event_ids": sorted(expected_ids),
+                "included_source_event_ids": sorted(included_source_event_ids),
+            },
+            "privacy_safety": {
+                "status": privacy_status,
+                "sensitive_excluded_source_event_ids": sorted(sensitive_excluded_ids),
+            },
+            "context_compression_quality": {
+                "status": compression_status,
+                "estimated_tokens": estimated_tokens,
+                "budget_tokens": budget_tokens,
+            },
+        }
+        release_gate_status = (
+            "pass"
+            if all(metric["status"] == "pass" for metric in metrics.values())
+            else "fail"
+        )
+        self._record_governance(
+            action="memory_eval_baseline_recorded",
+            scope=scope,
+            trace_id=trace_id,
+            task_id=task_id,
+            reason=release_gate_status,
+            metadata={
+                "query": query,
+                "metrics": metrics,
+                "adapter": self.semantic_adapter.describe(),
+            },
+        )
+        return MemoryEvalBaselineResult(
+            scope=scope,
+            query=query,
+            release_gate_status=release_gate_status,
+            metrics=metrics,
+            adapter=self.semantic_adapter.describe(),
+            context_pack=context_pack,
+        )
 
     def render_context_pack(
         self,
@@ -476,9 +635,25 @@ class MemoryEngine:
         source_event_ids_by_item: dict[str, list[str]] = {}
         selection_reasons_by_item: dict[str, str] = {}
         excluded_items: list[dict[str, Any]] = []
+        sensitive_source_event_ids = {
+            event.event_id
+            for event in self.store.raw_events(scope)
+            if self._sensitivity_tags(event.metadata).intersection(
+                self.memory_eval_policy.sensitive_tags_blocked
+            )
+        }
 
         for index, event in enumerate(self.build_recent_window(scope=scope, limit=5)):
             item_id = f"recent:{index}"
+            if event.event_id in sensitive_source_event_ids:
+                excluded_items.append(
+                    {
+                        "item_id": item_id,
+                        "reason": "sensitive_raw_event_blocked",
+                        "source_event_ids": [event.event_id],
+                    }
+                )
+                continue
             items.append(
                 {
                     "item_id": item_id,
@@ -492,6 +667,16 @@ class MemoryEngine:
 
         for index, summary in enumerate(self.store.task_summaries(scope)):
             item_id = f"summary:{index}"
+            summary_source_ids = set(summary.source_event_ids)
+            if summary_source_ids.intersection(sensitive_source_event_ids):
+                excluded_items.append(
+                    {
+                        "item_id": item_id,
+                        "reason": "sensitive_source_summary_blocked",
+                        "source_event_ids": list(summary.source_event_ids),
+                    }
+                )
+                continue
             items.append(
                 {
                     "item_id": item_id,
@@ -503,7 +688,21 @@ class MemoryEngine:
             source_event_ids_by_item[item_id] = list(summary.source_event_ids)
             selection_reasons_by_item[item_id] = "task_summary_available"
 
-        for index, candidate in enumerate(self.retrieve_memory(scope=scope, query=query, limit=5)):
+        search_results = self.search_semantic_memory(scope=scope, query=query, limit=5)
+        if not search_results:
+            search_results = tuple(
+                SemanticMemorySearchResult(
+                    candidate=candidate,
+                    score=0.0,
+                    matched_terms=(),
+                    adapter_id=self.semantic_adapter.adapter_id,
+                    vector_ref=f"local-vector:{candidate.candidate_id}:fallback",
+                    local_fallback=self.semantic_adapter.local_fallback,
+                )
+                for candidate in self._approved_memory_candidates(scope=scope)[:5]
+            )
+        for index, result in enumerate(search_results):
+            candidate = result.candidate
             item_id = f"memory:{candidate.candidate_id or index}"
             items.append(
                 {
@@ -512,10 +711,17 @@ class MemoryEngine:
                     "content": candidate.content,
                     "source_event_ids": list(candidate.source_event_ids),
                     "confidence": candidate.confidence,
+                    "semantic_score": result.score,
+                    "semantic_adapter_id": result.adapter_id,
+                    "vector_ref": result.vector_ref,
                 }
             )
             source_event_ids_by_item[item_id] = list(candidate.source_event_ids)
-            selection_reasons_by_item[item_id] = "approved_memory_query_match"
+            selection_reasons_by_item[item_id] = (
+                "approved_semantic_memory_query_match"
+                if result.score > 0
+                else "approved_memory_fallback_no_query_match"
+            )
 
         for candidate in self.store.memory_candidates(scope):
             if candidate.review_status is MemoryReviewStatus.APPROVED:
@@ -588,15 +794,33 @@ class MemoryEngine:
                 metadata=metadata,
             )
 
+    def _approved_memory_candidates(self, *, scope: MemoryScope) -> tuple[MemoryCandidate, ...]:
+        return tuple(
+            candidate
+            for candidate in self.store.memory_candidates(scope)
+            if candidate.review_status is MemoryReviewStatus.APPROVED
+            and not self._sensitivity_tags(candidate.metadata).intersection(
+                self.memory_eval_policy.sensitive_tags_blocked
+            )
+        )
+
+    @staticmethod
+    def _sensitivity_tags(metadata: dict[str, Any]) -> set[str]:
+        return {str(tag).lower() for tag in metadata.get("sensitivity_tags", [])}
+
 
 __all__ = [
     "InMemoryLayerStore",
     "DatabaseMemoryStore",
+    "DeterministicSemanticMemoryAdapter",
     "DurableMemoryStore",
     "MEMORY_TAXONOMY",
     "MemoryEngine",
+    "MemoryEvalBaselineResult",
     "MemoryEvalPolicy",
+    "MemoryPrivacyDeleteReport",
     "MemoryTaxonomyEntry",
     "RawMemoryEvent",
+    "SemanticMemorySearchResult",
     "TaskMemorySummary",
 ]

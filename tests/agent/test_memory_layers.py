@@ -187,3 +187,219 @@ def test_memory_processing_policy_documents_summary_and_extraction_rules() -> No
     assert payload["extraction_strategy"] == "structured_extraction"
     assert payload["review_required"] is True
     assert payload["preserve_raw_event_ids"] is True
+
+
+def test_semantic_memory_adapter_uses_local_deterministic_fallback_and_scope_filters() -> None:
+    from zuno.memory.engine import MemoryEngine
+    from zuno.services.memory.layers import (
+        MemoryCandidate,
+        MemoryLayer,
+        MemoryReviewStatus,
+        MemoryScope,
+        RetentionPolicy,
+    )
+
+    engine = MemoryEngine()
+    scope = MemoryScope(user_id="u1", agent_id="a1", project_id="p1", thread_id="t1")
+    other_scope = MemoryScope(user_id="u2", agent_id="a1", project_id="p1", thread_id="t1")
+    engine.store.save_memory_candidate(
+        MemoryCandidate(
+            candidate_id="release_memory",
+            scope=scope,
+            layer=MemoryLayer.SEMANTIC,
+            content="Memory release gate evidence must include privacy deletion proof.",
+            confidence=0.91,
+            source_event_ids=("evt_release",),
+            dedupe_key="semantic:release-memory",
+            retention_policy=RetentionPolicy(ttl_days=180),
+            review_status=MemoryReviewStatus.APPROVED,
+            requires_review=False,
+        )
+    )
+    engine.store.save_memory_candidate(
+        MemoryCandidate(
+            candidate_id="unrelated_memory",
+            scope=scope,
+            layer=MemoryLayer.SEMANTIC,
+            content="The preferred lunch order is noodles.",
+            confidence=0.88,
+            source_event_ids=("evt_lunch",),
+            dedupe_key="semantic:lunch",
+            retention_policy=RetentionPolicy(ttl_days=180),
+            review_status=MemoryReviewStatus.APPROVED,
+            requires_review=False,
+        )
+    )
+    engine.store.save_memory_candidate(
+        MemoryCandidate(
+            candidate_id="other_user_memory",
+            scope=other_scope,
+            layer=MemoryLayer.SEMANTIC,
+            content="Memory release gate evidence for another user.",
+            confidence=0.99,
+            source_event_ids=("evt_other_user",),
+            dedupe_key="semantic:other-user",
+            retention_policy=RetentionPolicy(ttl_days=180),
+            review_status=MemoryReviewStatus.APPROVED,
+            requires_review=False,
+        )
+    )
+
+    results = engine.search_semantic_memory(
+        scope=scope,
+        query="release gate privacy evidence",
+        limit=5,
+    )
+    payload = results[0].to_dict()
+
+    assert [result.candidate.candidate_id for result in results] == ["release_memory"]
+    assert payload["adapter_id"] == "local_deterministic_semantic_v1"
+    assert payload["local_fallback"] is True
+    assert payload["vector_ref"].startswith("local-vector:")
+    assert payload["score"] > 0
+
+
+def test_memory_privacy_delete_removes_scoped_content_and_preserves_redacted_audit_report() -> None:
+    from zuno.memory.engine import MemoryEngine
+    from zuno.services.memory.layers import (
+        MemoryCandidate,
+        MemoryLayer,
+        MemoryReviewStatus,
+        MemoryScope,
+        RetentionPolicy,
+    )
+
+    engine = MemoryEngine()
+    scope = MemoryScope(user_id="u1", agent_id="a1", project_id="p1", thread_id="t1")
+    event = engine.append_event(
+        scope=scope,
+        event_id="evt_secret",
+        event_type="agent_turn",
+        payload={"text": "super-secret token should be deleted"},
+        trace_id="trace_secret",
+        task_id="task_secret",
+        sensitivity_tags=("secret",),
+    )
+    engine.summarize_task(
+        scope=scope,
+        summary_id="summary_secret",
+        content="super-secret summary should be deleted",
+        source_event_ids=(event.event_id,),
+        token_count=6,
+        metadata={"trace_id": "trace_secret", "task_id": "task_secret"},
+    )
+    candidate = MemoryCandidate(
+        candidate_id="secret_candidate",
+        scope=scope,
+        layer=MemoryLayer.SEMANTIC,
+        content="super-secret durable memory should be deleted",
+        confidence=0.9,
+        source_event_ids=(event.event_id,),
+        dedupe_key="semantic:secret",
+        retention_policy=RetentionPolicy(ttl_days=30, allow_privacy_delete=True),
+        review_status=MemoryReviewStatus.APPROVED,
+        requires_review=False,
+    )
+    engine.store.save_memory_candidate(candidate)
+
+    report = engine.privacy_delete_scope(
+        scope=scope,
+        actor_id="privacy_admin",
+        reason="delete super-secret token",
+    )
+
+    assert report.deleted_counts == {
+        "raw_events": 1,
+        "task_summaries": 1,
+        "memory_candidates": 1,
+        "review_decisions": 0,
+        "governance_ledger": 2,
+    }
+    assert engine.store.raw_events(scope) == ()
+    assert engine.store.task_summaries(scope) == ()
+    assert engine.store.memory_candidates(scope) == ()
+    ledger = engine.store.governance_ledger(scope)
+    assert len(ledger) == 1
+    assert ledger[0]["action"] == "privacy_delete_applied"
+    assert ledger[0]["reason"] == "privacy_delete_request"
+    assert ledger[0]["metadata"]["deleted_counts"]["raw_events"] == 1
+    assert ledger[0]["metadata"]["actor_id"] == "privacy_admin"
+    assert report.to_dict()["reason"] == "privacy_delete_request"
+    assert "super-secret" not in repr(report.to_dict())
+    assert "super-secret" not in repr(ledger)
+
+
+def test_memory_eval_baseline_reports_release_gate_for_relevance_privacy_and_budget() -> None:
+    from zuno.memory.engine import MemoryEngine
+    from zuno.services.memory.layers import (
+        MemoryCandidate,
+        MemoryLayer,
+        MemoryReviewStatus,
+        MemoryScope,
+        RetentionPolicy,
+    )
+
+    engine = MemoryEngine()
+    scope = MemoryScope(user_id="u1", agent_id="a1", project_id="p1", thread_id="t1")
+    event = engine.append_event(
+        scope=scope,
+        event_id="evt_sensitive",
+        event_type="agent_turn",
+        payload={"task": "contains raw-secret-token"},
+        trace_id="trace_eval",
+        task_id="task_eval",
+        sensitivity_tags=("secret",),
+    )
+    engine.summarize_task(
+        scope=scope,
+        summary_id="summary_sensitive",
+        content="raw-secret-token summary must not enter context",
+        source_event_ids=(event.event_id,),
+        token_count=8,
+        metadata={"trace_id": "trace_eval", "task_id": "task_eval"},
+    )
+    engine.store.save_memory_candidate(
+        MemoryCandidate(
+            candidate_id="release_memory",
+            scope=scope,
+            layer=MemoryLayer.SEMANTIC,
+            content="Release gate memory evidence includes privacy-safe context quality.",
+            confidence=0.92,
+            source_event_ids=("evt_release",),
+            dedupe_key="semantic:release-gate",
+            retention_policy=RetentionPolicy(ttl_days=180),
+            review_status=MemoryReviewStatus.APPROVED,
+            requires_review=False,
+        )
+    )
+    engine.store.save_memory_candidate(
+        MemoryCandidate(
+            candidate_id="pending_secret",
+            scope=scope,
+            layer=MemoryLayer.SEMANTIC,
+            content="raw-secret-token must not enter context",
+            confidence=0.95,
+            source_event_ids=(event.event_id,),
+            dedupe_key="semantic:pending-secret",
+            retention_policy=RetentionPolicy(ttl_days=180),
+            review_status=MemoryReviewStatus.PENDING,
+        )
+    )
+
+    result = engine.evaluate_memory_baseline(
+        scope=scope,
+        query="release gate memory evidence",
+        task_id="task_eval",
+        trace_id="trace_eval",
+        expected_source_event_ids=("evt_release",),
+        budget_tokens=256,
+    )
+    payload = result.to_dict()
+
+    assert result.release_gate_status == "pass"
+    assert payload["metrics"]["retrieval_relevance"]["status"] == "pass"
+    assert payload["metrics"]["privacy_safety"]["status"] == "pass"
+    assert payload["metrics"]["context_compression_quality"]["status"] == "pass"
+    assert payload["adapter"]["adapter_id"] == "local_deterministic_semantic_v1"
+    assert "raw-secret-token" not in repr(payload["context_pack"]["items"])
+    assert payload["context_pack"]["context_policy"]["excluded_items"]

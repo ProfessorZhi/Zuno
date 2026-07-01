@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE09_memory-context-production-governance
+current_phase: PHASE10_tool-sandbox-vault-network-runtime
 
 `.agent/programs/` 当前保存 active program 的平铺执行计划：
 

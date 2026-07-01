@@ -128,6 +128,54 @@ class DurableMemoryStore(InMemoryLayerStore):
             if entry.scope == scope
         )
 
+    def delete_scope_memory(
+        self,
+        *,
+        scope: MemoryScope,
+        actor_id: str,
+        reason: str,
+    ) -> tuple[dict[str, int], MemoryGovernanceLedgerEntry]:
+        candidate_ids = {
+            candidate.candidate_id
+            for candidate in self._memory_candidates
+            if candidate.scope == scope
+        }
+        counts = {
+            "raw_events": sum(1 for event in self._raw_events if event.scope == scope),
+            "task_summaries": sum(1 for summary in self._task_summaries if summary.scope == scope),
+            "memory_candidates": len(candidate_ids),
+            "review_decisions": sum(
+                1
+                for decision in self._review_decisions
+                if decision.candidate_id in candidate_ids
+            ),
+            "governance_ledger": sum(1 for entry in self._governance_ledger if entry.scope == scope),
+        }
+        self._raw_events = [event for event in self._raw_events if event.scope != scope]
+        self._task_summaries = [summary for summary in self._task_summaries if summary.scope != scope]
+        self._memory_candidates = [
+            candidate for candidate in self._memory_candidates if candidate.scope != scope
+        ]
+        self._review_decisions = [
+            decision
+            for decision in self._review_decisions
+            if decision.candidate_id not in candidate_ids
+        ]
+        self._governance_ledger = [
+            entry for entry in self._governance_ledger if entry.scope != scope
+        ]
+        ledger_entry = self.append_governance_entry(
+            action="privacy_delete_applied",
+            scope=scope,
+            reason="privacy_delete_request",
+            metadata={
+                "actor_id": actor_id,
+                "deleted_counts": dict(counts),
+                "report_version": "phase09-memory-privacy-delete-v1",
+            },
+        )
+        return counts, ledger_entry
+
     def export_snapshot(self) -> MemoryStoreSnapshot:
         return MemoryStoreSnapshot(
             raw_events=tuple(event.to_dict() for event in self._raw_events),
@@ -268,6 +316,56 @@ class DatabaseMemoryStore(InMemoryLayerStore):
                 )
             ).all()
             return tuple(_governance_entry_from_table(row).to_dict() for row in rows)
+
+    def delete_scope_memory(
+        self,
+        *,
+        scope: MemoryScope,
+        actor_id: str,
+        reason: str,
+    ) -> tuple[dict[str, int], MemoryGovernanceLedgerEntry]:
+        with MemoryRuntimeDao.session_scope(self._session_factory) as session:
+            raw_events = session.exec(_scope_select(MemoryRawEventTable, scope)).all()
+            task_summaries = session.exec(_scope_select(MemoryTaskSummaryTable, scope)).all()
+            memory_candidates = session.exec(_scope_select(MemoryCandidateTable, scope)).all()
+            governance_entries = session.exec(_scope_select(MemoryGovernanceLedgerTable, scope)).all()
+            candidate_ids = {row.candidate_id for row in memory_candidates}
+            review_decisions = (
+                session.exec(select(MemoryReviewDecisionTable)).all()
+                if candidate_ids
+                else []
+            )
+            scoped_review_decisions = [
+                row for row in review_decisions if row.candidate_id in candidate_ids
+            ]
+            counts = {
+                "raw_events": len(raw_events),
+                "task_summaries": len(task_summaries),
+                "memory_candidates": len(memory_candidates),
+                "review_decisions": len(scoped_review_decisions),
+                "governance_ledger": len(governance_entries),
+            }
+            for row in (
+                *raw_events,
+                *task_summaries,
+                *memory_candidates,
+                *scoped_review_decisions,
+                *governance_entries,
+            ):
+                session.delete(row)
+            ledger_entry = MemoryGovernanceLedgerEntry(
+                entry_id=f"memory_ledger:{uuid4().hex}",
+                action="privacy_delete_applied",
+                scope=scope,
+                reason="privacy_delete_request",
+                metadata={
+                    "actor_id": actor_id,
+                    "deleted_counts": dict(counts),
+                    "report_version": "phase09-memory-privacy-delete-v1",
+                },
+            )
+            session.add(_governance_entry_to_table(ledger_entry))
+            return counts, ledger_entry
 
     def export_snapshot(self) -> MemoryStoreSnapshot:
         scopes = self._scopes()
