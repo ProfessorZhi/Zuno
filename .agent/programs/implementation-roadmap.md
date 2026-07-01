@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE08_model-gateway-cost-latency.md`
+current_phase: `PHASE09_planning-contract-and-strategy-selector.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 总套件
@@ -82,7 +82,7 @@ Program ID：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 当前 phase：
 
-- `.agent/programs/PHASE08_model-gateway-cost-latency.md`
+- `.agent/programs/PHASE09_planning-contract-and-strategy-selector.md`
 
 目标：把原 Program 3-6 合并为一个可执行到 closure 的全链路 program，完成 launchable enterprise Agentic GraphRAG product baseline。它不是要求部署真实生产集群，而是要求每个关键层都有 local runnable implementation、adapter boundary、dependency probe / target-blocked evidence、focused tests、E2E 闭环、trace/eval/cost 记录和文档成熟度边界。
 
@@ -112,9 +112,9 @@ Production scale external deployments remain replaceable targets.
 7. `PHASE07_security-governance-envelope.md`
    - Input / Retrieval / Tool / Output gates、ACL、workspace isolation、prompt injection、DLP、approval、audit。
 8. `PHASE08_model-gateway-cost-latency.md`
-   - Model Gateway、provider abstraction、token / latency / cost estimate、timeout、retry、trace fields。
+   - completed：Model Gateway、provider abstraction、token / latency / cost estimate、timeout、retry、trace fields、cost guard、fallback reason 和 eval judge category。
 9. `PHASE09_planning-contract-and-strategy-selector.md`
-   - PlanStep、PlanState、StrategySelectorOutput、SelectedSkill、CapabilityPlan、RetrievalPlan、ReflectionVerdict、ReplanDecision、ReflexionLesson。
+   - active：PlanStep、PlanState、StrategySelectorOutput、SelectedSkill、CapabilityPlan、RetrievalPlan、ReflectionVerdict、ReplanDecision、ReflexionLesson。
 10. `PHASE10_react-reflection-replan-reflexion-runtime.md`
    - ReAct step runner、Reflection gate、Dynamic Replan、Reflexion candidate 和 trace events。
 11. `PHASE11_workspace-product-api-frontend-sync.md`

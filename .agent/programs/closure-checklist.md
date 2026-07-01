@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE08_model-gateway-cost-latency.md`
+current_phase: `PHASE09_planning-contract-and-strategy-selector.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 收口目标
@@ -25,7 +25,7 @@ Production scale external deployments remain replaceable targets.
 - [x] PHASE05 完成 Memory & Context Engine baseline。
 - [x] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。
 - [x] PHASE07 完成 Security / Governance envelope baseline。
-- [ ] PHASE08 完成 Model Gateway / Cost / Latency baseline。
+- [x] PHASE08 完成 Model Gateway / Cost / Latency baseline。
 - [ ] PHASE09 完成 Planning Contract 与 Strategy Selector baseline。
 - [ ] PHASE10 完成 ReAct / Reflection / Dynamic Replan / Reflexion runtime baseline。
 - [ ] PHASE11 完成 Workspace Product API / Frontend Minimal Sync。
@@ -59,7 +59,7 @@ Production scale external deployments remain replaceable targets.
 - [x] Workstream D 提交 Capability / Skill / Tool / MCP evidence。
 - [x] Workstream E 提交 Security / Governance evidence。
 - [ ] Workstream F 提交 Planning / Agent Runtime evidence。
-- [ ] Workstream G 提交 Eval / Trace / Cost evidence。
+- [ ] Workstream G 提交 Eval / Trace / Cost benchmark evidence；PHASE08 Model Gateway / Cost / Latency evidence 已完成，PHASE13 仍未关闭。
 - [ ] Workstream H 提交 Product API / Frontend Minimal Sync evidence。
 - [ ] Workstream I 提交 Docs / Verifier / Closure evidence。
 
@@ -72,7 +72,7 @@ Production scale external deployments remain replaceable targets.
 - [x] Memory & Context Engine 输出的 ContextPack 能被 Strategy Selector 消费，且 sensitive exclusion 已生效。
 - [ ] Capability Layer 的 SkillCard / ToolCard / MCPCapability 能被 Planner 选择，并受 Tool Gate 约束。
 - [x] Security / Governance 的 Input / Retrieval / Tool / Output gates 能影响 plan / replan / refuse / ask_user。
-- [ ] Model Gateway 的 token / latency / cost metrics 能进入 trace，并影响 budget guard。
+- [x] Model Gateway 的 token / latency / cost metrics 能进入 trace，并影响 budget guard。
 - [ ] Planning & Control Runtime 能从 ContextPack、Skill、Capability、Evidence 和 Security verdict 生成 plan，并在 Reflection 后动态 replan。
 - [ ] Eval / Trace / Cost 层能从 E2E scenario 输出 regression summary。
 - [ ] Docs / Archive 能准确说明 Current / Target / Production Scale，且不把外部生产服务写成 Current。

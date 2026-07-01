@@ -48,10 +48,10 @@ Local-first Enterprise Private Knowledge Agent Workspace
 当前 `.agent/programs/` 处于 active 状态：
 
 - `active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- `current_phase: PHASE08_model-gateway-cost-latency.md`
+- `current_phase: PHASE09_planning-contract-and-strategy-selector.md`
 - `latest_completed_program: zuno-enterprise-document-ingestion-platform-v2`
 
-当前 Program 3 是 Mega Program：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`。它把原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 合并为一个 full closure program。执行模型是一个总 Program、十五个 Phase Gate、多条并行 Workstream、多个 PR / commit、一个 Coordinator 统一合并、验证和归档。目标是完成 Launchable Enterprise Agentic GraphRAG Product Baseline：输入层可靠，知识库层支持标准检索 / 深度检索，Capability / Skill / Tool / MCP 可编排，Memory & Context Engine 可构造 ContextPack，Planning & Control Runtime 可 strategy_select / plan / ReAct / reflect / replan / reflexion，Security / Governance 可 gate，Eval / Trace / Cost 可记录质量、成本和耗时。Basic RAG 与静态 GraphRAG 只作为评测对照组；GraphRAG 是 Agent 可调用的检索能力，Skill 是 Agent 的任务方法包，MCP / Tool / Knowledge 都属于 Capability Layer 的可编排能力，不是用户手动选择的主产品模式。
+当前 Program 3 是 Mega Program：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`。它把原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 合并为一个 full closure program。执行模型是一个总 Program、十五个 Phase Gate、多条并行 Workstream、多个 PR / commit、一个 Coordinator 统一合并、验证和归档。当前推进 Planning Contract 与 Strategy Selector；Model Gateway / Cost / Latency 的本地 baseline 已进入 Current。目标是完成 Launchable Enterprise Agentic GraphRAG Product Baseline：输入层可靠，知识库层支持标准检索 / 深度检索，Capability / Skill / Tool / MCP 可编排，Memory & Context Engine 可构造 ContextPack，Planning & Control Runtime 可 strategy_select / plan / ReAct / reflect / replan / reflexion，Security / Governance 可 gate，Eval / Trace / Cost 可记录质量、成本和耗时。Basic RAG 与静态 GraphRAG 只作为评测对照组；GraphRAG 是 Agent 可调用的检索能力，Skill 是 Agent 的任务方法包，MCP / Tool / Knowledge 都属于 Capability Layer 的可编排能力，不是用户手动选择的主产品模式。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 

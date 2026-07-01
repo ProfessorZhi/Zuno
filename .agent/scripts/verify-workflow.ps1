@@ -293,7 +293,7 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "current_phase: PHASE08_model-gateway-cost-latency.md" -or $currentProgram -notmatch "latest_completed_program: zuno-enterprise-document-ingestion-platform-v2") {
+if ($currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "current_phase: PHASE09_planning-contract-and-strategy-selector.md" -or $currentProgram -notmatch "latest_completed_program: zuno-enterprise-document-ingestion-platform-v2") {
     $failures.Add("current-program.md must declare active Program 3 Mega state and latest completed Program 2")
 }
 if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "zuno-enterprise-ingestion-async-infrastructure-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {

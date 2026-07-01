@@ -6,7 +6,7 @@
 
 - `state: active`
 - `active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- `current_phase: PHASE08_model-gateway-cost-latency.md`
+- `current_phase: PHASE09_planning-contract-and-strategy-selector.md`
 
 ## 被合并的计划
 

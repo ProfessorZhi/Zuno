@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE08_model-gateway-cost-latency
-status: active
+status: completed
 
 ## 目标
 
@@ -111,6 +111,19 @@ pytest -q tests/api -p no:cacheprovider
 - cost / latency metric 示例。
 - cost guard test。
 - fallback trace 示例。
+
+## Closure Evidence
+
+2026-07-02 本地完成：
+
+- `src/backend/zuno/platform/model_gateway.py` 新增 `ModelGateway`、`ModelGatewayRequest`、`ModelCallMetrics`、`BudgetPolicy`、`BudgetVerdict`、`MockModelProvider` 和 `build_default_model_gateway()`。
+- 支持 `chat`、`embedding`、`reranker`、`vlm`、`eval_judge` 五类本地 mock provider；真实外部 provider 仍是 Target / adapter boundary，不写成 Current。
+- 每次成功调用输出 `prompt_tokens`、`completion_tokens`、`total_tokens`、`latency_ms`、`cost_estimate`、`retry_count`、`timeout_count` 和 `fallback_reason`。
+- budget guard 在 estimated cost 超限时返回 blocked verdict，且不会调用 provider。
+- timeout fallback 会把 `timeout:<provider_id>` 写入 trace payload。
+- trace event 只保留 redacted prompt preview 和 prompt hash，不写入原始 prompt secret。
+- focused tests：`pytest -q tests/evals/test_model_gateway_cost_latency.py -p no:cacheprovider` -> 4 passed。
+- broader gates：`pytest -q tests/evals -p no:cacheprovider` -> 152 passed；`pytest -q tests/agent -p no:cacheprovider` -> 171 passed；`pytest -q tests/api -p no:cacheprovider` -> 52 passed。
 
 ## 停止条件
 

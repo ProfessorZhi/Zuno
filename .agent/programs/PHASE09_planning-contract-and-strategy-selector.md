@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE09_planning-contract-and-strategy-selector
-status: pending
+status: active
 
 ## 目标
 

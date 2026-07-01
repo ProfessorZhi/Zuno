@@ -95,6 +95,17 @@ EXPECTED_EXPORTS = {
     "zuno.platform.model_gateway": [
         "EchoLLMProvider",
         "LLMProvider",
+        "BudgetPolicy",
+        "BudgetVerdict",
+        "MockModelProvider",
+        "ModelCallMetrics",
+        "ModelCategory",
+        "ModelGateway",
+        "ModelGatewayProviderError",
+        "ModelGatewayRequest",
+        "ModelGatewayResult",
+        "ModelGatewayTimeoutError",
+        "build_default_model_gateway",
     ],
 }
 
