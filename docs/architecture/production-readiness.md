@@ -41,6 +41,17 @@ Current 可以表述为：
 - `src/backend/zuno/api/services/workspace_task_runtime.py`、`src/backend/zuno/agent/durable_runtime.py`、`src/backend/zuno/knowledge/ingestion/`、`src/backend/zuno/knowledge/indexing/`、`src/backend/zuno/capability/runtime.py`、`src/backend/zuno/memory/store.py`：提供第一版 runtime surfaces。
 - `tests/api/`、`tests/agent/`、`tests/knowledge/`、`tests/frontend/`、`tests/repo/`：提供 focused tests 和结构防漂移 tests。
 
+## 当前四大总交付物
+
+Zuno 的剩余工作不只是一组 runtime feature。当前正式交付物按四个总方向管理，第四项再展开为八类 runtime-first 交付物。
+
+| 编号 | 总交付物 | Current 验收边界 | Production Target |
+| --- | --- | --- | --- |
+| 1 | 工作流自洽与自我维护 | `AGENTS.md`、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、workflow verifier 和 closure checklist 已形成基础闭环；用户长期规则已有写回路径。 | 用户新规则能被及时分类、写回、模板化并进入机器检查；program open / phase closure / archive / docs sync 能持续自我审查，不靠对话记忆。 |
+| 2 | 文档系统清晰无冗余 | `architecture.md` 负责目标架构，`production-readiness.md` 负责成熟度和交付物，README / AGENTS / current program 只做入口摘要，History 保存旧材料。 | 前台文档持续少而精，架构描述和代码事实同步；旧 roadmap、deliverables、current / target 拆分文档不再回流成第二事实源。 |
+| 3 | 文件夹和代码 ownership 清晰 | 后端顶层六层、ownership matrix、legacy alias guard、compat / vendor guard 和 repo structure verifier 已存在。 | 代码文件分工清楚，`platform/services`、compatibility、vendor、legacy alias 和 provider tree 不再显得零碎或凑合；兼容层只做临时桥，不承担新 runtime owner。 |
+| 4 | 架构功能完整实现 | 第一版 runtime-first vertical slice 已完成：Web 产品闭环、本地 parse / index / retrieval / tool / trace / eval surface、focused tests 和 release evidence。 | 生产级目标架构完整落地：parser queue、深度解析、外部索引、LangGraph persistence、semantic/vector memory、真实 sandbox、vault、外部 trace/eval、Desktop 和 CI release gate。 |
+
 ## Production Target
 
 以下能力仍是 Target，不得因为有 contract、local deterministic runtime、fixture 或 README 就写成 Current：
@@ -56,11 +67,11 @@ Current 可以表述为：
 | Observability / Eval | `ZunoSpan`、release baseline、local eval runner、trace replay surface。 | 外部 LangSmith / OTel sink、online eval、持久 trace store、CI release gate operations。 |
 | Product Surface | Web workspace Agent file / ingest / task / SSE / approval / artifact / trace-eval / feedback 闭环。 | production Desktop 闭环、下载体验、长任务恢复提示、运维级错误恢复。 |
 
-## 当前 runtime-first 八类交付物
+## 第四交付物展开：当前 runtime-first 八类交付物
 
 本文是唯一成熟度与 runtime-first 交付物口径事实源。`README.md`、`AGENTS.md`、`.agent/programs/current.md` 和 `.agent/references/current-program.md` 只保留状态摘要并链接到本文，不重复 phase 清单、Production Target 清单或八类交付物展开。
 
-当前 runtime-first 八类交付物如下：
+第四项“架构功能完整实现”展开为当前 runtime-first 八类交付物：
 
 | 编号 | 交付物 | Current 验收边界 | Production Target |
 | --- | --- | --- | --- |
@@ -83,5 +94,5 @@ Current 可以表述为：
 
 - 如果某个 Production Target 要升为 Current，必须同时有代码、focused tests、trace / eval 或 verifier 证据。
 - 修改成熟度边界时，同步更新 `docs/architecture/architecture.md`、本文、入口摘要和相关 verifier / repo tests。
-- 前台摘要不得重复 phase 目录、Production Target 目录或八类交付物展开；需要展开时链接本文。
+- 前台摘要不得重复 phase 目录、Production Target 目录、四大总交付物或八类 runtime 交付物展开；需要展开时链接本文。
 - 不要恢复已退休的拆分架构文档作为当前前台入口。

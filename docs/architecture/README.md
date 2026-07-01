@@ -2,7 +2,7 @@
 
 `docs/architecture/` 是 Zuno 当前面向人的正式架构入口。这里保持少而精：一个充实的总架构 Markdown、一个生产成熟度基线、一个由 Markdown 生成的 HTML 展示页、正式附件和仍然生效的 ADR。
 
-架构正文以 `architecture.md` 为准；成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。本 README 只做入口导航，不重复 phase 清单或 Production Target 清单。
+架构正文以 `architecture.md` 为准；四大总交付物、成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。本 README 只做入口导航，不重复 phase 清单、四大总交付物展开或 Production Target 清单。
 
 当前没有 active program。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`，它已把“上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback”的 vertical slice 推进到第一版真实 runtime；只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
 
@@ -22,7 +22,7 @@ docs/architecture/
 ## 阅读顺序
 
 1. `architecture.md`：总架构文档，正文详细说明 Current / Target 边界、企业私有知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；后半部分维护 Mermaid 图源。
-2. `production-readiness.md`：生产成熟度基线，明确第一版 runtime slice 与 production-grade Target 的边界。
+2. `production-readiness.md`：生产成熟度基线，明确四大总交付物、第一版 runtime slice 与 production-grade Target 的边界。
 3. `architecture.html`：图形化展示页，适合快速看完整架构图，不替代 Markdown 正文。
 4. `repo-ownership-matrix.md`：PHASE02 的目录 ownership、compat/vendor 边界和 provider 分类事实表；它是代码布局治理的正式 Current 证据。
 5. `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，必须由 `tools/agent/render_architecture.py --write` 同步。

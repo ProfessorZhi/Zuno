@@ -214,6 +214,12 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in [
         "第一版 runtime-first vertical slice",
         "唯一成熟度与 runtime-first 交付物口径事实源",
+        "当前四大总交付物",
+        "工作流自洽与自我维护",
+        "文档系统清晰无冗余",
+        "文件夹和代码 ownership 清晰",
+        "架构功能完整实现",
+        "第四交付物展开：当前 runtime-first 八类交付物",
         "当前 runtime-first 八类交付物",
         "历史治理交付物只保留在 History",
         "Production Target",
