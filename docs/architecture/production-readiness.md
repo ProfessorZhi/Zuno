@@ -56,17 +56,32 @@ Current 可以表述为：
 | Observability / Eval | `ZunoSpan`、release baseline、local eval runner、trace replay surface。 | 外部 LangSmith / OTel sink、online eval、持久 trace store、CI release gate operations。 |
 | Product Surface | Web workspace Agent file / ingest / task / SSE / approval / artifact / trace-eval / feedback 闭环。 | production Desktop 闭环、下载体验、长任务恢复提示、运维级错误恢复。 |
 
-## 八类交付物口径
+## 当前 runtime-first 八类交付物
 
-仓库历史上有两套八类交付物口径，它们不应并行竞争：
+本文是唯一成熟度与 runtime-first 交付物口径事实源。`README.md`、`AGENTS.md`、`.agent/programs/current.md` 和 `.agent/references/current-program.md` 只保留状态摘要并链接到本文，不重复 phase 清单、Production Target 清单或八类交付物展开。
 
-- `zuno-eight-deliverables-full-realization-v1` 是历史治理口径，重心是 Agent 工作流、元工作流、模板、正式架构文档、HTML 展示、目标架构、代码目录和验证系统。
-- `zuno-target-architecture-runtime-full-implementation-v1` 是当前最近完成的 runtime-first 口径，重心是产品闭环、解析索引、Agent Runtime、Memory、Tool / Sandbox、GraphRAG / Evidence / Citation、Security / Trace / Eval 和仓库治理。
+当前 runtime-first 八类交付物如下：
 
-当前前台采用 runtime-first 口径；历史治理口径只作为 `docs/history/programs/zuno-eight-deliverables-full-realization-v1/` 的完成证据保留。
+| 编号 | 交付物 | Current 验收边界 | Production Target |
+| --- | --- | --- | --- |
+| 1 | 产品闭环 | Web workspace Agent 已接通 file / ingest / task / SSE / approval / artifact / trace-eval / feedback。 | Desktop 生产闭环、长任务恢复体验、下载与错误恢复产品化。 |
+| 2 | 文档解析与索引 | Parse Gateway、Document IR、adapter registry、本地 BM25 / vector / graph index job、manifest、retry、replay。 | 生产 parser queue、深度 OCR / layout / table / code 抽取、外部索引服务运维。 |
+| 3 | Agent Runtime | controller-node 级 checkpoint、interrupt、resume、cancel、failure snapshot，并接入 workspace task。 | 生产级 LangGraph-compatible persistence、进程重启恢复、exactly-once tool boundary。 |
+| 4 | Memory 与 Context | SQLModel-backed memory store、governance ledger、promotion、decay、consolidation、GeneralAgent 接入。 | semantic / vector memory、后台 consolidation scheduler、隐私删除平台、memory eval baseline。 |
+| 5 | Tool Control Plane 与 Sandbox | deterministic executor、approval wait / approve、credential ref、sandbox context、audit trace。 | 真实隔离 sandbox、外部 vault / OAuth broker、网络代理、持久 approval DB。 |
+| 6 | Knowledge / GraphRAG / Evidence / Citation | Agentic retrieval、EvidenceBundle、CitationBuilder、unsupported claim metrics、cited artifact 闭环。 | 生产 GraphRAG extraction、community report、RRF / rerank、外部图索引服务。 |
+| 7 | Security / Trace / Eval / Release | input / retrieval / tool / output gates、redaction、ZunoSpan、release baseline、trace replay surface。 | 外部 LangSmith / OTel sink、online eval、持久 trace store、CI release gate operations。 |
+| 8 | 仓库治理与一致性 | 架构 Markdown / HTML 镜像、program no-active 状态、repo verifiers、focused tests、history archive。 | 持续发布治理、跨线程合并策略、生产运维证据自动归档。 |
+
+## History 边界
+
+`zuno-eight-deliverables-full-realization-v1` 是历史治理口径，重心是 Agent 工作流、元工作流、模板、正式架构文档、HTML 展示、目标架构、代码目录和验证系统。历史治理交付物只保留在 History，不再作为当前前台交付物分类。
+
+`zuno-target-architecture-runtime-full-implementation-v1` 是最近完成的 runtime-first program，当前成熟度、八类交付物和 Production Target 边界以本文为准；执行证据保留在 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。
 
 ## 更新规则
 
 - 如果某个 Production Target 要升为 Current，必须同时有代码、focused tests、trace / eval 或 verifier 证据。
-- 修改成熟度边界时，同步更新 `docs/architecture/architecture.md`、本文、`README.md`、`AGENTS.md` 和相关 verifier / repo tests。
+- 修改成熟度边界时，同步更新 `docs/architecture/architecture.md`、本文、入口摘要和相关 verifier / repo tests。
+- 前台摘要不得重复 phase 目录、Production Target 目录或八类交付物展开；需要展开时链接本文。
 - 不要恢复已退休的拆分架构文档作为当前前台入口。

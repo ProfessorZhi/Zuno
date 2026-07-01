@@ -56,18 +56,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 执行状态入口在 `.agent/programs/`，当前处于 no-active 等待态。打开下一轮 program 前必须重新确认 worktree、branch、允许范围和禁止范围，并从 `PHASE01` 开始。
 
-PHASE03 已完成 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface；PHASE04 已完成 Document Ingestion / Parse Gateway runtime owner surface；PHASE05 已完成本地 BM25 / vector / graph index job runtime；PHASE06 已完成 controller-node 级 durable Single Controller runtime surface；PHASE07 已完成 snapshot / SQLModel-backed memory runtime 与 GeneralAgent 接入；PHASE08 已完成本地 deterministic Tool Control Plane、工具级 approval / sandbox / credential ref / audit runtime 和最小前端审批入口；PHASE09 已完成 Agentic Retrieval / Evidence / Citation runtime 与 cited artifact 闭环；PHASE10 已完成 Security、Observability 与 release eval 在 workspace task runtime 的闭环；PHASE11 已把 Web workspace Agent 模式接入 file / ingest / task / SSE / approval / artifact / trace-eval / feedback 产品闭环；PHASE12 已完成 release gate、归档和 no-active 收口。
-
-本轮大型 program 的八个方面产物：
-
-1. 项目文件夹与代码布局治理。
-2. 企业私有知识库场景与产品闭环。
-3. Document Ingestion / Parse Gateway。
-4. Single Controller Agent Runtime。
-5. Context / Memory 系统。
-6. Tool Control Plane。
-7. RAG / GraphRAG 知识系统。
-8. 安全、评测、观测、文档展示闭环。
+成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。phase 级执行证据保留在 runtime-full program 归档和 closure summary 中，README 只保留当前状态摘要。
 
 ## 运行示例
 
@@ -107,7 +96,7 @@ Zuno/
 ├─ infra/                 # Docker 和基础设施配置
 ├─ examples/              # GraphRAG Project 示例
 ├─ docs/                  # 正式文档
-│  ├─ architecture/        # 当前架构、目标架构、路线图、正式决策
+│  ├─ architecture/        # 总架构、生产成熟度基线、HTML、正式决策
 │  ├─ evidence/            # 精选证据
 │  ├─ reference/           # 当前术语
 │  └─ history/             # 过时或已完成材料归档

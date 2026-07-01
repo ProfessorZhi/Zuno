@@ -23,7 +23,7 @@ current_phase: none
 
 本轮关闭后的长期验收规则仍是 runtime-first / vertical-slice-first：只写 contract、schema 或 README 不能关闭 runtime phase。
 
-它仍然遵守 Current / Target / Future / History 边界：未由代码、测试、trace、eval 或 verifier 证明的能力不能写成 Current。Current 包括第一版 in-process runtime vertical slice 和 Web workspace Agent 产品闭环；production-grade parser platform、durable LangGraph-compatible runtime、production Memory DB、生产级 GraphRAG extraction / fusion / index job、LangSmith / OTel 产品化 trace/eval、online eval、rootless / gVisor / Firecracker sandbox、外部 credential broker 和生产级 Desktop 闭环仍是 Target。
+它仍然遵守 Current / Target / Future / History 边界：未由代码、测试、trace、eval 或 verifier 证明的能力不能写成 Current。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；本文件只记录 program 状态、归档位置和下一轮打开规则。
 
 ## 下一轮打开规则
 

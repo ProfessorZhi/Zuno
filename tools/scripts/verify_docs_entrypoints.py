@@ -213,6 +213,9 @@ def verify_entrypoint_text() -> list[str]:
 
     for phrase in [
         "第一版 runtime-first vertical slice",
+        "唯一成熟度与 runtime-first 交付物口径事实源",
+        "当前 runtime-first 八类交付物",
+        "历史治理交付物只保留在 History",
         "Production Target",
         "zuno-target-architecture-runtime-full-implementation-v1",
         "zuno-eight-deliverables-full-realization-v1",
@@ -221,6 +224,41 @@ def verify_entrypoint_text() -> list[str]:
         if phrase not in production_readiness:
             errors.append(f"docs/architecture/production-readiness.md missing phrase: {phrase}")
 
+    return errors
+
+
+def verify_front_path_summary_boundaries() -> list[str]:
+    errors: list[str] = []
+    forbidden_summary_details = [
+        "PHASE03 已完成",
+        "PHASE04 已完成",
+        "PHASE05 已完成",
+        "PHASE06 已完成",
+        "PHASE07 已完成",
+        "PHASE08 已完成",
+        "PHASE09 已完成",
+        "PHASE10 已完成",
+        "PHASE11 已把",
+        "PHASE12 已完成 release gate",
+        "production-grade parser platform",
+        "durable LangGraph-compatible runtime",
+        "rootless / gVisor / Firecracker sandbox",
+    ]
+    summary_paths = [
+        "README.md",
+        "AGENTS.md",
+        "docs/README.md",
+        "docs/architecture/README.md",
+        ".agent/programs/current.md",
+        ".agent/references/current-program.md",
+    ]
+    for relative_path in summary_paths:
+        content = _read(relative_path)
+        if "production-readiness.md" not in content:
+            errors.append(f"{relative_path} must point to production-readiness.md for maturity details")
+        for phrase in forbidden_summary_details:
+            if phrase in content:
+                errors.append(f"{relative_path} duplicates phase or production target detail: {phrase}")
     return errors
 
 
@@ -335,6 +373,7 @@ def main() -> int:
     errors: list[str] = []
     errors.extend(verify_front_path_shape())
     errors.extend(verify_entrypoint_text())
+    errors.extend(verify_front_path_summary_boundaries())
     errors.extend(verify_architecture_html_sync())
     errors.extend(verify_architecture_view_contract())
     errors.extend(verify_no_retired_front_path_links())

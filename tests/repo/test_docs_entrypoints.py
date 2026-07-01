@@ -120,12 +120,48 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     assert docs_architecture.count("```mermaid") == 10
     for phrase in [
         "第一版 runtime-first vertical slice",
+        "唯一成熟度与 runtime-first 交付物口径事实源",
+        "当前 runtime-first 八类交付物",
+        "历史治理交付物只保留在 History",
         "Production Target",
         "zuno-target-architecture-runtime-full-implementation-v1",
         "zuno-eight-deliverables-full-realization-v1",
         "不要恢复已退休的拆分架构文档",
     ]:
         assert phrase in production_readiness
+
+
+def test_front_path_summaries_do_not_duplicate_program_phase_or_target_catalogs() -> None:
+    summary_paths = [
+        REPO_ROOT / "README.md",
+        REPO_ROOT / "AGENTS.md",
+        REPO_ROOT / "docs" / "README.md",
+        REPO_ROOT / "docs" / "architecture" / "README.md",
+        REPO_ROOT / ".agent" / "programs" / "current.md",
+        REPO_ROOT / ".agent" / "references" / "current-program.md",
+    ]
+
+    forbidden_summary_details = [
+        "PHASE03 已完成",
+        "PHASE04 已完成",
+        "PHASE05 已完成",
+        "PHASE06 已完成",
+        "PHASE07 已完成",
+        "PHASE08 已完成",
+        "PHASE09 已完成",
+        "PHASE10 已完成",
+        "PHASE11 已把",
+        "PHASE12 已完成 release gate",
+        "production-grade parser platform",
+        "durable LangGraph-compatible runtime",
+        "rootless / gVisor / Firecracker sandbox",
+    ]
+
+    for path in summary_paths:
+        content = path.read_text(encoding="utf-8")
+        assert "production-readiness.md" in content
+        for phrase in forbidden_summary_details:
+            assert phrase not in content, f"{path.relative_to(REPO_ROOT)} duplicates detail: {phrase}"
 
 
 def test_architecture_surface_cleanup_archive_keeps_old_materials() -> None:
@@ -204,6 +240,7 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
     for phrase in [
         "documentation entrypoint verification passed.",
         "verify_front_path_shape",
+        "verify_front_path_summary_boundaries",
         "verify_no_retired_front_path_links",
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",

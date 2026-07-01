@@ -974,6 +974,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         "current_phase: none",
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
+        "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
     ]:

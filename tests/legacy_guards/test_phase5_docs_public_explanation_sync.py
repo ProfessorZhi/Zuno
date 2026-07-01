@@ -17,7 +17,8 @@ def test_phase5_docs_sync_current_public_story() -> None:
         "本地优先的 Agent Workspace",
         "`src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。",
         "Phase 0-6 架构收口仍是已完成的历史事实。",
-        "architecture/        # 当前架构、目标架构、路线图、正式决策",
+        "architecture/        # 总架构、生产成熟度基线、HTML、正式决策",
+        "./docs/architecture/production-readiness.md",
     ]:
         assert phrase in readme
 

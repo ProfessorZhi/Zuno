@@ -87,6 +87,7 @@ def test_agent_entrypoint_records_current_architecture_sync_and_work_modes() -> 
         "## Program Closure 自维护审查",
         "如果用户提醒“以后注意”，不能只留在对话里",
         "当前前台采用 runtime-first 口径",
+        "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
     ]:
         assert phrase in agents
 
@@ -167,6 +168,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         RUNTIME_PROGRAM_ARCHIVE,
         "runtime-first / vertical-slice-first",
         "只写 contract、schema 或 README 不能关闭 runtime phase",
+        "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,

@@ -15,4 +15,5 @@
 - 每个新 program 必须从 `PHASE01` 开始。
 - active phase 文件只在有 active program 时平铺在 `.agent/programs/` 根目录。
 - completed program 必须归档到 `docs/history/programs/`。
+- 成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；本目录只记录 program 执行状态。
 - 本等待态不授权 runtime、docs 或 workflow 修改；新任务必须由用户给出明确目标或打开新的 program。
