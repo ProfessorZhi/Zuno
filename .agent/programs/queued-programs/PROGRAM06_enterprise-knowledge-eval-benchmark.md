@@ -6,7 +6,7 @@ depends_on: zuno-agent-planning-integration-v1
 
 ## 目标
 
-建设企业内部知识库问答系统的自动化评测体系，评估 Zuno 的 Agentic GraphRAG 是否相比 Basic RAG、Static GraphRAG baseline、标准检索 profile 和深度检索 profile 在召回、答案质量、引用质量、低幻觉、安全和可观测性上有实质提升。
+建设企业内部知识库问答系统的自动化评测体系，评估 Zuno 的 Agentic GraphRAG 是否相比 Basic RAG、Static GraphRAG baseline、标准检索 profile 和深度检索 profile 在召回、答案质量、引用质量、低幻觉、安全和可观测性上有实质提升；同时评估 Planning & Control Runtime 的 strategy selection、skill selection、dynamic replan、reflection、reflexion reuse 和 skill-specific rubric 是否真的带来收益。
 
 ## 场景边界
 
@@ -81,12 +81,14 @@ Question types：
 - Standard retrieval profile runner：模拟用户在知识库选择处选择标准检索。
 - Deep retrieval profile runner：模拟用户在知识库选择处选择深度检索。
 - Agentic GraphRAG target runner。
+- Skill-aware Agentic runner：记录 selected_skill_id、skill_version、skill_rubric_id 和 capability route。
 - Optional ablation：no-memory、no-replan、no-rerank。
+- Optional ablation：no-skill、no-reflection、no-reflexion。
 
 验收：
 
 - 所有 runner 使用同一 corpus、同一 question set、同一 metric interface。
-- runner 输出 run id、trace id、requested_profile、effective_profile、fallback_reason、retrieved block ids、answer、citations、latency。
+- runner 输出 run id、trace id、requested_profile、effective_profile、fallback_reason、selected_skill_id、skill_version、strategy、capability_route、retrieved block ids、answer、citations、latency。
 
 ## PHASE05 Retrieval Metrics
 
@@ -116,17 +118,24 @@ Question types：
 - source-span accuracy
 - unsupported claim rate
 - refusal correctness
+- skill rubric completeness
+- planning correctness
+- replan effectiveness
+- reflection usefulness
+- reflexion reuse rate
 
 验收：
 
 - 不可回答问题必须评估 refusal correctness。
 - 有引用答案必须检查 citation 是否指向 relevant block。
+- 有 selected skill 的答案必须检查 output_contract 和 skill eval rubric 是否满足。
 
 ## PHASE07 LangSmith / OTel Trace Bridge
 
 目标：
 
 - 将 parse、retrieve、graph_expand、plan、tool、reflect、replan、answer 写成 span。
+- 将 strategy_selected、skill_selected、capability_routed、reflexion_candidate_created / reused 写成 span。
 - 本地 trace 是事实源，LangSmith 是 sink / experiment viewer。
 
 验收：
@@ -147,6 +156,9 @@ Question types：
 - 标准检索在 lookup / single-doc fact 问题上不得明显慢于或差于 Basic RAG。
 - 深度检索在 multi-hop / compare / report 问题上的 recall@5、NDCG 或 citation coverage 应高于标准检索和 Basic RAG。
 - graph index 未就绪时，深度检索应记录 `effective_profile=deep_without_graph` 和 fallback reason，且不能假装 GraphRAG 已生效。
+- Skill-aware runner 在 contract_review / research_report / bug_diagnosis 场景里必须记录 selected_skill_id、skill_version 和 rubric result。
+- dynamic replan 至少在 retrieval_empty、citation_coverage_low 或 tool_failed 场景上产生可观察收益，不能只是 trace 里多一个节点。
+- reflexion reuse 只能在有 review / scope / safety label 的 lesson 上计入，不得把未审核失败教训当作长期事实。
 - citation coverage 达到 release threshold。
 - unsupported claim rate 低于 baseline。
 - trace completeness 达到 release threshold。

@@ -15,7 +15,7 @@ latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 Program 3 承接 Program 2 的 Product V1 local durable ingestion baseline，目标是把文档输入层升级为本地可验证的企业异步基础设施 baseline：PostgreSQL-compatible durable store boundary、binary ObjectStore、QueueBackend、local async workers、Redis runtime state boundary、outbox、dead letter、reconciler、OCR / VLM worker boundary、ingest status / retry / cancel / replay contract。
 
-目标产品口径固定为 AgentChat 驱动的企业知识库 Agentic GraphRAG Workspace。用户在聊天里提出目标，并在勾选知识库时选择标准检索 / 深度检索；GraphRAG、BM25、vector、re-query、rerank 和工具调用由 Single Controller Agent 内部自动规划。Basic RAG 和 Static GraphRAG 只作为 Program 6 的评测对照组，不是最终产品模式。
+目标产品口径固定为 AgentChat 驱动的企业知识库 Agentic GraphRAG Workspace。Agent Core 公式是 `Model Gateway + Memory & Context Engine + Planning & Control Runtime + Capability Layer + Governance / Trace / Eval Envelope`。用户在聊天里提出目标，并在勾选知识库时选择标准检索 / 深度检索；GraphRAG、BM25、vector、re-query、rerank、Skill、MCP 和工具调用由 Single Controller Agent 内部自动规划。Skill 是 Capability Layer 里的任务方法包，不是 Tool、不是 Knowledge、也不是产品级多 Agent runtime。Basic RAG 和 Static GraphRAG 只作为 Program 6 的评测对照组，不是最终产品模式。
 
 当前 Program 1-6 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的前台数字化执行序列；旧 Program 1A / 1B 命名已收敛为 Program 1 / Program 2，后续 queued program 自动后移为 Program 4-6。
 

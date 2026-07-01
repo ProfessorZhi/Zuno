@@ -6,7 +6,7 @@ depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 
 ## 目标
 
-在 Program 1 固定 Document IR、Program 2 完成 durable ingestion Product V1，且 Program 3 完成 enterprise ingestion async infrastructure baseline 之后，使用多线程模式并行推进四个低耦合子系统：Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。Program 4 的目标是产出可被 Program 5 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环，也不回退到 in-memory 产品事实源。
+在 Program 1 固定 Document IR、Program 2 完成 durable ingestion Product V1，且 Program 3 完成 enterprise ingestion async infrastructure baseline 之后，使用多线程模式并行推进四个低耦合子系统：Memory & Context Engine、Capability / Skill / Tool / MCP / Sandbox、Security / Governance、GraphRAG / Index。Program 4 的目标是产出可被 Program 5 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环，也不回退到 in-memory 产品事实源。
 
 产品口径必须固定：用户不选择 Basic RAG / GraphRAG，也不选择全局 Agent 快速 / 深度模式。用户在勾选具体知识库时选择本次检索策略：标准检索或深度检索。建库时决定知识库是否具备基础索引、图谱增强索引、OCR / 多模态解析能力；查询时只决定本次用多深。Program 4 只准备这些能力和 contract，Program 5 再由 Agentic Retrieval Planner 消费它们。
 
@@ -14,14 +14,14 @@ depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 
 这四块写入范围可以相对隔离：
 
-- Memory / Context 主要在 `src/backend/zuno/memory/`、`src/backend/zuno/agent/context.py` 和 memory tests。
-- Tool / Sandbox 主要在 `src/backend/zuno/capability/`、`src/backend/zuno/platform/security/` 和 tool tests。
+- Memory & Context Engine 主要在 `src/backend/zuno/memory/`、`src/backend/zuno/agent/context.py` 和 memory tests。
+- Capability / Skill / Tool / MCP / Sandbox 主要在 `src/backend/zuno/capability/`、`src/backend/zuno/platform/security/` 和 capability / tool tests。
 - Security / Governance 主要在 `src/backend/zuno/platform/security/`、trace / redaction tests 和 security tests。
 - GraphRAG / Index 主要在 `src/backend/zuno/knowledge/`、retrieval / graph tests 和 eval hooks。Program 4 不再补 Program 3 已负责的 queue、worker、outbox、dead letter 或 reconciler。
 
 共享文件如 `AGENTS.md`、README、`.agent/system.yaml`、`.agent/programs/*`、核心 verifier、架构文档由主线程 coordinator 收口。
 
-## 线程 A：Memory / Context
+## 线程 A：Memory & Context Engine
 
 建议分支：`codex/zuno-p2-memory-context`
 
@@ -40,7 +40,8 @@ depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 
 1. 明确 working memory、episodic memory、semantic memory、procedural memory、preference / governance memory 的边界。
 2. 实现上下文压缩策略：最近窗口、任务摘要、结构化记忆、被丢弃内容原因、可恢复引用。
-3. 强化 semantic fallback、privacy delete、sensitive exclusion 和 memory eval baseline。
+3. 明确 Reflexion Memory 边界：Reflection 发现失败，Reflexion 生成 lesson，Memory 负责保存、scope、expiry 和下次召回。
+4. 强化 semantic fallback、privacy delete、sensitive exclusion 和 memory eval baseline。
 
 验收：
 
@@ -49,9 +50,9 @@ depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 - sensitive source 不进入模型上下文。
 - focused memory tests 通过。
 
-## 线程 B：Tool / Sandbox
+## 线程 B：Capability / Skill / Tool / MCP / Sandbox
 
-建议分支：`codex/zuno-p2-tool-sandbox`
+建议分支：`codex/zuno-p4-capability-skill-tool`
 
 允许范围：
 
@@ -64,14 +65,19 @@ depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 
 目标：
 
-1. 强化 Tool Control Plane：tool registry、policy、approval、execution、result normalization。
-2. 强化 approval ledger：redaction、decision id、tool request id、result id。
-3. 强化 credential-ref-only broker 和 network policy。
-4. 明确 sandbox adapter：当前 `real_isolation=False`，真实 rootless / gVisor / Firecracker 仍是 Target。
+1. 把线程 B 升级为 Capability Layer foundation：Skill Capability、Knowledge Capability、Tool Capability、MCP Capability、External API / File / Code / Browser / Artifact Capability 的 registry / routing 边界。
+2. 定义 SkillCard / Skill Registry / Skill policy / runtime hints / required evidence / allowed tools / required memory scopes / output contract / safety policy / eval rubric / trace requirements。
+3. 强化 Tool Control Plane：tool registry、policy、approval、execution、result normalization。
+4. 强化 MCP connector governance：MCP 是 connector / protocol，不是默认可信工具库；MCP 暴露的工具仍进入 Tool Gate。
+5. 强化 approval ledger：redaction、decision id、tool request id、result id。
+6. 强化 credential-ref-only broker 和 network policy。
+7. 明确 sandbox adapter：当前 `real_isolation=False`，真实 rootless / gVisor / Firecracker 仍是 Target。
 
 验收：
 
 - 高副作用工具必须 approval。
+- Skill 不能写成 Tool，不能直接绕过 Knowledge / Tool / Memory / Security；Skill 只能提供任务方法、约束和评测 rubric。
+- Capability Router 能区分 Skill、Knowledge、Tool、MCP 和 Memory capability。
 - 凭据原文不进入日志、trace 或 approval ledger。
 - network deny / deny_by_default 可测试。
 - sandbox audit context 可进入 trace。
@@ -136,7 +142,7 @@ depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 3. 每个线程必须确认 worktree、branch、status、allowed paths、forbidden paths。
 4. 每个线程完成前必须验证、commit、push。
 5. 主线程读取 diff 和验证结果，不只信总结。
-6. 合并顺序建议：GraphRAG / Index -> Memory / Context -> Tool / Sandbox -> Security / Governance -> docs / verifier 收口。
+6. 合并顺序建议：GraphRAG / Index -> Memory & Context Engine -> Capability / Skill / Tool / MCP / Sandbox -> Security / Governance -> docs / verifier 收口。
 
 ## Program 4 验证基线
 

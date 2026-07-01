@@ -290,6 +290,13 @@ flowchart TB
     INGEST --&gt; KNOW
   end
 
+  subgraph SKILLSYS[&quot;Capability Layer&quot;]
+    direction TB
+    SKILL[&quot;Capability Registry&lt;br/&gt;Skill Knowledge Tool MCP&quot;]:::accent
+    HINT[&quot;Runtime Hints&lt;br/&gt;retrieval tools memory output rubric&quot;]:::guard
+    SKILL --&gt; HINT
+  end
+
   subgraph ACTSYS[&quot;Action and Output&quot;]
     direction LR
     TOOL[&quot;Tool Control Plane&quot;]
@@ -303,9 +310,10 @@ flowchart TB
 
   USER --&gt; API --&gt; CORE
   MODEL --&gt; CORE
-  CORE --&gt; PACK
-  CORE --&gt; TOOL
-  CORE --&gt; KNOW
+  CORE --&gt; SKILL
+  HINT --&gt; PACK
+  HINT --&gt; TOOL
+  HINT --&gt; KNOW
   CORE --&gt; POST --&gt; RAW
   PACK --&gt; GOV
   NORM --&gt; GOV
@@ -355,6 +363,13 @@ flowchart TB
     INGEST --&gt; KNOW
   end
 
+  subgraph SKILLSYS[&quot;Capability Layer&quot;]
+    direction TB
+    SKILL[&quot;Capability Registry&lt;br/&gt;Skill Knowledge Tool MCP&quot;]:::accent
+    HINT[&quot;Runtime Hints&lt;br/&gt;retrieval tools memory output rubric&quot;]:::guard
+    SKILL --&gt; HINT
+  end
+
   subgraph ACTSYS[&quot;Action and Output&quot;]
     direction LR
     TOOL[&quot;Tool Control Plane&quot;]
@@ -368,9 +383,10 @@ flowchart TB
 
   USER --&gt; API --&gt; CORE
   MODEL --&gt; CORE
-  CORE --&gt; PACK
-  CORE --&gt; TOOL
-  CORE --&gt; KNOW
+  CORE --&gt; SKILL
+  HINT --&gt; PACK
+  HINT --&gt; TOOL
+  HINT --&gt; KNOW
   CORE --&gt; POST --&gt; RAW
   PACK --&gt; GOV
   NORM --&gt; GOV
@@ -421,6 +437,7 @@ flowchart TB
   API --&gt; APISTATE[&quot;session task artifact contracts&quot;]
   AG --&gt; RUNTIME[&quot;state graph planning streaming&quot;]
   MEM --&gt; MEMSYS[&quot;context builder memory stores&quot;]
+  CAP --&gt; SKILLSYS[&quot;SkillCard registry policy rubrics&quot;]
   CAP --&gt; TOOLSYS[&quot;ToolCard policy executors MCP&quot;]
   KNO --&gt; KNOWSYS[&quot;ingestion retrieval GraphRAG evidence&quot;]
   PLA --&gt; PLATSYS[&quot;model storage jobs security observability&lt;br/&gt;trace_eval contract&quot;]
@@ -439,7 +456,7 @@ flowchart TB
     WA[&quot;A architecture docs v2&quot;]:::work
     WB[&quot;B code layout rationalization&quot;]:::work
     WC[&quot;C document ingestion&quot;]:::work
-    WD[&quot;D runtime memory tool plane&quot;]:::work
+    WD[&quot;D runtime memory skill tool plane&quot;]:::work
     WE[&quot;E security sandbox&quot;]:::work
     WF[&quot;F eval observability&quot;]:::work
   end
@@ -454,7 +471,7 @@ flowchart TB
   WE --&gt; PLA
   WF --&gt; PLA
   WORK --&gt; VERIFY
-  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,APISTATE,RUNTIME,MEMSYS,TOOLSYS,KNOWSYS,PLATSYS,FORMAL,HTML,ASSETS,REFS,TPL,RENDER,VERIFY,REPO node;
+  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,APISTATE,RUNTIME,MEMSYS,SKILLSYS,TOOLSYS,KNOWSYS,PLATSYS,FORMAL,HTML,ASSETS,REFS,TPL,RENDER,VERIFY,REPO node;
           </div>
         </figure>
         <details>
@@ -482,6 +499,7 @@ flowchart TB
   API --&gt; APISTATE[&quot;session task artifact contracts&quot;]
   AG --&gt; RUNTIME[&quot;state graph planning streaming&quot;]
   MEM --&gt; MEMSYS[&quot;context builder memory stores&quot;]
+  CAP --&gt; SKILLSYS[&quot;SkillCard registry policy rubrics&quot;]
   CAP --&gt; TOOLSYS[&quot;ToolCard policy executors MCP&quot;]
   KNO --&gt; KNOWSYS[&quot;ingestion retrieval GraphRAG evidence&quot;]
   PLA --&gt; PLATSYS[&quot;model storage jobs security observability&lt;br/&gt;trace_eval contract&quot;]
@@ -500,7 +518,7 @@ flowchart TB
     WA[&quot;A architecture docs v2&quot;]:::work
     WB[&quot;B code layout rationalization&quot;]:::work
     WC[&quot;C document ingestion&quot;]:::work
-    WD[&quot;D runtime memory tool plane&quot;]:::work
+    WD[&quot;D runtime memory skill tool plane&quot;]:::work
     WE[&quot;E security sandbox&quot;]:::work
     WF[&quot;F eval observability&quot;]:::work
   end
@@ -515,7 +533,7 @@ flowchart TB
   WE --&gt; PLA
   WF --&gt; PLA
   WORK --&gt; VERIFY
-  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,APISTATE,RUNTIME,MEMSYS,TOOLSYS,KNOWSYS,PLATSYS,FORMAL,HTML,ASSETS,REFS,TPL,RENDER,VERIFY,REPO node;</code></pre>
+  class APPS,BACKEND,DOCS,AGENT,TOOLS,TESTS,API,AG,MEM,CAP,KNO,PLA,APISTATE,RUNTIME,MEMSYS,SKILLSYS,TOOLSYS,KNOWSYS,PLATSYS,FORMAL,HTML,ASSETS,REFS,TPL,RENDER,VERIFY,REPO node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -772,6 +790,7 @@ flowchart TB
   CONTEXT[&quot;10 Context Builder&lt;br/&gt;query files memory&quot;]
   MEMORY[&quot;11 Selected Memory&lt;br/&gt;recent summary structured&quot;]
   AGENT[&quot;12 Controller Agent&quot;]:::accent
+  SKILL[&quot;13 Skill Selection&lt;br/&gt;task method package&quot;]:::accent
   MODE[&quot;Agentic Retrieval Planner&lt;br/&gt;profile capability evidence budget&quot;]:::accent
   NORMAL[&quot;BM25 Vector&lt;br/&gt;precise lookup&quot;]
   ENHANCED[&quot;GraphRAG&lt;br/&gt;local global drift&quot;]
@@ -799,7 +818,7 @@ flowchart TB
   ROUTEPARSE --&gt; MINERU --&gt; NORMALIZE
   ROUTEPARSE --&gt; UNSTRUCT --&gt; NORMALIZE
   NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
-  INDEX --&gt; QUERY --&gt; PRODUCT --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; MODE --&gt; NEED
+  INDEX --&gt; QUERY --&gt; PRODUCT --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; SKILL --&gt; MODE --&gt; NEED
   MODE --&gt; NORMAL --&gt; ROUTER
   MODE --&gt; ENHANCED --&gt; ROUTER
   MODE --&gt; AUTO --&gt; ROUTER
@@ -842,6 +861,7 @@ flowchart TB
   CONTEXT[&quot;10 Context Builder&lt;br/&gt;query files memory&quot;]
   MEMORY[&quot;11 Selected Memory&lt;br/&gt;recent summary structured&quot;]
   AGENT[&quot;12 Controller Agent&quot;]:::accent
+  SKILL[&quot;13 Skill Selection&lt;br/&gt;task method package&quot;]:::accent
   MODE[&quot;Agentic Retrieval Planner&lt;br/&gt;profile capability evidence budget&quot;]:::accent
   NORMAL[&quot;BM25 Vector&lt;br/&gt;precise lookup&quot;]
   ENHANCED[&quot;GraphRAG&lt;br/&gt;local global drift&quot;]
@@ -869,7 +889,7 @@ flowchart TB
   ROUTEPARSE --&gt; MINERU --&gt; NORMALIZE
   ROUTEPARSE --&gt; UNSTRUCT --&gt; NORMALIZE
   NORMALIZE --&gt; CHUNK --&gt; ACL --&gt; INDEX
-  INDEX --&gt; QUERY --&gt; PRODUCT --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; MODE --&gt; NEED
+  INDEX --&gt; QUERY --&gt; PRODUCT --&gt; CONTEXT --&gt; MEMORY --&gt; AGENT --&gt; SKILL --&gt; MODE --&gt; NEED
   MODE --&gt; NORMAL --&gt; ROUTER
   MODE --&gt; ENHANCED --&gt; ROUTER
   MODE --&gt; AUTO --&gt; ROUTER
@@ -918,11 +938,16 @@ flowchart TB
   DOMAIN[&quot;Zuno Domain&quot;]:::accent
   DOMAIN --&gt; RUNTIME[&quot;Agent Core Runtime&quot;]
   DOMAIN --&gt; MEMORY[&quot;Context Memory System&quot;]
-  DOMAIN --&gt; CAPABILITY[&quot;Capability Tool System&quot;]
+  DOMAIN --&gt; SKILLCAP[&quot;Capability Layer&quot;]
+  DOMAIN --&gt; CAPABILITY[&quot;Tool Control Plane&quot;]
   DOMAIN --&gt; KNOWLEDGE[&quot;Knowledge GraphRAG System&quot;]
   DOMAIN --&gt; INGESTION[&quot;Document Ingestion System&quot;]
   DOMAIN --&gt; WORKSPACE[&quot;Workspace Artifact System&quot;]
   RUNTIME --&gt; PLAN[&quot;Planner ReAct Reflection Replan&quot;]
+  PLAN --&gt; SKILLCARD[&quot;SkillCard Registry&lt;br/&gt;Policy Rubric Hints&quot;]
+  SKILLCARD --&gt; MEMORY
+  SKILLCARD --&gt; CAPABILITY
+  SKILLCARD --&gt; KNOWLEDGE
   MEMORY --&gt; RAW[&quot;Raw Event Log&quot;]
   MEMORY --&gt; WINDOW[&quot;Recent Window&quot;]
   MEMORY --&gt; SUMMARY[&quot;Task Summary&quot;]
@@ -930,6 +955,7 @@ flowchart TB
   STRUCT --&gt; TYPES[&quot;Semantic Episodic Procedural&quot;]
   MEMORY --&gt; PACK[&quot;Model Context Packet&quot;]
   MEMORY --&gt; GOV[&quot;Review Promote Decay&quot;]
+  SKILLCAP --&gt; SKILLCARD
   CAPABILITY --&gt; MANIFEST[&quot;Tool Manifest&quot;]
   MANIFEST --&gt; CARD[&quot;ToolCard Registry&quot;]
   CARD --&gt; SELECT[&quot;Capability Selector&quot;]
@@ -949,7 +975,7 @@ flowchart TB
   GOV --&gt; POLICY
   SPAN[&quot;ZunoSpan Release Baseline&quot;]:::guard
   POLICY --&gt; SPAN
-  class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;
+  class RUNTIME,MEMORY,SKILLCAP,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,SKILLCARD,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;
           </div>
         </figure>
         <details>
@@ -963,11 +989,16 @@ flowchart TB
   DOMAIN[&quot;Zuno Domain&quot;]:::accent
   DOMAIN --&gt; RUNTIME[&quot;Agent Core Runtime&quot;]
   DOMAIN --&gt; MEMORY[&quot;Context Memory System&quot;]
-  DOMAIN --&gt; CAPABILITY[&quot;Capability Tool System&quot;]
+  DOMAIN --&gt; SKILLCAP[&quot;Capability Layer&quot;]
+  DOMAIN --&gt; CAPABILITY[&quot;Tool Control Plane&quot;]
   DOMAIN --&gt; KNOWLEDGE[&quot;Knowledge GraphRAG System&quot;]
   DOMAIN --&gt; INGESTION[&quot;Document Ingestion System&quot;]
   DOMAIN --&gt; WORKSPACE[&quot;Workspace Artifact System&quot;]
   RUNTIME --&gt; PLAN[&quot;Planner ReAct Reflection Replan&quot;]
+  PLAN --&gt; SKILLCARD[&quot;SkillCard Registry&lt;br/&gt;Policy Rubric Hints&quot;]
+  SKILLCARD --&gt; MEMORY
+  SKILLCARD --&gt; CAPABILITY
+  SKILLCARD --&gt; KNOWLEDGE
   MEMORY --&gt; RAW[&quot;Raw Event Log&quot;]
   MEMORY --&gt; WINDOW[&quot;Recent Window&quot;]
   MEMORY --&gt; SUMMARY[&quot;Task Summary&quot;]
@@ -975,6 +1006,7 @@ flowchart TB
   STRUCT --&gt; TYPES[&quot;Semantic Episodic Procedural&quot;]
   MEMORY --&gt; PACK[&quot;Model Context Packet&quot;]
   MEMORY --&gt; GOV[&quot;Review Promote Decay&quot;]
+  SKILLCAP --&gt; SKILLCARD
   CAPABILITY --&gt; MANIFEST[&quot;Tool Manifest&quot;]
   MANIFEST --&gt; CARD[&quot;ToolCard Registry&quot;]
   CARD --&gt; SELECT[&quot;Capability Selector&quot;]
@@ -994,7 +1026,7 @@ flowchart TB
   GOV --&gt; POLICY
   SPAN[&quot;ZunoSpan Release Baseline&quot;]:::guard
   POLICY --&gt; SPAN
-  class RUNTIME,MEMORY,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;</code></pre>
+  class RUNTIME,MEMORY,SKILLCAP,CAPABILITY,KNOWLEDGE,INGESTION,WORKSPACE,PLAN,SKILLCARD,RAW,WINDOW,SUMMARY,STRUCT,TYPES,PACK,GOV,MANIFEST,CARD,SELECT,TOOLPOL,EXEC,NORMAL,TOOLTRACE,RET,DOC,ART node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -1006,7 +1038,7 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：组件和连接器。</li>
-          <li>Zuno 映射：控制由 Agent 集中；能力通过 Tool Manifest Registry、Capability Selector、Tool Policy Approval、Executor Adapter、Sandbox、Result Normalizer 和 Retrieval Router 进入结果；Memory 通过 read policy 进入 Context Pack，通过 post-turn write path 进入 durable memory。</li>
+          <li>Zuno 映射：控制由 Agent 集中；Planner 先通过 Skill Selector / Skill Registry 选择任务方法包，再把 Skill 的证据、工具、记忆和输出约束交给 ReAct。具体动作仍通过 Tool Manifest Registry、Capability Selector、Tool Policy Approval、Executor Adapter、Sandbox、Result Normalizer 和 Retrieval Router 进入结果；Memory 通过 read policy 进入 Context Pack，通过 post-turn write path 进入 durable memory。</li>
           <li>边界：Planner 是 Agent Core Runtime 的内部控制点，不是一个独立顶层业务层。</li>
         </ul>
         <div class="diagram-actions">
@@ -1029,6 +1061,9 @@ flowchart TB
   MEMREVIEW[&quot;Memory Review Gate&lt;br/&gt;dedupe conflict retention&quot;]:::warn
   AGENT[&quot;Controller Agent&quot;]:::accent
   PLANNER[&quot;Planner&quot;]
+  SKILLSEL[&quot;Skill Selector&quot;]
+  SKILLREG[&quot;Skill Registry&lt;br/&gt;SkillCard Rubric&quot;]
+  SKILLPOL[&quot;Skill Policy&lt;br/&gt;evidence output safety&quot;]:::warn
   REACT[&quot;ReAct Executor&quot;]
   TOOLSEL[&quot;Capability Selector&quot;]
   TOOLREG[&quot;Tool Manifest Registry&quot;]
@@ -1053,7 +1088,7 @@ flowchart TB
 
   subgraph RUNTIME[&quot;Agent Runtime&quot;]
     direction TB
-    AGENT --&gt; PLANNER --&gt; REACT
+    AGENT --&gt; PLANNER --&gt; SKILLSEL --&gt; SKILLREG --&gt; SKILLPOL --&gt; REACT
     OBS -. next step .-&gt; AGENT
   end
 
@@ -1076,7 +1111,7 @@ flowchart TB
   SANDBOX --&gt; TRACE
   AGENT --&gt; TRACE
   TRACE --&gt; BASELINE
-  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE,BASELINE node;
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,SKILLSEL,SKILLREG,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE,BASELINE node;
           </div>
         </figure>
         <details>
@@ -1096,6 +1131,9 @@ flowchart TB
   MEMREVIEW[&quot;Memory Review Gate&lt;br/&gt;dedupe conflict retention&quot;]:::warn
   AGENT[&quot;Controller Agent&quot;]:::accent
   PLANNER[&quot;Planner&quot;]
+  SKILLSEL[&quot;Skill Selector&quot;]
+  SKILLREG[&quot;Skill Registry&lt;br/&gt;SkillCard Rubric&quot;]
+  SKILLPOL[&quot;Skill Policy&lt;br/&gt;evidence output safety&quot;]:::warn
   REACT[&quot;ReAct Executor&quot;]
   TOOLSEL[&quot;Capability Selector&quot;]
   TOOLREG[&quot;Tool Manifest Registry&quot;]
@@ -1120,7 +1158,7 @@ flowchart TB
 
   subgraph RUNTIME[&quot;Agent Runtime&quot;]
     direction TB
-    AGENT --&gt; PLANNER --&gt; REACT
+    AGENT --&gt; PLANNER --&gt; SKILLSEL --&gt; SKILLREG --&gt; SKILLPOL --&gt; REACT
     OBS -. next step .-&gt; AGENT
   end
 
@@ -1143,7 +1181,7 @@ flowchart TB
   SANDBOX --&gt; TRACE
   AGENT --&gt; TRACE
   TRACE --&gt; BASELINE
-  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE,BASELINE node;</code></pre>
+  class API,SESSION,CONTEXT,MEMREAD,MEMSTORE,MEMWRITE,PLANNER,SKILLSEL,SKILLREG,REACT,TOOLSEL,TOOLREG,EXECAD,NORMAL,RETROUTER,INGEST,OBS,CIT,TRACE,BASELINE node;</code></pre>
         </details>
       </section>
       <section class="diagram-section">
@@ -1401,7 +1439,7 @@ flowchart TB
         </dl>
         <ul class="analysis">
           <li>关注点：Agent 内部决策循环。</li>
-          <li>Zuno 映射：Planning 是 Agent Core Runtime 的控制能力；runtime harness 负责状态、checkpoint、streaming、interrupt、trace、memory read/write 和失败处理。</li>
+          <li>Zuno 映射：Planning 是 Agent Core Runtime 的控制能力；Skill selection 在 plan 和 ReAct 之间提供任务方法、证据要求、允许工具、memory scope、输出契约和 eval rubric；runtime harness 负责状态、checkpoint、streaming、interrupt、trace、memory read/write 和失败处理。</li>
           <li>边界：LangGraph 是目标实现候选，用于 state graph、checkpoint、durable execution、human-in-the-loop、streaming 和 resume；它不是“规划模块本身”。</li>
           <li>边界：Reflection 是门控动作，不是每一步强制执行；ToT / LATS 只作为 Future 或离线困难模式，不进入近期默认路径。</li>
         </ul>
@@ -1421,8 +1459,9 @@ flowchart LR
   READMEM[&quot;memory read&lt;br/&gt;recent task structured&quot;]
   ROUTE[&quot;intent and mode router&quot;]
   PLAN[&quot;plan&quot;]
+  SKILL[&quot;skill selection&lt;br/&gt;method hints constraints&quot;]
   STEP[&quot;ReAct step&quot;]
-  CALL[&quot;tool or retrieval dispatch&quot;]
+  CALL[&quot;tool retrieval memory dispatch&lt;br/&gt;constrained by skill&quot;]
   OBS[&quot;observation&quot;]
   RAW[&quot;raw event append&quot;]
   WORK[&quot;working memory&quot;]
@@ -1438,7 +1477,7 @@ flowchart LR
 
   subgraph PREPARE[&quot;Prepare&quot;]
     direction TB
-    GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN
+    GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN --&gt; SKILL
   end
 
   subgraph EXECUTE[&quot;Execute&quot;]
@@ -1454,13 +1493,13 @@ flowchart LR
     COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
   end
 
-  PLAN --&gt; STEP
+  SKILL --&gt; STEP
   REFLECT --&gt;|continue| STEP
   REFLECT --&gt;|replan| REPLAN --&gt; PLAN
   REFLECT --&gt;|finish| FINAL
   SUMMARY -. next turn .-&gt; READMEM
   LONG -. next turn .-&gt; READMEM
-  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,AUDIT,SUMMARY,CAND,LONG node;
+  class GOAL,PREP,READMEM,ROUTE,PLAN,SKILL,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,AUDIT,SUMMARY,CAND,LONG node;
           </div>
         </figure>
         <details>
@@ -1476,8 +1515,9 @@ flowchart LR
   READMEM[&quot;memory read&lt;br/&gt;recent task structured&quot;]
   ROUTE[&quot;intent and mode router&quot;]
   PLAN[&quot;plan&quot;]
+  SKILL[&quot;skill selection&lt;br/&gt;method hints constraints&quot;]
   STEP[&quot;ReAct step&quot;]
-  CALL[&quot;tool or retrieval dispatch&quot;]
+  CALL[&quot;tool retrieval memory dispatch&lt;br/&gt;constrained by skill&quot;]
   OBS[&quot;observation&quot;]
   RAW[&quot;raw event append&quot;]
   WORK[&quot;working memory&quot;]
@@ -1493,7 +1533,7 @@ flowchart LR
 
   subgraph PREPARE[&quot;Prepare&quot;]
     direction TB
-    GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN
+    GOAL --&gt; PREP --&gt; READMEM --&gt; ROUTE --&gt; PLAN --&gt; SKILL
   end
 
   subgraph EXECUTE[&quot;Execute&quot;]
@@ -1509,13 +1549,13 @@ flowchart LR
     COMMIT --&gt; CAND --&gt; REVIEW --&gt; LONG
   end
 
-  PLAN --&gt; STEP
+  SKILL --&gt; STEP
   REFLECT --&gt;|continue| STEP
   REFLECT --&gt;|replan| REPLAN --&gt; PLAN
   REFLECT --&gt;|finish| FINAL
   SUMMARY -. next turn .-&gt; READMEM
   LONG -. next turn .-&gt; READMEM
-  class GOAL,PREP,READMEM,ROUTE,PLAN,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,AUDIT,SUMMARY,CAND,LONG node;</code></pre>
+  class GOAL,PREP,READMEM,ROUTE,PLAN,SKILL,STEP,CALL,OBS,RAW,WORK,REPLAN,COMMIT,AUDIT,SUMMARY,CAND,LONG node;</code></pre>
         </details>
       </section>
     </section>

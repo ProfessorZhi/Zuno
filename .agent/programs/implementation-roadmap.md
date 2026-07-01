@@ -25,7 +25,7 @@ latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
   -> automated enterprise KB eval
 ```
 
-Zuno 最终产品不是 Basic RAG、GraphRAG、Agentic GraphRAG 三个并列模式。最终产品是 AgentChat 驱动的企业知识库 Agentic GraphRAG Agent。用户在勾选知识库时只选择标准检索 / 深度检索；建库时决定基础索引、图谱增强索引和 OCR / 多模态解析能力；Agent 后端自动选择 RAG / GraphRAG / re-query / rerank。Basic RAG 与静态 GraphRAG 是 Program 6 的评测 baseline。
+Zuno 最终产品不是 Basic RAG、GraphRAG、Agentic GraphRAG 三个并列模式。最终产品是 AgentChat 驱动的企业知识库 Agentic GraphRAG Agent。Agent Core 公式是 `Model Gateway + Memory & Context Engine + Planning & Control Runtime + Capability Layer + Governance / Trace / Eval Envelope`。用户在勾选知识库时只选择标准检索 / 深度检索；建库时决定基础索引、图谱增强索引和 OCR / 多模态解析能力；Agent 后端自动选择 RAG / GraphRAG / re-query / rerank、Skill、MCP 和工具能力。Basic RAG 与静态 GraphRAG 是 Program 6 的评测 baseline。
 
 ## Program 1：Document Ingestion Foundation
 
@@ -97,7 +97,7 @@ Program ID：`zuno-runtime-subsystems-parallel-v1`
 
 状态：queued。计划文件：`.agent/programs/queued-programs/PROGRAM04_runtime-subsystems-parallel.md`。
 
-Program 4 在 Program 3 完成后启动，使用多线程模式并行推进 Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。它不再替文档输入层补 queue、worker、outbox 或 reconciler。GraphRAG / Index 线程需要产出知识库索引能力与 retrieval profile 的基础契约：标准检索、深度检索、graph_index_not_ready 降级和 trace 字段。
+Program 4 在 Program 3 完成后启动，使用多线程模式并行推进 Memory & Context Engine、Capability / Skill / Tool / MCP / Sandbox、Security / Governance、GraphRAG / Index。它不再替文档输入层补 queue、worker、outbox 或 reconciler。Capability 线程需要把 SkillCard、ToolCard、MCP connector 和 capability routing 边界分清；GraphRAG / Index 线程需要产出知识库索引能力与 retrieval profile 的基础契约：标准检索、深度检索、graph_index_not_ready 降级和 trace 字段。
 
 ## Program 5：Planning Integration
 
@@ -105,7 +105,7 @@ Program ID：`zuno-agent-planning-integration-v1`
 
 状态：queued。计划文件：`.agent/programs/queued-programs/PROGRAM05_agent-planning-integration.md`。
 
-Program 5 合并 Program 4 成果，实现 Single Controller / Single `GeneralAgent` 内部的 planning、ReAct、reflection 和 replan 闭环。核心验收是 Agentic Retrieval Planner 能消费每个知识库的标准检索 / 深度检索 profile，自动生成 query rewrite、retriever selection、GraphRAG expansion、reflection、re-query 和 cited answer 轨迹。
+Program 5 合并 Program 4 成果，实现 Single Controller / Single `GeneralAgent` 内部的 Planning & Control Runtime：Strategy Selector、Skill selection、ReAct、Plan-and-Execute、Reflection、Dynamic Replan、Reflexion 和 post_turn_commit。核心验收是 Agentic Retrieval Planner 能消费每个知识库的标准检索 / 深度检索 profile、selected / pinned Skill、Capability Router、Memory state、安全策略和预算，自动生成 query rewrite、retriever selection、GraphRAG expansion、tool/memory capability use、reflection、dynamic replan、reflexion candidate 和 cited answer 轨迹。
 
 ## Program 6：Enterprise Knowledge Eval Benchmark
 
@@ -113,7 +113,7 @@ Program ID：`zuno-enterprise-knowledge-eval-benchmark-v1`
 
 状态：queued。计划文件：`.agent/programs/queued-programs/PROGRAM06_enterprise-knowledge-eval-benchmark.md`。
 
-Program 6 建设企业知识库问答自动化评测，对比 Basic RAG baseline、Static GraphRAG baseline、标准检索 profile、深度检索 profile 和 Agentic GraphRAG target。
+Program 6 建设企业知识库问答自动化评测，对比 Basic RAG baseline、Static GraphRAG baseline、标准检索 profile、深度检索 profile 和 Agentic GraphRAG target，并评估 planning quality、replan effectiveness、reflection usefulness、reflexion reuse、skill-specific rubric、tool safety、citation coverage、cost 和 latency。
 
 ## Program 3 验证基线
 

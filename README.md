@@ -1,14 +1,17 @@
 # Zuno
 
-Zuno 是 AgentChat 驱动的企业知识库 Agentic GraphRAG Workspace，不是普通 RAG 问答 demo。用户在聊天里提出目标，系统通过统一输入层、知识库层、模型层、记忆层、工具层、安全层和规划层协作，由 Single Controller Agent 自动决定如何检索、是否使用 GraphRAG、是否调用工具、是否重查或反思，最后生成带引用、可追溯、可评测的回答或 artifact。
+Zuno 是 AgentChat 驱动的企业知识库 Agentic GraphRAG Workspace，不是普通 RAG 问答 demo。用户在聊天里提出目标，系统通过统一输入层、知识库层、Model Gateway、Memory & Context Engine、Planning & Control Runtime、Capability Layer、Tool Control Plane、安全治理和评测观测外壳协作，由 Single Controller Agent 自动决定选择何种 Skill、如何检索、是否使用 GraphRAG、是否调用工具、是否重查或反思，最后生成带引用、可追溯、可评测的回答或 artifact。
 
-它继承“企业私有知识库与多功能 Agent 助手”的定位，把 Vue Web、Electron Desktop、FastAPI 后端、当前 `GeneralAgent` 单循环主线、Agentic Retrieval Planner、Knowledge / RAG / GraphRAG、工具能力、MCP 语境和本地 Eval 放在一个 monorepo 里，目标是让企业私有文档从“可搜索”升级为“可由 Agent 主动规划检索、可理解、可追溯、可执行、可评测、可治理”。
+它继承“企业私有知识库与多功能 Agent 助手”的定位，把 Vue Web、Electron Desktop、FastAPI 后端、当前 `GeneralAgent` 单循环主线、Agentic Retrieval Planner、SkillCard / Capability Layer、Knowledge / RAG / GraphRAG、Tool Control Plane、MCP 语境和本地 Eval 放在一个 monorepo 里，目标是让企业私有文档从“可搜索”升级为“可由 Agent 主动规划检索、可理解、可追溯、可执行、可评测、可治理”。
 
 ```text
 Local-first Enterprise Private Knowledge Agent Workspace
 = Single Controller Agent
-+ Context / Memory Engine
-+ Capability / Tool Retrieval
++ Model Gateway
++ Memory & Context Engine
++ Planning & Control Runtime
++ Capability Layer
++ Tool Control Plane
 + Agentic Retrieval Planner
 + Knowledge / GraphRAG as Agent Tool
 + Evidence / Citation / Trace / Eval
@@ -35,7 +38,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 - `apps/desktop` 是 Electron Desktop 工作区。
 - `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。
 - 当前知识回答主线是 `Completion API -> CompletionService -> GeneralAgent single loop -> search_knowledge_base -> KnowledgeQueryService -> GraphRAGQueryService -> RetrievalPlanner / RetrievalOrchestrator -> Evidence / Citation / Trace -> GeneralAgent answer`；目标产品主线是用户只在 AgentChat 提目标，并在勾选知识库时选择标准检索或深度检索，由 Single Controller Agent 内部的 Agentic Retrieval Planner 决定 query rewrite、retriever selection、GraphRAG expansion、reflection 和 re-query。
-- 当前已有 Query Router、Context / Memory、ToolCard、GraphRAG、Evidence / Citation / Trace / Eval foundation。
+- 当前已有 Query Router、Context / Memory、ToolCard、GraphRAG、Evidence / Citation / Trace / Eval foundation；独立 SkillCard runtime 仍是 Target。
 - 当前已有第一版 runtime-first vertical slice 和 Web workspace Agent 产品闭环。
 - 当前不是完整产品级 LangGraph runtime，不是生产级 Memory DB，不是成熟安全沙箱，也不是默认多 Agent runtime。
 - Phase 0-6 架构收口仍是已完成的历史事实。
@@ -48,7 +51,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 - `current_phase: PHASE01_truth-source-and-async-gap-audit.md`
 - `latest_completed_program: zuno-enterprise-document-ingestion-platform-v2`
 
-当前 Program 3 是 Enterprise Ingestion Async Infrastructure：承接 Program 2 已完成的 Product V1 local durable ingestion baseline，补齐企业文档输入层的异步基础设施 baseline，包括 PostgreSQL-compatible fact store boundary、ObjectStore binary support、QueueBackend / LocalQueueBackend、RabbitMQ boundary、Redis runtime state boundary、ParserWorker / IndexWorker、outbox、dead letter、reconciler、OCR / VLM worker boundary 和 ingest status / retry / cancel / replay contract。后续 queued program 依次是 Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标是 AgentChat 驱动的 Single Controller Agentic GraphRAG 企业知识库 Agent。用户在知识库选择处只看到标准检索 / 深度检索，GraphRAG 是 Agent 可调用的检索工具，不是用户手动选择的主产品模式。
+当前 Program 3 是 Enterprise Ingestion Async Infrastructure：承接 Program 2 已完成的 Product V1 local durable ingestion baseline，补齐企业文档输入层的异步基础设施 baseline，包括 PostgreSQL-compatible fact store boundary、ObjectStore binary support、QueueBackend / LocalQueueBackend、RabbitMQ boundary、Redis runtime state boundary、ParserWorker / IndexWorker、outbox、dead letter、reconciler、OCR / VLM worker boundary 和 ingest status / retry / cancel / replay contract。后续 queued program 依次是 Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1`。Program 4 需要准备 Memory & Context Engine、Capability / Skill / Tool / MCP / Sandbox、Security / Governance、GraphRAG / Index；Program 5 再把 Strategy Selector、Skill selection、Dynamic Replan、Reflexion 和 Agentic Retrieval Planner 接入 Single Controller Agent。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标是 AgentChat 驱动的 Single Controller Agentic GraphRAG 企业知识库 Agent。用户在知识库选择处只看到标准检索 / 深度检索，GraphRAG 是 Agent 可调用的检索工具，Skill 是 Agent 的任务方法包，MCP / Tool / Knowledge 都属于 Capability Layer 的可编排能力，不是用户手动选择的主产品模式。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 

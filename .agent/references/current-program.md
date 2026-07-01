@@ -14,7 +14,7 @@ latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 Program 3 承接 Program 2 已完成的 Product V1 local durable ingestion baseline，把文档输入层推进到 enterprise ingestion async infrastructure baseline。当前目标包括 PostgreSQL-compatible fact store boundary、ObjectStore binary support、QueueBackend / LocalQueueBackend、RabbitMQ boundary、Redis runtime state boundary、ParserWorker / IndexWorker、Outbox、Dead Letter、Reconciler、OCR / VLM worker boundary、ingest status / retry / cancel / replay contract。
 
-目标产品口径固定为 AgentChat 驱动的企业知识库 Agentic GraphRAG Workspace。用户在聊天里提出目标，并在勾选知识库时选择标准检索 / 深度检索；GraphRAG、BM25、vector、re-query、rerank 和工具调用由 Single Controller Agent 内部自动规划。Basic RAG 和 Static GraphRAG 只作为 Program 6 的评测对照组，不是最终产品模式。
+目标产品口径固定为 AgentChat 驱动的企业知识库 Agentic GraphRAG Workspace。Agent Core 公式是 `Model Gateway + Memory & Context Engine + Planning & Control Runtime + Capability Layer + Governance / Trace / Eval Envelope`。用户在聊天里提出目标，并在勾选知识库时选择标准检索 / 深度检索；GraphRAG、BM25、vector、re-query、rerank、Skill、MCP 和工具调用由 Single Controller Agent 内部自动规划。Skill 是 Capability Layer 里的任务方法包，不是 Tool、不是 Knowledge、也不是产品级多 Agent runtime。Basic RAG 和 Static GraphRAG 只作为 Program 6 的评测对照组，不是最终产品模式。
 
 成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。Current 必须来自代码、focused tests、trace、eval、verifier 或可复现证据。真实 PostgreSQL、RabbitMQ、Redis、MinIO / S3、external OCR / VLM、external index 未接入并测试前，仍只能写作 Target / target-blocked evidence。
 
