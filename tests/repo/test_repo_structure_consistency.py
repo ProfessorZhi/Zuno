@@ -1024,7 +1024,19 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         assert phase_path.exists()
         phase_text = phase_path.read_text(encoding="utf-8")
         assert "status:" in phase_text
-        for section in ["## 目标", "## 范围", "## 禁止范围", "## 验收闸门", "## 验证命令"]:
+        for section in [
+            "## 目标",
+            "## 范围",
+            "## 禁止范围",
+            "## 验收闸门",
+            "## 验证命令",
+            "## 需要先读取",
+            "## 需要修改的文件",
+            "## 执行拆解",
+            "## 多 agent 分工",
+            "## 需要返回的证据",
+            "## 停止条件",
+        ]:
             assert section in phase_text
     for index, phase in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
         phase_path = runtime_archive / phase

@@ -41,6 +41,59 @@ current_phase: `PHASE01_production-maturity-gap-audit`
 
 一次性交付指同一个 active program 覆盖全部剩余成熟化工作，并在 PHASE12 统一 release closure；它不表示一个 commit、一个线程或跳过 phase gate。
 
+## 执行分层
+
+本 program 分三层推进：
+
+1. **Truth / Governance 层**：PHASE01-PHASE04。先证明还差什么、谁是事实源、文档如何不双轨、workflow 如何自维护。
+2. **Ownership / Runtime Productionization 层**：PHASE05-PHASE11。按 owner 清晰度、产品闭环、parse/index、Agent Runtime、Memory、Tool/Sandbox、GraphRAG/Evidence 推进生产化。
+3. **Release Closure 层**：PHASE12。只在证据链完整后更新 Current、归档 program、运行全量验证并推送。
+
+## 全局完成定义
+
+每个 phase 关闭时必须同时满足：
+
+- phase 文件 `status` 从 `active` 或 `pending` 更新为 `completed`，并写明完成证据。
+- 修改过的事实源、代码、测试和 verifier 彼此一致。
+- 至少运行 phase 文件列出的最小验证命令。
+- 如能力不能完成，必须记录 blocked evidence，并保留为 Remaining Target / Future，不得伪装为 Current。
+- commit message 必须能看出 phase 和交付物范围。
+
+## 证据类型
+
+允许关闭 phase 的证据包括：
+
+- runtime 代码路径和 focused tests。
+- API / UI / Desktop / event stream 的可复现运行证据。
+- trace / eval / release baseline。
+- verifier / repo tests。
+- 外部依赖 blocked evidence 和 local fallback。
+
+不允许单独关闭 phase 的证据：
+
+- 只有 README。
+- 只有 schema。
+- 只有 contract。
+- 只有计划或提示词。
+- 只有截图但没有可复现路径。
+
+## 多线程执行规则
+
+- 主线程先盘点可复用 Codex 线程和 worktree，再写 thread prompts。
+- 子线程必须使用独立 worktree 和 `codex/` 分支。
+- 子线程只处理不重叠写入范围。
+- 共享文件由主线程收口：`AGENTS.md`、`README.md`、`.agent/system.yaml`、`.agent/programs/*`、`docs/architecture/*`、core verifier、repo tests。
+- 每个子线程完成前必须验证、提交、推送；主线程必须读 diff、检查提交、运行集成验证后再合并。
+
+## Phase 间依赖
+
+- PHASE01 是所有后续工作的差距审计 gate。
+- PHASE02 必须在大规模并行前完成，否则 thread prompt 和 verifier 口径会漂移。
+- PHASE03-PHASE04 是 workflow / docs 自维护 gate，避免后续生产化改动导致前台双轨。
+- PHASE05 是 runtime 物理 ownership gate，PHASE06-PHASE11 不应继续扩大旧 owner。
+- PHASE08 durable runtime 是 PHASE06 长任务恢复、PHASE10 exactly-once tool boundary 和 PHASE12 release replay 的关键依赖。
+- PHASE12 不能在 PHASE01-PHASE11 未完成或未记录 blocked evidence 时关闭。
+
 ## 最终验收
 
 - `docs/architecture/production-readiness.md` 中四大总交付物和八类 runtime-first 交付物均有 Current 证据或明确 Remaining Target。

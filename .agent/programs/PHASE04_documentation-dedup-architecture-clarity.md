@@ -33,3 +33,53 @@ python .agent/scripts/verify_doc_boundaries.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-docs.ps1
 pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 ```
+
+## 需要先读取
+
+- `docs/architecture/README.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/production-readiness.md`
+- `.agent/architecture/README.md`
+- `.agent/architecture/architecture.md`
+- `.agent/references/docs-map.md`
+- `.agent/references/architecture-docs-map.md`
+- `.agent/references/documentation-governance.md`
+- `tools/scripts/verify_docs_entrypoints.py`
+
+## 需要修改的文件
+
+- `docs/architecture/architecture.md`
+- `docs/architecture/production-readiness.md`
+- `docs/architecture/README.md`
+- `.agent/architecture/README.md`
+- generated: `docs/architecture/architecture.html`、`.agent/architecture/architecture.md`、`.agent/architecture/architecture.html`
+- `tools/scripts/verify_docs_entrypoints.py`
+- `tests/repo/test_docs_entrypoints.py`
+
+## 执行拆解
+
+1. 建立前台文档职责表：README 只导航，architecture 讲架构，production-readiness 讲成熟度，program 讲执行，history 留证据。
+2. 搜索重复 Current / Target / phase / deliverables 展开，压缩到唯一事实源。
+3. 更新 architecture.md 中当前 active program 和实施落点，但不把 Production Target 写成 Current。
+4. 运行 render_architecture 同步 HTML 和 `.agent/architecture` 镜像。
+5. 更新 docs verifier/test，阻止旧拆分文档回到前台。
+
+## 多 agent 分工
+
+- Thread A：审计 README / docs/architecture。
+- Thread B：审计 `.agent/architecture` 和 references。
+- Thread C：更新 verifier/test。
+- 主线程：修改 architecture.md、运行 renderer、审查镜像 diff。
+
+## 需要返回的证据
+
+- 文档职责表。
+- 重复内容删除或保留理由。
+- architecture Markdown / HTML sync 结果。
+- docs entrypoint verifier 结果。
+
+## 停止条件
+
+- 需要恢复已归档拆分文档作为当前入口。
+- Markdown 和 HTML 生成结果不一致。
+- Current / Target 边界因文档压缩变模糊。

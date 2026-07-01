@@ -1231,7 +1231,19 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         if "status:" not in phase_content:
             errors.append(f"active production program phase missing status: {phase_name}")
-        for required in ["## 目标", "## 范围", "## 禁止范围", "## 验收闸门", "## 验证命令"]:
+        for required in [
+            "## 目标",
+            "## 范围",
+            "## 禁止范围",
+            "## 验收闸门",
+            "## 验证命令",
+            "## 需要先读取",
+            "## 需要修改的文件",
+            "## 执行拆解",
+            "## 多 agent 分工",
+            "## 需要返回的证据",
+            "## 停止条件",
+        ]:
             if required not in phase_content:
                 errors.append(f"active production program phase missing section {required}: {phase_name}")
     for phase_index, phase_name in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):

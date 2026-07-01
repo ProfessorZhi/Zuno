@@ -49,6 +49,28 @@ state: active
 - [ ] 两个 `architecture.html` 是否由同一个 Markdown 源生成且可通过渲染校验。
 - [ ] verifier / tests 是否覆盖新规则，避免下次漂移。
 
+## 必须归档的证据
+
+- [ ] PHASE01 maturity gap audit。
+- [ ] 四大总交付物 closure table。
+- [ ] 八类 runtime-first deliverables closure table。
+- [ ] owner map 和 import matrix。
+- [ ] external dependency / blocked evidence matrix。
+- [ ] trace / eval / release baseline。
+- [ ] full verification log。
+- [ ] final `git status --short --branch`。
+- [ ] final commit hash。
+- [ ] push status。
+
+## 不允许关闭的情况
+
+- [ ] 任何 Target / Future 被写成 Current，但没有代码、测试、trace、eval 或 verifier 证据。
+- [ ] `.agent/programs/`、`README.md`、`AGENTS.md`、`.agent/references/current-program.md` 对 program 状态不一致。
+- [ ] `docs/architecture/architecture.md` 和 `.agent/architecture/architecture.md` 不一致。
+- [ ] `architecture.html` 不是由当前 Markdown 生成。
+- [ ] compatibility / vendor / legacy alias 被删除但没有 import matrix 和 tests。
+- [ ] full pytest 或 required verifier 失败且没有 blocked evidence。
+
 ## 最终验证命令
 
 ```powershell
