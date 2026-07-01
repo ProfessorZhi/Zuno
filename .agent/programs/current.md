@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE05_repo-ownership-and-compatibility-retirement
+current_phase: PHASE06_product-surface-desktop-recovery-loop
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE05_repo-ownership-and-compatibility-retirement
 
 ## 当前阶段
 
-- 当前 phase：`PHASE05_repo-ownership-and-compatibility-retirement`
-- 当前动作：盘点六层 backend owner、platform/services、compatibility、vendor、provider tree 和 legacy alias，收敛低风险兼容层。
-- 当前验收：PHASE05 只有在 owner map、import matrix、compatibility retirement table、repo verifier 和 legacy guard 证据齐全后才能关闭。
+- 当前 phase：`PHASE06_product-surface-desktop-recovery-loop`
+- 当前动作：把 Web 第一版产品闭环推进到 Desktop、长任务恢复、artifact 下载、错误恢复和 trace / feedback 串联。
+- 当前验收：PHASE06 只有在 Web / Desktop 共享 task lifecycle contract，并有 focused tests 或 e2e evidence 证明恢复、下载、feedback 和 trace 串联后才能关闭。
 
 ## 最近完成基线
 

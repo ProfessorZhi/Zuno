@@ -26,7 +26,7 @@ HTTP route
 
 Capability foundation 代码位于：
 
-- `src/backend/zuno/services/application/capabilities/`
+- `src/backend/zuno/platform/services/application/capabilities/`
 
 它定义 Knowledge、ActionTool、MCPTool、MCPResource、MCPPrompt 和 Skill capability 的当前 metadata contract，以及一个最小 selector。selector 可以只返回与任务相关的 schema。现有 API capability search service 保留旧 response key，同时暴露统一 metadata 字段。
 
@@ -40,8 +40,7 @@ GeneralAgent 还没有在每轮模型调用中完整注入 selected capabilities
 
 详细目标行为见：
 
-- `.agent/architecture/architecture.md`
-- `.agent/architecture/architecture.md`
+- `docs/architecture/architecture.md`
 - `.agent/architecture/architecture.md`
 
 ## GraphRAG 与知识路径

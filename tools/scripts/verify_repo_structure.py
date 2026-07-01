@@ -404,6 +404,8 @@ BACKEND_LAYER_INTERNAL_SURFACES = {
             "README.md",
             "__init__.py",
             "context.py",
+            "durable_runtime.py",
+            "harness.py",
             "post_turn.py",
             "runtime.py",
             "state.py",
@@ -432,17 +434,21 @@ BACKEND_LAYER_INTERNAL_SURFACES = {
             "__init__.py",
             "contracts.py",
             "execution.py",
+            "control_plane.py",
             "policy.py",
             "registry.py",
+            "retrieval.py",
+            "runtime.py",
             "selector.py",
             "trace.py",
         ],
     },
     "knowledge": {
-        "directories": ["fusion", "graphrag", "ingestion", "retrieval"],
+        "directories": ["fusion", "graphrag", "indexing", "ingestion", "retrieval"],
         "files": [
             "README.md",
             "__init__.py",
+            "agentic_graphrag.py",
             "citation.py",
             "contracts.py",
             "evidence.py",
@@ -809,6 +815,22 @@ def verify_backend_layer_internal_surfaces() -> list[str]:
                 errors.append(
                     f"missing backend layer internal file: {layer_name}/{file_name}"
                 )
+    return errors
+
+
+def verify_backend_owner_docs_do_not_reference_retired_physical_paths() -> list[str]:
+    errors: list[str] = []
+    api_readme = _read_text("src/backend/zuno/api/README.md")
+    runtime_call_chain = _read_text(".agent/references/runtime-call-chain.md")
+
+    if "src/backend/zuno/schema/" in api_readme:
+        errors.append("src/backend/zuno/api/README.md references retired physical schema directory")
+    if "src/backend/zuno/api/dto/" not in api_readme:
+        errors.append("src/backend/zuno/api/README.md must point to api/dto as DTO owner")
+    if "src/backend/zuno/services/application/capabilities/" in runtime_call_chain:
+        errors.append(".agent/references/runtime-call-chain.md references retired root services capability path")
+    if "src/backend/zuno/platform/services/application/capabilities/" not in runtime_call_chain:
+        errors.append(".agent/references/runtime-call-chain.md must point to platform/services/application/capabilities")
     return errors
 
 
@@ -1468,6 +1490,7 @@ def run_verification() -> VerificationResult:
             *verify_first_class_directory_responsibilities(),
             *verify_backend_zuno_directory_classifications(),
             *verify_backend_layer_internal_surfaces(),
+            *verify_backend_owner_docs_do_not_reference_retired_physical_paths(),
             *verify_phase02_backend_ownership_matrix(),
             *verify_phase02_platform_services_owner_guard(),
             *verify_phase02_capability_provider_guard(),

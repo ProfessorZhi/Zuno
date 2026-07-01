@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE05_repo-ownership-and-compatibility-retirement
+current_phase: PHASE06_product-surface-desktop-recovery-loop
 
 `.agent/programs/` 当前保存 active program 的平铺执行计划：
 

@@ -2,7 +2,7 @@
 
 program: `zuno-production-architecture-and-deliverables-completion-v1`
 state: active
-current_phase: `PHASE05_repo-ownership-and-compatibility-retirement`
+current_phase: `PHASE06_product-surface-desktop-recovery-loop`
 
 ## 核心目标
 

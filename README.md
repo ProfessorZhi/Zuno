@@ -38,7 +38,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE05_repo-ownership-and-compatibility-retirement`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。前序 phase closure evidence 以 `.agent/programs/PHASE*.md` 为准；后续 phase 以这些证据为 gate。
+当前 active Agent program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE06_product-surface-desktop-recovery-loop`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。前序 phase closure evidence 以 `.agent/programs/PHASE*.md` 为准；后续 phase 以这些证据为 gate。
 
 本轮 program 文件在 `.agent/programs/`：
 

@@ -283,6 +283,8 @@ def test_repo_structure_verifier_pins_backend_layer_internal_surfaces() -> None:
                 "README.md",
                 "__init__.py",
                 "context.py",
+                "durable_runtime.py",
+                "harness.py",
                 "post_turn.py",
                 "runtime.py",
                 "state.py",
@@ -311,17 +313,21 @@ def test_repo_structure_verifier_pins_backend_layer_internal_surfaces() -> None:
                 "__init__.py",
                 "contracts.py",
                 "execution.py",
+                "control_plane.py",
                 "policy.py",
                 "registry.py",
+                "retrieval.py",
+                "runtime.py",
                 "selector.py",
                 "trace.py",
             ],
         },
         "knowledge": {
-            "directories": ["fusion", "graphrag", "ingestion", "retrieval"],
+            "directories": ["fusion", "graphrag", "indexing", "ingestion", "retrieval"],
             "files": [
                 "README.md",
                 "__init__.py",
+                "agentic_graphrag.py",
                 "citation.py",
                 "contracts.py",
                 "evidence.py",
@@ -346,6 +352,24 @@ def test_repo_structure_verifier_pins_backend_layer_internal_surfaces() -> None:
             "files": ["README.md", "__init__.py", "model_gateway.py", "settings.py"],
         },
     }
+
+
+def test_backend_owner_docs_do_not_reference_retired_physical_paths() -> None:
+    api_readme = (REPO_ROOT / "src/backend/zuno/api/README.md").read_text(
+        encoding="utf-8"
+    )
+    runtime_call_chain = (REPO_ROOT / ".agent/references/runtime-call-chain.md").read_text(
+        encoding="utf-8"
+    )
+    verifier_source = (REPO_ROOT / "tools/scripts/verify_repo_structure.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "src/backend/zuno/schema/" not in api_readme
+    assert "src/backend/zuno/services/application/capabilities/" not in runtime_call_chain
+    assert "src/backend/zuno/api/dto/" in api_readme
+    assert "src/backend/zuno/platform/services/application/capabilities/" in runtime_call_chain
+    assert "verify_backend_owner_docs_do_not_reference_retired_physical_paths" in verifier_source
 
 
 def test_repo_structure_verifier_pins_phase02_ownership_contract() -> None:

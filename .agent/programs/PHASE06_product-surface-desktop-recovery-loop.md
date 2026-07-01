@@ -1,6 +1,6 @@
 # PHASE06 Product Surface Desktop Recovery Loop
 
-status: pending
+status: active
 
 ## 目标
 
