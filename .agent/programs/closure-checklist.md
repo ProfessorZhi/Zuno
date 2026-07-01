@@ -19,7 +19,7 @@ Production scale external deployments remain replaceable targets.
 ## Phase Gate 清单
 
 - [ ] PHASE01 完成 truth source、program merge、owner map、workstream map 和 PR / commit plan。
-- [ ] PHASE02 完成 shared contract freeze。
+- [ ] PHASE02 完成 shared contract freeze，且明确冻结 KnowledgeSpaceConfig、ChangeImpactPreview、CapabilityPolicy / RiskProfile / AuditEvent、ConversationRunMetrics、StageMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport、ScenarioSummary 和 TraceSummary。
 - [ ] PHASE03 完成 enterprise ingestion async infrastructure baseline。
 - [ ] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
 - [ ] PHASE05 完成 Memory & Context Engine baseline。

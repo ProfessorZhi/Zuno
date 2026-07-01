@@ -100,7 +100,7 @@ Production scale external deployments remain replaceable targets.
    - 输出 merge map、owner map、shared file map、workstream map、PR / commit plan。
    - 确认目标架构公式和 Product Baseline 完成标准。
 2. `PHASE02_shared-contract-freeze.md`
-   - 冻结 AgentRun、ContextPack、RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage、CapabilityCard、CapabilityPolicy、SkillCard、ToolCard、PlanStep、ReflectionVerdict、ReplanDecision、ReflexionLesson、TraceRecord、ConversationRunMetrics、StageMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport 和 CostMetric。
+   - 冻结 AgentRun、ContextPack、RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage、KnowledgeSpaceConfig、ChangeImpactPreview、CapabilityCard、CapabilityPolicy、CapabilityRiskProfile、CapabilityAuditEvent、SkillCard、ToolCard、PlanStep、ReflectionVerdict、ReplanDecision、ReflexionLesson、ScenarioSummary、TraceSummary、TraceRecord、ConversationRunMetrics、StageMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport 和 CostMetric。
 3. `PHASE03_enterprise-ingestion-async-infrastructure.md`
    - DurableIngestionStore、ObjectStore、QueueBackend、ParserWorker / IndexWorker、Outbox、DeadLetter、Reconciler、OCR/VLM boundary、ingest status / retry / cancel / replay。
 4. `PHASE04_knowledge-retrieval-and-graphrag-profile.md`

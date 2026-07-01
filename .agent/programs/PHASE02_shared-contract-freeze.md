@@ -6,14 +6,17 @@ status: pending
 
 ## 目标
 
-在并行实现前冻结共享契约，避免多个 workstream 同时改 `AgentRun`、`ContextPack`、`RetrievalProfile`、`CapabilityCard`、`PlanStep`、trace / cost metric 等核心对象造成冲突。
+在并行实现前冻结共享契约，避免多个 workstream 同时改 `AgentRun`、`ContextPack`、`RetrievalProfile`、`KnowledgeSpaceConfig`、`CapabilityPolicy`、`PlanStep`、scenario summary、trace / eval / cost metric 等核心对象造成冲突。
 
 ## 范围
 
 - 定义或确认 `AgentRun`、`ContextPack`、`RetrievalProfile`、`RetrievalDecision`、`EvidenceBundle`、`CitationLineage`。
-- 定义或确认 `CapabilityCard`、`SkillCard`、`ToolCard`、MCP capability、output contract、eval rubric。
+- 定义或确认 `KnowledgeSpaceConfig`、`ChangeImpactPreview`、file-level status summary、knowledge profile request / response summary。
+- 定义或确认 `CapabilityCard`、`CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent`、`SkillCard`、`ToolCard`、MCP capability、output contract、eval rubric。
 - 定义或确认 `PlanStep`、`PlanState`、`StrategySelectorOutput`、`ReflectionVerdict`、`ReplanDecision`、`ReflexionLesson`。
-- 定义或确认 `TraceMetric`、`CostMetric`、model call metric 和 release baseline metric。
+- 定义或确认 `TraceRecord`、`TraceMetric`、`CostMetric`、model call metric 和 release baseline metric。
+- 定义或确认 `ConversationRunMetrics`、`StageMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport`。
+- 定义或确认 `ScenarioSummary` / `TraceSummary` fixture contract，用于 PHASE12 用户可感知 E2E evidence。
 
 ## 目标架构拼接点
 
@@ -21,12 +24,17 @@ status: pending
 
 - Knowledge 输出 `EvidenceBundle` 和 `CitationLineage` 给 Planning / Reflection / Output Gate。
 - Memory 输出 `ContextPack` 给 Planning。
-- Capability 输出 `SkillCard`、`ToolCard` 和 allowed capability summary 给 Planning。
+- Product Surface 输出 `KnowledgeSpaceConfig`、`ChangeImpactPreview` 和 file status summary 给 API / Frontend / E2E。
+- Capability 输出 `CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent`、`SkillCard`、`ToolCard` 和 allowed capability summary 给 Planning。
 - Security 输出 gate verdict 给 Planning 和 Tool runtime。
 - Model Gateway 输出 cost / latency / token metrics 给 Eval。
 - Planning 输出 plan / replan / reflexion events 给 Trace / Eval。
+- Eval 输出 `ConversationRunMetrics`、`StageMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport` 给 release gate。
+- E2E 输出 `ScenarioSummary` / `TraceSummary`，给 PHASE13 benchmark 和 PHASE15 closure summary。
 
 PHASE02 完成后，后续 workstream 不允许随意发明第二套 plan、evidence、skill 或 trace 字段。
+
+PHASE11 的 `KnowledgeSpaceConfig` / `ChangeImpactPreview`、PHASE06 的 `CapabilityPolicy` 系列、PHASE13 的 per conversation / per stage metrics、PHASE12 的 scenario summary / trace summary fixture 都必须先在本 phase 冻结，再允许各 workstream 实现。
 
 ## 并行开发可行性
 
@@ -48,8 +56,8 @@ PHASE02 完成后，后续 workstream 不允许随意发明第二套 plan、evid
 - 输入依赖：PHASE01 owner map、现有 DTO / storage / agent / knowledge contracts、workspace API schema、trace/eval 字段现状。
 - 主要交付物：共享 contract 文件、contract tests、兼容说明、后续 workstream 不得擅自改动的冻结字段清单。
 - 可并行工作包：只读 review 可并行；实际 contract 文件只能单 owner 编辑。各 workstream 可以提交 contract request，但不能直接改共享 schema。
-- Coordinator 锁点：AgentRun、ContextPack、RetrievalProfile、EvidenceBundle、SkillCard、PlanState、TraceMetric、Workspace API DTO。
-- 下游交接：PHASE03 需要 ingestion/status contracts；PHASE04 需要 retrieval/evidence contracts；PHASE05 需要 ContextPack；PHASE06 需要 Capability/SkillCard；PHASE09 需要 Plan/Replan/Reflection contracts。
+- Coordinator 锁点：AgentRun、ContextPack、RetrievalProfile、EvidenceBundle、KnowledgeSpaceConfig、ChangeImpactPreview、CapabilityPolicy、SkillCard、PlanState、ConversationRunMetrics、StageMetrics、ScenarioSummary、TraceMetric、Workspace API DTO。
+- 下游交接：PHASE03 需要 ingestion/status contracts；PHASE04 需要 retrieval/evidence contracts；PHASE05 需要 ContextPack；PHASE06 需要 CapabilityPolicy / CapabilityRiskProfile / SkillCard；PHASE09 需要 Plan/Replan/Reflection contracts；PHASE11 需要 KnowledgeSpaceConfig / ChangeImpactPreview；PHASE12 需要 ScenarioSummary / TraceSummary；PHASE13 需要 ConversationRunMetrics / StageMetrics / EvalComparisonReport。
 - PR / commit 建议：`feat(contracts): freeze agentic graphrag shared runtime contracts`，必须先过 contract tests 再允许并行实现。
 
 ## 禁止范围
@@ -62,6 +70,7 @@ PHASE02 完成后，后续 workstream 不允许随意发明第二套 plan、evid
 
 - 共享契约文件位置明确，字段命名稳定。
 - focused contract tests 覆盖序列化、默认值、枚举值和 backward-compatible parse。
+- `KnowledgeSpaceConfig`、`ChangeImpactPreview`、`CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent`、`ConversationRunMetrics`、`StageMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport`、`ScenarioSummary` 和 `TraceSummary` 均在 shared contract map 中有唯一 owner。
 - 后续 workstream 修改 shared contract 必须经 Coordinator 审查。
 
 ## 验证命令
