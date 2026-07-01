@@ -3,12 +3,48 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .contracts import DocumentBlock, DocumentFigure, DocumentTable, ParseDocumentRequest, SourceSpan
+from .contracts import (
+    DocumentBlock,
+    DocumentFigure,
+    DocumentTable,
+    ParseDocumentRequest,
+    ParserDiagnostic,
+    SourceSpan,
+)
 
 
 @dataclass(frozen=True)
 class ParserAdapter:
     parser_id: str
+
+    def supports(self, format_name: str) -> bool:
+        return format_name in self.capabilities()
+
+    def capabilities(self) -> list[str]:
+        from .router import PARSER_ADAPTER_CONTRACTS
+
+        contract = PARSER_ADAPTER_CONTRACTS[self.parser_id]
+        return list(contract.supported_formats)
+
+    def diagnostics(self, format_name: str) -> list[ParserDiagnostic]:
+        if self.supports(format_name):
+            return [
+                ParserDiagnostic(
+                    code="adapter_supports_format",
+                    message=f"{self.parser_id} supports {format_name}.",
+                    parser_id=self.parser_id,
+                    format=format_name,
+                )
+            ]
+        return [
+            ParserDiagnostic(
+                code="adapter_unsupported_format",
+                message=f"{self.parser_id} does not support {format_name}.",
+                severity="warning",
+                parser_id=self.parser_id,
+                format=format_name,
+            )
+        ]
 
     def parse(
         self,

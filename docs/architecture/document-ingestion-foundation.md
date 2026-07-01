@@ -27,10 +27,12 @@ workspace file
 Current 只能描述代码和测试已经证明的事实：
 
 - `src/backend/zuno/knowledge/ingestion/contracts.py` 已有 `CanonicalDocumentIR`、`DocumentMetadata`、`DocumentBlock`、`DocumentTable`、`DocumentFigure`、`DocumentProvenance`、`ParseDocumentRequest`、`ParseDocumentResult`、`ParseJobSnapshot` 和 `IndexHandoffPayload`。
-- `CanonicalDocumentIR.metadata` 已记录 `document_id`、`workspace_id`、`source_uri`、`mime_type`、`hash`、`parser_id`、`parser_version`、`acl_scope` 和 `sensitivity_tags`。
-- `DocumentBlock` 已记录 `block_id`、`type`、`text`、`source_span`、`acl_scope`、`sensitivity_tags` 和 `confidence`。
+- `CanonicalDocumentIR.metadata` 已记录 `document_id`、`source_id`、`workspace_id`、`source_uri`、`mime_type`、`hash`、`source_sha256`、`parser_id`、`parser_version`、`parser_config_hash`、`document_version_id`、`schema_version` / `ir_schema_version`、`parent_document_version_id`、`derived_from`、`asset_refs`、`redaction_status`、`retention_policy`、fallback、target-blocked、`acl_scope` 和 `sensitivity_tags`。
+- `DocumentBlock` 已记录 `block_id`、`type`、`text`、`source_span`、`language`、`code_fence`、block metadata、`acl_scope`、`sensitivity_tags` 和 `confidence`。
 - `SourceSpan` 已能表达 page、slide、sheet、line range、bbox、section path 和 table cell。
+- `ParserAdapterContract` 和 `ParserAdapter` 已能表达 `supports`、`parse`、`diagnostics`、`capabilities`、`blocked_reason`、capability status 和 external dependency boundary。
 - `ParseGateway` 已提供 `parse_document()`、`submit_parse_job()`、`get_job_status()`、`get_job_snapshot()` 和 retry 相关本地 runtime surface。
+- `ParseGateway` 已对 unknown format 返回稳定 fallback diagnostics，并对 target-blocked adapter 返回稳定 warning diagnostics；这不表示外部 parser / OCR / VLM 已成为 Current。
 - parser matrix 已覆盖 `pdf / docx / pptx / xlsx / txt / md / csv / json / html / image / scanned / code`。PDF、Office、OCR / VLM 等生产级能力仍有 target-blocked 边界，不能写成完整 Current。
 - `KnowledgeIndexRuntime` 已能把 `CanonicalDocumentIR` 转为本地 BM25 / vector / graph index job，并产生 `IndexJobManifest`、retrieval payload、source provenance、ACL scopes、sensitivity tags 和 adapter status。
 - `WorkspaceTaskRuntimeService.create_ingest_job()` 当前仍通过 `_document_from_file()` 把 workspace file 包装成 `workspace_text_runtime` 单 block 文档后直接 index，没有走 `ParseGateway.submit_parse_job()`。这是 Program 1 必须关闭的产品闭环缺口。

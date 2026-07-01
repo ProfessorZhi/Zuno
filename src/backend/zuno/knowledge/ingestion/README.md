@@ -1,21 +1,22 @@
 # Knowledge Ingestion 边界
 
-PHASE04 status: runtime-current-production-target
+PHASE02/04 status: contract-current-runtime-current-production-target
 
 ## 当前角色
 
 `knowledge/ingestion/` 是 Document Ingestion / Parse Gateway 的正式 owner 入口。当前已经落地的是可测试 runtime owner surface：
 
 - Parser Capability Matrix：登记格式、默认 parser、fallback、结构保留、证据锚点、timeout、resource budget 和 sandbox policy。
-- Canonical Document IR：统一 document metadata、block、table、figure、source span、ACL、sensitivity tags 和 provenance。
+- Parser adapter contract：每个 adapter 都能表达 `supports`、`parse`、`diagnostics`、`capabilities`、`blocked_reason`、`capability_status` 和 external dependency boundary。
+- Canonical Document IR：统一 document metadata、block、table、figure、source span、ACL、sensitivity tags 和 provenance；metadata 当前已包含 `source_id`、`source_sha256`、`document_version_id`、`parser_config_hash`、`schema_version` / `ir_schema_version`、`derived_from`、`asset_refs`、`redaction_status`、`retention_policy`、fallback 和 target-blocked 字段。
 - Parser router contract：按文件扩展名或格式选择 native、Docling/PyMuPDF、MinerU/OCR/VLM 或 Unstructured/MarkItDown 路径。
 - Index handoff payload：把 Document IR block 归一给 BM25、vector、GraphRAG、evidence 和 citation。
 - Parser adapter registry：把 `native`、`docling_pymupdf`、`mineru_ocr_vlm` 和 `unstructured_markitdown` 作为可调度 adapter surface 管起来。
-- Parse Gateway runtime：`ParseGateway` 能从 `source_text`、`source_bytes` 或 `file://` fixture 生成 `CanonicalDocumentIR`、parser diagnostics、job status 和 index handoff。
+- Parse Gateway runtime：`ParseGateway` 能从 `source_text`、`source_bytes` 或 `file://` fixture 生成 `CanonicalDocumentIR`、parser diagnostics、job status 和 index handoff；unknown format 会返回稳定 fallback diagnostics，target-blocked adapter 会返回稳定 warning diagnostics。
 - Legacy chunk normalizer：旧 `ChunkModel` 可归一为 `CanonicalDocumentIR`，为旧 pipeline 迁移留出明确 seam。
 - Parser golden fixture manifest：登记 PDF 表格、扫描件、PPTX、DOCX、XLSX、代码和 Markdown 链接的验收样例，并绑定真实 `input_path`。
 
-当前 production parser runtime 仍在 `platform/services/convert_files/`、`platform/services/pipeline/` 和 `platform/services/rag/` 等旧路径中；PHASE04 不迁移这些重 runtime，也不把生产级 Docling / MinerU / Unstructured 平台写成 Current。
+当前 production parser runtime 仍在 `platform/services/convert_files/`、`platform/services/pipeline/` 和 `platform/services/rag/` 等旧路径中；本目录不迁移这些重 runtime，也不把生产级 Docling / MinerU / Unstructured / OCR / VLM 平台写成 Current。
 
 ## Target role
 

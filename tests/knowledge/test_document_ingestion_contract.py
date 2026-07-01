@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import hashlib
+import json
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -65,6 +67,24 @@ def test_parser_adapter_contracts_mark_external_engines_as_target_boundary() -> 
         assert contract.blocked_reason
 
 
+def test_parser_adapter_contract_exposes_runtime_operations_and_capabilities() -> None:
+    from zuno.knowledge.ingestion import PARSER_ADAPTER_CONTRACTS, get_parser_adapter
+
+    native_contract = PARSER_ADAPTER_CONTRACTS["native"]
+    assert native_contract.operations == ["supports", "parse", "diagnostics", "capabilities"]
+    assert native_contract.capability_status == "current"
+    assert "md" in native_contract.capabilities
+
+    native_adapter = get_parser_adapter("native")
+    assert native_adapter.supports("md") is True
+    assert native_adapter.supports("pdf") is False
+    assert "code" in native_adapter.capabilities()
+
+    blocked_contract = PARSER_ADAPTER_CONTRACTS["mineru_ocr_vlm"]
+    assert blocked_contract.capability_status == "target-blocked"
+    assert blocked_contract.blocked_reason
+
+
 def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
     from zuno.knowledge.ingestion import (
         CanonicalDocumentIR,
@@ -111,6 +131,51 @@ def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
     assert dumped["blocks"][0]["source_span"]["bbox"] == [10.0, 20.0, 300.0, 360.0]
     assert dumped["blocks"][0]["acl_scope"] == "workspace"
     assert dumped["provenance"]["parser_id"] == "docling_pymupdf"
+
+
+def test_parse_gateway_freezes_document_version_and_schema_fields() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    source_text = "# Policy\nRenewal notice is required."
+    parser_config = {"chunking": "line", "normalizer": "deterministic"}
+    source_sha256 = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+    parser_config_hash = hashlib.sha256(
+        json.dumps(parser_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_policy",
+            source_id="source_policy_md",
+            workspace_id="workspace_contract",
+            source_uri="file://policies/renewal.md",
+            mime_type="text/markdown",
+            source_text=source_text,
+            parser_version="contract-v2",
+            parser_config=parser_config,
+            asset_refs=["file://policies/renewal.md"],
+            retention_policy="workspace_default",
+            redaction_status="raw",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    metadata = result.document.metadata
+    assert metadata.source_id == "source_policy_md"
+    assert metadata.source_sha256 == source_sha256
+    assert metadata.parser_config_hash == parser_config_hash
+    assert metadata.schema_version == "canonical-document-ir-v1"
+    assert metadata.ir_schema_version == "canonical-document-ir-v1"
+    assert metadata.document_version_id == (
+        "doc_policy:"
+        f"{source_sha256}:native:contract-v2:{parser_config_hash}:canonical-document-ir-v1"
+    )
+    assert metadata.parent_document_version_id is None
+    assert metadata.derived_from == []
+    assert metadata.asset_refs == ["file://policies/renewal.md"]
+    assert metadata.redaction_status == "raw"
+    assert metadata.retention_policy == "workspace_default"
 
 
 def test_index_handoff_payload_targets_retrieval_graphrag_and_citation() -> None:

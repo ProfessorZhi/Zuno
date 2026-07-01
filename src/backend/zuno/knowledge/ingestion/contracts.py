@@ -22,6 +22,16 @@ class ParserAdapterContract(BaseModel):
     parser_id: str
     family: str
     supported_formats: list[str] = Field(default_factory=list)
+    operations: list[str] = Field(
+        default_factory=lambda: ["supports", "parse", "diagnostics", "capabilities"]
+    )
+    capabilities: list[str] = Field(default_factory=list)
+    capability_status: Literal[
+        "current",
+        "fallback-current",
+        "target-blocked",
+        "unknown-needs-test",
+    ] = "current"
     timeout_seconds: int
     resource_budget: dict[str, Any] = Field(default_factory=dict)
     sandbox_policy: str
@@ -44,12 +54,27 @@ class SourceSpan(BaseModel):
 
 class DocumentMetadata(BaseModel):
     document_id: str
+    source_id: str | None = None
     workspace_id: str
     source_uri: str
     mime_type: str
     hash: str
+    source_sha256: str = ""
     parser_id: str
     parser_version: str
+    parser_config_hash: str = ""
+    document_version_id: str = ""
+    schema_version: str = "canonical-document-ir-v1"
+    ir_schema_version: str = "canonical-document-ir-v1"
+    parent_document_version_id: str | None = None
+    derived_from: list[str] = Field(default_factory=list)
+    asset_refs: list[str] = Field(default_factory=list)
+    redaction_status: str = "raw"
+    retention_policy: str | None = None
+    fallback_used: bool = False
+    fallback_reason: str | None = None
+    target_blocked: bool = False
+    blocked_reason: str | None = None
     acl_scope: str = "workspace"
     sensitivity_tags: list[str] = Field(default_factory=list)
 
@@ -59,6 +84,9 @@ class DocumentBlock(BaseModel):
     type: str
     text: str
     source_span: SourceSpan = Field(default_factory=SourceSpan)
+    language: str | None = None
+    code_fence: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
     acl_scope: str = "workspace"
     sensitivity_tags: list[str] = Field(default_factory=list)
     confidence: float = 1.0
@@ -108,10 +136,12 @@ class ParserDiagnostic(BaseModel):
     severity: Literal["info", "warning", "error"] = "info"
     parser_id: str | None = None
     format: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ParseDocumentRequest(BaseModel):
     document_id: str
+    source_id: str | None = None
     workspace_id: str
     source_uri: str
     mime_type: str
@@ -121,6 +151,15 @@ class ParseDocumentRequest(BaseModel):
     acl_scope: str = "workspace"
     sensitivity_tags: list[str] = Field(default_factory=list)
     parser_version: str = "phase04-runtime-v1"
+    parser_config: dict[str, Any] = Field(default_factory=dict)
+    parser_config_hash: str | None = None
+    schema_version: str = "canonical-document-ir-v1"
+    ir_schema_version: str = "canonical-document-ir-v1"
+    parent_document_version_id: str | None = None
+    derived_from: list[str] = Field(default_factory=list)
+    asset_refs: list[str] = Field(default_factory=list)
+    redaction_status: str = "raw"
+    retention_policy: str | None = None
 
 
 class IndexHandoffPayload(BaseModel):

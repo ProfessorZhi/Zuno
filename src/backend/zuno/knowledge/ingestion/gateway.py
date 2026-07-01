@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import time
 from pathlib import Path
@@ -23,7 +24,15 @@ from .contracts import (
     ParserJobMetrics,
     SourceSpan,
 )
-from .router import PARSER_ADAPTER_CONTRACTS, build_index_handoff_payload, select_parser_for_format
+from .router import (
+    PARSER_ADAPTER_CONTRACTS,
+    PARSER_CAPABILITY_MATRIX,
+    build_index_handoff_payload,
+    select_parser_for_format,
+)
+
+
+IR_SCHEMA_VERSION = "canonical-document-ir-v1"
 
 
 class ParseGateway:
@@ -79,6 +88,8 @@ class ParseGateway:
     def parse_document(cls, request: ParseDocumentRequest) -> ParseDocumentResult:
         capability = select_parser_for_format(request.source_uri or request.mime_type)
         parser_id = capability.default_parser
+        known_format = capability.format in PARSER_CAPABILITY_MATRIX
+        adapter_contract = PARSER_ADAPTER_CONTRACTS.get(parser_id)
         diagnostics = [
             ParserDiagnostic(
                 code="parser_selected",
@@ -87,12 +98,43 @@ class ParseGateway:
                 format=capability.format,
             )
         ]
+        if not known_format:
+            diagnostics.append(
+                ParserDiagnostic(
+                    code="unknown_format_fallback",
+                    message=f"Unknown format {capability.format}; using deterministic fallback parser.",
+                    severity="warning",
+                    parser_id=parser_id,
+                    format=capability.format,
+                    metadata={
+                        "fallback_used": True,
+                        "fallback_reason": capability.fallback_reason,
+                    },
+                )
+            )
+        if adapter_contract and adapter_contract.external_dependency_status == "target_blocked":
+            diagnostics.append(
+                ParserDiagnostic(
+                    code="target_blocked_adapter",
+                    message=adapter_contract.blocked_reason or "External parser dependency is not available.",
+                    severity="warning",
+                    parser_id=parser_id,
+                    format=capability.format,
+                    metadata={
+                        "external_dependency_status": adapter_contract.external_dependency_status,
+                        "production_target": adapter_contract.production_target,
+                    },
+                )
+            )
+        parser_config_hash = cls._parser_config_hash(request)
         job_id = f"parse_{uuid4().hex[:12]}"
 
         try:
             source_text = cls._source_text(request)
             if not source_text.strip():
                 raise ValueError("empty source content")
+            source_sha256 = cls._source_sha256(request, source_text)
+            ir_schema_version = request.ir_schema_version or IR_SCHEMA_VERSION
 
             adapter = get_parser_adapter(parser_id)
             blocks, tables, figures, warnings, confidence = adapter.parse(
@@ -112,12 +154,42 @@ class ParseGateway:
             )
             metadata = DocumentMetadata(
                 document_id=request.document_id,
+                source_id=request.source_id or request.document_id,
                 workspace_id=request.workspace_id,
                 source_uri=request.source_uri,
                 mime_type=request.mime_type,
-                hash=request.hash or hashlib.sha256(source_text.encode("utf-8")).hexdigest(),
+                hash=request.hash or source_sha256,
+                source_sha256=source_sha256,
                 parser_id=parser_id,
                 parser_version=request.parser_version,
+                parser_config_hash=parser_config_hash,
+                document_version_id=cls._document_version_id(
+                    document_id=request.document_id,
+                    source_sha256=source_sha256,
+                    parser_id=parser_id,
+                    parser_version=request.parser_version,
+                    parser_config_hash=parser_config_hash,
+                    ir_schema_version=ir_schema_version,
+                ),
+                schema_version=request.schema_version or ir_schema_version,
+                ir_schema_version=ir_schema_version,
+                parent_document_version_id=request.parent_document_version_id,
+                derived_from=list(request.derived_from),
+                asset_refs=list(request.asset_refs),
+                redaction_status=request.redaction_status,
+                retention_policy=request.retention_policy,
+                fallback_used=not known_format,
+                fallback_reason=capability.fallback_reason if not known_format else None,
+                target_blocked=bool(
+                    adapter_contract
+                    and adapter_contract.external_dependency_status == "target_blocked"
+                ),
+                blocked_reason=(
+                    adapter_contract.blocked_reason
+                    if adapter_contract
+                    and adapter_contract.external_dependency_status == "target_blocked"
+                    else None
+                ),
                 acl_scope=request.acl_scope,
                 sensitivity_tags=list(request.sensitivity_tags),
             )
@@ -220,8 +292,9 @@ class ParseGateway:
             return result.failure.parser_id
         return fallback_parser_id
 
-    @staticmethod
+    @classmethod
     def _source_provenance(
+        cls,
         result: ParseDocumentResult,
         request: ParseDocumentRequest,
         parser_id: str,
@@ -230,24 +303,35 @@ class ParseGateway:
             metadata = result.document.metadata
             return {
                 "document_id": metadata.document_id,
+                "source_id": metadata.source_id,
                 "workspace_id": metadata.workspace_id,
                 "source_uri": metadata.source_uri,
                 "mime_type": metadata.mime_type,
                 "hash": metadata.hash,
+                "source_sha256": metadata.source_sha256,
                 "parser_id": metadata.parser_id,
                 "parser_version": metadata.parser_version,
+                "parser_config_hash": metadata.parser_config_hash,
+                "document_version_id": metadata.document_version_id,
+                "schema_version": metadata.schema_version,
+                "ir_schema_version": metadata.ir_schema_version,
                 "acl_scope": metadata.acl_scope,
                 "sensitivity_tags": list(metadata.sensitivity_tags),
                 "confidence": result.document.provenance.confidence,
             }
         return {
             "document_id": request.document_id,
+            "source_id": request.source_id or request.document_id,
             "workspace_id": request.workspace_id,
             "source_uri": request.source_uri,
             "mime_type": request.mime_type,
             "hash": request.hash,
+            "source_sha256": request.hash,
             "parser_id": parser_id,
             "parser_version": request.parser_version,
+            "parser_config_hash": cls._parser_config_hash(request),
+            "schema_version": request.schema_version,
+            "ir_schema_version": request.ir_schema_version,
             "acl_scope": request.acl_scope,
             "sensitivity_tags": list(request.sensitivity_tags),
         }
@@ -265,6 +349,42 @@ class ParseGateway:
                 path_text = path_text[1:]
             return Path(path_text).read_text(encoding="utf-8", errors="ignore")
         return ""
+
+    @staticmethod
+    def _parser_config_hash(request: ParseDocumentRequest) -> str:
+        if request.parser_config_hash:
+            return request.parser_config_hash
+        payload = json.dumps(request.parser_config, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _source_sha256(request: ParseDocumentRequest, source_text: str) -> str:
+        if request.source_bytes is not None:
+            return hashlib.sha256(request.source_bytes).hexdigest()
+        if source_text:
+            return hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+        return request.hash or ""
+
+    @staticmethod
+    def _document_version_id(
+        *,
+        document_id: str,
+        source_sha256: str,
+        parser_id: str,
+        parser_version: str,
+        parser_config_hash: str,
+        ir_schema_version: str,
+    ) -> str:
+        return ":".join(
+            [
+                document_id,
+                source_sha256,
+                parser_id,
+                parser_version,
+                parser_config_hash,
+                ir_schema_version,
+            ]
+        )
 
     @classmethod
     def _parse_blocks(

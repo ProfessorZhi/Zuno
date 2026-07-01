@@ -1,7 +1,8 @@
 # PHASE02 Document IR 与 Parser Contract 冻结
 
-status: planned
+status: completed
 program: zuno-production-document-ingestion-and-thread-foundation-v1
+completed_at: 2026-07-01
 
 ## 目标
 
@@ -81,6 +82,74 @@ python .agent/scripts/verify_agent_system.py
 - parser capability matrix。
 - target-blocked adapter 清单。
 - focused test 结果。
+
+## PHASE02 证据
+
+### TDD red 证据
+
+先写 tests 后实现，第一次 focused run 失败点符合预期：
+
+- `tests/knowledge/test_document_ingestion_contract.py::test_parser_adapter_contract_exposes_runtime_operations_and_capabilities`：缺 `ParserAdapterContract.operations`。
+- `tests/knowledge/test_document_ingestion_contract.py::test_parse_gateway_freezes_document_version_and_schema_fields`：缺 `DocumentMetadata.source_id` 等 version 字段。
+- `tests/knowledge/test_parse_gateway_runtime.py::test_parse_gateway_unknown_format_returns_stable_fallback_diagnostics`：缺 `fallback_used`。
+- `tests/knowledge/test_parse_gateway_runtime.py::test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic`：缺 `target_blocked`。
+
+### 新增 / 更新 tests
+
+- `test_parser_adapter_contract_exposes_runtime_operations_and_capabilities`
+- `test_parse_gateway_freezes_document_version_and_schema_fields`
+- `test_parse_gateway_unknown_format_returns_stable_fallback_diagnostics`
+- `test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic`
+
+### Document IR 字段表
+
+| 对象 | Current 字段 |
+| --- | --- |
+| `DocumentMetadata` | `document_id`、`source_id`、`workspace_id`、`source_uri`、`mime_type`、`hash`、`source_sha256`、`parser_id`、`parser_version`、`parser_config_hash`、`document_version_id`、`schema_version`、`ir_schema_version`、`parent_document_version_id`、`derived_from`、`asset_refs`、`redaction_status`、`retention_policy`、`fallback_used`、`fallback_reason`、`target_blocked`、`blocked_reason`、`acl_scope`、`sensitivity_tags`。 |
+| `DocumentBlock` | `block_id`、`type`、`text`、`source_span`、`language`、`code_fence`、`metadata`、`acl_scope`、`sensitivity_tags`、`confidence`。 |
+| `ParserDiagnostic` | `code`、`message`、`severity`、`parser_id`、`format`、`metadata`。 |
+
+### Version / hash / config / schema
+
+- `source_sha256`：从 `source_bytes` 或 `source_text` 计算；无内容时保留 request hash。
+- `parser_config_hash`：对 `ParseDocumentRequest.parser_config` 做 canonical JSON 后 sha256；request 显式传入 hash 时优先使用。
+- `schema_version` / `ir_schema_version`：当前默认 `canonical-document-ir-v1`。
+- `document_version_id` local contract：`document_id:source_sha256:parser_id:parser_version:parser_config_hash:ir_schema_version`。
+- `parent_document_version_id`、`derived_from`、`asset_refs`、`redaction_status`、`retention_policy` 已进入 Current contract；生产 artifact store 和 version DB 仍是 Target。
+
+### Parser capability matrix
+
+- `native`：`current`，支持 `txt / md / csv / json / html / code`，并暴露 `supports()`、`capabilities()`、`diagnostics()`。
+- `docling_pymupdf`：`target-blocked`，支持 `pdf` 的 contract surface，但生产 worker 未部署。
+- `mineru_ocr_vlm`：`target-blocked`，支持 `image / scanned` 的 contract surface，但 OCR / VLM runtime 未部署。
+- `unstructured_markitdown`：`target-blocked`，支持 `docx / pptx / xlsx / unknown` 的 deterministic fallback surface，生产 worker 未部署。
+
+### Diagnostics / fallback / blocked evidence
+
+- unknown format 现在返回 `unknown_format_fallback` warning diagnostic，并在 `DocumentMetadata` 标记 `fallback_used=True` 与 `fallback_reason`。
+- target-blocked adapter 现在返回 `target_blocked_adapter` warning diagnostic，并在 `DocumentMetadata` 标记 `target_blocked=True` 与 `blocked_reason`。
+- 该实现只冻结 local contract；不会把 Docling、Unstructured、MinerU、OCR 或 VLM 写成 Current。
+
+### 修改文件
+
+- `src/backend/zuno/knowledge/ingestion/contracts.py`
+- `src/backend/zuno/knowledge/ingestion/adapters.py`
+- `src/backend/zuno/knowledge/ingestion/router.py`
+- `src/backend/zuno/knowledge/ingestion/gateway.py`
+- `src/backend/zuno/knowledge/ingestion/README.md`
+- `docs/architecture/document-ingestion-foundation.md`
+- `tests/knowledge/test_document_ingestion_contract.py`
+- `tests/knowledge/test_parse_gateway_runtime.py`
+
+### Focused test 结果
+
+```powershell
+pytest -q tests/knowledge/test_document_ingestion_contract.py -p no:cacheprovider
+# 8 passed
+
+pytest -q tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+# 16 passed
+```
 
 ## 停止条件
 

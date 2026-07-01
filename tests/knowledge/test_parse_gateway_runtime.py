@@ -140,6 +140,52 @@ def test_parse_gateway_failure_is_traceable_and_does_not_swallow_errors() -> Non
     assert result.diagnostics[-1].code == "parse_failed"
 
 
+def test_parse_gateway_unknown_format_returns_stable_fallback_diagnostics() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_unknown",
+            workspace_id="workspace_phase02",
+            source_uri="file://uploads/archive.bin",
+            mime_type="application/octet-stream",
+            source_text="Long tail content that should use a deterministic fallback.",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert result.document.metadata.parser_id == "unstructured_markitdown"
+    assert result.document.metadata.fallback_used is True
+    assert result.document.metadata.fallback_reason == "unknown format"
+    assert any(diagnostic.code == "unknown_format_fallback" for diagnostic in result.diagnostics)
+
+
+def test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_scan",
+            workspace_id="workspace_phase02",
+            source_uri="file://scans/invoice.png",
+            mime_type="image/png",
+            source_text="OCR placeholder text",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert result.document.metadata.parser_id == "mineru_ocr_vlm"
+    assert result.document.metadata.target_blocked is True
+    assert result.document.metadata.blocked_reason
+    blocked_diagnostic = next(
+        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "target_blocked_adapter"
+    )
+    assert blocked_diagnostic.severity == "warning"
+    assert blocked_diagnostic.metadata["external_dependency_status"] == "target_blocked"
+
+
 def test_parse_gateway_records_parse_job_status_for_replay() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 

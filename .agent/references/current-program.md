@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-production-document-ingestion-and-thread-foundation-v1
-current_phase: PHASE02_document-ir-and-parser-contract-freeze.md
+current_phase: PHASE03_parser-worker-runtime-and-job-lifecycle.md
 latest_completed_program: zuno-production-architecture-and-deliverables-completion-v1
 
 `.agent/programs/` 当前处于 active program 状态。当前 active program 是：
@@ -13,7 +13,7 @@ latest_completed_program: zuno-production-architecture-and-deliverables-completi
 
 该 program 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的 Program 1。它负责把企业知识库文档解析与索引交接地基做清楚、做扎实，并准备 Program 2 多线程施工的目标模式提示词、分支边界和验收闸门。企业知识库文档入口的正式架构契约是 `docs/architecture/document-ingestion-foundation.md`；Program 1 必须把 workspace ingest 接入 ParseGateway 的 local runtime gap 作为核心验收项。
 
-成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。本轮继续保留 runtime-first / vertical-slice-first 验收规则：只写 contract、schema 或 README 不能关闭 runtime phase。Current 必须来自代码、focused tests、trace、eval、verifier 或可复现证据。PHASE01 已完成只读审计；当前进入 PHASE02。
+成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。本轮继续保留 runtime-first / vertical-slice-first 验收规则：只写 contract、schema 或 README 不能关闭 runtime phase。Current 必须来自代码、focused tests、trace、eval、verifier 或可复现证据。PHASE01 和 PHASE02 已完成；当前进入 PHASE03。
 
 ## 当前 Active Program 文件
 
