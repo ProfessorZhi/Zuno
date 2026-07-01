@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE03_workflow-self-maintenance-automation
+current_phase: PHASE04_documentation-dedup-architecture-clarity
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE03_workflow-self-maintenance-automation
 
 ## 当前阶段
 
-- 当前 phase：`PHASE03_workflow-self-maintenance-automation`
-- 当前动作：把长期规则写回、program open/close、docs sync、history archive 和 verifier 更新做成自维护闭环。
-- 当前验收：PHASE03 只有在 workflow 更新规则有入口、模板、verifier 和 repo test 覆盖后才能关闭。
+- 当前 phase：`PHASE04_documentation-dedup-architecture-clarity`
+- 当前动作：压缩前台文档重复，保证 architecture / production-readiness / program / history 各司其职。
+- 当前验收：PHASE04 只有在前台文档入口少而精、架构描述和成熟度边界清楚、docs verifier / tests 覆盖去冗余规则后才能关闭。
 
 ## 最近完成基线
 

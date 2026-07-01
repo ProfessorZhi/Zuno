@@ -26,6 +26,8 @@ new work
 ### During work
 
 - 是否新增长期规则？
+- 是否留下规则分类证据，说明它是一条长期规则还是一次性指令？
+- 是否留下写回路径证据，说明哪些入口、reference、template、program、docs、verifier / tests 需要更新？
 - 是否影响 AGENTS.md？
 - 是否影响 `.agent/references`？
 - 是否影响 `.agent/templates`？
@@ -39,6 +41,7 @@ new work
 
 - 是否更新 `workflow-requirements.md`？
 - 是否更新 `workflow-change-log.md`？
+- 是否把规则分类证据和写回路径证据写入收口报告或 workflow change note？
 - 是否更新受影响模板？
 - 是否重新生成 architecture HTML？
 - 是否运行最小有效验证？

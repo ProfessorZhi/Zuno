@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-production-architecture-and-deliverables-completion-v1`
-- Current phase: `PHASE03_workflow-self-maintenance-automation`
+- Current phase: `PHASE04_documentation-dedup-architecture-clarity`
 - 最近完成 program: `zuno-target-architecture-runtime-full-implementation-v1`
 - 最近完成归档位置: `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 

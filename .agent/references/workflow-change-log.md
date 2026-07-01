@@ -17,6 +17,27 @@ date
 
 ## Current Truth
 
+### 2026-07-01: workflow rule evidence made machine-checkable
+
+Summary: 工作流规则变化必须留下规则分类证据和写回路径证据，并由 phase 收口模板、workflow change note、Agent verifier 和 repo test 共同检查。
+
+Reason: PHASE03 的目标是让工作流自我维护不依赖对话记忆。只写“以后注意”或只改一份 reference，无法证明未来 Agent 知道规则类型、写回路径和验证边界。
+
+Affected files:
+
+- `.agent/references/workflow-update-policy.md`
+- `.agent/references/workflow-requirements.md`
+- `.agent/references/workflow-maintenance-checklist.md`
+- `.agent/references/workflow-change-log.md`
+- `.agent/templates/workflow-change-note-template.md`
+- `.agent/templates/phase-closure-report.md`
+- `.agent/scripts/verify_agent_system.py`
+- `tests/repo/test_agent_system.py`
+
+Status: Current workflow truth for PHASE03 and later workflow-rule changes.
+
+Validation: 本条随 PHASE03 由 `git diff --check`、`python tools/agent/render_architecture.py --check`、`python .agent/scripts/verify_agent_system.py`、`python .agent/scripts/verify_doc_boundaries.py`、`powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1`、`python tools/scripts/verify_docs_entrypoints.py`、`python tools/scripts/verify_repo_structure.py` 和 focused repo tests 验证通过。
+
 ### 2026-06-30: runtime-full program archived and no-active restored
 
 Summary: 完成 `zuno-target-architecture-runtime-full-implementation-v1` 的 PHASE01-PHASE12，归档 program，并把 `.agent/programs/` 切回 no-active 等待态。

@@ -300,8 +300,59 @@ def test_agent_verifier_enforces_workflow_self_maintenance_contracts() -> None:
         "docs/history/programs",
         "## 自维护审查",
         "verify_architecture_mirror",
+        "verify_workflow_update_policy_requires_classification_evidence",
+        "verify_phase_closure_template_self_maintenance_contract",
     ]:
         assert phrase in content
+
+
+def test_workflow_update_policy_requires_classification_and_writeback_evidence() -> None:
+    content = (REPO_ROOT / ".agent/references/workflow-update-policy.md").read_text(
+        encoding="utf-8"
+    )
+    template = (REPO_ROOT / ".agent/templates/workflow-change-note-template.md").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "规则分类证据",
+        "写回路径证据",
+        "one-time instruction",
+        "reusable project rule",
+        "architecture governance rule",
+        "Codex execution rule",
+        "documentation template rule",
+        "long-term workflow rule",
+    ]:
+        assert phrase in content + template
+
+
+def test_phase_closure_template_self_maintenance_review_is_not_duplicate() -> None:
+    content = (REPO_ROOT / ".agent/templates/phase-closure-report.md").read_text(
+        encoding="utf-8"
+    )
+    self_review = content.split("## 自维护审查", 1)[1].split("## 剩余风险", 1)[0]
+
+    checklist_items = [
+        line.strip()
+        for line in self_review.splitlines()
+        if line.strip().startswith("- ")
+    ]
+    assert len(checklist_items) == len(set(checklist_items))
+    for phrase in [
+        "`AGENTS.md`",
+        "`.agent/system.yaml`",
+        "`.agent/references/`",
+        "`.agent/templates/`",
+        "`.agent/programs/`",
+        "`docs/history/programs/`",
+        "`docs/architecture/architecture.md`",
+        "`.agent/architecture/architecture.md`",
+        "`docs/architecture/architecture.html`",
+        "`.agent/architecture/architecture.html`",
+        "verifier / tests",
+    ]:
+        assert phrase in self_review
 
 
 def test_system_yaml_tracks_current_architecture_docs_sync() -> None:

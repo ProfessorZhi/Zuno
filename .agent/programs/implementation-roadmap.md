@@ -2,7 +2,7 @@
 
 program: `zuno-production-architecture-and-deliverables-completion-v1`
 state: active
-current_phase: `PHASE03_workflow-self-maintenance-automation`
+current_phase: `PHASE04_documentation-dedup-architecture-clarity`
 
 ## 核心目标
 

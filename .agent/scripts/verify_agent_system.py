@@ -193,7 +193,15 @@ TEMPLATE_REQUIRED_SECTIONS = {
     "mermaid-diagram-template.md": ["## Diagram Name", "## Mermaid Block", "## Validation"],
     "architecture-change-note-template.md": ["## Change Summary", "## Docs Updated", "## Validation"],
     "verification-report-template.md": ["## Commands", "## Results", "## Remaining Risk"],
-    "workflow-change-note-template.md": ["Change Summary", "Trigger", "Affected Workflow Files", "Validation"],
+    "workflow-change-note-template.md": [
+        "Change Summary",
+        "Trigger",
+        "Requirement Type",
+        "规则分类证据",
+        "写回路径证据",
+        "Affected Workflow Files",
+        "Validation",
+    ],
 }
 
 SELF_MAINTENANCE_GUARDS = [
@@ -206,6 +214,8 @@ SELF_MAINTENANCE_GUARDS = [
     "workflow-change-log.md",
     "docs/history/programs",
     "## 自维护审查",
+    "verify_workflow_update_policy_requires_classification_evidence",
+    "verify_phase_closure_template_self_maintenance_contract",
 ]
 
 
@@ -478,6 +488,81 @@ def verify_workflow_change_log_entries(repo_root: Path = REPO_ROOT) -> list[str]
     return []
 
 
+def verify_workflow_update_policy_requires_classification_evidence(
+    repo_root: Path = REPO_ROOT,
+) -> list[str]:
+    errors: list[str] = []
+    policy = (repo_root / ".agent/references/workflow-update-policy.md").read_text(
+        encoding="utf-8"
+    )
+    requirements = (repo_root / ".agent/references/workflow-requirements.md").read_text(
+        encoding="utf-8"
+    )
+    checklist = (repo_root / ".agent/references/workflow-maintenance-checklist.md").read_text(
+        encoding="utf-8"
+    )
+    template = (repo_root / ".agent/templates/workflow-change-note-template.md").read_text(
+        encoding="utf-8"
+    )
+    combined = policy + requirements + checklist + template
+    for phrase in [
+        "规则分类证据",
+        "写回路径证据",
+        "one-time instruction",
+        "reusable project rule",
+        "architecture governance rule",
+        "Codex execution rule",
+        "documentation template rule",
+        "long-term workflow rule",
+        "AGENTS.md",
+        ".agent/references/",
+        ".agent/templates/",
+        ".agent/programs/",
+        "docs/architecture/",
+        "verifier / tests",
+    ]:
+        if phrase not in combined:
+            errors.append(f"workflow update policy evidence contract missing phrase: {phrase}")
+    for section in ["## 规则分类证据", "## 写回路径证据"]:
+        if section not in template:
+            errors.append(f"workflow-change-note-template.md missing section: {section}")
+    return errors
+
+
+def verify_phase_closure_template_self_maintenance_contract(
+    repo_root: Path = REPO_ROOT,
+) -> list[str]:
+    errors: list[str] = []
+    path = repo_root / ".agent/templates/phase-closure-report.md"
+    content = path.read_text(encoding="utf-8")
+    if "## 自维护审查" not in content or "## 剩余风险" not in content:
+        return ["phase-closure-report.md missing self-maintenance or risk section"]
+    self_review = content.split("## 自维护审查", 1)[1].split("## 剩余风险", 1)[0]
+    checklist_items = [
+        line.strip()
+        for line in self_review.splitlines()
+        if line.strip().startswith("- ")
+    ]
+    if len(checklist_items) != len(set(checklist_items)):
+        errors.append("phase-closure-report.md self-maintenance checklist has duplicate items")
+    for phrase in [
+        "`AGENTS.md`",
+        "`.agent/system.yaml`",
+        "`.agent/references/`",
+        "`.agent/templates/`",
+        "`.agent/programs/`",
+        "`docs/history/programs/`",
+        "`docs/architecture/architecture.md`",
+        "`.agent/architecture/architecture.md`",
+        "`docs/architecture/architecture.html`",
+        "`.agent/architecture/architecture.html`",
+        "verifier / tests",
+    ]:
+        if phrase not in self_review:
+            errors.append(f"phase-closure-report.md self-maintenance missing item: {phrase}")
+    return errors
+
+
 def verify_architecture_mirror(repo_root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
     docs_md = repo_root / "docs/architecture/architecture.md"
@@ -521,6 +606,8 @@ def main() -> int:
     errors.extend(verify_templates_are_skeletons())
     errors.extend(verify_program_lifecycle_surfaces())
     errors.extend(verify_workflow_change_log_entries())
+    errors.extend(verify_workflow_update_policy_requires_classification_evidence())
+    errors.extend(verify_phase_closure_template_self_maintenance_contract())
     errors.extend(verify_architecture_mirror())
     errors.extend(verify_phase05_context_memory_verification_map())
     errors.extend(verify_phase06_capability_toolcard_verification_map())

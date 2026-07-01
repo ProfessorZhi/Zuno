@@ -30,6 +30,11 @@ new user requirement
 - Current / Target / Future / History 定义被细化。
 - AGENTS.md、`.agent/references`、`docs/architecture`、`architecture.html` 之间出现不一致。
 
+每次工作流规则变化都必须留下两类证据：
+
+- 规则分类证据：说明新要求属于 one-time instruction、reusable project rule、architecture governance rule、Codex execution rule、documentation template rule 或 long-term workflow rule 中哪一类，以及为什么不是一次性任务噪音。
+- 写回路径证据：说明是否需要更新 `AGENTS.md`、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、verifier / tests；不更新的路径也要写明原因。
+
 ## Update Targets
 
 | Target | When to update |
@@ -57,9 +62,10 @@ Agent Workflow Self-Maintenance 的最终效果是：用户提出长期规则后
 ## Before Editing
 
 1. 用一句话写出触发原因。
-2. 标记 requirement type：one-time instruction、project rule、architecture governance rule、Codex execution rule、template rule、long-term workflow rule。
+2. 标记 requirement type：one-time instruction、reusable project rule、architecture governance rule、Codex execution rule、documentation template rule、long-term workflow rule。
 3. 选择 update targets。
-4. 准备 workflow change log。
+4. 准备规则分类证据和写回路径证据。
+5. 准备 workflow change log。
 
 ## Allowed Changes
 
@@ -76,6 +82,7 @@ Agent Workflow Self-Maintenance 的最终效果是：用户提出长期规则后
 - 更新 requirements 但忘记 change log。
 - 更新 templates 但 system.yaml 没引用。
 - 更新 reference set 但 exact-set test 没改。
+- 只说“长期规则已沉淀”，但没有留下规则分类证据和写回路径证据。
 
 ## Debug Playbooks
 
@@ -96,6 +103,7 @@ pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
 - `.agent/references/workflow-requirements.md`
 - `.agent/references/workflow-change-log.md`
 - `.agent/templates/workflow-change-note-template.md`
+- `.agent/templates/phase-closure-report.md`
 
 ## Lessons Learned
 

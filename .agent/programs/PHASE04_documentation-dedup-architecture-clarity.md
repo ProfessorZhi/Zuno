@@ -1,6 +1,6 @@
 # PHASE04 Documentation Dedup Architecture Clarity
 
-status: pending
+status: active
 
 ## 目标
 

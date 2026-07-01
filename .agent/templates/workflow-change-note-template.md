@@ -12,6 +12,21 @@
 
 one-time instruction / reusable project rule / architecture governance rule / Codex execution rule / documentation template rule / long-term workflow rule
 
+## 规则分类证据
+
+- Requirement type:
+- Why it is / is not long-term:
+- Why the selected status is correct:
+
+## 写回路径证据
+
+- `AGENTS.md`:
+- `.agent/references/`:
+- `.agent/templates/`:
+- `.agent/programs/`:
+- `docs/architecture/`:
+- verifier / tests:
+
 ## Status
 
 Current / Target / Future / History
