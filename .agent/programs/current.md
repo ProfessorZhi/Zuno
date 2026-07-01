@@ -1,32 +1,37 @@
 # 当前程序
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-enterprise-document-ingestion-platform-v2
+current_phase: PHASE01_truth-source-and-gap-audit
 latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1
 
 ## 当前状态
 
-`.agent/programs/` 当前处于 no-active 等待态。上一轮 active program 已完成并归档：
+`.agent/programs/` 当前 active program 是 `zuno-enterprise-document-ingestion-platform-v2`，业务口径是 Program 1B / V2。上一轮 Program 1A 已完成并归档：
 
 - `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`
 
-该 program 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的 Program 1，已完成企业知识库文档入口地基：workspace ingest 进入 `ParseGateway.submit_parse_job()`，解析结果进入 `CanonicalDocumentIR`，parser job snapshot 进入 `KnowledgeIndexRuntime.index_document()`，index manifest 和 retrieval chunk 保留 parse lineage、document version、source hash、ACL、sensitivity 和 `citation_lineage`。
+Program 1A 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的已完成文档入口地基：workspace ingest 进入 `ParseGateway.submit_parse_job()`，解析结果进入 `CanonicalDocumentIR`，parser job snapshot 进入 `KnowledgeIndexRuntime.index_document()`，index manifest 和 retrieval chunk 保留 parse lineage、document version、source hash、ACL、sensitivity 和 `citation_lineage`。
 
-成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；Program 1 的展开契约以 `docs/architecture/document-ingestion-foundation.md` 和归档 closure summary 为准。
+Program 1B / V2 的目标是把 Program 1A 的 local runtime slice 升级为企业级文档输入与持久化平台雏形。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；文档输入层展开契约以 `docs/architecture/document-ingestion-foundation.md`、本 active phase 和归档 closure summary 为准。
 
-## 下一轮候选
+## 当前 phase
 
-Program 2-5 仍为 queued，不是当前 active program：
+- `PHASE01_truth-source-and-gap-audit.md`
+  - 状态：active。
+  - 模式：只读审计。
+  - 目标：确认 current gap matrix、storage target matrix、API compatibility map、dependency probe 和 PHASE02 输入清单。
 
-1. `zuno-enterprise-document-ingestion-platform-v2`
-   - 计划：`.agent/programs/queued-programs/PROGRAM02_enterprise-document-ingestion-platform-v2.md`
-2. `zuno-runtime-subsystems-parallel-v1`
+## 后续 queued program
+
+Program 3-5 仍为 queued，不是当前 active program：
+
+1. `zuno-runtime-subsystems-parallel-v1`
    - 计划：`.agent/programs/queued-programs/PROGRAM03_runtime-subsystems-parallel.md`
    - 可复用提示词归档：`docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/thread-prompts/`
-3. `zuno-agent-planning-integration-v1`
+2. `zuno-agent-planning-integration-v1`
    - 计划：`.agent/programs/queued-programs/PROGRAM04_agent-planning-integration.md`
-4. `zuno-enterprise-knowledge-eval-benchmark-v1`
+3. `zuno-enterprise-knowledge-eval-benchmark-v1`
    - 计划：`.agent/programs/queued-programs/PROGRAM05_enterprise-knowledge-eval-benchmark.md`
 
 ## 最近完成归档
@@ -38,8 +43,8 @@ Program 2-5 仍为 queued，不是当前 active program：
 
 ## 当前执行规则
 
-- no-active 状态下，`.agent/programs/` 根目录只保留 `current.md`、`README.md`、`implementation-roadmap.md` 和 `closure-checklist.md`；active phase 文件必须在 completed program archive 中。
+- active 状态下，`.agent/programs/` 根目录保留 `current.md`、`README.md`、`implementation-roadmap.md`、`closure-checklist.md` 和当前 active phase 文件。
 - queued program 只能放在 `.agent/programs/queued-programs/`，不得写成 active 或 completed。
-- 启动新 program 必须从 `PHASE01` 开始，并同步 `AGENTS.md`、README、`.agent/references/current-program.md`、verifier 和 repo tests。
+- Program 1B / V2 必须从 PHASE01 只读审计开始；runtime 代码修改从 PHASE02 开始。
 - Runtime Subsystems 多线程提示词归档为历史交接资产；真正启动 Program 3 子线程时仍必须重新确认 Codex UI 目标模式、worktree、branch、允许范围、禁止范围和验证闸门。
 - Codex 多线程是工程执行方式，不是 Zuno 产品 runtime 多 Agent 架构。Zuno 近期 runtime 主线仍是 Single Controller / Single `GeneralAgent`。

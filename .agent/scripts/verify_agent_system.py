@@ -65,6 +65,7 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
+    "PHASE01_truth-source-and-gap-audit.md",
 ]
 CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
 CURRENT_ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{CURRENT_ACTIVE_PROGRAM_NAME}"
@@ -80,7 +81,6 @@ CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
 ]
 QUEUED_PROGRAM_FILES = [
     "README.md",
-    "PROGRAM02_enterprise-document-ingestion-platform-v2.md",
     "PROGRAM03_runtime-subsystems-parallel.md",
     "PROGRAM04_agent-planning-integration.md",
     "PROGRAM05_enterprise-knowledge-eval-benchmark.md",
@@ -429,9 +429,9 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        "active_program: zuno-enterprise-document-ingestion-platform-v2",
+        "current_phase: PHASE01_truth-source-and-gap-audit",
         f"latest_completed_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
         CURRENT_ACTIVE_PROGRAM_ARCHIVE,
@@ -444,7 +444,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         ACTIVE_PROGRAM_ARCHIVE,
         "completed / archived",
         "PHASE01-PHASE12",
-        "no-active",
+        "PHASE01_truth-source-and-gap-audit",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",
@@ -461,10 +461,10 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         if phrase not in current + readme + roadmap + closure + current_reference + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names:
+    if active_phase_names != ["PHASE01_truth-source-and-gap-audit.md"]:
         errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
     if (repo_root / ".agent/programs/thread-prompts").exists():
-        errors.append(".agent/programs/thread-prompts must be archived when no active program is present")
+        errors.append(".agent/programs/thread-prompts must stay archived until Program 3 starts")
     for phase_name in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:
         phase_path = ingestion_archive_root / phase_name
         if not phase_path.exists():

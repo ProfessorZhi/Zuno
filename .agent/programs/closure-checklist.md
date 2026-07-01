@@ -1,9 +1,20 @@
 # Program Closure Checklist
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-enterprise-document-ingestion-platform-v2
+current_phase: PHASE01_truth-source-and-gap-audit
 latest_completed_program: `zuno-production-document-ingestion-and-thread-foundation-v1`
+
+## Program 1B / V2 当前启动闸门
+
+- [x] Program 1B / V2 已从 queued 切换为 active。
+- [x] 当前 phase 从 `PHASE01_truth-source-and-gap-audit.md` 开始。
+- [ ] PHASE01 完成 current gap matrix。
+- [ ] PHASE01 完成 storage target matrix。
+- [ ] PHASE01 完成 API compatibility map。
+- [ ] PHASE01 完成 dependency probe summary。
+- [ ] PHASE01 产出 PHASE02 focused test seed list。
+- [ ] PHASE01 验证、提交并推送。
 
 ## Program 1 收口结果
 
@@ -21,16 +32,16 @@ latest_completed_program: `zuno-production-document-ingestion-and-thread-foundat
 
 - [x] Program 1 只把真实可验证能力写成 Current。
 - [x] 生产 parser worker、深度 OCR/layout/table/code extraction、外部 index service 没接入前仍是 Target。
-- [x] Program 2-5 是 queued program，不是当前 active program。
+- [x] Program 3-5 是 queued program，不是当前 active program。
 - [x] Codex 多线程施工不写成 Zuno 产品 runtime 多 Agent 架构。
 - [x] Basic RAG / Static GraphRAG 只作为评测 baseline，不写成最终产品模式。
 - [x] 生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index 和 reconciler 没有代码证据前仍是 Target。
 
 ## 文档同步检查
 
-- [x] `.agent/programs/current.md` 与 no-active 状态一致。
+- [x] `.agent/programs/current.md` 与 Program 1B / V2 active 状态一致。
 - [x] `.agent/programs/implementation-roadmap.md` 覆盖 Program 1-5 的顺序、依赖和验收。
-- [x] `.agent/programs/queued-programs/` 中 Program 2-5 计划仍是 queued，不含 active 状态。
+- [x] `.agent/programs/queued-programs/` 中 Program 3-5 计划仍是 queued，不含 active 状态。
 - [x] `.agent/references/current-program.md` 与 `.agent/programs/current.md` 一致。
 - [x] `AGENTS.md` 和 README 当前 program 摘要一致。
 - [x] `docs/architecture/document-ingestion-foundation.md` 与 Program 1 closure evidence 一致。

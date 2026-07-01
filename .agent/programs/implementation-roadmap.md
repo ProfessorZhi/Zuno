@@ -1,8 +1,8 @@
 # Program Roadmap
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: `zuno-enterprise-document-ingestion-platform-v2`
+current_phase: `PHASE01_truth-source-and-gap-audit`
 latest_completed_program: `zuno-production-document-ingestion-and-thread-foundation-v1`
 
 ## 总套件
@@ -50,7 +50,7 @@ Remaining Target：
 
 Program ID：`zuno-enterprise-document-ingestion-platform-v2`
 
-状态：queued。计划文件：`.agent/programs/queued-programs/PROGRAM02_enterprise-document-ingestion-platform-v2.md`。
+状态：active。当前 phase：`.agent/programs/PHASE01_truth-source-and-gap-audit.md`。
 
 业务口径：这是 Program 1B / V2，不是重写或篡改已归档 Program 1A。Program 1A 已经完成 `workspace ingest -> ParseGateway -> Document IR -> Index Manifest -> Citation Lineage` local runtime slice；Program 1B / V2 的目标是把这条链路升级为企业级文档输入与持久化平台雏形。
 
@@ -72,7 +72,7 @@ Production Scale Target
   Postgres、object store、queue/outbox/worker、worker lease、external OCR/VLM、external index、SSO/RBAC/DLP、OTel/LangSmith、online eval 和多租户运维。
 ```
 
-Program 2 是当前最短路径。它先关闭文档输入层的事实源和重启恢复，再允许后续 Memory / Tool / Security / GraphRAG 四线程继续加能力。
+Program 2 是当前最短路径。它先关闭文档输入层的事实源和重启恢复，再允许后续 Memory / Tool / Security / GraphRAG 四线程继续加能力。当前 PHASE01 只做 truth source 与 gap audit，不修改 runtime。
 
 ## Program 3：Runtime Subsystems Parallel
 
@@ -109,14 +109,14 @@ Program ID：`zuno-enterprise-knowledge-eval-benchmark-v1`
 
 目标：建设企业知识库问答自动化评测系统，对同一 corpus 和 question set 比较 Basic RAG baseline、Static GraphRAG baseline 和 Agentic GraphRAG target。
 
-## 下一轮启动门槛
+## 当前 Program 1B / V2 启动门槛
 
-启动 Program 2 前必须：
+Program 1B / V2 已启动。PHASE01 执行前必须：
 
 1. 重新确认 worktree、branch、`git status --short --branch`、允许范围和禁止范围。
 2. 确认本轮目标是 Program 1B / V2 企业级文档输入与持久化平台，而不是启动四线程 Runtime Subsystems。
-3. 从 `PHASE01` 建立新的 active program truth source，并同步 verifier / tests。
-4. 只在 Program 2 closure 后刷新 Program 1 归档 thread prompts 并启动 Program 3。
+3. 只读审计 `WorkspaceTaskRuntimeService`、`ParseGateway`、`KnowledgeIndexRuntime`、platform storage / DB 和 tests。
+4. 只在 Program 2 closure 后刷新 Program 1A 归档 thread prompts 并启动 Program 3。
 
 ## 验证基线
 

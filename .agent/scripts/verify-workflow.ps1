@@ -40,6 +40,7 @@ Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
+Require-Path ".agent\programs\PHASE01_truth-source-and-gap-audit.md"
 Require-NoPath ".agent\programs\PHASE01_program-truth-source-and-parser-current-audit.md"
 Require-NoPath ".agent\programs\PHASE02_document-ir-and-parser-contract-freeze.md"
 Require-NoPath ".agent\programs\PHASE03_parser-worker-runtime-and-job-lifecycle.md"
@@ -50,7 +51,6 @@ Require-NoPath ".agent\programs\PHASE07_program2-thread-prompts-and-branch-plan.
 Require-NoPath ".agent\programs\PHASE08_verification-doc-sync-and-closure.md"
 Require-NoPath ".agent\programs\thread-prompts"
 Require-Path ".agent\programs\queued-programs\README.md"
-Require-Path ".agent\programs\queued-programs\PROGRAM02_enterprise-document-ingestion-platform-v2.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM03_runtime-subsystems-parallel.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM04_agent-planning-integration.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM05_enterprise-knowledge-eval-benchmark.md"
@@ -264,8 +264,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1") {
-    $failures.Add("current-program.md must declare no-active state and latest completed Program 1")
+if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "current_phase: PHASE01_truth-source-and-gap-audit" -or $currentProgram -notmatch "latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1") {
+    $failures.Add("current-program.md must declare active Program 1B/V2 state and latest completed Program 1A")
 }
 if ($currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
     $failures.Add("current-program.md missing Program 1A/1B and Program 3-5 suite queue")

@@ -117,7 +117,7 @@ workspace file
 
 Program 1A 的优势是链路语义、Document IR、parser contract、native parser fixtures、index manifest lineage 和 citation lineage 已经打通；不足是状态仍大多是 local / in-process / in-memory。
 
-下一轮 Program 1B / V2 是 `zuno-enterprise-document-ingestion-platform-v2`。它不改写 Program 1A 历史，而是把 local runtime slice 升级为企业级文档输入与持久化平台雏形：
+当前 active Program 1B / V2 是 `zuno-enterprise-document-ingestion-platform-v2`。它不改写 Program 1A 历史，而是把 local runtime slice 升级为企业级文档输入与持久化平台雏形：
 
 ```text
 文件对象存储
@@ -373,7 +373,7 @@ Program 1 已完成的最小可验收代码闭环：
 6. index manifest 增加 parse lineage
 ```
 
-以上是 Program 1A 已完成的 local runtime slice。企业级文档输入与持久化平台雏形进入 Program 1B / V2：`zuno-enterprise-document-ingestion-platform-v2`。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index platform 和 online eval 仍是 Production Scale Target。
+以上是 Program 1A 已完成的 local runtime slice。企业级文档输入与持久化平台雏形当前进入 Program 1B / V2：`zuno-enterprise-document-ingestion-platform-v2`。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index platform 和 online eval 仍是 Production Scale Target。
 
 ## 验证要求
 

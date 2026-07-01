@@ -47,7 +47,7 @@ Current Local Slice 可以表述为：
 | 层级 | 定义 | 当前状态 |
 | --- | --- | --- |
 | Current Local Slice | 代码、focused tests、trace / eval 或 verifier 已证明的本地 runtime 事实。 | Program 1A 已完成 `workspace file -> ParseGateway -> CanonicalDocumentIR -> index handoff -> IndexJobManifest -> retrieval / citation provenance`。 |
-| Launchable Prototype Target | 一两天内可由 Codex 真实补到闭环、可给个人 / 小团队 / 实验室 / 内网试用的企业级雏形。 | 下一轮 Program 1B / V2：`zuno-enterprise-document-ingestion-platform-v2`，先补企业级文档输入与持久化平台雏形。 |
+| Launchable Prototype Target | 一两天内可由 Codex 真实补到闭环、可给个人 / 小团队 / 实验室 / 内网试用的企业级雏形。 | 当前 active Program 1B / V2：`zuno-enterprise-document-ingestion-platform-v2`，先补企业级文档输入与持久化平台雏形。 |
 | Production Scale Target | 多租户、可恢复、可扩展、可审计、可运维、可灰度、可评测的完整企业级平台。 | Postgres、object store、queue / outbox / worker、Redis / Kafka、external OCR / VLM、external index、SSO / RBAC / DLP / Vault、OTel / LangSmith、online eval 和大规模运维仍是后续扩展。 |
 
 ## Current 证据

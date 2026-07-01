@@ -62,6 +62,7 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
+    "PHASE01_truth-source-and-gap-audit.md",
 ]
 CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
 CURRENT_ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{CURRENT_ACTIVE_PROGRAM_NAME}"
@@ -77,7 +78,6 @@ CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
 ]
 QUEUED_PROGRAM_FILES = [
     "README.md",
-    "PROGRAM02_enterprise-document-ingestion-platform-v2.md",
     "PROGRAM03_runtime-subsystems-parallel.md",
     "PROGRAM04_agent-planning-integration.md",
     "PROGRAM05_enterprise-knowledge-eval-benchmark.md",
@@ -240,9 +240,9 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (runtime_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        "active_program: zuno-enterprise-document-ingestion-platform-v2",
+        "current_phase: PHASE01_truth-source-and-gap-audit",
         f"latest_completed_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
         CURRENT_ACTIVE_PROGRAM_ARCHIVE,
@@ -255,7 +255,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         ACTIVE_PROGRAM_ARCHIVE,
         "completed / archived",
         "PHASE01-PHASE12",
-        "no-active",
+        "PHASE01_truth-source-and-gap-audit",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",
@@ -281,7 +281,9 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
             + production_archive_text
             + archive_text
         )
-    assert not list((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == [
+        "PHASE01_truth-source-and-gap-audit.md"
+    ]
     assert not (REPO_ROOT / ".agent/programs/thread-prompts").exists()
     for phase in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:
         phase_path = ingestion_archive / phase
