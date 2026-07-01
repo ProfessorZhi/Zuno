@@ -6,7 +6,7 @@
 
 - `state: active`
 - `active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- `current_phase: PHASE04_knowledge-retrieval-and-graphrag-profile.md`
+- `current_phase: PHASE05_memory-context-engine.md`
 
 ## 被合并的计划
 

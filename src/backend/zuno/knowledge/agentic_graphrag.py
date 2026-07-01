@@ -6,6 +6,10 @@ from typing import Any, Iterable
 
 from pydantic import BaseModel, Field
 
+from zuno.agent.contracts import (
+    RetrievalDecision as ProductRetrievalDecision,
+    RetrievalProfile,
+)
 from zuno.knowledge.ingestion import CanonicalDocumentIR
 
 
@@ -20,6 +24,10 @@ class QueryMethod(str, Enum):
     LOCAL = "local"
     GLOBAL = "global"
     DRIFT = "drift"
+
+
+USER_VISIBLE_RETRIEVAL_PROFILES = (RetrievalProfile.STANDARD, RetrievalProfile.DEEP)
+INTERNAL_RETRIEVAL_FALLBACK_PROFILES = (RetrievalProfile.DEEP_WITHOUT_GRAPH,)
 
 
 class RetrievalRouterInput(BaseModel):
@@ -303,6 +311,7 @@ class EvidenceItem(BaseModel):
     citation_label: str
     trust_label: str
     acl_scope: str = "workspace"
+    sensitivity_tags: list[str] = Field(default_factory=list)
     text: str = ""
     source_uri: str = ""
     provenance: dict[str, Any] = Field(default_factory=dict)
@@ -400,6 +409,7 @@ class AgenticRetrievalRuntimeRequest(BaseModel):
     query: str
     workspace_id: str
     knowledge_space_ids: list[str] = Field(default_factory=list)
+    retrieval_profile: RetrievalProfile | None = None
     product_mode: ProductMode = ProductMode.AUTO
     context_pack: dict[str, Any] = Field(default_factory=dict)
     budget: dict[str, Any] = Field(default_factory=dict)
@@ -414,6 +424,7 @@ class AgenticRetrievalRuntimeRequest(BaseModel):
 class AgenticRetrievalRuntimeResult(BaseModel):
     answer: str
     decision: RetrievalRouterDecision
+    retrieval_decision: ProductRetrievalDecision | None = None
     fusion_plan: StagedFusionPlan
     evidence_bundle: EvidenceBundle
     citations: list[Citation] = Field(default_factory=list)
@@ -462,6 +473,15 @@ class AgenticRetrievalRuntimeResult(BaseModel):
                         for retriever in payload.get("retrievers_used", [])
                     }
                 ),
+                "retrieval_decision": self.retrieval_decision.model_dump(mode="json")
+                if self.retrieval_decision
+                else None,
+                "retrieval_profile": self.retrieval_decision.requested_profile.value
+                if self.retrieval_decision
+                else None,
+                "effective_retrieval_profile": self.retrieval_decision.effective_profile.value
+                if self.retrieval_decision
+                else None,
             },
         }
 
@@ -481,7 +501,10 @@ class AgenticRetrievalRuntime:
                 query=request.query,
                 workspace_id=request.workspace_id,
                 context_pack=request.context_pack,
-                product_mode=request.product_mode,
+                product_mode=_product_mode_for_retrieval_profile(
+                    request.retrieval_profile,
+                    request.product_mode,
+                ),
                 budget=request.budget,
                 acl_scope={"workspace_id": request.workspace_id},
                 evidence_state=request.evidence_state,
@@ -494,6 +517,13 @@ class AgenticRetrievalRuntime:
         if not decision.retrieval_required:
             empty_bundle = EvidenceBundle()
             unsupported = UnsupportedClaimCheck()
+            retrieval_decision = _build_product_retrieval_decision(
+                request=request,
+                decision=decision,
+                index_payloads=[],
+                evidence_bundle=empty_bundle,
+                citations=[],
+            )
             trace = AgenticGraphRAGTrace.from_decision(
                 decision=decision,
                 evidence_bundle=empty_bundle,
@@ -503,6 +533,7 @@ class AgenticRetrievalRuntime:
             return AgenticRetrievalRuntimeResult(
                 answer="No retrieval was required for this request.",
                 decision=decision,
+                retrieval_decision=retrieval_decision,
                 fusion_plan=fusion_plan,
                 evidence_bundle=empty_bundle,
                 citations=[],
@@ -518,6 +549,7 @@ class AgenticRetrievalRuntime:
                     index_payloads=[],
                     unsupported_claim_check=unsupported,
                     claims=request.claims,
+                    retrieval_decision=retrieval_decision,
                 ),
             )
 
@@ -532,6 +564,13 @@ class AgenticRetrievalRuntime:
         bundle = EvidenceBundle.from_candidates(candidates, request.allowed_acl_scopes)
         citations = self.citation_builder.build(bundle)
         unsupported = self.claim_checker.check(request.claims, bundle)
+        retrieval_decision = _build_product_retrieval_decision(
+            request=request,
+            decision=decision,
+            index_payloads=index_payloads,
+            evidence_bundle=bundle,
+            citations=citations,
+        )
         trace = AgenticGraphRAGTrace.from_decision(
             decision=decision,
             evidence_bundle=bundle,
@@ -542,6 +581,7 @@ class AgenticRetrievalRuntime:
         return AgenticRetrievalRuntimeResult(
             answer=answer,
             decision=decision,
+            retrieval_decision=retrieval_decision,
             fusion_plan=fusion_plan,
             evidence_bundle=bundle,
             citations=citations,
@@ -557,6 +597,7 @@ class AgenticRetrievalRuntime:
                 index_payloads=index_payloads,
                 unsupported_claim_check=unsupported,
                 claims=request.claims,
+                retrieval_decision=retrieval_decision,
             ),
         )
 
@@ -599,6 +640,7 @@ class AgenticRetrievalRuntime:
                                     citation_label="",
                                     trust_label=str(metadata.get("trust_label") or "indexed"),
                                     acl_scope=str(metadata.get("acl_scope") or "workspace"),
+                                    sensitivity_tags=list(metadata.get("sensitivity_tags") or []),
                                     text=str(document.get("content") or ""),
                                     source_uri=str(
                                         metadata.get("source_uri")
@@ -646,7 +688,7 @@ class AgenticRetrievalRuntime:
     @staticmethod
     def _sources_for_method(method: QueryMethod) -> tuple[str, ...]:
         if method is QueryMethod.BASIC:
-            return ("bm25",)
+            return ("bm25", "vector")
         if method is QueryMethod.LOCAL:
             return ("graph", "vector")
         if method is QueryMethod.GLOBAL:
@@ -666,6 +708,7 @@ class AgenticRetrievalRuntime:
         index_payloads: list[dict[str, Any]],
         unsupported_claim_check: UnsupportedClaimCheck,
         claims: list[str],
+        retrieval_decision: ProductRetrievalDecision | None,
     ) -> dict[str, Any]:
         from zuno.knowledge.trace import enrich_trace_metadata_with_artifacts
 
@@ -682,6 +725,16 @@ class AgenticRetrievalRuntime:
             "resolved_product_mode": decision.requested_product_mode.value,
             "requested_query_method": ",".join(method.value for method in decision.candidate_methods),
             "resolved_query_method": ",".join(method.value for method in decision.resolved_methods),
+            "retrieval_decision": retrieval_decision.model_dump(mode="json")
+            if retrieval_decision
+            else {},
+            "retrieval_profile_contract": {
+                "user_visible_profiles": [profile.value for profile in USER_VISIBLE_RETRIEVAL_PROFILES],
+                "internal_fallback_profiles": [
+                    profile.value for profile in INTERNAL_RETRIEVAL_FALLBACK_PROFILES
+                ],
+                "hidden_internal_methods": [method.value for method in QueryMethod],
+            },
             "retrievers_used": sorted(
                 {
                     retriever
@@ -764,6 +817,84 @@ def _evidence_ref(item: EvidenceItem) -> str:
     return f"{item.document_id}::{item.block_id}"
 
 
+def _product_mode_for_retrieval_profile(
+    retrieval_profile: RetrievalProfile | None,
+    default_product_mode: ProductMode,
+) -> ProductMode:
+    if retrieval_profile is None:
+        return default_product_mode
+    profile = RetrievalProfile(retrieval_profile)
+    if profile is RetrievalProfile.STANDARD:
+        return ProductMode.NORMAL
+    return ProductMode.ENHANCED
+
+
+def _build_product_retrieval_decision(
+    *,
+    request: AgenticRetrievalRuntimeRequest,
+    decision: RetrievalRouterDecision,
+    index_payloads: list[dict[str, Any]],
+    evidence_bundle: EvidenceBundle,
+    citations: list[Citation],
+) -> ProductRetrievalDecision | None:
+    if request.retrieval_profile is None:
+        return None
+
+    requested_profile = RetrievalProfile(request.retrieval_profile)
+    retrievers_used = _retrievers_used_for_methods(decision.resolved_methods, index_payloads)
+    effective_profile = requested_profile
+    fallback_reason = decision.fallback_reason
+    if requested_profile is RetrievalProfile.DEEP and "graph" not in retrievers_used:
+        effective_profile = RetrievalProfile.DEEP_WITHOUT_GRAPH
+        fallback_reason = "graph_index_unavailable"
+    elif requested_profile is RetrievalProfile.DEEP_WITHOUT_GRAPH:
+        fallback_reason = fallback_reason or "internal_deep_without_graph"
+
+    citation_coverage = len(citations) / len(evidence_bundle.items) if evidence_bundle.items else 0.0
+    return ProductRetrievalDecision(
+        requested_profile=requested_profile,
+        effective_profile=effective_profile,
+        fallback_reason=fallback_reason,
+        retrievers_used=retrievers_used,
+        evidence_count=len(evidence_bundle.items),
+        citation_coverage=citation_coverage,
+        trace_id=request.trace_id,
+    )
+
+
+def _retrievers_used_for_methods(
+    methods: list[QueryMethod],
+    index_payloads: list[dict[str, Any]],
+) -> list[str]:
+    available = {
+        retriever
+        for payload in index_payloads
+        for retriever in payload.get("retrievers_used", [])
+    }
+    desired = {
+        retriever
+        for method in methods
+        for retriever in _retriever_sources_for_method(method)
+    }
+    return [
+        retriever
+        for retriever in ["bm25", "vector", "graph"]
+        if retriever in available and retriever in desired
+    ]
+
+
+def _retriever_sources_for_method(method: QueryMethod) -> tuple[str, ...]:
+    if method is QueryMethod.BASIC:
+        return ("bm25", "vector")
+    if method is QueryMethod.LOCAL:
+        return ("graph", "vector")
+    if method is QueryMethod.GLOBAL:
+        return ("graph",)
+    if method is QueryMethod.DRIFT:
+        return ("bm25", "graph")
+    return ("bm25",)
+
+
 def _citation_ref(citation: Citation) -> str:
     return f"{citation.document_id}::{citation.block_id}"
 
@@ -784,6 +915,7 @@ def _evidence_item_payload(item: EvidenceItem) -> dict[str, Any]:
         "citation_label": item.citation_label,
         "trust_label": item.trust_label,
         "acl_scope": item.acl_scope,
+        "sensitivity_tags": list(item.sensitivity_tags),
         "community_ids": list(item.community_ids),
     }
 
@@ -1010,11 +1142,13 @@ __all__ = [
     "EvidenceItem",
     "FusionStage",
     "GraphRAGIndexPipelineContract",
+    "INTERNAL_RETRIEVAL_FALLBACK_PROFILES",
     "ProductMode",
     "QueryMethod",
     "RetrievalRouterDecision",
     "RetrievalRouterInput",
     "StagedFusionPlan",
+    "USER_VISIBLE_RETRIEVAL_PROFILES",
     "UnsupportedClaimCheck",
     "UnsupportedClaimChecker",
 ]

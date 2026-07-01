@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE04_knowledge-retrieval-and-graphrag-profile
-status: active
+status: completed
 
 ## 目标
 
@@ -112,6 +112,17 @@ pytest -q tests/evals -p no:cacheprovider
 - standard / deep / fallback tests。
 - trace fields 示例。
 - citation lineage 示例。
+
+## Closure Evidence
+
+- Runtime files：`src/backend/zuno/knowledge/agentic_graphrag.py`、`src/backend/zuno/agent/contracts.py`。
+- Product profile：`AgenticRetrievalRuntimeRequest.retrieval_profile` 接受 `standard` / `deep`，用户可见 profile 只暴露 `standard` 和 `deep`，`basic` / `local` / `global` / `drift` 保持内部 QueryMethod。
+- Standard retrieval：`standard` 映射到本地 light fusion baseline，使用 BM25 + vector，生成 EvidenceBundle、Citation 和 RetrievalDecision。
+- Deep fallback：`deep` 在本地 graph index 不可用时输出 `effective_profile=deep_without_graph` 与 `fallback_reason=graph_index_unavailable`，不 fake graph success。
+- Trace evidence：retrieval trace 记录 requested/effective profile、fallback reason、retrievers_used、evidence_count、citation_coverage 和 profile contract。
+- ACL / sensitivity：EvidenceItem 从 index chunk metadata 保留 `acl_scope` 与 `sensitivity_tags`，disallowed ACL evidence 会被 dropped 并进入 task event / evidence verdict。
+- Focused tests：`pytest -q tests/agent/test_knowledge_graphrag_runtime_contracts.py -p no:cacheprovider` 通过，`4 passed`。
+- Regression tests：`pytest -q tests/agent -p no:cacheprovider` 通过，`171 passed`；`pytest -q tests/knowledge -p no:cacheprovider` 通过，`54 passed`；`pytest -q tests/evals -p no:cacheprovider` 通过，`148 passed, 3 warnings`。
 
 ## 停止条件
 

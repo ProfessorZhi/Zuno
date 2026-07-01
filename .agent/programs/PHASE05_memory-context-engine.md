@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE05_memory-context-engine
-status: pending
+status: active
 
 ## 目标
 

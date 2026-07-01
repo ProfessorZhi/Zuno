@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE04_knowledge-retrieval-and-graphrag-profile.md`
+current_phase: `PHASE05_memory-context-engine.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 收口目标
@@ -21,7 +21,7 @@ Production scale external deployments remain replaceable targets.
 - [x] PHASE01 完成 truth source、program merge、owner map、workstream map 和 PR / commit plan。
 - [x] PHASE02 完成 shared contract freeze，且明确冻结 FileInputFormat、SourceObject、BinarySourceObject、ObjectStoreRef、ObjectStoreResult、ParserCapabilityStatus、ParserDependencyProbe、ParserWorkerSpec、ParserWorkerResult、ParseJobStatus、ParseAttempt、IndexWorkerSpec、IndexWorkerResult、QueueMessage、QueueBackendResult、OutboxEvent、DeadLetterRecord、ReconcilerFinding、OCRVLMEnrichmentResult、KnowledgeSpaceConfig、FileIngestionStatus、ChangeImpactPreview、CapabilityPolicy / RiskProfile / AuditEvent、ConversationRunMetrics、StageMetrics、IngestionMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport、ScenarioSummary 和 TraceSummary。
 - [x] PHASE03 完成 enterprise ingestion async infrastructure baseline，并覆盖 PDF / Office / image / scanned / binary target-blocked visibility、binary ObjectStore、file lifecycle、outbox、dead letter 和 reconciler。
-- [ ] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
+- [x] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
 - [ ] PHASE05 完成 Memory & Context Engine baseline。
 - [ ] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。
 - [ ] PHASE07 完成 Security / Governance envelope baseline。
@@ -40,7 +40,7 @@ Production scale external deployments remain replaceable targets.
 - [ ] `/workspace/ingest -> parse job -> Document IR -> index job -> chunks` 可跑。
 - [ ] `QueueBackend + local async worker` 可跑，RabbitMQ / Redis / Postgres / MinIO 有 adapter boundary 和 probe。
 - [ ] `ParserWorker / IndexWorker` 本地可执行，blocked OCR / VLM 不 fake index。
-- [ ] Knowledge retrieval 支持标准检索 / 深度检索 profile。
+- [x] Knowledge retrieval 支持标准检索 / 深度检索 profile。
 - [ ] Agentic Retrieval Planner 能按 profile、证据、预算选择 BM25 / vector / GraphRAG / requery / rerank。
 - [ ] Capability Layer 有 Skill / Knowledge / Tool / MCP / Artifact capability registry contract。
 - [ ] Memory & Context Engine 有多重记忆和 ContextPack contract，并有最小 runtime / focused tests。

@@ -4,13 +4,13 @@
 
 state: active
 active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
-current_phase: PHASE04_knowledge-retrieval-and-graphrag-profile.md
+current_phase: PHASE05_memory-context-engine.md
 latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 `.agent/programs/` 当前 active program 是：
 
 - Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- 当前 phase：`.agent/programs/PHASE04_knowledge-retrieval-and-graphrag-profile.md`
+- 当前 phase：`.agent/programs/PHASE05_memory-context-engine.md`
 
 Program 3 Mega 合并原 active Program 3 与 queued Program 4-6：
 
@@ -66,7 +66,7 @@ active 状态下，`.agent/programs/` 根目录保留当前 Program 3 Mega 的 P
    - 完成：Product V1 local durable ingestion baseline。
 3. Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
    - 状态：active。
-   - 当前 phase：`.agent/programs/PHASE01_truth-source-and-merge-plan.md`
+   - 当前 phase：`.agent/programs/PHASE05_memory-context-engine.md`
    - 合并输入：`zuno-enterprise-ingestion-async-infrastructure-v1`、`zuno-runtime-subsystems-parallel-v1`、`zuno-agent-planning-integration-v1`、`zuno-enterprise-knowledge-eval-benchmark-v1`
 
 ## Mega Phase Gate
