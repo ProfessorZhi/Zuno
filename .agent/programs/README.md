@@ -1,28 +1,36 @@
 # Agent 执行计划
 
-`.agent/programs/` 当前处于 no-active 等待态。
+`.agent/programs/` 当前处于 active program 状态。
 
-## 当前状态
+## 当前 Active Program
 
-- State: no-active
-- Active program: none
-- Current phase: none
+- State: active
+- Active program: `zuno-production-document-ingestion-and-thread-foundation-v1`
+- Current phase: `PHASE01_program-truth-source-and-parser-current-audit.md`
 - Latest completed program: `zuno-production-architecture-and-deliverables-completion-v1`
-- Latest completed archive: `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
 
-## 文件
+当前 program 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的第一段。它先把企业知识库文档解析与索引交接地基做扎实，并为后续 Program 2 多线程施工准备可直接投递的目标模式提示词、分支边界和验收闸门。
 
-- `current.md`：当前 no-active 状态、最近完成归档和下一轮打开规则。
-- `implementation-roadmap.md`：最近完成 program 的归档摘要和下一轮执行规则。
-- `closure-checklist.md`：no-active 状态和最近完成 program 的归档检查结果。
+## 当前文件
 
-PHASE01-PHASE12 文件不留在前台路径；它们已归档到：
-
-- `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
+- `current.md`：当前 active program 状态、suite 顺序和执行规则。
+- `implementation-roadmap.md`：Program 1-4 总路线、依赖关系、验收和验证命令。
+- `closure-checklist.md`：Program 1 收口清单、证据要求和归档规则。
+- `PHASE01_program-truth-source-and-parser-current-audit.md`：打开 program、确认边界、审计解析层 Current。
+- `PHASE02_document-ir-and-parser-contract-freeze.md`：冻结 Document IR、parser adapter contract 和 parser capability matrix。
+- `PHASE03_parser-worker-runtime-and-job-lifecycle.md`：实现本地 parser worker / job lifecycle / retry / metrics。
+- `PHASE04_native-text-and-structured-file-parsers.md`：稳定文本、Markdown、CSV、JSON、HTML、代码等 native parser。
+- `PHASE05_pdf-office-ocr-adapter-boundaries.md`：梳理 PDF / Office / OCR adapter、fallback 和 target-blocked 边界。
+- `PHASE06_index-handoff-provenance-and-fixtures.md`：打通解析到索引 manifest、provenance、ACL 和 golden fixtures。
+- `PHASE07_program2-thread-prompts-and-branch-plan.md`：准备 Program 2 多线程目标模式提示词和分支计划。
+- `PHASE08_verification-doc-sync-and-closure.md`：验证、文档同步、自维护审查、归档和 no-active / next-program 交接。
+- `queued-programs/`：Program 2-4 的后续计划，不是当前 active phase。
 
 ## 使用规则
 
-- `.agent/programs/` 只保存当前 active program，或像现在一样保存 no-active 等待态入口。
+- `.agent/programs/` 根目录只保存当前 active program 的 phase 文件。
+- 后续 queued program 可以先放在 `queued-programs/`，但不得被写成 active program。
 - completed program 必须整体归档到 `docs/history/programs/`。
 - 新 program 必须从 PHASE01 开始，并同步 `AGENTS.md`、README、`.agent/references/current-program.md`、verifier 和 repo tests。
 - 只写 contract、schema 或 README 不能关闭 runtime phase。
+- 多线程执行必须先由当前主线程生成提示词和分支边界；子线程必须由用户在 Codex UI 中确认真实目标模式。

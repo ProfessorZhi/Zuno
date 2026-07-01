@@ -62,6 +62,31 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
+    "PHASE01_program-truth-source-and-parser-current-audit.md",
+    "PHASE02_document-ir-and-parser-contract-freeze.md",
+    "PHASE03_parser-worker-runtime-and-job-lifecycle.md",
+    "PHASE04_native-text-and-structured-file-parsers.md",
+    "PHASE05_pdf-office-ocr-adapter-boundaries.md",
+    "PHASE06_index-handoff-provenance-and-fixtures.md",
+    "PHASE07_program2-thread-prompts-and-branch-plan.md",
+    "PHASE08_verification-doc-sync-and-closure.md",
+]
+CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
+CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_program-truth-source-and-parser-current-audit.md",
+    "PHASE02_document-ir-and-parser-contract-freeze.md",
+    "PHASE03_parser-worker-runtime-and-job-lifecycle.md",
+    "PHASE04_native-text-and-structured-file-parsers.md",
+    "PHASE05_pdf-office-ocr-adapter-boundaries.md",
+    "PHASE06_index-handoff-provenance-and-fixtures.md",
+    "PHASE07_program2-thread-prompts-and-branch-plan.md",
+    "PHASE08_verification-doc-sync-and-closure.md",
+]
+QUEUED_PROGRAM_FILES = [
+    "README.md",
+    "PROGRAM02_runtime-subsystems-parallel.md",
+    "PROGRAM03_agent-planning-integration.md",
+    "PROGRAM04_enterprise-knowledge-eval-benchmark.md",
 ]
 
 
@@ -209,10 +234,15 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (runtime_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        f"active_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
+        "current_phase: PHASE01_program-truth-source-and-parser-current-audit.md",
         f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
+        CURRENT_ACTIVE_PROGRAM_NAME,
+        "zuno-enterprise-agentic-graphrag-production-suite-v1",
+        "zuno-runtime-subsystems-parallel-v1",
+        "zuno-agent-planning-integration-v1",
+        "zuno-enterprise-knowledge-eval-benchmark-v1",
         ACTIVE_PROGRAM_NAME,
         ACTIVE_PROGRAM_ARCHIVE,
         "completed / archived",
@@ -234,7 +264,30 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         MASTER_PROGRAM_ARCHIVE,
     ]:
         assert phrase in current_program + readme + roadmap + closure + current_reference + production_archive_text + archive_text
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == []
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(CURRENT_ACTIVE_PROGRAM_PHASE_FILES)
+    for phase in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:
+        phase_path = REPO_ROOT / ".agent/programs" / phase
+        phase_text = phase_path.read_text(encoding="utf-8")
+        assert "program: zuno-production-document-ingestion-and-thread-foundation-v1" in phase_text
+        for section in [
+            "## 目标",
+            "## 范围",
+            "## 禁止范围",
+            "## 验收闸门",
+            "## 验证命令",
+            "## 需要先读取",
+            "## 需要修改的文件",
+            "## 执行拆解",
+            "## 多 agent 分工",
+            "## 需要返回的证据",
+            "## 停止条件",
+        ]:
+            assert section in phase_text
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs/queued-programs").glob("*.md")) == sorted(QUEUED_PROGRAM_FILES)
+    for file_name in QUEUED_PROGRAM_FILES:
+        text = (REPO_ROOT / ".agent/programs/queued-programs" / file_name).read_text(encoding="utf-8")
+        if file_name != "README.md":
+            assert "state: queued" in text
     _assert_archived_phase_state()
     for phase in ACTIVE_PROGRAM_PHASE_FILES:
         phase_path = production_archive / phase
