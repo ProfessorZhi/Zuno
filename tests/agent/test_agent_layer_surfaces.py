@@ -62,6 +62,11 @@ EXPECTED_EXPORTS = {
         "CapabilitySelectionRequest",
         "DynamicCapabilitySelector",
     ],
+    "zuno.agent.planning": [
+        "PlanningRequest",
+        "StrategySelector",
+        "build_default_strategy_selector",
+    ],
 }
 
 
@@ -114,6 +119,7 @@ def test_agent_package_facade_points_at_layer_modules() -> None:
     from zuno.agent.context import ContextOrchestrator
     from zuno.agent.durable_runtime import SingleControllerDurableRuntime
     from zuno.agent.harness import ControllerRuntimeState
+    from zuno.agent.planning import StrategySelector
     from zuno.agent.runtime import GeneralAgent
     from zuno.agent.state import StreamAgentState
 
@@ -122,6 +128,7 @@ def test_agent_package_facade_points_at_layer_modules() -> None:
     assert agent.StreamAgentState is StreamAgentState
     assert agent.ControllerRuntimeState is ControllerRuntimeState
     assert agent.SingleControllerDurableRuntime is SingleControllerDurableRuntime
+    assert agent.StrategySelector is StrategySelector
 
 
 def test_durable_runtime_store_persists_approval_wait_and_resumes_after_restart() -> None:

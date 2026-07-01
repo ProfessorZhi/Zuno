@@ -39,9 +39,13 @@ PHASE02_CONTRACT_NAMES = {
     "PlanStep",
     "PlanState",
     "StrategySelectorOutput",
+    "SelectedSkill",
+    "CapabilityPlan",
+    "RetrievalPlan",
     "ReflectionVerdict",
     "ReplanDecision",
     "ReflexionLesson",
+    "PlannerOutput",
     "TraceRecord",
     "TraceMetric",
     "CostMetric",
@@ -85,16 +89,24 @@ def test_phase02_shared_contract_index_has_unique_owners_and_consumers() -> None
 def test_phase02_shared_contracts_serialize_defaults_and_boundaries() -> None:
     from zuno.agent.contracts import (
         CapabilityPolicy,
+        CapabilityPlan,
         ConversationRunMetrics,
         EvalComparisonReport,
         KnowledgeSpaceConfig,
         ParserDependencyProbe,
+        PlannerOutput,
+        PlanState,
+        PlanStep,
         QueueMessage,
         RetrievalDecision,
+        RetrievalPlan,
         RetrievalProfile,
         ScenarioSummary,
+        SelectedSkill,
         SkillCard,
         StageMetrics,
+        StrategySelectorOutput,
+        TraceRecord,
     )
 
     assert {item.value for item in RetrievalProfile} == {
@@ -175,6 +187,56 @@ def test_phase02_shared_contracts_serialize_defaults_and_boundaries() -> None:
     stage = StageMetrics(stage_name="retrieval", latency_ms=12.5, trace_event_ids=["evt_1"])
     assert _dump(stage)["stage_name"] == "retrieval"
     assert _dump(stage)["error_count"] == 0
+
+    selected = SelectedSkill(
+        skill_id="contract_review",
+        selection_mode="automatic",
+        allowed_tools=["knowledge.contracts"],
+        required_evidence=["citation_lineage"],
+        retrieval_profile=RetrievalProfile.DEEP,
+    )
+    capability_plan = CapabilityPlan(
+        allowed_capabilities=["knowledge.contracts"],
+        allowed_tools=[],
+        executed_tools=[],
+    )
+    retrieval_plan = RetrievalPlan(
+        requested_profile=RetrievalProfile.DEEP,
+        effective_profile=RetrievalProfile.DEEP_WITHOUT_GRAPH,
+        retrievers_used=["bm25", "vector"],
+        fallback_reason="graph_index_missing",
+        evidence_requirements=["citation_lineage"],
+    )
+    planner_output = PlannerOutput(
+        task_id="task_plan",
+        trace_id="trace_plan",
+        strategy=StrategySelectorOutput(
+            strategy="plan_execute_with_replan",
+            reason="multi_hop_evidence_needed",
+            selected_skill="contract_review",
+            retrieval_profile=RetrievalProfile.DEEP,
+        ),
+        selected_skill=selected,
+        capability_plan=capability_plan,
+        retrieval_plan=retrieval_plan,
+        plan_state=PlanState(
+            plan_id="plan_1",
+            status="planned",
+            steps=[PlanStep(step_id="step_1", goal="Retrieve evidence.", action_type="retrieval")],
+            current_step_id="step_1",
+        ),
+        trace_events=[
+            TraceRecord(
+                event_id="evt_strategy",
+                task_id="task_plan",
+                trace_id="trace_plan",
+                event_type="strategy_selected",
+                payload={"strategy": "plan_execute_with_replan"},
+            )
+        ],
+    )
+    assert _dump(planner_output)["retrieval_plan"]["effective_profile"] == "deep_without_graph"
+    assert _dump(planner_output)["capability_plan"]["executed_tools"] == []
 
     run = ConversationRunMetrics(
         task_id="task_1",

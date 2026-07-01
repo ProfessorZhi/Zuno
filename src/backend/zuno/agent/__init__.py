@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         SingleControllerDurableRuntime,
     )
     from zuno.agent.post_turn import RuntimeTurnLedger
+    from zuno.agent.planning import PlanningRequest, StrategySelector, build_default_strategy_selector
     from zuno.agent.runtime import AgentConfig, GeneralAgent
     from zuno.agent.state import StreamAgentState
 
@@ -42,13 +43,16 @@ _EXPORT_TO_MODULE = {
     "GeneralAgent": "zuno.agent.runtime",
     "InMemoryDurableRuntimeStore": "zuno.agent.durable_runtime",
     "ModelContextPacket": "zuno.agent.context",
+    "PlanningRequest": "zuno.agent.planning",
     "RuntimeCheckpoint": "zuno.agent.harness",
     "RuntimeInterrupt": "zuno.agent.harness",
     "RuntimeNodeContract": "zuno.agent.harness",
     "RuntimeTurnLedger": "zuno.agent.post_turn",
     "SingleControllerRuntimeHarness": "zuno.agent.harness",
     "SingleControllerDurableRuntime": "zuno.agent.durable_runtime",
+    "StrategySelector": "zuno.agent.planning",
     "StreamAgentState": "zuno.agent.state",
+    "build_default_strategy_selector": "zuno.agent.planning",
     "build_single_controller_runtime_harness": "zuno.agent.harness",
 }
 
@@ -64,13 +68,16 @@ __all__ = [
     "GeneralAgent",
     "InMemoryDurableRuntimeStore",
     "ModelContextPacket",
+    "PlanningRequest",
     "RuntimeCheckpoint",
     "RuntimeInterrupt",
     "RuntimeNodeContract",
     "RuntimeTurnLedger",
     "SingleControllerRuntimeHarness",
     "SingleControllerDurableRuntime",
+    "StrategySelector",
     "StreamAgentState",
+    "build_default_strategy_selector",
     "build_single_controller_runtime_harness",
 ]
 

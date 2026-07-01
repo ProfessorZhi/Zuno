@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE09_planning-contract-and-strategy-selector.md`
+current_phase: `PHASE10_react-reflection-replan-reflexion-runtime.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 总套件
@@ -82,7 +82,7 @@ Program ID：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 当前 phase：
 
-- `.agent/programs/PHASE09_planning-contract-and-strategy-selector.md`
+- `.agent/programs/PHASE10_react-reflection-replan-reflexion-runtime.md`
 
 目标：把原 Program 3-6 合并为一个可执行到 closure 的全链路 program，完成 launchable enterprise Agentic GraphRAG product baseline。它不是要求部署真实生产集群，而是要求每个关键层都有 local runnable implementation、adapter boundary、dependency probe / target-blocked evidence、focused tests、E2E 闭环、trace/eval/cost 记录和文档成熟度边界。
 
@@ -114,9 +114,9 @@ Production scale external deployments remain replaceable targets.
 8. `PHASE08_model-gateway-cost-latency.md`
    - completed：Model Gateway、provider abstraction、token / latency / cost estimate、timeout、retry、trace fields、cost guard、fallback reason 和 eval judge category。
 9. `PHASE09_planning-contract-and-strategy-selector.md`
-   - active：PlanStep、PlanState、StrategySelectorOutput、SelectedSkill、CapabilityPlan、RetrievalPlan、ReflectionVerdict、ReplanDecision、ReflexionLesson。
+   - completed：PlanStep、PlanState、StrategySelectorOutput、SelectedSkill、CapabilityPlan、RetrievalPlan、PlannerOutput、ReflectionVerdict、ReplanDecision、ReflexionLesson 和本地 deterministic StrategySelector baseline。
 10. `PHASE10_react-reflection-replan-reflexion-runtime.md`
-   - ReAct step runner、Reflection gate、Dynamic Replan、Reflexion candidate 和 trace events。
+   - active：ReAct step runner、Reflection gate、Dynamic Replan、Reflexion candidate 和 trace events。
 11. `PHASE11_workspace-product-api-frontend-sync.md`
    - 后端新增 profile / plan / trace / capability / eval 字段与 workspace API / frontend API types 最小同步，并补 KnowledgeSpaceConfig、创建 Wizard、Settings tabs、file status、parser dependency probe、PDF / Office / OCR provider target、retry / cancel / reparse / reindex / rebuild_graph actions 和 Change Impact Preview 的产品契约。
 12. `PHASE12_end-to-end-product-runtime.md`

@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE09_planning-contract-and-strategy-selector
-status: active
+status: completed
 
 ## 目标
 
@@ -110,6 +110,20 @@ pytest -q tests/agent -p no:cacheprovider
 - focused tests。
 - sample PlannerOutput。
 - trace event 示例。
+
+## Closure Evidence
+
+2026-07-02 本地完成：
+
+- `src/backend/zuno/agent/contracts.py` 增补 `SelectedSkill`、`CapabilityPlan`、`RetrievalPlan` 和 `PlannerOutput`，并登记到 `PHASE02_SHARED_CONTRACTS`，避免规划层生成第二套同义 schema。
+- `src/backend/zuno/agent/planning.py` 新增 `PlanningRequest`、`StrategySelector` 和 `build_default_strategy_selector()`。
+- `StrategySelector` 以本地 deterministic 规则消费 user goal、requested retrieval profile、Capability Layer registry、Security summary 和 PHASE08 budget verdict；不调用真实 LLM、retrieval 或 tool。
+- 覆盖策略矩阵：lookup -> `direct_answer`，multi-hop -> `plan_execute_with_replan`，tool task -> `react`，formal report -> `reflection_enabled`，code/test task -> `reflexion_enabled`。
+- 输出 `PlannerOutput`，包含 `StrategySelectorOutput`、`SelectedSkill`、`CapabilityPlan`、`RetrievalPlan`、`PlanState`、`ReflectionVerdict`、`ReplanDecision`、`ReflexionLesson` candidate 和 `strategy_selected` / `skill_selected` / `plan_created` trace events。
+- 安全阻断会返回 blocked plan 与 `refuse` / `ask_user` verdict，不会允许 dangerous tool；budget blocked 会返回 `budget_guard_blocked` 和 ask_user verdict。
+- focused tests：`pytest -q tests/agent/test_planning_control_runtime.py -p no:cacheprovider` -> 7 passed。
+- contract / facade tests：`pytest -q tests/agent/test_planning_control_runtime.py tests/agent/test_shared_contract_freeze.py tests/agent/test_agent_layer_surfaces.py -p no:cacheprovider` -> 15 passed。
+- broader gate：`pytest -q tests/agent -p no:cacheprovider` -> 178 passed。
 
 ## 停止条件
 

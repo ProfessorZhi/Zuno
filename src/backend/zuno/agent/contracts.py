@@ -381,6 +381,33 @@ class StrategySelectorOutput(BaseModel):
     retrieval_profile: RetrievalProfile | None = None
 
 
+class SelectedSkill(BaseModel):
+    skill_id: str
+    skill_version: str | None = None
+    selection_mode: Literal["automatic", "pinned"] = "automatic"
+    reason: str = ""
+    allowed_tools: list[str] = Field(default_factory=list)
+    required_evidence: list[str] = Field(default_factory=list)
+    retrieval_profile: RetrievalProfile = RetrievalProfile.STANDARD
+
+
+class CapabilityPlan(BaseModel):
+    allowed_capabilities: list[str] = Field(default_factory=list)
+    allowed_tools: list[str] = Field(default_factory=list)
+    blocked_capability_reasons: dict[str, str] = Field(default_factory=dict)
+    approval_required_tools: list[str] = Field(default_factory=list)
+    executed_tools: list[str] = Field(default_factory=list)
+    risk_summary: dict[str, Any] = Field(default_factory=dict)
+
+
+class RetrievalPlan(BaseModel):
+    requested_profile: RetrievalProfile
+    effective_profile: RetrievalProfile
+    retrievers_used: list[str] = Field(default_factory=list)
+    fallback_reason: str | None = None
+    evidence_requirements: list[str] = Field(default_factory=list)
+
+
 class ReflectionVerdict(BaseModel):
     decision: Literal["continue", "finish", "retrieve_more", "replan", "ask_user", "refuse"]
     evidence_enough: bool = False
@@ -418,6 +445,20 @@ class TraceRecord(BaseModel):
     trace_id: str
     event_type: str
     payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class PlannerOutput(BaseModel):
+    task_id: str
+    trace_id: str
+    strategy: StrategySelectorOutput
+    selected_skill: SelectedSkill | None = None
+    capability_plan: CapabilityPlan = Field(default_factory=CapabilityPlan)
+    retrieval_plan: RetrievalPlan
+    plan_state: PlanState
+    reflection_verdict: ReflectionVerdict = Field(default_factory=lambda: ReflectionVerdict(decision="continue"))
+    replan_decision: ReplanDecision | None = None
+    reflexion_lesson: ReflexionLesson | None = None
+    trace_events: list[TraceRecord] = Field(default_factory=list)
 
 
 class TraceMetric(BaseModel):
@@ -625,10 +666,14 @@ PHASE02_SHARED_CONTRACTS: dict[str, SharedContractEntry] = {
     "PlanStep": _entry("Workstream F", _AGENT_PATH, _fields(PlanStep), ["PHASE09", "PHASE10", "PHASE12", "PHASE13"]),
     "PlanState": _entry("Workstream F", _AGENT_PATH, _fields(PlanState), ["PHASE09", "PHASE10", "PHASE12"]),
     "StrategySelectorOutput": _entry("Workstream F", _AGENT_PATH, _fields(StrategySelectorOutput), ["PHASE09", "PHASE10", "PHASE13"]),
+    "SelectedSkill": _entry("Workstream F", _AGENT_PATH, _fields(SelectedSkill), ["PHASE09", "PHASE10", "PHASE12", "PHASE13"]),
+    "CapabilityPlan": _entry("Workstream F", _AGENT_PATH, _fields(CapabilityPlan), ["PHASE09", "PHASE10", "PHASE12", "PHASE13"]),
+    "RetrievalPlan": _entry("Workstream F", _AGENT_PATH, _fields(RetrievalPlan), ["PHASE09", "PHASE10", "PHASE12", "PHASE13"]),
     "ReflectionVerdict": _entry("Workstream F", _AGENT_PATH, _fields(ReflectionVerdict), ["PHASE09", "PHASE10", "PHASE12", "PHASE13"]),
     "ReplanDecision": _entry("Workstream F", _AGENT_PATH, _fields(ReplanDecision), ["PHASE09", "PHASE10", "PHASE12"]),
     "ReflexionLesson": _entry("Workstream C", _AGENT_PATH, _fields(ReflexionLesson), ["PHASE05", "PHASE10", "PHASE13"]),
     "TraceRecord": _entry("Workstream G", _OBS_PATH, _fields(TraceRecord), ["PHASE08", "PHASE10", "PHASE12", "PHASE13"]),
+    "PlannerOutput": _entry("Workstream F", _AGENT_PATH, _fields(PlannerOutput), ["PHASE09", "PHASE10", "PHASE12", "PHASE13"]),
     "TraceMetric": _entry("Workstream G", _OBS_PATH, _fields(TraceMetric), ["PHASE08", "PHASE13"]),
     "CostMetric": _entry("Workstream G", _OBS_PATH, _fields(CostMetric), ["PHASE08", "PHASE13"]),
     "ConversationRunMetrics": _entry("Workstream G", _OBS_PATH, _fields(ConversationRunMetrics), ["PHASE13", "PHASE15"]),
@@ -648,6 +693,7 @@ __all__ = [
     "BinarySourceObject",
     "CapabilityAuditEvent",
     "CapabilityCard",
+    "CapabilityPlan",
     "CapabilityPolicy",
     "CapabilityRiskProfile",
     "ChangeImpactPreview",
@@ -675,6 +721,7 @@ __all__ = [
     "ParserWorkerSpec",
     "ParseAttempt",
     "ParseJobStatus",
+    "PlannerOutput",
     "PlanState",
     "PlanStep",
     "PlanningMetrics",
@@ -689,6 +736,7 @@ __all__ = [
     "RetrievalProfile",
     "ScenarioSummary",
     "SecurityMetrics",
+    "SelectedSkill",
     "SharedContractEntry",
     "SkillCard",
     "SourceObject",
@@ -698,4 +746,5 @@ __all__ = [
     "TraceMetric",
     "TraceRecord",
     "TraceSummary",
+    "RetrievalPlan",
 ]
