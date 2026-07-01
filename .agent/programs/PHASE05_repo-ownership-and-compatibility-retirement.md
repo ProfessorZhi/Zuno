@@ -1,6 +1,6 @@
 # PHASE05 Repo Ownership and Compatibility Retirement
 
-status: pending
+status: active
 
 ## 目标
 

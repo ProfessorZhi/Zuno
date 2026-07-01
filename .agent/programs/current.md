@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE04_documentation-dedup-architecture-clarity
+current_phase: PHASE05_repo-ownership-and-compatibility-retirement
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE04_documentation-dedup-architecture-clarity
 
 ## 当前阶段
 
-- 当前 phase：`PHASE04_documentation-dedup-architecture-clarity`
-- 当前动作：压缩前台文档重复，保证 architecture / production-readiness / program / history 各司其职。
-- 当前验收：PHASE04 只有在前台文档入口少而精、架构描述和成熟度边界清楚、docs verifier / tests 覆盖去冗余规则后才能关闭。
+- 当前 phase：`PHASE05_repo-ownership-and-compatibility-retirement`
+- 当前动作：盘点六层 backend owner、platform/services、compatibility、vendor、provider tree 和 legacy alias，收敛低风险兼容层。
+- 当前验收：PHASE05 只有在 owner map、import matrix、compatibility retirement table、repo verifier 和 legacy guard 证据齐全后才能关闭。
 
 ## 最近完成基线
 
@@ -31,7 +31,7 @@ current_phase: PHASE04_documentation-dedup-architecture-clarity
 
 - `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 
-该 program 已完成 PHASE01-PHASE12，覆盖 runtime-first 目标架构第一版闭环：上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback。
+该 program 的 runtime-first closure evidence 保留在归档目录；本状态文件不重复闭环链路细节。
 
 上一轮 foundation program：`zuno-master-architecture-implementation-v1`
 

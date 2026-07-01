@@ -97,6 +97,25 @@ def test_docs_front_path_readmes_explain_architecture_contract() -> None:
         assert phrase in agent_architecture_index
 
 
+def test_docs_map_does_not_duplicate_architecture_source_roles() -> None:
+    content = (REPO_ROOT / ".agent" / "references" / "docs-map.md").read_text(
+        encoding="utf-8"
+    )
+    formal_entries = content.split("正式人类入口：", 1)[1].split("Agent 工作流入口：", 1)[0]
+    docs_sync = content.split("## Docs Sync", 1)[1].split("## Lessons Learned", 1)[0]
+    docs_sync_items = [
+        line.strip()
+        for line in docs_sync.splitlines()
+        if line.strip().startswith("- `")
+    ]
+
+    assert formal_entries.count("`docs/architecture/architecture.md`") == 1
+    assert "`docs/architecture/production-readiness.md`" in formal_entries
+    assert len(docs_sync_items) == len(set(docs_sync_items))
+    for phrase in ["当前仓库事实", "近期目标摘要", "当前状态和下一步"]:
+        assert phrase not in formal_entries
+
+
 def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> None:
     docs_architecture = (REPO_ROOT / "docs" / "architecture" / "architecture.md").read_text(
         encoding="utf-8"
@@ -176,6 +195,7 @@ def test_front_path_summaries_do_not_duplicate_program_phase_or_target_catalogs(
         "production-grade parser platform",
         "durable LangGraph-compatible runtime",
         "rootless / gVisor / Firecracker sandbox",
+        "上传文档 -> parse -> index -> ask",
     ]
 
     for path in summary_paths:
@@ -262,6 +282,7 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "documentation entrypoint verification passed.",
         "verify_front_path_shape",
         "verify_front_path_summary_boundaries",
+        "verify_docs_map_has_unique_architecture_source_roles",
         "verify_no_retired_front_path_links",
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",

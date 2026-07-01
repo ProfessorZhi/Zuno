@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE04_documentation-dedup-architecture-clarity
+current_phase: PHASE05_repo-ownership-and-compatibility-retirement
 
 `.agent/programs/` 当前保存 active program 的平铺执行计划：
 
@@ -31,11 +31,7 @@ current_phase: PHASE04_documentation-dedup-architecture-clarity
 
 - `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 
-该 program 已完成 PHASE01-PHASE12，把 Zuno 从“目标架构已定义、contracts 已成型”推进到“目标架构第一版 runtime 闭环真实可跑”。核心闭环：
-
-```text
-上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback
-```
+该 program 的 runtime-first closure evidence 保留在归档目录；本状态索引不重复闭环链路细节。
 
 本轮继续保留 runtime-first / vertical-slice-first 验收规则：只写 contract、schema 或 README 不能关闭 runtime phase。
 

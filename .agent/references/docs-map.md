@@ -22,9 +22,8 @@ docs/history/ = archive and evidence
 - `README.md`：仓库总览和首读路径。
 - `docs/README.md`：文档入口。
 - `docs/architecture/architecture.md`：总架构文档，文字说明当前事实、目标分层、主链路和实施落点。
-- `docs/architecture/architecture.md`：当前仓库事实。
-- `docs/architecture/architecture.md`：近期目标摘要。
-- `docs/architecture/architecture.md`：当前状态和下一步。
+- `docs/architecture/production-readiness.md`：成熟度、四大总交付物和 runtime-first Production Target 边界。
+- `docs/architecture/repo-ownership-matrix.md`：代码目录 ownership、compatibility、vendor 和 provider 分类事实表。
 - `docs/evidence/public-demo.md`：精选公开证据入口。
 - `docs/evidence/eval-baselines.md`：Eval baseline 状态。
 - `docs/reference/terminology.md`：公共术语表。
@@ -52,7 +51,7 @@ Agent 工作流入口：
 - Current 只描述代码和测试已证明事实。
 - Target 只描述近期目标，不等于完成声明。
 - History 保留旧材料原文，不为了新叙事改写证据。
-- `.agent/architecture/architecture.md` 是 Target / Proposed 视觉蓝图，不是 Current truth。
+- `.agent/architecture/architecture.md` 是 `docs/architecture/architecture.md` 的 Agent 侧镜像，不承载独立事实源。
 
 ## Before Editing
 
@@ -137,10 +136,11 @@ pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p
 - `docs/README.md`
 - `docs/architecture/README.md`
 - `docs/architecture/architecture.md`
-- `docs/architecture/architecture.md`
-- `docs/architecture/architecture.md`
-- `docs/architecture/architecture.md`
+- `docs/architecture/production-readiness.md`
+- `docs/architecture/architecture.html`
+- `.agent/architecture/README.md`
 - `.agent/architecture/architecture.md`
+- `.agent/architecture/architecture.html`
 - `docs/history/README.md`
 
 ## Lessons Learned

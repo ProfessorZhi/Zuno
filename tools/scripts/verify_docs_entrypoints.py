@@ -264,6 +264,7 @@ def verify_front_path_summary_boundaries() -> list[str]:
         "production-grade parser platform",
         "durable LangGraph-compatible runtime",
         "rootless / gVisor / Firecracker sandbox",
+        "上传文档 -> parse -> index -> ask",
     ]
     summary_paths = [
         "README.md",
@@ -280,6 +281,45 @@ def verify_front_path_summary_boundaries() -> list[str]:
         for phrase in forbidden_summary_details:
             if phrase in content:
                 errors.append(f"{relative_path} duplicates phase or production target detail: {phrase}")
+    return errors
+
+
+def verify_docs_map_has_unique_architecture_source_roles() -> list[str]:
+    errors: list[str] = []
+    content = _read(".agent/references/docs-map.md")
+    if "正式人类入口：" not in content or "Agent 工作流入口：" not in content:
+        return [".agent/references/docs-map.md missing formal or Agent entrypoint section"]
+    formal_entries = content.split("正式人类入口：", 1)[1].split("Agent 工作流入口：", 1)[0]
+    architecture_count = formal_entries.count("`docs/architecture/architecture.md`")
+    if architecture_count != 1:
+        errors.append(
+            ".agent/references/docs-map.md must list docs/architecture/architecture.md "
+            f"once as a formal entry, got {architecture_count}"
+        )
+    for phrase in [
+        "`docs/architecture/production-readiness.md`",
+        "`docs/architecture/repo-ownership-matrix.md`",
+    ]:
+        if phrase not in formal_entries:
+            errors.append(f".agent/references/docs-map.md formal entries missing: {phrase}")
+    for stale_role in ["当前仓库事实", "近期目标摘要", "当前状态和下一步"]:
+        if stale_role in formal_entries:
+            errors.append(f".agent/references/docs-map.md keeps stale duplicate role: {stale_role}")
+
+    if "## Docs Sync" not in content or "## Lessons Learned" not in content:
+        errors.append(".agent/references/docs-map.md missing Docs Sync or Lessons Learned section")
+        return errors
+    docs_sync = content.split("## Docs Sync", 1)[1].split("## Lessons Learned", 1)[0]
+    docs_sync_items = [
+        line.strip()
+        for line in docs_sync.splitlines()
+        if line.strip().startswith("- `")
+    ]
+    duplicate_items = sorted(
+        {item for item in docs_sync_items if docs_sync_items.count(item) > 1}
+    )
+    for item in duplicate_items:
+        errors.append(f".agent/references/docs-map.md Docs Sync duplicates item: {item}")
     return errors
 
 
@@ -395,6 +435,7 @@ def main() -> int:
     errors.extend(verify_front_path_shape())
     errors.extend(verify_entrypoint_text())
     errors.extend(verify_front_path_summary_boundaries())
+    errors.extend(verify_docs_map_has_unique_architecture_source_roles())
     errors.extend(verify_architecture_html_sync())
     errors.extend(verify_architecture_view_contract())
     errors.extend(verify_no_retired_front_path_links())

@@ -1,6 +1,8 @@
 # PHASE04 Documentation Dedup Architecture Clarity
 
-status: active
+status: completed
+completed_at: 2026-07-01
+next_phase: PHASE05_repo-ownership-and-compatibility-retirement
 
 ## 目标
 
@@ -83,3 +85,45 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 - 需要恢复已归档拆分文档作为当前入口。
 - Markdown 和 HTML 生成结果不一致。
 - Current / Target 边界因文档压缩变模糊。
+
+## 完成证据
+
+PHASE04 已把前台文档职责进一步压缩为“入口只导航、architecture 讲架构、production-readiness 讲成熟度、program 文件讲执行、history 留证据”。本 phase 没有恢复旧拆分架构文档，也没有把 Production Target 写成 Current。
+
+### 文档职责表
+
+| Surface | 职责 | PHASE04 处理 |
+| --- | --- | --- |
+| `README.md` | 仓库总览和首读路径 | 删除 runtime-full 闭环链路重复，保留归档指针和 production-readiness 指针。 |
+| `AGENTS.md` | Agent boot entry 和工作流契约 | 删除 runtime-full 闭环链路重复，保留归档位置和闭环证据边界。 |
+| `docs/architecture/README.md` | 架构目录入口 | 删除上一轮 program 的完整闭环链路，保留 architecture / production-readiness / history 路由。 |
+| `.agent/programs/current.md` | active program 当前状态 | 删除闭环链路细节，保留当前 phase、归档位置和 phase gate。 |
+| `.agent/references/current-program.md` | Agent 侧 program 状态索引 | 删除闭环链路细节，保留 active program、归档位置和 Current / Target 规则。 |
+| `.agent/references/docs-map.md` | 文档同步 skill | 把 `docs/architecture/architecture.md` 从多角色重复入口压缩为单一总架构职责，并加入 `production-readiness.md` / `repo-ownership-matrix.md` 明确边界。 |
+
+### 去冗余规则
+
+- 前台摘要不得重复 phase 完成细节、Production Target 清单或 runtime-full 闭环链路。
+- `docs-map.md` 的正式入口列表中 `docs/architecture/architecture.md` 只能出现一次；成熟度和 owner matrix 必须使用各自正式文件承载。
+- `docs-map.md` 的 Docs Sync 列表不能重复同一路径。
+
+### Verifier / Test 证据
+
+- RED：新增 `test_docs_map_does_not_duplicate_architecture_source_roles` 后，`pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider` 失败，证明 `docs-map.md` 中 `docs/architecture/architecture.md` 出现 4 次且 verifier 缺少对应检查。
+- GREEN：修正 `docs-map.md` 并新增 `verify_docs_map_has_unique_architecture_source_roles` 后，同一测试通过，`13 passed`。
+- RED：把 runtime-full 闭环链路加入 forbidden summary details 后，docs verifier 指出 `README.md`、`AGENTS.md`、`docs/architecture/README.md`、`.agent/programs/current.md` 和 `.agent/references/current-program.md` 仍重复该链路。
+- GREEN：瘦身上述 5 个摘要入口后，`python tools/scripts/verify_docs_entrypoints.py` 通过，`pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider` 通过。
+
+### 最终收口验证
+
+| Command | Result |
+| --- | --- |
+| `git diff --check` | exit 0，仅 Windows LF/CRLF 提示。 |
+| `python tools/agent/render_architecture.py --check` | exit 0，architecture Markdown mirror 和 HTML outputs in sync。 |
+| `python tools/scripts/verify_docs_entrypoints.py` | exit 0，documentation entrypoint verification passed。 |
+| `python .agent/scripts/verify_doc_boundaries.py` | exit 0，Doc boundary verification passed。 |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-docs.ps1` | exit 0，Docs verification passed。 |
+| `python .agent/scripts/verify_agent_system.py` | exit 0，Agent system verification passed。 |
+| `python tools/scripts/verify_repo_structure.py` | exit 0，Repository structure verification passed；PowerShell Terminal-Icons profile 输出为环境噪音。 |
+| `pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider` | `13 passed`。 |
+| `pytest -q tests/repo/test_agent_system.py tests/repo/test_repo_structure_consistency.py -p no:cacheprovider` | `41 passed`。 |

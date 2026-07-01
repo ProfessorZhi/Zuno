@@ -38,7 +38,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE04_documentation-dedup-architecture-clarity`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。前序 phase closure evidence 以 `.agent/programs/PHASE*.md` 为准；后续 phase 以这些证据为 gate。
+当前 active Agent program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE05_repo-ownership-and-compatibility-retirement`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。前序 phase closure evidence 以 `.agent/programs/PHASE*.md` 为准；后续 phase 以这些证据为 gate。
 
 本轮 program 文件在 `.agent/programs/`：
 
@@ -51,11 +51,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 - `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 
-该 program 不再继续做架构细化或 contract foundation，而是把目标架构推进到第一版真实 runtime 闭环：
-
-```text
-上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback
-```
+该 program 的 runtime-first closure evidence 保留在归档目录；README 不重复闭环链路细节。
 
 上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`：
 
