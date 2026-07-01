@@ -68,7 +68,21 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
+    "PHASE01_truth-source-and-async-gap-audit.md",
+    "PHASE02_storage-interface-and-postgres-boundary.md",
+    "PHASE03_object-store-abstraction-and-binary-input.md",
+    "PHASE04_queue-backend-and-rabbitmq-boundary.md",
+    "PHASE05_parser-index-worker-runtime.md",
+    "PHASE06_redis-runtime-state-boundary.md",
+    "PHASE07_outbox-dead-letter-reconciler.md",
+    "PHASE08_async-ingest-status-retry-cancel-replay.md",
+    "PHASE09_ocr-vlm-worker-boundary.md",
+    "PHASE10_end-to-end-async-restart-recovery.md",
+    "PHASE11_docs-verifier-sync.md",
+    "PHASE12_closure-archive-commit-push.md",
 ]
+PROGRAM3_ACTIVE_NAME = "zuno-enterprise-ingestion-async-infrastructure-v1"
+PROGRAM3_ACTIVE_PHASE_FILES = ACTIVE_PROGRAM_FILES[4:]
 LATEST_COMPLETED_PROGRAM_NAME = "zuno-enterprise-document-ingestion-platform-v2"
 LATEST_COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{LATEST_COMPLETED_PROGRAM_NAME}"
 LATEST_COMPLETED_PROGRAM_PHASE_FILES = [
@@ -95,9 +109,9 @@ CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
 ]
 QUEUED_PROGRAM_FILES = [
     "README.md",
-    "PROGRAM03_runtime-subsystems-parallel.md",
-    "PROGRAM04_agent-planning-integration.md",
-    "PROGRAM05_enterprise-knowledge-eval-benchmark.md",
+    "PROGRAM04_runtime-subsystems-parallel.md",
+    "PROGRAM05_agent-planning-integration.md",
+    "PROGRAM06_enterprise-knowledge-eval-benchmark.md",
 ]
 THREAD_PROMPT_FILES = [
     "THREAD_A_memory-context.md",
@@ -1317,10 +1331,11 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         + (runtime_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        f"active_program: {PROGRAM3_ACTIVE_NAME}",
+        "current_phase: PHASE01_truth-source-and-async-gap-audit.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
+        PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
         LATEST_COMPLETED_PROGRAM_ARCHIVE,
         CURRENT_ACTIVE_PROGRAM_NAME,
@@ -1367,10 +1382,35 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_names = sorted(path.name for path in programs_root.glob("PHASE*.md"))
-    if active_phase_names:
-        errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
+    if active_phase_names != sorted(PROGRAM3_ACTIVE_PHASE_FILES):
+        errors.append(".agent/programs active Program 3 phase files drifted: " + ", ".join(active_phase_names))
+    for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
+        phase_path = programs_root / phase_name
+        if not phase_path.exists():
+            continue
+        phase_content = phase_path.read_text(encoding="utf-8")
+        if f"program: {PROGRAM3_ACTIVE_NAME}" not in phase_content:
+            errors.append(f"Program 3 active phase missing program id: {phase_name}")
+        expected_status = "status: active" if phase_name.startswith("PHASE01_") else "status: pending"
+        if expected_status not in phase_content:
+            errors.append(f"Program 3 active phase missing {expected_status}: {phase_name}")
+        for required in [
+            "## 目标",
+            "## 范围",
+            "## 禁止范围",
+            "## 验收闸门",
+            "## 验证命令",
+            "## 需要先读取",
+            "## 需要修改的文件",
+            "## 执行拆解",
+            "## 多 agent 分工",
+            "## 需要返回的证据",
+            "## 停止条件",
+        ]:
+            if required not in phase_content:
+                errors.append(f"Program 3 active phase missing section {required}: {phase_name}")
     if (programs_root / "thread-prompts").exists():
-        errors.append(".agent/programs/thread-prompts must stay archived until Program 3 starts")
+        errors.append(".agent/programs/thread-prompts must stay archived until Program 4 starts")
     for phase_name in LATEST_COMPLETED_PROGRAM_PHASE_FILES:
         phase_path = latest_archive_root / phase_name
         if not phase_path.exists():

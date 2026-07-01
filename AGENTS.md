@@ -183,27 +183,28 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前 `.agent/programs/` 是 no-active 状态。最近完成并归档的 program 是 Program 2：`zuno-enterprise-document-ingestion-platform-v2`，归档位置是 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。该 program 完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。上一轮 Program 1 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，归档位置是 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`。后续 queued program 是 Program 3 `zuno-runtime-subsystems-parallel-v1`、Program 4 `zuno-agent-planning-integration-v1` 和 Program 5 `zuno-enterprise-knowledge-eval-benchmark-v1`。
+当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3：`zuno-enterprise-ingestion-async-infrastructure-v1`，当前 phase 是 `PHASE01_truth-source-and-async-gap-audit.md`。最近完成并归档的 program 是 Program 2：`zuno-enterprise-document-ingestion-platform-v2`，归档位置是 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。该 program 完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。上一轮 Program 1 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，归档位置是 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`。后续 queued program 是 Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1`。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`，归档位置是 `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`。它是一次性交付型成熟化 program，已完成 PHASE01-PHASE12，把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”的本地可验证 baseline。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；PHASE11 已关闭 local evidence provenance、citation source tracing、local RRF/rerank trace、deterministic graph extraction / community report trace 和 unsupported claim metrics；PHASE12 已完成 release closure、full verification、archive 和 no-active state。
 
 上一轮 runtime-first program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。runtime-first closure evidence 保留在归档目录；AGENTS.md 不重复闭环链路细节。
 
-当前前台采用三层成熟度口径：Current Local Slice 只写已由代码和测试证明的本地闭环；Launchable Prototype Target 是近期可上线企业知识库 Agent 雏形；Production Scale Target 是完整企业级多租户、队列、worker、外部索引、安全治理和运维扩展。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；Program 2 已关闭 PHASE01-PHASE08，详细证据以归档 phase 文件和 closure summary 为准。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
+当前前台采用三层成熟度口径：Current Local Slice 只写已由代码和测试证明的本地闭环；Launchable Prototype Target 是近期可上线企业知识库 Agent 雏形；Production Scale Target 是完整企业级多租户、队列、worker、外部索引、安全治理和运维扩展。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；Program 3 当前正在把 Program 2 的 SQLite / local synchronous durable baseline 推进为 enterprise ingestion async infrastructure baseline。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
 
 上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`。`zuno-eight-deliverables-full-realization-v1` 是八类治理交付物闭环的历史完成事实，不是当前前台 runtime deliverables 口径。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。更多历史归档见 `docs/history/programs/README.md`。
 
-当前 `.agent/programs/` no-active 状态保存：
+当前 `.agent/programs/` active 状态保存：
 
 - `.agent/programs/current.md`
 - `.agent/programs/README.md`
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/closure-checklist.md`
+- `.agent/programs/PHASE01_truth-source-and-async-gap-audit.md` 到 `.agent/programs/PHASE12_closure-archive-commit-push.md`
 - `.agent/programs/queued-programs/`
 
-最近完成的 `zuno-enterprise-document-ingestion-platform-v2` 已归档。本轮 Program 2 不能改写 Program 1 或上一轮 PHASE01-PHASE12 closure evidence；后续仍不得把 Target 伪装成 Current。
+最近完成的 `zuno-enterprise-document-ingestion-platform-v2` 已归档。本轮 Program 3 不能改写 Program 1 / Program 2 或上一轮 PHASE01-PHASE12 closure evidence；后续仍不得把 Target 伪装成 Current。
 
-Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
+历史 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 
 Program 4 已完成的边界：六层内部已有第一批无副作用薄入口、README、focused tests 和 verifier guard。它不表示 GeneralAgent 主循环、DB schema、API 行为、eval baseline、production memory、dynamic capability orchestration、retrieval fusion 或 model gateway runtime 已完成。
 

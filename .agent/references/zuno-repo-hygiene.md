@@ -10,7 +10,7 @@
 
 ## Current Truth
 
-Program 3 final alias surface closure 已完成。当前目标态要求 `src/backend/zuno` 顶层只保留 `api / agent / memory / capability / knowledge / platform` 六个目录和 `__init__.py`、`main.py` 两个文件；旧 runtime import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
+历史 Program 3 final alias surface closure 已完成。当前目标态要求 `src/backend/zuno` 顶层只保留 `api / agent / memory / capability / knowledge / platform` 六个目录和 `__init__.py`、`main.py` 两个文件；旧 runtime import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 
 ## Target Direction
 

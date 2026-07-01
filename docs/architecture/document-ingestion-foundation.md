@@ -133,6 +133,22 @@ Program 2 `zuno-enterprise-document-ingestion-platform-v2` 已完成并归档。
 
 Program 2 的 Product V1 验收不是分布式 queue 或百万文档，而是服务重启后 file、parse job、document version、index manifest、index chunk、citation lineage、task、events、artifact content/ref 和 feedback 不丢。Production Scale Target 才包括 Postgres、object store、Redis / Kafka、outbox、worker lease、heartbeat、dead letter reconciler、external OCR / VLM 和 external index platform。
 
+Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1` 当前 active。它承接 Program 2 的 durable baseline，目标是完成 enterprise ingestion async infrastructure baseline：
+
+```text
+PostgreSQL-compatible fact store boundary
++ ObjectStore binary support
++ QueueBackend / LocalQueueBackend
++ RabbitMQ boundary
++ Redis runtime state boundary
++ ParserWorker / IndexWorker
++ outbox / dead letter / reconciler
++ OCR / VLM worker boundary
++ ingest status / retry / cancel / replay
+```
+
+Program 3 的 Current 只能来自本轮真实代码和 focused tests。真实 PostgreSQL、RabbitMQ、Redis、MinIO / S3、external OCR / VLM 和 external index 没有 provider 接入与测试前，只能写成 Target / target-blocked evidence。
+
 ## Program 2 数据模型目标
 
 Program 2 已定义并验证以下 durable entities：

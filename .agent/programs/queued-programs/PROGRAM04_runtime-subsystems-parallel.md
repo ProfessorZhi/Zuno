@@ -1,12 +1,12 @@
-# PROGRAM03 Runtime Subsystems Parallel
+# PROGRAM04 Runtime Subsystems Parallel
 
 state: queued
 program: zuno-runtime-subsystems-parallel-v1
-depends_on: zuno-enterprise-document-ingestion-platform-v2
+depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
 
 ## 目标
 
-在 Program 1 固定 Document IR、parser worker 和 index handoff，且 Program 2 完成 enterprise document ingestion persistence platform 之后，使用多线程模式并行推进四个低耦合子系统：Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。Program 3 的目标是产出可被 Program 4 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环，也不回退到 in-memory 产品事实源。
+在 Program 1 固定 Document IR、Program 2 完成 durable ingestion Product V1，且 Program 3 完成 enterprise ingestion async infrastructure baseline 之后，使用多线程模式并行推进四个低耦合子系统：Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。Program 4 的目标是产出可被 Program 5 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环，也不回退到 in-memory 产品事实源。
 
 ## 为什么可以并行
 
@@ -15,7 +15,7 @@ depends_on: zuno-enterprise-document-ingestion-platform-v2
 - Memory / Context 主要在 `src/backend/zuno/memory/`、`src/backend/zuno/agent/context.py` 和 memory tests。
 - Tool / Sandbox 主要在 `src/backend/zuno/capability/`、`src/backend/zuno/platform/security/` 和 tool tests。
 - Security / Governance 主要在 `src/backend/zuno/platform/security/`、trace / redaction tests 和 security tests。
-- GraphRAG / Index 主要在 `src/backend/zuno/knowledge/`、retrieval / graph tests 和 eval hooks。
+- GraphRAG / Index 主要在 `src/backend/zuno/knowledge/`、retrieval / graph tests 和 eval hooks。Program 4 不再补 Program 3 已负责的 queue、worker、outbox、dead letter 或 reconciler。
 
 共享文件如 `AGENTS.md`、README、`.agent/system.yaml`、`.agent/programs/*`、核心 verifier、架构文档由主线程 coordinator 收口。
 
@@ -114,25 +114,25 @@ depends_on: zuno-enterprise-document-ingestion-platform-v2
 
 1. 固定 enterprise knowledge schema 和 EvidenceBundle 字段。
 2. 增强 local RRF / rerank trace。
-3. 提供 Static GraphRAG baseline runner，为 Program 5 对照组准备。
+3. 提供 Static GraphRAG baseline runner，为 Program 6 对照组准备。
 4. 继续把外部 Elasticsearch / Milvus / Neo4j 写成 adapter boundary 和 Target，不伪装 Current。
 
 验收：
 
 - 同一 query 能产生 retrieval trace、evidence bundle 和 citation source tracing。
-- GraphRAG baseline runner 可被 Program 5 eval 调用。
+- GraphRAG baseline runner 可被 Program 6 eval 调用。
 - unsupported claim metrics 可读。
 
 ## 主线程 Coordinator 规则
 
-1. Program 1 PHASE07 已按旧 Program 2 语境生成四个 thread prompts；启动本 program 时必须先刷新为当前 Program 3 语境。
+1. Program 1 PHASE07 已按旧 Program 2 语境生成四个 thread prompts；启动本 program 时必须先刷新为当前 Program 4 语境，并引用 Program 3 async ingestion infrastructure closure evidence。
 2. 用户在 Codex UI 中创建或确认四个真实目标模式线程。
 3. 每个线程必须确认 worktree、branch、status、allowed paths、forbidden paths。
 4. 每个线程完成前必须验证、commit、push。
 5. 主线程读取 diff 和验证结果，不只信总结。
 6. 合并顺序建议：GraphRAG / Index -> Memory / Context -> Tool / Sandbox -> Security / Governance -> docs / verifier 收口。
 
-## Program 3 验证基线
+## Program 4 验证基线
 
 ```powershell
 git diff --check

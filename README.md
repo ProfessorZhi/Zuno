@@ -39,12 +39,13 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 `.agent/programs/` 处于 no-active 状态：
+当前 `.agent/programs/` 处于 active 状态：
 
+- `active_program: zuno-enterprise-ingestion-async-infrastructure-v1`
+- `current_phase: PHASE01_truth-source-and-async-gap-audit.md`
 - `latest_completed_program: zuno-enterprise-document-ingestion-platform-v2`
-- 归档：`docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
 
-最近完成的 active program 是 `zuno-enterprise-document-ingestion-platform-v2`，业务口径是 Program 2：不改写 Program 1 历史，而是把 local runtime slice 推进到企业级文档输入与持久化平台雏形。它已完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。后续 queued program 依次是 Program 3 `zuno-runtime-subsystems-parallel-v1`、Program 4 `zuno-agent-planning-integration-v1` 和 Program 5 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标仍是单控制器 Agentic GraphRAG 企业知识库问答系统。
+当前 Program 3 是 Enterprise Ingestion Async Infrastructure：承接 Program 2 已完成的 Product V1 local durable ingestion baseline，补齐企业文档输入层的异步基础设施 baseline，包括 PostgreSQL-compatible fact store boundary、ObjectStore binary support、QueueBackend / LocalQueueBackend、RabbitMQ boundary、Redis runtime state boundary、ParserWorker / IndexWorker、outbox、dead letter、reconciler、OCR / VLM worker boundary 和 ingest status / retry / cancel / replay contract。后续 queued program 依次是 Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标仍是单控制器 Agentic GraphRAG 企业知识库问答系统。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 
