@@ -42,6 +42,100 @@ Current 只能描述代码和测试已经证明的事实：
 - `WorkspaceTaskRuntimeService.create_ingest_job()` 已通过 `ParseGateway.submit_parse_job()` 解析 workspace file，返回 `parse_job` 和 `parse_snapshot`，并把 `ParseJobSnapshot` 传给 `KnowledgeIndexRuntime.index_document(..., parse_job_snapshot=...)`，让 `/api/v1/workspace/ingest` 的 index manifest 保留 `parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256` 和 parser diagnostics lineage。旧 `_document_from_file()` / `workspace_text_runtime` 只保留为历史 gap 证据，不再是当前 ingest 闭环。
 - Program 2 已新增 `src/backend/zuno/knowledge/storage/`，并把 `LocalObjectStore` 和 `SQLiteDurableIngestionStore` 接入 `WorkspaceTaskRuntimeService`：`/workspace/file` 保存 source object、source hash、storage uri 和 workspace file metadata；`/workspace/ingest` 持久化 parse job、parse snapshot、document version、document blocks、index manifest、index chunks 和 citation lineage；workspace task、events、artifact content/ref 和 feedback 可从 SQLite rehydrate。它仍不是生产 Postgres、MinIO / S3、Redis / outbox / worker lease、external OCR / VLM 或 external index platform。
 
+## Input Format Support Matrix
+
+当前代码已经有 parser capability matrix，但“矩阵覆盖”和“真实 Current 能力”不是一回事。当前稳定 Current 是低依赖 native parser；PDF、Office、image、scanned 和 binary 仍必须保持 target-blocked 或 fallback diagnostics 边界，不能因为有 fixture 或 adapter contract 就写成生产可用。
+
+| Input Type | Examples | Current Behavior | Launchable Target | Production Scale Target | Status / UI Behavior |
+| --- | --- | --- | --- | --- | --- |
+| Text | txt | `native` deterministic parser，保留 line range。 | async parse worker 执行同一 native parser，并写 file-level status。 | parser ops metrics、large text streaming、charset diagnostics。 | indexed / failed。 |
+| Markdown | md, mdx | `native` parser，保留 heading、link、code fence、table 和 section path；`.mdx` 路由到 `md`。 | async worker，malformed markdown diagnostics 和 citation source span。 | richer Markdown AST、frontmatter / embed policy。 | indexed / failed。 |
+| CSV | csv | `native` table parser，保留 delimiter、header、row、column 和 table_cell。 | async worker，large-ish CSV status 和 malformed row diagnostics。 | large CSV streaming、schema inference、column ACL。 | indexed / failed。 |
+| JSON | json | `native` JSON parser，保留 object / array / value block 和 JSON pointer。 | async worker，JSONL / malformed JSON diagnostics contract。 | JSONL / streaming、typed schema mapping。 | indexed / failed。 |
+| HTML | html, htm | `native` cleanup parser，过滤 script / style，保留 heading、paragraph、link 和 table。 | async worker，browser-rendered HTML parser boundary。 | browser-rendered HTML parser、DOM snapshot provenance。 | indexed / failed。 |
+| Code | py, ts, js, java, go | `native` code parser，做扩展名语言识别和 regex import / class / function metadata，不声称完整 AST。 | code-aware worker，line range、symbol summary 和 citation。 | repo-level code graph、dependency graph、language server enrichment。 | indexed / failed。 |
+| PDF | pdf | `docling_pymupdf` adapter contract 已登记，但 external dependency 是 `target_blocked`；当前只允许 deterministic fixture / text fallback diagnostics 或 blocked job state，不能写成真实 PDF parser。 | local PDF worker boundary、dependency probe、text layer fallback、blocked visibility。 | production Docling / PyMuPDF worker、layout / table / page image extraction。 | blocked / dependency_probe / retry。 |
+| Office | docx, pptx, xlsx, xls | `unstructured_markitdown` adapter contract 已登记，但 external dependency 是 `target_blocked`；fixture 可生成 target-blocked metadata，不代表真实 Office parser Current。 | office worker boundary、dependency probe、source object persistence、blocked diagnostics。 | production Unstructured / MarkItDown worker、slide / sheet / table extraction。 | blocked / dependency_probe / retry。 |
+| Image | png, jpg, jpeg, bmp, webp, tiff | `mineru_ocr_vlm` adapter contract 已登记，当前是 target-blocked derived enrichment；缺 provider 时 `submit_parse_job()` 应 blocked。 | OCR / VLM worker boundary、privacy / budget / review gate、diagnostics。 | MinerU / PaddleOCR / VLM provider、figure caption、chart/table understanding。 | blocked / review_required。 |
+| Scanned | scanned PDF / scanned image | target-blocked OCR / VLM boundary；scanned PDF 目标上先检测 text layer，无 text layer 再进入 OCR / VLM worker。 | OCR / VLM worker boundary、page image extraction target、human review gate。 | production OCR / VLM pipeline、confidence calibration、review workflow。 | blocked / review_required。 |
+| Binary / Unknown | bin, unknown | source object only 或 unknown format fallback diagnostics；不能假装可解析。 | object store + dependency probe + unsupported / blocked 状态。 | custom parser plugins、admin-configured parser policy。 | unsupported / blocked。 |
+
+这张表的关键约束是：`txt / md / csv / json / html / code` 可以写成 Current native deterministic parser；PDF / Office / image / scanned / unknown binary 只能写成 target-blocked boundary、dependency probe、blocked diagnostics 或 Launchable / Production Target。
+
+## Binary Source Object Target
+
+当前 `LocalObjectStore` 主要面向 `save_text()` 和小文本 fixture，已经能计算 `source_sha256` 并返回 `storage_uri`。Program 3 Mega 的 Launchable Target 要把 source object 从“文本内容保存”升级成“原始文件事实保存”，但本轮没有 runtime 实现前不能把这些写成 Current。
+
+Launchable Prototype Target：
+
+- `save_bytes()`：保存 PDF、Office、image、scanned、unknown binary 的原始 bytes。
+- `read_bytes()` / `open_stream()`：支持 worker 以 bytes 或 stream 读取原始对象。
+- `verify_sha256()`：验证 object store 内容与 `source_sha256` 一致。
+- `mime sniffing`：记录用户声明 MIME 与后端 sniffed MIME 的差异。
+- `size_bytes`、`content_type`、`storage_uri`、`source_sha256`：进入 `SourceObject` 和 workspace file metadata。
+- `object_missing diagnostics`：对象丢失时返回可审计错误，不让 parser 假成功。
+
+Production Scale Target：
+
+- MinIO / S3 / OSS / COS adapter。
+- multipart upload 和 large file streaming。
+- object lifecycle policy、retention policy、encryption / access policy。
+- derived artifacts：page image、IR JSON、diagnostics JSON、artifact export 都以 object ref 追溯。
+
+数据库仍只保存事实、状态和 metadata；大对象和原始证据进入 object store。
+
+## Async Ingestion Pipeline
+
+成熟输入层目标链路是异步、可恢复、可重试，而不是 API 请求线程同步解析所有重文件：
+
+```text
+/workspace/file
+  -> SourceObject persisted
+  -> WorkspaceFile metadata
+  -> /workspace/ingest
+  -> ParseJob queued
+  -> QueueBackend
+  -> ParserWorker
+  -> ParseAttempt
+  -> CanonicalDocumentIR
+  -> DocumentVersion / DocumentBlocks
+  -> IndexJob queued
+  -> IndexWorker
+  -> IndexManifest / IndexChunks / CitationLineage
+  -> Retrieval available
+```
+
+Program 3 Mega 的 local baseline 可以用 `LocalQueueBackend` 和 local workers 跑通；RabbitMQ、Redis、PostgreSQL、MinIO / S3 和 external parser workers 没有真实 provider 和 tests 前只能是 adapter boundary / dependency probe / target-blocked evidence。
+
+## Queue / Worker / Outbox / Reconciler
+
+Program 3 Mega 的 PHASE03 必须把以下对象写进计划和 shared contracts：
+
+- **QueueBackend**：先实现 local queue；RabbitMQQueueBackend 只做 boundary、dependency probe 和 target-blocked evidence，不能要求外部 broker 才能跑 tests。
+- **ParserWorker**：消费 `parse_requested`，调用 `ParseGateway`，写 `ParseAttempt`、parse snapshot、`DocumentVersion` 和 blocks；target-blocked PDF / Office / OCR / VLM 必须保留 blocked reason。
+- **IndexWorker**：消费 `index_requested`，写 `IndexManifest`、chunks 和 citation lineage；blocked / failed parse 不能进入 fake index。
+- **Outbox**：DB 事务内写 job + outbox event，防止“parse job 已落库但队列消息丢失”。
+- **DeadLetter**：超过 retry 上限、依赖缺失或策略 blocked 时保留 failure / blocked evidence。
+- **Reconciler**：检查 `uploaded_without_parse`、`parse_succeeded_without_index`、`index_chunks_missing`、`blocked_without_diagnostics`、`object_missing`、`citation_lineage_missing`。
+
+这些是输入层进入 launchable enterprise baseline 的结构骨架；真实 RabbitMQ / Redis / Postgres / MinIO / OCR / VLM 仍是 Production Scale Target。
+
+## File-level Lifecycle
+
+产品、API 和 trace 必须能表达文件级生命周期，不只表达最终是否有 answer：
+
+```text
+uploaded
+  -> queued
+  -> parsing
+  -> parsed
+  -> indexing
+  -> indexed
+  -> failed / blocked / dead_letter / cancelled
+```
+
+文件列表和 diagnostics 至少要能展示 `file_id`、`filename`、`mime_type`、`size_bytes`、`source_sha256`、`storage_uri` / `source_ref`、`parse_status`、`index_status`、`parser_id`、`document_version_id`、`index_job_id`、`blocked_reason`、`dependency_probe`、`retry_count`、`last_error` 和 `retry / cancel / reparse / reindex / rebuild_graph / view_diagnostics` actions。
+
 ## Program 1 Local Runtime Slice
 
 Program 1 已关闭本地可验证 ingestion runtime slice：
@@ -363,7 +457,11 @@ metadata:
 - 默认 network deny，除非显式允许。
 - page limit、budget limit 和 privacy gate 必须先于 VLM 调用。
 - VLM 输出要带 `derived_from` 和 `review_required`，不能覆盖原始 source span。
+- OCR / VLM 输出必须记录 confidence、model_id、prompt_version、derived_from、review_required、privacy_gate 和 budget_gate；这些字段是 derived evidence，不是 source truth。
+- scanned PDF 应优先检测 text layer；没有 text layer 时才进入 OCR / VLM worker target。
 - scanned / image 在 OCR engine 或 VLM 不可用时应返回 blocked diagnostics，而不是假成功。
+- blocked OCR / VLM、PDF 或 Office 解析不能创建 fake index；E2E 和 Eval 必须能证明 blocked reason、dependency probe、worker event 和 index status 可追溯。
+- 高风险或低置信 OCR / VLM 输出必须进入 human review 或 blocked/review_required 状态，不允许直接作为高置信引用证据。
 
 ## Program 1 Phase 映射
 

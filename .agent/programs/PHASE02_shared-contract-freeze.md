@@ -11,11 +11,14 @@ status: pending
 ## 范围
 
 - 定义或确认 `AgentRun`、`ContextPack`、`RetrievalProfile`、`RetrievalDecision`、`EvidenceBundle`、`CitationLineage`。
+- 定义或确认输入层 shared contracts：`FileInputFormat`、`SourceObject`、`BinarySourceObject`、`ObjectStoreRef`、`ObjectStoreResult`、`ParserCapabilityStatus`、`ParserDependencyProbe`、`FileIngestionStatus`。
+- 定义或确认 worker / queue contracts：`ParserWorkerSpec`、`ParserWorkerResult`、`ParseJobStatus`、`ParseAttempt`、`IndexWorkerSpec`、`IndexWorkerResult`、`QueueMessage`、`QueueBackendResult`、`OutboxEvent`、`DeadLetterRecord`、`ReconcilerFinding`。
+- 定义或确认 OCR / VLM derived enrichment contract：`OCRVLMEnrichmentResult`，必须包含 confidence、model_id、prompt_version、derived_from、review_required、privacy_gate、budget_gate 和 blocked / target-blocked 状态。
 - 定义或确认 `KnowledgeSpaceConfig`、`ChangeImpactPreview`、file-level status summary、knowledge profile request / response summary。
 - 定义或确认 `CapabilityCard`、`CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent`、`SkillCard`、`ToolCard`、MCP capability、output contract、eval rubric。
 - 定义或确认 `PlanStep`、`PlanState`、`StrategySelectorOutput`、`ReflectionVerdict`、`ReplanDecision`、`ReflexionLesson`。
 - 定义或确认 `TraceRecord`、`TraceMetric`、`CostMetric`、model call metric 和 release baseline metric。
-- 定义或确认 `ConversationRunMetrics`、`StageMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport`。
+- 定义或确认 `ConversationRunMetrics`、`StageMetrics`、`IngestionMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport`。
 - 定义或确认 `ScenarioSummary` / `TraceSummary` fixture contract，用于 PHASE12 用户可感知 E2E evidence。
 
 ## 目标架构拼接点
@@ -23,18 +26,21 @@ status: pending
 本 phase 是所有层之间的“接口冻结层”。最终目标架构能拼起来，靠的是这些 contract 让各层只依赖稳定语义，而不是互相读内部实现：
 
 - Knowledge 输出 `EvidenceBundle` 和 `CitationLineage` 给 Planning / Reflection / Output Gate。
+- Input / Async Infrastructure 输出 `SourceObject`、`ObjectStoreRef`、`FileIngestionStatus`、`ParseJobStatus`、`ParserWorkerResult`、`IndexWorkerResult`、`OutboxEvent`、`DeadLetterRecord` 和 `ReconcilerFinding` 给 Product Surface、Knowledge、E2E 和 Eval。
 - Memory 输出 `ContextPack` 给 Planning。
 - Product Surface 输出 `KnowledgeSpaceConfig`、`ChangeImpactPreview` 和 file status summary 给 API / Frontend / E2E。
 - Capability 输出 `CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent`、`SkillCard`、`ToolCard` 和 allowed capability summary 给 Planning。
 - Security 输出 gate verdict 给 Planning 和 Tool runtime。
 - Model Gateway 输出 cost / latency / token metrics 给 Eval。
 - Planning 输出 plan / replan / reflexion events 给 Trace / Eval。
-- Eval 输出 `ConversationRunMetrics`、`StageMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport` 给 release gate。
+- Eval 输出 `ConversationRunMetrics`、`StageMetrics`、`IngestionMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport` 给 release gate。
 - E2E 输出 `ScenarioSummary` / `TraceSummary`，给 PHASE13 benchmark 和 PHASE15 closure summary。
 
-PHASE02 完成后，后续 workstream 不允许随意发明第二套 plan、evidence、skill 或 trace 字段。
+PHASE02 完成后，后续 workstream 不允许随意发明第二套 file status、queue message、worker result、OCR / VLM result、plan、evidence、skill、trace 或 metrics 字段。
 
 PHASE11 的 `KnowledgeSpaceConfig` / `ChangeImpactPreview`、PHASE06 的 `CapabilityPolicy` 系列、PHASE13 的 per conversation / per stage metrics、PHASE12 的 scenario summary / trace summary fixture 都必须先在本 phase 冻结，再允许各 workstream 实现。
+
+PHASE03 的 `FileInputFormat`、`BinarySourceObject`、`QueueMessage`、`ParserWorkerResult`、`IndexWorkerResult`、`OutboxEvent`、`DeadLetterRecord`、`ReconcilerFinding` 和 `OCRVLMEnrichmentResult` 也必须先在本 phase 冻结；PHASE03、PHASE11、PHASE12、PHASE13 不得自行发明第二套文件状态、队列消息、worker result、OCR / VLM result 或 metrics schema。
 
 ## 并行开发可行性
 
@@ -57,7 +63,7 @@ PHASE11 的 `KnowledgeSpaceConfig` / `ChangeImpactPreview`、PHASE06 的 `Capabi
 - 主要交付物：共享 contract 文件、contract tests、兼容说明、后续 workstream 不得擅自改动的冻结字段清单。
 - 可并行工作包：只读 review 可并行；实际 contract 文件只能单 owner 编辑。各 workstream 可以提交 contract request，但不能直接改共享 schema。
 - Coordinator 锁点：AgentRun、ContextPack、RetrievalProfile、EvidenceBundle、KnowledgeSpaceConfig、ChangeImpactPreview、CapabilityPolicy、SkillCard、PlanState、ConversationRunMetrics、StageMetrics、ScenarioSummary、TraceMetric、Workspace API DTO。
-- 下游交接：PHASE03 需要 ingestion/status contracts；PHASE04 需要 retrieval/evidence contracts；PHASE05 需要 ContextPack；PHASE06 需要 CapabilityPolicy / CapabilityRiskProfile / SkillCard；PHASE09 需要 Plan/Replan/Reflection contracts；PHASE11 需要 KnowledgeSpaceConfig / ChangeImpactPreview；PHASE12 需要 ScenarioSummary / TraceSummary；PHASE13 需要 ConversationRunMetrics / StageMetrics / EvalComparisonReport。
+- 下游交接：PHASE03 需要 input format、binary object、object ref、queue message、worker result、outbox、dead letter、reconciler、OCR / VLM enrichment 和 status contracts；PHASE04 需要 retrieval/evidence contracts；PHASE05 需要 ContextPack；PHASE06 需要 CapabilityPolicy / CapabilityRiskProfile / SkillCard；PHASE09 需要 Plan/Replan/Reflection contracts；PHASE11 需要 KnowledgeSpaceConfig / ChangeImpactPreview / FileIngestionStatus；PHASE12 需要 ScenarioSummary / TraceSummary；PHASE13 需要 ConversationRunMetrics / StageMetrics / RetrievalMetrics / PlanningMetrics / SecurityMetrics / EvalComparisonReport / IngestionMetrics。
 - PR / commit 建议：`feat(contracts): freeze agentic graphrag shared runtime contracts`，必须先过 contract tests 再允许并行实现。
 
 ## 禁止范围
@@ -70,7 +76,7 @@ PHASE11 的 `KnowledgeSpaceConfig` / `ChangeImpactPreview`、PHASE06 的 `Capabi
 
 - 共享契约文件位置明确，字段命名稳定。
 - focused contract tests 覆盖序列化、默认值、枚举值和 backward-compatible parse。
-- `KnowledgeSpaceConfig`、`ChangeImpactPreview`、`CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent`、`ConversationRunMetrics`、`StageMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport`、`ScenarioSummary` 和 `TraceSummary` 均在 shared contract map 中有唯一 owner。
+- `FileInputFormat`、`SourceObject`、`BinarySourceObject`、`ObjectStoreRef`、`ObjectStoreResult`、`ParserCapabilityStatus`、`ParserDependencyProbe`、`ParserWorkerSpec`、`ParserWorkerResult`、`ParseJobStatus`、`ParseAttempt`、`IndexWorkerSpec`、`IndexWorkerResult`、`QueueMessage`、`QueueBackendResult`、`OutboxEvent`、`DeadLetterRecord`、`ReconcilerFinding`、`OCRVLMEnrichmentResult`、`KnowledgeSpaceConfig`、`FileIngestionStatus`、`ChangeImpactPreview`、`CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent`、`ConversationRunMetrics`、`StageMetrics`、`IngestionMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`EvalComparisonReport`、`ScenarioSummary` 和 `TraceSummary` 均在 shared contract map 中有唯一 owner。
 - 后续 workstream 修改 shared contract 必须经 Coordinator 审查。
 
 ## 验证命令

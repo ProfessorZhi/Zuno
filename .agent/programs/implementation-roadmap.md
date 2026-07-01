@@ -100,9 +100,9 @@ Production scale external deployments remain replaceable targets.
    - 输出 merge map、owner map、shared file map、workstream map、PR / commit plan。
    - 确认目标架构公式和 Product Baseline 完成标准。
 2. `PHASE02_shared-contract-freeze.md`
-   - 冻结 AgentRun、ContextPack、RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage、KnowledgeSpaceConfig、ChangeImpactPreview、CapabilityCard、CapabilityPolicy、CapabilityRiskProfile、CapabilityAuditEvent、SkillCard、ToolCard、PlanStep、ReflectionVerdict、ReplanDecision、ReflexionLesson、ScenarioSummary、TraceSummary、TraceRecord、ConversationRunMetrics、StageMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport 和 CostMetric。
+   - 冻结 AgentRun、ContextPack、RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage、FileInputFormat、SourceObject、BinarySourceObject、ObjectStoreRef、ObjectStoreResult、ParserCapabilityStatus、ParserDependencyProbe、ParserWorkerSpec、ParserWorkerResult、ParseJobStatus、ParseAttempt、IndexWorkerSpec、IndexWorkerResult、QueueMessage、QueueBackendResult、OutboxEvent、DeadLetterRecord、ReconcilerFinding、OCRVLMEnrichmentResult、KnowledgeSpaceConfig、FileIngestionStatus、ChangeImpactPreview、CapabilityCard、CapabilityPolicy、CapabilityRiskProfile、CapabilityAuditEvent、SkillCard、ToolCard、PlanStep、ReflectionVerdict、ReplanDecision、ReflexionLesson、ScenarioSummary、TraceSummary、TraceRecord、ConversationRunMetrics、StageMetrics、IngestionMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport 和 CostMetric。
 3. `PHASE03_enterprise-ingestion-async-infrastructure.md`
-   - DurableIngestionStore、ObjectStore、QueueBackend、ParserWorker / IndexWorker、Outbox、DeadLetter、Reconciler、OCR/VLM boundary、ingest status / retry / cancel / replay。
+   - DurableIngestionStore、binary ObjectStore、LocalObjectStore save/read/verify bytes、QueueBackend、LocalQueueBackend、RabbitMQ boundary / probe、Redis runtime state boundary、ParserWorker / IndexWorker、Outbox、DeadLetter、Reconciler、PDF / Office / image / scanned / binary async ingestion target、OCR/VLM blocked boundary、file status lifecycle、ingest status / retry / cancel / replay。
 4. `PHASE04_knowledge-retrieval-and-graphrag-profile.md`
    - 标准检索 / 深度检索、RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage、deep_without_graph fallback。
 5. `PHASE05_memory-context-engine.md`
@@ -118,13 +118,13 @@ Production scale external deployments remain replaceable targets.
 10. `PHASE10_react-reflection-replan-reflexion-runtime.md`
    - ReAct step runner、Reflection gate、Dynamic Replan、Reflexion candidate 和 trace events。
 11. `PHASE11_workspace-product-api-frontend-sync.md`
-   - 后端新增 profile / plan / trace / capability / eval 字段与 workspace API / frontend API types 最小同步，并补 KnowledgeSpaceConfig、创建 Wizard、Settings tabs、file status 和 Change Impact Preview 的产品契约。
+   - 后端新增 profile / plan / trace / capability / eval 字段与 workspace API / frontend API types 最小同步，并补 KnowledgeSpaceConfig、创建 Wizard、Settings tabs、file status、parser dependency probe、PDF / Office / OCR provider target、retry / cancel / reparse / reindex / rebuild_graph actions 和 Change Impact Preview 的产品契约。
 12. `PHASE12_end-to-end-product-runtime.md`
-   - Upload / ingest / parse / index / retrieval / planning / skill / artifact / trace / feedback / restart rehydrate E2E，并生成用户可感知 scenario summary / trace summary fixture。
+   - Upload / ingest / parse / index / retrieval / planning / skill / artifact / trace / feedback / restart rehydrate E2E，并生成用户可感知 scenario summary / trace summary fixture；覆盖 native formats、PDF / Office target-blocked、image / scanned OCR/VLM blocked no fake index、binary object traceability、local queue / worker lifecycle、dead_letter / reconciler fixture。
 13. `PHASE13_eval-trace-cost-benchmark.md`
-   - ConversationRunMetrics、StageMetrics、retrieval / answer / planning / replan / reflection / reflexion / security / cost / latency metrics and regression report。
+   - ConversationRunMetrics、StageMetrics、IngestionMetrics、retrieval / answer / planning / replan / reflection / reflexion / security / cost / latency metrics and regression report；回答文件 blocked、PDF / Office / OCR no fake index、binary sha256 traceability、parse / index duration、deep retrieval cost source 和 OCR/VLM provider blocked 是否正确。
 14. `PHASE14_docs-architecture-expansion.md`
-   - agent core runtime、capability and skill、agentic retrieval planner、eval observability and cost 等架构展开文档。
+   - agent core runtime、capability and skill、agentic retrieval planner、input-layer-and-document-processing、knowledge-space-product-configuration、eval observability and cost 等架构展开文档。
 15. `PHASE15_verification-archive-closure.md`
    - full verification、archive、no-active、closure summary、commit、push。
 
@@ -133,14 +133,14 @@ Production scale external deployments remain replaceable targets.
 | 目标架构层 | 对应 Phase | 主要产物 | 下游消费者 |
 |---|---|---|---|
 | Product Surface | PHASE11, PHASE12 | knowledge profile request、KnowledgeSpaceConfig、Change Impact Preview、task snapshot、artifact citation、feedback、scenario summary | 用户、AgentChat、E2E、Eval |
-| Input / Async Infrastructure | PHASE03 | ObjectStore、QueueBackend、ParserWorker、IndexWorker、Outbox、Reconciler | Knowledge Retrieval、E2E、Restart Recovery |
+| Input / Async Infrastructure | PHASE03 | binary ObjectStore、QueueBackend、ParserWorker、IndexWorker、Outbox、DeadLetter、Reconciler、OCR/VLM blocked boundary、file lifecycle | Knowledge Retrieval、Product API、E2E、Eval、Restart Recovery |
 | Knowledge Capability | PHASE04 | RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage | Planning、Reflection、Output Gate、Eval |
 | Memory & Context Engine | PHASE05 | ContextPack、多重 memory、structured extraction、hierarchical summary、evidence-bound compression、Reflexion review path | Strategy Selector、ReAct、Reflexion |
 | Capability Layer | PHASE06 | CapabilityRegistry、CapabilityPolicy、SkillCard、ToolCard、MCPCapability、KnowledgeCapability、ArtifactCapability | Skill selection、Tool Gate、Retrieval Gate、ReAct runner |
 | Security / Governance Envelope | PHASE07 | Input / Retrieval / Tool / Output gates、audit verdict | Planning、Retrieval、Tool runtime、Output safety、Eval |
 | Model Gateway | PHASE08 | model category、provider boundary、cost / latency / token metrics | Planning budget、Retrieval rerank、Eval judge |
 | Planning & Control Runtime | PHASE09, PHASE10 | StrategySelector、PlanStep、Reflection、Dynamic Replan、ReflexionLesson | Product runtime、Trace、E2E |
-| Eval / Trace / Cost | PHASE13 | ConversationRunMetrics、StageMetrics、metrics、trace、regression report、release baseline | Closure、README / architecture evidence |
+| Eval / Trace / Cost | PHASE13 | ConversationRunMetrics、StageMetrics、IngestionMetrics、metrics、trace、regression report、release baseline | Closure、README / architecture evidence |
 | Docs / Archive | PHASE14, PHASE15 | architecture docs、production readiness、closure summary、archive | Future programs、repo verifiers |
 
 ## 串并行策略

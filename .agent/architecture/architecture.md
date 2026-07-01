@@ -110,6 +110,8 @@ Zuno production scale target
 
 基础设施目标是 PostgreSQL / SQLite、Object Store / MinIO / S3 / Local FS、RabbitMQ / QueueBackend、Redis / Runtime State、Workers、Outbox / Dead Letter / Reconciler 和 OpenTelemetry / Trace Store。它们不应暴露成普通用户心智。
 
+输入层不是“上传一段文本”的窄功能，而是企业文档输入平台。当前 Current 稳定能力是 `native` parser 对 txt / md / csv / json / html / code 的低依赖确定性解析；PDF、Office、图片、扫描件和未知二进制文件已经有格式矩阵、adapter contract、dependency probe 与 target-blocked diagnostics，但真实 Docling / PyMuPDF、Unstructured / MarkItDown、MinerU / OCR / VLM worker 仍是 Launchable / Production Scale Target。用户在产品上应看到文件状态、知识库状态、标准检索 / 深度检索和 blocked / retry / diagnostics，不应看到 Docling、MinerU、RabbitMQ 等技术细节。成熟输入层依赖 ObjectStore、QueueBackend、ParserWorker、IndexWorker、Outbox、DeadLetter 和 Reconciler；详细边界由 `docs/architecture/document-ingestion-foundation.md` 维护。
+
 ## 近期目标：Launchable Enterprise KB Agent Prototype
 
 Zuno 近期目标是 **Zuno Launchable Enterprise KB Agent Prototype / Zuno 可上线企业知识库 Agent 雏形架构**。
@@ -1199,15 +1201,9 @@ upload / sync enterprise docs
 
 ## 文档解析边界
 
-下一阶段需要把文档解析正式成层。目标 Parser Capability Matrix 至少覆盖：
+文档解析已经正式成为输入层的一等能力，但 Current / Target 仍要严格分层。当前 parser capability matrix 覆盖 PDF、Office、TXT、MD / MDX、CSV、JSON、HTML、图片、扫描件和代码；真正 Current 稳定的是 `native` parser 对 txt / md / csv / json / html / code 的 deterministic baseline。PDF / Office / OCR / VLM 是 target-blocked adapter boundary：当前可记录 dependency probe、blocked diagnostics、fixture / fallback evidence 和 source lineage，但不能写成真实生产 parser worker。
 
-- PDF：页码、span、图片、表格和 OCR metadata。
-- DOCX / PPTX / XLSX：heading、slide、sheet、table 和结构信息。
-- TXT / MD / CSV / JSON / HTML：行号、标题、row id、DOM section。
-- 图片 / 扫描件：OCR 文本、bbox、confidence、视觉描述。
-- 代码文件：语言、路径、symbol、line range 和代码感知切块。
-
-这些能力进入 `Document Ingestion / Parse Gateway` program，而不是在当前文档里伪装成已经完成。Program 1 的正式文档入口契约是 `docs/architecture/document-ingestion-foundation.md`；该文件专门说明 local runtime slice 与 production object store / metadata DB / queue / outbox / worker lease / reconciler Target 的边界。
+目标上，PDF 应进入 Docling / PyMuPDF worker，Office 应进入 Unstructured / MarkItDown worker，图片和扫描件应进入 MinerU / OCR / VLM derived enrichment worker，未知二进制文件先作为 source object 保存并返回 unsupported / blocked diagnostics。`Document Ingestion / Parse Gateway` 的展开契约在 `docs/architecture/document-ingestion-foundation.md`，其中专门维护格式矩阵、binary ObjectStore、QueueBackend、ParserWorker / IndexWorker、outbox、dead letter、reconciler、OCR / VLM 和 file-level lifecycle 边界。
 
 ## 工具层边界
 
@@ -1237,34 +1233,19 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 `.agent/programs/` 处于 no-active 状态。最近完成并归档的 Program 2 是 `zuno-enterprise-document-ingestion-platform-v2`，归档位置是 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。它承接 Program 1 的企业知识库文档入口 local runtime slice，并把 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、workspace task、events、artifact content/ref、feedback 和 restart recovery 推进到 SQLite / local file store backed Product V1 durable baseline。Program 1 `zuno-production-document-ingestion-and-thread-foundation-v1` 的 PHASE01-PHASE08 证据保留在历史归档；Program 2 不改写 Program 1 事实。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM 和 external index 仍是 Production Scale Target，不能写成 Current。
+当前 `.agent/programs/` 处于 active 状态，active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE01_truth-source-and-merge-plan.md`。最近完成并归档的 Program 2 是 `zuno-enterprise-document-ingestion-platform-v2`，归档位置是 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。它承接 Program 1 的企业知识库文档入口 local runtime slice，并把 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、workspace task、events、artifact content/ref、feedback 和 restart recovery 推进到 SQLite / local file store backed Product V1 durable baseline。Program 1 `zuno-production-document-ingestion-and-thread-foundation-v1` 的 PHASE01-PHASE08 证据保留在历史归档；Program 2 不改写 Program 1 事实。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM 和 external index 仍是 Production Scale Target，不能写成 Current。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`，归档位置是 `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`。它是一次性交付型成熟化 program，已完成 PHASE01-PHASE12，把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”的本地可验证 baseline：PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；PHASE11 已关闭 local evidence provenance、citation source tracing、local RRF/rerank trace、deterministic graph extraction / community report trace 和 unsupported claim metrics；PHASE12 已完成 release closure、full verification、archive 和 no-active state。上一轮 runtime-first program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。它承接 `zuno-master-architecture-implementation-v1` 的 contract foundation，不推翻目标架构，而是把目标架构推进到第一版真实 runtime 闭环。上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`；它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。
 
-本轮 runtime-first program 的核心闭环是：
+历史 runtime-first 归档中仍保留 `PHASE09_agentic-retrieval-evidence-citation-runtime` 作为 Agentic retrieval / evidence / citation runtime 证据锚点；它是 History，不是当前 Program 3 Mega 的 active phase 名称。
+
+Program 3 Mega 的核心闭环是：
 
 ```text
-上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback
+上传/注册文件 -> async/local parse -> index -> AgentChat ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback -> restart rehydrate
 ```
 
-本轮的十二个 phase：
-
-1. `PHASE01_program-reopen-and-truth-source-freeze`：已打开新 active program，冻结 runtime-first 验收口径和事实源。
-2. `PHASE02_runtime-migration-map-and-repo-ownership-lock`：固定旧 runtime 与六层 target owner 的迁移图和兼容策略。
-3. `PHASE03_task-session-artifact-event-runtime`：已打通 workspace / session / file / ingest / task / approval / event / artifact / feedback 后端 API 与 SSE runtime surface。
-4. `PHASE04_document-ingestion-parse-runtime`：已让 `knowledge/ingestion` 从 contract owner 进入 Parse Gateway runtime owner surface。
-5. `PHASE05_index-jobs-and-knowledge-space-runtime`：已将 Document IR 送入本地 BM25 / vector / graph index job runtime，并提供 manifest、失败重试、回放和 retrieval payload。
-6. `PHASE06_durable-single-controller-runtime`：已让 Single Controller runtime 支持 controller-node 级 checkpoint、interrupt、resume、cancel、failure snapshot，并接入 workspace task。
-7. `PHASE07_memory-db-and-context-governance`：已将 MemoryEngine 升级为 snapshot / SQLModel-backed memory runtime，并接入 GeneralAgent。
-8. `PHASE08_tool-control-plane-approval-and-sandbox-runtime`：已接通本地 deterministic executor、approval API/UI bridge、credential ref broker、sandbox context、audit trace 和 workspace event stream。
-9. `PHASE09_agentic-retrieval-evidence-citation-runtime`：已让 Agentic retrieval 消费新 index runtime，输出 citation-rich answer，并把 evidence / citation / unsupported claim 指标写入 task retrieval event。
-10. `PHASE10_security-observability-and-online-eval`：已将 security gates、ZunoSpan、task observability snapshot、trace replay 和 release baseline 接入 workspace task runtime。
-11. `PHASE11_web-desktop-surface-and-feedback-loop`：已把 Web workspace Agent 模式接入 file / ingest / task / SSE / approval / artifact / trace-eval / feedback 产品闭环；Desktop 当前复用 API / bridge，不写成生产桌面闭环。
-12. `PHASE12_release-gate-full-e2e-closure`：已完成完整 vertical slice release closure、归档和验证收口。
-
-这十二个 phase 可以按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
-
-最新 mature-architecture completion program 已归档；后续新 program 仍必须从 PHASE01 开始，不把生产级 Target 直接写成 Current。
+Program 3 Mega 采用十五个 Phase Gate：PHASE01 合并事实源，PHASE02 冻结共享契约，PHASE03 输入异步基础设施，PHASE04 知识库检索 profile，PHASE05 Memory & Context，PHASE06 Capability / Skill / Tool / MCP，PHASE07 Security / Governance，PHASE08 Model Gateway / Cost，PHASE09-PHASE10 Planning & Control Runtime，PHASE11 Product API / Frontend 最小同步，PHASE12 E2E，PHASE13 Eval / Trace / Cost，PHASE14 文档展开，PHASE15 验证归档。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
 
 ## 研究产物归档
 

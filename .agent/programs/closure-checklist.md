@@ -19,8 +19,8 @@ Production scale external deployments remain replaceable targets.
 ## Phase Gate 清单
 
 - [ ] PHASE01 完成 truth source、program merge、owner map、workstream map 和 PR / commit plan。
-- [ ] PHASE02 完成 shared contract freeze，且明确冻结 KnowledgeSpaceConfig、ChangeImpactPreview、CapabilityPolicy / RiskProfile / AuditEvent、ConversationRunMetrics、StageMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport、ScenarioSummary 和 TraceSummary。
-- [ ] PHASE03 完成 enterprise ingestion async infrastructure baseline。
+- [ ] PHASE02 完成 shared contract freeze，且明确冻结 FileInputFormat、SourceObject、BinarySourceObject、ObjectStoreRef、ObjectStoreResult、ParserCapabilityStatus、ParserDependencyProbe、ParserWorkerSpec、ParserWorkerResult、ParseJobStatus、ParseAttempt、IndexWorkerSpec、IndexWorkerResult、QueueMessage、QueueBackendResult、OutboxEvent、DeadLetterRecord、ReconcilerFinding、OCRVLMEnrichmentResult、KnowledgeSpaceConfig、FileIngestionStatus、ChangeImpactPreview、CapabilityPolicy / RiskProfile / AuditEvent、ConversationRunMetrics、StageMetrics、IngestionMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport、ScenarioSummary 和 TraceSummary。
+- [ ] PHASE03 完成 enterprise ingestion async infrastructure baseline，并覆盖 PDF / Office / image / scanned / binary target-blocked visibility、binary ObjectStore、file lifecycle、outbox、dead letter 和 reconciler。
 - [ ] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
 - [ ] PHASE05 完成 Memory & Context Engine baseline。
 - [ ] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。
@@ -48,6 +48,7 @@ Production scale external deployments remain replaceable targets.
 - [ ] Security gates 覆盖 input / retrieval / tool / output，至少有 prompt injection、ACL、tool approval、output citation safety tests。
 - [ ] Eval / Trace / Cost 能记录 latency、tokens / cost estimate、retrieval rounds、citation coverage、unsupported claim、plan / replan / reflection events。
 - [ ] 一个 E2E scenario 能跑：上传文档 -> ingest -> 标准/深度检索 -> Agent plan -> cited artifact -> trace/eval/feedback -> restart rehydrate。
+- [ ] E2E scenario 覆盖 native text / markdown / csv / json / html / code 解析，PDF / Office target-blocked，image / scanned OCR/VLM blocked no fake index，binary source object sha256 / storage_uri traceability，local queue / worker lifecycle，dead_letter / reconciler fixture。
 
 ## Workstream 收口清单
 
@@ -66,6 +67,7 @@ Production scale external deployments remain replaceable targets.
 
 - [ ] Product Surface 能把用户的 AgentChat goal、knowledge selection、标准检索 / 深度检索传入 runtime。
 - [ ] Input / Async Infrastructure 的 source object、parse job、document version、index manifest 和 citation lineage 能被 Knowledge Retrieval 消费。
+- [ ] Input / Async Infrastructure 的 file status timeline、dependency probe、blocked reason、worker event、index status 和 binary source object refs 能被 Product API、E2E 和 Eval 消费。
 - [ ] Knowledge Retrieval 输出的 EvidenceBundle / CitationLineage 能被 Planning、Reflection、Output Gate 和 Eval 共同消费。
 - [ ] Memory & Context Engine 输出的 ContextPack 能被 Strategy Selector 消费，且 sensitive exclusion 已生效。
 - [ ] Capability Layer 的 SkillCard / ToolCard / MCPCapability 能被 Planner 选择，并受 Tool Gate 约束。
@@ -79,6 +81,8 @@ Production scale external deployments remain replaceable targets.
 
 - [ ] SQLite、local object store、local queue、local worker、local state store 可作为 Current。
 - [ ] PostgreSQL / RabbitMQ / Redis / MinIO / S3 / external OCR / VLM / external index 没有真实 provider 和 tests 前只能写成 Production Scale Target 或 target-blocked evidence。
+- [ ] PDF / Office / OCR / VLM 没有真实 Docling / PyMuPDF、Unstructured / MarkItDown、MinerU / PaddleOCR / VLM worker 前只能写成 target-blocked boundary / Launchable Target / Production Scale Target，不能写成 Current。
+- [ ] Current 格式能力只把 native deterministic `txt / md / csv / json / html / code` 写成稳定解析；多格式 matrix 覆盖不等于生产解析完成。
 - [ ] Basic RAG 和 Static GraphRAG 只能作为 eval baseline，不写成最终产品模式。
 - [ ] Skill 不写成 Tool，不写成 Knowledge，不写成产品级多 Agent runtime。
 - [ ] Codex 多线程施工不写成 Zuno 产品 runtime 多 Agent 架构。
@@ -93,6 +97,7 @@ Production scale external deployments remain replaceable targets.
 - [ ] `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两个 architecture HTML 同步。
 - [ ] `docs/architecture/production-readiness.md` 与 mega program Current / Target 边界一致。
 - [ ] `docs/architecture/document-ingestion-foundation.md` 与 async ingestion / E2E baseline 边界一致。
+- [ ] `docs/architecture/document-ingestion-foundation.md` 包含 Input Format Support Matrix、Binary Source Object Target、Async Ingestion Pipeline、Queue / Worker / Outbox / Reconciler、OCR / VLM / Scanned 边界和 File-level Lifecycle。
 - [ ] verifier / repo tests 覆盖 active program 文件清单、superseded Program 4-6 和 latest completed archive。
 
 ## 验证命令

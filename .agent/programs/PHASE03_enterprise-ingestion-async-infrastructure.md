@@ -11,12 +11,16 @@ status: pending
 ## 范围
 
 - DurableIngestionStore interface / protocol 与 SQLite 默认实现。
-- ObjectStore abstraction，LocalObjectStore 支持 `save_bytes`、`read_bytes`、`verify_sha256`。
-- QueueBackend abstraction，LocalQueueBackend 可运行，RabbitMQ boundary 可 probe。
-- Runtime state boundary，local fallback 可运行，Redis boundary 可 probe。
+- ObjectStore abstraction with binary support：`save_bytes`、`read_bytes`、`open_stream`、`verify_sha256`、mime sniffing、size_bytes、content_type、storage_uri、source_sha256 和 object_missing diagnostics。
+- LocalObjectStore 在 Product Baseline 中支持 bytes round-trip；当前 Program 2 的 `save_text()` 保留兼容路径。
+- QueueBackend abstraction：`QueueMessage`、enqueue、consume、ack、fail、dead_letter 和 replay。
+- LocalQueueBackend 可运行；RabbitMQQueueBackend 只做 boundary / dependency probe / target-blocked evidence，不能要求真实 RabbitMQ 才能过 tests。
+- Runtime state boundary，local fallback 可运行，Redis runtime state boundary 可 probe。
 - ParserWorker / IndexWorker local runner。
-- OutboxEvent、DeadLetter、Reconciler local baseline。
-- OCR / VLM worker boundary，blocked 不创建 fake index。
+- OutboxEvent、DeadLetterRecord、Reconciler local baseline。
+- OCR / VLM worker boundary，缺 provider 时 blocked，不创建 fake index。
+- PDF / Office / image / scanned / binary async ingestion target：source object 可保存、dependency probe 可见、blocked reason 可追溯。
+- file status lifecycle：`uploaded -> queued -> parsing -> parsed -> indexing -> indexed -> failed / blocked / dead_letter / cancelled`。
 - ingest status / retry / cancel / replay service contract。
 
 ## 目标架构拼接点
@@ -28,6 +32,7 @@ status: pending
 - QueueBackend 和 workers 把 `/workspace/ingest` 从同步请求线程中拆出来。
 - Outbox / DeadLetter / Reconciler 给后续 restart recovery、repair、retry、replay 提供事实依据。
 - OCR / VLM boundary 为多模态输入保留 blocked / succeeded / failed 语义，不伪造能力。
+- File lifecycle status 给 PHASE11 产品 UI、PHASE12 E2E summary 和 PHASE13 IngestionMetrics 共同消费。
 
 本 phase 不负责 Agent Planning，但它必须保证 Agent 后续检索看到的是可追溯、可恢复、可重建的数据事实。
 
@@ -50,7 +55,7 @@ status: pending
 ## 详细执行卡
 
 - 输入依赖：PHASE02 的 source object、parse job、index job、status、trace 和 object URI contract；Program 2 durable ingestion tests。
-- 主要交付物：ObjectStore bytes support、QueueBackend local lifecycle、ParserWorker、IndexWorker、OutboxEvent、DeadLetter、Reconciler、OCR/VLM blocked boundary 和 dependency probe。
+- 主要交付物：ObjectStore bytes support、QueueBackend local lifecycle、ParserWorker、IndexWorker、OutboxEvent、DeadLetterRecord、Reconciler、OCR/VLM blocked boundary、PDF / Office / image / scanned target-blocked visibility、binary source object traceability、file status lifecycle 和 dependency probe。
 - 可并行工作包：ObjectStore 与 QueueBackend 可分开做；ParserWorker 和 IndexWorker 在 queue contract 稳定后并行；Reconciler / DeadLetter 在 durable store contract 稳定后并行。
 - Coordinator 锁点：`workspace_task_runtime.py`、public `/workspace/file` 和 `/workspace/ingest` response、schema compatibility。
 - 下游交接：PHASE04 消费 index manifest/chunks/citation lineage；PHASE10/12 消费 ingest status、restart recovery、blocked diagnostics；PHASE13 消费 job latency/retry/dead-letter metrics。
@@ -69,7 +74,11 @@ status: pending
 - local queue enqueue / consume / ack / fail / dead_letter 通过。
 - ParserWorker 消费 parse_requested 并持久化 parse snapshot / document version。
 - IndexWorker 消费 index_requested 并持久化 index manifest / chunks。
-- Reconciler 能检测 parse_succeeded_without_index 或 missing chunks。
+- RabbitMQ 未配置时返回 dependency probe / target-blocked evidence，而不是测试失败或假成功。
+- Redis 未配置时 local fallback 可运行，Redis boundary 返回 dependency probe / target-blocked evidence。
+- OCR / VLM 未配置时 image / scanned 进入 blocked，blocked 不创建 fake index。
+- Reconciler 能检测 parse_succeeded_without_index 和 index_chunks_missing。
+- file status lifecycle transitions 可追踪，至少覆盖 queued -> parsing -> parsed -> indexing -> indexed，以及 blocked / failed / dead_letter / cancelled 中的失败路径。
 
 ## 验证命令
 
@@ -103,8 +112,10 @@ pytest -q tests/knowledge -p no:cacheprovider
 2. 写 QueueBackend local lifecycle focused test。
 3. 写 ParserWorker / IndexWorker focused tests。
 4. 写 Reconciler drift detection test。
-5. 实现 local baseline 和 external dependency probe。
-6. 确认 existing durable ingest tests 不回退。
+5. 写 PDF / Office / OCR / VLM target-blocked no fake index focused tests。
+6. 写 file status lifecycle focused tests。
+7. 实现 local baseline 和 external dependency probe。
+8. 确认 existing durable ingest tests 不回退。
 
 ## 多 agent 分工
 
@@ -117,6 +128,8 @@ pytest -q tests/knowledge -p no:cacheprovider
 - object store、queue、worker、outbox、dead letter、reconciler tests。
 - external adapter target-blocked evidence。
 - blocked OCR / VLM 不 fake index evidence。
+- PDF / Office / image / scanned / binary source object traceability evidence。
+- status / retry / cancel / replay contract evidence。
 
 ## 停止条件
 

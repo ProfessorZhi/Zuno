@@ -26,6 +26,7 @@ status: pending
 - `docs/architecture/agentic-retrieval-planner.md`：标准检索 / 深度检索、RetrievalPlan、EvidenceBundle、Reflection、Dynamic Replan。
 - `docs/architecture/eval-observability-and-cost.md`：ConversationRunMetrics、StageMetrics、EvalComparisonReport、release gate。
 - `docs/architecture/knowledge-space-product-configuration.md`：KnowledgeSpaceConfig、创建 Wizard、Settings tabs、Change Impact Preview、file-level status。
+- `docs/architecture/input-layer-and-document-processing.md`：格式矩阵、binary ObjectStore、parser workers、PDF / Office / OCR / VLM、async pipeline、file status lifecycle。
 
 这些文档只有在对应代码、tests、trace 或 E2E evidence 出现后才能把能力写成 Current；在 Program 3 执行前期只能写成 Target contract。
 
@@ -59,7 +60,7 @@ status: pending
 ## 详细执行卡
 
 - 输入依赖：PHASE03-PHASE13 的实际代码、测试、trace、E2E 和 metrics evidence；现有 architecture governance rules。
-- 主要交付物：architecture summary、agent core runtime doc、capability/skill doc、agentic retrieval planner doc、eval/observability/cost doc、production-readiness boundary update。
+- 主要交付物：architecture summary、agent core runtime doc、capability/skill doc、agentic retrieval planner doc、input-layer/document-processing doc、knowledge-space product configuration doc、eval/observability/cost doc、production-readiness boundary update。
 - 可并行工作包：子文档草稿可并行；`architecture.md` 总入口、Current/Target wording、HTML render 由 Coordinator 收口。
 - Coordinator 锁点：Current 只写已证明事实；Target / Production Scale 不得伪装成 Current；Skill/GraphRAG/多 agent runtime 边界必须统一。
 - 下游交接：PHASE15 verifier 和 archive 需要 docs entrypoints、architecture mirror、HTML render、README/AGENTS/current-program 同步。
