@@ -40,8 +40,8 @@ Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE01_truth-source-and-gap-audit.md"
-Require-Path ".agent\programs\PHASE02_durable-storage-contract.md"
+Require-NoPath ".agent\programs\PHASE01_truth-source-and-gap-audit.md"
+Require-NoPath ".agent\programs\PHASE02_durable-storage-contract.md"
 Require-NoPath ".agent\programs\PHASE01_program-truth-source-and-parser-current-audit.md"
 Require-NoPath ".agent\programs\PHASE02_document-ir-and-parser-contract-freeze.md"
 Require-NoPath ".agent\programs\PHASE03_parser-worker-runtime-and-job-lifecycle.md"
@@ -55,6 +55,19 @@ Require-Path ".agent\programs\queued-programs\README.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM03_runtime-subsystems-parallel.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM04_agent-planning-integration.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM05_enterprise-knowledge-eval-benchmark.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\README.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\current.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\implementation-roadmap.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\closure-checklist.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\closure-summary.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\PHASE01_truth-source-and-gap-audit.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\PHASE02_durable-storage-contract.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\PHASE03_workspace-file-durable-input.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\PHASE04_parse-document-persistence.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\PHASE05_index-persistence-rehydrate.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\PHASE06_workspace-product-durable-closure.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\PHASE07_restart-recovery-end-to-end.md"
+Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\PHASE08_docs-verifier-closure.md"
 Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\README.md"
 Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\current.md"
 Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\implementation-roadmap.md"
@@ -265,11 +278,14 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "current_phase: PHASE02_durable-storage-contract" -or $currentProgram -notmatch "latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1") {
-    $failures.Add("current-program.md must declare active Program 1B/V2 state and latest completed Program 1A")
+if ($currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-enterprise-document-ingestion-platform-v2") {
+    $failures.Add("current-program.md must declare no-active state and latest completed Program 1B/V2")
 }
-if ($currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
+if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
     $failures.Add("current-program.md missing Program 1A/1B and Program 3-5 suite queue")
+}
+if ($currentProgram -notmatch "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/" -or $currentProgram -notmatch "Product V1 local durable ingestion baseline") {
+    $failures.Add("current-program.md missing latest Program 1B/V2 archive and durable baseline summary")
 }
 if ($currentProgram -notmatch "docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/") {
     $failures.Add("current-program.md must keep latest production completion archive")

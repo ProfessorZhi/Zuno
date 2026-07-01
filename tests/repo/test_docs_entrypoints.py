@@ -131,10 +131,10 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     agent_architecture = (
         REPO_ROOT / ".agent" / "architecture" / "architecture.md"
     ).read_text(encoding="utf-8")
-    current_phase = _current_phase_name(
-        (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
+    current_program = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(
+        encoding="utf-8"
     )
-    assert current_phase is not None
+    assert _current_phase_name(current_program) == "none"
 
     assert docs_architecture == agent_architecture
     for phrase in [
@@ -149,7 +149,9 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
         "LangSmith-compatible Trace / Eval",
         "docs/architecture/document-ingestion-foundation.md",
         "zuno-production-architecture-and-deliverables-completion-v1",
-        current_phase,
+        "no-active",
+        "zuno-enterprise-document-ingestion-platform-v2",
+        "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/",
         "成熟目标架构和四大总交付物完成",
         "文档一致性规则",
         "架构图视图集",

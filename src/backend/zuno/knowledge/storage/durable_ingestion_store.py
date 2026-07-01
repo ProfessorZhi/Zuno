@@ -11,20 +11,30 @@ from zuno.knowledge.ingestion import CanonicalDocumentIR, ParseJobSnapshot
 from zuno.knowledge.indexing import IndexJobManifest
 
 from .contracts import (
+    ArtifactRecord,
+    DocumentBlockRecord,
     DocumentVersionRecord,
+    FeedbackRecord,
     IndexChunkRecord,
     ParseJobRecord,
     SourceObjectRecord,
+    TaskEventRecord,
     WorkspaceFileRecord,
+    WorkspaceTaskRecord,
 )
 from .sqlmodel_models import (
+    ArtifactTable,
+    DocumentBlockTable,
     DocumentVersionTable,
+    FeedbackTable,
     IndexChunkTable,
     IndexManifestTable,
     ParseJobTable,
     ParseSnapshotTable,
     SourceObjectTable,
+    TaskEventTable,
     WorkspaceFileTable,
+    WorkspaceTaskTable,
 )
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -143,6 +153,22 @@ class SQLiteDurableIngestionStore:
                 ir_json=record.ir_json,
             )
         )
+        for block in document.blocks:
+            self._merge(
+                DocumentBlockTable(
+                    block_row_id=f"{record.document_version_id}:{block.block_id}",
+                    document_version_id=record.document_version_id,
+                    block_id=block.block_id,
+                    workspace_id=record.workspace_id,
+                    document_id=record.document_id,
+                    block_type=block.type,
+                    text=block.text,
+                    source_span_json=_model_payload(block.source_span),
+                    metadata_json=block.metadata,
+                    acl_scope=block.acl_scope,
+                    sensitivity_tags_json=list(block.sensitivity_tags),
+                )
+            )
         return record
 
     def save_index_manifest(self, manifest: IndexJobManifest) -> IndexJobManifest:
@@ -180,6 +206,22 @@ class SQLiteDurableIngestionStore:
         )
         return record
 
+    def get_source_object(self, source_id: str) -> SourceObjectRecord:
+        row = self._get(SourceObjectTable, source_id, "source object")
+        return SourceObjectRecord(
+            source_id=row.source_id,
+            workspace_id=row.workspace_id,
+            owner_id=row.owner_id,
+            source_uri=row.source_uri,
+            storage_uri=row.storage_uri,
+            source_sha256=row.source_sha256,
+            mime_type=row.mime_type,
+            filename=row.filename,
+            size_bytes=row.size_bytes,
+            acl_scope=row.acl_scope,
+            sensitivity_tags=list(row.sensitivity_tags_json or []),
+        )
+
     def get_workspace_file(self, file_id: str) -> WorkspaceFileRecord:
         row = self._get(WorkspaceFileTable, file_id, "workspace file")
         return WorkspaceFileRecord(
@@ -195,6 +237,26 @@ class SQLiteDurableIngestionStore:
             latest_document_version_id=row.latest_document_version_id,
             security_label=row.security_label,
         )
+
+    def list_workspace_files(self) -> list[WorkspaceFileRecord]:
+        with Session(self.engine) as session:
+            rows = session.exec(select(WorkspaceFileTable)).all()
+        return [
+            WorkspaceFileRecord(
+                file_id=row.file_id,
+                workspace_id=row.workspace_id,
+                source_id=row.source_id,
+                owner_id=row.owner_id,
+                filename=row.filename,
+                mime_type=row.mime_type,
+                source_sha256=row.source_sha256,
+                parse_status=row.parse_status,
+                latest_parse_job_id=row.latest_parse_job_id,
+                latest_document_version_id=row.latest_document_version_id,
+                security_label=row.security_label,
+            )
+            for row in rows
+        ]
 
     def get_parse_job(self, parse_job_id: str) -> ParseJobRecord:
         row = self._get(ParseJobTable, parse_job_id, "parse job")
@@ -236,6 +298,29 @@ class SQLiteDurableIngestionStore:
             ir_json=row.ir_json,
         )
 
+    def list_document_blocks(self, document_version_id: str) -> list[DocumentBlockRecord]:
+        with Session(self.engine) as session:
+            rows = session.exec(
+                select(DocumentBlockTable).where(
+                    DocumentBlockTable.document_version_id == document_version_id
+                )
+            ).all()
+        return [
+            DocumentBlockRecord(
+                document_version_id=row.document_version_id,
+                block_id=row.block_id,
+                workspace_id=row.workspace_id,
+                document_id=row.document_id,
+                block_type=row.block_type,
+                text=row.text,
+                source_span=row.source_span_json,
+                metadata=row.metadata_json,
+                acl_scope=row.acl_scope,
+                sensitivity_tags=list(row.sensitivity_tags_json or []),
+            )
+            for row in rows
+        ]
+
     def get_index_manifest(self, index_job_id: str) -> IndexJobManifest:
         row = self._get(IndexManifestTable, index_job_id, "index manifest")
         return IndexJobManifest.model_validate(row.manifest_json)
@@ -260,6 +345,166 @@ class SQLiteDurableIngestionStore:
                 citation_lineage=row.citation_lineage_json,
                 acl_scope=row.acl_scope,
                 sensitivity_tags=list(row.sensitivity_tags_json or []),
+            )
+            for row in rows
+        ]
+
+    def list_index_manifests(self) -> list[IndexJobManifest]:
+        with Session(self.engine) as session:
+            rows = session.exec(select(IndexManifestTable)).all()
+        return [IndexJobManifest.model_validate(row.manifest_json) for row in rows]
+
+    def save_workspace_task(self, record: WorkspaceTaskRecord) -> WorkspaceTaskRecord:
+        self._merge(
+            WorkspaceTaskTable(
+                task_id=record.task_id,
+                workspace_id=record.workspace_id,
+                owner_id=record.owner_id,
+                status=record.status,
+                trace_id=record.trace_id,
+                payload_json=record.payload,
+            )
+        )
+        return record
+
+    def get_workspace_task(self, task_id: str) -> WorkspaceTaskRecord:
+        row = self._get(WorkspaceTaskTable, task_id, "workspace task")
+        return WorkspaceTaskRecord(
+            task_id=row.task_id,
+            workspace_id=row.workspace_id,
+            owner_id=row.owner_id,
+            status=row.status,
+            trace_id=row.trace_id,
+            payload=row.payload_json,
+        )
+
+    def list_workspace_tasks(self) -> list[WorkspaceTaskRecord]:
+        with Session(self.engine) as session:
+            rows = session.exec(select(WorkspaceTaskTable)).all()
+        return [
+            WorkspaceTaskRecord(
+                task_id=row.task_id,
+                workspace_id=row.workspace_id,
+                owner_id=row.owner_id,
+                status=row.status,
+                trace_id=row.trace_id,
+                payload=row.payload_json,
+            )
+            for row in rows
+        ]
+
+    def save_task_event(self, record: TaskEventRecord) -> TaskEventRecord:
+        self._merge(
+            TaskEventTable(
+                event_id=record.event_id,
+                task_id=record.task_id,
+                trace_id=record.trace_id,
+                event_type=record.event_type,
+                timestamp=record.timestamp,
+                payload_json=record.payload,
+            )
+        )
+        return record
+
+    def list_task_events(self, task_id: str) -> list[TaskEventRecord]:
+        with Session(self.engine) as session:
+            rows = session.exec(
+                select(TaskEventTable).where(TaskEventTable.task_id == task_id)
+            ).all()
+        rows = sorted(rows, key=lambda row: row.timestamp)
+        return [
+            TaskEventRecord(
+                event_id=row.event_id,
+                task_id=row.task_id,
+                trace_id=row.trace_id,
+                event_type=row.event_type,
+                timestamp=row.timestamp,
+                payload=row.payload_json,
+            )
+            for row in rows
+        ]
+
+    def save_artifact(self, record: ArtifactRecord) -> ArtifactRecord:
+        self._merge(
+            ArtifactTable(
+                artifact_id=record.artifact_id,
+                task_id=record.task_id,
+                workspace_id=record.workspace_id,
+                owner_id=record.owner_id,
+                kind=record.kind,
+                uri=record.uri,
+                content=record.content,
+                content_sha256=record.content_sha256,
+                trace_id=record.trace_id,
+                payload_json=record.payload,
+            )
+        )
+        return record
+
+    def get_artifact(self, artifact_id: str) -> ArtifactRecord:
+        row = self._get(ArtifactTable, artifact_id, "artifact")
+        return ArtifactRecord(
+            artifact_id=row.artifact_id,
+            task_id=row.task_id,
+            workspace_id=row.workspace_id,
+            owner_id=row.owner_id,
+            kind=row.kind,
+            uri=row.uri,
+            content=row.content,
+            content_sha256=row.content_sha256,
+            trace_id=row.trace_id,
+            payload=row.payload_json,
+        )
+
+    def list_artifacts_for_task(self, task_id: str) -> list[ArtifactRecord]:
+        with Session(self.engine) as session:
+            rows = session.exec(
+                select(ArtifactTable).where(ArtifactTable.task_id == task_id)
+            ).all()
+        return [
+            ArtifactRecord(
+                artifact_id=row.artifact_id,
+                task_id=row.task_id,
+                workspace_id=row.workspace_id,
+                owner_id=row.owner_id,
+                kind=row.kind,
+                uri=row.uri,
+                content=row.content,
+                content_sha256=row.content_sha256,
+                trace_id=row.trace_id,
+                payload=row.payload_json,
+            )
+            for row in rows
+        ]
+
+    def save_feedback(self, record: FeedbackRecord) -> FeedbackRecord:
+        self._merge(
+            FeedbackTable(
+                feedback_id=record.feedback_id,
+                task_id=record.task_id,
+                rating=record.rating,
+                label=record.label,
+                comment=record.comment,
+                dataset_candidate=record.dataset_candidate,
+                payload_json=record.payload,
+            )
+        )
+        return record
+
+    def list_feedback_for_task(self, task_id: str) -> list[FeedbackRecord]:
+        with Session(self.engine) as session:
+            rows = session.exec(
+                select(FeedbackTable).where(FeedbackTable.task_id == task_id)
+            ).all()
+        return [
+            FeedbackRecord(
+                feedback_id=row.feedback_id,
+                task_id=row.task_id,
+                rating=row.rating,
+                label=row.label,
+                comment=row.comment,
+                dataset_candidate=row.dataset_candidate,
+                payload=row.payload_json,
             )
             for row in rows
         ]

@@ -151,10 +151,10 @@ def verify_entrypoint_text() -> list[str]:
     agent_architecture = _read(".agent/architecture/architecture.md")
     production_readiness = _read("docs/architecture/production-readiness.md")
     document_ingestion = _read("docs/architecture/document-ingestion-foundation.md")
-    current_phase = _current_phase_name(_read(".agent/programs/current.md"))
-    if current_phase is None:
-        errors.append(".agent/programs/current.md missing current_phase")
-        current_phase = ""
+    current_program = _read(".agent/programs/current.md")
+    current_phase = _current_phase_name(current_program)
+    if current_phase != "none":
+        errors.append(".agent/programs/current.md must declare current_phase: none in no-active state")
 
     for phrase in [
         "./docs/architecture/architecture.md",
@@ -218,7 +218,9 @@ def verify_entrypoint_text() -> list[str]:
         "Document Ingestion",
         "Security / Governance",
         "zuno-production-architecture-and-deliverables-completion-v1",
-        current_phase,
+        "no-active",
+        "zuno-enterprise-document-ingestion-platform-v2",
+        "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/",
         "成熟目标架构和四大总交付物完成",
         "zuno-target-architecture-runtime-full-implementation-v1",
         "PHASE09_agentic-retrieval-evidence-citation-runtime",

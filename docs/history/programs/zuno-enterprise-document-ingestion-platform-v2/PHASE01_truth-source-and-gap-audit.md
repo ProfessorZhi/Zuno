@@ -1,6 +1,6 @@
 # PHASE01 Truth Source 与 Gap Audit
 
-status: active
+status: completed
 program: zuno-enterprise-document-ingestion-platform-v2
 phase: PHASE01_truth-source-and-gap-audit
 mode: read-only-audit

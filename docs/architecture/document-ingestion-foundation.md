@@ -40,7 +40,7 @@ Current 只能描述代码和测试已经证明的事实：
 - `KnowledgeIndexRuntime` 已能把 `CanonicalDocumentIR` 转为本地 BM25 / vector / graph index job，并产生 `IndexJobManifest`、retrieval payload、source provenance、ACL scopes、sensitivity tags、adapter status、parse job lineage、diagnostics digest 和 citation lineage chunk metadata。
 - `IndexJobManifest` 已记录 `parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256`、`parser_config_hash`、`ir_schema_version`、`diagnostics_digest`、parser diagnostics、block/table/figure count；Agentic retrieval evidence provenance 已能从 manifest 继承这些字段。
 - `WorkspaceTaskRuntimeService.create_ingest_job()` 已通过 `ParseGateway.submit_parse_job()` 解析 workspace file，返回 `parse_job` 和 `parse_snapshot`，并把 `ParseJobSnapshot` 传给 `KnowledgeIndexRuntime.index_document(..., parse_job_snapshot=...)`，让 `/api/v1/workspace/ingest` 的 index manifest 保留 `parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256` 和 parser diagnostics lineage。旧 `_document_from_file()` / `workspace_text_runtime` 只保留为历史 gap 证据，不再是当前 ingest 闭环。
-- Program 1B / V2 PHASE02 已新增 `src/backend/zuno/knowledge/storage/`，提供 `LocalObjectStore` 和 `SQLiteDurableIngestionStore` 的最小 durable storage contract；focused test 已证明 source object、workspace file、parse job、parse snapshot、document version、index manifest 和 index chunk 可 SQLite round-trip。这仍只是 storage contract Current，不表示 `/workspace/file`、`/workspace/ingest` 主链路已经完成持久化接入。
+- Program 1B / V2 已新增 `src/backend/zuno/knowledge/storage/`，并把 `LocalObjectStore` 和 `SQLiteDurableIngestionStore` 接入 `WorkspaceTaskRuntimeService`：`/workspace/file` 保存 source object、source hash、storage uri 和 workspace file metadata；`/workspace/ingest` 持久化 parse job、parse snapshot、document version、document blocks、index manifest、index chunks 和 citation lineage；workspace task、events、artifact content/ref 和 feedback 可从 SQLite rehydrate。它仍不是生产 Postgres、MinIO / S3、Redis / outbox / worker lease、external OCR / VLM 或 external index platform。
 
 ## Program 1 Local Runtime Slice
 
@@ -118,7 +118,7 @@ workspace file
 
 Program 1A 的优势是链路语义、Document IR、parser contract、native parser fixtures、index manifest lineage 和 citation lineage 已经打通；不足是状态仍大多是 local / in-process / in-memory。
 
-当前 active Program 1B / V2 是 `zuno-enterprise-document-ingestion-platform-v2`。PHASE01 已完成 gap audit，PHASE02 已完成第一版 SQLite-compatible durable store contract；后续 phase 继续把 local runtime slice 升级为企业级文档输入与持久化平台雏形：
+Program 1B / V2 `zuno-enterprise-document-ingestion-platform-v2` 已完成并归档。它把 Program 1A 的 local runtime slice 升级为 Product V1 local durable ingestion baseline：
 
 ```text
 文件对象存储
@@ -126,28 +126,27 @@ Program 1A 的优势是链路语义、Document IR、parser contract、native par
 + parse job / attempt persistence
 + document version / block / IR artifact persistence
 + index job / chunk persistence
-+ QueueBackend local / Redis boundary
-+ local parser / index worker runner
++ SQLite / local file store backed workspace task state
 + OCR / VLM / PDF / Office blocked diagnostics persistence
-+ ingest status / retry / cancel / replay API
 + restart recovery tests
 ```
 
-Program 1B / V2 的 Product V1 验收不是分布式 queue 或百万文档，而是服务重启后 file、parse job、document version、index manifest、index chunk 和 citation lineage 不丢。Production Scale Target 才包括 Postgres、object store、Redis / Kafka、outbox、worker lease、heartbeat、dead letter reconciler、external OCR / VLM 和 external index platform。
+Program 1B / V2 的 Product V1 验收不是分布式 queue 或百万文档，而是服务重启后 file、parse job、document version、index manifest、index chunk、citation lineage、task、events、artifact content/ref 和 feedback 不丢。Production Scale Target 才包括 Postgres、object store、Redis / Kafka、outbox、worker lease、heartbeat、dead letter reconciler、external OCR / VLM 和 external index platform。
 
 ## Program 1B / V2 数据模型目标
 
-Program 1B / V2 至少应定义以下 durable entities：
+Program 1B / V2 已定义并验证以下 durable entities：
 
 - `source_objects`：原始文件事实源、storage uri、source hash、ACL、sensitivity。
 - `workspace_files`：前端和 workspace 可见 file id，关联 source object。
 - `document_versions`：parser id / version / config、IR schema、IR artifact、status。
 - `document_blocks`：block type、text、source span、metadata、ACL、sensitivity。
 - `parse_jobs`：parse idempotency key、status、attempt count、blocked reason、failure reason。
-- `parse_attempts`：attempt no、worker id、diagnostics、metrics。
-- `index_jobs`：knowledge space、document version、parse lineage、target status。
+- `parse_attempts`：当前 Product V1 用 `ParseJobSnapshot` 保存 attempt count、diagnostics 和 metrics；独立 attempt table 仍是 Target。
+- `index_jobs`：当前 Product V1 用 `index_manifests` 保存 knowledge space、document version、parse lineage 和 target status；独立 queue job table 仍是 Target。
 - `index_chunks`：content、metadata、citation lineage、ACL、sensitivity。
-- `ingestion_dead_letters`：不可恢复或需人工处理的 parse / index 失败。
+- `workspace_tasks`、`task_events`、`artifacts`、`feedback`：workspace 产品闭环的可恢复事实。
+- `ingestion_dead_letters`：不可恢复或需人工处理的 parse / index 失败，仍是后续 Target。
 
 ## 核心对象
 
@@ -374,7 +373,7 @@ Program 1 已完成的最小可验收代码闭环：
 6. index manifest 增加 parse lineage
 ```
 
-以上是 Program 1A 已完成的 local runtime slice。企业级文档输入与持久化平台雏形当前进入 Program 1B / V2：`zuno-enterprise-document-ingestion-platform-v2`。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index platform 和 online eval 仍是 Production Scale Target。
+以上是 Program 1A 已完成的 local runtime slice；Program 1B / V2：`zuno-enterprise-document-ingestion-platform-v2` 已进一步完成 Product V1 local durable ingestion baseline。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index platform 和 online eval 仍是 Production Scale Target。
 
 ## 验证要求
 

@@ -83,6 +83,22 @@ class DocumentVersionTable(SQLModel, table=True):
     ir_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
 
 
+class DocumentBlockTable(SQLModel, table=True):
+    __tablename__ = "zuno_document_blocks"
+
+    block_row_id: str = Field(primary_key=True)
+    document_version_id: str = Field(index=True)
+    block_id: str = Field(index=True)
+    workspace_id: str = Field(index=True)
+    document_id: str = Field(index=True)
+    block_type: str = Field(index=True)
+    text: str
+    source_span_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    metadata_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    acl_scope: str = "workspace"
+    sensitivity_tags_json: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
+
 class IndexManifestTable(SQLModel, table=True):
     __tablename__ = "zuno_index_manifests"
 
@@ -114,24 +130,83 @@ class IndexChunkTable(SQLModel, table=True):
     sensitivity_tags_json: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 
 
+class WorkspaceTaskTable(SQLModel, table=True):
+    __tablename__ = "zuno_workspace_tasks"
+
+    task_id: str = Field(primary_key=True)
+    workspace_id: str = Field(index=True)
+    owner_id: str | None = Field(default=None, index=True)
+    status: str = Field(index=True)
+    trace_id: str | None = Field(default=None, index=True)
+    payload_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class TaskEventTable(SQLModel, table=True):
+    __tablename__ = "zuno_task_events"
+
+    event_id: str = Field(primary_key=True)
+    task_id: str = Field(index=True)
+    trace_id: str = Field(index=True)
+    event_type: str = Field(index=True)
+    timestamp: float = Field(index=True)
+    payload_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class ArtifactTable(SQLModel, table=True):
+    __tablename__ = "zuno_artifacts"
+
+    artifact_id: str = Field(primary_key=True)
+    task_id: str = Field(index=True)
+    workspace_id: str = Field(index=True)
+    owner_id: str | None = Field(default=None, index=True)
+    kind: str = Field(index=True)
+    uri: str
+    content: str
+    content_sha256: str = Field(index=True)
+    trace_id: str | None = Field(default=None, index=True)
+    payload_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class FeedbackTable(SQLModel, table=True):
+    __tablename__ = "zuno_feedback"
+
+    feedback_id: str = Field(primary_key=True)
+    task_id: str = Field(index=True)
+    rating: int | None = Field(default=None, index=True)
+    label: str | None = Field(default=None, index=True)
+    comment: str | None = None
+    dataset_candidate: bool = Field(default=False, index=True)
+    payload_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
+
+
 STORAGE_TABLES = [
     SourceObjectTable,
     WorkspaceFileTable,
     ParseJobTable,
     ParseSnapshotTable,
     DocumentVersionTable,
+    DocumentBlockTable,
     IndexManifestTable,
     IndexChunkTable,
+    WorkspaceTaskTable,
+    TaskEventTable,
+    ArtifactTable,
+    FeedbackTable,
 ]
 
 
 __all__ = [
+    "ArtifactTable",
+    "DocumentBlockTable",
     "DocumentVersionTable",
+    "FeedbackTable",
     "IndexChunkTable",
     "IndexManifestTable",
     "ParseJobTable",
     "ParseSnapshotTable",
     "STORAGE_TABLES",
     "SourceObjectTable",
+    "TaskEventTable",
+    "WorkspaceTaskTable",
     "WorkspaceFileTable",
 ]

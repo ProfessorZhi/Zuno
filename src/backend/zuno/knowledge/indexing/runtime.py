@@ -177,6 +177,30 @@ class KnowledgeIndexRuntime:
             "manifest": result.manifest.model_dump(),
         }
 
+    def rehydrate_index(self, manifest: IndexJobManifest, chunks: list[object]) -> None:
+        self._spaces[manifest.knowledge_space_id] = KnowledgeSpaceManifest(
+            knowledge_space_id=manifest.knowledge_space_id,
+            workspace_id=manifest.workspace_id,
+            graph_project_id=manifest.graph_project_ref,
+            index_version=manifest.index_version,
+            status="ready" if manifest.status == "succeeded" else manifest.status,
+        )
+        documents = [_rehydrated_document_payload(chunk) for chunk in chunks]
+        self._indexes[manifest.knowledge_space_id] = {
+            "bm25": [dict(document, source_type="bm25") for document in documents],
+            "vector": [dict(document, source_type="vector") for document in documents],
+            "graph": [
+                {
+                    **dict(document, source_type="graph"),
+                    "graph_project_id": manifest.graph_project_ref,
+                    "entities": _entities(str(document.get("content") or "")),
+                }
+                for document in documents
+            ],
+        }
+        self._jobs[manifest.job_id] = manifest
+        self._latest_job_by_space[manifest.knowledge_space_id] = manifest.job_id
+
     def _require_space(self, knowledge_space_id: str) -> KnowledgeSpaceManifest:
         try:
             return self._spaces[knowledge_space_id]
@@ -294,6 +318,27 @@ def _document_payload(
         "content": content,
         "source_type": source_type,
         "metadata": enriched_metadata,
+    }
+
+
+def _rehydrated_document_payload(chunk: object) -> dict:
+    metadata = dict(getattr(chunk, "metadata", {}) or {})
+    citation_lineage = dict(getattr(chunk, "citation_lineage", {}) or {})
+    if citation_lineage:
+        metadata["citation_lineage"] = citation_lineage
+    chunk_id = str(getattr(chunk, "chunk_id"))
+    block_id = str(getattr(chunk, "block_id", "") or chunk_id.split("::", 1)[-1])
+    metadata.setdefault("block_id", block_id)
+    metadata.setdefault("document_version_id", getattr(chunk, "document_version_id", ""))
+    metadata.setdefault("acl_scope", getattr(chunk, "acl_scope", "workspace"))
+    metadata.setdefault("sensitivity_tags", list(getattr(chunk, "sensitivity_tags", []) or []))
+    return {
+        "chunk_id": chunk_id,
+        "document_id": str(getattr(chunk, "document_id")),
+        "workspace_id": str(getattr(chunk, "workspace_id")),
+        "content": str(getattr(chunk, "content")),
+        "source_type": str(getattr(chunk, "source_type", "bm25")),
+        "metadata": metadata,
     }
 
 

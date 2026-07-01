@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import replace
 import hashlib
 import json
+from pathlib import Path
 import time
+from urllib.parse import unquote, urlparse
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -22,15 +24,30 @@ from zuno.knowledge.agentic_graphrag import (
     AgenticRetrievalRuntimeResult,
     ProductMode,
 )
-from zuno.knowledge.indexing import KnowledgeIndexRuntime
+from zuno.knowledge.indexing import IndexJobManifest, KnowledgeIndexRuntime
 from zuno.knowledge.ingestion import (
     CanonicalDocumentIR,
     DocumentBlock,
     DocumentMetadata,
     DocumentProvenance,
     ParseDocumentRequest,
+    ParseDocumentResult,
     ParseGateway,
+    ParseJobSnapshot,
     SourceSpan,
+)
+from zuno.knowledge.storage import (
+    ArtifactRecord,
+    DocumentVersionRecord,
+    FeedbackRecord,
+    IndexChunkRecord,
+    LocalObjectStore,
+    ParseJobRecord,
+    SQLiteDurableIngestionStore,
+    SourceObjectRecord,
+    TaskEventRecord,
+    WorkspaceFileRecord,
+    WorkspaceTaskRecord,
 )
 from zuno.platform.observability import (
     EvalMetricResult,
@@ -89,6 +106,8 @@ class WorkspaceTaskRuntimeService:
     _tool_runtime = build_default_tool_control_plane_runtime()
     _knowledge_index_runtime = KnowledgeIndexRuntime()
     _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
+    _durable_ingestion_store: SQLiteDurableIngestionStore | None = None
+    _source_object_store: LocalObjectStore | None = None
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
     _input_security_gate = InputSecurityGate()
     _retrieval_security_gate = RetrievalSecurityGate()
@@ -97,6 +116,113 @@ class WorkspaceTaskRuntimeService:
     _trace_spans: dict[str, list[dict]] = {}
     _release_evals: dict[str, dict] = {}
     _trace_replays: dict[str, dict] = {}
+
+    @classmethod
+    def configure_durable_ingestion(
+        cls,
+        *,
+        store: SQLiteDurableIngestionStore | None,
+        object_store: LocalObjectStore | None,
+        rehydrate: bool = False,
+    ) -> None:
+        cls._durable_ingestion_store = store
+        cls._source_object_store = object_store
+        if rehydrate and store is not None:
+            cls._rehydrate_from_durable_store()
+
+    @classmethod
+    def reset_runtime_state_for_tests(cls) -> None:
+        cls._tasks = {}
+        cls._task_inputs = {}
+        cls._events = {}
+        cls._files = {}
+        cls._file_text = {}
+        cls._ingest_jobs = {}
+        cls._artifacts = {}
+        cls._artifact_content = {}
+        cls._artifact_ids_by_task = {}
+        cls._feedback = {}
+        cls._feedback_ids_by_task = {}
+        cls._task_recovery = {}
+        cls._durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
+        cls._tool_runtime = build_default_tool_control_plane_runtime()
+        cls._knowledge_index_runtime = KnowledgeIndexRuntime()
+        cls._agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=cls._knowledge_index_runtime)
+        cls._pending_tool_requests = {}
+        cls._trace_spans = {}
+        cls._release_evals = {}
+        cls._trace_replays = {}
+        cls._durable_ingestion_store = None
+        cls._source_object_store = None
+
+    @classmethod
+    def _rehydrate_from_durable_store(cls) -> None:
+        if cls._durable_ingestion_store is None:
+            return
+        for durable_file in cls._durable_ingestion_store.list_workspace_files():
+            cls._files[durable_file.file_id] = UploadedFileContract(
+                workspace_id=durable_file.workspace_id,
+                owner=durable_file.owner_id,
+                status="ready",
+                file_id=durable_file.file_id,
+                mime_type=durable_file.mime_type,
+                hash=durable_file.source_sha256,
+                security_label=durable_file.security_label,
+                parse_status=durable_file.parse_status,
+            )
+            try:
+                source_object = cls._durable_ingestion_store.get_source_object(durable_file.source_id)
+                cls._file_text[durable_file.file_id] = cls._read_source_text(source_object)
+            except KeyError:
+                cls._file_text[durable_file.file_id] = ""
+        for manifest in cls._durable_ingestion_store.list_index_manifests():
+            cls._knowledge_index_runtime.rehydrate_index(
+                manifest,
+                cls._durable_ingestion_store.list_index_chunks(manifest.job_id),
+            )
+        for task_record in cls._durable_ingestion_store.list_workspace_tasks():
+            task_payload = task_record.payload.get("task", task_record.payload)
+            task = WorkspaceTaskContract.model_validate(task_payload)
+            cls._tasks[task.task_id] = task
+            cls._artifact_ids_by_task[task.task_id] = []
+            cls._feedback_ids_by_task[task.task_id] = []
+            cls._events[task.task_id] = [
+                TraceEventContract(
+                    event_id=event.event_id,
+                    task_id=event.task_id,
+                    trace_id=event.trace_id,
+                    type=event.event_type,
+                    timestamp=event.timestamp,
+                    payload=event.payload,
+                )
+                for event in cls._durable_ingestion_store.list_task_events(task.task_id)
+            ]
+            for artifact_record in cls._durable_ingestion_store.list_artifacts_for_task(task.task_id):
+                artifact_payload = artifact_record.payload.get("artifact", artifact_record.payload)
+                artifact = ArtifactContract.model_validate(artifact_payload)
+                cls._artifacts[artifact.artifact_id] = artifact
+                cls._artifact_content[artifact.artifact_id] = artifact_record.content
+                cls._artifact_ids_by_task.setdefault(task.task_id, []).append(artifact.artifact_id)
+            for feedback_record in cls._durable_ingestion_store.list_feedback_for_task(task.task_id):
+                feedback_payload = feedback_record.payload.get("feedback", feedback_record.payload)
+                feedback = FeedbackContract.model_validate(feedback_payload)
+                cls._feedback[feedback.feedback_id] = feedback
+                cls._feedback_ids_by_task.setdefault(task.task_id, []).append(feedback.feedback_id)
+            cls._trace_spans.setdefault(task.task_id, [])
+            cls._trace_replays.setdefault(task.task_id, {"source_refs": []})
+
+    @staticmethod
+    def _read_source_text(source_object: SourceObjectRecord) -> str:
+        parsed = urlparse(source_object.storage_uri)
+        if parsed.scheme != "file":
+            return ""
+        path_text = unquote(parsed.path)
+        if path_text.startswith("/") and len(path_text) > 3 and path_text[2] == ":":
+            path_text = path_text[1:]
+        path = Path(path_text)
+        if not path.exists():
+            return ""
+        return path.read_text(encoding="utf-8", errors="ignore")
 
     @classmethod
     def register_file(
@@ -114,8 +240,9 @@ class WorkspaceTaskRuntimeService:
         content: str | None = None,
     ) -> dict:
         normalized_file_id = file_id or f"file_{uuid4().hex[:12]}"
+        stored_content = content or f"{name or normalized_file_id} was uploaded to workspace {workspace_id}."
         normalized_hash = file_hash or hashlib.sha256(
-            f"{workspace_id}:{normalized_file_id}:{uri or name or mime_type}".encode("utf-8")
+            stored_content.encode("utf-8")
         ).hexdigest()
         file = UploadedFileContract(
             workspace_id=workspace_id,
@@ -131,12 +258,47 @@ class WorkspaceTaskRuntimeService:
             updated_at=str(time.time()),
         )
         cls._files[file.file_id] = file
-        cls._file_text[file.file_id] = content or f"{name or normalized_file_id} was uploaded to workspace {workspace_id}."
-        return {
+        cls._file_text[file.file_id] = stored_content
+        payload = {
             "file": file.model_dump(),
             "name": name,
             "uri": uri,
         }
+        if cls._durable_ingestion_store is not None and cls._source_object_store is not None:
+            source_id = f"source_{normalized_file_id}"
+            source_object = cls._source_object_store.save_text(
+                workspace_id=workspace_id,
+                source_id=source_id,
+                filename=name or f"{normalized_file_id}.txt",
+                mime_type=mime_type,
+                content=stored_content,
+                owner_id=login_user.user_id,
+                acl_scope=file.policy_scope,
+                sensitivity_tags=[security_label],
+            )
+            cls._durable_ingestion_store.save_source_object(source_object)
+            cls._durable_ingestion_store.save_workspace_file(
+                WorkspaceFileRecord(
+                    file_id=file.file_id,
+                    workspace_id=workspace_id,
+                    source_id=source_id,
+                    owner_id=login_user.user_id,
+                    filename=name or normalized_file_id,
+                    mime_type=mime_type,
+                    source_sha256=source_object.source_sha256,
+                    parse_status=file.parse_status,
+                    security_label=security_label,
+                )
+            )
+            payload.update(
+                {
+                    "source_id": source_id,
+                    "source_sha256": source_object.source_sha256,
+                    "storage_uri": source_object.storage_uri,
+                    "durable_status": "persisted",
+                }
+            )
+        return payload
 
     @classmethod
     def create_ingest_job(
@@ -151,6 +313,7 @@ class WorkspaceTaskRuntimeService:
         file = cls._require_file(file_id)
         if file.workspace_id != workspace_id:
             raise HTTPException(status_code=400, detail="Workspace file does not belong to workspace")
+        durable_file, source_object = cls._durable_file_source(file_id)
         file.parse_status = "ingest_accepted"
         file.updated_at = str(time.time())
         normalized_trace_id = trace_id or file.trace_id or f"trace_{uuid4().hex[:12]}"
@@ -163,20 +326,33 @@ class WorkspaceTaskRuntimeService:
         parse_job = ParseGateway.submit_parse_job(
             ParseDocumentRequest(
                 document_id=file.file_id,
-                source_id=file.file_id,
+                source_id=source_object.source_id if source_object is not None else file.file_id,
                 workspace_id=workspace_id,
-                source_uri=cls._parser_source_uri(file=file),
+                source_uri=source_object.storage_uri if source_object is not None else cls._parser_source_uri(file=file),
                 mime_type=file.mime_type,
                 source_text=cls._file_text.get(file_id, ""),
-                hash=file.hash,
+                hash=source_object.source_sha256 if source_object is not None else file.hash,
                 acl_scope="workspace",
                 sensitivity_tags=[file.security_label],
             )
         )
         parse_snapshot = ParseGateway.get_job_snapshot(parse_job.job_id)
+        cls._persist_parse_job(
+            file=file,
+            durable_file=durable_file,
+            source_object=source_object,
+            parse_job=parse_job,
+            parse_snapshot=parse_snapshot,
+        )
         if parse_job.status != "succeeded" or parse_job.document is None:
             file.parse_status = parse_job.status
             file.updated_at = str(time.time())
+            cls._persist_workspace_file_status(
+                durable_file=durable_file,
+                parse_status=file.parse_status,
+                latest_parse_job_id=parse_job.job_id,
+                latest_document_version_id=None,
+            )
             job = {
                 "ingest_task_id": ingest_task_id,
                 "workspace_id": workspace_id,
@@ -190,6 +366,10 @@ class WorkspaceTaskRuntimeService:
                 "parse_snapshot": parse_snapshot.model_dump(),
                 "index_job": None,
             }
+            cls._attach_blocked_durable_payload(
+                job=job,
+                source_object=source_object,
+            )
             cls._ingest_jobs[ingest_task_id] = job
             return job
         index_job = cls._knowledge_index_runtime.index_document(
@@ -200,6 +380,15 @@ class WorkspaceTaskRuntimeService:
         )
         file.parse_status = "indexed"
         file.updated_at = str(time.time())
+        document_version = cls._persist_successful_ingest(
+            file=file,
+            durable_file=durable_file,
+            source_object=source_object,
+            parse_job=parse_job,
+            parse_snapshot=parse_snapshot,
+            index_job=index_job,
+            knowledge_space_id=knowledge_space_id,
+        )
         job = {
             "ingest_task_id": ingest_task_id,
             "workspace_id": workspace_id,
@@ -213,8 +402,200 @@ class WorkspaceTaskRuntimeService:
             "parse_snapshot": parse_snapshot.model_dump(),
             "index_job": index_job.model_dump(),
         }
+        cls._attach_success_durable_payload(
+            job=job,
+            source_object=source_object,
+            document_version=document_version,
+            index_job=index_job,
+        )
         cls._ingest_jobs[ingest_task_id] = job
         return job
+
+    @classmethod
+    def _durable_file_source(
+        cls,
+        file_id: str,
+    ) -> tuple[WorkspaceFileRecord | None, SourceObjectRecord | None]:
+        if cls._durable_ingestion_store is None:
+            return None, None
+        try:
+            durable_file = cls._durable_ingestion_store.get_workspace_file(file_id)
+            source_object = cls._durable_ingestion_store.get_source_object(durable_file.source_id)
+        except KeyError:
+            return None, None
+        return durable_file, source_object
+
+    @classmethod
+    def _persist_parse_job(
+        cls,
+        *,
+        file: UploadedFileContract,
+        durable_file: WorkspaceFileRecord | None,
+        source_object: SourceObjectRecord | None,
+        parse_job: ParseDocumentResult,
+        parse_snapshot: ParseJobSnapshot,
+    ) -> None:
+        if cls._durable_ingestion_store is None or source_object is None:
+            return
+        parser_version = (
+            parse_job.document.metadata.parser_version
+            if parse_job.document is not None
+            else "phase05-runtime-v1"
+        )
+        cls._durable_ingestion_store.create_parse_job(
+            ParseJobRecord(
+                parse_job_id=parse_job.job_id,
+                workspace_id=file.workspace_id,
+                file_id=file.file_id,
+                source_id=source_object.source_id,
+                status=parse_job.status,
+                parser_id=parse_snapshot.parser_id,
+                parser_version=parser_version,
+                parse_idempotency_key=parse_snapshot.parse_idempotency_key,
+                attempt_count=parse_snapshot.attempt_count,
+                document_version_id=parse_snapshot.source_provenance.get("document_version_id"),
+                blocked_reason=parse_snapshot.blocked_reason,
+                failure_reason=parse_snapshot.failure_reason,
+            )
+        )
+        cls._durable_ingestion_store.save_parse_snapshot(parse_snapshot)
+        cls._persist_workspace_file_status(
+            durable_file=durable_file,
+            parse_status=parse_job.status,
+            latest_parse_job_id=parse_job.job_id,
+            latest_document_version_id=parse_snapshot.source_provenance.get("document_version_id"),
+        )
+
+    @classmethod
+    def _persist_successful_ingest(
+        cls,
+        *,
+        file: UploadedFileContract,
+        durable_file: WorkspaceFileRecord | None,
+        source_object: SourceObjectRecord | None,
+        parse_job: ParseDocumentResult,
+        parse_snapshot: ParseJobSnapshot,
+        index_job: IndexJobManifest,
+        knowledge_space_id: str,
+    ) -> DocumentVersionRecord | None:
+        if (
+            cls._durable_ingestion_store is None
+            or source_object is None
+            or parse_job.document is None
+        ):
+            return None
+        document_version = cls._durable_ingestion_store.save_document_version(parse_job.document)
+        cls._durable_ingestion_store.save_index_manifest(index_job)
+        for chunk in cls._index_chunks_for_manifest(
+            index_job=index_job,
+            knowledge_space_id=knowledge_space_id,
+            query=cls._file_text.get(file.file_id, ""),
+        ):
+            cls._durable_ingestion_store.save_index_chunk(chunk)
+        cls._persist_workspace_file_status(
+            durable_file=durable_file,
+            parse_status="indexed",
+            latest_parse_job_id=parse_snapshot.job_id,
+            latest_document_version_id=document_version.document_version_id,
+        )
+        return document_version
+
+    @classmethod
+    def _persist_workspace_file_status(
+        cls,
+        *,
+        durable_file: WorkspaceFileRecord | None,
+        parse_status: str,
+        latest_parse_job_id: str | None,
+        latest_document_version_id: str | None,
+    ) -> None:
+        if cls._durable_ingestion_store is None or durable_file is None:
+            return
+        cls._durable_ingestion_store.save_workspace_file(
+            durable_file.model_copy(
+                update={
+                    "parse_status": parse_status,
+                    "latest_parse_job_id": latest_parse_job_id,
+                    "latest_document_version_id": latest_document_version_id,
+                }
+            )
+        )
+
+    @classmethod
+    def _index_chunks_for_manifest(
+        cls,
+        *,
+        index_job: IndexJobManifest,
+        knowledge_space_id: str,
+        query: str,
+    ) -> list[IndexChunkRecord]:
+        payload = cls._knowledge_index_runtime.to_retrieval_payload(knowledge_space_id, query or "__all__")
+        chunks: list[IndexChunkRecord] = []
+        seen_chunk_ids: set[str] = set()
+        for source_name in ("bm25", "vector", "graph"):
+            for document in payload.get("documents_by_source", {}).get(source_name, []):
+                chunk_id = str(document.get("chunk_id") or "")
+                if not chunk_id or chunk_id in seen_chunk_ids:
+                    continue
+                seen_chunk_ids.add(chunk_id)
+                metadata = dict(document.get("metadata") or {})
+                chunks.append(
+                    IndexChunkRecord(
+                        chunk_id=chunk_id,
+                        index_job_id=index_job.job_id,
+                        knowledge_space_id=index_job.knowledge_space_id,
+                        workspace_id=index_job.workspace_id,
+                        document_id=str(document.get("document_id") or index_job.document_id),
+                        document_version_id=index_job.document_version_id,
+                        block_id=str(metadata.get("block_id") or chunk_id.split("::", 1)[-1]),
+                        content=str(document.get("content") or ""),
+                        source_type=str(document.get("source_type") or source_name),
+                        metadata=metadata,
+                        citation_lineage=dict(metadata.get("citation_lineage") or {}),
+                        acl_scope=str(metadata.get("acl_scope") or "workspace"),
+                        sensitivity_tags=list(metadata.get("sensitivity_tags") or index_job.sensitivity_tags),
+                    )
+                )
+        return chunks
+
+    @staticmethod
+    def _attach_blocked_durable_payload(
+        *,
+        job: dict,
+        source_object: SourceObjectRecord | None,
+    ) -> None:
+        if source_object is None:
+            return
+        job.update(
+            {
+                "source_object": source_object.model_dump(),
+                "durable_status": "persisted",
+            }
+        )
+
+    @staticmethod
+    def _attach_success_durable_payload(
+        *,
+        job: dict,
+        source_object: SourceObjectRecord | None,
+        document_version: DocumentVersionRecord | None,
+        index_job: IndexJobManifest,
+    ) -> None:
+        if source_object is None or document_version is None:
+            return
+        job.update(
+            {
+                "source_object": source_object.model_dump(),
+                "document_version": document_version.model_dump(exclude={"ir_json"}),
+                "index_manifest_ref": {
+                    "index_job_id": index_job.job_id,
+                    "knowledge_space_id": index_job.knowledge_space_id,
+                    "document_version_id": index_job.document_version_id,
+                    "source_sha256": index_job.source_sha256,
+                },
+                "durable_status": "persisted",
+            }
+        )
 
     @classmethod
     def create_task(
@@ -839,8 +1220,72 @@ class WorkspaceTaskRuntimeService:
         return f"{base_uri}{extension_by_mime.get(file.mime_type, '')}"
 
     @classmethod
+    def _persist_workspace_product_state(cls, task_id: str) -> None:
+        if cls._durable_ingestion_store is None:
+            return
+        task = cls._tasks.get(task_id)
+        if task is None:
+            return
+        cls._durable_ingestion_store.save_workspace_task(
+            WorkspaceTaskRecord(
+                task_id=task.task_id,
+                workspace_id=task.workspace_id,
+                owner_id=task.owner,
+                status=task.status,
+                trace_id=task.trace_id,
+                payload={"task": task.model_dump()},
+            )
+        )
+        for event in cls._events.get(task_id, []):
+            cls._durable_ingestion_store.save_task_event(
+                TaskEventRecord(
+                    event_id=event.event_id,
+                    task_id=event.task_id,
+                    trace_id=event.trace_id,
+                    event_type=event.type,
+                    timestamp=event.timestamp,
+                    payload=event.payload,
+                )
+            )
+        for artifact_id in cls._artifact_ids_by_task.get(task_id, []):
+            artifact = cls._artifacts.get(artifact_id)
+            if artifact is None:
+                continue
+            content = cls._artifact_content.get(artifact_id, "")
+            cls._durable_ingestion_store.save_artifact(
+                ArtifactRecord(
+                    artifact_id=artifact.artifact_id,
+                    task_id=artifact.task_id,
+                    workspace_id=artifact.workspace_id,
+                    owner_id=artifact.owner,
+                    kind=artifact.kind,
+                    uri=artifact.uri,
+                    content=content,
+                    content_sha256=hashlib.sha256(content.encode("utf-8")).hexdigest(),
+                    trace_id=artifact.trace_id,
+                    payload={"artifact": artifact.model_dump()},
+                )
+            )
+        for feedback_id in cls._feedback_ids_by_task.get(task_id, []):
+            feedback = cls._feedback.get(feedback_id)
+            if feedback is None:
+                continue
+            cls._durable_ingestion_store.save_feedback(
+                FeedbackRecord(
+                    feedback_id=feedback.feedback_id,
+                    task_id=feedback.task_id,
+                    rating=feedback.rating,
+                    label=feedback.label,
+                    comment=feedback.comment,
+                    dataset_candidate=feedback.dataset_candidate,
+                    payload={"feedback": feedback.model_dump()},
+                )
+            )
+
+    @classmethod
     def get_task_snapshot(cls, task_id: str) -> dict:
         task = cls._require_task(task_id)
+        cls._persist_workspace_product_state(task_id)
         artifact_ids = cls._artifact_ids_by_task.get(task_id, [])
         feedback_ids = cls._feedback_ids_by_task.get(task_id, [])
         runtime_snapshot = cls._durable_runtime.get_task_snapshot(task_id)
@@ -933,6 +1378,7 @@ class WorkspaceTaskRuntimeService:
                 payload={"feedback_id": feedback.feedback_id, "dataset_candidate": dataset_candidate},
             ),
         )
+        cls._persist_workspace_product_state(task_id)
         return feedback.model_dump()
 
     @classmethod

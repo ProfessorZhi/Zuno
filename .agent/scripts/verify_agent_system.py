@@ -65,8 +65,18 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
+]
+LATEST_COMPLETED_PROGRAM_NAME = "zuno-enterprise-document-ingestion-platform-v2"
+LATEST_COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{LATEST_COMPLETED_PROGRAM_NAME}"
+LATEST_COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_truth-source-and-gap-audit.md",
     "PHASE02_durable-storage-contract.md",
+    "PHASE03_workspace-file-durable-input.md",
+    "PHASE04_parse-document-persistence.md",
+    "PHASE05_index-persistence-rehydrate.md",
+    "PHASE06_workspace-product-durable-closure.md",
+    "PHASE07_restart-recovery-end-to-end.md",
+    "PHASE08_docs-verifier-closure.md",
 ]
 CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
 CURRENT_ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{CURRENT_ACTIVE_PROGRAM_NAME}"
@@ -168,6 +178,12 @@ REQUIRED_PATHS = [
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
     *[f".agent/programs/queued-programs/{file_name}" for file_name in QUEUED_PROGRAM_FILES],
+    f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/README.md",
+    f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/current.md",
+    f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/closure-summary.md",
+    *[f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in LATEST_COMPLETED_PROGRAM_PHASE_FILES],
     f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/README.md",
     f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/current.md",
     f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/implementation-roadmap.md",
@@ -410,6 +426,12 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     roadmap = (repo_root / ".agent/programs/implementation-roadmap.md").read_text(encoding="utf-8")
     closure = (repo_root / ".agent/programs/closure-checklist.md").read_text(encoding="utf-8")
     current_reference = (repo_root / ".agent/references/current-program.md").read_text(encoding="utf-8")
+    latest_archive_root = repo_root / LATEST_COMPLETED_PROGRAM_ARCHIVE
+    latest_archive_text = (
+        (latest_archive_root / "current.md").read_text(encoding="utf-8")
+        + (latest_archive_root / "README.md").read_text(encoding="utf-8")
+        + (latest_archive_root / "closure-summary.md").read_text(encoding="utf-8")
+    )
     production_archive_root = repo_root / ACTIVE_PROGRAM_ARCHIVE
     production_archive_text = (
         (production_archive_root / "current.md").read_text(encoding="utf-8")
@@ -430,23 +452,26 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: active",
-        "active_program: zuno-enterprise-document-ingestion-platform-v2",
-        "current_phase: PHASE02_durable-storage-contract",
-        f"latest_completed_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
+        LATEST_COMPLETED_PROGRAM_NAME,
+        LATEST_COMPLETED_PROGRAM_ARCHIVE,
         CURRENT_ACTIVE_PROGRAM_NAME,
         CURRENT_ACTIVE_PROGRAM_ARCHIVE,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",
-        "zuno-enterprise-document-ingestion-platform-v2",
         "zuno-runtime-subsystems-parallel-v1",
         "zuno-agent-planning-integration-v1",
         "zuno-enterprise-knowledge-eval-benchmark-v1",
         ACTIVE_PROGRAM_NAME,
         ACTIVE_PROGRAM_ARCHIVE,
         "completed / archived",
+        "PHASE01-PHASE08",
         "PHASE01-PHASE12",
         "PHASE01_truth-source-and-gap-audit",
-        "PHASE02_durable-storage-contract",
+        "PHASE08_docs-verifier-closure",
+        "Product V1 local durable ingestion baseline",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",
@@ -460,16 +485,41 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
     ]:
-        if phrase not in current + readme + roadmap + closure + current_reference + ingestion_archive_text + production_archive_text + runtime_archive_text:
+        if phrase not in current + readme + roadmap + closure + current_reference + latest_archive_text + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names != [
-        "PHASE01_truth-source-and-gap-audit.md",
-        "PHASE02_durable-storage-contract.md",
-    ]:
+    if active_phase_names:
         errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
     if (repo_root / ".agent/programs/thread-prompts").exists():
         errors.append(".agent/programs/thread-prompts must stay archived until Program 3 starts")
+    for phase_name in LATEST_COMPLETED_PROGRAM_PHASE_FILES:
+        phase_path = latest_archive_root / phase_name
+        if not phase_path.exists():
+            errors.append(f"latest completed ingestion v2 archive missing phase: {phase_name}")
+            continue
+        phase_content = phase_path.read_text(encoding="utf-8")
+        if f"program: {LATEST_COMPLETED_PROGRAM_NAME}" not in phase_content:
+            errors.append(f"latest completed ingestion v2 phase missing program id: {phase_name}")
+        if "status: completed" not in phase_content:
+            errors.append(f"latest completed ingestion v2 phase missing completed status: {phase_name}")
+        for required in [
+            "## 目标",
+            "## 范围",
+            "## 禁止范围",
+            "## 验收闸门",
+            "## 验证命令",
+            "## 需要先读取",
+            "## 需要修改的文件",
+            "## 执行拆解",
+            "## 多 agent 分工",
+            "## 需要返回的证据",
+            "## 停止条件",
+        ]:
+            if required not in phase_content:
+                errors.append(f"latest completed ingestion v2 phase missing section {required}: {phase_name}")
+    for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        if not (latest_archive_root / required_archive_file).exists():
+            errors.append(f"latest completed ingestion v2 archive missing file: {required_archive_file}")
     for phase_name in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:
         phase_path = ingestion_archive_root / phase_name
         if not phase_path.exists():

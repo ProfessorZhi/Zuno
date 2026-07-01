@@ -65,6 +65,19 @@ class DocumentVersionRecord(BaseModel):
     ir_json: dict[str, Any] = Field(default_factory=dict)
 
 
+class DocumentBlockRecord(BaseModel):
+    document_version_id: str
+    block_id: str
+    workspace_id: str
+    document_id: str
+    block_type: str
+    text: str
+    source_span: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    acl_scope: str = "workspace"
+    sensitivity_tags: list[str] = Field(default_factory=list)
+
+
 class IndexChunkRecord(BaseModel):
     chunk_id: str
     index_job_id: str
@@ -81,10 +94,56 @@ class IndexChunkRecord(BaseModel):
     sensitivity_tags: list[str] = Field(default_factory=list)
 
 
+class WorkspaceTaskRecord(BaseModel):
+    task_id: str
+    workspace_id: str
+    owner_id: str | None = None
+    status: str
+    trace_id: str | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class TaskEventRecord(BaseModel):
+    event_id: str
+    task_id: str
+    trace_id: str
+    event_type: str
+    timestamp: float
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class ArtifactRecord(BaseModel):
+    artifact_id: str
+    task_id: str
+    workspace_id: str
+    owner_id: str | None = None
+    kind: str
+    uri: str
+    content: str
+    content_sha256: str
+    trace_id: str | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class FeedbackRecord(BaseModel):
+    feedback_id: str
+    task_id: str
+    rating: int | None = None
+    label: str | None = None
+    comment: str | None = None
+    dataset_candidate: bool = False
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
 __all__ = [
+    "ArtifactRecord",
+    "DocumentBlockRecord",
     "DocumentVersionRecord",
+    "FeedbackRecord",
     "IndexChunkRecord",
     "ParseJobRecord",
     "SourceObjectRecord",
+    "TaskEventRecord",
     "WorkspaceFileRecord",
+    "WorkspaceTaskRecord",
 ]

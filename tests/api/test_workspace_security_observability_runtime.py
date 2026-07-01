@@ -219,7 +219,9 @@ def test_workspace_task_trace_replays_to_source_block_and_tool_audit_span() -> N
     observability = client.get("/api/v1/workspace/task/task_phase10_trace").json()["data"][
         "observability"
     ]
-    assert observability["trace_replay"]["source_refs"] == ["file_phase10_trace::block_1"]
+    assert observability["trace_replay"]["source_refs"] == [
+        "file_phase10_trace::block_paragraph_1"
+    ]
     assert observability["release_eval"]["status"] == "pass"
     assert {span["span_kind"] for span in observability["spans"]} >= {"retrieval", "sandbox", "eval"}
     assert "raw-secret" not in repr(observability)

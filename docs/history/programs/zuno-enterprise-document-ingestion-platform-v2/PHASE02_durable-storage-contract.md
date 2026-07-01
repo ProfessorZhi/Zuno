@@ -1,6 +1,6 @@
 # PHASE02 Durable Storage Contract
 
-status: active
+status: completed
 program: zuno-enterprise-document-ingestion-platform-v2
 phase: PHASE02_durable-storage-contract
 mode: tdd-implementation
@@ -33,13 +33,52 @@ SQLite-compatible durable store contract
 - 不把 Redis / object store / outbox / worker lease / external OCR / VLM / external index 写成 Current。
 - 不破坏现有 `/workspace/file`、`/workspace/ingest`、task、artifact、feedback response shape。
 
-## TDD 验收
+## 验收闸门
 
 1. 先写 focused test。
 2. 运行并确认失败原因是缺 module / 缺 contract / 缺持久化能力。
 3. 实现最小代码。
 4. focused test 通过。
 5. repo verifier 和 guardrail tests 通过。
+
+## 需要先读取
+
+- `docs/architecture/document-ingestion-foundation.md`
+- `src/backend/zuno/knowledge/ingestion/contracts.py`
+- `src/backend/zuno/knowledge/indexing/contracts.py`
+- `src/backend/zuno/api/services/workspace_task_runtime.py`
+- `tests/knowledge/`
+
+## 需要修改的文件
+
+- `src/backend/zuno/knowledge/storage/contracts.py`
+- `src/backend/zuno/knowledge/storage/local_object_store.py`
+- `src/backend/zuno/knowledge/storage/sqlmodel_models.py`
+- `src/backend/zuno/knowledge/storage/durable_ingestion_store.py`
+- `src/backend/zuno/knowledge/storage/__init__.py`
+- `tests/knowledge/test_enterprise_ingestion_storage_contract.py`
+
+## 执行拆解
+
+1. 写 durable ingestion store focused test，并确认 red failure。
+2. 定义 source object、workspace file、parse job、document version、index manifest 和 index chunk records。
+3. 实现 local object store 和 SQLite durable ingestion store。
+4. 跑 focused test、knowledge tests 和 repo verifier。
+
+## 多 agent 分工
+
+本 phase 由主线程直接执行；未拆子线程，避免在 store contract 和 SQLModel schema 上产生并行冲突。
+
+## 需要返回的证据
+
+- red failure：缺少 `zuno.knowledge.storage` module。
+- green result：`tests/knowledge/test_enterprise_ingestion_storage_contract.py` 通过。
+- 边界证据：生产 Postgres、Redis、MinIO、external OCR / VLM 和 external index 仍保留为 Target。
+
+## 停止条件
+
+- 如果必须接入外部 DB / object store / queue 才能继续，停止并回报。
+- 如果必须破坏 `/workspace/file` 或 `/workspace/ingest` response shape，停止并回报。
 
 ## 最小 store contract
 

@@ -54,15 +54,16 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "LangSmith-compatible Trace / Eval",
     ]:
         assert phrase in architecture
-    assert _current_phase_name(current_program) == "PHASE02_durable-storage-contract"
-    assert "state: active" in current_program
-    assert "active_program: zuno-enterprise-document-ingestion-platform-v2" in current_program
-    assert "latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1" in current_program
+    assert _current_phase_name(current_program) == "none"
+    assert "state: no-active" in current_program
+    assert "active_program: none" in current_program
+    assert "latest_completed_program: zuno-enterprise-document-ingestion-platform-v2" in current_program
     assert "zuno-enterprise-agentic-graphrag-production-suite-v1" in current_program
-    assert "docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/" in current_program
+    assert "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/" in current_program
     assert "zuno-production-architecture-and-deliverables-completion-v1" in readme
     assert "zuno-production-architecture-and-deliverables-completion-v1" in architecture
     assert "一次性交付型成熟化 program" in current_program
+    assert "zuno-production-document-ingestion-and-thread-foundation-v1" in current_program
     assert "zuno-target-architecture-runtime-full-implementation-v1" in current_program
     assert "docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/" in current_program
 
