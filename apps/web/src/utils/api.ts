@@ -3,6 +3,9 @@ type DesktopConfig = {
   bridgeUrl?: string
   bridgeToken?: string
   workspaceRoot?: string
+  taskLifecycleEndpoint?: string
+  artifactDownloadEndpointTemplate?: string
+  workspaceTaskLifecycleStates?: string[]
 }
 
 declare global {

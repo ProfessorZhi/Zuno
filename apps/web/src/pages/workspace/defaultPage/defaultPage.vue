@@ -2,7 +2,7 @@
 import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, watch, type Component } from 'vue'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowDown, ArrowLeft, ArrowUp, CopyDocument, Plus } from '@element-plus/icons-vue'
+import { ArrowDown, ArrowLeft, ArrowUp, CopyDocument, Download, Plus } from '@element-plus/icons-vue'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import {
@@ -13,10 +13,12 @@ import {
   createWorkspaceTaskAPI,
   createWorkspaceSessionAPI,
   deleteWorkspaceSessionAPI,
+  downloadWorkspaceArtifactAPI,
   getWorkspaceArtifactAPI,
   getWorkspaceExecutionModesAPI,
   getWorkspacePluginsByModeAPI,
   getWorkspaceSessionInfoAPI,
+  getWorkspaceTaskLifecycleAPI,
   getWorkspaceTaskAPI,
   workspaceSimpleChatStreamAPI,
   workspaceTaskEventsStreamAPI,
@@ -124,9 +126,13 @@ const activeRuntimeArtifact = ref<{
   content: string
   citations: string[]
   uri: string
+  downloadUrl?: string
+  downloadPolicy?: string
 } | null>(null)
 const activeRuntimeCitationIds = ref<string[]>([])
 const activeRuntimeObservability = ref<WorkspaceObservabilitySnapshot | null>(null)
+const workspaceTaskLifecycleStates = ref<string[]>(['pending', 'running', 'approval_required', 'recoverable_failed', 'cancelled', 'completed'])
+const workspaceTaskRecoveryActions = ref<Record<string, string[]>>({})
 const runtimeFailure = ref<{ title: string; detail: string } | null>(null)
 const feedbackSubmitting = ref(false)
 const feedbackSent = ref(false)
@@ -471,6 +477,20 @@ const runtimeFeedbackCopy = computed(() => {
   if (!feedbackSent.value) return '等待反馈。'
   return runtimeFeedbackLabel.value === 'helpful' ? '已记录为可用结果。' : '已记录为需要调整。'
 })
+const refreshWorkspaceTaskLifecycleContract = async () => {
+  try {
+    const response = await getWorkspaceTaskLifecycleAPI()
+    const contract = response.data?.data
+    if (Array.isArray(contract?.states)) {
+      workspaceTaskLifecycleStates.value = contract.states.map((state: unknown) => String(state))
+    }
+    if (contract?.recovery_actions && typeof contract.recovery_actions === 'object') {
+      workspaceTaskRecoveryActions.value = contract.recovery_actions
+    }
+  } catch (error) {
+    console.warn('workspace task lifecycle contract unavailable', error)
+  }
+}
 
 const safeQueryValue = (value: unknown, fallback: string) => Array.isArray(value) ? String(value[0] || fallback) : (typeof value === 'string' && value.trim() ? value : fallback)
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || ''
@@ -1299,15 +1319,20 @@ const captureRuntimeEventSurface = (event: WorkspaceStreamEvent) => {
       content: '',
       citations: citationIds,
       uri: '',
+      downloadUrl: String(event.download_url || data.download_url || ''),
     }
   }
+  const lifecycleState = String(event.lifecycle_state || data.lifecycle_state || '')
+  const recoveryActions = normalizeStringList(event.recovery_actions || data.recovery_actions)
   const failed = event.type === 'task_failed'
     || String(data.status || '').toLowerCase() === 'failed'
     || String(data.phase || '').toLowerCase().includes('failed')
+    || lifecycleState === 'recoverable_failed'
   if (failed) {
+    const recoveryCopy = recoveryActions.length > 0 ? ` recovery_actions=${recoveryActions.join(',')}` : ''
     runtimeFailure.value = {
-      title: '任务失败',
-      detail: String(data.error || data.message || event.detail || '任务未能完成。'),
+      title: lifecycleState === 'recoverable_failed' ? '任务可恢复失败' : '任务失败',
+      detail: `${String(data.error || data.reason || data.message || event.detail || '任务未能完成。')}${recoveryCopy}`,
     }
   }
 }
@@ -1559,12 +1584,39 @@ const loadWorkspaceArtifact = async (artifactId: string, assistantIndex = -1) =>
     content,
     citations: activeRuntimeCitationIds.value,
     uri: String(artifact?.uri || ''),
+    downloadUrl: String(data?.download?.url || ''),
+    downloadPolicy: String(data?.download?.policy || artifact?.download_policy || ''),
   }
   if (content && assistantIndex >= 0 && messages.value[assistantIndex]) {
     messages.value[assistantIndex].content = content
     assistantTextStreaming.value = false
     setMessageMotion(messages.value[assistantIndex], 'complete', 1100)
     await scrollToBottom()
+  }
+}
+const extractDownloadFilename = (headers: Record<string, any>, fallbackArtifactId: string) => {
+  const disposition = String(headers?.['content-disposition'] || headers?.['Content-Disposition'] || '')
+  const match = disposition.match(/filename="?([^";]+)"?/i)
+  return match?.[1] || `${fallbackArtifactId}.md`
+}
+const downloadActiveWorkspaceArtifact = async () => {
+  const artifact = activeRuntimeArtifact.value
+  if (!artifact?.artifactId) return
+  try {
+    const response = await downloadWorkspaceArtifactAPI(artifact.artifactId)
+    const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'text/markdown;charset=utf-8' })
+    const downloadUrl = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = downloadUrl
+    anchor.download = extractDownloadFilename(response.headers || {}, artifact.artifactId)
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(downloadUrl)
+    ElMessage.success('Artifact 已下载。')
+  } catch (error) {
+    console.error('Artifact download failed', error)
+    ElMessage.error('Artifact 下载失败')
   }
 }
 const applyWorkspaceTaskSnapshot = async (snapshot: WorkspaceTaskCreateResponse | null, assistantIndex = -1) => {
@@ -1580,11 +1632,18 @@ const applyWorkspaceTaskSnapshot = async (snapshot: WorkspaceTaskCreateResponse 
   ]
   if (artifactIds[0]) await loadWorkspaceArtifact(artifactIds[0], assistantIndex)
   const status = String(snapshot.task.status || snapshot.runtime?.status || '').toLowerCase()
+  const lifecycleState = String(snapshot.lifecycle?.state || '').toLowerCase()
+  const recoveryActions = normalizeStringList(
+    snapshot.lifecycle?.recovery_actions
+    || workspaceTaskRecoveryActions.value[lifecycleState]
+    || []
+  )
   const failure = snapshot.runtime?.failure || snapshot.runtime?.state?.failure
-  if (status === 'failed' || status === 'cancelled' || failure) {
+  if (lifecycleState === 'recoverable_failed' || status === 'failed' || status === 'cancelled' || failure) {
+    const recoveryCopy = recoveryActions.length > 0 ? ` recovery_actions=${recoveryActions.join(',')}` : ''
     runtimeFailure.value = {
-      title: status === 'cancelled' ? '任务已取消' : '任务失败',
-      detail: String(failure?.message || failure?.reason || failure?.error || '任务未能完成。'),
+      title: status === 'cancelled' ? '任务已取消' : lifecycleState === 'recoverable_failed' ? '任务可恢复失败' : '任务失败',
+      detail: `${String(failure?.message || failure?.reason || failure?.error || '任务未能完成。')}${recoveryCopy}`,
     }
     if (assistantIndex >= 0 && messages.value[assistantIndex] && !activeRuntimeArtifact.value?.content) {
       messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
@@ -2533,7 +2592,7 @@ onMounted(async () => {
   window.addEventListener('resize', handleViewportResize)
   window.addEventListener('pointerdown', handleAgentPickerPointerDown)
   window.addEventListener('workspace-settings-navigate', handleSettingsNavigateRequest as EventListener)
-  await Promise.all([fetchExecutionConfig(), fetchModels(), fetchMcpServers()])
+  await Promise.all([refreshWorkspaceTaskLifecycleContract(), fetchExecutionConfig(), fetchModels(), fetchMcpServers()])
   const savedDefaults = loadWorkspaceDefaults()
   selectedMode.value = safeQueryValue(route.query.mode, savedDefaults.mode || 'normal') === 'agent' ? 'agent' : 'normal'
   activeAgentName.value = selectedMode.value === 'agent' ? safeQueryValue(route.query.agent_name, '') : ''
@@ -2896,6 +2955,9 @@ onBeforeUnmount(() => {
               <div class="runtime-panel-head">
                 <strong>Artifact</strong>
                 <span>{{ activeRuntimeArtifact.artifactId }}</span>
+                <button type="button" class="runtime-download-button" title="下载 artifact" aria-label="下载 artifact" @click="downloadActiveWorkspaceArtifact">
+                  <el-icon><Download /></el-icon>
+                </button>
               </div>
               <div v-if="activeRuntimeArtifact.uri" class="runtime-panel-copy">{{ activeRuntimeArtifact.uri }}</div>
               <div v-if="activeRuntimeArtifact.citations.length > 0 || activeRuntimeCitationIds.length > 0" class="runtime-citation-row">

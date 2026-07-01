@@ -101,20 +101,31 @@ def test_workspace_product_object_contracts_cover_phase03_fields() -> None:
 
 def test_workspace_task_state_machine_and_request_envelope_are_pinned() -> None:
     from zuno.schema.workspace import (
+        WORKSPACE_TASK_LIFECYCLE_FLOW,
         WORKSPACE_TASK_STATUS_FLOW,
         WorkSpaceSimpleTask,
         WorkspaceOutputContract,
         WorkspaceTaskBudget,
     )
 
+    assert WORKSPACE_TASK_LIFECYCLE_FLOW == [
+        "pending",
+        "running",
+        "approval_required",
+        "recoverable_failed",
+        "cancelled",
+        "completed",
+    ]
     assert WORKSPACE_TASK_STATUS_FLOW == [
         "created",
         "context_building",
         "planning",
         "running",
         "approval_waiting",
+        "approval_required",
         "resuming",
         "finalizing",
+        "recoverable_failed",
         "completed",
         "failed",
         "cancelled",

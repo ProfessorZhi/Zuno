@@ -16,11 +16,29 @@ WorkspaceTaskStatus = Literal[
     "planning",
     "running",
     "approval_waiting",
+    "approval_required",
     "resuming",
     "finalizing",
+    "recoverable_failed",
     "completed",
     "failed",
     "cancelled",
+]
+WorkspaceTaskLifecycleState = Literal[
+    "pending",
+    "running",
+    "approval_required",
+    "recoverable_failed",
+    "cancelled",
+    "completed",
+]
+WORKSPACE_TASK_LIFECYCLE_FLOW = [
+    "pending",
+    "running",
+    "approval_required",
+    "recoverable_failed",
+    "cancelled",
+    "completed",
 ]
 WORKSPACE_TASK_STATUS_FLOW = [
     "created",
@@ -28,12 +46,33 @@ WORKSPACE_TASK_STATUS_FLOW = [
     "planning",
     "running",
     "approval_waiting",
+    "approval_required",
     "resuming",
     "finalizing",
+    "recoverable_failed",
     "completed",
     "failed",
     "cancelled",
 ]
+WORKSPACE_TASK_STATUS_TO_LIFECYCLE = {
+    "created": "pending",
+    "context_building": "pending",
+    "planning": "running",
+    "running": "running",
+    "approval_waiting": "approval_required",
+    "approval_required": "approval_required",
+    "resuming": "running",
+    "finalizing": "running",
+    "recoverable_failed": "recoverable_failed",
+    "failed": "recoverable_failed",
+    "cancelled": "cancelled",
+    "completed": "completed",
+}
+WORKSPACE_TASK_RECOVERY_ACTIONS = {
+    "recoverable_failed": ["retry_task", "download_trace", "send_feedback"],
+    "cancelled": ["retry_task", "send_feedback"],
+    "completed": ["download_artifact", "send_feedback"],
+}
 
 
 class WorkSpaceAgents(Enum):
@@ -130,6 +169,16 @@ class WorkspaceTaskContract(WorkspaceProductObjectBase):
     product_mode: WorkspaceProductMode = "general_agent"
     status: WorkspaceTaskStatus = "created"
     budget: WorkspaceTaskBudget = Field(default_factory=WorkspaceTaskBudget)
+
+
+class WorkspaceTaskLifecycleSnapshot(BaseModel):
+    task_id: str
+    trace_id: str | None = None
+    state: WorkspaceTaskLifecycleState
+    status: str
+    recoverable: bool = False
+    recovery_actions: list[str] = Field(default_factory=list)
+    downloadable_artifact_ids: list[str] = Field(default_factory=list)
 
 
 class UploadedFileContract(WorkspaceProductObjectBase):
@@ -242,4 +291,9 @@ __all__ = [
     "WorkspaceSessionContract",
     "WorkspaceTaskBudget",
     "WorkspaceTaskContract",
+    "WorkspaceTaskLifecycleSnapshot",
+    "WorkspaceTaskLifecycleState",
+    "WORKSPACE_TASK_LIFECYCLE_FLOW",
+    "WORKSPACE_TASK_RECOVERY_ACTIONS",
+    "WORKSPACE_TASK_STATUS_TO_LIFECYCLE",
 ]

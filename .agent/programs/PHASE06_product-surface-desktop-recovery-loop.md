@@ -1,6 +1,8 @@
 # PHASE06 Product Surface Desktop Recovery Loop
 
-status: active
+status: completed
+completed_at: 2026-07-01
+next_phase: PHASE07_production-parse-and-index-platform
 
 ## 目标
 
@@ -73,6 +75,54 @@ npm --prefix apps/web test -- --run
 - Web / Desktop contract 对齐证据。
 - SSE / event stream 示例。
 - artifact / feedback / trace 关联样例。
+
+## 完成证据
+
+- task lifecycle 状态表：`WORKSPACE_TASK_LIFECYCLE_FLOW = pending / running / approval_required / recoverable_failed / cancelled / completed`；`GET /api/v1/workspace/task-lifecycle` 返回同一状态表、internal status mapping 和 recovery actions。
+- Web / Desktop contract 对齐：`apps/web/src/apis/workspace.ts` 暴露 `getWorkspaceTaskLifecycleAPI` / `downloadWorkspaceArtifactAPI`；`apps/desktop/preload.cjs` 暴露 `taskLifecycleEndpoint`、`artifactDownloadEndpointTemplate` 和 `workspaceTaskLifecycleStates`，Electron 继续复用同一 Web bundle 与 backend API。
+- SSE / event stream 示例：`stream_task_events()` 对每个事件输出 `lifecycle_state`；`task_failed` 事件带 `recoverable_failed` 和 `recovery_actions`；`artifact_created` 事件带 `download_url`。
+- artifact / feedback / trace 关联样例：focused test 创建 `task_phase06_download`，验证 artifact download response、`feedback_ids`、artifact `trace_id` 和 feedback event `trace_id` 同 task 串联。
+- Web 体验：workspace artifact panel 增加真实 `downloadWorkspaceArtifactAPI` 下载按钮；recoverable failure 面板消费 runtime `recovery_actions`，不是纯 UI 文案。
+
+## 验证结果
+
+```powershell
+pytest -q tests/api/test_workspace_task_runtime.py tests/api/test_workspace_product_loop_contract.py tests/frontend/test_frontend_workspace_features.py -p no:cacheprovider
+# 17 passed, 1 warning
+
+pytest -q tests/api/test_workspace_task_runtime.py tests/api/test_workspace_product_loop_contract.py tests/frontend/test_frontend_workspace_features.py tests/frontend/test_workspace_product_loop_types.py -p no:cacheprovider
+# 20 passed, 1 warning
+
+python tools/agent/render_architecture.py --check
+# passed
+
+git diff --check
+# passed
+
+npm --prefix apps/web run lint
+# passed
+
+npm --prefix apps/web run build
+# passed
+
+npm --prefix apps/web test -- --run
+# blocked: apps/web/package.json has no "test" script
+
+python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_repo_structure.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+python .agent/scripts/verify_repo_hygiene.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-docs.ps1
+# passed after removing generated local artifacts node_modules/ and apps/web/dist/
+```
+
+## Remaining Target
+
+- production Desktop 打包/e2e 闭环仍是 Target；本 phase 证明的是 Desktop 通过同一 Web bundle/API 共享 task lifecycle contract。
+- 进程重启后的 durable recovery 仍属于 PHASE08 / 后续 production persistence Target；本 phase 只把 recoverable failure 和 retry/trace/feedback actions 产品化暴露。
+- 运维级错误恢复和外部发布 gate 仍留到后续 release closure。
 
 ## 停止条件
 

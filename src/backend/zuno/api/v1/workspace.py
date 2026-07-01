@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from starlette.responses import StreamingResponse
+from starlette.responses import PlainTextResponse, StreamingResponse
 
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.services.workspace import WorkspaceService
@@ -193,6 +193,14 @@ async def create_workspace_task(
     )
 
 
+@router.get("/task-lifecycle", summary="Get workspace task lifecycle contract")
+async def get_workspace_task_lifecycle(
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    return resp_200(data=WorkspaceTaskRuntimeService.task_lifecycle_contract())
+
+
 @router.get("/task/{task_id}", summary="Get workspace task")
 async def get_workspace_task(
     task_id: str,
@@ -268,6 +276,23 @@ async def get_workspace_artifact(
     return resp_200(data=WorkspaceTaskRuntimeService.get_artifact(artifact_id))
 
 
+@router.get("/artifact/{artifact_id}/download", summary="Download workspace artifact")
+async def download_workspace_artifact(
+    artifact_id: str,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    payload = WorkspaceTaskRuntimeService.download_artifact(artifact_id)
+    return PlainTextResponse(
+        payload["content"],
+        media_type=payload["media_type"],
+        headers={
+            "Content-Disposition": f'attachment; filename="{payload["filename"]}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
 @router.post("/feedback", summary="Create workspace feedback")
 async def create_workspace_feedback(
     payload: WorkspaceFeedbackBody,
@@ -299,10 +324,12 @@ __all__ = [
     "create_workspace_feedback",
     "create_workspace_task",
     "delete_workspace_session",
+    "download_workspace_artifact",
     "get_workspace_artifact",
     "get_workspace_execution_modes",
     "get_workspace_plugins",
     "get_workspace_sessions",
+    "get_workspace_task_lifecycle",
     "get_workspace_task",
     "get_workspace_task_events",
     "register_workspace_file",

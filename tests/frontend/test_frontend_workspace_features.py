@@ -67,17 +67,23 @@ def test_workspace_agent_mode_uses_task_runtime_product_loop():
         "workspaceTaskEventsStreamAPI",
         "getWorkspaceTaskAPI",
         "getWorkspaceArtifactAPI",
+        "downloadWorkspaceArtifactAPI",
+        "getWorkspaceTaskLifecycleAPI",
         "createWorkspaceFeedbackAPI",
         "submitAgentRuntimeTask",
         "registerRuntimeAttachments",
         "streamWorkspaceTaskEvents",
         "loadWorkspaceArtifact",
+        "downloadActiveWorkspaceArtifact",
         "submitWorkspaceFeedback",
         "buildRuntimeAssistantMessage",
         "runtime-artifact-panel",
+        "runtime-download-button",
         "runtime-observability-panel",
         "runtime-feedback-panel",
         "runtime-failure-panel",
+        "recoverable_failed",
+        "recovery_actions",
         "release-eval",
         "security_gate",
         "eval_diagnostic",
@@ -85,3 +91,19 @@ def test_workspace_agent_mode_uses_task_runtime_product_loop():
         "if (isAgentMode.value) return await submitAgentRuntimeTask",
     ]:
         assert phrase in workspace_page
+
+
+def test_desktop_shell_exposes_same_workspace_task_lifecycle_contract():
+    preload = (REPO_ROOT / "apps/desktop/preload.cjs").read_text(encoding="utf-8")
+    desktop_readme = (REPO_ROOT / "apps/desktop/README.md").read_text(encoding="utf-8")
+    web_api = (REPO_ROOT / "apps/web/src/utils/api.ts").read_text(encoding="utf-8")
+
+    for phrase in [
+        "taskLifecycleEndpoint",
+        "/api/v1/workspace/task-lifecycle",
+        "artifactDownloadEndpointTemplate",
+        "/api/v1/workspace/artifact/:artifactId/download",
+        "workspaceTaskLifecycleStates",
+        "recoverable_failed",
+    ]:
+        assert phrase in preload or phrase in desktop_readme or phrase in web_api

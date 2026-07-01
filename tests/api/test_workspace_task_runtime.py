@@ -161,6 +161,119 @@ def test_workspace_task_event_stream_emits_frontend_trace_payloads() -> None:
     assert artifact_event["data"]["status"] == "finalizing"
 
 
+def test_workspace_task_runtime_exposes_phase06_lifecycle_download_and_recovery() -> None:
+    client = _client()
+
+    lifecycle_response = client.get("/api/v1/workspace/task-lifecycle")
+    assert lifecycle_response.status_code == 200
+    lifecycle = lifecycle_response.json()["data"]
+    assert lifecycle["states"] == [
+        "pending",
+        "running",
+        "approval_required",
+        "recoverable_failed",
+        "cancelled",
+        "completed",
+    ]
+    assert lifecycle["status_mapping"]["approval_waiting"] == "approval_required"
+    assert lifecycle["recovery_actions"]["recoverable_failed"] == [
+        "retry_task",
+        "download_trace",
+        "send_feedback",
+    ]
+
+    completed_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Create a downloadable workspace report",
+            "model_id": "model-local",
+            "session_id": "session_phase06_download",
+            "workspace_id": "workspace_phase06_download",
+            "task_id": "task_phase06_download",
+            "trace_id": "trace_phase06_download",
+            "goal": "downloadable report",
+            "product_mode": "general_agent",
+            "plugins": [],
+            "mcp_servers": [],
+        },
+    )
+    assert completed_response.status_code == 200
+    completed = completed_response.json()["data"]
+    artifact = completed["artifacts"][0]
+    artifact_id = artifact["artifact_id"]
+    assert completed["lifecycle"]["state"] == "completed"
+    assert completed["lifecycle"]["downloadable_artifact_ids"] == [artifact_id]
+
+    download_response = client.get(f"/api/v1/workspace/artifact/{artifact_id}/download")
+    assert download_response.status_code == 200
+    assert download_response.headers["content-disposition"].startswith("attachment;")
+    assert "downloadable-report" in download_response.headers["content-disposition"]
+    assert download_response.text.startswith("# downloadable report")
+
+    feedback_response = client.post(
+        "/api/v1/workspace/feedback",
+        json={
+            "task_id": "task_phase06_download",
+            "rating": 5,
+            "label": "helpful",
+            "dataset_candidate": True,
+        },
+    )
+    assert feedback_response.status_code == 200
+    feedback = feedback_response.json()["data"]
+    linked_snapshot = client.get("/api/v1/workspace/task/task_phase06_download").json()["data"]
+    feedback_event = client.get("/api/v1/workspace/task/task_phase06_download/events").json()["data"][-1]
+    assert linked_snapshot["feedback_ids"] == [feedback["feedback_id"]]
+    assert linked_snapshot["task"]["trace_id"] == artifact["trace_id"] == feedback_event["trace_id"]
+
+    client.post(
+        "/api/v1/workspace/file",
+        json={
+            "workspace_id": "workspace_phase06_recover",
+            "file_id": "file_phase06_recover",
+            "name": "security.md",
+            "mime_type": "text/markdown",
+            "content": "Security incidents require notice within 24 hours.",
+        },
+    )
+    client.post(
+        "/api/v1/workspace/ingest",
+        json={
+            "workspace_id": "workspace_phase06_recover",
+            "file_id": "file_phase06_recover",
+            "knowledge_space_id": "ks_phase06_recover",
+        },
+    )
+    failure_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Which indemnity waiver exists?",
+            "model_id": "model-local",
+            "session_id": "session_phase06_recover",
+            "workspace_id": "workspace_phase06_recover",
+            "task_id": "task_phase06_recover",
+            "trace_id": "trace_phase06_recover",
+            "goal": "recoverable missing citation",
+            "product_mode": "contract_review",
+            "knowledge_space_ids": ["ks_phase06_recover"],
+            "plugins": [],
+            "mcp_servers": [],
+        },
+    )
+    assert failure_response.status_code == 200
+    failed = failure_response.json()["data"]
+    assert failed["task"]["status"] == "failed"
+    assert failed["lifecycle"]["state"] == "recoverable_failed"
+    assert failed["lifecycle"]["recoverable"] is True
+    assert failed["lifecycle"]["recovery_actions"] == [
+        "retry_task",
+        "download_trace",
+        "send_feedback",
+    ]
+    failed_events = client.get("/api/v1/workspace/task/task_phase06_recover/events").json()["data"]
+    assert failed_events[-1]["payload"]["lifecycle_state"] == "recoverable_failed"
+
+
 def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monkeypatch) -> None:
     async def fake_create_workspace_session(payload):
         return {

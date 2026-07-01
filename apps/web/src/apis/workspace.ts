@@ -91,15 +91,26 @@ export type WorkspaceProductMode = 'enterprise_kb' | 'hr_resume' | 'contract_rev
 
 export type WorkspaceTaskStatus =
   | 'created'
+  | 'pending'
   | 'context_building'
   | 'planning'
   | 'running'
   | 'approval_waiting'
+  | 'approval_required'
   | 'resuming'
   | 'finalizing'
+  | 'recoverable_failed'
   | 'completed'
   | 'failed'
   | 'cancelled'
+
+export type WorkspaceTaskLifecycleState =
+  | 'pending'
+  | 'running'
+  | 'approval_required'
+  | 'recoverable_failed'
+  | 'cancelled'
+  | 'completed'
 
 export interface WorkspaceTaskBudget {
   max_steps?: number
@@ -170,6 +181,16 @@ export interface ArtifactContract extends WorkspaceProductObjectBase {
   download_policy?: string
 }
 
+export interface WorkspaceTaskLifecycleSnapshot {
+  task_id: string
+  trace_id?: string
+  state: WorkspaceTaskLifecycleState
+  status: string
+  recoverable: boolean
+  recovery_actions: string[]
+  downloadable_artifact_ids: string[]
+}
+
 export interface TraceEventContract {
   event_id: string
   task_id: string
@@ -233,6 +254,9 @@ export interface WorkspaceTaskCreateResponse {
   task: WorkspaceTaskContract
   artifact_ids: string[]
   artifacts: ArtifactContract[]
+  feedback_ids?: string[]
+  feedback?: FeedbackContract[]
+  lifecycle?: WorkspaceTaskLifecycleSnapshot
   runtime?: WorkspaceRuntimeSnapshot
   observability?: WorkspaceObservabilitySnapshot
 }
@@ -240,6 +264,12 @@ export interface WorkspaceTaskCreateResponse {
 export interface WorkspaceArtifactResponse {
   artifact: ArtifactContract
   content: string
+  download?: {
+    url: string
+    filename: string
+    media_type: string
+    policy: string
+  }
 }
 
 export interface WorkspaceFeedbackRequest {
@@ -301,6 +331,13 @@ export interface WorkspaceCancelRequest {
   reason?: string
 }
 
+export interface WorkspaceTaskLifecycleResponse {
+  states: WorkspaceTaskLifecycleState[]
+  terminal_states: WorkspaceTaskLifecycleState[]
+  status_mapping: Record<string, WorkspaceTaskLifecycleState>
+  recovery_actions: Record<string, string[]>
+}
+
 export interface WorkspaceRuntimeSnapshot {
   task_id: string
   trace_id: string
@@ -348,6 +385,9 @@ export interface WorkspaceStreamEvent {
   approval_id?: string
   required_approval?: string
   audit_ref?: string
+  lifecycle_state?: WorkspaceTaskLifecycleState | string
+  recovery_actions?: string[]
+  download_url?: string
   data?: Record<string, any>
   raw?: any
 }
@@ -409,6 +449,9 @@ export const workspaceSimpleChatStreamAPI = async (
               approval_id: parsed?.data?.approval_id,
               required_approval: parsed?.data?.required_approval,
               audit_ref: parsed?.data?.audit_ref,
+              lifecycle_state: parsed?.data?.lifecycle_state,
+              recovery_actions: parsed?.data?.recovery_actions,
+              download_url: parsed?.data?.download_url,
               data: parsed?.data || {},
               raw: parsed,
             }
@@ -460,6 +503,13 @@ export const createWorkspaceTaskAPI = async (data: WorkSpaceSimpleTask) => {
     url: '/api/v1/workspace/task',
     method: 'post',
     data,
+  })
+}
+
+export const getWorkspaceTaskLifecycleAPI = async () => {
+  return request({
+    url: '/api/v1/workspace/task-lifecycle',
+    method: 'get',
   })
 }
 
@@ -532,6 +582,9 @@ export const workspaceTaskEventsStreamAPI = async (
             approval_id: parsed?.data?.approval_id,
             required_approval: parsed?.data?.required_approval,
             audit_ref: parsed?.data?.audit_ref,
+            lifecycle_state: parsed?.data?.lifecycle_state,
+            recovery_actions: parsed?.data?.recovery_actions,
+            download_url: parsed?.data?.download_url,
             data: parsed?.data || {},
             raw: parsed,
           }
@@ -575,6 +628,14 @@ export const getWorkspaceArtifactAPI = async (artifactId: string) => {
   return request({
     url: `/api/v1/workspace/artifact/${artifactId}`,
     method: 'get',
+  })
+}
+
+export const downloadWorkspaceArtifactAPI = async (artifactId: string) => {
+  return request({
+    url: `/api/v1/workspace/artifact/${artifactId}/download`,
+    method: 'get',
+    responseType: 'blob',
   })
 }
 

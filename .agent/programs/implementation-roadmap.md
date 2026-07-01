@@ -2,7 +2,7 @@
 
 program: `zuno-production-architecture-and-deliverables-completion-v1`
 state: active
-current_phase: `PHASE06_product-surface-desktop-recovery-loop`
+current_phase: `PHASE07_production-parse-and-index-platform`
 
 ## 核心目标
 

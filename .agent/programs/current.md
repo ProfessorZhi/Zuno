@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE06_product-surface-desktop-recovery-loop
+current_phase: PHASE07_production-parse-and-index-platform
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE06_product-surface-desktop-recovery-loop
 
 ## 当前阶段
 
-- 当前 phase：`PHASE06_product-surface-desktop-recovery-loop`
-- 当前动作：把 Web 第一版产品闭环推进到 Desktop、长任务恢复、artifact 下载、错误恢复和 trace / feedback 串联。
-- 当前验收：PHASE06 只有在 Web / Desktop 共享 task lifecycle contract，并有 focused tests 或 e2e evidence 证明恢复、下载、feedback 和 trace 串联后才能关闭。
+- 当前 phase：`PHASE07_production-parse-and-index-platform`
+- 当前动作：把文档解析与索引从本地 deterministic runtime 推进到 parser queue、深度抽取和外部索引 adapter 边界。
+- 当前验收：PHASE07 只有在 parser queue / index job 有本地可测实现或明确外部 blocked evidence，并能追踪 Document IR、chunk、provenance、ACL、manifest 后才能关闭。
 
 ## 最近完成基线
 

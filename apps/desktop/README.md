@@ -23,6 +23,14 @@ npm run dev
 - `DESKTOP_FRONTEND_URL`
 - `DESKTOP_API_BASE_URL`
 
+## Workspace Task Lifecycle
+
+The Electron shell runs the same Web workspace product loop and exposes the same backend task lifecycle contract through `window.__ZUNO_DESKTOP__`:
+
+- `taskLifecycleEndpoint`: `/api/v1/workspace/task-lifecycle`
+- `artifactDownloadEndpointTemplate`: `/api/v1/workspace/artifact/:artifactId/download`
+- `workspaceTaskLifecycleStates`: `pending`, `running`, `approval_required`, `recoverable_failed`, `cancelled`, `completed`
+
 ## Production-style Run
 
 1. Build the frontend in `apps/web`:

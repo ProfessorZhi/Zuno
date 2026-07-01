@@ -55,8 +55,12 @@ from zuno.schema.workspace import (
     TraceEventContract,
     UploadedFileContract,
     WorkSpaceSimpleTask,
+    WORKSPACE_TASK_LIFECYCLE_FLOW,
+    WORKSPACE_TASK_RECOVERY_ACTIONS,
+    WORKSPACE_TASK_STATUS_TO_LIFECYCLE,
     WorkspaceTaskBudget,
     WorkspaceTaskContract,
+    WorkspaceTaskLifecycleSnapshot,
 )
 
 
@@ -77,6 +81,8 @@ class WorkspaceTaskRuntimeService:
     _artifact_content: dict[str, str] = {}
     _artifact_ids_by_task: dict[str, list[str]] = {}
     _feedback: dict[str, FeedbackContract] = {}
+    _feedback_ids_by_task: dict[str, list[str]] = {}
+    _task_recovery: dict[str, dict] = {}
     _durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
     _tool_runtime = build_default_tool_control_plane_runtime()
     _knowledge_index_runtime = KnowledgeIndexRuntime()
@@ -208,6 +214,8 @@ class WorkspaceTaskRuntimeService:
         cls._tasks[task_id] = task
         cls._task_inputs[task_id] = simple_task
         cls._artifact_ids_by_task[task_id] = []
+        cls._feedback_ids_by_task[task_id] = []
+        cls._task_recovery.pop(task_id, None)
         cls._trace_spans[task_id] = []
         cls._release_evals.pop(task_id, None)
         cls._trace_replays[task_id] = {"source_refs": []}
@@ -417,10 +425,22 @@ class WorkspaceTaskRuntimeService:
                 trace_id=task.trace_id or "",
                 event_type="task_cancelled",
                 status="cancelled",
-                payload={"reason": normalized_reason},
+                payload={"reason": normalized_reason, "lifecycle_state": "cancelled"},
             )
         )
         return cls.get_task_snapshot(task_id)
+
+    @classmethod
+    def task_lifecycle_contract(cls) -> dict:
+        return {
+            "states": list(WORKSPACE_TASK_LIFECYCLE_FLOW),
+            "terminal_states": ["recoverable_failed", "cancelled", "completed"],
+            "status_mapping": dict(WORKSPACE_TASK_STATUS_TO_LIFECYCLE),
+            "recovery_actions": {
+                state: list(actions)
+                for state, actions in WORKSPACE_TASK_RECOVERY_ACTIONS.items()
+            },
+        }
 
     @classmethod
     def _complete_task(
@@ -518,6 +538,7 @@ class WorkspaceTaskRuntimeService:
                 required_citation_coverage=required_citation_coverage,
                 security_block_count=1,
                 source_refs=cls._trace_replays.get(task_id, {}).get("source_refs", []),
+                recoverable=True,
                 failure_examples=[
                     {
                         "gate": "output",
@@ -558,7 +579,11 @@ class WorkspaceTaskRuntimeService:
                     trace_id=trace_id,
                     event_type="artifact_created",
                     status="finalizing",
-                    payload={"artifact_id": artifact.artifact_id, "kind": artifact.kind},
+                    payload={
+                        "artifact_id": artifact.artifact_id,
+                        "kind": artifact.kind,
+                        "download_url": cls._artifact_download_url(artifact.artifact_id),
+                    },
                 ),
                 cls._event(
                     task_id=task_id,
@@ -762,11 +787,18 @@ class WorkspaceTaskRuntimeService:
     def get_task_snapshot(cls, task_id: str) -> dict:
         task = cls._require_task(task_id)
         artifact_ids = cls._artifact_ids_by_task.get(task_id, [])
+        feedback_ids = cls._feedback_ids_by_task.get(task_id, [])
         runtime_snapshot = cls._durable_runtime.get_task_snapshot(task_id)
         return {
             "task": task.model_dump(),
             "artifact_ids": list(artifact_ids),
             "artifacts": [cls._artifacts[artifact_id].model_dump() for artifact_id in artifact_ids],
+            "feedback_ids": list(feedback_ids),
+            "feedback": [cls._feedback[feedback_id].model_dump() for feedback_id in feedback_ids],
+            "lifecycle": cls._task_lifecycle_snapshot(
+                task=task,
+                runtime_snapshot=runtime_snapshot,
+            ).model_dump(),
             "runtime": runtime_snapshot.to_dict() if runtime_snapshot is not None else None,
             "observability": {
                 "spans": list(cls._trace_spans.get(task_id, [])),
@@ -795,6 +827,24 @@ class WorkspaceTaskRuntimeService:
         return {
             "artifact": artifact.model_dump(),
             "content": cls._artifact_content.get(artifact_id, ""),
+            "download": {
+                "url": cls._artifact_download_url(artifact_id),
+                "filename": cls._artifact_filename(artifact),
+                "media_type": "text/markdown; charset=utf-8",
+                "policy": artifact.download_policy,
+            },
+        }
+
+    @classmethod
+    def download_artifact(cls, artifact_id: str) -> dict:
+        artifact = cls._artifacts.get(artifact_id)
+        if artifact is None:
+            raise HTTPException(status_code=404, detail="Workspace artifact not found")
+        return {
+            "artifact": artifact,
+            "content": cls._artifact_content.get(artifact_id, ""),
+            "filename": cls._artifact_filename(artifact),
+            "media_type": "text/markdown; charset=utf-8",
         }
 
     @classmethod
@@ -818,6 +868,7 @@ class WorkspaceTaskRuntimeService:
             created_at=str(time.time()),
         )
         cls._feedback[feedback.feedback_id] = feedback
+        cls._feedback_ids_by_task.setdefault(task_id, []).append(feedback.feedback_id)
         cls._events.setdefault(task_id, []).append(
             cls._event(
                 task_id=task_id,
@@ -835,6 +886,57 @@ class WorkspaceTaskRuntimeService:
         if task is None:
             raise HTTPException(status_code=404, detail="Workspace task not found")
         return task
+
+    @staticmethod
+    def _artifact_download_url(artifact_id: str) -> str:
+        return f"/api/v1/workspace/artifact/{artifact_id}/download"
+
+    @classmethod
+    def _artifact_filename(cls, artifact: ArtifactContract) -> str:
+        task = cls._tasks.get(artifact.task_id)
+        source = task.goal if task is not None else artifact.uri.rsplit("/", 1)[-1]
+        slug = source.replace("_", "-").replace(" ", "-").lower()
+        safe_slug = "".join(
+            ch for ch in slug if ch.isalnum() or ch in {"-", "."}
+        ).strip("-")
+        return f"{safe_slug or artifact.artifact_id}.md"
+
+    @classmethod
+    def _task_lifecycle_snapshot(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        runtime_snapshot: object | None,
+    ) -> WorkspaceTaskLifecycleSnapshot:
+        _ = runtime_snapshot
+        recovery = cls._task_recovery.get(task.task_id, {})
+        state = cls._lifecycle_state_for_status(task.status, recovery=recovery)
+        recoverable = bool(recovery.get("recoverable")) if state == "recoverable_failed" else False
+        return WorkspaceTaskLifecycleSnapshot(
+            task_id=task.task_id,
+            trace_id=task.trace_id,
+            state=state,
+            status=task.status,
+            recoverable=recoverable,
+            recovery_actions=cls._recovery_actions_for_state(
+                state,
+                recoverable=recoverable,
+            ),
+            downloadable_artifact_ids=list(cls._artifact_ids_by_task.get(task.task_id, [])),
+        )
+
+    @classmethod
+    def _lifecycle_state_for_status(cls, status: str, *, recovery: dict | None = None) -> str:
+        normalized = (status or "").strip().lower()
+        if normalized == "failed" and recovery and recovery.get("recoverable") is True:
+            return "recoverable_failed"
+        return WORKSPACE_TASK_STATUS_TO_LIFECYCLE.get(normalized, "running")
+
+    @staticmethod
+    def _recovery_actions_for_state(state: str, *, recoverable: bool) -> list[str]:
+        if state == "recoverable_failed" and not recoverable:
+            return ["download_trace", "send_feedback"]
+        return list(WORKSPACE_TASK_RECOVERY_ACTIONS.get(state, []))
 
     @staticmethod
     def _event(
@@ -1010,11 +1112,20 @@ class WorkspaceTaskRuntimeService:
         required_citation_coverage: float,
         security_block_count: int,
         source_refs: list[str] | None = None,
+        recoverable: bool = False,
         failure_examples: list[dict] | None = None,
     ) -> None:
         task = cls._require_task(task_id)
         task.status = "failed"
         task.updated_at = str(time.time())
+        cls._task_recovery[task_id] = {
+            "reason": reason,
+            "recoverable": recoverable,
+            "actions": cls._recovery_actions_for_state(
+                "recoverable_failed",
+                recoverable=recoverable,
+            ),
+        }
         release_eval = cls._record_release_eval(
             task=task,
             simple_task=simple_task,
@@ -1038,7 +1149,14 @@ class WorkspaceTaskRuntimeService:
                     trace_id=task.trace_id or "",
                     event_type="task_failed",
                     status="failed",
-                    payload={"reason": reason},
+                    payload={
+                        "reason": reason,
+                        "lifecycle_state": cls._lifecycle_state_for_status(
+                            task.status,
+                            recovery=cls._task_recovery.get(task_id),
+                        ),
+                        "recovery_actions": cls._task_recovery[task_id]["actions"],
+                    },
                 ),
             ]
         )
@@ -1131,8 +1249,8 @@ class WorkspaceTaskRuntimeService:
             },
         )
 
-    @staticmethod
-    def _to_frontend_stream_payload(event: TraceEventContract) -> dict:
+    @classmethod
+    def _to_frontend_stream_payload(cls, event: TraceEventContract) -> dict:
         data = {
             "event_id": event.event_id,
             "task_id": event.task_id,
@@ -1142,6 +1260,10 @@ class WorkspaceTaskRuntimeService:
             "message": event.payload.get("message") or event.type,
             **event.payload,
         }
+        data.setdefault(
+            "lifecycle_state",
+            cls._lifecycle_state_for_status(str(data.get("status") or "")),
+        )
         return {
             "event": event.type,
             "timestamp": event.timestamp,
