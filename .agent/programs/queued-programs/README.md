@@ -6,7 +6,7 @@
 
 - `state: active`
 - `active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- `current_phase: PHASE01_truth-source-and-merge-plan.md`
+- `current_phase: PHASE03_enterprise-ingestion-async-infrastructure.md`
 
 ## 被合并的计划
 

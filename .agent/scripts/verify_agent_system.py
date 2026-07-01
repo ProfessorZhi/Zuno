@@ -471,7 +471,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE01_truth-source-and-merge-plan.md",
+        "current_phase: PHASE03_enterprise-ingestion-async-infrastructure.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -515,7 +515,12 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {PROGRAM3_ACTIVE_NAME}" not in phase_content:
             errors.append(f"Program 3 active phase missing program id: {phase_name}")
-        expected_status = "status: active" if phase_name.startswith("PHASE01_") else "status: pending"
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_"):
+            expected_status = "status: completed"
+        elif phase_name.startswith("PHASE03_"):
+            expected_status = "status: active"
+        else:
+            expected_status = "status: pending"
         if expected_status not in phase_content:
             errors.append(f"Program 3 active phase missing {expected_status}: {phase_name}")
         for required in [

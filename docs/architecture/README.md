@@ -4,7 +4,7 @@
 
 架构正文以 `architecture.md` 为准；四大总交付物、Current Local Slice、Launchable Prototype Target、Production Scale Target 和 runtime-first 交付物口径以 `production-readiness.md` 为准。本 README 只做入口导航，不重复 phase 清单、四大总交付物展开或 Production Target 清单。
 
-当前 active program 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，当前 phase 是 `PHASE01_program-truth-source-and-parser-current-audit.md`。最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`，归档在 `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`。成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
+当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE03_enterprise-ingestion-async-infrastructure.md`。最近完成并归档的 program 是 `zuno-enterprise-document-ingestion-platform-v2`，归档在 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
 
 ## 当前前台
 

@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE01_truth-source-and-merge-plan
-status: active
+status: completed
 
 ## 目标
 
@@ -124,6 +124,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workfl
 - phase 文件清单。
 - verifier / repo tests 更新清单。
 - 验证命令和结果。
+
+## Closure Evidence
+
+- 当前 branch：`codex/zuno-truth-source-production-readiness-baseline`。
+- 当前 commit：`ec020e86`。
+- Program merge map 已在 `current.md`、`implementation-roadmap.md`、README、AGENTS、`.agent/references/current-program.md` 和 queued program 文件中固定：原 Program 3 / 4 / 5 / 6 均合并进 Program 3 Mega。
+- phase 文件清单已固定为 PHASE01-PHASE15；PHASE01 关闭后 PHASE02 成为 active shared contract freeze gate。
+- queued Program 4-6 文件保留在 `.agent/programs/queued-programs/`，状态为 `superseded` / `merged_into`，不是 active，也不是 completed evidence。
+- PHASE01 关闭前验证通过：`git diff --check`、`python tools/scripts/verify_docs_entrypoints.py`、`python tools/scripts/verify_repo_structure.py`、`python .agent/scripts/verify_agent_system.py`、`python .agent/scripts/verify_doc_boundaries.py`、`powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1`。
 
 ## 停止条件
 

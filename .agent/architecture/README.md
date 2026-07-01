@@ -2,9 +2,9 @@
 
 `.agent/architecture/` 现在只保留 Agent 维护架构时需要的最小入口，并与 `docs/architecture/` 保持同名镜像。
 
-PHASE12 已完成 release closure；本目录继续跟随 `docs/architecture/architecture.md` 刷新 Agent 侧镜像和 HTML，不单独承载事实。PHASE02-PHASE12 的已验证 runtime / contract / UI / release evidence 可以写入 Current；未实现的生产级 LangSmith、online eval、persistent trace store、CI release gate operations、rootless / gVisor / Firecracker sandbox、外部 vault / OAuth broker、真实网络代理、持久 approval DB 和 production Desktop 闭环仍保持 Target。
+本目录继续跟随 `docs/architecture/architecture.md` 刷新 Agent 侧镜像和 HTML，不单独承载事实。已验证 runtime / contract / UI / release evidence 可以写入 Current；未实现的生产级 LangSmith、online eval、persistent trace store、CI release gate operations、rootless / gVisor / Firecracker sandbox、外部 vault / OAuth broker、真实网络代理、持久 approval DB 和 production Desktop 闭环仍保持 Target。
 
-当前没有 active program；`.agent/programs/` 是 no-active 等待态。最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`，归档在 `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；PHASE11 已关闭 local evidence provenance、citation source tracing、local RRF/rerank trace、deterministic graph extraction / community report trace 和 unsupported claim metrics；PHASE12 已完成 release closure、full verification、archive 和 no-active state。后续仍只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后，才把 Target 能力推进到 Current。生产成熟度边界由 `docs/architecture/production-readiness.md` 维护。
+当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE03_enterprise-ingestion-async-infrastructure.md`。最近完成并归档的 program 是 `zuno-enterprise-document-ingestion-platform-v2`，归档在 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。后续仍只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后，才把 Target 能力推进到 Current。生产成熟度边界由 `docs/architecture/production-readiness.md` 维护。
 
 ## 当前前台
 
