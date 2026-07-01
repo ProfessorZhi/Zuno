@@ -189,21 +189,63 @@ def test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic() -> None:
 def test_parse_gateway_records_parse_job_status_for_replay() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
-    submitted = ParseGateway.submit_parse_job(
-        ParseDocumentRequest(
-            document_id="doc_job",
-            workspace_id="workspace_phase04",
-            source_uri="file://notes/job.md",
-            mime_type="text/markdown",
-            source_text="# Job\nReplay me.",
-        )
+    request = ParseDocumentRequest(
+        document_id="doc_job",
+        workspace_id="workspace_phase04",
+        source_uri="file://notes/job.md",
+        mime_type="text/markdown",
+        source_text="# Job\nReplay me.",
+        parser_config={"chunking": "line"},
     )
+    submitted = ParseGateway.submit_parse_job(request)
     replayed = ParseGateway.get_job_status(submitted.job_id)
+    snapshot = ParseGateway.get_job_snapshot(submitted.job_id)
+    resubmitted = ParseGateway.submit_parse_job(request)
+    resubmitted_snapshot = ParseGateway.get_job_snapshot(resubmitted.job_id)
 
     assert replayed.job_id == submitted.job_id
     assert replayed.status == "succeeded"
     assert replayed.document is not None
     assert replayed.document.metadata.document_id == "doc_job"
+    assert snapshot.parse_idempotency_key == resubmitted_snapshot.parse_idempotency_key
+    assert snapshot.parse_attempt_id.startswith("attempt_")
+    assert snapshot.attempt_count == 1
+    assert [entry["status"] for entry in snapshot.status_timeline] == [
+        "accepted",
+        "running",
+        "succeeded",
+    ]
+    assert snapshot.metrics.status == "succeeded"
+    assert snapshot.metrics.parser_name == "native"
+    assert snapshot.metrics.format == "md"
+
+
+def test_parse_gateway_target_blocked_adapter_enters_blocked_job_state() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    blocked = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_blocked_ocr",
+            workspace_id="workspace_phase03",
+            source_uri="file://scans/invoice.png",
+            mime_type="image/png",
+            source_text="OCR placeholder should not make worker Current.",
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(blocked.job_id)
+
+    assert blocked.status == "blocked"
+    assert blocked.document is None
+    assert blocked.failure is not None
+    assert blocked.failure.reason == snapshot.blocked_reason
+    assert snapshot.status == "blocked"
+    assert snapshot.retryable is False
+    assert snapshot.failure_snapshot["blocked"] is True
+    assert snapshot.adapter_boundary["external_dependency_status"] == "target_blocked"
+    assert [entry["status"] for entry in snapshot.status_timeline] == [
+        "accepted",
+        "blocked",
+    ]
 
 
 def test_parse_gateway_records_queue_snapshot_metrics_and_retry_lineage() -> None:
@@ -223,11 +265,16 @@ def test_parse_gateway_records_queue_snapshot_metrics_and_retry_lineage() -> Non
     assert failed_snapshot.job_id == failed.job_id
     assert failed_snapshot.status == "failed"
     assert failed_snapshot.attempt == 1
+    assert failed_snapshot.attempt_count == 1
     assert failed_snapshot.retryable is True
     assert failed_snapshot.failure_reason
+    assert failed_snapshot.last_error == failed_snapshot.failure_reason
+    assert failed_snapshot.error_class == "ValueError"
+    assert failed_snapshot.failure_snapshot["error_class"] == "ValueError"
+    assert failed_snapshot.parser_diagnostics[-1]["code"] == "parse_failed"
     assert failed_snapshot.metrics.error_count == 1
     assert [entry["status"] for entry in failed_snapshot.status_timeline] == [
-        "queued",
+        "accepted",
         "running",
         "failed",
     ]
@@ -248,10 +295,51 @@ def test_parse_gateway_records_queue_snapshot_metrics_and_retry_lineage() -> Non
     assert retried.job_id != failed.job_id
     assert retried_snapshot.previous_job_id == failed.job_id
     assert retried_snapshot.attempt == 2
+    assert retried_snapshot.attempt_count == 2
     assert retried_snapshot.status == "succeeded"
     assert retried_snapshot.metrics.block_count >= 1
     assert retried_snapshot.metrics.warning_count == 0
     assert retried_snapshot.adapter_boundary["current_runtime"] == "deterministic_local"
+    assert retried_snapshot.status_timeline[0]["status"] == "retrying"
+
+    dead_letter = ParseGateway.retry_parse_job(
+        retried.job_id,
+        ParseDocumentRequest(
+            document_id="doc_queue_empty",
+            workspace_id="workspace_phase07",
+            source_uri="file://notes/empty.md",
+            mime_type="text/markdown",
+            source_text="",
+        ),
+    )
+    dead_letter_snapshot = ParseGateway.get_job_snapshot(dead_letter.job_id)
+
+    assert dead_letter.status == "dead_letter"
+    assert dead_letter_snapshot.status == "dead_letter"
+    assert dead_letter_snapshot.retryable is False
+    assert dead_letter_snapshot.status_timeline[-1]["status"] == "dead_letter"
+
+
+def test_parse_gateway_cancelled_job_snapshot_is_distinct_from_failed() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    submitted = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_cancel",
+            workspace_id="workspace_phase03",
+            source_uri="file://notes/cancel.md",
+            mime_type="text/markdown",
+            source_text="# Cancel\nThis completed before cancellation request.",
+        )
+    )
+    cancelled = ParseGateway.cancel_parse_job(submitted.job_id, reason="user_cancelled")
+    snapshot = ParseGateway.get_job_snapshot(cancelled.job_id)
+
+    assert cancelled.status == "cancelled"
+    assert snapshot.status == "cancelled"
+    assert snapshot.failure_reason == "user_cancelled"
+    assert snapshot.retryable is False
+    assert snapshot.status_timeline[-1]["status"] == "cancelled"
 
 
 def test_parse_gateway_reads_real_parser_golden_files() -> None:

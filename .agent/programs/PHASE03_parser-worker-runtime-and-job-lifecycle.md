@@ -1,7 +1,8 @@
 # PHASE03 Parser Worker Runtime 与 Job Lifecycle
 
-status: planned
+status: completed
 program: zuno-production-document-ingestion-and-thread-foundation-v1
+completed_at: 2026-07-01
 
 ## 目标
 
@@ -82,6 +83,85 @@ python .agent/scripts/verify_agent_system.py
 - local idempotency key 和 Target-only outbox / lease / reconciler 边界。
 - metrics 字段表。
 - focused test 输出。
+
+## PHASE03 证据
+
+### TDD red 证据
+
+先写 tests 后实现，第一次 focused run 失败点符合预期：
+
+- `test_parse_gateway_records_parse_job_status_for_replay`：缺 `parse_idempotency_key`。
+- `test_parse_gateway_target_blocked_adapter_enters_blocked_job_state`：target-blocked adapter 仍返回 `succeeded`。
+- `test_parse_gateway_records_queue_snapshot_metrics_and_retry_lineage`：缺 `attempt_count`、failure snapshot 和 diagnostics。
+- `test_parse_gateway_cancelled_job_snapshot_is_distinct_from_failed`：缺 `cancel_parse_job()`。
+
+### Job lifecycle 状态机
+
+Current local lifecycle 是 in-process snapshot，不是生产队列：
+
+```text
+submit_parse_job
+  -> accepted
+  -> running
+  -> succeeded | failed
+
+submit_parse_job(target-blocked adapter)
+  -> accepted
+  -> blocked
+
+retry_parse_job
+  -> retrying
+  -> running
+  -> succeeded | failed | dead_letter
+
+cancel_parse_job
+  -> cancelled
+```
+
+`blocked` 表达能力或策略不可用；`failed` 表达 parser 运行失败；`dead_letter` 表达超过本地 retry policy 后仍失败；`cancelled` 表达用户或策略取消。生产 DB queue、outbox、lease、heartbeat、reconciler 仍是 Target。
+
+### Retry / blocked / failure snapshot 示例
+
+- target-blocked OCR / VLM adapter 通过 `submit_parse_job()` 进入 `blocked`，`document=None`，`retryable=False`，snapshot 保留 `blocked_reason` 和 adapter boundary。
+- empty source content 进入 `failed`，snapshot 保留 `failure_reason`、`last_error`、`error_class="ValueError"`、`failure_snapshot` 和 `parser_diagnostics`。
+- failed job retry成功时保留 `previous_job_id`、`attempt_count=2` 和 `retrying -> running -> succeeded` timeline。
+- 超过 local `max_attempts=2` 后仍失败时进入 `dead_letter`，不写成生产 dead letter queue。
+- `cancel_parse_job()` 将 snapshot 更新为 `cancelled`，与 `failed` 区分。
+
+### Idempotency / metrics 字段
+
+| 字段 | Current 语义 |
+| --- | --- |
+| `parse_idempotency_key` | `workspace_id + source_sha256 + parser_id + parser_version + parser_config_hash` 的 sha256。 |
+| `parse_attempt_id` | `attempt_{job_id}_{attempt}`，本地稳定 attempt 标识。 |
+| `attempt_count` | 当前 job attempt 次数。 |
+| `retry_policy` | 当前本地 `max_attempts=2`，生产 retry policy / queue policy 仍是 Target。 |
+| `ParserJobMetrics.status` | job terminal status。 |
+| `ParserJobMetrics.parser_name` | parser id。 |
+| `ParserJobMetrics.format` | parser format。 |
+| `ParserJobMetrics.block_count/table_count/figure_count` | parser output 计数。 |
+| `ParserJobMetrics.warning_count/error_count/duration_ms` | diagnostics 与本地耗时。 |
+
+### 修改文件
+
+- `src/backend/zuno/knowledge/ingestion/contracts.py`
+- `src/backend/zuno/knowledge/ingestion/gateway.py`
+- `src/backend/zuno/knowledge/ingestion/README.md`
+- `docs/architecture/document-ingestion-foundation.md`
+- `tests/knowledge/test_parse_gateway_runtime.py`
+
+### Focused test 结果
+
+```powershell
+pytest -q tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+# 18 passed
+
+pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovider
+# 5 passed
+
+pytest -q tests/knowledge -p no:cacheprovider
+# 31 passed
+```
 
 ## 停止条件
 

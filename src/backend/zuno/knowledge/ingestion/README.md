@@ -13,10 +13,11 @@ PHASE02/04 status: contract-current-runtime-current-production-target
 - Index handoff payload：把 Document IR block 归一给 BM25、vector、GraphRAG、evidence 和 citation。
 - Parser adapter registry：把 `native`、`docling_pymupdf`、`mineru_ocr_vlm` 和 `unstructured_markitdown` 作为可调度 adapter surface 管起来。
 - Parse Gateway runtime：`ParseGateway` 能从 `source_text`、`source_bytes` 或 `file://` fixture 生成 `CanonicalDocumentIR`、parser diagnostics、job status 和 index handoff；unknown format 会返回稳定 fallback diagnostics，target-blocked adapter 会返回稳定 warning diagnostics。
+- Local parser worker lifecycle：`submit_parse_job()` / `retry_parse_job()` / `cancel_parse_job()` 当前提供 in-process job lifecycle，覆盖 `accepted`、`running`、`succeeded`、`failed`、`blocked`、`retrying`、`cancelled` 和 `dead_letter` 的本地 snapshot 语义，并记录 idempotency key、attempt id、failure snapshot、diagnostics、retry policy 和 metrics。
 - Legacy chunk normalizer：旧 `ChunkModel` 可归一为 `CanonicalDocumentIR`，为旧 pipeline 迁移留出明确 seam。
 - Parser golden fixture manifest：登记 PDF 表格、扫描件、PPTX、DOCX、XLSX、代码和 Markdown 链接的验收样例，并绑定真实 `input_path`。
 
-当前 production parser runtime 仍在 `platform/services/convert_files/`、`platform/services/pipeline/` 和 `platform/services/rag/` 等旧路径中；本目录不迁移这些重 runtime，也不把生产级 Docling / MinerU / Unstructured / OCR / VLM 平台写成 Current。
+当前 production parser runtime 仍在 `platform/services/convert_files/`、`platform/services/pipeline/` 和 `platform/services/rag/` 等旧路径中；本目录不迁移这些重 runtime，也不把生产级 Docling / MinerU / Unstructured / OCR / VLM 平台、DB-backed queue、outbox、worker lease、heartbeat、dead letter queue 或 reconciler 写成 Current。
 
 ## Target role
 

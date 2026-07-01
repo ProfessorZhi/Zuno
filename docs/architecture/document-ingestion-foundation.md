@@ -33,6 +33,7 @@ Current 只能描述代码和测试已经证明的事实：
 - `ParserAdapterContract` 和 `ParserAdapter` 已能表达 `supports`、`parse`、`diagnostics`、`capabilities`、`blocked_reason`、capability status 和 external dependency boundary。
 - `ParseGateway` 已提供 `parse_document()`、`submit_parse_job()`、`get_job_status()`、`get_job_snapshot()` 和 retry 相关本地 runtime surface。
 - `ParseGateway` 已对 unknown format 返回稳定 fallback diagnostics，并对 target-blocked adapter 返回稳定 warning diagnostics；这不表示外部 parser / OCR / VLM 已成为 Current。
+- `ParseGateway` 已提供本地 in-process parser worker lifecycle：`accepted`、`running`、`succeeded`、`failed`、`blocked`、`retrying`、`cancelled`、`dead_letter` 的 snapshot 语义，记录 `parse_idempotency_key`、`parse_attempt_id`、`attempt_count`、failure snapshot、parser diagnostics、retry policy 和 metrics。生产 DB-backed queue、outbox、worker lease、heartbeat、dead letter queue 和 reconciler 仍是 Target。
 - parser matrix 已覆盖 `pdf / docx / pptx / xlsx / txt / md / csv / json / html / image / scanned / code`。PDF、Office、OCR / VLM 等生产级能力仍有 target-blocked 边界，不能写成完整 Current。
 - `KnowledgeIndexRuntime` 已能把 `CanonicalDocumentIR` 转为本地 BM25 / vector / graph index job，并产生 `IndexJobManifest`、retrieval payload、source provenance、ACL scopes、sensitivity tags 和 adapter status。
 - `WorkspaceTaskRuntimeService.create_ingest_job()` 当前仍通过 `_document_from_file()` 把 workspace file 包装成 `workspace_text_runtime` 单 block 文档后直接 index，没有走 `ParseGateway.submit_parse_job()`。这是 Program 1 必须关闭的产品闭环缺口。

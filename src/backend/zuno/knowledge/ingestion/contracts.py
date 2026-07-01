@@ -175,7 +175,16 @@ class IndexHandoffPayload(BaseModel):
 
 class ParseDocumentResult(BaseModel):
     job_id: str
-    status: Literal["succeeded", "failed"]
+    status: Literal[
+        "accepted",
+        "running",
+        "succeeded",
+        "failed",
+        "blocked",
+        "retrying",
+        "cancelled",
+        "dead_letter",
+    ]
     document: CanonicalDocumentIR | None = None
     failure: ParserFailure | None = None
     diagnostics: list[ParserDiagnostic] = Field(default_factory=list)
@@ -183,6 +192,9 @@ class ParseDocumentResult(BaseModel):
 
 
 class ParserJobMetrics(BaseModel):
+    status: str = "accepted"
+    parser_name: str = ""
+    format: str = ""
     block_count: int = 0
     table_count: int = 0
     figure_count: int = 0
@@ -193,7 +205,16 @@ class ParserJobMetrics(BaseModel):
 
 class ParseJobSnapshot(BaseModel):
     job_id: str
-    status: Literal["queued", "running", "succeeded", "failed"]
+    status: Literal[
+        "accepted",
+        "running",
+        "succeeded",
+        "failed",
+        "blocked",
+        "retrying",
+        "cancelled",
+        "dead_letter",
+    ]
     document_id: str
     workspace_id: str
     source_uri: str
@@ -201,9 +222,18 @@ class ParseJobSnapshot(BaseModel):
     parser_id: str
     parser_format: str
     attempt: int = 1
+    attempt_count: int = 1
+    parse_attempt_id: str = ""
+    parse_idempotency_key: str = ""
     retryable: bool = False
     previous_job_id: str | None = None
+    blocked_reason: str | None = None
     failure_reason: str | None = None
+    error_class: str | None = None
+    last_error: str | None = None
+    failure_snapshot: dict[str, Any] = Field(default_factory=dict)
+    parser_diagnostics: list[dict[str, Any]] = Field(default_factory=list)
+    retry_policy: dict[str, Any] = Field(default_factory=dict)
     metrics: ParserJobMetrics = Field(default_factory=ParserJobMetrics)
     source_provenance: dict[str, Any] = Field(default_factory=dict)
     adapter_boundary: dict[str, Any] = Field(default_factory=dict)

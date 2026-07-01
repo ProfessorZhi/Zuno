@@ -33,6 +33,7 @@ from .router import (
 
 
 IR_SCHEMA_VERSION = "canonical-document-ir-v1"
+MAX_PARSE_ATTEMPTS = 2
 
 
 class ParseGateway:
@@ -44,7 +45,7 @@ class ParseGateway:
     @classmethod
     def submit_parse_job(cls, request: ParseDocumentRequest) -> ParseDocumentResult:
         started = time.perf_counter()
-        result = cls.parse_document(request)
+        result = cls._blocked_result(request) or cls.parse_document(request)
         cls._jobs[result.job_id] = result
         cls._job_snapshots[result.job_id] = cls._build_job_snapshot(
             result=result,
@@ -52,6 +53,7 @@ class ParseGateway:
             attempt=1,
             previous_job_id=None,
             duration_ms=(time.perf_counter() - started) * 1000,
+            lifecycle_start="accepted",
         )
         return result
 
@@ -73,14 +75,69 @@ class ParseGateway:
     def retry_parse_job(cls, job_id: str, request: ParseDocumentRequest) -> ParseDocumentResult:
         previous = cls.get_job_snapshot(job_id)
         started = time.perf_counter()
-        result = cls.parse_document(request)
+        attempt = previous.attempt + 1
+        result = cls._blocked_result(request) or cls.parse_document(request)
+        if result.status == "failed" and attempt > MAX_PARSE_ATTEMPTS:
+            result = result.model_copy(
+                update={
+                    "status": "dead_letter",
+                    "failure": result.failure.model_copy(update={"retryable": False})
+                    if result.failure
+                    else None,
+                }
+            )
         cls._jobs[result.job_id] = result
         cls._job_snapshots[result.job_id] = cls._build_job_snapshot(
             result=result,
             request=request,
-            attempt=previous.attempt + 1,
+            attempt=attempt,
             previous_job_id=previous.job_id,
             duration_ms=(time.perf_counter() - started) * 1000,
+            lifecycle_start="retrying",
+        )
+        return result
+
+    @classmethod
+    def cancel_parse_job(cls, job_id: str, *, reason: str) -> ParseDocumentResult:
+        previous = cls.get_job_snapshot(job_id)
+        result = ParseDocumentResult(
+            job_id=job_id,
+            status="cancelled",
+            failure=ParserFailure(
+                parser_id=previous.parser_id,
+                format=previous.parser_format,
+                reason=reason,
+                retryable=False,
+            ),
+            diagnostics=[
+                ParserDiagnostic(
+                    code="parse_cancelled",
+                    message=reason,
+                    severity="warning",
+                    parser_id=previous.parser_id,
+                    format=previous.parser_format,
+                )
+            ],
+        )
+        cls._jobs[job_id] = result
+        cls._job_snapshots[job_id] = previous.model_copy(
+            update={
+                "status": "cancelled",
+                "retryable": False,
+                "failure_reason": reason,
+                "last_error": reason,
+                "failure_snapshot": {
+                    **previous.failure_snapshot,
+                    "cancelled": True,
+                    "reason": reason,
+                },
+                "parser_diagnostics": [diagnostic.model_dump() for diagnostic in result.diagnostics],
+                "metrics": previous.metrics.model_copy(update={"status": "cancelled"}),
+                "status_timeline": [
+                    *previous.status_timeline,
+                    {"status": "cancelled", "attempt": previous.attempt, "reason": reason},
+                ],
+            }
         )
         return result
 
@@ -245,6 +302,7 @@ class ParseGateway:
         attempt: int,
         previous_job_id: str | None,
         duration_ms: float,
+        lifecycle_start: str,
     ) -> ParseJobSnapshot:
         capability = select_parser_for_format(request.source_uri or request.mime_type)
         parser_id = cls._snapshot_parser_id(result, capability.default_parser)
@@ -252,7 +310,14 @@ class ParseGateway:
         warning_count = sum(1 for diagnostic in result.diagnostics if diagnostic.severity == "warning")
         document = result.document
         adapter_contract = PARSER_ADAPTER_CONTRACTS.get(parser_id)
+        failure_reason = result.failure.reason if result.failure else None
+        error_class = cls._error_class(failure_reason)
+        source_sha256 = cls._source_sha256(request, cls._source_text(request))
+        parser_config_hash = cls._parser_config_hash(request)
         metrics = ParserJobMetrics(
+            status=result.status,
+            parser_name=parser_id,
+            format=capability.format,
             block_count=len(document.blocks) if document else 0,
             table_count=len(document.tables) if document else 0,
             figure_count=len(document.figures) if document else 0,
@@ -260,11 +325,17 @@ class ParseGateway:
             error_count=error_count,
             duration_ms=round(duration_ms, 3),
         )
-        status_timeline = [
-            {"status": "queued", "attempt": attempt},
-            {"status": "running", "attempt": attempt, "parser_id": parser_id},
-            {"status": result.status, "attempt": attempt},
-        ]
+        status_timeline = [{"status": lifecycle_start, "attempt": attempt}]
+        if result.status == "blocked":
+            status_timeline.append({"status": "blocked", "attempt": attempt, "parser_id": parser_id})
+        else:
+            status_timeline.extend(
+                [
+                    {"status": "running", "attempt": attempt, "parser_id": parser_id},
+                    {"status": result.status, "attempt": attempt},
+                ]
+            )
+        retryable = result.status == "failed" and attempt < MAX_PARSE_ATTEMPTS
         return ParseJobSnapshot(
             job_id=result.job_id,
             status=result.status,
@@ -275,9 +346,31 @@ class ParseGateway:
             parser_id=parser_id,
             parser_format=capability.format,
             attempt=attempt,
-            retryable=result.status == "failed",
+            attempt_count=attempt,
+            parse_attempt_id=f"attempt_{result.job_id}_{attempt}",
+            parse_idempotency_key=cls._parse_idempotency_key(
+                workspace_id=request.workspace_id,
+                source_sha256=source_sha256,
+                parser_id=parser_id,
+                parser_version=request.parser_version,
+                parser_config_hash=parser_config_hash,
+            ),
+            retryable=retryable,
             previous_job_id=previous_job_id,
-            failure_reason=result.failure.reason if result.failure else None,
+            blocked_reason=result.failure.reason if result.status == "blocked" and result.failure else None,
+            failure_reason=failure_reason,
+            error_class=error_class,
+            last_error=failure_reason,
+            failure_snapshot=cls._failure_snapshot(
+                result=result,
+                error_class=error_class,
+                attempt=attempt,
+            ),
+            parser_diagnostics=[diagnostic.model_dump() for diagnostic in result.diagnostics],
+            retry_policy={
+                "max_attempts": MAX_PARSE_ATTEMPTS,
+                "next_status": "retrying" if retryable else None,
+            },
             metrics=metrics,
             source_provenance=cls._source_provenance(result, request, parser_id),
             adapter_boundary=adapter_contract.model_dump() if adapter_contract else {},
@@ -336,6 +429,39 @@ class ParseGateway:
             "sensitivity_tags": list(request.sensitivity_tags),
         }
 
+    @classmethod
+    def _blocked_result(cls, request: ParseDocumentRequest) -> ParseDocumentResult | None:
+        capability = select_parser_for_format(request.source_uri or request.mime_type)
+        parser_id = capability.default_parser
+        adapter_contract = PARSER_ADAPTER_CONTRACTS.get(parser_id)
+        if not adapter_contract or adapter_contract.external_dependency_status != "target_blocked":
+            return None
+        reason = adapter_contract.blocked_reason or "External parser dependency is not available."
+        return ParseDocumentResult(
+            job_id=f"parse_{uuid4().hex[:12]}",
+            status="blocked",
+            failure=ParserFailure(
+                parser_id=parser_id,
+                format=capability.format,
+                reason=reason,
+                fallback=capability.fallback,
+                retryable=False,
+            ),
+            diagnostics=[
+                ParserDiagnostic(
+                    code="target_blocked_adapter",
+                    message=reason,
+                    severity="warning",
+                    parser_id=parser_id,
+                    format=capability.format,
+                    metadata={
+                        "external_dependency_status": adapter_contract.external_dependency_status,
+                        "production_target": adapter_contract.production_target,
+                    },
+                )
+            ],
+        )
+
     @staticmethod
     def _source_text(request: ParseDocumentRequest) -> str:
         if request.source_text is not None:
@@ -385,6 +511,46 @@ class ParseGateway:
                 ir_schema_version,
             ]
         )
+
+    @staticmethod
+    def _parse_idempotency_key(
+        *,
+        workspace_id: str,
+        source_sha256: str,
+        parser_id: str,
+        parser_version: str,
+        parser_config_hash: str,
+    ) -> str:
+        payload = ":".join(
+            [workspace_id, source_sha256, parser_id, parser_version, parser_config_hash]
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _error_class(reason: str | None) -> str | None:
+        if not reason:
+            return None
+        if "empty source content" in reason:
+            return "ValueError"
+        return "ParserError"
+
+    @staticmethod
+    def _failure_snapshot(
+        *,
+        result: ParseDocumentResult,
+        error_class: str | None,
+        attempt: int,
+    ) -> dict:
+        if result.status not in {"failed", "blocked", "dead_letter", "cancelled"}:
+            return {}
+        return {
+            "status": result.status,
+            "attempt": attempt,
+            "error_class": error_class,
+            "reason": result.failure.reason if result.failure else None,
+            "blocked": result.status == "blocked",
+            "dead_letter": result.status == "dead_letter",
+        }
 
     @classmethod
     def _parse_blocks(
