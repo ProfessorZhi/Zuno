@@ -38,6 +38,20 @@ class DurableRuntimeEvent:
             "timestamp": self.timestamp,
         }
 
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "DurableRuntimeEvent":
+        return cls(
+            event_id=str(payload.get("event_id") or ""),
+            task_id=str(payload.get("task_id") or ""),
+            trace_id=str(payload.get("trace_id") or ""),
+            thread_id=str(payload.get("thread_id") or ""),
+            type=str(payload.get("type") or ""),
+            status=str(payload.get("status") or ""),
+            node=str(payload.get("node") or ""),
+            payload=deepcopy(dict(payload.get("payload") or {})),
+            timestamp=float(payload.get("timestamp") or time.time()),
+        )
+
 
 @dataclass(slots=True)
 class DurableRuntimeTaskSnapshot:
@@ -163,6 +177,61 @@ class InMemoryDurableRuntimeStore:
             events=self.events(task_id),
         )
 
+    def to_persistence_payload(self) -> dict[str, Any]:
+        return {
+            "records": {
+                task_id: {
+                    "state": record.state.to_dict(),
+                    "status": record.status,
+                    "checkpoint_ids": list(record.checkpoint_ids),
+                    "latest_checkpoint_id": record.latest_checkpoint_id,
+                    "pending_interrupt_id": record.pending_interrupt_id,
+                    "failure": deepcopy(record.failure),
+                }
+                for task_id, record in self._records.items()
+            },
+            "checkpoints": {
+                checkpoint_id: checkpoint.to_dict()
+                for checkpoint_id, checkpoint in self._checkpoints.items()
+            },
+            "interrupts": {
+                interrupt_id: interrupt.to_dict()
+                for interrupt_id, interrupt in self._interrupts.items()
+            },
+            "events": {
+                task_id: [event.to_dict() for event in events]
+                for task_id, events in self._events.items()
+            },
+        }
+
+    @classmethod
+    def from_persistence_payload(cls, payload: dict[str, Any]) -> "InMemoryDurableRuntimeStore":
+        store = cls()
+        store._records = {
+            task_id: _DurableRuntimeRecord(
+                state=ControllerRuntimeState.from_dict(dict(record.get("state") or {})),
+                status=str(record.get("status") or "created"),
+                checkpoint_ids=[str(item) for item in record.get("checkpoint_ids") or []],
+                latest_checkpoint_id=record.get("latest_checkpoint_id"),
+                pending_interrupt_id=record.get("pending_interrupt_id"),
+                failure=deepcopy(record.get("failure")),
+            )
+            for task_id, record in dict(payload.get("records") or {}).items()
+        }
+        store._checkpoints = {
+            checkpoint_id: RuntimeCheckpoint.from_dict(dict(checkpoint))
+            for checkpoint_id, checkpoint in dict(payload.get("checkpoints") or {}).items()
+        }
+        store._interrupts = {
+            interrupt_id: RuntimeInterrupt.from_dict(dict(interrupt))
+            for interrupt_id, interrupt in dict(payload.get("interrupts") or {}).items()
+        }
+        store._events = {
+            task_id: [DurableRuntimeEvent.from_dict(dict(event)) for event in events]
+            for task_id, events in dict(payload.get("events") or {}).items()
+        }
+        return store
+
 
 class SingleControllerDurableRuntime:
     """PHASE06 durable state machine on top of the Single Controller harness."""
@@ -256,13 +325,19 @@ class SingleControllerDurableRuntime:
         node: str,
         error: str,
         recoverable: bool,
+        details: dict[str, Any] | None = None,
     ) -> DurableRuntimeTaskSnapshot:
         record = self.store.get_record(task_id)
         failure = {
+            "task_id": task_id,
+            "trace_id": record.state.trace_id,
+            "thread_id": record.state.thread_id,
+            "workspace_id": record.state.workspace_id,
             "node": node,
             "error": error,
             "recoverable": recoverable,
             "latest_checkpoint_id": record.latest_checkpoint_id,
+            **deepcopy(dict(details or {})),
         }
         self.store.mark_failure(task_id, failure)
         self._append_event(

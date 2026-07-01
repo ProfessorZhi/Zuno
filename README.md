@@ -38,7 +38,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE08_durable-agent-runtime-persistence`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。PHASE07 已关闭本地 parser queue snapshot / retry、parser adapter target-blocked boundary、index adapter boundary 和 manifest provenance / ACL；后续 phase 以 `.agent/programs/PHASE*.md` 的 closure evidence 为 gate。
+当前 active Agent program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE09_memory-context-production-governance`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；后续 phase 以 `.agent/programs/PHASE*.md` 的 closure evidence 为 gate。
 
 本轮 program 文件在 `.agent/programs/`：
 

@@ -270,6 +270,11 @@ def test_workspace_task_runtime_exposes_phase06_lifecycle_download_and_recovery(
         "download_trace",
         "send_feedback",
     ]
+    assert failed["runtime"]["status"] == "failed"
+    assert failed["runtime"]["failure"]["task_id"] == "task_phase06_recover"
+    assert failed["runtime"]["failure"]["trace_id"] == "trace_phase06_recover"
+    assert failed["runtime"]["failure"]["recoverable"] is True
+    assert failed["runtime"]["failure"]["error"] == "output_security_block"
     failed_events = client.get("/api/v1/workspace/task/task_phase06_recover/events").json()["data"]
     assert failed_events[-1]["payload"]["lifecycle_state"] == "recoverable_failed"
 
@@ -648,6 +653,8 @@ def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_to
     approval_event = waiting_events[-1]
     assert approval_event["payload"]["required_approval"] == "tool:mail.send"
     assert approval_event["payload"]["tool_id"] == "mail.send"
+    assert approval_event["payload"]["tool_request_id"].startswith("toolreq_")
+    assert approval_event["payload"]["approval_id"].startswith("approval_")
     assert "raw-secret" not in repr(waiting_events)
 
     approve_response = client.post(
@@ -680,6 +687,17 @@ def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_to
     ]
     tool_result = next(event for event in approved_events if event["type"] == "tool_result")
     assert tool_result["payload"]["tool_id"] == "mail.send"
+    assert tool_result["payload"]["tool_request_id"] == approval_event["payload"]["tool_request_id"]
+    assert tool_result["payload"]["approval_id"] == approval_event["payload"]["approval_id"]
+    assert tool_result["payload"]["tool_execution_id"].startswith("toolexec_")
+    assert tool_result["payload"]["tool_result_id"].startswith("toolres_")
+    assert len(
+        {
+            event["payload"].get("tool_execution_id")
+            for event in approved_events
+            if event["type"] == "tool_result"
+        }
+    ) == 1
     assert tool_result["payload"]["result"]["data"]["message_id"].startswith("msg_")
     assert tool_result["payload"]["credential_refs"] == ["credref://workspace_phase08/mail.send"]
     assert "raw-secret" not in repr(approved_events)

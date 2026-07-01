@@ -1135,6 +1135,20 @@ class WorkspaceTaskRuntimeService:
             source_refs=source_refs or [],
             failure_examples=failure_examples or [{"reason": reason}],
         )
+        try:
+            cls._durable_runtime.mark_failure(
+                task_id,
+                node="answer_or_artifact",
+                error=reason,
+                recoverable=recoverable,
+                details={
+                    "source_refs": list(source_refs or []),
+                    "artifact_ids": list(cls._artifact_ids_by_task.get(task_id, [])),
+                    "release_eval_status": release_eval.get("status"),
+                },
+            )
+        except KeyError:
+            pass
         cls._events.setdefault(task_id, []).extend(
             [
                 cls._event(

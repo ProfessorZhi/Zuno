@@ -4,7 +4,7 @@
 
 架构正文以 `architecture.md` 为准；四大总交付物、成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。本 README 只做入口导航，不重复 phase 清单、四大总交付物展开或 Production Target 清单。
 
-当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE08_durable-agent-runtime-persistence`。PHASE07 已关闭本地 parser queue snapshot / retry、parser adapter target-blocked boundary、index adapter boundary 和 manifest provenance / ACL；后续 phase closure evidence 以 `.agent/programs/PHASE*.md` 为准。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`；runtime-first closure evidence 保留在归档目录，只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
+当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE09_memory-context-production-governance`。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；后续 phase closure evidence 以 `.agent/programs/PHASE*.md` 为准。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`；runtime-first closure evidence 保留在归档目录，只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
 
 ## 当前前台
 

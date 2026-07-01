@@ -124,6 +124,49 @@ def test_agent_package_facade_points_at_layer_modules() -> None:
     assert agent.SingleControllerDurableRuntime is SingleControllerDurableRuntime
 
 
+def test_durable_runtime_store_persists_approval_wait_and_resumes_after_restart() -> None:
+    from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
+    from zuno.agent.harness import ControllerRuntimeState
+
+    state = ControllerRuntimeState(
+        thread_id="thread_restart",
+        workspace_id="workspace_restart",
+        user_id="user_restart",
+        task_id="task_restart",
+        trace_id="trace_restart",
+        goal="Resume after process restart",
+    )
+    store = InMemoryDurableRuntimeStore()
+    runtime = SingleControllerDurableRuntime(store=store)
+
+    waiting = runtime.start_task(
+        state,
+        interrupt_at_node="act_react_loop",
+        required_approval="tool:mail.send",
+        interrupt_payload={"approval_id": "approval_restart"},
+    )
+    assert waiting.status == "approval_waiting"
+    assert waiting.pending_interrupt is not None
+
+    persisted = json.loads(json.dumps(store.to_persistence_payload()))
+    restored_store = InMemoryDurableRuntimeStore.from_persistence_payload(persisted)
+    restored_runtime = SingleControllerDurableRuntime(store=restored_store)
+
+    resumed = restored_runtime.resume_task(
+        task_id="task_restart",
+        approval_decision="approved",
+        comment="approved after restart",
+    )
+
+    assert resumed.status == "completed"
+    assert resumed.task_id == "task_restart"
+    assert resumed.trace_id == "trace_restart"
+    assert resumed.pending_interrupt is None
+    assert resumed.latest_checkpoint is not None
+    assert resumed.latest_checkpoint.node == "post_turn_commit"
+    assert "runtime_resumed" in [event.type for event in resumed.events]
+
+
 def test_importing_agent_surfaces_does_not_load_heavy_runtime_modules() -> None:
     code = """
 import importlib

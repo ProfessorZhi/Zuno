@@ -42,6 +42,9 @@ class ToolRuntimeRequest:
     approved: bool = False
     approval_comment: str = ""
     runtime_state: Any | None = None
+    tool_request_id: str = field(default_factory=lambda: f"toolreq_{uuid4().hex[:12]}")
+    approval_id: str = field(default_factory=lambda: f"approval_{uuid4().hex[:12]}")
+    execution_id: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,10 +154,18 @@ class ToolRuntimeExecutionResult:
     sandbox_context: ToolSandboxContext
     normalized_result: NormalizedToolResult | None = None
     task_events: tuple[dict[str, Any], ...] = field(default_factory=tuple)
+    tool_request_id: str = ""
+    approval_id: str = ""
+    tool_execution_id: str = ""
+    tool_result_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "tool_id": self.tool_id,
+            "tool_request_id": self.tool_request_id,
+            "approval_id": self.approval_id,
+            "tool_execution_id": self.tool_execution_id,
+            "tool_result_id": self.tool_result_id,
             "status": self.status,
             "approval_required": self.approval_required,
             "security_decision": self.security_decision,
@@ -246,6 +257,8 @@ class ToolControlPlaneRuntime:
                 audit_event=audit_event,
                 sandbox_context=sandbox_context,
                 task_events=events,
+                tool_request_id=request.tool_request_id,
+                approval_id=request.approval_id,
             )
 
         requires_approval = (
@@ -270,12 +283,16 @@ class ToolControlPlaneRuntime:
                 audit_event=audit_event,
                 sandbox_context=sandbox_context,
                 task_events=events,
+                tool_request_id=request.tool_request_id,
+                approval_id=request.approval_id,
             )
 
         audit_event = replace(
             gate_result.audit_event,
             final_decision="approved" if request.approved or requires_approval else "approved",
         )
+        execution_id = request.execution_id or f"toolexec_{uuid4().hex[:12]}"
+        result_id = f"toolres_{execution_id.removeprefix('toolexec_')}"
         execution_context = ToolExecutionContext(
             request=request,
             manifest=manifest,
@@ -290,7 +307,7 @@ class ToolControlPlaneRuntime:
         normalized = ToolResultNormalizer.normalize(
             tool_id=manifest.tool_id,
             raw_result=raw_result,
-            trace_span_id=f"span_tool_{request.trace_id}_{manifest.tool_id}",
+            trace_span_id=f"span_tool_{request.trace_id}_{execution_id}",
             audit_ref=audit_event.audit_id,
         )
         events = self._events_for_completed(
@@ -299,6 +316,8 @@ class ToolControlPlaneRuntime:
             audit_event=audit_event,
             sandbox_context=sandbox_context,
             normalized=normalized,
+            execution_id=execution_id,
+            result_id=result_id,
         )
         return ToolRuntimeExecutionResult(
             tool_id=manifest.tool_id,
@@ -310,6 +329,10 @@ class ToolControlPlaneRuntime:
             sandbox_context=sandbox_context,
             normalized_result=normalized,
             task_events=events,
+            tool_request_id=request.tool_request_id,
+            approval_id=request.approval_id,
+            tool_execution_id=execution_id,
+            tool_result_id=result_id,
         )
 
     def _require_manifest(self, tool_id: str) -> ToolCardManifest:
@@ -331,6 +354,8 @@ class ToolControlPlaneRuntime:
             "status": status,
             "payload": {
                 "status": status,
+                "tool_request_id": request.tool_request_id,
+                "approval_id": request.approval_id,
                 "tool_id": manifest.tool_id,
                 "adapter_id": sandbox_context.adapter_id,
                 "model_intent": request.model_intent,
@@ -379,6 +404,8 @@ class ToolControlPlaneRuntime:
                 "status": "approval_waiting",
                 "payload": {
                     "status": "approval_waiting",
+                    "tool_request_id": request.tool_request_id,
+                    "approval_id": request.approval_id,
                     "tool_id": manifest.tool_id,
                     "required_approval": f"tool:{manifest.tool_id}",
                     "approval_decision": approval_decision,
@@ -395,6 +422,8 @@ class ToolControlPlaneRuntime:
         audit_event: SandboxAuditEvent,
         sandbox_context: ToolSandboxContext,
         normalized: NormalizedToolResult,
+        execution_id: str,
+        result_id: str,
     ) -> tuple[dict[str, Any], ...]:
         return (
             self._tool_call_event(
@@ -409,6 +438,10 @@ class ToolControlPlaneRuntime:
                 "status": normalized.status,
                 "payload": {
                     "status": normalized.status,
+                    "tool_request_id": request.tool_request_id,
+                    "approval_id": request.approval_id,
+                    "tool_execution_id": execution_id,
+                    "tool_result_id": result_id,
                     "tool_id": manifest.tool_id,
                     "result": normalized.to_dict(),
                     "audit_ref": audit_event.audit_id,
@@ -440,6 +473,8 @@ class ToolControlPlaneRuntime:
                 "status": "blocked",
                 "payload": {
                     "status": "blocked",
+                    "tool_request_id": request.tool_request_id,
+                    "approval_id": request.approval_id,
                     "tool_id": manifest.tool_id,
                     "error": reason,
                     "audit_ref": audit_event.audit_id,

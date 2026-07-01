@@ -126,6 +126,19 @@ class RuntimeCheckpoint:
             "state_version": self.state_version,
         }
 
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "RuntimeCheckpoint":
+        return cls(
+            checkpoint_id=str(payload.get("checkpoint_id") or ""),
+            thread_id=str(payload.get("thread_id") or ""),
+            task_id=str(payload.get("task_id") or ""),
+            trace_id=str(payload.get("trace_id") or ""),
+            node=str(payload.get("node") or ""),
+            state=deepcopy(dict(payload.get("state") or {})),
+            payload=deepcopy(dict(payload.get("payload") or {})),
+            state_version=str(payload.get("state_version") or "single-controller-v1"),
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class RuntimeInterrupt:
@@ -151,6 +164,20 @@ class RuntimeInterrupt:
             "payload": deepcopy(self.payload),
             "resumable": self.resumable,
         }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "RuntimeInterrupt":
+        return cls(
+            interrupt_id=str(payload.get("interrupt_id") or ""),
+            thread_id=str(payload.get("thread_id") or ""),
+            task_id=str(payload.get("task_id") or ""),
+            trace_id=str(payload.get("trace_id") or ""),
+            node=str(payload.get("node") or ""),
+            reason=str(payload.get("reason") or ""),
+            required_approval=str(payload.get("required_approval") or ""),
+            payload=deepcopy(dict(payload.get("payload") or {})),
+            resumable=bool(payload.get("resumable", True)),
+        )
 
 
 @dataclass(frozen=True, slots=True)

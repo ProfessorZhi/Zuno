@@ -1,6 +1,7 @@
 # PHASE09 Memory Context Production Governance
 
-status: pending
+status: active
+previous_phase: PHASE08_durable-agent-runtime-persistence
 
 ## 目标
 

@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE08_durable-agent-runtime-persistence
+current_phase: PHASE09_memory-context-production-governance
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE08_durable-agent-runtime-persistence
 
 ## 当前阶段
 
-- 当前 phase：`PHASE08_durable-agent-runtime-persistence`
-- 当前动作：把 Agent Runtime 推进到生产级 durable persistence：LangGraph-compatible persistence、进程重启恢复、approval wait/resume、cancel 和 exactly-once tool boundary。
-- 当前验收：PHASE08 只有在 durable state 可持久化并可恢复，approval wait/resume、cancel 有 focused tests，failure snapshot 能和 trace / task / artifact 关联后才能关闭。
+- 当前 phase：`PHASE09_memory-context-production-governance`
+- 当前动作：把 Memory 与 Context 推进到 semantic/vector memory、后台治理 scheduler、隐私删除平台和 memory eval baseline。
+- 当前验收：PHASE09 只有在 memory 可跨任务读写、审查、删除和追责，semantic/vector adapter 有 local fallback 和 tests，memory eval baseline 进入 release gate 后才能关闭。
 
 ## 最近完成基线
 

@@ -12,7 +12,7 @@ state: active
 - [x] PHASE05 repo ownership and compatibility retirement
 - [x] PHASE06 product surface desktop recovery loop
 - [x] PHASE07 production parse and index platform
-- [ ] PHASE08 durable agent runtime persistence
+- [x] PHASE08 durable agent runtime persistence
 - [ ] PHASE09 memory context production governance
 - [ ] PHASE10 tool sandbox vault network runtime
 - [ ] PHASE11 production graphrag evidence citation
@@ -29,7 +29,7 @@ state: active
 
 - [ ] 产品闭环。
 - [x] 文档解析与索引。
-- [ ] Agent Runtime。
+- [x] Agent Runtime。
 - [ ] Memory 与 Context。
 - [ ] Tool Control Plane 与 Sandbox。
 - [ ] Knowledge / GraphRAG / Evidence / Citation。
