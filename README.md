@@ -39,12 +39,12 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，入口在 `.agent/programs/`：
+当前 `.agent/programs/` 处于 no-active 等待态：
 
-- `current_phase: PHASE08_verification-doc-sync-and-closure.md`
-- 当前 suite：`zuno-enterprise-agentic-graphrag-production-suite-v1`
+- `latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1`
+- 归档：`docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`
 
-这个 program 先推进企业知识库文档解析与索引交接地基，并准备后续多线程施工提示词。后续 queued program 是 `zuno-runtime-subsystems-parallel-v1`、`zuno-agent-planning-integration-v1` 和 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标仍是单控制器 Agentic GraphRAG 企业知识库问答系统。
+这个 program 已完成企业知识库文档解析与索引交接地基，并准备后续多线程施工提示词。后续 queued program 是 `zuno-runtime-subsystems-parallel-v1`、`zuno-agent-planning-integration-v1` 和 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标仍是单控制器 Agentic GraphRAG 企业知识库问答系统。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 

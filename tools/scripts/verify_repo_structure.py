@@ -68,16 +68,9 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
-    "PHASE01_program-truth-source-and-parser-current-audit.md",
-    "PHASE02_document-ir-and-parser-contract-freeze.md",
-    "PHASE03_parser-worker-runtime-and-job-lifecycle.md",
-    "PHASE04_native-text-and-structured-file-parsers.md",
-    "PHASE05_pdf-office-ocr-adapter-boundaries.md",
-    "PHASE06_index-handoff-provenance-and-fixtures.md",
-    "PHASE07_program2-thread-prompts-and-branch-plan.md",
-    "PHASE08_verification-doc-sync-and-closure.md",
 ]
 CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
+CURRENT_ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{CURRENT_ACTIVE_PROGRAM_NAME}"
 CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-truth-source-and-parser-current-audit.md",
     "PHASE02_document-ir-and-parser-contract-freeze.md",
@@ -93,6 +86,12 @@ QUEUED_PROGRAM_FILES = [
     "PROGRAM02_runtime-subsystems-parallel.md",
     "PROGRAM03_agent-planning-integration.md",
     "PROGRAM04_enterprise-knowledge-eval-benchmark.md",
+]
+THREAD_PROMPT_FILES = [
+    "THREAD_A_memory-context.md",
+    "THREAD_B_tool-sandbox.md",
+    "THREAD_C_security-governance.md",
+    "THREAD_D_graphrag-index.md",
 ]
 
 
@@ -157,8 +156,14 @@ REQUIRED_PATHS = [
     ".agent/programs/README.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    *[f".agent/programs/{phase_name}" for phase_name in CURRENT_ACTIVE_PROGRAM_PHASE_FILES],
     *[f".agent/programs/queued-programs/{file_name}" for file_name in QUEUED_PROGRAM_FILES],
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/README.md",
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/current.md",
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/closure-summary.md",
+    *[f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in CURRENT_ACTIVE_PROGRAM_PHASE_FILES],
+    *[f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/thread-prompts/{file_name}" for file_name in THREAD_PROMPT_FILES],
     f"{ACTIVE_PROGRAM_ARCHIVE}/README.md",
     f"{ACTIVE_PROGRAM_ARCHIVE}/current.md",
     f"{ACTIVE_PROGRAM_ARCHIVE}/implementation-roadmap.md",
@@ -1270,6 +1275,12 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         + (production_archive_root / "README.md").read_text(encoding="utf-8")
         + (production_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
+    ingestion_archive_root = REPO_ROOT / CURRENT_ACTIVE_PROGRAM_ARCHIVE
+    ingestion_archive_text = (
+        (ingestion_archive_root / "current.md").read_text(encoding="utf-8")
+        + (ingestion_archive_root / "README.md").read_text(encoding="utf-8")
+        + (ingestion_archive_root / "closure-summary.md").read_text(encoding="utf-8")
+    )
     runtime_archive_root = REPO_ROOT / RUNTIME_PROGRAM_ARCHIVE
     current_readme = (
         current_path.read_text(encoding="utf-8")
@@ -1282,11 +1293,12 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         + (runtime_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: active",
-        f"active_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE01_program-truth-source-and-parser-current-audit.md",
-        f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
+        CURRENT_ACTIVE_PROGRAM_ARCHIVE,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",
         "zuno-runtime-subsystems-parallel-v1",
         "zuno-agent-planning-integration-v1",
@@ -1311,7 +1323,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
     ]:
-        if phrase not in current_readme + production_archive_text:
+        if phrase not in current_readme + ingestion_archive_text + production_archive_text:
             errors.append(f".agent/programs active surface missing phrase: {phrase}")
     phase03_path = REPO_ROOT / "docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md"
     if not phase03_path.exists():
@@ -1326,16 +1338,20 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_names = sorted(path.name for path in programs_root.glob("PHASE*.md"))
-    if active_phase_names != sorted(CURRENT_ACTIVE_PROGRAM_PHASE_FILES):
+    if active_phase_names:
         errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
+    if (programs_root / "thread-prompts").exists():
+        errors.append(".agent/programs/thread-prompts must be archived when no active program is present")
     for phase_name in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:
-        phase_path = programs_root / phase_name
+        phase_path = ingestion_archive_root / phase_name
         if not phase_path.exists():
-            errors.append(f"active program missing phase: {phase_name}")
+            errors.append(f"completed ingestion program archive missing phase: {phase_name}")
             continue
         phase_content = phase_path.read_text(encoding="utf-8")
         if "program: zuno-production-document-ingestion-and-thread-foundation-v1" not in phase_content:
-            errors.append(f"active program phase missing program id: {phase_name}")
+            errors.append(f"completed ingestion program phase missing program id: {phase_name}")
+        if "status: completed" not in phase_content:
+            errors.append(f"completed ingestion program phase missing completed status: {phase_name}")
         for required in [
             "## 目标",
             "## 范围",
@@ -1350,7 +1366,13 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             "## 停止条件",
         ]:
             if required not in phase_content:
-                errors.append(f"active program phase missing section {required}: {phase_name}")
+                errors.append(f"completed ingestion program phase missing section {required}: {phase_name}")
+    for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        if not (ingestion_archive_root / required_archive_file).exists():
+            errors.append(f"completed ingestion program archive missing file: {required_archive_file}")
+    for file_name in THREAD_PROMPT_FILES:
+        if not (ingestion_archive_root / "thread-prompts" / file_name).exists():
+            errors.append(f"completed ingestion program thread prompt missing file: {file_name}")
     queued_root = programs_root / "queued-programs"
     queued_files = sorted(path.name for path in queued_root.glob("*.md")) if queued_root.exists() else []
     if queued_files != sorted(QUEUED_PROGRAM_FILES):

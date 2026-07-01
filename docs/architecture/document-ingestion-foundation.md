@@ -39,11 +39,11 @@ Current 只能描述代码和测试已经证明的事实：
 - `adapter_boundary_metadata()`、adapter dependency probe 和 blocked diagnostics 已能把 Docling / PyMuPDF、Unstructured / MarkItDown、MinerU / OCR / VLM 的缺失依赖、fallback、network policy、privacy gate、budget gate 和 derived enrichment role 写入稳定 metadata。OCR / VLM 当前只能是 target-blocked derived enrichment，不能覆盖 deterministic parser source truth。
 - `KnowledgeIndexRuntime` 已能把 `CanonicalDocumentIR` 转为本地 BM25 / vector / graph index job，并产生 `IndexJobManifest`、retrieval payload、source provenance、ACL scopes、sensitivity tags、adapter status、parse job lineage、diagnostics digest 和 citation lineage chunk metadata。
 - `IndexJobManifest` 已记录 `parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256`、`parser_config_hash`、`ir_schema_version`、`diagnostics_digest`、parser diagnostics、block/table/figure count；Agentic retrieval evidence provenance 已能从 manifest 继承这些字段。
-- `WorkspaceTaskRuntimeService.create_ingest_job()` 当前仍通过 `_document_from_file()` 把 workspace file 包装成 `workspace_text_runtime` 单 block 文档后直接 index，没有走 `ParseGateway.submit_parse_job()`。这是 Program 1 必须关闭的产品闭环缺口。
+- `WorkspaceTaskRuntimeService.create_ingest_job()` 已通过 `ParseGateway.submit_parse_job()` 解析 workspace file，返回 `parse_job` 和 `parse_snapshot`，并把 `ParseJobSnapshot` 传给 `KnowledgeIndexRuntime.index_document(..., parse_job_snapshot=...)`，让 `/api/v1/workspace/ingest` 的 index manifest 保留 `parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256` 和 parser diagnostics lineage。旧 `_document_from_file()` / `workspace_text_runtime` 只保留为历史 gap 证据，不再是当前 ingest 闭环。
 
-## Program 1 Local Runtime Target
+## Program 1 Local Runtime Slice
 
-Program 1 的近期目标是关闭本地可验证 ingestion runtime slice：
+Program 1 已关闭本地可验证 ingestion runtime slice：
 
 ```text
 /workspace/file
@@ -60,7 +60,7 @@ Program 1 的近期目标是关闭本地可验证 ingestion runtime slice：
   -> evidence / citation source tracing
 ```
 
-Program 1 完成后，workspace 附件和知识库文件应进入同一 Parse Gateway，而不是继续由 `_document_from_file()` 生成 `workspace_text_runtime` stub。
+当前 workspace 附件和知识库文件进入同一 Parse Gateway，不再由 `_document_from_file()` 生成 `workspace_text_runtime` stub 作为产品闭环。
 
 ## Production Target Infrastructure
 
@@ -313,7 +313,7 @@ metadata:
 
 ## Program 1 最小闭环
 
-Program 1 最小可验收代码闭环：
+Program 1 已完成的最小可验收代码闭环：
 
 ```text
 1. create_ingest_job 调用 ParseGateway.submit_parse_job()
@@ -324,7 +324,7 @@ Program 1 最小可验收代码闭环：
 6. index manifest 增加 parse lineage
 ```
 
-以上只描述 Program 1 应实现的 local runtime slice。生产 DB、object store、queue/outbox、worker lease、external OCR / VLM、external index platform 和 online eval 仍是后续 Target。
+以上是 Program 1 已完成的 local runtime slice。生产 DB、object store、queue/outbox、worker lease、external OCR / VLM、external index platform 和 online eval 仍是后续 Target。
 
 ## 验证要求
 

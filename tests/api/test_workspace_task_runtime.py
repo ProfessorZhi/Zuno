@@ -737,6 +737,14 @@ def test_workspace_task_runtime_answers_from_ingested_index_with_citations() -> 
         "vector": "ready",
         "graph": "ready",
     }
+    assert ingest["parse_job"]["status"] == "succeeded"
+    assert ingest["parse_snapshot"]["status"] == "succeeded"
+    assert ingest["parse_job"]["job_id"] == ingest["parse_snapshot"]["job_id"]
+    assert ingest["parse_snapshot"]["parser_id"] != "workspace_text_runtime"
+    assert ingest["index_job"]["parse_job_id"] == ingest["parse_job"]["job_id"]
+    assert ingest["index_job"]["parse_attempt_id"] == ingest["parse_snapshot"]["parse_attempt_id"]
+    assert ingest["index_job"]["document_version_id"] == ingest["parse_snapshot"]["source_provenance"]["document_version_id"]
+    assert ingest["index_job"]["source_sha256"] == ingest["parse_snapshot"]["source_provenance"]["source_sha256"]
 
     create_response = client.post(
         "/api/v1/workspace/task",

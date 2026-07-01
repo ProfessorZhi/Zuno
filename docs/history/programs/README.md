@@ -60,6 +60,12 @@ and evidence, not the active Agent execution path.
   repo ownership, product surface, parse/index, durable runtime, Memory,
   Tool/Sandbox, GraphRAG evidence/citation, Security / Trace / Eval / Release,
   full verification, archive, and no-active closure.
+- `zuno-production-document-ingestion-and-thread-foundation-v1/`: completed
+  document ingestion and Program 2 thread foundation program. It closed
+  PHASE01-PHASE08 across parser audit, Document IR contract, parser job
+  lifecycle, native parser fixtures, adapter boundaries, index handoff
+  provenance, Program 2 thread prompts, workspace ingest -> ParseGateway
+  runtime closure, archive, and no-active state.
 
 ## Rule
 

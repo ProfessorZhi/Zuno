@@ -40,18 +40,36 @@ Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE01_program-truth-source-and-parser-current-audit.md"
-Require-Path ".agent\programs\PHASE02_document-ir-and-parser-contract-freeze.md"
-Require-Path ".agent\programs\PHASE03_parser-worker-runtime-and-job-lifecycle.md"
-Require-Path ".agent\programs\PHASE04_native-text-and-structured-file-parsers.md"
-Require-Path ".agent\programs\PHASE05_pdf-office-ocr-adapter-boundaries.md"
-Require-Path ".agent\programs\PHASE06_index-handoff-provenance-and-fixtures.md"
-Require-Path ".agent\programs\PHASE07_program2-thread-prompts-and-branch-plan.md"
-Require-Path ".agent\programs\PHASE08_verification-doc-sync-and-closure.md"
+Require-NoPath ".agent\programs\PHASE01_program-truth-source-and-parser-current-audit.md"
+Require-NoPath ".agent\programs\PHASE02_document-ir-and-parser-contract-freeze.md"
+Require-NoPath ".agent\programs\PHASE03_parser-worker-runtime-and-job-lifecycle.md"
+Require-NoPath ".agent\programs\PHASE04_native-text-and-structured-file-parsers.md"
+Require-NoPath ".agent\programs\PHASE05_pdf-office-ocr-adapter-boundaries.md"
+Require-NoPath ".agent\programs\PHASE06_index-handoff-provenance-and-fixtures.md"
+Require-NoPath ".agent\programs\PHASE07_program2-thread-prompts-and-branch-plan.md"
+Require-NoPath ".agent\programs\PHASE08_verification-doc-sync-and-closure.md"
+Require-NoPath ".agent\programs\thread-prompts"
 Require-Path ".agent\programs\queued-programs\README.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM02_runtime-subsystems-parallel.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM03_agent-planning-integration.md"
 Require-Path ".agent\programs\queued-programs\PROGRAM04_enterprise-knowledge-eval-benchmark.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\README.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\current.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\implementation-roadmap.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\closure-checklist.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\closure-summary.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\PHASE01_program-truth-source-and-parser-current-audit.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\PHASE02_document-ir-and-parser-contract-freeze.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\PHASE03_parser-worker-runtime-and-job-lifecycle.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\PHASE04_native-text-and-structured-file-parsers.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\PHASE05_pdf-office-ocr-adapter-boundaries.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\PHASE06_index-handoff-provenance-and-fixtures.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\PHASE07_program2-thread-prompts-and-branch-plan.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\PHASE08_verification-doc-sync-and-closure.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\thread-prompts\THREAD_A_memory-context.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\thread-prompts\THREAD_B_tool-sandbox.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\thread-prompts\THREAD_C_security-governance.md"
+Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\thread-prompts\THREAD_D_graphrag-index.md"
 Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\README.md"
 Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\current.md"
 Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\implementation-roadmap.md"
@@ -245,8 +263,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "current_phase: PHASE08_verification-doc-sync-and-closure.md" -or $currentProgram -notmatch "latest_completed_program: zuno-production-architecture-and-deliverables-completion-v1") {
-    $failures.Add("current-program.md must declare active Program 1 state and latest completed production architecture completion program")
+if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1") {
+    $failures.Add("current-program.md must declare no-active state and latest completed Program 1")
 }
 if ($currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
     $failures.Add("current-program.md missing Program 1-4 suite queue")

@@ -65,16 +65,9 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
-    "PHASE01_program-truth-source-and-parser-current-audit.md",
-    "PHASE02_document-ir-and-parser-contract-freeze.md",
-    "PHASE03_parser-worker-runtime-and-job-lifecycle.md",
-    "PHASE04_native-text-and-structured-file-parsers.md",
-    "PHASE05_pdf-office-ocr-adapter-boundaries.md",
-    "PHASE06_index-handoff-provenance-and-fixtures.md",
-    "PHASE07_program2-thread-prompts-and-branch-plan.md",
-    "PHASE08_verification-doc-sync-and-closure.md",
 ]
 CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
+CURRENT_ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{CURRENT_ACTIVE_PROGRAM_NAME}"
 CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-truth-source-and-parser-current-audit.md",
     "PHASE02_document-ir-and-parser-contract-freeze.md",
@@ -172,8 +165,14 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    *[f".agent/programs/{phase_name}" for phase_name in CURRENT_ACTIVE_PROGRAM_PHASE_FILES],
     *[f".agent/programs/queued-programs/{file_name}" for file_name in QUEUED_PROGRAM_FILES],
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/README.md",
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/current.md",
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/closure-summary.md",
+    *[f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in CURRENT_ACTIVE_PROGRAM_PHASE_FILES],
+    *[f"{CURRENT_ACTIVE_PROGRAM_ARCHIVE}/thread-prompts/{file_name}" for file_name in THREAD_PROMPT_FILES],
     f"{ACTIVE_PROGRAM_ARCHIVE}/README.md",
     f"{ACTIVE_PROGRAM_ARCHIVE}/current.md",
     f"{ACTIVE_PROGRAM_ARCHIVE}/implementation-roadmap.md",
@@ -415,6 +414,12 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         + (production_archive_root / "README.md").read_text(encoding="utf-8")
         + (production_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
+    ingestion_archive_root = repo_root / CURRENT_ACTIVE_PROGRAM_ARCHIVE
+    ingestion_archive_text = (
+        (ingestion_archive_root / "current.md").read_text(encoding="utf-8")
+        + (ingestion_archive_root / "README.md").read_text(encoding="utf-8")
+        + (ingestion_archive_root / "closure-summary.md").read_text(encoding="utf-8")
+    )
     runtime_archive_root = repo_root / RUNTIME_PROGRAM_ARCHIVE
     runtime_archive_text = (
         (runtime_archive_root / "current.md").read_text(encoding="utf-8")
@@ -423,11 +428,12 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: active",
-        f"active_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE08_verification-doc-sync-and-closure.md",
-        f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
+        CURRENT_ACTIVE_PROGRAM_ARCHIVE,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",
         "zuno-runtime-subsystems-parallel-v1",
         "zuno-agent-planning-integration-v1",
@@ -450,19 +456,23 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
     ]:
-        if phrase not in current + readme + roadmap + closure + current_reference + production_archive_text + runtime_archive_text:
+        if phrase not in current + readme + roadmap + closure + current_reference + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names != sorted(CURRENT_ACTIVE_PROGRAM_PHASE_FILES):
+    if active_phase_names:
         errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
+    if (repo_root / ".agent/programs/thread-prompts").exists():
+        errors.append(".agent/programs/thread-prompts must be archived when no active program is present")
     for phase_name in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:
-        phase_path = repo_root / ".agent/programs" / phase_name
+        phase_path = ingestion_archive_root / phase_name
         if not phase_path.exists():
-            errors.append(f"active program missing phase: {phase_name}")
+            errors.append(f"completed ingestion program archive missing phase: {phase_name}")
             continue
         phase_content = phase_path.read_text(encoding="utf-8")
         if "program: zuno-production-document-ingestion-and-thread-foundation-v1" not in phase_content:
-            errors.append(f"active program phase missing program id: {phase_name}")
+            errors.append(f"completed ingestion program phase missing program id: {phase_name}")
+        if "status: completed" not in phase_content:
+            errors.append(f"completed ingestion program phase missing completed status: {phase_name}")
         for required in [
             "## 目标",
             "## 范围",
@@ -477,7 +487,10 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
             "## 停止条件",
         ]:
             if required not in phase_content:
-                errors.append(f"active program phase missing section {required}: {phase_name}")
+                errors.append(f"completed ingestion program phase missing section {required}: {phase_name}")
+    for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        if not (ingestion_archive_root / required_archive_file).exists():
+            errors.append(f"completed ingestion program archive missing file: {required_archive_file}")
     queued_root = repo_root / ".agent/programs/queued-programs"
     queued_files = sorted(path.name for path in queued_root.glob("*.md")) if queued_root.exists() else []
     if queued_files != sorted(QUEUED_PROGRAM_FILES):
@@ -557,10 +570,10 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
 
 def verify_program_thread_prompts(repo_root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
-    prompt_root = repo_root / ".agent/programs/thread-prompts"
+    prompt_root = repo_root / CURRENT_ACTIVE_PROGRAM_ARCHIVE / "thread-prompts"
     prompt_files = sorted(path.name for path in prompt_root.glob("*.md")) if prompt_root.exists() else []
     if prompt_files != sorted(THREAD_PROMPT_FILES):
-        errors.append(".agent/programs/thread-prompts files drifted: " + ", ".join(prompt_files))
+        errors.append("completed ingestion program thread-prompts files drifted: " + ", ".join(prompt_files))
     required_phrases = [
         "## UI Mode",
         "Codex UI 目标模式",

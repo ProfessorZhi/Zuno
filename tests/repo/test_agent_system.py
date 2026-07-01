@@ -62,16 +62,9 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
-    "PHASE01_program-truth-source-and-parser-current-audit.md",
-    "PHASE02_document-ir-and-parser-contract-freeze.md",
-    "PHASE03_parser-worker-runtime-and-job-lifecycle.md",
-    "PHASE04_native-text-and-structured-file-parsers.md",
-    "PHASE05_pdf-office-ocr-adapter-boundaries.md",
-    "PHASE06_index-handoff-provenance-and-fixtures.md",
-    "PHASE07_program2-thread-prompts-and-branch-plan.md",
-    "PHASE08_verification-doc-sync-and-closure.md",
 ]
 CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
+CURRENT_ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{CURRENT_ACTIVE_PROGRAM_NAME}"
 CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_program-truth-source-and-parser-current-audit.md",
     "PHASE02_document-ir-and-parser-contract-freeze.md",
@@ -233,6 +226,12 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (production_archive / "README.md").read_text(encoding="utf-8")
         + (production_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
+    ingestion_archive = REPO_ROOT / CURRENT_ACTIVE_PROGRAM_ARCHIVE
+    ingestion_archive_text = (
+        (ingestion_archive / "current.md").read_text(encoding="utf-8")
+        + (ingestion_archive / "README.md").read_text(encoding="utf-8")
+        + (ingestion_archive / "closure-summary.md").read_text(encoding="utf-8")
+    )
     runtime_archive = REPO_ROOT / RUNTIME_PROGRAM_ARCHIVE
     archive_text = (
         (runtime_archive / "current.md").read_text(encoding="utf-8")
@@ -240,11 +239,12 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (runtime_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: active",
-        f"active_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE08_verification-doc-sync-and-closure.md",
-        f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
+        CURRENT_ACTIVE_PROGRAM_ARCHIVE,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",
         "zuno-runtime-subsystems-parallel-v1",
         "zuno-agent-planning-integration-v1",
@@ -269,12 +269,23 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
     ]:
-        assert phrase in current_program + readme + roadmap + closure + current_reference + production_archive_text + archive_text
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(CURRENT_ACTIVE_PROGRAM_PHASE_FILES)
+        assert phrase in (
+            current_program
+            + readme
+            + roadmap
+            + closure
+            + current_reference
+            + ingestion_archive_text
+            + production_archive_text
+            + archive_text
+        )
+    assert not list((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
+    assert not (REPO_ROOT / ".agent/programs/thread-prompts").exists()
     for phase in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:
-        phase_path = REPO_ROOT / ".agent/programs" / phase
+        phase_path = ingestion_archive / phase
         phase_text = phase_path.read_text(encoding="utf-8")
         assert "program: zuno-production-document-ingestion-and-thread-foundation-v1" in phase_text
+        assert "status: completed" in phase_text
         for section in [
             "## 目标",
             "## 范围",
@@ -289,6 +300,10 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
             "## 停止条件",
         ]:
             assert section in phase_text
+    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        assert (ingestion_archive / archive_file).exists()
+    for file_name in THREAD_PROMPT_FILES:
+        assert (ingestion_archive / "thread-prompts" / file_name).exists()
     assert sorted(path.name for path in (REPO_ROOT / ".agent/programs/queued-programs").glob("*.md")) == sorted(QUEUED_PROGRAM_FILES)
     for file_name in QUEUED_PROGRAM_FILES:
         text = (REPO_ROOT / ".agent/programs/queued-programs" / file_name).read_text(encoding="utf-8")
@@ -334,7 +349,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
 
 
 def test_program2_thread_prompts_are_target_mode_ready_and_guarded() -> None:
-    prompt_root = REPO_ROOT / ".agent/programs/thread-prompts"
+    prompt_root = REPO_ROOT / CURRENT_ACTIVE_PROGRAM_ARCHIVE / "thread-prompts"
     prompt_files = sorted(path.name for path in prompt_root.glob("*.md"))
     assert prompt_files == sorted(THREAD_PROMPT_FILES)
 

@@ -28,6 +28,8 @@ from zuno.knowledge.ingestion import (
     DocumentBlock,
     DocumentMetadata,
     DocumentProvenance,
+    ParseDocumentRequest,
+    ParseGateway,
     SourceSpan,
 )
 from zuno.platform.observability import (
@@ -158,11 +160,43 @@ class WorkspaceTaskRuntimeService:
             knowledge_space_id=knowledge_space_id,
             workspace_id=workspace_id,
         )
-        document = cls._document_from_file(file=file, content=cls._file_text.get(file_id, ""))
+        parse_job = ParseGateway.submit_parse_job(
+            ParseDocumentRequest(
+                document_id=file.file_id,
+                source_id=file.file_id,
+                workspace_id=workspace_id,
+                source_uri=cls._parser_source_uri(file=file),
+                mime_type=file.mime_type,
+                source_text=cls._file_text.get(file_id, ""),
+                hash=file.hash,
+                acl_scope="workspace",
+                sensitivity_tags=[file.security_label],
+            )
+        )
+        parse_snapshot = ParseGateway.get_job_snapshot(parse_job.job_id)
+        if parse_job.status != "succeeded" or parse_job.document is None:
+            file.parse_status = parse_job.status
+            file.updated_at = str(time.time())
+            job = {
+                "ingest_task_id": ingest_task_id,
+                "workspace_id": workspace_id,
+                "file_id": file_id,
+                "knowledge_space_id": knowledge_space_id,
+                "session_id": session_id,
+                "trace_id": normalized_trace_id,
+                "status": parse_job.status,
+                "file": file.model_dump(),
+                "parse_job": parse_job.model_dump(),
+                "parse_snapshot": parse_snapshot.model_dump(),
+                "index_job": None,
+            }
+            cls._ingest_jobs[ingest_task_id] = job
+            return job
         index_job = cls._knowledge_index_runtime.index_document(
             knowledge_space_id,
-            document,
+            parse_job.document,
             targets=["bm25", "vector", "graph"],
+            parse_job_snapshot=parse_snapshot,
         )
         file.parse_status = "indexed"
         file.updated_at = str(time.time())
@@ -175,6 +209,8 @@ class WorkspaceTaskRuntimeService:
             "trace_id": normalized_trace_id,
             "status": "accepted",
             "file": file.model_dump(),
+            "parse_job": parse_job.model_dump(),
+            "parse_snapshot": parse_snapshot.model_dump(),
             "index_job": index_job.model_dump(),
         }
         cls._ingest_jobs[ingest_task_id] = job
@@ -782,6 +818,25 @@ class WorkspaceTaskRuntimeService:
                 confidence=1.0,
             ),
         )
+
+    @staticmethod
+    def _parser_source_uri(*, file: UploadedFileContract) -> str:
+        base_uri = f"memory://workspace/{file.workspace_id}/files/{file.file_id}"
+        if "." in file.file_id.rsplit("/", 1)[-1]:
+            return base_uri
+        extension_by_mime = {
+            "text/markdown": ".md",
+            "text/plain": ".txt",
+            "text/csv": ".csv",
+            "application/json": ".json",
+            "text/html": ".html",
+            "text/x-python": ".py",
+            "application/pdf": ".pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+        }
+        return f"{base_uri}{extension_by_mime.get(file.mime_type, '')}"
 
     @classmethod
     def get_task_snapshot(cls, task_id: str) -> dict:

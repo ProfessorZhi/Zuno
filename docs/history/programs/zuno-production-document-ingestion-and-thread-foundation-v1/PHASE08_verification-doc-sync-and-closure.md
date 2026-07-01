@@ -1,6 +1,7 @@
 # PHASE08 Verification、Docs Sync 与 Closure
 
-status: planned
+status: completed
+completed_at: 2026-07-01
 program: zuno-production-document-ingestion-and-thread-foundation-v1
 
 ## 目标
@@ -94,6 +95,16 @@ pytest -q tests/knowledge -p no:cacheprovider
 - archive path。
 - commit hash。
 - push status。
+
+## 关闭证据
+
+- PHASE01-PHASE07 均为 `status: completed`，PHASE08 在本归档文件中关闭。
+- workspace ingest runtime 已从 `_document_from_file()` stub 改为 `ParseGateway.submit_parse_job()` -> `ParseJobSnapshot` -> `KnowledgeIndexRuntime.index_document(..., parse_job_snapshot=...)`。
+- API focused test `tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_answers_from_ingested_index_with_citations` 先失败于缺少 `parse_job`，修复后通过，并断言 `parse_job_id`、`parse_attempt_id`、`document_version_id` 和 `source_sha256` 进入 index manifest。
+- Program 2 thread prompts 已归档到 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/thread-prompts/`。
+- 下一状态选择 `no-active`：Program 2-4 保持 queued，等待用户明确启动下一轮。
+
+最终验证结果见 `closure-summary.md`。
 
 ## 停止条件
 
