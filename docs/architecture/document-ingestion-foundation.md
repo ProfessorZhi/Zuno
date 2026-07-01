@@ -37,7 +37,8 @@ Current 只能描述代码和测试已经证明的事实：
 - parser matrix 已覆盖 `pdf / docx / pptx / xlsx / txt / md / csv / json / html / image / scanned / code`。PDF、Office、OCR / VLM 等生产级能力仍有 target-blocked 边界，不能写成完整 Current。
 - `native` parser 已对 `txt / md / csv / json / html / code` 提供本地 deterministic baseline：Markdown heading hierarchy、link、code fence、table 与 section path；CSV delimiter/header/row/column/table_cell；JSON pointer object/array/value block；HTML script/style 过滤、heading、paragraph、link 和 table；code extension language detection 与 regex import/class/function metadata。CSV / JSON / HTML malformed 输入会生成 diagnostics 并保留 fallback block，不让 parser worker 崩溃。
 - `adapter_boundary_metadata()`、adapter dependency probe 和 blocked diagnostics 已能把 Docling / PyMuPDF、Unstructured / MarkItDown、MinerU / OCR / VLM 的缺失依赖、fallback、network policy、privacy gate、budget gate 和 derived enrichment role 写入稳定 metadata。OCR / VLM 当前只能是 target-blocked derived enrichment，不能覆盖 deterministic parser source truth。
-- `KnowledgeIndexRuntime` 已能把 `CanonicalDocumentIR` 转为本地 BM25 / vector / graph index job，并产生 `IndexJobManifest`、retrieval payload、source provenance、ACL scopes、sensitivity tags 和 adapter status。
+- `KnowledgeIndexRuntime` 已能把 `CanonicalDocumentIR` 转为本地 BM25 / vector / graph index job，并产生 `IndexJobManifest`、retrieval payload、source provenance、ACL scopes、sensitivity tags、adapter status、parse job lineage、diagnostics digest 和 citation lineage chunk metadata。
+- `IndexJobManifest` 已记录 `parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256`、`parser_config_hash`、`ir_schema_version`、`diagnostics_digest`、parser diagnostics、block/table/figure count；Agentic retrieval evidence provenance 已能从 manifest 继承这些字段。
 - `WorkspaceTaskRuntimeService.create_ingest_job()` 当前仍通过 `_document_from_file()` 把 workspace file 包装成 `workspace_text_runtime` 单 block 文档后直接 index，没有走 `ParseGateway.submit_parse_job()`。这是 Program 1 必须关闭的产品闭环缺口。
 
 ## Program 1 Local Runtime Target

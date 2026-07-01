@@ -236,7 +236,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phrase in [
         "state: active",
         f"active_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE06_index-handoff-provenance-and-fixtures.md",
+        "current_phase: PHASE07_program2-thread-prompts-and-branch-plan.md",
         f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",

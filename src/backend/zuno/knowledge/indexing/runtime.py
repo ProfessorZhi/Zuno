@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from uuid import uuid4
 
-from zuno.knowledge.ingestion import CanonicalDocumentIR, build_index_handoff_payload
+from zuno.knowledge.ingestion import CanonicalDocumentIR, ParseJobSnapshot, build_index_handoff_payload
 
 from .adapters import adapter_status_for_targets
 from .contracts import IndexJobManifest, IndexQueryResult, IndexTarget, KnowledgeSpaceManifest
@@ -44,10 +46,12 @@ class KnowledgeIndexRuntime:
         targets: list[IndexTarget],
         retry_count: int = 0,
         previous_job_id: str | None = None,
+        parse_job_snapshot: ParseJobSnapshot | None = None,
     ) -> IndexJobManifest:
         space = self._require_space(knowledge_space_id)
         job_id = f"index_{uuid4().hex[:12]}"
         source_block_ids = [block.block_id for block in document.blocks]
+        lineage = _parse_index_lineage(document, parse_job_snapshot, index_job_id=job_id)
         if not document.blocks:
             manifest = IndexJobManifest(
                 job_id=job_id,
@@ -64,10 +68,11 @@ class KnowledgeIndexRuntime:
                 previous_job_id=previous_job_id,
                 graph_project_ref=space.graph_project_id,
                 source_block_ids=source_block_ids,
-                source_provenance=_source_provenance(document),
+                source_provenance=_source_provenance(document, lineage),
                 acl_scopes=_acl_scopes(document),
                 sensitivity_tags=_sensitivity_tags(document),
                 adapter_status=adapter_status_for_targets(list(targets)),
+                **_manifest_lineage_fields(lineage),
             )
             self._jobs[job_id] = manifest
             self._latest_job_by_space[knowledge_space_id] = job_id
@@ -77,13 +82,26 @@ class KnowledgeIndexRuntime:
         handoff = build_index_handoff_payload(document)
         target_status = {}
         if "bm25" in targets:
-            self._indexes[knowledge_space_id]["bm25"] = self._bm25_documents(handoff.bm25_documents, document)
+            self._indexes[knowledge_space_id]["bm25"] = self._bm25_documents(
+                handoff.bm25_documents,
+                document,
+                lineage,
+            )
             target_status["bm25"] = "ready"
         if "vector" in targets:
-            self._indexes[knowledge_space_id]["vector"] = self._vector_documents(handoff.vector_documents, document)
+            self._indexes[knowledge_space_id]["vector"] = self._vector_documents(
+                handoff.vector_documents,
+                document,
+                lineage,
+            )
             target_status["vector"] = "ready"
         if "graph" in targets:
-            self._indexes[knowledge_space_id]["graph"] = self._graph_documents(handoff.graphrag_documents, document, space.graph_project_id)
+            self._indexes[knowledge_space_id]["graph"] = self._graph_documents(
+                handoff.graphrag_documents,
+                document,
+                space.graph_project_id,
+                lineage,
+            )
             target_status["graph"] = "ready"
 
         manifest = IndexJobManifest(
@@ -100,10 +118,11 @@ class KnowledgeIndexRuntime:
             previous_job_id=previous_job_id,
             graph_project_ref=space.graph_project_id,
             source_block_ids=source_block_ids,
-            source_provenance=_source_provenance(document),
+            source_provenance=_source_provenance(document, lineage),
             acl_scopes=_acl_scopes(document),
             sensitivity_tags=_sensitivity_tags(document),
             adapter_status=adapter_status_for_targets(list(targets)),
+            **_manifest_lineage_fields(lineage),
         )
         self._jobs[job_id] = manifest
         self._latest_job_by_space[knowledge_space_id] = job_id
@@ -172,26 +191,60 @@ class KnowledgeIndexRuntime:
         return self._jobs[job_id]
 
     @staticmethod
-    def _bm25_documents(documents: list[dict], source: CanonicalDocumentIR) -> list[dict]:
+    def _bm25_documents(
+        documents: list[dict],
+        source: CanonicalDocumentIR,
+        lineage: dict,
+    ) -> list[dict]:
         return [
-            _document_payload(document["chunk_id"], document["content"], document["metadata"], "bm25", source)
+            _document_payload(
+                document["chunk_id"],
+                document["content"],
+                document["metadata"],
+                "bm25",
+                source,
+                lineage,
+            )
             for document in documents
         ]
 
     @staticmethod
-    def _vector_documents(documents: list[dict], source: CanonicalDocumentIR) -> list[dict]:
+    def _vector_documents(
+        documents: list[dict],
+        source: CanonicalDocumentIR,
+        lineage: dict,
+    ) -> list[dict]:
         return [
-            _document_payload(document["id"], document["text"], document["metadata"], "vector", source)
+            _document_payload(
+                document["id"],
+                document["text"],
+                document["metadata"],
+                "vector",
+                source,
+                lineage,
+            )
             for document in documents
         ]
 
     @staticmethod
-    def _graph_documents(documents: list[dict], source: CanonicalDocumentIR, graph_project_id: str | None) -> list[dict]:
+    def _graph_documents(
+        documents: list[dict],
+        source: CanonicalDocumentIR,
+        graph_project_id: str | None,
+        lineage: dict,
+    ) -> list[dict]:
         graph_documents = []
         for document in documents:
             graph_documents.append(
                 {
-                    **_document_payload(document["chunk_id"], document["content"], document, "graph", source),
+                    **_document_payload(
+                        document["chunk_id"],
+                        document["content"],
+                        document,
+                        "graph",
+                        source,
+                        lineage,
+                    ),
                     "graph_project_id": graph_project_id,
                     "entities": _entities(document["content"]),
                 }
@@ -210,29 +263,120 @@ class KnowledgeIndexRuntime:
         return ranked
 
 
-def _document_payload(chunk_id: str, content: str, metadata: dict, source_type: str, source: CanonicalDocumentIR) -> dict:
+def _document_payload(
+    chunk_id: str,
+    content: str,
+    metadata: dict,
+    source_type: str,
+    source: CanonicalDocumentIR,
+    lineage: dict,
+) -> dict:
+    block_id = chunk_id.split("::", 1)[-1]
+    citation_lineage = {
+        **_public_lineage_fields(lineage),
+        "chunk_id": chunk_id,
+        "block_id": block_id,
+    }
+    enriched_metadata = {
+        **metadata,
+        "block_id": block_id,
+        "document_version_id": lineage["document_version_id"],
+        "source_sha256": lineage["source_sha256"],
+        "parser_config_hash": lineage["parser_config_hash"],
+        "ir_schema_version": lineage["ir_schema_version"],
+        "diagnostics_digest": lineage["diagnostics_digest"],
+        "citation_lineage": citation_lineage,
+    }
     return {
         "chunk_id": chunk_id,
         "document_id": source.metadata.document_id,
         "workspace_id": source.metadata.workspace_id,
         "content": content,
         "source_type": source_type,
-        "metadata": metadata,
+        "metadata": enriched_metadata,
     }
 
 
-def _source_provenance(document: CanonicalDocumentIR) -> dict:
+def _source_provenance(document: CanonicalDocumentIR, lineage: dict | None = None) -> dict:
+    lineage = lineage or _parse_index_lineage(document, None, index_job_id=None)
     return {
         "document_id": document.metadata.document_id,
+        "source_id": document.metadata.source_id,
         "workspace_id": document.metadata.workspace_id,
         "source_uri": document.metadata.source_uri,
         "mime_type": document.metadata.mime_type,
         "hash": document.metadata.hash,
+        "source_sha256": lineage["source_sha256"],
         "parser_id": document.metadata.parser_id,
         "parser_version": document.metadata.parser_version,
+        "parser_config_hash": lineage["parser_config_hash"],
+        "document_version_id": lineage["document_version_id"],
+        "ir_schema_version": lineage["ir_schema_version"],
+        "parse_job_id": lineage["parse_job_id"],
+        "parse_attempt_id": lineage["parse_attempt_id"],
+        "diagnostics_digest": lineage["diagnostics_digest"],
         "confidence": document.provenance.confidence,
         "warnings": list(document.provenance.warnings),
     }
+
+
+def _parse_index_lineage(
+    document: CanonicalDocumentIR,
+    parse_job_snapshot: ParseJobSnapshot | None,
+    *,
+    index_job_id: str | None,
+) -> dict:
+    diagnostics = parse_job_snapshot.parser_diagnostics if parse_job_snapshot else []
+    return {
+        "index_job_id": index_job_id,
+        "parse_job_id": parse_job_snapshot.job_id if parse_job_snapshot else None,
+        "parse_attempt_id": parse_job_snapshot.parse_attempt_id if parse_job_snapshot else None,
+        "document_id": document.metadata.document_id,
+        "document_version_id": document.metadata.document_version_id,
+        "source_sha256": document.metadata.source_sha256 or document.metadata.hash,
+        "parser_config_hash": document.metadata.parser_config_hash,
+        "ir_schema_version": document.metadata.ir_schema_version,
+        "diagnostics_digest": _diagnostics_digest(diagnostics),
+        "parser_diagnostics": list(diagnostics),
+        "block_count": len(document.blocks),
+        "table_count": len(document.tables),
+        "figure_count": len(document.figures),
+    }
+
+
+def _manifest_lineage_fields(lineage: dict) -> dict:
+    return {
+        "parse_job_id": lineage["parse_job_id"],
+        "parse_attempt_id": lineage["parse_attempt_id"],
+        "document_version_id": lineage["document_version_id"],
+        "source_sha256": lineage["source_sha256"],
+        "parser_config_hash": lineage["parser_config_hash"],
+        "ir_schema_version": lineage["ir_schema_version"],
+        "diagnostics_digest": lineage["diagnostics_digest"],
+        "parser_diagnostics": list(lineage["parser_diagnostics"]),
+        "block_count": lineage["block_count"],
+        "table_count": lineage["table_count"],
+        "figure_count": lineage["figure_count"],
+    }
+
+
+def _public_lineage_fields(lineage: dict) -> dict:
+    return {
+        "index_job_id": lineage["index_job_id"],
+        "parse_job_id": lineage["parse_job_id"],
+        "parse_attempt_id": lineage["parse_attempt_id"],
+        "document_id": lineage["document_id"],
+        "document_version_id": lineage["document_version_id"],
+        "source_sha256": lineage["source_sha256"],
+        "parser_config_hash": lineage["parser_config_hash"],
+        "ir_schema_version": lineage["ir_schema_version"],
+        "diagnostics_digest": lineage["diagnostics_digest"],
+    }
+
+
+def _diagnostics_digest(diagnostics: list[dict]) -> str:
+    payload = json.dumps(diagnostics, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def _acl_scopes(document: CanonicalDocumentIR) -> list[str]:

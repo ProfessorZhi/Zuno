@@ -1,7 +1,8 @@
 # PHASE06 Index Handoff、Provenance 与 Fixtures
 
-status: planned
+status: completed
 program: zuno-production-document-ingestion-and-thread-foundation-v1
+completed_at: 2026-07-01
 
 ## 目标
 
@@ -88,3 +89,72 @@ python .agent/scripts/verify_agent_system.py
 - index manifest 变更需要迁移历史数据。
 - GraphRAG evidence contract 与新的 provenance 字段冲突。
 - 外部 index service 成为验收前提。
+
+## 执行证据
+
+本 phase 按 TDD 关闭。先写 parse -> index manifest、retrieval chunk citation lineage、replay idempotency 和 Agentic retrieval provenance tests，再实现 manifest / chunk metadata 扩展。
+
+首次红灯：
+
+```powershell
+pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_parse_gateway_runtime.py tests/agent/test_agentic_retrieval_runtime.py -p no:cacheprovider
+```
+
+结果：`4 failed, 43 passed`。失败点集中在 `KnowledgeIndexRuntime.index_document()` 缺 `parse_job_snapshot` 参数，以及 `IndexJobManifest` 缺 parse lineage 字段。
+
+## Parse -> IR -> Index Manifest 示例
+
+`ParseGateway.submit_parse_job()` 生成 `ParseJobSnapshot` 后，`KnowledgeIndexRuntime.index_document(..., parse_job_snapshot=snapshot)` 当前会把 lineage 写入 `IndexJobManifest`：
+
+| Field | Source |
+| --- | --- |
+| `parse_job_id` | `ParseJobSnapshot.job_id` |
+| `parse_attempt_id` | `ParseJobSnapshot.parse_attempt_id` |
+| `document_version_id` | `CanonicalDocumentIR.metadata.document_version_id` |
+| `source_sha256` | `CanonicalDocumentIR.metadata.source_sha256` |
+| `parser_config_hash` | `CanonicalDocumentIR.metadata.parser_config_hash` |
+| `ir_schema_version` | `CanonicalDocumentIR.metadata.ir_schema_version` |
+| `diagnostics_digest` | canonical JSON parser diagnostics 的 sha256 |
+| `parser_diagnostics` | `ParseJobSnapshot.parser_diagnostics` |
+| `block_count / table_count / figure_count` | `CanonicalDocumentIR` 输出计数 |
+
+## Citation Lineage 字段表
+
+retrieval chunk metadata 当前带 `citation_lineage`：
+
+- `index_job_id`
+- `parse_job_id`
+- `parse_attempt_id`
+- `document_id`
+- `block_id`
+- `chunk_id`
+- `document_version_id`
+- `source_sha256`
+- `parser_config_hash`
+- `ir_schema_version`
+- `diagnostics_digest`
+
+Agentic retrieval runtime 从 `manifest.source_provenance` 继承这些字段到 `EvidenceItem.provenance` 和 `Citation.provenance`，使 citation 能回追到 source hash、document version、parse job 和 parse attempt。
+
+## Replay / Idempotency 结果
+
+- 同一 `CanonicalDocumentIR` 和同一 `ParseJobSnapshot` 重复 index，会生成新的 index job id，但 `source_block_ids` 和 retrieval chunk ids 保持稳定。
+- runtime 当前仍是 local in-memory index surface，不声明为生产 durable index service。
+
+## 变更文件
+
+- `src/backend/zuno/knowledge/indexing/contracts.py`
+- `src/backend/zuno/knowledge/indexing/runtime.py`
+- `src/backend/zuno/knowledge/indexing/README.md`
+- `docs/architecture/document-ingestion-foundation.md`
+- `tests/knowledge/test_index_jobs_runtime.py`
+- `tests/agent/test_agentic_retrieval_runtime.py`
+
+## 验证结果
+
+```powershell
+git diff --check
+pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_parse_gateway_runtime.py tests/agent/test_agentic_retrieval_runtime.py -p no:cacheprovider
+```
+
+结果：`47 passed`。`git diff --check` 通过；PowerShell profile 的 Terminal-Icons warning 不属于仓库 diff 检查失败。

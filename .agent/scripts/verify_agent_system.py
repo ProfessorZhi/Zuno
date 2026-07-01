@@ -419,7 +419,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE06_index-handoff-provenance-and-fixtures.md",
+        "current_phase: PHASE07_program2-thread-prompts-and-branch-plan.md",
         f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",

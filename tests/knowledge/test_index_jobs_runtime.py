@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import json
+
 
 def _sample_document():
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
@@ -16,6 +19,29 @@ def _sample_document():
     )
     assert result.document is not None
     return result.document
+
+
+def _submitted_document():
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    request = ParseDocumentRequest(
+        document_id="doc_parse_index",
+        workspace_id="workspace_index",
+        source_uri="file://contracts/parse-index.md",
+        mime_type="text/markdown",
+        source_text="# Renewal\nSupplier renewal evidence carries lineage.",
+        parser_config={"chunking": "line", "normalizer": "deterministic"},
+        sensitivity_tags=["internal"],
+    )
+    submitted = ParseGateway.submit_parse_job(request)
+    snapshot = ParseGateway.get_job_snapshot(submitted.job_id)
+    assert submitted.document is not None
+    return submitted.document, snapshot
+
+
+def _diagnostics_digest(diagnostics: list[dict]) -> str:
+    payload = json.dumps(diagnostics, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def test_index_runtime_builds_queryable_bm25_vector_and_graph_indexes() -> None:
@@ -92,6 +118,99 @@ def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -
         "vector": "local_vector:current",
         "graph": "local_graph:current",
     }
+
+
+def test_index_manifest_tracks_parse_job_lineage_and_diagnostics_digest() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+
+    document, parse_snapshot = _submitted_document()
+    runtime = KnowledgeIndexRuntime()
+    runtime.create_knowledge_space(
+        knowledge_space_id="ks_parse_lineage",
+        workspace_id="workspace_index",
+        graph_project_id="contract_review",
+    )
+    manifest = runtime.index_document(
+        "ks_parse_lineage",
+        document,
+        targets=["bm25", "vector", "graph"],
+        parse_job_snapshot=parse_snapshot,
+    )
+
+    assert manifest.status == "succeeded"
+    assert manifest.parse_job_id == parse_snapshot.job_id
+    assert manifest.parse_attempt_id == parse_snapshot.parse_attempt_id
+    assert manifest.document_version_id == document.metadata.document_version_id
+    assert manifest.source_sha256 == document.metadata.source_sha256
+    assert manifest.parser_config_hash == document.metadata.parser_config_hash
+    assert manifest.ir_schema_version == document.metadata.ir_schema_version
+    assert manifest.diagnostics_digest == _diagnostics_digest(parse_snapshot.parser_diagnostics)
+    assert manifest.block_count == len(document.blocks)
+    assert manifest.table_count == len(document.tables)
+    assert manifest.figure_count == len(document.figures)
+    assert manifest.parser_diagnostics == parse_snapshot.parser_diagnostics
+    assert manifest.source_provenance["parse_job_id"] == parse_snapshot.job_id
+    assert manifest.source_provenance["document_version_id"] == document.metadata.document_version_id
+
+
+def test_retrieval_payload_chunks_carry_citation_lineage_to_source_hash() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+
+    document, parse_snapshot = _submitted_document()
+    runtime = KnowledgeIndexRuntime()
+    runtime.create_knowledge_space("ks_citation_lineage", "workspace_index")
+    manifest = runtime.index_document(
+        "ks_citation_lineage",
+        document,
+        targets=["bm25", "vector", "graph"],
+        parse_job_snapshot=parse_snapshot,
+    )
+    payload = runtime.to_retrieval_payload("ks_citation_lineage", "renewal evidence")
+    first_document = payload["documents_by_source"]["bm25"][0]
+    lineage = first_document["metadata"]["citation_lineage"]
+
+    assert lineage["index_job_id"] == manifest.job_id
+    assert lineage["document_id"] == document.metadata.document_id
+    assert lineage["block_id"] in manifest.source_block_ids
+    assert lineage["document_version_id"] == document.metadata.document_version_id
+    assert lineage["parse_job_id"] == parse_snapshot.job_id
+    assert lineage["parse_attempt_id"] == parse_snapshot.parse_attempt_id
+    assert lineage["source_sha256"] == document.metadata.source_sha256
+    assert lineage["parser_config_hash"] == document.metadata.parser_config_hash
+    assert first_document["metadata"]["document_version_id"] == document.metadata.document_version_id
+    assert first_document["metadata"]["diagnostics_digest"] == manifest.diagnostics_digest
+
+
+def test_index_replay_keeps_stable_source_block_ids_and_chunk_ids() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+
+    document, parse_snapshot = _submitted_document()
+    runtime = KnowledgeIndexRuntime()
+    runtime.create_knowledge_space("ks_replay_lineage", "workspace_index")
+    first = runtime.index_document(
+        "ks_replay_lineage",
+        document,
+        targets=["bm25", "vector", "graph"],
+        parse_job_snapshot=parse_snapshot,
+    )
+    first_chunks = [
+        item["chunk_id"]
+        for item in runtime.to_retrieval_payload("ks_replay_lineage", "renewal")["documents_by_source"]["bm25"]
+    ]
+    second = runtime.index_document(
+        "ks_replay_lineage",
+        document,
+        targets=["bm25", "vector", "graph"],
+        parse_job_snapshot=parse_snapshot,
+    )
+    second_chunks = [
+        item["chunk_id"]
+        for item in runtime.to_retrieval_payload("ks_replay_lineage", "renewal")["documents_by_source"]["bm25"]
+    ]
+
+    assert first.source_block_ids == second.source_block_ids
+    assert first_chunks == second_chunks
+    assert len(second_chunks) == len(set(second_chunks))
 
 
 def test_index_runtime_records_failed_jobs_and_retry_replays_manifest() -> None:

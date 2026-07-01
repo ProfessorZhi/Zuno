@@ -268,6 +268,56 @@ def test_agentic_retrieval_runtime_records_production_graphrag_traceability_metr
     assert result.to_task_event()["payload"]["unsupported_claim_metrics"] == trace["unsupported_claim_metrics"]
 
 
+def test_agentic_retrieval_runtime_preserves_parse_lineage_in_evidence_provenance() -> None:
+    from zuno.knowledge.agentic_graphrag import (
+        AgenticRetrievalRuntime,
+        AgenticRetrievalRuntimeRequest,
+        ProductMode,
+    )
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    submitted = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_agent_lineage",
+            workspace_id="workspace_retrieval",
+            source_uri="file://contracts/agent-lineage.md",
+            mime_type="text/markdown",
+            source_text="# Renewal\nRenewal lineage evidence must cite the parse job.",
+            parser_config={"chunking": "line"},
+        )
+    )
+    assert submitted.document is not None
+    parse_snapshot = ParseGateway.get_job_snapshot(submitted.job_id)
+    index_runtime = KnowledgeIndexRuntime()
+    index_runtime.create_knowledge_space("ks_agent_lineage", "workspace_retrieval")
+    index_runtime.index_document(
+        "ks_agent_lineage",
+        submitted.document,
+        targets=["bm25", "vector", "graph"],
+        parse_job_snapshot=parse_snapshot,
+    )
+
+    result = AgenticRetrievalRuntime(index_runtime=index_runtime).answer(
+        AgenticRetrievalRuntimeRequest(
+            query="renewal lineage evidence",
+            workspace_id="workspace_retrieval",
+            knowledge_space_ids=["ks_agent_lineage"],
+            product_mode=ProductMode.ENHANCED,
+            trace_id="trace_phase06_lineage",
+            task_id="task_phase06_lineage",
+        )
+    )
+    item = result.evidence_bundle.items[0]
+    citation = result.citations[0]
+
+    assert item.provenance["parse_job_id"] == parse_snapshot.job_id
+    assert item.provenance["parse_attempt_id"] == parse_snapshot.parse_attempt_id
+    assert item.provenance["document_version_id"] == submitted.document.metadata.document_version_id
+    assert item.provenance["source_sha256"] == submitted.document.metadata.source_sha256
+    assert citation.provenance["parse_job_id"] == parse_snapshot.job_id
+
+
 def test_agentic_retrieval_runtime_drops_disallowed_acl_evidence() -> None:
     from zuno.knowledge.agentic_graphrag import (
         AgenticRetrievalRuntime,

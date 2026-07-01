@@ -45,6 +45,17 @@ class IndexJobManifest(BaseModel):
     acl_scopes: list[str] = Field(default_factory=list)
     sensitivity_tags: list[str] = Field(default_factory=list)
     adapter_status: dict[str, str] = Field(default_factory=dict)
+    parse_job_id: str | None = None
+    parse_attempt_id: str | None = None
+    document_version_id: str = ""
+    source_sha256: str = ""
+    parser_config_hash: str = ""
+    ir_schema_version: str = ""
+    diagnostics_digest: str = ""
+    parser_diagnostics: list[dict[str, Any]] = Field(default_factory=list)
+    block_count: int = 0
+    table_count: int = 0
+    figure_count: int = 0
 
 
 class IndexQueryResult(BaseModel):
