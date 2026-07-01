@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-production-document-ingestion-and-thread-foundation-v1`
-- Current phase: `PHASE01_program-truth-source-and-parser-current-audit.md`
+- Current phase: `PHASE02_document-ir-and-parser-contract-freeze.md`
 - Latest completed program: `zuno-production-architecture-and-deliverables-completion-v1`
 
 当前 program 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的第一段。它先把企业知识库文档解析与索引交接地基做扎实，并为后续 Program 2 多线程施工准备可直接投递的目标模式提示词、分支边界和验收闸门。
@@ -16,8 +16,8 @@
 - `current.md`：当前 active program 状态、suite 顺序和执行规则。
 - `implementation-roadmap.md`：Program 1-4 总路线、依赖关系、验收和验证命令。
 - `closure-checklist.md`：Program 1 收口清单、证据要求和归档规则。
-- `PHASE01_program-truth-source-and-parser-current-audit.md`：打开 program、确认边界、审计解析层 Current。
-- `PHASE02_document-ir-and-parser-contract-freeze.md`：冻结 Document IR、parser adapter contract 和 parser capability matrix。
+- `PHASE01_program-truth-source-and-parser-current-audit.md`：已完成打开 program、确认边界、审计解析层 Current。
+- `PHASE02_document-ir-and-parser-contract-freeze.md`：当前 phase，冻结 Document IR、parser adapter contract 和 parser capability matrix。
 - `PHASE03_parser-worker-runtime-and-job-lifecycle.md`：实现本地 parser worker / job lifecycle / retry / metrics。
 - `PHASE04_native-text-and-structured-file-parsers.md`：稳定文本、Markdown、CSV、JSON、HTML、代码等 native parser。
 - `PHASE05_pdf-office-ocr-adapter-boundaries.md`：梳理 PDF / Office / OCR adapter、fallback 和 target-blocked 边界。
