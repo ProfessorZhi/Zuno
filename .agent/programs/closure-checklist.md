@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE06_capability-skill-tool-mcp-layer.md`
+current_phase: `PHASE07_security-governance-envelope.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 收口目标
@@ -23,7 +23,7 @@ Production scale external deployments remain replaceable targets.
 - [x] PHASE03 完成 enterprise ingestion async infrastructure baseline，并覆盖 PDF / Office / image / scanned / binary target-blocked visibility、binary ObjectStore、file lifecycle、outbox、dead letter 和 reconciler。
 - [x] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
 - [x] PHASE05 完成 Memory & Context Engine baseline。
-- [ ] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。
+- [x] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。
 - [ ] PHASE07 完成 Security / Governance envelope baseline。
 - [ ] PHASE08 完成 Model Gateway / Cost / Latency baseline。
 - [ ] PHASE09 完成 Planning Contract 与 Strategy Selector baseline。
@@ -42,7 +42,7 @@ Production scale external deployments remain replaceable targets.
 - [ ] `ParserWorker / IndexWorker` 本地可执行，blocked OCR / VLM 不 fake index。
 - [x] Knowledge retrieval 支持标准检索 / 深度检索 profile。
 - [ ] Agentic Retrieval Planner 能按 profile、证据、预算选择 BM25 / vector / GraphRAG / requery / rerank。
-- [ ] Capability Layer 有 Skill / Knowledge / Tool / MCP / Artifact capability registry contract。
+- [x] Capability Layer 有 Skill / Knowledge / Tool / MCP / Artifact capability registry contract。
 - [x] Memory & Context Engine 有多重记忆和 ContextPack contract，并有最小 runtime / focused tests。
 - [ ] Planning & Control Runtime 有 StrategySelector、PlanStep、Reflection、Dynamic Replan、ReflexionLesson candidate。
 - [ ] Security gates 覆盖 input / retrieval / tool / output，至少有 prompt injection、ACL、tool approval、output citation safety tests。
@@ -56,7 +56,7 @@ Production scale external deployments remain replaceable targets.
 - [ ] Workstream A 提交 Input / Async Infrastructure evidence。
 - [ ] Workstream B 提交 Knowledge / Retrieval / GraphRAG evidence。
 - [ ] Workstream C 提交 Memory / Context evidence。
-- [ ] Workstream D 提交 Capability / Skill / Tool / MCP evidence。
+- [x] Workstream D 提交 Capability / Skill / Tool / MCP evidence。
 - [ ] Workstream E 提交 Security / Governance evidence。
 - [ ] Workstream F 提交 Planning / Agent Runtime evidence。
 - [ ] Workstream G 提交 Eval / Trace / Cost evidence。

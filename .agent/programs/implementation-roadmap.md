@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE06_capability-skill-tool-mcp-layer.md`
+current_phase: `PHASE07_security-governance-envelope.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 总套件
@@ -82,7 +82,7 @@ Program ID：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 当前 phase：
 
-- `.agent/programs/PHASE06_capability-skill-tool-mcp-layer.md`
+- `.agent/programs/PHASE07_security-governance-envelope.md`
 
 目标：把原 Program 3-6 合并为一个可执行到 closure 的全链路 program，完成 launchable enterprise Agentic GraphRAG product baseline。它不是要求部署真实生产集群，而是要求每个关键层都有 local runnable implementation、adapter boundary、dependency probe / target-blocked evidence、focused tests、E2E 闭环、trace/eval/cost 记录和文档成熟度边界。
 

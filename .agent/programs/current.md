@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
-current_phase: PHASE06_capability-skill-tool-mcp-layer.md
+current_phase: PHASE07_security-governance-envelope.md
 latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 ## 当前状态
@@ -11,7 +11,7 @@ latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 - Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 - 中文名：Zuno 可上线企业知识库 Agentic GraphRAG 全链路闭环 Program
-- 当前 phase：`PHASE06_capability-skill-tool-mcp-layer.md`
+- 当前 phase：`PHASE07_security-governance-envelope.md`
 - Suite：`zuno-enterprise-agentic-graphrag-production-suite-v1`
 
 本 program 合并原 active Program 3 和 queued Program 4-6：
@@ -75,8 +75,8 @@ Production scale external deployments remain replaceable targets.
 3. `PHASE03_enterprise-ingestion-async-infrastructure.md`：completed。
 4. `PHASE04_knowledge-retrieval-and-graphrag-profile.md`：completed。
 5. `PHASE05_memory-context-engine.md`：completed。
-6. `PHASE06_capability-skill-tool-mcp-layer.md`：active。
-7. `PHASE07_security-governance-envelope.md`：pending。
+6. `PHASE06_capability-skill-tool-mcp-layer.md`：completed。
+7. `PHASE07_security-governance-envelope.md`：active。
 8. `PHASE08_model-gateway-cost-latency.md`：pending。
 9. `PHASE09_planning-contract-and-strategy-selector.md`：pending。
 10. `PHASE10_react-reflection-replan-reflexion-runtime.md`：pending。

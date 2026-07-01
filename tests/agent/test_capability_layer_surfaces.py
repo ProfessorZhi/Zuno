@@ -52,6 +52,14 @@ EXPECTED_EXPORTS = {
         "CapabilityHealth",
         "CapabilityPermissions",
     ],
+    "zuno.capability.layer": [
+        "CapabilityDecision",
+        "CapabilityLayerRegistry",
+        "CapabilityRouteDecision",
+        "CapabilityRouteRequest",
+        "CapabilityRouter",
+        "build_default_capability_layer_registry",
+    ],
     "zuno.capability.execution": [
         "CapabilityRecord",
         "CapabilitySelectionResult",
@@ -109,12 +117,14 @@ def test_capability_package_facade_points_at_layer_modules() -> None:
     import zuno.capability as capability
     from zuno.capability.control_plane import ToolCardManifest
     from zuno.capability.contracts import CapabilityRecord
+    from zuno.capability.layer import CapabilityRouter
     from zuno.capability.registry import CapabilityRegistry
     from zuno.capability.runtime import ToolControlPlaneRuntime
     from zuno.capability.selector import DynamicCapabilitySelector
 
     assert capability.CapabilityRecord is CapabilityRecord
     assert capability.CapabilityRegistry is CapabilityRegistry
+    assert capability.CapabilityRouter is CapabilityRouter
     assert capability.DynamicCapabilitySelector is DynamicCapabilitySelector
     assert capability.ToolCardManifest is ToolCardManifest
     assert capability.ToolControlPlaneRuntime is ToolControlPlaneRuntime

@@ -8,6 +8,8 @@
 
 `capability/tools/` 不按 CLI / API 拆成两类顶层目录。CLI / API 是 execution adapter、runtime type 或 provider metadata，不是 capability 的主分类。
 
+Program 3 Mega PHASE06 已新增 `layer.py`，作为本地 Capability Layer baseline：它复用 PHASE02 `SkillCard`、`CapabilityCard`、`CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent` 和 `ToolCard` contract，提供 `CapabilityLayerRegistry`、`CapabilityRouter`、`contract_review` / `research_report` SkillCard fixture、Knowledge / Tool / MCP / External API / File / Code / Browser / Artifact capability registry、skill allowed_tools 约束、cross-workspace knowledge block、MCP permission denied / target-blocked evidence 和 Tool / MCP trace fields。它仍不是 Planner 已深度消费的完整 Skill runtime，也不是 PHASE07 Security / Governance gates 已关闭。
+
 PHASE02 的 provider 分类入口是 `docs/architecture/repo-ownership-matrix.md` 和 `CAPABILITY_TOOL_PROVIDER_CLASSIFICATIONS` / `CAPABILITY_MCP_SERVER_CLASSIFICATIONS`。新增 tool 或 MCP server 目录前，必须先声明分类、target owner、compat path、测试和 verifier。
 
 ## Target role

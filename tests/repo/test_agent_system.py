@@ -276,7 +276,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE06_capability-skill-tool-mcp-layer.md",
+        "current_phase: PHASE07_security-governance-envelope.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -325,9 +325,9 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
         phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
         assert f"program: {PROGRAM3_ACTIVE_NAME}" in phase_text
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_"):
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_"):
             expected_status = "status: completed"
-        elif phase_name.startswith("PHASE06_"):
+        elif phase_name.startswith("PHASE07_"):
             expected_status = "status: active"
         else:
             expected_status = "status: pending"

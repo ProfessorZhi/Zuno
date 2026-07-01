@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE06_capability-skill-tool-mcp-layer
-status: active
+status: completed
 
 ## 目标
 
@@ -169,6 +169,16 @@ pytest -q tests/agent -p no:cacheprovider
 - Capability registry 示例。
 - Skill 与 Tool / Knowledge / MCP 边界说明。
 - tests 输出。
+
+## Closure Evidence
+
+- 本地实现：新增 `src/backend/zuno/capability/layer.py`，以 PHASE02 `CapabilityCard`、`CapabilityPolicy`、`CapabilityRiskProfile`、`CapabilityAuditEvent`、`SkillCard` 和 `ToolCard` 为唯一共享 contract surface，提供 `CapabilityLayerRegistry`、`CapabilityRouter`、`CapabilityRouteRequest`、`CapabilityDecision` 和默认 registry builder。
+- Skill fixture：默认包含 `contract_review` 和 `research_report`，二者均声明 recommended retrieval profile、required evidence、allowed tools、memory scopes、output contract、safety policy、eval rubric、max_steps 和 reflection policy。Skill 仍是任务方法包，不是 Tool、不是 Knowledge、不是产品级多 Agent runtime。
+- Capability registry：覆盖 Knowledge、Tool、MCP、External API、File、Code、Browser 和 Artifact capability；所有 capability 均带统一 `CapabilityPolicy`、`CapabilityRiskProfile`、workspace scope、role policy、side-effect、network / credential / data access / audit policy。
+- Policy / router：`CapabilityRouter.route` 支持自动 skill selection、pinned skill override、skill allowed_tools 限制、cross-workspace knowledge block、MCP permission denied 和 not-configured target-blocked evidence；Tool / MCP boundary 通过 PHASE02 `ToolCard` 暴露 permission 和 trace fields。
+- Focused tests：`pytest -q tests/capability/test_capability_skill_layer.py -p no:cacheprovider` -> 7 passed；RED 首次运行 7 failures，根因为 `zuno.capability.layer` 不存在。
+- Compatibility tests：`pytest -q tests/capability/test_capability_skill_layer.py tests/agent/test_capability_layer_surfaces.py tests/agent/test_capability_system.py tests/agent/test_capability_registry.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider` -> 27 passed。
+- 边界：本 phase 不声明 PHASE07 Security / Governance gates 已完成，不声明 PHASE09 Planner 已消费 capability registry，不声明 MCP 真实外部服务已配置；`mcp.lark.send_message` 当前以 target-blocked dependency probe 表达。
 
 ## 停止条件
 
