@@ -1,6 +1,25 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+
+
+FIXTURE_ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "parser_golden" / "inputs"
+
+
+def _parse_fixture(case_id: str, file_name: str, mime_type: str):
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    source_path = FIXTURE_ROOT / file_name
+    return ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id=f"doc_{case_id}",
+            workspace_id="workspace_phase04",
+            source_uri=source_path.as_uri(),
+            mime_type=mime_type,
+        )
+    )
 
 
 @pytest.mark.parametrize(
@@ -342,24 +361,176 @@ def test_parse_gateway_cancelled_job_snapshot_is_distinct_from_failed() -> None:
     assert snapshot.status_timeline[-1]["status"] == "cancelled"
 
 
-def test_parse_gateway_reads_real_parser_golden_files() -> None:
-    from pathlib import Path
+def test_native_markdown_fixture_keeps_sections_links_code_fence_and_table() -> None:
+    result = _parse_fixture("markdown_structured", "markdown_structured.md", "text/markdown")
 
+    assert result.status == "succeeded"
+    assert result.document is not None
+    document = result.document
+    blocks = document.blocks
+
+    heading = next(block for block in blocks if block.type == "heading" and block.text == "Supplier Policy")
+    assert heading.source_span.section_path == ["Supplier Policy"]
+
+    link = next(block for block in blocks if block.type == "link")
+    assert link.metadata["href"] == "appendix.md"
+    assert link.metadata["label"] == "contract appendix"
+    assert link.source_span.section_path == ["Supplier Policy"]
+
+    code = next(block for block in blocks if block.type == "code_block")
+    assert code.language == "python"
+    assert code.code_fence == "python"
+    assert code.source_span.section_path == ["Supplier Policy", "Renewal"]
+
+    table = next(block for block in blocks if block.type == "table")
+    assert table.metadata["headers"] == ["Control", "Owner"]
+    assert table.source_span.table_cell == "table:1"
+    assert document.tables[0].rows[-1] == ["Notice", "Legal"]
+
+
+def test_native_csv_fixture_keeps_table_cell_coordinates() -> None:
+    result = _parse_fixture("csv_table", "csv_table.csv", "text/csv")
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    document = result.document
+    table = next(block for block in document.blocks if block.type == "table")
+    cells = [block for block in document.blocks if block.type == "table_cell"]
+
+    assert table.metadata["delimiter"] == ","
+    assert table.metadata["headers"] == ["control", "owner", "status"]
+    assert table.metadata["row_count"] == 2
+    assert table.metadata["column_count"] == 3
+    owner_cell = next(
+        block
+        for block in cells
+        if block.metadata["row_index"] == 1 and block.metadata["column_name"] == "owner"
+    )
+    assert owner_cell.text == "Legal"
+    assert owner_cell.source_span.table_cell == "row:1,col:owner"
+    assert document.tables[0].rows[1] == ["Renewal Notice", "Legal", "ready"]
+
+
+def test_native_json_fixture_keeps_pointer_paths_for_objects_arrays_and_values() -> None:
+    result = _parse_fixture("json_policy", "json_policy.json", "application/json")
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    blocks = result.document.blocks
+
+    policy_object = next(block for block in blocks if block.metadata.get("json_pointer") == "/policy")
+    owners_array = next(block for block in blocks if block.metadata.get("json_pointer") == "/policy/owners")
+    policy_name = next(block for block in blocks if block.metadata.get("json_pointer") == "/policy/name")
+
+    assert policy_object.type == "json_object"
+    assert owners_array.type == "json_array"
+    assert policy_name.type == "json_value"
+    assert policy_name.text == "Renewal Review"
+    assert policy_name.source_span.section_path == ["policy", "name"]
+
+
+def test_native_html_fixture_filters_scripts_and_keeps_links_and_tables() -> None:
+    result = _parse_fixture("html_policy", "html_policy.html", "text/html")
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    document = result.document
+    text = "\n".join(block.text for block in document.blocks)
+    link = next(block for block in document.blocks if block.type == "link")
+    table = next(block for block in document.blocks if block.type == "table")
+
+    assert "window.secret" not in text
+    assert "display: none" not in text
+    assert any(block.type == "heading" and block.text == "Supplier Policy" for block in document.blocks)
+    assert link.metadata["href"] == "appendix.html"
+    assert link.metadata["label"] == "appendix"
+    assert table.metadata["headers"] == ["Control", "Owner"]
+    assert document.tables[0].rows[-1] == ["Renewal Notice", "Legal"]
+
+
+def test_native_code_fixture_keeps_language_imports_and_symbol_metadata() -> None:
+    result = _parse_fixture("code_file", "code_file.py", "text/x-python")
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    code = next(block for block in result.document.blocks if block.type == "code_block")
+
+    assert code.language == "python"
+    assert code.metadata["imports"] == ["json", "pathlib.Path"]
+    assert code.metadata["classes"] == ["PolicyParser"]
+    assert code.metadata["functions"] == ["parse_policy", "helper"]
+    assert code.metadata["language_detection"] == "extension"
+    expected_line_count = len((FIXTURE_ROOT / "code_file.py").read_text(encoding="utf-8").splitlines())
+    assert code.source_span.line_range == [1, expected_line_count]
+
+
+@pytest.mark.parametrize(
+    ("source_uri", "mime_type", "source_text", "expected_warning"),
+    [
+        (
+            "file://fixtures/malformed.csv",
+            "text/csv",
+            "control,owner,status\nRenewal Notice,Legal\nSecurity Review,Platform,blocked,extra",
+            "malformed_csv",
+        ),
+        (
+            "file://fixtures/malformed.json",
+            "application/json",
+            '{"policy": {"name": "Broken", "owners": [}',
+            "malformed_json",
+        ),
+        (
+            "file://fixtures/malformed.html",
+            "text/html",
+            "<html><body><h1>Broken<p>Text<table><tr><td>A",
+            "malformed_html",
+        ),
+    ],
+)
+def test_native_malformed_structured_inputs_emit_diagnostics_without_crashing(
+    source_uri: str,
+    mime_type: str,
+    source_text: str,
+    expected_warning: str,
+) -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
-    fixture_root = Path(__file__).resolve().parents[1] / "fixtures" / "parser_golden" / "inputs"
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id=f"doc_{expected_warning}",
+            workspace_id="workspace_phase04",
+            source_uri=source_uri,
+            mime_type=mime_type,
+            source_text=source_text,
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert any(expected_warning in diagnostic.message for diagnostic in result.diagnostics)
+    assert any(block.metadata.get("malformed") for block in result.document.blocks)
+
+
+def test_parse_gateway_reads_real_parser_golden_files() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
     cases = [
         ("pdf_table", "pdf_table.pdf", "application/pdf", "table"),
         ("docx_heading_table", "docx_heading_table.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "heading"),
         ("pptx_slide", "pptx_slide.pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "slide_title"),
         ("xlsx_sheet", "xlsx_sheet.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "table"),
         ("scanned_image", "scanned_image.png", "image/png", "ocr_text"),
+        ("plain_text", "plain_text.txt", "text/plain", "paragraph"),
+        ("markdown_structured", "markdown_structured.md", "text/markdown", "code_block"),
+        ("csv_table", "csv_table.csv", "text/csv", "table_cell"),
+        ("json_policy", "json_policy.json", "application/json", "json_value"),
+        ("html_policy", "html_policy.html", "text/html", "link"),
         ("code_file", "code_file.py", "text/x-python", "code_block"),
         ("markdown_link", "markdown_link.md", "text/markdown", "link"),
     ]
 
     for case_id, file_name, mime_type, expected_block in cases:
-        source_path = fixture_root / file_name
+        source_path = FIXTURE_ROOT / file_name
         result = ParseGateway.parse_document(
             ParseDocumentRequest(
                 document_id=f"doc_{case_id}",

@@ -1,0 +1,10 @@
+{
+  "policy": {
+    "name": "Renewal Review",
+    "owners": ["Legal", "Platform"],
+    "controls": [
+      {"id": "renewal_notice", "required": true},
+      {"id": "security_review", "required": false}
+    ]
+  }
+}

@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-production-document-ingestion-and-thread-foundation-v1`
-current_phase: `PHASE04_native-text-and-structured-file-parsers.md`
+current_phase: `PHASE05_pdf-office-ocr-adapter-boundaries.md`
 latest_completed_program: `zuno-production-architecture-and-deliverables-completion-v1`
 
 ## 总套件
@@ -51,9 +51,9 @@ Program 1 不是只做 parser adapter 清单；它要把企业知识库文档入
 3. `PHASE03_parser-worker-runtime-and-job-lifecycle.md`
    - 已完成：实现本地 parser worker 抽象、job state、retry、metrics、snapshot、idempotency、blocked / failed / dead-letter 语义，并把 outbox / lease / reconciler 保留为 Target。
 4. `PHASE04_native-text-and-structured-file-parsers.md`
-   - 当前 phase。
-   - 强化 `txt/md/csv/json/html/code` 等 native parser，让 heading、table cell、JSON pointer、HTML table、code line range 等结构化输出可测试。
+   - 已关闭：强化 `txt/md/csv/json/html/code` 等 native parser，让 heading、table cell、JSON pointer、HTML table、code line range 等结构化输出可测试。
 5. `PHASE05_pdf-office-ocr-adapter-boundaries.md`
+   - 当前 phase。
    - 处理 PDF / Office / OCR / VLM enrichment adapter、local fallback、依赖探测、network / privacy / budget gate 和 Remaining Target。
 6. `PHASE06_index-handoff-provenance-and-fixtures.md`
    - 证明解析结果能进入 index manifest，并保留 source span、ACL、parser version、document_version_id、parse_job_id、parse_attempt_id、source_sha256、parser_config_hash 和 citation lineage。

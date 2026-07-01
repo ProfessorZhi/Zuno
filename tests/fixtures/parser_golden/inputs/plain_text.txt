@@ -1,0 +1,3 @@
+Overview
+The supplier must acknowledge renewal terms.
+Security review owner: Platform.

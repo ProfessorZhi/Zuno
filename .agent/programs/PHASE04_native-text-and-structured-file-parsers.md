@@ -1,7 +1,8 @@
 # PHASE04 Native Text 与 Structured File Parser
 
-status: planned
+status: completed
 program: zuno-production-document-ingestion-and-thread-foundation-v1
+completed_at: 2026-07-01
 
 ## 目标
 
@@ -86,3 +87,67 @@ python .agent/scripts/verify_agent_system.py
 - fixture 需要引入二进制大文件且没有合适存放位置。
 - code parser 需求扩大到完整 AST / LSP。
 - HTML parser 需求扩大到联网抓取或动态渲染。
+
+## 执行证据
+
+本 phase 按 TDD 关闭。先新增 fixtures 和 focused tests，再实现 native adapter 增强。
+
+首次红灯：
+
+```powershell
+pytest -q tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+```
+
+结果：`9 failed, 25 passed`。失败点集中在 Markdown link metadata、CSV table/cell block、JSON pointer、HTML link/table、code language/symbol metadata 和 malformed CSV / JSON / HTML diagnostics。
+
+## 新增和修正 fixtures
+
+- 新增 `tests/fixtures/parser_golden/inputs/plain_text.txt`。
+- 新增 `tests/fixtures/parser_golden/inputs/markdown_structured.md`。
+- 新增 `tests/fixtures/parser_golden/inputs/csv_table.csv`。
+- 新增 `tests/fixtures/parser_golden/inputs/json_policy.json`。
+- 新增 `tests/fixtures/parser_golden/inputs/html_policy.html`。
+- 扩展 `tests/fixtures/parser_golden/inputs/code_file.py`，覆盖 import、class 和 function regex metadata。
+- 修正 `tests/fixtures/parser_golden/manifest.json` 中 `docx_heading_table` 与 `xlsx_sheet` 的 input path 互换问题，并把 TXT / Markdown / CSV / JSON / HTML 加入 manifest。
+
+## Native IR 摘要
+
+| Format | Current local output |
+| --- | --- |
+| TXT | 非空行生成 paragraph block，保留 line_range。 |
+| Markdown | heading hierarchy 写入 `section_path`，link block 写入 `href` / `label`，code fence 写入 `language` / `code_fence`，table block 写入 headers、row_count、column_count 和 `table_cell`。 |
+| CSV | table block 写入 delimiter、headers、row_count、column_count；每个 cell 生成 `table_cell` block，保留 row index、column index、column name 和 `source_span.table_cell`。 |
+| JSON | object / array / value 分别生成 `json_object`、`json_array`、`json_value` block，metadata 保留 JSON pointer 和 path。 |
+| HTML | 使用 Python `HTMLParser` 做静态解析，过滤 script/style，保留 heading、paragraph、link 和 table；不做浏览器渲染或安全沙箱声明。 |
+| Code | 用扩展名识别语言，用 regex 提取 import、class 和 function metadata；不声称完整 AST 或 LSP 语义。 |
+
+## Malformed Diagnostics
+
+- malformed CSV：row length 与 header length 不一致时返回 warning diagnostic，仍生成 table / cell block，并把 malformed metadata 写入相关 block。
+- malformed JSON：`json.JSONDecodeError` 转为 warning diagnostic 和 fallback paragraph block，不让 parser worker 崩溃。
+- malformed HTML：缺失闭合结构时返回 warning diagnostic；严重不闭合且 parser 无法产出结构化块时生成 fallback paragraph block，并写入 malformed metadata。
+
+## 变更文件
+
+- `src/backend/zuno/knowledge/ingestion/adapters.py`
+- `src/backend/zuno/knowledge/ingestion/router.py`
+- `src/backend/zuno/knowledge/ingestion/README.md`
+- `tests/fixtures/parser_golden/manifest.json`
+- `tests/fixtures/parser_golden/inputs/plain_text.txt`
+- `tests/fixtures/parser_golden/inputs/markdown_structured.md`
+- `tests/fixtures/parser_golden/inputs/csv_table.csv`
+- `tests/fixtures/parser_golden/inputs/json_policy.json`
+- `tests/fixtures/parser_golden/inputs/html_policy.html`
+- `tests/fixtures/parser_golden/inputs/code_file.py`
+- `tests/knowledge/test_document_ingestion_contract.py`
+- `tests/knowledge/test_parse_gateway_runtime.py`
+- `docs/architecture/document-ingestion-foundation.md`
+
+## 验证结果
+
+```powershell
+git diff --check
+pytest -q tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+```
+
+结果：`34 passed`。`git diff --check` 通过；PowerShell profile 的 Terminal-Icons warning 不属于仓库 diff 检查失败。

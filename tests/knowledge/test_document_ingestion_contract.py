@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import hashlib
-import json
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -233,10 +232,28 @@ def test_parser_golden_fixture_manifest_is_complete() -> None:
         "pptx_slide",
         "docx_heading_table",
         "xlsx_sheet",
+        "plain_text",
+        "markdown_structured",
+        "csv_table",
+        "json_policy",
+        "html_policy",
         "code_file",
         "markdown_link",
+    }
+    expected_paths = {
+        "docx_heading_table": "inputs/docx_heading_table.docx",
+        "xlsx_sheet": "inputs/xlsx_sheet.xlsx",
+        "plain_text": "inputs/plain_text.txt",
+        "markdown_structured": "inputs/markdown_structured.md",
+        "csv_table": "inputs/csv_table.csv",
+        "json_policy": "inputs/json_policy.json",
+        "html_policy": "inputs/html_policy.html",
+        "code_file": "inputs/code_file.py",
+        "markdown_link": "inputs/markdown_link.md",
     }
     for case in manifest["cases"]:
         for field in ["format", "input_path", "default_parser", "evidence_anchor", "expected_blocks"]:
             assert case[field], f"{case['case_id']} missing {field}"
         assert (manifest_path.parent / case["input_path"]).exists()
+        if case["case_id"] in expected_paths:
+            assert case["input_path"] == expected_paths[case["case_id"]]

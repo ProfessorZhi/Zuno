@@ -1,6 +1,6 @@
 # Knowledge Ingestion 边界
 
-PHASE02/04 status: contract-current-runtime-current-production-target
+PHASE02-PHASE04 status: contract-current-runtime-current-production-target
 
 ## 当前角色
 
@@ -14,8 +14,9 @@ PHASE02/04 status: contract-current-runtime-current-production-target
 - Parser adapter registry：把 `native`、`docling_pymupdf`、`mineru_ocr_vlm` 和 `unstructured_markitdown` 作为可调度 adapter surface 管起来。
 - Parse Gateway runtime：`ParseGateway` 能从 `source_text`、`source_bytes` 或 `file://` fixture 生成 `CanonicalDocumentIR`、parser diagnostics、job status 和 index handoff；unknown format 会返回稳定 fallback diagnostics，target-blocked adapter 会返回稳定 warning diagnostics。
 - Local parser worker lifecycle：`submit_parse_job()` / `retry_parse_job()` / `cancel_parse_job()` 当前提供 in-process job lifecycle，覆盖 `accepted`、`running`、`succeeded`、`failed`、`blocked`、`retrying`、`cancelled` 和 `dead_letter` 的本地 snapshot 语义，并记录 idempotency key、attempt id、failure snapshot、diagnostics、retry policy 和 metrics。
+- Native parser runtime：`native` 当前覆盖 `txt / md / csv / json / html / code` 的低依赖解析；Markdown 保留 heading / link / code fence / table，CSV 保留 delimiter / header / row / column / table_cell，JSON 保留 JSON pointer，HTML 过滤 script/style 并保留 heading / paragraph / link / table，code 只做扩展名语言识别和 regex import/class/function metadata，不声称完整 AST 语义。
 - Legacy chunk normalizer：旧 `ChunkModel` 可归一为 `CanonicalDocumentIR`，为旧 pipeline 迁移留出明确 seam。
-- Parser golden fixture manifest：登记 PDF 表格、扫描件、PPTX、DOCX、XLSX、代码和 Markdown 链接的验收样例，并绑定真实 `input_path`。
+- Parser golden fixture manifest：登记 PDF 表格、扫描件、PPTX、DOCX、XLSX、TXT、Markdown、CSV、JSON、HTML 和代码的验收样例，并绑定真实 `input_path`。
 
 当前 production parser runtime 仍在 `platform/services/convert_files/`、`platform/services/pipeline/` 和 `platform/services/rag/` 等旧路径中；本目录不迁移这些重 runtime，也不把生产级 Docling / MinerU / Unstructured / OCR / VLM 平台、DB-backed queue、outbox、worker lease、heartbeat、dead letter queue 或 reconciler 写成 Current。
 

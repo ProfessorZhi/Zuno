@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-document-ingestion-and-thread-foundation-v1
-current_phase: PHASE04_native-text-and-structured-file-parsers.md
+current_phase: PHASE05_pdf-office-ocr-adapter-boundaries.md
 latest_completed_program: zuno-production-architecture-and-deliverables-completion-v1
 
 ## 当前状态
@@ -44,7 +44,7 @@ Zuno 的最终产品目标不是三个并列产品模式，而是一个企业内
 
 ## 当前执行规则
 
-- 当前 active program 必须从 PHASE01 顺序推进到 PHASE08。当前已关闭 PHASE01-PHASE03；当前进入 PHASE04。
+- 当前 active program 必须从 PHASE01 顺序推进到 PHASE08。当前已关闭 PHASE01-PHASE04；当前进入 PHASE05。
 - 每个 phase 只有在代码、测试、trace、eval、verifier 或明确 blocked evidence 支撑后才能关闭。
 - 只写 contract、schema、README 或计划不能关闭 runtime phase。
 - 外部生产 parser、OCR、LangGraph DB persistence、真实 sandbox、外部 vault、真实网络代理、外部 trace/eval 平台不可用时，只能写 adapter、local fallback、target-blocked evidence 和 Remaining Target。

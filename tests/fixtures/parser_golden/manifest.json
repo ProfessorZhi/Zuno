@@ -32,7 +32,7 @@
     {
       "case_id": "docx_heading_table",
       "format": "docx",
-      "input_path": "inputs/xlsx_sheet.xlsx",
+      "input_path": "inputs/docx_heading_table.docx",
       "default_parser": "unstructured_markitdown",
       "fallback": "native",
       "evidence_anchor": ["section_path", "table_cell"],
@@ -41,11 +41,56 @@
     {
       "case_id": "xlsx_sheet",
       "format": "xlsx",
-      "input_path": "inputs/docx_heading_table.docx",
+      "input_path": "inputs/xlsx_sheet.xlsx",
       "default_parser": "unstructured_markitdown",
       "fallback": "native",
       "evidence_anchor": ["sheet", "table_cell"],
       "expected_blocks": ["sheet", "table"]
+    },
+    {
+      "case_id": "plain_text",
+      "format": "txt",
+      "input_path": "inputs/plain_text.txt",
+      "default_parser": "native",
+      "fallback": "unstructured_markitdown",
+      "evidence_anchor": ["line_range"],
+      "expected_blocks": ["paragraph"]
+    },
+    {
+      "case_id": "markdown_structured",
+      "format": "md",
+      "input_path": "inputs/markdown_structured.md",
+      "default_parser": "native",
+      "fallback": "unstructured_markitdown",
+      "evidence_anchor": ["line_range", "section_path", "table_cell"],
+      "expected_blocks": ["heading", "paragraph", "link", "code_block", "table"]
+    },
+    {
+      "case_id": "csv_table",
+      "format": "csv",
+      "input_path": "inputs/csv_table.csv",
+      "default_parser": "native",
+      "fallback": "unstructured_markitdown",
+      "evidence_anchor": ["line_range", "table_cell"],
+      "expected_blocks": ["table", "table_cell"]
+    },
+    {
+      "case_id": "json_policy",
+      "format": "json",
+      "input_path": "inputs/json_policy.json",
+      "default_parser": "native",
+      "fallback": "unstructured_markitdown",
+      "evidence_anchor": ["line_range", "section_path"],
+      "expected_blocks": ["json_object", "json_array", "json_value"]
+    },
+    {
+      "case_id": "html_policy",
+      "format": "html",
+      "input_path": "inputs/html_policy.html",
+      "default_parser": "native",
+      "fallback": "unstructured_markitdown",
+      "evidence_anchor": ["line_range", "section_path", "table_cell"],
+      "expected_blocks": ["heading", "paragraph", "link", "table"]
     },
     {
       "case_id": "code_file",
