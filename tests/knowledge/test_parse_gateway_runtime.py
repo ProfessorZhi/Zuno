@@ -160,6 +160,54 @@ def test_parse_gateway_records_parse_job_status_for_replay() -> None:
     assert replayed.document.metadata.document_id == "doc_job"
 
 
+def test_parse_gateway_records_queue_snapshot_metrics_and_retry_lineage() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    failed = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_queue_empty",
+            workspace_id="workspace_phase07",
+            source_uri="file://notes/empty.md",
+            mime_type="text/markdown",
+            source_text="",
+        )
+    )
+    failed_snapshot = ParseGateway.get_job_snapshot(failed.job_id)
+
+    assert failed_snapshot.job_id == failed.job_id
+    assert failed_snapshot.status == "failed"
+    assert failed_snapshot.attempt == 1
+    assert failed_snapshot.retryable is True
+    assert failed_snapshot.failure_reason
+    assert failed_snapshot.metrics.error_count == 1
+    assert [entry["status"] for entry in failed_snapshot.status_timeline] == [
+        "queued",
+        "running",
+        "failed",
+    ]
+    assert failed_snapshot.source_provenance["source_uri"] == "file://notes/empty.md"
+
+    retried = ParseGateway.retry_parse_job(
+        failed.job_id,
+        ParseDocumentRequest(
+            document_id="doc_queue_empty",
+            workspace_id="workspace_phase07",
+            source_uri="file://notes/empty.md",
+            mime_type="text/markdown",
+            source_text="# Repaired\nRetry me.",
+        ),
+    )
+    retried_snapshot = ParseGateway.get_job_snapshot(retried.job_id)
+
+    assert retried.job_id != failed.job_id
+    assert retried_snapshot.previous_job_id == failed.job_id
+    assert retried_snapshot.attempt == 2
+    assert retried_snapshot.status == "succeeded"
+    assert retried_snapshot.metrics.block_count >= 1
+    assert retried_snapshot.metrics.warning_count == 0
+    assert retried_snapshot.adapter_boundary["current_runtime"] == "deterministic_local"
+
+
 def test_parse_gateway_reads_real_parser_golden_files() -> None:
     from pathlib import Path
 

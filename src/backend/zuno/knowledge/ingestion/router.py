@@ -19,6 +19,7 @@ PARSER_ADAPTER_CONTRACTS = {
         resource_budget={"cpu": "low", "memory_mb": 256},
         sandbox_policy="read_only_workspace_file",
         fallback_reason="native parser failed or unsupported encoding",
+        production_target="built-in deterministic parser",
     ),
     "docling_pymupdf": ParserAdapterContract(
         parser_id="docling_pymupdf",
@@ -28,6 +29,9 @@ PARSER_ADAPTER_CONTRACTS = {
         resource_budget={"cpu": "medium", "memory_mb": 1024},
         sandbox_policy="isolated_parse_worker",
         fallback_reason="layout parse failed or scanned content detected",
+        production_target="Docling / PyMuPDF parser worker",
+        external_dependency_status="target_blocked",
+        blocked_reason="production Docling / PyMuPDF worker is not deployed in this repository runtime",
     ),
     "mineru_ocr_vlm": ParserAdapterContract(
         parser_id="mineru_ocr_vlm",
@@ -37,6 +41,9 @@ PARSER_ADAPTER_CONTRACTS = {
         resource_budget={"cpu": "high", "memory_mb": 2048, "network": "deny"},
         sandbox_policy="ocr_vlm_sandbox_with_timeout",
         fallback_reason="OCR confidence below threshold or image unsupported",
+        production_target="MinerU OCR / VLM parser worker",
+        external_dependency_status="target_blocked",
+        blocked_reason="production OCR / VLM parser service and model runtime are not deployed locally",
     ),
     "unstructured_markitdown": ParserAdapterContract(
         parser_id="unstructured_markitdown",
@@ -46,6 +53,9 @@ PARSER_ADAPTER_CONTRACTS = {
         resource_budget={"cpu": "medium", "memory_mb": 1024},
         sandbox_policy="office_parse_sandbox",
         fallback_reason="office parser failed or structure unsupported",
+        production_target="Unstructured / MarkItDown parser worker",
+        external_dependency_status="target_blocked",
+        blocked_reason="production Unstructured / MarkItDown worker is not deployed in this repository runtime",
     ),
 }
 

@@ -4,7 +4,7 @@
 
 PHASE12 已完成 release closure；本目录继续跟随 `docs/architecture/architecture.md` 刷新 Agent 侧镜像和 HTML，不单独承载事实。PHASE02-PHASE11 的已验证 runtime / contract / UI 事实可以写入 Current；未实现的生产级 LangSmith、online eval、sandbox runtime、credential broker 和 production Desktop 闭环仍保持 Target。
 
-当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE07_production-parse-and-index-platform`。PHASE06 已关闭 Web / Desktop 共享 lifecycle、artifact 下载、recoverable failure 和 feedback / trace 串联；后续 phase closure evidence 以 `.agent/programs/PHASE*.md` 为准。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`；后续仍只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后，才把 Target 能力推进到 Current。生产成熟度边界由 `docs/architecture/production-readiness.md` 维护。
+当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE08_durable-agent-runtime-persistence`。PHASE07 已关闭本地 parser queue snapshot / retry、parser adapter target-blocked boundary、index adapter boundary 和 manifest provenance / ACL；后续 phase closure evidence 以 `.agent/programs/PHASE*.md` 为准。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`；后续仍只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后，才把 Target 能力推进到 Current。生产成熟度边界由 `docs/architecture/production-readiness.md` 维护。
 
 ## 当前前台
 

@@ -54,6 +54,46 @@ def test_index_runtime_builds_queryable_bm25_vector_and_graph_indexes() -> None:
     assert result.manifest.document_id == "doc_index"
 
 
+def test_index_runtime_exposes_adapter_contracts_with_external_targets_blocked() -> None:
+    from zuno.knowledge.indexing import INDEX_ADAPTER_CONTRACTS
+
+    assert INDEX_ADAPTER_CONTRACTS["local_bm25"].runtime_status == "current"
+    assert INDEX_ADAPTER_CONTRACTS["local_vector"].runtime_status == "current"
+    assert INDEX_ADAPTER_CONTRACTS["local_graph"].runtime_status == "current"
+    for adapter_id in ["elasticsearch", "milvus", "neo4j"]:
+        adapter = INDEX_ADAPTER_CONTRACTS[adapter_id]
+        assert adapter.runtime_status == "target_blocked"
+        assert adapter.external_service is True
+        assert adapter.blocked_reason
+
+
+def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+
+    document = _sample_document()
+    runtime = KnowledgeIndexRuntime()
+    runtime.create_knowledge_space(
+        knowledge_space_id="ks_manifest",
+        workspace_id="workspace_index",
+        graph_project_id="contract_review",
+    )
+    manifest = runtime.index_document(
+        knowledge_space_id="ks_manifest",
+        document=document,
+        targets=["bm25", "vector", "graph"],
+    )
+
+    assert manifest.source_provenance["parser_id"] == document.metadata.parser_id
+    assert manifest.source_provenance["source_uri"] == document.metadata.source_uri
+    assert manifest.acl_scopes == ["workspace"]
+    assert manifest.sensitivity_tags == ["internal"]
+    assert manifest.adapter_status == {
+        "bm25": "local_bm25:current",
+        "vector": "local_vector:current",
+        "graph": "local_graph:current",
+    }
+
+
 def test_index_runtime_records_failed_jobs_and_retry_replays_manifest() -> None:
     from zuno.knowledge.indexing import KnowledgeIndexRuntime
     from zuno.knowledge.ingestion import CanonicalDocumentIR, DocumentMetadata, DocumentProvenance

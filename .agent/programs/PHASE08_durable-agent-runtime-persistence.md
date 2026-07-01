@@ -1,6 +1,7 @@
 # PHASE08 Durable Agent Runtime Persistence
 
-status: pending
+status: active
+previous_phase: PHASE07_production-parse-and-index-platform
 
 ## 目标
 

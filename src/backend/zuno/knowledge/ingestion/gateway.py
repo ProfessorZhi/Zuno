@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import time
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 from uuid import uuid4
@@ -16,22 +17,33 @@ from .contracts import (
     DocumentTable,
     ParseDocumentRequest,
     ParseDocumentResult,
+    ParseJobSnapshot,
     ParserDiagnostic,
     ParserFailure,
+    ParserJobMetrics,
     SourceSpan,
 )
-from .router import build_index_handoff_payload, select_parser_for_format
+from .router import PARSER_ADAPTER_CONTRACTS, build_index_handoff_payload, select_parser_for_format
 
 
 class ParseGateway:
     """PHASE04 deterministic Parse Gateway runtime surface."""
 
     _jobs: dict[str, ParseDocumentResult] = {}
+    _job_snapshots: dict[str, ParseJobSnapshot] = {}
 
     @classmethod
     def submit_parse_job(cls, request: ParseDocumentRequest) -> ParseDocumentResult:
+        started = time.perf_counter()
         result = cls.parse_document(request)
         cls._jobs[result.job_id] = result
+        cls._job_snapshots[result.job_id] = cls._build_job_snapshot(
+            result=result,
+            request=request,
+            attempt=1,
+            previous_job_id=None,
+            duration_ms=(time.perf_counter() - started) * 1000,
+        )
         return result
 
     @classmethod
@@ -40,6 +52,28 @@ class ParseGateway:
             return cls._jobs[job_id]
         except KeyError as exc:
             raise KeyError(f"parse job not found: {job_id}") from exc
+
+    @classmethod
+    def get_job_snapshot(cls, job_id: str) -> ParseJobSnapshot:
+        try:
+            return cls._job_snapshots[job_id]
+        except KeyError as exc:
+            raise KeyError(f"parse job snapshot not found: {job_id}") from exc
+
+    @classmethod
+    def retry_parse_job(cls, job_id: str, request: ParseDocumentRequest) -> ParseDocumentResult:
+        previous = cls.get_job_snapshot(job_id)
+        started = time.perf_counter()
+        result = cls.parse_document(request)
+        cls._jobs[result.job_id] = result
+        cls._job_snapshots[result.job_id] = cls._build_job_snapshot(
+            result=result,
+            request=request,
+            attempt=previous.attempt + 1,
+            previous_job_id=previous.job_id,
+            duration_ms=(time.perf_counter() - started) * 1000,
+        )
+        return result
 
     @classmethod
     def parse_document(cls, request: ParseDocumentRequest) -> ParseDocumentResult:
@@ -129,6 +163,94 @@ class ParseGateway:
                 ),
                 diagnostics=diagnostics,
             )
+
+    @classmethod
+    def _build_job_snapshot(
+        cls,
+        *,
+        result: ParseDocumentResult,
+        request: ParseDocumentRequest,
+        attempt: int,
+        previous_job_id: str | None,
+        duration_ms: float,
+    ) -> ParseJobSnapshot:
+        capability = select_parser_for_format(request.source_uri or request.mime_type)
+        parser_id = cls._snapshot_parser_id(result, capability.default_parser)
+        error_count = sum(1 for diagnostic in result.diagnostics if diagnostic.severity == "error")
+        warning_count = sum(1 for diagnostic in result.diagnostics if diagnostic.severity == "warning")
+        document = result.document
+        adapter_contract = PARSER_ADAPTER_CONTRACTS.get(parser_id)
+        metrics = ParserJobMetrics(
+            block_count=len(document.blocks) if document else 0,
+            table_count=len(document.tables) if document else 0,
+            figure_count=len(document.figures) if document else 0,
+            warning_count=warning_count,
+            error_count=error_count,
+            duration_ms=round(duration_ms, 3),
+        )
+        status_timeline = [
+            {"status": "queued", "attempt": attempt},
+            {"status": "running", "attempt": attempt, "parser_id": parser_id},
+            {"status": result.status, "attempt": attempt},
+        ]
+        return ParseJobSnapshot(
+            job_id=result.job_id,
+            status=result.status,
+            document_id=request.document_id,
+            workspace_id=request.workspace_id,
+            source_uri=request.source_uri,
+            mime_type=request.mime_type,
+            parser_id=parser_id,
+            parser_format=capability.format,
+            attempt=attempt,
+            retryable=result.status == "failed",
+            previous_job_id=previous_job_id,
+            failure_reason=result.failure.reason if result.failure else None,
+            metrics=metrics,
+            source_provenance=cls._source_provenance(result, request, parser_id),
+            adapter_boundary=adapter_contract.model_dump() if adapter_contract else {},
+            status_timeline=status_timeline,
+        )
+
+    @staticmethod
+    def _snapshot_parser_id(result: ParseDocumentResult, fallback_parser_id: str) -> str:
+        if result.document is not None:
+            return result.document.metadata.parser_id
+        if result.failure is not None:
+            return result.failure.parser_id
+        return fallback_parser_id
+
+    @staticmethod
+    def _source_provenance(
+        result: ParseDocumentResult,
+        request: ParseDocumentRequest,
+        parser_id: str,
+    ) -> dict:
+        if result.document is not None:
+            metadata = result.document.metadata
+            return {
+                "document_id": metadata.document_id,
+                "workspace_id": metadata.workspace_id,
+                "source_uri": metadata.source_uri,
+                "mime_type": metadata.mime_type,
+                "hash": metadata.hash,
+                "parser_id": metadata.parser_id,
+                "parser_version": metadata.parser_version,
+                "acl_scope": metadata.acl_scope,
+                "sensitivity_tags": list(metadata.sensitivity_tags),
+                "confidence": result.document.provenance.confidence,
+            }
+        return {
+            "document_id": request.document_id,
+            "workspace_id": request.workspace_id,
+            "source_uri": request.source_uri,
+            "mime_type": request.mime_type,
+            "hash": request.hash,
+            "parser_id": parser_id,
+            "parser_version": request.parser_version,
+            "acl_scope": request.acl_scope,
+            "sensitivity_tags": list(request.sensitivity_tags),
+        }
 
     @staticmethod
     def _source_text(request: ParseDocumentRequest) -> str:

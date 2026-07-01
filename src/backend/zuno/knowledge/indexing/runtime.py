@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from zuno.knowledge.ingestion import CanonicalDocumentIR, build_index_handoff_payload
 
+from .adapters import adapter_status_for_targets
 from .contracts import IndexJobManifest, IndexQueryResult, IndexTarget, KnowledgeSpaceManifest
 
 
@@ -63,6 +64,10 @@ class KnowledgeIndexRuntime:
                 previous_job_id=previous_job_id,
                 graph_project_ref=space.graph_project_id,
                 source_block_ids=source_block_ids,
+                source_provenance=_source_provenance(document),
+                acl_scopes=_acl_scopes(document),
+                sensitivity_tags=_sensitivity_tags(document),
+                adapter_status=adapter_status_for_targets(list(targets)),
             )
             self._jobs[job_id] = manifest
             self._latest_job_by_space[knowledge_space_id] = job_id
@@ -95,6 +100,10 @@ class KnowledgeIndexRuntime:
             previous_job_id=previous_job_id,
             graph_project_ref=space.graph_project_id,
             source_block_ids=source_block_ids,
+            source_provenance=_source_provenance(document),
+            acl_scopes=_acl_scopes(document),
+            sensitivity_tags=_sensitivity_tags(document),
+            adapter_status=adapter_status_for_targets(list(targets)),
         )
         self._jobs[job_id] = manifest
         self._latest_job_by_space[knowledge_space_id] = job_id
@@ -210,6 +219,36 @@ def _document_payload(chunk_id: str, content: str, metadata: dict, source_type: 
         "source_type": source_type,
         "metadata": metadata,
     }
+
+
+def _source_provenance(document: CanonicalDocumentIR) -> dict:
+    return {
+        "document_id": document.metadata.document_id,
+        "workspace_id": document.metadata.workspace_id,
+        "source_uri": document.metadata.source_uri,
+        "mime_type": document.metadata.mime_type,
+        "hash": document.metadata.hash,
+        "parser_id": document.metadata.parser_id,
+        "parser_version": document.metadata.parser_version,
+        "confidence": document.provenance.confidence,
+        "warnings": list(document.provenance.warnings),
+    }
+
+
+def _acl_scopes(document: CanonicalDocumentIR) -> list[str]:
+    return sorted(
+        {
+            document.metadata.acl_scope,
+            *(block.acl_scope for block in document.blocks),
+        }
+    )
+
+
+def _sensitivity_tags(document: CanonicalDocumentIR) -> list[str]:
+    tags = set(document.metadata.sensitivity_tags)
+    for block in document.blocks:
+        tags.update(block.sensitivity_tags)
+    return sorted(tags)
 
 
 def _tokens(text: str) -> list[str]:

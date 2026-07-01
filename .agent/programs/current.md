@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE07_production-parse-and-index-platform
+current_phase: PHASE08_durable-agent-runtime-persistence
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE07_production-parse-and-index-platform
 
 ## 当前阶段
 
-- 当前 phase：`PHASE07_production-parse-and-index-platform`
-- 当前动作：把文档解析与索引从本地 deterministic runtime 推进到 parser queue、深度抽取和外部索引 adapter 边界。
-- 当前验收：PHASE07 只有在 parser queue / index job 有本地可测实现或明确外部 blocked evidence，并能追踪 Document IR、chunk、provenance、ACL、manifest 后才能关闭。
+- 当前 phase：`PHASE08_durable-agent-runtime-persistence`
+- 当前动作：把 Agent Runtime 推进到生产级 durable persistence：LangGraph-compatible persistence、进程重启恢复、approval wait/resume、cancel 和 exactly-once tool boundary。
+- 当前验收：PHASE08 只有在 durable state 可持久化并可恢复，approval wait/resume、cancel 有 focused tests，failure snapshot 能和 trace / task / artifact 关联后才能关闭。
 
 ## 最近完成基线
 

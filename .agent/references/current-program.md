@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE07_production-parse-and-index-platform
+current_phase: PHASE08_durable-agent-runtime-persistence
 
 `.agent/programs/` 当前保存 active program 的平铺执行计划：
 

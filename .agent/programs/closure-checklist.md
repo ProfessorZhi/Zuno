@@ -11,7 +11,7 @@ state: active
 - [x] PHASE04 documentation dedup architecture clarity
 - [x] PHASE05 repo ownership and compatibility retirement
 - [x] PHASE06 product surface desktop recovery loop
-- [ ] PHASE07 production parse and index platform
+- [x] PHASE07 production parse and index platform
 - [ ] PHASE08 durable agent runtime persistence
 - [ ] PHASE09 memory context production governance
 - [ ] PHASE10 tool sandbox vault network runtime
@@ -28,7 +28,7 @@ state: active
 ## 八类 runtime-first 交付物
 
 - [ ] 产品闭环。
-- [ ] 文档解析与索引。
+- [x] 文档解析与索引。
 - [ ] Agent Runtime。
 - [ ] Memory 与 Context。
 - [ ] Tool Control Plane 与 Sandbox。

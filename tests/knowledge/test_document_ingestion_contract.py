@@ -53,6 +53,18 @@ def test_parser_router_selects_default_and_fallback_contracts() -> None:
     assert select_parser_for_format("unknown.bin").fallback == "unstructured_markitdown"
 
 
+def test_parser_adapter_contracts_mark_external_engines_as_target_boundary() -> None:
+    from zuno.knowledge.ingestion import PARSER_ADAPTER_CONTRACTS
+
+    assert PARSER_ADAPTER_CONTRACTS["native"].external_dependency_status == "not_required"
+    for parser_id in ["docling_pymupdf", "mineru_ocr_vlm", "unstructured_markitdown"]:
+        contract = PARSER_ADAPTER_CONTRACTS[parser_id]
+        assert contract.current_runtime == "deterministic_local"
+        assert contract.external_dependency_status == "target_blocked"
+        assert contract.production_target
+        assert contract.blocked_reason
+
+
 def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
     from zuno.knowledge.ingestion import (
         CanonicalDocumentIR,

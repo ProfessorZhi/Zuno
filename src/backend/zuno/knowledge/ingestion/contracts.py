@@ -26,6 +26,10 @@ class ParserAdapterContract(BaseModel):
     resource_budget: dict[str, Any] = Field(default_factory=dict)
     sandbox_policy: str
     fallback_reason: str
+    current_runtime: Literal["deterministic_local", "external_service"] = "deterministic_local"
+    production_target: str | None = None
+    external_dependency_status: Literal["not_required", "target_blocked"] = "not_required"
+    blocked_reason: str | None = None
 
 
 class SourceSpan(BaseModel):
@@ -139,6 +143,34 @@ class ParseDocumentResult(BaseModel):
     index_handoff: IndexHandoffPayload | None = None
 
 
+class ParserJobMetrics(BaseModel):
+    block_count: int = 0
+    table_count: int = 0
+    figure_count: int = 0
+    warning_count: int = 0
+    error_count: int = 0
+    duration_ms: float = 0.0
+
+
+class ParseJobSnapshot(BaseModel):
+    job_id: str
+    status: Literal["queued", "running", "succeeded", "failed"]
+    document_id: str
+    workspace_id: str
+    source_uri: str
+    mime_type: str
+    parser_id: str
+    parser_format: str
+    attempt: int = 1
+    retryable: bool = False
+    previous_job_id: str | None = None
+    failure_reason: str | None = None
+    metrics: ParserJobMetrics = Field(default_factory=ParserJobMetrics)
+    source_provenance: dict[str, Any] = Field(default_factory=dict)
+    adapter_boundary: dict[str, Any] = Field(default_factory=dict)
+    status_timeline: list[dict[str, Any]] = Field(default_factory=list)
+
+
 __all__ = [
     "CanonicalDocumentIR",
     "DocumentBlock",
@@ -149,9 +181,11 @@ __all__ = [
     "IndexHandoffPayload",
     "ParseDocumentRequest",
     "ParseDocumentResult",
+    "ParseJobSnapshot",
     "ParserAdapterContract",
     "ParserCapability",
     "ParserDiagnostic",
     "ParserFailure",
+    "ParserJobMetrics",
     "SourceSpan",
 ]

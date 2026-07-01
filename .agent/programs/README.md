@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-production-architecture-and-deliverables-completion-v1`
-- Current phase: `PHASE07_production-parse-and-index-platform`
+- Current phase: `PHASE08_durable-agent-runtime-persistence`
 - 最近完成 program: `zuno-target-architecture-runtime-full-implementation-v1`
 - 最近完成归档位置: `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 

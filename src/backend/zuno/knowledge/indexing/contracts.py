@@ -1,11 +1,21 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 
 IndexTarget = Literal["bm25", "vector", "graph"]
+
+
+class IndexAdapterContract(BaseModel):
+    adapter_id: str
+    target: IndexTarget
+    engine: str
+    runtime_status: Literal["current", "target_blocked"]
+    external_service: bool = False
+    operations: list[str] = Field(default_factory=list)
+    blocked_reason: str | None = None
 
 
 class KnowledgeSpaceManifest(BaseModel):
@@ -31,6 +41,10 @@ class IndexJobManifest(BaseModel):
     previous_job_id: str | None = None
     graph_project_ref: str | None = None
     source_block_ids: list[str] = Field(default_factory=list)
+    source_provenance: dict[str, Any] = Field(default_factory=dict)
+    acl_scopes: list[str] = Field(default_factory=list)
+    sensitivity_tags: list[str] = Field(default_factory=list)
+    adapter_status: dict[str, str] = Field(default_factory=dict)
 
 
 class IndexQueryResult(BaseModel):
@@ -42,6 +56,7 @@ class IndexQueryResult(BaseModel):
 
 
 __all__ = [
+    "IndexAdapterContract",
     "IndexJobManifest",
     "IndexQueryResult",
     "IndexTarget",

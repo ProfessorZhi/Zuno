@@ -1,7 +1,9 @@
 # PHASE07 Production Parse and Index Platform
 
-status: active
+status: completed
 previous_phase: PHASE06_product-surface-desktop-recovery-loop
+completed_at: 2026-07-01
+next_phase: PHASE08_durable-agent-runtime-persistence
 
 ## 目标
 
@@ -76,6 +78,43 @@ python tools/scripts/verify_repo_structure.py
 - Document IR fixture。
 - index manifest 和 retrieval payload。
 - external adapter blocked/current 边界。
+
+## 完成证据
+
+- Parser adapter boundary：`ParserAdapterContract` 区分 `current_runtime = deterministic_local`、`production_target` 和 `external_dependency_status`；`native` 是 Current，Docling / PyMuPDF、MinerU OCR / VLM、Unstructured / MarkItDown 是 target-blocked production adapter 边界。
+- Parser queue/job：`ParseGateway.submit_parse_job()` 继续提供本地 deterministic parse，新增 `ParseJobSnapshot`，记录 queued / running / succeeded|failed timeline、attempt、retry lineage、metrics、failure reason、source provenance 和 adapter boundary；`retry_parse_job()` 可用同一 request contract 做本地 retry。
+- Document IR / provenance / ACL：现有 Canonical Document IR、source span、table、figure、code block、ACL、sensitivity tags 和 index handoff 继续由 golden fixtures 覆盖；PHASE07 增加 queue snapshot 对 source provenance 的运行时记录。
+- Index adapter boundary：`INDEX_ADAPTER_CONTRACTS` 区分 `local_bm25` / `local_vector` / `local_graph` Current 与 Elasticsearch / Milvus / Neo4j target-blocked external adapters。
+- Index manifest：`IndexJobManifest` 记录 source provenance、ACL scopes、sensitivity tags、adapter status、source block ids、retry lineage、graph project ref 和 retrieval payload。
+
+## 验证结果
+
+```powershell
+pytest -q tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovider
+# RED before implementation: 4 failed, 21 passed
+# GREEN after implementation: 25 passed
+
+pytest -q tests/knowledge tests/api/test_knowledge_api_contract.py tests/retrieval -p no:cacheprovider
+# baseline before implementation: 79 passed
+# after implementation: 83 passed
+
+python tools/agent/render_architecture.py --check
+git diff --check
+python tools/scripts/verify_repo_structure.py
+python tools/scripts/verify_docs_entrypoints.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+python .agent/scripts/verify_repo_hygiene.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-docs.ps1
+# passed
+```
+
+## Remaining Target
+
+- 真实生产 Docling / PyMuPDF、MinerU OCR / VLM、Unstructured / MarkItDown worker 仍是 Target；本 phase 只把 production adapter boundary、local fallback 和 blocked evidence 固定为 Current。
+- Elasticsearch / Milvus / Neo4j 仍是 target-blocked external adapters；Current 只包括本地 deterministic BM25 / vector / graph index runtime。
+- 深度 OCR / layout / table / code 抽取仍以现有 fixtures 和 deterministic extraction 证明边界，不声称已经具备生产级 OCR/VLM 或复杂版面平台。
 
 ## 停止条件
 
