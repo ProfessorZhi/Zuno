@@ -1,6 +1,7 @@
 # PHASE07 Program 2 Thread Prompts 与 Branch Plan
 
-status: planned
+status: completed
+completed_at: 2026-07-01
 program: zuno-production-document-ingestion-and-thread-foundation-v1
 
 ## 目标
@@ -83,6 +84,47 @@ pytest -q tests/repo/test_agent_system.py tests/agent_system/test_agent_guardrai
 - 每个线程 branch / allowed paths / focused tests 表。
 - 主线程合并计划。
 - workflow verifier 输出。
+
+## 关闭证据
+
+PHASE07 只准备 Program 2 多线程施工资产，不直接创建或控制真实 Codex UI 目标模式线程。当前工具不能证明新线程处于 Codex UI 目标模式，因此本阶段交付可投递提示词文件；真实线程启动需要用户在 UI 中手动确认，或下一轮明确改为挂机模式。
+
+四个 thread prompt 路径：
+
+- `.agent/programs/thread-prompts/THREAD_A_memory-context.md`
+- `.agent/programs/thread-prompts/THREAD_B_tool-sandbox.md`
+- `.agent/programs/thread-prompts/THREAD_C_security-governance.md`
+- `.agent/programs/thread-prompts/THREAD_D_graphrag-index.md`
+
+线程边界：
+
+| Thread | Branch | Suggested worktree | Allowed roots | Focused tests |
+| --- | --- | --- | --- | --- |
+| Memory / Context | `codex/zuno-p2-memory-context` | `F:\internship-work\resume&resume project\02_projects\Zuno-worktrees\p2-memory-context` | `src/backend/zuno/memory/**`, `src/backend/zuno/agent/context.py`, `src/backend/zuno/agent/post_turn.py` | `tests/agent/test_context_contracts.py`, `tests/agent/test_context_orchestrator.py`, `tests/agent/test_memory_layers.py`, `tests/agent/test_memory_layer_surfaces.py`, `tests/agent/test_generalagent_context_memory_runtime.py` |
+| Tool / Sandbox | `codex/zuno-p2-tool-sandbox` | `F:\internship-work\resume&resume project\02_projects\Zuno-worktrees\p2-tool-sandbox` | `src/backend/zuno/capability/**`, `src/backend/zuno/platform/security/**` | `tests/agent/test_capability_system.py`, `tests/agent/test_capability_registry.py`, `tests/security/**`, `tests/tools/**` |
+| Security / Governance | `codex/zuno-p2-security-governance` | `F:\internship-work\resume&resume project\02_projects\Zuno-worktrees\p2-security-governance` | `src/backend/zuno/platform/security/**`, `src/backend/zuno/platform/observability/**`, `tools/evals/zuno/**` 轻量安全指标配置 | `tests/security/**`, `tests/evals/**` |
+| GraphRAG / Index | `codex/zuno-p2-graphrag-index` | `F:\internship-work\resume&resume project\02_projects\Zuno-worktrees\p2-graphrag-index` | `src/backend/zuno/knowledge/**` | `tests/agent/test_knowledge_graphrag_runtime_contracts.py`, `tests/agent/test_agentic_retrieval_runtime.py`, `tests/graphrag/**`, `tests/retrieval/**` |
+
+主线程合并计划：
+
+1. 先审查 GraphRAG / Index，因为它消费 Program 1 的 index manifest、`citation_lineage` 和 evidence provenance，后续 Memory / Security 都依赖这些字段稳定。
+2. 再审查 Memory / Context，确保上下文压缩、memory write、semantic fallback、privacy delete 和 sensitive exclusion 不丢失 ACL、sensitivity、source lineage 和 dropped reason。
+3. 再审查 Tool / Sandbox，确认 approval、network、credential-ref-only 和 sandbox audit 不泄露 Program 1 文档 payload、source hash 或 parser diagnostics。
+4. 最后审查 Security / Governance，用 input / retrieval / tool / output gate 统一验证 ACL、sensitivity、prompt injection、cross-workspace leakage、redaction 和 unsupported claim policy。
+5. 共享文件 `AGENTS.md`、README、`docs/**`、`.agent/**`、verifier、workflow scripts 和跨线程架构结论由主线程统一收口；子线程如果必须修改这些路径，必须停止并返回证据。
+
+机器守门：
+
+- 新增 `tests/repo/test_agent_system.py::test_program2_thread_prompts_are_target_mode_ready_and_guarded`，检查四个 prompt 的文件名、目标模式声明、safety gate、Program 1 shared facts、allowed / forbidden paths、focused tests、stop conditions、commit / push evidence。
+- 新增 `.agent/scripts/verify_agent_system.py::verify_program_thread_prompts`，把同一规则纳入 Agent system verifier。
+
+验证结果：
+
+- `pytest -q tests/repo/test_agent_system.py::test_program2_thread_prompts_are_target_mode_ready_and_guarded -p no:cacheprovider`：先失败于 verifier 未纳入 `THREAD_PROMPT_FILES`，补 verifier 后通过，证明测试能抓住缺失守门。
+- `git diff --check`：通过；仅报告 Windows line ending warning。
+- `python .agent/scripts/verify_agent_system.py`：`Agent system verification passed.`
+- `powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1`：`Workflow verification passed.`
+- `pytest -q tests/repo/test_agent_system.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider`：`16 passed`。
 
 ## 停止条件
 

@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-production-document-ingestion-and-thread-foundation-v1`
-current_phase: `PHASE07_program2-thread-prompts-and-branch-plan.md`
+current_phase: `PHASE08_verification-doc-sync-and-closure.md`
 latest_completed_program: `zuno-production-architecture-and-deliverables-completion-v1`
 
 ## 总套件
@@ -57,9 +57,9 @@ Program 1 不是只做 parser adapter 清单；它要把企业知识库文档入
 6. `PHASE06_index-handoff-provenance-and-fixtures.md`
    - 已关闭：证明解析结果能进入 index manifest，并保留 source span、ACL、parser version、document_version_id、parse_job_id、parse_attempt_id、source_sha256、parser_config_hash 和 citation lineage。
 7. `PHASE07_program2-thread-prompts-and-branch-plan.md`
-   - 当前 phase。
-   - 生成 Program 2 四条子线程目标模式提示词：Memory / Tool / Security / GraphRAG。
+   - 已关闭：生成 Program 2 四条子线程目标模式提示词：Memory / Tool / Security / GraphRAG，并写清分支、worktree、允许范围、禁止范围、focused tests、停止条件和提交推送证据。
 8. `PHASE08_verification-doc-sync-and-closure.md`
+   - 当前 phase。
    - 运行验证、更新文档、归档 program，并把下一轮切到 Program 2 或 no-active。
 
 ### Program 1 验收

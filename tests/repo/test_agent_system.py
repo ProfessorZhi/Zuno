@@ -88,6 +88,12 @@ QUEUED_PROGRAM_FILES = [
     "PROGRAM03_agent-planning-integration.md",
     "PROGRAM04_enterprise-knowledge-eval-benchmark.md",
 ]
+THREAD_PROMPT_FILES = [
+    "THREAD_A_memory-context.md",
+    "THREAD_B_tool-sandbox.md",
+    "THREAD_C_security-governance.md",
+    "THREAD_D_graphrag-index.md",
+]
 
 
 def _current_phase_name(content: str) -> str | None:
@@ -236,7 +242,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phrase in [
         "state: active",
         f"active_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE07_program2-thread-prompts-and-branch-plan.md",
+        "current_phase: PHASE08_verification-doc-sync-and-closure.md",
         f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",
@@ -325,6 +331,59 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         phase_path = REPO_ROOT / MASTER_PROGRAM_ARCHIVE / phase
         assert phase_path.exists()
         assert "status: completed" in phase_path.read_text(encoding="utf-8")
+
+
+def test_program2_thread_prompts_are_target_mode_ready_and_guarded() -> None:
+    prompt_root = REPO_ROOT / ".agent/programs/thread-prompts"
+    prompt_files = sorted(path.name for path in prompt_root.glob("*.md"))
+    assert prompt_files == sorted(THREAD_PROMPT_FILES)
+
+    verifier = (REPO_ROOT / ".agent/scripts/verify_agent_system.py").read_text(
+        encoding="utf-8"
+    )
+    assert "THREAD_PROMPT_FILES" in verifier
+    assert "verify_program_thread_prompts" in verifier
+
+    required_phrases = [
+        "## UI Mode",
+        "Codex UI 目标模式",
+        "## Goal",
+        "## Safety Gate",
+        "git fetch --prune",
+        "git status --short --branch",
+        "git log --oneline -5 --decorate",
+        "## Program 1 Shared Facts",
+        "Document IR",
+        "citation_lineage",
+        "target-blocked",
+        "## Allowed Paths",
+        "## Forbidden Paths",
+        "## Focused Tests",
+        "## Stop Conditions",
+        "Commit hash",
+        "Push status",
+    ]
+    branch_by_file = {
+        "THREAD_A_memory-context.md": "codex/zuno-p2-memory-context",
+        "THREAD_B_tool-sandbox.md": "codex/zuno-p2-tool-sandbox",
+        "THREAD_C_security-governance.md": "codex/zuno-p2-security-governance",
+        "THREAD_D_graphrag-index.md": "codex/zuno-p2-graphrag-index",
+    }
+    ownership_by_file = {
+        "THREAD_A_memory-context.md": "src/backend/zuno/memory/**",
+        "THREAD_B_tool-sandbox.md": "src/backend/zuno/capability/**",
+        "THREAD_C_security-governance.md": "src/backend/zuno/platform/security/**",
+        "THREAD_D_graphrag-index.md": "src/backend/zuno/knowledge/**",
+    }
+    for file_name in THREAD_PROMPT_FILES:
+        text = (prompt_root / file_name).read_text(encoding="utf-8")
+        for phrase in required_phrases:
+            assert phrase in text
+        assert branch_by_file[file_name] in text
+        assert ownership_by_file[file_name] in text
+        assert "AGENTS.md" in text
+        assert "docs/**" in text
+        assert ".agent/**" in text
 
 
 def test_closure_checklist_keeps_self_maintenance_gate() -> None:

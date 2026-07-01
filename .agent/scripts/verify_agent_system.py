@@ -91,6 +91,12 @@ QUEUED_PROGRAM_FILES = [
     "PROGRAM03_agent-planning-integration.md",
     "PROGRAM04_enterprise-knowledge-eval-benchmark.md",
 ]
+THREAD_PROMPT_FILES = [
+    "THREAD_A_memory-context.md",
+    "THREAD_B_tool-sandbox.md",
+    "THREAD_C_security-governance.md",
+    "THREAD_D_graphrag-index.md",
+]
 
 
 def _current_phase_name(content: str) -> str | None:
@@ -419,7 +425,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE07_program2-thread-prompts-and-branch-plan.md",
+        "current_phase: PHASE08_verification-doc-sync-and-closure.md",
         f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",
@@ -546,6 +552,64 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     ]:
         if phrase not in current_reference:
             errors.append(f"current-program reference missing archived phrase: {phrase}")
+    return errors
+
+
+def verify_program_thread_prompts(repo_root: Path = REPO_ROOT) -> list[str]:
+    errors: list[str] = []
+    prompt_root = repo_root / ".agent/programs/thread-prompts"
+    prompt_files = sorted(path.name for path in prompt_root.glob("*.md")) if prompt_root.exists() else []
+    if prompt_files != sorted(THREAD_PROMPT_FILES):
+        errors.append(".agent/programs/thread-prompts files drifted: " + ", ".join(prompt_files))
+    required_phrases = [
+        "## UI Mode",
+        "Codex UI 目标模式",
+        "## Goal",
+        "## Safety Gate",
+        "git fetch --prune",
+        "git status --short --branch",
+        "git log --oneline -5 --decorate",
+        "## Program 1 Shared Facts",
+        "Document IR",
+        "citation_lineage",
+        "target-blocked",
+        "## Allowed Paths",
+        "## Forbidden Paths",
+        "## Focused Tests",
+        "## Stop Conditions",
+        "Commit hash",
+        "Push status",
+    ]
+    branch_by_file = {
+        "THREAD_A_memory-context.md": "codex/zuno-p2-memory-context",
+        "THREAD_B_tool-sandbox.md": "codex/zuno-p2-tool-sandbox",
+        "THREAD_C_security-governance.md": "codex/zuno-p2-security-governance",
+        "THREAD_D_graphrag-index.md": "codex/zuno-p2-graphrag-index",
+    }
+    ownership_by_file = {
+        "THREAD_A_memory-context.md": "src/backend/zuno/memory/**",
+        "THREAD_B_tool-sandbox.md": "src/backend/zuno/capability/**",
+        "THREAD_C_security-governance.md": "src/backend/zuno/platform/security/**",
+        "THREAD_D_graphrag-index.md": "src/backend/zuno/knowledge/**",
+    }
+    for file_name in THREAD_PROMPT_FILES:
+        prompt_path = prompt_root / file_name
+        if not prompt_path.exists():
+            errors.append(f"program thread prompt missing file: {file_name}")
+            continue
+        content = prompt_path.read_text(encoding="utf-8")
+        for phrase in required_phrases:
+            if phrase not in content:
+                errors.append(f"program thread prompt missing phrase {phrase}: {file_name}")
+        for phrase in [
+            branch_by_file[file_name],
+            ownership_by_file[file_name],
+            "AGENTS.md",
+            "docs/**",
+            ".agent/**",
+        ]:
+            if phrase not in content:
+                errors.append(f"program thread prompt missing boundary phrase {phrase}: {file_name}")
     return errors
 
 
@@ -679,6 +743,7 @@ def main() -> int:
     errors.extend(verify_workflow_rule_writeback_route())
     errors.extend(verify_templates_are_skeletons())
     errors.extend(verify_program_lifecycle_surfaces())
+    errors.extend(verify_program_thread_prompts())
     errors.extend(verify_workflow_change_log_entries())
     errors.extend(verify_workflow_update_policy_requires_classification_evidence())
     errors.extend(verify_phase_closure_template_self_maintenance_contract())

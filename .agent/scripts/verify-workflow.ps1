@@ -245,7 +245,7 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "current_phase: PHASE01_program-truth-source-and-parser-current-audit.md" -or $currentProgram -notmatch "latest_completed_program: zuno-production-architecture-and-deliverables-completion-v1") {
+if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "current_phase: PHASE08_verification-doc-sync-and-closure.md" -or $currentProgram -notmatch "latest_completed_program: zuno-production-architecture-and-deliverables-completion-v1") {
     $failures.Add("current-program.md must declare active Program 1 state and latest completed production architecture completion program")
 }
 if ($currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
