@@ -6,6 +6,13 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def _current_phase_name(content: str) -> str | None:
+    for line in content.splitlines():
+        if line.startswith("current_phase:"):
+            return line.split(":", 1)[1].strip().strip("`")
+    return None
+
+
 def test_readme_exposes_current_architecture_entrypoints() -> None:
     content = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
@@ -100,6 +107,10 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     agent_architecture = (
         REPO_ROOT / ".agent" / "architecture" / "architecture.md"
     ).read_text(encoding="utf-8")
+    current_phase = _current_phase_name(
+        (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
+    )
+    assert current_phase is not None
 
     assert docs_architecture == agent_architecture
     for phrase in [
@@ -113,7 +124,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
         "Tool Control Plane",
         "LangSmith-compatible Trace / Eval",
         "zuno-production-architecture-and-deliverables-completion-v1",
-        "PHASE02_program-truth-source-and-execution-system",
+        current_phase,
         "成熟目标架构和四大总交付物完成",
         "文档一致性规则",
         "架构图视图集",

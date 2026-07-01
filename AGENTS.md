@@ -181,7 +181,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE02_program-truth-source-and-execution-system`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。PHASE01 已完成生产成熟度差距审计，后续 phase 必须以 PHASE01 的 gap 表、owner map、external dependency matrix 和风险排序为 gate。四大总交付物是：工作流自洽与自我维护、文档系统清晰无冗余、文件夹和代码 ownership 清晰、架构功能完整实现；第四项展开为八类 runtime-first 交付物。
+当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE03_workflow-self-maintenance-automation`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。PHASE01 已完成生产成熟度差距审计，PHASE02 已冻结 program truth source 和 phase gate；后续 phase 必须以这些证据为 gate。四大总交付物是：工作流自洽与自我维护、文档系统清晰无冗余、文件夹和代码 ownership 清晰、架构功能完整实现；第四项展开为八类 runtime-first 交付物。
 
 最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。它把 Zuno 推进到目标架构第一版 runtime 闭环真实可跑，核心闭环是：上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback。
 
@@ -208,7 +208,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/PHASE11_production-graphrag-evidence-citation.md`
 - `.agent/programs/PHASE12_security-trace-eval-release-closure.md`
 
-最近完成的 `zuno-target-architecture-runtime-full-implementation-v1` 已归档。本轮已完成 PHASE01 生产成熟度差距审计，当前进入 PHASE02 冻结 program truth source 和执行系统；后续仍不得把 Target 伪装成 Current。
+最近完成的 `zuno-target-architecture-runtime-full-implementation-v1` 已归档。本轮已完成 PHASE01 生产成熟度差距审计和 PHASE02 program truth source / phase gate 收口，当前进入 PHASE03 workflow self-maintenance automation；后续仍不得把 Target 伪装成 Current。
 
 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 

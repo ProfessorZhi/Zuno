@@ -67,6 +67,30 @@ ACTIVE_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_PHASE_FILES,
 ]
 
+
+def _current_phase_name(content: str) -> str | None:
+    for line in content.splitlines():
+        if line.startswith("current_phase:"):
+            return line.split(":", 1)[1].strip().strip("`")
+    return None
+
+
+def _verify_active_phase_state(repo_root: Path, current: str) -> list[str]:
+    errors: list[str] = []
+    current_phase = _current_phase_name(current)
+    phase_stems = [Path(name).stem for name in ACTIVE_PROGRAM_PHASE_FILES]
+    if current_phase not in phase_stems:
+        errors.append(f"current_phase is not an active program phase: {current_phase}")
+        return errors
+
+    active_index = phase_stems.index(current_phase)
+    for index, phase_name in enumerate(ACTIVE_PROGRAM_PHASE_FILES):
+        phase_content = (repo_root / ".agent/programs" / phase_name).read_text(encoding="utf-8")
+        expected_status = "completed" if index < active_index else "active" if index == active_index else "pending"
+        if f"status: {expected_status}" not in phase_content:
+            errors.append(f"{phase_name} should have status: {expected_status}")
+    return errors
+
 REQUIRED_PATHS = [
     "AGENTS.md",
     "apps/web/AGENTS.md",
@@ -350,7 +374,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE02_program-truth-source-and-execution-system",
+        "current_phase:",
         ACTIVE_PROGRAM_NAME,
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
@@ -370,6 +394,16 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
     if active_phase_names != sorted(ACTIVE_PROGRAM_PHASE_FILES):
         errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
+    errors.extend(_verify_active_phase_state(repo_root, current))
+    current_phase = _current_phase_name(current)
+    if current_phase:
+        for label, content in [
+            (".agent/programs/README.md", readme),
+            (".agent/programs/implementation-roadmap.md", roadmap),
+            (".agent/references/current-program.md", current_reference),
+        ]:
+            if current_phase not in content:
+                errors.append(f"{label} missing current phase {current_phase}")
     for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
         phase_path = repo_root / ".agent/programs" / phase_name
         if not phase_path.exists():

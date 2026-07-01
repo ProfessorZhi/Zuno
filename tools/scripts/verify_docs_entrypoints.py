@@ -48,6 +48,13 @@ def _read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
+def _current_phase_name(content: str) -> str | None:
+    for line in content.splitlines():
+        if line.startswith("current_phase:"):
+            return line.split(":", 1)[1].strip().strip("`")
+    return None
+
+
 def _load_render_architecture_module():
     module_path = REPO_ROOT / "tools" / "agent" / "render_architecture.py"
     spec = importlib.util.spec_from_file_location("render_architecture", module_path)
@@ -141,6 +148,10 @@ def verify_entrypoint_text() -> list[str]:
     docs_architecture = _read("docs/architecture/architecture.md")
     agent_architecture = _read(".agent/architecture/architecture.md")
     production_readiness = _read("docs/architecture/production-readiness.md")
+    current_phase = _current_phase_name(_read(".agent/programs/current.md"))
+    if current_phase is None:
+        errors.append(".agent/programs/current.md missing current_phase")
+        current_phase = ""
 
     for phrase in [
         "./docs/architecture/architecture.md",
@@ -201,7 +212,7 @@ def verify_entrypoint_text() -> list[str]:
         "Document Ingestion",
         "Security / Governance",
         "zuno-production-architecture-and-deliverables-completion-v1",
-        "PHASE02_program-truth-source-and-execution-system",
+        current_phase,
         "成熟目标架构和四大总交付物完成",
         "zuno-target-architecture-runtime-full-implementation-v1",
         "PHASE09_agentic-retrieval-evidence-citation-runtime",

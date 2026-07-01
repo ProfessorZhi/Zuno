@@ -214,7 +214,7 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "current_phase: PHASE01_production-maturity-gap-audit") {
+if ($currentProgram -notmatch "zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "current_phase: PHASE\d\d_[A-Za-z0-9_-]+") {
     $failures.Add("current-program.md must declare active production architecture completion program")
 }
 if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/") {

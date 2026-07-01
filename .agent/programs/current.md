@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE02_program-truth-source-and-execution-system
+current_phase: PHASE03_workflow-self-maintenance-automation
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE02_program-truth-source-and-execution-system
 
 ## 当前阶段
 
-- 当前 phase：`PHASE02_program-truth-source-and-execution-system`
-- 当前动作：冻结 active program 真相源、phase gate、单线程挂机执行边界、verifier 期望和 commit/push 节奏。
-- 当前验收：PHASE02 只有在 active program 文件集、phase 顺序、共享文件 owner、verifier/test 覆盖和单线程执行规则都一致后才能关闭。
+- 当前 phase：`PHASE03_workflow-self-maintenance-automation`
+- 当前动作：把长期规则写回、program open/close、docs sync、history archive 和 verifier 更新做成自维护闭环。
+- 当前验收：PHASE03 只有在 workflow 更新规则有入口、模板、verifier 和 repo test 覆盖后才能关闭。
 
 ## 最近完成基线
 

@@ -171,6 +171,7 @@ skill_routes:
     verify:
       - "git diff --check"
       - "python tools/agent/render_architecture.py --check"
+      - "python tools/scripts/verify_docs_entrypoints.py"
       - "python tools/scripts/verify_repo_structure.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"

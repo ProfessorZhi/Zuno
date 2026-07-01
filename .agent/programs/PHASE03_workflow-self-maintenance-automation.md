@@ -1,6 +1,6 @@
 # PHASE03 Workflow Self Maintenance Automation
 
-status: pending
+status: active
 
 ## 目标
 

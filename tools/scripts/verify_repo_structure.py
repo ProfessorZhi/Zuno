@@ -69,6 +69,30 @@ ACTIVE_PROGRAM_FILES = [
     "closure-checklist.md",
     *ACTIVE_PROGRAM_PHASE_FILES,
 ]
+
+
+def _current_phase_name(content: str) -> str | None:
+    for line in content.splitlines():
+        if line.startswith("current_phase:"):
+            return line.split(":", 1)[1].strip().strip("`")
+    return None
+
+
+def _verify_active_phase_state(current: str) -> list[str]:
+    errors: list[str] = []
+    current_phase = _current_phase_name(current)
+    phase_stems = [Path(name).stem for name in ACTIVE_PROGRAM_PHASE_FILES]
+    if current_phase not in phase_stems:
+        errors.append(f"current_phase is not an active program phase: {current_phase}")
+        return errors
+
+    active_index = phase_stems.index(current_phase)
+    for index, phase_name in enumerate(ACTIVE_PROGRAM_PHASE_FILES):
+        phase_content = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
+        expected_status = "completed" if index < active_index else "active" if index == active_index else "pending"
+        if f"status: {expected_status}" not in phase_content:
+            errors.append(f"{phase_name} should have status: {expected_status}")
+    return errors
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
     "PHASE02_workflow-self-maintenance-system.md",
@@ -1186,7 +1210,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE02_program-truth-source-and-execution-system",
+        "current_phase:",
         ACTIVE_PROGRAM_NAME,
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
@@ -1223,6 +1247,17 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             ".agent/programs active phase files drifted: "
             + ", ".join(active_phase_names)
         )
+    current_program_text = current_path.read_text(encoding="utf-8")
+    errors.extend(_verify_active_phase_state(current_program_text))
+    current_phase = _current_phase_name(current_program_text)
+    if current_phase:
+        for label, content in [
+            (".agent/programs/README.md", readme_path.read_text(encoding="utf-8")),
+            (".agent/programs/implementation-roadmap.md", roadmap_path.read_text(encoding="utf-8")),
+            (".agent/references/current-program.md", current_program_reference.read_text(encoding="utf-8")),
+        ]:
+            if current_phase not in content:
+                errors.append(f"{label} missing current phase {current_phase}")
     for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
         phase_path = programs_root / phase_name
         if not phase_path.exists():

@@ -6,6 +6,13 @@ import shlex
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def _current_phase_name(content: str) -> str | None:
+    for line in content.splitlines():
+        if line.startswith("current_phase:"):
+            return line.split(":", 1)[1].strip().strip("`")
+    return None
+
+
 def test_gitignore_matches_current_local_only_boundary() -> None:
     content = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
 
@@ -47,9 +54,13 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "LangSmith-compatible Trace / Eval",
     ]:
         assert phrase in architecture
+    current_phase = _current_phase_name(current_program)
+    assert current_phase is not None
     assert "state: active" in current_program
     assert "active_program: zuno-production-architecture-and-deliverables-completion-v1" in current_program
-    assert "current_phase: PHASE01_production-maturity-gap-audit" in current_program
+    assert "current_phase:" in current_program
+    assert current_phase in readme
+    assert current_phase in architecture
     assert "一次性交付型成熟化 program" in current_program
     assert "zuno-target-architecture-runtime-full-implementation-v1" in current_program
     assert "docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/" in current_program

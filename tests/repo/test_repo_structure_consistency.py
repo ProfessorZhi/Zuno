@@ -79,6 +79,25 @@ ACTIVE_PROGRAM_FILES = [
 ]
 
 
+def _current_phase_name(content: str) -> str | None:
+    for line in content.splitlines():
+        if line.startswith("current_phase:"):
+            return line.split(":", 1)[1].strip().strip("`")
+    return None
+
+
+def _assert_active_phase_state(current: str) -> None:
+    current_phase = _current_phase_name(current)
+    phase_stems = [Path(name).stem for name in ACTIVE_PROGRAM_PHASE_FILES]
+    assert current_phase in phase_stems
+
+    active_index = phase_stems.index(current_phase)
+    for index, phase_name in enumerate(ACTIVE_PROGRAM_PHASE_FILES):
+        phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
+        expected_status = "completed" if index < active_index else "active" if index == active_index else "pending"
+        assert f"status: {expected_status}" in phase_text
+
+
 def test_required_current_paths_exist() -> None:
     required_paths = [
         "AGENTS.md",
@@ -1002,7 +1021,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         ACTIVE_PROGRAM_NAME,
         "state: active",
         f"active_program: {ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE02_program-truth-source-and-execution-system",
+        "current_phase:",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",
@@ -1019,6 +1038,11 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     ]:
         assert phrase in current + readme + roadmap + closure + current_reference + archive_text
     assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(ACTIVE_PROGRAM_PHASE_FILES)
+    _assert_active_phase_state(current)
+    current_phase = _current_phase_name(current)
+    assert current_phase in readme
+    assert current_phase in roadmap
+    assert current_phase in current_reference
     for phase in ACTIVE_PROGRAM_PHASE_FILES:
         phase_path = REPO_ROOT / ".agent/programs" / phase
         assert phase_path.exists()

@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE02_program-truth-source-and-execution-system
+current_phase: PHASE03_workflow-self-maintenance-automation
 
 `.agent/programs/` 当前保存 active program 的平铺执行计划：
 
