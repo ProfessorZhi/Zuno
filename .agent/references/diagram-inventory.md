@@ -88,7 +88,7 @@ README 首页只给出精简入口。完整十类视图保留在 `docs/architect
 
 - 图源改了但 HTML 没重新生成。
 - HTML 更新了但 `docs/architecture/architecture.md` 没变。
-- 新模式写进图但没写进 `target-architecture.md`。
+- 新模式写进图但没写进 `docs/architecture/architecture.md`。
 - 为了凑数量把理论映射图算成架构图。
 
 ## Debug Playbooks

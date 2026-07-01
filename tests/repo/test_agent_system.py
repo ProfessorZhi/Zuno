@@ -86,6 +86,7 @@ def test_agent_entrypoint_records_current_architecture_sync_and_work_modes() -> 
         "Single GeneralAgent",
         "## Program Closure 自维护审查",
         "如果用户提醒“以后注意”，不能只留在对话里",
+        "当前前台采用 runtime-first 口径",
     ]:
         assert phrase in agents
 
@@ -231,6 +232,7 @@ def test_system_yaml_tracks_current_architecture_docs_sync() -> None:
         "new_program_first_phase: \"PHASE01\"",
         "skill_routes:",
         "docs_sync:",
+        "docs/architecture/production-readiness.md",
         "verify:",
         ".agent/references/workflow.md",
         ".agent/references/architecture-docs-map.md",

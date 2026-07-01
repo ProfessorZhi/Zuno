@@ -6,7 +6,7 @@ tags:
   - zuno/architecture
   - zuno/agentic-rag
 status: target
-updated: 2026-06-30
+updated: 2026-07-01
 ---
 # Zuno 架构总文档
 
@@ -18,6 +18,7 @@ updated: 2026-06-30
 2. Zuno 的目标架构是什么。
 3. 下一阶段为什么落在企业私有知识库、多格式文档解析、评测观测和安全治理上。
 4. 哪些能力仍是 Target，不能写成 Current。
+5. 当前第一版 runtime slice 与 production-grade Target 的成熟度边界。
 
 图形化展示以 `docs/architecture/architecture.html` 为准；图源是 `docs/architecture/architecture.md`。Agent 侧维护镜像是 `.agent/architecture/architecture.md`，Agent 侧也保留同名 HTML 镜像。这四个 canonical paths 必须保持一致：
 
@@ -30,7 +31,7 @@ updated: 2026-06-30
 
 Zuno 的主叙事是 **本地优先的企业私有知识库与多功能 Agent 助手**，不是普通 RAG 问答 demo，也不是默认多 Agent 平台。
 
-当前仓库已经完成的是架构治理、文档系统、六层后端边界、`GeneralAgent` 单循环主线、Query Router foundation、Context / Memory foundation、ToolCard foundation、GraphRAG query contract、PHASE03 workspace product API / SSE runtime surface、PHASE04 Document Ingestion / Parse Gateway runtime surface、PHASE05 local deterministic index job runtime surface、PHASE06 controller-node durable runtime surface、PHASE07 snapshot / SQLModel-backed memory runtime surface、PHASE08 local deterministic Tool Control Plane runtime surface、Agentic Retrieval Router / Evidence / Citation contract、Security Governance contract、Trace / Eval foundation。
+当前仓库已经完成的是架构治理、文档系统、六层后端边界、`GeneralAgent` 单循环主线、Query Router foundation、Context / Memory foundation、ToolCard foundation、GraphRAG query contract、PHASE03 workspace product API / SSE runtime surface、PHASE04 Document Ingestion / Parse Gateway runtime surface、PHASE05 local deterministic index job runtime surface、PHASE06 controller-node durable runtime surface、PHASE07 snapshot / SQLModel-backed memory runtime surface、PHASE08 local deterministic Tool Control Plane runtime surface、PHASE09 Agentic Retrieval / Evidence / Citation runtime、PHASE10 Security / Observability / release eval runtime、PHASE11 Web workspace Agent 产品闭环，以及 PHASE12 release closure。
 
 仍然不能写成 Current 的能力包括：生产级 LangGraph runtime、成熟 Memory DB、完整 dynamic tool orchestration、生产级 Docling / MinerU / Unstructured parser platform、生产级 GraphRAG extraction / fusion / RRF / rerank / 外部 index platform、LangSmith 产品化评测、rootless/gVisor/Firecracker 安全沙箱、外部 vault / OAuth credential broker、生产级输出 DLP、完整前端 trace 面板和默认产品级多 Agent runtime。
 
@@ -73,6 +74,7 @@ Current 只写代码、测试和可复现结果已经证明的事实：
 - 当前 PHASE06 已提供 `zuno.agent.durable_runtime` controller-node 级 durable runtime surface，覆盖 checkpoint、approval interrupt、resume、cancel、recoverable / non-recoverable failure、store snapshot，并接入 workspace task runtime；它不是生产 LangGraph checkpointer，不是进程重启后的持久恢复，也不保证 exactly-once tool execution。
 - 当前 PHASE07 已提供 `zuno.memory.store.DatabaseMemoryStore`、`DurableMemoryStore`、`MemoryStoreSnapshot`、memory runtime SQLModel tables、governance ledger、sensitive exclusion、promotion、decay、consolidation、Context Pack include/exclude reasons，并让 `GeneralAgent` 通过 `MemoryEngine` 做 post-turn write / pre-context read；它不是生产级 semantic/vector Memory DB、后台 memory scheduler 或完整隐私治理平台。
 - 当前 PHASE08 已提供 `zuno.capability.runtime.ToolControlPlaneRuntime`、`ToolRuntimeRequest`、`InMemoryCredentialBroker`、`SandboxPolicyEnforcer` 和 default tool runtime，覆盖只读工具自动执行、高副作用工具 approval wait / approve 后执行、credential reference、sandbox context、audit trace、workspace task event stream 和最小前端审批卡；它不是 rootless / gVisor / Firecracker sandbox，不是外部 vault / OAuth broker，不是真实网络代理，也不是完整 MCP runtime governance。
+- 当前 PHASE09/10/11 已把 Agentic retrieval、citation-rich artifact、security / observability snapshot、release eval 和 Web workspace Agent UI 闭环接入第一版 runtime slice；它不是生产级 GraphRAG extraction / rerank、外部 trace sink、online eval 或 production Desktop 闭环。
 - 当前 Memory、Hooks、GraphRAG 和 Runtime Upgrade 仍有 foundation slice；Tool Control Plane 已有第一版本地 runtime surface，但不是成熟生产工具平台。
 - 当前 `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界，没有 active root-level `services/` 后端树。
 
@@ -1026,6 +1028,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 - `README.md`
 - `architecture.md`
+- `production-readiness.md`
 - `architecture.html`
 - `assets/`
 - `decisions/`
@@ -1045,6 +1048,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 - 改文字架构时，先改 `docs/architecture/architecture.md`，再运行 `python tools/agent/render_architecture.py --write` 同步 `.agent/architecture/architecture.md`。
 - 改图形架构时，先改 `docs/architecture/architecture.md` 中的 Mermaid 图源，再运行 `python tools/agent/render_architecture.py --write` 更新两个 `architecture.html`。
+- 改生产成熟度边界时，同步 `docs/architecture/production-readiness.md`、README、AGENTS、verifier 和 repo tests。
 - 不再新增 `current-architecture.md`、`target-architecture.md`、`roadmap.md` 这类拆分入口，除非先打开新的文档重组 program。
 - 高频变化的执行细节放进 `.agent/programs/`。
 - Agent 操作规则放进 `.agent/references/`。

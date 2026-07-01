@@ -26,7 +26,7 @@ Program 3 final alias surface closure 已完成。当前目标态要求 `src/bac
 ## Before Editing
 
 1. 读 `.agent/references/code-map.md` 的后端包根规则。
-2. 读 `docs/architecture/architecture.md` 和 `target-architecture.md`。
+2. 读 `docs/architecture/architecture.md` 和 `docs/architecture/production-readiness.md`。
 3. 搜索待移动路径的 imports、tests、scripts 和 docs references。
 4. 先加 focused guard，再移动或退休目录。
 

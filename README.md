@@ -17,10 +17,11 @@ Local-first Enterprise Private Knowledge Agent Workspace
 ## 5 分钟首读
 
 1. [总架构文档](./docs/architecture/architecture.md)：文字说明 Current / Target 边界、企业知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；同一文件也维护 Mermaid 图源。
-2. [架构 HTML](./docs/architecture/architecture.html)：图形化查看十类架构图，支持展开全屏查看。
-3. [公开演示证据](./docs/evidence/public-demo.md)：可公开引用的证据入口。
-4. [术语表](./docs/reference/terminology.md)：当前公开术语。
-5. [Agent 入口](./AGENTS.md)：Codex / Agent 执行任务前必须遵守的工作流契约。
+2. [Production Readiness Baseline](./docs/architecture/production-readiness.md)：明确第一版 runtime slice 与 production-grade Target 的边界。
+3. [架构 HTML](./docs/architecture/architecture.html)：图形化查看十类架构图，支持展开全屏查看。
+4. [公开演示证据](./docs/evidence/public-demo.md)：可公开引用的证据入口。
+5. [术语表](./docs/reference/terminology.md)：当前公开术语。
+6. [Agent 入口](./AGENTS.md)：Codex / Agent 执行任务前必须遵守的工作流契约。
 
 已归档的旧拆分架构文档在 `docs/history/architecture-surface-cleanup-2026-06-30/`，不再作为当前前台入口。
 
@@ -31,6 +32,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 - `src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。
 - 当前知识回答主线是 `Completion API -> CompletionService -> GeneralAgent single loop -> search_knowledge_base -> KnowledgeQueryService -> GraphRAGQueryService -> RetrievalPlanner / RetrievalOrchestrator -> Evidence / Citation / Trace -> GeneralAgent answer`。
 - 当前已有 Query Router、Context / Memory、ToolCard、GraphRAG、Evidence / Citation / Trace / Eval foundation。
+- 当前已有第一版 runtime-first vertical slice 和 Web workspace Agent 产品闭环。
 - 当前不是完整产品级 LangGraph runtime，不是生产级 Memory DB，不是成熟安全沙箱，也不是默认多 Agent runtime。
 - Phase 0-6 架构收口仍是已完成的历史事实。
 

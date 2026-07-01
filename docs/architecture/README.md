@@ -1,6 +1,6 @@
 # 架构文档
 
-`docs/architecture/` 是 Zuno 当前面向人的正式架构入口。这里保持少而精：一个充实的总架构 Markdown、一个由它生成的 HTML 展示页、正式附件和仍然生效的 ADR。
+`docs/architecture/` 是 Zuno 当前面向人的正式架构入口。这里保持少而精：一个充实的总架构 Markdown、一个生产成熟度基线、一个由 Markdown 生成的 HTML 展示页、正式附件和仍然生效的 ADR。
 
 PHASE12 已确认 PHASE02-PHASE11 的已验证事实写入总架构：目录 ownership、企业知识库产品闭环、Document IR、Single Controller runtime harness、MemoryEngine、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、`ZunoSpan` / release baseline contract，以及 Web 第一版产品闭环。生产级 LangSmith 写入、在线 eval、持久 trace store、真实 sandbox runtime 和 production Desktop 闭环仍是 Target。
 
@@ -12,6 +12,7 @@ PHASE12 已确认 PHASE02-PHASE11 的已验证事实写入总架构：目录 own
 docs/architecture/
   README.md
   architecture.md
+  production-readiness.md
   architecture.html
   repo-ownership-matrix.md
   assets/
@@ -21,11 +22,12 @@ docs/architecture/
 ## 阅读顺序
 
 1. `architecture.md`：总架构文档，正文详细说明 Current / Target 边界、企业私有知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；后半部分维护 Mermaid 图源。
-2. `architecture.html`：图形化展示页，适合快速看完整架构图，不替代 Markdown 正文。
-3. `repo-ownership-matrix.md`：PHASE02 的目录 ownership、compat/vendor 边界和 provider 分类事实表；它是代码布局治理的正式 Current 证据。
-4. `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，必须由 `tools/agent/render_architecture.py --write` 同步。
-5. `decisions/README.md`：仍影响当前主线的正式架构决策。
-6. `../evidence/public-demo.md`：公开证据入口。
+2. `production-readiness.md`：生产成熟度基线，明确第一版 runtime slice 与 production-grade Target 的边界。
+3. `architecture.html`：图形化展示页，适合快速看完整架构图，不替代 Markdown 正文。
+4. `repo-ownership-matrix.md`：PHASE02 的目录 ownership、compat/vendor 边界和 provider 分类事实表；它是代码布局治理的正式 Current 证据。
+5. `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，必须由 `tools/agent/render_architecture.py --write` 同步。
+6. `decisions/README.md`：仍影响当前主线的正式架构决策。
+7. `../evidence/public-demo.md`：公开证据入口。
 
 研究输入归档在 `docs/history/research/chatgpt-research-mode-artifacts/`。这些 PDF / Markdown 抽取版用于补充架构论证，不替代当前正式架构源。
 

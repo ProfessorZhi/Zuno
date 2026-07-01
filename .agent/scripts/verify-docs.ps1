@@ -6,12 +6,14 @@ Set-Location $root
 
 $required = @(
     "docs\architecture\README.md",
-    "docs\architecture\current-architecture.md",
-    "docs\architecture\target-architecture.md",
-    "docs\architecture\roadmap.md",
-    "docs\history\phases\README.md",
-    "docs\history\programs\zuno-target-architecture-migration-v1\README.md",
-    "docs\history\programs\official-graphrag-cleanup-v1\README.md"
+    "docs\architecture\architecture.md",
+    "docs\architecture\production-readiness.md",
+    "docs\architecture\architecture.html",
+    "docs\history\architecture-surface-cleanup-2026-06-30\docs-architecture\current-architecture.md",
+    "docs\history\architecture-surface-cleanup-2026-06-30\docs-architecture\target-architecture.md",
+    "docs\history\architecture-surface-cleanup-2026-06-30\docs-architecture\roadmap.md",
+    "docs\history\architecture-surface-cleanup-2026-06-30\docs-architecture\deliverables.md",
+    "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\closure-summary.md"
 )
 
 foreach ($path in $required) {
@@ -21,17 +23,21 @@ foreach ($path in $required) {
 }
 
 $index = Get-Content -LiteralPath "docs\architecture\README.md" -Raw
-if ($index -notmatch "zuno-target-architecture-migration-v1") {
-    throw "docs/architecture/README.md does not point to zuno-target-architecture-migration-v1"
+if ($index -notmatch "production-readiness.md") {
+    throw "docs/architecture/README.md does not point to production-readiness.md"
 }
-if ($index -notmatch "official-graphrag-cleanup-v1") {
-    throw "docs/architecture/README.md does not preserve official cleanup dependency"
+if ($index -notmatch "architecture.md") {
+    throw "docs/architecture/README.md does not point to architecture.md"
 }
-if ($index -notmatch "AGENTS.md") {
-    throw "docs/architecture/README.md does not describe AGENTS.md boundary"
+if ($index -notmatch "\.agent/architecture/architecture.md") {
+    throw "docs/architecture/README.md does not describe Agent architecture mirror"
 }
-if ($index -notmatch "\.agent/") {
-    throw "docs/architecture/README.md does not describe .agent boundary"
+
+$readiness = Get-Content -LiteralPath "docs\architecture\production-readiness.md" -Raw -Encoding UTF8
+$hasRuntimeSliceBoundary = $readiness -match "runtime-first vertical slice"
+$hasProductionTargetBoundary = $readiness -match "Production Target"
+if (-not $hasRuntimeSliceBoundary -or -not $hasProductionTargetBoundary) {
+    throw "production-readiness.md does not describe runtime slice and Production Target boundary"
 }
 
 Write-Host "Docs verification passed."

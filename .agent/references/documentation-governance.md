@@ -51,7 +51,7 @@ Zuno 最终不是单一 RAG Demo，而是代码、架构文档、Agent 工作流
 
 - 补充或修正文档治理规则。
 - 更新受影响 docs、HTML 生成器、图清单、模板和 verifier。
-- 在 `.agent/programs/current.md` 或 `implementation-roadmap.md` 记录当前状态。
+- 在 `.agent/programs/current.md` 记录当前状态；只有 active program 才在 `.agent/programs/` 平铺 roadmap 和 phase 文件。
 
 ## Forbidden Changes
 

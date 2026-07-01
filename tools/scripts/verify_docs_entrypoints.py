@@ -23,6 +23,7 @@ ARCHITECTURE_VIEW_CONTRACT = [
 ACTIVE_DOCS_ARCHITECTURE_FILES = {
     "README.md",
     "architecture.md",
+    "production-readiness.md",
     "architecture.html",
     "repo-ownership-matrix.md",
 }
@@ -66,6 +67,7 @@ def verify_front_path_shape() -> list[str]:
         "docs/README.md",
         "docs/architecture/README.md",
         "docs/architecture/architecture.md",
+        "docs/architecture/production-readiness.md",
         "docs/architecture/architecture.html",
         "docs/architecture/repo-ownership-matrix.md",
         ".agent/architecture/README.md",
@@ -138,9 +140,11 @@ def verify_entrypoint_text() -> list[str]:
     architecture_index = _read("docs/architecture/README.md")
     docs_architecture = _read("docs/architecture/architecture.md")
     agent_architecture = _read(".agent/architecture/architecture.md")
+    production_readiness = _read("docs/architecture/production-readiness.md")
 
     for phrase in [
         "./docs/architecture/architecture.md",
+        "./docs/architecture/production-readiness.md",
         "./docs/architecture/architecture.html",
         "GeneralAgent` single loop",
         "zuno-master-architecture-implementation-v1",
@@ -151,6 +155,7 @@ def verify_entrypoint_text() -> list[str]:
 
     for phrase in [
         "./architecture/architecture.md",
+        "./architecture/production-readiness.md",
         "./architecture/architecture.html",
         "./history/README.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/",
@@ -160,6 +165,7 @@ def verify_entrypoint_text() -> list[str]:
 
     for phrase in [
         "architecture.md",
+        "production-readiness.md",
         "architecture.html",
         "repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
@@ -204,6 +210,16 @@ def verify_entrypoint_text() -> list[str]:
 
     if docs_architecture != agent_architecture:
         errors.append(".agent/architecture/architecture.md must mirror docs/architecture/architecture.md exactly")
+
+    for phrase in [
+        "第一版 runtime-first vertical slice",
+        "Production Target",
+        "zuno-target-architecture-runtime-full-implementation-v1",
+        "zuno-eight-deliverables-full-realization-v1",
+        "不要恢复已退休的拆分架构文档",
+    ]:
+        if phrase not in production_readiness:
+            errors.append(f"docs/architecture/production-readiness.md missing phrase: {phrase}")
 
     return errors
 

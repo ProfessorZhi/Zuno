@@ -56,8 +56,8 @@ Agent 工作流入口：
 
 ## Before Editing
 
-1. 读 `docs/architecture/README.md`、`current-architecture.md`、`target-architecture.md`、`roadmap.md`。
-2. 架构任务先读 `docs/architecture/architecture.md` 和 `.agent/architecture/architecture.md`。
+1. 读 `docs/architecture/README.md`、`docs/architecture/architecture.md` 和 `docs/architecture/production-readiness.md`。
+2. 架构任务先读 `docs/architecture/architecture.md` 和 `.agent/architecture/architecture.md`；涉及成熟度判断时追加 `docs/architecture/production-readiness.md`。
 3. 读 `.agent/README.md`、`.agent/system.yaml`、`task-routing.md`、`workflow.md`。
 4. 判断修改属于 Current、Target、Program、Skill、Template、History 哪一类。
 5. 搜索同一术语的前台命中，避免只改一个入口。

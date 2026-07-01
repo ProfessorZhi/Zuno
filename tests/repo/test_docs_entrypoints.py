@@ -11,6 +11,7 @@ def test_readme_exposes_current_architecture_entrypoints() -> None:
 
     for phrase in [
         "./docs/architecture/architecture.md",
+        "./docs/architecture/production-readiness.md",
         "./docs/architecture/architecture.html",
         "./docs/evidence/public-demo.md",
         "Single Controller Agent 是目标架构角色",
@@ -33,6 +34,7 @@ def test_docs_architecture_front_path_is_small_and_synced() -> None:
     assert docs_files == {
         "README.md",
         "architecture.md",
+        "production-readiness.md",
         "architecture.html",
         "repo-ownership-matrix.md",
     }
@@ -57,6 +59,7 @@ def test_docs_front_path_readmes_explain_architecture_contract() -> None:
     for phrase in [
         "Zuno 文档入口",
         "./architecture/architecture.md",
+        "./architecture/production-readiness.md",
         "./architecture/architecture.html",
         "./evidence/public-demo.md",
         "./history/README.md",
@@ -67,6 +70,7 @@ def test_docs_front_path_readmes_explain_architecture_contract() -> None:
     for phrase in [
         "架构文档",
         "architecture.md",
+        "production-readiness.md",
         "architecture.html",
         "repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
@@ -90,6 +94,9 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     docs_architecture = (REPO_ROOT / "docs" / "architecture" / "architecture.md").read_text(
         encoding="utf-8"
     )
+    production_readiness = (
+        REPO_ROOT / "docs" / "architecture" / "production-readiness.md"
+    ).read_text(encoding="utf-8")
     agent_architecture = (
         REPO_ROOT / ".agent" / "architecture" / "architecture.md"
     ).read_text(encoding="utf-8")
@@ -111,6 +118,14 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     ]:
         assert phrase in docs_architecture
     assert docs_architecture.count("```mermaid") == 10
+    for phrase in [
+        "第一版 runtime-first vertical slice",
+        "Production Target",
+        "zuno-target-architecture-runtime-full-implementation-v1",
+        "zuno-eight-deliverables-full-realization-v1",
+        "不要恢复已退休的拆分架构文档",
+    ]:
+        assert phrase in production_readiness
 
 
 def test_architecture_surface_cleanup_archive_keeps_old_materials() -> None:
@@ -191,6 +206,7 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "verify_front_path_shape",
         "verify_no_retired_front_path_links",
         "docs/architecture/architecture.md",
+        "docs/architecture/production-readiness.md",
         "docs/architecture/repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",

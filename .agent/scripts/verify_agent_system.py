@@ -84,6 +84,7 @@ REQUIRED_PATHS = [
     ".agent/architecture/architecture.html",
     "docs/architecture/README.md",
     "docs/architecture/architecture.md",
+    "docs/architecture/production-readiness.md",
     "docs/architecture/architecture.html",
     "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
     "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",

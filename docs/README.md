@@ -6,15 +6,16 @@
 
 1. [仓库 README](../README.md)
 2. [总架构文档](./architecture/architecture.md)
-3. [架构 HTML](./architecture/architecture.html)
-4. [公开演示证据](./evidence/public-demo.md)
-5. [Eval Baseline](./evidence/eval-baselines.md)
-6. [术语表](./reference/terminology.md)
-7. [历史档案](./history/README.md)
+3. [Production Readiness Baseline](./architecture/production-readiness.md)
+4. [架构 HTML](./architecture/architecture.html)
+5. [公开演示证据](./evidence/public-demo.md)
+6. [Eval Baseline](./evidence/eval-baselines.md)
+7. [术语表](./reference/terminology.md)
+8. [历史档案](./history/README.md)
 
 ## 当前目录
 
-- [architecture/](./architecture/README.md)：当前总架构 Markdown、生成 HTML、正式 ADR 和附件。
+- [architecture/](./architecture/README.md)：当前总架构 Markdown、生产成熟度基线、生成 HTML、正式 ADR 和附件。
 - [evidence/](./evidence/README.md)：精选证据入口。
 - [reference/terminology.md](./reference/terminology.md)：仍然有效的公共术语。
 - [history/](./history/README.md)：历史档案，包含旧计划、旧规格、旧审计、旧 runbook 和被替换材料。
