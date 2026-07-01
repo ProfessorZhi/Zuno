@@ -453,6 +453,7 @@ ALLOWED_RESPONSIBILITY_SUBDIRS = {
         "graphrag",
         "knowledge",
         "legacy_guards",
+        "memory",
         "repo",
         "retrieval",
         "security",
@@ -1336,7 +1337,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE05_memory-context-engine.md",
+        "current_phase: PHASE06_capability-skill-tool-mcp-layer.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -1394,9 +1395,9 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {PROGRAM3_ACTIVE_NAME}" not in phase_content:
             errors.append(f"Program 3 active phase missing program id: {phase_name}")
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_"):
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_"):
             expected_status = "status: completed"
-        elif phase_name.startswith("PHASE05_"):
+        elif phase_name.startswith("PHASE06_"):
             expected_status = "status: active"
         else:
             expected_status = "status: pending"

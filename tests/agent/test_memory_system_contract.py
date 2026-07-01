@@ -7,11 +7,14 @@ def test_memory_taxonomy_defines_read_write_manage_boundaries() -> None:
     assert set(MEMORY_TAXONOMY) == {
         "raw_event_log",
         "working_memory",
+        "session_memory",
         "recent_window",
         "task_summary",
         "episodic_memory",
         "semantic_memory",
         "procedural_memory",
+        "reflexion_memory_candidate",
+        "governance_memory",
         "graph_memory_candidate",
         "model_context_pack",
     }
@@ -20,6 +23,8 @@ def test_memory_taxonomy_defines_read_write_manage_boundaries() -> None:
     assert MEMORY_TAXONOMY["raw_event_log"].can_enter_context is False
     assert MEMORY_TAXONOMY["task_summary"].can_enter_context is True
     assert MEMORY_TAXONOMY["semantic_memory"].requires_review is True
+    assert MEMORY_TAXONOMY["reflexion_memory_candidate"].storage_target == "review_queue"
+    assert MEMORY_TAXONOMY["governance_memory"].can_enter_context is False
     assert MEMORY_TAXONOMY["graph_memory_candidate"].storage_target == "review_queue"
     assert MEMORY_TAXONOMY["model_context_pack"].storage_target == "rendered_context"
 

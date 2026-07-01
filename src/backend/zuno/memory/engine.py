@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from zuno.agent.contracts import ContextPack, ReflexionLesson
 from zuno.memory.retrieval import (
     DeterministicSemanticMemoryAdapter,
     SemanticMemorySearchResult,
@@ -115,6 +116,12 @@ MEMORY_TAXONOMY = {
         can_enter_context=True,
         requires_review=False,
     ),
+    "session_memory": MemoryTaxonomyEntry(
+        category="session_memory",
+        storage_target="summary_store",
+        can_enter_context=True,
+        requires_review=False,
+    ),
     "recent_window": MemoryTaxonomyEntry(
         category="recent_window",
         storage_target="context_only",
@@ -144,6 +151,18 @@ MEMORY_TAXONOMY = {
         storage_target="searchable_store",
         can_enter_context=True,
         requires_review=True,
+    ),
+    "reflexion_memory_candidate": MemoryTaxonomyEntry(
+        category="reflexion_memory_candidate",
+        storage_target="review_queue",
+        can_enter_context=False,
+        requires_review=True,
+    ),
+    "governance_memory": MemoryTaxonomyEntry(
+        category="governance_memory",
+        storage_target="governance_ledger",
+        can_enter_context=False,
+        requires_review=False,
     ),
     "graph_memory_candidate": MemoryTaxonomyEntry(
         category="graph_memory_candidate",
@@ -622,6 +641,113 @@ class MemoryEngine:
             context_pack=context_pack,
         )
 
+    def build_context_pack(
+        self,
+        *,
+        scope: MemoryScope,
+        context_pack_id: str,
+        user_goal: str,
+        task_state: dict[str, Any],
+        selected_evidence: list[dict[str, Any]] | tuple[dict[str, Any], ...],
+        allowed_capabilities: list[str] | tuple[str, ...],
+        safety_policy: dict[str, Any],
+        output_contract: dict[str, Any],
+        budget_tokens: int,
+        task_id: str,
+        trace_id: str,
+        high_risk: bool = False,
+    ) -> dict[str, Any]:
+        rendered = self.render_context_pack(
+            scope=scope,
+            task_id=task_id,
+            trace_id=trace_id,
+            query=user_goal,
+            budget_tokens=budget_tokens,
+        )
+        evidence_items = [dict(item) for item in selected_evidence]
+        compression = self._compress_context(
+            scope=scope,
+            user_goal=user_goal,
+            rendered_context=rendered,
+            selected_evidence=evidence_items,
+            budget_tokens=budget_tokens,
+            high_risk=high_risk,
+        )
+        selected_memory_refs = [
+            item["item_id"]
+            for item in rendered["items"]
+            if str(item.get("item_id", "")).startswith("memory:")
+        ]
+        selected_evidence_refs = _unique_strings(
+            item.get("evidence_id")
+            or item.get("citation_ref")
+            or item.get("artifact_id")
+            or item.get("source_event_id")
+            for item in evidence_items
+        )
+        context_pack = ContextPack(
+            context_pack_id=context_pack_id,
+            user_goal=user_goal,
+            task_state=dict(task_state),
+            selected_memory_refs=selected_memory_refs,
+            selected_evidence_refs=selected_evidence_refs,
+            allowed_capabilities=list(allowed_capabilities),
+            safety_policy={
+                **dict(safety_policy),
+                "excluded_items": list(rendered["context_policy"]["excluded_items"]),
+            },
+            output_contract={**dict(output_contract), "compression": compression},
+            budget={
+                "budget_tokens": budget_tokens,
+                "estimated_tokens": compression["budget_policy"]["estimated_tokens"],
+                "within_budget": compression["budget_policy"]["within_budget"],
+            },
+        )
+        return {
+            "context_pack": context_pack.model_dump(mode="json"),
+            "items": rendered["items"],
+            "compression": compression,
+            "trace": rendered["trace"],
+        }
+
+    def submit_reflexion_lesson_candidate(
+        self,
+        *,
+        scope: MemoryScope,
+        lesson: ReflexionLesson,
+        retention_policy: RetentionPolicy,
+    ) -> MemoryCandidate:
+        source_event_ids = tuple(str(ref) for ref in lesson.evidence_refs if str(ref).strip())
+        if not source_event_ids:
+            raise ValueError("ReflexionLesson candidate requires evidence_refs")
+        candidate = MemoryCandidate(
+            candidate_id=f"reflexion:{lesson.lesson_id}",
+            scope=scope,
+            layer=MemoryLayer.PROCEDURAL,
+            content=lesson.lesson,
+            confidence=0.7,
+            source_event_ids=source_event_ids,
+            dedupe_key=f"reflexion:{scope.user_id}:{lesson.task_type}:{lesson.failure_type}:{lesson.lesson_id}",
+            retention_policy=retention_policy,
+            review_status=MemoryReviewStatus.PENDING,
+            requires_review=True,
+            metadata={
+                "memory_category": "reflexion_memory_candidate",
+                "reflexion_lesson": lesson.model_dump(mode="json"),
+                "failure_type": lesson.failure_type,
+                "trigger_condition": lesson.trigger_condition,
+            },
+        )
+        self.store.save_memory_candidate(candidate)
+        self._record_governance(
+            action="reflexion_lesson_candidate_created",
+            scope=scope,
+            source_event_ids=source_event_ids,
+            reason=lesson.failure_type,
+            metadata={"candidate_id": candidate.candidate_id, "lesson_id": lesson.lesson_id},
+        )
+        return candidate
+
     def render_context_pack(
         self,
         *,
@@ -704,6 +830,16 @@ class MemoryEngine:
         for index, result in enumerate(search_results):
             candidate = result.candidate
             item_id = f"memory:{candidate.candidate_id or index}"
+            exclusion_reason = self._memory_exclusion_reason(candidate)
+            if exclusion_reason:
+                excluded_items.append(
+                    {
+                        "item_id": item_id,
+                        "reason": exclusion_reason,
+                        "source_event_ids": list(candidate.source_event_ids),
+                    }
+                )
+                continue
             items.append(
                 {
                     "item_id": item_id,
@@ -723,13 +859,22 @@ class MemoryEngine:
                 else "approved_memory_fallback_no_query_match"
             )
 
+        excluded_item_ids = {
+            str(item.get("item_id"))
+            for item in excluded_items
+            if item.get("item_id")
+        }
         for candidate in self.store.memory_candidates(scope):
-            if candidate.review_status is MemoryReviewStatus.APPROVED:
+            reason = self._memory_exclusion_reason(candidate)
+            if not reason:
+                continue
+            item_id = f"memory:{candidate.candidate_id}"
+            if item_id in excluded_item_ids:
                 continue
             excluded_items.append(
                 {
-                    "item_id": f"memory:{candidate.candidate_id}",
-                    "reason": f"{candidate.review_status.value}_review",
+                    "item_id": item_id,
+                    "reason": reason,
                     "source_event_ids": list(candidate.source_event_ids),
                 }
             )
@@ -798,15 +943,151 @@ class MemoryEngine:
         return tuple(
             candidate
             for candidate in self.store.memory_candidates(scope)
-            if candidate.review_status is MemoryReviewStatus.APPROVED
-            and not self._sensitivity_tags(candidate.metadata).intersection(
-                self.memory_eval_policy.sensitive_tags_blocked
-            )
+            if self._memory_exclusion_reason(candidate) is None
         )
 
     @staticmethod
     def _sensitivity_tags(metadata: dict[str, Any]) -> set[str]:
         return {str(tag).lower() for tag in metadata.get("sensitivity_tags", [])}
+
+    def _compress_context(
+        self,
+        *,
+        scope: MemoryScope,
+        user_goal: str,
+        rendered_context: dict[str, Any],
+        selected_evidence: list[dict[str, Any]],
+        budget_tokens: int,
+        high_risk: bool,
+    ) -> dict[str, Any]:
+        raw_events = self.build_recent_window(scope=scope, limit=5)
+        task_summaries = self.store.task_summaries(scope)
+        structured_fields = {
+            "user_goal": user_goal,
+            "decisions": [],
+            "constraints": [],
+            "entities": [],
+            "open_issues": [],
+            "tool_results": [],
+            "evidence_refs": [],
+            "safety_notes": [],
+        }
+        for event in raw_events:
+            payload = event.payload
+            for field in [
+                "decisions",
+                "constraints",
+                "entities",
+                "open_issues",
+                "tool_results",
+                "safety_notes",
+            ]:
+                structured_fields[field].extend(_list_payload(payload.get(field)))
+        evidence_refs = _unique_strings(
+            item.get("evidence_id") or item.get("citation_ref") for item in selected_evidence
+        )
+        artifact_refs = _unique_strings(item.get("artifact_id") for item in selected_evidence)
+        source_event_ids = _unique_strings(
+            [
+                *(item.get("source_event_id") for item in selected_evidence),
+                *(
+                    event_id
+                    for item in rendered_context["items"]
+                    for event_id in item.get("source_event_ids", [])
+                ),
+            ]
+        )
+        structured_fields["evidence_refs"].extend(evidence_refs)
+        if high_risk and not (source_event_ids or evidence_refs or artifact_refs):
+            raise ValueError("high-risk summary requires source event, artifact, or evidence binding")
+        item_contents = [str(item.get("content") or "") for item in rendered_context["items"]]
+        evidence_contents = [str(item.get("content") or "") for item in selected_evidence]
+        estimated_tokens = sum(
+            max(1, len(content) // 4)
+            for content in [user_goal, *item_contents, *evidence_contents]
+            if content
+        )
+        return {
+            "strategy": "structured_extraction_hierarchical_evidence_bound_budget_aware",
+            "structured_fields": structured_fields,
+            "hierarchical_summary": {
+                "turn_summary": _first_nonempty(
+                    (event.payload.get("task") or event.payload.get("text")) for event in raw_events
+                )
+                or user_goal,
+                "task_summary": _first_nonempty(summary.content for summary in task_summaries)
+                or user_goal,
+                "session_summary": _first_nonempty(item_contents) or user_goal,
+                "workspace_or_project_summary": (
+                    f"{scope.project_id or 'workspace'} context pack includes "
+                    f"{len(rendered_context['items'])} memory items and {len(selected_evidence)} evidence items."
+                ),
+            },
+            "evidence_bound_summary": {
+                "summary": _first_nonempty(evidence_contents)
+                or _first_nonempty(item_contents)
+                or user_goal,
+                "source_event_ids": source_event_ids,
+                "evidence_refs": evidence_refs,
+                "artifact_refs": artifact_refs,
+                "high_risk": high_risk,
+            },
+            "budget_policy": {
+                "budget_tokens": budget_tokens,
+                "estimated_tokens": estimated_tokens,
+                "within_budget": estimated_tokens <= budget_tokens,
+                "packing_order": [
+                    "safety_policy",
+                    "user_goal",
+                    "task_state",
+                    "selected_evidence",
+                    "selected_memory",
+                    "tool_and_capability_state",
+                    "output_contract",
+                ],
+            },
+        }
+
+    def _memory_exclusion_reason(self, candidate: MemoryCandidate) -> str | None:
+        if candidate.review_status is not MemoryReviewStatus.APPROVED:
+            return f"{candidate.review_status.value}_review"
+        memory_state = str(candidate.metadata.get("memory_state") or "").lower()
+        if memory_state in {"stale", "conflict", "revoked"}:
+            return f"{memory_state}_memory_excluded"
+        if self._sensitivity_tags(candidate.metadata).intersection(
+            self.memory_eval_policy.sensitive_tags_blocked
+        ):
+            return "sensitive_memory_excluded"
+        return None
+
+
+def _list_payload(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple, set)):
+        return [str(item) for item in value if str(item).strip()]
+    text = str(value).strip()
+    return [text] if text else []
+
+
+def _first_nonempty(values: Any) -> str:
+    for value in values:
+        text = str(value or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def _unique_strings(values: Any) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        text = str(value or "").strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        result.append(text)
+    return result
 
 
 __all__ = [

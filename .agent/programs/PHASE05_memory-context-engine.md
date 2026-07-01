@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE05_memory-context-engine
-status: active
+status: completed
 
 ## 目标
 
@@ -169,6 +169,18 @@ pytest -q tests/agent -p no:cacheprovider
 - memory selection reason。
 - sensitive exclusion evidence。
 - ReflexionLesson candidate review evidence。
+
+## Closure Evidence
+
+- Runtime files：`src/backend/zuno/memory/engine.py`、`src/backend/zuno/agent/contracts.py`。
+- Memory taxonomy：PHASE05 明确 Working、Session、Episodic、Semantic、Procedural、Reflexion candidate 和 Governance memory；仍复用本地 durable store / deterministic semantic fallback，不接入生产外部 memory DB。
+- ContextPack builder：`MemoryEngine.build_context_pack()` 输出 PHASE02 `ContextPack` contract，并携带 selected memory refs、selected evidence refs、allowed capabilities、safety policy、output contract 和 budget。
+- Compression：本地 deterministic compression 输出 `structured_fields`、`hierarchical_summary`、`evidence_bound_summary` 和 budget-aware packing policy。
+- Evidence-bound summary：high-risk context pack 没有 source event、artifact 或 evidence binding 时抛出错误，不允许高风险无证据总结进入上下文。
+- Exclusion：stale / conflict / revoked / sensitive approved memories 不进入 ContextPack，且在 `safety_policy.excluded_items` 中保留 reason；敏感原文不写入 prompt items。
+- Reflexion review path：`submit_reflexion_lesson_candidate()` 把 ReflexionLesson 保存为 pending procedural candidate，进入 review path，不直接进入长期可用 memory。
+- Focused tests：`pytest -q tests/memory -p no:cacheprovider` 通过，`4 passed`。
+- Regression tests：`pytest -q tests/agent/test_generalagent_context_memory_runtime.py -p no:cacheprovider` 通过，`7 passed`；`pytest -q tests/agent -p no:cacheprovider` 通过，`171 passed`。
 
 ## 停止条件
 

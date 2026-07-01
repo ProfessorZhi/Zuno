@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE05_memory-context-engine.md`
+current_phase: `PHASE06_capability-skill-tool-mcp-layer.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 收口目标
@@ -22,7 +22,7 @@ Production scale external deployments remain replaceable targets.
 - [x] PHASE02 完成 shared contract freeze，且明确冻结 FileInputFormat、SourceObject、BinarySourceObject、ObjectStoreRef、ObjectStoreResult、ParserCapabilityStatus、ParserDependencyProbe、ParserWorkerSpec、ParserWorkerResult、ParseJobStatus、ParseAttempt、IndexWorkerSpec、IndexWorkerResult、QueueMessage、QueueBackendResult、OutboxEvent、DeadLetterRecord、ReconcilerFinding、OCRVLMEnrichmentResult、KnowledgeSpaceConfig、FileIngestionStatus、ChangeImpactPreview、CapabilityPolicy / RiskProfile / AuditEvent、ConversationRunMetrics、StageMetrics、IngestionMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport、ScenarioSummary 和 TraceSummary。
 - [x] PHASE03 完成 enterprise ingestion async infrastructure baseline，并覆盖 PDF / Office / image / scanned / binary target-blocked visibility、binary ObjectStore、file lifecycle、outbox、dead letter 和 reconciler。
 - [x] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
-- [ ] PHASE05 完成 Memory & Context Engine baseline。
+- [x] PHASE05 完成 Memory & Context Engine baseline。
 - [ ] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。
 - [ ] PHASE07 完成 Security / Governance envelope baseline。
 - [ ] PHASE08 完成 Model Gateway / Cost / Latency baseline。
@@ -43,7 +43,7 @@ Production scale external deployments remain replaceable targets.
 - [x] Knowledge retrieval 支持标准检索 / 深度检索 profile。
 - [ ] Agentic Retrieval Planner 能按 profile、证据、预算选择 BM25 / vector / GraphRAG / requery / rerank。
 - [ ] Capability Layer 有 Skill / Knowledge / Tool / MCP / Artifact capability registry contract。
-- [ ] Memory & Context Engine 有多重记忆和 ContextPack contract，并有最小 runtime / focused tests。
+- [x] Memory & Context Engine 有多重记忆和 ContextPack contract，并有最小 runtime / focused tests。
 - [ ] Planning & Control Runtime 有 StrategySelector、PlanStep、Reflection、Dynamic Replan、ReflexionLesson candidate。
 - [ ] Security gates 覆盖 input / retrieval / tool / output，至少有 prompt injection、ACL、tool approval、output citation safety tests。
 - [ ] Eval / Trace / Cost 能记录 latency、tokens / cost estimate、retrieval rounds、citation coverage、unsupported claim、plan / replan / reflection events。
@@ -69,7 +69,7 @@ Production scale external deployments remain replaceable targets.
 - [ ] Input / Async Infrastructure 的 source object、parse job、document version、index manifest 和 citation lineage 能被 Knowledge Retrieval 消费。
 - [ ] Input / Async Infrastructure 的 file status timeline、dependency probe、blocked reason、worker event、index status 和 binary source object refs 能被 Product API、E2E 和 Eval 消费。
 - [ ] Knowledge Retrieval 输出的 EvidenceBundle / CitationLineage 能被 Planning、Reflection、Output Gate 和 Eval 共同消费。
-- [ ] Memory & Context Engine 输出的 ContextPack 能被 Strategy Selector 消费，且 sensitive exclusion 已生效。
+- [x] Memory & Context Engine 输出的 ContextPack 能被 Strategy Selector 消费，且 sensitive exclusion 已生效。
 - [ ] Capability Layer 的 SkillCard / ToolCard / MCPCapability 能被 Planner 选择，并受 Tool Gate 约束。
 - [ ] Security / Governance 的 Input / Retrieval / Tool / Output gates 能影响 plan / replan / refuse / ask_user。
 - [ ] Model Gateway 的 token / latency / cost metrics 能进入 trace，并影响 budget guard。
