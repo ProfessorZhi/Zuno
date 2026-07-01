@@ -23,6 +23,7 @@ docs/history/ = archive and evidence
 - `docs/README.md`：文档入口。
 - `docs/architecture/architecture.md`：总架构文档，文字说明当前事实、目标分层、主链路和实施落点。
 - `docs/architecture/production-readiness.md`：成熟度、四大总交付物和 runtime-first Production Target 边界。
+- `docs/architecture/document-ingestion-foundation.md`：企业知识库文档入口契约，集中说明 ParseGateway、Document IR、parser job、index handoff、幂等、版本、防丢、ACL、citation lineage 和多模态解析边界。
 - `docs/architecture/repo-ownership-matrix.md`：代码目录 ownership、compatibility、vendor 和 provider 分类事实表。
 - `docs/evidence/public-demo.md`：精选公开证据入口。
 - `docs/evidence/eval-baselines.md`：Eval baseline 状态。
@@ -137,6 +138,7 @@ pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p
 - `docs/architecture/README.md`
 - `docs/architecture/architecture.md`
 - `docs/architecture/production-readiness.md`
+- `docs/architecture/document-ingestion-foundation.md`
 - `docs/architecture/architecture.html`
 - `.agent/architecture/README.md`
 - `.agent/architecture/architecture.md`

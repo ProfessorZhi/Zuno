@@ -51,10 +51,11 @@ docs/history/
 
 ## Architecture Documentation Governance
 
-Zuno 的架构文档由 `docs/architecture/architecture.md`、`docs/architecture/architecture.html`、`.agent/architecture/architecture.md`、`.agent/architecture/architecture.html` 和 `.agent/references/` 共同治理。
+Zuno 的架构文档由 `docs/architecture/architecture.md`、`docs/architecture/production-readiness.md`、`docs/architecture/document-ingestion-foundation.md`、`docs/architecture/architecture.html`、`.agent/architecture/architecture.md`、`.agent/architecture/architecture.html` 和 `.agent/references/` 共同治理。
 
 - `docs/architecture/` 是人类可读的正式架构说明，也是 public architecture source。
 - `docs/architecture/architecture.md` 是正式总架构文档，用自然语言说清当前事实、目标分层、主链路、企业私有知识库场景、文档解析、Memory、Tool、RAG / GraphRAG、安全、评测和实施落点；同一文件后半部分维护十类 Mermaid 架构视图。
+- `docs/architecture/document-ingestion-foundation.md` 是企业知识库文档入口契约，集中说明 workspace file、ParseGateway、Document IR、parser job、index handoff、幂等、版本、防丢、ACL、citation lineage 和多模态解析边界。
 - `docs/` 应少而精，保留相对稳定、面向人的正式结论；不要把高频变化的执行细节、图清单、workflow change log 或 Agent 操作规则塞进 `docs/`。
 - `docs/architecture/architecture.html` 是正式架构 HTML 展示页，不是唯一事实来源；它必须由 `docs/architecture/architecture.md` 和 `tools/agent/render_architecture.py` 生成。
 - `.agent/architecture/architecture.md` 是 Agent 侧总架构镜像，必须与 `docs/architecture/architecture.md` 完全一致。
@@ -68,14 +69,15 @@ Zuno 的架构文档由 `docs/architecture/architecture.md`、`docs/architecture
 
 1. `docs/architecture/architecture.md`
 2. `docs/architecture/architecture.html`
-3. `.agent/architecture/architecture.md`
-4. `.agent/architecture/architecture.html`
-5. `docs/architecture/README.md`
-6. `.agent/architecture/README.md`
-7. `.agent/references/*`
-8. `.agent/templates/*`
-9. `.agent/programs/current.md`，有 active program 时还要检查对应 roadmap；no-active 时检查最近归档 program 的 roadmap
-10. `README.md` 中的架构摘要
+3. `docs/architecture/document-ingestion-foundation.md`
+4. `.agent/architecture/architecture.md`
+5. `.agent/architecture/architecture.html`
+6. `docs/architecture/README.md`
+7. `.agent/architecture/README.md`
+8. `.agent/references/*`
+9. `.agent/templates/*`
+10. `.agent/programs/current.md`，有 active program 时还要检查对应 roadmap；no-active 时检查最近归档 program 的 roadmap
+11. `README.md` 中的架构摘要
 
 架构结论必须区分 Current、Target、Future、History。Current 只写代码、测试和可复现结果已经证明的事实；Target 是近期目标；Future 是长期方向；History 是完成、过时或被替换的方案。禁止把 Target 或 Future 写成 Current。
 
@@ -187,7 +189,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 上一轮 runtime-first program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。runtime-first closure evidence 保留在归档目录；AGENTS.md 不重复闭环链路细节。
 
-当前前台采用 runtime-first 口径。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；当前没有 active phase，已完成证据以 completed program 归档和 closure summary 为准。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
+当前前台采用 runtime-first 口径。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；当前 active phase 是 Program 1 的 `PHASE01_program-truth-source-and-parser-current-audit.md`，已完成证据仍以 completed program 归档和 closure summary 为准。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
 
 上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`。`zuno-eight-deliverables-full-realization-v1` 是八类治理交付物闭环的历史完成事实，不是当前前台 runtime deliverables 口径。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。更多历史归档见 `docs/history/programs/README.md`。
 

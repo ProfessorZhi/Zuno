@@ -16,6 +16,7 @@ program: zuno-production-document-ingestion-and-thread-foundation-v1
   - Security / Governance
   - GraphRAG / Index
 - 写清每个线程的 branch、worktree、allowed paths、forbidden paths、verification gates、commit / push 要求。
+- 每个提示词都必须把 Program 1 的 ingestion lineage 作为共享输入事实：Document IR、document version、ACL / sensitivity、parse job、index manifest 和 citation provenance。
 - 写清主线程 coordinator 的合并顺序和冲突处理规则。
 
 ## 禁止范围
@@ -30,6 +31,7 @@ program: zuno-production-document-ingestion-and-thread-foundation-v1
 - 每个 thread prompt 都能独立交给目标模式线程执行。
 - 每个 prompt 都声明 worktree / branch safety gate。
 - 每个 prompt 都包含 allowed paths、forbidden paths、focused tests、stop conditions、commit / push evidence。
+- Memory / Tool / Security / GraphRAG 四个 prompt 都必须说明自己如何消费或保护 Program 1 的 Document IR / index manifest / ACL / citation lineage。
 - 主线程合并计划能说明共享文件由谁收口。
 
 ## 验证命令
@@ -46,6 +48,7 @@ pytest -q tests/repo/test_agent_system.py tests/agent_system/test_agent_guardrai
 - `.agent/references/workflow.md`
 - `.agent/system.yaml`
 - `.agent/templates/target-mode-prompt.md`
+- `docs/architecture/document-ingestion-foundation.md`
 - `.agent/programs/queued-programs/PROGRAM02_runtime-subsystems-parallel.md`
 - PHASE01-PHASE06 closure evidence
 
@@ -62,11 +65,12 @@ pytest -q tests/repo/test_agent_system.py tests/agent_system/test_agent_guardrai
 
 1. 读取 Program 2 queued plan。
 2. 为每个线程写目标、背景、allowed paths、forbidden paths。
-3. 为每个线程写 safety gate：`git fetch --prune`、`git status --short --branch`、`git log --oneline -5 --decorate`。
-4. 为每个线程写 focused tests。
-5. 写主线程合并顺序：GraphRAG / Index、Memory / Context、Tool / Sandbox、Security / Governance，最后统一 docs / verifier。
-6. 明确如果无法创建真实 UI 目标模式线程，则只报告提示词路径，等待用户手动打开。
-7. 运行 docs / workflow verifier。
+3. 把 Program 1 的 Document IR / parse lineage / index manifest / ACL / citation provenance 写成每个线程的输入约束。
+4. 为每个线程写 safety gate：`git fetch --prune`、`git status --short --branch`、`git log --oneline -5 --decorate`。
+5. 为每个线程写 focused tests。
+6. 写主线程合并顺序：GraphRAG / Index、Memory / Context、Tool / Sandbox、Security / Governance，最后统一 docs / verifier。
+7. 明确如果无法创建真实 UI 目标模式线程，则只报告提示词路径，等待用户手动打开。
+8. 运行 docs / workflow verifier。
 
 ## 多 agent 分工
 

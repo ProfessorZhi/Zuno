@@ -34,21 +34,28 @@ Program ID：`zuno-production-document-ingestion-and-thread-foundation-v1`
 
 目标：把文档解析层从本地 deterministic baseline 推进到可继续 productionize 的 parser worker / Document IR / index handoff 基线，并准备 Program 2 多线程执行资产。
 
+正式架构契约：
+
+- `docs/architecture/document-ingestion-foundation.md`
+
+Program 1 不是只做 parser adapter 清单；它要把企业知识库文档入口的 local runtime slice 和 production Target 边界讲清楚。近期闭环是 `workspace file -> ParseGateway -> CanonicalDocumentIR -> index handoff -> IndexJobManifest -> retrieval / citation provenance`。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index 和 reconciler 只写为 Target，不能写成 Current。
+
 ### Phase 顺序
 
 1. `PHASE01_program-truth-source-and-parser-current-audit.md`
    - 确认 worktree、branch、status、Current / Target 边界。
    - 审计当前 parser registry、Document IR、fixtures、index handoff 和 tests。
+   - 审计 workspace ingest 是否仍绕过 `ParseGateway`，并记录 `_document_from_file()` / `workspace_text_runtime` gap。
 2. `PHASE02_document-ir-and-parser-contract-freeze.md`
-   - 冻结 parser capability matrix、adapter contract、Document IR 字段和 target-blocked 表达。
+   - 冻结 parser capability matrix、adapter contract、Document IR 字段、document version、source hash、parser config hash、schema version 和 target-blocked 表达。
 3. `PHASE03_parser-worker-runtime-and-job-lifecycle.md`
-   - 实现本地 parser worker 抽象、job state、retry、metrics、snapshot 和 idempotency。
+   - 实现本地 parser worker 抽象、job state、retry、metrics、snapshot、idempotency、blocked / failed / dead-letter 语义，并把 outbox / lease / reconciler 保留为 Target。
 4. `PHASE04_native-text-and-structured-file-parsers.md`
-   - 强化 `txt/md/csv/json/html/code` 等 native parser，让结构化输出可测试。
+   - 强化 `txt/md/csv/json/html/code` 等 native parser，让 heading、table cell、JSON pointer、HTML table、code line range 等结构化输出可测试。
 5. `PHASE05_pdf-office-ocr-adapter-boundaries.md`
-   - 处理 PDF / Office / OCR adapter、local fallback、依赖探测和 Remaining Target。
+   - 处理 PDF / Office / OCR / VLM enrichment adapter、local fallback、依赖探测、network / privacy / budget gate 和 Remaining Target。
 6. `PHASE06_index-handoff-provenance-and-fixtures.md`
-   - 证明解析结果能进入 index manifest，并保留 source span、ACL、parser version 和 provenance。
+   - 证明解析结果能进入 index manifest，并保留 source span、ACL、parser version、document_version_id、parse_job_id、parse_attempt_id、source_sha256、parser_config_hash 和 citation lineage。
 7. `PHASE07_program2-thread-prompts-and-branch-plan.md`
    - 生成 Program 2 四条子线程目标模式提示词：Memory / Tool / Security / GraphRAG。
 8. `PHASE08_verification-doc-sync-and-closure.md`
@@ -59,7 +66,9 @@ Program ID：`zuno-production-document-ingestion-and-thread-foundation-v1`
 - parser matrix 明确支持、fallback、target-blocked 三种状态。
 - 所有 golden fixtures 可复现解析为 Document IR。
 - parser worker / job lifecycle 有状态、失败原因、重试、metrics 和 snapshot。
-- index handoff 能追踪 source file、block id、page / section、parser version、ACL 和 manifest provenance。
+- workspace ingest 通过 `ParseGateway.submit_parse_job()` 进入 `CanonicalDocumentIR` 和 `KnowledgeIndexRuntime.index_document()`，不再依赖 `workspace_text_runtime` 单 block stub 作为产品闭环。
+- index handoff 能追踪 source file、block id、page / section、parser version、ACL、document version、parse job / attempt 和 manifest provenance。
+- `docs/architecture/document-ingestion-foundation.md` 明确 Current local runtime slice、Remaining Target infrastructure、target-blocked parser / OCR / VLM evidence。
 - Program 2 的线程提示词写入 `.agent/programs/thread-prompts/`，并给出独立 branch / worktree / allowed paths / forbidden paths / verification gates。
 
 ## Program 2：Runtime Subsystems Parallel

@@ -161,6 +161,7 @@ def test_required_current_paths_exist() -> None:
         "docs/architecture/README.md",
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",
+        "docs/architecture/document-ingestion-foundation.md",
         "docs/architecture/architecture.html",
         "docs/architecture/repo-ownership-matrix.md",
         "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
@@ -217,6 +218,7 @@ def test_repo_structure_verifier_pins_current_front_path() -> None:
         "docs/architecture/README.md",
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",
+        "docs/architecture/document-ingestion-foundation.md",
         "docs/architecture/architecture.html",
         "docs/architecture/repo-ownership-matrix.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
@@ -984,15 +986,18 @@ def test_front_path_docs_link_current_entrypoints() -> None:
 
     assert "architecture.md" in architecture_index
     assert "production-readiness.md" in architecture_index
+    assert "document-ingestion-foundation.md" in architecture_index
     assert "architecture.html" in architecture_index
     assert ".agent/architecture/architecture.md" in architecture_index
     assert ".agent/architecture/architecture.html" in architecture_index
     assert "../evidence/public-demo.md" in architecture_index
     assert "./architecture/architecture.md" in docs_index
     assert "./architecture/production-readiness.md" in docs_index
+    assert "./architecture/document-ingestion-foundation.md" in docs_index
     assert "./architecture/architecture.html" in docs_index
     assert "./docs/architecture/architecture.md" in readme
     assert "./docs/architecture/production-readiness.md" in readme
+    assert "./docs/architecture/document-ingestion-foundation.md" in readme
     assert "./docs/architecture/architecture.html" in readme
 
 

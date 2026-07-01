@@ -11,6 +11,7 @@ program: zuno-production-document-ingestion-and-thread-foundation-v1
 
 - Document IR -> index manifest handoff。
 - source provenance、ACL inheritance、parser diagnostics、adapter status。
+- parse job lineage：`parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256`、`ir_schema_version`、`parser_config_hash`、block / table / figure count、diagnostics digest。
 - retry / replay 关联 parser job 和 index job。
 - golden fixtures 覆盖 parse -> IR -> manifest 的完整路径。
 
@@ -25,6 +26,8 @@ program: zuno-production-document-ingestion-and-thread-foundation-v1
 
 - 每个 indexed block 都能追溯到 source file 和 parser output。
 - manifest 记录 parser name、version、job id、adapter status、ACL 和 diagnostics。
+- manifest 必须能追溯到 `document_version_id`、`parse_job_id`、`parse_attempt_id`、`source_sha256`、`parser_config_hash` 和 `diagnostics_digest`，未实现字段必须作为 Target / blocked evidence 写清。
+- answer citation 的目标 lineage 必须能从 citation -> evidence -> index chunk -> document block -> document version -> parse job / attempt -> source hash。
 - replay 不重复制造冲突 block id。
 - focused tests 能证明 parse -> index handoff 不是只在文档中存在。
 
@@ -40,6 +43,7 @@ python .agent/scripts/verify_agent_system.py
 ## 需要先读取
 
 - PHASE03 parser job lifecycle。
+- `docs/architecture/document-ingestion-foundation.md`
 - `src/backend/zuno/knowledge/indexing/`
 - `src/backend/zuno/knowledge/agentic_graphrag.py`
 - `tests/knowledge/test_index_jobs_runtime.py`
@@ -59,10 +63,11 @@ python .agent/scripts/verify_agent_system.py
 1. 写 failing test：Document IR block 进入 index manifest 后保留 source provenance。
 2. 写 failing test：ACL 和 sensitivity metadata 从 parser output 传入 manifest。
 3. 写 failing test：parser diagnostics 和 adapter status 可被 index job 读取。
-4. 写 failing test：replay 不重复产生 block ids。
-5. 实现 handoff metadata。
-6. 检查 Agentic GraphRAG evidence / citation 不因 metadata 改动退化。
-7. 运行 focused tests。
+4. 写 failing test：parse lineage fields 进入 index manifest 或作为明确 Target diagnostics 暴露。
+5. 写 failing test：replay 不重复产生 block ids。
+6. 实现 handoff metadata。
+7. 检查 Agentic GraphRAG evidence / citation 不因 metadata 改动退化。
+8. 运行 focused tests。
 
 ## 多 agent 分工
 
@@ -74,6 +79,7 @@ python .agent/scripts/verify_agent_system.py
 
 - parse -> IR -> index manifest 示例。
 - provenance 字段表。
+- citation lineage 字段表。
 - replay / idempotency 结果。
 - focused test 输出。
 

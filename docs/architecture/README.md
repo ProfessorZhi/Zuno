@@ -1,10 +1,10 @@
 # 架构文档
 
-`docs/architecture/` 是 Zuno 当前面向人的正式架构入口。这里保持少而精：一个充实的总架构 Markdown、一个生产成熟度基线、一个由 Markdown 生成的 HTML 展示页、正式附件和仍然生效的 ADR。
+`docs/architecture/` 是 Zuno 当前面向人的正式架构入口。这里保持少而精：一个充实的总架构 Markdown、一个生产成熟度基线、一个企业知识库文档入口契约、一个由 Markdown 生成的 HTML 展示页、正式附件和仍然生效的 ADR。
 
 架构正文以 `architecture.md` 为准；四大总交付物、成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。本 README 只做入口导航，不重复 phase 清单、四大总交付物展开或 Production Target 清单。
 
-当前没有 active program；`.agent/programs/` 是 no-active 等待态。最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`，归档在 `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；PHASE11 已关闭 local evidence provenance、citation source tracing、local RRF/rerank trace、deterministic graph extraction / community report trace 和 unsupported claim metrics；PHASE12 已完成 release closure、full verification、archive 和 no-active state。只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
+当前 active program 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，当前 phase 是 `PHASE01_program-truth-source-and-parser-current-audit.md`。最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`，归档在 `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`。成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
 
 ## 当前前台
 
@@ -13,6 +13,7 @@ docs/architecture/
   README.md
   architecture.md
   production-readiness.md
+  document-ingestion-foundation.md
   architecture.html
   repo-ownership-matrix.md
   assets/
@@ -23,11 +24,12 @@ docs/architecture/
 
 1. `architecture.md`：总架构文档，正文详细说明 Current / Target 边界、企业私有知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；后半部分维护 Mermaid 图源。
 2. `production-readiness.md`：生产成熟度基线，明确四大总交付物、第一版 runtime slice 与 production-grade Target 的边界。
-3. `architecture.html`：图形化展示页，适合快速看完整架构图，不替代 Markdown 正文。
-4. `repo-ownership-matrix.md`：PHASE02 的目录 ownership、compat/vendor 边界和 provider 分类事实表；它是代码布局治理的正式 Current 证据。
-5. `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，必须由 `tools/agent/render_architecture.py --write` 同步。
-6. `decisions/README.md`：仍影响当前主线的正式架构决策。
-7. `../evidence/public-demo.md`：公开证据入口。
+3. `document-ingestion-foundation.md`：企业知识库文档入口契约，说明 workspace file、ParseGateway、Document IR、index handoff、幂等、版本、防丢、ACL、citation lineage 和多模态解析边界。
+4. `architecture.html`：图形化展示页，适合快速看完整架构图，不替代 Markdown 正文。
+5. `repo-ownership-matrix.md`：PHASE02 的目录 ownership、compat/vendor 边界和 provider 分类事实表；它是代码布局治理的正式 Current 证据。
+6. `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，必须由 `tools/agent/render_architecture.py --write` 同步。
+7. `decisions/README.md`：仍影响当前主线的正式架构决策。
+8. `../evidence/public-demo.md`：公开证据入口。
 
 研究输入归档在 `docs/history/research/chatgpt-research-mode-artifacts/`。这些 PDF / Markdown 抽取版用于补充架构论证，不替代当前正式架构源。
 

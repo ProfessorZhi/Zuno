@@ -25,6 +25,11 @@ program: zuno-production-document-ingestion-and-thread-foundation-v1
 
 - 每种 native 格式至少有一个 golden fixture。
 - 输出 Document IR 保留 block type、source span、section path 或 table/code metadata。
+- Markdown 至少覆盖 heading hierarchy、link、code fence、table 和 `section_path`。
+- CSV 至少覆盖 delimiter/header、row index、column name 和 `table_cell`。
+- JSON 至少覆盖 JSON pointer path、object / array block 和 malformed diagnostics。
+- HTML 至少覆盖 script/style 过滤、heading、paragraph、link 和 table。
+- Code 至少覆盖 language、imports、class/function regex metadata 和 line range；不声称完整 AST 语义。
 - malformed CSV / JSON / HTML 有 diagnostics，不导致 parser worker 崩溃。
 - code parser 能识别语言和基本结构，但不声称完整语义理解。
 
@@ -40,6 +45,7 @@ python .agent/scripts/verify_agent_system.py
 
 - PHASE02 Document IR contract。
 - PHASE03 parser worker lifecycle。
+- `docs/architecture/document-ingestion-foundation.md`
 - `tests/fixtures/` 或当前 parser golden fixture 路径。
 - `src/backend/zuno/knowledge/ingestion/`
 

@@ -202,6 +202,7 @@ REQUIRED_PATHS = [
     "docs/architecture/README.md",
     "docs/architecture/architecture.md",
     "docs/architecture/production-readiness.md",
+    "docs/architecture/document-ingestion-foundation.md",
     "docs/architecture/architecture.html",
     "docs/architecture/repo-ownership-matrix.md",
     "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
@@ -347,6 +348,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     "docs/README.md": [
         "./architecture/architecture.md",
         "./architecture/production-readiness.md",
+        "./architecture/document-ingestion-foundation.md",
         "./architecture/architecture.html",
         "./evidence/public-demo.md",
         "./history/README.md",
@@ -355,6 +357,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
     "docs/architecture/README.md": [
         "architecture.md",
         "production-readiness.md",
+        "document-ingestion-foundation.md",
         "architecture.html",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
@@ -374,6 +377,20 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "Document Ingestion / Parse Gateway",
         "Tool Control Plane",
         "LangSmith-compatible Trace / Eval",
+        "docs/architecture/document-ingestion-foundation.md",
+    ],
+    "docs/architecture/document-ingestion-foundation.md": [
+        "Document Ingestion Foundation",
+        "企业知识库文档入口",
+        "ParseGateway.submit_parse_job()",
+        "CanonicalDocumentIR",
+        "IndexJobManifest",
+        "document_version_id",
+        "parse_idempotency_key",
+        "index_idempotency_key",
+        "workspace_text_runtime",
+        "VLM enrichment adapter",
+        "生产 DB、object store、queue/outbox、worker lease、external OCR / VLM、external index platform",
     ],
 }
 

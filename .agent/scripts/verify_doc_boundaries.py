@@ -11,6 +11,7 @@ DOCS_ARCHITECTURE_FILES = {
     "architecture.md",
     "architecture.html",
     "production-readiness.md",
+    "document-ingestion-foundation.md",
     "repo-ownership-matrix.md",
 }
 AGENT_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture.html"}

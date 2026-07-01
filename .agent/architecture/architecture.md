@@ -19,6 +19,7 @@ updated: 2026-07-01
 3. 下一阶段为什么落在企业私有知识库、多格式文档解析、评测观测和安全治理上。
 4. 哪些能力仍是 Target，不能写成 Current。
 5. 当前第一版 runtime slice 与 production-grade Target 的成熟度边界；展开版成熟度和 runtime-first 交付物口径由 `docs/architecture/production-readiness.md` 维护。
+6. 企业知识库文档入口的对象存储、元数据、job lifecycle、幂等、版本、防丢、index manifest 和多模态解析边界；展开版文档入口契约由 `docs/architecture/document-ingestion-foundation.md` 维护。
 
 图形化展示以 `docs/architecture/architecture.html` 为准；图源是 `docs/architecture/architecture.md`。Agent 侧维护镜像是 `.agent/architecture/architecture.md`，Agent 侧也保留同名 HTML 镜像。这四个 canonical paths 必须保持一致：
 
@@ -26,6 +27,10 @@ updated: 2026-07-01
 - `.agent/architecture/architecture.md`
 - `docs/architecture/architecture.html`
 - `.agent/architecture/architecture.html`
+
+`docs/architecture/document-ingestion-foundation.md` 是文档入口的正式补充契约，负责集中说明 Program 1 的 enterprise ingestion foundation：workspace file 如何进入 ParseGateway、Document IR 如何版本化、parse job 如何幂等与防丢、index manifest 如何保留 lineage、OCR / VLM 如何作为 derived enrichment 接入。它不是 Mermaid 图源，也不替代本文的总架构角色。
+
+当前 active program 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，当前 phase 是 `PHASE01_program-truth-source-and-parser-current-audit.md`。该 program 的任务是先把文档入口和索引交接地基做实，再进入 Program 2 的 Memory / Tool / Security / GraphRAG 并行外围能力。
 
 ## 核心判断
 
@@ -954,7 +959,7 @@ upload / sync enterprise docs
 - 图片 / 扫描件：OCR 文本、bbox、confidence、视觉描述。
 - 代码文件：语言、路径、symbol、line range 和代码感知切块。
 
-这些能力进入 `Document Ingestion / Parse Gateway` program，而不是在当前文档里伪装成已经完成。
+这些能力进入 `Document Ingestion / Parse Gateway` program，而不是在当前文档里伪装成已经完成。Program 1 的正式文档入口契约是 `docs/architecture/document-ingestion-foundation.md`；该文件专门说明 local runtime slice 与 production object store / metadata DB / queue / outbox / worker lease / reconciler Target 的边界。
 
 ## 工具层边界
 
@@ -1031,7 +1036,9 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 - `README.md`
 - `architecture.md`
 - `production-readiness.md`
+- `document-ingestion-foundation.md`
 - `architecture.html`
+- `repo-ownership-matrix.md`
 - `assets/`
 - `decisions/`
 
@@ -1051,6 +1058,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 - 改文字架构时，先改 `docs/architecture/architecture.md`，再运行 `python tools/agent/render_architecture.py --write` 同步 `.agent/architecture/architecture.md`。
 - 改图形架构时，先改 `docs/architecture/architecture.md` 中的 Mermaid 图源，再运行 `python tools/agent/render_architecture.py --write` 更新两个 `architecture.html`。
 - 改生产成熟度边界时，同步 `docs/architecture/production-readiness.md`、入口摘要、verifier 和 repo tests；README、AGENTS、`.agent/programs/current.md` 和 `.agent/references/current-program.md` 不重复 phase 目录、Production Target 目录或八类交付物展开。
+- 改文档入口架构契约时，同步 `docs/architecture/document-ingestion-foundation.md`、Program 1 phase 验收、入口摘要、verifier 和 repo tests；不要把生产 DB、object store、queue / outbox、外部 OCR / VLM 或 external index 写成 Current。
 - 不再新增 `current-architecture.md`、`target-architecture.md`、`roadmap.md` 这类拆分入口，除非先打开新的文档重组 program。
 - 高频变化的执行细节放进 `.agent/programs/`。
 - Agent 操作规则放进 `.agent/references/`。

@@ -18,10 +18,11 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 1. [总架构文档](./docs/architecture/architecture.md)：文字说明 Current / Target 边界、企业知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；同一文件也维护 Mermaid 图源。
 2. [Production Readiness Baseline](./docs/architecture/production-readiness.md)：明确四大总交付物、第一版 runtime slice 与 production-grade Target 的边界。
-3. [架构 HTML](./docs/architecture/architecture.html)：图形化查看十类架构图，支持展开全屏查看。
-4. [公开演示证据](./docs/evidence/public-demo.md)：可公开引用的证据入口。
-5. [术语表](./docs/reference/terminology.md)：当前公开术语。
-6. [Agent 入口](./AGENTS.md)：Codex / Agent 执行任务前必须遵守的工作流契约。
+3. [Document Ingestion Foundation](./docs/architecture/document-ingestion-foundation.md)：企业知识库文档入口契约，说明 ParseGateway、Document IR、index handoff、版本、幂等、防丢、ACL、citation lineage 和多模态解析边界。
+4. [架构 HTML](./docs/architecture/architecture.html)：图形化查看十类架构图，支持展开全屏查看。
+5. [公开演示证据](./docs/evidence/public-demo.md)：可公开引用的证据入口。
+6. [术语表](./docs/reference/terminology.md)：当前公开术语。
+7. [Agent 入口](./AGENTS.md)：Codex / Agent 执行任务前必须遵守的工作流契约。
 
 已归档的旧拆分架构文档在 `docs/history/architecture-surface-cleanup-2026-06-30/`，不再作为当前前台入口。
 
@@ -103,7 +104,7 @@ Zuno/
 ├─ infra/                 # Docker 和基础设施配置
 ├─ examples/              # GraphRAG Project 示例
 ├─ docs/                  # 正式文档
-│  ├─ architecture/        # 总架构、生产成熟度基线、HTML、正式决策
+│  ├─ architecture/        # 总架构、生产成熟度基线、文档入口契约、HTML、正式决策
 │  ├─ evidence/            # 精选证据
 │  ├─ reference/           # 当前术语
 │  └─ history/             # 过时或已完成材料归档

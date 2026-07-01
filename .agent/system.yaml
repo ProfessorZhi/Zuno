@@ -177,6 +177,7 @@ skill_routes:
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
       - "docs/architecture/production-readiness.md"
+      - "docs/architecture/document-ingestion-foundation.md"
       - "docs/architecture/architecture.html"
       - ".agent/architecture/architecture.md"
       - ".agent/architecture/architecture.html"

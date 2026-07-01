@@ -19,6 +19,7 @@ def test_readme_exposes_current_architecture_entrypoints() -> None:
     for phrase in [
         "./docs/architecture/architecture.md",
         "./docs/architecture/production-readiness.md",
+        "./docs/architecture/document-ingestion-foundation.md",
         "./docs/architecture/architecture.html",
         "./docs/evidence/public-demo.md",
         "Single Controller Agent 是目标架构角色",
@@ -42,6 +43,7 @@ def test_docs_architecture_front_path_is_small_and_synced() -> None:
         "README.md",
         "architecture.md",
         "production-readiness.md",
+        "document-ingestion-foundation.md",
         "architecture.html",
         "repo-ownership-matrix.md",
     }
@@ -67,6 +69,7 @@ def test_docs_front_path_readmes_explain_architecture_contract() -> None:
         "Zuno 文档入口",
         "./architecture/architecture.md",
         "./architecture/production-readiness.md",
+        "./architecture/document-ingestion-foundation.md",
         "./architecture/architecture.html",
         "./evidence/public-demo.md",
         "./history/README.md",
@@ -78,6 +81,7 @@ def test_docs_front_path_readmes_explain_architecture_contract() -> None:
         "架构文档",
         "architecture.md",
         "production-readiness.md",
+        "document-ingestion-foundation.md",
         "architecture.html",
         "repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
@@ -111,6 +115,7 @@ def test_docs_map_does_not_duplicate_architecture_source_roles() -> None:
 
     assert formal_entries.count("`docs/architecture/architecture.md`") == 1
     assert "`docs/architecture/production-readiness.md`" in formal_entries
+    assert "`docs/architecture/document-ingestion-foundation.md`" in formal_entries
     assert len(docs_sync_items) == len(set(docs_sync_items))
     for phrase in ["当前仓库事实", "近期目标摘要", "当前状态和下一步"]:
         assert phrase not in formal_entries
@@ -142,6 +147,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
         "Document Ingestion / Parse Gateway",
         "Tool Control Plane",
         "LangSmith-compatible Trace / Eval",
+        "docs/architecture/document-ingestion-foundation.md",
         "zuno-production-architecture-and-deliverables-completion-v1",
         current_phase,
         "成熟目标架构和四大总交付物完成",
@@ -169,6 +175,24 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
         "不要恢复已退休的拆分架构文档",
     ]:
         assert phrase in production_readiness
+
+    document_ingestion = (
+        REPO_ROOT / "docs" / "architecture" / "document-ingestion-foundation.md"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "Document Ingestion Foundation",
+        "企业知识库文档入口",
+        "ParseGateway.submit_parse_job()",
+        "CanonicalDocumentIR",
+        "IndexJobManifest",
+        "document_version_id",
+        "parse_idempotency_key",
+        "index_idempotency_key",
+        "workspace_text_runtime",
+        "VLM enrichment adapter",
+        "Current 只能描述代码和测试已经证明的事实",
+    ]:
+        assert phrase in document_ingestion
 
 
 def test_front_path_summaries_do_not_duplicate_program_phase_or_target_catalogs() -> None:
@@ -286,6 +310,7 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "verify_no_retired_front_path_links",
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",
+        "docs/architecture/document-ingestion-foundation.md",
         "docs/architecture/repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",

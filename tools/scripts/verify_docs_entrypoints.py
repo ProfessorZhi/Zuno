@@ -24,6 +24,7 @@ ACTIVE_DOCS_ARCHITECTURE_FILES = {
     "README.md",
     "architecture.md",
     "production-readiness.md",
+    "document-ingestion-foundation.md",
     "architecture.html",
     "repo-ownership-matrix.md",
 }
@@ -75,6 +76,7 @@ def verify_front_path_shape() -> list[str]:
         "docs/architecture/README.md",
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",
+        "docs/architecture/document-ingestion-foundation.md",
         "docs/architecture/architecture.html",
         "docs/architecture/repo-ownership-matrix.md",
         ".agent/architecture/README.md",
@@ -148,6 +150,7 @@ def verify_entrypoint_text() -> list[str]:
     docs_architecture = _read("docs/architecture/architecture.md")
     agent_architecture = _read(".agent/architecture/architecture.md")
     production_readiness = _read("docs/architecture/production-readiness.md")
+    document_ingestion = _read("docs/architecture/document-ingestion-foundation.md")
     current_phase = _current_phase_name(_read(".agent/programs/current.md"))
     if current_phase is None:
         errors.append(".agent/programs/current.md missing current_phase")
@@ -156,6 +159,7 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in [
         "./docs/architecture/architecture.md",
         "./docs/architecture/production-readiness.md",
+        "./docs/architecture/document-ingestion-foundation.md",
         "./docs/architecture/architecture.html",
         "GeneralAgent` single loop",
         "zuno-master-architecture-implementation-v1",
@@ -167,6 +171,7 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in [
         "./architecture/architecture.md",
         "./architecture/production-readiness.md",
+        "./architecture/document-ingestion-foundation.md",
         "./architecture/architecture.html",
         "./history/README.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/",
@@ -177,6 +182,7 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in [
         "architecture.md",
         "production-readiness.md",
+        "document-ingestion-foundation.md",
         "architecture.html",
         "repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
@@ -245,6 +251,23 @@ def verify_entrypoint_text() -> list[str]:
         if phrase not in production_readiness:
             errors.append(f"docs/architecture/production-readiness.md missing phrase: {phrase}")
 
+    for phrase in [
+        "Document Ingestion Foundation",
+        "企业知识库文档入口",
+        "ParseGateway.submit_parse_job()",
+        "CanonicalDocumentIR",
+        "IndexJobManifest",
+        "document_version_id",
+        "parse_idempotency_key",
+        "index_idempotency_key",
+        "workspace_text_runtime",
+        "VLM enrichment adapter",
+        "Current 只能描述代码和测试已经证明的事实",
+        "生产 DB、object store、queue/outbox、worker lease、external OCR / VLM、external index platform",
+    ]:
+        if phrase not in document_ingestion:
+            errors.append(f"docs/architecture/document-ingestion-foundation.md missing phrase: {phrase}")
+
     return errors
 
 
@@ -298,6 +321,7 @@ def verify_docs_map_has_unique_architecture_source_roles() -> list[str]:
         )
     for phrase in [
         "`docs/architecture/production-readiness.md`",
+        "`docs/architecture/document-ingestion-foundation.md`",
         "`docs/architecture/repo-ownership-matrix.md`",
     ]:
         if phrase not in formal_entries:
