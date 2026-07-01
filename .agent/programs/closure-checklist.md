@@ -9,12 +9,12 @@ latest_completed_program: `zuno-production-document-ingestion-and-thread-foundat
 
 - [x] Program 1B / V2 已从 queued 切换为 active。
 - [x] 当前 phase 从 `PHASE01_truth-source-and-gap-audit.md` 开始。
-- [ ] PHASE01 完成 current gap matrix。
-- [ ] PHASE01 完成 storage target matrix。
-- [ ] PHASE01 完成 API compatibility map。
-- [ ] PHASE01 完成 dependency probe summary。
-- [ ] PHASE01 产出 PHASE02 focused test seed list。
-- [ ] PHASE01 验证、提交并推送。
+- [x] PHASE01 完成 current gap matrix。
+- [x] PHASE01 完成 storage target matrix。
+- [x] PHASE01 完成 API compatibility map。
+- [x] PHASE01 完成 dependency probe summary。
+- [x] PHASE01 产出 PHASE02 focused test seed list。
+- [x] PHASE01 验证、提交并推送。
 
 ## Program 1 收口结果
 
