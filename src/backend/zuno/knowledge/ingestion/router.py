@@ -10,6 +10,28 @@ from .contracts import (
 )
 
 
+def adapter_boundary_metadata(parser_id: str, *, fallback: str | None = None) -> dict:
+    contract = PARSER_ADAPTER_CONTRACTS[parser_id]
+    required_packages = contract.dependency_probe.get("required_packages", [])
+    provider = contract.dependency_probe.get("provider")
+    return {
+        "parser_id": contract.parser_id,
+        "capability_status": contract.capability_status,
+        "external_dependency_status": contract.external_dependency_status,
+        "dependency_status": contract.dependency_status,
+        "provider": provider,
+        "required_packages": required_packages,
+        "dependency_probe": dict(contract.dependency_probe),
+        "production_target": contract.production_target,
+        "blocked_reason": contract.blocked_reason,
+        "network_policy": contract.network_policy,
+        "privacy_gate": dict(contract.privacy_gate),
+        "budget_gate": dict(contract.budget_gate),
+        "enrichment_role": contract.enrichment_role,
+        "fallback": fallback,
+    }
+
+
 PARSER_ADAPTER_CONTRACTS = {
     "native": ParserAdapterContract(
         parser_id="native",
@@ -22,6 +44,23 @@ PARSER_ADAPTER_CONTRACTS = {
         sandbox_policy="read_only_workspace_file",
         fallback_reason="native parser failed or unsupported encoding",
         production_target="built-in deterministic parser",
+        dependency_status="present",
+        dependency_probe={
+            "provider": "builtin",
+            "required_packages": [],
+            "status_reason": "implemented in repository with Python standard library helpers",
+        },
+        network_policy="local_only",
+        privacy_gate={
+            "sensitive_input_policy": "workspace_acl",
+            "source_truth_policy": "deterministic_source_parser",
+        },
+        budget_gate={
+            "max_pages": 0,
+            "max_images": 0,
+            "network_default": "deny",
+            "review_required": False,
+        },
     ),
     "docling_pymupdf": ParserAdapterContract(
         parser_id="docling_pymupdf",
@@ -36,6 +75,23 @@ PARSER_ADAPTER_CONTRACTS = {
         production_target="Docling / PyMuPDF parser worker",
         external_dependency_status="target_blocked",
         blocked_reason="production Docling / PyMuPDF worker is not deployed in this repository runtime",
+        dependency_status="missing",
+        dependency_probe={
+            "provider": "external_python_packages",
+            "required_packages": ["docling", "pymupdf"],
+            "status_reason": "production parser worker packages are not part of this repository runtime",
+        },
+        network_policy="local_only",
+        privacy_gate={
+            "sensitive_input_policy": "deny_by_default",
+            "source_truth_policy": "deterministic_layout_parser",
+        },
+        budget_gate={
+            "max_pages": 50,
+            "max_images": 0,
+            "network_default": "deny",
+            "review_required": False,
+        },
     ),
     "mineru_ocr_vlm": ParserAdapterContract(
         parser_id="mineru_ocr_vlm",
@@ -50,6 +106,26 @@ PARSER_ADAPTER_CONTRACTS = {
         production_target="MinerU OCR / VLM parser worker",
         external_dependency_status="target_blocked",
         blocked_reason="production OCR / VLM parser service and model runtime are not deployed locally",
+        dependency_status="missing",
+        dependency_probe={
+            "provider": "external_ocr_vlm_runtime",
+            "required_packages": ["mineru", "paddleocr", "vlm_runtime"],
+            "status_reason": "OCR / VLM service, model weights, and production worker are not deployed locally",
+        },
+        network_policy="deny_by_default",
+        privacy_gate={
+            "sensitive_input_policy": "deny_by_default",
+            "source_truth_policy": "cannot_override_deterministic_source",
+            "requires_human_review": True,
+        },
+        budget_gate={
+            "max_pages": 0,
+            "max_images": 0,
+            "max_cost_usd": 0.0,
+            "network_default": "deny",
+            "review_required": True,
+        },
+        enrichment_role="derived_enrichment",
     ),
     "unstructured_markitdown": ParserAdapterContract(
         parser_id="unstructured_markitdown",
@@ -64,6 +140,23 @@ PARSER_ADAPTER_CONTRACTS = {
         production_target="Unstructured / MarkItDown parser worker",
         external_dependency_status="target_blocked",
         blocked_reason="production Unstructured / MarkItDown worker is not deployed in this repository runtime",
+        dependency_status="missing",
+        dependency_probe={
+            "provider": "external_python_packages",
+            "required_packages": ["unstructured", "markitdown"],
+            "status_reason": "production office parser worker packages are not part of this repository runtime",
+        },
+        network_policy="local_only",
+        privacy_gate={
+            "sensitive_input_policy": "deny_by_default",
+            "source_truth_policy": "deterministic_office_parser",
+        },
+        budget_gate={
+            "max_pages": 50,
+            "max_images": 0,
+            "network_default": "deny",
+            "review_required": False,
+        },
     ),
 }
 
@@ -329,6 +422,7 @@ def build_index_handoff_payload(document: CanonicalDocumentIR) -> IndexHandoffPa
 __all__ = [
     "PARSER_ADAPTER_CONTRACTS",
     "PARSER_CAPABILITY_MATRIX",
+    "adapter_boundary_metadata",
     "build_index_handoff_payload",
     "select_parser_for_format",
 ]

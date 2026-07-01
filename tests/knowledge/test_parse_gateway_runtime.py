@@ -205,6 +205,100 @@ def test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic() -> None:
     assert blocked_diagnostic.metadata["external_dependency_status"] == "target_blocked"
 
 
+def test_parser_adapter_dependency_probe_reports_present_and_missing_dependencies() -> None:
+    from zuno.knowledge.ingestion import get_parser_adapter
+
+    native_probe = get_parser_adapter("native").dependency_probe()
+    docling_probe = get_parser_adapter("docling_pymupdf").dependency_probe()
+
+    assert native_probe.code == "adapter_dependency_probe"
+    assert native_probe.severity == "info"
+    assert native_probe.metadata["dependency_status"] == "present"
+    assert native_probe.metadata["provider"] == "builtin"
+
+    assert docling_probe.code == "adapter_dependency_probe"
+    assert docling_probe.severity == "warning"
+    assert docling_probe.metadata["dependency_status"] == "missing"
+    assert "docling" in docling_probe.metadata["required_packages"]
+
+
+@pytest.mark.parametrize(
+    ("case_id", "file_name", "mime_type", "expected_parser", "expected_block"),
+    [
+        ("pdf_table", "pdf_table.pdf", "application/pdf", "docling_pymupdf", "table"),
+        (
+            "docx_heading_table",
+            "docx_heading_table.docx",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "unstructured_markitdown",
+            "heading",
+        ),
+        (
+            "pptx_slide",
+            "pptx_slide.pptx",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "unstructured_markitdown",
+            "slide_title",
+        ),
+        (
+            "xlsx_sheet",
+            "xlsx_sheet.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "unstructured_markitdown",
+            "table",
+        ),
+    ],
+)
+def test_pdf_and_office_contract_parse_keeps_target_blocked_boundary(
+    case_id: str,
+    file_name: str,
+    mime_type: str,
+    expected_parser: str,
+    expected_block: str,
+) -> None:
+    result = _parse_fixture(case_id, file_name, mime_type)
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert result.document.metadata.parser_id == expected_parser
+    assert result.document.metadata.target_blocked is True
+    assert result.document.metadata.blocked_reason
+    assert any(block.type == expected_block for block in result.document.blocks)
+    blocked_diagnostic = next(
+        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "target_blocked_adapter"
+    )
+    assert blocked_diagnostic.metadata["dependency_status"] == "missing"
+    assert blocked_diagnostic.metadata["capability_status"] == "target-blocked"
+    assert blocked_diagnostic.metadata["fallback"] in {"native", "mineru_ocr_vlm"}
+
+
+def test_ocr_vlm_blocked_result_keeps_derived_enrichment_gates() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    blocked = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_vlm_blocked",
+            workspace_id="workspace_phase05",
+            source_uri="file://scans/diagram.png",
+            mime_type="image/png",
+            source_text="OCR placeholder should not be source truth.",
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(blocked.job_id)
+    diagnostic = blocked.diagnostics[0]
+
+    assert blocked.status == "blocked"
+    assert blocked.document is None
+    assert diagnostic.code == "target_blocked_adapter"
+    assert diagnostic.metadata["enrichment_role"] == "derived_enrichment"
+    assert diagnostic.metadata["network_policy"] == "deny_by_default"
+    assert diagnostic.metadata["privacy_gate"]["source_truth_policy"] == "cannot_override_deterministic_source"
+    assert diagnostic.metadata["budget_gate"]["network_default"] == "deny"
+    assert snapshot.adapter_boundary["enrichment_role"] == "derived_enrichment"
+    assert snapshot.adapter_boundary["dependency_status"] == "missing"
+    assert snapshot.adapter_boundary["budget_gate"]["review_required"] is True
+
+
 def test_parse_gateway_records_parse_job_status_for_replay() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 

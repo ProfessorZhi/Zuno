@@ -84,6 +84,29 @@ def test_parser_adapter_contract_exposes_runtime_operations_and_capabilities() -
     assert blocked_contract.blocked_reason
 
 
+def test_external_parser_contracts_freeze_dependency_and_enrichment_boundaries() -> None:
+    from zuno.knowledge.ingestion import PARSER_ADAPTER_CONTRACTS
+
+    native_contract = PARSER_ADAPTER_CONTRACTS["native"]
+    assert native_contract.dependency_status == "present"
+    assert native_contract.dependency_probe["provider"] == "builtin"
+
+    for parser_id in ["docling_pymupdf", "unstructured_markitdown", "mineru_ocr_vlm"]:
+        contract = PARSER_ADAPTER_CONTRACTS[parser_id]
+        assert contract.capability_status == "target-blocked"
+        assert contract.external_dependency_status == "target_blocked"
+        assert contract.dependency_status == "missing"
+        assert contract.dependency_probe["required_packages"]
+        assert contract.network_policy in {"local_only", "deny_by_default"}
+        assert contract.privacy_gate["sensitive_input_policy"] == "deny_by_default"
+        assert contract.budget_gate["max_pages"] >= 0
+
+    ocr_contract = PARSER_ADAPTER_CONTRACTS["mineru_ocr_vlm"]
+    assert ocr_contract.enrichment_role == "derived_enrichment"
+    assert ocr_contract.privacy_gate["source_truth_policy"] == "cannot_override_deterministic_source"
+    assert ocr_contract.budget_gate["network_default"] == "deny"
+
+
 def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
     from zuno.knowledge.ingestion import (
         CanonicalDocumentIR,

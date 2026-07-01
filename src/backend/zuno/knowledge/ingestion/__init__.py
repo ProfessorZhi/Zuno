@@ -24,6 +24,7 @@ from .normalizer import normalize_legacy_chunks_to_ir
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
     PARSER_CAPABILITY_MATRIX,
+    adapter_boundary_metadata,
     build_index_handoff_payload,
     select_parser_for_format,
 )
@@ -50,6 +51,7 @@ __all__ = [
     "ParserFailure",
     "ParserJobMetrics",
     "SourceSpan",
+    "adapter_boundary_metadata",
     "build_index_handoff_payload",
     "get_parser_adapter",
     "normalize_legacy_chunks_to_ir",

@@ -1,7 +1,8 @@
 # PHASE05 PDF / Office / OCR Adapter 边界
 
-status: planned
+status: completed
 program: zuno-production-document-ingestion-and-thread-foundation-v1
+completed_at: 2026-07-01
 
 ## 目标
 
@@ -88,3 +89,69 @@ python .agent/scripts/verify_agent_system.py
 - 需要安装大型系统依赖、OCR engine 或外部服务。
 - 用户要求真实企业内部资料进入 fixtures。
 - adapter fallback 会让 citation source span 丢失且无法标记低置信度。
+
+## 执行证据
+
+本 phase 按 TDD 关闭。先写 dependency probe、PDF / Office target-blocked boundary、OCR / VLM blocked derived enrichment gate 的 focused tests，再补 adapter contract 和 ParseGateway diagnostics metadata。
+
+首次红灯：
+
+```powershell
+pytest -q tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+```
+
+结果：`7 failed, 34 passed`。失败点集中在 `ParserAdapterContract` 缺 dependency / privacy / budget / enrichment 字段、`ParserAdapter` 缺 `dependency_probe()`、blocked diagnostics 缺 dependency status / fallback / derived enrichment metadata。
+
+## PDF / Office / OCR Capability Boundary
+
+| Parser | Formats | Current local status | Production Target |
+| --- | --- | --- | --- |
+| `native` | `txt / md / csv / json / html / code` | `present`，仓库内 deterministic parser。 | 继续作为低依赖 source parser。 |
+| `docling_pymupdf` | `pdf` | `missing` + `target-blocked`，contract parse 可生成本地 fixture IR，但 parser worker submit 不能写成 Current。 | Docling / PyMuPDF isolated parser worker。 |
+| `unstructured_markitdown` | `docx / pptx / xlsx / unknown` | `missing` + `target-blocked`，contract parse 只保留 fixture / fallback boundary。 | Unstructured / MarkItDown office parser worker。 |
+| `mineru_ocr_vlm` | `image / scanned` | `missing` + `target-blocked`，只表达 blocked derived enrichment。 | MinerU / OCR / VLM worker，带隐私、预算、人工复核 gate。 |
+
+## Dependency Probe 摘要
+
+- `native.dependency_probe()` 返回 `dependency_status=present`、`provider=builtin`。
+- `docling_pymupdf.dependency_probe()` 返回 `dependency_status=missing`、`required_packages=["docling", "pymupdf"]`。
+- `unstructured_markitdown` 和 `mineru_ocr_vlm` 也在 contract 中记录 required packages / runtime，并通过 `adapter_boundary_metadata()` 暴露给 diagnostics 和 job snapshot。
+
+## Blocked Adapter Examples
+
+- PDF / Office 的 `parse_document()` 当前仍可用 deterministic fixture text 生成 IR，但 metadata 和 diagnostics 必须写入 `target_blocked=True`、`dependency_status=missing`、`capability_status=target-blocked` 和 fallback。
+- OCR / VLM 的 `submit_parse_job()` 返回 `blocked`，不生成 document，不创建假 index。
+- `ParseJobSnapshot.adapter_boundary` 保留 external dependency、dependency probe、network policy、privacy gate、budget gate 和 enrichment role。
+
+## VLM Enrichment Contract
+
+`mineru_ocr_vlm` 当前只允许表达 Target contract：
+
+- `enrichment_role=derived_enrichment`
+- `network_policy=deny_by_default`
+- `privacy_gate.source_truth_policy=cannot_override_deterministic_source`
+- `budget_gate.network_default=deny`
+- `budget_gate.review_required=True`
+
+这表示 OCR / VLM 输出未来只能作为派生增强，不能覆盖 deterministic parser 的 source span 或 source truth。
+
+## 变更文件
+
+- `src/backend/zuno/knowledge/ingestion/contracts.py`
+- `src/backend/zuno/knowledge/ingestion/router.py`
+- `src/backend/zuno/knowledge/ingestion/adapters.py`
+- `src/backend/zuno/knowledge/ingestion/gateway.py`
+- `src/backend/zuno/knowledge/ingestion/__init__.py`
+- `src/backend/zuno/knowledge/ingestion/README.md`
+- `tests/knowledge/test_document_ingestion_contract.py`
+- `tests/knowledge/test_parse_gateway_runtime.py`
+- `docs/architecture/document-ingestion-foundation.md`
+
+## 验证结果
+
+```powershell
+git diff --check
+pytest -q tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+```
+
+结果：`41 passed`。`git diff --check` 通过；PowerShell profile 的 Terminal-Icons warning 不属于仓库 diff 检查失败。

@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-production-document-ingestion-and-thread-foundation-v1`
-- Current phase: `PHASE05_pdf-office-ocr-adapter-boundaries.md`
+- Current phase: `PHASE06_index-handoff-provenance-and-fixtures.md`
 - Latest completed program: `zuno-production-architecture-and-deliverables-completion-v1`
 
 当前 program 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的第一段。它先把企业知识库文档解析与索引交接地基做扎实，并为后续 Program 2 多线程施工准备可直接投递的目标模式提示词、分支边界和验收闸门。
@@ -20,8 +20,8 @@
 - `PHASE02_document-ir-and-parser-contract-freeze.md`：已完成 Document IR、parser adapter contract 和 parser capability matrix 冻结。
 - `PHASE03_parser-worker-runtime-and-job-lifecycle.md`：已完成本地 parser worker / job lifecycle / retry / metrics。
 - `PHASE04_native-text-and-structured-file-parsers.md`：已关闭 native 文本、Markdown、CSV、JSON、HTML、代码 parser 与 fixtures。
-- `PHASE05_pdf-office-ocr-adapter-boundaries.md`：当前 phase，梳理 PDF / Office / OCR adapter、fallback 和 target-blocked 边界。
-- `PHASE06_index-handoff-provenance-and-fixtures.md`：打通解析到索引 manifest、provenance、ACL 和 golden fixtures。
+- `PHASE05_pdf-office-ocr-adapter-boundaries.md`：已关闭 PDF / Office / OCR adapter、fallback、依赖探测和 target-blocked 边界。
+- `PHASE06_index-handoff-provenance-and-fixtures.md`：当前 phase，打通解析到索引 manifest、provenance、ACL 和 golden fixtures。
 - `PHASE07_program2-thread-prompts-and-branch-plan.md`：准备 Program 2 多线程目标模式提示词和分支计划。
 - `PHASE08_verification-doc-sync-and-closure.md`：验证、文档同步、自维护审查、归档和 no-active / next-program 交接。
 - `queued-programs/`：Program 2-4 的后续计划，不是当前 active phase。

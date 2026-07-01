@@ -1,6 +1,6 @@
 # Knowledge Ingestion 边界
 
-PHASE02-PHASE04 status: contract-current-runtime-current-production-target
+PHASE02-PHASE05 status: contract-current-runtime-current-production-target
 
 ## 当前角色
 
@@ -8,6 +8,7 @@ PHASE02-PHASE04 status: contract-current-runtime-current-production-target
 
 - Parser Capability Matrix：登记格式、默认 parser、fallback、结构保留、证据锚点、timeout、resource budget 和 sandbox policy。
 - Parser adapter contract：每个 adapter 都能表达 `supports`、`parse`、`diagnostics`、`capabilities`、`blocked_reason`、`capability_status` 和 external dependency boundary。
+- Parser adapter boundary：外部 parser contract 当前记录 dependency status、dependency probe、network policy、privacy gate、budget gate 和 enrichment role；缺失的 Docling / PyMuPDF、Unstructured / MarkItDown、MinerU / OCR / VLM 只写成 target-blocked evidence。
 - Canonical Document IR：统一 document metadata、block、table、figure、source span、ACL、sensitivity tags 和 provenance；metadata 当前已包含 `source_id`、`source_sha256`、`document_version_id`、`parser_config_hash`、`schema_version` / `ir_schema_version`、`derived_from`、`asset_refs`、`redaction_status`、`retention_policy`、fallback 和 target-blocked 字段。
 - Parser router contract：按文件扩展名或格式选择 native、Docling/PyMuPDF、MinerU/OCR/VLM 或 Unstructured/MarkItDown 路径。
 - Index handoff payload：把 Document IR block 归一给 BM25、vector、GraphRAG、evidence 和 citation。
@@ -15,6 +16,7 @@ PHASE02-PHASE04 status: contract-current-runtime-current-production-target
 - Parse Gateway runtime：`ParseGateway` 能从 `source_text`、`source_bytes` 或 `file://` fixture 生成 `CanonicalDocumentIR`、parser diagnostics、job status 和 index handoff；unknown format 会返回稳定 fallback diagnostics，target-blocked adapter 会返回稳定 warning diagnostics。
 - Local parser worker lifecycle：`submit_parse_job()` / `retry_parse_job()` / `cancel_parse_job()` 当前提供 in-process job lifecycle，覆盖 `accepted`、`running`、`succeeded`、`failed`、`blocked`、`retrying`、`cancelled` 和 `dead_letter` 的本地 snapshot 语义，并记录 idempotency key、attempt id、failure snapshot、diagnostics、retry policy 和 metrics。
 - Native parser runtime：`native` 当前覆盖 `txt / md / csv / json / html / code` 的低依赖解析；Markdown 保留 heading / link / code fence / table，CSV 保留 delimiter / header / row / column / table_cell，JSON 保留 JSON pointer，HTML 过滤 script/style 并保留 heading / paragraph / link / table，code 只做扩展名语言识别和 regex import/class/function metadata，不声称完整 AST 语义。
+- OCR / VLM boundary：`mineru_ocr_vlm` 当前是 blocked derived enrichment adapter；diagnostics 和 job snapshot 会保留 `derived_enrichment`、deny-by-default network policy、privacy gate、budget gate 和 review_required，不把 OCR / VLM 输出写成 source truth。
 - Legacy chunk normalizer：旧 `ChunkModel` 可归一为 `CanonicalDocumentIR`，为旧 pipeline 迁移留出明确 seam。
 - Parser golden fixture manifest：登记 PDF 表格、扫描件、PPTX、DOCX、XLSX、TXT、Markdown、CSV、JSON、HTML 和代码的验收样例，并绑定真实 `input_path`。
 

@@ -52,6 +52,19 @@ class ParserAdapter:
             )
         ]
 
+    def dependency_probe(self) -> ParserDiagnostic:
+        from .router import PARSER_ADAPTER_CONTRACTS, adapter_boundary_metadata
+
+        contract = PARSER_ADAPTER_CONTRACTS[self.parser_id]
+        severity = "info" if contract.dependency_status == "present" else "warning"
+        return ParserDiagnostic(
+            code="adapter_dependency_probe",
+            message=f"{self.parser_id} dependency status: {contract.dependency_status}.",
+            severity=severity,
+            parser_id=self.parser_id,
+            metadata=adapter_boundary_metadata(self.parser_id),
+        )
+
     def parse(
         self,
         *,

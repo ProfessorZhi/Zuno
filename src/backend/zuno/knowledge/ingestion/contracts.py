@@ -40,6 +40,12 @@ class ParserAdapterContract(BaseModel):
     production_target: str | None = None
     external_dependency_status: Literal["not_required", "target_blocked"] = "not_required"
     blocked_reason: str | None = None
+    dependency_status: Literal["present", "missing", "disabled", "unsupported"] = "present"
+    dependency_probe: dict[str, Any] = Field(default_factory=dict)
+    network_policy: str = "local_only"
+    privacy_gate: dict[str, Any] = Field(default_factory=dict)
+    budget_gate: dict[str, Any] = Field(default_factory=dict)
+    enrichment_role: Literal["source_parser", "derived_enrichment", "none"] = "source_parser"
 
 
 class SourceSpan(BaseModel):
@@ -150,7 +156,7 @@ class ParseDocumentRequest(BaseModel):
     hash: str | None = None
     acl_scope: str = "workspace"
     sensitivity_tags: list[str] = Field(default_factory=list)
-    parser_version: str = "phase04-runtime-v1"
+    parser_version: str = "phase05-runtime-v1"
     parser_config: dict[str, Any] = Field(default_factory=dict)
     parser_config_hash: str | None = None
     schema_version: str = "canonical-document-ir-v1"

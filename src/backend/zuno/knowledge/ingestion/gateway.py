@@ -27,6 +27,7 @@ from .contracts import (
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
     PARSER_CAPABILITY_MATRIX,
+    adapter_boundary_metadata,
     build_index_handoff_payload,
     select_parser_for_format,
 )
@@ -177,10 +178,7 @@ class ParseGateway:
                     severity="warning",
                     parser_id=parser_id,
                     format=capability.format,
-                    metadata={
-                        "external_dependency_status": adapter_contract.external_dependency_status,
-                        "production_target": adapter_contract.production_target,
-                    },
+                    metadata=adapter_boundary_metadata(parser_id, fallback=capability.fallback),
                 )
             )
         parser_config_hash = cls._parser_config_hash(request)
@@ -454,10 +452,7 @@ class ParseGateway:
                     severity="warning",
                     parser_id=parser_id,
                     format=capability.format,
-                    metadata={
-                        "external_dependency_status": adapter_contract.external_dependency_status,
-                        "production_target": adapter_contract.production_target,
-                    },
+                    metadata=adapter_boundary_metadata(parser_id, fallback=capability.fallback),
                 )
             ],
         )

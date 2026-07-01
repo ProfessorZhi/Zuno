@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-production-document-ingestion-and-thread-foundation-v1`
-current_phase: `PHASE05_pdf-office-ocr-adapter-boundaries.md`
+current_phase: `PHASE06_index-handoff-provenance-and-fixtures.md`
 latest_completed_program: `zuno-production-architecture-and-deliverables-completion-v1`
 
 ## Program 1 收口目标
@@ -12,7 +12,7 @@ latest_completed_program: `zuno-production-architecture-and-deliverables-complet
 - [x] PHASE02 冻结 Document IR、document version、source hash、parser config hash、schema version、parser adapter contract 和 parser capability matrix。
 - [x] PHASE03 完成本地 parser worker / job lifecycle / retry / metrics / snapshot / idempotency，并把 outbox / lease / reconciler 保留为 Target。
 - [x] PHASE04 完成 native text / structured parser 强化和 focused tests。
-- [ ] PHASE05 完成 PDF / Office / OCR / VLM enrichment adapter boundary、fallback、network / privacy / budget gate 和 blocked evidence。
+- [x] PHASE05 完成 PDF / Office / OCR / VLM enrichment adapter boundary、fallback、network / privacy / budget gate 和 blocked evidence。
 - [ ] PHASE06 完成 index handoff、manifest provenance、ACL、parse job lineage、citation lineage、golden fixtures。
 - [ ] PHASE07 写入 Program 2 thread prompts、branch/worktree plan 和合并闸门。
 - [ ] PHASE08 完成验证、文档同步、自维护审查、归档和下一轮状态交接。
