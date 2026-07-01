@@ -15,7 +15,7 @@ state: active
 - [x] PHASE08 durable agent runtime persistence
 - [x] PHASE09 memory context production governance
 - [x] PHASE10 tool sandbox vault network runtime
-- [ ] PHASE11 production graphrag evidence citation
+- [x] PHASE11 production graphrag evidence citation
 - [ ] PHASE12 security trace eval release closure
 
 ## 四大总交付物
@@ -32,7 +32,7 @@ state: active
 - [x] Agent Runtime。
 - [x] Memory 与 Context。
 - [x] Tool Control Plane 与 Sandbox。
-- [ ] Knowledge / GraphRAG / Evidence / Citation。
+- [x] Knowledge / GraphRAG / Evidence / Citation。
 - [ ] Security / Trace / Eval / Release。
 - [ ] 仓库治理与一致性。
 

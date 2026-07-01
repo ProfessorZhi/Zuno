@@ -209,6 +209,65 @@ def test_agentic_retrieval_runtime_covers_normal_global_and_drift_modes() -> Non
     ]
 
 
+def test_agentic_retrieval_runtime_records_production_graphrag_traceability_metrics() -> None:
+    from zuno.knowledge.agentic_graphrag import (
+        AgenticRetrievalRuntimeRequest,
+        ProductMode,
+    )
+
+    result = _indexed_runtime().answer(
+        AgenticRetrievalRuntimeRequest(
+            query="Compare global renewal and security themes across all policies",
+            workspace_id="workspace_retrieval",
+            knowledge_space_ids=["ks_contracts"],
+            product_mode=ProductMode.ENHANCED,
+            trace_id="trace_phase11_production",
+            task_id="task_phase11_production",
+            claims=[
+                "Renewal notice must be sent 30 days before the contract anniversary.",
+                "The contract includes an uncited indemnity waiver.",
+            ],
+        )
+    )
+
+    trace = result.trace_metadata
+    first_citation = result.citations[0]
+    first_item = trace["evidence_bundle"]["items"][0]
+    production = trace["production_graphrag"]
+
+    assert first_citation.source_uri == "memory://contracts/runtime.md"
+    assert first_citation.provenance["hash"] == "sha256-runtime"
+    assert first_item["source_uri"] == "memory://contracts/runtime.md"
+    assert first_item["provenance"]["hash"] == "sha256-runtime"
+    assert first_item["source_span"]["page"] == 2
+    assert first_item["source_methods"]
+
+    assert production["current_runtime"] == "local_deterministic"
+    assert production["external_graph_index"] == {
+        "status": "target_blocked",
+        "target": "external_graph_index_service",
+        "blocked_reason": "external graph index service is not connected in local runtime",
+    }
+    assert production["graph_extraction"]["status"] == "local_deterministic"
+    assert production["graph_extraction"]["text_unit_count"] == len(result.evidence_bundle.items)
+    assert production["graph_extraction"]["records"][0]["source_uri"] == "memory://contracts/runtime.md"
+    assert production["community_report"]["status"] == "local_deterministic"
+    assert production["community_report"]["reports"][0]["source_evidence_ids"]
+    assert production["fusion"]["strategy"] == "local_rrf_then_score_rerank"
+    assert production["fusion"]["ranked_evidence_ids"] == [
+        item.evidence_id for item in result.evidence_bundle.items
+    ]
+    assert production["fusion"]["rrf_scores"][result.evidence_bundle.items[0].evidence_id] > 0
+
+    assert trace["unsupported_claim_metrics"] == {
+        "checked_claim_count": 2,
+        "unsupported_claim_count": 1,
+        "unsupported_claims": ["The contract includes an uncited indemnity waiver."],
+        "guard_status": "blocked_confident_wording",
+    }
+    assert result.to_task_event()["payload"]["unsupported_claim_metrics"] == trace["unsupported_claim_metrics"]
+
+
 def test_agentic_retrieval_runtime_drops_disallowed_acl_evidence() -> None:
     from zuno.knowledge.agentic_graphrag import (
         AgenticRetrievalRuntime,

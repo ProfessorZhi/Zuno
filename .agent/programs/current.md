@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE11_production-graphrag-evidence-citation
+current_phase: PHASE12_security-trace-eval-release-closure
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE11_production-graphrag-evidence-citation
 
 ## 当前阶段
 
-- 当前 phase：`PHASE11_production-graphrag-evidence-citation`
-- 当前动作：把 Knowledge / GraphRAG / Evidence / Citation 推进到生产 GraphRAG extraction、community report、RRF / rerank、外部图索引、unsupported claim guard 和 evidence eval。
-- 当前验收：PHASE11 只有在 cited answer 可从 evidence block 追到 source document、graph extraction / rerank 有 focused tests 或 blocked evidence、retrieval / citation / unsupported claim metrics 进入 trace / eval 后才能关闭。
+- 当前 phase：`PHASE12_security-trace-eval-release-closure`
+- 当前动作：完成 Security / Trace / Eval / Release 的生产级收口：外部 trace/eval、online eval、CI release gate、生产运维证据归档、全量验证和 program 归档。
+- 当前验收：PHASE12 只有在四大总交付物和八类 runtime-first 交付物都有 Current 证据或明确 Remaining Target、program 已归档、`.agent/programs/` 回到明确状态、完整验证通过后才能关闭。
 
 ## 最近完成基线
 

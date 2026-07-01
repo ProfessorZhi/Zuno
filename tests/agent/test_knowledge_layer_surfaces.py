@@ -98,11 +98,15 @@ EXPECTED_EXPORTS = {
         "normalize_retrieval_mode",
     ],
     "zuno.knowledge.indexing": [
+        "INDEX_ADAPTER_CONTRACTS",
+        "LOCAL_INDEX_ADAPTER_BY_TARGET",
+        "IndexAdapterContract",
         "IndexJobManifest",
         "IndexQueryResult",
         "IndexTarget",
         "KnowledgeIndexRuntime",
         "KnowledgeSpaceManifest",
+        "adapter_status_for_targets",
     ],
 }
 

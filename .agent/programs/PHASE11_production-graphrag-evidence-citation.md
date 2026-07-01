@@ -1,7 +1,9 @@
 # PHASE11 Production GraphRAG Evidence Citation
 
-status: active
+status: completed
 previous_phase: PHASE10_tool-sandbox-vault-network-runtime
+next_phase: PHASE12_security-trace-eval-release-closure
+completed_at: 2026-07-01
 
 ## 目标
 
@@ -82,3 +84,36 @@ pytest -q tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/graphra
 - 外部图索引服务不可用且无 local fallback。
 - citation 无法追溯 source evidence。
 - enhanced / auto 模式绕过 evidence guard。
+
+## 完成证据
+
+PHASE11 已关闭本地可测 Knowledge / GraphRAG / Evidence / Citation runtime 边界：
+
+- `EvidenceItem` 与 `Citation` 现在携带 `source_uri`、`source_span`、parser provenance、ACL、retrieval method 和 source method trace，可从 cited answer 追到 source document / block。
+- `AgenticRetrievalRuntime` 对同一 evidence block 做本地 RRF 聚合与 score rerank，并在 `production_graphrag.fusion` 中记录 ranked evidence、RRF score、rerank score 和 source methods。
+- `production_graphrag.graph_extraction` 记录本地 deterministic text unit / entity / relation extraction trace。
+- `production_graphrag.community_report` 记录本地 deterministic community report 与 source evidence ids。
+- `production_graphrag.external_graph_index` 明确标记为 `target_blocked`，不把外部图索引服务伪装成 Current。
+- `unsupported_claim_metrics` 写入 trace metadata 和 task retrieval event，enhanced / auto 路径不能绕过 unsupported claim guard。
+
+## Current / Target 边界
+
+Current 只能表述为：目标层 `zuno.knowledge.agentic_graphrag` 具备本地 deterministic evidence provenance、citation source tracing、local RRF / rerank trace、deterministic graph extraction / community report trace、unsupported claim metrics 和 focused tests。
+
+Remaining Target 仍是：生产级 LLM GraphRAG extraction、真实 community report pipeline、外部 Elasticsearch / Milvus / Neo4j 图索引、生产 reranker 服务、完整 retrieval / citation eval baseline 和外部 operations。
+
+## 验证证据
+
+```powershell
+pytest -q tests/agent/test_agentic_retrieval_runtime.py tests/agent/test_agentic_graphrag_contract.py tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
+pytest -q tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/graphrag tests/retrieval tests/evals/test_multihop_eval_real_runtime_runner.py -p no:cacheprovider
+git diff --check
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_repo_structure.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-docs.ps1
+pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+```

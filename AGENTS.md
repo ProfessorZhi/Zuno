@@ -181,7 +181,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE11_production-graphrag-evidence-citation`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；后续 phase 必须以 `.agent/programs/PHASE*.md` 的 closure evidence 为 gate。四大总交付物是：工作流自洽与自我维护、文档系统清晰无冗余、文件夹和代码 ownership 清晰、架构功能完整实现；第四项展开为八类 runtime-first 交付物。
+当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE12_security-trace-eval-release-closure`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；PHASE11 已关闭 local evidence provenance、citation source tracing、local RRF/rerank trace、deterministic graph extraction / community report trace 和 unsupported claim metrics；后续 phase 必须以 `.agent/programs/PHASE*.md` 的 closure evidence 为 gate。四大总交付物是：工作流自洽与自我维护、文档系统清晰无冗余、文件夹和代码 ownership 清晰、架构功能完整实现；第四项展开为八类 runtime-first 交付物。
 
 最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。runtime-first closure evidence 保留在归档目录；AGENTS.md 不重复闭环链路细节。
 
@@ -208,7 +208,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/PHASE11_production-graphrag-evidence-citation.md`
 - `.agent/programs/PHASE12_security-trace-eval-release-closure.md`
 
-最近完成的 `zuno-target-architecture-runtime-full-implementation-v1` 已归档。本轮当前进入 PHASE11 production graphrag evidence citation；PHASE10 closure evidence 以 `.agent/programs/PHASE10_tool-sandbox-vault-network-runtime.md` 为准，后续仍不得把 Target 伪装成 Current。
+最近完成的 `zuno-target-architecture-runtime-full-implementation-v1` 已归档。本轮当前进入 PHASE12 security trace eval release closure；PHASE11 closure evidence 以 `.agent/programs/PHASE11_production-graphrag-evidence-citation.md` 为准，后续仍不得把 Target 伪装成 Current。
 
 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 

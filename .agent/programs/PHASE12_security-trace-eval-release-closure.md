@@ -1,6 +1,7 @@
 # PHASE12 Security Trace Eval Release Closure
 
-status: pending
+status: active
+previous_phase: PHASE11_production-graphrag-evidence-citation
 
 ## 目标
 

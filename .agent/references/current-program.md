@@ -4,7 +4,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE11_production-graphrag-evidence-citation
+current_phase: PHASE12_security-trace-eval-release-closure
 
 `.agent/programs/` 当前保存 active program 的平铺执行计划：
 

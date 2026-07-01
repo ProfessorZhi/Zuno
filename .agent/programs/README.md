@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-production-architecture-and-deliverables-completion-v1`
-- Current phase: `PHASE11_production-graphrag-evidence-citation`
+- Current phase: `PHASE12_security-trace-eval-release-closure`
 - 最近完成 program: `zuno-target-architecture-runtime-full-implementation-v1`
 - 最近完成归档位置: `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 

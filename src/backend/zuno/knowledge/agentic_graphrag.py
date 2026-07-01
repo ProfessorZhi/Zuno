@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+import re
 from typing import Any, Iterable
 
 from pydantic import BaseModel, Field
@@ -303,6 +304,12 @@ class EvidenceItem(BaseModel):
     trust_label: str
     acl_scope: str = "workspace"
     text: str = ""
+    source_uri: str = ""
+    provenance: dict[str, Any] = Field(default_factory=dict)
+    source_methods: list[QueryMethod] = Field(default_factory=list)
+    rrf_score: float = 0.0
+    rerank_score: float = 0.0
+    community_ids: list[str] = Field(default_factory=list)
 
 
 class EvidenceBundle(BaseModel):
@@ -339,6 +346,8 @@ class Citation(BaseModel):
     block_id: str
     source_span: dict[str, Any] = Field(default_factory=dict)
     trust_label: str
+    source_uri: str = ""
+    provenance: dict[str, Any] = Field(default_factory=dict)
 
 
 class CitationBuilder:
@@ -351,6 +360,8 @@ class CitationBuilder:
                 block_id=item.block_id,
                 source_span=dict(item.source_span),
                 trust_label=item.trust_label,
+                source_uri=item.source_uri,
+                provenance=dict(item.provenance),
             )
             for item in evidence_bundle.items
             if item.citation_label and item.source_span
@@ -433,6 +444,9 @@ class AgenticRetrievalRuntimeResult(BaseModel):
                 "citation_coverage": trace["citation_coverage"],
                 "citation_ids": [citation.label for citation in self.citations],
                 "unsupported_claims": list(self.unsupported_claim_check.unsupported_claims),
+                "unsupported_claim_metrics": dict(
+                    self.trace_metadata.get("unsupported_claim_metrics") or {}
+                ),
                 "dropped_evidence_ids": list(self.evidence_bundle.dropped_evidence_ids),
                 "evidence_verdict": dict(self.trace_metadata.get("evidence_verdict") or {}),
                 "artifact_manifest": dict(self.trace_metadata.get("artifact_manifest") or {}),
@@ -502,6 +516,8 @@ class AgenticRetrievalRuntime:
                     citations=[],
                     answer="No retrieval was required for this request.",
                     index_payloads=[],
+                    unsupported_claim_check=unsupported,
+                    claims=request.claims,
                 ),
             )
 
@@ -539,6 +555,8 @@ class AgenticRetrievalRuntime:
                 citations=citations,
                 answer=answer,
                 index_payloads=index_payloads,
+                unsupported_claim_check=unsupported,
+                claims=request.claims,
             ),
         )
 
@@ -548,35 +566,81 @@ class AgenticRetrievalRuntime:
         decision: RetrievalRouterDecision,
         index_payloads: list[dict[str, Any]],
     ) -> list[EvidenceItem]:
-        candidates: list[EvidenceItem] = []
-        seen_chunks: set[str] = set()
-        citation_index = 1
+        aggregated: dict[str, dict[str, Any]] = {}
         for method in decision.resolved_methods:
             for payload in index_payloads:
                 for source_name in self._sources_for_method(method):
-                    for document in payload.get("documents_by_source", {}).get(source_name, []):
+                    for rank, document in enumerate(
+                        payload.get("documents_by_source", {}).get(source_name, []),
+                        start=1,
+                    ):
                         chunk_id = str(document.get("chunk_id") or "")
-                        if not chunk_id or chunk_id in seen_chunks:
+                        if not chunk_id:
                             continue
-                        if float(document.get("score") or 0.0) <= 0:
+                        score = float(document.get("score") or 0.0)
+                        if score <= 0:
                             continue
                         metadata = dict(document.get("metadata") or {})
-                        seen_chunks.add(chunk_id)
-                        candidates.append(
-                            EvidenceItem(
-                                evidence_id=f"ev:{method.value}:{chunk_id}",
-                                document_id=str(document.get("document_id") or metadata.get("document_id") or ""),
-                                block_id=chunk_id.split("::", 1)[-1],
-                                retrieval_method=method,
-                                score=float(document.get("score") or 0.0),
-                                source_span=dict(metadata.get("source_span") or {}),
-                                citation_label=f"[{citation_index}]",
-                                trust_label=str(metadata.get("trust_label") or "indexed"),
-                                acl_scope=str(metadata.get("acl_scope") or "workspace"),
-                                text=str(document.get("content") or ""),
+                        document_id = str(document.get("document_id") or metadata.get("document_id") or "")
+                        block_id = chunk_id.split("::", 1)[-1]
+                        evidence_key = f"{document_id}::{block_id}"
+                        if evidence_key not in aggregated:
+                            provenance = dict(
+                                (payload.get("manifest") or {}).get("source_provenance") or {}
                             )
-                        )
-                        citation_index += 1
+                            aggregated[evidence_key] = {
+                                "item": EvidenceItem(
+                                    evidence_id=f"ev:{method.value}:{chunk_id}",
+                                    document_id=document_id,
+                                    block_id=block_id,
+                                    retrieval_method=method,
+                                    score=score,
+                                    source_span=dict(metadata.get("source_span") or {}),
+                                    citation_label="",
+                                    trust_label=str(metadata.get("trust_label") or "indexed"),
+                                    acl_scope=str(metadata.get("acl_scope") or "workspace"),
+                                    text=str(document.get("content") or ""),
+                                    source_uri=str(
+                                        metadata.get("source_uri")
+                                        or provenance.get("source_uri")
+                                        or ""
+                                    ),
+                                    provenance=provenance,
+                                ),
+                                "methods": [],
+                                "rrf_score": 0.0,
+                                "rerank_score": score,
+                                "community_ids": set(),
+                            }
+                        entry = aggregated[evidence_key]
+                        methods: list[QueryMethod] = entry["methods"]
+                        if method not in methods:
+                            methods.append(method)
+                        entry["rrf_score"] += 1.0 / (60.0 + rank)
+                        entry["rerank_score"] = max(float(entry["rerank_score"]), score)
+                        entry["community_ids"].add(f"community:{document_id}")
+
+        candidates: list[EvidenceItem] = []
+        ranked = sorted(
+            aggregated.values(),
+            key=lambda entry: (float(entry["rrf_score"]), float(entry["rerank_score"])),
+            reverse=True,
+        )
+        for citation_index, entry in enumerate(ranked, start=1):
+            item: EvidenceItem = entry["item"]
+            methods = list(entry["methods"])
+            candidates.append(
+                item.model_copy(
+                    update={
+                        "citation_label": f"[{citation_index}]",
+                        "source_methods": methods,
+                        "score": float(entry["rerank_score"]),
+                        "rrf_score": round(float(entry["rrf_score"]), 6),
+                        "rerank_score": round(float(entry["rerank_score"]), 6),
+                        "community_ids": sorted(entry["community_ids"]),
+                    }
+                )
+            )
         return candidates
 
     @staticmethod
@@ -600,11 +664,18 @@ class AgenticRetrievalRuntime:
         citations: list[Citation],
         answer: str,
         index_payloads: list[dict[str, Any]],
+        unsupported_claim_check: UnsupportedClaimCheck,
+        claims: list[str],
     ) -> dict[str, Any]:
         from zuno.knowledge.trace import enrich_trace_metadata_with_artifacts
 
         evidence_refs = [_evidence_ref(item) for item in evidence_bundle.items]
         citation_refs = [_citation_ref(citation) for citation in citations]
+        evidence_items = [_evidence_item_payload(item) for item in evidence_bundle.items]
+        unsupported_claim_metrics = _unsupported_claim_metrics(
+            claims=claims,
+            unsupported_claim_check=unsupported_claim_check,
+        )
         metadata = {
             **decision.to_trace(),
             "requested_product_mode": decision.requested_product_mode.value,
@@ -628,7 +699,23 @@ class AgenticRetrievalRuntime:
                     else 0.0
                 ),
                 "dropped_evidence_ids": list(evidence_bundle.dropped_evidence_ids),
+                "items": evidence_items,
             },
+            "citation_contract": {
+                "status": "pass" if citations and len(citation_refs) == len(evidence_bundle.items) else "missing",
+                "citation_coverage": (
+                    len(citation_refs) / len(evidence_bundle.items)
+                    if evidence_bundle.items
+                    else 0.0
+                ),
+                "citation_chunks": citation_refs,
+                "evidence_document_count": len(evidence_bundle.items),
+            },
+            "production_graphrag": _production_graphrag_trace(
+                evidence_bundle.items,
+                index_payloads=index_payloads,
+            ),
+            "unsupported_claim_metrics": unsupported_claim_metrics,
             "citation_chunks": citation_refs,
             "pipeline_trace": {
                 "steps": [
@@ -679,6 +766,139 @@ def _evidence_ref(item: EvidenceItem) -> str:
 
 def _citation_ref(citation: Citation) -> str:
     return f"{citation.document_id}::{citation.block_id}"
+
+
+def _evidence_item_payload(item: EvidenceItem) -> dict[str, Any]:
+    return {
+        "evidence_id": item.evidence_id,
+        "document_id": item.document_id,
+        "block_id": item.block_id,
+        "source_uri": item.source_uri,
+        "source_span": dict(item.source_span),
+        "provenance": dict(item.provenance),
+        "retrieval_method": item.retrieval_method.value,
+        "source_methods": [method.value for method in item.source_methods],
+        "score": item.score,
+        "rrf_score": item.rrf_score,
+        "rerank_score": item.rerank_score,
+        "citation_label": item.citation_label,
+        "trust_label": item.trust_label,
+        "acl_scope": item.acl_scope,
+        "community_ids": list(item.community_ids),
+    }
+
+
+def _production_graphrag_trace(
+    items: list[EvidenceItem],
+    *,
+    index_payloads: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "current_runtime": "local_deterministic",
+        "external_graph_index": {
+            "status": "target_blocked",
+            "target": "external_graph_index_service",
+            "blocked_reason": "external graph index service is not connected in local runtime",
+        },
+        "graph_extraction": _graph_extraction_trace(items),
+        "community_report": _community_report_trace(items),
+        "fusion": _fusion_trace(items),
+        "index_manifest_refs": [
+            {
+                "knowledge_space_id": payload.get("knowledge_space_id"),
+                "index_version": payload.get("index_version"),
+                "adapter_status": dict((payload.get("manifest") or {}).get("adapter_status") or {}),
+            }
+            for payload in index_payloads
+        ],
+    }
+
+
+def _graph_extraction_trace(items: list[EvidenceItem]) -> dict[str, Any]:
+    records = []
+    for item in items:
+        entities = _entities(item.text)
+        records.append(
+            {
+                "text_unit_id": _evidence_ref(item),
+                "document_id": item.document_id,
+                "block_id": item.block_id,
+                "source_uri": item.source_uri,
+                "source_span": dict(item.source_span),
+                "entities": entities,
+                "relations": [
+                    {
+                        "source": item.document_id,
+                        "target": entity,
+                        "relation_type": "DOCUMENT_MENTIONS_ENTITY",
+                    }
+                    for entity in entities
+                ],
+                "acl_scope": item.acl_scope,
+            }
+        )
+    return {
+        "status": "local_deterministic",
+        "text_unit_count": len(records),
+        "entity_count": sum(len(record["entities"]) for record in records),
+        "relation_count": sum(len(record["relations"]) for record in records),
+        "records": records,
+    }
+
+
+def _community_report_trace(items: list[EvidenceItem]) -> dict[str, Any]:
+    grouped: dict[str, list[EvidenceItem]] = {}
+    for item in items:
+        community_ids = item.community_ids or [f"community:{item.document_id}"]
+        for community_id in community_ids:
+            grouped.setdefault(community_id, []).append(item)
+    reports = [
+        {
+            "community_id": community_id,
+            "summary": " ".join(item.text for item in community_items)[:240],
+            "source_evidence_ids": [item.evidence_id for item in community_items],
+            "source_documents": sorted({item.document_id for item in community_items}),
+            "status": "local_deterministic",
+        }
+        for community_id, community_items in sorted(grouped.items())
+    ]
+    return {
+        "status": "local_deterministic",
+        "community_count": len(reports),
+        "reports": reports,
+    }
+
+
+def _fusion_trace(items: list[EvidenceItem]) -> dict[str, Any]:
+    return {
+        "strategy": "local_rrf_then_score_rerank",
+        "rerank_status": "local_deterministic",
+        "ranked_evidence_ids": [item.evidence_id for item in items],
+        "rrf_scores": {item.evidence_id: item.rrf_score for item in items},
+        "rerank_scores": {item.evidence_id: item.rerank_score for item in items},
+        "source_methods": {
+            item.evidence_id: [method.value for method in item.source_methods] for item in items
+        },
+    }
+
+
+def _unsupported_claim_metrics(
+    *,
+    claims: list[str],
+    unsupported_claim_check: UnsupportedClaimCheck,
+) -> dict[str, Any]:
+    unsupported = list(unsupported_claim_check.unsupported_claims)
+    return {
+        "checked_claim_count": len([claim for claim in claims if claim.strip()]),
+        "unsupported_claim_count": len(unsupported),
+        "unsupported_claims": unsupported,
+        "guard_status": "blocked_confident_wording" if unsupported else "pass",
+    }
+
+
+def _entities(text: str) -> list[str]:
+    candidates = re.findall(r"\b[A-Z][A-Za-z0-9_]{2,}\b", text)
+    return sorted(set(candidates))
 
 
 class GraphRAGIndexPipelineContract(BaseModel):
