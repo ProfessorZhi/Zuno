@@ -40,7 +40,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
     for phrase in [
         ".agent/programs/",
         "zuno-production-architecture-and-deliverables-completion-v1",
-        "PHASE01_production-maturity-gap-audit",
+        "docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/",
         "zuno-target-architecture-runtime-full-implementation-v1",
         "zuno-master-architecture-implementation-v1",
     ]:
@@ -54,13 +54,12 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "LangSmith-compatible Trace / Eval",
     ]:
         assert phrase in architecture
-    current_phase = _current_phase_name(current_program)
-    assert current_phase is not None
-    assert "state: active" in current_program
-    assert "active_program: zuno-production-architecture-and-deliverables-completion-v1" in current_program
-    assert "current_phase:" in current_program
-    assert current_phase in readme
-    assert current_phase in architecture
+    assert _current_phase_name(current_program) == "none"
+    assert "state: no-active" in current_program
+    assert "active_program: none" in current_program
+    assert "latest_completed_program: zuno-production-architecture-and-deliverables-completion-v1" in current_program
+    assert "zuno-production-architecture-and-deliverables-completion-v1" in readme
+    assert "zuno-production-architecture-and-deliverables-completion-v1" in architecture
     assert "一次性交付型成熟化 program" in current_program
     assert "zuno-target-architecture-runtime-full-implementation-v1" in current_program
     assert "docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/" in current_program

@@ -1,7 +1,8 @@
 # PHASE12 Security Trace Eval Release Closure
 
-status: active
+status: completed
 previous_phase: PHASE11_production-graphrag-evidence-citation
+completed_at: 2026-07-01
 
 ## 目标
 
@@ -97,3 +98,10 @@ pytest -q -p no:cacheprovider
 - full verification 失败且无法在当前 phase 修复。
 - 生产级能力没有证据却被要求写成 Current。
 - 归档会丢失 active program evidence。
+
+## 完成证据
+
+- `docs/architecture/production-readiness.md` 已更新四大总交付物和八类 runtime-first 交付物闭环；未接入外部平台的 LangSmith / OTel sink、online eval、persistent trace store 和 CI release gate operations 保持 Remaining Target。
+- `.agent/programs/` 已回到 no-active 等待态，PHASE01-PHASE12 已归档到本目录。
+- `AGENTS.md`、README、`.agent/references/current-program.md`、`.agent/references/verification-map.md`、verifier 和 repo tests 已同步 no-active / latest completed archive 规则。
+- full verification 结果记录在 `closure-summary.md`。

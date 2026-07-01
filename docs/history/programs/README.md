@@ -54,6 +54,12 @@ and evidence, not the active Agent execution path.
   durable controller runtime, memory DB, tool control plane, agentic retrieval,
   security / observability / eval, Web product surface, release gate, archive,
   and no-active closure.
+- `zuno-production-architecture-and-deliverables-completion-v1/`: completed
+  production architecture and deliverables completion program. It closed
+  PHASE01-PHASE12 across workflow self-maintenance, documentation dedup,
+  repo ownership, product surface, parse/index, durable runtime, Memory,
+  Tool/Sandbox, GraphRAG evidence/citation, Security / Trace / Eval / Release,
+  full verification, archive, and no-active closure.
 
 ## Rule
 

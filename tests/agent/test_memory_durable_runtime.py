@@ -93,7 +93,7 @@ def test_durable_memory_store_snapshot_round_trips_cross_task_memory() -> None:
         "evt_task_1"
     ]
     assert context_pack["context_policy"]["selection_reasons_by_item"]["memory:semantic_0"] == (
-        "approved_memory_query_match"
+        "approved_semantic_memory_query_match"
     )
     assert "memory_candidate_approved" in {
         entry["action"] for entry in restored_engine.store.governance_ledger(scope)

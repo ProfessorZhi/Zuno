@@ -38,20 +38,19 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 active Agent program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE12_security-trace-eval-release-closure`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；PHASE11 已关闭 local evidence provenance、citation source tracing、local RRF/rerank trace、deterministic graph extraction / community report trace 和 unsupported claim metrics；后续 phase 以 `.agent/programs/PHASE*.md` 的 closure evidence 为 gate。
+当前没有 active Agent program；`.agent/programs/` 处于 no-active 等待态，只保留 `current.md`、`README.md`、`implementation-roadmap.md` 和 `closure-checklist.md`。
 
-本轮 program 文件在 `.agent/programs/`：
+最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 
-- `.agent/programs/current.md`
-- `.agent/programs/implementation-roadmap.md`
-- `.agent/programs/closure-checklist.md`
-- `.agent/programs/PHASE01_production-maturity-gap-audit.md` 到 `.agent/programs/PHASE12_security-trace-eval-release-closure.md`
+- `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
 
-最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`：
+它完成 PHASE01-PHASE12，把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”的本地可验证 baseline。PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；PHASE11 已关闭 local evidence provenance、citation source tracing、local RRF/rerank trace、deterministic graph extraction / community report trace 和 unsupported claim metrics；PHASE12 已完成 release closure、full verification、archive 和 no-active state。
+
+上一轮 runtime-first program 是 `zuno-target-architecture-runtime-full-implementation-v1`：
 
 - `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 
-该 program 的 runtime-first closure evidence 保留在归档目录；README 不重复闭环链路细节。
+这些 program 的 closure evidence 保留在归档目录；README 不重复闭环链路细节。
 
 上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`：
 
@@ -59,7 +58,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。
 
-执行状态入口在 `.agent/programs/`。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。phase 级执行证据保留在 active program 文件和 completed program 归档中，README 只保留当前状态摘要。
+执行状态入口在 `.agent/programs/`。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。phase 级执行证据保留在 completed program 归档中，README 只保留当前状态摘要。
 
 ## 运行示例
 

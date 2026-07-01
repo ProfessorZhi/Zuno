@@ -48,6 +48,7 @@ RUNTIME_PROGRAM_FILES = [
     "current.md",
 ]
 ACTIVE_PROGRAM_NAME = "zuno-production-architecture-and-deliverables-completion-v1"
+ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{ACTIVE_PROGRAM_NAME}"
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_production-maturity-gap-audit.md",
     "PHASE02_program-truth-source-and-execution-system.md",
@@ -67,7 +68,6 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
-    *ACTIVE_PROGRAM_PHASE_FILES,
 ]
 
 
@@ -78,20 +78,17 @@ def _current_phase_name(content: str) -> str | None:
     return None
 
 
-def _verify_active_phase_state(current: str) -> list[str]:
+def _verify_archived_phase_state() -> list[str]:
     errors: list[str] = []
-    current_phase = _current_phase_name(current)
-    phase_stems = [Path(name).stem for name in ACTIVE_PROGRAM_PHASE_FILES]
-    if current_phase not in phase_stems:
-        errors.append(f"current_phase is not an active program phase: {current_phase}")
-        return errors
-
-    active_index = phase_stems.index(current_phase)
-    for index, phase_name in enumerate(ACTIVE_PROGRAM_PHASE_FILES):
-        phase_content = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
-        expected_status = "completed" if index < active_index else "active" if index == active_index else "pending"
-        if f"status: {expected_status}" not in phase_content:
-            errors.append(f"{phase_name} should have status: {expected_status}")
+    archive_root = REPO_ROOT / ACTIVE_PROGRAM_ARCHIVE
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
+        phase_path = archive_root / phase_name
+        if not phase_path.exists():
+            errors.append(f"production completion program archive missing phase: {phase_name}")
+            continue
+        phase_content = phase_path.read_text(encoding="utf-8")
+        if "status: completed" not in phase_content:
+            errors.append(f"production completion program archive phase missing completed status: {phase_name}")
     return errors
 COMPLETED_PROGRAM_PHASE_FILES = [
     "PHASE01_program-boot-baseline.md",
@@ -135,7 +132,12 @@ REQUIRED_PATHS = [
     ".agent/programs/README.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    *[f".agent/programs/{phase_name}" for phase_name in ACTIVE_PROGRAM_PHASE_FILES],
+    f"{ACTIVE_PROGRAM_ARCHIVE}/README.md",
+    f"{ACTIVE_PROGRAM_ARCHIVE}/current.md",
+    f"{ACTIVE_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{ACTIVE_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{ACTIVE_PROGRAM_ARCHIVE}/closure-summary.md",
+    *[f"{ACTIVE_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in ACTIVE_PROGRAM_PHASE_FILES],
     f"{RUNTIME_PROGRAM_ARCHIVE}/README.md",
     f"{RUNTIME_PROGRAM_ARCHIVE}/current.md",
     f"{RUNTIME_PROGRAM_ARCHIVE}/implementation-roadmap.md",
@@ -1218,6 +1220,12 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     roadmap_path = programs_root / "implementation-roadmap.md"
     closure_path = programs_root / "closure-checklist.md"
     current_program_reference = REPO_ROOT / ".agent/references/current-program.md"
+    production_archive_root = REPO_ROOT / ACTIVE_PROGRAM_ARCHIVE
+    production_archive_text = (
+        (production_archive_root / "current.md").read_text(encoding="utf-8")
+        + (production_archive_root / "README.md").read_text(encoding="utf-8")
+        + (production_archive_root / "closure-summary.md").read_text(encoding="utf-8")
+    )
     runtime_archive_root = REPO_ROOT / RUNTIME_PROGRAM_ARCHIVE
     current_readme = (
         current_path.read_text(encoding="utf-8")
@@ -1230,10 +1238,15 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         + (runtime_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: active",
-        f"active_program: {ACTIVE_PROGRAM_NAME}",
-        "current_phase:",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
         ACTIVE_PROGRAM_NAME,
+        ACTIVE_PROGRAM_ARCHIVE,
+        "completed / archived",
+        "PHASE01-PHASE12",
+        "no-active",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",
@@ -1249,8 +1262,8 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
     ]:
-        if phrase not in current_readme:
-            errors.append(f".agent/programs active runtime surface missing phrase: {phrase}")
+        if phrase not in current_readme + production_archive_text:
+            errors.append(f".agent/programs no-active surface missing phrase: {phrase}")
     phase03_path = REPO_ROOT / "docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md"
     if not phase03_path.exists():
         errors.append("missing archived Program 1 PHASE03 Skill / Template / Program plan")
@@ -1264,30 +1277,20 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_names = sorted(path.name for path in programs_root.glob("PHASE*.md"))
-    if active_phase_names != sorted(ACTIVE_PROGRAM_PHASE_FILES):
+    if active_phase_names:
         errors.append(
-            ".agent/programs active phase files drifted: "
+            ".agent/programs must not keep archived phase files in no-active state: "
             + ", ".join(active_phase_names)
         )
-    current_program_text = current_path.read_text(encoding="utf-8")
-    errors.extend(_verify_active_phase_state(current_program_text))
-    current_phase = _current_phase_name(current_program_text)
-    if current_phase:
-        for label, content in [
-            (".agent/programs/README.md", readme_path.read_text(encoding="utf-8")),
-            (".agent/programs/implementation-roadmap.md", roadmap_path.read_text(encoding="utf-8")),
-            (".agent/references/current-program.md", current_program_reference.read_text(encoding="utf-8")),
-        ]:
-            if current_phase not in content:
-                errors.append(f"{label} missing current phase {current_phase}")
+    errors.extend(_verify_archived_phase_state())
     for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
-        phase_path = programs_root / phase_name
+        phase_path = production_archive_root / phase_name
         if not phase_path.exists():
-            errors.append(f"active production program missing phase: {phase_name}")
+            errors.append(f"production completion program archive missing phase: {phase_name}")
             continue
         phase_content = phase_path.read_text(encoding="utf-8")
-        if "status:" not in phase_content:
-            errors.append(f"active production program phase missing status: {phase_name}")
+        if "status: completed" not in phase_content:
+            errors.append(f"production completion program archive phase missing completed status: {phase_name}")
         for required in [
             "## 目标",
             "## 范围",
@@ -1302,7 +1305,10 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             "## 停止条件",
         ]:
             if required not in phase_content:
-                errors.append(f"active production program phase missing section {required}: {phase_name}")
+                errors.append(f"production completion program archive phase missing section {required}: {phase_name}")
+    for required_archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        if not (production_archive_root / required_archive_file).exists():
+            errors.append(f"production completion program archive missing file: {required_archive_file}")
     for phase_index, phase_name in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
         phase_path = runtime_archive_root / phase_name
         if not phase_path.exists():

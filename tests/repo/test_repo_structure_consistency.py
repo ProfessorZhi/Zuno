@@ -56,6 +56,7 @@ RUNTIME_PROGRAM_FILES = [
     "current.md",
 ]
 ACTIVE_PROGRAM_NAME = "zuno-production-architecture-and-deliverables-completion-v1"
+ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{ACTIVE_PROGRAM_NAME}"
 ACTIVE_PROGRAM_PHASE_FILES = [
     "PHASE01_production-maturity-gap-audit.md",
     "PHASE02_program-truth-source-and-execution-system.md",
@@ -75,7 +76,6 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
-    *ACTIVE_PROGRAM_PHASE_FILES,
 ]
 
 
@@ -86,16 +86,11 @@ def _current_phase_name(content: str) -> str | None:
     return None
 
 
-def _assert_active_phase_state(current: str) -> None:
-    current_phase = _current_phase_name(current)
-    phase_stems = [Path(name).stem for name in ACTIVE_PROGRAM_PHASE_FILES]
-    assert current_phase in phase_stems
-
-    active_index = phase_stems.index(current_phase)
-    for index, phase_name in enumerate(ACTIVE_PROGRAM_PHASE_FILES):
-        phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
-        expected_status = "completed" if index < active_index else "active" if index == active_index else "pending"
-        assert f"status: {expected_status}" in phase_text
+def _assert_archived_phase_state() -> None:
+    archive_root = REPO_ROOT / ACTIVE_PROGRAM_ARCHIVE
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
+        phase_text = (archive_root / phase_name).read_text(encoding="utf-8")
+        assert "status: completed" in phase_text
 
 
 def test_required_current_paths_exist() -> None:
@@ -126,7 +121,12 @@ def test_required_current_paths_exist() -> None:
         ".agent/programs/README.md",
         ".agent/programs/implementation-roadmap.md",
         ".agent/programs/closure-checklist.md",
-        *[f".agent/programs/{phase_name}" for phase_name in ACTIVE_PROGRAM_PHASE_FILES],
+        f"{ACTIVE_PROGRAM_ARCHIVE}/README.md",
+        f"{ACTIVE_PROGRAM_ARCHIVE}/current.md",
+        f"{ACTIVE_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+        f"{ACTIVE_PROGRAM_ARCHIVE}/closure-checklist.md",
+        f"{ACTIVE_PROGRAM_ARCHIVE}/closure-summary.md",
+        *[f"{ACTIVE_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in ACTIVE_PROGRAM_PHASE_FILES],
         ".agent/architecture/README.md",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
@@ -1035,6 +1035,12 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     current_reference = (REPO_ROOT / ".agent/references/current-program.md").read_text(
         encoding="utf-8"
     )
+    production_archive = REPO_ROOT / ACTIVE_PROGRAM_ARCHIVE
+    production_archive_text = (
+        (production_archive / "current.md").read_text(encoding="utf-8")
+        + (production_archive / "README.md").read_text(encoding="utf-8")
+        + (production_archive / "closure-summary.md").read_text(encoding="utf-8")
+    )
     runtime_archive = REPO_ROOT / RUNTIME_PROGRAM_ARCHIVE
     archive_text = (
         (runtime_archive / "current.md").read_text(encoding="utf-8")
@@ -1043,9 +1049,14 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     )
     for phrase in [
         ACTIVE_PROGRAM_NAME,
-        "state: active",
-        f"active_program: {ACTIVE_PROGRAM_NAME}",
-        "current_phase:",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {ACTIVE_PROGRAM_NAME}",
+        ACTIVE_PROGRAM_ARCHIVE,
+        "completed / archived",
+        "PHASE01-PHASE12",
+        "no-active",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",
@@ -1060,18 +1071,14 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
     ]:
-        assert phrase in current + readme + roadmap + closure + current_reference + archive_text
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(ACTIVE_PROGRAM_PHASE_FILES)
-    _assert_active_phase_state(current)
-    current_phase = _current_phase_name(current)
-    assert current_phase in readme
-    assert current_phase in roadmap
-    assert current_phase in current_reference
+        assert phrase in current + readme + roadmap + closure + current_reference + production_archive_text + archive_text
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == []
+    _assert_archived_phase_state()
     for phase in ACTIVE_PROGRAM_PHASE_FILES:
-        phase_path = REPO_ROOT / ".agent/programs" / phase
+        phase_path = production_archive / phase
         assert phase_path.exists()
         phase_text = phase_path.read_text(encoding="utf-8")
-        assert "status:" in phase_text
+        assert "status: completed" in phase_text
         for section in [
             "## 目标",
             "## 范围",
@@ -1086,6 +1093,8 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
             "## 停止条件",
         ]:
             assert section in phase_text
+    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        assert (production_archive / archive_file).exists()
     for index, phase in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
         phase_path = runtime_archive / phase
         assert phase_path.exists()

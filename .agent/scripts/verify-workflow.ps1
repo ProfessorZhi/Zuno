@@ -38,6 +38,25 @@ Require-Path "docs\architecture\architecture.md"
 Require-Path "docs\architecture\architecture.html"
 Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
+Require-Path ".agent\programs\implementation-roadmap.md"
+Require-Path ".agent\programs\closure-checklist.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\README.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\current.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\implementation-roadmap.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\closure-checklist.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\closure-summary.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE01_production-maturity-gap-audit.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE02_program-truth-source-and-execution-system.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE03_workflow-self-maintenance-automation.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE04_documentation-dedup-architecture-clarity.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE05_repo-ownership-and-compatibility-retirement.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE06_product-surface-desktop-recovery-loop.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE07_production-parse-and-index-platform.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE08_durable-agent-runtime-persistence.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE09_memory-context-production-governance.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE10_tool-sandbox-vault-network-runtime.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE11_production-graphrag-evidence-citation.md"
+Require-Path "docs\history\programs\zuno-production-architecture-and-deliverables-completion-v1\PHASE12_security-trace-eval-release-closure.md"
 Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\implementation-roadmap.md"
 Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\closure-checklist.md"
 Require-Path "docs\history\programs\zuno-target-architecture-runtime-full-implementation-v1\closure-summary.md"
@@ -214,8 +233,11 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "current_phase: PHASE\d\d_[A-Za-z0-9_-]+") {
-    $failures.Add("current-program.md must declare active production architecture completion program")
+if ($currentProgram -notmatch "zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-production-architecture-and-deliverables-completion-v1") {
+    $failures.Add("current-program.md must declare no-active state and latest completed production architecture completion program")
+}
+if ($currentProgram -notmatch "docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/") {
+    $failures.Add("current-program.md must keep latest production completion archive")
 }
 if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/") {
     $failures.Add("current-program.md must keep latest runtime full implementation archive")

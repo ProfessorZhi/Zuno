@@ -1,37 +1,28 @@
 # Agent 执行计划
 
-`.agent/programs/` 当前保存 active program：`zuno-production-architecture-and-deliverables-completion-v1`。
+`.agent/programs/` 当前处于 no-active 等待态。
 
 ## 当前状态
 
-- State: active
-- Active program: `zuno-production-architecture-and-deliverables-completion-v1`
-- Current phase: `PHASE12_security-trace-eval-release-closure`
-- 最近完成 program: `zuno-target-architecture-runtime-full-implementation-v1`
-- 最近完成归档位置: `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
-
-## 本轮定位
-
-本轮不是继续做架构细化，也不是再做最小 runtime slice。它是一次性交付型成熟化 program，目标是完整推进四大总交付物：
-
-1. 工作流自洽与自我维护。
-2. 文档系统清晰无冗余。
-3. 文件夹和代码 ownership 清晰。
-4. 架构功能完整实现；该项展开为八类 runtime-first 交付物。
-
-成熟度、Current / Target 边界和四大总交付物口径以 `docs/architecture/production-readiness.md` 为准；本目录保存执行计划、phase gate 和 closure 证据。
+- State: no-active
+- Active program: none
+- Current phase: none
+- Latest completed program: `zuno-production-architecture-and-deliverables-completion-v1`
+- Latest completed archive: `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
 
 ## 文件
 
-- `current.md`：当前状态和 program 规则。
-- `implementation-roadmap.md`：PHASE01-PHASE12 总路线。
-- `closure-checklist.md`：最终收口闸门。
-- `PHASE01_*.md` 到 `PHASE12_*.md`：当前 active phase 文件。
+- `current.md`：当前 no-active 状态、最近完成归档和下一轮打开规则。
+- `implementation-roadmap.md`：最近完成 program 的归档摘要和下一轮执行规则。
+- `closure-checklist.md`：no-active 状态和最近完成 program 的归档检查结果。
+
+PHASE01-PHASE12 文件不留在前台路径；它们已归档到：
+
+- `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
 
 ## 使用规则
 
-- 必须按 PHASE01 -> PHASE12 顺序推进。
-- 每个 phase 关闭前必须运行最小有效验证，并写回 phase 文件。
-- completed program 必须归档到 `docs/history/programs/`。
-- 允许使用主线程 coordinator + 多 agent / 多 worktree 模式；多 agent 是工程执行方式，不改变 Zuno 产品 runtime 的 Single Controller 主线。
+- `.agent/programs/` 只保存当前 active program，或像现在一样保存 no-active 等待态入口。
+- completed program 必须整体归档到 `docs/history/programs/`。
+- 新 program 必须从 PHASE01 开始，并同步 `AGENTS.md`、README、`.agent/references/current-program.md`、verifier 和 repo tests。
 - 只写 contract、schema 或 README 不能关闭 runtime phase。
