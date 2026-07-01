@@ -4,13 +4,13 @@
 
 state: active
 active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
-current_phase: PHASE03_enterprise-ingestion-async-infrastructure.md
+current_phase: PHASE04_knowledge-retrieval-and-graphrag-profile.md
 latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 `.agent/programs/` 当前 active program 是：
 
 - Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- 当前 phase：`.agent/programs/PHASE03_enterprise-ingestion-async-infrastructure.md`
+- 当前 phase：`.agent/programs/PHASE04_knowledge-retrieval-and-graphrag-profile.md`
 
 Program 3 Mega 合并原 active Program 3 与 queued Program 4-6：
 

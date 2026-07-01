@@ -275,6 +275,27 @@ class SQLiteDurableIngestionStore:
             failure_reason=row.failure_reason,
         )
 
+    def list_parse_jobs(self) -> list[ParseJobRecord]:
+        with Session(self.engine) as session:
+            rows = session.exec(select(ParseJobTable)).all()
+        return [
+            ParseJobRecord(
+                parse_job_id=row.parse_job_id,
+                workspace_id=row.workspace_id,
+                file_id=row.file_id,
+                source_id=row.source_id,
+                status=row.status,
+                parser_id=row.parser_id,
+                parser_version=row.parser_version,
+                parse_idempotency_key=row.parse_idempotency_key,
+                attempt_count=row.attempt_count,
+                document_version_id=row.document_version_id,
+                blocked_reason=row.blocked_reason,
+                failure_reason=row.failure_reason,
+            )
+            for row in rows
+        ]
+
     def get_parse_snapshot(self, parse_job_id: str) -> ParseJobSnapshot:
         row = self._get(ParseSnapshotTable, parse_job_id, "parse snapshot")
         return ParseJobSnapshot.model_validate(row.snapshot_json)

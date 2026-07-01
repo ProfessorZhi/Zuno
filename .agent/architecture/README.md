@@ -4,7 +4,7 @@
 
 本目录继续跟随 `docs/architecture/architecture.md` 刷新 Agent 侧镜像和 HTML，不单独承载事实。已验证 runtime / contract / UI / release evidence 可以写入 Current；未实现的生产级 LangSmith、online eval、persistent trace store、CI release gate operations、rootless / gVisor / Firecracker sandbox、外部 vault / OAuth broker、真实网络代理、持久 approval DB 和 production Desktop 闭环仍保持 Target。
 
-当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE03_enterprise-ingestion-async-infrastructure.md`。最近完成并归档的 program 是 `zuno-enterprise-document-ingestion-platform-v2`，归档在 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。后续仍只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后，才把 Target 能力推进到 Current。生产成熟度边界由 `docs/architecture/production-readiness.md` 维护。
+当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE04_knowledge-retrieval-and-graphrag-profile.md`。最近完成并归档的 program 是 `zuno-enterprise-document-ingestion-platform-v2`，归档在 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。后续仍只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后，才把 Target 能力推进到 Current。生产成熟度边界由 `docs/architecture/production-readiness.md` 维护。
 
 ## 当前前台
 

@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE03_enterprise-ingestion-async-infrastructure
-status: active
+status: completed
 
 ## 目标
 
@@ -130,6 +130,18 @@ pytest -q tests/knowledge -p no:cacheprovider
 - blocked OCR / VLM 不 fake index evidence。
 - PDF / Office / image / scanned / binary source object traceability evidence。
 - status / retry / cancel / replay contract evidence。
+
+## Closure Evidence
+
+- Runtime files：`src/backend/zuno/knowledge/storage/local_object_store.py`、`src/backend/zuno/knowledge/ingestion/async_runtime.py`、`src/backend/zuno/knowledge/storage/durable_ingestion_store.py`。
+- ObjectStore bytes：`LocalObjectStore.save_bytes/read_bytes/open_stream/verify_sha256/diagnose_object` 覆盖 bytes round-trip、mime sniff、sha256 和 object_missing diagnostics。
+- Queue / worker：`LocalQueueBackend` 覆盖 enqueue / consume / ack / fail / dead_letter / replay；`ParserWorker` 消费 `parse_requested` 并持久化 parse job、snapshot 和 document version；`IndexWorker` 消费 `index_requested` 并持久化 index manifest 和 chunks。
+- External target-blocked evidence：`RabbitMQQueueBackend.dependency_probe()` 与 `RedisRuntimeStateBoundary.dependency_probe()` 返回 target-blocked，不要求真实 RabbitMQ / Redis。
+- OCR / VLM no fake index：image / scanned target-blocked path 只持久化 blocked parse job / snapshot，不创建 `index_requested` 或 fake index manifest。
+- Reconciler：`IngestionReconciler` 覆盖 `parse_succeeded_without_index` 和 `index_chunks_missing`。
+- Focused tests：`pytest -q tests/knowledge/test_ingestion_async_infrastructure.py -p no:cacheprovider` 通过，`4 passed`。
+- Regression tests：`pytest -q tests/api/test_workspace_durable_ingest_runtime.py -p no:cacheprovider` 通过，`4 passed, 1 warning`；`pytest -q tests/knowledge -p no:cacheprovider` 通过，`54 passed`。
+
 
 ## 停止条件
 

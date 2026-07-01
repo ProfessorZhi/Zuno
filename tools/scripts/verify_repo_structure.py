@@ -1336,7 +1336,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE03_enterprise-ingestion-async-infrastructure.md",
+        "current_phase: PHASE04_knowledge-retrieval-and-graphrag-profile.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -1394,9 +1394,9 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {PROGRAM3_ACTIVE_NAME}" not in phase_content:
             errors.append(f"Program 3 active phase missing program id: {phase_name}")
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_"):
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_"):
             expected_status = "status: completed"
-        elif phase_name.startswith("PHASE03_"):
+        elif phase_name.startswith("PHASE04_"):
             expected_status = "status: active"
         else:
             expected_status = "status: pending"

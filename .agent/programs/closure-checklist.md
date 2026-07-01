@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE03_enterprise-ingestion-async-infrastructure.md`
+current_phase: `PHASE04_knowledge-retrieval-and-graphrag-profile.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 收口目标
@@ -20,7 +20,7 @@ Production scale external deployments remain replaceable targets.
 
 - [x] PHASE01 完成 truth source、program merge、owner map、workstream map 和 PR / commit plan。
 - [x] PHASE02 完成 shared contract freeze，且明确冻结 FileInputFormat、SourceObject、BinarySourceObject、ObjectStoreRef、ObjectStoreResult、ParserCapabilityStatus、ParserDependencyProbe、ParserWorkerSpec、ParserWorkerResult、ParseJobStatus、ParseAttempt、IndexWorkerSpec、IndexWorkerResult、QueueMessage、QueueBackendResult、OutboxEvent、DeadLetterRecord、ReconcilerFinding、OCRVLMEnrichmentResult、KnowledgeSpaceConfig、FileIngestionStatus、ChangeImpactPreview、CapabilityPolicy / RiskProfile / AuditEvent、ConversationRunMetrics、StageMetrics、IngestionMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、EvalComparisonReport、ScenarioSummary 和 TraceSummary。
-- [ ] PHASE03 完成 enterprise ingestion async infrastructure baseline，并覆盖 PDF / Office / image / scanned / binary target-blocked visibility、binary ObjectStore、file lifecycle、outbox、dead letter 和 reconciler。
+- [x] PHASE03 完成 enterprise ingestion async infrastructure baseline，并覆盖 PDF / Office / image / scanned / binary target-blocked visibility、binary ObjectStore、file lifecycle、outbox、dead letter 和 reconciler。
 - [ ] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
 - [ ] PHASE05 完成 Memory & Context Engine baseline。
 - [ ] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。

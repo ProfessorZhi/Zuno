@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE04_knowledge-retrieval-and-graphrag-profile
-status: pending
+status: active
 
 ## 目标
 
