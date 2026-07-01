@@ -1,4 +1,4 @@
-# PROGRAM04 Enterprise Knowledge Eval Benchmark
+# PROGRAM05 Enterprise Knowledge Eval Benchmark
 
 state: queued
 program: zuno-enterprise-knowledge-eval-benchmark-v1

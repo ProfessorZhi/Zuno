@@ -1,4 +1,4 @@
-# PROGRAM03 Agent Planning Integration
+# PROGRAM04 Agent Planning Integration
 
 state: queued
 program: zuno-agent-planning-integration-v1
@@ -6,7 +6,7 @@ depends_on: zuno-runtime-subsystems-parallel-v1
 
 ## 目标
 
-把 Program 2 的 Memory、Tool、安全和 GraphRAG 成果合并进 Single Controller Agent，实现真实 `prepare_context -> plan -> ReAct -> observe -> reflect -> replan -> post_turn_commit`。Program 3 是 Zuno 从“能检索回答”走向“能计划、执行、反思、重规划”的关键 program。
+把 Program 3 的 Memory、Tool、安全和 GraphRAG 成果合并进 Single Controller Agent，实现真实 `prepare_context -> plan -> ReAct -> observe -> reflect -> replan -> post_turn_commit`。Program 4 是 Zuno 从“能检索回答”走向“能计划、执行、反思、重规划”的关键 program。
 
 ## 核心边界
 
@@ -18,7 +18,7 @@ depends_on: zuno-runtime-subsystems-parallel-v1
 
 目标：
 
-- 拉取 Program 2 四个分支。
+- 拉取 Program 3 四个分支。
 - 建立 diff map、conflict map、test map。
 - 判断哪些变更先合并，哪些需要主线程重写。
 
@@ -128,7 +128,7 @@ python .agent/scripts/verify_agent_system.py
 
 ## 停止条件
 
-- Program 2 分支未完成或验证不可信。
+- Program 3 分支未完成或验证不可信。
 - Planning 需要 public API 或 DB schema 变更，但未经过单独 phase 审批。
 - Planner 只能生成静态模板，无法通过测试证明会影响 runtime 行为。
 - replan 无法被 trace 或 tests 观察。

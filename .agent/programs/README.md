@@ -16,9 +16,9 @@
 ## 当前文件
 
 - `current.md`：当前 no-active 状态、最近完成 program 和下一轮候选。
-- `implementation-roadmap.md`：Program 1-4 总路线、当前完成状态、queued program 顺序和下一轮启动门槛。
+- `implementation-roadmap.md`：Program 1-5 总路线、当前完成状态、queued program 顺序和下一轮启动门槛。
 - `closure-checklist.md`：Program 1 closure 结果、no-active 自维护检查和下一轮启动前检查。
-- `queued-programs/`：Program 2-4 的后续计划，不是当前 active phase。
+- `queued-programs/`：Program 2-5 的后续计划，不是当前 active phase。
 
 ## 已归档 Program 1
 
@@ -30,10 +30,10 @@
 - native text and structured file parsers
 - PDF / Office / OCR / VLM adapter boundaries
 - index handoff provenance and fixtures
-- Program 2 thread prompts and branch plan
+- 后续 Runtime Subsystems thread prompts and branch plan
 - verification, docs sync and no-active closure
 
-Program 2 thread prompts 保存在归档目录的 `thread-prompts/` 下。它们是下一轮可复用输入，不代表 Program 2 已启动。
+Runtime Subsystems thread prompts 保存在归档目录的 `thread-prompts/` 下。它们是后续 Program 3 可复用输入，不代表 Program 3 已启动。
 
 ## 使用规则
 

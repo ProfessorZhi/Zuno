@@ -1,12 +1,12 @@
-# PROGRAM02 Runtime Subsystems Parallel
+# PROGRAM03 Runtime Subsystems Parallel
 
 state: queued
 program: zuno-runtime-subsystems-parallel-v1
-depends_on: zuno-production-document-ingestion-and-thread-foundation-v1
+depends_on: zuno-enterprise-document-ingestion-platform-v2
 
 ## 目标
 
-在 Program 1 固定 Document IR、parser worker 和 index handoff 之后，使用多线程模式并行推进四个低耦合子系统：Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。Program 2 的目标是产出可被 Program 3 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环。
+在 Program 1A 固定 Document IR、parser worker 和 index handoff，且 Program 1B / V2 完成 enterprise document ingestion persistence platform 之后，使用多线程模式并行推进四个低耦合子系统：Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。Program 3 的目标是产出可被 Program 4 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环，也不回退到 in-memory 产品事实源。
 
 ## 为什么可以并行
 
@@ -114,25 +114,25 @@ depends_on: zuno-production-document-ingestion-and-thread-foundation-v1
 
 1. 固定 enterprise knowledge schema 和 EvidenceBundle 字段。
 2. 增强 local RRF / rerank trace。
-3. 提供 Static GraphRAG baseline runner，为 Program 4 对照组准备。
+3. 提供 Static GraphRAG baseline runner，为 Program 5 对照组准备。
 4. 继续把外部 Elasticsearch / Milvus / Neo4j 写成 adapter boundary 和 Target，不伪装 Current。
 
 验收：
 
 - 同一 query 能产生 retrieval trace、evidence bundle 和 citation source tracing。
-- GraphRAG baseline runner 可被 Program 4 eval 调用。
+- GraphRAG baseline runner 可被 Program 5 eval 调用。
 - unsupported claim metrics 可读。
 
 ## 主线程 Coordinator 规则
 
-1. Program 1 PHASE07 先生成四个 thread prompts。
+1. Program 1 PHASE07 已按旧 Program 2 语境生成四个 thread prompts；启动本 program 时必须先刷新为当前 Program 3 语境。
 2. 用户在 Codex UI 中创建或确认四个真实目标模式线程。
 3. 每个线程必须确认 worktree、branch、status、allowed paths、forbidden paths。
 4. 每个线程完成前必须验证、commit、push。
 5. 主线程读取 diff 和验证结果，不只信总结。
 6. 合并顺序建议：GraphRAG / Index -> Memory / Context -> Tool / Sandbox -> Security / Governance -> docs / verifier 收口。
 
-## Program 2 验证基线
+## Program 3 验证基线
 
 ```powershell
 git diff --check

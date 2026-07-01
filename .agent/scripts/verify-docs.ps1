@@ -36,8 +36,10 @@ if ($index -notmatch "\.agent/architecture/architecture.md") {
 $readiness = Get-Content -LiteralPath "docs\architecture\production-readiness.md" -Raw -Encoding UTF8
 $hasRuntimeSliceBoundary = $readiness -match "runtime-first vertical slice"
 $hasProductionTargetBoundary = $readiness -match "Production Target"
-if (-not $hasRuntimeSliceBoundary -or -not $hasProductionTargetBoundary) {
-    throw "production-readiness.md does not describe runtime slice and Production Target boundary"
+$hasLaunchablePrototypeBoundary = $readiness -match "Launchable Prototype Target"
+$hasProductionScaleBoundary = $readiness -match "Production Scale Target"
+if (-not $hasRuntimeSliceBoundary -or -not $hasProductionTargetBoundary -or -not $hasLaunchablePrototypeBoundary -or -not $hasProductionScaleBoundary) {
+    throw "production-readiness.md does not describe runtime slice, Launchable Prototype Target, and Production Scale Target boundary"
 }
 
 Write-Host "Docs verification passed."

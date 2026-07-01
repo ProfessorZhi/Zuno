@@ -17,7 +17,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 ## 5 分钟首读
 
 1. [总架构文档](./docs/architecture/architecture.md)：文字说明 Current / Target 边界、企业知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；同一文件也维护 Mermaid 图源。
-2. [Production Readiness Baseline](./docs/architecture/production-readiness.md)：明确四大总交付物、第一版 runtime slice 与 production-grade Target 的边界。
+2. [Production Readiness Baseline](./docs/architecture/production-readiness.md)：明确四大总交付物、Current Local Slice、Launchable Prototype Target 与 Production Scale Target 的边界。
 3. [Document Ingestion Foundation](./docs/architecture/document-ingestion-foundation.md)：企业知识库文档入口契约，说明 ParseGateway、Document IR、index handoff、版本、幂等、防丢、ACL、citation lineage 和多模态解析边界。
 4. [架构 HTML](./docs/architecture/architecture.html)：图形化查看十类架构图，支持展开全屏查看。
 5. [公开演示证据](./docs/evidence/public-demo.md)：可公开引用的证据入口。
@@ -44,7 +44,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 - `latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1`
 - 归档：`docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`
 
-这个 program 已完成企业知识库文档解析与索引交接地基，并准备后续多线程施工提示词。后续 queued program 是 `zuno-runtime-subsystems-parallel-v1`、`zuno-agent-planning-integration-v1` 和 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标仍是单控制器 Agentic GraphRAG 企业知识库问答系统。
+这个 program 已完成企业知识库文档解析与索引交接地基，并准备后续多线程施工提示词。下一轮 queued program 是 `zuno-enterprise-document-ingestion-platform-v2`，业务口径是 Program 1B / V2：不改写 Program 1A 历史，而是把 local runtime slice 推进到企业级文档输入与持久化平台雏形，覆盖文件对象存储、后端 durable store、parse / index job persistence、queue adapter、worker boundary、OCR / VLM blocked diagnostics 和 restart recovery。后续 queued program 依次是 `zuno-runtime-subsystems-parallel-v1`、`zuno-agent-planning-integration-v1` 和 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标仍是单控制器 Agentic GraphRAG 企业知识库问答系统。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 

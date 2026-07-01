@@ -243,6 +243,9 @@ def verify_entrypoint_text() -> list[str]:
         "当前 runtime-first 八类交付物",
         "历史治理交付物只保留在 History",
         "Production Target",
+        "Launchable Prototype Target",
+        "Production Scale Target",
+        "zuno-enterprise-document-ingestion-platform-v2",
         "zuno-production-architecture-and-deliverables-completion-v1",
         "zuno-target-architecture-runtime-full-implementation-v1",
         "zuno-eight-deliverables-full-realization-v1",
@@ -254,6 +257,10 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in [
         "Document Ingestion Foundation",
         "企业知识库文档入口",
+        "Program 1A / Program 1B",
+        "zuno-enterprise-document-ingestion-platform-v2",
+        "source_objects",
+        "index_chunks",
         "ParseGateway.submit_parse_job()",
         "CanonicalDocumentIR",
         "IndexJobManifest",
@@ -263,7 +270,7 @@ def verify_entrypoint_text() -> list[str]:
         "workspace_text_runtime",
         "VLM enrichment adapter",
         "Current 只能描述代码和测试已经证明的事实",
-        "生产 DB、object store、queue/outbox、worker lease、external OCR / VLM、external index platform",
+        "生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index platform",
     ]:
         if phrase not in document_ingestion:
             errors.append(f"docs/architecture/document-ingestion-foundation.md missing phrase: {phrase}")

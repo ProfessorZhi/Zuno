@@ -99,6 +99,55 @@ Index Layer
 
 生产化时，object store 保存原始文件和派生产物，metadata DB 保存版本和任务事实，queue / outbox 负责异步可靠投递，index layer 负责 BM25、vector、graph 和 evidence / citation 检索面。
 
+## Program 1A / Program 1B 边界
+
+已归档的 Program 1A 是 `zuno-production-document-ingestion-and-thread-foundation-v1`。它不是完整企业级文档输入层，而是一个扎实的解析链路地基：
+
+```text
+workspace file
+  -> /workspace/ingest
+  -> ParseGateway.submit_parse_job()
+  -> ParseJobSnapshot
+  -> CanonicalDocumentIR
+  -> KnowledgeIndexRuntime.index_document(parse_job_snapshot=...)
+  -> IndexJobManifest
+  -> retrieval payload
+  -> citation provenance
+```
+
+Program 1A 的优势是链路语义、Document IR、parser contract、native parser fixtures、index manifest lineage 和 citation lineage 已经打通；不足是状态仍大多是 local / in-process / in-memory。
+
+下一轮 Program 1B / V2 是 `zuno-enterprise-document-ingestion-platform-v2`。它不改写 Program 1A 历史，而是把 local runtime slice 升级为企业级文档输入与持久化平台雏形：
+
+```text
+文件对象存储
++ SQLModel / SQLite durable store
++ parse job / attempt persistence
++ document version / block / IR artifact persistence
++ index job / chunk persistence
++ QueueBackend local / Redis boundary
++ local parser / index worker runner
++ OCR / VLM / PDF / Office blocked diagnostics persistence
++ ingest status / retry / cancel / replay API
++ restart recovery tests
+```
+
+Program 1B / V2 的 Product V1 验收不是分布式 queue 或百万文档，而是服务重启后 file、parse job、document version、index manifest、index chunk 和 citation lineage 不丢。Production Scale Target 才包括 Postgres、object store、Redis / Kafka、outbox、worker lease、heartbeat、dead letter reconciler、external OCR / VLM 和 external index platform。
+
+## Program 1B / V2 数据模型目标
+
+Program 1B / V2 至少应定义以下 durable entities：
+
+- `source_objects`：原始文件事实源、storage uri、source hash、ACL、sensitivity。
+- `workspace_files`：前端和 workspace 可见 file id，关联 source object。
+- `document_versions`：parser id / version / config、IR schema、IR artifact、status。
+- `document_blocks`：block type、text、source span、metadata、ACL、sensitivity。
+- `parse_jobs`：parse idempotency key、status、attempt count、blocked reason、failure reason。
+- `parse_attempts`：attempt no、worker id、diagnostics、metrics。
+- `index_jobs`：knowledge space、document version、parse lineage、target status。
+- `index_chunks`：content、metadata、citation lineage、ACL、sensitivity。
+- `ingestion_dead_letters`：不可恢复或需人工处理的 parse / index 失败。
+
 ## 核心对象
 
 ### Source Object
@@ -308,7 +357,7 @@ metadata:
 | PHASE04 | 强化低依赖格式，作为 eval corpus 和 fixtures 基础。 |
 | PHASE05 | 明确 PDF / Office / OCR / VLM adapter 和 enrichment 边界。 |
 | PHASE06 | 把 parse lineage 写进 index manifest 和 citation source tracing。 |
-| PHASE07 | 为 Program 2 生成线程提示词时，把 ingestion lineage 作为共享输入事实。 |
+| PHASE07 | 为后续 Runtime Subsystems 生成线程提示词时，把 ingestion lineage 作为共享输入事实。 |
 | PHASE08 | closure summary 必须列 Current、Remaining Target、blocked evidence 和未接生产基础设施。 |
 
 ## Program 1 最小闭环
@@ -324,7 +373,7 @@ Program 1 已完成的最小可验收代码闭环：
 6. index manifest 增加 parse lineage
 ```
 
-以上是 Program 1 已完成的 local runtime slice。生产 DB、object store、queue/outbox、worker lease、external OCR / VLM、external index platform 和 online eval 仍是后续 Target。
+以上是 Program 1A 已完成的 local runtime slice。企业级文档输入与持久化平台雏形进入 Program 1B / V2：`zuno-enterprise-document-ingestion-platform-v2`。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index platform 和 online eval 仍是 Production Scale Target。
 
 ## 验证要求
 

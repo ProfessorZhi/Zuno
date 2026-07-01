@@ -50,9 +50,10 @@ Require-NoPath ".agent\programs\PHASE07_program2-thread-prompts-and-branch-plan.
 Require-NoPath ".agent\programs\PHASE08_verification-doc-sync-and-closure.md"
 Require-NoPath ".agent\programs\thread-prompts"
 Require-Path ".agent\programs\queued-programs\README.md"
-Require-Path ".agent\programs\queued-programs\PROGRAM02_runtime-subsystems-parallel.md"
-Require-Path ".agent\programs\queued-programs\PROGRAM03_agent-planning-integration.md"
-Require-Path ".agent\programs\queued-programs\PROGRAM04_enterprise-knowledge-eval-benchmark.md"
+Require-Path ".agent\programs\queued-programs\PROGRAM02_enterprise-document-ingestion-platform-v2.md"
+Require-Path ".agent\programs\queued-programs\PROGRAM03_runtime-subsystems-parallel.md"
+Require-Path ".agent\programs\queued-programs\PROGRAM04_agent-planning-integration.md"
+Require-Path ".agent\programs\queued-programs\PROGRAM05_enterprise-knowledge-eval-benchmark.md"
 Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\README.md"
 Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\current.md"
 Require-Path "docs\history\programs\zuno-production-document-ingestion-and-thread-foundation-v1\implementation-roadmap.md"
@@ -266,8 +267,8 @@ $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md
 if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1") {
     $failures.Add("current-program.md must declare no-active state and latest completed Program 1")
 }
-if ($currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
-    $failures.Add("current-program.md missing Program 1-4 suite queue")
+if ($currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
+    $failures.Add("current-program.md missing Program 1A/1B and Program 3-5 suite queue")
 }
 if ($currentProgram -notmatch "docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/") {
     $failures.Add("current-program.md must keep latest production completion archive")

@@ -18,7 +18,7 @@ updated: 2026-07-01
 2. Zuno 的目标架构是什么。
 3. 下一阶段为什么落在企业私有知识库、多格式文档解析、评测观测和安全治理上。
 4. 哪些能力仍是 Target，不能写成 Current。
-5. 当前第一版 runtime slice 与 production-grade Target 的成熟度边界；展开版成熟度和 runtime-first 交付物口径由 `docs/architecture/production-readiness.md` 维护。
+5. Current Local Slice、Launchable Prototype Target 与 Production Scale Target 的成熟度边界；展开版成熟度和 runtime-first 交付物口径由 `docs/architecture/production-readiness.md` 维护。
 6. 企业知识库文档入口的对象存储、元数据、job lifecycle、幂等、版本、防丢、index manifest 和多模态解析边界；展开版文档入口契约由 `docs/architecture/document-ingestion-foundation.md` 维护。
 
 图形化展示以 `docs/architecture/architecture.html` 为准；图源是 `docs/architecture/architecture.md`。Agent 侧维护镜像是 `.agent/architecture/architecture.md`，Agent 侧也保留同名 HTML 镜像。这四个 canonical paths 必须保持一致：
@@ -30,11 +30,11 @@ updated: 2026-07-01
 
 `docs/architecture/document-ingestion-foundation.md` 是文档入口的正式补充契约，负责集中说明 Program 1 的 enterprise ingestion foundation：workspace file 如何进入 ParseGateway、Document IR 如何版本化、parse job 如何幂等与防丢、index manifest 如何保留 lineage、OCR / VLM 如何作为 derived enrichment 接入。它不是 Mermaid 图源，也不替代本文的总架构角色。
 
-当前 `.agent/programs/` 处于 no-active 等待态。最近完成并归档的 program 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，归档位置是 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`。该 program 已完成 PHASE01-PHASE08：parser current audit、Document IR / parser adapter contract freeze、本地 parser worker lifecycle、native parser baseline、PDF / Office / OCR / VLM adapter boundary、index manifest parse lineage、Program 2 thread prompts、workspace ingest -> ParseGateway 闭环、验证、文档同步、自维护审查和 no-active closure。Program 2-4 仍是 queued，不是当前 active program。
+当前 `.agent/programs/` 处于 no-active 等待态。最近完成并归档的 program 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，归档位置是 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`。该 program 已完成 PHASE01-PHASE08：parser current audit、Document IR / parser adapter contract freeze、本地 parser worker lifecycle、native parser baseline、PDF / Office / OCR / VLM adapter boundary、index manifest parse lineage、runtime subsystems thread prompts、workspace ingest -> ParseGateway 闭环、验证、文档同步、自维护审查和 no-active closure。Program 2-5 仍是 queued，不是当前 active program；下一轮是 Program 1B / V2：`zuno-enterprise-document-ingestion-platform-v2`。
 
 ## 核心判断
 
-Zuno 的主叙事是 **本地优先的企业私有知识库与多功能 Agent 助手**，不是普通 RAG 问答 demo，也不是默认多 Agent 平台。
+Zuno 的主叙事是 **本地优先 / 私有部署优先的企业知识库 Agent Workspace**，也继承“本地优先的企业私有知识库与多功能 Agent 助手”定位；它不是普通 RAG 问答 demo，也不是默认多 Agent 平台。
 
 当前仓库已经完成的是架构治理、文档系统、六层后端边界、`GeneralAgent` 单循环主线、Query Router foundation、Context / Memory foundation、ToolCard foundation、GraphRAG query contract、PHASE03 workspace product API / SSE runtime surface、PHASE04 Document Ingestion / Parse Gateway runtime surface、PHASE05 local deterministic index job runtime surface、PHASE06 controller-node durable runtime surface、PHASE07 snapshot / SQLModel-backed memory runtime surface、PHASE08 local deterministic Tool Control Plane runtime surface、PHASE09 Agentic Retrieval / Evidence / Citation runtime、PHASE10 Security / Observability / release eval runtime、PHASE11 Web workspace Agent 产品闭环，以及 PHASE12 release closure。
 
@@ -48,10 +48,25 @@ Zuno current
   + Knowledge / GraphRAG query path
   + evidence / citation / trace foundation
 
-Zuno target
+Zuno launchable prototype target
+  = Launchable Enterprise KB Agent Prototype
+  + frontend/backend separation
+  + usable account / workspace surface
+  + backend-persisted workspace / file / parse job / index / task / artifact / feedback
+  + Document Ingestion / Parse Gateway
+  + Agentic RAG + GraphRAG answer with citation
+  + artifact / trace / event / feedback recovery
+  + SQLite / local file store product V1 persistence
+
+Zuno production scale target
   = Local-first Enterprise Private Knowledge Agent Workspace
   + Single Controller Agent Runtime
+  + Auth / Organization / RBAC
+  + Postgres metadata DB
+  + Object Store
+  + Queue / Outbox / Worker
   + Document Ingestion / Parse Gateway
+  + Parser Worker / Index Worker
   + Context / Memory write-manage-read
   + Tool Control Plane
   + Agentic RAG + GraphRAG
@@ -60,7 +75,47 @@ Zuno target
   + Workspace / Artifact / Event Flow
 ```
 
-## Current
+## 近期目标：Launchable Enterprise KB Agent Prototype
+
+Zuno 近期目标是 **Zuno Launchable Enterprise KB Agent Prototype / Zuno 可上线企业知识库 Agent 雏形架构**。
+
+它的定义是：Zuno 是一个前后端分离、本地优先 / 私有部署优先的企业知识库 Agent Workspace。当前目标不是完整分布式企业平台，而是一个可以部署给个人、小团队、实验室或内网试用的企业级雏形：账号体系、workspace、文件上传、文档解析、索引、Agent 问答、引用、artifact、trace、反馈和基础权限都由后端持久化管理。生产级分布式队列、外部 OCR / VLM、外部向量库 / 图数据库、企业 SSO、在线评测和大规模运维作为 Production Scale Target。
+
+近期实现原则：
+
+- 前端只做 UI，不保存核心业务事实。
+- 后端是 workspace、session、file、parse job、index manifest、task、artifact、trace 和 feedback 的唯一业务事实源。
+- Product V1 持久层先用 SQLite / SQLModel backed local durable store、local file store 和 in-process runner。
+- 文档入口继续走 `ParseGateway` 和 `CanonicalDocumentIR`，索引入口继续保留 index manifest 与 citation lineage。
+- 服务重启后，file、parse job、document version、index manifest、task、events、artifact 和 feedback 必须能从后端恢复。
+
+## 完整企业级：Production Scale Target
+
+完整企业级 Zuno 不是“功能更多一点”，而是从单机闭环升级为可多租户、可恢复、可扩展、可审计、可运维、可灰度、可评测的企业私有知识库 Agentic GraphRAG 平台。
+
+Production Scale Target 的技术串联是：
+
+```text
+FastAPI API Gateway
+  -> Auth / Organization / RBAC
+  -> Postgres metadata DB
+  -> Object Store
+  -> Queue / Outbox / Worker
+  -> Parser Worker
+  -> Document IR Store
+  -> Index Worker
+  -> BM25 / Vector / Graph Retrieval Stores
+  -> Durable Single Controller Agent Runtime
+  -> Memory Store
+  -> Tool Control Plane / Sandbox / Approval
+  -> Security Gates
+  -> Trace / Eval / Observability
+  -> Admin / Ops / Release Gate
+```
+
+这层不是 Program 1B / V2 的验收标准。它保留为 Level 2 / Level 3 的生产扩展方向：Team Production 可以接 Postgres、Redis / Celery、MinIO、worker pool 和 pgvector / OpenSearch；Enterprise Scale 再接 Kafka / RabbitMQ、S3、Milvus / Elasticsearch / Neo4j、OCR / VLM workers、SSO / RBAC / DLP / Vault、OTel / LangSmith / Prometheus、multi-tenant / HA / autoscaling。
+
+## Current Local Slice
 
 Current 只写代码、测试和可复现结果已经证明的事实：
 
@@ -989,7 +1044,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前 `.agent/programs/` 处于 no-active 等待态。最近完成并归档的 `zuno-production-document-ingestion-and-thread-foundation-v1` 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的 Program 1，目标是关闭企业知识库文档入口 local runtime slice：workspace file -> ParseGateway -> CanonicalDocumentIR -> index handoff -> IndexJobManifest -> retrieval / citation provenance。PHASE01-PHASE08 已完成，Program 2 thread prompts 已归档为后续 queued program 的输入；生产 DB、object store、queue / outbox、worker lease、external OCR / VLM 和 external index 仍是 Target，不能写成 Current。
+当前 `.agent/programs/` 处于 no-active 等待态。最近完成并归档的 `zuno-production-document-ingestion-and-thread-foundation-v1` 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的 Program 1A，目标是关闭企业知识库文档入口 local runtime slice：workspace file -> ParseGateway -> CanonicalDocumentIR -> index handoff -> IndexJobManifest -> retrieval / citation provenance。PHASE01-PHASE08 已完成，runtime subsystems thread prompts 已归档为后续 queued program 的输入；下一轮 Program 1B / V2 是 `zuno-enterprise-document-ingestion-platform-v2`，目标是补文件对象存储、SQLModel durable store、parse / index persistence、queue adapter、worker boundary、OCR / VLM blocked diagnostics 和 restart recovery。生产 DB、object store、queue / outbox、worker lease、external OCR / VLM 和 external index 仍是 Production Scale Target，不能写成 Current。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`，归档位置是 `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`。它是一次性交付型成熟化 program，已完成 PHASE01-PHASE12，把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”的本地可验证 baseline：PHASE08 已关闭 local durable store round-trip、restart resume、failure snapshot 和 exactly-once tool id boundary；PHASE09 已关闭 local semantic fallback、privacy delete、sensitive context exclusion 和 memory eval baseline；PHASE10 已关闭 local network policy decision、credential-ref-only broker、redacted approval ledger 和 sandbox audit context；PHASE11 已关闭 local evidence provenance、citation source tracing、local RRF/rerank trace、deterministic graph extraction / community report trace 和 unsupported claim metrics；PHASE12 已完成 release closure、full verification、archive 和 no-active state。上一轮 runtime-first program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。它承接 `zuno-master-architecture-implementation-v1` 的 contract foundation，不推翻目标架构，而是把目标架构推进到第一版真实 runtime 闭环。上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`；它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。
 

@@ -83,9 +83,10 @@ CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
 ]
 QUEUED_PROGRAM_FILES = [
     "README.md",
-    "PROGRAM02_runtime-subsystems-parallel.md",
-    "PROGRAM03_agent-planning-integration.md",
-    "PROGRAM04_enterprise-knowledge-eval-benchmark.md",
+    "PROGRAM02_enterprise-document-ingestion-platform-v2.md",
+    "PROGRAM03_runtime-subsystems-parallel.md",
+    "PROGRAM04_agent-planning-integration.md",
+    "PROGRAM05_enterprise-knowledge-eval-benchmark.md",
 ]
 THREAD_PROMPT_FILES = [
     "THREAD_A_memory-context.md",
@@ -395,7 +396,7 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "index_idempotency_key",
         "workspace_text_runtime",
         "VLM enrichment adapter",
-        "生产 DB、object store、queue/outbox、worker lease、external OCR / VLM、external index platform",
+        "生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index platform",
     ],
 }
 
@@ -1300,6 +1301,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         CURRENT_ACTIVE_PROGRAM_NAME,
         CURRENT_ACTIVE_PROGRAM_ARCHIVE,
         "zuno-enterprise-agentic-graphrag-production-suite-v1",
+        "zuno-enterprise-document-ingestion-platform-v2",
         "zuno-runtime-subsystems-parallel-v1",
         "zuno-agent-planning-integration-v1",
         "zuno-enterprise-knowledge-eval-benchmark-v1",
