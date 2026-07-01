@@ -14,7 +14,7 @@ latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 该 program 属于 `zuno-enterprise-agentic-graphrag-production-suite-v1`。
 
-该 program 是 Program 1B / V2，已把 Program 1A 的 local runtime slice 推进到企业级文档输入与持久化平台雏形，即 Product V1 local durable ingestion baseline：source object、workspace file、parse job、parse snapshot、document version、document blocks、index manifest、index chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery 均有 focused tests。
+该 program 是 Program 2，已把 Program 1 的 local runtime slice 推进到企业级文档输入与持久化平台雏形，即 Product V1 local durable ingestion baseline：source object、workspace file、parse job、parse snapshot、document version、document blocks、index manifest、index chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery 均有 focused tests。
 
 成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。Current 必须来自代码、focused tests、trace、eval、verifier 或可复现证据。Postgres、Redis、MinIO / S3、external OCR / VLM、external index、worker lease 和 production parser worker 仍是 Target / Production Scale Target。
 
@@ -33,26 +33,26 @@ no-active 状态下，`.agent/programs/` 根目录不得保留 `PHASE*.md`。com
 
 ## Program Suite 顺序
 
-1. `zuno-production-document-ingestion-and-thread-foundation-v1`
+1. Program 1：`zuno-production-document-ingestion-and-thread-foundation-v1`
    - 状态：completed / archived。
    - 归档：`docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`
-2. `zuno-enterprise-document-ingestion-platform-v2`
+2. Program 2：`zuno-enterprise-document-ingestion-platform-v2`
    - 状态：completed / archived。
    - 归档：`docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
-3. `zuno-runtime-subsystems-parallel-v1`
+3. Program 3：`zuno-runtime-subsystems-parallel-v1`
    - 状态：queued。
    - 计划：`.agent/programs/queued-programs/PROGRAM03_runtime-subsystems-parallel.md`
-4. `zuno-agent-planning-integration-v1`
+4. Program 4：`zuno-agent-planning-integration-v1`
    - 状态：queued。
    - 计划：`.agent/programs/queued-programs/PROGRAM04_agent-planning-integration.md`
-5. `zuno-enterprise-knowledge-eval-benchmark-v1`
+5. Program 5：`zuno-enterprise-knowledge-eval-benchmark-v1`
    - 状态：queued。
    - 计划：`.agent/programs/queued-programs/PROGRAM05_enterprise-knowledge-eval-benchmark.md`
 
 ## 最近完成归档
 
 - `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`：完成 PHASE01-PHASE08、durable ingestion、restart recovery、验证和 no-active closure。
-- `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`：完成 Program 1A 的 Document IR、parser worker、native parser、adapter boundary、index manifest lineage、workspace ingest -> ParseGateway 闭环、runtime subsystems prompts 和 no-active closure。
+- `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`：完成 Program 1 的 Document IR、parser worker、native parser、adapter boundary、index manifest lineage、workspace ingest -> ParseGateway 闭环、runtime subsystems prompts 和 no-active closure。
 - `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`：一次性交付型成熟化 program，完成“成熟目标架构和四大总交付物完成”的本地可验证 baseline。
 - `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`：完成 PHASE01-PHASE12 的 runtime-first 目标架构第一版闭环。
 - `docs/history/programs/zuno-master-architecture-implementation-v1/`：完成 PHASE01-PHASE12 的目标架构分阶段实现、架构刷新和 release closure。

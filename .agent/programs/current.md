@@ -7,7 +7,7 @@ latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 ## 当前状态
 
-`.agent/programs/` 当前没有 active program。最近完成并归档的 program 是 Program 1B / V2：
+`.agent/programs/` 当前没有 active program。最近完成并归档的 program 是 Program 2：
 
 - `zuno-enterprise-document-ingestion-platform-v2`
 - 归档：`docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
@@ -29,8 +29,8 @@ Program 3-5 仍为 queued，不是当前 active program：
 
 ## 最近完成归档
 
-- `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`：完成 PHASE01-PHASE08 的 Program 1B / V2 durable ingestion closure。
-- `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`：完成 Program 1A 文档解析、Document IR、parser worker lifecycle、native parser、adapter boundary、index handoff、runtime subsystems prompts 和 no-active closure。
+- `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`：完成 PHASE01-PHASE08 的 Program 2 durable ingestion closure。
+- `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`：完成 Program 1 文档解析、Document IR、parser worker lifecycle、native parser、adapter boundary、index handoff、runtime subsystems prompts 和 no-active closure。
 - `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`：一次性交付型成熟化 program，完成 PHASE01-PHASE12。
 - `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`：完成 PHASE01-PHASE12 的 runtime-first 目标架构第一版闭环。
 - `docs/history/programs/zuno-master-architecture-implementation-v1/`：完成 PHASE01-PHASE12 的目标架构分阶段实现、架构刷新和 release closure。

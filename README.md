@@ -44,7 +44,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 - `latest_completed_program: zuno-enterprise-document-ingestion-platform-v2`
 - 归档：`docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
 
-最近完成的 active program 是 `zuno-enterprise-document-ingestion-platform-v2`，业务口径是 Program 1B / V2：不改写 Program 1A 历史，而是把 local runtime slice 推进到企业级文档输入与持久化平台雏形。它已完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。后续 queued program 依次是 `zuno-runtime-subsystems-parallel-v1`、`zuno-agent-planning-integration-v1` 和 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标仍是单控制器 Agentic GraphRAG 企业知识库问答系统。
+最近完成的 active program 是 `zuno-enterprise-document-ingestion-platform-v2`，业务口径是 Program 2：不改写 Program 1 历史，而是把 local runtime slice 推进到企业级文档输入与持久化平台雏形。它已完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。后续 queued program 依次是 Program 3 `zuno-runtime-subsystems-parallel-v1`、Program 4 `zuno-agent-planning-integration-v1` 和 Program 5 `zuno-enterprise-knowledge-eval-benchmark-v1`。Basic RAG 与静态 GraphRAG 只作为评测对照组；最终产品目标仍是单控制器 Agentic GraphRAG 企业知识库问答系统。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 

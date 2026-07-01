@@ -1,4 +1,4 @@
-# Program Roadmap
+﻿# Program Roadmap
 
 state: completed
 active_program: none
@@ -52,7 +52,7 @@ Program ID：`zuno-enterprise-document-ingestion-platform-v2`
 
 状态：completed / archived。归档位置：`docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。
 
-业务口径：这是 Program 1B / V2，不是重写或篡改已归档 Program 1A。Program 1A 已经完成 `workspace ingest -> ParseGateway -> Document IR -> Index Manifest -> Citation Lineage` local runtime slice；Program 1B / V2 的目标是把这条链路升级为企业级文档输入与持久化平台雏形。
+业务口径：这是 Program 2，不是重写或篡改已归档 Program 1。Program 1 已经完成 `workspace ingest -> ParseGateway -> Document IR -> Index Manifest -> Citation Lineage` local runtime slice；Program 2 的目标是把这条链路升级为企业级文档输入与持久化平台雏形。
 
 目标：文件由后端持久化保存，parse / index / job 状态落库，OCR / VLM / PDF / Office 有明确 adapter boundary，服务重启后文档、任务、索引、artifact、feedback 和引用 lineage 不丢。
 
@@ -60,8 +60,8 @@ Program ID：`zuno-enterprise-document-ingestion-platform-v2`
 
 ```text
 Current Local Slice
-  已完成 Program 1A 的 workspace file -> ParseGateway -> Document IR -> index manifest -> citation lineage。
-  已完成 Program 1B / V2 的 SQLite / local file store durable ingestion baseline。
+  已完成 Program 1 的 workspace file -> ParseGateway -> Document IR -> index manifest -> citation lineage。
+  已完成 Program 2 的 SQLite / local file store durable ingestion baseline。
 
 Launchable Prototype Target
   SQLite / SQLModel backed local durable store + local file store + in-process runner。
@@ -80,7 +80,7 @@ Program ID：`zuno-runtime-subsystems-parallel-v1`
 
 状态：queued。计划文件：`.agent/programs/queued-programs/PROGRAM03_runtime-subsystems-parallel.md`。
 
-目标：在 Program 1A 的解析和索引地基稳定、Program 1B / V2 的 enterprise ingestion persistence baseline 完成后，使用多线程模式并行推进四个低耦合子系统。
+目标：在 Program 1 的解析和索引地基稳定、Program 2 的 enterprise ingestion persistence baseline 完成后，使用多线程模式并行推进四个低耦合子系统。
 
 线程：
 
@@ -109,14 +109,14 @@ Program ID：`zuno-enterprise-knowledge-eval-benchmark-v1`
 
 目标：建设企业知识库问答自动化评测系统，对同一 corpus 和 question set 比较 Basic RAG baseline、Static GraphRAG baseline 和 Agentic GraphRAG target。
 
-## 当前 Program 1B / V2 启动门槛
+## 当前 Program 2 启动门槛
 
-Program 1B / V2 已启动。PHASE01 执行前必须：
+Program 2 已启动。PHASE01 执行前必须：
 
 1. 重新确认 worktree、branch、`git status --short --branch`、允许范围和禁止范围。
-2. 确认本轮目标是 Program 1B / V2 企业级文档输入与持久化平台，而不是启动四线程 Runtime Subsystems。
+2. 确认本轮目标是 Program 2 企业级文档输入与持久化平台，而不是启动四线程 Runtime Subsystems。
 3. 只读审计 `WorkspaceTaskRuntimeService`、`ParseGateway`、`KnowledgeIndexRuntime`、platform storage / DB 和 tests。
-4. 只在 Program 2 closure 后刷新 Program 1A 归档 thread prompts 并启动 Program 3。
+4. 只在 Program 2 closure 后刷新 Program 1 归档 thread prompts 并启动 Program 3。
 
 ## 验证基线
 

@@ -5,9 +5,9 @@ active_program: none
 current_phase: none
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
-## Program 1B / V2 收口结果
+## Program 2 收口结果
 
-- [x] PHASE01 完成 truth source 与 gap audit，列出 Program 1A 之后的 durable ingestion 缺口。
+- [x] PHASE01 完成 truth source 与 gap audit，列出 Program 1 之后的 durable ingestion 缺口。
 - [x] PHASE02 用 TDD 固定最小 SQLModel / SQLite-compatible durable store contract。
 - [x] PHASE03 将 `/workspace/file` 接入 source object、source hash、storage uri 和 workspace file metadata 持久化。
 - [x] PHASE04 将 `ParseGateway.submit_parse_job()` 结果、parse snapshot、document version 和 document blocks 持久化。
@@ -18,7 +18,7 @@ latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 当前边界
 
-- [x] Program 1B / V2 只把真实可验证能力写成 Current。
+- [x] Program 2 只把真实可验证能力写成 Current。
 - [x] 生产 parser worker、深度 OCR/layout/table/code extraction、外部 index service 没接入前仍是 Target。
 - [x] Program 3-5 是 queued program，不是当前 active program。
 - [x] Codex 多线程施工不写成 Zuno 产品 runtime 多 Agent 架构。
@@ -28,11 +28,11 @@ latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 ## 文档同步检查
 
 - [x] `.agent/programs/current.md` 与 no-active 状态一致。
-- [x] `.agent/programs/implementation-roadmap.md` 覆盖 Program 1A、Program 1B / V2 和 Program 3-5 的顺序、依赖和验收。
+- [x] `.agent/programs/implementation-roadmap.md` 覆盖 Program 1-5 的顺序、依赖和验收。
 - [x] `.agent/programs/queued-programs/` 中 Program 3-5 计划仍是 queued，不含 active 状态。
 - [x] `.agent/references/current-program.md` 与 `.agent/programs/current.md` 一致。
 - [x] `AGENTS.md` 和 README 当前 program 摘要一致。
-- [x] `docs/architecture/document-ingestion-foundation.md` 与 Program 1B / V2 closure evidence 一致。
+- [x] `docs/architecture/document-ingestion-foundation.md` 与 Program 2 closure evidence 一致。
 - [x] verifier / repo tests 覆盖 no-active 文件清单、latest completed archive、queued program 边界和 Program 1 archive。
 
 ## 验证命令
@@ -50,7 +50,7 @@ pytest -q tests/knowledge -p no:cacheprovider
 
 ## 归档位置
 
-Program 1B / V2 已整体归档到：
+Program 2 已整体归档到：
 
 - `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
 

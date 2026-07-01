@@ -187,7 +187,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     for phrase in [
         "Document Ingestion Foundation",
         "企业知识库文档入口",
-        "Program 1A / Program 1B",
+        "Program 1 / Program 2",
         "zuno-enterprise-document-ingestion-platform-v2",
         "source_objects",
         "index_chunks",

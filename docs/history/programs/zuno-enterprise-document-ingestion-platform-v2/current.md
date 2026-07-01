@@ -8,17 +8,17 @@ latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 ## 当前状态
 
-本文件是 Program 1B / V2 `zuno-enterprise-document-ingestion-platform-v2` 的历史完成快照。该 program 已完成 PHASE01-PHASE08 并归档到：
+本文件是 Program 2 `zuno-enterprise-document-ingestion-platform-v2` 的历史完成快照。该 program 已完成 PHASE01-PHASE08 并归档到：
 
 - `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
 
-上一轮 Program 1A 已完成并归档：
+Program 1 已完成并归档：
 
 - `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`
 
-Program 1A 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的已完成文档入口地基：workspace ingest 进入 `ParseGateway.submit_parse_job()`，解析结果进入 `CanonicalDocumentIR`，parser job snapshot 进入 `KnowledgeIndexRuntime.index_document()`，index manifest 和 retrieval chunk 保留 parse lineage、document version、source hash、ACL、sensitivity 和 `citation_lineage`。
+Program 1 是 `zuno-enterprise-agentic-graphrag-production-suite-v1` 的已完成文档入口地基：workspace ingest 进入 `ParseGateway.submit_parse_job()`，解析结果进入 `CanonicalDocumentIR`，parser job snapshot 进入 `KnowledgeIndexRuntime.index_document()`，index manifest 和 retrieval chunk 保留 parse lineage、document version、source hash、ACL、sensitivity 和 `citation_lineage`。
 
-Program 1B / V2 已把 Program 1A 的 local runtime slice 升级为企业级文档输入与持久化平台雏形。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；文档输入层展开契约以 `docs/architecture/document-ingestion-foundation.md` 和本归档 closure summary 为准。
+Program 2 已把 Program 1 的 local runtime slice 升级为企业级文档输入与持久化平台雏形。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；文档输入层展开契约以 `docs/architecture/document-ingestion-foundation.md` 和本归档 closure summary 为准。
 
 ## 完成 phase
 

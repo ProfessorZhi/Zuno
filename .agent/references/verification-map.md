@@ -142,7 +142,7 @@ pytest -q tests/security tests/tools tests/agent/test_capability_system.py tests
 pytest -q tests/evals tools/evals/zuno -p no:cacheprovider
 ```
 
-`zuno-enterprise-document-ingestion-platform-v2` 已完成 PHASE08 并归档到 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。当前 `.agent/programs/` 是 no-active 等待态；front path 只保留 current、README、implementation-roadmap、closure-checklist 和 queued-programs，不保留 PHASE01-PHASE08 文件或旧 thread-prompts。上一轮 Program 1A `zuno-production-document-ingestion-and-thread-foundation-v1` 继续作为历史归档检查对象。
+Program 2 `zuno-enterprise-document-ingestion-platform-v2` 已完成 PHASE08 并归档到 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。当前 `.agent/programs/` 是 no-active 等待态；front path 只保留 current、README、implementation-roadmap、closure-checklist 和 queued-programs，不保留 PHASE01-PHASE08 文件或旧 thread-prompts。Program 1 `zuno-production-document-ingestion-and-thread-foundation-v1` 继续作为历史归档检查对象。
 
 打开或关闭 active program 时，必须从 `PHASE01` 建立 program truth，并同步 `.agent/scripts/verify_agent_system.py`、`.agent/scripts/verify-workflow.ps1`、`tools/scripts/verify_repo_structure.py`、`tests/repo/test_agent_system.py`、`tests/repo/test_repo_structure_consistency.py` 和 `tests/repo/test_publish_boundary.py`。已归档 program 的 phase status 只能作为历史证据，不能被 verifier 当作当前 active state；no-active 时 verifier 必须检查 latest completed archive。
 

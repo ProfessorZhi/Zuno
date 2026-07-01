@@ -9,18 +9,18 @@
 - Current phase: none
 - Latest completed program: `zuno-enterprise-document-ingestion-platform-v2`
 
-最近完成的 Program 1B / V2 已归档到：
+最近完成的 Program 2 已归档到：
 
 - `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
 
 ## 当前文件
 
 - `current.md`：当前 no-active 状态、最近完成 program 和后续 queued program。
-- `implementation-roadmap.md`：Program 1A、Program 1B / V2、Program 3-5 的顺序、依赖和状态。
-- `closure-checklist.md`：最近完成 Program 1B / V2 的 closure 结果和下一轮启动检查。
+- `implementation-roadmap.md`：Program 1-5 的顺序、依赖和状态。
+- `closure-checklist.md`：最近完成 Program 2 的 closure 结果和下一轮启动检查。
 - `queued-programs/`：Program 3-5 的后续计划，不是当前 active phase。
 
-## 已归档 Program 1B / V2
+## 已归档 Program 2
 
 `zuno-enterprise-document-ingestion-platform-v2` 已完成 PHASE01-PHASE08：
 

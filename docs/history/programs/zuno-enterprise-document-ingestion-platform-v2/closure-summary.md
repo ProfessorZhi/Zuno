@@ -6,7 +6,7 @@ closed_at: 2026-07-01
 
 ## Summary
 
-Program 1B / V2 已完成。Zuno 的文档输入层从 Program 1A 的 local runtime slice 推进到 Product V1 local durable ingestion baseline：`/workspace/file` 保存 source object 和 workspace file metadata；`/workspace/ingest` 继续走 `ParseGateway`，并持久化 parse job、snapshot、document version、document blocks、index manifest、index chunks 和 citation lineage；workspace task、events、artifact content/ref 和 feedback 可从 SQLite rehydrate。
+Program 2 已完成。Zuno 的文档输入层从 Program 1 的 local runtime slice 推进到 Product V1 local durable ingestion baseline：`/workspace/file` 保存 source object 和 workspace file metadata；`/workspace/ingest` 继续走 `ParseGateway`，并持久化 parse job、snapshot、document version、document blocks、index manifest、index chunks 和 citation lineage；workspace task、events、artifact content/ref 和 feedback 可从 SQLite rehydrate。
 
 ## Current Evidence
 

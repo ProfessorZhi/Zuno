@@ -26,7 +26,7 @@ latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 Zuno 最终产品不是 Basic RAG、GraphRAG、Agentic GraphRAG 三个并列模式。最终产品是企业知识库 Agentic GraphRAG Agent。Basic RAG 与静态 GraphRAG 是 Program 5 的评测 baseline。
 
-## Program 1A：Document Ingestion 与线程地基
+## Program 1：Document Ingestion 与线程地基
 
 Program ID：`zuno-production-document-ingestion-and-thread-foundation-v1`
 
@@ -38,7 +38,7 @@ Program ID：`zuno-production-document-ingestion-and-thread-foundation-v1`
 
 完成边界：`ParseGateway`、`CanonicalDocumentIR`、parser job snapshot、adapter boundary、native parser fixtures、index manifest lineage 和 citation lineage 已形成本地可验证地基。
 
-## Program 1B / V2：Enterprise Document Ingestion Platform V2
+## Program 2：Enterprise Document Ingestion Platform V2
 
 Program ID：`zuno-enterprise-document-ingestion-platform-v2`
 

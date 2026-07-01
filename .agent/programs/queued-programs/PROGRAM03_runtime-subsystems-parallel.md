@@ -6,7 +6,7 @@ depends_on: zuno-enterprise-document-ingestion-platform-v2
 
 ## 目标
 
-在 Program 1A 固定 Document IR、parser worker 和 index handoff，且 Program 1B / V2 完成 enterprise document ingestion persistence platform 之后，使用多线程模式并行推进四个低耦合子系统：Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。Program 3 的目标是产出可被 Program 4 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环，也不回退到 in-memory 产品事实源。
+在 Program 1 固定 Document IR、parser worker 和 index handoff，且 Program 2 完成 enterprise document ingestion persistence platform 之后，使用多线程模式并行推进四个低耦合子系统：Memory / Context、Tool / Sandbox、Security / Governance、GraphRAG / Index。Program 3 的目标是产出可被 Program 4 合并的模块能力、tests 和 evidence，不直接重写 `GeneralAgent` 主循环，也不回退到 in-memory 产品事实源。
 
 ## 为什么可以并行
 

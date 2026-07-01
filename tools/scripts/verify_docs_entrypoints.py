@@ -259,7 +259,7 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in [
         "Document Ingestion Foundation",
         "企业知识库文档入口",
-        "Program 1A / Program 1B",
+        "Program 1 / Program 2",
         "zuno-enterprise-document-ingestion-platform-v2",
         "source_objects",
         "index_chunks",
