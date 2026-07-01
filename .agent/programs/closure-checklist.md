@@ -18,12 +18,12 @@ latest_completed_program: `zuno-production-document-ingestion-and-thread-foundat
 
 ## PHASE02 Durable Storage Contract
 
-- [ ] 先写 focused tests 并确认 red failure。
-- [ ] 新增最小 SQLModel / SQLite-compatible durable store contract。
-- [ ] source object、workspace file、parse job、parse snapshot、document version、index manifest、index chunk round-trip 通过。
-- [ ] local object store boundary 明确，不依赖 MinIO / OSS。
-- [ ] PHASE02 evidence 写回 phase 文件。
-- [ ] PHASE02 验证、提交并推送。
+- [x] 先写 focused tests 并确认 red failure。
+- [x] 新增最小 SQLModel / SQLite-compatible durable store contract。
+- [x] source object、workspace file、parse job、parse snapshot、document version、index manifest、index chunk round-trip 通过。
+- [x] local object store boundary 明确，不依赖 MinIO / OSS。
+- [x] PHASE02 evidence 写回 phase 文件。
+- [x] PHASE02 验证、提交并推送。
 
 ## Program 1 收口结果
 

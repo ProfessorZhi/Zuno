@@ -75,4 +75,64 @@ pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py te
 
 ## PHASE02 Evidence
 
-启动时本节为空；TDD red / green 证据、store contract、验证结果和 commit / push evidence 必须在本 phase 结束前补齐。
+### TDD Red
+
+已先写 focused test：
+
+- `tests/knowledge/test_enterprise_ingestion_storage_contract.py::test_sqlite_store_round_trips_source_file_parse_snapshot_and_index_manifest`
+
+首次运行：
+
+```powershell
+pytest -q tests/knowledge/test_enterprise_ingestion_storage_contract.py -p no:cacheprovider
+```
+
+结果：失败，原因符合预期：
+
+```text
+ModuleNotFoundError: No module named 'zuno.knowledge.storage'
+```
+
+### TDD Green
+
+新增最小实现：
+
+- `src/backend/zuno/knowledge/storage/contracts.py`
+- `src/backend/zuno/knowledge/storage/local_object_store.py`
+- `src/backend/zuno/knowledge/storage/sqlmodel_models.py`
+- `src/backend/zuno/knowledge/storage/durable_ingestion_store.py`
+- `src/backend/zuno/knowledge/storage/__init__.py`
+
+当前 contract：
+
+- `LocalObjectStore.save_text()` 保存本地 source content，返回 `SourceObjectRecord`、`storage_uri`、`source_sha256`、ACL 和 sensitivity。
+- `SQLiteDurableIngestionStore` 支持 source object、workspace file、parse job、parse snapshot、document version、index manifest 和 index chunk round-trip。
+- 当前不接 Postgres / Redis / MinIO / OSS / worker lease / external OCR / VLM；这些仍是 Target。
+
+再次运行：
+
+```powershell
+pytest -q tests/knowledge/test_enterprise_ingestion_storage_contract.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+1 passed in 1.01s
+```
+
+### 验证结果
+
+2026-07-01 已运行：
+
+- `pytest -q tests/knowledge/test_enterprise_ingestion_storage_contract.py -p no:cacheprovider`：通过，`1 passed`。
+- `pytest -q tests/knowledge -p no:cacheprovider`：通过，`50 passed`。
+- `git diff --check`：通过；仅出现 Windows 工作树 CRLF 提示。
+- `python tools/agent/render_architecture.py --check`：通过。
+- `python tools/scripts/verify_docs_entrypoints.py`：通过。
+- `python tools/scripts/verify_repo_structure.py`：通过。
+- `python .agent/scripts/verify_agent_system.py`：通过。
+- `python .agent/scripts/verify_doc_boundaries.py`：通过。
+- `python .agent/scripts/verify_repo_hygiene.py`：通过。
+- `powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1`：通过。
+- `pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider`：通过，`72 passed`。

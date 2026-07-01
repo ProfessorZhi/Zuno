@@ -40,6 +40,7 @@ Current 只能描述代码和测试已经证明的事实：
 - `KnowledgeIndexRuntime` 已能把 `CanonicalDocumentIR` 转为本地 BM25 / vector / graph index job，并产生 `IndexJobManifest`、retrieval payload、source provenance、ACL scopes、sensitivity tags、adapter status、parse job lineage、diagnostics digest 和 citation lineage chunk metadata。
 - `IndexJobManifest` 已记录 `parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256`、`parser_config_hash`、`ir_schema_version`、`diagnostics_digest`、parser diagnostics、block/table/figure count；Agentic retrieval evidence provenance 已能从 manifest 继承这些字段。
 - `WorkspaceTaskRuntimeService.create_ingest_job()` 已通过 `ParseGateway.submit_parse_job()` 解析 workspace file，返回 `parse_job` 和 `parse_snapshot`，并把 `ParseJobSnapshot` 传给 `KnowledgeIndexRuntime.index_document(..., parse_job_snapshot=...)`，让 `/api/v1/workspace/ingest` 的 index manifest 保留 `parse_job_id`、`parse_attempt_id`、`document_version_id`、`source_sha256` 和 parser diagnostics lineage。旧 `_document_from_file()` / `workspace_text_runtime` 只保留为历史 gap 证据，不再是当前 ingest 闭环。
+- Program 1B / V2 PHASE02 已新增 `src/backend/zuno/knowledge/storage/`，提供 `LocalObjectStore` 和 `SQLiteDurableIngestionStore` 的最小 durable storage contract；focused test 已证明 source object、workspace file、parse job、parse snapshot、document version、index manifest 和 index chunk 可 SQLite round-trip。这仍只是 storage contract Current，不表示 `/workspace/file`、`/workspace/ingest` 主链路已经完成持久化接入。
 
 ## Program 1 Local Runtime Slice
 
@@ -117,7 +118,7 @@ workspace file
 
 Program 1A 的优势是链路语义、Document IR、parser contract、native parser fixtures、index manifest lineage 和 citation lineage 已经打通；不足是状态仍大多是 local / in-process / in-memory。
 
-当前 active Program 1B / V2 是 `zuno-enterprise-document-ingestion-platform-v2`。它不改写 Program 1A 历史，而是把 local runtime slice 升级为企业级文档输入与持久化平台雏形：
+当前 active Program 1B / V2 是 `zuno-enterprise-document-ingestion-platform-v2`。PHASE01 已完成 gap audit，PHASE02 已完成第一版 SQLite-compatible durable store contract；后续 phase 继续把 local runtime slice 升级为企业级文档输入与持久化平台雏形：
 
 ```text
 文件对象存储
