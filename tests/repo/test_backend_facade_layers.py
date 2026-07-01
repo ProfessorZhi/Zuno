@@ -15,6 +15,8 @@ FACADE_ALL = {
     "zuno.api": ["Settings", "router"],
     "zuno.agent": [
         "AgentConfig",
+        "AgentControlRuntime",
+        "AgentRuntimeResult",
         "AgentExecutionContext",
         "ContextOrchestrator",
         "ContextPackPolicy",
@@ -29,6 +31,7 @@ FACADE_ALL = {
         "RuntimeCheckpoint",
         "RuntimeInterrupt",
         "RuntimeNodeContract",
+        "RuntimeObservation",
         "RuntimeTurnLedger",
         "SingleControllerRuntimeHarness",
         "SingleControllerDurableRuntime",

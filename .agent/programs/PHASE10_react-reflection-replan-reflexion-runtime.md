@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE10_react-reflection-replan-reflexion-runtime
-status: active
+status: completed
 
 ## 目标
 
@@ -112,6 +112,20 @@ pytest -q tests/api/test_workspace_task_runtime.py -p no:cacheprovider
 - reflection verdict 示例。
 - reflexion candidate 示例。
 - focused tests 输出。
+
+## Closure Evidence
+
+2026-07-02 本地完成：
+
+- `src/backend/zuno/agent/control_runtime.py` 新增 `AgentControlRuntime`、`RuntimeObservation` 和 `AgentRuntimeResult`，消费 PHASE09 `PlannerOutput`，保持 `PlanState`、`CapabilityPlan`、`ReflectionVerdict`、`ReplanDecision`、`ReflexionLesson` 和 `TraceRecord` 共享契约，不新增第二套 schema。
+- ReAct runtime baseline 会记录 `step_completed`，把 governed observation / tool boundary 写入 `CapabilityPlan.executed_tools`，并在 evidence 充足时产生 `reflection_completed` 与 `answer_finalized`。
+- Reflection gate 覆盖 evidence empty、citation coverage low、unsupported claim、tool failed 和 security blocked；reflection 不通过时不生成 final answer。
+- Dynamic Replan 会把后续轨迹改成 `retrieve_deeper_evidence -> reflect_before_final`，`ReplanDecision` 记录 trigger、replaced step 和新 steps，trace 写入 `replan_created`。
+- Reflexion runtime 会从 failed verification observation 生成带 evidence refs 的 `ReflexionLesson`，并通过 `MemoryEngine.submit_reflexion_lesson_candidate()` 进入 pending review path，不绕过 governance 写长期 memory。
+- Security blocked planner output 会停在 blocked plan 和 `refuse` verdict，不执行 step / tool。
+- focused tests：`pytest -q tests/agent/test_react_reflection_replan_runtime.py -p no:cacheprovider` -> 6 passed。
+- surface / facade tests：`pytest -q tests/agent/test_react_reflection_replan_runtime.py tests/agent/test_agent_layer_surfaces.py -p no:cacheprovider` -> 11 passed；`pytest -q tests/repo/test_backend_facade_layers.py tests/repo/test_lazy_facade_static_exports.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider` -> 7 passed。
+- broader gate：`pytest -q tests/agent -p no:cacheprovider` -> 184 passed；`python -m py_compile src/backend/zuno/agent/control_runtime.py` -> passed。
 
 ## 停止条件
 

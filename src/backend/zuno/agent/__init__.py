@@ -4,6 +4,7 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from zuno.agent.control_runtime import AgentControlRuntime, AgentRuntimeResult, RuntimeObservation
     from zuno.agent.context import (
         AgentExecutionContext,
         ContextOrchestrator,
@@ -33,6 +34,8 @@ if TYPE_CHECKING:
 
 _EXPORT_TO_MODULE = {
     "AgentConfig": "zuno.agent.runtime",
+    "AgentControlRuntime": "zuno.agent.control_runtime",
+    "AgentRuntimeResult": "zuno.agent.control_runtime",
     "AgentExecutionContext": "zuno.agent.context",
     "ContextOrchestrator": "zuno.agent.context",
     "ContextPackPolicy": "zuno.agent.context",
@@ -47,6 +50,7 @@ _EXPORT_TO_MODULE = {
     "RuntimeCheckpoint": "zuno.agent.harness",
     "RuntimeInterrupt": "zuno.agent.harness",
     "RuntimeNodeContract": "zuno.agent.harness",
+    "RuntimeObservation": "zuno.agent.control_runtime",
     "RuntimeTurnLedger": "zuno.agent.post_turn",
     "SingleControllerRuntimeHarness": "zuno.agent.harness",
     "SingleControllerDurableRuntime": "zuno.agent.durable_runtime",
@@ -58,6 +62,8 @@ _EXPORT_TO_MODULE = {
 
 __all__ = [
     "AgentConfig",
+    "AgentControlRuntime",
+    "AgentRuntimeResult",
     "AgentExecutionContext",
     "ContextOrchestrator",
     "ContextPackPolicy",
@@ -72,6 +78,7 @@ __all__ = [
     "RuntimeCheckpoint",
     "RuntimeInterrupt",
     "RuntimeNodeContract",
+    "RuntimeObservation",
     "RuntimeTurnLedger",
     "SingleControllerRuntimeHarness",
     "SingleControllerDurableRuntime",

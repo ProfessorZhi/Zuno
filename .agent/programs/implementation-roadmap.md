@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE10_react-reflection-replan-reflexion-runtime.md`
+current_phase: `PHASE11_workspace-product-api-frontend-sync.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 总套件
@@ -82,7 +82,7 @@ Program ID：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 当前 phase：
 
-- `.agent/programs/PHASE10_react-reflection-replan-reflexion-runtime.md`
+- `.agent/programs/PHASE11_workspace-product-api-frontend-sync.md`
 
 目标：把原 Program 3-6 合并为一个可执行到 closure 的全链路 program，完成 launchable enterprise Agentic GraphRAG product baseline。它不是要求部署真实生产集群，而是要求每个关键层都有 local runnable implementation、adapter boundary、dependency probe / target-blocked evidence、focused tests、E2E 闭环、trace/eval/cost 记录和文档成熟度边界。
 
@@ -116,9 +116,9 @@ Production scale external deployments remain replaceable targets.
 9. `PHASE09_planning-contract-and-strategy-selector.md`
    - completed：PlanStep、PlanState、StrategySelectorOutput、SelectedSkill、CapabilityPlan、RetrievalPlan、PlannerOutput、ReflectionVerdict、ReplanDecision、ReflexionLesson 和本地 deterministic StrategySelector baseline。
 10. `PHASE10_react-reflection-replan-reflexion-runtime.md`
-   - active：ReAct step runner、Reflection gate、Dynamic Replan、Reflexion candidate 和 trace events。
+   - completed：AgentControlRuntime、ReAct observation runner、Reflection gate、Dynamic Replan、Reflexion review candidate 和 trace events。
 11. `PHASE11_workspace-product-api-frontend-sync.md`
-   - 后端新增 profile / plan / trace / capability / eval 字段与 workspace API / frontend API types 最小同步，并补 KnowledgeSpaceConfig、创建 Wizard、Settings tabs、file status、parser dependency probe、PDF / Office / OCR provider target、retry / cancel / reparse / reindex / rebuild_graph actions 和 Change Impact Preview 的产品契约。
+   - active：后端新增 profile / plan / trace / capability / eval 字段与 workspace API / frontend API types 最小同步，并补 KnowledgeSpaceConfig、创建 Wizard、Settings tabs、file status、parser dependency probe、PDF / Office / OCR provider target、retry / cancel / reparse / reindex / rebuild_graph actions 和 Change Impact Preview 的产品契约。
 12. `PHASE12_end-to-end-product-runtime.md`
    - Upload / ingest / parse / index / retrieval / planning / skill / artifact / trace / feedback / restart rehydrate E2E，并生成用户可感知 scenario summary / trace summary fixture；覆盖 native formats、PDF / Office target-blocked、image / scanned OCR/VLM blocked no fake index、binary object traceability、local queue / worker lifecycle、dead_letter / reconciler fixture。
 13. `PHASE13_eval-trace-cost-benchmark.md`
@@ -139,7 +139,7 @@ Production scale external deployments remain replaceable targets.
 | Capability Layer | PHASE06 | CapabilityRegistry、CapabilityPolicy、SkillCard、ToolCard、MCPCapability、KnowledgeCapability、ArtifactCapability | Skill selection、Tool Gate、Retrieval Gate、ReAct runner |
 | Security / Governance Envelope | PHASE07 | Input / Retrieval / Tool / Output gates、audit verdict | Planning、Retrieval、Tool runtime、Output safety、Eval |
 | Model Gateway | PHASE08 | model category、provider boundary、cost / latency / token metrics | Planning budget、Retrieval rerank、Eval judge |
-| Planning & Control Runtime | PHASE09, PHASE10 | StrategySelector、PlanStep、Reflection、Dynamic Replan、ReflexionLesson | Product runtime、Trace、E2E |
+| Planning & Control Runtime | PHASE09, PHASE10 | StrategySelector、PlanStep、AgentControlRuntime、Reflection、Dynamic Replan、ReflexionLesson pending review | Product runtime、Trace、E2E |
 | Eval / Trace / Cost | PHASE13 | ConversationRunMetrics、StageMetrics、IngestionMetrics、metrics、trace、regression report、release baseline | Closure、README / architecture evidence |
 | Docs / Archive | PHASE14, PHASE15 | architecture docs、production readiness、closure summary、archive | Future programs、repo verifiers |
 
