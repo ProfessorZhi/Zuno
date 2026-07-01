@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/capability/` 目前是 capability metadata、ToolCard retrieval、selector foundation、Tool Control Plane contract 和 PHASE08 本地 deterministic tool runtime 的目标层入口，公开 CapabilityRecord、ToolCard、CapabilityRegistry、ToolCardRegistry、NativeBM25Retriever、DynamicCapabilitySelector、selection trace、ToolCardManifest、ExecutorRegistry、ApprovalGate、MCPTrustContract、ToolResultNormalizer、ToolControlPlaneRuntime、ToolRuntimeRequest、InMemoryCredentialBroker 和 SandboxPolicyEnforcer 等 surface。当前已提供 `contracts.py`、`registry.py`、`selector.py`、`policy.py`、`execution.py`、`trace.py`、`retrieval.py`、`control_plane.py` 和 `runtime.py`。真实 provider 实现仍在 `src/backend/zuno/platform/services/application/capabilities/` 和相关 registry 路径；PHASE08 runtime 只证明本地可测 executor / approval / sandbox context / audit bridge，不是生产级外部工具平台。
+`src/backend/zuno/capability/` 目前是 capability metadata、ToolCard retrieval、selector foundation、Tool Control Plane contract 和本地 deterministic tool runtime 的目标层入口，公开 CapabilityRecord、ToolCard、CapabilityRegistry、ToolCardRegistry、NativeBM25Retriever、DynamicCapabilitySelector、selection trace、ToolCardManifest、ExecutorRegistry、ApprovalGate、MCPTrustContract、ToolResultNormalizer、ToolControlPlaneRuntime、ToolRuntimeRequest、InMemoryCredentialBroker、SandboxPolicyEnforcer 和 NetworkPolicyDecision 等 surface。当前已提供 `contracts.py`、`registry.py`、`selector.py`、`policy.py`、`execution.py`、`trace.py`、`retrieval.py`、`control_plane.py` 和 `runtime.py`。真实 provider 实现仍在 `src/backend/zuno/platform/services/application/capabilities/` 和相关 registry 路径；当前 runtime 只证明本地可测 executor、approval gate、credential-ref-only broker、network policy decision、sandbox audit context 和 redacted approval ledger，不是生产级外部工具平台。
 
 `capability/tools/` 不按 CLI / API 拆成两类顶层目录。CLI / API 是 execution adapter、runtime type 或 provider metadata，不是 capability 的主分类。
 
@@ -23,7 +23,7 @@ PHASE02 的 provider 分类入口是 `docs/architecture/repo-ownership-matrix.md
 - capability contract、selector trace、permission / health / cost 相关轻量类型。
 - 不加载旧 provider、DB 或外部工具重型实现的 facade re-export；PHASE08 本地 runtime surface 必须保持无旧 provider 副作用。
 - 指向旧 application capability owner 的边界说明。
-- 本地 deterministic tool runtime、credential reference broker、sandbox context 和 task event bridge。
+- 本地 deterministic tool runtime、credential reference broker、network policy decision、sandbox context、redacted approval ledger 和 task event bridge。
 
 ## 禁止事项
 

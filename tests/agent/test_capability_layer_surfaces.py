@@ -60,6 +60,7 @@ EXPECTED_EXPORTS = {
     "zuno.capability.runtime": [
         "CredentialGrant",
         "InMemoryCredentialBroker",
+        "NetworkPolicyDecision",
         "SandboxPolicyEnforcer",
         "ToolControlPlaneRuntime",
         "ToolExecutionContext",

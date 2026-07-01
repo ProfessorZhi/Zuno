@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-production-architecture-and-deliverables-completion-v1
-current_phase: PHASE10_tool-sandbox-vault-network-runtime
+current_phase: PHASE11_production-graphrag-evidence-citation
 
 ## 目标
 
@@ -19,9 +19,9 @@ current_phase: PHASE10_tool-sandbox-vault-network-runtime
 
 ## 当前阶段
 
-- 当前 phase：`PHASE10_tool-sandbox-vault-network-runtime`
-- 当前动作：把 Tool Control Plane 与 Sandbox 推进到真实隔离 sandbox、外部 vault / OAuth broker、网络代理、持久 approval DB 和 audit。
-- 当前验收：PHASE10 只有在低风险工具自动通行、高风险工具强制审批、credential 只通过 ref 传递，sandbox / network / approval audit 可追踪后才能关闭。
+- 当前 phase：`PHASE11_production-graphrag-evidence-citation`
+- 当前动作：把 Knowledge / GraphRAG / Evidence / Citation 推进到生产 GraphRAG extraction、community report、RRF / rerank、外部图索引、unsupported claim guard 和 evidence eval。
+- 当前验收：PHASE11 只有在 cited answer 可从 evidence block 追到 source document、graph extraction / rerank 有 focused tests 或 blocked evidence、retrieval / citation / unsupported claim metrics 进入 trace / eval 后才能关闭。
 
 ## 最近完成基线
 

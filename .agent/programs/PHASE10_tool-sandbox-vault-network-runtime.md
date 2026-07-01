@@ -1,7 +1,9 @@
 # PHASE10 Tool Sandbox Vault Network Runtime
 
-status: active
+status: completed
 previous_phase: PHASE09_memory-context-production-governance
+next_phase: PHASE11_production-graphrag-evidence-citation
+completed_at: 2026-07-01
 
 ## 目标
 
@@ -79,3 +81,35 @@ pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_regi
 - 需要真实 vault / OAuth 凭据。
 - 需要真实隔离运行时但本机不可用。
 - 高副作用工具无法强制审批。
+
+## 完成证据
+
+PHASE10 已关闭本地可测 Tool / Sandbox runtime 边界：
+
+- `ToolControlPlaneRuntime` 在执行前读取 sandbox network policy，拒绝 deny / deny_by_default 下的外联目标，并记录 `network_egress_denied` sandbox audit。
+- `InMemoryCredentialBroker` 只接受 `credref://`、`vaultref://`、`oauthref://` credential reference，拒绝原始 secret 字符串。
+- approval ledger 记录 pending / approved execution，写入 redacted approval comment、credential ref 和 sandbox context。
+- `ToolSandboxContext` 明确标注 `isolation_mode=local_deterministic` 与 `real_isolation=False`，并暴露 rootless / gVisor / Firecracker 为 Target isolation profiles。
+- `NetworkPolicyDecision` 已纳入 capability runtime surface，用于解释 requested / allowed / denied network targets。
+
+## Current / Target 边界
+
+Current 只能表述为：本地 deterministic Tool Control Plane runtime 具备 approval gate、credential-ref-only broker、network policy decision、sandbox audit context、workspace event bridge 和 focused tests。
+
+Remaining Target 仍是：真实 rootless / gVisor / Firecracker 隔离 sandbox、外部 vault / OAuth broker、真实网络代理、持久 approval DB、完整 MCP runtime governance 和 tool trajectory eval。
+
+## 验证证据
+
+```powershell
+pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_registry.py tests/agent/test_capability_layer_surfaces.py tests/api/test_workspace_security_observability_runtime.py -p no:cacheprovider
+pytest -q tests/agent/test_tool_control_plane_runtime.py tests/agent/test_tool_control_plane_contract.py -p no:cacheprovider
+git diff --check
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_repo_structure.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-docs.ps1
+pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+```

@@ -354,3 +354,143 @@ def test_dynamic_selector_records_toolcard_trace_and_policy_filters() -> None:
     blocked_trace = blocked.trace.to_dict()
     assert blocked.capabilities == ()
     assert blocked_trace["rejected_tool_card_ids"]["MCPTool:lark_send_message"] == "side_effect_not_allowed"
+
+
+def test_tool_runtime_blocks_denied_network_egress_and_records_sandbox_decision() -> None:
+    from zuno.capability.control_plane import (
+        ExecutorAdapterContract,
+        ToolApprovalPolicy,
+        ToolCardManifest,
+        ToolExecutionMode,
+        ToolSideEffectLevel,
+        ToolTrustTier,
+    )
+    from zuno.capability.runtime import ToolControlPlaneRuntime, ToolRuntimeRequest
+
+    calls: list[dict] = []
+    runtime = ToolControlPlaneRuntime()
+    runtime.register_manifest(
+        ToolCardManifest(
+            tool_id="web.fetch",
+            owner="capability.tools.web",
+            capability_domain="web",
+            description_for_model="Fetch a public URL.",
+            input_schema={"type": "object", "properties": {"url": {"type": "string"}}},
+            output_schema={"type": "object"},
+            execution_mode=ToolExecutionMode.API,
+            trust_tier=ToolTrustTier.WORKSPACE,
+            side_effect_level=ToolSideEffectLevel.READ,
+            approval_policy=ToolApprovalPolicy.AUTO,
+            sandbox_profile="network_limited",
+            credential_policy="none",
+            network_policy="deny",
+            audit_policy="trace",
+            budget={"timeout_seconds": 3},
+            executor_adapter="api.web.fetch",
+        )
+    )
+    runtime.register_executor_adapter(
+        ExecutorAdapterContract(
+            adapter_id="api.web.fetch",
+            execution_mode=ToolExecutionMode.API,
+            sandbox_profile="network_limited",
+            network_policy="deny",
+            credential_policy="none",
+            timeout_seconds=3,
+        ),
+        lambda args, context: calls.append({"args": args, "context": context}) or {"status": "success"},
+    )
+
+    result = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="web.fetch",
+            arguments={
+                "url": "https://example.com/private",
+                "metadata": {"endpoint": "https://example.com/private"},
+            },
+            workspace_id="workspace_tools",
+            user_id="user_tools",
+            task_id="task_network",
+            trace_id="trace_network",
+            model_intent="Fetch a public URL.",
+        )
+    )
+
+    assert result.status == "blocked"
+    assert result.security_decision == "block"
+    assert calls == []
+    decision = result.sandbox_context.to_dict()["network_policy_decision"]
+    assert decision["allowed"] is False
+    assert decision["reason"] == "network_egress_denied"
+    assert decision["denied_targets"] == ["https://example.com/private"]
+    assert result.sandbox_context.to_dict()["real_isolation"] is False
+    assert result.task_events[1]["payload"]["sandbox"]["network_policy_decision"]["allowed"] is False
+    assert result.task_events[-1]["payload"]["error"] == "network_egress_denied"
+
+
+def test_tool_runtime_rejects_raw_secret_refs_and_records_redacted_approval_ledger() -> None:
+    from zuno.capability.runtime import (
+        InMemoryCredentialBroker,
+        ToolRuntimeRequest,
+        build_default_tool_control_plane_runtime,
+    )
+
+    broker = InMemoryCredentialBroker()
+    try:
+        broker.register_secret_ref(
+            policy="brokered_secret",
+            workspace_id="workspace_tools",
+            user_id="user_tools",
+            secret_ref="sk-live-secret",
+        )
+    except ValueError as err:
+        assert "credential reference" in str(err)
+        assert "sk-live-secret" not in str(err)
+    else:
+        raise AssertionError("raw secret values must not be stored in the credential broker")
+
+    broker.register_secret_ref(
+        policy="brokered_secret",
+        workspace_id="workspace_tools",
+        user_id="user_tools",
+        secret_ref="credref://workspace_tools/mail",
+    )
+    runtime = build_default_tool_control_plane_runtime()
+    runtime.set_credential_broker(broker)
+    pending = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={"to": "hr@example.com", "smtp_password": "raw-secret"},
+            workspace_id="workspace_tools",
+            user_id="user_tools",
+            task_id="task_mail",
+            trace_id="trace_mail",
+            model_intent="Send email.",
+        )
+    )
+    approved = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={"to": "hr@example.com", "smtp_password": "raw-secret"},
+            workspace_id="workspace_tools",
+            user_id="user_tools",
+            task_id="task_mail",
+            trace_id="trace_mail",
+            model_intent="Send email.",
+            approved=True,
+            approval_comment="approved with raw-secret",
+            tool_request_id=pending.tool_request_id,
+            approval_id=pending.approval_id,
+        )
+    )
+
+    ledger = runtime.approval_ledger()
+
+    assert pending.status == "approval_required"
+    assert approved.status == "completed"
+    assert [entry["status"] for entry in ledger] == ["approval_waiting", "approved_executed"]
+    assert ledger[0]["approval_id"] == pending.approval_id
+    assert ledger[1]["approval_id"] == pending.approval_id
+    assert ledger[1]["credential_refs"] == ["credref://workspace_tools/mail"]
+    assert ledger[1]["approval_comment"] == "approved with [REDACTED_SECRET]"
+    assert "raw-secret" not in repr(ledger)
