@@ -1,69 +1,99 @@
-# Program 3 Closure Checklist
+# Mega Program Closure Checklist
 
 state: active
-active_program: `zuno-enterprise-ingestion-async-infrastructure-v1`
-current_phase: `PHASE01_truth-source-and-async-gap-audit.md`
+active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
+current_phase: `PHASE01_truth-source-and-merge-plan.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
-## Program 3 收口目标
+## 收口目标
 
-Program 3 完成时必须达到：
+Program 完成时必须达到：
 
 ```text
-Enterprise ingestion async infrastructure baseline completed.
+Launchable enterprise Agentic GraphRAG product baseline completed.
+Production scale external deployments remain replaceable targets.
 ```
 
-这句话只在以下事实都由代码、focused tests、verifier 或可复现 evidence 证明后才能写入 closure summary。
+这句话只在以下事实都由代码、focused tests、verifier、trace / eval 或可复现 evidence 证明后才能写入 closure summary。
 
-## Phase 清单
+## Phase Gate 清单
 
-- [ ] PHASE01 完成 truth source 与 async gap audit。
-- [ ] PHASE02 完成 `DurableIngestionStore` interface 和 PostgreSQL-compatible boundary。
-- [ ] PHASE03 完成 `ObjectStore` abstraction 和 binary input。
-- [ ] PHASE04 完成 `QueueBackend`、`LocalQueueBackend` 和 RabbitMQ boundary。
-- [ ] PHASE05 完成 `ParserWorker` / `IndexWorker` local runner。
-- [ ] PHASE06 完成 Redis runtime state boundary 和 local fallback。
-- [ ] PHASE07 完成 outbox、dead letter、worker lease / heartbeat 和 reconciler。
-- [ ] PHASE08 完成 ingest status / retry / cancel / replay API 或 service contract。
-- [ ] PHASE09 完成 OCR / VLM worker boundary 和 blocked diagnostics。
-- [ ] PHASE10 完成 end-to-end async restart recovery focused test。
-- [ ] PHASE11 完成 docs、architecture mirror、verifier 和 repo tests 同步。
-- [ ] PHASE12 完成 closure、archive、commit 和 push。
+- [ ] PHASE01 完成 truth source、program merge、owner map、workstream map 和 PR / commit plan。
+- [ ] PHASE02 完成 shared contract freeze。
+- [ ] PHASE03 完成 enterprise ingestion async infrastructure baseline。
+- [ ] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
+- [ ] PHASE05 完成 Memory & Context Engine baseline。
+- [ ] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。
+- [ ] PHASE07 完成 Security / Governance envelope baseline。
+- [ ] PHASE08 完成 Model Gateway / Cost / Latency baseline。
+- [ ] PHASE09 完成 Planning Contract 与 Strategy Selector baseline。
+- [ ] PHASE10 完成 ReAct / Reflection / Dynamic Replan / Reflexion runtime baseline。
+- [ ] PHASE11 完成 Workspace Product API / Frontend Minimal Sync。
+- [ ] PHASE12 完成 End-to-End Product Runtime scenario。
+- [ ] PHASE13 完成 Eval / Trace / Cost / Benchmark baseline。
+- [ ] PHASE14 完成 Docs / Architecture Expansion。
+- [ ] PHASE15 完成 full verification、archive、no-active、commit 和 push。
 
-## Runtime 验收清单
+## 12 条 Product Baseline 验收
 
-- [ ] `/workspace/file` 继续保存 source object、source hash、storage uri 和 workspace file metadata。
-- [ ] `LocalObjectStore` 支持 text 和 bytes，`source_sha256` 与真实 bytes 一致。
-- [ ] `/workspace/ingest` 支持 async queued path，response 字段保持 additive compatibility。
-- [ ] `LocalQueueBackend` 支持 enqueue、consume、ack、nack、dead_letter。
-- [ ] `ParserWorker` 能消费 `parse_requested`，调用 `ParseGateway`，持久化 parse job / snapshot / document version / blocks。
-- [ ] `IndexWorker` 能消费 `index_requested`，持久化 index manifest / chunks / citation lineage。
-- [ ] blocked / failed parser diagnostics 落库，blocked 不创建 fake index。
-- [ ] ingest status 可查询 queued / parsing / parsed / indexing / indexed / blocked / failed / dead_letter。
-- [ ] outbox 能防止“DB 写了任务但队列消息丢失”。
-- [ ] reconciler 能发现 uploaded_without_parse、parse_succeeded_without_index、blocked_without_diagnostics、index_chunks_missing、citation_lineage_missing、object_missing。
-- [ ] OCR / VLM worker boundary 能表达 queued / blocked / succeeded / failed，默认无 provider 时 target-blocked，不 fake success。
-- [ ] restart recovery 后仍能 rehydrate file、parse、document、index、task、artifact、feedback，并生成带 citation 的 artifact。
+- [ ] `/workspace/file -> source object -> object store/local store` 可跑。
+- [ ] `/workspace/ingest -> parse job -> Document IR -> index job -> chunks` 可跑。
+- [ ] `QueueBackend + local async worker` 可跑，RabbitMQ / Redis / Postgres / MinIO 有 adapter boundary 和 probe。
+- [ ] `ParserWorker / IndexWorker` 本地可执行，blocked OCR / VLM 不 fake index。
+- [ ] Knowledge retrieval 支持标准检索 / 深度检索 profile。
+- [ ] Agentic Retrieval Planner 能按 profile、证据、预算选择 BM25 / vector / GraphRAG / requery / rerank。
+- [ ] Capability Layer 有 Skill / Knowledge / Tool / MCP / Artifact capability registry contract。
+- [ ] Memory & Context Engine 有多重记忆和 ContextPack contract，并有最小 runtime / focused tests。
+- [ ] Planning & Control Runtime 有 StrategySelector、PlanStep、Reflection、Dynamic Replan、ReflexionLesson candidate。
+- [ ] Security gates 覆盖 input / retrieval / tool / output，至少有 prompt injection、ACL、tool approval、output citation safety tests。
+- [ ] Eval / Trace / Cost 能记录 latency、tokens / cost estimate、retrieval rounds、citation coverage、unsupported claim、plan / replan / reflection events。
+- [ ] 一个 E2E scenario 能跑：上传文档 -> ingest -> 标准/深度检索 -> Agent plan -> cited artifact -> trace/eval/feedback -> restart rehydrate。
+
+## Workstream 收口清单
+
+- [ ] Coordinator 审查所有 shared contract 和共享文件，没有跨 workstream 未解决冲突。
+- [ ] Workstream A 提交 Input / Async Infrastructure evidence。
+- [ ] Workstream B 提交 Knowledge / Retrieval / GraphRAG evidence。
+- [ ] Workstream C 提交 Memory / Context evidence。
+- [ ] Workstream D 提交 Capability / Skill / Tool / MCP evidence。
+- [ ] Workstream E 提交 Security / Governance evidence。
+- [ ] Workstream F 提交 Planning / Agent Runtime evidence。
+- [ ] Workstream G 提交 Eval / Trace / Cost evidence。
+- [ ] Workstream H 提交 Product API / Frontend Minimal Sync evidence。
+- [ ] Workstream I 提交 Docs / Verifier / Closure evidence。
+
+## 目标架构拼接验收
+
+- [ ] Product Surface 能把用户的 AgentChat goal、knowledge selection、标准检索 / 深度检索传入 runtime。
+- [ ] Input / Async Infrastructure 的 source object、parse job、document version、index manifest 和 citation lineage 能被 Knowledge Retrieval 消费。
+- [ ] Knowledge Retrieval 输出的 EvidenceBundle / CitationLineage 能被 Planning、Reflection、Output Gate 和 Eval 共同消费。
+- [ ] Memory & Context Engine 输出的 ContextPack 能被 Strategy Selector 消费，且 sensitive exclusion 已生效。
+- [ ] Capability Layer 的 SkillCard / ToolCard / MCPCapability 能被 Planner 选择，并受 Tool Gate 约束。
+- [ ] Security / Governance 的 Input / Retrieval / Tool / Output gates 能影响 plan / replan / refuse / ask_user。
+- [ ] Model Gateway 的 token / latency / cost metrics 能进入 trace，并影响 budget guard。
+- [ ] Planning & Control Runtime 能从 ContextPack、Skill、Capability、Evidence 和 Security verdict 生成 plan，并在 Reflection 后动态 replan。
+- [ ] Eval / Trace / Cost 层能从 E2E scenario 输出 regression summary。
+- [ ] Docs / Archive 能准确说明 Current / Target / Production Scale，且不把外部生产服务写成 Current。
 
 ## Current / Target 边界
 
-- [ ] SQLite 和 local implementations 可作为 Current。
-- [ ] PostgreSQL-compatible boundary 只有在代码和 tests 证明时才能写成 Current。
-- [ ] RabbitMQ、Redis、MinIO / S3、external OCR / VLM、external index 没有真实 provider 和 tests 前只能写成 Target / target-blocked evidence。
+- [ ] SQLite、local object store、local queue、local worker、local state store 可作为 Current。
+- [ ] PostgreSQL / RabbitMQ / Redis / MinIO / S3 / external OCR / VLM / external index 没有真实 provider 和 tests 前只能写成 Production Scale Target 或 target-blocked evidence。
+- [ ] Basic RAG 和 Static GraphRAG 只能作为 eval baseline，不写成最终产品模式。
+- [ ] Skill 不写成 Tool，不写成 Knowledge，不写成产品级多 Agent runtime。
 - [ ] Codex 多线程施工不写成 Zuno 产品 runtime 多 Agent 架构。
-- [ ] Program 4-6 是 queued program，不是当前 active program。
 
 ## 文档同步检查
 
-- [ ] `.agent/programs/current.md` 与 Program 3 active 状态一致。
-- [ ] `.agent/programs/implementation-roadmap.md` 覆盖 Program 1-6 顺序。
-- [ ] `.agent/programs/queued-programs/` 中 Program 4-6 计划仍是 queued。
+- [ ] `.agent/programs/current.md` 与 mega program active 状态一致。
+- [ ] `.agent/programs/implementation-roadmap.md` 覆盖 Program 1 / 2 completed 与 Program 3 Mega active。
+- [ ] `.agent/programs/queued-programs/` 中原 Program 4-6 标注 superseded / merged_into，不写成 completed。
 - [ ] `.agent/references/current-program.md` 与 `.agent/programs/current.md` 一致。
 - [ ] `AGENTS.md` 和 README 当前 program 摘要一致。
 - [ ] `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两个 architecture HTML 同步。
-- [ ] `docs/architecture/production-readiness.md` 与 Program 3 Current / Target 边界一致。
-- [ ] `docs/architecture/document-ingestion-foundation.md` 与 async ingestion infrastructure 边界一致。
-- [ ] verifier / repo tests 覆盖 active program 文件清单、queued Program 4-6 和 latest completed archive。
+- [ ] `docs/architecture/production-readiness.md` 与 mega program Current / Target 边界一致。
+- [ ] `docs/architecture/document-ingestion-foundation.md` 与 async ingestion / E2E baseline 边界一致。
+- [ ] verifier / repo tests 覆盖 active program 文件清单、superseded Program 4-6 和 latest completed archive。
 
 ## 验证命令
 
@@ -79,14 +109,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workfl
 pytest -q tests/api/test_workspace_durable_ingest_runtime.py -p no:cacheprovider
 pytest -q tests/api/test_workspace_task_runtime.py -p no:cacheprovider
 pytest -q tests/knowledge -p no:cacheprovider
+pytest -q tests/agent -p no:cacheprovider
+pytest -q tests/api -p no:cacheprovider
 pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider
 ```
 
 ## 归档目标
 
-Program 3 完成后整体归档到：
+Program 完成后整体归档到：
 
-- `docs/history/programs/zuno-enterprise-ingestion-async-infrastructure-v1/`
+- `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`
 
 归档必须包含：
 
@@ -95,4 +127,4 @@ Program 3 完成后整体归档到：
 - `implementation-roadmap.md`
 - `closure-checklist.md`
 - `closure-summary.md`
-- PHASE01-PHASE12 文件
+- PHASE01-PHASE15 文件

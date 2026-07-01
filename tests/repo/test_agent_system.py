@@ -62,20 +62,23 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
-    "PHASE01_truth-source-and-async-gap-audit.md",
-    "PHASE02_storage-interface-and-postgres-boundary.md",
-    "PHASE03_object-store-abstraction-and-binary-input.md",
-    "PHASE04_queue-backend-and-rabbitmq-boundary.md",
-    "PHASE05_parser-index-worker-runtime.md",
-    "PHASE06_redis-runtime-state-boundary.md",
-    "PHASE07_outbox-dead-letter-reconciler.md",
-    "PHASE08_async-ingest-status-retry-cancel-replay.md",
-    "PHASE09_ocr-vlm-worker-boundary.md",
-    "PHASE10_end-to-end-async-restart-recovery.md",
-    "PHASE11_docs-verifier-sync.md",
-    "PHASE12_closure-archive-commit-push.md",
+    "PHASE01_truth-source-and-merge-plan.md",
+    "PHASE02_shared-contract-freeze.md",
+    "PHASE03_enterprise-ingestion-async-infrastructure.md",
+    "PHASE04_knowledge-retrieval-and-graphrag-profile.md",
+    "PHASE05_memory-context-engine.md",
+    "PHASE06_capability-skill-tool-mcp-layer.md",
+    "PHASE07_security-governance-envelope.md",
+    "PHASE08_model-gateway-cost-latency.md",
+    "PHASE09_planning-contract-and-strategy-selector.md",
+    "PHASE10_react-reflection-replan-reflexion-runtime.md",
+    "PHASE11_workspace-product-api-frontend-sync.md",
+    "PHASE12_end-to-end-product-runtime.md",
+    "PHASE13_eval-trace-cost-benchmark.md",
+    "PHASE14_docs-architecture-expansion.md",
+    "PHASE15_verification-archive-closure.md",
 ]
-PROGRAM3_ACTIVE_NAME = "zuno-enterprise-ingestion-async-infrastructure-v1"
+PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_PHASE_FILES = ACTIVE_PROGRAM_FILES[4:]
 LATEST_COMPLETED_PROGRAM_NAME = "zuno-enterprise-document-ingestion-platform-v2"
 LATEST_COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{LATEST_COMPLETED_PROGRAM_NAME}"
@@ -273,7 +276,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE01_truth-source-and-async-gap-audit.md",
+        "current_phase: PHASE01_truth-source-and-merge-plan.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -386,7 +389,9 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for file_name in QUEUED_PROGRAM_FILES:
         text = (REPO_ROOT / ".agent/programs/queued-programs" / file_name).read_text(encoding="utf-8")
         if file_name != "README.md":
-            assert "state: queued" in text
+            assert "state: superseded" in text
+            assert "merged_into: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in text
+            assert "superseded_by: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in text
     _assert_archived_phase_state()
     for phase in ACTIVE_PROGRAM_PHASE_FILES:
         phase_path = production_archive / phase

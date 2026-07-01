@@ -40,18 +40,21 @@ Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE01_truth-source-and-async-gap-audit.md"
-Require-Path ".agent\programs\PHASE02_storage-interface-and-postgres-boundary.md"
-Require-Path ".agent\programs\PHASE03_object-store-abstraction-and-binary-input.md"
-Require-Path ".agent\programs\PHASE04_queue-backend-and-rabbitmq-boundary.md"
-Require-Path ".agent\programs\PHASE05_parser-index-worker-runtime.md"
-Require-Path ".agent\programs\PHASE06_redis-runtime-state-boundary.md"
-Require-Path ".agent\programs\PHASE07_outbox-dead-letter-reconciler.md"
-Require-Path ".agent\programs\PHASE08_async-ingest-status-retry-cancel-replay.md"
-Require-Path ".agent\programs\PHASE09_ocr-vlm-worker-boundary.md"
-Require-Path ".agent\programs\PHASE10_end-to-end-async-restart-recovery.md"
-Require-Path ".agent\programs\PHASE11_docs-verifier-sync.md"
-Require-Path ".agent\programs\PHASE12_closure-archive-commit-push.md"
+Require-Path ".agent\programs\PHASE01_truth-source-and-merge-plan.md"
+Require-Path ".agent\programs\PHASE02_shared-contract-freeze.md"
+Require-Path ".agent\programs\PHASE03_enterprise-ingestion-async-infrastructure.md"
+Require-Path ".agent\programs\PHASE04_knowledge-retrieval-and-graphrag-profile.md"
+Require-Path ".agent\programs\PHASE05_memory-context-engine.md"
+Require-Path ".agent\programs\PHASE06_capability-skill-tool-mcp-layer.md"
+Require-Path ".agent\programs\PHASE07_security-governance-envelope.md"
+Require-Path ".agent\programs\PHASE08_model-gateway-cost-latency.md"
+Require-Path ".agent\programs\PHASE09_planning-contract-and-strategy-selector.md"
+Require-Path ".agent\programs\PHASE10_react-reflection-replan-reflexion-runtime.md"
+Require-Path ".agent\programs\PHASE11_workspace-product-api-frontend-sync.md"
+Require-Path ".agent\programs\PHASE12_end-to-end-product-runtime.md"
+Require-Path ".agent\programs\PHASE13_eval-trace-cost-benchmark.md"
+Require-Path ".agent\programs\PHASE14_docs-architecture-expansion.md"
+Require-Path ".agent\programs\PHASE15_verification-archive-closure.md"
 Require-NoPath ".agent\programs\PHASE01_truth-source-and-gap-audit.md"
 Require-NoPath ".agent\programs\PHASE02_durable-storage-contract.md"
 Require-NoPath ".agent\programs\PHASE01_program-truth-source-and-parser-current-audit.md"
@@ -290,11 +293,11 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-enterprise-ingestion-async-infrastructure-v1" -or $currentProgram -notmatch "current_phase: PHASE01_truth-source-and-async-gap-audit.md" -or $currentProgram -notmatch "latest_completed_program: zuno-enterprise-document-ingestion-platform-v2") {
-    $failures.Add("current-program.md must declare active Program 3 state and latest completed Program 2")
+if ($currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "current_phase: PHASE01_truth-source-and-merge-plan.md" -or $currentProgram -notmatch "latest_completed_program: zuno-enterprise-document-ingestion-platform-v2") {
+    $failures.Add("current-program.md must declare active Program 3 Mega state and latest completed Program 2")
 }
-if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-enterprise-ingestion-async-infrastructure-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
-    $failures.Add("current-program.md missing Program 1-6 suite queue")
+if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "zuno-enterprise-ingestion-async-infrastructure-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
+    $failures.Add("current-program.md missing Program 1-3 mega suite map")
 }
 if ($currentProgram -notmatch "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/" -or $currentProgram -notmatch "Product V1 local durable ingestion baseline") {
     $failures.Add("current-program.md missing latest Program 2 archive and durable baseline summary")

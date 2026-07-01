@@ -183,7 +183,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3：`zuno-enterprise-ingestion-async-infrastructure-v1`，当前 phase 是 `PHASE01_truth-source-and-async-gap-audit.md`。最近完成并归档的 program 是 Program 2：`zuno-enterprise-document-ingestion-platform-v2`，归档位置是 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。该 program 完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。上一轮 Program 1 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，归档位置是 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`。后续 queued program 是 Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1`。
+当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE01_truth-source-and-merge-plan.md`。最近完成并归档的 program 是 Program 2：`zuno-enterprise-document-ingestion-platform-v2`，归档位置是 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。该 program 完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。上一轮 Program 1 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，归档位置是 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`。原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 已合并进当前 Mega Program，不再作为独立 queued pipeline 执行。
 
 目标产品口径固定为 AgentChat 驱动的企业知识库 Agentic GraphRAG Workspace。Agent Core 公式是 `Model Gateway + Memory & Context Engine + Planning & Control Runtime + Capability Layer + Governance / Trace / Eval Envelope`。用户在聊天里提出目标，并在勾选知识库时选择标准检索 / 深度检索；GraphRAG、BM25、vector、re-query、rerank、Skill、MCP 和工具调用由 Single Controller Agent 内部自动规划。Skill 是 Capability Layer 里的任务方法包，不是 Tool、不是 Knowledge、也不是产品级多 Agent runtime。不要把 Zuno 写成用户手动选择 RAG / GraphRAG 模式的工具箱，也不要把近期主线写成产品级多 Agent runtime。
 
@@ -191,7 +191,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 上一轮 runtime-first program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。runtime-first closure evidence 保留在归档目录；AGENTS.md 不重复闭环链路细节。
 
-当前前台采用三层成熟度口径：Current Local Slice 只写已由代码和测试证明的本地闭环；Launchable Prototype Target 是近期可上线企业知识库 Agent 雏形；Production Scale Target 是完整企业级多租户、队列、worker、外部索引、安全治理和运维扩展。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；Program 3 当前正在把 Program 2 的 SQLite / local synchronous durable baseline 推进为 enterprise ingestion async infrastructure baseline。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
+当前前台采用三层成熟度口径：Current Local Slice 只写已由代码和测试证明的本地闭环；Launchable Prototype Target 是近期可上线企业知识库 Agent 雏形；Production Scale Target 是完整企业级多租户、队列、worker、外部索引、安全治理和运维扩展。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；Program 3 Mega 当前目标是把输入异步基础设施、Knowledge / Retrieval / GraphRAG、Memory & Context、Capability / Skill / Tool / MCP、Security / Governance、Model Gateway / Cost、Planning & Control Runtime、Eval / Trace / Benchmark、Product API / Frontend 最小同步、E2E、文档和归档统一收口成 launchable product baseline。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
 
 上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`。`zuno-eight-deliverables-full-realization-v1` 是八类治理交付物闭环的历史完成事实，不是当前前台 runtime deliverables 口径。Program 4 / `zuno-six-layer-internalization-v1` 已完成并归档，它不是完整 runtime architecture upgrade。更多历史归档见 `docs/history/programs/README.md`。
 
@@ -201,10 +201,10 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 - `.agent/programs/README.md`
 - `.agent/programs/implementation-roadmap.md`
 - `.agent/programs/closure-checklist.md`
-- `.agent/programs/PHASE01_truth-source-and-async-gap-audit.md` 到 `.agent/programs/PHASE12_closure-archive-commit-push.md`
+- `.agent/programs/PHASE01_truth-source-and-merge-plan.md` 到 `.agent/programs/PHASE15_verification-archive-closure.md`
 - `.agent/programs/queued-programs/`
 
-最近完成的 `zuno-enterprise-document-ingestion-platform-v2` 已归档。本轮 Program 3 不能改写 Program 1 / Program 2 或上一轮 PHASE01-PHASE12 closure evidence；后续仍不得把 Target 伪装成 Current。
+最近完成的 `zuno-enterprise-document-ingestion-platform-v2` 已归档。本轮 Program 3 Mega 不能改写 Program 1 / Program 2 或上一轮 PHASE01-PHASE12 closure evidence；后续仍不得把 Target 伪装成 Current。
 
 历史 Program 3 final alias surface closure 已完成：`src/backend/` 顶层只保留 `zuno/`；`src/backend/zuno` 顶层目录只保留 `api / agent / memory / capability / knowledge / platform`；根级零碎 `.py` alias 文件退休；旧 public import path 通过 `src/backend/zuno/platform/compatibility/legacy_aliases.py` 注册兼容。
 

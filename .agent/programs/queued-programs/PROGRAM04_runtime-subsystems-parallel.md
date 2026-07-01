@@ -1,8 +1,16 @@
 # PROGRAM04 Runtime Subsystems Parallel
 
-state: queued
+state: superseded
 program: zuno-runtime-subsystems-parallel-v1
 depends_on: zuno-enterprise-ingestion-async-infrastructure-v1
+merged_into: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
+superseded_by: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
+
+## 当前状态
+
+本文件不再作为 queued program 执行。其 Memory / Context、Capability / Skill / Tool / MCP、Security / Governance、GraphRAG / Index 范围已经合并进 `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1` 的 PHASE04-PHASE07、PHASE09-PHASE12 和 PHASE13-PHASE14。
+
+本文件保留为历史输入，不是 completed evidence。
 
 ## 目标
 

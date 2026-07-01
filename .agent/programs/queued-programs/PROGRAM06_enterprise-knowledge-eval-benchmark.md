@@ -1,8 +1,16 @@
 # PROGRAM06 Enterprise Knowledge Eval Benchmark
 
-state: queued
+state: superseded
 program: zuno-enterprise-knowledge-eval-benchmark-v1
 depends_on: zuno-agent-planning-integration-v1
+merged_into: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
+superseded_by: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
+
+## 当前状态
+
+本文件不再作为 queued program 执行。其 Basic RAG baseline、Static GraphRAG baseline、Agentic GraphRAG target、quality / cost / latency / evidence / citation / security metrics 已合并进 `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1` 的 PHASE13 和 PHASE15。
+
+本文件保留为历史输入，不是 completed evidence。
 
 ## 目标
 

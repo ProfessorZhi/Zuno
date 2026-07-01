@@ -1,8 +1,8 @@
 # Program Roadmap
 
 state: active
-active_program: `zuno-enterprise-ingestion-async-infrastructure-v1`
-current_phase: `PHASE01_truth-source-and-async-gap-audit.md`
+active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
+current_phase: `PHASE01_truth-source-and-merge-plan.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 总套件
@@ -10,6 +10,19 @@ latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 本轮套件名：
 
 `zuno-enterprise-agentic-graphrag-production-suite-v1`
+
+当前执行形态收敛为三个前台 program：
+
+1. Program 1：Document Ingestion Foundation，completed / archived。
+2. Program 2：Durable Ingestion Product V1，completed / archived。
+3. Program 3 Mega：Launchable Enterprise Agentic GraphRAG Full Closure，active。
+
+原 Program 3 / 4 / 5 / 6 已合并进 Program 3 Mega：
+
+- `zuno-enterprise-ingestion-async-infrastructure-v1` -> merged_into mega program。
+- `zuno-runtime-subsystems-parallel-v1` -> merged_into mega program。
+- `zuno-agent-planning-integration-v1` -> merged_into mega program。
+- `zuno-enterprise-knowledge-eval-benchmark-v1` -> merged_into mega program。
 
 核心目标：
 
@@ -20,12 +33,15 @@ latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
   -> durable ingestion facts
   -> async parse / index workers
   -> index / graph handoff
+  -> Memory & Context Engine
+  -> Capability Layer
+  -> Planning & Control Runtime
   -> Single Controller Agentic GraphRAG
-  -> cited answer / artifact / trace
-  -> automated enterprise KB eval
+  -> cited answer / artifact / trace / cost / eval
+  -> launchable product baseline
 ```
 
-Zuno 最终产品不是 Basic RAG、GraphRAG、Agentic GraphRAG 三个并列模式。最终产品是 AgentChat 驱动的企业知识库 Agentic GraphRAG Agent。Agent Core 公式是 `Model Gateway + Memory & Context Engine + Planning & Control Runtime + Capability Layer + Governance / Trace / Eval Envelope`。用户在勾选知识库时只选择标准检索 / 深度检索；建库时决定基础索引、图谱增强索引和 OCR / 多模态解析能力；Agent 后端自动选择 RAG / GraphRAG / re-query / rerank、Skill、MCP 和工具能力。Basic RAG 与静态 GraphRAG 是 Program 6 的评测 baseline。
+Zuno 最终产品不是 Basic RAG、GraphRAG、Agentic GraphRAG 三个并列模式。最终产品是 AgentChat 驱动的企业知识库 Agentic GraphRAG Agent。Agent Core 公式是 `Model Gateway + Memory & Context Engine + Planning & Control Runtime + Capability Layer + Governance / Trace / Eval Envelope`。用户在勾选知识库时只选择标准检索 / 深度检索；建库时决定基础索引、图谱增强索引和 OCR / 多模态解析能力；Agent 后端自动选择 RAG / GraphRAG / re-query / rerank、Skill、MCP 和工具能力。Basic RAG 与静态 GraphRAG 是 eval baseline。
 
 ## Program 1：Document Ingestion Foundation
 
@@ -58,66 +74,143 @@ Program ID：`zuno-enterprise-document-ingestion-platform-v2`
 - workspace task、events、artifact content/ref 和 feedback 可从 durable store rehydrate。
 - restart recovery focused test 证明 fresh service/runtime 后仍能查询 task / events / artifact / feedback，并用 persisted chunks 生成 cited artifact。
 
-## Program 3：Enterprise Ingestion Async Infrastructure
+## Program 3 Mega：Launchable Enterprise Agentic GraphRAG Full Closure
 
-Program ID：`zuno-enterprise-ingestion-async-infrastructure-v1`
+Program ID：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 状态：active。
 
 当前 phase：
 
-- `.agent/programs/PHASE01_truth-source-and-async-gap-audit.md`
+- `.agent/programs/PHASE01_truth-source-and-merge-plan.md`
 
-目标：把 Program 2 的 SQLite / local synchronous durable baseline 升级为企业文档输入异步基础设施 baseline。Program 3 不是否定 Program 2 closure，而是补齐文档入口层最核心的企业化运行面：
+目标：把原 Program 3-6 合并为一个可执行到 closure 的全链路 program，完成 launchable enterprise Agentic GraphRAG product baseline。它不是要求部署真实生产集群，而是要求每个关键层都有 local runnable implementation、adapter boundary、dependency probe / target-blocked evidence、focused tests、E2E 闭环、trace/eval/cost 记录和文档成熟度边界。
 
-- `DurableIngestionStore` protocol / interface。
-- SQLite 默认实现继续通过现有 tests。
-- PostgreSQL-compatible adapter boundary / dependency probe / target-blocked evidence。
-- `ObjectStore` protocol，支持 `save_bytes`、`save_text`、`read_bytes`、`read_text`、`open_stream`、`get_metadata`、`verify_sha256`。
-- `LocalObjectStore` 支持 binary source、IR artifact、diagnostics artifact 和 artifact content。
-- `QueueBackend` protocol、`LocalQueueBackend`、RabbitMQ adapter boundary / dependency probe。
-- `ParserWorker` / `IndexWorker` local runner。
-- `RuntimeStateStore` protocol、local fallback、Redis adapter boundary / dependency probe。
-- outbox、dead letter、worker lease / heartbeat、reconciler。
-- ingest status / retry / cancel / replay service contract。
-- OCR / VLM worker boundary，默认 target-blocked diagnostics，不 fake success。
-
-验收主链路：
+完成后前台结论必须是：
 
 ```text
-file -> object store -> queued ingest -> parser worker -> ParseGateway
-     -> parse snapshot / document version / blocks
-     -> index worker -> index manifest / chunks / citation lineage
-     -> ingest status query -> restart recovery -> reconciler check
+Launchable enterprise Agentic GraphRAG product baseline completed.
+Production scale external deployments remain replaceable targets.
 ```
 
-## Program 4：Runtime Subsystems Parallel
+## Mega Program Phase Gate
 
-Program ID：`zuno-runtime-subsystems-parallel-v1`
+1. `PHASE01_truth-source-and-merge-plan.md`
+   - 审计当前 Program 3 active 状态与 queued Program 4-6。
+   - 输出 merge map、owner map、shared file map、workstream map、PR / commit plan。
+   - 确认目标架构公式和 Product Baseline 完成标准。
+2. `PHASE02_shared-contract-freeze.md`
+   - 冻结 AgentRun、ContextPack、RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage、CapabilityCard、SkillCard、ToolCard、PlanStep、ReflectionVerdict、ReplanDecision、ReflexionLesson、TraceMetric 和 CostMetric。
+3. `PHASE03_enterprise-ingestion-async-infrastructure.md`
+   - DurableIngestionStore、ObjectStore、QueueBackend、ParserWorker / IndexWorker、Outbox、DeadLetter、Reconciler、OCR/VLM boundary、ingest status / retry / cancel / replay。
+4. `PHASE04_knowledge-retrieval-and-graphrag-profile.md`
+   - 标准检索 / 深度检索、RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage、deep_without_graph fallback。
+5. `PHASE05_memory-context-engine.md`
+   - Working / Session / Episodic / Semantic / Procedural / Reflexion / Governance memory、ContextPack、context compression、sensitive exclusion。
+6. `PHASE06_capability-skill-tool-mcp-layer.md`
+   - Capability Registry、SkillCard、Knowledge / Tool / MCP / External API / File / Code / Browser / Artifact capabilities。
+7. `PHASE07_security-governance-envelope.md`
+   - Input / Retrieval / Tool / Output gates、ACL、workspace isolation、prompt injection、DLP、approval、audit。
+8. `PHASE08_model-gateway-cost-latency.md`
+   - Model Gateway、provider abstraction、token / latency / cost estimate、timeout、retry、trace fields。
+9. `PHASE09_planning-contract-and-strategy-selector.md`
+   - PlanStep、PlanState、StrategySelectorOutput、SelectedSkill、CapabilityPlan、RetrievalPlan、ReflectionVerdict、ReplanDecision、ReflexionLesson。
+10. `PHASE10_react-reflection-replan-reflexion-runtime.md`
+   - ReAct step runner、Reflection gate、Dynamic Replan、Reflexion candidate 和 trace events。
+11. `PHASE11_workspace-product-api-frontend-sync.md`
+   - 后端新增 profile / plan / trace / capability / eval 字段与 workspace API / frontend API types 最小同步。
+12. `PHASE12_end-to-end-product-runtime.md`
+   - Upload / ingest / parse / index / retrieval / planning / skill / artifact / trace / feedback / restart rehydrate E2E。
+13. `PHASE13_eval-trace-cost-benchmark.md`
+   - retrieval / answer / planning / replan / reflection / reflexion / cost / latency metrics and regression report。
+14. `PHASE14_docs-architecture-expansion.md`
+   - agent core runtime、capability and skill、agentic retrieval planner、eval observability and cost 等架构展开文档。
+15. `PHASE15_verification-archive-closure.md`
+   - full verification、archive、no-active、closure summary、commit、push。
 
-状态：queued。计划文件：`.agent/programs/queued-programs/PROGRAM04_runtime-subsystems-parallel.md`。
+## 目标架构拼接矩阵
 
-Program 4 在 Program 3 完成后启动，使用多线程模式并行推进 Memory & Context Engine、Capability / Skill / Tool / MCP / Sandbox、Security / Governance、GraphRAG / Index。它不再替文档输入层补 queue、worker、outbox 或 reconciler。Capability 线程需要把 SkillCard、ToolCard、MCP connector 和 capability routing 边界分清；GraphRAG / Index 线程需要产出知识库索引能力与 retrieval profile 的基础契约：标准检索、深度检索、graph_index_not_ready 降级和 trace 字段。
+| 目标架构层 | 对应 Phase | 主要产物 | 下游消费者 |
+|---|---|---|---|
+| Product Surface | PHASE11, PHASE12 | knowledge profile request、task snapshot、artifact citation、feedback | 用户、AgentChat、E2E、Eval |
+| Input / Async Infrastructure | PHASE03 | ObjectStore、QueueBackend、ParserWorker、IndexWorker、Outbox、Reconciler | Knowledge Retrieval、E2E、Restart Recovery |
+| Knowledge Capability | PHASE04 | RetrievalProfile、RetrievalDecision、EvidenceBundle、CitationLineage | Planning、Reflection、Output Gate、Eval |
+| Memory & Context Engine | PHASE05 | ContextPack、多重 memory、compression、Reflexion review path | Strategy Selector、ReAct、Reflexion |
+| Capability Layer | PHASE06 | CapabilityRegistry、SkillCard、ToolCard、MCPCapability、ArtifactCapability | Skill selection、Tool Gate、ReAct runner |
+| Security / Governance Envelope | PHASE07 | Input / Retrieval / Tool / Output gates、audit verdict | Planning、Retrieval、Tool runtime、Output safety、Eval |
+| Model Gateway | PHASE08 | model category、provider boundary、cost / latency / token metrics | Planning budget、Retrieval rerank、Eval judge |
+| Planning & Control Runtime | PHASE09, PHASE10 | StrategySelector、PlanStep、Reflection、Dynamic Replan、ReflexionLesson | Product runtime、Trace、E2E |
+| Eval / Trace / Cost | PHASE13 | metrics、trace、regression report、release baseline | Closure、README / architecture evidence |
+| Docs / Archive | PHASE14, PHASE15 | architecture docs、production readiness、closure summary、archive | Future programs、repo verifiers |
 
-## Program 5：Planning Integration
+## 串并行策略
 
-Program ID：`zuno-agent-planning-integration-v1`
+必须串行：
 
-状态：queued。计划文件：`.agent/programs/queued-programs/PROGRAM05_agent-planning-integration.md`。
+1. PHASE01：Program 合并和 owner map。
+2. PHASE02：Shared contract freeze。
+3. PHASE09-PHASE10：Planning runtime integration，由单 owner 控制。
+4. PHASE11：Workspace Product API / Frontend Sync，由 Coordinator 控制共享 API。
+5. PHASE12：E2E Product Runtime，由 Coordinator 集成。
+6. PHASE15：Verification / Archive / Closure，由 Coordinator 收口。
 
-Program 5 合并 Program 4 成果，实现 Single Controller / Single `GeneralAgent` 内部的 Planning & Control Runtime：Strategy Selector、Skill selection、ReAct、Plan-and-Execute、Reflection、Dynamic Replan、Reflexion 和 post_turn_commit。核心验收是 Agentic Retrieval Planner 能消费每个知识库的标准检索 / 深度检索 profile、selected / pinned Skill、Capability Router、Memory state、安全策略和预算，自动生成 query rewrite、retriever selection、GraphRAG expansion、tool/memory capability use、reflection、dynamic replan、reflexion candidate 和 cited answer 轨迹。
+可并行：
 
-## Program 6：Enterprise Knowledge Eval Benchmark
+- PHASE03 Workstream A：Input / Async Infrastructure。
+- PHASE04 Workstream B：Knowledge / Retrieval / GraphRAG。
+- PHASE05 Workstream C：Memory / Context。
+- PHASE06 Workstream D：Capability / Skill / Tool / MCP。
+- PHASE07 Workstream E：Security / Governance。
+- PHASE08 和 PHASE13 Workstream G：Model Gateway、Eval / Trace / Cost。
+- PHASE14 Workstream I 可以起草 supporting docs，但 architecture.md / README / AGENTS 最终 wording 归 Coordinator。
 
-Program ID：`zuno-enterprise-knowledge-eval-benchmark-v1`
+共享文件锁：
 
-状态：queued。计划文件：`.agent/programs/queued-programs/PROGRAM06_enterprise-knowledge-eval-benchmark.md`。
+- Coordinator only：`.agent/programs/current.md`、`implementation-roadmap.md`、`closure-checklist.md`、README、AGENTS、`docs/architecture/architecture.md`、`docs/architecture/production-readiness.md`、`src/backend/zuno/api/services/workspace_task_runtime.py`、public API DTO、frontend workspace API type。
+- Workstream owner files：各自 backend layer、tests 和 supporting docs。
+- 任何 workstream 需要改 shared contract，必须先回到 PHASE02 contract review。
 
-Program 6 建设企业知识库问答自动化评测，对比 Basic RAG baseline、Static GraphRAG baseline、标准检索 profile、深度检索 profile 和 Agentic GraphRAG target，并评估 planning quality、replan effectiveness、reflection usefulness、reflexion reuse、skill-specific rubric、tool safety、citation coverage、cost 和 latency。
+## Workstream 与 PR / commit 分组
 
-## Program 3 验证基线
+并行 workstream：
 
-Program 3 开轮和每个 phase 至少运行最小有效验证；最终 closure 至少运行：
+- Coordinator：Program 状态、共享契约、roadmap、README / AGENTS、共享 API、最终 merge、验证、commit / push、archive。
+- A：Input / Async Infrastructure。
+- B：Knowledge / Retrieval / GraphRAG。
+- C：Memory / Context。
+- D：Capability / Skill / Tool / MCP。
+- E：Security / Governance。
+- F：Planning / Agent Runtime。
+- G：Eval / Trace / Cost。
+- H：Product API / Frontend Minimal Sync。
+- I：Docs / Verifier。
+
+建议 PR / commit 分组：
+
+```text
+PR-00 program open + contracts
+PR-A1 input interfaces
+PR-A2 parser/index workers + outbox/reconciler
+PR-B1 retrieval profiles
+PR-B2 evidence/citation + deep fallback
+PR-C1 Memory ContextPack
+PR-C2 ReflexionMemory review path
+PR-D1 Capability registry
+PR-D2 SkillCard fixtures + Tool/MCP boundary
+PR-E1 security gates
+PR-E2 ACL/DLP/prompt injection tests
+PR-F1 planning contracts + strategy selector
+PR-F2 react/reflection/replan/reflexion runtime
+PR-G1 trace/cost metrics
+PR-G2 benchmark/release baseline
+PR-H1 API/frontend minimal contract sync
+PR-Z1 E2E scenarios
+PR-Z2 docs/verifier/archive closure
+```
+
+## 验证基线
+
+开轮与每个 phase 至少运行最小有效验证；最终 closure 至少运行：
 
 ```powershell
 git diff --check
@@ -131,5 +224,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workfl
 pytest -q tests/api/test_workspace_durable_ingest_runtime.py -p no:cacheprovider
 pytest -q tests/api/test_workspace_task_runtime.py -p no:cacheprovider
 pytest -q tests/knowledge -p no:cacheprovider
+pytest -q tests/agent -p no:cacheprovider
+pytest -q tests/api -p no:cacheprovider
 pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider
 ```
