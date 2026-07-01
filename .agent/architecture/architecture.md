@@ -238,18 +238,22 @@ Zuno 的目标架构必须围绕企业工作空间里的对象组织，而不是
 | --- | --- | --- | --- |
 | `Workspace` | 企业、部门、项目、招聘流程或合同库的隔离边界。 | workspace_id、owner、members、policy_profile、storage_scope、retention_policy。 | API / Session、Security、Platform |
 | `KnowledgeSpace` | 一组文档、索引、GraphRAG project、citation policy 和查询时 retrieval profile 的选择对象。 | knowledge_space_id、workspace_id、graph_project_id、index_version、index_capabilities、acl_policy、citation_policy、default_retrieval_profile。 | Knowledge、Document Ingestion |
+| `KnowledgeSpaceConfig` | 创建和维护知识库的产品配置契约。 | name、description、acl_scope、default_sensitivity、index_capabilities、parser_config、chunk_config、embedding_config、graph_config、ocr_vlm_config、retrieval_defaults、security_policy。 | Product Surface、Knowledge、Security |
 | `Document` | 原始上传或同步文件的逻辑记录。 | document_id、source_uri、mime_type、hash、parser_result_id、security_label、acl_scope。 | Document Ingestion、Security |
 | `DocumentBlock` | 可检索、可引用、可脱敏的最小结构单元。 | block_id、type、text、page、bbox、table_cell、line_range、source_span、confidence。 | Document Ingestion、Knowledge |
 | `Session` | 用户和 Agent 的交互上下文。 | session_id、workspace_id、user_id、created_at、active_task_id、policy_context。 | API / Session、Memory |
 | `Task` | 一次可追踪、可恢复的目标执行。 | task_id、thread_id、goal、selected_knowledge_spaces、retrieval_profiles、status、budget、approval_mode、trace_id。 | API / Session、Agent Runtime |
-| `ContextPack` | 每轮送入模型的受控上下文包。 | recent_window、task_summary、selected_memory、retrieval_preview、policy_notes、budget。 | Memory、Agent Runtime |
+| `ContextPack` | 每轮送入模型的受控上下文包。 | structured_fields、hierarchical_summary、evidence_refs、selected_memory、selected_evidence、policy_notes、tool_state、output_contract、budget。 | Memory、Agent Runtime |
 | `PlanStep` | 计划 / ReAct / replan 的可执行步骤。 | step_id、goal、expected_evidence、allowed_tools、status、observations、retry_count。 | Agent Runtime |
 | `SkillCard` | 可复用任务方法包的声明式契约。 | skill_id、skill_version、task_type、recommended_retrieval_profile、required_evidence、allowed_tools、required_memory_scopes、output_contract、safety_policy、eval_rubric、trace_requirements。 | Capability Layer、Planning、Eval |
 | `ToolCard` | 工具的声明式身份证。 | tool_id、input_schema、output_schema、execution_mode、side_effect_level、approval_policy、sandbox_policy。 | Tool Control Plane |
+| `CapabilityPolicy` | Skill、Knowledge、Tool、MCP、Artifact 等 capability 的统一权限、风险和审计策略。 | capability_id、capability_type、workspace_scope、required_roles、approval_required、side_effect_level、network_policy、credential_policy、data_access_policy、audit_policy。 | Capability Layer、Security |
 | `RetrievalDecision` | Agentic Retrieval Planner 对每个知识库本次怎么查的路由结果。 | knowledge_space_id、requested_profile、effective_profile、candidate_methods、resolved_methods、route_reason、fallback_reason、budget_used。 | Knowledge、Trace |
 | `EvidenceBundle` | 进入答案合成的证据包。 | evidence_id、source_blocks、scores、trust_label、citation_refs、unsupported_claims。 | Knowledge、Eval |
 | `Artifact` | 任务生成的 Markdown、PDF、JSON、citation bundle 或 trace report。 | artifact_id、task_id、kind、uri、hash、created_by、download_policy。 | API / Artifact、Platform |
 | `TraceSpan` | 一次运行的可观测事实单元。 | trace_id、session_id、thread_id、task_id、turn_id、run_id、parent_run_id、run_type、span_kind、inputs、outputs、redacted_payload、latency、cost、policy_decision。 | Eval / Observability、Security |
+| `ConversationRunMetrics` | 每次对话 / task 的评测、成本、耗时和安全汇总。 | task_id、session_id、selected_knowledge_spaces、retrieval_profiles、selected_skill、strategy、model_config、started_at、ended_at。 | Eval / Trace / Cost |
+| `StageMetrics` | 每个执行环节的局部指标。 | stage_name、latency_ms、token_count、cost_estimate、model_id、error_count、retry_count、security_block_count、trace_event_ids。 | Eval / Trace / Cost |
 | `ApprovalDecision` | 高风险工具或输出的人工 / 策略批准记录。 | approval_id、task_id、tool_call_id、risk_reason、decision、approver、audit_note。 | Security、Capability |
 | `MemoryCandidate` | 可能进入长期记忆的结构化候选。 | candidate_id、source_trace_id、kind、content、confidence、privacy_label、review_status。 | Memory、Security |
 

@@ -133,7 +133,7 @@ Program 2 `zuno-enterprise-document-ingestion-platform-v2` 已完成并归档。
 
 Program 2 的 Product V1 验收不是分布式 queue 或百万文档，而是服务重启后 file、parse job、document version、index manifest、index chunk、citation lineage、task、events、artifact content/ref 和 feedback 不丢。Production Scale Target 才包括 Postgres、object store、Redis / Kafka、outbox、worker lease、heartbeat、dead letter reconciler、external OCR / VLM 和 external index platform。
 
-Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1` 当前 active。它承接 Program 2 的 durable baseline，目标是完成 enterprise ingestion async infrastructure baseline：
+Program 3 Mega `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1` 当前 active。它承接 Program 2 的 durable baseline，并把原 Program 3 async infrastructure、Runtime Subsystems、Planning Integration 和 Enterprise Eval Benchmark 合并为一个 full closure program。文档入口相关的 PHASE03 目标是完成 enterprise ingestion async infrastructure baseline：
 
 ```text
 PostgreSQL-compatible fact store boundary
@@ -147,7 +147,9 @@ PostgreSQL-compatible fact store boundary
 + ingest status / retry / cancel / replay
 ```
 
-Program 3 的 Current 只能来自本轮真实代码和 focused tests。真实 PostgreSQL、RabbitMQ、Redis、MinIO / S3、external OCR / VLM 和 external index 没有 provider 接入与测试前，只能写成 Target / target-blocked evidence。
+Program 3 Mega 的 Current 只能来自本轮真实代码、focused tests、E2E、trace / eval 或 verifier evidence。真实 PostgreSQL、RabbitMQ、Redis、MinIO / S3、external OCR / VLM 和 external index 没有 provider 接入与测试前，只能写成 Target / target-blocked evidence。
+
+PHASE11 还必须补齐 KnowledgeSpaceConfig 与 Change Impact Preview，让知识库初始化和后续修改能明确触发 metadata-only、ACL refresh、reparse、vector rebuild、graph rebuild 或 OCR / VLM job。文件内容、parser config、chunk policy、OCR 参数和 redaction policy 变化都必须保留 document_version / index_manifest lineage，不得覆盖旧引用。
 
 ## Program 2 数据模型目标
 

@@ -17,6 +17,26 @@ status: pending
 - retrieval_empty 或 citation_coverage_low 触发 dynamic replan 场景。
 - ReflexionLesson candidate 生成场景。
 
+## 用户可感知 E2E Evidence
+
+E2E 不能只 assert 后端字段。每个 product scenario 必须生成可分享的 scenario summary / trace summary fixture，至少包含：
+
+- `user_question`：用户原始问题。
+- `selected_knowledge_spaces`：选中的知识库。
+- `retrieval_profiles`：每个知识库的标准检索 / 深度检索。
+- `selected_skill`：自动选择或 pinned 的 Skill。
+- `plan_summary`：用户可理解的计划摘要。
+- `retrieval_decision`：requested_profile、effective_profile、fallback_reason、retrievers_used。
+- `reflection_verdict`：证据是否足够、citation coverage 是否达标、是否需要 re-query。
+- `replan_event`：触发原因、被替换的 step、后续轨迹变化。
+- `artifact_content_excerpt`：产物片段，不泄露私有全文。
+- `citations`：可追溯 citation refs。
+- `metrics_summary`：latency、cost、token、evidence_count、citation_coverage。
+- `feedback_result`：反馈是否写入 durable/task/eval surface。
+- `restart_rehydrate_result`：重启后 task/artifact/feedback/cited answer 是否仍可恢复。
+
+这些 evidence 是 PHASE13 benchmark 和 PHASE15 closure summary 的输入，不允许只保存在临时测试日志里。
+
 ## 目标架构拼接点
 
 本 phase 是所有层拼成产品基线的证明：
@@ -56,7 +76,7 @@ E2E 不是新增一套 demo path，而是复用真实 local implementation、真
 ## 详细执行卡
 
 - 输入依赖：PHASE03 ingestion workers、PHASE04 retrieval profiles、PHASE05 ContextPack、PHASE06 Skill registry、PHASE07 gates、PHASE08 metrics、PHASE09/10 planner runtime、PHASE11 API contract。
-- 主要交付物：完整 E2E scenario tests、restart rehydrate proof、standard/deep/deep_without_graph coverage、blocked OCR no fake index、dynamic replan proof、ReflexionLesson candidate proof。
+- 主要交付物：完整 E2E scenario tests、shareable scenario summary / trace summary fixture、restart rehydrate proof、standard/deep/deep_without_graph coverage、blocked OCR no fake index、dynamic replan proof、ReflexionLesson candidate proof。
 - 可并行工作包：test fixtures、scenario data、trace assertions 可并行准备；最终 E2E runner 和 runtime wiring 必须单 owner 收口。
 - Coordinator 锁点：跨模块失败根因判断、是否关闭 phase、是否允许 fallback 作为 completion evidence。
 - 下游交接：PHASE13 消费 E2E trace/eval/cost artifacts；PHASE14 把 E2E 链路写入 architecture；PHASE15 归档 closure evidence。
@@ -71,6 +91,8 @@ E2E 不是新增一套 demo path，而是复用真实 local implementation、真
 ## 验收闸门
 
 - E2E scenario 在 local implementation 下可运行。
+- E2E 输出包含用户问题、知识库、profile、selected skill、plan summary、retrieval decision、reflection verdict、replan event、artifact excerpt、citations、metrics summary、feedback result 和 restart rehydrate result。
+- E2E 生成 shareable scenario summary / trace summary fixture，不能只 assert internal fields。
 - restart rehydrate 后仍能查询 artifact / feedback / cited answer。
 - trace / eval / cost fields 存在。
 - replan 与 reflexion candidate 至少各出现一次。

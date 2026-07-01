@@ -17,6 +17,103 @@ status: pending
 - release baseline and regression report。
 - Basic RAG 和 Static GraphRAG 只作为 eval baseline。
 
+## Per Conversation / Per Stage Metrics
+
+PHASE13 必须把每次对话、每个 task、每个关键 stage 的指标写成统一 schema，而不是只在测试末尾生成一个总分。
+
+### ConversationRunMetrics
+
+```text
+ConversationRunMetrics
+  task_id
+  session_id
+  workspace_id
+  user_id
+  selected_knowledge_spaces
+  retrieval_profiles
+  selected_skill
+  strategy
+  model_config
+  started_at
+  ended_at
+```
+
+### StageMetrics
+
+```text
+StageMetrics
+  stage_name: input_gate / context_build / planning / retrieval / rerank / graph_expand / tool_call / reflection / replan / answer / output_gate / artifact / feedback
+  latency_ms
+  token_count
+  cost_estimate
+  model_id
+  error_count
+  retry_count
+  security_block_count
+  trace_event_ids
+```
+
+### RetrievalMetrics
+
+```text
+RetrievalMetrics
+  retrieval_rounds
+  retrievers_used
+  candidate_count
+  reranked_count
+  evidence_count
+  citation_count
+  citation_coverage
+  source_span_accuracy
+```
+
+### PlanningMetrics
+
+```text
+PlanningMetrics
+  plan_step_count
+  strategy
+  skill_selected
+  replan_count
+  reflection_count
+  reflexion_count
+  replan_reason
+```
+
+### SecurityMetrics
+
+```text
+SecurityMetrics
+  input_blocks
+  retrieval_acl_denied
+  tool_approval_required
+  output_dlp_blocks
+  prompt_injection_flags
+```
+
+### EvalComparisonReport
+
+```text
+EvalComparisonReport
+  baseline_label: basic_rag / static_graphrag / agentic_graphrag
+  quality_delta
+  latency_delta
+  cost_delta
+  citation_delta
+  security_delta
+```
+
+### 必须回答的问题
+
+release / regression report 必须能回答：
+
+- 深度检索是否比标准检索提升 citation coverage？
+- Agentic Replan 是否改善 evidence_count？
+- Reflection 是否降低 unsupported_claim_rate？
+- GraphRAG 是否值得多花成本？
+- 哪一步造成 latency / cost 上升？
+- 安全 gate 是在哪一步拦截的？
+
 ## 目标架构拼接点
 
 本 phase 拼到 Governance / Trace / Eval Envelope，并把“能跑”升级为“可评测、可回放、可回归”：
@@ -48,7 +145,7 @@ status: pending
 ## 详细执行卡
 
 - 输入依赖：PHASE08 cost metrics、PHASE10 trace events、PHASE12 E2E scenario output、Program 5 benchmark target。
-- 主要交付物：TraceRecord、EvalMetric、CostMetric、regression summary、release baseline、failure cases report、basic/static/agentic comparison labels。
+- 主要交付物：TraceRecord、ConversationRunMetrics、StageMetrics、RetrievalMetrics、PlanningMetrics、SecurityMetrics、CostMetric、EvalComparisonReport、regression summary、release baseline、failure cases report、basic/static/agentic comparison labels。
 - 可并行工作包：metric collector、report writer、baseline comparison、guardrail tests 可拆；metric schema 名称由单 owner 冻结。
 - Coordinator 锁点：Basic RAG / Static GraphRAG 只能作为 eval baseline，不得写成最终产品模式。
 - 下游交接：PHASE14 记录 eval/release gate；PHASE15 closure summary 引用 metrics、trace、cost、latency 和 remaining targets。
@@ -63,6 +160,9 @@ status: pending
 ## 验收闸门
 
 - metrics fields present test 通过。
+- missing stage metrics 不得 silent pass。
+- report 必须区分 quality / cost / latency / security。
+- EvalComparisonReport 必须区分 basic_rag / static_graphrag / agentic_graphrag baseline labels。
 - cost guard works test 通过。
 - regression report generated test 通过。
 - baseline comparison 不 silent pass。

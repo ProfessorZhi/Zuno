@@ -16,6 +16,69 @@ status: pending
 - frontend API type 最小同步，避免 schema 漂移。
 - 保持现有 `/workspace/file`、`/workspace/ingest` 和 task runtime compatibility。
 
+## Knowledge Space Product Contract
+
+PHASE11 不只同步后端字段，还必须把知识库创建、配置、文件状态和配置变更影响预览纳入产品契约。UI 大改可以后置，但 API / type / plan 必须让后续 UI 有明确落点。
+
+### KnowledgeSpaceConfig
+
+```text
+KnowledgeSpaceConfig
+  name
+  description
+  workspace_id
+  acl_scope
+  default_sensitivity
+  index_capabilities
+  parser_config
+  chunk_config
+  embedding_config
+  graph_config
+  ocr_vlm_config
+  retrieval_defaults
+  security_policy
+```
+
+### 创建知识库 UI
+
+创建时使用 Wizard 简化版，减少配置负担：
+
+1. 基础信息：名称、描述、workspace、可见范围、默认安全标签。
+2. 上传文件：本地文件、附件、未来同步源占位。
+3. 索引能力：基础索引必选，图谱增强索引可选，OCR / 多模态解析可选。
+4. 默认检索策略：标准检索 / 深度检索。
+
+### 知识库详情页
+
+后续 Settings 使用完整配置，建议 tabs：
+
+- 概览：文件数、已索引数、失败数、blocked 数、默认检索策略、图谱和 OCR 状态。
+- 文件：file name、parse_status、index_status、document_version_id、source_sha256、parser_id、blocked_reason、retry / reparse / reindex actions。
+- 索引配置：基础索引、chunk policy、embedding、reranker、parser config。
+- 解析任务：parse job、index job、worker status、retries、dead letter、diagnostics。
+- 图谱状态：graph ready、entity count、community count、last rebuild、rebuild action。
+- 评测与质量：citation coverage、unsupported claim、avg latency、avg cost、standard vs deep 对比。
+- 权限与安全：ACL、sensitivity、retrieval gate stats、DLP stats。
+- 高级设置：provider boundary、budget、adapter probe 和 target-blocked evidence。
+
+### Change Impact Preview
+
+保存配置前必须能预览影响：
+
+| 修改类型 | 触发动作 | 说明 |
+|---|---|---|
+| name / description | metadata-only | 不重建索引。 |
+| ACL / sensitivity | ACL refresh | 更新 metadata 和 index chunk ACL，不必重 parse。 |
+| 上传 / 删除文件 | incremental parse / tombstone | 新文件进入 parse / index；删除生成 tombstone 或 hide。 |
+| parser_config / chunk_config | reparse + reindex | 生成新 document_version，旧引用继续指向旧版本。 |
+| enable graph | graph rebuild | 基于已有 Document IR / blocks 构建 graph。 |
+| disable graph | deep_without_graph fallback | 禁用 graph retrieval，保留旧 graph artifact 或 tombstone。 |
+| enable OCR / VLM | OCR / VLM worker job | 生成 derived blocks，再 reindex affected version。 |
+| embedding model | vector rebuild | 不重 parse，只重建 vector index。 |
+| reranker | query-time only | 不重建 index，只影响查询时 rerank。 |
+
+用户可见文案必须说明预计影响，例如需要 reparse 的文档数、rebuild chunks 数、是否影响旧 artifact 引用和预计耗时。
+
 ## 目标架构拼接点
 
 本 phase 拼到 Product Surface。用户看见的是 AgentChat、知识库选择、标准检索 / 深度检索、artifact、trace 和 feedback；后端实现细节不能泄露成复杂模式选择：
@@ -46,7 +109,7 @@ status: pending
 ## 详细执行卡
 
 - 输入依赖：PHASE02 API DTO contract、PHASE04 retrieval profile、PHASE09 planner summary、PHASE13 trace/eval summary target fields。
-- 主要交付物：workspace API schema alignment、standard/deep request field、task snapshot plan/eval/trace summary、artifact citation fields、minimal frontend API type sync。
+- 主要交付物：workspace API schema alignment、KnowledgeSpaceConfig、KnowledgeSpaceSettings UI/API plan、Change Impact Preview、file-level status fields、standard/deep request field、task snapshot plan/eval/trace summary、artifact citation fields、minimal frontend API type sync。
 - 可并行工作包：backend schema tests、frontend API type update、compatibility docs 可拆；public response shape 由 Coordinator 统一审查。
 - Coordinator 锁点：`src/backend/zuno/schema/workspace.py`、`workspace_task_runtime.py`、`apps/web/src/apis/workspace.ts`。
 - 下游交接：PHASE12 使用同一 API path 做 E2E；PHASE14 文档记录产品层只暴露标准/深度检索；PHASE15 verifier 确保 entrypoint 不漂移。
@@ -63,7 +126,11 @@ status: pending
 - API response schema tests 通过。
 - workspace task runtime compatibility tests 通过。
 - frontend API type 或 existing frontend tests 通过。
+- frontend API types 包含 retrieval profile、knowledge config summary、file status 和 change impact preview。
+- KnowledgeSpaceConfig 区分创建 Wizard 简化版和 Settings 完整版，但底层 schema 一致。
+- 配置变更能明确 metadata-only、ACL refresh、reparse、vector rebuild、graph rebuild、OCR/VLM job。
 - 标准检索 / 深度检索字段能进入后端 retrieval plan。
+- 普通用户界面不得暴露 basic / local / global / drift 为主选择。
 
 ## 验证命令
 

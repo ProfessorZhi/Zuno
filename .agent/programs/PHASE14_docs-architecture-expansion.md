@@ -17,6 +17,18 @@ status: pending
 - 同步 `.agent/architecture/architecture.md` 和两个 HTML mirror。
 - 更新 README、AGENTS、`.agent/references/current-program.md` 和 verifier docs entrypoints。
 
+## 预期专题文档
+
+为了避免 `architecture.md` 无限膨胀，本 phase 只把总纲写进总架构；稳定专题可以拆到以下文档：
+
+- `docs/architecture/agent-core-runtime.md`：Model Gateway、Memory & Context、Planning & Control、Capability Layer 的 Agent Core 运行契约。
+- `docs/architecture/capability-and-skill-layer.md`：SkillCard、CapabilityPolicy、Tool / MCP / Knowledge / Artifact capability 边界。
+- `docs/architecture/agentic-retrieval-planner.md`：标准检索 / 深度检索、RetrievalPlan、EvidenceBundle、Reflection、Dynamic Replan。
+- `docs/architecture/eval-observability-and-cost.md`：ConversationRunMetrics、StageMetrics、EvalComparisonReport、release gate。
+- `docs/architecture/knowledge-space-product-configuration.md`：KnowledgeSpaceConfig、创建 Wizard、Settings tabs、Change Impact Preview、file-level status。
+
+这些文档只有在对应代码、tests、trace 或 E2E evidence 出现后才能把能力写成 Current；在 Program 3 执行前期只能写成 Target contract。
+
 ## 目标架构拼接点
 
 本 phase 把已经由代码、tests、trace 和 E2E 证明的事实写回正式文档：

@@ -15,6 +15,59 @@ status: pending
 - KnowledgeCapability、ToolCapability、MCPCapability、ArtifactCapability。
 - contract_review、research_report、code_review 或 bug_diagnosis 中至少两个 SkillCard fixture。
 
+## Capability Policy Contract
+
+PHASE06 必须把权限模型从 Tool 专属扩展为所有 capability 共享的策略对象。Skill、Knowledge、Tool、MCP、External API、File / Code / Browser 和 Artifact capability 都必须能接入统一策略、风险和审计。
+
+### CapabilityPolicy
+
+```text
+CapabilityPolicy
+  capability_id
+  capability_type: skill / knowledge / tool / mcp / external_api / file / code / browser / artifact
+  workspace_scope
+  required_roles
+  approval_required
+  side_effect_level
+  network_policy
+  credential_policy
+  data_access_policy
+  audit_policy
+```
+
+### CapabilityRiskProfile
+
+```text
+CapabilityRiskProfile
+  read_only
+  write_workspace
+  external_write
+  network_access
+  credential_access
+  code_execution
+  browser_control
+```
+
+### CapabilityAuditEvent
+
+```text
+CapabilityAuditEvent
+  capability_id
+  task_id
+  decision
+  reason
+  latency_ms
+  error
+  approval_id
+```
+
+### Capability 统一边界
+
+- Skill 是 task method package，可约束 retrieval profile、allowed tools、memory scopes、output contract、eval rubric 和 reflection policy。
+- KnowledgeCapability 也必须带 ACL、sensitivity、workspace_scope 和 data_access_policy，不只是 Tool 有权限。
+- MCPCapability 可以暴露工具或数据源，但必须产生 permission denied / target-blocked / dependency probe 的可观测结果。
+- ArtifactCapability 必须声明导出、下载、分享和 redaction policy。
+
 ## 目标架构拼接点
 
 本 phase 拼到 Agent Core 的 Capability Layer。它把“Agent 能做什么”从工具函数列表升级为可编排能力目录：
@@ -46,7 +99,7 @@ status: pending
 ## 详细执行卡
 
 - 输入依赖：PHASE02 CapabilityCard / SkillCard / ToolCard contract、现有 capability 和 agent_system guardrails。
-- 主要交付物：CapabilityRegistry、CapabilityRouter、CapabilityPolicy、SkillCard fixtures、KnowledgeCapability、ToolCapability、MCPCapability、ArtifactCapability。
+- 主要交付物：CapabilityRegistry、CapabilityRouter、CapabilityPolicy、CapabilityRiskProfile、CapabilityAuditEvent、SkillCard fixtures、KnowledgeCapability、ToolCapability、MCPCapability、ArtifactCapability。
 - 可并行工作包：SkillCard fixture、ToolCard policy、MCP boundary、Artifact capability 可拆；CapabilityRouter 由单 owner 收口，防止 registry contract 分叉。
 - Coordinator 锁点：Skill 的正式定义和产品边界：Skill 是任务方法包，不是 Tool、不是 Knowledge、不是产品级多 Agent runtime。
 - 下游交接：PHASE09 用 Skill selection；PHASE10 用 capability execution plan；PHASE07 用 tool approval/safety policy；PHASE13 用 skill_selected / capability_used metrics。
@@ -64,6 +117,9 @@ status: pending
 - Capability registry tests 通过。
 - SkillCard fixture tests 通过。
 - skill 限制 allowed_tools 测试通过。
+- skill 限制 capability / tool 权限测试通过。
+- cross-workspace KnowledgeCapability 被 Retrieval / Capability policy block。
+- MCP capability 未配置或无权限时产生 target-blocked / permission denied evidence。
 - pinned skill 覆盖自动选择的 contract 清晰。
 - Tool / MCP capability boundary 有 permission 和 trace 字段。
 
