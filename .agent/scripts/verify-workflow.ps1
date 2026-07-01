@@ -41,6 +41,7 @@ Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
 Require-Path ".agent\programs\PHASE01_truth-source-and-gap-audit.md"
+Require-Path ".agent\programs\PHASE02_durable-storage-contract.md"
 Require-NoPath ".agent\programs\PHASE01_program-truth-source-and-parser-current-audit.md"
 Require-NoPath ".agent\programs\PHASE02_document-ir-and-parser-contract-freeze.md"
 Require-NoPath ".agent\programs\PHASE03_parser-worker-runtime-and-job-lifecycle.md"
@@ -264,7 +265,7 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "current_phase: PHASE01_truth-source-and-gap-audit" -or $currentProgram -notmatch "latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1") {
+if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "current_phase: PHASE02_durable-storage-contract" -or $currentProgram -notmatch "latest_completed_program: zuno-production-document-ingestion-and-thread-foundation-v1") {
     $failures.Add("current-program.md must declare active Program 1B/V2 state and latest completed Program 1A")
 }
 if ($currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {

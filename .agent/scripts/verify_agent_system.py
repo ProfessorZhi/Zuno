@@ -66,6 +66,7 @@ ACTIVE_PROGRAM_FILES = [
     "implementation-roadmap.md",
     "closure-checklist.md",
     "PHASE01_truth-source-and-gap-audit.md",
+    "PHASE02_durable-storage-contract.md",
 ]
 CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
 CURRENT_ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{CURRENT_ACTIVE_PROGRAM_NAME}"
@@ -431,7 +432,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         "active_program: zuno-enterprise-document-ingestion-platform-v2",
-        "current_phase: PHASE01_truth-source-and-gap-audit",
+        "current_phase: PHASE02_durable-storage-contract",
         f"latest_completed_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
         CURRENT_ACTIVE_PROGRAM_ARCHIVE,
@@ -445,6 +446,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "completed / archived",
         "PHASE01-PHASE12",
         "PHASE01_truth-source-and-gap-audit",
+        "PHASE02_durable-storage-contract",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",
@@ -461,7 +463,10 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         if phrase not in current + readme + roadmap + closure + current_reference + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names != ["PHASE01_truth-source-and-gap-audit.md"]:
+    if active_phase_names != [
+        "PHASE01_truth-source-and-gap-audit.md",
+        "PHASE02_durable-storage-contract.md",
+    ]:
         errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
     if (repo_root / ".agent/programs/thread-prompts").exists():
         errors.append(".agent/programs/thread-prompts must stay archived until Program 3 starts")

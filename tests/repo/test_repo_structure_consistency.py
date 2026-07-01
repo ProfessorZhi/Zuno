@@ -77,6 +77,7 @@ ACTIVE_PROGRAM_FILES = [
     "implementation-roadmap.md",
     "closure-checklist.md",
     "PHASE01_truth-source-and-gap-audit.md",
+    "PHASE02_durable-storage-contract.md",
 ]
 CURRENT_ACTIVE_PROGRAM_NAME = "zuno-production-document-ingestion-and-thread-foundation-v1"
 CURRENT_ACTIVE_PROGRAM_ARCHIVE = f"docs/history/programs/{CURRENT_ACTIVE_PROGRAM_NAME}"
@@ -1087,7 +1088,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         ACTIVE_PROGRAM_NAME,
         "state: active",
         "active_program: zuno-enterprise-document-ingestion-platform-v2",
-        "current_phase: PHASE01_truth-source-and-gap-audit",
+        "current_phase: PHASE02_durable-storage-contract",
         f"latest_completed_program: {CURRENT_ACTIVE_PROGRAM_NAME}",
         CURRENT_ACTIVE_PROGRAM_NAME,
         CURRENT_ACTIVE_PROGRAM_ARCHIVE,
@@ -1100,6 +1101,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         "completed / archived",
         "PHASE01-PHASE12",
         "PHASE01_truth-source-and-gap-audit",
+        "PHASE02_durable-storage-contract",
         "一次性交付型成熟化 program",
         "成熟目标架构和四大总交付物完成",
         "工作流自洽与自我维护",
@@ -1116,7 +1118,8 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     ]:
         assert phrase in current + readme + roadmap + closure + current_reference + ingestion_archive_text + production_archive_text + archive_text
     assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == [
-        "PHASE01_truth-source-and-gap-audit.md"
+        "PHASE01_truth-source-and-gap-audit.md",
+        "PHASE02_durable-storage-contract.md",
     ]
     assert not (REPO_ROOT / ".agent/programs/thread-prompts").exists()
     for phase in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:

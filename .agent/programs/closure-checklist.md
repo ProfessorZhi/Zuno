@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-enterprise-document-ingestion-platform-v2
-current_phase: PHASE01_truth-source-and-gap-audit
+current_phase: PHASE02_durable-storage-contract
 latest_completed_program: `zuno-production-document-ingestion-and-thread-foundation-v1`
 
 ## Program 1B / V2 当前启动闸门
@@ -15,6 +15,15 @@ latest_completed_program: `zuno-production-document-ingestion-and-thread-foundat
 - [x] PHASE01 完成 dependency probe summary。
 - [x] PHASE01 产出 PHASE02 focused test seed list。
 - [x] PHASE01 验证、提交并推送。
+
+## PHASE02 Durable Storage Contract
+
+- [ ] 先写 focused tests 并确认 red failure。
+- [ ] 新增最小 SQLModel / SQLite-compatible durable store contract。
+- [ ] source object、workspace file、parse job、parse snapshot、document version、index manifest、index chunk round-trip 通过。
+- [ ] local object store boundary 明确，不依赖 MinIO / OSS。
+- [ ] PHASE02 evidence 写回 phase 文件。
+- [ ] PHASE02 验证、提交并推送。
 
 ## Program 1 收口结果
 

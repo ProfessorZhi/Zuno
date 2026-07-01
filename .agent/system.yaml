@@ -160,6 +160,7 @@ skill_routes:
       - ".agent/programs/implementation-roadmap.md"
       - ".agent/programs/closure-checklist.md"
       - ".agent/programs/PHASE01_truth-source-and-gap-audit.md"
+      - ".agent/programs/PHASE02_durable-storage-contract.md"
       - ".agent/programs/queued-programs/README.md"
       - ".agent/programs/queued-programs/PROGRAM03_runtime-subsystems-parallel.md"
       - ".agent/programs/queued-programs/PROGRAM04_agent-planning-integration.md"

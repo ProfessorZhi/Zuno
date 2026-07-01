@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-enterprise-document-ingestion-platform-v2`
-current_phase: `PHASE01_truth-source-and-gap-audit`
+current_phase: `PHASE02_durable-storage-contract`
 latest_completed_program: `zuno-production-document-ingestion-and-thread-foundation-v1`
 
 ## 总套件
@@ -50,7 +50,7 @@ Remaining Target：
 
 Program ID：`zuno-enterprise-document-ingestion-platform-v2`
 
-状态：active。当前 phase：`.agent/programs/PHASE01_truth-source-and-gap-audit.md`。
+状态：active。当前 phase：`.agent/programs/PHASE02_durable-storage-contract.md`。
 
 业务口径：这是 Program 1B / V2，不是重写或篡改已归档 Program 1A。Program 1A 已经完成 `workspace ingest -> ParseGateway -> Document IR -> Index Manifest -> Citation Lineage` local runtime slice；Program 1B / V2 的目标是把这条链路升级为企业级文档输入与持久化平台雏形。
 
@@ -72,7 +72,7 @@ Production Scale Target
   Postgres、object store、queue/outbox/worker、worker lease、external OCR/VLM、external index、SSO/RBAC/DLP、OTel/LangSmith、online eval 和多租户运维。
 ```
 
-Program 2 是当前最短路径。它先关闭文档输入层的事实源和重启恢复，再允许后续 Memory / Tool / Security / GraphRAG 四线程继续加能力。当前 PHASE01 只做 truth source 与 gap audit，不修改 runtime。
+Program 2 是当前最短路径。它先关闭文档输入层的事实源和重启恢复，再允许后续 Memory / Tool / Security / GraphRAG 四线程继续加能力。PHASE01 已完成 truth source 与 gap audit；当前 PHASE02 用 TDD 固定 durable storage contract，并实现最小 SQLite-compatible local store。
 
 ## Program 3：Runtime Subsystems Parallel
 
