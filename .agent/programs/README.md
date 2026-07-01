@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- Current phase: `PHASE07_security-governance-envelope.md`
+- Current phase: `PHASE08_model-gateway-cost-latency.md`
 - Latest completed program: `zuno-enterprise-document-ingestion-platform-v2`
 
 当前 Program 3 Mega 合并原 active Program 3 与 queued Program 4-6，目标是在一个 program 内完成 Zuno 可上线企业知识库 Agentic GraphRAG product baseline 的全链路闭环计划。

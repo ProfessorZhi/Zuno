@@ -144,6 +144,7 @@ class GateResult:
     sanitized_content: str
     findings: list[SecurityFinding]
     audit_event: SandboxAuditEvent
+    recommended_action: str = "continue"
 
 
 class InputSecurityGate:
@@ -393,11 +394,21 @@ class OutputSecurityGate:
         content: str,
         citation_coverage: float,
         required_citation_coverage: float,
+        unsupported_claim_count: int = 0,
         workspace_id: str,
         trace_id: str,
         task_id: str,
     ) -> GateResult:
         findings = _content_findings(content, SecurityGate.OUTPUT, include_prompt_injection=False)
+        if unsupported_claim_count > 0:
+            findings.append(
+                SecurityFinding(
+                    code="unsupported_claim",
+                    gate=SecurityGate.OUTPUT,
+                    severity="high",
+                    message="answer contains unsupported claim candidates",
+                )
+            )
         if citation_coverage < required_citation_coverage:
             findings.append(
                 SecurityFinding(
@@ -423,7 +434,112 @@ class OutputSecurityGate:
                 decision=decision,
                 risk_reasons=[finding.code for finding in findings],
             ),
+            recommended_action=_output_recommended_action(findings),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class SecurityTraceSummary:
+    gate_verdicts: dict[str, str]
+    planning_actions: dict[str, str]
+    metrics: dict[str, int]
+    trace_events: list[dict[str, Any]]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "gate_verdicts": dict(self.gate_verdicts),
+            "planning_actions": dict(self.planning_actions),
+            "metrics": dict(self.metrics),
+            "trace_events": [deepcopy(event) for event in self.trace_events],
+        }
+
+
+def build_security_trace_summary(
+    *,
+    input_result: GateResult,
+    retrieval_result: RetrievalGateResult,
+    tool_result: ToolGateResult,
+    output_result: GateResult,
+) -> SecurityTraceSummary:
+    gate_verdicts = {
+        "input": input_result.decision.value,
+        "retrieval": retrieval_result.decision.value,
+        "tool": tool_result.decision.value,
+        "output": output_result.decision.value,
+    }
+    planning_actions: dict[str, str] = {}
+    if input_result.decision is SecurityDecision.BLOCK:
+        planning_actions["input"] = input_result.recommended_action if input_result.recommended_action != "continue" else "refuse"
+    if retrieval_result.blocked_candidates:
+        planning_actions["retrieval"] = (
+            "continue_with_filtered_context"
+            if retrieval_result.allowed_candidates
+            else "refuse"
+        )
+    if tool_result.decision is SecurityDecision.REQUIRE_APPROVAL:
+        planning_actions["tool"] = "ask_user"
+    elif tool_result.decision is SecurityDecision.BLOCK:
+        planning_actions["tool"] = "refuse"
+    if output_result.decision is SecurityDecision.BLOCK:
+        planning_actions["output"] = output_result.recommended_action
+
+    trace_events = [
+        _security_trace_event(
+            gate="input",
+            decision=input_result.decision,
+            findings=input_result.findings,
+            audit_ref=input_result.audit_event.audit_id,
+            planning_action=planning_actions.get("input", "continue"),
+        ),
+        _security_trace_event(
+            gate="retrieval",
+            decision=retrieval_result.decision,
+            findings=retrieval_result.findings,
+            audit_ref=retrieval_result.audit_event.audit_id,
+            planning_action=planning_actions.get("retrieval", "continue"),
+            extra={
+                "allowed_candidate_count": len(retrieval_result.allowed_candidates),
+                "blocked_candidate_count": len(retrieval_result.blocked_candidates),
+            },
+        ),
+        _security_trace_event(
+            gate="tool",
+            decision=tool_result.decision,
+            findings=tool_result.findings,
+            audit_ref=tool_result.audit_event.audit_id,
+            planning_action=planning_actions.get("tool", "continue"),
+        ),
+        _security_trace_event(
+            gate="output",
+            decision=output_result.decision,
+            findings=output_result.findings,
+            audit_ref=output_result.audit_event.audit_id,
+            planning_action=planning_actions.get("output", "continue"),
+        ),
+    ]
+
+    return SecurityTraceSummary(
+        gate_verdicts=gate_verdicts,
+        planning_actions=planning_actions,
+        metrics={
+            "security_block_count": sum(
+                1
+                for decision in (
+                    input_result.decision,
+                    retrieval_result.decision,
+                    tool_result.decision,
+                    output_result.decision,
+                )
+                if decision is SecurityDecision.BLOCK
+            ),
+            "security_approval_count": 1 if tool_result.decision is SecurityDecision.REQUIRE_APPROVAL else 0,
+            "security_replan_count": sum(
+                1 for action in planning_actions.values() if action == "replan"
+            ),
+            "security_filtered_candidate_count": len(retrieval_result.blocked_candidates),
+        },
+        trace_events=trace_events,
+    )
 
 
 def _content_findings(
@@ -461,6 +577,40 @@ def _content_findings(
             )
         )
     return findings
+
+
+def _output_recommended_action(findings: list[SecurityFinding]) -> str:
+    codes = {finding.code for finding in findings}
+    if "secret_detected" in codes or "pii_detected" in codes:
+        return "refuse"
+    if "unsupported_claim" in codes or "citation_coverage_low" in codes:
+        return "replan"
+    return "continue"
+
+
+def _security_trace_event(
+    *,
+    gate: str,
+    decision: SecurityDecision,
+    findings: list[SecurityFinding],
+    audit_ref: str,
+    planning_action: str,
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    payload = {
+        "gate": gate,
+        "decision": decision.value,
+        "planning_action": planning_action,
+        "reasons": [finding.code for finding in findings],
+        "audit_ref": audit_ref,
+    }
+    if extra:
+        payload.update(extra)
+    return {
+        "type": "security_verdict",
+        "status": decision.value,
+        "payload": payload,
+    }
 
 
 def _audit_event(
@@ -508,9 +658,11 @@ __all__ = [
     "SecurityDecision",
     "SecurityFinding",
     "SecurityGate",
+    "SecurityTraceSummary",
     "ToolGateResult",
     "ToolSecurityGate",
     "ToolSecurityProfile",
+    "build_security_trace_summary",
     "redact_sensitive_payload",
     "redact_sensitive_text",
 ]

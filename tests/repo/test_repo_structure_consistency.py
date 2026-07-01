@@ -1125,7 +1125,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         ACTIVE_PROGRAM_NAME,
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE07_security-governance-envelope.md",
+        "current_phase: PHASE08_model-gateway-cost-latency.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -1162,9 +1162,9 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
         phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
         assert f"program: {PROGRAM3_ACTIVE_NAME}" in phase_text
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_"):
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_"):
             expected_status = "status: completed"
-        elif phase_name.startswith("PHASE07_"):
+        elif phase_name.startswith("PHASE08_"):
             expected_status = "status: active"
         else:
             expected_status = "status: pending"

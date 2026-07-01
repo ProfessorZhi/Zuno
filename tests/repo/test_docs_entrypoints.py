@@ -134,7 +134,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     current_program = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(
         encoding="utf-8"
     )
-    assert _current_phase_name(current_program) == "PHASE07_security-governance-envelope.md"
+    assert _current_phase_name(current_program) == "PHASE08_model-gateway-cost-latency.md"
 
     assert docs_architecture == agent_architecture
     for phrase in [
@@ -219,7 +219,8 @@ def test_front_path_summaries_do_not_duplicate_program_phase_or_target_catalogs(
         "PHASE04 已完成",
         "PHASE05 已完成",
         "PHASE06 已完成",
-        "PHASE07 进行中",
+        "PHASE07 已完成",
+        "PHASE08 进行中",
         "PHASE07 已完成",
         "PHASE08 已完成",
         "PHASE09 已完成",

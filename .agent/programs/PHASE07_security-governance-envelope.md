@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE07_security-governance-envelope
-status: active
+status: completed
 
 ## 目标
 
@@ -112,6 +112,18 @@ pytest -q tests/agent -p no:cacheprovider
 - policy verdict 示例。
 - audit / trace 字段示例。
 - blocked reason 示例。
+
+## Closure Evidence
+
+- 本地实现：`src/backend/zuno/platform/security/governance.py` 提供 Input / Retrieval / Tool / Output 四道 gate、`SecurityDecision`、`SecurityFinding`、`SandboxAuditEvent`、redaction helper、`ToolSecurityProfile`、`SecurityTraceSummary` 和 `build_security_trace_summary`。
+- Input Gate：阻断 prompt injection、secret / PII signal，并在 sanitized content 与 trace payload 中移除敏感原文。
+- Retrieval Gate：在候选进入回答前按 workspace / ACL scope 过滤，阻断 cross-workspace chunk 与 denied ACL，并剥离 untrusted retrieved instruction；它是检索候选 gate baseline，不把检索后补丁写成权限模型。
+- Tool Gate：按 side-effect / execution mode 产生 approval、sandbox、credential policy 和 redacted audit event；危险工具不会 auto-pass，credential 原文不会进入 trace。
+- Output Gate：对 secret / PII、citation coverage low 和 unsupported claim 产出 block verdict；citation low / unsupported claim 的 planner-facing `recommended_action` 是 `replan`，secret / PII 的默认动作是 `refuse`。
+- Trace / Eval：`build_security_trace_summary` 汇总 gate verdicts、planning actions、`security_block_count`、`security_approval_count`、`security_replan_count` 和 `security_filtered_candidate_count`，供 PHASE09 / PHASE10 / PHASE13 消费。
+- Focused tests：`pytest -q tests/security/test_security_governance_contract.py -p no:cacheprovider` -> 7 passed；RED 首次运行 2 failures，根因为 `unsupported_claim_count` / `recommended_action` 和 `build_security_trace_summary` 尚不存在。
+- Integration guardrails：`pytest -q tests/security tests/agent_system tests/agent/test_tool_control_plane_contract.py tests/agent/test_tool_control_plane_runtime.py -p no:cacheprovider` -> 17 passed。
+- 边界：本 phase 不声明 rootless / gVisor / Firecracker sandbox、外部 vault / OAuth broker、生产级 DLP 或 PHASE09/10 planner runtime 已完成。
 
 ## 停止条件
 

@@ -146,6 +146,129 @@ def test_output_gate_blocks_low_citation_secret_output_and_redacts_payload() -> 
     assert result.audit_event.policy_decision is SecurityDecision.BLOCK
 
 
+def test_output_gate_emits_replan_contract_for_low_citation_and_unsupported_claims() -> None:
+    from zuno.platform.security.governance import (
+        OutputSecurityGate,
+        SecurityDecision,
+    )
+
+    result = OutputSecurityGate().evaluate(
+        content="The vendor has unlimited liability without support.",
+        citation_coverage=0.35,
+        required_citation_coverage=0.8,
+        unsupported_claim_count=2,
+        workspace_id="ws_contracts",
+        trace_id="trace-output-replan",
+        task_id="task-output-replan",
+    )
+
+    assert result.decision is SecurityDecision.BLOCK
+    assert result.recommended_action == "replan"
+    assert {finding.code for finding in result.findings} == {
+        "citation_coverage_low",
+        "unsupported_claim",
+    }
+    assert result.audit_event.to_trace_payload()["risk_reasons"] == [
+        "unsupported_claim",
+        "citation_coverage_low",
+    ]
+
+
+def test_security_trace_summary_exposes_gate_verdicts_for_eval_and_planning() -> None:
+    from zuno.platform.security.governance import (
+        GateRequest,
+        InputSecurityGate,
+        OutputSecurityGate,
+        RetrievalCandidate,
+        RetrievalSecurityGate,
+        SecurityDecision,
+        SecurityGate,
+        ToolSecurityGate,
+        ToolSecurityProfile,
+        build_security_trace_summary,
+    )
+
+    input_result = InputSecurityGate().evaluate(
+        GateRequest(
+            gate=SecurityGate.INPUT,
+            workspace_id="ws_contracts",
+            user_id="user-1",
+            content="Review the contract renewal clause.",
+            trace_id="trace-security-summary",
+            task_id="task-security-summary",
+        )
+    )
+    retrieval_result = RetrievalSecurityGate().filter_candidates(
+        workspace_id="ws_contracts",
+        allowed_acl_scopes={"workspace"},
+        candidates=[
+            RetrievalCandidate(
+                chunk_id="chunk-allowed",
+                workspace_id="ws_contracts",
+                acl_scope="workspace",
+                document_trust_label="internal",
+                text="Renewal notice is 30 days.",
+            ),
+            RetrievalCandidate(
+                chunk_id="chunk-other",
+                workspace_id="ws_other",
+                acl_scope="workspace",
+                document_trust_label="internal",
+                text="Other workspace private terms.",
+            ),
+        ],
+        trace_id="trace-security-summary",
+        task_id="task-security-summary",
+    )
+    tool_result = ToolSecurityGate().evaluate(
+        profile=ToolSecurityProfile.from_tool_card(
+            tool_id="mail.send",
+            side_effect_level="write_external",
+            execution_mode="api",
+        ),
+        model_intent="Send the contract summary.",
+        proposed_args={"to": "legal@example.com", "api_token": "raw-secret"},
+        workspace_id="ws_contracts",
+        trace_id="trace-security-summary",
+        task_id="task-security-summary",
+    )
+    output_result = OutputSecurityGate().evaluate(
+        content="No cited evidence covers the conclusion.",
+        citation_coverage=0.1,
+        required_citation_coverage=0.8,
+        workspace_id="ws_contracts",
+        trace_id="trace-security-summary",
+        task_id="task-security-summary",
+    )
+
+    summary = build_security_trace_summary(
+        input_result=input_result,
+        retrieval_result=retrieval_result,
+        tool_result=tool_result,
+        output_result=output_result,
+    )
+
+    assert summary.gate_verdicts == {
+        "input": "allow",
+        "retrieval": "allow",
+        "tool": "require_approval",
+        "output": "block",
+    }
+    assert summary.planning_actions == {
+        "retrieval": "continue_with_filtered_context",
+        "tool": "ask_user",
+        "output": "replan",
+    }
+    assert summary.metrics == {
+        "security_block_count": 1,
+        "security_approval_count": 1,
+        "security_replan_count": 1,
+        "security_filtered_candidate_count": 1,
+    }
+    assert summary.trace_events[-1]["payload"]["planning_action"] == "replan"
+    assert summary.trace_events[-1]["payload"]["decision"] == SecurityDecision.BLOCK.value
+
+
 def test_security_governance_trace_never_exposes_raw_secrets() -> None:
     from zuno.platform.security.governance import (
         SandboxAuditEvent,
