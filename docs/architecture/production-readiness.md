@@ -36,7 +36,7 @@ Current 可以表述为：
 当前 Current 来自以下可复现仓库证据：
 
 - `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/closure-summary.md`：记录 PHASE01-PHASE12 已完成，并说明 release gate 结果。
-- `README.md` 和 `.agent/programs/current.md`：记录当前 no-active，最近完成 program 是 `zuno-target-architecture-runtime-full-implementation-v1`。
+- `README.md` 和 `.agent/programs/current.md`：记录当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，最近完成 program 是 `zuno-target-architecture-runtime-full-implementation-v1`。
 - `docs/architecture/architecture.md`：记录 Current / Target 边界、九个目标平面和第一版 runtime 落点。
 - `src/backend/zuno/api/services/workspace_task_runtime.py`、`src/backend/zuno/agent/durable_runtime.py`、`src/backend/zuno/knowledge/ingestion/`、`src/backend/zuno/knowledge/indexing/`、`src/backend/zuno/capability/runtime.py`、`src/backend/zuno/memory/store.py`：提供第一版 runtime surfaces。
 - `tests/api/`、`tests/agent/`、`tests/knowledge/`、`tests/frontend/`、`tests/repo/`：提供 focused tests 和结构防漂移 tests。

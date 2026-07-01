@@ -1,0 +1,65 @@
+# Program Closure Checklist
+
+program: `zuno-production-architecture-and-deliverables-completion-v1`
+state: active
+
+## Phase 顺序
+
+- [ ] PHASE01 production maturity gap audit
+- [ ] PHASE02 program truth source and execution system
+- [ ] PHASE03 workflow self maintenance automation
+- [ ] PHASE04 documentation dedup architecture clarity
+- [ ] PHASE05 repo ownership and compatibility retirement
+- [ ] PHASE06 product surface desktop recovery loop
+- [ ] PHASE07 production parse and index platform
+- [ ] PHASE08 durable agent runtime persistence
+- [ ] PHASE09 memory context production governance
+- [ ] PHASE10 tool sandbox vault network runtime
+- [ ] PHASE11 production graphrag evidence citation
+- [ ] PHASE12 security trace eval release closure
+
+## 四大总交付物
+
+- [ ] 工作流自洽与自我维护：长期规则能被分类、写回、模板化并进入机器检查。
+- [ ] 文档系统清晰无冗余：前台文档少而精，architecture / production-readiness / program / history 边界清楚。
+- [ ] 文件夹和代码 ownership 清晰：六层 owner 清楚，compatibility / vendor / legacy alias 只承担必要临时桥接。
+- [ ] 架构功能完整实现：八类 runtime-first 交付物达到 production target 或保留明确 Remaining Target 证据。
+
+## 八类 runtime-first 交付物
+
+- [ ] 产品闭环。
+- [ ] 文档解析与索引。
+- [ ] Agent Runtime。
+- [ ] Memory 与 Context。
+- [ ] Tool Control Plane 与 Sandbox。
+- [ ] Knowledge / GraphRAG / Evidence / Citation。
+- [ ] Security / Trace / Eval / Release。
+- [ ] 仓库治理与一致性。
+
+## Program Closure 自维护审查
+
+- [ ] `AGENTS.md` 是否需要更新。
+- [ ] `.agent/system.yaml` 的 route、docs_sync、verify 是否需要更新。
+- [ ] `.agent/references/` 是否有新的 skill、lesson、pitfall 或 debug playbook 要沉淀。
+- [ ] `.agent/templates/` 是否需要新增或修正执行骨架。
+- [ ] `.agent/programs/` 是否完成归档并回到明确状态。
+- [ ] completed program 是否已归档到 `docs/history/programs/`。
+- [ ] `docs/architecture/architecture.md` 的 Current / Target / Future / History 是否仍严格区分。
+- [ ] `.agent/architecture/architecture.md` 是否与 `docs/architecture/architecture.md` 完全一致。
+- [ ] 两个 `architecture.html` 是否由同一个 Markdown 源生成且可通过渲染校验。
+- [ ] verifier / tests 是否覆盖新规则，避免下次漂移。
+
+## 最终验证命令
+
+```powershell
+git diff --check
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_repo_structure.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+python .agent/scripts/verify_repo_hygiene.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-docs.ps1
+pytest -q -p no:cacheprovider
+```

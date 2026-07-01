@@ -17,7 +17,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 ## 5 分钟首读
 
 1. [总架构文档](./docs/architecture/architecture.md)：文字说明 Current / Target 边界、企业知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；同一文件也维护 Mermaid 图源。
-2. [Production Readiness Baseline](./docs/architecture/production-readiness.md)：明确第一版 runtime slice 与 production-grade Target 的边界。
+2. [Production Readiness Baseline](./docs/architecture/production-readiness.md)：明确四大总交付物、第一版 runtime slice 与 production-grade Target 的边界。
 3. [架构 HTML](./docs/architecture/architecture.html)：图形化查看十类架构图，支持展开全屏查看。
 4. [公开演示证据](./docs/evidence/public-demo.md)：可公开引用的证据入口。
 5. [术语表](./docs/reference/terminology.md)：当前公开术语。
@@ -38,7 +38,16 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前没有 active Agent program。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`：
+当前 active Agent program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE01_production-maturity-gap-audit`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。
+
+本轮 program 文件在 `.agent/programs/`：
+
+- `.agent/programs/current.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/closure-checklist.md`
+- `.agent/programs/PHASE01_production-maturity-gap-audit.md` 到 `.agent/programs/PHASE12_security-trace-eval-release-closure.md`
+
+最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`：
 
 - `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 
@@ -54,9 +63,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。
 
-执行状态入口在 `.agent/programs/`，当前处于 no-active 等待态。打开下一轮 program 前必须重新确认 worktree、branch、允许范围和禁止范围，并从 `PHASE01` 开始。
-
-成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。phase 级执行证据保留在 runtime-full program 归档和 closure summary 中，README 只保留当前状态摘要。
+执行状态入口在 `.agent/programs/`。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。phase 级执行证据保留在 active program 文件和 completed program 归档中，README 只保留当前状态摘要。
 
 ## 运行示例
 

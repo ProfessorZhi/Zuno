@@ -1,10 +1,29 @@
 # 当前程序
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-production-architecture-and-deliverables-completion-v1
+current_phase: PHASE01_production-maturity-gap-audit
 
-## 最近完成
+## 目标
+
+本 program 是一次性交付型成熟化 program：把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。
+
+四大总交付物以 `docs/architecture/production-readiness.md` 为准：
+
+1. 工作流自洽与自我维护。
+2. 文档系统清晰无冗余。
+3. 文件夹和代码 ownership 清晰。
+4. 架构功能完整实现；该项展开为八类 runtime-first 交付物。
+
+本 program 允许使用主线程 coordinator + 多 agent / 多 worktree 模式。这里的多 agent 是 Codex 工程执行方式，不改变 Zuno 产品 runtime 的 Single Controller / Single GeneralAgent 主线。
+
+## 当前阶段
+
+- 当前 phase：`PHASE01_production-maturity-gap-audit`
+- 当前动作：先做生产成熟度差距审计，逐项核对 Current / Target / Future / History，不直接把 Target 写成 Current。
+- 当前验收：PHASE01 只有在差距清单、owner map、验证矩阵、执行拆分和停止条件都写清后才能关闭。
+
+## 最近完成基线
 
 最近完成并归档的 program：`zuno-target-architecture-runtime-full-implementation-v1`
 
@@ -14,8 +33,15 @@ current_phase: none
 
 该 program 已完成 PHASE01-PHASE12，覆盖 runtime-first 目标架构第一版闭环：上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback。
 
-成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准；本文件只记录 program 执行状态。
+上一轮 foundation program：`zuno-master-architecture-implementation-v1`
 
-## 下一步
+- `docs/history/programs/zuno-master-architecture-implementation-v1/`
 
-当前没有 active program。打开下一轮 program 前，必须重新确认 worktree、branch、`git status --short --branch`、允许范围和禁止范围，并从 `PHASE01` 开始。
+## 执行规则
+
+- 必须按 PHASE01 -> PHASE12 顺序推进。
+- 每个 phase 必须有代码、focused tests、trace / eval、verifier 或运行证据之一，才能把 Target 升为 Current。
+- 只写 contract、schema 或 README 不能关闭 runtime phase。
+- 不为目录好看直接删除兼容路径；compatibility、vendor、legacy alias 必须先有 import matrix、替代 owner 和 tests。
+- 不把多 agent 执行方式写成 Zuno 产品 runtime 架构。
+- 每个 phase 完成后更新 phase 文件状态、运行最小有效验证、提交并推送；最终 PHASE12 归档到 `docs/history/programs/` 并回到明确状态。

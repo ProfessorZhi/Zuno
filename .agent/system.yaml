@@ -157,6 +157,8 @@ skill_routes:
       - ".agent/templates/workflow-change-note-template.md"
       - ".agent/programs/README.md"
       - ".agent/programs/current.md"
+      - ".agent/programs/implementation-roadmap.md"
+      - ".agent/programs/closure-checklist.md"
       - "docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/"
       - "docs/history/programs/zuno-master-architecture-implementation-v1/"
       - "docs/architecture/README.md"

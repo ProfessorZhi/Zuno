@@ -984,7 +984,7 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 
 ## 实施落点
 
-当前没有 active program。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。它承接 `zuno-master-architecture-implementation-v1` 的 contract foundation，不推翻目标架构，而是把目标架构推进到第一版真实 runtime 闭环。上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`；它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。
+当前 active program 是 `zuno-production-architecture-and-deliverables-completion-v1`，当前阶段是 `PHASE01_production-maturity-gap-audit`。它是一次性交付型成熟化 program，目标是把 Zuno 从“第一版 runtime-first vertical slice 已完成”推进到“成熟目标架构和四大总交付物完成”。最近完成并归档的 program 是 `zuno-target-architecture-runtime-full-implementation-v1`，归档位置是 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。它承接 `zuno-master-architecture-implementation-v1` 的 contract foundation，不推翻目标架构，而是把目标架构推进到第一版真实 runtime 闭环。上一轮 foundation program 是 `zuno-master-architecture-implementation-v1`，归档位置是 `docs/history/programs/zuno-master-architecture-implementation-v1/`；它已完成 PHASE01-PHASE12，将目标架构按阶段落地，同时仍然遵守 Current / Target 边界。
 
 本轮 runtime-first program 的核心闭环是：
 
@@ -1005,9 +1005,11 @@ LangSmith-compatible Trace / Eval 是统一 trace / span / dataset / evaluator /
 9. `PHASE09_agentic-retrieval-evidence-citation-runtime`：已让 Agentic retrieval 消费新 index runtime，输出 citation-rich answer，并把 evidence / citation / unsupported claim 指标写入 task retrieval event。
 10. `PHASE10_security-observability-and-online-eval`：已将 security gates、ZunoSpan、task observability snapshot、trace replay 和 release baseline 接入 workspace task runtime。
 11. `PHASE11_web-desktop-surface-and-feedback-loop`：已把 Web workspace Agent 模式接入 file / ingest / task / SSE / approval / artifact / trace-eval / feedback 产品闭环；Desktop 当前复用 API / bridge，不写成生产桌面闭环。
-12. `PHASE12_release-gate-full-e2e-closure`：已完成完整 vertical slice release closure、归档、验证和 no-active 收口。
+12. `PHASE12_release-gate-full-e2e-closure`：已完成完整 vertical slice release closure、归档和验证收口。
 
 这十二个 phase 可以按 workstream 拆分并行，但共享状态面、架构源文档、verifier、tests 和 release closure 必须由主线程统一收口。每个 runtime phase 只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后才能关闭；只写 contract、schema 或 README 不能关闭 runtime phase。
+
+新的 mature-architecture completion program 从 PHASE01 开始，不把生产级 Target 直接写成 Current。它按四大总交付物推进：工作流自洽与自我维护、文档系统清晰无冗余、文件夹和代码 ownership 清晰、架构功能完整实现；第四项展开为八类 runtime-first 交付物。
 
 ## 研究产物归档
 
@@ -1187,7 +1189,7 @@ flowchart TB
   DOCS --> FORMAL["architecture.md source"]
   DOCS --> HTML["architecture.html generated"]
   DOCS --> ASSETS["architecture assets PDFs"]
-  AGENT --> PROGRAM["programs no-active<br/>latest runtime full implementation archived"]:::guard
+  AGENT --> PROGRAM["active production completion program<br/>PHASE01 maturity gap audit"]:::guard
   AGENT --> REFS["references governance"]
   AGENT --> TPL["templates skeletons"]
   TOOLS --> RENDER["render architecture"]

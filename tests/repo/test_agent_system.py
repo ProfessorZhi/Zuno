@@ -41,6 +41,28 @@ RUNTIME_PROGRAM_FILES = [
     "README.md",
     "current.md",
 ]
+ACTIVE_PROGRAM_NAME = "zuno-production-architecture-and-deliverables-completion-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_production-maturity-gap-audit.md",
+    "PHASE02_program-truth-source-and-execution-system.md",
+    "PHASE03_workflow-self-maintenance-automation.md",
+    "PHASE04_documentation-dedup-architecture-clarity.md",
+    "PHASE05_repo-ownership-and-compatibility-retirement.md",
+    "PHASE06_product-surface-desktop-recovery-loop.md",
+    "PHASE07_production-parse-and-index-platform.md",
+    "PHASE08_durable-agent-runtime-persistence.md",
+    "PHASE09_memory-context-production-governance.md",
+    "PHASE10_tool-sandbox-vault-network-runtime.md",
+    "PHASE11_production-graphrag-evidence-citation.md",
+    "PHASE12_security-trace-eval-release-closure.md",
+]
+ACTIVE_PROGRAM_FILES = [
+    "README.md",
+    "current.md",
+    "implementation-roadmap.md",
+    "closure-checklist.md",
+    *ACTIVE_PROGRAM_PHASE_FILES,
+]
 
 
 def test_agent_architecture_folder_is_slim_mirror() -> None:
@@ -147,10 +169,16 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     program_files = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").iterdir() if path.is_file()
     )
-    assert program_files == sorted(RUNTIME_PROGRAM_FILES)
+    assert program_files == sorted(ACTIVE_PROGRAM_FILES)
 
     current_program = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
     readme = (REPO_ROOT / ".agent/programs/README.md").read_text(encoding="utf-8")
+    roadmap = (REPO_ROOT / ".agent/programs/implementation-roadmap.md").read_text(
+        encoding="utf-8"
+    )
+    closure = (REPO_ROOT / ".agent/programs/closure-checklist.md").read_text(
+        encoding="utf-8"
+    )
     current_reference = (REPO_ROOT / ".agent/references/current-program.md").read_text(
         encoding="utf-8"
     )
@@ -161,9 +189,16 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (runtime_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        f"active_program: {ACTIVE_PROGRAM_NAME}",
+        "current_phase: PHASE01_production-maturity-gap-audit",
+        ACTIVE_PROGRAM_NAME,
+        "一次性交付型成熟化 program",
+        "成熟目标架构和四大总交付物完成",
+        "工作流自洽与自我维护",
+        "文档系统清晰无冗余",
+        "文件夹和代码 ownership 清晰",
+        "架构功能完整实现",
         RUNTIME_PROGRAM_NAME,
         RUNTIME_PROGRAM_ARCHIVE,
         "runtime-first / vertical-slice-first",
@@ -173,8 +208,15 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
     ]:
-        assert phrase in current_program + readme + current_reference + archive_text
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == []
+        assert phrase in current_program + readme + roadmap + closure + current_reference + archive_text
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(ACTIVE_PROGRAM_PHASE_FILES)
+    for phase in ACTIVE_PROGRAM_PHASE_FILES:
+        phase_path = REPO_ROOT / ".agent/programs" / phase
+        assert phase_path.exists()
+        phase_text = phase_path.read_text(encoding="utf-8")
+        assert "status:" in phase_text
+        for section in ["## 目标", "## 范围", "## 禁止范围", "## 验收闸门", "## 验证命令"]:
+            assert section in phase_text
     for index, phase in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
         phase_path = runtime_archive / phase
         assert phase_path.exists()

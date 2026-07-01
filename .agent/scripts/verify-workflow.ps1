@@ -214,11 +214,17 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none") {
-    $failures.Add("current-program.md must declare no-active state and latest runtime full implementation archive")
+if ($currentProgram -notmatch "zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-production-architecture-and-deliverables-completion-v1" -or $currentProgram -notmatch "current_phase: PHASE01_production-maturity-gap-audit") {
+    $failures.Add("current-program.md must declare active production architecture completion program")
+}
+if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/") {
+    $failures.Add("current-program.md must keep latest runtime full implementation archive")
 }
 if ($currentProgram -notmatch "runtime-first / vertical-slice-first" -or $currentProgram -notmatch "只写 contract、schema 或 README 不能关闭 runtime phase") {
     $failures.Add("current-program.md missing runtime-first closure guard")
+}
+if ($currentProgram -notmatch "一次性交付型成熟化 program" -or $currentProgram -notmatch "成熟目标架构和四大总交付物完成") {
+    $failures.Add("current-program.md missing production completion program goal")
 }
 if ($currentProgram -notmatch "zuno-master-architecture-implementation-v1") {
     $failures.Add("current-program.md must keep the archived master architecture implementation program visible")

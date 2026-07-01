@@ -44,6 +44,28 @@ RUNTIME_PROGRAM_FILES = [
     "README.md",
     "current.md",
 ]
+ACTIVE_PROGRAM_NAME = "zuno-production-architecture-and-deliverables-completion-v1"
+ACTIVE_PROGRAM_PHASE_FILES = [
+    "PHASE01_production-maturity-gap-audit.md",
+    "PHASE02_program-truth-source-and-execution-system.md",
+    "PHASE03_workflow-self-maintenance-automation.md",
+    "PHASE04_documentation-dedup-architecture-clarity.md",
+    "PHASE05_repo-ownership-and-compatibility-retirement.md",
+    "PHASE06_product-surface-desktop-recovery-loop.md",
+    "PHASE07_production-parse-and-index-platform.md",
+    "PHASE08_durable-agent-runtime-persistence.md",
+    "PHASE09_memory-context-production-governance.md",
+    "PHASE10_tool-sandbox-vault-network-runtime.md",
+    "PHASE11_production-graphrag-evidence-citation.md",
+    "PHASE12_security-trace-eval-release-closure.md",
+]
+ACTIVE_PROGRAM_FILES = [
+    "README.md",
+    "current.md",
+    "implementation-roadmap.md",
+    "closure-checklist.md",
+    *ACTIVE_PROGRAM_PHASE_FILES,
+]
 
 REQUIRED_PATHS = [
     "AGENTS.md",
@@ -96,6 +118,9 @@ REQUIRED_PATHS = [
     "docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/decisions/README.md",
     ".agent/programs/README.md",
     ".agent/programs/current.md",
+    ".agent/programs/implementation-roadmap.md",
+    ".agent/programs/closure-checklist.md",
+    *[f".agent/programs/{phase_name}" for phase_name in ACTIVE_PROGRAM_PHASE_FILES],
     f"{RUNTIME_PROGRAM_ARCHIVE}/README.md",
     f"{RUNTIME_PROGRAM_ARCHIVE}/current.md",
     f"{RUNTIME_PROGRAM_ARCHIVE}/implementation-roadmap.md",
@@ -209,9 +234,9 @@ def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
     if not programs_root.exists():
         return ["missing .agent/programs"]
     program_files = sorted(path.name for path in programs_root.iterdir() if path.is_file())
-    if program_files != sorted(RUNTIME_PROGRAM_FILES):
-        errors.append(f".agent/programs no-active files drifted: {program_files}")
-    for name in RUNTIME_PROGRAM_FILES:
+    if program_files != sorted(ACTIVE_PROGRAM_FILES):
+        errors.append(f".agent/programs active files drifted: {program_files}")
+    for name in ACTIVE_PROGRAM_FILES:
         if not (programs_root / name).exists():
             errors.append(f"missing .agent/programs/{name}")
     return errors
@@ -312,6 +337,8 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
     current = (repo_root / ".agent/programs/current.md").read_text(encoding="utf-8")
     readme = (repo_root / ".agent/programs/README.md").read_text(encoding="utf-8")
+    roadmap = (repo_root / ".agent/programs/implementation-roadmap.md").read_text(encoding="utf-8")
+    closure = (repo_root / ".agent/programs/closure-checklist.md").read_text(encoding="utf-8")
     current_reference = (repo_root / ".agent/references/current-program.md").read_text(encoding="utf-8")
     runtime_archive_root = repo_root / RUNTIME_PROGRAM_ARCHIVE
     runtime_archive_text = (
@@ -321,9 +348,16 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        f"active_program: {ACTIVE_PROGRAM_NAME}",
+        "current_phase: PHASE01_production-maturity-gap-audit",
+        ACTIVE_PROGRAM_NAME,
+        "一次性交付型成熟化 program",
+        "成熟目标架构和四大总交付物完成",
+        "工作流自洽与自我维护",
+        "文档系统清晰无冗余",
+        "文件夹和代码 ownership 清晰",
+        "架构功能完整实现",
         RUNTIME_PROGRAM_NAME,
         RUNTIME_PROGRAM_ARCHIVE,
         "runtime-first / vertical-slice-first",
@@ -331,8 +365,22 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
     ]:
-        if phrase not in current + readme + current_reference + runtime_archive_text:
-            errors.append(f"program lifecycle surface missing no-active runtime phrase: {phrase}")
+        if phrase not in current + readme + roadmap + closure + current_reference + runtime_archive_text:
+            errors.append(f"program lifecycle surface missing active runtime phrase: {phrase}")
+    active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
+    if active_phase_names != sorted(ACTIVE_PROGRAM_PHASE_FILES):
+        errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
+    for phase_name in ACTIVE_PROGRAM_PHASE_FILES:
+        phase_path = repo_root / ".agent/programs" / phase_name
+        if not phase_path.exists():
+            errors.append(f"active production program missing phase: {phase_name}")
+            continue
+        phase_content = phase_path.read_text(encoding="utf-8")
+        if "status:" not in phase_content:
+            errors.append(f"active production program phase missing status: {phase_name}")
+        for required in ["## 目标", "## 范围", "## 禁止范围", "## 验收闸门", "## 验证命令"]:
+            if required not in phase_content:
+                errors.append(f"active production program phase missing section {required}: {phase_name}")
     for phase_index, phase_name in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
         phase_path = runtime_archive_root / phase_name
         if not phase_path.exists():
