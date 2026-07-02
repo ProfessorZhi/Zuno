@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE15_verification-archive-closure
-status: active
+status: completed
 
 ## 目标
 
@@ -85,6 +85,14 @@ pytest -q tests/agent -p no:cacheprovider
 pytest -q tests/api -p no:cacheprovider
 pytest -q tests/evals -p no:cacheprovider
 ```
+
+## Closure Evidence
+
+- PHASE15 关闭前已从 clean worktree 运行 full verification：repo verifiers、workflow verifier、focused durable ingest/task tests、knowledge suite、agent suite、api suite 和 eval suite 均通过。
+- 完整归档已写入 `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`，包含 `README.md`、`current.md`、`implementation-roadmap.md`、`closure-checklist.md`、`closure-summary.md`、PHASE01-PHASE15 文件和 merged queued inputs。
+- `.agent/programs/` 已回到 no-active：只保留 `current.md`、`README.md`、`implementation-roadmap.md`、`closure-checklist.md` 和 `queued-programs/README.md`。
+- `closure-summary.md` 写清 Completed Product Baseline、Current evidence、Focused tests、E2E scenario、Metrics captured 和 Remaining Production Scale targets。
+- 本地目标要求 no push / no PR unless explicitly requested，因此本 phase 的本地 closure commit 不执行 push；push 仍等待用户明确请求。
 
 ## 需要先读取
 

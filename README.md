@@ -46,13 +46,24 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 ## 当前 program 状态
 
-当前 `.agent/programs/` 处于 active 状态：
+当前 `.agent/programs/` 处于 no-active 状态：
 
-- `active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- `current_phase: PHASE15_verification-archive-closure.md`
-- `latest_completed_program: zuno-enterprise-document-ingestion-platform-v2`
+- `active_program: none`
+- `current_phase: none`
+- `latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
-当前 Program 3 是 Mega Program：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`。它把原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 合并为一个 full closure program。执行模型是一个总 Program、十五个 Phase Gate、多条并行 Workstream、多个 PR / commit、一个 Coordinator 统一合并、验证和归档。当前推进 PHASE15 full verification、archive 和 final closure；Docs / Architecture Expansion、End-to-End Product Runtime、Eval / Trace / Cost / Benchmark、Model Gateway / Cost / Latency、Planning Contract / Strategy Selector、ReAct / Reflection / Dynamic Replan / Reflexion runtime，以及 Workspace Product API / Frontend Minimal Sync 的本地 baseline 已进入 Current。目标是完成 Launchable Enterprise Agentic GraphRAG Product Baseline：输入层可靠，知识库层支持标准检索 / 深度检索，Capability / Skill / Tool / MCP 可编排，Memory & Context Engine 可构造 ContextPack，Planning & Control Runtime 可 strategy_select / plan / ReAct / reflect / replan / reflexion，Security / Governance 可 gate，Eval / Trace / Cost 可记录质量、成本和耗时。Basic RAG 与静态 GraphRAG 只作为评测对照组；GraphRAG 是 Agent 可调用的检索能力，Skill 是 Agent 的任务方法包，MCP / Tool / Knowledge 都属于 Capability Layer 的可编排能力，不是用户手动选择的主产品模式。
+最近完成并归档的 program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`。
+
+- `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`
+
+Program 3 Mega 已完成 PHASE01-PHASE15，把原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 合并并收口为本地可验证的 launchable enterprise Agentic GraphRAG product baseline。当前结论是：
+
+```text
+Launchable enterprise Agentic GraphRAG product baseline completed.
+Production scale external deployments remain replaceable targets.
+```
+
+输入层、知识库层、Capability / Skill / Tool / MCP、Memory & Context Engine、Planning & Control Runtime、Security / Governance、Eval / Trace / Cost、Product API / Frontend、E2E 和文档归档已进入 Current Local Slice。Basic RAG 与静态 GraphRAG 只作为评测对照组；GraphRAG 是 Agent 可调用的检索能力，Skill 是 Agent 的任务方法包，MCP / Tool / Knowledge 都属于 Capability Layer 的可编排能力，不是用户手动选择的主产品模式。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 
@@ -72,7 +83,7 @@ Local-first Enterprise Private Knowledge Agent Workspace
 
 它已完成 PHASE01-PHASE12，覆盖项目文件夹与代码布局治理、企业知识库产品闭环、Document Ingestion、Single Controller runtime harness、Memory、Tool Control Plane、Agentic GraphRAG / Evidence / Citation、Security Governance、Eval / Observability、Architecture Markdown / HTML refresh 和 release closure。
 
-执行状态入口在 `.agent/programs/`。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。phase 级执行证据保留在 completed program 归档中，README 只保留当前状态摘要。
+执行状态入口在 `.agent/programs/`。成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准。phase 级执行证据保留在 completed program 归档中，README 只保留当前状态摘要。新 program 必须从 no-active 状态和历史 closure summary 出发，不能把归档 PHASE 文件直接恢复成 active front path。
 
 ## 运行示例
 

@@ -1,47 +1,38 @@
 # Agent 执行计划
 
-`.agent/programs/` 当前处于 active 状态。
+`.agent/programs/` 当前处于 no-active 状态。
 
 ## 当前状态
 
-- State: active
-- Active program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- Current phase: `PHASE15_verification-archive-closure.md`
-- Latest completed program: `zuno-enterprise-document-ingestion-platform-v2`
+- State: no-active
+- Active program: none
+- Current phase: none
+- Latest completed program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
-当前 Program 3 Mega 合并原 active Program 3 与 queued Program 4-6，目标是在一个 program 内完成 Zuno 可上线企业知识库 Agentic GraphRAG product baseline 的全链路闭环计划。
+最近完成并归档的 Program 3 Mega 已完成本地可验证的 launchable enterprise Agentic GraphRAG product baseline。归档入口：
 
-PHASE12 End-to-End Product Runtime 已完成本地 E2E product baseline；PHASE13 已把 scenario / trace 输出汇总为 Eval / Trace / Cost / Benchmark baseline；PHASE14 已完成 Docs / Architecture Expansion；当前 PHASE15 负责 full verification、archive 和 final closure。
+- `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`
 
 ## 当前文件
 
-- `current.md`：当前 active mega program、phase、workstream 和 superseded queued program。
-- `implementation-roadmap.md`：Program 1 / 2 completed 与 Program 3 Mega active 的顺序、依赖和状态。
-- `closure-checklist.md`：mega program 从 open 到 closure 的验收清单。
-- `PHASE01_*.md` 到 `PHASE15_*.md`：mega program 平铺 phase gate 计划。
-- `queued-programs/`：原 Program 4-6 的 superseded 输入文件，不是当前 active phase。
+- `current.md`：当前 no-active 状态、最近完成 program 和下一轮规则。
+- `implementation-roadmap.md`：Program 1 / 2 / 3 completed 与 no-active 状态。
+- `closure-checklist.md`：最近完成 program 的最终验收摘要和下一轮检查入口。
+- `queued-programs/README.md`：当前没有 queued program；旧 Program 4-6 已随 Program 3 Mega 归档为 merged inputs。
 
-## Program 3 Mega 完成口径
-
-Program 完成时必须能说：
+## 最近完成口径
 
 ```text
 Launchable enterprise Agentic GraphRAG product baseline completed.
 Production scale external deployments remain replaceable targets.
 ```
 
-它至少要证明：
-
-```text
-upload/register -> local object store -> async ingest -> parse/document/index
-  -> standard/deep retrieval -> planning/control -> skill/capability
-  -> cited artifact -> trace/eval/cost -> feedback -> restart rehydrate
-```
+这表示所有关键层都有 local runnable implementation、adapter boundary、dependency probe / target-blocked evidence、focused tests、E2E 闭环、trace/eval/cost 记录和文档成熟度边界。它不表示已经部署真实 PostgreSQL / RabbitMQ / Redis / MinIO / OCR / VLM / external index 集群。
 
 ## 使用规则
 
-- active 状态下，`.agent/programs/` 根目录只保留当前 mega program 的 PHASE 文件。
-- superseded queued program 只能留在 `queued-programs/`，不得写成 active 或 completed。
-- PHASE01 和 PHASE02 是顺序闸门；中间 workstream 可以并行；PHASE12-PHASE15 必须由 Coordinator 集成收口。
-- 每个 runtime phase 必须有真实 API / service / worker 路径和 focused tests；只写 contract、schema 或 README 不能关闭 runtime phase。
+- no-active 状态下，不在 `.agent/programs/` 根目录保留 PHASE 文件。
+- completed program 的 phase、closure summary 和 merged queued inputs 必须留在 `docs/history/programs/`。
+- 新 program 必须从 `PHASE01` 开始，并同步 `AGENTS.md`、README、`.agent/references/current-program.md`、verifier 和 repo tests。
+- 只写 contract、schema 或 README 不能关闭 runtime phase。
 - 多线程执行必须由当前主线程先确认真实 UI 目标模式和独立 worktree / branch；提示词目标模式不等于 Codex UI 目标模式。

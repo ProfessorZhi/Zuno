@@ -160,7 +160,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     current_program = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(
         encoding="utf-8"
     )
-    assert _current_phase_name(current_program) == "PHASE15_verification-archive-closure.md"
+    assert _current_phase_name(current_program) == "none"
 
     assert docs_architecture == agent_architecture
     for phrase in [
@@ -176,6 +176,8 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
         "docs/architecture/document-ingestion-foundation.md",
         "zuno-production-architecture-and-deliverables-completion-v1",
         "no-active",
+        "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1",
+        "docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/",
         "zuno-enterprise-document-ingestion-platform-v2",
         "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/",
         "成熟目标架构和四大总交付物完成",
@@ -199,6 +201,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
         "Production Target",
         "Launchable Prototype Target",
         "Production Scale Target",
+        "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1",
         "zuno-enterprise-document-ingestion-platform-v2",
         "zuno-production-architecture-and-deliverables-completion-v1",
         "zuno-target-architecture-runtime-full-implementation-v1",

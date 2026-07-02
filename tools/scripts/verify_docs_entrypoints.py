@@ -165,8 +165,8 @@ def verify_entrypoint_text() -> list[str]:
     document_ingestion = _read("docs/architecture/document-ingestion-foundation.md")
     current_program = _read(".agent/programs/current.md")
     current_phase = _current_phase_name(current_program)
-    if current_phase != "PHASE15_verification-archive-closure.md":
-        errors.append(".agent/programs/current.md must declare current Program 3 PHASE15")
+    if current_phase != "none":
+        errors.append(".agent/programs/current.md must declare no-active current phase")
 
     for phrase in [
         "./docs/architecture/architecture.md",
@@ -249,6 +249,8 @@ def verify_entrypoint_text() -> list[str]:
         "Security / Governance",
         "zuno-production-architecture-and-deliverables-completion-v1",
         "no-active",
+        "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1",
+        "docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/",
         "zuno-enterprise-document-ingestion-platform-v2",
         "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/",
         "成熟目标架构和四大总交付物完成",
@@ -277,6 +279,7 @@ def verify_entrypoint_text() -> list[str]:
         "Production Target",
         "Launchable Prototype Target",
         "Production Scale Target",
+        "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1",
         "zuno-enterprise-document-ingestion-platform-v2",
         "zuno-production-architecture-and-deliverables-completion-v1",
         "zuno-target-architecture-runtime-full-implementation-v1",

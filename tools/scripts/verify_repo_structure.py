@@ -68,6 +68,10 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
+]
+PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
+PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
+PROGRAM3_ACTIVE_PHASE_FILES = [
     "PHASE01_truth-source-and-merge-plan.md",
     "PHASE02_shared-contract-freeze.md",
     "PHASE03_enterprise-ingestion-async-infrastructure.md",
@@ -84,8 +88,6 @@ ACTIVE_PROGRAM_FILES = [
     "PHASE14_docs-architecture-expansion.md",
     "PHASE15_verification-archive-closure.md",
 ]
-PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
-PROGRAM3_ACTIVE_PHASE_FILES = ACTIVE_PROGRAM_FILES[4:]
 LATEST_COMPLETED_PROGRAM_NAME = "zuno-enterprise-document-ingestion-platform-v2"
 LATEST_COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{LATEST_COMPLETED_PROGRAM_NAME}"
 LATEST_COMPLETED_PROGRAM_PHASE_FILES = [
@@ -112,6 +114,8 @@ CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
 ]
 QUEUED_PROGRAM_FILES = [
     "README.md",
+]
+PROGRAM3_MERGED_QUEUED_FILES = [
     "PROGRAM04_runtime-subsystems-parallel.md",
     "PROGRAM05_agent-planning-integration.md",
     "PROGRAM06_enterprise-knowledge-eval-benchmark.md",
@@ -186,6 +190,14 @@ REQUIRED_PATHS = [
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
     *[f".agent/programs/queued-programs/{file_name}" for file_name in QUEUED_PROGRAM_FILES],
+    f"{PROGRAM3_ACTIVE_ARCHIVE}/README.md",
+    f"{PROGRAM3_ACTIVE_ARCHIVE}/current.md",
+    f"{PROGRAM3_ACTIVE_ARCHIVE}/implementation-roadmap.md",
+    f"{PROGRAM3_ACTIVE_ARCHIVE}/closure-checklist.md",
+    f"{PROGRAM3_ACTIVE_ARCHIVE}/closure-summary.md",
+    *[f"{PROGRAM3_ACTIVE_ARCHIVE}/{phase_name}" for phase_name in PROGRAM3_ACTIVE_PHASE_FILES],
+    f"{PROGRAM3_ACTIVE_ARCHIVE}/queued-programs/README.md",
+    *[f"{PROGRAM3_ACTIVE_ARCHIVE}/queued-programs/{file_name}" for file_name in PROGRAM3_MERGED_QUEUED_FILES],
     f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/README.md",
     f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/current.md",
     f"{LATEST_COMPLETED_PROGRAM_ARCHIVE}/implementation-roadmap.md",
@@ -1353,12 +1365,21 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         + (runtime_archive_root / "README.md").read_text(encoding="utf-8")
         + (runtime_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
+    program3_archive_root = REPO_ROOT / PROGRAM3_ACTIVE_ARCHIVE
+    program3_archive_text = (
+        (program3_archive_root / "current.md").read_text(encoding="utf-8")
+        + (program3_archive_root / "README.md").read_text(encoding="utf-8")
+        + (program3_archive_root / "closure-summary.md").read_text(encoding="utf-8")
+    )
     for phrase in [
-        "state: active",
-        f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE15_verification-archive-closure.md",
-        f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
         PROGRAM3_ACTIVE_NAME,
+        PROGRAM3_ACTIVE_ARCHIVE,
+        "Launchable enterprise Agentic GraphRAG product baseline completed.",
+        "Production scale external deployments remain replaceable targets.",
         LATEST_COMPLETED_PROGRAM_NAME,
         LATEST_COMPLETED_PROGRAM_ARCHIVE,
         CURRENT_ACTIVE_PROGRAM_NAME,
@@ -1390,7 +1411,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         MASTER_PROGRAM_NAME,
         MASTER_PROGRAM_ARCHIVE,
     ]:
-        if phrase not in current_readme + latest_archive_text + ingestion_archive_text + production_archive_text:
+        if phrase not in current_readme + program3_archive_text + latest_archive_text + ingestion_archive_text + production_archive_text:
             errors.append(f".agent/programs active surface missing phrase: {phrase}")
     phase03_path = REPO_ROOT / "docs/history/programs/zuno-workflow-doc-system-v1/PHASE03_skill-template-program-system.md"
     if not phase03_path.exists():
@@ -1405,23 +1426,18 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_names = sorted(path.name for path in programs_root.glob("PHASE*.md"))
-    if active_phase_names != sorted(PROGRAM3_ACTIVE_PHASE_FILES):
-        errors.append(".agent/programs active Program 3 phase files drifted: " + ", ".join(active_phase_names))
+    if active_phase_names:
+        errors.append(".agent/programs must not contain PHASE files in no-active state: " + ", ".join(active_phase_names))
     for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
-        phase_path = programs_root / phase_name
+        phase_path = program3_archive_root / phase_name
         if not phase_path.exists():
+            errors.append(f"Program 3 archive missing phase: {phase_name}")
             continue
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {PROGRAM3_ACTIVE_NAME}" not in phase_content:
-            errors.append(f"Program 3 active phase missing program id: {phase_name}")
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_") or phase_name.startswith("PHASE12_") or phase_name.startswith("PHASE13_") or phase_name.startswith("PHASE14_"):
-            expected_status = "status: completed"
-        elif phase_name.startswith("PHASE15_"):
-            expected_status = "status: active"
-        else:
-            expected_status = "status: pending"
-        if expected_status not in phase_content:
-            errors.append(f"Program 3 active phase missing {expected_status}: {phase_name}")
+            errors.append(f"Program 3 archive phase missing program id: {phase_name}")
+        if "status: completed" not in phase_content:
+            errors.append(f"Program 3 archive phase missing status: completed: {phase_name}")
         for required in [
             "## 目标",
             "## 范围",
@@ -1436,7 +1452,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             "## 停止条件",
         ]:
             if required not in phase_content:
-                errors.append(f"Program 3 active phase missing section {required}: {phase_name}")
+                errors.append(f"Program 3 archive phase missing section {required}: {phase_name}")
     if (programs_root / "thread-prompts").exists():
         errors.append(".agent/programs/thread-prompts must stay archived until Program 4 starts")
     for phase_name in LATEST_COMPLETED_PROGRAM_PHASE_FILES:

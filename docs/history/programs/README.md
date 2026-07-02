@@ -66,6 +66,12 @@ and evidence, not the active Agent execution path.
   lifecycle, native parser fixtures, adapter boundaries, index handoff
   provenance, Program 2 thread prompts, workspace ingest -> ParseGateway
   runtime closure, archive, and no-active state.
+- `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`: completed
+  launchable enterprise Agentic GraphRAG product baseline program. It closed
+  PHASE01-PHASE15 across shared contracts, async ingestion, retrieval /
+  GraphRAG, Memory, Capability / Skill / Tool / MCP, Security, Model Gateway,
+  Planning & Control Runtime, Product API / Frontend, E2E, Eval / Trace /
+  Cost, architecture docs, full verification, archive, and no-active state.
 
 ## Rule
 

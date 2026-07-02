@@ -1,18 +1,19 @@
 # Mega Program Closure Checklist
 
-state: no-active
+state: completed
+program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 active_program: none
 current_phase: none
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
-## 最近完成结论
+## 收口目标
 
 ```text
 Launchable enterprise Agentic GraphRAG product baseline completed.
 Production scale external deployments remain replaceable targets.
 ```
 
-## 完成状态
+## Phase Gate 清单
 
 - [x] PHASE01 完成 truth source、program merge、owner map、workstream map 和 PR / commit plan。
 - [x] PHASE02 完成 shared contract freeze。
@@ -30,23 +31,23 @@ Production scale external deployments remain replaceable targets.
 - [x] PHASE14 完成 Docs / Architecture Expansion。
 - [x] PHASE15 完成 full verification、archive、no-active 和 local commit。
 
-## 归档位置
+## 关键验收
 
-- `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`
+- [x] `/workspace/file -> source object -> object store/local store` 可跑。
+- [x] `/workspace/ingest -> parse job -> Document IR -> index job -> chunks` 可跑。
+- [x] `QueueBackend + local async worker` 可跑，RabbitMQ / Redis / Postgres / MinIO 有 adapter boundary 和 probe。
+- [x] `ParserWorker / IndexWorker` 本地可执行，blocked OCR / VLM 不 fake index。
+- [x] Knowledge retrieval 支持标准检索 / 深度检索 profile。
+- [x] Agentic Retrieval Planner / Strategy Selector 能按 profile、证据、预算选择检索计划、replan boundary 和 capability plan。
+- [x] Capability Layer 有 Skill / Knowledge / Tool / MCP / Artifact capability registry contract。
+- [x] Memory & Context Engine 有多重记忆和 ContextPack contract，并有 runtime / focused tests。
+- [x] Planning & Control Runtime 有 StrategySelector、PlanStep、PlannerOutput、ReflectionVerdict、ReplanDecision、ReflexionLesson candidate contract 和本地 AgentControlRuntime 闭环。
+- [x] Security gates 覆盖 input / retrieval / tool / output。
+- [x] Eval / Trace / Cost 能记录 latency、tokens / cost estimate、retrieval rounds、citation coverage、unsupported claim、plan / replan / reflection events，并生成统一 regression summary。
+- [x] E2E scenario 能跑：上传文档 -> ingest -> 标准/深度检索 -> Agent plan -> cited artifact -> trace/eval/feedback -> restart rehydrate。
+- [x] Docs / Archive 准确说明 Current / Target / Production Scale，且不把外部生产服务写成 Current。
 
-归档包含：
-
-- `README.md`
-- `current.md`
-- `implementation-roadmap.md`
-- `closure-checklist.md`
-- `closure-summary.md`
-- `PHASE01` 到 `PHASE15` 文件
-- `queued-programs/` merged input 文件
-
-## 最终验证命令
-
-PHASE15 关闭前已运行：
+## 验证命令
 
 ```powershell
 git diff --check
@@ -66,8 +67,10 @@ pytest -q tests/api -p no:cacheprovider
 pytest -q tests/evals -p no:cacheprovider
 ```
 
-## 下一轮检查
+## Remaining Production Scale Target
 
-- 新 program 前必须确认 `.agent/programs/` 仍为 no-active。
-- 新 program 不得复用 archived phase 文件作为 active front path。
-- 新 program 必须先定义 Current / Target / Production Scale 边界和最小有效验证。
+- PostgreSQL / RabbitMQ / Redis / MinIO / S3。
+- External OCR / VLM / external parser workers。
+- External vector / graph index。
+- External LangSmith / OTel sink、Prometheus dashboard、online eval、persistent trace store、CI release gate operations。
+- Production multi-tenant deployment、SSO / RBAC / DLP operations、cross-process worker lease 和 distributed exactly-once tool execution。

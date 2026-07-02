@@ -62,6 +62,10 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
+]
+PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
+PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
+PROGRAM3_ACTIVE_PHASE_FILES = [
     "PHASE01_truth-source-and-merge-plan.md",
     "PHASE02_shared-contract-freeze.md",
     "PHASE03_enterprise-ingestion-async-infrastructure.md",
@@ -78,8 +82,6 @@ ACTIVE_PROGRAM_FILES = [
     "PHASE14_docs-architecture-expansion.md",
     "PHASE15_verification-archive-closure.md",
 ]
-PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
-PROGRAM3_ACTIVE_PHASE_FILES = ACTIVE_PROGRAM_FILES[4:]
 LATEST_COMPLETED_PROGRAM_NAME = "zuno-enterprise-document-ingestion-platform-v2"
 LATEST_COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{LATEST_COMPLETED_PROGRAM_NAME}"
 LATEST_COMPLETED_PROGRAM_PHASE_FILES = [
@@ -106,6 +108,8 @@ CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
 ]
 QUEUED_PROGRAM_FILES = [
     "README.md",
+]
+PROGRAM3_MERGED_QUEUED_FILES = [
     "PROGRAM04_runtime-subsystems-parallel.md",
     "PROGRAM05_agent-planning-integration.md",
     "PROGRAM06_enterprise-knowledge-eval-benchmark.md",
@@ -273,12 +277,21 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (runtime_archive / "README.md").read_text(encoding="utf-8")
         + (runtime_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
+    program3_archive = REPO_ROOT / PROGRAM3_ACTIVE_ARCHIVE
+    program3_archive_text = (
+        (program3_archive / "current.md").read_text(encoding="utf-8")
+        + (program3_archive / "README.md").read_text(encoding="utf-8")
+        + (program3_archive / "closure-summary.md").read_text(encoding="utf-8")
+    )
     for phrase in [
-        "state: active",
-        f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE15_verification-archive-closure.md",
-        f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
         PROGRAM3_ACTIVE_NAME,
+        PROGRAM3_ACTIVE_ARCHIVE,
+        "Launchable enterprise Agentic GraphRAG product baseline completed.",
+        "Production scale external deployments remain replaceable targets.",
         LATEST_COMPLETED_PROGRAM_NAME,
         LATEST_COMPLETED_PROGRAM_ARCHIVE,
         CURRENT_ACTIVE_PROGRAM_NAME,
@@ -316,22 +329,17 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
             + roadmap
             + closure
             + current_reference
+            + program3_archive_text
             + latest_archive_text
             + ingestion_archive_text
             + production_archive_text
             + archive_text
         )
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(PROGRAM3_ACTIVE_PHASE_FILES)
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == []
     for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
-        phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
+        phase_text = (program3_archive / phase_name).read_text(encoding="utf-8")
         assert f"program: {PROGRAM3_ACTIVE_NAME}" in phase_text
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_") or phase_name.startswith("PHASE12_") or phase_name.startswith("PHASE13_") or phase_name.startswith("PHASE14_"):
-            expected_status = "status: completed"
-        elif phase_name.startswith("PHASE15_"):
-            expected_status = "status: active"
-        else:
-            expected_status = "status: pending"
-        assert expected_status in phase_text
+        assert "status: completed" in phase_text
         for section in [
             "## 目标",
             "## 范围",
@@ -346,6 +354,10 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
             "## 停止条件",
         ]:
             assert section in phase_text
+    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
+        assert (program3_archive / archive_file).exists()
+    for queued_file in ["README.md", *PROGRAM3_MERGED_QUEUED_FILES]:
+        assert (program3_archive / "queued-programs" / queued_file).exists()
     assert not (REPO_ROOT / ".agent/programs/thread-prompts").exists()
     for phase in LATEST_COMPLETED_PROGRAM_PHASE_FILES:
         phase_path = latest_archive / phase

@@ -40,21 +40,6 @@ Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\PHASE01_truth-source-and-merge-plan.md"
-Require-Path ".agent\programs\PHASE02_shared-contract-freeze.md"
-Require-Path ".agent\programs\PHASE03_enterprise-ingestion-async-infrastructure.md"
-Require-Path ".agent\programs\PHASE04_knowledge-retrieval-and-graphrag-profile.md"
-Require-Path ".agent\programs\PHASE05_memory-context-engine.md"
-Require-Path ".agent\programs\PHASE06_capability-skill-tool-mcp-layer.md"
-Require-Path ".agent\programs\PHASE07_security-governance-envelope.md"
-Require-Path ".agent\programs\PHASE08_model-gateway-cost-latency.md"
-Require-Path ".agent\programs\PHASE09_planning-contract-and-strategy-selector.md"
-Require-Path ".agent\programs\PHASE10_react-reflection-replan-reflexion-runtime.md"
-Require-Path ".agent\programs\PHASE11_workspace-product-api-frontend-sync.md"
-Require-Path ".agent\programs\PHASE12_end-to-end-product-runtime.md"
-Require-Path ".agent\programs\PHASE13_eval-trace-cost-benchmark.md"
-Require-Path ".agent\programs\PHASE14_docs-architecture-expansion.md"
-Require-Path ".agent\programs\PHASE15_verification-archive-closure.md"
 Require-NoPath ".agent\programs\PHASE01_truth-source-and-gap-audit.md"
 Require-NoPath ".agent\programs\PHASE02_durable-storage-contract.md"
 Require-NoPath ".agent\programs\PHASE01_program-truth-source-and-parser-current-audit.md"
@@ -67,9 +52,34 @@ Require-NoPath ".agent\programs\PHASE07_program2-thread-prompts-and-branch-plan.
 Require-NoPath ".agent\programs\PHASE08_verification-doc-sync-and-closure.md"
 Require-NoPath ".agent\programs\thread-prompts"
 Require-Path ".agent\programs\queued-programs\README.md"
-Require-Path ".agent\programs\queued-programs\PROGRAM04_runtime-subsystems-parallel.md"
-Require-Path ".agent\programs\queued-programs\PROGRAM05_agent-planning-integration.md"
-Require-Path ".agent\programs\queued-programs\PROGRAM06_enterprise-knowledge-eval-benchmark.md"
+$activePhaseFiles = Get-ChildItem -LiteralPath ".agent\programs" -Filter "PHASE*.md" -File -ErrorAction SilentlyContinue
+if ($activePhaseFiles) {
+    $failures.Add(".agent/programs must not keep active PHASE files after Program 3 closure")
+}
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\README.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\current.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\implementation-roadmap.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\closure-checklist.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\closure-summary.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE01_truth-source-and-merge-plan.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE02_shared-contract-freeze.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE03_enterprise-ingestion-async-infrastructure.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE04_knowledge-retrieval-and-graphrag-profile.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE05_memory-context-engine.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE06_capability-skill-tool-mcp-layer.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE07_security-governance-envelope.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE08_model-gateway-cost-latency.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE09_planning-contract-and-strategy-selector.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE10_react-reflection-replan-reflexion-runtime.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE11_workspace-product-api-frontend-sync.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE12_end-to-end-product-runtime.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE13_eval-trace-cost-benchmark.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE14_docs-architecture-expansion.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\PHASE15_verification-archive-closure.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\queued-programs\README.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\queued-programs\PROGRAM04_runtime-subsystems-parallel.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\queued-programs\PROGRAM05_agent-planning-integration.md"
+Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\queued-programs\PROGRAM06_enterprise-knowledge-eval-benchmark.md"
 Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\README.md"
 Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\current.md"
 Require-Path "docs\history\programs\zuno-enterprise-document-ingestion-platform-v2\implementation-roadmap.md"
@@ -293,14 +303,14 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "zuno-enterprise-document-ingestion-platform-v2" -or $currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "current_phase: PHASE15_verification-archive-closure.md" -or $currentProgram -notmatch "latest_completed_program: zuno-enterprise-document-ingestion-platform-v2") {
-    $failures.Add("current-program.md must declare active Program 3 Mega state and latest completed Program 2")
+if ($currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/") {
+    $failures.Add("current-program.md must declare no-active state and latest completed Program 3 Mega archive")
 }
 if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "zuno-enterprise-ingestion-async-infrastructure-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
     $failures.Add("current-program.md missing Program 1-3 mega suite map")
 }
 if ($currentProgram -notmatch "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/" -or $currentProgram -notmatch "Product V1 local durable ingestion baseline") {
-    $failures.Add("current-program.md missing latest Program 2 archive and durable baseline summary")
+    $failures.Add("current-program.md missing Program 2 archive and durable baseline summary")
 }
 if ($currentProgram -notmatch "docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/") {
     $failures.Add("current-program.md must keep latest production completion archive")
