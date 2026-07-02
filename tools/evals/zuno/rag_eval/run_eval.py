@@ -181,6 +181,40 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
             "needs_query_rewrite": False,
         },
     },
+    "agentic_graphrag": {
+        "retrieval_mode": "rag_graph_deep",
+        "retrieval_options": {
+            "top_k": 5,
+            "rerank_enabled": False,
+            "rerank_top_k": 5,
+            "score_threshold": None,
+            "graph_hop_limit": 3,
+            "max_paths_per_entity": 12,
+            "needs_query_rewrite": True,
+            "product_mode": "enhanced",
+            "requested_profile": "deep",
+            "route_policy": "force_deep",
+            "fallback_policy": {
+                "allow_retry": True,
+                "route_broadening": True,
+                "query_rewrite_retry": True,
+            },
+            "trace_policy": {
+                "enabled": True,
+                "include_rounds": True,
+                "include_retriever_runs": True,
+            },
+            "agentic_floor_fusion": True,
+            "fusion_top_k": 5,
+            "floor_retrieval_options": {
+                "top_k": 5,
+                "rerank_enabled": False,
+                "rerank_top_k": 5,
+                "score_threshold": None,
+                "needs_query_rewrite": False,
+            },
+        },
+    },
     "rag_graph_rerank_recall_first_3hop": {
         "retrieval_mode": "rag_graph",
         "retrieval_options": {
@@ -197,7 +231,7 @@ PROFILE_SETTINGS: dict[str, dict[str, Any]] = {
 PROFILE_SETS: dict[str, list[str]] = {
     "local_compare": ["baseline_rag", "rag_rerank", "rag_graph_chunk_backed"],
     "graph_compare": ["baseline_rag", "rag_graph_chunk_backed", "rag_graph_chunk_backed_3hop"],
-    "deep_graphrag_compare": ["baseline_rag", "local_graphrag", "deep_graphrag"],
+    "deep_graphrag_compare": ["baseline_rag", "local_graphrag", "deep_graphrag", "agentic_graphrag"],
 }
 
 
@@ -287,6 +321,72 @@ def resolve_profiles(*, profiles: str | None = None, profile_set: str | None = N
             raise ValueError(f"unknown profile_set: {profile_set}")
         return list(resolved)
     return [profile.strip() for profile in str(profiles or "").split(",") if profile.strip()]
+
+
+def _runtime_retrieval_options(options: dict[str, Any]) -> dict[str, Any]:
+    runtime_options = dict(options)
+    for key in ("agentic_floor_fusion", "fusion_top_k", "floor_retrieval_options"):
+        runtime_options.pop(key, None)
+    return runtime_options
+
+
+def _context_identity(context: dict[str, Any]) -> tuple[str, str, str]:
+    file_name = _canonical_file_name(str(context.get("file_name") or context.get("source") or ""))
+    chunk_id = str(context.get("chunk_id") or "").strip()
+    content = str(context.get("content") or context.get("text") or "").strip()[:120]
+    return file_name, chunk_id, content
+
+
+def _context_document_key(context: dict[str, Any]) -> str:
+    return _canonical_file_name(str(context.get("file_name") or context.get("source") or "")).strip().lower()
+
+
+def _fuse_agentic_floor_contexts(
+    floor_contexts: list[dict[str, Any]],
+    enhanced_contexts: list[dict[str, Any]],
+    *,
+    limit: int = 5,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    seen_contexts: set[tuple[str, str, str]] = set()
+    seen_documents: set[str] = set()
+
+    def add(context: dict[str, Any], *, require_new_document: bool) -> bool:
+        identity = _context_identity(context)
+        if identity in seen_contexts:
+            return False
+        document_key = _context_document_key(context)
+        if require_new_document and document_key and document_key in seen_documents:
+            return False
+        selected.append(context)
+        seen_contexts.add(identity)
+        if document_key:
+            seen_documents.add(document_key)
+        return len(selected) >= limit
+
+    for source_contexts in (floor_contexts, enhanced_contexts):
+        for context in source_contexts:
+            if add(context, require_new_document=True):
+                return selected, {
+                    "floor_context_count": len(floor_contexts),
+                    "enhanced_context_count": len(enhanced_contexts),
+                    "fused_context_count": len(selected),
+                }
+
+    for source_contexts in (floor_contexts, enhanced_contexts):
+        for context in source_contexts:
+            if add(context, require_new_document=False):
+                return selected, {
+                    "floor_context_count": len(floor_contexts),
+                    "enhanced_context_count": len(enhanced_contexts),
+                    "fused_context_count": len(selected),
+                }
+
+    return selected, {
+        "floor_context_count": len(floor_contexts),
+        "enhanced_context_count": len(enhanced_contexts),
+        "fused_context_count": len(selected),
+    }
 
 
 def _tokenize(text: str) -> set[str]:
@@ -1245,6 +1345,7 @@ async def run_eval(
 
         retrieval_mode = profile_settings["retrieval_mode"]
         retrieval_options = dict(profile_settings.get("retrieval_options") or {})
+        runtime_retrieval_options = _runtime_retrieval_options(retrieval_options)
         for sample in samples:
             metadata = {
                 "eval_run_id": output_dir.name,
@@ -1255,13 +1356,17 @@ async def run_eval(
                 "knowledge_ids": knowledge_ids,
             }
 
-            async def retrieve_one() -> dict[str, Any]:
+            async def retrieve_one(
+                *,
+                mode: str = retrieval_mode,
+                options: dict[str, Any] = runtime_retrieval_options,
+            ) -> dict[str, Any]:
                 return await RagHandler.retrieve_ranked_documents_with_metadata(
                     sample["query"],
                     knowledge_ids,
                     knowledge_ids,
-                    retrieval_mode=retrieval_mode,
-                    retrieval_options=retrieval_options,
+                    retrieval_mode=mode,
+                    retrieval_options=options,
                 )
 
             retrieval_started_at = time.perf_counter()
@@ -1272,12 +1377,34 @@ async def run_eval(
                 func=retrieve_one,
             )
             retrieval_latency_ms = round((time.perf_counter() - retrieval_started_at) * 1000, 2)
-            contexts = _extract_contexts(retrieval_result, sample["query"])
             retrieval_metadata = retrieval_result.get("metadata") or {}
             if retrieval_metadata.get("latency_ms") is None:
                 retrieval_metadata["latency_ms"] = retrieval_latency_ms
             if "cost_usd" not in retrieval_metadata:
                 retrieval_metadata["cost_usd"] = None
+            contexts = _extract_contexts(retrieval_result, sample["query"])
+            if retrieval_options.get("agentic_floor_fusion"):
+                floor_options = dict(retrieval_options.get("floor_retrieval_options") or {})
+                floor_retrieval_started_at = time.perf_counter()
+                floor_result = await _maybe_trace(
+                    enabled=trace_langsmith,
+                    run_name=f"zuno-rag-eval:{profile}:{sample['id']}:standard-floor",
+                    metadata={**metadata, "agentic_floor_fusion_stage": "standard_floor"},
+                    func=lambda: retrieve_one(mode="rag", options=_runtime_retrieval_options(floor_options)),
+                )
+                floor_latency_ms = round((time.perf_counter() - floor_retrieval_started_at) * 1000, 2)
+                floor_contexts = _extract_contexts(floor_result, sample["query"])
+                contexts, fusion_trace = _fuse_agentic_floor_contexts(
+                    floor_contexts,
+                    contexts,
+                    limit=int(retrieval_options.get("fusion_top_k") or 5),
+                )
+                retrieval_metadata["agentic_floor_fusion"] = {
+                    **fusion_trace,
+                    "floor_latency_ms": floor_latency_ms,
+                    "floor_final_mode": floor_result.get("final_mode"),
+                    "enhanced_final_mode": retrieval_result.get("final_mode"),
+                }
             effective_domain_pack_id = str(
                 ((retrieval_metadata.get("retrieval_options") or {}).get("domain_pack_id"))
                 or retrieval_options.get("domain_pack_id")
@@ -1297,6 +1424,7 @@ async def run_eval(
                         "final_mode": retrieval_result.get("final_mode"),
                         "fallback_reason": retrieval_result.get("fallback_reason"),
                         "round_count": retrieval_result.get("round_count"),
+                        "agentic_floor_fusion": bool(retrieval_options.get("agentic_floor_fusion")),
                     },
                 }
             )

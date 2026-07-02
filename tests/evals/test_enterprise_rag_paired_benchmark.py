@@ -324,6 +324,14 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                 "answer_correctness": 0.7,
                 "citation_accuracy": 0.8,
             },
+            "agentic_graphrag": {
+                "retrieval_recall_at_k": 1.0,
+                "context_precision_at_k": 0.45,
+                "mrr_at_k": 0.9,
+                "ndcg_at_k": 0.95,
+                "answer_correctness": 0.85,
+                "citation_accuracy": 0.9,
+            },
         }
         for profile, aggregate in profiles.items():
             profile_dir = run_root / profile
@@ -364,12 +372,20 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                 {
                     "id": "qst_conflict",
                     "contexts": [{"kind": "graph_path", "content": "rollout -> console-2026.04"}]
-                    if profile == "deep_graphrag"
+                    if profile in {"deep_graphrag", "agentic_graphrag"}
                     else [],
-                    "metadata": {"latency_ms": 12 if profile == "baseline_rag" else 24, "cost_usd": 0.002},
+                    "metadata": {
+                        "latency_ms": 12
+                        if profile == "baseline_rag"
+                        else (34 if profile == "agentic_graphrag" else 24),
+                        "cost_usd": 0.003 if profile == "agentic_graphrag" else 0.002,
+                    },
                     "raw_result": {"final_mode": "rag_graph_deep" if "graph" in profile else "rag"},
                 },
             ]
+            if profile == "agentic_graphrag":
+                retrieval_rows[1]["raw_result"]["round_count"] = 2
+                retrieval_rows[1]["raw_result"]["replan_success"] = True
             (profile_dir / "retrieval_results.jsonl").write_text(
                 "\n".join(json.dumps(row, ensure_ascii=False) for row in retrieval_rows) + "\n",
                 encoding="utf-8",
@@ -407,16 +423,23 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert metrics["case_set"]["common_case_ids"] == ["qst_basic", "qst_conflict"]
     assert metrics["profiles"]["standard_rag"]["underlying_profile"] == "baseline_rag"
     assert metrics["profiles"]["deep_graphrag"]["underlying_profile"] == "deep_graphrag"
-    assert metrics["profiles"]["agentic_graphrag"]["measured"] is False
-    assert metrics["profiles"]["agentic_graphrag"]["blocked_reason"] == "agentic_runtime_runner_not_wired"
+    assert metrics["profiles"]["agentic_graphrag"]["measured"] is True
+    assert metrics["profiles"]["agentic_graphrag"]["underlying_profile"] == "agentic_graphrag"
     assert metrics["deltas"]["deep_vs_standard"]["retrieval_recall_at_k"] == 0.5
     assert metrics["deltas"]["deep_vs_standard"]["answer_correctness"] == 0.3
+    assert metrics["deltas"]["agentic_vs_standard"]["answer_correctness"] == 0.45
+    assert metrics["deltas"]["agentic_vs_deep"]["mrr_at_k"] == 0.1
     assert metrics["agentic_metrics"]["graph_usage_gain"] == 0.5
-    assert metrics["agentic_metrics"]["replan_success_rate"] is None
+    assert metrics["agentic_metrics"]["replan_success_rate"] == 1.0
     assert metrics["cost_latency"]["deep_graphrag"]["latency_p95_ms"] == 24
+    assert metrics["cost_latency"]["agentic_graphrag"]["latency_p95_ms"] == 34
 
     failure_text = (output_root / "failure_cases.md").read_text(encoding="utf-8")
     assert "retrieval_miss" in failure_text
     assert "unsupported_claim" in failure_text
     assert "unavailable_due_to_missing_trace_fields" in failure_text
     assert "failure_tag_limitations" in metrics
+    report_text = (output_root / "report.md").read_text(encoding="utf-8")
+    assert "## Paired Deltas" in report_text
+    assert "agentic_vs_standard" in report_text
+    assert "## Agentic Metrics" in report_text

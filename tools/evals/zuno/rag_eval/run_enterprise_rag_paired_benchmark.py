@@ -28,6 +28,7 @@ PROFILE_ALIASES = {
     "standard_rag": "baseline_rag",
     "local_graphrag": "local_graphrag",
     "deep_graphrag": "deep_graphrag",
+    "agentic_graphrag": "agentic_graphrag",
 }
 METRIC_KEYS = [
     "retrieval_recall_at_k",
@@ -245,13 +246,63 @@ def _build_profile_summary(*, run_root: Path, run_report: dict[str, Any]) -> tup
             "aggregate": aggregate,
             **latency,
         }
-    profiles["agentic_graphrag"] = {
-        "measured": False,
-        "metrics_source": "not_measured",
-        "blocked_reason": "agentic_runtime_runner_not_wired",
-        "aggregate": {},
-    }
+        if public_name == "agentic_graphrag" and not aggregate:
+            profiles[public_name]["metrics_source"] = "not_measured"
+            profiles[public_name]["blocked_reason"] = "agentic_runtime_runner_not_wired"
     return profiles, cost_latency, per_samples
+
+
+def _replan_success_rate(
+    *,
+    run_root: Path,
+    agentic_underlying_profile: str,
+    standard_rows: list[dict[str, Any]],
+    agentic_rows: list[dict[str, Any]],
+) -> float | None:
+    retrieval_rows = _read_jsonl(run_root / agentic_underlying_profile / "retrieval_results.jsonl")
+    if not retrieval_rows:
+        return None
+
+    standard_by_id = {str(row.get("id")): row for row in standard_rows}
+    agentic_by_id = {str(row.get("id")): row for row in agentic_rows}
+    attempts = 0
+    successes = 0
+    for retrieval_row in retrieval_rows:
+        raw = dict(retrieval_row.get("raw_result") or {})
+        try:
+            round_count = int(raw.get("round_count") or 1)
+        except (TypeError, ValueError):
+            round_count = 1
+        attempted = round_count > 1 or raw.get("replan_success") is not None or raw.get("fallback_reason")
+        if not attempted:
+            continue
+        attempts += 1
+        case_id = str(retrieval_row.get("id") or "")
+        standard_recall = float((standard_by_id.get(case_id) or {}).get("retrieval_recall") or 0.0)
+        agentic_recall = float((agentic_by_id.get(case_id) or {}).get("retrieval_recall") or 0.0)
+        if raw.get("replan_success") is True or agentic_recall > standard_recall:
+            successes += 1
+    if attempts == 0:
+        return None
+    return round(successes / attempts, 6)
+
+
+def _cost_quality_ratio(
+    *,
+    quality_delta: float | None,
+    standard_latency: dict[str, Any],
+    agentic_latency: dict[str, Any],
+) -> float | None:
+    if quality_delta is None:
+        return None
+    standard_cost = standard_latency.get("estimated_cost")
+    agentic_cost = agentic_latency.get("estimated_cost")
+    if standard_cost is None or agentic_cost is None:
+        return None
+    cost_delta = float(agentic_cost) - float(standard_cost)
+    if cost_delta <= 0:
+        return None
+    return round(float(quality_delta) / cost_delta, 6)
 
 
 def _delta(left: dict[str, Any], right: dict[str, Any]) -> dict[str, float | None]:
@@ -337,6 +388,38 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 latency=_fmt(payload.get("latency_p95_ms")),
                 cost=_fmt(payload.get("estimated_cost")),
             )
+        )
+    if metrics.get("deltas"):
+        lines.extend(
+            [
+                "",
+                "## Paired Deltas",
+                "",
+                "| Delta | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy |",
+                "|---|---:|---:|---:|---:|",
+            ]
+        )
+        for name, delta in metrics.get("deltas", {}).items():
+            lines.append(
+                "| {name} | {recall} | {mrr} | {correctness} | {citation} |".format(
+                    name=name,
+                    recall=_fmt((delta or {}).get("retrieval_recall_at_k")),
+                    mrr=_fmt((delta or {}).get("mrr_at_k")),
+                    correctness=_fmt((delta or {}).get("answer_correctness")),
+                    citation=_fmt((delta or {}).get("citation_accuracy")),
+                )
+            )
+    if metrics.get("agentic_metrics"):
+        agentic_metrics = metrics["agentic_metrics"]
+        lines.extend(
+            [
+                "",
+                "## Agentic Metrics",
+                "",
+                f"- graph_usage_gain: `{_fmt(agentic_metrics.get('graph_usage_gain'))}`",
+                f"- replan_success_rate: `{_fmt(agentic_metrics.get('replan_success_rate'))}`",
+                f"- cost_quality_ratio: `{_fmt(agentic_metrics.get('cost_quality_ratio'))}`",
+            ]
         )
     if metrics["measurement_status"] == "blocked_not_measured":
         lines.extend(
@@ -524,8 +607,27 @@ async def run_enterprise_rag_paired_benchmark(
     common_case_ids = [str(row.get("id")) for row in cases]
     standard = profiles["standard_rag"].get("aggregate") or {}
     deep = profiles["deep_graphrag"].get("aggregate") or {}
+    agentic = profiles["agentic_graphrag"].get("aggregate") or {}
+    deep_vs_standard = _delta(deep, standard)
+    agentic_vs_standard = _delta(agentic, standard) if agentic else {}
+    agentic_vs_deep = _delta(agentic, deep) if agentic else {}
     failures = _build_failure_cases(per_samples)
     failure_tag_limitations = _failure_tag_limitations()
+    replan_success_rate = (
+        _replan_success_rate(
+            run_root=stackless_root,
+            agentic_underlying_profile=str(profiles["agentic_graphrag"].get("underlying_profile") or "agentic_graphrag"),
+            standard_rows=per_samples.get("standard_rag") or [],
+            agentic_rows=per_samples.get("agentic_graphrag") or [],
+        )
+        if agentic
+        else None
+    )
+    graph_usage_gain = (
+        agentic_vs_standard.get("retrieval_recall_at_k")
+        if agentic_vs_standard
+        else deep_vs_standard.get("retrieval_recall_at_k")
+    )
     metrics = {
         "status": "measured",
         "measurement_status": "fixed_benchmark",
@@ -539,12 +641,18 @@ async def run_enterprise_rag_paired_benchmark(
         "corpus": manifest,
         "profiles": profiles,
         "deltas": {
-            "deep_vs_standard": _delta(deep, standard),
+            "deep_vs_standard": deep_vs_standard,
+            "agentic_vs_standard": agentic_vs_standard,
+            "agentic_vs_deep": agentic_vs_deep,
         },
         "agentic_metrics": {
-            "graph_usage_gain": _delta(deep, standard).get("retrieval_recall_at_k"),
-            "replan_success_rate": None,
-            "cost_quality_ratio": None,
+            "graph_usage_gain": graph_usage_gain,
+            "replan_success_rate": replan_success_rate,
+            "cost_quality_ratio": _cost_quality_ratio(
+                quality_delta=agentic_vs_standard.get("answer_correctness") if agentic_vs_standard else None,
+                standard_latency=cost_latency.get("standard_rag") or {},
+                agentic_latency=cost_latency.get("agentic_graphrag") or {},
+            ),
         },
         "cost_latency": cost_latency,
         "failure_count": len(failures),

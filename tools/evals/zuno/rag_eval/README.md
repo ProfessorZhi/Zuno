@@ -93,7 +93,7 @@ python tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py `
   --allow-blocked
 ```
 
-The runner writes `selected_questions.jsonl`, `cases.jsonl`, `corpus_manifest.json`, `metrics.json`, `report.md`, and `failure_cases.md`. It uses the same case set for the measured profiles. Current measured profiles are `standard_rag` (underlying `baseline_rag`) and `deep_graphrag` (underlying `deep_graphrag`). `agentic_graphrag` is listed as `measured=false` with `blocked_reason=agentic_runtime_runner_not_wired` until a real Agent runtime runner is wired in; do not treat deep GraphRAG metrics as Agentic metrics.
+The runner writes `selected_questions.jsonl`, `cases.jsonl`, `corpus_manifest.json`, `metrics.json`, `report.md`, and `failure_cases.md`. It uses the same case set for the measured profiles. Current measured profiles are `standard_rag` (underlying `baseline_rag`), `local_graphrag`, `deep_graphrag`, and `agentic_graphrag`. The agentic profile is a fixed benchmark profile that uses `rag_graph_deep`, enhanced product mode, forced deep routing, query rewrite, retry/fallback trace, and standard-floor fusion. It is only reported as measured when the underlying profile directory produces metrics. Do not treat a missing agentic profile as a measured zero.
 
 When `--inspect-documents-schema` is set, the runner also writes `schema_probe.json` with parquet columns, row count, resolved field aliases, and a truncated first-row preview. The EnterpriseRAG document reader accepts common aliases for the required `doc_id` and `content` fields, including `document_id` / `dsid` / `id` / `source_id` and `text` / `body` / `page_content` / `document` / `raw_text`. Optional aliases include `title` / `name` / `subject` / `doc_title` and `source_type` / `source` / `connector` / `app` / `datasource`.
 
@@ -108,6 +108,7 @@ Supported public profiles:
 - `baseline_rag`
 - `local_graphrag`
 - `deep_graphrag`
+- `agentic_graphrag`
 
 Supported public compare set:
 
@@ -118,6 +119,9 @@ The intent of this surface is narrow:
 1. give one stable baseline for normal RAG
 2. give one stable local-graph profile
 3. give one stable deep-routed GraphRAG profile
+4. give one stable agentic deep profile with forced enhanced routing, retry trace, and standard-floor fusion
+
+EnterpriseRAG retrieval metrics use document-level gold (`doc_id` / `file_contains`) for Recall@K and ranking metrics, while citation and source-span metrics remain stricter evidence checks. This separates "did retrieval find the right document" from "did the answer cite the exact supporting evidence."
 
 It is **not** a full production evaluation framework.
 It is the V1 public compare surface for the current architecture round.

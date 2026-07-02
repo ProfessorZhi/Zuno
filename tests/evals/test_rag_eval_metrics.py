@@ -129,6 +129,76 @@ def test_rag_eval_metrics_falls_back_to_text_match_when_source_metadata_missing(
         assert metrics["aggregate"]["context_precision_at_k"] == 1.0
 
 
+def test_rag_eval_metrics_counts_enterprise_doc_id_hits_for_retrieval_only():
+    from zuno.evals.rag_eval.metrics import compute_metrics
+
+    local_tmp_root = Path.cwd() / ".test-tmp"
+    local_tmp_root.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=local_tmp_root) as tmp_name:
+        tmp_path = Path(tmp_name)
+        dataset = tmp_path / "dataset.jsonl"
+        retrieval = tmp_path / "retrieval.jsonl"
+        answers = tmp_path / "answers.jsonl"
+
+        _write_jsonl(
+            dataset,
+            [
+                {
+                    "id": "enterprise_q1",
+                    "query": "When does booking open?",
+                    "gold_evidence": [
+                        {
+                            "doc_id": "dsid_45e2",
+                            "file_contains": "dsid_45e2.md",
+                            "text_contains": "Booking opens Monday at 09:00 UTC.",
+                        }
+                    ],
+                    "required_citations": True,
+                }
+            ],
+        )
+        _write_jsonl(
+            retrieval,
+            [
+                {
+                    "id": "enterprise_q1",
+                    "contexts": [
+                        {
+                            "file_name": "dsid_45e2.md",
+                            "content": "Reservations open Mon 2026-04-06 09:00 UTC.",
+                        }
+                    ],
+                }
+            ],
+        )
+        _write_jsonl(
+            answers,
+            [
+                {
+                    "id": "enterprise_q1",
+                    "answer": "Reservations open Monday at 09:00 UTC.",
+                    "citations": [
+                        {
+                            "file_name": "dsid_45e2.md",
+                            "content": "Reservations open Mon 2026-04-06 09:00 UTC.",
+                        }
+                    ],
+                }
+            ],
+        )
+
+        metrics = compute_metrics(
+            dataset_path=dataset,
+            retrieval_results_path=retrieval,
+            answers_path=answers,
+            k=1,
+        )
+
+        assert metrics["aggregate"]["retrieval_recall_at_k"] == 1.0
+        assert metrics["aggregate"]["context_precision_at_k"] == 1.0
+        assert metrics["aggregate"]["citation_accuracy"] == 0.0
+
+
 def test_rag_eval_metrics_compute_source_span_and_unsupported_claim_rate():
     from zuno.evals.rag_eval.metrics import compute_metrics
 
@@ -292,6 +362,99 @@ def test_run_eval_writes_profile_outputs(monkeypatch):
         assert calls[0]["retrieval_options"]["rerank_enabled"] is False
         assert calls[-1]["retrieval_mode"] == "rag_graph"
         assert calls[-1]["retrieval_options"]["graph_hop_limit"] == 2
+
+
+def test_run_eval_agentic_profile_fuses_standard_floor_with_deep_contexts(monkeypatch):
+    from zuno.evals.rag_eval import run_eval as run_eval_module
+
+    calls = []
+
+    async def fake_retrieve(query, collection_names, index_names=None, **kwargs):
+        calls.append(kwargs)
+        if kwargs.get("retrieval_mode") == "rag":
+            documents = [
+                {
+                    "content": "Floor evidence from document A.",
+                    "file_name": "doc_a.md",
+                    "chunk_id": "a1",
+                    "score": 0.9,
+                },
+                {
+                    "content": "Another floor chunk from document A.",
+                    "file_name": "doc_a.md",
+                    "chunk_id": "a2",
+                    "score": 0.8,
+                },
+            ]
+        else:
+            documents = [
+                {
+                    "content": "Enhanced evidence from document B.",
+                    "file_name": "doc_b.md",
+                    "chunk_id": "b1",
+                    "score": 0.7,
+                }
+            ]
+        return {
+            "first_mode": kwargs.get("retrieval_mode", "rag"),
+            "final_mode": kwargs.get("retrieval_mode", "rag"),
+            "round_count": 2 if kwargs.get("retrieval_mode") == "rag_graph_deep" else 1,
+            "rag_result": {"documents": documents},
+            "graph_result": {"documents": [], "paths": []},
+            "metadata": {"rounds": []},
+        }
+
+    monkeypatch.setattr(
+        run_eval_module.RagHandler,
+        "retrieve_ranked_documents_with_metadata",
+        staticmethod(fake_retrieve),
+    )
+
+    local_tmp_root = Path.cwd() / ".test-tmp"
+    local_tmp_root.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=local_tmp_root) as tmp_name:
+        tmp_path = Path(tmp_name)
+        dataset = tmp_path / "dataset.jsonl"
+        _write_jsonl(
+            dataset,
+            [
+                {
+                    "id": "q_agentic",
+                    "query": "Compare document A and B.",
+                    "reference_answer": "Document A and document B are both required.",
+                    "gold_evidence": [
+                        {"file_contains": "doc_a.md", "text_contains": "Floor evidence"},
+                        {"file_contains": "doc_b.md", "text_contains": "Enhanced evidence"},
+                    ],
+                    "required_citations": True,
+                }
+            ],
+        )
+
+        report = asyncio.run(
+            run_eval_module.run_eval(
+                dataset_path=dataset,
+                knowledge_ids=["k_eval"],
+                profiles=["agentic_graphrag"],
+                output_dir=tmp_path / "run",
+                trace_langsmith=False,
+            )
+        )
+
+        retrieval_rows = [
+            json.loads(line)
+            for line in (tmp_path / "run" / "agentic_graphrag" / "retrieval_results.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line.strip()
+        ]
+        contexts = retrieval_rows[0]["contexts"]
+
+        assert [call["retrieval_mode"] for call in calls] == ["rag_graph_deep", "rag"]
+        assert contexts[0]["file_name"] == "doc_a.md"
+        assert contexts[1]["file_name"] == "doc_b.md"
+        assert retrieval_rows[0]["metadata"]["agentic_floor_fusion"]["fused_context_count"] == 3
+        assert report["profiles"]["agentic_graphrag"]["retrieval_recall_at_k"] == 1.0
 
 
 def test_run_eval_supports_llm_answer_and_judge_modes(monkeypatch):

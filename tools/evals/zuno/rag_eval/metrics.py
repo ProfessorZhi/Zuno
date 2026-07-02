@@ -42,7 +42,23 @@ def _context_source_text(context: dict[str, Any]) -> str:
     )
 
 
-def _evidence_matches_context(evidence: dict[str, Any], context: dict[str, Any]) -> bool:
+def _source_matches_context(evidence: dict[str, Any], context: dict[str, Any]) -> bool:
+    source_text = _context_source_text(context)
+    doc_id = _norm(evidence.get("doc_id"))
+    file_contains = _norm(evidence.get("file_contains"))
+    if doc_id and doc_id in source_text:
+        return True
+    return bool(file_contains and file_contains in source_text)
+
+
+def _evidence_matches_context(
+    evidence: dict[str, Any],
+    context: dict[str, Any],
+    *,
+    allow_document_match: bool = False,
+) -> bool:
+    if allow_document_match and _source_matches_context(evidence, context):
+        return True
     text = _context_text(context)
     source_text = _context_source_text(context)
     file_contains = _norm(evidence.get("file_contains"))
@@ -52,8 +68,20 @@ def _evidence_matches_context(evidence: dict[str, Any], context: dict[str, Any])
     return file_ok and text_ok
 
 
-def _is_context_relevant(context: dict[str, Any], gold_evidence: Iterable[dict[str, Any]]) -> bool:
-    return any(_evidence_matches_context(evidence, context) for evidence in gold_evidence)
+def _is_context_relevant(
+    context: dict[str, Any],
+    gold_evidence: Iterable[dict[str, Any]],
+    *,
+    allow_document_match: bool = False,
+) -> bool:
+    return any(
+        _evidence_matches_context(
+            evidence,
+            context,
+            allow_document_match=allow_document_match,
+        )
+        for evidence in gold_evidence
+    )
 
 
 def _retrieval_metrics(sample: dict[str, Any], contexts: list[dict[str, Any]], k: int) -> dict[str, float]:
@@ -71,9 +99,19 @@ def _retrieval_metrics(sample: dict[str, Any], contexts: list[dict[str, Any]], k
     matched_gold = [
         evidence
         for evidence in gold
-        if any(_evidence_matches_context(evidence, context) for context in top_contexts)
+        if any(
+            _evidence_matches_context(
+                evidence,
+                context,
+                allow_document_match=True,
+            )
+            for context in top_contexts
+        )
     ]
-    relevant_flags = [_is_context_relevant(context, gold) for context in top_contexts]
+    relevant_flags = [
+        _is_context_relevant(context, gold, allow_document_match=True)
+        for context in top_contexts
+    ]
     first_relevant_rank = next((idx + 1 for idx, flag in enumerate(relevant_flags) if flag), None)
     dcg = sum((1 / math.log2(idx + 2)) for idx, flag in enumerate(relevant_flags) if flag)
     ideal_relevant = sum(1 for flag in relevant_flags if flag)
