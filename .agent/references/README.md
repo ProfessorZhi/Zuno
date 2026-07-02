@@ -32,6 +32,7 @@ docs/history/
   architecture-docs-map.md
   documentation-governance.md
   architecture-update-policy.md
+  agentchat-knowledge-profile-alignment.md
   diagram-inventory.md
   current-target-future-rules.md
   workflow-governance.md
