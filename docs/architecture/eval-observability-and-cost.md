@@ -12,6 +12,7 @@
 - `src/backend/zuno/platform/observability/product_benchmark.py` 生成 PHASE13 regression summary。
 - `StageMetrics` 覆盖 file upload、object store、input gate、parse queue/worker、document IR、index queue/worker、context build、planning、retrieval、rerank、graph expand、tool call、reflection、replan、answer、output gate、artifact 和 feedback。
 - `EvalComparisonReport` 区分 `basic_rag`、`static_graphrag`、`agentic_graphrag` baseline labels。
+- `tools/evals/zuno/rag_eval` 已有 public enterprise dataset V1 接入面：`techqa_rag_eval` 可生成本地 Markdown corpus 和 Zuno eval JSONL；`cfqa` 可生成中文财报页码 grounding 数据集，但在年报 PDF 未准备前明确标记 `cfqa_annual_report_pdf_required`，不伪造语料或索引。
 
 对应测试包括 `tests/evals/test_model_gateway_cost_latency.py`、`tests/evals/test_observability_trace_contract.py`、`tests/evals/test_agentic_graphrag_product_baseline.py`、`tests/evals/test_agentic_graphrag_regression_summary.py` 和全量 `tests/evals`。
 
@@ -40,6 +41,7 @@ missing required stage 不能 silent pass；PHASE13 对缺失 stage 抛出明确
 PHASE15 closure 应使用这些指标回答：
 
 - deep retrieval 是否有更高 citation coverage。
+- public enterprise dataset V1 是否能给出 Recall@5、Precision@5、MRR、NDCG、Answer Correctness、Citation Coverage、Source Span Accuracy、Unsupported Claim Rate、Latency、Estimated Cost 的可追踪输入。
 - dynamic replan 是否改变 trajectory。
 - PDF / Office / OCR blocked 是否保持 no fake index。
 - binary source object 是否可追溯 sha256。

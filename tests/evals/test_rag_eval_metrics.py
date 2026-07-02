@@ -129,6 +129,81 @@ def test_rag_eval_metrics_falls_back_to_text_match_when_source_metadata_missing(
         assert metrics["aggregate"]["context_precision_at_k"] == 1.0
 
 
+def test_rag_eval_metrics_compute_source_span_and_unsupported_claim_rate():
+    from zuno.evals.rag_eval.metrics import compute_metrics
+
+    local_tmp_root = Path.cwd() / ".test-tmp"
+    local_tmp_root.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=local_tmp_root) as tmp_name:
+        tmp_path = Path(tmp_name)
+        dataset = tmp_path / "dataset.jsonl"
+        retrieval = tmp_path / "retrieval.jsonl"
+        answers = tmp_path / "answers.jsonl"
+
+        _write_jsonl(
+            dataset,
+            [
+                {
+                    "id": "cfqa_1",
+                    "query": "研发费用是多少？",
+                    "gold_evidence": [
+                        {
+                            "file_contains": "600000_2023_annual_report.pdf",
+                            "page_number": 42,
+                            "text_contains": "研发费用",
+                        }
+                    ],
+                    "required_citations": True,
+                }
+            ],
+        )
+        _write_jsonl(
+            retrieval,
+            [
+                {
+                    "id": "cfqa_1",
+                    "contexts": [
+                        {
+                            "content": "研发费用为 1.23 亿元。",
+                            "source": "600000_2023_annual_report.pdf",
+                            "page_number": 42,
+                        }
+                    ],
+                }
+            ],
+        )
+        _write_jsonl(
+            answers,
+            [
+                {
+                    "id": "cfqa_1",
+                    "answer": "研发费用为 1.23 亿元，另有一个未支持判断。",
+                    "citations": [
+                        {
+                            "source": "600000_2023_annual_report.pdf",
+                            "page_number": 42,
+                            "content": "研发费用为 1.23 亿元。",
+                        }
+                    ],
+                    "claim_count": 2,
+                    "unsupported_claims": ["另有一个未支持判断"],
+                }
+            ],
+        )
+
+        metrics = compute_metrics(
+            dataset_path=dataset,
+            retrieval_results_path=retrieval,
+            answers_path=answers,
+            k=1,
+        )
+
+        aggregate = metrics["aggregate"]
+        assert aggregate["citation_accuracy"] == 1.0
+        assert aggregate["source_span_accuracy"] == 1.0
+        assert aggregate["unsupported_claim_rate"] == 0.5
+
+
 def test_prepare_python_notes_corpus_deduplicates_file_names():
     from zuno.evals.rag_eval.prepare_python_notes_corpus import prepare_corpus
 

@@ -99,6 +99,64 @@ def _citation_accuracy(sample: dict[str, Any], answer_row: dict[str, Any] | None
     return supported / len(citations)
 
 
+def _source_span_matches(citation: dict[str, Any], evidence: dict[str, Any]) -> bool:
+    if not _evidence_matches_context(evidence, citation):
+        return False
+    expected_span = str(evidence.get("source_span") or "").strip().lower()
+    actual_span = str(citation.get("source_span") or citation.get("source_ref") or "").strip().lower()
+    if expected_span:
+        return expected_span == actual_span or expected_span in actual_span or actual_span in expected_span
+
+    expected_page = evidence.get("page_number")
+    if expected_page in (None, ""):
+        return True
+    actual_page = citation.get("page_number") or citation.get("page") or citation.get("page_index")
+    try:
+        return int(expected_page) == int(actual_page)
+    except (TypeError, ValueError):
+        return False
+
+
+def _source_span_accuracy(sample: dict[str, Any], answer_row: dict[str, Any] | None) -> float | None:
+    if not sample.get("required_citations"):
+        return None
+    gold = list(sample.get("gold_evidence") or [])
+    if not any(evidence.get("page_number") not in (None, "") or evidence.get("source_span") for evidence in gold):
+        return _citation_accuracy(sample, answer_row)
+    citations = list((answer_row or {}).get("citations") or [])
+    if not citations:
+        return 0.0
+    supported = sum(
+        1
+        for citation in citations
+        if any(_source_span_matches(citation, evidence) for evidence in gold)
+    )
+    return supported / len(citations)
+
+
+def _unsupported_claim_rate(answer_row: dict[str, Any] | None, judge_row: dict[str, Any] | None) -> float | None:
+    for row in (answer_row or {}, judge_row or {}):
+        explicit = row.get("unsupported_claim_rate") or row.get("unsupported_claims_rate")
+        if explicit is not None:
+            return float(explicit)
+    answer = answer_row or {}
+    unsupported = answer.get("unsupported_claims")
+    if isinstance(unsupported, int):
+        unsupported_count = unsupported
+    elif isinstance(unsupported, list):
+        unsupported_count = len(unsupported)
+    else:
+        return None
+    claim_count = answer.get("claim_count") or answer.get("claims_count")
+    try:
+        total = int(claim_count)
+    except (TypeError, ValueError):
+        total = 0
+    if total <= 0:
+        return None
+    return unsupported_count / total
+
+
 def _mean(values: Iterable[float | None]) -> float | None:
     usable = [value for value in values if value is not None]
     if not usable:
@@ -126,7 +184,9 @@ def compute_metrics(
         contexts = list(retrieval_row.get("contexts") or retrieval_row.get("documents") or [])
         retrieval = _retrieval_metrics(sample, contexts, k)
         citation_accuracy = _citation_accuracy(sample, answer_rows.get(sample_id))
+        source_span_accuracy = _source_span_accuracy(sample, answer_rows.get(sample_id))
         judge = judge_rows.get(sample_id, {})
+        unsupported_claim_rate = _unsupported_claim_rate(answer_rows.get(sample_id), judge)
         per_sample.append(
             {
                 "id": sample_id,
@@ -134,6 +194,8 @@ def compute_metrics(
                 "faithfulness": judge.get("faithfulness"),
                 "answer_correctness": judge.get("answer_correctness"),
                 "citation_accuracy": citation_accuracy,
+                "source_span_accuracy": source_span_accuracy,
+                "unsupported_claim_rate": unsupported_claim_rate,
                 "retrieved_contexts": len(contexts),
             }
         )
@@ -148,6 +210,8 @@ def compute_metrics(
         "faithfulness": _mean(row["faithfulness"] for row in per_sample),
         "answer_correctness": _mean(row["answer_correctness"] for row in per_sample),
         "citation_accuracy": _mean(row["citation_accuracy"] for row in per_sample),
+        "source_span_accuracy": _mean(row["source_span_accuracy"] for row in per_sample),
+        "unsupported_claim_rate": _mean(row["unsupported_claim_rate"] for row in per_sample),
     }
     return {
         "k": k,

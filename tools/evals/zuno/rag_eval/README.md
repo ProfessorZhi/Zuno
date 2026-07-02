@@ -7,6 +7,7 @@ This folder contains the local RAG / GraphRAG evaluation harness used to compare
 - `python_notes_eval.jsonl`: small query -> gold evidence dataset.
 - `metrics.py`: offline metric calculator.
 - `prepare_python_notes_corpus.py`: copies a local note folder into an ignored evaluation corpus.
+- `public_enterprise_datasets.py`: normalizes first-pass public enterprise-style datasets into the Zuno eval schema.
 - `ingest_prepared_corpus.py`: imports a prepared corpus into a Zuno knowledge base.
 - `run_eval.py`: runs retrieval profiles and writes metrics/reports.
 
@@ -30,6 +31,40 @@ Optional answer-layer metrics can be added on top:
 - Faithfulness
 - Answer Correctness
 - Citation Accuracy
+- Source Span Accuracy
+- Unsupported Claim Rate
+
+## Public Enterprise Dataset V1
+
+The first public enterprise-style adapter surface is intentionally small:
+
+- `techqa_rag_eval`: adapter-ready. Converts TechQA-RAG-Eval style `question / answer / is_impossible / contexts` rows into a local Markdown corpus plus Zuno eval JSONL.
+- `cfqa`: adapter-ready for dataset rows. Keeps Chinese annual-report page grounding in `gold_evidence`, but marks the corpus as `external_documents_required` until the public annual-report PDFs are downloaded. It must not create fake PDF corpus files.
+- `enterprise_rag_bench`: registry-only in this pass. It is the right large enterprise benchmark target, but the first Zuno pass should not pull the full large corpus into a smoke run.
+- `open_rag_benchmark`: registry-only in this pass. It needs a qrels/corpus adapter before it becomes runnable.
+
+Prepare a small TechQA-style raw file:
+
+```powershell
+python tools/evals/zuno/rag_eval/public_enterprise_datasets.py `
+  --dataset techqa_rag_eval `
+  --raw .local/evals/raw/techqa_rag_eval_sample.jsonl `
+  --output-dir .local/evals/zuno/rag_eval/corpus/public_enterprise_v1/techqa_rag_eval `
+  --limit 50
+```
+
+Then run it through the existing stackless compare path:
+
+```powershell
+python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
+  --manifest .local/evals/zuno/rag_eval/corpus/public_enterprise_v1/techqa_rag_eval/manifest.json `
+  --dataset .local/evals/zuno/rag_eval/corpus/public_enterprise_v1/techqa_rag_eval/techqa_rag_eval_eval.jsonl `
+  --sample-limit 20 `
+  --local-compare-rerank-threshold-override 0.0 `
+  --output-root .local/evals/zuno/rag_eval/runs/public-enterprise-v1-techqa
+```
+
+For CFQA, run the normalizer first to produce a page-grounded dataset, then download the annual-report PDFs and prepare the corpus in a separate step. Until those PDFs are present, the generated `manifest.json` has `file_count = 0`, `external_documents_required = true`, and `blocked_reason = cfqa_annual_report_pdf_required`.
 
 ## Deep GraphRAG Eval Surface
 
