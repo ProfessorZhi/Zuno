@@ -8,6 +8,7 @@ This folder contains the local RAG / GraphRAG evaluation harness used to compare
 - `metrics.py`: offline metric calculator.
 - `prepare_python_notes_corpus.py`: copies a local note folder into an ignored evaluation corpus.
 - `public_enterprise_datasets.py`: normalizes first-pass public enterprise-style datasets into the Zuno eval schema.
+- `run_enterprise_rag_paired_benchmark.py`: prepares and runs the EnterpriseRAG-Bench selected-doc paired benchmark surface.
 - `ingest_prepared_corpus.py`: imports a prepared corpus into a Zuno knowledge base.
 - `run_eval.py`: runs retrieval profiles and writes metrics/reports.
 
@@ -78,6 +79,20 @@ python tools/evals/zuno/rag_eval/public_enterprise_datasets.py `
 ```
 
 The generated manifest records `selected_question_count`, `skipped_case_count`, `loaded_doc_count`, and any `missing_doc_ids`. If the document parquet is not available, the adapter reports `external_documents_required` and does not fake corpus files.
+
+For a paired EnterpriseRAG-Bench run, use the dedicated runner:
+
+```powershell
+python tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py `
+  --questions-file .local/evals/raw/enterprise_rag_bench/hf/data/questions/test.parquet `
+  --documents-file .local/evals/raw/enterprise_rag_bench/hf/data/documents/test.parquet `
+  --output-root .local/evals/zuno/rag_eval/runs/enterprise-rag-paired-80 `
+  --sample-size 80 `
+  --hard-negative-count 20 `
+  --allow-blocked
+```
+
+The runner writes `selected_questions.jsonl`, `cases.jsonl`, `corpus_manifest.json`, `metrics.json`, `report.md`, and `failure_cases.md`. It uses the same case set for the measured profiles. Current measured profiles are `standard_rag` (underlying `baseline_rag`) and `deep_graphrag` (underlying `deep_graphrag`). `agentic_graphrag` is listed as `measured=false` with `blocked_reason=agentic_runtime_runner_not_wired` until a real Agent runtime runner is wired in; do not treat deep GraphRAG metrics as Agentic metrics.
 
 ## Deep GraphRAG Eval Surface
 
