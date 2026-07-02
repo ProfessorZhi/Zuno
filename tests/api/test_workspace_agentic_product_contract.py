@@ -204,3 +204,22 @@ def test_frontend_workspace_api_types_expose_product_contract_without_internal_u
     assert "knowledge_space_profiles?: KnowledgeSpaceRetrievalSelection[]" in source
     assert "retrieval_profiles?: Record<string, WorkspaceRetrievalProfile>" in source
     assert "citation_refs: WorkspaceCitationRef[]" in source
+
+
+def test_frontend_agentchat_sends_explicit_product_profiles_from_selected_knowledge() -> None:
+    root = Path(__file__).resolve().parents[2]
+    workspace_page = (root / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue").read_text(
+        encoding="utf-8"
+    )
+    create_page = (root / "apps/web/src/pages/knowledge/knowledge-create.vue").read_text(
+        encoding="utf-8"
+    )
+    config_utils = (root / "apps/web/src/utils/knowledge-config.ts").read_text(encoding="utf-8")
+
+    assert "toWorkspaceRetrievalProfile" in config_utils
+    assert "buildKnowledgeSpaceProfileSelections" in workspace_page
+    assert "knowledge_space_ids:" in workspace_page
+    assert "knowledge_space_profiles:" in workspace_page
+    assert "retrieval_profiles:" in workspace_page
+    assert "KnowledgeProductMode = 'standard' | 'deep'" in config_utils
+    assert "value: 'enhanced'" not in create_page

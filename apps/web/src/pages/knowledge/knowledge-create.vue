@@ -17,8 +17,8 @@ const retrievalModes = [
     subtitle: '普通文档问答、FAQ、具体内容查找',
   },
   {
-    value: 'enhanced',
-    title: '增强检索',
+    value: 'deep',
+    title: '深度检索',
     subtitle: '关系推理、跨文档分析、图谱增强问答',
   },
 ] as const
@@ -65,7 +65,7 @@ const buildConfig = () => {
   base.model_refs.text_embedding_model_id = form.value.text_embedding_model_id || null
   base.model_refs.vl_embedding_model_id = form.value.vl_embedding_model_id || null
   base.model_refs.rerank_model_id = form.value.rerank_model_id || null
-  base.graphrag_project_id = productMode.value === 'enhanced' ? (form.value.graphrag_project_id || null) : null
+  base.graphrag_project_id = productMode.value === 'deep' ? (form.value.graphrag_project_id || null) : null
   return toProductKnowledgeConfig(productMode.value, base)
 }
 
@@ -111,7 +111,7 @@ watch(
   (value) => {
     if (value) {
       form.value.graphrag_project_id = String(value)
-      productMode.value = 'enhanced'
+      productMode.value = 'deep'
     }
   },
 )
@@ -189,8 +189,8 @@ onMounted(loadOptions)
           <input
             type="text"
             readonly
-            :value="productMode === 'enhanced'
-              ? `增强检索 · ${form.graphrag_project_id || '未绑定 GraphRAG Project'} · 创建后进入文件管理上传资料`
+            :value="productMode === 'deep'
+              ? `深度检索 · ${form.graphrag_project_id || '未绑定 GraphRAG Project'} · 创建后进入文件管理上传资料`
               : '标准检索 · 向量 + BM25 · 创建后进入文件管理上传资料'"
           />
         </label>

@@ -43,6 +43,7 @@ docs/history/
   task-routing.md
   workflow.md
   code-map.md
+  agentchat-knowledge-lifecycle-implementation-plan.md
   runtime-call-chain.md
   verification-map.md
   command-catalog.md

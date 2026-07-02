@@ -27,8 +27,10 @@ import {
   type WorkspaceArtifactResponse,
   type WorkspaceExecutionConfig,
   type WorkspaceObservabilitySnapshot,
+  type WorkspaceRetrievalProfile,
   type WorkspaceStreamEvent,
   type WorkspaceTaskCreateResponse,
+  type KnowledgeSpaceRetrievalSelection,
   type WorkSpaceSimpleTask,
 } from '../../../apis/workspace'
 import { uploadFile } from '../../../apis/chat'
@@ -38,7 +40,7 @@ import { getAgentSkillsAPI, type AgentSkill } from '../../../apis/agent-skill'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../../apis/knowledge'
 import { useUserStore } from '../../../store/user'
 import { getRetrievalModeLabel, normalizeRetrievalMode } from '../../../utils/retrieval'
-import { describeKnowledgeConfig, normalizeKnowledgeConfig } from '../../../utils/knowledge-config'
+import { describeKnowledgeConfig, normalizeKnowledgeConfig, toWorkspaceRetrievalProfile } from '../../../utils/knowledge-config'
 import { safeDisplayText } from '../../../utils/display-text'
 import { sanitizeWorkspaceContexts } from '../../../utils/workspace-history'
 import { zunoAgentAvatar } from '../../../utils/brand'
@@ -334,6 +336,7 @@ const selectedKnowledge = computed(() => {
 })
 const selectedKnowledgeConfig = computed(() => normalizeKnowledgeConfig(selectedKnowledge.value?.knowledge_config))
 const effectiveRetrievalMode = computed(() => normalizeRetrievalMode(selectedKnowledgeConfig.value.retrieval_settings.default_mode))
+const effectiveWorkspaceRetrievalProfile = computed(() => toWorkspaceRetrievalProfile(selectedKnowledgeConfig.value))
 const effectiveRetrievalModeLabel = computed(() => getRetrievalModeLabel(effectiveRetrievalMode.value))
 const selectedKnowledgeSummary = computed(() => describeKnowledgeConfig(selectedKnowledgeConfig.value))
 const buildToolCreationPrompt = (kind: ToolCreationKind = 'general') => {
@@ -2076,6 +2079,19 @@ const getValidSelectedKnowledgeIds = () => {
   return selectedKnowledgeIds.value.filter((knowledgeId) => availableKnowledgeIds.has(knowledgeId)).slice(0, 1)
 }
 
+const buildKnowledgeSpaceProfileSelections = (knowledgeIds: string[]): KnowledgeSpaceRetrievalSelection[] => {
+  const profile: WorkspaceRetrievalProfile = effectiveWorkspaceRetrievalProfile.value
+  return knowledgeIds.map((knowledgeSpaceId) => ({
+    knowledge_space_id: knowledgeSpaceId,
+    retrieval_profile: profile,
+  }))
+}
+
+const buildRetrievalProfileMap = (knowledgeIds: string[]): Record<string, WorkspaceRetrievalProfile> => {
+  const profile: WorkspaceRetrievalProfile = effectiveWorkspaceRetrievalProfile.value
+  return Object.fromEntries(knowledgeIds.map((knowledgeSpaceId) => [knowledgeSpaceId, profile]))
+}
+
 const classifySelectedFile = (file: File) => {
   const extension = getFileExtension(file.name)
   if (file.type.startsWith('image/') || CHAT_IMAGE_EXTENSIONS.has(extension)) return 'image'
@@ -2178,25 +2194,31 @@ const handleAttachmentDrop = async (event: DragEvent) => {
   await uploadAttachments(Array.from(event.dataTransfer.files))
 }
 
-const buildPayload = (query: string): WorkSpaceSimpleTask => ({
-  query,
-  model_id: selectedModelId.value,
-  workspace_mode: selectedMode.value,
-  agent_name: isAgentMode.value ? activeAgentName.value : '',
-  agent_id: isAgentMode.value ? activeAgentId.value : '',
-  web_search: ALWAYS_WEB_SEARCH,
-  plugins: canPickTools.value ? getValidSelectedToolIds() : [],
-  mcp_servers: canPickTools.value ? getValidSelectedMcpIds() : getValidAutoMcpIds(),
-  knowledge_ids: canPickTools.value ? getValidSelectedKnowledgeIds() : [],
-  retrieval_mode: canPickTools.value ? effectiveRetrievalMode.value : 'rag',
-  agent_skill_ids: canPickTools.value ? getValidSelectedSkillIds() : [],
-  session_id: currentSessionId.value,
-  execution_mode: isAgentMode.value ? selectedExecutionMode.value : 'tool',
-  access_scope: isAgentMode.value ? selectedAccessScope.value : 'workspace',
-  desktop_bridge_url: isDesktopRuntime() ? window.__ZUNO_DESKTOP__?.bridgeUrl || '' : '',
-  desktop_bridge_token: isDesktopRuntime() ? window.__ZUNO_DESKTOP__?.bridgeToken || '' : '',
-  attachments: pendingAttachments.value.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment),
-})
+const buildPayload = (query: string): WorkSpaceSimpleTask => {
+  const selectedKnowledgeSpaceIds = canPickTools.value ? getValidSelectedKnowledgeIds() : []
+  return {
+    query,
+    model_id: selectedModelId.value,
+    workspace_mode: selectedMode.value,
+    agent_name: isAgentMode.value ? activeAgentName.value : '',
+    agent_id: isAgentMode.value ? activeAgentId.value : '',
+    web_search: ALWAYS_WEB_SEARCH,
+    plugins: canPickTools.value ? getValidSelectedToolIds() : [],
+    mcp_servers: canPickTools.value ? getValidSelectedMcpIds() : getValidAutoMcpIds(),
+    knowledge_ids: selectedKnowledgeSpaceIds,
+    knowledge_space_ids: selectedKnowledgeSpaceIds,
+    knowledge_space_profiles: buildKnowledgeSpaceProfileSelections(selectedKnowledgeSpaceIds),
+    retrieval_profiles: buildRetrievalProfileMap(selectedKnowledgeSpaceIds),
+    retrieval_mode: canPickTools.value ? effectiveRetrievalMode.value : 'rag',
+    agent_skill_ids: canPickTools.value ? getValidSelectedSkillIds() : [],
+    session_id: currentSessionId.value,
+    execution_mode: isAgentMode.value ? selectedExecutionMode.value : 'tool',
+    access_scope: isAgentMode.value ? selectedAccessScope.value : 'workspace',
+    desktop_bridge_url: isDesktopRuntime() ? window.__ZUNO_DESKTOP__?.bridgeUrl || '' : '',
+    desktop_bridge_token: isDesktopRuntime() ? window.__ZUNO_DESKTOP__?.bridgeToken || '' : '',
+    attachments: pendingAttachments.value.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment),
+  }
+}
 
 const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: PendingAttachment[], assistantIndex: number) => {
   let generationFailed = false
@@ -2214,7 +2236,10 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
     payload.goal = query
     payload.product_mode = registered.length > 0 ? 'enterprise_kb' : 'general_agent'
     payload.uploaded_file_ids = registered.map((item) => item.fileId)
-    payload.knowledge_space_ids = registered.map((item) => item.knowledgeSpaceId)
+    const registeredKnowledgeSpaceIds = registered.map((item) => item.knowledgeSpaceId)
+    payload.knowledge_space_ids = registeredKnowledgeSpaceIds
+    payload.knowledge_space_profiles = buildKnowledgeSpaceProfileSelections(registeredKnowledgeSpaceIds)
+    payload.retrieval_profiles = buildRetrievalProfileMap(registeredKnowledgeSpaceIds)
     payload.approval_mode = 'runtime'
     payload.output_contract = {
       artifact_kinds: ['markdown'],

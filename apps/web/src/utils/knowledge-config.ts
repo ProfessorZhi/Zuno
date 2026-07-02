@@ -14,7 +14,9 @@ export type KnowledgeChunkMode = 'general' | 'parent_child' | 'qa'
 export type KnowledgeImageStrategy = 'text_only' | 'vl_only' | 'dual'
 export type KnowledgeVectorBackend = 'milvus' | 'chroma' | 'milvus_lite'
 export type KnowledgeRefillPolicy = 'none' | 'auto' | 'smart'
-export type KnowledgeProductMode = 'standard' | 'enhanced'
+export type KnowledgeProductMode = 'standard' | 'deep'
+export type LegacyKnowledgeProductMode = KnowledgeProductMode | 'enhanced'
+export type WorkspaceRetrievalProductProfile = 'standard' | 'deep'
 type LegacyKnowledgeConfigInput = Partial<KnowledgeConfigPayload> & {
   domain_pack_id?: string | null
 }
@@ -257,6 +259,17 @@ export const normalizeKnowledgeConfig = (
   return merged
 }
 
+export const toWorkspaceRetrievalProfile = (
+  configInput?: LegacyKnowledgeConfigInput | null,
+): WorkspaceRetrievalProductProfile => {
+  const rawDefaultMode = String(configInput?.retrieval_settings?.default_mode || '').trim().toLowerCase()
+  if (['deep', 'rag_graph', 'graphrag', 'hybrid'].includes(rawDefaultMode)) return 'deep'
+  if (['standard', 'rag', 'auto', 'default'].includes(rawDefaultMode)) return 'standard'
+
+  const config = normalizeKnowledgeConfig(configInput)
+  return config.index_capability === 'rag_graph' ? 'deep' : 'standard'
+}
+
 export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): KnowledgeConfigPatchPayload => ({
   index_capability: config.index_capability,
   graphrag_project_id: config.graphrag_project_id,
@@ -269,11 +282,11 @@ export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): Knowledg
 })
 
 export const toProductKnowledgeConfig = (
-  mode: KnowledgeProductMode,
+  mode: LegacyKnowledgeProductMode,
   overrides: Partial<KnowledgeConfigPayload> = {},
 ): KnowledgeConfigPayload => {
   const config = normalizeKnowledgeConfig(overrides)
-  if (mode === 'enhanced') {
+  if (mode === 'deep' || mode === 'enhanced') {
     config.index_capability = 'rag_graph'
     config.retrieval_settings.default_mode = 'rag_graph'
     if (config.graphrag_project) {
