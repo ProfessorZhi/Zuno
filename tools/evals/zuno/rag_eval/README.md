@@ -89,10 +89,15 @@ python tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py `
   --output-root .local/evals/zuno/rag_eval/runs/enterprise-rag-paired-80 `
   --sample-size 80 `
   --hard-negative-count 20 `
+  --inspect-documents-schema `
   --allow-blocked
 ```
 
 The runner writes `selected_questions.jsonl`, `cases.jsonl`, `corpus_manifest.json`, `metrics.json`, `report.md`, and `failure_cases.md`. It uses the same case set for the measured profiles. Current measured profiles are `standard_rag` (underlying `baseline_rag`) and `deep_graphrag` (underlying `deep_graphrag`). `agentic_graphrag` is listed as `measured=false` with `blocked_reason=agentic_runtime_runner_not_wired` until a real Agent runtime runner is wired in; do not treat deep GraphRAG metrics as Agentic metrics.
+
+When `--inspect-documents-schema` is set, the runner also writes `schema_probe.json` with parquet columns, row count, resolved field aliases, and a truncated first-row preview. The EnterpriseRAG document reader accepts common aliases for the required `doc_id` and `content` fields, including `document_id` / `dsid` / `id` / `source_id` and `text` / `body` / `page_content` / `document` / `raw_text`. Optional aliases include `title` / `name` / `subject` / `doc_title` and `source_type` / `source` / `connector` / `app` / `datasource`.
+
+If a document parquet cannot resolve both document id and content, the run must stay `blocked_not_measured` with `blocked_reason = document_schema_unsupported`; it must not silently produce `file_count = 0` as a measured benchmark. Partial selected-doc extraction records `missing_doc_ids`, and hard negatives must never include selected `expected_doc_ids`.
 
 ## Deep GraphRAG Eval Surface
 

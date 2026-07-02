@@ -12,10 +12,13 @@ from typing import Any, Iterable
 
 from zuno.evals.rag_eval.paths import default_runs_root
 from zuno.evals.rag_eval.public_enterprise_datasets import (
+    EnterpriseDocumentSchemaError,
     _as_string_list,
+    _iter_enterprise_document_rows,
     _read_rows,
     _safe_stem,
     _write_jsonl,
+    inspect_enterprise_document_schema,
     prepare_public_enterprise_eval,
 )
 from zuno.evals.rag_eval.run_stackless_local_eval import run_stackless_local_eval
@@ -35,6 +38,14 @@ METRIC_KEYS = [
     "citation_accuracy",
     "source_span_accuracy",
     "unsupported_claim_rate",
+]
+ADVANCED_FAILURE_TAGS = [
+    "gold_doc_not_indexed",
+    "gold_doc_recalled_but_low_rank",
+    "graph_context_non_gold",
+    "rerank_demoted_gold",
+    "no_answer_should_refuse",
+    "too_expensive_for_gain",
 ]
 
 
@@ -75,38 +86,7 @@ def _expected_doc_ids(rows: Iterable[dict[str, Any]]) -> set[str]:
 
 
 def _iter_source_documents(source_root: Path) -> Iterable[dict[str, Any]]:
-    if source_root.is_file() and source_root.suffix.lower() == ".parquet":
-        yield from _iter_parquet_documents(source_root)
-        return
-    if source_root.is_dir():
-        for parquet_path in sorted(source_root.rglob("*.parquet")):
-            yield from _iter_parquet_documents(parquet_path)
-        for file_path in sorted(source_root.rglob("*")):
-            if not file_path.is_file() or file_path.suffix.lower() in {".parquet", ".zip"}:
-                continue
-            yield {
-                "doc_id": file_path.stem,
-                "source_type": file_path.parent.name,
-                "title": file_path.stem,
-                "content": file_path.read_text(encoding="utf-8", errors="replace"),
-            }
-
-
-def _iter_parquet_documents(path: Path) -> Iterable[dict[str, Any]]:
-    try:
-        import pyarrow.parquet as pq
-    except ImportError as exc:  # pragma: no cover - depends on optional local env
-        raise RuntimeError("pyarrow is required to read EnterpriseRAG-Bench parquet documents") from exc
-
-    parquet_file = pq.ParquetFile(path)
-    available_columns = set(parquet_file.schema_arrow.names)
-    columns = [column for column in ("doc_id", "source_type", "title", "content") if column in available_columns]
-    if "doc_id" not in columns or "content" not in columns:
-        return
-    for batch in parquet_file.iter_batches(batch_size=4096, columns=columns):
-        payload = batch.to_pydict()
-        for index, doc_id in enumerate(payload.get("doc_id") or []):
-            yield {column: (payload.get(column) or [None])[index] for column in columns} | {"doc_id": str(doc_id or "")}
+    yield from _iter_enterprise_document_rows(source_root)
 
 
 def _write_document_markdown(files_dir: Path, document: dict[str, Any]) -> dict[str, Any]:
@@ -150,6 +130,11 @@ def _append_hard_negatives(
     hard_negative_count: int,
 ) -> dict[str, Any]:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("blocked_reason") == "document_schema_unsupported":
+        manifest["hard_negative_count"] = 0
+        manifest["file_count"] = len(manifest.get("files", []))
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+        return manifest
     if not source_root or hard_negative_count <= 0 or not source_root.exists():
         manifest["hard_negative_count"] = 0
         manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -159,15 +144,24 @@ def _append_hard_negatives(
     files_dir = manifest_path.parent / "files"
     files_dir.mkdir(parents=True, exist_ok=True)
     added = 0
-    for document in _iter_source_documents(source_root):
-        doc_id = str(document.get("doc_id") or "")
-        if not doc_id or doc_id in excluded_doc_ids or doc_id in existing_doc_ids:
-            continue
-        manifest.setdefault("files", []).append(_write_document_markdown(files_dir, document))
-        existing_doc_ids.add(doc_id)
-        added += 1
-        if added >= hard_negative_count:
-            break
+    try:
+        documents = _iter_source_documents(source_root)
+        for document in documents:
+            doc_id = str(document.get("doc_id") or "")
+            if not doc_id or doc_id in excluded_doc_ids or doc_id in existing_doc_ids:
+                continue
+            manifest.setdefault("files", []).append(_write_document_markdown(files_dir, document))
+            existing_doc_ids.add(doc_id)
+            added += 1
+            if added >= hard_negative_count:
+                break
+    except EnterpriseDocumentSchemaError:
+        manifest["blocked_reason"] = "document_schema_unsupported"
+        manifest["document_source_status"] = "document_schema_unsupported"
+        manifest["hard_negative_count"] = 0
+        manifest["file_count"] = len(manifest.get("files", []))
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+        return manifest
     manifest["hard_negative_count"] = added
     manifest["file_count"] = len(manifest.get("files", []))
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -280,15 +274,39 @@ def _build_failure_cases(per_samples: dict[str, list[dict[str, Any]]]) -> list[d
                 tags.append("unsupported_claim")
             if row.get("citation_accuracy") is not None and float(row.get("citation_accuracy") or 0.0) <= 0:
                 tags.append("citation_missing")
+            if tags and not _has_advanced_failure_trace_fields(row):
+                tags.append("unavailable_due_to_missing_trace_fields")
             if tags:
                 failures.append({"case_id": row.get("id"), "profile": profile, "tags": tags})
     return failures
+
+
+def _has_advanced_failure_trace_fields(row: dict[str, Any]) -> bool:
+    return any(
+        key in row
+        for key in (
+            "retrieval_contexts",
+            "retrieval_rank_trace",
+            "graph_context_gold_hits",
+            "rerank_trace",
+            "answer_type",
+            "case_cost_usd",
+            "latency_ms",
+        )
+    )
 
 
 def _write_failure_cases(path: Path, failures: list[dict[str, Any]]) -> None:
     lines = ["# EnterpriseRAG Failure Cases", ""]
     if not failures:
         lines.append("No tagged failures were found in the measured per-sample metrics.")
+    if any("unavailable_due_to_missing_trace_fields" in failure.get("tags", []) for failure in failures):
+        lines.extend(
+            [
+                "Advanced failure tags were not fully available because the per-sample metrics do not yet carry graph context, rerank, no-answer, and per-case cost trace fields.",
+                "",
+            ]
+        )
     for failure in failures:
         lines.append(f"- `{failure['case_id']}` / `{failure['profile']}`: {', '.join(failure['tags'])}")
     path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
@@ -327,7 +345,27 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 "## Blocked",
                 "",
                 f"- blocked_reason: `{metrics['corpus'].get('blocked_reason')}`",
-                "- No benchmark metrics were measured because the EnterpriseRAG-Bench documents are missing.",
+                "- No benchmark metrics were measured because the EnterpriseRAG-Bench corpus is blocked.",
+            ]
+        )
+    agentic = (metrics.get("profiles") or {}).get("agentic_graphrag") or {}
+    if agentic.get("measured") is False and agentic.get("blocked_reason"):
+        lines.extend(
+            [
+                "",
+                "## Agentic GraphRAG",
+                "",
+                f"- measured: `false`",
+                f"- blocked_reason: `{agentic.get('blocked_reason')}`",
+            ]
+        )
+    if metrics.get("failure_tag_limitations"):
+        lines.extend(
+            [
+                "",
+                "## Failure Tag Limitations",
+                "",
+                str(metrics["failure_tag_limitations"]),
             ]
         )
     path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
@@ -357,11 +395,18 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
         "profiles": {
             "standard_rag": {"measured": False, "metrics_source": "blocked_not_measured", "aggregate": {}},
             "deep_graphrag": {"measured": False, "metrics_source": "blocked_not_measured", "aggregate": {}},
-            "agentic_graphrag": {"measured": False, "metrics_source": "blocked_not_measured", "aggregate": {}},
+            "agentic_graphrag": {
+                "measured": False,
+                "metrics_source": "blocked_not_measured",
+                "blocked_reason": "agentic_runtime_runner_not_wired",
+                "aggregate": {},
+            },
         },
         "deltas": {},
         "agentic_metrics": {"graph_usage_gain": None, "replan_success_rate": None, "cost_quality_ratio": None},
         "cost_latency": {},
+        "failure_count": 0,
+        "failure_tag_limitations": _failure_tag_limitations(),
     }
 
 
@@ -378,6 +423,21 @@ def _write_selected_questions(path: Path, rows: list[dict[str, Any]]) -> None:
     _write_jsonl(path, rows)
 
 
+def inspect_documents_schema(document_source: Path, *, output_root: Path, preview_chars: int = 160) -> dict[str, Any]:
+    probe = inspect_enterprise_document_schema(document_source, preview_chars=preview_chars)
+    output_root.mkdir(parents=True, exist_ok=True)
+    (output_root / "schema_probe.json").write_text(json.dumps(probe, ensure_ascii=False, indent=2), encoding="utf-8")
+    return probe
+
+
+def _failure_tag_limitations() -> str:
+    return (
+        "Advanced tags require per-sample graph context, rerank rank trace, no-answer labels, "
+        "and per-case cost/latency fields. Missing fields are tagged as "
+        "unavailable_due_to_missing_trace_fields rather than inferred."
+    )
+
+
 async def run_enterprise_rag_paired_benchmark(
     *,
     questions_file: Path,
@@ -389,6 +449,7 @@ async def run_enterprise_rag_paired_benchmark(
     hard_negative_count: int = 0,
     allow_blocked: bool = True,
     run_profiles: bool = True,
+    inspect_schema: bool = False,
     spawn_dev_embedding_server: bool = True,
     rerank_score_threshold_override: float | None = 0.0,
 ) -> dict[str, Any]:
@@ -403,6 +464,7 @@ async def run_enterprise_rag_paired_benchmark(
     _write_selected_questions(selected_questions, selected_rows)
 
     document_source = documents_file or source_root
+    schema_probe = inspect_documents_schema(document_source, output_root=output_root) if inspect_schema and document_source else None
     corpus_dir = output_root / "corpus"
     prepared = prepare_public_enterprise_eval(
         dataset_id="enterprise_rag_bench",
@@ -411,6 +473,14 @@ async def run_enterprise_rag_paired_benchmark(
         output_dir=corpus_dir,
     )
     manifest_path = Path(prepared["manifest_path"])
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if schema_probe is not None:
+        manifest["schema_probe"] = schema_probe
+    if documents_file is not None:
+        manifest["documents_file"] = str(documents_file)
+    if source_root is not None:
+        manifest["source_root"] = str(source_root)
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     manifest = _append_hard_negatives(
         manifest_path=manifest_path,
         source_root=document_source,
@@ -455,6 +525,7 @@ async def run_enterprise_rag_paired_benchmark(
     standard = profiles["standard_rag"].get("aggregate") or {}
     deep = profiles["deep_graphrag"].get("aggregate") or {}
     failures = _build_failure_cases(per_samples)
+    failure_tag_limitations = _failure_tag_limitations()
     metrics = {
         "status": "measured",
         "measurement_status": "fixed_benchmark",
@@ -477,6 +548,7 @@ async def run_enterprise_rag_paired_benchmark(
         },
         "cost_latency": cost_latency,
         "failure_count": len(failures),
+        "failure_tag_limitations": failure_tag_limitations,
     }
     (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
     _write_failure_cases(output_root / "failure_cases.md", failures)
@@ -500,6 +572,7 @@ def main() -> None:
     parser.add_argument("--hard-negative-count", type=int, default=20)
     parser.add_argument("--allow-blocked", action="store_true")
     parser.add_argument("--prepare-only", action="store_true")
+    parser.add_argument("--inspect-documents-schema", action="store_true")
     parser.add_argument("--no-spawn-dev-embedding-server", action="store_true")
     parser.add_argument("--rerank-score-threshold-override", type=float, default=0.0)
     args = parser.parse_args()
@@ -516,6 +589,7 @@ def main() -> None:
             hard_negative_count=max(args.hard_negative_count, 0),
             allow_blocked=args.allow_blocked,
             run_profiles=not args.prepare_only,
+            inspect_schema=args.inspect_documents_schema,
             spawn_dev_embedding_server=not args.no_spawn_dev_embedding_server,
             rerank_score_threshold_override=args.rerank_score_threshold_override,
         )

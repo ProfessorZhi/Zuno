@@ -60,6 +60,37 @@ def _write_documents(path: Path) -> None:
     )
 
 
+def _write_alias_documents(path: Path) -> None:
+    pq.write_table(
+        pa.table(
+            {
+                "dsid": ["dsid_upload_limits", "dsid_rollout_current", "dsid_negative_noise"],
+                "connector": ["github", "confluence", "slack"],
+                "name": ["Multipart upload support", "Current rollout checklist", "Unrelated launch chatter"],
+                "body": [
+                    "The default per file upload size limit is 10 MiB. The default total request size limit is 50 MiB."
+                    + " extra detail" * 30,
+                    "The current rollout checklist is console-2026.04.",
+                    "This unrelated Slack thread mentions launch snacks and should be a hard negative.",
+                ],
+            }
+        ),
+        path,
+    )
+
+
+def _write_unsupported_documents(path: Path) -> None:
+    pq.write_table(
+        pa.table(
+            {
+                "opaque_key": ["dsid_upload_limits"],
+                "payload_blob": ["The document exists but the adapter cannot infer id/content columns."],
+            }
+        ),
+        path,
+    )
+
+
 def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path) -> None:
     from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
         run_enterprise_rag_paired_benchmark,
@@ -93,6 +124,162 @@ def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path
     report = (output_root / "report.md").read_text(encoding="utf-8")
     assert "blocked_not_measured" in report
     assert "enterprise_rag_bench_documents_required" in report
+
+
+def test_enterprise_rag_schema_probe_writes_alias_preview(tmp_path: Path) -> None:
+    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import inspect_documents_schema
+
+    documents = tmp_path / "documents.parquet"
+    output_root = tmp_path / "run"
+    _write_alias_documents(documents)
+
+    probe = inspect_documents_schema(documents, output_root=output_root)
+
+    assert probe["row_count"] == 3
+    assert probe["columns"] == ["dsid", "connector", "name", "body"]
+    assert probe["column_aliases"]["doc_id"] == "dsid"
+    assert probe["column_aliases"]["content"] == "body"
+    assert probe["column_aliases"]["title"] == "name"
+    assert probe["column_aliases"]["source_type"] == "connector"
+    assert len(probe["first_row_preview"]["body"]) < 180
+    assert "extra detail extra detail extra detail extra detail extra detail extra detail extra detail" not in probe["first_row_preview"]["body"]
+
+    written = _read_json(output_root / "schema_probe.json")
+    assert written == probe
+
+
+def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch, tmp_path: Path) -> None:
+    from zuno.evals.rag_eval import run_enterprise_rag_paired_benchmark as paired
+
+    questions = tmp_path / "questions.jsonl"
+    documents = tmp_path / "documents.parquet"
+    _write_questions(questions)
+    _write_alias_documents(documents)
+    output_root = tmp_path / "run"
+
+    async def fake_run_stackless_local_eval(**kwargs):
+        run_root = Path(kwargs["output_root"])
+        run_root.mkdir(parents=True, exist_ok=True)
+        for profile in ["baseline_rag", "local_graphrag", "deep_graphrag"]:
+            profile_dir = run_root / profile
+            profile_dir.mkdir()
+            aggregate = {
+                "retrieval_recall_at_k": 1.0,
+                "context_precision_at_k": 0.5,
+                "mrr_at_k": 1.0,
+                "ndcg_at_k": 1.0,
+                "answer_correctness": 1.0,
+                "citation_accuracy": 1.0,
+            }
+            (profile_dir / "metrics.json").write_text(
+                json.dumps({"aggregate": aggregate, "per_sample": []}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            (profile_dir / "retrieval_results.jsonl").write_text("", encoding="utf-8")
+        return {"report": {"profiles": {}}, "output_root": str(run_root)}
+
+    monkeypatch.setattr(paired, "run_stackless_local_eval", fake_run_stackless_local_eval)
+
+    result = asyncio.run(
+        paired.run_enterprise_rag_paired_benchmark(
+            questions_file=questions,
+            documents_file=documents,
+            output_root=output_root,
+            sample_size=2,
+            hard_negative_count=1,
+            allow_blocked=True,
+            inspect_schema=True,
+        )
+    )
+
+    assert result["status"] == "measured"
+    metrics = _read_json(output_root / "metrics.json")
+    assert metrics["corpus"]["file_count"] == 3
+    assert metrics["corpus"]["hard_negative_count"] == 1
+    assert metrics["corpus"]["missing_doc_ids"] == []
+    assert metrics["corpus"]["schema_probe"]["column_aliases"]["doc_id"] == "dsid"
+    assert (output_root / "corpus" / "files" / "dsid_upload_limits.md").exists()
+
+
+def test_enterprise_rag_paired_benchmark_blocks_unsupported_document_schema(tmp_path: Path) -> None:
+    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+        run_enterprise_rag_paired_benchmark,
+    )
+
+    questions = tmp_path / "questions.jsonl"
+    documents = tmp_path / "unsupported.parquet"
+    _write_questions(questions)
+    _write_unsupported_documents(documents)
+    output_root = tmp_path / "run"
+
+    result = asyncio.run(
+        run_enterprise_rag_paired_benchmark(
+            questions_file=questions,
+            documents_file=documents,
+            output_root=output_root,
+            sample_size=2,
+            allow_blocked=True,
+            run_profiles=False,
+            inspect_schema=True,
+        )
+    )
+
+    assert result["status"] == "blocked"
+    metrics = _read_json(output_root / "metrics.json")
+    assert metrics["measurement_status"] == "blocked_not_measured"
+    assert metrics["case_set"]["measured_case_count"] == 0
+    assert metrics["corpus"]["blocked_reason"] == "document_schema_unsupported"
+    assert metrics["corpus"]["document_source_status"] == "document_schema_unsupported"
+    assert metrics["corpus"]["schema_probe"]["column_aliases"]["doc_id"] is None
+    assert "document_schema_unsupported" in (output_root / "report.md").read_text(encoding="utf-8")
+
+
+def test_enterprise_rag_paired_benchmark_records_missing_docs_without_faking_measured(tmp_path: Path) -> None:
+    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+        run_enterprise_rag_paired_benchmark,
+    )
+
+    questions = tmp_path / "questions.jsonl"
+    _write_questions(questions)
+    rows = [
+        json.loads(line)
+        for line in questions.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    rows.append(
+        {
+            "question_id": "qst_missing_doc",
+            "question_type": "multi_doc",
+            "source_types": ["drive"],
+            "question": "What does the missing document say?",
+            "expected_doc_ids": ["dsid_missing_doc"],
+            "gold_answer": "The missing document should not be fabricated.",
+            "answer_facts": ["The missing document should not be fabricated."],
+        }
+    )
+    questions.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n", encoding="utf-8")
+    documents = tmp_path / "documents.parquet"
+    _write_documents(documents)
+    output_root = tmp_path / "run"
+
+    result = asyncio.run(
+        run_enterprise_rag_paired_benchmark(
+            questions_file=questions,
+            documents_file=documents,
+            output_root=output_root,
+            sample_size=3,
+            hard_negative_count=1,
+            allow_blocked=True,
+            run_profiles=False,
+        )
+    )
+
+    assert result["status"] == "prepared"
+    metrics = _read_json(output_root / "metrics.json")
+    assert metrics["measurement_status"] == "prepared_not_measured"
+    assert metrics["corpus"]["missing_doc_ids"] == ["dsid_missing_doc"]
+    assert metrics["case_set"]["selected_case_count"] == 3
+    assert metrics["case_set"]["measured_case_count"] == 0
 
 
 def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negatives(
@@ -212,6 +399,9 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     corpus_manifest = _read_json(output_root / "corpus_manifest.json")
     assert corpus_manifest["file_count"] == 3
     assert corpus_manifest["hard_negative_count"] == 1
+    hard_negatives = [item for item in corpus_manifest["files"] if item.get("hard_negative")]
+    assert [item["doc_id"] for item in hard_negatives] == ["dsid_negative_noise"]
+    assert "dsid_upload_limits" not in {item["doc_id"] for item in hard_negatives}
 
     metrics = _read_json(output_root / "metrics.json")
     assert metrics["case_set"]["common_case_ids"] == ["qst_basic", "qst_conflict"]
@@ -228,3 +418,5 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     failure_text = (output_root / "failure_cases.md").read_text(encoding="utf-8")
     assert "retrieval_miss" in failure_text
     assert "unsupported_claim" in failure_text
+    assert "unavailable_due_to_missing_trace_fields" in failure_text
+    assert "failure_tag_limitations" in metrics

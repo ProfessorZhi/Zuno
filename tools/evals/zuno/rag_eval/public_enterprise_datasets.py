@@ -9,6 +9,18 @@ from typing import Any, Iterable
 from zuno.evals.rag_eval.paths import default_corpus_root
 
 
+ENTERPRISE_DOCUMENT_COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
+    "doc_id": ("doc_id", "document_id", "dsid", "id", "source_id"),
+    "content": ("content", "text", "body", "page_content", "document", "raw_text"),
+    "title": ("title", "name", "subject", "doc_title"),
+    "source_type": ("source_type", "source", "connector", "app", "datasource"),
+}
+
+
+class EnterpriseDocumentSchemaError(ValueError):
+    """Raised when an EnterpriseRAG document source lacks required columns."""
+
+
 DATASET_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {
         "dataset_id": "techqa_rag_eval",
@@ -149,6 +161,99 @@ def _first_nonempty(row: dict[str, Any], keys: Iterable[str]) -> Any:
         if value not in (None, ""):
             return value
     return None
+
+
+def _resolve_enterprise_document_columns(columns: Iterable[str]) -> dict[str, str | None]:
+    available = list(columns)
+    available_set = set(available)
+    resolved: dict[str, str | None] = {}
+    for field, aliases in ENTERPRISE_DOCUMENT_COLUMN_ALIASES.items():
+        resolved[field] = next((alias for alias in aliases if alias in available_set), None)
+    return resolved
+
+
+def _preview_value(value: Any, *, limit: int = 160) -> str:
+    normalized = " ".join(str(value or "").split())
+    if len(normalized) <= limit:
+        return normalized
+    return normalized[: max(limit - 3, 0)].rstrip() + "..."
+
+
+def _inspect_parquet_schema(path: Path, *, preview_chars: int = 160) -> dict[str, Any]:
+    try:
+        import pyarrow.parquet as pq
+    except ImportError as exc:  # pragma: no cover - depends on optional local env
+        raise RuntimeError("pyarrow is required to inspect EnterpriseRAG-Bench parquet documents") from exc
+
+    parquet_file = pq.ParquetFile(path)
+    columns = list(parquet_file.schema_arrow.names)
+    preview: dict[str, str] = {}
+    if parquet_file.metadata.num_rows:
+        try:
+            batch = next(parquet_file.iter_batches(batch_size=1, columns=columns))
+            payload = batch.to_pydict()
+            preview = {
+                column: _preview_value((payload.get(column) or [None])[0], limit=preview_chars)
+                for column in columns
+            }
+        except StopIteration:
+            preview = {}
+    aliases = _resolve_enterprise_document_columns(columns)
+    probe = {
+        "path": str(path),
+        "source_kind": "parquet",
+        "row_count": parquet_file.metadata.num_rows,
+        "columns": columns,
+        "column_aliases": aliases,
+        "first_row_preview": preview,
+    }
+    if not aliases.get("doc_id") or not aliases.get("content"):
+        probe["blocked_reason"] = "document_schema_unsupported"
+    return probe
+
+
+def inspect_enterprise_document_schema(source_root: Path, *, preview_chars: int = 160) -> dict[str, Any]:
+    if not source_root.exists():
+        return {
+            "path": str(source_root),
+            "source_kind": "missing",
+            "row_count": 0,
+            "columns": [],
+            "column_aliases": {field: None for field in ENTERPRISE_DOCUMENT_COLUMN_ALIASES},
+            "first_row_preview": {},
+            "blocked_reason": "enterprise_rag_bench_documents_required",
+        }
+    if source_root.is_file() and source_root.suffix.lower() == ".parquet":
+        return _inspect_parquet_schema(source_root, preview_chars=preview_chars)
+    if source_root.is_dir():
+        first_parquet = next(iter(sorted(source_root.rglob("*.parquet"))), None)
+        if first_parquet:
+            probe = _inspect_parquet_schema(first_parquet, preview_chars=preview_chars)
+            probe["directory"] = str(source_root)
+            return probe
+        files = [path for path in sorted(source_root.rglob("*")) if path.is_file()]
+        return {
+            "path": str(source_root),
+            "source_kind": "directory_files",
+            "row_count": len(files),
+            "columns": [],
+            "column_aliases": {
+                "doc_id": "file_stem",
+                "content": "file_text",
+                "title": "file_stem",
+                "source_type": "parent_directory",
+            },
+            "first_row_preview": {"path": str(files[0])} if files else {},
+        }
+    return {
+        "path": str(source_root),
+        "source_kind": "unsupported",
+        "row_count": 0,
+        "columns": [],
+        "column_aliases": {field: None for field in ENTERPRISE_DOCUMENT_COLUMN_ALIASES},
+        "first_row_preview": {},
+        "blocked_reason": "document_schema_unsupported",
+    }
 
 
 def _context_to_markdown(context: Any, *, index: int) -> tuple[str, str]:
@@ -350,31 +455,34 @@ def _as_string_list(value: Any) -> list[str]:
     return [str(value)]
 
 
-def _iter_parquet_document_rows(path: Path, *, doc_ids: set[str]) -> Iterable[dict[str, Any]]:
+def _iter_parquet_document_rows(path: Path, *, doc_ids: set[str] | None = None) -> Iterable[dict[str, Any]]:
     try:
         import pyarrow.parquet as pq
     except ImportError as exc:  # pragma: no cover - depends on optional local env
         raise RuntimeError("pyarrow is required to read EnterpriseRAG-Bench parquet documents") from exc
 
-    remaining = set(doc_ids)
+    remaining = set(doc_ids or [])
     parquet_file = pq.ParquetFile(path)
-    available_columns = set(parquet_file.schema_arrow.names)
-    columns = [column for column in ("doc_id", "source_type", "title", "content") if column in available_columns]
-    if "doc_id" not in columns:
-        raise ValueError(f"EnterpriseRAG-Bench parquet is missing doc_id column: {path}")
-    if "content" not in columns:
-        raise ValueError(f"EnterpriseRAG-Bench parquet is missing content column: {path}")
+    resolved = _resolve_enterprise_document_columns(parquet_file.schema_arrow.names)
+    if not resolved.get("doc_id") or not resolved.get("content"):
+        raise EnterpriseDocumentSchemaError(f"document_schema_unsupported: {path}")
+    columns = [column for column in resolved.values() if column]
 
     for batch in parquet_file.iter_batches(batch_size=4096, columns=columns):
         payload = batch.to_pydict()
-        doc_id_values = payload.get("doc_id") or []
+        doc_id_values = payload.get(resolved["doc_id"]) or []
         for index, doc_id_value in enumerate(doc_id_values):
             doc_id = str(doc_id_value or "")
-            if doc_id not in remaining:
+            if doc_ids is not None and doc_id not in remaining:
                 continue
-            yield {column: (payload.get(column) or [None])[index] for column in columns}
-            remaining.discard(doc_id)
-            if not remaining:
+            row: dict[str, Any] = {"doc_id": doc_id}
+            for target_field in ("source_type", "title", "content"):
+                source_column = resolved.get(target_field)
+                row[target_field] = (payload.get(source_column) or [None])[index] if source_column else None
+            yield row
+            if doc_ids is not None:
+                remaining.discard(doc_id)
+            if doc_ids is not None and not remaining:
                 return
 
 
@@ -393,6 +501,43 @@ def _iter_file_document_rows(source_root: Path, *, doc_ids: set[str]) -> Iterabl
         }
 
 
+def _iter_enterprise_document_rows(source_root: Path, *, doc_ids: set[str] | None = None) -> Iterable[dict[str, Any]]:
+    if source_root.is_file() and source_root.suffix.lower() == ".parquet":
+        yield from _iter_parquet_document_rows(source_root, doc_ids=doc_ids)
+        return
+    if source_root.is_dir():
+        parquet_paths = sorted(source_root.rglob("*.parquet"))
+        if parquet_paths:
+            if doc_ids is None:
+                for parquet_path in parquet_paths:
+                    yield from _iter_parquet_document_rows(parquet_path)
+                return
+            remaining = set(doc_ids or [])
+            for parquet_path in parquet_paths:
+                emitted = list(_iter_parquet_document_rows(parquet_path, doc_ids=remaining))
+                for row in emitted:
+                    yield row
+                remaining -= {str(row.get("doc_id")) for row in emitted}
+                if not remaining:
+                    return
+        remaining_for_files = set(doc_ids or [])
+        if doc_ids is not None:
+            for row in _iter_file_document_rows(source_root, doc_ids=remaining_for_files):
+                yield row
+        else:
+            for file_path in sorted(source_root.rglob("*")):
+                if not file_path.is_file() or file_path.suffix.lower() in {".parquet", ".zip"}:
+                    continue
+                yield {
+                    "doc_id": file_path.stem,
+                    "source_type": file_path.parent.name,
+                    "title": file_path.stem,
+                    "content": file_path.read_text(encoding="utf-8", errors="replace"),
+                }
+        return
+    raise ValueError(f"unsupported EnterpriseRAG-Bench document source: {source_root}")
+
+
 def _load_enterprise_documents(source_root: Path | None, *, doc_ids: set[str]) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     if not source_root:
         return {}, {
@@ -404,21 +549,27 @@ def _load_enterprise_documents(source_root: Path | None, *, doc_ids: set[str]) -
 
     rows: list[dict[str, Any]] = []
     scanned_paths: list[str] = []
-    if source_root.is_file() and source_root.suffix.lower() == ".parquet":
-        scanned_paths.append(str(source_root))
-        rows.extend(_iter_parquet_document_rows(source_root, doc_ids=doc_ids))
-    elif source_root.is_dir():
-        parquet_paths = sorted(source_root.rglob("*.parquet"))
-        for parquet_path in parquet_paths:
-            scanned_paths.append(str(parquet_path))
-            rows.extend(_iter_parquet_document_rows(parquet_path, doc_ids=doc_ids - {str(row.get("doc_id")) for row in rows}))
-            if {str(row.get("doc_id")) for row in rows} >= doc_ids:
-                break
-        if doc_ids - {str(row.get("doc_id")) for row in rows}:
+    schema_probe = inspect_enterprise_document_schema(source_root)
+    try:
+        if source_root.is_file() and source_root.suffix.lower() == ".parquet":
             scanned_paths.append(str(source_root))
-            rows.extend(_iter_file_document_rows(source_root, doc_ids=doc_ids - {str(row.get("doc_id")) for row in rows}))
-    else:
-        raise ValueError(f"unsupported EnterpriseRAG-Bench document source: {source_root}")
+            rows.extend(_iter_parquet_document_rows(source_root, doc_ids=doc_ids))
+        elif source_root.is_dir():
+            scanned_paths.extend(str(path) for path in sorted(source_root.rglob("*.parquet")))
+            scanned_paths.append(str(source_root))
+            rows.extend(_iter_enterprise_document_rows(source_root, doc_ids=doc_ids))
+        else:
+            raise ValueError(f"unsupported EnterpriseRAG-Bench document source: {source_root}")
+    except EnterpriseDocumentSchemaError:
+        return {}, {
+            "document_source_status": "document_schema_unsupported",
+            "source_root": str(source_root),
+            "scanned_paths": scanned_paths or [str(source_root)],
+            "loaded_doc_count": 0,
+            "missing_doc_ids": sorted(doc_ids),
+            "blocked_reason": "document_schema_unsupported",
+            "schema_probe": schema_probe,
+        }
 
     documents = {str(row.get("doc_id")): row for row in rows if row.get("doc_id")}
     return documents, {
@@ -427,6 +578,7 @@ def _load_enterprise_documents(source_root: Path | None, *, doc_ids: set[str]) -
         "scanned_paths": scanned_paths,
         "loaded_doc_count": len(documents),
         "missing_doc_ids": sorted(doc_ids - set(documents)),
+        "schema_probe": schema_probe,
     }
 
 
@@ -529,12 +681,13 @@ def _prepare_enterprise_rag_bench(
         )
 
     manifest_files = list(manifest_files_by_name.values())
+    blocked_reason = document_probe.get("blocked_reason")
     manifest = {
         "source": "EnterpriseRAG-Bench",
         "output_dir": str(output_dir),
         "file_count": len(manifest_files),
-        "external_documents_required": bool(expected_doc_ids and not documents_by_id),
-        "blocked_reason": "enterprise_rag_bench_documents_required" if expected_doc_ids and not documents_by_id else None,
+        "external_documents_required": bool(expected_doc_ids and (blocked_reason or not documents_by_id)),
+        "blocked_reason": blocked_reason or ("enterprise_rag_bench_documents_required" if expected_doc_ids and not documents_by_id else None),
         "files": manifest_files,
         "selected_question_count": len(selected_rows),
         "skipped_case_count": skipped_case_count,
