@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE14_docs-architecture-expansion
-status: active
+status: completed
 
 ## 目标
 
@@ -90,6 +90,14 @@ python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
+
+## Closure Evidence
+
+- 新增 `docs/architecture/agent-core-runtime.md`、`docs/architecture/capability-and-skill-layer.md`、`docs/architecture/agentic-retrieval-planner.md`、`docs/architecture/eval-observability-and-cost.md`、`docs/architecture/input-layer-and-document-processing.md` 和 `docs/architecture/knowledge-space-product-configuration.md`，只承载稳定专题架构、Current / Launchable Target / Production Scale Target 边界和证据路径。
+- `docs/architecture/architecture.md`、`docs/architecture/production-readiness.md`、`docs/architecture/document-ingestion-foundation.md`、`README.md`、`AGENTS.md`、`.agent/references/docs-map.md`、`.agent/references/architecture-docs-map.md`、`.agent/system.yaml`、verifier 和 repo tests 已同步 PHASE14 文档入口。
+- 已运行 `python tools/agent/render_architecture.py --write`，同步 `.agent/architecture/architecture.md`、`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html`。
+- 已验证通过：`git diff --check`、`python tools/agent/render_architecture.py --check`、`python tools/scripts/verify_docs_entrypoints.py`、`python tools/scripts/verify_repo_structure.py`、`python .agent/scripts/verify_agent_system.py`、`python .agent/scripts/verify_doc_boundaries.py`、`python .agent/scripts/verify_repo_hygiene.py`、`powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1` 和 repo static guardrails。
+- PHASE14 完成后当前 active phase 切换到 `PHASE15_verification-archive-closure.md`，Program 3 Mega 仍保持 active，等待 full verification、archive、no-active closure 和本地提交后的最终收口。
 
 ## 需要先读取
 

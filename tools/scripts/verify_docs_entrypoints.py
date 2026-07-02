@@ -25,6 +25,12 @@ ACTIVE_DOCS_ARCHITECTURE_FILES = {
     "architecture.md",
     "production-readiness.md",
     "document-ingestion-foundation.md",
+    "agent-core-runtime.md",
+    "capability-and-skill-layer.md",
+    "agentic-retrieval-planner.md",
+    "eval-observability-and-cost.md",
+    "input-layer-and-document-processing.md",
+    "knowledge-space-product-configuration.md",
     "architecture.html",
     "repo-ownership-matrix.md",
 }
@@ -77,6 +83,12 @@ def verify_front_path_shape() -> list[str]:
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",
         "docs/architecture/document-ingestion-foundation.md",
+        "docs/architecture/agent-core-runtime.md",
+        "docs/architecture/capability-and-skill-layer.md",
+        "docs/architecture/agentic-retrieval-planner.md",
+        "docs/architecture/eval-observability-and-cost.md",
+        "docs/architecture/input-layer-and-document-processing.md",
+        "docs/architecture/knowledge-space-product-configuration.md",
         "docs/architecture/architecture.html",
         "docs/architecture/repo-ownership-matrix.md",
         ".agent/architecture/README.md",
@@ -153,13 +165,19 @@ def verify_entrypoint_text() -> list[str]:
     document_ingestion = _read("docs/architecture/document-ingestion-foundation.md")
     current_program = _read(".agent/programs/current.md")
     current_phase = _current_phase_name(current_program)
-    if current_phase != "PHASE14_docs-architecture-expansion.md":
-        errors.append(".agent/programs/current.md must declare current Program 3 PHASE14")
+    if current_phase != "PHASE15_verification-archive-closure.md":
+        errors.append(".agent/programs/current.md must declare current Program 3 PHASE15")
 
     for phrase in [
         "./docs/architecture/architecture.md",
         "./docs/architecture/production-readiness.md",
         "./docs/architecture/document-ingestion-foundation.md",
+        "./docs/architecture/agent-core-runtime.md",
+        "./docs/architecture/capability-and-skill-layer.md",
+        "./docs/architecture/agentic-retrieval-planner.md",
+        "./docs/architecture/eval-observability-and-cost.md",
+        "./docs/architecture/input-layer-and-document-processing.md",
+        "./docs/architecture/knowledge-space-product-configuration.md",
         "./docs/architecture/architecture.html",
         "GeneralAgent` single loop",
         "zuno-master-architecture-implementation-v1",
@@ -172,6 +190,12 @@ def verify_entrypoint_text() -> list[str]:
         "./architecture/architecture.md",
         "./architecture/production-readiness.md",
         "./architecture/document-ingestion-foundation.md",
+        "./architecture/agent-core-runtime.md",
+        "./architecture/capability-and-skill-layer.md",
+        "./architecture/agentic-retrieval-planner.md",
+        "./architecture/eval-observability-and-cost.md",
+        "./architecture/input-layer-and-document-processing.md",
+        "./architecture/knowledge-space-product-configuration.md",
         "./architecture/architecture.html",
         "./history/README.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/",
@@ -183,6 +207,12 @@ def verify_entrypoint_text() -> list[str]:
         "architecture.md",
         "production-readiness.md",
         "document-ingestion-foundation.md",
+        "agent-core-runtime.md",
+        "capability-and-skill-layer.md",
+        "agentic-retrieval-planner.md",
+        "eval-observability-and-cost.md",
+        "input-layer-and-document-processing.md",
+        "knowledge-space-product-configuration.md",
         "architecture.html",
         "repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
@@ -333,6 +363,12 @@ def verify_docs_map_has_unique_architecture_source_roles() -> list[str]:
     for phrase in [
         "`docs/architecture/production-readiness.md`",
         "`docs/architecture/document-ingestion-foundation.md`",
+        "`docs/architecture/agent-core-runtime.md`",
+        "`docs/architecture/capability-and-skill-layer.md`",
+        "`docs/architecture/agentic-retrieval-planner.md`",
+        "`docs/architecture/eval-observability-and-cost.md`",
+        "`docs/architecture/input-layer-and-document-processing.md`",
+        "`docs/architecture/knowledge-space-product-configuration.md`",
         "`docs/architecture/repo-ownership-matrix.md`",
     ]:
         if phrase not in formal_entries:

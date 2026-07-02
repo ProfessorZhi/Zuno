@@ -6,12 +6,12 @@
 
 - State: active
 - Active program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- Current phase: `PHASE14_docs-architecture-expansion.md`
+- Current phase: `PHASE15_verification-archive-closure.md`
 - Latest completed program: `zuno-enterprise-document-ingestion-platform-v2`
 
 当前 Program 3 Mega 合并原 active Program 3 与 queued Program 4-6，目标是在一个 program 内完成 Zuno 可上线企业知识库 Agentic GraphRAG product baseline 的全链路闭环计划。
 
-PHASE12 End-to-End Product Runtime 已完成本地 E2E product baseline；PHASE13 已把 scenario / trace 输出汇总为 Eval / Trace / Cost / Benchmark baseline；当前 PHASE14 负责 Docs / Architecture Expansion。
+PHASE12 End-to-End Product Runtime 已完成本地 E2E product baseline；PHASE13 已把 scenario / trace 输出汇总为 Eval / Trace / Cost / Benchmark baseline；PHASE14 已完成 Docs / Architecture Expansion；当前 PHASE15 负责 full verification、archive 和 final closure。
 
 ## 当前文件
 

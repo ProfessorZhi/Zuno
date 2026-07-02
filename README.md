@@ -25,10 +25,11 @@ Local-first Enterprise Private Knowledge Agent Workspace
 1. [总架构文档](./docs/architecture/architecture.md)：文字说明 Current / Target 边界、企业知识库主叙事、运行时分层、文档解析、Memory、工具、安全、评测和实施落点；同一文件也维护 Mermaid 图源。
 2. [Production Readiness Baseline](./docs/architecture/production-readiness.md)：明确四大总交付物、Current Local Slice、Launchable Prototype Target 与 Production Scale Target 的边界。
 3. [Document Ingestion Foundation](./docs/architecture/document-ingestion-foundation.md)：企业知识库文档入口契约，说明 ParseGateway、Document IR、index handoff、版本、幂等、防丢、ACL、citation lineage 和多模态解析边界。
-4. [架构 HTML](./docs/architecture/architecture.html)：图形化查看十类架构图，支持展开全屏查看。
-5. [公开演示证据](./docs/evidence/public-demo.md)：可公开引用的证据入口。
-6. [术语表](./docs/reference/terminology.md)：当前公开术语。
-7. [Agent 入口](./AGENTS.md)：Codex / Agent 执行任务前必须遵守的工作流契约。
+4. [Agent Core Runtime](./docs/architecture/agent-core-runtime.md)、[Capability And Skill Layer](./docs/architecture/capability-and-skill-layer.md)、[Agentic Retrieval Planner](./docs/architecture/agentic-retrieval-planner.md)、[Eval Observability And Cost](./docs/architecture/eval-observability-and-cost.md)、[Input Layer And Document Processing](./docs/architecture/input-layer-and-document-processing.md)、[Knowledge Space Product Configuration](./docs/architecture/knowledge-space-product-configuration.md)：PHASE14 稳定专题说明，展开 Current / Target 边界和证据路径。
+5. [架构 HTML](./docs/architecture/architecture.html)：图形化查看十类架构图，支持展开全屏查看。
+6. [公开演示证据](./docs/evidence/public-demo.md)：可公开引用的证据入口。
+7. [术语表](./docs/reference/terminology.md)：当前公开术语。
+8. [Agent 入口](./AGENTS.md)：Codex / Agent 执行任务前必须遵守的工作流契约。
 
 已归档的旧拆分架构文档在 `docs/history/architecture-surface-cleanup-2026-06-30/`，不再作为当前前台入口。
 
@@ -48,10 +49,10 @@ Local-first Enterprise Private Knowledge Agent Workspace
 当前 `.agent/programs/` 处于 active 状态：
 
 - `active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- `current_phase: PHASE14_docs-architecture-expansion.md`
+- `current_phase: PHASE15_verification-archive-closure.md`
 - `latest_completed_program: zuno-enterprise-document-ingestion-platform-v2`
 
-当前 Program 3 是 Mega Program：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`。它把原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 合并为一个 full closure program。执行模型是一个总 Program、十五个 Phase Gate、多条并行 Workstream、多个 PR / commit、一个 Coordinator 统一合并、验证和归档。当前推进 Docs / Architecture Expansion；End-to-End Product Runtime、Eval / Trace / Cost / Benchmark、Model Gateway / Cost / Latency、Planning Contract / Strategy Selector、ReAct / Reflection / Dynamic Replan / Reflexion runtime，以及 Workspace Product API / Frontend Minimal Sync 的本地 baseline 已进入 Current。目标是完成 Launchable Enterprise Agentic GraphRAG Product Baseline：输入层可靠，知识库层支持标准检索 / 深度检索，Capability / Skill / Tool / MCP 可编排，Memory & Context Engine 可构造 ContextPack，Planning & Control Runtime 可 strategy_select / plan / ReAct / reflect / replan / reflexion，Security / Governance 可 gate，Eval / Trace / Cost 可记录质量、成本和耗时。Basic RAG 与静态 GraphRAG 只作为评测对照组；GraphRAG 是 Agent 可调用的检索能力，Skill 是 Agent 的任务方法包，MCP / Tool / Knowledge 都属于 Capability Layer 的可编排能力，不是用户手动选择的主产品模式。
+当前 Program 3 是 Mega Program：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`。它把原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 合并为一个 full closure program。执行模型是一个总 Program、十五个 Phase Gate、多条并行 Workstream、多个 PR / commit、一个 Coordinator 统一合并、验证和归档。当前推进 PHASE15 full verification、archive 和 final closure；Docs / Architecture Expansion、End-to-End Product Runtime、Eval / Trace / Cost / Benchmark、Model Gateway / Cost / Latency、Planning Contract / Strategy Selector、ReAct / Reflection / Dynamic Replan / Reflexion runtime，以及 Workspace Product API / Frontend Minimal Sync 的本地 baseline 已进入 Current。目标是完成 Launchable Enterprise Agentic GraphRAG Product Baseline：输入层可靠，知识库层支持标准检索 / 深度检索，Capability / Skill / Tool / MCP 可编排，Memory & Context Engine 可构造 ContextPack，Planning & Control Runtime 可 strategy_select / plan / ReAct / reflect / replan / reflexion，Security / Governance 可 gate，Eval / Trace / Cost 可记录质量、成本和耗时。Basic RAG 与静态 GraphRAG 只作为评测对照组；GraphRAG 是 Agent 可调用的检索能力，Skill 是 Agent 的任务方法包，MCP / Tool / Knowledge 都属于 Capability Layer 的可编排能力，不是用户手动选择的主产品模式。
 
 最近完成并归档的 program 是 `zuno-production-architecture-and-deliverables-completion-v1`：
 

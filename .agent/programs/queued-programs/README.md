@@ -6,7 +6,7 @@
 
 - `state: active`
 - `active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- `current_phase: PHASE14_docs-architecture-expansion.md`
+- `current_phase: PHASE15_verification-archive-closure.md`
 
 ## 被合并的计划
 

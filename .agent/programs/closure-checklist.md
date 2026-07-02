@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE14_docs-architecture-expansion.md`
+current_phase: `PHASE15_verification-archive-closure.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 收口目标
@@ -31,7 +31,7 @@ Production scale external deployments remain replaceable targets.
 - [x] PHASE11 完成 Workspace Product API / Frontend Minimal Sync。
 - [x] PHASE12 完成 End-to-End Product Runtime scenario。
 - [x] PHASE13 完成 Eval / Trace / Cost / Benchmark baseline。
-- [ ] PHASE14 完成 Docs / Architecture Expansion。
+- [x] PHASE14 完成 Docs / Architecture Expansion。
 - [ ] PHASE15 完成 full verification、archive、no-active、commit 和 push。
 
 ## 12 条 Product Baseline 验收
@@ -89,16 +89,16 @@ Production scale external deployments remain replaceable targets.
 
 ## 文档同步检查
 
-- [ ] `.agent/programs/current.md` 与 mega program active 状态一致。
-- [ ] `.agent/programs/implementation-roadmap.md` 覆盖 Program 1 / 2 completed 与 Program 3 Mega active。
-- [ ] `.agent/programs/queued-programs/` 中原 Program 4-6 标注 superseded / merged_into，不写成 completed。
-- [ ] `.agent/references/current-program.md` 与 `.agent/programs/current.md` 一致。
-- [ ] `AGENTS.md` 和 README 当前 program 摘要一致。
-- [ ] `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两个 architecture HTML 同步。
-- [ ] `docs/architecture/production-readiness.md` 与 mega program Current / Target 边界一致。
-- [ ] `docs/architecture/document-ingestion-foundation.md` 与 async ingestion / E2E baseline 边界一致。
-- [ ] `docs/architecture/document-ingestion-foundation.md` 包含 Input Format Support Matrix、Binary Source Object Target、Async Ingestion Pipeline、Queue / Worker / Outbox / Reconciler、OCR / VLM / Scanned 边界和 File-level Lifecycle。
-- [ ] verifier / repo tests 覆盖 active program 文件清单、superseded Program 4-6 和 latest completed archive。
+- [x] `.agent/programs/current.md` 与 mega program active 状态一致。
+- [x] `.agent/programs/implementation-roadmap.md` 覆盖 Program 1 / 2 completed 与 Program 3 Mega active。
+- [x] `.agent/programs/queued-programs/` 中原 Program 4-6 标注 superseded / merged_into，不写成 completed。
+- [x] `.agent/references/current-program.md` 与 `.agent/programs/current.md` 一致。
+- [x] `AGENTS.md` 和 README 当前 program 摘要一致。
+- [x] `docs/architecture/architecture.md`、`.agent/architecture/architecture.md` 和两个 architecture HTML 同步。
+- [x] `docs/architecture/production-readiness.md` 与 mega program Current / Target 边界一致。
+- [x] `docs/architecture/document-ingestion-foundation.md` 与 async ingestion / E2E baseline 边界一致。
+- [x] `docs/architecture/document-ingestion-foundation.md` 包含 Input Format Support Matrix、Binary Source Object Target、Async Ingestion Pipeline、Queue / Worker / Outbox / Reconciler、OCR / VLM / Scanned 边界和 File-level Lifecycle。
+- [x] verifier / repo tests 覆盖 active program 文件清单、superseded Program 4-6 和 latest completed archive。
 
 ## 验证命令
 

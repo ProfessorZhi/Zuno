@@ -243,6 +243,12 @@ REQUIRED_PATHS = [
     "docs/architecture/architecture.md",
     "docs/architecture/production-readiness.md",
     "docs/architecture/document-ingestion-foundation.md",
+    "docs/architecture/agent-core-runtime.md",
+    "docs/architecture/capability-and-skill-layer.md",
+    "docs/architecture/agentic-retrieval-planner.md",
+    "docs/architecture/eval-observability-and-cost.md",
+    "docs/architecture/input-layer-and-document-processing.md",
+    "docs/architecture/knowledge-space-product-configuration.md",
     "docs/architecture/architecture.html",
     "docs/architecture/repo-ownership-matrix.md",
     "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
@@ -389,6 +395,12 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "./architecture/architecture.md",
         "./architecture/production-readiness.md",
         "./architecture/document-ingestion-foundation.md",
+        "./architecture/agent-core-runtime.md",
+        "./architecture/capability-and-skill-layer.md",
+        "./architecture/agentic-retrieval-planner.md",
+        "./architecture/eval-observability-and-cost.md",
+        "./architecture/input-layer-and-document-processing.md",
+        "./architecture/knowledge-space-product-configuration.md",
         "./architecture/architecture.html",
         "./evidence/public-demo.md",
         "./history/README.md",
@@ -398,6 +410,12 @@ DOC_REQUIRED_PHRASES: dict[str, list[str]] = {
         "architecture.md",
         "production-readiness.md",
         "document-ingestion-foundation.md",
+        "agent-core-runtime.md",
+        "capability-and-skill-layer.md",
+        "agentic-retrieval-planner.md",
+        "eval-observability-and-cost.md",
+        "input-layer-and-document-processing.md",
+        "knowledge-space-product-configuration.md",
         "architecture.html",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
@@ -1338,7 +1356,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE14_docs-architecture-expansion.md",
+        "current_phase: PHASE15_verification-archive-closure.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -1396,9 +1414,9 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {PROGRAM3_ACTIVE_NAME}" not in phase_content:
             errors.append(f"Program 3 active phase missing program id: {phase_name}")
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_") or phase_name.startswith("PHASE12_") or phase_name.startswith("PHASE13_"):
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_") or phase_name.startswith("PHASE12_") or phase_name.startswith("PHASE13_") or phase_name.startswith("PHASE14_"):
             expected_status = "status: completed"
-        elif phase_name.startswith("PHASE14_"):
+        elif phase_name.startswith("PHASE15_"):
             expected_status = "status: active"
         else:
             expected_status = "status: pending"

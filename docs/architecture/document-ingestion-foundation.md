@@ -62,11 +62,11 @@ Current 只能描述代码和测试已经证明的事实：
 
 这张表的关键约束是：`txt / md / csv / json / html / code` 可以写成 Current native deterministic parser；PDF / Office / image / scanned / unknown binary 只能写成 target-blocked boundary、dependency probe、blocked diagnostics 或 Launchable / Production Target。
 
-## Binary Source Object Target
+## Binary Source Object Current / Target
 
-当前 `LocalObjectStore` 主要面向 `save_text()` 和小文本 fixture，已经能计算 `source_sha256` 并返回 `storage_uri`。Program 3 Mega 的 Launchable Target 要把 source object 从“文本内容保存”升级成“原始文件事实保存”，但本轮没有 runtime 实现前不能把这些写成 Current。
+当前 `LocalObjectStore` 已提供 `save_bytes()`、`read_bytes()`、`open_stream()` 和 sha256 verification。Program 3 Mega PHASE03 已用 focused tests 证明 binary object save / read / verify；PHASE12 E2E 已证明 PDF / Office / image / scanned 这类 blocked 文件仍会保存 source object、`source_sha256` 和 `storage_uri`，即使解析 blocked 也不丢原始文件事实。
 
-Launchable Prototype Target：
+Launchable Prototype Target 继续要求：
 
 - `save_bytes()`：保存 PDF、Office、image、scanned、unknown binary 的原始 bytes。
 - `read_bytes()` / `open_stream()`：支持 worker 以 bytes 或 stream 读取原始对象。
@@ -105,16 +105,16 @@ Production Scale Target：
   -> Retrieval available
 ```
 
-Program 3 Mega 的 local baseline 可以用 `LocalQueueBackend` 和 local workers 跑通；RabbitMQ、Redis、PostgreSQL、MinIO / S3 和 external parser workers 没有真实 provider 和 tests 前只能是 adapter boundary / dependency probe / target-blocked evidence。
+Program 3 Mega 的 local baseline 已用 `LocalQueueBackend` 和 local workers 跑通；RabbitMQ、Redis、PostgreSQL、MinIO / S3 和 external parser workers 没有真实 provider 和 tests 前只能是 adapter boundary / dependency probe / target-blocked evidence。
 
 ## Queue / Worker / Outbox / Reconciler
 
-Program 3 Mega 的 PHASE03 必须把以下对象写进计划和 shared contracts：
+Program 3 Mega 的 PHASE03 已把以下对象落成本地 baseline 或明确 Target boundary：
 
-- **QueueBackend**：先实现 local queue；RabbitMQQueueBackend 只做 boundary、dependency probe 和 target-blocked evidence，不能要求外部 broker 才能跑 tests。
-- **ParserWorker**：消费 `parse_requested`，调用 `ParseGateway`，写 `ParseAttempt`、parse snapshot、`DocumentVersion` 和 blocks；target-blocked PDF / Office / OCR / VLM 必须保留 blocked reason。
-- **IndexWorker**：消费 `index_requested`，写 `IndexManifest`、chunks 和 citation lineage；blocked / failed parse 不能进入 fake index。
-- **Outbox**：DB 事务内写 job + outbox event，防止“parse job 已落库但队列消息丢失”。
+- **QueueBackend**：Current 是 `LocalQueueBackend`；`RabbitMQQueueBackend` 只做 boundary、dependency probe 和 target-blocked evidence，不能要求外部 broker 才能跑 tests。
+- **ParserWorker**：Current 已消费 `parse_requested`，调用 `ParseGateway`，写 parse snapshot、`DocumentVersion` 和 blocks；target-blocked PDF / Office / OCR / VLM 保留 blocked reason。
+- **IndexWorker**：Current 已消费 `index_requested`，写 `IndexManifest`、chunks 和 citation lineage；blocked / failed parse 不能进入 fake index。
+- **Outbox**：本地 baseline 保留 outbox event contract；生产 DB 事务 outbox operations 仍是 Production Scale Target。
 - **DeadLetter**：超过 retry 上限、依赖缺失或策略 blocked 时保留 failure / blocked evidence。
 - **Reconciler**：检查 `uploaded_without_parse`、`parse_succeeded_without_index`、`index_chunks_missing`、`blocked_without_diagnostics`、`object_missing`、`citation_lineage_missing`。
 
@@ -378,7 +378,7 @@ Program 1 应区分以下状态：
 - `cancelled`：用户、预算或策略取消。
 - `dead_letter`：超过 retry 上限或需要人工处理。
 
-当前 `ParseJobSnapshot` 只覆盖本地 queued / running / succeeded / failed 基线。Program 1 可以扩展本地 contract，但不能把 DB-backed queue、worker lease 或 dead letter 写成 Current，除非代码和测试证明。
+当前 `ParseJobSnapshot` 覆盖本地 queued / running / succeeded / failed / blocked / dead_letter 等 baseline；Program 3 Mega 还用 local queue、dead letter 和 reconciler focused tests 证明本地行为。DB-backed queue、worker lease、heartbeat 和生产 dead letter operations 仍是 Production Scale Target。
 
 ## 防丢机制
 
@@ -389,7 +389,7 @@ Program 1 应区分以下状态：
 - **Dead Letter**：超过 retry 上限或 blocked 的任务进入 dead letter，保留 blocked reason、retry policy 和人工处理入口。
 - **Reconciler**：周期性检查 `uploaded_without_parse`、`parsed_without_index`、`manifest_block_mismatch`、`acl_index_drift`、`citation_version_missing`。
 
-Program 1 的 local slice 可以先实现 snapshot / replay / diagnostics；生产 outbox、lease、reconciler 仍是 Target。
+Program 1 / Program 3 的 local slice 已实现 snapshot / replay / diagnostics、local dead letter 和 reconciler baseline；生产 outbox、lease、heartbeat 和 distributed reconciler operations 仍是 Target。
 
 ## ACL 与 Sensitivity 继承
 

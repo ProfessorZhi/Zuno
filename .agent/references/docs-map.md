@@ -24,6 +24,7 @@ docs/history/ = archive and evidence
 - `docs/architecture/architecture.md`：总架构文档，文字说明当前事实、目标分层、主链路和实施落点。
 - `docs/architecture/production-readiness.md`：成熟度、四大总交付物、Current Local Slice、Launchable Prototype Target 和 Production Scale Target 边界。
 - `docs/architecture/document-ingestion-foundation.md`：企业知识库文档入口契约，集中说明 ParseGateway、Document IR、parser job、index handoff、幂等、版本、防丢、ACL、citation lineage 和多模态解析边界。
+- `docs/architecture/agent-core-runtime.md`、`docs/architecture/capability-and-skill-layer.md`、`docs/architecture/agentic-retrieval-planner.md`、`docs/architecture/eval-observability-and-cost.md`、`docs/architecture/input-layer-and-document-processing.md`、`docs/architecture/knowledge-space-product-configuration.md`：PHASE14 稳定专题说明，只展开长期可复用架构语义和 Current / Target 边界。
 - `docs/architecture/repo-ownership-matrix.md`：代码目录 ownership、compatibility、vendor 和 provider 分类事实表。
 - `docs/evidence/public-demo.md`：精选公开证据入口。
 - `docs/evidence/eval-baselines.md`：Eval baseline 状态。
@@ -73,7 +74,7 @@ Agent 工作流入口：
 - 不把一次性调查流水账写进 `docs/` 或 `.agent/references/`。
 - 不把模板改成项目知识库。
 - 不把 history 文件重写为当前事实。
-- 不恢复 `docs/architecture/phases/`、`docs/architecture/plans/`、`docs/architecture/programs/` 当前前台目录。
+- 不恢复 `docs/architecture/phases/`、`docs/architecture/plans/`、`docs/architecture/programs/` 当前前台目录；PHASE14 专题文档是稳定专题入口，不是旧 split front path。
 
 ## Common Failure Patterns
 
@@ -139,6 +140,12 @@ pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p
 - `docs/architecture/architecture.md`
 - `docs/architecture/production-readiness.md`
 - `docs/architecture/document-ingestion-foundation.md`
+- `docs/architecture/agent-core-runtime.md`
+- `docs/architecture/capability-and-skill-layer.md`
+- `docs/architecture/agentic-retrieval-planner.md`
+- `docs/architecture/eval-observability-and-cost.md`
+- `docs/architecture/input-layer-and-document-processing.md`
+- `docs/architecture/knowledge-space-product-configuration.md`
 - `docs/architecture/architecture.html`
 - `.agent/architecture/README.md`
 - `.agent/architecture/architecture.md`

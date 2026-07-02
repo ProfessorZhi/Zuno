@@ -181,6 +181,13 @@ REQUIRED_PATHS = [
     "docs/architecture/README.md",
     "docs/architecture/architecture.md",
     "docs/architecture/production-readiness.md",
+    "docs/architecture/document-ingestion-foundation.md",
+    "docs/architecture/agent-core-runtime.md",
+    "docs/architecture/capability-and-skill-layer.md",
+    "docs/architecture/agentic-retrieval-planner.md",
+    "docs/architecture/eval-observability-and-cost.md",
+    "docs/architecture/input-layer-and-document-processing.md",
+    "docs/architecture/knowledge-space-product-configuration.md",
     "docs/architecture/architecture.html",
     "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
     "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
@@ -471,7 +478,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE14_docs-architecture-expansion.md",
+        "current_phase: PHASE15_verification-archive-closure.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -515,9 +522,9 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {PROGRAM3_ACTIVE_NAME}" not in phase_content:
             errors.append(f"Program 3 active phase missing program id: {phase_name}")
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_") or phase_name.startswith("PHASE12_") or phase_name.startswith("PHASE13_"):
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_") or phase_name.startswith("PHASE12_") or phase_name.startswith("PHASE13_") or phase_name.startswith("PHASE14_"):
             expected_status = "status: completed"
-        elif phase_name.startswith("PHASE14_"):
+        elif phase_name.startswith("PHASE15_"):
             expected_status = "status: active"
         else:
             expected_status = "status: pending"

@@ -4,13 +4,13 @@
 
 state: active
 active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
-current_phase: PHASE14_docs-architecture-expansion.md
+current_phase: PHASE15_verification-archive-closure.md
 latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 `.agent/programs/` 当前 active program 是：
 
 - Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- 当前 phase：`.agent/programs/PHASE14_docs-architecture-expansion.md`
+- 当前 phase：`.agent/programs/PHASE15_verification-archive-closure.md`
 
 Program 3 Mega 合并原 active Program 3 与 queued Program 4-6：
 
@@ -66,12 +66,12 @@ active 状态下，`.agent/programs/` 根目录保留当前 Program 3 Mega 的 P
    - 完成：Product V1 local durable ingestion baseline。
 3. Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
    - 状态：active。
-   - 当前 phase：`.agent/programs/PHASE14_docs-architecture-expansion.md`
+   - 当前 phase：`.agent/programs/PHASE15_verification-archive-closure.md`
    - 合并输入：`zuno-enterprise-ingestion-async-infrastructure-v1`、`zuno-runtime-subsystems-parallel-v1`、`zuno-agent-planning-integration-v1`、`zuno-enterprise-knowledge-eval-benchmark-v1`
 
 ## Mega Phase Gate
 
-当前 active phase 文件为 PHASE01-PHASE15。PHASE01-PHASE02 是顺序闸门；PHASE03-PHASE08 可在 contract freeze 后按 workstream 并行；PHASE09-PHASE11 是 planning / runtime / product API 集成；PHASE12-PHASE15 是 E2E、eval、docs、archive closure。
+当前 active phase 文件为 PHASE01-PHASE15。PHASE01-PHASE02 是顺序闸门；PHASE03-PHASE08 可在 contract freeze 后按 workstream 并行；PHASE09-PHASE11 是 planning / runtime / product API 集成；PHASE12-PHASE14 已完成 E2E、eval 和 docs expansion；PHASE15 当前负责 full verification、archive closure 和 no-active state。
 
 ## 最近完成归档
 

@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE14_docs-architecture-expansion.md`
+current_phase: `PHASE15_verification-archive-closure.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 总套件
@@ -82,7 +82,7 @@ Program ID：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 当前 phase：
 
-- `.agent/programs/PHASE14_docs-architecture-expansion.md`
+- `.agent/programs/PHASE15_verification-archive-closure.md`
 
 目标：把原 Program 3-6 合并为一个可执行到 closure 的全链路 program，完成 launchable enterprise Agentic GraphRAG product baseline。它不是要求部署真实生产集群，而是要求每个关键层都有 local runnable implementation、adapter boundary、dependency probe / target-blocked evidence、focused tests、E2E 闭环、trace/eval/cost 记录和文档成熟度边界。
 
@@ -124,9 +124,9 @@ Production scale external deployments remain replaceable targets.
 13. `PHASE13_eval-trace-cost-benchmark.md`
    - completed：ConversationRunMetrics、StageMetrics、IngestionMetrics、retrieval / answer / planning / replan / reflection / reflexion / security / cost / latency metrics and regression report；回答文件 blocked、PDF / Office / OCR no fake index、binary sha256 traceability、parse / index duration、deep retrieval cost source 和 OCR/VLM provider blocked 是否正确。
 14. `PHASE14_docs-architecture-expansion.md`
-   - active：agent core runtime、capability and skill、agentic retrieval planner、input-layer-and-document-processing、knowledge-space-product-configuration、eval observability and cost 等架构展开文档。
+   - completed：agent core runtime、capability and skill、agentic retrieval planner、input-layer-and-document-processing、knowledge-space-product-configuration、eval observability and cost 等架构展开文档。
 15. `PHASE15_verification-archive-closure.md`
-   - full verification、archive、no-active、closure summary、commit、push。
+   - active：full verification、archive、no-active、closure summary、commit、push。
 
 ## 目标架构拼接矩阵
 

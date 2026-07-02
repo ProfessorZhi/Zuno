@@ -51,11 +51,12 @@ docs/history/
 
 ## Architecture Documentation Governance
 
-Zuno 的架构文档由 `docs/architecture/architecture.md`、`docs/architecture/production-readiness.md`、`docs/architecture/document-ingestion-foundation.md`、`docs/architecture/architecture.html`、`.agent/architecture/architecture.md`、`.agent/architecture/architecture.html` 和 `.agent/references/` 共同治理。
+Zuno 的架构文档由 `docs/architecture/architecture.md`、`docs/architecture/production-readiness.md`、`docs/architecture/document-ingestion-foundation.md`、PHASE14 稳定专题文档、`docs/architecture/architecture.html`、`.agent/architecture/architecture.md`、`.agent/architecture/architecture.html` 和 `.agent/references/` 共同治理。
 
 - `docs/architecture/` 是人类可读的正式架构说明，也是 public architecture source。
 - `docs/architecture/architecture.md` 是正式总架构文档，用自然语言说清当前事实、目标分层、主链路、企业私有知识库场景、文档解析、Memory、Tool、RAG / GraphRAG、安全、评测和实施落点；同一文件后半部分维护十类 Mermaid 架构视图。
 - `docs/architecture/document-ingestion-foundation.md` 是企业知识库文档入口契约，集中说明 workspace file、ParseGateway、Document IR、parser job、index handoff、幂等、版本、防丢、ACL、citation lineage 和多模态解析边界。
+- PHASE14 稳定专题文档包括 `agent-core-runtime.md`、`capability-and-skill-layer.md`、`agentic-retrieval-planner.md`、`eval-observability-and-cost.md`、`input-layer-and-document-processing.md` 和 `knowledge-space-product-configuration.md`；它们只承载稳定专题架构、Current / Target 边界和证据路径，不承载 phase log、roadmap 或 Agent 操作规则。
 - `docs/` 应少而精，保留相对稳定、面向人的正式结论；不要把高频变化的执行细节、图清单、workflow change log 或 Agent 操作规则塞进 `docs/`。
 - `docs/architecture/architecture.html` 是正式架构 HTML 展示页，不是唯一事实来源；它必须由 `docs/architecture/architecture.md` 和 `tools/agent/render_architecture.py` 生成。
 - `.agent/architecture/architecture.md` 是 Agent 侧总架构镜像，必须与 `docs/architecture/architecture.md` 完全一致。
@@ -70,14 +71,15 @@ Zuno 的架构文档由 `docs/architecture/architecture.md`、`docs/architecture
 1. `docs/architecture/architecture.md`
 2. `docs/architecture/architecture.html`
 3. `docs/architecture/document-ingestion-foundation.md`
-4. `.agent/architecture/architecture.md`
-5. `.agent/architecture/architecture.html`
-6. `docs/architecture/README.md`
-7. `.agent/architecture/README.md`
-8. `.agent/references/*`
-9. `.agent/templates/*`
-10. `.agent/programs/current.md`，有 active program 时还要检查对应 roadmap；no-active 时检查最近归档 program 的 roadmap
-11. `README.md` 中的架构摘要
+4. PHASE14 稳定专题文档
+5. `.agent/architecture/architecture.md`
+6. `.agent/architecture/architecture.html`
+7. `docs/architecture/README.md`
+8. `.agent/architecture/README.md`
+9. `.agent/references/*`
+10. `.agent/templates/*`
+11. `.agent/programs/current.md`，有 active program 时还要检查对应 roadmap；no-active 时检查最近归档 program 的 roadmap
+12. `README.md` 中的架构摘要
 
 架构结论必须区分 Current、Target、Future、History。Current 只写代码、测试和可复现结果已经证明的事实；Target 是近期目标；Future 是长期方向；History 是完成、过时或被替换的方案。禁止把 Target 或 Future 写成 Current。
 
@@ -183,7 +185,7 @@ Zuno 本地执行默认只有两种模式：挂机模式和多线程模式。这
 
 - `.agent/programs/`
 
-当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE14_docs-architecture-expansion.md`。最近完成并归档的 program 是 Program 2：`zuno-enterprise-document-ingestion-platform-v2`，归档位置是 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。该 program 完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。Program 3 Mega 已完成 PHASE13 Eval / Trace / Cost / Benchmark baseline，本地 E2E 覆盖标准检索 / 深度检索、task summary、artifact citation refs、file status、native formats、PDF / Office / OCR target-blocked no fake index、binary object traceability、queue / worker lifecycle、dead_letter / reconciler、dynamic replan、Reflexion candidate、feedback、restart rehydrate、per conversation/stage metrics、ingestion/retrieval/planning/security/cost metrics、baseline comparison 和 regression summary；PHASE14 当前负责 Docs / Architecture Expansion。上一轮 Program 1 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，归档位置是 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`。原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 已合并进当前 Mega Program，不再作为独立 queued pipeline 执行。
+当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE15_verification-archive-closure.md`。最近完成并归档的 program 是 Program 2：`zuno-enterprise-document-ingestion-platform-v2`，归档位置是 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。该 program 完成 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks、citation lineage、task、events、artifact content/ref、feedback 和 restart recovery focused tests。Program 3 Mega 已完成 PHASE14 Docs / Architecture Expansion，本地 E2E 覆盖标准检索 / 深度检索、task summary、artifact citation refs、file status、native formats、PDF / Office / OCR target-blocked no fake index、binary object traceability、queue / worker lifecycle、dead_letter / reconciler、dynamic replan、Reflexion candidate、feedback、restart rehydrate、per conversation/stage metrics、ingestion/retrieval/planning/security/cost metrics、baseline comparison、regression summary 和六篇稳定专题架构文档；PHASE15 当前负责 full verification、archive 和 final closure。上一轮 Program 1 是 `zuno-production-document-ingestion-and-thread-foundation-v1`，归档位置是 `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`。原 Program 3 `zuno-enterprise-ingestion-async-infrastructure-v1`、Program 4 `zuno-runtime-subsystems-parallel-v1`、Program 5 `zuno-agent-planning-integration-v1` 和 Program 6 `zuno-enterprise-knowledge-eval-benchmark-v1` 已合并进当前 Mega Program，不再作为独立 queued pipeline 执行。
 
 目标产品口径固定为 AgentChat 驱动的企业知识库 Agentic GraphRAG Workspace。Agent Core 公式是 `Model Gateway + Memory & Context Engine + Planning & Control Runtime + Capability Layer + Governance / Trace / Eval Envelope`。用户在聊天里提出目标，并在勾选知识库时选择标准检索 / 深度检索；GraphRAG、BM25、vector、re-query、rerank、Skill、MCP 和工具调用由 Single Controller Agent 内部自动规划。Skill 是 Capability Layer 里的任务方法包，不是 Tool、不是 Knowledge、也不是产品级多 Agent runtime。不要把 Zuno 写成用户手动选择 RAG / GraphRAG 模式的工具箱，也不要把近期主线写成产品级多 Agent runtime。
 

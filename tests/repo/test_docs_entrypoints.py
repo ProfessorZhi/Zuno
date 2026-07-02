@@ -20,6 +20,12 @@ def test_readme_exposes_current_architecture_entrypoints() -> None:
         "./docs/architecture/architecture.md",
         "./docs/architecture/production-readiness.md",
         "./docs/architecture/document-ingestion-foundation.md",
+        "./docs/architecture/agent-core-runtime.md",
+        "./docs/architecture/capability-and-skill-layer.md",
+        "./docs/architecture/agentic-retrieval-planner.md",
+        "./docs/architecture/eval-observability-and-cost.md",
+        "./docs/architecture/input-layer-and-document-processing.md",
+        "./docs/architecture/knowledge-space-product-configuration.md",
         "./docs/architecture/architecture.html",
         "./docs/evidence/public-demo.md",
         "Single Controller Agent 是目标架构角色",
@@ -44,6 +50,12 @@ def test_docs_architecture_front_path_is_small_and_synced() -> None:
         "architecture.md",
         "production-readiness.md",
         "document-ingestion-foundation.md",
+        "agent-core-runtime.md",
+        "capability-and-skill-layer.md",
+        "agentic-retrieval-planner.md",
+        "eval-observability-and-cost.md",
+        "input-layer-and-document-processing.md",
+        "knowledge-space-product-configuration.md",
         "architecture.html",
         "repo-ownership-matrix.md",
     }
@@ -70,6 +82,12 @@ def test_docs_front_path_readmes_explain_architecture_contract() -> None:
         "./architecture/architecture.md",
         "./architecture/production-readiness.md",
         "./architecture/document-ingestion-foundation.md",
+        "./architecture/agent-core-runtime.md",
+        "./architecture/capability-and-skill-layer.md",
+        "./architecture/agentic-retrieval-planner.md",
+        "./architecture/eval-observability-and-cost.md",
+        "./architecture/input-layer-and-document-processing.md",
+        "./architecture/knowledge-space-product-configuration.md",
         "./architecture/architecture.html",
         "./evidence/public-demo.md",
         "./history/README.md",
@@ -82,6 +100,12 @@ def test_docs_front_path_readmes_explain_architecture_contract() -> None:
         "architecture.md",
         "production-readiness.md",
         "document-ingestion-foundation.md",
+        "agent-core-runtime.md",
+        "capability-and-skill-layer.md",
+        "agentic-retrieval-planner.md",
+        "eval-observability-and-cost.md",
+        "input-layer-and-document-processing.md",
+        "knowledge-space-product-configuration.md",
         "architecture.html",
         "repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
@@ -116,6 +140,8 @@ def test_docs_map_does_not_duplicate_architecture_source_roles() -> None:
     assert formal_entries.count("`docs/architecture/architecture.md`") == 1
     assert "`docs/architecture/production-readiness.md`" in formal_entries
     assert "`docs/architecture/document-ingestion-foundation.md`" in formal_entries
+    assert "`docs/architecture/agent-core-runtime.md`" in formal_entries
+    assert "`docs/architecture/eval-observability-and-cost.md`" in formal_entries
     assert len(docs_sync_items) == len(set(docs_sync_items))
     for phrase in ["当前仓库事实", "近期目标摘要", "当前状态和下一步"]:
         assert phrase not in formal_entries
@@ -134,7 +160,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     current_program = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(
         encoding="utf-8"
     )
-    assert _current_phase_name(current_program) == "PHASE14_docs-architecture-expansion.md"
+    assert _current_phase_name(current_program) == "PHASE15_verification-archive-closure.md"
 
     assert docs_architecture == agent_architecture
     for phrase in [
@@ -322,6 +348,12 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",
         "docs/architecture/document-ingestion-foundation.md",
+        "docs/architecture/agent-core-runtime.md",
+        "docs/architecture/capability-and-skill-layer.md",
+        "docs/architecture/agentic-retrieval-planner.md",
+        "docs/architecture/eval-observability-and-cost.md",
+        "docs/architecture/input-layer-and-document-processing.md",
+        "docs/architecture/knowledge-space-product-configuration.md",
         "docs/architecture/repo-ownership-matrix.md",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",

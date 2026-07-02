@@ -190,6 +190,12 @@ def test_required_current_paths_exist() -> None:
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",
         "docs/architecture/document-ingestion-foundation.md",
+        "docs/architecture/agent-core-runtime.md",
+        "docs/architecture/capability-and-skill-layer.md",
+        "docs/architecture/agentic-retrieval-planner.md",
+        "docs/architecture/eval-observability-and-cost.md",
+        "docs/architecture/input-layer-and-document-processing.md",
+        "docs/architecture/knowledge-space-product-configuration.md",
         "docs/architecture/architecture.html",
         "docs/architecture/repo-ownership-matrix.md",
         "docs/architecture/assets/zuno-agentic-rag-graphrag-ideal-architecture.pdf",
@@ -247,6 +253,12 @@ def test_repo_structure_verifier_pins_current_front_path() -> None:
         "docs/architecture/architecture.md",
         "docs/architecture/production-readiness.md",
         "docs/architecture/document-ingestion-foundation.md",
+        "docs/architecture/agent-core-runtime.md",
+        "docs/architecture/capability-and-skill-layer.md",
+        "docs/architecture/agentic-retrieval-planner.md",
+        "docs/architecture/eval-observability-and-cost.md",
+        "docs/architecture/input-layer-and-document-processing.md",
+        "docs/architecture/knowledge-space-product-configuration.md",
         "docs/architecture/architecture.html",
         "docs/architecture/repo-ownership-matrix.md",
         "docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/current-architecture.md",
@@ -1019,6 +1031,12 @@ def test_front_path_docs_link_current_entrypoints() -> None:
     assert "architecture.md" in architecture_index
     assert "production-readiness.md" in architecture_index
     assert "document-ingestion-foundation.md" in architecture_index
+    assert "agent-core-runtime.md" in architecture_index
+    assert "capability-and-skill-layer.md" in architecture_index
+    assert "agentic-retrieval-planner.md" in architecture_index
+    assert "eval-observability-and-cost.md" in architecture_index
+    assert "input-layer-and-document-processing.md" in architecture_index
+    assert "knowledge-space-product-configuration.md" in architecture_index
     assert "architecture.html" in architecture_index
     assert ".agent/architecture/architecture.md" in architecture_index
     assert ".agent/architecture/architecture.html" in architecture_index
@@ -1026,10 +1044,22 @@ def test_front_path_docs_link_current_entrypoints() -> None:
     assert "./architecture/architecture.md" in docs_index
     assert "./architecture/production-readiness.md" in docs_index
     assert "./architecture/document-ingestion-foundation.md" in docs_index
+    assert "./architecture/agent-core-runtime.md" in docs_index
+    assert "./architecture/capability-and-skill-layer.md" in docs_index
+    assert "./architecture/agentic-retrieval-planner.md" in docs_index
+    assert "./architecture/eval-observability-and-cost.md" in docs_index
+    assert "./architecture/input-layer-and-document-processing.md" in docs_index
+    assert "./architecture/knowledge-space-product-configuration.md" in docs_index
     assert "./architecture/architecture.html" in docs_index
     assert "./docs/architecture/architecture.md" in readme
     assert "./docs/architecture/production-readiness.md" in readme
     assert "./docs/architecture/document-ingestion-foundation.md" in readme
+    assert "./docs/architecture/agent-core-runtime.md" in readme
+    assert "./docs/architecture/capability-and-skill-layer.md" in readme
+    assert "./docs/architecture/agentic-retrieval-planner.md" in readme
+    assert "./docs/architecture/eval-observability-and-cost.md" in readme
+    assert "./docs/architecture/input-layer-and-document-processing.md" in readme
+    assert "./docs/architecture/knowledge-space-product-configuration.md" in readme
     assert "./docs/architecture/architecture.html" in readme
 
 
@@ -1125,7 +1155,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         ACTIVE_PROGRAM_NAME,
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE14_docs-architecture-expansion.md",
+        "current_phase: PHASE15_verification-archive-closure.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -1162,9 +1192,9 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
         phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
         assert f"program: {PROGRAM3_ACTIVE_NAME}" in phase_text
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_") or phase_name.startswith("PHASE12_") or phase_name.startswith("PHASE13_"):
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_") or phase_name.startswith("PHASE12_") or phase_name.startswith("PHASE13_") or phase_name.startswith("PHASE14_"):
             expected_status = "status: completed"
-        elif phase_name.startswith("PHASE14_"):
+        elif phase_name.startswith("PHASE15_"):
             expected_status = "status: active"
         else:
             expected_status = "status: pending"

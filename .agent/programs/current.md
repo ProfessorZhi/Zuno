@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
-current_phase: PHASE14_docs-architecture-expansion.md
+current_phase: PHASE15_verification-archive-closure.md
 latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 ## 当前状态
@@ -11,7 +11,7 @@ latest_completed_program: zuno-enterprise-document-ingestion-platform-v2
 
 - Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 - 中文名：Zuno 可上线企业知识库 Agentic GraphRAG 全链路闭环 Program
-- 当前 phase：`PHASE14_docs-architecture-expansion.md`
+- 当前 phase：`PHASE15_verification-archive-closure.md`
 - Suite：`zuno-enterprise-agentic-graphrag-production-suite-v1`
 
 本 program 合并原 active Program 3 和 queued Program 4-6：
@@ -83,8 +83,8 @@ Production scale external deployments remain replaceable targets.
 11. `PHASE11_workspace-product-api-frontend-sync.md`：completed。
 12. `PHASE12_end-to-end-product-runtime.md`：completed。
 13. `PHASE13_eval-trace-cost-benchmark.md`：completed。
-14. `PHASE14_docs-architecture-expansion.md`：active。
-15. `PHASE15_verification-archive-closure.md`：pending。
+14. `PHASE14_docs-architecture-expansion.md`：completed。
+15. `PHASE15_verification-archive-closure.md`：active。
 
 ## Workstream 模型
 
