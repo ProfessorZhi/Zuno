@@ -6,10 +6,12 @@
 
 - State: active
 - Active program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- Current phase: `PHASE12_end-to-end-product-runtime.md`
+- Current phase: `PHASE13_eval-trace-cost-benchmark.md`
 - Latest completed program: `zuno-enterprise-document-ingestion-platform-v2`
 
 当前 Program 3 Mega 合并原 active Program 3 与 queued Program 4-6，目标是在一个 program 内完成 Zuno 可上线企业知识库 Agentic GraphRAG product baseline 的全链路闭环计划。
+
+PHASE12 End-to-End Product Runtime 已完成本地 E2E product baseline；当前 PHASE13 负责把 scenario / trace 输出汇总为 Eval / Trace / Cost / Benchmark baseline。
 
 ## 当前文件
 

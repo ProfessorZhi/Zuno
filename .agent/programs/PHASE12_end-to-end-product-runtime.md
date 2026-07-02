@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE12_end-to-end-product-runtime
-status: active
+status: completed
 
 ## 目标
 
@@ -164,6 +164,34 @@ pytest -q tests/knowledge -p no:cacheprovider
 - restart rehydrate evidence。
 - blocked OCR / VLM no fake index evidence。
 - dynamic replan and ReflexionLesson evidence。
+
+## Closure Evidence
+
+PHASE12 已按 TDD 路径关闭：先新增 `tests/evals/test_agentic_graphrag_product_baseline.py` 作为 RED test，第一次运行失败于 `ModuleNotFoundError: No module named 'zuno.agent.product_baseline'`，再补 `src/backend/zuno/agent/product_baseline.py` 的本地 E2E coordinator。
+
+已完成的 runtime 证据：
+
+- `run_workspace_product_e2e_scenario(output_dir)` 复用 `WorkspaceTaskRuntimeService`、`SQLiteDurableIngestionStore`、`LocalObjectStore`、`LocalQueueBackend`、`ParserWorker`、`IndexWorker`、`KnowledgeIndexRuntime`、`AgentControlRuntime` 和本地 memory review path。
+- E2E 覆盖 upload/register、local object store、parse/index worker、standard/deep retrieval、deep_without_graph fallback、skill selection、plan/reflection/replan、artifact citation refs、feedback、restart rehydrate。
+- native `text/plain`、`text/markdown`、`text/csv`、`application/json`、`text/html`、`text/x-python` 已证明可解析、索引并进入检索证据。
+- PDF、DOCX、PPTX、XLSX、image/scanned 在缺生产 parser / OCR / VLM provider 时记录 `target_blocked` dependency probe，不创建 fake index。
+- binary source object 即使解析 blocked，也保存并验证 `sha256`、`storage_uri` 和 bytes round-trip。
+- queue lifecycle 覆盖 queued -> parsing -> parsed -> indexing -> indexed，并包含 dead_letter fixture 与 reconciler finding。
+- scenario summary / trace summary fixture 写入调用方提供的 `output_dir`，作为 PHASE13 benchmark 和 PHASE15 closure summary 的输入。
+
+已通过验证：
+
+```powershell
+pytest -q tests/evals/test_agentic_graphrag_product_baseline.py -p no:cacheprovider
+git diff --check
+pytest -q tests/api/test_workspace_durable_ingest_runtime.py tests/api/test_workspace_task_runtime.py tests/api/test_workspace_agentic_product_contract.py -p no:cacheprovider
+pytest -q tests/knowledge -p no:cacheprovider
+pytest -q tests/agent -p no:cacheprovider
+python -m py_compile src/backend/zuno/agent/product_baseline.py
+pytest -q tests/evals -p no:cacheprovider
+```
+
+边界：本 phase 证明的是 local launchable product E2E baseline；真实外部 parser、OCR / VLM、生产 queue、外部 index、外部 observability sink 和 CI release gate 仍属于 Target / Production Scale Target。PHASE13 继续把该 E2E 输出汇总为 Eval / Trace / Cost / Benchmark baseline。
 
 ## 停止条件
 

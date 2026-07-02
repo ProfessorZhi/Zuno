@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE12_end-to-end-product-runtime.md`
+current_phase: `PHASE13_eval-trace-cost-benchmark.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 收口目标
@@ -29,32 +29,32 @@ Production scale external deployments remain replaceable targets.
 - [x] PHASE09 完成 Planning Contract 与 Strategy Selector baseline。
 - [x] PHASE10 完成 ReAct / Reflection / Dynamic Replan / Reflexion runtime baseline。
 - [x] PHASE11 完成 Workspace Product API / Frontend Minimal Sync。
-- [ ] PHASE12 完成 End-to-End Product Runtime scenario。
+- [x] PHASE12 完成 End-to-End Product Runtime scenario。
 - [ ] PHASE13 完成 Eval / Trace / Cost / Benchmark baseline。
 - [ ] PHASE14 完成 Docs / Architecture Expansion。
 - [ ] PHASE15 完成 full verification、archive、no-active、commit 和 push。
 
 ## 12 条 Product Baseline 验收
 
-- [ ] `/workspace/file -> source object -> object store/local store` 可跑。
-- [ ] `/workspace/ingest -> parse job -> Document IR -> index job -> chunks` 可跑。
-- [ ] `QueueBackend + local async worker` 可跑，RabbitMQ / Redis / Postgres / MinIO 有 adapter boundary 和 probe。
-- [ ] `ParserWorker / IndexWorker` 本地可执行，blocked OCR / VLM 不 fake index。
+- [x] `/workspace/file -> source object -> object store/local store` 可跑。
+- [x] `/workspace/ingest -> parse job -> Document IR -> index job -> chunks` 可跑。
+- [x] `QueueBackend + local async worker` 可跑，RabbitMQ / Redis / Postgres / MinIO 有 adapter boundary 和 probe。
+- [x] `ParserWorker / IndexWorker` 本地可执行，blocked OCR / VLM 不 fake index。
 - [x] Knowledge retrieval 支持标准检索 / 深度检索 profile。
 - [x] Agentic Retrieval Planner / Strategy Selector 能按 profile、证据、预算选择标准 / 深度检索计划、replan boundary 和 capability plan；PHASE10 已证明 reflection 后 replan 会改变后续本地执行轨迹。
 - [x] Capability Layer 有 Skill / Knowledge / Tool / MCP / Artifact capability registry contract。
 - [x] Memory & Context Engine 有多重记忆和 ContextPack contract，并有最小 runtime / focused tests。
-- [x] Planning & Control Runtime 已有 StrategySelector、PlanStep、PlannerOutput、ReflectionVerdict、ReplanDecision、ReflexionLesson candidate contract 和本地 AgentControlRuntime 闭环；PHASE11 已完成 Product API 最小接入，E2E 证明仍属 PHASE12。
+- [x] Planning & Control Runtime 已有 StrategySelector、PlanStep、PlannerOutput、ReflectionVerdict、ReplanDecision、ReflexionLesson candidate contract 和本地 AgentControlRuntime 闭环；PHASE11 已完成 Product API 最小接入，PHASE12 已完成 E2E 证明。
 - [x] Security gates 覆盖 input / retrieval / tool / output，至少有 prompt injection、ACL、tool approval、output citation safety tests。
-- [ ] Eval / Trace / Cost 能记录 latency、tokens / cost estimate、retrieval rounds、citation coverage、unsupported claim、plan / replan / reflection events。
-- [ ] 一个 E2E scenario 能跑：上传文档 -> ingest -> 标准/深度检索 -> Agent plan -> cited artifact -> trace/eval/feedback -> restart rehydrate。
-- [ ] E2E scenario 覆盖 native text / markdown / csv / json / html / code 解析，PDF / Office target-blocked，image / scanned OCR/VLM blocked no fake index，binary source object sha256 / storage_uri traceability，local queue / worker lifecycle，dead_letter / reconciler fixture。
+- [x] Eval / Trace / Cost 能记录 latency、tokens / cost estimate、retrieval rounds、citation coverage、unsupported claim、plan / replan / reflection events；PHASE13 仍需生成统一 regression summary。
+- [x] 一个 E2E scenario 能跑：上传文档 -> ingest -> 标准/深度检索 -> Agent plan -> cited artifact -> trace/eval/feedback -> restart rehydrate。
+- [x] E2E scenario 覆盖 native text / markdown / csv / json / html / code 解析，PDF / Office target-blocked，image / scanned OCR/VLM blocked no fake index，binary source object sha256 / storage_uri traceability，local queue / worker lifecycle，dead_letter / reconciler fixture。
 
 ## Workstream 收口清单
 
 - [ ] Coordinator 审查所有 shared contract 和共享文件，没有跨 workstream 未解决冲突。
-- [ ] Workstream A 提交 Input / Async Infrastructure evidence。
-- [ ] Workstream B 提交 Knowledge / Retrieval / GraphRAG evidence。
+- [x] Workstream A 提交 Input / Async Infrastructure evidence。
+- [x] Workstream B 提交 Knowledge / Retrieval / GraphRAG evidence。
 - [ ] Workstream C 提交 Memory / Context evidence。
 - [x] Workstream D 提交 Capability / Skill / Tool / MCP evidence。
 - [x] Workstream E 提交 Security / Governance evidence。
@@ -66,26 +66,26 @@ Production scale external deployments remain replaceable targets.
 ## 目标架构拼接验收
 
 - [x] Product Surface 能把用户的 AgentChat goal、knowledge selection、标准检索 / 深度检索传入 runtime。
-- [ ] Input / Async Infrastructure 的 source object、parse job、document version、index manifest 和 citation lineage 能被 Knowledge Retrieval 消费。
-- [ ] Input / Async Infrastructure 的 file status timeline、dependency probe、blocked reason、worker event、index status 和 binary source object refs 能被 Product API、E2E 和 Eval 消费。
-- [ ] Knowledge Retrieval 输出的 EvidenceBundle / CitationLineage 能被 Planning、Reflection、Output Gate 和 Eval 共同消费。
+- [x] Input / Async Infrastructure 的 source object、parse job、document version、index manifest 和 citation lineage 能被 Knowledge Retrieval 消费。
+- [x] Input / Async Infrastructure 的 file status timeline、dependency probe、blocked reason、worker event、index status 和 binary source object refs 能被 Product API、E2E 和 Eval 消费。
+- [x] Knowledge Retrieval 输出的 EvidenceBundle / CitationLineage 能被 Planning、Reflection、Output Gate 和 Eval 共同消费。
 - [x] Memory & Context Engine 输出的 ContextPack 能被 Strategy Selector 消费，且 sensitive exclusion 已生效。
-- [ ] Capability Layer 的 SkillCard / ToolCard / MCPCapability 能被 Planner 选择，并受 Tool Gate 约束。
+- [x] Capability Layer 的 SkillCard / ToolCard / MCPCapability 能被 Planner 选择，并受 Tool Gate 约束。
 - [x] Security / Governance 的 Input / Retrieval / Tool / Output gates 能影响 plan / replan / refuse / ask_user。
 - [x] Model Gateway 的 token / latency / cost metrics 能进入 trace，并影响 budget guard。
-- [x] Planning & Control Runtime 能从 Skill、Capability、Evidence、Security verdict 和 budget verdict 生成 plan / verdict，并在 Reflection 后动态 replan 改变本地轨迹；PHASE11 已把 plan / reflection / replan summary 接入 Product API，PHASE12 仍需 E2E 证明。
+- [x] Planning & Control Runtime 能从 Skill、Capability、Evidence、Security verdict 和 budget verdict 生成 plan / verdict，并在 Reflection 后动态 replan 改变本地轨迹；PHASE11 已把 plan / reflection / replan summary 接入 Product API，PHASE12 已完成 E2E 证明。
 - [ ] Eval / Trace / Cost 层能从 E2E scenario 输出 regression summary。
 - [ ] Docs / Archive 能准确说明 Current / Target / Production Scale，且不把外部生产服务写成 Current。
 
 ## Current / Target 边界
 
-- [ ] SQLite、local object store、local queue、local worker、local state store 可作为 Current。
-- [ ] PostgreSQL / RabbitMQ / Redis / MinIO / S3 / external OCR / VLM / external index 没有真实 provider 和 tests 前只能写成 Production Scale Target 或 target-blocked evidence。
-- [ ] PDF / Office / OCR / VLM 没有真实 Docling / PyMuPDF、Unstructured / MarkItDown、MinerU / PaddleOCR / VLM worker 前只能写成 target-blocked boundary / Launchable Target / Production Scale Target，不能写成 Current。
-- [ ] Current 格式能力只把 native deterministic `txt / md / csv / json / html / code` 写成稳定解析；多格式 matrix 覆盖不等于生产解析完成。
-- [ ] Basic RAG 和 Static GraphRAG 只能作为 eval baseline，不写成最终产品模式。
-- [ ] Skill 不写成 Tool，不写成 Knowledge，不写成产品级多 Agent runtime。
-- [ ] Codex 多线程施工不写成 Zuno 产品 runtime 多 Agent 架构。
+- [x] SQLite、local object store、local queue、local worker、local state store 可作为 Current。
+- [x] PostgreSQL / RabbitMQ / Redis / MinIO / S3 / external OCR / VLM / external index 没有真实 provider 和 tests 前只能写成 Production Scale Target 或 target-blocked evidence。
+- [x] PDF / Office / OCR / VLM 没有真实 Docling / PyMuPDF、Unstructured / MarkItDown、MinerU / PaddleOCR / VLM worker 前只能写成 target-blocked boundary / Launchable Target / Production Scale Target，不能写成 Current。
+- [x] Current 格式能力只把 native deterministic `txt / md / csv / json / html / code` 写成稳定解析；多格式 matrix 覆盖不等于生产解析完成。
+- [x] Basic RAG 和 Static GraphRAG 只能作为 eval baseline，不写成最终产品模式。
+- [x] Skill 不写成 Tool，不写成 Knowledge，不写成产品级多 Agent runtime。
+- [x] Codex 多线程施工不写成 Zuno 产品 runtime 多 Agent 架构。
 
 ## 文档同步检查
 

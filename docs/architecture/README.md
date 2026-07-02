@@ -4,7 +4,7 @@
 
 架构正文以 `architecture.md` 为准；四大总交付物、Current Local Slice、Launchable Prototype Target、Production Scale Target 和 runtime-first 交付物口径以 `production-readiness.md` 为准。本 README 只做入口导航，不重复 phase 清单、四大总交付物展开或 Production Target 清单。
 
-当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE12_end-to-end-product-runtime.md`。最近完成并归档的 program 是 `zuno-enterprise-document-ingestion-platform-v2`，归档在 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。当前已具备本地 Model Gateway / Cost / Latency、Planning Contract / Strategy Selector、ReAct / Reflection / Dynamic Replan / Reflexion runtime 和 Workspace Product API / Frontend Minimal Sync baseline；成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
+当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE13_eval-trace-cost-benchmark.md`。最近完成并归档的 program 是 `zuno-enterprise-document-ingestion-platform-v2`，归档在 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。当前已具备本地 Model Gateway / Cost / Latency、Planning Contract / Strategy Selector、ReAct / Reflection / Dynamic Replan / Reflexion runtime、Workspace Product API / Frontend Minimal Sync baseline 和 PHASE12 End-to-End Product Runtime baseline；成熟度和 runtime-first 交付物口径以 `production-readiness.md` 为准。只写 contract、schema 或 README 不能关闭 runtime phase 的规则继续保留。
 
 ## 当前前台
 
