@@ -18,6 +18,10 @@ from zuno.platform.observability.trace_eval import (
     ZunoSpanBuilder,
     ZunoSpanKind,
 )
+from zuno.platform.observability.product_benchmark import (
+    AgenticGraphRAGRegressionSummary,
+    build_agentic_graphrag_regression_summary,
+)
 
 __all__ = [
     "EvalDatasetCase",
@@ -32,6 +36,8 @@ __all__ = [
     "ZunoSpanKind",
     "build_langchain_run_config",
     "build_langsmith_metadata",
+    "AgenticGraphRAGRegressionSummary",
+    "build_agentic_graphrag_regression_summary",
     "configure_langsmith",
     "get_active_trace_id",
 ]

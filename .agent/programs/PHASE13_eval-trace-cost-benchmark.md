@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE13_eval-trace-cost-benchmark
-status: active
+status: completed
 
 ## 目标
 
@@ -241,6 +241,31 @@ pytest -q tests/evals/test_agentic_graphrag_product_baseline.py -p no:cacheprovi
 - regression summary。
 - cost report。
 - baseline labels for Basic RAG / Static GraphRAG / Agentic GraphRAG。
+
+## Closure Evidence
+
+PHASE13 已按 TDD 路径关闭：先新增 `tests/evals/test_agentic_graphrag_regression_summary.py`，RED 失败于 `ModuleNotFoundError: No module named 'zuno.platform.observability.product_benchmark'`，再补 `src/backend/zuno/platform/observability/product_benchmark.py`。
+
+已完成的 runtime / eval 证据：
+
+- `build_agentic_graphrag_regression_summary()` 消费 PHASE12 `ScenarioSummary` / `TraceSummary`，生成 `ConversationRunMetrics`、`StageMetrics`、`IngestionMetrics`、`RetrievalMetrics`、`PlanningMetrics`、`SecurityMetrics`、`CostMetric`、`EvalComparisonReport` 和 release evidence。
+- Stage metrics 覆盖 `file_upload`、`object_store_write`、`input_gate`、`parse_queue`、`parse_worker`、`document_ir`、`index_queue`、`index_worker`、`context_build`、`planning`、`retrieval`、`rerank`、`graph_expand`、`tool_call`、`reflection`、`replan`、`answer`、`output_gate`、`artifact`、`feedback`，并对 missing required stage 抛错，不 silent pass。
+- Ingestion metrics 覆盖 uploaded / indexed / failed / blocked、parser format、dependency status、blocked reason、dead letter、reconciler findings 和 binary bytes processed。
+- Retrieval / Planning / Security / Cost metrics 覆盖 citation coverage、retrievers used、retrieval rounds、plan steps、replan/reflection/reflexion counts、security block counters 和 local cost summary。
+- Eval comparison report 明确区分 `basic_rag`、`static_graphrag` 和 `agentic_graphrag` baseline labels；Basic / Static 只作为 eval baseline，不写成产品 Current mode。
+- Regression summary 可写入 `agentic_graphrag_regression_summary.json`，作为 PHASE15 closure evidence 输入。
+
+已通过验证：
+
+```powershell
+pytest -q tests/evals/test_agentic_graphrag_regression_summary.py -p no:cacheprovider
+pytest -q tests/evals/test_observability_trace_contract.py tests/evals/test_agentic_graphrag_regression_summary.py -p no:cacheprovider
+pytest -q tests/agent/test_platform_layer_surfaces.py -p no:cacheprovider
+python -m py_compile src/backend/zuno/platform/observability/product_benchmark.py src/backend/zuno/platform/observability/__init__.py
+pytest -q tests/evals -p no:cacheprovider
+```
+
+边界：本 phase 证明的是本地 deterministic regression summary；外部 LangSmith / OTel sink、online eval、持久 trace store、Prometheus dashboard 和 CI release gate operations 仍是 Production Scale Target。
 
 ## 停止条件
 

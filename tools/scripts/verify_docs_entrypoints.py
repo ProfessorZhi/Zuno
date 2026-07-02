@@ -153,8 +153,8 @@ def verify_entrypoint_text() -> list[str]:
     document_ingestion = _read("docs/architecture/document-ingestion-foundation.md")
     current_program = _read(".agent/programs/current.md")
     current_phase = _current_phase_name(current_program)
-    if current_phase != "PHASE13_eval-trace-cost-benchmark.md":
-        errors.append(".agent/programs/current.md must declare current Program 3 PHASE13")
+    if current_phase != "PHASE14_docs-architecture-expansion.md":
+        errors.append(".agent/programs/current.md must declare current Program 3 PHASE14")
 
     for phrase in [
         "./docs/architecture/architecture.md",

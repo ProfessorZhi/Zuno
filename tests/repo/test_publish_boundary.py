@@ -54,7 +54,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "LangSmith-compatible Trace / Eval",
     ]:
         assert phrase in architecture
-    assert _current_phase_name(current_program) == "PHASE13_eval-trace-cost-benchmark.md"
+    assert _current_phase_name(current_program) == "PHASE14_docs-architecture-expansion.md"
     assert "state: active" in current_program
     assert "active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in current_program
     assert "latest_completed_program: zuno-enterprise-document-ingestion-platform-v2" in current_program

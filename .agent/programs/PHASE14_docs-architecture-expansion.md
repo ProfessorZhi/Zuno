@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE14_docs-architecture-expansion
-status: pending
+status: active
 
 ## 目标
 

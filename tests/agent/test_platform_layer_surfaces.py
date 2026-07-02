@@ -72,6 +72,8 @@ EXPECTED_EXPORTS = {
         "ZunoSpanKind",
         "build_langchain_run_config",
         "build_langsmith_metadata",
+        "AgenticGraphRAGRegressionSummary",
+        "build_agentic_graphrag_regression_summary",
         "configure_langsmith",
         "get_active_trace_id",
     ],
