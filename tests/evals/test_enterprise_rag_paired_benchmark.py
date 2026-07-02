@@ -299,65 +299,110 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
         assert kwargs["sample_limit"] == 2
         run_root = Path(kwargs["output_root"])
         run_root.mkdir(parents=True, exist_ok=True)
-        profiles = {
-            "baseline_rag": {
-                "retrieval_recall_at_k": 0.5,
-                "context_precision_at_k": 0.25,
-                "mrr_at_k": 0.5,
-                "ndcg_at_k": 0.5,
-                "answer_correctness": 0.4,
-                "citation_accuracy": 0.5,
-            },
-            "local_graphrag": {
-                "retrieval_recall_at_k": 0.75,
-                "context_precision_at_k": 0.3,
-                "mrr_at_k": 0.6,
-                "ndcg_at_k": 0.65,
-                "answer_correctness": 0.55,
-                "citation_accuracy": 0.6,
-            },
-            "deep_graphrag": {
-                "retrieval_recall_at_k": 1.0,
-                "context_precision_at_k": 0.35,
-                "mrr_at_k": 0.8,
-                "ndcg_at_k": 0.9,
-                "answer_correctness": 0.7,
-                "citation_accuracy": 0.8,
-            },
-            "agentic_graphrag": {
-                "retrieval_recall_at_k": 1.0,
-                "context_precision_at_k": 0.45,
-                "mrr_at_k": 0.9,
-                "ndcg_at_k": 0.95,
-                "answer_correctness": 0.85,
-                "citation_accuracy": 0.9,
-            },
-        }
-        for profile, aggregate in profiles.items():
-            profile_dir = run_root / profile
-            profile_dir.mkdir()
-            per_sample = [
+        rows_by_profile = {
+            "baseline_rag": [
                 {
                     "id": "qst_basic",
-                    "retrieval_recall": aggregate["retrieval_recall_at_k"],
-                    "context_precision": aggregate["context_precision_at_k"],
-                    "mrr": aggregate["mrr_at_k"],
-                    "ndcg": aggregate["ndcg_at_k"],
-                    "answer_correctness": aggregate["answer_correctness"],
-                    "citation_accuracy": aggregate["citation_accuracy"],
+                    "retrieval_recall": 1.0,
+                    "context_precision": 0.5,
+                    "mrr": 1.0,
+                    "ndcg": 1.0,
+                    "answer_correctness": 0.8,
+                    "citation_accuracy": 1.0,
                     "unsupported_claim_rate": 0.0,
                 },
                 {
                     "id": "qst_conflict",
-                    "retrieval_recall": 0.0 if profile == "baseline_rag" else 1.0,
-                    "context_precision": aggregate["context_precision_at_k"],
-                    "mrr": aggregate["mrr_at_k"],
-                    "ndcg": aggregate["ndcg_at_k"],
-                    "answer_correctness": aggregate["answer_correctness"],
-                    "citation_accuracy": aggregate["citation_accuracy"],
-                    "unsupported_claim_rate": 0.25 if profile == "baseline_rag" else 0.0,
+                    "retrieval_recall": 0.0,
+                    "context_precision": 0.0,
+                    "mrr": 0.0,
+                    "ndcg": 0.0,
+                    "answer_correctness": 0.9,
+                    "citation_accuracy": 0.0,
+                    "unsupported_claim_rate": 0.25,
                 },
-            ]
+            ],
+            "local_graphrag": [
+                {
+                    "id": "qst_basic",
+                    "retrieval_recall": 1.0,
+                    "context_precision": 0.45,
+                    "mrr": 0.8,
+                    "ndcg": 0.8,
+                    "answer_correctness": 0.75,
+                    "citation_accuracy": 1.0,
+                    "unsupported_claim_rate": 0.0,
+                },
+                {
+                    "id": "qst_conflict",
+                    "retrieval_recall": 0.5,
+                    "context_precision": 0.15,
+                    "mrr": 0.4,
+                    "ndcg": 0.5,
+                    "answer_correctness": 0.55,
+                    "citation_accuracy": 0.0,
+                    "unsupported_claim_rate": 0.0,
+                },
+            ],
+            "deep_graphrag": [
+                {
+                    "id": "qst_basic",
+                    "retrieval_recall": 1.0,
+                    "context_precision": 0.4,
+                    "mrr": 0.7,
+                    "ndcg": 0.9,
+                    "answer_correctness": 0.75,
+                    "citation_accuracy": 1.0,
+                    "unsupported_claim_rate": 0.0,
+                },
+                {
+                    "id": "qst_conflict",
+                    "retrieval_recall": 1.0,
+                    "context_precision": 0.3,
+                    "mrr": 0.9,
+                    "ndcg": 0.9,
+                    "answer_correctness": 0.7,
+                    "citation_accuracy": 0.0,
+                    "unsupported_claim_rate": 0.0,
+                },
+            ],
+            "agentic_graphrag": [
+                {
+                    "id": "qst_basic",
+                    "retrieval_recall": 1.0,
+                    "context_precision": 0.5,
+                    "mrr": 1.0,
+                    "ndcg": 1.0,
+                    "answer_correctness": 0.85,
+                    "citation_accuracy": 1.0,
+                    "unsupported_claim_rate": 0.0,
+                },
+                {
+                    "id": "qst_conflict",
+                    "retrieval_recall": 1.0,
+                    "context_precision": 0.4,
+                    "mrr": 0.8,
+                    "ndcg": 0.9,
+                    "answer_correctness": 0.8,
+                    "citation_accuracy": 0.0,
+                    "unsupported_claim_rate": 0.0,
+                },
+            ],
+        }
+        profiles = {}
+        for profile, per_sample in rows_by_profile.items():
+            aggregate = {
+                "retrieval_recall_at_k": sum(row["retrieval_recall"] for row in per_sample) / len(per_sample),
+                "context_precision_at_k": sum(row["context_precision"] for row in per_sample) / len(per_sample),
+                "mrr_at_k": sum(row["mrr"] for row in per_sample) / len(per_sample),
+                "ndcg_at_k": sum(row["ndcg"] for row in per_sample) / len(per_sample),
+                "answer_correctness": sum(row["answer_correctness"] for row in per_sample) / len(per_sample),
+                "citation_accuracy": sum(row["citation_accuracy"] for row in per_sample) / len(per_sample),
+                "unsupported_claim_rate": sum(row["unsupported_claim_rate"] for row in per_sample) / len(per_sample),
+            }
+            profiles[profile] = aggregate
+            profile_dir = run_root / profile
+            profile_dir.mkdir()
             (profile_dir / "metrics.json").write_text(
                 json.dumps({"aggregate": aggregate, "per_sample": per_sample}, ensure_ascii=False),
                 encoding="utf-8",
@@ -365,13 +410,20 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
             retrieval_rows = [
                 {
                     "id": "qst_basic",
-                    "contexts": [{"file_name": "dsid_upload_limits.md", "content": "10 MiB"}],
+                    "contexts": [
+                        {"file_name": "dsid_upload_limits.md", "content": "10 MiB"},
+                        {"kind": "graph_path", "content": "unrelated graph neighbor"},
+                    ]
+                    if profile == "agentic_graphrag"
+                    else [{"file_name": "dsid_upload_limits.md", "content": "10 MiB"}],
                     "metadata": {"latency_ms": 10 if profile == "baseline_rag" else 18, "cost_usd": 0.001},
                     "raw_result": {"final_mode": "rag_graph_deep" if "graph" in profile else "rag"},
                 },
                 {
                     "id": "qst_conflict",
-                    "contexts": [{"kind": "graph_path", "content": "rollout -> console-2026.04"}]
+                    "contexts": [
+                        {"kind": "graph_path", "file_name": "dsid_rollout_current.md", "content": "rollout -> console-2026.04"}
+                    ]
                     if profile in {"deep_graphrag", "agentic_graphrag"}
                     else [],
                     "metadata": {
@@ -384,8 +436,18 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                 },
             ]
             if profile == "agentic_graphrag":
+                retrieval_rows[0]["metadata"]["agentic_floor_fusion"] = {
+                    "floor_context_count": 1,
+                    "enhanced_context_count": 1,
+                }
+                retrieval_rows[0]["raw_result"]["agentic_floor_fusion"] = True
+                retrieval_rows[1]["metadata"]["agentic_floor_fusion"] = {
+                    "floor_context_count": 0,
+                    "enhanced_context_count": 1,
+                }
                 retrieval_rows[1]["raw_result"]["round_count"] = 2
                 retrieval_rows[1]["raw_result"]["replan_success"] = True
+                retrieval_rows[1]["raw_result"]["agentic_floor_fusion"] = True
             (profile_dir / "retrieval_results.jsonl").write_text(
                 "\n".join(json.dumps(row, ensure_ascii=False) for row in retrieval_rows) + "\n",
                 encoding="utf-8",
@@ -426,8 +488,8 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert metrics["profiles"]["agentic_graphrag"]["measured"] is True
     assert metrics["profiles"]["agentic_graphrag"]["underlying_profile"] == "agentic_graphrag"
     assert metrics["deltas"]["deep_vs_standard"]["retrieval_recall_at_k"] == 0.5
-    assert metrics["deltas"]["deep_vs_standard"]["answer_correctness"] == 0.3
-    assert metrics["deltas"]["agentic_vs_standard"]["answer_correctness"] == 0.45
+    assert metrics["deltas"]["deep_vs_standard"]["answer_correctness"] == -0.125
+    assert metrics["deltas"]["agentic_vs_standard"]["answer_correctness"] == -0.025
     assert metrics["deltas"]["agentic_vs_deep"]["mrr_at_k"] == 0.1
     assert metrics["agentic_metrics"]["graph_usage_gain"] == 0.5
     assert metrics["agentic_metrics"]["replan_success_rate"] == 1.0
@@ -439,7 +501,32 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert "unsupported_claim" in failure_text
     assert "unavailable_due_to_missing_trace_fields" in failure_text
     assert "failure_tag_limitations" in metrics
+    assert "gold_doc_retrieved_but_citation_missing" in failure_text
+    assert "citation_not_bound_to_gold_doc" in failure_text
+    assert "answer_correctness_drop_despite_recall_gain" in failure_text
+    assert "graph_added_gold_doc" in failure_text
+    assert "graph_added_non_gold_context" in failure_text
+    assert "standard_floor_preserved_gold_doc" in failure_text
+    assert "agentic_added_new_gold_doc" in failure_text
+    assert metrics["question_type_metrics"]["basic"]["profiles"]["standard_rag"]["retrieval_recall_at_k"] == 1.0
+    assert (
+        metrics["question_type_metrics"]["conflicting_info"]["deltas"]["agentic_vs_standard"][
+            "retrieval_recall_at_k"
+        ]
+        == 1.0
+    )
+    assert (
+        metrics["question_type_metrics"]["conflicting_info"]["deltas"]["agentic_vs_standard"][
+            "answer_correctness"
+        ]
+        == -0.1
+    )
+    assert metrics["evidence_conversion_diagnostics"]["tag_counts"]["agentic_added_new_gold_doc"] == 1
+    assert metrics["evidence_conversion_diagnostics"]["tag_counts"]["graph_added_non_gold_context"] == 1
     report_text = (output_root / "report.md").read_text(encoding="utf-8")
     assert "## Paired Deltas" in report_text
     assert "agentic_vs_standard" in report_text
     assert "## Agentic Metrics" in report_text
+    assert "## Question Type Breakdown" in report_text
+    assert "conflicting_info" in report_text
+    assert "## Evidence Conversion Diagnostics" in report_text

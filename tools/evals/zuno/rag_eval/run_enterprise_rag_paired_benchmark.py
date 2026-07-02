@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from zuno.evals.rag_eval.paths import default_runs_root
+from zuno.evals.rag_eval.metrics import _is_context_relevant
 from zuno.evals.rag_eval.public_enterprise_datasets import (
     EnterpriseDocumentSchemaError,
     _as_string_list,
@@ -40,6 +41,16 @@ METRIC_KEYS = [
     "source_span_accuracy",
     "unsupported_claim_rate",
 ]
+PER_SAMPLE_METRIC_MAP = {
+    "retrieval_recall": "retrieval_recall_at_k",
+    "context_precision": "context_precision_at_k",
+    "mrr": "mrr_at_k",
+    "ndcg": "ndcg_at_k",
+    "answer_correctness": "answer_correctness",
+    "citation_accuracy": "citation_accuracy",
+    "source_span_accuracy": "source_span_accuracy",
+    "unsupported_claim_rate": "unsupported_claim_rate",
+}
 ADVANCED_FAILURE_TAGS = [
     "gold_doc_not_indexed",
     "gold_doc_recalled_but_low_rank",
@@ -193,8 +204,7 @@ def _percentile(values: list[float], percentile: float) -> float | None:
     return ordered[index]
 
 
-def _cost_latency(profile_dir: Path) -> dict[str, Any]:
-    rows = _read_jsonl(profile_dir / "retrieval_results.jsonl")
+def _cost_latency_from_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     latencies = [
         float((row.get("metadata") or {}).get("latency_ms"))
         for row in rows
@@ -219,6 +229,10 @@ def _cost_latency(profile_dir: Path) -> dict[str, Any]:
         "estimated_cost": sum(costs) if costs else None,
         "graph_used_rate": (graph_used / len(rows)) if rows else None,
     }
+
+
+def _cost_latency(profile_dir: Path) -> dict[str, Any]:
+    return _cost_latency_from_rows(_read_jsonl(profile_dir / "retrieval_results.jsonl"))
 
 
 def _load_profile_metrics(run_root: Path, underlying_profile: str, report_profiles: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -314,6 +328,179 @@ def _delta(left: dict[str, Any], right: dict[str, Any]) -> dict[str, float | Non
     return output
 
 
+def _mean(values: Iterable[Any]) -> float | None:
+    usable: list[float] = []
+    for value in values:
+        if value is None:
+            continue
+        try:
+            usable.append(float(value))
+        except (TypeError, ValueError):
+            continue
+    if not usable:
+        return None
+    return sum(usable) / len(usable)
+
+
+def _aggregate_per_sample_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    aggregate: dict[str, Any] = {"sample_count": len(rows)}
+    for sample_key, aggregate_key in PER_SAMPLE_METRIC_MAP.items():
+        aggregate[aggregate_key] = _mean(row.get(sample_key) for row in rows)
+    return aggregate
+
+
+def _profile_retrieval_rows(run_root: Path) -> dict[str, list[dict[str, Any]]]:
+    return {
+        public_name: _read_jsonl(run_root / underlying / "retrieval_results.jsonl")
+        for public_name, underlying in PROFILE_ALIASES.items()
+    }
+
+
+def _question_type_metrics(
+    *,
+    cases: list[dict[str, Any]],
+    per_samples: dict[str, list[dict[str, Any]]],
+    retrieval_rows: dict[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
+    case_types = {str(row.get("id")): str(row.get("question_type") or "unknown") for row in cases}
+    type_order = list(dict.fromkeys(case_types.values()))
+    output: dict[str, Any] = {}
+    for question_type in type_order:
+        case_ids = {case_id for case_id, type_name in case_types.items() if type_name == question_type}
+        type_payload: dict[str, Any] = {
+            "sample_count": len(case_ids),
+            "profiles": {},
+            "deltas": {},
+        }
+        for profile, rows in per_samples.items():
+            selected_rows = [row for row in rows if str(row.get("id")) in case_ids]
+            aggregate = _aggregate_per_sample_rows(selected_rows)
+            selected_retrieval_rows = [
+                row for row in retrieval_rows.get(profile, []) if str(row.get("id")) in case_ids
+            ]
+            aggregate.update(_cost_latency_from_rows(selected_retrieval_rows))
+            type_payload["profiles"][profile] = aggregate
+        profiles = type_payload["profiles"]
+        type_payload["deltas"] = {
+            "deep_vs_standard": _delta(
+                profiles.get("deep_graphrag") or {},
+                profiles.get("standard_rag") or {},
+            ),
+            "agentic_vs_standard": _delta(
+                profiles.get("agentic_graphrag") or {},
+                profiles.get("standard_rag") or {},
+            ),
+            "agentic_vs_deep": _delta(
+                profiles.get("agentic_graphrag") or {},
+                profiles.get("deep_graphrag") or {},
+            ),
+        }
+        output[question_type] = type_payload
+    return output
+
+
+def _case_gold_evidence(case: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not case:
+        return []
+    gold = list(case.get("gold_evidence") or [])
+    if gold:
+        return gold
+    return [{"doc_id": doc_id} for doc_id in _as_string_list(case.get("expected_doc_ids")) if doc_id]
+
+
+def _context_matches_gold(context: dict[str, Any], case: dict[str, Any] | None) -> bool:
+    gold = _case_gold_evidence(case)
+    return bool(gold and _is_context_relevant(context, gold, allow_document_match=True))
+
+
+def _row_float(row: dict[str, Any] | None, key: str) -> float | None:
+    if not row:
+        return None
+    value = row.get(key)
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _build_evidence_conversion_diagnostics(
+    *,
+    cases: list[dict[str, Any]],
+    per_samples: dict[str, list[dict[str, Any]]],
+    retrieval_rows: dict[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
+    cases_by_id = {str(row.get("id")): row for row in cases}
+    samples_by_profile = {
+        profile: {str(row.get("id")): row for row in rows}
+        for profile, rows in per_samples.items()
+    }
+    retrieval_by_profile = {
+        profile: {str(row.get("id")): row for row in rows}
+        for profile, rows in retrieval_rows.items()
+    }
+    standard_by_id = samples_by_profile.get("standard_rag") or {}
+    agentic_by_id = samples_by_profile.get("agentic_graphrag") or {}
+    items: list[dict[str, Any]] = []
+    tag_counts: dict[str, int] = {}
+
+    def add(case_id: str, profile: str, tag: str) -> None:
+        items.append(
+            {
+                "case_id": case_id,
+                "question_type": str((cases_by_id.get(case_id) or {}).get("question_type") or "unknown"),
+                "profile": profile,
+                "tag": tag,
+            }
+        )
+        tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+    for profile, rows in samples_by_profile.items():
+        for case_id, sample in rows.items():
+            recall = _row_float(sample, "retrieval_recall") or 0.0
+            answer_correctness = _row_float(sample, "answer_correctness")
+            citation_accuracy = _row_float(sample, "citation_accuracy")
+            if recall > 0 and answer_correctness is not None and answer_correctness < 0.5:
+                add(case_id, profile, "gold_doc_retrieved_but_answer_missing")
+            if recall > 0 and citation_accuracy is not None and citation_accuracy <= 0:
+                add(case_id, profile, "gold_doc_retrieved_but_citation_missing")
+                add(case_id, profile, "citation_not_bound_to_gold_doc")
+
+    for case_id, agentic_sample in agentic_by_id.items():
+        standard_sample = standard_by_id.get(case_id)
+        agentic_recall = _row_float(agentic_sample, "retrieval_recall") or 0.0
+        standard_recall = _row_float(standard_sample, "retrieval_recall") or 0.0
+        agentic_answer = _row_float(agentic_sample, "answer_correctness")
+        standard_answer = _row_float(standard_sample, "answer_correctness")
+        agentic_retrieval = (retrieval_by_profile.get("agentic_graphrag") or {}).get(case_id)
+        if agentic_recall > standard_recall:
+            add(case_id, "agentic_graphrag", "agentic_added_new_gold_doc")
+            if agentic_answer is not None and standard_answer is not None and agentic_answer < standard_answer:
+                add(case_id, "agentic_graphrag", "answer_correctness_drop_despite_recall_gain")
+        if not agentic_retrieval:
+            add(case_id, "agentic_graphrag", "unavailable_due_to_missing_trace_fields")
+            continue
+        metadata = dict(agentic_retrieval.get("metadata") or {})
+        raw = dict(agentic_retrieval.get("raw_result") or {})
+        contexts = list(agentic_retrieval.get("contexts") or agentic_retrieval.get("documents") or [])
+        floor_fusion = bool(metadata.get("agentic_floor_fusion") or raw.get("agentic_floor_fusion"))
+        if floor_fusion and standard_recall > 0 and agentic_recall >= standard_recall:
+            add(case_id, "agentic_graphrag", "standard_floor_preserved_gold_doc")
+        graph_contexts = [context for context in contexts if context.get("kind") == "graph_path"]
+        if not graph_contexts:
+            continue
+        case = cases_by_id.get(case_id)
+        gold_graph_contexts = [context for context in graph_contexts if _context_matches_gold(context, case)]
+        non_gold_graph_contexts = [context for context in graph_contexts if not _context_matches_gold(context, case)]
+        if agentic_recall > standard_recall and gold_graph_contexts:
+            add(case_id, "agentic_graphrag", "graph_added_gold_doc")
+        if agentic_recall <= standard_recall and non_gold_graph_contexts:
+            add(case_id, "agentic_graphrag", "graph_added_non_gold_context")
+
+    return {"items": items, "tag_counts": tag_counts}
+
+
 def _build_failure_cases(per_samples: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
     failures: list[dict[str, Any]] = []
     for profile, rows in per_samples.items():
@@ -347,7 +534,12 @@ def _has_advanced_failure_trace_fields(row: dict[str, Any]) -> bool:
     )
 
 
-def _write_failure_cases(path: Path, failures: list[dict[str, Any]]) -> None:
+def _write_failure_cases(
+    path: Path,
+    failures: list[dict[str, Any]],
+    *,
+    diagnostics: dict[str, Any] | None = None,
+) -> None:
     lines = ["# EnterpriseRAG Failure Cases", ""]
     if not failures:
         lines.append("No tagged failures were found in the measured per-sample metrics.")
@@ -360,6 +552,18 @@ def _write_failure_cases(path: Path, failures: list[dict[str, Any]]) -> None:
         )
     for failure in failures:
         lines.append(f"- `{failure['case_id']}` / `{failure['profile']}`: {', '.join(failure['tags'])}")
+    diagnostic_items = list((diagnostics or {}).get("items") or [])
+    if diagnostic_items:
+        lines.extend(["", "## Evidence Conversion Diagnostics", ""])
+        for item in diagnostic_items:
+            lines.append(
+                "- `{case_id}` / `{profile}` / `{question_type}`: {tag}".format(
+                    case_id=item.get("case_id"),
+                    profile=item.get("profile"),
+                    question_type=item.get("question_type"),
+                    tag=item.get("tag"),
+                )
+            )
     path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
 
 
@@ -409,6 +613,46 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                     citation=_fmt((delta or {}).get("citation_accuracy")),
                 )
             )
+    if metrics.get("question_type_metrics"):
+        lines.extend(
+            [
+                "",
+                "## Question Type Breakdown",
+                "",
+                (
+                    "| Question Type | Cases | Standard Recall@5 | Deep Recall@5 | Agentic Recall@5 | "
+                    "Agentic Δ Recall | Agentic Δ Answer | Agentic Δ Citation | Agentic p95 ms |"
+                ),
+                "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+            ]
+        )
+        for question_type, payload in metrics.get("question_type_metrics", {}).items():
+            profiles = payload.get("profiles") or {}
+            deltas = payload.get("deltas") or {}
+            agentic_delta = deltas.get("agentic_vs_standard") or {}
+            lines.append(
+                "| {question_type} | {cases} | {standard} | {deep} | {agentic} | {delta_recall} | {delta_answer} | {delta_citation} | {latency} |".format(
+                    question_type=question_type,
+                    cases=payload.get("sample_count"),
+                    standard=_fmt((profiles.get("standard_rag") or {}).get("retrieval_recall_at_k")),
+                    deep=_fmt((profiles.get("deep_graphrag") or {}).get("retrieval_recall_at_k")),
+                    agentic=_fmt((profiles.get("agentic_graphrag") or {}).get("retrieval_recall_at_k")),
+                    delta_recall=_fmt(agentic_delta.get("retrieval_recall_at_k")),
+                    delta_answer=_fmt(agentic_delta.get("answer_correctness")),
+                    delta_citation=_fmt(agentic_delta.get("citation_accuracy")),
+                    latency=_fmt((profiles.get("agentic_graphrag") or {}).get("latency_p95_ms")),
+                )
+            )
+        lines.extend(
+            [
+                "",
+                "### Strategy Gate Notes",
+                "",
+                "- Treat question types with positive agentic retrieval delta as candidates for agentic deep routing.",
+                "- Treat question types with no agentic retrieval gain and higher latency as candidates for standard-first routing.",
+                "- Answer/citation non-gain means the next bottleneck is evidence-to-answer synthesis and citation binding, not more context alone.",
+            ]
+        )
     if metrics.get("agentic_metrics"):
         agentic_metrics = metrics["agentic_metrics"]
         lines.extend(
@@ -421,6 +665,11 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 f"- cost_quality_ratio: `{_fmt(agentic_metrics.get('cost_quality_ratio'))}`",
             ]
         )
+    diagnostics = metrics.get("evidence_conversion_diagnostics") or {}
+    if diagnostics.get("tag_counts"):
+        lines.extend(["", "## Evidence Conversion Diagnostics", ""])
+        for tag, count in sorted((diagnostics.get("tag_counts") or {}).items()):
+            lines.append(f"- {tag}: `{count}`")
     if metrics["measurement_status"] == "blocked_not_measured":
         lines.extend(
             [
@@ -487,6 +736,8 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
         },
         "deltas": {},
         "agentic_metrics": {"graph_usage_gain": None, "replan_success_rate": None, "cost_quality_ratio": None},
+        "question_type_metrics": {},
+        "evidence_conversion_diagnostics": {"items": [], "tag_counts": {}},
         "cost_latency": {},
         "failure_count": 0,
         "failure_tag_limitations": _failure_tag_limitations(),
@@ -604,6 +855,7 @@ async def run_enterprise_rag_paired_benchmark(
     )
     profiles, cost_latency, per_samples = _build_profile_summary(run_root=stackless_root, run_report=run_report)
     cases = _read_jsonl(dataset_path)
+    retrieval_rows = _profile_retrieval_rows(stackless_root)
     common_case_ids = [str(row.get("id")) for row in cases]
     standard = profiles["standard_rag"].get("aggregate") or {}
     deep = profiles["deep_graphrag"].get("aggregate") or {}
@@ -612,6 +864,11 @@ async def run_enterprise_rag_paired_benchmark(
     agentic_vs_standard = _delta(agentic, standard) if agentic else {}
     agentic_vs_deep = _delta(agentic, deep) if agentic else {}
     failures = _build_failure_cases(per_samples)
+    evidence_conversion_diagnostics = _build_evidence_conversion_diagnostics(
+        cases=cases,
+        per_samples=per_samples,
+        retrieval_rows=retrieval_rows,
+    )
     failure_tag_limitations = _failure_tag_limitations()
     replan_success_rate = (
         _replan_success_rate(
@@ -645,6 +902,11 @@ async def run_enterprise_rag_paired_benchmark(
             "agentic_vs_standard": agentic_vs_standard,
             "agentic_vs_deep": agentic_vs_deep,
         },
+        "question_type_metrics": _question_type_metrics(
+            cases=cases,
+            per_samples=per_samples,
+            retrieval_rows=retrieval_rows,
+        ),
         "agentic_metrics": {
             "graph_usage_gain": graph_usage_gain,
             "replan_success_rate": replan_success_rate,
@@ -654,12 +916,17 @@ async def run_enterprise_rag_paired_benchmark(
                 agentic_latency=cost_latency.get("agentic_graphrag") or {},
             ),
         },
+        "evidence_conversion_diagnostics": evidence_conversion_diagnostics,
         "cost_latency": cost_latency,
         "failure_count": len(failures),
         "failure_tag_limitations": failure_tag_limitations,
     }
     (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
-    _write_failure_cases(output_root / "failure_cases.md", failures)
+    _write_failure_cases(
+        output_root / "failure_cases.md",
+        failures,
+        diagnostics=evidence_conversion_diagnostics,
+    )
     _write_report(output_root / "report.md", metrics)
     return {
         "status": "measured",
