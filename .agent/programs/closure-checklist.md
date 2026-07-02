@@ -2,7 +2,7 @@
 
 state: active
 active_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-current_phase: `PHASE11_workspace-product-api-frontend-sync.md`
+current_phase: `PHASE12_end-to-end-product-runtime.md`
 latest_completed_program: `zuno-enterprise-document-ingestion-platform-v2`
 
 ## 收口目标
@@ -28,7 +28,7 @@ Production scale external deployments remain replaceable targets.
 - [x] PHASE08 完成 Model Gateway / Cost / Latency baseline。
 - [x] PHASE09 完成 Planning Contract 与 Strategy Selector baseline。
 - [x] PHASE10 完成 ReAct / Reflection / Dynamic Replan / Reflexion runtime baseline。
-- [ ] PHASE11 完成 Workspace Product API / Frontend Minimal Sync。
+- [x] PHASE11 完成 Workspace Product API / Frontend Minimal Sync。
 - [ ] PHASE12 完成 End-to-End Product Runtime scenario。
 - [ ] PHASE13 完成 Eval / Trace / Cost / Benchmark baseline。
 - [ ] PHASE14 完成 Docs / Architecture Expansion。
@@ -44,7 +44,7 @@ Production scale external deployments remain replaceable targets.
 - [x] Agentic Retrieval Planner / Strategy Selector 能按 profile、证据、预算选择标准 / 深度检索计划、replan boundary 和 capability plan；PHASE10 已证明 reflection 后 replan 会改变后续本地执行轨迹。
 - [x] Capability Layer 有 Skill / Knowledge / Tool / MCP / Artifact capability registry contract。
 - [x] Memory & Context Engine 有多重记忆和 ContextPack contract，并有最小 runtime / focused tests。
-- [x] Planning & Control Runtime 已有 StrategySelector、PlanStep、PlannerOutput、ReflectionVerdict、ReplanDecision、ReflexionLesson candidate contract 和本地 AgentControlRuntime 闭环；Product API / E2E 接入仍属 PHASE11 / PHASE12。
+- [x] Planning & Control Runtime 已有 StrategySelector、PlanStep、PlannerOutput、ReflectionVerdict、ReplanDecision、ReflexionLesson candidate contract 和本地 AgentControlRuntime 闭环；PHASE11 已完成 Product API 最小接入，E2E 证明仍属 PHASE12。
 - [x] Security gates 覆盖 input / retrieval / tool / output，至少有 prompt injection、ACL、tool approval、output citation safety tests。
 - [ ] Eval / Trace / Cost 能记录 latency、tokens / cost estimate、retrieval rounds、citation coverage、unsupported claim、plan / replan / reflection events。
 - [ ] 一个 E2E scenario 能跑：上传文档 -> ingest -> 标准/深度检索 -> Agent plan -> cited artifact -> trace/eval/feedback -> restart rehydrate。
@@ -60,12 +60,12 @@ Production scale external deployments remain replaceable targets.
 - [x] Workstream E 提交 Security / Governance evidence。
 - [x] Workstream F 提交 Planning / Agent Runtime evidence。
 - [ ] Workstream G 提交 Eval / Trace / Cost benchmark evidence；PHASE08 Model Gateway / Cost / Latency evidence 已完成，PHASE13 仍未关闭。
-- [ ] Workstream H 提交 Product API / Frontend Minimal Sync evidence。
+- [x] Workstream H 提交 Product API / Frontend Minimal Sync evidence。
 - [ ] Workstream I 提交 Docs / Verifier / Closure evidence。
 
 ## 目标架构拼接验收
 
-- [ ] Product Surface 能把用户的 AgentChat goal、knowledge selection、标准检索 / 深度检索传入 runtime。
+- [x] Product Surface 能把用户的 AgentChat goal、knowledge selection、标准检索 / 深度检索传入 runtime。
 - [ ] Input / Async Infrastructure 的 source object、parse job、document version、index manifest 和 citation lineage 能被 Knowledge Retrieval 消费。
 - [ ] Input / Async Infrastructure 的 file status timeline、dependency probe、blocked reason、worker event、index status 和 binary source object refs 能被 Product API、E2E 和 Eval 消费。
 - [ ] Knowledge Retrieval 输出的 EvidenceBundle / CitationLineage 能被 Planning、Reflection、Output Gate 和 Eval 共同消费。
@@ -73,7 +73,7 @@ Production scale external deployments remain replaceable targets.
 - [ ] Capability Layer 的 SkillCard / ToolCard / MCPCapability 能被 Planner 选择，并受 Tool Gate 约束。
 - [x] Security / Governance 的 Input / Retrieval / Tool / Output gates 能影响 plan / replan / refuse / ask_user。
 - [x] Model Gateway 的 token / latency / cost metrics 能进入 trace，并影响 budget guard。
-- [x] Planning & Control Runtime 能从 Skill、Capability、Evidence、Security verdict 和 budget verdict 生成 plan / verdict，并在 Reflection 后动态 replan 改变本地轨迹；Product API / E2E 接入仍属 PHASE11 / PHASE12。
+- [x] Planning & Control Runtime 能从 Skill、Capability、Evidence、Security verdict 和 budget verdict 生成 plan / verdict，并在 Reflection 后动态 replan 改变本地轨迹；PHASE11 已把 plan / reflection / replan summary 接入 Product API，PHASE12 仍需 E2E 证明。
 - [ ] Eval / Trace / Cost 层能从 E2E scenario 输出 regression summary。
 - [ ] Docs / Archive 能准确说明 Current / Target / Production Scale，且不把外部生产服务写成 Current。
 

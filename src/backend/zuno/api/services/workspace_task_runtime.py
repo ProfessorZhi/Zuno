@@ -5,13 +5,16 @@ import hashlib
 import json
 from pathlib import Path
 import time
+from typing import Any
 from urllib.parse import unquote, urlparse
 from uuid import uuid4
 
 from fastapi import HTTPException
 
+from zuno.agent.contracts import PlannerOutput, RetrievalProfile
 from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
 from zuno.agent.harness import ControllerRuntimeState
+from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
 from zuno.api.services.user import UserPayload
 from zuno.capability.runtime import (
     ToolRuntimeExecutionResult,
@@ -79,6 +82,7 @@ from zuno.schema.workspace import (
     WORKSPACE_TASK_STATUS_TO_LIFECYCLE,
     WorkspaceTaskBudget,
     WorkspaceTaskContract,
+    WorkspaceFileStatus,
     WorkspaceTaskLifecycleSnapshot,
 )
 
@@ -102,6 +106,9 @@ class WorkspaceTaskRuntimeService:
     _feedback: dict[str, FeedbackContract] = {}
     _feedback_ids_by_task: dict[str, list[str]] = {}
     _task_recovery: dict[str, dict] = {}
+    _planner_outputs: dict[str, PlannerOutput] = {}
+    _task_retrieval_results: dict[str, AgenticRetrievalRuntimeResult] = {}
+    _artifact_citation_refs: dict[str, list[dict[str, Any]]] = {}
     _durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
     _tool_runtime = build_default_tool_control_plane_runtime()
     _knowledge_index_runtime = KnowledgeIndexRuntime()
@@ -144,6 +151,9 @@ class WorkspaceTaskRuntimeService:
         cls._feedback = {}
         cls._feedback_ids_by_task = {}
         cls._task_recovery = {}
+        cls._planner_outputs = {}
+        cls._task_retrieval_results = {}
+        cls._artifact_citation_refs = {}
         cls._durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
         cls._tool_runtime = build_default_tool_control_plane_runtime()
         cls._knowledge_index_runtime = KnowledgeIndexRuntime()
@@ -263,6 +273,12 @@ class WorkspaceTaskRuntimeService:
             "file": file.model_dump(),
             "name": name,
             "uri": uri,
+            "file_status": cls._file_status_payload(
+                file=file,
+                filename=name,
+                storage_uri=uri,
+                source_ref=uri or file.file_id,
+            ),
         }
         if cls._durable_ingestion_store is not None and cls._source_object_store is not None:
             source_id = f"source_{normalized_file_id}"
@@ -297,6 +313,14 @@ class WorkspaceTaskRuntimeService:
                     "storage_uri": source_object.storage_uri,
                     "durable_status": "persisted",
                 }
+            )
+            payload["file_status"] = cls._file_status_payload(
+                file=file,
+                filename=source_object.filename,
+                storage_uri=source_object.storage_uri,
+                source_ref=source_object.source_id,
+                source_sha256=source_object.source_sha256,
+                size_bytes=source_object.size_bytes,
             )
         return payload
 
@@ -366,6 +390,16 @@ class WorkspaceTaskRuntimeService:
                 "parse_snapshot": parse_snapshot.model_dump(),
                 "index_job": None,
             }
+            job["file_status"] = cls._file_status_payload(
+                file=file,
+                filename=source_object.filename if source_object is not None else None,
+                storage_uri=source_object.storage_uri if source_object is not None else None,
+                source_ref=source_object.source_id if source_object is not None else file.file_id,
+                source_sha256=source_object.source_sha256 if source_object is not None else file.hash,
+                size_bytes=source_object.size_bytes if source_object is not None else 0,
+                parse_snapshot=parse_snapshot,
+                index_status="blocked",
+            )
             cls._attach_blocked_durable_payload(
                 job=job,
                 source_object=source_object,
@@ -402,6 +436,18 @@ class WorkspaceTaskRuntimeService:
             "parse_snapshot": parse_snapshot.model_dump(),
             "index_job": index_job.model_dump(),
         }
+        job["file_status"] = cls._file_status_payload(
+            file=file,
+            filename=source_object.filename if source_object is not None else None,
+            storage_uri=source_object.storage_uri if source_object is not None else None,
+            source_ref=source_object.source_id if source_object is not None else file.file_id,
+            source_sha256=source_object.source_sha256 if source_object is not None else file.hash,
+            size_bytes=source_object.size_bytes if source_object is not None else 0,
+            parse_snapshot=parse_snapshot,
+            document_version=document_version,
+            index_job=index_job,
+            index_status="indexed",
+        )
         cls._attach_success_durable_payload(
             job=job,
             source_object=source_object,
@@ -633,6 +679,13 @@ class WorkspaceTaskRuntimeService:
         cls._artifact_ids_by_task[task_id] = []
         cls._feedback_ids_by_task[task_id] = []
         cls._task_recovery.pop(task_id, None)
+        planner_output = cls._build_planner_output(
+            task=task,
+            simple_task=simple_task,
+            login_user=login_user,
+        )
+        cls._planner_outputs[task_id] = planner_output
+        cls._task_retrieval_results.pop(task_id, None)
         cls._trace_spans[task_id] = []
         cls._release_evals.pop(task_id, None)
         cls._trace_replays[task_id] = {"source_refs": []}
@@ -646,7 +699,18 @@ class WorkspaceTaskRuntimeService:
         )
         cls._events[task_id] = [
             cls._event(task_id=task_id, trace_id=trace_id, event_type="task_started", status="created", payload={"session_id": task.session_id}),
-            cls._event(task_id=task_id, trace_id=trace_id, event_type="planning", status="planning", payload={"goal": goal}),
+            cls._event(
+                task_id=task_id,
+                trace_id=trace_id,
+                event_type="planning",
+                status="planning",
+                payload={
+                    "goal": goal,
+                    "strategy": planner_output.strategy.strategy,
+                    "selected_skill": planner_output.strategy.selected_skill,
+                    "retrieval_plan": planner_output.retrieval_plan.model_dump(mode="json"),
+                },
+            ),
             cls._event(
                 task_id=task_id,
                 trace_id=trace_id,
@@ -657,6 +721,7 @@ class WorkspaceTaskRuntimeService:
                     "uploaded_file_ids": list(simple_task.uploaded_file_ids),
                     "uploaded_files": cls._uploaded_file_payloads(simple_task.uploaded_file_ids),
                     "retrieval_mode": simple_task.retrieval_mode,
+                    "retrieval_profiles": cls._retrieval_profile_map(simple_task),
                 },
             ),
         ]
@@ -901,6 +966,7 @@ class WorkspaceTaskRuntimeService:
             goal=goal,
         )
         if retrieval_result is not None:
+            cls._task_retrieval_results[task_id] = retrieval_result
             cls._events.setdefault(task_id, []).append(
                 cls._event(
                     task_id=task_id,
@@ -966,6 +1032,7 @@ class WorkspaceTaskRuntimeService:
             )
             return
 
+        citation_refs = cls._citation_refs_from_result(retrieval_result)
         artifact = ArtifactContract(
             workspace_id=task.workspace_id,
             owner=task.owner,
@@ -976,11 +1043,13 @@ class WorkspaceTaskRuntimeService:
             kind=artifact_kind,
             uri=f"memory://workspace/{task.workspace_id}/artifacts/{task_id}",
             hash=hashlib.sha256(artifact_content.encode("utf-8")).hexdigest(),
+            citation_refs=citation_refs,
             created_at=str(time.time()),
             updated_at=str(time.time()),
         )
         cls._artifacts[artifact.artifact_id] = artifact
         cls._artifact_content[artifact.artifact_id] = artifact_content
+        cls._artifact_citation_refs[artifact.artifact_id] = citation_refs
         cls._artifact_ids_by_task[task_id] = [artifact.artifact_id]
         cls._events.setdefault(task_id, []).extend(
             [
@@ -1000,6 +1069,8 @@ class WorkspaceTaskRuntimeService:
                         "artifact_id": artifact.artifact_id,
                         "kind": artifact.kind,
                         "download_url": cls._artifact_download_url(artifact.artifact_id),
+                        "citation_ids": [ref["citation_id"] for ref in citation_refs],
+                        "citation_refs": citation_refs,
                     },
                 ),
                 cls._event(
@@ -1031,6 +1102,292 @@ class WorkspaceTaskRuntimeService:
             cls._files[file_id].model_dump()
             for file_id in uploaded_file_ids
             if file_id in cls._files
+        ]
+
+    @staticmethod
+    def _file_status_payload(
+        *,
+        file: UploadedFileContract,
+        filename: str | None = None,
+        storage_uri: str | None = None,
+        source_ref: str | None = None,
+        source_sha256: str | None = None,
+        size_bytes: int = 0,
+        parse_snapshot: ParseJobSnapshot | None = None,
+        document_version: DocumentVersionRecord | None = None,
+        index_job: IndexJobManifest | None = None,
+        index_status: str = "not_indexed",
+    ) -> dict:
+        source_provenance = (
+            dict(getattr(parse_snapshot, "source_provenance", {}) or {})
+            if parse_snapshot is not None
+            else {}
+        )
+        dependency_probe = (
+            dict(getattr(parse_snapshot, "diagnostics", {}) or {})
+            if parse_snapshot is not None
+            else {}
+        )
+        resolved_index_status = index_status
+        if index_job is not None:
+            resolved_index_status = "indexed" if index_job.status == "succeeded" else index_job.status
+        status = WorkspaceFileStatus(
+            file_id=file.file_id,
+            filename=filename or file.file_id,
+            mime_type=file.mime_type,
+            size_bytes=size_bytes,
+            source_sha256=source_sha256 or file.hash,
+            storage_uri=storage_uri,
+            source_ref=source_ref or file.file_id,
+            parse_status=file.parse_status,
+            index_status=resolved_index_status,
+            parser_id=getattr(parse_snapshot, "parser_id", None),
+            document_version_id=(
+                document_version.document_version_id
+                if document_version is not None
+                else source_provenance.get("document_version_id")
+            ),
+            index_job_id=index_job.job_id if index_job is not None else None,
+            blocked_reason=getattr(parse_snapshot, "blocked_reason", None),
+            dependency_probe=dependency_probe,
+            retry_count=int(getattr(parse_snapshot, "attempt_count", 1) or 1) - 1
+            if parse_snapshot is not None
+            else 0,
+            last_error=getattr(parse_snapshot, "failure_reason", None),
+        )
+        return status.model_dump(mode="json")
+
+    @staticmethod
+    def _retrieval_profile_map(simple_task: WorkSpaceSimpleTask | None) -> dict[str, str]:
+        if simple_task is None:
+            return {}
+        profiles = {
+            knowledge_space_id: "standard"
+            for knowledge_space_id in simple_task.knowledge_space_ids
+        }
+        for knowledge_space_id, profile in simple_task.retrieval_profiles.items():
+            profiles[knowledge_space_id] = str(profile)
+        for selection in simple_task.knowledge_space_profiles:
+            profiles[selection.knowledge_space_id] = str(selection.retrieval_profile)
+        if (
+            simple_task.retrieval_mode in {"standard", "deep"}
+            and simple_task.knowledge_space_ids
+            and not simple_task.retrieval_profiles
+            and not simple_task.knowledge_space_profiles
+        ):
+            profiles = {
+                knowledge_space_id: simple_task.retrieval_mode
+                for knowledge_space_id in simple_task.knowledge_space_ids
+            }
+        return profiles
+
+    @classmethod
+    def _requested_retrieval_profile(cls, simple_task: WorkSpaceSimpleTask | None) -> RetrievalProfile:
+        profiles = cls._retrieval_profile_map(simple_task)
+        if any(profile == "deep" for profile in profiles.values()):
+            return RetrievalProfile.DEEP
+        return RetrievalProfile.STANDARD
+
+    @classmethod
+    def _explicit_retrieval_profile(cls, simple_task: WorkSpaceSimpleTask | None) -> RetrievalProfile | None:
+        if simple_task is None:
+            return None
+        explicit_profiles = bool(simple_task.retrieval_profiles or simple_task.knowledge_space_profiles)
+        explicit_mode = simple_task.retrieval_mode in {"standard", "deep"}
+        if not explicit_profiles and not explicit_mode:
+            return None
+        return cls._requested_retrieval_profile(simple_task)
+
+    @classmethod
+    def _retrieval_plan_summary(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask | None,
+    ) -> dict:
+        planner_output = cls._planner_outputs.get(task.task_id)
+        retrieval_result = cls._task_retrieval_results.get(task.task_id)
+        product_decision = (
+            retrieval_result.retrieval_decision
+            if retrieval_result is not None
+            else None
+        )
+        requested_profile = (
+            product_decision.requested_profile.value
+            if product_decision is not None
+            else (
+                planner_output.retrieval_plan.requested_profile.value
+                if planner_output is not None
+                else cls._requested_retrieval_profile(simple_task).value
+            )
+        )
+        effective_profile = (
+            product_decision.effective_profile.value
+            if product_decision is not None
+            else (
+                planner_output.retrieval_plan.effective_profile.value
+                if planner_output is not None
+                else requested_profile
+            )
+        )
+        return {
+            "retrieval_profiles": cls._retrieval_profile_map(simple_task),
+            "requested_profile": requested_profile,
+            "effective_profile": effective_profile,
+            "fallback_reason": (
+                product_decision.fallback_reason
+                if product_decision is not None
+                else (
+                    planner_output.retrieval_plan.fallback_reason
+                    if planner_output is not None
+                    else None
+                )
+            ),
+            "retrievers_used": (
+                list(product_decision.retrievers_used)
+                if product_decision is not None
+                else (
+                    list(planner_output.retrieval_plan.retrievers_used)
+                    if planner_output is not None
+                    else []
+                )
+            ),
+            "evidence_count": (
+                product_decision.evidence_count
+                if product_decision is not None
+                else 0
+            ),
+            "citation_coverage": (
+                product_decision.citation_coverage
+                if product_decision is not None
+                else 0.0
+            ),
+        }
+
+    @classmethod
+    def _plan_summary(cls, task_id: str) -> dict:
+        planner_output = cls._planner_outputs.get(task_id)
+        if planner_output is None:
+            return {"strategy": None, "selected_skill": None, "steps": []}
+        return {
+            "strategy": planner_output.strategy.strategy,
+            "reason": planner_output.strategy.reason,
+            "selected_skill": planner_output.strategy.selected_skill,
+            "plan_id": planner_output.plan_state.plan_id,
+            "status": planner_output.plan_state.status,
+            "steps": [
+                {
+                    "step_id": step.step_id,
+                    "action_type": step.action_type,
+                    "goal": step.goal,
+                }
+                for step in planner_output.plan_state.steps
+            ],
+        }
+
+    @classmethod
+    def _reflection_summary(cls, task_id: str) -> dict:
+        planner_output = cls._planner_outputs.get(task_id)
+        if planner_output is None:
+            return {"decision": None, "reason": "planner_output_missing"}
+        return planner_output.reflection_verdict.model_dump(mode="json")
+
+    @classmethod
+    def _replan_summary(cls, task_id: str) -> dict:
+        planner_output = cls._planner_outputs.get(task_id)
+        if planner_output is None or planner_output.replan_decision is None:
+            return {"created": False}
+        payload = planner_output.replan_decision.model_dump(mode="json")
+        payload["created"] = True
+        return payload
+
+    @classmethod
+    def _trace_summary(cls, task_id: str) -> dict:
+        task = cls._tasks.get(task_id)
+        events = cls._events.get(task_id, [])
+        replay = cls._trace_replays.get(task_id, {"source_refs": []})
+        return {
+            "trace_id": task.trace_id if task is not None else None,
+            "event_count": len(events),
+            "event_types": [event.type for event in events],
+            "span_count": len(cls._trace_spans.get(task_id, [])),
+            "source_refs": list(replay.get("source_refs") or []),
+        }
+
+    @classmethod
+    def _eval_summary(cls, task_id: str) -> dict:
+        release_eval = cls._release_evals.get(task_id) or {}
+        return {
+            "release_eval_status": release_eval.get("status"),
+            "dataset_version": release_eval.get("dataset_version"),
+            "metric_results": dict(release_eval.get("metric_results") or {}),
+            "source_refs": list(release_eval.get("source_refs") or []),
+        }
+
+    @staticmethod
+    def _cost_summary(task_id: str) -> dict:
+        _ = task_id
+        return {
+            "estimated_cost": 0.0,
+            "token_count": 0,
+            "latency_ms": 0.0,
+            "model_id": "local-runtime",
+            "source": "local_estimate",
+        }
+
+    @classmethod
+    def _capability_snapshot(cls, task_id: str) -> dict:
+        planner_output = cls._planner_outputs.get(task_id)
+        if planner_output is None:
+            return {"selected_skill": None, "allowed_tools": [], "allowed_capabilities": []}
+        return {
+            "selected_skill": (
+                planner_output.selected_skill.skill_id
+                if planner_output.selected_skill is not None
+                else planner_output.strategy.selected_skill
+            ),
+            "selection_mode": (
+                planner_output.selected_skill.selection_mode
+                if planner_output.selected_skill is not None
+                else None
+            ),
+            "allowed_tools": list(planner_output.capability_plan.allowed_tools),
+            "allowed_capabilities": list(planner_output.capability_plan.allowed_capabilities),
+            "approval_required_tools": list(planner_output.capability_plan.approval_required_tools),
+        }
+
+    @classmethod
+    def _knowledge_config_summary(cls, simple_task: WorkSpaceSimpleTask | None) -> dict:
+        return {
+            "selected_knowledge_spaces": list(simple_task.knowledge_space_ids)
+            if simple_task is not None
+            else [],
+            "retrieval_profiles": cls._retrieval_profile_map(simple_task),
+            "retrieval_defaults": {
+                "default_profile": "standard",
+                "available_profiles": ["standard", "deep"],
+            },
+        }
+
+    @staticmethod
+    def _citation_refs_from_result(
+        retrieval_result: AgenticRetrievalRuntimeResult | None,
+    ) -> list[dict[str, Any]]:
+        if retrieval_result is None:
+            return []
+        return [
+            {
+                "citation_id": citation.label,
+                "evidence_id": citation.evidence_id,
+                "document_id": citation.document_id,
+                "block_id": citation.block_id,
+                "source_ref": f"{citation.document_id}::{citation.block_id}",
+                "source_span": dict(citation.source_span),
+                "trust_label": citation.trust_label,
+                "source_uri": citation.source_uri,
+                "provenance": dict(citation.provenance),
+            }
+            for citation in retrieval_result.citations
         ]
 
     @classmethod
@@ -1289,6 +1646,7 @@ class WorkspaceTaskRuntimeService:
         artifact_ids = cls._artifact_ids_by_task.get(task_id, [])
         feedback_ids = cls._feedback_ids_by_task.get(task_id, [])
         runtime_snapshot = cls._durable_runtime.get_task_snapshot(task_id)
+        simple_task = cls._task_inputs.get(task_id)
         return {
             "task": task.model_dump(),
             "artifact_ids": list(artifact_ids),
@@ -1305,6 +1663,15 @@ class WorkspaceTaskRuntimeService:
                 "release_eval": cls._release_evals.get(task_id),
                 "trace_replay": cls._trace_replays.get(task_id, {"source_refs": []}),
             },
+            "retrieval_plan": cls._retrieval_plan_summary(task=task, simple_task=simple_task),
+            "plan_summary": cls._plan_summary(task_id),
+            "reflection_summary": cls._reflection_summary(task_id),
+            "replan_summary": cls._replan_summary(task_id),
+            "trace_summary": cls._trace_summary(task_id),
+            "eval_summary": cls._eval_summary(task_id),
+            "cost_summary": cls._cost_summary(task_id),
+            "capability_snapshot": cls._capability_snapshot(task_id),
+            "knowledge_config_summary": cls._knowledge_config_summary(simple_task),
         }
 
     @classmethod
@@ -1324,9 +1691,14 @@ class WorkspaceTaskRuntimeService:
         artifact = cls._artifacts.get(artifact_id)
         if artifact is None:
             raise HTTPException(status_code=404, detail="Workspace artifact not found")
+        citation_refs = cls._artifact_citation_refs.get(
+            artifact_id,
+            [ref.model_dump(mode="json") for ref in artifact.citation_refs],
+        )
         return {
             "artifact": artifact.model_dump(),
             "content": cls._artifact_content.get(artifact_id, ""),
+            "citation_refs": citation_refs,
             "download": {
                 "url": cls._artifact_download_url(artifact_id),
                 "filename": cls._artifact_filename(artifact),
@@ -1541,6 +1913,48 @@ class WorkspaceTaskRuntimeService:
         cls._trace_spans.setdefault(task.task_id, []).append(span.to_otel_span())
 
     @classmethod
+    def _build_planner_output(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+        login_user: UserPayload,
+    ) -> PlannerOutput:
+        selector = build_default_strategy_selector()
+        return selector.select(
+            PlanningRequest(
+                task_id=task.task_id,
+                trace_id=task.trace_id or "",
+                workspace_id=task.workspace_id,
+                user_goal=task.goal,
+                requested_retrieval_profile=cls._requested_retrieval_profile(simple_task),
+                context_pack={
+                    "session_id": simple_task.session_id,
+                    "knowledge_space_ids": list(simple_task.knowledge_space_ids),
+                    "retrieval_profiles": cls._retrieval_profile_map(simple_task),
+                    "product_mode": simple_task.product_mode,
+                },
+                pinned_skill_id=(
+                    simple_task.agent_skill_ids[0]
+                    if simple_task.agent_skill_ids
+                    else None
+                ),
+                available_capability_ids=tuple(simple_task.plugins),
+                user_roles=cls._user_roles(login_user),
+                graph_available=True,
+            )
+        )
+
+    @staticmethod
+    def _user_roles(login_user: UserPayload) -> tuple[str, ...]:
+        roles = getattr(login_user, "user_role", None)
+        if isinstance(roles, list):
+            return tuple(str(role) for role in roles)
+        if roles:
+            return (str(roles),)
+        return ("member",)
+
+    @classmethod
     def _record_release_eval(
         cls,
         *,
@@ -1692,11 +2106,13 @@ class WorkspaceTaskRuntimeService:
                     query=simple_task.query,
                     workspace_id=task.workspace_id,
                     knowledge_space_ids=list(simple_task.knowledge_space_ids),
+                    retrieval_profile=cls._explicit_retrieval_profile(simple_task),
                     product_mode=_product_mode_for_retrieval(simple_task.product_mode),
                     context_pack={
                         "goal": goal,
                         "session_id": simple_task.session_id,
                         "uploaded_file_ids": list(simple_task.uploaded_file_ids),
+                        "retrieval_profiles": cls._retrieval_profile_map(simple_task),
                     },
                     allowed_acl_scopes={"workspace", task.policy_scope},
                     trace_id=task.trace_id or "",

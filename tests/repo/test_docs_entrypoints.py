@@ -134,7 +134,7 @@ def test_architecture_markdown_is_text_first_and_contains_diagram_source() -> No
     current_program = (REPO_ROOT / ".agent" / "programs" / "current.md").read_text(
         encoding="utf-8"
     )
-    assert _current_phase_name(current_program) == "PHASE11_workspace-product-api-frontend-sync.md"
+    assert _current_phase_name(current_program) == "PHASE12_end-to-end-product-runtime.md"
 
     assert docs_architecture == agent_architecture
     for phrase in [

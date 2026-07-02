@@ -471,7 +471,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM3_ACTIVE_NAME}",
-        "current_phase: PHASE11_workspace-product-api-frontend-sync.md",
+        "current_phase: PHASE12_end-to-end-product-runtime.md",
         f"latest_completed_program: {LATEST_COMPLETED_PROGRAM_NAME}",
         PROGRAM3_ACTIVE_NAME,
         LATEST_COMPLETED_PROGRAM_NAME,
@@ -515,9 +515,9 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {PROGRAM3_ACTIVE_NAME}" not in phase_content:
             errors.append(f"Program 3 active phase missing program id: {phase_name}")
-        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_"):
+        if phase_name.startswith("PHASE01_") or phase_name.startswith("PHASE02_") or phase_name.startswith("PHASE03_") or phase_name.startswith("PHASE04_") or phase_name.startswith("PHASE05_") or phase_name.startswith("PHASE06_") or phase_name.startswith("PHASE07_") or phase_name.startswith("PHASE08_") or phase_name.startswith("PHASE09_") or phase_name.startswith("PHASE10_") or phase_name.startswith("PHASE11_"):
             expected_status = "status: completed"
-        elif phase_name.startswith("PHASE11_"):
+        elif phase_name.startswith("PHASE12_"):
             expected_status = "status: active"
         else:
             expected_status = "status: pending"

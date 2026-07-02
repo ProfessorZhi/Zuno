@@ -6,7 +6,7 @@
 
 - `state: active`
 - `active_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
-- `current_phase: PHASE11_workspace-product-api-frontend-sync.md`
+- `current_phase: PHASE12_end-to-end-product-runtime.md`
 
 ## 被合并的计划
 

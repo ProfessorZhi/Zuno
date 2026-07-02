@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE12_end-to-end-product-runtime
-status: pending
+status: active
 
 ## 目标
 

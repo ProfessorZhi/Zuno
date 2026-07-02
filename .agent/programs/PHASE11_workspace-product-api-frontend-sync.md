@@ -2,7 +2,7 @@
 
 program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 phase: PHASE11_workspace-product-api-frontend-sync
-status: active
+status: completed
 
 ## 目标
 
@@ -204,6 +204,19 @@ pytest -q tests/api -p no:cacheprovider
 - compatibility tests。
 - frontend type diff。
 - no breaking change summary。
+
+## Closure Evidence
+
+- 完成时间：2026-07-02。
+- 后端 DTO：`src/backend/zuno/api/dto/workspace.py` 新增 `WorkspaceRetrievalProfile`、`KnowledgeSpaceRetrievalSelection`、`KnowledgeSpaceConfig`、`WorkspaceFileStatus`、`WorkspaceCitationRef` 和 `ChangeImpactPreview`；`WorkSpaceSimpleTask` 支持 `knowledge_space_profiles` 与 `retrieval_profiles`，入口只允许 `standard` / `deep`。
+- Workspace runtime：`src/backend/zuno/api/services/workspace_task_runtime.py` 将显式 per-knowledge-space profile 接入 `AgenticRetrievalRuntimeRequest.retrieval_profile`，保持旧请求继续由 `product_mode` 决定内部检索；task snapshot 返回 `retrieval_plan`、`plan_summary`、`reflection_summary`、`replan_summary`、`trace_summary`、`eval_summary`、`cost_summary`、`capability_snapshot` 和 `knowledge_config_summary`。
+- Artifact / file surface：artifact response 和 artifact contract 返回 `citation_refs`；file/register/ingest response 返回 `file_status`，覆盖 filename、mime_type、source_sha256、storage_uri/source_ref、parse_status、index_status、parser_id、document_version_id、index_job_id、blocked_reason、dependency_probe、retry_count、last_error 和可见 actions。
+- Frontend API type：`apps/web/src/apis/workspace.ts` 同步 `WorkspaceRetrievalProfile`、`KnowledgeSpaceRetrievalSelection`、`KnowledgeSpaceConfig`、`WorkspaceFileStatus`、`WorkspaceCitationRef`、`ChangeImpactPreview` 和 task/artifact response summary fields；未做 UI 大改。
+- TDD red evidence：`pytest -q tests/api/test_workspace_agentic_product_contract.py -p no:cacheprovider` 初次运行 4 failed，失败在缺 `ChangeImpactPreview` / `KnowledgeSpaceConfig`、缺 `file_status`、缺前端 `WorkspaceRetrievalProfile`。
+- Focused verification：`pytest -q tests/api/test_workspace_agentic_product_contract.py -p no:cacheprovider` -> 4 passed。
+- Compatibility verification：`pytest -q tests/api/test_workspace_task_runtime.py -p no:cacheprovider` -> 8 passed；`pytest -q tests/api/test_workspace_durable_ingest_runtime.py -p no:cacheprovider` -> 4 passed；`pytest -q tests/api -p no:cacheprovider` -> 56 passed。
+- Frontend type verification：`npm --prefix apps/web run lint` 未通过环境闸门，根因是当前仓库没有 `node_modules/vue-tsc/bin/vue-tsc.js`；本 phase 以前端 API type focused pytest 覆盖 drift，未安装依赖、未修改 lockfile。
+- Current / Target 边界：Current 是本地 Workspace API / DTO / frontend type 最小同步和 focused tests；大型 UI 改版、真实外部 parser / worker / index provider、生产级 trace sink 和 PHASE12 E2E 仍是后续 Target。
 
 ## 停止条件
 

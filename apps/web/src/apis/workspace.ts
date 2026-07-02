@@ -126,6 +126,13 @@ export interface WorkspaceOutputContract {
   format?: string
 }
 
+export type WorkspaceRetrievalProfile = 'standard' | 'deep'
+
+export interface KnowledgeSpaceRetrievalSelection {
+  knowledge_space_id: string
+  retrieval_profile: WorkspaceRetrievalProfile
+}
+
 export interface WorkspaceProductObjectBase {
   workspace_id: string
   owner?: string
@@ -146,6 +153,26 @@ export interface KnowledgeSpaceContract extends WorkspaceProductObjectBase {
   graph_project_id?: string
   index_version?: string
   acl_policy?: string
+}
+
+export interface KnowledgeSpaceConfig {
+  name: string
+  description?: string
+  workspace_id: string
+  acl_scope?: string
+  default_sensitivity?: string
+  index_capabilities?: Record<string, any>
+  parser_config?: Record<string, any>
+  chunk_config?: Record<string, any>
+  embedding_config?: Record<string, any>
+  graph_config?: Record<string, any>
+  ocr_vlm_config?: Record<string, any>
+  retrieval_defaults?: {
+    default_profile?: WorkspaceRetrievalProfile
+    available_profiles?: WorkspaceRetrievalProfile[]
+    [key: string]: any
+  }
+  security_policy?: Record<string, any>
 }
 
 export interface WorkspaceSessionContract extends WorkspaceProductObjectBase {
@@ -172,6 +199,38 @@ export interface UploadedFileContract extends WorkspaceProductObjectBase {
   parse_status: string
 }
 
+export interface WorkspaceFileStatus {
+  file_id: string
+  filename?: string
+  mime_type: string
+  size_bytes: number
+  source_sha256: string
+  storage_uri?: string
+  source_ref?: string
+  parse_status: string
+  index_status: string
+  parser_id?: string
+  document_version_id?: string
+  index_job_id?: string
+  blocked_reason?: string
+  dependency_probe: Record<string, any>
+  retry_count: number
+  last_error?: string
+  actions: string[]
+}
+
+export interface WorkspaceCitationRef {
+  citation_id: string
+  evidence_id: string
+  document_id: string
+  block_id: string
+  source_ref: string
+  source_span: Record<string, any>
+  trust_label?: string
+  source_uri?: string
+  provenance?: Record<string, any>
+}
+
 export interface ArtifactContract extends WorkspaceProductObjectBase {
   artifact_id: string
   task_id: string
@@ -179,6 +238,19 @@ export interface ArtifactContract extends WorkspaceProductObjectBase {
   uri: string
   hash?: string
   download_policy?: string
+  citation_refs: WorkspaceCitationRef[]
+}
+
+export interface ChangeImpactPreview {
+  change_type: string
+  triggered_action: string
+  affected_file_count: number
+  affected_chunk_count: number
+  affects_existing_artifacts: boolean
+  requires_external_provider: boolean
+  may_create_blocked_state: boolean
+  estimated_duration_ms?: number
+  user_visible_summary?: string
 }
 
 export interface WorkspaceTaskLifecycleSnapshot {
@@ -229,6 +301,8 @@ export interface WorkSpaceSimpleTask {
   goal?: string
   product_mode?: WorkspaceProductMode
   knowledge_space_ids?: string[]
+  knowledge_space_profiles?: KnowledgeSpaceRetrievalSelection[]
+  retrieval_profiles?: Record<string, WorkspaceRetrievalProfile>
   uploaded_file_ids?: string[]
   approval_mode?: string
   budget?: WorkspaceTaskBudget
@@ -259,11 +333,21 @@ export interface WorkspaceTaskCreateResponse {
   lifecycle?: WorkspaceTaskLifecycleSnapshot
   runtime?: WorkspaceRuntimeSnapshot
   observability?: WorkspaceObservabilitySnapshot
+  retrieval_plan?: Record<string, any>
+  plan_summary?: Record<string, any>
+  reflection_summary?: Record<string, any>
+  replan_summary?: Record<string, any>
+  trace_summary?: Record<string, any>
+  eval_summary?: Record<string, any>
+  cost_summary?: Record<string, any>
+  capability_snapshot?: Record<string, any>
+  knowledge_config_summary?: Record<string, any>
 }
 
 export interface WorkspaceArtifactResponse {
   artifact: ArtifactContract
   content: string
+  citation_refs: WorkspaceCitationRef[]
   download?: {
     url: string
     filename: string
@@ -296,6 +380,7 @@ export interface WorkspaceFileCreateResponse {
   file: UploadedFileContract
   name?: string
   uri?: string
+  file_status?: WorkspaceFileStatus
 }
 
 export interface WorkspaceIngestRequest {
@@ -315,6 +400,7 @@ export interface WorkspaceIngestResponse {
   trace_id: string
   status: string
   file: UploadedFileContract
+  file_status?: WorkspaceFileStatus
 }
 
 export interface WorkspaceApprovalRequest {

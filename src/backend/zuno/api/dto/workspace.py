@@ -10,6 +10,7 @@ WorkspaceProductMode = Literal[
     "contract_review",
     "general_agent",
 ]
+WorkspaceRetrievalProfile = Literal["standard", "deep"]
 WorkspaceTaskStatus = Literal[
     "created",
     "context_building",
@@ -94,6 +95,11 @@ class WorkspaceOutputContract(BaseModel):
     format: str = "markdown"
 
 
+class KnowledgeSpaceRetrievalSelection(BaseModel):
+    knowledge_space_id: str
+    retrieval_profile: WorkspaceRetrievalProfile = "standard"
+
+
 class WorkSpaceSimpleTask(BaseModel):
     query: str
     model_id: str
@@ -105,6 +111,8 @@ class WorkSpaceSimpleTask(BaseModel):
     goal: str | None = None
     product_mode: WorkspaceProductMode = "general_agent"
     knowledge_space_ids: List[str] = Field(default_factory=list)
+    knowledge_space_profiles: List[KnowledgeSpaceRetrievalSelection] = Field(default_factory=list)
+    retrieval_profiles: dict[str, WorkspaceRetrievalProfile] = Field(default_factory=dict)
     uploaded_file_ids: List[str] = Field(default_factory=list)
     approval_mode: str = "auto"
     budget: WorkspaceTaskBudget | None = None
@@ -155,6 +163,27 @@ class KnowledgeSpaceContract(WorkspaceProductObjectBase):
     acl_policy: str = "workspace"
 
 
+class KnowledgeSpaceConfig(BaseModel):
+    name: str
+    description: str = ""
+    workspace_id: str
+    acl_scope: str = "workspace"
+    default_sensitivity: str = "internal"
+    index_capabilities: dict[str, Any] = Field(default_factory=dict)
+    parser_config: dict[str, Any] = Field(default_factory=dict)
+    chunk_config: dict[str, Any] = Field(default_factory=dict)
+    embedding_config: dict[str, Any] = Field(default_factory=dict)
+    graph_config: dict[str, Any] = Field(default_factory=dict)
+    ocr_vlm_config: dict[str, Any] = Field(default_factory=dict)
+    retrieval_defaults: dict[str, Any] = Field(
+        default_factory=lambda: {
+            "default_profile": "standard",
+            "available_profiles": ["standard", "deep"],
+        }
+    )
+    security_policy: dict[str, Any] = Field(default_factory=dict)
+
+
 class WorkspaceSessionContract(WorkspaceProductObjectBase):
     session_id: str
     user_id: str
@@ -189,6 +218,47 @@ class UploadedFileContract(WorkspaceProductObjectBase):
     parse_status: str = "created"
 
 
+class WorkspaceFileStatus(BaseModel):
+    file_id: str
+    filename: str | None = None
+    mime_type: str
+    size_bytes: int = 0
+    source_sha256: str
+    storage_uri: str | None = None
+    source_ref: str | None = None
+    parse_status: str
+    index_status: str = "not_indexed"
+    parser_id: str | None = None
+    document_version_id: str | None = None
+    index_job_id: str | None = None
+    blocked_reason: str | None = None
+    dependency_probe: dict[str, Any] = Field(default_factory=dict)
+    retry_count: int = 0
+    last_error: str | None = None
+    actions: list[str] = Field(
+        default_factory=lambda: [
+            "retry",
+            "cancel",
+            "reparse",
+            "reindex",
+            "rebuild_graph",
+            "view_diagnostics",
+        ]
+    )
+
+
+class WorkspaceCitationRef(BaseModel):
+    citation_id: str
+    evidence_id: str
+    document_id: str
+    block_id: str
+    source_ref: str
+    source_span: dict[str, Any] = Field(default_factory=dict)
+    trust_label: str | None = None
+    source_uri: str | None = None
+    provenance: dict[str, Any] = Field(default_factory=dict)
+
+
 class ArtifactContract(WorkspaceProductObjectBase):
     artifact_id: str
     task_id: str
@@ -196,6 +266,19 @@ class ArtifactContract(WorkspaceProductObjectBase):
     uri: str
     hash: str | None = None
     download_policy: str = "workspace"
+    citation_refs: list[WorkspaceCitationRef] = Field(default_factory=list)
+
+
+class ChangeImpactPreview(BaseModel):
+    change_type: str
+    triggered_action: str
+    affected_file_count: int = 0
+    affected_chunk_count: int = 0
+    affects_existing_artifacts: bool = False
+    requires_external_provider: bool = False
+    may_create_blocked_state: bool = False
+    estimated_duration_ms: int | None = None
+    user_visible_summary: str | None = None
 
 
 class TraceEventContract(BaseModel):
@@ -273,11 +356,16 @@ class WorkspaceAgentStreamEvent(TypedDict):
 
 __all__ = [
     "ArtifactContract",
+    "ChangeImpactPreview",
     "CitationContract",
     "FeedbackContract",
+    "KnowledgeSpaceConfig",
     "KnowledgeSpaceContract",
+    "KnowledgeSpaceRetrievalSelection",
     "TraceEventContract",
     "UploadedFileContract",
+    "WorkspaceCitationRef",
+    "WorkspaceFileStatus",
     "WORKSPACE_TASK_STATUS_FLOW",
     "WorkSpaceAgents",
     "WorkSpaceSimpleTask",
@@ -288,6 +376,7 @@ __all__ = [
     "WorkspaceOutputContract",
     "WorkspaceProductObjectBase",
     "WorkspaceProductStreamEvent",
+    "WorkspaceRetrievalProfile",
     "WorkspaceSessionContract",
     "WorkspaceTaskBudget",
     "WorkspaceTaskContract",
