@@ -45,7 +45,7 @@ DATASET_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {
         "dataset_id": "enterprise_rag_bench",
         "name": "EnterpriseRAG-Bench",
-        "current_status": "registry_only",
+        "current_status": "selected_adapter_ready",
         "license": "MIT",
         "source_url": "https://github.com/onyx-dot-app/EnterpriseRAG-Bench",
         "best_for": ["enterprise_corpus", "multi_source", "conflicting_information", "no_answer"],
@@ -56,7 +56,7 @@ DATASET_DEFINITIONS: tuple[dict[str, Any], ...] = (
             "ndcg_at_k",
             "answer_correctness",
         ],
-        "notes": "Keep as registry/runbook in V1; full corpus scale is too large for the first adapter pass.",
+        "notes": "Supports selected local parquet/document subsets; full 500K corpus remains an explicit external-scale target.",
     },
     {
         "dataset_id": "open_rag_benchmark",
@@ -104,6 +104,16 @@ def _normalize_dataset_id(dataset_id: str) -> str:
 def _read_rows(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         raise FileNotFoundError(f"raw dataset path does not exist: {path}")
+    if path.suffix.lower() == ".parquet":
+        try:
+            import pyarrow.parquet as pq
+        except ImportError as exc:  # pragma: no cover - depends on optional local env
+            raise RuntimeError("pyarrow is required to read parquet public eval datasets") from exc
+        table = pq.read_table(path)
+        return [
+            {column: table[column][index].as_py() for column in table.column_names}
+            for index in range(table.num_rows)
+        ]
     text = path.read_text(encoding="utf-8").strip()
     if not text:
         return []
@@ -330,11 +340,215 @@ def _prepare_cfqa(
     return cases, manifest
 
 
+def _as_string_list(value: Any) -> list[str]:
+    if value in (None, ""):
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [str(item) for item in value if item not in (None, "")]
+    return [str(value)]
+
+
+def _iter_parquet_document_rows(path: Path, *, doc_ids: set[str]) -> Iterable[dict[str, Any]]:
+    try:
+        import pyarrow.parquet as pq
+    except ImportError as exc:  # pragma: no cover - depends on optional local env
+        raise RuntimeError("pyarrow is required to read EnterpriseRAG-Bench parquet documents") from exc
+
+    remaining = set(doc_ids)
+    parquet_file = pq.ParquetFile(path)
+    available_columns = set(parquet_file.schema_arrow.names)
+    columns = [column for column in ("doc_id", "source_type", "title", "content") if column in available_columns]
+    if "doc_id" not in columns:
+        raise ValueError(f"EnterpriseRAG-Bench parquet is missing doc_id column: {path}")
+    if "content" not in columns:
+        raise ValueError(f"EnterpriseRAG-Bench parquet is missing content column: {path}")
+
+    for batch in parquet_file.iter_batches(batch_size=4096, columns=columns):
+        payload = batch.to_pydict()
+        doc_id_values = payload.get("doc_id") or []
+        for index, doc_id_value in enumerate(doc_id_values):
+            doc_id = str(doc_id_value or "")
+            if doc_id not in remaining:
+                continue
+            yield {column: (payload.get(column) or [None])[index] for column in columns}
+            remaining.discard(doc_id)
+            if not remaining:
+                return
+
+
+def _iter_file_document_rows(source_root: Path, *, doc_ids: set[str]) -> Iterable[dict[str, Any]]:
+    for file_path in source_root.rglob("*"):
+        if not file_path.is_file() or file_path.suffix.lower() in {".parquet", ".zip"}:
+            continue
+        doc_id = file_path.stem
+        if doc_id not in doc_ids:
+            continue
+        yield {
+            "doc_id": doc_id,
+            "source_type": file_path.parent.name,
+            "title": file_path.stem,
+            "content": file_path.read_text(encoding="utf-8", errors="replace"),
+        }
+
+
+def _load_enterprise_documents(source_root: Path | None, *, doc_ids: set[str]) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+    if not source_root:
+        return {}, {
+            "document_source_status": "missing_source_root",
+            "missing_doc_ids": sorted(doc_ids),
+        }
+    if not source_root.exists():
+        raise FileNotFoundError(f"EnterpriseRAG-Bench document source does not exist: {source_root}")
+
+    rows: list[dict[str, Any]] = []
+    scanned_paths: list[str] = []
+    if source_root.is_file() and source_root.suffix.lower() == ".parquet":
+        scanned_paths.append(str(source_root))
+        rows.extend(_iter_parquet_document_rows(source_root, doc_ids=doc_ids))
+    elif source_root.is_dir():
+        parquet_paths = sorted(source_root.rglob("*.parquet"))
+        for parquet_path in parquet_paths:
+            scanned_paths.append(str(parquet_path))
+            rows.extend(_iter_parquet_document_rows(parquet_path, doc_ids=doc_ids - {str(row.get("doc_id")) for row in rows}))
+            if {str(row.get("doc_id")) for row in rows} >= doc_ids:
+                break
+        if doc_ids - {str(row.get("doc_id")) for row in rows}:
+            scanned_paths.append(str(source_root))
+            rows.extend(_iter_file_document_rows(source_root, doc_ids=doc_ids - {str(row.get("doc_id")) for row in rows}))
+    else:
+        raise ValueError(f"unsupported EnterpriseRAG-Bench document source: {source_root}")
+
+    documents = {str(row.get("doc_id")): row for row in rows if row.get("doc_id")}
+    return documents, {
+        "document_source_status": "loaded",
+        "source_root": str(source_root),
+        "scanned_paths": scanned_paths,
+        "loaded_doc_count": len(documents),
+        "missing_doc_ids": sorted(doc_ids - set(documents)),
+    }
+
+
+def _write_enterprise_document_file(
+    *,
+    files_dir: Path,
+    document: dict[str, Any],
+) -> dict[str, Any]:
+    doc_id = _safe_stem(str(document.get("doc_id") or ""), "enterprise_doc")
+    source_type = str(document.get("source_type") or "unknown").strip() or "unknown"
+    title = str(document.get("title") or doc_id).strip() or doc_id
+    content = str(document.get("content") or "").strip()
+    file_name = f"{doc_id}.md"
+    prepared_path = files_dir / file_name
+    prepared_path.write_text(
+        "\n".join(
+            [
+                f"# {title}",
+                "",
+                f"Document ID: {doc_id}",
+                f"Source Type: {source_type}",
+                "",
+                content,
+            ]
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    return {
+        "source_path": str(document.get("doc_id") or doc_id),
+        "relative_source_path": file_name,
+        "prepared_path": str(prepared_path),
+        "file_name": file_name,
+        "size_bytes": prepared_path.stat().st_size,
+        "doc_id": doc_id,
+        "source_type": source_type,
+    }
+
+
+def _prepare_enterprise_rag_bench(
+    *,
+    rows: list[dict[str, Any]],
+    output_dir: Path,
+    limit: int | None,
+    source_root: Path | None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    files_dir = output_dir / "files"
+    files_dir.mkdir(parents=True, exist_ok=True)
+    selected_rows = rows[:limit] if limit else rows
+    expected_doc_ids = {
+        doc_id
+        for row in selected_rows
+        for doc_id in _as_string_list(row.get("expected_doc_ids"))
+    }
+    documents_by_id, document_probe = _load_enterprise_documents(source_root, doc_ids=expected_doc_ids)
+    manifest_files_by_name: dict[str, dict[str, Any]] = {}
+    cases: list[dict[str, Any]] = []
+    skipped_case_count = 0
+
+    for index, row in enumerate(selected_rows, start=1):
+        sample_id = _safe_stem(str(row.get("question_id") or row.get("id") or f"enterprise_rag_bench_{index:04d}"), f"enterprise_rag_bench_{index:04d}")
+        doc_ids = _as_string_list(row.get("expected_doc_ids"))
+        available_docs = [documents_by_id[doc_id] for doc_id in doc_ids if doc_id in documents_by_id]
+        if doc_ids and len(available_docs) != len(doc_ids):
+            skipped_case_count += 1
+            continue
+
+        gold_evidence: list[dict[str, Any]] = []
+        answer_facts = _as_string_list(row.get("answer_facts"))
+        for doc_index, document in enumerate(available_docs):
+            manifest_item = _write_enterprise_document_file(files_dir=files_dir, document=document)
+            manifest_files_by_name[manifest_item["file_name"]] = manifest_item
+            snippet = answer_facts[min(doc_index, len(answer_facts) - 1)] if answer_facts else _evidence_snippet(document.get("content") or "")
+            gold_evidence.append(
+                {
+                    "file_contains": manifest_item["file_name"],
+                    "text_contains": _evidence_snippet(snippet),
+                    "doc_id": manifest_item["doc_id"],
+                    "source_type": manifest_item["source_type"],
+                }
+            )
+
+        cases.append(
+            {
+                "id": sample_id,
+                "dataset": "enterprise_rag_bench",
+                "query": str(_first_nonempty(row, ("question", "query", "prompt")) or "").strip(),
+                "reference_answer": str(_first_nonempty(row, ("gold_answer", "answer", "reference_answer")) or "").strip(),
+                "gold_evidence": gold_evidence,
+                "required_citations": bool(gold_evidence),
+                "is_unanswerable": not bool(gold_evidence),
+                "answer_type": "enterprise_internal_qa" if gold_evidence else "enterprise_no_ground_truth",
+                "question_type": str(row.get("question_type") or "enterprise").strip() or "enterprise",
+                "metadata": {
+                    "source_types": _as_string_list(row.get("source_types")),
+                    "expected_doc_ids": doc_ids,
+                    "answer_facts": answer_facts,
+                },
+            }
+        )
+
+    manifest_files = list(manifest_files_by_name.values())
+    manifest = {
+        "source": "EnterpriseRAG-Bench",
+        "output_dir": str(output_dir),
+        "file_count": len(manifest_files),
+        "external_documents_required": bool(expected_doc_ids and not documents_by_id),
+        "blocked_reason": "enterprise_rag_bench_documents_required" if expected_doc_ids and not documents_by_id else None,
+        "files": manifest_files,
+        "selected_question_count": len(selected_rows),
+        "skipped_case_count": skipped_case_count,
+        **document_probe,
+    }
+    return cases, manifest
+
+
 def prepare_public_enterprise_eval(
     *,
     dataset_id: str,
     raw_path: Path,
     output_dir: Path,
+    source_root: Path | None = None,
     limit: int | None = None,
 ) -> dict[str, Any]:
     normalized = _normalize_dataset_id(dataset_id)
@@ -346,6 +560,13 @@ def prepare_public_enterprise_eval(
         cases, manifest = _prepare_techqa(rows=rows, output_dir=output_dir, limit=limit)
     elif normalized == "cfqa":
         cases, manifest = _prepare_cfqa(rows=rows, output_dir=output_dir, limit=limit)
+    elif normalized == "enterprise_rag_bench":
+        cases, manifest = _prepare_enterprise_rag_bench(
+            rows=rows,
+            output_dir=output_dir,
+            limit=limit,
+            source_root=source_root,
+        )
     else:
         raise ValueError(f"{normalized} is {definition['current_status']}; no adapter is implemented yet")
 
@@ -369,6 +590,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare public enterprise-style RAG eval datasets for Zuno.")
     parser.add_argument("--dataset", required=True, choices=[item["dataset_id"] for item in DATASET_DEFINITIONS])
     parser.add_argument("--raw", required=True, type=Path)
+    parser.add_argument("--source-root", type=Path)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--limit", type=int)
     args = parser.parse_args()
@@ -378,6 +600,7 @@ def main() -> None:
         dataset_id=args.dataset,
         raw_path=args.raw,
         output_dir=output_dir,
+        source_root=args.source_root,
         limit=args.limit,
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2))

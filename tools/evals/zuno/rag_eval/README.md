@@ -40,7 +40,7 @@ The first public enterprise-style adapter surface is intentionally small:
 
 - `techqa_rag_eval`: adapter-ready. Converts TechQA-RAG-Eval style `question / answer / is_impossible / contexts` rows into a local Markdown corpus plus Zuno eval JSONL.
 - `cfqa`: adapter-ready for dataset rows. Keeps Chinese annual-report page grounding in `gold_evidence`, but marks the corpus as `external_documents_required` until the public annual-report PDFs are downloaded. It must not create fake PDF corpus files.
-- `enterprise_rag_bench`: registry-only in this pass. It is the right large enterprise benchmark target, but the first Zuno pass should not pull the full large corpus into a smoke run.
+- `enterprise_rag_bench`: selected-adapter-ready. Converts EnterpriseRAG-Bench `questions` rows plus a local document parquet/directory into a local Markdown corpus and Zuno eval JSONL. Full 500K-document runs remain an external-scale target; the adapter only writes cases whose `expected_doc_ids` are present locally.
 - `open_rag_benchmark`: registry-only in this pass. It needs a qrels/corpus adapter before it becomes runnable.
 
 Prepare a small TechQA-style raw file:
@@ -65,6 +65,19 @@ python tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py `
 ```
 
 For CFQA, run the normalizer first to produce a page-grounded dataset, then download the annual-report PDFs and prepare the corpus in a separate step. Until those PDFs are present, the generated `manifest.json` has `file_count = 0`, `external_documents_required = true`, and `blocked_reason = cfqa_annual_report_pdf_required`.
+
+For EnterpriseRAG-Bench, first download the question parquet and at least a local document parquet subset, then normalize a bounded sample:
+
+```powershell
+python tools/evals/zuno/rag_eval/public_enterprise_datasets.py `
+  --dataset enterprise_rag_bench `
+  --raw .local/evals/raw/enterprise_rag_bench/hf/data/questions/test.parquet `
+  --source-root .local/evals/raw/enterprise_rag_bench/hf/data/documents/test.parquet `
+  --output-dir .local/evals/zuno/rag_eval/corpus/public_enterprise_v1/enterprise_rag_bench_core `
+  --limit 20
+```
+
+The generated manifest records `selected_question_count`, `skipped_case_count`, `loaded_doc_count`, and any `missing_doc_ids`. If the document parquet is not available, the adapter reports `external_documents_required` and does not fake corpus files.
 
 ## Deep GraphRAG Eval Surface
 
