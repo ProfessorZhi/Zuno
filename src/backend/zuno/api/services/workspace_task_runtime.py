@@ -1335,6 +1335,175 @@ class WorkspaceTaskRuntimeService:
             "source": "local_estimate",
         }
 
+    @staticmethod
+    def _avg(values: list[float]) -> float:
+        if not values:
+            return 0.0
+        return sum(values) / len(values)
+
+    @staticmethod
+    def _rate(count: int, total: int) -> float:
+        if total <= 0:
+            return 0.0
+        return count / total
+
+    @staticmethod
+    def _safe_float(value: Any) -> float:
+        try:
+            return float(value or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    @classmethod
+    def _summarize_retrieval_profile_runs(cls, runs: list[dict]) -> dict:
+        citation_values = [cls._safe_float(run.get("citation_coverage")) for run in runs]
+        evidence_values = [cls._safe_float(run.get("evidence_count")) for run in runs]
+        cost_values = [cls._safe_float(run.get("estimated_cost")) for run in runs]
+        latency_values = [cls._safe_float(run.get("latency_ms")) for run in runs]
+        eval_pass_count = sum(1 for run in runs if run.get("eval_status") == "pass")
+        graph_used_count = sum(1 for run in runs if run.get("graph_used"))
+        replan_count = sum(1 for run in runs if run.get("replan_created"))
+        return {
+            "runs": len(runs),
+            "avg_evidence_count": cls._avg(evidence_values),
+            "avg_citation_coverage": cls._avg(citation_values),
+            "avg_estimated_cost": cls._avg(cost_values),
+            "avg_latency_ms": cls._avg(latency_values),
+            "graph_used_rate": cls._rate(graph_used_count, len(runs)),
+            "replan_rate": cls._rate(replan_count, len(runs)),
+            "eval_pass_rate": cls._rate(eval_pass_count, len(runs)),
+        }
+
+    @classmethod
+    def _is_retrieval_observability_candidate(
+        cls,
+        *,
+        task_id: str,
+        simple_task: WorkSpaceSimpleTask | None,
+    ) -> bool:
+        if task_id in cls._task_retrieval_results:
+            return True
+        if simple_task is None:
+            return False
+        return bool(
+            simple_task.knowledge_space_ids
+            or simple_task.knowledge_space_profiles
+            or simple_task.retrieval_profiles
+            or simple_task.uploaded_file_ids
+        )
+
+    @classmethod
+    def retrieval_observability_summary(cls, *, limit: int = 20) -> dict:
+        runs: list[dict] = []
+        for task in cls._tasks.values():
+            simple_task = cls._task_inputs.get(task.task_id)
+            if not cls._is_retrieval_observability_candidate(
+                task_id=task.task_id,
+                simple_task=simple_task,
+            ):
+                continue
+            retrieval_plan = cls._retrieval_plan_summary(task=task, simple_task=simple_task)
+            eval_summary = cls._eval_summary(task.task_id)
+            cost_summary = cls._cost_summary(task.task_id)
+            replan_summary = cls._replan_summary(task.task_id)
+            retrievers_used = list(retrieval_plan.get("retrievers_used") or [])
+            graph_used = any("graph" in str(retriever).lower() for retriever in retrievers_used)
+            runs.append(
+                {
+                    "task_id": task.task_id,
+                    "trace_id": task.trace_id,
+                    "workspace_id": task.workspace_id,
+                    "created_at": task.created_at,
+                    "status": task.status,
+                    "knowledge_space_ids": list(simple_task.knowledge_space_ids) if simple_task else [],
+                    "retrieval_profiles": dict(retrieval_plan.get("retrieval_profiles") or {}),
+                    "requested_profile": retrieval_plan.get("requested_profile") or "standard",
+                    "effective_profile": retrieval_plan.get("effective_profile") or "standard",
+                    "fallback_reason": retrieval_plan.get("fallback_reason"),
+                    "retrievers_used": retrievers_used,
+                    "evidence_count": int(retrieval_plan.get("evidence_count") or 0),
+                    "citation_coverage": cls._safe_float(retrieval_plan.get("citation_coverage")),
+                    "graph_used": graph_used,
+                    "replan_created": bool(replan_summary.get("created")),
+                    "estimated_cost": cls._safe_float(cost_summary.get("estimated_cost")),
+                    "latency_ms": cls._safe_float(cost_summary.get("latency_ms")),
+                    "eval_status": eval_summary.get("release_eval_status"),
+                }
+            )
+
+        runs.sort(key=lambda run: str(run.get("created_at") or ""), reverse=True)
+        total_runs = len(runs)
+        requested_standard_runs = sum(1 for run in runs if run["requested_profile"] == "standard")
+        requested_deep_runs = sum(1 for run in runs if run["requested_profile"] == "deep")
+        effective_standard_runs = sum(1 for run in runs if run["effective_profile"] == "standard")
+        effective_deep_runs = sum(1 for run in runs if run["effective_profile"] == "deep")
+        deep_without_graph_runs = sum(
+            1 for run in runs if run["effective_profile"] == "deep_without_graph"
+        )
+        graph_used_runs = sum(1 for run in runs if run["graph_used"])
+        replan_runs = sum(1 for run in runs if run["replan_created"])
+        profile_order = ("standard", "deep", "deep_without_graph")
+        profiles = {
+            profile: cls._summarize_retrieval_profile_runs(
+                [run for run in runs if run["effective_profile"] == profile]
+            )
+            for profile in profile_order
+        }
+        standard_profile = profiles["standard"]
+        deep_like_runs = [
+            run for run in runs if run["requested_profile"] == "deep"
+        ]
+        deep_requested_summary = cls._summarize_retrieval_profile_runs(deep_like_runs)
+        comparison = {
+            "deep_vs_standard": {
+                "citation_coverage_delta": (
+                    deep_requested_summary["avg_citation_coverage"]
+                    - standard_profile["avg_citation_coverage"]
+                ),
+                "evidence_count_delta": (
+                    deep_requested_summary["avg_evidence_count"]
+                    - standard_profile["avg_evidence_count"]
+                ),
+                "cost_delta": (
+                    deep_requested_summary["avg_estimated_cost"]
+                    - standard_profile["avg_estimated_cost"]
+                ),
+                "latency_delta_ms": (
+                    deep_requested_summary["avg_latency_ms"]
+                    - standard_profile["avg_latency_ms"]
+                ),
+            }
+        }
+        return {
+            "summary": {
+                "total_runs": total_runs,
+                "requested_standard_runs": requested_standard_runs,
+                "requested_deep_runs": requested_deep_runs,
+                "effective_standard_runs": effective_standard_runs,
+                "effective_deep_runs": effective_deep_runs,
+                "deep_without_graph_runs": deep_without_graph_runs,
+                "graph_used_runs": graph_used_runs,
+                "replan_runs": replan_runs,
+                "avg_evidence_count": cls._avg(
+                    [cls._safe_float(run.get("evidence_count")) for run in runs]
+                ),
+                "avg_citation_coverage": cls._avg(
+                    [cls._safe_float(run.get("citation_coverage")) for run in runs]
+                ),
+                "avg_estimated_cost": cls._avg(
+                    [cls._safe_float(run.get("estimated_cost")) for run in runs]
+                ),
+                "avg_latency_ms": cls._avg(
+                    [cls._safe_float(run.get("latency_ms")) for run in runs]
+                ),
+                "graph_used_rate": cls._rate(graph_used_runs, total_runs),
+                "replan_rate": cls._rate(replan_runs, total_runs),
+            },
+            "profiles": profiles,
+            "comparison": comparison,
+            "recent_runs": runs[: max(1, limit)],
+        }
+
     @classmethod
     def _capability_snapshot(cls, task_id: str) -> dict:
         planner_output = cls._planner_outputs.get(task_id)

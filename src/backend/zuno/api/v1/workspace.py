@@ -201,6 +201,15 @@ async def get_workspace_task_lifecycle(
     return resp_200(data=WorkspaceTaskRuntimeService.task_lifecycle_contract())
 
 
+@router.get("/retrieval-observability", summary="Get agentic retrieval observability summary")
+async def get_workspace_retrieval_observability(
+    limit: int = 20,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    return resp_200(data=WorkspaceTaskRuntimeService.retrieval_observability_summary(limit=limit))
+
+
 @router.get("/task/{task_id}", summary="Get workspace task")
 async def get_workspace_task(
     task_id: str,
@@ -328,6 +337,7 @@ __all__ = [
     "get_workspace_artifact",
     "get_workspace_execution_modes",
     "get_workspace_plugins",
+    "get_workspace_retrieval_observability",
     "get_workspace_sessions",
     "get_workspace_task_lifecycle",
     "get_workspace_task",

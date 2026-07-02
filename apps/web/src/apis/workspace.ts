@@ -449,6 +449,67 @@ export interface WorkspaceObservabilitySnapshot {
   }
 }
 
+export interface WorkspaceRetrievalObservabilityProfileSummary {
+  runs: number
+  avg_evidence_count: number
+  avg_citation_coverage: number
+  avg_estimated_cost: number
+  avg_latency_ms: number
+  graph_used_rate: number
+  replan_rate: number
+  eval_pass_rate: number
+}
+
+export interface WorkspaceRetrievalObservabilityRun {
+  task_id: string
+  trace_id?: string
+  workspace_id?: string
+  created_at?: string
+  status: string
+  knowledge_space_ids: string[]
+  retrieval_profiles: Record<string, WorkspaceRetrievalProfile | string>
+  requested_profile: WorkspaceRetrievalProfile | 'deep_without_graph' | string
+  effective_profile: WorkspaceRetrievalProfile | 'deep_without_graph' | string
+  fallback_reason?: string | null
+  retrievers_used: string[]
+  evidence_count: number
+  citation_coverage: number
+  graph_used: boolean
+  replan_created: boolean
+  estimated_cost: number
+  latency_ms: number
+  eval_status?: string | null
+}
+
+export interface WorkspaceRetrievalObservabilitySummary {
+  summary: {
+    total_runs: number
+    requested_standard_runs: number
+    requested_deep_runs: number
+    effective_standard_runs: number
+    effective_deep_runs: number
+    deep_without_graph_runs: number
+    graph_used_runs: number
+    replan_runs: number
+    avg_evidence_count: number
+    avg_citation_coverage: number
+    avg_estimated_cost: number
+    avg_latency_ms: number
+    graph_used_rate: number
+    replan_rate: number
+  }
+  profiles: Record<string, WorkspaceRetrievalObservabilityProfileSummary>
+  comparison: {
+    deep_vs_standard: {
+      citation_coverage_delta: number
+      evidence_count_delta: number
+      cost_delta: number
+      latency_delta_ms: number
+    }
+  }
+  recent_runs: WorkspaceRetrievalObservabilityRun[]
+}
+
 export interface WorkspaceAttachment {
   name: string
   url: string
@@ -596,6 +657,14 @@ export const getWorkspaceTaskLifecycleAPI = async () => {
   return request({
     url: '/api/v1/workspace/task-lifecycle',
     method: 'get',
+  })
+}
+
+export const getWorkspaceRetrievalObservabilityAPI = async (limit = 20) => {
+  return request({
+    url: '/api/v1/workspace/retrieval-observability',
+    method: 'get',
+    params: { limit },
   })
 }
 

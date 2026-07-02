@@ -21,6 +21,11 @@ import {
   type UsageCountByDate,
 } from '../../apis/usage-stats'
 import { getAgentsAPI } from '../../apis/agent'
+import {
+  getWorkspaceRetrievalObservabilityAPI,
+  type WorkspaceRetrievalObservabilityProfileSummary,
+  type WorkspaceRetrievalObservabilitySummary,
+} from '../../apis/workspace'
 
 const loading = ref(false)
 const models = ref<string[]>([])
@@ -28,6 +33,7 @@ const agents = ref<string[]>([])
 const createdAgentNames = ref<string[]>([])
 const tokenUsage = ref<UsageDataByDate>({})
 const usageCount = ref<UsageCountByDate>({})
+const retrievalObservability = ref<WorkspaceRetrievalObservabilitySummary | null>(null)
 
 const filters = ref<UsageStatsRequest>({
   model: '',
@@ -141,12 +147,73 @@ const maxModelTotal = computed(() => Math.max(...topModels.value.map((item) => i
 const maxAgentTotal = computed(() => Math.max(...topAgents.value.map((item) => item.total), 1))
 
 const getPercent = (value: number, max: number) => `${Math.max(4, Math.round(((value || 0) / max) * 100))}%`
+const formatRatio = (value: number) => `${Math.round((Number(value) || 0) * 100)}%`
+const formatDecimal = (value: number, digits = 2) =>
+  new Intl.NumberFormat('zh-CN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits,
+  }).format(Number(value) || 0)
+const formatCost = (value: number) => `$${formatDecimal(value, 4)}`
+const formatSignedDecimal = (value: number, digits = 2) => {
+  const numberValue = Number(value) || 0
+  const prefix = numberValue > 0 ? '+' : ''
+  return `${prefix}${formatDecimal(numberValue, digits)}`
+}
 
 const kpiCards = computed(() => [
   { label: '调用次数', value: totalCalls.value, icon: callsIcon },
   { label: '输入 Token', value: totalInputTokens.value, icon: inputTokenIcon },
   { label: '输出 Token', value: totalOutputTokens.value, icon: outputTokenIcon },
   { label: '总 Token', value: totalTokens.value, icon: totalTokenIcon },
+])
+
+const retrievalSummary = computed(() => retrievalObservability.value?.summary)
+const retrievalComparison = computed(() => retrievalObservability.value?.comparison?.deep_vs_standard)
+const retrievalProfileRows = computed(() => {
+  const profiles = retrievalObservability.value?.profiles || {}
+  const labels: Record<string, string> = {
+    standard: '标准检索',
+    deep: '深度检索',
+    deep_without_graph: '深度降级',
+  }
+  return ['standard', 'deep', 'deep_without_graph'].map((key) => ({
+    key,
+    label: labels[key],
+    ...(profiles[key] || {
+      runs: 0,
+      avg_evidence_count: 0,
+      avg_citation_coverage: 0,
+      avg_estimated_cost: 0,
+      avg_latency_ms: 0,
+      graph_used_rate: 0,
+      replan_rate: 0,
+      eval_pass_rate: 0,
+    } satisfies WorkspaceRetrievalObservabilityProfileSummary),
+  }))
+})
+const retrievalKpiCards = computed(() => [
+  {
+    label: '检索运行',
+    value: formatNumber(retrievalSummary.value?.total_runs || 0),
+    meta: `standard ${retrievalSummary.value?.requested_standard_runs || 0} / deep ${
+      retrievalSummary.value?.requested_deep_runs || 0
+    }`,
+  },
+  {
+    label: '引用覆盖 citation_coverage',
+    value: formatRatio(retrievalSummary.value?.avg_citation_coverage || 0),
+    meta: '回答证据覆盖',
+  },
+  {
+    label: '图谱参与 graph_used_rate',
+    value: formatRatio(retrievalSummary.value?.graph_used_rate || 0),
+    meta: `${retrievalSummary.value?.deep_without_graph_runs || 0} 次 deep_without_graph`,
+  },
+  {
+    label: '成本差 cost_delta',
+    value: formatSignedDecimal(retrievalComparison.value?.cost_delta || 0, 4),
+    meta: 'deep vs standard',
+  },
 ])
 
 const loadMeta = async () => {
@@ -177,7 +244,11 @@ const loadDashboard = async () => {
       delta_days: filters.value.delta_days || 30,
     }
 
-    const [tokenResponse, countResponse] = await Promise.all([getUsageStatsAPI(payload), getUsageCountAPI(payload)])
+    const [tokenResponse, countResponse, retrievalResponse] = await Promise.all([
+      getUsageStatsAPI(payload),
+      getUsageCountAPI(payload),
+      getWorkspaceRetrievalObservabilityAPI(20),
+    ])
 
     if (tokenResponse.data.status_code === 200) {
       tokenUsage.value = tokenResponse.data.data || {}
@@ -189,6 +260,13 @@ const loadDashboard = async () => {
       usageCount.value = countResponse.data.data || {}
     } else {
       ElMessage.error(countResponse.data.status_message || '加载调用统计失败')
+    }
+
+    if (retrievalResponse.data.status_code === 200) {
+      retrievalObservability.value = retrievalResponse.data.data || null
+    } else {
+      retrievalObservability.value = null
+      ElMessage.error(retrievalResponse.data.status_message || '加载检索观测失败')
     }
   } catch (error) {
     console.error('加载数据看板失败:', error)
@@ -240,6 +318,84 @@ onMounted(refreshAll)
         <strong>{{ formatNumber(item.value) }}</strong>
         <small>{{ periodText }}</small>
       </article>
+    </section>
+
+    <section class="agentic-retrieval-panel panel-card" v-loading="loading">
+      <div class="panel-head">
+        <div class="panel-title">
+          <img :src="trendIcon" alt="" class="panel-icon" />
+          <h2>Agentic Retrieval</h2>
+        </div>
+        <span>standard / deep / deep_without_graph</span>
+      </div>
+
+      <div class="agentic-kpi-row">
+        <div v-for="item in retrievalKpiCards" :key="item.label" class="agentic-kpi">
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+          <small>{{ item.meta }}</small>
+        </div>
+      </div>
+
+      <div class="agentic-retrieval-grid">
+        <div class="agentic-profile-list">
+          <div v-for="profile in retrievalProfileRows" :key="profile.key" class="agentic-profile-row">
+            <div>
+              <strong>{{ profile.label }}</strong>
+              <span>{{ profile.key }}</span>
+            </div>
+            <dl>
+              <div>
+                <dt>runs</dt>
+                <dd>{{ formatNumber(profile.runs) }}</dd>
+              </div>
+              <div>
+                <dt>citation_coverage</dt>
+                <dd>{{ formatRatio(profile.avg_citation_coverage) }}</dd>
+              </div>
+              <div>
+                <dt>graph_used_rate</dt>
+                <dd>{{ formatRatio(profile.graph_used_rate) }}</dd>
+              </div>
+              <div>
+                <dt>replan</dt>
+                <dd>{{ formatRatio(profile.replan_rate) }}</dd>
+              </div>
+              <div>
+                <dt>cost</dt>
+                <dd>{{ formatCost(profile.avg_estimated_cost) }}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="agentic-run-list">
+          <div class="agentic-run-head">
+            <strong>最近运行</strong>
+            <span>
+              cost_delta {{ formatSignedDecimal(retrievalComparison?.cost_delta || 0, 4) }}
+            </span>
+          </div>
+          <div v-if="retrievalObservability?.recent_runs?.length" class="agentic-run-rows">
+            <div v-for="run in retrievalObservability.recent_runs.slice(0, 6)" :key="run.task_id" class="agentic-run-row">
+              <div>
+                <strong>{{ run.requested_profile }} -> {{ run.effective_profile }}</strong>
+                <span>{{ run.task_id }}</span>
+              </div>
+              <div class="agentic-run-metrics">
+                <span>{{ run.evidence_count }} evidence</span>
+                <span>{{ formatRatio(run.citation_coverage) }} citation_coverage</span>
+                <span>{{ run.graph_used ? 'graph_used' : 'graph_not_used' }}</span>
+                <span>{{ run.replan_created ? 'replan' : 'no_replan' }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-else class="empty-panel">
+            <img :src="emptyIcon" alt="" />
+            <span>暂无检索观测数据</span>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="content-grid">
@@ -447,6 +603,129 @@ onMounted(refreshAll)
 .kpi-label { color: #64748b; font-size: 11px; }
 .kpi-card strong { font-size: 21px; line-height: 1; color: #0f172a; letter-spacing: 0; }
 .kpi-card small { color: #94a3b8; font-size: 10px; }
+
+.agentic-retrieval-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.agentic-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.agentic-kpi {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.agentic-kpi span,
+.agentic-kpi small,
+.agentic-profile-row span,
+.agentic-profile-row dt,
+.agentic-run-head span,
+.agentic-run-row span {
+  color: #64748b;
+  font-size: 10.5px;
+  line-height: 1.25;
+}
+
+.agentic-kpi strong {
+  color: #0f172a;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.agentic-retrieval-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.agentic-profile-list,
+.agentic-run-rows {
+  display: grid;
+  gap: 8px;
+}
+
+.agentic-profile-row {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 42px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.agentic-profile-row:last-child,
+.agentic-run-row:last-child {
+  border-bottom: 0;
+}
+
+.agentic-profile-row strong,
+.agentic-run-head strong,
+.agentic-run-row strong {
+  color: #0f172a;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.agentic-profile-row dl {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.agentic-profile-row dl div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.agentic-profile-row dd {
+  margin: 0;
+  color: #334155;
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+.agentic-run-list {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.agentic-run-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.agentic-run-row {
+  display: grid;
+  gap: 5px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.agentic-run-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+}
+
+.agentic-run-metrics span {
+  padding-left: 7px;
+  border-left: 2px solid rgba(14, 165, 233, 0.36);
+}
 
 .content-grid {
   display: grid;
@@ -667,6 +946,8 @@ onMounted(refreshAll)
     grid-auto-rows: auto;
   }
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agentic-retrieval-grid { grid-template-columns: 1fr; }
+  .agentic-profile-row { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 720px) {
@@ -676,6 +957,10 @@ onMounted(refreshAll)
   .filter-icon { display: none; }
   .filter-item { width: 100%; }
   .kpi-grid { grid-template-columns: 1fr; }
+  .agentic-kpi-row,
+  .agentic-profile-row dl {
+    grid-template-columns: 1fr 1fr;
+  }
   .detail-row { grid-template-columns: 1fr 1fr; }
 }
 </style>

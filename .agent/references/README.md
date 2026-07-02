@@ -44,6 +44,7 @@ docs/history/
   workflow.md
   code-map.md
   agentchat-knowledge-lifecycle-implementation-plan.md
+  agentic-retrieval-dashboard-observability-plan.md
   runtime-call-chain.md
   verification-map.md
   command-catalog.md
