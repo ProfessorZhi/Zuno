@@ -38,6 +38,7 @@ METRIC_KEYS = [
     "ndcg_at_k",
     "answer_correctness",
     "citation_accuracy",
+    "source_doc_citation_accuracy",
     "source_span_accuracy",
     "unsupported_claim_rate",
 ]
@@ -48,6 +49,7 @@ PER_SAMPLE_METRIC_MAP = {
     "ndcg": "ndcg_at_k",
     "answer_correctness": "answer_correctness",
     "citation_accuracy": "citation_accuracy",
+    "source_doc_citation_accuracy": "source_doc_citation_accuracy",
     "source_span_accuracy": "source_span_accuracy",
     "unsupported_claim_rate": "unsupported_claim_rate",
 }
@@ -650,19 +652,20 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
         f"- selected_case_count: `{metrics['case_set']['selected_case_count']}`",
         f"- measured_case_count: `{metrics['case_set']['measured_case_count']}`",
         "",
-        "| Profile | Measured | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | Latency p95 ms | Cost |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| Profile | Measured | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | Source Doc Citation | Latency p95 ms | Cost |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for profile, payload in metrics.get("profiles", {}).items():
         aggregate = payload.get("aggregate") or {}
         lines.append(
-            "| {profile} | {measured} | {recall} | {mrr} | {correctness} | {citation} | {latency} | {cost} |".format(
+            "| {profile} | {measured} | {recall} | {mrr} | {correctness} | {citation} | {source_doc_citation} | {latency} | {cost} |".format(
                 profile=profile,
                 measured=str(bool(payload.get("measured"))).lower(),
                 recall=_fmt(aggregate.get("retrieval_recall_at_k")),
                 mrr=_fmt(aggregate.get("mrr_at_k")),
                 correctness=_fmt(aggregate.get("answer_correctness")),
                 citation=_fmt(aggregate.get("citation_accuracy")),
+                source_doc_citation=_fmt(aggregate.get("source_doc_citation_accuracy")),
                 latency=_fmt(payload.get("latency_p95_ms")),
                 cost=_fmt(payload.get("estimated_cost")),
             )
@@ -673,18 +676,19 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 "",
                 "## Paired Deltas",
                 "",
-                "| Delta | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy |",
-                "|---|---:|---:|---:|---:|",
+                "| Delta | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | Source Doc Citation |",
+                "|---|---:|---:|---:|---:|---:|",
             ]
         )
         for name, delta in metrics.get("deltas", {}).items():
             lines.append(
-                "| {name} | {recall} | {mrr} | {correctness} | {citation} |".format(
+                "| {name} | {recall} | {mrr} | {correctness} | {citation} | {source_doc_citation} |".format(
                     name=name,
                     recall=_fmt((delta or {}).get("retrieval_recall_at_k")),
                     mrr=_fmt((delta or {}).get("mrr_at_k")),
                     correctness=_fmt((delta or {}).get("answer_correctness")),
                     citation=_fmt((delta or {}).get("citation_accuracy")),
+                    source_doc_citation=_fmt((delta or {}).get("source_doc_citation_accuracy")),
                 )
             )
     if metrics.get("question_type_metrics"):
@@ -695,9 +699,9 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 "",
                 (
                     "| Question Type | Cases | Standard Recall@5 | Deep Recall@5 | Agentic Recall@5 | "
-                    "Agentic Δ Recall | Agentic Δ Answer | Agentic Δ Citation | Agentic p95 ms |"
+                    "Agentic Δ Recall | Agentic Δ Answer | Agentic Δ Citation | Agentic Δ Source Doc Citation | Agentic p95 ms |"
                 ),
-                "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+                "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
             ]
         )
         for question_type, payload in metrics.get("question_type_metrics", {}).items():
@@ -705,7 +709,7 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
             deltas = payload.get("deltas") or {}
             agentic_delta = deltas.get("agentic_vs_standard") or {}
             lines.append(
-                "| {question_type} | {cases} | {standard} | {deep} | {agentic} | {delta_recall} | {delta_answer} | {delta_citation} | {latency} |".format(
+                "| {question_type} | {cases} | {standard} | {deep} | {agentic} | {delta_recall} | {delta_answer} | {delta_citation} | {delta_source_doc_citation} | {latency} |".format(
                     question_type=question_type,
                     cases=payload.get("sample_count"),
                     standard=_fmt((profiles.get("standard_rag") or {}).get("retrieval_recall_at_k")),
@@ -714,6 +718,7 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                     delta_recall=_fmt(agentic_delta.get("retrieval_recall_at_k")),
                     delta_answer=_fmt(agentic_delta.get("answer_correctness")),
                     delta_citation=_fmt(agentic_delta.get("citation_accuracy")),
+                    delta_source_doc_citation=_fmt(agentic_delta.get("source_doc_citation_accuracy")),
                     latency=_fmt((profiles.get("agentic_graphrag") or {}).get("latency_p95_ms")),
                 )
             )
@@ -757,6 +762,7 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 f"- Recall@5: `{_fmt(aggregate.get('retrieval_recall_at_k'))}`",
                 f"- Recall@5 delta vs standard: `{_fmt(deltas.get('retrieval_recall_at_k'))}`",
                 f"- Answer Correctness delta vs standard: `{_fmt(deltas.get('answer_correctness'))}`",
+                f"- Source Doc Citation delta vs standard: `{_fmt(deltas.get('source_doc_citation_accuracy'))}`",
                 f"- latency_p50_ms: `{_fmt(gated.get('latency_p50_ms'))}`",
                 f"- latency_p95_ms: `{_fmt(gated.get('latency_p95_ms'))}`",
                 f"- all_agentic_latency_p95_ms: `{_fmt(gated.get('all_agentic_latency_p95_ms'))}`",

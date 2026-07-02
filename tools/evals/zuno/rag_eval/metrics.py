@@ -137,6 +137,21 @@ def _citation_accuracy(sample: dict[str, Any], answer_row: dict[str, Any] | None
     return supported / len(citations)
 
 
+def _source_doc_citation_accuracy(sample: dict[str, Any], answer_row: dict[str, Any] | None) -> float | None:
+    if not sample.get("required_citations"):
+        return None
+    citations = list((answer_row or {}).get("citations") or [])
+    if not citations:
+        return 0.0
+    gold = list(sample.get("gold_evidence") or [])
+    supported = sum(
+        1
+        for citation in citations
+        if _is_context_relevant(citation, gold, allow_document_match=True)
+    )
+    return supported / len(citations)
+
+
 def _source_span_matches(citation: dict[str, Any], evidence: dict[str, Any]) -> bool:
     if not _evidence_matches_context(evidence, citation):
         return False
@@ -222,6 +237,7 @@ def compute_metrics(
         contexts = list(retrieval_row.get("contexts") or retrieval_row.get("documents") or [])
         retrieval = _retrieval_metrics(sample, contexts, k)
         citation_accuracy = _citation_accuracy(sample, answer_rows.get(sample_id))
+        source_doc_citation_accuracy = _source_doc_citation_accuracy(sample, answer_rows.get(sample_id))
         source_span_accuracy = _source_span_accuracy(sample, answer_rows.get(sample_id))
         judge = judge_rows.get(sample_id, {})
         unsupported_claim_rate = _unsupported_claim_rate(answer_rows.get(sample_id), judge)
@@ -232,6 +248,7 @@ def compute_metrics(
                 "faithfulness": judge.get("faithfulness"),
                 "answer_correctness": judge.get("answer_correctness"),
                 "citation_accuracy": citation_accuracy,
+                "source_doc_citation_accuracy": source_doc_citation_accuracy,
                 "source_span_accuracy": source_span_accuracy,
                 "unsupported_claim_rate": unsupported_claim_rate,
                 "retrieved_contexts": len(contexts),
@@ -248,6 +265,7 @@ def compute_metrics(
         "faithfulness": _mean(row["faithfulness"] for row in per_sample),
         "answer_correctness": _mean(row["answer_correctness"] for row in per_sample),
         "citation_accuracy": _mean(row["citation_accuracy"] for row in per_sample),
+        "source_doc_citation_accuracy": _mean(row["source_doc_citation_accuracy"] for row in per_sample),
         "source_span_accuracy": _mean(row["source_span_accuracy"] for row in per_sample),
         "unsupported_claim_rate": _mean(row["unsupported_claim_rate"] for row in per_sample),
     }
