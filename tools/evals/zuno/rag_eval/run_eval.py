@@ -514,6 +514,12 @@ def _snippet_score(query: str, snippet: str, *, context_rank: int) -> tuple[floa
         snippet,
     ):
         score += 3.0
+    if re.search(r"(size|limit|limits|default|upload|request)", query, re.I) and re.search(
+        r"(default|max[_-]?\w*|\d+\s*(mib|mb|gib|gb|kib|kb))",
+        snippet,
+        re.I,
+    ):
+        score += 70.0
     if re.search(r"^第.+条", snippet):
         score += 1.0
 

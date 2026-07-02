@@ -733,6 +733,46 @@ def test_build_extractive_answer_prefers_law_basis_snippet():
     assert "20个工作日内返还相关数据" not in answer["answer"]
 
 
+def test_build_extractive_answer_prefers_compact_limit_snippet_over_long_intro():
+    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+
+    sample = {
+        "id": "q_upload_limits",
+        "query": (
+            "What are the default size limits for file uploads and total request size "
+            "for the new multipart upload support on the OpenAI-compatible API endpoints?"
+        ),
+    }
+    contexts = [
+        {
+            "content": (
+                "add multipart/form-data handling, strict content-type validation, and payload limit enforcement "
+                "for API tool/file inputs\n\n"
+                "description:\n"
+                "Motivation: users integrating tool/function calling and file uploads via the "
+                "OpenAI-compatibility endpoints were sending a wide variety of content-types and very large "
+                "multipart requests which caused inconsistent runtime behavior, high memory pressure, and "
+                "unexpected acceptance of unsupported payloads. This PR introduces a focused, backwards-compatible "
+                "implementation for multipart/form-data parsing on the OpenAI-compatibility path, strict "
+                "Content-Type validation for tool/file inputs, and deterministic payload limits both per-file "
+                "and per-request. Summary of changes: 1) Add a streaming-safe multipart parser that yields parts "
+                "rather than buffering entire requests; 2) Validate Content-Type of each part; "
+                "3) Enforce configurable limits: max_file_size (default 10MiB), "
+                "max_total_request_size (default 50MiB), max_parts_count (default 20)."
+            ),
+            "file_name": "dsid_ae068ee4aa9640159427cd941bef0238.md",
+        }
+    ]
+
+    answer = _build_extractive_answer(sample, contexts)
+
+    assert "max_file_size" in answer["answer"]
+    assert "10MiB" in answer["answer"]
+    assert "max_total_request_size" in answer["answer"]
+    assert "50MiB" in answer["answer"]
+    assert "streaming-safe multipart parser" not in answer["answer"]
+
+
 def test_build_extractive_answer_contract_review_handles_guarantee_scope():
     from zuno.evals.rag_eval.run_eval import _build_extractive_answer
 

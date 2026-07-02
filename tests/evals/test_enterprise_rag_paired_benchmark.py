@@ -297,6 +297,8 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     async def fake_run_stackless_local_eval(**kwargs):
         assert kwargs["profile_set"] == "deep_graphrag_compare"
         assert kwargs["sample_limit"] == 2
+        assert kwargs["chunk_size_override"] == 1800
+        assert kwargs["overlap_override"] == 240
         run_root = Path(kwargs["output_root"])
         run_root.mkdir(parents=True, exist_ok=True)
         rows_by_profile = {
@@ -493,6 +495,8 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
 
     metrics = _read_json(output_root / "metrics.json")
     assert metrics["case_set"]["common_case_ids"] == ["qst_basic", "qst_conflict"]
+    assert metrics["runtime_config"]["chunk_size_override"] == 1800
+    assert metrics["runtime_config"]["overlap_override"] == 240
     assert metrics["profiles"]["standard_rag"]["underlying_profile"] == "baseline_rag"
     assert metrics["profiles"]["deep_graphrag"]["underlying_profile"] == "deep_graphrag"
     assert metrics["profiles"]["agentic_graphrag"]["measured"] is True

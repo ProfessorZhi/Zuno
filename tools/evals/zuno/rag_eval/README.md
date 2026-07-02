@@ -108,6 +108,8 @@ Measured EnterpriseRAG runs also write two diagnostic surfaces:
 
 `Citation Accuracy` remains the strict evidence-text citation metric. `Source Doc Citation Accuracy` is a separate intermediate metric that only checks whether the citation binds to the expected source document (`doc_id` / `file_contains`). Do not treat source-document citation as source-span proof.
 
+EnterpriseRAG paired runs default to `--chunk-size-override 1800 --overlap-override 240` because the benchmark documents often contain long GitHub, Slack, or support-thread lines where 1024-character chunks can cut an answer-bearing limit or configuration clause in the middle. The selected values are recorded in `metrics.json.runtime_config` and in `report.md`; override them explicitly when comparing chunking experiments.
+
 These diagnostics are computed only from the fixed case set, per-sample metrics, and available retrieval traces. If the trace does not carry enough detail, the runner reports `unavailable_due_to_missing_trace_fields` instead of inventing rerank, graph, or no-answer explanations. The measured `agentic_graphrag` profile is still an eval-level retrieval strategy; it is not a claim that the full product Single Controller Agent runtime has been benchmarked end to end.
 
 ## Deep GraphRAG Eval Surface

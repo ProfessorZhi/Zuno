@@ -42,6 +42,9 @@ METRIC_KEYS = [
     "source_span_accuracy",
     "unsupported_claim_rate",
 ]
+
+ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE = 1800
+ENTERPRISE_RAG_DEFAULT_OVERLAP = 240
 PER_SAMPLE_METRIC_MAP = {
     "retrieval_recall": "retrieval_recall_at_k",
     "context_precision": "context_precision_at_k",
@@ -651,6 +654,8 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
         f"- measurement_status: `{metrics['measurement_status']}`",
         f"- selected_case_count: `{metrics['case_set']['selected_case_count']}`",
         f"- measured_case_count: `{metrics['case_set']['measured_case_count']}`",
+        f"- chunk_size_override: `{(metrics.get('runtime_config') or {}).get('chunk_size_override')}`",
+        f"- overlap_override: `{(metrics.get('runtime_config') or {}).get('overlap_override')}`",
         "",
         "| Profile | Measured | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | Source Doc Citation | Latency p95 ms | Cost |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
@@ -895,6 +900,8 @@ async def run_enterprise_rag_paired_benchmark(
     inspect_schema: bool = False,
     spawn_dev_embedding_server: bool = True,
     rerank_score_threshold_override: float | None = 0.0,
+    chunk_size_override: int | None = ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE,
+    overlap_override: int | None = ENTERPRISE_RAG_DEFAULT_OVERLAP,
 ) -> dict[str, Any]:
     output_root.mkdir(parents=True, exist_ok=True)
     rows = _read_rows(questions_file)
@@ -961,6 +968,8 @@ async def run_enterprise_rag_paired_benchmark(
         sample_limit=prepared["case_count"],
         spawn_dev_embedding_server=spawn_dev_embedding_server,
         rerank_score_threshold_override=rerank_score_threshold_override,
+        chunk_size_override=chunk_size_override,
+        overlap_override=overlap_override,
     )
     profiles, cost_latency, per_samples = _build_profile_summary(run_root=stackless_root, run_report=run_report)
     cases = _read_jsonl(dataset_path)
@@ -1017,6 +1026,11 @@ async def run_enterprise_rag_paired_benchmark(
             "question_type_counts": _question_type_counts(cases),
         },
         "corpus": manifest,
+        "runtime_config": {
+            "chunk_size_override": chunk_size_override,
+            "overlap_override": overlap_override,
+            "rerank_score_threshold_override": rerank_score_threshold_override,
+        },
         "profiles": profiles,
         "deltas": {
             "deep_vs_standard": deep_vs_standard,
@@ -1068,6 +1082,8 @@ def main() -> None:
     parser.add_argument("--inspect-documents-schema", action="store_true")
     parser.add_argument("--no-spawn-dev-embedding-server", action="store_true")
     parser.add_argument("--rerank-score-threshold-override", type=float, default=0.0)
+    parser.add_argument("--chunk-size-override", type=int, default=ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE)
+    parser.add_argument("--overlap-override", type=int, default=ENTERPRISE_RAG_DEFAULT_OVERLAP)
     args = parser.parse_args()
 
     output_root = args.output_root or default_runs_root() / f"enterprise-rag-paired-{time.strftime('%Y%m%d-%H%M%S')}"
@@ -1085,6 +1101,8 @@ def main() -> None:
             inspect_schema=args.inspect_documents_schema,
             spawn_dev_embedding_server=not args.no_spawn_dev_embedding_server,
             rerank_score_threshold_override=args.rerank_score_threshold_override,
+            chunk_size_override=args.chunk_size_override,
+            overlap_override=args.overlap_override,
         )
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
