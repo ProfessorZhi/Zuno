@@ -20,6 +20,7 @@ def test_public_enterprise_registry_marks_first_pass_adapters() -> None:
     assert cfqa["current_status"] == "adapter_ready"
     assert "source_span_accuracy" in cfqa["primary_metrics"]
     assert enterprise["current_status"] == "registry_only"
+    assert enterprise["source_url"] == "https://github.com/onyx-dot-app/EnterpriseRAG-Bench"
 
 
 def test_prepare_techqa_rag_eval_writes_corpus_manifest_and_zuno_dataset(tmp_path: Path) -> None:

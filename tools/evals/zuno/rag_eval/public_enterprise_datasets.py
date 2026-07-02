@@ -47,7 +47,7 @@ DATASET_DEFINITIONS: tuple[dict[str, Any], ...] = (
         "name": "EnterpriseRAG-Bench",
         "current_status": "registry_only",
         "license": "MIT",
-        "source_url": "https://github.com/galileo-ai/enterprise-rag-bench",
+        "source_url": "https://github.com/onyx-dot-app/EnterpriseRAG-Bench",
         "best_for": ["enterprise_corpus", "multi_source", "conflicting_information", "no_answer"],
         "primary_metrics": [
             "retrieval_recall_at_k",
