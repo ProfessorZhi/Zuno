@@ -523,6 +523,18 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     )
     assert metrics["evidence_conversion_diagnostics"]["tag_counts"]["agentic_added_new_gold_doc"] == 1
     assert metrics["evidence_conversion_diagnostics"]["tag_counts"]["graph_added_non_gold_context"] == 1
+    gated = metrics["gated_agentic_simulation"]
+    assert gated["metrics_source"] == "fixed_benchmark_simulation"
+    assert gated["gate_policy"]["mode"] == "positive_agentic_recall_delta"
+    assert gated["gate_policy"]["selected_profile_by_question_type"] == {
+        "basic": "standard_rag",
+        "conflicting_info": "agentic_graphrag",
+    }
+    assert gated["profile_mix"]["standard_case_count"] == 1
+    assert gated["profile_mix"]["agentic_case_count"] == 1
+    assert gated["aggregate"]["retrieval_recall_at_k"] == 1.0
+    assert gated["deltas_vs_standard"]["retrieval_recall_at_k"] == 0.5
+    assert gated["latency_p50_ms"] == 10
     report_text = (output_root / "report.md").read_text(encoding="utf-8")
     assert "## Paired Deltas" in report_text
     assert "agentic_vs_standard" in report_text
@@ -530,3 +542,5 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert "## Question Type Breakdown" in report_text
     assert "conflicting_info" in report_text
     assert "## Evidence Conversion Diagnostics" in report_text
+    assert "## Gated Agentic Simulation" in report_text
+    assert "positive_agentic_recall_delta" in report_text

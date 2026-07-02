@@ -501,6 +501,80 @@ def _build_evidence_conversion_diagnostics(
     return {"items": items, "tag_counts": tag_counts}
 
 
+def _build_gated_agentic_simulation(
+    *,
+    cases: list[dict[str, Any]],
+    profiles: dict[str, Any],
+    per_samples: dict[str, list[dict[str, Any]]],
+    retrieval_rows: dict[str, list[dict[str, Any]]],
+    question_type_metrics: dict[str, Any],
+) -> dict[str, Any]:
+    case_types = {str(row.get("id")): str(row.get("question_type") or "unknown") for row in cases}
+    selected_profile_by_type: dict[str, str] = {}
+    for question_type, payload in question_type_metrics.items():
+        delta = ((payload.get("deltas") or {}).get("agentic_vs_standard") or {}).get("retrieval_recall_at_k")
+        try:
+            agentic_recall_gain = float(delta)
+        except (TypeError, ValueError):
+            agentic_recall_gain = 0.0
+        selected_profile_by_type[question_type] = "agentic_graphrag" if agentic_recall_gain > 0 else "standard_rag"
+
+    samples_by_profile = {
+        profile: {str(row.get("id")): row for row in rows}
+        for profile, rows in per_samples.items()
+    }
+    retrieval_by_profile = {
+        profile: {str(row.get("id")): row for row in rows}
+        for profile, rows in retrieval_rows.items()
+    }
+
+    selected_samples: list[dict[str, Any]] = []
+    selected_retrieval_rows: list[dict[str, Any]] = []
+    selected_case_profiles: dict[str, str] = {}
+    profile_mix = {"standard_case_count": 0, "agentic_case_count": 0}
+    for case in cases:
+        case_id = str(case.get("id"))
+        question_type = case_types.get(case_id, "unknown")
+        selected_profile = selected_profile_by_type.get(question_type, "standard_rag")
+        selected_case_profiles[case_id] = selected_profile
+        if selected_profile == "agentic_graphrag":
+            profile_mix["agentic_case_count"] += 1
+        else:
+            profile_mix["standard_case_count"] += 1
+        sample = (samples_by_profile.get(selected_profile) or {}).get(case_id)
+        if sample:
+            selected_samples.append(sample)
+        retrieval_row = (retrieval_by_profile.get(selected_profile) or {}).get(case_id)
+        if retrieval_row:
+            selected_retrieval_rows.append(retrieval_row)
+
+    common_case_ids = set(case_types)
+    all_agentic_rows = [
+        row for row in retrieval_rows.get("agentic_graphrag", []) if str(row.get("id")) in common_case_ids
+    ]
+    aggregate = _aggregate_per_sample_rows(selected_samples)
+    latency = _cost_latency_from_rows(selected_retrieval_rows)
+    all_agentic_latency = _cost_latency_from_rows(all_agentic_rows)
+    standard = (profiles.get("standard_rag") or {}).get("aggregate") or {}
+    agentic = (profiles.get("agentic_graphrag") or {}).get("aggregate") or {}
+    return {
+        "metrics_source": "fixed_benchmark_simulation",
+        "gate_policy": {
+            "mode": "positive_agentic_recall_delta",
+            "selected_profile_by_question_type": selected_profile_by_type,
+            "selected_profile_by_case_id": selected_case_profiles,
+        },
+        "profile_mix": profile_mix,
+        "aggregate": aggregate,
+        "deltas_vs_standard": _delta(aggregate, standard),
+        "deltas_vs_all_agentic": _delta(aggregate, agentic),
+        **latency,
+        "all_agentic_latency_p50_ms": all_agentic_latency.get("latency_p50_ms"),
+        "all_agentic_latency_p95_ms": all_agentic_latency.get("latency_p95_ms"),
+        "all_agentic_estimated_cost": all_agentic_latency.get("estimated_cost"),
+    }
+
+
 def _build_failure_cases(per_samples: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
     failures: list[dict[str, Any]] = []
     for profile, rows in per_samples.items():
@@ -665,6 +739,34 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 f"- cost_quality_ratio: `{_fmt(agentic_metrics.get('cost_quality_ratio'))}`",
             ]
         )
+    gated = metrics.get("gated_agentic_simulation") or {}
+    if gated:
+        gate_policy = gated.get("gate_policy") or {}
+        profile_mix = gated.get("profile_mix") or {}
+        aggregate = gated.get("aggregate") or {}
+        deltas = gated.get("deltas_vs_standard") or {}
+        lines.extend(
+            [
+                "",
+                "## Gated Agentic Simulation",
+                "",
+                f"- metrics_source: `{gated.get('metrics_source')}`",
+                f"- gate_policy: `{gate_policy.get('mode')}`",
+                f"- standard_case_count: `{profile_mix.get('standard_case_count')}`",
+                f"- agentic_case_count: `{profile_mix.get('agentic_case_count')}`",
+                f"- Recall@5: `{_fmt(aggregate.get('retrieval_recall_at_k'))}`",
+                f"- Recall@5 delta vs standard: `{_fmt(deltas.get('retrieval_recall_at_k'))}`",
+                f"- Answer Correctness delta vs standard: `{_fmt(deltas.get('answer_correctness'))}`",
+                f"- latency_p50_ms: `{_fmt(gated.get('latency_p50_ms'))}`",
+                f"- latency_p95_ms: `{_fmt(gated.get('latency_p95_ms'))}`",
+                f"- all_agentic_latency_p95_ms: `{_fmt(gated.get('all_agentic_latency_p95_ms'))}`",
+                "",
+                "| Question Type | Selected Profile |",
+                "|---|---|",
+            ]
+        )
+        for question_type, profile in (gate_policy.get("selected_profile_by_question_type") or {}).items():
+            lines.append(f"| {question_type} | {profile} |")
     diagnostics = metrics.get("evidence_conversion_diagnostics") or {}
     if diagnostics.get("tag_counts"):
         lines.extend(["", "## Evidence Conversion Diagnostics", ""])
@@ -738,6 +840,7 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
         "agentic_metrics": {"graph_usage_gain": None, "replan_success_rate": None, "cost_quality_ratio": None},
         "question_type_metrics": {},
         "evidence_conversion_diagnostics": {"items": [], "tag_counts": {}},
+        "gated_agentic_simulation": {},
         "cost_latency": {},
         "failure_count": 0,
         "failure_tag_limitations": _failure_tag_limitations(),
@@ -885,6 +988,18 @@ async def run_enterprise_rag_paired_benchmark(
         if agentic_vs_standard
         else deep_vs_standard.get("retrieval_recall_at_k")
     )
+    question_type_metrics = _question_type_metrics(
+        cases=cases,
+        per_samples=per_samples,
+        retrieval_rows=retrieval_rows,
+    )
+    gated_agentic_simulation = _build_gated_agentic_simulation(
+        cases=cases,
+        profiles=profiles,
+        per_samples=per_samples,
+        retrieval_rows=retrieval_rows,
+        question_type_metrics=question_type_metrics,
+    )
     metrics = {
         "status": "measured",
         "measurement_status": "fixed_benchmark",
@@ -902,11 +1017,7 @@ async def run_enterprise_rag_paired_benchmark(
             "agentic_vs_standard": agentic_vs_standard,
             "agentic_vs_deep": agentic_vs_deep,
         },
-        "question_type_metrics": _question_type_metrics(
-            cases=cases,
-            per_samples=per_samples,
-            retrieval_rows=retrieval_rows,
-        ),
+        "question_type_metrics": question_type_metrics,
         "agentic_metrics": {
             "graph_usage_gain": graph_usage_gain,
             "replan_success_rate": replan_success_rate,
@@ -917,6 +1028,7 @@ async def run_enterprise_rag_paired_benchmark(
             ),
         },
         "evidence_conversion_diagnostics": evidence_conversion_diagnostics,
+        "gated_agentic_simulation": gated_agentic_simulation,
         "cost_latency": cost_latency,
         "failure_count": len(failures),
         "failure_tag_limitations": failure_tag_limitations,

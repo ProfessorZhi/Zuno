@@ -103,6 +103,7 @@ Measured EnterpriseRAG runs also write two diagnostic surfaces:
 
 - `question_type_metrics`: per-question-type fixed benchmark metrics for each profile, plus `deep_vs_standard`, `agentic_vs_standard`, and `agentic_vs_deep` deltas. This is the surface to decide which question types deserve agentic/deep routing and which should remain standard-first.
 - `evidence_conversion_diagnostics`: case-level tags that explain whether retrieval gains converted into answer and citation gains. Tags include `agentic_added_new_gold_doc`, `graph_added_gold_doc`, `standard_floor_preserved_gold_doc`, `answer_correctness_drop_despite_recall_gain`, `gold_doc_retrieved_but_citation_missing`, and `citation_not_bound_to_gold_doc`.
+- `gated_agentic_simulation`: a fixed-benchmark simulation that routes only question types with positive `agentic_vs_standard` retrieval recall delta to `agentic_graphrag`; all other types stay on `standard_rag`. It reports the simulated aggregate metrics, latency, profile mix, and deltas versus standard without rerunning retrieval or claiming a new production runtime policy.
 
 These diagnostics are computed only from the fixed case set, per-sample metrics, and available retrieval traces. If the trace does not carry enough detail, the runner reports `unavailable_due_to_missing_trace_fields` instead of inventing rerank, graph, or no-answer explanations. The measured `agentic_graphrag` profile is still an eval-level retrieval strategy; it is not a claim that the full product Single Controller Agent runtime has been benchmarked end to end.
 
