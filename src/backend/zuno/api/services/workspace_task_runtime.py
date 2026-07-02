@@ -123,6 +123,74 @@ class WorkspaceTaskRuntimeService:
     _trace_spans: dict[str, list[dict]] = {}
     _release_evals: dict[str, dict] = {}
     _trace_replays: dict[str, dict] = {}
+    _benchmark_metric_definitions: tuple[dict[str, Any], ...] = (
+        {
+            "key": "retrieval_recall_at_k",
+            "label": "Recall@5",
+            "unit": "ratio",
+            "aliases": ("retrieval_recall_at_k", "retrieval_recall", "recall_at_5", "Recall@5"),
+        },
+        {
+            "key": "context_precision_at_k",
+            "label": "Precision@5",
+            "unit": "ratio",
+            "aliases": ("context_precision_at_k", "context_precision", "precision_at_5", "Precision@5"),
+        },
+        {
+            "key": "mrr_at_k",
+            "label": "MRR",
+            "unit": "ratio",
+            "aliases": ("mrr_at_k", "mrr", "mrr_at_5", "mrr_at_10", "MRR@5", "MRR@10"),
+        },
+        {
+            "key": "ndcg_at_k",
+            "label": "NDCG",
+            "unit": "ratio",
+            "aliases": ("ndcg_at_k", "ndcg", "ndcg_at_5", "NDCG@5"),
+        },
+        {
+            "key": "answer_correctness",
+            "label": "Answer Correctness",
+            "unit": "ratio",
+            "aliases": ("answer_correctness",),
+        },
+        {
+            "key": "citation_coverage",
+            "label": "Citation Coverage",
+            "unit": "ratio",
+            "aliases": ("citation_coverage_at_k", "citation_coverage"),
+        },
+        {
+            "key": "source_span_accuracy",
+            "label": "Source Span Accuracy",
+            "unit": "ratio",
+            "aliases": ("source_span_accuracy", "citation_accuracy", "citation_span_accuracy"),
+        },
+        {
+            "key": "unsupported_claim_rate",
+            "label": "Unsupported Claim Rate",
+            "unit": "ratio",
+            "aliases": ("unsupported_claim_rate", "unsupported_claims_rate"),
+        },
+        {
+            "key": "latency_p50_ms",
+            "label": "Latency p50",
+            "unit": "ms",
+            "aliases": ("latency_p50_ms", "p50_latency_ms"),
+        },
+        {
+            "key": "latency_p95_ms",
+            "label": "Latency p95",
+            "unit": "ms",
+            "aliases": ("latency_p95_ms", "p95_latency_ms"),
+        },
+        {
+            "key": "estimated_cost",
+            "label": "Estimated Cost",
+            "unit": "usd",
+            "aliases": ("estimated_cost", "cost_estimate", "cost_usd", "avg_estimated_cost"),
+        },
+    )
 
     @classmethod
     def configure_durable_ingestion(
@@ -1354,6 +1422,30 @@ class WorkspaceTaskRuntimeService:
         except (TypeError, ValueError):
             return 0.0
 
+    @staticmethod
+    def _optional_float(value: Any) -> float | None:
+        if value is None:
+            return None
+        if isinstance(value, dict):
+            value = value.get("value")
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    @classmethod
+    def _percentile(cls, values: list[float], ratio: float) -> float | None:
+        if not values:
+            return None
+        ordered = sorted(values)
+        if len(ordered) == 1:
+            return ordered[0]
+        position = (len(ordered) - 1) * ratio
+        lower = int(position)
+        upper = min(lower + 1, len(ordered) - 1)
+        weight = position - lower
+        return ordered[lower] * (1 - weight) + ordered[upper] * weight
+
     @classmethod
     def _summarize_retrieval_profile_runs(cls, runs: list[dict]) -> dict:
         citation_values = [cls._safe_float(run.get("citation_coverage")) for run in runs]
@@ -1372,6 +1464,100 @@ class WorkspaceTaskRuntimeService:
             "graph_used_rate": cls._rate(graph_used_count, len(runs)),
             "replan_rate": cls._rate(replan_count, len(runs)),
             "eval_pass_rate": cls._rate(eval_pass_count, len(runs)),
+        }
+
+    @classmethod
+    def _benchmark_metric_from_runtime(cls, key: str, runs: list[dict]) -> float | None:
+        if key == "citation_coverage":
+            return cls._avg([cls._safe_float(run.get("citation_coverage")) for run in runs])
+        if key == "latency_p50_ms":
+            return cls._percentile([cls._safe_float(run.get("latency_ms")) for run in runs], 0.50)
+        if key == "latency_p95_ms":
+            return cls._percentile([cls._safe_float(run.get("latency_ms")) for run in runs], 0.95)
+        if key == "estimated_cost":
+            return cls._avg([cls._safe_float(run.get("estimated_cost")) for run in runs])
+        return None
+
+    @classmethod
+    def _benchmark_observability_summary(cls, runs: list[dict]) -> dict:
+        measured_evals = [
+            release_eval
+            for release_eval in cls._release_evals.values()
+            if int(release_eval.get("case_count") or 0) > 0
+        ]
+        dataset_versions = sorted(
+            {
+                str(release_eval.get("dataset_version"))
+                for release_eval in measured_evals
+                if release_eval.get("dataset_version")
+            }
+        )
+        dataset_sample_count = sum(int(release_eval.get("case_count") or 0) for release_eval in measured_evals)
+        metrics: list[dict[str, Any]] = []
+        measured_metric_count = 0
+        runtime_metric_count = 0
+
+        for definition in cls._benchmark_metric_definitions:
+            measured_values: list[float] = []
+            measured_sample_count = 0
+            for release_eval in measured_evals:
+                metric_results = release_eval.get("metric_results") or {}
+                for alias in definition["aliases"]:
+                    value = cls._optional_float(metric_results.get(alias))
+                    if value is not None:
+                        measured_values.append(value)
+                        measured_sample_count += int(release_eval.get("case_count") or 0) or 1
+                        break
+
+            if measured_values:
+                measured_metric_count += 1
+                metrics.append(
+                    {
+                        "key": definition["key"],
+                        "label": definition["label"],
+                        "unit": definition["unit"],
+                        "value": cls._avg(measured_values),
+                        "sample_count": measured_sample_count,
+                        "status": "measured",
+                        "source": "release_eval",
+                    }
+                )
+                continue
+
+            runtime_value = cls._benchmark_metric_from_runtime(definition["key"], runs)
+            if runtime_value is not None and runs:
+                runtime_metric_count += 1
+                metrics.append(
+                    {
+                        "key": definition["key"],
+                        "label": definition["label"],
+                        "unit": definition["unit"],
+                        "value": runtime_value,
+                        "sample_count": len(runs),
+                        "status": "runtime_observed",
+                        "source": "workspace_runtime",
+                    }
+                )
+                continue
+
+            metrics.append(
+                {
+                    "key": definition["key"],
+                    "label": definition["label"],
+                    "unit": definition["unit"],
+                    "value": None,
+                    "sample_count": 0,
+                    "status": "missing_dataset",
+                    "source": "benchmark_dataset",
+                }
+            )
+
+        status = "measured" if measured_metric_count else ("runtime_observed" if runtime_metric_count else "missing_dataset")
+        return {
+            "status": status,
+            "dataset_version": ", ".join(dataset_versions) if dataset_versions else None,
+            "sample_count": dataset_sample_count,
+            "metrics": metrics,
         }
 
     @classmethod
@@ -1501,6 +1687,7 @@ class WorkspaceTaskRuntimeService:
             },
             "profiles": profiles,
             "comparison": comparison,
+            "benchmark": cls._benchmark_observability_summary(runs),
             "recent_runs": runs[: max(1, limit)],
         }
 

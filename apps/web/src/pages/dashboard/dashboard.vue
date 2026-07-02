@@ -23,6 +23,7 @@ import {
 import { getAgentsAPI } from '../../apis/agent'
 import {
   getWorkspaceRetrievalObservabilityAPI,
+  type WorkspaceRetrievalBenchmarkMetric,
   type WorkspaceRetrievalObservabilityProfileSummary,
   type WorkspaceRetrievalObservabilitySummary,
 } from '../../apis/workspace'
@@ -169,6 +170,40 @@ const kpiCards = computed(() => [
 
 const retrievalSummary = computed(() => retrievalObservability.value?.summary)
 const retrievalComparison = computed(() => retrievalObservability.value?.comparison?.deep_vs_standard)
+const benchmarkStatusLabel = computed(() => {
+  switch (retrievalObservability.value?.benchmark?.status) {
+    case 'measured':
+      return '固定数据集'
+    case 'runtime_observed':
+      return '运行观测'
+    default:
+      return '暂无基准数据'
+  }
+})
+const fallbackBenchmarkMetrics: WorkspaceRetrievalBenchmarkMetric[] = [
+  { key: 'retrieval_recall_at_k', label: 'Recall@5', unit: 'ratio', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'context_precision_at_k', label: 'Precision@5', unit: 'ratio', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'mrr_at_k', label: 'MRR', unit: 'ratio', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'ndcg_at_k', label: 'NDCG', unit: 'ratio', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'answer_correctness', label: 'Answer Correctness', unit: 'ratio', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'citation_coverage', label: 'Citation Coverage', unit: 'ratio', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'source_span_accuracy', label: 'Source Span Accuracy', unit: 'ratio', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'unsupported_claim_rate', label: 'Unsupported Claim Rate', unit: 'ratio', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'latency_p50_ms', label: 'Latency p50', unit: 'ms', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'latency_p95_ms', label: 'Latency p95', unit: 'ms', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+  { key: 'estimated_cost', label: 'Estimated Cost', unit: 'usd', value: null, sample_count: 0, status: 'missing_dataset', source: 'benchmark_dataset' },
+]
+const benchmarkMetrics = computed(() => {
+  const metrics = retrievalObservability.value?.benchmark?.metrics
+  return metrics?.length ? metrics : fallbackBenchmarkMetrics
+})
+const formatBenchmarkMetric = (metric: WorkspaceRetrievalBenchmarkMetric) => {
+  if (metric.value === null || metric.value === undefined) return '待评测'
+  if (metric.unit === 'ratio') return formatRatio(metric.value)
+  if (metric.unit === 'ms') return `${formatDecimal(metric.value, 1)} ms`
+  if (metric.unit === 'usd') return formatCost(metric.value)
+  return formatDecimal(metric.value, 3)
+}
 const retrievalProfileRows = computed(() => {
   const profiles = retrievalObservability.value?.profiles || {}
   const labels: Record<string, string> = {
@@ -334,6 +369,26 @@ onMounted(refreshAll)
           <span>{{ item.label }}</span>
           <strong>{{ item.value }}</strong>
           <small>{{ item.meta }}</small>
+        </div>
+      </div>
+
+      <div class="agentic-benchmark-section">
+        <div class="agentic-run-head">
+          <strong>Benchmark Metrics</strong>
+          <span>
+            {{ benchmarkStatusLabel }}
+            <template v-if="retrievalObservability?.benchmark?.dataset_version">
+              · {{ retrievalObservability.benchmark.dataset_version }}
+            </template>
+            · samples {{ formatNumber(retrievalObservability?.benchmark?.sample_count || 0) }}
+          </span>
+        </div>
+        <div class="agentic-benchmark-grid">
+          <div v-for="metric in benchmarkMetrics" :key="metric.key" class="agentic-benchmark-metric">
+            <span>{{ metric.label }}</span>
+            <strong>{{ formatBenchmarkMetric(metric) }}</strong>
+            <small>{{ metric.status }} · {{ metric.source }}</small>
+          </div>
         </div>
       </div>
 
@@ -638,6 +693,42 @@ onMounted(refreshAll)
   color: #0f172a;
   font-size: 18px;
   line-height: 1.1;
+}
+
+.agentic-benchmark-section {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.agentic-benchmark-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px 10px;
+}
+
+.agentic-benchmark-metric {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.agentic-benchmark-metric span,
+.agentic-benchmark-metric small {
+  min-width: 0;
+  color: #64748b;
+  font-size: 10.5px;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agentic-benchmark-metric strong {
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.15;
 }
 
 .agentic-retrieval-grid {
@@ -946,6 +1037,7 @@ onMounted(refreshAll)
     grid-auto-rows: auto;
   }
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agentic-benchmark-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .agentic-retrieval-grid { grid-template-columns: 1fr; }
   .agentic-profile-row { grid-template-columns: 1fr; }
 }
@@ -958,6 +1050,7 @@ onMounted(refreshAll)
   .filter-item { width: 100%; }
   .kpi-grid { grid-template-columns: 1fr; }
   .agentic-kpi-row,
+  .agentic-benchmark-grid,
   .agentic-profile-row dl {
     grid-template-columns: 1fr 1fr;
   }

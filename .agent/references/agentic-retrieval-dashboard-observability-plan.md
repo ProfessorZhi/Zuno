@@ -8,7 +8,13 @@
 
 当前实现只聚合本地 `WorkspaceTaskRuntimeService` 已经保存的 task、retrieval plan、eval 和 cost summary，不新增数据库表，不接外部 observability sink，也不把尚未接入的生产级指标平台写成 Current。
 
-产品侧只展示知识库检索 profile 的观测事实：运行数、引用覆盖率、图谱参与率、replan 比率、成本差和最近运行。用户仍只在知识库层选择标准检索或深度检索，GraphRAG、rerank、re-query 和 fallback 由 Single Controller Agent 内部规划。
+产品侧展示知识库检索 profile 的观测事实：运行数、引用覆盖率、图谱参与率、replan 比率、成本差和最近运行。数据看板还必须展示 Benchmark Metrics，包括 Recall@5、Precision@5、MRR、NDCG、Answer Correctness、Citation Coverage、Source Span Accuracy、Unsupported Claim Rate、Latency p50/p95 和 Estimated Cost。用户仍只在知识库层选择标准检索或深度检索，GraphRAG、rerank、re-query 和 fallback 由 Single Controller Agent 内部规划。
+
+Benchmark Metrics 必须区分三种状态：
+
+- `measured`：来自固定 eval dataset 的真实评测结果。
+- `runtime_observed`：来自当前 workspace runtime 的运行观测，例如 citation coverage、latency、cost。
+- `missing_dataset`：固定数据集尚未提供，不能伪造成已评测。
 
 ## 已完成事项
 
@@ -18,6 +24,7 @@
 - [x] 同步前端 API 类型与调用：`apps/web/src/apis/workspace.ts`。
 - [x] 在 `apps/web/src/pages/dashboard/dashboard.vue` 增加 Agentic Retrieval 面板。
 - [x] 面板展示 `standard / deep / deep_without_graph`、`citation_coverage`、`graph_used_rate` 和 `cost_delta`。
+- [x] 面板展示 Benchmark Metrics，并明确区分 `measured / runtime_observed / missing_dataset`。
 
 ## 验收命令
 

@@ -481,6 +481,23 @@ export interface WorkspaceRetrievalObservabilityRun {
   eval_status?: string | null
 }
 
+export interface WorkspaceRetrievalBenchmarkMetric {
+  key: string
+  label: string
+  unit: 'ratio' | 'ms' | 'usd' | string
+  value: number | null
+  sample_count: number
+  status: 'measured' | 'runtime_observed' | 'missing_dataset' | string
+  source: string
+}
+
+export interface WorkspaceRetrievalBenchmarkSummary {
+  status: 'measured' | 'runtime_observed' | 'missing_dataset' | string
+  dataset_version?: string | null
+  sample_count: number
+  metrics: WorkspaceRetrievalBenchmarkMetric[]
+}
+
 export interface WorkspaceRetrievalObservabilitySummary {
   summary: {
     total_runs: number
@@ -507,6 +524,7 @@ export interface WorkspaceRetrievalObservabilitySummary {
       latency_delta_ms: number
     }
   }
+  benchmark: WorkspaceRetrievalBenchmarkSummary
   recent_runs: WorkspaceRetrievalObservabilityRun[]
 }
 

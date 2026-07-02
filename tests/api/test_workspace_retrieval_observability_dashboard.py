@@ -125,6 +125,68 @@ def test_workspace_retrieval_observability_summary_compares_standard_and_deep_ru
     assert "eval_status" in recent["task_retrieval_obs_deep"]
 
 
+def test_workspace_retrieval_observability_exposes_benchmark_metrics_without_faking_dataset() -> None:
+    client = _client()
+    _seed_index(client, workspace_id="workspace_benchmark_obs", knowledge_space_id="ks_benchmark_obs")
+    _create_task(
+        client,
+        task_id="task_benchmark_obs_standard",
+        workspace_id="workspace_benchmark_obs",
+        knowledge_space_id="ks_benchmark_obs",
+        profile="standard",
+    )
+    _create_task(
+        client,
+        task_id="task_benchmark_obs_deep",
+        workspace_id="workspace_benchmark_obs",
+        knowledge_space_id="ks_benchmark_obs",
+        profile="deep",
+    )
+    WorkspaceTaskRuntimeService._release_evals["task_benchmark_obs_deep"] = {
+        "status": "pass",
+        "dataset_version": "internal_kb_v1",
+        "case_count": 4,
+        "metric_results": {
+            "retrieval_recall_at_k": {"value": 0.75, "passed": True},
+            "context_precision_at_k": {"value": 0.5, "passed": True},
+            "mrr_at_k": {"value": 0.8, "passed": True},
+            "ndcg_at_k": {"value": 0.7, "passed": True},
+            "answer_correctness": {"value": 0.9, "passed": True},
+            "source_span_accuracy": {"value": 0.6, "passed": True},
+            "unsupported_claim_rate": {"value": 0.05, "passed": True},
+        },
+    }
+
+    response = client.get("/api/v1/workspace/retrieval-observability")
+
+    assert response.status_code == 200
+    benchmark = response.json()["data"]["benchmark"]
+    assert benchmark["status"] == "measured"
+    assert benchmark["dataset_version"] == "internal_kb_v1"
+    assert benchmark["sample_count"] == 4
+    metrics = {metric["key"]: metric for metric in benchmark["metrics"]}
+    for required_metric in (
+        "retrieval_recall_at_k",
+        "context_precision_at_k",
+        "mrr_at_k",
+        "ndcg_at_k",
+        "answer_correctness",
+        "citation_coverage",
+        "source_span_accuracy",
+        "unsupported_claim_rate",
+        "latency_p50_ms",
+        "latency_p95_ms",
+        "estimated_cost",
+    ):
+        assert required_metric in metrics
+    assert metrics["retrieval_recall_at_k"]["label"] == "Recall@5"
+    assert metrics["context_precision_at_k"]["label"] == "Precision@5"
+    assert metrics["source_span_accuracy"]["value"] == 0.6
+    assert metrics["source_span_accuracy"]["status"] == "measured"
+    assert metrics["citation_coverage"]["status"] == "runtime_observed"
+    assert metrics["latency_p95_ms"]["status"] == "runtime_observed"
+
+
 def test_frontend_dashboard_declares_agentic_retrieval_observability_panel() -> None:
     root = Path(__file__).resolve().parents[2]
     workspace_api = (root / "apps/web/src/apis/workspace.ts").read_text(encoding="utf-8")
@@ -141,5 +203,16 @@ def test_frontend_dashboard_declares_agentic_retrieval_observability_panel() -> 
         "citation_coverage",
         "graph_used_rate",
         "cost_delta",
+        "Benchmark Metrics",
+        "Recall@5",
+        "Precision@5",
+        "MRR",
+        "NDCG",
+        "Answer Correctness",
+        "Source Span Accuracy",
+        "Unsupported Claim Rate",
+        "Latency p50",
+        "Latency p95",
+        "Estimated Cost",
     ):
         assert required_copy in dashboard
