@@ -312,6 +312,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                     "answer_correctness": 0.8,
                     "citation_accuracy": 1.0,
                     "source_doc_citation_accuracy": 1.0,
+                    "evidence_text_available": 1.0,
                     "unsupported_claim_rate": 0.0,
                 },
                 {
@@ -323,6 +324,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                     "answer_correctness": 0.9,
                     "citation_accuracy": 0.0,
                     "source_doc_citation_accuracy": 0.0,
+                    "evidence_text_available": 0.0,
                     "unsupported_claim_rate": 0.25,
                 },
             ],
@@ -336,6 +338,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                     "answer_correctness": 0.75,
                     "citation_accuracy": 1.0,
                     "source_doc_citation_accuracy": 1.0,
+                    "evidence_text_available": 1.0,
                     "unsupported_claim_rate": 0.0,
                 },
                 {
@@ -347,6 +350,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                     "answer_correctness": 0.55,
                     "citation_accuracy": 0.0,
                     "source_doc_citation_accuracy": 0.5,
+                    "evidence_text_available": 0.0,
                     "unsupported_claim_rate": 0.0,
                 },
             ],
@@ -360,6 +364,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                     "answer_correctness": 0.75,
                     "citation_accuracy": 1.0,
                     "source_doc_citation_accuracy": 1.0,
+                    "evidence_text_available": 1.0,
                     "unsupported_claim_rate": 0.0,
                 },
                 {
@@ -371,6 +376,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                     "answer_correctness": 0.7,
                     "citation_accuracy": 0.0,
                     "source_doc_citation_accuracy": 1.0,
+                    "evidence_text_available": 0.0,
                     "unsupported_claim_rate": 0.0,
                 },
             ],
@@ -384,6 +390,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                     "answer_correctness": 0.85,
                     "citation_accuracy": 1.0,
                     "source_doc_citation_accuracy": 1.0,
+                    "evidence_text_available": 1.0,
                     "unsupported_claim_rate": 0.0,
                 },
                 {
@@ -395,6 +402,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                     "answer_correctness": 0.8,
                     "citation_accuracy": 0.0,
                     "source_doc_citation_accuracy": 1.0,
+                    "evidence_text_available": 0.0,
                     "unsupported_claim_rate": 0.0,
                 },
             ],
@@ -409,6 +417,8 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
                 "answer_correctness": sum(row["answer_correctness"] for row in per_sample) / len(per_sample),
                 "citation_accuracy": sum(row["citation_accuracy"] for row in per_sample) / len(per_sample),
                 "source_doc_citation_accuracy": sum(row["source_doc_citation_accuracy"] for row in per_sample)
+                / len(per_sample),
+                "evidence_text_available_at_k": sum(row["evidence_text_available"] for row in per_sample)
                 / len(per_sample),
                 "unsupported_claim_rate": sum(row["unsupported_claim_rate"] for row in per_sample) / len(per_sample),
             }
@@ -505,6 +515,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert metrics["deltas"]["deep_vs_standard"]["answer_correctness"] == -0.125
     assert metrics["deltas"]["agentic_vs_standard"]["answer_correctness"] == -0.025
     assert metrics["deltas"]["agentic_vs_standard"]["source_doc_citation_accuracy"] == 0.5
+    assert metrics["deltas"]["agentic_vs_standard"]["evidence_text_available_at_k"] == 0.0
     assert metrics["deltas"]["agentic_vs_deep"]["mrr_at_k"] == 0.1
     assert metrics["agentic_metrics"]["graph_usage_gain"] == 0.5
     assert metrics["agentic_metrics"]["replan_success_rate"] == 1.0
@@ -517,6 +528,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert "unavailable_due_to_missing_trace_fields" in failure_text
     assert "failure_tag_limitations" in metrics
     assert "gold_doc_retrieved_but_citation_missing" in failure_text
+    assert "gold_text_not_in_retrieved_context" in failure_text
     assert "citation_not_bound_to_gold_doc" in failure_text
     assert "answer_correctness_drop_despite_recall_gain" in failure_text
     assert "graph_added_gold_doc" in failure_text
@@ -546,6 +558,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
         == 1.0
     )
     assert metrics["evidence_conversion_diagnostics"]["tag_counts"]["agentic_added_new_gold_doc"] == 1
+    assert metrics["evidence_conversion_diagnostics"]["tag_counts"]["gold_text_not_in_retrieved_context"] >= 1
     assert metrics["evidence_conversion_diagnostics"]["tag_counts"]["graph_added_non_gold_context"] == 1
     gated = metrics["gated_agentic_simulation"]
     assert gated["metrics_source"] == "fixed_benchmark_simulation"
@@ -557,6 +570,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert gated["profile_mix"]["standard_case_count"] == 1
     assert gated["profile_mix"]["agentic_case_count"] == 1
     assert gated["aggregate"]["retrieval_recall_at_k"] == 1.0
+    assert gated["aggregate"]["evidence_text_available_at_k"] == 0.5
     assert gated["deltas_vs_standard"]["retrieval_recall_at_k"] == 0.5
     assert gated["deltas_vs_standard"]["source_doc_citation_accuracy"] == 0.5
     assert gated["latency_p50_ms"] == 10
@@ -567,6 +581,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert "## Question Type Breakdown" in report_text
     assert "conflicting_info" in report_text
     assert "## Evidence Conversion Diagnostics" in report_text
+    assert "Evidence Text Available" in report_text
     assert "Source Doc Citation" in report_text
     assert "## Gated Agentic Simulation" in report_text
     assert "positive_agentic_recall_delta" in report_text

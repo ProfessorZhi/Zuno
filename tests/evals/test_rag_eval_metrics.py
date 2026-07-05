@@ -88,6 +88,8 @@ def test_rag_eval_metrics_compute_retrieval_and_citation_scores():
         assert aggregate["answer_correctness"] == 0.9
         assert aggregate["citation_accuracy"] == 1.0
         assert aggregate["source_doc_citation_accuracy"] == 1.0
+        assert aggregate["evidence_text_available_at_k"] == 1.0
+        assert metrics["per_sample"][0]["evidence_text_available"] == 1.0
 
 
 def test_rag_eval_metrics_falls_back_to_text_match_when_source_metadata_missing():
@@ -199,6 +201,8 @@ def test_rag_eval_metrics_counts_enterprise_doc_id_hits_for_retrieval_only():
         assert metrics["aggregate"]["context_precision_at_k"] == 1.0
         assert metrics["aggregate"]["citation_accuracy"] == 0.0
         assert metrics["aggregate"]["source_doc_citation_accuracy"] == 1.0
+        assert metrics["aggregate"]["evidence_text_available_at_k"] == 0.0
+        assert metrics["per_sample"][0]["evidence_text_available"] == 0.0
 
 
 def test_rag_eval_metrics_compute_source_span_and_unsupported_claim_rate():

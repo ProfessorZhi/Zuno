@@ -126,6 +126,30 @@ def _retrieval_metrics(sample: dict[str, Any], contexts: list[dict[str, Any]], k
     }
 
 
+def _evidence_text_available(sample: dict[str, Any], contexts: list[dict[str, Any]], k: int) -> float | None:
+    gold_with_text = [
+        evidence
+        for evidence in list(sample.get("gold_evidence") or [])
+        if _norm(evidence.get("text_contains"))
+    ]
+    if not gold_with_text:
+        return None
+    top_contexts = contexts[:k]
+    matched = [
+        evidence
+        for evidence in gold_with_text
+        if any(
+            _evidence_matches_context(
+                evidence,
+                context,
+                allow_document_match=False,
+            )
+            for context in top_contexts
+        )
+    ]
+    return len(matched) / len(gold_with_text)
+
+
 def _citation_accuracy(sample: dict[str, Any], answer_row: dict[str, Any] | None) -> float | None:
     if not sample.get("required_citations"):
         return None
@@ -236,6 +260,7 @@ def compute_metrics(
         retrieval_row = retrieval_rows.get(sample_id, {})
         contexts = list(retrieval_row.get("contexts") or retrieval_row.get("documents") or [])
         retrieval = _retrieval_metrics(sample, contexts, k)
+        evidence_text_available = _evidence_text_available(sample, contexts, k)
         citation_accuracy = _citation_accuracy(sample, answer_rows.get(sample_id))
         source_doc_citation_accuracy = _source_doc_citation_accuracy(sample, answer_rows.get(sample_id))
         source_span_accuracy = _source_span_accuracy(sample, answer_rows.get(sample_id))
@@ -249,6 +274,7 @@ def compute_metrics(
                 "answer_correctness": judge.get("answer_correctness"),
                 "citation_accuracy": citation_accuracy,
                 "source_doc_citation_accuracy": source_doc_citation_accuracy,
+                "evidence_text_available": evidence_text_available,
                 "source_span_accuracy": source_span_accuracy,
                 "unsupported_claim_rate": unsupported_claim_rate,
                 "retrieved_contexts": len(contexts),
@@ -266,6 +292,7 @@ def compute_metrics(
         "answer_correctness": _mean(row["answer_correctness"] for row in per_sample),
         "citation_accuracy": _mean(row["citation_accuracy"] for row in per_sample),
         "source_doc_citation_accuracy": _mean(row["source_doc_citation_accuracy"] for row in per_sample),
+        "evidence_text_available_at_k": _mean(row["evidence_text_available"] for row in per_sample),
         "source_span_accuracy": _mean(row["source_span_accuracy"] for row in per_sample),
         "unsupported_claim_rate": _mean(row["unsupported_claim_rate"] for row in per_sample),
     }

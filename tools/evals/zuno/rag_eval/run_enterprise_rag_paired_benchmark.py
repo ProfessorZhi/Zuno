@@ -39,6 +39,7 @@ METRIC_KEYS = [
     "answer_correctness",
     "citation_accuracy",
     "source_doc_citation_accuracy",
+    "evidence_text_available_at_k",
     "source_span_accuracy",
     "unsupported_claim_rate",
 ]
@@ -53,6 +54,7 @@ PER_SAMPLE_METRIC_MAP = {
     "answer_correctness": "answer_correctness",
     "citation_accuracy": "citation_accuracy",
     "source_doc_citation_accuracy": "source_doc_citation_accuracy",
+    "evidence_text_available": "evidence_text_available_at_k",
     "source_span_accuracy": "source_span_accuracy",
     "unsupported_claim_rate": "unsupported_claim_rate",
 }
@@ -466,11 +468,16 @@ def _build_evidence_conversion_diagnostics(
             recall = _row_float(sample, "retrieval_recall") or 0.0
             answer_correctness = _row_float(sample, "answer_correctness")
             citation_accuracy = _row_float(sample, "citation_accuracy")
+            evidence_text_available = _row_float(sample, "evidence_text_available")
             if recall > 0 and answer_correctness is not None and answer_correctness < 0.5:
                 add(case_id, profile, "gold_doc_retrieved_but_answer_missing")
             if recall > 0 and citation_accuracy is not None and citation_accuracy <= 0:
                 add(case_id, profile, "gold_doc_retrieved_but_citation_missing")
                 add(case_id, profile, "citation_not_bound_to_gold_doc")
+                if evidence_text_available is not None and evidence_text_available <= 0:
+                    add(case_id, profile, "gold_text_not_in_retrieved_context")
+                elif evidence_text_available is not None and evidence_text_available > 0:
+                    add(case_id, profile, "citation_not_bound_to_gold_text")
 
     for case_id, agentic_sample in agentic_by_id.items():
         standard_sample = standard_by_id.get(case_id)
@@ -591,6 +598,14 @@ def _build_failure_cases(per_samples: dict[str, list[dict[str, Any]]]) -> list[d
                 tags.append("unsupported_claim")
             if row.get("citation_accuracy") is not None and float(row.get("citation_accuracy") or 0.0) <= 0:
                 tags.append("citation_missing")
+            if (
+                float(row.get("retrieval_recall") or 0.0) > 0
+                and row.get("citation_accuracy") is not None
+                and float(row.get("citation_accuracy") or 0.0) <= 0
+                and row.get("evidence_text_available") is not None
+                and float(row.get("evidence_text_available") or 0.0) <= 0
+            ):
+                tags.append("gold_text_not_in_retrieved_context")
             if tags and not _has_advanced_failure_trace_fields(row):
                 tags.append("unavailable_due_to_missing_trace_fields")
             if tags:
@@ -657,13 +672,16 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
         f"- chunk_size_override: `{(metrics.get('runtime_config') or {}).get('chunk_size_override')}`",
         f"- overlap_override: `{(metrics.get('runtime_config') or {}).get('overlap_override')}`",
         "",
-        "| Profile | Measured | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | Source Doc Citation | Latency p95 ms | Cost |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        (
+            "| Profile | Measured | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | "
+            "Source Doc Citation | Evidence Text Available | Latency p95 ms | Cost |"
+        ),
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for profile, payload in metrics.get("profiles", {}).items():
         aggregate = payload.get("aggregate") or {}
         lines.append(
-            "| {profile} | {measured} | {recall} | {mrr} | {correctness} | {citation} | {source_doc_citation} | {latency} | {cost} |".format(
+            "| {profile} | {measured} | {recall} | {mrr} | {correctness} | {citation} | {source_doc_citation} | {evidence_text_available} | {latency} | {cost} |".format(
                 profile=profile,
                 measured=str(bool(payload.get("measured"))).lower(),
                 recall=_fmt(aggregate.get("retrieval_recall_at_k")),
@@ -671,6 +689,7 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 correctness=_fmt(aggregate.get("answer_correctness")),
                 citation=_fmt(aggregate.get("citation_accuracy")),
                 source_doc_citation=_fmt(aggregate.get("source_doc_citation_accuracy")),
+                evidence_text_available=_fmt(aggregate.get("evidence_text_available_at_k")),
                 latency=_fmt(payload.get("latency_p95_ms")),
                 cost=_fmt(payload.get("estimated_cost")),
             )
@@ -681,19 +700,20 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 "",
                 "## Paired Deltas",
                 "",
-                "| Delta | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | Source Doc Citation |",
-                "|---|---:|---:|---:|---:|---:|",
+                "| Delta | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | Source Doc Citation | Evidence Text Available |",
+                "|---|---:|---:|---:|---:|---:|---:|",
             ]
         )
         for name, delta in metrics.get("deltas", {}).items():
             lines.append(
-                "| {name} | {recall} | {mrr} | {correctness} | {citation} | {source_doc_citation} |".format(
+                "| {name} | {recall} | {mrr} | {correctness} | {citation} | {source_doc_citation} | {evidence_text_available} |".format(
                     name=name,
                     recall=_fmt((delta or {}).get("retrieval_recall_at_k")),
                     mrr=_fmt((delta or {}).get("mrr_at_k")),
                     correctness=_fmt((delta or {}).get("answer_correctness")),
                     citation=_fmt((delta or {}).get("citation_accuracy")),
                     source_doc_citation=_fmt((delta or {}).get("source_doc_citation_accuracy")),
+                    evidence_text_available=_fmt((delta or {}).get("evidence_text_available_at_k")),
                 )
             )
     if metrics.get("question_type_metrics"):
@@ -704,9 +724,10 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 "",
                 (
                     "| Question Type | Cases | Standard Recall@5 | Deep Recall@5 | Agentic Recall@5 | "
-                    "Agentic Δ Recall | Agentic Δ Answer | Agentic Δ Citation | Agentic Δ Source Doc Citation | Agentic p95 ms |"
+                    "Agentic Δ Recall | Agentic Δ Answer | Agentic Δ Citation | "
+                    "Agentic Δ Source Doc Citation | Agentic Δ Evidence Text | Agentic p95 ms |"
                 ),
-                "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+                "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
             ]
         )
         for question_type, payload in metrics.get("question_type_metrics", {}).items():
@@ -714,7 +735,7 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
             deltas = payload.get("deltas") or {}
             agentic_delta = deltas.get("agentic_vs_standard") or {}
             lines.append(
-                "| {question_type} | {cases} | {standard} | {deep} | {agentic} | {delta_recall} | {delta_answer} | {delta_citation} | {delta_source_doc_citation} | {latency} |".format(
+                "| {question_type} | {cases} | {standard} | {deep} | {agentic} | {delta_recall} | {delta_answer} | {delta_citation} | {delta_source_doc_citation} | {delta_evidence_text} | {latency} |".format(
                     question_type=question_type,
                     cases=payload.get("sample_count"),
                     standard=_fmt((profiles.get("standard_rag") or {}).get("retrieval_recall_at_k")),
@@ -724,6 +745,7 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                     delta_answer=_fmt(agentic_delta.get("answer_correctness")),
                     delta_citation=_fmt(agentic_delta.get("citation_accuracy")),
                     delta_source_doc_citation=_fmt(agentic_delta.get("source_doc_citation_accuracy")),
+                    delta_evidence_text=_fmt(agentic_delta.get("evidence_text_available_at_k")),
                     latency=_fmt((profiles.get("agentic_graphrag") or {}).get("latency_p95_ms")),
                 )
             )
