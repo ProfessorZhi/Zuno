@@ -66,6 +66,21 @@ ACTIVE_PROGRAM_FILES = [
     "implementation-roadmap.md",
     "closure-checklist.md",
 ]
+EVIDENCE_SPAN_PROGRAM_NAME = "zuno-evidence-span-agentic-graphrag-hardening-v1"
+EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
+    "PHASE01_eval-truth-source-and-gap-buckets.md",
+    "PHASE02_source-span-provenance-contract.md",
+    "PHASE03_citation-sized-chunk-index.md",
+    "PHASE04_lexical-phrase-evidence-retriever.md",
+    "PHASE05_entity-chunk-bidirectional-graph-index.md",
+    "PHASE06_evidence-aware-reranker.md",
+    "PHASE07_claim-level-citation-binder.md",
+    "PHASE08_hard-negative-eval-and-release-gate.md",
+]
+CURRENT_FRONT_PROGRAM_FILES = [
+    *ACTIVE_PROGRAM_FILES,
+    *EVIDENCE_SPAN_PROGRAM_PHASE_FILES,
+]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
 PROGRAM3_ACTIVE_PHASE_FILES = [
@@ -356,9 +371,9 @@ def verify_programs_flat(repo_root: Path = REPO_ROOT) -> list[str]:
     if not programs_root.exists():
         return ["missing .agent/programs"]
     program_files = sorted(path.name for path in programs_root.iterdir() if path.is_file())
-    if program_files != sorted(ACTIVE_PROGRAM_FILES):
+    if program_files != sorted(CURRENT_FRONT_PROGRAM_FILES):
         errors.append(f".agent/programs active files drifted: {program_files}")
-    for name in ACTIVE_PROGRAM_FILES:
+    for name in CURRENT_FRONT_PROGRAM_FILES:
         if not (programs_root / name).exists():
             errors.append(f"missing .agent/programs/{name}")
     return errors
@@ -494,10 +509,14 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        f"active_program: {EVIDENCE_SPAN_PROGRAM_NAME}",
+        "current_phase: PHASE01_eval-truth-source-and-gap-buckets.md",
         f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
+        EVIDENCE_SPAN_PROGRAM_NAME,
+        "Evidence Text Available@5 >= 0.60",
+        "Citation Accuracy >= 0.30",
+        "doc_hit_text_miss",
         PROGRAM3_ACTIVE_NAME,
         PROGRAM3_ACTIVE_ARCHIVE,
         "Launchable enterprise Agentic GraphRAG product baseline completed.",
@@ -534,8 +553,29 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         if phrase not in current + readme + roadmap + closure + current_reference + program3_archive_text + latest_archive_text + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names:
-        errors.append(".agent/programs must not contain PHASE files in no-active state: " + ", ".join(active_phase_names))
+    if active_phase_names != sorted(EVIDENCE_SPAN_PROGRAM_PHASE_FILES):
+        errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
+    for index, phase_name in enumerate(EVIDENCE_SPAN_PROGRAM_PHASE_FILES, start=1):
+        phase_path = repo_root / ".agent/programs" / phase_name
+        if not phase_path.exists():
+            errors.append(f"evidence-span active program missing phase: {phase_name}")
+            continue
+        phase_content = phase_path.read_text(encoding="utf-8")
+        if f"program: {EVIDENCE_SPAN_PROGRAM_NAME}" not in phase_content:
+            errors.append(f"evidence-span phase missing program id: {phase_name}")
+        expected_status = "active" if index == 1 else "pending"
+        if f"status: {expected_status}" not in phase_content:
+            errors.append(f"evidence-span phase wrong status for active lifecycle: {phase_name}")
+        for section in [
+            "## 目标",
+            "## 范围",
+            "## 禁止范围",
+            "## 验收闸门",
+            "## 验证命令",
+            "## 停止条件",
+        ]:
+            if section not in phase_content:
+                errors.append(f"evidence-span phase missing required section {section}: {phase_name}")
     for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
         phase_path = program3_archive_root / phase_name
         if not phase_path.exists():

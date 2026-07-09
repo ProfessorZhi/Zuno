@@ -63,6 +63,21 @@ ACTIVE_PROGRAM_FILES = [
     "implementation-roadmap.md",
     "closure-checklist.md",
 ]
+EVIDENCE_SPAN_PROGRAM_NAME = "zuno-evidence-span-agentic-graphrag-hardening-v1"
+EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
+    "PHASE01_eval-truth-source-and-gap-buckets.md",
+    "PHASE02_source-span-provenance-contract.md",
+    "PHASE03_citation-sized-chunk-index.md",
+    "PHASE04_lexical-phrase-evidence-retriever.md",
+    "PHASE05_entity-chunk-bidirectional-graph-index.md",
+    "PHASE06_evidence-aware-reranker.md",
+    "PHASE07_claim-level-citation-binder.md",
+    "PHASE08_hard-negative-eval-and-release-gate.md",
+]
+CURRENT_FRONT_PROGRAM_FILES = [
+    *ACTIVE_PROGRAM_FILES,
+    *EVIDENCE_SPAN_PROGRAM_PHASE_FILES,
+]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
 PROGRAM3_ACTIVE_PHASE_FILES = [
@@ -192,6 +207,9 @@ def test_agent_references_keep_canonical_set() -> None:
     expected_references = sorted(
         [
             "README.md",
+            "agentchat-knowledge-lifecycle-implementation-plan.md",
+            "agentchat-knowledge-profile-alignment.md",
+            "agentic-retrieval-dashboard-observability-plan.md",
             "project-map.md",
             "current-program.md",
             "docs-map.md",
@@ -240,7 +258,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     program_files = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").iterdir() if path.is_file()
     )
-    assert program_files == sorted(ACTIVE_PROGRAM_FILES)
+    assert program_files == sorted(CURRENT_FRONT_PROGRAM_FILES)
 
     current_program = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
     readme = (REPO_ROOT / ".agent/programs/README.md").read_text(encoding="utf-8")
@@ -284,10 +302,14 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (program3_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        f"active_program: {EVIDENCE_SPAN_PROGRAM_NAME}",
+        "current_phase: PHASE01_eval-truth-source-and-gap-buckets.md",
         f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
+        EVIDENCE_SPAN_PROGRAM_NAME,
+        "Evidence Text Available@5 >= 0.60",
+        "Citation Accuracy >= 0.30",
+        "doc_hit_text_miss",
         PROGRAM3_ACTIVE_NAME,
         PROGRAM3_ACTIVE_ARCHIVE,
         "Launchable enterprise Agentic GraphRAG product baseline completed.",
@@ -335,7 +357,23 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
             + production_archive_text
             + archive_text
         )
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == []
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(
+        EVIDENCE_SPAN_PROGRAM_PHASE_FILES
+    )
+    for index, phase_name in enumerate(EVIDENCE_SPAN_PROGRAM_PHASE_FILES, start=1):
+        phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
+        assert f"program: {EVIDENCE_SPAN_PROGRAM_NAME}" in phase_text
+        expected_status = "active" if index == 1 else "pending"
+        assert f"status: {expected_status}" in phase_text
+        for section in [
+            "## 目标",
+            "## 范围",
+            "## 禁止范围",
+            "## 验收闸门",
+            "## 验证命令",
+            "## 停止条件",
+        ]:
+            assert section in phase_text
     for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
         phase_text = (program3_archive / phase_name).read_text(encoding="utf-8")
         assert f"program: {PROGRAM3_ACTIVE_NAME}" in phase_text

@@ -1,12 +1,12 @@
 # Agent 执行计划
 
-`.agent/programs/` 当前处于 no-active 状态。
+`.agent/programs/` 当前处于 active 状态。
 
 ## 当前状态
 
-- State: no-active
-- Active program: none
-- Current phase: none
+- State: active
+- Active program: `zuno-evidence-span-agentic-graphrag-hardening-v1`
+- Current phase: `PHASE01_eval-truth-source-and-gap-buckets.md`
 - Latest completed program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 最近完成并归档的 Program 3 Mega 已完成本地可验证的 launchable enterprise Agentic GraphRAG product baseline。归档入口：
@@ -15,24 +15,34 @@
 
 ## 当前文件
 
-- `current.md`：当前 no-active 状态、最近完成 program 和下一轮规则。
-- `implementation-roadmap.md`：Program 1 / 2 / 3 completed 与 no-active 状态。
-- `closure-checklist.md`：最近完成 program 的最终验收摘要和下一轮检查入口。
+- `current.md`：当前 active program、当前 phase、质量目标和 Current / Target / Future 边界。
+- `implementation-roadmap.md`：本轮 evidence-span hardening 的 PHASE01-PHASE08 路线。
+- `closure-checklist.md`：本轮关闭条件、质量闸门和禁止提前关闭项。
+- `PHASE01_eval-truth-source-and-gap-buckets.md`：当前 active phase。
+- `PHASE02_source-span-provenance-contract.md` 到 `PHASE08_hard-negative-eval-and-release-gate.md`：后续 pending phase。
 - `queued-programs/README.md`：当前没有 queued program；旧 Program 4-6 已随 Program 3 Mega 归档为 merged inputs。
 
-## 最近完成口径
+## 本轮 Program 口径
 
 ```text
-Launchable enterprise Agentic GraphRAG product baseline completed.
-Production scale external deployments remain replaceable targets.
+目标：把 Agentic GraphRAG 从 doc-level retrieval 增益推进到 evidence-span-level retrieval / citation / answer quality 增益。
+不做：把 external graph DB、external vector DB、OCR / VLM、长期 metrics store 写成 Current。
+不做：把 deep_graphrag 冒充完整产品 Agentic Runtime。
 ```
 
-这表示所有关键层都有 local runnable implementation、adapter boundary、dependency probe / target-blocked evidence、focused tests、E2E 闭环、trace/eval/cost 记录和文档成熟度边界。它不表示已经部署真实 PostgreSQL / RabbitMQ / Redis / MinIO / OCR / VLM / external index 集群。
+本轮质量闸门：
+
+```text
+Evidence Text Available@5 >= 0.60
+Source Doc Citation >= 0.85
+Citation Accuracy >= 0.30 first hardening target
+Answer Correctness >= standard_rag baseline
+```
 
 ## 使用规则
 
-- no-active 状态下，不在 `.agent/programs/` 根目录保留 PHASE 文件。
+- active 状态下，PHASE 文件必须平铺在 `.agent/programs/` 根目录，不放入子目录。
+- 每个 phase 只能在真实代码、测试、trace/eval 或 verifier 证明后关闭。
+- blocked、prepared、runtime observed 或缺失数据不能写成 measured。
 - completed program 的 phase、closure summary 和 merged queued inputs 必须留在 `docs/history/programs/`。
-- 新 program 必须从 `PHASE01` 开始，并同步 `AGENTS.md`、README、`.agent/references/current-program.md`、verifier 和 repo tests。
-- 只写 contract、schema 或 README 不能关闭 runtime phase。
 - 多线程执行必须由当前主线程先确认真实 UI 目标模式和独立 worktree / branch；提示词目标模式不等于 Codex UI 目标模式。

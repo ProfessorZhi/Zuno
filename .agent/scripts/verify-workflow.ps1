@@ -52,9 +52,27 @@ Require-NoPath ".agent\programs\PHASE07_program2-thread-prompts-and-branch-plan.
 Require-NoPath ".agent\programs\PHASE08_verification-doc-sync-and-closure.md"
 Require-NoPath ".agent\programs\thread-prompts"
 Require-Path ".agent\programs\queued-programs\README.md"
-$activePhaseFiles = Get-ChildItem -LiteralPath ".agent\programs" -Filter "PHASE*.md" -File -ErrorAction SilentlyContinue
-if ($activePhaseFiles) {
-    $failures.Add(".agent/programs must not keep active PHASE files after Program 3 closure")
+$expectedEvidenceSpanPhaseFiles = @(
+    "PHASE01_eval-truth-source-and-gap-buckets.md",
+    "PHASE02_source-span-provenance-contract.md",
+    "PHASE03_citation-sized-chunk-index.md",
+    "PHASE04_lexical-phrase-evidence-retriever.md",
+    "PHASE05_entity-chunk-bidirectional-graph-index.md",
+    "PHASE06_evidence-aware-reranker.md",
+    "PHASE07_claim-level-citation-binder.md",
+    "PHASE08_hard-negative-eval-and-release-gate.md"
+)
+$activePhaseFiles = @(Get-ChildItem -LiteralPath ".agent\programs" -Filter "PHASE*.md" -File -ErrorAction SilentlyContinue | ForEach-Object { $_.Name } | Sort-Object)
+$expectedEvidenceSpanPhaseFilesSorted = @($expectedEvidenceSpanPhaseFiles | Sort-Object)
+if (($activePhaseFiles -join "|") -ne ($expectedEvidenceSpanPhaseFilesSorted -join "|")) {
+    $failures.Add(".agent/programs active PHASE files drifted for evidence-span program")
+}
+foreach ($phaseFile in $expectedEvidenceSpanPhaseFiles) {
+    Require-Path ".agent\programs\$phaseFile"
+    $phaseContent = Get-Content ".agent\programs\$phaseFile" -Raw -Encoding UTF8
+    if ($phaseContent -notmatch "program: zuno-evidence-span-agentic-graphrag-hardening-v1") {
+        $failures.Add("$phaseFile missing evidence-span program id")
+    }
 }
 Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\README.md"
 Require-Path "docs\history\programs\zuno-launchable-enterprise-agentic-graphrag-full-closure-v1\current.md"
@@ -303,8 +321,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/") {
-    $failures.Add("current-program.md must declare no-active state and latest completed Program 3 Mega archive")
+if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-evidence-span-agentic-graphrag-hardening-v1" -or $currentProgram -notmatch "current_phase: PHASE01_eval-truth-source-and-gap-buckets.md" -or $currentProgram -notmatch "latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/") {
+    $failures.Add("current-program.md must declare active evidence-span program and latest completed Program 3 Mega archive")
 }
 if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "zuno-enterprise-ingestion-async-infrastructure-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
     $failures.Add("current-program.md missing Program 1-3 mega suite map")

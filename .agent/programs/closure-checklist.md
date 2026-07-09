@@ -1,73 +1,70 @@
-# Mega Program Closure Checklist
+# Evidence-Span Hardening Closure Checklist
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
+current_phase: PHASE01_eval-truth-source-and-gap-buckets.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
-## 最近完成结论
+## 当前关闭状态
+
+本 program 尚未关闭。当前 active phase 是：
+
+- `PHASE01_eval-truth-source-and-gap-buckets.md`
+
+## Program 关闭目标
+
+本轮关闭时必须能证明：
 
 ```text
-Launchable enterprise Agentic GraphRAG product baseline completed.
-Production scale external deployments remain replaceable targets.
+Agentic GraphRAG 的 doc-level retrieval 增益已经转化成 evidence-span retrieval / citation / answer quality 的可测增益。
 ```
 
-## 完成状态
+最低质量闸门：
 
-- [x] PHASE01 完成 truth source、program merge、owner map、workstream map 和 PR / commit plan。
-- [x] PHASE02 完成 shared contract freeze。
-- [x] PHASE03 完成 enterprise ingestion async infrastructure baseline。
-- [x] PHASE04 完成 knowledge retrieval profile 与 GraphRAG profile baseline。
-- [x] PHASE05 完成 Memory & Context Engine baseline。
-- [x] PHASE06 完成 Capability / Skill / Tool / MCP layer baseline。
-- [x] PHASE07 完成 Security / Governance envelope baseline。
-- [x] PHASE08 完成 Model Gateway / Cost / Latency baseline。
-- [x] PHASE09 完成 Planning Contract 与 Strategy Selector baseline。
-- [x] PHASE10 完成 ReAct / Reflection / Dynamic Replan / Reflexion runtime baseline。
-- [x] PHASE11 完成 Workspace Product API / Frontend Minimal Sync。
-- [x] PHASE12 完成 End-to-End Product Runtime scenario。
-- [x] PHASE13 完成 Eval / Trace / Cost / Benchmark baseline。
-- [x] PHASE14 完成 Docs / Architecture Expansion。
-- [x] PHASE15 完成 full verification、archive、no-active 和 local commit。
+- [ ] `Evidence Text Available@5 >= 0.60`
+- [ ] `Source Doc Citation >= 0.85`
+- [ ] `Citation Accuracy >= 0.30`
+- [ ] `Answer Correctness >= standard_rag baseline`
+- [ ] `blocked_not_measured`、`prepared`、`runtime_observed` 没有被写成 `measured`
+- [ ] strict citation 没有用 doc-level citation 冒充
+- [ ] `deep_graphrag` 没有被写成完整 product Agentic Runtime
 
-## 归档位置
+## Phase 关闭清单
+
+- [ ] PHASE01 完成 eval truth source、gap buckets 和 failure taxonomy。
+- [ ] PHASE02 完成 source span provenance contract。
+- [ ] PHASE03 完成 citation-sized chunks 与 parent context chunks。
+- [ ] PHASE04 完成 lexical / phrase evidence retriever。
+- [ ] PHASE05 完成 entity-chunk bidirectional graph index。
+- [ ] PHASE06 完成 evidence-aware reranker。
+- [ ] PHASE07 完成 claim-level citation binder。
+- [ ] PHASE08 完成 hard negative eval、release gate、归档和 no-active closure。
+
+## 必须保留的历史边界
+
+Program 3 Mega 仍是最近完成的 launchable baseline：
 
 - `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`
 
-归档包含：
+本 program 不能改写 Program 1 / Program 2 / Program 3 Mega 的 closure evidence。新的结论只能作为 evidence-span hardening 的增量 Current。
 
-- `README.md`
-- `current.md`
-- `implementation-roadmap.md`
-- `closure-checklist.md`
-- `closure-summary.md`
-- `PHASE01` 到 `PHASE15` 文件
-- `queued-programs/` merged input 文件
+## 最小验证命令
 
-## 最终验证命令
-
-PHASE15 关闭前已运行：
+每个 phase 关闭前至少运行相关 focused tests。本 program 收口前必须运行：
 
 ```powershell
 git diff --check
-python tools/agent/render_architecture.py --check
-python tools/scripts/verify_docs_entrypoints.py
-python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
-python .agent/scripts/verify_doc_boundaries.py
-python .agent/scripts/verify_repo_hygiene.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
-pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py tests/repo/test_publish_boundary.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider
-pytest -q tests/api/test_workspace_durable_ingest_runtime.py -p no:cacheprovider
-pytest -q tests/api/test_workspace_task_runtime.py -p no:cacheprovider
-pytest -q tests/knowledge -p no:cacheprovider
-pytest -q tests/agent -p no:cacheprovider
-pytest -q tests/api -p no:cacheprovider
-pytest -q tests/evals -p no:cacheprovider
+pytest -q tests/repo/test_agent_system.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider
+pytest -q tests/evals/test_enterprise_rag_paired_benchmark.py tests/evals/test_rag_eval_metrics.py -p no:cacheprovider
 ```
+
+如果 runtime 代码、API、frontend 或 architecture docs 被修改，还必须追加对应 focused tests / verifier。
 
 ## 下一轮检查
 
-- 新 program 前必须确认 `.agent/programs/` 仍为 no-active。
-- 新 program 不得复用 archived phase 文件作为 active front path。
-- 新 program 必须先定义 Current / Target / Production Scale 边界和最小有效验证。
+- 当前 phase 是否仍是 `PHASE01_eval-truth-source-and-gap-buckets.md`。
+- 本轮修改是否只做 program front path 和 guardrail 对齐，还是已经进入 runtime。
+- 如果进入 runtime，必须先写 tests，再改实现。
+- 所有新增指标必须说明是 fixed benchmark、runtime observed、prepared 还是 blocked。
