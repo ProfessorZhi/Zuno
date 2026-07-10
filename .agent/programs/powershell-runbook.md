@@ -48,8 +48,9 @@ $env:PYTHONPATH = $BackendPath
 $PytestArgs = @(
     '-m', 'pytest',
     '-q',
-    'tests\agent\test_agent_runtime.py',
-    'tests\agent\test_agent_control_runtime.py',
+    'tests\agent\runtime\test_runtime_state_contract.py',
+    'tests\agent\runtime\test_runtime_legacy_adapters.py',
+    'tests\agent\test_planning_control_runtime.py',
     '-p', 'no:cacheprovider'
 )
 & $Python @PytestArgs

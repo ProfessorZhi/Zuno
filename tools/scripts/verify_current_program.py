@@ -13,6 +13,7 @@ PHASE01_PATH = REPO_ROOT / ".agent/programs/PHASE01_truth-source-baseline-and-pr
 
 PROGRAM = "zuno-unified-agent-runtime-closure-v1"
 NEXT_PHASE = "PHASE02_unified-runtime-contracts-and-state"
+CURRENT_PHASE = "PHASE03_model-gateway-closure"
 
 
 def _extract_json_block(text: str) -> dict[str, Any]:
@@ -71,10 +72,10 @@ def verify_current_program() -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM}",
-        f"current_phase: {NEXT_PHASE}",
+        f"current_phase: {CURRENT_PHASE}",
     ]:
         if phrase not in current:
-            errors.append(f"current.md missing phrase after PHASE01 closure: {phrase}")
+            errors.append(f"current.md missing phrase for active program state: {phrase}")
     if "PHASE01 | `truth-source-baseline-and-program-activation` | completed" not in roadmap:
         errors.append("roadmap must mark PHASE01 completed")
     if "state: completed" not in phase01:

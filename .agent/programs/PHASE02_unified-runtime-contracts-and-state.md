@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE02
-    state: planned
+    state: completed
     title: 统一 Runtime Contract 与版本化状态
     depends_on: PHASE01
     next_phase: PHASE03
@@ -14,6 +14,12 @@
     ## 当前事实
 
     状态分散在 StreamAgentState、ControllerRuntimeState、PlanState、RuntimeObservation 和领域 models 中；序列化与版本策略不统一。
+
+    ## 完成事实
+
+    PHASE02 已新增 `src/backend/zuno/agent/runtime/` 作为统一 runtime contract owner，包含版本化 `AgentRuntimeSnapshot`、轻量 `AgentRuntimeState`、`NormalizedObservation`、`NodeOutcome`、`RuntimeLimits`、`RuntimeCounters`、Strategy / Reflection / Finalization 枚举和 legacy adapters。`PlanStep` 已补齐 dependencies、input refs、expected output、acceptance criteria、policy refs、model role、timeout 和 attempt 默认字段。
+
+    当前完成状态只表示 contract/state 可测；没有完成 Model Gateway closure、SQLite durable store、LangGraph 主图、真实 step executor、产品 API/UI cutover 或 paired benchmark measured gate。
 
     ## 目标增量
 
@@ -85,7 +91,7 @@ $Python = if (Test-Path -LiteralPath $VenvPython) { (Resolve-Path -LiteralPath $
 $env:PYTHONPATH = (Resolve-Path -LiteralPath 'src\backend').Path
 ```
 ```powershell
-$Targets=@('-m','pytest','-q','tests\agent\runtime\test_runtime_state_contract.py','tests\agent\runtime\test_runtime_legacy_adapters.py','tests\agent\test_agent_control_runtime.py','-p','no:cacheprovider')
+$Targets=@('-m','pytest','-q','tests\agent\runtime\test_runtime_state_contract.py','tests\agent\runtime\test_runtime_legacy_adapters.py','tests\agent\test_planning_control_runtime.py','-p','no:cacheprovider')
 & $Python @Targets
 if ($LASTEXITCODE -ne 0) { throw 'runtime contract tests failed' }
 & $Python -m compileall -q 'src\backend\zuno\agent\runtime'
@@ -103,6 +109,12 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     更新 agent-core-runtime 实现路径，但 unified runtime 仍为 Partial/Target。
 
     ## Phase 完成报告
+
+    - 修改 owner：`src/backend/zuno/agent/runtime/*`、`src/backend/zuno/agent/contracts.py`、`tests/agent/runtime/*`、program 状态文档。
+    - 新增 contract：`AgentRuntimeState`、`AgentRuntimeSnapshot`、`NormalizedObservation`、`NodeOutcome`、`RuntimeLimits`、`RuntimeCounters`、`StrategyDecision`、`StrategyMode`、`ReflectionDecision`、`FinalizationStatus`。
+    - legacy adapters：`RuntimeObservation`、`ControllerRuntimeState`、`PlannerOutput` 可转换到统一 runtime state/observation。
+    - trace/restart/eval 证据：本 phase 只有 JSON round-trip 和 legacy adapter focused tests；没有 restart recovery 或 eval measured 证据。
+    - 下一 phase：PHASE03 可以开始 Model Gateway closure。
 
     Codex 必须报告：
 

@@ -355,10 +355,19 @@ class PlanStep(BaseModel):
     step_id: str
     goal: str
     action_type: str
+    dependencies: list[str] = Field(default_factory=list)
+    input_refs: list[str] = Field(default_factory=list)
+    expected_output: str = ""
+    acceptance_criteria: list[str] = Field(default_factory=list)
     required_evidence: list[str] = Field(default_factory=list)
     allowed_capabilities: list[str] = Field(default_factory=list)
+    retrieval_policy_ref: str | None = None
+    tool_policy_ref: str | None = None
+    model_role: str | None = None
     failure_conditions: list[str] = Field(default_factory=list)
     budget: dict[str, Any] = Field(default_factory=dict)
+    timeout_ms: int | None = None
+    attempt: int = 0
 
 
 class PlanState(BaseModel):
