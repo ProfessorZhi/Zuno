@@ -127,6 +127,11 @@ def test_agentic_retrieval_runtime_consumes_index_runtime_and_returns_cited_answ
     assert "Renewal notice must be sent 30 days" in result.answer
     assert result.unsupported_claim_check.unsupported_claims == ["The contract waives indemnity."]
     assert result.trace.to_dict()["citation_coverage"] == 1.0
+    trace_item = result.trace_metadata["evidence_bundle"]["items"][0]
+    assert trace_item["retriever_source"] in {"normalized_phrase", "bm25", "vector", "graph"}
+    assert "raw_score" in trace_item
+    assert "normalized_score" in trace_item
+    assert "candidate_reason" in trace_item
     assert result.to_task_event()["type"] == "retrieval"
     assert result.to_task_event()["payload"]["citation_ids"] == ["[1]"]
     assert result.to_task_event()["payload"]["evidence_verdict"]["status"] == "pass"

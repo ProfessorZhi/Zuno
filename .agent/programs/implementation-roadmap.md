@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE04_lexical-phrase-evidence-retriever.md
+current_phase: PHASE05_entity-chunk-bidirectional-graph-index.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 总目标
@@ -70,7 +70,7 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
 文件：`PHASE03_citation-sized-chunk-index.md`
 
-状态：active。
+状态：completed。
 
 目标：建立 small citation chunks + parent context chunks。检索可以用 parent context，citation 必须能落到更小的 evidence span。
 
@@ -89,6 +89,8 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 ### PHASE05：Entity-Chunk Bidirectional Graph Index
 
 文件：`PHASE05_entity-chunk-bidirectional-graph-index.md`
+
+状态：active。
 
 目标：让 graph 结果必须能回落到 source chunks：`entity -> relation -> supporting_chunk_ids`、`relation -> evidence_span_ids`、`community_summary -> source_chunk_ids`、`chunk -> entities / relations`。
 

@@ -471,7 +471,7 @@ def _citation_units(text: str) -> list[dict]:
     stripped = text.strip()
     if not stripped:
         return [{"text": "", "char_start": 0, "char_end": 0}]
-    matches = list(re.finditer(r"[^.!?\n]+(?:[.!?]+|$)", text))
+    matches = list(re.finditer(r".+?(?:[.!?](?=\s|$)|$)", text, flags=re.DOTALL))
     units: list[dict] = []
     for match in matches or [re.match(r".*", text)]:
         if match is None:

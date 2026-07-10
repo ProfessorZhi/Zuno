@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE04_lexical-phrase-evidence-retriever.md
+current_phase: PHASE05_entity-chunk-bidirectional-graph-index.md
 latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 
 ## 当前状态
@@ -11,7 +11,7 @@ latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closu
 
 - Program：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 - 中文名：Zuno evidence-span Agentic GraphRAG 质量加固 Program
-- 当前 Phase：`PHASE04_lexical-phrase-evidence-retriever.md`
+- 当前 Phase：`PHASE05_entity-chunk-bidirectional-graph-index.md`
 - 状态：active
 
 这个 program 的第一性目标不是继续堆 GraphRAG 名词，而是把已经出现的 doc-level Agentic Retrieval 增益，转成 evidence-span-level retrieval、claim-level citation 和 answer correctness 增益。
@@ -37,6 +37,7 @@ Production scale external deployments remain replaceable targets.
 - Current：PHASE01 focused tests 和 workflow verifier 已通过，当前 active phase 已推进到 PHASE02 source span provenance contract。
 - Current：PHASE02 已完成 source span provenance contract，本地 IR -> handoff -> index metadata / citation_lineage -> EvidenceItem / Citation / trace 能保留 document、source object、document version、block、chunk、span、source URI、content hash 和 parser 字段；缺失 page / char offset 时保持 `null`，不 fake span。
 - Current：local citation-sized chunk handoff 已进入 BM25 / vector / GraphRAG / evidence / citation handoff，citation chunks 保留 parent context、neighbor chunks、source span provenance 和 runtime chunking config；这不是 Evidence Text Available@5 达标证明。
+- Current：local lexical / phrase evidence path 已进入 retrieval ranking 和 trace metadata，输出 retriever source、raw / normalized score、rank、matched terms / phrase 和 candidate reason；该路径不读取 benchmark gold labels。
 - Target：把 `Evidence Text Available@5` 从不可用水平提高到可作为 release gate 的水平，并让 citation accuracy 进入可解释增长区间。
 - Future：生产级 external graph index、external vector DB、OCR / VLM、长期 metrics store 和在线 release gate 仍是 Production Scale Target。
 
@@ -82,7 +83,7 @@ active 状态下，`.agent/programs/` 根目录保留：
 
 ## 当前执行规则
 
-- 已完成 eval truth source / gap buckets、source span provenance contract 和 citation-sized chunk index；当前 PHASE04 只做 lexical / phrase evidence retriever，不读取 gold text 参与 runtime 检索。
+- 已完成 eval truth source / gap buckets、source span provenance contract、citation-sized chunk index 和 lexical / phrase evidence retriever；当前 PHASE05 只做 entity-chunk bidirectional graph index，不接 external graph DB。
 - Runtime 行为修改仍必须由 focused tests、E2E、trace/eval 或 verifier 证明后才能写成 Current。
 - 不得把 doc-level retrieval 增益写成 evidence-span citation 已完成。
 - 不得把 `deep_graphrag` 冒充为完整产品 Agentic Runtime；当前主线仍是 Single Controller / Single `GeneralAgent`。

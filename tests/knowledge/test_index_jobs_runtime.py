@@ -348,3 +348,108 @@ def test_index_runtime_retrieval_returns_citation_chunks_with_parent_context() -
     assert first_document["metadata"]["parent_context"]
     assert first_document["metadata"]["source_span"]["parent_chunk_id"] == first_document["metadata"]["parent_chunk_id"]
     assert first_document["metadata"]["source_span"]["chunk_id"] == first_document["chunk_id"]
+
+
+def test_index_runtime_promotes_normalized_phrase_over_keyword_noise() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+    from zuno.knowledge.ingestion import (
+        CanonicalDocumentIR,
+        DocumentBlock,
+        DocumentMetadata,
+        DocumentProvenance,
+        SourceSpan,
+    )
+
+    document = CanonicalDocumentIR(
+        metadata=DocumentMetadata(
+            document_id="doc_phrase",
+            workspace_id="workspace_index",
+            source_uri="file://phrase.md",
+            mime_type="text/markdown",
+            hash="sha256:phrase",
+            parser_id="native",
+            parser_version="phase04-test",
+        ),
+        blocks=[
+            DocumentBlock(
+                block_id="block_noise",
+                type="paragraph",
+                text="Renewal risk risk risk appears often but not as the exact obligation.",
+                source_span=SourceSpan(line_range=[1, 1]),
+            ),
+            DocumentBlock(
+                block_id="block_phrase",
+                type="paragraph",
+                text="The supplier renewal evidence carries lineage.",
+                source_span=SourceSpan(line_range=[2, 2]),
+            ),
+        ],
+        provenance=DocumentProvenance(
+            parser_id="native",
+            parser_version="phase04-test",
+            source_uri="file://phrase.md",
+            confidence=1.0,
+        ),
+    )
+    runtime = KnowledgeIndexRuntime()
+    runtime.create_knowledge_space("ks_phrase", "workspace_index")
+    runtime.index_document("ks_phrase", document, targets=["bm25", "vector", "graph"])
+
+    first_document = runtime.to_retrieval_payload(
+        "ks_phrase",
+        "supplier renewal evidence",
+    )["documents_by_source"]["bm25"][0]
+
+    assert first_document["metadata"]["block_id"] == "block_phrase"
+    assert first_document["retriever_source"] == "normalized_phrase"
+    assert first_document["candidate_reason"] == "normalized_phrase_match"
+    assert first_document["matched_phrase"] == "supplier renewal evidence"
+    assert first_document["rank"] == 1
+
+
+def test_index_runtime_normalized_phrase_handles_punctuation_and_newlines() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+    from zuno.knowledge.ingestion import (
+        CanonicalDocumentIR,
+        DocumentBlock,
+        DocumentMetadata,
+        DocumentProvenance,
+        SourceSpan,
+    )
+
+    document = CanonicalDocumentIR(
+        metadata=DocumentMetadata(
+            document_id="doc_phrase_norm",
+            workspace_id="workspace_index",
+            source_uri="file://phrase-normalized.md",
+            mime_type="text/markdown",
+            hash="sha256:phrase-normalized",
+            parser_id="native",
+            parser_version="phase04-test",
+        ),
+        blocks=[
+            DocumentBlock(
+                block_id="block_phrase",
+                type="paragraph",
+                text="Console-2026.04\nrollout checklist is current.",
+                source_span=SourceSpan(line_range=[1, 2]),
+            )
+        ],
+        provenance=DocumentProvenance(
+            parser_id="native",
+            parser_version="phase04-test",
+            source_uri="file://phrase-normalized.md",
+            confidence=1.0,
+        ),
+    )
+    runtime = KnowledgeIndexRuntime()
+    runtime.create_knowledge_space("ks_phrase_norm", "workspace_index")
+    runtime.index_document("ks_phrase_norm", document, targets=["bm25", "vector", "graph"])
+
+    first_document = runtime.to_retrieval_payload(
+        "ks_phrase_norm",
+        "console 2026 04 rollout checklist",
+    )["documents_by_source"]["bm25"][0]
+
+    assert first_document["retriever_source"] == "normalized_phrase"
+    assert first_document["candidate_reason"] == "normalized_phrase_match"

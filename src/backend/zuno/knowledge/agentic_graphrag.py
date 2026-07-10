@@ -317,6 +317,13 @@ class EvidenceItem(BaseModel):
     source_uri: str = ""
     provenance: dict[str, Any] = Field(default_factory=dict)
     source_methods: list[QueryMethod] = Field(default_factory=list)
+    retriever_source: str = ""
+    raw_score: float = 0.0
+    normalized_score: float = 0.0
+    rank: int | None = None
+    matched_terms: list[str] = Field(default_factory=list)
+    matched_phrase: str = ""
+    candidate_reason: str = ""
     rrf_score: float = 0.0
     rerank_score: float = 0.0
     community_ids: list[str] = Field(default_factory=list)
@@ -655,6 +662,13 @@ class AgenticRetrievalRuntime:
                                         or ""
                                     ),
                                     provenance=provenance,
+                                    retriever_source=str(document.get("retriever_source") or source_name),
+                                    raw_score=float(document.get("raw_score") or score),
+                                    normalized_score=float(document.get("normalized_score") or 0.0),
+                                    rank=int(document.get("rank") or rank),
+                                    matched_terms=list(document.get("matched_terms") or []),
+                                    matched_phrase=str(document.get("matched_phrase") or ""),
+                                    candidate_reason=str(document.get("candidate_reason") or ""),
                                 ),
                                 "methods": [],
                                 "rrf_score": 0.0,
@@ -917,6 +931,13 @@ def _evidence_item_payload(item: EvidenceItem) -> dict[str, Any]:
         "provenance": dict(item.provenance),
         "retrieval_method": item.retrieval_method.value,
         "source_methods": [method.value for method in item.source_methods],
+        "retriever_source": item.retriever_source,
+        "raw_score": item.raw_score,
+        "normalized_score": item.normalized_score,
+        "rank": item.rank,
+        "matched_terms": list(item.matched_terms),
+        "matched_phrase": item.matched_phrase,
+        "candidate_reason": item.candidate_reason,
         "score": item.score,
         "rrf_score": item.rrf_score,
         "rerank_score": item.rerank_score,

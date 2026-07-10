@@ -348,7 +348,17 @@ def test_enterprise_rag_phase01_failure_buckets_and_missing_trace_fields() -> No
         "agentic_graphrag": [
             {"id": "doc_miss", "contexts": []},
             {"id": "text_miss", "contexts": [{"file_name": "gold.md", "content": "document only"}]},
-            {"id": "citation_miss", "contexts": [{"file_name": "gold.md", "content": "gold evidence"}]},
+            {
+                "id": "citation_miss",
+                "contexts": [
+                    {
+                        "file_name": "gold.md",
+                        "content": "gold evidence",
+                        "retriever_source": "normalized_phrase",
+                        "candidate_reason": "normalized_phrase_match",
+                    }
+                ],
+            },
             {"id": "answer_wrong", "contexts": [{"file_name": "gold.md", "content": "gold evidence"}]},
         ]
     }
@@ -367,6 +377,10 @@ def test_enterprise_rag_phase01_failure_buckets_and_missing_trace_fields() -> No
         "citation_hit_answer_wrong": 1,
     }
     assert diagnostics["measured_failure_bucket_count"] == 4
+    citation_bucket = next(
+        item for item in diagnostics["bucket_items"] if item["case_id"] == "citation_miss"
+    )
+    assert citation_bucket["lexical_phrase_hit"] is True
     assert diagnostics["unavailable_reason"] == "unavailable_due_to_missing_trace_fields"
     assert diagnostics["unavailable_items"] == [
         {

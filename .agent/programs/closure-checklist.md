@@ -2,14 +2,14 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE04_lexical-phrase-evidence-retriever.md
+current_phase: PHASE05_entity-chunk-bidirectional-graph-index.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 当前关闭状态
 
 本 program 尚未关闭。当前 active phase 是：
 
-- `PHASE04_lexical-phrase-evidence-retriever.md`
+- `PHASE05_entity-chunk-bidirectional-graph-index.md`
 
 ## Program 关闭目标
 
@@ -34,7 +34,7 @@ Agentic GraphRAG 的 doc-level retrieval 增益已经转化成 evidence-span ret
 - [x] PHASE01 完成 eval truth source、gap buckets 和 failure taxonomy。
 - [x] PHASE02 完成 source span provenance contract。
 - [x] PHASE03 完成 citation-sized chunks 与 parent context chunks。
-- [ ] PHASE04 完成 lexical / phrase evidence retriever。
+- [x] PHASE04 完成 lexical / phrase evidence retriever。
 - [ ] PHASE05 完成 entity-chunk bidirectional graph index。
 - [ ] PHASE06 完成 evidence-aware reranker。
 - [ ] PHASE07 完成 claim-level citation binder。
@@ -64,7 +64,7 @@ pytest -q tests/evals/test_enterprise_rag_paired_benchmark.py tests/evals/test_r
 
 ## 下一轮检查
 
-- 当前 phase 是否仍是 `PHASE04_lexical-phrase-evidence-retriever.md`；PHASE03 citation-sized chunk index 已完成并已通过 focused tests。
-- 本轮修改是否只做 lexical / phrase evidence retriever，还是已经进入 graph index / citation binder。
+- 当前 phase 是否仍是 `PHASE05_entity-chunk-bidirectional-graph-index.md`；PHASE04 lexical / phrase evidence retriever 已完成并已通过 focused tests。
+- 本轮修改是否只做 entity-chunk graph evidence lineage，还是已经进入 reranker / citation binder。
 - 如果进入 runtime，必须先写 tests，再改实现。
 - 所有新增指标必须说明是 fixed benchmark、runtime observed、prepared 还是 blocked。

@@ -278,12 +278,31 @@ class KnowledgeIndexRuntime:
     @staticmethod
     def _rank_documents(query: str, documents: list[dict]) -> list[dict]:
         query_tokens = set(_tokens(query))
+        normalized_query = _normalize_phrase(query)
         ranked = []
         for document in documents:
             doc_tokens = set(_tokens(document["content"]))
-            score = len(query_tokens & doc_tokens)
-            ranked.append({**document, "score": float(score)})
+            content = str(document.get("content") or "")
+            normalized_content = _normalize_phrase(content)
+            matched_terms = sorted(query_tokens & doc_tokens)
+            phrase_match = bool(normalized_query and normalized_query in normalized_content)
+            raw_score = len(matched_terms) + (3.0 if phrase_match else 0.0)
+            normalized_score = raw_score / max(len(query_tokens), 1)
+            ranked.append(
+                {
+                    **document,
+                    "score": float(raw_score),
+                    "raw_score": float(raw_score),
+                    "normalized_score": round(float(normalized_score), 6),
+                    "retriever_source": "normalized_phrase" if phrase_match else document.get("source_type"),
+                    "matched_terms": matched_terms,
+                    "matched_phrase": query if phrase_match else "",
+                    "candidate_reason": "normalized_phrase_match" if phrase_match else "token_overlap",
+                }
+            )
         ranked.sort(key=lambda item: item["score"], reverse=True)
+        for rank, item in enumerate(ranked, start=1):
+            item["rank"] = rank
         return ranked
 
 
@@ -454,6 +473,10 @@ def _sensitivity_tags(document: CanonicalDocumentIR) -> list[str]:
 
 def _tokens(text: str) -> list[str]:
     return re.findall(r"[a-zA-Z0-9_]+", text.lower())
+
+
+def _normalize_phrase(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
 
 def _entities(text: str) -> list[str]:

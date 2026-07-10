@@ -555,6 +555,7 @@ def _build_evidence_conversion_diagnostics(
                 "source_doc_citation_accuracy": _row_float(sample, "source_doc_citation_accuracy"),
                 "citation_accuracy": _row_float(sample, "citation_accuracy"),
                 "answer_correctness": _row_float(sample, "answer_correctness"),
+                "lexical_phrase_hit": _lexical_phrase_hit(retrieval_row),
             }
         )
 
@@ -618,6 +619,22 @@ def _build_evidence_conversion_diagnostics(
         "items": items,
         "tag_counts": tag_counts,
     }
+
+
+def _lexical_phrase_hit(retrieval_row: dict[str, Any] | None) -> bool | None:
+    if not retrieval_row:
+        return None
+    contexts = list(retrieval_row.get("contexts") or retrieval_row.get("documents") or [])
+    if not contexts and isinstance(retrieval_row.get("raw_result"), dict):
+        raw_result = retrieval_row["raw_result"]
+        contexts = list(raw_result.get("contexts") or raw_result.get("documents") or [])
+    if not contexts:
+        return None
+    return any(
+        str(context.get("retriever_source") or "") == "normalized_phrase"
+        or str(context.get("candidate_reason") or "") == "normalized_phrase_match"
+        for context in contexts
+    )
 
 
 def _build_gated_agentic_simulation(
@@ -769,7 +786,7 @@ def _write_failure_cases(
                 continue
             for item in bucket_cases:
                 lines.append(
-                    "- `{case_id}` / `{profile}` / `{question_type}`: recall={recall}, evidence_text={evidence}, source_doc_citation={source_doc}, strict_citation={citation}, answer={answer}".format(
+                    "- `{case_id}` / `{profile}` / `{question_type}`: recall={recall}, evidence_text={evidence}, source_doc_citation={source_doc}, strict_citation={citation}, answer={answer}, lexical_phrase_hit={lexical}".format(
                         case_id=item.get("case_id"),
                         profile=item.get("profile"),
                         question_type=item.get("question_type"),
@@ -778,6 +795,7 @@ def _write_failure_cases(
                         source_doc=_fmt(item.get("source_doc_citation_accuracy")),
                         citation=_fmt(item.get("citation_accuracy")),
                         answer=_fmt(item.get("answer_correctness")),
+                        lexical=item.get("lexical_phrase_hit"),
                     )
                 )
         if unavailable_items:

@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE04_lexical-phrase-evidence-retriever
-status: active
+status: completed
 owner: Retrieval
 
 ## 目标
@@ -22,9 +22,26 @@ owner: Retrieval
 
 ## 验收闸门
 
-- strict evidence text 命中不只依赖 embedding。
-- failure cases 能标出 lexical path 是否命中。
-- hard negatives 下不会大量误命中相似噪声。
+- [x] strict evidence text 命中不只依赖 embedding，exact / normalized phrase 是本地候选信号。
+- [x] failure bucket items 能标出 `lexical_phrase_hit`。
+- [x] hard negative / punctuation / newline focused tests 覆盖 phrase path 不被关键词噪声压过。
+
+## 完成事实
+
+PHASE04 已完成 local deterministic lexical / phrase evidence retriever baseline，不表示 PHASE05 graph evidence lineage 或 PHASE06 evidence-aware reranker 已完成。
+
+Current 已实现：
+
+- `KnowledgeIndexRuntime` ranking 输出 `retriever_source`、`raw_score`、`normalized_score`、`rank`、`matched_terms`、`matched_phrase` 和 `candidate_reason`。
+- Exact / normalized phrase match 作为 `normalized_phrase` 候选信号参与排序，支持常见标点、大小写、换行和版本号点号规范化。
+- Agentic retrieval EvidenceItem / trace payload 保留 lexical candidate metadata。
+- EnterpriseRAG paired diagnostics 在可用 trace 下输出 `lexical_phrase_hit`；缺 trace 时仍输出 unavailable，不猜测。
+
+边界：
+
+- 当前没有接 external lexical engine / Elasticsearch。
+- 当前 phrase path 不读取 benchmark gold answer、gold evidence text 或 gold labels。
+- 当前仍未完成 evidence-aware reranker 的多特征排序契约。
 
 ## 验证命令
 
