@@ -130,6 +130,7 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
         "PHASE03_model-gateway-closure",
         "PHASE04_durable-store-trace-and-idempotency",
         "PHASE05_unified-langgraph-runtime-skeleton",
+        "PHASE06_strategy-plan-and-react-step-execution",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }

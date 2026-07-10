@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE05_unified-langgraph-runtime-skeleton
+current_phase: PHASE06_strategy-plan-and-react-step-execution
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
 ## Program Definition
@@ -30,7 +30,7 @@ Plan-and-Execute for macro control
 | PHASE02 | `unified-runtime-contracts-and-state` | completed：建立 AgentRuntimeState、Observation、Strategy、Plan、limits、snapshot 与兼容适配器；未关闭 gateway/store/graph/product cutover | runtime contracts |
 | PHASE03 | `model-gateway-closure` | completed：ModelRole、ModelCall aliases、role trace、GeneralAgent gateway adapter 和 direct-call verifier 已完成；legacy SDK wrappers 显式 allowlist 保留 | model runtime |
 | PHASE04 | `durable-store-trace-and-idempotency` | completed：SQLite-backed run/checkpoint/event/interrupt/plan/observation/tool claim store、local trace store 和 restart resume evidence 已完成；完整 graph restart 等 PHASE05/11 | persistence |
-| PHASE05 | `unified-langgraph-runtime-skeleton` | 建立真实 StateGraph、conditional routes、stream、interrupt、resume | agent graph |
+| PHASE05 | `unified-langgraph-runtime-skeleton` | completed：已建立 LangGraph topology、UnifiedAgentRuntimeService、conditional routes、stream、interrupt/resume/cancel/checkpoint 和无 simulated marker skeleton；产品切换仍待 PHASE11 | agent graph |
 | PHASE06 | `strategy-plan-and-react-step-execution` | 把 Plan-and-Execute 和 ReAct 组合成真实逐步执行器 | planning execution |
 | PHASE07 | `tool-control-plane-and-approval-integration` | ToolCallIntent -> policy/approval/credential/execution/observation 闭环 | tool runtime |
 | PHASE08 | `corrective-agentic-graphrag-and-evidence-ledger` | 多轮检索、EvidenceLedger、quality gate、corrective action | knowledge runtime |

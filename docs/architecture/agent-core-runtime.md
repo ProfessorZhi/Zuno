@@ -233,6 +233,7 @@ Current：
 - `src/backend/zuno/agent/runtime/` 已提供 PHASE02 版本化 runtime contract：`AgentRuntimeState`、`AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、node outcome、strategy/reflection/finalization 枚举和 legacy adapters。它是后续统一 graph 的状态事实源，不等于真实 LangGraph 主图、SQLite restart recovery 或产品切换已经完成。
 - `src/backend/zuno/platform/model_gateway.py` 已提供 PHASE03 role-aware gateway contract、cost/latency/fallback/redacted trace 和 LangChain-compatible legacy adapter；`GeneralAgent` 的 executor chat model 已经经由 gateway 获取。历史 legacy SDK wrappers 仍以 verifier allowlist 保留，不等于全仓所有旧服务已迁入统一 runtime。
 - `SQLiteAgentRunStore` 已提供 PHASE04 SQLite-backed run/checkpoint/event/interrupt/plan/observation/tool claim baseline，并已用新 store 实例证明 pending interrupt 可恢复后 resume；完整 LangGraph 主图和产品 API/UI restart recovery 仍是后续目标。
+- `UnifiedAgentRuntimeService` 已提供 PHASE05 unified LangGraph runtime skeleton：`build_agent_graph`、`RuntimeNode` routes、store-backed checkpoint/event、stream、approval / ask_user interrupt、resume、cancel 和 `get_snapshot`。该 skeleton 使用 deterministic node adapters，已移除 `status: simulated` marker；真实 Plan/ReAct step、Tool Control Plane、corrective retrieval、grounded synthesis 和产品 API/UI cutover 仍是后续 PHASE06-PHASE11 目标。
 - Memory 模块能力和本地 baseline 较完整，但完整 MemoryEngine 尚未全部接入真实 AgentChat 生命周期。
 - Planning contract 和规则判断存在，但真实 LangChain/LangGraph ReAct、规则式 AgentControlRuntime、SingleControllerDurableRuntime 尚未统一为一条真实执行图。
 

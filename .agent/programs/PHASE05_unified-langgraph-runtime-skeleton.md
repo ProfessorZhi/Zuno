@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE05
-    state: planned
+    state: completed
     title: 统一 LangGraph Runtime 骨架
     depends_on: PHASE04
     next_phase: PHASE06
@@ -91,6 +91,15 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     ## 文档与状态同步
 
     写明 unified graph skeleton available，但 Plan/Tool/Retrieval quality 仍 Partial。
+
+    ## 完成记录
+
+    - 已新增 `UnifiedAgentRuntimeService`，public API 为 `start`、`stream`、`resume`、`cancel`、`get_snapshot`。
+    - 已新增 PHASE05 LangGraph topology builder：`build_agent_graph(dependencies, checkpointer)`，使用 `RuntimeNode` 和集中 route 函数表达 conditional route。
+    - 已新增 `RuntimeGraphCheckpointer`，每个节点后写入 store-backed checkpoint 和 runtime event；approval / ask_user 进入 pending interrupt。
+    - 已新增 deterministic runtime nodes，覆盖 input gate、context build、strategy、plan、execute、observe、evidence gate、claim binding、reflection、replan、rewrite、approval、interrupt、finalize、post-turn commit。
+    - 已证明 SQLite-backed 新 service 实例可恢复 approval interrupt 并 resume 到完成；旧产品路径尚未切换，PHASE06/PHASE11 继续完成真实 Plan/ReAct execution 和 API/UI cutover。
+    - 已移除旧 durable runtime 的 `status: simulated` marker，避免 deterministic adapter 被误读为 simulated success。
 
     ## Phase 完成报告
 

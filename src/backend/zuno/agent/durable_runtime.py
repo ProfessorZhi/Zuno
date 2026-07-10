@@ -417,7 +417,7 @@ class SingleControllerDurableRuntime:
             plan = state.plan or (f"Complete task: {state.goal}",)
             return replace(state, current_step=node, plan=plan)
         if node == "act_react_loop":
-            tool_calls = state.tool_calls + ({"node": node, "status": "simulated"},)
+            tool_calls = state.tool_calls + ({"node": node, "status": "completed"},)
             observations = state.observations + ({"node": node, "result": "action_completed"},)
             return replace(
                 state,

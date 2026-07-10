@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-unified-agent-runtime-closure-v1`
-- Current phase: `PHASE05_unified-langgraph-runtime-skeleton`
+- Current phase: `PHASE06_strategy-plan-and-react-step-execution`
 - Latest completed program: `zuno-lean-complete-product-architecture-v1`
 - Baseline commit: `72488a25fde59bc5ef86b2b1c84f25d42cb946ca`
 
@@ -22,9 +22,9 @@
 
 当前只执行：
 
-- `.agent/programs/PHASE05_unified-langgraph-runtime-skeleton.md`
+- `.agent/programs/PHASE06_strategy-plan-and-react-step-execution.md`
 
-PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。PHASE02 已完成 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的主入口和边界 verifier。PHASE04 已完成 durable store、trace 和 idempotency baseline。当前下一步是 PHASE05 的 unified LangGraph runtime skeleton。
+PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。PHASE02 已完成 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的主入口和边界 verifier。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。当前下一步是 PHASE06 的 Strategy / Plan-and-Execute / ReAct step execution。
 
 ## 当前文件
 
