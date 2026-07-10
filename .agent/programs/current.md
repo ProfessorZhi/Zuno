@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE10_four-layer-memory-and-reflexion-reuse
+current_phase: PHASE11_product-api-sse-ui-and-recovery-cutover
 latest_completed_program: zuno-lean-complete-product-architecture-v1
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
@@ -45,9 +45,9 @@ input_gate
 
 ## 当前 Phase
 
-`PHASE10_four-layer-memory-and-reflexion-reuse`
+`PHASE11_product-api-sse-ui-and-recovery-cutover`
 
-PHASE01 已完成事实源、现状证据、运行命令、失败语义和 benchmark truth source 冻结，未修改生产 runtime。PHASE02 已建立 `zuno.agent.runtime` 版本化 contract、`AgentRuntimeState` / `AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、strategy/reflection/finalization 枚举和 legacy adapters。PHASE03 已建立 `ModelRole`、`ModelCallRequest` / `ModelCallResponse` aliases、role-aware gateway trace、LangChain-compatible gateway adapter、GeneralAgent gateway 注入和 direct-call boundary verifier；legacy SDK wrappers 仍以显式 allowlist 保留，不是产品主 unified runtime 入口。PHASE04 已建立 SQLite-backed `SQLiteAgentRunStore`、local trace store、tool idempotency claim、scope load、corrupt JSON rejection 和 restart resume tests。PHASE05 已建立 unified LangGraph topology、`UnifiedAgentRuntimeService`、conditional routes、stream、approval/ask_user interrupt、resume、cancel、checkpoint 和无 simulated marker 的 deterministic skeleton；产品 API/UI 尚未切换。PHASE06 已建立 runtime Strategy、Plan validation、PlanExecutor、StepExecutorRegistry 和多步 execution baseline。PHASE07 已接入 Tool Control Plane approval/resume/idempotency/blocked observation baseline。PHASE08 已建立 EvidenceLedger、RetrievalQualityGate、CorrectiveRetrievalPolicy、CorrectiveAgenticRetrievalRuntime，并接入 `KnowledgeStepExecutor` 的 `knowledge_runtime` 依赖；fixed benchmark 仍未 measured。PHASE09 已接入 ReflectionEngine、ReplanEngine、GroundedSynthesisEngine，`RETRIEVE_MORE` 会修改真实 PlanState 并回到 execute_step，`REWRITE_ANSWER` 会回到 claim binding 后再次 reflection。下一步 PHASE10 只处理四层 Memory 和 Reflexion reuse。
+PHASE01 已完成事实源、现状证据、运行命令、失败语义和 benchmark truth source 冻结，未修改生产 runtime。PHASE02 已建立 `zuno.agent.runtime` 版本化 contract、`AgentRuntimeState` / `AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、strategy/reflection/finalization 枚举和 legacy adapters。PHASE03 已建立 `ModelRole`、`ModelCallRequest` / `ModelCallResponse` aliases、role-aware gateway trace、LangChain-compatible gateway adapter、GeneralAgent gateway 注入和 direct-call boundary verifier；legacy SDK wrappers 仍以显式 allowlist 保留，不是产品主 unified runtime 入口。PHASE04 已建立 SQLite-backed `SQLiteAgentRunStore`、local trace store、tool idempotency claim、scope load、corrupt JSON rejection 和 restart resume tests。PHASE05 已建立 unified LangGraph topology、`UnifiedAgentRuntimeService`、conditional routes、stream、approval/ask_user interrupt、resume、cancel、checkpoint 和无 simulated marker 的 deterministic skeleton；产品 API/UI 尚未切换。PHASE06 已建立 runtime Strategy、Plan validation、PlanExecutor、StepExecutorRegistry 和多步 execution baseline。PHASE07 已接入 Tool Control Plane approval/resume/idempotency/blocked observation baseline。PHASE08 已建立 EvidenceLedger、RetrievalQualityGate、CorrectiveRetrievalPolicy、CorrectiveAgenticRetrievalRuntime，并接入 `KnowledgeStepExecutor` 的 `knowledge_runtime` 依赖；fixed benchmark 仍未 measured。PHASE09 已接入 ReflectionEngine、ReplanEngine、GroundedSynthesisEngine，`RETRIEVE_MORE` 会修改真实 PlanState 并回到 execute_step，`REWRITE_ANSWER` 会回到 claim binding 后再次 reflection。PHASE10 已接入 unified runtime Memory pre-read/post-write、pending Reflexion candidate 和 approved procedural memory strategy influence。下一步 PHASE11 只处理 Product API / SSE / UI / recovery cutover。
 
 ## 不变边界
 

@@ -154,6 +154,7 @@ def verify_entrypoint_text() -> list[str]:
         "PHASE08_corrective-agentic-graphrag-and-evidence-ledger",
         "PHASE09_reflection-replan-grounded-synthesis",
         "PHASE10_four-layer-memory-and-reflexion-reuse",
+        "PHASE11_product-api-sse-ui-and-recovery-cutover",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }:

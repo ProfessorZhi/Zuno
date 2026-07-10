@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE10_four-layer-memory-and-reflexion-reuse
+current_phase: PHASE11_product-api-sse-ui-and-recovery-cutover
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
 ## Program Definition
@@ -35,7 +35,7 @@ Plan-and-Execute for macro control
 | PHASE07 | `tool-control-plane-and-approval-integration` | completed：ToolStepExecutor 已经经 ToolControlPlaneRuntime 执行，approval/resume/idempotency/blocked observation baseline 已完成；产品切换仍待 PHASE11 | tool runtime |
 | PHASE08 | `corrective-agentic-graphrag-and-evidence-ledger` | completed：已建立多轮 corrective retrieval、EvidenceLedger、quality gate、failure bucket action mapping，并接入 KnowledgeStepExecutor；fixed benchmark 仍未 measured | knowledge runtime |
 | PHASE09 | `reflection-replan-grounded-synthesis` | completed：已接入 deterministic reflection、optional critic shim、GroundedSynthesis、strict citation binding、rewrite loop 和 trajectory-changing Replan；产品切换和 measured benchmark 仍未完成 | quality control |
-| PHASE10 | `four-layer-memory-and-reflexion-reuse` | 四层 Memory 读/用/写、Reflexion review 与未来任务复用 | memory closure |
+| PHASE10 | `four-layer-memory-and-reflexion-reuse` | completed：已接入 unified runtime Memory pre-read/post-write、ContextPack trace、pending Reflexion candidate、approved procedural memory strategy influence 和 Entity supersede baseline | memory closure |
 | PHASE11 | `product-api-sse-ui-and-recovery-cutover` | Completion/Workspace/SSE/approval/trace/UI 切换到统一 runtime | product integration |
 | PHASE12 | `real-pdf-source-span-vertical-slice` | PyMuPDF PDF -> IR -> CitationChunk -> SourceSpan -> grounded answer | document vertical |
 | PHASE13 | `paired-benchmark-release-gate-and-program-closure` | sample-8、sample-80、release gate、旧主路径退出与文档收口 | quality closure |

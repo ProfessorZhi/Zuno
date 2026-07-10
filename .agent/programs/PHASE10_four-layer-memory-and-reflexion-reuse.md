@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE10
-    state: planned
+    state: completed
     title: 四层 Memory 与 Reflexion 复用闭环
     depends_on: PHASE09
     next_phase: PHASE11
@@ -105,3 +105,29 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     6. 未完成和 blocked 项。
     7. commit SHA。
     8. 下一 Phase 是否满足依赖。
+
+    ## 完成记录
+
+    状态：completed，本地 unified runtime memory/reflexion reuse baseline available；产品 API/UI 切换和 benchmark 仍未 measured。
+
+    已完成：
+
+    - `build_context` 已在注入 `memory_engine` 时调用 MemoryEngine pre-read，生成 ContextPack、selected memory refs、include/exclude trace 和 `memory_influenced_strategy` 标记。
+    - `RuntimeStrategySelector` 已读取 approved procedural / Reflexion memory hint，并在 strategy reason 与 trace 中记录 `memory_influenced_strategy`。
+    - `post_turn_commit` 已在注入 `memory_engine` 时写 raw event、task summary，并在 abstain/failed/blocked 路径生成 pending Reflexion candidate。
+    - Reflexion candidate metadata 显式记录 `hidden_cot: False`，pending candidate 不进入未来 ContextPack。
+    - 新增 `EntityMemoryStore`，以 scope + entity + attribute 为 authoritative key，支持 supersede trace。
+    - focused tests 已证明 approved Reflexion lesson 影响后续 strategy/planning，post-turn memory 写入可见，pending Reflexion candidate 不被当作 approved memory 复用。
+
+    证据：
+
+    - `pytest -q tests/agent/runtime/test_runtime_memory_reflexion.py tests/memory/test_entity_memory.py tests/memory/test_memory_context_trace.py tests/agent/test_memory_durable_runtime.py -p no:cacheprovider`
+    - `pytest -q tests/memory/test_context_pack_engine.py tests/agent/test_generalagent_context_memory_runtime.py tests/agent/runtime/test_runtime_graph_routes.py tests/agent/runtime/test_runtime_reflection_replan.py -p no:cacheprovider`
+    - `pytest -q tests/agent/runtime/test_runtime_plan_execution.py tests/agent/runtime/test_runtime_interrupt_resume.py tests/agent/runtime/test_runtime_tool_control_plane.py -p no:cacheprovider`
+    - `python -m compileall -q src/backend/zuno/memory/entity.py src/backend/zuno/memory/reflexion.py src/backend/zuno/memory/engine.py src/backend/zuno/agent/runtime/nodes/core.py src/backend/zuno/agent/runtime/planning/selector.py`
+
+    未关闭：
+
+    - Completion / Workspace / SSE / UI 产品切换仍属于 PHASE11。
+    - 真实 PDF SourceSpan vertical slice 属于 PHASE12。
+    - fixed paired benchmark 和 release gate 仍属于 PHASE13，不能写成 measured。

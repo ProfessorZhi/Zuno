@@ -736,6 +736,7 @@ class MemoryEngine:
                 "reflexion_lesson": lesson.model_dump(mode="json"),
                 "failure_type": lesson.failure_type,
                 "trigger_condition": lesson.trigger_condition,
+                "hidden_cot": False,
             },
         )
         self.store.save_memory_candidate(candidate)
@@ -898,6 +899,7 @@ class MemoryEngine:
                 "trace_id": trace_id,
                 "task_id": task_id,
                 "source_event_ids_by_item": source_event_ids_by_item,
+                "selection_reasons_by_item": selection_reasons_by_item,
                 "memory_read_span": {
                     "trace_id": trace_id,
                     "task_id": task_id,

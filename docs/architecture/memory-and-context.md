@@ -144,12 +144,16 @@ Current：
 
 - `MemoryEngine`、raw event、task summary、candidate extraction、review、decay、consolidation、semantic search、privacy delete、ContextPack rendering 和 Reflexion candidate baseline 已存在。
 - GeneralAgent 已有 MemoryEngine/ContextPack 接入点和相关 focused tests。
+- PHASE10 已把 MemoryEngine 接入 unified runtime：`build_context` 在注入 `memory_engine` 时执行 pre-turn memory read，ContextPack 记录 selected memory refs、include/exclude trace 和 `memory_influenced_strategy`；`post_turn_commit` 写 raw event / task summary，并在 abstain/failed/blocked 路径生成 pending Reflexion candidate。
+- Approved procedural / Reflexion memory 已能影响后续 Strategy/Planning：`RuntimeStrategySelector` 会在 reason 和 trace 中记录 `memory_influenced_strategy`。
+- Reflexion candidate metadata 显式记录 `hidden_cot: False`，pending candidate 不进入未来 ContextPack。
+- `EntityMemoryStore` 已提供本地 scope + entity + attribute authoritative key 和 supersede trace baseline。
 
 Partial / closure gap：
 
-- 完整 MemoryEngine 尚未全部接入真实 AgentChat 生命周期。
-- Reflexion candidate -> review -> approved -> future ContextPack reuse 未被完整产品闭环证明。
-- Entity Memory 的 effective time、supersede 和跨索引 privacy delete 仍是目标 contract。
+- Completion / Workspace / SSE / UI 产品链路尚未切换到 unified runtime，属于 PHASE11。
+- Entity Memory 的跨索引 privacy delete 和生产级关系查询仍是目标 contract。
+- fixed paired benchmark 未 measured，Memory reuse 不能写成线上质量提升已证明。
 
 Short-term：
 

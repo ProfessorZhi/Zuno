@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-unified-agent-runtime-closure-v1`
-- Current phase: `PHASE10_four-layer-memory-and-reflexion-reuse`
+- Current phase: `PHASE11_product-api-sse-ui-and-recovery-cutover`
 - Latest completed program: `zuno-lean-complete-product-architecture-v1`
 - Baseline commit: `72488a25fde59bc5ef86b2b1c84f25d42cb946ca`
 
@@ -22,9 +22,9 @@
 
 当前只执行：
 
-- `.agent/programs/PHASE10_four-layer-memory-and-reflexion-reuse.md`
+- `.agent/programs/PHASE11_product-api-sse-ui-and-recovery-cutover.md`
 
-PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。PHASE02 已完成 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的主入口和边界 verifier。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。PHASE06 已完成 Strategy / Plan-and-Execute / ReAct step execution baseline。PHASE07 已完成 Tool Control Plane integration baseline。PHASE08 已完成 corrective Agentic GraphRAG / EvidenceLedger baseline，并通过 `KnowledgeStepExecutor` 接入 runtime 依赖。PHASE09 已完成 Reflection / Replan / Grounded Synthesis runtime loop baseline。当前下一步是 PHASE10 的 four-layer Memory / Reflexion reuse。
+PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。PHASE02 已完成 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的主入口和边界 verifier。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。PHASE06 已完成 Strategy / Plan-and-Execute / ReAct step execution baseline。PHASE07 已完成 Tool Control Plane integration baseline。PHASE08 已完成 corrective Agentic GraphRAG / EvidenceLedger baseline，并通过 `KnowledgeStepExecutor` 接入 runtime 依赖。PHASE09 已完成 Reflection / Replan / Grounded Synthesis runtime loop baseline。PHASE10 已完成 four-layer Memory / Reflexion reuse baseline。当前下一步是 PHASE11 的 Product API / SSE / UI / recovery cutover。
 
 ## 当前文件
 

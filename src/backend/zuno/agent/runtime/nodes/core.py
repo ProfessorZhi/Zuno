@@ -29,6 +29,9 @@ from zuno.agent.runtime.reflection import ReflectionEngine
 from zuno.agent.runtime.routing import RuntimeNode
 from zuno.agent.runtime.state import AgentRuntimeState
 from zuno.agent.runtime.synthesis import GroundedSynthesisEngine
+from zuno.memory.contracts import MemoryScope
+from zuno.memory.policy import RetentionPolicy
+from zuno.memory.reflexion import ReflexionCandidateBuilder
 
 RuntimeNodeHandler = Callable[[AgentRuntimeState, RuntimeDependencies], AgentRuntimeState]
 _STRATEGY_SELECTOR = RuntimeStrategySelector()
@@ -37,6 +40,7 @@ _PLAN_EXECUTOR = PlanExecutor()
 _REPLAN_ENGINE = ReplanEngine()
 _REFLECTION_ENGINE = ReflectionEngine()
 _SYNTHESIS_ENGINE = GroundedSynthesisEngine()
+_REFLEXION_BUILDER = ReflexionCandidateBuilder()
 _STEP_EXECUTORS = StepExecutorRegistry(
     (
         KnowledgeStepExecutor(),
@@ -53,7 +57,40 @@ def input_gate(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRunt
 
 
 def build_context(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
-    del deps
+    if deps.memory_engine is not None and hasattr(deps.memory_engine, "build_context_pack"):
+        scope = _memory_scope(state)
+        memory_context = deps.memory_engine.build_context_pack(
+            scope=scope,
+            context_pack_id=f"context:{state.run_id}",
+            user_goal=state.goal,
+            task_state={"thread_id": state.thread_id, "task_id": state.task_id},
+            selected_evidence=[],
+            allowed_capabilities=state.capability_plan.allowed_capabilities,
+            safety_policy={"memory_context": "enabled"},
+            output_contract={"runtime": "unified_graph_memory_context"},
+            budget_tokens=state.limits.token_budget or 512,
+            task_id=state.task_id,
+            trace_id=state.trace_id,
+        )
+        context_payload = dict(memory_context["context_pack"])
+        items = list(memory_context.get("items") or [])
+        context_payload["task_state"] = {
+            **dict(context_payload.get("task_state") or {}),
+            "memory_context_trace": memory_context.get("trace", {}),
+            "memory_context_items": items,
+            "memory_influenced_strategy": bool(context_payload.get("selected_memory_refs")),
+            "memory_strategy_hints": [
+                str(item.get("content"))
+                for item in items
+                if item.get("source") in {"procedural_memory", "episodic_memory"}
+            ],
+        }
+        context_pack = ContextPack.model_validate(context_payload)
+        return _record_node(
+            replace(state, context_pack=context_pack),
+            RuntimeNode.BUILD_CONTEXT,
+            summary="context pack prepared with memory read",
+        )
     context_pack = state.context_pack or ContextPack(
         context_pack_id=f"context:{state.run_id}",
         user_goal=state.goal,
@@ -288,12 +325,58 @@ def finalize(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntim
 
 
 def post_turn_commit(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
-    del deps
+    if deps.memory_engine is not None:
+        scope = _memory_scope(state)
+        event = deps.memory_engine.append_event(
+            scope=scope,
+            event_id=f"event:{state.run_id}:post_turn",
+            event_type="agent_turn",
+            payload={
+                "task": state.goal,
+                "finalization_status": state.finalization_status.value,
+                "reflection_decision": state.reflection_decision.value if state.reflection_decision else "",
+                "artifact_refs": list(state.artifact_refs),
+                "evidence_refs": list(state.evidence_refs),
+            },
+            trace_id=state.trace_id,
+            task_id=state.task_id,
+        )
+        deps.memory_engine.summarize_task(
+            scope=scope,
+            summary_id=f"summary:{state.run_id}",
+            content=f"{state.goal} -> {state.finalization_status.value}",
+            source_event_ids=(event.event_id,),
+            token_count=max(1, len(state.goal) // 4),
+            metadata={"trace_id": state.trace_id, "task_id": state.task_id},
+        )
+        refs = [f"summary:{state.run_id}"]
+        lesson = _REFLEXION_BUILDER.build(state)
+        if lesson is not None:
+            candidate = deps.memory_engine.submit_reflexion_lesson_candidate(
+                scope=scope,
+                lesson=lesson,
+                retention_policy=RetentionPolicy(ttl_days=365),
+            )
+            refs.append(candidate.candidate_id)
+        return _record_node(
+            replace(state, memory_candidate_refs=[*state.memory_candidate_refs, *refs]),
+            RuntimeNode.POST_TURN_COMMIT,
+            summary="post-turn memory committed",
+        )
     memory_refs = state.memory_candidate_refs or [f"memory_candidate:{state.run_id}:summary"]
     return _record_node(
         replace(state, memory_candidate_refs=memory_refs),
         RuntimeNode.POST_TURN_COMMIT,
         summary="post-turn commit boundary reached",
+    )
+
+
+def _memory_scope(state: AgentRuntimeState) -> MemoryScope:
+    return MemoryScope(
+        user_id=state.user_id,
+        agent_id="unified_runtime",
+        project_id=state.workspace_id,
+        thread_id=state.thread_id,
     )
 
 

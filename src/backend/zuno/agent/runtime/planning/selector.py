@@ -26,12 +26,24 @@ class RuntimeStrategySelector:
         lowered_goal = state.goal.lower()
         if mode == StrategyMode.DIRECT_ANSWER and "plan" in lowered_goal and "execute" in lowered_goal:
             mode = StrategyMode.PLAN_EXECUTE
+        memory_influenced_strategy = bool(
+            state.context_pack
+            and state.context_pack.task_state.get("memory_influenced_strategy")
+        )
+        if memory_influenced_strategy and mode == StrategyMode.DIRECT_ANSWER:
+            mode = StrategyMode.PLAN_EXECUTE_WITH_REPLAN
+        reason = output.strategy.reason
+        if memory_influenced_strategy:
+            reason = f"{reason}; memory_influenced_strategy"
         strategy = StrategyDecision(
             mode=mode,
-            reason=output.strategy.reason,
+            reason=reason,
             selected_skill_id=output.strategy.selected_skill,
             retrieval_profile=output.strategy.retrieval_profile.value if output.strategy.retrieval_profile else None,
-            trace_event_ids=[event.event_id for event in output.trace_events],
+            trace_event_ids=[
+                *[event.event_id for event in output.trace_events],
+                *(["memory:influenced_strategy"] if memory_influenced_strategy else []),
+            ],
         )
         state.strategy = strategy
         state.plan_state = output.plan_state
