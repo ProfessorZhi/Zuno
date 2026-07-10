@@ -295,7 +295,7 @@ def _document_payload(
     source: CanonicalDocumentIR,
     lineage: dict,
 ) -> dict:
-    block_id = chunk_id.split("::", 1)[-1]
+    block_id = str(metadata.get("block_id") or chunk_id.split("::", 1)[-1])
     source_span = dict(metadata.get("source_span") or {})
     citation_lineage = {
         **_public_lineage_fields(lineage),

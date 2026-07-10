@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE03_citation-sized-chunk-index
-status: active
+status: completed
 owner: Knowledge / Retrieval
 
 ## 目标
@@ -22,9 +22,26 @@ owner: Knowledge / Retrieval
 
 ## 验收闸门
 
-- `Evidence Text Available@5` 可由真实 citation chunks 支撑。
-- parent context 不覆盖 citation span 的 source truth。
-- chunk 粒度变化有 focused tests。
+- [x] citation chunks 保留 `citation_chunk_id` / `chunk_id`、`parent_chunk_id`、`neighbor_chunk_ids` 和 source span。
+- [x] retrieval payload 返回 citation chunk，并携带 parent context。
+- [x] `runtime_config.citation_chunking` 进入 EnterpriseRAG paired metrics/report。
+
+## 完成事实
+
+PHASE03 已完成本地 citation-sized chunk handoff 和 retrieval metadata，不表示 PHASE04 lexical/phrase evidence retrieval 或 PHASE07 claim-level binding 已完成。
+
+Current 已实现：
+
+- 每个 Document IR block 生成一个 `parent_context` chunk 和若干 `citation` chunks。
+- BM25、vector、GraphRAG、evidence 和 citation handoff 使用 citation chunks，避免 parent context 挤掉 citation span。
+- Citation chunk metadata 保留 `parent_chunk_id`、`neighbor_chunk_ids`、`parent_context`、`citation_chunking`、source span provenance 和 raw / normalized text。
+- Index runtime retrieval payload 返回 citation chunk，并保留 parent context 与 citation lineage。
+- EnterpriseRAG paired `metrics.json` / `report.md` 暴露 `citation_sized_with_parent_context` 配置。
+
+边界：
+
+- 当前只完成 local deterministic chunking baseline；没有声明 Evidence Text Available@5 已达标。
+- Chunk boundary 当前按 sentence / fallback char 边界实现，section、paragraph、table row/cell、code block 的更细粒度优化留给后续 hardening。
 
 ## 验证命令
 

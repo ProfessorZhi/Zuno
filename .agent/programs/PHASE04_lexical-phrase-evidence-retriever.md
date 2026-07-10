@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE04_lexical-phrase-evidence-retriever
-status: pending
+status: active
 owner: Retrieval
 
 ## 目标

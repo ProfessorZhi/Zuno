@@ -329,3 +329,22 @@ def test_index_runtime_exports_retrieval_payload_for_later_retrieval_phase() -> 
     assert payload["documents_by_source"]["bm25"]
     assert payload["documents_by_source"]["vector"]
     assert payload["documents_by_source"]["graph"]
+
+
+def test_index_runtime_retrieval_returns_citation_chunks_with_parent_context() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+
+    document = _sample_document()
+    runtime = KnowledgeIndexRuntime()
+    runtime.create_knowledge_space("ks_citation_chunks", "workspace_index")
+    runtime.index_document("ks_citation_chunks", document, targets=["bm25", "vector", "graph"])
+
+    payload = runtime.to_retrieval_payload("ks_citation_chunks", "supplier renewal risk")
+    first_document = payload["documents_by_source"]["bm25"][0]
+
+    assert first_document["chunk_id"].endswith("::cite1")
+    assert first_document["metadata"]["chunk_role"] == "citation"
+    assert first_document["metadata"]["parent_chunk_id"].startswith("doc_index::")
+    assert first_document["metadata"]["parent_context"]
+    assert first_document["metadata"]["source_span"]["parent_chunk_id"] == first_document["metadata"]["parent_chunk_id"]
+    assert first_document["metadata"]["source_span"]["chunk_id"] == first_document["chunk_id"]

@@ -256,9 +256,14 @@ def test_index_handoff_payload_targets_retrieval_graphrag_and_citation() -> None
     )
     assert handoff["vector_documents"][0]["metadata"]["source_span"]["document_version_id"] == "doc_contract:v1"
     assert handoff["vector_documents"][0]["metadata"]["source_span"]["page_number"] == 5
-    assert handoff["vector_documents"][0]["metadata"]["source_span"]["chunk_id"] == "doc_contract::block_payment"
+    assert (
+        handoff["vector_documents"][0]["metadata"]["source_span"]["chunk_id"]
+        == "doc_contract::block_payment::cite1"
+    )
     assert handoff["vector_documents"][0]["metadata"]["source_span"]["char_start"] == 40
-    assert handoff["vector_documents"][0]["metadata"]["source_span"]["char_end"] == 84
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["char_end"] == (
+        40 + len("The supplier must provide invoices monthly.")
+    )
     assert (
         handoff["vector_documents"][0]["metadata"]["source_span"]["normalized_text"]
         == "The supplier must provide invoices monthly."
@@ -269,11 +274,78 @@ def test_index_handoff_payload_targets_retrieval_graphrag_and_citation() -> None
     )
     assert handoff["vector_documents"][0]["metadata"]["source_span"]["content_hash"] == "sha256:def"
     assert handoff["vector_documents"][0]["metadata"]["source_span"]["parser_name"] == "native"
-    assert handoff["graphrag_documents"][0]["chunk_id"] == "doc_contract::block_payment"
-    assert handoff["evidence_items"][0]["evidence_id"] == "doc_contract::block_payment"
-    assert handoff["evidence_items"][0]["chunk_id"] == "doc_contract::block_payment"
+    assert handoff["graphrag_documents"][0]["chunk_id"] == "doc_contract::block_payment::cite1"
+    assert handoff["evidence_items"][0]["evidence_id"] == "doc_contract::block_payment::cite1"
+    assert handoff["evidence_items"][0]["chunk_id"] == "doc_contract::block_payment::cite1"
     assert handoff["citation_items"][0]["source_span"]["section_path"] == ["Payment"]
-    assert handoff["citation_items"][0]["chunk_id"] == "doc_contract::block_payment"
+    assert handoff["citation_items"][0]["chunk_id"] == "doc_contract::block_payment::cite1"
+
+
+def test_index_handoff_builds_citation_chunks_with_parent_context_and_neighbors() -> None:
+    from zuno.knowledge.ingestion import (
+        CanonicalDocumentIR,
+        DocumentBlock,
+        DocumentMetadata,
+        DocumentProvenance,
+        SourceSpan,
+        build_index_handoff_payload,
+    )
+
+    gold_sentence = "Critical supplier evidence survives sentence chunking."
+    full_context = (
+        "Introductory context should stay available for answer synthesis. "
+        f"{gold_sentence} "
+        "Neighbor context should be attached without replacing the citation span."
+    )
+    ir = CanonicalDocumentIR(
+        metadata=DocumentMetadata(
+            document_id="doc_chunking",
+            source_id="source_chunking",
+            workspace_id="workspace_1",
+            source_uri="file://chunking.md",
+            mime_type="text/markdown",
+            hash="sha256:chunking",
+            parser_id="native",
+            parser_version="chunking-v1",
+            document_version_id="doc_chunking:v1",
+        ),
+        blocks=[
+            DocumentBlock(
+                block_id="block_policy",
+                type="paragraph",
+                text=full_context,
+                source_span=SourceSpan(line_range=[7, 7], section_path=["Policy"], char_start=100),
+            )
+        ],
+        provenance=DocumentProvenance(
+            parser_id="native",
+            parser_version="chunking-v1",
+            source_uri="file://chunking.md",
+            confidence=1.0,
+        ),
+    )
+
+    handoff = build_index_handoff_payload(ir).model_dump()
+    parent_chunk = next(chunk for chunk in handoff["chunks"] if chunk["metadata"]["chunk_role"] == "parent_context")
+    citation_chunks = [
+        chunk for chunk in handoff["chunks"] if chunk["metadata"]["chunk_role"] == "citation"
+    ]
+    gold_chunk = next(chunk for chunk in citation_chunks if gold_sentence in chunk["content"])
+
+    assert parent_chunk["chunk_id"] == "doc_chunking::block_policy"
+    assert parent_chunk["content"] == full_context
+    assert len(citation_chunks) == 3
+    assert [item["chunk_id"] for item in handoff["bm25_documents"]] == [
+        chunk["chunk_id"] for chunk in citation_chunks
+    ]
+    assert gold_chunk["metadata"]["parent_chunk_id"] == parent_chunk["chunk_id"]
+    assert gold_chunk["metadata"]["parent_context"] == full_context
+    assert gold_chunk["metadata"]["neighbor_chunk_ids"]
+    assert gold_chunk["metadata"]["source_span"]["raw_text"] == gold_sentence
+    assert gold_chunk["metadata"]["source_span"]["normalized_text"] == gold_sentence
+    assert gold_chunk["metadata"]["source_span"]["char_start"] > 100
+    assert gold_chunk["metadata"]["source_span"]["char_end"] > gold_chunk["metadata"]["source_span"]["char_start"]
+    assert gold_chunk["metadata"]["citation_chunking"]["citation_chunk_char_limit"] == 240
 
 
 def test_legacy_source_span_does_not_fake_page_or_character_offsets() -> None:

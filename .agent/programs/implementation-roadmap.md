@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE03_citation-sized-chunk-index.md
+current_phase: PHASE04_lexical-phrase-evidence-retriever.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 总目标
@@ -60,7 +60,7 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
 文件：`PHASE02_source-span-provenance-contract.md`
 
-状态：active。
+状态：completed。
 
 目标：冻结 citation 所需 provenance 字段，包括 `document_id`、`source_object_id`、`document_version_id`、`page_number`、`section_path`、`block_id`、`chunk_id`、`char_start`、`char_end`、`normalized_text`、`raw_text`、`parent_chunk_id`、`neighbor_chunk_ids`、`source_uri`、`file_name`、`content_hash`、`parser_name`、`parser_version`。
 
@@ -79,6 +79,8 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 ### PHASE04：Lexical Phrase Evidence Retriever
 
 文件：`PHASE04_lexical-phrase-evidence-retriever.md`
+
+状态：active。
 
 目标：把 BM25、phrase / normalized substring、vector、entity 和 graph neighbor 作为一等候选来源，再做 RRF / rerank。
 

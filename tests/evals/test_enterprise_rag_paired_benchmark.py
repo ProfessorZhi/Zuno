@@ -120,10 +120,13 @@ def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path
     assert metrics["case_set"]["measured_case_count"] == 0
     assert metrics["corpus"]["external_documents_required"] is True
     assert metrics["corpus"]["blocked_reason"] == "enterprise_rag_bench_documents_required"
+    assert metrics["runtime_config"]["citation_chunking"]["strategy"] == "citation_sized_with_parent_context"
+    assert metrics["runtime_config"]["citation_chunking"]["citation_chunk_char_limit"] == 240
 
     report = (output_root / "report.md").read_text(encoding="utf-8")
     assert "blocked_not_measured" in report
     assert "enterprise_rag_bench_documents_required" in report
+    assert "citation_chunking_strategy" in report
 
 
 def test_enterprise_rag_schema_probe_writes_alias_preview(tmp_path: Path) -> None:
@@ -198,6 +201,7 @@ def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch
     assert metrics["corpus"]["hard_negative_count"] == 1
     assert metrics["corpus"]["missing_doc_ids"] == []
     assert metrics["corpus"]["schema_probe"]["column_aliases"]["doc_id"] == "dsid"
+    assert metrics["runtime_config"]["citation_chunking"]["parent_context_char_limit"] == 1200
     assert (output_root / "corpus" / "files" / "dsid_upload_limits.md").exists()
 
 

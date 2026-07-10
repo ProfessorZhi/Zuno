@@ -46,6 +46,12 @@ METRIC_KEYS = [
 
 ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE = 1800
 ENTERPRISE_RAG_DEFAULT_OVERLAP = 240
+ENTERPRISE_RAG_CITATION_CHUNKING = {
+    "strategy": "citation_sized_with_parent_context",
+    "citation_chunk_char_limit": 240,
+    "parent_context_char_limit": 1200,
+    "boundary_priority": ["section", "paragraph", "sentence", "table_cell", "code_block", "character"],
+}
 PER_SAMPLE_METRIC_MAP = {
     "retrieval_recall": "retrieval_recall_at_k",
     "context_precision": "context_precision_at_k",
@@ -809,6 +815,9 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
         f"- measured_case_count: `{metrics['case_set']['measured_case_count']}`",
         f"- chunk_size_override: `{(metrics.get('runtime_config') or {}).get('chunk_size_override')}`",
         f"- overlap_override: `{(metrics.get('runtime_config') or {}).get('overlap_override')}`",
+        f"- citation_chunking_strategy: `{((metrics.get('runtime_config') or {}).get('citation_chunking') or {}).get('strategy')}`",
+        f"- citation_chunk_char_limit: `{((metrics.get('runtime_config') or {}).get('citation_chunking') or {}).get('citation_chunk_char_limit')}`",
+        f"- parent_context_char_limit: `{((metrics.get('runtime_config') or {}).get('citation_chunking') or {}).get('parent_context_char_limit')}`",
         "",
         (
             "| Profile | Measured | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | "
@@ -1038,6 +1047,12 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
             "tag_counts": {},
         },
         "gated_agentic_simulation": {},
+        "runtime_config": {
+            "chunk_size_override": None,
+            "overlap_override": None,
+            "rerank_score_threshold_override": None,
+            "citation_chunking": dict(ENTERPRISE_RAG_CITATION_CHUNKING),
+        },
         "cost_latency": {},
         "failure_count": 0,
         "failure_tag_limitations": _failure_tag_limitations(),
@@ -1217,6 +1232,7 @@ async def run_enterprise_rag_paired_benchmark(
             "chunk_size_override": chunk_size_override,
             "overlap_override": overlap_override,
             "rerank_score_threshold_override": rerank_score_threshold_override,
+            "citation_chunking": dict(ENTERPRISE_RAG_CITATION_CHUNKING),
         },
         "profiles": profiles,
         "deltas": {

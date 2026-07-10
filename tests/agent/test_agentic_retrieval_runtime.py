@@ -348,10 +348,10 @@ def test_agentic_retrieval_runtime_drops_disallowed_acl_evidence() -> None:
 
     assert result.evidence_bundle.items == []
     assert result.evidence_bundle.dropped_evidence_ids == [
-        "ev:local:doc_restricted_runtime::block_private"
+        "ev:local:doc_restricted_runtime::block_private::cite1"
     ]
     assert result.to_task_event()["payload"]["dropped_evidence_ids"] == [
-        "ev:local:doc_restricted_runtime::block_private"
+        "ev:local:doc_restricted_runtime::block_private::cite1"
     ]
     assert result.trace_metadata["evidence_verdict"]["fallback_reason"] == "evidence_missing"
 

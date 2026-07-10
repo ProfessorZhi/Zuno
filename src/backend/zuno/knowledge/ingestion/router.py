@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 from .contracts import (
     CanonicalDocumentIR,
@@ -9,6 +10,10 @@ from .contracts import (
     ParserCapability,
     build_source_span_provenance,
 )
+
+
+DEFAULT_CITATION_CHUNK_CHAR_LIMIT = 240
+DEFAULT_PARENT_CONTEXT_CHAR_LIMIT = 1200
 
 
 def adapter_boundary_metadata(parser_id: str, *, fallback: str | None = None) -> dict:
@@ -357,14 +362,8 @@ def select_parser_for_format(format_or_path: str) -> ParserCapability:
     )
 
 
-def _chunk_payload(document: CanonicalDocumentIR, block) -> dict:
-    chunk_id = f"{document.metadata.document_id}::{block.block_id}"
-    source_span = build_source_span_provenance(
-        document=document,
-        block=block,
-        chunk_id=chunk_id,
-    )
-    metadata = {
+def _base_metadata(document: CanonicalDocumentIR, block, chunk_id: str, source_span: dict) -> dict:
+    return {
         "document_id": document.metadata.document_id,
         "source_object_id": document.metadata.source_id,
         "workspace_id": document.metadata.workspace_id,
@@ -380,6 +379,24 @@ def _chunk_payload(document: CanonicalDocumentIR, block) -> dict:
         "acl_scope": block.acl_scope,
         "sensitivity_tags": list(block.sensitivity_tags),
     }
+
+
+def _parent_chunk_payload(document: CanonicalDocumentIR, block, citation_chunk_ids: list[str]) -> dict:
+    chunk_id = f"{document.metadata.document_id}::{block.block_id}"
+    source_span = build_source_span_provenance(
+        document=document,
+        block=block,
+        chunk_id=chunk_id,
+        neighbor_chunk_ids=citation_chunk_ids,
+    )
+    metadata = _base_metadata(document, block, chunk_id, source_span)
+    metadata.update(
+        {
+            "chunk_role": "parent_context",
+            "citation_chunk_ids": list(citation_chunk_ids),
+            "citation_chunking": _chunking_metadata(),
+        }
+    )
     return {
         "chunk_id": chunk_id,
         "content": block.text,
@@ -388,19 +405,136 @@ def _chunk_payload(document: CanonicalDocumentIR, block) -> dict:
     }
 
 
+def _citation_chunk_payloads(document: CanonicalDocumentIR, block) -> list[dict]:
+    parent_chunk_id = f"{document.metadata.document_id}::{block.block_id}"
+    units = _citation_units(block.text)
+    chunk_ids = [f"{parent_chunk_id}::cite{index}" for index, _unit in enumerate(units, start=1)]
+    payloads = []
+    base_char_start = block.source_span.char_start or 0
+    for index, unit in enumerate(units):
+        chunk_id = chunk_ids[index]
+        neighbor_chunk_ids = []
+        if index > 0:
+            neighbor_chunk_ids.append(chunk_ids[index - 1])
+        if index + 1 < len(chunk_ids):
+            neighbor_chunk_ids.append(chunk_ids[index + 1])
+        span = block.source_span.model_copy(
+            update={
+                "char_start": base_char_start + unit["char_start"],
+                "char_end": base_char_start + unit["char_end"],
+                "raw_text": unit["text"],
+                "normalized_text": _normalize_chunk_text(unit["text"]),
+                "chunk_id": chunk_id,
+                "parent_chunk_id": parent_chunk_id,
+                "neighbor_chunk_ids": neighbor_chunk_ids,
+            }
+        )
+        source_span = build_source_span_provenance(
+            document=document,
+            block=block.model_copy(update={"text": unit["text"], "source_span": span}),
+            chunk_id=chunk_id,
+            parent_chunk_id=parent_chunk_id,
+            neighbor_chunk_ids=neighbor_chunk_ids,
+        )
+        metadata = _base_metadata(document, block, chunk_id, source_span)
+        metadata.update(
+            {
+                "chunk_role": "citation",
+                "parent_chunk_id": parent_chunk_id,
+                "neighbor_chunk_ids": neighbor_chunk_ids,
+                "parent_context": block.text[:DEFAULT_PARENT_CONTEXT_CHAR_LIMIT],
+                "citation_chunking": _chunking_metadata(),
+            }
+        )
+        payloads.append(
+            {
+                "chunk_id": chunk_id,
+                "content": unit["text"],
+                "source_span": source_span,
+                "metadata": metadata,
+            }
+        )
+    return payloads
+
+
+def _chunk_payloads(document: CanonicalDocumentIR, block) -> list[dict]:
+    citation_chunks = _citation_chunk_payloads(document, block)
+    parent = _parent_chunk_payload(
+        document,
+        block,
+        citation_chunk_ids=[chunk["chunk_id"] for chunk in citation_chunks],
+    )
+    return [parent, *citation_chunks]
+
+
+def _citation_units(text: str) -> list[dict]:
+    stripped = text.strip()
+    if not stripped:
+        return [{"text": "", "char_start": 0, "char_end": 0}]
+    matches = list(re.finditer(r"[^.!?\n]+(?:[.!?]+|$)", text))
+    units: list[dict] = []
+    for match in matches or [re.match(r".*", text)]:
+        if match is None:
+            continue
+        raw = match.group(0).strip()
+        if not raw:
+            continue
+        start = text.find(raw, match.start(), match.end())
+        units.extend(_split_long_unit(raw, start if start >= 0 else match.start()))
+    return units or [{"text": stripped, "char_start": 0, "char_end": len(stripped)}]
+
+
+def _split_long_unit(text: str, start: int) -> list[dict]:
+    if len(text) <= DEFAULT_CITATION_CHUNK_CHAR_LIMIT:
+        return [{"text": text, "char_start": start, "char_end": start + len(text)}]
+    units = []
+    offset = 0
+    while offset < len(text):
+        piece = text[offset : offset + DEFAULT_CITATION_CHUNK_CHAR_LIMIT].strip()
+        if piece:
+            piece_start = start + offset + (len(text[offset : offset + DEFAULT_CITATION_CHUNK_CHAR_LIMIT]) - len(text[offset : offset + DEFAULT_CITATION_CHUNK_CHAR_LIMIT].lstrip()))
+            units.append(
+                {
+                    "text": piece,
+                    "char_start": piece_start,
+                    "char_end": piece_start + len(piece),
+                }
+            )
+        offset += DEFAULT_CITATION_CHUNK_CHAR_LIMIT
+    return units
+
+
+def _normalize_chunk_text(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _chunking_metadata() -> dict:
+    return {
+        "strategy": "citation_sized_with_parent_context",
+        "citation_chunk_char_limit": DEFAULT_CITATION_CHUNK_CHAR_LIMIT,
+        "parent_context_char_limit": DEFAULT_PARENT_CONTEXT_CHAR_LIMIT,
+        "boundary_priority": ["section", "paragraph", "sentence", "table_cell", "code_block", "character"],
+    }
+
+
 def build_index_handoff_payload(document: CanonicalDocumentIR) -> IndexHandoffPayload:
-    chunks = [_chunk_payload(document, block) for block in document.blocks]
+    chunks = [
+        chunk
+        for block in document.blocks
+        for chunk in _chunk_payloads(document, block)
+    ]
+    citation_chunks = [chunk for chunk in chunks if chunk["metadata"]["chunk_role"] == "citation"]
     return IndexHandoffPayload(
         document_id=document.metadata.document_id,
         workspace_id=document.metadata.workspace_id,
         chunks=chunks,
         bm25_documents=[
             {"chunk_id": chunk["chunk_id"], "content": chunk["content"], "metadata": chunk["metadata"]}
-            for chunk in chunks
+            for chunk in citation_chunks
         ],
         vector_documents=[
             {"id": chunk["chunk_id"], "text": chunk["content"], "metadata": chunk["metadata"]}
-            for chunk in chunks
+            for chunk in citation_chunks
         ],
         graphrag_documents=[
             {
@@ -409,7 +543,7 @@ def build_index_handoff_payload(document: CanonicalDocumentIR) -> IndexHandoffPa
                 "source_chunk_id": chunk["chunk_id"],
                 **chunk["metadata"],
             }
-            for chunk in chunks
+            for chunk in citation_chunks
         ],
         evidence_items=[
             {
@@ -422,7 +556,7 @@ def build_index_handoff_payload(document: CanonicalDocumentIR) -> IndexHandoffPa
                 "document_version_id": document.metadata.document_version_id,
                 "acl_scope": chunk["metadata"]["acl_scope"],
             }
-            for chunk in chunks
+            for chunk in citation_chunks
         ],
         citation_items=[
             {
@@ -433,7 +567,7 @@ def build_index_handoff_payload(document: CanonicalDocumentIR) -> IndexHandoffPa
                 "document_version_id": document.metadata.document_version_id,
                 "source_span": chunk["metadata"]["source_span"],
             }
-            for chunk in chunks
+            for chunk in citation_chunks
         ],
     )
 
