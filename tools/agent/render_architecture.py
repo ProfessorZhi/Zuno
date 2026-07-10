@@ -323,20 +323,57 @@ def _status_class_for_label(label: str) -> str:
     return "current"
 
 
+def _flow_direction(mermaid: str) -> str:
+    match = re.search(r"^\s*flowchart\s+(?P<direction>TB|TD|BT|LR|RL)\b", mermaid, re.M)
+    if not match:
+        return "TB"
+    direction = match.group("direction")
+    return "TB" if direction in {"TD", "BT"} else direction
+
+
+def _rank_nodes(nodes: list[tuple[str, str]], edges: list[tuple[str, str]]) -> dict[str, int]:
+    order = {node_id: index for index, (node_id, _label) in enumerate(nodes)}
+    ranks = {node_id: 0 for node_id, _label in nodes}
+    for _ in range(len(nodes)):
+        changed = False
+        for source, target in edges:
+            if source not in ranks or target not in ranks:
+                continue
+            if order.get(target, 0) <= order.get(source, 0):
+                continue
+            next_rank = ranks[source] + 1
+            if ranks[target] < next_rank:
+                ranks[target] = next_rank
+                changed = True
+        if not changed:
+            break
+    return ranks
+
+
 def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
     nodes, edges = _extract_mermaid_graph(mermaid)
     if not nodes:
         nodes = [(f"node_{index}", label) for index, label in enumerate(_extract_mermaid_labels(mermaid), start=1)]
     if not nodes:
         nodes = [("overview", sub_title), ("source", "See Mermaid source")]
-    columns = 4 if len(nodes) > 6 else max(2, min(3, len(nodes)))
-    node_width = 196
-    node_height = 72
-    gap_x = 38
-    gap_y = 34
-    rows = (len(nodes) + columns - 1) // columns
-    width = columns * node_width + (columns + 1) * gap_x
-    height = 76 + rows * node_height + max(rows - 1, 0) * gap_y + 34
+    direction = _flow_direction(mermaid)
+    ranks = _rank_nodes(nodes, edges)
+    grouped: dict[int, list[tuple[str, str]]] = {}
+    for node in nodes:
+        grouped.setdefault(ranks[node[0]], []).append(node)
+    rank_values = sorted(grouped)
+    node_width = 188
+    node_height = 66
+    gap_x = 62
+    gap_y = 40
+    max_group_size = max((len(group) for group in grouped.values()), default=1)
+    rank_count = len(rank_values)
+    if direction == "LR":
+        width = rank_count * node_width + max(rank_count - 1, 0) * gap_x + 80
+        height = 82 + max_group_size * node_height + max(max_group_size - 1, 0) * gap_y + 34
+    else:
+        width = max_group_size * node_width + max(max_group_size - 1, 0) * gap_x + 80
+        height = 82 + rank_count * node_height + max(rank_count - 1, 0) * gap_y + 34
     svg_parts = [
         f'<svg class="offline-svg" viewBox="0 0 {width} {height}" role="img" aria-label="{html.escape(title)} / {html.escape(sub_title)}">',
         '<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>',
@@ -351,12 +388,18 @@ def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
         "future": ("#f1eaff", "#8266b2"),
     }
     positions: dict[str, tuple[float, float]] = {}
-    for index, (node_id, _label) in enumerate(nodes):
-        row = index // columns
-        column = index % columns
-        x = gap_x + column * (node_width + gap_x)
-        y = 76 + row * (node_height + gap_y)
-        positions[node_id] = (x, y)
+    for rank_index, rank in enumerate(rank_values):
+        group = grouped[rank]
+        for item_index, (node_id, _label) in enumerate(group):
+            if direction == "LR":
+                x = 40 + rank_index * (node_width + gap_x)
+                group_height = len(group) * node_height + max(len(group) - 1, 0) * gap_y
+                y = 82 + (height - 116 - group_height) / 2 + item_index * (node_height + gap_y)
+            else:
+                group_width = len(group) * node_width + max(len(group) - 1, 0) * gap_x
+                x = 40 + (width - 80 - group_width) / 2 + item_index * (node_width + gap_x)
+                y = 82 + rank_index * (node_height + gap_y)
+            positions[node_id] = (x, y)
 
     edge_parts: list[str] = []
     for source, target in edges:
@@ -364,21 +407,30 @@ def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
             continue
         sx, sy = positions[source]
         tx, ty = positions[target]
-        start_x = sx + node_width
-        start_y = sy + node_height / 2
-        end_x = tx
-        end_y = ty + node_height / 2
-        if tx > sx:
+        if direction == "LR":
+            start_x = sx + node_width
+            start_y = sy + node_height / 2
+            end_x = tx
+            end_y = ty + node_height / 2
             mid_x = (start_x + end_x) / 2
-            path = f"M {start_x} {start_y} C {mid_x} {start_y}, {mid_x} {end_y}, {end_x - 8} {end_y}"
+            if tx >= sx:
+                path = f"M {start_x} {start_y} C {mid_x} {start_y}, {mid_x} {end_y}, {end_x - 8} {end_y}"
+            else:
+                loop_y = min(start_y, end_y) - 32
+                path = f"M {sx + node_width / 2} {sy} C {sx + node_width / 2} {loop_y}, {tx + node_width / 2} {loop_y}, {tx + node_width / 2} {ty - 8}"
         else:
+            start_x = sx + node_width / 2
+            start_y = sy + node_height
+            end_x = tx + node_width / 2
+            end_y = ty
             mid_y = (start_y + end_y) / 2
-            path = (
-                f"M {sx + node_width / 2} {sy + node_height} "
-                f"C {sx + node_width / 2} {mid_y}, {tx + node_width / 2} {mid_y}, {tx + node_width / 2} {ty - 8}"
-            )
+            if ty >= sy:
+                path = f"M {start_x} {start_y} C {start_x} {mid_y}, {end_x} {mid_y}, {end_x} {end_y - 8}"
+            else:
+                loop_x = min(start_x, end_x) - 34
+                path = f"M {sx} {sy + node_height / 2} C {loop_x} {sy + node_height / 2}, {loop_x} {ty + node_height / 2}, {tx - 8} {ty + node_height / 2}"
         edge_parts.append(
-            f'<path class="svg-edge" d="{path}" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>'
+            f'<path class="svg-edge" d="{path}" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>'
         )
     svg_parts.extend(edge_parts)
 
@@ -693,7 +745,7 @@ def build_html() -> str:
       filter: drop-shadow(0 1px 1px rgba(22,32,42,.08));
     }}
     .svg-edge {{
-      opacity: .78;
+      opacity: .48;
     }}
     .analysis {{
       margin-top: 14px;
