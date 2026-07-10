@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE06_evidence-aware-reranker
-status: pending
+status: active
 owner: Retrieval / Eval
 
 ## 目标

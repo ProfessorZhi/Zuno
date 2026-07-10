@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE05_entity-chunk-bidirectional-graph-index.md
+current_phase: PHASE06_evidence-aware-reranker.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 总目标
@@ -80,7 +80,7 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
 文件：`PHASE04_lexical-phrase-evidence-retriever.md`
 
-状态：active。
+状态：completed。
 
 目标：把 BM25、phrase / normalized substring、vector、entity 和 graph neighbor 作为一等候选来源，再做 RRF / rerank。
 
@@ -99,6 +99,8 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 ### PHASE06：Evidence-Aware Reranker
 
 文件：`PHASE06_evidence-aware-reranker.md`
+
+状态：active。
 
 目标：rerank 不只排序 relevance，还排序 answerability、exact evidence presence、citation span quality、source authority、ACL allowed、freshness。
 

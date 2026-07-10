@@ -977,34 +977,90 @@ def _production_graphrag_trace(
 
 def _graph_extraction_trace(items: list[EvidenceItem]) -> dict[str, Any]:
     records = []
+    entity_support: dict[str, dict[str, set[str]]] = {}
+    relation_support: dict[str, dict[str, Any]] = {}
+    chunk_entities: dict[str, list[str]] = {}
+    span_entities: dict[str, list[str]] = {}
     for item in items:
         entities = _entities(item.text)
+        chunk_id = item.chunk_id or _evidence_ref(item)
+        span_id = _span_id(item)
+        chunk_entities[chunk_id] = entities
+        span_entities[span_id] = entities
+        for entity in entities:
+            entity_entry = entity_support.setdefault(
+                entity,
+                {"supporting_chunk_ids": set(), "supporting_span_ids": set()},
+            )
+            entity_entry["supporting_chunk_ids"].add(chunk_id)
+            entity_entry["supporting_span_ids"].add(span_id)
+            relation_key = f"{item.document_id}->DOCUMENT_MENTIONS_ENTITY->{entity}"
+            relation_entry = relation_support.setdefault(
+                relation_key,
+                {
+                    "source": item.document_id,
+                    "target": entity,
+                    "relation_type": "DOCUMENT_MENTIONS_ENTITY",
+                    "supporting_chunk_ids": set(),
+                    "evidence_span_ids": set(),
+                    "extraction_method": "local_regex_entity_extractor",
+                    "extraction_version": "phase05-local-v1",
+                },
+            )
+            relation_entry["supporting_chunk_ids"].add(chunk_id)
+            relation_entry["evidence_span_ids"].add(span_id)
         records.append(
             {
                 "text_unit_id": _evidence_ref(item),
                 "document_id": item.document_id,
-                "chunk_id": item.chunk_id,
+                "chunk_id": chunk_id,
                 "block_id": item.block_id,
                 "source_uri": item.source_uri,
                 "source_span": dict(item.source_span),
+                "source_span_id": span_id,
                 "entities": entities,
                 "relations": [
                     {
                         "source": item.document_id,
                         "target": entity,
                         "relation_type": "DOCUMENT_MENTIONS_ENTITY",
+                        "supporting_chunk_ids": [chunk_id],
+                        "evidence_span_ids": [span_id],
                     }
                     for entity in entities
                 ],
                 "acl_scope": item.acl_scope,
             }
         )
+    entity_index = {
+        entity: {
+            "supporting_chunk_ids": sorted(payload["supporting_chunk_ids"]),
+            "supporting_span_ids": sorted(payload["supporting_span_ids"]),
+        }
+        for entity, payload in sorted(entity_support.items())
+    }
+    relation_index = [
+        {
+            **{
+                key: value
+                for key, value in relation.items()
+                if key not in {"supporting_chunk_ids", "evidence_span_ids"}
+            },
+            "supporting_chunk_ids": sorted(relation["supporting_chunk_ids"]),
+            "evidence_span_ids": sorted(relation["evidence_span_ids"]),
+        }
+        for relation in relation_support.values()
+    ]
     return {
         "status": "local_deterministic",
         "text_unit_count": len(records),
         "entity_count": sum(len(record["entities"]) for record in records),
         "relation_count": sum(len(record["relations"]) for record in records),
         "records": records,
+        "entity_index": entity_index,
+        "relation_index": relation_index,
+        "chunk_entity_index": chunk_entities,
+        "span_entity_index": span_entities,
     }
 
 
@@ -1019,6 +1075,8 @@ def _community_report_trace(items: list[EvidenceItem]) -> dict[str, Any]:
             "community_id": community_id,
             "summary": " ".join(item.text for item in community_items)[:240],
             "source_evidence_ids": [item.evidence_id for item in community_items],
+            "source_chunk_ids": [item.chunk_id or _evidence_ref(item) for item in community_items],
+            "source_span_ids": [_span_id(item) for item in community_items],
             "source_documents": sorted({item.document_id for item in community_items}),
             "status": "local_deterministic",
         }
@@ -1042,6 +1100,15 @@ def _fusion_trace(items: list[EvidenceItem]) -> dict[str, Any]:
             item.evidence_id: [method.value for method in item.source_methods] for item in items
         },
     }
+
+
+def _span_id(item: EvidenceItem) -> str:
+    return str(
+        item.source_span.get("span_id")
+        or item.source_span.get("chunk_id")
+        or item.chunk_id
+        or _evidence_ref(item)
+    )
 
 
 def _unsupported_claim_metrics(

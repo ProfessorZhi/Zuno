@@ -143,6 +143,18 @@ def test_agentic_retrieval_runtime_consumes_index_runtime_and_returns_cited_answ
         "trace_phase09_runtime:0002:post_retrieval",
         "trace_phase09_runtime:0003:post_answer",
     ]
+    graph_trace = result.trace_metadata["production_graphrag"]["graph_extraction"]
+    renewal_chunk_id = result.evidence_bundle.items[0].chunk_id
+    assert graph_trace["entity_index"]["Renewal"]["supporting_chunk_ids"] == [renewal_chunk_id]
+    assert graph_trace["entity_index"]["Renewal"]["supporting_span_ids"] == [renewal_chunk_id]
+    relation = next(
+        item for item in graph_trace["relation_index"] if item["target"] == "Renewal"
+    )
+    assert relation["supporting_chunk_ids"] == [renewal_chunk_id]
+    assert relation["evidence_span_ids"] == [renewal_chunk_id]
+    report = result.trace_metadata["production_graphrag"]["community_report"]["reports"][0]
+    assert renewal_chunk_id in report["source_chunk_ids"]
+    assert renewal_chunk_id in report["source_span_ids"]
 
 
 def test_agentic_retrieval_runtime_covers_normal_global_and_drift_modes() -> None:

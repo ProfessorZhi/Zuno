@@ -146,6 +146,37 @@ def test_evidence_bundle_citations_and_unsupported_claims_are_traceable() -> Non
     ]
 
 
+def test_graph_context_without_source_span_is_not_strict_citation() -> None:
+    from zuno.knowledge.agentic_graphrag import (
+        CitationBuilder,
+        EvidenceBundle,
+        EvidenceItem,
+        QueryMethod,
+    )
+
+    bundle = EvidenceBundle.from_candidates(
+        [
+            EvidenceItem(
+                evidence_id="ev-graph-summary",
+                document_id="doc-graph",
+                chunk_id="doc-graph::summary",
+                block_id="summary",
+                retrieval_method=QueryMethod.GLOBAL,
+                score=0.77,
+                source_span={},
+                citation_label="[1]",
+                trust_label="graph_summary_without_source_refs",
+                acl_scope="workspace",
+                text="Graph summary without source refs.",
+            )
+        ],
+        allowed_acl_scopes={"workspace"},
+    )
+
+    assert bundle.coverage == 0.0
+    assert CitationBuilder().build(bundle) == []
+
+
 def test_graph_index_pipeline_consumes_document_ir_source_spans() -> None:
     from zuno.knowledge.agentic_graphrag import GraphRAGIndexPipelineContract
     from zuno.knowledge.ingestion import (
