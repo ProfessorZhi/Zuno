@@ -10,15 +10,21 @@
 
 ```text
 agent_run
+  -> input_gate
   -> context_build
   -> memory_read
+  -> strategy_select
   -> planning
-  -> retrieval
-  -> graph_expand
-  -> rerank
-  -> model_call
-  -> tool_call
+  -> execute_step
+     -> retrieval
+     -> graph_expand
+     -> rerank
+     -> model_call
+     -> tool_call
+  -> evidence_gate
   -> claim_binding
+  -> reflection
+  -> replan
   -> answer_synthesis
   -> output_gate
   -> memory_commit
@@ -39,6 +45,29 @@ agent_run
 ## Release Gate
 
 Agentic GraphRAG 必须与 standard_rag 使用同一 fixed case set。只有完整 measured profile 才能进入 release gate 判断。
+
+## 分层指标
+
+| 层 | 指标 |
+| --- | --- |
+| Retrieval | Recall@K、MRR、Evidence Precision/Recall、doc/text/span hit |
+| Generation | Faithfulness、Answer Relevancy、Citation Accuracy、Answer Correctness、Unsupported Claim Rate |
+| Agent | Plan success、step acceptance、replan success、reflection pass、average retrieval rounds、tool success、abstain correctness |
+| Memory | retrieval relevance、stale/conflict rate、promotion quality、Reflexion reuse rate、repeated failure reduction |
+| Product | thumbs down、follow-up、session resolution、latency、cost |
+
+离线到线上反馈闭环：
+
+```text
+offline eval
+-> release gate
+-> product feedback
+-> failure case
+-> fixed dataset update
+-> regression eval
+```
+
+Product feedback 不能直接证明质量完成；它只能生成 failure case、dataset update 或人工审查输入。质量完成仍必须由 fixed benchmark 和 release gate 证明。
 
 ## 当前与短期目标
 

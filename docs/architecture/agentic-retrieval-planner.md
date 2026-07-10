@@ -39,6 +39,153 @@ ContextPack
 
 EvidenceBundle 必须包含 source document、source span、citation label 和 retriever/rerank diagnostics。Graph evidence 必须回到 source span；doc-only evidence 不得作为 strict citation。
 
+## 五阶段 Retrieval Architecture
+
+```text
+1. Index Layer
+2. Query Strategy Layer
+3. Recall / Graph / Rerank Layer
+4. Evidence and Citation Layer
+5. Corrective Agentic Control Layer
+```
+
+### Index Layer
+
+```text
+SourceObject
+-> ParseSnapshot
+-> CanonicalDocumentIR
+-> DocumentBlock / SourceSpan
+-> CitationChunk
+-> ParentChunk
+-> BM25 / Vector / Entity-Relation-Community indexes
+-> IndexManifest
+-> CitationLineage
+```
+
+粒度边界：
+
+```text
+CitationChunk = retrieval unit
+ParentChunk   = context expansion unit
+SourceSpan    = citation and provenance unit
+```
+
+parser failed 或 source span 缺失时不得 fake index 或 strict citation。
+
+### QueryStrategy
+
+```yaml
+query_strategy:
+  type: DIRECT | REWRITE | MULTI_QUERY | STEP_BACK | HYDE | ENTITY_DECOMPOSITION | RELATION_QUERY
+  generated_queries: [string]
+  rationale_summary: string
+  budget_cost: number
+  expected_failure_to_fix: string
+```
+
+| 问题特征 | 默认策略 |
+| --- | --- |
+| 口语、缩写、代词指代 | REWRITE |
+| 用户表达与文档文体差异大 | HYDE |
+| 问题过度具体、需要背景原理 | STEP_BACK |
+| 多维度、表述角度多 | MULTI_QUERY |
+| 多实体及关系问题 | ENTITY_DECOMPOSITION / RELATION_QUERY |
+| 精确型号、数字、术语 | DIRECT + BM25 |
+| 简单清晰事实问题 | DIRECT |
+
+### Recall、Fusion 与 Rerank
+
+```text
+BM25 ---------\
+Vector --------\
+Multi Query ----> RRF / fusion -> Cross-encoder rerank -> Parent expansion
+Graph ----------/
+```
+
+- BM25 与 Vector 默认可并行。
+- RRF 使用排名融合不可比分数。
+- Rerank 只对候选集运行。
+- Graph 不是默认全开，由 GraphRoutingDecision 控制。
+- Context 中只放经预算选择的 evidence。
+
+### GraphRoutingDecision
+
+```yaml
+graph_routing_decision:
+  use_graph: boolean
+  reason_codes:
+    - multiple_entities
+    - explicit_relation
+    - multi_hop
+    - global_theme
+    - cross_document_relation
+  mode: local_path | global_community
+  max_hops: int
+  entry_entities: [entity]
+```
+
+适合使用 Graph：多个明确实体、实体关系、多跳路径、跨文档关联、corpus-level 主题/社区问题。
+
+跳过 Graph：简单事实查找、操作流程、无可靠实体 grounding、图证据无法回到 SourceSpan、latency/budget 不允许。
+
+## EvidenceLedger
+
+多轮检索必须通过 EvidenceLedger 累积、去重和追踪证据。
+
+```yaml
+evidence_record:
+  evidence_id: string
+  source_document_id: string
+  document_version_id: string
+  source_span: object
+  citation_label: string
+  retrieval_round: int
+  query_id: string
+  retriever: bm25 | vector | graph | tool
+  raw_score: number | null
+  fusion_rank: int | null
+  rerank_score: number | null
+  graph_path: [edge] | null
+  claim_refs: [claim_id]
+  contradiction_group: string | null
+  freshness: string
+  selected: boolean
+  selection_reason: string
+  trace_span_id: string
+```
+
+EvidenceLedger 负责跨轮去重、证据版本、新证据增量、冲突分组、source lineage、Context budget、claim attribution 和 eval attribution。
+
+## RetrievalQualityVerdict
+
+```yaml
+retrieval_quality_verdict:
+  verdict: RELEVANT | AMBIGUOUS | IRRELEVANT | CONFLICTING | INSUFFICIENT_SPAN
+  evidence_count: int
+  span_coverage: number
+  top_score: number | null
+  novelty_since_previous_round: number
+  missing_requirements: [string]
+```
+
+Corrective loop：
+
+```text
+Need retrieval?
+-> Query Strategy
+-> Retrieve / Graph / Rerank
+-> EvidenceLedger
+-> Retrieval Quality Gate
+   -> sufficient -> Claim Binding
+   -> doc miss -> Rewrite / Multi Query / HyDE
+   -> text miss -> Parent / Adjacent / Graph expansion
+   -> citation miss -> Focused source-span retrieval
+   -> conflicting -> retrieve both sides / ask user
+   -> external gap -> governed external Tool
+   -> no safe path -> abstain
+```
+
 ## Failure Buckets
 
 - doc_miss
@@ -48,6 +195,16 @@ EvidenceBundle 必须包含 source document、source span、citation label 和 r
 - unavailable_due_to_missing_trace_fields
 
 缺少 trace 字段时必须输出 unavailable，不得编造 bucket。
+
+| Failure bucket | 默认纠正动作 |
+| --- | --- |
+| `doc_miss` | REWRITE、MULTI_QUERY、HYDE、扩大 scope |
+| `doc_hit_text_miss` | Parent expansion、adjacent span、Graph path |
+| `text_hit_citation_miss` | focused citation retrieval、source-span expansion |
+| `citation_hit_answer_wrong` | answer critic、claim rewrite、重新 synthesis |
+| `graph_without_span` | 降为辅助信息，不允许 strict citation |
+| `retrieval_low_confidence` | external Tool、ASK_USER 或 ABSTAIN |
+| `conflicting_evidence` | 保存双方证据、标记冲突、继续检索或说明不确定性 |
 
 ## 质量门
 

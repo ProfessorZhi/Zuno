@@ -12,6 +12,7 @@
 
 - `document-ingestion-foundation.md`
 - `agent-core-runtime.md`
+- `memory-and-context.md`
 - `capability-and-skill-layer.md`
 - `agentic-retrieval-planner.md`
 - `eval-observability-and-cost.md`

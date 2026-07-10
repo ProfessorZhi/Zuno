@@ -203,6 +203,112 @@ def _verify_render_safe(title: str, mermaid: str) -> None:
         raise ValueError(f"{title} has unquoted Mermaid labels that may fail in browser: {unsafe[:3]}")
 
 
+def _clean_mermaid_label(label: str) -> str:
+    label = re.sub(r"<br\s*/?>", " / ", label)
+    label = re.sub(r"<[^>]+>", "", label)
+    label = re.sub(r"\s+", " ", label)
+    return html.unescape(label).strip()
+
+
+def _extract_mermaid_labels(mermaid: str) -> list[str]:
+    labels: list[str] = []
+    seen: set[str] = set()
+    for match in re.finditer(r'\w+\s*(?:\{|\[|\(|>)"(?P<label>[^"]+)"(?:\}|\]|\)|])', mermaid):
+        label = _clean_mermaid_label(match.group("label"))
+        if label and label not in seen:
+            labels.append(label)
+            seen.add(label)
+    return labels[:16]
+
+
+def _wrap_svg_text(text: str, width: int = 26) -> list[str]:
+    words = text.split()
+    if not words:
+        return [text[:width]]
+    lines: list[str] = []
+    current = ""
+    for word in words:
+        if not current:
+            current = word
+        elif len(current) + len(word) + 1 <= width:
+            current = f"{current} {word}"
+        else:
+            lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines[:3]
+
+
+def _status_class_for_label(label: str) -> str:
+    lower = label.lower()
+    if any(term in lower for term in ["blocked", "not proven", "quality gate", "release gate"]):
+        return "blocked"
+    if any(term in lower for term in ["future", "optional", "external"]):
+        return "future"
+    if any(term in lower for term in ["target", "replan", "reflexion", "ledger", "corrective", "unified"]):
+        return "target"
+    if any(term in lower for term in ["current", "baseline", "partial", "memory", "graph", "tool", "agent"]):
+        return "partial"
+    return "current"
+
+
+def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
+    labels = _extract_mermaid_labels(mermaid)
+    if not labels:
+        labels = [sub_title, "See Mermaid source"]
+    columns = 4
+    card_width = 220
+    card_height = 86
+    gap_x = 20
+    gap_y = 22
+    rows = (len(labels) + columns - 1) // columns
+    width = columns * card_width + (columns + 1) * gap_x
+    height = 76 + rows * card_height + max(rows - 1, 0) * gap_y + 34
+    svg_parts = [
+        f'<svg class="offline-svg" viewBox="0 0 {width} {height}" role="img" aria-label="{html.escape(title)} / {html.escape(sub_title)}">',
+        '<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>',
+        f'<text x="24" y="32" class="svg-title">{html.escape(sub_title)}</text>',
+        f'<text x="24" y="54" class="svg-subtitle">{html.escape(title)}</text>',
+    ]
+    status_styles = {
+        "current": ("#dff5e7", "#4f9d69"),
+        "partial": ("#fff3cf", "#bf8b21"),
+        "target": ("#e3f0ff", "#4f82bd"),
+        "blocked": ("#fff0f0", "#c84b4b"),
+        "future": ("#f1eaff", "#8266b2"),
+    }
+    for index, label in enumerate(labels):
+        row = index // columns
+        column = index % columns
+        x = gap_x + column * (card_width + gap_x)
+        y = 76 + row * (card_height + gap_y)
+        status = _status_class_for_label(label)
+        fill, stroke = status_styles[status]
+        svg_parts.append(
+            f'<rect x="{x}" y="{y}" width="{card_width}" height="{card_height}" rx="10" fill="{fill}" stroke="{stroke}" stroke-width="1.4"/>'
+        )
+        svg_parts.append(
+            f'<text x="{x + 12}" y="{y + 22}" class="svg-status">{html.escape(status.upper())}</text>'
+        )
+        for line_index, line in enumerate(_wrap_svg_text(label)):
+            svg_parts.append(
+                f'<text x="{x + 12}" y="{y + 45 + line_index * 16}" class="svg-label">{html.escape(line)}</text>'
+            )
+        if index < len(labels) - 1 and column < columns - 1:
+            arrow_x = x + card_width + 5
+            arrow_y = y + card_height / 2
+            svg_parts.append(
+                f'<path d="M {arrow_x} {arrow_y} L {arrow_x + 10} {arrow_y}" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>'
+            )
+    svg_parts.insert(
+        1,
+        '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>',
+    )
+    svg_parts.append("</svg>")
+    return "\n".join(svg_parts)
+
+
 def extract_diagrams(content: str) -> list[Diagram]:
     sections = _sections(content)
     missing = [title for title in EXPECTED_DIAGRAMS if title not in sections]
@@ -230,13 +336,13 @@ def extract_diagrams(content: str) -> list[Diagram]:
         subdiagrams: list[SubDiagram] = []
         for index, match in enumerate(matches, start=1):
             mermaid = match.group("body").strip()
-            sub_title = _extract_nearest_subtitle(section_body, match.start(), "Main View")
+            sub_title = _extract_nearest_subtitle(section_body, match.start(), "Overview")
             _verify_palette(f"{title} / {sub_title}", mermaid)
             _verify_render_safe(f"{title} / {sub_title}", mermaid)
             subdiagrams.append(
                 SubDiagram(
                     title=sub_title,
-                    description=_extract_subdescription(section_body, match.start(), f"{title} main diagram {index}"),
+                    description=_extract_subdescription(section_body, match.start(), f"{title} overview and implementation boundary"),
                     analysis=_extract_analysis_after(section_body, match.end()),
                     mermaid=mermaid,
                 )
@@ -261,6 +367,7 @@ def _render_diagram_card(index: int, diagram: Diagram) -> str:
         escaped_sub_title = html.escape(subdiagram.title)
         escaped_sub_description = html.escape(subdiagram.description)
         escaped_source = html.escape(subdiagram.mermaid)
+        offline_svg = _render_offline_svg(diagram.title, subdiagram.title, subdiagram.mermaid)
         analysis_items = "\n".join(
             f"                <li>{html.escape(item)}</li>" for item in subdiagram.analysis
         )
@@ -278,8 +385,8 @@ def _render_diagram_card(index: int, diagram: Diagram) -> str:
               <button class="fullscreen-button" type="button">展开全屏查看</button>
             </div>
             <div class="diagram-frame">
-              <div class="mermaid">
-{escaped_source}
+              <div class="offline-diagram">
+{offline_svg}
               </div>
             </div>
             <div class="analysis">
@@ -290,7 +397,7 @@ def _render_diagram_card(index: int, diagram: Diagram) -> str:
             </div>
             <details>
               <summary>Mermaid source</summary>
-              <pre><code>{escaped_source}</code></pre>
+              <pre><code class="mermaid-source">{escaped_source}</code></pre>
             </details>
           </section>
 """
@@ -339,6 +446,7 @@ def build_html() -> str:
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Zuno Lean Complete Product Architecture</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232f6db3'/%3E%3Cpath d='M4 11h8v1H4zM4 4h8L5.8 10H12v1H4l6.2-6H4z' fill='white'/%3E%3C/svg%3E" />
   <style>
     :root {{
       color-scheme: light;
@@ -462,10 +570,31 @@ def build_html() -> str:
       padding: 16px;
       background: #fbfcfe;
     }}
-    .mermaid {{
+    .offline-diagram {{
       min-width: 760px;
-      display: flex;
-      justify-content: center;
+    }}
+    .offline-svg {{
+      width: 100%;
+      min-width: 760px;
+      height: auto;
+      display: block;
+    }}
+    .svg-title {{
+      font-size: 18px;
+      font-weight: 700;
+      fill: var(--ink);
+    }}
+    .svg-subtitle,
+    .svg-status {{
+      font-size: 11px;
+      fill: var(--muted);
+    }}
+    .svg-status {{
+      font-weight: 700;
+    }}
+    .svg-label {{
+      font-size: 13px;
+      fill: var(--ink);
     }}
     .analysis {{
       margin-top: 14px;
@@ -510,7 +639,10 @@ def build_html() -> str:
       padding: 16px;
       background: var(--bg);
     }}
-    .dialog-body .mermaid {{
+    .dialog-body .offline-diagram {{
+      min-width: 980px;
+    }}
+    .dialog-body .offline-svg {{
       min-width: 980px;
     }}
     @media (max-width: 720px) {{
@@ -518,7 +650,7 @@ def build_html() -> str:
       .diagram-heading {{ display: block; }}
       .fullscreen-button {{ margin-top: 10px; }}
       .diagram-meta {{ grid-template-columns: 1fr; }}
-      .mermaid {{ min-width: 680px; }}
+      .offline-diagram, .offline-svg {{ min-width: 680px; }}
     }}
   </style>
 </head>
@@ -544,10 +676,7 @@ def build_html() -> str:
       <div id="dialog-content"></div>
     </div>
   </dialog>
-  <script type="module">
-    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-    mermaid.initialize({{ startOnLoad: true, securityLevel: "strict", theme: "base" }});
-
+  <script>
     const dialog = document.getElementById("diagram-dialog");
     const dialogTitle = document.getElementById("dialog-title");
     const dialogContent = document.getElementById("dialog-content");
@@ -556,11 +685,10 @@ def build_html() -> str:
       button.addEventListener("click", () => {{
         const section = button.closest(".diagram-card");
         const title = section.dataset.title || "Diagram";
-        const mermaidSource = section.querySelector("pre code").textContent;
+        const diagram = section.querySelector(".offline-diagram").cloneNode(true);
         dialogTitle.textContent = title;
-        dialogContent.innerHTML = `<div class="mermaid">${{mermaidSource}}</div>`;
+        dialogContent.replaceChildren(diagram);
         dialog.showModal();
-        mermaid.run({{ nodes: [dialogContent.querySelector(".mermaid")] }});
       }});
     }});
 

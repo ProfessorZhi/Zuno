@@ -52,9 +52,10 @@ def test_docs_architecture_front_path_is_small_and_synced() -> None:
         "README.md",
         "architecture.md",
         "production-readiness.md",
-        "document-ingestion-foundation.md",
-        "agent-core-runtime.md",
-        "capability-and-skill-layer.md",
+            "document-ingestion-foundation.md",
+            "agent-core-runtime.md",
+            "memory-and-context.md",
+            "capability-and-skill-layer.md",
         "agentic-retrieval-planner.md",
         "eval-observability-and-cost.md",
         "input-layer-and-document-processing.md",
@@ -133,6 +134,9 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
         "六物理运行域",
         "Agent Core / Planning & Control",
         "Capability 是能力目录、选择器和权限策略",
+        "Four-layer governed Memory",
+        "Corrective Agentic GraphRAG",
+        "EvidenceLedger",
         "Product & API",
         "Input & Knowledge",
         "Agent Core",
@@ -157,6 +161,7 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
         "Agentic GraphRAG fixed benchmark 跑通并达到 baseline gate",
         "所有真实模型调用统一进入 Model Runtime / Gateway",
         "统一 Agent Core 真实闭环",
+        "EvidenceLedger",
         "Agent run trace 持久化并可查看",
     ]:
         assert phrase in production_readiness
@@ -166,9 +171,10 @@ def test_topic_docs_follow_six_runtime_domains() -> None:
     expected = {
         "document-ingestion-foundation.md": ["Input & Knowledge", "SourceObject", "CitationLineage"],
         "agent-core-runtime.md": ["Agent Core", "Model Runtime / Gateway", "Single Controller", "统一 Agent Core 真实闭环"],
-        "capability-and-skill-layer.md": ["Capability & Tool", "SkillCard", "ToolRequest"],
-        "agentic-retrieval-planner.md": ["Agentic Retrieval Planner", "Failure Buckets", "quality not yet proven", "Query Rewrite"],
-        "eval-observability-and-cost.md": ["Governance & Observability", "agent_run", "Measurement Semantics"],
+        "memory-and-context.md": ["Sensory Memory", "Short-term Memory", "Long-term Memory", "Entity Memory", "ContextPack read view"],
+        "capability-and-skill-layer.md": ["Capability & Tool", "Function Calling", "SkillMetadata", "ToolRequest"],
+        "agentic-retrieval-planner.md": ["Agentic Retrieval Planner", "Failure Buckets", "EvidenceLedger", "RetrievalQualityVerdict"],
+        "eval-observability-and-cost.md": ["Governance & Observability", "agent_run", "Measurement Semantics", "Retrieval", "Generation"],
         "input-layer-and-document-processing.md": ["Product & API", "Input & Knowledge", "parser blocked"],
         "knowledge-space-product-configuration.md": ["Knowledge Space", "ModelSlotBinding", "RetrievalProfile"],
     }
@@ -297,8 +303,10 @@ def test_architecture_html_is_generated_from_ten_mermaid_sections() -> None:
     assert architecture_html.count('class="diagram-section') == 10
     assert architecture_html.count('class="diagram-card"') >= 10
     assert architecture_html.count("<summary>Mermaid source</summary>") >= 10
+    assert architecture_html.count('class="offline-svg"') >= 10
     assert "diagram-dialog" in architecture_html
-    assert 'securityLevel: "strict"' in architecture_html
+    assert "https://cdn.jsdelivr.net" not in architecture_html
+    assert "import mermaid" not in architecture_html
 
 
 def test_architecture_html_matches_rendered_mermaid_source() -> None:

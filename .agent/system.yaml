@@ -172,6 +172,7 @@ skill_routes:
       - "docs/architecture/production-readiness.md"
       - "docs/architecture/document-ingestion-foundation.md"
       - "docs/architecture/agent-core-runtime.md"
+      - "docs/architecture/memory-and-context.md"
       - "docs/architecture/capability-and-skill-layer.md"
       - "docs/architecture/agentic-retrieval-planner.md"
       - "docs/architecture/eval-observability-and-cost.md"

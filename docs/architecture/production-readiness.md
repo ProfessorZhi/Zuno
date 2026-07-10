@@ -24,6 +24,7 @@ P0：
 - Agentic GraphRAG fixed benchmark 跑通并达到 baseline gate。
 - 所有真实模型调用统一进入 Model Runtime / Gateway。
 - 统一 Agent Core 真实闭环：Strategy、Plan-and-Execute、ReAct、Observation、Reflection、Replan、Reflexion、Memory 和 Retrieval 进入同一条可执行、可恢复、可测量链路。
+- Corrective Agentic GraphRAG：`RETRIEVE_MORE -> replan -> execute_step` 真实回路、EvidenceLedger 和 failure bucket corrective action 可观测。
 - Agent run trace 持久化并可查看。
 
 P1：
@@ -32,6 +33,8 @@ P1：
 - 至少一个真实 PDF parser 跑通 source span citation。
 - 2-3 个真实 Tool 完成 approval / timeout / trace 闭环。
 - Memory ContextPack 在真实 AgentChat 中可观测。
+- Reflexion candidate -> review -> approved -> future ContextPack reuse。
+- Skill metadata -> instruction -> resource 的渐进式加载 trace。
 
 P2：
 

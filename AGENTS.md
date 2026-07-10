@@ -56,7 +56,7 @@ Zuno 的架构文档由 `docs/architecture/architecture.md`、`docs/architecture
 - `docs/architecture/` 是人类可读的正式架构说明，也是 public architecture source。
 - `docs/architecture/architecture.md` 是正式总架构文档，用自然语言说清当前事实、目标分层、主链路、企业私有知识库场景、文档解析、Memory、Tool、RAG / GraphRAG、安全、评测和实施落点；同一文件后半部分维护十类 Mermaid 架构视图。
 - `docs/architecture/document-ingestion-foundation.md` 是企业知识库文档入口契约，集中说明 workspace file、ParseGateway、Document IR、parser job、index handoff、幂等、版本、防丢、ACL、citation lineage 和多模态解析边界。
-- PHASE14 稳定专题文档包括 `agent-core-runtime.md`、`capability-and-skill-layer.md`、`agentic-retrieval-planner.md`、`eval-observability-and-cost.md`、`input-layer-and-document-processing.md` 和 `knowledge-space-product-configuration.md`；它们只承载稳定专题架构、Current / Target 边界和证据路径，不承载 phase log、roadmap 或 Agent 操作规则。
+- PHASE14 稳定专题文档包括 `agent-core-runtime.md`、`memory-and-context.md`、`capability-and-skill-layer.md`、`agentic-retrieval-planner.md`、`eval-observability-and-cost.md`、`input-layer-and-document-processing.md` 和 `knowledge-space-product-configuration.md`；它们只承载稳定专题架构、Current / Target 边界和证据路径，不承载 phase log、roadmap 或 Agent 操作规则。
 - `docs/` 应少而精，保留相对稳定、面向人的正式结论；不要把高频变化的执行细节、图清单、workflow change log 或 Agent 操作规则塞进 `docs/`。
 - `docs/architecture/architecture.html` 是正式架构 HTML 展示页，不是唯一事实来源；它必须由 `docs/architecture/architecture.md` 和 `tools/agent/render_architecture.py` 生成。
 - `.agent/architecture/architecture.md` 是 Agent 侧总架构镜像，必须与 `docs/architecture/architecture.md` 完全一致。

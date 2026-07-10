@@ -14,6 +14,7 @@
 
 - [Document ingestion foundation](./architecture/document-ingestion-foundation.md)
 - [Agent core runtime](./architecture/agent-core-runtime.md)
+- [Memory and context engineering](./architecture/memory-and-context.md)
 - [Capability and skill layer](./architecture/capability-and-skill-layer.md)
 - [Agentic retrieval planner](./architecture/agentic-retrieval-planner.md)
 - [Eval, observability and cost](./architecture/eval-observability-and-cost.md)

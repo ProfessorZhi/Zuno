@@ -123,7 +123,7 @@ Zuno 的目标架构必须同时保留两张视图，不能把其中一张当成
 | Input | 上传、解析、Document IR、SourceObject、SourceSpan 和 parser/index handoff | parser blocked 不 fake index |
 | Knowledge | Chunk、Index、BM25、Vector、GraphRAG、EvidenceBundle 和 CitationLineage | 产出可回溯 evidence span，不决定最终回答 |
 | Model Gateway | 模型槽位、provider、base URL、路由、超时、费用、fallback 和 usage trace | 所有真实模型调用统一入口 |
-| Memory | 工作记忆、会话记忆、长期记忆、经验记忆、ContextPack、读写治理 | Memory 能力独立，Agent Core 负责在任务生命周期中读、用、写 |
+| Memory | Sensory、Short-term、Long-term、Entity 四层记忆，ContextPack、读写治理和跨任务经验复用 | Memory 能力独立，Agent Core 负责在任务生命周期中读、用、写；ContextPack 不是第五层 Memory |
 | Agent Core / Planning & Control | Strategy、Plan、ReAct、Observation、Reflection、Replan、Stop condition、abstain、answer synthesis | Single Controller 的控制循环，不是所有模块的物理父层 |
 | Capability | SkillCard、CapabilityCard、能力目录、能力选择、权限策略和路由 | 描述与路由能力，不拥有 Knowledge/Tool 的执行实现 |
 | Tool Runtime | Tool/MCP 执行、审批、timeout、credential ref、result normalization 和 ToolTrace | 副作用执行必须经 policy/approval/trace |
@@ -159,6 +159,34 @@ Planning、ReAct、Reflection、Replan 和 Reflexion 也不是五层、五个 Ag
 Memory：模块能力和本地 baseline 较完整；真实 AgentChat 读、用、写、Reflexion review 闭环仍未完全打通。
 Planning：contract 和规则判断已存在；真实 GeneralAgent、AgentControlRuntime 和 durable runtime 尚未统一成一条执行图。
 RAG：证据、引用和 GraphRAG 基础较强；agentic re-retrieval 闭环和 fixed benchmark measured pass 仍未完成。
+```
+
+### 3.2 可实施规格增强
+
+下一阶段架构文档不再继续增加“大层”，而是把核心能力补成有状态、有触发条件、有输入输出、有失败转移和有验收指标的 contract。
+
+| 模块 | 目标 contract | Current 边界 |
+| --- | --- | --- |
+| Memory | 四层模型：Sensory、Short-term、Long-term、Entity；Long-term 包含 Episodic、Semantic、Procedural 和 approved Reflexion lessons；ContextPack 是读取视图 | MemoryEngine baseline 存在；完整 AgentChat 读、用、写、未来复用未全闭环 |
+| Planning & Control | Plan-and-Execute 管宏观计划，ReAct 管单步执行，Reflection 管质量检查，Replan 改真实轨迹，Reflexion 进入 Memory governance | GeneralAgent ReAct、planning contracts、AgentControlRuntime 存在；统一真实执行图未完成 |
+| Agentic GraphRAG | Index、Query Strategy、Recall/Graph/Rerank、Evidence/Citation、Corrective Agentic Control 五阶段；EvidenceLedger 跨轮累积证据 | retrieval/evidence/citation baseline 存在；corrective re-retrieval 和 fixed benchmark measured pass 未完成 |
+| Capability & Tool | Function Calling 表达结构化意图，Capability 做目录/策略/路由，Skill 做 SOP，MCP/Tool 提供原子能力，Tool Runtime 执行和治理 | capability registry、tool adapters、MCP surfaces 存在；2-3 个真实工具闭环仍是 P1 |
+| Eval & Observability | Retrieval、Generation、Agent、Memory、Product 分层指标；offline eval -> release -> feedback -> failure case -> fixed dataset -> regression eval | local trace/eval helpers 和 failure buckets 存在；完整 measured agentic profile 仍 blocked |
+
+统一目标表达：
+
+```text
+Single Controller Agent
+=
+Plan-and-Execute for global control
++ ReAct for step execution
++ Reflection for quality control
++ Replan for trajectory correction
++ Reflexion for cross-task learning
++ Four-layer governed Memory
++ Capability / Skill / Tool Runtime
++ Corrective Agentic GraphRAG
++ Source-span evidence and measurable release gates
 ```
 
 ## 4. 六个运行域总览
@@ -507,7 +535,7 @@ flowchart TB
   Input["2 Input<br/>Upload, Parse, Document IR, SourceSpan"]
   Knowledge["3 Knowledge<br/>Chunk, BM25, Vector, GraphRAG, EvidenceBundle"]
   Model["4 Model Gateway<br/>slot, provider, route, timeout, cost"]
-  Memory["5 Memory<br/>working, session, semantic, episodic, procedural"]
+  Memory["5 Memory<br/>Sensory, Short-term, Long-term, Entity"]
   Agent["6 Agent Core / Planning & Control<br/>strategy, plan, ReAct, reflection, replan, stop"]
   Capability["7 Capability<br/>descriptor, catalog, policy, routing"]
   Tool["8 Tool Runtime<br/>approval, MCP/tool execution, result normalization"]
@@ -564,30 +592,32 @@ flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
 
-  Session["Session Window"]
-  Task["Task Events"]
-  Summary["Task Summary"]
-  Semantic["Semantic Memory"]
-  Policy["Memory Policy<br/>privacy + scope"]
-  Context["ContextPack"]
+  Sensory["Sensory Memory<br/>current input + raw observations"]
+  Short["Short-term Memory<br/>working state, messages, PlanState"]
+  Long["Long-term Memory<br/>episodic, semantic, procedural"]
+  Entity["Entity Memory<br/>user, project, relation facts"]
+  Policy["Memory Policy<br/>privacy, scope, token budget"]
+  Context["ContextPack<br/>budgeted read view"]
   Agent["Single Controller Agent"]
-  Candidate["Post-turn Memory Candidate"]
-  Review["Memory Governance Review"]
-  Store["MemoryRecord"]
+  Candidate["Post-turn Candidate<br/>facts, lessons, summaries"]
+  Review["Governance Review<br/>redact, dedup, conflict"]
+  Store["Approved MemoryRecord"]
 
-  Session --> Context
-  Task --> Summary --> Context
-  Semantic --> Policy --> Context
+  Sensory --> Short --> Context
+  Long --> Policy --> Context
+  Entity --> Policy
   Context --> Agent
-  Agent --> Candidate --> Review --> Store --> Semantic
+  Agent --> Candidate --> Review --> Store
+  Store --> Long
+  Store --> Entity
 
-  class Session,Task,Summary,Semantic,Context,Agent,Candidate,Store node;
+  class Sensory,Short,Long,Entity,Context,Agent,Candidate,Store node;
   class Policy,Review gate;
 ```
 
 #### 分析
 
-- Memory 的读路径进入 ContextPack，写路径走 post-turn governance。
+- Memory 采用 Sensory、Short-term、Long-term、Entity 四层；ContextPack 是读取视图，不是第五层。
 - Privacy 和 workspace scope 是 memory 使用边界。
 - Memory ContextPack 是否在真实 AgentChat 中可观测仍是 P1 closure gap。
 
@@ -632,7 +662,7 @@ flowchart LR
 
 ### Agentic GraphRAG Evidence and Agent Loop (Zuno)
 
-standard、deep 和 agentic 共享 evidence/citation contract；agentic 模式由 Single Controller 规划检索、Graph expansion、claim binding、reflection 和 replan。
+standard、deep 和 agentic 共享 evidence/citation contract；agentic 模式的关键不是“多一个 Agent 节点”，而是检测检索失败、选择纠正动作、再次执行，并用 EvidenceLedger 保留跨轮 source-span 证据。
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
@@ -641,43 +671,45 @@ flowchart TB
   classDef decision fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
   classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
 
-  Request["AgentChat Request"]
-  Context["ContextPack"]
-  Strategy{"Strategy<br/>standard / deep / agentic"}
-  Standard["Standard Retrieval<br/>BM25 + Vector baseline"]
-  Deep["Deep Retrieval<br/>larger pool + rerank"]
-  Agentic["Agentic Plan<br/>query, graph, tool, citation goals"]
-  Hybrid["Hybrid Retrieval"]
-  Graph["Graph Expansion<br/>entity / relation / community evidence"]
-  Evidence["EvidenceBundle<br/>source span required"]
+  Question["Question + ContextPack"]
+  Need{"NeedRetrievalDecision"}
+  Query["QueryStrategy<br/>DIRECT, REWRITE, MULTI_QUERY, STEP_BACK, HYDE, ENTITY, RELATION"]
+  BM25["BM25"]
+  Vector["Vector"]
+  Graph["GraphRoutingDecision<br/>local path / global community"]
+  Fusion["RRF / Fusion"]
+  Rerank["Rerank + Parent Expansion"]
+  Ledger["EvidenceLedger<br/>round, query, retriever, score, source span"]
+  Quality{"RetrievalQualityGate<br/>RELEVANT, AMBIGUOUS, IRRELEVANT, CONFLICTING, INSUFFICIENT_SPAN"}
+  Correct["CorrectiveAction<br/>rewrite, multi-query, graph expand, focused cite, tool, ask, abstain"]
   Claim["Claim Extraction"]
   Bind["Claim-level Citation Binding"]
-  Reflect{"Reflect<br/>finish / re-retrieve / tool / abstain"}
-  Tool["Capability / Tool Observation"]
-  Final["Final Grounded Answer"]
+  Verify["Answer Verification<br/>unsupported claim + faithfulness"]
+  Final["Grounded Answer / Partial / Abstain"]
   Eval["Failure Buckets and Release Gate"]
 
-  Request --> Context --> Strategy
-  Strategy --> Standard --> Hybrid
-  Strategy --> Deep --> Hybrid
-  Strategy --> Agentic --> Hybrid
-  Agentic --> Graph
-  Hybrid --> Evidence
-  Graph --> Evidence
-  Evidence --> Claim --> Bind --> Reflect
-  Reflect -->|finish| Final
-  Reflect -->|re-retrieve| Agentic
-  Reflect -->|use tool| Tool --> Reflect
-  Reflect -->|abstain| Final
-  Final --> Eval
+  Question --> Need
+  Need -->|yes| Query
+  Need -->|no| Claim
+  Query --> BM25 --> Fusion
+  Query --> Vector --> Fusion
+  Query --> Graph --> Fusion
+  Fusion --> Rerank --> Ledger --> Quality
+  Quality -->|sufficient| Claim --> Bind --> Verify --> Final --> Eval
+  Quality -->|doc_miss / text_miss / citation_miss| Correct --> Query
+  Quality -->|external gap| Correct
+  Correct -->|use tool| Ledger
+  Correct -->|abstain| Final
 
-  class Request,Context,Standard,Deep,Agentic,Hybrid,Graph,Evidence,Claim,Bind,Tool,Final,Eval node;
-  class Strategy,Reflect decision;
+  class Question,Query,BM25,Vector,Graph,Fusion,Rerank,Ledger,Correct,Claim,Bind,Verify,Final,Eval node;
+  class Need,Quality decision;
 ```
 
 #### 分析
 
 - agentic 不是独立产品模式，而是 Single Controller 内部策略。
+- QueryStrategy 包含 DIRECT、REWRITE、MULTI_QUERY、STEP_BACK、HYDE、ENTITY_DECOMPOSITION、RELATION_QUERY。
+- EvidenceLedger 负责跨轮去重、证据累积、冲突分组、source lineage、Context budget 和 eval attribution。
 - strict citation 必须绑定 source span，doc-only evidence 不能冒充。
 - 质量完成只看 fixed benchmark 和 release gate。
 
@@ -819,6 +851,39 @@ flowchart LR
 - strict citation 必须有 SourceSpan 和 CitationLineage。
 - Graph evidence 必须能回到 source object。
 
+#### Dynamic Knowledge Update
+
+Data View 的局部展开：知识库更新不能直接改旧 chunk，应通过新 DocumentVersion 和 candidate IndexManifest 原子切换，并失效旧 graph evidence 与 citation lineage。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Change["Source changed<br/>checksum / version"]
+  Version["New DocumentVersion"]
+  Parse["Re-parse document"]
+  Chunks["Rebuild all chunks<br/>CitationChunk + ParentChunk"]
+  Candidate["Candidate IndexManifest"]
+  Validate["Validate<br/>span, ACL, index health"]
+  Activate["Atomic activate"]
+  Retire["Retire old manifest"]
+  Invalidate["Invalidate old graph evidence<br/>and citation lineage"]
+  Trace["Update trace / diagnostics"]
+
+  Change --> Version --> Parse --> Chunks --> Candidate --> Validate --> Activate --> Retire --> Invalidate --> Trace
+
+  class Change,Version,Parse,Chunks,Candidate,Activate,Retire,Invalidate,Trace node;
+  class Validate gate;
+```
+
+#### 分析
+
+- 文档更新后不能假设旧 chunk 边界稳定。
+- 旧 source-span citation 必须通过 document version 判断是否仍有效。
+- IndexManifest active/retired 状态必须进入 trace 和 eval attribution。
+
 ### Process View (4+1)
 
 Single Controller Agent 的目标状态是一条真实统一执行图：从 input gate、context、strategy、plan、step execution 到 evidence gate、claim binding、reflection、replan、finalize 和 post-turn memory commit。Reflection 必须有 PASS 出口和硬上限，不能无限自我修改。
@@ -871,6 +936,47 @@ flowchart TB
 - 所有真实模型调用必须进入统一 Model Runtime / Gateway；所有工具执行必须经 Capability/Tool policy。
 - abstain 是合法输出，不是失败绕过；max steps / max replans / max reflections 命中时不能写成 measured success。
 
+#### Planning and Control Internal View
+
+Process View 的局部展开：五个机制不是并列产品模式，而是同一 Agent Core / Planning & Control 内部状态机。Plan-and-Execute 负责宏观计划，ReAct 负责单步执行，Reflection 决定是否 PASS，Replan 必须改变真实执行轨迹，ReflexionBridge 只提交经验候选给 Memory governance。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+  classDef target fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+
+  Strategy["StrategyDecision<br/>direct, react, plan_and_execute"]
+  Planner["Planner<br/>PlanStep DAG + budgets + acceptance"]
+  Validate["Plan Validation<br/>complete, atomic, verifiable, budgeted"]
+  Executor["PlanExecutor"]
+  ReAct["ReAct Step Controller<br/>decide, act, observe"]
+  Observation["Observation Contract<br/>retrieval, graph, tool, model, gate"]
+  StepCheck["Step Acceptance Check"]
+  Reflection["Reflection<br/>deterministic gate + optional critic"]
+  Replan["Replanner<br/>modify query, scope, steps, tool, model role"]
+  Reflexion["ReflexionBridge<br/>lesson candidate, no hidden CoT"]
+  Memory["Memory Governance<br/>review, approve, reject"]
+  Final["Finalize<br/>grounded answer, partial, abstain"]
+
+  Strategy --> Planner --> Validate --> Executor --> ReAct --> Observation --> StepCheck --> Reflection
+  Reflection -->|PASS| Final
+  Reflection -->|REWRITE_ANSWER| Final
+  Reflection -->|RETRIEVE_MORE / failure| Replan --> Executor
+  Reflection -->|ABSTAIN| Final
+  Final --> Reflexion --> Memory
+
+  class Strategy,Planner,Executor,ReAct,Observation,StepCheck,Replan,Reflexion,Memory,Final node;
+  class Validate,Reflection gate;
+```
+
+#### 分析
+
+- PlanStep 必须包含 goal、action_type、dependencies、expected_output、acceptance_criteria、allowed_capabilities、model_role、budget、timeout、retry_policy 和 status。
+- Reflection 输出限定为 PASS、REWRITE_ANSWER、RETRIEVE_MORE、USE_TOOL、ASK_USER、ABSTAIN。
+- Replan 至少要修改 query strategy、retrieval scope、retriever mix、graph traversal、tool selection、remaining steps、acceptance criteria、model role 或 budget allocation 中的一项。
+
 ### Component-and-Connector View (Views & Beyond)
 
 Agentic GraphRAG 的核心不是“图检索存在”，而是从 query planning 到 Graph expansion、EvidenceBundle、claim binding 和 release gate 都能保留 source span 证据链。
@@ -914,7 +1020,7 @@ flowchart LR
 
 #### Tool Control Connector
 
-Component-and-Connector View 的局部展开：工具调用必须经过 capability policy、approval、credential reference、adapter、normalizer 和 trace。
+Component-and-Connector View 的局部展开：Function Calling 是模型表达结构化调用意图的语言；Capability 是目录、策略和路由；Skill 是 SOP/模板/验收；MCP/Tool 是原子能力；Tool Runtime 负责审批、凭据、执行、timeout、normalize 和 trace。
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
@@ -923,32 +1029,39 @@ flowchart TB
   classDef policy fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
 
   Plan["CapabilityPlan"]
-  Skill["SkillCard<br/>task method"]
-  Capability["CapabilityCard<br/>knowledge, tool, artifact"]
+  Metadata["SkillMetadata<br/>startup catalog only"]
+  Instruction["SkillInstruction<br/>loaded on demand"]
+  Resource["SkillResourceRef<br/>script, template, reference"]
+  Intent["Function Call Intent<br/>structured args"]
+  Capability["CapabilityCard<br/>catalog, policy, routing"]
   Router["CapabilityRouter"]
-  Policy["Policy / Approval Gate"]
+  Policy["Capability Policy / Approval"]
   Credential["CredentialRef<br/>no raw secret"]
-  Tool["ToolCard"]
+  Tool["ToolCard / MCP Tool"]
   Adapter["ExecutionAdapter"]
   Normalizer["ResultNormalizer"]
   Trace["ToolTrace"]
   Observation["Agent Observation"]
 
-  Plan --> Router
-  Skill --> Router
+  Plan --> Metadata --> Instruction --> Resource
+  Plan --> Intent --> Router
   Capability --> Router
+  Instruction --> Router
   Router --> Policy --> Credential --> Tool --> Adapter --> Normalizer --> Observation
   Adapter --> Trace
   Policy --> Trace
   Normalizer --> Trace
+  Metadata --> Trace
+  Resource --> Trace
 
-  class Plan,Skill,Capability,Router,Credential,Tool,Adapter,Normalizer,Trace,Observation node;
+  class Plan,Metadata,Instruction,Resource,Intent,Capability,Router,Credential,Tool,Adapter,Normalizer,Trace,Observation node;
   class Policy policy;
 ```
 
 #### 分析
 
-- Skill 不是 Tool，不能把任务方法和执行动作混写。
+- Skill 不是 Tool；Function Calling 不是执行；MCP/Tool 是原子能力。
+- Skill 采用 metadata -> instruction -> resource/script/template 的渐进式加载，避免一次性塞入 ContextPack。
 - 副作用工具必须有审批、timeout、幂等和 trace。
 - Agent 消费 normalized observation，不依赖工具内部结构。
 
@@ -1037,6 +1150,51 @@ flowchart TB
 - blocked、prepared、runtime observed、measured 必须分开。
 - 缺 trace 字段时输出 unavailable，不编造诊断。
 - 近期先做本地持久 trace，不强求完整 LangSmith / OTel 平台。
+
+#### Layered Metrics and Feedback Loop
+
+Quality View 的局部展开：质量指标按 Retrieval、Generation、Agent、Memory、Product 分层；产品反馈只能生成 failure case 和 dataset update，不能直接证明 quality completed。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+  classDef blocked fill:#fff0f0,stroke:#c84b4b,stroke-width:1px,color:#16202a;
+
+  Retrieval["Retrieval Metrics<br/>Recall@K, MRR, Evidence Precision/Recall"]
+  Generation["Generation Metrics<br/>Faithfulness, Citation Accuracy, Answer Correctness"]
+  Agent["Agent Metrics<br/>replan success, reflection pass, tool success"]
+  Memory["Memory Metrics<br/>relevance, stale/conflict, Reflexion reuse"]
+  Product["Product Metrics<br/>thumbs down, follow-up, resolution, latency, cost"]
+  Offline["offline eval"]
+  Release["release gate"]
+  Feedback["product feedback"]
+  Failure["failure case"]
+  Dataset["fixed dataset update"]
+  Regression["regression eval"]
+  Blocked["Blocked<br/>measurement blocked when profile incomplete"]
+
+  Retrieval --> Offline
+  Generation --> Offline
+  Agent --> Offline
+  Memory --> Offline
+  Product --> Feedback
+  Offline --> Release
+  Release --> Regression
+  Feedback --> Failure --> Dataset --> Regression --> Offline
+  Release --> Blocked
+
+  class Retrieval,Generation,Agent,Memory,Product,Offline,Feedback,Failure,Dataset,Regression node;
+  class Release gate;
+  class Blocked blocked;
+```
+
+#### 分析
+
+- Current verified、Partial / closure gap、Short-term target、Blocked、Future optional 必须在图和文字中可区分。
+- fixed benchmark profile incomplete 时只能 blocked_not_measured，不能把 failed checks 当成 measured quality failure。
+- feedback 是数据闭环输入，不是 release gate 替代物。
 
 ### Physical View (4+1)
 

@@ -27,6 +27,7 @@ ACTIVE_DOCS_ARCHITECTURE_FILES = {
     "production-readiness.md",
     "document-ingestion-foundation.md",
     "agent-core-runtime.md",
+    "memory-and-context.md",
     "capability-and-skill-layer.md",
     "agentic-retrieval-planner.md",
     "eval-observability-and-cost.md",
@@ -84,6 +85,7 @@ def verify_front_path_shape() -> list[str]:
         "docs/architecture/production-readiness.md",
         "docs/architecture/document-ingestion-foundation.md",
         "docs/architecture/agent-core-runtime.md",
+        "docs/architecture/memory-and-context.md",
         "docs/architecture/capability-and-skill-layer.md",
         "docs/architecture/agentic-retrieval-planner.md",
         "docs/architecture/eval-observability-and-cost.md",
@@ -189,6 +191,9 @@ def verify_entrypoint_text() -> list[str]:
         "六物理运行域",
         "Agent Core / Planning & Control",
         "Capability 是能力目录、选择器和权限策略",
+        "Four-layer governed Memory",
+        "Corrective Agentic GraphRAG",
+        "EvidenceLedger",
         "Product & API",
         "Input & Knowledge",
         "Agent Core",
@@ -214,6 +219,7 @@ def verify_entrypoint_text() -> list[str]:
         "Agentic GraphRAG fixed benchmark 跑通并达到 baseline gate",
         "所有真实模型调用统一进入 Model Runtime / Gateway",
         "统一 Agent Core 真实闭环",
+        "EvidenceLedger",
         "Agent run trace 持久化并可查看",
     ]
     for phrase in production_phrases:
@@ -276,12 +282,16 @@ def verify_architecture_view_contract() -> list[str]:
         errors.append("architecture.html must render exactly ten view categories")
     if html_content.count('class="diagram-card"') < len(expected_titles):
         errors.append("architecture.html must render at least one subdiagram card for each view category")
-    if html_content.count('<div class="mermaid">') < len(expected_titles):
-        errors.append("architecture.html must render Mermaid containers")
+    if html_content.count('class="offline-svg"') < len(expected_titles):
+        errors.append("architecture.html must render offline SVG diagrams")
     if html_content.count("<summary>Mermaid source</summary>") < len(expected_titles):
         errors.append("architecture.html must include source disclosure for each subdiagram")
-    if "diagram-dialog" not in html_content or "securityLevel: \"strict\"" not in html_content:
-        errors.append("architecture.html must preserve fullscreen dialog and Mermaid strict security")
+    if "diagram-dialog" not in html_content:
+        errors.append("architecture.html must preserve fullscreen dialog")
+    if "https://" in html_content or "http://" in html_content or "cdn.jsdelivr" in html_content:
+        errors.append("architecture.html must be offline and contain no external network URL")
+    if "import mermaid" in html_content:
+        errors.append("architecture.html must not depend on browser-side Mermaid runtime")
     return errors
 
 
