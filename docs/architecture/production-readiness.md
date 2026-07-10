@@ -23,6 +23,7 @@ P0：
 
 - Agentic GraphRAG fixed benchmark 跑通并达到 baseline gate。
 - 所有真实模型调用统一进入 Model Runtime / Gateway。
+- 统一 Agent Core 真实闭环：Strategy、Plan-and-Execute、ReAct、Observation、Reflection、Replan、Reflexion、Memory 和 Retrieval 进入同一条可执行、可恢复、可测量链路。
 - Agent run trace 持久化并可查看。
 
 P1：

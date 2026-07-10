@@ -185,6 +185,10 @@ def verify_entrypoint_text() -> list[str]:
     architecture_phrases = [
         "Zuno Lean Complete Product Architecture",
         "Lean Complete Agentic GraphRAG Product",
+        "十一逻辑能力层",
+        "六物理运行域",
+        "Agent Core / Planning & Control",
+        "Capability 是能力目录、选择器和权限策略",
         "Product & API",
         "Input & Knowledge",
         "Agent Core",
@@ -209,6 +213,7 @@ def verify_entrypoint_text() -> list[str]:
         "Future Optional",
         "Agentic GraphRAG fixed benchmark 跑通并达到 baseline gate",
         "所有真实模型调用统一进入 Model Runtime / Gateway",
+        "统一 Agent Core 真实闭环",
         "Agent run trace 持久化并可查看",
     ]
     for phrase in production_phrases:

@@ -90,6 +90,9 @@ def verify_architecture_markdown_contract() -> list[str]:
     required_phrases = [
         "Zuno Lean Complete Product Architecture",
         "Lean Complete Agentic GraphRAG Product",
+        "十一逻辑能力层",
+        "六物理运行域",
+        "Agent Core / Planning & Control",
         "Product & API",
         "Input & Knowledge",
         "Agent Core",

@@ -129,6 +129,10 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
     for phrase in [
         "Zuno Lean Complete Product Architecture",
         "Lean Complete Agentic GraphRAG Product",
+        "十一逻辑能力层",
+        "六物理运行域",
+        "Agent Core / Planning & Control",
+        "Capability 是能力目录、选择器和权限策略",
         "Product & API",
         "Input & Knowledge",
         "Agent Core",
@@ -152,6 +156,7 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
         "Future Optional",
         "Agentic GraphRAG fixed benchmark 跑通并达到 baseline gate",
         "所有真实模型调用统一进入 Model Runtime / Gateway",
+        "统一 Agent Core 真实闭环",
         "Agent run trace 持久化并可查看",
     ]:
         assert phrase in production_readiness
@@ -160,9 +165,9 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
 def test_topic_docs_follow_six_runtime_domains() -> None:
     expected = {
         "document-ingestion-foundation.md": ["Input & Knowledge", "SourceObject", "CitationLineage"],
-        "agent-core-runtime.md": ["Agent Core", "Model Runtime / Gateway", "Single Controller"],
+        "agent-core-runtime.md": ["Agent Core", "Model Runtime / Gateway", "Single Controller", "统一 Agent Core 真实闭环"],
         "capability-and-skill-layer.md": ["Capability & Tool", "SkillCard", "ToolRequest"],
-        "agentic-retrieval-planner.md": ["Agentic Retrieval Planner", "Failure Buckets", "quality not yet proven"],
+        "agentic-retrieval-planner.md": ["Agentic Retrieval Planner", "Failure Buckets", "quality not yet proven", "Query Rewrite"],
         "eval-observability-and-cost.md": ["Governance & Observability", "agent_run", "Measurement Semantics"],
         "input-layer-and-document-processing.md": ["Product & API", "Input & Knowledge", "parser blocked"],
         "knowledge-space-product-configuration.md": ["Knowledge Space", "ModelSlotBinding", "RetrievalProfile"],

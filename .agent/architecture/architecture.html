@@ -208,7 +208,7 @@
             <div>
               <span class="diagram-kicker">View Category 1</span>
               <h3>1. Logical View (4+1)</h3>
-              <p>六个运行域和它们的 owner 边界。Product 触发黄金链路，Agent Core 编排检索和工具，Governance 贯穿 trace/eval/cost，Local Infrastructure 提供本地事实源。</p>
+              <p>十一逻辑能力层回答“系统有哪些能力”。Agent Core / Planning &amp; Control 是协调者，通过 contract 调用 Model Gateway、Memory、Knowledge、Capability 和 Tool Runtime；它不把这些能力物理吞成一个大层。</p>
             </div>
           </div>
           <dl class="diagram-meta">
@@ -230,41 +230,61 @@
 %%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef core fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
   classDef guard fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
   classDef infra fill:#f7f7f2,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
 
-  Product[&quot;Product &amp; API&lt;br/&gt;AgentChat, Workspace, File, Task, Artifact, Citation UI&quot;]
-  Knowledge[&quot;Input &amp; Knowledge&lt;br/&gt;Source, Parse, IR, Chunk, Index, EvidenceBundle&quot;]
-  Agent[&quot;Agent Core&lt;br/&gt;Model Gateway, ContextPack, Planner, Single Controller&quot;]
-  Capability[&quot;Capability &amp; Tool&lt;br/&gt;Skill, Capability, Tool, Approval, Result&quot;]
-  Governance[&quot;Governance &amp; Observability&lt;br/&gt;Gates, Trace, Eval, Cost, Release&quot;]
-  Infra[&quot;Local Infrastructure&lt;br/&gt;SQLite, ObjectStore, Queue, Index, TraceStore&quot;]
+  Product[&quot;1 Product Surface&lt;br/&gt;AgentChat, Workspace, Artifact, Citation UI&quot;]
+  Input[&quot;2 Input&lt;br/&gt;Upload, Parse, Document IR, SourceSpan&quot;]
+  Knowledge[&quot;3 Knowledge&lt;br/&gt;Chunk, BM25, Vector, GraphRAG, EvidenceBundle&quot;]
+  Model[&quot;4 Model Gateway&lt;br/&gt;slot, provider, route, timeout, cost&quot;]
+  Memory[&quot;5 Memory&lt;br/&gt;working, session, semantic, episodic, procedural&quot;]
+  Agent[&quot;6 Agent Core / Planning &amp; Control&lt;br/&gt;strategy, plan, ReAct, reflection, replan, stop&quot;]
+  Capability[&quot;7 Capability&lt;br/&gt;descriptor, catalog, policy, routing&quot;]
+  Tool[&quot;8 Tool Runtime&lt;br/&gt;approval, MCP/tool execution, result normalization&quot;]
+  Security[&quot;9 Security&lt;br/&gt;input, retrieval, tool, output gates&quot;]
+  Observability[&quot;10 Observability &amp; Eval&lt;br/&gt;trace, cost, benchmark, release gate&quot;]
+  Infra[&quot;11 Infrastructure&lt;br/&gt;SQLite, object store, queue, index, recovery&quot;]
 
   Product --&gt; Agent
-  Product --&gt; Knowledge
+  Product --&gt; Input --&gt; Knowledge
+  Agent --&gt; Model
+  Agent --&gt; Memory
   Agent --&gt; Knowledge
-  Agent --&gt; Capability
-  Knowledge --&gt; Governance
-  Capability --&gt; Governance
-  Agent --&gt; Governance
-  Product --&gt; Governance
-  Governance --&gt; Infra
+  Agent --&gt; Capability --&gt; Tool
+  Tool --&gt; Agent
+  Knowledge --&gt; Agent
+  Memory --&gt; Agent
+  Security -. governs .-&gt; Product
+  Security -. governs .-&gt; Knowledge
+  Security -. governs .-&gt; Tool
+  Security -. governs .-&gt; Agent
+  Observability -. observes .-&gt; Product
+  Observability -. observes .-&gt; Knowledge
+  Observability -. observes .-&gt; Tool
+  Observability -. observes .-&gt; Agent
   Product --&gt; Infra
+  Input --&gt; Infra
   Knowledge --&gt; Infra
+  Model --&gt; Infra
+  Memory --&gt; Infra
   Agent --&gt; Infra
-  Capability --&gt; Infra
+  Tool --&gt; Infra
+  Security --&gt; Infra
+  Observability --&gt; Infra
 
-  class Product,Knowledge,Agent,Capability node;
-  class Governance guard;
+  class Product,Input,Knowledge,Model,Memory,Capability,Tool node;
+  class Agent core;
+  class Security,Observability guard;
   class Infra infra;
               </div>
             </div>
             <div class="analysis">
               <h5>分析</h5>
               <ul>
-                <li>六域是近期实施和 ownership 的主边界。</li>
-                <li>Governance 不是最后生成报告的脚本，而是贯穿输入、检索、工具、输出和 eval。</li>
-                <li>Local Infrastructure 是正式近期目标，不是低级 placeholder。</li>
+                <li>十一层是能力分解，六运行域是代码组织；两者不能互相替代。</li>
+                <li>Agent Core / Planning &amp; Control 协调 Model、Memory、Knowledge、Capability 和 Tool Runtime，但不拥有它们的执行实现。</li>
+                <li>Security 与 Observability 是横切能力，必须贯穿输入、检索、工具、输出和 eval。</li>
               </ul>
             </div>
             <details>
@@ -272,32 +292,52 @@ flowchart TB
               <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef core fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
   classDef guard fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
   classDef infra fill:#f7f7f2,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
 
-  Product[&quot;Product &amp; API&lt;br/&gt;AgentChat, Workspace, File, Task, Artifact, Citation UI&quot;]
-  Knowledge[&quot;Input &amp; Knowledge&lt;br/&gt;Source, Parse, IR, Chunk, Index, EvidenceBundle&quot;]
-  Agent[&quot;Agent Core&lt;br/&gt;Model Gateway, ContextPack, Planner, Single Controller&quot;]
-  Capability[&quot;Capability &amp; Tool&lt;br/&gt;Skill, Capability, Tool, Approval, Result&quot;]
-  Governance[&quot;Governance &amp; Observability&lt;br/&gt;Gates, Trace, Eval, Cost, Release&quot;]
-  Infra[&quot;Local Infrastructure&lt;br/&gt;SQLite, ObjectStore, Queue, Index, TraceStore&quot;]
+  Product[&quot;1 Product Surface&lt;br/&gt;AgentChat, Workspace, Artifact, Citation UI&quot;]
+  Input[&quot;2 Input&lt;br/&gt;Upload, Parse, Document IR, SourceSpan&quot;]
+  Knowledge[&quot;3 Knowledge&lt;br/&gt;Chunk, BM25, Vector, GraphRAG, EvidenceBundle&quot;]
+  Model[&quot;4 Model Gateway&lt;br/&gt;slot, provider, route, timeout, cost&quot;]
+  Memory[&quot;5 Memory&lt;br/&gt;working, session, semantic, episodic, procedural&quot;]
+  Agent[&quot;6 Agent Core / Planning &amp; Control&lt;br/&gt;strategy, plan, ReAct, reflection, replan, stop&quot;]
+  Capability[&quot;7 Capability&lt;br/&gt;descriptor, catalog, policy, routing&quot;]
+  Tool[&quot;8 Tool Runtime&lt;br/&gt;approval, MCP/tool execution, result normalization&quot;]
+  Security[&quot;9 Security&lt;br/&gt;input, retrieval, tool, output gates&quot;]
+  Observability[&quot;10 Observability &amp; Eval&lt;br/&gt;trace, cost, benchmark, release gate&quot;]
+  Infra[&quot;11 Infrastructure&lt;br/&gt;SQLite, object store, queue, index, recovery&quot;]
 
   Product --&gt; Agent
-  Product --&gt; Knowledge
+  Product --&gt; Input --&gt; Knowledge
+  Agent --&gt; Model
+  Agent --&gt; Memory
   Agent --&gt; Knowledge
-  Agent --&gt; Capability
-  Knowledge --&gt; Governance
-  Capability --&gt; Governance
-  Agent --&gt; Governance
-  Product --&gt; Governance
-  Governance --&gt; Infra
+  Agent --&gt; Capability --&gt; Tool
+  Tool --&gt; Agent
+  Knowledge --&gt; Agent
+  Memory --&gt; Agent
+  Security -. governs .-&gt; Product
+  Security -. governs .-&gt; Knowledge
+  Security -. governs .-&gt; Tool
+  Security -. governs .-&gt; Agent
+  Observability -. observes .-&gt; Product
+  Observability -. observes .-&gt; Knowledge
+  Observability -. observes .-&gt; Tool
+  Observability -. observes .-&gt; Agent
   Product --&gt; Infra
+  Input --&gt; Infra
   Knowledge --&gt; Infra
+  Model --&gt; Infra
+  Memory --&gt; Infra
   Agent --&gt; Infra
-  Capability --&gt; Infra
+  Tool --&gt; Infra
+  Security --&gt; Infra
+  Observability --&gt; Infra
 
-  class Product,Knowledge,Agent,Capability node;
-  class Governance guard;
+  class Product,Input,Knowledge,Model,Memory,Capability,Tool node;
+  class Agent core;
+  class Security,Observability guard;
   class Infra infra;</code></pre>
             </details>
           </section>
@@ -308,7 +348,7 @@ flowchart TB
               <div>
                 <span class="diagram-kicker">Subdiagram 1.2</span>
                 <h4>1.2 Memory Context Subsystem</h4>
-                <p>Logical View 的局部展开：Memory 不是独立产品模式，而是 Agent Core 构建 ContextPack 的一部分。</p>
+                <p>Logical View 的局部展开：Memory 是独立逻辑能力，不是独立产品模式；Agent Core 在任务生命周期中读、用、写 Memory，并通过 ContextPack 使用它。</p>
               </div>
               <button class="fullscreen-button" type="button">展开全屏查看</button>
             </div>
@@ -485,7 +525,7 @@ flowchart TB
             <div>
               <span class="diagram-kicker">View Category 3</span>
               <h3>3. Process View (4+1)</h3>
-              <p>Single Controller Agent 从 ContextPack 出发，选择策略、规划检索或工具、观察结果、绑定引用、反思并决定 finish、re-retrieve、use tool 或 abstain。</p>
+              <p>Single Controller Agent 的目标状态是一条真实统一执行图：从 input gate、context、strategy、plan、step execution 到 evidence gate、claim binding、reflection、replan、finalize 和 post-turn memory commit。Reflection 必须有 PASS 出口和硬上限，不能无限自我修改。</p>
             </div>
           </div>
           <dl class="diagram-meta">
@@ -508,41 +548,49 @@ flowchart TB
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef decision fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
 
-  Request[&quot;AgentChat Request&quot;]
-  Model[&quot;Model Runtime / Gateway&quot;]
-  Context[&quot;ContextPack&lt;br/&gt;session + memory + knowledge&quot;]
-  Memory[&quot;Memory Read&quot;]
-  Strategy{&quot;StrategySelector&quot;}
-  Plan[&quot;PlannerOutput&lt;br/&gt;RetrievalPlan + CapabilityPlan&quot;]
-  Observe[&quot;Observation&lt;br/&gt;retrieval, model, tool, gate&quot;]
-  Bind[&quot;Claim Binding&quot;]
-  Synthesis[&quot;Grounded Answer Synthesis&quot;]
-  Reflect{&quot;Reflect / Replan&quot;}
-  Commit[&quot;Post-turn Memory Commit&quot;]
-  Final[&quot;Final Answer or Abstain&quot;]
+  Start([&quot;START&quot;])
+  InputGate[&quot;input_gate&lt;br/&gt;ACL + redaction + request validation&quot;]
+  Context[&quot;build_context&lt;br/&gt;session state + memory read + knowledge scope&quot;]
+  Strategy{&quot;strategy_select&lt;br/&gt;direct / react / plan_and_execute&quot;}
+  Plan[&quot;create_or_update_plan&lt;br/&gt;RetrievalPlan + CapabilityPlan + stop limits&quot;]
+  Execute[&quot;execute_step&lt;br/&gt;knowledge retrieval / graph expansion / governed tool&quot;]
+  Observe[&quot;observe&lt;br/&gt;retrieval, model, tool, gate result&quot;]
+  EvidenceGate[&quot;evidence_gate&lt;br/&gt;source span + sufficiency checks&quot;]
+  Draft[&quot;draft_and_bind_claims&lt;br/&gt;claim extraction + citation binding&quot;]
+  Reflect{&quot;reflection&lt;br/&gt;PASS / RETRIEVE_MORE / USE_TOOL / ASK_USER / ABSTAIN&quot;}
+  Replan[&quot;replan&lt;br/&gt;modify remaining steps&quot;]
+  Tool[&quot;approval / tool call&lt;br/&gt;policy + timeout + normalized result&quot;]
+  Interrupt[&quot;interrupt&lt;br/&gt;ask user&quot;]
+  Finalize[&quot;finalize&lt;br/&gt;grounded answer or abstain&quot;]
+  Commit[&quot;post_turn_commit&lt;br/&gt;raw event + task summary + Reflexion candidate&quot;]
+  End([&quot;END&quot;])
+  Limits[&quot;hard controls&lt;br/&gt;max_steps, max_replans, max_reflections, timeout, budget&quot;]
 
-  Request --&gt; Context
-  Context --&gt; Memory --&gt; Strategy
-  Strategy --&gt; Plan --&gt; Observe --&gt; Bind --&gt; Synthesis --&gt; Reflect
-  Model --&gt; Strategy
-  Model --&gt; Synthesis
-  Reflect --&gt;|finish| Final
-  Reflect --&gt;|re-retrieve| Plan
-  Reflect --&gt;|use tool| Observe
-  Reflect --&gt;|abstain| Final
-  Final --&gt; Commit
+  Start --&gt; InputGate --&gt; Context --&gt; Strategy --&gt; Plan --&gt; Execute --&gt; Observe --&gt; EvidenceGate --&gt; Draft --&gt; Reflect
+  Reflect --&gt;|PASS| Finalize
+  Reflect --&gt;|RETRIEVE_MORE| Replan --&gt; Execute
+  Reflect --&gt;|USE_TOOL| Tool --&gt; Observe
+  Reflect --&gt;|ASK_USER| Interrupt
+  Reflect --&gt;|ABSTAIN| Finalize
+  Finalize --&gt; Commit --&gt; End
+  Limits -. bounds .-&gt; Strategy
+  Limits -. bounds .-&gt; Execute
+  Limits -. bounds .-&gt; Reflect
+  Limits -. blocks to abstain/partial .-&gt; Finalize
 
-  class Request,Model,Context,Memory,Plan,Observe,Bind,Synthesis,Commit,Final node;
+  class Start,InputGate,Context,Plan,Execute,Observe,EvidenceGate,Draft,Replan,Tool,Interrupt,Finalize,Commit,End node;
   class Strategy,Reflect decision;
+  class InputGate,EvidenceGate,Limits gate;
               </div>
             </div>
             <div class="analysis">
               <h5>分析</h5>
               <ul>
-                <li>所有真实模型调用必须进入统一 Model Runtime / Gateway。</li>
-                <li>规则 planner 和 model planner 共享 PlannerOutput contract。</li>
-                <li>abstain 是合法输出，不是失败绕过。</li>
+                <li>Planner、ReAct step、Observation、Reflection、Replan、Stop Controller 和 Reflexion Bridge 是同一 Agent Core / Planning &amp; Control 内部机制。</li>
+                <li>所有真实模型调用必须进入统一 Model Runtime / Gateway；所有工具执行必须经 Capability/Tool policy。</li>
+                <li>abstain 是合法输出，不是失败绕过；max steps / max replans / max reflections 命中时不能写成 measured success。</li>
               </ul>
             </div>
             <details>
@@ -551,33 +599,41 @@ flowchart TB
 flowchart TB
   classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
   classDef decision fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
 
-  Request[&quot;AgentChat Request&quot;]
-  Model[&quot;Model Runtime / Gateway&quot;]
-  Context[&quot;ContextPack&lt;br/&gt;session + memory + knowledge&quot;]
-  Memory[&quot;Memory Read&quot;]
-  Strategy{&quot;StrategySelector&quot;}
-  Plan[&quot;PlannerOutput&lt;br/&gt;RetrievalPlan + CapabilityPlan&quot;]
-  Observe[&quot;Observation&lt;br/&gt;retrieval, model, tool, gate&quot;]
-  Bind[&quot;Claim Binding&quot;]
-  Synthesis[&quot;Grounded Answer Synthesis&quot;]
-  Reflect{&quot;Reflect / Replan&quot;}
-  Commit[&quot;Post-turn Memory Commit&quot;]
-  Final[&quot;Final Answer or Abstain&quot;]
+  Start([&quot;START&quot;])
+  InputGate[&quot;input_gate&lt;br/&gt;ACL + redaction + request validation&quot;]
+  Context[&quot;build_context&lt;br/&gt;session state + memory read + knowledge scope&quot;]
+  Strategy{&quot;strategy_select&lt;br/&gt;direct / react / plan_and_execute&quot;}
+  Plan[&quot;create_or_update_plan&lt;br/&gt;RetrievalPlan + CapabilityPlan + stop limits&quot;]
+  Execute[&quot;execute_step&lt;br/&gt;knowledge retrieval / graph expansion / governed tool&quot;]
+  Observe[&quot;observe&lt;br/&gt;retrieval, model, tool, gate result&quot;]
+  EvidenceGate[&quot;evidence_gate&lt;br/&gt;source span + sufficiency checks&quot;]
+  Draft[&quot;draft_and_bind_claims&lt;br/&gt;claim extraction + citation binding&quot;]
+  Reflect{&quot;reflection&lt;br/&gt;PASS / RETRIEVE_MORE / USE_TOOL / ASK_USER / ABSTAIN&quot;}
+  Replan[&quot;replan&lt;br/&gt;modify remaining steps&quot;]
+  Tool[&quot;approval / tool call&lt;br/&gt;policy + timeout + normalized result&quot;]
+  Interrupt[&quot;interrupt&lt;br/&gt;ask user&quot;]
+  Finalize[&quot;finalize&lt;br/&gt;grounded answer or abstain&quot;]
+  Commit[&quot;post_turn_commit&lt;br/&gt;raw event + task summary + Reflexion candidate&quot;]
+  End([&quot;END&quot;])
+  Limits[&quot;hard controls&lt;br/&gt;max_steps, max_replans, max_reflections, timeout, budget&quot;]
 
-  Request --&gt; Context
-  Context --&gt; Memory --&gt; Strategy
-  Strategy --&gt; Plan --&gt; Observe --&gt; Bind --&gt; Synthesis --&gt; Reflect
-  Model --&gt; Strategy
-  Model --&gt; Synthesis
-  Reflect --&gt;|finish| Final
-  Reflect --&gt;|re-retrieve| Plan
-  Reflect --&gt;|use tool| Observe
-  Reflect --&gt;|abstain| Final
-  Final --&gt; Commit
+  Start --&gt; InputGate --&gt; Context --&gt; Strategy --&gt; Plan --&gt; Execute --&gt; Observe --&gt; EvidenceGate --&gt; Draft --&gt; Reflect
+  Reflect --&gt;|PASS| Finalize
+  Reflect --&gt;|RETRIEVE_MORE| Replan --&gt; Execute
+  Reflect --&gt;|USE_TOOL| Tool --&gt; Observe
+  Reflect --&gt;|ASK_USER| Interrupt
+  Reflect --&gt;|ABSTAIN| Finalize
+  Finalize --&gt; Commit --&gt; End
+  Limits -. bounds .-&gt; Strategy
+  Limits -. bounds .-&gt; Execute
+  Limits -. bounds .-&gt; Reflect
+  Limits -. blocks to abstain/partial .-&gt; Finalize
 
-  class Request,Model,Context,Memory,Plan,Observe,Bind,Synthesis,Commit,Final node;
-  class Strategy,Reflect decision;</code></pre>
+  class Start,InputGate,Context,Plan,Execute,Observe,EvidenceGate,Draft,Replan,Tool,Interrupt,Finalize,Commit,End node;
+  class Strategy,Reflect decision;
+  class InputGate,EvidenceGate,Limits gate;</code></pre>
             </details>
           </section>
 
@@ -901,6 +957,121 @@ flowchart TB
 
   class UI,Workspace,Files,Chat,Artifact,Trace,Store node;
   class DTO,SSE api;</code></pre>
+            </details>
+          </section>
+
+
+          <section class="diagram-card" data-title="Module View (Views &amp; Beyond) / Physical Runtime Domain Mapping">
+            <div class="diagram-heading">
+              <div>
+                <span class="diagram-kicker">Subdiagram 6.2</span>
+                <h4>6.2 Physical Runtime Domain Mapping</h4>
+                <p>Module View 的局部展开：六个物理运行域回答“代码如何组合 owner”，不是逻辑能力层的替代物。Model Gateway、Memory、Agent Core / Planning &amp; Control 可以位于 Agent Core 运行域协作，但逻辑 owner 必须分开。</p>
+              </div>
+              <button class="fullscreen-button" type="button">展开全屏查看</button>
+            </div>
+            <div class="diagram-frame">
+              <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef domain fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef logical fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  ProductDomain[&quot;Product &amp; API&quot;]
+  InputDomain[&quot;Input &amp; Knowledge&quot;]
+  AgentDomain[&quot;Agent Core Runtime Domain&quot;]
+  CapabilityDomain[&quot;Capability &amp; Tool&quot;]
+  GovDomain[&quot;Governance &amp; Observability&quot;]
+  InfraDomain[&quot;Local Infrastructure&quot;]
+
+  ProductSurface[&quot;Product Surface&quot;]
+  Input[&quot;Input&quot;]
+  Knowledge[&quot;Knowledge&quot;]
+  Model[&quot;Model Gateway&quot;]
+  Memory[&quot;Memory&quot;]
+  Planning[&quot;Agent Core / Planning &amp; Control&quot;]
+  Capability[&quot;Capability&quot;]
+  ToolRuntime[&quot;Tool Runtime&quot;]
+  Security[&quot;Security&quot;]
+  Observability[&quot;Observability &amp; Eval&quot;]
+  Infrastructure[&quot;Infrastructure&quot;]
+
+  ProductSurface --&gt; ProductDomain
+  Input --&gt; InputDomain
+  Knowledge --&gt; InputDomain
+  Model --&gt; AgentDomain
+  Memory --&gt; AgentDomain
+  Planning --&gt; AgentDomain
+  Capability --&gt; CapabilityDomain
+  ToolRuntime --&gt; CapabilityDomain
+  Security --&gt; GovDomain
+  Observability --&gt; GovDomain
+  Infrastructure --&gt; InfraDomain
+
+  ProductDomain --&gt; InfraDomain
+  InputDomain --&gt; InfraDomain
+  AgentDomain --&gt; InfraDomain
+  CapabilityDomain --&gt; InfraDomain
+  GovDomain --&gt; InfraDomain
+
+  class ProductDomain,InputDomain,AgentDomain,CapabilityDomain,GovDomain,InfraDomain domain;
+  class ProductSurface,Input,Knowledge,Model,Memory,Planning,Capability,ToolRuntime,Security,Observability,Infrastructure logical;
+              </div>
+            </div>
+            <div class="analysis">
+              <h5>分析</h5>
+              <ul>
+                <li>六运行域服务近期代码 owner，不否定十一逻辑能力层。</li>
+                <li>Capability 是能力目录和策略路由；Tool Runtime 才是执行域。</li>
+                <li>Agent Core 运行域内的 Model Gateway、Memory 和 Planning 必须保持 contract 独立。</li>
+              </ul>
+            </div>
+            <details>
+              <summary>Mermaid source</summary>
+              <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef domain fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef logical fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  ProductDomain[&quot;Product &amp; API&quot;]
+  InputDomain[&quot;Input &amp; Knowledge&quot;]
+  AgentDomain[&quot;Agent Core Runtime Domain&quot;]
+  CapabilityDomain[&quot;Capability &amp; Tool&quot;]
+  GovDomain[&quot;Governance &amp; Observability&quot;]
+  InfraDomain[&quot;Local Infrastructure&quot;]
+
+  ProductSurface[&quot;Product Surface&quot;]
+  Input[&quot;Input&quot;]
+  Knowledge[&quot;Knowledge&quot;]
+  Model[&quot;Model Gateway&quot;]
+  Memory[&quot;Memory&quot;]
+  Planning[&quot;Agent Core / Planning &amp; Control&quot;]
+  Capability[&quot;Capability&quot;]
+  ToolRuntime[&quot;Tool Runtime&quot;]
+  Security[&quot;Security&quot;]
+  Observability[&quot;Observability &amp; Eval&quot;]
+  Infrastructure[&quot;Infrastructure&quot;]
+
+  ProductSurface --&gt; ProductDomain
+  Input --&gt; InputDomain
+  Knowledge --&gt; InputDomain
+  Model --&gt; AgentDomain
+  Memory --&gt; AgentDomain
+  Planning --&gt; AgentDomain
+  Capability --&gt; CapabilityDomain
+  ToolRuntime --&gt; CapabilityDomain
+  Security --&gt; GovDomain
+  Observability --&gt; GovDomain
+  Infrastructure --&gt; InfraDomain
+
+  ProductDomain --&gt; InfraDomain
+  InputDomain --&gt; InfraDomain
+  AgentDomain --&gt; InfraDomain
+  CapabilityDomain --&gt; InfraDomain
+  GovDomain --&gt; InfraDomain
+
+  class ProductDomain,InputDomain,AgentDomain,CapabilityDomain,GovDomain,InfraDomain domain;
+  class ProductSurface,Input,Knowledge,Model,Memory,Planning,Capability,ToolRuntime,Security,Observability,Infrastructure logical;</code></pre>
             </details>
           </section>
 
