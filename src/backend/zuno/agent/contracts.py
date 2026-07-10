@@ -368,6 +368,8 @@ class PlanStep(BaseModel):
     budget: dict[str, Any] = Field(default_factory=dict)
     timeout_ms: int | None = None
     attempt: int = 0
+    status: str = "pending"
+    observation_refs: list[str] = Field(default_factory=list)
 
 
 class PlanState(BaseModel):

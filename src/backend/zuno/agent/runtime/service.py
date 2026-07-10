@@ -176,6 +176,8 @@ class UnifiedAgentRuntimeService:
         if node == RuntimeNode.EXECUTE_STEP:
             return RuntimeNode.OBSERVE
         if node == RuntimeNode.OBSERVE:
+            if state.plan_state is not None and state.plan_state.current_step_id:
+                return RuntimeNode.EXECUTE_STEP
             return RuntimeNode.EVIDENCE_GATE
         if node == RuntimeNode.EVIDENCE_GATE:
             return RuntimeNode.DRAFT_AND_BIND_CLAIMS

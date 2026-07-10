@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE06
-    state: planned
+    state: completed
     title: Strategy、Plan-and-Execute 与 ReAct Step 真实执行
     depends_on: PHASE05
     next_phase: PHASE07
@@ -85,6 +85,15 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     ## 文档与状态同步
 
     更新 Plan/ReAct Current/Partial 和 legacy adapter 说明。
+
+    ## 完成记录
+
+    - 已新增 `runtime/planning`：`RuntimeStrategySelector`、`RuntimePlanner`、`PlanValidator`、`PlanExecutor`。
+    - 已新增 `runtime/execution`：`StepExecutorRegistry`、`ReActStepExecutor`、`KnowledgeStepExecutor`、`ToolStepExecutor`、`ModelStepExecutor`。
+    - `UnifiedAgentRuntimeService` 已从 fixed single-step skeleton 升级为 Strategy -> Plan -> next ready step -> executor -> observation -> plan status/attempt/observation refs 的逐步执行。
+    - `PlanStep` contract 已增加 `status` 和 `observation_refs`，支持 durable step progress。
+    - 已证明复杂任务在 unified runtime 中执行至少两个 step 后再进入 reflection/finalize；invalid DAG、missing acceptance、attempt/status/observation refs 均有 focused tests。
+    - Tool executor 当前只生成 governed ToolCallIntent observation；真实 Tool Control Plane approval、credential、timeout 和 idempotency 闭环属于 PHASE07。
 
     ## Phase 完成报告
 

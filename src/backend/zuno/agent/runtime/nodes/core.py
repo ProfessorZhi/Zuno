@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import replace
 from typing import Callable
 
-from zuno.agent.contracts import ContextPack, PlanState, PlanStep
+from zuno.agent.contracts import ContextPack
 from zuno.agent.runtime.contracts import (
     FinalizationStatus,
     NodeOutcome,
@@ -16,10 +16,29 @@ from zuno.agent.runtime.contracts import (
     StrategyMode,
 )
 from zuno.agent.runtime.dependencies import RuntimeDependencies
+from zuno.agent.runtime.execution import (
+    KnowledgeStepExecutor,
+    ModelStepExecutor,
+    ReActStepExecutor,
+    StepExecutorRegistry,
+    ToolStepExecutor,
+)
+from zuno.agent.runtime.planning import PlanExecutor, RuntimePlanner, RuntimeStrategySelector
 from zuno.agent.runtime.routing import RuntimeNode
 from zuno.agent.runtime.state import AgentRuntimeState
 
 RuntimeNodeHandler = Callable[[AgentRuntimeState, RuntimeDependencies], AgentRuntimeState]
+_STRATEGY_SELECTOR = RuntimeStrategySelector()
+_PLANNER = RuntimePlanner()
+_PLAN_EXECUTOR = PlanExecutor()
+_STEP_EXECUTORS = StepExecutorRegistry(
+    (
+        KnowledgeStepExecutor(),
+        ToolStepExecutor(),
+        ModelStepExecutor(),
+        ReActStepExecutor(),
+    )
+)
 
 
 def input_gate(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
@@ -44,47 +63,18 @@ def build_context(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentR
 
 
 def strategy_select(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
-    del deps
-    if state.strategy is not None:
-        return _record_node(state, RuntimeNode.STRATEGY_SELECT, summary="strategy preset")
-    lowered_goal = state.goal.lower()
-    if "direct" in lowered_goal:
-        mode = StrategyMode.DIRECT_ANSWER
-    elif "react" in lowered_goal:
-        mode = StrategyMode.REACT
-    else:
-        mode = StrategyMode.PLAN_EXECUTE_WITH_REPLAN
-    strategy = StrategyDecision(
-        mode=mode,
-        reason="deterministic PHASE05 skeleton strategy selection",
-    )
+    if state.strategy is None:
+        state = _STRATEGY_SELECTOR.select(state, deps)
     return _record_node(
-        replace(state, strategy=strategy),
+        state,
         RuntimeNode.STRATEGY_SELECT,
-        summary=f"strategy={mode.value}",
+        summary=f"strategy={StrategyMode(state.strategy.mode).value if state.strategy else 'missing'}",
     )
 
 
 def create_or_update_plan(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
-    del deps
-    if state.plan_state is None:
-        step = PlanStep(
-            step_id=f"{state.run_id}:step:1",
-            goal=state.goal,
-            action_type="answer_with_grounded_evidence",
-            expected_output="grounded answer draft",
-            acceptance_criteria=["no simulated runtime result", "reflection decision is explicit"],
-            model_role="executor",
-            attempt=1,
-        )
-        plan_state = PlanState(
-            plan_id=f"plan:{state.run_id}",
-            status="planned",
-            steps=[step],
-            current_step_id=step.step_id,
-        )
-    else:
-        plan_state = state.plan_state
+    state = _PLANNER.plan(state, deps)
+    plan_state = state.plan_state
     return _record_node(
         replace(state, plan_state=plan_state, current_step_id=plan_state.current_step_id),
         RuntimeNode.CREATE_OR_UPDATE_PLAN,
@@ -93,21 +83,30 @@ def create_or_update_plan(state: AgentRuntimeState, deps: RuntimeDependencies) -
 
 
 def execute_step(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
-    del deps
-    observation = NormalizedObservation(
-        observation_id=f"obs:{state.run_id}:{len(state.observations) + 1}",
-        step_id=state.current_step_id,
-        kind=ObservationKind.SYSTEM,
-        status=ObservationStatus.COMPLETED,
-        source="UnifiedAgentRuntimeService.execute_step",
-        summary="deterministic skeleton step completed",
-        metadata={"phase": "PHASE05", "simulated": False},
+    if state.plan_state is None:
+        state = _PLANNER.plan(state, deps)
+    step = _PLAN_EXECUTOR.next_ready_step(state.plan_state)
+    if step is None:
+        return _record_node(state, RuntimeNode.EXECUTE_STEP, summary="no ready step")
+    running_plan = _PLAN_EXECUTOR.mark_running(state.plan_state, step)
+    running_step = next(item for item in running_plan.steps if item.step_id == step.step_id)
+    result = _STEP_EXECUTORS.execute(state=replace(state, plan_state=running_plan), step=running_step, deps=deps)
+    plan_state = (
+        _PLAN_EXECUTOR.mark_completed(running_plan, running_step, observation_ref=result.observation.observation_id)
+        if result.status == ObservationStatus.COMPLETED
+        else _PLAN_EXECUTOR.mark_failed(running_plan, running_step, observation_ref=result.observation.observation_id)
     )
     counters = state.counters.model_copy(update={"steps_executed": state.counters.steps_executed + 1})
     return _record_node(
-        replace(state, observations=[*state.observations, observation], counters=counters),
+        replace(
+            state,
+            observations=[*state.observations, result.observation],
+            plan_state=plan_state,
+            current_step_id=plan_state.current_step_id,
+            counters=counters,
+        ),
         RuntimeNode.EXECUTE_STEP,
-        summary="step executed by deterministic adapter",
+        summary=f"step executed: {running_step.action_type}",
     )
 
 
