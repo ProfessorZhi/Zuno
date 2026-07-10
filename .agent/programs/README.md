@@ -1,28 +1,48 @@
 # Agent 执行计划
 
-`.agent/programs/` 当前处于 no-active 状态。
+`.agent/programs/` 当前处于 active 状态。
 
 ## 当前状态
 
-- State: no-active
-- Active program: none
-- Current phase: none
-- Latest completed program: `zuno-evidence-span-agentic-graphrag-hardening-v1`
+- State: active
+- Active program: `zuno-unified-agent-runtime-closure-v1`
+- Current phase: `PHASE01_truth-source-baseline-and-program-activation`
+- Latest completed program: `zuno-lean-complete-product-architecture-v1`
+- Baseline commit: `72488a25fde59bc5ef86b2b1c84f25d42cb946ca`
 
-最近完成并归档的 evidence-span hardening program 入口：
+## 当前 program
 
-- `docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/`
+本 program 的目标是把以下三个并存基线收敛为同一条真实、可恢复、可测量的 Single Controller Agent Runtime：
+
+- `GeneralAgent`：真实 LangChain / LangGraph ReAct 与现有模型、工具、知识库入口。
+- `StrategySelector + AgentControlRuntime`：Planning、Reflection、Replan、Reflexion 规则与 contract。
+- `SingleControllerDurableRuntime`：checkpoint、approval、resume、cancel 的本地 deterministic runtime。
+
+## 当前 phase
+
+当前只执行：
+
+- `.agent/programs/PHASE01_truth-source-baseline-and-program-activation.md`
+
+PHASE01 只冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime。
 
 ## 当前文件
 
-- `current.md`：no-active state、最近完成 program 和前台文件边界。
-- `implementation-roadmap.md`：最近完成 program 的归档入口和后续 Target。
-- `closure-checklist.md`：最近完成 program 的关闭结论和后续重开条件。
+- `current.md`：active program、current phase 和不变边界。
+- `implementation-roadmap.md`：PHASE01-PHASE13 依赖顺序和关闭定义。
+- `closure-checklist.md`：program 完整关闭条件和禁止虚假关闭。
+- `program-decisions.md`：跨 phase 决策。
+- `code-architecture-map.md`：当前关键路径和目标 owner。
+- `powershell-runbook.md`：Windows PowerShell 5.1 命令规范。
+- `test-matrix.md`：测试层级、场景和 release gate。
+- `PHASE01_*.md` 到 `PHASE13_*.md`：分阶段执行文件。
 - `queued-programs/README.md`：当前没有 queued program。
 
 ## 使用规则
 
-- no-active 状态下，`.agent/programs/` 根目录不得保留平铺 `PHASE*.md`。
-- 新 program 必须从 `PHASE01` 开始，不能复用已归档 phase 文件作为 active truth source。
+- 每轮只执行 `current_phase`，不得提前实现后续 phase。
+- 当前代码、测试、trace/eval 和 HEAD 高于 phase 文档中的路径建议。
+- 不把 contract、mock、fixture、probe 或 deterministic baseline 写成 runtime completed。
 - blocked、prepared、runtime observed 或缺失数据不能写成 measured。
+- 生产 runtime 的 Current 只能由真实 API / runtime / UI 路径、focused tests、trace/eval 或 verifier 证明。
 - completed program 的 phase、closure summary 和 merged inputs 必须留在 `docs/history/programs/`。

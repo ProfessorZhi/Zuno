@@ -1,34 +1,60 @@
 # 当前程序
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-unified-agent-runtime-closure-v1
+current_phase: PHASE01_truth-source-baseline-and-program-activation
 latest_completed_program: zuno-lean-complete-product-architecture-v1
+baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
-## 当前状态
+## 当前目标
 
-`.agent/programs/` 当前没有 active program。最近完成并归档的是：
+把以下三个并存基线收敛为一条真实主链路：
 
-- `docs/history/programs/zuno-lean-complete-product-architecture-v1/`
+```text
+GeneralAgent
+  = 真实 LangChain/LangGraph ReAct 与现有模型/工具/知识库入口
 
-## 最近完成边界
+StrategySelector + AgentControlRuntime
+  = Planning / Reflection / Replan / Reflexion 规则与 contract
 
-本轮完成的是目标架构事实源、HTML 展示、文档入口、renderer、verifier 和 tests 的收缩与同步：
+SingleControllerDurableRuntime
+  = checkpoint / approval / resume / cancel 的本地 deterministic runtime
+```
 
-- 项目定位改为 Lean Complete Agentic GraphRAG Product。
-- 近期目标范围从大规模企业平台收缩到本地优先、短期可闭环的产品。
-- `docs/architecture/architecture.md` 仍保持详细实施蓝图能力。
-- 前台架构从旧十图收缩为四张展示图。
-- Production Scale 内容降为 Future Optional。
+目标链路：
 
-本轮没有修改核心 runtime，没有声称运行质量已经提升。Agentic GraphRAG 是否真正完成，仍以 fixed benchmark 和 release gate 为准。
+```text
+input_gate
+-> build_context
+-> strategy_select
+-> create_or_update_plan
+-> execute_step
+-> observe
+-> evidence_gate
+-> draft_and_bind_claims
+-> reflection
+   -> PASS -> finalize
+   -> REWRITE_ANSWER -> revise_draft -> claim binding -> reflection
+   -> RETRIEVE_MORE -> replan -> execute_step
+   -> USE_TOOL -> approval/tool -> observe
+   -> ASK_USER -> interrupt/resume
+   -> ABSTAIN -> finalize
+-> post_turn_commit
+-> END
+```
 
-## 前台文件
+## 当前 Phase
 
-no-active 状态下，`.agent/programs/` 根目录保留：
+`PHASE01_truth-source-baseline-and-program-activation`
 
-- `.agent/programs/current.md`
-- `.agent/programs/README.md`
-- `.agent/programs/implementation-roadmap.md`
-- `.agent/programs/closure-checklist.md`
-- `.agent/programs/queued-programs/README.md`
+PHASE01 只冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source，不修改生产 runtime。
+
+## 不变边界
+
+- 近期保持 Single Controller，不转向产品级 Multi-Agent。
+- Model、Memory、Knowledge、Capability、Tool Runtime 保持独立 owner。
+- 所有真实模型调用最终统一进入 Model Gateway。
+- Tool 执行必须经过 Tool Control Plane。
+- Graph evidence 必须回到 SourceSpan。
+- Reflexion 不保存隐藏 CoT，只保存可审计的经验候选。
+- `implementation available / measurement blocked / quality not yet proven` 在 measured gate 通过前保持不变。

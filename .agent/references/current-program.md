@@ -1,42 +1,79 @@
 # Current Program Reference
 
-state: no-active
-active_program: none
-current_phase: none
-latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
+state: active
+active_program: zuno-unified-agent-runtime-closure-v1
+current_phase: PHASE01_truth-source-baseline-and-program-activation
+latest_completed_program: zuno-lean-complete-product-architecture-v1
+baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
-`.agent/programs/` 当前没有 active program。
+`.agent/programs/` 当前已激活 `zuno-unified-agent-runtime-closure-v1`。本轮 program 的近期目标是把 `GeneralAgent`、`StrategySelector + AgentControlRuntime` 和 `SingleControllerDurableRuntime` 收敛为同一条真实、可恢复、可测量的 Single Controller Agent Runtime。
 
-成熟度和 runtime-first 交付物边界仍以 `docs/architecture/production-readiness.md` 为准。
+Phase 边界：PHASE01-PHASE13。
+
+当前 phase：
+
+- `.agent/programs/PHASE01_truth-source-baseline-and-program-activation.md`
+
+PHASE01 只冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime。
+
+## Active Program Files
+
+- `.agent/programs/current.md`
+- `.agent/programs/README.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/closure-checklist.md`
+- `.agent/programs/program-decisions.md`
+- `.agent/programs/code-architecture-map.md`
+- `.agent/programs/powershell-runbook.md`
+- `.agent/programs/test-matrix.md`
+- `.agent/programs/PHASE01_truth-source-baseline-and-program-activation.md`
+- `.agent/programs/PHASE02_unified-runtime-contracts-and-state.md`
+- `.agent/programs/PHASE03_model-gateway-closure.md`
+- `.agent/programs/PHASE04_durable-store-trace-and-idempotency.md`
+- `.agent/programs/PHASE05_unified-langgraph-runtime-skeleton.md`
+- `.agent/programs/PHASE06_strategy-plan-and-react-step-execution.md`
+- `.agent/programs/PHASE07_tool-control-plane-and-approval-integration.md`
+- `.agent/programs/PHASE08_corrective-agentic-graphrag-and-evidence-ledger.md`
+- `.agent/programs/PHASE09_reflection-replan-grounded-synthesis.md`
+- `.agent/programs/PHASE10_four-layer-memory-and-reflexion-reuse.md`
+- `.agent/programs/PHASE11_product-api-sse-ui-and-recovery-cutover.md`
+- `.agent/programs/PHASE12_real-pdf-source-span-vertical-slice.md`
+- `.agent/programs/PHASE13_paired-benchmark-release-gate-and-program-closure.md`
+- `.agent/programs/queued-programs/README.md`
 
 ## 最近完成归档
 
-1. `docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/`
+1. `docs/history/programs/zuno-lean-complete-product-architecture-v1/`
+   - 状态：completed / archived。
+   - 完成：目标架构事实源、HTML 展示、文档入口、renderer、verifier 和 tests 的收缩与同步。
+   - 边界：没有修改核心 runtime，没有声称运行质量已经提升。
+2. `docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/`
    - 状态：completed / archived。
    - 完成：evidence-span hardening baseline。
    - 边界：release gate 输出面已完成；fixed EnterpriseRAG measured pass 仍因 local agentic profile run incomplete 而 blocked。
-2. `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`
+3. `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`
    - 状态：completed / archived。
    - 完成：Program 3 Mega launchable enterprise Agentic GraphRAG product baseline。
-3. `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
+4. `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`
    - 状态：completed / archived。
    - 完成：Product V1 local durable ingestion baseline。
-4. `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`
+5. `docs/history/programs/zuno-production-document-ingestion-and-thread-foundation-v1/`
    - 状态：completed / archived。
-5. `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
+6. `docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
    - 状态：completed / archived。
    - 说明：一次性交付型成熟化 program，完成“成熟目标架构和四大总交付物完成”。
-6. `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
+7. `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
    - 状态：completed / archived。
-7. `docs/history/programs/zuno-master-architecture-implementation-v1/`
+   - 边界：runtime-first / vertical-slice-first closure evidence 保留在归档中。
+8. `docs/history/programs/zuno-master-architecture-implementation-v1/`
    - 状态：completed / archived。
    - 边界：PHASE01-PHASE12。
-8. `docs/history/programs/zuno-eight-deliverables-full-realization-v1/`
+9. `docs/history/programs/zuno-eight-deliverables-full-realization-v1/`
    - 状态：completed / archived。
    - 边界：PHASE01-PHASE10。
-9. `docs/history/programs/zuno-six-layer-internalization-v1/`
+10. `docs/history/programs/zuno-six-layer-internalization-v1/`
    - 状态：completed / archived。
-10. `docs/history/programs/zuno-repo-layout-cleanup-v1/`
+11. `docs/history/programs/zuno-repo-layout-cleanup-v1/`
    - 状态：completed / archived。
 
 ## 历史边界
@@ -52,7 +89,7 @@ latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 ## 当前执行规则
 
 - 每轮开始必须重新确认当前 worktree、branch、`git status --short --branch`、允许范围和禁止范围。
-- no-active 状态下不得在 `.agent/programs/` 根目录保留平铺 `PHASE*.md`。
+- 每轮只执行 `.agent/programs/current.md` 指向的 current phase。
 - 新 program 必须从 PHASE01 开始；不得把已归档 phase 文件复制回前台当作 active truth source。
 - runtime-first / vertical-slice-first closure guard 保持有效。
 - 新 runtime 行为继续遵守 TDD；只写 contract、schema 或 README 不能关闭 runtime phase。

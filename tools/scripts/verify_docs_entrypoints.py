@@ -142,7 +142,12 @@ def verify_entrypoint_text() -> list[str]:
     production_readiness = _read("docs/architecture/production-readiness.md")
     current_program = _read(".agent/programs/current.md")
     current_phase = _current_phase_name(current_program)
-    if current_phase not in {"none", "PHASE03_four-diagram-html-and-guardrails", "PHASE04_docs-sync-verification-and-closure"}:
+    if current_phase not in {
+        "none",
+        "PHASE01_truth-source-baseline-and-program-activation",
+        "PHASE03_four-diagram-html-and-guardrails",
+        "PHASE04_docs-sync-verification-and-closure",
+    }:
         errors.append(f"unexpected current phase for docs verification: {current_phase}")
 
     readme_phrases = [

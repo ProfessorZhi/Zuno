@@ -75,8 +75,33 @@ EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
     "PHASE07_claim-level-citation-binder.md",
     "PHASE08_hard-negative-eval-and-release-gate.md",
 ]
-CURRENT_FRONT_PROGRAM_FILES = [
+UNIFIED_RUNTIME_PROGRAM_NAME = "zuno-unified-agent-runtime-closure-v1"
+UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE01_truth-source-baseline-and-program-activation"
+UNIFIED_RUNTIME_PHASE_FILES = [
+    "PHASE01_truth-source-baseline-and-program-activation.md",
+    "PHASE02_unified-runtime-contracts-and-state.md",
+    "PHASE03_model-gateway-closure.md",
+    "PHASE04_durable-store-trace-and-idempotency.md",
+    "PHASE05_unified-langgraph-runtime-skeleton.md",
+    "PHASE06_strategy-plan-and-react-step-execution.md",
+    "PHASE07_tool-control-plane-and-approval-integration.md",
+    "PHASE08_corrective-agentic-graphrag-and-evidence-ledger.md",
+    "PHASE09_reflection-replan-grounded-synthesis.md",
+    "PHASE10_four-layer-memory-and-reflexion-reuse.md",
+    "PHASE11_product-api-sse-ui-and-recovery-cutover.md",
+    "PHASE12_real-pdf-source-span-vertical-slice.md",
+    "PHASE13_paired-benchmark-release-gate-and-program-closure.md",
+]
+UNIFIED_RUNTIME_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_FILES,
+    "program-decisions.md",
+    "code-architecture-map.md",
+    "powershell-runbook.md",
+    "test-matrix.md",
+    *UNIFIED_RUNTIME_PHASE_FILES,
+]
+CURRENT_FRONT_PROGRAM_FILES = [
+    *UNIFIED_RUNTIME_PROGRAM_FILES,
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -308,10 +333,15 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (evidence_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
-        f"latest_completed_program: {EVIDENCE_SPAN_PROGRAM_NAME}",
+        "state: active",
+        f"active_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
+        f"current_phase: {UNIFIED_RUNTIME_CURRENT_PHASE}",
+        "latest_completed_program: zuno-lean-complete-product-architecture-v1",
+        "baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca",
+        UNIFIED_RUNTIME_PROGRAM_NAME,
+        UNIFIED_RUNTIME_CURRENT_PHASE,
+        "PHASE01-PHASE13",
+        "Single Controller Agent Runtime",
         EVIDENCE_SPAN_PROGRAM_NAME,
         EVIDENCE_SPAN_PROGRAM_ARCHIVE,
         "blocked_not_measured_due_to_agentic_profile_incomplete",
@@ -366,7 +396,29 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
             + production_archive_text
             + archive_text
         )
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == []
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(
+        UNIFIED_RUNTIME_PHASE_FILES
+    )
+    for phase_name in UNIFIED_RUNTIME_PHASE_FILES:
+        phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(
+            encoding="utf-8"
+        )
+        assert f"program: {UNIFIED_RUNTIME_PROGRAM_NAME}" in phase_text
+        for section in [
+            "## 目标",
+            "## 目标增量",
+            "## 验收标准",
+            "## Windows PowerShell 验证",
+            "## Phase 完成报告",
+        ]:
+            assert section in phase_text
+    for active_file in [
+        "program-decisions.md",
+        "code-architecture-map.md",
+        "powershell-runbook.md",
+        "test-matrix.md",
+    ]:
+        assert (REPO_ROOT / ".agent/programs" / active_file).exists()
     for index, phase_name in enumerate(EVIDENCE_SPAN_PROGRAM_PHASE_FILES, start=1):
         phase_text = (evidence_archive / phase_name).read_text(encoding="utf-8")
         assert f"program: {EVIDENCE_SPAN_PROGRAM_NAME}" in phase_text

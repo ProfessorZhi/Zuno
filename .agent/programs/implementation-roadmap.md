@@ -1,31 +1,63 @@
 # Program Roadmap
 
-state: no-active
-active_program: none
-current_phase: none
-latest_completed_program: zuno-lean-complete-product-architecture-v1
+state: active
+active_program: zuno-unified-agent-runtime-closure-v1
+current_phase: PHASE01_truth-source-baseline-and-program-activation
+baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
-## 当前路线状态
+## Program Definition
 
-当前没有 active program。最近完成的 roadmap 已归档：
+```text
+Zuno Unified Agent Runtime
+=
+Plan-and-Execute for macro control
++ ReAct for step execution
++ deterministic/model Reflection
++ trajectory-changing Replan
++ governed Reflexion
++ four-layer Memory
++ Tool Control Plane
++ Corrective Agentic GraphRAG
++ durable state and trace
++ fixed paired benchmark
+```
 
-- `docs/history/programs/zuno-lean-complete-product-architecture-v1/implementation-roadmap.md`
+## Phase Roadmap
 
-## 后续 Target
+| Phase | 文件后缀 | 主要目标 | 主要变更域 |
+| --- | --- | --- | --- |
+| PHASE01 | `truth-source-baseline-and-program-activation` | 冻结真实基线、命令、failure semantics、sample case set 和 program 状态 | docs/workflow only |
+| PHASE02 | `unified-runtime-contracts-and-state` | 建立 AgentRuntimeState、Observation、Strategy、Plan、limits、snapshot 与兼容适配器 | runtime contracts |
+| PHASE03 | `model-gateway-closure` | 所有 planner/executor/critic/synthesis/tool-call 模型统一经 Model Gateway | model runtime |
+| PHASE04 | `durable-store-trace-and-idempotency` | SQLite-backed run/checkpoint/plan/observation/interrupt/evidence/tool execution store | persistence |
+| PHASE05 | `unified-langgraph-runtime-skeleton` | 建立真实 StateGraph、conditional routes、stream、interrupt、resume | agent graph |
+| PHASE06 | `strategy-plan-and-react-step-execution` | 把 Plan-and-Execute 和 ReAct 组合成真实逐步执行器 | planning execution |
+| PHASE07 | `tool-control-plane-and-approval-integration` | ToolCallIntent -> policy/approval/credential/execution/observation 闭环 | tool runtime |
+| PHASE08 | `corrective-agentic-graphrag-and-evidence-ledger` | 多轮检索、EvidenceLedger、quality gate、corrective action | knowledge runtime |
+| PHASE09 | `reflection-replan-grounded-synthesis` | 确定性 gate、可选 critic、真实 replan、rewrite、citation finalization | quality control |
+| PHASE10 | `four-layer-memory-and-reflexion-reuse` | 四层 Memory 读/用/写、Reflexion review 与未来任务复用 | memory closure |
+| PHASE11 | `product-api-sse-ui-and-recovery-cutover` | Completion/Workspace/SSE/approval/trace/UI 切换到统一 runtime | product integration |
+| PHASE12 | `real-pdf-source-span-vertical-slice` | PyMuPDF PDF -> IR -> CitationChunk -> SourceSpan -> grounded answer | document vertical |
+| PHASE13 | `paired-benchmark-release-gate-and-program-closure` | sample-8、sample-80、release gate、旧主路径退出与文档收口 | quality closure |
 
-短期后续工作以 `docs/architecture/production-readiness.md` 的 P0 / P1 / P2 closure gap 为准：
+## 依赖顺序
 
-- P0 Agentic GraphRAG fixed benchmark 跑通并达到 baseline gate。
-- P0 所有真实模型调用统一进入 Model Runtime / Gateway。
-- P0 Agent run trace 持久化并可查看。
-- P1 task / planner / retrieval / approval 状态本地持久化。
-- P1 至少一个真实 PDF parser 跑通 source span citation。
-- P1 2-3 个真实 Tool 完成 approval / timeout / trace 闭环。
-- P1 Memory ContextPack 在真实 AgentChat 中可观测。
-- P2 前端 E2E、项目演示脚本和可复现启动方式。
+```text
+PHASE01 -> PHASE02 -> PHASE03 -> PHASE04 -> PHASE05 -> PHASE06
+-> PHASE07 -> PHASE08 -> PHASE09 -> PHASE10 -> PHASE11 -> PHASE12 -> PHASE13
+```
 
-## 开新 program 规则
+后续 Phase 可以在独立 worktree 并行准备，但合并必须遵守依赖顺序。
 
-- 新 program 必须从 `PHASE01` 开始。
-- 旧 phase 文件必须保留在 `docs/history/programs/`，不得复制回前台冒充 active。
-- 每个 phase 的 Current 必须来自代码、测试、trace/eval 或 verifier。
+## 每个 Phase 的关闭定义
+
+1. 目标代码进入唯一 owner。
+2. focused unit/integration tests 通过。
+3. 至少一个真实或 deterministic vertical scenario 通过。
+4. trace 能说明关键决策和失败。
+5. 持久状态可序列化；需要 restart 证明的 Phase 必须重建进程后读取。
+6. Current/Target 文档按事实更新。
+7. `.agent/programs/current.md` 和 roadmap 同步。
+8. PowerShell 命令兼容 Windows PowerShell 5.1。
+9. `git diff --check` 通过。
+10. 不以 mock/fixture 结果冒充真实模型、真实工具、真实解析或 measured quality。

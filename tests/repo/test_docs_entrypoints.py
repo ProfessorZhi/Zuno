@@ -125,6 +125,7 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
     )
     assert _current_phase_name(current_program) in {
         "none",
+        "PHASE01_truth-source-baseline-and-program-activation",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }

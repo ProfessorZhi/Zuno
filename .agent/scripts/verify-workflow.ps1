@@ -40,6 +40,10 @@ Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
+Require-Path ".agent\programs\program-decisions.md"
+Require-Path ".agent\programs\code-architecture-map.md"
+Require-Path ".agent\programs\powershell-runbook.md"
+Require-Path ".agent\programs\test-matrix.md"
 Require-NoPath ".agent\programs\PHASE01_truth-source-and-gap-audit.md"
 Require-NoPath ".agent\programs\PHASE02_durable-storage-contract.md"
 Require-NoPath ".agent\programs\PHASE01_program-truth-source-and-parser-current-audit.md"
@@ -62,9 +66,27 @@ $expectedEvidenceSpanPhaseFiles = @(
     "PHASE07_claim-level-citation-binder.md",
     "PHASE08_hard-negative-eval-and-release-gate.md"
 )
+$expectedUnifiedRuntimePhaseFiles = @(
+    "PHASE01_truth-source-baseline-and-program-activation.md",
+    "PHASE02_unified-runtime-contracts-and-state.md",
+    "PHASE03_model-gateway-closure.md",
+    "PHASE04_durable-store-trace-and-idempotency.md",
+    "PHASE05_unified-langgraph-runtime-skeleton.md",
+    "PHASE06_strategy-plan-and-react-step-execution.md",
+    "PHASE07_tool-control-plane-and-approval-integration.md",
+    "PHASE08_corrective-agentic-graphrag-and-evidence-ledger.md",
+    "PHASE09_reflection-replan-grounded-synthesis.md",
+    "PHASE10_four-layer-memory-and-reflexion-reuse.md",
+    "PHASE11_product-api-sse-ui-and-recovery-cutover.md",
+    "PHASE12_real-pdf-source-span-vertical-slice.md",
+    "PHASE13_paired-benchmark-release-gate-and-program-closure.md"
+)
 $activePhaseFiles = @(Get-ChildItem -LiteralPath ".agent\programs" -Filter "PHASE*.md" -File -ErrorAction SilentlyContinue | ForEach-Object { $_.Name } | Sort-Object)
-if ($activePhaseFiles.Count -ne 0) {
-    $failures.Add(".agent/programs must not keep active PHASE files in no-active state")
+if (($activePhaseFiles -join "|") -ne (($expectedUnifiedRuntimePhaseFiles | Sort-Object) -join "|")) {
+    $failures.Add(".agent/programs active unified runtime phase files drifted")
+}
+foreach ($phaseFile in $expectedUnifiedRuntimePhaseFiles) {
+    Require-Path (".agent\programs\" + $phaseFile)
 }
 foreach ($phaseFile in $expectedEvidenceSpanPhaseFiles) {
     Require-Path ("docs\history\programs\zuno-evidence-span-agentic-graphrag-hardening-v1\" + $phaseFile)
@@ -316,8 +338,14 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/") {
-    $failures.Add("current-program.md must declare no-active state and latest completed evidence-span archive")
+if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-unified-agent-runtime-closure-v1" -or $currentProgram -notmatch "current_phase: PHASE01_truth-source-baseline-and-program-activation" -or $currentProgram -notmatch "latest_completed_program: zuno-lean-complete-product-architecture-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-lean-complete-product-architecture-v1/") {
+    $failures.Add("current-program.md must declare active unified runtime program and latest lean architecture archive")
+}
+if ($currentProgram -notmatch "zuno-evidence-span-agentic-graphrag-hardening-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/") {
+    $failures.Add("current-program.md must keep evidence-span archive visible")
+}
+if ($currentProgram -notmatch "PHASE01-PHASE13" -or $currentProgram -notmatch "Single Controller Agent Runtime") {
+    $failures.Add("current-program.md missing unified runtime active program boundary")
 }
 if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "zuno-enterprise-ingestion-async-infrastructure-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
     $failures.Add("current-program.md missing Program 1-3 mega suite map")

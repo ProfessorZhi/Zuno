@@ -78,8 +78,33 @@ EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
     "PHASE07_claim-level-citation-binder.md",
     "PHASE08_hard-negative-eval-and-release-gate.md",
 ]
-CURRENT_FRONT_PROGRAM_FILES = [
+UNIFIED_RUNTIME_PROGRAM_NAME = "zuno-unified-agent-runtime-closure-v1"
+UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE01_truth-source-baseline-and-program-activation"
+UNIFIED_RUNTIME_PHASE_FILES = [
+    "PHASE01_truth-source-baseline-and-program-activation.md",
+    "PHASE02_unified-runtime-contracts-and-state.md",
+    "PHASE03_model-gateway-closure.md",
+    "PHASE04_durable-store-trace-and-idempotency.md",
+    "PHASE05_unified-langgraph-runtime-skeleton.md",
+    "PHASE06_strategy-plan-and-react-step-execution.md",
+    "PHASE07_tool-control-plane-and-approval-integration.md",
+    "PHASE08_corrective-agentic-graphrag-and-evidence-ledger.md",
+    "PHASE09_reflection-replan-grounded-synthesis.md",
+    "PHASE10_four-layer-memory-and-reflexion-reuse.md",
+    "PHASE11_product-api-sse-ui-and-recovery-cutover.md",
+    "PHASE12_real-pdf-source-span-vertical-slice.md",
+    "PHASE13_paired-benchmark-release-gate-and-program-closure.md",
+]
+UNIFIED_RUNTIME_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_FILES,
+    "program-decisions.md",
+    "code-architecture-map.md",
+    "powershell-runbook.md",
+    "test-matrix.md",
+    *UNIFIED_RUNTIME_PHASE_FILES,
+]
+CURRENT_FRONT_PROGRAM_FILES = [
+    *UNIFIED_RUNTIME_PROGRAM_FILES,
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -220,6 +245,11 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/programs/program-decisions.md",
+    ".agent/programs/code-architecture-map.md",
+    ".agent/programs/powershell-runbook.md",
+    ".agent/programs/test-matrix.md",
+    *[f".agent/programs/{phase_name}" for phase_name in UNIFIED_RUNTIME_PHASE_FILES],
     *[f".agent/programs/queued-programs/{file_name}" for file_name in QUEUED_PROGRAM_FILES],
     f"{PROGRAM3_ACTIVE_ARCHIVE}/README.md",
     f"{PROGRAM3_ACTIVE_ARCHIVE}/current.md",
@@ -515,10 +545,15 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
-        f"latest_completed_program: {EVIDENCE_SPAN_PROGRAM_NAME}",
+        "state: active",
+        f"active_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
+        f"current_phase: {UNIFIED_RUNTIME_CURRENT_PHASE}",
+        "latest_completed_program: zuno-lean-complete-product-architecture-v1",
+        "baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca",
+        UNIFIED_RUNTIME_PROGRAM_NAME,
+        UNIFIED_RUNTIME_CURRENT_PHASE,
+        "PHASE01-PHASE13",
+        "Single Controller Agent Runtime",
         EVIDENCE_SPAN_PROGRAM_NAME,
         EVIDENCE_SPAN_PROGRAM_ARCHIVE,
         "blocked_not_measured_due_to_agentic_profile_incomplete",
@@ -561,8 +596,33 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         if phrase not in current + readme + roadmap + closure + current_reference + evidence_archive_text + program3_archive_text + latest_archive_text + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names:
-        errors.append(".agent/programs must not keep active phase files in no-active state: " + ", ".join(active_phase_names))
+    if active_phase_names != sorted(UNIFIED_RUNTIME_PHASE_FILES):
+        errors.append(".agent/programs unified runtime phases drifted: " + ", ".join(active_phase_names))
+    for phase_name in UNIFIED_RUNTIME_PHASE_FILES:
+        phase_path = repo_root / ".agent/programs" / phase_name
+        if not phase_path.exists():
+            errors.append(f"unified runtime active phase missing: {phase_name}")
+            continue
+        phase_content = phase_path.read_text(encoding="utf-8")
+        if f"program: {UNIFIED_RUNTIME_PROGRAM_NAME}" not in phase_content:
+            errors.append(f"unified runtime phase missing program id: {phase_name}")
+        for section in [
+            "## 目标",
+            "## 目标增量",
+            "## 验收标准",
+            "## Windows PowerShell 验证",
+            "## Phase 完成报告",
+        ]:
+            if section not in phase_content:
+                errors.append(f"unified runtime phase missing section {section}: {phase_name}")
+    for active_file in [
+        "program-decisions.md",
+        "code-architecture-map.md",
+        "powershell-runbook.md",
+        "test-matrix.md",
+    ]:
+        if not (repo_root / ".agent/programs" / active_file).exists():
+            errors.append(f"unified runtime active program missing file: {active_file}")
     for index, phase_name in enumerate(EVIDENCE_SPAN_PROGRAM_PHASE_FILES, start=1):
         phase_path = evidence_archive_root / phase_name
         if not phase_path.exists():

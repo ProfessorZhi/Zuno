@@ -201,6 +201,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workfl
 pytest -q tests/repo/test_agent_system.py -p no:cacheprovider
 ```
 
+## Windows PowerShell Rules
+
+当前仓库路径包含空格和 `&`，program 命令默认兼容 Windows PowerShell 5.1。执行 program phase 时必须优先读取 `.agent/programs/powershell-runbook.md`。
+
+- 进入仓库使用 `Set-Location -LiteralPath`。
+- 不使用 Bash `&&`、`export`、`source`、`rm -rf`、`grep -R`。
+- 外部命令后检查 `$LASTEXITCODE`。
+- Python 优先使用 `.venv\Scripts\python.exe`，否则使用 `python`。
+- pytest 使用 `& $Python -m pytest ... -p no:cacheprovider`。
+- 临时目录删除使用 `Remove-Item -LiteralPath ... -Recurse -Force`。
+
 较大收口可追加：
 
 ```powershell
