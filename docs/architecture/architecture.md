@@ -432,6 +432,12 @@ Future Optional Extensions：
 
 Markdown 是详细实施蓝图。HTML 是从以下四个 canonical Mermaid section 生成的 visual executive summary。
 
+同步路径：
+
+- `docs/architecture/architecture.html`
+- `.agent/architecture/architecture.md`
+- `.agent/architecture/architecture.html`
+
 ### Lean System Overview
 
 六个运行域和它们的 owner 边界。Product 触发黄金链路，Agent Core 编排检索和工具，Governance 贯穿 trace/eval/cost，Local Infrastructure 提供本地事实源。

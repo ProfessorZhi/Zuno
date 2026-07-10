@@ -1,46 +1,35 @@
 # Program Closure Checklist
 
-state: active
-active_program: zuno-lean-complete-product-architecture-v1
-current_phase: PHASE03_four-diagram-html-and-guardrails
-latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
+state: no-active
+active_program: none
+current_phase: none
+latest_completed_program: zuno-lean-complete-product-architecture-v1
 
-## 必须关闭的事项
+## 当前关闭状态
 
-- [x] PHASE01：active program 已打开，旧问题、新定位、六域、四图和边界已记录。
-- [x] PHASE02：`docs/architecture/architecture.md` 已收缩为 Lean Complete 近期范围，同时保持详细实施蓝图能力。
-- [x] PHASE02：六个运行域已按统一模板展开，包含 owner、contract、配置、状态、失败、trace、测试和验收。
-- [x] PHASE02：ownership matrix、配置化契约、核心状态对象、restart recovery 边界、质量验收矩阵已写入。
-- [x] PHASE02：README、docs README、architecture README、production readiness 和专题文档不再把旧十图 / 11 层 / Production Scale 写成当前主线。
-- [x] PHASE03：renderer、HTML、diagram inventory、verifier 和 tests 全部使用四图契约。
-- [x] PHASE03：`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html` 由同一个 Markdown 源生成。
-- [ ] PHASE04：验证命令全部通过。
-- [ ] PHASE04：program 已归档到 `docs/history/programs/zuno-lean-complete-product-architecture-v1/`。
-- [ ] PHASE04：`.agent/programs/` 回到 no-active。
-- [ ] PHASE04：提交并推送当前分支。
+当前没有 active program。最近完成 program 已归档：
 
-## 禁止关闭为成功的事项
+- `docs/history/programs/zuno-lean-complete-product-architecture-v1/`
 
-- [ ] 不把本轮文档重写写成 runtime 质量提升。
-- [ ] 不把 `architecture.md` 改成简单宣传页。
-- [ ] 不把 Agentic GraphRAG fixed benchmark 写成 measured pass。
-- [ ] 不把 Evidence Text Available、strict citation、answer correctness 写成已通过质量门。
-- [ ] 不把 Deep GraphRAG 写成完整 product Agentic Runtime。
+## 最近关闭结论
 
-## 验证命令
+- [x] 项目定位改成 Lean Complete Agentic GraphRAG Product。
+- [x] 前台架构从 11 层 / 旧十图主叙事收缩为六个运行域和四张展示图。
+- [x] `docs/architecture/architecture.md` 保持详细实施蓝图能力。
+- [x] `docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html` 由同一个 Markdown 源生成。
+- [x] renderer、verifier 和 docs entrypoint tests 已改为四图契约。
+- [x] Production Scale 内容降为 Future Optional。
+- [x] 短期 P0 / P1 / P2 closure gap 已进入 `production-readiness.md`。
+- [x] 本轮没有修改核心 runtime。
 
-```powershell
-python tools/agent/render_architecture.py --write
-python tools/agent/render_architecture.py --check
-python tools/scripts/verify_docs_entrypoints.py
-pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
-python .agent/scripts/verify_agent_system.py
-powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
-git diff --check
-```
+## 未关闭的质量事项
 
-如果修改 repo guardrail，还要运行：
+- [ ] Agentic GraphRAG fixed EnterpriseRAG measured pass 未达成。
+- [ ] Agentic GraphRAG quality completed 未证明。
+- [ ] runtime 质量是否提升未由本轮声明。
 
-```powershell
-pytest -q tests/repo/test_agent_system.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider
-```
+## 下一轮检查
+
+- 是否按 P0 先跑通 fixed benchmark 和 model gateway / trace closure。
+- 是否仍严格区分 implementation available、measurement blocked、quality not yet proven。
+- 是否继续遵守六个运行域和 ownership matrix。

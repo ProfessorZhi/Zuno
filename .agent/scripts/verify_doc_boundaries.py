@@ -88,24 +88,28 @@ def verify_architecture_markdown_contract() -> list[str]:
     errors: list[str] = []
     content = _read("docs/architecture/architecture.md")
     required_phrases = [
-        "总架构文档",
-        "本地优先的企业私有知识库与多功能 Agent 助手",
-        "Current",
-        "Target",
-        "Document Ingestion / Parse Gateway",
-        "Tool Control Plane",
-        "LangSmith-compatible Trace / Eval",
-        "架构图视图集",
+        "Zuno Lean Complete Product Architecture",
+        "Lean Complete Agentic GraphRAG Product",
+        "Product & API",
+        "Input & Knowledge",
+        "Agent Core",
+        "Capability & Tool",
+        "Governance & Observability",
+        "Local Infrastructure",
+        "代码 Ownership Matrix",
+        "配置化与禁止写死契约",
+        "数据与状态模型",
+        "Runtime 完成与质量完成",
         "docs/architecture/architecture.html",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
-        "不能写成 Current",
+        "Future Optional Extensions",
     ]
     for phrase in required_phrases:
         if phrase not in content:
             errors.append(f"docs/architecture/architecture.md missing architecture contract phrase: {phrase}")
-    if content.count("```mermaid") != 10:
-        errors.append("docs/architecture/architecture.md must keep exactly ten Mermaid diagrams")
+    if content.count("```mermaid") != 4:
+        errors.append("docs/architecture/architecture.md must keep exactly four Mermaid diagrams")
     return errors
 
 
@@ -122,6 +126,8 @@ def verify_future_only_terms() -> list[str]:
         "事件 worker",
         "product-level multi-agent",
         "product/runtime default multi-agent",
+        "多 Agent 平台",
+        "多 Agent runtime",
         "产品级多 Agent",
         "Coding Agent",
     ]
@@ -137,6 +143,9 @@ def verify_future_only_terms() -> list[str]:
         "不是当前",
         "不是近期",
         "不是默认",
+        "不把近期目标",
+        "近期明确不做",
+        "Future Optional",
         "不是微服务",
         "不实施",
     ]

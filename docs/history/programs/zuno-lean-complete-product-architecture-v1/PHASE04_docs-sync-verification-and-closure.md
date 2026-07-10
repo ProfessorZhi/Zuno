@@ -1,6 +1,6 @@
 # PHASE04 docs-sync-verification-and-closure
 
-status: pending
+status: active
 program: zuno-lean-complete-product-architecture-v1
 
 ## 目标

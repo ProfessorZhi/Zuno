@@ -80,6 +80,12 @@ and evidence, not the active Agent execution path.
   coverage, release gate output, archive, and no-active state. Fixed
   EnterpriseRAG measured pass remains blocked by incomplete local agentic
   profile run.
+- `zuno-lean-complete-product-architecture-v1/`: completed Lean Complete
+  product architecture rewrite program. It closed PHASE01-PHASE04 across
+  product positioning, detailed architecture blueprint, four-diagram HTML,
+  renderer / verifier guardrails, docs sync, archive, and no-active state.
+  It did not claim runtime quality improvement; Agentic GraphRAG completion
+  remains gated by fixed benchmark and release gate.
 
 ## Rule
 
