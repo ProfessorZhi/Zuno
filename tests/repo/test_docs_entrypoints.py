@@ -144,7 +144,7 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
         "Future Optional Extensions",
     ]:
         assert phrase in docs_architecture
-    assert docs_architecture.count("```mermaid") == 4
+    assert docs_architecture.count("```mermaid") == 10
 
     for phrase in [
         "Short-term Closure Gap",
@@ -250,17 +250,29 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "Lean System Overview",
         "Golden Path Runtime",
         "Agentic GraphRAG and Agent Loop",
+        "Product and API Surface",
+        "Input and Knowledge Pipeline",
+        "Agent Core Control Loop",
+        "Agentic GraphRAG Evidence Flow",
+        "Capability and Tool Control Plane",
+        "Governance Observability and Release Gate",
         "Local Deployment and State",
     ]:
         assert phrase in content
 
 
-def test_architecture_html_is_generated_from_four_mermaid_sections() -> None:
+def test_architecture_html_is_generated_from_ten_mermaid_sections() -> None:
     render_architecture = _load_render_architecture()
     expected = [
         "Lean System Overview",
         "Golden Path Runtime",
         "Agentic GraphRAG and Agent Loop",
+        "Product and API Surface",
+        "Input and Knowledge Pipeline",
+        "Agent Core Control Loop",
+        "Agentic GraphRAG Evidence Flow",
+        "Capability and Tool Control Plane",
+        "Governance Observability and Release Gate",
         "Local Deployment and State",
     ]
     assert render_architecture.EXPECTED_DIAGRAMS == expected
@@ -276,8 +288,8 @@ def test_architecture_html_is_generated_from_four_mermaid_sections() -> None:
         assert f"### {title}" in architecture_source
         assert f"<h3>{index}. {title}</h3>" in architecture_html
 
-    assert architecture_html.count('class="diagram-section"') == 4
-    assert architecture_html.count("<summary>Mermaid source</summary>") == 4
+    assert architecture_html.count('class="diagram-section"') == 10
+    assert architecture_html.count("<summary>Mermaid source</summary>") == 10
     assert "diagram-dialog" in architecture_html
     assert 'securityLevel: "strict"' in architecture_html
     for retired in ["4+1 View Model", "View &amp; Beyond", "V&amp;B Logical View"]:

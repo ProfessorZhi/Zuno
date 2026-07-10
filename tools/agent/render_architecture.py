@@ -28,15 +28,44 @@ EXPECTED_DIAGRAMS = [
     "Lean System Overview",
     "Golden Path Runtime",
     "Agentic GraphRAG and Agent Loop",
+    "Product and API Surface",
+    "Input and Knowledge Pipeline",
+    "Agent Core Control Loop",
+    "Agentic GraphRAG Evidence Flow",
+    "Capability and Tool Control Plane",
+    "Governance Observability and Release Gate",
     "Local Deployment and State",
 ]
 
 GROUPS = [
     (
-        "Lean Complete Product Architecture",
-        "四张图从产品域、黄金链路、Agentic GraphRAG 循环和本地状态部署解释同一个近期目标。",
-        EXPECTED_DIAGRAMS,
-    )
+        "一、产品总览与黄金链路",
+        "先用三张图解释 Lean Complete Product 的总体结构、用户端到端链路和 Agentic GraphRAG 循环。",
+        [
+            "Lean System Overview",
+            "Golden Path Runtime",
+            "Agentic GraphRAG and Agent Loop",
+        ],
+    ),
+    (
+        "二、六运行域展开",
+        "按运行域展开 Product/API、Input/Knowledge、Agent Core、Capability/Tool、Governance/Observability。",
+        [
+            "Product and API Surface",
+            "Input and Knowledge Pipeline",
+            "Agent Core Control Loop",
+            "Agentic GraphRAG Evidence Flow",
+            "Capability and Tool Control Plane",
+            "Governance Observability and Release Gate",
+        ],
+    ),
+    (
+        "三、本地部署、配置与恢复",
+        "说明本地状态事实源、配置 owner、禁止写死和 restart recovery 边界。",
+        [
+            "Local Deployment and State",
+        ],
+    ),
 ]
 
 VIEW_META = {
@@ -51,6 +80,30 @@ VIEW_META = {
     "Agentic GraphRAG and Agent Loop": (
         "Retrieval and control loop",
         "展示 standard / deep / agentic 的关系，以及 evidence、claim binding、reflection、replan 和 release gate。",
+    ),
+    "Product and API Surface": (
+        "Product surface and DTO boundary",
+        "展示 AgentChat、Workspace、file lifecycle、task events、citation UI、trace summary 和后端事实源。",
+    ),
+    "Input and Knowledge Pipeline": (
+        "Document and evidence pipeline",
+        "展示 SourceObject、ParseJob、Document IR、SourceSpan、CitationChunk、IndexManifest 和 EvidenceBundle。",
+    ),
+    "Agent Core Control Loop": (
+        "Single Controller runtime",
+        "展示 ContextPack、Memory、StrategySelector、PlannerOutput、Observation、claim binding、reflection 和 memory commit。",
+    ),
+    "Agentic GraphRAG Evidence Flow": (
+        "Evidence-span GraphRAG",
+        "展示 query planning、BM25/vector/graph、fusion/rerank、EvidenceBundle、citation binding、failure bucket 和 release gate。",
+    ),
+    "Capability and Tool Control Plane": (
+        "Skill, capability and tool governance",
+        "展示 SkillCard、CapabilityRouter、Policy/Approval、CredentialRef、ExecutionAdapter、ResultNormalizer 和 ToolTrace。",
+    ),
+    "Governance Observability and Release Gate": (
+        "Trace, eval and release",
+        "展示 gates、ZunoSpan tree、usage/cost、failure buckets、EvalRun 和 release gate。",
     ),
     "Local Deployment and State": (
         "Local durable runtime",
@@ -422,7 +475,7 @@ def build_html() -> str:
 <body>
   <header>
     <h1>Zuno Lean Complete Product Architecture</h1>
-    <p class="lede">Zuno 是本地优先的 Agentic GraphRAG 产品。Markdown 是详细实施蓝图；本页是从四张 canonical Mermaid 图生成的展示摘要。</p>
+    <p class="lede">Zuno 是本地优先的 Agentic GraphRAG 产品。Markdown 是详细实施蓝图；本页是从十张 canonical Mermaid 图生成的架构图谱。</p>
     <nav class="source-links" aria-label="Source links">
       <a href="architecture.md">docs/architecture/architecture.md</a>
       <a href="../../.agent/architecture/architecture.md">.agent/architecture/architecture.md</a>

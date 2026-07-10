@@ -185,7 +185,7 @@
 <body>
   <header>
     <h1>Zuno Lean Complete Product Architecture</h1>
-    <p class="lede">Zuno 是本地优先的 Agentic GraphRAG 产品。Markdown 是详细实施蓝图；本页是从四张 canonical Mermaid 图生成的展示摘要。</p>
+    <p class="lede">Zuno 是本地优先的 Agentic GraphRAG 产品。Markdown 是详细实施蓝图；本页是从十张 canonical Mermaid 图生成的架构图谱。</p>
     <nav class="source-links" aria-label="Source links">
       <a href="architecture.md">docs/architecture/architecture.md</a>
       <a href="../../.agent/architecture/architecture.md">.agent/architecture/architecture.md</a>
@@ -195,8 +195,8 @@
   <main>
 
       <section class="diagram-group">
-        <h2>Lean Complete Product Architecture</h2>
-        <p>四张图从产品域、黄金链路、Agentic GraphRAG 循环和本地状态部署解释同一个近期目标。</p>
+        <h2>一、产品总览与黄金链路</h2>
+        <p>先用三张图解释 Lean Complete Product 的总体结构、用户端到端链路和 Agentic GraphRAG 循环。</p>
 
         <article class="diagram-section" data-title="Lean System Overview">
           <div class="diagram-heading">
@@ -478,15 +478,557 @@ flowchart TB
           </details>
         </article>
 
+      </section>
+
+
+      <section class="diagram-group">
+        <h2>二、六运行域展开</h2>
+        <p>按运行域展开 Product/API、Input/Knowledge、Agent Core、Capability/Tool、Governance/Observability。</p>
+
+        <article class="diagram-section" data-title="Product and API Surface">
+          <div class="diagram-heading">
+            <div>
+              <span class="diagram-kicker">Diagram 4</span>
+              <h3>4. Product and API Surface</h3>
+              <p>用户可见的 AgentChat、Workspace、Knowledge Space、file lifecycle、task lifecycle、citation UI、trace summary 和 feedback，都必须通过后端 DTO 与 durable state 对齐。</p>
+            </div>
+            <button class="fullscreen-button" type="button" data-diagram-index="3">展开全屏查看</button>
+          </div>
+          <dl class="diagram-meta">
+            <div><dt>Focus</dt><dd>Product surface and DTO boundary</dd></div>
+            <div><dt>Purpose</dt><dd>展示 AgentChat、Workspace、file lifecycle、task events、citation UI、trace summary 和后端事实源。</dd></div>
+          </dl>
+          <div class="diagram-frame">
+            <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef api fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  UI[&quot;Web / Desktop UI&lt;br/&gt;chat, files, citations, trace&quot;]
+  DTO[&quot;FastAPI DTO&lt;br/&gt;completion, workspace, knowledge, tool&quot;]
+  SSE[&quot;SSE / Task Events&quot;]
+  Workspace[&quot;Workspace + Knowledge Space&quot;]
+  Files[&quot;File Lifecycle&lt;br/&gt;uploaded, parsing, indexed, blocked&quot;]
+  Chat[&quot;AgentChat Request&quot;]
+  Artifact[&quot;Answer / Artifact / Citation UI&quot;]
+  Trace[&quot;Trace Summary / Feedback&quot;]
+  Store[&quot;Backend Durable State&lt;br/&gt;not frontend state&quot;]
+
+  UI --&gt; DTO
+  DTO --&gt; Workspace
+  DTO --&gt; Files
+  DTO --&gt; Chat
+  Chat --&gt; SSE
+  SSE --&gt; UI
+  Chat --&gt; Artifact
+  Artifact --&gt; Trace
+  Workspace --&gt; Store
+  Files --&gt; Store
+  Artifact --&gt; Store
+  Trace --&gt; Store
+
+  class UI,Workspace,Files,Chat,Artifact,Trace,Store node;
+  class DTO,SSE api;
+            </div>
+          </div>
+          <div class="analysis">
+            <h4>分析</h4>
+            <ul>
+              <li>前端只负责 UI 和交互，不是业务事实源。</li>
+              <li>API DTO 是产品请求和 runtime contract 的边界。</li>
+              <li>刷新或重启后必须从后端状态恢复核心结果。</li>
+            </ul>
+          </div>
+          <details>
+            <summary>Mermaid source</summary>
+            <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef api fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  UI[&quot;Web / Desktop UI&lt;br/&gt;chat, files, citations, trace&quot;]
+  DTO[&quot;FastAPI DTO&lt;br/&gt;completion, workspace, knowledge, tool&quot;]
+  SSE[&quot;SSE / Task Events&quot;]
+  Workspace[&quot;Workspace + Knowledge Space&quot;]
+  Files[&quot;File Lifecycle&lt;br/&gt;uploaded, parsing, indexed, blocked&quot;]
+  Chat[&quot;AgentChat Request&quot;]
+  Artifact[&quot;Answer / Artifact / Citation UI&quot;]
+  Trace[&quot;Trace Summary / Feedback&quot;]
+  Store[&quot;Backend Durable State&lt;br/&gt;not frontend state&quot;]
+
+  UI --&gt; DTO
+  DTO --&gt; Workspace
+  DTO --&gt; Files
+  DTO --&gt; Chat
+  Chat --&gt; SSE
+  SSE --&gt; UI
+  Chat --&gt; Artifact
+  Artifact --&gt; Trace
+  Workspace --&gt; Store
+  Files --&gt; Store
+  Artifact --&gt; Store
+  Trace --&gt; Store
+
+  class UI,Workspace,Files,Chat,Artifact,Trace,Store node;
+  class DTO,SSE api;</code></pre>
+          </details>
+        </article>
+
+
+        <article class="diagram-section" data-title="Input and Knowledge Pipeline">
+          <div class="diagram-heading">
+            <div>
+              <span class="diagram-kicker">Diagram 5</span>
+              <h3>5. Input and Knowledge Pipeline</h3>
+              <p>文档从 SourceObject 进入，经过 ParseJob、Document IR、SourceSpan、CitationChunk、IndexManifest 和 CitationLineage，最终形成可检索的 EvidenceBundle。</p>
+            </div>
+            <button class="fullscreen-button" type="button" data-diagram-index="4">展开全屏查看</button>
+          </div>
+          <dl class="diagram-meta">
+            <div><dt>Focus</dt><dd>Document and evidence pipeline</dd></div>
+            <div><dt>Purpose</dt><dd>展示 SourceObject、ParseJob、Document IR、SourceSpan、CitationChunk、IndexManifest 和 EvidenceBundle。</dd></div>
+          </dl>
+          <div class="diagram-frame">
+            <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef blocked fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+
+  Source[&quot;SourceObject&lt;br/&gt;checksum + object URI&quot;]
+  File[&quot;WorkspaceFile&lt;br/&gt;status&quot;]
+  Parse[&quot;ParseJob / ParseSnapshot&quot;]
+  IR[&quot;CanonicalDocumentIR&quot;]
+  Span[&quot;DocumentBlock + SourceSpan&quot;]
+  Chunk[&quot;CitationChunk + ParentChunk&quot;]
+  Manifest[&quot;IndexManifest&quot;]
+  Index[&quot;BM25 / Vector / Graph Index&quot;]
+  Lineage[&quot;CitationLineage&quot;]
+  Evidence[&quot;EvidenceBundle&quot;]
+  Blocked[&quot;Blocked&lt;br/&gt;no fake index&quot;]
+
+  Source --&gt; File --&gt; Parse
+  Parse --&gt; IR --&gt; Span --&gt; Chunk --&gt; Manifest --&gt; Index --&gt; Evidence
+  Chunk --&gt; Lineage --&gt; Evidence
+  Parse --&gt;|parser failed| Blocked
+  Span --&gt;|missing source span| Blocked
+
+  class Source,File,Parse,IR,Span,Chunk,Manifest,Index,Lineage,Evidence node;
+  class Blocked blocked;
+            </div>
+          </div>
+          <div class="analysis">
+            <h4>分析</h4>
+            <ul>
+              <li>parser blocked 时不能继续伪造 index。</li>
+              <li>strict citation 必须有 SourceSpan 和 CitationLineage。</li>
+              <li>Graph evidence 必须能回到 source object。</li>
+            </ul>
+          </div>
+          <details>
+            <summary>Mermaid source</summary>
+            <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef blocked fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+
+  Source[&quot;SourceObject&lt;br/&gt;checksum + object URI&quot;]
+  File[&quot;WorkspaceFile&lt;br/&gt;status&quot;]
+  Parse[&quot;ParseJob / ParseSnapshot&quot;]
+  IR[&quot;CanonicalDocumentIR&quot;]
+  Span[&quot;DocumentBlock + SourceSpan&quot;]
+  Chunk[&quot;CitationChunk + ParentChunk&quot;]
+  Manifest[&quot;IndexManifest&quot;]
+  Index[&quot;BM25 / Vector / Graph Index&quot;]
+  Lineage[&quot;CitationLineage&quot;]
+  Evidence[&quot;EvidenceBundle&quot;]
+  Blocked[&quot;Blocked&lt;br/&gt;no fake index&quot;]
+
+  Source --&gt; File --&gt; Parse
+  Parse --&gt; IR --&gt; Span --&gt; Chunk --&gt; Manifest --&gt; Index --&gt; Evidence
+  Chunk --&gt; Lineage --&gt; Evidence
+  Parse --&gt;|parser failed| Blocked
+  Span --&gt;|missing source span| Blocked
+
+  class Source,File,Parse,IR,Span,Chunk,Manifest,Index,Lineage,Evidence node;
+  class Blocked blocked;</code></pre>
+          </details>
+        </article>
+
+
+        <article class="diagram-section" data-title="Agent Core Control Loop">
+          <div class="diagram-heading">
+            <div>
+              <span class="diagram-kicker">Diagram 6</span>
+              <h3>6. Agent Core Control Loop</h3>
+              <p>Single Controller Agent 从 ContextPack 出发，选择策略、规划检索或工具、观察结果、绑定引用、反思并决定 finish、re-retrieve、use tool 或 abstain。</p>
+            </div>
+            <button class="fullscreen-button" type="button" data-diagram-index="5">展开全屏查看</button>
+          </div>
+          <dl class="diagram-meta">
+            <div><dt>Focus</dt><dd>Single Controller runtime</dd></div>
+            <div><dt>Purpose</dt><dd>展示 ContextPack、Memory、StrategySelector、PlannerOutput、Observation、claim binding、reflection 和 memory commit。</dd></div>
+          </dl>
+          <div class="diagram-frame">
+            <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef decision fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+
+  Request[&quot;AgentChat Request&quot;]
+  Model[&quot;Model Runtime / Gateway&quot;]
+  Context[&quot;ContextPack&lt;br/&gt;session + memory + knowledge&quot;]
+  Memory[&quot;Memory Read&quot;]
+  Strategy{&quot;StrategySelector&quot;}
+  Plan[&quot;PlannerOutput&lt;br/&gt;RetrievalPlan + CapabilityPlan&quot;]
+  Observe[&quot;Observation&lt;br/&gt;retrieval, model, tool, gate&quot;]
+  Bind[&quot;Claim Binding&quot;]
+  Synthesis[&quot;Grounded Answer Synthesis&quot;]
+  Reflect{&quot;Reflect / Replan&quot;}
+  Commit[&quot;Post-turn Memory Commit&quot;]
+  Final[&quot;Final Answer or Abstain&quot;]
+
+  Request --&gt; Context
+  Context --&gt; Memory --&gt; Strategy
+  Strategy --&gt; Plan --&gt; Observe --&gt; Bind --&gt; Synthesis --&gt; Reflect
+  Model --&gt; Strategy
+  Model --&gt; Synthesis
+  Reflect --&gt;|finish| Final
+  Reflect --&gt;|re-retrieve| Plan
+  Reflect --&gt;|use tool| Observe
+  Reflect --&gt;|abstain| Final
+  Final --&gt; Commit
+
+  class Request,Model,Context,Memory,Plan,Observe,Bind,Synthesis,Commit,Final node;
+  class Strategy,Reflect decision;
+            </div>
+          </div>
+          <div class="analysis">
+            <h4>分析</h4>
+            <ul>
+              <li>所有真实模型调用必须进入统一 Model Runtime / Gateway。</li>
+              <li>规则 planner 和 model planner 共享 PlannerOutput contract。</li>
+              <li>abstain 是合法输出，不是失败绕过。</li>
+            </ul>
+          </div>
+          <details>
+            <summary>Mermaid source</summary>
+            <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef decision fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+
+  Request[&quot;AgentChat Request&quot;]
+  Model[&quot;Model Runtime / Gateway&quot;]
+  Context[&quot;ContextPack&lt;br/&gt;session + memory + knowledge&quot;]
+  Memory[&quot;Memory Read&quot;]
+  Strategy{&quot;StrategySelector&quot;}
+  Plan[&quot;PlannerOutput&lt;br/&gt;RetrievalPlan + CapabilityPlan&quot;]
+  Observe[&quot;Observation&lt;br/&gt;retrieval, model, tool, gate&quot;]
+  Bind[&quot;Claim Binding&quot;]
+  Synthesis[&quot;Grounded Answer Synthesis&quot;]
+  Reflect{&quot;Reflect / Replan&quot;}
+  Commit[&quot;Post-turn Memory Commit&quot;]
+  Final[&quot;Final Answer or Abstain&quot;]
+
+  Request --&gt; Context
+  Context --&gt; Memory --&gt; Strategy
+  Strategy --&gt; Plan --&gt; Observe --&gt; Bind --&gt; Synthesis --&gt; Reflect
+  Model --&gt; Strategy
+  Model --&gt; Synthesis
+  Reflect --&gt;|finish| Final
+  Reflect --&gt;|re-retrieve| Plan
+  Reflect --&gt;|use tool| Observe
+  Reflect --&gt;|abstain| Final
+  Final --&gt; Commit
+
+  class Request,Model,Context,Memory,Plan,Observe,Bind,Synthesis,Commit,Final node;
+  class Strategy,Reflect decision;</code></pre>
+          </details>
+        </article>
+
+
+        <article class="diagram-section" data-title="Agentic GraphRAG Evidence Flow">
+          <div class="diagram-heading">
+            <div>
+              <span class="diagram-kicker">Diagram 7</span>
+              <h3>7. Agentic GraphRAG Evidence Flow</h3>
+              <p>Agentic GraphRAG 的核心不是“图检索存在”，而是从 query planning 到 Graph expansion、EvidenceBundle、claim binding 和 release gate 都能保留 source span 证据链。</p>
+            </div>
+            <button class="fullscreen-button" type="button" data-diagram-index="6">展开全屏查看</button>
+          </div>
+          <dl class="diagram-meta">
+            <div><dt>Focus</dt><dd>Evidence-span GraphRAG</dd></div>
+            <div><dt>Purpose</dt><dd>展示 query planning、BM25/vector/graph、fusion/rerank、EvidenceBundle、citation binding、failure bucket 和 release gate。</dd></div>
+          </dl>
+          <div class="diagram-frame">
+            <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Question[&quot;Question + ContextPack&quot;]
+  Query[&quot;Query Set&quot;]
+  BM25[&quot;BM25 Candidates&quot;]
+  Vector[&quot;Vector Candidates&quot;]
+  Graph[&quot;Graph Expansion&lt;br/&gt;entity, relation, community&quot;]
+  Fusion[&quot;Fusion / Rerank&quot;]
+  Bundle[&quot;EvidenceBundle&lt;br/&gt;source span required&quot;]
+  Claims[&quot;Claim Extraction&quot;]
+  Citations[&quot;Citation Binding&quot;]
+  Answer[&quot;Grounded Answer&quot;]
+  Buckets[&quot;Failure Buckets&quot;]
+  Gate[&quot;Release Gate&quot;]
+
+  Question --&gt; Query
+  Query --&gt; BM25 --&gt; Fusion
+  Query --&gt; Vector --&gt; Fusion
+  Query --&gt; Graph --&gt; Fusion
+  Fusion --&gt; Bundle --&gt; Claims --&gt; Citations --&gt; Answer --&gt; Gate
+  Bundle --&gt; Buckets
+  Citations --&gt; Buckets
+
+  class Question,Query,BM25,Vector,Graph,Fusion,Bundle,Claims,Citations,Answer,Buckets node;
+  class Gate gate;
+            </div>
+          </div>
+          <div class="analysis">
+            <h4>分析</h4>
+            <ul>
+              <li>doc-level hit 不能冒充 evidence-span hit。</li>
+              <li>citation binding 失败必须能定位到 failure bucket。</li>
+              <li>quality completed 只由 fixed benchmark 和 release gate 证明。</li>
+            </ul>
+          </div>
+          <details>
+            <summary>Mermaid source</summary>
+            <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Question[&quot;Question + ContextPack&quot;]
+  Query[&quot;Query Set&quot;]
+  BM25[&quot;BM25 Candidates&quot;]
+  Vector[&quot;Vector Candidates&quot;]
+  Graph[&quot;Graph Expansion&lt;br/&gt;entity, relation, community&quot;]
+  Fusion[&quot;Fusion / Rerank&quot;]
+  Bundle[&quot;EvidenceBundle&lt;br/&gt;source span required&quot;]
+  Claims[&quot;Claim Extraction&quot;]
+  Citations[&quot;Citation Binding&quot;]
+  Answer[&quot;Grounded Answer&quot;]
+  Buckets[&quot;Failure Buckets&quot;]
+  Gate[&quot;Release Gate&quot;]
+
+  Question --&gt; Query
+  Query --&gt; BM25 --&gt; Fusion
+  Query --&gt; Vector --&gt; Fusion
+  Query --&gt; Graph --&gt; Fusion
+  Fusion --&gt; Bundle --&gt; Claims --&gt; Citations --&gt; Answer --&gt; Gate
+  Bundle --&gt; Buckets
+  Citations --&gt; Buckets
+
+  class Question,Query,BM25,Vector,Graph,Fusion,Bundle,Claims,Citations,Answer,Buckets node;
+  class Gate gate;</code></pre>
+          </details>
+        </article>
+
+
+        <article class="diagram-section" data-title="Capability and Tool Control Plane">
+          <div class="diagram-heading">
+            <div>
+              <span class="diagram-kicker">Diagram 8</span>
+              <h3>8. Capability and Tool Control Plane</h3>
+              <p>Skill 定义任务方法，Tool 执行具体动作；CapabilityRouter、policy、approval、credential reference、adapter、normalizer 和 trace 构成控制面。</p>
+            </div>
+            <button class="fullscreen-button" type="button" data-diagram-index="7">展开全屏查看</button>
+          </div>
+          <dl class="diagram-meta">
+            <div><dt>Focus</dt><dd>Skill, capability and tool governance</dd></div>
+            <div><dt>Purpose</dt><dd>展示 SkillCard、CapabilityRouter、Policy/Approval、CredentialRef、ExecutionAdapter、ResultNormalizer 和 ToolTrace。</dd></div>
+          </dl>
+          <div class="diagram-frame">
+            <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef policy fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Plan[&quot;CapabilityPlan&quot;]
+  Skill[&quot;SkillCard&lt;br/&gt;task method&quot;]
+  Capability[&quot;CapabilityCard&lt;br/&gt;knowledge, tool, artifact&quot;]
+  Router[&quot;CapabilityRouter&quot;]
+  Policy[&quot;Policy / Approval Gate&quot;]
+  Credential[&quot;CredentialRef&lt;br/&gt;no raw secret&quot;]
+  Tool[&quot;ToolCard&quot;]
+  Adapter[&quot;ExecutionAdapter&quot;]
+  Normalizer[&quot;ResultNormalizer&quot;]
+  Trace[&quot;ToolTrace&quot;]
+  Observation[&quot;Agent Observation&quot;]
+
+  Plan --&gt; Router
+  Skill --&gt; Router
+  Capability --&gt; Router
+  Router --&gt; Policy --&gt; Credential --&gt; Tool --&gt; Adapter --&gt; Normalizer --&gt; Observation
+  Adapter --&gt; Trace
+  Policy --&gt; Trace
+  Normalizer --&gt; Trace
+
+  class Plan,Skill,Capability,Router,Credential,Tool,Adapter,Normalizer,Trace,Observation node;
+  class Policy policy;
+            </div>
+          </div>
+          <div class="analysis">
+            <h4>分析</h4>
+            <ul>
+              <li>Skill 不是 Tool，不能把任务方法和执行动作混写。</li>
+              <li>副作用工具必须有审批、timeout、幂等和 trace。</li>
+              <li>Agent 消费 normalized observation，不依赖工具内部结构。</li>
+            </ul>
+          </div>
+          <details>
+            <summary>Mermaid source</summary>
+            <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef policy fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Plan[&quot;CapabilityPlan&quot;]
+  Skill[&quot;SkillCard&lt;br/&gt;task method&quot;]
+  Capability[&quot;CapabilityCard&lt;br/&gt;knowledge, tool, artifact&quot;]
+  Router[&quot;CapabilityRouter&quot;]
+  Policy[&quot;Policy / Approval Gate&quot;]
+  Credential[&quot;CredentialRef&lt;br/&gt;no raw secret&quot;]
+  Tool[&quot;ToolCard&quot;]
+  Adapter[&quot;ExecutionAdapter&quot;]
+  Normalizer[&quot;ResultNormalizer&quot;]
+  Trace[&quot;ToolTrace&quot;]
+  Observation[&quot;Agent Observation&quot;]
+
+  Plan --&gt; Router
+  Skill --&gt; Router
+  Capability --&gt; Router
+  Router --&gt; Policy --&gt; Credential --&gt; Tool --&gt; Adapter --&gt; Normalizer --&gt; Observation
+  Adapter --&gt; Trace
+  Policy --&gt; Trace
+  Normalizer --&gt; Trace
+
+  class Plan,Skill,Capability,Router,Credential,Tool,Adapter,Normalizer,Trace,Observation node;
+  class Policy policy;</code></pre>
+          </details>
+        </article>
+
+
+        <article class="diagram-section" data-title="Governance Observability and Release Gate">
+          <div class="diagram-heading">
+            <div>
+              <span class="diagram-kicker">Diagram 9</span>
+              <h3>9. Governance Observability and Release Gate</h3>
+              <p>治理观测贯穿 input、retrieval、tool、output、trace、usage/cost、failure bucket、benchmark 和 release gate。</p>
+            </div>
+            <button class="fullscreen-button" type="button" data-diagram-index="8">展开全屏查看</button>
+          </div>
+          <dl class="diagram-meta">
+            <div><dt>Focus</dt><dd>Trace, eval and release</dd></div>
+            <div><dt>Purpose</dt><dd>展示 gates、ZunoSpan tree、usage/cost、failure buckets、EvalRun 和 release gate。</dd></div>
+          </dl>
+          <div class="diagram-frame">
+            <div class="mermaid">
+%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  InputGate[&quot;Input Gate / ACL / Redaction&quot;]
+  AgentRun[&quot;agent_run&quot;]
+  Context[&quot;context_build&quot;]
+  Retrieval[&quot;retrieval / graph_expand / rerank&quot;]
+  Model[&quot;model_call&lt;br/&gt;usage + cost&quot;]
+  Tool[&quot;tool_call&quot;]
+  Citation[&quot;claim_binding&quot;]
+  OutputGate[&quot;output_gate&quot;]
+  Trace[&quot;ZunoSpan Tree&quot;]
+  Eval[&quot;EvalRun&quot;]
+  Buckets[&quot;Failure Buckets&quot;]
+  Release[&quot;Release Gate&quot;]
+
+  InputGate --&gt; AgentRun --&gt; Context --&gt; Retrieval --&gt; Citation --&gt; OutputGate
+  AgentRun --&gt; Model
+  AgentRun --&gt; Tool
+  Context --&gt; Trace
+  Retrieval --&gt; Trace
+  Model --&gt; Trace
+  Tool --&gt; Trace
+  Citation --&gt; Trace
+  OutputGate --&gt; Trace
+  Trace --&gt; Eval --&gt; Buckets --&gt; Release
+
+  class AgentRun,Context,Retrieval,Model,Tool,Citation,Trace,Eval,Buckets node;
+  class InputGate,OutputGate,Release gate;
+            </div>
+          </div>
+          <div class="analysis">
+            <h4>分析</h4>
+            <ul>
+              <li>blocked、prepared、runtime observed、measured 必须分开。</li>
+              <li>缺 trace 字段时输出 unavailable，不编造诊断。</li>
+              <li>近期先做本地持久 trace，不强求完整 LangSmith / OTel 平台。</li>
+            </ul>
+          </div>
+          <details>
+            <summary>Mermaid source</summary>
+            <pre><code>%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  InputGate[&quot;Input Gate / ACL / Redaction&quot;]
+  AgentRun[&quot;agent_run&quot;]
+  Context[&quot;context_build&quot;]
+  Retrieval[&quot;retrieval / graph_expand / rerank&quot;]
+  Model[&quot;model_call&lt;br/&gt;usage + cost&quot;]
+  Tool[&quot;tool_call&quot;]
+  Citation[&quot;claim_binding&quot;]
+  OutputGate[&quot;output_gate&quot;]
+  Trace[&quot;ZunoSpan Tree&quot;]
+  Eval[&quot;EvalRun&quot;]
+  Buckets[&quot;Failure Buckets&quot;]
+  Release[&quot;Release Gate&quot;]
+
+  InputGate --&gt; AgentRun --&gt; Context --&gt; Retrieval --&gt; Citation --&gt; OutputGate
+  AgentRun --&gt; Model
+  AgentRun --&gt; Tool
+  Context --&gt; Trace
+  Retrieval --&gt; Trace
+  Model --&gt; Trace
+  Tool --&gt; Trace
+  Citation --&gt; Trace
+  OutputGate --&gt; Trace
+  Trace --&gt; Eval --&gt; Buckets --&gt; Release
+
+  class AgentRun,Context,Retrieval,Model,Tool,Citation,Trace,Eval,Buckets node;
+  class InputGate,OutputGate,Release gate;</code></pre>
+          </details>
+        </article>
+
+      </section>
+
+
+      <section class="diagram-group">
+        <h2>三、本地部署、配置与恢复</h2>
+        <p>说明本地状态事实源、配置 owner、禁止写死和 restart recovery 边界。</p>
 
         <article class="diagram-section" data-title="Local Deployment and State">
           <div class="diagram-heading">
             <div>
-              <span class="diagram-kicker">Diagram 4</span>
-              <h3>4. Local Deployment and State</h3>
+              <span class="diagram-kicker">Diagram 10</span>
+              <h3>10. Local Deployment and State</h3>
               <p>近期部署是本地优先的正式实现：Web、FastAPI、SQLite、本地对象存储、本地队列、本地索引、模型 provider 和 trace store 构成闭环；外部集群只是可选 adapter。</p>
             </div>
-            <button class="fullscreen-button" type="button" data-diagram-index="3">展开全屏查看</button>
+            <button class="fullscreen-button" type="button" data-diagram-index="9">展开全屏查看</button>
           </div>
           <dl class="diagram-meta">
             <div><dt>Focus</dt><dd>Local durable runtime</dd></div>
@@ -539,6 +1081,7 @@ flowchart TB
               <li>本地状态必须能支持 restart recovery。</li>
               <li>外部 Postgres / Redis / MinIO / graph/vector store 是可替换方向，不是近期 blocker。</li>
               <li>配置最终生效值必须进入 trace 和 eval 报告。</li>
+              <li>配置 owner、禁止写死、restart recovery 和 short-term gap 由本图与上文配置/状态表共同约束。</li>
             </ul>
           </div>
           <details>

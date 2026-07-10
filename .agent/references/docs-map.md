@@ -22,7 +22,7 @@ docs/history/ = archive and evidence
 - `README.md`：仓库总览和首读路径。
 - `docs/README.md`：文档入口。
 - `docs/architecture/architecture.md`：Lean Complete Agentic GraphRAG Product 的详细实施蓝图事实源，包含六个运行域、黄金链路、owner、contract、配置、状态、失败、trace、测试和验收。
-- `docs/architecture/architecture.html`：由四张 canonical Mermaid 图生成的展示摘要。
+- `docs/architecture/architecture.html`：由十张 canonical Mermaid 图生成的架构图谱。
 - `docs/architecture/production-readiness.md`：Current、Short-term Closure Gap、Measurement Blocked、Completed、Future Optional。
 - `docs/architecture/document-ingestion-foundation.md`、`agent-core-runtime.md`、`capability-and-skill-layer.md`、`agentic-retrieval-planner.md`、`eval-observability-and-cost.md`、`input-layer-and-document-processing.md`、`knowledge-space-product-configuration.md`：六运行域专题细化。
 - `docs/architecture/repo-ownership-matrix.md`：代码目录 ownership 辅助事实表。

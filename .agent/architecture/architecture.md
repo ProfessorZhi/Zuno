@@ -430,7 +430,7 @@ Future Optional Extensions：
 
 ## 13. 架构图
 
-Markdown 是详细实施蓝图。HTML 是从以下四个 canonical Mermaid section 生成的 visual executive summary。
+Markdown 是详细实施蓝图。HTML 是从以下十个 canonical Mermaid section 生成的 architecture visual atlas。十图不是恢复旧的大平台叙事，而是把 Lean Complete Product 的六运行域、黄金链路、数据流、控制流、部署、配置、恢复和质量门拆成更适合讲解的十个视角。
 
 同步路径：
 
@@ -571,6 +571,256 @@ flowchart TB
 - strict citation 必须绑定 source span，doc-only evidence 不能冒充。
 - 质量完成只看 fixed benchmark 和 release gate。
 
+### Product and API Surface
+
+用户可见的 AgentChat、Workspace、Knowledge Space、file lifecycle、task lifecycle、citation UI、trace summary 和 feedback，都必须通过后端 DTO 与 durable state 对齐。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef api fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  UI["Web / Desktop UI<br/>chat, files, citations, trace"]
+  DTO["FastAPI DTO<br/>completion, workspace, knowledge, tool"]
+  SSE["SSE / Task Events"]
+  Workspace["Workspace + Knowledge Space"]
+  Files["File Lifecycle<br/>uploaded, parsing, indexed, blocked"]
+  Chat["AgentChat Request"]
+  Artifact["Answer / Artifact / Citation UI"]
+  Trace["Trace Summary / Feedback"]
+  Store["Backend Durable State<br/>not frontend state"]
+
+  UI --> DTO
+  DTO --> Workspace
+  DTO --> Files
+  DTO --> Chat
+  Chat --> SSE
+  SSE --> UI
+  Chat --> Artifact
+  Artifact --> Trace
+  Workspace --> Store
+  Files --> Store
+  Artifact --> Store
+  Trace --> Store
+
+  class UI,Workspace,Files,Chat,Artifact,Trace,Store node;
+  class DTO,SSE api;
+```
+
+#### 分析
+
+- 前端只负责 UI 和交互，不是业务事实源。
+- API DTO 是产品请求和 runtime contract 的边界。
+- 刷新或重启后必须从后端状态恢复核心结果。
+
+### Input and Knowledge Pipeline
+
+文档从 SourceObject 进入，经过 ParseJob、Document IR、SourceSpan、CitationChunk、IndexManifest 和 CitationLineage，最终形成可检索的 EvidenceBundle。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef blocked fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+
+  Source["SourceObject<br/>checksum + object URI"]
+  File["WorkspaceFile<br/>status"]
+  Parse["ParseJob / ParseSnapshot"]
+  IR["CanonicalDocumentIR"]
+  Span["DocumentBlock + SourceSpan"]
+  Chunk["CitationChunk + ParentChunk"]
+  Manifest["IndexManifest"]
+  Index["BM25 / Vector / Graph Index"]
+  Lineage["CitationLineage"]
+  Evidence["EvidenceBundle"]
+  Blocked["Blocked<br/>no fake index"]
+
+  Source --> File --> Parse
+  Parse --> IR --> Span --> Chunk --> Manifest --> Index --> Evidence
+  Chunk --> Lineage --> Evidence
+  Parse -->|parser failed| Blocked
+  Span -->|missing source span| Blocked
+
+  class Source,File,Parse,IR,Span,Chunk,Manifest,Index,Lineage,Evidence node;
+  class Blocked blocked;
+```
+
+#### 分析
+
+- parser blocked 时不能继续伪造 index。
+- strict citation 必须有 SourceSpan 和 CitationLineage。
+- Graph evidence 必须能回到 source object。
+
+### Agent Core Control Loop
+
+Single Controller Agent 从 ContextPack 出发，选择策略、规划检索或工具、观察结果、绑定引用、反思并决定 finish、re-retrieve、use tool 或 abstain。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef decision fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
+
+  Request["AgentChat Request"]
+  Model["Model Runtime / Gateway"]
+  Context["ContextPack<br/>session + memory + knowledge"]
+  Memory["Memory Read"]
+  Strategy{"StrategySelector"}
+  Plan["PlannerOutput<br/>RetrievalPlan + CapabilityPlan"]
+  Observe["Observation<br/>retrieval, model, tool, gate"]
+  Bind["Claim Binding"]
+  Synthesis["Grounded Answer Synthesis"]
+  Reflect{"Reflect / Replan"}
+  Commit["Post-turn Memory Commit"]
+  Final["Final Answer or Abstain"]
+
+  Request --> Context
+  Context --> Memory --> Strategy
+  Strategy --> Plan --> Observe --> Bind --> Synthesis --> Reflect
+  Model --> Strategy
+  Model --> Synthesis
+  Reflect -->|finish| Final
+  Reflect -->|re-retrieve| Plan
+  Reflect -->|use tool| Observe
+  Reflect -->|abstain| Final
+  Final --> Commit
+
+  class Request,Model,Context,Memory,Plan,Observe,Bind,Synthesis,Commit,Final node;
+  class Strategy,Reflect decision;
+```
+
+#### 分析
+
+- 所有真实模型调用必须进入统一 Model Runtime / Gateway。
+- 规则 planner 和 model planner 共享 PlannerOutput contract。
+- abstain 是合法输出，不是失败绕过。
+
+### Agentic GraphRAG Evidence Flow
+
+Agentic GraphRAG 的核心不是“图检索存在”，而是从 query planning 到 Graph expansion、EvidenceBundle、claim binding 和 release gate 都能保留 source span 证据链。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart LR
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Question["Question + ContextPack"]
+  Query["Query Set"]
+  BM25["BM25 Candidates"]
+  Vector["Vector Candidates"]
+  Graph["Graph Expansion<br/>entity, relation, community"]
+  Fusion["Fusion / Rerank"]
+  Bundle["EvidenceBundle<br/>source span required"]
+  Claims["Claim Extraction"]
+  Citations["Citation Binding"]
+  Answer["Grounded Answer"]
+  Buckets["Failure Buckets"]
+  Gate["Release Gate"]
+
+  Question --> Query
+  Query --> BM25 --> Fusion
+  Query --> Vector --> Fusion
+  Query --> Graph --> Fusion
+  Fusion --> Bundle --> Claims --> Citations --> Answer --> Gate
+  Bundle --> Buckets
+  Citations --> Buckets
+
+  class Question,Query,BM25,Vector,Graph,Fusion,Bundle,Claims,Citations,Answer,Buckets node;
+  class Gate gate;
+```
+
+#### 分析
+
+- doc-level hit 不能冒充 evidence-span hit。
+- citation binding 失败必须能定位到 failure bucket。
+- quality completed 只由 fixed benchmark 和 release gate 证明。
+
+### Capability and Tool Control Plane
+
+Skill 定义任务方法，Tool 执行具体动作；CapabilityRouter、policy、approval、credential reference、adapter、normalizer 和 trace 构成控制面。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef policy fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Plan["CapabilityPlan"]
+  Skill["SkillCard<br/>task method"]
+  Capability["CapabilityCard<br/>knowledge, tool, artifact"]
+  Router["CapabilityRouter"]
+  Policy["Policy / Approval Gate"]
+  Credential["CredentialRef<br/>no raw secret"]
+  Tool["ToolCard"]
+  Adapter["ExecutionAdapter"]
+  Normalizer["ResultNormalizer"]
+  Trace["ToolTrace"]
+  Observation["Agent Observation"]
+
+  Plan --> Router
+  Skill --> Router
+  Capability --> Router
+  Router --> Policy --> Credential --> Tool --> Adapter --> Normalizer --> Observation
+  Adapter --> Trace
+  Policy --> Trace
+  Normalizer --> Trace
+
+  class Plan,Skill,Capability,Router,Credential,Tool,Adapter,Normalizer,Trace,Observation node;
+  class Policy policy;
+```
+
+#### 分析
+
+- Skill 不是 Tool，不能把任务方法和执行动作混写。
+- 副作用工具必须有审批、timeout、幂等和 trace。
+- Agent 消费 normalized observation，不依赖工具内部结构。
+
+### Governance Observability and Release Gate
+
+治理观测贯穿 input、retrieval、tool、output、trace、usage/cost、failure bucket、benchmark 和 release gate。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  InputGate["Input Gate / ACL / Redaction"]
+  AgentRun["agent_run"]
+  Context["context_build"]
+  Retrieval["retrieval / graph_expand / rerank"]
+  Model["model_call<br/>usage + cost"]
+  Tool["tool_call"]
+  Citation["claim_binding"]
+  OutputGate["output_gate"]
+  Trace["ZunoSpan Tree"]
+  Eval["EvalRun"]
+  Buckets["Failure Buckets"]
+  Release["Release Gate"]
+
+  InputGate --> AgentRun --> Context --> Retrieval --> Citation --> OutputGate
+  AgentRun --> Model
+  AgentRun --> Tool
+  Context --> Trace
+  Retrieval --> Trace
+  Model --> Trace
+  Tool --> Trace
+  Citation --> Trace
+  OutputGate --> Trace
+  Trace --> Eval --> Buckets --> Release
+
+  class AgentRun,Context,Retrieval,Model,Tool,Citation,Trace,Eval,Buckets node;
+  class InputGate,OutputGate,Release gate;
+```
+
+#### 分析
+
+- blocked、prepared、runtime observed、measured 必须分开。
+- 缺 trace 字段时输出 unavailable，不编造诊断。
+- 近期先做本地持久 trace，不强求完整 LangSmith / OTel 平台。
+
 ### Local Deployment and State
 
 近期部署是本地优先的正式实现：Web、FastAPI、SQLite、本地对象存储、本地队列、本地索引、模型 provider 和 trace store 构成闭环；外部集群只是可选 adapter。
@@ -620,6 +870,7 @@ flowchart TB
 - 本地状态必须能支持 restart recovery。
 - 外部 Postgres / Redis / MinIO / graph/vector store 是可替换方向，不是近期 blocker。
 - 配置最终生效值必须进入 trace 和 eval 报告。
+- 配置 owner、禁止写死、restart recovery 和 short-term gap 由本图与上文配置/状态表共同约束。
 
 ## 14. 验证和演示方式
 

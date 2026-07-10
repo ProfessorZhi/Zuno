@@ -11,7 +11,13 @@ ARCHITECTURE_VIEW_CONTRACT = [
     (1, "Lean System Overview", "Six runtime domains"),
     (2, "Golden Path Runtime", "End-to-end product path"),
     (3, "Agentic GraphRAG and Agent Loop", "Retrieval and control loop"),
-    (4, "Local Deployment and State", "Local durable runtime"),
+    (4, "Product and API Surface", "Product surface and DTO boundary"),
+    (5, "Input and Knowledge Pipeline", "Document and evidence pipeline"),
+    (6, "Agent Core Control Loop", "Single Controller runtime"),
+    (7, "Agentic GraphRAG Evidence Flow", "Evidence-span GraphRAG"),
+    (8, "Capability and Tool Control Plane", "Skill, capability and tool governance"),
+    (9, "Governance Observability and Release Gate", "Trace, eval and release"),
+    (10, "Local Deployment and State", "Local durable runtime"),
 ]
 
 ACTIVE_DOCS_ARCHITECTURE_FILES = {
@@ -260,7 +266,7 @@ def verify_architecture_view_contract() -> list[str]:
             errors.append(f"architecture.html missing focus text: {focus}")
 
     if html_content.count('class="diagram-section"') != len(expected_titles):
-        errors.append("architecture.html must render exactly four diagram sections")
+        errors.append("architecture.html must render exactly ten diagram sections")
     if html_content.count('<div class="mermaid">') < len(expected_titles):
         errors.append("architecture.html must render Mermaid containers")
     if html_content.count("<summary>Mermaid source</summary>") != len(expected_titles):

@@ -7,7 +7,7 @@
 ## Current Truth
 
 - `docs/architecture/architecture.md` 是 Zuno Lean Complete Agentic GraphRAG Product 的详细实施蓝图事实源。
-- `docs/architecture/architecture.html` 是从四张 canonical Mermaid 图生成的展示摘要。
+- `docs/architecture/architecture.html` 是从十张 canonical Mermaid 图生成的架构图谱。
 - `.agent/architecture/architecture.md` 和 `.agent/architecture/architecture.html` 是生成镜像，不承载独立结论。
 - `docs/architecture/production-readiness.md` 只维护 Current、Short-term Closure Gap、Measurement Blocked、Completed 和 Future Optional。
 - 专题文档保留运行域技术细节，但服从六个运行域。

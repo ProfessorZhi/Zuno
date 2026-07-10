@@ -28,7 +28,7 @@ Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agen
 ## 架构入口
 
 - [产品与运行架构总事实源](./docs/architecture/architecture.md)
-- [架构四图 HTML 展示](./docs/architecture/architecture.html)
+- [架构十类图 HTML 展示](./docs/architecture/architecture.html)
 - [Production readiness 状态](./docs/architecture/production-readiness.md)
 - [文档入口](./docs/README.md)
 - [公开证据入口](./docs/evidence/public-demo.md)

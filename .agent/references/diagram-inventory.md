@@ -6,16 +6,22 @@
 
 ## Current Truth
 
-Zuno 前台架构展示固定为四张 canonical Mermaid 图：
+Zuno 前台架构展示固定为十张 canonical Mermaid 图。十图密度用于架构讲解、答辩和后续实施规划，但内容仍围绕 Lean Complete Agentic GraphRAG Product，不恢复旧大规模企业平台主叙事。
 
 | # | Diagram | Focus | Source | HTML |
 | --- | --- | --- | --- | --- |
 | 1 | Lean System Overview | 六个运行域、owner 边界和依赖关系 | `docs/architecture/architecture.md` | yes |
 | 2 | Golden Path Runtime | 配置模型到 restart recovery 的产品黄金链路 | `docs/architecture/architecture.md` | yes |
 | 3 | Agentic GraphRAG and Agent Loop | standard/deep/agentic、EvidenceBundle、claim binding、reflection/replan、release gate | `docs/architecture/architecture.md` | yes |
-| 4 | Local Deployment and State | Web、FastAPI、SQLite、LocalObjectStore、LocalQueue、LocalIndex、Model Provider、TraceStore 和 future adapters | `docs/architecture/architecture.md` | yes |
+| 4 | Product and API Surface | AgentChat、Workspace、Knowledge Space、DTO、SSE、Citation UI、Trace summary 与后端事实源 | `docs/architecture/architecture.md` | yes |
+| 5 | Input and Knowledge Pipeline | SourceObject、ParseJob、Document IR、SourceSpan、CitationChunk、IndexManifest、CitationLineage、EvidenceBundle | `docs/architecture/architecture.md` | yes |
+| 6 | Agent Core Control Loop | Model Gateway、ContextPack、Memory、StrategySelector、PlannerOutput、Observation、Reflection、Memory Commit | `docs/architecture/architecture.md` | yes |
+| 7 | Agentic GraphRAG Evidence Flow | query planning、BM25/vector/graph、fusion/rerank、EvidenceBundle、claim binding、failure buckets、release gate | `docs/architecture/architecture.md` | yes |
+| 8 | Capability and Tool Control Plane | SkillCard、CapabilityRouter、Policy/Approval、CredentialRef、ExecutionAdapter、ResultNormalizer、ToolTrace | `docs/architecture/architecture.md` | yes |
+| 9 | Governance Observability and Release Gate | gates、ZunoSpan tree、usage/cost、failure buckets、EvalRun、Release Gate | `docs/architecture/architecture.md` | yes |
+| 10 | Local Deployment and State | Web、FastAPI、SQLite、LocalObjectStore、LocalQueue、LocalIndex、Model Provider、TraceStore 和 future adapters | `docs/architecture/architecture.md` | yes |
 
-四张图是展示摘要，不替代 `architecture.md` 的详细实施蓝图。`architecture.md` 可以包含 owner、contract、配置、状态、失败、trace、测试和验收矩阵；HTML 只渲染这四张图。
+十张图是架构图谱，不替代 `architecture.md` 的详细实施蓝图。`architecture.md` 仍负责 owner、contract、配置、状态、失败、trace、测试和验收矩阵；HTML 渲染十张 canonical 图。
 
 ## Must Preserve
 
@@ -31,6 +37,12 @@ Zuno 前台架构展示固定为四张 canonical Mermaid 图：
 - Lean System Overview：六个运行域、owner、主要依赖或治理边界变化。
 - Golden Path Runtime：用户产品链路、状态持久化、trace/cost/eval、recovery 变化。
 - Agentic GraphRAG and Agent Loop：strategy、RetrievalPlan、Graph expansion、EvidenceBundle、claim binding、reflection/replan、abstain 或 quality gate 变化。
+- Product and API Surface：AgentChat、Workspace、DTO、SSE、Citation UI、trace summary 或后端事实源变化。
+- Input and Knowledge Pipeline：SourceObject、ParseJob、IR、SourceSpan、CitationChunk、IndexManifest 或 EvidenceBundle 变化。
+- Agent Core Control Loop：Model Gateway、ContextPack、Memory、PlannerOutput、Observation、Reflection 或 Memory Commit 变化。
+- Agentic GraphRAG Evidence Flow：retrieval plan、BM25/vector/graph、fusion/rerank、claim binding、failure bucket 或 release gate 变化。
+- Capability and Tool Control Plane：Skill/Capability/Tool、approval、credential ref、adapter、normalizer 或 ToolTrace 变化。
+- Governance Observability and Release Gate：gates、trace tree、usage/cost、EvalRun、blocked/measured 语义或 release threshold 变化。
 - Local Deployment and State：本地存储、queue、index、trace store、model provider、config 或 optional adapter 边界变化。
 
 ## Before Editing
@@ -50,7 +62,7 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 
 - 不手写生成 HTML 的 Mermaid 卡片。
 - 不让图标题在 docs、inventory、生成器和 tests 之间漂移。
-- 不把 HTML 展示页当成完整实施蓝图。
+- 不把 HTML 图谱当成完整实施蓝图。
 - 不把 Future Optional 画成近期必做基础设施。
 
 ## Debug Playbooks
