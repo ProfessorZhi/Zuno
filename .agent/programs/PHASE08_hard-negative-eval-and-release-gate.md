@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE08_hard-negative-eval-and-release-gate
-status: pending
+status: active
 owner: Eval / Release
 
 ## 目标

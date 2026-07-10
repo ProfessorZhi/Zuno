@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE07_claim-level-citation-binder.md
+current_phase: PHASE08_hard-negative-eval-and-release-gate.md
 latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 
 ## 当前状态
@@ -11,7 +11,7 @@ latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closu
 
 - Program：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 - 中文名：Zuno evidence-span Agentic GraphRAG 质量加固 Program
-- 当前 Phase：`PHASE07_claim-level-citation-binder.md`
+- 当前 Phase：`PHASE08_hard-negative-eval-and-release-gate.md`
 - 状态：active
 
 这个 program 的第一性目标不是继续堆 GraphRAG 名词，而是把已经出现的 doc-level Agentic Retrieval 增益，转成 evidence-span-level retrieval、claim-level citation 和 answer correctness 增益。
@@ -40,6 +40,7 @@ Production scale external deployments remain replaceable targets.
 - Current：local lexical / phrase evidence path 已进入 retrieval ranking 和 trace metadata，输出 retriever source、raw / normalized score、rank、matched terms / phrase 和 candidate reason；该路径不读取 benchmark gold labels。
 - Current：local deterministic graph evidence lineage 已进入 trace：entity / relation / community report 能回源到 supporting chunks 和 source spans；external graph DB 仍是 Target。
 - Current：local deterministic evidence-aware reranker 已进入 Agentic retrieval，trace 输出 feature scores、pre/post rank、rank delta 和 selected reason；external reranker provider 仍是 Target。
+- Current：local deterministic claim-level citation binder 已进入 Agentic retrieval，trace 和 task event 输出 claim -> evidence binding、support / contradict / insufficient verdict、citation label、chunk、block、source span 和 action；只有带 source span 的 evidence 能成为 strict claim citation，doc-level citation 不算 strict citation。
 - Target：把 `Evidence Text Available@5` 从不可用水平提高到可作为 release gate 的水平，并让 citation accuracy 进入可解释增长区间。
 - Future：生产级 external graph index、external vector DB、OCR / VLM、长期 metrics store 和在线 release gate 仍是 Production Scale Target。
 
@@ -85,7 +86,7 @@ active 状态下，`.agent/programs/` 根目录保留：
 
 ## 当前执行规则
 
-- 已完成 eval truth source / gap buckets、source span provenance、citation-sized chunking、lexical / phrase retrieval、local graph evidence lineage 和 evidence-aware reranker；当前 PHASE07 只做 claim-level citation binder，不把 doc-only citation 算 strict citation。
+- 已完成 eval truth source / gap buckets、source span provenance、citation-sized chunking、lexical / phrase retrieval、local graph evidence lineage、evidence-aware reranker 和 claim-level citation binder；当前 PHASE08 只做 hard negative eval、release gate、归档和 no-active closure。
 - Runtime 行为修改仍必须由 focused tests、E2E、trace/eval 或 verifier 证明后才能写成 Current。
 - 不得把 doc-level retrieval 增益写成 evidence-span citation 已完成。
 - 不得把 `deep_graphrag` 冒充为完整产品 Agentic Runtime；当前主线仍是 Single Controller / Single `GeneralAgent`。

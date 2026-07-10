@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE07_claim-level-citation-binder.md
+current_phase: PHASE08_hard-negative-eval-and-release-gate.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 总目标
@@ -44,7 +44,7 @@ Production scale external deployments remain replaceable targets.
 
 Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
-状态：completed。
+状态：active。
 
 ### PHASE01：Eval Truth Source And Gap Buckets
 
@@ -100,7 +100,7 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
 文件：`PHASE06_evidence-aware-reranker.md`
 
-状态：active。
+状态：completed。
 
 目标：rerank 不只排序 relevance，还排序 answerability、exact evidence presence、citation span quality、source authority、ACL allowed、freshness。
 
@@ -110,7 +110,7 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
 文件：`PHASE07_claim-level-citation-binder.md`
 
-状态：active。
+状态：completed。
 
 目标：回答先拆 claim，再把每个 claim 绑定 candidate evidence span；没有 evidence 的 claim 要 rewrite、abstain 或触发 focused retrieval。
 
@@ -119,6 +119,8 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 ### PHASE08：Hard Negative Eval And Release Gate
 
 文件：`PHASE08_hard-negative-eval-and-release-gate.md`
+
+状态：active。
 
 目标：补齐 hard negative eval，覆盖同文档相邻错误 chunk、同主题不同文档、表格 vs 正文、页眉页脚、OCR 噪声、多文档冲突和 graph summary must cite source。
 

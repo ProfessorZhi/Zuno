@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 import re
-from typing import Any, Iterable
+from typing import Any, Iterable, Literal
 
 from pydantic import BaseModel, Field
 
@@ -421,6 +421,98 @@ class UnsupportedClaimChecker:
         )
 
 
+class Claim(BaseModel):
+    claim_id: str
+    text: str
+
+
+class ClaimEvidenceBinding(BaseModel):
+    claim_id: str
+    claim_text: str
+    support_verdict: Literal["supported", "contradicted", "insufficient"] = "insufficient"
+    evidence_id: str | None = None
+    citation_label: str | None = None
+    document_id: str | None = None
+    chunk_id: str | None = None
+    block_id: str | None = None
+    source_span: dict[str, Any] = Field(default_factory=dict)
+    evidence_text: str = ""
+    action: Literal["bind", "focused_retrieve", "rewrite", "abstain"] = "focused_retrieve"
+
+
+class ClaimCitationBinder:
+    def bind(self, claims: Iterable[str], evidence_bundle: EvidenceBundle) -> list[ClaimEvidenceBinding]:
+        bindings: list[ClaimEvidenceBinding] = []
+        for index, claim_text in enumerate([claim for claim in claims if claim.strip()], start=1):
+            claim = Claim(claim_id=f"claim-{index}", text=claim_text.strip())
+            evidence = self._supporting_evidence(claim, evidence_bundle)
+            if evidence is not None:
+                bindings.append(
+                    ClaimEvidenceBinding(
+                        claim_id=claim.claim_id,
+                        claim_text=claim.text,
+                        support_verdict="supported",
+                        evidence_id=evidence.evidence_id,
+                        citation_label=evidence.citation_label,
+                        document_id=evidence.document_id,
+                        chunk_id=evidence.chunk_id,
+                        block_id=evidence.block_id,
+                        source_span=dict(evidence.source_span),
+                        evidence_text=evidence.text,
+                        action="bind",
+                    )
+                )
+                continue
+            evidence = self._contradicting_evidence(claim, evidence_bundle)
+            if evidence is not None:
+                bindings.append(
+                    ClaimEvidenceBinding(
+                        claim_id=claim.claim_id,
+                        claim_text=claim.text,
+                        support_verdict="contradicted",
+                        evidence_id=evidence.evidence_id,
+                        citation_label=evidence.citation_label,
+                        document_id=evidence.document_id,
+                        chunk_id=evidence.chunk_id,
+                        block_id=evidence.block_id,
+                        source_span=dict(evidence.source_span),
+                        evidence_text=evidence.text,
+                        action="abstain",
+                    )
+                )
+                continue
+            bindings.append(
+                ClaimEvidenceBinding(
+                    claim_id=claim.claim_id,
+                    claim_text=claim.text,
+                    support_verdict="insufficient",
+                    action="focused_retrieve",
+                )
+            )
+        return bindings
+
+    @staticmethod
+    def _supporting_evidence(claim: Claim, evidence_bundle: EvidenceBundle) -> EvidenceItem | None:
+        normalized_claim = _normalize_claim_text(claim.text)
+        for item in evidence_bundle.items:
+            if not item.source_span or not item.citation_label:
+                continue
+            evidence_text = _normalize_claim_text(item.text)
+            if normalized_claim and normalized_claim in evidence_text:
+                return item
+        return None
+
+    @staticmethod
+    def _contradicting_evidence(claim: Claim, evidence_bundle: EvidenceBundle) -> EvidenceItem | None:
+        normalized_claim = _normalize_claim_text(claim.text)
+        for item in evidence_bundle.items:
+            if not item.source_span or not item.citation_label:
+                continue
+            if _evidence_contradicts_claim(normalized_claim, _normalize_claim_text(item.text)):
+                return item
+        return None
+
+
 class AgenticRetrievalRuntimeRequest(BaseModel):
     query: str
     workspace_id: str
@@ -445,6 +537,7 @@ class AgenticRetrievalRuntimeResult(BaseModel):
     evidence_bundle: EvidenceBundle
     citations: list[Citation] = Field(default_factory=list)
     unsupported_claim_check: UnsupportedClaimCheck
+    claim_bindings: list[ClaimEvidenceBinding] = Field(default_factory=list)
     trace: AgenticGraphRAGTrace
     index_payloads: list[dict[str, Any]] = Field(default_factory=list)
     trace_metadata: dict[str, Any] = Field(default_factory=dict)
@@ -471,6 +564,7 @@ class AgenticRetrievalRuntimeResult(BaseModel):
                 "citation_coverage": trace["citation_coverage"],
                 "citation_ids": [citation.label for citation in self.citations],
                 "unsupported_claims": list(self.unsupported_claim_check.unsupported_claims),
+                "claim_bindings": [binding.model_dump(mode="json") for binding in self.claim_bindings],
                 "unsupported_claim_metrics": dict(
                     self.trace_metadata.get("unsupported_claim_metrics") or {}
                 ),
@@ -510,6 +604,7 @@ class AgenticRetrievalRuntime:
         self.router = AgenticRetrievalRouter()
         self.citation_builder = CitationBuilder()
         self.claim_checker = UnsupportedClaimChecker()
+        self.claim_binder = ClaimCitationBinder()
 
     def answer(self, request: AgenticRetrievalRuntimeRequest) -> AgenticRetrievalRuntimeResult:
         decision = self.router.decide(
@@ -533,6 +628,7 @@ class AgenticRetrievalRuntime:
         if not decision.retrieval_required:
             empty_bundle = EvidenceBundle()
             unsupported = UnsupportedClaimCheck()
+            claim_bindings: list[ClaimEvidenceBinding] = []
             retrieval_decision = _build_product_retrieval_decision(
                 request=request,
                 decision=decision,
@@ -554,6 +650,7 @@ class AgenticRetrievalRuntime:
                 evidence_bundle=empty_bundle,
                 citations=[],
                 unsupported_claim_check=unsupported,
+                claim_bindings=claim_bindings,
                 trace=trace,
                 index_payloads=[],
                 trace_metadata=self._trace_metadata(
@@ -564,6 +661,7 @@ class AgenticRetrievalRuntime:
                     answer="No retrieval was required for this request.",
                     index_payloads=[],
                     unsupported_claim_check=unsupported,
+                    claim_bindings=claim_bindings,
                     claims=request.claims,
                     retrieval_decision=retrieval_decision,
                 ),
@@ -580,6 +678,7 @@ class AgenticRetrievalRuntime:
         bundle = EvidenceBundle.from_candidates(candidates, request.allowed_acl_scopes)
         citations = self.citation_builder.build(bundle)
         unsupported = self.claim_checker.check(request.claims, bundle)
+        claim_bindings = self.claim_binder.bind(request.claims, bundle)
         retrieval_decision = _build_product_retrieval_decision(
             request=request,
             decision=decision,
@@ -602,6 +701,7 @@ class AgenticRetrievalRuntime:
             evidence_bundle=bundle,
             citations=citations,
             unsupported_claim_check=unsupported,
+            claim_bindings=claim_bindings,
             trace=trace,
             index_payloads=index_payloads,
             trace_metadata=self._trace_metadata(
@@ -612,6 +712,7 @@ class AgenticRetrievalRuntime:
                 answer=answer,
                 index_payloads=index_payloads,
                 unsupported_claim_check=unsupported,
+                claim_bindings=claim_bindings,
                 claims=request.claims,
                 retrieval_decision=retrieval_decision,
             ),
@@ -734,6 +835,7 @@ class AgenticRetrievalRuntime:
         answer: str,
         index_payloads: list[dict[str, Any]],
         unsupported_claim_check: UnsupportedClaimCheck,
+        claim_bindings: list[ClaimEvidenceBinding],
         claims: list[str],
         retrieval_decision: ProductRetrievalDecision | None,
     ) -> dict[str, Any]:
@@ -796,6 +898,8 @@ class AgenticRetrievalRuntime:
                 index_payloads=index_payloads,
             ),
             "unsupported_claim_metrics": unsupported_claim_metrics,
+            "claim_citation_bindings": [binding.model_dump(mode="json") for binding in claim_bindings],
+            "claim_citation_binding_metrics": _claim_binding_metrics(claim_bindings),
             "citation_chunks": citation_refs,
             "pipeline_trace": {
                 "steps": [
@@ -1230,6 +1334,37 @@ def _unsupported_claim_metrics(
         "unsupported_claims": unsupported,
         "guard_status": "blocked_confident_wording" if unsupported else "pass",
     }
+
+
+def _claim_binding_metrics(bindings: list[ClaimEvidenceBinding]) -> dict[str, Any]:
+    supported = [binding for binding in bindings if binding.support_verdict == "supported"]
+    contradicted = [binding for binding in bindings if binding.support_verdict == "contradicted"]
+    insufficient = [binding for binding in bindings if binding.support_verdict == "insufficient"]
+    return {
+        "claim_count": len(bindings),
+        "supported_claim_count": len(supported),
+        "contradicted_claim_count": len(contradicted),
+        "insufficient_claim_count": len(insufficient),
+        "claim_citation_coverage": len(supported) / len(bindings) if bindings else 0.0,
+        "unsupported_actions": [binding.action for binding in insufficient],
+        "abstain_actions": [binding.action for binding in contradicted],
+    }
+
+
+def _normalize_claim_text(text: str) -> str:
+    return re.sub(r"\s+", " ", text.lower()).strip()
+
+
+def _evidence_contradicts_claim(normalized_claim: str, normalized_evidence: str) -> bool:
+    if not normalized_claim or not normalized_evidence:
+        return False
+    negated_claim = normalized_claim.replace(" is ", " is not ", 1)
+    if negated_claim != normalized_claim and negated_claim in normalized_evidence:
+        return True
+    return (
+        " not " in normalized_claim
+        and normalized_claim.replace(" not ", " ", 1) in normalized_evidence
+    )
 
 
 def _entities(text: str) -> list[str]:

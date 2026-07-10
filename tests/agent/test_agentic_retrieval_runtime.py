@@ -126,6 +126,20 @@ def test_agentic_retrieval_runtime_consumes_index_runtime_and_returns_cited_answ
     assert "[1]" in result.answer
     assert "Renewal notice must be sent 30 days" in result.answer
     assert result.unsupported_claim_check.unsupported_claims == ["The contract waives indemnity."]
+    assert [binding.support_verdict for binding in result.claim_bindings] == [
+        "supported",
+        "insufficient",
+    ]
+    supported_binding = result.claim_bindings[0]
+    assert supported_binding.citation_label == "[1]"
+    assert supported_binding.chunk_id == result.evidence_bundle.items[0].chunk_id
+    assert supported_binding.chunk_id.endswith("::cite1")
+    assert supported_binding.block_id == "block_renewal"
+    assert supported_binding.source_span["page"] == 2
+    assert supported_binding.evidence_text == (
+        "Renewal notice must be sent 30 days before the contract anniversary."
+    )
+    assert result.claim_bindings[1].action == "focused_retrieve"
     assert result.trace.to_dict()["citation_coverage"] == 1.0
     trace_item = result.trace_metadata["evidence_bundle"]["items"][0]
     assert trace_item["retriever_source"] in {"normalized_phrase", "bm25", "vector", "graph"}
@@ -140,6 +154,7 @@ def test_agentic_retrieval_runtime_consumes_index_runtime_and_returns_cited_answ
     assert trace_item["evidence_selected_reason"]
     assert result.to_task_event()["type"] == "retrieval"
     assert result.to_task_event()["payload"]["citation_ids"] == ["[1]"]
+    assert result.to_task_event()["payload"]["claim_bindings"][0]["support_verdict"] == "supported"
     assert result.to_task_event()["payload"]["evidence_verdict"]["status"] == "pass"
     assert result.to_task_event()["payload"]["artifact_manifest"]["retrieval_refs"] == [
         "doc_contract_runtime::block_renewal"
@@ -161,6 +176,15 @@ def test_agentic_retrieval_runtime_consumes_index_runtime_and_returns_cited_answ
     report = result.trace_metadata["production_graphrag"]["community_report"]["reports"][0]
     assert renewal_chunk_id in report["source_chunk_ids"]
     assert renewal_chunk_id in report["source_span_ids"]
+    assert result.trace_metadata["claim_citation_binding_metrics"] == {
+        "claim_count": 2,
+        "supported_claim_count": 1,
+        "contradicted_claim_count": 0,
+        "insufficient_claim_count": 1,
+        "claim_citation_coverage": 0.5,
+        "unsupported_actions": ["focused_retrieve"],
+        "abstain_actions": [],
+    }
 
 
 def test_evidence_aware_reranker_keeps_phrase_span_ahead_of_keyword_noise() -> None:

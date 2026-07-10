@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-evidence-span-agentic-graphrag-hardening-v1`
-- Current phase: `PHASE07_claim-level-citation-binder.md`
+- Current phase: `PHASE08_hard-negative-eval-and-release-gate.md`
 - Latest completed program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 最近完成并归档的 Program 3 Mega 已完成本地可验证的 launchable enterprise Agentic GraphRAG product baseline。归档入口：
@@ -24,8 +24,8 @@
 - `PHASE04_lexical-phrase-evidence-retriever.md`：completed phase。
 - `PHASE05_entity-chunk-bidirectional-graph-index.md`：completed phase。
 - `PHASE06_evidence-aware-reranker.md`：completed phase。
-- `PHASE07_claim-level-citation-binder.md`：当前 active phase。
-- `PHASE08_hard-negative-eval-and-release-gate.md`：后续 pending phase。
+- `PHASE07_claim-level-citation-binder.md`：completed phase。
+- `PHASE08_hard-negative-eval-and-release-gate.md`：当前 active phase。
 - `queued-programs/README.md`：当前没有 queued program；旧 Program 4-6 已随 Program 3 Mega 归档为 merged inputs。
 
 ## 本轮 Program 口径

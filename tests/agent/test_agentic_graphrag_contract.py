@@ -149,6 +149,7 @@ def test_evidence_bundle_citations_and_unsupported_claims_are_traceable() -> Non
 def test_graph_context_without_source_span_is_not_strict_citation() -> None:
     from zuno.knowledge.agentic_graphrag import (
         CitationBuilder,
+        ClaimCitationBinder,
         EvidenceBundle,
         EvidenceItem,
         QueryMethod,
@@ -175,6 +176,73 @@ def test_graph_context_without_source_span_is_not_strict_citation() -> None:
 
     assert bundle.coverage == 0.0
     assert CitationBuilder().build(bundle) == []
+    binding = ClaimCitationBinder().bind(["Graph summary without source refs."], bundle)[0]
+    assert binding.support_verdict == "insufficient"
+    assert binding.action == "focused_retrieve"
+    assert binding.citation_label is None
+
+
+def test_claim_citation_binder_emits_supported_contradicted_and_insufficient_bindings() -> None:
+    from zuno.knowledge.agentic_graphrag import (
+        ClaimCitationBinder,
+        EvidenceBundle,
+        EvidenceItem,
+        QueryMethod,
+    )
+
+    bundle = EvidenceBundle.from_candidates(
+        [
+            EvidenceItem(
+                evidence_id="ev-supported",
+                document_id="doc-a",
+                chunk_id="doc-a::block-1",
+                block_id="block-1",
+                retrieval_method=QueryMethod.LOCAL,
+                score=0.95,
+                source_span={"page": 2, "chunk_id": "doc-a::block-1"},
+                citation_label="[1]",
+                trust_label="verified",
+                acl_scope="workspace",
+                text="Renewal notice must be sent 30 days before renewal.",
+            ),
+            EvidenceItem(
+                evidence_id="ev-contradicted",
+                document_id="doc-a",
+                chunk_id="doc-a::block-2",
+                block_id="block-2",
+                retrieval_method=QueryMethod.LOCAL,
+                score=0.81,
+                source_span={"page": 3, "chunk_id": "doc-a::block-2"},
+                citation_label="[2]",
+                trust_label="verified",
+                acl_scope="workspace",
+                text="The customer data export is not enabled.",
+            ),
+        ],
+        allowed_acl_scopes={"workspace"},
+    )
+
+    bindings = ClaimCitationBinder().bind(
+        [
+            "Renewal notice must be sent 30 days before renewal.",
+            "The customer data export is enabled.",
+            "The contract waives indemnity.",
+        ],
+        bundle,
+    )
+
+    assert [binding.support_verdict for binding in bindings] == [
+        "supported",
+        "contradicted",
+        "insufficient",
+    ]
+    assert bindings[0].citation_label == "[1]"
+    assert bindings[0].source_span["chunk_id"] == "doc-a::block-1"
+    assert bindings[0].action == "bind"
+    assert bindings[1].citation_label == "[2]"
+    assert bindings[1].action == "abstain"
+    assert bindings[2].citation_label is None
+    assert bindings[2].action == "focused_retrieve"
 
 
 def test_graph_index_pipeline_consumes_document_ir_source_spans() -> None:

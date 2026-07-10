@@ -2,12 +2,18 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE07_claim-level-citation-binder
-status: active
+status: completed
 owner: Answer / Citation
 
 ## 目标
 
 把回答生成从 paragraph-first 改为 claim-first：每个 claim 必须绑定 candidate evidence span。
+
+## Current 完成事实
+
+PHASE07 已完成 local deterministic claim-level citation binder baseline：runtime 会为每个输入 claim 输出 `supported`、`contradicted` 或 `insufficient` binding，且只有带 `source_span` 和 `citation_label` 的 evidence span 能成为 strict claim citation。无可引用证据的 claim 保持 `focused_retrieve`，可追溯矛盾证据触发 `abstain`，不把 doc-level citation 冒充 strict citation。
+
+该完成事实来自 focused runtime tests 和 trace metadata，不表示 PHASE08 fixed benchmark release gate 已达标。
 
 ## 范围
 

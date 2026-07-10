@@ -304,7 +304,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phrase in [
         "state: active",
         f"active_program: {EVIDENCE_SPAN_PROGRAM_NAME}",
-            "current_phase: PHASE07_claim-level-citation-binder.md",
+            "current_phase: PHASE08_hard-negative-eval-and-release-gate.md",
         f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
         EVIDENCE_SPAN_PROGRAM_NAME,
         "Evidence Text Available@5 >= 0.60",
@@ -363,7 +363,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for index, phase_name in enumerate(EVIDENCE_SPAN_PROGRAM_PHASE_FILES, start=1):
         phase_text = (REPO_ROOT / ".agent/programs" / phase_name).read_text(encoding="utf-8")
         assert f"program: {EVIDENCE_SPAN_PROGRAM_NAME}" in phase_text
-        expected_status = "completed" if index <= 6 else "active" if index == 7 else "pending"
+        expected_status = "completed" if index <= 7 else "active"
         assert f"status: {expected_status}" in phase_text
         for section in [
             "## 目标",
