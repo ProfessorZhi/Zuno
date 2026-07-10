@@ -2,14 +2,14 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE06_evidence-aware-reranker.md
+current_phase: PHASE07_claim-level-citation-binder.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 当前关闭状态
 
 本 program 尚未关闭。当前 active phase 是：
 
-- `PHASE06_evidence-aware-reranker.md`
+- `PHASE07_claim-level-citation-binder.md`
 
 ## Program 关闭目标
 
@@ -36,7 +36,7 @@ Agentic GraphRAG 的 doc-level retrieval 增益已经转化成 evidence-span ret
 - [x] PHASE03 完成 citation-sized chunks 与 parent context chunks。
 - [x] PHASE04 完成 lexical / phrase evidence retriever。
 - [x] PHASE05 完成 entity-chunk bidirectional graph index。
-- [ ] PHASE06 完成 evidence-aware reranker。
+- [x] PHASE06 完成 evidence-aware reranker。
 - [ ] PHASE07 完成 claim-level citation binder。
 - [ ] PHASE08 完成 hard negative eval、release gate、归档和 no-active closure。
 
@@ -64,7 +64,7 @@ pytest -q tests/evals/test_enterprise_rag_paired_benchmark.py tests/evals/test_r
 
 ## 下一轮检查
 
-- 当前 phase 是否仍是 `PHASE06_evidence-aware-reranker.md`；PHASE05 graph evidence lineage 已完成并已通过 focused tests。
-- 本轮修改是否只做 evidence-aware reranker，还是已经进入 citation binder / release gate。
+- 当前 phase 是否仍是 `PHASE07_claim-level-citation-binder.md`；PHASE06 evidence-aware reranker 已完成并已通过 focused tests。
+- 本轮修改是否只做 claim-level citation binder，还是已经进入 release gate。
 - 如果进入 runtime，必须先写 tests，再改实现。
 - 所有新增指标必须说明是 fixed benchmark、runtime observed、prepared 还是 blocked。

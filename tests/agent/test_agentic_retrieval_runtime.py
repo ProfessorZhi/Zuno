@@ -132,6 +132,12 @@ def test_agentic_retrieval_runtime_consumes_index_runtime_and_returns_cited_answ
     assert "raw_score" in trace_item
     assert "normalized_score" in trace_item
     assert "candidate_reason" in trace_item
+    assert "rerank_features" in trace_item
+    assert "citation_span_quality" in trace_item["rerank_features"]
+    assert trace_item["rank_before"] is not None
+    assert trace_item["rank_after"] == 1
+    assert trace_item["rank_delta"] is not None
+    assert trace_item["evidence_selected_reason"]
     assert result.to_task_event()["type"] == "retrieval"
     assert result.to_task_event()["payload"]["citation_ids"] == ["[1]"]
     assert result.to_task_event()["payload"]["evidence_verdict"]["status"] == "pass"
@@ -155,6 +161,74 @@ def test_agentic_retrieval_runtime_consumes_index_runtime_and_returns_cited_answ
     report = result.trace_metadata["production_graphrag"]["community_report"]["reports"][0]
     assert renewal_chunk_id in report["source_chunk_ids"]
     assert renewal_chunk_id in report["source_span_ids"]
+
+
+def test_evidence_aware_reranker_keeps_phrase_span_ahead_of_keyword_noise() -> None:
+    from zuno.knowledge.agentic_graphrag import (
+        AgenticRetrievalRuntime,
+        AgenticRetrievalRuntimeRequest,
+        ProductMode,
+    )
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+    from zuno.knowledge.ingestion import (
+        CanonicalDocumentIR,
+        DocumentBlock,
+        DocumentMetadata,
+        DocumentProvenance,
+        SourceSpan,
+    )
+
+    document = CanonicalDocumentIR(
+        metadata=DocumentMetadata(
+            document_id="doc_rerank",
+            workspace_id="workspace_retrieval",
+            source_uri="memory://contracts/rerank.md",
+            mime_type="text/markdown",
+            hash="sha256-rerank",
+            parser_id="native",
+            parser_version="phase06-test",
+        ),
+        blocks=[
+            DocumentBlock(
+                block_id="block_noise",
+                type="paragraph",
+                text="Renewal renewal renewal risk context lacks the exact supplier evidence.",
+                source_span=SourceSpan(line_range=[1, 1]),
+            ),
+            DocumentBlock(
+                block_id="block_phrase",
+                type="paragraph",
+                text="The supplier renewal evidence carries lineage.",
+                source_span=SourceSpan(line_range=[2, 2]),
+            ),
+        ],
+        provenance=DocumentProvenance(
+            parser_id="native",
+            parser_version="phase06-test",
+            source_uri="memory://contracts/rerank.md",
+            confidence=1.0,
+        ),
+    )
+    index_runtime = KnowledgeIndexRuntime()
+    index_runtime.create_knowledge_space("ks_rerank", "workspace_retrieval")
+    index_runtime.index_document("ks_rerank", document, targets=["bm25", "vector", "graph"])
+
+    result = AgenticRetrievalRuntime(index_runtime=index_runtime).answer(
+        AgenticRetrievalRuntimeRequest(
+            query="supplier renewal evidence",
+            workspace_id="workspace_retrieval",
+            knowledge_space_ids=["ks_rerank"],
+            product_mode=ProductMode.NORMAL,
+            trace_id="trace_phase06_rerank",
+            task_id="task_phase06_rerank",
+        )
+    )
+
+    top_item = result.evidence_bundle.items[0]
+    assert top_item.block_id == "block_phrase"
+    assert top_item.rerank_features["lexical_phrase_match"] == 1.0
+    assert top_item.rank_after == 1
+    assert "lexical_phrase_match" in top_item.evidence_selected_reason
 
 
 def test_agentic_retrieval_runtime_covers_normal_global_and_drift_modes() -> None:

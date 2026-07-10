@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE06_evidence-aware-reranker.md
+current_phase: PHASE07_claim-level-citation-binder.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 总目标
@@ -90,7 +90,7 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
 文件：`PHASE05_entity-chunk-bidirectional-graph-index.md`
 
-状态：active。
+状态：completed。
 
 目标：让 graph 结果必须能回落到 source chunks：`entity -> relation -> supporting_chunk_ids`、`relation -> evidence_span_ids`、`community_summary -> source_chunk_ids`、`chunk -> entities / relations`。
 
@@ -109,6 +109,8 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 ### PHASE07：Claim-Level Citation Binder
 
 文件：`PHASE07_claim-level-citation-binder.md`
+
+状态：active。
 
 目标：回答先拆 claim，再把每个 claim 绑定 candidate evidence span；没有 evidence 的 claim 要 rewrite、abstain 或触发 focused retrieval。
 

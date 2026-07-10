@@ -511,7 +511,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {EVIDENCE_SPAN_PROGRAM_NAME}",
-        "current_phase: PHASE06_evidence-aware-reranker.md",
+        "current_phase: PHASE07_claim-level-citation-binder.md",
         f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
         EVIDENCE_SPAN_PROGRAM_NAME,
         "Evidence Text Available@5 >= 0.60",
@@ -563,7 +563,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {EVIDENCE_SPAN_PROGRAM_NAME}" not in phase_content:
             errors.append(f"evidence-span phase missing program id: {phase_name}")
-        expected_status = "completed" if index <= 5 else "active" if index == 6 else "pending"
+        expected_status = "completed" if index <= 6 else "active" if index == 7 else "pending"
         if f"status: {expected_status}" not in phase_content:
             errors.append(f"evidence-span phase wrong status for active lifecycle: {phase_name}")
         for section in [

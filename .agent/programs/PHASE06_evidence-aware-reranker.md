@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE06_evidence-aware-reranker
-status: active
+status: completed
 owner: Retrieval / Eval
 
 ## 目标
@@ -28,9 +28,25 @@ rerank score 至少考虑：
 
 ## 验收闸门
 
-- top-k context 更像 evidence bundle。
-- `gold_doc_recalled_but_low_rank` 下降。
-- `graph_context_non_gold` 和无用背景噪声下降。
+- [x] top-k context 使用 evidence-aware score，不只按 relevance 排序。
+- [x] trace 输出 pre-rerank rank、post-rerank rank、rank delta、feature scores 和 selected reason。
+- [x] local tests 覆盖 phrase evidence 优先于 keyword noise、ACL denied 不进入 final context、graph/support/span feature 可见。
+
+## 完成事实
+
+PHASE06 已完成 local deterministic evidence-aware reranker baseline，不表示 external reranker provider 已接入，也不表示 fixed benchmark quality gate 已达标。
+
+Current 已实现：
+
+- `EvidenceItem` 保留 `rerank_features`、`rank_before`、`rank_after`、`rank_delta`、`evidence_selected_reason` 和 `demotion_reason`。
+- Reranker 综合 semantic relevance、lexical / phrase match、answerability、exact evidence presence、citation span quality、source authority、freshness、ACL allowed、graph support、duplicate penalty 和 context diversity。
+- Trace payload 中每条 evidence item 输出 feature breakdown 和排序变化。
+- Local deterministic tests 证明 phrase evidence 能排在 keyword noise 前，ACL denied evidence 不进入 final context。
+
+边界：
+
+- 当前没有接 external reranker provider。
+- 当前没有把 local tests 写成 EnterpriseRAG measured improvement；真实质量门仍留到 PHASE08 fixed paired benchmark。
 
 ## 验证命令
 

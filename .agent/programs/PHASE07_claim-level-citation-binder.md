@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE07_claim-level-citation-binder
-status: pending
+status: active
 owner: Answer / Citation
 
 ## 目标

@@ -324,6 +324,12 @@ class EvidenceItem(BaseModel):
     matched_terms: list[str] = Field(default_factory=list)
     matched_phrase: str = ""
     candidate_reason: str = ""
+    rerank_features: dict[str, float] = Field(default_factory=dict)
+    rank_before: int | None = None
+    rank_after: int | None = None
+    rank_delta: int | None = None
+    evidence_selected_reason: str = ""
+    demotion_reason: str = ""
     rrf_score: float = 0.0
     rerank_score: float = 0.0
     community_ids: list[str] = Field(default_factory=list)
@@ -689,22 +695,22 @@ class AgenticRetrievalRuntime:
             key=lambda entry: (float(entry["rrf_score"]), float(entry["rerank_score"])),
             reverse=True,
         )
-        for citation_index, entry in enumerate(ranked, start=1):
+        for rank_before, entry in enumerate(ranked, start=1):
             item: EvidenceItem = entry["item"]
             methods = list(entry["methods"])
             candidates.append(
                 item.model_copy(
                     update={
-                        "citation_label": f"[{citation_index}]",
                         "source_methods": methods,
                         "score": float(entry["rerank_score"]),
                         "rrf_score": round(float(entry["rrf_score"]), 6),
                         "rerank_score": round(float(entry["rerank_score"]), 6),
+                        "rank_before": rank_before,
                         "community_ids": sorted(entry["community_ids"]),
                     }
                 )
             )
-        return candidates
+        return _evidence_aware_rerank(candidates)
 
     @staticmethod
     def _sources_for_method(method: QueryMethod) -> tuple[str, ...]:
@@ -916,6 +922,101 @@ def _retriever_sources_for_method(method: QueryMethod) -> tuple[str, ...]:
     return ("bm25",)
 
 
+def _evidence_aware_rerank(candidates: list[EvidenceItem]) -> list[EvidenceItem]:
+    scored: list[tuple[float, EvidenceItem]] = []
+    document_seen: dict[str, int] = {}
+    for item in candidates:
+        seen_count = document_seen.get(item.document_id, 0)
+        document_seen[item.document_id] = seen_count + 1
+        features = _rerank_features(item, duplicate_count=seen_count)
+        final_score = _weighted_rerank_score(features)
+        scored.append(
+            (
+                final_score,
+                item.model_copy(
+                    update={
+                        "rerank_features": features,
+                        "rerank_score": round(final_score, 6),
+                        "demotion_reason": "duplicate_chunk" if seen_count else "",
+                    }
+                ),
+            )
+        )
+    scored.sort(
+        key=lambda pair: (
+            pair[0],
+            pair[1].rrf_score,
+            pair[1].score,
+            -float(pair[1].rank_before or 0),
+        ),
+        reverse=True,
+    )
+    reranked: list[EvidenceItem] = []
+    for rank_after, (_score, item) in enumerate(scored, start=1):
+        rank_before = item.rank_before or rank_after
+        reason_priority = [
+            "lexical_phrase_match",
+            "exact_evidence_presence",
+            "citation_span_quality",
+            "answerability",
+            "graph_support",
+            "acl_allowed",
+            "context_diversity",
+        ]
+        reasons = [
+            name
+            for name in reason_priority
+            if item.rerank_features.get(name, 0.0) >= 0.75
+        ]
+        reranked.append(
+            item.model_copy(
+                update={
+                    "citation_label": f"[{rank_after}]",
+                    "rank_after": rank_after,
+                    "rank_delta": rank_before - rank_after,
+                    "evidence_selected_reason": ",".join(reasons[:4]) or "balanced_relevance",
+                }
+            )
+        )
+    return reranked
+
+
+def _rerank_features(item: EvidenceItem, *, duplicate_count: int) -> dict[str, float]:
+    has_source_span = bool(item.source_span)
+    has_raw_span_text = bool(item.source_span.get("raw_text") or item.source_span.get("normalized_text"))
+    exact_phrase = 1.0 if item.matched_phrase else 0.0
+    answerability = 1.0 if len(item.text.strip()) >= 20 else 0.3 if item.text.strip() else 0.0
+    return {
+        "semantic_relevance": min(max(item.normalized_score, 0.0), 1.0),
+        "lexical_phrase_match": exact_phrase,
+        "answerability": answerability,
+        "exact_evidence_presence": 1.0 if has_raw_span_text else 0.5 if item.text.strip() else 0.0,
+        "citation_span_quality": 1.0 if has_source_span and item.source_span.get("chunk_id") else 0.0,
+        "source_authority": 0.8 if item.trust_label in {"indexed", "verified"} else 0.5,
+        "source_freshness": 0.5,
+        "acl_allowed": 1.0 if item.acl_scope == "workspace" else 0.0,
+        "graph_support": 1.0 if item.community_ids else 0.0,
+        "duplicate_penalty": min(float(duplicate_count) * 0.25, 1.0),
+        "context_diversity": 1.0 if duplicate_count == 0 else 0.5,
+    }
+
+
+def _weighted_rerank_score(features: dict[str, float]) -> float:
+    positive = (
+        features["semantic_relevance"] * 0.16
+        + features["lexical_phrase_match"] * 0.16
+        + features["answerability"] * 0.12
+        + features["exact_evidence_presence"] * 0.12
+        + features["citation_span_quality"] * 0.12
+        + features["source_authority"] * 0.08
+        + features["source_freshness"] * 0.04
+        + features["acl_allowed"] * 0.08
+        + features["graph_support"] * 0.06
+        + features["context_diversity"] * 0.06
+    )
+    return max(positive - features["duplicate_penalty"] * 0.2, 0.0)
+
+
 def _citation_ref(citation: Citation) -> str:
     return citation.chunk_id or f"{citation.document_id}::{citation.block_id}"
 
@@ -938,6 +1039,12 @@ def _evidence_item_payload(item: EvidenceItem) -> dict[str, Any]:
         "matched_terms": list(item.matched_terms),
         "matched_phrase": item.matched_phrase,
         "candidate_reason": item.candidate_reason,
+        "rerank_features": dict(item.rerank_features),
+        "rank_before": item.rank_before,
+        "rank_after": item.rank_after,
+        "rank_delta": item.rank_delta,
+        "evidence_selected_reason": item.evidence_selected_reason,
+        "demotion_reason": item.demotion_reason,
         "score": item.score,
         "rrf_score": item.rrf_score,
         "rerank_score": item.rerank_score,

@@ -13,6 +13,7 @@ PHASE05-PHASE06 status: runtime-current-production-target
 - Citation chunk retrieval：本地 retrieval payload 当前返回 citation-sized chunk，并在 metadata 中携带 parent context 与 neighbor chunk refs；parent context 不挤掉 citation span。
 - Lexical / phrase candidate metadata：本地 ranking 当前输出 `retriever_source`、`raw_score`、`normalized_score`、`rank`、`matched_terms`、`matched_phrase` 和 `candidate_reason`。Exact / normalized phrase match 会作为 `normalized_phrase` 候选信号参与排序；该路径不读取 eval gold answer 或 gold evidence text。
 - Graph evidence lineage：本地 deterministic GraphRAG trace 当前输出 entity / relation / community 到 `source_chunk_ids` 和 `source_span_ids` 的回源关系；无 source span 的 graph summary 不能生成 strict citation。
+- Evidence-aware rerank trace：Agentic retrieval 当前用 local deterministic reranker 综合 semantic relevance、lexical phrase match、answerability、exact evidence presence、citation span quality、source authority、freshness、ACL、graph support、duplicate penalty 和 context diversity，并在 trace 中输出 pre/post rank、rank delta、feature scores 和 selected reason。
 
 ## Target 边界
 
