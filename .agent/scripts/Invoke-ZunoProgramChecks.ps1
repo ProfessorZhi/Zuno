@@ -3,6 +3,7 @@ param(
     [string]$RepoPath = 'F:\internship-work\resume&resume project\02_projects\Zuno',
     [string[]]$PytestTargets = @(
         'tests\repo\test_docs_entrypoints.py',
+        'tests\repo\test_current_program_contract.py',
         'tests\repo\test_agent_system.py',
         'tests\agent_system\test_agent_guardrails.py'
     ),
@@ -23,6 +24,9 @@ $env:PYTHONPATH = (Resolve-Path -LiteralPath 'src\backend').Path
 
 & $Python '.agent\scripts\verify_agent_system.py'
 if ($LASTEXITCODE -ne 0) { throw 'verify_agent_system.py failed' }
+
+& $Python 'tools\scripts\verify_current_program.py'
+if ($LASTEXITCODE -ne 0) { throw 'verify_current_program.py failed' }
 
 if (-not $SkipWorkflow) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File '.agent\scripts\verify-workflow.ps1'

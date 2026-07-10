@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE01
-    state: active
+    state: completed
     title: 事实源、基线与 Program 激活
     depends_on: none
     next_phase: PHASE02

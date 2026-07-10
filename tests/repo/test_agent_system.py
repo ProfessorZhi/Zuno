@@ -76,7 +76,7 @@ EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
     "PHASE08_hard-negative-eval-and-release-gate.md",
 ]
 UNIFIED_RUNTIME_PROGRAM_NAME = "zuno-unified-agent-runtime-closure-v1"
-UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE01_truth-source-baseline-and-program-activation"
+UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE02_unified-runtime-contracts-and-state"
 UNIFIED_RUNTIME_PHASE_FILES = [
     "PHASE01_truth-source-baseline-and-program-activation.md",
     "PHASE02_unified-runtime-contracts-and-state.md",
@@ -94,6 +94,7 @@ UNIFIED_RUNTIME_PHASE_FILES = [
 ]
 UNIFIED_RUNTIME_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_FILES,
+    "baseline-manifest.md",
     "program-decisions.md",
     "code-architecture-map.md",
     "powershell-runbook.md",

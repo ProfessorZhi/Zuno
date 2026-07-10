@@ -145,6 +145,7 @@ def verify_entrypoint_text() -> list[str]:
     if current_phase not in {
         "none",
         "PHASE01_truth-source-baseline-and-program-activation",
+        "PHASE02_unified-runtime-contracts-and-state",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }:

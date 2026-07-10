@@ -40,6 +40,7 @@ Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
+Require-Path ".agent\programs\baseline-manifest.md"
 Require-Path ".agent\programs\program-decisions.md"
 Require-Path ".agent\programs\code-architecture-map.md"
 Require-Path ".agent\programs\powershell-runbook.md"
@@ -56,6 +57,7 @@ Require-NoPath ".agent\programs\PHASE07_program2-thread-prompts-and-branch-plan.
 Require-NoPath ".agent\programs\PHASE08_verification-doc-sync-and-closure.md"
 Require-NoPath ".agent\programs\thread-prompts"
 Require-Path ".agent\programs\queued-programs\README.md"
+Require-Path "tools\scripts\verify_current_program.py"
 $expectedEvidenceSpanPhaseFiles = @(
     "PHASE01_eval-truth-source-and-gap-buckets.md",
     "PHASE02_source-span-provenance-contract.md",
@@ -338,7 +340,7 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-unified-agent-runtime-closure-v1" -or $currentProgram -notmatch "current_phase: PHASE01_truth-source-baseline-and-program-activation" -or $currentProgram -notmatch "latest_completed_program: zuno-lean-complete-product-architecture-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-lean-complete-product-architecture-v1/") {
+if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-unified-agent-runtime-closure-v1" -or $currentProgram -notmatch "current_phase: PHASE02_unified-runtime-contracts-and-state" -or $currentProgram -notmatch "latest_completed_program: zuno-lean-complete-product-architecture-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-lean-complete-product-architecture-v1/") {
     $failures.Add("current-program.md must declare active unified runtime program and latest lean architecture archive")
 }
 if ($currentProgram -notmatch "zuno-evidence-span-agentic-graphrag-hardening-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/") {

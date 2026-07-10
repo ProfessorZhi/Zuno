@@ -79,7 +79,7 @@ EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
     "PHASE08_hard-negative-eval-and-release-gate.md",
 ]
 UNIFIED_RUNTIME_PROGRAM_NAME = "zuno-unified-agent-runtime-closure-v1"
-UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE01_truth-source-baseline-and-program-activation"
+UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE02_unified-runtime-contracts-and-state"
 UNIFIED_RUNTIME_PHASE_FILES = [
     "PHASE01_truth-source-baseline-and-program-activation.md",
     "PHASE02_unified-runtime-contracts-and-state.md",
@@ -97,6 +97,7 @@ UNIFIED_RUNTIME_PHASE_FILES = [
 ]
 UNIFIED_RUNTIME_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_FILES,
+    "baseline-manifest.md",
     "program-decisions.md",
     "code-architecture-map.md",
     "powershell-runbook.md",
@@ -214,6 +215,7 @@ REQUIRED_PATHS = [
     ".agent/templates/architecture-change-note-template.md",
     ".agent/templates/verification-report-template.md",
     ".agent/templates/workflow-change-note-template.md",
+    "tools/scripts/verify_current_program.py",
     ".agent/templates/phase-plan.md",
     ".agent/templates/phase-closure-report.md",
     ".agent/templates/requirement-intake.md",
@@ -245,6 +247,7 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
+    ".agent/programs/baseline-manifest.md",
     ".agent/programs/program-decisions.md",
     ".agent/programs/code-architecture-map.md",
     ".agent/programs/powershell-runbook.md",

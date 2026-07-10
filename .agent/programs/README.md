@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-unified-agent-runtime-closure-v1`
-- Current phase: `PHASE01_truth-source-baseline-and-program-activation`
+- Current phase: `PHASE02_unified-runtime-contracts-and-state`
 - Latest completed program: `zuno-lean-complete-product-architecture-v1`
 - Baseline commit: `72488a25fde59bc5ef86b2b1c84f25d42cb946ca`
 
@@ -22,9 +22,9 @@
 
 当前只执行：
 
-- `.agent/programs/PHASE01_truth-source-baseline-and-program-activation.md`
+- `.agent/programs/PHASE02_unified-runtime-contracts-and-state.md`
 
-PHASE01 只冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime。
+PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。当前下一步是 PHASE02 的 unified runtime contracts and state。
 
 ## 当前文件
 

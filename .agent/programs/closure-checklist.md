@@ -2,11 +2,11 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE01_truth-source-baseline-and-program-activation
+current_phase: PHASE02_unified-runtime-contracts-and-state
 
 ## 功能与质量关闭项
 
-- [ ] PHASE01 已冻结 baseline、truth source、PowerShell 命令和 sample case set。
+- [x] PHASE01 已冻结 baseline、truth source、PowerShell 命令和 sample case set。
 - [ ] PHASE02 已建立唯一版本化 AgentRuntimeState/Observation contract。
 - [ ] PHASE03 所有 Agent 角色模型调用统一经 Model Gateway。
 - [ ] PHASE04 run/checkpoint/plan/observation/interrupt/evidence/tool execution 可 SQLite 持久化并重启恢复。

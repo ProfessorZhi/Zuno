@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE01_truth-source-baseline-and-program-activation
+current_phase: PHASE02_unified-runtime-contracts-and-state
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
 ## Program Definition
@@ -26,7 +26,7 @@ Plan-and-Execute for macro control
 
 | Phase | 文件后缀 | 主要目标 | 主要变更域 |
 | --- | --- | --- | --- |
-| PHASE01 | `truth-source-baseline-and-program-activation` | 冻结真实基线、命令、failure semantics、sample case set 和 program 状态 | docs/workflow only |
+| PHASE01 | `truth-source-baseline-and-program-activation` | completed：冻结真实基线、命令、failure semantics、sample case set 和 program 状态；未修改生产 runtime | docs/workflow only |
 | PHASE02 | `unified-runtime-contracts-and-state` | 建立 AgentRuntimeState、Observation、Strategy、Plan、limits、snapshot 与兼容适配器 | runtime contracts |
 | PHASE03 | `model-gateway-closure` | 所有 planner/executor/critic/synthesis/tool-call 模型统一经 Model Gateway | model runtime |
 | PHASE04 | `durable-store-trace-and-idempotency` | SQLite-backed run/checkpoint/plan/observation/interrupt/evidence/tool execution store | persistence |
