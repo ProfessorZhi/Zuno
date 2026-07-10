@@ -28,7 +28,9 @@ def _slot(summary: dict, slot_name: str) -> dict:
 def test_single_conversation_default_passes() -> None:
     summary = module.summarize_registry(
         [
-            _row(model="qwen-plus", llm_type="LLM", model_slot="conversation_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="conversation_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="tool_call_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="reasoning_model"),
             _row(model="text-embedding-v4", llm_type="Embedding", model_slot="embedding"),
             _row(model="gte-rerank-v2", llm_type="Rerank", model_slot="rerank"),
         ]
@@ -42,7 +44,9 @@ def test_duplicate_conversation_default_fails() -> None:
     summary = module.summarize_registry(
         [
             _row(model="MiniMax-M2.5", llm_type="LLM", model_slot="conversation_model"),
-            _row(model="qwen-plus", llm_type="LLM", model_slot="conversation_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="conversation_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="tool_call_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="reasoning_model"),
             _row(model="text-embedding-v4", llm_type="Embedding", model_slot="embedding"),
             _row(model="gte-rerank-v2", llm_type="Rerank", model_slot="rerank"),
         ]
@@ -56,7 +60,9 @@ def test_duplicate_conversation_default_fails() -> None:
 def test_missing_embedding_fails() -> None:
     summary = module.summarize_registry(
         [
-            _row(model="qwen-plus", llm_type="LLM", model_slot="conversation_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="conversation_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="tool_call_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="reasoning_model"),
             _row(model="gte-rerank-v2", llm_type="Rerank", model_slot="rerank"),
         ]
     )
@@ -68,7 +74,9 @@ def test_missing_embedding_fails() -> None:
 def test_missing_rerank_fails() -> None:
     summary = module.summarize_registry(
         [
-            _row(model="qwen-plus", llm_type="LLM", model_slot="conversation_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="conversation_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="tool_call_model"),
+            _row(model="deepseek-v4-flash", llm_type="LLM", model_slot="reasoning_model"),
             _row(model="text-embedding-v4", llm_type="Embedding", model_slot="embedding"),
         ]
     )

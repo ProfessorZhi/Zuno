@@ -12,11 +12,18 @@ def get_weather(city: str) -> str:
 
     return f"It's always sunny in {city}!"
 
+MODEL_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.deepseek.com")
+MODEL_NAME = os.getenv("OPENAI_MODEL", "deepseek-v4-flash")
+MODEL_KWARGS = {}
+if "deepseek.com" in MODEL_BASE_URL.lower() and MODEL_NAME.lower().startswith("deepseek-v4"):
+    MODEL_KWARGS["extra_body"] = {"thinking": {"type": "disabled"}}
+
 agent = create_agent(
     model=ChatOpenAI(
-        base_url=os.getenv("OPENAI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+        base_url=MODEL_BASE_URL,
         api_key=os.getenv("OPENAI_API_KEY", ""),
-        model="qwen-plus",
+        model=MODEL_NAME,
+        **MODEL_KWARGS,
     ),
     tools=[get_weather],
 )

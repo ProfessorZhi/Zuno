@@ -5,6 +5,8 @@ from zuno.utils.model_output import normalize_model_id_for_provider
 LLM_Types = ["LLM", "Embedding", "Rerank"]
 MODEL_SLOTS = {
     "conversation_model": {"llm_types": {"LLM"}, "label": "聊天模型"},
+    "tool_call_model": {"llm_types": {"LLM"}, "label": "工具调用模型"},
+    "reasoning_model": {"llm_types": {"LLM"}, "label": "推理模型"},
     "embedding": {"llm_types": {"Embedding"}, "label": "文本 Embedding 模型"},
     "vl_embedding": {"llm_types": {"Embedding"}, "label": "VL Embedding 模型"},
     "rerank": {"llm_types": {"Rerank"}, "label": "Rerank 模型"},

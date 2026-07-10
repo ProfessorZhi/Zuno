@@ -281,6 +281,8 @@ async def insert_agent_to_mysql():
 async def insert_llm_to_mysql():
     model_specs = [
         ("LLM", "conversation_model", app_settings.multi_models.conversation_model),
+        ("LLM", "tool_call_model", app_settings.multi_models.tool_call_model),
+        ("LLM", "reasoning_model", app_settings.multi_models.reasoning_model),
         ("Embedding", "embedding", app_settings.multi_models.embedding),
         ("Embedding", "vl_embedding", app_settings.multi_models.vl_embedding),
         ("Rerank", "rerank", app_settings.multi_models.rerank),
@@ -288,7 +290,7 @@ async def insert_llm_to_mysql():
 
     existing_system_llms = await LLMDao.get_llm_by_user(SystemUser)
     existing_by_key = {
-        (LLMService.normalize_llm_type(llm.llm_type), llm.model): llm
+        (LLMService.normalize_llm_type(llm.llm_type), llm.model, llm.model_slot): llm
         for llm in existing_system_llms
     }
 
@@ -307,7 +309,7 @@ async def insert_llm_to_mysql():
             "model_slot": model_slot,
         }
 
-        existing_llm = existing_by_key.get((llm_type, config.model_name))
+        existing_llm = existing_by_key.get((llm_type, config.model_name, model_slot))
         if existing_llm:
             await LLMService.update_llm(llm_id=existing_llm.llm_id, **payload)
         else:
@@ -315,7 +317,7 @@ async def insert_llm_to_mysql():
                 user_id=SystemUser,
                 **payload,
             )
-            existing_by_key[(llm_type, config.model_name)] = True
+            existing_by_key[(llm_type, config.model_name, model_slot)] = True
 
         if llm_type == "LLM":
             has_default_llm = True

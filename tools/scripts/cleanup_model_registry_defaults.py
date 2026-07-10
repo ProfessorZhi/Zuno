@@ -17,6 +17,8 @@ if str(BACKEND_ROOT) not in sys.path:
 
 SLOT_TO_TYPE = {
     "conversation_model": "LLM",
+    "tool_call_model": "LLM",
+    "reasoning_model": "LLM",
     "embedding": "Embedding",
     "vl_embedding": "Embedding",
     "rerank": "Rerank",
@@ -46,7 +48,13 @@ def summarize_slots(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]
     return summary
 
 
-def resolve_unique_model(rows: list[dict[str, Any]], *, model_name: str, expected_type: str) -> dict[str, Any]:
+def resolve_unique_model(
+    rows: list[dict[str, Any]],
+    *,
+    model_name: str,
+    expected_type: str,
+    preferred_slot: str,
+) -> dict[str, Any]:
     matches = [
         row
         for row in rows
@@ -55,6 +63,12 @@ def resolve_unique_model(rows: list[dict[str, Any]], *, model_name: str, expecte
     ]
     if not matches:
         raise ValueError(f"model not found: {model_name} ({expected_type})")
+    preferred_matches = [row for row in matches if row.get("model_slot") == preferred_slot]
+    if len(preferred_matches) == 1:
+        return preferred_matches[0]
+    unbound_matches = [row for row in matches if not row.get("model_slot")]
+    if len(matches) > 1 and len(unbound_matches) == 1:
+        return unbound_matches[0]
     if len(matches) > 1:
         raise ValueError(f"multiple models matched: {model_name} ({expected_type})")
     return matches[0]
@@ -64,24 +78,40 @@ def build_target_plan(
     rows: list[dict[str, Any]],
     *,
     conversation_model: str,
+    tool_call_model: str,
+    reasoning_model: str,
     embedding_model: str,
     vl_embedding_model: str,
     rerank_model: str,
 ) -> list[dict[str, Any]]:
     requested = {
         "conversation_model": conversation_model,
+        "tool_call_model": tool_call_model,
+        "reasoning_model": reasoning_model,
         "embedding": embedding_model,
         "vl_embedding": vl_embedding_model,
         "rerank": rerank_model,
     }
     plan: list[dict[str, Any]] = []
+    selected_llm_ids: dict[str, str] = {}
     for slot, model_name in requested.items():
-        target = resolve_unique_model(rows, model_name=model_name, expected_type=SLOT_TO_TYPE[slot])
+        target = resolve_unique_model(
+            rows,
+            model_name=model_name,
+            expected_type=SLOT_TO_TYPE[slot],
+            preferred_slot=slot,
+        )
+        llm_id = str(target.get("llm_id") or "")
+        if llm_id in selected_llm_ids:
+            raise ValueError(
+                f"same llm_id cannot back multiple slots: {llm_id} for {selected_llm_ids[llm_id]} and {slot}"
+            )
+        selected_llm_ids[llm_id] = slot
         plan.append(
             {
                 "slot": slot,
                 "target_model": model_name,
-                "llm_id": target.get("llm_id"),
+                "llm_id": llm_id,
                 "current_slot": target.get("model_slot"),
                 "already_bound": target.get("model_slot") == slot,
             }
@@ -111,6 +141,8 @@ async def apply_plan(plan: list[dict[str, Any]]) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Clean up local model registry default slots safely.")
     parser.add_argument("--conversation-model", required=True)
+    parser.add_argument("--tool-call-model", required=True)
+    parser.add_argument("--reasoning-model", required=True)
     parser.add_argument("--embedding-model", required=True)
     parser.add_argument("--vl-embedding-model", required=True)
     parser.add_argument("--rerank-model", required=True)
@@ -139,6 +171,8 @@ async def run_cleanup(args: argparse.Namespace) -> int:
         plan = build_target_plan(
             before_rows,
             conversation_model=args.conversation_model,
+            tool_call_model=args.tool_call_model,
+            reasoning_model=args.reasoning_model,
             embedding_model=args.embedding_model,
             vl_embedding_model=args.vl_embedding_model,
             rerank_model=args.rerank_model,

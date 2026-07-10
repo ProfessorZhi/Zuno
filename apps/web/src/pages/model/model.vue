@@ -35,11 +35,35 @@ const activationLoadingId = ref('')
 const isEditMode = ref(false)
 const showApiKey = ref(false)
 
+type ModelSlotOption = {
+  value: string
+  label: string
+  llmTypes: string[]
+}
+
+const MODEL_SLOT_OPTIONS: ModelSlotOption[] = [
+  { value: 'conversation_model', label: '聊天模型', llmTypes: ['LLM'] },
+  { value: 'tool_call_model', label: '工具调用模型', llmTypes: ['LLM'] },
+  { value: 'reasoning_model', label: '推理模型', llmTypes: ['LLM'] },
+  { value: 'embedding', label: '文本 Embedding', llmTypes: ['Embedding'] },
+  { value: 'vl_embedding', label: 'VL Embedding', llmTypes: ['Embedding'] },
+  { value: 'rerank', label: 'Rerank', llmTypes: ['Rerank'] },
+]
+
+const MODEL_SLOT_ORDER = MODEL_SLOT_OPTIONS.reduce<Record<string, number>>((acc, item, index) => {
+  acc[item.value] = index
+  return acc
+}, {})
+const MODEL_SLOT_LABELS = MODEL_SLOT_OPTIONS.reduce<Record<string, string>>((acc, item) => {
+  acc[item.value] = item.label
+  return acc
+}, {})
+
 const form = ref<CreateLLMRequest & { llm_id?: string }>({
-  model: '',
+  model: 'deepseek-v4-flash',
   api_key: '',
-  base_url: '',
-  provider: '',
+  base_url: 'https://api.deepseek.com',
+  provider: 'DeepSeek',
   llm_type: 'LLM',
 })
 
@@ -47,11 +71,9 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const sortedModels = computed(() => {
   return [...models.value].sort((a, b) => {
-    const slotDiff = Number(a.model_slot === 'conversation_model') === Number(b.model_slot === 'conversation_model')
-      ? 0
-      : a.model_slot === 'conversation_model'
-        ? -1
-        : 1
+    const aSlotOrder = a.model_slot ? MODEL_SLOT_ORDER[a.model_slot] ?? 99 : 99
+    const bSlotOrder = b.model_slot ? MODEL_SLOT_ORDER[b.model_slot] ?? 99 : 99
+    const slotDiff = aSlotOrder - bSlotOrder
 
     if (slotDiff !== 0) return slotDiff
 
@@ -72,11 +94,14 @@ const paginatedModels = computed(() => sortedModels.value.slice(
 ))
 
 const isOfficial = (item: LLMResponse) => item.user_id === '0'
-const isConversationModel = (item: LLMResponse) => item.model_slot === 'conversation_model'
+const modelSlotLabel = (slot?: string | null) => slot ? MODEL_SLOT_LABELS[slot] || slot : ''
 const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
 const canManageItem = (item: LLMResponse) => !isOfficial(item) || isAdmin.value
 const isEditingItem = (item: LLMResponse) => dialogVisible.value && isEditMode.value && form.value.llm_id === item.llm_id
-const canActivateConversationModel = (item: LLMResponse) => item.llm_type === 'LLM'
+const availableSlotOptions = (item: LLMResponse) => {
+  const type = String(item.llm_type || '').trim()
+  return MODEL_SLOT_OPTIONS.filter((option) => option.llmTypes.includes(type))
+}
 
 const flattenModelMap = (value: Record<string, LLMResponse[]>) => {
   const result: LLMResponse[] = []
@@ -136,10 +161,10 @@ watch(keyword, (value) => {
 
 const resetForm = () => {
   form.value = {
-    model: '',
+    model: 'deepseek-v4-flash',
     api_key: '',
-    base_url: '',
-    provider: '',
+    base_url: 'https://api.deepseek.com',
+    provider: 'DeepSeek',
     llm_type: 'LLM',
   }
   isEditMode.value = false
@@ -261,24 +286,24 @@ const handleSave = async () => {
   }
 }
 
-const handleActivateConversationModel = async (item: LLMResponse) => {
-  if (!canActivateConversationModel(item) || isConversationModel(item)) return
+const handleActivateModelSlot = async (item: LLMResponse, slot: ModelSlotOption) => {
+  if (item.model_slot === slot.value) return
 
   activationLoadingId.value = item.llm_id
   try {
     const response = await activateLLMAPI({
       llm_id: item.llm_id,
-      model_slot: 'conversation_model',
+      model_slot: slot.value,
     })
     if (response.data.status_code === 200) {
-      ElMessage.success(`已切换聊天模型到 ${item.model}`)
+      ElMessage.success(`已切换${slot.label}到 ${item.model}`)
       await fetchModels()
       return
     }
-    ElMessage.error(response.data.status_message || '切换聊天模型失败')
+    ElMessage.error(response.data.status_message || `切换${slot.label}失败`)
   } catch (error) {
-    console.error('切换聊天模型失败:', error)
-    ElMessage.error('切换聊天模型失败')
+    console.error('切换模型槽位失败:', error)
+    ElMessage.error(`切换${slot.label}失败`)
   } finally {
     activationLoadingId.value = ''
   }
@@ -342,7 +367,7 @@ onMounted(fetchModels)
       <header class="inline-form-head">
         <div>
           <h2>{{ isEditMode ? '编辑模型' : '新建模型' }}</h2>
-          <p>创建模型后，还需要把它设为聊天模型，聊天页才会真正走这套配置。</p>
+          <p>新建默认使用 DeepSeek V4 Flash；保存后可在卡片上绑定聊天、工具、推理、Embedding 或 Rerank 槽位。</p>
         </div>
         <div class="inline-form-actions">
           <ZunoIconButton :icon="Close" title="关闭" @click="closeInlineForm" />
@@ -352,8 +377,8 @@ onMounted(fetchModels)
 
       <el-form label-position="top" class="compact-model-form">
         <div class="dialog-grid">
-          <ZunoLineInput v-model="form.model" label="模型名称" placeholder="接口 model id，例如 qwen-plus / mimo-v2.5" />
-          <ZunoLineInput v-model="form.provider" label="供应商" placeholder="例如 MiniMax / 通义千问 / OpenAI" />
+          <ZunoLineInput v-model="form.model" label="模型名称" placeholder="接口 model id，例如 deepseek-v4-flash" />
+          <ZunoLineInput v-model="form.provider" label="供应商" placeholder="例如 DeepSeek / 通义千问 / OpenAI" />
           <ZunoLineSelect v-model="form.llm_type" label="模型类型">
             <el-option label="LLM" value="LLM" />
             <el-option label="Embedding" value="Embedding" />
@@ -385,8 +410,8 @@ onMounted(fetchModels)
               <span class="badge" :class="{ official: isOfficial(item) }">
                 {{ isOfficial(item) ? '官方模型' : '自定义模型' }}
               </span>
-              <span v-if="isConversationModel(item)" class="badge active-slot">
-                当前聊天模型
+              <span v-if="item.model_slot" class="badge active-slot">
+                {{ modelSlotLabel(item.model_slot) }}
               </span>
             </div>
 
@@ -398,15 +423,16 @@ onMounted(fetchModels)
 
           <div class="card-actions">
             <el-button
-              v-if="canActivateConversationModel(item)"
+              v-for="slot in availableSlotOptions(item)"
+              :key="slot.value"
               class="slot-button"
-              :type="isConversationModel(item) ? 'warning' : 'default'"
-              :plain="!isConversationModel(item)"
+              :type="item.model_slot === slot.value ? 'warning' : 'default'"
+              :plain="item.model_slot !== slot.value"
               :loading="activationLoadingId === item.llm_id"
-              :disabled="isConversationModel(item)"
-              @click="handleActivateConversationModel(item)"
+              :disabled="item.model_slot === slot.value"
+              @click="handleActivateModelSlot(item, slot)"
             >
-              {{ isConversationModel(item) ? '当前聊天模型' : '设为聊天模型' }}
+              {{ item.model_slot === slot.value ? `当前${slot.label}` : `设为${slot.label}` }}
             </el-button>
             <el-button
               :class="['model-icon-button', { active: isEditingItem(item) }]"

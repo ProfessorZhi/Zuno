@@ -26,9 +26,21 @@ def test_insert_llm_to_mysql_syncs_conversation_embedding_vl_embedding_and_reran
 
     app_settings.multi_models = SimpleNamespace(
         conversation_model=SimpleNamespace(
-            model_name="qwen-plus",
+            model_name="deepseek-v4-flash",
             api_key="conv-key",
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+            base_url="https://api.deepseek.com",
+            is_configured=lambda: True,
+        ),
+        tool_call_model=SimpleNamespace(
+            model_name="deepseek-v4-flash",
+            api_key="tool-key",
+            base_url="https://api.deepseek.com",
+            is_configured=lambda: True,
+        ),
+        reasoning_model=SimpleNamespace(
+            model_name="deepseek-v4-flash",
+            api_key="reason-key",
+            base_url="https://api.deepseek.com",
             is_configured=lambda: True,
         ),
         embedding=SimpleNamespace(
@@ -61,7 +73,9 @@ def test_insert_llm_to_mysql_syncs_conversation_embedding_vl_embedding_and_reran
         (record["model"], record["llm_type"], record.get("model_slot"))
         for record in created_records
     } == {
-        ("qwen-plus", "LLM", "conversation_model"),
+        ("deepseek-v4-flash", "LLM", "conversation_model"),
+        ("deepseek-v4-flash", "LLM", "tool_call_model"),
+        ("deepseek-v4-flash", "LLM", "reasoning_model"),
         ("text-embedding-v4", "Embedding", "embedding"),
         ("qwen3-vl-embedding", "Embedding", "vl_embedding"),
         ("gte-rerank-v2", "Rerank", "rerank"),
@@ -74,10 +88,10 @@ def test_get_visible_llm_normalizes_legacy_reranker_type(monkeypatch):
     llms = [
         {
             "llm_id": "llm_1",
-            "model": "qwen-plus",
-            "provider": "通义千问",
+            "model": "deepseek-v4-flash",
+            "provider": "DeepSeek",
             "llm_type": "LLM",
-            "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "base_url": "https://api.deepseek.com",
             "api_key": "secret-1",
             "user_id": "0",
             "update_time": "",
@@ -186,3 +200,36 @@ def test_model_manager_prefers_active_slot_over_yaml(monkeypatch):
     assert config.model_name == "active-embedding"
     assert config.api_key == "active-key"
     assert config.base_url == "https://active.example.com/v1"
+
+
+def test_model_manager_uses_active_tool_and_reasoning_slots(monkeypatch):
+    from types import SimpleNamespace
+
+    from zuno.core.models.manager import ModelManager
+
+    slot_rows = {
+        "tool_call_model": SimpleNamespace(
+            model="deepseek-v4-flash",
+            provider="DeepSeek",
+            api_key="tool-key",
+            base_url="https://api.deepseek.com",
+        ),
+        "reasoning_model": SimpleNamespace(
+            model="deepseek-v4-flash",
+            provider="DeepSeek",
+            api_key="reason-key",
+            base_url="https://api.deepseek.com",
+        ),
+    }
+
+    monkeypatch.setattr(
+        "zuno.database.dao.llm.LLMDao.get_llm_by_slot",
+        lambda slot: slot_rows.get(slot),
+    )
+
+    tool_model = ModelManager.get_tool_invocation_model()
+    reasoning_model = ModelManager.get_reasoning_model()
+
+    assert getattr(tool_model, "model_name", "") == "deepseek-v4-flash"
+    assert getattr(tool_model, "extra_body", {}) == {"thinking": {"type": "disabled"}}
+    assert reasoning_model.model_name == "deepseek-v4-flash"

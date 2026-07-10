@@ -16,11 +16,13 @@ if str(BACKEND_ROOT) not in sys.path:
 MODEL_TYPES = ("LLM", "Embedding", "Rerank")
 MODEL_SLOTS = (
     "conversation_model",
+    "tool_call_model",
+    "reasoning_model",
     "embedding",
     "vl_embedding",
     "rerank",
 )
-REQUIRED_NON_EMPTY_SLOTS = {"embedding", "rerank"}
+REQUIRED_NON_EMPTY_SLOTS = {"conversation_model", "tool_call_model", "reasoning_model", "embedding", "rerank"}
 
 
 def normalize_llm_type(value: str | None) -> str:
@@ -55,10 +57,10 @@ def summarize_registry(rows: list[dict[str, Any]]) -> dict[str, Any]:
         models = [_model_label(row) for row in slot_rows]
         status = "ok"
 
-        if slot == "conversation_model" and len(slot_rows) > 1:
+        if slot in REQUIRED_NON_EMPTY_SLOTS and len(slot_rows) > 1:
             status = "ambiguous"
             failures.append(
-                "multiple models are bound to conversation_model; default conversation resolution is ambiguous"
+                f"multiple models are bound to {slot}; default model resolution is ambiguous"
             )
         elif slot in REQUIRED_NON_EMPTY_SLOTS and not slot_rows:
             status = "missing"

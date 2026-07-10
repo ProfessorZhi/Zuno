@@ -11,6 +11,14 @@ from zuno.utils.model_output import normalize_model_id_for_provider
 
 class ModelManager:
     @staticmethod
+    def _standard_chat_kwargs(model_name: str, base_url: str | None) -> dict:
+        base_url_lower = str(base_url or "").lower()
+        model_lower = str(model_name or "").lower()
+        if "deepseek.com" in base_url_lower and model_lower.startswith("deepseek-v4"):
+            return {"extra_body": {"thinking": {"type": "disabled"}}}
+        return {}
+
+    @staticmethod
     def _require_model_config(model_config, label: str):
         if not model_config.is_configured():
             raise ValueError(f"{label} 鏈厤缃紝璇峰厛鍦ㄧ郴缁熶腑鏂板妯″瀷閰嶇疆")
@@ -35,18 +43,17 @@ class ModelManager:
 
     @classmethod
     def get_tool_invocation_model(cls, **kwargs) -> BaseChatModel:
-        tool_call_model = cls._require_model_config(
-            app_settings.multi_models.tool_call_model,
-            "宸ュ叿璋冪敤妯″瀷",
+        tool_call_model = cls.get_model_config("tool_call_model", "宸ュ叿璋冪敤妯″瀷")
+        model_name = normalize_model_id_for_provider(
+            tool_call_model.model_name,
+            base_url=tool_call_model.base_url,
         )
         return ChatOpenAI(
             stream_usage=True,
-            model=normalize_model_id_for_provider(
-                tool_call_model.model_name,
-                base_url=tool_call_model.base_url,
-            ),
+            model=model_name,
             api_key=tool_call_model.api_key,
             base_url=tool_call_model.base_url,
+            **cls._standard_chat_kwargs(model_name, tool_call_model.base_url),
         )
 
     @classmethod
@@ -57,14 +64,12 @@ class ModelManager:
             model=conversation_model.model_name,
             api_key=conversation_model.api_key,
             base_url=conversation_model.base_url,
+            **cls._standard_chat_kwargs(conversation_model.model_name, conversation_model.base_url),
         )
 
     @classmethod
     def get_reasoning_model(cls) -> ReasoningModel:
-        reasoning_model = cls._require_model_config(
-            app_settings.multi_models.reasoning_model,
-            "鎺ㄧ悊妯″瀷",
-        )
+        reasoning_model = cls.get_model_config("reasoning_model", "鎺ㄧ悊妯″瀷")
         return ReasoningModel(
             model_name=normalize_model_id_for_provider(
                 reasoning_model.model_name,
@@ -93,15 +98,17 @@ class ModelManager:
     @classmethod
     def get_user_model(cls, **kwargs) -> BaseChatModel:
         user_model = kwargs
+        model_name = normalize_model_id_for_provider(
+            user_model.get("model"),
+            provider=user_model.get("provider"),
+            base_url=user_model.get("base_url"),
+        )
         return ChatOpenAI(
             stream_usage=True,
-            model=normalize_model_id_for_provider(
-                user_model.get("model"),
-                provider=user_model.get("provider"),
-                base_url=user_model.get("base_url"),
-            ),
+            model=model_name,
             api_key=user_model.get("api_key"),
             base_url=user_model.get("base_url"),
+            **cls._standard_chat_kwargs(model_name, user_model.get("base_url")),
         )
 
     @classmethod

@@ -28,6 +28,8 @@ def _row(*, llm_id: str, model: str, llm_type: str, model_slot: str | None) -> d
 def _args(*, apply: bool = False) -> SimpleNamespace:
     return SimpleNamespace(
         conversation_model="deepseek-v4-flash",
+        tool_call_model="deepseek-v4-flash",
+        reasoning_model="deepseek-v4-flash",
         embedding_model="text-embedding-v4",
         vl_embedding_model="qwen3-vl-embedding",
         rerank_model="gte-rerank-v2",
@@ -37,7 +39,9 @@ def _args(*, apply: bool = False) -> SimpleNamespace:
 
 def test_build_target_plan_resolves_unique_models() -> None:
     rows = [
-        _row(llm_id="a", model="deepseek-v4-flash", llm_type="LLM", model_slot=None),
+        _row(llm_id="a", model="deepseek-v4-flash", llm_type="LLM", model_slot="conversation_model"),
+        _row(llm_id="a_tool", model="deepseek-v4-flash", llm_type="LLM", model_slot="tool_call_model"),
+        _row(llm_id="a_reason", model="deepseek-v4-flash", llm_type="LLM", model_slot="reasoning_model"),
         _row(llm_id="b", model="text-embedding-v4", llm_type="Embedding", model_slot="embedding"),
         _row(llm_id="c", model="qwen3-vl-embedding", llm_type="Embedding", model_slot="vl_embedding"),
         _row(llm_id="d", model="gte-rerank-v2", llm_type="Rerank", model_slot="rerank"),
@@ -46,14 +50,23 @@ def test_build_target_plan_resolves_unique_models() -> None:
     plan = module.build_target_plan(
         rows,
         conversation_model="deepseek-v4-flash",
+        tool_call_model="deepseek-v4-flash",
+        reasoning_model="deepseek-v4-flash",
         embedding_model="text-embedding-v4",
         vl_embedding_model="qwen3-vl-embedding",
         rerank_model="gte-rerank-v2",
     )
 
-    assert [item["slot"] for item in plan] == ["conversation_model", "embedding", "vl_embedding", "rerank"]
+    assert [item["slot"] for item in plan] == [
+        "conversation_model",
+        "tool_call_model",
+        "reasoning_model",
+        "embedding",
+        "vl_embedding",
+        "rerank",
+    ]
     assert plan[0]["llm_id"] == "a"
-    assert plan[1]["already_bound"] is True
+    assert plan[3]["already_bound"] is True
 
 
 def test_build_target_plan_fails_when_model_missing() -> None:
@@ -65,6 +78,8 @@ def test_build_target_plan_fails_when_model_missing() -> None:
         module.build_target_plan(
             rows,
             conversation_model="deepseek-v4-flash",
+            tool_call_model="deepseek-v4-flash",
+            reasoning_model="deepseek-v4-flash",
             embedding_model="text-embedding-v4",
             vl_embedding_model="qwen3-vl-embedding",
             rerank_model="gte-rerank-v2",
@@ -88,6 +103,8 @@ def test_build_target_plan_fails_when_model_is_duplicated() -> None:
         module.build_target_plan(
             rows,
             conversation_model="deepseek-v4-flash",
+            tool_call_model="deepseek-v4-flash",
+            reasoning_model="deepseek-v4-flash",
             embedding_model="text-embedding-v4",
             vl_embedding_model="qwen3-vl-embedding",
             rerank_model="gte-rerank-v2",
@@ -100,7 +117,9 @@ def test_build_target_plan_fails_when_model_is_duplicated() -> None:
 
 def test_run_cleanup_dry_run_does_not_apply(monkeypatch, capsys) -> None:
     rows = [
-        _row(llm_id="a", model="deepseek-v4-flash", llm_type="LLM", model_slot=None),
+        _row(llm_id="a", model="deepseek-v4-flash", llm_type="LLM", model_slot="conversation_model"),
+        _row(llm_id="a_tool", model="deepseek-v4-flash", llm_type="LLM", model_slot="tool_call_model"),
+        _row(llm_id="a_reason", model="deepseek-v4-flash", llm_type="LLM", model_slot="reasoning_model"),
         _row(llm_id="b", model="text-embedding-v4", llm_type="Embedding", model_slot="embedding"),
         _row(llm_id="c", model="qwen3-vl-embedding", llm_type="Embedding", model_slot="vl_embedding"),
         _row(llm_id="d", model="gte-rerank-v2", llm_type="Rerank", model_slot="rerank"),
@@ -130,6 +149,8 @@ def test_run_cleanup_apply_executes_plan(monkeypatch, capsys) -> None:
         _row(llm_id="old1", model="MiniMax-M2.5", llm_type="LLM", model_slot="conversation_model"),
         _row(llm_id="old2", model="qwen-plus", llm_type="LLM", model_slot="conversation_model"),
         _row(llm_id="a", model="deepseek-v4-flash", llm_type="LLM", model_slot=None),
+        _row(llm_id="a_tool", model="deepseek-v4-flash", llm_type="LLM", model_slot="tool_call_model"),
+        _row(llm_id="a_reason", model="deepseek-v4-flash", llm_type="LLM", model_slot="reasoning_model"),
         _row(llm_id="b", model="text-embedding-v4", llm_type="Embedding", model_slot="embedding"),
         _row(llm_id="c", model="qwen3-vl-embedding", llm_type="Embedding", model_slot="vl_embedding"),
         _row(llm_id="d", model="gte-rerank-v2", llm_type="Rerank", model_slot="rerank"),
@@ -138,6 +159,8 @@ def test_run_cleanup_apply_executes_plan(monkeypatch, capsys) -> None:
         _row(llm_id="old1", model="MiniMax-M2.5", llm_type="LLM", model_slot=None),
         _row(llm_id="old2", model="qwen-plus", llm_type="LLM", model_slot=None),
         _row(llm_id="a", model="deepseek-v4-flash", llm_type="LLM", model_slot="conversation_model"),
+        _row(llm_id="a_tool", model="deepseek-v4-flash", llm_type="LLM", model_slot="tool_call_model"),
+        _row(llm_id="a_reason", model="deepseek-v4-flash", llm_type="LLM", model_slot="reasoning_model"),
         _row(llm_id="b", model="text-embedding-v4", llm_type="Embedding", model_slot="embedding"),
         _row(llm_id="c", model="qwen3-vl-embedding", llm_type="Embedding", model_slot="vl_embedding"),
         _row(llm_id="d", model="gte-rerank-v2", llm_type="Rerank", model_slot="rerank"),
@@ -159,5 +182,12 @@ def test_run_cleanup_apply_executes_plan(monkeypatch, capsys) -> None:
     captured = capsys.readouterr().out
 
     assert result == 0
-    assert [item["slot"] for item in applied] == ["conversation_model", "embedding", "vl_embedding", "rerank"]
+    assert [item["slot"] for item in applied] == [
+        "conversation_model",
+        "tool_call_model",
+        "reasoning_model",
+        "embedding",
+        "vl_embedding",
+        "rerank",
+    ]
     assert '"after_slots"' in captured
