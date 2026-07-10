@@ -8,9 +8,9 @@ class CompletionReq(BaseModel):
     dialog_id: str = Field(description="对话 ID")
     file_url: Optional[str] = Field(None, description="对话上传文件的对象存储链接")
     multi_agent_enabled: bool = Field(False, description="是否显式启用 multi-agent runtime")
-    product_mode: Literal["normal", "enhanced", "auto"] = Field(
+    product_mode: Literal["normal", "enhanced", "auto", "unified_runtime"] = Field(
         "auto",
-        description="产品检索模式：普通、增强或自动路由",
+        description="产品检索模式：普通、增强、自动路由或统一 runtime cutover",
     )
     query_method: Optional[Literal["auto", "basic", "local", "global", "drift"]] = Field(
         None,

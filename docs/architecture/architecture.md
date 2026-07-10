@@ -220,8 +220,8 @@ Plan-and-Execute for global control
 | trace / metrics | `agent_run.started`、`task_event.emitted`、`api.error`、latency、stream interruption、feedback saved。 |
 | focused tests | DTO validation、SSE event order、workspace ACL、task recovery、citation payload shape。 |
 | E2E 验收 | 用户配置模型、创建 workspace、上传文档、提问、看到引用和 trace、刷新后仍能查看。 |
-| 当前状态 | API/DTO、workspace、message、knowledge、tool 和 model 配置入口存在；部分 task/planner/retrieval runtime state 仍需 durable 化。 |
-| 短期闭环项 | P0 trace 可查看；P1 task/planner/retrieval/approval 状态本地持久化；P2 前端 E2E 和演示脚本。 |
+| 当前状态 | API/DTO、workspace、message、knowledge、tool 和 model 配置入口存在；PHASE11 已让 Completion `unified_runtime` SSE、Workspace task events/snapshot 和 SQLite restart recovery 暴露 unified runtime baseline。 |
+| 短期闭环项 | P0 真实 PDF SourceSpan vertical slice；P1 release benchmark measured gate；P2 更完整前端 E2E 和演示脚本。 |
 | Future Optional | 多租户 admin console、复杂团队权限、企业审计门户。 |
 
 ### 4.2 Input & Knowledge

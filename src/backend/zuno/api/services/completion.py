@@ -1,4 +1,7 @@
-from typing import List
+from pathlib import Path
+import tempfile
+from typing import AsyncIterator, List
+from uuid import uuid4
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
@@ -6,6 +9,7 @@ from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
 from zuno.resources.prompts.completion import SYSTEM_PROMPT
 from zuno.schema.completion import CompletionReq
+from zuno.agent.runtime import RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
 from zuno.utils.helpers import (
     build_completion_history_messages,
     build_completion_system_prompt,
@@ -14,6 +18,57 @@ from zuno.utils.helpers import (
 
 
 class CompletionService:
+    _unified_runtime_store = SQLiteAgentRunStore(Path(tempfile.gettempdir()) / "zuno_completion_unified_runtime.db")
+
+    @classmethod
+    def configure_unified_runtime_store_for_tests(cls, store: SQLiteAgentRunStore) -> None:
+        cls._unified_runtime_store = store
+
+    @classmethod
+    def unified_runtime_service(cls) -> UnifiedAgentRuntimeService:
+        return UnifiedAgentRuntimeService(store=cls._unified_runtime_store)
+
+    @classmethod
+    async def stream_unified_runtime(
+        cls,
+        *,
+        req: CompletionReq,
+        login_user_id: str,
+    ) -> AsyncIterator[dict]:
+        task_id = f"completion:{req.dialog_id}:{uuid4().hex[:8]}"
+        request = RuntimeStartRequest(
+            run_id=f"run:{task_id}",
+            thread_id=req.dialog_id,
+            workspace_id=str(getattr(req, "workspace_id", "") or "completion"),
+            user_id=login_user_id,
+            task_id=task_id,
+            trace_id=f"trace:{task_id}",
+            goal=req.user_input,
+        )
+        for event in cls.unified_runtime_service().stream(request):
+            yield {
+                "type": event.event_type,
+                "data": {
+                    "runtime_topology": "unified_agent_runtime",
+                    "run_id": event.run_id,
+                    "task_id": event.task_id,
+                    "trace_id": event.trace_id,
+                    "node": event.node,
+                    "status": event.status,
+                    **dict(event.payload),
+                },
+            }
+        snapshot = cls.unified_runtime_service().get_snapshot(task_id)
+        yield {
+            "type": "response_chunk",
+            "data": {
+                "chunk": "Unified runtime completed.",
+                "runtime_topology": "unified_agent_runtime",
+                "task_id": task_id,
+                "finalization_status": snapshot.finalization_status if snapshot else "unknown",
+            },
+        }
+
     @staticmethod
     async def create_chat_agent(req: CompletionReq, login_user_id: str):
         from zuno.core.agents.general_agent import AgentConfig, GeneralAgent

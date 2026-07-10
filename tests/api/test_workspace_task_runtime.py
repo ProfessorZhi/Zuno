@@ -73,7 +73,12 @@ def test_workspace_task_runtime_links_task_events_artifact_and_feedback() -> Non
     assert events_response.status_code == 200
     events = events_response.json()["data"]
     event_types = [event["type"] for event in events]
-    assert event_types == [
+    product_event_types = [
+        event["type"]
+        for event in events
+        if event["payload"].get("runtime_topology") != "unified_agent_runtime"
+    ]
+    assert product_event_types == [
         "task_started",
         "planning",
         "retrieval",
@@ -82,6 +87,9 @@ def test_workspace_task_runtime_links_task_events_artifact_and_feedback() -> Non
         "eval_diagnostic",
         "task_completed",
     ]
+    assert "runtime_started" in event_types
+    assert "runtime_node" in event_types
+    assert "runtime_completed" in event_types
     assert {event["task_id"] for event in events} == {task_id}
     assert {event["trace_id"] for event in events} == {trace_id}
 
@@ -145,7 +153,12 @@ def test_workspace_task_event_stream_emits_frontend_trace_payloads() -> None:
         if line.startswith("data: ")
     ]
     streamed_events = [payload["event"] for payload in streamed_payloads]
-    assert streamed_events == [
+    product_streamed_events = [
+        payload["event"]
+        for payload in streamed_payloads
+        if payload["data"].get("runtime_topology") != "unified_agent_runtime"
+    ]
+    assert product_streamed_events == [
         "task_started",
         "planning",
         "retrieval",
@@ -154,6 +167,9 @@ def test_workspace_task_event_stream_emits_frontend_trace_payloads() -> None:
         "eval_diagnostic",
         "task_completed",
     ]
+    assert "runtime_started" in streamed_events
+    assert "runtime_node" in streamed_events
+    assert "runtime_completed" in streamed_events
     assert {payload["data"]["task_id"] for payload in streamed_payloads} == {task_id}
     assert {payload["data"]["trace_id"] for payload in streamed_payloads} == {trace_id}
     artifact_event = next(payload for payload in streamed_payloads if payload["event"] == "artifact_created")

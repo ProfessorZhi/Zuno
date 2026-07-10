@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Callable
 
 import loguru
@@ -71,6 +72,16 @@ async def _create_chat_agent(req: CompletionReq, login_user_id: str):
 
 @router.post("/completion", description="Completion chat endpoint")
 async def completion(*, req: CompletionReq, login_user: UserPayload = Depends(get_login_user)):
+    if req.product_mode == "unified_runtime" or os.getenv("ZUNO_COMPLETION_UNIFIED_RUNTIME") == "1":
+        async def unified_generate():
+            async for event in CompletionService.stream_unified_runtime(req=req, login_user_id=login_user.user_id):
+                yield f"data: {json.dumps(event)}\n\n"
+
+        return WatchedStreamingResponse(
+            content=unified_generate(),
+            media_type="text/event-stream",
+        )
+
     chat_agent, agent_config = await _create_chat_agent(req, login_user.user_id)
 
     set_user_id_context(login_user.user_id)

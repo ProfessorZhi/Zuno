@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE11
-    state: planned
+    state: completed
     title: Product/API/SSE/UI 切换与恢复
     depends_on: PHASE10
     next_phase: PHASE12
@@ -102,3 +102,34 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     6. 未完成和 blocked 项。
     7. commit SHA。
     8. 下一 Phase 是否满足依赖。
+
+    ## PHASE11 完成记录
+
+    状态：completed。
+
+    本轮真实完成：
+
+    - `CompletionService` 增加 `UnifiedAgentRuntimeService` cutover stream；`POST /completion` 在 `product_mode=unified_runtime` 或 `ZUNO_COMPLETION_UNIFIED_RUNTIME=1` 时输出 unified runtime SSE。
+    - `WorkspaceTaskRuntimeService` 在 task 创建链路中启动 unified runtime，将 `runtime_started`、`runtime_node`、`runtime_completed` 写入现有 task event stream，并在 task snapshot 中暴露 `unified_runtime`。
+    - Completion DTO 明确允许 `product_mode=unified_runtime`，避免 API schema 阻断 cutover 请求。
+    - SQLite-backed unified runtime store 可由新 `UnifiedAgentRuntimeService` 实例按 task id 恢复 snapshot。
+    - 旧 Workspace 产品事件序列仍可从非 runtime events 中稳定读取；runtime events 作为新增 trace 面出现。
+
+    本轮没有声明完成：
+
+    - 没有把 fixed EnterpriseRAG benchmark 写成 measured。
+    - 没有声明全量前端 redesign 已完成；最小 UI 面是通过现有 SSE payload 增加 `runtime_topology`、`node`、`run_id` 和 runtime payload。
+    - 没有关闭 PHASE12 的真实 PDF SourceSpan vertical slice。
+
+    验证证据：
+
+    ```text
+pytest -q tests/api/test_completion_unified_runtime.py tests/api/test_workspace_runtime_recovery.py tests/e2e/test_unified_agent_product_scenario.py -p no:cacheprovider
+4 passed
+
+pytest -q tests/api/test_workspace_task_runtime.py -p no:cacheprovider
+8 passed
+
+python -m compileall -q src/backend/zuno/api/services/completion.py src/backend/zuno/api/v1/completion.py src/backend/zuno/api/services/workspace_task_runtime.py src/backend/zuno/api/dto/completion.py
+passed
+```

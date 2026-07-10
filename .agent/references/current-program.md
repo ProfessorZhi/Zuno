@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE11_product-api-sse-ui-and-recovery-cutover
+current_phase: PHASE12_real-pdf-source-span-vertical-slice
 latest_completed_program: zuno-lean-complete-product-architecture-v1
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
@@ -12,9 +12,9 @@ Phase 边界：PHASE01-PHASE13。
 
 当前 phase：
 
-- `.agent/programs/PHASE11_product-api-sse-ui-and-recovery-cutover.md`
+- `.agent/programs/PHASE12_real-pdf-source-span-vertical-slice.md`
 
-PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；没有修改生产 runtime，也没有运行 fixed benchmark measured gate。PHASE02 已建立 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的角色、调用 contract、GeneralAgent gateway adapter 和 direct-call verifier；legacy allowlist 仍保留为历史迁移面。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。PHASE06 已完成 Strategy / Plan-and-Execute / ReAct step execution baseline。PHASE07 已完成 Tool Control Plane integration baseline。PHASE08 已完成 corrective Agentic GraphRAG / EvidenceLedger baseline，并接入 `KnowledgeStepExecutor` 的 `knowledge_runtime` 依赖；fixed benchmark 仍未 measured。PHASE09 已完成 Reflection / Replan / Rewrite / Grounded Synthesis runtime loop baseline。PHASE10 已完成 four-layer Memory / Reflexion reuse baseline。PHASE11 开始处理 Product API / SSE / UI / recovery cutover。
+PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；没有修改生产 runtime，也没有运行 fixed benchmark measured gate。PHASE02 已建立 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的角色、调用 contract、GeneralAgent gateway adapter 和 direct-call verifier；legacy allowlist 仍保留为历史迁移面。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。PHASE06 已完成 Strategy / Plan-and-Execute / ReAct step execution baseline。PHASE07 已完成 Tool Control Plane integration baseline。PHASE08 已完成 corrective Agentic GraphRAG / EvidenceLedger baseline，并接入 `KnowledgeStepExecutor` 的 `knowledge_runtime` 依赖；fixed benchmark 仍未 measured。PHASE09 已完成 Reflection / Replan / Rewrite / Grounded Synthesis runtime loop baseline。PHASE10 已完成 four-layer Memory / Reflexion reuse baseline。PHASE11 已完成 Completion / Workspace / SSE / recovery cutover baseline。PHASE12 开始处理真实 PDF SourceSpan vertical slice。
 
 ## Active Program Files
 

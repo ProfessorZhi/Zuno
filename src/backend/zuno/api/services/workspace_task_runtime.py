@@ -4,6 +4,7 @@ from dataclasses import replace
 import hashlib
 import json
 from pathlib import Path
+import tempfile
 import time
 from typing import Any
 from urllib.parse import unquote, urlparse
@@ -15,6 +16,7 @@ from zuno.agent.contracts import PlannerOutput, RetrievalProfile
 from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
 from zuno.agent.harness import ControllerRuntimeState
 from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
+from zuno.agent.runtime import RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
 from zuno.api.services.user import UserPayload
 from zuno.capability.runtime import (
     ToolRuntimeExecutionResult,
@@ -110,6 +112,7 @@ class WorkspaceTaskRuntimeService:
     _task_retrieval_results: dict[str, AgenticRetrievalRuntimeResult] = {}
     _artifact_citation_refs: dict[str, list[dict[str, Any]]] = {}
     _durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
+    _unified_runtime_store = SQLiteAgentRunStore(Path(tempfile.gettempdir()) / "zuno_workspace_unified_runtime.db")
     _tool_runtime = build_default_tool_control_plane_runtime()
     _knowledge_index_runtime = KnowledgeIndexRuntime()
     _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
@@ -206,6 +209,10 @@ class WorkspaceTaskRuntimeService:
             cls._rehydrate_from_durable_store()
 
     @classmethod
+    def configure_unified_runtime_store_for_tests(cls, store: SQLiteAgentRunStore) -> None:
+        cls._unified_runtime_store = store
+
+    @classmethod
     def reset_runtime_state_for_tests(cls) -> None:
         cls._tasks = {}
         cls._task_inputs = {}
@@ -223,6 +230,7 @@ class WorkspaceTaskRuntimeService:
         cls._task_retrieval_results = {}
         cls._artifact_citation_refs = {}
         cls._durable_runtime = SingleControllerDurableRuntime(store=InMemoryDurableRuntimeStore())
+        cls._unified_runtime_store = SQLiteAgentRunStore(Path(tempfile.gettempdir()) / "zuno_workspace_unified_runtime_tests.db")
         cls._tool_runtime = build_default_tool_control_plane_runtime()
         cls._knowledge_index_runtime = KnowledgeIndexRuntime()
         cls._agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=cls._knowledge_index_runtime)
@@ -872,6 +880,12 @@ class WorkspaceTaskRuntimeService:
             return cls.get_task_snapshot(task_id)
 
         cls._durable_runtime.start_task(runtime_state)
+        cls._start_unified_runtime_for_task(
+            task=task,
+            simple_task=simple_task,
+            login_user=login_user,
+            goal=goal,
+        )
         cls._complete_task(
             task_id=task_id,
             simple_task=simple_task,
@@ -991,6 +1005,44 @@ class WorkspaceTaskRuntimeService:
                 for state, actions in WORKSPACE_TASK_RECOVERY_ACTIONS.items()
             },
         }
+
+    @classmethod
+    def _unified_runtime_service(cls) -> UnifiedAgentRuntimeService:
+        return UnifiedAgentRuntimeService(store=cls._unified_runtime_store)
+
+    @classmethod
+    def _start_unified_runtime_for_task(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+        login_user: UserPayload,
+        goal: str,
+    ) -> None:
+        request = RuntimeStartRequest(
+            run_id=f"run:{task.task_id}",
+            thread_id=simple_task.session_id or task.task_id,
+            workspace_id=task.workspace_id,
+            user_id=login_user.user_id,
+            task_id=task.task_id,
+            trace_id=task.trace_id or f"trace:{task.task_id}",
+            goal=goal,
+        )
+        for runtime_event in cls._unified_runtime_service().stream(request):
+            cls._events.setdefault(task.task_id, []).append(
+                cls._event(
+                    task_id=task.task_id,
+                    trace_id=task.trace_id or "",
+                    event_type=runtime_event.event_type,
+                    status=runtime_event.status,
+                    payload={
+                        "runtime_topology": "unified_agent_runtime",
+                        "node": runtime_event.node,
+                        "run_id": runtime_event.run_id,
+                        "payload": dict(runtime_event.payload),
+                    },
+                )
+            )
 
     @classmethod
     def _complete_task(
@@ -2002,6 +2054,7 @@ class WorkspaceTaskRuntimeService:
         artifact_ids = cls._artifact_ids_by_task.get(task_id, [])
         feedback_ids = cls._feedback_ids_by_task.get(task_id, [])
         runtime_snapshot = cls._durable_runtime.get_task_snapshot(task_id)
+        unified_snapshot = cls._unified_runtime_service().get_snapshot(task_id)
         simple_task = cls._task_inputs.get(task_id)
         return {
             "task": task.model_dump(),
@@ -2014,6 +2067,7 @@ class WorkspaceTaskRuntimeService:
                 runtime_snapshot=runtime_snapshot,
             ).model_dump(),
             "runtime": runtime_snapshot.to_dict() if runtime_snapshot is not None else None,
+            "unified_runtime": unified_snapshot.model_dump(mode="json") if unified_snapshot is not None else None,
             "observability": {
                 "spans": list(cls._trace_spans.get(task_id, [])),
                 "release_eval": cls._release_evals.get(task_id),
