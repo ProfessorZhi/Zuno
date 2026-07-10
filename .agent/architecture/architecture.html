@@ -151,8 +151,15 @@
       font-weight: 700;
     }
     .svg-label {
-      font-size: 13px;
+      font-size: 12.5px;
       fill: var(--ink);
+      font-weight: 600;
+    }
+    .svg-node {
+      filter: drop-shadow(0 1px 1px rgba(22,32,42,.08));
+    }
+    .svg-edge {
+      opacity: .78;
     }
     .analysis {
       margin-top: 14px;
@@ -252,72 +259,82 @@
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Logical View (4+1) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Logical View (4+1) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Logical View (4+1)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">PARTIAL</text>
-<text x="32" y="121" class="svg-label">1 Product Surface /</text>
-<text x="32" y="137" class="svg-label">AgentChat, Workspace,</text>
-<text x="32" y="153" class="svg-label">Artifact, Citation UI</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">2 Input / Upload, Parse,</text>
-<text x="272" y="137" class="svg-label">Document IR, SourceSpan</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">PARTIAL</text>
-<text x="512" y="121" class="svg-label">3 Knowledge / Chunk, BM25,</text>
-<text x="512" y="137" class="svg-label">Vector, GraphRAG,</text>
-<text x="512" y="153" class="svg-label">EvidenceBundle</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">4 Model Gateway / slot,</text>
-<text x="752" y="137" class="svg-label">provider, route, timeout,</text>
-<text x="752" y="153" class="svg-label">cost</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">PARTIAL</text>
-<text x="32" y="229" class="svg-label">5 Memory / Sensory,</text>
-<text x="32" y="245" class="svg-label">Short-term, Long-term,</text>
-<text x="32" y="261" class="svg-label">Entity</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">TARGET</text>
-<text x="272" y="229" class="svg-label">6 Agent Core / Planning &amp;</text>
-<text x="272" y="245" class="svg-label">Control / strategy, plan,</text>
-<text x="272" y="261" class="svg-label">ReAct, reflection, replan,</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">7 Capability / descriptor,</text>
-<text x="512" y="245" class="svg-label">catalog, policy, routing</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">PARTIAL</text>
-<text x="752" y="229" class="svg-label">8 Tool Runtime / approval,</text>
-<text x="752" y="245" class="svg-label">MCP/tool execution, result</text>
-<text x="752" y="261" class="svg-label">normalization</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">PARTIAL</text>
-<text x="32" y="337" class="svg-label">9 Security / input,</text>
-<text x="32" y="353" class="svg-label">retrieval, tool, output</text>
-<text x="32" y="369" class="svg-label">gates</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">BLOCKED</text>
-<text x="272" y="337" class="svg-label">10 Observability &amp; Eval /</text>
-<text x="272" y="353" class="svg-label">trace, cost, benchmark,</text>
-<text x="272" y="369" class="svg-label">release gate</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">CURRENT</text>
-<text x="512" y="337" class="svg-label">11 Infrastructure /</text>
-<text x="512" y="353" class="svg-label">SQLite, object store,</text>
-<text x="512" y="369" class="svg-label">queue, index, recovery</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 604.0 218.0, 604.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 254 C 370.0 218.0, 136.0 218.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 218.0, 370.0 218.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 136.0 360 C 136.0 218.0, 136.0 218.0, 136.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 370.0 324.0, 370.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 487.0 324.0, 487.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 360 C 370.0 218.0, 136.0 218.0, 136.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 604.0 324.0, 604.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 360 C 370.0 271.0, 370.0 271.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 112.0 C 370.0 112.0, 370.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 218.0, 604.0 218.0, 604.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 218.0, 604.0 218.0, 604.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 370.0 218.0, 370.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 604.0 271.0, 604.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 370.0 324.0, 370.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">1 Product Surface /</text>
+<text x="136.0" y="119" class="svg-label" text-anchor="middle">AgentChat, Workspace,</text>
+<text x="136.0" y="134" class="svg-label" text-anchor="middle">Artifact, Citation UI</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">2 Input / Upload, Parse,</text>
+<text x="370.0" y="119" class="svg-label" text-anchor="middle">Document IR, SourceSpan</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">3 Knowledge / Chunk,</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">BM25, Vector, GraphRAG,</text>
+<text x="604.0" y="134" class="svg-label" text-anchor="middle">EvidenceBundle</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">4 Model Gateway / slot,</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">provider, route,</text>
+<text x="838.0" y="134" class="svg-label" text-anchor="middle">timeout, cost</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">5 Memory / Sensory,</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">Short-term, Long-term,</text>
+<text x="136.0" y="240" class="svg-label" text-anchor="middle">Entity</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">6 Agent Core / Planning</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">&amp; Control / strategy,</text>
+<text x="370.0" y="240" class="svg-label" text-anchor="middle">plan, ReAct, reflection,</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">7 Capability /</text>
+<text x="604.0" y="225" class="svg-label" text-anchor="middle">descriptor, catalog,</text>
+<text x="604.0" y="240" class="svg-label" text-anchor="middle">policy, routing</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">8 Tool Runtime /</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">approval, MCP/tool</text>
+<text x="838.0" y="240" class="svg-label" text-anchor="middle">execution, result</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">9 Security / input,</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">retrieval, tool, output</text>
+<text x="136.0" y="346" class="svg-label" text-anchor="middle">gates</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">10 Observability &amp; Eval</text>
+<text x="370.0" y="331" class="svg-label" text-anchor="middle">/ trace, cost,</text>
+<text x="370.0" y="346" class="svg-label" text-anchor="middle">benchmark, release gate</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">11 Infrastructure /</text>
+<text x="604.0" y="331" class="svg-label" text-anchor="middle">SQLite, object store,</text>
+<text x="604.0" y="346" class="svg-label" text-anchor="middle">queue, index, recovery</text>
 </svg>
               </div>
             </div>
@@ -396,58 +413,53 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Logical View (4+1) / Memory Context Subsystem">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Logical View (4+1) / Memory Context Subsystem">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Memory Context Subsystem</text>
 <text x="24" y="54" class="svg-subtitle">Logical View (4+1)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">PARTIAL</text>
-<text x="32" y="121" class="svg-label">Sensory Memory / current</text>
-<text x="32" y="137" class="svg-label">input + raw observations</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">PARTIAL</text>
-<text x="272" y="121" class="svg-label">Short-term Memory /</text>
-<text x="272" y="137" class="svg-label">working state, messages,</text>
-<text x="272" y="153" class="svg-label">PlanState</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">PARTIAL</text>
-<text x="512" y="121" class="svg-label">Long-term Memory /</text>
-<text x="512" y="137" class="svg-label">episodic, semantic,</text>
-<text x="512" y="153" class="svg-label">procedural</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">PARTIAL</text>
-<text x="752" y="121" class="svg-label">Entity Memory / user,</text>
-<text x="752" y="137" class="svg-label">project, relation facts</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">PARTIAL</text>
-<text x="32" y="229" class="svg-label">Memory Policy / privacy,</text>
-<text x="32" y="245" class="svg-label">scope, token budget</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">CURRENT</text>
-<text x="272" y="229" class="svg-label">ContextPack / budgeted</text>
-<text x="272" y="245" class="svg-label">read view</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">PARTIAL</text>
-<text x="512" y="229" class="svg-label">Single Controller Agent</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">Post-turn Candidate /</text>
-<text x="752" y="245" class="svg-label">facts, lessons, summaries</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">Governance Review /</text>
-<text x="32" y="353" class="svg-label">redact, dedup, conflict</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">PARTIAL</text>
-<text x="272" y="337" class="svg-label">Approved MemoryRecord</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 604.0 324.0, 604.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Sensory Memory / current</text>
+<text x="136.0" y="119" class="svg-label" text-anchor="middle">input + raw observations</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">Short-term Memory /</text>
+<text x="370.0" y="119" class="svg-label" text-anchor="middle">working state, messages,</text>
+<text x="370.0" y="134" class="svg-label" text-anchor="middle">PlanState</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">Long-term Memory /</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">episodic, semantic,</text>
+<text x="604.0" y="134" class="svg-label" text-anchor="middle">procedural</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">Entity Memory / user,</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">project, relation facts</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">Memory Policy / privacy,</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">scope, token budget</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">ContextPack / budgeted</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">read view</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">Single Controller Agent</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">Post-turn Candidate /</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">facts, lessons,</text>
+<text x="838.0" y="240" class="svg-label" text-anchor="middle">summaries</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">Governance Review /</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">redact, dedup, conflict</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">Approved MemoryRecord</text>
 </svg>
               </div>
             </div>
@@ -517,60 +529,55 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Development View (4+1) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Development View (4+1) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Development View (4+1)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">apps/web / Product UI</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">src/backend/zuno/api /</text>
-<text x="272" y="137" class="svg-label">DTO, route, SSE</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">PARTIAL</text>
-<text x="512" y="121" class="svg-label">src/backend/zuno/agent /</text>
-<text x="512" y="137" class="svg-label">Single Controller</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">PARTIAL</text>
-<text x="752" y="121" class="svg-label">src/backend/zuno/memory /</text>
-<text x="752" y="137" class="svg-label">ContextPack, memory policy</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">PARTIAL</text>
-<text x="32" y="229" class="svg-label">src/backend/zuno/knowledge</text>
-<text x="32" y="245" class="svg-label">/ ingestion, retrieval,</text>
-<text x="32" y="261" class="svg-label">GraphRAG</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">PARTIAL</text>
-<text x="272" y="229" class="svg-label">src/backend/zuno/capability</text>
-<text x="272" y="245" class="svg-label">/ skill, tool, MCP</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">src/backend/zuno/platform</text>
-<text x="512" y="245" class="svg-label">/ config, DB, storage,</text>
-<text x="512" y="261" class="svg-label">security, observability</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">docs/architecture /</text>
-<text x="752" y="245" class="svg-label">normative blueprint</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">PARTIAL</text>
-<text x="32" y="337" class="svg-label">tools/agent + tools/evals</text>
-<text x="32" y="353" class="svg-label">/ renderer, verifier,</text>
-<text x="32" y="369" class="svg-label">benchmark</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">tests / focused and</text>
-<text x="272" y="353" class="svg-label">guardrail tests</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 370.0 218.0, 370.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 604.0 165.0, 604.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 604.0 324.0, 604.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">apps/web / Product UI</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">src/backend/zuno/api /</text>
+<text x="370.0" y="119" class="svg-label" text-anchor="middle">DTO, route, SSE</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">src/backend/zuno/agent /</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">Single Controller</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">src/backend/zuno/memory</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">/ ContextPack, memory</text>
+<text x="838.0" y="134" class="svg-label" text-anchor="middle">policy</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">src/backend/zuno/knowledge</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">/ ingestion, retrieval,</text>
+<text x="136.0" y="240" class="svg-label" text-anchor="middle">GraphRAG</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">src/backend/zuno/capability</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">/ skill, tool, MCP</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">src/backend/zuno/platform</text>
+<text x="604.0" y="225" class="svg-label" text-anchor="middle">/ config, DB, storage,</text>
+<text x="604.0" y="240" class="svg-label" text-anchor="middle">security, observability</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">docs/architecture /</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">normative blueprint</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">tools/agent +</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">tools/evals / renderer,</text>
+<text x="136.0" y="346" class="svg-label" text-anchor="middle">verifier, benchmark</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">tests / focused and</text>
+<text x="370.0" y="331" class="svg-label" text-anchor="middle">guardrail tests</text>
 </svg>
               </div>
             </div>
@@ -643,90 +650,91 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 520" role="img" aria-label="Process View (4+1) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 606" role="img" aria-label="Process View (4+1) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Process View (4+1)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">input_gate / ACL +</text>
-<text x="32" y="137" class="svg-label">redaction + request</text>
-<text x="32" y="153" class="svg-label">validation</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">PARTIAL</text>
-<text x="272" y="121" class="svg-label">build_context / session</text>
-<text x="272" y="137" class="svg-label">state + memory read +</text>
-<text x="272" y="153" class="svg-label">knowledge scope</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">strategy_select / direct /</text>
-<text x="512" y="137" class="svg-label">react / plan_and_execute</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">create_or_update_plan /</text>
-<text x="752" y="137" class="svg-label">RetrievalPlan +</text>
-<text x="752" y="153" class="svg-label">CapabilityPlan + stop</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">PARTIAL</text>
-<text x="32" y="229" class="svg-label">execute_step / knowledge</text>
-<text x="32" y="245" class="svg-label">retrieval / graph</text>
-<text x="32" y="261" class="svg-label">expansion / governed tool</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">PARTIAL</text>
-<text x="272" y="229" class="svg-label">observe / retrieval,</text>
-<text x="272" y="245" class="svg-label">model, tool, gate result</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">evidence_gate / source</text>
-<text x="512" y="245" class="svg-label">span + sufficiency checks</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">draft_and_bind_claims /</text>
-<text x="752" y="245" class="svg-label">claim extraction +</text>
-<text x="752" y="261" class="svg-label">citation binding</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">PARTIAL</text>
-<text x="32" y="337" class="svg-label">reflection / PASS /</text>
-<text x="32" y="353" class="svg-label">RETRIEVE_MORE / USE_TOOL /</text>
-<text x="32" y="369" class="svg-label">ASK_USER / ABSTAIN</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">TARGET</text>
-<text x="272" y="337" class="svg-label">replan / modify remaining</text>
-<text x="272" y="353" class="svg-label">steps</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">PARTIAL</text>
-<text x="512" y="337" class="svg-label">approval / tool call /</text>
-<text x="512" y="353" class="svg-label">policy + timeout +</text>
-<text x="512" y="369" class="svg-label">normalized result</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">CURRENT</text>
-<text x="752" y="337" class="svg-label">interrupt / ask user</text>
-<rect x="20" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="422" class="svg-status">CURRENT</text>
-<text x="32" y="445" class="svg-label">finalize / grounded answer</text>
-<text x="32" y="461" class="svg-label">or abstain</text>
-<path d="M 245 443.0 L 255 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="400" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="272" y="422" class="svg-status">TARGET</text>
-<text x="272" y="445" class="svg-label">post_turn_commit / raw</text>
-<text x="272" y="461" class="svg-label">event + task summary +</text>
-<text x="272" y="477" class="svg-label">Reflexion candidate</text>
-<path d="M 485 443.0 L 495 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="400" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="512" y="422" class="svg-status">TARGET</text>
-<text x="512" y="445" class="svg-label">hard controls / max_steps,</text>
-<text x="512" y="461" class="svg-label">max_replans,</text>
-<text x="512" y="477" class="svg-label">max_reflections, timeout,</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 360 C 370.0 377.0, 370.0 377.0, 370.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 360 C 604.0 271.0, 370.0 271.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 604.0 324.0, 604.0 324.0, 732 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 360 C 838.0 271.0, 604.0 271.0, 604.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 360 C 370.0 377.0, 136.0 377.0, 136.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 430.0 C 487.0 430.0, 487.0 430.0, 498 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 430.0 C 721.0 430.0, 721.0 430.0, 732 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 536.0 C 487.0 536.0, 487.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 536.0 C 253.0 536.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 536.0 C 253.0 536.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 536.0 C 253.0 536.0, 253.0 430.0, 264 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">START</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">input_gate / ACL +</text>
+<text x="370.0" y="119" class="svg-label" text-anchor="middle">redaction + request</text>
+<text x="370.0" y="134" class="svg-label" text-anchor="middle">validation</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">build_context / session</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">state + memory read +</text>
+<text x="604.0" y="134" class="svg-label" text-anchor="middle">knowledge scope</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">strategy_select / direct</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">/ react /</text>
+<text x="838.0" y="134" class="svg-label" text-anchor="middle">plan_and_execute</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">create_or_update_plan /</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">RetrievalPlan +</text>
+<text x="136.0" y="240" class="svg-label" text-anchor="middle">CapabilityPlan + stop</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">execute_step / knowledge</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">retrieval / graph</text>
+<text x="370.0" y="240" class="svg-label" text-anchor="middle">expansion / governed</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">observe / retrieval,</text>
+<text x="604.0" y="225" class="svg-label" text-anchor="middle">model, tool, gate result</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">evidence_gate / source</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">span + sufficiency</text>
+<text x="838.0" y="240" class="svg-label" text-anchor="middle">checks</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">draft_and_bind_claims /</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">claim extraction +</text>
+<text x="136.0" y="346" class="svg-label" text-anchor="middle">citation binding</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">reflection / PASS /</text>
+<text x="370.0" y="331" class="svg-label" text-anchor="middle">RETRIEVE_MORE / USE_TOOL</text>
+<text x="370.0" y="346" class="svg-label" text-anchor="middle">/ ASK_USER / ABSTAIN</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">replan / modify</text>
+<text x="604.0" y="331" class="svg-label" text-anchor="middle">remaining steps</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">approval / tool call /</text>
+<text x="838.0" y="331" class="svg-label" text-anchor="middle">policy + timeout +</text>
+<text x="838.0" y="346" class="svg-label" text-anchor="middle">normalized result</text>
+<rect class="svg-node" x="38" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="422" class="svg-label" text-anchor="middle">interrupt / ask user</text>
+<rect class="svg-node" x="272" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="422" class="svg-label" text-anchor="middle">finalize / grounded</text>
+<text x="370.0" y="437" class="svg-label" text-anchor="middle">answer or abstain</text>
+<rect class="svg-node" x="506" y="394" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="604.0" y="422" class="svg-label" text-anchor="middle">post_turn_commit / raw</text>
+<text x="604.0" y="437" class="svg-label" text-anchor="middle">event + task summary +</text>
+<text x="604.0" y="452" class="svg-label" text-anchor="middle">Reflexion candidate</text>
+<rect class="svg-node" x="740" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="422" class="svg-label" text-anchor="middle">END</text>
+<rect class="svg-node" x="38" y="500" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="136.0" y="528" class="svg-label" text-anchor="middle">hard controls /</text>
+<text x="136.0" y="543" class="svg-label" text-anchor="middle">max_steps, max_replans,</text>
+<text x="136.0" y="558" class="svg-label" text-anchor="middle">max_reflections,</text>
 </svg>
               </div>
             </div>
@@ -794,69 +802,62 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Process View (4+1) / Planning and Control Internal View">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Process View (4+1) / Planning and Control Internal View">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Planning and Control Internal View</text>
 <text x="24" y="54" class="svg-subtitle">Process View (4+1)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">StrategyDecision / direct,</text>
-<text x="32" y="137" class="svg-label">react, plan_and_execute</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">Planner / PlanStep DAG +</text>
-<text x="272" y="137" class="svg-label">budgets + acceptance</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">Plan Validation /</text>
-<text x="512" y="137" class="svg-label">complete, atomic,</text>
-<text x="512" y="153" class="svg-label">verifiable, budgeted</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">PlanExecutor</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">ReAct Step Controller /</text>
-<text x="32" y="245" class="svg-label">decide, act, observe</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">PARTIAL</text>
-<text x="272" y="229" class="svg-label">Observation Contract /</text>
-<text x="272" y="245" class="svg-label">retrieval, graph, tool,</text>
-<text x="272" y="261" class="svg-label">model, gate</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">Step Acceptance Check</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#f1eaff" stroke="#8266b2" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">FUTURE</text>
-<text x="752" y="229" class="svg-label">Reflection / deterministic</text>
-<text x="752" y="245" class="svg-label">gate + optional critic</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">TARGET</text>
-<text x="32" y="337" class="svg-label">Replanner / modify query,</text>
-<text x="32" y="353" class="svg-label">scope, steps, tool, model</text>
-<text x="32" y="369" class="svg-label">role</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">TARGET</text>
-<text x="272" y="337" class="svg-label">ReflexionBridge / lesson</text>
-<text x="272" y="353" class="svg-label">candidate, no hidden CoT</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">PARTIAL</text>
-<text x="512" y="337" class="svg-label">Memory Governance /</text>
-<text x="512" y="353" class="svg-label">review, approve, reject</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">PARTIAL</text>
-<text x="752" y="337" class="svg-label">Finalize / grounded</text>
-<text x="752" y="353" class="svg-label">answer, partial, abstain</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 838.0 271.0, 838.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 487.0 324.0, 487.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 360 C 838.0 324.0, 370.0 324.0, 370.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">StrategyDecision /</text>
+<text x="136.0" y="119" class="svg-label" text-anchor="middle">direct, react,</text>
+<text x="136.0" y="134" class="svg-label" text-anchor="middle">plan_and_execute</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">Planner / PlanStep DAG +</text>
+<text x="370.0" y="119" class="svg-label" text-anchor="middle">budgets + acceptance</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">Plan Validation /</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">complete, atomic,</text>
+<text x="604.0" y="134" class="svg-label" text-anchor="middle">verifiable, budgeted</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">PlanExecutor</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">ReAct Step Controller /</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">decide, act, observe</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">Observation Contract /</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">retrieval, graph, tool,</text>
+<text x="370.0" y="240" class="svg-label" text-anchor="middle">model, gate</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">Step Acceptance Check</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#f1eaff" stroke="#8266b2" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">Reflection /</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">deterministic gate +</text>
+<text x="838.0" y="240" class="svg-label" text-anchor="middle">optional critic</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">Replanner / modify</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">query, scope, steps,</text>
+<text x="136.0" y="346" class="svg-label" text-anchor="middle">tool, model role</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">ReflexionBridge / lesson</text>
+<text x="370.0" y="331" class="svg-label" text-anchor="middle">candidate, no hidden CoT</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">Memory Governance /</text>
+<text x="604.0" y="331" class="svg-label" text-anchor="middle">review, approve, reject</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">Finalize / grounded</text>
+<text x="838.0" y="331" class="svg-label" text-anchor="middle">answer, partial, abstain</text>
 </svg>
               </div>
             </div>
@@ -928,62 +929,60 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Physical View (4+1) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Physical View (4+1) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Physical View (4+1)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Web / Desktop UI</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">FastAPI / DTO + SSE</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">PARTIAL</text>
-<text x="512" y="121" class="svg-label">Single Controller Agent</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">Model Provider /</text>
-<text x="752" y="137" class="svg-label">OpenAI-compatible /</text>
-<text x="752" y="153" class="svg-label">DeepSeek / local adapter</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">PARTIAL</text>
-<text x="32" y="229" class="svg-label">SQLite / workspace, task,</text>
-<text x="32" y="245" class="svg-label">model, memory</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">CURRENT</text>
-<text x="272" y="229" class="svg-label">LocalObjectStore / source,</text>
-<text x="272" y="245" class="svg-label">artifact, parse snapshot</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">LocalQueue / In-process</text>
-<text x="512" y="245" class="svg-label">Runner</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">PARTIAL</text>
-<text x="752" y="229" class="svg-label">LocalIndex /</text>
-<text x="752" y="245" class="svg-label">LocalGraphIndex</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">LocalTraceStore / span,</text>
-<text x="32" y="353" class="svg-label">usage, diagnostics</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">Configuration / YAML, env,</text>
-<text x="272" y="353" class="svg-label">DB override</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#f1eaff" stroke="#8266b2" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">FUTURE</text>
-<text x="512" y="337" class="svg-label">Optional Future Adapters /</text>
-<text x="512" y="353" class="svg-label">Postgres, Redis, MinIO,</text>
-<text x="512" y="369" class="svg-label">external vector/graph</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 604.0 165.0, 604.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 218.0, 136.0 218.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 360 C 370.0 218.0, 370.0 218.0, 370.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 370.0 218.0, 370.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 254 C 604.0 271.0, 604.0 271.0, 604.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 604.0 271.0, 604.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 370.0 324.0, 370.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Web / Desktop UI</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">FastAPI / DTO + SSE</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">Single Controller Agent</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">Model Provider /</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">OpenAI-compatible /</text>
+<text x="838.0" y="134" class="svg-label" text-anchor="middle">DeepSeek / local adapter</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">SQLite / workspace,</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">task, model, memory</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">LocalObjectStore /</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">source, artifact, parse</text>
+<text x="370.0" y="240" class="svg-label" text-anchor="middle">snapshot</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">LocalQueue / In-process</text>
+<text x="604.0" y="225" class="svg-label" text-anchor="middle">Runner</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">LocalIndex /</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">LocalGraphIndex</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">LocalTraceStore / span,</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">usage, diagnostics</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">Configuration / YAML,</text>
+<text x="370.0" y="331" class="svg-label" text-anchor="middle">env, DB override</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#f1eaff" stroke="#8266b2" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">Optional Future Adapters</text>
+<text x="604.0" y="331" class="svg-label" text-anchor="middle">/ Postgres, Redis,</text>
+<text x="604.0" y="346" class="svg-label" text-anchor="middle">MinIO, external</text>
 </svg>
               </div>
             </div>
@@ -1069,74 +1068,63 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 520" role="img" aria-label="Scenarios View (4+1) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 500" role="img" aria-label="Scenarios View (4+1) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Scenarios View (4+1)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Configure Model</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">Create Workspace</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">Upload Document</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">Parse Gateway</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">Document IR and Citation</text>
-<text x="32" y="245" class="svg-label">Chunks</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">PARTIAL</text>
-<text x="272" y="229" class="svg-label">BM25 / Vector / Graph</text>
-<text x="272" y="245" class="svg-label">Index</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">PARTIAL</text>
-<text x="512" y="229" class="svg-label">AgentChat Ask</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">ContextPack</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">Strategy and RetrievalPlan</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">PARTIAL</text>
-<text x="272" y="337" class="svg-label">Hybrid Retrieval and Graph</text>
-<text x="272" y="353" class="svg-label">Expansion</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">CURRENT</text>
-<text x="512" y="337" class="svg-label">Fusion / Rerank</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">CURRENT</text>
-<text x="752" y="337" class="svg-label">Claim-level Citation</text>
-<rect x="20" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="422" class="svg-status">CURRENT</text>
-<text x="32" y="445" class="svg-label">Grounded Answer / Artifact</text>
-<path d="M 245 443.0 L 255 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="422" class="svg-status">CURRENT</text>
-<text x="272" y="445" class="svg-label">Trace / Cost / Eval</text>
-<path d="M 485 443.0 L 495 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="422" class="svg-status">CURRENT</text>
-<text x="512" y="445" class="svg-label">Feedback</text>
-<path d="M 725 443.0 L 735 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="422" class="svg-status">CURRENT</text>
-<text x="752" y="445" class="svg-label">Restart Recovery</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 324.0 C 721.0 324.0, 721.0 324.0, 732 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 360 C 838.0 377.0, 136.0 377.0, 136.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 430.0 C 253.0 430.0, 253.0 430.0, 264 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 430.0 C 487.0 430.0, 487.0 430.0, 498 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 430.0 C 721.0 430.0, 721.0 430.0, 732 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Configure Model</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">Create Workspace</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">Upload Document</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">Parse Gateway</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">Document IR and Citation</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">Chunks</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">BM25 / Vector / Graph</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">Index</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">AgentChat Ask</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">ContextPack</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">Strategy and</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">RetrievalPlan</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">Hybrid Retrieval and</text>
+<text x="370.0" y="331" class="svg-label" text-anchor="middle">Graph Expansion</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">Fusion / Rerank</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">Claim-level Citation</text>
+<rect class="svg-node" x="38" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="422" class="svg-label" text-anchor="middle">Grounded Answer /</text>
+<text x="136.0" y="437" class="svg-label" text-anchor="middle">Artifact</text>
+<rect class="svg-node" x="272" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="422" class="svg-label" text-anchor="middle">Trace / Cost / Eval</text>
+<rect class="svg-node" x="506" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="422" class="svg-label" text-anchor="middle">Feedback</text>
+<rect class="svg-node" x="740" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="422" class="svg-label" text-anchor="middle">Restart Recovery</text>
 </svg>
               </div>
             </div>
@@ -1212,50 +1200,49 @@ flowchart LR
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Module View (Views &amp; Beyond) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Module View (Views &amp; Beyond) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Module View (Views &amp; Beyond)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Web / Desktop UI / chat,</text>
-<text x="32" y="137" class="svg-label">files, citations, trace</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">PARTIAL</text>
-<text x="272" y="121" class="svg-label">FastAPI DTO / completion,</text>
-<text x="272" y="137" class="svg-label">workspace, knowledge, tool</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">SSE / Task Events</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">Workspace + Knowledge</text>
-<text x="752" y="137" class="svg-label">Space</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">BLOCKED</text>
-<text x="32" y="229" class="svg-label">File Lifecycle / uploaded,</text>
-<text x="32" y="245" class="svg-label">parsing, indexed, blocked</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">PARTIAL</text>
-<text x="272" y="229" class="svg-label">AgentChat Request</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">Answer / Artifact /</text>
-<text x="512" y="245" class="svg-label">Citation UI</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">Trace Summary / Feedback</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">Backend Durable State /</text>
-<text x="32" y="353" class="svg-label">not frontend state</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 604.0 112.0, 604.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 112.0, 136.0 112.0, 136.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 218.0, 136.0 218.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 136.0 254 C 136.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 254 C 604.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Web / Desktop UI / chat,</text>
+<text x="136.0" y="119" class="svg-label" text-anchor="middle">files, citations, trace</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">FastAPI DTO /</text>
+<text x="370.0" y="119" class="svg-label" text-anchor="middle">completion, workspace,</text>
+<text x="370.0" y="134" class="svg-label" text-anchor="middle">knowledge, tool</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">SSE / Task Events</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">Workspace + Knowledge</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">Space</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">File Lifecycle /</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">uploaded, parsing,</text>
+<text x="136.0" y="240" class="svg-label" text-anchor="middle">indexed, blocked</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">AgentChat Request</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">Answer / Artifact /</text>
+<text x="604.0" y="225" class="svg-label" text-anchor="middle">Citation UI</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">Trace Summary / Feedback</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">Backend Durable State /</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">not frontend state</text>
 </svg>
               </div>
             </div>
@@ -1314,72 +1301,64 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 520" role="img" aria-label="Module View (Views &amp; Beyond) / Physical Runtime Domain Mapping">
+<svg class="offline-svg" viewBox="0 0 974 606" role="img" aria-label="Module View (Views &amp; Beyond) / Physical Runtime Domain Mapping">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Physical Runtime Domain Mapping</text>
 <text x="24" y="54" class="svg-subtitle">Module View (Views &amp; Beyond)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Product &amp; API</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">Input &amp; Knowledge</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">PARTIAL</text>
-<text x="512" y="121" class="svg-label">Agent Core Runtime Domain</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">PARTIAL</text>
-<text x="752" y="121" class="svg-label">Capability &amp; Tool</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">Governance &amp; Observability</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">CURRENT</text>
-<text x="272" y="229" class="svg-label">Local Infrastructure</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">Product Surface</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">Input</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">Knowledge</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">Model Gateway</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">PARTIAL</text>
-<text x="512" y="337" class="svg-label">Memory</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">PARTIAL</text>
-<text x="752" y="337" class="svg-label">Agent Core / Planning &amp;</text>
-<text x="752" y="353" class="svg-label">Control</text>
-<rect x="20" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="422" class="svg-status">CURRENT</text>
-<text x="32" y="445" class="svg-label">Capability</text>
-<path d="M 245 443.0 L 255 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="400" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="422" class="svg-status">PARTIAL</text>
-<text x="272" y="445" class="svg-label">Tool Runtime</text>
-<path d="M 485 443.0 L 495 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="422" class="svg-status">CURRENT</text>
-<text x="512" y="445" class="svg-label">Security</text>
-<path d="M 725 443.0 L 735 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="422" class="svg-status">CURRENT</text>
-<text x="752" y="445" class="svg-label">Observability &amp; Eval</text>
+<path class="svg-edge" d="M 604.0 254 C 604.0 165.0, 136.0 165.0, 136.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 165.0, 370.0 165.0, 370.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 360 C 604.0 218.0, 604.0 218.0, 604.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 360 C 838.0 218.0, 604.0 218.0, 604.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 430.0 C 487.0 430.0, 487.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 430.0 C 604.0 430.0, 604.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 466 C 604.0 324.0, 136.0 324.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 466 C 838.0 324.0, 136.0 324.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 536.0 C 253.0 536.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Product &amp; API</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">Input &amp; Knowledge</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">Agent Core Runtime</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">Domain</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">Capability &amp; Tool</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">Governance &amp;</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">Observability</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">Local Infrastructure</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">Product Surface</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">Input</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">Knowledge</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">Model Gateway</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">Memory</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">Agent Core / Planning &amp;</text>
+<text x="838.0" y="331" class="svg-label" text-anchor="middle">Control</text>
+<rect class="svg-node" x="38" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="422" class="svg-label" text-anchor="middle">Capability</text>
+<rect class="svg-node" x="272" y="394" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="422" class="svg-label" text-anchor="middle">Tool Runtime</text>
+<rect class="svg-node" x="506" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="422" class="svg-label" text-anchor="middle">Security</text>
+<rect class="svg-node" x="740" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="422" class="svg-label" text-anchor="middle">Observability &amp; Eval</text>
+<rect class="svg-node" x="38" y="500" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="528" class="svg-label" text-anchor="middle">Infrastructure</text>
 </svg>
               </div>
             </div>
@@ -1467,58 +1446,52 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Component-and-Connector View (Views &amp; Beyond) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Component-and-Connector View (Views &amp; Beyond) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Component-and-Connector View (Views &amp; Beyond)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Question + ContextPack</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">Query Set</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">BM25 Candidates</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">Vector Candidates</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">PARTIAL</text>
-<text x="32" y="229" class="svg-label">Graph Expansion / entity,</text>
-<text x="32" y="245" class="svg-label">relation, community</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">CURRENT</text>
-<text x="272" y="229" class="svg-label">Fusion / Rerank</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">EvidenceBundle / source</text>
-<text x="512" y="245" class="svg-label">span required</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">Claim Extraction</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">Citation Binding</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">Grounded Answer</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">CURRENT</text>
-<text x="512" y="337" class="svg-label">Failure Buckets</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">BLOCKED</text>
-<text x="752" y="337" class="svg-label">Release Gate</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 604.0 112.0, 604.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 604.0 324.0, 604.0 324.0, 732 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 254 C 604.0 271.0, 604.0 271.0, 604.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 370.0 324.0, 370.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Question + ContextPack</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">Query Set</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">BM25 Candidates</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">Vector Candidates</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">Graph Expansion /</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">entity, relation,</text>
+<text x="136.0" y="240" class="svg-label" text-anchor="middle">community</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">Fusion / Rerank</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">EvidenceBundle / source</text>
+<text x="604.0" y="225" class="svg-label" text-anchor="middle">span required</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">Claim Extraction</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">Citation Binding</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">Grounded Answer</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">Failure Buckets</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">Release Gate</text>
 </svg>
               </div>
             </div>
@@ -1575,70 +1548,65 @@ flowchart LR
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 520" role="img" aria-label="Component-and-Connector View (Views &amp; Beyond) / Tool Control Connector">
+<svg class="offline-svg" viewBox="0 0 974 500" role="img" aria-label="Component-and-Connector View (Views &amp; Beyond) / Tool Control Connector">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Tool Control Connector</text>
 <text x="24" y="54" class="svg-subtitle">Component-and-Connector View (Views &amp; Beyond)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">CapabilityPlan</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">SkillMetadata / startup</text>
-<text x="272" y="137" class="svg-label">catalog only</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">SkillInstruction / loaded</text>
-<text x="512" y="137" class="svg-label">on demand</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">SkillResourceRef / script,</text>
-<text x="752" y="137" class="svg-label">template, reference</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">Function Call Intent /</text>
-<text x="32" y="245" class="svg-label">structured args</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">CURRENT</text>
-<text x="272" y="229" class="svg-label">CapabilityCard / catalog,</text>
-<text x="272" y="245" class="svg-label">policy, routing</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">CapabilityRouter</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">Capability Policy /</text>
-<text x="752" y="245" class="svg-label">Approval</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">CredentialRef / no raw</text>
-<text x="32" y="353" class="svg-label">secret</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">PARTIAL</text>
-<text x="272" y="337" class="svg-label">ToolCard / MCP Tool</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">CURRENT</text>
-<text x="512" y="337" class="svg-label">ExecutionAdapter</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">CURRENT</text>
-<text x="752" y="337" class="svg-label">ResultNormalizer</text>
-<rect x="20" y="400" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="422" class="svg-status">PARTIAL</text>
-<text x="32" y="445" class="svg-label">ToolTrace</text>
-<path d="M 245 443.0 L 255 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="400" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="422" class="svg-status">PARTIAL</text>
-<text x="272" y="445" class="svg-label">Agent Observation</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 136.0 148 C 136.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 370.0 218.0, 370.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 604.0 165.0, 604.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 324.0 C 721.0 324.0, 721.0 324.0, 732 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 360 C 838.0 377.0, 370.0 377.0, 370.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 360 C 604.0 377.0, 136.0 377.0, 136.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 324.0, 136.0 324.0, 136.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 360 C 838.0 377.0, 136.0 377.0, 136.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 271.0, 136.0 271.0, 136.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 271.0, 136.0 271.0, 136.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">CapabilityPlan</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">SkillMetadata / startup</text>
+<text x="370.0" y="119" class="svg-label" text-anchor="middle">catalog only</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">SkillInstruction /</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">loaded on demand</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">SkillResourceRef /</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">script, template,</text>
+<text x="838.0" y="134" class="svg-label" text-anchor="middle">reference</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">Function Call Intent /</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">structured args</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">CapabilityCard /</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">catalog, policy, routing</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">CapabilityRouter</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">Capability Policy /</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">Approval</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">CredentialRef / no raw</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">secret</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">ToolCard / MCP Tool</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">ExecutionAdapter</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">ResultNormalizer</text>
+<rect class="svg-node" x="38" y="394" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="422" class="svg-label" text-anchor="middle">ToolTrace</text>
+<rect class="svg-node" x="272" y="394" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="422" class="svg-label" text-anchor="middle">Agent Observation</text>
 </svg>
               </div>
             </div>
@@ -1716,55 +1684,49 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Data View (Views &amp; Beyond) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Data View (Views &amp; Beyond) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Data View (Views &amp; Beyond)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">SourceObject / checksum +</text>
-<text x="32" y="137" class="svg-label">object URI</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">WorkspaceFile / status</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">ParseJob / ParseSnapshot</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">CanonicalDocumentIR</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">DocumentBlock + SourceSpan</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">CURRENT</text>
-<text x="272" y="229" class="svg-label">CitationChunk +</text>
-<text x="272" y="245" class="svg-label">ParentChunk</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">IndexManifest</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">PARTIAL</text>
-<text x="752" y="229" class="svg-label">BM25 / Vector / Graph</text>
-<text x="752" y="245" class="svg-label">Index</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">CitationLineage</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">EvidenceBundle</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">BLOCKED</text>
-<text x="512" y="337" class="svg-label">Blocked / no fake index</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 370.0 271.0, 370.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 254 C 370.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 218.0, 604.0 218.0, 604.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 370.0 218.0, 370.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">SourceObject / checksum</text>
+<text x="136.0" y="119" class="svg-label" text-anchor="middle">+ object URI</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">WorkspaceFile / status</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">ParseJob / ParseSnapshot</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">CanonicalDocumentIR</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">DocumentBlock +</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">SourceSpan</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">CitationChunk +</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">ParentChunk</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">IndexManifest</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">BM25 / Vector / Graph</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">Index</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">CitationLineage</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">EvidenceBundle</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">Blocked / no fake index</text>
 </svg>
               </div>
             </div>
@@ -1818,54 +1780,47 @@ flowchart LR
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Data View (Views &amp; Beyond) / Dynamic Knowledge Update">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Data View (Views &amp; Beyond) / Dynamic Knowledge Update">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Dynamic Knowledge Update</text>
 <text x="24" y="54" class="svg-subtitle">Data View (Views &amp; Beyond)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Source changed / checksum</text>
-<text x="32" y="137" class="svg-label">/ version</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">New DocumentVersion</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">Re-parse document</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">Rebuild all chunks /</text>
-<text x="752" y="137" class="svg-label">CitationChunk +</text>
-<text x="752" y="153" class="svg-label">ParentChunk</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">Candidate IndexManifest</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">CURRENT</text>
-<text x="272" y="229" class="svg-label">Validate / span, ACL,</text>
-<text x="272" y="245" class="svg-label">index health</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">Atomic activate</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">Retire old manifest</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">PARTIAL</text>
-<text x="32" y="337" class="svg-label">Invalidate old graph</text>
-<text x="32" y="353" class="svg-label">evidence / and citation</text>
-<text x="32" y="369" class="svg-label">lineage</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">Update trace / diagnostics</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 253.0 218.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Source changed /</text>
+<text x="136.0" y="119" class="svg-label" text-anchor="middle">checksum / version</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">New DocumentVersion</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">Re-parse document</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">Rebuild all chunks /</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">CitationChunk +</text>
+<text x="838.0" y="134" class="svg-label" text-anchor="middle">ParentChunk</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">Candidate IndexManifest</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">Validate / span, ACL,</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">index health</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">Atomic activate</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">Retire old manifest</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">Invalidate old graph</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">evidence / and citation</text>
+<text x="136.0" y="346" class="svg-label" text-anchor="middle">lineage</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">Update trace /</text>
+<text x="370.0" y="331" class="svg-label" text-anchor="middle">diagnostics</text>
 </svg>
               </div>
             </div>
@@ -1929,58 +1884,54 @@ flowchart LR
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Quality View (Views &amp; Beyond) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Quality View (Views &amp; Beyond) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Quality View (Views &amp; Beyond)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Input Gate / ACL /</text>
-<text x="32" y="137" class="svg-label">Redaction</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">PARTIAL</text>
-<text x="272" y="121" class="svg-label">agent_run</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">context_build</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">PARTIAL</text>
-<text x="752" y="121" class="svg-label">retrieval / graph_expand /</text>
-<text x="752" y="137" class="svg-label">rerank</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">model_call / usage + cost</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">PARTIAL</text>
-<text x="272" y="229" class="svg-label">tool_call</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">claim_binding</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">output_gate</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">ZunoSpan Tree</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">EvalRun</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">CURRENT</text>
-<text x="512" y="337" class="svg-label">Failure Buckets</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">BLOCKED</text>
-<text x="752" y="337" class="svg-label">Release Gate</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 604.0 165.0, 604.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 218.0, 136.0 218.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 218.0, 136.0 218.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 136.0 254 C 136.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 254 C 370.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 254 C 604.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 324.0 C 721.0 324.0, 721.0 324.0, 732 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Input Gate / ACL /</text>
+<text x="136.0" y="119" class="svg-label" text-anchor="middle">Redaction</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">agent_run</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">context_build</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">retrieval / graph_expand</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">/ rerank</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">model_call / usage +</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">cost</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">tool_call</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">claim_binding</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">output_gate</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">ZunoSpan Tree</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">EvalRun</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">Failure Buckets</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">Release Gate</text>
 </svg>
               </div>
             </div>
@@ -2040,68 +1991,59 @@ flowchart TB
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 412" role="img" aria-label="Quality View (Views &amp; Beyond) / Layered Metrics and Feedback Loop">
+<svg class="offline-svg" viewBox="0 0 974 394" role="img" aria-label="Quality View (Views &amp; Beyond) / Layered Metrics and Feedback Loop">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Layered Metrics and Feedback Loop</text>
 <text x="24" y="54" class="svg-subtitle">Quality View (Views &amp; Beyond)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Retrieval Metrics /</text>
-<text x="32" y="137" class="svg-label">Recall@K, MRR, Evidence</text>
-<text x="32" y="153" class="svg-label">Precision/Recall</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">Generation Metrics /</text>
-<text x="272" y="137" class="svg-label">Faithfulness, Citation</text>
-<text x="272" y="153" class="svg-label">Accuracy, Answer</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">TARGET</text>
-<text x="512" y="121" class="svg-label">Agent Metrics / replan</text>
-<text x="512" y="137" class="svg-label">success, reflection pass,</text>
-<text x="512" y="153" class="svg-label">tool success</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">TARGET</text>
-<text x="752" y="121" class="svg-label">Memory Metrics /</text>
-<text x="752" y="137" class="svg-label">relevance, stale/conflict,</text>
-<text x="752" y="153" class="svg-label">Reflexion reuse</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">Product Metrics / thumbs</text>
-<text x="32" y="245" class="svg-label">down, follow-up,</text>
-<text x="32" y="261" class="svg-label">resolution, latency, cost</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">CURRENT</text>
-<text x="272" y="229" class="svg-label">offline eval</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">BLOCKED</text>
-<text x="512" y="229" class="svg-label">release gate</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">product feedback</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">CURRENT</text>
-<text x="32" y="337" class="svg-label">failure case</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">fixed dataset update</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">CURRENT</text>
-<text x="512" y="337" class="svg-label">regression eval</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">BLOCKED</text>
-<text x="752" y="337" class="svg-label">Blocked / measurement</text>
-<text x="752" y="353" class="svg-label">blocked when profile</text>
-<text x="752" y="369" class="svg-label">incomplete</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 218.0, 264 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 370.0 148 C 370.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 487.0 218.0, 487.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 254 C 604.0 271.0, 604.0 271.0, 604.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 360 C 604.0 271.0, 370.0 271.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 324.0, 732 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Retrieval Metrics /</text>
+<text x="136.0" y="119" class="svg-label" text-anchor="middle">Recall@K, MRR, Evidence</text>
+<text x="136.0" y="134" class="svg-label" text-anchor="middle">Precision/Recall</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">Generation Metrics /</text>
+<text x="370.0" y="119" class="svg-label" text-anchor="middle">Faithfulness, Citation</text>
+<text x="370.0" y="134" class="svg-label" text-anchor="middle">Accuracy, Answer</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">Agent Metrics / replan</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">success, reflection</text>
+<text x="604.0" y="134" class="svg-label" text-anchor="middle">pass, tool success</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">Memory Metrics /</text>
+<text x="838.0" y="119" class="svg-label" text-anchor="middle">relevance,</text>
+<text x="838.0" y="134" class="svg-label" text-anchor="middle">stale/conflict,</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">Product Metrics / thumbs</text>
+<text x="136.0" y="225" class="svg-label" text-anchor="middle">down, follow-up,</text>
+<text x="136.0" y="240" class="svg-label" text-anchor="middle">resolution, latency,</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">offline eval</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">release gate</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">product feedback</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">failure case</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">fixed dataset update</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">regression eval</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">Blocked / measurement</text>
+<text x="838.0" y="331" class="svg-label" text-anchor="middle">blocked when profile</text>
+<text x="838.0" y="346" class="svg-label" text-anchor="middle">incomplete</text>
 </svg>
               </div>
             </div>
@@ -2183,86 +2125,80 @@ flowchart LR
             </div>
             <div class="diagram-frame">
               <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 980 520" role="img" aria-label="Agentic GraphRAG Evidence and Agent Loop (Zuno) / Overview">
+<svg class="offline-svg" viewBox="0 0 974 500" role="img" aria-label="Agentic GraphRAG Evidence and Agent Loop (Zuno) / Overview">
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
 <rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
 <text x="24" y="32" class="svg-title">Overview</text>
 <text x="24" y="54" class="svg-subtitle">Agentic GraphRAG Evidence and Agent Loop (Zuno)</text>
-<rect x="20" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="98" class="svg-status">CURRENT</text>
-<text x="32" y="121" class="svg-label">Question + ContextPack</text>
-<path d="M 245 119.0 L 255 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="98" class="svg-status">CURRENT</text>
-<text x="272" y="121" class="svg-label">NeedRetrievalDecision</text>
-<path d="M 485 119.0 L 495 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="98" class="svg-status">CURRENT</text>
-<text x="512" y="121" class="svg-label">QueryStrategy / DIRECT,</text>
-<text x="512" y="137" class="svg-label">REWRITE, MULTI_QUERY,</text>
-<text x="512" y="153" class="svg-label">STEP_BACK, HYDE, ENTITY,</text>
-<path d="M 725 119.0 L 735 119.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="76" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="98" class="svg-status">CURRENT</text>
-<text x="752" y="121" class="svg-label">BM25</text>
-<rect x="20" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="206" class="svg-status">CURRENT</text>
-<text x="32" y="229" class="svg-label">Vector</text>
-<path d="M 245 227.0 L 255 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="184" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="272" y="206" class="svg-status">PARTIAL</text>
-<text x="272" y="229" class="svg-label">GraphRoutingDecision /</text>
-<text x="272" y="245" class="svg-label">local path / global</text>
-<text x="272" y="261" class="svg-label">community</text>
-<path d="M 485 227.0 L 495 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="512" y="206" class="svg-status">CURRENT</text>
-<text x="512" y="229" class="svg-label">RRF / Fusion</text>
-<path d="M 725 227.0 L 735 227.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="184" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="206" class="svg-status">CURRENT</text>
-<text x="752" y="229" class="svg-label">Rerank + Parent Expansion</text>
-<rect x="20" y="292" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="32" y="314" class="svg-status">TARGET</text>
-<text x="32" y="337" class="svg-label">EvidenceLedger / round,</text>
-<text x="32" y="353" class="svg-label">query, retriever, score,</text>
-<text x="32" y="369" class="svg-label">source span</text>
-<path d="M 245 335.0 L 255 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="314" class="svg-status">CURRENT</text>
-<text x="272" y="337" class="svg-label">RetrievalQualityGate /</text>
-<text x="272" y="353" class="svg-label">RELEVANT, AMBIGUOUS,</text>
-<text x="272" y="369" class="svg-label">IRRELEVANT, CONFLICTING,</text>
-<path d="M 485 335.0 L 495 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="292" width="220" height="86" rx="10" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.4"/>
-<text x="512" y="314" class="svg-status">TARGET</text>
-<text x="512" y="337" class="svg-label">CorrectiveAction /</text>
-<text x="512" y="353" class="svg-label">rewrite, multi-query,</text>
-<text x="512" y="369" class="svg-label">graph expand, focused</text>
-<path d="M 725 335.0 L 735 335.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="292" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="752" y="314" class="svg-status">CURRENT</text>
-<text x="752" y="337" class="svg-label">Claim Extraction</text>
-<rect x="20" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="32" y="422" class="svg-status">CURRENT</text>
-<text x="32" y="445" class="svg-label">Claim-level Citation</text>
-<text x="32" y="461" class="svg-label">Binding</text>
-<path d="M 245 443.0 L 255 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="260" y="400" width="220" height="86" rx="10" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.4"/>
-<text x="272" y="422" class="svg-status">CURRENT</text>
-<text x="272" y="445" class="svg-label">Answer Verification /</text>
-<text x="272" y="461" class="svg-label">unsupported claim +</text>
-<text x="272" y="477" class="svg-label">faithfulness</text>
-<path d="M 485 443.0 L 495 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="500" y="400" width="220" height="86" rx="10" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.4"/>
-<text x="512" y="422" class="svg-status">PARTIAL</text>
-<text x="512" y="445" class="svg-label">Grounded Answer / Partial</text>
-<text x="512" y="461" class="svg-label">/ Abstain</text>
-<path d="M 725 443.0 L 735 443.0" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="740" y="400" width="220" height="86" rx="10" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.4"/>
-<text x="752" y="422" class="svg-status">BLOCKED</text>
-<text x="752" y="445" class="svg-label">Failure Buckets and</text>
-<text x="752" y="461" class="svg-label">Release Gate</text>
+<path class="svg-edge" d="M 234 112.0 C 253.0 112.0, 253.0 112.0, 264 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 487.0 112.0, 487.0 112.0, 498 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 112.0 C 604.0 112.0, 604.0 324.0, 732 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 112.0 C 721.0 112.0, 721.0 112.0, 732 112.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 148 C 838.0 165.0, 604.0 165.0, 604.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 136.0 165.0, 136.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 218.0 C 370.0 218.0, 370.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 148 C 604.0 165.0, 370.0 165.0, 370.0 174" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 218.0 C 487.0 218.0, 487.0 218.0, 498 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 218.0 C 721.0 218.0, 721.0 218.0, 732 218.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 254 C 838.0 271.0, 136.0 271.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 324.0 C 253.0 324.0, 253.0 324.0, 264 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 604.0 324.0, 604.0 324.0, 732 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 838.0 360 C 838.0 377.0, 136.0 377.0, 136.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 234 430.0 C 253.0 430.0, 253.0 430.0, 264 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 430.0 C 487.0 430.0, 487.0 430.0, 498 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 702 430.0 C 721.0 430.0, 721.0 430.0, 732 430.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 468 324.0 C 487.0 324.0, 487.0 324.0, 498 324.0" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 360 C 604.0 218.0, 604.0 218.0, 604.0 68" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 360 C 604.0 324.0, 136.0 324.0, 136.0 280" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<path class="svg-edge" d="M 604.0 360 C 604.0 377.0, 604.0 377.0, 604.0 386" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>
+<rect class="svg-node" x="38" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="104" class="svg-label" text-anchor="middle">Question + ContextPack</text>
+<rect class="svg-node" x="272" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="104" class="svg-label" text-anchor="middle">NeedRetrievalDecision</text>
+<rect class="svg-node" x="506" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="104" class="svg-label" text-anchor="middle">QueryStrategy / DIRECT,</text>
+<text x="604.0" y="119" class="svg-label" text-anchor="middle">REWRITE, MULTI_QUERY,</text>
+<text x="604.0" y="134" class="svg-label" text-anchor="middle">STEP_BACK, HYDE, ENTITY,</text>
+<rect class="svg-node" x="740" y="76" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="104" class="svg-label" text-anchor="middle">BM25</text>
+<rect class="svg-node" x="38" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="210" class="svg-label" text-anchor="middle">Vector</text>
+<rect class="svg-node" x="272" y="182" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="370.0" y="210" class="svg-label" text-anchor="middle">GraphRoutingDecision /</text>
+<text x="370.0" y="225" class="svg-label" text-anchor="middle">local path / global</text>
+<text x="370.0" y="240" class="svg-label" text-anchor="middle">community</text>
+<rect class="svg-node" x="506" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="604.0" y="210" class="svg-label" text-anchor="middle">RRF / Fusion</text>
+<rect class="svg-node" x="740" y="182" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="210" class="svg-label" text-anchor="middle">Rerank + Parent</text>
+<text x="838.0" y="225" class="svg-label" text-anchor="middle">Expansion</text>
+<rect class="svg-node" x="38" y="288" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="136.0" y="316" class="svg-label" text-anchor="middle">EvidenceLedger / round,</text>
+<text x="136.0" y="331" class="svg-label" text-anchor="middle">query, retriever, score,</text>
+<text x="136.0" y="346" class="svg-label" text-anchor="middle">source span</text>
+<rect class="svg-node" x="272" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="316" class="svg-label" text-anchor="middle">RetrievalQualityGate /</text>
+<text x="370.0" y="331" class="svg-label" text-anchor="middle">RELEVANT, AMBIGUOUS,</text>
+<text x="370.0" y="346" class="svg-label" text-anchor="middle">IRRELEVANT, CONFLICTING,</text>
+<rect class="svg-node" x="506" y="288" width="196" height="72" rx="9" fill="#e3f0ff" stroke="#4f82bd" stroke-width="1.25"/>
+<text x="604.0" y="316" class="svg-label" text-anchor="middle">CorrectiveAction /</text>
+<text x="604.0" y="331" class="svg-label" text-anchor="middle">rewrite, multi-query,</text>
+<text x="604.0" y="346" class="svg-label" text-anchor="middle">graph expand, focused</text>
+<rect class="svg-node" x="740" y="288" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="838.0" y="316" class="svg-label" text-anchor="middle">Claim Extraction</text>
+<rect class="svg-node" x="38" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="136.0" y="422" class="svg-label" text-anchor="middle">Claim-level Citation</text>
+<text x="136.0" y="437" class="svg-label" text-anchor="middle">Binding</text>
+<rect class="svg-node" x="272" y="394" width="196" height="72" rx="9" fill="#dff5e7" stroke="#4f9d69" stroke-width="1.25"/>
+<text x="370.0" y="422" class="svg-label" text-anchor="middle">Answer Verification /</text>
+<text x="370.0" y="437" class="svg-label" text-anchor="middle">unsupported claim +</text>
+<text x="370.0" y="452" class="svg-label" text-anchor="middle">faithfulness</text>
+<rect class="svg-node" x="506" y="394" width="196" height="72" rx="9" fill="#fff3cf" stroke="#bf8b21" stroke-width="1.25"/>
+<text x="604.0" y="422" class="svg-label" text-anchor="middle">Grounded Answer /</text>
+<text x="604.0" y="437" class="svg-label" text-anchor="middle">Partial / Abstain</text>
+<rect class="svg-node" x="740" y="394" width="196" height="72" rx="9" fill="#fff0f0" stroke="#c84b4b" stroke-width="1.25"/>
+<text x="838.0" y="422" class="svg-label" text-anchor="middle">Failure Buckets and</text>
+<text x="838.0" y="437" class="svg-label" text-anchor="middle">Release Gate</text>
 </svg>
               </div>
             </div>

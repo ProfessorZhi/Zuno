@@ -221,6 +221,76 @@ def _extract_mermaid_labels(mermaid: str) -> list[str]:
     return labels[:16]
 
 
+def _extract_mermaid_graph(mermaid: str) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    node_labels: dict[str, str] = {}
+    node_order: list[str] = []
+    edges: list[tuple[str, str]] = []
+
+    node_def_pattern = re.compile(
+        r'\b(?P<id>[A-Za-z]\w*)\s*'
+        r'(?:'
+        r'\[\s*"(?P<bracket>[^"]+)"\s*\]'
+        r'|\{\s*"(?P<brace>[^"]+)"\s*\}'
+        r'|\(\s*"(?P<paren>[^"]+)"\s*\)'
+        r'|\(\[\s*"(?P<stadium>[^"]+)"\s*\]\)'
+        r'|>\s*"(?P<flag>[^"]+)"'
+        r')'
+    )
+
+    def add_node(node_id: str, label: str | None = None) -> None:
+        if node_id in {"flowchart", "classDef", "class", "subgraph", "end"}:
+            return
+        if node_id not in node_order:
+            node_order.append(node_id)
+        if label:
+            node_labels[node_id] = _clean_mermaid_label(label)
+        elif node_id not in node_labels:
+            node_labels[node_id] = node_id
+
+    for match in node_def_pattern.finditer(mermaid):
+        label = next(
+            value
+            for value in [
+                match.group("bracket"),
+                match.group("brace"),
+                match.group("paren"),
+                match.group("stadium"),
+                match.group("flag"),
+            ]
+            if value is not None
+        )
+        add_node(match.group("id"), label)
+
+    for raw_line in mermaid.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("%") or line.startswith("class ") or line.startswith("classDef"):
+            continue
+        if "-->" not in line and ".->" not in line:
+            continue
+        normalized = re.sub(r"\|[^|]*\|", " ", line)
+        normalized = re.sub(r"-\.[^.\n]*\.->", " --> ", normalized)
+        normalized = re.sub(r"--[^-\n>]*-->", " --> ", normalized)
+        normalized = normalized.replace("-->", " --> ")
+        ids = [
+            match.group("id")
+            for match in re.finditer(r"\b(?P<id>[A-Za-z]\w*)\b(?:\s*(?:\[[^\]]*\]|\{[^}]*\}|\([^)]*\)|>\s*\"[^\"]+\"))?", normalized)
+            if match.group("id") not in {"class", "classDef"}
+        ]
+        if len(ids) < 2:
+            continue
+        for node_id in ids:
+            add_node(node_id)
+        for source, target in zip(ids, ids[1:]):
+            edge = (source, target)
+            if edge not in edges:
+                edges.append(edge)
+
+    nodes = [(node_id, node_labels.get(node_id, node_id)) for node_id in node_order[:18]]
+    node_ids = {node_id for node_id, _label in nodes}
+    filtered_edges = [(source, target) for source, target in edges if source in node_ids and target in node_ids][:28]
+    return nodes, filtered_edges
+
+
 def _wrap_svg_text(text: str, width: int = 26) -> list[str]:
     words = text.split()
     if not words:
@@ -254,17 +324,19 @@ def _status_class_for_label(label: str) -> str:
 
 
 def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
-    labels = _extract_mermaid_labels(mermaid)
-    if not labels:
-        labels = [sub_title, "See Mermaid source"]
-    columns = 4
-    card_width = 220
-    card_height = 86
-    gap_x = 20
-    gap_y = 22
-    rows = (len(labels) + columns - 1) // columns
-    width = columns * card_width + (columns + 1) * gap_x
-    height = 76 + rows * card_height + max(rows - 1, 0) * gap_y + 34
+    nodes, edges = _extract_mermaid_graph(mermaid)
+    if not nodes:
+        nodes = [(f"node_{index}", label) for index, label in enumerate(_extract_mermaid_labels(mermaid), start=1)]
+    if not nodes:
+        nodes = [("overview", sub_title), ("source", "See Mermaid source")]
+    columns = 4 if len(nodes) > 6 else max(2, min(3, len(nodes)))
+    node_width = 196
+    node_height = 72
+    gap_x = 38
+    gap_y = 34
+    rows = (len(nodes) + columns - 1) // columns
+    width = columns * node_width + (columns + 1) * gap_x
+    height = 76 + rows * node_height + max(rows - 1, 0) * gap_y + 34
     svg_parts = [
         f'<svg class="offline-svg" viewBox="0 0 {width} {height}" role="img" aria-label="{html.escape(title)} / {html.escape(sub_title)}">',
         '<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>',
@@ -278,28 +350,48 @@ def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
         "blocked": ("#fff0f0", "#c84b4b"),
         "future": ("#f1eaff", "#8266b2"),
     }
-    for index, label in enumerate(labels):
+    positions: dict[str, tuple[float, float]] = {}
+    for index, (node_id, _label) in enumerate(nodes):
         row = index // columns
         column = index % columns
-        x = gap_x + column * (card_width + gap_x)
-        y = 76 + row * (card_height + gap_y)
+        x = gap_x + column * (node_width + gap_x)
+        y = 76 + row * (node_height + gap_y)
+        positions[node_id] = (x, y)
+
+    edge_parts: list[str] = []
+    for source, target in edges:
+        if source not in positions or target not in positions:
+            continue
+        sx, sy = positions[source]
+        tx, ty = positions[target]
+        start_x = sx + node_width
+        start_y = sy + node_height / 2
+        end_x = tx
+        end_y = ty + node_height / 2
+        if tx > sx:
+            mid_x = (start_x + end_x) / 2
+            path = f"M {start_x} {start_y} C {mid_x} {start_y}, {mid_x} {end_y}, {end_x - 8} {end_y}"
+        else:
+            mid_y = (start_y + end_y) / 2
+            path = (
+                f"M {sx + node_width / 2} {sy + node_height} "
+                f"C {sx + node_width / 2} {mid_y}, {tx + node_width / 2} {mid_y}, {tx + node_width / 2} {ty - 8}"
+            )
+        edge_parts.append(
+            f'<path class="svg-edge" d="{path}" stroke="#52616f" stroke-width="1.15" fill="none" marker-end="url(#arrow)"/>'
+        )
+    svg_parts.extend(edge_parts)
+
+    for node_id, label in nodes:
+        x, y = positions[node_id]
         status = _status_class_for_label(label)
         fill, stroke = status_styles[status]
         svg_parts.append(
-            f'<rect x="{x}" y="{y}" width="{card_width}" height="{card_height}" rx="10" fill="{fill}" stroke="{stroke}" stroke-width="1.4"/>'
+            f'<rect class="svg-node" x="{x}" y="{y}" width="{node_width}" height="{node_height}" rx="9" fill="{fill}" stroke="{stroke}" stroke-width="1.25"/>'
         )
-        svg_parts.append(
-            f'<text x="{x + 12}" y="{y + 22}" class="svg-status">{html.escape(status.upper())}</text>'
-        )
-        for line_index, line in enumerate(_wrap_svg_text(label)):
+        for line_index, line in enumerate(_wrap_svg_text(label, width=24)):
             svg_parts.append(
-                f'<text x="{x + 12}" y="{y + 45 + line_index * 16}" class="svg-label">{html.escape(line)}</text>'
-            )
-        if index < len(labels) - 1 and column < columns - 1:
-            arrow_x = x + card_width + 5
-            arrow_y = y + card_height / 2
-            svg_parts.append(
-                f'<path d="M {arrow_x} {arrow_y} L {arrow_x + 10} {arrow_y}" stroke="#52616f" stroke-width="1.2" marker-end="url(#arrow)"/>'
+                f'<text x="{x + node_width / 2}" y="{y + 28 + line_index * 15}" class="svg-label" text-anchor="middle">{html.escape(line)}</text>'
             )
     svg_parts.insert(
         1,
@@ -593,8 +685,15 @@ def build_html() -> str:
       font-weight: 700;
     }}
     .svg-label {{
-      font-size: 13px;
+      font-size: 12.5px;
       fill: var(--ink);
+      font-weight: 600;
+    }}
+    .svg-node {{
+      filter: drop-shadow(0 1px 1px rgba(22,32,42,.08));
+    }}
+    .svg-edge {{
+      opacity: .78;
     }}
     .analysis {{
       margin-top: 14px;
