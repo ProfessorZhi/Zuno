@@ -148,6 +148,7 @@ def verify_entrypoint_text() -> list[str]:
         "PHASE02_unified-runtime-contracts-and-state",
         "PHASE03_model-gateway-closure",
         "PHASE04_durable-store-trace-and-idempotency",
+        "PHASE05_unified-langgraph-runtime-skeleton",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }:

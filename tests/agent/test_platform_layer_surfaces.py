@@ -67,6 +67,7 @@ EXPECTED_EXPORTS = {
         "RedisKeys",
         "ReleaseEvalBaseline",
         "ReleaseEvalBaselineResult",
+        "SQLiteLocalTraceStore",
         "ZunoSpan",
         "ZunoSpanBuilder",
         "ZunoSpanKind",

@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE04
-    state: planned
+    state: completed
     title: 持久化 Run Store、Trace 与幂等
     depends_on: PHASE03
     next_phase: PHASE05
@@ -14,6 +14,12 @@
     ## 当前事实
 
     SingleControllerDurableRuntime 有 checkpoint/interrupt/resume contract，但 store 是内存；Memory 已有 SQLModel-backed store。
+
+    ## 完成事实
+
+    PHASE04 已新增 `AgentRunStore` protocol、`SQLiteAgentRunStore`、runtime SQL table definitions 和 `SQLiteLocalTraceStore`。SQLite store 兼容现有 `SingleControllerDurableRuntime` store 方法，并持久化 run、checkpoint、event、interrupt、plan version、observation 和 tool idempotency claim。测试已证明新 store 实例可从同一 SQLite db 读取 pending interrupt 并 resume 到 completed，重复 tool idempotency key 不会重复 claim，corrupt JSON snapshot 会显式失败。
+
+    当前完成状态不表示 LangGraph 主图已经接入持久 store；完整 graph restart、产品 API 恢复和 UI recovery 仍归 PHASE05/PHASE11。
 
     ## 目标增量
 
@@ -88,6 +94,12 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     可将 store baseline 写 Current，但 graph restart 要等 PHASE05/11。
 
     ## Phase 完成报告
+
+    - 修改 owner：`src/backend/zuno/agent/runtime/store.py`、`src/backend/zuno/agent/runtime/sqlite_store.py`、`src/backend/zuno/platform/database/models/agent_runtime.py`、`src/backend/zuno/platform/observability/local_trace_store.py`、PHASE04 tests。
+    - 新增 contract：`AgentRunStore`、`SQLiteAgentRunStore`、`RUNTIME_STORE_SCHEMA_VERSION`、`SQLiteLocalTraceStore`。
+    - 真实调用链：`SingleControllerDurableRuntime(store=SQLiteAgentRunStore(db_path))` -> checkpoint/interrupt/event persisted -> new runtime/store instance -> `resume_task()`.
+    - trace/restart/eval 证据：SQLite restart resume test 已覆盖 pending interrupt recovery；没有 benchmark measured 证据。
+    - 下一 phase：PHASE05 可以开始 unified LangGraph runtime skeleton。
 
     Codex 必须报告：
 

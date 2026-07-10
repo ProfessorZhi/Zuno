@@ -2,14 +2,14 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE04_durable-store-trace-and-idempotency
+current_phase: PHASE05_unified-langgraph-runtime-skeleton
 
 ## 功能与质量关闭项
 
 - [x] PHASE01 已冻结 baseline、truth source、PowerShell 命令和 sample case set。
 - [x] PHASE02 已建立唯一版本化 AgentRuntimeState/Observation contract。
 - [x] PHASE03 所有 Agent 角色模型调用统一经 Model Gateway。
-- [ ] PHASE04 run/checkpoint/plan/observation/interrupt/evidence/tool execution 可 SQLite 持久化并重启恢复。
+- [x] PHASE04 run/checkpoint/plan/observation/interrupt/evidence/tool execution 可 SQLite 持久化并重启恢复。
 - [ ] PHASE05 真实 LangGraph 主图可 run/stream/resume/cancel。
 - [ ] PHASE06 Plan-and-Execute 与 ReAct step 在同一图中真实执行。
 - [ ] PHASE07 Tool Control Plane approval/timeout/idempotency/trace 闭环完成。

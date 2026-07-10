@@ -22,6 +22,7 @@ from zuno.platform.observability.product_benchmark import (
     AgenticGraphRAGRegressionSummary,
     build_agentic_graphrag_regression_summary,
 )
+from zuno.platform.observability.local_trace_store import SQLiteLocalTraceStore
 
 __all__ = [
     "EvalDatasetCase",
@@ -31,6 +32,7 @@ __all__ = [
     "RedisKeys",
     "ReleaseEvalBaseline",
     "ReleaseEvalBaselineResult",
+    "SQLiteLocalTraceStore",
     "ZunoSpan",
     "ZunoSpanBuilder",
     "ZunoSpanKind",

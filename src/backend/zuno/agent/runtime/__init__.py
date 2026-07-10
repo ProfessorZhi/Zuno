@@ -24,11 +24,14 @@ from zuno.agent.runtime.state import (
     AgentRuntimeState,
     UnsupportedRuntimeStateVersion,
 )
+from zuno.agent.runtime.store import AgentRunStore
+from zuno.agent.runtime.sqlite_store import SQLiteAgentRunStore
 
 __all__ = [
     "AGENT_RUNTIME_STATE_VERSION",
     "AgentRuntimeSnapshot",
     "AgentRuntimeState",
+    "AgentRunStore",
     "FinalizationStatus",
     "NodeOutcome",
     "NormalizedObservation",
@@ -37,6 +40,7 @@ __all__ = [
     "ReflectionDecision",
     "RuntimeCounters",
     "RuntimeLimits",
+    "SQLiteAgentRunStore",
     "StrategyDecision",
     "StrategyMode",
     "UnsupportedRuntimeStateVersion",
