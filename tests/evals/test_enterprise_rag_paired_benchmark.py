@@ -277,9 +277,101 @@ def test_enterprise_rag_paired_benchmark_records_missing_docs_without_faking_mea
     assert result["status"] == "prepared"
     metrics = _read_json(output_root / "metrics.json")
     assert metrics["measurement_status"] == "prepared_not_measured"
+    assert metrics["evidence_conversion_diagnostics"]["measurement_status"] == "prepared_not_measured"
+    assert metrics["evidence_conversion_diagnostics"]["measured_failure_bucket_count"] == 0
     assert metrics["corpus"]["missing_doc_ids"] == ["dsid_missing_doc"]
     assert metrics["case_set"]["selected_case_count"] == 3
     assert metrics["case_set"]["measured_case_count"] == 0
+
+
+def test_enterprise_rag_phase01_failure_buckets_and_missing_trace_fields() -> None:
+    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+        _build_evidence_conversion_diagnostics,
+    )
+
+    cases = [
+        {"id": "doc_miss", "question_type": "retrieval"},
+        {"id": "text_miss", "question_type": "evidence_text"},
+        {"id": "citation_miss", "question_type": "citation_binding"},
+        {"id": "answer_wrong", "question_type": "answer_synthesis"},
+        {"id": "missing_trace", "question_type": "trace"},
+    ]
+    per_samples = {
+        "agentic_graphrag": [
+            {
+                "id": "doc_miss",
+                "retrieval_recall": 0.0,
+                "evidence_text_available": 0.0,
+                "source_doc_citation_accuracy": 0.0,
+                "citation_accuracy": 0.0,
+                "answer_correctness": 0.8,
+            },
+            {
+                "id": "text_miss",
+                "retrieval_recall": 1.0,
+                "evidence_text_available": 0.0,
+                "source_doc_citation_accuracy": 1.0,
+                "citation_accuracy": 0.0,
+                "answer_correctness": 0.8,
+            },
+            {
+                "id": "citation_miss",
+                "retrieval_recall": 1.0,
+                "evidence_text_available": 1.0,
+                "source_doc_citation_accuracy": 1.0,
+                "citation_accuracy": 0.0,
+                "answer_correctness": 0.8,
+            },
+            {
+                "id": "answer_wrong",
+                "retrieval_recall": 1.0,
+                "evidence_text_available": 1.0,
+                "source_doc_citation_accuracy": 1.0,
+                "citation_accuracy": 1.0,
+                "answer_correctness": 0.2,
+            },
+            {
+                "id": "missing_trace",
+                "retrieval_recall": 1.0,
+                "evidence_text_available": 1.0,
+                "source_doc_citation_accuracy": 1.0,
+                "citation_accuracy": 1.0,
+                "answer_correctness": 1.0,
+            },
+        ]
+    }
+    retrieval_rows = {
+        "agentic_graphrag": [
+            {"id": "doc_miss", "contexts": []},
+            {"id": "text_miss", "contexts": [{"file_name": "gold.md", "content": "document only"}]},
+            {"id": "citation_miss", "contexts": [{"file_name": "gold.md", "content": "gold evidence"}]},
+            {"id": "answer_wrong", "contexts": [{"file_name": "gold.md", "content": "gold evidence"}]},
+        ]
+    }
+
+    diagnostics = _build_evidence_conversion_diagnostics(
+        cases=cases,
+        per_samples=per_samples,
+        retrieval_rows=retrieval_rows,
+    )
+
+    assert diagnostics["measurement_status"] == "fixed_benchmark"
+    assert diagnostics["failure_buckets"] == {
+        "doc_miss": 1,
+        "doc_hit_text_miss": 1,
+        "text_hit_citation_miss": 1,
+        "citation_hit_answer_wrong": 1,
+    }
+    assert diagnostics["measured_failure_bucket_count"] == 4
+    assert diagnostics["unavailable_reason"] == "unavailable_due_to_missing_trace_fields"
+    assert diagnostics["unavailable_items"] == [
+        {
+            "case_id": "missing_trace",
+            "question_type": "trace",
+            "profile": "agentic_graphrag",
+            "reason": "unavailable_due_to_missing_trace_fields",
+        }
+    ]
 
 
 def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negatives(

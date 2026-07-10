@@ -29,10 +29,30 @@ owner: Eval / Retrieval
 
 ## 验收闸门
 
-- `metrics.json` 能输出四类 failure bucket 计数。
-- `report.md` 解释 `Evidence Text Available@5` 和 strict citation 的关系。
-- `failure_cases.md` 能按 bucket 列出样本。
-- 当前质量目标仍保持 Target，不写成 Current。
+- [x] `metrics.json` 能输出四类 failure bucket 计数。
+- [x] `report.md` 解释 `Evidence Text Available@5` 和 strict citation 的关系。
+- [x] `failure_cases.md` 能按 bucket 列出样本。
+- [x] 当前质量目标仍保持 Target，不写成 Current。
+
+## 完成事实
+
+PHASE01 已完成 eval 诊断能力，不表示 evidence-span 质量目标已经达标。
+
+新增 `evidence_conversion_diagnostics` 字段：
+
+- `failure_buckets`：四类互斥 failure bucket 计数，包含 `doc_miss`、`doc_hit_text_miss`、`text_hit_citation_miss`、`citation_hit_answer_wrong`。
+- `bucket_items`：按 case/profile 记录可判定 bucket 和对应指标值。
+- `unavailable_items`：trace 或 per-sample 字段不足时记录 `unavailable_due_to_missing_trace_fields`。
+- `measured_failure_bucket_count`：只统计 fixed benchmark 中真实可判定的 failure bucket 数。
+
+报告边界：
+
+- `Evidence Text Available@5` 只证明 gold evidence text 进入 top-k context。
+- strict `Citation Accuracy` 还要求 answer citation 绑定到 gold evidence text。
+- `Source Doc Citation Accuracy` 只是 source document 级中间指标，不能冒充 strict citation。
+- `blocked_not_measured` 和 `prepared_not_measured` 的 bucket 计数保持 0，不写成 measured。
+
+本轮没有运行完整 EnterpriseRAG paired eval；当前完成证据来自 focused tests 和 guardrail verifier。
 
 ## 验证命令
 

@@ -66,6 +66,13 @@ ADVANCED_FAILURE_TAGS = [
     "no_answer_should_refuse",
     "too_expensive_for_gain",
 ]
+FAILURE_BUCKETS = [
+    "doc_miss",
+    "doc_hit_text_miss",
+    "text_hit_citation_miss",
+    "citation_hit_answer_wrong",
+]
+UNAVAILABLE_BUCKET_REASON = "unavailable_due_to_missing_trace_fields"
 
 
 def _select_rows(
@@ -432,6 +439,53 @@ def _row_float(row: dict[str, Any] | None, key: str) -> float | None:
         return None
 
 
+def _has_bucket_trace_fields(sample: dict[str, Any] | None, retrieval_row: dict[str, Any] | None) -> bool:
+    if not sample:
+        return False
+    required_metric_keys = (
+        "retrieval_recall",
+        "evidence_text_available",
+        "citation_accuracy",
+        "source_doc_citation_accuracy",
+        "answer_correctness",
+    )
+    if any(key not in sample for key in required_metric_keys):
+        return False
+    if retrieval_row is None:
+        return False
+    contexts = retrieval_row.get("contexts") if "contexts" in retrieval_row else retrieval_row.get("documents")
+    return isinstance(contexts, list)
+
+
+def _failure_bucket_for_sample(
+    *,
+    sample: dict[str, Any],
+    retrieval_row: dict[str, Any] | None,
+) -> tuple[str | None, str | None]:
+    if not _has_bucket_trace_fields(sample, retrieval_row):
+        return None, UNAVAILABLE_BUCKET_REASON
+
+    recall = _row_float(sample, "retrieval_recall")
+    evidence_text_available = _row_float(sample, "evidence_text_available")
+    citation_accuracy = _row_float(sample, "citation_accuracy")
+    source_doc_citation_accuracy = _row_float(sample, "source_doc_citation_accuracy")
+    answer_correctness = _row_float(sample, "answer_correctness")
+
+    if recall is None or evidence_text_available is None or answer_correctness is None:
+        return None, UNAVAILABLE_BUCKET_REASON
+    if recall <= 0:
+        return "doc_miss", None
+    if evidence_text_available <= 0:
+        return "doc_hit_text_miss", None
+    if citation_accuracy is None or source_doc_citation_accuracy is None:
+        return None, UNAVAILABLE_BUCKET_REASON
+    if citation_accuracy <= 0:
+        return "text_hit_citation_miss", None
+    if answer_correctness < 0.5:
+        return "citation_hit_answer_wrong", None
+    return None, None
+
+
 def _build_evidence_conversion_diagnostics(
     *,
     cases: list[dict[str, Any]],
@@ -451,6 +505,9 @@ def _build_evidence_conversion_diagnostics(
     agentic_by_id = samples_by_profile.get("agentic_graphrag") or {}
     items: list[dict[str, Any]] = []
     tag_counts: dict[str, int] = {}
+    failure_buckets = {bucket: 0 for bucket in FAILURE_BUCKETS}
+    bucket_items: list[dict[str, Any]] = []
+    unavailable_items: list[dict[str, Any]] = []
 
     def add(case_id: str, profile: str, tag: str) -> None:
         items.append(
@@ -463,8 +520,41 @@ def _build_evidence_conversion_diagnostics(
         )
         tag_counts[tag] = tag_counts.get(tag, 0) + 1
 
+    def add_bucket(case_id: str, profile: str, sample: dict[str, Any]) -> None:
+        retrieval_row = (retrieval_by_profile.get(profile) or {}).get(case_id)
+        bucket, unavailable_reason = _failure_bucket_for_sample(sample=sample, retrieval_row=retrieval_row)
+        question_type = str((cases_by_id.get(case_id) or {}).get("question_type") or "unknown")
+        if unavailable_reason:
+            unavailable_items.append(
+                {
+                    "case_id": case_id,
+                    "question_type": question_type,
+                    "profile": profile,
+                    "reason": unavailable_reason,
+                }
+            )
+            tag_counts[unavailable_reason] = tag_counts.get(unavailable_reason, 0) + 1
+            return
+        if not bucket:
+            return
+        failure_buckets[bucket] += 1
+        bucket_items.append(
+            {
+                "case_id": case_id,
+                "question_type": question_type,
+                "profile": profile,
+                "bucket": bucket,
+                "retrieval_recall": _row_float(sample, "retrieval_recall"),
+                "evidence_text_available": _row_float(sample, "evidence_text_available"),
+                "source_doc_citation_accuracy": _row_float(sample, "source_doc_citation_accuracy"),
+                "citation_accuracy": _row_float(sample, "citation_accuracy"),
+                "answer_correctness": _row_float(sample, "answer_correctness"),
+            }
+        )
+
     for profile, rows in samples_by_profile.items():
         for case_id, sample in rows.items():
+            add_bucket(case_id, profile, sample)
             recall = _row_float(sample, "retrieval_recall") or 0.0
             answer_correctness = _row_float(sample, "answer_correctness")
             citation_accuracy = _row_float(sample, "citation_accuracy")
@@ -491,7 +581,7 @@ def _build_evidence_conversion_diagnostics(
             if agentic_answer is not None and standard_answer is not None and agentic_answer < standard_answer:
                 add(case_id, "agentic_graphrag", "answer_correctness_drop_despite_recall_gain")
         if not agentic_retrieval:
-            add(case_id, "agentic_graphrag", "unavailable_due_to_missing_trace_fields")
+            add(case_id, "agentic_graphrag", UNAVAILABLE_BUCKET_REASON)
             continue
         metadata = dict(agentic_retrieval.get("metadata") or {})
         raw = dict(agentic_retrieval.get("raw_result") or {})
@@ -510,7 +600,18 @@ def _build_evidence_conversion_diagnostics(
         if agentic_recall <= standard_recall and non_gold_graph_contexts:
             add(case_id, "agentic_graphrag", "graph_added_non_gold_context")
 
-    return {"items": items, "tag_counts": tag_counts}
+    measured_bucket_count = sum(failure_buckets.values())
+    return {
+        "measurement_status": "fixed_benchmark",
+        "bucket_taxonomy": FAILURE_BUCKETS,
+        "failure_buckets": failure_buckets,
+        "bucket_items": bucket_items,
+        "unavailable_items": unavailable_items,
+        "unavailable_reason": UNAVAILABLE_BUCKET_REASON if unavailable_items else None,
+        "measured_failure_bucket_count": measured_bucket_count,
+        "items": items,
+        "tag_counts": tag_counts,
+    }
 
 
 def _build_gated_agentic_simulation(
@@ -647,6 +748,43 @@ def _write_failure_cases(
     for failure in failures:
         lines.append(f"- `{failure['case_id']}` / `{failure['profile']}`: {', '.join(failure['tags'])}")
     diagnostic_items = list((diagnostics or {}).get("items") or [])
+    bucket_items = list((diagnostics or {}).get("bucket_items") or [])
+    unavailable_items = list((diagnostics or {}).get("unavailable_items") or [])
+    if bucket_items or unavailable_items:
+        lines.extend(["", "## PHASE01 Failure Buckets", ""])
+        buckets_by_name: dict[str, list[dict[str, Any]]] = {bucket: [] for bucket in FAILURE_BUCKETS}
+        for item in bucket_items:
+            buckets_by_name.setdefault(str(item.get("bucket")), []).append(item)
+        for bucket in FAILURE_BUCKETS:
+            lines.extend(["", f"### {bucket}", ""])
+            bucket_cases = buckets_by_name.get(bucket) or []
+            if not bucket_cases:
+                lines.append("- None measured.")
+                continue
+            for item in bucket_cases:
+                lines.append(
+                    "- `{case_id}` / `{profile}` / `{question_type}`: recall={recall}, evidence_text={evidence}, source_doc_citation={source_doc}, strict_citation={citation}, answer={answer}".format(
+                        case_id=item.get("case_id"),
+                        profile=item.get("profile"),
+                        question_type=item.get("question_type"),
+                        recall=_fmt(item.get("retrieval_recall")),
+                        evidence=_fmt(item.get("evidence_text_available")),
+                        source_doc=_fmt(item.get("source_doc_citation_accuracy")),
+                        citation=_fmt(item.get("citation_accuracy")),
+                        answer=_fmt(item.get("answer_correctness")),
+                    )
+                )
+        if unavailable_items:
+            lines.extend(["", f"### {UNAVAILABLE_BUCKET_REASON}", ""])
+            for item in unavailable_items:
+                lines.append(
+                    "- `{case_id}` / `{profile}` / `{question_type}`: {reason}".format(
+                        case_id=item.get("case_id"),
+                        profile=item.get("profile"),
+                        question_type=item.get("question_type"),
+                        reason=item.get("reason"),
+                    )
+                )
     if diagnostic_items:
         lines.extend(["", "## Evidence Conversion Diagnostics", ""])
         for item in diagnostic_items:
@@ -801,8 +939,24 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
         for question_type, profile in (gate_policy.get("selected_profile_by_question_type") or {}).items():
             lines.append(f"| {question_type} | {profile} |")
     diagnostics = metrics.get("evidence_conversion_diagnostics") or {}
-    if diagnostics.get("tag_counts"):
+    if diagnostics.get("tag_counts") or diagnostics.get("bucket_items") or diagnostics.get("unavailable_items"):
         lines.extend(["", "## Evidence Conversion Diagnostics", ""])
+        lines.extend(
+            [
+                "- measured_state: `fixed_benchmark` only when `measurement_status` is `fixed_benchmark`; blocked and prepared runs remain not measured.",
+                "- Evidence Text Available@5 checks whether the gold text span is present in retrieved context; strict citation additionally requires the answer citation to bind to that gold text, so source-doc citation alone is not strict citation.",
+                "- Responsibility boundary: `doc_miss` belongs to retrieval, `doc_hit_text_miss` to evidence text/chunking/rerank, `text_hit_citation_miss` to citation binding, and `citation_hit_answer_wrong` to answer synthesis.",
+                "",
+                "### PHASE01 Failure Buckets",
+                "",
+            ]
+        )
+        buckets = diagnostics.get("failure_buckets") or {}
+        for bucket in FAILURE_BUCKETS:
+            lines.append(f"- {bucket}: `{buckets.get(bucket, 0)}`")
+        if diagnostics.get("unavailable_items"):
+            lines.append(f"- {UNAVAILABLE_BUCKET_REASON}: `{len(diagnostics.get('unavailable_items') or [])}`")
+        lines.append("")
         for tag, count in sorted((diagnostics.get("tag_counts") or {}).items()):
             lines.append(f"- {tag}: `{count}`")
     if metrics["measurement_status"] == "blocked_not_measured":
@@ -872,7 +1026,17 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
         "deltas": {},
         "agentic_metrics": {"graph_usage_gain": None, "replan_success_rate": None, "cost_quality_ratio": None},
         "question_type_metrics": {},
-        "evidence_conversion_diagnostics": {"items": [], "tag_counts": {}},
+        "evidence_conversion_diagnostics": {
+            "measurement_status": "blocked_not_measured",
+            "bucket_taxonomy": FAILURE_BUCKETS,
+            "failure_buckets": {bucket: 0 for bucket in FAILURE_BUCKETS},
+            "bucket_items": [],
+            "unavailable_items": [],
+            "unavailable_reason": None,
+            "measured_failure_bucket_count": 0,
+            "items": [],
+            "tag_counts": {},
+        },
         "gated_agentic_simulation": {},
         "cost_latency": {},
         "failure_count": 0,
@@ -975,6 +1139,7 @@ async def run_enterprise_rag_paired_benchmark(
         metrics["status"] = "prepared"
         metrics["measurement_status"] = "prepared_not_measured"
         metrics["metrics_source"] = "prepared_not_measured"
+        metrics["evidence_conversion_diagnostics"]["measurement_status"] = "prepared_not_measured"
         (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
         _write_failure_cases(output_root / "failure_cases.md", [])
         _write_report(output_root / "report.md", metrics)

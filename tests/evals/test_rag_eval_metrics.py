@@ -203,6 +203,8 @@ def test_rag_eval_metrics_counts_enterprise_doc_id_hits_for_retrieval_only():
         assert metrics["aggregate"]["source_doc_citation_accuracy"] == 1.0
         assert metrics["aggregate"]["evidence_text_available_at_k"] == 0.0
         assert metrics["per_sample"][0]["evidence_text_available"] == 0.0
+        assert metrics["per_sample"][0]["citation_accuracy"] == 0.0
+        assert metrics["per_sample"][0]["source_doc_citation_accuracy"] == 1.0
 
 
 def test_rag_eval_metrics_compute_source_span_and_unsupported_claim_rate():

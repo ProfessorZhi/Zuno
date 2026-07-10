@@ -31,7 +31,7 @@ Agentic GraphRAG 的 doc-level retrieval 增益已经转化成 evidence-span ret
 
 ## Phase 关闭清单
 
-- [ ] PHASE01 完成 eval truth source、gap buckets 和 failure taxonomy。
+- [x] PHASE01 完成 eval truth source、gap buckets 和 failure taxonomy。
 - [ ] PHASE02 完成 source span provenance contract。
 - [ ] PHASE03 完成 citation-sized chunks 与 parent context chunks。
 - [ ] PHASE04 完成 lexical / phrase evidence retriever。
@@ -64,7 +64,7 @@ pytest -q tests/evals/test_enterprise_rag_paired_benchmark.py tests/evals/test_r
 
 ## 下一轮检查
 
-- 当前 phase 是否仍是 `PHASE01_eval-truth-source-and-gap-buckets.md`。
+- 当前 phase 是否仍是 `PHASE01_eval-truth-source-and-gap-buckets.md`；PHASE01 诊断面已完成，下一步才进入 PHASE02。
 - 本轮修改是否只做 program front path 和 guardrail 对齐，还是已经进入 runtime。
 - 如果进入 runtime，必须先写 tests，再改实现。
 - 所有新增指标必须说明是 fixed benchmark、runtime observed、prepared 还是 blocked。
