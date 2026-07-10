@@ -1,65 +1,45 @@
-# Input Layer And Document Processing
+# Input Layer and Document Processing
 
-本文说明企业知识库文件如何进入 Zuno runtime。格式矩阵和成熟度边界仍以 `document-ingestion-foundation.md` 和 `production-readiness.md` 为准。
+所属运行域：Product & API、Input & Knowledge。
 
-## Current Local Slice
+## 定位
 
-当前已证明：
+Input layer 管理用户输入、文件输入和状态反馈。它把 UI 的上传、选择知识库和提问动作转成后端可恢复的 SourceObject、ParseJob、IndexManifest、AgentChat Request 和 TaskEvent。
 
-- `src/backend/zuno/knowledge/storage/local_object_store.py` 提供 `save_bytes()`、`read_bytes()`、`open_stream()` 和 sha256 verification。
-- `src/backend/zuno/knowledge/storage/durable_ingestion_store.py` 和 `sqlmodel_models.py` 保存 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks 和 citation lineage。
-- `src/backend/zuno/knowledge/ingestion/async_runtime.py` 提供 `LocalQueueBackend`、`RabbitMQQueueBackend` dependency probe、`RedisRuntimeStateBoundary` local fallback、`ParserWorker`、`IndexWorker`、dead letter 和 `IngestionReconciler`。
-- `ParseGateway` 支持 native deterministic parser：txt、md、csv、json、html、code。
-- PDF、Office、image、scanned、OCR / VLM 在未配置生产 provider 时进入 target-blocked diagnostics，不创建 fake index。
-- PHASE12 E2E 已证明 binary source object 保存 sha256 / storage_uri，即使解析 blocked 仍可追溯。
-
-对应测试包括 `tests/knowledge/test_ingestion_async_infrastructure.py`、`tests/api/test_workspace_durable_ingest_runtime.py`、`tests/knowledge/test_document_ingestion_contract.py`、`tests/evals/test_agentic_graphrag_product_baseline.py` 和 `tests/evals/test_agentic_graphrag_regression_summary.py`。
-
-## 输入链路
+## Contract
 
 ```text
-workspace file upload
-  -> source object
-  -> workspace file metadata
-  -> parse_requested
-  -> ParserWorker / ParseGateway
-  -> DocumentVersion / DocumentBlocks
-  -> index_requested
-  -> IndexWorker / KnowledgeIndexRuntime
-  -> IndexManifest / IndexChunks / CitationLineage
-  -> retrieval / cited artifact
+UI Input
+-> FastAPI DTO
+-> Workspace / Knowledge scope
+-> SourceObject or AgentChat Request
+-> TaskEvent / SSE
+-> durable status
 ```
 
-每个阶段都必须保留 workspace_id、file_id、source_sha256、document_version_id、parse_job_id、parse_attempt_id、parser diagnostics 和 index manifest lineage。
+前端只展示状态，不是状态事实源。file lifecycle、task lifecycle、parse/index status、approval status 和 trace summary 必须能从后端恢复。
 
-## 格式边界
+## Document Processing Boundary
 
-| 类型 | Current | Target |
-| --- | --- | --- |
-| txt / md / csv / json / html / code | native deterministic parser，可进入本地 parse / index / retrieval。 | 更丰富的 chunk policy 和质量指标。 |
-| PDF | dependency probe / target-blocked diagnostics；不 fake success。 | Docling / PyMuPDF worker。 |
-| Office | dependency probe / target-blocked diagnostics；不 fake success。 | Unstructured / MarkItDown worker。 |
-| image / scanned | OCR / VLM target-blocked diagnostics；不 fake index。 | MinerU / OCR / VLM enrichment worker。 |
-| binary / unknown | source object only 或 unsupported diagnostics。 | admin-configured parser policy。 |
+- 文本类文档是当前真实闭环基线。
+- PDF 是近期最小真实扩展，不要求同时支持所有 parser。
+- parser blocked 时必须显示 blocked reason，不得 fake indexed。
+- chunk、source span、citation lineage 必须在 index 和 retrieval trace 中保留。
 
-## Launchable Prototype Target
+## 当前与短期目标
 
-- Document ingestion 专题文档与正式 architecture 总纲互相引用，但不复制 phase log。
-- PHASE15 archive 保留 blocked no fake index、dead letter、reconciler、restart recovery 和 binary traceability evidence。
-- Product API file-level status 保持 queued、parsing、parsed、indexing、indexed、blocked、failed 可解释。
+Current：
 
-## Production Scale Target
+- upload / knowledge DTO、local storage、parser/indexing surface 和 SSE/API surfaces 已存在。
 
-以下仍不是 Current：
+Short-term：
 
-- 真实 PostgreSQL / MinIO / S3 / RabbitMQ / Kafka / Redis。
-- worker lease、heartbeat、distributed outbox operations。
-- external OCR / VLM runtime。
-- external index platform。
-- 大规模 document operations dashboard。
+- P1 PDF source span citation。
+- P1 task/parse/index status durable。
+- P2 前端 E2E 覆盖 upload -> ask -> citation -> trace。
 
-## 不变量
+Future Optional：
 
-- blocked parser 不能创建 fake index。
-- source object 是原始事实，不被 parser output 覆盖。
-- citation lineage 必须能回到 source object、document version、block 和 index chunk。
+- OCR/VLM。
+- 大量 enterprise parser。
+- 分布式 file processing worker。

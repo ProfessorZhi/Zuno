@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-lean-complete-product-architecture-v1
-current_phase: PHASE01_truth-source-and-product-positioning
+current_phase: PHASE02_lean-architecture-markdown
 latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 
 ## Program Intent

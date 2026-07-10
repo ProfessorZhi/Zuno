@@ -1,41 +1,27 @@
 # Agent 架构工作区
 
-`.agent/architecture/` 现在只保留 Agent 维护架构时需要的最小入口，并与 `docs/architecture/` 保持同名镜像。
+`.agent/architecture/` 是 Agent 侧架构镜像，不是独立事实源。
 
-本目录继续跟随 `docs/architecture/architecture.md` 刷新 Agent 侧镜像和 HTML，不单独承载事实。已验证 runtime / contract / UI / release evidence 可以写入 Current；未实现的生产级 LangSmith、online eval、persistent trace store、CI release gate operations、rootless / gVisor / Firecracker sandbox、外部 vault / OAuth broker、真实网络代理、持久 approval DB 和 production Desktop 闭环仍保持 Target。
+## 同步规则
 
-当前 `.agent/programs/` 是 active 状态。当前 active program 是 Program 3 Mega：`zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`，当前 phase 是 `PHASE10_react-reflection-replan-reflexion-runtime.md`。最近完成并归档的 program 是 `zuno-enterprise-document-ingestion-platform-v2`，归档在 `docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/`。当前已具备本地 Model Gateway / Cost / Latency 和 Planning Contract / Strategy Selector baseline；后续仍只有在真实 API / runtime / UI 路径、focused tests、trace / eval 或 verifier 证明后，才把 Target 能力推进到 Current。生产成熟度边界由 `docs/architecture/production-readiness.md` 维护。
+- `.agent/architecture/architecture.md` 必须与 `docs/architecture/architecture.md` 完全一致。
+- `.agent/architecture/architecture.html` 必须与 `docs/architecture/architecture.html` 由同一个 Markdown 源生成。
+- 修改架构图或总架构后运行：
 
-## 当前前台
-
-```text
-.agent/architecture/
-  README.md
-  architecture.md
-  architecture.html
+```powershell
+python tools/agent/render_architecture.py --write
+python tools/agent/render_architecture.py --check
 ```
 
-`architecture.md` 是 Agent 侧总架构维护镜像，必须与正式人类文档 `docs/architecture/architecture.md` 完全一致。`architecture.html` 是 Agent 侧 HTML 镜像，必须与 `docs/architecture/architecture.html` 由同一 Markdown 源生成。
+## 当前定位
 
-## 已归档旧工作集
+Zuno 当前前台架构是 Lean Complete Agentic GraphRAG Product。
 
-以下旧工作集已经被 `docs/architecture/architecture.md`、`.agent/architecture/architecture.md`、`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html` 吸收：
+`architecture.md` 是详细实施蓝图；`architecture.html` 是四张核心图的展示摘要。收缩的是近期目标规模，不是文档精度。
 
-- 旧 near-term 工作集
-- 旧 future 工作集
-- 旧 decisions 工作集
-- 旧架构索引
-- 旧术语表
+## 禁止
 
-归档位置：
-
-- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/`
-
-## 边界
-
-- 正式人类架构结论进入 `docs/architecture/architecture.md`。
-- Agent 侧架构文档不手写分叉，必须通过 `python tools/agent/render_architecture.py --write` 同步。
-- 图形化展示由 `docs/architecture/architecture.md` 生成到两个 HTML：`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html`。
-- 执行计划进入 `.agent/programs/`。
-- Agent 操作规则、地图和验证清单进入 `.agent/references/`。
-- 不要把已归档的旧工作集重新放回 `.agent/architecture/`，除非先打开新的架构重组 program 并同步 verifier / tests。
+- 不在 `.agent/architecture/` 写入独立结论。
+- 不手写 HTML。
+- 不恢复已归档 split architecture docs。
+- 不把 Future Optional 写成 Current。

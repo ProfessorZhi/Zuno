@@ -1,63 +1,56 @@
-# Capability And Skill Layer
+# Capability and Skill Layer
 
-本文说明 Zuno 的 Capability / Skill / Tool / MCP 边界。它只承载稳定架构说明，高频执行细节仍在 `.agent/programs/`。
+所属运行域：Capability & Tool。
 
 ## 定位
 
-Capability Layer 负责把任务方法、知识访问、工具调用、MCP 连接、Artifact 生成和策略审计统一成可路由、可授权、可观测的能力面。Skill 是任务方法包，描述如何做一类任务；Tool 是具体动作；Knowledge 是检索能力；MCP 是外部工具协议入口。
+Capability & Tool 负责把 Agent 的意图转成可治理的能力调用。Skill 定义任务方法，Tool 执行具体动作；二者不能混写。
 
-## Current Local Slice
+## 核心对象
 
-当前已由代码和测试证明：
+- SkillCard：任务方法说明、适用场景、输入输出约束。
+- CapabilityCard：能力类型、策略、owner、trace 要求。
+- CapabilityRouter：从 CapabilityPlan 选择可用能力。
+- KnowledgeCapability：检索、GraphRAG、citation 相关能力。
+- ToolCapability：外部动作、MCP、本地工具。
+- ArtifactCapability：文档、报告、导出等产物生成。
+- ToolCard：具体工具 manifest。
+- ToolRequest：一次工具调用意图。
+- Approval：副作用审批。
+- CredentialRef：凭据引用，禁止把 secret 写入 trace。
+- ExecutionAdapter：工具执行适配器。
+- ResultNormalizer：把工具结果归一成 Agent observation。
+- ToolTrace：审批、执行、timeout、错误和结果摘要。
 
-- `src/backend/zuno/capability/layer.py` 提供 `CapabilityLayerRegistry`、`CapabilityRouter`、`CapabilityPolicy`、`CapabilityRiskProfile` 和 `CapabilityAuditEvent` 的本地 baseline。
-- `src/backend/zuno/capability/runtime.py`、`registry.py`、`policy.py`、`execution.py` 和 `control_plane.py` 保留现有 capability / tool control contracts。
-- SkillCard fixtures 已覆盖 `contract_review`、`research_report`、`code_review` 或 `bug_diagnosis` 中的本地可测任务方法包。
-- Tool / MCP boundary 在未配置真实外部服务时返回 permission / target-blocked evidence，不 fake success。
-- Capability policy 已能阻止跨 workspace KnowledgeCapability 和未授权 Tool/MCP capability。
-
-对应 focused tests 包括 `tests/capability/test_capability_skill_layer.py`、`tests/agent/test_capability_layer_surfaces.py`、`tests/agent/test_capability_system.py`、`tests/agent/test_capability_registry.py` 和 `tests/agent_system/test_agent_guardrails.py`。
-
-## Skill 与 Capability 的关系
+## Runtime
 
 ```text
-SkillCard
-  -> recommended_retrieval_profile
-  -> required_evidence
-  -> allowed_tools
-  -> required_memory_scopes
-  -> output_contract
-  -> safety_policy
-  -> eval_rubric
-  -> trace_requirements
-
-CapabilityRouter
-  -> KnowledgeCapability
-  -> ToolCapability
-  -> MCPCapability
-  -> ArtifactCapability
+CapabilityPlan
+-> CapabilityRouter
+-> Policy / Approval
+-> CredentialRef
+-> ExecutionAdapter
+-> ResultNormalizer
+-> ToolTrace
+-> Observation
 ```
 
-Skill 选择不会绕过 capability policy。即使用户 pin 了 skill，router 仍必须检查 workspace scope、tool permission、network policy、credential policy、side effect level 和 audit policy。
+副作用工具必须有 approval、timeout、幂等 key 和 trace。Agent 只能消费 normalized observation，不直接依赖工具内部返回结构。
 
-## Launchable Prototype Target
+## 当前与短期目标
 
-- 把 SkillCard、CapabilityPolicy、Knowledge / Tool / MCP / Artifact capability 边界写入正式归档。
-- Product API 继续向用户展示“标准检索 / 深度检索”和任务结果，而不是把 Capability 内部细节做成用户手动工具箱。
-- PHASE15 closure 中保留 capability risk、permission denial、target-blocked MCP 和 audit event evidence。
+Current：
 
-## Production Scale Target
+- capability registry/control plane、tool adapters、MCP surfaces 和多个工具实现已存在。
 
-以下仍不是 Current：
+Short-term：
 
-- 生产级 Skill Registry 和 skill marketplace。
-- 真实 MCP connector governance、connector health、tenant-level approval policy。
-- 外部 vault / OAuth credential broker。
-- rootless / gVisor / Firecracker sandbox。
-- 持久 approval DB 和生产网络代理。
+- P1 选择 2-3 个真实工具完成 approval / timeout / trace 闭环。
+- 工具失败必须进入 Agent observation，使 Agent 可 replan 或 abstain。
+- credential 只以 reference 进入 runtime 和 trace。
 
-## 不变量
+Future Optional：
 
-- Skill 不是 Tool，不能把 skill list 写成 tool list。
-- MCP 未配置时不能伪装成功调用。
-- Capability policy 是 runtime guard，不是 README 里的建议。
+- marketplace。
+- 复杂远程企业工具治理。
+- Firecracker 级隔离。

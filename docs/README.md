@@ -1,36 +1,23 @@
 # Zuno 文档入口
 
-`docs/` 是 Zuno 面向人的正式文档入口，只保留当前仍会影响判断的核心文档。前台文档默认使用中文；历史档案可以保留原文。
+前台文档默认使用中文，承载当前正式结论；历史材料保留在 `docs/history/`，不删除、不改写成当前事实。
 
 ## 首读路径
 
-1. [仓库 README](../README.md)
-2. [总架构文档](./architecture/architecture.md)
-3. [Production Readiness Baseline](./architecture/production-readiness.md)
-4. [Document Ingestion Foundation](./architecture/document-ingestion-foundation.md)
-5. [Agent Core Runtime](./architecture/agent-core-runtime.md)
-6. [Capability And Skill Layer](./architecture/capability-and-skill-layer.md)
-7. [Agentic Retrieval Planner](./architecture/agentic-retrieval-planner.md)
-8. [Eval Observability And Cost](./architecture/eval-observability-and-cost.md)
-9. [Input Layer And Document Processing](./architecture/input-layer-and-document-processing.md)
-10. [Knowledge Space Product Configuration](./architecture/knowledge-space-product-configuration.md)
-11. [架构 HTML](./architecture/architecture.html)
-12. [公开演示证据](./evidence/public-demo.md)
-13. [Eval Baseline](./evidence/eval-baselines.md)
-14. [术语表](./reference/terminology.md)
-9. [历史档案](./history/README.md)
+- [架构总事实源](./architecture/architecture.md)：详细实施蓝图，说明 Lean Complete Agentic GraphRAG Product、六个运行域、黄金链路、owner、contract、配置、状态、失败、trace、测试和验收。
+- [架构 HTML 展示](./architecture/architecture.html)：由四张 Mermaid 图生成的展示摘要，适合项目介绍和截图。
+- [Production readiness](./architecture/production-readiness.md)：当前状态、短期闭环、measurement blocked、completed 和 Future Optional。
+- [公开证据](./evidence/public-demo.md)：精选可展示证据。
+- [历史归档](./history/README.md)：过时计划、旧 program 和历史证据。
 
-## 当前目录
+## 运行域专题
 
-- [architecture/](./architecture/README.md)：当前总架构 Markdown、生产成熟度基线、文档入口契约、生成 HTML、正式 ADR 和附件。
-- [evidence/](./evidence/README.md)：精选证据入口。
-- [reference/terminology.md](./reference/terminology.md)：仍然有效的公共术语。
-- [history/](./history/README.md)：历史档案，包含旧计划、旧规格、旧审计、旧 runbook 和被替换材料。
+- [Document ingestion foundation](./architecture/document-ingestion-foundation.md)
+- [Agent core runtime](./architecture/agent-core-runtime.md)
+- [Capability and skill layer](./architecture/capability-and-skill-layer.md)
+- [Agentic retrieval planner](./architecture/agentic-retrieval-planner.md)
+- [Eval, observability and cost](./architecture/eval-observability-and-cost.md)
+- [Input layer and document processing](./architecture/input-layer-and-document-processing.md)
+- [Knowledge space product configuration](./architecture/knowledge-space-product-configuration.md)
 
-## 清理规则
-
-如果一个文档不再改变当前决策，把它移动到 `docs/history/`，并更新引用。不要把旧材料留在前台路径里制造“当前仍有效”的错觉。
-
-本轮架构前台瘦身归档在：
-
-- `docs/history/architecture-surface-cleanup-2026-06-30/`
+这些专题文档服从六个运行域，不承担完整目标架构设计；完整实施蓝图以 `architecture.md` 为准。

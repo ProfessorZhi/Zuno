@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-lean-complete-product-architecture-v1
-current_phase: PHASE01_truth-source-and-product-positioning
+current_phase: PHASE02_lean-architecture-markdown
 latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 
 ## 当前目标
@@ -27,7 +27,7 @@ latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 
 ## 当前 phase
 
-PHASE01 只负责打开 program、记录旧架构问题、确定新定位和四阶段验收边界。
+PHASE02 负责重写 Markdown 事实源和前台文档，使近期目标范围收缩到 Lean Complete Product，同时保留详细实施蓝图能力。
 
 后续 phase：
 

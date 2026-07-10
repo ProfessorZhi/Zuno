@@ -1,67 +1,45 @@
 # Knowledge Space Product Configuration
 
-本文说明企业知识库在产品面如何配置和变更。它关注用户可见的知识库选择、检索 profile、文件状态和变更影响，不展开内部 GraphRAG 算法细节。
+所属运行域：Product & API、Input & Knowledge、Local Infrastructure。
 
-## Current Local Slice
+## 定位
 
-当前已证明：
+Knowledge Space 是用户选择知识库、模型 slot、检索 profile 和解析/index 配置的产品边界。它不是前端 filter，而是后端可恢复、可 trace、可用于 benchmark 的配置事实源。
 
-- `src/backend/zuno/api/dto/workspace.py` 提供 `KnowledgeSpaceConfig`、`WorkspaceRetrievalProfile`、`WorkspaceKnowledgeSelection`、`WorkspaceCitationRef` 和 `ChangeImpactPreview`。
-- `src/backend/zuno/api/services/workspace_task_runtime.py` 接收 per-knowledge-space `standard` / `deep` retrieval profile，并把 retrieval plan、trace / eval / cost summary、artifact citation refs、file status 和 feedback 暴露给 workspace product API。
-- `src/backend/zuno/api/v1/workspace.py` 暴露对应 workspace API。
-- `apps/web/src/apis/workspace.ts` 同步 `WorkspaceRetrievalProfile = 'standard' | 'deep'`、retrieval profile map、citation refs 和 cost summary types。
-- tests 证明 API schema、requested profile propagation、task summary、artifact citation refs、KnowledgeSpaceConfig serialization、ChangeImpactPreview 和 frontend type contract。
+## 配置对象
 
-对应测试包括 `tests/api/test_workspace_agentic_product_contract.py`、`tests/api/test_workspace_task_runtime.py`、`tests/api/test_workspace_durable_ingest_runtime.py`、`tests/frontend/test_workspace_product_loop_types.py` 和 PHASE12 / PHASE13 eval tests。
+- ModelDefinition、ModelSlotBinding。
+- KnowledgeSpace、WorkspaceFile。
+- RetrievalProfile：top-k、candidate pool、RRF weights、rerank weights、citation threshold。
+- ChunkingProfile：chunk size、chunk overlap、parent context size。
+- ParserProfile：parser provider、PDF/text support、blocked reason policy。
+- EvalProfile：benchmark case set、release thresholds。
 
-## 产品配置对象
+## 优先级
 
 ```text
-KnowledgeSpaceConfig
-  knowledge_space_id
-  display_name
-  retrieval_defaults
-  ingestion_policy
-  security_policy
-  change_impact_preview
-
-Workspace task request
-  selected_knowledge_spaces
-  retrieval_profiles: standard / deep
-  task objective
+DB workspace binding
+> environment secret/reference
+> YAML default
+> test fixture default
 ```
 
-用户选择标准检索 / 深度检索；Single Controller Agent 决定内部 BM25、vector、GraphRAG fallback、rerank、Skill 和 Tool 使用。
+运行时必须把最终生效配置写入 trace 或 eval report。workspace override 只允许通过后端 DTO 和 policy validation。
 
-## Change Impact
+## 当前与短期目标
 
-ChangeImpactPreview 用来解释配置变化会触发什么：
+Current：
 
-- metadata-only：只改显示名、描述或标签。
-- ACL refresh：权限或 sensitivity 变化。
-- reparse：parser config、chunk policy、OCR 参数或 redaction policy 变化。
-- vector rebuild：embedding policy 或 chunk 内容变化。
-- graph rebuild：graph extraction policy 或 community report policy 变化。
-- blocked dependency：需要外部 parser / OCR / VLM / index provider，但当前未配置。
+- model/tool/knowledge DTO、config files、database models 和 retrieval services 已存在。
+- 部分参数仍需要从业务流程中抽出，统一进入配置事实源。
 
-## Launchable Prototype Target
+Short-term：
 
-- 产品面应能展示知识库文件状态、blocked reason、citation refs、task trace summary、eval/cost summary 和 artifact citation summary。
-- PHASE14/15 文档与归档保留“标准检索 / 深度检索”的产品口径。
-- 前端不是业务事实源；刷新或后端 service rehydrate 后仍能从后端查询 file / ingest / task / artifact / feedback。
+- P0 model provider/name/base URL/model slot 统一进入 Model Runtime / Gateway。
+- P1 retrieval、chunking、citation threshold、trace retention 和 release thresholds 可复现记录。
 
-## Production Scale Target
+Future Optional：
 
-以下仍不是 Current：
-
-- 完整创建 Wizard 和 Settings tabs。
-- 多租户 admin / ops。
-- production Desktop 打包 / e2e。
-- 进程重启后的跨 worker 长任务恢复。
-- 企业级知识库权限同步、审计报表和大规模变更预估。
-
-## 不变量
-
-- 不把 internal query mode 暴露成产品下拉。
-- 不把 frontend type 写成业务事实源。
-- 文件变更必须保留 document_version / index_manifest lineage，不能覆盖旧引用。
+- enterprise policy admin。
+- remote config service。
+- multi-tenant config inheritance。

@@ -2,7 +2,7 @@
 
 ## When To Use
 
-当任务触碰 `docs/`、`.agent/`、`AGENTS.md`、history、README、架构叙事或术语边界时使用本 skill。
+当任务触碰 `docs/`、`.agent/`、AGENTS.md、history、README、架构叙事或术语边界时使用本 skill。
 
 ## Mental Model
 
@@ -11,7 +11,7 @@ docs/ = formal human truth
 .agent/references/ = local skills and lessons
 .agent/templates/ = execution skeletons
 .agent/programs/ = active execution plan
-.agent/architecture/ = target design workspace
+.agent/architecture/ = generated architecture mirror
 docs/history/ = archive and evidence
 ```
 
@@ -21,15 +21,12 @@ docs/history/ = archive and evidence
 
 - `README.md`：仓库总览和首读路径。
 - `docs/README.md`：文档入口。
-- `docs/architecture/architecture.md`：总架构文档，文字说明当前事实、目标分层、主链路和实施落点。
-- `docs/architecture/production-readiness.md`：成熟度、四大总交付物、Current Local Slice、Launchable Prototype Target 和 Production Scale Target 边界。
-- `docs/architecture/document-ingestion-foundation.md`：企业知识库文档入口契约，集中说明 ParseGateway、Document IR、parser job、index handoff、幂等、版本、防丢、ACL、citation lineage 和多模态解析边界。
-- `docs/architecture/agent-core-runtime.md`、`docs/architecture/capability-and-skill-layer.md`、`docs/architecture/agentic-retrieval-planner.md`、`docs/architecture/eval-observability-and-cost.md`、`docs/architecture/input-layer-and-document-processing.md`、`docs/architecture/knowledge-space-product-configuration.md`：PHASE14 稳定专题说明，只展开长期可复用架构语义和 Current / Target 边界。
-- `docs/architecture/repo-ownership-matrix.md`：代码目录 ownership、compatibility、vendor 和 provider 分类事实表。
+- `docs/architecture/architecture.md`：Lean Complete Agentic GraphRAG Product 的详细实施蓝图事实源，包含六个运行域、黄金链路、owner、contract、配置、状态、失败、trace、测试和验收。
+- `docs/architecture/architecture.html`：由四张 canonical Mermaid 图生成的展示摘要。
+- `docs/architecture/production-readiness.md`：Current、Short-term Closure Gap、Measurement Blocked、Completed、Future Optional。
+- `docs/architecture/document-ingestion-foundation.md`、`agent-core-runtime.md`、`capability-and-skill-layer.md`、`agentic-retrieval-planner.md`、`eval-observability-and-cost.md`、`input-layer-and-document-processing.md`、`knowledge-space-product-configuration.md`：六运行域专题细化。
+- `docs/architecture/repo-ownership-matrix.md`：代码目录 ownership 辅助事实表。
 - `docs/evidence/public-demo.md`：精选公开证据入口。
-- `docs/evidence/eval-baselines.md`：Eval baseline 状态。
-- `docs/reference/terminology.md`：公共术语表。
-- `docs/architecture/decisions/`：仍然有效的正式 ADR。
 - `docs/history/`：历史档案。
 
 Agent 工作流入口：
@@ -39,102 +36,34 @@ Agent 工作流入口：
 - `.agent/system.yaml`：路径到 skills、templates、docs_sync、verify 的路由。
 - `.agent/references/`：本地项目 skills、lessons、playbooks。
 - `.agent/templates/`：执行骨架。
-- `.agent/programs/`：当前执行入口；有 active program 时放平铺 phase，当前也可以处于无 active 的等待状态。
-- `.agent/architecture/architecture.md`：Agent 侧总架构维护文档，必须和正式总架构文档一致。
-- `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/`：近期目标架构详细设计。
-- `.agent/scripts/`：过渡期验证器。
-
-## Target Direction
-
-前台保持小而清楚：正式结论进入 `docs/`，可执行项目知识进入 `.agent/references/`，旧材料进入 `docs/history/`。不要用更多前台目录解决叙事不清。
+- `.agent/programs/`：当前执行入口。
+- `.agent/architecture/architecture.md`：必须与正式总架构文档一致的 Agent 镜像。
 
 ## Must Preserve
 
-- Current 只描述代码和测试已证明事实。
+- Current 只描述代码、测试、trace/eval 或 verifier 已证明事实。
 - Target 只描述近期目标，不等于完成声明。
+- Future Optional 不得成为短期 blocker。
 - History 保留旧材料原文，不为了新叙事改写证据。
-- `.agent/architecture/architecture.md` 是 `docs/architecture/architecture.md` 的 Agent 侧镜像，不承载独立事实源。
-
-## Before Editing
-
-1. 读 `docs/architecture/README.md`、`docs/architecture/architecture.md` 和 `docs/architecture/production-readiness.md`。
-2. 架构任务先读 `docs/architecture/architecture.md` 和 `.agent/architecture/architecture.md`；涉及成熟度判断时追加 `docs/architecture/production-readiness.md`。
-3. 读 `.agent/README.md`、`.agent/system.yaml`、`task-routing.md`、`workflow.md`。
-4. 判断修改属于 Current、Target、Program、Skill、Template、History 哪一类。
-5. 搜索同一术语的前台命中，避免只改一个入口。
-
-## Allowed Changes
-
-- 同步 docs entrypoints、`.agent` maps、verifier/test 的路径和术语。
-- 将完成或被替换材料归档到 `docs/history/`。
-- 精简前台说明，保留决策所需信息。
-
-## Forbidden Changes
-
-- 不把一次性调查流水账写进 `docs/` 或 `.agent/references/`。
-- 不把模板改成项目知识库。
-- 不把 history 文件重写为当前事实。
-- 不恢复 `docs/architecture/phases/`、`docs/architecture/plans/`、`docs/architecture/programs/` 当前前台目录；PHASE14 专题文档是稳定专题入口，不是旧 split front path。
-
-## Common Failure Patterns
-
-- `docs/architecture/architecture.md` 已更新，但 `.agent/references/current-program.md` 仍旧。
-- `AGENTS.md` 路由变了，但 `.agent/system.yaml` 未同步。
-- references skill 改了，但 `.agent/templates/README.md` 仍暗示模板保存项目知识。
-- HTML 蓝图被引用成 Current proof。
-
-## Debug Playbooks
-
-- Current/Target 冲突：以 runtime code、tests、trace evidence 决定 Current；未证明内容保留 Target。
-- 路径漂移：用 `git grep -n "<path-or-term>"` 找前台命中，历史目录只在必要时保留原文。
-- 归档不清：先建或使用 `docs/history/` 下明确目录，再更新入口和 verifier。
-
-## Architecture Documentation Governance
-
-架构文档和展示页的专门索引已经拆到：
-
-- `.agent/references/architecture-docs-map.md`
-- `.agent/references/documentation-governance.md`
-- `.agent/references/architecture-update-policy.md`
-- `.agent/references/diagram-inventory.md`
-- `.agent/references/current-target-future-rules.md`
-
-这些文件说明 `docs/architecture/`、`docs/architecture/architecture.html`、`.agent/references/`、`.agent/templates/` 和 `.agent/programs/` 如何同步。涉及 architecture.html 或十类 Mermaid 架构视图时，不要只读本 docs map。
-
-## Agent Workflow Self-Maintenance
-
-工作流自我维护规则已经拆到：
-
-- `.agent/references/workflow-governance.md`
-- `.agent/references/workflow-update-policy.md`
-- `.agent/references/workflow-requirements.md`
-- `.agent/references/workflow-change-log.md`
-- `.agent/references/workflow-maintenance-checklist.md`
-
-当用户提出新的长期工作方式要求时，先用这些文件判断是否需要更新 AGENTS.md、`.agent/references/`、`.agent/templates/`、`.agent/programs/`、`docs/architecture/`、`docs/architecture/architecture.html`、verifier 或 tests。
+- `architecture.md` 可以详细，但必须结构化、范围收敛、可实施。
+- HTML 是展示摘要，不承担完整目标架构事实源。
 
 ## Focused Tests
 
 ```powershell
 git diff --check
 python .agent/scripts/verify_agent_system.py
-python .agent/scripts/verify_doc_boundaries.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
-pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 ```
 
 ## Docs Sync
 
-修改文档边界时检查：
+修改架构或文档入口时检查：
 
-- `AGENTS.md`
-- `.agent/README.md`
-- `.agent/system.yaml`
-- `.agent/references/current-program.md`
-- `.agent/references/task-routing.md`
-- `.agent/references/workflow.md`
-- `.agent/references/verification-map.md`
-- `.agent/templates/README.md`
+- `README.md`
 - `docs/README.md`
 - `docs/architecture/README.md`
 - `docs/architecture/architecture.md`
@@ -150,8 +79,9 @@ pytest -q tests/repo/test_agent_system.py tests/repo/test_docs_entrypoints.py -p
 - `.agent/architecture/README.md`
 - `.agent/architecture/architecture.md`
 - `.agent/architecture/architecture.html`
-- `docs/history/README.md`
+- `.agent/references/diagram-inventory.md`
+- `.agent/programs/current.md`
 
 ## Lessons Learned
 
-文档同步的本质不是“所有地方都写一遍”，而是每个 surface 只承载自己的真相层级，并且入口之间不互相矛盾。
+文档同步的本质不是“所有地方都写一遍”，而是每个 surface 只承载自己的事实层级，并且入口之间不互相矛盾。

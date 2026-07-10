@@ -1,72 +1,60 @@
-# Eval Observability And Cost
+# Eval, Observability and Cost
 
-本文说明 Zuno 的 Eval / Trace / Cost / Benchmark layer。它用于证明质量、成本、耗时、安全和回归，不是上线后才补的看板。
+所属运行域：Governance & Observability。
 
-## Current Local Slice
+## 定位
 
-当前已由 PHASE08、PHASE12 和 PHASE13 证明：
+本专题定义 Agent run 如何被追踪、如何统计模型调用和成本、如何用 fixed benchmark 判断质量。近期目标是本地持久 trace 和可查看 summary，不要求先接完整 LangSmith / OTel 平台。
 
-- `src/backend/zuno/platform/model_gateway.py` 记录 model category、token_count、latency_ms、cost_estimate、budget verdict、timeout fallback 和 redacted trace。
-- `src/backend/zuno/platform/observability/trace_eval.py` 提供 `ZunoSpan`、LangSmith-compatible metadata、EvalDatasetCase、MetricThreshold、EvalMetricResult 和 ReleaseEvalBaseline。
-- `src/backend/zuno/agent/product_baseline.py` 生成 PHASE12 scenario summary / trace summary。
-- `src/backend/zuno/platform/observability/product_benchmark.py` 生成 PHASE13 regression summary。
-- `StageMetrics` 覆盖 file upload、object store、input gate、parse queue/worker、document IR、index queue/worker、context build、planning、retrieval、rerank、graph expand、tool call、reflection、replan、answer、output gate、artifact 和 feedback。
-- `EvalComparisonReport` 区分 `basic_rag`、`static_graphrag`、`agentic_graphrag` baseline labels。
-- `tools/evals/zuno/rag_eval` 已有 public enterprise dataset V1 接入面：`techqa_rag_eval` 可生成本地 Markdown corpus 和 Zuno eval JSONL；`cfqa` 可生成中文财报页码 grounding 数据集，但在年报 PDF 未准备前明确标记 `cfqa_annual_report_pdf_required`，不伪造语料或索引。
-
-对应测试包括 `tests/evals/test_model_gateway_cost_latency.py`、`tests/evals/test_observability_trace_contract.py`、`tests/evals/test_agentic_graphrag_product_baseline.py`、`tests/evals/test_agentic_graphrag_regression_summary.py` 和全量 `tests/evals`。
-
-## 指标对象
+## Span Tree
 
 ```text
-ConversationRunMetrics
-  task_id / session_id / workspace_id / selected_knowledge_spaces
-  retrieval_profiles / selected_skill / strategy / model_config
-
-StageMetrics
-  stage_name / latency_ms / token_count / cost_estimate
-  model_id / error_count / retry_count / security_block_count
-  trace_event_ids
-
-IngestionMetrics / RetrievalMetrics / PlanningMetrics / SecurityMetrics / CostMetric
-  -> release evidence
-  -> EvalComparisonReport
-  -> regression summary
+agent_run
+  -> context_build
+  -> memory_read
+  -> planning
+  -> retrieval
+  -> graph_expand
+  -> rerank
+  -> model_call
+  -> tool_call
+  -> claim_binding
+  -> answer_synthesis
+  -> output_gate
+  -> memory_commit
+  -> eval
 ```
 
-missing required stage 不能 silent pass；PHASE13 对缺失 stage 抛出明确错误。
+每个 span 至少记录 run_id、task_id、workspace_id、span name、status、start/end、latency、error/fallback、effective config 摘要。model_call 还要记录 provider、model、slot、token/usage、cost estimate 和 retry。retrieval/citation span 还要记录 failure bucket 所需 trace 字段。
 
-## Release Gate 用法
+## Measurement Semantics
 
-PHASE15 closure 应使用这些指标回答：
+- measured：同一 fixed case set 完整跑完并产出可比较指标。
+- runtime observed：真实运行产生 trace，但不是 benchmark。
+- prepared：数据或配置准备完成，但未执行完整 runtime。
+- blocked：运行被明确阻塞，有 blocked_reason。
 
-- deep retrieval 是否有更高 citation coverage。
-- public enterprise dataset V1 是否能给出 Recall@5、Precision@5、MRR、NDCG、Answer Correctness、Citation Coverage、Source Span Accuracy、Unsupported Claim Rate、Latency、Estimated Cost 的可追踪输入。
-- dynamic replan 是否改变 trajectory。
-- PDF / Office / OCR blocked 是否保持 no fake index。
-- binary source object 是否可追溯 sha256。
-- cost / latency 是否来自本地 deterministic path、model call、rerank、graph expand 或 OCR/VLM target-blocked boundary。
-- security gate 是否有 block / refusal / ask_user / replan 证据。
+缺少 trace 字段时输出 `unavailable_due_to_missing_trace_fields`。
 
-## Launchable Prototype Target
+## Release Gate
 
-- 本地 regression summary 进入 closure archive。
-- README / AGENTS 只保留入口摘要，指标细节保留在正式专题文档和归档。
-- 外部观测适配保持可替换，不把 vendor 数据结构变成唯一事实源。
+Agentic GraphRAG 必须与 standard_rag 使用同一 fixed case set。只有完整 measured profile 才能进入 release gate 判断。
 
-## Production Scale Target
+## 当前与短期目标
 
-以下仍不是 Current：
+Current：
 
-- 外部 LangSmith / OTel sink runtime。
-- Prometheus dashboard。
-- online eval。
-- 持久 trace store。
-- CI release gate operations。
-- 多租户成本账单和 provider SLA / quota 管理。
+- local trace/eval helpers、EnterpriseRAG paired eval runner、failure bucket diagnostics 和 release gate output surface 已存在。
+- 完整 LangSmith 接入不是 Current。
 
-## 不变量
+Short-term：
 
-- trace / eval / cost 证据必须能回到 task、workspace、artifact、citation 或 source object。
-- 不用“测试通过”替代指标覆盖说明。
-- Basic RAG / Static GraphRAG 只作为 baseline，不是最终产品模式。
+- P0 Agent run trace 持久化并可查看。
+- P0 fixed benchmark 跑通并达到 baseline gate。
+- P1 trace summary 在前端可定位模型调用、retrieval、citation 和 tool failure。
+
+Future Optional：
+
+- LangSmith / OTel backend。
+- 大规模在线 eval 平台。
+- 企业级成本和合规 dashboard。
