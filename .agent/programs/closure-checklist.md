@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-lean-complete-product-architecture-v1
-current_phase: PHASE02_lean-architecture-markdown
+current_phase: PHASE03_four-diagram-html-and-guardrails
 latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 
 ## 必须关闭的事项
@@ -12,8 +12,8 @@ latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 - [x] PHASE02：六个运行域已按统一模板展开，包含 owner、contract、配置、状态、失败、trace、测试和验收。
 - [x] PHASE02：ownership matrix、配置化契约、核心状态对象、restart recovery 边界、质量验收矩阵已写入。
 - [x] PHASE02：README、docs README、architecture README、production readiness 和专题文档不再把旧十图 / 11 层 / Production Scale 写成当前主线。
-- [ ] PHASE03：renderer、HTML、diagram inventory、verifier 和 tests 全部使用四图契约。
-- [ ] PHASE03：`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html` 由同一个 Markdown 源生成。
+- [x] PHASE03：renderer、HTML、diagram inventory、verifier 和 tests 全部使用四图契约。
+- [x] PHASE03：`docs/architecture/architecture.html` 和 `.agent/architecture/architecture.html` 由同一个 Markdown 源生成。
 - [ ] PHASE04：验证命令全部通过。
 - [ ] PHASE04：program 已归档到 `docs/history/programs/zuno-lean-complete-product-architecture-v1/`。
 - [ ] PHASE04：`.agent/programs/` 回到 no-active。

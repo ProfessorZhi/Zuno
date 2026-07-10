@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-lean-complete-product-architecture-v1
-current_phase: PHASE02_lean-architecture-markdown
+current_phase: PHASE03_four-diagram-html-and-guardrails
 latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 
 ## 当前目标
@@ -27,7 +27,7 @@ latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 
 ## 当前 phase
 
-PHASE02 负责重写 Markdown 事实源和前台文档，使近期目标范围收缩到 Lean Complete Product，同时保留详细实施蓝图能力。
+PHASE03 负责将 renderer、HTML、diagram inventory、verifier 和 docs entrypoint tests 同步为四图契约，并生成 `.agent/architecture` 镜像。
 
 后续 phase：
 

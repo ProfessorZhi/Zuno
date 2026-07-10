@@ -19,6 +19,8 @@ Zuno 当前前台架构是 Lean Complete Agentic GraphRAG Product。
 
 `architecture.md` 是详细实施蓝图；`architecture.html` 是四张核心图的展示摘要。收缩的是近期目标规模，不是文档精度。
 
+状态事实源见 `docs/architecture/production-readiness.md`。
+
 ## 禁止
 
 - 不在 `.agent/architecture/` 写入独立结论。

@@ -1,6 +1,6 @@
 # PHASE03 four-diagram-html-and-guardrails
 
-status: pending
+status: completed
 program: zuno-lean-complete-product-architecture-v1
 
 ## 目标
@@ -27,10 +27,10 @@ program: zuno-lean-complete-product-architecture-v1
 
 ## 验收
 
-- [ ] `EXPECTED_DIAGRAMS` 只包含四张图。
-- [ ] `GROUPS`、`VIEW_META`、HTML header 和章节标签不再要求 4+1 / View & Beyond。
-- [ ] Markdown 恰好四个 canonical Mermaid block。
-- [ ] HTML 恰好四个 diagram section。
-- [ ] `.agent/architecture/architecture.md` 与 `docs/architecture/architecture.md` 完全一致。
-- [ ] 两份 HTML 完全一致。
-- [ ] `python tools/agent/render_architecture.py --check` 通过。
+- [x] `EXPECTED_DIAGRAMS` 只包含四张图。
+- [x] `GROUPS`、`VIEW_META`、HTML header 和章节标签不再要求旧理论视图。
+- [x] Markdown 恰好四个 canonical Mermaid block。
+- [x] HTML 恰好四个 diagram section。
+- [x] `.agent/architecture/architecture.md` 与 `docs/architecture/architecture.md` 完全一致。
+- [x] 两份 HTML 完全一致。
+- [x] `python tools/agent/render_architecture.py --check` 通过。
