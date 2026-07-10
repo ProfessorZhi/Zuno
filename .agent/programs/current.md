@@ -1,41 +1,36 @@
 # 当前程序
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-lean-complete-product-architecture-v1
+current_phase: PHASE01_truth-source-and-product-positioning
 latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 
-## 当前状态
+## 当前目标
 
-`.agent/programs/` 当前没有 active program。最近完成并归档的是：
+本轮只重写 Zuno 的架构事实源和展示面，把近期目标范围从旧的 4+1 / View & Beyond 十图和过重 Production Scale 口径，收缩为 Lean Complete Agentic GraphRAG Product：
 
-- `docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/`
+- 6 个 runtime domain。
+- 1 条用户可完成任务的 golden path。
+- 4 张 Mermaid 架构图和同步 HTML 展示页。
+- 短期 P0 / P1 / P2 闭环清单。
+- Production Scale、外部分布式中间件、外部图/向量库、OCR/VLM、在线 eval 和产品级多 Agent runtime 全部降级为 Future Optional。
+- `docs/architecture/architecture.md` 保持详细、规范、可实施，继续作为后续 Program 规划事实源。
 
-成熟度和 runtime-first 交付物边界仍以 `docs/architecture/production-readiness.md` 为准。
+## 严格边界
 
-完成结论：
+- 本 program 只做 architecture / docs / renderer / verifier / tests 同步。
+- 不修改核心 runtime 逻辑。
+- 不把文档重写写成 runtime 质量提升。
+- 不把 `architecture.md` 改成宣传页，不删除 owner、contract、数据流、控制流、配置、持久化、失败、观测、测试和验收要求。
+- 不把 Agentic GraphRAG fixed benchmark、release gate 或质量门写成已经通过。
+- 不把 blocked / prepared / implementation available 写成 measured。
 
-```text
-Evidence-span Agentic GraphRAG hardening baseline completed.
-Release gate output surface is available.
-Fixed EnterpriseRAG measured pass remains blocked by incomplete local agentic profile run.
-```
+## 当前 phase
 
-## 最近完成边界
+PHASE01 只负责打开 program、记录旧架构问题、确定新定位和四阶段验收边界。
 
-- 最近完成 program 的 phase 文件已完整归档。
-- 已完成 failure bucket 诊断、source span provenance、citation-sized chunks、lexical / phrase evidence retrieval、graph evidence lineage、evidence-aware reranker、claim-level citation binder、hard negative coverage 和 release gate 输出面。
-- 两次真实本地 EnterpriseRAG paired eval 尝试未完成 agentic profile，因此没有 measured pass；不得把 blocked run 写成 measured。
-- 后续如继续 evidence-span hardening，必须新开 program 或明确重开 phase。
+后续 phase：
 
-## 前台文件
-
-no-active 状态下，`.agent/programs/` 根目录保留：
-
-- `.agent/programs/current.md`
-- `.agent/programs/README.md`
-- `.agent/programs/implementation-roadmap.md`
-- `.agent/programs/closure-checklist.md`
-- `.agent/programs/queued-programs/README.md`
-
-平铺 `PHASE*.md` 文件已归档到 `docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/`，前台不保留 active phase 文件。
+1. PHASE02_lean-architecture-markdown
+2. PHASE03_four-diagram-html-and-guardrails
+3. PHASE04_docs-sync-verification-and-closure
