@@ -1,70 +1,27 @@
-# Evidence-Span Hardening Closure Checklist
+# Program Closure Checklist
 
-state: active
-active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE08_hard-negative-eval-and-release-gate.md
-latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
+state: no-active
+active_program: none
+current_phase: none
+latest_completed_program: zuno-evidence-span-agentic-graphrag-hardening-v1
 
 ## 当前关闭状态
 
-本 program 尚未关闭。当前 active phase 是：
+当前没有 active program。最近完成 program 已归档：
 
-- `PHASE08_hard-negative-eval-and-release-gate.md`
+- `docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/`
 
-## Program 关闭目标
+## 最近关闭结论
 
-本轮关闭时必须能证明：
-
-```text
-Agentic GraphRAG 的 doc-level retrieval 增益已经转化成 evidence-span retrieval / citation / answer quality 的可测增益。
-```
-
-最低质量闸门：
-
-- [ ] `Evidence Text Available@5 >= 0.60`
-- [ ] `Source Doc Citation >= 0.85`
-- [ ] `Citation Accuracy >= 0.30`
-- [ ] `Answer Correctness >= standard_rag baseline`
-- [ ] `blocked_not_measured`、`prepared`、`runtime_observed` 没有被写成 `measured`
-- [ ] strict citation 没有用 doc-level citation 冒充
-- [ ] `deep_graphrag` 没有被写成完整 product Agentic Runtime
-
-## Phase 关闭清单
-
-- [x] PHASE01 完成 eval truth source、gap buckets 和 failure taxonomy。
-- [x] PHASE02 完成 source span provenance contract。
-- [x] PHASE03 完成 citation-sized chunks 与 parent context chunks。
-- [x] PHASE04 完成 lexical / phrase evidence retriever。
-- [x] PHASE05 完成 entity-chunk bidirectional graph index。
-- [x] PHASE06 完成 evidence-aware reranker。
-- [x] PHASE07 完成 claim-level citation binder。
-- [ ] PHASE08 完成 hard negative eval、release gate、归档和 no-active closure。
-
-## 必须保留的历史边界
-
-Program 3 Mega 仍是最近完成的 launchable baseline：
-
-- `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`
-
-本 program 不能改写 Program 1 / Program 2 / Program 3 Mega 的 closure evidence。新的结论只能作为 evidence-span hardening 的增量 Current。
-
-## 最小验证命令
-
-每个 phase 关闭前至少运行相关 focused tests。本 program 收口前必须运行：
-
-```powershell
-git diff --check
-python .agent/scripts/verify_agent_system.py
-powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
-pytest -q tests/repo/test_agent_system.py tests/agent_system/test_agent_guardrails.py -p no:cacheprovider
-pytest -q tests/evals/test_enterprise_rag_paired_benchmark.py tests/evals/test_rag_eval_metrics.py -p no:cacheprovider
-```
-
-如果 runtime 代码、API、frontend 或 architecture docs 被修改，还必须追加对应 focused tests / verifier。
+- [x] PHASE01-PHASE08 已归档。
+- [x] release gate 输出面已完成。
+- [x] blocked / prepared / incomplete eval 未写成 measured。
+- [x] strict citation 未使用 doc-level citation 冒充。
+- [x] `deep_graphrag` 未写成完整 product Agentic Runtime。
+- [ ] fixed EnterpriseRAG measured pass 未达成；agentic profile run 未完成。
 
 ## 下一轮检查
 
-- 当前 phase 是否仍是 `PHASE08_hard-negative-eval-and-release-gate.md`；PHASE07 claim-level citation binder 已完成并已通过 focused tests。
-- 本轮修改是否只做 hard negative eval / release gate，还是已经进入 program closure。
-- 如果进入 runtime，必须先写 tests，再改实现。
-- 所有新增指标必须说明是 fixed benchmark、runtime observed、prepared 还是 blocked。
+- 是否需要新开 program，而不是修改已归档 phase。
+- 是否已经修复 agentic profile runner，能完整运行 paired benchmark。
+- 是否仍严格区分 fixed benchmark measured、blocked、prepared 和 runtime observed。

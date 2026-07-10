@@ -2,12 +2,23 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE08_hard-negative-eval-and-release-gate
-status: active
+status: completed
 owner: Eval / Release
 
 ## 目标
 
 补齐 hard negative eval，并用 release gate 判断 Agentic GraphRAG 是否真正稳定超过 standard RAG。
+
+## Current 完成事实
+
+PHASE08 已完成 EnterpriseRAG paired runner 的 release gate 输出面：`metrics.json` 和 `report.md` 会输出 `hard_negative_coverage` 与 `release_gate`，其中 release gate 检查 `Evidence Text Available@5 >= 0.60`、`Source Doc Citation >= 0.85`、`Citation Accuracy >= 0.30`、`Answer Correctness >= standard_rag` 和 hard negative taxonomy 覆盖。
+
+本轮真实本地 paired eval 尝试过两次：
+
+- `sample_size=80` 输出目录：`.local/evals/zuno/rag_eval/runs/enterprise-rag-phase08-release-gate`
+- `sample_size=8` 输出目录：`.local/evals/zuno/rag_eval/runs/enterprise-rag-phase08-release-gate-smoke`
+
+两次运行都完成了部分 profile 产物，但 agentic profile 未在本轮运行窗口内完成，因此本轮不能写成 fixed benchmark measured pass。当前 release gate 结论是 `blocked_not_measured_due_to_agentic_profile_incomplete`；quality gate 保持未达成，后续需要修复或拆分 agentic profile runner 后再跑完整 fixed benchmark。
 
 ## 范围
 

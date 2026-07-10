@@ -72,6 +72,14 @@ and evidence, not the active Agent execution path.
   GraphRAG, Memory, Capability / Skill / Tool / MCP, Security, Model Gateway,
   Planning & Control Runtime, Product API / Frontend, E2E, Eval / Trace /
   Cost, architecture docs, full verification, archive, and no-active state.
+- `zuno-evidence-span-agentic-graphrag-hardening-v1/`: completed
+  evidence-span Agentic GraphRAG hardening program. It closed PHASE01-PHASE08
+  across eval failure buckets, source span provenance, citation-sized chunks,
+  lexical / phrase evidence retrieval, graph evidence lineage,
+  evidence-aware reranking, claim-level citation binding, hard negative
+  coverage, release gate output, archive, and no-active state. Fixed
+  EnterpriseRAG measured pass remains blocked by incomplete local agentic
+  profile run.
 
 ## Rule
 

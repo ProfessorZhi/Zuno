@@ -67,6 +67,7 @@ ACTIVE_PROGRAM_FILES = [
     "closure-checklist.md",
 ]
 EVIDENCE_SPAN_PROGRAM_NAME = "zuno-evidence-span-agentic-graphrag-hardening-v1"
+EVIDENCE_SPAN_PROGRAM_ARCHIVE = f"docs/history/programs/{EVIDENCE_SPAN_PROGRAM_NAME}"
 EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
     "PHASE01_eval-truth-source-and-gap-buckets.md",
     "PHASE02_source-span-provenance-contract.md",
@@ -79,7 +80,6 @@ EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
 ]
 CURRENT_FRONT_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_FILES,
-    *EVIDENCE_SPAN_PROGRAM_PHASE_FILES,
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -507,13 +507,21 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         + (program3_archive_root / "README.md").read_text(encoding="utf-8")
         + (program3_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
+    evidence_archive_root = repo_root / EVIDENCE_SPAN_PROGRAM_ARCHIVE
+    evidence_archive_text = (
+        (evidence_archive_root / "current.md").read_text(encoding="utf-8")
+        + (evidence_archive_root / "README.md").read_text(encoding="utf-8")
+        + (evidence_archive_root / "closure-summary.md").read_text(encoding="utf-8")
+    )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: active",
-        f"active_program: {EVIDENCE_SPAN_PROGRAM_NAME}",
-        "current_phase: PHASE08_hard-negative-eval-and-release-gate.md",
-        f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {EVIDENCE_SPAN_PROGRAM_NAME}",
         EVIDENCE_SPAN_PROGRAM_NAME,
+        EVIDENCE_SPAN_PROGRAM_ARCHIVE,
+        "blocked_not_measured_due_to_agentic_profile_incomplete",
         "Evidence Text Available@5 >= 0.60",
         "Citation Accuracy >= 0.30",
         "doc_hit_text_miss",
@@ -550,22 +558,21 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
     ]:
-        if phrase not in current + readme + roadmap + closure + current_reference + program3_archive_text + latest_archive_text + ingestion_archive_text + production_archive_text + runtime_archive_text:
+        if phrase not in current + readme + roadmap + closure + current_reference + evidence_archive_text + program3_archive_text + latest_archive_text + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names != sorted(EVIDENCE_SPAN_PROGRAM_PHASE_FILES):
-        errors.append(".agent/programs active phase files drifted: " + ", ".join(active_phase_names))
+    if active_phase_names:
+        errors.append(".agent/programs must not keep active phase files in no-active state: " + ", ".join(active_phase_names))
     for index, phase_name in enumerate(EVIDENCE_SPAN_PROGRAM_PHASE_FILES, start=1):
-        phase_path = repo_root / ".agent/programs" / phase_name
+        phase_path = evidence_archive_root / phase_name
         if not phase_path.exists():
-            errors.append(f"evidence-span active program missing phase: {phase_name}")
+            errors.append(f"evidence-span archive missing phase: {phase_name}")
             continue
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {EVIDENCE_SPAN_PROGRAM_NAME}" not in phase_content:
             errors.append(f"evidence-span phase missing program id: {phase_name}")
-        expected_status = "completed" if index <= 7 else "active"
-        if f"status: {expected_status}" not in phase_content:
-            errors.append(f"evidence-span phase wrong status for active lifecycle: {phase_name}")
+        if "status: completed" not in phase_content:
+            errors.append(f"evidence-span archive phase wrong status: {phase_name}")
         for section in [
             "## 目标",
             "## 范围",

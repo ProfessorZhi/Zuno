@@ -79,6 +79,20 @@ FAILURE_BUCKETS = [
     "citation_hit_answer_wrong",
 ]
 UNAVAILABLE_BUCKET_REASON = "unavailable_due_to_missing_trace_fields"
+HARD_NEGATIVE_CATEGORIES = [
+    "same_document_neighbor_wrong_chunk",
+    "same_topic_different_document",
+    "table_vs_body",
+    "header_footer_noise",
+    "ocr_noise",
+    "multi_document_conflict",
+    "graph_summary_requires_source_citation",
+]
+RELEASE_GATE_THRESHOLDS = {
+    "evidence_text_available_at_k": 0.60,
+    "source_doc_citation_accuracy": 0.85,
+    "citation_accuracy": 0.30,
+}
 
 
 def _select_rows(
@@ -151,7 +165,31 @@ def _write_document_markdown(files_dir: Path, document: dict[str, Any]) -> dict[
         "doc_id": doc_id,
         "source_type": source_type,
         "hard_negative": True,
+        "hard_negative_category": _classify_hard_negative(document),
     }
+
+
+def _classify_hard_negative(document: dict[str, Any]) -> str:
+    doc_id = str(document.get("doc_id") or "").lower()
+    source_type = str(document.get("source_type") or "").lower()
+    title = str(document.get("title") or "").lower()
+    content = str(document.get("content") or "").lower()
+    combined = " ".join([doc_id, source_type, title, content])
+    if any(token in combined for token in ("neighbor", "adjacent", "previous chunk", "next chunk")):
+        return "same_document_neighbor_wrong_chunk"
+    if any(token in combined for token in ("table", "csv", "spreadsheet", "|")):
+        return "table_vs_body"
+    if any(token in combined for token in ("header", "footer", "navigation", "breadcrumb")):
+        return "header_footer_noise"
+    if any(token in combined for token in ("ocr", "scanned", "scan", "noisy text")):
+        return "ocr_noise"
+    if any(token in combined for token in ("conflict", "conflicting", "outdated", "superseded", "old policy")):
+        return "multi_document_conflict"
+    if any(token in combined for token in ("graph summary", "community summary", "summary without source")):
+        return "graph_summary_requires_source_citation"
+    if any(token in combined for token in ("same topic", "similar topic", "related doc", "related document")):
+        return "same_topic_different_document"
+    return "same_topic_different_document"
 
 
 def _append_hard_negatives(
@@ -711,6 +749,108 @@ def _build_gated_agentic_simulation(
     }
 
 
+def _hard_negative_coverage(manifest: dict[str, Any]) -> dict[str, Any]:
+    counts = {category: 0 for category in HARD_NEGATIVE_CATEGORIES}
+    examples: dict[str, list[str]] = {category: [] for category in HARD_NEGATIVE_CATEGORIES}
+    for item in manifest.get("files", []):
+        if not item.get("hard_negative"):
+            continue
+        category = str(item.get("hard_negative_category") or "same_topic_different_document")
+        if category not in counts:
+            category = "same_topic_different_document"
+        counts[category] += 1
+        if len(examples[category]) < 3:
+            examples[category].append(str(item.get("doc_id") or item.get("file_name") or "unknown"))
+    missing = [category for category in HARD_NEGATIVE_CATEGORIES if counts.get(category, 0) <= 0]
+    observed = [category for category in HARD_NEGATIVE_CATEGORIES if counts.get(category, 0) > 0]
+    configured_count = sum(counts.values())
+    return {
+        "status": "complete" if configured_count > 0 and not missing else "incomplete",
+        "configured_count": configured_count,
+        "taxonomy": HARD_NEGATIVE_CATEGORIES,
+        "category_counts": counts,
+        "covered_categories": observed,
+        "missing_categories": missing,
+        "examples": examples,
+    }
+
+
+def _build_release_gate(metrics: dict[str, Any]) -> dict[str, Any]:
+    measurement_status = str(metrics.get("measurement_status") or "")
+    if measurement_status != "fixed_benchmark":
+        return {
+            "status": measurement_status or "not_measured",
+            "measured": False,
+            "blocked_reason": (metrics.get("corpus") or {}).get("blocked_reason"),
+            "checks": [],
+            "failed_checks": [],
+        }
+
+    profiles = metrics.get("profiles") or {}
+    agentic = (profiles.get("agentic_graphrag") or {}).get("aggregate") or {}
+    standard = (profiles.get("standard_rag") or {}).get("aggregate") or {}
+    hard_negative_coverage = metrics.get("hard_negative_coverage") or {}
+    checks = [
+        _threshold_check(
+            "Evidence Text Available@5",
+            agentic.get("evidence_text_available_at_k"),
+            ">=",
+            RELEASE_GATE_THRESHOLDS["evidence_text_available_at_k"],
+        ),
+        _threshold_check(
+            "Source Doc Citation",
+            agentic.get("source_doc_citation_accuracy"),
+            ">=",
+            RELEASE_GATE_THRESHOLDS["source_doc_citation_accuracy"],
+        ),
+        _threshold_check(
+            "Citation Accuracy",
+            agentic.get("citation_accuracy"),
+            ">=",
+            RELEASE_GATE_THRESHOLDS["citation_accuracy"],
+        ),
+        _threshold_check(
+            "Answer Correctness vs standard_rag",
+            agentic.get("answer_correctness"),
+            ">=",
+            standard.get("answer_correctness"),
+        ),
+        {
+            "name": "Hard Negative Coverage",
+            "observed": hard_negative_coverage.get("status"),
+            "operator": "==",
+            "threshold": "complete",
+            "passed": hard_negative_coverage.get("status") == "complete",
+            "missing_categories": hard_negative_coverage.get("missing_categories") or [],
+        },
+    ]
+    failed = [check for check in checks if not check.get("passed")]
+    return {
+        "status": "passed" if not failed else "failed",
+        "measured": True,
+        "profile": "agentic_graphrag",
+        "thresholds": RELEASE_GATE_THRESHOLDS,
+        "checks": checks,
+        "failed_checks": [check["name"] for check in failed],
+    }
+
+
+def _threshold_check(name: str, observed: Any, operator: str, threshold: Any) -> dict[str, Any]:
+    passed = False
+    if observed is not None and threshold is not None:
+        try:
+            passed = float(observed) >= float(threshold)
+        except (TypeError, ValueError):
+            passed = False
+    return {
+        "name": name,
+        "observed": observed,
+        "operator": operator,
+        "threshold": threshold,
+        "passed": passed,
+    }
+
+
 def _build_failure_cases(per_samples: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
     failures: list[dict[str, Any]] = []
     for profile, rows in per_samples.items():
@@ -965,6 +1105,56 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
         )
         for question_type, profile in (gate_policy.get("selected_profile_by_question_type") or {}).items():
             lines.append(f"| {question_type} | {profile} |")
+    hard_negative_coverage = metrics.get("hard_negative_coverage") or {}
+    if hard_negative_coverage:
+        lines.extend(
+            [
+                "",
+                "## Hard Negative Coverage",
+                "",
+                f"- status: `{hard_negative_coverage.get('status')}`",
+                f"- configured_count: `{hard_negative_coverage.get('configured_count')}`",
+                f"- missing_categories: `{', '.join(hard_negative_coverage.get('missing_categories') or []) or 'none'}`",
+                "",
+                "| Category | Count | Examples |",
+                "|---|---:|---|",
+            ]
+        )
+        counts = hard_negative_coverage.get("category_counts") or {}
+        examples = hard_negative_coverage.get("examples") or {}
+        for category in hard_negative_coverage.get("taxonomy") or HARD_NEGATIVE_CATEGORIES:
+            lines.append(
+                "| {category} | {count} | {examples} |".format(
+                    category=category,
+                    count=counts.get(category, 0),
+                    examples=", ".join(examples.get(category) or []),
+                )
+            )
+    release_gate = metrics.get("release_gate") or {}
+    if release_gate:
+        lines.extend(
+            [
+                "",
+                "## Release Gate",
+                "",
+                f"- status: `{release_gate.get('status')}`",
+                f"- measured: `{str(bool(release_gate.get('measured'))).lower()}`",
+                f"- failed_checks: `{', '.join(release_gate.get('failed_checks') or []) or 'none'}`",
+                "",
+                "| Check | Observed | Target | Passed |",
+                "|---|---:|---:|---:|",
+            ]
+        )
+        for check in release_gate.get("checks") or []:
+            lines.append(
+                "| {name} | {observed} | {operator} {threshold} | {passed} |".format(
+                    name=check.get("name"),
+                    observed=_fmt(check.get("observed")),
+                    operator=check.get("operator"),
+                    threshold=_fmt(check.get("threshold")),
+                    passed=str(bool(check.get("passed"))).lower(),
+                )
+            )
     diagnostics = metrics.get("evidence_conversion_diagnostics") or {}
     if diagnostics.get("tag_counts") or diagnostics.get("bucket_items") or diagnostics.get("unavailable_items"):
         lines.extend(["", "## Evidence Conversion Diagnostics", ""])
@@ -1029,7 +1219,7 @@ def _fmt(value: Any) -> str:
 
 
 def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str, Any]) -> dict[str, Any]:
-    return {
+    metrics = {
         "status": "blocked",
         "measurement_status": "blocked_not_measured",
         "metrics_source": "blocked_not_measured",
@@ -1075,6 +1265,9 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
         "failure_count": 0,
         "failure_tag_limitations": _failure_tag_limitations(),
     }
+    metrics["hard_negative_coverage"] = _hard_negative_coverage(manifest)
+    metrics["release_gate"] = _build_release_gate(metrics)
+    return metrics
 
 
 def _question_type_counts(rows: Iterable[dict[str, Any]]) -> dict[str, int]:
@@ -1173,6 +1366,7 @@ async def run_enterprise_rag_paired_benchmark(
         metrics["measurement_status"] = "prepared_not_measured"
         metrics["metrics_source"] = "prepared_not_measured"
         metrics["evidence_conversion_diagnostics"]["measurement_status"] = "prepared_not_measured"
+        metrics["release_gate"] = _build_release_gate(metrics)
         (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
         _write_failure_cases(output_root / "failure_cases.md", [])
         _write_report(output_root / "report.md", metrics)
@@ -1270,10 +1464,12 @@ async def run_enterprise_rag_paired_benchmark(
         },
         "evidence_conversion_diagnostics": evidence_conversion_diagnostics,
         "gated_agentic_simulation": gated_agentic_simulation,
+        "hard_negative_coverage": _hard_negative_coverage(manifest),
         "cost_latency": cost_latency,
         "failure_count": len(failures),
         "failure_tag_limitations": failure_tag_limitations,
     }
+    metrics["release_gate"] = _build_release_gate(metrics)
     (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
     _write_failure_cases(
         output_root / "failure_cases.md",

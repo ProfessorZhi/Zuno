@@ -118,6 +118,8 @@ def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path
     assert metrics["measurement_status"] == "blocked_not_measured"
     assert metrics["case_set"]["selected_case_count"] == 2
     assert metrics["case_set"]["measured_case_count"] == 0
+    assert metrics["release_gate"]["measured"] is False
+    assert metrics["release_gate"]["status"] == "blocked_not_measured"
     assert metrics["corpus"]["external_documents_required"] is True
     assert metrics["corpus"]["blocked_reason"] == "enterprise_rag_bench_documents_required"
     assert metrics["runtime_config"]["citation_chunking"]["strategy"] == "citation_sized_with_parent_context"
@@ -286,6 +288,8 @@ def test_enterprise_rag_paired_benchmark_records_missing_docs_without_faking_mea
     assert metrics["corpus"]["missing_doc_ids"] == ["dsid_missing_doc"]
     assert metrics["case_set"]["selected_case_count"] == 3
     assert metrics["case_set"]["measured_case_count"] == 0
+    assert metrics["release_gate"]["measured"] is False
+    assert metrics["release_gate"]["status"] == "prepared_not_measured"
 
 
 def test_enterprise_rag_phase01_failure_buckets_and_missing_trace_fields() -> None:
@@ -611,6 +615,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert corpus_manifest["hard_negative_count"] == 1
     hard_negatives = [item for item in corpus_manifest["files"] if item.get("hard_negative")]
     assert [item["doc_id"] for item in hard_negatives] == ["dsid_negative_noise"]
+    assert hard_negatives[0]["hard_negative_category"] == "same_topic_different_document"
     assert "dsid_upload_limits" not in {item["doc_id"] for item in hard_negatives}
 
     metrics = _read_json(output_root / "metrics.json")
@@ -631,6 +636,17 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert metrics["agentic_metrics"]["replan_success_rate"] == 1.0
     assert metrics["cost_latency"]["deep_graphrag"]["latency_p95_ms"] == 24
     assert metrics["cost_latency"]["agentic_graphrag"]["latency_p95_ms"] == 34
+    assert metrics["hard_negative_coverage"]["status"] == "incomplete"
+    assert metrics["hard_negative_coverage"]["configured_count"] == 1
+    assert metrics["hard_negative_coverage"]["category_counts"]["same_topic_different_document"] == 1
+    assert "ocr_noise" in metrics["hard_negative_coverage"]["missing_categories"]
+    assert metrics["release_gate"]["status"] == "failed"
+    assert metrics["release_gate"]["measured"] is True
+    assert metrics["release_gate"]["failed_checks"] == [
+        "Evidence Text Available@5",
+        "Answer Correctness vs standard_rag",
+        "Hard Negative Coverage",
+    ]
 
     failure_text = (output_root / "failure_cases.md").read_text(encoding="utf-8")
     assert "retrieval_miss" in failure_text
@@ -695,3 +711,29 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert "Source Doc Citation" in report_text
     assert "## Gated Agentic Simulation" in report_text
     assert "positive_agentic_recall_delta" in report_text
+    assert "## Hard Negative Coverage" in report_text
+    assert "same_topic_different_document" in report_text
+    assert "## Release Gate" in report_text
+    assert "Evidence Text Available@5" in report_text
+
+
+def test_enterprise_rag_hard_negative_classifier_covers_phase08_taxonomy() -> None:
+    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+        HARD_NEGATIVE_CATEGORIES,
+        _classify_hard_negative,
+    )
+
+    examples = [
+        ({"doc_id": "neighbor-chunk", "content": "Adjacent previous chunk has the wrong approval."}, "same_document_neighbor_wrong_chunk"),
+        ({"doc_id": "same-topic", "content": "Related document for the same topic but not the answer."}, "same_topic_different_document"),
+        ({"doc_id": "table", "content": "Table says A | B | C while body says something else."}, "table_vs_body"),
+        ({"doc_id": "footer", "content": "Footer navigation repeated on every page."}, "header_footer_noise"),
+        ({"doc_id": "ocr", "content": "OCR noisy text from a scanned policy."}, "ocr_noise"),
+        ({"doc_id": "conflict", "content": "Old policy conflicts with current retention."}, "multi_document_conflict"),
+        ({"doc_id": "graph-summary", "content": "Graph summary has answer but summary without source."}, "graph_summary_requires_source_citation"),
+    ]
+
+    observed = {_classify_hard_negative(payload) for payload, _ in examples}
+
+    assert [category for _, category in examples] == HARD_NEGATIVE_CATEGORIES
+    assert observed == set(HARD_NEGATIVE_CATEGORIES)
