@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE07_tool-control-plane-and-approval-integration
+current_phase: PHASE08_corrective-agentic-graphrag-and-evidence-ledger
 latest_completed_program: zuno-lean-complete-product-architecture-v1
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
@@ -45,9 +45,9 @@ input_gate
 
 ## 当前 Phase
 
-`PHASE07_tool-control-plane-and-approval-integration`
+`PHASE08_corrective-agentic-graphrag-and-evidence-ledger`
 
-PHASE01 已完成事实源、现状证据、运行命令、失败语义和 benchmark truth source 冻结，未修改生产 runtime。PHASE02 已建立 `zuno.agent.runtime` 版本化 contract、`AgentRuntimeState` / `AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、strategy/reflection/finalization 枚举和 legacy adapters。PHASE03 已建立 `ModelRole`、`ModelCallRequest` / `ModelCallResponse` aliases、role-aware gateway trace、LangChain-compatible gateway adapter、GeneralAgent gateway 注入和 direct-call boundary verifier；legacy SDK wrappers 仍以显式 allowlist 保留，不是产品主 unified runtime 入口。PHASE04 已建立 SQLite-backed `SQLiteAgentRunStore`、local trace store、tool idempotency claim、scope load、corrupt JSON rejection 和 restart resume tests。PHASE05 已建立 unified LangGraph topology、`UnifiedAgentRuntimeService`、conditional routes、stream、approval/ask_user interrupt、resume、cancel、checkpoint 和无 simulated marker 的 deterministic skeleton；产品 API/UI 尚未切换。PHASE06 已建立 runtime Strategy、Plan validation、PlanExecutor、StepExecutorRegistry 和多步 execution baseline。下一步 PHASE07 只处理 Tool Control Plane approval/timeout/idempotency/trace 闭环。
+PHASE01 已完成事实源、现状证据、运行命令、失败语义和 benchmark truth source 冻结，未修改生产 runtime。PHASE02 已建立 `zuno.agent.runtime` 版本化 contract、`AgentRuntimeState` / `AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、strategy/reflection/finalization 枚举和 legacy adapters。PHASE03 已建立 `ModelRole`、`ModelCallRequest` / `ModelCallResponse` aliases、role-aware gateway trace、LangChain-compatible gateway adapter、GeneralAgent gateway 注入和 direct-call boundary verifier；legacy SDK wrappers 仍以显式 allowlist 保留，不是产品主 unified runtime 入口。PHASE04 已建立 SQLite-backed `SQLiteAgentRunStore`、local trace store、tool idempotency claim、scope load、corrupt JSON rejection 和 restart resume tests。PHASE05 已建立 unified LangGraph topology、`UnifiedAgentRuntimeService`、conditional routes、stream、approval/ask_user interrupt、resume、cancel、checkpoint 和无 simulated marker 的 deterministic skeleton；产品 API/UI 尚未切换。PHASE06 已建立 runtime Strategy、Plan validation、PlanExecutor、StepExecutorRegistry 和多步 execution baseline。PHASE07 已接入 Tool Control Plane approval/resume/idempotency/blocked observation baseline。下一步 PHASE08 只处理 corrective Agentic GraphRAG 和 EvidenceLedger。
 
 ## 不变边界
 

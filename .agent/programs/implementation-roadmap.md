@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE07_tool-control-plane-and-approval-integration
+current_phase: PHASE08_corrective-agentic-graphrag-and-evidence-ledger
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
 ## Program Definition
@@ -32,7 +32,7 @@ Plan-and-Execute for macro control
 | PHASE04 | `durable-store-trace-and-idempotency` | completed：SQLite-backed run/checkpoint/event/interrupt/plan/observation/tool claim store、local trace store 和 restart resume evidence 已完成；完整 graph restart 等 PHASE05/11 | persistence |
 | PHASE05 | `unified-langgraph-runtime-skeleton` | completed：已建立 LangGraph topology、UnifiedAgentRuntimeService、conditional routes、stream、interrupt/resume/cancel/checkpoint 和无 simulated marker skeleton；产品切换仍待 PHASE11 | agent graph |
 | PHASE06 | `strategy-plan-and-react-step-execution` | completed：已建立 Strategy wrapper、Plan validator/executor、StepExecutorRegistry 和多步 Plan/ReAct execution baseline；Tool Control Plane 真执行待 PHASE07 | planning execution |
-| PHASE07 | `tool-control-plane-and-approval-integration` | ToolCallIntent -> policy/approval/credential/execution/observation 闭环 | tool runtime |
+| PHASE07 | `tool-control-plane-and-approval-integration` | completed：ToolStepExecutor 已经经 ToolControlPlaneRuntime 执行，approval/resume/idempotency/blocked observation baseline 已完成；产品切换仍待 PHASE11 | tool runtime |
 | PHASE08 | `corrective-agentic-graphrag-and-evidence-ledger` | 多轮检索、EvidenceLedger、quality gate、corrective action | knowledge runtime |
 | PHASE09 | `reflection-replan-grounded-synthesis` | 确定性 gate、可选 critic、真实 replan、rewrite、citation finalization | quality control |
 | PHASE10 | `four-layer-memory-and-reflexion-reuse` | 四层 Memory 读/用/写、Reflexion review 与未来任务复用 | memory closure |

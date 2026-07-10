@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE07_tool-control-plane-and-approval-integration
+current_phase: PHASE08_corrective-agentic-graphrag-and-evidence-ledger
 
 ## 功能与质量关闭项
 
@@ -12,7 +12,7 @@ current_phase: PHASE07_tool-control-plane-and-approval-integration
 - [x] PHASE04 run/checkpoint/plan/observation/interrupt/evidence/tool execution 可 SQLite 持久化并重启恢复。
 - [x] PHASE05 LangGraph 主图 skeleton 可 run/stream/resume/cancel/checkpoint；产品切换仍待 PHASE11。
 - [x] PHASE06 Plan-and-Execute 与 ReAct step 在同一图中逐步执行；真实 Tool Control Plane 执行待 PHASE07。
-- [ ] PHASE07 Tool Control Plane approval/timeout/idempotency/trace 闭环完成。
+- [x] PHASE07 Tool Control Plane approval/resume/idempotency/trace baseline 完成；产品切换仍待 PHASE11。
 - [ ] PHASE08 EvidenceLedger 和 corrective retrieval 真实执行多轮。
 - [ ] PHASE09 Reflection/Replan/Rewrite/Grounded Synthesis 形成质量闭环。
 - [ ] PHASE10 四层 Memory 与 Reflexion approved reuse 被产品链路证明。

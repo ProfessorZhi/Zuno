@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE07
-    state: planned
+    state: completed
     title: Tool Control Plane、Approval 与 Resume
     depends_on: PHASE06
     next_phase: PHASE08
@@ -94,6 +94,15 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     ## 文档与状态同步
 
     更新 capability/tool Current/Partial 与 trace event。
+
+    ## 完成记录
+
+    - `ToolStepExecutor` 已从 intent-only baseline 升级为调用 `ToolControlPlaneRuntime`。
+    - Read-only tool 会自动执行并输出 `NormalizedObservation(kind=tool)`、sandbox audit、tool result trace metadata。
+    - Side-effect tool 会进入 `approval_waiting` interrupt；resume 时先通过 `SQLiteAgentRunStore.claim_tool_execution` claim idempotency key，再以 approved request 执行一次。
+    - denied / network blocked 会转为 `TOOL` blocked observation，不直接抛成 fake success。
+    - vertical slice 覆盖：`filesystem.read` 只读本地、`mail.send` 外部副作用 approval/resume、`mail.send` 非 mail egress blocked。
+    - 产品 API/UI 仍未切换到 unified runtime；GeneralAgent 旧 handler path 的产品切换属于 PHASE11。
 
     ## Phase 完成报告
 

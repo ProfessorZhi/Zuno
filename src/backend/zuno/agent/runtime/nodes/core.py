@@ -91,11 +91,26 @@ def execute_step(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRu
     running_plan = _PLAN_EXECUTOR.mark_running(state.plan_state, step)
     running_step = next(item for item in running_plan.steps if item.step_id == step.step_id)
     result = _STEP_EXECUTORS.execute(state=replace(state, plan_state=running_plan), step=running_step, deps=deps)
-    plan_state = (
-        _PLAN_EXECUTOR.mark_completed(running_plan, running_step, observation_ref=result.observation.observation_id)
-        if result.status == ObservationStatus.COMPLETED
-        else _PLAN_EXECUTOR.mark_failed(running_plan, running_step, observation_ref=result.observation.observation_id)
-    )
+    if result.status == ObservationStatus.COMPLETED:
+        plan_state = _PLAN_EXECUTOR.mark_completed(
+            running_plan,
+            running_step,
+            observation_ref=result.observation.observation_id,
+        )
+        finalization_status = state.finalization_status
+        interrupt_refs = state.interrupt_refs
+    elif result.status == ObservationStatus.WAITING and result.interrupt_required:
+        plan_state = running_plan
+        finalization_status = FinalizationStatus.INTERRUPTED
+        interrupt_refs = [*state.interrupt_refs, result.idempotency_key]
+    else:
+        plan_state = _PLAN_EXECUTOR.mark_failed(
+            running_plan,
+            running_step,
+            observation_ref=result.observation.observation_id,
+        )
+        finalization_status = state.finalization_status
+        interrupt_refs = state.interrupt_refs
     counters = state.counters.model_copy(update={"steps_executed": state.counters.steps_executed + 1})
     return _record_node(
         replace(
@@ -104,6 +119,8 @@ def execute_step(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRu
             plan_state=plan_state,
             current_step_id=plan_state.current_step_id,
             counters=counters,
+            finalization_status=finalization_status,
+            interrupt_refs=interrupt_refs,
         ),
         RuntimeNode.EXECUTE_STEP,
         summary=f"step executed: {running_step.action_type}",

@@ -79,7 +79,7 @@ EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
     "PHASE08_hard-negative-eval-and-release-gate.md",
 ]
 UNIFIED_RUNTIME_PROGRAM_NAME = "zuno-unified-agent-runtime-closure-v1"
-UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE07_tool-control-plane-and-approval-integration"
+UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE08_corrective-agentic-graphrag-and-evidence-ledger"
 UNIFIED_RUNTIME_PHASE_FILES = [
     "PHASE01_truth-source-baseline-and-program-activation.md",
     "PHASE02_unified-runtime-contracts-and-state.md",

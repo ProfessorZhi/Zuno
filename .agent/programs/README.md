@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-unified-agent-runtime-closure-v1`
-- Current phase: `PHASE07_tool-control-plane-and-approval-integration`
+- Current phase: `PHASE08_corrective-agentic-graphrag-and-evidence-ledger`
 - Latest completed program: `zuno-lean-complete-product-architecture-v1`
 - Baseline commit: `72488a25fde59bc5ef86b2b1c84f25d42cb946ca`
 
@@ -22,9 +22,9 @@
 
 当前只执行：
 
-- `.agent/programs/PHASE07_tool-control-plane-and-approval-integration.md`
+- `.agent/programs/PHASE08_corrective-agentic-graphrag-and-evidence-ledger.md`
 
-PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。PHASE02 已完成 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的主入口和边界 verifier。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。PHASE06 已完成 Strategy / Plan-and-Execute / ReAct step execution baseline。当前下一步是 PHASE07 的 Tool Control Plane integration。
+PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。PHASE02 已完成 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的主入口和边界 verifier。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。PHASE06 已完成 Strategy / Plan-and-Execute / ReAct step execution baseline。PHASE07 已完成 Tool Control Plane integration baseline。当前下一步是 PHASE08 的 corrective Agentic GraphRAG / EvidenceLedger。
 
 ## 当前文件
 

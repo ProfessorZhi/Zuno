@@ -15,6 +15,9 @@ class StepExecutionResult:
     status: ObservationStatus
     observation: NormalizedObservation
     trace_event_ids: list[str] = field(default_factory=list)
+    interrupt_required: bool = False
+    required_approval: str = ""
+    idempotency_key: str = ""
 
 
 class StepExecutor(Protocol):

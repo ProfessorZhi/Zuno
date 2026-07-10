@@ -151,6 +151,7 @@ def verify_entrypoint_text() -> list[str]:
         "PHASE05_unified-langgraph-runtime-skeleton",
         "PHASE06_strategy-plan-and-react-step-execution",
         "PHASE07_tool-control-plane-and-approval-integration",
+        "PHASE08_corrective-agentic-graphrag-and-evidence-ledger",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }:

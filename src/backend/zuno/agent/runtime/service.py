@@ -114,10 +114,35 @@ class UnifiedAgentRuntimeService:
             raise ValueError(f"runtime task has no checkpoint to resume: {task_id}")
         state = AgentRuntimeState.from_snapshot(AgentRuntimeSnapshot.from_payload(dict(latest.state)))
         state = replace(state, reflection_decision=ReflectionDecision.PASS)
+        interrupt_payload = dict(interrupt.payload or {})
+        idempotency_key = str(interrupt_payload.get("idempotency_key") or "")
+        if idempotency_key and f"approved:{idempotency_key}" not in state.interrupt_refs:
+            if hasattr(self.store, "claim_tool_execution"):
+                claimed = self.store.claim_tool_execution(
+                    task_id=state.task_id,
+                    workspace_id=state.workspace_id,
+                    user_id=state.user_id,
+                    idempotency_key=idempotency_key,
+                    tool_name=str(interrupt_payload.get("required_approval") or "tool").removeprefix("tool:"),
+                    payload={"step_id": state.current_step_id or "", "status": "claimed"},
+                )
+                if not claimed:
+                    return state.to_snapshot()
+            state = replace(
+                state,
+                interrupt_refs=[*state.interrupt_refs, f"approved:{idempotency_key}"],
+                finalization_status=FinalizationStatus.NOT_READY,
+            )
+        else:
+            state = replace(state, finalization_status=FinalizationStatus.NOT_READY)
         self.store.clear_interrupt(task_id)
         self.store.update_status(task_id, "running")
         self.checkpointer.append_event(state, event_type="runtime_resumed", status="running", node=interrupt.node)
-        resume_node = RuntimeNode.EXECUTE_STEP if interrupt.node == RuntimeNode.APPROVAL.value else RuntimeNode.FINALIZE
+        resume_node = (
+            RuntimeNode.EXECUTE_STEP
+            if interrupt.node in {RuntimeNode.APPROVAL.value, RuntimeNode.EXECUTE_STEP.value}
+            else RuntimeNode.FINALIZE
+        )
         final_state = self._run_from(state, resume_node)
         return final_state.to_snapshot()
 
@@ -136,6 +161,18 @@ class UnifiedAgentRuntimeService:
         while current_node != RuntimeNode.END:
             current_state = self.nodes[current_node](current_state, self.dependencies)
             current_state = self.checkpointer.persist_node(current_state, node=current_node.value)
+
+            if current_state.finalization_status == FinalizationStatus.INTERRUPTED:
+                last_observation = current_state.observations[-1] if current_state.observations else None
+                metadata = dict(last_observation.metadata) if last_observation is not None else {}
+                current_state = self.checkpointer.persist_interrupt(
+                    current_state,
+                    node=current_node.value,
+                    reason=str(metadata.get("tool_runtime_status") or "interrupt_required"),
+                    required_approval=str(metadata.get("required_approval") or "tool_or_capability"),
+                    payload=metadata,
+                )
+                return current_state
 
             if current_node == RuntimeNode.INTERRUPT:
                 current_state = self.checkpointer.persist_interrupt(
@@ -176,7 +213,11 @@ class UnifiedAgentRuntimeService:
         if node == RuntimeNode.EXECUTE_STEP:
             return RuntimeNode.OBSERVE
         if node == RuntimeNode.OBSERVE:
-            if state.plan_state is not None and state.plan_state.current_step_id:
+            if (
+                state.plan_state is not None
+                and state.plan_state.status == "running"
+                and state.plan_state.current_step_id
+            ):
                 return RuntimeNode.EXECUTE_STEP
             return RuntimeNode.EVIDENCE_GATE
         if node == RuntimeNode.EVIDENCE_GATE:

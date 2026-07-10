@@ -5,6 +5,10 @@ from zuno.agent.contracts import PlanState, PlanStep
 
 class PlanExecutor:
     def next_ready_step(self, plan_state: PlanState) -> PlanStep | None:
+        if plan_state.current_step_id:
+            for step in plan_state.steps:
+                if step.step_id == plan_state.current_step_id and step.status == "running":
+                    return step
         completed = {step.step_id for step in plan_state.steps if step.status == "completed"}
         for step in plan_state.steps:
             if step.status != "pending":

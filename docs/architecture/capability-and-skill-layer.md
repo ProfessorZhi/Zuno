@@ -92,6 +92,7 @@ Tool contract 必须包含 JSON schema、input/output、side-effect class、time
 Current：
 
 - capability registry/control plane、tool adapters、MCP surfaces 和多个工具实现已存在。
+- PHASE07 已将 unified runtime 的 `ToolStepExecutor` 接入 `ToolControlPlaneRuntime`：read-only tool 可自动执行并产出 normalized observation，side-effect tool 可进入 approval interrupt 并在 resume 时用 idempotency key claim 后执行一次，network/disabled/denied 结果会转为 TOOL blocked observation。Completion / Workspace / UI 产品主路径切换仍属于 PHASE11。
 
 Short-term：
 
