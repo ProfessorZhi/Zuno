@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE09
-    state: planned
+    state: completed
     title: Reflection、Replan、Rewrite 与 Grounded Synthesis
     depends_on: PHASE08
     next_phase: PHASE10
@@ -106,3 +106,28 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     6. 未完成和 blocked 项。
     7. commit SHA。
     8. 下一 Phase 是否满足依赖。
+
+    ## 完成记录
+
+    状态：completed，本地 unified runtime loop baseline available；产品 API/UI 切换和 fixed benchmark 仍未 measured。
+
+    已完成：
+
+    - 新增 `ReflectionEngine`、`DeterministicReflectionGate` 和 optional critic shim。
+    - 新增 `ReplanEngine`，`RETRIEVE_MORE` / `REPLAN` 会追加真实 pending `retrieve_evidence` step，修改 `current_step_id`、retrieval policy 和 budget，并记录 `replan_diff`。
+    - 新增 `GroundedSynthesisEngine`、ClaimExtractor 和 RuntimeCitationBinder；binder 只绑定 retrieval observation 中已有的 strict citation ids，不把 doc-only evidence 升级为 strict citation。
+    - `draft_and_bind_claims`、`reflection`、`replan`、`revise_draft` runtime nodes 已接入上述模块。
+    - `REWRITE_ANSWER` 路径会回到 `draft_and_bind_claims` 再次 reflection；rewrite 后仍 unsupported 时合法 abstain，不直接 finalize。
+    - focused tests 已证明同一 request 可经历 first retrieval insufficient -> reflection -> replan -> second retrieval -> grounded final。
+
+    证据：
+
+    - `pytest -q tests/agent/runtime/test_runtime_reflection_replan.py tests/agent/runtime/test_runtime_grounded_synthesis.py tests/agent/test_react_reflection_replan_runtime.py -p no:cacheprovider`
+    - `pytest -q tests/agent/runtime/test_runtime_graph_routes.py tests/agent/runtime/test_runtime_plan_execution.py tests/agent/runtime/test_runtime_interrupt_resume.py tests/agent/runtime/test_runtime_tool_control_plane.py -p no:cacheprovider`
+    - `python -m compileall -q src/backend/zuno/agent/runtime/reflection src/backend/zuno/agent/runtime/planning/replan.py src/backend/zuno/agent/runtime/synthesis src/backend/zuno/agent/runtime/nodes/core.py`
+
+    未关闭：
+
+    - 四层 Memory / Reflexion approved reuse 仍属于 PHASE10。
+    - Completion / Workspace / SSE / UI 产品切换仍属于 PHASE11。
+    - fixed paired benchmark 和 release gate 仍属于 PHASE13，不能写成 measured。

@@ -24,13 +24,19 @@ from zuno.agent.runtime.execution import (
     ToolStepExecutor,
 )
 from zuno.agent.runtime.planning import PlanExecutor, RuntimePlanner, RuntimeStrategySelector
+from zuno.agent.runtime.planning.replan import ReplanEngine
+from zuno.agent.runtime.reflection import ReflectionEngine
 from zuno.agent.runtime.routing import RuntimeNode
 from zuno.agent.runtime.state import AgentRuntimeState
+from zuno.agent.runtime.synthesis import GroundedSynthesisEngine
 
 RuntimeNodeHandler = Callable[[AgentRuntimeState, RuntimeDependencies], AgentRuntimeState]
 _STRATEGY_SELECTOR = RuntimeStrategySelector()
 _PLANNER = RuntimePlanner()
 _PLAN_EXECUTOR = PlanExecutor()
+_REPLAN_ENGINE = ReplanEngine()
+_REFLECTION_ENGINE = ReflectionEngine()
+_SYNTHESIS_ENGINE = GroundedSynthesisEngine()
 _STEP_EXECUTORS = StepExecutorRegistry(
     (
         KnowledgeStepExecutor(),
@@ -134,26 +140,57 @@ def observe(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntime
 
 def evidence_gate(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
     del deps
-    evidence_refs = state.evidence_refs or [f"evidence:{state.run_id}:skeleton"]
+    evidence_refs = state.evidence_refs or [
+        evidence_id
+        for observation in state.observations
+        for evidence_id in observation.evidence_ids
+    ]
+    has_explicit_retrieval = any(observation.kind == ObservationKind.RETRIEVAL for observation in state.observations)
+    if not evidence_refs and not has_explicit_retrieval:
+        evidence_refs = [f"evidence:{state.run_id}:skeleton"]
     counters = state.counters.model_copy(update={"retrieval_rounds": state.counters.retrieval_rounds + 1})
     return _record_node(
         replace(state, evidence_refs=evidence_refs, counters=counters),
         RuntimeNode.EVIDENCE_GATE,
-        summary="evidence gate recorded deterministic evidence ref",
+        summary="evidence gate recorded evidence refs",
     )
 
 
 def draft_and_bind_claims(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
     del deps
-    return _record_node(state, RuntimeNode.DRAFT_AND_BIND_CLAIMS, summary="claim binding boundary reached")
+    synthesis_observation = _SYNTHESIS_ENGINE.synthesize(state)
+    return _record_node(
+        replace(state, observations=[*state.observations, synthesis_observation]),
+        RuntimeNode.DRAFT_AND_BIND_CLAIMS,
+        summary="claim binding boundary reached",
+    )
 
 
 def reflection(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
     del deps
-    decision = ReflectionDecision(state.reflection_decision or ReflectionDecision.PASS)
+    gate_result = _REFLECTION_ENGINE.decide(state)
+    decision = gate_result.decision
     counters = state.counters.model_copy(update={"reflections": state.counters.reflections + 1})
+    observation = NormalizedObservation(
+        observation_id=f"reflection:{state.run_id}:{counters.reflections}",
+        kind=ObservationKind.REFLECTION,
+        status=ObservationStatus.COMPLETED,
+        source="ReflectionEngine",
+        summary=f"reflection={decision.value}",
+        failure_reason=None if decision == ReflectionDecision.PASS else gate_result.reason,
+        metadata={
+            "reflection_decision": decision.value,
+            "reason": gate_result.reason,
+            "unsupported_claims": list(gate_result.unsupported_claims),
+        },
+    )
     return _record_node(
-        replace(state, reflection_decision=decision, counters=counters),
+        replace(
+            state,
+            reflection_decision=decision,
+            counters=counters,
+            observations=[*state.observations, observation],
+        ),
         RuntimeNode.REFLECTION,
         summary=f"reflection={decision.value}",
     )
@@ -161,12 +198,25 @@ def reflection(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRunt
 
 def replan(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
     del deps
+    decision = ReflectionDecision(state.reflection_decision or ReflectionDecision.RETRIEVE_MORE)
+    replan_result = _REPLAN_ENGINE.replan(state, decision)
     counters = state.counters.model_copy(update={"replans": state.counters.replans + 1})
-    plan_state = state.plan_state
-    if plan_state is not None:
-        plan_state = plan_state.model_copy(update={"status": "replanned"})
+    observation = NormalizedObservation(
+        observation_id=f"replan:{state.run_id}:{counters.replans}",
+        kind=ObservationKind.REPLAN,
+        status=ObservationStatus.COMPLETED,
+        source="ReplanEngine",
+        summary=f"replan added {replan_result.diff['added_step_id']}",
+        metadata={"replan_diff": replan_result.diff},
+    )
     return _record_node(
-        replace(state, counters=counters, plan_state=plan_state, reflection_decision=ReflectionDecision.PASS),
+        replace(
+            state,
+            counters=counters,
+            plan_state=replan_result.plan_state,
+            reflection_decision=None,
+            observations=[*state.observations, observation],
+        ),
         RuntimeNode.REPLAN,
         summary="remaining plan modified",
     )
@@ -174,8 +224,17 @@ def replan(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeS
 
 def revise_draft(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
     del deps
+    observation = NormalizedObservation(
+        observation_id=f"rewrite:{state.run_id}:{len(state.observations) + 1}",
+        kind=ObservationKind.MODEL,
+        status=ObservationStatus.COMPLETED,
+        source="GroundedSynthesisEngine",
+        summary="answer draft rewritten before finalization",
+        evidence_ids=list(state.evidence_refs),
+        metadata={"answer_rewritten": True},
+    )
     return _record_node(
-        replace(state, reflection_decision=ReflectionDecision.PASS),
+        replace(state, reflection_decision=None, observations=[*state.observations, observation]),
         RuntimeNode.REVISE_DRAFT,
         summary="draft revision boundary reached",
     )

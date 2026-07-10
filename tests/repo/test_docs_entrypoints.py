@@ -134,6 +134,7 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
         "PHASE07_tool-control-plane-and-approval-integration",
         "PHASE08_corrective-agentic-graphrag-and-evidence-ledger",
         "PHASE09_reflection-replan-grounded-synthesis",
+        "PHASE10_four-layer-memory-and-reflexion-reuse",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }

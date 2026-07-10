@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE09_reflection-replan-grounded-synthesis
+current_phase: PHASE10_four-layer-memory-and-reflexion-reuse
 
 ## 功能与质量关闭项
 
@@ -14,7 +14,7 @@ current_phase: PHASE09_reflection-replan-grounded-synthesis
 - [x] PHASE06 Plan-and-Execute 与 ReAct step 在同一图中逐步执行；真实 Tool Control Plane 执行待 PHASE07。
 - [x] PHASE07 Tool Control Plane approval/resume/idempotency/trace baseline 完成；产品切换仍待 PHASE11。
 - [x] PHASE08 EvidenceLedger 和 corrective retrieval 真实执行多轮；fixed benchmark 仍未 measured。
-- [ ] PHASE09 Reflection/Replan/Rewrite/Grounded Synthesis 形成质量闭环。
+- [x] PHASE09 Reflection/Replan/Rewrite/Grounded Synthesis 已形成本地 runtime 质量闭环；产品切换和 benchmark 仍待后续 phase。
 - [ ] PHASE10 四层 Memory 与 Reflexion approved reuse 被产品链路证明。
 - [ ] PHASE11 Completion/Workspace/SSE/UI 切换到统一 runtime，刷新/重启可恢复。
 - [ ] PHASE12 真实 PDF SourceSpan vertical slice 通过。
