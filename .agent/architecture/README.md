@@ -17,7 +17,7 @@ python tools/agent/render_architecture.py --check
 
 Zuno 当前前台架构是 Lean Complete Agentic GraphRAG Product。
 
-`architecture.md` 是详细实施蓝图；`architecture.html` 是十张核心图的架构图谱。收缩的是近期目标规模，不是文档精度。
+`architecture.md` 是详细实施蓝图；`architecture.html` 是十类视图和可展开子图的架构图谱。收缩的是近期目标规模，不是文档精度。
 
 状态事实源见 `docs/architecture/production-readiness.md`。
 

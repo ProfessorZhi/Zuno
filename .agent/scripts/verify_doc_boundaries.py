@@ -108,8 +108,8 @@ def verify_architecture_markdown_contract() -> list[str]:
     for phrase in required_phrases:
         if phrase not in content:
             errors.append(f"docs/architecture/architecture.md missing architecture contract phrase: {phrase}")
-    if content.count("```mermaid") != 10:
-        errors.append("docs/architecture/architecture.md must keep exactly ten Mermaid diagrams")
+    if content.count("```mermaid") < 10:
+        errors.append("docs/architecture/architecture.md must keep at least ten Mermaid diagrams")
     return errors
 
 

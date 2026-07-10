@@ -438,7 +438,7 @@ Markdown 是详细实施蓝图。HTML 是从以下十个 canonical Mermaid secti
 - `.agent/architecture/architecture.md`
 - `.agent/architecture/architecture.html`
 
-### Lean System Overview
+### Logical View (4+1)
 
 六个运行域和它们的 owner 边界。Product 触发黄金链路，Agent Core 编排检索和工具，Governance 贯穿 trace/eval/cost，Local Infrastructure 提供本地事实源。
 
@@ -481,7 +481,44 @@ flowchart TB
 - Governance 不是最后生成报告的脚本，而是贯穿输入、检索、工具、输出和 eval。
 - Local Infrastructure 是正式近期目标，不是低级 placeholder。
 
-### Golden Path Runtime
+#### Memory Context Subsystem
+
+Logical View 的局部展开：Memory 不是独立产品模式，而是 Agent Core 构建 ContextPack 的一部分。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Session["Session Window"]
+  Task["Task Events"]
+  Summary["Task Summary"]
+  Semantic["Semantic Memory"]
+  Policy["Memory Policy<br/>privacy + scope"]
+  Context["ContextPack"]
+  Agent["Single Controller Agent"]
+  Candidate["Post-turn Memory Candidate"]
+  Review["Memory Governance Review"]
+  Store["MemoryRecord"]
+
+  Session --> Context
+  Task --> Summary --> Context
+  Semantic --> Policy --> Context
+  Context --> Agent
+  Agent --> Candidate --> Review --> Store --> Semantic
+
+  class Session,Task,Summary,Semantic,Context,Agent,Candidate,Store node;
+  class Policy,Review gate;
+```
+
+#### 分析
+
+- Memory 的读路径进入 ContextPack，写路径走 post-turn governance。
+- Privacy 和 workspace scope 是 memory 使用边界。
+- Memory ContextPack 是否在真实 AgentChat 中可观测仍是 P1 closure gap。
+
+### Scenarios View (4+1)
 
 用户从模型配置和 Workspace 进入，文档被解析和索引，AgentChat 触发计划、检索、引用、回答、trace、feedback 和恢复。
 
@@ -520,7 +557,7 @@ flowchart LR
 - 每个节点都有 owner、contract、持久状态、trace event 和失败语义。
 - Restart Recovery 是产品完成标准的一部分。
 
-### Agentic GraphRAG and Agent Loop
+### Agentic GraphRAG Evidence and Agent Loop (Zuno)
 
 standard、deep 和 agentic 共享 evidence/citation contract；agentic 模式由 Single Controller 规划检索、Graph expansion、claim binding、reflection 和 replan。
 
@@ -571,7 +608,7 @@ flowchart TB
 - strict citation 必须绑定 source span，doc-only evidence 不能冒充。
 - 质量完成只看 fixed benchmark 和 release gate。
 
-### Product and API Surface
+### Module View (Views & Beyond)
 
 用户可见的 AgentChat、Workspace、Knowledge Space、file lifecycle、task lifecycle、citation UI、trace summary 和 feedback，都必须通过后端 DTO 与 durable state 对齐。
 
@@ -614,7 +651,7 @@ flowchart TB
 - API DTO 是产品请求和 runtime contract 的边界。
 - 刷新或重启后必须从后端状态恢复核心结果。
 
-### Input and Knowledge Pipeline
+### Data View (Views & Beyond)
 
 文档从 SourceObject 进入，经过 ParseJob、Document IR、SourceSpan、CitationChunk、IndexManifest 和 CitationLineage，最终形成可检索的 EvidenceBundle。
 
@@ -652,7 +689,7 @@ flowchart LR
 - strict citation 必须有 SourceSpan 和 CitationLineage。
 - Graph evidence 必须能回到 source object。
 
-### Agent Core Control Loop
+### Process View (4+1)
 
 Single Controller Agent 从 ContextPack 出发，选择策略、规划检索或工具、观察结果、绑定引用、反思并决定 finish、re-retrieve、use tool 或 abstain。
 
@@ -696,7 +733,7 @@ flowchart TB
 - 规则 planner 和 model planner 共享 PlannerOutput contract。
 - abstain 是合法输出，不是失败绕过。
 
-### Agentic GraphRAG Evidence Flow
+### Component-and-Connector View (Views & Beyond)
 
 Agentic GraphRAG 的核心不是“图检索存在”，而是从 query planning 到 Graph expansion、EvidenceBundle、claim binding 和 release gate 都能保留 source span 证据链。
 
@@ -737,9 +774,9 @@ flowchart LR
 - citation binding 失败必须能定位到 failure bucket。
 - quality completed 只由 fixed benchmark 和 release gate 证明。
 
-### Capability and Tool Control Plane
+#### Tool Control Connector
 
-Skill 定义任务方法，Tool 执行具体动作；CapabilityRouter、policy、approval、credential reference、adapter、normalizer 和 trace 构成控制面。
+Component-and-Connector View 的局部展开：工具调用必须经过 capability policy、approval、credential reference、adapter、normalizer 和 trace。
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
@@ -777,7 +814,49 @@ flowchart TB
 - 副作用工具必须有审批、timeout、幂等和 trace。
 - Agent 消费 normalized observation，不依赖工具内部结构。
 
-### Governance Observability and Release Gate
+### Development View (4+1)
+
+代码组织视角说明前端、API、Agent Core、Knowledge、Capability、Platform、docs、tools 和 tests 如何围绕六运行域分工。Capability / Tool 控制面作为连接器展开到 Component-and-Connector View。
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f7f8fb", "lineColor": "#52616f"}}}%%
+flowchart TB
+  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
+  classDef policy fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
+
+  Web["apps/web<br/>Product UI"]
+  API["src/backend/zuno/api<br/>DTO, route, SSE"]
+  Agent["src/backend/zuno/agent<br/>Single Controller"]
+  Memory["src/backend/zuno/memory<br/>ContextPack, memory policy"]
+  Knowledge["src/backend/zuno/knowledge<br/>ingestion, retrieval, GraphRAG"]
+  Capability["src/backend/zuno/capability<br/>skill, tool, MCP"]
+  Platform["src/backend/zuno/platform<br/>config, DB, storage, security, observability"]
+  Docs["docs/architecture<br/>normative blueprint"]
+  Tools["tools/agent + tools/evals<br/>renderer, verifier, benchmark"]
+  Tests["tests<br/>focused and guardrail tests"]
+
+  Web --> API
+  API --> Agent
+  Agent --> Memory
+  Agent --> Knowledge
+  Agent --> Capability
+  Knowledge --> Platform
+  Capability --> Platform
+  Agent --> Platform
+  Docs --> Tools
+  Tools --> Tests
+  Tests --> Docs
+
+  class Web,API,Agent,Memory,Knowledge,Capability,Platform,Docs,Tools,Tests node;
+```
+
+#### 分析
+
+- 代码 owner 必须跟六运行域一致。
+- docs、renderer、verifier 和 tests 是架构事实源的一部分。
+- 不在 API route 或 planner 内新增绕过 owner 的业务逻辑。
+
+### Quality View (Views & Beyond)
 
 治理观测贯穿 input、retrieval、tool、output、trace、usage/cost、failure bucket、benchmark 和 release gate。
 
@@ -821,7 +900,7 @@ flowchart TB
 - 缺 trace 字段时输出 unavailable，不编造诊断。
 - 近期先做本地持久 trace，不强求完整 LangSmith / OTel 平台。
 
-### Local Deployment and State
+### Physical View (4+1)
 
 近期部署是本地优先的正式实现：Web、FastAPI、SQLite、本地对象存储、本地队列、本地索引、模型 provider 和 trace store 构成闭环；外部集群只是可选 adapter。
 

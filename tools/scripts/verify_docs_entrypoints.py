@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import importlib.util
 import sys
 from pathlib import Path
@@ -8,16 +9,16 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ARCHITECTURE_VIEW_CONTRACT = [
-    (1, "Lean System Overview", "Six runtime domains"),
-    (2, "Golden Path Runtime", "End-to-end product path"),
-    (3, "Agentic GraphRAG and Agent Loop", "Retrieval and control loop"),
-    (4, "Product and API Surface", "Product surface and DTO boundary"),
-    (5, "Input and Knowledge Pipeline", "Document and evidence pipeline"),
-    (6, "Agent Core Control Loop", "Single Controller runtime"),
-    (7, "Agentic GraphRAG Evidence Flow", "Evidence-span GraphRAG"),
-    (8, "Capability and Tool Control Plane", "Skill, capability and tool governance"),
-    (9, "Governance Observability and Release Gate", "Trace, eval and release"),
-    (10, "Local Deployment and State", "Local durable runtime"),
+    (1, "Logical View (4+1)", "4+1 Logical"),
+    (2, "Development View (4+1)", "4+1 Development"),
+    (3, "Process View (4+1)", "4+1 Process"),
+    (4, "Physical View (4+1)", "4+1 Physical"),
+    (5, "Scenarios View (4+1)", "4+1 Scenarios"),
+    (6, "Module View (Views & Beyond)", "V&B Module"),
+    (7, "Component-and-Connector View (Views & Beyond)", "V&B Component-and-Connector"),
+    (8, "Data View (Views & Beyond)", "V&B Data / Information"),
+    (9, "Quality View (Views & Beyond)", "V&B Quality"),
+    (10, "Agentic GraphRAG Evidence and Agent Loop (Zuno)", "Zuno Product Core"),
 ]
 
 ACTIVE_DOCS_ARCHITECTURE_FILES = {
@@ -254,28 +255,28 @@ def verify_architecture_view_contract() -> list[str]:
 
     source = _read("docs/architecture/architecture.md")
     html_content = _read("docs/architecture/architecture.html")
-    if source.count("```mermaid") != len(expected_titles):
-        errors.append(f"architecture.md must contain exactly {len(expected_titles)} Mermaid blocks")
+    if source.count("```mermaid") < len(expected_titles):
+        errors.append(f"architecture.md must contain at least {len(expected_titles)} Mermaid blocks")
 
     for index, title, focus in ARCHITECTURE_VIEW_CONTRACT:
         if f"### {title}" not in source:
             errors.append(f"architecture.md missing diagram heading: {title}")
-        if f"<h3>{index}. {title}</h3>" not in html_content:
+        html_title = title.replace("&", "&amp;")
+        if f"<h3>{index}. {html_title}</h3>" not in html_content:
             errors.append(f"architecture.html missing diagram title: {title}")
-        if focus not in html_content:
+        if html.escape(focus) not in html_content:
             errors.append(f"architecture.html missing focus text: {focus}")
 
-    if html_content.count('class="diagram-section"') != len(expected_titles):
-        errors.append("architecture.html must render exactly ten diagram sections")
+    if html_content.count('class="diagram-section') != len(expected_titles):
+        errors.append("architecture.html must render exactly ten view categories")
+    if html_content.count('class="diagram-card"') < len(expected_titles):
+        errors.append("architecture.html must render at least one subdiagram card for each view category")
     if html_content.count('<div class="mermaid">') < len(expected_titles):
         errors.append("architecture.html must render Mermaid containers")
-    if html_content.count("<summary>Mermaid source</summary>") != len(expected_titles):
-        errors.append("architecture.html must include source disclosure for each diagram")
+    if html_content.count("<summary>Mermaid source</summary>") < len(expected_titles):
+        errors.append("architecture.html must include source disclosure for each subdiagram")
     if "diagram-dialog" not in html_content or "securityLevel: \"strict\"" not in html_content:
         errors.append("architecture.html must preserve fullscreen dialog and Mermaid strict security")
-    for retired in ["4+1 View Model", "View &amp; Beyond", "V&amp;B Logical View"]:
-        if retired in html_content:
-            errors.append(f"architecture.html contains retired diagram phrase: {retired}")
     return errors
 
 

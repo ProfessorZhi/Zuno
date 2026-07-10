@@ -144,7 +144,7 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
         "Future Optional Extensions",
     ]:
         assert phrase in docs_architecture
-    assert docs_architecture.count("```mermaid") == 10
+    assert docs_architecture.count("```mermaid") >= 10
 
     for phrase in [
         "Short-term Closure Gap",
@@ -247,16 +247,16 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
         "verify_docs_map_has_unique_architecture_source_roles",
         "verify_no_retired_front_path_links",
         "ARCHITECTURE_VIEW_CONTRACT",
-        "Lean System Overview",
-        "Golden Path Runtime",
-        "Agentic GraphRAG and Agent Loop",
-        "Product and API Surface",
-        "Input and Knowledge Pipeline",
-        "Agent Core Control Loop",
-        "Agentic GraphRAG Evidence Flow",
-        "Capability and Tool Control Plane",
-        "Governance Observability and Release Gate",
-        "Local Deployment and State",
+        "Logical View (4+1)",
+        "Development View (4+1)",
+        "Process View (4+1)",
+        "Physical View (4+1)",
+        "Scenarios View (4+1)",
+        "Module View (Views & Beyond)",
+        "Component-and-Connector View (Views & Beyond)",
+        "Data View (Views & Beyond)",
+        "Quality View (Views & Beyond)",
+        "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
     ]:
         assert phrase in content
 
@@ -264,16 +264,16 @@ def test_verify_docs_entrypoints_script_tracks_current_surface() -> None:
 def test_architecture_html_is_generated_from_ten_mermaid_sections() -> None:
     render_architecture = _load_render_architecture()
     expected = [
-        "Lean System Overview",
-        "Golden Path Runtime",
-        "Agentic GraphRAG and Agent Loop",
-        "Product and API Surface",
-        "Input and Knowledge Pipeline",
-        "Agent Core Control Loop",
-        "Agentic GraphRAG Evidence Flow",
-        "Capability and Tool Control Plane",
-        "Governance Observability and Release Gate",
-        "Local Deployment and State",
+        "Logical View (4+1)",
+        "Development View (4+1)",
+        "Process View (4+1)",
+        "Physical View (4+1)",
+        "Scenarios View (4+1)",
+        "Module View (Views & Beyond)",
+        "Component-and-Connector View (Views & Beyond)",
+        "Data View (Views & Beyond)",
+        "Quality View (Views & Beyond)",
+        "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
     ]
     assert render_architecture.EXPECTED_DIAGRAMS == expected
 
@@ -286,14 +286,14 @@ def test_architecture_html_is_generated_from_ten_mermaid_sections() -> None:
 
     for index, title in enumerate(expected, start=1):
         assert f"### {title}" in architecture_source
-        assert f"<h3>{index}. {title}</h3>" in architecture_html
+        html_title = title.replace("&", "&amp;")
+        assert f"<h3>{index}. {html_title}</h3>" in architecture_html
 
-    assert architecture_html.count('class="diagram-section"') == 10
-    assert architecture_html.count("<summary>Mermaid source</summary>") == 10
+    assert architecture_html.count('class="diagram-section') == 10
+    assert architecture_html.count('class="diagram-card"') >= 10
+    assert architecture_html.count("<summary>Mermaid source</summary>") >= 10
     assert "diagram-dialog" in architecture_html
     assert 'securityLevel: "strict"' in architecture_html
-    for retired in ["4+1 View Model", "View &amp; Beyond", "V&amp;B Logical View"]:
-        assert retired not in architecture_html
 
 
 def test_architecture_html_matches_rendered_mermaid_source() -> None:

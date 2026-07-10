@@ -5,7 +5,7 @@
 ## 当前事实源
 
 - `architecture.md`：详细、规范、可实施的产品与运行架构总事实源。它定义 Lean Complete Agentic GraphRAG Product、六个运行域、黄金链路、ownership、配置、状态、失败、trace、测试和完成标准。
-- `architecture.html`：由 `architecture.md` 中十张 canonical Mermaid 图生成的架构图谱，不复制 Markdown 的全部技术细节。
+- `architecture.html`：由 `architecture.md` 中十类 canonical view categories 和可展开 Mermaid 子图生成的架构图谱，不复制 Markdown 的全部技术细节。
 - `production-readiness.md`：只维护 Current、Short-term Closure Gap、Measurement Blocked、Completed 和 Future Optional。
 
 ## 专题文档
