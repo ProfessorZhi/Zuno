@@ -2,14 +2,14 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE01_eval-truth-source-and-gap-buckets.md
+current_phase: PHASE02_source-span-provenance-contract.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 当前关闭状态
 
 本 program 尚未关闭。当前 active phase 是：
 
-- `PHASE01_eval-truth-source-and-gap-buckets.md`
+- `PHASE02_source-span-provenance-contract.md`
 
 ## Program 关闭目标
 
@@ -64,7 +64,7 @@ pytest -q tests/evals/test_enterprise_rag_paired_benchmark.py tests/evals/test_r
 
 ## 下一轮检查
 
-- 当前 phase 是否仍是 `PHASE01_eval-truth-source-and-gap-buckets.md`；PHASE01 诊断面已完成，下一步才进入 PHASE02。
-- 本轮修改是否只做 program front path 和 guardrail 对齐，还是已经进入 runtime。
+- 当前 phase 是否仍是 `PHASE02_source-span-provenance-contract.md`；PHASE01 诊断面已完成并已通过 focused tests。
+- 本轮修改是否只做 source span provenance contract，还是已经进入后续 chunking / citation binder。
 - 如果进入 runtime，必须先写 tests，再改实现。
 - 所有新增指标必须说明是 fixed benchmark、runtime observed、prepared 还是 blocked。

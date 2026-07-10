@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE01_eval-truth-source-and-gap-buckets
-status: active
+status: completed
 owner: Eval / Retrieval
 
 ## 目标

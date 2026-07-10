@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE01_eval-truth-source-and-gap-buckets.md
+current_phase: PHASE02_source-span-provenance-contract.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 总目标
@@ -50,6 +50,8 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
 文件：`PHASE01_eval-truth-source-and-gap-buckets.md`
 
+状态：completed。
+
 目标：把 EnterpriseRAG paired eval 的失败从平均分拆成四类：`doc_miss`、`doc_hit_text_miss`、`text_hit_citation_miss`、`citation_hit_answer_wrong`。先证明瓶颈在哪里，再改 runtime。
 
 验收：metrics / report / failure cases 中能明确区分 retrieval、evidence text、citation binding 和 answer synthesis 的责任边界。
@@ -58,7 +60,9 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
 文件：`PHASE02_source-span-provenance-contract.md`
 
-目标：冻结 citation 所需 provenance 字段，包括 `document_id`、`source_object_id`、`page_number`、`section_path`、`block_id`、`chunk_id`、`char_start`、`char_end`、`normalized_text`、`raw_text`、`parent_chunk_id`、`neighbor_chunk_ids`。
+状态：active。
+
+目标：冻结 citation 所需 provenance 字段，包括 `document_id`、`source_object_id`、`document_version_id`、`page_number`、`section_path`、`block_id`、`chunk_id`、`char_start`、`char_end`、`normalized_text`、`raw_text`、`parent_chunk_id`、`neighbor_chunk_ids`、`source_uri`、`file_name`、`content_hash`、`parser_name`、`parser_version`。
 
 验收：新增或扩展 IR / chunk / eval fixtures 时，source span 字段不丢失，并能从 retrieval result 回到 source block。
 

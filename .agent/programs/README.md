@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-evidence-span-agentic-graphrag-hardening-v1`
-- Current phase: `PHASE01_eval-truth-source-and-gap-buckets.md`
+- Current phase: `PHASE02_source-span-provenance-contract.md`
 - Latest completed program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 最近完成并归档的 Program 3 Mega 已完成本地可验证的 launchable enterprise Agentic GraphRAG product baseline。归档入口：
@@ -18,8 +18,9 @@
 - `current.md`：当前 active program、当前 phase、质量目标和 Current / Target / Future 边界。
 - `implementation-roadmap.md`：本轮 evidence-span hardening 的 PHASE01-PHASE08 路线。
 - `closure-checklist.md`：本轮关闭条件、质量闸门和禁止提前关闭项。
-- `PHASE01_eval-truth-source-and-gap-buckets.md`：当前 active phase。
-- `PHASE02_source-span-provenance-contract.md` 到 `PHASE08_hard-negative-eval-and-release-gate.md`：后续 pending phase。
+- `PHASE01_eval-truth-source-and-gap-buckets.md`：completed phase。
+- `PHASE02_source-span-provenance-contract.md`：当前 active phase。
+- `PHASE03_citation-sized-chunk-index.md` 到 `PHASE08_hard-negative-eval-and-release-gate.md`：后续 pending phase。
 - `queued-programs/README.md`：当前没有 queued program；旧 Program 4-6 已随 Program 3 Mega 归档为 merged inputs。
 
 ## 本轮 Program 口径

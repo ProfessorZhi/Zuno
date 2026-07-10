@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE02_source-span-provenance-contract
-status: pending
+status: active
 owner: Ingestion / Knowledge
 
 ## 目标
@@ -15,6 +15,7 @@ owner: Ingestion / Knowledge
 
 - `document_id`
 - `source_object_id`
+- `document_version_id`
 - `page_number`
 - `section_path`
 - `block_id`
@@ -25,6 +26,11 @@ owner: Ingestion / Knowledge
 - `raw_text`
 - `parent_chunk_id`
 - `neighbor_chunk_ids`
+- `source_uri`
+- `file_name`
+- `content_hash`
+- `parser_name`
+- `parser_version`
 
 ## 禁止范围
 

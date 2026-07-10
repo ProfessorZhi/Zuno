@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE01_eval-truth-source-and-gap-buckets.md
+current_phase: PHASE02_source-span-provenance-contract.md
 latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1
 
 ## 当前状态
@@ -11,7 +11,7 @@ latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closu
 
 - Program：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 - 中文名：Zuno evidence-span Agentic GraphRAG 质量加固 Program
-- 当前 Phase：`PHASE01_eval-truth-source-and-gap-buckets.md`
+- 当前 Phase：`PHASE02_source-span-provenance-contract.md`
 - 状态：active
 
 这个 program 的第一性目标不是继续堆 GraphRAG 名词，而是把已经出现的 doc-level Agentic Retrieval 增益，转成 evidence-span-level retrieval、claim-level citation 和 answer correctness 增益。
@@ -34,6 +34,7 @@ Production scale external deployments remain replaceable targets.
 - Current：已有 EnterpriseRAG paired benchmark、standard / deep / agentic profile 对比、Evidence Text Available 指标、source doc citation 指标和 failure diagnostics 基础。
 - Current：上一轮结果显示 agentic floor fusion 能提高 doc-level retrieval / source-doc citation，但 strict citation 与 evidence text availability 仍是主要短板。
 - Current：PHASE01 已完成 EnterpriseRAG paired eval failure bucket 诊断面，`metrics.json`、`report.md` 和 `failure_cases.md` 能区分 `doc_miss`、`doc_hit_text_miss`、`text_hit_citation_miss`、`citation_hit_answer_wrong`；trace 字段不足时输出 `unavailable_due_to_missing_trace_fields`。
+- Current：PHASE01 focused tests 和 workflow verifier 已通过，当前 active phase 已推进到 PHASE02 source span provenance contract。
 - Target：把 `Evidence Text Available@5` 从不可用水平提高到可作为 release gate 的水平，并让 citation accuracy 进入可解释增长区间。
 - Future：生产级 external graph index、external vector DB、OCR / VLM、长期 metrics store 和在线 release gate 仍是 Production Scale Target。
 
@@ -79,7 +80,7 @@ active 状态下，`.agent/programs/` 根目录保留：
 
 ## 当前执行规则
 
-- PHASE01 已完成 eval truth source 和 gap buckets 诊断面；下一步是 PHASE02 source span provenance contract，不直接改 citation builder 猜答案。
+- PHASE01 已完成 eval truth source 和 gap buckets 诊断面；当前 PHASE02 只冻结并贯通 source span provenance contract，不直接改 citation builder 猜答案。
 - Runtime 行为修改仍必须由 focused tests、E2E、trace/eval 或 verifier 证明后才能写成 Current。
 - 不得把 doc-level retrieval 增益写成 evidence-span citation 已完成。
 - 不得把 `deep_graphrag` 冒充为完整产品 Agentic Runtime；当前主线仍是 Single Controller / Single `GeneralAgent`。
