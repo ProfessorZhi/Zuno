@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE03_citation-sized-chunk-index
-status: pending
+status: active
 owner: Knowledge / Retrieval
 
 ## 目标

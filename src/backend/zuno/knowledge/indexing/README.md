@@ -9,7 +9,7 @@ PHASE05-PHASE06 status: runtime-current-production-target
 - `KnowledgeSpaceManifest`：记录 workspace、knowledge space、graph project 和 index version。
 - `IndexJobManifest`：记录 document source、targets、target status、retry、error、source block ids、graph project reference、parse job id、parse attempt id、document version id、source sha256、parser config hash、IR schema version、diagnostics digest、parser diagnostics 和 block/table/figure count。
 - `KnowledgeIndexRuntime`：把 `CanonicalDocumentIR` 送入 BM25 / vector / graph 三类本地 index，并提供 query、job replay、failure retry 和 retrieval payload。
-- Citation lineage：`index_document(..., parse_job_snapshot=...)` 会把 parse lineage 写入 manifest、source provenance 和 retrieval chunk metadata 的 `citation_lineage`，让 evidence / citation 能回追到 source hash、document version、parse job 和 parse attempt。
+- Citation lineage：`index_document(..., parse_job_snapshot=...)` 会把 parse lineage 写入 manifest、source provenance 和 retrieval chunk metadata 的 `citation_lineage`，让 evidence / citation 能回追到 source hash、document version、parse job、parse attempt、source span、block 和 chunk。
 
 ## Target 边界
 

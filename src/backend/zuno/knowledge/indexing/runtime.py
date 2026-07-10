@@ -296,16 +296,25 @@ def _document_payload(
     lineage: dict,
 ) -> dict:
     block_id = chunk_id.split("::", 1)[-1]
+    source_span = dict(metadata.get("source_span") or {})
     citation_lineage = {
         **_public_lineage_fields(lineage),
         "chunk_id": chunk_id,
         "block_id": block_id,
+        "source_object_id": metadata.get("source_object_id") or source.metadata.source_id,
+        "source_uri": metadata.get("source_uri") or source.metadata.source_uri,
+        "source_span": source_span,
     }
     enriched_metadata = {
         **metadata,
         "block_id": block_id,
+        "chunk_id": chunk_id,
+        "source_object_id": metadata.get("source_object_id") or source.metadata.source_id,
+        "source_uri": metadata.get("source_uri") or source.metadata.source_uri,
         "document_version_id": lineage["document_version_id"],
         "source_sha256": lineage["source_sha256"],
+        "content_hash": metadata.get("content_hash") or lineage["source_sha256"],
+        "parser_name": metadata.get("parser_name") or source.metadata.parser_id,
         "parser_config_hash": lineage["parser_config_hash"],
         "ir_schema_version": lineage["ir_schema_version"],
         "diagnostics_digest": lineage["diagnostics_digest"],
@@ -329,9 +338,12 @@ def _rehydrated_document_payload(chunk: object) -> dict:
     chunk_id = str(getattr(chunk, "chunk_id"))
     block_id = str(getattr(chunk, "block_id", "") or chunk_id.split("::", 1)[-1])
     metadata.setdefault("block_id", block_id)
+    metadata.setdefault("chunk_id", chunk_id)
     metadata.setdefault("document_version_id", getattr(chunk, "document_version_id", ""))
     metadata.setdefault("acl_scope", getattr(chunk, "acl_scope", "workspace"))
     metadata.setdefault("sensitivity_tags", list(getattr(chunk, "sensitivity_tags", []) or []))
+    if citation_lineage.get("source_span") and not metadata.get("source_span"):
+        metadata["source_span"] = dict(citation_lineage["source_span"])
     return {
         "chunk_id": chunk_id,
         "document_id": str(getattr(chunk, "document_id")),

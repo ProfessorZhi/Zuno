@@ -172,6 +172,13 @@ def test_retrieval_payload_chunks_carry_citation_lineage_to_source_hash() -> Non
     assert lineage["index_job_id"] == manifest.job_id
     assert lineage["document_id"] == document.metadata.document_id
     assert lineage["block_id"] in manifest.source_block_ids
+    assert lineage["chunk_id"] == first_document["chunk_id"]
+    assert lineage["source_span"]["document_id"] == document.metadata.document_id
+    assert lineage["source_span"]["chunk_id"] == first_document["chunk_id"]
+    assert lineage["source_span"]["block_id"] in manifest.source_block_ids
+    assert lineage["source_span"]["document_version_id"] == document.metadata.document_version_id
+    assert lineage["source_span"]["source_uri"] == document.metadata.source_uri
+    assert lineage["source_span"]["parser_name"] == document.metadata.parser_id
     assert lineage["document_version_id"] == document.metadata.document_version_id
     assert lineage["parse_job_id"] == parse_snapshot.job_id
     assert lineage["parse_attempt_id"] == parse_snapshot.parse_attempt_id
@@ -179,6 +186,52 @@ def test_retrieval_payload_chunks_carry_citation_lineage_to_source_hash() -> Non
     assert lineage["parser_config_hash"] == document.metadata.parser_config_hash
     assert first_document["metadata"]["document_version_id"] == document.metadata.document_version_id
     assert first_document["metadata"]["diagnostics_digest"] == manifest.diagnostics_digest
+    assert first_document["metadata"]["source_span"]["chunk_id"] == first_document["chunk_id"]
+
+
+def test_index_rehydrate_preserves_source_span_provenance_after_reload() -> None:
+    from types import SimpleNamespace
+
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+
+    document, parse_snapshot = _submitted_document()
+    runtime = KnowledgeIndexRuntime()
+    runtime.create_knowledge_space("ks_reload_lineage", "workspace_index")
+    manifest = runtime.index_document(
+        "ks_reload_lineage",
+        document,
+        targets=["bm25", "vector", "graph"],
+        parse_job_snapshot=parse_snapshot,
+    )
+    payload = runtime.to_retrieval_payload("ks_reload_lineage", "renewal evidence")
+    first_document = payload["documents_by_source"]["bm25"][0]
+    chunk = SimpleNamespace(
+        chunk_id=first_document["chunk_id"],
+        document_id=first_document["document_id"],
+        workspace_id=first_document["workspace_id"],
+        content=first_document["content"],
+        document_version_id=first_document["metadata"]["document_version_id"],
+        block_id=first_document["metadata"]["block_id"],
+        source_type=first_document["source_type"],
+        metadata=first_document["metadata"],
+        citation_lineage=first_document["metadata"]["citation_lineage"],
+        acl_scope=first_document["metadata"]["acl_scope"],
+        sensitivity_tags=first_document["metadata"]["sensitivity_tags"],
+    )
+
+    reloaded = KnowledgeIndexRuntime()
+    reloaded.rehydrate_index(manifest, [chunk])
+    reloaded_document = reloaded.to_retrieval_payload(
+        "ks_reload_lineage",
+        "renewal evidence",
+    )["documents_by_source"]["bm25"][0]
+
+    assert reloaded_document["metadata"]["source_span"]["chunk_id"] == first_document["chunk_id"]
+    assert (
+        reloaded_document["metadata"]["citation_lineage"]["source_span"]["document_version_id"]
+        == document.metadata.document_version_id
+    )
+    assert reloaded_document["metadata"]["source_span"]["page_number"] is None
 
 
 def test_index_replay_keeps_stable_source_block_ids_and_chunk_ids() -> None:

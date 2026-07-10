@@ -2,7 +2,7 @@
 
 program: zuno-evidence-span-agentic-graphrag-hardening-v1
 phase: PHASE02_source-span-provenance-contract
-status: active
+status: completed
 owner: Ingestion / Knowledge
 
 ## 目标
@@ -40,9 +40,50 @@ owner: Ingestion / Knowledge
 
 ## 验收闸门
 
-- IR / chunk / eval fixtures 中 provenance 字段不丢失。
-- retrieval result 能回到 source block 或 source span。
-- 缺失字段时 diagnostics 明确记录，不 silent pass。
+- [x] IR / chunk / eval fixtures 中 provenance 字段不丢失。
+- [x] retrieval result 能回到 source block 或 source span。
+- [x] 缺失字段时保留 `null`，不 fake page/span。
+
+## 完成事实
+
+PHASE02 已完成 source span provenance contract 的本地 runtime 链路，不表示 PHASE03 citation-sized chunking 或 PHASE07 claim-level citation binding 已完成。
+
+Current 已冻结并贯通字段：
+
+- `document_id`
+- `source_object_id`
+- `document_version_id`
+- `page_number`
+- `section_path`
+- `block_id`
+- `chunk_id`
+- `char_start`
+- `char_end`
+- `normalized_text`
+- `raw_text`
+- `parent_chunk_id`
+- `neighbor_chunk_ids`
+- `source_uri`
+- `file_name`
+- `content_hash`
+- `parser_name`
+- `parser_version`
+
+贯通路径：
+
+```text
+CanonicalDocumentIR / DocumentBlock / SourceSpan
+-> build_source_span_provenance()
+-> IndexHandoffPayload chunks / bm25 / vector / graphrag / evidence / citation
+-> KnowledgeIndexRuntime retrieval metadata / citation_lineage
+-> AgenticRetrievalRuntime EvidenceItem / Citation / trace payload
+-> GraphRAGIndexPipelineContract text_units
+```
+
+Legacy 边界：
+
+- 旧 fixture 缺少真实 page 或 char offset 时，`page_number`、`char_start` 和 `char_end` 保持 `null`。
+- `normalized_text` 和 `raw_text` 来自当前 block text，不从 gold answer 或 eval label 推导。
 
 ## 验证命令
 

@@ -165,7 +165,7 @@ def verify_entrypoint_text() -> list[str]:
     document_ingestion = _read("docs/architecture/document-ingestion-foundation.md")
     current_program = _read(".agent/programs/current.md")
     current_phase = _current_phase_name(current_program)
-    if current_phase != "PHASE02_source-span-provenance-contract.md":
+    if current_phase != "PHASE03_citation-sized-chunk-index.md":
         errors.append(".agent/programs/current.md must declare evidence-span active current phase")
 
     for phrase in [

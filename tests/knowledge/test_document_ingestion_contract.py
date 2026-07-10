@@ -213,19 +213,28 @@ def test_index_handoff_payload_targets_retrieval_graphrag_and_citation() -> None
     ir = CanonicalDocumentIR(
         metadata=DocumentMetadata(
             document_id="doc_contract",
+            source_id="source_contract_md",
             workspace_id="workspace_1",
             source_uri="file://contract.md",
             mime_type="text/markdown",
             hash="sha256:def",
+            source_sha256="sha256:def",
             parser_id="native",
             parser_version="contract-v1",
+            document_version_id="doc_contract:v1",
         ),
         blocks=[
             DocumentBlock(
                 block_id="block_payment",
                 type="paragraph",
                 text="The supplier must provide invoices monthly.",
-                source_span=SourceSpan(line_range=[12, 14], section_path=["Payment"]),
+                source_span=SourceSpan(
+                    page=5,
+                    line_range=[12, 14],
+                    section_path=["Payment"],
+                    char_start=40,
+                    char_end=84,
+                ),
             )
         ],
         provenance=DocumentProvenance(
@@ -240,9 +249,79 @@ def test_index_handoff_payload_targets_retrieval_graphrag_and_citation() -> None
     assert handoff["document_id"] == "doc_contract"
     assert handoff["bm25_documents"][0]["content"]
     assert handoff["vector_documents"][0]["metadata"]["source_span"]["line_range"] == [12, 14]
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["document_id"] == "doc_contract"
+    assert (
+        handoff["vector_documents"][0]["metadata"]["source_span"]["source_object_id"]
+        == "source_contract_md"
+    )
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["document_version_id"] == "doc_contract:v1"
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["page_number"] == 5
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["chunk_id"] == "doc_contract::block_payment"
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["char_start"] == 40
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["char_end"] == 84
+    assert (
+        handoff["vector_documents"][0]["metadata"]["source_span"]["normalized_text"]
+        == "The supplier must provide invoices monthly."
+    )
+    assert (
+        handoff["vector_documents"][0]["metadata"]["source_span"]["raw_text"]
+        == "The supplier must provide invoices monthly."
+    )
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["content_hash"] == "sha256:def"
+    assert handoff["vector_documents"][0]["metadata"]["source_span"]["parser_name"] == "native"
     assert handoff["graphrag_documents"][0]["chunk_id"] == "doc_contract::block_payment"
     assert handoff["evidence_items"][0]["evidence_id"] == "doc_contract::block_payment"
+    assert handoff["evidence_items"][0]["chunk_id"] == "doc_contract::block_payment"
     assert handoff["citation_items"][0]["source_span"]["section_path"] == ["Payment"]
+    assert handoff["citation_items"][0]["chunk_id"] == "doc_contract::block_payment"
+
+
+def test_legacy_source_span_does_not_fake_page_or_character_offsets() -> None:
+    from zuno.knowledge.ingestion import (
+        CanonicalDocumentIR,
+        DocumentBlock,
+        DocumentMetadata,
+        DocumentProvenance,
+        SourceSpan,
+        build_index_handoff_payload,
+    )
+
+    ir = CanonicalDocumentIR(
+        metadata=DocumentMetadata(
+            document_id="doc_legacy",
+            source_id="source_legacy",
+            workspace_id="workspace_1",
+            source_uri="file://legacy.txt",
+            mime_type="text/plain",
+            hash="sha256:legacy",
+            parser_id="native",
+            parser_version="legacy-v1",
+            document_version_id="doc_legacy:v1",
+        ),
+        blocks=[
+            DocumentBlock(
+                block_id="block_legacy",
+                type="paragraph",
+                text="Legacy text has no page or character offsets.",
+                source_span=SourceSpan(),
+            )
+        ],
+        provenance=DocumentProvenance(
+            parser_id="native",
+            parser_version="legacy-v1",
+            source_uri="file://legacy.txt",
+            confidence=1.0,
+        ),
+    )
+
+    span = build_index_handoff_payload(ir).chunks[0]["metadata"]["source_span"]
+
+    assert span["document_id"] == "doc_legacy"
+    assert span["chunk_id"] == "doc_legacy::block_legacy"
+    assert span["block_id"] == "block_legacy"
+    assert span["page_number"] is None
+    assert span["char_start"] is None
+    assert span["char_end"] is None
 
 
 def test_parser_golden_fixture_manifest_is_complete() -> None:

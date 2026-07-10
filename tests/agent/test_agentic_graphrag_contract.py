@@ -98,6 +98,7 @@ def test_evidence_bundle_citations_and_unsupported_claims_are_traceable() -> Non
             EvidenceItem(
                 evidence_id="ev-1",
                 document_id="doc-a",
+                chunk_id="doc-a::block-1",
                 block_id="block-1",
                 retrieval_method=QueryMethod.LOCAL,
                 score=0.93,
@@ -134,6 +135,7 @@ def test_evidence_bundle_citations_and_unsupported_claims_are_traceable() -> Non
     assert [item.evidence_id for item in bundle.items] == ["ev-1"]
     assert bundle.coverage == 1.0
     assert citations[0].label == "[1]"
+    assert citations[0].chunk_id == "doc-a::block-1"
     assert citations[0].source_span["page"] == 2
     assert check.unsupported_claims == ["The contract includes an uncited indemnity waiver."]
     assert check.recommended_actions == [
@@ -195,6 +197,13 @@ def test_graph_index_pipeline_consumes_document_ir_source_spans() -> None:
         "index_manifest",
     ]
     assert contract.text_units[0]["source_span"]["line_range"] == [10, 12]
+    assert contract.text_units[0]["source_span"]["document_id"] == "doc-a"
+    assert contract.text_units[0]["source_span"]["chunk_id"] == "doc-a::block-1"
+    assert contract.text_units[0]["source_span"]["block_id"] == "block-1"
+    assert contract.text_units[0]["source_span"]["page_number"] == 1
+    assert contract.text_units[0]["source_span"]["normalized_text"] == (
+        "Acme renews the support contract annually."
+    )
     assert contract.index_manifest["workspace_id"] == "ws_contracts"
 
 

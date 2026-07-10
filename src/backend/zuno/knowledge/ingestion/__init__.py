@@ -18,6 +18,7 @@ from .contracts import (
     ParserFailure,
     ParserJobMetrics,
     SourceSpan,
+    build_source_span_provenance,
 )
 from .gateway import ParseGateway
 from .normalizer import normalize_legacy_chunks_to_ir
@@ -53,6 +54,7 @@ __all__ = [
     "SourceSpan",
     "adapter_boundary_metadata",
     "build_index_handoff_payload",
+    "build_source_span_provenance",
     "get_parser_adapter",
     "normalize_legacy_chunks_to_ir",
     "select_parser_for_format",

@@ -7,6 +7,7 @@ from .contracts import (
     IndexHandoffPayload,
     ParserAdapterContract,
     ParserCapability,
+    build_source_span_provenance,
 )
 
 
@@ -358,19 +359,31 @@ def select_parser_for_format(format_or_path: str) -> ParserCapability:
 
 def _chunk_payload(document: CanonicalDocumentIR, block) -> dict:
     chunk_id = f"{document.metadata.document_id}::{block.block_id}"
+    source_span = build_source_span_provenance(
+        document=document,
+        block=block,
+        chunk_id=chunk_id,
+    )
     metadata = {
         "document_id": document.metadata.document_id,
+        "source_object_id": document.metadata.source_id,
         "workspace_id": document.metadata.workspace_id,
         "source_uri": document.metadata.source_uri,
+        "document_version_id": document.metadata.document_version_id,
+        "content_hash": document.metadata.source_sha256 or document.metadata.hash,
         "parser_id": document.metadata.parser_id,
+        "parser_name": document.metadata.parser_id,
         "parser_version": document.metadata.parser_version,
-        "source_span": block.source_span.model_dump(),
+        "block_id": block.block_id,
+        "chunk_id": chunk_id,
+        "source_span": source_span,
         "acl_scope": block.acl_scope,
         "sensitivity_tags": list(block.sensitivity_tags),
     }
     return {
         "chunk_id": chunk_id,
         "content": block.text,
+        "source_span": source_span,
         "metadata": metadata,
     }
 
@@ -403,6 +416,10 @@ def build_index_handoff_payload(document: CanonicalDocumentIR) -> IndexHandoffPa
                 "evidence_id": chunk["chunk_id"],
                 "content": chunk["content"],
                 "source_span": chunk["metadata"]["source_span"],
+                "document_id": document.metadata.document_id,
+                "block_id": chunk["metadata"]["block_id"],
+                "chunk_id": chunk["chunk_id"],
+                "document_version_id": document.metadata.document_version_id,
                 "acl_scope": chunk["metadata"]["acl_scope"],
             }
             for chunk in chunks
@@ -412,6 +429,8 @@ def build_index_handoff_payload(document: CanonicalDocumentIR) -> IndexHandoffPa
                 "citation_id": chunk["chunk_id"],
                 "document_id": document.metadata.document_id,
                 "block_id": chunk["chunk_id"].split("::", 1)[-1],
+                "chunk_id": chunk["chunk_id"],
+                "document_version_id": document.metadata.document_version_id,
                 "source_span": chunk["metadata"]["source_span"],
             }
             for chunk in chunks

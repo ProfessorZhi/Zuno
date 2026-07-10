@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE02_source-span-provenance-contract.md
+current_phase: PHASE03_citation-sized-chunk-index.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 总目标
@@ -44,7 +44,7 @@ Production scale external deployments remain replaceable targets.
 
 Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 
-状态：active。
+状态：completed。
 
 ### PHASE01：Eval Truth Source And Gap Buckets
 
@@ -69,6 +69,8 @@ Program ID：`zuno-evidence-span-agentic-graphrag-hardening-v1`
 ### PHASE03：Citation-Sized Chunk Index
 
 文件：`PHASE03_citation-sized-chunk-index.md`
+
+状态：active。
 
 目标：建立 small citation chunks + parent context chunks。检索可以用 parent context，citation 必须能落到更小的 evidence span。
 

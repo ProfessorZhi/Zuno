@@ -104,6 +104,7 @@ class CitationLineage(BaseModel):
     source_object_id: str | None = None
     document_version_id: str
     block_id: str
+    chunk_id: str | None = None
     parse_job_id: str | None = None
     parse_attempt_id: str | None = None
     source_sha256: str | None = None

@@ -10,7 +10,7 @@ from zuno.agent.contracts import (
     RetrievalDecision as ProductRetrievalDecision,
     RetrievalProfile,
 )
-from zuno.knowledge.ingestion import CanonicalDocumentIR
+from zuno.knowledge.ingestion import CanonicalDocumentIR, build_source_span_provenance
 
 
 class ProductMode(str, Enum):
@@ -304,6 +304,7 @@ class StagedFusionPlan(BaseModel):
 class EvidenceItem(BaseModel):
     evidence_id: str
     document_id: str
+    chunk_id: str = ""
     block_id: str
     retrieval_method: QueryMethod
     score: float
@@ -352,6 +353,7 @@ class Citation(BaseModel):
     label: str
     evidence_id: str
     document_id: str
+    chunk_id: str = ""
     block_id: str
     source_span: dict[str, Any] = Field(default_factory=dict)
     trust_label: str
@@ -366,6 +368,7 @@ class CitationBuilder:
                 label=item.citation_label,
                 evidence_id=item.evidence_id,
                 document_id=item.document_id,
+                chunk_id=item.chunk_id,
                 block_id=item.block_id,
                 source_span=dict(item.source_span),
                 trust_label=item.trust_label,
@@ -623,20 +626,24 @@ class AgenticRetrievalRuntime:
                             continue
                         metadata = dict(document.get("metadata") or {})
                         document_id = str(document.get("document_id") or metadata.get("document_id") or "")
-                        block_id = chunk_id.split("::", 1)[-1]
+                        block_id = str(metadata.get("block_id") or chunk_id.split("::", 1)[-1])
                         evidence_key = f"{document_id}::{block_id}"
                         if evidence_key not in aggregated:
                             provenance = dict(
                                 (payload.get("manifest") or {}).get("source_provenance") or {}
                             )
+                            source_span = dict(metadata.get("source_span") or {})
+                            citation_lineage = dict(metadata.get("citation_lineage") or {})
+                            provenance.update(citation_lineage)
                             aggregated[evidence_key] = {
                                 "item": EvidenceItem(
                                     evidence_id=f"ev:{method.value}:{chunk_id}",
                                     document_id=document_id,
+                                    chunk_id=chunk_id,
                                     block_id=block_id,
                                     retrieval_method=method,
                                     score=score,
-                                    source_span=dict(metadata.get("source_span") or {}),
+                                    source_span=source_span,
                                     citation_label="",
                                     trust_label=str(metadata.get("trust_label") or "indexed"),
                                     acl_scope=str(metadata.get("acl_scope") or "workspace"),
@@ -896,13 +903,14 @@ def _retriever_sources_for_method(method: QueryMethod) -> tuple[str, ...]:
 
 
 def _citation_ref(citation: Citation) -> str:
-    return f"{citation.document_id}::{citation.block_id}"
+    return citation.chunk_id or f"{citation.document_id}::{citation.block_id}"
 
 
 def _evidence_item_payload(item: EvidenceItem) -> dict[str, Any]:
     return {
         "evidence_id": item.evidence_id,
         "document_id": item.document_id,
+        "chunk_id": item.chunk_id,
         "block_id": item.block_id,
         "source_uri": item.source_uri,
         "source_span": dict(item.source_span),
@@ -954,6 +962,7 @@ def _graph_extraction_trace(items: list[EvidenceItem]) -> dict[str, Any]:
             {
                 "text_unit_id": _evidence_ref(item),
                 "document_id": item.document_id,
+                "chunk_id": item.chunk_id,
                 "block_id": item.block_id,
                 "source_uri": item.source_uri,
                 "source_span": dict(item.source_span),
@@ -1047,8 +1056,13 @@ class GraphRAGIndexPipelineContract(BaseModel):
                 "text_unit_id": f"{document.metadata.document_id}::{block.block_id}",
                 "document_id": document.metadata.document_id,
                 "block_id": block.block_id,
+                "chunk_id": f"{document.metadata.document_id}::{block.block_id}",
                 "text": block.text,
-                "source_span": block.source_span.model_dump(),
+                "source_span": build_source_span_provenance(
+                    document=document,
+                    block=block,
+                    chunk_id=f"{document.metadata.document_id}::{block.block_id}",
+                ),
                 "acl_scope": block.acl_scope,
                 "sensitivity_tags": list(block.sensitivity_tags),
             }

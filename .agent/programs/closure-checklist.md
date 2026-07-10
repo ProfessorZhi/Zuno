@@ -2,14 +2,14 @@
 
 state: active
 active_program: zuno-evidence-span-agentic-graphrag-hardening-v1
-current_phase: PHASE02_source-span-provenance-contract.md
+current_phase: PHASE03_citation-sized-chunk-index.md
 latest_completed_program: `zuno-launchable-enterprise-agentic-graphrag-full-closure-v1`
 
 ## 当前关闭状态
 
 本 program 尚未关闭。当前 active phase 是：
 
-- `PHASE02_source-span-provenance-contract.md`
+- `PHASE03_citation-sized-chunk-index.md`
 
 ## Program 关闭目标
 
@@ -32,7 +32,7 @@ Agentic GraphRAG 的 doc-level retrieval 增益已经转化成 evidence-span ret
 ## Phase 关闭清单
 
 - [x] PHASE01 完成 eval truth source、gap buckets 和 failure taxonomy。
-- [ ] PHASE02 完成 source span provenance contract。
+- [x] PHASE02 完成 source span provenance contract。
 - [ ] PHASE03 完成 citation-sized chunks 与 parent context chunks。
 - [ ] PHASE04 完成 lexical / phrase evidence retriever。
 - [ ] PHASE05 完成 entity-chunk bidirectional graph index。
@@ -64,7 +64,7 @@ pytest -q tests/evals/test_enterprise_rag_paired_benchmark.py tests/evals/test_r
 
 ## 下一轮检查
 
-- 当前 phase 是否仍是 `PHASE02_source-span-provenance-contract.md`；PHASE01 诊断面已完成并已通过 focused tests。
-- 本轮修改是否只做 source span provenance contract，还是已经进入后续 chunking / citation binder。
+- 当前 phase 是否仍是 `PHASE03_citation-sized-chunk-index.md`；PHASE02 provenance contract 已完成并已通过 focused tests。
+- 本轮修改是否只做 citation-sized chunk index，还是已经进入后续 lexical retrieval / citation binder。
 - 如果进入 runtime，必须先写 tests，再改实现。
 - 所有新增指标必须说明是 fixed benchmark、runtime observed、prepared 还是 blocked。

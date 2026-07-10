@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import PurePosixPath
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -50,12 +52,20 @@ class ParserAdapterContract(BaseModel):
 
 class SourceSpan(BaseModel):
     page: int | None = None
+    page_number: int | None = None
     slide: int | None = None
     sheet: str | None = None
     line_range: list[int] | None = None
     bbox: list[float] | None = None
     section_path: list[str] = Field(default_factory=list)
     table_cell: str | None = None
+    char_start: int | None = None
+    char_end: int | None = None
+    normalized_text: str | None = None
+    raw_text: str | None = None
+    chunk_id: str | None = None
+    parent_chunk_id: str | None = None
+    neighbor_chunk_ids: list[str] = Field(default_factory=list)
 
 
 class DocumentMetadata(BaseModel):
@@ -246,6 +256,56 @@ class ParseJobSnapshot(BaseModel):
     status_timeline: list[dict[str, Any]] = Field(default_factory=list)
 
 
+def build_source_span_provenance(
+    *,
+    document: CanonicalDocumentIR,
+    block: DocumentBlock,
+    chunk_id: str,
+    parent_chunk_id: str | None = None,
+    neighbor_chunk_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    span = block.source_span.model_dump()
+    page_number = span.get("page_number") if span.get("page_number") is not None else span.get("page")
+    raw_text = span.get("raw_text") if span.get("raw_text") is not None else block.text
+    normalized_text = (
+        span.get("normalized_text")
+        if span.get("normalized_text") is not None
+        else _normalize_span_text(raw_text)
+    )
+    return {
+        **span,
+        "document_id": document.metadata.document_id,
+        "source_object_id": document.metadata.source_id,
+        "document_version_id": document.metadata.document_version_id,
+        "page_number": page_number,
+        "section_path": list(block.source_span.section_path),
+        "block_id": block.block_id,
+        "chunk_id": chunk_id,
+        "char_start": span.get("char_start"),
+        "char_end": span.get("char_end"),
+        "normalized_text": normalized_text,
+        "raw_text": raw_text,
+        "parent_chunk_id": parent_chunk_id or span.get("parent_chunk_id"),
+        "neighbor_chunk_ids": list(neighbor_chunk_ids or span.get("neighbor_chunk_ids") or []),
+        "source_uri": document.metadata.source_uri,
+        "file_name": _file_name_from_uri(document.metadata.source_uri),
+        "content_hash": document.metadata.source_sha256 or document.metadata.hash,
+        "parser_name": document.metadata.parser_id,
+        "parser_version": document.metadata.parser_version,
+    }
+
+
+def _normalize_span_text(text: str | None) -> str:
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
+def _file_name_from_uri(source_uri: str) -> str | None:
+    if not source_uri:
+        return None
+    name = PurePosixPath(source_uri.replace("\\", "/")).name
+    return name or None
+
+
 __all__ = [
     "CanonicalDocumentIR",
     "DocumentBlock",
@@ -263,4 +323,5 @@ __all__ = [
     "ParserFailure",
     "ParserJobMetrics",
     "SourceSpan",
+    "build_source_span_provenance",
 ]
