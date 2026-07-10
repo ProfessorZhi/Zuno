@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE08_corrective-agentic-graphrag-and-evidence-ledger
+current_phase: PHASE09_reflection-replan-grounded-synthesis
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
 ## Program Definition
@@ -33,7 +33,7 @@ Plan-and-Execute for macro control
 | PHASE05 | `unified-langgraph-runtime-skeleton` | completed：已建立 LangGraph topology、UnifiedAgentRuntimeService、conditional routes、stream、interrupt/resume/cancel/checkpoint 和无 simulated marker skeleton；产品切换仍待 PHASE11 | agent graph |
 | PHASE06 | `strategy-plan-and-react-step-execution` | completed：已建立 Strategy wrapper、Plan validator/executor、StepExecutorRegistry 和多步 Plan/ReAct execution baseline；Tool Control Plane 真执行待 PHASE07 | planning execution |
 | PHASE07 | `tool-control-plane-and-approval-integration` | completed：ToolStepExecutor 已经经 ToolControlPlaneRuntime 执行，approval/resume/idempotency/blocked observation baseline 已完成；产品切换仍待 PHASE11 | tool runtime |
-| PHASE08 | `corrective-agentic-graphrag-and-evidence-ledger` | 多轮检索、EvidenceLedger、quality gate、corrective action | knowledge runtime |
+| PHASE08 | `corrective-agentic-graphrag-and-evidence-ledger` | completed：已建立多轮 corrective retrieval、EvidenceLedger、quality gate、failure bucket action mapping，并接入 KnowledgeStepExecutor；fixed benchmark 仍未 measured | knowledge runtime |
 | PHASE09 | `reflection-replan-grounded-synthesis` | 确定性 gate、可选 critic、真实 replan、rewrite、citation finalization | quality control |
 | PHASE10 | `four-layer-memory-and-reflexion-reuse` | 四层 Memory 读/用/写、Reflexion review 与未来任务复用 | memory closure |
 | PHASE11 | `product-api-sse-ui-and-recovery-cutover` | Completion/Workspace/SSE/approval/trace/UI 切换到统一 runtime | product integration |

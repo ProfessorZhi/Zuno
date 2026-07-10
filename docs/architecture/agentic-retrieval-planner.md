@@ -235,6 +235,20 @@ measurement blocked
 quality not yet proven
 ```
 
+PHASE08 Current 事实：
+
+- `src/backend/zuno/knowledge/agentic/` 已提供 QueryStrategy、RetrievalQualityVerdict、CorrectiveRetrievalAction、EvidenceLedgerRecord、EvidenceLedger、RetrievalQualityGate、CorrectiveRetrievalPolicy 和 CorrectiveAgenticRetrievalRuntime。
+- EvidenceLedger 按 document version / SourceSpan / text hash 去重，并把 retrieval round、query strategy、retriever、score、graph path、claim refs、contradiction group 和 strict citation eligibility 写入 trace。
+- Graph evidence 缺少 SourceSpan 时只能作为辅助证据，不能升级为 strict citation。
+- `KnowledgeStepExecutor` 已在注入 `knowledge_runtime` 时调用 corrective retrieval runtime，并把 rounds、final action、final verdict 和 ledger trace 写入 runtime observation metadata；未注入依赖时保留 deterministic fallback。
+- 本地 focused tests 已证明第一轮不足可进入第二轮 query，source span 命中可停止并输出 strict-citation-eligible evidence。
+
+仍未 measured：
+
+- fixed EnterpriseRAG paired benchmark 尚未完成 measured pass。
+- Evidence Text Available@5、Citation Accuracy、Answer Correctness 仍不能写成质量通过。
+- PHASE09 之前，Reflection / Replan / Rewrite / Grounded Synthesis 还不是完整质量闭环。
+
 Short-term：
 
 - P0 完整跑通 fixed EnterpriseRAG paired benchmark。

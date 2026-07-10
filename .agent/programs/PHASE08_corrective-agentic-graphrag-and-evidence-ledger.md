@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE08
-    state: planned
+    state: completed
     title: Corrective Agentic GraphRAG 与 EvidenceLedger
     depends_on: PHASE07
     next_phase: PHASE09
@@ -99,3 +99,25 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     6. 未完成和 blocked 项。
     7. commit SHA。
     8. 下一 Phase 是否满足依赖。
+
+    ## 完成记录
+
+    状态：completed，本地 runtime baseline available；fixed EnterpriseRAG paired benchmark 仍未 measured。
+
+    已完成：
+
+    - 新增 `zuno.knowledge.agentic` contracts、EvidenceLedger、RetrievalQualityGate、CorrectiveRetrievalPolicy 和 CorrectiveAgenticRetrievalRuntime。
+    - EvidenceLedger 按 document version / source span / text hash 去重，Graph evidence 缺少 SourceSpan 时只能作为辅助证据，不能作为 strict citation。
+    - `doc_miss`、`doc_hit_text_miss`、`text_hit_citation_miss`、conflicting / ambiguous / irrelevant verdict 可映射到 corrective action。
+    - corrective runtime 可在第一轮不足时生成第二轮 query / strategy / round trace，并受 max rounds / novelty / action budget 停止条件约束。
+    - `KnowledgeStepExecutor` 在注入 `knowledge_runtime` 时调用 corrective retrieval runtime，并把 rounds、final action、final verdict 和 ledger trace 写入 observation metadata；未注入依赖时保留 deterministic fallback。
+
+    证据：
+
+    - `pytest -q tests/knowledge/test_evidence_ledger.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/runtime/test_runtime_graph_routes.py -p no:cacheprovider`
+    - `python -m compileall -q src/backend/zuno/knowledge/agentic src/backend/zuno/agent/runtime/execution/knowledge_step.py`
+
+    未关闭：
+
+    - 本 phase 不声称 fixed paired benchmark measured pass。
+    - Reflection / Replan / Rewrite / grounded synthesis 的质量闭环仍属于 PHASE09。
