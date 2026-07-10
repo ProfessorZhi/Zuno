@@ -54,6 +54,7 @@ START
 -> draft_and_bind_claims
 -> reflection
    -> PASS -> finalize
+   -> REWRITE_ANSWER -> revise_draft -> draft_and_bind_claims
    -> RETRIEVE_MORE -> replan -> execute_step
    -> USE_TOOL -> approval/tool -> observe
    -> ASK_USER -> interrupt

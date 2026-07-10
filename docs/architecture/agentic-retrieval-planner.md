@@ -186,6 +186,16 @@ Need retrieval?
    -> no safe path -> abstain
 ```
 
+停止条件：
+
+- Retrieval Quality Gate 达到 sufficient / PASS。
+- `max_retrieval_rounds` 到达上限。
+- `novelty_since_previous_round` 低于阈值，继续检索没有增量。
+- 所有未使用的 CorrectiveRetrievalAction 都已尝试或被 policy/budget 禁止。
+- token、latency 或 cost budget 耗尽。
+- 需要用户澄清才能继续。
+- 没有安全路径时输出 ABSTAIN。
+
 ## Failure Buckets
 
 - doc_miss

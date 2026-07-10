@@ -1,7 +1,8 @@
 # Zuno Lean Complete Product Architecture
 
 updated: 2026-07-10
-status: current-target
+status: normative-short-term-target
+current_state_source: docs/architecture/production-readiness.md
 
 ## 1. 项目定位与边界
 
@@ -961,13 +962,15 @@ flowchart TB
   Final["Finalize<br/>grounded answer, partial, abstain"]
 
   Strategy --> Planner --> Validate --> Executor --> ReAct --> Observation --> StepCheck --> Reflection
+  Revise["revise_draft<br/>rewrite answer under evidence constraints"]
+
   Reflection -->|PASS| Final
-  Reflection -->|REWRITE_ANSWER| Final
+  Reflection -->|REWRITE_ANSWER| Revise --> StepCheck
   Reflection -->|RETRIEVE_MORE / failure| Replan --> Executor
   Reflection -->|ABSTAIN| Final
   Final --> Reflexion --> Memory
 
-  class Strategy,Planner,Executor,ReAct,Observation,StepCheck,Replan,Reflexion,Memory,Final node;
+  class Strategy,Planner,Executor,ReAct,Observation,StepCheck,Replan,Reflexion,Memory,Final,Revise node;
   class Validate,Reflection gate;
 ```
 

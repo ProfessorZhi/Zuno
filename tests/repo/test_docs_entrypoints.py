@@ -2,6 +2,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -304,9 +306,13 @@ def test_architecture_html_is_generated_from_ten_mermaid_sections() -> None:
     assert architecture_html.count('class="diagram-card"') >= 10
     assert architecture_html.count("<summary>Mermaid source</summary>") >= 10
     assert architecture_html.count('class="offline-svg"') >= 10
+    assert architecture_html.count('class="svg-edge-label"') >= 5
     assert "diagram-dialog" in architecture_html
     assert "https://cdn.jsdelivr.net" not in architecture_html
     assert "import mermaid" not in architecture_html
+    assert "_status_class_for_label" not in (
+        REPO_ROOT / "tools" / "agent" / "render_architecture.py"
+    ).read_text(encoding="utf-8")
 
 
 def test_architecture_html_matches_rendered_mermaid_source() -> None:
@@ -317,3 +323,55 @@ def test_architecture_html_matches_rendered_mermaid_source() -> None:
         ".agent/architecture/architecture.html",
     ]:
         assert (REPO_ROOT / relative_path).read_bytes() == expected.encode("utf-8")
+
+
+def test_offline_architecture_renderer_preserves_key_topology_and_labels() -> None:
+    render_architecture = _load_render_architecture()
+    source = (REPO_ROOT / "docs" / "architecture" / "architecture.md").read_text(
+        encoding="utf-8"
+    )
+    diagrams = {diagram.title: diagram for diagram in render_architecture.extract_diagrams(source)}
+
+    logical_mermaid = diagrams["Logical View (4+1)"].subdiagrams[0].mermaid
+    _nodes, logical_edges = render_architecture._extract_mermaid_graph(logical_mermaid)
+    logical_pairs = {(edge.source, edge.target) for edge in logical_edges}
+    assert ("Product", "Agent") in logical_pairs
+    assert ("Product", "Input") in logical_pairs
+    assert ("Input", "Knowledge") in logical_pairs
+    assert ("Agent", "Capability") in logical_pairs
+    assert ("Capability", "Tool") in logical_pairs
+
+    process_internal = next(
+        subdiagram
+        for subdiagram in diagrams["Process View (4+1)"].subdiagrams
+        if subdiagram.title == "Planning and Control Internal View"
+    )
+    _nodes, process_edges = render_architecture._extract_mermaid_graph(process_internal.mermaid)
+    process_pairs = {(edge.source, edge.target) for edge in process_edges}
+    process_labels = {(edge.source, edge.target): edge.label for edge in process_edges}
+    assert ("Reflection", "Replan") in process_pairs
+    assert ("Replan", "Executor") in process_pairs
+    assert ("Final", "Reflexion") in process_pairs
+    assert ("Reflexion", "Memory") in process_pairs
+    assert process_labels[("Reflection", "Revise")] == "REWRITE_ANSWER"
+    assert process_labels[("Reflection", "Replan")] == "RETRIEVE_MORE / failure"
+
+    rag_mermaid = diagrams["Agentic GraphRAG Evidence and Agent Loop (Zuno)"].subdiagrams[
+        0
+    ].mermaid
+    _nodes, rag_edges = render_architecture._extract_mermaid_graph(rag_mermaid)
+    rag_pairs = {(edge.source, edge.target) for edge in rag_edges}
+    assert ("Query", "BM25") in rag_pairs
+    assert ("Query", "Vector") in rag_pairs
+    assert ("Query", "Graph") in rag_pairs
+    assert ("Quality", "Correct") in rag_pairs
+    assert ("Correct", "Query") in rag_pairs
+
+
+def test_offline_architecture_renderer_rejects_silent_truncation() -> None:
+    render_architecture = _load_render_architecture()
+    mermaid = "flowchart LR\n" + "\n".join(
+        f'  N{index}["Node {index}"]' for index in range(render_architecture.MAX_OFFLINE_NODES + 1)
+    )
+    with pytest.raises(ValueError, match="supports .* nodes"):
+        render_architecture._extract_mermaid_graph(mermaid)

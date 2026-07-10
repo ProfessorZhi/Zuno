@@ -69,7 +69,7 @@ GROUPS = [
 ]
 
 VIEW_META = {
-    "Logical View (4+1)": ("4+1 Logical", "说明六运行域、核心概念、Memory/Tool 等逻辑子系统如何组成产品。"),
+    "Logical View (4+1)": ("4+1 Logical", "说明十一逻辑能力层、层间依赖，以及它们到六物理运行域的映射。"),
     "Development View (4+1)": ("4+1 Development", "说明代码目录、docs、renderer、verifier 和 tests 如何映射到运行域 owner。"),
     "Process View (4+1)": ("4+1 Process", "说明请求进入后 Single Controller、retrieval、tool、citation、trace 如何运行。"),
     "Physical View (4+1)": ("4+1 Physical", "说明本地优先部署、SQLite、ObjectStore、Queue、Index、Model Provider 和 optional adapter。"),
@@ -88,6 +88,16 @@ PALETTE = {
     "text": "#16202a",
     "line": "#52616f",
 }
+
+MAX_OFFLINE_NODES = 40
+MAX_OFFLINE_EDGES = 80
+
+
+@dataclass(frozen=True)
+class Edge:
+    source: str
+    target: str
+    label: str = ""
 
 
 @dataclass(frozen=True)
@@ -218,13 +228,13 @@ def _extract_mermaid_labels(mermaid: str) -> list[str]:
         if label and label not in seen:
             labels.append(label)
             seen.add(label)
-    return labels[:16]
+    return labels
 
 
-def _extract_mermaid_graph(mermaid: str) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+def _extract_mermaid_graph(mermaid: str) -> tuple[list[tuple[str, str]], list[Edge]]:
     node_labels: dict[str, str] = {}
     node_order: list[str] = []
-    edges: list[tuple[str, str]] = []
+    edges: list[Edge] = []
 
     node_def_pattern = re.compile(
         r'\b(?P<id>[A-Za-z]\w*)\s*'
@@ -267,6 +277,7 @@ def _extract_mermaid_graph(mermaid: str) -> tuple[list[tuple[str, str]], list[tu
             continue
         if "-->" not in line and ".->" not in line:
             continue
+        edge_labels = [_clean_mermaid_label(label) for label in re.findall(r"\|([^|]+)\|", line)]
         normalized = re.sub(r"\|[^|]*\|", " ", line)
         normalized = re.sub(r"-\.[^.\n]*\.->", " --> ", normalized)
         normalized = re.sub(r"--[^-\n>]*-->", " --> ", normalized)
@@ -280,14 +291,25 @@ def _extract_mermaid_graph(mermaid: str) -> tuple[list[tuple[str, str]], list[tu
             continue
         for node_id in ids:
             add_node(node_id)
-        for source, target in zip(ids, ids[1:]):
-            edge = (source, target)
+        for edge_index, (source, target) in enumerate(zip(ids, ids[1:])):
+            label = edge_labels[edge_index] if edge_index < len(edge_labels) else ""
+            edge = Edge(source=source, target=target, label=label)
             if edge not in edges:
                 edges.append(edge)
 
-    nodes = [(node_id, node_labels.get(node_id, node_id)) for node_id in node_order[:18]]
+    if len(node_order) > MAX_OFFLINE_NODES:
+        raise ValueError(
+            f"offline architecture renderer supports {MAX_OFFLINE_NODES} nodes; found {len(node_order)}"
+        )
+    if len(edges) > MAX_OFFLINE_EDGES:
+        raise ValueError(
+            f"offline architecture renderer supports {MAX_OFFLINE_EDGES} edges; found {len(edges)}"
+        )
+    nodes = [(node_id, node_labels.get(node_id, node_id)) for node_id in node_order]
     node_ids = {node_id for node_id, _label in nodes}
-    filtered_edges = [(source, target) for source, target in edges if source in node_ids and target in node_ids][:28]
+    filtered_edges = [
+        edge for edge in edges if edge.source in node_ids and edge.target in node_ids
+    ]
     return nodes, filtered_edges
 
 
@@ -310,19 +332,6 @@ def _wrap_svg_text(text: str, width: int = 26) -> list[str]:
     return lines[:3]
 
 
-def _status_class_for_label(label: str) -> str:
-    lower = label.lower()
-    if any(term in lower for term in ["blocked", "not proven", "quality gate", "release gate"]):
-        return "blocked"
-    if any(term in lower for term in ["future", "optional", "external"]):
-        return "future"
-    if any(term in lower for term in ["target", "replan", "reflexion", "ledger", "corrective", "unified"]):
-        return "target"
-    if any(term in lower for term in ["current", "baseline", "partial", "memory", "graph", "tool", "agent"]):
-        return "partial"
-    return "current"
-
-
 def _flow_direction(mermaid: str) -> str:
     match = re.search(r"^\s*flowchart\s+(?P<direction>TB|TD|BT|LR|RL)\b", mermaid, re.M)
     if not match:
@@ -331,19 +340,19 @@ def _flow_direction(mermaid: str) -> str:
     return "TB" if direction in {"TD", "BT"} else direction
 
 
-def _rank_nodes(nodes: list[tuple[str, str]], edges: list[tuple[str, str]]) -> dict[str, int]:
+def _rank_nodes(nodes: list[tuple[str, str]], edges: list[Edge]) -> dict[str, int]:
     order = {node_id: index for index, (node_id, _label) in enumerate(nodes)}
     ranks = {node_id: 0 for node_id, _label in nodes}
     for _ in range(len(nodes)):
         changed = False
-        for source, target in edges:
-            if source not in ranks or target not in ranks:
+        for edge in edges:
+            if edge.source not in ranks or edge.target not in ranks:
                 continue
-            if order.get(target, 0) <= order.get(source, 0):
+            if order.get(edge.target, 0) <= order.get(edge.source, 0):
                 continue
-            next_rank = ranks[source] + 1
-            if ranks[target] < next_rank:
-                ranks[target] = next_rank
+            next_rank = ranks[edge.source] + 1
+            if ranks[edge.target] < next_rank:
+                ranks[edge.target] = next_rank
                 changed = True
         if not changed:
             break
@@ -380,13 +389,8 @@ def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
         f'<text x="24" y="32" class="svg-title">{html.escape(sub_title)}</text>',
         f'<text x="24" y="54" class="svg-subtitle">{html.escape(title)}</text>',
     ]
-    status_styles = {
-        "current": ("#dff5e7", "#4f9d69"),
-        "partial": ("#fff3cf", "#bf8b21"),
-        "target": ("#e3f0ff", "#4f82bd"),
-        "blocked": ("#fff0f0", "#c84b4b"),
-        "future": ("#f1eaff", "#8266b2"),
-    }
+    node_fill = "#ffffff"
+    node_stroke = "#9eb0bf"
     positions: dict[str, tuple[float, float]] = {}
     for rank_index, rank in enumerate(rank_values):
         group = grouped[rank]
@@ -402,11 +406,11 @@ def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
             positions[node_id] = (x, y)
 
     edge_parts: list[str] = []
-    for source, target in edges:
-        if source not in positions or target not in positions:
+    for edge in edges:
+        if edge.source not in positions or edge.target not in positions:
             continue
-        sx, sy = positions[source]
-        tx, ty = positions[target]
+        sx, sy = positions[edge.source]
+        tx, ty = positions[edge.target]
         if direction == "LR":
             start_x = sx + node_width
             start_y = sy + node_height / 2
@@ -432,14 +436,22 @@ def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
         edge_parts.append(
             f'<path class="svg-edge" d="{path}" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>'
         )
+        if edge.label:
+            if direction == "LR":
+                label_x = (start_x + end_x) / 2
+                label_y = (start_y + end_y) / 2 - 8
+            else:
+                label_x = (start_x + end_x) / 2 + 8
+                label_y = (start_y + end_y) / 2 - 6
+            edge_parts.append(
+                f'<text x="{label_x}" y="{label_y}" class="svg-edge-label">{html.escape(edge.label)}</text>'
+            )
     svg_parts.extend(edge_parts)
 
     for node_id, label in nodes:
         x, y = positions[node_id]
-        status = _status_class_for_label(label)
-        fill, stroke = status_styles[status]
         svg_parts.append(
-            f'<rect class="svg-node" x="{x}" y="{y}" width="{node_width}" height="{node_height}" rx="9" fill="{fill}" stroke="{stroke}" stroke-width="1.25"/>'
+            f'<rect class="svg-node" x="{x}" y="{y}" width="{node_width}" height="{node_height}" rx="9" fill="{node_fill}" stroke="{node_stroke}" stroke-width="1.15"/>'
         )
         for line_index, line in enumerate(_wrap_svg_text(label, width=24)):
             svg_parts.append(
@@ -603,6 +615,13 @@ def build_html() -> str:
       --soft: #eef6ff;
     }}
     * {{ box-sizing: border-box; }}
+    * {{
+      box-sizing: border-box;
+    }}
+    html, body {{
+      max-width: 100%;
+      overflow-x: hidden;
+    }}
     body {{
       margin: 0;
       background: var(--bg);
@@ -622,6 +641,7 @@ def build_html() -> str:
       font-size: clamp(30px, 4vw, 52px);
       line-height: 1.08;
       letter-spacing: 0;
+      overflow-wrap: anywhere;
     }}
     h2 {{
       margin: 36px 0 10px;
@@ -652,6 +672,7 @@ def build_html() -> str:
       padding: 8px 10px;
       border-radius: 6px;
       font-size: 14px;
+      overflow-wrap: anywhere;
     }}
     .diagram-group {{
       margin: 28px 0 44px;
@@ -708,6 +729,8 @@ def build_html() -> str:
     }}
     dd {{ margin: 0; }}
     .diagram-frame {{
+      max-width: 100%;
+      min-width: 0;
       overflow-x: auto;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -746,6 +769,15 @@ def build_html() -> str:
     }}
     .svg-edge {{
       opacity: .48;
+    }}
+    .svg-edge-label {{
+      font-size: 10.5px;
+      font-weight: 700;
+      fill: var(--muted);
+      paint-order: stroke;
+      stroke: #fbfcfe;
+      stroke-width: 3px;
+      stroke-linejoin: round;
     }}
     .analysis {{
       margin-top: 14px;
@@ -808,11 +840,11 @@ def build_html() -> str:
 <body>
   <header>
     <h1>Zuno Lean Complete Product Architecture</h1>
-    <p class="lede">Zuno 是本地优先的 Agentic GraphRAG 产品。Markdown 是详细实施蓝图；本页是从十类 canonical view categories 和可展开 Mermaid 子图生成的架构图谱。</p>
+    <p class="lede">Zuno 是本地优先的 Agentic GraphRAG 产品。Markdown 是详细实施蓝图；本页是从十类 canonical view categories 和 Mermaid 图源生成的离线拓扑摘要图谱。</p>
     <nav class="source-links" aria-label="Source links">
-      <a href="architecture.md">docs/architecture/architecture.md</a>
-      <a href="../../.agent/architecture/architecture.md">.agent/architecture/architecture.md</a>
-      <a href="../../tools/agent/render_architecture.py">tools/agent/render_architecture.py</a>
+      <a href="architecture.md">Local Markdown source or mirror</a>
+      <a href="../../.agent/architecture/architecture.md">Agent mirror markdown</a>
+      <a href="../../tools/agent/render_architecture.py">Renderer source</a>
     </nav>
   </header>
   <main>
