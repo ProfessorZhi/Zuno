@@ -231,6 +231,7 @@ Current：
 
 - GeneralAgent single loop、model manager/gateway surface、memory contracts、claim binder、planning contracts 和 evidence-aware pieces 已存在。
 - `src/backend/zuno/agent/runtime/` 已提供 PHASE02 版本化 runtime contract：`AgentRuntimeState`、`AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、node outcome、strategy/reflection/finalization 枚举和 legacy adapters。它是后续统一 graph 的状态事实源，不等于真实 LangGraph 主图、SQLite restart recovery 或产品切换已经完成。
+- `src/backend/zuno/platform/model_gateway.py` 已提供 PHASE03 role-aware gateway contract、cost/latency/fallback/redacted trace 和 LangChain-compatible legacy adapter；`GeneralAgent` 的 executor chat model 已经经由 gateway 获取。历史 legacy SDK wrappers 仍以 verifier allowlist 保留，不等于全仓所有旧服务已迁入统一 runtime。
 - Memory 模块能力和本地 baseline 较完整，但完整 MemoryEngine 尚未全部接入真实 AgentChat 生命周期。
 - Planning contract 和规则判断存在，但真实 LangChain/LangGraph ReAct、规则式 AgentControlRuntime、SingleControllerDurableRuntime 尚未统一为一条真实执行图。
 

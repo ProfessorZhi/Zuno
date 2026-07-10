@@ -13,7 +13,7 @@ PHASE01_PATH = REPO_ROOT / ".agent/programs/PHASE01_truth-source-baseline-and-pr
 
 PROGRAM = "zuno-unified-agent-runtime-closure-v1"
 NEXT_PHASE = "PHASE02_unified-runtime-contracts-and-state"
-CURRENT_PHASE = "PHASE03_model-gateway-closure"
+CURRENT_PHASE = "PHASE04_durable-store-trace-and-idempotency"
 
 
 def _extract_json_block(text: str) -> dict[str, Any]:

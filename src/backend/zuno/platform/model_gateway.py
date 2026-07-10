@@ -6,6 +6,9 @@ import hashlib
 import time
 from typing import Any, Iterable, Literal, Protocol
 
+from langchain_core.language_models import BaseChatModel
+
+from zuno.platform.model_roles import ModelRole, ROLE_DEFAULT_SLOT
 from zuno.platform.security import redact_sensitive_payload, redact_sensitive_text
 from zuno.platform.services.llm.providers import EchoLLMProvider, LLMProvider
 
@@ -56,23 +59,29 @@ class BudgetVerdict:
 class ModelGatewayRequest:
     category: ModelCategory | str
     prompt: str
+    role: ModelRole | str = ModelRole.EXECUTOR
+    run_id: str | None = None
     provider_id: str | None = None
     fallback_provider_ids: list[str] = field(default_factory=list)
     trace_id: str | None = None
     task_id: str | None = None
     workspace_id: str | None = None
     user_id: str | None = None
+    model_slot: str | None = None
+    timeout_ms: int | None = None
     max_output_tokens: int = 128
     budget: BudgetPolicy | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.category = ModelCategory(self.category)
+        self.role = ModelRole(self.role)
 
 
 @dataclass(frozen=True, slots=True)
 class ModelCallMetrics:
     category: ModelCategory
+    role: ModelRole
     provider_id: str
     model_id: str
     prompt_tokens: int
@@ -87,6 +96,7 @@ class ModelCallMetrics:
     def to_dict(self) -> dict[str, Any]:
         return {
             "category": self.category.value,
+            "role": self.role.value,
             "provider_id": self.provider_id,
             "model_id": self.model_id,
             "prompt_tokens": self.prompt_tokens,
@@ -108,6 +118,10 @@ class ModelGatewayResult:
     metrics: ModelCallMetrics
     budget_verdict: BudgetVerdict
     trace_event: dict[str, Any]
+
+
+ModelCallRequest = ModelGatewayRequest
+ModelCallResponse = ModelGatewayResult
 
 
 class ModelProvider(Protocol):
@@ -307,6 +321,31 @@ class ModelGateway:
                 return provider
         raise ModelGatewayProviderError(f"no model provider supports {category.value}")
 
+    def get_chat_model(
+        self,
+        binding: dict[str, Any] | None = None,
+        *,
+        role: ModelRole | str = ModelRole.EXECUTOR,
+    ) -> BaseChatModel:
+        """Return a LangChain chat model through the gateway boundary.
+
+        This is a legacy-compatible adapter: provider construction remains in
+        ModelManager, while callers no longer construct models directly.
+        """
+        normalized_role = ModelRole(role)
+        binding_payload = dict(binding or {})
+        from zuno.core.models.manager import ModelManager
+
+        if binding_payload.get("model") or binding_payload.get("model_name"):
+            if "model" not in binding_payload and "model_name" in binding_payload:
+                binding_payload["model"] = binding_payload["model_name"]
+            return ModelManager.get_user_model(**binding_payload)
+
+        slot = str(binding_payload.get("model_slot") or ROLE_DEFAULT_SLOT[normalized_role])
+        if slot == "tool_call_model":
+            return ModelManager.get_tool_invocation_model()
+        return ModelManager.get_conversation_model()
+
     def _evaluate_budget(
         self,
         *,
@@ -361,6 +400,7 @@ class ModelGateway:
         total_tokens = prompt_tokens + completion_tokens
         return ModelCallMetrics(
             category=request.category,
+            role=request.role,
             provider_id=provider.provider_id,
             model_id=provider.model_id,
             prompt_tokens=prompt_tokens,
@@ -385,8 +425,11 @@ class ModelGateway:
         payload = {
             **metrics.to_dict(),
             "budget_verdict": budget_verdict.to_dict(),
+            "run_id": request.run_id,
             "workspace_id": request.workspace_id,
             "user_id": request.user_id,
+            "model_slot": request.model_slot or ROLE_DEFAULT_SLOT[request.role],
+            "timeout_ms": request.timeout_ms,
             "prompt_sha256": hashlib.sha256(request.prompt.encode("utf-8")).hexdigest(),
             "prompt_preview": redact_sensitive_text(request.prompt[:160]),
             "metadata": redact_sensitive_payload(request.metadata),
@@ -442,6 +485,7 @@ def _build_event_id(request: ModelGatewayRequest, event_type: str) -> str:
             request.trace_id or "",
             request.task_id or "",
             request.category.value,
+            request.role.value,
             event_type,
             hashlib.sha256(request.prompt.encode("utf-8")).hexdigest()[:12],
         ]
@@ -455,12 +499,15 @@ __all__ = [
     "BudgetPolicy",
     "BudgetVerdict",
     "MockModelProvider",
+    "ModelCallRequest",
     "ModelCallMetrics",
+    "ModelCallResponse",
     "ModelCategory",
     "ModelGateway",
     "ModelGatewayProviderError",
     "ModelGatewayRequest",
     "ModelGatewayResult",
     "ModelGatewayTimeoutError",
+    "ModelRole",
     "build_default_model_gateway",
 ]

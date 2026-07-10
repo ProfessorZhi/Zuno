@@ -128,6 +128,7 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
         "PHASE01_truth-source-baseline-and-program-activation",
         "PHASE02_unified-runtime-contracts-and-state",
         "PHASE03_model-gateway-closure",
+        "PHASE04_durable-store-trace-and-idempotency",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }

@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE03
-    state: planned
+    state: completed
     title: Model Gateway 统一入口
     depends_on: PHASE02
     next_phase: PHASE04
@@ -14,6 +14,12 @@
     ## 当前事实
 
     GeneralAgent 仍通过 LLMService + ModelManager 获得模型；其他模块可能直接调用 ModelManager/provider。
+
+    ## 完成事实
+
+    PHASE03 已新增 `ModelRole` 和 role -> model slot 映射，`ModelGatewayRequest` 已扩展 run/task/trace、role、model slot、timeout 和 metadata 字段，并提供 `ModelCallRequest` / `ModelCallResponse` 兼容 alias。`ModelGateway.invoke()` 的 metrics 和 trace 已记录 role、slot、usage、latency、fallback、budget、error 和 redacted metadata。`ModelGateway.get_chat_model()` 作为 LangChain-compatible legacy adapter 统一封装 ModelManager 构造。`GeneralAgent.setup_language_model()` 已通过 gateway adapter 获取 executor chat model，不再直接调用 `ModelManager.get_*`。
+
+    `tools/scripts/verify_model_gateway_boundaries.py` 已记录 direct SDK / ModelManager inventory，并阻止 `GeneralAgent` 和 `zuno.agent.runtime` 新增绕过。当前 legacy SDK wrappers 仍以显式 allowlist 保留，不等于所有历史平台服务都已迁到 unified runtime。
 
     ## 目标增量
 
@@ -90,6 +96,12 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     只有 verifier 和真实调用链都收口后才将 Model Gateway 写 Current。
 
     ## Phase 完成报告
+
+    - 修改 owner：`src/backend/zuno/platform/model_gateway.py`、`src/backend/zuno/platform/model_roles.py`、`src/backend/zuno/agent/core/agents/general_agent.py`、`tools/scripts/verify_model_gateway_boundaries.py`、PHASE03 tests。
+    - 新增 contract：`ModelRole`、`ROLE_DEFAULT_SLOT`、`ModelCallRequest`、`ModelCallResponse`、role-aware `ModelCallMetrics`。
+    - 真实调用链：`GeneralAgent.setup_language_model()` -> `ModelGateway.get_chat_model(..., role=ModelRole.EXECUTOR)` -> legacy `ModelManager` adapter -> LangChain chat model。
+    - trace/restart/eval 证据：本 phase 有 gateway role/cost/fallback/redaction trace tests 和 direct-call verifier；没有 restart recovery 或 benchmark measured 证据。
+    - 下一 phase：PHASE04 可以开始 durable store、trace 和 idempotency。
 
     Codex 必须报告：
 

@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE03_model-gateway-closure
+current_phase: PHASE04_durable-store-trace-and-idempotency
 latest_completed_program: zuno-lean-complete-product-architecture-v1
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
@@ -45,9 +45,9 @@ input_gate
 
 ## 当前 Phase
 
-`PHASE03_model-gateway-closure`
+`PHASE04_durable-store-trace-and-idempotency`
 
-PHASE01 已完成事实源、现状证据、运行命令、失败语义和 benchmark truth source 冻结，未修改生产 runtime。PHASE02 已建立 `zuno.agent.runtime` 版本化 contract、`AgentRuntimeState` / `AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、strategy/reflection/finalization 枚举和 legacy adapters；未实现模型网关闭环、持久化、LangGraph 主图或产品切换。下一步 PHASE03 只处理 Model Gateway closure。
+PHASE01 已完成事实源、现状证据、运行命令、失败语义和 benchmark truth source 冻结，未修改生产 runtime。PHASE02 已建立 `zuno.agent.runtime` 版本化 contract、`AgentRuntimeState` / `AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、strategy/reflection/finalization 枚举和 legacy adapters。PHASE03 已建立 `ModelRole`、`ModelCallRequest` / `ModelCallResponse` aliases、role-aware gateway trace、LangChain-compatible gateway adapter、GeneralAgent gateway 注入和 direct-call boundary verifier；legacy SDK wrappers 仍以显式 allowlist 保留，不是产品主 unified runtime 入口。下一步 PHASE04 只处理 durable store、trace 和 idempotency。
 
 ## 不变边界
 

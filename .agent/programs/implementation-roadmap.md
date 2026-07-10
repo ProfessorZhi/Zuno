@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE03_model-gateway-closure
+current_phase: PHASE04_durable-store-trace-and-idempotency
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
 ## Program Definition
@@ -28,7 +28,7 @@ Plan-and-Execute for macro control
 | --- | --- | --- | --- |
 | PHASE01 | `truth-source-baseline-and-program-activation` | completed：冻结真实基线、命令、failure semantics、sample case set 和 program 状态；未修改生产 runtime | docs/workflow only |
 | PHASE02 | `unified-runtime-contracts-and-state` | completed：建立 AgentRuntimeState、Observation、Strategy、Plan、limits、snapshot 与兼容适配器；未关闭 gateway/store/graph/product cutover | runtime contracts |
-| PHASE03 | `model-gateway-closure` | 所有 planner/executor/critic/synthesis/tool-call 模型统一经 Model Gateway | model runtime |
+| PHASE03 | `model-gateway-closure` | completed：ModelRole、ModelCall aliases、role trace、GeneralAgent gateway adapter 和 direct-call verifier 已完成；legacy SDK wrappers 显式 allowlist 保留 | model runtime |
 | PHASE04 | `durable-store-trace-and-idempotency` | SQLite-backed run/checkpoint/plan/observation/interrupt/evidence/tool execution store | persistence |
 | PHASE05 | `unified-langgraph-runtime-skeleton` | 建立真实 StateGraph、conditional routes、stream、interrupt、resume | agent graph |
 | PHASE06 | `strategy-plan-and-react-step-execution` | 把 Plan-and-Execute 和 ReAct 组合成真实逐步执行器 | planning execution |

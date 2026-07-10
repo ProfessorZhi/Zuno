@@ -20,7 +20,6 @@ from zuno.api.services.mcp_server import MCPService
 from zuno.api.services.mcp_user_config import MCPUserConfigService
 from zuno.api.services.tool import ToolService
 from zuno.core.callbacks import usage_metadata_callback
-from zuno.core.models.manager import ModelManager
 from zuno.database import AgentSkill
 from zuno.agent.context import (
     AgentExecutionContext,
@@ -53,6 +52,8 @@ from zuno.memory import (
     MemoryReviewStatus,
     MemoryScope,
 )
+from zuno.platform.model_gateway import ModelGateway, build_default_model_gateway
+from zuno.platform.model_roles import ModelRole
 from zuno.services.mcp.manager import MCPManager
 from zuno.services.user_defined_tool_runtime import build_user_defined_langchain_tools
 from zuno.tools import AgentToolsWithName
@@ -265,8 +266,9 @@ class EmitEventAgentMiddleware(AgentMiddleware):
 
 
 class GeneralAgent:
-    def __init__(self, agent_config: AgentConfig):
+    def __init__(self, agent_config: AgentConfig, *, model_gateway: ModelGateway | None = None):
         self.agent_config = agent_config
+        self.model_gateway = model_gateway or build_default_model_gateway()
         self.conversation_model = None
         self.react_agent = None
 
@@ -537,9 +539,15 @@ class GeneralAgent:
     async def setup_language_model(self):
         if self.agent_config.llm_id:
             model_config = await LLMService.get_llm_by_id(self.agent_config.llm_id)
-            self.conversation_model = ModelManager.get_user_model(**model_config)
+            self.conversation_model = self.model_gateway.get_chat_model(
+                model_config,
+                role=ModelRole.EXECUTOR,
+            )
         else:
-            self.conversation_model = ModelManager.get_conversation_model()
+            self.conversation_model = self.model_gateway.get_chat_model(
+                {"model_slot": "conversation_model"},
+                role=ModelRole.EXECUTOR,
+            )
 
     def setup_react_agent(self):
         runtime_system_prompt = "\n".join(
