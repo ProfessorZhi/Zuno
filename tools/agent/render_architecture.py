@@ -50,37 +50,6 @@ EXPECTED_VIEWS = [view for group in VIEW_GROUPS for view in group["views"]]
 EXPECTED_DIAGRAMS = EXPECTED_VIEWS
 MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
 
-AGENT_POINTER = """# Zuno Target Architecture Atlas — Agent Entry
-
-status: generated-entrypoint  
-normative_source: `docs/architecture/architecture.md`  
-visual_atlas: `docs/architecture/architecture.html`
-
-本文件不再复制完整架构正文，避免两份大型 Mermaid 图谱产生内容漂移。
-
-Agent、Codex 和自动化工具在进行架构审阅、实现计划或代码修改前，必须读取：
-
-1. `docs/architecture/architecture.md`：目标架构唯一规范事实源；
-2. `docs/architecture/architecture.html`：4+1、Views & Beyond 与 Zuno Product Core 的十类 Mermaid 图谱；
-3. `docs/architecture/production-readiness.md`：当前真实实现、差距和测量状态。
-
-更新流程：
-
-```powershell
-python tools/agent/render_architecture.py --write
-python tools/agent/render_architecture.py --check
-python tools/scripts/verify_docs_entrypoints.py
-```
-
-边界：
-
-```text
-architecture.md = Target
-production-readiness.md = Current
-implementation available / measurement blocked / quality not yet proven
-```
-"""
-
 
 def _section(content: str, title: str) -> str:
     marker = f"### {title}"
@@ -171,7 +140,7 @@ def write_outputs() -> None:
     if errors:
         raise ValueError("\n".join(errors))
     AGENT_SOURCE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    AGENT_SOURCE_PATH.write_text(AGENT_POINTER, encoding="utf-8", newline="\n")
+    AGENT_SOURCE_PATH.write_text(source, encoding="utf-8", newline="\n")
     AGENT_HTML_PATH.write_text(html, encoding="utf-8", newline="\n")
 
 
@@ -183,9 +152,9 @@ def check_outputs() -> list[str]:
     errors.extend(validate_html(html))
 
     if not AGENT_SOURCE_PATH.exists():
-        errors.append(f"missing generated agent entrypoint: {AGENT_SOURCE_PATH.relative_to(REPO_ROOT)}")
-    elif AGENT_SOURCE_PATH.read_text(encoding="utf-8") != AGENT_POINTER:
-        errors.append(".agent/architecture/architecture.md is not the generated normative-source pointer")
+        errors.append(f"missing generated Markdown mirror: {AGENT_SOURCE_PATH.relative_to(REPO_ROOT)}")
+    elif AGENT_SOURCE_PATH.read_text(encoding="utf-8") != source:
+        errors.append(".agent/architecture/architecture.md is not synced with docs/architecture/architecture.md")
 
     if not AGENT_HTML_PATH.exists():
         errors.append(f"missing generated HTML mirror: {AGENT_HTML_PATH.relative_to(REPO_ROOT)}")
@@ -200,7 +169,7 @@ def check_outputs() -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate and sync the Zuno target architecture atlas.")
-    parser.add_argument("--write", action="store_true", help="sync agent pointer and HTML mirror")
+    parser.add_argument("--write", action="store_true", help="sync Markdown and HTML mirrors")
     parser.add_argument("--check", action="store_true", help="check source, native Mermaid HTML, and mirrors")
     args = parser.parse_args()
 
