@@ -68,9 +68,9 @@ def test_docs_architecture_front_path_and_generated_entries() -> None:
     }
     assert agent_files == {"README.md", "architecture.md", "architecture.html"}
 
-    render_architecture = _load_render_architecture()
-    agent_entry = (REPO_ROOT / ".agent/architecture/architecture.md").read_text(encoding="utf-8")
-    assert agent_entry == render_architecture.AGENT_POINTER
+    assert (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8") == (
+        REPO_ROOT / ".agent/architecture/architecture.md"
+    ).read_text(encoding="utf-8")
     assert (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8") == (
         REPO_ROOT / ".agent/architecture/architecture.html"
     ).read_text(encoding="utf-8")
