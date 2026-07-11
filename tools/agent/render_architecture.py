@@ -115,8 +115,8 @@ def validate_html(content: str) -> list[str]:
         'class="mermaid"',
         "diagram-dialog",
         "Mermaid source",
-        "Overall Diagram",
-        "Local Diagram",
+        'diagram.subtitle.startsWith("Overall")',
+        '${kind} Diagram',
     ]
     for marker in required:
         if marker not in content:
