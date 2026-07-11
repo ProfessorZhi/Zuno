@@ -2,16 +2,15 @@
 
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
-state: queued
-active_program: false
+state: activated_from_queue
+active_program: zuno-real-unified-runtime-cutover-v1
 baseline_commit: 2bcba3fd0a6391b1718b291d54560e292c9ebfbd
 program_type: implementation_and_product_cutover
-created_from: C:\Users\Administrator\.codex\attachments\f60bc122-6892-4bdf-a9c0-d9c49e090aaf\pasted-text.txt
 ```
 
 ## 适用性判断
 
-这个 program 适合作为下一轮实现 program，但当前只能进入 queued 状态，不能直接写成 active 或 completed。
+这个 program 已在 `d90dc0013c1721a56828a6dc6f889e209454b346` 之后由用户授权激活。当前 active truth source 是 `.agent/programs/current.md` 和平铺 PHASE 文件；本文件只保留 queued candidate 的来源设计，不再作为执行状态事实源。
 
 原因：
 
@@ -22,8 +21,8 @@ created_from: C:\Users\Administrator\.codex\attachments\f60bc122-6892-4bdf-a9c0-
 
 需要收缩的边界：
 
-0. 不得把 queued program 写成 active、Current、Completed 或 measured。
-1. 本 queued 文档不激活 program；真正执行前必须把 `.agent/programs/current.md`、`implementation-roadmap.md`、`closure-checklist.md` 和 PHASE 文件展开为 active program truth source。
+0. 不得把 activated_from_queue 设计稿写成 Completed 或 measured。
+1. `.agent/programs/current.md`、`implementation-roadmap.md`、`closure-checklist.md` 和 PHASE 文件才是 active program truth source。
 2. PHASE02-PHASE06 会修改核心 runtime、API 和产品默认路径；执行时必须逐 phase 小步提交，不能一次性大切。
 3. PHASE07 benchmark 可以关闭为 `measurement_blocked`，但必须给出 `blocked_reason`、`measured_case_count=0` 和可复现配置缺口。
 4. GeneralAgent 只能作为 rollback adapter 的目标状态，不能在文档中写成已经退出默认产品路径，除非代码和测试证明。

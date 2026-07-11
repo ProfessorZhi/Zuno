@@ -4,6 +4,10 @@ updated: 2026-07-10
 status: normative-short-term-target
 current_state_source: docs/architecture/production-readiness.md
 
+本文是 Zuno 的总架构文档，也是面向人的文字总架构文档。架构 HTML 由 `docs/architecture/architecture.md` 生成，并同步到 `docs/architecture/architecture.html`、`.agent/architecture/architecture.md` 和 `.agent/architecture/architecture.html`。文档摄取边界以 `docs/architecture/document-ingestion-foundation.md` 为准。
+
+Zuno 当前目标是本地优先的企业私有知识库与多功能 Agent 助手：围绕 AgentChat、Workspace、Document Ingestion / Parse Gateway、Agentic GraphRAG、Tool Control Plane 和 LangSmith-compatible Trace / Eval 建立可运行、可恢复、可评测的产品链路。
+
 ## 1. 项目定位与边界
 
 本文件同时说明 Current 本地事实、Target 近期目标和 Future Optional 边界；当前事实以 `docs/architecture/production-readiness.md` 为准。

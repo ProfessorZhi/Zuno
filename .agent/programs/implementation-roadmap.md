@@ -1,46 +1,56 @@
 # Program Roadmap
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-real-unified-runtime-cutover-v1
+current_phase: PHASE01_real-runtime-baseline
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
-## 最近完成 Program
+## Program 目标
 
-`zuno-unified-agent-runtime-closure-v1` 已归档到：
-
-- `docs/history/programs/zuno-unified-agent-runtime-closure-v1/`
-
-关闭状态：
+把 Completion / Workspace 产品主路径切到真实统一 runtime：
 
 ```text
-implementation_complete_measurement_blocked
+UnifiedAgentRuntimeService
+-> compiled LangGraph
+-> RuntimeDependencyFactory
+-> Model Gateway / Memory / Corrective Agentic GraphRAG / Tool Control Plane
+-> GroundedAnswer / SSE / Artifact
 ```
 
-PHASE01-PHASE13 已完成本地 implementation baseline。PHASE13 没有获得 fixed benchmark measured pass，原因是 sample-8 profile runner 配置不可用且 sample-80 没有 tracked fixed set。
+## Phase 顺序
 
-## 后续 Program 入口
+1. `PHASE01_real-runtime-baseline`：激活 program，冻结事实，建立 guardrail，不改生产 runtime。
+2. `PHASE02_langgraph-execution-cutover`：让 compiled LangGraph 接管 `UnifiedAgentRuntimeService` 执行，手写主循环退出产品路径。
+3. `PHASE03_runtime-dependency-factory`：建立 `RuntimeDependencyFactory` 和 typed protocols，停止核心依赖 `Any | None` 默认成功。
+4. `PHASE04_real-agent-execution`：ModelStep 走 Model Gateway，ReActStep 执行单步 ReAct，Grounded Synthesis 产生真实 final answer / claims / bindings。
+5. `PHASE05_knowledge-tool-memory-integration`：Knowledge、filesystem.read/write、Memory pre/in/post-turn 和 Reflexion reuse 接入统一 runtime。
+6. `PHASE06_product-cutover`：Completion / Workspace 默认走 unified runtime，GeneralAgent 只保留显式 rollback flag。
+7. `PHASE07_benchmark-and-closure`：运行或诚实阻塞 benchmark，输出 implementation / measurement / quality gate 三段状态，归档并恢复 no-active。
 
-当前没有 active program。当前 queued candidate 是：
+## 每个 Phase 的固定节奏
 
-- `.agent/programs/queued-programs/PROGRAM01_real-unified-runtime-cutover.md`
-
-它适合作为下一轮实现 program，但必须先从 PHASE01 激活为 active truth source，不能直接按 queued 文档跳到 runtime 大改。
-
-下一轮如果要继续真实统一 runtime cutover，应从 PHASE01 开始冻结：
-
-1. 当前 runtime 主路径事实：compiled graph、manual loop、deterministic executor、canned answer、sidecar workspace、blocked benchmark。
-2. `verify_real_runtime_cutover.py` guardrail。
-3. LangGraph 是否真正成为唯一执行引擎。
-4. RuntimeDependencyFactory、Model Gateway、Memory、Knowledge、Tool 的真实依赖装配。
-5. Completion / Workspace 默认路径和 rollback flag。
-6. benchmark pass / fail / blocked 输出位置。
+```text
+读取当前 Phase
+-> 审计真实代码
+-> 实现
+-> focused tests
+-> regression tests
+-> verifier
+-> 更新 Current/Target 文档
+-> 更新 Program 状态
+-> git diff --check
+-> 独立 commit
+-> push
+-> 自动进入下一 Phase
+```
 
 ## 不变关闭定义
 
+不得把 PHASE02-PHASE07 目标写成 Current、Completed 或 measured；每个目标只有在代码、测试、trace 或 eval 证明后才能关闭。
+
 1. 目标代码进入唯一 owner。
 2. focused unit/integration tests 通过。
-3. 至少一个真实或 deterministic vertical scenario 通过。
+3. 至少一个真实或 deterministic vertical scenario 通过；涉及真实 provider 时不能用 deterministic fixture 伪装。
 4. trace 能说明关键决策和失败。
 5. 需要 restart 证明的 Phase 必须重建进程后读取。
 6. Current/Target 文档按事实更新。

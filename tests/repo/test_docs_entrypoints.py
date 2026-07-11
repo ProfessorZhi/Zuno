@@ -125,6 +125,13 @@ def test_architecture_markdown_is_detailed_lean_blueprint() -> None:
     )
     assert _current_phase_name(current_program) in {
         "none",
+        "PHASE01_real-runtime-baseline",
+        "PHASE02_langgraph-execution-cutover",
+        "PHASE03_runtime-dependency-factory",
+        "PHASE04_real-agent-execution",
+        "PHASE05_knowledge-tool-memory-integration",
+        "PHASE06_product-cutover",
+        "PHASE07_benchmark-and-closure",
         "PHASE01_truth-source-baseline-and-program-activation",
         "PHASE02_unified-runtime-contracts-and-state",
         "PHASE03_model-gateway-closure",

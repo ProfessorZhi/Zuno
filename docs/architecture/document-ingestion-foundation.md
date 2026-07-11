@@ -2,6 +2,8 @@
 
 所属运行域：Input & Knowledge、Local Infrastructure。
 
+本文定义企业知识库文档入口：`ParseGateway.submit_parse_job()` 接收 workspace file 后生成 `CanonicalDocumentIR`、`IndexJobManifest`、`document_version_id`、`parse_idempotency_key` 和 `index_idempotency_key`，再交给 `workspace_text_runtime` 与 index handoff。`VLM enrichment adapter`、生产 DB、object store、queue / outbox、worker lease、external OCR / VLM、external index platform 均属于明确边界，不得在未实现时写成 Current。
+
 ## 定位
 
 Document ingestion 负责把 Workspace 文件变成可检索、可引用、可恢复的知识资产。它的完成标准不是“文件上传成功”，而是 source object、parse job、Document IR、citation chunk、index manifest 和 citation lineage 都能形成可追踪闭环。

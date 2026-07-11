@@ -43,3 +43,5 @@ python tools/agent/render_architecture.py --check
 
 - 公开证据入口：`../evidence/public-demo.md`
 - 旧架构清理工作集：`docs/history/architecture-surface-cleanup-2026-06-30/`
+- 旧 split docs 架构入口：`docs/history/architecture-surface-cleanup-2026-06-30/docs-architecture/`
+- 过时审计、旧规格、旧 phase、旧计划和旧 runbook 只保存在 `docs/history/`，不得重新作为当前入口。

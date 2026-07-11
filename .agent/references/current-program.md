@@ -1,23 +1,24 @@
 # Current Program Reference
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-real-unified-runtime-cutover-v1
+current_phase: PHASE01_real-runtime-baseline
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
-`.agent/programs/` 当前处于 no-active 等待态。最近完成并归档的 program 是 `zuno-unified-agent-runtime-closure-v1`。
+`.agent/programs/` 当前处于 active program 状态。最近完成并归档的 program 是 `zuno-unified-agent-runtime-closure-v1`。
 
 归档入口：
 
 - `docs/history/programs/zuno-unified-agent-runtime-closure-v1/`
 
-## 当前 queued candidate
+## 当前 active program
 
-- `.agent/programs/queued-programs/PROGRAM01_real-unified-runtime-cutover.md`
+- `.agent/programs/current.md`
+- `.agent/programs/PHASE01_real-runtime-baseline.md`
 
-该 queued program 适合作为下一轮实现 program，目标是把 Completion / Workspace 产品主路径切到 `UnifiedAgentRuntimeService -> compiled LangGraph -> RuntimeDependencyFactory -> Model Gateway / Memory / Corrective Agentic GraphRAG / Tool Control Plane` 的真实统一 runtime。
+当前 program 是 `zuno-real-unified-runtime-cutover-v1`，目标是把 Completion / Workspace 产品主路径切到 `UnifiedAgentRuntimeService -> compiled LangGraph -> RuntimeDependencyFactory -> Model Gateway / Memory / Corrective Agentic GraphRAG / Tool Control Plane` 的真实统一 runtime。
 
-当前状态仍是 `queued / not active`。不得把 queued program 写成 active、Current、Completed 或 measured；真正启动时必须从 PHASE01 展开 active flat phase 文件，并同步 verifier / tests。
+当前 Phase 是 PHASE01。PHASE01 先只落 facts 与 guardrail，只冻结事实和建立 guardrail，不修改生产 runtime。不得把 PHASE02-PHASE07 目标写成 Current、Completed 或 measured。
 
 ## 最近完成事实
 

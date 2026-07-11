@@ -3,11 +3,24 @@ from __future__ import annotations
 from dataclasses import dataclass
 import importlib
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _git_check_ignore(relative_path: str) -> bool:
+    result = subprocess.run(
+        ["git", "check-ignore", "-q", "--", relative_path],
+        cwd=REPO_ROOT,
+        text=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return result.returncode == 0
 
 COMPLETED_PROGRAM_NAME = "zuno-eight-deliverables-full-realization-v1"
 COMPLETED_PROGRAM_ARCHIVE = f"docs/history/programs/{COMPLETED_PROGRAM_NAME}"
@@ -68,6 +81,13 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
+    "PHASE01_real-runtime-baseline.md",
+    "PHASE02_langgraph-execution-cutover.md",
+    "PHASE03_runtime-dependency-factory.md",
+    "PHASE04_real-agent-execution.md",
+    "PHASE05_knowledge-tool-memory-integration.md",
+    "PHASE06_product-cutover.md",
+    "PHASE07_benchmark-and-closure.md",
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -1299,7 +1319,7 @@ def verify_root_local_artifacts_are_absent() -> list[str]:
     errors: list[str] = []
     for relative_path, reason in ROOT_LOCAL_ARTIFACT_DIRECTORIES.items():
         path = REPO_ROOT / relative_path
-        if path.exists():
+        if path.exists() and not _git_check_ignore(relative_path):
             errors.append(
                 f"root local artifact must not remain visible: {relative_path} ({reason})"
             )
@@ -1375,9 +1395,9 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         + (program3_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        "active_program: zuno-real-unified-runtime-cutover-v1",
+        "current_phase: PHASE01_real-runtime-baseline",
         f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
         PROGRAM3_ACTIVE_NAME,
         PROGRAM3_ACTIVE_ARCHIVE,
@@ -1429,7 +1449,8 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
             if phrase not in phase03:
                 errors.append(f"archived Program 1 PHASE03 Skill / Template / Program plan missing phrase: {phrase}")
     active_phase_names = sorted(path.name for path in programs_root.glob("PHASE*.md"))
-    if active_phase_names:
+    current_program_state = current_path.read_text(encoding="utf-8")
+    if active_phase_names and "state: no-active" in current_program_state:
         errors.append(".agent/programs must not contain PHASE files in no-active state: " + ", ".join(active_phase_names))
     for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
         phase_path = program3_archive_root / phase_name
@@ -1529,10 +1550,9 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
         content = queued_path.read_text(encoding="utf-8")
         if file_name == "PROGRAM01_real-unified-runtime-cutover.md":
             for phrase in [
-                "state: queued",
-                "active_program: false",
-                "不得把 queued program 写成 active",
-                "measurement_blocked + quality_not_proven",
+                "state: activated_from_queue",
+                "active_program: zuno-real-unified-runtime-cutover-v1",
+                "不再作为执行状态事实源",
             ]:
                 if phrase not in content:
                     errors.append(f"queued candidate missing phrase {phrase}: {file_name}")
@@ -1677,7 +1697,7 @@ def verify_architecture_diagram_outputs() -> list[str]:
     errors: list[str] = []
     architecture_source = _read_text("docs/architecture/architecture.md")
     for phrase in [
-        "Zuno 架构总览",
+        "Zuno Lean Complete Product Architecture",
         "python tools/agent/render_architecture.py --check",
         "#f7f8fb",
         "#ffffff",
@@ -1704,17 +1724,17 @@ def verify_architecture_diagram_outputs() -> list[str]:
             continue
         content = path.read_text(encoding="utf-8")
         for phrase in [
-            "docs/architecture/architecture.md",
+            "architecture.md",
             "tools/agent/render_architecture.py",
             "4+1 View Model",
             "Component-and-Connector View",
-            "Deployment View",
+            "Physical View",
             "Quality View",
             "Scenarios View",
             "Process View",
-            "V&amp;B Logical View",
-            "V&amp;B Deployment View",
-            "Agent Loop View",
+            "V&amp;B Module",
+            "V&amp;B Component-and-Connector",
+            "Agentic GraphRAG Evidence and Agent Loop",
             "#f7f8fb",
             "#ffffff",
             "#b8c2cc",

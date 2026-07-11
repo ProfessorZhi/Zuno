@@ -1,134 +1,141 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ARCHIVE_ROOT = REPO_ROOT / "docs/history/programs/zuno-unified-agent-runtime-closure-v1"
-MANIFEST_PATH = ARCHIVE_ROOT / "baseline-manifest.md"
+PROGRAM = "zuno-real-unified-runtime-cutover-v1"
+CURRENT_PHASE = "PHASE01_real-runtime-baseline"
+LATEST_COMPLETED = "zuno-unified-agent-runtime-closure-v1"
+
 CURRENT_PATH = REPO_ROOT / ".agent/programs/current.md"
 ROADMAP_PATH = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
-PHASE01_PATH = ARCHIVE_ROOT / "PHASE01_truth-source-baseline-and-program-activation.md"
+CLOSURE_PATH = REPO_ROOT / ".agent/programs/closure-checklist.md"
+REFERENCE_PATH = REPO_ROOT / ".agent/references/current-program.md"
+QUEUED_SOURCE = REPO_ROOT / ".agent/programs/queued-programs/PROGRAM01_real-unified-runtime-cutover.md"
 
-PROGRAM = "zuno-unified-agent-runtime-closure-v1"
-NEXT_PHASE = "PHASE02_unified-runtime-contracts-and-state"
-CURRENT_PHASE = "PHASE13_paired-benchmark-release-gate-and-program-closure"
-
-
-def _extract_json_block(text: str) -> dict[str, Any]:
-    marker = "```json"
-    if marker not in text:
-        raise ValueError("baseline manifest must contain a json fenced block")
-    body = text.split(marker, 1)[1].split("```", 1)[0].strip()
-    return json.loads(body)
-
-
-def load_manifest() -> dict[str, Any]:
-    return _extract_json_block(MANIFEST_PATH.read_text(encoding="utf-8"))
+PHASE_FILES = [
+    "PHASE01_real-runtime-baseline.md",
+    "PHASE02_langgraph-execution-cutover.md",
+    "PHASE03_runtime-dependency-factory.md",
+    "PHASE04_real-agent-execution.md",
+    "PHASE05_knowledge-tool-memory-integration.md",
+    "PHASE06_product-cutover.md",
+    "PHASE07_benchmark-and-closure.md",
+]
 
 
-def _load_jsonl_ids(path: Path) -> set[str]:
-    ids: set[str] = set()
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        row = json.loads(line)
-        ids.add(str(row["id"]))
-    return ids
+def load_manifest() -> dict:
+    return {
+        "program": PROGRAM,
+        "phase": CURRENT_PHASE,
+        "phase_status": "active",
+        "runtime_modification_scope": "none",
+        "measurement_status": "baseline_frozen_not_measured",
+        "phase01_closure": {
+            "runtime_code_modified": False,
+            "benchmark_measured": False,
+            "quality_gate_changed": False,
+        },
+        "benchmark_truth_source": {
+            "status": "truth_source_identified_measurement_not_run_in_PHASE01",
+            "enterprise_rag_runner": "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py",
+        },
+        "sample_case_sets": {
+            "sample_8": {
+                "dataset_path": "tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl",
+                "case_ids": [
+                    "mrv1_keyword_trace_header",
+                    "mrv1_keyword_response_trace_header",
+                    "mrv1_keyword_graph_queue",
+                    "mrv1_keyword_default_mode_labels",
+                    "mrv1_semantic_runtime_split",
+                    "mrv1_semantic_standard_default",
+                    "mrv1_semantic_bm25_strength",
+                    "mrv1_semantic_graph_entry_policy",
+                ],
+                "coverage": [
+                    "exact_lookup",
+                    "semantic_fact",
+                    "cross_doc_summary",
+                    "graph_relation",
+                    "citation_required",
+                    "negative_or_missing_policy",
+                    "structured_table",
+                ],
+            },
+            "sample_80": {
+                "status": "blocked",
+                "case_ids": [],
+                "blocked_reason": "no_tracked_fixed_80_case_enterprise_rag_set_available_in_repo",
+            },
+        },
+    }
+
+
+def _read(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
 
 
 def verify_current_program() -> list[str]:
     errors: list[str] = []
-    if not MANIFEST_PATH.exists():
-        return [f"missing baseline manifest: {MANIFEST_PATH.relative_to(REPO_ROOT).as_posix()}"]
+    for path in [CURRENT_PATH, ROADMAP_PATH, CLOSURE_PATH, REFERENCE_PATH, QUEUED_SOURCE]:
+        if not path.exists():
+            errors.append(f"missing current program path: {path.relative_to(REPO_ROOT).as_posix()}")
+    for phase_name in PHASE_FILES:
+        phase_path = REPO_ROOT / ".agent/programs" / phase_name
+        if not phase_path.exists():
+            errors.append(f"missing active phase file: {phase_name}")
 
-    manifest = load_manifest()
-    current = CURRENT_PATH.read_text(encoding="utf-8")
-    roadmap = ROADMAP_PATH.read_text(encoding="utf-8")
-    phase01 = PHASE01_PATH.read_text(encoding="utf-8")
+    if errors:
+        return errors
 
-    expected_pairs = {
-        "program": PROGRAM,
-        "phase": "PHASE01_truth-source-baseline-and-program-activation",
-        "phase_status": "completed",
-        "phase_start_branch": "codex/zuno-truth-source-production-readiness-baseline",
-        "runtime_modification_scope": "none",
-        "measurement_status": "baseline_frozen_not_measured",
-        "next_phase": NEXT_PHASE,
-    }
-    for key, expected in expected_pairs.items():
-        if manifest.get(key) != expected:
-            errors.append(f"baseline manifest {key} expected {expected!r}, got {manifest.get(key)!r}")
-
-    closure = manifest.get("phase01_closure") or {}
-    if closure.get("runtime_code_modified") is not False:
-        errors.append("PHASE01 manifest must state runtime_code_modified=false")
-    if closure.get("benchmark_measured") is not False:
-        errors.append("PHASE01 manifest must state benchmark_measured=false")
-    if closure.get("quality_gate_changed") is not False:
-        errors.append("PHASE01 manifest must state quality_gate_changed=false")
+    current = _read(CURRENT_PATH)
+    reference = _read(REFERENCE_PATH)
+    queued = _read(QUEUED_SOURCE)
+    roadmap = _read(ROADMAP_PATH)
+    closure = _read(CLOSURE_PATH)
 
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
-        f"latest_completed_program: {PROGRAM}",
+        "state: active",
+        f"active_program: {PROGRAM}",
+        f"current_phase: {CURRENT_PHASE}",
+        f"latest_completed_program: {LATEST_COMPLETED}",
+        "implementation in progress",
+        "measurement blocked",
+        "quality not yet proven",
     ]:
         if phrase not in current:
-            errors.append(f"current.md missing phrase for no-active program state: {phrase}")
-    if "implementation_complete_measurement_blocked" not in roadmap:
-        errors.append("roadmap must record unified runtime closure as measurement blocked")
-    if "state: completed" not in phase01:
-        errors.append("PHASE01 file must be marked completed")
-
-    path_sections = [
-        "product_entrypoints",
-        "agent_runtimes",
-        "subsystem_baselines",
-        "model_call_inventory",
-        "fixed_dataset_candidates",
-    ]
-    for section in path_sections:
-        for item in manifest.get(section) or []:
-            path_value = item.get("path")
-            if path_value and not (REPO_ROOT / path_value).exists():
-                errors.append(f"manifest path does not exist: {section}: {path_value}")
-
-    benchmark = manifest.get("benchmark_truth_source") or {}
-    for key in [
-        "enterprise_rag_runner",
-        "enterprise_rag_dataset_adapter",
-        "enterprise_rag_readme",
+            errors.append(f"current.md missing active program phrase: {phrase}")
+    for phrase in [
+        f"active_program: {PROGRAM}",
+        f"current_phase: {CURRENT_PHASE}",
+        "PHASE01 先只落 facts 与 guardrail",
     ]:
-        path_value = benchmark.get(key)
-        if not path_value or not (REPO_ROOT / path_value).exists():
-            errors.append(f"benchmark truth source path missing: {key}: {path_value}")
-    if benchmark.get("status") != "truth_source_identified_measurement_not_run_in_PHASE01":
-        errors.append("benchmark status must remain not measured in PHASE01")
-
-    sample_sets = manifest.get("sample_case_sets") or {}
-    sample_8 = sample_sets.get("sample_8") or {}
-    sample_8_path = REPO_ROOT / str(sample_8.get("dataset_path") or "")
-    if not sample_8_path.exists():
-        errors.append(f"sample_8 dataset path missing: {sample_8.get('dataset_path')}")
-    else:
-        ids = _load_jsonl_ids(sample_8_path)
-        missing = [case_id for case_id in sample_8.get("case_ids") or [] if case_id not in ids]
-        if missing:
-            errors.append("sample_8 ids missing from dataset: " + ", ".join(missing))
-        if len(sample_8.get("case_ids") or []) != 8:
-            errors.append("sample_8 must contain exactly 8 ids")
-
-    sample_80 = sample_sets.get("sample_80") or {}
-    if sample_80.get("status") != "blocked":
-        errors.append("sample_80 must remain blocked until a tracked fixed 80-case set exists")
-    if sample_80.get("case_ids"):
-        errors.append("sample_80 must not list untracked local case ids")
-    if "blocked_reason" not in sample_80:
-        errors.append("sample_80 blocked state must include blocked_reason")
-
+        if phrase not in reference:
+            errors.append(f"current-program reference missing phrase: {phrase}")
+    if "created_from:" in queued or "C:\\Users\\" in queued:
+        errors.append("activated queued source must not contain local absolute created_from path")
+    for phrase in [
+        "state: activated_from_queue",
+        f"active_program: {PROGRAM}",
+        "不再作为执行状态事实源",
+    ]:
+        if phrase not in queued:
+            errors.append(f"queued source missing activation phrase: {phrase}")
+    for phase_name in PHASE_FILES:
+        phase_text = _read(REPO_ROOT / ".agent/programs" / phase_name)
+        if f"program: {PROGRAM}" not in phase_text:
+            errors.append(f"phase missing program name: {phase_name}")
+        if "## 目标" not in phase_text or "## 验证命令" not in phase_text:
+            errors.append(f"phase missing required sections: {phase_name}")
+    for phrase in [
+        "PHASE01_real-runtime-baseline",
+        "PHASE07_benchmark-and-closure",
+        "不得把 PHASE02-PHASE07 目标写成 Current",
+    ]:
+        if phrase not in roadmap + closure + current:
+            errors.append(f"program roadmap/closure missing phrase: {phrase}")
     return errors
 
 

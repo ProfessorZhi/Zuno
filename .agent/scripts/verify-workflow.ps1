@@ -84,8 +84,12 @@ $expectedUnifiedRuntimePhaseFiles = @(
     "PHASE13_paired-benchmark-release-gate-and-program-closure.md"
 )
 $activePhaseFiles = @(Get-ChildItem -LiteralPath ".agent\programs" -Filter "PHASE*.md" -File -ErrorAction SilentlyContinue | ForEach-Object { $_.Name } | Sort-Object)
-if ($activePhaseFiles.Count -ne 0) {
+$frontCurrentProgram = Get-Content -LiteralPath ".agent\programs\current.md" -Raw -Encoding UTF8
+if ($frontCurrentProgram -match "state: no-active" -and $activePhaseFiles.Count -ne 0) {
     $failures.Add(".agent/programs must not keep active phase files in no-active state")
+}
+if ($frontCurrentProgram -match "state: active" -and $activePhaseFiles.Count -eq 0) {
+    $failures.Add(".agent/programs active state must keep PHASE files")
 }
 foreach ($phaseFile in $expectedUnifiedRuntimePhaseFiles) {
     Require-Path ("docs\history\programs\zuno-unified-agent-runtime-closure-v1\" + $phaseFile)
@@ -340,8 +344,8 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-unified-agent-runtime-closure-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-unified-agent-runtime-closure-v1/") {
-    $failures.Add("current-program.md must declare no-active state and latest unified runtime archive")
+if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-real-unified-runtime-cutover-v1" -or $currentProgram -notmatch "current_phase: PHASE01_real-runtime-baseline" -or $currentProgram -notmatch "latest_completed_program: zuno-unified-agent-runtime-closure-v1") {
+    $failures.Add("current-program.md must declare active real unified runtime cutover state")
 }
 if ($currentProgram -notmatch "zuno-evidence-span-agentic-graphrag-hardening-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/") {
     $failures.Add("current-program.md must keep evidence-span archive visible")

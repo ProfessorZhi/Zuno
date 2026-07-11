@@ -107,6 +107,13 @@ UNIFIED_RUNTIME_PROGRAM_FILES = [
 ]
 CURRENT_FRONT_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_FILES,
+    "PHASE01_real-runtime-baseline.md",
+    "PHASE02_langgraph-execution-cutover.md",
+    "PHASE03_runtime-dependency-factory.md",
+    "PHASE04_real-agent-execution.md",
+    "PHASE05_knowledge-tool-memory-integration.md",
+    "PHASE06_product-cutover.md",
+    "PHASE07_benchmark-and-closure.md",
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -561,10 +568,11 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        "active_program: zuno-real-unified-runtime-cutover-v1",
+        "current_phase: PHASE01_real-runtime-baseline",
         f"latest_completed_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
+        "zuno-real-unified-runtime-cutover-v1",
         UNIFIED_RUNTIME_PROGRAM_NAME,
         UNIFIED_RUNTIME_PROGRAM_ARCHIVE,
         "implementation_complete_measurement_blocked",
@@ -613,9 +621,6 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     ]:
         if phrase not in current + readme + roadmap + closure + current_reference + unified_archive_text + evidence_archive_text + program3_archive_text + latest_archive_text + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
-    active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names:
-        errors.append(".agent/programs must not keep active phase files in no-active state: " + ", ".join(active_phase_names))
     for phase_name in UNIFIED_RUNTIME_PHASE_FILES:
         phase_path = unified_archive_root / phase_name
         if not phase_path.exists():
@@ -756,10 +761,9 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         content = queued_path.read_text(encoding="utf-8")
         if file_name == "PROGRAM01_real-unified-runtime-cutover.md":
             for phrase in [
-                "state: queued",
-                "active_program: false",
-                "不得把 queued program 写成 active",
-                "measurement_blocked + quality_not_proven",
+                "state: activated_from_queue",
+                "active_program: zuno-real-unified-runtime-cutover-v1",
+                "不再作为执行状态事实源",
             ]:
                 if phrase not in content:
                     errors.append(f"queued candidate missing phrase {phrase}: {file_name}")

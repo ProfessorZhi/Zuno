@@ -104,6 +104,13 @@ UNIFIED_RUNTIME_PROGRAM_FILES = [
 ]
 CURRENT_FRONT_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_FILES,
+    "PHASE01_real-runtime-baseline.md",
+    "PHASE02_langgraph-execution-cutover.md",
+    "PHASE03_runtime-dependency-factory.md",
+    "PHASE04_real-agent-execution.md",
+    "PHASE05_knowledge-tool-memory-integration.md",
+    "PHASE06_product-cutover.md",
+    "PHASE07_benchmark-and-closure.md",
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -342,10 +349,11 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         + (unified_archive / "closure-summary.md").read_text(encoding="utf-8")
     )
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
+        "state: active",
+        "active_program: zuno-real-unified-runtime-cutover-v1",
+        "current_phase: PHASE01_real-runtime-baseline",
         f"latest_completed_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
+        "zuno-real-unified-runtime-cutover-v1",
         UNIFIED_RUNTIME_PROGRAM_NAME,
         UNIFIED_RUNTIME_PROGRAM_ARCHIVE,
         "implementation_complete_measurement_blocked",
@@ -408,7 +416,9 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
             + production_archive_text
             + archive_text
         )
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == []
+    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(
+        name for name in CURRENT_FRONT_PROGRAM_FILES if name.startswith("PHASE")
+    )
     for phase_name in UNIFIED_RUNTIME_PHASE_FILES:
         phase_text = (unified_archive / phase_name).read_text(encoding="utf-8")
         assert f"program: {UNIFIED_RUNTIME_PROGRAM_NAME}" in phase_text
@@ -511,10 +521,9 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for file_name in QUEUED_PROGRAM_FILES:
         text = (REPO_ROOT / ".agent/programs/queued-programs" / file_name).read_text(encoding="utf-8")
         if file_name == "PROGRAM01_real-unified-runtime-cutover.md":
-            assert "state: queued" in text
-            assert "active_program: false" in text
-            assert "不得把 queued program 写成 active" in text
-            assert "measurement_blocked + quality_not_proven" in text
+            assert "state: activated_from_queue" in text
+            assert "active_program: zuno-real-unified-runtime-cutover-v1" in text
+            assert "不再作为执行状态事实源" in text
         elif file_name != "README.md":
             assert "state: superseded" in text
             assert "merged_into: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in text

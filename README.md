@@ -44,6 +44,8 @@ Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agen
 ## Program 入口
 
 - 当前 program 前台：`.agent/programs/`
+- 当前 active program：`zuno-real-unified-runtime-cutover-v1`
+- 当前 phase：`PHASE01_real-runtime-baseline`
 - 最近完成归档：`docs/history/programs/zuno-unified-agent-runtime-closure-v1/`
 - 历史生产完成归档：`docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
 - 历史 runtime-first 归档：`docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`

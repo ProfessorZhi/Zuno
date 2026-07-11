@@ -1,30 +1,36 @@
 # Program Closure Checklist
 
-state: no-active
-active_program: none
-current_phase: none
+state: active
+active_program: zuno-real-unified-runtime-cutover-v1
+current_phase: PHASE01_real-runtime-baseline
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
-## 最近完成 Program
+## Phase Closure
 
-- [x] PHASE01 baseline、truth source、PowerShell 命令和 sample case set 已冻结。
-- [x] PHASE02-PHASE12 unified runtime implementation baseline 已完成并逐 phase 提交。
-- [x] PHASE13 修复 profile 缺失仍标 measured 的 bug。
-- [x] PHASE13 新增 profile case counts / hashes 和 `profile_completeness` diagnostics。
-- [x] PHASE13 provider/runtime profile runner 不可用时输出 `blocked_not_measured`，不异常冒充 measured。
-- [x] sample-8 runner 已执行并产出 blocked report。
-- [x] sample-80 保持 blocked，因为没有 tracked fixed 80-case set。
-- [x] production readiness 和 evidence 文档已记录 measurement blocked。
-- [x] program 已归档到 `docs/history/programs/zuno-unified-agent-runtime-closure-v1/`。
+- [ ] PHASE01 active program、truth source、PowerShell baseline、runtime gap facts 和 guardrail verifier 已冻结。
+- [ ] PHASE02 compiled LangGraph 成为 `UnifiedAgentRuntimeService` 执行引擎，手写主循环退出产品主路径。
+- [ ] PHASE03 `RuntimeDependencyFactory` 和 typed runtime protocols 接入 Completion / Workspace。
+- [ ] PHASE04 ModelStep / Planner / ReActStep / Grounded Synthesis 进入真实执行数据面。
+- [ ] PHASE05 Knowledge / Tool / Memory 真实接入，filesystem.read/write 和 PDF evidence vertical slice 通过。
+- [ ] PHASE06 Completion / Workspace 默认 unified runtime，GeneralAgent 只保留 rollback flag。
+- [ ] PHASE07 benchmark 输出 pass / fail / blocked，program 归档并恢复 no-active。
 
-## 未完成质量门
+## Final Implementation Gate
 
-- [ ] fixed EnterpriseRAG paired benchmark 完整 measured pass。
-- [ ] Evidence Text Available@5 >= 0.60。
-- [ ] Source Doc Citation Accuracy >= 0.85。
-- [ ] Citation Accuracy >= 0.30。
-- [ ] Answer Correctness >= standard_rag。
-- [ ] Agentic GraphRAG stable superiority over baseline。
+- [ ] `UnifiedAgentRuntimeService` 真正调用 compiled LangGraph。
+- [ ] 手写主运行 `while` loop 退出产品主路径。
+- [ ] `ModelStepExecutor` 真实调用 Model Gateway。
+- [ ] `ReActStepExecutor` 真实执行单个 PlanStep 的 ReAct。
+- [ ] 缺依赖时返回 blocked observation，不伪造 evidence、citation 或 completed。
+- [ ] Grounded Synthesis 产生真实 `final_answer`、claims、citation bindings 和 unsupported claims。
+- [ ] Completion 默认进入 unified runtime。
+- [ ] Workspace artifact 来自 unified runtime final state。
+- [ ] GeneralAgent 只保留显式 rollback flag。
+- [ ] SingleControllerDurableRuntime 不再是产品主 Controller。
+- [ ] 至少两个真实本地 Tool：安全的 filesystem.read 和经审批的 filesystem.write。
+- [ ] Memory 完成 pre-turn read、in-turn usage、post-turn write 和 approved Reflexion reuse。
+- [ ] PDF -> index -> corrective retrieval -> EvidenceLedger -> synthesis -> page citation 的真实纵向链路通过。
+- [ ] Benchmark 诚实输出 pass、fail 或 blocked。
 
 ## 禁止的虚假关闭
 

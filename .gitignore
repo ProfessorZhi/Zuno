@@ -24,6 +24,7 @@ src/backend/zuno/config.local.yaml
 /vector_db/
 
 .local/
+.agents/
 .codex/
 
 # Agent workflow library: keep durable references/templates/scripts tracked.

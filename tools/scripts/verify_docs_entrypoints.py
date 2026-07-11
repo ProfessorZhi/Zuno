@@ -144,6 +144,13 @@ def verify_entrypoint_text() -> list[str]:
     current_phase = _current_phase_name(current_program)
     if current_phase not in {
         "none",
+        "PHASE01_real-runtime-baseline",
+        "PHASE02_langgraph-execution-cutover",
+        "PHASE03_runtime-dependency-factory",
+        "PHASE04_real-agent-execution",
+        "PHASE05_knowledge-tool-memory-integration",
+        "PHASE06_product-cutover",
+        "PHASE07_benchmark-and-closure",
         "PHASE01_truth-source-baseline-and-program-activation",
         "PHASE02_unified-runtime-contracts-and-state",
         "PHASE03_model-gateway-closure",
