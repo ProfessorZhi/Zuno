@@ -23,6 +23,7 @@ ARCHITECTURE_VIEW_CONTRACT = [
 ACTIVE_DOCS_ARCHITECTURE_FILES = {
     "README.md",
     "architecture.md",
+    "architecture-views.md",
     "production-readiness.md",
     "document-ingestion-foundation.md",
     "agent-core-runtime.md",
@@ -70,6 +71,7 @@ def verify_front_path_shape() -> list[str]:
         "docs/README.md",
         "docs/architecture/README.md",
         "docs/architecture/architecture.md",
+        "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
         "docs/architecture/production-readiness.md",
         ".agent/architecture/README.md",
@@ -118,6 +120,7 @@ def verify_entrypoint_text() -> list[str]:
     docs_index = _read("docs/README.md")
     architecture_index = _read("docs/architecture/README.md")
     architecture = _read("docs/architecture/architecture.md")
+    views = _read("docs/architecture/architecture-views.md")
     production = _read("docs/architecture/production-readiness.md")
 
     expected_by_file = {
@@ -138,6 +141,7 @@ def verify_entrypoint_text() -> list[str]:
         "docs/architecture/README.md": [
             "架构文档",
             "architecture.md",
+            "architecture-views.md",
             "architecture.html",
             "production-readiness.md",
             "python tools/agent/render_architecture.py --write",
@@ -155,11 +159,14 @@ def verify_entrypoint_text() -> list[str]:
 
     architecture_phrases = [
         "Zuno Target Architecture Atlas",
+        "Text-first Design Document",
+        "轻量实现，成熟设计",
         "十一逻辑能力模块",
         "六个物理运行域",
-        "4+1 View Model",
-        "Views & Beyond",
         "Agent Core / Planning & Control",
+        "TaskQueuePort",
+        "RabbitMQAdapter",
+        "LangSmithTraceSink",
         "RuntimeRequest",
         "ModelCallRequest",
         "ContextPack",
@@ -176,6 +183,28 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in architecture_phrases:
         if phrase not in architecture:
             errors.append(f"docs/architecture/architecture.md missing phrase: {phrase}")
+
+    view_phrases = [
+        "Zuno Architecture Visual Atlas Source",
+        "4+1 View Model",
+        "Views & Beyond",
+        "Zuno Product Core",
+        "RuntimeRequest",
+        "ModelCallRequest",
+        "ContextPack",
+        "RetrievalPlan",
+        "EvidenceBundle",
+        "ToolCallIntent",
+        "NormalizedToolObservation",
+        "GroundedAnswer",
+        "EvidenceLedger",
+        "TaskQueuePort",
+        "RabbitMQ",
+        "LangSmith",
+    ]
+    for phrase in view_phrases:
+        if phrase not in views:
+            errors.append(f"docs/architecture/architecture-views.md missing phrase: {phrase}")
 
     production_phrases = [
         "Short-term Closure Gap",
@@ -224,28 +253,35 @@ def verify_architecture_view_contract() -> list[str]:
             f"expected {ARCHITECTURE_VIEW_CONTRACT}, got {module.EXPECTED_VIEWS}"
         )
 
-    source = _read("docs/architecture/architecture.md")
+    architecture = _read("docs/architecture/architecture.md")
+    views = _read("docs/architecture/architecture-views.md")
     html = _read("docs/architecture/architecture.html")
-    errors.extend(module.validate_source(source))
+    errors.extend(module.validate_design(architecture))
+    errors.extend(module.validate_source(views))
     errors.extend(module.validate_html(html))
 
-    if source.count("```mermaid") < 30:
-        errors.append("architecture.md must contain at least 30 Mermaid diagrams")
+    if architecture.count("```mermaid") > 8:
+        errors.append("architecture.md must stay text-first; detailed diagrams belong in architecture-views.md")
+    if views.count("```mermaid") < 30:
+        errors.append("architecture-views.md must contain at least 30 Mermaid diagrams")
+
     for title in ARCHITECTURE_VIEW_CONTRACT:
-        section = module._section(source, title)
+        section = module._section(views, title)
         if "#### Overall" not in section:
-            errors.append(f"architecture.md missing Overall diagram: {title}")
-        if "#### Local" not in section:
-            errors.append(f"architecture.md missing Local diagram: {title}")
+            errors.append(f"architecture-views.md missing Overall diagram: {title}")
+        if section.count("#### Local") < 2:
+            errors.append(f"architecture-views.md needs two Local diagrams: {title}")
         if title not in html:
             errors.append(f"architecture.html missing canonical view title: {title}")
 
-    if "mermaid@11" not in html or 'class="mermaid"' not in html:
+    if "mermaid@11" not in html or 'className = "mermaid"' not in html:
         errors.append("architecture.html must use the native Mermaid v11 browser runtime")
     if "offline-svg" in html or "offline-diagram" in html:
         errors.append("architecture.html must not use the retired simplified SVG renderer")
     if "diagram-dialog" not in html or "Mermaid source" not in html:
         errors.append("architecture.html must preserve fullscreen and source disclosure")
+    if 'fetch("/docs/architecture/architecture-views.md"' not in html:
+        errors.append("architecture.html must load the dedicated Mermaid source")
     return errors
 
 
@@ -269,6 +305,7 @@ def verify_docs_map_has_unique_architecture_source_roles() -> list[str]:
     if formal_entries.count("`docs/architecture/architecture.md`") != 1:
         errors.append("docs-map must list architecture.md exactly once in formal entries")
     for phrase in [
+        "`docs/architecture/architecture-views.md`",
         "`docs/architecture/architecture.html`",
         "`docs/architecture/production-readiness.md`",
         "Lean Complete Agentic GraphRAG Product",
