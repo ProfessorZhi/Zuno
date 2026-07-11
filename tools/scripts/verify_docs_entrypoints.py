@@ -37,7 +37,12 @@ ACTIVE_DOCS_ARCHITECTURE_FILES = {
     "repo-ownership-matrix.md",
 }
 
-ACTIVE_AGENT_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture.html"}
+ACTIVE_AGENT_ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture-views.md",
+    "architecture.html",
+}
 
 ARCHIVED_ARCHITECTURE_SPLIT_DOCS = [
     "current-architecture.md",
@@ -76,6 +81,7 @@ def verify_front_path_shape() -> list[str]:
         "docs/architecture/production-readiness.md",
         ".agent/architecture/README.md",
         ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture-views.md",
         ".agent/architecture/architecture.html",
         "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
     ]
@@ -289,10 +295,17 @@ def verify_architecture_mirrors() -> list[str]:
     errors: list[str] = []
     docs_md = _read("docs/architecture/architecture.md")
     agent_md = _read(".agent/architecture/architecture.md")
+    docs_views = _read("docs/architecture/architecture-views.md")
+    agent_views = _read(".agent/architecture/architecture-views.md")
     docs_html = _read("docs/architecture/architecture.html")
     agent_html = _read(".agent/architecture/architecture.html")
     if docs_md != agent_md:
         errors.append(".agent/architecture/architecture.md must match docs/architecture/architecture.md")
+    if docs_views != agent_views:
+        errors.append(
+            ".agent/architecture/architecture-views.md must match "
+            "docs/architecture/architecture-views.md"
+        )
     if docs_html != agent_html:
         errors.append(".agent/architecture/architecture.html must match docs/architecture/architecture.html")
     return errors
