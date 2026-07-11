@@ -9,6 +9,7 @@ ARCHIVE_ROOT = "docs/history/architecture-surface-cleanup-2026-06-30"
 DOCS_ARCHITECTURE_FILES = {
     "README.md",
     "architecture.md",
+    "architecture-views.md",
     "architecture.html",
     "agent-core-runtime.md",
     "memory-and-context.md",
@@ -103,11 +104,10 @@ def verify_architecture_markdown_contract() -> list[str]:
     content = _read("docs/architecture/architecture.md")
     required_phrases = [
         "Zuno Target Architecture Atlas",
+        "Text-first Design Document",
+        "轻量实现，成熟设计",
         "十一逻辑能力模块",
         "六个物理运行域",
-        "4+1 View Model",
-        "Views & Beyond",
-        "Zuno Product Core",
         "Agent Core / Planning & Control",
         "RuntimeRequest",
         "ModelCallRequest",
@@ -118,6 +118,16 @@ def verify_architecture_markdown_contract() -> list[str]:
         "NormalizedToolObservation",
         "GroundedAnswer",
         "EvidenceLedger",
+        "TaskQueuePort",
+        "RabbitMQAdapter",
+        "LangSmithTraceSink",
+        "Plan-and-Execute",
+        "ReAct",
+        "Reflection",
+        "Replan",
+        "Reflexion",
+        "MCP",
+        "Recall@K",
         "Product & API",
         "Input & Knowledge",
         "Agent Core Runtime",
@@ -125,7 +135,8 @@ def verify_architecture_markdown_contract() -> list[str]:
         "Governance & Observability",
         "Local Infrastructure",
         "Target completion criteria",
-        "Current / Target 边界",
+        "Architecture Visual Atlas",
+        "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
@@ -134,13 +145,26 @@ def verify_architecture_markdown_contract() -> list[str]:
         if phrase not in content:
             errors.append(f"docs/architecture/architecture.md missing architecture contract phrase: {phrase}")
 
+    mermaid_count = content.count("```mermaid")
+    if mermaid_count < 2:
+        errors.append("docs/architecture/architecture.md must keep a few supporting Mermaid diagrams")
+    if mermaid_count > 8:
+        errors.append("docs/architecture/architecture.md must remain text-first")
+    if len(content) < 20000:
+        errors.append("docs/architecture/architecture.md is too short for the normative target design")
+    return errors
+
+
+def verify_architecture_views_contract() -> list[str]:
+    errors: list[str] = []
+    content = _read("docs/architecture/architecture-views.md")
     if content.count("```mermaid") < 30:
-        errors.append("docs/architecture/architecture.md must keep at least thirty Mermaid diagrams")
+        errors.append("docs/architecture/architecture-views.md must keep at least thirty Mermaid diagrams")
 
     for title in CANONICAL_VIEWS:
         marker = f"### {title}"
         if marker not in content:
-            errors.append(f"docs/architecture/architecture.md missing canonical view: {title}")
+            errors.append(f"docs/architecture/architecture-views.md missing canonical view: {title}")
             continue
         section_start = content.index(marker)
         later = [
@@ -152,8 +176,8 @@ def verify_architecture_markdown_contract() -> list[str]:
         section = content[section_start:section_end]
         if "#### Overall" not in section:
             errors.append(f"canonical view missing Overall diagram: {title}")
-        if "#### Local" not in section:
-            errors.append(f"canonical view missing Local diagram: {title}")
+        if section.count("#### Local") < 2:
+            errors.append(f"canonical view needs at least two Local diagrams: {title}")
     return errors
 
 
@@ -163,11 +187,12 @@ def verify_architecture_html_contract() -> list[str]:
     required = [
         "Zuno Target Architecture Atlas",
         '<script type="module">',
-        'fetch("architecture.md"',
+        'fetch("/docs/architecture/architecture-views.md"',
         "mermaid@11",
-        'class="mermaid"',
+        'className = "mermaid"',
         "diagram-dialog",
         "Mermaid source",
+        "阅读文字总架构",
     ]
     for phrase in required:
         if phrase not in content:
@@ -214,6 +239,8 @@ def verify_future_only_terms() -> list[str]:
         "近期明确不做",
         "Future Optional",
         "不是微服务",
+        "不代表十一个微服务",
+        "不需要提前拆微服务",
         "不实施",
     ]
     docs_to_scan = ["README.md", "docs/architecture/architecture.md"]
@@ -248,6 +275,7 @@ def main() -> int:
     errors: list[str] = []
     errors.extend(verify_architecture_surface())
     errors.extend(verify_architecture_markdown_contract())
+    errors.extend(verify_architecture_views_contract())
     errors.extend(verify_architecture_html_contract())
     errors.extend(verify_future_only_terms())
     errors.extend(verify_no_local_download_paths())
