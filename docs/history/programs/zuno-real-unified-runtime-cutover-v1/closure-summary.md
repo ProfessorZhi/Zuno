@@ -31,14 +31,15 @@ Completion / Workspace
 PHASE07 尝试运行 fixed EnterpriseRAG paired benchmark，但没有形成完整 measured profile：
 
 - raw parquet 缺失：`.local/evals/raw/enterprise_rag_bench/hf/data/questions/test.parquet`。
-- tracked sample-8 JSONL run 超时：`benchmark_timeout_after_184s`。
-- partial artifacts 只覆盖 baseline / local / deep profiles，缺 agentic profile 和顶层 metrics/report。
+- tracked sample-8 JSONL 首次 run 超时：`benchmark_timeout_after_184s`。
+- tracked sample-8 JSONL 复跑定位到 profile runner 访问本地 Postgres / LLM 配置失败，`--allow-blocked` 应落盘为 `profile_runner_external_db_unavailable`。
+- partial artifacts 只覆盖 baseline / local / deep profiles，缺 agentic profile 和完整 measured profile。
 
 因此：
 
 ```text
 measurement_status: measurement_blocked
-blocked_reason: enterprise_rag_sample8_timeout_and_agentic_profile_incomplete
+blocked_reason: enterprise_rag_sample8_external_db_unavailable_and_agentic_profile_incomplete
 quality_gate_status: quality_not_proven
 ```
 

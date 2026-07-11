@@ -31,7 +31,7 @@ def load_manifest() -> dict:
         "implementation_status": "implementation_complete",
         "measurement_status": "measurement_blocked",
         "quality_gate_status": "quality_not_proven",
-        "blocked_reason": "enterprise_rag_sample8_timeout_and_agentic_profile_incomplete",
+        "blocked_reason": "enterprise_rag_sample8_external_db_unavailable_and_agentic_profile_incomplete",
         "archive": "docs/history/programs/zuno-real-unified-runtime-cutover-v1/",
     }
 
@@ -72,7 +72,7 @@ def verify_current_program() -> list[str]:
         "implementation_status: implementation_complete",
         "measurement_status: measurement_blocked",
         "quality_gate_status: quality_not_proven",
-        "enterprise_rag_sample8_timeout_and_agentic_profile_incomplete",
+        "enterprise_rag_sample8_external_db_unavailable_and_agentic_profile_incomplete",
     ]:
         if phrase not in current:
             errors.append(f"current.md missing no-active closure phrase: {phrase}")

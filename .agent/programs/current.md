@@ -19,7 +19,7 @@ implementation_status: implementation_complete
 measurement_status: measurement_blocked
 measurement blocked
 quality_gate_status: quality_not_proven
-blocked_reason: enterprise_rag_sample8_timeout_and_agentic_profile_incomplete
+blocked_reason: enterprise_rag_sample8_external_db_unavailable_and_agentic_profile_incomplete
 ```
 
 ## 完成事实
@@ -35,4 +35,4 @@ blocked_reason: enterprise_rag_sample8_timeout_and_agentic_profile_incomplete
 
 ## 未证明事项
 
-fixed EnterpriseRAG paired benchmark 没有完成完整 measured profile。不得把本地 implementation tests passed 写成 quality pass，也不得把 Agentic GraphRAG superiority 写成已证明。
+fixed EnterpriseRAG paired benchmark 没有完成完整 measured profile。tracked sample-8 复跑暴露 profile runner 依赖本地 Postgres / LLM 配置，当前环境不可用。不得把本地 implementation tests passed 写成 quality pass，也不得把 Agentic GraphRAG superiority 写成已证明。

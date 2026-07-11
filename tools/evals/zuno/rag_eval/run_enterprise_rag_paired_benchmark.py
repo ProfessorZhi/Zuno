@@ -11,6 +11,8 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Iterable
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from zuno.evals.rag_eval.paths import default_runs_root
 from zuno.evals.rag_eval.metrics import _is_context_relevant
 from zuno.evals.rag_eval.public_enterprise_datasets import (
@@ -131,6 +133,14 @@ def _expected_doc_ids(rows: Iterable[dict[str, Any]]) -> set[str]:
         for doc_id in _as_string_list(row.get("expected_doc_ids"))
         if doc_id
     }
+
+
+def _profile_runner_blocked_reason(exc: BaseException) -> str:
+    if isinstance(exc, SQLAlchemyError):
+        return "profile_runner_external_db_unavailable"
+    if isinstance(exc, TimeoutError):
+        return "profile_runner_timeout"
+    return "profile_runner_unavailable"
 
 
 def _iter_source_documents(source_root: Path) -> Iterable[dict[str, Any]]:
@@ -1453,11 +1463,11 @@ async def run_enterprise_rag_paired_benchmark(
             chunk_size_override=chunk_size_override,
             overlap_override=overlap_override,
         )
-    except (RuntimeError, ValueError) as exc:
+    except (RuntimeError, TimeoutError, ValueError, SQLAlchemyError) as exc:
         if not allow_blocked:
             raise
         blocked_manifest = dict(manifest)
-        blocked_manifest["blocked_reason"] = "profile_runner_unavailable"
+        blocked_manifest["blocked_reason"] = _profile_runner_blocked_reason(exc)
         blocked_manifest["profile_runner_error"] = str(exc)
         metrics = _blocked_metrics(selected_rows=selected_rows, manifest=blocked_manifest)
         metrics["runtime_config"]["chunk_size_override"] = chunk_size_override

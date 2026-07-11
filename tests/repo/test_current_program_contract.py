@@ -28,7 +28,7 @@ def test_closure_manifest_does_not_promote_blocked_measurement() -> None:
     assert manifest["implementation_status"] == "implementation_complete"
     assert manifest["measurement_status"] == "measurement_blocked"
     assert manifest["quality_gate_status"] == "quality_not_proven"
-    assert manifest["blocked_reason"] == "enterprise_rag_sample8_timeout_and_agentic_profile_incomplete"
+    assert manifest["blocked_reason"] == "enterprise_rag_sample8_external_db_unavailable_and_agentic_profile_incomplete"
 
 
 def test_closure_archive_is_tracked() -> None:

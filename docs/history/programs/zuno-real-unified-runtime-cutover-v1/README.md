@@ -24,7 +24,8 @@ quality_gate_status: quality_not_proven
 Benchmark 状态：
 
 - raw EnterpriseRAG parquet 路径 `.local/evals/raw/enterprise_rag_bench/hf/data/questions/test.parquet` 不存在，runner 直接 `FileNotFoundError`。
-- tracked sample-8 JSONL 尝试运行到 184 秒超时，只生成了 baseline / local / deep partial profile artifacts，没有 agentic profile 和顶层 `metrics.json` / `report.md`。
+- tracked sample-8 JSONL 首次尝试运行到 184 秒超时；复跑定位到 profile runner 访问本地 Postgres / LLM 配置失败，应输出 `profile_runner_external_db_unavailable` 的 blocked-not-measured artifacts。
+- 已生成的 partial artifacts 只覆盖 baseline / local / deep partial profile，没有完整 agentic profile。
 - 因此 fixed EnterpriseRAG paired benchmark 未形成完整 measured profile，不允许写成 measured pass / fail。
 
 主要本地验证：

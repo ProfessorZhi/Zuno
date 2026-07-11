@@ -23,7 +23,7 @@ latest_completed_program: zuno-real-unified-runtime-cutover-v1
 implementation_status: implementation_complete
 measurement_status: measurement_blocked
 quality_gate_status: quality_not_proven
-blocked_reason: enterprise_rag_sample8_timeout_and_agentic_profile_incomplete
+blocked_reason: enterprise_rag_sample8_external_db_unavailable_and_agentic_profile_incomplete
 ```
 
 不得把 blocked benchmark 写成 measured。
@@ -55,7 +55,7 @@ measurement blocked
 quality not yet proven
 ```
 
-PHASE13 sample-8 已运行但 blocked，原因是本地 embedding profile runner 未配置。sample-80 仍因仓库没有 tracked fixed 80-case set 而 blocked。
+最近 sample-8 已运行但 blocked，原因是本地 Postgres / LLM profile runner 依赖不可用；此前 raw parquet 路径缺失也已记录。sample-80 仍因仓库没有 tracked fixed 80-case set 而 blocked。
 
 不得把本轮 program closure 写成 fixed EnterpriseRAG measured pass，也不得把 Agentic GraphRAG 稳定优于 baseline 写成已证明。
 

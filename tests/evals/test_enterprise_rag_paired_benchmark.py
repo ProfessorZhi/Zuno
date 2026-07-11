@@ -282,6 +282,48 @@ def test_enterprise_rag_paired_benchmark_blocks_when_profile_runner_unavailable(
     assert "profile_runner_unavailable" in (output_root / "report.md").read_text(encoding="utf-8")
 
 
+def test_enterprise_rag_paired_benchmark_blocks_when_profile_runner_database_unavailable(
+    monkeypatch, tmp_path: Path
+) -> None:
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from zuno.evals.rag_eval import run_enterprise_rag_paired_benchmark as paired
+
+    questions = tmp_path / "questions.jsonl"
+    documents = tmp_path / "documents.parquet"
+    _write_questions(questions)
+    _write_alias_documents(documents)
+    output_root = tmp_path / "run"
+
+    async def fake_run_stackless_local_eval(**kwargs):
+        raise SQLAlchemyError("local database connection timed out")
+
+    monkeypatch.setattr(paired, "run_stackless_local_eval", fake_run_stackless_local_eval)
+
+    result = asyncio.run(
+        paired.run_enterprise_rag_paired_benchmark(
+            questions_file=questions,
+            documents_file=documents,
+            output_root=output_root,
+            sample_size=2,
+            allow_blocked=True,
+        )
+    )
+
+    assert result["status"] == "blocked"
+    assert result["metrics_source"] == "blocked_not_measured"
+    metrics = _read_json(output_root / "metrics.json")
+    assert metrics["status"] == "blocked"
+    assert metrics["measurement_status"] == "blocked_not_measured"
+    assert metrics["case_set"]["measured_case_count"] == 0
+    assert metrics["corpus"]["blocked_reason"] == "profile_runner_external_db_unavailable"
+    assert metrics["corpus"]["profile_runner_error"] == "local database connection timed out"
+    assert metrics["release_gate"]["measured"] is False
+    assert metrics["release_gate"]["status"] == "blocked_not_measured"
+    assert metrics["release_gate"]["blocked_reason"] == "profile_runner_external_db_unavailable"
+    assert "profile_runner_external_db_unavailable" in (output_root / "report.md").read_text(encoding="utf-8")
+
+
 def test_enterprise_rag_paired_benchmark_blocks_unsupported_document_schema(tmp_path: Path) -> None:
     from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
         run_enterprise_rag_paired_benchmark,
