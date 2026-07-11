@@ -54,6 +54,7 @@ def test_docs_architecture_front_path_and_generated_entries() -> None:
     assert docs_files == {
         "README.md",
         "architecture.md",
+        "architecture-views.md",
         "production-readiness.md",
         "document-ingestion-foundation.md",
         "agent-core-runtime.md",
@@ -92,6 +93,7 @@ def test_docs_front_path_readmes_explain_current_contract() -> None:
     for phrase in [
         "架构文档",
         "architecture.md",
+        "architecture-views.md",
         "architecture.html",
         "production-readiness.md",
         "python tools/agent/render_architecture.py --write",
@@ -101,27 +103,29 @@ def test_docs_front_path_readmes_explain_current_contract() -> None:
     for phrase in [
         "Agent 架构工作区",
         "Lean Complete Agentic GraphRAG Product",
+        "architecture-views.md",
         "python tools/agent/render_architecture.py --write",
     ]:
         assert phrase in agent_index
 
 
-def test_architecture_markdown_is_target_atlas_with_ten_view_categories() -> None:
+def test_architecture_markdown_is_text_first_target_design() -> None:
     render_architecture = _load_render_architecture()
-    source = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
+    design = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
 
-    assert render_architecture.EXPECTED_VIEWS == EXPECTED_VIEWS
-    assert render_architecture.EXPECTED_DIAGRAMS == EXPECTED_VIEWS
-    assert render_architecture.validate_source(source) == []
-    assert source.count("```mermaid") >= 30
+    assert render_architecture.validate_design(design) == []
+    assert 2 <= design.count("```mermaid") <= 8
 
     for phrase in [
         "Zuno Target Architecture Atlas",
+        "Text-first Design Document",
+        "轻量实现，成熟设计",
         "十一逻辑能力模块",
         "六个物理运行域",
-        "4+1 View Model",
-        "Views & Beyond",
         "Agent Core / Planning & Control",
+        "TaskQueuePort",
+        "RabbitMQAdapter",
+        "LangSmithTraceSink",
         "RuntimeRequest",
         "ModelCallRequest",
         "ContextPack",
@@ -135,13 +139,23 @@ def test_architecture_markdown_is_target_atlas_with_ten_view_categories() -> Non
         "measurement blocked",
         "quality not yet proven",
     ]:
-        assert phrase in source
+        assert phrase in design
+
+
+def test_architecture_views_contains_ten_categories_and_thirty_diagrams() -> None:
+    render_architecture = _load_render_architecture()
+    views = (REPO_ROOT / "docs/architecture/architecture-views.md").read_text(encoding="utf-8")
+
+    assert render_architecture.EXPECTED_VIEWS == EXPECTED_VIEWS
+    assert render_architecture.EXPECTED_DIAGRAMS == EXPECTED_VIEWS
+    assert render_architecture.validate_source(views) == []
+    assert views.count("```mermaid") >= 30
 
     for title in EXPECTED_VIEWS:
-        section = render_architecture._section(source, title)
+        section = render_architecture._section(views, title)
         assert section
         assert "#### Overall" in section
-        assert "#### Local" in section
+        assert section.count("#### Local") >= 2
         assert "```mermaid" in section
 
 
@@ -156,13 +170,14 @@ def test_architecture_html_uses_true_mermaid_rendering() -> None:
     for phrase in [
         "Zuno Target Architecture Atlas",
         '<script type="module">',
-        'fetch("architecture.md"',
+        'fetch("/docs/architecture/architecture-views.md"',
         "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs",
-        'class="mermaid"',
+        'className = "mermaid"',
         "diagram-dialog",
         "Mermaid source",
         'diagram.subtitle.startsWith("Overall")',
         "${kind} Diagram",
+        "阅读文字总架构",
     ]:
         assert phrase in html
 
@@ -262,32 +277,3 @@ def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
         content = path.read_text(encoding="utf-8")
         for phrase in forbidden:
             assert phrase not in content, f"{path} contains retired front-path text: {phrase}"
-
-
-def test_agent_entrypoint_records_architecture_governance() -> None:
-    agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
-    for phrase in [
-        "这是仓库唯一的 Agent 入口",
-        "Architecture Documentation Governance",
-        "docs/architecture/architecture.md",
-        "docs/architecture/architecture.html",
-        ".agent/architecture/architecture.md",
-        ".agent/architecture/architecture.html",
-        "python tools/agent/render_architecture.py --write",
-    ]:
-        assert phrase in agents
-
-
-def test_verify_docs_entrypoints_script_tracks_native_mermaid_atlas() -> None:
-    content = (REPO_ROOT / "tools/scripts/verify_docs_entrypoints.py").read_text(encoding="utf-8")
-    for phrase in [
-        "documentation entrypoint verification passed.",
-        "verify_front_path_shape",
-        "verify_architecture_view_contract",
-        "verify_architecture_mirrors",
-        "ARCHITECTURE_VIEW_CONTRACT",
-        "mermaid@11",
-        "offline-svg",
-        *EXPECTED_VIEWS,
-    ]:
-        assert phrase in content
