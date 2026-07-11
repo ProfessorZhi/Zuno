@@ -11,10 +11,10 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 已具备的本地实现基线包括：
 
 - Product & API：AgentChat、workspace、knowledge/file、message、model/tool DTO 和部分 task/event surface。
-- Input & Knowledge：文本类文档 ingestion、local object store、durable ingestion store、chunk/index、retrieval、GraphRAG 和 evidence-span hardening surface。
-- Agent Core：GeneralAgent single loop、model manager/gateway surface、Context/Memory 相关 contract、claim-level citation binder。
-- Capability & Tool：capability registry/control plane、tool adapters、MCP/tool surfaces。
-- Governance & Observability：local trace/eval helpers、EnterpriseRAG paired eval runner、failure bucket diagnostics、release gate output surface。
+- Input & Knowledge：文本类文档 ingestion、local object store、durable ingestion store、chunk/index、retrieval、GraphRAG、evidence-span hardening surface 和真实 text PDF SourceSpan vertical slice。
+- Agent Core：GeneralAgent single loop、Model Gateway surface、统一 runtime service、Strategy / Plan-and-Execute / ReAct step execution、Reflection / Replan / Grounded Synthesis 和 Memory pre/post commit baseline。
+- Capability & Tool：capability registry/control plane、tool adapters、MCP/tool surfaces、approval/resume/idempotency trace baseline。
+- Governance & Observability：local trace/eval helpers、EnterpriseRAG paired eval runner、failure bucket diagnostics、profile completeness diagnostics 和 release gate output surface。
 - Local Infrastructure：SQLite/SQLModel、local object store、config、database/storage surfaces。
 
 ## Short-term Closure Gap
@@ -50,7 +50,16 @@ measurement blocked
 quality not yet proven
 ```
 
-blocked 原因：真实 fixed EnterpriseRAG paired benchmark 尚未完整产出可比较的 agentic profile measured pass。
+blocked 原因：
+
+- PHASE13 sample-8 已运行 EnterpriseRAG paired runner，但本地 profile runner 因 embedding model/base_url 未配置而输出 `blocked_not_measured`，`measured_case_count=0`。
+- PHASE13 sample-80 仍因仓库没有 tracked fixed 80-case set 而 blocked。
+- release gate 现在只在 `standard_rag`、`deep_graphrag` 和 `agentic_graphrag` 都完成同一 fixed case set 时写 `fixed_benchmark`；profile 不完整时输出 `profile_completeness.blocked_reason`。
+
+证据入口：
+
+- `docs/evidence/unified-agent-runtime-phase13-release-gate.md`
+- `docs/history/programs/zuno-unified-agent-runtime-closure-v1/closure-summary.md`
 
 必须保留的质量门：
 

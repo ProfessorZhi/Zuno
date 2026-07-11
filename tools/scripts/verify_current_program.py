@@ -6,10 +6,11 @@ from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_PATH = REPO_ROOT / ".agent/programs/baseline-manifest.md"
+ARCHIVE_ROOT = REPO_ROOT / "docs/history/programs/zuno-unified-agent-runtime-closure-v1"
+MANIFEST_PATH = ARCHIVE_ROOT / "baseline-manifest.md"
 CURRENT_PATH = REPO_ROOT / ".agent/programs/current.md"
 ROADMAP_PATH = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
-PHASE01_PATH = REPO_ROOT / ".agent/programs/PHASE01_truth-source-baseline-and-program-activation.md"
+PHASE01_PATH = ARCHIVE_ROOT / "PHASE01_truth-source-baseline-and-program-activation.md"
 
 PROGRAM = "zuno-unified-agent-runtime-closure-v1"
 NEXT_PHASE = "PHASE02_unified-runtime-contracts-and-state"
@@ -70,14 +71,15 @@ def verify_current_program() -> list[str]:
         errors.append("PHASE01 manifest must state quality_gate_changed=false")
 
     for phrase in [
-        "state: active",
-        f"active_program: {PROGRAM}",
-        f"current_phase: {CURRENT_PHASE}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {PROGRAM}",
     ]:
         if phrase not in current:
-            errors.append(f"current.md missing phrase for active program state: {phrase}")
-    if "PHASE01 | `truth-source-baseline-and-program-activation` | completed" not in roadmap:
-        errors.append("roadmap must mark PHASE01 completed")
+            errors.append(f"current.md missing phrase for no-active program state: {phrase}")
+    if "implementation_complete_measurement_blocked" not in roadmap:
+        errors.append("roadmap must record unified runtime closure as measurement blocked")
     if "state: completed" not in phase01:
         errors.append("PHASE01 file must be marked completed")
 

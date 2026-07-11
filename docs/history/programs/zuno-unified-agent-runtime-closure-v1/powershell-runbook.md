@@ -1,4 +1,4 @@
-# Windows PowerShell Runbook
+﻿# Windows PowerShell Runbook
 
 本文件是 Codex 的强制命令规范。默认兼容 Windows PowerShell 5.1，而不是只兼容 PowerShell 7 或 Bash。
 

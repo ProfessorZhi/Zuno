@@ -79,6 +79,7 @@ EVIDENCE_SPAN_PROGRAM_PHASE_FILES = [
     "PHASE08_hard-negative-eval-and-release-gate.md",
 ]
 UNIFIED_RUNTIME_PROGRAM_NAME = "zuno-unified-agent-runtime-closure-v1"
+UNIFIED_RUNTIME_PROGRAM_ARCHIVE = f"docs/history/programs/{UNIFIED_RUNTIME_PROGRAM_NAME}"
 UNIFIED_RUNTIME_CURRENT_PHASE = "PHASE13_paired-benchmark-release-gate-and-program-closure"
 UNIFIED_RUNTIME_PHASE_FILES = [
     "PHASE01_truth-source-baseline-and-program-activation.md",
@@ -105,7 +106,7 @@ UNIFIED_RUNTIME_PROGRAM_FILES = [
     *UNIFIED_RUNTIME_PHASE_FILES,
 ]
 CURRENT_FRONT_PROGRAM_FILES = [
-    *UNIFIED_RUNTIME_PROGRAM_FILES,
+    *ACTIVE_PROGRAM_FILES,
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -247,13 +248,18 @@ REQUIRED_PATHS = [
     ".agent/programs/current.md",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
-    ".agent/programs/baseline-manifest.md",
-    ".agent/programs/program-decisions.md",
-    ".agent/programs/code-architecture-map.md",
-    ".agent/programs/powershell-runbook.md",
-    ".agent/programs/test-matrix.md",
-    *[f".agent/programs/{phase_name}" for phase_name in UNIFIED_RUNTIME_PHASE_FILES],
     *[f".agent/programs/queued-programs/{file_name}" for file_name in QUEUED_PROGRAM_FILES],
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/README.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/current.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/implementation-roadmap.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/closure-checklist.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/closure-summary.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/baseline-manifest.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/program-decisions.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/code-architecture-map.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/powershell-runbook.md",
+    f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/test-matrix.md",
+    *[f"{UNIFIED_RUNTIME_PROGRAM_ARCHIVE}/{phase_name}" for phase_name in UNIFIED_RUNTIME_PHASE_FILES],
     f"{PROGRAM3_ACTIVE_ARCHIVE}/README.md",
     f"{PROGRAM3_ACTIVE_ARCHIVE}/current.md",
     f"{PROGRAM3_ACTIVE_ARCHIVE}/implementation-roadmap.md",
@@ -546,15 +552,23 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         + (evidence_archive_root / "README.md").read_text(encoding="utf-8")
         + (evidence_archive_root / "closure-summary.md").read_text(encoding="utf-8")
     )
+    unified_archive_root = repo_root / UNIFIED_RUNTIME_PROGRAM_ARCHIVE
+    unified_archive_text = (
+        (unified_archive_root / "current.md").read_text(encoding="utf-8")
+        + (unified_archive_root / "README.md").read_text(encoding="utf-8")
+        + (unified_archive_root / "closure-summary.md").read_text(encoding="utf-8")
+    )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: active",
-        f"active_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
-        f"current_phase: {UNIFIED_RUNTIME_CURRENT_PHASE}",
-        "latest_completed_program: zuno-lean-complete-product-architecture-v1",
-        "baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"latest_completed_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
         UNIFIED_RUNTIME_PROGRAM_NAME,
-        UNIFIED_RUNTIME_CURRENT_PHASE,
+        UNIFIED_RUNTIME_PROGRAM_ARCHIVE,
+        "implementation_complete_measurement_blocked",
+        "profile_runner_unavailable",
+        "no_tracked_fixed_80_case_enterprise_rag_set_available_in_repo",
         "PHASE01-PHASE13",
         "Single Controller Agent Runtime",
         EVIDENCE_SPAN_PROGRAM_NAME,
@@ -596,15 +610,15 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
         "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
     ]:
-        if phrase not in current + readme + roadmap + closure + current_reference + evidence_archive_text + program3_archive_text + latest_archive_text + ingestion_archive_text + production_archive_text + runtime_archive_text:
+        if phrase not in current + readme + roadmap + closure + current_reference + unified_archive_text + evidence_archive_text + program3_archive_text + latest_archive_text + ingestion_archive_text + production_archive_text + runtime_archive_text:
             errors.append(f"program lifecycle surface missing active/archive phrase: {phrase}")
     active_phase_names = sorted(path.name for path in (repo_root / ".agent/programs").glob("PHASE*.md"))
-    if active_phase_names != sorted(UNIFIED_RUNTIME_PHASE_FILES):
-        errors.append(".agent/programs unified runtime phases drifted: " + ", ".join(active_phase_names))
+    if active_phase_names:
+        errors.append(".agent/programs must not keep active phase files in no-active state: " + ", ".join(active_phase_names))
     for phase_name in UNIFIED_RUNTIME_PHASE_FILES:
-        phase_path = repo_root / ".agent/programs" / phase_name
+        phase_path = unified_archive_root / phase_name
         if not phase_path.exists():
-            errors.append(f"unified runtime active phase missing: {phase_name}")
+            errors.append(f"unified runtime archive phase missing: {phase_name}")
             continue
         phase_content = phase_path.read_text(encoding="utf-8")
         if f"program: {UNIFIED_RUNTIME_PROGRAM_NAME}" not in phase_content:
@@ -624,8 +638,8 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
         "powershell-runbook.md",
         "test-matrix.md",
     ]:
-        if not (repo_root / ".agent/programs" / active_file).exists():
-            errors.append(f"unified runtime active program missing file: {active_file}")
+        if not (unified_archive_root / active_file).exists():
+            errors.append(f"unified runtime archive missing file: {active_file}")
     for index, phase_name in enumerate(EVIDENCE_SPAN_PROGRAM_PHASE_FILES, start=1):
         phase_path = evidence_archive_root / phase_name
         if not phase_path.exists():

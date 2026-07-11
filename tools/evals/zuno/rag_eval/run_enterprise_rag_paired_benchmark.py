@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import math
 import shutil
@@ -31,6 +32,7 @@ PROFILE_ALIASES = {
     "deep_graphrag": "deep_graphrag",
     "agentic_graphrag": "agentic_graphrag",
 }
+REQUIRED_MEASURED_PROFILES = ("standard_rag", "deep_graphrag", "agentic_graphrag")
 METRIC_KEYS = [
     "retrieval_recall_at_k",
     "context_precision_at_k",
@@ -322,6 +324,69 @@ def _build_profile_summary(*, run_root: Path, run_report: dict[str, Any]) -> tup
             profiles[public_name]["metrics_source"] = "not_measured"
             profiles[public_name]["blocked_reason"] = "agentic_runtime_runner_not_wired"
     return profiles, cost_latency, per_samples
+
+
+def _case_ids_hash(case_ids: Iterable[str]) -> str:
+    payload = json.dumps(list(case_ids), ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _build_profile_completeness(
+    *,
+    expected_case_ids: list[str],
+    profiles: dict[str, Any],
+    per_samples: dict[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
+    expected_set = set(expected_case_ids)
+    expected_hash = _case_ids_hash(expected_case_ids)
+    profile_case_ids: dict[str, list[str]] = {}
+    profile_case_hashes: dict[str, str] = {}
+    profile_case_counts: dict[str, int] = {}
+    missing_profiles: list[str] = []
+    incomplete_profiles: list[str] = []
+    missing_case_ids: dict[str, list[str]] = {}
+    extra_case_ids: dict[str, list[str]] = {}
+
+    for profile in PROFILE_ALIASES:
+        ids = [str(row.get("id")) for row in per_samples.get(profile, []) if row.get("id") is not None]
+        profile_case_ids[profile] = ids
+        profile_case_hashes[profile] = _case_ids_hash(ids)
+        profile_case_counts[profile] = len(ids)
+
+    for profile in REQUIRED_MEASURED_PROFILES:
+        payload = profiles.get(profile) or {}
+        ids = profile_case_ids.get(profile) or []
+        id_set = set(ids)
+        if not payload.get("measured"):
+            missing_profiles.append(profile)
+            continue
+        missing = sorted(expected_set - id_set)
+        extra = sorted(id_set - expected_set)
+        if missing or extra or len(ids) != len(expected_case_ids):
+            incomplete_profiles.append(profile)
+            if missing:
+                missing_case_ids[profile] = missing
+            if extra:
+                extra_case_ids[profile] = extra
+
+    blocked_profiles = missing_profiles + incomplete_profiles
+    complete = not blocked_profiles
+    blocked_reason = None
+    if blocked_profiles:
+        blocked_reason = "incomplete_profile_measurement:" + ",".join(blocked_profiles)
+    return {
+        "required_profiles": list(REQUIRED_MEASURED_PROFILES),
+        "complete": complete,
+        "expected_case_count": len(expected_case_ids),
+        "expected_case_ids_hash": expected_hash,
+        "profile_case_counts": profile_case_counts,
+        "profile_case_ids_hash": profile_case_hashes,
+        "missing_profiles": missing_profiles,
+        "incomplete_profiles": incomplete_profiles,
+        "missing_case_ids": missing_case_ids,
+        "extra_case_ids": extra_case_ids,
+        "blocked_reason": blocked_reason,
+    }
 
 
 def _replan_success_rate(
@@ -781,7 +846,8 @@ def _build_release_gate(metrics: dict[str, Any]) -> dict[str, Any]:
         return {
             "status": measurement_status or "not_measured",
             "measured": False,
-            "blocked_reason": (metrics.get("corpus") or {}).get("blocked_reason"),
+            "blocked_reason": (metrics.get("profile_completeness") or {}).get("blocked_reason")
+            or (metrics.get("corpus") or {}).get("blocked_reason"),
             "checks": [],
             "failed_checks": [],
         }
@@ -1177,13 +1243,14 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
         for tag, count in sorted((diagnostics.get("tag_counts") or {}).items()):
             lines.append(f"- {tag}: `{count}`")
     if metrics["measurement_status"] == "blocked_not_measured":
+        blocked_reason = (metrics.get("profile_completeness") or {}).get("blocked_reason") or metrics["corpus"].get("blocked_reason")
         lines.extend(
             [
                 "",
                 "## Blocked",
                 "",
-                f"- blocked_reason: `{metrics['corpus'].get('blocked_reason')}`",
-                "- No benchmark metrics were measured because the EnterpriseRAG-Bench corpus is blocked.",
+                f"- blocked_reason: `{blocked_reason}`",
+                "- The fixed paired benchmark is not measured until every required profile writes the same fixed case set.",
             ]
         )
     agentic = (metrics.get("profiles") or {}).get("agentic_graphrag") or {}
@@ -1374,21 +1441,46 @@ async def run_enterprise_rag_paired_benchmark(
 
     dataset_path = Path(prepared["dataset_path"])
     stackless_root = output_root / "stackless_profiles"
-    run_report = await run_stackless_local_eval(
-        manifest_path=manifest_path,
-        dataset_path=dataset_path,
-        output_root=stackless_root,
-        profile_set="deep_graphrag_compare",
-        sample_limit=prepared["case_count"],
-        spawn_dev_embedding_server=spawn_dev_embedding_server,
-        rerank_score_threshold_override=rerank_score_threshold_override,
-        chunk_size_override=chunk_size_override,
-        overlap_override=overlap_override,
-    )
+    try:
+        run_report = await run_stackless_local_eval(
+            manifest_path=manifest_path,
+            dataset_path=dataset_path,
+            output_root=stackless_root,
+            profile_set="deep_graphrag_compare",
+            sample_limit=prepared["case_count"],
+            spawn_dev_embedding_server=spawn_dev_embedding_server,
+            rerank_score_threshold_override=rerank_score_threshold_override,
+            chunk_size_override=chunk_size_override,
+            overlap_override=overlap_override,
+        )
+    except (RuntimeError, ValueError) as exc:
+        if not allow_blocked:
+            raise
+        blocked_manifest = dict(manifest)
+        blocked_manifest["blocked_reason"] = "profile_runner_unavailable"
+        blocked_manifest["profile_runner_error"] = str(exc)
+        metrics = _blocked_metrics(selected_rows=selected_rows, manifest=blocked_manifest)
+        metrics["runtime_config"]["chunk_size_override"] = chunk_size_override
+        metrics["runtime_config"]["overlap_override"] = overlap_override
+        metrics["runtime_config"]["rerank_score_threshold_override"] = rerank_score_threshold_override
+        metrics["release_gate"] = _build_release_gate(metrics)
+        (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_failure_cases(output_root / "failure_cases.md", [])
+        _write_report(output_root / "report.md", metrics)
+        return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
     profiles, cost_latency, per_samples = _build_profile_summary(run_root=stackless_root, run_report=run_report)
     cases = _read_jsonl(dataset_path)
     retrieval_rows = _profile_retrieval_rows(stackless_root)
     common_case_ids = [str(row.get("id")) for row in cases]
+    profile_completeness = _build_profile_completeness(
+        expected_case_ids=common_case_ids,
+        profiles=profiles,
+        per_samples=per_samples,
+    )
+    measurement_status = "fixed_benchmark" if profile_completeness["complete"] else "blocked_not_measured"
+    metrics_source = "fixed_benchmark" if profile_completeness["complete"] else "blocked_not_measured"
+    run_status = "measured" if profile_completeness["complete"] else "blocked"
+    measured_case_count = len(cases) if profile_completeness["complete"] else 0
     standard = profiles["standard_rag"].get("aggregate") or {}
     deep = profiles["deep_graphrag"].get("aggregate") or {}
     agentic = profiles["agentic_graphrag"].get("aggregate") or {}
@@ -1401,6 +1493,7 @@ async def run_enterprise_rag_paired_benchmark(
         per_samples=per_samples,
         retrieval_rows=retrieval_rows,
     )
+    evidence_conversion_diagnostics["measurement_status"] = measurement_status
     failure_tag_limitations = _failure_tag_limitations()
     replan_success_rate = (
         _replan_success_rate(
@@ -1430,13 +1523,16 @@ async def run_enterprise_rag_paired_benchmark(
         question_type_metrics=question_type_metrics,
     )
     metrics = {
-        "status": "measured",
-        "measurement_status": "fixed_benchmark",
-        "metrics_source": "fixed_benchmark",
+        "status": run_status,
+        "measurement_status": measurement_status,
+        "metrics_source": metrics_source,
         "case_set": {
             "selected_case_count": len(selected_rows),
-            "measured_case_count": len(cases),
+            "measured_case_count": measured_case_count,
             "common_case_ids": common_case_ids,
+            "common_case_ids_hash": profile_completeness["expected_case_ids_hash"],
+            "profile_case_counts": profile_completeness["profile_case_counts"],
+            "profile_case_ids_hash": profile_completeness["profile_case_ids_hash"],
             "question_type_counts": _question_type_counts(cases),
         },
         "corpus": manifest,
@@ -1447,6 +1543,7 @@ async def run_enterprise_rag_paired_benchmark(
             "citation_chunking": dict(ENTERPRISE_RAG_CITATION_CHUNKING),
         },
         "profiles": profiles,
+        "profile_completeness": profile_completeness,
         "deltas": {
             "deep_vs_standard": deep_vs_standard,
             "agentic_vs_standard": agentic_vs_standard,
@@ -1478,10 +1575,10 @@ async def run_enterprise_rag_paired_benchmark(
     )
     _write_report(output_root / "report.md", metrics)
     return {
-        "status": "measured",
-        "metrics_source": "fixed_benchmark",
+        "status": run_status,
+        "metrics_source": metrics_source,
         "output_root": str(output_root),
-        "measured_case_count": len(cases),
+        "measured_case_count": measured_case_count,
     }
 
 

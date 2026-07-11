@@ -176,8 +176,28 @@ def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch
                 "answer_correctness": 1.0,
                 "citation_accuracy": 1.0,
             }
+            per_sample = [
+                {
+                    "id": "qst_basic",
+                    "retrieval_recall": 1.0,
+                    "context_precision": 0.5,
+                    "mrr": 1.0,
+                    "ndcg": 1.0,
+                    "answer_correctness": 1.0,
+                    "citation_accuracy": 1.0,
+                },
+                {
+                    "id": "qst_conflict",
+                    "retrieval_recall": 1.0,
+                    "context_precision": 0.5,
+                    "mrr": 1.0,
+                    "ndcg": 1.0,
+                    "answer_correctness": 1.0,
+                    "citation_accuracy": 1.0,
+                },
+            ]
             (profile_dir / "metrics.json").write_text(
-                json.dumps({"aggregate": aggregate, "per_sample": []}, ensure_ascii=False),
+                json.dumps({"aggregate": aggregate, "per_sample": per_sample}, ensure_ascii=False),
                 encoding="utf-8",
             )
             (profile_dir / "retrieval_results.jsonl").write_text("", encoding="utf-8")
@@ -197,14 +217,69 @@ def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch
         )
     )
 
-    assert result["status"] == "measured"
+    assert result["status"] == "blocked"
+    assert result["metrics_source"] == "blocked_not_measured"
     metrics = _read_json(output_root / "metrics.json")
+    assert metrics["status"] == "blocked"
+    assert metrics["measurement_status"] == "blocked_not_measured"
+    assert metrics["metrics_source"] == "blocked_not_measured"
+    assert metrics["case_set"]["measured_case_count"] == 0
+    assert metrics["case_set"]["profile_case_counts"]["standard_rag"] == 2
+    assert metrics["case_set"]["profile_case_counts"]["deep_graphrag"] == 2
+    assert metrics["case_set"]["profile_case_counts"]["agentic_graphrag"] == 0
+    assert metrics["profile_completeness"]["complete"] is False
+    assert metrics["profile_completeness"]["missing_profiles"] == ["agentic_graphrag"]
+    assert metrics["profile_completeness"]["blocked_reason"] == "incomplete_profile_measurement:agentic_graphrag"
+    assert metrics["profiles"]["agentic_graphrag"]["measured"] is False
+    assert metrics["profiles"]["agentic_graphrag"]["metrics_source"] == "not_measured"
+    assert metrics["profiles"]["agentic_graphrag"]["blocked_reason"] == "agentic_runtime_runner_not_wired"
+    assert metrics["release_gate"]["measured"] is False
+    assert metrics["release_gate"]["status"] == "blocked_not_measured"
+    assert metrics["release_gate"]["blocked_reason"] == "incomplete_profile_measurement:agentic_graphrag"
     assert metrics["corpus"]["file_count"] == 3
     assert metrics["corpus"]["hard_negative_count"] == 1
     assert metrics["corpus"]["missing_doc_ids"] == []
     assert metrics["corpus"]["schema_probe"]["column_aliases"]["doc_id"] == "dsid"
     assert metrics["runtime_config"]["citation_chunking"]["parent_context_char_limit"] == 1200
     assert (output_root / "corpus" / "files" / "dsid_upload_limits.md").exists()
+
+
+def test_enterprise_rag_paired_benchmark_blocks_when_profile_runner_unavailable(monkeypatch, tmp_path: Path) -> None:
+    from zuno.evals.rag_eval import run_enterprise_rag_paired_benchmark as paired
+
+    questions = tmp_path / "questions.jsonl"
+    documents = tmp_path / "documents.parquet"
+    _write_questions(questions)
+    _write_alias_documents(documents)
+    output_root = tmp_path / "run"
+
+    async def fake_run_stackless_local_eval(**kwargs):
+        raise ValueError("local embedding model name and base url are required")
+
+    monkeypatch.setattr(paired, "run_stackless_local_eval", fake_run_stackless_local_eval)
+
+    result = asyncio.run(
+        paired.run_enterprise_rag_paired_benchmark(
+            questions_file=questions,
+            documents_file=documents,
+            output_root=output_root,
+            sample_size=2,
+            allow_blocked=True,
+        )
+    )
+
+    assert result["status"] == "blocked"
+    assert result["metrics_source"] == "blocked_not_measured"
+    metrics = _read_json(output_root / "metrics.json")
+    assert metrics["status"] == "blocked"
+    assert metrics["measurement_status"] == "blocked_not_measured"
+    assert metrics["case_set"]["measured_case_count"] == 0
+    assert metrics["corpus"]["blocked_reason"] == "profile_runner_unavailable"
+    assert metrics["corpus"]["profile_runner_error"] == "local embedding model name and base url are required"
+    assert metrics["release_gate"]["measured"] is False
+    assert metrics["release_gate"]["status"] == "blocked_not_measured"
+    assert metrics["release_gate"]["blocked_reason"] == "profile_runner_unavailable"
+    assert "profile_runner_unavailable" in (output_root / "report.md").read_text(encoding="utf-8")
 
 
 def test_enterprise_rag_paired_benchmark_blocks_unsupported_document_schema(tmp_path: Path) -> None:

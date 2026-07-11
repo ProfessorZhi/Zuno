@@ -57,7 +57,8 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
     assert _current_phase_name(current_program) == "none"
     assert "state: no-active" in current_program
     assert "active_program: none" in current_program
-    assert "latest_completed_program: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in current_program
+    assert "latest_completed_program: zuno-unified-agent-runtime-closure-v1" in current_program
+    assert "docs/history/programs/zuno-unified-agent-runtime-closure-v1/" in current_program
     assert "zuno-enterprise-agentic-graphrag-production-suite-v1" in current_program
     assert "docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/" in current_program
     assert "zuno-production-architecture-and-deliverables-completion-v1" in readme

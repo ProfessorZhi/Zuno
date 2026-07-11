@@ -6,6 +6,10 @@ current_state_source: docs/architecture/production-readiness.md
 
 ## 1. 项目定位与边界
 
+本文件同时说明 Current 本地事实、Target 近期目标和 Future Optional 边界；当前事实以 `docs/architecture/production-readiness.md` 为准。
+
+兼容术语映射：Document Ingestion / Parse Gateway 属于 Input & Knowledge；Tool Control Plane 属于 Capability & Tool；LangSmith-compatible Trace / Eval 属于 Governance & Observability 的可替换外部 sink。
+
 一句话定义：
 
 ```text
@@ -1281,3 +1285,4 @@ pytest -q tests/evals/test_enterprise_rag_paired_benchmark.py tests/evals/test_r
 历史证据只从统一入口查看：
 
 - `docs/history/programs/README.md`
+- `zuno-production-architecture-and-deliverables-completion-v1`

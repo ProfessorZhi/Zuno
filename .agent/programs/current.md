@@ -1,60 +1,54 @@
 # 当前程序
 
-state: active
-active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE13_paired-benchmark-release-gate-and-program-closure
-latest_completed_program: zuno-lean-complete-product-architecture-v1
-baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
+state: no-active
+active_program: none
+current_phase: none
+latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
-## 当前目标
+## 当前状态
 
-把以下三个并存基线收敛为一条真实主链路：
+`.agent/programs/` 当前处于 no-active 等待态。最近完成并归档的 program 是：
+
+- `docs/history/programs/zuno-unified-agent-runtime-closure-v1/`
+
+## 最近完成结论
+
+`zuno-unified-agent-runtime-closure-v1` 已完成 PHASE01-PHASE13 的本地 unified runtime implementation baseline，并以 `implementation_complete_measurement_blocked` 收口。
+
+完成事实：
+
+- Model Gateway、durable store、unified LangGraph service、Plan-and-Execute / ReAct step execution、Tool Control Plane、corrective Agentic GraphRAG / EvidenceLedger、Reflection / Replan / Grounded Synthesis、Memory / Reflexion reuse、Completion / Workspace API cutover 和真实 text PDF SourceSpan vertical slice 已完成本地 focused tests。
+- PHASE13 修复 EnterpriseRAG paired benchmark 的 measured 语义：profile 不完整、provider 不可用或 sample-80 缺少 tracked set 时不会写成 `fixed_benchmark`。
+- release gate 输出面可区分 `blocked_not_measured`、`prepared_not_measured` 和 `fixed_benchmark`。
+
+质量边界：
 
 ```text
-GeneralAgent
-  = 真实 LangChain/LangGraph ReAct 与现有模型/工具/知识库入口
-
-StrategySelector + AgentControlRuntime
-  = Planning / Reflection / Replan / Reflexion 规则与 contract
-
-SingleControllerDurableRuntime
-  = checkpoint / approval / resume / cancel 的本地 deterministic runtime
+implementation available
+measurement blocked
+quality not yet proven
 ```
 
-目标链路：
+sample-8 已运行但 blocked，原因是本地 embedding profile runner 未配置。sample-80 仍因仓库没有 tracked fixed 80-case set 而 blocked。不得把本轮 implementation closure 写成 Agentic GraphRAG fixed benchmark measured pass。
 
-```text
-input_gate
--> build_context
--> strategy_select
--> create_or_update_plan
--> execute_step
--> observe
--> evidence_gate
--> draft_and_bind_claims
--> reflection
-   -> PASS -> finalize
-   -> REWRITE_ANSWER -> revise_draft -> claim binding -> reflection
-   -> RETRIEVE_MORE -> replan -> execute_step
-   -> USE_TOOL -> approval/tool -> observe
-   -> ASK_USER -> interrupt/resume
-   -> ABSTAIN -> finalize
--> post_turn_commit
--> END
-```
+## 当前前台文件
 
-## 当前 Phase
+- `.agent/programs/current.md`
+- `.agent/programs/README.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/closure-checklist.md`
+- `.agent/programs/queued-programs/README.md`
 
-`PHASE13_paired-benchmark-release-gate-and-program-closure`
+## 下一步
 
-PHASE01 已完成事实源、现状证据、运行命令、失败语义和 benchmark truth source 冻结，未修改生产 runtime。PHASE02 已建立 `zuno.agent.runtime` 版本化 contract、`AgentRuntimeState` / `AgentRuntimeSnapshot`、`NormalizedObservation`、runtime limits/counters、strategy/reflection/finalization 枚举和 legacy adapters。PHASE03 已建立 `ModelRole`、`ModelCallRequest` / `ModelCallResponse` aliases、role-aware gateway trace、LangChain-compatible gateway adapter、GeneralAgent gateway 注入和 direct-call boundary verifier；legacy SDK wrappers 仍以显式 allowlist 保留，不是产品主 unified runtime 入口。PHASE04 已建立 SQLite-backed `SQLiteAgentRunStore`、local trace store、tool idempotency claim、scope load、corrupt JSON rejection 和 restart resume tests。PHASE05 已建立 unified LangGraph topology、`UnifiedAgentRuntimeService`、conditional routes、stream、approval/ask_user interrupt、resume、cancel、checkpoint 和无 simulated marker 的 deterministic skeleton。PHASE06 已建立 runtime Strategy、Plan validation、PlanExecutor、StepExecutorRegistry 和多步 execution baseline。PHASE07 已接入 Tool Control Plane approval/resume/idempotency/blocked observation baseline。PHASE08 已建立 EvidenceLedger、RetrievalQualityGate、CorrectiveRetrievalPolicy、CorrectiveAgenticRetrievalRuntime，并接入 `KnowledgeStepExecutor` 的 `knowledge_runtime` 依赖。PHASE09 已接入 ReflectionEngine、ReplanEngine、GroundedSynthesisEngine，`RETRIEVE_MORE` 会修改真实 PlanState 并回到 execute_step，`REWRITE_ANSWER` 会回到 claim binding 后再次 reflection。PHASE10 已接入 unified runtime Memory pre-read/post-write、pending Reflexion candidate 和 approved procedural memory strategy influence。PHASE11 已接入 Completion / Workspace API、SSE runtime trace payload 和 SQLite restart recovery focused tests；最小 UI 面通过现有 SSE schema 暴露，未声明全量前端 redesign。PHASE12 已接入本地 PyMuPDF text PDF -> CanonicalDocumentIR -> CitationChunk/ParentChunk -> retrieval -> EvidenceLedger -> page-level citation vertical slice；scanned/OCR PDF 返回 needs_ocr，不 fake index。下一步 PHASE13 只处理 paired benchmark、release gate 和 program closure。
+只有用户明确打开新 program 后，才能从 PHASE01 建立新的 active program。新 program 应优先处理 EnterpriseRAG profile runner 配置 / sample-80 tracked set / release validation，而不是继续扩大架构层。
 
-## 不变边界
+## 历史边界
 
-- 近期保持 Single Controller，不转向产品级 Multi-Agent。
-- Model、Memory、Knowledge、Capability、Tool Runtime 保持独立 owner。
-- 所有真实模型调用最终统一进入 Model Gateway。
-- Tool 执行必须经过 Tool Control Plane。
-- Graph evidence 必须回到 SourceSpan。
-- Reflexion 不保存隐藏 CoT，只保存可审计的经验候选。
-- `implementation available / measurement blocked / quality not yet proven` 在 measured gate 通过前保持不变。
+- `zuno-enterprise-agentic-graphrag-production-suite-v1` 是历史 suite 输入，不是当前 active program。
+- Program 3 Mega 归档仍在 `docs/history/programs/zuno-launchable-enterprise-agentic-graphrag-full-closure-v1/`。
+- 历史 Program 3 final alias surface closure 已完成，旧 public import path 只通过 `legacy_aliases.py` 注册兼容。
+- `zuno-production-architecture-and-deliverables-completion-v1` 是一次性交付型成熟化 program。
+- `zuno-production-document-ingestion-and-thread-foundation-v1` 是历史 ingestion foundation program。
+- `zuno-enterprise-ingestion-async-infrastructure-v1` 是 Program 3 Mega 的历史 merged input。
+- `zuno-target-architecture-runtime-full-implementation-v1` 归档在 `docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`。

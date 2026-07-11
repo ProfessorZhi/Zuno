@@ -34,6 +34,14 @@ Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agen
 - [公开证据入口](./docs/evidence/public-demo.md)
 - [历史归档入口](./docs/history/programs/README.md)
 
+## Program 入口
+
+- 当前 program 前台：`.agent/programs/`
+- 最近完成归档：`docs/history/programs/zuno-unified-agent-runtime-closure-v1/`
+- 历史生产完成归档：`docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
+- 历史 runtime-first 归档：`docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
+- 历史 master architecture 归档：`docs/history/programs/zuno-master-architecture-implementation-v1/`
+
 ## 六个运行域
 
 1. Product & API
@@ -43,9 +51,13 @@ Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agen
 5. Governance & Observability
 6. Local Infrastructure
 
+后端主路径位于 `src/backend/zuno`，按 Product/API、Agent、Memory、Capability、Knowledge 和 Platform owner 分层维护。
+
 ## 当前质量声明
 
 Evidence-span Agentic GraphRAG 的本地实现基线已经存在，但 fixed EnterpriseRAG measured pass 仍未完成。
+
+最近完成的 `zuno-unified-agent-runtime-closure-v1` 已把 unified runtime implementation baseline 归档为 `implementation_complete_measurement_blocked`。PHASE13 sample-8 运行产出 `blocked_not_measured`，原因是本地 embedding profile runner 未配置；sample-80 仍因仓库没有 tracked fixed 80-case set 而 blocked。
 
 ```text
 implementation available

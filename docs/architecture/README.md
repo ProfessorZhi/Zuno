@@ -38,3 +38,7 @@ python tools/agent/render_architecture.py --check
 - `.agent/architecture/architecture.html`
 
 不要手写 HTML 展示页，不恢复已归档的 split architecture docs。
+
+## 历史入口
+
+- 旧架构清理工作集：`docs/history/architecture-surface-cleanup-2026-06-30/`

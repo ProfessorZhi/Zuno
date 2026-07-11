@@ -86,6 +86,16 @@ and evidence, not the active Agent execution path.
   renderer / verifier guardrails, docs sync, archive, and no-active state.
   It did not claim runtime quality improvement; Agentic GraphRAG completion
   remains gated by fixed benchmark and release gate.
+- `zuno-unified-agent-runtime-closure-v1/`: completed unified Agent runtime
+  implementation closure program. It closed PHASE01-PHASE13 across Model
+  Gateway, durable store, unified LangGraph service, Plan-and-Execute / ReAct,
+  Tool Control Plane, corrective Agentic GraphRAG / EvidenceLedger,
+  Reflection / Replan / Grounded Synthesis, Memory / Reflexion reuse,
+  Completion / Workspace API cutover, real text PDF SourceSpan vertical slice,
+  paired benchmark profile completeness semantics, archive, and no-active
+  state. It closed as `implementation_complete_measurement_blocked`: sample-8
+  is blocked by unavailable local embedding profile runner and sample-80 is
+  blocked by the absence of a tracked fixed 80-case set.
 
 ## Rule
 

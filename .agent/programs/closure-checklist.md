@@ -1,36 +1,36 @@
 # Program Closure Checklist
 
-state: active
-active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE13_paired-benchmark-release-gate-and-program-closure
+state: no-active
+active_program: none
+current_phase: none
+latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
-## 功能与质量关闭项
+## 最近完成 Program
 
-- [x] PHASE01 已冻结 baseline、truth source、PowerShell 命令和 sample case set。
-- [x] PHASE02 已建立唯一版本化 AgentRuntimeState/Observation contract。
-- [x] PHASE03 所有 Agent 角色模型调用统一经 Model Gateway。
-- [x] PHASE04 run/checkpoint/plan/observation/interrupt/evidence/tool execution 可 SQLite 持久化并重启恢复。
-- [x] PHASE05 LangGraph 主图 skeleton 可 run/stream/resume/cancel/checkpoint；产品切换仍待 PHASE11。
-- [x] PHASE06 Plan-and-Execute 与 ReAct step 在同一图中逐步执行；真实 Tool Control Plane 执行待 PHASE07。
-- [x] PHASE07 Tool Control Plane approval/resume/idempotency/trace baseline 完成；产品切换仍待 PHASE11。
-- [x] PHASE08 EvidenceLedger 和 corrective retrieval 真实执行多轮；fixed benchmark 仍未 measured。
-- [x] PHASE09 Reflection/Replan/Rewrite/Grounded Synthesis 已形成本地 runtime 质量闭环；产品切换和 benchmark 仍待后续 phase。
-- [x] PHASE10 四层 Memory 与 Reflexion approved reuse 已被 unified runtime focused tests 证明；产品 API/UI 链路仍待 PHASE11。
-- [x] PHASE11 Completion/Workspace/SSE/API trace 已接入统一 runtime，SQLite restart recovery 已测；最小 UI 面通过现有 SSE payload 暴露，未声明全量前端 redesign。
-- [x] PHASE12 真实 text PDF SourceSpan vertical slice 通过；扫描/OCR PDF 返回 needs_ocr，不 fake index。
-- [ ] PHASE13 sample-8 与 sample-80 paired benchmark 完成，release gate 给出 measured 结论。
-- [ ] 旧模拟 runtime 不再处于产品主路径；兼容 facade 有明确删除/保留决策。
-- [ ] architecture / production-readiness / topic docs / HTML 已按实际 Current 更新。
-- [ ] 所有 phase 状态、current.md、roadmap、references、system.yaml、verifier/tests 已同步。
-- [ ] program 已归档到 docs/history/programs/，前台恢复 no-active。
+- [x] PHASE01 baseline、truth source、PowerShell 命令和 sample case set 已冻结。
+- [x] PHASE02-PHASE12 unified runtime implementation baseline 已完成并逐 phase 提交。
+- [x] PHASE13 修复 profile 缺失仍标 measured 的 bug。
+- [x] PHASE13 新增 profile case counts / hashes 和 `profile_completeness` diagnostics。
+- [x] PHASE13 provider/runtime profile runner 不可用时输出 `blocked_not_measured`，不异常冒充 measured。
+- [x] sample-8 runner 已执行并产出 blocked report。
+- [x] sample-80 保持 blocked，因为没有 tracked fixed 80-case set。
+- [x] production readiness 和 evidence 文档已记录 measurement blocked。
+- [x] program 已归档到 `docs/history/programs/zuno-unified-agent-runtime-closure-v1/`。
+
+## 未完成质量门
+
+- [ ] fixed EnterpriseRAG paired benchmark 完整 measured pass。
+- [ ] Evidence Text Available@5 >= 0.60。
+- [ ] Source Doc Citation Accuracy >= 0.85。
+- [ ] Citation Accuracy >= 0.30。
+- [ ] Answer Correctness >= standard_rag。
+- [ ] Agentic GraphRAG stable superiority over baseline。
 
 ## 禁止的虚假关闭
 
 - contract test 通过不等于 runtime complete。
 - deterministic fixture 通过不等于真实 provider complete。
-- in-memory snapshot round-trip 不等于 restart recovery。
-- replan 对象变化不等于 replan execution。
-- Reflexion candidate 创建不等于 future reuse。
-- Graph evidence 有 document id 不等于 SourceSpan citation。
 - benchmark prepared 不等于 measured。
-- HTML/文档完成不等于生产 runtime 完成。
+- partial profile output 不等于 fixed paired benchmark。
+- doc-level citation 不等于 source-span strict citation。
+- implementation closure 不等于 quality gate pass。

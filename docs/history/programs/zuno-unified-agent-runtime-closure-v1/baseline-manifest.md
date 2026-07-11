@@ -1,4 +1,4 @@
-# PHASE01 Baseline Manifest
+﻿# PHASE01 Baseline Manifest
 
 本文件是 `zuno-unified-agent-runtime-closure-v1` 的 PHASE01 事实源。它冻结的是 program 启动时的 runtime baseline，不表示 unified runtime 已完成。
 

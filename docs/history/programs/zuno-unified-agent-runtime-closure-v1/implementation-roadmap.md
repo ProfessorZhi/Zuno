@@ -1,0 +1,63 @@
+﻿# Program Roadmap
+
+state: active
+active_program: zuno-unified-agent-runtime-closure-v1
+current_phase: PHASE13_paired-benchmark-release-gate-and-program-closure
+baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
+
+## Program Definition
+
+```text
+Zuno Unified Agent Runtime
+=
+Plan-and-Execute for macro control
++ ReAct for step execution
++ deterministic/model Reflection
++ trajectory-changing Replan
++ governed Reflexion
++ four-layer Memory
++ Tool Control Plane
++ Corrective Agentic GraphRAG
++ durable state and trace
++ fixed paired benchmark
+```
+
+## Phase Roadmap
+
+| Phase | 文件后缀 | 主要目标 | 主要变更域 |
+| --- | --- | --- | --- |
+| PHASE01 | `truth-source-baseline-and-program-activation` | completed：冻结真实基线、命令、failure semantics、sample case set 和 program 状态；未修改生产 runtime | docs/workflow only |
+| PHASE02 | `unified-runtime-contracts-and-state` | completed：建立 AgentRuntimeState、Observation、Strategy、Plan、limits、snapshot 与兼容适配器；未关闭 gateway/store/graph/product cutover | runtime contracts |
+| PHASE03 | `model-gateway-closure` | completed：ModelRole、ModelCall aliases、role trace、GeneralAgent gateway adapter 和 direct-call verifier 已完成；legacy SDK wrappers 显式 allowlist 保留 | model runtime |
+| PHASE04 | `durable-store-trace-and-idempotency` | completed：SQLite-backed run/checkpoint/event/interrupt/plan/observation/tool claim store、local trace store 和 restart resume evidence 已完成；完整 graph restart 等 PHASE05/11 | persistence |
+| PHASE05 | `unified-langgraph-runtime-skeleton` | completed：已建立 LangGraph topology、UnifiedAgentRuntimeService、conditional routes、stream、interrupt/resume/cancel/checkpoint 和无 simulated marker skeleton；产品切换仍待 PHASE11 | agent graph |
+| PHASE06 | `strategy-plan-and-react-step-execution` | completed：已建立 Strategy wrapper、Plan validator/executor、StepExecutorRegistry 和多步 Plan/ReAct execution baseline；Tool Control Plane 真执行待 PHASE07 | planning execution |
+| PHASE07 | `tool-control-plane-and-approval-integration` | completed：ToolStepExecutor 已经经 ToolControlPlaneRuntime 执行，approval/resume/idempotency/blocked observation baseline 已完成；产品切换仍待 PHASE11 | tool runtime |
+| PHASE08 | `corrective-agentic-graphrag-and-evidence-ledger` | completed：已建立多轮 corrective retrieval、EvidenceLedger、quality gate、failure bucket action mapping，并接入 KnowledgeStepExecutor；fixed benchmark 仍未 measured | knowledge runtime |
+| PHASE09 | `reflection-replan-grounded-synthesis` | completed：已接入 deterministic reflection、optional critic shim、GroundedSynthesis、strict citation binding、rewrite loop 和 trajectory-changing Replan；产品切换和 measured benchmark 仍未完成 | quality control |
+| PHASE10 | `four-layer-memory-and-reflexion-reuse` | completed：已接入 unified runtime Memory pre-read/post-write、ContextPack trace、pending Reflexion candidate、approved procedural memory strategy influence 和 Entity supersede baseline | memory closure |
+| PHASE11 | `product-api-sse-ui-and-recovery-cutover` | completed：Completion 支持 unified_runtime SSE；Workspace task events/snapshot 暴露 unified runtime trace；SQLite restart recovery 已由 focused tests 证明；最小 UI 面通过现有 SSE schema 暴露，未做全量前端 redesign | product integration |
+| PHASE12 | `real-pdf-source-span-vertical-slice` | completed：本地 PyMuPDF text PDF -> IR -> CitationChunk/ParentChunk -> index/retrieval -> EvidenceLedger -> page-level citation 已测；scanned/OCR 返回 needs_ocr，不 fake index | document vertical |
+| PHASE13 | `paired-benchmark-release-gate-and-program-closure` | sample-8、sample-80、release gate、旧主路径退出与文档收口 | quality closure |
+
+## 依赖顺序
+
+```text
+PHASE01 -> PHASE02 -> PHASE03 -> PHASE04 -> PHASE05 -> PHASE06
+-> PHASE07 -> PHASE08 -> PHASE09 -> PHASE10 -> PHASE11 -> PHASE12 -> PHASE13
+```
+
+后续 Phase 可以在独立 worktree 并行准备，但合并必须遵守依赖顺序。
+
+## 每个 Phase 的关闭定义
+
+1. 目标代码进入唯一 owner。
+2. focused unit/integration tests 通过。
+3. 至少一个真实或 deterministic vertical scenario 通过。
+4. trace 能说明关键决策和失败。
+5. 持久状态可序列化；需要 restart 证明的 Phase 必须重建进程后读取。
+6. Current/Target 文档按事实更新。
+7. `.agent/programs/current.md` 和 roadmap 同步。
+8. PowerShell 命令兼容 Windows PowerShell 5.1。
+9. `git diff --check` 通过。
+10. 不以 mock/fixture 结果冒充真实模型、真实工具、真实解析或 measured quality。
