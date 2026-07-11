@@ -21,8 +21,9 @@ docs/history/ = archive and evidence
 
 - `README.md`：仓库总览和首读路径。
 - `docs/README.md`：文档入口。
-- `docs/architecture/architecture.md`：Lean Complete Agentic GraphRAG Product 的详细实施蓝图事实源，包含六个运行域、黄金链路、owner、contract、配置、状态、失败、trace、测试和验收。
-- `docs/architecture/architecture.html`：由十类 canonical view categories 和可展开 Mermaid 子图生成的架构图谱。
+- `docs/architecture/architecture.md`：Lean Complete Agentic GraphRAG Product 的**重文字目标总架构**，解释轻量实现、成熟设计、十一模块、Agent 闭环、owner、contract、状态、失败、trace、测试和验收。
+- `docs/architecture/architecture-views.md`：十类 canonical view categories、Overall 图和 Local Mermaid 图的规范图源。
+- `docs/architecture/architecture.html`：读取 `architecture-views.md` 的原生 Mermaid Architecture Atlas。
 - `docs/architecture/production-readiness.md`：Current、Short-term Closure Gap、Measurement Blocked、Completed、Future Optional。
 - `docs/architecture/document-ingestion-foundation.md`、`agent-core-runtime.md`、`memory-and-context.md`、`capability-and-skill-layer.md`、`agentic-retrieval-planner.md`、`eval-observability-and-cost.md`、`input-layer-and-document-processing.md`、`knowledge-space-product-configuration.md`：六运行域专题细化。
 - `docs/architecture/repo-ownership-matrix.md`：代码目录 ownership 辅助事实表。
@@ -37,7 +38,8 @@ Agent 工作流入口：
 - `.agent/references/`：本地项目 skills、lessons、playbooks。
 - `.agent/templates/`：执行骨架。
 - `.agent/programs/`：当前执行入口。
-- `.agent/architecture/architecture.md`：必须与正式总架构文档一致的 Agent 镜像。
+- `.agent/architecture/architecture.md`：必须与正式文字总架构文档一致的 Agent 镜像。
+- `.agent/architecture/architecture.html`：必须与正式 HTML Atlas shell 一致的 Agent 镜像。
 
 ## Must Preserve
 
@@ -45,8 +47,9 @@ Agent 工作流入口：
 - Target 只描述近期目标，不等于完成声明。
 - Future Optional 不得成为短期 blocker。
 - History 保留旧材料原文，不为了新叙事改写证据。
-- `architecture.md` 可以详细，但必须结构化、范围收敛、可实施。
-- HTML 是展示摘要，不承担完整目标架构事实源。
+- `architecture.md` 必须以设计文字为主，只保留少量关键图。
+- `architecture-views.md` 承担十类 Mermaid 图源，不承载完整设计解释。
+- HTML 是图谱展示，不承担完整目标架构事实源。
 
 ## Focused Tests
 
@@ -67,6 +70,7 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 - `docs/README.md`
 - `docs/architecture/README.md`
 - `docs/architecture/architecture.md`
+- `docs/architecture/architecture-views.md`
 - `docs/architecture/production-readiness.md`
 - `docs/architecture/document-ingestion-foundation.md`
 - `docs/architecture/agent-core-runtime.md`
