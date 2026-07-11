@@ -149,8 +149,12 @@ class AgentRuntimeState:
             capability_plan=snapshot.capability_plan,
             observations=list(snapshot.observations),
             node_outcomes=list(snapshot.node_outcomes),
-            reflection_decision=snapshot.reflection_decision,
-            finalization_status=snapshot.finalization_status,
+            reflection_decision=(
+                ReflectionDecision(snapshot.reflection_decision)
+                if snapshot.reflection_decision is not None
+                else None
+            ),
+            finalization_status=FinalizationStatus(snapshot.finalization_status),
             limits=snapshot.limits,
             counters=snapshot.counters,
             evidence_refs=list(snapshot.evidence_refs),

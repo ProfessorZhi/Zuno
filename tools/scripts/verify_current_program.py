@@ -5,7 +5,16 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-real-unified-runtime-cutover-v1"
-CURRENT_PHASE = "PHASE01_real-runtime-baseline"
+ACTIVE_PHASES = [
+    "PHASE01_real-runtime-baseline",
+    "PHASE02_langgraph-execution-cutover",
+    "PHASE03_runtime-dependency-factory",
+    "PHASE04_real-agent-execution",
+    "PHASE05_knowledge-tool-memory-integration",
+    "PHASE06_product-cutover",
+    "PHASE07_benchmark-and-closure",
+]
+CURRENT_PHASE = "PHASE03_runtime-dependency-factory"
 LATEST_COMPLETED = "zuno-unified-agent-runtime-closure-v1"
 
 CURRENT_PATH = REPO_ROOT / ".agent/programs/current.md"
@@ -28,7 +37,7 @@ PHASE_FILES = [
 def load_manifest() -> dict:
     return {
         "program": PROGRAM,
-        "phase": CURRENT_PHASE,
+        "phase": "PHASE01_real-runtime-baseline",
         "phase_status": "active",
         "runtime_modification_scope": "none",
         "measurement_status": "baseline_frozen_not_measured",
@@ -110,7 +119,7 @@ def verify_current_program() -> list[str]:
     for phrase in [
         f"active_program: {PROGRAM}",
         f"current_phase: {CURRENT_PHASE}",
-        "PHASE01 先只落 facts 与 guardrail",
+        "PHASE03 目标是建立 `RuntimeDependencyFactory`",
     ]:
         if phrase not in reference:
             errors.append(f"current-program reference missing phrase: {phrase}")

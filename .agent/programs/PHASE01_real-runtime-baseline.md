@@ -3,7 +3,7 @@
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
 phase: PHASE01_real-runtime-baseline
-state: active
+state: completed
 runtime_code_modified: false
 measurement_status: baseline_frozen_not_measured
 quality_status: not_proven
@@ -18,7 +18,7 @@ quality_status: not_proven
 ```text
 branch: codex/zuno-truth-source-production-readiness-baseline
 activation_head: d90dc0013c1721a56828a6dc6f889e209454b346
-program_state: active
+program_state: completed
 current_phase: PHASE01_real-runtime-baseline
 ```
 
@@ -103,4 +103,3 @@ python tools/scripts/verify_repo_structure.py
 pytest -q tests/repo/test_agent_system.py tests/repo/test_repo_structure_consistency.py tests/repo/test_current_program_contract.py tests/repo/test_publish_boundary.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 git diff --check
 ```
-

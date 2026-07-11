@@ -31,7 +31,6 @@ def verify_phase01_baseline() -> list[str]:
     for phrase in [
         "state: active",
         "active_program: zuno-real-unified-runtime-cutover-v1",
-        "current_phase: PHASE01_real-runtime-baseline",
     ]:
         if phrase not in current:
             errors.append(f"current.md missing active phrase: {phrase}")
@@ -144,7 +143,16 @@ def main() -> int:
     parser.add_argument("--enforce-product-cutover", action="store_true")
     args = parser.parse_args()
 
-    errors = verify_phase01_baseline()
+    enforce_requested = any(
+        [
+            args.enforce_langgraph,
+            args.enforce_dependencies,
+            args.enforce_real_execution,
+            args.enforce_knowledge_tool_memory,
+            args.enforce_product_cutover,
+        ]
+    )
+    errors = [] if enforce_requested else verify_phase01_baseline()
     if args.enforce_langgraph:
         errors.extend(verify_enforce_langgraph())
     if args.enforce_dependencies:

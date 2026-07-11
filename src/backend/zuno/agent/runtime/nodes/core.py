@@ -333,8 +333,8 @@ def post_turn_commit(state: AgentRuntimeState, deps: RuntimeDependencies) -> Age
             event_type="agent_turn",
             payload={
                 "task": state.goal,
-                "finalization_status": state.finalization_status.value,
-                "reflection_decision": state.reflection_decision.value if state.reflection_decision else "",
+                "finalization_status": _enum_value(state.finalization_status),
+                "reflection_decision": _enum_value(state.reflection_decision) if state.reflection_decision else "",
                 "artifact_refs": list(state.artifact_refs),
                 "evidence_refs": list(state.evidence_refs),
             },
@@ -344,7 +344,7 @@ def post_turn_commit(state: AgentRuntimeState, deps: RuntimeDependencies) -> Age
         deps.memory_engine.summarize_task(
             scope=scope,
             summary_id=f"summary:{state.run_id}",
-            content=f"{state.goal} -> {state.finalization_status.value}",
+            content=f"{state.goal} -> {_enum_value(state.finalization_status)}",
             source_event_ids=(event.event_id,),
             token_count=max(1, len(state.goal) // 4),
             metadata={"trace_id": state.trace_id, "task_id": state.task_id},
@@ -393,6 +393,10 @@ def _record_node(state: AgentRuntimeState, node: RuntimeNode, *, summary: str) -
         node_outcomes=[*deepcopy(state.node_outcomes), outcome.model_dump(mode="json")],
         trace_event_ids=[*state.trace_event_ids, trace_event_id],
     )
+
+
+def _enum_value(value) -> str:
+    return str(getattr(value, "value", value))
 
 
 DEFAULT_RUNTIME_NODES: dict[RuntimeNode, RuntimeNodeHandler] = {
