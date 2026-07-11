@@ -4,11 +4,21 @@
 
 ## 当前事实源
 
-- `architecture.md`：目标架构唯一规范事实源。它定义十一逻辑能力模块、六个物理运行域，以及 4+1、Views & Beyond、Zuno Product Core 三组十类 canonical views。每类视图包含 Overall Mermaid 图和 Local Mermaid 图。
-- `architecture.html`：原生 Mermaid Architecture Atlas。页面运行时读取同目录的 `architecture.md`，保留 subgraph、decision、edge label、sequence diagram、连线类型和全屏查看，不再使用简化离线 SVG parser。
+- `architecture.md`：**重文字的目标总架构设计文档**。它解释项目定位、轻量实现与成熟设计原则、十一逻辑模块、完整 Agent 闭环、typed contract、状态、失败语义和完成标准，只保留少量关键 Mermaid 图辅助理解。
+- `architecture-views.md`：**十类 canonical views 的 Mermaid 规范图源**。包含 4+1、Views & Beyond 和 Zuno Product Core 三组十类视图，每类一张 Overall 图和至少两张 Local 图。
+- `architecture.html`：**以 Mermaid 图为主的 Architecture Atlas**。页面运行时读取 `/docs/architecture/architecture-views.md`，保留 decision、sequence、edge label、循环、搜索和全屏查看。
 - `production-readiness.md`：只维护 Current、Short-term Closure Gap、Measurement Blocked、Completed 和 Future Optional。
 
-`architecture.md` 描述 Target；`production-readiness.md` 描述 Current。不得把目标图中的能力直接写成当前已实现事实。
+职责边界：
+
+```text
+architecture.md        讲设计
+architecture-views.md  维护图源
+architecture.html      看图
+production-readiness   讲当前事实
+```
+
+不得把目标文档或目标图中的能力直接写成当前已经实现。
 
 ## 专题文档
 
@@ -26,7 +36,7 @@
 
 ## 更新与验证
 
-修改 `architecture.md` 或 Architecture Atlas shell 后运行：
+修改 `architecture.md`、`architecture-views.md` 或 HTML shell 后运行：
 
 ```powershell
 python tools/agent/render_architecture.py --write
@@ -36,22 +46,24 @@ python tools/scripts/verify_docs_entrypoints.py
 
 生成器负责：
 
-- 验证十类 canonical views 全部存在；
-- 验证每类都有 Overall 和 Local 图；
+- 验证 `architecture.md` 的十一模块文字设计、轻量实现边界和核心 contract 完整；
+- 限制 `architecture.md` 只保留少量辅助 Mermaid 图；
+- 验证 `architecture-views.md` 的十类 canonical views 全部存在；
+- 验证每类有 Overall 和至少两张 Local 图；
 - 验证至少存在 30 张 Mermaid 图；
-- 验证核心 connector contract 已标注；
+- 验证 HTML 读取独立图源并使用 Mermaid v11；
 - 同步 `.agent/architecture/architecture.md`；
 - 同步 `.agent/architecture/architecture.html`。
 
 ## HTML 预览
 
-HTML 会通过 `fetch("architecture.md")` 读取 Markdown，因此不能直接用 `file://` 双击预览。在仓库根目录运行：
+HTML 会通过 HTTP 读取 `/docs/architecture/architecture-views.md`，不能直接用 `file://` 双击预览。在仓库根目录运行：
 
 ```powershell
 python -m http.server 8000
 ```
 
-然后在浏览器打开：
+浏览器打开：
 
 ```text
 http://localhost:8000/docs/architecture/architecture.html
