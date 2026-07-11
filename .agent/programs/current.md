@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-real-unified-runtime-cutover-v1
-current_phase: PHASE04_real-agent-execution
+current_phase: PHASE05_knowledge-tool-memory-integration
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 baseline_commit: d90dc0013c1721a56828a6dc6f889e209454b346
 
@@ -31,21 +31,19 @@ Completion / Workspace
 
 ## 当前 Phase
 
-`PHASE04_real-agent-execution` 正在把 ModelStep、Planner、ReActStep 和 Grounded Synthesis 从 deterministic observation baseline 切到真实执行数据面。
+`PHASE05_knowledge-tool-memory-integration` 正在把 Knowledge、Tool、Memory 的真实读写路径接入统一 runtime，重点是 filesystem.read/write、pre/in/post-turn memory 和 PDF evidence vertical slice。
 
-PHASE01 已完成 program 激活、事实冻结和 guardrail。PHASE02 已完成 compiled LangGraph cutover。PHASE03 已完成 `RuntimeDependencyFactory`、typed runtime protocols、Completion / Workspace 工厂装配入口，以及核心依赖缺失时 blocked observation 的边界。
+PHASE01 已完成 program 激活、事实冻结和 guardrail。PHASE02 已完成 compiled LangGraph cutover。PHASE03 已完成 `RuntimeDependencyFactory`、typed runtime protocols、Completion / Workspace 工厂装配入口，以及核心依赖缺失时 blocked observation 的边界。PHASE04 已完成 ModelStep 经 Model Gateway 调用、ReAct 单步 runner 和 Grounded Synthesis `final_answer` / claims / citation bindings / unsupported claims 输出。
 
-PHASE04 不修改 Completion 默认产品入口；默认产品切换属于 PHASE06。
+PHASE05 不修改 Completion 默认产品入口；默认产品切换属于 PHASE06。
 
 ## 当前已冻结的主要缺口
 
 - Completion unified path 仍输出固定文本 `Unified runtime completed.`。
-- `ModelStepExecutor` 仍是 deterministic completed observation，没有调用 Model Gateway。
-- `ReActStepExecutor` 仍是 deterministic completed observation，没有真实执行单个 PlanStep 的 ReAct。
 - `src/backend/zuno/api/v1/completion.py` 默认仍走 `GeneralAgent`，unified runtime 需要 `product_mode == "unified_runtime"` 或 `ZUNO_COMPLETION_UNIFIED_RUNTIME=1`。
 - fixed EnterpriseRAG paired benchmark 仍是 measurement blocked / quality not yet proven。
 
-这些缺口是 PHASE04-PHASE07 的修复目标。不得把它们写成 Current fixed。
+这些缺口是 PHASE05-PHASE07 的修复目标。不得把它们写成 Current fixed。
 
 ## 前台 Phase 文件
 

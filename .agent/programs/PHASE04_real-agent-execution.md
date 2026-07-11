@@ -3,7 +3,7 @@
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
 phase: PHASE04_real-agent-execution
-state: active
+state: completed
 ```
 
 ## 目标
@@ -27,10 +27,18 @@ state: active
 
 ## 验收闸门
 
-- `ModelStepExecutor` 调用 Model Gateway，并记录 provider/model/role/latency/token/cost/fallback/trace。
-- `ReActStepExecutor` 调用真实 ReAct runner 或在依赖缺失时 blocked。
-- Grounded Synthesis 输出 `final_answer`、claims、citation bindings、unsupported claims。
-- Reflection 能处理 `REWRITE_ANSWER -> revise_draft -> claim binding -> reflection`。
+- [x] `ModelStepExecutor` 调用 Model Gateway，并记录 provider/model/role/latency/token/cost/fallback/trace。
+- [x] `ReActStepExecutor` 调用真实 ReAct runner 或在依赖缺失时 blocked。
+- [x] Grounded Synthesis 输出 `final_answer`、claims、citation bindings、unsupported claims。
+- [x] Reflection 能处理 `REWRITE_ANSWER -> revise_draft -> claim binding -> reflection`。
+
+## 完成证据
+
+- `ModelStepExecutor` 通过 `ModelGatewayRequest` 调用 `deps.model_gateway.invoke()`，并记录 output、metrics、budget verdict 和 trace event。
+- 新增 `ReActStepRunner`，`ReActStepExecutor` 只执行当前 PlanStep 的单步 reason / act / observe，不接管全局任务。
+- `GroundedSynthesisEngine` 输出 `final_answer`、claims、citation bindings 和 unsupported claims，不再输出 `Draft answer for:` 作为正常结果。
+- `pytest -q tests/agent/runtime -p no:cacheprovider` 通过。
+- `python tools/scripts/verify_real_runtime_cutover.py --enforce-real-execution` 通过。
 
 ## 验证命令
 

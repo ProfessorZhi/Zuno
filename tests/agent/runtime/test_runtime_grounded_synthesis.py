@@ -50,4 +50,7 @@ def test_grounded_synthesis_does_not_upgrade_doc_only_evidence_to_strict_citatio
     assert synthesis.evidence_ids == ["ev_doc_only"]
     assert synthesis.citation_ids == []
     assert synthesis.metadata["citation_bindings"][0]["support_verdict"] == "insufficient"
-    assert synthesis.metadata["unsupported_claims"] == ["Draft answer for: Answer with grounded citations."]
+    assert synthesis.metadata["final_answer"] == "Insufficient cited evidence to answer: Answer with grounded citations."
+    assert synthesis.metadata["unsupported_claims"] == [
+        "Insufficient cited evidence to answer: Answer with grounded citations."
+    ]
