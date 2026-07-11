@@ -161,8 +161,8 @@ def test_architecture_html_uses_true_mermaid_rendering() -> None:
         'class="mermaid"',
         "diagram-dialog",
         "Mermaid source",
-        "Overall Diagram",
-        "Local Diagram",
+        'diagram.subtitle.startsWith("Overall")',
+        "${kind} Diagram",
     ]:
         assert phrase in html
 
