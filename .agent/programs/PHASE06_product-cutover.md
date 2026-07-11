@@ -3,7 +3,7 @@
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
 phase: PHASE06_product-cutover
-state: pending
+state: active
 ```
 
 ## 目标
@@ -41,4 +41,3 @@ python tools/scripts/verify_current_program.py
 python .agent/scripts/verify_agent_system.py
 git diff --check
 ```
-

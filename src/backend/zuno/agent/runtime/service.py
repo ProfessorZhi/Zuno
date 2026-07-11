@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from typing import Iterable
 
 from zuno.agent.durable_runtime import DurableRuntimeTaskSnapshot
+from zuno.agent.contracts import ContextPack
 from zuno.agent.runtime.checkpointer import RuntimeGraphCheckpointer
 from zuno.agent.runtime.contracts import FinalizationStatus, ReflectionDecision, StrategyDecision, StrategyMode
 from zuno.agent.runtime.dependencies import RuntimeDependencies
@@ -28,6 +29,7 @@ class RuntimeStartRequest:
     task_id: str
     trace_id: str
     goal: str
+    knowledge_space_ids: tuple[str, ...] = ()
     strategy_mode: StrategyMode | str | None = None
     reflection_decision: ReflectionDecision | str | None = None
 
@@ -71,6 +73,20 @@ class UnifiedAgentRuntimeService:
             task_id=request.task_id,
             trace_id=request.trace_id,
             goal=request.goal,
+            context_pack=(
+                ContextPack(
+                    context_pack_id=f"context:{request.run_id}",
+                    user_goal=request.goal,
+                    task_state={
+                        "thread_id": request.thread_id,
+                        "task_id": request.task_id,
+                        "knowledge_space_ids": list(request.knowledge_space_ids),
+                    },
+                    output_contract={"runtime": "unified_graph_request_context"},
+                )
+                if request.knowledge_space_ids
+                else None
+            ),
             strategy=(
                 StrategyDecision(mode=StrategyMode(request.strategy_mode), reason="preset by caller")
                 if request.strategy_mode

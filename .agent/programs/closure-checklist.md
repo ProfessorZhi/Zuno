@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-real-unified-runtime-cutover-v1
-current_phase: PHASE05_knowledge-tool-memory-integration
+current_phase: PHASE06_product-cutover
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
 ## Phase Closure
@@ -11,7 +11,7 @@ latest_completed_program: zuno-unified-agent-runtime-closure-v1
 - [x] PHASE02 compiled LangGraph 成为 `UnifiedAgentRuntimeService` 执行引擎，手写主循环退出产品主路径。
 - [x] PHASE03 `RuntimeDependencyFactory` 和 typed runtime protocols 接入 Completion / Workspace。
 - [x] PHASE04 ModelStep / Planner / ReActStep / Grounded Synthesis 进入真实执行数据面。
-- [ ] PHASE05 Knowledge / Tool / Memory 真实接入，filesystem.read/write 和 PDF evidence vertical slice 通过。
+- [x] PHASE05 Knowledge / Tool / Memory 真实接入，filesystem.read/write 和 PDF evidence vertical slice 通过。
 - [ ] PHASE06 Completion / Workspace 默认 unified runtime，GeneralAgent 只保留 rollback flag。
 - [ ] PHASE07 benchmark 输出 pass / fail / blocked，program 归档并恢复 no-active。
 
@@ -27,9 +27,9 @@ latest_completed_program: zuno-unified-agent-runtime-closure-v1
 - [ ] Workspace artifact 来自 unified runtime final state。
 - [ ] GeneralAgent 只保留显式 rollback flag。
 - [ ] SingleControllerDurableRuntime 不再是产品主 Controller。
-- [ ] 至少两个真实本地 Tool：安全的 filesystem.read 和经审批的 filesystem.write。
-- [ ] Memory 完成 pre-turn read、in-turn usage、post-turn write 和 approved Reflexion reuse。
-- [ ] PDF -> index -> corrective retrieval -> EvidenceLedger -> synthesis -> page citation 的真实纵向链路通过。
+- [x] 至少两个真实本地 Tool：安全的 filesystem.read 和经审批的 filesystem.write。
+- [x] Memory 完成 pre-turn read、in-turn usage、post-turn write 和 approved Reflexion reuse。
+- [x] PDF -> index -> corrective retrieval -> EvidenceLedger -> synthesis -> page citation 的真实纵向链路通过。
 - [ ] Benchmark 诚实输出 pass、fail 或 blocked。
 
 ## 禁止的虚假关闭

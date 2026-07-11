@@ -57,13 +57,14 @@ def input_gate(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRunt
 
 
 def build_context(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
+    caller_task_state = dict(state.context_pack.task_state) if state.context_pack else {}
     if deps.memory_engine is not None and hasattr(deps.memory_engine, "build_context_pack"):
         scope = _memory_scope(state)
         memory_context = deps.memory_engine.build_context_pack(
             scope=scope,
             context_pack_id=f"context:{state.run_id}",
             user_goal=state.goal,
-            task_state={"thread_id": state.thread_id, "task_id": state.task_id},
+            task_state={**caller_task_state, "thread_id": state.thread_id, "task_id": state.task_id},
             selected_evidence=[],
             allowed_capabilities=state.capability_plan.allowed_capabilities,
             safety_policy={"memory_context": "enabled"},
@@ -94,7 +95,7 @@ def build_context(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentR
     context_pack = state.context_pack or ContextPack(
         context_pack_id=f"context:{state.run_id}",
         user_goal=state.goal,
-        task_state={"thread_id": state.thread_id, "task_id": state.task_id},
+        task_state={**caller_task_state, "thread_id": state.thread_id, "task_id": state.task_id},
         output_contract={"runtime": "unified_graph_skeleton"},
         budget=state.limits.model_dump(),
     )

@@ -3,7 +3,7 @@
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
 phase: PHASE05_knowledge-tool-memory-integration
-state: active
+state: completed
 ```
 
 ## 目标
@@ -28,11 +28,20 @@ state: active
 
 ## 验收闸门
 
-- Knowledge 缺失时 blocked，不再 synthetic evidence。
-- filesystem.read 有 workspace containment、max bytes 和 trace。
-- filesystem.write 有 approval、atomic write、idempotency、allowed extension 和 audit trace。
-- Memory pre-turn read、in-turn selected refs、post-turn raw event / summary / pending Reflexion candidate 可观测。
-- PDF -> index -> corrective retrieval -> EvidenceLedger -> synthesis -> page citation 最低纵向链路通过。
+- [x] Knowledge 缺失时 blocked，不再 synthetic evidence。
+- [x] filesystem.read 有 workspace containment、max bytes 和 trace。
+- [x] filesystem.write 有 approval、atomic write、idempotency、allowed extension 和 audit trace。
+- [x] Memory pre-turn read、in-turn selected refs、post-turn raw event / summary / pending Reflexion candidate 可观测。
+- [x] PDF -> index -> corrective retrieval -> EvidenceLedger -> synthesis -> page citation 最低纵向链路通过。
+
+## 完成证据
+
+- `RuntimeStartRequest.knowledge_space_ids` 进入 ContextPack task_state，`KnowledgeStepExecutor` 能通过 unified runtime 读取 caller 选择的 knowledge space。
+- PDF fixture 经 ParseGateway / KnowledgeIndexRuntime / CorrectiveAgenticRetrievalRuntime / EvidenceLedger / GroundedSynthesisEngine 形成 page citation vertical slice。
+- filesystem.read / filesystem.write 由 Tool Control Plane 注册，write 仍需审批与 idempotency。
+- Memory pre-turn read、post-turn raw event / summary / pending Reflexion candidate 和 approved Reflexion reuse 已由 focused runtime tests 覆盖。
+- `pytest -q tests/agent/runtime tests/e2e -p no:cacheprovider` 通过。
+- `python tools/scripts/verify_real_runtime_cutover.py --enforce-knowledge-tool-memory` 通过。
 
 ## 验证命令
 
