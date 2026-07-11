@@ -1,224 +1,365 @@
 # Zuno Target Architecture Atlas
 
-> Text-first Design Document
+> Event-Driven Agentic GraphRAG Design Document
 
 updated: 2026-07-11  
-status: normative-short-term-target  
+status: normative-target-architecture  
 current_state_source: `docs/architecture/production-readiness.md`  
 visual_atlas_source: `docs/architecture/architecture-views.md`
 
-本文是 Zuno 的**目标总架构文档**。它以文字说明为主，负责讲清楚系统为什么这样设计、十一逻辑模块分别做什么、模块之间怎样协作、状态由谁持有、失败怎样表达、怎样在保持项目短小精悍的同时具备企业级成熟考虑。
+本文是 Zuno 的**目标总架构文档**，负责定义系统定位、逻辑模块、Agent 运行闭环、数据所有权、基础设施分工、安全边界、失败语义、可观测性和完成标准。
 
-Mermaid 图只用于辅助理解。完整十类视图和局部关系图由 `architecture-views.md` 维护，并通过 `architecture.html` 展示。
+本文描述的是 **Target**，不是 Current。仓库当前真实实现、已知差距、blocked 原因和 measured 状态，以 `docs/architecture/production-readiness.md` 为事实源。目标能力不得仅因出现在本文、依赖文件、配置文件或代码骨架中，就被表述为已经完成或质量已经证明。
 
-本文描述的是 **Target**，不是 Current。仓库当前真实实现、已知差距、blocked 原因和 measured 状态以 `docs/architecture/production-readiness.md` 为准。目标能力不得因为出现在本文或图中，就被写成当前已经完成。
+文档同步规则：
 
-文档角色与兼容术语：
-
-- `docs/architecture/architecture.md` 是**文字总架构文档**，面向本地优先的企业私有知识库与多功能 Agent 助手设计。
-- `docs/architecture/architecture.html` 是**架构 HTML**，重点展示十类 Mermaid 图。
-- `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html` 是同步镜像。
-- Document Ingestion / Parse Gateway 对应 Input 模块和 `docs/architecture/document-ingestion-foundation.md`。
-- Tool Control Plane 对应 Capability 与 Tool Runtime 的治理执行边界。
-- LangSmith-compatible Trace / Eval 对应 Observability & Eval 的可选外部 Trace/Eval sink。
-
-当前质量口径保持：
-
-```text
-implementation available
-measurement blocked
-quality not yet proven
-```
+- `docs/architecture/architecture.md` 是对外目标架构文字事实源；
+- `.agent/architecture/architecture.md` 是 Agent 工作区同步镜像；
+- 两个文件必须保持内容一致；
+- 修改任意一侧时，必须在同一轮变更中同步另一侧；
+- 架构图由 `docs/architecture/architecture-views.md` 维护；
+- 当前实现状态由 `docs/architecture/production-readiness.md` 维护。
 
 ---
 
-# 1. 项目定位：轻量实现，成熟设计
+# 1. 项目定位
 
-Zuno 的目标不是建设一个大规模、多租户、分布式的 AI 中台，而是做成一个**短小精悍的企业知识库问答与任务执行 Agent**：
+Zuno 的目标是建设一个面向企业私有知识、复杂任务执行和个人 Agent Workspace 的：
 
-- 能配置真实模型；
-- 能上传常见文件并建立知识库；
-- 能完成普通问答和复杂多步骤任务；
-- 能使用本地 CLI、HTTP API、MCP Tool 和 Skill；
-- 能通过 Agentic GraphRAG 给出可追溯引用；
-- 能在任务失败时反思、重检索和重规划；
-- 能保存经过治理的分层记忆；
-- 能展示完整 trace、token、cost 和评测结果；
-- 能进行基础脱敏、权限、输入输出检查和工具审批；
-- 能在进程重启后恢复任务。
+> **基于 LangGraph 的事件驱动 Agentic GraphRAG Runtime。**
 
-所谓“企业级成熟考虑”，指的是在设计上提前考虑：
+核心技术定位：
+
+- **LangGraph**：Agent 在线控制平面；
+- **Plan、ReAct、Reflection、Replan、Reflexion**：完整任务生命周期；
+- **RabbitMQ**：文档处理、索引、评测、记忆整理和长任务的异步数据平面；
+- **PostgreSQL**：事务事实源；
+- **Milvus**：知识和长期记忆的语义向量索引；
+- **Neo4j**：实体关系、图扩展、社区和多跳推理引擎；
+- **BM25**：关键词召回；
+- **Object Store**：原始文件、解析快照和 Artifact；
+- **LangSmith-compatible sink**：外部 Trace 与 Eval；
+- **本地 Trace/Audit Store**：系统独立运行和审计的事实源。
+
+Zuno 不以“安装了多少组件”作为完成标准。所有组件必须通过稳定 contract 真实参与主链路，并由测试、Trace 和固定评测集证明其行为。
+
+## 1.1 设计原则
 
 ```text
-模块边界
-typed contract
-持久化
-恢复
-幂等
-权限
-脱敏
-审计
-可观测
-成本
-评测
-失败语义
-可替换适配器
+Agent 自主，但控制边界明确
+流程动态，但状态可恢复
+组件深度融合，但领域层不绑定厂商 SDK
+知识可检索，但答案必须回到证据
+记忆可积累，但必须经过治理
+工具可执行，但副作用必须审批和幂等
+消息可重试，但业务事实只由数据库确认
+能力可观测，但不得伪造质量结论
 ```
 
-但近期实现不追求复杂基础设施。默认形态仍是一个本地优先的模块化单体：
+## 1.2 非目标
 
-- FastAPI 提供产品 API；
-- LangGraph 驱动 Agent Core；
-- SQLite / SQLModel 保存结构化事实；
-- 本地 Object Store 保存文件和 Artifact；
-- 本地 BM25、Vector 和 Graph Index 提供检索；
-- 简单后台 worker 处理解析和索引；
-- RabbitMQ 只作为 `TaskQueuePort` 的可选适配器，不是近期运行 blocker；
-- LangSmith 只作为 Trace 的可选外部 sink，本地 Trace Store 必须独立可用；
-- Milvus、Neo4j、Kafka、Kubernetes、Vault、Firecracker 等只作为未来扩展边界。
+近期不追求：
 
-设计原则可以概括为：
-
-> **先把 Agent 自主闭环、Agentic GraphRAG、分层 Memory、真实 Tool、全链路 Trace 和基础 Security 做完整，再按实际规模替换基础设施。**
+- 以微服务数量体现成熟度；
+- 让每个 LangGraph 节点都通过 RabbitMQ 调度；
+- 保存模型隐藏思维链；
+- 把 Milvus、Neo4j 或 RabbitMQ 当成事务事实源；
+- 把 LangSmith 当成安全执行模块；
+- 保留多套互相竞争的 Agent Controller；
+- 在 fixed benchmark 完成前宣称 Agentic GraphRAG 优于标准 RAG。
 
 ---
 
 # 2. 总体架构
 
-Zuno 采用 **Single Controller Agent**。一个 LangGraph Agent Core 负责状态和控制流，其他能力保持独立模块。
+## 2.1 六个物理运行域
 
-```mermaid
-flowchart TB
-  Product[Product Surface] ==>|RuntimeRequest| Core[Agent Core / LangGraph]
-  Core -->|RuntimeEvent · GroundedAnswer · Artifact| Product
+| 运行域 | 主要职责 |
+| --- | --- |
+| Product & API | Chat、Workspace、Upload、Approval、Citation、Artifact、Trace Viewer、SSE |
+| Agent Control Plane | Context、Plan、ReAct、Reflection、Replan、Finalize、Reflexion |
+| Knowledge & Memory Runtime | Retrieval Orchestrator、Milvus、Neo4j、BM25、Memory Context Builder |
+| Async Data Plane | RabbitMQ、Parser Worker、Embedding Worker、Graph Worker、Eval Worker |
+| Governance Plane | Security Gate、ACL、Approval、Audit、Policy、Redaction |
+| Durable Infrastructure | PostgreSQL、Object Store、Checkpoint、Trace、Migration、Health Check |
 
-  Core ==>|ModelCallRequest| Model[Model Gateway]
-  Model -->|ModelResult · Usage| Core
+这些是运行边界，不要求一开始拆成大量微服务。初期可以由同一 backend image 启动不同进程角色，但模块之间必须通过 typed contract 协作。
 
-  Core ==>|MemoryReadRequest · MemoryCommit| Memory[Memory]
-  Memory -->|ContextPack| Core
-
-  Core ==>|RetrievalPlan| Knowledge[Knowledge / Agentic GraphRAG]
-  Knowledge -->|EvidenceBundle · RetrievalVerdict| Core
-
-  Core ==>|CapabilityQuery| Capability[Capability / Skill]
-  Capability -->|CapabilityPlan · AllowedTools| Core
-
-  Core ==>|ToolCallIntent| Tool[Tool Runtime]
-  Tool -->|NormalizedToolObservation| Core
-
-  Security[Security] -.-> Product & Core & Model & Memory & Knowledge & Capability & Tool
-  Observe[Observability & Eval] -.-> Product & Core & Model & Memory & Knowledge & Capability & Tool
-  Infra[Infrastructure] --> Product & Core & Model & Memory & Knowledge & Capability & Tool
-```
-
-核心边界：
-
-```text
-LangGraph 管流程，不实现业务能力
-Model Gateway 管模型，不决定任务计划
-Memory 管记忆，不替代知识库
-Knowledge 管证据，不保存用户偏好
-Capability 管可用能力，不执行副作用
-Tool Runtime 执行动作，不决定全局目标
-Security 管边界，不成为任务控制器
-Observability 记录事实，不伪造质量结论
-Infrastructure 保存状态，不定义 Agent 策略
-Product 展示和交互，不成为后端事实源
-```
-
-## 2.1 十一逻辑能力模块
+## 2.2 十一逻辑模块
 
 1. Product Surface
-2. Input
-3. Knowledge
+2. Input / Document Ingestion
+3. Knowledge / Agentic GraphRAG
 4. Model Gateway
-5. Memory
+5. Memory & Context
 6. Agent Core / Planning & Control
-7. Capability
+7. Capability / Skill
 8. Tool Runtime
 9. Security
 10. Observability & Eval
 11. Infrastructure
 
-这十一层是逻辑边界，不代表十一个微服务。
-
-## 2.2 六个物理运行域
-
-| 物理运行域 | 逻辑模块映射 |
-| --- | --- |
-| Product & API | Product Surface |
-| Input & Knowledge | Input、Knowledge |
-| Agent Core Runtime | Model Gateway、Memory、Agent Core / Planning & Control；逻辑 owner 仍独立 |
-| Capability & Tool | Capability、Tool Runtime |
-| Governance & Observability | Security、Observability & Eval |
-| Local Infrastructure | Infrastructure |
-
-近期可以部署为一个后端进程加一个 Web 前端。物理上放在一起，不代表逻辑上可以相互绕过 contract。
-
----
-
-# 3. 完整 Agent 闭环
-
-普通 LLM 调用是“输入一次、输出一次”。Agent 必须形成：
-
-```text
-感知
--> 构建上下文
--> 选择策略
--> 规划
--> 行动
--> 获取 Observation
--> 判断质量
--> 调整计划
--> 完成目标
--> 沉淀经验
-```
-
-Zuno 的完整运行链路：
-
-1. Product Surface 创建 `RuntimeRequest`。
-2. Input Gate 进行身份、scope、敏感信息和 prompt injection 检查。
-3. Context Builder 组合最近对话、TaskState、Memory、Entity facts、knowledge scope 和 tool constraints。
-4. Strategy Selector 选择 Direct、Retrieval-first、ReAct 或 Plan-and-Execute。
-5. Planner 为复杂任务生成带依赖和验收条件的 `PlanState`。
-6. Executor 执行 Model、Knowledge、Tool 或单步 ReAct。
-7. Observation Normalizer 将所有结果统一成 `NormalizedObservation`。
-8. Evidence Gate 判断证据覆盖、来源版本、矛盾和支持度。
-9. Grounded Synthesis 生成 draft、claims 和 citation bindings。
-10. Reflection 返回 `PASS`、`REWRITE_ANSWER`、`RETRIEVE_MORE`、`USE_TOOL`、`ASK_USER` 或 `ABSTAIN`。
-11. Replan 修改真实后续步骤并再次执行。
-12. Finalize 形成 `GroundedAnswer`、Artifact、Citation 和最终 RuntimeEvent。
-13. Post-turn Commit 写入 task summary、Memory candidate、usage、cost 和 trace。
+## 2.3 系统上下文
 
 ```mermaid
 flowchart TB
-  Start([START]) --> Input[input_gate] --> Context[build_context] --> Strategy{strategy_select}
-  Strategy -->|direct| Draft[draft_and_bind_claims]
-  Strategy -->|react / plan| Plan[create_or_update_plan] --> Execute[execute_step] --> Observe[observe]
-  Observe -->|plan remains| Execute
-  Observe -->|plan complete| Evidence[evidence_gate] --> Draft --> Reflect{reflection}
-  Reflect -->|PASS| Finalize[finalize]
-  Reflect -->|REWRITE_ANSWER| Revise[revise_draft] --> Draft
-  Reflect -->|RETRIEVE_MORE| Replan[replan] --> Execute
-  Reflect -->|USE_TOOL| Tool[approval / tool execution] --> Observe
-  Reflect -->|ASK_USER| Interrupt[interrupt]
-  Interrupt -->|resume| Execute
-  Reflect -->|ABSTAIN| Finalize
-  Finalize --> Commit[post_turn_commit] --> End([END])
+    User[User / Client] --> Product[Product Surface / FastAPI]
+    Product --> Core[Agent Core / LangGraph]
+
+    Core --> Model[Model Gateway]
+    Core --> Memory[Memory & Context]
+    Core --> Knowledge[Knowledge / Agentic GraphRAG]
+    Core --> Capability[Capability / Skill]
+    Core --> Tool[Tool Runtime]
+
+    Input[Input / Ingestion] --> Queue[RabbitMQ]
+    Queue --> Parse[Parse / OCR Worker]
+    Queue --> Embed[Embedding / Vector Worker]
+    Queue --> Graph[Entity / Relation / Community Worker]
+    Queue --> Eval[Eval / Maintenance Worker]
+
+    Parse --> ObjectStore[Object Store]
+    Parse --> Postgres[(PostgreSQL)]
+    Embed --> Milvus[(Milvus)]
+    Graph --> Neo4j[(Neo4j)]
+
+    Knowledge --> Milvus
+    Knowledge --> Neo4j
+    Knowledge --> Postgres
+    Memory --> Milvus
+    Memory --> Neo4j
+    Memory --> Postgres
+
+    Security[Security & Governance] -.-> Product
+    Security -.-> Core
+    Security -.-> Knowledge
+    Security -.-> Memory
+    Security -.-> Tool
+
+    Observe[Observability & Eval] -.-> Product
+    Observe -.-> Core
+    Observe -.-> Model
+    Observe -.-> Knowledge
+    Observe -.-> Memory
+    Observe -.-> Tool
+    Observe --> LocalTrace[(Local Trace / Audit Store)]
+    Observe -.-> LangSmith[LangSmith Sink]
 ```
 
-所有循环必须有硬限制，包括最大步骤、最大检索轮次、单步最大 action、最大 token、最大费用、最大时长和最大副作用次数。
+## 2.4 在线控制平面与异步数据平面
+
+在线控制平面由 LangGraph 管理：
+
+```text
+Request
+-> Context
+-> Plan
+-> ReAct Step
+-> Reflection
+-> optional Replan
+-> Final Reflection
+-> Finalize
+-> Reflexion Candidate
+```
+
+RabbitMQ 负责耗时和可异步化工作：
+
+```text
+Document Parse / OCR
+Embedding
+Vector Index
+Entity / Relation Extraction
+Graph Index
+Community Detection
+Knowledge Rebuild
+Offline Eval
+Memory Consolidation
+Long-running Artifact / Tool Job
+Retry / DLQ
+```
+
+原则：
+
+> LangGraph 决定做什么，RabbitMQ 承载耗时任务；在线 Agent 的每个普通节点不通过消息队列往返。
 
 ---
 
-# 4. 十一模块目标设计
+# 3. Agent 完整闭环
+
+## 3.1 五个概念的层级关系
+
+Plan、ReAct、Reflection、Replan、Reflexion 不是五种并列策略，而是任务生命周期中的五层机制。
+
+| 机制 | 作用范围 | 职责 |
+| --- | --- | --- |
+| Plan | 整个任务 | 拆解目标、依赖、顺序、验收条件、预算、风险 |
+| ReAct | 单个 PlanStep | 根据 Observation 动态选择知识、模型或工具动作 |
+| Reflection | 步骤或最终结果 | 判断通过、重试、补检索、重规划、询问或放弃 |
+| Replan | 剩余计划 | 当前提变化或执行偏离时修改后续轨迹 |
+| Reflexion | 跨任务 | 把成功或失败经验形成受治理的长期记忆候选 |
+
+## 3.2 任务生命周期
+
+```mermaid
+flowchart TB
+    Start([START]) --> Input[input_gate]
+    Input --> Context[build_context]
+    Context --> Plan[create_plan]
+    Plan --> Select[select_next_step]
+    Select --> React[run_react_step]
+    React --> Reflect{step_reflection}
+
+    Reflect -->|PASS| More{plan remains?}
+    Reflect -->|RETRY_STEP| React
+    Reflect -->|RETRIEVE_MORE / REPLAN| Replan[replan]
+    Reflect -->|ASK_USER| Interrupt[interrupt / resume]
+    Reflect -->|APPROVAL| Approval[approval / resume]
+    Reflect -->|ABSTAIN| FinalReflect[final_reflection]
+
+    Replan --> Select
+    Interrupt --> Select
+    Approval --> Select
+    More -->|yes| Select
+    More -->|no| FinalReflect
+
+    FinalReflect -->|REWRITE| Synthesis[grounded_synthesis]
+    Synthesis --> FinalReflect
+    FinalReflect -->|PASS / ABSTAIN| Finalize[finalize]
+    Finalize --> Reflexion[build_reflexion_candidate]
+    Reflexion --> Commit[post_turn_commit]
+    Commit --> End([END])
+```
+
+## 3.3 ReAct 步骤子图
+
+```text
+PlanStep
+-> reason summary
+-> action decision
+-> capability/security policy
+-> execute model/retrieval/tool
+-> normalize observation
+-> acceptance check
+-> continue / complete / replan / approval / abstain
+```
+
+ReAct 只控制当前 PlanStep，不得自行覆盖全局目标，也不得直接写长期记忆。
+
+## 3.4 Plan 与 Replan
+
+Plan 必须包含：
+
+```text
+plan_id
+version
+goal
+steps
+dependencies
+acceptance_criteria
+allowed_capabilities
+budget
+risk
+stop_conditions
+created_by_model_call_id
+```
+
+Replan 不覆盖旧计划，而是产生可审计 `PlanPatch`：
+
+```text
+base_plan_version
+remove_step_ids
+update_steps
+insert_steps
+reason
+trigger_observation_refs
+created_by_model_call_id
+```
+
+## 3.5 Reflection
+
+Reflection 输出结构化决策：
+
+```text
+PASS
+RETRY_STEP
+REWRITE_ANSWER
+RETRIEVE_MORE
+USE_TOOL
+REPLAN
+ASK_USER
+APPROVAL
+ABSTAIN
+REFUSE
+```
+
+并记录：
+
+```text
+reason
+failure_bucket
+unsupported_claims
+missing_evidence
+suggested_actions
+```
+
+Reflection 可以由 deterministic gate、规则评估器和 critic model 组合，但必须受预算和最大轮数限制。
+
+## 3.6 Reflexion
+
+Reflexion 不保存隐藏思维链，只保存可审计经验：
+
+```text
+task_type
+outcome
+failure_type
+root_cause_summary
+failed_action
+successful_action
+lesson
+recommended_strategy
+applicability_conditions
+confidence
+evidence_refs
+trace_refs
+review_status
+```
+
+生命周期：
+
+```text
+Runtime Result
+-> ReflexionCandidate
+-> Redact
+-> Deduplicate
+-> Score
+-> Governance Review
+-> PostgreSQL
+-> Milvus / Neo4j Index
+-> Future ContextPack
+-> Future Plan Influence
+```
+
+## 3.7 停止条件
+
+所有循环必须受以下限制：
+
+- 最大 PlanStep 数；
+- 单步最大 ReAct 轮数；
+- 最大 Reflection 次数；
+- 最大 Replan 次数；
+- 最大检索轮数；
+- 最大 Tool 和副作用次数；
+- 最大 token、费用和总时长；
+- 用户取消；
+- 安全策略阻止。
+
+---
+
+# 4. 十一逻辑模块设计
 
 ## 4.1 Product Surface
 
-### 模块目标
-
-Product Surface 是用户和系统交互的入口，最终包括：
+负责：
 
 ```text
 AgentChat
@@ -233,34 +374,19 @@ Artifact
 Trace Viewer
 Feedback
 Model Configuration
+Memory Governance
 ```
 
-它负责收集用户输入、创建任务、展示实时事件、处理审批、展示回答与引用、查看 Trace 和提交反馈。
+边界：
 
-### 近期精简实现
+- 前端不是业务事实源；
+- 页面刷新后按 `task_id/run_id` 从后端恢复；
+- Completion 和 Workspace 使用同一个 Agent Runtime；
+- 前端不得直接访问 RabbitMQ、Milvus 或 Neo4j。
 
-- 一个 Web 前端；
-- Completion 与 Workspace 两类入口；
-- SSE 展示 runtime event；
-- Workspace 页面展示文件、索引状态、任务、Artifact 和 Citation；
-- Approval 对话框支持 approve / deny；
-- Trace 页面先展示节点、模型、检索、工具、token、cost 和错误；
-- 刷新后根据 `task_id/run_id` 从后端恢复状态。
-
-### 成熟设计考虑
-
-- 前端不保存业务事实；
-- API 使用 typed DTO；
-- 所有状态具有稳定 error code；
-- Artifact 与 Citation 可版本化；
-- 用户反馈能够回到 Eval case 和 regression set；
-- Completion 和 Workspace 使用同一个 Runtime，而不是两套 Agent 实现。
-
-### 核心 contract
+核心 contract：
 
 ```text
-CompletionRequest
-WorkspaceTaskRequest
 RuntimeRequest
 RuntimeEvent
 ApprovalDecision
@@ -269,24 +395,15 @@ ArtifactRef
 CitationView
 TraceSummary
 FeedbackRequest
+MemoryReviewDecision
 ```
 
-### 完成标准
+## 4.2 Input / Document Ingestion
 
-Workspace 生成的 Artifact 和 Completion 返回的答案都来自统一 Runtime final state。前端刷新、服务重启和审批恢复不丢失任务。
-
----
-
-## 4.2 Input
-
-### 模块目标
-
-Input 把 File、URL、Text 和 Image 转换成可版本化、可重建、可定位的标准内部表示。
-
-目标流程：
+目标链路：
 
 ```text
-File / URL / Text / Image
+File / URL / Text / Image / Code
 -> SourceObject
 -> MIME Detection
 -> Parser Routing
@@ -297,272 +414,220 @@ File / URL / Text / Image
 -> IndexHandoffPayload
 ```
 
-### 支持的输入类型
+近期支持：PDF、DOCX、PPTX、XLSX/CSV、Markdown/TXT、HTML、代码文件、图片和扫描 PDF。
 
-近期目标支持常见企业资料即可：
+所有 Parser 必须输出统一 `CanonicalDocumentIR`，下游索引不得直接依赖特定解析器结构。
 
-- PDF；
-- DOCX；
-- PPTX；
-- XLSX / CSV；
-- Markdown / TXT；
-- HTML；
-- 常见代码文件；
-- 图片型 PDF 或图片通过 OCR/VLM adapter 处理。
-
-不要求一开始支持所有格式，也不要求每种格式达到复杂版面恢复。关键是：解析结果必须统一进入 `CanonicalDocumentIR`，并保留 `SourceSpan`。
-
-### SourceSpan
+`SourceSpan` 至少支持：
 
 ```text
 PDF: page + bbox + char range
-DOCX: section + paragraph
-PPTX: slide + bbox
+DOCX: section + paragraph + run range
+PPTX: slide + shape + bbox
 XLSX: sheet + cell range
 Markdown / Code: section path + line range
 HTML: selector / DOM path
+Image: image id + bbox
 ```
 
-### 异步设计
-
-Input 和 Indexing 可能耗时，必须支持异步任务，但近期不需要强依赖 RabbitMQ。
-
-定义统一 `TaskQueuePort`：
+任务状态：
 
 ```text
-TaskQueuePort
-├─ InProcessQueueAdapter      默认开发模式
-├─ LocalWorkerQueueAdapter    默认本地生产模式
-└─ RabbitMQAdapter            可选扩展
+queued
+running
+waiting_dependency
+retrying
+completed
+blocked
+failed
+cancelled
+dead_lettered
 ```
 
-上传后 API 先保存 `SourceObject` 和 `ParseJob`，后台 worker 领取任务并更新状态。任务必须幂等，重复提交同一 source version 不应生成重复索引。
+## 4.3 Knowledge / Agentic GraphRAG
 
-### 成熟设计考虑
-
-- parser adapter 可插拔；
-- 原始文件和解析版本分离；
-- ParseJob 有 queued/running/completed/blocked/failed；
-- 支持取消、重试和错误原因；
-- OCR、Office parser 和远程 parser 都是 adapter，不影响 IR contract；
-- RabbitMQ 只替换 queue adapter，不修改业务流程。
-
-### 核心 contract
-
-```text
-SourceObject
-ParseJob
-ParseSnapshot
-CanonicalDocumentIR
-DocumentBlock
-DocumentTable
-DocumentFigure
-SourceSpan
-IndexHandoffPayload
-```
-
-### 完成标准
-
-常见文件能够上传、异步解析、生成 Document IR、进入索引，并从最终 Citation 回到原始文件位置。
-
----
-
-## 4.3 Knowledge：Agentic GraphRAG
-
-### 模块目标
-
-Knowledge 负责外部知识事实的索引、检索、融合、重排、图扩展和证据追踪。它不保存用户偏好，也不负责规划整个任务。
-
-离线阶段：
+离线索引：
 
 ```text
 CanonicalDocumentIR
 -> Parent Chunk / Citation Chunk
 -> Embedding
--> BM25 Index
--> Vector Index
+-> Milvus
+-> BM25
 -> Entity / Relation Extraction
--> Graph Index
+-> Neo4j
+-> Community Detection
 -> IndexManifest
 ```
 
-在线阶段：
+在线检索：
 
 ```text
 NeedRetrievalDecision
--> Query Strategy
--> BM25 / Vector / Graph
--> RRF Fusion
+-> Query Analysis
+-> RetrievalPlan
+-> BM25 / Milvus / Neo4j
+-> Fusion
 -> Rerank
--> Parent / Neighbor Expansion
+-> Parent / Neighbor / Graph Expansion
 -> EvidenceLedger
--> Retrieval Quality Gate
+-> RetrievalVerdict
 -> Corrective Action
 ```
 
-### Agentic Retrieval 策略
-
-根据问题和失败类型选择：
+支持策略：
 
 - Direct Query；
 - Query Rewrite；
 - Multi Query；
-- Step-back Query；
+- Step-back；
 - HyDE；
 - Entity Decomposition；
 - Relation Query；
 - Graph Neighbor Expansion；
-- Source Diversification。
+- Multi-hop Path；
+- Community Search；
+- Source Diversification；
+- Contradiction Search。
 
-策略生成可以先使用轻量规则加模型调用，后续再优化 planner。不能只在原 query 后拼接固定字符串，就声称实现了 HyDE 或 Step-back。
+### Milvus 职责
 
-### 多路召回与 GraphRAG
+Milvus 是可重建语义索引，不是事实源。建议 Collection：
 
-近期无需强依赖大型图数据库。可采用：
-
-- 本地 BM25；
-- 本地向量索引；
-- SQLite / 文件化轻量 entity-relation graph；
-- RRF 融合；
-- heuristic 或模型 rerank；
-- parent / neighbor expansion。
-
-未来规模增长后，可以通过 adapter 替换为 Elasticsearch、Milvus、Qdrant 或 Neo4j，不改变 `RetrievalPlan` 与 `EvidenceBundle`。
-
-### EvidenceLedger
-
-核心不是返回一组文本，而是保存每轮检索证据：
-
-```python
-class EvidenceLedgerRecord:
-    evidence_id: str
-    document_id: str
-    document_version: str
-    source_span: SourceSpan
-    retrieval_round: int
-    query_id: str
-    query_strategy: str
-    retriever: str
-    raw_score: float
-    fusion_score: float | None
-    rerank_score: float | None
-    graph_path: list[str]
-    selection_reason: str
-    trace_span: str
-    text: str
+```text
+knowledge_chunks
+knowledge_parents
+knowledge_images
+agent_memories
+procedural_lessons
 ```
 
-Evidence 必须可以回到不可变 DocumentVersion 和 SourceSpan。无法回到原文的 Graph fact 不能用于 strict citation。
+索引字段至少包含：
+
+```text
+chunk_id / memory_id
+document_id
+document_version
+workspace_id
+knowledge_space_id
+source_span_ref
+parent_chunk_id
+embedding_model
+index_version
+acl_scope
+status
+```
+
+必须支持 batch upsert、workspace/ACL filter、document/index version filter、删除墓碑和 search trace。
+
+### Neo4j 职责
+
+主要节点：
+
+```text
+Workspace
+KnowledgeSpace
+Document
+DocumentVersion
+Chunk
+Entity
+Concept
+GraphCommunity
+User
+Project
+```
+
+主要关系：
+
+```text
+HAS_VERSION
+HAS_CHUNK
+MENTIONS
+RELATES_TO
+SUPPORTED_BY
+IN_COMMUNITY
+DERIVED_FROM
+BELONGS_TO
+```
+
+严格回答中的图事实必须回到：
+
+```text
+Graph Fact
+-> Supporting Chunk
+-> DocumentVersion
+-> SourceSpan
+```
+
+没有支持 Chunk 的图事实只能用于检索扩展，不能作为 strict citation。
 
 ### Corrective Retrieval
 
-当检索质量不足时，返回 failure bucket：
+failure bucket：
 
 ```text
 document_miss
 text_miss
 entity_miss
 relation_miss
+multi_hop_miss
 contradiction
 stale_index
+version_mismatch
 acl_denied
 no_candidate
+insufficient_source_diversity
+unsupported_graph_fact
 ```
 
-Agent Core 根据 bucket 生成下一轮 `RetrievalPlan`。达到预算或仍无证据时，应 Ask User 或 Abstain，而不是编造答案。
+Reflection 根据 bucket 触发 Query Rewrite、Milvus Multi Query、Neo4j Path Query、Source Diversification、Rebuild 或 Abstain，并通过 Replan 修改真实后续步骤。
 
-### 核心指标
+### EvidenceLedger
 
-- Recall@K；
-- Precision@K；
-- MRR / nDCG；
-- rerank gain；
-- source coverage；
-- citation accuracy；
-- unsupported claim rate；
-- retrieval rounds；
-- latency；
-- token 和 cost。
-
-### 完成标准
-
-真实 PDF 能走通：
+每条证据至少记录：
 
 ```text
-parse
--> index
--> first retrieval
--> corrective retrieval
--> EvidenceLedger
--> claim binding
--> page citation
--> grounded answer
+evidence_id
+document_id
+document_version
+source_span_ref
+retrieval_round
+query_id
+query_strategy
+retriever
+raw_score
+fusion_score
+rerank_score
+graph_path
+selection_reason
+trace_span_ref
+text_ref
 ```
-
----
 
 ## 4.4 Model Gateway
 
-### 模块目标
-
-Model Gateway 是所有模型调用的唯一入口，统一处理 Chat、Embedding、Reranker、VLM 和 Eval Judge。
-
-Agent 角色至少包括：
+所有模型调用的唯一入口，统一管理：
 
 ```text
 Planner
 Executor
-Tool Call
+ReAct Decision
 Critic
 Synthesis
 Query Rewrite
+Embedding
+Reranker
+VLM / OCR
 Memory Extraction
+Reflexion
 Eval Judge
 ```
 
-### 近期精简实现
+职责：provider adapter、model slot、credential ref、timeout、retry、fallback、structured output、streaming、token/cost/latency、redaction、budget 和 trace。
 
-- 支持 1 个真实远程 provider 和 1 个本地 OpenAI-compatible provider；
-- 支持用户配置 base URL、model name 和 credential ref；
-- 支持 chat、embedding 和 reranker slot；
-- 支持 timeout、一次 retry、fallback 和 structured output；
-- 记录 token、cost、latency、provider、model 和 fallback；
-- Mock provider 仅用于测试和 demo mode。
+业务模块禁止直接实例化 provider SDK 或 `ChatOpenAI`。
 
-### 成熟设计考虑
-
-- `ModelSlotBinding` 按 Workspace/Dialog 绑定 Planner、Executor、Critic、Synthesis、Embedding、Reranker；
-- provider adapter 可替换；
-- 统一预算和并发限制；
-- prompt redaction；
-- streaming；
-- schema validation；
-- fallback 不得静默；
-- 选型考虑合规、成本、延迟和能力，而不是只看 benchmark。
-
-### 核心 contract
-
-```text
-ModelDefinition
-ModelSlotBinding
-ModelCallRequest
-ModelResult
-UsageRecord
-FallbackDecision
-ModelError
-```
-
-业务模块禁止直接实例化 OpenAI、Anthropic、ChatOpenAI 或旧 ModelManager。
-
-### 完成标准
-
-Planner、ReAct、Critic、Synthesis、Query Rewrite、Embedding 和 Rerank 都从 Gateway 获取模型，并在 Trace 中看到真实 usage。
-
----
-
-## 4.5 Memory 与 Context 管理
-
-### 模块边界
+## 4.5 Memory & Context
 
 必须区分：
 
@@ -571,557 +636,157 @@ Context != Memory
 Memory != Knowledge
 Chat History != Long-term Memory
 LangGraph State != Memory Database
+Milvus Index != Memory Fact Source
+Neo4j Relation != Entity Fact Source
 ```
 
-- LangGraph State：当前 run 的控制状态；
-- ContextPack：当前模型调用的预算化只读视图；
-- Memory：跨轮、跨任务可治理的经验和事实；
-- Knowledge：来自文档和外部来源的证据。
+四层 Memory：
 
-### 四层 Memory
+- Sensory：输入、输出、Tool/Retrieval Observation 和系统事件；
+- Short-term：Goal、PlanState、当前步骤、recent window、Evidence Summary；
+- Long-term：Episodic、Semantic、Procedural；
+- Entity：User、Project、Workspace、Preference、Relation、Effective Time、Confidence、Source。
 
-#### Sensory Memory
+存储分工：
 
-原始短期信号：用户输入、模型输出、Tool Observation、Retrieval Observation、系统事件和错误事件。生命周期短，主要用于 trace、压缩和候选提取，不直接全部进入 prompt。
+- PostgreSQL：Memory 正文、来源、有效期、治理状态和撤销记录；
+- Milvus：Episodic、Semantic、Procedural 的语义索引；
+- Neo4j：Entity Memory 的关系查询视图。
 
-#### Short-term Memory
-
-当前任务工作记忆：目标、PlanState、当前步骤、recent window、Evidence Summary、未完成事项和本轮约束。主要位于 AgentRuntimeState 和 Task Summary。
-
-#### Long-term Memory
-
-- Episodic：发生过什么；
-- Semantic：稳定事实和偏好；
-- Procedural：怎样做、什么策略有效。
-
-#### Entity Memory
-
-保存 User、Project、Workspace、Company、Document、Preference、Relation、Effective Time、Confidence 和 Source。结构化 Entity fact 是权威事实源，Semantic Memory 只是其语义检索表示。
-
-### ContextPack
-
-```python
-class ContextPack:
-    user_goal: str
-    system_policy: list[str]
-    recent_window: list[MessageSummary]
-    task_state: TaskStateSummary
-    selected_memories: list[MemoryItem]
-    entity_facts: list[EntityFact]
-    knowledge_scope: list[str]
-    evidence_summary: list[str]
-    tool_constraints: list[str]
-    output_contract: dict
-    exclusion_reasons: list[ContextExclusion]
-    token_budget: int
-```
-
-ContextPack 必须记录选了什么、为什么选、排除了什么、是否过期、是否冲突和来源。
-
-### Active 与 On-demand Retrieval
-
-Active Retrieval 每轮读取：
-
-- 用户偏好；
-- 当前项目；
-- 最近任务；
-- 未完成事项；
-- 高置信 Entity Fact；
-- approved Procedural Memory。
-
-On-demand Retrieval 只在 Agent 需要时查询类似历史任务、旧决策、故障经验和实体关系。
-
-### Memory 生命周期
-
-```text
-Capture
--> Normalize
--> Classify
--> Redact
--> Deduplicate
--> Score
--> Candidate
--> Governance Review
--> Store
--> Retrieve
--> Rank
--> ContextPack
--> Consolidate / Decay / Revoke / Delete
-```
-
-```mermaid
-flowchart LR
-  Event[Input / Observation / Result] --> Sensory[Sensory]
-  Sensory --> Short[Short-term]
-  Short & Long[Long-term] & Entity[Entity] --> Policy[Scope · Privacy · Freshness · Conflict · Budget]
-  Policy --> Rank[Retrieve and Rank] --> Context[ContextPack] --> Agent[Agent Core]
-  Agent --> Candidate[Memory Candidate] --> Review{Governance Review}
-  Review -->|approved| Long
-  Review -->|entity fact| Entity
-  Review -->|pending / rejected| Ledger[Governance Ledger]
-```
-
-### Reflexion
-
-Reflexion 不是保存完整思维链，而是生成可审计经验：
-
-```text
-task type
-failure type
-trigger
-root cause summary
-failed action
-lesson
-recommended strategy
-applicability conditions
-confidence
-trace refs
-review status
-```
-
-只有 approved candidate 才能进入长期记忆。
-
-### 近期精简实现
-
-- SQLite Memory Store；
-- recent window 和 task summary；
-- semantic/procedural memory；
-- Entity fact 基础表；
-- candidate + approve/reject；
-- 简单 relevance/recency/confidence 排序；
-- token budget 和 exclusion reason；
-- privacy delete 和 revoke。
-
-### 完成标准
-
-请求 A 产生经验，经审批后写入；服务重启后请求 B 能读取该经验，并对 Strategy 或 Plan 产生可证明影响。
-
----
+`ContextPack` 必须记录选中、排除、过期、冲突、来源、token budget，以及 Memory 对 Strategy 或 Plan 的影响。
 
 ## 4.6 Agent Core / Planning & Control
 
-### 模块目标
-
-Agent Core 是 Single Controller 的大脑，负责：
+职责：
 
 ```text
 Runtime State
 Input Gate orchestration
 Context Builder
-Strategy Selector
 Planner
 Plan Validator
 Plan Executor
-Step Executor Registry
 ReAct Step Controller
 Observation Normalizer
 Evidence Gate
 Reflection Engine
 Replan Engine
 Grounded Synthesis
+Final Reflection
 Finalization Controller
 Reflexion Bridge
 Budget / Stop Controller
 Interrupt / Resume
 ```
 
-### Plan-and-Execute
+规则：
 
-负责宏观任务拆解：
+- LangGraph 是唯一产品主 controller；
+- Completion 与 Workspace 共用同一 compiled graph；
+- State 只保存小型可序列化数据；
+- 文档、Evidence、Embedding、Tool binary 和 Artifact 只保存引用；
+- 条件路由使用明确 enum；
+- checkpoint、interrupt 和 resume 必须跨进程恢复。
 
-```text
-目标
-步骤
-依赖
-顺序
-验收条件
-允许能力
-预算
-风险
-停止条件
-```
+## 4.7 Capability / Skill
 
-简单任务不需要强制规划；复杂任务才生成多步 Plan。Plan 可以先是有序步骤，未来需要时再升级 DAG。
-
-### ReAct
-
-负责一个 PlanStep 内部的：
-
-```text
-Reason summary
--> Action decision
--> Knowledge / Tool / Model action
--> Observation
--> Acceptance check
--> next action or complete
-```
-
-ReAct 只控制当前步骤，不控制整个任务。模型只负责决策和结构化 ToolCall，宿主代码负责真实执行。
-
-### Reflection
-
-检查：
-
-- 当前步骤是否满足验收条件；
-- 证据是否充分；
-- 是否存在 unsupported claims；
-- 工具是否失败；
-- 用户约束是否满足；
-- 安全门是否阻止；
-- 是否超出预算。
-
-### Replan
-
-真正修改后续执行轨迹：
-
-- 换 Query Strategy；
-- 增加 Retrieval Round；
-- 更换 Retriever Mix；
-- 增加 Tool Step；
-- 删除无效步骤；
-- 修改验收条件；
-- 调整模型角色；
-- Ask User 或 Abstain。
-
-### Reflexion
-
-任务完成或失败后，将经验作为 Memory candidate 提交治理，不直接写入长期记忆。
-
-### Runtime State
-
-```python
-class AgentRuntimeState:
-    run_id: str
-    task_id: str
-    thread_id: str
-    workspace_id: str
-    user_id: str
-    trace_id: str
-
-    request: RuntimeRequest
-    context_pack: ContextPack
-    strategy: StrategyDecision
-    plan_state: PlanState
-    current_step_id: str | None
-
-    observations: list[NormalizedObservation]
-    evidence_ledger_ref: str | None
-
-    draft_answer: str | None
-    claims: list[StructuredClaim]
-    claim_bindings: list[ClaimEvidenceBinding]
-    unsupported_claims: list[str]
-    reflection: ReflectionResult | None
-
-    counters: RuntimeCounters
-    limits: RuntimeLimits
-    pending_interrupt: PendingInterrupt | None
-    final_answer: GroundedAnswer | None
-    failure: RuntimeFailure | None
-```
-
-完整文档、Embedding、Evidence 文本、Tool binary 和 Artifact binary 只保存引用。
-
-### 近期精简实现
-
-- 一个 compiled LangGraph；
-- direct、retrieval-first、ReAct、Plan-and-Execute 四种策略；
-- 单步 ReAct；
-- deterministic gate + 可选 critic model；
-- SQLite checkpoint；
-- approval interrupt/resume；
-- live SSE event；
-- RuntimeLimits；
-- GroundedAnswer 正式 state。
-
-### 完成标准
-
-LangGraph 是唯一产品主 controller，Completion 与 Workspace 不再同时跑旧 durable runtime、sidecar runtime 和独立完成链路。
-
----
-
-## 4.7 Capability
-
-### 模块目标
-
-Capability 回答：
-
-> Agent 具备什么能力，当前任务允许使用什么能力？
-
-它管理：
-
-```text
-Capability Registry
-CapabilityCard
-SkillCard
-ToolCard
-MCP Server Card
-Capability Policy
-Capability Router
-Progressive Loader
-```
-
-### 概念边界
-
-- Capability：抽象能力，例如 `search_knowledge`；
-- Tool：原子动作，例如 `filesystem.read`；
-- Skill：带 instruction、resources、templates、required tools 和 acceptance criteria 的复用流程；
-- MCP：Agent 与外部工具/资源之间的标准协议；
-- Function Calling：模型输出结构化工具意图的语言形式。
-
-可以理解为：
+概念边界：
 
 ```text
 Function Calling = 模型表达调用意图的格式
-MCP = 工具箱和资源接入协议
-Skill = 如何完成一类任务的操作手册
-Capability = Agent 能力目录和选择层
-Tool Runtime = 真正执行动作的宿主
+MCP = 工具和资源接入协议
+Tool = 原子动作
+Skill = 完成一类任务的复用流程
+Capability = 能力目录和选择层
+Tool Runtime = 真实执行宿主
 ```
 
-### Progressive Loading
-
-模型不能一次看到所有工具和 Skill：
+采用 Progressive Loading：
 
 ```text
 Task
 -> Capability Router
--> 选择少量 Capability
--> 加载 Skill metadata
--> 必要时加载 instruction / resource
--> 提供 AllowedTools schema 给 ReAct
+-> select small capability set
+-> load Skill metadata
+-> load instruction/resource on demand
+-> expose AllowedTools to ReAct
 ```
 
-### 近期精简实现
-
-- 文件型 Capability/Skill registry；
-- 3 到 8 个能力的动态选择；
-- Skill markdown + resource/template；
-- 本地 Tool 和 MCP Tool 统一 manifest；
-- Capability policy 根据 workspace、安全和副作用过滤。
-
-### 完成标准
-
-PlanStep 只能看到当前允许的 capabilities 和 tools，不能使用未授权或未加载的工具。
-
----
+PlanStep 只能看到当前被授权的 Capability 与 Tool。
 
 ## 4.8 Tool Runtime
 
-### 模块目标
-
-Tool Runtime 将模型产生的 `ToolCallIntent` 转换成受治理的真实动作。
-
-```mermaid
-flowchart LR
-  Model[Model Tool Call] --> Intent[ToolCallIntent]
-  Intent --> Policy[Capability Policy]
-  Policy --> Security[Tool Security Gate]
-  Security --> Approval{Approval Required?}
-  Approval -->|yes| User[User Decision]
-  Approval -->|no / approved| Claim[Idempotency Claim]
-  Claim --> Executor[CLI · HTTP API · Local Function · MCP Executor]
-  Executor --> Normalize[Result Normalizer]
-  Normalize --> Observation[NormalizedToolObservation]
-```
-
-### 工具类型
-
-近期支持：
-
-- 本地 Python function；
-- 本地 CLI 命令；
-- HTTP API；
-- Workspace file read/write；
-- calculator / JSON / text transform；
-- MCP tools/resources；
-- Skill 组合出的多步工具流程。
-
-### 运行边界
-
-模型只输出结构化 ToolCall，不直接执行代码、访问网络或读取 secret。宿主代码负责：
+将 `ToolCallIntent` 转换为受治理的真实动作：
 
 ```text
-schema validation
-allowlist
-approval
-credential ref
-workspace path scope
-network policy
-timeout
-cancel
-retry
-idempotency
-atomic write
-audit
-result normalization
+Schema Validation
+-> Capability Policy
+-> Security Gate
+-> Approval
+-> Idempotency Claim
+-> Execute CLI / HTTP / Function / MCP / File / DB
+-> Normalize Observation
 ```
 
-### 近期精简实现
+宿主负责 allowlist、credential ref、workspace path、network policy、timeout、cancel、retry、atomic write、audit 和 result normalization。
 
-- 真实安全 `filesystem.read`；
-- 经审批的 `filesystem.write`；
-- calculator/transform；
-- 一个 HTTP API Tool；
-- 一个 MCP server adapter；
-- CLI 只允许 manifest 注册的命令和参数；
-- 不需要一开始建设复杂容器 sandbox。
-
-### 成熟设计考虑
-
-未来可接 Vault、容器 sandbox、网络代理和远程 worker，但 `ToolRuntimeRequest` 与 `NormalizedToolObservation` 不变。
-
-### 完成标准
-
-真实 ReAct 能执行工具、等待审批、进程重启后恢复，并通过 idempotency 保证副作用只发生一次。
-
----
+短工具在线执行；长任务可提交 RabbitMQ，并通过 durable `JobHandle` 和事件恢复 LangGraph。
 
 ## 4.9 Security
 
-### 模块目标
-
-Security 是横切能力，与 Observability 紧密协作。每次安全决策都必须进入 Trace 和 Audit，而不是只返回一个布尔值。
-
-### 七类 Gate
+七类 Gate：
 
 1. Input Gate：身份、scope、PII、secret、prompt injection；
 2. Retrieval Gate：ACL、cross-workspace、stale version、untrusted instruction；
-3. Memory Gate：scope、privacy、expired/revoked/conflict record；
-4. Model Context Gate：发送给模型前的脱敏和敏感信息过滤；
+3. Memory Gate：scope、privacy、expired/revoked/conflict；
+4. Model Context Gate：发送模型前脱敏；
 5. Tool Gate：allowlist、arguments、side effect、approval、credential、path、network；
-6. Output Gate：unsupported claim、敏感泄露、citation coverage、unsafe content；
-7. Artifact Gate：文件类型、路径、大小、敏感内容和发布权限。
+6. Output Gate：unsupported claim、敏感泄露、citation coverage；
+7. Artifact Gate：类型、路径、大小、敏感内容和发布权限。
 
-### 近期精简实现
-
-- regex + structured field 的 PII/secret redaction；
-- Workspace ACL；
-- retrieval chunk 中的 instruction sanitization；
-- Tool allowlist 和 side-effect approval；
-- 输出敏感词、secret 和 unsupported claim 检查；
-- Artifact path containment；
-- 安全事件关联 run_id、trace_id、user_id 和 workspace_id。
-
-### 成熟设计考虑
-
-未来可以替换为 DLP、企业身份、Vault 和更强策略引擎，但近期不需要建设复杂安全平台。
-
-### 核心 contract
-
-```text
-GateRequest
-GateDecision
-PolicyReason
-RedactionRecord
-AuditEvent
-SecurityFailure
-```
-
-### 完成标准
-
-任何被阻止的输入、检索、Memory、Tool、输出和 Artifact 都能在 Trace Viewer 中看到原因、位置和处理动作。
-
----
+LangSmith 只记录安全事件，不执行安全决策。Milvus 和 Neo4j 查询必须携带 workspace 和 ACL 条件。
 
 ## 4.10 Observability & Eval
 
-### 模块目标
-
-Observability 记录 Agent 全链路发生了什么；Eval 判断它做得好不好。
-
-一次 Agent Run 的 Trace Tree：
+Trace Tree：
 
 ```text
 agent_run
 ├─ input_gate
 ├─ context_build
-│  └─ memory_retrieval
-├─ strategy
+│  ├─ memory_postgres_read
+│  ├─ memory_milvus_search
+│  └─ entity_neo4j_query
 ├─ planner_model
 ├─ plan_validation
 ├─ execute_step
-│  ├─ model_call
+│  ├─ react_decision
 │  ├─ retrieval_round
 │  │  ├─ query_rewrite
 │  │  ├─ bm25
-│  │  ├─ vector
-│  │  ├─ graph
+│  │  ├─ milvus
+│  │  ├─ neo4j
 │  │  ├─ fusion
 │  │  └─ rerank
 │  └─ tool_call
-├─ evidence_gate
 ├─ reflection
-├─ synthesis_model
+├─ replan
+├─ synthesis
 ├─ citation_binding
 ├─ output_gate
+├─ reflexion_candidate
 └─ memory_commit
 ```
 
-### Trace 字段
+每个 Span 至少记录 status、input/output refs、model/provider、token、cost、latency、retry/fallback、failure bucket、security decision、evidence refs、tool id、memory refs、queue event id 和 plan version。
 
-每个 span 至少记录：
-
-```text
-start / end
-status
-input / output refs
-model / provider
-token input / output
-cost
-latency
-retry / fallback
-failure bucket
-security decision
-evidence refs
-tool id
-memory refs
-```
-
-### 本地 Trace 与 LangSmith
-
-本地 Trace Store 是事实源，保证离线可查看。定义 `TraceSinkPort`：
+Trace Sink：
 
 ```text
-TraceSinkPort
-├─ SQLiteTraceSink          默认
-├─ JSONL / File Sink        调试
-└─ LangSmithTraceSink       可选
+PostgreSQL / Local Trace Sink   事实源
+JSONL Sink                      调试
+LangSmith Sink                  外部可观测与评测
 ```
-
-接入 LangSmith 时，发送的是经过脱敏的 span，不把 LangSmith 作为系统可运行的强依赖。
-
-### Eval 分层
-
-#### 模块级
-
-- parser success / structure accuracy；
-- retrieval Recall@K、MRR、nDCG；
-- memory relevance；
-- tool success；
-- security precision / false positive。
-
-#### Agent Runtime 级
-
-- plan completion；
-- replan success；
-- tool completion；
-- grounded claim rate；
-- citation support；
-- unsupported claim rate；
-- recovery success。
-
-#### 产品 Release 级
-
-- answer correctness；
-- citation accuracy；
-- latency；
-- token；
-- cost；
-- task completion；
-- user feedback。
-
-### Measurement Semantics
 
 严格区分：
 
@@ -1133,253 +798,399 @@ measured pass / fail
 quality proven / not proven
 ```
 
-外部数据库或模型不可用时输出 blocked report，不能 fake measured。
-
-### 完成标准
-
-standard_rag、deep_graphrag 和 agentic_graphrag 使用相同 case IDs、index version、模型和 runtime config，能够比较 Recall、correctness、citation、latency、token 和 cost。
-
----
-
 ## 4.11 Infrastructure
 
-### 模块目标
+### PostgreSQL
 
-Infrastructure 提供本地可恢复的事实存储和运行支撑，但不决定 Agent 策略。
-
-近期组成：
+事务事实源，保存：
 
 ```text
-SQLite / SQLModel
-Local Object Store
-TaskQueuePort
-Local Parse / Index Worker
-LangGraph Checkpoint Store
-Runtime Event Store
-Memory Store
-EvidenceLedger Store
-Artifact Store
-BM25 / Vector / Graph Index
-Configuration
-Migration
-Health Check
+Workspace / User / Session
+Task / AgentRun / RuntimeEvent
+PlanVersion / PlanPatch
+Checkpoint / Interrupt / Approval
+SourceObject / DocumentVersion / ParseJob
+IndexManifest
+EvidenceLedger / ClaimBinding / Citation
+Memory / Governance
+ToolExecutionClaim
+Job / OutboxEvent / InboxDedup
+Trace / Audit metadata
 ```
 
-### 异步任务
+### RabbitMQ
 
-默认使用简单后台 worker 或本地任务队列。只要 `TaskQueuePort` 稳定，未来可以替换 RabbitMQ，不需要提前拆微服务。
+异步事件和任务骨干，负责 parse、OCR、embed、vector index、graph extraction、graph index、community、rebuild、eval、memory consolidation、长工具和 DLQ。RabbitMQ 不保存最终业务事实。
 
-### 持久化原则
+### Milvus
 
-- Workspace scoped；
-- User scoped；
-- schema versioned；
-- atomic write；
-- idempotent；
-- migration 可追踪；
-- 不使用 pickle 保存关键事实；
-- 不允许 class-level dict 成为业务真相源；
-- 临时缓存可以丢失，但 Run、Checkpoint、Memory、Evidence、Approval 和 Artifact 不可丢失。
+知识和 Memory 的语义索引，必须可从 PostgreSQL 与 Object Store 重建。
 
-### 恢复场景
+### Neo4j
 
-```text
-Run starts
--> Tool approval interrupt
--> Process exits
--> New process uses same DB
--> Load LangGraph checkpoint
--> Resume correct node
--> Tool executes once
--> Final answer, artifact and trace preserved
-```
+实体关系、证据回链、多跳路径、社区和 Entity Memory 关系视图，必须可从权威来源重建。
 
-### 未来扩展
+### Object Store
 
-- RabbitMQ / Redis queue；
-- PostgreSQL；
-- Qdrant / Milvus；
-- Neo4j；
-- Object Storage；
-- distributed worker。
+保存原始文件、解析快照、OCR/VLM 输出、Artifact、大型 Tool Result 和 immutable blob。
 
-这些是 adapter 替换，不应改变核心领域 contract。
+### Redis
+
+仅用于可丢失缓存、限流和短期协调，不作为 AgentRun、Memory、Evidence 或 Approval 的事实源。
 
 ---
 
-# 5. 模块间核心 contract
+# 5. RabbitMQ 事件架构
+
+建议 Queue：
+
+```text
+zuno.document.parse
+zuno.document.ocr
+zuno.document.embed
+zuno.document.vector.index
+zuno.document.graph.extract
+zuno.document.graph.index
+zuno.document.keyword.index
+zuno.knowledge.rebuild
+zuno.eval.run
+zuno.memory.consolidate
+zuno.artifact.generate
+```
+
+每个 Queue 具有 retry 和 DLQ。
+
+事件信封至少包含：
+
+```text
+event_id
+event_type
+schema_version
+aggregate_type
+aggregate_id
+workspace_id
+correlation_id
+causation_id
+trace_id
+idempotency_key
+occurred_at
+payload
+```
+
+所有“数据库状态改变 + 发布消息”的操作必须使用 Transactional Outbox：
+
+```text
+PostgreSQL Transaction
+├─ update aggregate
+├─ create job
+└─ insert OutboxEvent
+        ↓
+Outbox Publisher
+        ↓
+RabbitMQ
+        ↓
+Consumer
+        ↓
+InboxDedup + Business Transaction
+```
+
+消费者要求：durable queue、persistent message、manual ACK、prefetch、backoff retry、DLQ、幂等、schema version、trace propagation、poison message isolation、job lease 和 heartbeat。
+
+---
+
+# 6. 数据所有权与一致性
+
+| 数据 | 权威事实源 | 索引/副本 |
+| --- | --- | --- |
+| User、Workspace、Task、Run | PostgreSQL | Redis Cache |
+| Plan、Checkpoint、Interrupt | PostgreSQL | LangGraph State Snapshot |
+| 原始文件、Artifact | Object Store | PostgreSQL Metadata |
+| DocumentVersion、SourceSpan | PostgreSQL / Object Store | Milvus Metadata |
+| 文本语义向量 | PostgreSQL Metadata | Milvus |
+| 实体关系来源 | PostgreSQL Evidence Metadata | Neo4j |
+| Memory 正文和治理状态 | PostgreSQL | Milvus / Neo4j |
+| EvidenceLedger | PostgreSQL | Trace Summary |
+| 异步任务 | PostgreSQL Job + Outbox | RabbitMQ Delivery |
+| Trace/Audit | Local/PostgreSQL Trace Store | LangSmith |
+
+一致性原则：
+
+- PostgreSQL 事务先确认事实；
+- RabbitMQ 使用至少一次投递；
+- Consumer 必须幂等；
+- Milvus 和 Neo4j 是可重建索引；
+- IndexManifest 记录源版本、模型版本和索引版本；
+- 查询禁止混用不兼容版本；
+- 索引缺失或过期时返回 blocked/stale，不静默使用错误证据。
+
+---
+
+# 7. 核心 Contract
 
 | 调用方 | 被调用方 | 请求 | 返回 |
 | --- | --- | --- | --- |
-| Product Surface | Agent Core | `RuntimeRequest` | `RuntimeEvent`、`GroundedAnswer`、`ArtifactRef` |
+| Product | Agent Core | `RuntimeRequest` | `RuntimeEvent`、`GroundedAnswer` |
 | Agent Core | Model Gateway | `ModelCallRequest` | `ModelResult`、`UsageRecord` |
 | Agent Core | Memory | `MemoryReadRequest`、`MemoryCommit` | `ContextPack`、Memory refs |
 | Agent Core | Knowledge | `RetrievalPlan` | `EvidenceBundle`、`RetrievalVerdict` |
 | Agent Core | Capability | `CapabilityQuery` | `CapabilityPlan`、`AllowedTools` |
-| Agent Core | Tool Runtime | `ToolCallIntent`、`ToolRuntimeRequest` | `NormalizedToolObservation` |
-| Input | Knowledge | `CanonicalDocumentIR`、`IndexHandoffPayload` | `IndexManifest` |
+| Agent Core | Tool Runtime | `ToolCallIntent` | `NormalizedToolObservation` |
+| Input | Queue | `OutboxEvent` | `JobHandle` |
+| Worker | Knowledge | `IndexHandoffPayload` | `IndexManifest` |
+| Knowledge | Milvus | `VectorSearchRequest` | `VectorCandidate` |
+| Knowledge | Neo4j | `GraphSearchRequest` | `GraphCandidate` |
 | 各模块 | Security | `GateRequest` | `GateDecision`、`AuditEvent` |
-| 各模块 | Observability | Span/Event payload | `TraceRef` |
-| 各模块 | Infrastructure | typed record | durable handle |
+| 各模块 | Observability | Span/Event | `TraceRef` |
 
-所有 connector 必须可序列化、可版本化、可追踪。模块之间不能通过共享可变全局变量交换业务事实。
-
----
-
-# 6. 关键数据与事实源
-
-## 6.1 产品事实
-
-```text
-Workspace
-Session
-Task
-Message
-Artifact
-Approval
-Feedback
-ModelSlotBinding
-```
-
-由 Product/API 和数据库模型拥有。
-
-## 6.2 文档与证据事实
-
-```text
-SourceObject
--> DocumentVersion
--> CanonicalDocumentIR
--> DocumentBlock
--> SourceSpan
--> CitationChunk
--> IndexManifest
--> EvidenceLedger
--> ClaimEvidenceBinding
--> Citation
-```
-
-严格 Citation 必须指向不可变 DocumentVersion 和 SourceSpan。
-
-## 6.3 Runtime 事实
-
-```text
-AgentRun
-Checkpoint
-RuntimeEvent
-PlanVersion
-NormalizedObservation
-Interrupt
-ToolExecutionClaim
-GroundedAnswer
-```
-
-## 6.4 Memory 事实
-
-```text
-RawMemoryEvent
-TaskSummary
-MemoryCandidate
-GovernanceRecord
-ApprovedMemory
-EntityFact
-```
-
-撤销、删除和冲突解决都必须留下治理记录。
+所有 Contract 必须 typed、serializable、versioned、workspace scoped、traceable、failure-aware。
 
 ---
 
-# 7. Current、Target 与 Future Optional
+# 8. 失败语义
 
-## Current
+统一失败分类：
 
-只写代码、测试和可复现运行已经证明的事实，详见 `production-readiness.md`。
+```text
+validation_error
+authentication_failed
+authorization_denied
+security_blocked
+model_timeout
+model_rate_limited
+model_schema_invalid
+retrieval_insufficient
+index_stale
+index_version_mismatch
+tool_failed
+tool_approval_denied
+queue_publish_failed
+queue_job_failed
+dependency_unavailable
+budget_exceeded
+user_cancelled
+internal_error
+```
 
-## Target
+失败对象必须包含：
 
-本文定义近期理想架构。Target 完成必须有真实 provider、真实工具、持久 Memory、原生 checkpoint、统一产品路径和 measured benchmark，不能只存在 class、mock 或 fixture。
-
-## Future Optional
-
-可以扩展：
-
-- RabbitMQ / Kafka；
-- PostgreSQL；
-- Milvus / Qdrant；
-- Neo4j；
-- Vault；
-- container sandbox；
-- enterprise SSO；
-- distributed workers；
-- Multi-Agent；
-- fully offline Mermaid vendor。
-
-这些不应成为近期 blocker。
+```text
+error_code
+message
+retryable
+owner_module
+run_id
+trace_id
+caused_by
+suggested_action
+```
 
 ---
 
-# 8. 代码 Ownership
+# 9. 恢复与幂等
 
-| 逻辑能力 | 近期代码 owner |
+Agent 恢复：
+
+```text
+Run starts
+-> Plan created
+-> Tool approval interrupt
+-> process exits
+-> new process loads PostgreSQL checkpoint
+-> LangGraph resumes correct node
+-> idempotency claim checked
+-> Tool executes once
+-> final answer and trace preserved
+```
+
+索引恢复：
+
+```text
+DocumentVersion committed
+-> Outbox published
+-> Worker writes Milvus and crashes
+-> RabbitMQ redelivers
+-> InboxDedup / IndexManifest checks idempotency
+-> no duplicate logical chunk
+-> job completes
+```
+
+幂等至少覆盖 Upload、ParseJob、Chunk、Embedding、Milvus Upsert、Neo4j Upsert、Tool Side Effect、Approval Resume、Memory Commit、Outbox Publish 和 Consumer Handling。
+
+---
+
+# 10. 部署架构
+
+Target Full Runtime：
+
+```text
+frontend
+backend-api
+agent-runtime
+worker-parse
+worker-index
+worker-graph
+worker-eval
+postgresql
+rabbitmq
+milvus
+neo4j
+object-store
+optional redis
+optional langsmith
+```
+
+健康检查必须区分：
+
+```text
+liveness
+readiness
+dependency health
+queue lag
+consumer health
+database migration status
+milvus collection/index status
+neo4j connectivity
+outbox backlog
+dlq size
+```
+
+单元测试可使用 in-memory queue、SQLite、local vector/graph fake 和 mock model；但产品目标完成必须包含 PostgreSQL、RabbitMQ、Milvus、Neo4j 的真实集成测试。
+
+---
+
+# 11. 代码 Ownership
+
+| 逻辑能力 | 代码 Owner |
 | --- | --- |
 | Product Surface | `apps/web`、`src/backend/zuno/api` |
 | Input | `src/backend/zuno/knowledge/ingestion` |
 | Knowledge | `src/backend/zuno/knowledge` |
-| Model Gateway | `src/backend/zuno/platform/model_gateway.py` 及 provider adapters |
+| Model Gateway | `src/backend/zuno/platform/model_gateway.py` 和 provider adapters |
 | Memory | `src/backend/zuno/memory` |
 | Agent Core | `src/backend/zuno/agent` |
-| Capability | `src/backend/zuno/capability` catalog/skill/router |
-| Tool Runtime | `src/backend/zuno/capability` tool control/executors |
+| Capability / Tool | `src/backend/zuno/capability` |
 | Security | `src/backend/zuno/platform/security` |
 | Observability & Eval | `src/backend/zuno/platform/observability`、`tools/evals/zuno` |
-| Infrastructure | `src/backend/zuno/platform/database`、storage、queue、index/checkpoint adapters |
+| PostgreSQL | `src/backend/zuno/platform/database`、`infra/db` |
+| RabbitMQ | Queue Port、Outbox Publisher、Worker Runtime |
+| Milvus | Knowledge/Memory Vector Adapters |
+| Neo4j | Knowledge Graph Adapters |
+| Object Store | Storage Adapters |
 
-Knowledge、Memory 和 Capability 不得反向依赖 Product UI；Agent Core 不得绕过 Gateway 或 Tool Runtime。
-
----
-
-# 9. Target completion criteria
-
-目标架构完成时必须满足：
-
-1. 十一模块都有唯一 owner、typed contract、failure semantics、持久化和 focused tests。
-2. LangGraph 是唯一产品主运行时，支持 native checkpoint、interrupt/resume 和 live SSE。
-3. Product 默认使用真实 Model Gateway，不使用 Mock 作为正常回答路径。
-4. Input 支持常见文件和简单异步任务，RabbitMQ 可以通过 adapter 接入但不是强依赖。
-5. Memory 跨请求、跨重启持久化，并证明 approved Reflexion lesson 被未来任务复用。
-6. Knowledge 提供真实 Corrective Agentic GraphRAG、EvidenceLedger 和 SourceSpan Citation。
-7. Capability 动态选择 Skill、MCP 和 AllowedTools；Tool Runtime 能执行真实 CLI/API/文件工具。
-8. Security 与 Observability 覆盖关键模块，脱敏、输入输出检查、审批和审计可查看。
-9. Trace 能记录模型、检索、Memory、Tool、token、cost、failure bucket，并可选接入 LangSmith。
-10. Completion、Workspace、Artifact、Citation 和 Trace 使用同一 Runtime 事实源。
-11. fixed paired benchmark 产生 measured pass/fail；阻塞时诚实保持 quality not proven。
-
----
-
-# 10. Architecture Visual Atlas
-
-完整十类架构图不再堆放在本文件中，统一维护于：
-
-- Mermaid 图源：`docs/architecture/architecture-views.md`
-- HTML 图谱：`docs/architecture/architecture.html`
-
-HTML 必须展示：
+依赖方向：
 
 ```text
-4+1 View Model
-  1 Logical View
-  2 Development View
-  3 Process View
-  4 Physical View
-  5 Scenarios View
-
-Views & Beyond
-  6 Module View
-  7 Component-and-Connector View
-  8 Data View
-  9 Quality View
-
-Zuno Product Core
-  10 Agentic GraphRAG Evidence and Agent Loop
+Product -> Application / Agent
+Agent -> Ports
+Domain Modules -> Ports
+Infrastructure Adapters -> External SDK
 ```
 
-每类包含一张 Overall 图和至少两张 Local 图。Markdown 负责解释架构，HTML 负责看图。
+---
+
+# 12. 近期实施顺序
+
+## P0：统一 Agent 闭环
+
+- 一个 compiled LangGraph；
+- Plan -> ReAct -> Reflection -> Replan -> Finalize -> Reflexion；
+- 真实 Model Gateway；
+- typed RuntimeState；
+- PostgreSQL checkpoint；
+- interrupt/resume；
+- RuntimeLimits；
+- GroundedAnswer。
+
+## P1：PostgreSQL 与 RabbitMQ
+
+- PostgreSQL schema 和 migration；
+- Job、Outbox、InboxDedup；
+- RabbitMQ producer/consumer lifecycle；
+- retry、DLQ、prefetch、heartbeat；
+- 幂等 Parse/Index Job；
+- Queue Trace。
+
+## P2：多格式 Input
+
+- PDF、DOCX、PPTX、XLSX、Markdown、HTML、Code；
+- CanonicalDocumentIR；
+- SourceSpan；
+- Parser Adapter；
+- OCR/VLM blocked semantics。
+
+## P3：Milvus + Neo4j Agentic GraphRAG
+
+- Milvus versioned collections；
+- Neo4j evidence-backed graph；
+- BM25 + Milvus + Neo4j fusion；
+- EvidenceLedger；
+- Corrective Retrieval；
+- Strict Citation。
+
+## P4：Memory 与 Reflexion
+
+- PostgreSQL Memory Governance；
+- Milvus Memory Index；
+- Neo4j Entity Relation View；
+- Candidate Approve/Reject；
+- Future ContextPack Reuse Proof。
+
+## P5：Security、LangSmith 与固定评测
+
+- 七类 Security Gate；
+- Local Trace Store；
+- LangSmith Sink；
+- Fixed Paired Benchmark；
+- Release Gate；
+- Blocked/Measured Semantics。
+
+---
+
+# 13. Target Completion Criteria
+
+目标架构完成必须满足：
+
+1. 十一模块都有唯一 Owner、typed contract、failure semantics、持久化和 focused tests。
+2. LangGraph 是唯一产品主 Controller。
+3. Plan、ReAct、Reflection、Replan、Reflexion 在同一真实链路运行。
+4. PostgreSQL 是 Task、Run、Plan、Checkpoint、Evidence、Memory、Approval 和 Outbox 的事实源。
+5. RabbitMQ 真实承载 Parse、Embed、Graph、Index、Eval 和维护任务，并具备 retry、DLQ 和幂等。
+6. Milvus 真实承载知识与长期记忆语义检索，支持 workspace、ACL 和 index version filter。
+7. Neo4j 真实承载实体关系、多跳扩展和社区查询，图事实能回到支持 Chunk 和 SourceSpan。
+8. BM25、Milvus、Neo4j 进入统一 RetrievalPlan、Fusion、Rerank 和 EvidenceLedger。
+9. Corrective Retrieval 能根据 failure bucket 改变下一轮 RetrievalPlan。
+10. Memory 跨请求、跨重启持久化，并证明 approved Reflexion lesson 影响未来 Plan。
+11. Tool Runtime 支持审批、超时、恢复和副作用幂等。
+12. Security Gate 覆盖 Input、Retrieval、Memory、Model Context、Tool、Output 和 Artifact。
+13. Trace 记录模型、计划、检索、队列、工具、记忆、token、cost、failure bucket 和安全决策。
+14. LangSmith 是脱敏后的外部 Sink，本地 Trace/Audit 可独立运行。
+15. Completion、Workspace、Artifact、Citation 和 Trace 使用同一 Runtime 事实源。
+16. `standard_rag`、`graphrag` 和 `agentic_graphrag` 在同一 fixed case set 上产生 measured pass/fail。
+17. blocked、runtime observed、measured 和 quality proven 始终严格区分。
+18. `docs/architecture/architecture.md` 与 `.agent/architecture/architecture.md` 始终内容一致。
+
+---
+
+# 14. 架构总纲
+
+```text
+用户请求
+-> LangGraph 构建 Context
+-> Plan 生成全局任务计划
+-> ReAct 执行单个步骤
+-> Milvus / Neo4j / BM25 提供证据
+-> Tool Runtime 执行动作
+-> Reflection 判断步骤质量
+-> Replan 修改剩余计划
+-> Final Reflection 验证答案
+-> Finalize 输出 GroundedAnswer
+-> Reflexion 形成受治理经验
+-> PostgreSQL 保存事实
+-> Milvus / Neo4j 建立可重建索引
+-> RabbitMQ 驱动异步数据处理
+-> Local Trace + LangSmith 记录与评测
+```
+
+核心原则：
+
+> **LangGraph 管控制，RabbitMQ 管异步任务，PostgreSQL 管事实，Milvus 管语义检索，Neo4j 管关系推理，Security 管边界，Observability 管证据，Eval 管质量结论。**
