@@ -5,8 +5,8 @@
 ## 同步规则
 
 - `.agent/architecture/architecture.md` 必须与 `docs/architecture/architecture.md` 完全一致。
+- `.agent/architecture/architecture-views.md` 必须与 `docs/architecture/architecture-views.md` 完全一致。
 - `.agent/architecture/architecture.html` 必须与 `docs/architecture/architecture.html` 完全一致。
-- 十类 Mermaid 图的正式源是 `docs/architecture/architecture-views.md`，不在 `.agent` 下维护第二份图源。
 - 修改文字架构、图源或 HTML shell 后运行：
 
 ```powershell
@@ -26,6 +26,14 @@ docs/architecture/architecture.md        重文字目标设计
 docs/architecture/architecture-views.md  十类 Mermaid 图源
 docs/architecture/architecture.html      可视化 Atlas
 docs/architecture/production-readiness   Current 与差距
+```
+
+Agent 镜像目录对应为：
+
+```text
+.agent/architecture/architecture.md        重文字目标设计镜像
+.agent/architecture/architecture-views.md  Mermaid 图源镜像
+.agent/architecture/architecture.html      可视化 Atlas 镜像
 ```
 
 `architecture.md` 重点说明十一模块、Agent 闭环、Memory、Planning、Tool/MCP/Skill、Agentic GraphRAG、Security、Observability、Infrastructure 和完成标准；HTML 重点展示模块关系和局部连线。
