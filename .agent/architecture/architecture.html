@@ -3,2339 +3,290 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zuno Lean Complete Product Architecture</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232f6db3'/%3E%3Cpath d='M4 11h8v1H4zM4 4h8L5.8 10H12v1H4l6.2-6H4z' fill='white'/%3E%3C/svg%3E" />
+  <title>Zuno Target Architecture Atlas</title>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f7f8fb;
+      --bg: #f5f7fa;
       --paper: #ffffff;
       --ink: #16202a;
       --muted: #52616f;
-      --line: #b8c2cc;
-      --accent: #2f6db3;
-      --soft: #eef6ff;
+      --line: #c8d1da;
+      --accent: #2563a6;
+      --accent-soft: #eaf3ff;
+      --warning: #8c5a00;
     }
     * { box-sizing: border-box; }
-    * {
-      box-sizing: border-box;
-    }
-    html, body {
-      max-width: 100%;
-      overflow-x: hidden;
-    }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       background: var(--bg);
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.55;
     }
-    header, main {
-      width: min(1180px, calc(100vw - 32px));
-      margin: 0 auto;
+    a { color: var(--accent); }
+    .layout {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      min-height: 100vh;
     }
-    header {
-      padding: 40px 0 24px;
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 24px 18px;
+      border-right: 1px solid var(--line);
+      background: #f9fafc;
     }
-    h1 {
-      margin: 0 0 12px;
-      font-size: clamp(30px, 4vw, 52px);
-      line-height: 1.08;
-      letter-spacing: 0;
-      overflow-wrap: anywhere;
-    }
-    h2 {
-      margin: 36px 0 10px;
-      font-size: 24px;
-      letter-spacing: 0;
-    }
-    h3 {
-      margin: 4px 0 8px;
-      font-size: 20px;
-      letter-spacing: 0;
-    }
-    p { color: var(--muted); }
-    .lede {
-      max-width: 880px;
-      font-size: 18px;
-    }
-    .source-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }
-    .source-links a {
-      border: 1px solid var(--line);
-      background: var(--paper);
+    aside h1 { margin: 0 0 8px; font-size: 22px; }
+    aside p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+    nav h2 { margin: 20px 0 8px; font-size: 13px; color: var(--muted); }
+    nav a {
+      display: block;
+      padding: 7px 9px;
+      margin: 3px 0;
+      border-radius: 6px;
       color: var(--ink);
       text-decoration: none;
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 14px;
-      overflow-wrap: anywhere;
+      font-size: 13px;
     }
-    .diagram-group {
-      margin: 28px 0 44px;
-    }
-    .diagram-section {
-      margin: 18px 0 28px;
-      padding: 18px;
+    nav a:hover { background: var(--accent-soft); }
+    main { width: min(1480px, 100%); padding: 34px 34px 80px; }
+    .hero {
+      padding: 24px;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: var(--paper);
     }
+    .hero h1 { margin: 0 0 10px; font-size: clamp(30px, 4vw, 52px); line-height: 1.08; }
+    .hero p { max-width: 980px; color: var(--muted); }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .legend span { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font-size: 12px; }
+    .status { margin-top: 14px; color: var(--warning); font-weight: 650; }
+    .group { margin-top: 42px; }
+    .group > h2 { margin: 0 0 14px; font-size: 26px; }
+    .view {
+      margin: 22px 0 38px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      scroll-margin-top: 16px;
+    }
+    .view > h3 { margin: 0 0 6px; font-size: 23px; }
+    .view-description { margin: 0 0 18px; color: var(--muted); }
     .diagram-card {
-      margin-top: 16px;
-      padding-top: 16px;
+      margin: 18px 0;
+      padding-top: 18px;
       border-top: 1px solid var(--line);
     }
-    .diagram-heading {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      justify-content: space-between;
-    }
-    .diagram-kicker {
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .fullscreen-button {
-      flex: 0 0 auto;
+    .diagram-header { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }
+    .diagram-header h4 { margin: 0 0 4px; font-size: 18px; }
+    .diagram-kind { display: inline-block; margin-bottom: 5px; color: var(--accent); font-size: 11px; font-weight: 750; text-transform: uppercase; }
+    button {
       border: 1px solid var(--line);
-      background: var(--soft);
+      border-radius: 7px;
+      padding: 7px 10px;
+      background: var(--accent-soft);
       color: var(--ink);
-      border-radius: 6px;
-      padding: 8px 10px;
       cursor: pointer;
+      white-space: nowrap;
     }
-    .diagram-meta {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin: 12px 0;
-    }
-    .diagram-meta div {
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 10px;
-      min-width: 0;
-    }
-    dt {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-    dd { margin: 0; }
     .diagram-frame {
-      max-width: 100%;
-      min-width: 0;
-      overflow-x: auto;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-      background: #fbfcfe;
-    }
-    .offline-diagram {
-      min-width: 760px;
-    }
-    .offline-svg {
-      width: 100%;
-      min-width: 760px;
-      height: auto;
-      display: block;
-    }
-    .svg-title {
-      font-size: 18px;
-      font-weight: 700;
-      fill: var(--ink);
-    }
-    .svg-subtitle,
-    .svg-status {
-      font-size: 11px;
-      fill: var(--muted);
-    }
-    .svg-status {
-      font-weight: 700;
-    }
-    .svg-label {
-      font-size: 12.5px;
-      fill: var(--ink);
-      font-weight: 600;
-    }
-    .svg-node {
-      filter: drop-shadow(0 1px 1px rgba(22,32,42,.08));
-    }
-    .svg-edge {
-      opacity: .48;
-    }
-    .svg-edge-label {
-      font-size: 10.5px;
-      font-weight: 700;
-      fill: var(--muted);
-      paint-order: stroke;
-      stroke: #fbfcfe;
-      stroke-width: 3px;
-      stroke-linejoin: round;
-    }
-    .analysis {
-      margin-top: 14px;
-      background: #fbfcfe;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 12px;
-    }
-    .analysis h4 { margin: 0 0 8px; }
-    .analysis ul { margin: 0; padding-left: 20px; }
-    details {
       margin-top: 12px;
-    }
-    pre {
-      overflow-x: auto;
-      background: #101820;
-      color: #f5f7fb;
-      border-radius: 6px;
-      padding: 12px;
-    }
-    dialog {
-      width: min(1200px, calc(100vw - 24px));
-      height: min(900px, calc(100vh - 24px));
-      border: 0;
-      border-radius: 8px;
-      padding: 0;
-    }
-    dialog::backdrop {
-      background: rgba(13, 20, 28, 0.62);
-    }
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--line);
-      background: var(--paper);
-    }
-    .dialog-body {
-      height: calc(100% - 58px);
+      padding: 18px;
       overflow: auto;
-      padding: 16px;
-      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fcfdff;
     }
-    .dialog-body .offline-diagram {
-      min-width: 980px;
-    }
-    .dialog-body .offline-svg {
-      min-width: 980px;
-    }
-    @media (max-width: 720px) {
-      header, main { width: min(100vw - 20px, 1180px); }
-      .diagram-heading { display: block; }
-      .fullscreen-button { margin-top: 10px; }
-      .diagram-meta { grid-template-columns: 1fr; }
-      .offline-diagram, .offline-svg { min-width: 680px; }
+    .mermaid { min-width: 860px; text-align: center; }
+    details { margin-top: 10px; }
+    pre.source { overflow: auto; max-height: 420px; padding: 13px; border-radius: 8px; background: #101820; color: #f5f7fb; }
+    dialog { width: min(1500px, calc(100vw - 24px)); height: min(960px, calc(100vh - 24px)); border: 0; border-radius: 10px; padding: 0; }
+    dialog::backdrop { background: rgba(15, 23, 42, .72); }
+    .dialog-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .dialog-body { height: calc(100% - 58px); overflow: auto; padding: 20px; background: var(--bg); }
+    .dialog-body svg { min-width: 1200px; height: auto; }
+    .error { padding: 14px; border: 1px solid #c97979; border-radius: 8px; background: #fff2f2; color: #7b2020; }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      main { padding: 20px 14px 60px; }
+      .diagram-header { display: block; }
+      .diagram-header button { margin-top: 8px; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Zuno Lean Complete Product Architecture</h1>
-    <p class="lede">Zuno 是本地优先的 Agentic GraphRAG 产品。Markdown 是详细实施蓝图；本页是从十类 canonical view categories 和 Mermaid 图源生成的离线拓扑摘要图谱。</p>
-    <nav class="source-links" aria-label="Source links">
-      <a href="architecture.md">Local Markdown source or mirror</a>
-      <a href="../../.agent/architecture/architecture.md">Agent mirror markdown</a>
-      <a href="../../tools/agent/render_architecture.py">Renderer source</a>
-    </nav>
-  </header>
-  <main>
-
-      <section class="diagram-group">
-        <h2>一、4+1 View Model</h2>
-        <p>从 Logical、Development、Process、Physical、Scenarios 五类视图解释同一个 Lean Complete Product。</p>
-
-        <article class="diagram-section view-category" data-title="Logical View (4+1)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 1</span>
-              <h3>1. Logical View (4+1)</h3>
-              <p>十一逻辑能力层回答“系统有哪些能力”。Agent Core / Planning &amp; Control 是协调者，通过 contract 调用 Model Gateway、Memory、Knowledge、Capability 和 Tool Runtime；它不把这些能力物理吞成一个大层。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>4+1 Logical</dd></div>
-            <div><dt>Purpose</dt><dd>说明十一逻辑能力层、层间依赖，以及它们到六物理运行域的映射。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Logical View (4+1) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 1.1</span>
-                <h4>1.1 Overview</h4>
-                <p>Logical View (4+1) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 1268 818" role="img" aria-label="Logical View (4+1) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Logical View (4+1)</text>
-<path class="svg-edge" d="M 134.0 148 C 134.0 274.0, 634.0 274.0, 634.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 148 C 134.0 168.0, 634.0 168.0, 634.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 254 C 634.0 274.0, 634.0 274.0, 634.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 540.0 433.0 C 350.0 433.0, 350.0 115.0, 282.0 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 540.0 433.0 C 600.0 433.0, 600.0 115.0, 532.0 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 540.0 433.0 C 600.0 433.0, 600.0 327.0, 532.0 327.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 466 C 634.0 486.0, 634.0 486.0, 634.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 572 C 634.0 592.0, 634.0 592.0, 634.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 540.0 645.0 C 600.0 645.0, 600.0 433.0, 532.0 433.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 360 C 634.0 380.0, 634.0 380.0, 634.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 148 C 634.0 274.0, 634.0 274.0, 634.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 884.0 148 C 884.0 115.0, 134.0 115.0, 134.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 884.0 148 C 884.0 221.0, 634.0 221.0, 634.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 884.0 148 C 884.0 380.0, 634.0 380.0, 634.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 884.0 148 C 884.0 274.0, 634.0 274.0, 634.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1134.0 148 C 1134.0 115.0, 134.0 115.0, 134.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1134.0 148 C 1134.0 221.0, 634.0 221.0, 634.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1134.0 148 C 1134.0 380.0, 634.0 380.0, 634.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1134.0 148 C 1134.0 274.0, 634.0 274.0, 634.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 148 C 134.0 433.0, 634.0 433.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 254 C 634.0 486.0, 634.0 486.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 360 C 634.0 539.0, 634.0 539.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 148 C 384.0 433.0, 634.0 433.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 148 C 634.0 433.0, 634.0 433.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 466 C 634.0 592.0, 634.0 592.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 678 C 634.0 698.0, 634.0 698.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 884.0 148 C 884.0 433.0, 634.0 433.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1134.0 148 C 1134.0 433.0, 634.0 433.0, 634.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="40.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="110" class="svg-label" text-anchor="middle">1 Product Surface /</text>
-<text x="134.0" y="125" class="svg-label" text-anchor="middle">AgentChat, Workspace,</text>
-<text x="134.0" y="140" class="svg-label" text-anchor="middle">Artifact, Citation UI</text>
-<rect class="svg-node" x="540.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="216" class="svg-label" text-anchor="middle">2 Input / Upload, Parse,</text>
-<text x="634.0" y="231" class="svg-label" text-anchor="middle">Document IR, SourceSpan</text>
-<rect class="svg-node" x="540.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="322" class="svg-label" text-anchor="middle">3 Knowledge / Chunk,</text>
-<text x="634.0" y="337" class="svg-label" text-anchor="middle">BM25, Vector, GraphRAG,</text>
-<text x="634.0" y="352" class="svg-label" text-anchor="middle">EvidenceBundle</text>
-<rect class="svg-node" x="290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110" class="svg-label" text-anchor="middle">4 Model Gateway / slot,</text>
-<text x="384.0" y="125" class="svg-label" text-anchor="middle">provider, route,</text>
-<text x="384.0" y="140" class="svg-label" text-anchor="middle">timeout, cost</text>
-<rect class="svg-node" x="540.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="110" class="svg-label" text-anchor="middle">5 Memory / Sensory,</text>
-<text x="634.0" y="125" class="svg-label" text-anchor="middle">Short-term, Long-term,</text>
-<text x="634.0" y="140" class="svg-label" text-anchor="middle">Entity</text>
-<rect class="svg-node" x="540.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="428" class="svg-label" text-anchor="middle">6 Agent Core / Planning</text>
-<text x="634.0" y="443" class="svg-label" text-anchor="middle">&amp; Control / strategy,</text>
-<text x="634.0" y="458" class="svg-label" text-anchor="middle">plan, ReAct, reflection,</text>
-<rect class="svg-node" x="540.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="534" class="svg-label" text-anchor="middle">7 Capability /</text>
-<text x="634.0" y="549" class="svg-label" text-anchor="middle">descriptor, catalog,</text>
-<text x="634.0" y="564" class="svg-label" text-anchor="middle">policy, routing</text>
-<rect class="svg-node" x="540.0" y="612" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="640" class="svg-label" text-anchor="middle">8 Tool Runtime /</text>
-<text x="634.0" y="655" class="svg-label" text-anchor="middle">approval, MCP/tool</text>
-<text x="634.0" y="670" class="svg-label" text-anchor="middle">execution, result</text>
-<rect class="svg-node" x="790.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="110" class="svg-label" text-anchor="middle">9 Security / input,</text>
-<text x="884.0" y="125" class="svg-label" text-anchor="middle">retrieval, tool, output</text>
-<text x="884.0" y="140" class="svg-label" text-anchor="middle">gates</text>
-<rect class="svg-node" x="1040.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1134.0" y="110" class="svg-label" text-anchor="middle">10 Observability &amp; Eval</text>
-<text x="1134.0" y="125" class="svg-label" text-anchor="middle">/ trace, cost,</text>
-<text x="1134.0" y="140" class="svg-label" text-anchor="middle">benchmark, release gate</text>
-<rect class="svg-node" x="540.0" y="718" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="746" class="svg-label" text-anchor="middle">11 Infrastructure /</text>
-<text x="634.0" y="761" class="svg-label" text-anchor="middle">SQLite, object store,</text>
-<text x="634.0" y="776" class="svg-label" text-anchor="middle">queue, index, recovery</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>十一层是能力分解，六运行域是代码组织；两者不能互相替代。</li>
-                <li>Agent Core / Planning &amp; Control 协调 Model、Memory、Knowledge、Capability 和 Tool Runtime，但不拥有它们的执行实现。</li>
-                <li>Security 与 Observability 是横切能力，必须贯穿输入、检索、工具、输出和 eval。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef core fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
-  classDef guard fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-  classDef infra fill:#f7f7f2,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-
-  Product[&quot;1 Product Surface&lt;br/&gt;AgentChat, Workspace, Artifact, Citation UI&quot;]
-  Input[&quot;2 Input&lt;br/&gt;Upload, Parse, Document IR, SourceSpan&quot;]
-  Knowledge[&quot;3 Knowledge&lt;br/&gt;Chunk, BM25, Vector, GraphRAG, EvidenceBundle&quot;]
-  Model[&quot;4 Model Gateway&lt;br/&gt;slot, provider, route, timeout, cost&quot;]
-  Memory[&quot;5 Memory&lt;br/&gt;Sensory, Short-term, Long-term, Entity&quot;]
-  Agent[&quot;6 Agent Core / Planning &amp; Control&lt;br/&gt;strategy, plan, ReAct, reflection, replan, stop&quot;]
-  Capability[&quot;7 Capability&lt;br/&gt;descriptor, catalog, policy, routing&quot;]
-  Tool[&quot;8 Tool Runtime&lt;br/&gt;approval, MCP/tool execution, result normalization&quot;]
-  Security[&quot;9 Security&lt;br/&gt;input, retrieval, tool, output gates&quot;]
-  Observability[&quot;10 Observability &amp; Eval&lt;br/&gt;trace, cost, benchmark, release gate&quot;]
-  Infra[&quot;11 Infrastructure&lt;br/&gt;SQLite, object store, queue, index, recovery&quot;]
-
-  Product --&gt; Agent
-  Product --&gt; Input --&gt; Knowledge
-  Agent --&gt; Model
-  Agent --&gt; Memory
-  Agent --&gt; Knowledge
-  Agent --&gt; Capability --&gt; Tool
-  Tool --&gt; Agent
-  Knowledge --&gt; Agent
-  Memory --&gt; Agent
-  Security -. governs .-&gt; Product
-  Security -. governs .-&gt; Knowledge
-  Security -. governs .-&gt; Tool
-  Security -. governs .-&gt; Agent
-  Observability -. observes .-&gt; Product
-  Observability -. observes .-&gt; Knowledge
-  Observability -. observes .-&gt; Tool
-  Observability -. observes .-&gt; Agent
-  Product --&gt; Infra
-  Input --&gt; Infra
-  Knowledge --&gt; Infra
-  Model --&gt; Infra
-  Memory --&gt; Infra
-  Agent --&gt; Infra
-  Tool --&gt; Infra
-  Security --&gt; Infra
-  Observability --&gt; Infra
-
-  class Product,Input,Knowledge,Model,Memory,Capability,Tool node;
-  class Agent core;
-  class Security,Observability guard;
-  class Infra infra;</code></pre>
-            </details>
-          </section>
-
-
-          <section class="diagram-card" data-title="Logical View (4+1) / Memory Context Subsystem">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 1.2</span>
-                <h4>1.2 Memory Context Subsystem</h4>
-                <p>Logical View 的局部展开：Memory 是独立逻辑能力，不是独立产品模式；Agent Core 在任务生命周期中读、用、写 Memory，并通过 ContextPack 使用它。</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 768 818" role="img" aria-label="Logical View (4+1) / Memory Context Subsystem">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Memory Context Subsystem</text>
-<text x="24" y="54" class="svg-subtitle">Logical View (4+1)</text>
-<path class="svg-edge" d="M 134.0 148 C 134.0 168.0, 259.0 168.0, 259.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 254 C 259.0 274.0, 384.0 274.0, 384.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 148 C 384.0 168.0, 509.0 168.0, 509.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 254 C 509.0 274.0, 384.0 274.0, 384.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 148 C 634.0 168.0, 509.0 168.0, 509.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 360 C 384.0 380.0, 384.0 380.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 572 C 384.0 592.0, 384.0 592.0, 384.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 678 C 384.0 698.0, 384.0 698.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 290.0 751.0 C 350.0 751.0, 350.0 115.0, 282.0 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 290.0 751.0 C 350.0 751.0, 350.0 115.0, 532.0 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="40.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="110" class="svg-label" text-anchor="middle">Sensory Memory / current</text>
-<text x="134.0" y="125" class="svg-label" text-anchor="middle">input + raw observations</text>
-<rect class="svg-node" x="165.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="216" class="svg-label" text-anchor="middle">Short-term Memory /</text>
-<text x="259.0" y="231" class="svg-label" text-anchor="middle">working state, messages,</text>
-<text x="259.0" y="246" class="svg-label" text-anchor="middle">PlanState</text>
-<rect class="svg-node" x="290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110" class="svg-label" text-anchor="middle">Long-term Memory /</text>
-<text x="384.0" y="125" class="svg-label" text-anchor="middle">episodic, semantic,</text>
-<text x="384.0" y="140" class="svg-label" text-anchor="middle">procedural</text>
-<rect class="svg-node" x="540.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="110" class="svg-label" text-anchor="middle">Entity Memory / user,</text>
-<text x="634.0" y="125" class="svg-label" text-anchor="middle">project, relation facts</text>
-<rect class="svg-node" x="415.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="216" class="svg-label" text-anchor="middle">Memory Policy / privacy,</text>
-<text x="509.0" y="231" class="svg-label" text-anchor="middle">scope, token budget</text>
-<rect class="svg-node" x="290.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="322" class="svg-label" text-anchor="middle">ContextPack / budgeted</text>
-<text x="384.0" y="337" class="svg-label" text-anchor="middle">read view</text>
-<rect class="svg-node" x="290.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="428" class="svg-label" text-anchor="middle">Single Controller Agent</text>
-<rect class="svg-node" x="290.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="534" class="svg-label" text-anchor="middle">Post-turn Candidate /</text>
-<text x="384.0" y="549" class="svg-label" text-anchor="middle">facts, lessons,</text>
-<text x="384.0" y="564" class="svg-label" text-anchor="middle">summaries</text>
-<rect class="svg-node" x="290.0" y="612" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="640" class="svg-label" text-anchor="middle">Governance Review /</text>
-<text x="384.0" y="655" class="svg-label" text-anchor="middle">redact, dedup, conflict</text>
-<rect class="svg-node" x="290.0" y="718" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="746" class="svg-label" text-anchor="middle">Approved MemoryRecord</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>Memory 采用 Sensory、Short-term、Long-term、Entity 四层；ContextPack 是读取视图，不是第五层。</li>
-                <li>Privacy 和 workspace scope 是 memory 使用边界。</li>
-                <li>Memory ContextPack 是否在真实 AgentChat 中可观测仍是 P1 closure gap。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  Sensory[&quot;Sensory Memory&lt;br/&gt;current input + raw observations&quot;]
-  Short[&quot;Short-term Memory&lt;br/&gt;working state, messages, PlanState&quot;]
-  Long[&quot;Long-term Memory&lt;br/&gt;episodic, semantic, procedural&quot;]
-  Entity[&quot;Entity Memory&lt;br/&gt;user, project, relation facts&quot;]
-  Policy[&quot;Memory Policy&lt;br/&gt;privacy, scope, token budget&quot;]
-  Context[&quot;ContextPack&lt;br/&gt;budgeted read view&quot;]
-  Agent[&quot;Single Controller Agent&quot;]
-  Candidate[&quot;Post-turn Candidate&lt;br/&gt;facts, lessons, summaries&quot;]
-  Review[&quot;Governance Review&lt;br/&gt;redact, dedup, conflict&quot;]
-  Store[&quot;Approved MemoryRecord&quot;]
-
-  Sensory --&gt; Short --&gt; Context
-  Long --&gt; Policy --&gt; Context
-  Entity --&gt; Policy
-  Context --&gt; Agent
-  Agent --&gt; Candidate --&gt; Review --&gt; Store
-  Store --&gt; Long
-  Store --&gt; Entity
-
-  class Sensory,Short,Long,Entity,Context,Agent,Candidate,Store node;
-  class Policy,Review gate;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-
-        <article class="diagram-section view-category" data-title="Development View (4+1)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 2</span>
-              <h3>2. Development View (4+1)</h3>
-              <p>代码组织视角说明前端、API、Agent Core、Knowledge、Capability、Platform、docs、tools 和 tests 如何围绕六运行域分工。Capability / Tool 控制面作为连接器展开到 Component-and-Connector View。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>4+1 Development</dd></div>
-            <div><dt>Purpose</dt><dd>说明代码目录、docs、renderer、verifier 和 tests 如何映射到运行域 owner。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Development View (4+1) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 2.1</span>
-                <h4>2.1 Overview</h4>
-                <p>Development View (4+1) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 768 606" role="img" aria-label="Development View (4+1) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Development View (4+1)</text>
-<path class="svg-edge" d="M 259.0 148 C 259.0 168.0, 259.0 168.0, 259.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 254 C 259.0 274.0, 259.0 274.0, 259.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 360 C 259.0 380.0, 134.0 380.0, 134.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 360 C 259.0 380.0, 384.0 380.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 360 C 259.0 380.0, 634.0 380.0, 634.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 466 C 634.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 360 C 259.0 433.0, 384.0 433.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 148 C 509.0 168.0, 509.0 168.0, 509.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 254 C 509.0 274.0, 509.0 274.0, 509.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 415.0 327.0 C 475.0 327.0, 475.0 115.0, 407.0 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="165.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="110" class="svg-label" text-anchor="middle">apps/web / Product UI</text>
-<rect class="svg-node" x="165.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="216" class="svg-label" text-anchor="middle">src/backend/zuno/api /</text>
-<text x="259.0" y="231" class="svg-label" text-anchor="middle">DTO, route, SSE</text>
-<rect class="svg-node" x="165.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="322" class="svg-label" text-anchor="middle">src/backend/zuno/agent /</text>
-<text x="259.0" y="337" class="svg-label" text-anchor="middle">Single Controller</text>
-<rect class="svg-node" x="40.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="428" class="svg-label" text-anchor="middle">src/backend/zuno/memory</text>
-<text x="134.0" y="443" class="svg-label" text-anchor="middle">/ ContextPack, memory</text>
-<text x="134.0" y="458" class="svg-label" text-anchor="middle">policy</text>
-<rect class="svg-node" x="290.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="428" class="svg-label" text-anchor="middle">src/backend/zuno/knowledge</text>
-<text x="384.0" y="443" class="svg-label" text-anchor="middle">/ ingestion, retrieval,</text>
-<text x="384.0" y="458" class="svg-label" text-anchor="middle">GraphRAG</text>
-<rect class="svg-node" x="540.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="428" class="svg-label" text-anchor="middle">src/backend/zuno/capability</text>
-<text x="634.0" y="443" class="svg-label" text-anchor="middle">/ skill, tool, MCP</text>
-<rect class="svg-node" x="290.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="534" class="svg-label" text-anchor="middle">src/backend/zuno/platform</text>
-<text x="384.0" y="549" class="svg-label" text-anchor="middle">/ config, DB, storage,</text>
-<text x="384.0" y="564" class="svg-label" text-anchor="middle">security, observability</text>
-<rect class="svg-node" x="415.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="110" class="svg-label" text-anchor="middle">docs/architecture /</text>
-<text x="509.0" y="125" class="svg-label" text-anchor="middle">normative blueprint</text>
-<rect class="svg-node" x="415.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="216" class="svg-label" text-anchor="middle">tools/agent +</text>
-<text x="509.0" y="231" class="svg-label" text-anchor="middle">tools/evals / renderer,</text>
-<text x="509.0" y="246" class="svg-label" text-anchor="middle">verifier, benchmark</text>
-<rect class="svg-node" x="415.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="322" class="svg-label" text-anchor="middle">tests / focused and</text>
-<text x="509.0" y="337" class="svg-label" text-anchor="middle">guardrail tests</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>代码 owner 必须跟六运行域一致。</li>
-                <li>docs、renderer、verifier 和 tests 是架构事实源的一部分。</li>
-                <li>不在 API route 或 planner 内新增绕过 owner 的业务逻辑。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef policy fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  Web[&quot;apps/web&lt;br/&gt;Product UI&quot;]
-  API[&quot;src/backend/zuno/api&lt;br/&gt;DTO, route, SSE&quot;]
-  Agent[&quot;src/backend/zuno/agent&lt;br/&gt;Single Controller&quot;]
-  Memory[&quot;src/backend/zuno/memory&lt;br/&gt;ContextPack, memory policy&quot;]
-  Knowledge[&quot;src/backend/zuno/knowledge&lt;br/&gt;ingestion, retrieval, GraphRAG&quot;]
-  Capability[&quot;src/backend/zuno/capability&lt;br/&gt;skill, tool, MCP&quot;]
-  Platform[&quot;src/backend/zuno/platform&lt;br/&gt;config, DB, storage, security, observability&quot;]
-  Docs[&quot;docs/architecture&lt;br/&gt;normative blueprint&quot;]
-  Tools[&quot;tools/agent + tools/evals&lt;br/&gt;renderer, verifier, benchmark&quot;]
-  Tests[&quot;tests&lt;br/&gt;focused and guardrail tests&quot;]
-
-  Web --&gt; API
-  API --&gt; Agent
-  Agent --&gt; Memory
-  Agent --&gt; Knowledge
-  Agent --&gt; Capability
-  Knowledge --&gt; Platform
-  Capability --&gt; Platform
-  Agent --&gt; Platform
-  Docs --&gt; Tools
-  Tools --&gt; Tests
-  Tests --&gt; Docs
-
-  class Web,API,Agent,Memory,Knowledge,Capability,Platform,Docs,Tools,Tests node;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-
-        <article class="diagram-section view-category" data-title="Process View (4+1)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 3</span>
-              <h3>3. Process View (4+1)</h3>
-              <p>Single Controller Agent 的目标状态是一条真实统一执行图：从 input gate、context、strategy、plan、step execution 到 evidence gate、claim binding、reflection、replan、finalize 和 post-turn memory commit。Reflection 必须有 PASS 出口和硬上限，不能无限自我修改。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>4+1 Process</dd></div>
-            <div><dt>Purpose</dt><dd>说明请求进入后 Single Controller、retrieval、tool、citation、trace 如何运行。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Process View (4+1) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 3.1</span>
-                <h4>3.1 Overview</h4>
-                <p>Process View (4+1) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 1018 1454" role="img" aria-label="Process View (4+1) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Process View (4+1)</text>
-<path class="svg-edge" d="M 384.0 148 C 384.0 168.0, 509.0 168.0, 509.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 254 C 509.0 274.0, 509.0 274.0, 509.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 360 C 509.0 380.0, 509.0 380.0, 509.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 466 C 509.0 486.0, 509.0 486.0, 509.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 572 C 509.0 592.0, 509.0 592.0, 509.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 678 C 509.0 698.0, 509.0 698.0, 509.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 784 C 509.0 804.0, 509.0 804.0, 509.0 816" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 890 C 509.0 910.0, 509.0 910.0, 509.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 996 C 509.0 1016.0, 509.0 1016.0, 509.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 1102 C 509.0 1122.0, 884.0 1122.0, 884.0 1134" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="704.5" y="1116.0" class="svg-edge-label">PASS</text>
-<path class="svg-edge" d="M 509.0 1102 C 509.0 1122.0, 134.0 1122.0, 134.0 1134" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="329.5" y="1116.0" class="svg-edge-label">RETRIEVE_MORE</text>
-<path class="svg-edge" d="M 40.0 1175.0 C 100.0 1175.0, 100.0 645.0, 407.0 645.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 1102 C 509.0 1122.0, 384.0 1122.0, 384.0 1134" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="454.5" y="1116.0" class="svg-edge-label">USE_TOOL</text>
-<path class="svg-edge" d="M 290.0 1175.0 C 350.0 1175.0, 350.0 751.0, 407.0 751.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 1102 C 509.0 1122.0, 634.0 1122.0, 634.0 1134" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="579.5" y="1116.0" class="svg-edge-label">ASK_USER</text>
-<path class="svg-edge" d="M 509.0 1102 C 509.0 1122.0, 884.0 1122.0, 884.0 1134" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="704.5" y="1116.0" class="svg-edge-label">ABSTAIN</text>
-<path class="svg-edge" d="M 884.0 1208 C 884.0 1228.0, 509.0 1228.0, 509.0 1240" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 1314 C 509.0 1334.0, 509.0 1334.0, 509.0 1346" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 148 C 634.0 274.0, 509.0 274.0, 509.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 148 C 634.0 380.0, 509.0 380.0, 509.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 148 C 634.0 592.0, 509.0 592.0, 509.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 148 C 634.0 645.0, 884.0 645.0, 884.0 1134" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110" class="svg-label" text-anchor="middle">START</text>
-<rect class="svg-node" x="415.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="216" class="svg-label" text-anchor="middle">input_gate / ACL +</text>
-<text x="509.0" y="231" class="svg-label" text-anchor="middle">redaction + request</text>
-<text x="509.0" y="246" class="svg-label" text-anchor="middle">validation</text>
-<rect class="svg-node" x="415.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="322" class="svg-label" text-anchor="middle">build_context / session</text>
-<text x="509.0" y="337" class="svg-label" text-anchor="middle">state + memory read +</text>
-<text x="509.0" y="352" class="svg-label" text-anchor="middle">knowledge scope</text>
-<rect class="svg-node" x="415.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="428" class="svg-label" text-anchor="middle">strategy_select / direct</text>
-<text x="509.0" y="443" class="svg-label" text-anchor="middle">/ react /</text>
-<text x="509.0" y="458" class="svg-label" text-anchor="middle">plan_and_execute</text>
-<rect class="svg-node" x="415.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="534" class="svg-label" text-anchor="middle">create_or_update_plan /</text>
-<text x="509.0" y="549" class="svg-label" text-anchor="middle">RetrievalPlan +</text>
-<text x="509.0" y="564" class="svg-label" text-anchor="middle">CapabilityPlan + stop</text>
-<rect class="svg-node" x="415.0" y="612" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="640" class="svg-label" text-anchor="middle">execute_step / knowledge</text>
-<text x="509.0" y="655" class="svg-label" text-anchor="middle">retrieval / graph</text>
-<text x="509.0" y="670" class="svg-label" text-anchor="middle">expansion / governed</text>
-<rect class="svg-node" x="415.0" y="718" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="746" class="svg-label" text-anchor="middle">observe / retrieval,</text>
-<text x="509.0" y="761" class="svg-label" text-anchor="middle">model, tool, gate result</text>
-<rect class="svg-node" x="415.0" y="824" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="852" class="svg-label" text-anchor="middle">evidence_gate / source</text>
-<text x="509.0" y="867" class="svg-label" text-anchor="middle">span + sufficiency</text>
-<text x="509.0" y="882" class="svg-label" text-anchor="middle">checks</text>
-<rect class="svg-node" x="415.0" y="930" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="958" class="svg-label" text-anchor="middle">draft_and_bind_claims /</text>
-<text x="509.0" y="973" class="svg-label" text-anchor="middle">claim extraction +</text>
-<text x="509.0" y="988" class="svg-label" text-anchor="middle">citation binding</text>
-<rect class="svg-node" x="415.0" y="1036" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="1064" class="svg-label" text-anchor="middle">reflection / PASS /</text>
-<text x="509.0" y="1079" class="svg-label" text-anchor="middle">RETRIEVE_MORE / USE_TOOL</text>
-<text x="509.0" y="1094" class="svg-label" text-anchor="middle">/ ASK_USER / ABSTAIN</text>
-<rect class="svg-node" x="40.0" y="1142" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="1170" class="svg-label" text-anchor="middle">replan / modify</text>
-<text x="134.0" y="1185" class="svg-label" text-anchor="middle">remaining steps</text>
-<rect class="svg-node" x="290.0" y="1142" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="1170" class="svg-label" text-anchor="middle">approval / tool call /</text>
-<text x="384.0" y="1185" class="svg-label" text-anchor="middle">policy + timeout +</text>
-<text x="384.0" y="1200" class="svg-label" text-anchor="middle">normalized result</text>
-<rect class="svg-node" x="540.0" y="1142" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="1170" class="svg-label" text-anchor="middle">interrupt / ask user</text>
-<rect class="svg-node" x="790.0" y="1142" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="1170" class="svg-label" text-anchor="middle">finalize / grounded</text>
-<text x="884.0" y="1185" class="svg-label" text-anchor="middle">answer or abstain</text>
-<rect class="svg-node" x="415.0" y="1248" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="1276" class="svg-label" text-anchor="middle">post_turn_commit / raw</text>
-<text x="509.0" y="1291" class="svg-label" text-anchor="middle">event + task summary +</text>
-<text x="509.0" y="1306" class="svg-label" text-anchor="middle">Reflexion candidate</text>
-<rect class="svg-node" x="415.0" y="1354" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="1382" class="svg-label" text-anchor="middle">END</text>
-<rect class="svg-node" x="540.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="110" class="svg-label" text-anchor="middle">hard controls /</text>
-<text x="634.0" y="125" class="svg-label" text-anchor="middle">max_steps, max_replans,</text>
-<text x="634.0" y="140" class="svg-label" text-anchor="middle">max_reflections,</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>Planner、ReAct step、Observation、Reflection、Replan、Stop Controller 和 Reflexion Bridge 是同一 Agent Core / Planning &amp; Control 内部机制。</li>
-                <li>所有真实模型调用必须进入统一 Model Runtime / Gateway；所有工具执行必须经 Capability/Tool policy。</li>
-                <li>abstain 是合法输出，不是失败绕过；max steps / max replans / max reflections 命中时不能写成 measured success。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef decision fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
-  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  Start([&quot;START&quot;])
-  InputGate[&quot;input_gate&lt;br/&gt;ACL + redaction + request validation&quot;]
-  Context[&quot;build_context&lt;br/&gt;session state + memory read + knowledge scope&quot;]
-  Strategy{&quot;strategy_select&lt;br/&gt;direct / react / plan_and_execute&quot;}
-  Plan[&quot;create_or_update_plan&lt;br/&gt;RetrievalPlan + CapabilityPlan + stop limits&quot;]
-  Execute[&quot;execute_step&lt;br/&gt;knowledge retrieval / graph expansion / governed tool&quot;]
-  Observe[&quot;observe&lt;br/&gt;retrieval, model, tool, gate result&quot;]
-  EvidenceGate[&quot;evidence_gate&lt;br/&gt;source span + sufficiency checks&quot;]
-  Draft[&quot;draft_and_bind_claims&lt;br/&gt;claim extraction + citation binding&quot;]
-  Reflect{&quot;reflection&lt;br/&gt;PASS / RETRIEVE_MORE / USE_TOOL / ASK_USER / ABSTAIN&quot;}
-  Replan[&quot;replan&lt;br/&gt;modify remaining steps&quot;]
-  Tool[&quot;approval / tool call&lt;br/&gt;policy + timeout + normalized result&quot;]
-  Interrupt[&quot;interrupt&lt;br/&gt;ask user&quot;]
-  Finalize[&quot;finalize&lt;br/&gt;grounded answer or abstain&quot;]
-  Commit[&quot;post_turn_commit&lt;br/&gt;raw event + task summary + Reflexion candidate&quot;]
-  End([&quot;END&quot;])
-  Limits[&quot;hard controls&lt;br/&gt;max_steps, max_replans, max_reflections, timeout, budget&quot;]
-
-  Start --&gt; InputGate --&gt; Context --&gt; Strategy --&gt; Plan --&gt; Execute --&gt; Observe --&gt; EvidenceGate --&gt; Draft --&gt; Reflect
-  Reflect --&gt;|PASS| Finalize
-  Reflect --&gt;|RETRIEVE_MORE| Replan --&gt; Execute
-  Reflect --&gt;|USE_TOOL| Tool --&gt; Observe
-  Reflect --&gt;|ASK_USER| Interrupt
-  Reflect --&gt;|ABSTAIN| Finalize
-  Finalize --&gt; Commit --&gt; End
-  Limits -. bounds .-&gt; Strategy
-  Limits -. bounds .-&gt; Execute
-  Limits -. bounds .-&gt; Reflect
-  Limits -. blocks to abstain/partial .-&gt; Finalize
-
-  class Start,InputGate,Context,Plan,Execute,Observe,EvidenceGate,Draft,Replan,Tool,Interrupt,Finalize,Commit,End node;
-  class Strategy,Reflect decision;
-  class InputGate,EvidenceGate,Limits gate;</code></pre>
-            </details>
-          </section>
-
-
-          <section class="diagram-card" data-title="Process View (4+1) / Planning and Control Internal View">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 3.2</span>
-                <h4>3.2 Planning and Control Internal View</h4>
-                <p>Process View 的局部展开：五个机制不是并列产品模式，而是同一 Agent Core / Planning &amp; Control 内部状态机。Plan-and-Execute 负责宏观计划，ReAct 负责单步执行，Reflection 决定是否 PASS，Replan 必须改变真实执行轨迹，ReflexionBridge 只提交经验候选给 Memory governance。</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 768 1030" role="img" aria-label="Process View (4+1) / Planning and Control Internal View">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Planning and Control Internal View</text>
-<text x="24" y="54" class="svg-subtitle">Process View (4+1)</text>
-<path class="svg-edge" d="M 259.0 148 C 259.0 168.0, 259.0 168.0, 259.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 254 C 259.0 274.0, 384.0 274.0, 384.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 360 C 384.0 380.0, 384.0 380.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 572 C 384.0 592.0, 384.0 592.0, 384.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 678 C 384.0 698.0, 384.0 698.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 784 C 384.0 804.0, 384.0 804.0, 384.0 816" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 890 C 384.0 910.0, 384.0 910.0, 384.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="392.0" y="904.0" class="svg-edge-label">PASS</text>
-<path class="svg-edge" d="M 384.0 890 C 384.0 910.0, 634.0 910.0, 634.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="517.0" y="904.0" class="svg-edge-label">REWRITE_ANSWER</text>
-<path class="svg-edge" d="M 540.0 963.0 C 350.0 963.0, 350.0 751.0, 282.0 751.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 890 C 384.0 910.0, 134.0 910.0, 134.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="267.0" y="904.0" class="svg-edge-label">RETRIEVE_MORE / failure</text>
-<path class="svg-edge" d="M 40.0 963.0 C 100.0 963.0, 100.0 433.0, 282.0 433.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 890 C 384.0 910.0, 384.0 910.0, 384.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="392.0" y="904.0" class="svg-edge-label">ABSTAIN</text>
-<path class="svg-edge" d="M 290.0 963.0 C 350.0 963.0, 350.0 115.0, 407.0 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 148 C 509.0 168.0, 509.0 168.0, 509.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="165.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="110" class="svg-label" text-anchor="middle">StrategyDecision /</text>
-<text x="259.0" y="125" class="svg-label" text-anchor="middle">direct, react,</text>
-<text x="259.0" y="140" class="svg-label" text-anchor="middle">plan_and_execute</text>
-<rect class="svg-node" x="165.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="216" class="svg-label" text-anchor="middle">Planner / PlanStep DAG +</text>
-<text x="259.0" y="231" class="svg-label" text-anchor="middle">budgets + acceptance</text>
-<rect class="svg-node" x="290.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="322" class="svg-label" text-anchor="middle">Plan Validation /</text>
-<text x="384.0" y="337" class="svg-label" text-anchor="middle">complete, atomic,</text>
-<text x="384.0" y="352" class="svg-label" text-anchor="middle">verifiable, budgeted</text>
-<rect class="svg-node" x="290.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="428" class="svg-label" text-anchor="middle">PlanExecutor</text>
-<rect class="svg-node" x="290.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="534" class="svg-label" text-anchor="middle">ReAct Step Controller /</text>
-<text x="384.0" y="549" class="svg-label" text-anchor="middle">decide, act, observe</text>
-<rect class="svg-node" x="290.0" y="612" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="640" class="svg-label" text-anchor="middle">Observation Contract /</text>
-<text x="384.0" y="655" class="svg-label" text-anchor="middle">retrieval, graph, tool,</text>
-<text x="384.0" y="670" class="svg-label" text-anchor="middle">model, gate</text>
-<rect class="svg-node" x="290.0" y="718" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="746" class="svg-label" text-anchor="middle">Step Acceptance Check</text>
-<rect class="svg-node" x="290.0" y="824" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="852" class="svg-label" text-anchor="middle">Reflection /</text>
-<text x="384.0" y="867" class="svg-label" text-anchor="middle">deterministic gate +</text>
-<text x="384.0" y="882" class="svg-label" text-anchor="middle">optional critic</text>
-<rect class="svg-node" x="40.0" y="930" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="958" class="svg-label" text-anchor="middle">Replanner / modify</text>
-<text x="134.0" y="973" class="svg-label" text-anchor="middle">query, scope, steps,</text>
-<text x="134.0" y="988" class="svg-label" text-anchor="middle">tool, model role</text>
-<rect class="svg-node" x="415.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="110" class="svg-label" text-anchor="middle">ReflexionBridge / lesson</text>
-<text x="509.0" y="125" class="svg-label" text-anchor="middle">candidate, no hidden CoT</text>
-<rect class="svg-node" x="415.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="216" class="svg-label" text-anchor="middle">Memory Governance /</text>
-<text x="509.0" y="231" class="svg-label" text-anchor="middle">review, approve, reject</text>
-<rect class="svg-node" x="290.0" y="930" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="958" class="svg-label" text-anchor="middle">Finalize / grounded</text>
-<text x="384.0" y="973" class="svg-label" text-anchor="middle">answer, partial, abstain</text>
-<rect class="svg-node" x="540.0" y="930" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="958" class="svg-label" text-anchor="middle">revise_draft / rewrite</text>
-<text x="634.0" y="973" class="svg-label" text-anchor="middle">answer under evidence</text>
-<text x="634.0" y="988" class="svg-label" text-anchor="middle">constraints</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>PlanStep 必须包含 goal、action_type、dependencies、expected_output、acceptance_criteria、allowed_capabilities、model_role、budget、timeout、retry_policy 和 status。</li>
-                <li>Reflection 输出限定为 PASS、REWRITE_ANSWER、RETRIEVE_MORE、USE_TOOL、ASK_USER、ABSTAIN。</li>
-                <li>Replan 至少要修改 query strategy、retrieval scope、retriever mix、graph traversal、tool selection、remaining steps、acceptance criteria、model role 或 budget allocation 中的一项。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-  classDef target fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
-
-  Strategy[&quot;StrategyDecision&lt;br/&gt;direct, react, plan_and_execute&quot;]
-  Planner[&quot;Planner&lt;br/&gt;PlanStep DAG + budgets + acceptance&quot;]
-  Validate[&quot;Plan Validation&lt;br/&gt;complete, atomic, verifiable, budgeted&quot;]
-  Executor[&quot;PlanExecutor&quot;]
-  ReAct[&quot;ReAct Step Controller&lt;br/&gt;decide, act, observe&quot;]
-  Observation[&quot;Observation Contract&lt;br/&gt;retrieval, graph, tool, model, gate&quot;]
-  StepCheck[&quot;Step Acceptance Check&quot;]
-  Reflection[&quot;Reflection&lt;br/&gt;deterministic gate + optional critic&quot;]
-  Replan[&quot;Replanner&lt;br/&gt;modify query, scope, steps, tool, model role&quot;]
-  Reflexion[&quot;ReflexionBridge&lt;br/&gt;lesson candidate, no hidden CoT&quot;]
-  Memory[&quot;Memory Governance&lt;br/&gt;review, approve, reject&quot;]
-  Final[&quot;Finalize&lt;br/&gt;grounded answer, partial, abstain&quot;]
-
-  Strategy --&gt; Planner --&gt; Validate --&gt; Executor --&gt; ReAct --&gt; Observation --&gt; StepCheck --&gt; Reflection
-  Revise[&quot;revise_draft&lt;br/&gt;rewrite answer under evidence constraints&quot;]
-
-  Reflection --&gt;|PASS| Final
-  Reflection --&gt;|REWRITE_ANSWER| Revise --&gt; StepCheck
-  Reflection --&gt;|RETRIEVE_MORE / failure| Replan --&gt; Executor
-  Reflection --&gt;|ABSTAIN| Final
-  Final --&gt; Reflexion --&gt; Memory
-
-  class Strategy,Planner,Executor,ReAct,Observation,StepCheck,Replan,Reflexion,Memory,Final,Revise node;
-  class Validate,Reflection gate;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-
-        <article class="diagram-section view-category" data-title="Physical View (4+1)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 4</span>
-              <h3>4. Physical View (4+1)</h3>
-              <p>近期部署是本地优先的正式实现：Web、FastAPI、SQLite、本地对象存储、本地队列、本地索引、模型 provider 和 trace store 构成闭环；外部集群只是可选 adapter。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>4+1 Physical</dd></div>
-            <div><dt>Purpose</dt><dd>说明本地优先部署、SQLite、ObjectStore、Queue、Index、Model Provider 和 optional adapter。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Physical View (4+1) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 4.1</span>
-                <h4>4.1 Overview</h4>
-                <p>Physical View (4+1) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 1268 606" role="img" aria-label="Physical View (4+1) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Physical View (4+1)</text>
-<path class="svg-edge" d="M 509.0 148 C 509.0 168.0, 634.0 168.0, 634.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 254 C 634.0 274.0, 509.0 274.0, 509.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 360 C 509.0 380.0, 134.0 380.0, 134.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 254 C 634.0 327.0, 384.0 327.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 360 C 509.0 380.0, 384.0 380.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 360 C 509.0 380.0, 634.0 380.0, 634.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 360 C 509.0 380.0, 884.0 380.0, 884.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 254 C 634.0 274.0, 759.0 274.0, 759.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 360 C 509.0 380.0, 1134.0 380.0, 1134.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 759.0 148 C 759.0 168.0, 634.0 168.0, 634.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 759.0 148 C 759.0 221.0, 509.0 221.0, 509.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 486.0, 634.0 486.0, 634.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 759.0 360 C 759.0 433.0, 634.0 433.0, 634.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 466 C 634.0 486.0, 634.0 486.0, 634.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 884.0 466 C 884.0 486.0, 634.0 486.0, 634.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1134.0 466 C 1134.0 486.0, 634.0 486.0, 634.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="415.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="110" class="svg-label" text-anchor="middle">Web / Desktop UI</text>
-<rect class="svg-node" x="540.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="216" class="svg-label" text-anchor="middle">FastAPI / DTO + SSE</text>
-<rect class="svg-node" x="415.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="322" class="svg-label" text-anchor="middle">Single Controller Agent</text>
-<rect class="svg-node" x="40.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="428" class="svg-label" text-anchor="middle">Model Provider /</text>
-<text x="134.0" y="443" class="svg-label" text-anchor="middle">OpenAI-compatible /</text>
-<text x="134.0" y="458" class="svg-label" text-anchor="middle">DeepSeek / local adapter</text>
-<rect class="svg-node" x="290.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="428" class="svg-label" text-anchor="middle">SQLite / workspace,</text>
-<text x="384.0" y="443" class="svg-label" text-anchor="middle">task, model, memory</text>
-<rect class="svg-node" x="665.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="759.0" y="322" class="svg-label" text-anchor="middle">LocalObjectStore /</text>
-<text x="759.0" y="337" class="svg-label" text-anchor="middle">source, artifact, parse</text>
-<text x="759.0" y="352" class="svg-label" text-anchor="middle">snapshot</text>
-<rect class="svg-node" x="540.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="428" class="svg-label" text-anchor="middle">LocalQueue / In-process</text>
-<text x="634.0" y="443" class="svg-label" text-anchor="middle">Runner</text>
-<rect class="svg-node" x="790.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="428" class="svg-label" text-anchor="middle">LocalIndex /</text>
-<text x="884.0" y="443" class="svg-label" text-anchor="middle">LocalGraphIndex</text>
-<rect class="svg-node" x="1040.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1134.0" y="428" class="svg-label" text-anchor="middle">LocalTraceStore / span,</text>
-<text x="1134.0" y="443" class="svg-label" text-anchor="middle">usage, diagnostics</text>
-<rect class="svg-node" x="665.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="759.0" y="110" class="svg-label" text-anchor="middle">Configuration / YAML,</text>
-<text x="759.0" y="125" class="svg-label" text-anchor="middle">env, DB override</text>
-<rect class="svg-node" x="540.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="534" class="svg-label" text-anchor="middle">Optional Future Adapters</text>
-<text x="634.0" y="549" class="svg-label" text-anchor="middle">/ Postgres, Redis,</text>
-<text x="634.0" y="564" class="svg-label" text-anchor="middle">MinIO, external</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>本地状态必须能支持 restart recovery。</li>
-                <li>外部 Postgres / Redis / MinIO / graph/vector store 是可替换方向，不是近期 blocker。</li>
-                <li>配置最终生效值必须进入 trace 和 eval 报告。</li>
-                <li>配置 owner、禁止写死、restart recovery 和 short-term gap 由本图与上文配置/状态表共同约束。</li>
-                <li>EnterpriseRAG paired benchmark 必须包含 standard_rag 和 agentic_graphrag 同一 fixed case set。</li>
-                <li>`metrics.json`、`report.md`、`failure_cases.md` 必须区分 retrieval、evidence text、citation binding、answer synthesis。</li>
-                <li>blocked run 必须写 blocked_reason，不得写 measured。</li>
-                <li>`docs/history/programs/README.md`</li>
-                <li>`zuno-production-architecture-and-deliverables-completion-v1`</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef store fill:#f7f7f2,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef future fill:#f3f1ff,stroke:#9a8fd0,stroke-width:1px,color:#16202a;
-
-  Web[&quot;Web / Desktop UI&quot;]
-  API[&quot;FastAPI&lt;br/&gt;DTO + SSE&quot;]
-  Agent[&quot;Single Controller Agent&quot;]
-  Model[&quot;Model Provider&lt;br/&gt;OpenAI-compatible / DeepSeek / local adapter&quot;]
-  SQLite[&quot;SQLite&lt;br/&gt;workspace, task, model, memory&quot;]
-  ObjectStore[&quot;LocalObjectStore&lt;br/&gt;source, artifact, parse snapshot&quot;]
-  Queue[&quot;LocalQueue / In-process Runner&quot;]
-  Index[&quot;LocalIndex / LocalGraphIndex&quot;]
-  Trace[&quot;LocalTraceStore&lt;br/&gt;span, usage, diagnostics&quot;]
-  Config[&quot;Configuration&lt;br/&gt;YAML, env, DB override&quot;]
-  Future[&quot;Optional Future Adapters&lt;br/&gt;Postgres, Redis, MinIO, external vector/graph&quot;]
-
-  Web --&gt; API --&gt; Agent
-  Agent --&gt; Model
-  API --&gt; SQLite
-  Agent --&gt; SQLite
-  Agent --&gt; Queue
-  Agent --&gt; Index
-  API --&gt; ObjectStore
-  Agent --&gt; Trace
-  Config --&gt; API
-  Config --&gt; Agent
-  SQLite --&gt; Future
-  ObjectStore --&gt; Future
-  Queue --&gt; Future
-  Index --&gt; Future
-  Trace --&gt; Future
-
-  class Web,API,Agent,Model,Config node;
-  class SQLite,ObjectStore,Queue,Index,Trace store;
-  class Future future;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-
-        <article class="diagram-section view-category" data-title="Scenarios View (4+1)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 5</span>
-              <h3>5. Scenarios View (4+1)</h3>
-              <p>用户从模型配置和 Workspace 进入，文档被解析和索引，AgentChat 触发计划、检索、引用、回答、trace、feedback 和恢复。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>4+1 Scenarios</dd></div>
-            <div><dt>Purpose</dt><dd>说明用户从配置模型、上传文档、AgentChat 到 trace/recovery 的黄金场景。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Scenarios View (4+1) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 5.1</span>
-                <h4>5.1 Overview</h4>
-                <p>Scenarios View (4+1) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 4018 182" role="img" aria-label="Scenarios View (4+1) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Scenarios View (4+1)</text>
-<path class="svg-edge" d="M 228 115.0 C 259.0 115.0, 259.0 115.0, 282 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 478 115.0 C 509.0 115.0, 509.0 115.0, 532 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 115.0 C 759.0 115.0, 759.0 115.0, 782 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 978 115.0 C 1009.0 115.0, 1009.0 115.0, 1032 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1228 115.0 C 1259.0 115.0, 1259.0 115.0, 1282 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1478 115.0 C 1509.0 115.0, 1509.0 115.0, 1532 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1728 115.0 C 1759.0 115.0, 1759.0 115.0, 1782 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1978 115.0 C 2009.0 115.0, 2009.0 115.0, 2032 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2228 115.0 C 2259.0 115.0, 2259.0 115.0, 2282 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2478 115.0 C 2509.0 115.0, 2509.0 115.0, 2532 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2728 115.0 C 2759.0 115.0, 2759.0 115.0, 2782 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2978 115.0 C 3009.0 115.0, 3009.0 115.0, 3032 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 3228 115.0 C 3259.0 115.0, 3259.0 115.0, 3282 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 3478 115.0 C 3509.0 115.0, 3509.0 115.0, 3532 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 3728 115.0 C 3759.0 115.0, 3759.0 115.0, 3782 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="40" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="110.0" class="svg-label" text-anchor="middle">Configure Model</text>
-<rect class="svg-node" x="290" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110.0" class="svg-label" text-anchor="middle">Create Workspace</text>
-<rect class="svg-node" x="540" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="110.0" class="svg-label" text-anchor="middle">Upload Document</text>
-<rect class="svg-node" x="790" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="110.0" class="svg-label" text-anchor="middle">Parse Gateway</text>
-<rect class="svg-node" x="1040" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1134.0" y="110.0" class="svg-label" text-anchor="middle">Document IR and Citation</text>
-<text x="1134.0" y="125.0" class="svg-label" text-anchor="middle">Chunks</text>
-<rect class="svg-node" x="1290" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1384.0" y="110.0" class="svg-label" text-anchor="middle">BM25 / Vector / Graph</text>
-<text x="1384.0" y="125.0" class="svg-label" text-anchor="middle">Index</text>
-<rect class="svg-node" x="1540" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1634.0" y="110.0" class="svg-label" text-anchor="middle">AgentChat Ask</text>
-<rect class="svg-node" x="1790" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1884.0" y="110.0" class="svg-label" text-anchor="middle">ContextPack</text>
-<rect class="svg-node" x="2040" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2134.0" y="110.0" class="svg-label" text-anchor="middle">Strategy and</text>
-<text x="2134.0" y="125.0" class="svg-label" text-anchor="middle">RetrievalPlan</text>
-<rect class="svg-node" x="2290" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2384.0" y="110.0" class="svg-label" text-anchor="middle">Hybrid Retrieval and</text>
-<text x="2384.0" y="125.0" class="svg-label" text-anchor="middle">Graph Expansion</text>
-<rect class="svg-node" x="2540" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2634.0" y="110.0" class="svg-label" text-anchor="middle">Fusion / Rerank</text>
-<rect class="svg-node" x="2790" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2884.0" y="110.0" class="svg-label" text-anchor="middle">Claim-level Citation</text>
-<rect class="svg-node" x="3040" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="3134.0" y="110.0" class="svg-label" text-anchor="middle">Grounded Answer /</text>
-<text x="3134.0" y="125.0" class="svg-label" text-anchor="middle">Artifact</text>
-<rect class="svg-node" x="3290" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="3384.0" y="110.0" class="svg-label" text-anchor="middle">Trace / Cost / Eval</text>
-<rect class="svg-node" x="3540" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="3634.0" y="110.0" class="svg-label" text-anchor="middle">Feedback</text>
-<rect class="svg-node" x="3790" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="3884.0" y="110.0" class="svg-label" text-anchor="middle">Restart Recovery</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>这条链路是短期唯一主叙事。</li>
-                <li>每个节点都有 owner、contract、持久状态、trace event 和失败语义。</li>
-                <li>Restart Recovery 是产品完成标准的一部分。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef trace fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  Model[&quot;Configure Model&quot;]
-  Workspace[&quot;Create Workspace&quot;]
-  Upload[&quot;Upload Document&quot;]
-  Parse[&quot;Parse Gateway&quot;]
-  IR[&quot;Document IR and Citation Chunks&quot;]
-  Index[&quot;BM25 / Vector / Graph Index&quot;]
-  Ask[&quot;AgentChat Ask&quot;]
-  Context[&quot;ContextPack&quot;]
-  Plan[&quot;Strategy and RetrievalPlan&quot;]
-  Retrieve[&quot;Hybrid Retrieval and Graph Expansion&quot;]
-  Rerank[&quot;Fusion / Rerank&quot;]
-  Cite[&quot;Claim-level Citation&quot;]
-  Answer[&quot;Grounded Answer / Artifact&quot;]
-  Trace[&quot;Trace / Cost / Eval&quot;]
-  Feedback[&quot;Feedback&quot;]
-  Recovery[&quot;Restart Recovery&quot;]
-
-  Model --&gt; Workspace --&gt; Upload --&gt; Parse --&gt; IR --&gt; Index --&gt; Ask --&gt; Context --&gt; Plan --&gt; Retrieve --&gt; Rerank --&gt; Cite --&gt; Answer --&gt; Trace --&gt; Feedback --&gt; Recovery
-
-  class Model,Workspace,Upload,Parse,IR,Index,Ask,Context,Plan,Retrieve,Rerank,Cite,Answer,Feedback,Recovery node;
-  class Trace trace;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
+  <div class="layout">
+    <aside>
+      <h1>Zuno Architecture Atlas</h1>
+      <p>4+1、Views & Beyond 与 Zuno Product Core。Markdown 是目标架构事实源，HTML 使用原生 Mermaid 渲染。</p>
+      <nav id="toc"></nav>
+      <p><a href="architecture.md">打开 Markdown 事实源</a></p>
+    </aside>
+    <main>
+      <section class="hero">
+        <h1>Zuno Target Architecture Atlas</h1>
+        <p>十类 canonical views。每一类均包含一张 Overall 图和至少一张 Local 图；核心 connector 使用 typed contract 标注，Security 与 Observability 明确横切。</p>
+        <div class="legend">
+          <span>==&gt; command / control</span>
+          <span>--&gt; data / result</span>
+          <span>-. -&gt; governance / observation</span>
+          <span>Target view; Current 见 production-readiness.md</span>
+        </div>
+        <div id="status" class="status">正在读取 architecture.md 并加载 Mermaid…</div>
       </section>
+      <div id="atlas"></div>
+    </main>
+  </div>
 
-
-      <section class="diagram-group">
-        <h2>二、Views &amp; Beyond</h2>
-        <p>从 Module、Component-and-Connector、Data、Quality 四类工程视图展开模块、连接、信息和质量属性。</p>
-
-        <article class="diagram-section view-category" data-title="Module View (Views &amp; Beyond)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 6</span>
-              <h3>6. Module View (Views &amp; Beyond)</h3>
-              <p>用户可见的 AgentChat、Workspace、Knowledge Space、file lifecycle、task lifecycle、citation UI、trace summary 和 feedback，都必须通过后端 DTO 与 durable state 对齐。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>V&amp;B Module</dd></div>
-            <div><dt>Purpose</dt><dd>说明 Product/API、Input/Knowledge、Agent Core、Capability/Tool、Governance、Infrastructure 模块分解。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Module View (Views &amp; Beyond) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 6.1</span>
-                <h4>6.1 Overview</h4>
-                <p>Module View (Views &amp; Beyond) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 768 712" role="img" aria-label="Module View (Views &amp; Beyond) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Module View (Views &amp; Beyond)</text>
-<path class="svg-edge" d="M 259.0 148 C 259.0 168.0, 384.0 168.0, 384.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 254 C 384.0 274.0, 134.0 274.0, 134.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 254 C 384.0 274.0, 384.0 274.0, 384.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 254 C 384.0 274.0, 634.0 274.0, 634.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 540.0 327.0 C 475.0 327.0, 475.0 115.0, 407.0 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 509.0 148 C 509.0 115.0, 259.0 115.0, 259.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 360 C 634.0 380.0, 384.0 380.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 360 C 134.0 486.0, 384.0 486.0, 384.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 360 C 384.0 486.0, 384.0 486.0, 384.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 539.0, 384.0 539.0, 384.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 572 C 384.0 592.0, 384.0 592.0, 384.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="165.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="110" class="svg-label" text-anchor="middle">Web / Desktop UI / chat,</text>
-<text x="259.0" y="125" class="svg-label" text-anchor="middle">files, citations, trace</text>
-<rect class="svg-node" x="290.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="216" class="svg-label" text-anchor="middle">FastAPI DTO /</text>
-<text x="384.0" y="231" class="svg-label" text-anchor="middle">completion, workspace,</text>
-<text x="384.0" y="246" class="svg-label" text-anchor="middle">knowledge, tool</text>
-<rect class="svg-node" x="415.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="110" class="svg-label" text-anchor="middle">SSE / Task Events</text>
-<rect class="svg-node" x="40.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="322" class="svg-label" text-anchor="middle">Workspace + Knowledge</text>
-<text x="134.0" y="337" class="svg-label" text-anchor="middle">Space</text>
-<rect class="svg-node" x="290.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="322" class="svg-label" text-anchor="middle">File Lifecycle /</text>
-<text x="384.0" y="337" class="svg-label" text-anchor="middle">uploaded, parsing,</text>
-<text x="384.0" y="352" class="svg-label" text-anchor="middle">indexed, blocked</text>
-<rect class="svg-node" x="540.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="322" class="svg-label" text-anchor="middle">AgentChat Request</text>
-<rect class="svg-node" x="290.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="428" class="svg-label" text-anchor="middle">Answer / Artifact /</text>
-<text x="384.0" y="443" class="svg-label" text-anchor="middle">Citation UI</text>
-<rect class="svg-node" x="290.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="534" class="svg-label" text-anchor="middle">Trace Summary / Feedback</text>
-<rect class="svg-node" x="290.0" y="612" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="640" class="svg-label" text-anchor="middle">Backend Durable State /</text>
-<text x="384.0" y="655" class="svg-label" text-anchor="middle">not frontend state</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>前端只负责 UI 和交互，不是业务事实源。</li>
-                <li>API DTO 是产品请求和 runtime contract 的边界。</li>
-                <li>刷新或重启后必须从后端状态恢复核心结果。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef api fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  UI[&quot;Web / Desktop UI&lt;br/&gt;chat, files, citations, trace&quot;]
-  DTO[&quot;FastAPI DTO&lt;br/&gt;completion, workspace, knowledge, tool&quot;]
-  SSE[&quot;SSE / Task Events&quot;]
-  Workspace[&quot;Workspace + Knowledge Space&quot;]
-  Files[&quot;File Lifecycle&lt;br/&gt;uploaded, parsing, indexed, blocked&quot;]
-  Chat[&quot;AgentChat Request&quot;]
-  Artifact[&quot;Answer / Artifact / Citation UI&quot;]
-  Trace[&quot;Trace Summary / Feedback&quot;]
-  Store[&quot;Backend Durable State&lt;br/&gt;not frontend state&quot;]
-
-  UI --&gt; DTO
-  DTO --&gt; Workspace
-  DTO --&gt; Files
-  DTO --&gt; Chat
-  Chat --&gt; SSE
-  SSE --&gt; UI
-  Chat --&gt; Artifact
-  Artifact --&gt; Trace
-  Workspace --&gt; Store
-  Files --&gt; Store
-  Artifact --&gt; Store
-  Trace --&gt; Store
-
-  class UI,Workspace,Files,Chat,Artifact,Trace,Store node;
-  class DTO,SSE api;</code></pre>
-            </details>
-          </section>
-
-
-          <section class="diagram-card" data-title="Module View (Views &amp; Beyond) / Physical Runtime Domain Mapping">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 6.2</span>
-                <h4>6.2 Physical Runtime Domain Mapping</h4>
-                <p>Module View 的局部展开：六个物理运行域回答“代码如何组合 owner”，不是逻辑能力层的替代物。Model Gateway、Memory、Agent Core / Planning &amp; Control 可以位于 Agent Core 运行域协作，但逻辑 owner 必须分开。</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 4018 288" role="img" aria-label="Module View (Views &amp; Beyond) / Physical Runtime Domain Mapping">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Physical Runtime Domain Mapping</text>
-<text x="24" y="54" class="svg-subtitle">Module View (Views &amp; Beyond)</text>
-<path class="svg-edge" d="M 1384.0 148 C 1384.0 115.0, 134.0 115.0, 134.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1634.0 148 C 1634.0 115.0, 384.0 115.0, 384.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1884.0 148 C 1884.0 115.0, 384.0 115.0, 384.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2134.0 148 C 2134.0 115.0, 634.0 115.0, 634.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2384.0 148 C 2384.0 115.0, 634.0 115.0, 634.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2634.0 148 C 2634.0 115.0, 634.0 115.0, 634.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2884.0 148 C 2884.0 115.0, 884.0 115.0, 884.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 3134.0 148 C 3134.0 115.0, 884.0 115.0, 884.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 3384.0 148 C 3384.0 115.0, 1134.0 115.0, 1134.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 3634.0 148 C 3634.0 115.0, 1134.0 115.0, 1134.0 74" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 3884.0 148 C 3884.0 168.0, 2009.0 168.0, 2009.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 148 C 134.0 168.0, 2009.0 168.0, 2009.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 148 C 384.0 168.0, 2009.0 168.0, 2009.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 148 C 634.0 168.0, 2009.0 168.0, 2009.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 884.0 148 C 884.0 168.0, 2009.0 168.0, 2009.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1134.0 148 C 1134.0 168.0, 2009.0 168.0, 2009.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="40.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="110" class="svg-label" text-anchor="middle">Product &amp; API</text>
-<rect class="svg-node" x="290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110" class="svg-label" text-anchor="middle">Input &amp; Knowledge</text>
-<rect class="svg-node" x="540.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="110" class="svg-label" text-anchor="middle">Agent Core Runtime</text>
-<text x="634.0" y="125" class="svg-label" text-anchor="middle">Domain</text>
-<rect class="svg-node" x="790.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="110" class="svg-label" text-anchor="middle">Capability &amp; Tool</text>
-<rect class="svg-node" x="1040.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1134.0" y="110" class="svg-label" text-anchor="middle">Governance &amp;</text>
-<text x="1134.0" y="125" class="svg-label" text-anchor="middle">Observability</text>
-<rect class="svg-node" x="1915.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2009.0" y="216" class="svg-label" text-anchor="middle">Local Infrastructure</text>
-<rect class="svg-node" x="1290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1384.0" y="110" class="svg-label" text-anchor="middle">Product Surface</text>
-<rect class="svg-node" x="1540.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1634.0" y="110" class="svg-label" text-anchor="middle">Input</text>
-<rect class="svg-node" x="1790.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1884.0" y="110" class="svg-label" text-anchor="middle">Knowledge</text>
-<rect class="svg-node" x="2040.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2134.0" y="110" class="svg-label" text-anchor="middle">Model Gateway</text>
-<rect class="svg-node" x="2290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2384.0" y="110" class="svg-label" text-anchor="middle">Memory</text>
-<rect class="svg-node" x="2540.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2634.0" y="110" class="svg-label" text-anchor="middle">Agent Core / Planning &amp;</text>
-<text x="2634.0" y="125" class="svg-label" text-anchor="middle">Control</text>
-<rect class="svg-node" x="2790.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2884.0" y="110" class="svg-label" text-anchor="middle">Capability</text>
-<rect class="svg-node" x="3040.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="3134.0" y="110" class="svg-label" text-anchor="middle">Tool Runtime</text>
-<rect class="svg-node" x="3290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="3384.0" y="110" class="svg-label" text-anchor="middle">Security</text>
-<rect class="svg-node" x="3540.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="3634.0" y="110" class="svg-label" text-anchor="middle">Observability &amp; Eval</text>
-<rect class="svg-node" x="3790.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="3884.0" y="110" class="svg-label" text-anchor="middle">Infrastructure</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>六运行域服务近期代码 owner，不否定十一逻辑能力层。</li>
-                <li>Capability 是能力目录和策略路由；Tool Runtime 才是执行域。</li>
-                <li>Agent Core 运行域内的 Model Gateway、Memory 和 Planning 必须保持 contract 独立。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef domain fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef logical fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  ProductDomain[&quot;Product &amp; API&quot;]
-  InputDomain[&quot;Input &amp; Knowledge&quot;]
-  AgentDomain[&quot;Agent Core Runtime Domain&quot;]
-  CapabilityDomain[&quot;Capability &amp; Tool&quot;]
-  GovDomain[&quot;Governance &amp; Observability&quot;]
-  InfraDomain[&quot;Local Infrastructure&quot;]
-
-  ProductSurface[&quot;Product Surface&quot;]
-  Input[&quot;Input&quot;]
-  Knowledge[&quot;Knowledge&quot;]
-  Model[&quot;Model Gateway&quot;]
-  Memory[&quot;Memory&quot;]
-  Planning[&quot;Agent Core / Planning &amp; Control&quot;]
-  Capability[&quot;Capability&quot;]
-  ToolRuntime[&quot;Tool Runtime&quot;]
-  Security[&quot;Security&quot;]
-  Observability[&quot;Observability &amp; Eval&quot;]
-  Infrastructure[&quot;Infrastructure&quot;]
-
-  ProductSurface --&gt; ProductDomain
-  Input --&gt; InputDomain
-  Knowledge --&gt; InputDomain
-  Model --&gt; AgentDomain
-  Memory --&gt; AgentDomain
-  Planning --&gt; AgentDomain
-  Capability --&gt; CapabilityDomain
-  ToolRuntime --&gt; CapabilityDomain
-  Security --&gt; GovDomain
-  Observability --&gt; GovDomain
-  Infrastructure --&gt; InfraDomain
-
-  ProductDomain --&gt; InfraDomain
-  InputDomain --&gt; InfraDomain
-  AgentDomain --&gt; InfraDomain
-  CapabilityDomain --&gt; InfraDomain
-  GovDomain --&gt; InfraDomain
-
-  class ProductDomain,InputDomain,AgentDomain,CapabilityDomain,GovDomain,InfraDomain domain;
-  class ProductSurface,Input,Knowledge,Model,Memory,Planning,Capability,ToolRuntime,Security,Observability,Infrastructure logical;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-
-        <article class="diagram-section view-category" data-title="Component-and-Connector View (Views &amp; Beyond)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 7</span>
-              <h3>7. Component-and-Connector View (Views &amp; Beyond)</h3>
-              <p>Agentic GraphRAG 的核心不是“图检索存在”，而是从 query planning 到 Graph expansion、EvidenceBundle、claim binding 和 release gate 都能保留 source span 证据链。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>V&amp;B Component-and-Connector</dd></div>
-            <div><dt>Purpose</dt><dd>说明 runtime connector、retrieval connector、tool connector 和 trace connector。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Component-and-Connector View (Views &amp; Beyond) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 7.1</span>
-                <h4>7.1 Overview</h4>
-                <p>Component-and-Connector View (Views &amp; Beyond) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 2268 394" role="img" aria-label="Component-and-Connector View (Views &amp; Beyond) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Component-and-Connector View (Views &amp; Beyond)</text>
-<path class="svg-edge" d="M 228 221.0 C 259.0 221.0, 259.0 221.0, 282 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 478 221.0 C 509.0 221.0, 509.0 115.0, 532 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 115.0 C 759.0 115.0, 759.0 221.0, 782 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 478 221.0 C 509.0 221.0, 509.0 221.0, 532 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 221.0 C 759.0 221.0, 759.0 221.0, 782 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 478 221.0 C 509.0 221.0, 509.0 327.0, 532 327.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 327.0 C 759.0 327.0, 759.0 221.0, 782 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 978 221.0 C 1009.0 221.0, 1009.0 221.0, 1032 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1228 221.0 C 1259.0 221.0, 1259.0 221.0, 1282 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1478 221.0 C 1509.0 221.0, 1509.0 221.0, 1532 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1728 221.0 C 1759.0 221.0, 1759.0 168.0, 1782 168.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1978 168.0 C 2009.0 168.0, 2009.0 221.0, 2032 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1228 221.0 C 1509.0 221.0, 1509.0 274.0, 1782 274.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1728 221.0 C 1759.0 221.0, 1759.0 274.0, 1782 274.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="40" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="216.0" class="svg-label" text-anchor="middle">Question + ContextPack</text>
-<rect class="svg-node" x="290" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="216.0" class="svg-label" text-anchor="middle">Query Set</text>
-<rect class="svg-node" x="540" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="110.0" class="svg-label" text-anchor="middle">BM25 Candidates</text>
-<rect class="svg-node" x="540" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="216.0" class="svg-label" text-anchor="middle">Vector Candidates</text>
-<rect class="svg-node" x="540" y="294.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="322.0" class="svg-label" text-anchor="middle">Graph Expansion /</text>
-<text x="634.0" y="337.0" class="svg-label" text-anchor="middle">entity, relation,</text>
-<text x="634.0" y="352.0" class="svg-label" text-anchor="middle">community</text>
-<rect class="svg-node" x="790" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="216.0" class="svg-label" text-anchor="middle">Fusion / Rerank</text>
-<rect class="svg-node" x="1040" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1134.0" y="216.0" class="svg-label" text-anchor="middle">EvidenceBundle / source</text>
-<text x="1134.0" y="231.0" class="svg-label" text-anchor="middle">span required</text>
-<rect class="svg-node" x="1290" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1384.0" y="216.0" class="svg-label" text-anchor="middle">Claim Extraction</text>
-<rect class="svg-node" x="1540" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1634.0" y="216.0" class="svg-label" text-anchor="middle">Citation Binding</text>
-<rect class="svg-node" x="1790" y="135.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1884.0" y="163.0" class="svg-label" text-anchor="middle">Grounded Answer</text>
-<rect class="svg-node" x="1790" y="241.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1884.0" y="269.0" class="svg-label" text-anchor="middle">Failure Buckets</text>
-<rect class="svg-node" x="2040" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2134.0" y="216.0" class="svg-label" text-anchor="middle">Release Gate</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>doc-level hit 不能冒充 evidence-span hit。</li>
-                <li>citation binding 失败必须能定位到 failure bucket。</li>
-                <li>quality completed 只由 fixed benchmark 和 release gate 证明。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  Question[&quot;Question + ContextPack&quot;]
-  Query[&quot;Query Set&quot;]
-  BM25[&quot;BM25 Candidates&quot;]
-  Vector[&quot;Vector Candidates&quot;]
-  Graph[&quot;Graph Expansion&lt;br/&gt;entity, relation, community&quot;]
-  Fusion[&quot;Fusion / Rerank&quot;]
-  Bundle[&quot;EvidenceBundle&lt;br/&gt;source span required&quot;]
-  Claims[&quot;Claim Extraction&quot;]
-  Citations[&quot;Citation Binding&quot;]
-  Answer[&quot;Grounded Answer&quot;]
-  Buckets[&quot;Failure Buckets&quot;]
-  Gate[&quot;Release Gate&quot;]
-
-  Question --&gt; Query
-  Query --&gt; BM25 --&gt; Fusion
-  Query --&gt; Vector --&gt; Fusion
-  Query --&gt; Graph --&gt; Fusion
-  Fusion --&gt; Bundle --&gt; Claims --&gt; Citations --&gt; Answer --&gt; Gate
-  Bundle --&gt; Buckets
-  Citations --&gt; Buckets
-
-  class Question,Query,BM25,Vector,Graph,Fusion,Bundle,Claims,Citations,Answer,Buckets node;
-  class Gate gate;</code></pre>
-            </details>
-          </section>
-
-
-          <section class="diagram-card" data-title="Component-and-Connector View (Views &amp; Beyond) / Tool Control Connector">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 7.2</span>
-                <h4>7.2 Tool Control Connector</h4>
-                <p>Component-and-Connector View 的局部展开：Function Calling 是模型表达结构化调用意图的语言；Capability 是目录、策略和路由；Skill 是 SOP/模板/验收；MCP/Tool 是原子能力；Tool Runtime 负责审批、凭据、执行、timeout、normalize 和 trace。</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 518 1136" role="img" aria-label="Component-and-Connector View (Views &amp; Beyond) / Tool Control Connector">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Tool Control Connector</text>
-<text x="24" y="54" class="svg-subtitle">Component-and-Connector View (Views &amp; Beyond)</text>
-<path class="svg-edge" d="M 134.0 148 C 134.0 168.0, 134.0 168.0, 134.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 254 C 134.0 274.0, 259.0 274.0, 259.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 360 C 259.0 380.0, 134.0 380.0, 134.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 148 C 134.0 168.0, 384.0 168.0, 384.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 254 C 384.0 327.0, 384.0 327.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 148 C 384.0 274.0, 384.0 274.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 360 C 259.0 380.0, 384.0 380.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 486.0, 259.0 486.0, 259.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 572 C 259.0 592.0, 259.0 592.0, 259.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 678 C 259.0 698.0, 259.0 698.0, 259.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 784 C 259.0 804.0, 259.0 804.0, 259.0 816" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 890 C 259.0 910.0, 259.0 910.0, 259.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 996 C 259.0 1016.0, 384.0 1016.0, 384.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 890 C 259.0 963.0, 134.0 963.0, 134.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 572 C 259.0 804.0, 134.0 804.0, 134.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 259.0 996 C 259.0 1016.0, 134.0 1016.0, 134.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 254 C 134.0 645.0, 134.0 645.0, 134.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 466 C 134.0 751.0, 134.0 751.0, 134.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="40.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="110" class="svg-label" text-anchor="middle">CapabilityPlan</text>
-<rect class="svg-node" x="40.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="216" class="svg-label" text-anchor="middle">SkillMetadata / startup</text>
-<text x="134.0" y="231" class="svg-label" text-anchor="middle">catalog only</text>
-<rect class="svg-node" x="165.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="322" class="svg-label" text-anchor="middle">SkillInstruction /</text>
-<text x="259.0" y="337" class="svg-label" text-anchor="middle">loaded on demand</text>
-<rect class="svg-node" x="40.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="428" class="svg-label" text-anchor="middle">SkillResourceRef /</text>
-<text x="134.0" y="443" class="svg-label" text-anchor="middle">script, template,</text>
-<text x="134.0" y="458" class="svg-label" text-anchor="middle">reference</text>
-<rect class="svg-node" x="290.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="216" class="svg-label" text-anchor="middle">Function Call Intent /</text>
-<text x="384.0" y="231" class="svg-label" text-anchor="middle">structured args</text>
-<rect class="svg-node" x="290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110" class="svg-label" text-anchor="middle">CapabilityCard /</text>
-<text x="384.0" y="125" class="svg-label" text-anchor="middle">catalog, policy, routing</text>
-<rect class="svg-node" x="290.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="428" class="svg-label" text-anchor="middle">CapabilityRouter</text>
-<rect class="svg-node" x="165.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="534" class="svg-label" text-anchor="middle">Capability Policy /</text>
-<text x="259.0" y="549" class="svg-label" text-anchor="middle">Approval</text>
-<rect class="svg-node" x="165.0" y="612" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="640" class="svg-label" text-anchor="middle">CredentialRef / no raw</text>
-<text x="259.0" y="655" class="svg-label" text-anchor="middle">secret</text>
-<rect class="svg-node" x="165.0" y="718" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="746" class="svg-label" text-anchor="middle">ToolCard / MCP Tool</text>
-<rect class="svg-node" x="165.0" y="824" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="852" class="svg-label" text-anchor="middle">ExecutionAdapter</text>
-<rect class="svg-node" x="165.0" y="930" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="958" class="svg-label" text-anchor="middle">ResultNormalizer</text>
-<rect class="svg-node" x="40.0" y="1036" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="1064" class="svg-label" text-anchor="middle">ToolTrace</text>
-<rect class="svg-node" x="290.0" y="1036" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="1064" class="svg-label" text-anchor="middle">Agent Observation</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>Skill 不是 Tool；Function Calling 不是执行；MCP/Tool 是原子能力。</li>
-                <li>Skill 采用 metadata -&gt; instruction -&gt; resource/script/template 的渐进式加载，避免一次性塞入 ContextPack。</li>
-                <li>副作用工具必须有审批、timeout、幂等和 trace。</li>
-                <li>Agent 消费 normalized observation，不依赖工具内部结构。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef policy fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  Plan[&quot;CapabilityPlan&quot;]
-  Metadata[&quot;SkillMetadata&lt;br/&gt;startup catalog only&quot;]
-  Instruction[&quot;SkillInstruction&lt;br/&gt;loaded on demand&quot;]
-  Resource[&quot;SkillResourceRef&lt;br/&gt;script, template, reference&quot;]
-  Intent[&quot;Function Call Intent&lt;br/&gt;structured args&quot;]
-  Capability[&quot;CapabilityCard&lt;br/&gt;catalog, policy, routing&quot;]
-  Router[&quot;CapabilityRouter&quot;]
-  Policy[&quot;Capability Policy / Approval&quot;]
-  Credential[&quot;CredentialRef&lt;br/&gt;no raw secret&quot;]
-  Tool[&quot;ToolCard / MCP Tool&quot;]
-  Adapter[&quot;ExecutionAdapter&quot;]
-  Normalizer[&quot;ResultNormalizer&quot;]
-  Trace[&quot;ToolTrace&quot;]
-  Observation[&quot;Agent Observation&quot;]
-
-  Plan --&gt; Metadata --&gt; Instruction --&gt; Resource
-  Plan --&gt; Intent --&gt; Router
-  Capability --&gt; Router
-  Instruction --&gt; Router
-  Router --&gt; Policy --&gt; Credential --&gt; Tool --&gt; Adapter --&gt; Normalizer --&gt; Observation
-  Adapter --&gt; Trace
-  Policy --&gt; Trace
-  Normalizer --&gt; Trace
-  Metadata --&gt; Trace
-  Resource --&gt; Trace
-
-  class Plan,Metadata,Instruction,Resource,Intent,Capability,Router,Credential,Tool,Adapter,Normalizer,Trace,Observation node;
-  class Policy policy;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-
-        <article class="diagram-section view-category" data-title="Data View (Views &amp; Beyond)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 8</span>
-              <h3>8. Data View (Views &amp; Beyond)</h3>
-              <p>文档从 SourceObject 进入，经过 ParseJob、Document IR、SourceSpan、CitationChunk、IndexManifest 和 CitationLineage，最终形成可检索的 EvidenceBundle。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>V&amp;B Data / Information</dd></div>
-            <div><dt>Purpose</dt><dd>说明 SourceObject、IR、Chunk、Index、CitationLineage、EvidenceBundle 和 TraceSpan 的数据流。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Data View (Views &amp; Beyond) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 8.1</span>
-                <h4>8.1 Overview</h4>
-                <p>Data View (Views &amp; Beyond) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 2268 288" role="img" aria-label="Data View (Views &amp; Beyond) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Data View (Views &amp; Beyond)</text>
-<path class="svg-edge" d="M 228 168.0 C 259.0 168.0, 259.0 168.0, 282 168.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 478 168.0 C 509.0 168.0, 509.0 168.0, 532 168.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 168.0 C 759.0 168.0, 759.0 168.0, 782 168.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 978 168.0 C 1009.0 168.0, 1009.0 168.0, 1032 168.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1228 168.0 C 1259.0 168.0, 1259.0 115.0, 1282 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1478 115.0 C 1509.0 115.0, 1509.0 115.0, 1532 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1728 115.0 C 1759.0 115.0, 1759.0 168.0, 1782 168.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1978 168.0 C 2009.0 168.0, 2009.0 168.0, 2032 168.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1478 115.0 C 1509.0 115.0, 1509.0 221.0, 1532 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1728 221.0 C 1884.0 221.0, 1884.0 168.0, 2032 168.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 168.0 C 1009.0 168.0, 1009.0 221.0, 1282 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="1009.0" y="186.5" class="svg-edge-label">parser failed</text>
-<path class="svg-edge" d="M 1228 168.0 C 1259.0 168.0, 1259.0 221.0, 1282 221.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="1259.0" y="186.5" class="svg-edge-label">missing source span</text>
-<rect class="svg-node" x="40" y="135.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="163.0" class="svg-label" text-anchor="middle">SourceObject / checksum</text>
-<text x="134.0" y="178.0" class="svg-label" text-anchor="middle">+ object URI</text>
-<rect class="svg-node" x="290" y="135.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="163.0" class="svg-label" text-anchor="middle">WorkspaceFile / status</text>
-<rect class="svg-node" x="540" y="135.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="163.0" class="svg-label" text-anchor="middle">ParseJob / ParseSnapshot</text>
-<rect class="svg-node" x="790" y="135.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="163.0" class="svg-label" text-anchor="middle">CanonicalDocumentIR</text>
-<rect class="svg-node" x="1040" y="135.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1134.0" y="163.0" class="svg-label" text-anchor="middle">DocumentBlock +</text>
-<text x="1134.0" y="178.0" class="svg-label" text-anchor="middle">SourceSpan</text>
-<rect class="svg-node" x="1290" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1384.0" y="110.0" class="svg-label" text-anchor="middle">CitationChunk +</text>
-<text x="1384.0" y="125.0" class="svg-label" text-anchor="middle">ParentChunk</text>
-<rect class="svg-node" x="1540" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1634.0" y="110.0" class="svg-label" text-anchor="middle">IndexManifest</text>
-<rect class="svg-node" x="1790" y="135.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1884.0" y="163.0" class="svg-label" text-anchor="middle">BM25 / Vector / Graph</text>
-<text x="1884.0" y="178.0" class="svg-label" text-anchor="middle">Index</text>
-<rect class="svg-node" x="1540" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1634.0" y="216.0" class="svg-label" text-anchor="middle">CitationLineage</text>
-<rect class="svg-node" x="2040" y="135.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2134.0" y="163.0" class="svg-label" text-anchor="middle">EvidenceBundle</text>
-<rect class="svg-node" x="1290" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1384.0" y="216.0" class="svg-label" text-anchor="middle">Blocked / no fake index</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>parser blocked 时不能继续伪造 index。</li>
-                <li>strict citation 必须有 SourceSpan 和 CitationLineage。</li>
-                <li>Graph evidence 必须能回到 source object。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef blocked fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
-
-  Source[&quot;SourceObject&lt;br/&gt;checksum + object URI&quot;]
-  File[&quot;WorkspaceFile&lt;br/&gt;status&quot;]
-  Parse[&quot;ParseJob / ParseSnapshot&quot;]
-  IR[&quot;CanonicalDocumentIR&quot;]
-  Span[&quot;DocumentBlock + SourceSpan&quot;]
-  Chunk[&quot;CitationChunk + ParentChunk&quot;]
-  Manifest[&quot;IndexManifest&quot;]
-  Index[&quot;BM25 / Vector / Graph Index&quot;]
-  Lineage[&quot;CitationLineage&quot;]
-  Evidence[&quot;EvidenceBundle&quot;]
-  Blocked[&quot;Blocked&lt;br/&gt;no fake index&quot;]
-
-  Source --&gt; File --&gt; Parse
-  Parse --&gt; IR --&gt; Span --&gt; Chunk --&gt; Manifest --&gt; Index --&gt; Evidence
-  Chunk --&gt; Lineage --&gt; Evidence
-  Parse --&gt;|parser failed| Blocked
-  Span --&gt;|missing source span| Blocked
-
-  class Source,File,Parse,IR,Span,Chunk,Manifest,Index,Lineage,Evidence node;
-  class Blocked blocked;</code></pre>
-            </details>
-          </section>
-
-
-          <section class="diagram-card" data-title="Data View (Views &amp; Beyond) / Dynamic Knowledge Update">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 8.2</span>
-                <h4>8.2 Dynamic Knowledge Update</h4>
-                <p>Data View 的局部展开：知识库更新不能直接改旧 chunk，应通过新 DocumentVersion 和 candidate IndexManifest 原子切换，并失效旧 graph evidence 与 citation lineage。</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 2518 182" role="img" aria-label="Data View (Views &amp; Beyond) / Dynamic Knowledge Update">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Dynamic Knowledge Update</text>
-<text x="24" y="54" class="svg-subtitle">Data View (Views &amp; Beyond)</text>
-<path class="svg-edge" d="M 228 115.0 C 259.0 115.0, 259.0 115.0, 282 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 478 115.0 C 509.0 115.0, 509.0 115.0, 532 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 115.0 C 759.0 115.0, 759.0 115.0, 782 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 978 115.0 C 1009.0 115.0, 1009.0 115.0, 1032 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1228 115.0 C 1259.0 115.0, 1259.0 115.0, 1282 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1478 115.0 C 1509.0 115.0, 1509.0 115.0, 1532 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1728 115.0 C 1759.0 115.0, 1759.0 115.0, 1782 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1978 115.0 C 2009.0 115.0, 2009.0 115.0, 2032 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 2228 115.0 C 2259.0 115.0, 2259.0 115.0, 2282 115.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="40" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="110.0" class="svg-label" text-anchor="middle">Source changed /</text>
-<text x="134.0" y="125.0" class="svg-label" text-anchor="middle">checksum / version</text>
-<rect class="svg-node" x="290" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110.0" class="svg-label" text-anchor="middle">New DocumentVersion</text>
-<rect class="svg-node" x="540" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="110.0" class="svg-label" text-anchor="middle">Re-parse document</text>
-<rect class="svg-node" x="790" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="110.0" class="svg-label" text-anchor="middle">Rebuild all chunks /</text>
-<text x="884.0" y="125.0" class="svg-label" text-anchor="middle">CitationChunk +</text>
-<text x="884.0" y="140.0" class="svg-label" text-anchor="middle">ParentChunk</text>
-<rect class="svg-node" x="1040" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1134.0" y="110.0" class="svg-label" text-anchor="middle">Candidate IndexManifest</text>
-<rect class="svg-node" x="1290" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1384.0" y="110.0" class="svg-label" text-anchor="middle">Validate / span, ACL,</text>
-<text x="1384.0" y="125.0" class="svg-label" text-anchor="middle">index health</text>
-<rect class="svg-node" x="1540" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1634.0" y="110.0" class="svg-label" text-anchor="middle">Atomic activate</text>
-<rect class="svg-node" x="1790" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1884.0" y="110.0" class="svg-label" text-anchor="middle">Retire old manifest</text>
-<rect class="svg-node" x="2040" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2134.0" y="110.0" class="svg-label" text-anchor="middle">Invalidate old graph</text>
-<text x="2134.0" y="125.0" class="svg-label" text-anchor="middle">evidence / and citation</text>
-<text x="2134.0" y="140.0" class="svg-label" text-anchor="middle">lineage</text>
-<rect class="svg-node" x="2290" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="2384.0" y="110.0" class="svg-label" text-anchor="middle">Update trace /</text>
-<text x="2384.0" y="125.0" class="svg-label" text-anchor="middle">diagnostics</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>文档更新后不能假设旧 chunk 边界稳定。</li>
-                <li>旧 source-span citation 必须通过 document version 判断是否仍有效。</li>
-                <li>IndexManifest active/retired 状态必须进入 trace 和 eval attribution。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  Change[&quot;Source changed&lt;br/&gt;checksum / version&quot;]
-  Version[&quot;New DocumentVersion&quot;]
-  Parse[&quot;Re-parse document&quot;]
-  Chunks[&quot;Rebuild all chunks&lt;br/&gt;CitationChunk + ParentChunk&quot;]
-  Candidate[&quot;Candidate IndexManifest&quot;]
-  Validate[&quot;Validate&lt;br/&gt;span, ACL, index health&quot;]
-  Activate[&quot;Atomic activate&quot;]
-  Retire[&quot;Retire old manifest&quot;]
-  Invalidate[&quot;Invalidate old graph evidence&lt;br/&gt;and citation lineage&quot;]
-  Trace[&quot;Update trace / diagnostics&quot;]
-
-  Change --&gt; Version --&gt; Parse --&gt; Chunks --&gt; Candidate --&gt; Validate --&gt; Activate --&gt; Retire --&gt; Invalidate --&gt; Trace
-
-  class Change,Version,Parse,Chunks,Candidate,Activate,Retire,Invalidate,Trace node;
-  class Validate gate;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-
-        <article class="diagram-section view-category" data-title="Quality View (Views &amp; Beyond)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 9</span>
-              <h3>9. Quality View (Views &amp; Beyond)</h3>
-              <p>治理观测贯穿 input、retrieval、tool、output、trace、usage/cost、failure bucket、benchmark 和 release gate。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>V&amp;B Quality</dd></div>
-            <div><dt>Purpose</dt><dd>说明 correctness、citation、observability、security、recoverability、cost 和 release gate。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Quality View (Views &amp; Beyond) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 9.1</span>
-                <h4>9.1 Overview</h4>
-                <p>Quality View (Views &amp; Beyond) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 768 1136" role="img" aria-label="Quality View (Views &amp; Beyond) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Quality View (Views &amp; Beyond)</text>
-<path class="svg-edge" d="M 384.0 148 C 384.0 168.0, 384.0 168.0, 384.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 254 C 384.0 274.0, 134.0 274.0, 134.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 360 C 134.0 380.0, 384.0 380.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 572 C 384.0 592.0, 384.0 592.0, 384.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 254 C 384.0 274.0, 384.0 274.0, 384.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 254 C 384.0 274.0, 634.0 274.0, 634.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 360 C 134.0 539.0, 384.0 539.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 592.0, 384.0 592.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 360 C 384.0 539.0, 384.0 539.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 360 C 634.0 539.0, 384.0 539.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 572 C 384.0 645.0, 384.0 645.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 678 C 384.0 698.0, 384.0 698.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 784 C 384.0 804.0, 384.0 804.0, 384.0 816" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 890 C 384.0 910.0, 384.0 910.0, 384.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 996 C 384.0 1016.0, 384.0 1016.0, 384.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110" class="svg-label" text-anchor="middle">Input Gate / ACL /</text>
-<text x="384.0" y="125" class="svg-label" text-anchor="middle">Redaction</text>
-<rect class="svg-node" x="290.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="216" class="svg-label" text-anchor="middle">agent_run</text>
-<rect class="svg-node" x="40.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="322" class="svg-label" text-anchor="middle">context_build</text>
-<rect class="svg-node" x="290.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="428" class="svg-label" text-anchor="middle">retrieval / graph_expand</text>
-<text x="384.0" y="443" class="svg-label" text-anchor="middle">/ rerank</text>
-<rect class="svg-node" x="290.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="322" class="svg-label" text-anchor="middle">model_call / usage +</text>
-<text x="384.0" y="337" class="svg-label" text-anchor="middle">cost</text>
-<rect class="svg-node" x="540.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="322" class="svg-label" text-anchor="middle">tool_call</text>
-<rect class="svg-node" x="290.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="534" class="svg-label" text-anchor="middle">claim_binding</text>
-<rect class="svg-node" x="290.0" y="612" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="640" class="svg-label" text-anchor="middle">output_gate</text>
-<rect class="svg-node" x="290.0" y="718" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="746" class="svg-label" text-anchor="middle">ZunoSpan Tree</text>
-<rect class="svg-node" x="290.0" y="824" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="852" class="svg-label" text-anchor="middle">EvalRun</text>
-<rect class="svg-node" x="290.0" y="930" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="958" class="svg-label" text-anchor="middle">Failure Buckets</text>
-<rect class="svg-node" x="290.0" y="1036" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="1064" class="svg-label" text-anchor="middle">Release Gate</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>blocked、prepared、runtime observed、measured 必须分开。</li>
-                <li>缺 trace 字段时输出 unavailable，不编造诊断。</li>
-                <li>近期先做本地持久 trace，不强求完整 LangSmith / OTel 平台。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  InputGate[&quot;Input Gate / ACL / Redaction&quot;]
-  AgentRun[&quot;agent_run&quot;]
-  Context[&quot;context_build&quot;]
-  Retrieval[&quot;retrieval / graph_expand / rerank&quot;]
-  Model[&quot;model_call&lt;br/&gt;usage + cost&quot;]
-  Tool[&quot;tool_call&quot;]
-  Citation[&quot;claim_binding&quot;]
-  OutputGate[&quot;output_gate&quot;]
-  Trace[&quot;ZunoSpan Tree&quot;]
-  Eval[&quot;EvalRun&quot;]
-  Buckets[&quot;Failure Buckets&quot;]
-  Release[&quot;Release Gate&quot;]
-
-  InputGate --&gt; AgentRun --&gt; Context --&gt; Retrieval --&gt; Citation --&gt; OutputGate
-  AgentRun --&gt; Model
-  AgentRun --&gt; Tool
-  Context --&gt; Trace
-  Retrieval --&gt; Trace
-  Model --&gt; Trace
-  Tool --&gt; Trace
-  Citation --&gt; Trace
-  OutputGate --&gt; Trace
-  Trace --&gt; Eval --&gt; Buckets --&gt; Release
-
-  class AgentRun,Context,Retrieval,Model,Tool,Citation,Trace,Eval,Buckets node;
-  class InputGate,OutputGate,Release gate;</code></pre>
-            </details>
-          </section>
-
-
-          <section class="diagram-card" data-title="Quality View (Views &amp; Beyond) / Layered Metrics and Feedback Loop">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 9.2</span>
-                <h4>9.2 Layered Metrics and Feedback Loop</h4>
-                <p>Quality View 的局部展开：质量指标按 Retrieval、Generation、Agent、Memory、Product 分层；产品反馈只能生成 failure case 和 dataset update，不能直接证明 quality completed。</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 1268 606" role="img" aria-label="Quality View (Views &amp; Beyond) / Layered Metrics and Feedback Loop">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Layered Metrics and Feedback Loop</text>
-<text x="24" y="54" class="svg-subtitle">Quality View (Views &amp; Beyond)</text>
-<path class="svg-edge" d="M 228 115.0 C 259.0 115.0, 259.0 274.0, 282 274.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 228 221.0 C 259.0 221.0, 259.0 274.0, 282 274.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 228 327.0 C 259.0 327.0, 259.0 274.0, 282 274.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 228 433.0 C 259.0 433.0, 259.0 274.0, 282 274.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 228 539.0 C 259.0 539.0, 259.0 380.0, 282 380.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 478 274.0 C 509.0 274.0, 509.0 274.0, 532 274.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 274.0 C 884.0 274.0, 884.0 327.0, 1032 327.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 478 380.0 C 509.0 380.0, 509.0 380.0, 532 380.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 380.0 C 759.0 380.0, 759.0 274.0, 782 274.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 978 274.0 C 1009.0 274.0, 1009.0 327.0, 1032 327.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 1134.0 294.0 C 1134.0 242.0, 384.0 242.0, 384.0 233.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 728 274.0 C 759.0 274.0, 759.0 380.0, 782 380.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<rect class="svg-node" x="40" y="82.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="110.0" class="svg-label" text-anchor="middle">Retrieval Metrics /</text>
-<text x="134.0" y="125.0" class="svg-label" text-anchor="middle">Recall@K, MRR, Evidence</text>
-<text x="134.0" y="140.0" class="svg-label" text-anchor="middle">Precision/Recall</text>
-<rect class="svg-node" x="40" y="188.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="216.0" class="svg-label" text-anchor="middle">Generation Metrics /</text>
-<text x="134.0" y="231.0" class="svg-label" text-anchor="middle">Faithfulness, Citation</text>
-<text x="134.0" y="246.0" class="svg-label" text-anchor="middle">Accuracy, Answer</text>
-<rect class="svg-node" x="40" y="294.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="322.0" class="svg-label" text-anchor="middle">Agent Metrics / replan</text>
-<text x="134.0" y="337.0" class="svg-label" text-anchor="middle">success, reflection</text>
-<text x="134.0" y="352.0" class="svg-label" text-anchor="middle">pass, tool success</text>
-<rect class="svg-node" x="40" y="400.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="428.0" class="svg-label" text-anchor="middle">Memory Metrics /</text>
-<text x="134.0" y="443.0" class="svg-label" text-anchor="middle">relevance,</text>
-<text x="134.0" y="458.0" class="svg-label" text-anchor="middle">stale/conflict,</text>
-<rect class="svg-node" x="40" y="506.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="534.0" class="svg-label" text-anchor="middle">Product Metrics / thumbs</text>
-<text x="134.0" y="549.0" class="svg-label" text-anchor="middle">down, follow-up,</text>
-<text x="134.0" y="564.0" class="svg-label" text-anchor="middle">resolution, latency,</text>
-<rect class="svg-node" x="290" y="241.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="269.0" class="svg-label" text-anchor="middle">offline eval</text>
-<rect class="svg-node" x="540" y="241.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="269.0" class="svg-label" text-anchor="middle">release gate</text>
-<rect class="svg-node" x="290" y="347.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="375.0" class="svg-label" text-anchor="middle">product feedback</text>
-<rect class="svg-node" x="540" y="347.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="375.0" class="svg-label" text-anchor="middle">failure case</text>
-<rect class="svg-node" x="790" y="241.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="269.0" class="svg-label" text-anchor="middle">fixed dataset update</text>
-<rect class="svg-node" x="1040" y="294.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="1134.0" y="322.0" class="svg-label" text-anchor="middle">regression eval</text>
-<rect class="svg-node" x="790" y="347.0" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="884.0" y="375.0" class="svg-label" text-anchor="middle">Blocked / measurement</text>
-<text x="884.0" y="390.0" class="svg-label" text-anchor="middle">blocked when profile</text>
-<text x="884.0" y="405.0" class="svg-label" text-anchor="middle">incomplete</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>Current verified、Partial / closure gap、Short-term target、Blocked、Future optional 必须在图和文字中可区分。</li>
-                <li>fixed benchmark profile incomplete 时只能 blocked_not_measured，不能把 failed checks 当成 measured quality failure。</li>
-                <li>feedback 是数据闭环输入，不是 release gate 替代物。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart LR
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-  classDef blocked fill:#fff0f0,stroke:#c84b4b,stroke-width:1px,color:#16202a;
-
-  Retrieval[&quot;Retrieval Metrics&lt;br/&gt;Recall@K, MRR, Evidence Precision/Recall&quot;]
-  Generation[&quot;Generation Metrics&lt;br/&gt;Faithfulness, Citation Accuracy, Answer Correctness&quot;]
-  Agent[&quot;Agent Metrics&lt;br/&gt;replan success, reflection pass, tool success&quot;]
-  Memory[&quot;Memory Metrics&lt;br/&gt;relevance, stale/conflict, Reflexion reuse&quot;]
-  Product[&quot;Product Metrics&lt;br/&gt;thumbs down, follow-up, resolution, latency, cost&quot;]
-  Offline[&quot;offline eval&quot;]
-  Release[&quot;release gate&quot;]
-  Feedback[&quot;product feedback&quot;]
-  Failure[&quot;failure case&quot;]
-  Dataset[&quot;fixed dataset update&quot;]
-  Regression[&quot;regression eval&quot;]
-  Blocked[&quot;Blocked&lt;br/&gt;measurement blocked when profile incomplete&quot;]
-
-  Retrieval --&gt; Offline
-  Generation --&gt; Offline
-  Agent --&gt; Offline
-  Memory --&gt; Offline
-  Product --&gt; Feedback
-  Offline --&gt; Release
-  Release --&gt; Regression
-  Feedback --&gt; Failure --&gt; Dataset --&gt; Regression --&gt; Offline
-  Release --&gt; Blocked
-
-  class Retrieval,Generation,Agent,Memory,Product,Offline,Feedback,Failure,Dataset,Regression node;
-  class Release gate;
-  class Blocked blocked;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-      </section>
-
-
-      <section class="diagram-group">
-        <h2>三、Zuno 专题视图</h2>
-        <p>单独放大 Agentic GraphRAG evidence-span、claim citation 和 Agent loop，这是 Zuno 的产品核心。</p>
-
-        <article class="diagram-section view-category" data-title="Agentic GraphRAG Evidence and Agent Loop (Zuno)">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category 10</span>
-              <h3>10. Agentic GraphRAG Evidence and Agent Loop (Zuno)</h3>
-              <p>standard、deep 和 agentic 共享 evidence/citation contract；agentic 模式的关键不是“多一个 Agent 节点”，而是检测检索失败、选择纠正动作、再次执行，并用 EvidenceLedger 保留跨轮 source-span 证据。</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>Zuno Product Core</dd></div>
-            <div><dt>Purpose</dt><dd>放大 Agentic GraphRAG evidence-span、claim binding、reflection/replan 和 fixed benchmark gate。</dd></div>
-          </dl>
-
-          <section class="diagram-card" data-title="Agentic GraphRAG Evidence and Agent Loop (Zuno) / Overview">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram 10.1</span>
-                <h4>10.1 Overview</h4>
-                <p>Agentic GraphRAG Evidence and Agent Loop (Zuno) overview and implementation boundary</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-<svg class="offline-svg" viewBox="0 0 768 1454" role="img" aria-label="Agentic GraphRAG Evidence and Agent Loop (Zuno) / Overview">
-<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>
-<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>
-<text x="24" y="32" class="svg-title">Overview</text>
-<text x="24" y="54" class="svg-subtitle">Agentic GraphRAG Evidence and Agent Loop (Zuno)</text>
-<path class="svg-edge" d="M 384.0 148 C 384.0 168.0, 384.0 168.0, 384.0 180" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 254 C 384.0 274.0, 384.0 274.0, 384.0 286" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="392.0" y="268.0" class="svg-edge-label">yes</text>
-<path class="svg-edge" d="M 384.0 254 C 384.0 592.0, 509.0 592.0, 509.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="454.5" y="586.0" class="svg-edge-label">no</text>
-<path class="svg-edge" d="M 384.0 360 C 384.0 380.0, 134.0 380.0, 134.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 134.0 466 C 134.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 360 C 384.0 380.0, 384.0 380.0, 384.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 466 C 384.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 360 C 384.0 380.0, 634.0 380.0, 634.0 392" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 634.0 466 C 634.0 486.0, 384.0 486.0, 384.0 498" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 572 C 384.0 592.0, 384.0 592.0, 384.0 604" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 678 C 384.0 698.0, 384.0 698.0, 384.0 710" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 784 C 384.0 804.0, 384.0 804.0, 384.0 816" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 890 C 384.0 910.0, 509.0 910.0, 509.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="454.5" y="904.0" class="svg-edge-label">sufficient</text>
-<path class="svg-edge" d="M 509.0 996 C 509.0 1016.0, 384.0 1016.0, 384.0 1028" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 1102 C 384.0 1122.0, 384.0 1122.0, 384.0 1134" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 1208 C 384.0 1228.0, 384.0 1228.0, 384.0 1240" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 1314 C 384.0 1334.0, 384.0 1334.0, 384.0 1346" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 890 C 384.0 910.0, 259.0 910.0, 259.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="329.5" y="904.0" class="svg-edge-label">doc_miss / text_miss / citation_miss</text>
-<path class="svg-edge" d="M 165.0 963.0 C 225.0 963.0, 225.0 327.0, 282.0 327.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<path class="svg-edge" d="M 384.0 890 C 384.0 910.0, 259.0 910.0, 259.0 922" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="329.5" y="904.0" class="svg-edge-label">external gap</text>
-<path class="svg-edge" d="M 165.0 963.0 C 225.0 963.0, 225.0 751.0, 282.0 751.0" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="329.5" y="851.0" class="svg-edge-label">use tool</text>
-<path class="svg-edge" d="M 259.0 996 C 259.0 1122.0, 384.0 1122.0, 384.0 1240" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-<text x="329.5" y="1116.0" class="svg-edge-label">abstain</text>
-<rect class="svg-node" x="290.0" y="82" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="110" class="svg-label" text-anchor="middle">Question + ContextPack</text>
-<rect class="svg-node" x="290.0" y="188" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="216" class="svg-label" text-anchor="middle">NeedRetrievalDecision</text>
-<rect class="svg-node" x="290.0" y="294" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="322" class="svg-label" text-anchor="middle">QueryStrategy / DIRECT,</text>
-<text x="384.0" y="337" class="svg-label" text-anchor="middle">REWRITE, MULTI_QUERY,</text>
-<text x="384.0" y="352" class="svg-label" text-anchor="middle">STEP_BACK, HYDE, ENTITY,</text>
-<rect class="svg-node" x="40.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="134.0" y="428" class="svg-label" text-anchor="middle">BM25</text>
-<rect class="svg-node" x="290.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="428" class="svg-label" text-anchor="middle">Vector</text>
-<rect class="svg-node" x="540.0" y="400" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="634.0" y="428" class="svg-label" text-anchor="middle">GraphRoutingDecision /</text>
-<text x="634.0" y="443" class="svg-label" text-anchor="middle">local path / global</text>
-<text x="634.0" y="458" class="svg-label" text-anchor="middle">community</text>
-<rect class="svg-node" x="290.0" y="506" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="534" class="svg-label" text-anchor="middle">RRF / Fusion</text>
-<rect class="svg-node" x="290.0" y="612" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="640" class="svg-label" text-anchor="middle">Rerank + Parent</text>
-<text x="384.0" y="655" class="svg-label" text-anchor="middle">Expansion</text>
-<rect class="svg-node" x="290.0" y="718" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="746" class="svg-label" text-anchor="middle">EvidenceLedger / round,</text>
-<text x="384.0" y="761" class="svg-label" text-anchor="middle">query, retriever, score,</text>
-<text x="384.0" y="776" class="svg-label" text-anchor="middle">source span</text>
-<rect class="svg-node" x="290.0" y="824" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="852" class="svg-label" text-anchor="middle">RetrievalQualityGate /</text>
-<text x="384.0" y="867" class="svg-label" text-anchor="middle">RELEVANT, AMBIGUOUS,</text>
-<text x="384.0" y="882" class="svg-label" text-anchor="middle">IRRELEVANT, CONFLICTING,</text>
-<rect class="svg-node" x="165.0" y="930" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="259.0" y="958" class="svg-label" text-anchor="middle">CorrectiveAction /</text>
-<text x="259.0" y="973" class="svg-label" text-anchor="middle">rewrite, multi-query,</text>
-<text x="259.0" y="988" class="svg-label" text-anchor="middle">graph expand, focused</text>
-<rect class="svg-node" x="415.0" y="930" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="509.0" y="958" class="svg-label" text-anchor="middle">Claim Extraction</text>
-<rect class="svg-node" x="290.0" y="1036" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="1064" class="svg-label" text-anchor="middle">Claim-level Citation</text>
-<text x="384.0" y="1079" class="svg-label" text-anchor="middle">Binding</text>
-<rect class="svg-node" x="290.0" y="1142" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="1170" class="svg-label" text-anchor="middle">Answer Verification /</text>
-<text x="384.0" y="1185" class="svg-label" text-anchor="middle">unsupported claim +</text>
-<text x="384.0" y="1200" class="svg-label" text-anchor="middle">faithfulness</text>
-<rect class="svg-node" x="290.0" y="1248" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="1276" class="svg-label" text-anchor="middle">Grounded Answer /</text>
-<text x="384.0" y="1291" class="svg-label" text-anchor="middle">Partial / Abstain</text>
-<rect class="svg-node" x="290.0" y="1354" width="188" height="66" rx="9" fill="#ffffff" stroke="#9eb0bf" stroke-width="1.15"/>
-<text x="384.0" y="1382" class="svg-label" text-anchor="middle">Failure Buckets and</text>
-<text x="384.0" y="1397" class="svg-label" text-anchor="middle">Release Gate</text>
-</svg>
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-                <li>agentic 不是独立产品模式，而是 Single Controller 内部策略。</li>
-                <li>QueryStrategy 包含 DIRECT、REWRITE、MULTI_QUERY、STEP_BACK、HYDE、ENTITY_DECOMPOSITION、RELATION_QUERY。</li>
-                <li>EvidenceLedger 负责跨轮去重、证据累积、冲突分组、source lineage、Context budget 和 eval attribution。</li>
-                <li>strict citation 必须绑定 source span，doc-only evidence 不能冒充。</li>
-                <li>质量完成只看 fixed benchmark 和 release gate。</li>
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;background&quot;: &quot;#f7f8fb&quot;, &quot;lineColor&quot;: &quot;#52616f&quot;}}}%%
-flowchart TB
-  classDef node fill:#ffffff,stroke:#b8c2cc,stroke-width:1px,color:#16202a;
-  classDef decision fill:#fff8e8,stroke:#d2a44a,stroke-width:1px,color:#16202a;
-  classDef gate fill:#eef6ff,stroke:#7aa2d8,stroke-width:1px,color:#16202a;
-
-  Question[&quot;Question + ContextPack&quot;]
-  Need{&quot;NeedRetrievalDecision&quot;}
-  Query[&quot;QueryStrategy&lt;br/&gt;DIRECT, REWRITE, MULTI_QUERY, STEP_BACK, HYDE, ENTITY, RELATION&quot;]
-  BM25[&quot;BM25&quot;]
-  Vector[&quot;Vector&quot;]
-  Graph[&quot;GraphRoutingDecision&lt;br/&gt;local path / global community&quot;]
-  Fusion[&quot;RRF / Fusion&quot;]
-  Rerank[&quot;Rerank + Parent Expansion&quot;]
-  Ledger[&quot;EvidenceLedger&lt;br/&gt;round, query, retriever, score, source span&quot;]
-  Quality{&quot;RetrievalQualityGate&lt;br/&gt;RELEVANT, AMBIGUOUS, IRRELEVANT, CONFLICTING, INSUFFICIENT_SPAN&quot;}
-  Correct[&quot;CorrectiveAction&lt;br/&gt;rewrite, multi-query, graph expand, focused cite, tool, ask, abstain&quot;]
-  Claim[&quot;Claim Extraction&quot;]
-  Bind[&quot;Claim-level Citation Binding&quot;]
-  Verify[&quot;Answer Verification&lt;br/&gt;unsupported claim + faithfulness&quot;]
-  Final[&quot;Grounded Answer / Partial / Abstain&quot;]
-  Eval[&quot;Failure Buckets and Release Gate&quot;]
-
-  Question --&gt; Need
-  Need --&gt;|yes| Query
-  Need --&gt;|no| Claim
-  Query --&gt; BM25 --&gt; Fusion
-  Query --&gt; Vector --&gt; Fusion
-  Query --&gt; Graph --&gt; Fusion
-  Fusion --&gt; Rerank --&gt; Ledger --&gt; Quality
-  Quality --&gt;|sufficient| Claim --&gt; Bind --&gt; Verify --&gt; Final --&gt; Eval
-  Quality --&gt;|doc_miss / text_miss / citation_miss| Correct --&gt; Query
-  Quality --&gt;|external gap| Correct
-  Correct --&gt;|use tool| Ledger
-  Correct --&gt;|abstain| Final
-
-  class Question,Query,BM25,Vector,Graph,Fusion,Rerank,Ledger,Correct,Claim,Bind,Verify,Final,Eval node;
-  class Need,Quality decision;</code></pre>
-            </details>
-          </section>
-
-        </article>
-
-      </section>
-
-  </main>
-  <dialog id="diagram-dialog" aria-label="Diagram fullscreen view">
-    <div class="dialog-header">
+  <dialog id="diagram-dialog">
+    <div class="dialog-head">
       <strong id="dialog-title">Diagram</strong>
       <button id="dialog-close" type="button">关闭</button>
     </div>
-    <div class="dialog-body">
-      <div id="dialog-content"></div>
-    </div>
+    <div id="dialog-body" class="dialog-body"></div>
   </dialog>
-  <script>
-    const dialog = document.getElementById("diagram-dialog");
-    const dialogTitle = document.getElementById("dialog-title");
-    const dialogContent = document.getElementById("dialog-content");
-    const closeButton = document.getElementById("dialog-close");
-    document.querySelectorAll(".fullscreen-button").forEach((button) => {
-      button.addEventListener("click", () => {
-        const section = button.closest(".diagram-card");
-        const title = section.dataset.title || "Diagram";
-        const diagram = section.querySelector(".offline-diagram").cloneNode(true);
-        dialogTitle.textContent = title;
-        dialogContent.replaceChildren(diagram);
-        dialog.showModal();
-      });
-    });
 
-    closeButton.addEventListener("click", () => dialog.close());
+  <script type="module">
+    const groups = [{"title": "一、4+1 View Model", "views": ["Logical View (4+1)", "Development View (4+1)", "Process View (4+1)", "Physical View (4+1)", "Scenarios View (4+1)"]}, {"title": "二、Views & Beyond", "views": ["Module View (Views & Beyond)", "Component-and-Connector View (Views & Beyond)", "Data View (Views & Beyond)", "Quality View (Views & Beyond)"]}, {"title": "三、Zuno Product Core", "views": ["Agentic GraphRAG Evidence and Agent Loop (Zuno)"]}];
+    const expectedViews = ["Logical View (4+1)", "Development View (4+1)", "Process View (4+1)", "Physical View (4+1)", "Scenarios View (4+1)", "Module View (Views & Beyond)", "Component-and-Connector View (Views & Beyond)", "Data View (Views & Beyond)", "Quality View (Views & Beyond)", "Agentic GraphRAG Evidence and Agent Loop (Zuno)"];
+    const status = document.getElementById("status");
+    const atlas = document.getElementById("atlas");
+    const toc = document.getElementById("toc");
+
+    const slugify = (value) => value
+      .toLowerCase()
+      .replace(/[^a-z0-9\u4e00-\u9fff]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    function sectionFor(markdown, title) {
+      const marker = `### ${title}`;
+      const start = markdown.indexOf(marker);
+      if (start < 0) throw new Error(`缺少 canonical view: ${title}`);
+      const candidates = expectedViews
+        .filter((other) => other !== title)
+        .map((other) => markdown.indexOf(`### ${other}`, start + marker.length))
+        .filter((index) => index >= 0);
+      const end = candidates.length ? Math.min(...candidates) : markdown.length;
+      return markdown.slice(start + marker.length, end);
+    }
+
+    function parseView(markdown, title) {
+      const section = sectionFor(markdown, title);
+      const firstLocal = section.search(/^#### /m);
+      const description = (firstLocal >= 0 ? section.slice(0, firstLocal) : section)
+        .trim()
+        .split(/\n+/)
+        .filter((line) => line && !line.startsWith("#"))
+        .join(" ");
+      const diagrams = [];
+      const regex = /^#### (?<subtitle>[^\n]+)\n(?<between>[\s\S]*?)```mermaid\n(?<source>[\s\S]*?)\n```/gm;
+      for (const match of section.matchAll(regex)) {
+        diagrams.push({
+          subtitle: match.groups.subtitle.trim(),
+          source: match.groups.source.trim(),
+        });
+      }
+      if (!diagrams.length) throw new Error(`视图没有 Mermaid 子图: ${title}`);
+      return { title, description, diagrams };
+    }
+
+    function renderShell(views) {
+      const lookup = new Map(views.map((view) => [view.title, view]));
+      groups.forEach((group) => {
+        const navTitle = document.createElement("h2");
+        navTitle.textContent = group.title;
+        toc.appendChild(navTitle);
+
+        const groupSection = document.createElement("section");
+        groupSection.className = "group";
+        const groupHeading = document.createElement("h2");
+        groupHeading.textContent = group.title;
+        groupSection.appendChild(groupHeading);
+
+        group.views.forEach((title) => {
+          const view = lookup.get(title);
+          const id = slugify(title);
+          const link = document.createElement("a");
+          link.href = `#${id}`;
+          link.textContent = title;
+          toc.appendChild(link);
+
+          const article = document.createElement("article");
+          article.className = "view";
+          article.id = id;
+          article.innerHTML = `<h3>${title}</h3><p class="view-description">${view.description}</p>`;
+
+          view.diagrams.forEach((diagram) => {
+            const card = document.createElement("section");
+            card.className = "diagram-card";
+            const kind = diagram.subtitle.startsWith("Overall") ? "Overall" : "Local";
+            const escaped = diagram.source
+              .replaceAll("&", "&amp;")
+              .replaceAll("<", "&lt;")
+              .replaceAll(">", "&gt;");
+            card.innerHTML = `
+              <div class="diagram-header">
+                <div><span class="diagram-kind">${kind} Diagram</span><h4>${diagram.subtitle}</h4></div>
+                <button type="button" class="fullscreen">全屏查看</button>
+              </div>
+              <div class="diagram-frame"><pre class="mermaid">${escaped}</pre></div>
+              <details><summary>Mermaid source</summary><pre class="source"><code>${escaped}</code></pre></details>`;
+            article.appendChild(card);
+          });
+          groupSection.appendChild(article);
+        });
+        atlas.appendChild(groupSection);
+      });
+    }
+
+    function bindFullscreen() {
+      const dialog = document.getElementById("diagram-dialog");
+      const body = document.getElementById("dialog-body");
+      const title = document.getElementById("dialog-title");
+      document.getElementById("dialog-close").addEventListener("click", () => dialog.close());
+      document.querySelectorAll(".fullscreen").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest(".diagram-card");
+          const svg = card.querySelector("svg");
+          title.textContent = card.querySelector("h4").textContent;
+          body.replaceChildren(svg.cloneNode(true));
+          dialog.showModal();
+        });
+      });
+    }
+
+    try {
+      if (location.protocol === "file:") {
+        throw new Error("请使用 HTTP 预览：python -m http.server 8000，然后打开 /docs/architecture/architecture.html");
+      }
+      const response = await fetch("architecture.md", { cache: "no-store" });
+      if (!response.ok) throw new Error(`无法读取 architecture.md: HTTP ${response.status}`);
+      const markdown = await response.text();
+      const views = expectedViews.map((title) => parseView(markdown, title));
+      renderShell(views);
+
+      const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "base",
+        flowchart: { htmlLabels: true, curve: "basis", useMaxWidth: false },
+        sequence: { useMaxWidth: false, wrap: true },
+      });
+      await mermaid.run({ querySelector: ".mermaid" });
+      bindFullscreen();
+      status.textContent = `已渲染 ${views.length} 类视图，共 ${views.reduce((sum, view) => sum + view.diagrams.length, 0)} 张 Mermaid 图。`;
+    } catch (error) {
+      status.textContent = "架构图加载失败。";
+      atlas.innerHTML = `<div class="error"><strong>无法渲染 Architecture Atlas</strong><br/>${error.message}</div>`;
+      console.error(error);
+    }
   </script>
 </body>
 </html>
