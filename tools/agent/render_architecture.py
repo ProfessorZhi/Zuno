@@ -10,11 +10,12 @@ DESIGN_PATH = REPO_ROOT / "docs/architecture/architecture.md"
 VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
 AGENT_DESIGN_PATH = REPO_ROOT / ".agent/architecture/architecture.md"
+AGENT_VIEWS_PATH = REPO_ROOT / ".agent/architecture/architecture-views.md"
 AGENT_HTML_PATH = REPO_ROOT / ".agent/architecture/architecture.html"
 
-# Backward-compatible alias used by older tests and helper scripts.
+# Backward-compatible aliases used by older tests and helper scripts.
 SOURCE_PATH = VIEWS_PATH
-AGENT_SOURCE_PATH = AGENT_DESIGN_PATH
+AGENT_SOURCE_PATH = AGENT_VIEWS_PATH
 
 STALE_OUTPUTS = [
     REPO_ROOT / "docs/architecture/overview.html",
@@ -223,6 +224,7 @@ def write_outputs() -> None:
         raise ValueError("\n".join(errors))
     AGENT_DESIGN_PATH.parent.mkdir(parents=True, exist_ok=True)
     AGENT_DESIGN_PATH.write_text(design, encoding="utf-8", newline="\n")
+    AGENT_VIEWS_PATH.write_text(views, encoding="utf-8", newline="\n")
     AGENT_HTML_PATH.write_text(html, encoding="utf-8", newline="\n")
 
 
@@ -239,6 +241,14 @@ def check_outputs() -> list[str]:
         errors.append(f"missing generated Markdown mirror: {AGENT_DESIGN_PATH.relative_to(REPO_ROOT)}")
     elif AGENT_DESIGN_PATH.read_text(encoding="utf-8") != design:
         errors.append(".agent/architecture/architecture.md is not synced with docs/architecture/architecture.md")
+
+    if not AGENT_VIEWS_PATH.exists():
+        errors.append(f"missing generated Mermaid source mirror: {AGENT_VIEWS_PATH.relative_to(REPO_ROOT)}")
+    elif AGENT_VIEWS_PATH.read_text(encoding="utf-8") != views:
+        errors.append(
+            ".agent/architecture/architecture-views.md is not synced with "
+            "docs/architecture/architecture-views.md"
+        )
 
     if not AGENT_HTML_PATH.exists():
         errors.append(f"missing generated HTML mirror: {AGENT_HTML_PATH.relative_to(REPO_ROOT)}")
