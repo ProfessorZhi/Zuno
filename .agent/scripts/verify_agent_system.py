@@ -107,13 +107,6 @@ UNIFIED_RUNTIME_PROGRAM_FILES = [
 ]
 CURRENT_FRONT_PROGRAM_FILES = [
     *ACTIVE_PROGRAM_FILES,
-    "PHASE01_real-runtime-baseline.md",
-    "PHASE02_langgraph-execution-cutover.md",
-    "PHASE03_runtime-dependency-factory.md",
-    "PHASE04_real-agent-execution.md",
-    "PHASE05_knowledge-tool-memory-integration.md",
-    "PHASE06_product-cutover.md",
-    "PHASE07_benchmark-and-closure.md",
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -568,10 +561,10 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     )
     archive_root = repo_root / MASTER_PROGRAM_ARCHIVE
     for phrase in [
-        "state: active",
-        "active_program: zuno-real-unified-runtime-cutover-v1",
-        "current_phase: PHASE07_benchmark-and-closure",
-        f"latest_completed_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        "latest_completed_program: zuno-real-unified-runtime-cutover-v1",
         "zuno-real-unified-runtime-cutover-v1",
         UNIFIED_RUNTIME_PROGRAM_NAME,
         UNIFIED_RUNTIME_PROGRAM_ARCHIVE,

@@ -76,13 +76,6 @@ ACTIVE_PROGRAM_FILES = [
     "current.md",
     "implementation-roadmap.md",
     "closure-checklist.md",
-    "PHASE01_real-runtime-baseline.md",
-    "PHASE02_langgraph-execution-cutover.md",
-    "PHASE03_runtime-dependency-factory.md",
-    "PHASE04_real-agent-execution.md",
-    "PHASE05_knowledge-tool-memory-integration.md",
-    "PHASE06_product-cutover.md",
-    "PHASE07_benchmark-and-closure.md",
 ]
 PROGRAM3_ACTIVE_NAME = "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1"
 PROGRAM3_ACTIVE_ARCHIVE = f"docs/history/programs/{PROGRAM3_ACTIVE_NAME}"
@@ -1175,10 +1168,10 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
     )
     for phrase in [
         ACTIVE_PROGRAM_NAME,
-        "state: active",
-        "active_program: zuno-real-unified-runtime-cutover-v1",
-        "current_phase: PHASE07_benchmark-and-closure",
-        f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        "latest_completed_program: zuno-real-unified-runtime-cutover-v1",
         PROGRAM3_ACTIVE_NAME,
         PROGRAM3_ACTIVE_ARCHIVE,
         "Launchable enterprise Agentic GraphRAG product baseline completed.",

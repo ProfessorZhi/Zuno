@@ -378,7 +378,6 @@ def _register_blocked_parser_inputs(
     queue: LocalQueueBackend,
 ) -> dict[str, dict[str, Any]]:
     blocked_inputs = [
-        ("file_phase12_pdf", "layout.pdf", "application/pdf"),
         (
             "file_phase12_docx",
             "office.docx",

@@ -1,64 +1,38 @@
 # 当前程序
 
-state: active
-active_program: zuno-real-unified-runtime-cutover-v1
-current_phase: PHASE07_benchmark-and-closure
-latest_completed_program: zuno-unified-agent-runtime-closure-v1
-baseline_commit: d90dc0013c1721a56828a6dc6f889e209454b346
+state: no-active
+active_program: none
+current_phase: none
+latest_completed_program: zuno-real-unified-runtime-cutover-v1
+latest_completed_archive: docs/history/programs/zuno-real-unified-runtime-cutover-v1/
 
-## 当前目标
+## 当前状态
 
-本轮 program 的目标不是继续扩大架构层，也不是只优先 benchmark。当前目标是把产品主路径从并存的 `GeneralAgent` legacy path、`UnifiedAgentRuntimeService` 手写 runtime loop 和 deterministic executor baseline，切到：
+`.agent/programs/` 当前没有 active program。
 
-```text
-Completion / Workspace
--> UnifiedAgentRuntimeService
--> compiled LangGraph
--> RuntimeDependencyFactory
-   -> Model Gateway
-   -> Memory Engine
-   -> Corrective Agentic GraphRAG
-   -> Tool Control Plane
--> Plan-and-Execute
--> real ReAct step
--> Observation
--> Reflection
--> true Replan
--> Reflexion
--> GroundedAnswer
--> SSE / Artifact
-```
+最近完成并归档的 program 是 `zuno-real-unified-runtime-cutover-v1`。
 
-## 当前 Phase
-
-`PHASE07_benchmark-and-closure` 正在运行或诚实阻塞 benchmark，并完成 program closure / archive。
-
-PHASE01 已完成 program 激活、事实冻结和 guardrail。PHASE02 已完成 compiled LangGraph cutover。PHASE03 已完成 `RuntimeDependencyFactory`、typed runtime protocols、Completion / Workspace 工厂装配入口，以及核心依赖缺失时 blocked observation 的边界。PHASE04 已完成 ModelStep 经 Model Gateway 调用、ReAct 单步 runner 和 Grounded Synthesis `final_answer` / claims / citation bindings / unsupported claims 输出。PHASE05 已完成 Knowledge / Tool / Memory 集成，以及 PDF -> index -> corrective retrieval -> EvidenceLedger -> synthesis -> page citation unified runtime vertical slice。PHASE06 已完成 Completion 默认 unified runtime、legacy rollback flag 和 SSE product event surface。
-
-PHASE07 不得把 benchmark blocked / partial / prepared 写成 measured。
-
-## 当前已冻结的主要缺口
-
-- fixed EnterpriseRAG paired benchmark 仍是 measurement blocked / quality not yet proven。
-
-这些缺口是 PHASE07 的修复目标。不得把它们写成 Current fixed。
-
-## 前台 Phase 文件
-
-- `PHASE01_real-runtime-baseline.md`
-- `PHASE02_langgraph-execution-cutover.md`
-- `PHASE03_runtime-dependency-factory.md`
-- `PHASE04_real-agent-execution.md`
-- `PHASE05_knowledge-tool-memory-integration.md`
-- `PHASE06_product-cutover.md`
-- `PHASE07_benchmark-and-closure.md`
-
-## 质量边界
+关闭口径：
 
 ```text
-implementation in progress
+implementation_status: implementation_complete
+measurement_status: measurement_blocked
 measurement blocked
-quality not yet proven
+quality_gate_status: quality_not_proven
+blocked_reason: enterprise_rag_sample8_timeout_and_agentic_profile_incomplete
 ```
 
-不得把 prepared、blocked、runtime observed、partial profile 或 deterministic fixture 写成 measured。
+## 完成事实
+
+本轮已完成本地实现切换：
+
+- `UnifiedAgentRuntimeService` 使用 compiled LangGraph。
+- `RuntimeDependencyFactory` 统一装配 Model Gateway、Memory、Knowledge 和 Tool Control Plane。
+- ModelStep 经 Model Gateway 执行。
+- ReActStep 执行当前 PlanStep 的单步 reason / act / observe。
+- Knowledge / Tool / Memory 已接入 unified runtime。
+- Completion 默认进入 unified runtime；legacy GeneralAgent 只通过 `ZUNO_AGENT_RUNTIME=legacy_general_agent` rollback。
+
+## 未证明事项
+
+fixed EnterpriseRAG paired benchmark 没有完成完整 measured profile。不得把本地 implementation tests passed 写成 quality pass，也不得把 Agentic GraphRAG superiority 写成已证明。

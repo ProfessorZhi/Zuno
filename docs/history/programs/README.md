@@ -96,6 +96,14 @@ and evidence, not the active Agent execution path.
   state. It closed as `implementation_complete_measurement_blocked`: sample-8
   is blocked by unavailable local embedding profile runner and sample-80 is
   blocked by the absence of a tracked fixed 80-case set.
+- `zuno-real-unified-runtime-cutover-v1/`: completed real unified runtime
+  cutover program. It closed PHASE01-PHASE07 across active program guardrails,
+  compiled LangGraph execution, RuntimeDependencyFactory, real Model Gateway
+  / ReAct / Grounded Synthesis execution, Knowledge / Tool / Memory
+  integration, Completion product cutover, and benchmark closure. It closed
+  as `implementation_complete_measurement_blocked`: sample-8 timed out with
+  incomplete agentic profile artifacts and fixed EnterpriseRAG quality gates
+  remain not proven.
 
 ## Rule
 

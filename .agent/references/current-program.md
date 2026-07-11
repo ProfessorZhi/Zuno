@@ -1,30 +1,32 @@
 # Current Program Reference
 
-state: active
-active_program: zuno-real-unified-runtime-cutover-v1
-current_phase: PHASE07_benchmark-and-closure
-latest_completed_program: zuno-unified-agent-runtime-closure-v1
+state: no-active
+active_program: none
+current_phase: none
+latest_completed_program: zuno-real-unified-runtime-cutover-v1
 
-`.agent/programs/` 当前处于 active program 状态。最近完成并归档的 program 是 `zuno-unified-agent-runtime-closure-v1`。
+`.agent/programs/` 当前处于 no-active 状态。最近完成并归档的 program 是 `zuno-real-unified-runtime-cutover-v1`。
 
 归档入口：
 
-- `docs/history/programs/zuno-unified-agent-runtime-closure-v1/`
+- `docs/history/programs/zuno-real-unified-runtime-cutover-v1/`
 
-## 当前 active program
+## 当前状态
 
 - `.agent/programs/current.md`
-- `.agent/programs/PHASE01_real-runtime-baseline.md`
-- `.agent/programs/PHASE02_langgraph-execution-cutover.md`
-- `.agent/programs/PHASE03_runtime-dependency-factory.md`
-- `.agent/programs/PHASE04_real-agent-execution.md`
-- `.agent/programs/PHASE05_knowledge-tool-memory-integration.md`
-- `.agent/programs/PHASE06_product-cutover.md`
-- `.agent/programs/PHASE07_benchmark-and-closure.md`
+- `.agent/programs/implementation-roadmap.md`
+- `.agent/programs/closure-checklist.md`
 
-当前 program 是 `zuno-real-unified-runtime-cutover-v1`，目标是把 Completion / Workspace 产品主路径切到 `UnifiedAgentRuntimeService -> compiled LangGraph -> RuntimeDependencyFactory -> Model Gateway / Memory / Corrective Agentic GraphRAG / Tool Control Plane` 的真实统一 runtime。
+`zuno-real-unified-runtime-cutover-v1` 已归档。关闭口径：
 
-当前 Phase 是 PHASE07。PHASE01-PHASE06 已完成本地 implementation cutover；PHASE07 目标是运行或诚实阻塞 benchmark，并完成 program closure / archive。不得把 blocked benchmark 写成 measured。
+```text
+implementation_status: implementation_complete
+measurement_status: measurement_blocked
+quality_gate_status: quality_not_proven
+blocked_reason: enterprise_rag_sample8_timeout_and_agentic_profile_incomplete
+```
+
+不得把 blocked benchmark 写成 measured。
 
 ## 最近完成事实
 

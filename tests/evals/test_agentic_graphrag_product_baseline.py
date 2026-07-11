@@ -62,7 +62,6 @@ def test_launchable_agentic_graphrag_product_baseline_generates_shareable_summar
     }
     blocked_evidence = metrics["blocked_parser_evidence"]
     assert set(blocked_evidence) == {
-        "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

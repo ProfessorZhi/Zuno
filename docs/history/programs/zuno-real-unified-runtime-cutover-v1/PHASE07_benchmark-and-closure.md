@@ -3,7 +3,7 @@
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
 phase: PHASE07_benchmark-and-closure
-state: active
+state: completed
 ```
 
 ## 目标
@@ -28,16 +28,22 @@ state: active
 
 ## 验收闸门
 
-- sample-8 尝试运行或输出 precise blocked_reason。
-- fixed 80-case set 不存在时创建 tracked manifest 或记录 blocked_reason。
-- release gate 只在完整 measured profile 时判断 pass / fail。
-- 合法结果只能是：
+- [x] sample-8 尝试运行或输出 precise blocked_reason。
+- [x] fixed 80-case set 不存在时创建 tracked manifest 或记录 blocked_reason。
+- [x] release gate 只在完整 measured profile 时判断 pass / fail。
+- [x] 合法结果只能是：
 
 ```text
 implementation_complete + measurement_pass + quality_pass
 implementation_complete + measurement_pass + quality_fail
 implementation_complete + measurement_blocked + quality_not_proven
 ```
+
+## 完成证据
+
+- raw EnterpriseRAG parquet run blocked: `.local/evals/raw/enterprise_rag_bench/hf/data/questions/test.parquet` 不存在，runner 抛出 `FileNotFoundError`。
+- tracked sample-8 JSONL run timed out after 184 seconds，partial artifacts 只包含 baseline / local / deep profile，缺 agentic profile 和顶层 `metrics.json` / `report.md`。
+- final status: `implementation_complete + measurement_blocked + quality_not_proven`。
 
 ## 验证命令
 

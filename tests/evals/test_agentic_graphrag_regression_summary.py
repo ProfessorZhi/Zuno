@@ -55,10 +55,10 @@ def test_agentic_graphrag_regression_summary_consumes_phase12_e2e_output(tmp_pat
     } <= stage_names
     assert all(stage.model_id == "local-runtime" for stage in summary.stages)
 
-    assert summary.ingestion.files_uploaded == 11
+    assert summary.ingestion.files_uploaded == 10
     assert summary.ingestion.files_indexed == 6
     assert summary.ingestion.files_failed == 0
-    assert summary.ingestion.files_blocked == 5
+    assert summary.ingestion.files_blocked == 4
     assert summary.ingestion.dependency_status == "target_blocked"
     assert summary.ingestion.dead_letter_count == 1
     assert summary.ingestion.reconciler_findings

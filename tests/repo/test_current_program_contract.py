@@ -20,33 +20,20 @@ def test_current_program_baseline_manifest_is_machine_verifiable() -> None:
     assert verifier.verify_current_program() == []
 
 
-def test_phase01_manifest_does_not_promote_blocked_measurement() -> None:
+def test_closure_manifest_does_not_promote_blocked_measurement() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
 
-    assert manifest["measurement_status"] == "baseline_frozen_not_measured"
-    assert manifest["phase01_closure"]["benchmark_measured"] is False
-    assert manifest["phase01_closure"]["quality_gate_changed"] is False
-    assert manifest["benchmark_truth_source"]["status"].endswith("measurement_not_run_in_PHASE01")
-
-    sample_80 = manifest["sample_case_sets"]["sample_80"]
-    assert sample_80["status"] == "blocked"
-    assert sample_80["case_ids"] == []
-    assert "blocked_reason" in sample_80
+    assert manifest["state"] == "no-active"
+    assert manifest["implementation_status"] == "implementation_complete"
+    assert manifest["measurement_status"] == "measurement_blocked"
+    assert manifest["quality_gate_status"] == "quality_not_proven"
+    assert manifest["blocked_reason"] == "enterprise_rag_sample8_timeout_and_agentic_profile_incomplete"
 
 
-def test_phase01_sample_8_covers_tracked_regression_dataset() -> None:
+def test_closure_archive_is_tracked() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
-    sample_8 = manifest["sample_case_sets"]["sample_8"]
 
-    assert sample_8["dataset_path"] == "tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl"
-    assert len(sample_8["case_ids"]) == 8
-    for expected in [
-        "exact_lookup",
-        "semantic_fact",
-        "cross_doc_summary",
-        "graph_relation",
-        "citation_required",
-    ]:
-        assert expected in sample_8["coverage"]
+    assert manifest["archive"] == "docs/history/programs/zuno-real-unified-runtime-cutover-v1/"
+    assert (REPO_ROOT / manifest["archive"] / "closure-summary.md").exists()
