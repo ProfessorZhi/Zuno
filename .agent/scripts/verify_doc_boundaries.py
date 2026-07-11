@@ -52,6 +52,19 @@ REQUIRED_ARCHIVES = [
     f"{ARCHIVE_ROOT}/agent-architecture/decisions/README.md",
 ]
 
+CANONICAL_VIEWS = [
+    "Logical View (4+1)",
+    "Development View (4+1)",
+    "Process View (4+1)",
+    "Physical View (4+1)",
+    "Scenarios View (4+1)",
+    "Module View (Views & Beyond)",
+    "Component-and-Connector View (Views & Beyond)",
+    "Data View (Views & Beyond)",
+    "Quality View (Views & Beyond)",
+    "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
+]
+
 
 def _read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
@@ -89,34 +102,81 @@ def verify_architecture_markdown_contract() -> list[str]:
     errors: list[str] = []
     content = _read("docs/architecture/architecture.md")
     required_phrases = [
-        "Zuno Lean Complete Product Architecture",
-        "Lean Complete Agentic GraphRAG Product",
-        "十一逻辑能力层",
-        "六物理运行域",
+        "Zuno Target Architecture Atlas",
+        "十一逻辑能力模块",
+        "六个物理运行域",
+        "4+1 View Model",
+        "Views & Beyond",
+        "Zuno Product Core",
         "Agent Core / Planning & Control",
-        "Four-layer governed Memory",
-        "Corrective Agentic GraphRAG",
+        "RuntimeRequest",
+        "ModelCallRequest",
+        "ContextPack",
+        "RetrievalPlan",
+        "EvidenceBundle",
+        "ToolCallIntent",
+        "NormalizedToolObservation",
+        "GroundedAnswer",
         "EvidenceLedger",
         "Product & API",
         "Input & Knowledge",
-        "Agent Core",
+        "Agent Core Runtime",
         "Capability & Tool",
         "Governance & Observability",
         "Local Infrastructure",
-        "代码 Ownership Matrix",
-        "配置化与禁止写死契约",
-        "数据与状态模型",
-        "Runtime 完成与质量完成",
+        "Target completion criteria",
+        "Current / Target 边界",
         "docs/architecture/architecture.html",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
-        "Future Optional Extensions",
     ]
     for phrase in required_phrases:
         if phrase not in content:
             errors.append(f"docs/architecture/architecture.md missing architecture contract phrase: {phrase}")
-    if content.count("```mermaid") < 10:
-        errors.append("docs/architecture/architecture.md must keep at least ten Mermaid diagrams")
+
+    if content.count("```mermaid") < 30:
+        errors.append("docs/architecture/architecture.md must keep at least thirty Mermaid diagrams")
+
+    for title in CANONICAL_VIEWS:
+        marker = f"### {title}"
+        if marker not in content:
+            errors.append(f"docs/architecture/architecture.md missing canonical view: {title}")
+            continue
+        section_start = content.index(marker)
+        later = [
+            content.find(f"### {other}", section_start + len(marker))
+            for other in CANONICAL_VIEWS
+            if other != title and content.find(f"### {other}", section_start + len(marker)) >= 0
+        ]
+        section_end = min(later) if later else len(content)
+        section = content[section_start:section_end]
+        if "#### Overall" not in section:
+            errors.append(f"canonical view missing Overall diagram: {title}")
+        if "#### Local" not in section:
+            errors.append(f"canonical view missing Local diagram: {title}")
+    return errors
+
+
+def verify_architecture_html_contract() -> list[str]:
+    errors: list[str] = []
+    content = _read("docs/architecture/architecture.html")
+    required = [
+        "Zuno Target Architecture Atlas",
+        '<script type="module">',
+        'fetch("architecture.md"',
+        "mermaid@11",
+        'class="mermaid"',
+        "diagram-dialog",
+        "Mermaid source",
+    ]
+    for phrase in required:
+        if phrase not in content:
+            errors.append(f"docs/architecture/architecture.html missing native Mermaid phrase: {phrase}")
+    for title in CANONICAL_VIEWS:
+        if title not in content:
+            errors.append(f"docs/architecture/architecture.html missing canonical view title: {title}")
+    if "offline-svg" in content or "offline-diagram" in content:
+        errors.append("docs/architecture/architecture.html must not use retired simplified SVG rendering")
     return errors
 
 
@@ -156,10 +216,7 @@ def verify_future_only_terms() -> list[str]:
         "不是微服务",
         "不实施",
     ]
-    docs_to_scan = [
-        "README.md",
-        "docs/architecture/architecture.md",
-    ]
+    docs_to_scan = ["README.md", "docs/architecture/architecture.md"]
 
     for relative_path in docs_to_scan:
         content = _read(relative_path)
@@ -191,6 +248,7 @@ def main() -> int:
     errors: list[str] = []
     errors.extend(verify_architecture_surface())
     errors.extend(verify_architecture_markdown_contract())
+    errors.extend(verify_architecture_html_contract())
     errors.extend(verify_future_only_terms())
     errors.extend(verify_no_local_download_paths())
 
