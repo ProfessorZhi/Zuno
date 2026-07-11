@@ -17,7 +17,23 @@ class ModelStepExecutor:
         step: PlanStep,
         deps: RuntimeDependencies,
     ) -> StepExecutionResult:
-        del deps
+        if deps.model_gateway is None:
+            observation = NormalizedObservation(
+                observation_id=f"obs:{state.run_id}:{step.step_id}:{step.attempt + 1}",
+                step_id=step.step_id,
+                kind=ObservationKind.MODEL,
+                status=ObservationStatus.BLOCKED,
+                source="ModelStepExecutor",
+                summary="model gateway dependency missing",
+                failure_reason="missing_model_gateway",
+                metadata={
+                    "blocked": True,
+                    "missing_dependency": "model_gateway",
+                    "action_type": step.action_type,
+                    "model_role": step.model_role or "executor",
+                },
+            )
+            return StepExecutionResult(step_id=step.step_id, status=ObservationStatus.BLOCKED, observation=observation)
         observation = NormalizedObservation(
             observation_id=f"obs:{state.run_id}:{step.step_id}:{step.attempt + 1}",
             step_id=step.step_id,

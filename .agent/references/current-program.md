@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-real-unified-runtime-cutover-v1
-current_phase: PHASE03_runtime-dependency-factory
+current_phase: PHASE04_real-agent-execution
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
 `.agent/programs/` 当前处于 active program 状态。最近完成并归档的 program 是 `zuno-unified-agent-runtime-closure-v1`。
@@ -17,10 +17,11 @@ latest_completed_program: zuno-unified-agent-runtime-closure-v1
 - `.agent/programs/PHASE01_real-runtime-baseline.md`
 - `.agent/programs/PHASE02_langgraph-execution-cutover.md`
 - `.agent/programs/PHASE03_runtime-dependency-factory.md`
+- `.agent/programs/PHASE04_real-agent-execution.md`
 
 当前 program 是 `zuno-real-unified-runtime-cutover-v1`，目标是把 Completion / Workspace 产品主路径切到 `UnifiedAgentRuntimeService -> compiled LangGraph -> RuntimeDependencyFactory -> Model Gateway / Memory / Corrective Agentic GraphRAG / Tool Control Plane` 的真实统一 runtime。
 
-当前 Phase 是 PHASE03。PHASE01 已完成 facts / guardrail 激活，PHASE02 已完成 compiled LangGraph cutover；PHASE03 目标是建立 `RuntimeDependencyFactory` 和 typed runtime protocols。不得把 PHASE03-PHASE07 目标写成 Current、Completed 或 measured。
+当前 Phase 是 PHASE04。PHASE01 已完成 facts / guardrail 激活，PHASE02 已完成 compiled LangGraph cutover，PHASE03 已完成 `RuntimeDependencyFactory` 和 typed runtime protocols；PHASE04 目标是把 ModelStep、ReActStep 和 Grounded Synthesis 切到真实执行数据面。不得把 PHASE04-PHASE07 目标写成 Current、Completed 或 measured。
 
 ## 最近完成事实
 

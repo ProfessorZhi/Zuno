@@ -14,7 +14,7 @@ ACTIVE_PHASES = [
     "PHASE06_product-cutover",
     "PHASE07_benchmark-and-closure",
 ]
-CURRENT_PHASE = "PHASE03_runtime-dependency-factory"
+CURRENT_PHASE = "PHASE04_real-agent-execution"
 LATEST_COMPLETED = "zuno-unified-agent-runtime-closure-v1"
 
 CURRENT_PATH = REPO_ROOT / ".agent/programs/current.md"
@@ -119,7 +119,7 @@ def verify_current_program() -> list[str]:
     for phrase in [
         f"active_program: {PROGRAM}",
         f"current_phase: {CURRENT_PHASE}",
-        "PHASE03 目标是建立 `RuntimeDependencyFactory`",
+        "PHASE04 目标是把 ModelStep",
     ]:
         if phrase not in reference:
             errors.append(f"current-program reference missing phrase: {phrase}")

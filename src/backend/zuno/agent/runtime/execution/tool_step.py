@@ -7,7 +7,7 @@ from zuno.agent.runtime.contracts import FinalizationStatus, NormalizedObservati
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.execution.registry import StepExecutionResult
 from zuno.agent.runtime.state import AgentRuntimeState
-from zuno.capability.runtime import ToolRuntimeRequest, build_default_tool_control_plane_runtime
+from zuno.capability.runtime import ToolRuntimeRequest
 
 
 class ToolStepExecutor:
@@ -20,7 +20,23 @@ class ToolStepExecutor:
         step: PlanStep,
         deps: RuntimeDependencies,
     ) -> StepExecutionResult:
-        tool_runtime = deps.tool_control_plane or build_default_tool_control_plane_runtime()
+        if deps.tool_control_plane is None:
+            observation = NormalizedObservation(
+                observation_id=f"obs:{state.run_id}:{step.step_id}:{step.attempt + 1}",
+                step_id=step.step_id,
+                kind=ObservationKind.TOOL,
+                status=ObservationStatus.BLOCKED,
+                source="ToolStepExecutor",
+                summary="tool control plane dependency missing",
+                failure_reason="missing_tool_control_plane",
+                metadata={
+                    "blocked": True,
+                    "missing_dependency": "tool_control_plane",
+                    "action_type": step.action_type,
+                },
+            )
+            return StepExecutionResult(step_id=step.step_id, status=ObservationStatus.BLOCKED, observation=observation)
+        tool_runtime = deps.tool_control_plane
         tool_id = _tool_id_for_step(state, step)
         arguments = _arguments_for_step(state, step, tool_id)
         idempotency_key = _idempotency_key(state, step, tool_id, arguments)

@@ -351,7 +351,7 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     for phrase in [
         "state: active",
         "active_program: zuno-real-unified-runtime-cutover-v1",
-        "current_phase: PHASE03_runtime-dependency-factory",
+        "current_phase: PHASE04_real-agent-execution",
         f"latest_completed_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
         "zuno-real-unified-runtime-cutover-v1",
         UNIFIED_RUNTIME_PROGRAM_NAME,

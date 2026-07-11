@@ -24,14 +24,18 @@ class KnowledgeStepExecutor:
             observation_id=f"obs:{state.run_id}:{step.step_id}:{step.attempt + 1}",
             step_id=step.step_id,
             kind=ObservationKind.RETRIEVAL,
-            status=ObservationStatus.COMPLETED,
+            status=ObservationStatus.BLOCKED,
             source="KnowledgeStepExecutor",
-            summary=f"retrieval request prepared for {step.action_type}",
-            evidence_ids=[f"evidence:{state.run_id}:{step.step_id}"],
-            citation_ids=[f"citation:{state.run_id}:{step.step_id}"],
-            metadata={"retrieval_request": True, "action_type": step.action_type},
+            summary="knowledge runtime dependency missing",
+            failure_reason="missing_knowledge_runtime",
+            metadata={
+                "blocked": True,
+                "missing_dependency": "knowledge_runtime",
+                "retrieval_request": True,
+                "action_type": step.action_type,
+            },
         )
-        return StepExecutionResult(step_id=step.step_id, status=ObservationStatus.COMPLETED, observation=observation)
+        return StepExecutionResult(step_id=step.step_id, status=ObservationStatus.BLOCKED, observation=observation)
 
     def _execute_with_runtime(
         self,

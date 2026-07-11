@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-real-unified-runtime-cutover-v1
-current_phase: PHASE03_runtime-dependency-factory
+current_phase: PHASE04_real-agent-execution
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
 ## Program 目标

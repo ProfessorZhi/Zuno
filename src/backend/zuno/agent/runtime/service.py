@@ -7,6 +7,7 @@ from zuno.agent.durable_runtime import DurableRuntimeTaskSnapshot
 from zuno.agent.runtime.checkpointer import RuntimeGraphCheckpointer
 from zuno.agent.runtime.contracts import FinalizationStatus, ReflectionDecision, StrategyDecision, StrategyMode
 from zuno.agent.runtime.dependencies import RuntimeDependencies
+from zuno.agent.runtime.factory import RuntimeDependencyFactory
 from zuno.agent.runtime.graph import build_agent_graph
 from zuno.agent.runtime.routing import (
     RuntimeNode,
@@ -56,7 +57,7 @@ class UnifiedAgentRuntimeService:
         store: AgentRunStore,
         graph=None,
     ) -> None:
-        self.dependencies = dependencies or RuntimeDependencies()
+        self.dependencies = dependencies or RuntimeDependencyFactory().dependencies()
         self.store = store
         self.checkpointer = RuntimeGraphCheckpointer(store)
         self.graph = graph or build_agent_graph(dependencies=self.dependencies, checkpointer=self.checkpointer)

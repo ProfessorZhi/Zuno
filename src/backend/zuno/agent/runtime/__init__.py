@@ -19,6 +19,7 @@ from zuno.agent.runtime.contracts import (
     StrategyMode,
 )
 from zuno.agent.runtime.graph import build_agent_graph
+from zuno.agent.runtime.factory import RuntimeAssembly, RuntimeDependencyFactory
 from zuno.agent.runtime.planning import (
     PlanExecutor,
     PlanValidationError,
@@ -53,6 +54,8 @@ __all__ = [
     "ReflectionDecision",
     "RuntimeCounters",
     "RuntimeLimits",
+    "RuntimeAssembly",
+    "RuntimeDependencyFactory",
     "RuntimeNode",
     "RuntimePlanner",
     "RuntimeStartRequest",

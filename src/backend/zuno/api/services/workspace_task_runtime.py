@@ -1008,7 +1008,13 @@ class WorkspaceTaskRuntimeService:
 
     @classmethod
     def _unified_runtime_service(cls) -> UnifiedAgentRuntimeService:
-        return UnifiedAgentRuntimeService(store=cls._unified_runtime_store)
+        from zuno.agent.runtime import RuntimeDependencyFactory
+
+        assembly = RuntimeDependencyFactory.for_workspace_task(
+            store=cls._unified_runtime_store,
+            knowledge_index_runtime=cls._knowledge_index_runtime,
+        )
+        return UnifiedAgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
 
     @classmethod
     def _start_unified_runtime_for_task(

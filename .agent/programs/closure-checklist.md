@@ -2,14 +2,14 @@
 
 state: active
 active_program: zuno-real-unified-runtime-cutover-v1
-current_phase: PHASE03_runtime-dependency-factory
+current_phase: PHASE04_real-agent-execution
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
 ## Phase Closure
 
 - [x] PHASE01 active program、truth source、PowerShell baseline、runtime gap facts 和 guardrail verifier 已冻结。
 - [x] PHASE02 compiled LangGraph 成为 `UnifiedAgentRuntimeService` 执行引擎，手写主循环退出产品主路径。
-- [ ] PHASE03 `RuntimeDependencyFactory` 和 typed runtime protocols 接入 Completion / Workspace。
+- [x] PHASE03 `RuntimeDependencyFactory` 和 typed runtime protocols 接入 Completion / Workspace。
 - [ ] PHASE04 ModelStep / Planner / ReActStep / Grounded Synthesis 进入真实执行数据面。
 - [ ] PHASE05 Knowledge / Tool / Memory 真实接入，filesystem.read/write 和 PDF evidence vertical slice 通过。
 - [ ] PHASE06 Completion / Workspace 默认 unified runtime，GeneralAgent 只保留 rollback flag。
@@ -21,7 +21,7 @@ latest_completed_program: zuno-unified-agent-runtime-closure-v1
 - [ ] 手写主运行 `while` loop 退出产品主路径。
 - [ ] `ModelStepExecutor` 真实调用 Model Gateway。
 - [ ] `ReActStepExecutor` 真实执行单个 PlanStep 的 ReAct。
-- [ ] 缺依赖时返回 blocked observation，不伪造 evidence、citation 或 completed。
+- [x] 缺依赖时返回 blocked observation，不伪造 evidence、citation 或 completed。
 - [ ] Grounded Synthesis 产生真实 `final_answer`、claims、citation bindings 和 unsupported claims。
 - [ ] Completion 默认进入 unified runtime。
 - [ ] Workspace artifact 来自 unified runtime final state。

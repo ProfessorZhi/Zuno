@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from zuno.agent.runtime import RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
-from zuno.agent.runtime.dependencies import RuntimeDependencies
+from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
 from zuno.knowledge.agentic import (
     CorrectiveAction,
     CorrectiveRetrievalResult,
@@ -61,11 +60,23 @@ class _StatefulKnowledgeRuntime:
         )
 
 
+def _dependencies_with_knowledge(knowledge_runtime):
+    dependencies = RuntimeDependencyFactory().dependencies()
+    return dependencies.__class__(
+        model_gateway=dependencies.model_gateway,
+        memory_engine=dependencies.memory_engine,
+        knowledge_runtime=knowledge_runtime,
+        capability_runtime=dependencies.capability_runtime,
+        tool_control_plane=dependencies.tool_control_plane,
+        trace_sink=dependencies.trace_sink,
+    )
+
+
 def test_reflection_replan_executes_second_retrieval_and_finalizes(tmp_path) -> None:
     knowledge_runtime = _StatefulKnowledgeRuntime()
     service = UnifiedAgentRuntimeService(
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
-        dependencies=RuntimeDependencies(knowledge_runtime=knowledge_runtime),
+        dependencies=_dependencies_with_knowledge(knowledge_runtime),
     )
 
     snapshot = service.start(_request("task_phase09_replan"))
@@ -89,7 +100,7 @@ def test_rewrite_answer_routes_back_to_claim_binding_before_abstain(tmp_path) ->
     knowledge_runtime = _StatefulKnowledgeRuntime(second_has_source_span=False)
     service = UnifiedAgentRuntimeService(
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
-        dependencies=RuntimeDependencies(knowledge_runtime=knowledge_runtime),
+        dependencies=_dependencies_with_knowledge(knowledge_runtime),
     )
 
     snapshot = service.start(_request("task_phase09_rewrite"))

@@ -3,7 +3,7 @@
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
 phase: PHASE03_runtime-dependency-factory
-state: active
+state: completed
 ```
 
 ## 目标
@@ -29,10 +29,19 @@ state: active
 
 ## 验收闸门
 
-- `RuntimeDependencyFactory.for_completion()` 和 `for_workspace_task()` 存在。
-- 核心依赖有 typed protocols。
-- 缺失 Knowledge / Tool / Model 时返回 blocked observation 或 blocked runtime status。
-- Completion / Workspace 不再自己拼接一套旁路依赖。
+- [x] `RuntimeDependencyFactory.for_completion()` 和 `for_workspace_task()` 存在。
+- [x] 核心依赖有 typed protocols。
+- [x] 缺失 Knowledge / Tool / Model 时返回 blocked observation 或 blocked runtime status。
+- [x] Completion / Workspace 不再自己拼接一套旁路依赖。
+
+## 完成证据
+
+- 新增 `RuntimeDependencyFactory`、`RuntimeFactoryConfig`、`RuntimeAssembly` 和 runtime protocols。
+- `UnifiedAgentRuntimeService` 默认通过 factory 装配本地 Model Gateway、Memory Engine 和 Tool Control Plane。
+- Completion / Workspace unified runtime 入口通过 factory assembly 构造 service。
+- Model / Knowledge / Tool executor 在核心依赖缺失时返回 blocked observation，不再伪造 evidence、citation 或 completed。
+- `pytest -q tests/agent/runtime tests/api -p no:cacheprovider` 通过。
+- `python tools/scripts/verify_real_runtime_cutover.py --enforce-dependencies` 通过。
 
 ## 验证命令
 

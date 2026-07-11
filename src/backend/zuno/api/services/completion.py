@@ -9,7 +9,7 @@ from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
 from zuno.resources.prompts.completion import SYSTEM_PROMPT
 from zuno.schema.completion import CompletionReq
-from zuno.agent.runtime import RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
 from zuno.utils.helpers import (
     build_completion_history_messages,
     build_completion_system_prompt,
@@ -26,7 +26,8 @@ class CompletionService:
 
     @classmethod
     def unified_runtime_service(cls) -> UnifiedAgentRuntimeService:
-        return UnifiedAgentRuntimeService(store=cls._unified_runtime_store)
+        assembly = RuntimeDependencyFactory.for_completion(store=cls._unified_runtime_store)
+        return UnifiedAgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
 
     @classmethod
     async def stream_unified_runtime(

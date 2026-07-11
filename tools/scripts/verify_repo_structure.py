@@ -1397,7 +1397,7 @@ def verify_completed_architecture_surface_phase_plan() -> list[str]:
     for phrase in [
         "state: active",
         "active_program: zuno-real-unified-runtime-cutover-v1",
-        "current_phase: PHASE03_runtime-dependency-factory",
+        "current_phase: PHASE04_real-agent-execution",
         f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
         PROGRAM3_ACTIVE_NAME,
         PROGRAM3_ACTIVE_ARCHIVE,
