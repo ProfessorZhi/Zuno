@@ -7,14 +7,15 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f5f7fa;
+      --bg: #f4f6f8;
       --paper: #ffffff;
       --ink: #16202a;
-      --muted: #52616f;
-      --line: #c8d1da;
+      --muted: #5b6976;
+      --line: #d2d9e0;
       --accent: #2563a6;
       --accent-soft: #eaf3ff;
-      --warning: #8c5a00;
+      --target: #fff4d8;
+      --shadow: 0 10px 28px rgba(20, 35, 50, .08);
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -26,9 +27,10 @@
       line-height: 1.55;
     }
     a { color: var(--accent); }
+    button, input { font: inherit; }
     .layout {
       display: grid;
-      grid-template-columns: 300px minmax(0, 1fr);
+      grid-template-columns: 310px minmax(0, 1fr);
       min-height: 100vh;
     }
     aside {
@@ -38,85 +40,185 @@
       overflow: auto;
       padding: 24px 18px;
       border-right: 1px solid var(--line);
-      background: #f9fafc;
+      background: #f9fafb;
     }
-    aside h1 { margin: 0 0 8px; font-size: 22px; }
-    aside p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
-    nav h2 { margin: 20px 0 8px; font-size: 13px; color: var(--muted); }
-    nav a {
+    aside h1 { margin: 0 0 6px; font-size: 20px; }
+    aside p { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+    .doc-links {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .doc-links a {
       display: block;
-      padding: 7px 9px;
-      margin: 3px 0;
-      border-radius: 6px;
-      color: var(--ink);
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--paper);
       text-decoration: none;
       font-size: 13px;
     }
-    nav a:hover { background: var(--accent-soft); }
-    main { width: min(1480px, 100%); padding: 34px 34px 80px; }
-    .hero {
-      padding: 24px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--paper);
-    }
-    .hero h1 { margin: 0 0 10px; font-size: clamp(30px, 4vw, 52px); line-height: 1.08; }
-    .hero p { max-width: 980px; color: var(--muted); }
-    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-    .legend span { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font-size: 12px; }
-    .status { margin-top: 14px; color: var(--warning); font-weight: 650; }
-    .group { margin-top: 42px; }
-    .group > h2 { margin: 0 0 14px; font-size: 26px; }
-    .view {
-      margin: 22px 0 38px;
-      padding: 20px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--paper);
-      scroll-margin-top: 16px;
-    }
-    .view > h3 { margin: 0 0 6px; font-size: 23px; }
-    .view-description { margin: 0 0 18px; color: var(--muted); }
-    .diagram-card {
-      margin: 18px 0;
-      padding-top: 18px;
-      border-top: 1px solid var(--line);
-    }
-    .diagram-header { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }
-    .diagram-header h4 { margin: 0 0 4px; font-size: 18px; }
-    .diagram-kind { display: inline-block; margin-bottom: 5px; color: var(--accent); font-size: 11px; font-weight: 750; text-transform: uppercase; }
-    button {
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 7px 10px;
-      background: var(--accent-soft);
-      color: var(--ink);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .diagram-frame {
-      margin-top: 12px;
-      padding: 18px;
-      overflow: auto;
+    #filter {
+      width: 100%;
+      padding: 9px 11px;
       border: 1px solid var(--line);
       border-radius: 9px;
-      background: #fcfdff;
+      background: var(--paper);
+      margin-bottom: 14px;
     }
-    .mermaid { min-width: 860px; text-align: center; }
-    details { margin-top: 10px; }
-    pre.source { overflow: auto; max-height: 420px; padding: 13px; border-radius: 8px; background: #101820; color: #f5f7fb; }
-    dialog { width: min(1500px, calc(100vw - 24px)); height: min(960px, calc(100vh - 24px)); border: 0; border-radius: 10px; padding: 0; }
-    dialog::backdrop { background: rgba(15, 23, 42, .72); }
-    .dialog-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
-    .dialog-body { height: calc(100% - 58px); overflow: auto; padding: 20px; background: var(--bg); }
-    .dialog-body svg { min-width: 1200px; height: auto; }
-    .error { padding: 14px; border: 1px solid #c97979; border-radius: 8px; background: #fff2f2; color: #7b2020; }
+    nav { display: grid; gap: 4px; }
+    nav .group {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    nav a {
+      display: block;
+      padding: 7px 9px;
+      border-radius: 7px;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 13px;
+    }
+    nav a:hover { background: var(--accent-soft); color: var(--accent); }
+    main { min-width: 0; padding: 34px 40px 80px; }
+    .hero {
+      padding: 26px 28px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .hero h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 44px); }
+    .hero p { margin: 8px 0 0; color: var(--muted); max-width: 980px; }
+    .boundary {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .boundary div {
+      padding: 12px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      border: 1px solid #c8dcf5;
+      font-size: 13px;
+    }
+    .view-section { scroll-margin-top: 20px; margin-top: 46px; }
+    .view-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--line);
+    }
+    .view-heading h2 { margin: 0; font-size: 27px; }
+    .view-heading span { color: var(--muted); font-size: 13px; }
+    .diagram-grid {
+      display: grid;
+      gap: 22px;
+      margin-top: 20px;
+    }
+    .diagram-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .diagram-card[data-kind="Overall"] { border-top: 4px solid var(--accent); }
+    .diagram-card[data-kind="Local"] { border-top: 4px solid #7c5cbf; }
+    .diagram-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+    .diagram-header h3 { margin: 0; font-size: 17px; }
+    .kind-badge {
+      display: inline-block;
+      margin-right: 8px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .actions { display: flex; gap: 8px; }
+    .actions button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+    .actions button:hover { border-color: var(--accent); color: var(--accent); }
+    .diagram-stage {
+      min-height: 220px;
+      overflow: auto;
+      padding: 24px;
+      background: #ffffff;
+    }
+    .mermaid { min-width: max-content; text-align: center; }
+    .mermaid svg { max-width: none !important; height: auto; }
+    details {
+      border-top: 1px solid var(--line);
+      padding: 11px 16px 14px;
+      background: #fafbfc;
+    }
+    summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: auto;
+      padding: 14px;
+      border-radius: 9px;
+      background: #111827;
+      color: #e5e7eb;
+      font-size: 12px;
+    }
+    .error {
+      margin: 20px 0;
+      padding: 16px;
+      border: 1px solid #d66;
+      border-radius: 10px;
+      background: #fff4f4;
+      color: #8d2222;
+    }
+    dialog#diagram-dialog {
+      width: min(96vw, 1700px);
+      height: 94vh;
+      border: 0;
+      border-radius: 14px;
+      padding: 0;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    dialog::backdrop { background: rgba(10, 20, 30, .7); }
+    .dialog-shell { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+    .dialog-body { overflow: auto; padding: 28px; background: white; }
+    .dialog-body svg { max-width: none !important; }
     @media (max-width: 900px) {
-      .layout { grid-template-columns: 1fr; }
+      .layout { display: block; }
       aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
-      main { padding: 20px 14px 60px; }
-      .diagram-header { display: block; }
-      .diagram-header button { margin-top: 8px; }
+      main { padding: 22px 14px 60px; }
+      .boundary { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -124,169 +226,243 @@
   <div class="layout">
     <aside>
       <h1>Zuno Architecture Atlas</h1>
-      <p>4+1、Views & Beyond 与 Zuno Product Core。Markdown 是目标架构事实源，HTML 使用原生 Mermaid 渲染。</p>
-      <nav id="toc"></nav>
-      <p><a href="architecture.md">打开 Markdown 事实源</a></p>
+      <p>十类 canonical views。Markdown 负责设计说明，HTML 负责 Mermaid 图谱。</p>
+      <div class="doc-links">
+        <a href="./architecture.md">阅读文字总架构</a>
+        <a href="./production-readiness.md">查看 Current / Readiness</a>
+        <a href="./architecture-views.md">查看 Mermaid 图源</a>
+      </div>
+      <input id="filter" type="search" placeholder="筛选视图或图标题" />
+      <nav id="nav"></nav>
     </aside>
     <main>
       <section class="hero">
         <h1>Zuno Target Architecture Atlas</h1>
-        <p>十类 canonical views。每一类均包含一张 Overall 图和至少一张 Local 图；核心 connector 使用 typed contract 标注，Security 与 Observability 明确横切。</p>
-        <div class="legend">
-          <span>==&gt; command / control</span>
-          <span>--&gt; data / result</span>
-          <span>-. -&gt; governance / observation</span>
-          <span>Target view; Current 见 production-readiness.md</span>
+        <p>本页展示 4+1 View Model、Views & Beyond 与 Zuno Product Core 共十类目标架构视图。所有图均来自独立的 <code>architecture-views.md</code>，保留 Mermaid subgraph、decision、sequence、edge label 和循环关系。</p>
+        <div class="boundary">
+          <div><strong>Target：</strong>本页展示理想架构与模块协作。</div>
+          <div><strong>Current：</strong>以 production-readiness.md 为准。</div>
+          <div><strong>Quality：</strong>implementation available / measurement blocked / quality not yet proven。</div>
         </div>
-        <div id="status" class="status">正在读取 architecture.md 并加载 Mermaid…</div>
       </section>
-      <div id="atlas"></div>
+      <div id="content"></div>
     </main>
   </div>
 
   <dialog id="diagram-dialog">
-    <div class="dialog-head">
-      <strong id="dialog-title">Diagram</strong>
-      <button id="dialog-close" type="button">关闭</button>
+    <div class="dialog-shell">
+      <div class="dialog-header">
+        <strong id="dialog-title">Diagram</strong>
+        <button id="dialog-close" type="button">关闭</button>
+      </div>
+      <div id="dialog-body" class="dialog-body"></div>
     </div>
-    <div id="dialog-body" class="dialog-body"></div>
   </dialog>
 
   <script type="module">
-    const groups = [{"title": "一、4+1 View Model", "views": ["Logical View (4+1)", "Development View (4+1)", "Process View (4+1)", "Physical View (4+1)", "Scenarios View (4+1)"]}, {"title": "二、Views & Beyond", "views": ["Module View (Views & Beyond)", "Component-and-Connector View (Views & Beyond)", "Data View (Views & Beyond)", "Quality View (Views & Beyond)"]}, {"title": "三、Zuno Product Core", "views": ["Agentic GraphRAG Evidence and Agent Loop (Zuno)"]}];
-    const expectedViews = ["Logical View (4+1)", "Development View (4+1)", "Process View (4+1)", "Physical View (4+1)", "Scenarios View (4+1)", "Module View (Views & Beyond)", "Component-and-Connector View (Views & Beyond)", "Data View (Views & Beyond)", "Quality View (Views & Beyond)", "Agentic GraphRAG Evidence and Agent Loop (Zuno)"];
-    const status = document.getElementById("status");
-    const atlas = document.getElementById("atlas");
-    const toc = document.getElementById("toc");
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
 
-    const slugify = (value) => value
-      .toLowerCase()
-      .replace(/[^a-z0-9\u4e00-\u9fff]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+    const EXPECTED_VIEWS = [
+      "Logical View (4+1)",
+      "Development View (4+1)",
+      "Process View (4+1)",
+      "Physical View (4+1)",
+      "Scenarios View (4+1)",
+      "Module View (Views & Beyond)",
+      "Component-and-Connector View (Views & Beyond)",
+      "Data View (Views & Beyond)",
+      "Quality View (Views & Beyond)",
+      "Agentic GraphRAG Evidence and Agent Loop (Zuno)"
+    ];
 
-    function sectionFor(markdown, title) {
-      const marker = `### ${title}`;
-      const start = markdown.indexOf(marker);
-      if (start < 0) throw new Error(`缺少 canonical view: ${title}`);
-      const candidates = expectedViews
-        .filter((other) => other !== title)
-        .map((other) => markdown.indexOf(`### ${other}`, start + marker.length))
-        .filter((index) => index >= 0);
-      const end = candidates.length ? Math.min(...candidates) : markdown.length;
-      return markdown.slice(start + marker.length, end);
-    }
-
-    function parseView(markdown, title) {
-      const section = sectionFor(markdown, title);
-      const firstLocal = section.search(/^#### /m);
-      const description = (firstLocal >= 0 ? section.slice(0, firstLocal) : section)
-        .trim()
-        .split(/\n+/)
-        .filter((line) => line && !line.startsWith("#"))
-        .join(" ");
-      const diagrams = [];
-      const regex = /^#### (?<subtitle>[^\n]+)\n(?<between>[\s\S]*?)```mermaid\n(?<source>[\s\S]*?)\n```/gm;
-      for (const match of section.matchAll(regex)) {
-        diagrams.push({
-          subtitle: match.groups.subtitle.trim(),
-          source: match.groups.source.trim(),
-        });
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: "base",
+      flowchart: { curve: "basis", useMaxWidth: false },
+      sequence: { useMaxWidth: false },
+      themeVariables: {
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        primaryColor: "#ffffff",
+        primaryBorderColor: "#64748b",
+        primaryTextColor: "#16202a",
+        lineColor: "#64748b",
+        tertiaryColor: "#f4f6f8"
       }
-      if (!diagrams.length) throw new Error(`视图没有 Mermaid 子图: ${title}`);
-      return { title, description, diagrams };
+    });
+
+    function slugify(value) {
+      return value.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, "-").replace(/^-|-$/g, "");
     }
 
-    function renderShell(views) {
-      const lookup = new Map(views.map((view) => [view.title, view]));
-      groups.forEach((group) => {
-        const navTitle = document.createElement("h2");
-        navTitle.textContent = group.title;
-        toc.appendChild(navTitle);
+    function parseAtlas(markdown) {
+      const lines = markdown.split(/\r?\n/);
+      const groups = [];
+      let group = null;
+      let view = null;
+      let diagram = null;
+      let inMermaid = false;
+      let source = [];
 
-        const groupSection = document.createElement("section");
-        groupSection.className = "group";
-        const groupHeading = document.createElement("h2");
-        groupHeading.textContent = group.title;
-        groupSection.appendChild(groupHeading);
+      for (const line of lines) {
+        if (!inMermaid && line.startsWith("## ")) {
+          group = { title: line.slice(3).trim(), views: [] };
+          groups.push(group);
+          view = null;
+          continue;
+        }
+        if (!inMermaid && line.startsWith("### ")) {
+          if (!group) continue;
+          view = { title: line.slice(4).trim(), diagrams: [] };
+          group.views.push(view);
+          diagram = null;
+          continue;
+        }
+        if (!inMermaid && line.startsWith("#### ")) {
+          if (!view) continue;
+          diagram = { subtitle: line.slice(5).trim(), source: "" };
+          view.diagrams.push(diagram);
+          continue;
+        }
+        if (!inMermaid && line.trim() === "```mermaid") {
+          inMermaid = true;
+          source = [];
+          continue;
+        }
+        if (inMermaid && line.trim() === "```") {
+          inMermaid = false;
+          if (diagram) diagram.source = source.join("\n").trim();
+          continue;
+        }
+        if (inMermaid) source.push(line);
+      }
+      return groups;
+    }
 
-        group.views.forEach((title) => {
-          const view = lookup.get(title);
-          const id = slugify(title);
+    function makeDiagramCard(view, diagram, index) {
+      const kind = diagram.subtitle.startsWith("Overall") ? "Overall" : "Local";
+      const card = document.createElement("article");
+      card.className = "diagram-card";
+      card.dataset.kind = kind;
+      card.dataset.search = `${view.title} ${diagram.subtitle}`.toLowerCase();
+
+      const header = document.createElement("div");
+      header.className = "diagram-header";
+      header.innerHTML = `<h3><span class="kind-badge">${kind} Diagram</span>${diagram.subtitle}</h3>`;
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+      const expand = document.createElement("button");
+      expand.type = "button";
+      expand.textContent = "全屏";
+      actions.appendChild(expand);
+      header.appendChild(actions);
+
+      const stage = document.createElement("div");
+      stage.className = "diagram-stage";
+      const mermaidNode = document.createElement("div");
+      mermaidNode.className = "mermaid";
+      mermaidNode.id = `mermaid-${index}`;
+      mermaidNode.textContent = diagram.source;
+      stage.appendChild(mermaidNode);
+
+      const details = document.createElement("details");
+      const summary = document.createElement("summary");
+      summary.textContent = "Mermaid source";
+      const pre = document.createElement("pre");
+      pre.textContent = diagram.source;
+      details.append(summary, pre);
+
+      expand.addEventListener("click", () => {
+        const dialog = document.getElementById("diagram-dialog");
+        document.getElementById("dialog-title").textContent = `${view.title} — ${diagram.subtitle}`;
+        const body = document.getElementById("dialog-body");
+        body.innerHTML = "";
+        const svg = stage.querySelector("svg");
+        if (svg) body.appendChild(svg.cloneNode(true));
+        dialog.showModal();
+      });
+
+      card.append(header, stage, details);
+      return card;
+    }
+
+    function renderAtlas(groups) {
+      const nav = document.getElementById("nav");
+      const content = document.getElementById("content");
+      let diagramIndex = 0;
+
+      for (const group of groups) {
+        const groupLabel = document.createElement("div");
+        groupLabel.className = "group";
+        groupLabel.textContent = group.title;
+        nav.appendChild(groupLabel);
+
+        for (const view of group.views) {
+          const id = slugify(view.title);
           const link = document.createElement("a");
           link.href = `#${id}`;
-          link.textContent = title;
-          toc.appendChild(link);
+          link.textContent = view.title;
+          nav.appendChild(link);
 
-          const article = document.createElement("article");
-          article.className = "view";
-          article.id = id;
-          article.innerHTML = `<h3>${title}</h3><p class="view-description">${view.description}</p>`;
+          const section = document.createElement("section");
+          section.className = "view-section";
+          section.id = id;
+          section.dataset.search = view.title.toLowerCase();
 
-          view.diagrams.forEach((diagram) => {
-            const card = document.createElement("section");
-            card.className = "diagram-card";
-            const kind = diagram.subtitle.startsWith("Overall") ? "Overall" : "Local";
-            const escaped = diagram.source
-              .replaceAll("&", "&amp;")
-              .replaceAll("<", "&lt;")
-              .replaceAll(">", "&gt;");
-            card.innerHTML = `
-              <div class="diagram-header">
-                <div><span class="diagram-kind">${kind} Diagram</span><h4>${diagram.subtitle}</h4></div>
-                <button type="button" class="fullscreen">全屏查看</button>
-              </div>
-              <div class="diagram-frame"><pre class="mermaid">${escaped}</pre></div>
-              <details><summary>Mermaid source</summary><pre class="source"><code>${escaped}</code></pre></details>`;
-            article.appendChild(card);
-          });
-          groupSection.appendChild(article);
-        });
-        atlas.appendChild(groupSection);
-      });
-    }
+          const heading = document.createElement("div");
+          heading.className = "view-heading";
+          heading.innerHTML = `<h2>${view.title}</h2><span>${view.diagrams.length} diagrams</span>`;
 
-    function bindFullscreen() {
-      const dialog = document.getElementById("diagram-dialog");
-      const body = document.getElementById("dialog-body");
-      const title = document.getElementById("dialog-title");
-      document.getElementById("dialog-close").addEventListener("click", () => dialog.close());
-      document.querySelectorAll(".fullscreen").forEach((button) => {
-        button.addEventListener("click", () => {
-          const card = button.closest(".diagram-card");
-          const svg = card.querySelector("svg");
-          title.textContent = card.querySelector("h4").textContent;
-          body.replaceChildren(svg.cloneNode(true));
-          dialog.showModal();
-        });
-      });
-    }
-
-    try {
-      if (location.protocol === "file:") {
-        throw new Error("请使用 HTTP 预览：python -m http.server 8000，然后打开 /docs/architecture/architecture.html");
+          const grid = document.createElement("div");
+          grid.className = "diagram-grid";
+          for (const diagram of view.diagrams) {
+            grid.appendChild(makeDiagramCard(view, diagram, diagramIndex++));
+          }
+          section.append(heading, grid);
+          content.appendChild(section);
+        }
       }
-      const response = await fetch("architecture.md", { cache: "no-store" });
-      if (!response.ok) throw new Error(`无法读取 architecture.md: HTTP ${response.status}`);
-      const markdown = await response.text();
-      const views = expectedViews.map((title) => parseView(markdown, title));
-      renderShell(views);
-
-      const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
-      mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: "strict",
-        theme: "base",
-        flowchart: { htmlLabels: true, curve: "basis", useMaxWidth: false },
-        sequence: { useMaxWidth: false, wrap: true },
-      });
-      await mermaid.run({ querySelector: ".mermaid" });
-      bindFullscreen();
-      status.textContent = `已渲染 ${views.length} 类视图，共 ${views.reduce((sum, view) => sum + view.diagrams.length, 0)} 张 Mermaid 图。`;
-    } catch (error) {
-      status.textContent = "架构图加载失败。";
-      atlas.innerHTML = `<div class="error"><strong>无法渲染 Architecture Atlas</strong><br/>${error.message}</div>`;
-      console.error(error);
+      return diagramIndex;
     }
+
+    async function boot() {
+      try {
+        const response = await fetch("/docs/architecture/architecture-views.md", { cache: "no-store" });
+        if (!response.ok) throw new Error(`cannot load architecture-views.md: HTTP ${response.status}`);
+        const markdown = await response.text();
+        const groups = parseAtlas(markdown);
+        const viewTitles = groups.flatMap(group => group.views.map(view => view.title));
+        const missing = EXPECTED_VIEWS.filter(title => !viewTitles.includes(title));
+        if (missing.length) throw new Error(`missing canonical views: ${missing.join(", ")}`);
+        const count = renderAtlas(groups);
+        if (count < 30) throw new Error(`architecture atlas expected at least 30 diagrams, found ${count}`);
+        await mermaid.run({ querySelector: ".mermaid", suppressErrors: false });
+      } catch (error) {
+        const box = document.createElement("div");
+        box.className = "error";
+        box.textContent = `Architecture Atlas render failed: ${error instanceof Error ? error.message : String(error)}`;
+        document.getElementById("content").appendChild(box);
+        console.error(error);
+      }
+    }
+
+    document.getElementById("dialog-close").addEventListener("click", () => {
+      document.getElementById("diagram-dialog").close();
+    });
+
+    document.getElementById("filter").addEventListener("input", event => {
+      const query = event.target.value.trim().toLowerCase();
+      for (const card of document.querySelectorAll(".diagram-card")) {
+        card.hidden = Boolean(query) && !card.dataset.search.includes(query);
+      }
+      for (const section of document.querySelectorAll(".view-section")) {
+        const visible = [...section.querySelectorAll(".diagram-card")].some(card => !card.hidden);
+        section.hidden = Boolean(query) && !visible && !section.dataset.search.includes(query);
+      }
+    });
+
+    boot();
   </script>
 </body>
 </html>
