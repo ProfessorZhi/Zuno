@@ -21,12 +21,20 @@ PHASE01-PHASE13 已完成本地 implementation baseline。PHASE13 没有获得 f
 
 ## 后续 Program 入口
 
-当前没有 active program。下一轮如果要继续质量闭环，应新开短 program，从 PHASE01 开始冻结：
+当前没有 active program。当前 queued candidate 是：
 
-1. local embedding / model profile runner 配置。
-2. tracked fixed sample-80 case set。
-3. standard/deep/agentic 同 case set resume 策略。
-4. release gate pass/fail/block 输出位置。
+- `.agent/programs/queued-programs/PROGRAM01_real-unified-runtime-cutover.md`
+
+它适合作为下一轮实现 program，但必须先从 PHASE01 激活为 active truth source，不能直接按 queued 文档跳到 runtime 大改。
+
+下一轮如果要继续真实统一 runtime cutover，应从 PHASE01 开始冻结：
+
+1. 当前 runtime 主路径事实：compiled graph、manual loop、deterministic executor、canned answer、sidecar workspace、blocked benchmark。
+2. `verify_real_runtime_cutover.py` guardrail。
+3. LangGraph 是否真正成为唯一执行引擎。
+4. RuntimeDependencyFactory、Model Gateway、Memory、Knowledge、Tool 的真实依赖装配。
+5. Completion / Workspace 默认路径和 rollback flag。
+6. benchmark pass / fail / blocked 输出位置。
 
 ## 不变关闭定义
 

@@ -30,6 +30,13 @@ Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agen
 - [产品与运行架构总事实源](./docs/architecture/architecture.md)
 - [架构十类图 HTML 展示](./docs/architecture/architecture.html)
 - [Production readiness 状态](./docs/architecture/production-readiness.md)
+- [文档摄取基础](./docs/architecture/document-ingestion-foundation.md)
+- [Agent Core Runtime](./docs/architecture/agent-core-runtime.md)
+- [Capability 与 Skill Layer](./docs/architecture/capability-and-skill-layer.md)
+- [Agentic Retrieval Planner](./docs/architecture/agentic-retrieval-planner.md)
+- [Eval、Observability 与 Cost](./docs/architecture/eval-observability-and-cost.md)
+- [Input Layer 与 Document Processing](./docs/architecture/input-layer-and-document-processing.md)
+- [Knowledge Space Product Configuration](./docs/architecture/knowledge-space-product-configuration.md)
 - [文档入口](./docs/README.md)
 - [公开证据入口](./docs/evidence/public-demo.md)
 - [历史归档入口](./docs/history/programs/README.md)
@@ -41,6 +48,17 @@ Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agen
 - 历史生产完成归档：`docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
 - 历史 runtime-first 归档：`docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 - 历史 master architecture 归档：`docs/history/programs/zuno-master-architecture-implementation-v1/`
+
+## 本地验证入口
+
+```powershell
+python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_repo_structure.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py
+uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860
+```
 
 ## 六个运行域
 

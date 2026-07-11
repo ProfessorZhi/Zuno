@@ -150,6 +150,7 @@ CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
 ]
 QUEUED_PROGRAM_FILES = [
     "README.md",
+    "PROGRAM01_real-unified-runtime-cutover.md",
 ]
 PROGRAM3_MERGED_QUEUED_FILES = [
     "PROGRAM04_runtime-subsystems-parallel.md",
@@ -509,7 +510,12 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     assert sorted(path.name for path in (REPO_ROOT / ".agent/programs/queued-programs").glob("*.md")) == sorted(QUEUED_PROGRAM_FILES)
     for file_name in QUEUED_PROGRAM_FILES:
         text = (REPO_ROOT / ".agent/programs/queued-programs" / file_name).read_text(encoding="utf-8")
-        if file_name != "README.md":
+        if file_name == "PROGRAM01_real-unified-runtime-cutover.md":
+            assert "state: queued" in text
+            assert "active_program: false" in text
+            assert "不得把 queued program 写成 active" in text
+            assert "measurement_blocked + quality_not_proven" in text
+        elif file_name != "README.md":
             assert "state: superseded" in text
             assert "merged_into: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in text
             assert "superseded_by: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in text

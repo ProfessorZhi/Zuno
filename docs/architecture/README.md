@@ -41,4 +41,5 @@ python tools/agent/render_architecture.py --check
 
 ## 历史入口
 
+- 公开证据入口：`../evidence/public-demo.md`
 - 旧架构清理工作集：`docs/history/architecture-surface-cleanup-2026-06-30/`

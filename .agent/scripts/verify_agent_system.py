@@ -153,6 +153,7 @@ CURRENT_ACTIVE_PROGRAM_PHASE_FILES = [
 ]
 QUEUED_PROGRAM_FILES = [
     "README.md",
+    "PROGRAM01_real-unified-runtime-cutover.md",
 ]
 PROGRAM3_MERGED_QUEUED_FILES = [
     "PROGRAM04_runtime-subsystems-parallel.md",
@@ -753,7 +754,16 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
             errors.append(f"queued program missing file: {file_name}")
             continue
         content = queued_path.read_text(encoding="utf-8")
-        if file_name != "README.md":
+        if file_name == "PROGRAM01_real-unified-runtime-cutover.md":
+            for phrase in [
+                "state: queued",
+                "active_program: false",
+                "不得把 queued program 写成 active",
+                "measurement_blocked + quality_not_proven",
+            ]:
+                if phrase not in content:
+                    errors.append(f"queued candidate missing phrase {phrase}: {file_name}")
+        elif file_name != "README.md":
             for phrase in [
                 "state: superseded",
                 "merged_into: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1",
