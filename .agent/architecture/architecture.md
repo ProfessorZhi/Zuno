@@ -13,6 +13,15 @@ Mermaid 图只用于辅助理解。完整十类视图和局部关系图由 `arch
 
 本文描述的是 **Target**，不是 Current。仓库当前真实实现、已知差距、blocked 原因和 measured 状态以 `docs/architecture/production-readiness.md` 为准。目标能力不得因为出现在本文或图中，就被写成当前已经完成。
 
+文档角色与兼容术语：
+
+- `docs/architecture/architecture.md` 是**文字总架构文档**，面向本地优先的企业私有知识库与多功能 Agent 助手设计。
+- `docs/architecture/architecture.html` 是**架构 HTML**，重点展示十类 Mermaid 图。
+- `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html` 是同步镜像。
+- Document Ingestion / Parse Gateway 对应 Input 模块和 `docs/architecture/document-ingestion-foundation.md`。
+- Tool Control Plane 对应 Capability 与 Tool Runtime 的治理执行边界。
+- LangSmith-compatible Trace / Eval 对应 Observability & Eval 的可选外部 Trace/Eval sink。
+
 当前质量口径保持：
 
 ```text
