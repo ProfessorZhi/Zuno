@@ -67,10 +67,18 @@ def test_docs_architecture_front_path_and_generated_entries() -> None:
         "architecture.html",
         "repo-ownership-matrix.md",
     }
-    assert agent_files == {"README.md", "architecture.md", "architecture.html"}
+    assert agent_files == {
+        "README.md",
+        "architecture.md",
+        "architecture-views.md",
+        "architecture.html",
+    }
 
     assert (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8") == (
         REPO_ROOT / ".agent/architecture/architecture.md"
+    ).read_text(encoding="utf-8")
+    assert (REPO_ROOT / "docs/architecture/architecture-views.md").read_text(encoding="utf-8") == (
+        REPO_ROOT / ".agent/architecture/architecture-views.md"
     ).read_text(encoding="utf-8")
     assert (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8") == (
         REPO_ROOT / ".agent/architecture/architecture.html"
