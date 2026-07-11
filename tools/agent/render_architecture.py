@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import html
-import re
+import json
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -24,858 +22,367 @@ STALE_OUTPUTS = [
     REPO_ROOT / ".agent/architecture/overall-architecture.md",
 ]
 
-EXPECTED_DIAGRAMS = [
-    "Logical View (4+1)",
-    "Development View (4+1)",
-    "Process View (4+1)",
-    "Physical View (4+1)",
-    "Scenarios View (4+1)",
-    "Module View (Views & Beyond)",
-    "Component-and-Connector View (Views & Beyond)",
-    "Data View (Views & Beyond)",
-    "Quality View (Views & Beyond)",
-    "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
-]
-
-GROUPS = [
-    (
-        "一、4+1 View Model",
-        "从 Logical、Development、Process、Physical、Scenarios 五类视图解释同一个 Lean Complete Product。",
-        [
+VIEW_GROUPS = [
+    {
+        "title": "一、4+1 View Model",
+        "views": [
             "Logical View (4+1)",
             "Development View (4+1)",
             "Process View (4+1)",
             "Physical View (4+1)",
             "Scenarios View (4+1)",
         ],
-    ),
-    (
-        "二、Views & Beyond",
-        "从 Module、Component-and-Connector、Data、Quality 四类工程视图展开模块、连接、信息和质量属性。",
-        [
+    },
+    {
+        "title": "二、Views & Beyond",
+        "views": [
             "Module View (Views & Beyond)",
             "Component-and-Connector View (Views & Beyond)",
             "Data View (Views & Beyond)",
             "Quality View (Views & Beyond)",
         ],
-    ),
-    (
-        "三、Zuno 专题视图",
-        "单独放大 Agentic GraphRAG evidence-span、claim citation 和 Agent loop，这是 Zuno 的产品核心。",
-        [
-            "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
-        ],
-    ),
+    },
+    {
+        "title": "三、Zuno Product Core",
+        "views": ["Agentic GraphRAG Evidence and Agent Loop (Zuno)"],
+    },
 ]
 
-VIEW_META = {
-    "Logical View (4+1)": ("4+1 Logical", "说明十一逻辑能力层、层间依赖，以及它们到六物理运行域的映射。"),
-    "Development View (4+1)": ("4+1 Development", "说明代码目录、docs、renderer、verifier 和 tests 如何映射到运行域 owner。"),
-    "Process View (4+1)": ("4+1 Process", "说明请求进入后 Single Controller、retrieval、tool、citation、trace 如何运行。"),
-    "Physical View (4+1)": ("4+1 Physical", "说明本地优先部署、SQLite、ObjectStore、Queue、Index、Model Provider 和 optional adapter。"),
-    "Scenarios View (4+1)": ("4+1 Scenarios", "说明用户从配置模型、上传文档、AgentChat 到 trace/recovery 的黄金场景。"),
-    "Module View (Views & Beyond)": ("V&B Module", "说明 Product/API、Input/Knowledge、Agent Core、Capability/Tool、Governance、Infrastructure 模块分解。"),
-    "Component-and-Connector View (Views & Beyond)": ("V&B Component-and-Connector", "说明 runtime connector、retrieval connector、tool connector 和 trace connector。"),
-    "Data View (Views & Beyond)": ("V&B Data / Information", "说明 SourceObject、IR、Chunk、Index、CitationLineage、EvidenceBundle 和 TraceSpan 的数据流。"),
-    "Quality View (Views & Beyond)": ("V&B Quality", "说明 correctness、citation、observability、security、recoverability、cost 和 release gate。"),
-    "Agentic GraphRAG Evidence and Agent Loop (Zuno)": ("Zuno Product Core", "放大 Agentic GraphRAG evidence-span、claim binding、reflection/replan 和 fixed benchmark gate。"),
-}
-
-PALETTE = {
-    "background": "#f7f8fb",
-    "node": "#ffffff",
-    "border": "#b8c2cc",
-    "text": "#16202a",
-    "line": "#52616f",
-}
-
-MAX_OFFLINE_NODES = 40
-MAX_OFFLINE_EDGES = 80
+EXPECTED_VIEWS = [view for group in VIEW_GROUPS for view in group["views"]]
+MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
 
 
-@dataclass(frozen=True)
-class Edge:
-    source: str
-    target: str
-    label: str = ""
-
-
-@dataclass(frozen=True)
-class SubDiagram:
-    title: str
-    description: str
-    analysis: list[str]
-    mermaid: str
-
-
-@dataclass(frozen=True)
-class Diagram:
-    title: str
-    description: str
-    analysis: list[str]
-    subdiagrams: list[SubDiagram]
-
-
-def _sections(content: str) -> dict[str, str]:
-    matches = list(re.finditer(r"^### (?P<title>[^\n]+)\n", content, re.M))
-    sections: dict[str, str] = {}
-    seen: set[str] = set()
-    duplicates: list[str] = []
-    for index, match in enumerate(matches):
-        title = match.group("title").strip()
-        if title in seen:
-            duplicates.append(title)
-        seen.add(title)
-        start = match.end()
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(content)
-        sections[title] = content[start:end]
-    if duplicates:
-        raise ValueError(f"duplicate Mermaid diagram sections: {duplicates}")
-    return sections
-
-
-def _extract_section_description(section_body: str, title: str) -> str:
-    body_before_mermaid = section_body.split("```mermaid", maxsplit=1)[0]
-    if body_before_mermaid == section_body:
-        raise ValueError(f"missing Mermaid block for {title}")
-    lines = [
-        line.strip()
-        for line in body_before_mermaid.strip().splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    ]
-    return " ".join(lines)
-
-
-def _extract_analysis(section_body: str) -> list[str]:
-    match = re.search(r"#### 分析\n(?P<body>.*?)(?:\n## |\n### |\Z)", section_body, re.S)
-    if not match:
-        return []
-    analysis: list[str] = []
-    for line in match.group("body").splitlines():
-        stripped = line.strip()
-        if stripped.startswith("- "):
-            analysis.append(stripped[2:].strip())
-    return analysis
-
-
-def _extract_nearest_subtitle(section_body: str, mermaid_start: int, fallback: str) -> str:
-    prefix = section_body[:mermaid_start]
-    headings = [
-        match.group("title").strip()
-        for match in re.finditer(r"^#### (?P<title>[^\n]+)\n", prefix, re.M)
-        if match.group("title").strip() != "分析"
-    ]
-    return headings[-1] if headings else fallback
-
-
-def _extract_subdescription(section_body: str, mermaid_start: int, fallback: str) -> str:
-    prefix = section_body[:mermaid_start]
-    last_heading = list(re.finditer(r"^#### (?P<title>[^\n]+)\n", prefix, re.M))
-    if not last_heading:
-        return fallback
-    body = prefix[last_heading[-1].end() :]
-    lines = [
-        line.strip()
-        for line in body.strip().splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    ]
-    return " ".join(lines) or fallback
-
-
-def _extract_analysis_after(section_body: str, mermaid_end: int) -> list[str]:
-    tail = section_body[mermaid_end:]
-    match = re.search(r"^#### 分析\n(?P<body>.*?)(?:\n#### |\n### |\Z)", tail, re.S | re.M)
-    if not match:
-        return []
-    analysis: list[str] = []
-    for line in match.group("body").splitlines():
-        stripped = line.strip()
-        if stripped.startswith("- "):
-            analysis.append(stripped[2:].strip())
-    return analysis
-
-
-def _verify_palette(title: str, mermaid: str) -> None:
-    required = [
-        f"fill:{PALETTE['node']}",
-        f"stroke:{PALETTE['border']}",
-        f"color:{PALETTE['text']}",
-        f'"lineColor": "{PALETTE["line"]}"',
-    ]
-    missing = [phrase for phrase in required if phrase not in mermaid]
-    if missing:
-        raise ValueError(f"{title} Mermaid palette is incomplete: {missing}")
-
-
-def _verify_render_safe(title: str, mermaid: str) -> None:
-    unsafe = re.findall(r"\[[^\]\"].*?[+/&:：].*?\]", mermaid)
-    if unsafe:
-        raise ValueError(f"{title} has unquoted Mermaid labels that may fail in browser: {unsafe[:3]}")
-
-
-def _clean_mermaid_label(label: str) -> str:
-    label = re.sub(r"<br\s*/?>", " / ", label)
-    label = re.sub(r"<[^>]+>", "", label)
-    label = re.sub(r"\s+", " ", label)
-    return html.unescape(label).strip()
-
-
-def _extract_mermaid_labels(mermaid: str) -> list[str]:
-    labels: list[str] = []
-    seen: set[str] = set()
-    for match in re.finditer(r'\w+\s*(?:\{|\[|\(|>)"(?P<label>[^"]+)"(?:\}|\]|\)|])', mermaid):
-        label = _clean_mermaid_label(match.group("label"))
-        if label and label not in seen:
-            labels.append(label)
-            seen.add(label)
-    return labels
-
-
-def _extract_mermaid_graph(mermaid: str) -> tuple[list[tuple[str, str]], list[Edge]]:
-    node_labels: dict[str, str] = {}
-    node_order: list[str] = []
-    edges: list[Edge] = []
-
-    node_def_pattern = re.compile(
-        r'\b(?P<id>[A-Za-z]\w*)\s*'
-        r'(?:'
-        r'\[\s*"(?P<bracket>[^"]+)"\s*\]'
-        r'|\{\s*"(?P<brace>[^"]+)"\s*\}'
-        r'|\(\s*"(?P<paren>[^"]+)"\s*\)'
-        r'|\(\[\s*"(?P<stadium>[^"]+)"\s*\]\)'
-        r'|>\s*"(?P<flag>[^"]+)"'
-        r')'
-    )
-
-    def add_node(node_id: str, label: str | None = None) -> None:
-        if node_id in {"flowchart", "classDef", "class", "subgraph", "end"}:
-            return
-        if node_id not in node_order:
-            node_order.append(node_id)
-        if label:
-            node_labels[node_id] = _clean_mermaid_label(label)
-        elif node_id not in node_labels:
-            node_labels[node_id] = node_id
-
-    for match in node_def_pattern.finditer(mermaid):
-        label = next(
-            value
-            for value in [
-                match.group("bracket"),
-                match.group("brace"),
-                match.group("paren"),
-                match.group("stadium"),
-                match.group("flag"),
-            ]
-            if value is not None
-        )
-        add_node(match.group("id"), label)
-
-    for raw_line in mermaid.splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("%") or line.startswith("class ") or line.startswith("classDef"):
+def validate_source(content: str) -> list[str]:
+    errors: list[str] = []
+    for title in EXPECTED_VIEWS:
+        marker = f"### {title}"
+        if marker not in content:
+            errors.append(f"missing canonical architecture view: {title}")
             continue
-        if "-->" not in line and ".->" not in line:
-            continue
-        edge_labels = [_clean_mermaid_label(label) for label in re.findall(r"\|([^|]+)\|", line)]
-        normalized = re.sub(r"\|[^|]*\|", " ", line)
-        normalized = re.sub(r"-\.[^.\n]*\.->", " --> ", normalized)
-        normalized = re.sub(r"--[^-\n>]*-->", " --> ", normalized)
-        normalized = normalized.replace("-->", " --> ")
-        ids = [
-            match.group("id")
-            for match in re.finditer(r"\b(?P<id>[A-Za-z]\w*)\b(?:\s*(?:\[[^\]]*\]|\{[^}]*\}|\([^)]*\)|>\s*\"[^\"]+\"))?", normalized)
-            if match.group("id") not in {"class", "classDef"}
+        start = content.index(marker)
+        later_starts = [
+            content.find(f"### {other}", start + len(marker))
+            for other in EXPECTED_VIEWS
+            if content.find(f"### {other}", start + len(marker)) >= 0
         ]
-        if len(ids) < 2:
-            continue
-        for node_id in ids:
-            add_node(node_id)
-        for edge_index, (source, target) in enumerate(zip(ids, ids[1:])):
-            label = edge_labels[edge_index] if edge_index < len(edge_labels) else ""
-            edge = Edge(source=source, target=target, label=label)
-            if edge not in edges:
-                edges.append(edge)
-
-    if len(node_order) > MAX_OFFLINE_NODES:
-        raise ValueError(
-            f"offline architecture renderer supports {MAX_OFFLINE_NODES} nodes; found {len(node_order)}"
-        )
-    if len(edges) > MAX_OFFLINE_EDGES:
-        raise ValueError(
-            f"offline architecture renderer supports {MAX_OFFLINE_EDGES} edges; found {len(edges)}"
-        )
-    nodes = [(node_id, node_labels.get(node_id, node_id)) for node_id in node_order]
-    node_ids = {node_id for node_id, _label in nodes}
-    filtered_edges = [
-        edge for edge in edges if edge.source in node_ids and edge.target in node_ids
+        end = min(later_starts) if later_starts else len(content)
+        section = content[start:end]
+        if "```mermaid" not in section:
+            errors.append(f"canonical view has no Mermaid diagram: {title}")
+        if "#### Overall" not in section:
+            errors.append(f"canonical view has no Overall diagram: {title}")
+        if "#### Local" not in section:
+            errors.append(f"canonical view has no Local diagram: {title}")
+    if content.count("```mermaid") < 30:
+        errors.append("architecture atlas must contain at least 30 Mermaid diagrams")
+    required_contract_terms = [
+        "RuntimeRequest",
+        "ModelCallRequest",
+        "ContextPack",
+        "RetrievalPlan",
+        "EvidenceBundle",
+        "ToolCallIntent",
+        "NormalizedToolObservation",
+        "GroundedAnswer",
     ]
-    return nodes, filtered_edges
-
-
-def _wrap_svg_text(text: str, width: int = 26) -> list[str]:
-    words = text.split()
-    if not words:
-        return [text[:width]]
-    lines: list[str] = []
-    current = ""
-    for word in words:
-        if not current:
-            current = word
-        elif len(current) + len(word) + 1 <= width:
-            current = f"{current} {word}"
-        else:
-            lines.append(current)
-            current = word
-    if current:
-        lines.append(current)
-    return lines[:3]
-
-
-def _flow_direction(mermaid: str) -> str:
-    match = re.search(r"^\s*flowchart\s+(?P<direction>TB|TD|BT|LR|RL)\b", mermaid, re.M)
-    if not match:
-        return "TB"
-    direction = match.group("direction")
-    return "TB" if direction in {"TD", "BT"} else direction
-
-
-def _rank_nodes(nodes: list[tuple[str, str]], edges: list[Edge]) -> dict[str, int]:
-    order = {node_id: index for index, (node_id, _label) in enumerate(nodes)}
-    ranks = {node_id: 0 for node_id, _label in nodes}
-    for _ in range(len(nodes)):
-        changed = False
-        for edge in edges:
-            if edge.source not in ranks or edge.target not in ranks:
-                continue
-            if order.get(edge.target, 0) <= order.get(edge.source, 0):
-                continue
-            next_rank = ranks[edge.source] + 1
-            if ranks[edge.target] < next_rank:
-                ranks[edge.target] = next_rank
-                changed = True
-        if not changed:
-            break
-    return ranks
-
-
-def _render_offline_svg(title: str, sub_title: str, mermaid: str) -> str:
-    nodes, edges = _extract_mermaid_graph(mermaid)
-    if not nodes:
-        nodes = [(f"node_{index}", label) for index, label in enumerate(_extract_mermaid_labels(mermaid), start=1)]
-    if not nodes:
-        nodes = [("overview", sub_title), ("source", "See Mermaid source")]
-    direction = _flow_direction(mermaid)
-    ranks = _rank_nodes(nodes, edges)
-    grouped: dict[int, list[tuple[str, str]]] = {}
-    for node in nodes:
-        grouped.setdefault(ranks[node[0]], []).append(node)
-    rank_values = sorted(grouped)
-    node_width = 188
-    node_height = 66
-    gap_x = 62
-    gap_y = 40
-    max_group_size = max((len(group) for group in grouped.values()), default=1)
-    rank_count = len(rank_values)
-    if direction == "LR":
-        width = rank_count * node_width + max(rank_count - 1, 0) * gap_x + 80
-        height = 82 + max_group_size * node_height + max(max_group_size - 1, 0) * gap_y + 34
-    else:
-        width = max_group_size * node_width + max(max_group_size - 1, 0) * gap_x + 80
-        height = 82 + rank_count * node_height + max(rank_count - 1, 0) * gap_y + 34
-    svg_parts = [
-        f'<svg class="offline-svg" viewBox="0 0 {width} {height}" role="img" aria-label="{html.escape(title)} / {html.escape(sub_title)}">',
-        '<rect x="0" y="0" width="100%" height="100%" rx="14" fill="#fbfcfe" stroke="#b8c2cc"/>',
-        f'<text x="24" y="32" class="svg-title">{html.escape(sub_title)}</text>',
-        f'<text x="24" y="54" class="svg-subtitle">{html.escape(title)}</text>',
-    ]
-    node_fill = "#ffffff"
-    node_stroke = "#9eb0bf"
-    positions: dict[str, tuple[float, float]] = {}
-    for rank_index, rank in enumerate(rank_values):
-        group = grouped[rank]
-        for item_index, (node_id, _label) in enumerate(group):
-            if direction == "LR":
-                x = 40 + rank_index * (node_width + gap_x)
-                group_height = len(group) * node_height + max(len(group) - 1, 0) * gap_y
-                y = 82 + (height - 116 - group_height) / 2 + item_index * (node_height + gap_y)
-            else:
-                group_width = len(group) * node_width + max(len(group) - 1, 0) * gap_x
-                x = 40 + (width - 80 - group_width) / 2 + item_index * (node_width + gap_x)
-                y = 82 + rank_index * (node_height + gap_y)
-            positions[node_id] = (x, y)
-
-    edge_parts: list[str] = []
-    for edge in edges:
-        if edge.source not in positions or edge.target not in positions:
-            continue
-        sx, sy = positions[edge.source]
-        tx, ty = positions[edge.target]
-        if direction == "LR":
-            start_x = sx + node_width
-            start_y = sy + node_height / 2
-            end_x = tx
-            end_y = ty + node_height / 2
-            mid_x = (start_x + end_x) / 2
-            if tx >= sx:
-                path = f"M {start_x} {start_y} C {mid_x} {start_y}, {mid_x} {end_y}, {end_x - 8} {end_y}"
-            else:
-                loop_y = min(start_y, end_y) - 32
-                path = f"M {sx + node_width / 2} {sy} C {sx + node_width / 2} {loop_y}, {tx + node_width / 2} {loop_y}, {tx + node_width / 2} {ty - 8}"
-        else:
-            start_x = sx + node_width / 2
-            start_y = sy + node_height
-            end_x = tx + node_width / 2
-            end_y = ty
-            mid_y = (start_y + end_y) / 2
-            if ty >= sy:
-                path = f"M {start_x} {start_y} C {start_x} {mid_y}, {end_x} {mid_y}, {end_x} {end_y - 8}"
-            else:
-                loop_x = min(start_x, end_x) - 34
-                path = f"M {sx} {sy + node_height / 2} C {loop_x} {sy + node_height / 2}, {loop_x} {ty + node_height / 2}, {tx - 8} {ty + node_height / 2}"
-        edge_parts.append(
-            f'<path class="svg-edge" d="{path}" stroke="#52616f" stroke-width="1" fill="none" marker-end="url(#arrow)"/>'
-        )
-        if edge.label:
-            if direction == "LR":
-                label_x = (start_x + end_x) / 2
-                label_y = (start_y + end_y) / 2 - 8
-            else:
-                label_x = (start_x + end_x) / 2 + 8
-                label_y = (start_y + end_y) / 2 - 6
-            edge_parts.append(
-                f'<text x="{label_x}" y="{label_y}" class="svg-edge-label">{html.escape(edge.label)}</text>'
-            )
-    svg_parts.extend(edge_parts)
-
-    for node_id, label in nodes:
-        x, y = positions[node_id]
-        svg_parts.append(
-            f'<rect class="svg-node" x="{x}" y="{y}" width="{node_width}" height="{node_height}" rx="9" fill="{node_fill}" stroke="{node_stroke}" stroke-width="1.15"/>'
-        )
-        for line_index, line in enumerate(_wrap_svg_text(label, width=24)):
-            svg_parts.append(
-                f'<text x="{x + node_width / 2}" y="{y + 28 + line_index * 15}" class="svg-label" text-anchor="middle">{html.escape(line)}</text>'
-            )
-    svg_parts.insert(
-        1,
-        '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#52616f"/></marker></defs>',
-    )
-    svg_parts.append("</svg>")
-    return "\n".join(svg_parts)
-
-
-def extract_diagrams(content: str) -> list[Diagram]:
-    sections = _sections(content)
-    missing = [title for title in EXPECTED_DIAGRAMS if title not in sections]
-    if missing:
-        raise ValueError(f"missing architecture view sections: {missing}")
-    mermaid_block_count = len(re.findall(r"```mermaid\n", content))
-    if mermaid_block_count < len(EXPECTED_DIAGRAMS):
-        raise ValueError(
-            f"expected at least {len(EXPECTED_DIAGRAMS)} Mermaid blocks, found {mermaid_block_count}"
-        )
-    unknown = [
-        title
-        for title, section_body in sections.items()
-        if "```mermaid" in section_body and title not in EXPECTED_DIAGRAMS
-    ]
-    if unknown:
-        raise ValueError(f"unknown Mermaid diagram sections: {unknown}")
-
-    diagrams: list[Diagram] = []
-    for title in EXPECTED_DIAGRAMS:
-        section_body = sections[title]
-        matches = list(re.finditer(r"```mermaid\n(?P<body>.*?)\n```", section_body, re.S))
-        if not matches:
-            raise ValueError(f"missing Mermaid source for {title}")
-        subdiagrams: list[SubDiagram] = []
-        for index, match in enumerate(matches, start=1):
-            mermaid = match.group("body").strip()
-            sub_title = _extract_nearest_subtitle(section_body, match.start(), "Overview")
-            _verify_palette(f"{title} / {sub_title}", mermaid)
-            _verify_render_safe(f"{title} / {sub_title}", mermaid)
-            subdiagrams.append(
-                SubDiagram(
-                    title=sub_title,
-                    description=_extract_subdescription(section_body, match.start(), f"{title} overview and implementation boundary"),
-                    analysis=_extract_analysis_after(section_body, match.end()),
-                    mermaid=mermaid,
-                )
-            )
-        diagrams.append(
-            Diagram(
-                title=title,
-                description=_extract_section_description(section_body, title),
-                analysis=_extract_analysis(section_body),
-                subdiagrams=subdiagrams,
-            )
-        )
-    return diagrams
-
-
-def _render_diagram_card(index: int, diagram: Diagram) -> str:
-    escaped_title = html.escape(diagram.title)
-    escaped_description = html.escape(diagram.description)
-    focus, purpose = VIEW_META[diagram.title]
-    sub_cards: list[str] = []
-    for sub_index, subdiagram in enumerate(diagram.subdiagrams, start=1):
-        escaped_sub_title = html.escape(subdiagram.title)
-        escaped_sub_description = html.escape(subdiagram.description)
-        escaped_source = html.escape(subdiagram.mermaid)
-        offline_svg = _render_offline_svg(diagram.title, subdiagram.title, subdiagram.mermaid)
-        analysis_items = "\n".join(
-            f"                <li>{html.escape(item)}</li>" for item in subdiagram.analysis
-        )
-        if not analysis_items:
-            analysis_items = "                <li>此子图暂无额外分析。</li>"
-        sub_cards.append(
-            f"""
-          <section class="diagram-card" data-title="{escaped_title} / {escaped_sub_title}">
-            <div class="diagram-heading">
-              <div>
-                <span class="diagram-kicker">Subdiagram {index}.{sub_index}</span>
-                <h4>{index}.{sub_index} {escaped_sub_title}</h4>
-                <p>{escaped_sub_description}</p>
-              </div>
-              <button class="fullscreen-button" type="button">展开全屏查看</button>
-            </div>
-            <div class="diagram-frame">
-              <div class="offline-diagram">
-{offline_svg}
-              </div>
-            </div>
-            <div class="analysis">
-              <h5>分析</h5>
-              <ul>
-{analysis_items}
-              </ul>
-            </div>
-            <details>
-              <summary>Mermaid source</summary>
-              <pre><code class="mermaid-source">{escaped_source}</code></pre>
-            </details>
-          </section>
-"""
-        )
-    rendered_sub_cards = "\n".join(sub_cards)
-    return f"""
-        <article class="diagram-section view-category" data-title="{escaped_title}">
-          <div class="diagram-heading">
-            <div>
-              <span class="diagram-kicker">View Category {index}</span>
-              <h3>{index}. {escaped_title}</h3>
-              <p>{escaped_description}</p>
-            </div>
-          </div>
-          <dl class="diagram-meta">
-            <div><dt>Focus</dt><dd>{html.escape(focus)}</dd></div>
-            <div><dt>Purpose</dt><dd>{html.escape(purpose)}</dd></div>
-          </dl>
-{rendered_sub_cards}
-        </article>
-"""
+    for term in required_contract_terms:
+        if term not in content:
+            errors.append(f"architecture atlas is missing connector contract: {term}")
+    return errors
 
 
 def build_html() -> str:
-    content = SOURCE_PATH.read_text(encoding="utf-8")
-    diagrams = extract_diagrams(content)
-    cards = []
-    for group_title, group_description, group_diagrams in GROUPS:
-        rendered = "\n".join(
-            _render_diagram_card(EXPECTED_DIAGRAMS.index(title) + 1, diagrams[EXPECTED_DIAGRAMS.index(title)])
-            for title in group_diagrams
-        )
-        cards.append(
-            f"""
-      <section class="diagram-group">
-        <h2>{html.escape(group_title)}</h2>
-        <p>{html.escape(group_description)}</p>
-{rendered}
-      </section>
-"""
-        )
-    body = "\n".join(cards)
+    groups_json = json.dumps(VIEW_GROUPS, ensure_ascii=False)
+    expected_json = json.dumps(EXPECTED_VIEWS, ensure_ascii=False)
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zuno Lean Complete Product Architecture</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232f6db3'/%3E%3Cpath d='M4 11h8v1H4zM4 4h8L5.8 10H12v1H4l6.2-6H4z' fill='white'/%3E%3C/svg%3E" />
+  <title>Zuno Target Architecture Atlas</title>
   <style>
     :root {{
       color-scheme: light;
-      --bg: #f7f8fb;
+      --bg: #f5f7fa;
       --paper: #ffffff;
       --ink: #16202a;
       --muted: #52616f;
-      --line: #b8c2cc;
-      --accent: #2f6db3;
-      --soft: #eef6ff;
+      --line: #c8d1da;
+      --accent: #2563a6;
+      --accent-soft: #eaf3ff;
+      --warning: #8c5a00;
     }}
     * {{ box-sizing: border-box; }}
-    * {{
-      box-sizing: border-box;
-    }}
-    html, body {{
-      max-width: 100%;
-      overflow-x: hidden;
-    }}
+    html {{ scroll-behavior: smooth; }}
     body {{
       margin: 0;
       background: var(--bg);
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.55;
     }}
-    header, main {{
-      width: min(1180px, calc(100vw - 32px));
-      margin: 0 auto;
+    a {{ color: var(--accent); }}
+    .layout {{
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      min-height: 100vh;
     }}
-    header {{
-      padding: 40px 0 24px;
+    aside {{
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 24px 18px;
+      border-right: 1px solid var(--line);
+      background: #f9fafc;
     }}
-    h1 {{
-      margin: 0 0 12px;
-      font-size: clamp(30px, 4vw, 52px);
-      line-height: 1.08;
-      letter-spacing: 0;
-      overflow-wrap: anywhere;
-    }}
-    h2 {{
-      margin: 36px 0 10px;
-      font-size: 24px;
-      letter-spacing: 0;
-    }}
-    h3 {{
-      margin: 4px 0 8px;
-      font-size: 20px;
-      letter-spacing: 0;
-    }}
-    p {{ color: var(--muted); }}
-    .lede {{
-      max-width: 880px;
-      font-size: 18px;
-    }}
-    .source-links {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }}
-    .source-links a {{
-      border: 1px solid var(--line);
-      background: var(--paper);
+    aside h1 {{ margin: 0 0 8px; font-size: 22px; }}
+    aside p {{ margin: 0 0 18px; color: var(--muted); font-size: 13px; }}
+    nav h2 {{ margin: 20px 0 8px; font-size: 13px; color: var(--muted); }}
+    nav a {{
+      display: block;
+      padding: 7px 9px;
+      margin: 3px 0;
+      border-radius: 6px;
       color: var(--ink);
       text-decoration: none;
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 14px;
-      overflow-wrap: anywhere;
+      font-size: 13px;
     }}
-    .diagram-group {{
-      margin: 28px 0 44px;
-    }}
-    .diagram-section {{
-      margin: 18px 0 28px;
-      padding: 18px;
+    nav a:hover {{ background: var(--accent-soft); }}
+    main {{ width: min(1480px, 100%); padding: 34px 34px 80px; }}
+    .hero {{
+      padding: 24px;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: var(--paper);
     }}
+    .hero h1 {{ margin: 0 0 10px; font-size: clamp(30px, 4vw, 52px); line-height: 1.08; }}
+    .hero p {{ max-width: 980px; color: var(--muted); }}
+    .legend {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }}
+    .legend span {{ padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font-size: 12px; }}
+    .status {{ margin-top: 14px; color: var(--warning); font-weight: 650; }}
+    .group {{ margin-top: 42px; }}
+    .group > h2 {{ margin: 0 0 14px; font-size: 26px; }}
+    .view {{
+      margin: 22px 0 38px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      scroll-margin-top: 16px;
+    }}
+    .view > h3 {{ margin: 0 0 6px; font-size: 23px; }}
+    .view-description {{ margin: 0 0 18px; color: var(--muted); }}
     .diagram-card {{
-      margin-top: 16px;
-      padding-top: 16px;
+      margin: 18px 0;
+      padding-top: 18px;
       border-top: 1px solid var(--line);
     }}
-    .diagram-heading {{
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      justify-content: space-between;
-    }}
-    .diagram-kicker {{
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }}
-    .fullscreen-button {{
-      flex: 0 0 auto;
+    .diagram-header {{ display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }}
+    .diagram-header h4 {{ margin: 0 0 4px; font-size: 18px; }}
+    .diagram-kind {{ display: inline-block; margin-bottom: 5px; color: var(--accent); font-size: 11px; font-weight: 750; text-transform: uppercase; }}
+    button {{
       border: 1px solid var(--line);
-      background: var(--soft);
+      border-radius: 7px;
+      padding: 7px 10px;
+      background: var(--accent-soft);
       color: var(--ink);
-      border-radius: 6px;
-      padding: 8px 10px;
       cursor: pointer;
+      white-space: nowrap;
     }}
-    .diagram-meta {{
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin: 12px 0;
-    }}
-    .diagram-meta div {{
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 10px;
-      min-width: 0;
-    }}
-    dt {{
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }}
-    dd {{ margin: 0; }}
     .diagram-frame {{
-      max-width: 100%;
-      min-width: 0;
-      overflow-x: auto;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-      background: #fbfcfe;
-    }}
-    .offline-diagram {{
-      min-width: 760px;
-    }}
-    .offline-svg {{
-      width: 100%;
-      min-width: 760px;
-      height: auto;
-      display: block;
-    }}
-    .svg-title {{
-      font-size: 18px;
-      font-weight: 700;
-      fill: var(--ink);
-    }}
-    .svg-subtitle,
-    .svg-status {{
-      font-size: 11px;
-      fill: var(--muted);
-    }}
-    .svg-status {{
-      font-weight: 700;
-    }}
-    .svg-label {{
-      font-size: 12.5px;
-      fill: var(--ink);
-      font-weight: 600;
-    }}
-    .svg-node {{
-      filter: drop-shadow(0 1px 1px rgba(22,32,42,.08));
-    }}
-    .svg-edge {{
-      opacity: .48;
-    }}
-    .svg-edge-label {{
-      font-size: 10.5px;
-      font-weight: 700;
-      fill: var(--muted);
-      paint-order: stroke;
-      stroke: #fbfcfe;
-      stroke-width: 3px;
-      stroke-linejoin: round;
-    }}
-    .analysis {{
-      margin-top: 14px;
-      background: #fbfcfe;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 12px;
-    }}
-    .analysis h4 {{ margin: 0 0 8px; }}
-    .analysis ul {{ margin: 0; padding-left: 20px; }}
-    details {{
       margin-top: 12px;
-    }}
-    pre {{
-      overflow-x: auto;
-      background: #101820;
-      color: #f5f7fb;
-      border-radius: 6px;
-      padding: 12px;
-    }}
-    dialog {{
-      width: min(1200px, calc(100vw - 24px));
-      height: min(900px, calc(100vh - 24px));
-      border: 0;
-      border-radius: 8px;
-      padding: 0;
-    }}
-    dialog::backdrop {{
-      background: rgba(13, 20, 28, 0.62);
-    }}
-    .dialog-header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--line);
-      background: var(--paper);
-    }}
-    .dialog-body {{
-      height: calc(100% - 58px);
+      padding: 18px;
       overflow: auto;
-      padding: 16px;
-      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fcfdff;
     }}
-    .dialog-body .offline-diagram {{
-      min-width: 980px;
-    }}
-    .dialog-body .offline-svg {{
-      min-width: 980px;
-    }}
-    @media (max-width: 720px) {{
-      header, main {{ width: min(100vw - 20px, 1180px); }}
-      .diagram-heading {{ display: block; }}
-      .fullscreen-button {{ margin-top: 10px; }}
-      .diagram-meta {{ grid-template-columns: 1fr; }}
-      .offline-diagram, .offline-svg {{ min-width: 680px; }}
+    .mermaid {{ min-width: 860px; text-align: center; }}
+    details {{ margin-top: 10px; }}
+    pre.source {{ overflow: auto; max-height: 420px; padding: 13px; border-radius: 8px; background: #101820; color: #f5f7fb; }}
+    dialog {{ width: min(1500px, calc(100vw - 24px)); height: min(960px, calc(100vh - 24px)); border: 0; border-radius: 10px; padding: 0; }}
+    dialog::backdrop {{ background: rgba(15, 23, 42, .72); }}
+    .dialog-head {{ display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }}
+    .dialog-body {{ height: calc(100% - 58px); overflow: auto; padding: 20px; background: var(--bg); }}
+    .dialog-body svg {{ min-width: 1200px; height: auto; }}
+    .error {{ padding: 14px; border: 1px solid #c97979; border-radius: 8px; background: #fff2f2; color: #7b2020; }}
+    @media (max-width: 900px) {{
+      .layout {{ grid-template-columns: 1fr; }}
+      aside {{ position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }}
+      main {{ padding: 20px 14px 60px; }}
+      .diagram-header {{ display: block; }}
+      .diagram-header button {{ margin-top: 8px; }}
     }}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Zuno Lean Complete Product Architecture</h1>
-    <p class="lede">Zuno 是本地优先的 Agentic GraphRAG 产品。Markdown 是详细实施蓝图；本页是从十类 canonical view categories 和 Mermaid 图源生成的离线拓扑摘要图谱。</p>
-    <nav class="source-links" aria-label="Source links">
-      <a href="architecture.md">Local Markdown source or mirror</a>
-      <a href="../../.agent/architecture/architecture.md">Agent mirror markdown</a>
-      <a href="../../tools/agent/render_architecture.py">Renderer source</a>
-    </nav>
-  </header>
-  <main>
-{body}
-  </main>
-  <dialog id="diagram-dialog" aria-label="Diagram fullscreen view">
-    <div class="dialog-header">
+  <div class="layout">
+    <aside>
+      <h1>Zuno Architecture Atlas</h1>
+      <p>4+1、Views & Beyond 与 Zuno Product Core。Markdown 是目标架构事实源，HTML 使用原生 Mermaid 渲染。</p>
+      <nav id="toc"></nav>
+      <p><a href="architecture.md">打开 Markdown 事实源</a></p>
+    </aside>
+    <main>
+      <section class="hero">
+        <h1>Zuno Target Architecture Atlas</h1>
+        <p>十类 canonical views。每一类均包含一张 Overall 图和至少一张 Local 图；核心 connector 使用 typed contract 标注，Security 与 Observability 明确横切。</p>
+        <div class="legend">
+          <span>==&gt; command / control</span>
+          <span>--&gt; data / result</span>
+          <span>-. -&gt; governance / observation</span>
+          <span>Target view; Current 见 production-readiness.md</span>
+        </div>
+        <div id="status" class="status">正在读取 architecture.md 并加载 Mermaid…</div>
+      </section>
+      <div id="atlas"></div>
+    </main>
+  </div>
+
+  <dialog id="diagram-dialog">
+    <div class="dialog-head">
       <strong id="dialog-title">Diagram</strong>
       <button id="dialog-close" type="button">关闭</button>
     </div>
-    <div class="dialog-body">
-      <div id="dialog-content"></div>
-    </div>
+    <div id="dialog-body" class="dialog-body"></div>
   </dialog>
-  <script>
-    const dialog = document.getElementById("diagram-dialog");
-    const dialogTitle = document.getElementById("dialog-title");
-    const dialogContent = document.getElementById("dialog-content");
-    const closeButton = document.getElementById("dialog-close");
-    document.querySelectorAll(".fullscreen-button").forEach((button) => {{
-      button.addEventListener("click", () => {{
-        const section = button.closest(".diagram-card");
-        const title = section.dataset.title || "Diagram";
-        const diagram = section.querySelector(".offline-diagram").cloneNode(true);
-        dialogTitle.textContent = title;
-        dialogContent.replaceChildren(diagram);
-        dialog.showModal();
-      }});
-    }});
 
-    closeButton.addEventListener("click", () => dialog.close());
+  <script type="module">
+    const groups = {groups_json};
+    const expectedViews = {expected_json};
+    const status = document.getElementById("status");
+    const atlas = document.getElementById("atlas");
+    const toc = document.getElementById("toc");
+
+    const slugify = (value) => value
+      .toLowerCase()
+      .replace(/[^a-z0-9\u4e00-\u9fff]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    function sectionFor(markdown, title) {{
+      const marker = `### ${{title}}`;
+      const start = markdown.indexOf(marker);
+      if (start < 0) throw new Error(`缺少 canonical view: ${{title}}`);
+      const candidates = expectedViews
+        .filter((other) => other !== title)
+        .map((other) => markdown.indexOf(`### ${{other}}`, start + marker.length))
+        .filter((index) => index >= 0);
+      const end = candidates.length ? Math.min(...candidates) : markdown.length;
+      return markdown.slice(start + marker.length, end);
+    }}
+
+    function parseView(markdown, title) {{
+      const section = sectionFor(markdown, title);
+      const firstLocal = section.search(/^#### /m);
+      const description = (firstLocal >= 0 ? section.slice(0, firstLocal) : section)
+        .trim()
+        .split(/\n+/)
+        .filter((line) => line && !line.startsWith("#"))
+        .join(" ");
+      const diagrams = [];
+      const regex = /^#### (?<subtitle>[^\n]+)\n(?<between>[\s\S]*?)```mermaid\n(?<source>[\s\S]*?)\n```/gm;
+      for (const match of section.matchAll(regex)) {{
+        diagrams.push({{
+          subtitle: match.groups.subtitle.trim(),
+          source: match.groups.source.trim(),
+        }});
+      }}
+      if (!diagrams.length) throw new Error(`视图没有 Mermaid 子图: ${{title}}`);
+      return {{ title, description, diagrams }};
+    }}
+
+    function renderShell(views) {{
+      const lookup = new Map(views.map((view) => [view.title, view]));
+      groups.forEach((group) => {{
+        const navTitle = document.createElement("h2");
+        navTitle.textContent = group.title;
+        toc.appendChild(navTitle);
+
+        const groupSection = document.createElement("section");
+        groupSection.className = "group";
+        const groupHeading = document.createElement("h2");
+        groupHeading.textContent = group.title;
+        groupSection.appendChild(groupHeading);
+
+        group.views.forEach((title) => {{
+          const view = lookup.get(title);
+          const id = slugify(title);
+          const link = document.createElement("a");
+          link.href = `#${{id}}`;
+          link.textContent = title;
+          toc.appendChild(link);
+
+          const article = document.createElement("article");
+          article.className = "view";
+          article.id = id;
+          article.innerHTML = `<h3>${{title}}</h3><p class="view-description">${{view.description}}</p>`;
+
+          view.diagrams.forEach((diagram, index) => {{
+            const card = document.createElement("section");
+            card.className = "diagram-card";
+            const kind = diagram.subtitle.startsWith("Overall") ? "Overall" : "Local";
+            const escaped = diagram.source
+              .replaceAll("&", "&amp;")
+              .replaceAll("<", "&lt;")
+              .replaceAll(">", "&gt;");
+            card.innerHTML = `
+              <div class="diagram-header">
+                <div><span class="diagram-kind">${{kind}} Diagram</span><h4>${{diagram.subtitle}}</h4></div>
+                <button type="button" class="fullscreen">全屏查看</button>
+              </div>
+              <div class="diagram-frame"><pre class="mermaid">${{escaped}}</pre></div>
+              <details><summary>Mermaid source</summary><pre class="source"><code>${{escaped}}</code></pre></details>`;
+            article.appendChild(card);
+          }});
+          groupSection.appendChild(article);
+        }});
+        atlas.appendChild(groupSection);
+      }});
+    }}
+
+    function bindFullscreen() {{
+      const dialog = document.getElementById("diagram-dialog");
+      const body = document.getElementById("dialog-body");
+      const title = document.getElementById("dialog-title");
+      document.getElementById("dialog-close").addEventListener("click", () => dialog.close());
+      document.querySelectorAll(".fullscreen").forEach((button) => {{
+        button.addEventListener("click", () => {{
+          const card = button.closest(".diagram-card");
+          const svg = card.querySelector("svg");
+          title.textContent = card.querySelector("h4").textContent;
+          body.replaceChildren(svg.cloneNode(true));
+          dialog.showModal();
+        }});
+      }});
+    }}
+
+    try {{
+      if (location.protocol === "file:") {{
+        throw new Error("请使用 HTTP 预览：python -m http.server 8000，然后打开 /docs/architecture/architecture.html");
+      }}
+      const response = await fetch("architecture.md", {{ cache: "no-store" }});
+      if (!response.ok) throw new Error(`无法读取 architecture.md: HTTP ${{response.status}}`);
+      const markdown = await response.text();
+      const views = expectedViews.map((title) => parseView(markdown, title));
+      renderShell(views);
+
+      const {{ default: mermaid }} = await import("{MERMAID_MODULE_URL}");
+      mermaid.initialize({{
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "base",
+        flowchart: {{ htmlLabels: true, curve: "basis", useMaxWidth: false }},
+        sequence: {{ useMaxWidth: false, wrap: true }},
+      }});
+      await mermaid.run({{ querySelector: ".mermaid" }});
+      bindFullscreen();
+      status.textContent = `已渲染 ${{views.length}} 类视图，共 ${{views.reduce((sum, view) => sum + view.diagrams.length, 0)}} 张 Mermaid 图。`;
+    }} catch (error) {{
+      status.textContent = "架构图加载失败。";
+      atlas.innerHTML = `<div class="error"><strong>无法渲染 Architecture Atlas</strong><br/>${{error.message}}</div>`;
+      console.error(error);
+    }}
   </script>
 </body>
 </html>
@@ -883,9 +390,12 @@ def build_html() -> str:
 
 
 def write_outputs() -> None:
-    source = SOURCE_PATH.read_bytes()
+    content = SOURCE_PATH.read_text(encoding="utf-8")
+    errors = validate_source(content)
+    if errors:
+        raise ValueError("\n".join(errors))
     AGENT_SOURCE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    AGENT_SOURCE_PATH.write_bytes(source)
+    AGENT_SOURCE_PATH.write_text(content, encoding="utf-8", newline="\n")
     html_output = build_html()
     for path in OUTPUT_PATHS:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -894,18 +404,18 @@ def write_outputs() -> None:
 
 def check_outputs() -> list[str]:
     errors: list[str] = []
+    content = SOURCE_PATH.read_text(encoding="utf-8")
+    errors.extend(validate_source(content))
     expected_html = build_html()
-    source = SOURCE_PATH.read_bytes()
     if not AGENT_SOURCE_PATH.exists():
         errors.append(f"missing generated mirror: {AGENT_SOURCE_PATH.relative_to(REPO_ROOT)}")
-    elif AGENT_SOURCE_PATH.read_bytes() != source:
+    elif AGENT_SOURCE_PATH.read_text(encoding="utf-8") != content:
         errors.append(".agent/architecture/architecture.md is not synced with docs/architecture/architecture.md")
     for path in OUTPUT_PATHS:
         if not path.exists():
             errors.append(f"missing generated HTML: {path.relative_to(REPO_ROOT)}")
-            continue
-        if path.read_text(encoding="utf-8") != expected_html:
-            errors.append(f"{path.relative_to(REPO_ROOT)} is not generated from current Markdown")
+        elif path.read_text(encoding="utf-8") != expected_html:
+            errors.append(f"{path.relative_to(REPO_ROOT)} is not generated from current renderer")
     for path in STALE_OUTPUTS:
         if path.exists():
             errors.append(f"stale architecture output exists: {path.relative_to(REPO_ROOT)}")
@@ -913,9 +423,9 @@ def check_outputs() -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Render Zuno architecture HTML from Markdown.")
-    parser.add_argument("--write", action="store_true", help="write generated mirror and HTML files")
-    parser.add_argument("--check", action="store_true", help="check generated files are up to date")
+    parser = argparse.ArgumentParser(description="Render the Zuno target architecture atlas.")
+    parser.add_argument("--write", action="store_true", help="sync mirrors and generated HTML")
+    parser.add_argument("--check", action="store_true", help="check source and generated outputs")
     args = parser.parse_args()
 
     if args.write:
