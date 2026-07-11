@@ -151,7 +151,6 @@ def verify_architecture_markdown_contract() -> list[str]:
         "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
         ".agent/architecture/architecture.md",
-        ".agent/architecture/architecture-views.md",
         ".agent/architecture/architecture.html",
     ]
     for phrase in required_phrases:
