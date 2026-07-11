@@ -22,7 +22,12 @@ DOCS_ARCHITECTURE_FILES = {
     "document-ingestion-foundation.md",
     "repo-ownership-matrix.md",
 }
-AGENT_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture.html"}
+AGENT_ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture-views.md",
+    "architecture.html",
+}
 
 RETIRED_FRONT_PATHS = [
     "docs/architecture/current-architecture.md",
@@ -90,10 +95,17 @@ def verify_architecture_surface() -> list[str]:
 
     docs_md = REPO_ROOT / "docs/architecture/architecture.md"
     agent_md = REPO_ROOT / ".agent/architecture/architecture.md"
+    docs_views = REPO_ROOT / "docs/architecture/architecture-views.md"
+    agent_views = REPO_ROOT / ".agent/architecture/architecture-views.md"
     docs_html = REPO_ROOT / "docs/architecture/architecture.html"
     agent_html = REPO_ROOT / ".agent/architecture/architecture.html"
     if docs_md.read_bytes() != agent_md.read_bytes():
         errors.append(".agent/architecture/architecture.md must match docs/architecture/architecture.md")
+    if docs_views.read_bytes() != agent_views.read_bytes():
+        errors.append(
+            ".agent/architecture/architecture-views.md must match "
+            "docs/architecture/architecture-views.md"
+        )
     if docs_html.read_text(encoding="utf-8") != agent_html.read_text(encoding="utf-8"):
         errors.append(".agent/architecture/architecture.html must match docs/architecture/architecture.html")
     return errors
@@ -139,6 +151,7 @@ def verify_architecture_markdown_contract() -> list[str]:
         "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
         ".agent/architecture/architecture.md",
+        ".agent/architecture/architecture-views.md",
         ".agent/architecture/architecture.html",
     ]
     for phrase in required_phrases:
