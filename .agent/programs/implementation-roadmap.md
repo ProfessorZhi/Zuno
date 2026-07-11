@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE12_real-pdf-source-span-vertical-slice
+current_phase: PHASE13_paired-benchmark-release-gate-and-program-closure
 baseline_commit: 72488a25fde59bc5ef86b2b1c84f25d42cb946ca
 
 ## Program Definition
@@ -37,7 +37,7 @@ Plan-and-Execute for macro control
 | PHASE09 | `reflection-replan-grounded-synthesis` | completed：已接入 deterministic reflection、optional critic shim、GroundedSynthesis、strict citation binding、rewrite loop 和 trajectory-changing Replan；产品切换和 measured benchmark 仍未完成 | quality control |
 | PHASE10 | `four-layer-memory-and-reflexion-reuse` | completed：已接入 unified runtime Memory pre-read/post-write、ContextPack trace、pending Reflexion candidate、approved procedural memory strategy influence 和 Entity supersede baseline | memory closure |
 | PHASE11 | `product-api-sse-ui-and-recovery-cutover` | completed：Completion 支持 unified_runtime SSE；Workspace task events/snapshot 暴露 unified runtime trace；SQLite restart recovery 已由 focused tests 证明；最小 UI 面通过现有 SSE schema 暴露，未做全量前端 redesign | product integration |
-| PHASE12 | `real-pdf-source-span-vertical-slice` | PyMuPDF PDF -> IR -> CitationChunk -> SourceSpan -> grounded answer | document vertical |
+| PHASE12 | `real-pdf-source-span-vertical-slice` | completed：本地 PyMuPDF text PDF -> IR -> CitationChunk/ParentChunk -> index/retrieval -> EvidenceLedger -> page-level citation 已测；scanned/OCR 返回 needs_ocr，不 fake index | document vertical |
 | PHASE13 | `paired-benchmark-release-gate-and-program-closure` | sample-8、sample-80、release gate、旧主路径退出与文档收口 | quality closure |
 
 ## 依赖顺序

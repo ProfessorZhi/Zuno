@@ -43,15 +43,15 @@ Current：
 
 - 文本类文档、本地对象存储、durable ingestion store、chunk/index 和 evidence-span hardening surface 已存在。
 - GraphRAG evidence lineage 代码已具备基础 surface。
+- 本地 PyMuPDF text PDF parser 已跑通 source span citation；损坏 PDF failed，无文本 PDF 返回 needs_ocr，不 fake index。
 
 Short-term：
 
-- P1 至少一个真实 PDF parser 跑通 source span citation。
 - Index rehydrate 后 citation lineage 不丢失。
 - parser blocked、index blocked 和 missing source span 必须进入 trace。
 
 Future Optional：
 
 - 大量 parser provider。
-- OCR/VLM enrichment 平台化。
+- OCR/VLM enrichment 平台化；扫描 PDF 仍是 Future/blocked，不属于当前 PHASE12 闭环。
 - 外部对象存储和分布式索引。

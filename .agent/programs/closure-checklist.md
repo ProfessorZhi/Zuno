@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-unified-agent-runtime-closure-v1
-current_phase: PHASE12_real-pdf-source-span-vertical-slice
+current_phase: PHASE13_paired-benchmark-release-gate-and-program-closure
 
 ## 功能与质量关闭项
 
@@ -17,7 +17,7 @@ current_phase: PHASE12_real-pdf-source-span-vertical-slice
 - [x] PHASE09 Reflection/Replan/Rewrite/Grounded Synthesis 已形成本地 runtime 质量闭环；产品切换和 benchmark 仍待后续 phase。
 - [x] PHASE10 四层 Memory 与 Reflexion approved reuse 已被 unified runtime focused tests 证明；产品 API/UI 链路仍待 PHASE11。
 - [x] PHASE11 Completion/Workspace/SSE/API trace 已接入统一 runtime，SQLite restart recovery 已测；最小 UI 面通过现有 SSE payload 暴露，未声明全量前端 redesign。
-- [ ] PHASE12 真实 PDF SourceSpan vertical slice 通过。
+- [x] PHASE12 真实 text PDF SourceSpan vertical slice 通过；扫描/OCR PDF 返回 needs_ocr，不 fake index。
 - [ ] PHASE13 sample-8 与 sample-80 paired benchmark 完成，release gate 给出 measured 结论。
 - [ ] 旧模拟 runtime 不再处于产品主路径；兼容 facade 有明确删除/保留决策。
 - [ ] architecture / production-readiness / topic docs / HTML 已按实际 Current 更新。

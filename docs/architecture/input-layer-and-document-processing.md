@@ -22,7 +22,7 @@ UI Input
 ## Document Processing Boundary
 
 - 文本类文档是当前真实闭环基线。
-- PDF 是近期最小真实扩展，不要求同时支持所有 parser。
+- PDF text parser 是当前最小真实扩展：本地 PyMuPDF 可输出 page / bbox / char offset SourceSpan；不要求同时支持所有 parser。
 - parser blocked 时必须显示 blocked reason，不得 fake indexed。
 - chunk、source span、citation lineage 必须在 index 和 retrieval trace 中保留。
 
@@ -31,15 +31,15 @@ UI Input
 Current：
 
 - upload / knowledge DTO、local storage、parser/indexing surface 和 SSE/API surfaces 已存在。
+- text PDF source span citation 已通过本地 vertical tests；扫描 PDF/OCR 不 fake 解析。
 
 Short-term：
 
-- P1 PDF source span citation。
 - P1 task/parse/index status durable。
 - P2 前端 E2E 覆盖 upload -> ask -> citation -> trace。
 
 Future Optional：
 
-- OCR/VLM。
+- OCR/VLM 和扫描 PDF 解析。
 - 大量 enterprise parser。
 - 分布式 file processing worker。

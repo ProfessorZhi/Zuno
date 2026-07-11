@@ -58,7 +58,14 @@ def test_parser_adapter_contracts_mark_external_engines_as_target_boundary() -> 
     from zuno.knowledge.ingestion import PARSER_ADAPTER_CONTRACTS
 
     assert PARSER_ADAPTER_CONTRACTS["native"].external_dependency_status == "not_required"
-    for parser_id in ["docling_pymupdf", "mineru_ocr_vlm", "unstructured_markitdown"]:
+    pdf_contract = PARSER_ADAPTER_CONTRACTS["docling_pymupdf"]
+    assert pdf_contract.capability_status == "fallback-current"
+    assert pdf_contract.external_dependency_status == "not_required"
+    assert pdf_contract.dependency_status == "present"
+    assert pdf_contract.blocked_reason is None
+    assert "pymupdf" in pdf_contract.dependency_probe["required_packages"]
+
+    for parser_id in ["mineru_ocr_vlm", "unstructured_markitdown"]:
         contract = PARSER_ADAPTER_CONTRACTS[parser_id]
         assert contract.current_runtime == "deterministic_local"
         assert contract.external_dependency_status == "target_blocked"
@@ -91,7 +98,14 @@ def test_external_parser_contracts_freeze_dependency_and_enrichment_boundaries()
     assert native_contract.dependency_status == "present"
     assert native_contract.dependency_probe["provider"] == "builtin"
 
-    for parser_id in ["docling_pymupdf", "unstructured_markitdown", "mineru_ocr_vlm"]:
+    pdf_contract = PARSER_ADAPTER_CONTRACTS["docling_pymupdf"]
+    assert pdf_contract.capability_status == "fallback-current"
+    assert pdf_contract.external_dependency_status == "not_required"
+    assert pdf_contract.dependency_status == "present"
+    assert pdf_contract.network_policy == "local_only"
+    assert pdf_contract.privacy_gate["sensitive_input_policy"] == "deny_by_default"
+
+    for parser_id in ["unstructured_markitdown", "mineru_ocr_vlm"]:
         contract = PARSER_ADAPTER_CONTRACTS[parser_id]
         assert contract.capability_status == "target-blocked"
         assert contract.external_dependency_status == "target_blocked"

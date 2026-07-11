@@ -6,7 +6,7 @@
 
 - State: active
 - Active program: `zuno-unified-agent-runtime-closure-v1`
-- Current phase: `PHASE12_real-pdf-source-span-vertical-slice`
+- Current phase: `PHASE13_paired-benchmark-release-gate-and-program-closure`
 - Latest completed program: `zuno-lean-complete-product-architecture-v1`
 - Baseline commit: `72488a25fde59bc5ef86b2b1c84f25d42cb946ca`
 
@@ -22,9 +22,9 @@
 
 当前只执行：
 
-- `.agent/programs/PHASE12_real-pdf-source-span-vertical-slice.md`
+- `.agent/programs/PHASE13_paired-benchmark-release-gate-and-program-closure.md`
 
-PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。PHASE02 已完成 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的主入口和边界 verifier。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。PHASE06 已完成 Strategy / Plan-and-Execute / ReAct step execution baseline。PHASE07 已完成 Tool Control Plane integration baseline。PHASE08 已完成 corrective Agentic GraphRAG / EvidenceLedger baseline，并通过 `KnowledgeStepExecutor` 接入 runtime 依赖。PHASE09 已完成 Reflection / Replan / Grounded Synthesis runtime loop baseline。PHASE10 已完成 four-layer Memory / Reflexion reuse baseline。PHASE11 已完成 Product API / SSE / recovery cutover baseline。当前下一步是 PHASE12 的真实 PDF SourceSpan vertical slice。
+PHASE01 已冻结事实源、现状证据、运行命令、失败语义和 benchmark truth source；不修改生产 runtime，也不产生 measured benchmark 结论。PHASE02 已完成 unified runtime contracts and state。PHASE03 已完成 Model Gateway closure 的主入口和边界 verifier。PHASE04 已完成 durable store、trace 和 idempotency baseline。PHASE05 已完成 unified LangGraph runtime skeleton。PHASE06 已完成 Strategy / Plan-and-Execute / ReAct step execution baseline。PHASE07 已完成 Tool Control Plane integration baseline。PHASE08 已完成 corrective Agentic GraphRAG / EvidenceLedger baseline，并通过 `KnowledgeStepExecutor` 接入 runtime 依赖。PHASE09 已完成 Reflection / Replan / Grounded Synthesis runtime loop baseline。PHASE10 已完成 four-layer Memory / Reflexion reuse baseline。PHASE11 已完成 Product API / SSE / recovery cutover baseline。PHASE12 已完成真实 text PDF SourceSpan vertical slice。当前下一步是 PHASE13 的 paired benchmark / release gate / program closure。
 
 ## 当前文件
 

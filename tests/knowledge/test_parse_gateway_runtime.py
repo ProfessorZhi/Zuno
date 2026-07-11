@@ -217,15 +217,14 @@ def test_parser_adapter_dependency_probe_reports_present_and_missing_dependencie
     assert native_probe.metadata["provider"] == "builtin"
 
     assert docling_probe.code == "adapter_dependency_probe"
-    assert docling_probe.severity == "warning"
-    assert docling_probe.metadata["dependency_status"] == "missing"
-    assert "docling" in docling_probe.metadata["required_packages"]
+    assert docling_probe.severity == "info"
+    assert docling_probe.metadata["dependency_status"] == "present"
+    assert "pymupdf" in docling_probe.metadata["required_packages"]
 
 
 @pytest.mark.parametrize(
     ("case_id", "file_name", "mime_type", "expected_parser", "expected_block"),
     [
-        ("pdf_table", "pdf_table.pdf", "application/pdf", "docling_pymupdf", "table"),
         (
             "docx_heading_table",
             "docx_heading_table.docx",
@@ -249,7 +248,7 @@ def test_parser_adapter_dependency_probe_reports_present_and_missing_dependencie
         ),
     ],
 )
-def test_pdf_and_office_contract_parse_keeps_target_blocked_boundary(
+def test_office_contract_parse_keeps_target_blocked_boundary(
     case_id: str,
     file_name: str,
     mime_type: str,
@@ -270,6 +269,18 @@ def test_pdf_and_office_contract_parse_keeps_target_blocked_boundary(
     assert blocked_diagnostic.metadata["dependency_status"] == "missing"
     assert blocked_diagnostic.metadata["capability_status"] == "target-blocked"
     assert blocked_diagnostic.metadata["fallback"] in {"native", "mineru_ocr_vlm"}
+
+
+def test_text_pdf_contract_parse_is_local_pymupdf_current() -> None:
+    result = _parse_fixture("pdf_table", "pdf_table.pdf", "application/pdf")
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert result.document.metadata.parser_id == "docling_pymupdf"
+    assert result.document.metadata.target_blocked is False
+    assert result.document.metadata.blocked_reason is None
+    assert any(block.type == "table" for block in result.document.blocks)
+    assert not any(diagnostic.code == "target_blocked_adapter" for diagnostic in result.diagnostics)
 
 
 def test_ocr_vlm_blocked_result_keeps_derived_enrichment_gates() -> None:

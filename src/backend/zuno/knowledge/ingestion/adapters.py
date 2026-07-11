@@ -17,6 +17,7 @@ from .contracts import (
     ParserDiagnostic,
     SourceSpan,
 )
+from .pymupdf_adapter import has_real_pdf_source, parse_pdf_source_spans
 
 
 @dataclass(frozen=True)
@@ -73,6 +74,9 @@ class ParserAdapter:
         request: ParseDocumentRequest,
     ) -> tuple[list[DocumentBlock], list[DocumentTable], list[DocumentFigure], list[str], float]:
         if format_name == "pdf":
+            if has_real_pdf_source(request):
+                blocks, warnings, confidence = parse_pdf_source_spans(request)
+                return blocks, [], [], warnings, confidence
             return _parse_pdf(text, request)
         if format_name in {"docx", "xlsx"}:
             return _parse_structured_markdown(text, request, table_cells=True)

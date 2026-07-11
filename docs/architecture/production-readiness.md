@@ -30,7 +30,7 @@ P0：
 P1：
 
 - task / planner / retrieval / approval 状态本地持久化。
-- 至少一个真实 PDF parser 跑通 source span citation。
+- 至少一个真实 text PDF parser 已跑通 source span citation；扫描/OCR PDF 仍返回 needs_ocr，不 fake index。
 - 2-3 个真实 Tool 完成 approval / timeout / trace 闭环。
 - Memory ContextPack 在真实 AgentChat 中可观测。
 - Reflexion candidate -> review -> approved -> future ContextPack reuse。

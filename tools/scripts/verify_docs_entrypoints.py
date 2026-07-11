@@ -156,6 +156,7 @@ def verify_entrypoint_text() -> list[str]:
         "PHASE10_four-layer-memory-and-reflexion-reuse",
         "PHASE11_product-api-sse-ui-and-recovery-cutover",
         "PHASE12_real-pdf-source-span-vertical-slice",
+        "PHASE13_paired-benchmark-release-gate-and-program-closure",
         "PHASE03_four-diagram-html-and-guardrails",
         "PHASE04_docs-sync-verification-and-closure",
     }:

@@ -221,7 +221,7 @@ Plan-and-Execute for global control
 | focused tests | DTO validation、SSE event order、workspace ACL、task recovery、citation payload shape。 |
 | E2E 验收 | 用户配置模型、创建 workspace、上传文档、提问、看到引用和 trace、刷新后仍能查看。 |
 | 当前状态 | API/DTO、workspace、message、knowledge、tool 和 model 配置入口存在；PHASE11 已让 Completion `unified_runtime` SSE、Workspace task events/snapshot 和 SQLite restart recovery 暴露 unified runtime baseline。 |
-| 短期闭环项 | P0 真实 PDF SourceSpan vertical slice；P1 release benchmark measured gate；P2 更完整前端 E2E 和演示脚本。 |
+| 短期闭环项 | P0 release benchmark measured gate；P1 更完整前端 E2E 和演示脚本。 |
 | Future Optional | 多租户 admin console、复杂团队权限、企业审计门户。 |
 
 ### 4.2 Input & Knowledge
@@ -242,9 +242,9 @@ Plan-and-Execute for global control
 | 安全边界 | Workspace ACL on every retrieval scope；redaction before trace export；no cross-workspace index leakage。 |
 | trace / metrics | `parse.started`、`parse.blocked`、`chunk.created`、`index.created`、`retrieval`、`graph_expand`、`rerank`、doc_miss / doc_hit_text_miss diagnostics。 |
 | focused tests | parser idempotency、chunk span mapping、index rehydrate、retrieval scope ACL、graph evidence to source span、blocked parser no fake index。 |
-| E2E 验收 | 文本文档真实闭环；最小 PDF parser 能产出 source span citation；同一 fixed case set 可比较 standard/deep/agentic。 |
-| 当前状态 | 文本类文档、local object store、durable ingestion store、GraphRAG、evidence-span hardening 代码已存在；fixed benchmark measured pass 仍 blocked。 |
-| 短期闭环项 | P0 fixed benchmark；P1 PDF source span citation；P1 retrieval diagnostics 持久化。 |
+| E2E 验收 | 文本文档真实闭环；text PDF parser 能产出 source span citation；同一 fixed case set 可比较 standard/deep/agentic。 |
+| 当前状态 | 文本类文档、local object store、durable ingestion store、GraphRAG、evidence-span hardening 代码已存在；PHASE12 已补本地 PyMuPDF text PDF -> SourceSpan -> retrieval -> page citation vertical slice；fixed benchmark measured pass 仍 blocked。 |
+| 短期闭环项 | P0 fixed benchmark；P1 retrieval diagnostics 持久化。 |
 | Future Optional | 大量 parser provider、外部 OCR/VLM、外部 graph/vector 集群。 |
 
 ### 4.3 Agent Core
@@ -489,7 +489,7 @@ P0：
 P1：
 
 - task / planner / retrieval / approval 状态本地持久化。
-- 至少一个真实 PDF parser 跑通 source span citation。
+- 至少一个真实 text PDF parser 已跑通 source span citation；扫描/OCR PDF 不 fake index。
 - 2-3 个真实 Tool 完成 approval / timeout / trace 闭环。
 - Memory ContextPack 在真实 AgentChat 中可观测。
 

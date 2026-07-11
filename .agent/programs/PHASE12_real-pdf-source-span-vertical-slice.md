@@ -2,7 +2,7 @@
 
     program: zuno-unified-agent-runtime-closure-v1
     phase: PHASE12
-    state: planned
+    state: completed
     title: 真实 PDF SourceSpan 纵向切片
     depends_on: PHASE11
     next_phase: PHASE13
@@ -114,3 +114,31 @@ if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
     6. 未完成和 blocked 项。
     7. commit SHA。
     8. 下一 Phase 是否满足依赖。
+
+    ## PHASE12 完成记录
+
+    状态：completed。
+
+    本轮真实完成：
+
+    - 新增本地 PyMuPDF adapter，真实 PDF bytes / `file://` PDF 可解析为 `CanonicalDocumentIR`。
+    - `DocumentBlock.source_span` 保留 `page`、`page_number`、`bbox`、`char_start`、`char_end`、`raw_text`、`normalized_text` 和 block metadata。
+    - `build_index_handoff_payload()` 现有 CitationChunk / ParentChunk contract 可直接保留 PDF SourceSpan；BM25/vector/graph index payload 保留 citation lineage。
+    - `AgenticRetrievalRuntime` 可从真实 PDF index 返回 page-level citation；`CorrectiveAgenticRetrievalRuntime` 的 `EvidenceLedger` 保存 PDF `document_version`、`source_span` 和 trace span。
+    - 损坏 PDF 返回 `failed`，不创建 document 或 index handoff；无文本 PDF 返回 `needs_ocr`，不 fake blocks。
+
+    本轮没有声明完成：
+
+    - 没有实现 OCR / VLM / scanned PDF 解析。
+    - 没有声明 Docling layout enrichment worker 已部署。
+    - 没有运行 PHASE13 fixed paired benchmark，也没有写成 measured pass。
+
+    验证证据：
+
+    ```text
+pytest -q tests/knowledge/test_pdf_source_span_vertical.py tests/e2e/test_pdf_agent_answer.py -p no:cacheprovider
+5 passed
+
+pytest -q tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+43 passed
+```
