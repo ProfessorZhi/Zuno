@@ -4,9 +4,11 @@
 
 ## 当前事实源
 
-- `architecture.md`：详细、规范、可实施的产品与运行架构总事实源。它定义 Lean Complete Agentic GraphRAG Product、六个运行域、黄金链路、ownership、配置、状态、失败、trace、测试和完成标准。
-- `architecture.html`：由 `architecture.md` 中十类 canonical view categories 和可展开 Mermaid 子图生成的架构图谱，不复制 Markdown 的全部技术细节。
+- `architecture.md`：目标架构唯一规范事实源。它定义十一逻辑能力模块、六个物理运行域，以及 4+1、Views & Beyond、Zuno Product Core 三组十类 canonical views。每类视图包含 Overall Mermaid 图和 Local Mermaid 图。
+- `architecture.html`：原生 Mermaid Architecture Atlas。页面运行时读取同目录的 `architecture.md`，保留 subgraph、decision、edge label、sequence diagram、连线类型和全屏查看，不再使用简化离线 SVG parser。
 - `production-readiness.md`：只维护 Current、Short-term Closure Gap、Measurement Blocked、Completed 和 Future Optional。
+
+`architecture.md` 描述 Target；`production-readiness.md` 描述 Current。不得把目标图中的能力直接写成当前已实现事实。
 
 ## 专题文档
 
@@ -20,24 +22,42 @@
 - `knowledge-space-product-configuration.md`
 - `repo-ownership-matrix.md`
 
-专题文档保留技术细节，但必须服从六个运行域和 `architecture.md` 的边界。
+专题文档保留技术细节，但必须服从十一逻辑模块、六个物理运行域和 `architecture.md` 的边界。
 
-## 生成规则
+## 更新与验证
 
-修改 `architecture.md` 中架构图后运行：
+修改 `architecture.md` 或 Architecture Atlas shell 后运行：
 
 ```powershell
 python tools/agent/render_architecture.py --write
 python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
 ```
 
-生成器同步：
+生成器负责：
 
-- `docs/architecture/architecture.html`
-- `.agent/architecture/architecture.md`
-- `.agent/architecture/architecture.html`
+- 验证十类 canonical views 全部存在；
+- 验证每类都有 Overall 和 Local 图；
+- 验证至少存在 30 张 Mermaid 图；
+- 验证核心 connector contract 已标注；
+- 同步 `.agent/architecture/architecture.md`；
+- 同步 `.agent/architecture/architecture.html`。
 
-不要手写 HTML 展示页，不恢复已归档的 split architecture docs。
+## HTML 预览
+
+HTML 会通过 `fetch("architecture.md")` 读取 Markdown，因此不能直接用 `file://` 双击预览。在仓库根目录运行：
+
+```powershell
+python -m http.server 8000
+```
+
+然后在浏览器打开：
+
+```text
+http://localhost:8000/docs/architecture/architecture.html
+```
+
+当前页面从固定 major 版本的 jsDelivr 路径加载 Mermaid v11，需要可访问网络。未来如需完全离线，可将同版本 Mermaid ESM 固定到仓库 vendor 目录，但不得恢复简化 SVG renderer。
 
 ## 历史入口
 
