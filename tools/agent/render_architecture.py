@@ -6,10 +6,15 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SOURCE_PATH = REPO_ROOT / "docs/architecture/architecture.md"
+DESIGN_PATH = REPO_ROOT / "docs/architecture/architecture.md"
+VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
-AGENT_SOURCE_PATH = REPO_ROOT / ".agent/architecture/architecture.md"
+AGENT_DESIGN_PATH = REPO_ROOT / ".agent/architecture/architecture.md"
 AGENT_HTML_PATH = REPO_ROOT / ".agent/architecture/architecture.html"
+
+# Backward-compatible alias used by older tests and helper scripts.
+SOURCE_PATH = VIEWS_PATH
+AGENT_SOURCE_PATH = AGENT_DESIGN_PATH
 
 STALE_OUTPUTS = [
     REPO_ROOT / "docs/architecture/overview.html",
@@ -65,7 +70,82 @@ def _section(content: str, title: str) -> str:
     return content[start:end]
 
 
+def validate_design(content: str) -> list[str]:
+    errors: list[str] = []
+    required_sections = [
+        "# Zuno Target Architecture Atlas",
+        "# 1. 项目定位：轻量实现，成熟设计",
+        "# 2. 总体架构",
+        "# 3. 完整 Agent 闭环",
+        "# 4. 十一模块目标设计",
+        "## 4.1 Product Surface",
+        "## 4.2 Input",
+        "## 4.3 Knowledge：Agentic GraphRAG",
+        "## 4.4 Model Gateway",
+        "## 4.5 Memory 与 Context 管理",
+        "## 4.6 Agent Core / Planning & Control",
+        "## 4.7 Capability",
+        "## 4.8 Tool Runtime",
+        "## 4.9 Security",
+        "## 4.10 Observability & Eval",
+        "## 4.11 Infrastructure",
+        "# 5. 模块间核心 contract",
+        "# 9. Target completion criteria",
+        "# 10. Architecture Visual Atlas",
+    ]
+    for section in required_sections:
+        if section not in content:
+            errors.append(f"architecture.md missing text-first design section: {section}")
+
+    required_terms = [
+        "十一逻辑能力模块",
+        "六个物理运行域",
+        "Single Controller Agent",
+        "TaskQueuePort",
+        "RabbitMQAdapter",
+        "LangSmithTraceSink",
+        "Agentic GraphRAG",
+        "EvidenceLedger",
+        "ContextPack",
+        "Plan-and-Execute",
+        "ReAct",
+        "Reflection",
+        "Replan",
+        "Reflexion",
+        "Capability Registry",
+        "MCP",
+        "ToolCallIntent",
+        "NormalizedToolObservation",
+        "GateDecision",
+        "Recall@K",
+        "token",
+        "cost",
+        "implementation available",
+        "measurement blocked",
+        "quality not yet proven",
+        "architecture-views.md",
+    ]
+    for term in required_terms:
+        if term not in content:
+            errors.append(f"architecture.md missing required design term: {term}")
+
+    mermaid_count = content.count("```mermaid")
+    if mermaid_count < 2:
+        errors.append("architecture.md should retain a small number of supporting Mermaid diagrams")
+    if mermaid_count > 8:
+        errors.append("architecture.md must stay text-first; move detailed diagrams to architecture-views.md")
+
+    if len(content) < 20000:
+        errors.append("architecture.md is too short for the normative text-first target design")
+    return errors
+
+
 def validate_source(content: str) -> list[str]:
+    """Validate the dedicated Mermaid atlas source.
+
+    Kept under the historical name because repo guardrails import this function.
+    """
+
     errors: list[str] = []
     for title in EXPECTED_VIEWS:
         section = _section(content, title)
@@ -74,18 +154,15 @@ def validate_source(content: str) -> list[str]:
             continue
         if "#### Overall" not in section:
             errors.append(f"canonical view has no Overall diagram: {title}")
-        if "#### Local" not in section:
-            errors.append(f"canonical view has no Local diagram: {title}")
+        if section.count("#### Local") < 2:
+            errors.append(f"canonical view must have at least two Local diagrams: {title}")
         if "```mermaid" not in section:
             errors.append(f"canonical view has no Mermaid diagram: {title}")
 
     if content.count("```mermaid") < 30:
-        errors.append("architecture atlas must contain at least 30 Mermaid diagrams")
+        errors.append("architecture visual source must contain at least 30 Mermaid diagrams")
 
     required_terms = [
-        "十一逻辑能力模块",
-        "六个物理运行域",
-        "Agent Core / Planning & Control",
         "RuntimeRequest",
         "ModelCallRequest",
         "ContextPack",
@@ -95,13 +172,16 @@ def validate_source(content: str) -> list[str]:
         "NormalizedToolObservation",
         "GroundedAnswer",
         "EvidenceLedger",
-        "implementation available",
-        "measurement blocked",
-        "quality not yet proven",
+        "TaskQueuePort",
+        "RabbitMQ",
+        "LangSmith",
+        "Recall",
+        "Token",
+        "Cost",
     ]
     for term in required_terms:
-        if term not in content:
-            errors.append(f"architecture atlas is missing required term: {term}")
+        if term.lower() not in content.lower():
+            errors.append(f"architecture-views.md missing required visual term: {term}")
     return errors
 
 
@@ -110,13 +190,14 @@ def validate_html(content: str) -> list[str]:
     required = [
         "Zuno Target Architecture Atlas",
         '<script type="module">',
-        'fetch("architecture.md"',
+        'fetch("/docs/architecture/architecture-views.md"',
         MERMAID_MODULE_URL,
-        'class="mermaid"',
+        'className = "mermaid"',
         "diagram-dialog",
         "Mermaid source",
         'diagram.subtitle.startsWith("Overall")',
-        '${kind} Diagram',
+        "${kind} Diagram",
+        "阅读文字总架构",
     ]
     for marker in required:
         if marker not in content:
@@ -134,26 +215,29 @@ def build_html() -> str:
 
 
 def write_outputs() -> None:
-    source = SOURCE_PATH.read_text(encoding="utf-8")
+    design = DESIGN_PATH.read_text(encoding="utf-8")
+    views = VIEWS_PATH.read_text(encoding="utf-8")
     html = HTML_PATH.read_text(encoding="utf-8")
-    errors = [*validate_source(source), *validate_html(html)]
+    errors = [*validate_design(design), *validate_source(views), *validate_html(html)]
     if errors:
         raise ValueError("\n".join(errors))
-    AGENT_SOURCE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    AGENT_SOURCE_PATH.write_text(source, encoding="utf-8", newline="\n")
+    AGENT_DESIGN_PATH.parent.mkdir(parents=True, exist_ok=True)
+    AGENT_DESIGN_PATH.write_text(design, encoding="utf-8", newline="\n")
     AGENT_HTML_PATH.write_text(html, encoding="utf-8", newline="\n")
 
 
 def check_outputs() -> list[str]:
     errors: list[str] = []
-    source = SOURCE_PATH.read_text(encoding="utf-8")
+    design = DESIGN_PATH.read_text(encoding="utf-8")
+    views = VIEWS_PATH.read_text(encoding="utf-8")
     html = HTML_PATH.read_text(encoding="utf-8")
-    errors.extend(validate_source(source))
+    errors.extend(validate_design(design))
+    errors.extend(validate_source(views))
     errors.extend(validate_html(html))
 
-    if not AGENT_SOURCE_PATH.exists():
-        errors.append(f"missing generated Markdown mirror: {AGENT_SOURCE_PATH.relative_to(REPO_ROOT)}")
-    elif AGENT_SOURCE_PATH.read_text(encoding="utf-8") != source:
+    if not AGENT_DESIGN_PATH.exists():
+        errors.append(f"missing generated Markdown mirror: {AGENT_DESIGN_PATH.relative_to(REPO_ROOT)}")
+    elif AGENT_DESIGN_PATH.read_text(encoding="utf-8") != design:
         errors.append(".agent/architecture/architecture.md is not synced with docs/architecture/architecture.md")
 
     if not AGENT_HTML_PATH.exists():
@@ -168,9 +252,11 @@ def check_outputs() -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate and sync the Zuno target architecture atlas.")
-    parser.add_argument("--write", action="store_true", help="sync Markdown and HTML mirrors")
-    parser.add_argument("--check", action="store_true", help="check source, native Mermaid HTML, and mirrors")
+    parser = argparse.ArgumentParser(
+        description="Validate the text-first Zuno target architecture and native Mermaid visual atlas."
+    )
+    parser.add_argument("--write", action="store_true", help="validate sources and sync Markdown/HTML mirrors")
+    parser.add_argument("--check", action="store_true", help="check design, views, HTML, and mirrors")
     args = parser.parse_args()
 
     if args.write:
