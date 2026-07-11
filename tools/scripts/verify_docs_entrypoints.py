@@ -119,7 +119,6 @@ def verify_entrypoint_text() -> list[str]:
     architecture_index = _read("docs/architecture/README.md")
     architecture = _read("docs/architecture/architecture.md")
     production = _read("docs/architecture/production-readiness.md")
-    agent_entry = _read(".agent/architecture/architecture.md")
 
     expected_by_file = {
         "README.md": [
@@ -188,15 +187,6 @@ def verify_entrypoint_text() -> list[str]:
     for phrase in production_phrases:
         if phrase not in production:
             errors.append(f"docs/architecture/production-readiness.md missing phrase: {phrase}")
-
-    for phrase in [
-        "normative_source: `docs/architecture/architecture.md`",
-        "visual_atlas: `docs/architecture/architecture.html`",
-        "production-readiness.md",
-        "architecture.md = Target",
-    ]:
-        if phrase not in agent_entry:
-            errors.append(f".agent/architecture/architecture.md missing phrase: {phrase}")
     return errors
 
 
@@ -261,12 +251,12 @@ def verify_architecture_view_contract() -> list[str]:
 
 def verify_architecture_mirrors() -> list[str]:
     errors: list[str] = []
-    module = _load_render_architecture_module()
+    docs_md = _read("docs/architecture/architecture.md")
     agent_md = _read(".agent/architecture/architecture.md")
     docs_html = _read("docs/architecture/architecture.html")
     agent_html = _read(".agent/architecture/architecture.html")
-    if agent_md != module.AGENT_POINTER:
-        errors.append(".agent/architecture/architecture.md must be the generated normative-source pointer")
+    if docs_md != agent_md:
+        errors.append(".agent/architecture/architecture.md must match docs/architecture/architecture.md")
     if docs_html != agent_html:
         errors.append(".agent/architecture/architecture.html must match docs/architecture/architecture.html")
     return errors
