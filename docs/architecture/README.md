@@ -53,6 +53,7 @@ python tools/scripts/verify_docs_entrypoints.py
 - 验证至少存在 30 张 Mermaid 图；
 - 验证 HTML 读取独立图源并使用 Mermaid v11；
 - 同步 `.agent/architecture/architecture.md`；
+- 同步 `.agent/architecture/architecture-views.md`；
 - 同步 `.agent/architecture/architecture.html`。
 
 ## HTML 预览
