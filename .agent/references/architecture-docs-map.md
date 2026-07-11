@@ -21,8 +21,11 @@ docs/architecture/architecture.html
   -> loads architecture-views.md at runtime
 docs/architecture/production-readiness.md
   -> Current, gaps, measurement and Future Optional
+
 .agent/architecture/architecture.md
   -> byte-for-byte text design mirror
+.agent/architecture/architecture-views.md
+  -> byte-for-byte Mermaid source mirror
 .agent/architecture/architecture.html
   -> byte-for-byte visual shell mirror
 ```
@@ -35,7 +38,7 @@ docs/architecture/production-readiness.md
 - `docs/architecture/architecture.html`：读取独立图源的原生 Mermaid visual atlas。
 - `docs/architecture/production-readiness.md`：Current、Short-term Closure Gap、Measurement Blocked、Completed、Future Optional。
 - 稳定专题文档：Document Ingestion、Agent Core、Memory、Capability/Tool、Agentic Retrieval、Eval/Observability、Input 和 Knowledge Space。
-- `.agent/architecture/architecture.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，不是独立事实源。
+- `.agent/architecture/architecture.md`、`.agent/architecture/architecture-views.md` 与 `.agent/architecture/architecture.html`：Agent 侧镜像，不是独立事实源。
 
 ## Presentation Page
 
@@ -65,9 +68,10 @@ python tools/scripts/verify_docs_entrypoints.py
 `--write` 负责验证三份正式源并同步：
 
 - `architecture.md` -> `.agent/architecture/architecture.md`
+- `architecture-views.md` -> `.agent/architecture/architecture-views.md`
 - `architecture.html` -> `.agent/architecture/architecture.html`
 
-`architecture-views.md` 不复制到 `.agent`，HTML 使用 `/docs/architecture/architecture-views.md` 作为唯一 Mermaid 图源。
+HTML 仍使用 `/docs/architecture/architecture-views.md` 作为运行时 Mermaid 图源；`.agent` 中的副本只用于 Agent 工作区一致性和离线审阅。
 
 ## Must Preserve
 
@@ -76,7 +80,7 @@ python tools/scripts/verify_docs_entrypoints.py
 - `architecture-views.md` 保留十类、至少三十张 Mermaid 图。
 - Current 与 Target 分离。
 - RabbitMQ、LangSmith、外部数据库和 sandbox 使用可替换 adapter 表达，不成为近期强依赖。
-- `.agent` 镜像与正式文件完全一致。
+- `.agent` 三份镜像与正式文件完全一致。
 
 ## Forbidden Changes
 
