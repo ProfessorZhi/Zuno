@@ -54,7 +54,7 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "LangSmith-compatible Trace / Eval",
     ]:
         assert phrase in architecture
-    assert _current_phase_name(current_program) == "PHASE06_product-cutover"
+    assert _current_phase_name(current_program) == "PHASE07_benchmark-and-closure"
     assert "state: active" in current_program
     assert "active_program: zuno-real-unified-runtime-cutover-v1" in current_program
     assert "latest_completed_program: zuno-unified-agent-runtime-closure-v1" in current_program

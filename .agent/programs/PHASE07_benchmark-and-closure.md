@@ -3,7 +3,7 @@
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
 phase: PHASE07_benchmark-and-closure
-state: pending
+state: active
 ```
 
 ## 目标
@@ -50,4 +50,3 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workfl
 python tools/scripts/verify_docs_entrypoints.py
 git diff --check
 ```
-

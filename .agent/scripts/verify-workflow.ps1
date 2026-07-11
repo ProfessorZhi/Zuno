@@ -344,7 +344,7 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-real-unified-runtime-cutover-v1" -or $currentProgram -notmatch "current_phase: PHASE06_product-cutover" -or $currentProgram -notmatch "latest_completed_program: zuno-unified-agent-runtime-closure-v1") {
+if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-real-unified-runtime-cutover-v1" -or $currentProgram -notmatch "current_phase: PHASE07_benchmark-and-closure" -or $currentProgram -notmatch "latest_completed_program: zuno-unified-agent-runtime-closure-v1") {
     $failures.Add("current-program.md must declare active real unified runtime cutover state")
 }
 if ($currentProgram -notmatch "zuno-evidence-span-agentic-graphrag-hardening-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/") {

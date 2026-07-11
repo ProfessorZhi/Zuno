@@ -47,7 +47,7 @@ class CompletionService:
             goal=req.user_input,
         )
         for event in cls.unified_runtime_service().stream(request):
-            yield {
+            payload = {
                 "type": event.event_type,
                 "data": {
                     "runtime_topology": "unified_agent_runtime",
@@ -59,15 +59,37 @@ class CompletionService:
                     **dict(event.payload),
                 },
             }
+            yield payload
+            if event.event_type == "runtime_node":
+                yield {
+                    "type": "node_started",
+                    "data": {
+                        "runtime_topology": "unified_agent_runtime",
+                        "run_id": event.run_id,
+                        "task_id": event.task_id,
+                        "trace_id": event.trace_id,
+                        "node": event.node,
+                        "status": event.status,
+                    },
+                }
         snapshot = cls.unified_runtime_service().get_snapshot(task_id)
+        if snapshot is not None:
+            for derived_event in _derived_sse_events(snapshot):
+                yield derived_event
+        final_answer = _final_answer_from_snapshot(snapshot) if snapshot is not None else ""
+        chunk_data = {
+            "chunk": final_answer or "Unified runtime finished without a final answer.",
+            "runtime_topology": "unified_agent_runtime",
+            "task_id": task_id,
+            "finalization_status": snapshot.finalization_status if snapshot else "unknown",
+        }
+        yield {
+            "type": "answer_chunk",
+            "data": chunk_data,
+        }
         yield {
             "type": "response_chunk",
-            "data": {
-                "chunk": "Unified runtime completed.",
-                "runtime_topology": "unified_agent_runtime",
-                "task_id": task_id,
-                "finalization_status": snapshot.finalization_status if snapshot else "unknown",
-            },
+            "data": chunk_data,
         }
 
     @staticmethod
@@ -138,3 +160,50 @@ class CompletionService:
 
 
 __all__ = ["CompletionService"]
+
+
+def _final_answer_from_snapshot(snapshot) -> str:
+    for observation in reversed(snapshot.observations):
+        if observation.metadata.get("grounded_synthesis"):
+            return str(observation.metadata.get("final_answer") or "")
+    return ""
+
+
+def _derived_sse_events(snapshot) -> list[dict]:
+    events: list[dict] = []
+    base = {
+        "runtime_topology": "unified_agent_runtime",
+        "run_id": snapshot.run_id,
+        "task_id": snapshot.task_id,
+        "trace_id": snapshot.trace_id,
+    }
+    for observation in snapshot.observations:
+        if observation.kind == "model" and (
+            observation.metadata.get("model_gateway_call") or observation.metadata.get("grounded_synthesis")
+        ):
+            source = "model_gateway" if observation.metadata.get("model_gateway_call") else "grounded_synthesis"
+            events.append({"type": "model_call", "data": {**base, "model_call_source": source, **observation.metadata}})
+        if observation.kind == "retrieval":
+            events.append(
+                {
+                    "type": "retrieval_round",
+                    "data": {
+                        **base,
+                        "evidence_ids": list(observation.evidence_ids),
+                        "citation_ids": list(observation.citation_ids),
+                        **observation.metadata,
+                    },
+                }
+            )
+        if observation.kind == "tool":
+            event_type = "approval_required" if observation.status == "waiting" else "tool_call"
+            events.append({"type": event_type, "data": {**base, **observation.metadata}})
+        if observation.kind == "reflection":
+            events.append({"type": "reflection", "data": {**base, **observation.metadata}})
+        if observation.kind == "replan":
+            events.append({"type": "replan", "data": {**base, **observation.metadata}})
+        if observation.metadata.get("grounded_synthesis"):
+            for binding in observation.metadata.get("citation_bindings", []):
+                if binding.get("citation_id"):
+                    events.append({"type": "citation", "data": {**base, **binding}})
+    return events

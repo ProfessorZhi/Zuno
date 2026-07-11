@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-real-unified-runtime-cutover-v1
-current_phase: PHASE06_product-cutover
+current_phase: PHASE07_benchmark-and-closure
 latest_completed_program: zuno-unified-agent-runtime-closure-v1
 
 `.agent/programs/` 当前处于 active program 状态。最近完成并归档的 program 是 `zuno-unified-agent-runtime-closure-v1`。
@@ -20,10 +20,11 @@ latest_completed_program: zuno-unified-agent-runtime-closure-v1
 - `.agent/programs/PHASE04_real-agent-execution.md`
 - `.agent/programs/PHASE05_knowledge-tool-memory-integration.md`
 - `.agent/programs/PHASE06_product-cutover.md`
+- `.agent/programs/PHASE07_benchmark-and-closure.md`
 
 当前 program 是 `zuno-real-unified-runtime-cutover-v1`，目标是把 Completion / Workspace 产品主路径切到 `UnifiedAgentRuntimeService -> compiled LangGraph -> RuntimeDependencyFactory -> Model Gateway / Memory / Corrective Agentic GraphRAG / Tool Control Plane` 的真实统一 runtime。
 
-当前 Phase 是 PHASE06。PHASE01 已完成 facts / guardrail 激活，PHASE02 已完成 compiled LangGraph cutover，PHASE03 已完成 `RuntimeDependencyFactory` 和 typed runtime protocols，PHASE04 已完成 ModelStep、ReActStep 和 Grounded Synthesis 真实执行数据面，PHASE05 已完成 Knowledge / Tool / Memory 真实集成；PHASE06 目标是切换 Completion / Workspace 产品入口。不得把 PHASE06-PHASE07 目标写成 Current、Completed 或 measured。
+当前 Phase 是 PHASE07。PHASE01-PHASE06 已完成本地 implementation cutover；PHASE07 目标是运行或诚实阻塞 benchmark，并完成 program closure / archive。不得把 blocked benchmark 写成 measured。
 
 ## 最近完成事实
 

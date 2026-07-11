@@ -1177,7 +1177,7 @@ def test_active_program_and_archived_program_closures_are_consistent() -> None:
         ACTIVE_PROGRAM_NAME,
         "state: active",
         "active_program: zuno-real-unified-runtime-cutover-v1",
-        "current_phase: PHASE06_product-cutover",
+        "current_phase: PHASE07_benchmark-and-closure",
         f"latest_completed_program: {PROGRAM3_ACTIVE_NAME}",
         PROGRAM3_ACTIVE_NAME,
         PROGRAM3_ACTIVE_ARCHIVE,

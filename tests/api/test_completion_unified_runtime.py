@@ -34,7 +34,7 @@ def test_completion_route_streams_unified_runtime_events(tmp_path) -> None:
         json={
             "user_input": "Summarize the workspace evidence with citations.",
             "dialog_id": "dialog_phase11_completion",
-            "product_mode": "unified_runtime",
+            "product_mode": "auto",
         },
     ) as response:
         assert response.status_code == 200
@@ -48,8 +48,14 @@ def test_completion_route_streams_unified_runtime_events(tmp_path) -> None:
     ]
     event_types = [event["type"] for event in streamed]
     assert "runtime_started" in event_types
+    assert "node_started" in event_types
+    assert "model_call" in event_types
+    assert "reflection" in event_types
+    assert "answer_chunk" in event_types
     assert "runtime_node" in event_types
     assert "runtime_completed" in event_types
     assert event_types[-1] == "response_chunk"
     assert {event["data"]["runtime_topology"] for event in streamed} == {"unified_agent_runtime"}
     assert streamed[-1]["data"]["finalization_status"] in {"finalized", "abstained"}
+    assert streamed[-1]["data"]["chunk"] != "Unified runtime completed."
+    assert streamed[-1]["data"]["chunk"]

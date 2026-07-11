@@ -72,7 +72,7 @@ async def _create_chat_agent(req: CompletionReq, login_user_id: str):
 
 @router.post("/completion", description="Completion chat endpoint")
 async def completion(*, req: CompletionReq, login_user: UserPayload = Depends(get_login_user)):
-    if req.product_mode == "unified_runtime" or os.getenv("ZUNO_COMPLETION_UNIFIED_RUNTIME") == "1":
+    if os.getenv("ZUNO_AGENT_RUNTIME") != "legacy_general_agent":
         async def unified_generate():
             async for event in CompletionService.stream_unified_runtime(req=req, login_user_id=login_user.user_id):
                 yield f"data: {json.dumps(event)}\n\n"

@@ -3,7 +3,7 @@
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
 phase: PHASE06_product-cutover
-state: active
+state: completed
 ```
 
 ## 目标
@@ -26,11 +26,19 @@ Completion / Workspace 默认走 unified runtime；GeneralAgent 只保留显式 
 
 ## 验收闸门
 
-- 普通 Completion 请求默认进入 unified runtime。
-- `ZUNO_AGENT_RUNTIME=legacy_general_agent` 或等价显式 flag 才回 legacy。
-- SSE 输出 runtime_started、node_started、model_call、retrieval_round、tool_call、approval_required、reflection、replan、answer_chunk、citation、runtime_completed。
-- Workspace task final answer / artifact 来自 unified runtime。
-- page refresh 后 approval resume 只执行一次。
+- [x] 普通 Completion 请求默认进入 unified runtime。
+- [x] `ZUNO_AGENT_RUNTIME=legacy_general_agent` 或等价显式 flag 才回 legacy。
+- [x] SSE 输出 runtime_started、node_started、model_call、retrieval_round、tool_call、approval_required、reflection、replan、answer_chunk、citation、runtime_completed。
+- [x] Workspace task final answer / artifact 来自 unified runtime。
+- [x] page refresh 后 approval resume 只执行一次。
+
+## 完成证据
+
+- Completion route 默认走 `CompletionService.stream_unified_runtime()`；只有 `ZUNO_AGENT_RUNTIME=legacy_general_agent` 回 legacy GeneralAgent。
+- Completion final chunk 来自 unified runtime `GroundedSynthesisEngine` 的 `final_answer`，不再输出固定 `Unified runtime completed.`。
+- Completion SSE 保留 runtime events，并派生 node_started、model_call、retrieval_round、tool_call、approval_required、reflection、replan、citation 和 answer_chunk。
+- `pytest -q tests/api tests/e2e tests/agent/runtime -p no:cacheprovider` 通过。
+- `python tools/scripts/verify_real_runtime_cutover.py --enforce-product-cutover` 通过。
 
 ## 验证命令
 

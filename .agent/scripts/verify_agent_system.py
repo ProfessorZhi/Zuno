@@ -570,7 +570,7 @@ def verify_program_lifecycle_surfaces(repo_root: Path = REPO_ROOT) -> list[str]:
     for phrase in [
         "state: active",
         "active_program: zuno-real-unified-runtime-cutover-v1",
-        "current_phase: PHASE06_product-cutover",
+        "current_phase: PHASE07_benchmark-and-closure",
         f"latest_completed_program: {UNIFIED_RUNTIME_PROGRAM_NAME}",
         "zuno-real-unified-runtime-cutover-v1",
         UNIFIED_RUNTIME_PROGRAM_NAME,
