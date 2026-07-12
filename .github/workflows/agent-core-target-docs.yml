@@ -60,6 +60,20 @@ jobs:
           set -o pipefail
           python tools/scripts/sync_agent_core_target_docs.py \
             2>&1 | tee validation-logs/document-sync.log
+          python - <<'PY'
+          from pathlib import Path
+          for relative in [
+              "docs/architecture/architecture.md",
+              ".agent/architecture/architecture.md",
+          ]:
+              path = Path(relative)
+              lines = path.read_text(encoding="utf-8").splitlines()
+              normalized = [
+                  line.rstrip() if "docs/status/production-readiness.md" in line else line
+                  for line in lines
+              ]
+              path.write_text("\n".join(normalized) + "\n", encoding="utf-8")
+          PY
           git diff --check
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
