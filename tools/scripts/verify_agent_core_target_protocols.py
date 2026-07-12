@@ -23,8 +23,9 @@ REMOVED_PATHS = [
 REQUIRED_PARTS = [
     "# Part I：定位与概念架构",
     "# Part II：智能机制与运行流程",
-    "# Part III：状态、恢复与一致性",
-    "# Part IV：目标 Contract 与实施规格",
+    "# Part III：状态、恢复与一致性概览",
+    "# Part IV：目标实现表面与规范索引",
+    "# Part V：领域模型、状态转换与决策闭环",
     "# Part VI：规范性控制协议",
     "# Part VII：一致性与生命周期协议",
     "# Part VIII：验证与完成证据",
@@ -36,6 +37,15 @@ REQUIRED_TERMS = [
     "StepExecutionGraph",
     "TaskContract",
     "GoalVersion",
+    "EffectivePolicySnapshot",
+    "ActionLifecycleStatus",
+    "ActionOutcome",
+    "command_sequence_no",
+    "ResourceClaim",
+    "PlanPatchOperation",
+    "BudgetSettlement",
+    "Requirement Enforcement Matrix",
+    "Transition Matrix",
     "pending_interrupt_refs",
     "WAITING_CONDITION",
     "CANCELLING",
@@ -50,13 +60,48 @@ REQUIRED_TERMS = [
     ".agent/programs/",
 ]
 
+REQUIRED_TABLES = [
+    "agent_objective_outcomes",
+    "agent_run_commands",
+    "agent_control_decisions",
+    "agent_effective_policy_snapshots",
+    "agent_resource_claims",
+    "agent_domain_commit_markers",
+    "agent_recovery_watermarks",
+    "agent_artifact_candidates",
+    "agent_publication_artifact_bindings",
+    "agent_publication_correction_decisions",
+    "agent_budget_consumptions",
+    "agent_budget_adjustments",
+    "agent_budget_settlements",
+]
+
 FORBIDDEN_TERMS = [
     "# 35. Current Baseline",
     "# 36. 实现阶段",
     "pending_interrupt_id: str | None",
     "同一 Run 默认只允许一个 PENDING Interrupt",
     "Agent Core Target 由三份正式文档共同构成",
+    "未来 Program 必须以本文及配套规范为目标约束",
+    "状态：DRAFT、VALIDATING、VALID、INVALID、SUPERSEDED、PUBLISHED、WITHDRAWN。",
+    "SUCCEEDED\nFAILED\nUNKNOWN\nRECONCILING\nRECONCILED",
 ]
+
+OBJECT_TABLE_PAIRS = {
+    "ObjectiveOutcome": "agent_objective_outcomes",
+    "RunCommand": "agent_run_commands",
+    "ControlDecision": "agent_control_decisions",
+    "EffectivePolicySnapshot": "agent_effective_policy_snapshots",
+    "ResourceClaim": "agent_resource_claims",
+    "DomainCommitMarker": "agent_domain_commit_markers",
+    "RecoveryWatermark": "agent_recovery_watermarks",
+    "ArtifactCandidate": "agent_artifact_candidates",
+    "PublicationArtifactBinding": "agent_publication_artifact_bindings",
+    "PublicationCorrectionDecision": "agent_publication_correction_decisions",
+    "BudgetConsumption": "agent_budget_consumptions",
+    "BudgetAdjustment": "agent_budget_adjustments",
+    "BudgetSettlement": "agent_budget_settlements",
+}
 
 
 def _read(path: Path) -> str:
@@ -81,15 +126,49 @@ def verify() -> list[str]:
     if "status: normative-target-module-architecture" not in formal:
         errors.append("Agent Core document must declare normative-target-module-architecture")
 
+    positions: list[int] = []
     for part in REQUIRED_PARTS:
-        if part not in formal:
-            errors.append(f"Agent Core document missing part: {part}")
+        if formal.count(part) != 1:
+            errors.append(f"Agent Core document must contain part exactly once: {part}")
+        else:
+            positions.append(formal.index(part))
+    if positions and positions != sorted(positions):
+        errors.append("Agent Core document parts are not in canonical order I through VIII")
+
     for term in REQUIRED_TERMS:
         if term not in formal:
             errors.append(f"Agent Core document missing required term: {term}")
+    for table in REQUIRED_TABLES:
+        if table not in formal:
+            errors.append(f"Agent Core document missing target table: {table}")
     for term in FORBIDDEN_TERMS:
         if term in formal:
-            errors.append(f"Agent Core document contains obsolete contract: {term}")
+            errors.append(f"Agent Core document contains obsolete or conflicting contract: {term}")
+
+    for object_name, table_name in OBJECT_TABLE_PAIRS.items():
+        if object_name not in formal or table_name not in formal:
+            errors.append(f"Agent Core object/storage mapping incomplete: {object_name} -> {table_name}")
+
+    for transition in [
+        "VALIDATING_INPUT` | `INPUT_INVALID",
+        "RUNNING` | `REPLAN_REQUIRED",
+        "FINALIZING` | `FINAL_GATE_PASS",
+        "PUBLISHING` | `DELIVERY_CONFIRMED",
+        "CANCELLING` | `DRAIN_COMPLETE",
+    ]:
+        if transition not in formal:
+            errors.append(f"AgentRun Transition Matrix missing transition: {transition}")
+
+    for policy_term in [
+        "System Default",
+        "Tenant Policy",
+        "Security Override",
+        "Runtime Emergency Override",
+        "AcceptancePolicy",
+        "ReflectionPolicy",
+    ]:
+        if policy_term not in formal:
+            errors.append(f"Agent Core Policy Contract missing term: {policy_term}")
 
     ids = [int(value) for value in re.findall(r"ARCH-AGENT-(\d{3})", formal)]
     if sorted(ids) != list(range(1, 81)):
@@ -122,7 +201,7 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
-    print("unified Agent Core target architecture verification passed.")
+    print("refined Agent Core target architecture verification passed.")
     return 0
 
 
