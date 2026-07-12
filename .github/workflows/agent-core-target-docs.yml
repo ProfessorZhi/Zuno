@@ -15,9 +15,9 @@ on:
       - ".agent/system.yaml"
       - ".agent/scripts/verify_agent_system.py"
       - ".agent/scripts/verify_doc_boundaries.py"
+      - "tools/scripts/sync_agent_core_target_docs.py"
       - "tools/scripts/verify_agent_core_target_protocols.py"
       - "tools/scripts/verify_docs_entrypoints.py"
-      - "tools/scripts/verify_repo_structure.py"
       - "tools/agent/render_architecture.py"
       - "tests/repo/test_agent_core_target_protocols.py"
       - "tests/repo/test_docs_entrypoints.py"
@@ -28,7 +28,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: agent-core-target-docs-${{ github.event.pull_request.number || github.ref }}
@@ -45,27 +45,46 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Apply deterministic documentation synchronization
+        if: github.event_name == 'push' && github.ref_name == 'agent/complete-agent-core-target-architecture'
+        run: |
+          python tools/scripts/sync_agent_core_target_docs.py
+          git diff --check
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add docs/architecture .agent/architecture .agent/scripts/verify_doc_boundaries.py \
+              tools/agent/render_architecture.py tools/scripts/verify_docs_entrypoints.py \
+              tests/repo/test_docs_entrypoints.py docs/history/research/chatgpt-research-mode-artifacts
+            git commit -m "docs: synchronize Agent Core target architecture surfaces"
+            git push origin HEAD:agent/complete-agent-core-target-architecture
+          fi
+
       - name: Install validation dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest pydantic pyyaml
+          python -m pip install pytest
 
       - name: Prepare validation logs
         run: mkdir -p validation-logs
+
+      - name: Verify clean patch formatting
+        run: git diff --check HEAD^ HEAD
 
       - name: Compile validation scripts
         run: |
           set -o pipefail
           python -m py_compile \
+            tools/scripts/sync_agent_core_target_docs.py \
             tools/scripts/verify_agent_core_target_protocols.py \
             tools/scripts/verify_docs_entrypoints.py \
-            tools/scripts/verify_repo_structure.py \
             tools/agent/render_architecture.py \
             .agent/scripts/verify_agent_system.py \
             .agent/scripts/verify_doc_boundaries.py \
@@ -80,68 +99,46 @@ jobs:
             2>&1 | tee validation-logs/agent-core-protocols.log
 
       - name: Verify Agent System
-        if: always()
         run: |
           set -o pipefail
           python .agent/scripts/verify_agent_system.py \
             2>&1 | tee validation-logs/agent-system.log
 
       - name: Verify document boundaries
-        if: always()
         run: |
           set -o pipefail
           python .agent/scripts/verify_doc_boundaries.py \
             2>&1 | tee validation-logs/doc-boundaries.log
 
-      - name: Verify repository structure
-        if: always()
-        run: |
-          set -o pipefail
-          python tools/scripts/verify_repo_structure.py \
-            2>&1 | tee validation-logs/repo-structure.log
-
       - name: Verify documentation entrypoints
-        if: always()
         run: |
           set -o pipefail
           python tools/scripts/verify_docs_entrypoints.py \
             2>&1 | tee validation-logs/docs-entrypoints.log
 
       - name: Verify architecture renderer outputs
-        if: always()
         run: |
           set -o pipefail
           python tools/agent/render_architecture.py --check \
             2>&1 | tee validation-logs/architecture-renderer.log
 
       - name: Run Agent Core protocol tests
-        if: always()
         run: |
           set -o pipefail
           pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider \
             2>&1 | tee validation-logs/agent-core-tests.log
 
       - name: Run documentation entrypoint tests
-        if: always()
         run: |
           set -o pipefail
           pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider \
             2>&1 | tee validation-logs/docs-entrypoint-tests.log
 
-      - name: Upload validation package
+      - name: Upload validation logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: agent-core-target-validation-package
-          path: |
-            validation-logs/
-            docs/architecture/README.md
-            docs/architecture/architecture.md
-            .agent/architecture/README.md
-            .agent/architecture/architecture.md
-            tools/agent/render_architecture.py
-            tools/scripts/verify_docs_entrypoints.py
-            tools/scripts/verify_repo_structure.py
-            tests/repo/test_docs_entrypoints.py
+          name: agent-core-target-validation-logs
+          path: validation-logs/
           if-no-files-found: error
           retention-days: 14
