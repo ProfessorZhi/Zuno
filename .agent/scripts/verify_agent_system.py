@@ -13,6 +13,12 @@ CANONICAL_ARCHITECTURE_FILES = {
     "architecture.html",
 }
 
+AGENT_CORE_DOCS = [
+    "06-agent-core-planning-control.md",
+    "06-agent-core-control-protocols.md",
+    "06-agent-core-consistency-lifecycle-protocols.md",
+]
+
 REQUIRED_PATHS = [
     "AGENTS.md",
     "README.md",
@@ -25,7 +31,7 @@ REQUIRED_PATHS = [
     "docs/modules/02-input-document-ingestion.md",
     "docs/modules/03-knowledge-agentic-graphrag.md",
     "docs/modules/05-memory-context.md",
-    "docs/modules/06-agent-core-planning-control.md",
+    *[f"docs/modules/{name}" for name in AGENT_CORE_DOCS],
     "docs/modules/07-capability-skill.md",
     "docs/modules/10-observability-eval.md",
     "docs/status/production-readiness.md",
@@ -39,7 +45,7 @@ REQUIRED_PATHS = [
     ".agent/architecture/architecture-views.md",
     ".agent/architecture/architecture.html",
     ".agent/modules/README.md",
-    ".agent/modules/06-agent-core-planning-control.md",
+    *[f".agent/modules/{name}" for name in AGENT_CORE_DOCS],
     ".agent/references/README.md",
     ".agent/references/project-map.md",
     ".agent/references/task-routing.md",
@@ -78,6 +84,7 @@ REQUIRED_PATHS = [
     "tools/scripts/verify_docs_entrypoints.py",
     "tools/scripts/verify_repo_structure.py",
     "tools/scripts/verify_current_program.py",
+    "tools/scripts/verify_agent_core_target_protocols.py",
 ]
 
 FORBIDDEN_ACTIVE_PATHS = [
@@ -126,12 +133,10 @@ def verify_required_paths() -> list[str]:
 
 def verify_architecture_directory_contract() -> list[str]:
     errors: list[str] = []
-
     for relative_root in ["docs/architecture", ".agent/architecture"]:
         root = REPO_ROOT / relative_root
         files = {path.name for path in root.iterdir() if path.is_file()}
         directories = [path.name for path in root.iterdir() if path.is_dir()]
-
         if files != CANONICAL_ARCHITECTURE_FILES:
             errors.append(
                 f"{relative_root} must contain only {sorted(CANONICAL_ARCHITECTURE_FILES)}; "
@@ -139,7 +144,6 @@ def verify_architecture_directory_contract() -> list[str]:
             )
         if directories:
             errors.append(f"{relative_root} must not contain subdirectories: {sorted(directories)}")
-
     return errors
 
 
@@ -149,22 +153,19 @@ def verify_mirrors() -> list[str]:
         ("docs/architecture/architecture.md", ".agent/architecture/architecture.md"),
         ("docs/architecture/architecture-views.md", ".agent/architecture/architecture-views.md"),
         ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
-        (
-            "docs/modules/06-agent-core-planning-control.md",
-            ".agent/modules/06-agent-core-planning-control.md",
-        ),
+        *[
+            (f"docs/modules/{name}", f".agent/modules/{name}")
+            for name in AGENT_CORE_DOCS
+        ],
     ]
-
     for formal, mirror in pairs:
         if _read(formal) != _read(mirror):
             errors.append(f"mirror mismatch: {mirror} must match {formal}")
-
     return errors
 
 
 def verify_entrypoint_boundaries() -> list[str]:
     errors: list[str] = []
-
     for relative_path in ENTRYPOINT_FILES:
         content = _read(relative_path)
         for forbidden in FORBIDDEN_ACTIVE_PATHS:
@@ -184,21 +185,24 @@ def verify_entrypoint_boundaries() -> list[str]:
             "docs/governance/",
         ],
         "docs/modules/README.md": [
-            "06-agent-core-planning-control.md",
+            *AGENT_CORE_DOCS,
             "docs/status/production-readiness.md",
+            "verify_agent_core_target_protocols.py",
+        ],
+        ".agent/modules/README.md": [
+            *AGENT_CORE_DOCS,
+            "verify_agent_core_target_protocols.py",
         ],
         ".agent/README.md": [
             ".agent/architecture/",
             ".agent/modules/",
         ],
     }
-
     for relative_path, phrases in required_phrases.items():
         content = _read(relative_path)
         for phrase in phrases:
             if phrase not in content:
                 errors.append(f"{relative_path} missing phrase: {phrase}")
-
     return errors
 
 
@@ -220,10 +224,26 @@ def verify_module_contracts() -> list[str]:
             "ContextPack read view",
         ],
         "docs/modules/06-agent-core-planning-control.md": [
-            "LangGraph",
+            "Single Controller Agent Runtime",
             "Plan DAG",
+            "TaskContract",
+            "pending_interrupt_refs",
+            "prepare_publication",
             "PostgreSQL",
-            "Alembic Migration",
+        ],
+        "docs/modules/06-agent-core-control-protocols.md": [
+            "WAITING_CONDITION",
+            "CANCELLING",
+            "PreparedAction",
+            "Publication",
+            "ARCH-AGENT-060",
+        ],
+        "docs/modules/06-agent-core-consistency-lifecycle-protocols.md": [
+            "GoalVersion",
+            "RecoveryWatermark",
+            "ResultValidity",
+            "RunOrphanReconciler",
+            "ARCH-AGENT-080",
         ],
         "docs/modules/07-capability-skill.md": [
             "Function Calling",
@@ -235,13 +255,27 @@ def verify_module_contracts() -> list[str]:
             "agent_run",
         ],
     }
-
     for relative_path, phrases in required.items():
         content = _read(relative_path)
         for phrase in phrases:
             if phrase not in content:
                 errors.append(f"{relative_path} missing module contract phrase: {phrase}")
+    return errors
 
+
+def verify_agent_core_routing() -> list[str]:
+    errors: list[str] = []
+    for relative_path in ["AGENTS.md", ".agent/system.yaml"]:
+        content = _read(relative_path)
+        for name in AGENT_CORE_DOCS:
+            if name not in content:
+                errors.append(f"{relative_path} does not route to Agent Core document: {name}")
+        if "verify_agent_core_target_protocols.py" not in content:
+            errors.append(f"{relative_path} does not route to Agent Core verifier")
+    if "Single GeneralAgent" in _read(".agent/system.yaml"):
+        errors.append(".agent/system.yaml uses obsolete Single GeneralAgent terminology")
+    if "Single Controller Agent Runtime" not in _read(".agent/system.yaml"):
+        errors.append(".agent/system.yaml must declare Single Controller Agent Runtime")
     return errors
 
 
@@ -267,18 +301,16 @@ def main() -> int:
         verify_mirrors,
         verify_entrypoint_boundaries,
         verify_module_contracts,
+        verify_agent_core_routing,
         verify_no_tracked_local_workspace,
     ]
-
     errors: list[str] = []
     for check in checks:
         errors.extend(check())
-
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
-
     print("agent system verification passed.")
     return 0
 
