@@ -18,6 +18,13 @@ EXPECTED_VIEWS = [
     "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
 ]
 
+CANONICAL_ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture-views.md",
+    "architecture.html",
+}
+
 
 def _load_render_architecture():
     module_path = REPO_ROOT / "tools" / "agent" / "render_architecture.py"
@@ -36,7 +43,9 @@ def test_readme_exposes_lean_complete_positioning() -> None:
         "Lean Complete Agentic GraphRAG Product",
         "./docs/architecture/architecture.md",
         "./docs/architecture/architecture.html",
-        "./docs/architecture/production-readiness.md",
+        "./docs/modules/README.md",
+        "./docs/status/production-readiness.md",
+        "./docs/modules/06-agent-core-planning-control.md",
         "implementation available",
         "measurement blocked",
         "quality not yet proven",
@@ -44,57 +53,50 @@ def test_readme_exposes_lean_complete_positioning() -> None:
         assert phrase in content
 
 
-def test_docs_architecture_front_path_and_generated_entries() -> None:
-    docs_files = {
-        path.name for path in (REPO_ROOT / "docs" / "architecture").iterdir() if path.is_file()
-    }
-    agent_files = {
-        path.name for path in (REPO_ROOT / ".agent" / "architecture").iterdir() if path.is_file()
-    }
-    assert docs_files == {
-        "README.md",
-        "architecture.md",
-        "architecture-views.md",
-        "production-readiness.md",
-        "document-ingestion-foundation.md",
-        "agent-core-runtime.md",
-        "memory-and-context.md",
-        "capability-and-skill-layer.md",
-        "agentic-retrieval-planner.md",
-        "eval-observability-and-cost.md",
-        "input-layer-and-document-processing.md",
-        "knowledge-space-product-configuration.md",
-        "architecture.html",
-        "repo-ownership-matrix.md",
-    }
-    assert agent_files == {
-        "README.md",
-        "architecture.md",
-        "architecture-views.md",
-        "architecture.html",
-    }
+def test_architecture_directories_only_contain_canonical_files() -> None:
+    docs_root = REPO_ROOT / "docs" / "architecture"
+    agent_root = REPO_ROOT / ".agent" / "architecture"
 
-    assert (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8") == (
-        REPO_ROOT / ".agent/architecture/architecture.md"
-    ).read_text(encoding="utf-8")
-    assert (REPO_ROOT / "docs/architecture/architecture-views.md").read_text(encoding="utf-8") == (
-        REPO_ROOT / ".agent/architecture/architecture-views.md"
-    ).read_text(encoding="utf-8")
-    assert (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8") == (
-        REPO_ROOT / ".agent/architecture/architecture.html"
-    ).read_text(encoding="utf-8")
+    docs_files = {path.name for path in docs_root.iterdir() if path.is_file()}
+    agent_files = {path.name for path in agent_root.iterdir() if path.is_file()}
+
+    assert docs_files == CANONICAL_ARCHITECTURE_FILES
+    assert agent_files == CANONICAL_ARCHITECTURE_FILES
+    assert not [path for path in docs_root.iterdir() if path.is_dir()]
+    assert not [path for path in agent_root.iterdir() if path.is_dir()]
+
+
+def test_architecture_and_agent_mirrors_match() -> None:
+    for file_name in ["architecture.md", "architecture-views.md", "architecture.html"]:
+        assert (REPO_ROOT / "docs/architecture" / file_name).read_text(encoding="utf-8") == (
+            REPO_ROOT / ".agent/architecture" / file_name
+        ).read_text(encoding="utf-8")
+
+    assert (REPO_ROOT / "docs/modules/06-agent-core-planning-control.md").read_text(
+        encoding="utf-8"
+    ) == (REPO_ROOT / ".agent/modules/06-agent-core-planning-control.md").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_docs_front_path_readmes_explain_current_contract() -> None:
     docs_index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
-    architecture_index = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
-    agent_index = (REPO_ROOT / ".agent/architecture/README.md").read_text(encoding="utf-8")
+    architecture_index = (REPO_ROOT / "docs/architecture/README.md").read_text(
+        encoding="utf-8"
+    )
+    modules_index = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
+    agent_architecture_index = (REPO_ROOT / ".agent/architecture/README.md").read_text(
+        encoding="utf-8"
+    )
 
     for phrase in [
         "Zuno 文档入口",
         "./architecture/architecture.md",
         "./architecture/architecture.html",
-        "./architecture/production-readiness.md",
+        "./modules/README.md",
+        "./status/production-readiness.md",
+        "./decisions/README.md",
+        "./governance/repo-ownership-matrix.md",
     ]:
         assert phrase in docs_index
 
@@ -103,18 +105,29 @@ def test_docs_front_path_readmes_explain_current_contract() -> None:
         "architecture.md",
         "architecture-views.md",
         "architecture.html",
-        "production-readiness.md",
+        "docs/modules/",
+        "docs/status/",
         "python tools/agent/render_architecture.py --write",
     ]:
         assert phrase in architecture_index
 
     for phrase in [
-        "Agent 架构工作区",
-        "Lean Complete Agentic GraphRAG Product",
-        "architecture-views.md",
-        "python tools/agent/render_architecture.py --write",
+        "Zuno 逻辑模块设计文档",
+        "02-input-document-ingestion.md",
+        "03-knowledge-agentic-graphrag.md",
+        "05-memory-context.md",
+        "06-agent-core-planning-control.md",
+        "07-capability-skill.md",
+        "10-observability-eval.md",
     ]:
-        assert phrase in agent_index
+        assert phrase in modules_index
+
+    for phrase in [
+        "Agent 架构工作区",
+        ".agent/modules/06-agent-core-planning-control.md",
+        "docs/status/production-readiness.md",
+    ]:
+        assert phrase in agent_architecture_index
 
 
 def test_architecture_markdown_is_text_first_target_design() -> None:
@@ -152,7 +165,9 @@ def test_architecture_markdown_is_text_first_target_design() -> None:
 
 def test_architecture_views_contains_ten_categories_and_thirty_diagrams() -> None:
     render_architecture = _load_render_architecture()
-    views = (REPO_ROOT / "docs/architecture/architecture-views.md").read_text(encoding="utf-8")
+    views = (REPO_ROOT / "docs/architecture/architecture-views.md").read_text(
+        encoding="utf-8"
+    )
 
     assert render_architecture.EXPECTED_VIEWS == EXPECTED_VIEWS
     assert render_architecture.EXPECTED_DIAGRAMS == EXPECTED_VIEWS
@@ -196,51 +211,73 @@ def test_architecture_html_uses_true_mermaid_rendering() -> None:
 def test_architecture_renderer_sync_contract() -> None:
     render_architecture = _load_render_architecture()
     assert render_architecture.check_outputs() == []
-    expected_html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
+    expected_html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(
+        encoding="utf-8"
+    )
     assert render_architecture.build_html() == expected_html
 
 
-def test_topic_docs_follow_runtime_domain_boundaries() -> None:
+def test_module_docs_follow_logical_module_boundaries() -> None:
     expected = {
-        "document-ingestion-foundation.md": ["Input & Knowledge", "SourceObject", "CitationLineage"],
-        "agent-core-runtime.md": ["Agent Core", "Model Runtime / Gateway", "Single Controller"],
-        "memory-and-context.md": [
+        "02-input-document-ingestion.md": [
+            "Input / Document Ingestion",
+            "SourceObject",
+            "CanonicalDocumentIR",
+            "IndexableDocumentSnapshot",
+        ],
+        "03-knowledge-agentic-graphrag.md": [
+            "Knowledge / Agentic GraphRAG",
+            "EvidenceLedger",
+            "RetrievalQualityVerdict",
+            "KnowledgeSnapshot",
+        ],
+        "05-memory-context.md": [
             "Sensory Memory",
             "Short-term Memory",
             "Long-term Memory",
             "Entity Memory",
             "ContextPack read view",
         ],
-        "capability-and-skill-layer.md": [
-            "Capability & Tool",
+        "06-agent-core-planning-control.md": [
+            "Agent Core / Planning & Control",
+            "Plan DAG",
+            "默认最大化安全并行",
+            "PostgreSQL",
+            "Alembic Migration",
+        ],
+        "07-capability-skill.md": [
+            "Capability / Skill",
             "Function Calling",
             "SkillMetadata",
             "ToolRequest",
         ],
-        "agentic-retrieval-planner.md": [
-            "Agentic Retrieval Planner",
-            "Failure Buckets",
-            "EvidenceLedger",
-            "RetrievalQualityVerdict",
-        ],
-        "eval-observability-and-cost.md": [
-            "Governance & Observability",
+        "10-observability-eval.md": [
+            "Observability & Eval",
             "agent_run",
             "Measurement Semantics",
         ],
-        "input-layer-and-document-processing.md": [
-            "Product & API",
-            "Input & Knowledge",
-            "parser blocked",
-        ],
-        "knowledge-space-product-configuration.md": [
-            "Knowledge Space",
-            "ModelSlotBinding",
-            "RetrievalProfile",
-        ],
     }
+
     for file_name, phrases in expected.items():
-        content = (REPO_ROOT / "docs/architecture" / file_name).read_text(encoding="utf-8")
+        content = (REPO_ROOT / "docs/modules" / file_name).read_text(encoding="utf-8")
+        for phrase in phrases:
+            assert phrase in content
+
+
+def test_status_decision_and_governance_entries_exist() -> None:
+    expected = {
+        "docs/status/production-readiness.md": [
+            "Short-term Closure Gap",
+            "Measurement Blocked",
+            "Future Optional",
+        ],
+        "docs/decisions/README.md": ["架构决策记录"],
+        "docs/decisions/0002-retire-compat-namespace.md": ["Accepted"],
+        "docs/governance/repo-ownership-matrix.md": ["Repository Ownership Matrix"],
+    }
+
+    for relative_path, phrases in expected.items():
+        content = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
         for phrase in phrases:
             assert phrase in content
 
@@ -258,30 +295,35 @@ def test_architecture_surface_cleanup_archive_keeps_old_materials() -> None:
         assert (REPO_ROOT / relative_path).exists(), f"missing archive path: {relative_path}"
 
 
-def test_active_entrypoints_do_not_restore_retired_front_path() -> None:
+def test_active_updated_entrypoints_do_not_reference_migrated_architecture_docs() -> None:
     files = [
         REPO_ROOT / "README.md",
         REPO_ROOT / "docs/README.md",
         REPO_ROOT / "docs/architecture/README.md",
-        REPO_ROOT / "AGENTS.md",
+        REPO_ROOT / "docs/modules/README.md",
         REPO_ROOT / ".agent/README.md",
         REPO_ROOT / ".agent/architecture/README.md",
+        REPO_ROOT / ".agent/modules/README.md",
+        REPO_ROOT / ".agent/references/docs-map.md",
+        REPO_ROOT / ".agent/references/architecture-docs-map.md",
     ]
+
     forbidden = [
-        "docs/architecture/current-architecture.md",
-        "docs/architecture/target-architecture.md",
-        "docs/architecture/roadmap.md",
-        "docs/architecture/deliverables.md",
-        "docs/architecture/overall-architecture.md",
-        ".agent/architecture/overall-architecture.md",
-        ".agent/architecture/near-term/",
-        ".agent/architecture/future/",
-        ".agent/architecture/decisions/",
-        "docs/architecture/phases/",
-        "docs/architecture/plans/",
-        "docs/architecture/programs/",
+        "docs/architecture/production-readiness.md",
+        "docs/architecture/document-ingestion-foundation.md",
+        "docs/architecture/agent-core-runtime.md",
+        "docs/architecture/memory-and-context.md",
+        "docs/architecture/capability-and-skill-layer.md",
+        "docs/architecture/agentic-retrieval-planner.md",
+        "docs/architecture/eval-observability-and-cost.md",
+        "docs/architecture/input-layer-and-document-processing.md",
+        "docs/architecture/knowledge-space-product-configuration.md",
+        "docs/architecture/repo-ownership-matrix.md",
+        "docs/architecture/decisions/",
+        ".agent/architecture/agent-core-runtime.md",
     ]
+
     for path in files:
         content = path.read_text(encoding="utf-8")
         for phrase in forbidden:
-            assert phrase not in content, f"{path} contains retired front-path text: {phrase}"
+            assert phrase not in content, f"{path} contains migrated path: {phrase}"
