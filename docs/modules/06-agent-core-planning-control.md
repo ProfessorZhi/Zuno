@@ -830,7 +830,9 @@ Plan Definition
 ├── agent_plan_steps
 ├── agent_dependency_rules
 ├── agent_activation_conditions
-└── agent_step_acceptance_criteria
+├── agent_step_acceptance_criteria
+├── agent_step_feasibility_decisions
+└── agent_graph_bundles
 
 Scheduling and Execution
 ├── agent_dispatch_groups

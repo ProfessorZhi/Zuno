@@ -46,7 +46,7 @@ REQUIRED_TERMS = [
     "BudgetSettlement",
     "Requirement Enforcement Matrix",
     "Transition Matrix",
-    "PlanVersion Transition Matrix",
+    "完整子状态机 Transition Matrix",
     "Final Gate Routing",
     "RunOutcome Contract",
     "LangGraph Adapter Contract",
