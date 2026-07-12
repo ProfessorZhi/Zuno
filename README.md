@@ -25,21 +25,32 @@ Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agen
 -> Restart Recovery
 ```
 
-## 架构入口
+## 文档入口
 
-- [产品与运行架构总事实源](./docs/architecture/architecture.md)
+- [总架构](./docs/architecture/architecture.md)
 - [架构十类图 HTML 展示](./docs/architecture/architecture.html)
-- [Production readiness 状态](./docs/architecture/production-readiness.md)
-- [文档摄取基础](./docs/architecture/document-ingestion-foundation.md)
-- [Agent Core Runtime](./docs/architecture/agent-core-runtime.md)
-- [Capability 与 Skill Layer](./docs/architecture/capability-and-skill-layer.md)
-- [Agentic Retrieval Planner](./docs/architecture/agentic-retrieval-planner.md)
-- [Eval、Observability 与 Cost](./docs/architecture/eval-observability-and-cost.md)
-- [Input Layer 与 Document Processing](./docs/architecture/input-layer-and-document-processing.md)
-- [Knowledge Space Product Configuration](./docs/architecture/knowledge-space-product-configuration.md)
-- [文档入口](./docs/README.md)
+- [十一逻辑模块设计](./docs/modules/README.md)
+- [Production Readiness 状态](./docs/status/production-readiness.md)
+- [02 Input / Document Ingestion](./docs/modules/02-input-document-ingestion.md)
+- [03 Knowledge / Agentic GraphRAG](./docs/modules/03-knowledge-agentic-graphrag.md)
+- [05 Memory & Context](./docs/modules/05-memory-context.md)
+- [06 Agent Core / Planning & Control](./docs/modules/06-agent-core-planning-control.md)
+- [07 Capability / Skill](./docs/modules/07-capability-skill.md)
+- [10 Observability & Eval](./docs/modules/10-observability-eval.md)
+- [架构决策](./docs/decisions/README.md)
+- [Repository Ownership Matrix](./docs/governance/repo-ownership-matrix.md)
+- [文档总入口](./docs/README.md)
 - [公开证据入口](./docs/evidence/public-demo.md)
 - [历史归档入口](./docs/history/programs/README.md)
+
+`docs/architecture/` 只保留：
+
+```text
+README.md
+architecture.md
+architecture-views.md
+architecture.html
+```
 
 ## Program 入口
 
