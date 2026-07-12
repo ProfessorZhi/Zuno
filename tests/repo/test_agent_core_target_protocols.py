@@ -118,3 +118,71 @@ def test_policy_failure_budget_and_requirement_closure() -> None:
         "EV-AG-NNN",
     ]:
         assert term in content
+
+
+
+def test_all_substate_transition_matrices_are_normative() -> None:
+    content = _content()
+    for heading in [
+        "### 39.1 PlanVersion",
+        "### 39.2 StepRun Attempt",
+        "### 39.3 ActionLifecycleStatus × ActionOutcome",
+        "### 39.4 Interrupt",
+        "### 39.5 Publication 与 PublicationAttempt",
+    ]:
+        assert heading in content
+    assert "RETRY_SCHEDULED` 不允许原行回到 `QUEUED" in content
+    assert "FAILED` Attempt 原地改成成功" in content
+
+
+def test_final_gate_and_run_outcome_are_closed() -> None:
+    content = _content()
+    for term in [
+        "Final Gate Routing",
+        "max_final_candidate_versions",
+        "max_retrieve_more_cycles",
+        "objective_outcome_refs",
+        "budget_settlement_ref",
+        "OutcomeCorrection",
+    ]:
+        assert term in content
+
+
+def test_langgraph_adapter_boundaries_are_explicit() -> None:
+    content = _content()
+    for term in [
+        "LangGraph Adapter Contract",
+        "每个 Node invocation 最多调用一次 interrupt()",
+        "Resume 从包含 interrupt() 的 Node 开头重新执行",
+        "LangGraph Node Retry",
+        "InfrastructureDrainProtocol",
+        "RunStreamEvent",
+        "Checkpoint Retention",
+        "thread_id = stable opaque UUID/hash, length < 255",
+    ]:
+        assert term in content
+
+
+def test_model_feasibility_resource_replay_and_upgrade_are_defined() -> None:
+    content = _content()
+    for term in [
+        "ModelCapabilityProfile",
+        "StepFeasibilityDecision",
+        "Resource Conflict Matrix",
+        "CONTROL_REPLAY",
+        "SIMULATION_FORK",
+        "StateMigrationRecord",
+        "PINNED_BUNDLE",
+        "COMPATIBLE_LATEST",
+    ]:
+        assert term in content
+
+
+def test_every_requirement_has_explicit_control_test_and_evidence() -> None:
+    content = _content()
+    controls = [int(value) for value in re.findall(r"RC-AG-(\d{3})", content)]
+    assert sorted(controls) == list(range(1, 81))
+    for requirement_id in range(1, 81):
+        assert f"AG-{requirement_id:03d}-UT" in content
+        assert f"AG-{requirement_id:03d}-IT" in content
+        assert f"EV-AG-{requirement_id:03d}" in content

@@ -714,6 +714,11 @@ ObjectiveDefinition
 ObjectiveOutcome
 ExecutionContextSnapshot
 EffectivePolicySnapshot
+GraphBundle
+ModelCapabilityProfileRef
+StepFeasibilityDecision
+RunStreamEvent
+StateMigrationRecord
 AgentRun
 RunCommand
 ControlDecision
@@ -753,6 +758,7 @@ PublicationArtifactBinding
 PublicationCorrectionDecision
 DeliveryReceipt
 RunOutcome
+OutcomeCorrection
 BudgetConsumption
 BudgetAdjustment
 BudgetSettlement
@@ -790,7 +796,8 @@ src/backend/zuno/agent/
     ├── application/{run,task_contract,planning,scheduling,step_execution,reflection,replan,signal,side_effect,reconciliation,finalization,publication,command_arbitration,recovery,cancellation}_service.py
     ├── graph/run/{state,nodes,routing,builder}.py
     ├── graph/step/{state,nodes,routing,builder}.py
-    ├── planning/{analyzer,validator,repair,planners/}
+    ├── graph/adapter/{bundle,checkpoint,interrupt,retry,streaming,upgrade}.py
+    ├── planning/{analyzer,validator,repair,capability_profile,feasibility,planners/}
     ├── scheduling/{readiness,liveness,admission,selector,fencing,reduction,join}.py
     ├── execution/{action_decider,action_validator,executor_registry,executors/}
     ├── finalization/{candidate,claims,gate,artifact,publication}.py
@@ -868,7 +875,8 @@ Output
 ├── agent_publication_artifact_bindings
 ├── agent_publication_correction_decisions
 ├── agent_delivery_receipts
-└── agent_run_outcomes
+├── agent_run_outcomes
+└── agent_outcome_corrections
 
 Consistency, Validity and Eventing
 ├── agent_domain_commit_markers
@@ -876,6 +884,8 @@ Consistency, Validity and Eventing
 ├── agent_result_validity
 ├── agent_failures
 ├── agent_runtime_events
+├── agent_run_stream_events
+├── agent_state_migration_records
 └── agent_outbox_events
 ```
 
@@ -1358,6 +1368,456 @@ status
 | 071–080 | VALIDITY / EVENT / ARTIFACT / TIME | Validity Gate、Outbox、Artifact Validation、Clock Guard | Integration + Fault + E2E | ValidityRecord / OutboxReceipt / AuditEvent |
 
 高风险 Requirement（Fencing、Approval、UNKNOWN、副作用、Security、Publication、Recovery）必须有 Fault Test。状态机 Requirement 必须同时覆盖合法和非法转换。
+
+---
+
+## 39. 完整子状态机 Transition Matrix
+
+AgentRun 的聚合矩阵之外，PlanVersion、StepRun、Action、Interrupt 和 Publication 必须使用独立 Transition Guard。所有转换都写 Transition Record，禁止通过直接 ORM 赋值绕过 Guard。
+
+### 39.1 PlanVersion
+
+| From | Trigger | Guard | To | 原子事实 |
+| --- | --- | --- | --- | --- |
+| `PROPOSED` | `VALIDATE_PLAN` | Proposal Schema 完整 | `VALIDATING` | ValidationAttempt |
+| `VALIDATING` | `VALIDATION_PASS` | DAG、Capability、Budget、Security、Acceptance 全通过 | `ACTIVE` | 激活新版本、Supersede 旧版本、递增 Generation |
+| `VALIDATING` | `VALIDATION_REJECT` | Repair 不允许或预算耗尽 | `REJECTED` | ValidationFailure |
+| `PROPOSED/VALIDATING` | `GOAL_SUPERSEDED` | GoalVersion 已非 ACTIVE | `INVALIDATED` | InvalidationRecord |
+| `ACTIVE` | `NEW_PLAN_ACTIVATED` | Replan Barrier 完成 | `SUPERSEDED` | PlanSwitchRecord |
+| `ACTIVE` | `PLAN_SETTLED` | 所有可达 Step 终止且无需 Replan | `COMPLETED` | PlanCompletionRecord |
+| `ACTIVE` | `SECURITY_OR_CONTRACT_INVALIDATED` | 继续执行不再合法 | `INVALIDATED` | ControlDecision |
+
+`REJECTED`、`SUPERSEDED`、`COMPLETED` 和 `INVALIDATED` 均为该 PlanVersion 的终态。旧版本不得重新激活。
+
+### 39.2 StepRun Attempt
+
+| From | Trigger | Guard | To | 语义 |
+| --- | --- | --- | --- | --- |
+| `QUEUED` | `CLAIM_STEP` | Plan ACTIVE、Epoch、Budget、Resource 合法 | `CLAIMED` | 获取 Claim 与 execution_epoch |
+| `CLAIMED` | `START_EXECUTION` | Claim 未过期 | `RUNNING` | 记录 started_at |
+| `RUNNING` | `WAIT_REQUIRED` | 有持久化 Interrupt/ExternalHandle | `WAITING_CONDITION` | 当前 Attempt 暂停 |
+| `WAITING_CONDITION` | `VALID_RESUME` | Goal、Plan、Security、Claim 仍兼容 | `RUNNING` | 同一 Attempt 恢复 |
+| `WAITING_CONDITION` | `RESUME_REQUIRES_NEW_ATTEMPT` | Lease、输入或执行上下文已变化 | `OBSOLETE` | 创建 successor StepRun |
+| `RUNNING` | `ACCEPTED_RESULT` | Output、Acceptance、Evidence、Validity 全通过 | `COMPLETED` | 不可变 Step Result |
+| `RUNNING` | `EXECUTION_FAILED` | 失败事实已提交 | `FAILED` | FailureRecord |
+| `FAILED` | `RETRY_DECIDED` | Retry Policy、Budget、Deadline 允许 | `RETRY_SCHEDULED` | 当前 Attempt 终止并创建新 StepRun |
+| `RUNNING` | `OUTCOME_UNKNOWN` | 外部事实不可确认 | `UNKNOWN` | 禁止完成与盲目重试 |
+| `QUEUED/CLAIMED/WAITING_CONDITION` | `PLAN_SUPERSEDED` | 不再复用 | `OBSOLETE` | Replan Disposition |
+| `RUNNING` | `CANCEL_SETTLED` | 可取消且无 UNKNOWN 副作用 | `CANCELLED` | CancellationRecord |
+
+`RETRY_SCHEDULED` 不允许原行回到 `QUEUED`；Retry 必须创建 `attempt_no + 1` 的新 StepRun。`UNKNOWN` 只有在 Reconciliation 提交明确事实后，才允许创建后继 Attempt 或终结 Step。
+
+### 39.3 ActionLifecycleStatus × ActionOutcome
+
+| Lifecycle | 允许 Outcome | 禁止行为 |
+| --- | --- | --- |
+| `PROPOSED/VALIDATING/PREPARED/WAITING_APPROVAL/CLAIMED` | 空或 `NOT_EXECUTED` | 声称外部成功 |
+| `EXECUTING` | 空或 `UNKNOWN` | 直接创建第二次执行 |
+| `RECONCILING` | `UNKNOWN` 或 `HUMAN_REQUIRED` | 盲目 Retry |
+| `TERMINAL` | `SUCCEEDED`、`FAILED`、`NOT_EXECUTED`、`CANCELLED`、`HUMAN_REQUIRED` | Outcome 为空或继续执行 |
+
+`TERMINAL / SUCCEEDED` 必须同时引用外部 Receipt 和本地 Observation Commit；`HUMAN_REQUIRED` 必须使 StepRun 进入 `WAITING_CONDITION` 或 `BLOCKED`，由 Policy 决定，不得隐式完成。
+
+### 39.4 Interrupt
+
+| From | Trigger | Guard | To |
+| --- | --- | --- | --- |
+| — | `CREATE_INTERRUPT` | Payload、Schema、Scope、Expiry 合法 | `PENDING` |
+| `PENDING` | `VALID_SIGNAL` | 鉴权、幂等、未过期、目标仍有效 | `RESOLVED` |
+| `PENDING` | `EXPIRE` | database_now >= expires_at | `EXPIRED` |
+| `PENDING` | `RUN_CANCELLED` | Cancellation 生效 | `CANCELLED` |
+| `PENDING` | `PLAN_SUPERSEDED` | Step 不再可达 | `OBSOLETE` |
+
+任何非 `PENDING` Interrupt 收到 Signal，只能返回原消费结果或 `STALE_SIGNAL`，不得推进状态。
+
+### 39.5 Publication 与 PublicationAttempt
+
+| From | Trigger | Guard | To |
+| --- | --- | --- | --- |
+| — | `PREPARE_PUBLICATION` | FinalCandidate 固定、Artifact VALID | `PREPARED` |
+| `PREPARED` | `VALIDATE_PUBLICATION` | ResultValidity、Security、Recipient Scope 合法 | `VALIDATING` |
+| `VALIDATING` | `APPROVE_PUBLICATION` | Gate 全通过 | `APPROVED` |
+| `APPROVED` | `START_DELIVERY` | Idempotency Claim 成功 | `PUBLISHING` |
+| `PUBLISHING` | `RECEIPT_CONFIRMED` | Receipt 与 Idempotency Key 匹配 | `PUBLISHED` |
+| `PUBLISHING` | `DELIVERY_FAILED` | 外部明确失败 | `FAILED` |
+| `PUBLISHED` | `CORRECTION_REPLACE` | 新 Publication 已准备 | `SUPERSEDED` |
+| `PUBLISHED` | `CORRECTION_WITHDRAW` | 渠道支持撤回且审批通过 | `WITHDRAWN` |
+
+可重试渠道错误创建新的 `PublicationAttempt`，但保留同一 Publication 和 Idempotency Key；不得把原 `FAILED` Attempt 原地改成成功。Correction 创建新 Decision 和可选新 Publication，不覆盖原 Receipt。
+
+## 40. Final Gate 路由与 RunOutcome Contract
+
+### 40.1 Final Gate Routing
+
+| Gate Result | 下一控制节点 | 版本与边界 |
+| --- | --- | --- |
+| `PASS` | `ArtifactValidation → Publication` | 固定当前 FinalCandidateVersion |
+| `REWRITE` | `FinalSynthesis` | 创建新 FinalCandidateVersion |
+| `RETRIEVE_MORE` | `SupplementalRetrieval` | 仅预声明补充边可在同一 Plan；结构变化必须 Replan |
+| `REPLAN` | `ReplanBarrier` | 创建新 PlanVersion |
+| `PARTIAL` | `PartialDisclosureGate` | 创建披露未完成项的新 CandidateVersion |
+| `ABSTAIN` | `OutcomeCommit` | RunOutcome=`ABSTAINED` |
+| `REFUSE` | `RefusalRenderer → OutcomeCommit` | RunOutcome=`REFUSED` |
+| `BLOCK` | `OutcomeCommit` | RunOutcome=`BLOCKED` |
+| `FAIL` | `FailureFinalizer → OutcomeCommit` | RunOutcome=`FAILED` |
+
+Finalization 受独立 Budget 和循环上限控制：
+
+```text
+max_final_candidate_versions
+max_rewrite_cycles
+max_retrieve_more_cycles
+max_final_reflection_cycles
+finalization_token_budget
+finalization_cost_budget
+```
+
+达到上限后必须确定性进入 `PARTIAL`、`ABSTAIN`、`REFUSE`、`BLOCK` 或 `FAIL`，禁止无限 Rewrite / Retrieve / Reflection。
+
+### 40.2 RunOutcome
+
+```text
+run_outcome_id
+run_id
+outcome_version
+status
+task_contract_id
+goal_version_id
+plan_version_id
+objective_outcome_refs
+completed_objective_refs
+incomplete_objective_refs
+failure_refs
+evidence_summary_ref
+artifact_version_refs
+publication_refs
+security_summary_ref
+budget_settlement_ref
+partial_disclosure
+abstention_reason
+refusal_reason
+correction_of_outcome_id
+created_at
+```
+
+RunOutcome 提交后不可覆盖。事实更正创建 `OutcomeCorrection` 或新的 `outcome_version`，原 Outcome、Publication 和 Receipt 永久保留审计。Run 业务终态与延迟 Budget Settlement 可以分开：Settlement 未完成时保存 `SETTLEMENT_PENDING`，但不得改变已经提交的业务结论。
+
+## 41. LangGraph Adapter Contract
+
+LangGraph 是控制执行框架，不是领域事实 Owner。Zuno 通过 `LangGraphAdapter` 隔离框架语义，Domain 和 Application Service 不导入 LangGraph 类型。
+
+### 41.1 GraphBundle 与线程映射
+
+```text
+GraphBundle
+    graph_bundle_id
+    graph_name
+    graph_schema_version
+    state_schema_version
+    node_contract_version
+    supported_langgraph_version_range
+    source_commit_sha
+    content_hash
+    status
+    created_at
+
+run_id 1:1 maps to thread_id
+thread_id = stable opaque UUID/hash, length < 255
+checkpoint namespace:
+    zuno/run/{run_id}
+    zuno/run/{run_id}/step/{step_run_id}
+```
+
+同一 Run 的 Resume 必须使用同一 `thread_id`。新 `thread_id` 表示新 Thread，不能作为原 Run 的恢复。跨 Run 数据必须通过 Domain Store 或受治理 Store，不通过 Checkpoint namespace 隐式共享。
+
+### 41.2 Interrupt Node Rules
+
+```text
+每个 Node invocation 最多调用一次 interrupt()
+Resume 从包含 interrupt() 的 Node 开头重新执行
+interrupt() 前的领域写入必须幂等
+interrupt() 前禁止未持有 IdempotencyClaim 的外部副作用
+Resume 后重新读取 PreparedAction、Approval、Policy、Security Epoch 和 ResultValidity
+Node 本地变量不是恢复事实
+多 Interrupt Resume 必须按 interrupt_id 映射响应
+```
+
+禁止在同一 Node 内使用 `while True + interrupt()` 反复提问；无效输入写回状态后通过条件边重新进入 Node。
+
+### 41.3 Retry、Timeout 与 Error Handler 分层
+
+| 层 | 允许范围 | 禁止 |
+| --- | --- | --- |
+| LangGraph Node Retry | 纯计算、只读且幂等、无领域 Attempt 语义的瞬时失败 | Tool 副作用、Action/Step 业务 Retry |
+| LangGraph Timeout | Async Node 单 Attempt 的 run/idle timeout | 将 Timeout 自动等同于领域失败终态 |
+| LangGraph Error Handler | 转换为 FailureProposal、RunCommand 或确定性路由 | 直接修改领域终态、自动 Compensation |
+| Zuno Action Retry | 创建新 Action Attempt，记录 Usage、Budget、Idempotency | 复用旧 execution_epoch 执行 |
+| Zuno Step Retry | 创建新 StepRun Attempt | 原 StepRun 回到 QUEUED |
+| Zuno Replan | 新 PlanVersion | 伪装成 Retry |
+
+Adapter 必须显式关闭副作用 Node 的框架自动 Retry。Node Timeout 产生结构化技术 Failure，由 Zuno Policy 决定 Retry、Reconcile、Fallback 或 Replan。框架 Error Handler 只有在框架 Retry 耗尽后运行，但它只能产生 Proposal/Command。
+
+### 41.4 Infrastructure Drain
+
+基础设施滚动升级、缩容或进程退出使用 `InfrastructureDrainProtocol`，不等于用户 Cancellation：
+
+```text
+停止新的 Superstep / Dispatch
+允许不可中断 Node 到安全边界
+写 DrainMarker 和最新合法 Checkpoint
+释放 Controller / Worker Lease
+不改变 AgentRun 业务终态
+恢复时使用原 thread_id、GraphBundle 与 Generation 校验
+```
+
+无法在 Drain Deadline 前到达安全边界时，标记 Recovery Required；不得把进程终止冒充 `CANCELLED`。
+
+### 41.5 Streaming Projection
+
+LangGraph 原始 `values`、`updates`、`tasks`、`debug` 和完整消息流仅供受控内部诊断。Product Surface 只能消费 Zuno 投影：
+
+```text
+RunStreamEvent
+    stream_event_id
+    run_id
+    sequence_no
+    projection_type
+    content_ref
+    provisional
+    retracts_event_ids
+    interrupt_refs
+    checkpoint_ref
+    security_classification
+    created_at
+
+ProjectionType
+    PROGRESS
+    SAFE_PROVISIONAL_CONTENT
+    INTERRUPT
+    PUBLICATION
+    RETRACTION
+```
+
+禁止流出完整 Graph State、Prompt、凭证、隐藏思维链、未脱敏 Observation 或未授权并行分支内容。断线恢复按 `sequence_no`，Provisional Content 必须可撤回，正式结果只由 PublicationProjection 表示。
+
+### 41.6 Checkpoint Retention 与框架参考
+
+Checkpoint 是 thread-scoped 控制状态，必须配置 Retention、Pruning 和 Legal Hold：终态 Run 保留最近合法 Checkpoint、关键 Interrupt/Publication Checkpoint 和 Hash；调试 Checkpoint 按 Policy 到期删除；Domain Audit 不随 Checkpoint 删除。
+
+框架适配依据官方文档，并由 Program 固定实际依赖版本：
+
+- [LangGraph Interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts)
+- [LangGraph Fault tolerance](https://docs.langchain.com/oss/python/langgraph/fault-tolerance)
+- [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
+- [LangGraph Streaming](https://docs.langchain.com/oss/python/langgraph/streaming)
+- [LangGraph Backward compatibility](https://docs.langchain.com/oss/python/langgraph/backward-compatibility)
+
+## 42. ModelCapabilityProfile 与 StepFeasibility
+
+`ModelCapabilityProfile` 的事实 Owner 是 Model Gateway；Agent Core 在 Plan Validation 时读取不可变 Profile Snapshot，不自行猜测模型能力。
+
+```text
+ModelCapabilityProfile
+    profile_id
+    model_role
+    model_ref
+    supported_input_modalities
+    supported_output_contracts
+    structured_output_reliability
+    tool_calling_support
+    context_window
+    reasoning_class
+    latency_class
+    cost_class
+    data_residency
+    security_classification
+    max_step_complexity
+    profile_version
+    valid_from
+```
+
+```text
+StepFeasibilityDecision
+    feasibility_decision_id
+    plan_version_id
+    step_definition_id
+    executable
+    selected_model_role
+    capability_profile_ref
+    fallback_profile_refs
+    estimated_context_tokens
+    estimated_cost
+    complexity_score
+    unmet_requirements
+    reason_codes
+    created_at
+```
+
+Plan Validator 必须拒绝：单 Step 超过执行器复杂度上限、没有模型支持输出 Contract、数据等级与模型安全/驻留不兼容、预计 Context 超出窗口、预算不支持、必要 Tool Calling 或输入模态不存在。Planner 只能根据可用 Profile 生成 Step；Profile 变化不原地修改 Active Plan，必要时触发 Replan。
+
+## 43. Resource Conflict Matrix
+
+| Existing Claim | Requested Claim | 默认结果 |
+| --- | --- | --- |
+| `READ_SHARED` | `READ_SHARED` | 允许 |
+| `READ_SHARED` | `WRITE_EXCLUSIVE` | 等待或拒绝 |
+| `WRITE_EXCLUSIVE` | 任意同资源 Claim | 等待或拒绝 |
+| `APPEND_SERIALIZED` | `APPEND_SERIALIZED` | 按数据库序列串行 |
+| `CAPACITY_SHARED` | `CAPACITY_SHARED` | 容量足够时允许并原子扣减 |
+| `NON_PREEMPTIBLE` | 任意冲突 Claim | 等待，不抢占 |
+
+资源 ID 必须规范化并支持层级冲突，例如 Account > Mailbox > Message。父资源 `WRITE_EXCLUSIVE` 与任意子资源冲突；子资源 Claim 是否阻止父资源请求由 Hierarchy Policy 确定。多资源固定排序获取，部分成功必须释放；等待超过阈值产生 `RESOURCE_STARVATION`，Priority Inversion 通过 Priority Inheritance 或拒绝升级解决，不能无限等待。
+
+## 44. Replay、Recovery、Reexecution 与 Simulation Fork
+
+```text
+CONTROL_REPLAY
+    从已提交 Domain Fact 与 Event 重建 Graph 控制状态。
+    禁止重新调用模型、检索、Tool 或外部副作用。
+
+RECOVERY
+    修复 Domain/Checkpoint/Dispatch/Receipt 不一致并恢复原 Run。
+    必须使用 Generation、Fencing 和 ReconciliationRecord。
+
+REEXECUTION
+    创建新的 StepRun / ActionRun Attempt。
+    使用新 execution_epoch、Budget Reservation 和必要 IdempotencyClaim。
+
+SIMULATION_FORK
+    从历史 Snapshot 创建新 Run 和新 thread_id。
+    默认禁止外部副作用，不能修改原 Run。
+```
+
+任何“Replay”命令必须显式声明 mode；不允许用 CONTROL_REPLAY 名义重新执行历史副作用。Time-travel 调试默认只读；执行型 Fork 必须创建新 Run、重新授权并重新预算。
+
+## 45. Graph、State 与长运行版本升级
+
+LangGraph 对恢复中的 Thread 使用当前部署 Graph 代码，因此 Zuno 必须显式治理兼容性：
+
+```text
+Run 创建时固定 graph_bundle_id、graph_schema_version、state_schema_version、flow_version
+新增 State 字段必须 Optional / 有默认值
+Node 或 State 字段重命名采用 add → dual support → drain → remove
+存在停在旧 Node 的 Thread 时禁止删除该 Node
+破坏性升级需要 StateMigrator 和 Migration Test
+副作用 EXECUTING / UNKNOWN 的 Run 默认禁止跨 Bundle Migration
+未知 Bundle / State Version → BLOCKED，不猜测恢复
+```
+
+部署策略二选一并由 Program 明确：
+
+```text
+PINNED_BUNDLE
+    保留旧 GraphBundle 直到关联 Run 全部终止。
+
+COMPATIBLE_LATEST
+    新代码保持旧 Checkpoint 技术与业务兼容，按 flow_version 分支。
+```
+
+`StateMigrationRecord` 保存 run_id、from/to bundle、from/to state version、migration_id、before/after hash、status、failure_ref、approved_by 和 created_at。迁移失败不得修改原 Checkpoint，必须可回滚到最后合法 Generation。
+
+## 46. 逐条 Requirement Control Registry
+
+以下 80 条 Control 与 Part VIII 的 80 条 Requirement 一一对应；每个 Control 都有稳定 Owner、Enforcement、Failure Code、Test ID 和 Evidence Key。Program 可以增加测试，但不得删除基础映射。
+
+| Control ID | Category | Owner | Enforcement Ref | Failure Code | Required Tests | Runtime Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `RC-AG-001` | FOUNDATION | Agent Core Controller | `SingleControllerGuard` | `AG001_VIOLATION` | `AG-001-UT, AG-001-IT` | `EV-AG-001` |
+| `RC-AG-002` | FOUNDATION | Agent Core Controller | `MechanismLayerRouter` | `AG002_VIOLATION` | `AG-002-UT, AG-002-IT` | `EV-AG-002` |
+| `RC-AG-003` | FOUNDATION | Persistence / Recovery | `RuntimeStateSchemaValidator` | `AG003_VIOLATION` | `AG-003-UT, AG-003-IT` | `EV-AG-003` |
+| `RC-AG-004` | FOUNDATION | Budget / Scheduling | `BudgetDeadlineGuard` | `AG004_VIOLATION` | `AG-004-UT, AG-004-IT, AG-004-FT` | `EV-AG-004` |
+| `RC-AG-005` | FOUNDATION | Contract Governance | `RuntimeContractGateway` | `AG005_VIOLATION` | `AG-005-UT, AG-005-IT, AG-005-E2E` | `EV-AG-005` |
+| `RC-AG-006` | FOUNDATION | Agent Core Controller | `InterruptResumeAdapter` | `AG006_VIOLATION` | `AG-006-UT, AG-006-IT, AG-006-FT, AG-006-E2E` | `EV-AG-006` |
+| `RC-AG-007` | FOUNDATION | Persistence / Recovery | `LargePayloadRefGuard` | `AG007_VIOLATION` | `AG-007-UT, AG-007-IT` | `EV-AG-007` |
+| `RC-AG-008` | FOUNDATION | Agent Core Controller | `RuntimeTraceEmitter` | `AG008_VIOLATION` | `AG-008-UT, AG-008-IT` | `EV-AG-008` |
+| `RC-AG-009` | PLANNING_EXECUTION | Planning / Scheduling | `PlanRequiredGuard` | `AG009_VIOLATION` | `AG-009-UT, AG-009-IT, AG-009-E2E` | `EV-AG-009` |
+| `RC-AG-010` | PLANNING_EXECUTION | Planning / Scheduling | `PlanDagValidator` | `AG010_VIOLATION` | `AG-010-UT, AG-010-IT, AG-010-E2E` | `EV-AG-010` |
+| `RC-AG-011` | PLANNING_EXECUTION | Planning / Scheduling | `PlanVersionImmutabilityGuard` | `AG011_VIOLATION` | `AG-011-UT, AG-011-IT` | `EV-AG-011` |
+| `RC-AG-012` | PLANNING_EXECUTION | Planning / Scheduling | `DefinitionRunResultSchema` | `AG012_VIOLATION` | `AG-012-UT, AG-012-IT` | `EV-AG-012` |
+| `RC-AG-013` | PLANNING_EXECUTION | Planning / Scheduling | `ExecutionContextSnapshotGuard` | `AG013_VIOLATION` | `AG-013-UT, AG-013-IT` | `EV-AG-013` |
+| `RC-AG-014` | PLANNING_EXECUTION | Planning / Scheduling | `KnowledgeSnapshotGuard` | `AG014_VIOLATION` | `AG-014-UT, AG-014-IT` | `EV-AG-014` |
+| `RC-AG-015` | PLANNING_EXECUTION | Quality / Finalization | `FinalGateGuard` | `AG015_VIOLATION` | `AG-015-UT, AG-015-IT, AG-015-FT, AG-015-E2E` | `EV-AG-015` |
+| `RC-AG-016` | PLANNING_EXECUTION | Planning / Scheduling | `DispatchCommitGuard` | `AG016_VIOLATION` | `AG-016-UT, AG-016-IT, AG-016-E2E` | `EV-AG-016` |
+| `RC-AG-017` | PLANNING_EXECUTION | Side Effect / Publication | `SideEffectPolicyValidator` | `AG017_VIOLATION` | `AG-017-UT, AG-017-IT, AG-017-FT` | `EV-AG-017` |
+| `RC-AG-018` | CONTROL_QUALITY | Quality / Finalization | `RunOutcomeSchemaValidator` | `AG018_VIOLATION` | `AG-018-UT, AG-018-IT, AG-018-E2E` | `EV-AG-018` |
+| `RC-AG-019` | CONTROL_QUALITY | Budget / Scheduling | `ControlPropagationGuard` | `AG019_VIOLATION` | `AG-019-UT, AG-019-IT, AG-019-FT` | `EV-AG-019` |
+| `RC-AG-020` | CONTROL_QUALITY | Agent Core Controller | `InterruptContractValidator` | `AG020_VIOLATION` | `AG-020-UT, AG-020-IT, AG-020-E2E` | `EV-AG-020` |
+| `RC-AG-021` | CONTROL_QUALITY | Persistence / Recovery | `GraphStateRefValidator` | `AG021_VIOLATION` | `AG-021-UT, AG-021-IT` | `EV-AG-021` |
+| `RC-AG-022` | CONTROL_QUALITY | Quality / Finalization | `QualityLayerGuard` | `AG022_VIOLATION` | `AG-022-UT, AG-022-IT` | `EV-AG-022` |
+| `RC-AG-023` | CONTROL_QUALITY | Quality / Finalization | `StepAcceptanceGuard` | `AG023_VIOLATION` | `AG-023-UT, AG-023-IT` | `EV-AG-023` |
+| `RC-AG-024` | CONTROL_QUALITY | Planning / Scheduling | `ReplanBarrierGuard` | `AG024_VIOLATION` | `AG-024-UT, AG-024-IT, AG-024-FT, AG-024-E2E` | `EV-AG-024` |
+| `RC-AG-025` | PERSISTENCE_MODEL_DISPATCH | Persistence / Recovery | `DomainCheckpointBoundaryGuard` | `AG025_VIOLATION` | `AG-025-UT, AG-025-IT, AG-025-FT` | `EV-AG-025` |
+| `RC-AG-026` | PERSISTENCE_MODEL_DISPATCH | Contract Governance | `TypedPortSchemaValidator` | `AG026_VIOLATION` | `AG-026-UT, AG-026-IT` | `EV-AG-026` |
+| `RC-AG-027` | PERSISTENCE_MODEL_DISPATCH | Side Effect / Publication | `ActionOutcomeGuard` | `AG027_VIOLATION` | `AG-027-UT, AG-027-IT, AG-027-FT` | `EV-AG-027` |
+| `RC-AG-028` | PERSISTENCE_MODEL_DISPATCH | Persistence / Recovery | `DomainOutboxTransaction` | `AG028_VIOLATION` | `AG-028-UT, AG-028-IT, AG-028-FT` | `EV-AG-028` |
+| `RC-AG-029` | PERSISTENCE_MODEL_DISPATCH | Model Gateway + Agent Core | `ModelRoleRouter` | `AG029_VIOLATION` | `AG-029-UT, AG-029-IT` | `EV-AG-029` |
+| `RC-AG-030` | PERSISTENCE_MODEL_DISPATCH | Model Gateway + Agent Core | `StepFeasibilityValidator` | `AG030_VIOLATION` | `AG-030-UT, AG-030-IT, AG-030-E2E` | `EV-AG-030` |
+| `RC-AG-031` | PERSISTENCE_MODEL_DISPATCH | Model Gateway + Agent Core | `ModelEscalationPolicy` | `AG031_VIOLATION` | `AG-031-UT, AG-031-IT` | `EV-AG-031` |
+| `RC-AG-032` | PERSISTENCE_MODEL_DISPATCH | Persistence / Recovery | `BranchResultFencingGuard` | `AG032_VIOLATION` | `AG-032-UT, AG-032-IT, AG-032-FT` | `EV-AG-032` |
+| `RC-AG-033` | STATE_DAG_SCHEDULING | Agent Core Controller | `InvariantRegistry` | `AG033_VIOLATION` | `AG-033-UT, AG-033-IT` | `EV-AG-033` |
+| `RC-AG-034` | STATE_DAG_SCHEDULING | Agent Core Controller | `StateMachineTransitionGuard` | `AG034_VIOLATION` | `AG-034-UT, AG-034-IT` | `EV-AG-034` |
+| `RC-AG-035` | STATE_DAG_SCHEDULING | Planning / Scheduling | `ActivePlanUniqueConstraint` | `AG035_VIOLATION` | `AG-035-UT, AG-035-IT, AG-035-FT` | `EV-AG-035` |
+| `RC-AG-036` | STATE_DAG_SCHEDULING | Planning / Scheduling | `DependencyActivationValidator` | `AG036_VIOLATION` | `AG-036-UT, AG-036-IT` | `EV-AG-036` |
+| `RC-AG-037` | STATE_DAG_SCHEDULING | Planning / Scheduling | `StepStatusDispositionValidityGuard` | `AG037_VIOLATION` | `AG-037-UT, AG-037-IT` | `EV-AG-037` |
+| `RC-AG-038` | STATE_DAG_SCHEDULING | Planning / Scheduling | `PlanLivenessDetector` | `AG038_VIOLATION` | `AG-038-UT, AG-038-IT, AG-038-FT` | `EV-AG-038` |
+| `RC-AG-039` | STATE_DAG_SCHEDULING | Planning / Scheduling | `JoinPolicyReducer` | `AG039_VIOLATION` | `AG-039-UT, AG-039-IT, AG-039-E2E` | `EV-AG-039` |
+| `RC-AG-040` | STATE_DAG_SCHEDULING | Planning / Scheduling | `DispatchCommitBeforeSend` | `AG040_VIOLATION` | `AG-040-UT, AG-040-IT, AG-040-FT` | `EV-AG-040` |
+| `RC-AG-041` | STATE_DAG_SCHEDULING | Persistence / Recovery | `EpochConditionalWrite` | `AG041_VIOLATION` | `AG-041-UT, AG-041-IT, AG-041-FT` | `EV-AG-041` |
+| `RC-AG-042` | STATE_DAG_SCHEDULING | Persistence / Recovery | `ReducerIdempotencyKey` | `AG042_VIOLATION` | `AG-042-UT, AG-042-IT, AG-042-FT` | `EV-AG-042` |
+| `RC-AG-043` | STATE_DAG_SCHEDULING | Planning / Scheduling | `ReplanVersionSwitch` | `AG043_VIOLATION` | `AG-043-UT, AG-043-IT, AG-043-FT, AG-043-E2E` | `EV-AG-043` |
+| `RC-AG-044` | INTERRUPT_SIDE_EFFECT_FINAL | Agent Core Controller | `MultiInterruptRegistry` | `AG044_VIOLATION` | `AG-044-UT, AG-044-IT, AG-044-FT, AG-044-E2E` | `EV-AG-044` |
+| `RC-AG-045` | INTERRUPT_SIDE_EFFECT_FINAL | Agent Core Controller | `SignalConsumptionGuard` | `AG045_VIOLATION` | `AG-045-UT, AG-045-IT, AG-045-FT` | `EV-AG-045` |
+| `RC-AG-046` | INTERRUPT_SIDE_EFFECT_FINAL | Side Effect / Publication | `PreparedActionProtocol` | `AG046_VIOLATION` | `AG-046-UT, AG-046-IT, AG-046-FT, AG-046-E2E` | `EV-AG-046` |
+| `RC-AG-047` | INTERRUPT_SIDE_EFFECT_FINAL | Side Effect / Publication | `UnknownActionReconcileGuard` | `AG047_VIOLATION` | `AG-047-UT, AG-047-IT, AG-047-FT` | `EV-AG-047` |
+| `RC-AG-048` | INTERRUPT_SIDE_EFFECT_FINAL | Quality / Finalization | `FinalOutputGate` | `AG048_VIOLATION` | `AG-048-UT, AG-048-IT, AG-048-FT, AG-048-E2E` | `EV-AG-048` |
+| `RC-AG-049` | INTERRUPT_SIDE_EFFECT_FINAL | Quality / Finalization | `FinalizationSeparationGuard` | `AG049_VIOLATION` | `AG-049-UT, AG-049-IT, AG-049-FT, AG-049-E2E` | `EV-AG-049` |
+| `RC-AG-050` | INTERRUPT_SIDE_EFFECT_FINAL | Side Effect / Publication | `PublicationReceiptProtocol` | `AG050_VIOLATION` | `AG-050-UT, AG-050-IT, AG-050-FT, AG-050-E2E` | `EV-AG-050` |
+| `RC-AG-051` | FAILURE_BUDGET_GOVERNANCE | Quality / Finalization | `FailureDecisionTable` | `AG051_VIOLATION` | `AG-051-UT, AG-051-IT` | `EV-AG-051` |
+| `RC-AG-052` | FAILURE_BUDGET_GOVERNANCE | Quality / Finalization | `MechanismDecisionAudit` | `AG052_VIOLATION` | `AG-052-UT, AG-052-IT` | `EV-AG-052` |
+| `RC-AG-053` | FAILURE_BUDGET_GOVERNANCE | Budget / Scheduling | `BudgetLedgerGuard` | `AG053_VIOLATION` | `AG-053-UT, AG-053-IT, AG-053-FT` | `EV-AG-053` |
+| `RC-AG-054` | FAILURE_BUDGET_GOVERNANCE | Budget / Scheduling | `AdmissionFairnessScheduler` | `AG054_VIOLATION` | `AG-054-UT, AG-054-IT, AG-054-FT, AG-054-E2E` | `EV-AG-054` |
+| `RC-AG-055` | FAILURE_BUDGET_GOVERNANCE | Quality / Finalization | `NoProgressDetector` | `AG055_VIOLATION` | `AG-055-UT, AG-055-IT, AG-055-FT` | `EV-AG-055` |
+| `RC-AG-056` | FAILURE_BUDGET_GOVERNANCE | Contract Governance | `OwnershipBoundaryGuard` | `AG056_VIOLATION` | `AG-056-UT, AG-056-IT, AG-056-FT` | `EV-AG-056` |
+| `RC-AG-057` | FAILURE_BUDGET_GOVERNANCE | Contract Governance | `ContractEnvelopeValidator` | `AG057_VIOLATION` | `AG-057-UT, AG-057-IT, AG-057-FT` | `EV-AG-057` |
+| `RC-AG-058` | FAILURE_BUDGET_GOVERNANCE | Contract Governance | `VersionBundlePinning` | `AG058_VIOLATION` | `AG-058-UT, AG-058-IT, AG-058-FT` | `EV-AG-058` |
+| `RC-AG-059` | FAILURE_BUDGET_GOVERNANCE | Persistence / Recovery | `PersistenceTierGuard` | `AG059_VIOLATION` | `AG-059-UT, AG-059-IT, AG-059-FT` | `EV-AG-059` |
+| `RC-AG-060` | FAILURE_BUDGET_GOVERNANCE | Quality / Finalization | `RequirementEvidenceRegistry` | `AG060_VIOLATION` | `AG-060-UT, AG-060-IT` | `EV-AG-060` |
+| `RC-AG-061` | GOAL_COMMAND_CONSISTENCY | Agent Core Controller | `TaskGoalVersionGuard` | `AG061_VIOLATION` | `AG-061-UT, AG-061-IT, AG-061-E2E` | `EV-AG-061` |
+| `RC-AG-062` | GOAL_COMMAND_CONSISTENCY | Planning / Scheduling | `PlanGoalBindingGuard` | `AG062_VIOLATION` | `AG-062-UT, AG-062-IT` | `EV-AG-062` |
+| `RC-AG-063` | GOAL_COMMAND_CONSISTENCY | Quality / Finalization | `ObjectiveOutcomeProjection` | `AG063_VIOLATION` | `AG-063-UT, AG-063-IT, AG-063-E2E` | `EV-AG-063` |
+| `RC-AG-064` | GOAL_COMMAND_CONSISTENCY | Agent Core Controller | `InputClassificationGuard` | `AG064_VIOLATION` | `AG-064-UT, AG-064-IT, AG-064-E2E` | `EV-AG-064` |
+| `RC-AG-065` | GOAL_COMMAND_CONSISTENCY | Agent Core Controller | `OrderedCommandJournal` | `AG065_VIOLATION` | `AG-065-UT, AG-065-IT, AG-065-FT` | `EV-AG-065` |
+| `RC-AG-066` | GOAL_COMMAND_CONSISTENCY | Agent Core Controller | `CommandPrecedenceResolver` | `AG066_VIOLATION` | `AG-066-UT, AG-066-IT, AG-066-FT` | `EV-AG-066` |
+| `RC-AG-067` | GOAL_COMMAND_CONSISTENCY | Agent Core Controller | `ControlDecisionAudit` | `AG067_VIOLATION` | `AG-067-UT, AG-067-IT, AG-067-FT` | `EV-AG-067` |
+| `RC-AG-068` | GOAL_COMMAND_CONSISTENCY | Persistence / Recovery | `GenerationWatermarkGuard` | `AG068_VIOLATION` | `AG-068-UT, AG-068-IT, AG-068-FT` | `EV-AG-068` |
+| `RC-AG-069` | GOAL_COMMAND_CONSISTENCY | Persistence / Recovery | `CheckpointDomainGenerationGuard` | `AG069_VIOLATION` | `AG-069-UT, AG-069-IT, AG-069-FT` | `EV-AG-069` |
+| `RC-AG-070` | GOAL_COMMAND_CONSISTENCY | Persistence / Recovery | `RecoveryRuleEngine` | `AG070_VIOLATION` | `AG-070-UT, AG-070-IT, AG-070-FT` | `EV-AG-070` |
+| `RC-AG-071` | VALIDITY_EVENT_ARTIFACT_TIME | Quality / Finalization | `ResultValidityGuard` | `AG071_VIOLATION` | `AG-071-UT, AG-071-IT, AG-071-FT` | `EV-AG-071` |
+| `RC-AG-072` | VALIDITY_EVENT_ARTIFACT_TIME | Quality / Finalization | `ValidityPropagationEngine` | `AG072_VIOLATION` | `AG-072-UT, AG-072-IT, AG-072-FT` | `EV-AG-072` |
+| `RC-AG-073` | VALIDITY_EVENT_ARTIFACT_TIME | Quality / Finalization | `PublicationValidityGate` | `AG073_VIOLATION` | `AG-073-UT, AG-073-IT, AG-073-FT, AG-073-E2E` | `EV-AG-073` |
+| `RC-AG-074` | VALIDITY_EVENT_ARTIFACT_TIME | Persistence / Recovery | `EventCategoryGuard` | `AG074_VIOLATION` | `AG-074-UT, AG-074-IT` | `EV-AG-074` |
+| `RC-AG-075` | VALIDITY_EVENT_ARTIFACT_TIME | Persistence / Recovery | `OrderedOutboxDelivery` | `AG075_VIOLATION` | `AG-075-UT, AG-075-IT, AG-075-FT` | `EV-AG-075` |
+| `RC-AG-076` | VALIDITY_EVENT_ARTIFACT_TIME | Agent Core Controller | `ArtifactVersionValidation` | `AG076_VIOLATION` | `AG-076-UT, AG-076-IT, AG-076-FT, AG-076-E2E` | `EV-AG-076` |
+| `RC-AG-077` | VALIDITY_EVENT_ARTIFACT_TIME | Agent Core Controller | `PublicationCorrectionAudit` | `AG077_VIOLATION` | `AG-077-UT, AG-077-IT, AG-077-FT, AG-077-E2E` | `EV-AG-077` |
+| `RC-AG-078` | VALIDITY_EVENT_ARTIFACT_TIME | Persistence / Recovery | `ReconcilerCoverageRegistry` | `AG078_VIOLATION` | `AG-078-UT, AG-078-IT, AG-078-FT, AG-078-E2E` | `EV-AG-078` |
+| `RC-AG-079` | VALIDITY_EVENT_ARTIFACT_TIME | Persistence / Recovery | `ReconcilerClaimFencingGuard` | `AG079_VIOLATION` | `AG-079-UT, AG-079-IT, AG-079-FT` | `EV-AG-079` |
+| `RC-AG-080` | VALIDITY_EVENT_ARTIFACT_TIME | Persistence / Recovery | `TimeSemanticsGuard` | `AG080_VIOLATION` | `AG-080-UT, AG-080-IT, AG-080-FT` | `EV-AG-080` |
+
+## 47. 架构完成与 Program 入口门槛
+
+生成 Agent Core 实现 Program 前必须满足：
+
+```text
+所有子状态机有合法/非法转换测试要求
+Final Gate 每个输出有唯一确定路由
+RunOutcome、Correction 与 Budget Settlement 边界明确
+LangGraph Adapter 不绕过领域 Retry、Interrupt、Security 和 Publication
+ModelCapabilityProfile 能产生确定性 StepFeasibilityDecision
+每个 Requirement 存在 RC-AG、Test ID 与 Evidence Key
+正式文档与 Agent 镜像字节级一致
+```
+
+这些条件只证明 Target 可实施；代码、Migration、故障注入、E2E、Trace、Eval 完成前仍不得声明 implementation available 或 production ready。
 
 ---
 
@@ -2028,7 +2488,7 @@ completed_at
 external_receipt_ref
 ```
 
-状态：CLAIMED、EXECUTING、SUCCEEDED、FAILED、UNKNOWN、RECONCILED。
+状态：CLAIMED、EXECUTING、SUCCEEDED、FAILED、UNKNOWN、CLOSED。`CLOSED` 只表示 Claim 生命周期关闭，Action 业务结果仍以 ActionOutcome 为准。
 
 UNKNOWN 时禁止盲目重试。Compensation 是新的受治理副作用，需要新的 PreparedAction、Security、Approval 和 IdempotencyClaim；不可补偿操作标记 NON_COMPENSATABLE。
 

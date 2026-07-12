@@ -46,6 +46,19 @@ REQUIRED_TERMS = [
     "BudgetSettlement",
     "Requirement Enforcement Matrix",
     "Transition Matrix",
+    "PlanVersion Transition Matrix",
+    "Final Gate Routing",
+    "RunOutcome Contract",
+    "LangGraph Adapter Contract",
+    "InfrastructureDrainProtocol",
+    "RunStreamEvent",
+    "ModelCapabilityProfile",
+    "StepFeasibilityDecision",
+    "Resource Conflict Matrix",
+    "CONTROL_REPLAY",
+    "SIMULATION_FORK",
+    "StateMigrationRecord",
+    "逐条 Requirement Control Registry",
     "pending_interrupt_refs",
     "WAITING_CONDITION",
     "CANCELLING",
@@ -74,6 +87,11 @@ REQUIRED_TABLES = [
     "agent_budget_consumptions",
     "agent_budget_adjustments",
     "agent_budget_settlements",
+    "agent_step_feasibility_decisions",
+    "agent_graph_bundles",
+    "agent_run_stream_events",
+    "agent_state_migration_records",
+    "agent_outcome_corrections",
 ]
 
 FORBIDDEN_TERMS = [
@@ -85,6 +103,7 @@ FORBIDDEN_TERMS = [
     "未来 Program 必须以本文及配套规范为目标约束",
     "状态：DRAFT、VALIDATING、VALID、INVALID、SUPERSEDED、PUBLISHED、WITHDRAWN。",
     "SUCCEEDED\nFAILED\nUNKNOWN\nRECONCILING\nRECONCILED",
+    "状态：CLAIMED、EXECUTING、SUCCEEDED、FAILED、UNKNOWN、RECONCILED。",
 ]
 
 OBJECT_TABLE_PAIRS = {
@@ -173,6 +192,41 @@ def verify() -> list[str]:
     ids = [int(value) for value in re.findall(r"ARCH-AGENT-(\d{3})", formal)]
     if sorted(ids) != list(range(1, 81)):
         errors.append("Agent Core document must define ARCH-AGENT-001 through ARCH-AGENT-080 exactly once")
+
+    controls = [int(value) for value in re.findall(r"RC-AG-(\d{3})", formal)]
+    if sorted(controls) != list(range(1, 81)):
+        errors.append("Agent Core document must map RC-AG-001 through RC-AG-080 exactly once")
+
+    for matrix in [
+        "### 39.1 PlanVersion",
+        "### 39.2 StepRun Attempt",
+        "### 39.3 ActionLifecycleStatus × ActionOutcome",
+        "### 39.4 Interrupt",
+        "### 39.5 Publication 与 PublicationAttempt",
+    ]:
+        if matrix not in formal:
+            errors.append(f"Agent Core document missing state matrix: {matrix}")
+
+    for route in [
+        "`PASS` | `ArtifactValidation → Publication`",
+        "`REWRITE` | `FinalSynthesis`",
+        "`RETRIEVE_MORE` | `SupplementalRetrieval`",
+        "`REPLAN` | `ReplanBarrier`",
+        "`ABSTAIN` | `OutcomeCommit`",
+    ]:
+        if route not in formal:
+            errors.append(f"Final Gate routing missing: {route}")
+
+    for adapter_term in [
+        "每个 Node invocation 最多调用一次 interrupt()",
+        "Resume 从包含 interrupt() 的 Node 开头重新执行",
+        "LangGraph Node Retry",
+        "Infrastructure Drain",
+        "thread_id = stable opaque UUID/hash, length < 255",
+        "Checkpoint Retention",
+    ]:
+        if adapter_term not in formal:
+            errors.append(f"LangGraph Adapter Contract missing: {adapter_term}")
 
     for index_name, content in {
         "docs/modules/README.md": _read(DOCS_INDEX),
