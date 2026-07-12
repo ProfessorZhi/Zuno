@@ -53,7 +53,6 @@ jobs:
           python-version: "3.12"
 
       - name: Apply deterministic documentation synchronization
-        if: github.event_name == 'push' && github.ref_name == 'agent/complete-agent-core-target-architecture'
         run: |
           python tools/scripts/sync_agent_core_target_docs.py
           git diff --check
