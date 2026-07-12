@@ -64,7 +64,7 @@ jobs:
           content = content.replace(
               "    return merged\n",
               "    for name in REMOVED_NAMES:\n"
-              "        merged = \\\"\\n\\\".join(line for line in merged.splitlines() if name not in line)\n"
+              "        merged = '\\n'.join(line for line in merged.splitlines() if name not in line)\n"
               "    return merged\n",
               1,
           )
