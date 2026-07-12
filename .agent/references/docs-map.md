@@ -7,12 +7,18 @@
 ## Mental Model
 
 ```text
-docs/ = formal human truth
+docs/architecture/ = four canonical architecture files
+docs/modules/ = formal logical module designs
+docs/status/ = current and readiness truth
+docs/decisions/ = ADR
+docs/governance/ = ownership and documentation governance
+docs/evidence/ = reproducible evidence
+docs/history/ = archive
+.agent/architecture/ = four generated architecture mirrors
+.agent/modules/ = selected module design mirrors
 .agent/references/ = local skills and lessons
 .agent/templates/ = execution skeletons
 .agent/programs/ = active execution plan
-.agent/architecture/ = generated architecture mirror
-docs/history/ = archive and evidence
 ```
 
 ## Current Truth
@@ -20,13 +26,16 @@ docs/history/ = archive and evidence
 正式人类入口：
 
 - `README.md`：仓库总览和首读路径。
-- `docs/README.md`：文档入口。
-- `docs/architecture/architecture.md`：Lean Complete Agentic GraphRAG Product 的**重文字目标总架构**，解释轻量实现、成熟设计、十一模块、Agent 闭环、owner、contract、状态、失败、trace、测试和验收。
-- `docs/architecture/architecture-views.md`：十类 canonical view categories、Overall 图和 Local Mermaid 图的规范图源。
-- `docs/architecture/architecture.html`：读取 `architecture-views.md` 的原生 Mermaid Architecture Atlas。
-- `docs/architecture/production-readiness.md`：Current、Short-term Closure Gap、Measurement Blocked、Completed、Future Optional。
-- `docs/architecture/document-ingestion-foundation.md`、`agent-core-runtime.md`、`memory-and-context.md`、`capability-and-skill-layer.md`、`agentic-retrieval-planner.md`、`eval-observability-and-cost.md`、`input-layer-and-document-processing.md`、`knowledge-space-product-configuration.md`：六运行域专题细化。
-- `docs/architecture/repo-ownership-matrix.md`：代码目录 ownership 辅助事实表。
+- `docs/README.md`：文档总入口。
+- `docs/architecture/README.md`：总架构目录规则。
+- `docs/architecture/architecture.md`：Lean Complete Agentic GraphRAG Product 的重文字目标总架构。
+- `docs/architecture/architecture-views.md`：十类 canonical views 的 Mermaid 规范图源。
+- `docs/architecture/architecture.html`：读取图源的 Architecture Atlas。
+- `docs/modules/README.md`：十一个逻辑模块入口。
+- `docs/modules/06-agent-core-planning-control.md`：Agent Core V2 实施级设计。
+- `docs/status/production-readiness.md`：Current、Gap、Measurement Blocked、Completed、Future Optional。
+- `docs/decisions/README.md`：正式 ADR 入口。
+- `docs/governance/repo-ownership-matrix.md`：代码目录 ownership 与迁移边界。
 - `docs/evidence/public-demo.md`：精选公开证据入口。
 - `docs/history/`：历史档案。
 
@@ -38,11 +47,15 @@ Agent 工作流入口：
 - `.agent/references/`：本地项目 skills、lessons、playbooks。
 - `.agent/templates/`：执行骨架。
 - `.agent/programs/`：当前执行入口。
-- `.agent/architecture/architecture.md`：必须与正式文字总架构文档一致的 Agent 镜像。
-- `.agent/architecture/architecture.html`：必须与正式 HTML Atlas shell 一致的 Agent 镜像。
+- `.agent/architecture/architecture.md`：正式总架构文字镜像。
+- `.agent/architecture/architecture-views.md`：正式 Mermaid 图源镜像。
+- `.agent/architecture/architecture.html`：正式 HTML Atlas 镜像。
+- `.agent/modules/06-agent-core-planning-control.md`：Agent Core 模块镜像。
 
 ## Must Preserve
 
+- `docs/architecture/` 和 `.agent/architecture/` 都只能包含 `README.md`、`architecture.md`、`architecture-views.md`、`architecture.html`。
+- 模块设计必须进入 `docs/modules/`，不能回到 architecture 目录。
 - Current 只描述代码、测试、trace/eval 或 verifier 已证明事实。
 - Target 只描述近期目标，不等于完成声明。
 - Future Optional 不得成为短期 blocker。
@@ -64,28 +77,34 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 
 ## Docs Sync
 
-修改架构或文档入口时检查：
+修改总架构时检查：
 
-- `README.md`
-- `docs/README.md`
 - `docs/architecture/README.md`
 - `docs/architecture/architecture.md`
 - `docs/architecture/architecture-views.md`
-- `docs/architecture/production-readiness.md`
-- `docs/architecture/document-ingestion-foundation.md`
-- `docs/architecture/agent-core-runtime.md`
-- `docs/architecture/memory-and-context.md`
-- `docs/architecture/capability-and-skill-layer.md`
-- `docs/architecture/agentic-retrieval-planner.md`
-- `docs/architecture/eval-observability-and-cost.md`
-- `docs/architecture/input-layer-and-document-processing.md`
-- `docs/architecture/knowledge-space-product-configuration.md`
 - `docs/architecture/architecture.html`
 - `.agent/architecture/README.md`
 - `.agent/architecture/architecture.md`
+- `.agent/architecture/architecture-views.md`
 - `.agent/architecture/architecture.html`
-- `.agent/references/diagram-inventory.md`
-- `.agent/programs/current.md`
+
+修改模块设计时检查：
+
+- `docs/modules/README.md`
+- 对应 `docs/modules/<module>.md`
+- 存在镜像时同步 `.agent/modules/<module>.md`
+
+修改 Current / readiness 时检查：
+
+- `docs/status/production-readiness.md`
+- `README.md`
+- `docs/README.md`
+
+修改 ADR 或 ownership 时检查：
+
+- `docs/decisions/`
+- `docs/governance/`
+- `.agent/references/architecture-docs-map.md`
 
 ## Lessons Learned
 
