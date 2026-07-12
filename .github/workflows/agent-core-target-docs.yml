@@ -15,17 +15,19 @@ on:
       - ".agent/system.yaml"
       - ".agent/scripts/verify_agent_system.py"
       - ".agent/scripts/verify_doc_boundaries.py"
-      - "tools/scripts/consolidate_agent_core_target_docs.py"
       - "tools/scripts/verify_agent_core_target_protocols.py"
       - "tools/scripts/verify_docs_entrypoints.py"
       - "tools/agent/render_architecture.py"
       - "tests/repo/test_agent_core_target_protocols.py"
       - "tests/repo/test_docs_entrypoints.py"
       - ".github/workflows/agent-core-target-docs.yml"
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: agent-core-target-docs-${{ github.event.pull_request.number || github.ref }}
@@ -33,79 +35,84 @@ concurrency:
 
 jobs:
   validate:
-    name: Consolidate and validate Agent Core target doc
+    name: Validate unified Agent Core target doc
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Checkout PR head
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Prepare logs
-        run: mkdir -p validation-logs
-
-      - name: Consolidate Agent Core target documentation
-        run: |
-          set -o pipefail
-          python - <<'PY'
-          from pathlib import Path
-          path = Path("tools/scripts/consolidate_agent_core_target_docs.py")
-          content = path.read_text(encoding="utf-8")
-          content = content.replace('      - "Program and code""""', '      - "Program and code"""')
-          content = content.replace('      - "code and migration""""', '      - "code and migration"""')
-          content = content.replace(
-              "    return merged\n",
-              "    for name in REMOVED_NAMES:\n"
-              "        merged = '\\n'.join(line for line in merged.splitlines() if name not in line)\n"
-              "    return merged\n",
-              1,
-          )
-          content = content.replace("    ensure_no_active_references()\n", "")
-          path.write_text(content, encoding="utf-8")
-          PY
-          python tools/scripts/consolidate_agent_core_target_docs.py \
-            2>&1 | tee validation-logs/consolidation.log
-          git diff --check -- '*.py' '*.yaml' '*.yml' \
-            2>&1 | tee validation-logs/diff-check.log
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "docs: consolidate Agent Core target architecture"
-          git push origin HEAD:agent/consolidate-agent-core-target-doc
-
       - name: Install validation dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install pytest
 
-      - name: Validate consolidated documentation
+      - name: Prepare validation logs
+        run: mkdir -p validation-logs
+
+      - name: Verify executable and configuration patch formatting
+        run: |
+          set -o pipefail
+          git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml' \
+            2>&1 | tee validation-logs/diff-check.log
+
+      - name: Compile validation scripts
         run: |
           set -o pipefail
           python -m py_compile \
             tools/scripts/verify_agent_core_target_protocols.py \
-            tests/repo/test_agent_core_target_protocols.py \
+            tools/scripts/verify_docs_entrypoints.py \
+            tools/agent/render_architecture.py \
             .agent/scripts/verify_agent_system.py \
+            .agent/scripts/verify_doc_boundaries.py \
+            tests/repo/test_agent_core_target_protocols.py \
+            tests/repo/test_docs_entrypoints.py \
             2>&1 | tee validation-logs/compile.log
+
+      - name: Verify unified Agent Core target document
+        run: |
+          set -o pipefail
           python tools/scripts/verify_agent_core_target_protocols.py \
-            2>&1 | tee validation-logs/protocols.log
+            2>&1 | tee validation-logs/agent-core.log
+
+      - name: Verify Agent System and document boundaries
+        run: |
+          set -o pipefail
           python .agent/scripts/verify_agent_system.py \
             2>&1 | tee validation-logs/agent-system.log
-          pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider \
+          python .agent/scripts/verify_doc_boundaries.py \
+            2>&1 | tee validation-logs/doc-boundaries.log
+
+      - name: Verify documentation entrypoints and architecture renderer
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_docs_entrypoints.py \
+            2>&1 | tee validation-logs/docs-entrypoints.log
+          python tools/agent/render_architecture.py --check \
+            2>&1 | tee validation-logs/architecture-renderer.log
+
+      - name: Run focused repository tests
+        run: |
+          set -o pipefail
+          pytest -q \
+            tests/repo/test_agent_core_target_protocols.py \
+            tests/repo/test_docs_entrypoints.py \
+            -p no:cacheprovider \
             2>&1 | tee validation-logs/tests.log
 
-      - name: Upload logs
+      - name: Upload validation logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: agent-core-consolidation-logs
+          name: agent-core-target-validation-logs
           path: validation-logs/
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
