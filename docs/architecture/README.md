@@ -34,6 +34,8 @@ production-readiness   讲当前事实
 
 专题文档保留技术细节，但必须服从十一逻辑模块、六个物理运行域和 `architecture.md` 的边界。
 
+`agent-core-runtime.md` 是 Agent Core V2 的实施级专题规范，包含 LangGraph 双层图、Plan DAG、默认安全并行、Domain/Contract/ORM 分层、PostgreSQL 精确表结构和 Alembic Migration 计划。它在 `.agent/architecture/agent-core-runtime.md` 保留字节级镜像；正式事实源始终是 `docs/architecture/agent-core-runtime.md`。
+
 ## 更新与验证
 
 修改 `architecture.md`、`architecture-views.md` 或 HTML shell 后运行：
@@ -55,6 +57,15 @@ python tools/scripts/verify_docs_entrypoints.py
 - 同步 `.agent/architecture/architecture.md`；
 - 同步 `.agent/architecture/architecture-views.md`；
 - 同步 `.agent/architecture/architecture.html`。
+
+专题镜像当前需要在同一变更中显式同步：
+
+```text
+docs/architecture/agent-core-runtime.md
+.agent/architecture/agent-core-runtime.md
+```
+
+两份文件必须保持字节级一致。
 
 ## HTML 预览
 
