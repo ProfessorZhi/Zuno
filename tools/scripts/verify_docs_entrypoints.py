@@ -217,18 +217,20 @@ def verify_entrypoint_text() -> list[str]:
     architecture = _read("docs/architecture/architecture.md")
     for phrase in [
         "Zuno Target Architecture Atlas",
-        "项目定位与架构目标",
-        "十一逻辑模块",
+        "Text-first Design Document",
+        "轻量实现，成熟设计",
+        "十一逻辑能力模块",
         "六个物理运行域",
-        "Single Controller Agent Runtime",
-        "AgentRunGraph",
-        "Plan DAG",
-        "StepExecutionGraph",
-        "TaskContract",
-        "FinalCandidate",
-        "Publication",
+        "Agent Core / Planning & Control",
+        "RuntimeRequest",
+        "ModelCallRequest",
+        "ContextPack",
+        "RetrievalPlan",
+        "EvidenceBundle",
+        "ToolCallIntent",
+        "NormalizedToolObservation",
+        "GroundedAnswer",
         "EvidenceLedger",
-        "docs/status/production-readiness.md",
     ]:
         if phrase not in architecture:
             errors.append(f"docs/architecture/architecture.md missing phrase: {phrase}")
@@ -246,12 +248,16 @@ def verify_entrypoint_text() -> list[str]:
 
     agent_core = _read("docs/modules/06-agent-core-planning-control.md")
     for phrase in [
-        "Single Controller Agent Runtime",
+        "LangGraph",
         "Plan DAG",
-        "TaskContract",
-        "pending_interrupt_refs",
-        "prepare_publication",
+        "默认最大化安全并行",
         "PostgreSQL",
+        "Alembic Migration",
+        "唯一的正式 Target 架构文档",
+        ".agent/programs/",
+        "WAITING_CONDITION",
+        "RecoveryWatermark",
+        "ARCH-AGENT-080",
     ]:
         if phrase not in agent_core:
             errors.append(f"Agent Core module doc missing phrase: {phrase}")
@@ -313,10 +319,6 @@ def verify_architecture_mirrors() -> list[str]:
         (
             "docs/modules/06-agent-core-planning-control.md",
             ".agent/modules/06-agent-core-planning-control.md",
-        ),
-        (
-        ),
-        (
         ),
     ]
 
