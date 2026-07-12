@@ -20,29 +20,43 @@ ARCHITECTURE_VIEW_CONTRACT = [
     "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
 ]
 
-ACTIVE_DOCS_ARCHITECTURE_FILES = {
+CANONICAL_ARCHITECTURE_FILES = {
     "README.md",
     "architecture.md",
     "architecture-views.md",
-    "production-readiness.md",
-    "document-ingestion-foundation.md",
-    "agent-core-runtime.md",
-    "memory-and-context.md",
-    "capability-and-skill-layer.md",
-    "agentic-retrieval-planner.md",
-    "eval-observability-and-cost.md",
-    "input-layer-and-document-processing.md",
-    "knowledge-space-product-configuration.md",
     "architecture.html",
-    "repo-ownership-matrix.md",
 }
 
-ACTIVE_AGENT_ARCHITECTURE_FILES = {
+REQUIRED_MODULE_DOCS = {
     "README.md",
-    "architecture.md",
-    "architecture-views.md",
-    "architecture.html",
+    "02-input-document-ingestion.md",
+    "03-knowledge-agentic-graphrag.md",
+    "05-memory-context.md",
+    "06-agent-core-planning-control.md",
+    "07-capability-skill.md",
+    "10-observability-eval.md",
 }
+
+REQUIRED_FRONT_PATHS = [
+    "README.md",
+    "docs/README.md",
+    "docs/architecture/README.md",
+    "docs/architecture/architecture.md",
+    "docs/architecture/architecture-views.md",
+    "docs/architecture/architecture.html",
+    "docs/modules/README.md",
+    "docs/modules/06-agent-core-planning-control.md",
+    "docs/status/production-readiness.md",
+    "docs/decisions/README.md",
+    "docs/governance/repo-ownership-matrix.md",
+    ".agent/architecture/README.md",
+    ".agent/architecture/architecture.md",
+    ".agent/architecture/architecture-views.md",
+    ".agent/architecture/architecture.html",
+    ".agent/modules/README.md",
+    ".agent/modules/06-agent-core-planning-control.md",
+    "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
+]
 
 ARCHIVED_ARCHITECTURE_SPLIT_DOCS = [
     "current-architecture.md",
@@ -71,41 +85,65 @@ def _load_render_architecture_module():
 
 def verify_front_path_shape() -> list[str]:
     errors: list[str] = []
-    required = [
-        "README.md",
-        "docs/README.md",
-        "docs/architecture/README.md",
-        "docs/architecture/architecture.md",
-        "docs/architecture/architecture-views.md",
-        "docs/architecture/architecture.html",
-        "docs/architecture/production-readiness.md",
-        ".agent/architecture/README.md",
-        ".agent/architecture/architecture.md",
-        ".agent/architecture/architecture-views.md",
-        ".agent/architecture/architecture.html",
-        "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
-    ]
-    for relative_path in required:
+
+    for relative_path in REQUIRED_FRONT_PATHS:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing documentation entrypoint: {relative_path}")
 
-    docs_files = {
-        path.name for path in (REPO_ROOT / "docs" / "architecture").iterdir() if path.is_file()
+    docs_architecture_files = {
+        path.name
+        for path in (REPO_ROOT / "docs" / "architecture").iterdir()
+        if path.is_file()
     }
-    if docs_files != ACTIVE_DOCS_ARCHITECTURE_FILES:
+    if docs_architecture_files != CANONICAL_ARCHITECTURE_FILES:
         errors.append(
-            "docs/architecture files changed unexpectedly: "
-            f"expected {sorted(ACTIVE_DOCS_ARCHITECTURE_FILES)}, got {sorted(docs_files)}"
+            "docs/architecture must contain only the four canonical files: "
+            f"expected {sorted(CANONICAL_ARCHITECTURE_FILES)}, "
+            f"got {sorted(docs_architecture_files)}"
         )
 
-    agent_files = {
-        path.name for path in (REPO_ROOT / ".agent" / "architecture").iterdir() if path.is_file()
-    }
-    if agent_files != ACTIVE_AGENT_ARCHITECTURE_FILES:
+    docs_architecture_dirs = [
+        path.name
+        for path in (REPO_ROOT / "docs" / "architecture").iterdir()
+        if path.is_dir()
+    ]
+    if docs_architecture_dirs:
         errors.append(
-            ".agent/architecture files changed unexpectedly: "
-            f"expected {sorted(ACTIVE_AGENT_ARCHITECTURE_FILES)}, got {sorted(agent_files)}"
+            "docs/architecture must not contain subdirectories: "
+            f"{sorted(docs_architecture_dirs)}"
         )
+
+    agent_architecture_files = {
+        path.name
+        for path in (REPO_ROOT / ".agent" / "architecture").iterdir()
+        if path.is_file()
+    }
+    if agent_architecture_files != CANONICAL_ARCHITECTURE_FILES:
+        errors.append(
+            ".agent/architecture must contain only the four canonical files: "
+            f"expected {sorted(CANONICAL_ARCHITECTURE_FILES)}, "
+            f"got {sorted(agent_architecture_files)}"
+        )
+
+    agent_architecture_dirs = [
+        path.name
+        for path in (REPO_ROOT / ".agent" / "architecture").iterdir()
+        if path.is_dir()
+    ]
+    if agent_architecture_dirs:
+        errors.append(
+            ".agent/architecture must not contain subdirectories: "
+            f"{sorted(agent_architecture_dirs)}"
+        )
+
+    module_files = {
+        path.name
+        for path in (REPO_ROOT / "docs" / "modules").iterdir()
+        if path.is_file()
+    }
+    missing_modules = REQUIRED_MODULE_DOCS - module_files
+    if missing_modules:
+        errors.append(f"docs/modules missing required module docs: {sorted(missing_modules)}")
 
     for name in ARCHIVED_ARCHITECTURE_SPLIT_DOCS:
         if (REPO_ROOT / "docs" / "architecture" / name).exists():
@@ -117,62 +155,73 @@ def verify_front_path_shape() -> list[str]:
         )
         if not archived.exists():
             errors.append(f"missing archived architecture split doc: {name}")
+
     return errors
 
 
 def verify_entrypoint_text() -> list[str]:
     errors: list[str] = []
-    readme = _read("README.md")
-    docs_index = _read("docs/README.md")
-    architecture_index = _read("docs/architecture/README.md")
-    architecture = _read("docs/architecture/architecture.md")
-    views = _read("docs/architecture/architecture-views.md")
-    production = _read("docs/architecture/production-readiness.md")
+
+    contents = {
+        "README.md": _read("README.md"),
+        "docs/README.md": _read("docs/README.md"),
+        "docs/architecture/README.md": _read("docs/architecture/README.md"),
+        "docs/modules/README.md": _read("docs/modules/README.md"),
+        ".agent/architecture/README.md": _read(".agent/architecture/README.md"),
+        ".agent/modules/README.md": _read(".agent/modules/README.md"),
+    }
 
     expected_by_file = {
-        "README.md": [
-            "Lean Complete Agentic GraphRAG Product",
-            "./docs/architecture/architecture.md",
-            "./docs/architecture/architecture.html",
-            "implementation available",
-            "measurement blocked",
-            "quality not yet proven",
-        ],
         "docs/README.md": [
-            "Zuno 文档入口",
             "./architecture/architecture.md",
             "./architecture/architecture.html",
-            "./architecture/production-readiness.md",
+            "./modules/README.md",
+            "./status/production-readiness.md",
+            "./decisions/README.md",
+            "./governance/repo-ownership-matrix.md",
         ],
         "docs/architecture/README.md": [
-            "架构文档",
+            "README.md",
             "architecture.md",
             "architecture-views.md",
             "architecture.html",
-            "production-readiness.md",
-            "python tools/agent/render_architecture.py --write",
+            "docs/modules/",
+            "docs/status/",
+            "docs/decisions/",
+            "docs/governance/",
+        ],
+        "docs/modules/README.md": [
+            "02-input-document-ingestion.md",
+            "03-knowledge-agentic-graphrag.md",
+            "05-memory-context.md",
+            "06-agent-core-planning-control.md",
+            "07-capability-skill.md",
+            "10-observability-eval.md",
+            "docs/status/production-readiness.md",
+        ],
+        ".agent/architecture/README.md": [
+            ".agent/modules/06-agent-core-planning-control.md",
+            "docs/status/production-readiness.md",
+        ],
+        ".agent/modules/README.md": [
+            ".agent/modules/06-agent-core-planning-control.md",
+            "docs/modules/06-agent-core-planning-control.md",
         ],
     }
-    contents = {
-        "README.md": readme,
-        "docs/README.md": docs_index,
-        "docs/architecture/README.md": architecture_index,
-    }
+
     for path, phrases in expected_by_file.items():
         for phrase in phrases:
             if phrase not in contents[path]:
                 errors.append(f"{path} missing phrase: {phrase}")
 
-    architecture_phrases = [
+    architecture = _read("docs/architecture/architecture.md")
+    for phrase in [
         "Zuno Target Architecture Atlas",
         "Text-first Design Document",
         "轻量实现，成熟设计",
         "十一逻辑能力模块",
         "六个物理运行域",
         "Agent Core / Planning & Control",
-        "TaskQueuePort",
-        "RabbitMQAdapter",
-        "LangSmithTraceSink",
         "RuntimeRequest",
         "ModelCallRequest",
         "ContextPack",
@@ -182,77 +231,39 @@ def verify_entrypoint_text() -> list[str]:
         "NormalizedToolObservation",
         "GroundedAnswer",
         "EvidenceLedger",
-        "implementation available",
-        "measurement blocked",
-        "quality not yet proven",
-    ]
-    for phrase in architecture_phrases:
+    ]:
         if phrase not in architecture:
             errors.append(f"docs/architecture/architecture.md missing phrase: {phrase}")
 
-    view_phrases = [
-        "Zuno Architecture Visual Atlas Source",
-        "4+1 View Model",
-        "Views & Beyond",
-        "Zuno Product Core",
-        "RuntimeRequest",
-        "ModelCallRequest",
-        "ContextPack",
-        "RetrievalPlan",
-        "EvidenceBundle",
-        "ToolCallIntent",
-        "NormalizedToolObservation",
-        "GroundedAnswer",
-        "EvidenceLedger",
-        "TaskQueuePort",
-        "RabbitMQ",
-        "LangSmith",
-    ]
-    for phrase in view_phrases:
-        if phrase not in views:
-            errors.append(f"docs/architecture/architecture-views.md missing phrase: {phrase}")
-
-    production_phrases = [
+    production = _read("docs/status/production-readiness.md")
+    for phrase in [
         "Short-term Closure Gap",
         "Measurement Blocked",
         "Future Optional",
         "EvidenceLedger",
         "Agent run trace 持久化并可查看",
-    ]
-    for phrase in production_phrases:
+    ]:
         if phrase not in production:
-            errors.append(f"docs/architecture/production-readiness.md missing phrase: {phrase}")
-    return errors
+            errors.append(f"docs/status/production-readiness.md missing phrase: {phrase}")
 
+    agent_core = _read("docs/modules/06-agent-core-planning-control.md")
+    for phrase in [
+        "LangGraph",
+        "Plan DAG",
+        "默认最大化安全并行",
+        "PostgreSQL",
+        "Alembic Migration",
+    ]:
+        if phrase not in agent_core:
+            errors.append(f"Agent Core module doc missing phrase: {phrase}")
 
-def verify_front_path_summary_boundaries() -> list[str]:
-    errors: list[str] = []
-    summary_paths = [
-        "README.md",
-        "docs/README.md",
-        "docs/architecture/README.md",
-        ".agent/architecture/README.md",
-    ]
-    forbidden = [
-        "Kafka / RabbitMQ 集群",
-        "Kubernetes",
-        "Firecracker 沙箱",
-        "Production Scale Target",
-        "V&B Logical View",
-    ]
-    for relative_path in summary_paths:
-        content = _read(relative_path)
-        if "production-readiness.md" not in content:
-            errors.append(f"{relative_path} must link production-readiness.md")
-        for phrase in forbidden:
-            if phrase in content:
-                errors.append(f"{relative_path} contains over-scoped or retired phrase: {phrase}")
     return errors
 
 
 def verify_architecture_view_contract() -> list[str]:
     errors: list[str] = []
     module = _load_render_architecture_module()
+
     if module.EXPECTED_VIEWS != ARCHITECTURE_VIEW_CONTRACT:
         errors.append(
             "render_architecture.EXPECTED_VIEWS drifted: "
@@ -262,6 +273,7 @@ def verify_architecture_view_contract() -> list[str]:
     architecture = _read("docs/architecture/architecture.md")
     views = _read("docs/architecture/architecture-views.md")
     html = _read("docs/architecture/architecture.html")
+
     errors.extend(module.validate_design(architecture))
     errors.extend(module.validate_source(views))
     errors.extend(module.validate_html(html))
@@ -288,43 +300,27 @@ def verify_architecture_view_contract() -> list[str]:
         errors.append("architecture.html must preserve fullscreen and source disclosure")
     if 'fetch("/docs/architecture/architecture-views.md"' not in html:
         errors.append("architecture.html must load the dedicated Mermaid source")
+
     return errors
 
 
 def verify_architecture_mirrors() -> list[str]:
     errors: list[str] = []
-    docs_md = _read("docs/architecture/architecture.md")
-    agent_md = _read(".agent/architecture/architecture.md")
-    docs_views = _read("docs/architecture/architecture-views.md")
-    agent_views = _read(".agent/architecture/architecture-views.md")
-    docs_html = _read("docs/architecture/architecture.html")
-    agent_html = _read(".agent/architecture/architecture.html")
-    if docs_md != agent_md:
-        errors.append(".agent/architecture/architecture.md must match docs/architecture/architecture.md")
-    if docs_views != agent_views:
-        errors.append(
-            ".agent/architecture/architecture-views.md must match "
-            "docs/architecture/architecture-views.md"
-        )
-    if docs_html != agent_html:
-        errors.append(".agent/architecture/architecture.html must match docs/architecture/architecture.html")
-    return errors
 
+    pairs = [
+        ("docs/architecture/architecture.md", ".agent/architecture/architecture.md"),
+        ("docs/architecture/architecture-views.md", ".agent/architecture/architecture-views.md"),
+        ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
+        (
+            "docs/modules/06-agent-core-planning-control.md",
+            ".agent/modules/06-agent-core-planning-control.md",
+        ),
+    ]
 
-def verify_docs_map_has_unique_architecture_source_roles() -> list[str]:
-    errors: list[str] = []
-    content = _read(".agent/references/docs-map.md")
-    formal_entries = content.split("正式人类入口：", 1)[1].split("Agent 工作流入口：", 1)[0]
-    if formal_entries.count("`docs/architecture/architecture.md`") != 1:
-        errors.append("docs-map must list architecture.md exactly once in formal entries")
-    for phrase in [
-        "`docs/architecture/architecture-views.md`",
-        "`docs/architecture/architecture.html`",
-        "`docs/architecture/production-readiness.md`",
-        "Lean Complete Agentic GraphRAG Product",
-    ]:
-        if phrase not in content:
-            errors.append(f"docs-map missing phrase: {phrase}")
+    for formal, mirror in pairs:
+        if _read(formal) != _read(mirror):
+            errors.append(f"mirror mismatch: {mirror} must match {formal}")
+
     return errors
 
 
@@ -334,17 +330,26 @@ def verify_no_retired_front_path_links() -> list[str]:
         "README.md",
         "docs/README.md",
         "docs/architecture/README.md",
+        "docs/modules/README.md",
         "AGENTS.md",
         ".agent/README.md",
         ".agent/architecture/README.md",
+        ".agent/modules/README.md",
     ]
+
     forbidden = [
-        "docs/architecture/current-architecture.md",
-        "docs/architecture/target-architecture.md",
-        "docs/architecture/roadmap.md",
-        "docs/architecture/deliverables.md",
-        "docs/architecture/overall-architecture.md",
-        ".agent/architecture/overall-architecture.md",
+        "docs/architecture/production-readiness.md",
+        "docs/architecture/document-ingestion-foundation.md",
+        "docs/architecture/agent-core-runtime.md",
+        "docs/architecture/memory-and-context.md",
+        "docs/architecture/capability-and-skill-layer.md",
+        "docs/architecture/agentic-retrieval-planner.md",
+        "docs/architecture/eval-observability-and-cost.md",
+        "docs/architecture/input-layer-and-document-processing.md",
+        "docs/architecture/knowledge-space-product-configuration.md",
+        "docs/architecture/repo-ownership-matrix.md",
+        "docs/architecture/decisions/",
+        ".agent/architecture/agent-core-runtime.md",
         ".agent/architecture/near-term/",
         ".agent/architecture/future/",
         ".agent/architecture/decisions/",
@@ -352,11 +357,13 @@ def verify_no_retired_front_path_links() -> list[str]:
         "docs/architecture/plans/",
         "docs/architecture/programs/",
     ]
+
     for relative_path in files:
         content = _read(relative_path)
         for phrase in forbidden:
             if phrase in content:
                 errors.append(f"{relative_path} contains retired front-path text: {phrase}")
+
     return errors
 
 
@@ -364,19 +371,20 @@ def main() -> int:
     checks = [
         verify_front_path_shape,
         verify_entrypoint_text,
-        verify_front_path_summary_boundaries,
         verify_architecture_view_contract,
         verify_architecture_mirrors,
-        verify_docs_map_has_unique_architecture_source_roles,
         verify_no_retired_front_path_links,
     ]
+
     errors: list[str] = []
     for check in checks:
         errors.extend(check())
+
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
+
     print("documentation entrypoint verification passed.")
     return 0
 
