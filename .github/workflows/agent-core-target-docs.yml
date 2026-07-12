@@ -54,8 +54,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest
 
+      - name: Prepare validation logs
+        run: mkdir -p validation-logs
+
       - name: Compile validation scripts
         run: |
+          set -o pipefail
           python -m py_compile \
             tools/scripts/verify_agent_core_target_protocols.py \
             tools/scripts/verify_docs_entrypoints.py \
@@ -64,35 +68,69 @@ jobs:
             .agent/scripts/verify_agent_system.py \
             .agent/scripts/verify_doc_boundaries.py \
             tests/repo/test_agent_core_target_protocols.py \
-            tests/repo/test_docs_entrypoints.py
+            tests/repo/test_docs_entrypoints.py \
+            2>&1 | tee validation-logs/compile.log
 
       - name: Verify Agent Core target protocols
-        run: python tools/scripts/verify_agent_core_target_protocols.py
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_agent_core_target_protocols.py \
+            2>&1 | tee validation-logs/agent-core-protocols.log
 
       - name: Verify Agent System
         if: always()
-        run: python .agent/scripts/verify_agent_system.py
+        run: |
+          set -o pipefail
+          python .agent/scripts/verify_agent_system.py \
+            2>&1 | tee validation-logs/agent-system.log
 
       - name: Verify document boundaries
         if: always()
-        run: python .agent/scripts/verify_doc_boundaries.py
+        run: |
+          set -o pipefail
+          python .agent/scripts/verify_doc_boundaries.py \
+            2>&1 | tee validation-logs/doc-boundaries.log
 
       - name: Verify repository structure
         if: always()
-        run: python tools/scripts/verify_repo_structure.py
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_repo_structure.py \
+            2>&1 | tee validation-logs/repo-structure.log
 
       - name: Verify documentation entrypoints
         if: always()
-        run: python tools/scripts/verify_docs_entrypoints.py
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_docs_entrypoints.py \
+            2>&1 | tee validation-logs/docs-entrypoints.log
 
       - name: Verify architecture renderer outputs
         if: always()
-        run: python tools/agent/render_architecture.py --check
+        run: |
+          set -o pipefail
+          python tools/agent/render_architecture.py --check \
+            2>&1 | tee validation-logs/architecture-renderer.log
 
       - name: Run Agent Core protocol tests
         if: always()
-        run: pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+        run: |
+          set -o pipefail
+          pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider \
+            2>&1 | tee validation-logs/agent-core-tests.log
 
       - name: Run documentation entrypoint tests
         if: always()
-        run: pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+        run: |
+          set -o pipefail
+          pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider \
+            2>&1 | tee validation-logs/docs-entrypoint-tests.log
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-core-target-validation-logs
+          path: validation-logs/
+          if-no-files-found: error
+          retention-days: 14
