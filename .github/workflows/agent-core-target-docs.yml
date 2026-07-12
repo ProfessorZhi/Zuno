@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate unified Agent Core target doc
+    name: Validate completed Agent Core P0 P1 contracts
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -77,7 +77,7 @@ jobs:
             tests/repo/test_docs_entrypoints.py \
             2>&1 | tee validation-logs/compile.log
 
-      - name: Verify unified Agent Core target document
+      - name: Verify completed Agent Core target architecture
         run: |
           set -o pipefail
           python tools/scripts/verify_agent_core_target_protocols.py \
@@ -112,7 +112,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: agent-core-target-validation-logs
+          name: agent-core-p0-p1-validation-logs
           path: validation-logs/
           if-no-files-found: error
           retention-days: 14
