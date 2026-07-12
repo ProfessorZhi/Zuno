@@ -4,25 +4,9 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-
 ARCHIVE_ROOT = "docs/history/architecture-surface-cleanup-2026-06-30"
-DOCS_ARCHITECTURE_FILES = {
-    "README.md",
-    "architecture.md",
-    "architecture-views.md",
-    "architecture.html",
-    "agent-core-runtime.md",
-    "memory-and-context.md",
-    "capability-and-skill-layer.md",
-    "agentic-retrieval-planner.md",
-    "eval-observability-and-cost.md",
-    "input-layer-and-document-processing.md",
-    "knowledge-space-product-configuration.md",
-    "production-readiness.md",
-    "document-ingestion-foundation.md",
-    "repo-ownership-matrix.md",
-}
-AGENT_ARCHITECTURE_FILES = {
+
+CANONICAL_ARCHITECTURE_FILES = {
     "README.md",
     "architecture.md",
     "architecture-views.md",
@@ -37,7 +21,18 @@ RETIRED_FRONT_PATHS = [
     "docs/architecture/security-and-sandbox.md",
     "docs/architecture/deliverables.md",
     "docs/architecture/overall-architecture.md",
+    "docs/architecture/production-readiness.md",
+    "docs/architecture/document-ingestion-foundation.md",
+    "docs/architecture/agent-core-runtime.md",
+    "docs/architecture/memory-and-context.md",
+    "docs/architecture/capability-and-skill-layer.md",
+    "docs/architecture/agentic-retrieval-planner.md",
+    "docs/architecture/eval-observability-and-cost.md",
+    "docs/architecture/input-layer-and-document-processing.md",
+    "docs/architecture/knowledge-space-product-configuration.md",
+    "docs/architecture/repo-ownership-matrix.md",
     ".agent/architecture/overall-architecture.md",
+    ".agent/architecture/agent-core-runtime.md",
     ".agent/architecture/near-term",
     ".agent/architecture/future",
     ".agent/architecture/decisions",
@@ -78,12 +73,21 @@ def _read(path: str) -> str:
 
 def verify_architecture_surface() -> list[str]:
     errors: list[str] = []
-    docs_files = {path.name for path in (REPO_ROOT / "docs/architecture").iterdir() if path.is_file()}
-    agent_files = {path.name for path in (REPO_ROOT / ".agent/architecture").iterdir() if path.is_file()}
-    if docs_files != DOCS_ARCHITECTURE_FILES:
-        errors.append(f"docs/architecture file surface drifted: {sorted(docs_files)}")
-    if agent_files != AGENT_ARCHITECTURE_FILES:
-        errors.append(f".agent/architecture file surface drifted: {sorted(agent_files)}")
+
+    for relative_root in ["docs/architecture", ".agent/architecture"]:
+        root = REPO_ROOT / relative_root
+        files = {path.name for path in root.iterdir() if path.is_file()}
+        directories = [path.name for path in root.iterdir() if path.is_dir()]
+
+        if files != CANONICAL_ARCHITECTURE_FILES:
+            errors.append(
+                f"{relative_root} must contain only the four canonical files: "
+                f"expected {sorted(CANONICAL_ARCHITECTURE_FILES)}, got {sorted(files)}"
+            )
+        if directories:
+            errors.append(
+                f"{relative_root} must not contain subdirectories: {sorted(directories)}"
+            )
 
     for relative_path in RETIRED_FRONT_PATHS:
         if (REPO_ROOT / relative_path).exists():
@@ -93,21 +97,19 @@ def verify_architecture_surface() -> list[str]:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing architecture cleanup archive path: {relative_path}")
 
-    docs_md = REPO_ROOT / "docs/architecture/architecture.md"
-    agent_md = REPO_ROOT / ".agent/architecture/architecture.md"
-    docs_views = REPO_ROOT / "docs/architecture/architecture-views.md"
-    agent_views = REPO_ROOT / ".agent/architecture/architecture-views.md"
-    docs_html = REPO_ROOT / "docs/architecture/architecture.html"
-    agent_html = REPO_ROOT / ".agent/architecture/architecture.html"
-    if docs_md.read_bytes() != agent_md.read_bytes():
-        errors.append(".agent/architecture/architecture.md must match docs/architecture/architecture.md")
-    if docs_views.read_bytes() != agent_views.read_bytes():
-        errors.append(
-            ".agent/architecture/architecture-views.md must match "
-            "docs/architecture/architecture-views.md"
-        )
-    if docs_html.read_text(encoding="utf-8") != agent_html.read_text(encoding="utf-8"):
-        errors.append(".agent/architecture/architecture.html must match docs/architecture/architecture.html")
+    pairs = [
+        ("docs/architecture/README.md", ".agent/architecture/README.md"),
+        ("docs/architecture/architecture.md", ".agent/architecture/architecture.md"),
+        (
+            "docs/architecture/architecture-views.md",
+            ".agent/architecture/architecture-views.md",
+        ),
+        ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
+    ]
+    for formal, mirror in pairs:
+        if (REPO_ROOT / formal).read_bytes() != (REPO_ROOT / mirror).read_bytes():
+            errors.append(f"architecture mirror mismatch: {mirror} must match {formal}")
+
     return errors
 
 
@@ -155,11 +157,13 @@ def verify_architecture_markdown_contract() -> list[str]:
     ]
     for phrase in required_phrases:
         if phrase not in content:
-            errors.append(f"docs/architecture/architecture.md missing architecture contract phrase: {phrase}")
+            errors.append(
+                f"docs/architecture/architecture.md missing architecture contract phrase: {phrase}"
+            )
 
     mermaid_count = content.count("```mermaid")
     if mermaid_count < 2:
-        errors.append("docs/architecture/architecture.md must keep a few supporting Mermaid diagrams")
+        errors.append("docs/architecture/architecture.md must keep supporting Mermaid diagrams")
     if mermaid_count > 8:
         errors.append("docs/architecture/architecture.md must remain text-first")
     if len(content) < 20000:
@@ -182,7 +186,8 @@ def verify_architecture_views_contract() -> list[str]:
         later = [
             content.find(f"### {other}", section_start + len(marker))
             for other in CANONICAL_VIEWS
-            if other != title and content.find(f"### {other}", section_start + len(marker)) >= 0
+            if other != title
+            and content.find(f"### {other}", section_start + len(marker)) >= 0
         ]
         section_end = min(later) if later else len(content)
         section = content[section_start:section_end]
@@ -255,18 +260,16 @@ def verify_future_only_terms() -> list[str]:
         "不需要提前拆微服务",
         "不实施",
     ]
-    docs_to_scan = ["README.md", "docs/architecture/architecture.md"]
-
-    for relative_path in docs_to_scan:
-        content = _read(relative_path)
-        lines = content.splitlines()
+    for relative_path in ["README.md", "docs/architecture/architecture.md"]:
+        lines = _read(relative_path).splitlines()
         for index, line in enumerate(lines, start=1):
             if not any(term in line for term in future_terms):
                 continue
             window = "\n".join(lines[max(0, index - 12) : min(len(lines), index + 3)])
             if not any(marker in window for marker in allowed_context_markers):
                 errors.append(
-                    f"{relative_path}:{index} mentions future-only term outside explicit Future/not-Current context: {line.strip()}"
+                    f"{relative_path}:{index} mentions future-only term outside explicit "
+                    f"Future/not-Current context: {line.strip()}"
                 )
     return errors
 
@@ -277,20 +280,23 @@ def verify_no_local_download_paths() -> list[str]:
         relative_path = path.relative_to(REPO_ROOT).as_posix()
         if relative_path.startswith(".agent/local/"):
             continue
-        content = path.read_text(encoding="utf-8")
-        if "C:\\Users\\Administrator\\Downloads" in content:
+        if "C:\\Users\\Administrator\\Downloads" in path.read_text(encoding="utf-8"):
             errors.append(f"{relative_path} contains local Downloads path")
     return errors
 
 
 def main() -> int:
+    checks = [
+        verify_architecture_surface,
+        verify_architecture_markdown_contract,
+        verify_architecture_views_contract,
+        verify_architecture_html_contract,
+        verify_future_only_terms,
+        verify_no_local_download_paths,
+    ]
     errors: list[str] = []
-    errors.extend(verify_architecture_surface())
-    errors.extend(verify_architecture_markdown_contract())
-    errors.extend(verify_architecture_views_contract())
-    errors.extend(verify_architecture_html_contract())
-    errors.extend(verify_future_only_terms())
-    errors.extend(verify_no_local_download_paths())
+    for check in checks:
+        errors.extend(check())
 
     if errors:
         for error in errors:
