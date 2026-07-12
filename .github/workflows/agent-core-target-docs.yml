@@ -15,17 +15,19 @@ on:
       - ".agent/system.yaml"
       - ".agent/scripts/verify_agent_system.py"
       - ".agent/scripts/verify_doc_boundaries.py"
-      - "tools/scripts/refine_agent_core_target_architecture.py"
       - "tools/scripts/verify_agent_core_target_protocols.py"
       - "tools/scripts/verify_docs_entrypoints.py"
       - "tools/agent/render_architecture.py"
       - "tests/repo/test_agent_core_target_protocols.py"
       - "tests/repo/test_docs_entrypoints.py"
       - ".github/workflows/agent-core-target-docs.yml"
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: agent-core-target-docs-${{ github.event.pull_request.number || github.ref }}
@@ -33,49 +35,34 @@ concurrency:
 
 jobs:
   validate:
-    name: Refine and validate Agent Core target architecture
+    name: Validate refined Agent Core target architecture
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Checkout PR head
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Prepare validation logs
-        run: mkdir -p validation-logs
-
-      - name: Apply deterministic Agent Core refinement
-        run: |
-          set -o pipefail
-          python -m py_compile tools/scripts/refine_agent_core_target_architecture.py
-          python tools/scripts/refine_agent_core_target_architecture.py \
-            2>&1 | tee validation-logs/refinement.log
-          git diff --check -- '*.py' '*.yml' '*.yaml' \
-            2>&1 | tee validation-logs/diff-check.log
-          if ! git diff --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add docs/modules/06-agent-core-planning-control.md \
-              .agent/modules/06-agent-core-planning-control.md \
-              tools/scripts/verify_agent_core_target_protocols.py \
-              tests/repo/test_agent_core_target_protocols.py \
-              .agent/scripts/verify_agent_system.py
-            git commit -m "docs: refine Agent Core target architecture contracts"
-            git push origin HEAD:agent/refine-agent-core-target-architecture
-          fi
-
       - name: Install validation dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install pytest
+
+      - name: Prepare validation logs
+        run: mkdir -p validation-logs
+
+      - name: Verify executable and configuration patch formatting
+        run: |
+          set -o pipefail
+          git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml' \
+            2>&1 | tee validation-logs/diff-check.log
 
       - name: Compile validation scripts
         run: |
@@ -125,7 +112,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: agent-core-target-refinement-logs
+          name: agent-core-target-validation-logs
           path: validation-logs/
           if-no-files-found: error
           retention-days: 14
