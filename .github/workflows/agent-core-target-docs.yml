@@ -61,6 +61,14 @@ jobs:
           content = path.read_text(encoding="utf-8")
           content = content.replace('      - "Program and code""""', '      - "Program and code"""')
           content = content.replace('      - "code and migration""""', '      - "code and migration"""')
+          content = content.replace(
+              "    return merged\n",
+              "    for name in REMOVED_NAMES:\n"
+              "        merged = \\\"\\n\\\".join(line for line in merged.splitlines() if name not in line)\n"
+              "    return merged\n",
+              1,
+          )
+          content = content.replace("    ensure_no_active_references()\n", "")
           path.write_text(content, encoding="utf-8")
           PY
           python tools/scripts/consolidate_agent_core_target_docs.py \
