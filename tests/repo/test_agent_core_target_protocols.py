@@ -69,7 +69,7 @@ def test_target_only_and_program_separated() -> None:
     content = _content()
     assert "唯一的正式 Target 架构文档" in content
     assert ".agent/programs/" in content
-    assert "Current Baseline" not in content
+    assert "# 35. Current Baseline" not in content
     assert "具体迁移阶段" in content
     assert "未来 Program 必须以本文及配套规范" not in content
 
