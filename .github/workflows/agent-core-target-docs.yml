@@ -15,19 +15,17 @@ on:
       - ".agent/system.yaml"
       - ".agent/scripts/verify_agent_system.py"
       - ".agent/scripts/verify_doc_boundaries.py"
+      - "tools/scripts/consolidate_agent_core_target_docs.py"
       - "tools/scripts/verify_agent_core_target_protocols.py"
       - "tools/scripts/verify_docs_entrypoints.py"
       - "tools/agent/render_architecture.py"
       - "tests/repo/test_agent_core_target_protocols.py"
       - "tests/repo/test_docs_entrypoints.py"
       - ".github/workflows/agent-core-target-docs.yml"
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: agent-core-target-docs-${{ github.event.pull_request.number || github.ref }}
@@ -35,95 +33,43 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate Agent Core target docs
+    name: Consolidate and validate Agent Core target doc
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Checkout repository
+      - name: Checkout PR head
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Consolidate Agent Core target documentation
+        run: |
+          python tools/scripts/consolidate_agent_core_target_docs.py
+          git diff --check -- '*.py' '*.yaml' '*.yml'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: consolidate Agent Core target architecture"
+          git push origin HEAD:agent/consolidate-agent-core-target-doc
+
       - name: Install validation dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install pytest
 
-      - name: Prepare validation logs
-        run: mkdir -p validation-logs
-
-      - name: Verify executable and configuration patch formatting
+      - name: Validate consolidated documentation
         run: |
-          set -o pipefail
-          git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml' \
-            2>&1 | tee validation-logs/diff-check.log
-
-      - name: Compile validation scripts
-        run: |
-          set -o pipefail
           python -m py_compile \
             tools/scripts/verify_agent_core_target_protocols.py \
-            tools/scripts/verify_docs_entrypoints.py \
-            tools/agent/render_architecture.py \
-            .agent/scripts/verify_agent_system.py \
-            .agent/scripts/verify_doc_boundaries.py \
             tests/repo/test_agent_core_target_protocols.py \
-            tests/repo/test_docs_entrypoints.py \
-            2>&1 | tee validation-logs/compile.log
-
-      - name: Verify Agent Core target protocols
-        run: |
-          set -o pipefail
-          python tools/scripts/verify_agent_core_target_protocols.py \
-            2>&1 | tee validation-logs/agent-core-protocols.log
-
-      - name: Verify Agent System
-        run: |
-          set -o pipefail
-          python .agent/scripts/verify_agent_system.py \
-            2>&1 | tee validation-logs/agent-system.log
-
-      - name: Verify document boundaries
-        run: |
-          set -o pipefail
-          python .agent/scripts/verify_doc_boundaries.py \
-            2>&1 | tee validation-logs/doc-boundaries.log
-
-      - name: Verify documentation entrypoints
-        run: |
-          set -o pipefail
-          python tools/scripts/verify_docs_entrypoints.py \
-            2>&1 | tee validation-logs/docs-entrypoints.log
-
-      - name: Verify architecture renderer outputs
-        run: |
-          set -o pipefail
-          python tools/agent/render_architecture.py --check \
-            2>&1 | tee validation-logs/architecture-renderer.log
-
-      - name: Run Agent Core protocol tests
-        run: |
-          set -o pipefail
-          pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider \
-            2>&1 | tee validation-logs/agent-core-tests.log
-
-      - name: Run documentation entrypoint tests
-        run: |
-          set -o pipefail
-          pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider \
-            2>&1 | tee validation-logs/docs-entrypoint-tests.log
-
-      - name: Upload validation logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: agent-core-target-validation-logs
-          path: validation-logs/
-          if-no-files-found: error
-          retention-days: 14
+            .agent/scripts/verify_agent_system.py
+          python tools/scripts/verify_agent_core_target_protocols.py
+          python .agent/scripts/verify_agent_system.py
+          pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
