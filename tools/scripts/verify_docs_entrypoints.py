@@ -33,8 +33,6 @@ REQUIRED_MODULE_DOCS = {
     "03-knowledge-agentic-graphrag.md",
     "05-memory-context.md",
     "06-agent-core-planning-control.md",
-    "06-agent-core-control-protocols.md",
-    "06-agent-core-consistency-lifecycle-protocols.md",
     "07-capability-skill.md",
     "10-observability-eval.md",
 }
@@ -48,8 +46,6 @@ REQUIRED_FRONT_PATHS = [
     "docs/architecture/architecture.html",
     "docs/modules/README.md",
     "docs/modules/06-agent-core-planning-control.md",
-    "docs/modules/06-agent-core-control-protocols.md",
-    "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
     "docs/status/production-readiness.md",
     "docs/decisions/README.md",
     "docs/governance/repo-ownership-matrix.md",
@@ -59,8 +55,6 @@ REQUIRED_FRONT_PATHS = [
     ".agent/architecture/architecture.html",
     ".agent/modules/README.md",
     ".agent/modules/06-agent-core-planning-control.md",
-    ".agent/modules/06-agent-core-control-protocols.md",
-    ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md",
     "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
 ]
 
@@ -321,12 +315,8 @@ def verify_architecture_mirrors() -> list[str]:
             ".agent/modules/06-agent-core-planning-control.md",
         ),
         (
-            "docs/modules/06-agent-core-control-protocols.md",
-            ".agent/modules/06-agent-core-control-protocols.md",
         ),
         (
-            "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
-            ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md",
         ),
     ]
 

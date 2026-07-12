@@ -351,16 +351,14 @@ index_version
 
 Agent Core 是 Zuno 的 **Single Controller Agent Runtime**。它把目标、计划、执行、等待、恢复、质量判断和最终发布组织成一个不可绕过的受治理闭环。
 
-完整 Target 由三份模块规范共同定义：
+完整 Target 由一份模块架构文档统一定义：
 
 ```text
 docs/modules/06-agent-core-planning-control.md
-    问题、概念架构、完整运行流程、目标代码和持久化规格。
+    统一包含概念架构、控制协议、一致性协议、目标代码、数据库和测试规格。
 
-docs/modules/06-agent-core-control-protocols.md
     架构不变量、状态机、DAG、并发、Interrupt、Signal、副作用、Finalization、Failure 与 Budget。
 
-docs/modules/06-agent-core-consistency-lifecycle-protocols.md
     TaskContract、GoalVersion、控制命令仲裁、Domain/Checkpoint、ResultValidity、Event、Artifact、Reconciler 与时间语义。
 ```
 

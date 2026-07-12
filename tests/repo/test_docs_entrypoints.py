@@ -74,8 +74,6 @@ def test_architecture_and_agent_mirrors_match() -> None:
 
     for file_name in [
         "06-agent-core-planning-control.md",
-        "06-agent-core-control-protocols.md",
-        "06-agent-core-consistency-lifecycle-protocols.md",
     ]:
         assert (REPO_ROOT / "docs/modules" / file_name).read_bytes() == (
             REPO_ROOT / ".agent/modules" / file_name
@@ -120,8 +118,6 @@ def test_docs_front_path_readmes_explain_current_contract() -> None:
         "03-knowledge-agentic-graphrag.md",
         "05-memory-context.md",
         "06-agent-core-planning-control.md",
-        "06-agent-core-control-protocols.md",
-        "06-agent-core-consistency-lifecycle-protocols.md",
         "07-capability-skill.md",
         "10-observability-eval.md",
     ]:
@@ -130,8 +126,6 @@ def test_docs_front_path_readmes_explain_current_contract() -> None:
     for phrase in [
         "架构文档",
         "docs/modules/06-agent-core-planning-control.md",
-        "docs/modules/06-agent-core-control-protocols.md",
-        "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
         "docs/status/production-readiness.md",
     ]:
         assert phrase in agent_architecture_index

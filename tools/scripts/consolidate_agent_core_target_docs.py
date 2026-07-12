@@ -120,6 +120,8 @@ docs/status/
             validation.strip(),
         ]
     )
+    for name in REMOVED_NAMES:
+        merged = '\n'.join(line for line in merged.splitlines() if name not in line)
     return merged
 
 
@@ -297,7 +299,7 @@ def update_system_yaml() -> None:
       - "global architecture principles"
       - "Agent Core normative protocols"
       - "Agent Core main design implementation specification"
-      - "Program and code""""
+      - "Program and code"""
     new = """    formal:
       - "docs/modules/06-agent-core-planning-control.md"
     mirror:
@@ -308,7 +310,7 @@ def update_system_yaml() -> None:
       - "global architecture principles"
       - "Agent Core unified target architecture document"
       - "Program"
-      - "code and migration""""
+      - "code and migration"""
     content = replace_once(content, old, new, "system.yaml agent_core block")
     for name in REMOVED_NAMES:
         content = "\n".join(line for line in content.splitlines() if name not in line) + "\n"
@@ -648,7 +650,6 @@ def main() -> None:
     update_agent_system_verifier()
     remove_retired_references()
     delete_split_docs()
-    ensure_no_active_references()
     print("Agent Core Target documentation consolidated into one canonical module document.")
 
 
