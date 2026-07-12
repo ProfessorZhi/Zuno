@@ -37,6 +37,14 @@ docs/modules/06-agent-core-control-protocols.md
 docs/modules/06-agent-core-consistency-lifecycle-protocols.md
 ```
 
+对应 Agent 镜像：
+
+```text
+.agent/modules/06-agent-core-planning-control.md
+.agent/modules/06-agent-core-control-protocols.md
+.agent/modules/06-agent-core-consistency-lifecycle-protocols.md
+```
+
 Current / Gap 事实源：`docs/status/production-readiness.md`。
 
 禁止在 architecture 目录新增模块专题、状态报告、ADR、Program、实施计划、附件目录或其他文件。
