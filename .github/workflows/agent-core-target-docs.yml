@@ -12,6 +12,7 @@ on:
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/scripts/verify_agent_system.py"
+      - ".agent/scripts/verify_doc_boundaries.py"
       - "tools/scripts/verify_agent_core_target_protocols.py"
       - "tools/scripts/verify_docs_entrypoints.py"
       - "tools/scripts/verify_repo_structure.py"
@@ -68,22 +69,30 @@ jobs:
       - name: Verify Agent Core target protocols
         run: python tools/scripts/verify_agent_core_target_protocols.py
 
-      - name: Verify Agent System and document boundaries
-        run: |
-          python .agent/scripts/verify_agent_system.py
-          python .agent/scripts/verify_doc_boundaries.py
+      - name: Verify Agent System
+        if: always()
+        run: python .agent/scripts/verify_agent_system.py
 
-      - name: Verify repository and documentation entrypoints
-        run: |
-          python tools/scripts/verify_repo_structure.py
-          python tools/scripts/verify_docs_entrypoints.py
+      - name: Verify document boundaries
+        if: always()
+        run: python .agent/scripts/verify_doc_boundaries.py
+
+      - name: Verify repository structure
+        if: always()
+        run: python tools/scripts/verify_repo_structure.py
+
+      - name: Verify documentation entrypoints
+        if: always()
+        run: python tools/scripts/verify_docs_entrypoints.py
 
       - name: Verify architecture renderer outputs
+        if: always()
         run: python tools/agent/render_architecture.py --check
 
-      - name: Run focused repository tests
-        run: |
-          pytest -q \
-            tests/repo/test_agent_core_target_protocols.py \
-            tests/repo/test_docs_entrypoints.py \
-            -p no:cacheprovider
+      - name: Run Agent Core protocol tests
+        if: always()
+        run: pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+
+      - name: Run documentation entrypoint tests
+        if: always()
+        run: pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
