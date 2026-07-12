@@ -49,8 +49,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Prepare logs
+        run: mkdir -p validation-logs
+
       - name: Consolidate Agent Core target documentation
         run: |
+          set -o pipefail
           python - <<'PY'
           from pathlib import Path
           path = Path("tools/scripts/consolidate_agent_core_target_docs.py")
@@ -59,8 +63,10 @@ jobs:
           content = content.replace('      - "code and migration""""', '      - "code and migration"""')
           path.write_text(content, encoding="utf-8")
           PY
-          python tools/scripts/consolidate_agent_core_target_docs.py
-          git diff --check -- '*.py' '*.yaml' '*.yml'
+          python tools/scripts/consolidate_agent_core_target_docs.py \
+            2>&1 | tee validation-logs/consolidation.log
+          git diff --check -- '*.py' '*.yaml' '*.yml' \
+            2>&1 | tee validation-logs/diff-check.log
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -74,10 +80,24 @@ jobs:
 
       - name: Validate consolidated documentation
         run: |
+          set -o pipefail
           python -m py_compile \
             tools/scripts/verify_agent_core_target_protocols.py \
             tests/repo/test_agent_core_target_protocols.py \
-            .agent/scripts/verify_agent_system.py
-          python tools/scripts/verify_agent_core_target_protocols.py
-          python .agent/scripts/verify_agent_system.py
-          pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+            .agent/scripts/verify_agent_system.py \
+            2>&1 | tee validation-logs/compile.log
+          python tools/scripts/verify_agent_core_target_protocols.py \
+            2>&1 | tee validation-logs/protocols.log
+          python .agent/scripts/verify_agent_system.py \
+            2>&1 | tee validation-logs/agent-system.log
+          pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider \
+            2>&1 | tee validation-logs/tests.log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-core-consolidation-logs
+          path: validation-logs/
+          if-no-files-found: error
+          retention-days: 7
