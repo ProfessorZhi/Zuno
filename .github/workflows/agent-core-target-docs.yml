@@ -51,6 +51,14 @@ jobs:
 
       - name: Consolidate Agent Core target documentation
         run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("tools/scripts/consolidate_agent_core_target_docs.py")
+          content = path.read_text(encoding="utf-8")
+          content = content.replace('      - "Program and code""""', '      - "Program and code"""')
+          content = content.replace('      - "code and migration""""', '      - "code and migration"""')
+          path.write_text(content, encoding="utf-8")
+          PY
           python tools/scripts/consolidate_agent_core_target_docs.py
           git diff --check -- '*.py' '*.yaml' '*.yml'
           git config user.name "github-actions[bot]"
