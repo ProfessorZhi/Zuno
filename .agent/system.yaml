@@ -1,6 +1,6 @@
 version: 1
 
-purpose: "Route Zuno tasks to local skills, templates, docs sync, and verification."
+purpose: "Route Zuno tasks to local skills, templates, Target docs, Programs, and verification."
 
 system_identity:
   name: "Zuno Local Agent Skill System"
@@ -20,41 +20,28 @@ program_rules:
   current_program_root: ".agent/programs"
   phase_filename_pattern: "PHASE[0-9][0-9]_<name>.md"
   new_program_first_phase: "PHASE01"
-  replaced_program_policy: "remove old active phase files from .agent/programs; archive evidence under docs/history/programs"
+  replaced_program_policy: "remove replaced active phase files; archive evidence under docs/history/programs"
 
 work_modes:
-  runtime_boundary: "parallel agents are workflow execution helpers; Zuno runtime target remains Single GeneralAgent"
+  runtime_boundary: "parallel agents are engineering workflow helpers; Zuno product runtime target remains a Single Controller Agent Runtime"
   branch_prefix: "codex/"
   persistent_thread_slots: true
-  task_isolation_unit: "worktree + codex branch, not thread title"
+  task_isolation_unit: "worktree + branch, not thread title"
   main_thread_can_self_execute: true
   main_thread_can_delegate: true
   prompt_only_is_not_goal_mode: true
-  prompt_only_phrase: "提示词目标模式不等于 Codex UI 目标模式"
   hangup_mode:
     main_thread_goal_mode: true
-    description: "主线程作为真正的 Codex UI 目标模式端到端执行计划、实现、验证、提交和推送"
     allow_multi_agent_inside_main_thread: true
     verification_owner: "main thread"
   multi_thread_mode:
     coordinator_thread_goal_mode: true
-    coordinator_role: "prepare coarse-grained child prompts, branch scopes, acceptance gates, progress tracking, diff review, integrated verification, and merge"
+    coordinator_role: "prepare child prompts, scopes, acceptance gates, progress tracking, diff review, integrated verification, and merge"
     child_thread_goal_mode: "user-created Codex UI goal mode thread required"
-    user_manual_goal_thread_creation: true
-    child_threads_are_reusable_slots: true
     require_fresh_or_confirmed_worktree_branch_per_task: true
     prefer_reuse_existing_thread_slots: true
-    create_new_threads_when_no_reusable_slot: true
-    rename_thread_after_assignment: true
-    child_prompt_must_default_multi_agent: true
     thread_prompt_root: ".agent/programs/thread-prompts"
-    thread_prompts_separate_from_phase_files: true
-    thread_prompts_replace_on_next_plan: true
-    cleanup_old_thread_prompts_by_default: true
-    archive_thread_prompts_only_when_requested: true
-    temporary_thread_execution_plans_default_cleanup: true
     coarse_grained_child_tasks: true
-    child_threads_allow_multi_agent: true
     require_disjoint_write_scope: true
     require_commit_and_push_before_merge: true
     merge_owner: "main coordinator thread"
@@ -80,9 +67,24 @@ architecture_directory_contract:
 module_document_contract:
   formal_index: "docs/modules/README.md"
   agent_index: ".agent/modules/README.md"
-  agent_core_formal: "docs/modules/06-agent-core-planning-control.md"
-  agent_core_mirror: ".agent/modules/06-agent-core-planning-control.md"
   status_truth: "docs/status/production-readiness.md"
+  agent_core:
+    formal:
+      - "docs/modules/06-agent-core-planning-control.md"
+      - "docs/modules/06-agent-core-control-protocols.md"
+      - "docs/modules/06-agent-core-consistency-lifecycle-protocols.md"
+    mirror:
+      - ".agent/modules/06-agent-core-planning-control.md"
+      - ".agent/modules/06-agent-core-control-protocols.md"
+      - ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md"
+    target_only: true
+    normative_order:
+      - "global architecture principles"
+      - "Agent Core normative protocols"
+      - "Agent Core main design implementation specification"
+      - "Program and code"
+    verifier: "python tools/scripts/verify_agent_core_target_protocols.py"
+    test: "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
 
 skill_file_contract:
   recommended_sections:
@@ -162,6 +164,8 @@ skill_routes:
       - "docs/modules/03-knowledge-agentic-graphrag.md"
       - "docs/modules/05-memory-context.md"
       - "docs/modules/06-agent-core-planning-control.md"
+      - "docs/modules/06-agent-core-control-protocols.md"
+      - "docs/modules/06-agent-core-consistency-lifecycle-protocols.md"
       - "docs/modules/07-capability-skill.md"
       - "docs/modules/10-observability-eval.md"
       - "docs/status/production-readiness.md"
@@ -175,6 +179,8 @@ skill_routes:
       - ".agent/architecture/architecture.html"
       - ".agent/modules/README.md"
       - ".agent/modules/06-agent-core-planning-control.md"
+      - ".agent/modules/06-agent-core-control-protocols.md"
+      - ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md"
       - ".agent/references/docs-map.md"
       - ".agent/references/architecture-docs-map.md"
       - ".agent/references/documentation-governance.md"
@@ -192,9 +198,10 @@ skill_routes:
       - "python tools/scripts/verify_docs_entrypoints.py"
       - "python tools/scripts/verify_current_program.py"
       - "python tools/scripts/verify_repo_structure.py"
+      - "python tools/scripts/verify_agent_core_target_protocols.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"
-      - "pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider"
+      - "pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
 
   - name: "backend-agent-runtime"
     match:
@@ -215,14 +222,19 @@ skill_routes:
       - "docs/architecture/architecture.md"
       - "docs/modules/05-memory-context.md"
       - "docs/modules/06-agent-core-planning-control.md"
+      - "docs/modules/06-agent-core-control-protocols.md"
+      - "docs/modules/06-agent-core-consistency-lifecycle-protocols.md"
       - "docs/status/production-readiness.md"
       - ".agent/architecture/architecture.md"
       - ".agent/modules/06-agent-core-planning-control.md"
+      - ".agent/modules/06-agent-core-control-protocols.md"
+      - ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md"
       - ".agent/references/code-map.md"
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
     verify:
-      - "pytest -q tests/agent/test_agent_layer_surfaces.py tests/agent/test_generalagent_context_memory_runtime.py tests/agent/test_general_agent_project_query_runtime.py tests/agent/test_hooks_evidence_trace_artifacts.py tests/evals/test_multihop_eval_real_runtime_runner.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider"
+      - "python tools/scripts/verify_agent_core_target_protocols.py"
+      - "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
       - "python .agent/scripts/verify_module_boundaries.py"
 
   - name: "capability-tool-retrieval"
@@ -243,7 +255,7 @@ skill_routes:
       - ".agent/architecture/architecture.md"
       - ".agent/references/code-map.md"
     verify:
-      - "pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_registry.py tests/agent/test_capability_layer_surfaces.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider"
+      - "pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_registry.py -p no:cacheprovider"
 
   - name: "knowledge-graphrag-retrieval"
     match:
@@ -251,9 +263,6 @@ skill_routes:
         - "src/backend/zuno/services/rag/**"
         - "src/backend/zuno/services/retrieval/**"
         - "src/backend/zuno/services/graphrag/**"
-        - "src/backend/zuno/platform/services/retrieval/**"
-        - "src/backend/zuno/platform/services/graphrag/**"
-        - "src/backend/zuno/platform/services/application/knowledge/**"
         - "src/backend/zuno/knowledge/**"
     skills:
       - ".agent/references/runtime-call-chain.md"
@@ -272,7 +281,7 @@ skill_routes:
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
     verify:
-      - "pytest -q tests/agent/test_hooks_evidence_trace_artifacts.py tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/agent/test_knowledge_layer_surfaces.py tests/retrieval/test_enhanced_retrieval_composition.py tests/graphrag/test_graphrag_project_contracts.py -p no:cacheprovider"
+      - "pytest -q tests/agent/test_knowledge_graphrag_runtime_contracts.py -p no:cacheprovider"
 
   - name: "platform-foundation"
     match:
@@ -293,12 +302,12 @@ skill_routes:
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"
     verify:
-      - "pytest -q tests/agent/test_platform_layer_surfaces.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider"
+      - "pytest -q tests/agent/test_platform_layer_surfaces.py tests/repo/test_backend_facade_layers.py -p no:cacheprovider"
 
 stop_conditions:
   - "public API field rename"
   - "database schema change"
   - "dependency upgrade"
-  - "Domain Pack restored as active public mainline"
-  - "Target behavior promoted to Current without code and test evidence"
-  - "verification requires edits outside the authorized task scope"
+  - "security boundary change"
+  - "Target behavior promoted to Current without evidence"
+  - "architecture principle changed by an implementation task"

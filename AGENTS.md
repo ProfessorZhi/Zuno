@@ -86,10 +86,18 @@ docs/architecture/
 - `docs/modules/README.md`：十一个逻辑模块入口。
 - `docs/modules/<number>-<module>.md`：单个模块实施级设计。
 - `.agent/modules/`：需要被 Agent System 高频读取的模块镜像。
-- Agent Core 正式文档：`docs/modules/06-agent-core-planning-control.md`。
-- Agent Core 镜像：`.agent/modules/06-agent-core-planning-control.md`。
+- Agent Core 正式文档集：
+  - `docs/modules/06-agent-core-planning-control.md`
+  - `docs/modules/06-agent-core-control-protocols.md`
+  - `docs/modules/06-agent-core-consistency-lifecycle-protocols.md`
+- Agent Core 镜像集：
+  - `.agent/modules/06-agent-core-planning-control.md`
+  - `.agent/modules/06-agent-core-control-protocols.md`
+  - `.agent/modules/06-agent-core-consistency-lifecycle-protocols.md`
 
-模块文档可以很详细，但必须服从总架构的 Owner 边界，不得把 Target 冒充为 Current。
+Agent Core 规范优先级：全局架构原则 → 规范性协议 → 主设计实施规格 → Program 与代码。
+
+模块文档可以很详细，但必须服从总架构的 Owner 边界，不得把 Target 冒充为 Current。Agent Core 三份文档只描述 Target，不承载 Current Baseline 或具体迁移计划。
 
 ### 状态、决策和治理
 
@@ -111,9 +119,10 @@ docs/architecture/
 模块变化时：
 
 1. 更新对应 `docs/modules/<module>.md`；
-2. 若存在 `.agent/modules` 镜像，同步镜像；
+2. 若存在 `.agent/modules` 镜像，同步全部镜像；
 3. 更新 `docs/status/production-readiness.md` 只能写已经由实现和证据证明的 Current 变化；
-4. 更新测试和验证器。
+4. 更新测试和验证器；
+5. Agent Core 变更运行 `python tools/scripts/verify_agent_core_target_protocols.py`。
 
 总架构 Markdown 必须比 HTML 更充实；HTML 偏图形展示。禁止把三十张详细图重新堆回 `architecture.md`。
 
@@ -153,6 +162,8 @@ docs/architecture/
 21. `.agent/references/current-target-future-rules.md`
 22. `.agent/references/verification-map.md`
 
+Agent Core 任务必须同时读取主设计、控制协议和一致性协议。
+
 实现任务在读完相关文档后再读代码。不要只凭文档推断 Runtime 行为。
 
 ## 任务路由
@@ -161,7 +172,7 @@ docs/architecture/
 - 文档、`.agent`、History、README → `.agent/references/workflow.md` 的文档维护流程。
 - 目录移动、删除、归档、忽略规则和缓存清理 → 仓库卫生流程。
 - `apps/web` → `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
-- `src/backend/zuno/agent/**` → Agent Core 模块文档、Runtime Call Chain 和 Code Map。
+- `src/backend/zuno/agent/**` → Agent Core 三份模块文档、Runtime Call Chain 和 Code Map。
 - `src/backend/zuno/knowledge/**` → Knowledge 模块文档和 Retrieval Reference。
 - `src/backend/zuno/memory/**` → Memory 模块文档。
 - `src/backend/zuno/capability/**` → Capability / Skill 模块文档。
@@ -212,9 +223,10 @@ git diff --check
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
+python tools/scripts/verify_agent_core_target_protocols.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
-pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
 ```
 
 ## Agent Workflow Self-Maintenance

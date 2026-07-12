@@ -75,69 +75,67 @@ def validate_design(content: str) -> list[str]:
     errors: list[str] = []
     required_sections = [
         "# Zuno Target Architecture Atlas",
-        "# 1. 项目定位：轻量实现，成熟设计",
-        "# 2. 总体架构",
-        "# 3. 完整 Agent 闭环",
-        "# 4. 十一模块目标设计",
-        "## 4.1 Product Surface",
-        "## 4.2 Input",
-        "## 4.3 Knowledge：Agentic GraphRAG",
-        "## 4.4 Model Gateway",
-        "## 4.5 Memory 与 Context 管理",
-        "## 4.6 Agent Core / Planning & Control",
-        "## 4.7 Capability",
-        "## 4.8 Tool Runtime",
-        "## 4.9 Security",
-        "## 4.10 Observability & Eval",
-        "## 4.11 Infrastructure",
-        "# 5. 模块间核心 contract",
-        "# 9. Target completion criteria",
-        "# 10. Architecture Visual Atlas",
+        "# 1. 项目定位与架构目标",
+        "# 2. 质量属性与架构约束",
+        "# 3. 架构视图总览",
+        "# 4. 全局事实源与数据所有权",
+        "# 5. Agent Core / Planning & Control",
+        "# 6. Input / Document Ingestion",
+        "# 7. Knowledge / Agentic GraphRAG",
+        "# 8. Memory & Context",
+        "# 9. Model Gateway",
+        "# 10. Capability / Skill",
+        "# 11. Tool Runtime",
+        "# 12. Product Surface",
+        "# 13. Security & Governance",
+        "# 14. Observability & Eval",
+        "# 15. Infrastructure",
+        "# 16. 关键端到端运行序列",
+        "# 19. 测试与验证架构",
+        "# 22. Target Completion Criteria",
     ]
     for section in required_sections:
         if section not in content:
-            errors.append(f"architecture.md missing text-first design section: {section}")
+            errors.append(f"architecture.md missing canonical target section: {section}")
 
     required_terms = [
-        "十一逻辑能力模块",
+        "十一逻辑模块",
         "六个物理运行域",
-        "Single Controller Agent",
-        "TaskQueuePort",
-        "RabbitMQAdapter",
-        "LangSmithTraceSink",
-        "Agentic GraphRAG",
+        "Single Controller Agent Runtime",
+        "AgentRunGraph",
+        "Plan DAG",
+        "StepExecutionGraph",
+        "TaskContract",
+        "GoalVersion",
+        "FinalCandidate",
+        "Publication",
+        "DeliveryReceipt",
+        "PostgreSQL",
+        "RabbitMQ",
+        "Milvus",
+        "Neo4j",
         "EvidenceLedger",
         "ContextPack",
-        "Plan-and-Execute",
-        "ReAct",
-        "Reflection",
-        "Replan",
-        "Reflexion",
-        "Capability Registry",
         "MCP",
         "ToolCallIntent",
-        "NormalizedToolObservation",
-        "GateDecision",
         "Recall@K",
-        "token",
-        "cost",
         "implementation available",
         "measurement blocked",
         "quality not yet proven",
         "architecture-views.md",
+        "docs/status/production-readiness.md",
     ]
     for term in required_terms:
         if term not in content:
-            errors.append(f"architecture.md missing required design term: {term}")
+            errors.append(f"architecture.md missing required target term: {term}")
 
     mermaid_count = content.count("```mermaid")
     if mermaid_count < 2:
-        errors.append("architecture.md should retain a small number of supporting Mermaid diagrams")
+        errors.append("architecture.md should retain supporting Mermaid diagrams")
     if mermaid_count > 8:
         errors.append("architecture.md must stay text-first; move detailed diagrams to architecture-views.md")
-
     if len(content) < 20000:
-        errors.append("architecture.md is too short for the normative text-first target design")
+        errors.append("architecture.md is too short for the normative target design")
     return errors
 
 

@@ -1,61 +1,93 @@
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/modules/06-agent-core-control-protocols.md"
-MIRROR = REPO_ROOT / ".agent/modules/06-agent-core-control-protocols.md"
+
+FORMAL_MIRROR_PAIRS = [
+    (
+        REPO_ROOT / "docs/modules/06-agent-core-planning-control.md",
+        REPO_ROOT / ".agent/modules/06-agent-core-planning-control.md",
+    ),
+    (
+        REPO_ROOT / "docs/modules/06-agent-core-control-protocols.md",
+        REPO_ROOT / ".agent/modules/06-agent-core-control-protocols.md",
+    ),
+    (
+        REPO_ROOT / "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
+        REPO_ROOT / ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md",
+    ),
+]
+
 DOCS_INDEX = REPO_ROOT / "docs/modules/README.md"
 AGENT_INDEX = REPO_ROOT / ".agent/modules/README.md"
+AGENTS = REPO_ROOT / "AGENTS.md"
+SYSTEM_YAML = REPO_ROOT / ".agent/system.yaml"
 
-REQUIRED_SECTIONS = [
-    "# 3. 架构不变量",
-    "# 4. 三套核心状态机",
-    "# 5. DAG 依赖、条件、Disposition 与 Join",
-    "# 6. Dispatch、Reducer、Fencing 与 Replan Barrier",
-    "# 7. Interrupt、Signal 与 Side Effect Protocol",
-    "# 8. AnswerPolicy、Final Gate 与 Publication",
-    "# 9. Failure Taxonomy、Budget 与 No-progress",
-    "# 10. Cross-module Ownership 与 Contract Versioning",
-]
-
-REQUIRED_TERMS = [
-    "INV-AGENT-001",
-    "INV-AGENT-024",
-    "AgentRun 状态机",
-    "PlanVersion 状态机",
-    "StepRun 状态机",
-    "ALL_SUCCESS",
-    "StepDisposition",
-    "PlanLivenessFinding",
-    "JoinPolicy",
+MAIN_REQUIRED = [
+    "Single Controller Agent Runtime",
+    "AgentRunGraph",
+    "StepExecutionGraph",
+    "TaskContract",
+    "GoalVersion",
+    "pending_interrupt_refs",
+    "create_final_candidate",
+    "prepare_publication",
+    "DeliveryReceipt",
     "controller_epoch",
     "execution_epoch",
-    "BranchResultRef",
-    "Replan Barrier",
-    "PreparedAction",
-    "IdempotencyClaim",
-    "UNKNOWN 与 Reconcile",
-    "Final Candidate",
-    "Publication Contract",
-    "FailureClass",
-    "Budget Reservation",
-    "NO_PROGRESS",
-    "事实 Ownership Matrix",
-    "Contract Envelope",
-    "Checkpoint 与领域事实边界",
-    "design available",
-    "contract-ready",
-    "program-ready",
+    "domain_generation",
+    "checkpoint_generation",
+    "Result Validity",
+    "Orphan Recovery",
+    "时间语义",
+    "agent_prepared_actions",
+    "agent_publications",
+    "agent_delivery_receipts",
 ]
 
-FORBIDDEN_TARGET_SCOPE_TERMS = [
-    "GeneralAgent",
-    "Legacy Adapter",
-    "Shadow 模式",
-    "Canary",
+CONTROL_REQUIRED = [
+    "# 2. 架构不变量",
+    "# 3. AgentRun 状态机",
+    "WAITING_CONDITION",
+    "CANCELLING",
+    "# 4. PlanVersion 状态机",
+    "# 5. StepRun 与 ActionRun 状态机",
+    "# 6. DAG、Condition 与 Disposition",
+    "# 8. Dispatch、Fencing 与 Reducer",
+    "# 9. Replan Barrier",
+    "一个 Run 可以同时存在多个 Pending Interrupt",
+    "PreparedAction",
+    "FinalCandidate",
+    "Publication",
+    "Failure Taxonomy",
+    "Cross-module Ownership",
+]
+
+CONSISTENCY_REQUIRED = [
+    "# 1. TaskContract、GoalVersion 与 Objective",
+    "# 2. 控制命令仲裁与 Policy Precedence",
+    "# 3. Domain Store 与 LangGraph Checkpoint 一致性",
+    "# 4. ResultValidity 与污染传播",
+    "# 5. Domain Event、Outbox 与交付语义",
+    "# 6. Artifact 生命周期",
+    "# 7. Orphan Recovery 与后台 Reconciler",
+    "# 8. 时间语义",
+    "RecoveryWatermark",
+    "PublicationCorrectionDecision",
+    "RunOrphanReconciler",
+    "数据库时间",
+]
+
+FORBIDDEN_TARGET_PATTERNS = [
+    "# 35. Current Baseline",
+    "# 36. 实现阶段",
+    "pending_interrupt_id: str | None",
+    "pending_interrupt_id UUID",
+    "同一 Run 默认只允许一个 PENDING Interrupt",
 ]
 
 
@@ -66,52 +98,92 @@ def _read(path: Path) -> str:
 def verify() -> list[str]:
     errors: list[str] = []
 
-    for path in [FORMAL, MIRROR, DOCS_INDEX, AGENT_INDEX]:
+    required_paths = [path for pair in FORMAL_MIRROR_PAIRS for path in pair]
+    required_paths.extend([DOCS_INDEX, AGENT_INDEX, AGENTS, SYSTEM_YAML])
+
+    for path in required_paths:
         if not path.exists():
-            errors.append(f"missing Agent Core target protocol path: {path.relative_to(REPO_ROOT)}")
+            errors.append(f"missing Agent Core target path: {path.relative_to(REPO_ROOT)}")
 
     if errors:
         return errors
 
-    formal = _read(FORMAL)
-    mirror = _read(MIRROR)
-    docs_index = _read(DOCS_INDEX)
-    agent_index = _read(AGENT_INDEX)
+    for formal, mirror in FORMAL_MIRROR_PAIRS:
+        if formal.read_bytes() != mirror.read_bytes():
+            errors.append(
+                f"mirror mismatch: {mirror.relative_to(REPO_ROOT)} must match "
+                f"{formal.relative_to(REPO_ROOT)}"
+            )
 
-    if formal != mirror:
-        errors.append("Agent Core control protocol mirror must be byte-identical to the formal document")
+    main = _read(FORMAL_MIRROR_PAIRS[0][0])
+    control = _read(FORMAL_MIRROR_PAIRS[1][0])
+    consistency = _read(FORMAL_MIRROR_PAIRS[2][0])
+    indexes = {
+        "docs/modules/README.md": _read(DOCS_INDEX),
+        ".agent/modules/README.md": _read(AGENT_INDEX),
+        "AGENTS.md": _read(AGENTS),
+        ".agent/system.yaml": _read(SYSTEM_YAML),
+    }
 
-    if "status: normative-target-protocols" not in formal:
-        errors.append("Agent Core control protocol must declare normative-target-protocols status")
+    if "本文只描述理想目标架构" not in main:
+        errors.append("Agent Core main design must explicitly state Target-only scope")
+    if "本文只定义 Target" not in control:
+        errors.append("Agent Core control protocol must explicitly state Target-only scope")
+    if "本文只描述理想 Target" not in consistency:
+        errors.append("Agent Core consistency protocol must explicitly state Target-only scope")
 
-    if "本文只定义 Target" not in formal:
-        errors.append("Agent Core control protocol must explicitly state its Target-only scope")
+    for term in MAIN_REQUIRED:
+        if term not in main:
+            errors.append(f"Agent Core main design missing required term: {term}")
 
-    for section in REQUIRED_SECTIONS:
-        if section not in formal:
-            errors.append(f"Agent Core control protocol missing section: {section}")
-
-    for term in REQUIRED_TERMS:
-        if term not in formal:
+    for term in CONTROL_REQUIRED:
+        if term not in control:
             errors.append(f"Agent Core control protocol missing required term: {term}")
 
-    for requirement_no in range(33, 61):
-        requirement_id = f"ARCH-AGENT-{requirement_no:03d}"
-        if requirement_id not in formal:
-            errors.append(f"Agent Core control protocol missing requirement: {requirement_id}")
+    for term in CONSISTENCY_REQUIRED:
+        if term not in consistency:
+            errors.append(f"Agent Core consistency protocol missing required term: {term}")
 
-    for term in FORBIDDEN_TARGET_SCOPE_TERMS:
-        if term in formal:
-            errors.append(f"Target-only Agent Core protocol contains migration-specific term: {term}")
+    combined = "\n".join([main, control, consistency])
+    for term in FORBIDDEN_TARGET_PATTERNS:
+        if term in combined:
+            errors.append(f"Agent Core Target docs contain obsolete contract: {term}")
 
-    for index_name, content in [
-        ("docs/modules/README.md", docs_index),
-        (".agent/modules/README.md", agent_index),
-    ]:
-        if "06-agent-core-control-protocols.md" not in content:
-            errors.append(f"{index_name} does not route to the Agent Core control protocol")
-        if "verify_agent_core_target_protocols.py" not in content:
-            errors.append(f"{index_name} does not expose the Agent Core protocol verifier")
+    ids = re.findall(r"ARCH-AGENT-(\d{3})", combined)
+    counts: dict[int, int] = {}
+    for value in ids:
+        number = int(value)
+        counts[number] = counts.get(number, 0) + 1
+
+    missing = [number for number in range(1, 81) if number not in counts]
+    if missing:
+        errors.append(f"Agent Core requirements missing IDs: {missing}")
+
+    duplicates = [number for number, count in counts.items() if count > 1]
+    if duplicates:
+        errors.append(f"Agent Core requirements duplicated across normative docs: {duplicates}")
+
+    for index_name, content in indexes.items():
+        for filename in [
+            "06-agent-core-planning-control.md",
+            "06-agent-core-control-protocols.md",
+            "06-agent-core-consistency-lifecycle-protocols.md",
+        ]:
+            if filename not in content:
+                errors.append(f"{index_name} does not route to {filename}")
+
+    for index_name in ["docs/modules/README.md", ".agent/modules/README.md", "AGENTS.md"]:
+        if "verify_agent_core_target_protocols.py" not in indexes[index_name]:
+            errors.append(f"{index_name} does not expose Agent Core verifier")
+
+    if "Single Controller Agent Runtime" not in indexes[".agent/system.yaml"]:
+        errors.append(".agent/system.yaml must use Single Controller Agent Runtime terminology")
+
+    if "pending_interrupt_refs" not in main or "prepare_publication" not in main:
+        errors.append("AgentRunGraph target must include multi-interrupt and Publication flow")
+
+    if "WAITING_CONDITION" not in control or "BLOCKED" not in control:
+        errors.append("control protocol must distinguish waiting from terminal blocked")
 
     return errors
 

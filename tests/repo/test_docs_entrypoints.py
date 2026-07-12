@@ -72,11 +72,14 @@ def test_architecture_and_agent_mirrors_match() -> None:
             REPO_ROOT / ".agent/architecture" / file_name
         ).read_text(encoding="utf-8")
 
-    assert (REPO_ROOT / "docs/modules/06-agent-core-planning-control.md").read_text(
-        encoding="utf-8"
-    ) == (REPO_ROOT / ".agent/modules/06-agent-core-planning-control.md").read_text(
-        encoding="utf-8"
-    )
+    for file_name in [
+        "06-agent-core-planning-control.md",
+        "06-agent-core-control-protocols.md",
+        "06-agent-core-consistency-lifecycle-protocols.md",
+    ]:
+        assert (REPO_ROOT / "docs/modules" / file_name).read_bytes() == (
+            REPO_ROOT / ".agent/modules" / file_name
+        ).read_bytes()
 
 
 def test_docs_front_path_readmes_explain_current_contract() -> None:
@@ -117,14 +120,18 @@ def test_docs_front_path_readmes_explain_current_contract() -> None:
         "03-knowledge-agentic-graphrag.md",
         "05-memory-context.md",
         "06-agent-core-planning-control.md",
+        "06-agent-core-control-protocols.md",
+        "06-agent-core-consistency-lifecycle-protocols.md",
         "07-capability-skill.md",
         "10-observability-eval.md",
     ]:
         assert phrase in modules_index
 
     for phrase in [
-        "Agent 架构工作区",
-        ".agent/modules/06-agent-core-planning-control.md",
+        "架构文档",
+        "docs/modules/06-agent-core-planning-control.md",
+        "docs/modules/06-agent-core-control-protocols.md",
+        "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
         "docs/status/production-readiness.md",
     ]:
         assert phrase in agent_architecture_index
@@ -139,22 +146,16 @@ def test_architecture_markdown_is_text_first_target_design() -> None:
 
     for phrase in [
         "Zuno Target Architecture Atlas",
-        "Text-first Design Document",
-        "轻量实现，成熟设计",
-        "十一逻辑能力模块",
+        "项目定位与架构目标",
+        "十一逻辑模块",
         "六个物理运行域",
-        "Agent Core / Planning & Control",
-        "TaskQueuePort",
-        "RabbitMQAdapter",
-        "LangSmithTraceSink",
-        "RuntimeRequest",
-        "ModelCallRequest",
-        "ContextPack",
-        "RetrievalPlan",
-        "EvidenceBundle",
-        "ToolCallIntent",
-        "NormalizedToolObservation",
-        "GroundedAnswer",
+        "Single Controller Agent Runtime",
+        "AgentRunGraph",
+        "Plan DAG",
+        "StepExecutionGraph",
+        "TaskContract",
+        "FinalCandidate",
+        "Publication",
         "EvidenceLedger",
         "implementation available",
         "measurement blocked",
@@ -240,10 +241,12 @@ def test_module_docs_follow_logical_module_boundaries() -> None:
         ],
         "06-agent-core-planning-control.md": [
             "Agent Core / Planning & Control",
+            "Single Controller Agent Runtime",
             "Plan DAG",
-            "默认最大化安全并行",
+            "TaskContract",
+            "pending_interrupt_refs",
+            "prepare_publication",
             "PostgreSQL",
-            "Alembic Migration",
         ],
         "07-capability-skill.md": [
             "Capability / Skill",

@@ -5,12 +5,12 @@
 updated: 2026-07-11  
 status: normative-target-architecture  
 document_role: architecture-to-program source of truth  
-current_state_source: `docs/architecture/production-readiness.md`  
+current_state_source: `docs/status/production-readiness.md`
 visual_atlas_source: `docs/architecture/architecture-views.md`
 
 本文是 Zuno 的**实施级目标架构规范**。它不仅说明系统“长什么样”，还必须能够直接驱动后续 Program、Phase、代码所有权、数据库迁移、集成测试、架构 HTML 和完成验收。
 
-本文描述的是 **Target**，不是 Current。仓库当前真实实现、已知差距、blocked 原因、runtime observed 状态和 measured 结果，以 `docs/architecture/production-readiness.md` 为事实源。任何目标能力不得仅因出现在本文、依赖文件、Docker Compose、配置文件、接口骨架或测试替身中，就被描述为已经完成。
+本文描述的是 **Target**，不是 Current。仓库当前真实实现、已知差距、blocked 原因、runtime observed 状态和 measured 结果，以 `docs/status/production-readiness.md` 为事实源。任何目标能力不得仅因出现在本文、依赖文件、Docker Compose、配置文件、接口骨架或测试替身中，就被描述为已经完成。
 
 ## 0.1 文档同步规则
 
@@ -20,7 +20,7 @@ visual_atlas_source: `docs/architecture/architecture-views.md`
 - 修改任意一侧时，必须在同一轮变更中同步另一侧；
 - `docs/architecture/architecture-views.md` 维护图形化架构视图；
 - `docs/architecture/architecture.html` 展示架构图与摘要；
-- `docs/architecture/production-readiness.md` 维护 Current、Gap、Blocked 和 Measurement；
+- `docs/status/production-readiness.md` 维护 Current、Gap、Blocked 和 Measurement；
 - `.agent/programs/` 中的 Program 必须引用本文的稳定 Requirement ID。
 
 ## 0.2 本文如何驱动 Program
@@ -146,7 +146,7 @@ Agent 自主，但控制边界明确
 
 ## 2.2 强制架构约束
 
-- Agent Runtime 默认采用 **Single Controller**；
+- Agent Runtime 默认采用 **Single Controller Agent Runtime**；
 - PostgreSQL 是结构化事实源；
 - Object Store 是大型不可变内容事实源；
 - RabbitMQ 使用 at-least-once delivery，Consumer 必须幂等；
@@ -249,8 +249,10 @@ Request
 -> ReAct Step
 -> Reflection
 -> optional Replan
--> Final Reflection
--> Finalize
+-> FinalCandidate
+-> Final Gate / Final Reflection
+-> ArtifactVersion / Publication
+-> RunOutcome
 -> Reflexion Candidate
 ```
 
@@ -345,370 +347,125 @@ index_version
 
 # 5. Agent Core / Planning & Control
 
-## 5.1 模块目标
+## 5.1 模块定位
 
-Agent Core 是 Zuno 的唯一任务控制器，负责把用户目标转化为可恢复、可观测、受预算和安全约束的执行过程。
+Agent Core 是 Zuno 的 **Single Controller Agent Runtime**。它把目标、计划、执行、等待、恢复、质量判断和最终发布组织成一个不可绕过的受治理闭环。
 
-### Requirement IDs
-
-- `ARCH-AGENT-001`：LangGraph 是唯一产品主 Controller；
-- `ARCH-AGENT-002`：Plan、ReAct、Reflection、Replan、Reflexion 在同一 Runtime 中协作；
-- `ARCH-AGENT-003`：Runtime State 可序列化、可版本化、可恢复；
-- `ARCH-AGENT-004`：所有循环受统一 RuntimeBudget 控制；
-- `ARCH-AGENT-005`：Completion 与 Workspace 共用同一 Runtime；
-- `ARCH-AGENT-006`：Interrupt/Resume 跨进程可恢复；
-- `ARCH-AGENT-007`：大对象只存引用；
-- `ARCH-AGENT-008`：每个节点产生 RuntimeEvent 和 Trace Span。
-
-## 5.2 内部组件
+完整 Target 由三份模块规范共同定义：
 
 ```text
-RuntimeRequestFactory
-InputGateOrchestrator
-ContextBuilder
-StrategyPolicy
-Planner
-PlanValidator
-PlanRepository
-PlanExecutor
-StepExecutorRegistry
-ReActController
-ObservationNormalizer
-EvidenceGate
-ReflectionEngine
-ReplanEngine
-GroundedSynthesisEngine
-FinalReflectionEngine
-FinalizationController
-ReflexionBridge
-RuntimeBudgetController
-InterruptController
-CheckpointRepository
-RuntimeEventPublisher
+docs/modules/06-agent-core-planning-control.md
+    问题、概念架构、完整运行流程、目标代码和持久化规格。
+
+docs/modules/06-agent-core-control-protocols.md
+    架构不变量、状态机、DAG、并发、Interrupt、Signal、副作用、Finalization、Failure 与 Budget。
+
+docs/modules/06-agent-core-consistency-lifecycle-protocols.md
+    TaskContract、GoalVersion、控制命令仲裁、Domain/Checkpoint、ResultValidity、Event、Artifact、Reconciler 与时间语义。
 ```
 
-## 5.3 五层 Agent 闭环
+发生冲突时，以模块规范为准，并必须在同一轮文档变更中消除冲突。
 
-| 机制 | 作用范围 | 职责 |
-| --- | --- | --- |
-| Plan | 整个任务 | 拆解目标、依赖、顺序、验收条件、预算、风险 |
-| ReAct | 单个 PlanStep | 根据 Observation 动态选择知识、模型或工具动作 |
-| Reflection | 步骤或最终结果 | 判断通过、重试、补检索、重规划、询问或放弃 |
-| Replan | 剩余计划 | 当前提变化或执行偏离时修改后续轨迹 |
-| Reflexion | 跨任务 | 把成功或失败经验形成受治理的长期记忆候选 |
-
-## 5.4 LangGraph 顶层图
-
-```mermaid
-flowchart TB
-    Start([START]) --> Input[input_gate]
-    Input --> Context[build_context]
-    Context --> Plan[create_or_update_plan]
-    Plan --> Select[select_next_step]
-    Select --> React[run_react_step]
-    React --> Reflect{step_reflection}
-
-    Reflect -->|PASS| More{plan remains?}
-    Reflect -->|RETRY_STEP| React
-    Reflect -->|RETRIEVE_MORE / REPLAN| Replan[replan]
-    Reflect -->|ASK_USER| Interrupt[interrupt / resume]
-    Reflect -->|APPROVAL| Approval[approval / resume]
-    Reflect -->|ABSTAIN / REFUSE| FinalReflect[final_reflection]
-
-    Replan --> Select
-    Interrupt --> Select
-    Approval --> Select
-    More -->|yes| Select
-    More -->|no| FinalReflect
-
-    FinalReflect -->|REWRITE| Synthesis[grounded_synthesis]
-    Synthesis --> FinalReflect
-    FinalReflect -->|PASS / ABSTAIN| Finalize[finalize]
-    Finalize --> Reflexion[build_reflexion_candidate]
-    Reflexion --> Commit[post_turn_commit]
-    Commit --> End([END])
-```
-
-## 5.5 ReAct 步骤子图
+## 5.2 三层运行结构
 
 ```text
-PlanStep
--> BuildStepContext
--> ReasonSummary
--> ActionDecision
--> CapabilityPolicy
--> SecurityGate
--> Execute Model / Retrieval / Tool
--> NormalizeObservation
--> StepAcceptanceCheck
--> Continue / Complete / Replan / Approval / Abstain
+固定 AgentRunGraph
+    管理 Run 生命周期、TaskContract、GoalVersion、Plan 激活、控制命令、预算、安全、恢复、Publication 和 RunOutcome。
+
+动态 Plan DAG
+    管理 Objective、StepDefinition、DependencyRule、ActivationCondition、并行、Join 和完成条件。
+
+固定 StepExecutionGraph
+    管理 Action Proposal、Validation、Execution、Observation、Evaluation、Acceptance 和条件 Reflection。
 ```
 
-ReAct 只控制当前 PlanStep，不得：
+简单任务使用 Deterministic Single-Step Plan，复杂任务使用 Dynamic DAG Plan。不存在绕过 Plan、Trace、Budget、AnswerPolicy、Final Gate、Publication 或 RunOutcome 的正式回答路径。
 
-- 覆盖全局 Goal；
-- 直接修改已完成 Step；
-- 绕过 Capability 和 Tool Runtime；
-- 直接写长期 Memory；
-- 在没有 Evidence Gate 时生成 grounded completion。
-
-## 5.6 Plan 数据模型
-
-```python
-class PlanState:
-    plan_id: str
-    task_id: str
-    version: int
-    goal: str
-    assumptions: list[str]
-    steps: list[PlanStep]
-    status: str
-    current_step_id: str | None
-    budget: RuntimeBudget
-    risks: list[PlanRisk]
-    created_by_model_call_id: str
-    created_at: datetime
-```
-
-```python
-class PlanStep:
-    step_id: str
-    title: str
-    objective: str
-    action_type: str
-    dependencies: list[str]
-    acceptance_criteria: list[AcceptanceCriterion]
-    allowed_capabilities: list[str]
-    expected_outputs: list[str]
-    status: str
-    attempt_count: int
-    observation_refs: list[str]
-```
-
-Plan 状态机：
+## 5.3 完整闭环
 
 ```text
-draft
--> validating
--> ready
--> running
--> waiting
--> completed
--> failed
--> cancelled
--> superseded
+RuntimeRequest
+-> TaskContract / GoalVersion
+-> ExecutionContextSnapshot
+-> Plan Proposal / Validation / Activation
+-> ReadySet / Admission / Budget Reservation
+-> Dispatch Commit
+-> StepExecutionGraph / ReAct
+-> BranchResultRef / Reducer / Join
+-> Acceptance / conditional Reflection
+-> Retry / Repair / Fallback / Replan Barrier
+-> FinalCandidate
+-> Evidence / Citation / ResultValidity Gate
+-> ArtifactVersion
+-> Publication / DeliveryReceipt
+-> RunOutcome
+-> Reflexion Candidate
 ```
 
-Step 状态机：
+## 5.4 核心控制原则
 
 ```text
-pending
--> ready
--> running
--> waiting_approval / waiting_user / waiting_job
--> completed / failed / skipped / cancelled
+模型只产生 Proposal，不能直接提交领域终态
+PlanVersion 激活后不可变，Replan 创建新版本
+一个 Run 同时最多一个 Active PlanVersion
+并行 Worker 只返回不可变 BranchResultRef
+Dispatch 必须先持久化后 Send
+Controller 与 Worker 使用 controller_epoch / execution_epoch Fencing
+一个 Run 可以同时存在多个 Pending Interrupt
+Signal 必须鉴权、版本化、幂等且绑定 Interrupt
+副作用遵循 Prepare / Approve / Claim / Execute / Reconcile
+UNKNOWN 副作用禁止盲目重试
+FinalCandidate、ArtifactVersion、Publication 与 RunOutcome 分离
+PostgreSQL 保存领域事实，LangGraph Checkpointer 保存图控制状态
 ```
 
-## 5.7 Replan 数据模型
+## 5.5 状态与终局
 
-Replan 不覆盖旧计划，产生 `PlanPatch`：
-
-```python
-class PlanPatch:
-    patch_id: str
-    plan_id: str
-    base_plan_version: int
-    remove_step_ids: list[str]
-    update_steps: list[PlanStep]
-    insert_steps: list[PlanStep]
-    new_assumptions: list[str]
-    reason: str
-    trigger_observation_refs: list[str]
-    created_by_model_call_id: str
-```
-
-Replan 触发条件：
+可恢复等待统一使用 `WAITING_CONDITION`；`BLOCKED` 是终态；取消必须经过 `CANCELLING`，以停止新 Dispatch、排空不可中断副作用并完成 Reconcile。
 
 ```text
-acceptance criteria failed
-retrieval insufficient
-tool failed with alternative path
-security blocked original path
-assumption invalidated
-new user constraint
-dependency output changed
-budget requires plan simplification
-contradictory evidence
-stale index
+COMPLETED
+PARTIAL
+ABSTAINED
+REFUSED
+BLOCKED
+FAILED
+CANCELLED
+EXPIRED
 ```
 
-## 5.8 Reflection Contract
-
-```python
-class ReflectionResult:
-    decision: Literal[
-        "PASS",
-        "RETRY_STEP",
-        "REWRITE_ANSWER",
-        "RETRIEVE_MORE",
-        "USE_TOOL",
-        "REPLAN",
-        "ASK_USER",
-        "APPROVAL",
-        "ABSTAIN",
-        "REFUSE",
-    ]
-    reason: str
-    failure_bucket: str | None
-    unsupported_claims: list[str]
-    missing_evidence: list[str]
-    violated_constraints: list[str]
-    suggested_actions: list[str]
-    confidence: float
-```
-
-Reflection 由三层组成：
-
-1. Deterministic Gate：状态、预算、Schema、安全、Evidence Coverage；
-2. Domain Evaluator：任务验收条件；
-3. Critic Model：高价值任务的语义质量判断。
-
-## 5.9 Runtime State
-
-```python
-class AgentRuntimeState:
-    schema_version: str
-    run_id: str
-    task_id: str
-    thread_id: str
-    workspace_id: str
-    user_id: str
-    trace_id: str
-
-    request_ref: str
-    context_pack_ref: str
-    plan_id: str
-    plan_version: int
-    current_step_id: str | None
-
-    observation_refs: list[str]
-    evidence_ledger_ref: str | None
-    draft_answer_ref: str | None
-    claim_refs: list[str]
-    unsupported_claims: list[str]
-    reflection_ref: str | None
-
-    counters: RuntimeCounters
-    limits: RuntimeLimits
-    pending_interrupt_ref: str | None
-    final_answer_ref: str | None
-    failure_ref: str | None
-```
-
-## 5.10 RuntimeBudget
+## 5.6 一致性、Owner 与恢复
 
 ```text
-max_plan_steps
-max_react_rounds_per_step
-max_reflections
-max_replans
-max_retrieval_rounds
-max_tool_calls
-max_side_effect_calls
-max_model_calls
-max_input_tokens
-max_output_tokens
-max_cost
-deadline_at
+PostgreSQL Domain Store
+    领域事实、状态转换、Epoch、Generation、ResultValidity 和审计。
+
+LangGraph Checkpointer
+    Graph Node、Channel、Pending Send、Interrupt Cursor 和 Reducer 控制状态。
+
+Object Store
+    大型 Observation、Evidence Snapshot、Artifact 和调试包。
 ```
 
-Budget 超限必须产生结构化 `budget_exceeded`，不能静默截断。
+Domain Generation 是权威提交序列。Checkpoint 只能引用已提交的 Domain Generation。Agent Core 通过 typed Port 使用其他模块，是编排者而不是所有事实的 Owner。
 
-## 5.11 持久化与恢复
+## 5.7 Requirement 与完成证据
 
-PostgreSQL 保存：
+Agent Core Requirement 使用 `ARCH-AGENT-001` 至 `ARCH-AGENT-080`，由三份模块文档连续定义且不得重复。
+
+Target 转为 Current 必须有代码、Alembic Migration、Unit/Integration/E2E、故障注入、Trace、Eval 和可复现运行证据。仅完成文档时只能声明：
 
 ```text
-AgentRun
-RuntimeCheckpoint
-PlanVersion
-PlanPatch
-RuntimeEvent
-Interrupt
-Approval
-RuntimeFailure
-GroundedAnswer
+design available
+internally consistent
+contract-complete
+implementation-spec-complete
+program-ready
 ```
 
-恢复流程：
-
-```text
-load Run
--> validate schema version
--> load latest committed checkpoint
--> resolve pending interrupt/job
--> verify idempotency claims
--> rebuild lightweight RuntimeState
--> resume exact LangGraph node
-```
-
-## 5.12 失败与降级
-
-| 失败 | 行为 |
-| --- | --- |
-| Planner Schema Invalid | 修复一次；仍失败则使用受限 fallback plan 或 Ask User |
-| ReAct Loop Exhausted | Reflection -> Replan / Abstain |
-| Checkpoint Write Failed | 不执行下一副作用动作；Run 标记 blocked |
-| Model Unavailable | Model Gateway fallback；必须记录 fallback |
-| Tool Waiting Job | 持久化 JobHandle，Interrupt |
-| Runtime Schema Incompatible | 阻止恢复并提供 migration requirement |
-
-## 5.13 可观测性
-
-每个节点记录：
-
-```text
-node_name
-plan_version
-step_id
-input_refs
-output_refs
-decision
-model_call_id
-latency
-token
-cost
-failure_bucket
-next_route
-```
-
-## 5.14 测试
-
-- Planner Contract Test；
-- Plan Validation Property Test；
-- ReAct 最大轮数测试；
-- Reflection 路由矩阵测试；
-- Replan Patch 不可修改历史 Step 测试；
-- Checkpoint/Resume 集成测试；
-- Approval 后重启 exactly-once 测试；
-- RuntimeBudget 故障注入测试；
-- Completion/Workspace 同 Runtime 测试。
-
-## 5.15 完成标准
-
-`ARCH-AGENT-*` 完成必须有：
-
-- 真实 compiled LangGraph；
-- PostgreSQL Checkpoint；
-- 至少一个真实 Retrieval Step 和 Tool Step；
-- Reflection 真实改变路由；
-- Replan 真实产生新 PlanVersion；
-- Reflexion 产生治理候选；
-- 进程重启恢复测试；
-- Trace Viewer 可查看完整节点链。
+不得仅凭设计声明 `implementation available`、`quality not yet proven` 已被证明、CI 通过或 production ready。
 
 ---
-
 # 6. Input / Document Ingestion
 
 ## 6.1 模块目标
@@ -3552,9 +3309,10 @@ Service split and scaling threshold
 -> Tool Runtime 执行动作
 -> Reflection 判断步骤质量
 -> Replan 修改剩余计划
--> Final Reflection 验证答案
--> Claim/Evidence/Citation Binding
--> Finalize 输出 GroundedAnswer
+-> FinalCandidate 与 Final Gate 验证答案
+-> Claim/Evidence/Citation/ResultValidity Binding
+-> ArtifactVersion 与 Publication 输出正式结果
+-> RunOutcome 提交终局
 -> Reflexion 形成受治理经验
 -> PostgreSQL 保存事实
 -> Milvus / Neo4j 建立可重建索引
