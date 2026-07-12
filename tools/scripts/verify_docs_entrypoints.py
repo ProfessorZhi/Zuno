@@ -33,8 +33,6 @@ REQUIRED_MODULE_DOCS = {
     "03-knowledge-agentic-graphrag.md",
     "05-memory-context.md",
     "06-agent-core-planning-control.md",
-    "06-agent-core-control-protocols.md",
-    "06-agent-core-consistency-lifecycle-protocols.md",
     "07-capability-skill.md",
     "10-observability-eval.md",
 }
@@ -48,8 +46,6 @@ REQUIRED_FRONT_PATHS = [
     "docs/architecture/architecture.html",
     "docs/modules/README.md",
     "docs/modules/06-agent-core-planning-control.md",
-    "docs/modules/06-agent-core-control-protocols.md",
-    "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
     "docs/status/production-readiness.md",
     "docs/decisions/README.md",
     "docs/governance/repo-ownership-matrix.md",
@@ -59,8 +55,6 @@ REQUIRED_FRONT_PATHS = [
     ".agent/architecture/architecture.html",
     ".agent/modules/README.md",
     ".agent/modules/06-agent-core-planning-control.md",
-    ".agent/modules/06-agent-core-control-protocols.md",
-    ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md",
     "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
 ]
 
@@ -226,6 +220,7 @@ def verify_entrypoint_text() -> list[str]:
         "项目定位与架构目标",
         "十一逻辑模块",
         "六个物理运行域",
+        "Agent Core / Planning & Control",
         "Single Controller Agent Runtime",
         "AgentRunGraph",
         "Plan DAG",
@@ -233,8 +228,9 @@ def verify_entrypoint_text() -> list[str]:
         "TaskContract",
         "FinalCandidate",
         "Publication",
+        "ContextPack",
+        "RetrievalPlan",
         "EvidenceLedger",
-        "docs/status/production-readiness.md",
     ]:
         if phrase not in architecture:
             errors.append(f"docs/architecture/architecture.md missing phrase: {phrase}")
@@ -252,12 +248,15 @@ def verify_entrypoint_text() -> list[str]:
 
     agent_core = _read("docs/modules/06-agent-core-planning-control.md")
     for phrase in [
-        "Single Controller Agent Runtime",
+        "LangGraph",
         "Plan DAG",
-        "TaskContract",
-        "pending_interrupt_refs",
-        "prepare_publication",
+        "默认最大化安全并行",
         "PostgreSQL",
+        "唯一的正式 Target 架构文档",
+        ".agent/programs/",
+        "WAITING_CONDITION",
+        "RecoveryWatermark",
+        "ARCH-AGENT-080",
     ]:
         if phrase not in agent_core:
             errors.append(f"Agent Core module doc missing phrase: {phrase}")
@@ -319,14 +318,6 @@ def verify_architecture_mirrors() -> list[str]:
         (
             "docs/modules/06-agent-core-planning-control.md",
             ".agent/modules/06-agent-core-planning-control.md",
-        ),
-        (
-            "docs/modules/06-agent-core-control-protocols.md",
-            ".agent/modules/06-agent-core-control-protocols.md",
-        ),
-        (
-            "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
-            ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md",
         ),
     ]
 

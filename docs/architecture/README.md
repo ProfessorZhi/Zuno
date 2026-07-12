@@ -29,20 +29,16 @@ docs/evidence/      可复现证据
 docs/history/       历史材料与研究附件
 ```
 
-Agent Core Target 文档集：
+Agent Core 唯一 Target 文档：
 
 ```text
 docs/modules/06-agent-core-planning-control.md
-docs/modules/06-agent-core-control-protocols.md
-docs/modules/06-agent-core-consistency-lifecycle-protocols.md
 ```
 
-对应 Agent 镜像：
+对应唯一 Agent 镜像：
 
 ```text
 .agent/modules/06-agent-core-planning-control.md
-.agent/modules/06-agent-core-control-protocols.md
-.agent/modules/06-agent-core-consistency-lifecycle-protocols.md
 ```
 
 Current / Gap 事实源：`docs/status/production-readiness.md`。

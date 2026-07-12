@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate Agent Core target docs
+    name: Validate unified Agent Core target doc
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -77,47 +77,36 @@ jobs:
             tests/repo/test_docs_entrypoints.py \
             2>&1 | tee validation-logs/compile.log
 
-      - name: Verify Agent Core target protocols
+      - name: Verify unified Agent Core target document
         run: |
           set -o pipefail
           python tools/scripts/verify_agent_core_target_protocols.py \
-            2>&1 | tee validation-logs/agent-core-protocols.log
+            2>&1 | tee validation-logs/agent-core.log
 
-      - name: Verify Agent System
+      - name: Verify Agent System and document boundaries
         run: |
           set -o pipefail
           python .agent/scripts/verify_agent_system.py \
             2>&1 | tee validation-logs/agent-system.log
-
-      - name: Verify document boundaries
-        run: |
-          set -o pipefail
           python .agent/scripts/verify_doc_boundaries.py \
             2>&1 | tee validation-logs/doc-boundaries.log
 
-      - name: Verify documentation entrypoints
+      - name: Verify documentation entrypoints and architecture renderer
         run: |
           set -o pipefail
           python tools/scripts/verify_docs_entrypoints.py \
             2>&1 | tee validation-logs/docs-entrypoints.log
-
-      - name: Verify architecture renderer outputs
-        run: |
-          set -o pipefail
           python tools/agent/render_architecture.py --check \
             2>&1 | tee validation-logs/architecture-renderer.log
 
-      - name: Run Agent Core protocol tests
+      - name: Run focused repository tests
         run: |
           set -o pipefail
-          pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider \
-            2>&1 | tee validation-logs/agent-core-tests.log
-
-      - name: Run documentation entrypoint tests
-        run: |
-          set -o pipefail
-          pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider \
-            2>&1 | tee validation-logs/docs-entrypoint-tests.log
+          pytest -q \
+            tests/repo/test_agent_core_target_protocols.py \
+            tests/repo/test_docs_entrypoints.py \
+            -p no:cacheprovider \
+            2>&1 | tee validation-logs/tests.log
 
       - name: Upload validation logs
         if: always()

@@ -25,61 +25,39 @@
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
 | 04 | Model Gateway | `04-model-gateway.md` | 待细化 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
-| 06 | Agent Core / Planning & Control | 见下方规范性文档集 | 已建立 Target 主设计、控制协议与一致性协议 |
+| 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
 | 09 | Security | `09-security.md` | 待细化 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 已建立 Target 规范 |
 | 11 | Infrastructure | `11-infrastructure.md` | 待细化 |
 
-## Agent Core 规范性文档集
+## Agent Core 文档边界
 
-Agent Core Target 由三份正式文档共同构成：
+唯一正式 Target 文档：
 
 ```text
 docs/modules/06-agent-core-planning-control.md
-    主设计：问题、概念架构、完整运行流程、模块边界、目标代码和持久化规格。
-
-docs/modules/06-agent-core-control-protocols.md
-    控制协议：不变量、状态机、DAG、并发、Interrupt、Signal、副作用、Finalization、Failure 与 Budget。
-
-docs/modules/06-agent-core-consistency-lifecycle-protocols.md
-    一致性协议：TaskContract、命令仲裁、Domain/Checkpoint、ResultValidity、Event、Artifact、Reconciler 与时间语义。
 ```
 
-入口：
+它统一包含概念架构、运行流程、不变量、状态机、DAG 与并发、Interrupt / Signal、副作用、Finalization、一致性、事件、Artifact、恢复、时间、目标代码、数据库和测试规格。
 
-- [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md)
-- [`06-agent-core-control-protocols.md`](./06-agent-core-control-protocols.md)
-- [`06-agent-core-consistency-lifecycle-protocols.md`](./06-agent-core-consistency-lifecycle-protocols.md)
-
-规范优先级：
+执行和迁移计划不写入模块 Target 文档：
 
 ```text
-全局架构原则
-→ Agent Core 规范性协议
-→ Agent Core 主设计实施规格
-→ 后续 Program 与代码
+.agent/programs/    Current → Target 的实现、迁移、切流和收口计划
+docs/status/       Current、Gap、Measurement 和完成状态
+docs/history/      已完成 Program 与历史证据
 ```
 
-三份文件都只描述 Target。Current 与 Gap 不写入这里；升级和迁移步骤放入 `.agent/programs/`。
-
 ## Agent 镜像
-
-`docs/modules/` 是正式事实源。Agent Core 保留同名镜像：
 
 ```text
 docs/modules/06-agent-core-planning-control.md
 .agent/modules/06-agent-core-planning-control.md
-
-docs/modules/06-agent-core-control-protocols.md
-.agent/modules/06-agent-core-control-protocols.md
-
-docs/modules/06-agent-core-consistency-lifecycle-protocols.md
-.agent/modules/06-agent-core-consistency-lifecycle-protocols.md
 ```
 
-每一对正式文档与镜像必须字节级一致。
+正式文件与镜像必须字节级一致。
 
 规则：
 
@@ -87,21 +65,11 @@ docs/modules/06-agent-core-consistency-lifecycle-protocols.md
 - 不得在 Target 文档中写 Current Baseline 或具体迁移步骤；
 - Current 变化只有在代码、Migration、测试、Trace、Eval 和运行证据完成后，才可写入状态文档；
 - 模块设计不得放回 `docs/architecture/`；
-- Agent Core 变更必须同步三份文档、三份镜像、入口、验证器和测试。
+- Agent Core 变更必须同步单一正式文档、镜像、入口、验证器和测试。
 
 专用验证：
 
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
-```
-
-## 与总架构的关系
-
-```text
-docs/architecture/architecture.md
-    总架构、十一模块关系、全局约束和 Owner 边界。
-
-docs/modules/*.md
-    单个逻辑模块的实施级 Target 设计。
 ```

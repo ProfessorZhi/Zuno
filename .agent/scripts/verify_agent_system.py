@@ -13,11 +13,7 @@ CANONICAL_ARCHITECTURE_FILES = {
     "architecture.html",
 }
 
-AGENT_CORE_DOCS = [
-    "06-agent-core-planning-control.md",
-    "06-agent-core-control-protocols.md",
-    "06-agent-core-consistency-lifecycle-protocols.md",
-]
+AGENT_CORE_DOCS = ["06-agent-core-planning-control.md"]
 
 REQUIRED_PATHS = [
     "AGENTS.md",
@@ -228,22 +224,14 @@ def verify_module_contracts() -> list[str]:
             "Plan DAG",
             "TaskContract",
             "pending_interrupt_refs",
-            "prepare_publication",
-            "PostgreSQL",
-        ],
-        "docs/modules/06-agent-core-control-protocols.md": [
             "WAITING_CONDITION",
-            "CANCELLING",
             "PreparedAction",
-            "Publication",
-            "ARCH-AGENT-060",
-        ],
-        "docs/modules/06-agent-core-consistency-lifecycle-protocols.md": [
-            "GoalVersion",
             "RecoveryWatermark",
             "ResultValidity",
             "RunOrphanReconciler",
+            "prepare_publication",
             "ARCH-AGENT-080",
+            "PostgreSQL",
         ],
         "docs/modules/07-capability-skill.md": [
             "Function Calling",
