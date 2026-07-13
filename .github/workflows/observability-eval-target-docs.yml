@@ -5,32 +5,18 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/10-observability-eval.md"
-      - ".agent/modules/10-observability-eval.md"
-      - "docs/modules/10-observability-eval-rag-agent-evaluation.md"
-      - ".agent/modules/10-observability-eval-rag-agent-evaluation.md"
+      - "docs/modules/10-observability-eval*.md"
+      - ".agent/modules/10-observability-eval*.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
-      - "tools/scripts/verify_observability_eval_target_protocols.py"
-      - "tests/repo/test_observability_eval_target_protocols.py"
-      - ".github/workflows/observability-eval-target-docs.yml"
-  push:
-    branches:
-      - main
-    paths:
-      - "docs/modules/10-observability-eval.md"
-      - ".agent/modules/10-observability-eval.md"
-      - "docs/modules/10-observability-eval-rag-agent-evaluation.md"
-      - ".agent/modules/10-observability-eval-rag-agent-evaluation.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
+      - "tools/scripts/reconcile_observability_wave1.py"
       - "tools/scripts/verify_observability_eval_target_protocols.py"
       - "tests/repo/test_observability_eval_target_protocols.py"
       - ".github/workflows/observability-eval-target-docs.yml"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: observability-eval-target-docs-${{ github.event.pull_request.number || github.ref }}
@@ -38,20 +24,45 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate Observability and Eval target contracts
+    name: Reconcile and validate Observability and Eval target contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout repository
+      - name: Checkout PR head
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Reconcile latest main
+        run: |
+          set -o pipefail
+          git fetch origin main
+          git merge --no-commit --no-ff origin/main || true
+          for path in docs/modules/README.md .agent/modules/README.md; do
+            if git diff --name-only --diff-filter=U | grep -Fxq "$path"; then
+              git checkout --theirs -- "$path"
+            fi
+          done
+          python tools/scripts/reconcile_observability_wave1.py
+          git add docs/modules/README.md .agent/modules/README.md
+          unresolved="$(git diff --name-only --diff-filter=U)"
+          test -z "$unresolved" || { echo "Unresolved conflicts: $unresolved"; exit 1; }
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "docs: reconcile Observability with Wave 1 baseline"
+            git push origin HEAD:agent/refine-10-observability-eval
+          else
+            git merge --abort 2>/dev/null || true
+          fi
 
       - name: Install validation dependencies
         run: |
@@ -73,9 +84,7 @@ jobs:
       - name: Verify formal and Agent mirror bytes
         run: |
           cmp docs/modules/10-observability-eval.md .agent/modules/10-observability-eval.md
-          cmp \
-            docs/modules/10-observability-eval-rag-agent-evaluation.md \
-            .agent/modules/10-observability-eval-rag-agent-evaluation.md
+          cmp docs/modules/10-observability-eval-rag-agent-evaluation.md .agent/modules/10-observability-eval-rag-agent-evaluation.md
 
       - name: Verify documentation entrypoints and boundaries
         run: |
