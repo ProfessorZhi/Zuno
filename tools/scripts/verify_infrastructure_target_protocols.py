@@ -9,6 +9,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/11-infrastructure.md"
 MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure.md"
+DATA_FORMAL = REPO_ROOT / "docs/modules/11-infrastructure-data-services.md"
+DATA_MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure-data-services.md"
 FORMAL_INDEX = REPO_ROOT / "docs/modules/README.md"
 MIRROR_INDEX = REPO_ROOT / ".agent/modules/README.md"
 
@@ -95,6 +97,46 @@ NOT_SELECTED = [
     "Kubernetes 作为本模块完成标准",
 ]
 
+DATA_SERVICE_TERMS = [
+    "PostgreSQL",
+    "RabbitMQ",
+    "Object Store / MinIO",
+    "LangGraph Checkpointer",
+    "Redis",
+    "Milvus",
+    "Neo4j",
+    "BM25 / Search",
+    "Trace/Audit persistence",
+    "Secret/KMS",
+    "DataServiceCapability",
+    "VectorIndexRuntimePort",
+    "GraphIndexRuntimePort",
+    "LexicalIndexRuntimePort",
+    "CacheAccelerationPort",
+    "DerivedIndexReplica State Machine",
+    "Cross-store Publish Protocol",
+    "IndexWriteReceipt",
+    "IndexManifest",
+    "generation/CAS",
+    "authoritative",
+    "rebuildable",
+]
+
+DATA_FAILURE_TERMS = [
+    "INFRA_VECTOR_WRITE_PARTIAL",
+    "INFRA_VECTOR_SCHEMA_INCOMPATIBLE",
+    "INFRA_GRAPH_WRITE_PARTIAL",
+    "INFRA_GRAPH_SCHEMA_INCOMPATIBLE",
+    "INFRA_LEXICAL_INDEX_CORRUPT",
+    "INFRA_CACHE_STALE_GENERATION",
+    "INFRA_CROSS_STORE_VERSION_DIVERGENCE",
+    "INFRA_INDEX_CUTOVER_CONFLICT",
+    "Milvus Write-Then-Crash Before Manifest Commit",
+    "Neo4j Commit-Then-Crash Before Manifest Commit",
+    "Tenant Filter Omission / Cross-tenant Hit",
+    "PITR with Stale Derived Indexes",
+]
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -120,6 +162,8 @@ def verify() -> list[Finding]:
     for path, code in [
         (FORMAL, "INFRA_DOC_MISSING"),
         (MIRROR, "INFRA_MIRROR_MISSING"),
+        (DATA_FORMAL, "INFRA_DATA_DOC_MISSING"),
+        (DATA_MIRROR, "INFRA_DATA_MIRROR_MISSING"),
         (FORMAL_INDEX, "INFRA_FORMAL_INDEX_MISSING"),
         (MIRROR_INDEX, "INFRA_MIRROR_INDEX_MISSING"),
     ]:
@@ -130,9 +174,14 @@ def verify() -> list[Finding]:
         return findings
 
     content = _read(FORMAL)
+    data_content = _read(DATA_FORMAL)
 
     if FORMAL.read_bytes() != MIRROR.read_bytes():
         findings.append(Finding("INFRA_MIRROR_DRIFT", "formal document and Agent mirror are not byte-identical"))
+    if DATA_FORMAL.read_bytes() != DATA_MIRROR.read_bytes():
+        findings.append(
+            Finding("INFRA_DATA_MIRROR_DRIFT", "data-service appendix and Agent mirror are not byte-identical")
+        )
 
     positions: list[int] = []
     for part in PARTS:
@@ -161,16 +210,12 @@ def verify() -> list[Finding]:
 
     for name in REQUIRED_OBJECTS:
         _require(content, name, "INFRA_OBJECT_MISSING", findings)
-
     for name in REQUIRED_STATE_MACHINES:
         _require(content, name, "INFRA_STATE_MACHINE_MISSING", findings)
-
     for name in REQUIRED_FAULTS:
         _require(content, name, "INFRA_FAULT_TEST_MISSING", findings)
-
     for term in CROSS_MODULE_TERMS:
         _require(content, term, "INFRA_CROSS_MODULE_MISSING", findings)
-
     for term in NOT_SELECTED:
         _require(content, term, "INFRA_NOT_SELECTED_MISSING", findings)
 
@@ -191,22 +236,56 @@ def verify() -> list[Finding]:
         if evidence_id not in content:
             findings.append(Finding("INFRA_EVIDENCE_MAPPING", f"missing {evidence_id}"))
 
+    if "parent_document: `docs/modules/11-infrastructure.md`" not in data_content:
+        findings.append(Finding("INFRA_DATA_PARENT", "appendix does not declare the Infrastructure parent document"))
+
+    for term in DATA_SERVICE_TERMS:
+        _require(data_content, term, "INFRA_DATA_SERVICE_COVERAGE", findings)
+    for term in DATA_FAILURE_TERMS:
+        _require(data_content, term, "INFRA_DATA_FAILURE_COVERAGE", findings)
+
+    data_requirements = [int(value) for value in re.findall(r"ARCH-INFRA-DS-(\d{3})", data_content)]
+    expected_data = list(range(1, 13))
+    if sorted(data_requirements) != expected_data:
+        findings.append(
+            Finding("INFRA_DATA_REQUIREMENT_REGISTRY", "ARCH-INFRA-DS IDs must be exactly 001..012")
+        )
+    for number in expected_data:
+        for suffix in ["UT", "IT"]:
+            test_id = f"INFRA-DS-{number:03d}-{suffix}"
+            if test_id not in data_content:
+                findings.append(Finding("INFRA_DATA_TEST_MAPPING", f"missing {test_id}"))
+        evidence_id = f"EV-INFRA-DS-{number:03d}"
+        if evidence_id not in data_content:
+            findings.append(Finding("INFRA_DATA_EVIDENCE_MAPPING", f"missing {evidence_id}"))
+
     for forbidden in [
         "PostgreSQL 已是 Current",
         "RabbitMQ 已是 Current",
         "MinIO 已是 Current",
+        "Milvus 已是 Current",
+        "Neo4j 已是 Current",
+        "Redis 已是 Current",
         "Kubernetes 已是 Current",
         "production ready 已完成",
     ]:
-        if forbidden in content:
+        if forbidden in content or forbidden in data_content:
             findings.append(Finding("INFRA_CURRENT_PROMOTION", f"forbidden unsupported statement: {forbidden}"))
 
     formal_index = _read(FORMAL_INDEX)
     mirror_index = _read(MIRROR_INDEX)
     if "(./11-infrastructure.md)" not in formal_index:
         findings.append(Finding("INFRA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route Infrastructure"))
+    if "11-infrastructure-data-services.md" not in formal_index:
+        findings.append(
+            Finding("INFRA_DATA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route data-service appendix")
+        )
     if "(./11-infrastructure.md)" not in mirror_index:
         findings.append(Finding("INFRA_MIRROR_INDEX_ROUTE", ".agent/modules/README.md does not route Infrastructure mirror"))
+    if "11-infrastructure-data-services.md" not in mirror_index:
+        findings.append(
+            Finding("INFRA_DATA_MIRROR_INDEX_ROUTE", ".agent/modules/README.md does not route data-service mirror")
+        )
 
     return findings
 
