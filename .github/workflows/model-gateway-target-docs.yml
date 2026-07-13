@@ -9,17 +9,21 @@ on:
       - ".agent/modules/04-model-gateway.md"
       - "docs/modules/04-model-gateway-contract-freeze.md"
       - ".agent/modules/04-model-gateway-contract-freeze.md"
+      - "docs/modules/04-model-gateway-operations-conformance.md"
+      - ".agent/modules/04-model-gateway-operations-conformance.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
       - ".agent/system.yaml"
       - "tools/scripts/verify_model_gateway_target_protocols.py"
       - "tools/scripts/verify_model_gateway_contract_freeze.py"
+      - "tools/scripts/verify_model_gateway_operations_conformance.py"
       - "tools/scripts/verify_model_gateway_boundaries.py"
       - "tools/scripts/verify_docs_entrypoints.py"
       - ".agent/scripts/verify_agent_system.py"
       - ".agent/scripts/verify_doc_boundaries.py"
       - "tests/repo/test_model_gateway_target_protocols.py"
       - "tests/repo/test_model_gateway_contract_freeze.py"
+      - "tests/repo/test_model_gateway_operations_conformance.py"
       - "tests/repo/test_docs_entrypoints.py"
       - ".github/workflows/model-gateway-target-docs.yml"
   push:
@@ -71,12 +75,14 @@ jobs:
           python -m py_compile \
             tools/scripts/verify_model_gateway_target_protocols.py \
             tools/scripts/verify_model_gateway_contract_freeze.py \
+            tools/scripts/verify_model_gateway_operations_conformance.py \
             tools/scripts/verify_model_gateway_boundaries.py \
             tools/scripts/verify_docs_entrypoints.py \
             .agent/scripts/verify_agent_system.py \
             .agent/scripts/verify_doc_boundaries.py \
             tests/repo/test_model_gateway_target_protocols.py \
             tests/repo/test_model_gateway_contract_freeze.py \
+            tests/repo/test_model_gateway_operations_conformance.py \
             tests/repo/test_docs_entrypoints.py \
             2>&1 | tee validation-logs/compile.log
 
@@ -87,6 +93,8 @@ jobs:
             2>&1 | tee validation-logs/model-gateway-target.log
           python tools/scripts/verify_model_gateway_contract_freeze.py \
             2>&1 | tee validation-logs/model-gateway-contract-freeze.log
+          python tools/scripts/verify_model_gateway_operations_conformance.py \
+            2>&1 | tee validation-logs/model-gateway-operations-conformance.log
 
       - name: Verify current Model Gateway boundary guard
         run: |
@@ -114,6 +122,7 @@ jobs:
           pytest -q \
             tests/repo/test_model_gateway_target_protocols.py \
             tests/repo/test_model_gateway_contract_freeze.py \
+            tests/repo/test_model_gateway_operations_conformance.py \
             tests/repo/test_docs_entrypoints.py \
             -p no:cacheprovider \
             2>&1 | tee validation-logs/tests.log
