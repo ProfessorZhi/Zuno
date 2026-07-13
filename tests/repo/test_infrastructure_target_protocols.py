@@ -276,7 +276,8 @@ def test_lifecycle_requirement_registry_is_complete() -> None:
 def test_wave1_contract_registry_has_shared_contract_ownership() -> None:
     content = CONTRACT_REGISTRY.read_text(encoding="utf-8")
     for term in [
-        "parallel-proposal-governance",
+        "status: confirmed-target",
+        "previous_status: field-frozen-pending-merge",
         "CrossModuleEnvelope",
         "SecurityConditionalWrite",
         "CredentialVersionRef",
