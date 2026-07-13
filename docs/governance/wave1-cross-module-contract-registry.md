@@ -458,39 +458,39 @@ Failure 不能被 Consumer 重命名成另一模块的成功或失败。
 | `ARCH-XMOD-009` | Failure Prefix 与共享 Code 无重复冲突 | `XMOD-009-UT, XMOD-009-IT` | `EV-XMOD-009` |
 | `ARCH-XMOD-010` | Confirmed Contract 必须有 ADR 与合并审计证据 | `XMOD-010-UT, XMOD-010-IT` | `EV-XMOD-010` |
 
-## 14. Wave 1 合并前审计清单
+## 14. Wave 1 合并审计清单
 
 ```text
-[x] 最新 main SHA 重新读取并保持 729e439e29deadc101c5687fc47125104e62e2c1
-[x] PR #17 / #18 / #19 / #20 当前 Head 已重新读取
-[x] Contract 名称、字段、Enum、Hash 和版本在 ADR 0003 冻结
+[x] Wave 1 基线 main SHA 已确认为 849820d2c52d36abebee8c3d4a974bf035524e0a
+[x] PR #19 Security 已合并
+[x] PR #18 Model Gateway 已合并
+[x] PR #17 Infrastructure / shared contracts 已合并
+[x] PR #21 Observability & Eval 已合并
+[x] Contract 名称、字段、Enum、Hash 和版本由 ADR 0003 与本 Registry 冻结
 [x] Security Epoch / Secret / Credential Ownership 对齐
 [x] AuditEvent / TelemetryEnvelope / Mandatory Audit 对齐
 [x] UsageReceipt / QuotaReservation / CancellationReceipt 对齐
 [x] Index Batch / Receipt / Manifest / Cutover / Watermark 对齐
-[x] PreparedAction / ToolAttempt / EffectReceipt Owner 决议
+[x] ActionProposal / ActionExecutionBinding / PreparedToolAction / EffectReceipt Owner 已去重
 [x] Failure Code Prefix 和共享 Code 去重
-[x] Retry / Replan / Fallback / Recovery Owner 去重
-[x] Infrastructure 物理目录冻结到 zuno/platform/**
-[x] 文档、ADR、Registry 和专用验证计划同步
-[x] 未运行验证继续明确记录
-[x] 没有把 Parallel Proposal 或 Target 写成 Current
-[ ] PR #17 合并，Registry 成为 CONFIRMED_TARGET
-[ ] PR #18 / #19 / #20 rebase 已合并 Registry 并更新兼容 Alias
+[x] Retry / Replan / Fallback / Reconcile / Recovery Owner 去重
+[x] Infrastructure 物理目录冻结到 src/backend/zuno/platform/**
+[x] 正式文档、模块入口、Agent 镜像和 focused validation 已同步
+[x] 未把 Target 写成 Current、implementation available 或 production ready
 [ ] Tool Runtime 正式模块采用 PreparedToolAction Contract
-[ ] Runtime 实现和工程证据完成
+[ ] Runtime 实现、Migration 和工程证据完成
+[ ] Integration / Fault / E2E / Trace / Eval 和运行证据完成
 ```
 
 ## 15. 当前结论
 
 ```text
-design field freeze complete
-status = FIELD_FROZEN_PENDING_MERGE
-module-internal Infrastructure design substantially complete
-cross-module ownership and schemas resolved
+design available
+status = CONFIRMED_TARGET
 implementation not established
-quality not proven
+measurement blocked
+quality not yet proven
 production ready not established
 ```
 
-PR #17 合并后，本 Registry 状态应更新为 `CONFIRMED_TARGET`；在此之前它仍不是 `main` 的正式事实源。
+本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`。它是后续模块设计和 Codex 实现的正式 Target 事实源，但仍不是 Runtime Current、实现证据或生产可用声明。
