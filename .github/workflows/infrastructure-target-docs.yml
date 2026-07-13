@@ -5,6 +5,8 @@ on:
     paths:
       - "docs/modules/11-infrastructure.md"
       - ".agent/modules/11-infrastructure.md"
+      - "docs/modules/11-infrastructure-data-services.md"
+      - ".agent/modules/11-infrastructure-data-services.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
@@ -16,6 +18,8 @@ on:
     paths:
       - "docs/modules/11-infrastructure.md"
       - ".agent/modules/11-infrastructure.md"
+      - "docs/modules/11-infrastructure-data-services.md"
+      - ".agent/modules/11-infrastructure-data-services.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
