@@ -41,21 +41,29 @@ def normalize_infrastructure_validation() -> None:
     verifier = INFRA_VERIFIER.read_text(encoding="utf-8")
     verifier = verifier.replace('"Wave 1 合并前审计清单",', '"Wave 1 合并审计清单",')
     if '"本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",' not in verifier:
-        verifier = verifier.replace(
-            '"Wave 1 合并审计清单",\n]',
-            '"Wave 1 合并审计清单",\n    "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",\n]',
-            1,
+        anchor = '    "Wave 1 合并审计清单",\n]'
+        replacement = (
+            '    "Wave 1 合并审计清单",\n'
+            '    "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",\n'
+            ']'
         )
+        if anchor not in verifier:
+            raise RuntimeError("Infrastructure verifier Registry term list changed unexpectedly")
+        verifier = verifier.replace(anchor, replacement, 1)
     INFRA_VERIFIER.write_text(verifier, encoding="utf-8", newline="\n")
 
     tests = INFRA_TESTS.read_text(encoding="utf-8")
     tests = tests.replace('"Wave 1 合并前审计清单",', '"Wave 1 合并审计清单",')
     if '"本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",' not in tests:
-        tests = tests.replace(
-            '"Wave 1 合并审计清单",\n        "ALIGNED_PENDING_FIELDS",',
-            '"Wave 1 合并审计清单",\n        "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",\n        "ALIGNED_PENDING_FIELDS",',
-            1,
+        anchor = '        "Wave 1 合并审计清单",\n        "ALIGNED_PENDING_FIELDS",'
+        replacement = (
+            '        "Wave 1 合并审计清单",\n'
+            '        "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",\n'
+            '        "ALIGNED_PENDING_FIELDS",'
         )
+        if anchor not in tests:
+            raise RuntimeError("Infrastructure focused test term list changed unexpectedly")
+        tests = tests.replace(anchor, replacement, 1)
     INFRA_TESTS.write_text(tests, encoding="utf-8", newline="\n")
 
 
