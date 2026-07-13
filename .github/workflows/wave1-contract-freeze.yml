@@ -13,7 +13,7 @@ on:
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
       - ".agent/scripts/verify_agent_system.py"
-      - "tools/scripts/coordinate_wave1_architecture.py"
+      - "tools/scripts/finish_wave1_coordination.py"
       - "tools/scripts/verify_wave1_contract_freeze.py"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
       - "tools/scripts/verify_agent_core_target_protocols.py"
@@ -47,45 +47,19 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Apply centralized Wave 1 architecture decisions
+      - name: Finish centralized verifier alignment
         run: |
-          mkdir -p validation-logs
-          python - <<'PY'
-          from pathlib import Path
-          path = Path("tools/scripts/coordinate_wave1_architecture.py")
-          text = path.read_text(encoding="utf-8")
-          text = text.replace(
-              '    if count != 1:\n        raise RuntimeError(f"{label}: expected one occurrence, got {count}")\n    return text.replace(old, new, 1)',
-              '    if count == 0:\n        print(f"SKIP {label}: already applied or source text changed")\n        return text\n    if count > 1:\n        raise RuntimeError(f"{label}: expected at most one occurrence, got {count}")\n    return text.replace(old, new, 1)',
-              1,
-          )
-          path.write_text(text, encoding="utf-8", newline="\n")
-          PY
-          python -m py_compile tools/scripts/coordinate_wave1_architecture.py
-          set +e
-          python tools/scripts/coordinate_wave1_architecture.py > validation-logs/wave1-coordinate.log 2>&1
-          coordinate_status=$?
-          set -e
-          cat validation-logs/wave1-coordinate.log
+          python -m py_compile tools/scripts/finish_wave1_coordination.py
+          python tools/scripts/finish_wave1_coordination.py
           git diff --check -- '*.py' '*.yml' '*.yaml'
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/decisions/0003-wave1-cross-module-contract-freeze.md \
-            docs/governance/wave1-cross-module-contract-registry.md \
-            docs/modules/06-agent-core-planning-control.md \
-            .agent/modules/06-agent-core-planning-control.md \
-            docs/modules/11-infrastructure.md \
-            .agent/modules/11-infrastructure.md \
-            tools/scripts/verify_agent_core_target_protocols.py \
-            tools/scripts/verify_infrastructure_target_protocols.py \
-            tools/scripts/verify_wave1_contract_freeze.py \
-            .agent/scripts/verify_agent_system.py
-          git add -f validation-logs/wave1-coordinate.log
-          if ! git diff --cached --quiet; then
-            git commit -m "docs: apply Wave 1 architecture coordination diagnostics"
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add tools/scripts/verify_wave1_contract_freeze.py
+            git add -u validation-logs/wave1-coordinate.log
+            git commit -m "docs: finish Wave 1 architecture verifier alignment"
             git push origin HEAD:agent/design-11-infrastructure
           fi
-          exit $coordinate_status
 
       - name: Install focused test dependency
         run: python -m pip install --disable-pip-version-check pytest
