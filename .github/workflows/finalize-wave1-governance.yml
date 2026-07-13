@@ -15,6 +15,7 @@ on:
       - "tools/scripts/verify_wave1_contract_freeze.py"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
       - "tests/repo/test_wave1_contract_freeze.py"
+      - "tests/repo/test_infrastructure_target_protocols.py"
       - ".github/workflows/finalize-wave1-governance.yml"
   workflow_dispatch:
 
@@ -60,7 +61,8 @@ jobs:
               .agent/modules/README.md \
               tools/scripts/verify_wave1_contract_freeze.py \
               tools/scripts/verify_infrastructure_target_protocols.py \
-              tests/repo/test_wave1_contract_freeze.py
+              tests/repo/test_wave1_contract_freeze.py \
+              tests/repo/test_infrastructure_target_protocols.py
             git commit -m "docs: confirm Wave 1 shared target contracts"
             git push origin HEAD:agent/finalize-wave1-architecture-governance
           fi
