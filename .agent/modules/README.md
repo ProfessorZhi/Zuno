@@ -9,7 +9,7 @@
 | 01 | Product Surface | `01-product-surface.md` | 待细化 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](../../docs/modules/02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](../../docs/modules/03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | `04-model-gateway.md` | 待细化 |
+| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) | Target 架构镜像 |
 | 05 | Memory & Context | [`05-memory-context.md`](../../docs/modules/05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构镜像 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
@@ -17,6 +17,27 @@
 | 09 | Security | `09-security.md` | 待细化 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](../../docs/modules/10-observability-eval.md) | 已建立 Target 规范 |
 | 11 | Infrastructure | `11-infrastructure.md` | 待细化 |
+
+## Model Gateway Target 镜像
+
+```text
+.agent/modules/04-model-gateway.md
+```
+
+对应正式事实源：
+
+```text
+docs/modules/04-model-gateway.md
+```
+
+正式文件与镜像必须字节级一致。Model Gateway Current 与旁路调用不能从 Target 文档推断，必须读取状态文件、代码调用链和 boundary verifier。
+
+专用验证：
+
+```text
+python tools/scripts/verify_model_gateway_target_protocols.py
+pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider
+```
 
 ## Agent Core 唯一 Target 镜像
 

@@ -68,6 +68,14 @@ module_document_contract:
   formal_index: "docs/modules/README.md"
   agent_index: ".agent/modules/README.md"
   status_truth: "docs/status/production-readiness.md"
+  model_gateway:
+    formal:
+      - "docs/modules/04-model-gateway.md"
+    mirror:
+      - ".agent/modules/04-model-gateway.md"
+    target_only: true
+    verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"
+    test: "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"
   agent_core:
     formal:
       - "docs/modules/06-agent-core-planning-control.md"
@@ -159,6 +167,7 @@ skill_routes:
       - "docs/modules/README.md"
       - "docs/modules/02-input-document-ingestion.md"
       - "docs/modules/03-knowledge-agentic-graphrag.md"
+      - "docs/modules/04-model-gateway.md"
       - "docs/modules/05-memory-context.md"
       - "docs/modules/06-agent-core-planning-control.md"
       - "docs/modules/07-capability-skill.md"
@@ -173,6 +182,7 @@ skill_routes:
       - ".agent/architecture/architecture-views.md"
       - ".agent/architecture/architecture.html"
       - ".agent/modules/README.md"
+      - ".agent/modules/04-model-gateway.md"
       - ".agent/modules/06-agent-core-planning-control.md"
       - ".agent/references/docs-map.md"
       - ".agent/references/architecture-docs-map.md"
@@ -191,9 +201,11 @@ skill_routes:
       - "python tools/scripts/verify_docs_entrypoints.py"
       - "python tools/scripts/verify_current_program.py"
       - "python tools/scripts/verify_repo_structure.py"
+      - "python tools/scripts/verify_model_gateway_target_protocols.py"
       - "python tools/scripts/verify_agent_core_target_protocols.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"
+      - "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"
       - "pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
 
   - name: "backend-agent-runtime"
