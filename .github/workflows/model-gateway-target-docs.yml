@@ -1,0 +1,137 @@
+name: Model Gateway Target Documentation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docs/modules/04-model-gateway.md"
+      - ".agent/modules/04-model-gateway.md"
+      - "docs/modules/04-model-gateway-contract-freeze.md"
+      - ".agent/modules/04-model-gateway-contract-freeze.md"
+      - "docs/modules/04-model-gateway-operations-conformance.md"
+      - ".agent/modules/04-model-gateway-operations-conformance.md"
+      - "docs/modules/README.md"
+      - ".agent/modules/README.md"
+      - ".agent/system.yaml"
+      - "tools/scripts/verify_model_gateway_target_protocols.py"
+      - "tools/scripts/verify_model_gateway_contract_freeze.py"
+      - "tools/scripts/verify_model_gateway_operations_conformance.py"
+      - "tools/scripts/verify_model_gateway_boundaries.py"
+      - "tools/scripts/verify_docs_entrypoints.py"
+      - ".agent/scripts/verify_agent_system.py"
+      - ".agent/scripts/verify_doc_boundaries.py"
+      - "tests/repo/test_model_gateway_target_protocols.py"
+      - "tests/repo/test_model_gateway_contract_freeze.py"
+      - "tests/repo/test_model_gateway_operations_conformance.py"
+      - "tests/repo/test_docs_entrypoints.py"
+      - ".github/workflows/model-gateway-target-docs.yml"
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-gateway-target-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Model Gateway target contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Prepare validation logs
+        run: mkdir -p validation-logs
+
+      - name: Verify patch formatting
+        run: |
+          set -o pipefail
+          git diff --check origin/main...HEAD \
+            2>&1 | tee validation-logs/diff-check.log
+
+      - name: Compile validation scripts
+        run: |
+          set -o pipefail
+          python -m py_compile \
+            tools/scripts/verify_model_gateway_target_protocols.py \
+            tools/scripts/verify_model_gateway_contract_freeze.py \
+            tools/scripts/verify_model_gateway_operations_conformance.py \
+            tools/scripts/verify_model_gateway_boundaries.py \
+            tools/scripts/verify_docs_entrypoints.py \
+            .agent/scripts/verify_agent_system.py \
+            .agent/scripts/verify_doc_boundaries.py \
+            tests/repo/test_model_gateway_target_protocols.py \
+            tests/repo/test_model_gateway_contract_freeze.py \
+            tests/repo/test_model_gateway_operations_conformance.py \
+            tests/repo/test_docs_entrypoints.py \
+            2>&1 | tee validation-logs/compile.log
+
+      - name: Verify Model Gateway target architecture
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_model_gateway_target_protocols.py \
+            2>&1 | tee validation-logs/model-gateway-target.log
+          python tools/scripts/verify_model_gateway_contract_freeze.py \
+            2>&1 | tee validation-logs/model-gateway-contract-freeze.log
+          python tools/scripts/verify_model_gateway_operations_conformance.py \
+            2>&1 | tee validation-logs/model-gateway-operations-conformance.log
+
+      - name: Verify current Model Gateway boundary guard
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_model_gateway_boundaries.py \
+            2>&1 | tee validation-logs/model-gateway-boundary.log
+
+      - name: Verify Agent System and document boundaries
+        run: |
+          set -o pipefail
+          python .agent/scripts/verify_agent_system.py \
+            2>&1 | tee validation-logs/agent-system.log
+          python .agent/scripts/verify_doc_boundaries.py \
+            2>&1 | tee validation-logs/doc-boundaries.log
+
+      - name: Verify documentation entrypoints
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_docs_entrypoints.py \
+            2>&1 | tee validation-logs/docs-entrypoints.log
+
+      - name: Run focused repository tests
+        run: |
+          set -o pipefail
+          pytest -q \
+            tests/repo/test_model_gateway_target_protocols.py \
+            tests/repo/test_model_gateway_contract_freeze.py \
+            tests/repo/test_model_gateway_operations_conformance.py \
+            tests/repo/test_docs_entrypoints.py \
+            -p no:cacheprovider \
+            2>&1 | tee validation-logs/tests.log
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-gateway-target-validation-logs
+          path: validation-logs/
+          if-no-files-found: error
+          retention-days: 14
