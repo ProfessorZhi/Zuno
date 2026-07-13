@@ -65,8 +65,8 @@ jobs:
           set +e
           python tools/scripts/coordinate_wave1_architecture.py > validation-logs/wave1-coordinate.log 2>&1
           coordinate_status=$?
-          cat validation-logs/wave1-coordinate.log
           set -e
+          cat validation-logs/wave1-coordinate.log
           git diff --check -- '*.py' '*.yml' '*.yaml'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -79,8 +79,8 @@ jobs:
             tools/scripts/verify_agent_core_target_protocols.py \
             tools/scripts/verify_infrastructure_target_protocols.py \
             tools/scripts/verify_wave1_contract_freeze.py \
-            .agent/scripts/verify_agent_system.py \
-            validation-logs/wave1-coordinate.log
+            .agent/scripts/verify_agent_system.py
+          git add -f validation-logs/wave1-coordinate.log
           if ! git diff --cached --quiet; then
             git commit -m "docs: apply Wave 1 architecture coordination diagnostics"
             git push origin HEAD:agent/design-11-infrastructure
