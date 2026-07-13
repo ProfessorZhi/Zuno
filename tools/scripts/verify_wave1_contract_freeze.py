@@ -18,7 +18,7 @@ CORE_MIRROR = REPO_ROOT / ".agent/modules/06-agent-core-planning-control.md"
 BASELINE_SHA = "729e439e29deadc101c5687fc47125104e62e2c1"
 
 ADR_TERMS = [
-    "status: accepted-target-pending-merge",
+    "status: accepted-target",
     "CrossModuleEnvelopeV1",
     "服务端权威产品边界",
     "contract_bundle_version",
@@ -41,7 +41,7 @@ ADR_TERMS = [
     "ActionExecutionBinding",
     "EffectReceipt",
     "EffectReconciliation",
-    "FIELD_FROZEN_PENDING_MERGE",
+    "CONFIRMED_TARGET",
     "src/backend/zuno/platform/",
     "├── data_services/",
     "Queue ACK != Tool Effect Success",
@@ -49,7 +49,7 @@ ADR_TERMS = [
 ]
 
 REGISTRY_TERMS = [
-    "status: field-frozen-pending-merge",
+    "status: confirmed-target",
     "previous_status: parallel-proposal-governance",
     "CrossModuleEnvelopeV1",
     "产品部署边界",
@@ -81,7 +81,7 @@ REGISTRY_TERMS = [
     "PreparedToolAction",
     "Queue ACK != Tool Effect Success",
     "Failure Ownership Matrix",
-    "Wave 1 合并前审计清单",
+    "CONFIRMED_TARGET",
     "design field freeze complete",
 ]
 
@@ -148,7 +148,6 @@ def verify() -> list[Finding]:
     ]:
         if not path.exists():
             findings.append(Finding(code, str(path.relative_to(REPO_ROOT))))
-
     if findings:
         return findings
 
@@ -158,13 +157,6 @@ def verify() -> list[Finding]:
     modules_index = _read(MODULES_INDEX)
     agent_index = _read(AGENT_MODULES_INDEX)
     core = _read(CORE)
-    # The immediate post-merge integration PR owns shared README routing. This
-    # avoids selecting one stale concurrent module index while preserving strict
-    # ADR, Registry, Core, Ownership and Requirement validation here.
-    if "field-frozen-pending-merge" in registry:
-        deferred_routes = "\n0003-wave1-cross-module-contract-freeze.md\nwave1-cross-module-contract-registry.md\nFIELD_FROZEN_PENDING_MERGE\nsrc/backend/zuno/platform/**\nPreparedToolAction\n"
-        modules_index += deferred_routes
-        agent_index += deferred_routes
 
     if CORE.read_bytes() != CORE_MIRROR.read_bytes():
         findings.append(Finding("XMOD_CORE_MIRROR_DRIFT", "Agent Core formal document and mirror differ"))
@@ -180,17 +172,13 @@ def verify() -> list[Finding]:
         "payload_schema_hash",
     ]:
         _require(core, term, "XMOD_CORE_ALIGNMENT", findings)
-    for forbidden in [
-        "`PreparedAction`、`ArtifactVersion`",
-        "agent_prepared_actions",
-    ]:
+    for forbidden in ["`PreparedAction`、`ArtifactVersion`", "agent_prepared_actions"]:
         if forbidden in core:
             findings.append(Finding("XMOD_CORE_LEGACY_OWNERSHIP", f"legacy Agent Core ownership remains: {forbidden}"))
 
     for content, label in [(adr, "ADR"), (registry, "REGISTRY")]:
         if BASELINE_SHA not in content:
             findings.append(Finding("XMOD_BASELINE_MISSING", f"{label} does not pin baseline SHA"))
-
     for term in ADR_TERMS:
         _require(adr, term, "XMOD_ADR_COVERAGE", findings)
     for term in REGISTRY_TERMS:
@@ -206,8 +194,7 @@ def verify() -> list[Finding]:
         for term in [
             "0003-wave1-cross-module-contract-freeze.md",
             "wave1-cross-module-contract-registry.md",
-            "FIELD_FROZEN_PENDING_MERGE",
-            "src/backend/zuno/platform/**",
+            "CONFIRMED_TARGET",
             "PreparedToolAction",
         ]:
             if term not in content:
@@ -216,7 +203,6 @@ def verify() -> list[Finding]:
     requirement_ids = [int(value) for value in re.findall(r"ARCH-XMOD-(\d{3})", registry)]
     if sorted(requirement_ids) != list(range(1, 11)):
         findings.append(Finding("XMOD_REQUIREMENT_REGISTRY", "ARCH-XMOD IDs must be exactly 001..010"))
-
     for number in range(1, 11):
         for suffix in ["UT", "IT"]:
             test_id = f"XMOD-{number:03d}-{suffix}"
@@ -226,24 +212,25 @@ def verify() -> list[Finding]:
         if evidence_id not in registry:
             findings.append(Finding("XMOD_EVIDENCE_MAPPING", f"missing {evidence_id}"))
 
-    if registry.count("`FIELD_FROZEN_PENDING_MERGE`") < 25:
-        findings.append(Finding("XMOD_STATUS_NOT_FROZEN", "too few shared contracts are field-frozen"))
+    if registry.count("`CONFIRMED_TARGET`") < 25:
+        findings.append(Finding("XMOD_STATUS_NOT_CONFIRMED", "too few shared contracts are confirmed Target"))
 
     forbidden_unresolved_phrases = [
         "协调状态：`CONFLICT_REQUIRES_DECISION`",
         "本文件当前所有条目最高只能是 `ALIGNED_PENDING_FIELDS`",
         "字段级 Contract 尚未全部确认",
+        "PR #17 合并后，本 Registry 状态应更新为 `CONFIRMED_TARGET`",
+        "仍在未合并 PR",
+        "不会把 PR #18、#19、#20 当成已合并事实源",
     ]
     for phrase in forbidden_unresolved_phrases:
         if phrase in registry:
-            findings.append(Finding("XMOD_UNRESOLVED_DRIFT", f"registry still contains unresolved statement: {phrase}"))
+            findings.append(Finding("XMOD_UNRESOLVED_DRIFT", f"registry still contains stale statement: {phrase}"))
 
     for content, label in [(adr, "ADR"), (registry, "REGISTRY")]:
         for line in content.splitlines():
             if "src/backend/zuno/infrastructure/" in line and "不新增" not in line:
-                findings.append(
-                    Finding("XMOD_PHYSICAL_OWNER_DRIFT", f"{label} positively maps runtime code to zuno/infrastructure: {line}")
-                )
+                findings.append(Finding("XMOD_PHYSICAL_OWNER_DRIFT", f"{label} positively maps runtime code to zuno/infrastructure: {line}"))
 
     for phrase in [
         "Queue ACK != Tool Effect Success",
@@ -253,8 +240,11 @@ def verify() -> list[Finding]:
         if phrase not in adr or phrase not in registry:
             findings.append(Finding("XMOD_RECEIPT_BOUNDARY", f"missing invariant: {phrase}"))
 
-    if "accepted-target-pending-merge" not in adr or "field-frozen-pending-merge" not in registry:
-        findings.append(Finding("XMOD_STATUS_INVALID", "ADR/Registry pending-merge status is inconsistent"))
+    if "status: accepted-target" not in adr or "status: confirmed-target" not in registry:
+        findings.append(Finding("XMOD_STATUS_INVALID", "ADR/Registry confirmed Target status is inconsistent"))
+    for stale_status in ["accepted-target-pending-merge", "field-frozen-pending-merge", "FIELD_FROZEN_PENDING_MERGE"]:
+        if stale_status in adr or stale_status in registry:
+            findings.append(Finding("XMOD_STALE_PENDING_STATUS", f"stale pending status remains: {stale_status}"))
 
     forbidden_promotions = [
         "production ready 已完成",
@@ -278,7 +268,7 @@ def main() -> int:
         for finding in findings:
             print(f"- {finding}")
         return 1
-    print("Wave 1 contract freeze verification passed.")
+    print("Wave 1 confirmed contract verification passed.")
     return 0
 
 
