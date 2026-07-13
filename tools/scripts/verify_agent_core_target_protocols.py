@@ -62,7 +62,9 @@ REQUIRED_TERMS = [
     "pending_interrupt_refs",
     "WAITING_CONDITION",
     "CANCELLING",
-    "PreparedAction",
+    "ActionProposal",
+    "ActionExecutionBinding",
+    "PreparedToolAction",
     "RecoveryWatermark",
     "ResultValidity",
     "RunOrphanReconciler",
@@ -92,6 +94,10 @@ REQUIRED_TABLES = [
     "agent_run_stream_events",
     "agent_state_migration_records",
     "agent_outcome_corrections",
+    "agent_action_proposals",
+    "agent_action_execution_bindings",
+    "agent_action_proposals",
+    "agent_action_execution_bindings",
 ]
 
 FORBIDDEN_TERMS = [
@@ -104,12 +110,20 @@ FORBIDDEN_TERMS = [
     "状态：DRAFT、VALIDATING、VALID、INVALID、SUPERSEDED、PUBLISHED、WITHDRAWN。",
     "SUCCEEDED\nFAILED\nUNKNOWN\nRECONCILING\nRECONCILED",
     "状态：CLAIMED、EXECUTING、SUCCEEDED、FAILED、UNKNOWN、RECONCILED。",
+    "`PreparedAction`、`ArtifactVersion`",
+    "agent_prepared_actions",
+    "`PreparedAction`、`ArtifactVersion`",
+    "agent_prepared_actions",
 ]
 
 OBJECT_TABLE_PAIRS = {
     "ObjectiveOutcome": "agent_objective_outcomes",
     "RunCommand": "agent_run_commands",
     "ControlDecision": "agent_control_decisions",
+    "ActionProposal": "agent_action_proposals",
+    "ActionExecutionBinding": "agent_action_execution_bindings",
+    "ActionProposal": "agent_action_proposals",
+    "ActionExecutionBinding": "agent_action_execution_bindings",
     "EffectivePolicySnapshot": "agent_effective_policy_snapshots",
     "ResourceClaim": "agent_resource_claims",
     "DomainCommitMarker": "agent_domain_commit_markers",
