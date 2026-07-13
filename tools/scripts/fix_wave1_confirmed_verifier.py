@@ -5,9 +5,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WAVE_VERIFIER = ROOT / "tools/scripts/verify_wave1_contract_freeze.py"
+INFRA_VERIFIER = ROOT / "tools/scripts/verify_infrastructure_target_protocols.py"
+INFRA_TESTS = ROOT / "tests/repo/test_infrastructure_target_protocols.py"
 
 
-def main() -> None:
+def normalize_wave_verifier() -> None:
     text = WAVE_VERIFIER.read_text(encoding="utf-8")
     text = text.replace('"Wave 1 合并前审计清单",', '"Wave 1 合并审计清单",')
     text = text.replace('"design field freeze complete",', '"design available",\n    "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",')
@@ -32,17 +34,60 @@ def main() -> None:
             raise RuntimeError("Wave 1 verifier unresolved-phrase block changed unexpectedly")
         text = text.replace(anchor, replacement, 1)
 
-    for required in [
-        '"Wave 1 合并审计清单",',
-        '"design available",',
-        '"本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",',
-        '"status = FIELD_FROZEN_PENDING_MERGE",',
-    ]:
-        if required not in text:
-            raise RuntimeError(f"missing normalized verifier term: {required}")
-
     WAVE_VERIFIER.write_text(text, encoding="utf-8", newline="\n")
-    print("Confirmed Wave 1 verifier normalized for final governance state.")
+
+
+def normalize_infrastructure_validation() -> None:
+    verifier = INFRA_VERIFIER.read_text(encoding="utf-8")
+    verifier = verifier.replace('"Wave 1 合并前审计清单",', '"Wave 1 合并审计清单",')
+    if '"本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",' not in verifier:
+        verifier = verifier.replace(
+            '"Wave 1 合并审计清单",\n]',
+            '"Wave 1 合并审计清单",\n    "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",\n]',
+            1,
+        )
+    INFRA_VERIFIER.write_text(verifier, encoding="utf-8", newline="\n")
+
+    tests = INFRA_TESTS.read_text(encoding="utf-8")
+    tests = tests.replace('"Wave 1 合并前审计清单",', '"Wave 1 合并审计清单",')
+    if '"本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",' not in tests:
+        tests = tests.replace(
+            '"Wave 1 合并审计清单",\n        "ALIGNED_PENDING_FIELDS",',
+            '"Wave 1 合并审计清单",\n        "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",\n        "ALIGNED_PENDING_FIELDS",',
+            1,
+        )
+    INFRA_TESTS.write_text(tests, encoding="utf-8", newline="\n")
+
+
+def main() -> None:
+    normalize_wave_verifier()
+    normalize_infrastructure_validation()
+
+    for path, required_terms in [
+        (
+            WAVE_VERIFIER,
+            [
+                "Wave 1 合并审计清单",
+                "design available",
+                "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",
+                "status = FIELD_FROZEN_PENDING_MERGE",
+            ],
+        ),
+        (
+            INFRA_VERIFIER,
+            ["Wave 1 合并审计清单", "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`"],
+        ),
+        (
+            INFRA_TESTS,
+            ["Wave 1 合并审计清单", "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`"],
+        ),
+    ]:
+        content = path.read_text(encoding="utf-8")
+        for term in required_terms:
+            if term not in content:
+                raise RuntimeError(f"{path}: missing normalized term {term}")
+
+    print("Wave 1 and Infrastructure validation normalized for final governance state.")
 
 
 if __name__ == "__main__":
