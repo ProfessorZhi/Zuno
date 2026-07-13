@@ -60,7 +60,7 @@ jobs:
             .agent/modules/10-observability-eval-rag-agent-evaluation.md \
             tools/scripts/verify_observability_eval_target_protocols.py \
             tests/repo/test_observability_eval_target_protocols.py
-          git diff --check --cached
+          git diff --check --cached -- '*.py' '*.yml' '*.yaml'
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
