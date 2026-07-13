@@ -11,6 +11,9 @@ FORMAL = REPO_ROOT / "docs/modules/11-infrastructure.md"
 MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure.md"
 DATA_FORMAL = REPO_ROOT / "docs/modules/11-infrastructure-data-services.md"
 DATA_MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure-data-services.md"
+LIFECYCLE_FORMAL = REPO_ROOT / "docs/modules/11-infrastructure-consistency-lifecycle.md"
+LIFECYCLE_MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure-consistency-lifecycle.md"
+CONTRACT_REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
 FORMAL_INDEX = REPO_ROOT / "docs/modules/README.md"
 MIRROR_INDEX = REPO_ROOT / ".agent/modules/README.md"
 
@@ -137,6 +140,80 @@ DATA_FAILURE_TERMS = [
     "PITR with Stale Derived Indexes",
 ]
 
+LIFECYCLE_TERMS = [
+    "IndexBuildRun",
+    "IndexWriteBatch",
+    "IndexWriteReceipt",
+    "IndexVerification",
+    "DerivedIndexReplica",
+    "IndexCutover",
+    "IndexRebuildRun",
+    "IndexRetirement",
+    "IndexReconciliationFinding",
+    "ServingWatermark",
+    "WriteVisibilityReceipt",
+    "DeletionRequest",
+    "DeletionTarget",
+    "DeletionVerification",
+    "RecoverySetManifest",
+    "RecoverySetValidation",
+    "AuditDurabilityRequirement",
+    "AuditBufferReservation",
+    "AuditPersistenceReceipt",
+    "TenantIsolationProfile",
+    "ServiceCompatibilityEntry",
+    "AdapterConformanceProfile",
+    "ServiceCriticalityProfile",
+    "ReleaseManifest",
+    "ResourceUsageAttribution",
+    "Cross-store Deletion",
+    "Recovery Set",
+    "Mandatory Audit Backpressure",
+    "Upgrade Compatibility",
+    "PreparedAction 与 Tool Effect Ownership",
+    "Tenant Filter Omission / Cross-tenant Hit",
+    "PITR With Ahead / Behind Derived Index",
+]
+
+LIFECYCLE_FAILURES = [
+    "INFRA_INDEX_CUTOVER_GENERATION_CONFLICT",
+    "INFRA_DELETION_VISIBILITY_DEADLINE",
+    "INFRA_RECOVERY_SET_INCONSISTENT",
+    "INFRA_MANDATORY_AUDIT_BLOCK_EFFECT",
+    "INFRA_CROSS_TENANT_HIT",
+    "INFRA_ADAPTER_SEMANTIC_UNSUPPORTED",
+    "INFRA_RELEASE_PROVENANCE_INVALID",
+    "INFRA_RESOURCE_ATTRIBUTION_MISSING",
+]
+
+REGISTRY_TERMS = [
+    "parallel-proposal-governance",
+    "CrossModuleEnvelope",
+    "SecurityConditionalWrite",
+    "CredentialVersionRef",
+    "SecurityAuditRequirement",
+    "AuditDurabilityRequirement",
+    "TelemetryEnvelope",
+    "ProviderConnectionFactory",
+    "UsageReceipt",
+    "QuotaReservation",
+    "CancellationReceipt",
+    "VectorIndexSpec",
+    "GraphIndexSpec",
+    "LexicalIndexSpec",
+    "IndexWriteBatch",
+    "IndexWriteReceipt",
+    "WriteVisibilityReceipt",
+    "IndexManifest",
+    "ServingWatermark",
+    "DeletionRequest",
+    "RecoverySetManifest",
+    "PreparedAction Ownership 决议建议",
+    "Queue ACK != Tool Effect Success",
+    "Failure Ownership Matrix",
+    "Wave 1 合并前审计清单",
+]
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -156,6 +233,32 @@ def _require(content: str, term: str, code: str, findings: list[Finding]) -> Non
         findings.append(Finding(code, f"missing required term: {term}"))
 
 
+def _verify_numbered_registry(
+    *,
+    content: str,
+    pattern: str,
+    expected: list[int],
+    prefix: str,
+    finding_prefix: str,
+    findings: list[Finding],
+) -> None:
+    numbers = [int(value) for value in re.findall(pattern, content)]
+    if sorted(numbers) != expected:
+        findings.append(
+            Finding(f"{finding_prefix}_REQUIREMENT_REGISTRY", f"{prefix} IDs must be exactly {expected[0]:03d}..{expected[-1]:03d}")
+        )
+    test_prefix = prefix.replace("ARCH-", "")
+    evidence_prefix = prefix.replace("ARCH-", "EV-")
+    for number in expected:
+        for suffix in ["UT", "IT"]:
+            test_id = f"{test_prefix}-{number:03d}-{suffix}"
+            if test_id not in content:
+                findings.append(Finding(f"{finding_prefix}_TEST_MAPPING", f"missing {test_id}"))
+        evidence_id = f"{evidence_prefix}-{number:03d}"
+        if evidence_id not in content:
+            findings.append(Finding(f"{finding_prefix}_EVIDENCE_MAPPING", f"missing {evidence_id}"))
+
+
 def verify() -> list[Finding]:
     findings: list[Finding] = []
 
@@ -164,6 +267,9 @@ def verify() -> list[Finding]:
         (MIRROR, "INFRA_MIRROR_MISSING"),
         (DATA_FORMAL, "INFRA_DATA_DOC_MISSING"),
         (DATA_MIRROR, "INFRA_DATA_MIRROR_MISSING"),
+        (LIFECYCLE_FORMAL, "INFRA_LIFECYCLE_DOC_MISSING"),
+        (LIFECYCLE_MIRROR, "INFRA_LIFECYCLE_MIRROR_MISSING"),
+        (CONTRACT_REGISTRY, "INFRA_CONTRACT_REGISTRY_MISSING"),
         (FORMAL_INDEX, "INFRA_FORMAL_INDEX_MISSING"),
         (MIRROR_INDEX, "INFRA_MIRROR_INDEX_MISSING"),
     ]:
@@ -175,12 +281,16 @@ def verify() -> list[Finding]:
 
     content = _read(FORMAL)
     data_content = _read(DATA_FORMAL)
+    lifecycle_content = _read(LIFECYCLE_FORMAL)
+    registry_content = _read(CONTRACT_REGISTRY)
 
     if FORMAL.read_bytes() != MIRROR.read_bytes():
         findings.append(Finding("INFRA_MIRROR_DRIFT", "formal document and Agent mirror are not byte-identical"))
     if DATA_FORMAL.read_bytes() != DATA_MIRROR.read_bytes():
+        findings.append(Finding("INFRA_DATA_MIRROR_DRIFT", "data-service appendix and Agent mirror are not byte-identical"))
+    if LIFECYCLE_FORMAL.read_bytes() != LIFECYCLE_MIRROR.read_bytes():
         findings.append(
-            Finding("INFRA_DATA_MIRROR_DRIFT", "data-service appendix and Agent mirror are not byte-identical")
+            Finding("INFRA_LIFECYCLE_MIRROR_DRIFT", "lifecycle appendix and Agent mirror are not byte-identical")
         )
 
     positions: list[int] = []
@@ -226,7 +336,6 @@ def verify() -> list[Finding]:
         findings.append(Finding("INFRA_REQUIREMENT_REGISTRY", "ARCH-INFRA IDs must be exactly 001..048"))
     if sorted(controls) != expected:
         findings.append(Finding("INFRA_CONTROL_REGISTRY", "RC-INFRA IDs must be exactly 001..048"))
-
     for number in expected:
         for suffix in ["UT", "IT"]:
             test_id = f"INFRA-{number:03d}-{suffix}"
@@ -236,28 +345,49 @@ def verify() -> list[Finding]:
         if evidence_id not in content:
             findings.append(Finding("INFRA_EVIDENCE_MAPPING", f"missing {evidence_id}"))
 
-    if "parent_document: `docs/modules/11-infrastructure.md`" not in data_content:
-        findings.append(Finding("INFRA_DATA_PARENT", "appendix does not declare the Infrastructure parent document"))
+    for appendix_content, code in [
+        (data_content, "INFRA_DATA_PARENT"),
+        (lifecycle_content, "INFRA_LIFECYCLE_PARENT"),
+    ]:
+        if "parent_document: `docs/modules/11-infrastructure.md`" not in appendix_content:
+            findings.append(Finding(code, "appendix does not declare the Infrastructure parent document"))
 
     for term in DATA_SERVICE_TERMS:
         _require(data_content, term, "INFRA_DATA_SERVICE_COVERAGE", findings)
     for term in DATA_FAILURE_TERMS:
         _require(data_content, term, "INFRA_DATA_FAILURE_COVERAGE", findings)
+    _verify_numbered_registry(
+        content=data_content,
+        pattern=r"ARCH-INFRA-DS-(\d{3})",
+        expected=list(range(1, 13)),
+        prefix="ARCH-INFRA-DS",
+        finding_prefix="INFRA_DATA",
+        findings=findings,
+    )
 
-    data_requirements = [int(value) for value in re.findall(r"ARCH-INFRA-DS-(\d{3})", data_content)]
-    expected_data = list(range(1, 13))
-    if sorted(data_requirements) != expected_data:
-        findings.append(
-            Finding("INFRA_DATA_REQUIREMENT_REGISTRY", "ARCH-INFRA-DS IDs must be exactly 001..012")
-        )
-    for number in expected_data:
-        for suffix in ["UT", "IT"]:
-            test_id = f"INFRA-DS-{number:03d}-{suffix}"
-            if test_id not in data_content:
-                findings.append(Finding("INFRA_DATA_TEST_MAPPING", f"missing {test_id}"))
-        evidence_id = f"EV-INFRA-DS-{number:03d}"
-        if evidence_id not in data_content:
-            findings.append(Finding("INFRA_DATA_EVIDENCE_MAPPING", f"missing {evidence_id}"))
+    for term in LIFECYCLE_TERMS:
+        _require(lifecycle_content, term, "INFRA_LIFECYCLE_COVERAGE", findings)
+    for term in LIFECYCLE_FAILURES:
+        _require(lifecycle_content, term, "INFRA_LIFECYCLE_FAILURE_COVERAGE", findings)
+    _verify_numbered_registry(
+        content=lifecycle_content,
+        pattern=r"ARCH-INFRA-LC-(\d{3})",
+        expected=list(range(1, 25)),
+        prefix="ARCH-INFRA-LC",
+        finding_prefix="INFRA_LIFECYCLE",
+        findings=findings,
+    )
+
+    for term in REGISTRY_TERMS:
+        _require(registry_content, term, "INFRA_CONTRACT_REGISTRY_COVERAGE", findings)
+    _verify_numbered_registry(
+        content=registry_content,
+        pattern=r"ARCH-XMOD-(\d{3})",
+        expected=list(range(1, 11)),
+        prefix="ARCH-XMOD",
+        finding_prefix="INFRA_XMOD",
+        findings=findings,
+    )
 
     for forbidden in [
         "PostgreSQL 已是 Current",
@@ -269,23 +399,22 @@ def verify() -> list[Finding]:
         "Kubernetes 已是 Current",
         "production ready 已完成",
     ]:
-        if forbidden in content or forbidden in data_content:
+        if any(forbidden in item for item in [content, data_content, lifecycle_content, registry_content]):
             findings.append(Finding("INFRA_CURRENT_PROMOTION", f"forbidden unsupported statement: {forbidden}"))
 
     formal_index = _read(FORMAL_INDEX)
     mirror_index = _read(MIRROR_INDEX)
     if "(./11-infrastructure.md)" not in formal_index:
         findings.append(Finding("INFRA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route Infrastructure"))
-    if "11-infrastructure-data-services.md" not in formal_index:
-        findings.append(
-            Finding("INFRA_DATA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route data-service appendix")
-        )
+    for path in ["11-infrastructure-data-services.md", "11-infrastructure-consistency-lifecycle.md"]:
+        if path not in formal_index:
+            findings.append(Finding("INFRA_FORMAL_APPENDIX_ROUTE", f"docs/modules/README.md does not route {path}"))
+        if path not in mirror_index:
+            findings.append(Finding("INFRA_MIRROR_APPENDIX_ROUTE", f".agent/modules/README.md does not route {path}"))
+    if "wave1-cross-module-contract-registry.md" not in formal_index:
+        findings.append(Finding("INFRA_CONTRACT_REGISTRY_ROUTE", "docs/modules/README.md does not route Wave 1 registry"))
     if "(./11-infrastructure.md)" not in mirror_index:
         findings.append(Finding("INFRA_MIRROR_INDEX_ROUTE", ".agent/modules/README.md does not route Infrastructure mirror"))
-    if "11-infrastructure-data-services.md" not in mirror_index:
-        findings.append(
-            Finding("INFRA_DATA_MIRROR_INDEX_ROUTE", ".agent/modules/README.md does not route data-service mirror")
-        )
 
     return findings
 
