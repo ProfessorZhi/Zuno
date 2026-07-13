@@ -122,6 +122,9 @@ class CrossModuleEnvelopeV1(BaseModel):
 - `contract_bundle_version`、`producer_module`、`consumer_module` 是强制路由与兼容字段。
 - `payload` / `payload_ref` 至少一个存在，并同时校验 payload hash 与 schema hash。
 - Agent 相关消息保留 `run_id` / `step_run_id`；非 Agent 工作流可以为空。
+- `contract_bundle_version`、`producer_module`、`consumer_module` 是强制路由与兼容字段。
+- `payload` / `payload_ref` 至少一个存在，并同时校验 payload hash 与 schema hash。
+- Agent 相关消息保留 `run_id` / `step_run_id`；非 Agent 工作流可以为空。
 - 旧字段 `security_epoch` 只作为迁移期 Alias；Canonical 字段为 `effective_security_epoch_ref/hash`。
 - Unknown Version、Unknown Enum、Missing Tenant、Hash Mismatch、Stale Epoch 和 Generation Conflict 默认 fail-closed 或 quarantine。
 - Consumer 只能产生自己的 Decision、Receipt 或 Projection，不能改写 Producer 领域事实。

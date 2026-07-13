@@ -96,6 +96,8 @@ REQUIRED_TABLES = [
     "agent_outcome_corrections",
     "agent_action_proposals",
     "agent_action_execution_bindings",
+    "agent_action_proposals",
+    "agent_action_execution_bindings",
 ]
 
 FORBIDDEN_TERMS = [
@@ -110,12 +112,16 @@ FORBIDDEN_TERMS = [
     "状态：CLAIMED、EXECUTING、SUCCEEDED、FAILED、UNKNOWN、RECONCILED。",
     "`PreparedAction`、`ArtifactVersion`",
     "agent_prepared_actions",
+    "`PreparedAction`、`ArtifactVersion`",
+    "agent_prepared_actions",
 ]
 
 OBJECT_TABLE_PAIRS = {
     "ObjectiveOutcome": "agent_objective_outcomes",
     "RunCommand": "agent_run_commands",
     "ControlDecision": "agent_control_decisions",
+    "ActionProposal": "agent_action_proposals",
+    "ActionExecutionBinding": "agent_action_execution_bindings",
     "ActionProposal": "agent_action_proposals",
     "ActionExecutionBinding": "agent_action_execution_bindings",
     "EffectivePolicySnapshot": "agent_effective_policy_snapshots",

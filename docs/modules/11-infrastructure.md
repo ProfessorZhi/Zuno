@@ -152,6 +152,20 @@ Web / Desktop Frontend
 
 前端不得直连数据库、对象存储、Queue、Checkpointer、模型 Provider 或 Secret Store。每个用户请求必须在服务端解析可信 `PrincipalAccount`、Tenant、Workspace、Policy 与 Effective Security Epoch。本地 Adapter 只用于开发、单元测试、集成测试和离线演示，不是多用户产品部署模式。
 
+产品部署边界固定为：
+
+```text
+Web / Desktop Frontend
+    只持有短期客户端会话和展示状态
+    → Server-hosted Product API
+        → Principal / Tenant / Workspace resolution
+        → Security Control Plane
+        → Agent / Knowledge / Memory / Model / Tool backends
+        → PostgreSQL / Object Store / Queue / Checkpoint
+```
+
+前端不得直连数据库、对象存储、Queue、Checkpointer、模型 Provider 或 Secret Store。每个用户请求必须在服务端解析可信 `PrincipalAccount`、Tenant、Workspace、Policy 与 Effective Security Epoch。本地 Adapter 只用于开发、单元测试、集成测试和离线演示，不是多用户产品部署模式。
+
 ### 4.3 Future Optional
 
 - Redis：缓存、短期 rate-limit acceleration、非权威协调优化；不得成为唯一事实源。
@@ -289,6 +303,8 @@ flowchart TB
 ```
 
 推荐部署单位是 role，不是默认微服务。相同 backend image 可以按 role 启动；只有隔离、扩缩容或安全要求出现时才拆镜像。
+
+该拓扑是 Zuno 产品 Target：后端部署在受控服务器或云运行环境，前端只是 API Client。所有账号、组织、权限、知识、Memory、AgentRun、Usage、Audit 与配置事实均由后端权威存储和校验；客户端缓存不能成为授权或业务事实源。
 
 该拓扑是 Zuno 产品 Target：后端部署在受控服务器或云运行环境，前端只是 API Client。所有账号、组织、权限、知识、Memory、AgentRun、Usage、Audit 与配置事实均由后端权威存储和校验；客户端缓存不能成为授权或业务事实源。
 

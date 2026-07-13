@@ -129,6 +129,9 @@ class CrossModuleEnvelopeV1(BaseModel):
 - `contract_bundle_version` 固定一次 Run 或工作流使用的跨模块 Contract 集；`producer_module` 与 `consumer_module` 必须显式。
 - `payload` 与 `payload_ref` 至少存在一个；无论使用内联或对象引用，都必须验证 `payload_hash` 与 `payload_schema_hash`。
 - `run_id`、`step_run_id` 在非 Agent 流程可为空，但不得用 `trace_id` 代替领域标识。
+- `contract_bundle_version` 固定一次 Run 或工作流使用的跨模块 Contract 集；`producer_module` 与 `consumer_module` 必须显式。
+- `payload` 与 `payload_ref` 至少存在一个；无论使用内联或对象引用，都必须验证 `payload_hash` 与 `payload_schema_hash`。
+- `run_id`、`step_run_id` 在非 Agent 流程可为空，但不得用 `trace_id` 代替领域标识。
 - `security_epoch` scalar 只作为迁移期别名；正式跨模块字段是 `effective_security_epoch_ref` 和 `effective_security_epoch_hash`。
 - 组合 Epoch 的组成值由 Security 保存；Consumer 不自行计算新的 Epoch。
 - Unknown Contract Version、Unknown Enum、缺 Tenant、Hash 不匹配、Stale Epoch 和 Generation Conflict 默认 fail-closed 或 quarantine。

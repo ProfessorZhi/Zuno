@@ -1012,6 +1012,8 @@ Part V 的对象分类、状态转换、Policy 与存储映射
 | `ControlDecision` | Agent Core | Immutable Result | `agent_control_decisions` | 引用 Command 与 applied generation |
 | `ActionProposal` | Agent Core | Relational Entity | `agent_action_proposals` | 只表达目标、能力、参数 Ref 与期望结果，不含可执行 Secret/Payload |
 | `ActionExecutionBinding` | Agent Core | Relational Entity | `agent_action_execution_bindings` | 绑定 Step/Plan、PreparedToolAction Ref、Approval/Claim Ref 与控制状态 |
+| `ActionProposal` | Agent Core | Relational Entity | `agent_action_proposals` | 只表达目标、能力、参数 Ref 与期望结果，不含可执行 Secret/Payload |
+| `ActionExecutionBinding` | Agent Core | Relational Entity | `agent_action_execution_bindings` | 绑定 Step/Plan、PreparedToolAction Ref、Approval/Claim Ref 与控制状态 |
 | `ResourceClaim` | Agent Core | Relational Lease/Claim | `agent_resource_claims` | Canonical Resource ID + Access Mode |
 | `PlanPatchOperation` | Agent Core | Relational Operation | `agent_plan_patch_operations` | 只生成新 PlanVersion，不原地改 Active Plan |
 | `DomainCommitMarker` | Agent Core | Relational Infrastructure Record | `agent_domain_commit_markers` | `UNIQUE(run_id, domain_generation)` |
