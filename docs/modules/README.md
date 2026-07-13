@@ -23,18 +23,18 @@
 | 01 | Product Surface | `01-product-surface.md` | 待细化 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立主 Target、Contract Freeze 与 Operations/Conformance 规范 |
+| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
-| 09 | Security | [`09-security.md`](./09-security.md) | 已建立 Target 规范（Draft Proposal） |
-| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 已建立 Target 规范 |
+| 09 | Security | [`09-security.md`](./09-security.md) | 已建立 Target 规范 |
+| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
 | 11 | Infrastructure | `11-infrastructure.md` | 待细化 |
 
 ## Model Gateway 文档边界
 
-正式 Target 文档、附录与 Agent 镜像：
+正式 Target 主文档与受控附录：
 
 ```text
 docs/modules/04-model-gateway.md
@@ -47,54 +47,21 @@ docs/modules/04-model-gateway-operations-conformance.md
 .agent/modules/04-model-gateway-operations-conformance.md
 ```
 
-每一对正式文件与 Agent 镜像都必须字节级一致。
+主文档定义 Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 和 Storage；两个附录分别冻结跨模块 Contract 与长期运行、Conformance、运维和生命周期协议。
 
-- 主文档定义完整 Model Gateway Target：Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 和 Storage。
-- Contract Freeze 附录冻结跨模块 Ownership、ModelOperationKind、ModelCall 聚合、Budget / Usage / Quota 崩溃语义、事件目录、三层 Streaming、Routing Replay、Capability 生命周期和 ResultValidity。
-- Operations / Conformance 附录定义 Adapter 一致性、配置激活、Provider/Model 生命周期、多租户公平、过载背压、缓存、运维命令、保留删除、SLO、Readiness、兼容升级和 Eval/Judge 治理。
+## Observability & Eval 文档边界
 
-Current 调用清单及旁路状态仍由代码、测试和 `docs/status/production-readiness.md` 证明。并行 PR 中出现的名称仍是 `Parallel Proposal`，不能因附录引用而提升为 Current 或 Confirmed Target。
-
-专用验证：
+正式 Target 主文档与受控附录：
 
 ```text
-python tools/scripts/verify_model_gateway_target_protocols.py
-python tools/scripts/verify_model_gateway_contract_freeze.py
-python tools/scripts/verify_model_gateway_operations_conformance.py
-pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
+docs/modules/10-observability-eval.md
+.agent/modules/10-observability-eval.md
+
+docs/modules/10-observability-eval-rag-agent-evaluation.md
+.agent/modules/10-observability-eval-rag-agent-evaluation.md
 ```
 
-## Model Gateway 文档边界
-
-正式 Target 文档、附录与 Agent 镜像：
-
-```text
-docs/modules/04-model-gateway.md
-.agent/modules/04-model-gateway.md
-
-docs/modules/04-model-gateway-contract-freeze.md
-.agent/modules/04-model-gateway-contract-freeze.md
-
-docs/modules/04-model-gateway-operations-conformance.md
-.agent/modules/04-model-gateway-operations-conformance.md
-```
-
-每一对正式文件与 Agent 镜像都必须字节级一致。
-
-- 主文档定义完整 Model Gateway Target：Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 和 Storage。
-- Contract Freeze 附录冻结跨模块 Ownership、ModelOperationKind、ModelCall 聚合、Budget / Usage / Quota 崩溃语义、事件目录、三层 Streaming、Routing Replay、Capability 生命周期和 ResultValidity。
-- Operations / Conformance 附录定义 Adapter 一致性、配置激活、Provider/Model 生命周期、多租户公平、过载背压、缓存、运维命令、保留删除、SLO、Readiness、兼容升级和 Eval/Judge 治理。
-
-Current 调用清单及旁路状态仍由代码、测试和 `docs/status/production-readiness.md` 证明。
-
-专用验证：
-
-```text
-python tools/scripts/verify_model_gateway_target_protocols.py
-python tools/scripts/verify_model_gateway_contract_freeze.py
-python tools/scripts/verify_model_gateway_operations_conformance.py
-pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
-```
+主文档定义 Trace、Audit、Metric、Eval、Evidence、Release Gate、事件交付、恢复和质量证明边界；受控附录冻结 RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket 和 Agent Efficiency。旧 Retrieval、Citation、Safety 与 Runtime 指标保留为诊断层，不得冒充 Core Five。
 
 ## Agent Core 文档边界
 
@@ -102,9 +69,21 @@ pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_mode
 
 ```text
 docs/modules/06-agent-core-planning-control.md
+.agent/modules/06-agent-core-planning-control.md
 ```
 
 它统一包含概念架构、运行流程、不变量、状态机、DAG 与并发、Interrupt / Signal、副作用、Finalization、一致性、事件、Artifact、恢复、时间、目标代码、数据库和测试规格。
+
+## Security 文档边界
+
+正式 Target 文档：
+
+```text
+docs/modules/09-security.md
+.agent/modules/09-security.md
+```
+
+它定义服务器端安全控制面、账号与身份、组织树、管理员作用域、资源权限、委派授权、Policy、全链路 Gate、输入输出检测、脱敏、审批、撤销、Secret 和审计 Contract。
 
 执行和迁移计划不写入模块 Target 文档：
 
@@ -114,42 +93,23 @@ docs/status/       Current、Gap、Measurement 和完成状态
 docs/history/      已完成 Program 与历史证据
 ```
 
-## Security 文档边界
-
-正式 Target 文档：
-
-```text
-docs/modules/09-security.md
-```
-
-它定义身份与组织树、管理员作用域、知识库和 Tool 三档权限、委派授权、Policy、全链路 Gate、输入输出检测、脱敏、审批、撤销、Secret 和审计 Contract。当前实现状态仍以 `docs/status/production-readiness.md` 为准。
-
-## Agent 镜像
-
-```text
-docs/modules/06-agent-core-planning-control.md
-.agent/modules/06-agent-core-planning-control.md
-
-docs/modules/09-security.md
-.agent/modules/09-security.md
-```
-
 存在镜像的正式文件必须字节级一致。
 
 规则：
 
 - 不得只修改 `.agent/modules/`；
-- 不得在 Target 文档中写 Current Baseline 或具体迁移步骤；
+- 不得在 Target 文档中把计划中的表、类或流程写成 Current；
 - Current 变化只有在代码、Migration、测试、Trace、Eval 和运行证据完成后，才可写入状态文档；
 - 模块设计不得放回 `docs/architecture/`；
-- Agent Core 变更必须同步单一正式文档、镜像、入口、验证器和测试。
+- 模块变更必须同步正式文档、受控附录、镜像、入口、专用验证器和测试。
 
 专用验证：
 
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
-pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
-
 python tools/scripts/verify_security_target_protocols.py
-pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
+python tools/scripts/verify_model_gateway_target_protocols.py
+python tools/scripts/verify_model_gateway_contract_freeze.py
+python tools/scripts/verify_model_gateway_operations_conformance.py
+python tools/scripts/verify_observability_eval_target_protocols.py
 ```
