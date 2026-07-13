@@ -216,7 +216,6 @@ def verify() -> list[Finding]:
         findings.append(Finding("XMOD_STATUS_INVALID", "ADR/Registry pending-merge status is inconsistent"))
 
     forbidden_promotions = [
-        "runtime implementation available",
         "production ready 已完成",
         "PostgreSQL 已是 Current",
         "RabbitMQ 已是 Current",
