@@ -29,18 +29,27 @@
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
 | 09 | Security | `09-security.md` | 待细化 |
-| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 已建立 Target 规范 |
+| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
 | 11 | Infrastructure | `11-infrastructure.md` | 待细化 |
 
-## Agent Core 文档边界
+## 单一正式 Target 与 Agent 镜像
 
-唯一正式 Target 文档：
+当前要求字节级同步的模块：
 
 ```text
 docs/modules/06-agent-core-planning-control.md
+.agent/modules/06-agent-core-planning-control.md
+
+docs/modules/10-observability-eval.md
+.agent/modules/10-observability-eval.md
+
+docs/modules/10-observability-eval-rag-agent-evaluation.md
+.agent/modules/10-observability-eval-rag-agent-evaluation.md
 ```
 
-它统一包含概念架构、运行流程、不变量、状态机、DAG 与并发、Interrupt / Signal、副作用、Finalization、一致性、事件、Artifact、恢复、时间、目标代码、数据库和测试规格。
+Agent Core 文档统一包含概念架构、运行流程、不变量、状态机、DAG 与并发、Interrupt / Signal、副作用、Finalization、一致性、事件、Artifact、恢复、时间、目标代码、数据库和测试规格。
+
+Observability & Eval 主文档统一包含 Trace/Audit/Eval/Evidence 边界、Agent Core 证据映射、事件交付、状态机、存储、恢复、Release Gate 与质量证明标准。受控附录冻结 RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket、Agent Efficiency、质量约束下的效率比较和对应 Evidence 要求；附录属于模块正式 Target，不是 History 或实现计划。
 
 执行和迁移计划不写入模块 Target 文档：
 
@@ -50,26 +59,20 @@ docs/status/       Current、Gap、Measurement 和完成状态
 docs/history/      已完成 Program 与历史证据
 ```
 
-## Agent 镜像
-
-```text
-docs/modules/06-agent-core-planning-control.md
-.agent/modules/06-agent-core-planning-control.md
-```
-
-正式文件与镜像必须字节级一致。
-
 规则：
 
 - 不得只修改 `.agent/modules/`；
-- 不得在 Target 文档中写 Current Baseline 或具体迁移步骤；
+- 不得在 Target 文档中把计划中的表、类或流程写成 Current；
 - Current 变化只有在代码、Migration、测试、Trace、Eval 和运行证据完成后，才可写入状态文档；
 - 模块设计不得放回 `docs/architecture/`；
-- Agent Core 变更必须同步单一正式文档、镜像、入口、验证器和测试。
+- Agent Core 与 Observability & Eval 变更必须同步正式文档、受控附录、镜像、入口、专用验证器和测试。
 
 专用验证：
 
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+
+python tools/scripts/verify_observability_eval_target_protocols.py
+pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider
 ```

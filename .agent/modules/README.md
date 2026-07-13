@@ -15,28 +15,35 @@
 | 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
 | 09 | Security | `09-security.md` | 待细化 |
-| 10 | Observability & Eval | [`10-observability-eval.md`](../../docs/modules/10-observability-eval.md) | 已建立 Target 规范 |
+| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 实施级 Target 架构镜像 |
 | 11 | Infrastructure | `11-infrastructure.md` | 待细化 |
 
-## Agent Core 唯一 Target 镜像
+## 字节级一致的 Target 镜像
 
 ```text
 .agent/modules/06-agent-core-planning-control.md
+.agent/modules/10-observability-eval.md
+.agent/modules/10-observability-eval-rag-agent-evaluation.md
 ```
 
 对应正式事实源：
 
 ```text
 docs/modules/06-agent-core-planning-control.md
+docs/modules/10-observability-eval.md
+docs/modules/10-observability-eval-rag-agent-evaluation.md
 ```
 
-该文档统一包含主设计、控制协议和一致性生命周期协议。Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。
+Agent Core 定义控制运行时、状态与一致性生命周期。Observability & Eval 主文档定义 Trace/Audit/Eval/Evidence、Agent Core 证据映射、交付与恢复、Release Gate 和质量证明标准；受控附录定义 RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket、Agent Efficiency 与质量约束下的效率 Gate。
 
-正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`。
+Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。正式文件、受控附录与对应镜像必须字节级一致，不得只修改 `.agent/modules/`。
 
 专用验证：
 
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+
+python tools/scripts/verify_observability_eval_target_protocols.py
+pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider
 ```
