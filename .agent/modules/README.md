@@ -16,7 +16,7 @@
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
 | 09 | Security | `09-security.md` | 待细化 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](../../docs/modules/10-observability-eval.md) | 已建立 Target 规范 |
-| 11 | Infrastructure | `11-infrastructure.md` | 待细化 |
+| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | 完整 Target 架构镜像 |
 
 ## Agent Core 唯一 Target 镜像
 
@@ -32,6 +32,20 @@ docs/modules/06-agent-core-planning-control.md
 
 该文档统一包含主设计、控制协议和一致性生命周期协议。Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。
 
+## Infrastructure 唯一 Target 镜像
+
+```text
+.agent/modules/11-infrastructure.md
+```
+
+对应正式事实源：
+
+```text
+docs/modules/11-infrastructure.md
+```
+
+该文档统一包含 Current/Target 技术选择、Infrastructure primitive Ownership、Local/Enterprise topology、事务、对象、Checkpoint、Queue、Inbox/Outbox、Lease/Fencing、Clock、Migration、Backup/Restore、Retention/Legal Hold、Drain、Capacity、DR、跨模块协议与 Requirement/Test/Evidence 映射。
+
 正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`。
 
 专用验证：
@@ -39,4 +53,6 @@ docs/modules/06-agent-core-planning-control.md
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+python tools/scripts/verify_infrastructure_target_protocols.py
+pytest -q tests/repo/test_infrastructure_target_protocols.py -p no:cacheprovider
 ```
