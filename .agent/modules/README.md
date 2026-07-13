@@ -9,13 +9,13 @@
 | 01 | Product Surface | `01-product-surface.md` | 待细化 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](../../docs/modules/02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](../../docs/modules/03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | `04-model-gateway.md` | 待细化 |
+| 04 | Model Gateway | `04-model-gateway.md` | 并行 Draft Target，待合并共享 Contract |
 | 05 | Memory & Context | [`05-memory-context.md`](../../docs/modules/05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构镜像 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
-| 09 | Security | `09-security.md` | 待细化 |
-| 10 | Observability & Eval | [`10-observability-eval.md`](../../docs/modules/10-observability-eval.md) | 已建立 Target 规范 |
+| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化；必须采用 PreparedToolAction 决议 |
+| 09 | Security | `09-security.md` | 并行 Draft Target，待合并共享 Contract |
+| 10 | Observability & Eval | [`10-observability-eval.md`](../../docs/modules/10-observability-eval.md) | 并行 Draft Target，待合并共享 Contract |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | Target 主文档镜像 + 数据服务与一致性生命周期附录镜像 |
 
 ## Agent Core 唯一 Target 镜像
@@ -54,13 +54,21 @@ docs/modules/11-infrastructure-consistency-lifecycle.md
 
 `11-infrastructure-consistency-lifecycle.md` 覆盖 Index Lifecycle、ServingWatermark、跨存储删除、RecoverySet、Mandatory Audit、PreparedAction 边界、租户隔离、Upgrade Compatibility、Conformance、SLO、Network、Release 和 Attribution。
 
-跨模块共享 Contract 的合并前协调登记位于：
+字段级共享 Contract 与物理目录最终决议：
 
 ```text
+docs/decisions/0003-wave1-cross-module-contract-freeze.md
 docs/governance/wave1-cross-module-contract-registry.md
 ```
 
-每对正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`；两个附录都不得形成第二套独立模块架构，Registry 也不能把 Parallel Proposal 写成 Current。
+Agent 读取规则：
+
+- ADR 0003 冻结 Infrastructure 物理实现到 `src/backend/zuno/platform/**`，不得新建顶层 `zuno/infrastructure`；
+- 旧 Agent Core `PreparedAction` 目标在实现时解释为 `ActionProposal + ActionExecutionBinding`，可执行事实归 Tool Runtime `PreparedToolAction`；
+- Registry 当前为 `FIELD_FROZEN_PENDING_MERGE`，合并到 `main` 后才成为 `CONFIRMED_TARGET`；
+- 未合并 Draft 或 Target 不能写成 Current。
+
+每对正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`；两个附录都不得形成第二套独立模块架构，必须服从已合并 ADR。
 
 专用验证：
 
@@ -69,4 +77,6 @@ python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
 python tools/scripts/verify_infrastructure_target_protocols.py
 pytest -q tests/repo/test_infrastructure_target_protocols.py -p no:cacheprovider
+python tools/scripts/verify_wave1_contract_freeze.py
+pytest -q tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider
 ```
