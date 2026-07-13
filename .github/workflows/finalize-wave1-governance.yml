@@ -43,11 +43,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Apply final Wave 1 governance state
+      - name: Compile governance helpers
+        run: python -m py_compile tools/scripts/finalize_wave1_architecture_governance.py tools/scripts/fix_wave1_confirmed_verifier.py
+
+      - name: Normalize final Registry state
+        run: python tools/scripts/finalize_wave1_architecture_governance.py
+
+      - name: Normalize final validators and focused tests
+        run: python tools/scripts/fix_wave1_confirmed_verifier.py
+
+      - name: Commit normalized governance state
         run: |
-          python -m py_compile tools/scripts/finalize_wave1_architecture_governance.py tools/scripts/fix_wave1_confirmed_verifier.py
-          python tools/scripts/finalize_wave1_architecture_governance.py
-          python tools/scripts/fix_wave1_confirmed_verifier.py
           git diff --check -- '*.py' '*.yml' '*.yaml'
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
