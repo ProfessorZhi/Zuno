@@ -50,7 +50,7 @@ ADR_TERMS = [
 
 REGISTRY_TERMS = [
     "status: confirmed-target",
-    "previous_status: parallel-proposal-governance",
+    "previous_status: field-frozen-pending-merge",
     "CrossModuleEnvelopeV1",
     "产品部署边界",
     "contract_bundle_version",
@@ -259,8 +259,8 @@ def verify() -> list[Finding]:
         if phrase not in adr or phrase not in registry:
             findings.append(Finding("XMOD_RECEIPT_BOUNDARY", f"missing invariant: {phrase}"))
 
-    if "accepted-target-pending-merge" not in adr or "field-frozen-pending-merge" not in registry:
-        findings.append(Finding("XMOD_STATUS_INVALID", "ADR/Registry pending-merge status is inconsistent"))
+    if "status: accepted-target" not in adr or "status: confirmed-target" not in registry:
+        findings.append(Finding("XMOD_STATUS_INVALID", "ADR/Registry confirmed Target status is inconsistent"))
 
     forbidden_promotions = [
         "production ready 已完成",
