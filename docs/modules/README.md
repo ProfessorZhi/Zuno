@@ -107,9 +107,16 @@ docs/history/      已完成 Program 与历史证据
 
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
+pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+
 python tools/scripts/verify_security_target_protocols.py
+pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
+
 python tools/scripts/verify_model_gateway_target_protocols.py
 python tools/scripts/verify_model_gateway_contract_freeze.py
 python tools/scripts/verify_model_gateway_operations_conformance.py
+pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
+
 python tools/scripts/verify_observability_eval_target_protocols.py
+pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider
 ```
