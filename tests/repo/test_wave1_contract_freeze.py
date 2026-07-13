@@ -83,13 +83,17 @@ def test_prepared_action_conflict_is_resolved() -> None:
     assert "Checkpoint Commit != Domain Commit" in content
 
 
-def test_registry_is_field_frozen_not_current() -> None:
+def test_registry_is_confirmed_target_not_current() -> None:
     content = REGISTRY.read_text(encoding="utf-8")
-    assert "status: field-frozen-pending-merge" in content
-    assert content.count("`FIELD_FROZEN_PENDING_MERGE`") >= 25
+    assert "status: confirmed-target" in content
+    assert content.count("`CONFIRMED_TARGET`") >= 25
+    assert "| `FIELD_FROZEN_PENDING_MERGE` |" not in content
+    assert "状态：`FIELD_FROZEN_PENDING_MERGE`" not in content
     assert "协调状态：`CONFLICT_REQUIRES_DECISION`" not in content
     assert "本文件当前所有条目最高只能是 `ALIGNED_PENDING_FIELDS`" not in content
-    assert "PR #17 合并后，本 Registry 状态应更新为 `CONFIRMED_TARGET`" in content
+    assert "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`" in content
+    assert "IMPLEMENTATION_AVAILABLE" in content
+    assert "CURRENT" in content
 
 
 def test_failure_namespaces_and_canonical_codes_are_frozen() -> None:

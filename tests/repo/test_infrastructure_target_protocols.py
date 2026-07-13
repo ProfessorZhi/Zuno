@@ -276,7 +276,8 @@ def test_lifecycle_requirement_registry_is_complete() -> None:
 def test_wave1_contract_registry_has_shared_contract_ownership() -> None:
     content = CONTRACT_REGISTRY.read_text(encoding="utf-8")
     for term in [
-        "parallel-proposal-governance",
+        "status: confirmed-target",
+        "previous_status: field-frozen-pending-merge",
         "CrossModuleEnvelope",
         "SecurityConditionalWrite",
         "CredentialVersionRef",
@@ -310,7 +311,7 @@ def test_wave1_registry_resolves_receipt_and_prepared_action_boundaries() -> Non
         "Lease Release != Tool Effect Success",
         "Checkpoint Commit != Domain Commit",
         "Failure Ownership Matrix",
-        "Wave 1 合并前审计清单",
+        "Wave 1 合并审计清单",
         "ALIGNED_PENDING_FIELDS",
     ]:
         assert term in content

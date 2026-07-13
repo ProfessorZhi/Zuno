@@ -41,6 +41,8 @@ docs/governance/wave1-cross-module-contract-registry.md
 
 ADR 0003 与 Registry 统一冻结 Security、Infrastructure、Model Gateway、Observability & Eval 之间的 Owner、Envelope、Receipt、Failure Namespace、Security Epoch 和 Recovery 边界。模块文档中的重复说明不得覆盖共享 Contract。
 
+当前状态：`CONFIRMED_TARGET`。服务端物理实现归 `src/backend/zuno/platform/**`；Agent Core 使用 `ActionProposal / ActionExecutionBinding`，可执行副作用事实归 Tool Runtime `PreparedToolAction`。
+
 ## Model Gateway 文档边界
 
 ```text
