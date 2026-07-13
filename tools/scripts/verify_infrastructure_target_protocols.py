@@ -187,7 +187,8 @@ LIFECYCLE_FAILURES = [
 ]
 
 REGISTRY_TERMS = [
-    "parallel-proposal-governance",
+    "status: confirmed-target",
+    "previous_status: field-frozen-pending-merge",
     "CrossModuleEnvelope",
     "SecurityConditionalWrite",
     "CredentialVersionRef",
