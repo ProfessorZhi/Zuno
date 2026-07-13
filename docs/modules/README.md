@@ -28,7 +28,7 @@
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
-| 09 | Security | `09-security.md` | 待细化 |
+| 09 | Security | [`09-security.md`](./09-security.md) | 已建立 Target 规范（Draft Proposal） |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 已建立 Target 规范 |
 | 11 | Infrastructure | `11-infrastructure.md` | 待细化 |
 
@@ -50,14 +50,27 @@ docs/status/       Current、Gap、Measurement 和完成状态
 docs/history/      已完成 Program 与历史证据
 ```
 
+## Security 文档边界
+
+正式 Target 文档：
+
+```text
+docs/modules/09-security.md
+```
+
+它定义身份与组织树、管理员作用域、知识库和 Tool 三档权限、委派授权、Policy、全链路 Gate、输入输出检测、脱敏、审批、撤销、Secret 和审计 Contract。当前实现状态仍以 `docs/status/production-readiness.md` 为准。
+
 ## Agent 镜像
 
 ```text
 docs/modules/06-agent-core-planning-control.md
 .agent/modules/06-agent-core-planning-control.md
+
+docs/modules/09-security.md
+.agent/modules/09-security.md
 ```
 
-正式文件与镜像必须字节级一致。
+存在镜像的正式文件必须字节级一致。
 
 规则：
 
@@ -72,4 +85,7 @@ docs/modules/06-agent-core-planning-control.md
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+
+python tools/scripts/verify_security_target_protocols.py
+pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
 ```

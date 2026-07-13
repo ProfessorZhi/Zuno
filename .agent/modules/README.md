@@ -14,7 +14,7 @@
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构镜像 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
-| 09 | Security | `09-security.md` | 待细化 |
+| 09 | Security | [`09-security.md`](./09-security.md) | Target 架构镜像（Draft Proposal） |
 | 10 | Observability & Eval | [`10-observability-eval.md`](../../docs/modules/10-observability-eval.md) | 已建立 Target 规范 |
 | 11 | Infrastructure | `11-infrastructure.md` | 待细化 |
 
@@ -30,13 +30,28 @@
 docs/modules/06-agent-core-planning-control.md
 ```
 
-该文档统一包含主设计、控制协议和一致性生命周期协议。Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。
+## Security Target 镜像
 
-正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`。
+```text
+.agent/modules/09-security.md
+```
+
+对应正式事实源：
+
+```text
+docs/modules/09-security.md
+```
+
+Security 文档定义身份与组织树、管理员作用域、知识库和 Tool 三档权限、委派授权、Policy、全链路 Gate、输入输出检测、脱敏、审批、撤销、Secret 和审计 Contract。
+
+正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`。Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。
 
 专用验证：
 
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+
+python tools/scripts/verify_security_target_protocols.py
+pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
 ```
