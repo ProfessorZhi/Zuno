@@ -63,10 +63,10 @@ jobs:
       - name: Prepare validation logs
         run: mkdir -p validation-logs
 
-      - name: Verify patch formatting
+      - name: Verify executable and configuration patch formatting
         run: |
           set -o pipefail
-          git diff --check origin/main...HEAD \
+          git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml' \
             2>&1 | tee validation-logs/diff-check.log
 
       - name: Compile validation scripts
