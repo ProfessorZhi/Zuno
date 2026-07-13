@@ -311,7 +311,7 @@ def test_wave1_registry_resolves_receipt_and_prepared_action_boundaries() -> Non
         "Lease Release != Tool Effect Success",
         "Checkpoint Commit != Domain Commit",
         "Failure Ownership Matrix",
-        "Wave 1 合并前审计清单",
+        "Wave 1 合并审计清单",
         "ALIGNED_PENDING_FIELDS",
     ]:
         assert term in content

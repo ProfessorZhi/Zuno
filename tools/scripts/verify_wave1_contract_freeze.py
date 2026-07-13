@@ -240,7 +240,7 @@ def verify() -> list[Finding]:
         "协调状态：`CONFLICT_REQUIRES_DECISION`",
         "本文件当前所有条目最高只能是 `ALIGNED_PENDING_FIELDS`",
         "字段级 Contract 尚未全部确认",
-        "Wave 1 合并前审计清单",
+        "Wave 1 合并审计清单",
         "status = FIELD_FROZEN_PENDING_MERGE",
         "PR #17 合并后，本 Registry 状态应更新为",
     ]

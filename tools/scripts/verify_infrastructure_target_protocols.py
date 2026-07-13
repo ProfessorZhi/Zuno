@@ -212,7 +212,7 @@ REGISTRY_TERMS = [
     "PreparedAction Ownership 决议建议",
     "Queue ACK != Tool Effect Success",
     "Failure Ownership Matrix",
-    "Wave 1 合并前审计清单",
+    "Wave 1 合并审计清单",
 ]
 
 
