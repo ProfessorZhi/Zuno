@@ -30,15 +30,15 @@ def test_physical_infrastructure_owner_is_platform() -> None:
     assert "src/backend/zuno/platform/" in content
     assert "不新增 `src/backend/zuno/infrastructure/` 顶层目录" in content
     for term in [
-        "platform/database",
-        "platform/storage",
-        "platform/jobs",
-        "platform/checkpoint",
-        "platform/coordination",
-        "platform/data_services/",
-        "platform/operations",
-        "platform/network",
-        "platform/release",
+        "├── database/",
+        "├── storage/",
+        "├── jobs/",
+        "├── checkpoint/",
+        "├── coordination/",
+        "├── data_services/",
+        "├── operations/",
+        "├── network/",
+        "├── release/",
     ]:
         assert term in content
 
