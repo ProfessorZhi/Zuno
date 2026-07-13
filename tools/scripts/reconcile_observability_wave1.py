@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# One-time PR reconciliation helper; removed after the branch absorbs latest main.
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs/modules/README.md"
 AGENT = ROOT / ".agent/modules/README.md"
