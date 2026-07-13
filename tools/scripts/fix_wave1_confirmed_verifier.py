@@ -61,6 +61,7 @@ def normalize_infrastructure_validation() -> None:
             '        "本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`",\n'
             '        "ALIGNED_PENDING_FIELDS",'
         )
+        replacement = "".join(replacement)
         if anchor not in tests:
             raise RuntimeError("Infrastructure focused test term list changed unexpectedly")
         tests = tests.replace(anchor, replacement, 1)
