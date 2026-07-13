@@ -51,6 +51,37 @@ python tools/scripts/verify_model_gateway_operations_conformance.py
 pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
 ```
 
+## Model Gateway Target 镜像
+
+```text
+.agent/modules/04-model-gateway.md
+.agent/modules/04-model-gateway-contract-freeze.md
+.agent/modules/04-model-gateway-operations-conformance.md
+```
+
+对应正式事实源：
+
+```text
+docs/modules/04-model-gateway.md
+docs/modules/04-model-gateway-contract-freeze.md
+docs/modules/04-model-gateway-operations-conformance.md
+```
+
+每一对正式文件与镜像都必须字节级一致。
+
+- 主文档定义 Model Gateway 完整调用协议与领域边界。
+- Contract Freeze 附录补充跨模块 Ownership、ModelOperationKind、ModelCall、Budget / Usage / Quota、Event、Streaming、Routing Replay、Capability 和 ResultValidity。
+- Operations / Conformance 附录补充 Adapter 一致性、Config / Model 生命周期、租户公平、过载背压、缓存、运维、Retention / Deletion、SLO / Readiness、兼容升级和 Eval / Judge 治理。
+
+专用验证：
+
+```text
+python tools/scripts/verify_model_gateway_target_protocols.py
+python tools/scripts/verify_model_gateway_contract_freeze.py
+python tools/scripts/verify_model_gateway_operations_conformance.py
+pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
+```
+
 ## Agent Core 唯一 Target 镜像
 
 ```text
