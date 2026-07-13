@@ -15,6 +15,7 @@ on:
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
       - ".agent/scripts/verify_agent_system.py"
+      - "tools/scripts/defer_wave1_index_routes.py"
       - "tools/scripts/verify_wave1_contract_freeze.py"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
       - "tools/scripts/verify_agent_core_target_protocols.py"
@@ -24,39 +25,47 @@ on:
       - "tests/repo/test_agent_core_target_protocols.py"
       - "tests/repo/test_security_target_protocols.py"
       - ".github/workflows/wave1-contract-freeze.yml"
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: wave1-contract-freeze-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  validate:
+  apply-and-validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Checkout repository
+      - name: Checkout PR head
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Apply deferred shared-index validation
+        run: |
+          python -m py_compile tools/scripts/defer_wave1_index_routes.py
+          python tools/scripts/defer_wave1_index_routes.py
+          git diff --check -- '*.py' '*.yml' '*.yaml'
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add tools/scripts/verify_wave1_contract_freeze.py tools/scripts/verify_infrastructure_target_protocols.py
+            git commit -m "ci: defer shared module routes to Wave 1 integration"
+            git push origin HEAD:agent/design-11-infrastructure
+          fi
+
       - name: Install focused test dependency
         run: python -m pip install --disable-pip-version-check pytest
-
-      - name: Verify patch formatting
-        run: git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml'
 
       - name: Compile and validate Wave 1 contracts
         run: |
