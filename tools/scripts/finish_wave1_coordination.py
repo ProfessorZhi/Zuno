@@ -52,7 +52,6 @@ def main() -> None:
         "core read",
     )
 
-    anchor = '    for content, label in [(adr, "ADR"), (registry, "REGISTRY")]:\n'
     checks = '''    if CORE.read_bytes() != CORE_MIRROR.read_bytes():
         findings.append(Finding("XMOD_CORE_MIRROR_DRIFT", "Agent Core formal document and mirror differ"))
     for term in [
@@ -76,7 +75,15 @@ def main() -> None:
 
 '''
     if "XMOD_CORE_MIRROR_DRIFT" not in text:
-        text = replace_once(text, anchor, checks + anchor, "core alignment checks")
+        anchor = '''    core = _read(CORE)
+
+    for content, label in [(adr, "ADR"), (registry, "REGISTRY")]:
+'''
+        replacement = '''    core = _read(CORE)
+
+''' + checks + '''    for content, label in [(adr, "ADR"), (registry, "REGISTRY")]:
+'''
+        text = replace_once(text, anchor, replacement, "core alignment checks")
 
     VERIFIER.write_text(text, encoding="utf-8", newline="\n")
     if DIAGNOSTIC.exists():
