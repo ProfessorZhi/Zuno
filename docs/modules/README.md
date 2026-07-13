@@ -23,7 +23,7 @@
 | 01 | Product Surface | `01-product-surface.md` | 待细化 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) | 已建立 Target 规范与 Wave 1 Contract Freeze 附录 |
+| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立主 Target、Contract Freeze 与 Operations/Conformance 规范 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
@@ -34,7 +34,7 @@
 
 ## Model Gateway 文档边界
 
-正式 Target 文档、Contract Freeze 附录与 Agent 镜像：
+正式 Target 文档、附录与 Agent 镜像：
 
 ```text
 docs/modules/04-model-gateway.md
@@ -42,9 +42,16 @@ docs/modules/04-model-gateway.md
 
 docs/modules/04-model-gateway-contract-freeze.md
 .agent/modules/04-model-gateway-contract-freeze.md
+
+docs/modules/04-model-gateway-operations-conformance.md
+.agent/modules/04-model-gateway-operations-conformance.md
 ```
 
-每一对正式文件与 Agent 镜像都必须字节级一致。主文档定义完整 Model Gateway Target；Contract Freeze 附录进一步冻结 Security / Infrastructure / Observability Ownership、ModelOperationKind、ModelCall 聚合、Budget / Usage / Quota 崩溃语义、事件目录、三层 Streaming、Routing Replay、Capability 生命周期和 ResultValidity 传播。
+每一对正式文件与 Agent 镜像都必须字节级一致。
+
+- 主文档定义完整 Model Gateway Target：Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 和 Storage。
+- Contract Freeze 附录冻结跨模块 Ownership、ModelOperationKind、ModelCall 聚合、Budget / Usage / Quota 崩溃语义、事件目录、三层 Streaming、Routing Replay、Capability 生命周期和 ResultValidity。
+- Operations / Conformance 附录定义 Adapter 一致性、配置激活、Provider/Model 生命周期、多租户公平、过载背压、缓存、运维命令、保留删除、SLO、Readiness、兼容升级和 Eval/Judge 治理。
 
 Current 调用清单及旁路状态仍由代码、测试和 `docs/status/production-readiness.md` 证明。并行 PR 中出现的名称仍是 `Parallel Proposal`，不能因附录引用而提升为 Current 或 Confirmed Target。
 
@@ -53,7 +60,8 @@ Current 调用清单及旁路状态仍由代码、测试和 `docs/status/product
 ```text
 python tools/scripts/verify_model_gateway_target_protocols.py
 python tools/scripts/verify_model_gateway_contract_freeze.py
-pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py -p no:cacheprovider
+python tools/scripts/verify_model_gateway_operations_conformance.py
+pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
 ```
 
 ## Agent Core 文档边界
