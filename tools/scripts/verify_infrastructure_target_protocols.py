@@ -203,9 +203,9 @@ def verify() -> list[Finding]:
 
     formal_index = _read(FORMAL_INDEX)
     mirror_index = _read(MIRROR_INDEX)
-    if "[11-infrastructure.md](./11-infrastructure.md)" not in formal_index:
+    if "(./11-infrastructure.md)" not in formal_index:
         findings.append(Finding("INFRA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route Infrastructure"))
-    if "[11-infrastructure.md](./11-infrastructure.md)" not in mirror_index:
+    if "(./11-infrastructure.md)" not in mirror_index:
         findings.append(Finding("INFRA_MIRROR_INDEX_ROUTE", ".agent/modules/README.md does not route Infrastructure mirror"))
 
     return findings
