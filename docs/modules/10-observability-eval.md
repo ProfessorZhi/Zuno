@@ -757,6 +757,113 @@ Domain 层不得 import OpenTelemetry/LangSmith SDK；adapter 负责映射，外
 | Release Gate with Incomparable Runs | INCOMPARABLE，不输出 PASS/FAIL |
 | Retention / Legal Hold Conflict | legal hold 优先；记录 disposition blocked |
 
+
+## 17.1 Wave 1 Canonical Contract Alignment
+
+本节在跨模块字段、Owner、Receipt、Failure Namespace 与恢复责任上优先于本文早期说明；共享事实源为 `docs/decisions/0003-wave1-cross-module-contract-freeze.md` 与 `docs/governance/wave1-cross-module-contract-registry.md`，状态为 `CONFIRMED_TARGET`。这些决议仍是 Target，不代表 Runtime 已实现。
+
+### 服务端权威产品边界
+
+```text
+Web / Desktop Frontend
+→ Server-hosted Product API
+→ Backend logical modules
+→ Infrastructure primitives
+```
+
+前端只展示账号、身份、组织、权限、审批、Trace、Eval 和 Evidence 投影。Principal、Tenant、Workspace、Policy、Security Epoch、AgentRun、Usage、Audit 与 Eval 事实均由服务端后端提交；Developer / CI Local Adapter 不构成多用户产品部署 Target。
+
+### CrossModuleEnvelopeV1 与 TelemetryEnvelopeV1
+
+所有跨模块消息先使用共享 `CrossModuleEnvelopeV1`：
+
+```text
+contract_name
+contract_version
+contract_bundle_version
+message_id
+producer_module
+consumer_module
+tenant_id
+workspace_id
+run_id
+step_run_id
+correlation_id
+causation_id
+idempotency_key
+aggregate_type
+aggregate_id
+aggregate_version
+expected_generation
+effective_security_epoch_ref
+effective_security_epoch_hash
+principal_context_ref
+security_context_ref
+authorization_decision_ref
+deadline_at
+trace_id
+data_classification
+redaction_decision_ref
+audit_requirement_ref
+occurred_at
+created_at
+payload
+payload_ref
+payload_hash
+payload_schema_hash
+```
+
+本文早期 `TelemetryEnvelope` 字段表是 Observability payload profile，而不是第二套跨模块 Envelope。正式 wire contract 命名为 `TelemetryEnvelopeV1`，放入 `CrossModuleEnvelopeV1.payload` 或 `payload_ref`，并补充 producer sequence、stream key、category、observed/ingested time、retention 与 projection metadata。未知 Contract/Enum、Hash 不一致、Scope 缺失或 stale epoch 使用稳定失败码：
+
+```text
+OBS_ENVELOPE_SCHEMA_UNSUPPORTED
+OBS_INGEST_GAP
+```
+
+### Audit 三层事实
+
+```text
+SecurityAuditRequirementV1
+    Owner: Security
+
+AuditDurabilityRequirement
+AuditPersistenceReceiptV1
+    Owner: Infrastructure execution fact
+
+AuditEvent
+    Owner: Observability accepted immutable fact
+```
+
+`AuditEvent` 必须引用 source event、`SecurityAuditRequirementV1` 和 `AuditPersistenceReceiptV1`。Mandatory Audit 不能由 Observability 降级；接受失败使用 `OBS_AUDIT_ACCEPTANCE_FAILED`。
+
+```text
+AuditPersistenceReceipt != accepted AuditEvent
+AuditEvent accepted != source-domain success
+ExternalSinkDelivery != source-domain success
+StructuredLog != AuditEvent
+```
+
+外部交付失败使用 `OBS_EXTERNAL_SINK_DELIVERY_FAILED`，不得反向覆盖 Security、Agent、Model 或 Tool 领域事实。
+
+### Model、Security 与 Infrastructure 对齐
+
+Observability 消费但不拥有：`ModelCallAttempt`、`RoutingDecision`、`UsageReceipt`、`ProviderHealth`、`StructuredOutputFailure`、`EffectiveSecurityEpochRefV1`、`RedactionDecision`、`DataClassification`、`ExternalSinkPolicy`、`AuditRetentionPolicy`、`BreakGlassDecision`。
+
+Infrastructure 提供 Trace Store、Append-only Ingest、Outbox-Inbox、Eval Job Queue、Backup/Restore、Retention 与 Legal Hold primitive；Observability 拥有其 Projection、Eval、Evidence、Benchmark、Release Gate 和 accepted Audit 语义。
+
+### Recovery 与 Receipt 规则
+
+```text
+Producer domain commit
+→ transactional Outbox
+→ Infrastructure AuditPersistenceReceipt（适用时）
+→ Observability ingest/dedup
+→ accepted AuditEvent 或 rebuildable Projection
+→ ExternalSinkDelivery attempt
+```
+
+Queue ACK、Object Store Receipt、Transport Receipt、Audit Persistence、External Sink Delivery 都只能证明各自 Owner 的物理事实，不得冒充 ModelCall、Tool Effect、AgentRun、Publication 或 Eval 成功。
+
 ## 18. Requirement Enforcement Matrix
 
 | Requirement | Runtime Control | Tests | Evidence |

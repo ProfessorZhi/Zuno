@@ -1,12 +1,12 @@
 # ADR 0003：Wave 1 跨模块 Contract 与 Infrastructure 物理边界冻结
 
-status: accepted-target-pending-merge
+status: accepted-target
 updated: 2026-07-13
 baseline_main_sha: `729e439e29deadc101c5687fc47125104e62e2c1`
 coordinating_pr: `#17`
 reviewed_parallel_prs: `#18 Model Gateway`、`#19 Security`、`#20 Observability & Eval`
 
-> 本 ADR 是 Target 设计决议，不是 Current 或实现证据。它只有合并到 `main` 后才成为正式共享 Target Contract；合并前仍是 Draft PR 中已冻结的设计决议。
+> 本 ADR 已合并到 `main`，是 Wave 1 正式共享 Target Contract；它仍不是 Current、Runtime 实现或生产证据。
 
 ## 1. 背景
 

@@ -1033,3 +1033,12 @@ ADR 0003 与 Wave 1 Registry 已合并；共享字段、枚举、Owner 和 Failu
 - Microsoft GraphRAG DRIFT Search: https://microsoft.github.io/graphrag/query/drift_search/
 - LangSmith Observability Concepts: https://docs.langchain.com/langsmith/observability-concepts
 - LangSmith Evaluation Concepts: https://docs.langchain.com/langsmith/evaluation-concepts
+
+
+## 17.1 Wave 1 Metric 与 Receipt 对齐
+
+RAG Core Five 与 Agent Efficiency 使用 Wave 1 已确认的源事实：Model 调用成本读取 Model Gateway `UsageReceipt` 的 `ESTIMATED / OBSERVED / SETTLED / CORRECTION` 版本；Security 范围读取 `effective_security_epoch_ref/hash`；运行对象引用 Agent Core `PlanVersion / StepRun / ActionRun / RunOutcome / BudgetSettlement`。Observability 不重定义这些领域事实。
+
+现有 Release Gate 阈值继续保留；RAG Core Five 是新增一级质量维度，不自动替换、降低或重新解释 Recall、Citation、Unsupported Claim 等现有门槛。阈值变化必须由独立 Policy/ADR 完成。Core Five 任一必需输入 `BLOCKED / UNAVAILABLE / INCOMPARABLE` 时，不得通过单一效率分或成本下降补偿。
+
+Judge 调用必须经过 Model Gateway，具有独立 ModelCallAttempt、UsageReceipt、Security、Budget 和 Trace；模型自评不能单独证明自身质量。Agent Efficiency 保持质量优先的向量，不选择不透明综合分。

@@ -1,7 +1,7 @@
 # Wave 1 跨模块 Contract Registry
 
 updated: 2026-07-13
-status: field-frozen-pending-merge
+status: confirmed-target
 previous_status: parallel-proposal-governance
 baseline_main_sha: `729e439e29deadc101c5687fc47125104e62e2c1`
 coordinating_pr: `#17`
@@ -11,7 +11,7 @@ reviewed_parallel_prs:
   - `#20 Observability & Eval @ 4a91953799cd0bae7f3ca441cccabffbce1271f9`
 canonical_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 
-> 本文件是 Wave 1 跨模块共享 Contract 的合并前 Registry。字段、Owner、Failure Namespace 和恢复责任已完成集中审计并冻结；由于本文件仍位于未合并 Draft PR，当前状态只能是 `FIELD_FROZEN_PENDING_MERGE`。PR #17 合并后才提升为 `CONFIRMED_TARGET`，仍不代表 Runtime 已实现或成为 Current。
+> 本文件已随 PR #17 合并到 `main`，字段、Owner、Failure Namespace 和恢复责任为 `CONFIRMED_TARGET`；仍不代表 Runtime 已实现、质量已证明或成为 Current。
 
 ## 1. 状态与生效规则
 
@@ -21,7 +21,7 @@ canonical_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 PARALLEL_PROPOSAL
 ALIGNED_PENDING_FIELDS
 CONFLICT_REQUIRES_DECISION
-FIELD_FROZEN_PENDING_MERGE
+CONFIRMED_TARGET
 CONFIRMED_TARGET
 IMPLEMENTATION_AVAILABLE
 CURRENT
@@ -30,7 +30,7 @@ CURRENT
 生效条件：
 
 ```text
-FIELD_FROZEN_PENDING_MERGE
+CONFIRMED_TARGET
     已完成字段级设计审计，但仍在未合并 PR。
 
 CONFIRMED_TARGET
@@ -62,7 +62,7 @@ CURRENT
 
 ## 2.1 产品部署边界
 
-状态：`FIELD_FROZEN_PENDING_MERGE`。
+状态：`CONFIRMED_TARGET`。
 
 ```text
 Frontend Client
@@ -129,19 +129,19 @@ class CrossModuleEnvelopeV1(BaseModel):
 - Unknown Version、Unknown Enum、Missing Tenant、Hash Mismatch、Stale Epoch 和 Generation Conflict 默认 fail-closed 或 quarantine。
 - Consumer 只能产生自己的 Decision、Receipt 或 Projection，不能改写 Producer 领域事实。
 
-状态：`FIELD_FROZEN_PENDING_MERGE`。
+状态：`CONFIRMED_TARGET`。
 
 ## 4. Security ↔ Infrastructure
 
 | Contract | Canonical Owner | Producer → Consumer | 冻结边界 | 状态 |
 | --- | --- | --- | --- | --- |
-| `EffectiveSecurityEpochRefV1` | Security | Security → 所有受控模块 | Security 保存组合 Epoch 与 Hash；Consumer 只验证 Ref/Hash | `FIELD_FROZEN_PENDING_MERGE` |
-| `SecurityConditionalWrite` | Infrastructure primitive | Domain/Security → Infrastructure | 执行 expected epoch hash、generation、fencing CAS，不判断授权 | `FIELD_FROZEN_PENDING_MERGE` |
-| `SecretRef` | Security | Security/Config → Consumer | 仅引用和分类，不含 Secret Material | `FIELD_FROZEN_PENDING_MERGE` |
-| `CredentialVersionRefV1` | Security | Security → Infrastructure/Model/Tool | 授权、Purpose、Scope、Revocation 归 Security | `FIELD_FROZEN_PENDING_MERGE` |
-| `SecretLeaseV1` | Infrastructure execution fact | Infrastructure → Model/Tool/Data Service | 只交付已授权版本、TTL、Generation 和 Receipt | `FIELD_FROZEN_PENDING_MERGE` |
-| `TenantIsolationRequirement` | Security | Security → Infrastructure | Security 定义等级，Infrastructure 执行物理 Profile | `FIELD_FROZEN_PENDING_MERGE` |
-| `LegalHoldBinding` | Security/Policy Owner | Security → Infrastructure/Domain | Hold 决策归 Security，Purge 阻断和 Receipt 归 Infrastructure | `FIELD_FROZEN_PENDING_MERGE` |
+| `EffectiveSecurityEpochRefV1` | Security | Security → 所有受控模块 | Security 保存组合 Epoch 与 Hash；Consumer 只验证 Ref/Hash | `CONFIRMED_TARGET` |
+| `SecurityConditionalWrite` | Infrastructure primitive | Domain/Security → Infrastructure | 执行 expected epoch hash、generation、fencing CAS，不判断授权 | `CONFIRMED_TARGET` |
+| `SecretRef` | Security | Security/Config → Consumer | 仅引用和分类，不含 Secret Material | `CONFIRMED_TARGET` |
+| `CredentialVersionRefV1` | Security | Security → Infrastructure/Model/Tool | 授权、Purpose、Scope、Revocation 归 Security | `CONFIRMED_TARGET` |
+| `SecretLeaseV1` | Infrastructure execution fact | Infrastructure → Model/Tool/Data Service | 只交付已授权版本、TTL、Generation 和 Receipt | `CONFIRMED_TARGET` |
+| `TenantIsolationRequirement` | Security | Security → Infrastructure | Security 定义等级，Infrastructure 执行物理 Profile | `CONFIRMED_TARGET` |
+| `LegalHoldBinding` | Security/Policy Owner | Security → Infrastructure/Domain | Hold 决策归 Security，Purge 阻断和 Receipt 归 Infrastructure | `CONFIRMED_TARGET` |
 
 Canonical Failure：
 
@@ -166,12 +166,12 @@ INFRA_SECURITY_CONDITIONAL_WRITE_CONFLICT
 
 | Contract | Canonical Owner | Producer → Consumer | 关键规则 | 状态 |
 | --- | --- | --- | --- | --- |
-| `SecurityAuditRequirementV1` | Security | Security/Domain → Infrastructure/Observability | 冻结 Audit Class、Redaction、Retention、Legal Hold 和 Fail Mode | `FIELD_FROZEN_PENDING_MERGE` |
-| `AuditDurabilityRequirement` | Infrastructure execution projection | Security Requirement → Infrastructure | 只能保持或加强，不能降低 Audit Class | `FIELD_FROZEN_PENDING_MERGE` |
-| `AuditPersistenceReceiptV1` | Infrastructure | Infrastructure → Producer/Observability | 证明 Local Commit、Outbox 和 Integrity Chain | `FIELD_FROZEN_PENDING_MERGE` |
-| `TelemetryEnvelope` | Observability & Eval | 所有模块 → Observability | at-least-once、Sequence、Watermark、Gap、Replay 和 Redaction | `FIELD_FROZEN_PENDING_MERGE` |
-| `AuditEvent` | Observability accepted fact | Source Event → Observability | 接收后为独立不可变合规事实，引用 Persistence Receipt | `FIELD_FROZEN_PENDING_MERGE` |
-| `ExternalSinkDelivery` | Observability & Eval | Observability → External Sink | Delivery Attempt、Retry、DLQ，不代表源领域成功 | `FIELD_FROZEN_PENDING_MERGE` |
+| `SecurityAuditRequirementV1` | Security | Security/Domain → Infrastructure/Observability | 冻结 Audit Class、Redaction、Retention、Legal Hold 和 Fail Mode | `CONFIRMED_TARGET` |
+| `AuditDurabilityRequirement` | Infrastructure execution projection | Security Requirement → Infrastructure | 只能保持或加强，不能降低 Audit Class | `CONFIRMED_TARGET` |
+| `AuditPersistenceReceiptV1` | Infrastructure | Infrastructure → Producer/Observability | 证明 Local Commit、Outbox 和 Integrity Chain | `CONFIRMED_TARGET` |
+| `TelemetryEnvelope` | Observability & Eval | 所有模块 → Observability | at-least-once、Sequence、Watermark、Gap、Replay 和 Redaction | `CONFIRMED_TARGET` |
+| `AuditEvent` | Observability accepted fact | Source Event → Observability | 接收后为独立不可变合规事实，引用 Persistence Receipt | `CONFIRMED_TARGET` |
+| `ExternalSinkDelivery` | Observability & Eval | Observability → External Sink | Delivery Attempt、Retry、DLQ，不代表源领域成功 | `CONFIRMED_TARGET` |
 
 Mandatory Audit 不变量：
 
@@ -193,13 +193,13 @@ StructuredLog != AuditEvent
 
 | Contract | Canonical Owner | Producer → Consumer | 冻结边界 | 状态 |
 | --- | --- | --- | --- | --- |
-| `ModelSecurityDecision` | Security | Security → Model Gateway | Provider/Model Allowlist、Residency、Classification、Redaction 和 Credential Scope | `FIELD_FROZEN_PENDING_MERGE` |
-| `ProviderConnectionFactory` | Infrastructure Port | Model Gateway → Infrastructure | Transport、Pool、TLS、Proxy、Timeout、Cancellation primitive | `FIELD_FROZEN_PENDING_MERGE` |
-| `ModelRoutingDecision` | Model Gateway | Gateway → Agent Core/Observability | Immutable，固定 Role、Operation、Provider、Model、Policy、Budget、Security Ref | `FIELD_FROZEN_PENDING_MERGE` |
-| `ModelCallAttempt` | Model Gateway | Gateway → Agent Core/Observability | 每次真实 Provider Dispatch 一个 Attempt | `FIELD_FROZEN_PENDING_MERGE` |
-| `QuotaReservation` / `ModelQuotaReservationV1` | Model Gateway | Gateway → Infrastructure persistence | Quota 语义归 Gateway；CAS/Clock/Recovery 归 Infrastructure | `FIELD_FROZEN_PENDING_MERGE` |
-| `UsageReceipt` / `ModelUsageReceiptV1` | Model Gateway | Provider/Gateway → Agent Core/Observability | Estimated、Observed、Settled、Correction 追加式结算 | `FIELD_FROZEN_PENDING_MERGE` |
-| `CancellationReceipt` / `ModelCancellationReceiptV1` | Model Gateway | Gateway → Agent Core | Transport Receipt 是输入；Requested 不等于 Confirmed | `FIELD_FROZEN_PENDING_MERGE` |
+| `ModelSecurityDecision` | Security | Security → Model Gateway | Provider/Model Allowlist、Residency、Classification、Redaction 和 Credential Scope | `CONFIRMED_TARGET` |
+| `ProviderConnectionFactory` | Infrastructure Port | Model Gateway → Infrastructure | Transport、Pool、TLS、Proxy、Timeout、Cancellation primitive | `CONFIRMED_TARGET` |
+| `ModelRoutingDecision` | Model Gateway | Gateway → Agent Core/Observability | Immutable，固定 Role、Operation、Provider、Model、Policy、Budget、Security Ref | `CONFIRMED_TARGET` |
+| `ModelCallAttempt` | Model Gateway | Gateway → Agent Core/Observability | 每次真实 Provider Dispatch 一个 Attempt | `CONFIRMED_TARGET` |
+| `QuotaReservation` / `ModelQuotaReservationV1` | Model Gateway | Gateway → Infrastructure persistence | Quota 语义归 Gateway；CAS/Clock/Recovery 归 Infrastructure | `CONFIRMED_TARGET` |
+| `UsageReceipt` / `ModelUsageReceiptV1` | Model Gateway | Provider/Gateway → Agent Core/Observability | Estimated、Observed、Settled、Correction 追加式结算 | `CONFIRMED_TARGET` |
+| `CancellationReceipt` / `ModelCancellationReceiptV1` | Model Gateway | Gateway → Agent Core | Transport Receipt 是输入；Requested 不等于 Confirmed | `CONFIRMED_TARGET` |
 
 共享字段：
 
@@ -233,17 +233,17 @@ Object stored != ModelResponse valid
 
 | Contract | Canonical Owner | Producer → Consumer | 关键规则 | 状态 |
 | --- | --- | --- | --- | --- |
-| `VectorIndexSpec` | Knowledge/Memory | Domain → Infrastructure | Embedding、Dimension、Filter、Version 语义归领域 Owner | `FIELD_FROZEN_PENDING_MERGE` |
-| `GraphIndexSpec` | Knowledge/Memory | Domain → Infrastructure | Entity、Relation、Ontology、Provenance 归领域 Owner | `FIELD_FROZEN_PENDING_MERGE` |
-| `LexicalIndexSpec` | Knowledge | Knowledge → Infrastructure | Analyzer、Mapping、Ranking Profile 归 Knowledge | `FIELD_FROZEN_PENDING_MERGE` |
-| `IndexWriteBatch` / `IndexWriteBatchV1` | Knowledge/Memory | Domain → Infrastructure | Stable Item ID、Version、Hash、Idempotency、Tenant Scope | `FIELD_FROZEN_PENDING_MERGE` |
-| `IndexWriteReceipt` / `IndexWriteReceiptV1` | Infrastructure | Infrastructure → Domain | 只证明物理写入；允许 PARTIAL、UNKNOWN | `FIELD_FROZEN_PENDING_MERGE` |
-| `WriteVisibilityReceipt` | Infrastructure | Infrastructure → Domain | 声明一致性等级、Visibility Deadline 和 Watermark | `FIELD_FROZEN_PENDING_MERGE` |
-| `IndexVerification` | Infrastructure physical verification | Infrastructure → Domain | Schema、Count、Lineage、Scope 和 Representative Query | `FIELD_FROZEN_PENDING_MERGE` |
-| `IndexManifest` | Knowledge/Memory | Domain → Agent Core/Infrastructure | 领域版本组成、质量和 Lineage 事实 | `FIELD_FROZEN_PENDING_MERGE` |
-| `KnowledgeVersion` / `MemoryVersion` | Knowledge / Memory | Domain → Consumer | 只有领域 Owner 可 Acceptance 和 Activation | `FIELD_FROZEN_PENDING_MERGE` |
-| `IndexCutover` / `CutoverReceipt` | Infrastructure execution | Domain ↔ Infrastructure | Owner Approval + expected serving generation/CAS | `FIELD_FROZEN_PENDING_MERGE` |
-| `ServingWatermark` | Infrastructure | Infrastructure → Domain/Recovery | 当前物理服务版本和 source generation | `FIELD_FROZEN_PENDING_MERGE` |
+| `VectorIndexSpec` | Knowledge/Memory | Domain → Infrastructure | Embedding、Dimension、Filter、Version 语义归领域 Owner | `CONFIRMED_TARGET` |
+| `GraphIndexSpec` | Knowledge/Memory | Domain → Infrastructure | Entity、Relation、Ontology、Provenance 归领域 Owner | `CONFIRMED_TARGET` |
+| `LexicalIndexSpec` | Knowledge | Knowledge → Infrastructure | Analyzer、Mapping、Ranking Profile 归 Knowledge | `CONFIRMED_TARGET` |
+| `IndexWriteBatch` / `IndexWriteBatchV1` | Knowledge/Memory | Domain → Infrastructure | Stable Item ID、Version、Hash、Idempotency、Tenant Scope | `CONFIRMED_TARGET` |
+| `IndexWriteReceipt` / `IndexWriteReceiptV1` | Infrastructure | Infrastructure → Domain | 只证明物理写入；允许 PARTIAL、UNKNOWN | `CONFIRMED_TARGET` |
+| `WriteVisibilityReceipt` | Infrastructure | Infrastructure → Domain | 声明一致性等级、Visibility Deadline 和 Watermark | `CONFIRMED_TARGET` |
+| `IndexVerification` | Infrastructure physical verification | Infrastructure → Domain | Schema、Count、Lineage、Scope 和 Representative Query | `CONFIRMED_TARGET` |
+| `IndexManifest` | Knowledge/Memory | Domain → Agent Core/Infrastructure | 领域版本组成、质量和 Lineage 事实 | `CONFIRMED_TARGET` |
+| `KnowledgeVersion` / `MemoryVersion` | Knowledge / Memory | Domain → Consumer | 只有领域 Owner 可 Acceptance 和 Activation | `CONFIRMED_TARGET` |
+| `IndexCutover` / `CutoverReceipt` | Infrastructure execution | Domain ↔ Infrastructure | Owner Approval + expected serving generation/CAS | `CONFIRMED_TARGET` |
+| `ServingWatermark` | Infrastructure | Infrastructure → Domain/Recovery | 当前物理服务版本和 source generation | `CONFIRMED_TARGET` |
 
 发布顺序：
 
@@ -263,13 +263,13 @@ Physical Write
 
 | Contract | Canonical Owner | Producer → Consumer | 关键规则 | 状态 |
 | --- | --- | --- | --- | --- |
-| `DeletionRequest` | 领域 Owner | Domain/Security → Infrastructure | 领域 Tombstone 是删除事实源 | `FIELD_FROZEN_PENDING_MERGE` |
-| `DeletionTarget` | Infrastructure execution | Infrastructure Internal | PostgreSQL/Object/Vector/Graph/Lexical/Cache/Backup 清单 | `FIELD_FROZEN_PENDING_MERGE` |
-| `DeletionVerification` | Infrastructure | Infrastructure → Domain/Security | Visibility Deadline、未解决目标和 Legal Hold | `FIELD_FROZEN_PENDING_MERGE` |
-| `RecoverySetManifest` | Infrastructure | Backup/Restore → Cutover Owner | 对齐 LSN、Object、Checkpoint、Outbox、Epoch 和 Index Watermark | `FIELD_FROZEN_PENDING_MERGE` |
-| `RecoverySetValidation` | Infrastructure | Infrastructure → Operations/Owner | 只有 `cutover_allowed=true` 才可切生产 | `FIELD_FROZEN_PENDING_MERGE` |
-| `RetentionPolicy` | Policy Owner | Security/Domain → Infrastructure | Infrastructure 执行，不改变保留语义 | `FIELD_FROZEN_PENDING_MERGE` |
-| `LegalHold` | Security/Policy Owner | Security → Infrastructure | Hold 优先于 Purge 和 Backup Expiry | `FIELD_FROZEN_PENDING_MERGE` |
+| `DeletionRequest` | 领域 Owner | Domain/Security → Infrastructure | 领域 Tombstone 是删除事实源 | `CONFIRMED_TARGET` |
+| `DeletionTarget` | Infrastructure execution | Infrastructure Internal | PostgreSQL/Object/Vector/Graph/Lexical/Cache/Backup 清单 | `CONFIRMED_TARGET` |
+| `DeletionVerification` | Infrastructure | Infrastructure → Domain/Security | Visibility Deadline、未解决目标和 Legal Hold | `CONFIRMED_TARGET` |
+| `RecoverySetManifest` | Infrastructure | Backup/Restore → Cutover Owner | 对齐 LSN、Object、Checkpoint、Outbox、Epoch 和 Index Watermark | `CONFIRMED_TARGET` |
+| `RecoverySetValidation` | Infrastructure | Infrastructure → Operations/Owner | 只有 `cutover_allowed=true` 才可切生产 | `CONFIRMED_TARGET` |
+| `RetentionPolicy` | Policy Owner | Security/Domain → Infrastructure | Infrastructure 执行，不改变保留语义 | `CONFIRMED_TARGET` |
+| `LegalHold` | Security/Policy Owner | Security → Infrastructure | Hold 优先于 Purge 和 Backup Expiry | `CONFIRMED_TARGET` |
 
 ## 9. PreparedAction Ownership 决议建议——现已冻结
 
@@ -301,7 +301,7 @@ Infrastructure
     Object / Transport physical receipt
 ```
 
-协调状态从 `CONFLICT_REQUIRES_DECISION` 变为 `FIELD_FROZEN_PENDING_MERGE`。
+协调状态从 `CONFLICT_REQUIRES_DECISION` 变为 `CONFIRMED_TARGET`。
 
 Canonical 执行顺序：
 
@@ -344,18 +344,18 @@ src/backend/zuno/platform/**
 
 | Contract | Canonical Owner | Consumers | 状态 |
 | --- | --- | --- | --- |
-| `InfrastructureCapabilityProfile` | Infrastructure | 所有模块 | `FIELD_FROZEN_PENDING_MERGE` |
-| `DatabaseTransaction` / UoW | Infrastructure | 所有领域模块 | `FIELD_FROZEN_PENDING_MERGE` |
-| `OutboxRecord` / `InboxRecord` | Infrastructure primitive | Producer/Consumer | `FIELD_FROZEN_PENDING_MERGE` |
-| `WorkerLease` / `FencingToken` | Infrastructure | Worker Runtime | `FIELD_FROZEN_PENDING_MERGE` |
-| `CapacityReservation` | Infrastructure | Agent/Model/Tool/Worker | `FIELD_FROZEN_PENDING_MERGE` |
-| `RecoveryWatermark` | Infrastructure | Agent/Knowledge/Operations | `FIELD_FROZEN_PENDING_MERGE` |
-| `TenantIsolationProfile` | Infrastructure execution | Security/Domain | `FIELD_FROZEN_PENDING_MERGE` |
-| `AdapterConformanceProfile` | Infrastructure | Engineering/Release | `FIELD_FROZEN_PENDING_MERGE` |
-| `ServiceCompatibilityEntry` | Infrastructure | Release/Migration | `FIELD_FROZEN_PENDING_MERGE` |
-| `ServiceCriticalityProfile` | Infrastructure | Readiness/Operations | `FIELD_FROZEN_PENDING_MERGE` |
-| `ReleaseManifest` | Infrastructure/Release Engineering | Deployment/Operations | `FIELD_FROZEN_PENDING_MERGE` |
-| `ResourceUsageAttribution` | Infrastructure physical measurement | Product/FinOps/Domain | `FIELD_FROZEN_PENDING_MERGE` |
+| `InfrastructureCapabilityProfile` | Infrastructure | 所有模块 | `CONFIRMED_TARGET` |
+| `DatabaseTransaction` / UoW | Infrastructure | 所有领域模块 | `CONFIRMED_TARGET` |
+| `OutboxRecord` / `InboxRecord` | Infrastructure primitive | Producer/Consumer | `CONFIRMED_TARGET` |
+| `WorkerLease` / `FencingToken` | Infrastructure | Worker Runtime | `CONFIRMED_TARGET` |
+| `CapacityReservation` | Infrastructure | Agent/Model/Tool/Worker | `CONFIRMED_TARGET` |
+| `RecoveryWatermark` | Infrastructure | Agent/Knowledge/Operations | `CONFIRMED_TARGET` |
+| `TenantIsolationProfile` | Infrastructure execution | Security/Domain | `CONFIRMED_TARGET` |
+| `AdapterConformanceProfile` | Infrastructure | Engineering/Release | `CONFIRMED_TARGET` |
+| `ServiceCompatibilityEntry` | Infrastructure | Release/Migration | `CONFIRMED_TARGET` |
+| `ServiceCriticalityProfile` | Infrastructure | Readiness/Operations | `CONFIRMED_TARGET` |
+| `ReleaseManifest` | Infrastructure/Release Engineering | Deployment/Operations | `CONFIRMED_TARGET` |
+| `ResourceUsageAttribution` | Infrastructure physical measurement | Product/FinOps/Domain | `CONFIRMED_TARGET` |
 
 Target 目录映射：
 
@@ -486,7 +486,7 @@ Failure 不能被 Consumer 重命名成另一模块的成功或失败。
 
 ```text
 design field freeze complete
-status = FIELD_FROZEN_PENDING_MERGE
+status = CONFIRMED_TARGET
 module-internal Infrastructure design substantially complete
 cross-module ownership and schemas resolved
 implementation not established
