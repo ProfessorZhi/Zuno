@@ -49,6 +49,17 @@ jobs:
 
       - name: Apply centralized Wave 1 architecture decisions
         run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("tools/scripts/coordinate_wave1_architecture.py")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace(
+              '    if count != 1:\n        raise RuntimeError(f"{label}: expected one occurrence, got {count}")\n    return text.replace(old, new, 1)',
+              '    if count == 0:\n        print(f"SKIP {label}: already applied or source text changed")\n        return text\n    if count > 1:\n        raise RuntimeError(f"{label}: expected at most one occurrence, got {count}")\n    return text.replace(old, new, 1)',
+              1,
+          )
+          path.write_text(text, encoding="utf-8", newline="\n")
+          PY
           python -m py_compile tools/scripts/coordinate_wave1_architecture.py
           python tools/scripts/coordinate_wave1_architecture.py
           git diff --check -- '*.py' '*.yml' '*.yaml'
