@@ -23,13 +23,13 @@
 | 01 | Product Surface | `01-product-surface.md` | 待细化 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | `04-model-gateway.md` | 待细化 |
+| 04 | Model Gateway | `04-model-gateway.md` | 并行 Draft Target，待合并共享 Contract |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
-| 09 | Security | `09-security.md` | 待细化 |
-| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 已建立 Target 规范 |
+| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化；必须采用 PreparedToolAction 决议 |
+| 09 | Security | `09-security.md` | 并行 Draft Target，待合并共享 Contract |
+| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 并行 Draft Target，待合并共享 Contract |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | Target 主文档 + 数据服务与一致性生命周期附录 |
 
 ## Agent Core 文档边界
@@ -71,13 +71,21 @@ docs/modules/11-infrastructure-consistency-lifecycle.md
 
 `11-infrastructure-consistency-lifecycle.md` 是第二个受控展开，冻结派生索引发布、ServingWatermark、跨存储删除、一致恢复集、Mandatory Audit 背压、PreparedAction 边界、租户隔离、Upgrade Compatibility、Adapter Conformance、SLO、Network、Release Provenance 与 Resource Attribution。
 
-跨模块共享 Contract 的合并前协调登记在：
+跨模块字段级 Contract 与物理目录最终决议：
 
 ```text
+docs/decisions/0003-wave1-cross-module-contract-freeze.md
 docs/governance/wave1-cross-module-contract-registry.md
 ```
 
-Registry 是 Parallel Proposal 协调材料，不能替代最新 `main` 或各模块正式文档。
+ADR 0003 冻结：
+
+- Infrastructure 是逻辑模块，物理代码归 `src/backend/zuno/platform/**`；不新增 `src/backend/zuno/infrastructure/` 顶层目录；
+- `CrossModuleEnvelopeV1`、Effective Security Epoch、Secret/Credential、Audit、Model、Index 和 Tool Effect 字段；
+- `PreparedAction` 最终拆分为 Agent Core `ActionProposal/ActionExecutionBinding` 与 Tool Runtime `PreparedToolAction/ToolAttempt/EffectReceipt`；
+- Failure Prefix、Retry/Recovery/Reconcile Owner 和 Receipt 边界。
+
+当前 ADR 与 Registry 状态是 `FIELD_FROZEN_PENDING_MERGE`。它们只有合并到 `main` 后才成为 `CONFIRMED_TARGET`，仍不能冒充 Current。
 
 这些文档记录 Current Inventory 只是为了防止 Target 冒充 Current；实现与迁移仍进入 `.agent/programs/`，完成状态仍进入 `docs/status/`。
 
@@ -106,8 +114,9 @@ docs/modules/11-infrastructure-consistency-lifecycle.md
 - Current 变化只有在代码、Migration、测试、Trace、Eval 和运行证据完成后，才可写入状态文档；
 - 模块设计不得放回 `docs/architecture/`；
 - Agent Core 或 Infrastructure 变更必须同步正式文档、镜像、入口、验证器和测试；
-- Infrastructure 两个附录必须服从主文档，不得形成竞争架构；
-- Wave 1 Registry 中的条目未完成集中审计前不能标记 Confirmed Target 或 Current。
+- Infrastructure 两个附录必须服从主文档和已合并 ADR，不得形成竞争架构；
+- 未合并 ADR/Registry 只能标记 `FIELD_FROZEN_PENDING_MERGE`，不能标记 Current；
+- PR #18、#19、#20 合并前必须 rebase 已合并的 ADR 0003 并处理兼容 Alias。
 
 专用验证：
 
@@ -116,4 +125,6 @@ python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
 python tools/scripts/verify_infrastructure_target_protocols.py
 pytest -q tests/repo/test_infrastructure_target_protocols.py -p no:cacheprovider
+python tools/scripts/verify_wave1_contract_freeze.py
+pytest -q tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider
 ```
