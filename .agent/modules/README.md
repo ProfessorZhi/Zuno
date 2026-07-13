@@ -16,7 +16,7 @@
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
 | 09 | Security | `09-security.md` | 待细化 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](../../docs/modules/10-observability-eval.md) | 已建立 Target 规范 |
-| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | 完整 Target 架构镜像 |
+| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | Target 主文档镜像 + 数据服务能力附录镜像 |
 
 ## Agent Core 唯一 Target 镜像
 
@@ -32,21 +32,23 @@ docs/modules/06-agent-core-planning-control.md
 
 该文档统一包含主设计、控制协议和一致性生命周期协议。Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。
 
-## Infrastructure 唯一 Target 镜像
+## Infrastructure Target 镜像边界
 
 ```text
 .agent/modules/11-infrastructure.md
+.agent/modules/11-infrastructure-data-services.md
 ```
 
-对应正式事实源：
+对应正式事实源与受控附录：
 
 ```text
 docs/modules/11-infrastructure.md
+docs/modules/11-infrastructure-data-services.md
 ```
 
-该文档统一包含 Current/Target 技术选择、Infrastructure primitive Ownership、Local/Enterprise topology、事务、对象、Checkpoint、Queue、Inbox/Outbox、Lease/Fencing、Clock、Migration、Backup/Restore、Retention/Legal Hold、Drain、Capacity、DR、跨模块协议与 Requirement/Test/Evidence 映射。
+`11-infrastructure.md` 是第 11 模块唯一模块架构事实源。`11-infrastructure-data-services.md` 是其受控规范性展开，覆盖 PostgreSQL、RabbitMQ、Redis、Milvus、Neo4j/可替换图数据库、BM25/可替换 Search runtime、Object Store、Checkpointer、Trace/Audit persistence 与 Secret/KMS 的运行责任、Ownership、故障、重建、隔离、降级和证据要求。
 
-正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`。
+每对正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`；附录不得成为第二套独立模块架构。
 
 专用验证：
 
