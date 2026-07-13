@@ -11,8 +11,12 @@ on:
       - ".agent/modules/10-observability-eval-rag-agent-evaluation.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
+      - "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
+      - "docs/governance/wave1-cross-module-contract-registry.md"
       - "tools/scripts/verify_observability_eval_target_protocols.py"
+      - "tools/scripts/verify_wave1_contract_freeze.py"
       - "tests/repo/test_observability_eval_target_protocols.py"
+      - "tests/repo/test_wave1_contract_freeze.py"
       - ".github/workflows/observability-eval-target-docs.yml"
   push:
     branches:
@@ -52,7 +56,11 @@ jobs:
 
       - name: Validate Observability and Wave 1 integration
         run: |
-          python -m py_compile tools/scripts/verify_observability_eval_target_protocols.py tests/repo/test_observability_eval_target_protocols.py
+          python -m py_compile \
+            tools/scripts/verify_observability_eval_target_protocols.py \
+            tools/scripts/verify_wave1_contract_freeze.py \
+            tests/repo/test_observability_eval_target_protocols.py \
+            tests/repo/test_wave1_contract_freeze.py
           python tools/scripts/verify_observability_eval_target_protocols.py
           cmp docs/modules/10-observability-eval.md .agent/modules/10-observability-eval.md
           cmp docs/modules/10-observability-eval-rag-agent-evaluation.md .agent/modules/10-observability-eval-rag-agent-evaluation.md
@@ -64,6 +72,8 @@ jobs:
           python tools/scripts/verify_agent_core_target_protocols.py
           python tools/scripts/verify_security_target_protocols.py
           python tools/scripts/verify_model_gateway_target_protocols.py
+          python tools/scripts/verify_model_gateway_contract_freeze.py
+          python tools/scripts/verify_model_gateway_operations_conformance.py
           pytest -q \
             tests/repo/test_observability_eval_target_protocols.py \
             tests/repo/test_docs_entrypoints.py \
@@ -72,4 +82,6 @@ jobs:
             tests/repo/test_agent_core_target_protocols.py \
             tests/repo/test_security_target_protocols.py \
             tests/repo/test_model_gateway_target_protocols.py \
+            tests/repo/test_model_gateway_contract_freeze.py \
+            tests/repo/test_model_gateway_operations_conformance.py \
             -p no:cacheprovider
