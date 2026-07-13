@@ -279,7 +279,25 @@ def test_rag_requirement_registry_is_complete() -> None:
         assert f"EV-OBS-RAG-{suffix}" in content
 
 
-def test_parallel_wave_contracts_remain_pending_fields() -> None:
+def test_wave1_contracts_are_confirmed_target() -> None:
     content = _rag_formal()
-    assert "ALIGNED_PENDING_FIELDS" in content
-    assert "未合并 PR 仍是 Parallel Proposal" in content
+    assert "CONFIRMED_TARGET" in content
+    assert "ALIGNED_PENDING_FIELDS" not in content
+
+
+def test_server_authoritative_observability_contract_alignment() -> None:
+    content = _formal()
+    for term in [
+        "Server-hosted Product API",
+        "CrossModuleEnvelopeV1",
+        "TelemetryEnvelopeV1",
+        "SecurityAuditRequirementV1",
+        "AuditDurabilityRequirement",
+        "AuditPersistenceReceiptV1",
+        "effective_security_epoch_ref",
+        "payload_schema_hash",
+        "OBS_AUDIT_ACCEPTANCE_FAILED",
+        "AuditPersistenceReceipt != accepted AuditEvent",
+        "ExternalSinkDelivery != source-domain success",
+    ]:
+        assert term in content

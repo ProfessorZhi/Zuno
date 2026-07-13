@@ -30,6 +30,11 @@ REQUIRED_SECTIONS = [
 ]
 
 REQUIRED_CONTRACTS = [
+    "CrossModuleEnvelopeV1",
+    "TelemetryEnvelopeV1",
+    "SecurityAuditRequirementV1",
+    "AuditDurabilityRequirement",
+    "AuditPersistenceReceiptV1",
     "TraceContext",
     "TraceRecord",
     "SpanRecord",
@@ -121,6 +126,17 @@ MEASUREMENT_TERMS = [
 ]
 
 CROSS_MODULE_TERMS = [
+    "Server-hosted Product API",
+    "CONFIRMED_TARGET",
+    "effective_security_epoch_ref",
+    "effective_security_epoch_hash",
+    "payload_schema_hash",
+    "OBS_ENVELOPE_SCHEMA_UNSUPPORTED",
+    "OBS_INGEST_GAP",
+    "OBS_AUDIT_ACCEPTANCE_FAILED",
+    "OBS_EXTERNAL_SINK_DELIVERY_FAILED",
+    "AuditPersistenceReceipt != accepted AuditEvent",
+    "ExternalSinkDelivery != source-domain success",
     "SecurityAuditRequirement",
     "RedactionDecision",
     "DataClassification",
@@ -366,7 +382,7 @@ def verify() -> list[str]:
             "Core Five 全部必须是 MEASURED",
             "缺失字段返回 `unavailable_due_to_missing_trace_fields`",
             "质量、安全、权限和正确性是硬约束",
-            "ALIGNED_PENDING_FIELDS",
+            "CONFIRMED_TARGET",
             "不保存隐藏思维链",
         ],
         "RAG metric or governance invariant",
@@ -395,6 +411,8 @@ def verify() -> list[str]:
         "quality is proven",
         "production ready now",
         "full CI passed",
+        "ALIGNED_PENDING_FIELDS",
+        "支持本地事实存储，并通过",
     ]
     for phrase in forbidden_claims:
         if phrase in formal or phrase in rag_formal:

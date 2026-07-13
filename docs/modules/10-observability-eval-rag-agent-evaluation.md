@@ -992,7 +992,7 @@ Target 变为 Current 至少需要：Metric 实现、Dataset/Claim Schema、Migr
 
 提供 Eval Job Queue、Artifact Store、Metric Result persistence、Trace Store、critical-path timestamps、Lease/Fencing、Backup/Restore 和容量能力。
 
-未合并 PR 仍是 Parallel Proposal；字段、枚举和 failure code 在 Wave 1 集中审计前为 `ALIGNED_PENDING_FIELDS`，不是 Confirmed Target。
+ADR 0003 与 Wave 1 Registry 已合并；共享字段、枚举、Owner 和 Failure Code 为 `CONFIRMED_TARGET`，但仍不是 Current 或工程完成证据。
 
 ## 17. Current、Target、Future
 
