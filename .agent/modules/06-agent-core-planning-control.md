@@ -743,9 +743,11 @@ PlanPatchOperation
 ReplanBarrier
 Interrupt
 SignalConsumption
-PreparedAction
+ActionProposal
+ActionExecutionBinding
+PreparedToolActionRef
 ApprovalDecision
-IdempotencyClaim
+IdempotencyClaimRef
 DomainCommitMarker
 RecoveryWatermark
 ResultValidityRecord
@@ -792,7 +794,7 @@ Port 不暴露其他模块内部 Repository、数据库 Session 或 Provider SDK
 src/backend/zuno/agent/
 ├── contracts/{task,policy,planning,execution,interrupt,side_effect,publication,outcome,events}.py
 └── runtime/
-    ├── domain/{task_contract,run,plan,step,action,dispatch,interrupt,signal,prepared_action,approval,idempotency,result_validity,artifact,publication,failure,outcome}.py
+    ├── domain/{task_contract,run,plan,step,action,dispatch,interrupt,signal,action_proposal,action_execution_binding,approval,result_validity,artifact,publication,failure,outcome}.py
     ├── application/{run,task_contract,planning,scheduling,step_execution,reflection,replan,signal,side_effect,reconciliation,finalization,publication,command_arbitration,recovery,cancellation}_service.py
     ├── graph/run/{state,nodes,routing,builder}.py
     ├── graph/step/{state,nodes,routing,builder}.py
@@ -853,9 +855,10 @@ Action and Side Effect
 ├── agent_observations
 ├── agent_acceptance_results
 ├── agent_reflection_results
-├── agent_prepared_actions
+├── agent_action_proposals
+├── agent_action_execution_bindings
 ├── agent_approval_decisions
-├── agent_idempotency_claims
+├── agent_idempotency_claim_refs
 └── agent_reconciliation_records
 
 Replan and Wait
@@ -919,7 +922,7 @@ Dispatch
     DispatchGroup、Item、StepRun、Budget、Resource Claim 和 Event 同事务提交；之后才 Send。
 
 External Action
-    事务 A 提交 PreparedAction、ActionRun、IdempotencyClaim；事务外执行；事务 B 提交 Observation 和 Outcome。
+    事务 A 提交 ActionProposal、ActionExecutionBinding、ActionRun，并保存 Tool Runtime PreparedToolAction 与 Infrastructure IdempotencyClaim Ref；事务外执行；事务 B 提交 Observation 和 Outcome。
 
 Publication
     事务 A 提交 FinalCandidate、Gate、ArtifactVersion 和 PREPARED Publication；事务外发送；事务 B 提交 DeliveryReceipt、PUBLISHED 和 RunOutcome。
@@ -934,19 +937,34 @@ contract_name
 contract_version
 contract_bundle_version
 message_id
-correlation_id
-causation_id
+producer_module
+consumer_module
 tenant_id
 workspace_id
 run_id
 step_run_id
-producer
-consumer
+correlation_id
+causation_id
+idempotency_key
+aggregate_type
+aggregate_id
+aggregate_version
+expected_generation
+effective_security_epoch_ref
+effective_security_epoch_hash
+principal_context_ref
 security_context_ref
 authorization_decision_ref
+deadline_at
+trace_id
 data_classification
+redaction_decision_ref
+audit_requirement_ref
+occurred_at
 created_at
 payload
+payload_ref
+payload_hash
 payload_schema_hash
 ```
 
@@ -973,11 +991,11 @@ Part V 的对象分类、状态转换、Policy 与存储映射
 
 | 类型 | 对象 | 规则 |
 | --- | --- | --- |
-| Aggregate Root | `TaskContract`、`AgentRun`、`PlanVersion`、`StepRun`、`PreparedAction`、`ArtifactVersion`、`Publication` | 通过 Application Service 和 Repository 修改；拥有独立并发与不变量边界 |
-| Entity | `GoalVersion`、`ObjectiveDefinition`、`ObjectiveOutcome`、`ActionRun`、`Interrupt`、`DispatchGroup`、`DispatchItem`、`FinalCandidate`、`DeliveryReceipt` | 生命周期从属于明确 Aggregate，不允许跨 Aggregate 隐式写入 |
+| Aggregate Root | `TaskContract`、`AgentRun`、`PlanVersion`、`StepRun`、`ArtifactVersion`、`Publication` | 通过 Application Service 和 Repository 修改；拥有独立并发与不变量边界 |
+| Entity | `GoalVersion`、`ObjectiveDefinition`、`ObjectiveOutcome`、`ActionProposal`、`ActionExecutionBinding`、`ActionRun`、`Interrupt`、`DispatchGroup`、`DispatchItem`、`FinalCandidate`、`DeliveryReceipt` | 生命周期从属于明确 Aggregate，不允许跨 Aggregate 隐式写入 |
 | Immutable Result | `Observation`、`AcceptanceResult`、`ReflectionResult`、`BranchResultRef`、`JoinOutcome`、`ControlDecision`、`RunOutcome` | 提交后不可原地改写；更正创建新版本或 Correction Record |
-| Value Object / Policy Snapshot | `DependencyRule`、`ActivationCondition`、`JoinPolicy`、`ResourceClaim`、`EffectivePolicySnapshot`、`ResultValidityRecord` | 必须版本化、可哈希、可审计；不得隐藏可执行代码 |
-| Infrastructure Record | `DomainCommitMarker`、`RecoveryWatermark`、`OutboxEvent`、`ReconciliationRecord`、`IdempotencyClaim`、Lease | 记录恢复和交付事实，不冒充业务结果 |
+| Value Object / Policy Snapshot | `DependencyRule`、`ActivationCondition`、`JoinPolicy`、`ResourceClaim`、`PreparedToolActionRef`、`IdempotencyClaimRef`、`EffectivePolicySnapshot`、`ResultValidityRecord` | 必须版本化、可哈希、可审计；不得隐藏可执行代码 |
+| Infrastructure Record | `DomainCommitMarker`、`RecoveryWatermark`、`OutboxEvent`、`ReconciliationRecord`、Lease | 记录恢复和交付事实，不冒充业务结果 |
 
 不是每个名称都需要独立 Repository。是否建表由本节 Storage Mapping 决定，Codex 不得仅根据类名自行拆表。
 
@@ -992,6 +1010,8 @@ Part V 的对象分类、状态转换、Policy 与存储映射
 | `EffectivePolicySnapshot` | Agent Core | JSONB Snapshot + Hash | `agent_effective_policy_snapshots` | Run 创建时冻结 |
 | `RunCommand` | Agent Core | Ordered Command Journal | `agent_run_commands` | `UNIQUE(run_id, command_sequence_no)` |
 | `ControlDecision` | Agent Core | Immutable Result | `agent_control_decisions` | 引用 Command 与 applied generation |
+| `ActionProposal` | Agent Core | Relational Entity | `agent_action_proposals` | 只表达目标、能力、参数 Ref 与期望结果，不含可执行 Secret/Payload |
+| `ActionExecutionBinding` | Agent Core | Relational Entity | `agent_action_execution_bindings` | 绑定 Step/Plan、PreparedToolAction Ref、Approval/Claim Ref 与控制状态 |
 | `ResourceClaim` | Agent Core | Relational Lease/Claim | `agent_resource_claims` | Canonical Resource ID + Access Mode |
 | `PlanPatchOperation` | Agent Core | Relational Operation | `agent_plan_patch_operations` | 只生成新 PlanVersion，不原地改 Active Plan |
 | `DomainCommitMarker` | Agent Core | Relational Infrastructure Record | `agent_domain_commit_markers` | `UNIQUE(run_id, domain_generation)` |
@@ -1322,19 +1342,34 @@ contract_name
 contract_version
 contract_bundle_version
 message_id
-correlation_id
-causation_id
+producer_module
+consumer_module
 tenant_id
 workspace_id
 run_id
 step_run_id
-producer
-consumer
+correlation_id
+causation_id
+idempotency_key
+aggregate_type
+aggregate_id
+aggregate_version
+expected_generation
+effective_security_epoch_ref
+effective_security_epoch_hash
+principal_context_ref
 security_context_ref
 authorization_decision_ref
+deadline_at
+trace_id
 data_classification
+redaction_decision_ref
+audit_requirement_ref
+occurred_at
 created_at
 payload
+payload_ref
+payload_hash
 payload_schema_hash
 ```
 
@@ -2440,32 +2475,66 @@ Proposal
 → Commit Outcome
 ```
 
-PreparedAction：
+Canonical side-effect split：
 
 ```text
-prepared_action_id
-run_id
-step_run_id
-action_type
-tool_id
-normalized_arguments
-arguments_hash
-target_resources
-credential_scope
-side_effect_class
-security_policy_version
-approval_policy_version
-idempotency_key
-expires_at
-status
+Agent Core owns
+    ActionProposal
+    ActionExecutionBinding
+
+Tool Runtime owns
+    PreparedToolAction
+    ToolAttempt
+    EffectReceipt
+    EffectReconciliation
+
+Security owns
+    ActionAuthorizationDecision
+    SecurityApprovalDecision
+    EffectiveSecurityEpoch
+
+Infrastructure owns
+    IdempotencyClaim
+    Queue / Lease / Fencing / Outbox / AuditPersistenceReceipt
 ```
+
+```text
+ActionProposal
+    action_proposal_id
+    run_id
+    step_run_id
+    proposed_capability_ref
+    proposed_operation
+    proposed_args_ref
+    proposed_args_hash
+    expected_result_contract_ref
+    side_effect_class
+    proposal_source_ref
+    status
+
+ActionExecutionBinding
+    action_execution_binding_id
+    action_proposal_ref
+    prepared_tool_action_ref
+    prepared_action_hash
+    approval_decision_ref
+    idempotency_claim_ref
+    tool_attempt_ref
+    effect_receipt_ref
+    effect_reconciliation_ref
+    controller_epoch
+    execution_epoch
+    status
+```
+
+`PreparedAction` 是旧文档术语；规范名称为 Tool Runtime `PreparedToolAction`。Agent Core 只保存 Ref、Hash 与控制绑定，不持有 canonical arguments、Credential Material 或可执行 Payload。
 
 ApprovalDecision：
 
 ```text
 approval_id
-prepared_action_id
-arguments_hash
+prepared_tool_action_ref
+prepared_action_hash
 decision
 approved_scope
 approver_identity
@@ -2477,22 +2546,21 @@ expires_at
 
 审批执行前重新验证权限、Policy、Hash、Scope 和 Expiry。
 
-IdempotencyClaim：
+IdempotencyClaimRef：
 
 ```text
-idempotency_claim_id
-idempotency_key
-action_run_id
+idempotency_claim_ref
+idempotency_key_hash
+owner_module = INFRASTRUCTURE
 scope
+fencing_epoch
 status
-claimed_at
-completed_at
 external_receipt_ref
 ```
 
-状态：CLAIMED、EXECUTING、SUCCEEDED、FAILED、UNKNOWN、CLOSED。`CLOSED` 只表示 Claim 生命周期关闭，Action 业务结果仍以 ActionOutcome 为准。
+Claim 生命周期和条件写由 Infrastructure 拥有；Agent Core 只保存 Ref 并消费结构化结果。Claim 成功、Queue ACK 或 Lease Release 均不等于 Tool Effect 成功。
 
-UNKNOWN 时禁止盲目重试。Compensation 是新的受治理副作用，需要新的 PreparedAction、Security、Approval 和 IdempotencyClaim；不可补偿操作标记 NON_COMPENSATABLE。
+UNKNOWN 时禁止盲目重试。Compensation 是新的受治理副作用，需要新的 ActionProposal、Tool Runtime PreparedToolAction、Security/Approval 和 Infrastructure IdempotencyClaim；不可补偿操作标记 NON_COMPENSATABLE。
 
 ---
 
@@ -2665,19 +2733,34 @@ contract_name
 contract_version
 contract_bundle_version
 message_id
-correlation_id
-causation_id
+producer_module
+consumer_module
 tenant_id
 workspace_id
 run_id
 step_run_id
-producer
-consumer
+correlation_id
+causation_id
+idempotency_key
+aggregate_type
+aggregate_id
+aggregate_version
+expected_generation
+effective_security_epoch_ref
+effective_security_epoch_hash
+principal_context_ref
 security_context_ref
 authorization_decision_ref
+deadline_at
+trace_id
 data_classification
+redaction_decision_ref
+audit_requirement_ref
+occurred_at
 created_at
 payload
+payload_ref
+payload_hash
 payload_schema_hash
 ```
 

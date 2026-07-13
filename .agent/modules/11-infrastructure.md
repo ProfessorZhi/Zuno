@@ -88,7 +88,7 @@ Observability Hook
 - 事务边界明确，外部调用不嵌入数据库事务。
 - at-least-once delivery 下通过 Inbox、Outbox、Idempotency 与 Fencing 保持业务事实一致。
 - 进程、Worker、数据库连接、对象上传和部署重启后可以恢复。
-- Local-first 与 Enterprise deployment 共用 typed contract，不让业务模块绑定厂商。
+- 服务端统一后端是产品 Target；浏览器或桌面前端只通过 Product API 访问。SQLite、本地对象存储和本地队列仅作为开发、测试与 CI Adapter，共用同一 typed contract。
 - 所有恢复、备份、迁移和容量声明都有测试与证据，不靠配置文件存在来证明。
 
 ## 3. 非目标
@@ -126,7 +126,7 @@ Infrastructure 可以拥有 `LeaseRecord`、`QueueDelivery`、`StorageObjectMeta
 
 ### 4.2 Target Selection
 
-| Capability | Local-first Target | Enterprise Target | 理由 |
+| Capability | Developer / CI Adapter | Canonical Server Product Target | 理由 |
 | --- | --- | --- | --- |
 | Relational DB | SQLite adapter，仅单机开发/测试 | PostgreSQL 16+ | Agent Core 已冻结 PostgreSQL 领域事实边界；支持事务、条件写、锁、PITR |
 | Object Store | Local immutable filesystem adapter | S3-compatible Object Store；managed S3 或 MinIO adapter | 大型不可变 payload、hash、版本和 lifecycle |
@@ -137,6 +137,20 @@ Infrastructure 可以拥有 `LeaseRecord`、`QueueDelivery`、`StorageObjectMeta
 | Secret Delivery | env/file reference adapter | external secret manager port | 业务只持有 secret reference |
 
 Target 选择不等于 Current 提升；迁移必须进入独立 Program。
+
+产品部署边界固定为：
+
+```text
+Web / Desktop Frontend
+    只持有短期客户端会话和展示状态
+    → Server-hosted Product API
+        → Principal / Tenant / Workspace resolution
+        → Security Control Plane
+        → Agent / Knowledge / Memory / Model / Tool backends
+        → PostgreSQL / Object Store / Queue / Checkpoint
+```
+
+前端不得直连数据库、对象存储、Queue、Checkpointer、模型 Provider 或 Secret Store。每个用户请求必须在服务端解析可信 `PrincipalAccount`、Tenant、Workspace、Policy 与 Effective Security Epoch。本地 Adapter 只用于开发、单元测试、集成测试和离线演示，不是多用户产品部署模式。
 
 ### 4.3 Future Optional
 
@@ -226,11 +240,11 @@ flowchart TB
 
 Infrastructure 是横向运行域，不要求每种 primitive 拆成独立微服务。
 
-## 7. Local-first Topology
+## 7. Developer / CI Local Adapter Topology
 
 ```mermaid
 flowchart LR
-  UI --> API[FastAPI + Controller]
+  DevClient[Developer / Test Client] --> API[FastAPI + Controller]
   API --> SQLite[(SQLite)]
   API --> LocalObject[(Local Immutable Object Store)]
   API --> LocalQueue[In-process / Local Durable Queue]
@@ -245,13 +259,16 @@ flowchart LR
 - 单写者或受控低并发，不声称 PostgreSQL 隔离级别语义。
 - typed ports 不变，业务代码不得用 `if sqlite` 改变领域规则。
 - 必须覆盖进程重启、重复投递、对象中断与 SQLite lock contention。
-- Local backup/restore 可以轻量，但不得称为 enterprise production ready。
+- Local backup/restore 可以轻量，但不得称为 server product deployment 或 production ready。
+- 不在该拓扑承载正式多用户账号、组织委派、生产 Secret 或生产权限事实。
 
-## 8. Enterprise Topology
+## 8. Canonical Server Product Topology
 
 ```mermaid
 flowchart TB
-  LB --> API[API Role]
+  Frontend[Web / Desktop Frontend] --> LB
+  IdP[Trusted Identity Provider] --> API
+  LB --> API[Product API Role]
   API --> PG[(PostgreSQL)]
   API --> OBJ[(S3-compatible Object Store)]
   API --> MQ[(RabbitMQ)]
@@ -273,6 +290,8 @@ flowchart TB
 
 推荐部署单位是 role，不是默认微服务。相同 backend image 可以按 role 启动；只有隔离、扩缩容或安全要求出现时才拆镜像。
 
+该拓扑是 Zuno 产品 Target：后端部署在受控服务器或云运行环境，前端只是 API Client。所有账号、组织、权限、知识、Memory、AgentRun、Usage、Audit 与配置事实均由后端权威存储和校验；客户端缓存不能成为授权或业务事实源。
+
 ---
 
 # Part III：核心 Contract 与状态机
@@ -283,7 +302,7 @@ flowchart TB
 class InfrastructureCapabilityProfile(BaseModel):
     profile_id: str
     profile_version: str
-    deployment_class: Literal["LOCAL", "ENTERPRISE"]
+    deployment_class: Literal["DEV_LOCAL", "SERVER"]
     database: DatabaseCapability
     object_store: ObjectStoreCapability
     checkpoint_store: CheckpointCapability

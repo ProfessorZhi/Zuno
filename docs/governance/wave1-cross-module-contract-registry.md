@@ -6,9 +6,9 @@ previous_status: parallel-proposal-governance
 baseline_main_sha: `729e439e29deadc101c5687fc47125104e62e2c1`
 coordinating_pr: `#17`
 reviewed_parallel_prs:
-  - `#18 Model Gateway @ a78f718ac8002ba2c602f922187bb155484ef5c4`
+  - `#18 Model Gateway @ 3bd9b3e4437314c376a5b1b767ef052e3c74db53`
   - `#19 Security @ f9fd19c16721cb9cec97c25d82b86274660622e6`
-  - `#20 Observability & Eval @ 600f1101dbf0c0e8bc9591e5dddc7a4b2ba4d81d`
+  - `#20 Observability & Eval @ 4a91953799cd0bae7f3ca441cccabffbce1271f9`
 canonical_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 
 > 本文件是 Wave 1 跨模块共享 Contract 的合并前 Registry。字段、Owner、Failure Namespace 和恢复责任已完成集中审计并冻结；由于本文件仍位于未合并 Draft PR，当前状态只能是 `FIELD_FROZEN_PENDING_MERGE`。PR #17 合并后才提升为 `CONFIRMED_TARGET`，仍不代表 Runtime 已实现或成为 Current。
@@ -60,6 +60,21 @@ CURRENT
 9. Requirement、Test、Evidence 有稳定映射；
 10. 实现不得绕过 ADR 0003。
 
+## 2.1 产品部署边界
+
+状态：`FIELD_FROZEN_PENDING_MERGE`。
+
+```text
+Frontend Client
+→ Server-hosted Product API
+→ Backend logical modules
+→ Infrastructure primitives
+```
+
+- `PrincipalAccount`、Tenant、Workspace、OrgUnit、Grant、Policy、Epoch 和业务事实只在后端成为权威事实。
+- 前端不得直连数据服务、Provider、Queue、Checkpoint 或 Secret Store。
+- Developer / CI Local Adapter 不得冒充产品部署模式或多用户安全证据。
+
 ## 3. 通用 CrossModuleEnvelope
 
 Canonical Schema：`CrossModuleEnvelopeV1`。
@@ -68,10 +83,14 @@ Canonical Schema：`CrossModuleEnvelopeV1`。
 class CrossModuleEnvelopeV1(BaseModel):
     contract_name: str
     contract_version: str
+    contract_bundle_version: str
     message_id: str
     producer_module: str
+    consumer_module: str
     tenant_id: str
     workspace_id: str | None
+    run_id: str | None
+    step_run_id: str | None
     correlation_id: str
     causation_id: str | None
     idempotency_key: str | None
@@ -82,19 +101,27 @@ class CrossModuleEnvelopeV1(BaseModel):
     effective_security_epoch_ref: str | None
     effective_security_epoch_hash: str | None
     principal_context_ref: str | None
+    security_context_ref: str | None
+    authorization_decision_ref: str | None
     deadline_at: datetime | None
     trace_id: str
     data_classification: str
     redaction_decision_ref: str | None
     audit_requirement_ref: str | None
     occurred_at: datetime
+    created_at: datetime
+    payload: dict | None
     payload_ref: str | None
     payload_hash: str
+    payload_schema_hash: str
 ```
 
 兼容规则：
 
 - `message_id` 只用于 Envelope 去重；业务幂等使用 `idempotency_key`。
+- `contract_bundle_version`、`producer_module`、`consumer_module` 是强制路由与兼容字段。
+- `payload` / `payload_ref` 至少一个存在，并同时校验 payload hash 与 schema hash。
+- Agent 相关消息保留 `run_id` / `step_run_id`；非 Agent 工作流可以为空。
 - 旧字段 `security_epoch` 只作为迁移期 Alias；Canonical 字段为 `effective_security_epoch_ref/hash`。
 - Unknown Version、Unknown Enum、Missing Tenant、Hash Mismatch、Stale Epoch 和 Generation Conflict 默认 fail-closed 或 quarantine。
 - Consumer 只能产生自己的 Decision、Receipt 或 Projection，不能改写 Producer 领域事实。
