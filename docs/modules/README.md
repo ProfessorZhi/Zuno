@@ -23,7 +23,7 @@
 | 01 | Product Surface | `01-product-surface.md` | 待细化 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | `04-model-gateway.md` | 并行 Draft Target，待对齐已合并共享 Contract |
+| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立主 Target、Contract Freeze 与 Operations/Conformance 规范 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
@@ -31,6 +31,38 @@
 | 09 | Security | [`09-security.md`](./09-security.md) | 已建立 Target 规范 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 并行 Draft Target，待对齐已合并共享 Contract |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | Target 主文档 + 数据服务与一致性生命周期附录 |
+
+## Model Gateway 文档边界
+
+正式 Target 文档、附录与 Agent 镜像：
+
+```text
+docs/modules/04-model-gateway.md
+.agent/modules/04-model-gateway.md
+
+docs/modules/04-model-gateway-contract-freeze.md
+.agent/modules/04-model-gateway-contract-freeze.md
+
+docs/modules/04-model-gateway-operations-conformance.md
+.agent/modules/04-model-gateway-operations-conformance.md
+```
+
+每一对正式文件与 Agent 镜像都必须字节级一致。
+
+- 主文档定义完整 Model Gateway Target：Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 和 Storage；
+- Contract Freeze 附录冻结跨模块 Ownership、ModelOperationKind、ModelCall 聚合、Budget / Usage / Quota 崩溃语义、事件目录、三层 Streaming、Routing Replay、Capability 生命周期和 ResultValidity；
+- Operations / Conformance 附录定义 Adapter 一致性、配置激活、Provider/Model 生命周期、多租户公平、过载背压、缓存、运维命令、保留删除、SLO、Readiness、兼容升级和 Eval/Judge 治理。
+
+Current 调用清单及旁路状态仍由代码、测试和 `docs/status/production-readiness.md` 证明。
+
+专用验证：
+
+```text
+python tools/scripts/verify_model_gateway_target_protocols.py
+python tools/scripts/verify_model_gateway_contract_freeze.py
+python tools/scripts/verify_model_gateway_operations_conformance.py
+pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
+```
 
 ## Agent Core 文档边界
 
@@ -91,18 +123,23 @@ docs/governance/wave1-cross-module-contract-registry.md
 ADR 0003 冻结：
 
 - 服务端后端是产品权威运行边界，本地 Adapter 只用于开发、测试和 CI；
-- Infrastructure 是逻辑模块，物理代码归 `src/backend/zuno/platform/**`；不新增 `src/backend/zuno/infrastructure/` 顶层目录；
+- Infrastructure 是逻辑模块，物理代码归 `src/backend/zuno/platform/**`；
 - `CrossModuleEnvelopeV1`、Effective Security Epoch、Secret/Credential、Audit、Model、Index 和 Tool Effect 字段；
 - `PreparedAction` 最终拆分为 Agent Core `ActionProposal/ActionExecutionBinding` 与 Tool Runtime `PreparedToolAction/ToolAttempt/EffectReceipt`；
 - Failure Prefix、Retry/Recovery/Reconcile Owner 和 Receipt 边界。
 
 当前 ADR 与 Registry 状态是 `FIELD_FROZEN_PENDING_MERGE`。它们只有合并到 `main` 后才成为 `CONFIRMED_TARGET`，仍不能冒充 Current。
 
-这些文档记录 Current Inventory 只是为了防止 Target 冒充 Current；实现与迁移仍进入 `.agent/programs/`，完成状态仍进入 `docs/status/`。
-
 ## Agent 镜像
 
 ```text
+docs/modules/04-model-gateway.md
+.agent/modules/04-model-gateway.md
+docs/modules/04-model-gateway-contract-freeze.md
+.agent/modules/04-model-gateway-contract-freeze.md
+docs/modules/04-model-gateway-operations-conformance.md
+.agent/modules/04-model-gateway-operations-conformance.md
+
 docs/modules/06-agent-core-planning-control.md
 .agent/modules/06-agent-core-planning-control.md
 
@@ -111,10 +148,8 @@ docs/modules/09-security.md
 
 docs/modules/11-infrastructure.md
 .agent/modules/11-infrastructure.md
-
 docs/modules/11-infrastructure-data-services.md
 .agent/modules/11-infrastructure-data-services.md
-
 docs/modules/11-infrastructure-consistency-lifecycle.md
 .agent/modules/11-infrastructure-consistency-lifecycle.md
 ```
@@ -127,10 +162,10 @@ docs/modules/11-infrastructure-consistency-lifecycle.md
 - 不得在 Target 文档中把未实现能力写成 Current；
 - Current 变化只有在代码、Migration、测试、Trace、Eval 和运行证据完成后，才可写入状态文档；
 - 模块设计不得放回 `docs/architecture/`；
-- Agent Core、Security 或 Infrastructure 变更必须同步正式文档、镜像、入口、验证器和测试；
+- Agent Core、Model Gateway、Security 或 Infrastructure 变更必须同步正式文档、镜像、入口、验证器和测试；
 - Infrastructure 两个附录必须服从主文档和已合并 ADR，不得形成竞争架构；
 - 未合并 ADR/Registry 只能标记 `FIELD_FROZEN_PENDING_MERGE`，不能标记 Current；
-- PR #18、#20 合并前必须对齐已合并的 ADR 0003 并处理兼容 Alias。
+- PR #20 合并前必须对齐已合并的 ADR 0003并处理兼容 Alias。
 
 专用验证：
 
