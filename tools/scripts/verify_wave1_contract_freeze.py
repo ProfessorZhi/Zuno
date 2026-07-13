@@ -12,12 +12,18 @@ DECISIONS_INDEX = REPO_ROOT / "docs/decisions/README.md"
 REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
 MODULES_INDEX = REPO_ROOT / "docs/modules/README.md"
 AGENT_MODULES_INDEX = REPO_ROOT / ".agent/modules/README.md"
+CORE = REPO_ROOT / "docs/modules/06-agent-core-planning-control.md"
+CORE_MIRROR = REPO_ROOT / ".agent/modules/06-agent-core-planning-control.md"
 
 BASELINE_SHA = "729e439e29deadc101c5687fc47125104e62e2c1"
 
 ADR_TERMS = [
     "status: accepted-target-pending-merge",
     "CrossModuleEnvelopeV1",
+    "服务端权威产品边界",
+    "contract_bundle_version",
+    "consumer_module",
+    "payload_schema_hash",
     "EffectiveSecurityEpochRefV1",
     "CredentialVersionRefV1",
     "SecretLeaseV1",
@@ -46,6 +52,10 @@ REGISTRY_TERMS = [
     "status: field-frozen-pending-merge",
     "previous_status: parallel-proposal-governance",
     "CrossModuleEnvelopeV1",
+    "产品部署边界",
+    "contract_bundle_version",
+    "consumer_module",
+    "payload_schema_hash",
     "SecurityConditionalWrite",
     "CredentialVersionRefV1",
     "SecretLeaseV1",
@@ -133,6 +143,8 @@ def verify() -> list[Finding]:
         (REGISTRY, "XMOD_REGISTRY_MISSING"),
         (MODULES_INDEX, "XMOD_MODULES_INDEX_MISSING"),
         (AGENT_MODULES_INDEX, "XMOD_AGENT_INDEX_MISSING"),
+        (CORE, "XMOD_CORE_MISSING"),
+        (CORE_MIRROR, "XMOD_CORE_MIRROR_MISSING"),
     ]:
         if not path.exists():
             findings.append(Finding(code, str(path.relative_to(REPO_ROOT))))
@@ -145,6 +157,28 @@ def verify() -> list[Finding]:
     decisions_index = _read(DECISIONS_INDEX)
     modules_index = _read(MODULES_INDEX)
     agent_index = _read(AGENT_MODULES_INDEX)
+    core = _read(CORE)
+
+    if CORE.read_bytes() != CORE_MIRROR.read_bytes():
+        findings.append(Finding("XMOD_CORE_MIRROR_DRIFT", "Agent Core formal document and mirror differ"))
+    for term in [
+        "ActionProposal",
+        "ActionExecutionBinding",
+        "PreparedToolAction",
+        "agent_action_proposals",
+        "agent_action_execution_bindings",
+        "contract_bundle_version",
+        "consumer_module",
+        "effective_security_epoch_ref",
+        "payload_schema_hash",
+    ]:
+        _require(core, term, "XMOD_CORE_ALIGNMENT", findings)
+    for forbidden in [
+        "`PreparedAction`、`ArtifactVersion`",
+        "agent_prepared_actions",
+    ]:
+        if forbidden in core:
+            findings.append(Finding("XMOD_CORE_LEGACY_OWNERSHIP", f"legacy Agent Core ownership remains: {forbidden}"))
 
     for content, label in [(adr, "ADR"), (registry, "REGISTRY")]:
         if BASELINE_SHA not in content:
