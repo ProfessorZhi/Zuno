@@ -30,7 +30,7 @@
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
 | 09 | Security | `09-security.md` | 待细化 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 已建立 Target 规范 |
-| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | Target 主文档 + 数据服务能力附录 |
+| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | Target 主文档 + 数据服务与一致性生命周期附录 |
 
 ## Agent Core 文档边界
 
@@ -60,13 +60,26 @@ docs/modules/11-infrastructure.md
 
 docs/modules/11-infrastructure-data-services.md
 .agent/modules/11-infrastructure-data-services.md
+
+docs/modules/11-infrastructure-consistency-lifecycle.md
+.agent/modules/11-infrastructure-consistency-lifecycle.md
 ```
 
 `11-infrastructure.md` 仍是第 11 模块唯一模块架构事实源，冻结 Database、Transaction、Object Store、Checkpoint、Queue/Worker、Inbox/Outbox、Lease/Fencing、Clock、Migration、Backup/Restore、Retention/Legal Hold、Drain、Capacity、DR 与跨模块 capability contract。
 
-`11-infrastructure-data-services.md` 是主文档的受控展开，专门冻结 PostgreSQL、RabbitMQ、Redis、Milvus、Neo4j/可替换图数据库、BM25/可替换 Search runtime、Object Store、Checkpointer、Trace/Audit persistence 与 Secret/KMS 的运行责任、Ownership、故障、重建、隔离、降级和证据要求。附录不能独立改变主文档边界。
+`11-infrastructure-data-services.md` 是主文档的受控展开，冻结 PostgreSQL、RabbitMQ、Redis、Milvus、Neo4j/可替换图数据库、BM25/可替换 Search runtime、Object Store、Checkpointer、Trace/Audit persistence 与 Secret/KMS 的运行责任、Ownership、故障、重建、隔离、降级和证据要求。
 
-两份文档记录 Current Inventory 只是为了防止 Target 冒充 Current；实现与迁移仍进入 `.agent/programs/`，完成状态仍进入 `docs/status/`。
+`11-infrastructure-consistency-lifecycle.md` 是第二个受控展开，冻结派生索引发布、ServingWatermark、跨存储删除、一致恢复集、Mandatory Audit 背压、PreparedAction 边界、租户隔离、Upgrade Compatibility、Adapter Conformance、SLO、Network、Release Provenance 与 Resource Attribution。
+
+跨模块共享 Contract 的合并前协调登记在：
+
+```text
+docs/governance/wave1-cross-module-contract-registry.md
+```
+
+Registry 是 Parallel Proposal 协调材料，不能替代最新 `main` 或各模块正式文档。
+
+这些文档记录 Current Inventory 只是为了防止 Target 冒充 Current；实现与迁移仍进入 `.agent/programs/`，完成状态仍进入 `docs/status/`。
 
 ## Agent 镜像
 
@@ -79,6 +92,9 @@ docs/modules/11-infrastructure.md
 
 docs/modules/11-infrastructure-data-services.md
 .agent/modules/11-infrastructure-data-services.md
+
+docs/modules/11-infrastructure-consistency-lifecycle.md
+.agent/modules/11-infrastructure-consistency-lifecycle.md
 ```
 
 每对正式文件与镜像必须字节级一致。
@@ -90,7 +106,8 @@ docs/modules/11-infrastructure-data-services.md
 - Current 变化只有在代码、Migration、测试、Trace、Eval 和运行证据完成后，才可写入状态文档；
 - 模块设计不得放回 `docs/architecture/`；
 - Agent Core 或 Infrastructure 变更必须同步正式文档、镜像、入口、验证器和测试；
-- Infrastructure 数据服务附录必须服从主文档，不得成为第二套独立模块架构。
+- Infrastructure 两个附录必须服从主文档，不得形成竞争架构；
+- Wave 1 Registry 中的条目未完成集中审计前不能标记 Confirmed Target 或 Current。
 
 专用验证：
 
