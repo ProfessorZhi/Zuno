@@ -1,0 +1,43 @@
+name: Finalize Wave 1 Governance
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "tools/scripts/align_observability_wave1.py"
+      - "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
+      - "docs/governance/wave1-cross-module-contract-registry.md"
+      - "docs/modules/10-observability-eval*.md"
+      - ".agent/modules/10-observability-eval*.md"
+      - ".github/workflows/finalize-wave1-governance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Activate governance and remove temporary helpers
+        run: |
+          set -o pipefail
+          python -m py_compile tools/scripts/align_observability_wave1.py
+          python tools/scripts/align_observability_wave1.py
+          rm tools/scripts/align_observability_wave1.py
+          rm .github/workflows/finalize-wave1-governance.yml
+          git diff --check -- '*.py' '*.yml' '*.yaml'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: activate and clean Wave 1 governance"
+          git push origin HEAD:agent/finalize-wave1-governance
