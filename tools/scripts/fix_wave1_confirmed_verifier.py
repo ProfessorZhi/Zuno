@@ -2,11 +2,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-VERIFIER = ROOT / "tools/scripts/verify_wave1_contract_freeze.py"
+WAVE_VERIFIER = ROOT / "tools/scripts/verify_wave1_contract_freeze.py"
+INFRA_VERIFIER = ROOT / "tools/scripts/verify_infrastructure_target_protocols.py"
 
 
 def main() -> None:
-    text = VERIFIER.read_text(encoding="utf-8")
+    text = WAVE_VERIFIER.read_text(encoding="utf-8")
     text = text.replace(
         '    "previous_status: parallel-proposal-governance",\n',
         '    "previous_status: field-frozen-pending-merge",\n',
@@ -21,8 +22,16 @@ def main() -> None:
 ''',
         1,
     )
-    VERIFIER.write_text(text, encoding="utf-8", newline="\n")
-    print("Confirmed Wave 1 verifier assertions fixed.")
+    WAVE_VERIFIER.write_text(text, encoding="utf-8", newline="\n")
+
+    text = INFRA_VERIFIER.read_text(encoding="utf-8")
+    text = text.replace(
+        '    "parallel-proposal-governance",\n',
+        '    "status: confirmed-target",\n    "previous_status: field-frozen-pending-merge",\n',
+        1,
+    )
+    INFRA_VERIFIER.write_text(text, encoding="utf-8", newline="\n")
+    print("Confirmed Wave 1 and Infrastructure verifier assertions fixed.")
 
 
 if __name__ == "__main__":
