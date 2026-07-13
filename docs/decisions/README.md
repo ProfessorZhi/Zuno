@@ -6,11 +6,11 @@
 
 - [ADR 0002：退休 compat namespace](0002-retire-compat-namespace.md)
 
-待合并生效的 Target 决议：
+正式 Target 决议：
 
 - [ADR 0003：Wave 1 跨模块 Contract 与 Infrastructure 物理边界冻结](0003-wave1-cross-module-contract-freeze.md)
-  - 当前状态：`accepted-target-pending-merge`；只有合并到 `main` 后才成为正式共享 Target Contract。
-  - 冻结范围：`zuno/platform/**` 物理 Ownership、共享 Envelope、Security Epoch、Secret/Credential、Audit、Model Gateway、派生索引、PreparedToolAction、Failure Code 与 Retry/Recovery Owner。
+  - 当前状态：`accepted-target`；已合并到 `main`，是正式共享 Target Contract，但不是 Current 或实现证据。
+  - 冻结范围：服务端权威产品边界、`zuno/platform/**` 物理 Ownership、共享 Envelope、Security Epoch、Secret/Credential、Audit、Model Gateway、派生索引、PreparedToolAction、Failure Code 与 Retry/Recovery Owner。
 
 已被替换的决策归档在：
 

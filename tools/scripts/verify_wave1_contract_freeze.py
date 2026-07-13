@@ -18,7 +18,7 @@ CORE_MIRROR = REPO_ROOT / ".agent/modules/06-agent-core-planning-control.md"
 BASELINE_SHA = "729e439e29deadc101c5687fc47125104e62e2c1"
 
 ADR_TERMS = [
-    "status: accepted-target-pending-merge",
+    "status: accepted-target",
     "CrossModuleEnvelopeV1",
     "服务端权威产品边界",
     "contract_bundle_version",
@@ -41,7 +41,7 @@ ADR_TERMS = [
     "ActionExecutionBinding",
     "EffectReceipt",
     "EffectReconciliation",
-    "FIELD_FROZEN_PENDING_MERGE",
+    "CONFIRMED_TARGET",
     "src/backend/zuno/platform/",
     "├── data_services/",
     "Queue ACK != Tool Effect Success",
@@ -49,7 +49,7 @@ ADR_TERMS = [
 ]
 
 REGISTRY_TERMS = [
-    "status: field-frozen-pending-merge",
+    "status: confirmed-target",
     "previous_status: parallel-proposal-governance",
     "CrossModuleEnvelopeV1",
     "产品部署边界",
@@ -158,14 +158,6 @@ def verify() -> list[Finding]:
     modules_index = _read(MODULES_INDEX)
     agent_index = _read(AGENT_MODULES_INDEX)
     core = _read(CORE)
-    # The immediate post-merge integration PR owns shared README routing. This
-    # avoids selecting one stale concurrent module index while preserving strict
-    # ADR, Registry, Core, Ownership and Requirement validation here.
-    if "field-frozen-pending-merge" in registry:
-        deferred_routes = "\n0003-wave1-cross-module-contract-freeze.md\nwave1-cross-module-contract-registry.md\nFIELD_FROZEN_PENDING_MERGE\nsrc/backend/zuno/platform/**\nPreparedToolAction\n"
-        modules_index += deferred_routes
-        agent_index += deferred_routes
-
     if CORE.read_bytes() != CORE_MIRROR.read_bytes():
         findings.append(Finding("XMOD_CORE_MIRROR_DRIFT", "Agent Core formal document and mirror differ"))
     for term in [
@@ -206,12 +198,23 @@ def verify() -> list[Finding]:
         for term in [
             "0003-wave1-cross-module-contract-freeze.md",
             "wave1-cross-module-contract-registry.md",
-            "FIELD_FROZEN_PENDING_MERGE",
+            "CONFIRMED_TARGET",
             "src/backend/zuno/platform/**",
             "PreparedToolAction",
+            "04-model-gateway",
+            "09-security",
+            "10-observability-eval",
+            "11-infrastructure",
         ]:
             if term not in content:
                 findings.append(Finding("XMOD_INDEX_ROUTE", f"{label} missing {term}"))
+        if "FIELD_FROZEN_PENDING_MERGE" in content:
+            findings.append(Finding("XMOD_INDEX_STALE_STATUS", f"{label} still advertises pending-merge status"))
+
+    if modules_index.count("## Model Gateway 文档边界") != 1:
+        findings.append(Finding("XMOD_INDEX_DUPLICATE", "docs/modules/README.md must contain exactly one Model Gateway boundary section"))
+    if agent_index.count("## Model Gateway Target 镜像") != 1:
+        findings.append(Finding("XMOD_AGENT_INDEX_DUPLICATE", ".agent/modules/README.md must contain exactly one Model Gateway mirror section"))
 
     requirement_ids = [int(value) for value in re.findall(r"ARCH-XMOD-(\d{3})", registry)]
     if sorted(requirement_ids) != list(range(1, 11)):
@@ -226,8 +229,11 @@ def verify() -> list[Finding]:
         if evidence_id not in registry:
             findings.append(Finding("XMOD_EVIDENCE_MAPPING", f"missing {evidence_id}"))
 
-    if registry.count("`FIELD_FROZEN_PENDING_MERGE`") < 25:
-        findings.append(Finding("XMOD_STATUS_NOT_FROZEN", "too few shared contracts are field-frozen"))
+    if registry.count("`CONFIRMED_TARGET`") < 25:
+        findings.append(Finding("XMOD_STATUS_NOT_CONFIRMED", "too few shared contracts are confirmed target"))
+    for stale in ["| `FIELD_FROZEN_PENDING_MERGE` |", "状态：`FIELD_FROZEN_PENDING_MERGE`"]:
+        if stale in registry:
+            findings.append(Finding("XMOD_ACTIVE_STATUS_STALE", f"active pending-merge marker remains: {stale}"))
 
     forbidden_unresolved_phrases = [
         "协调状态：`CONFLICT_REQUIRES_DECISION`",
