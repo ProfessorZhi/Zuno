@@ -5,23 +5,34 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/04-model-gateway*.md"
-      - ".agent/modules/04-model-gateway*.md"
+      - "docs/modules/04-model-gateway.md"
+      - ".agent/modules/04-model-gateway.md"
+      - "docs/modules/04-model-gateway-contract-freeze.md"
+      - ".agent/modules/04-model-gateway-contract-freeze.md"
+      - "docs/modules/04-model-gateway-operations-conformance.md"
+      - ".agent/modules/04-model-gateway-operations-conformance.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
       - ".agent/system.yaml"
-      - "tools/scripts/reconcile_model_gateway_wave1.py"
-      - "tools/scripts/verify_model_gateway*.py"
+      - "tools/scripts/verify_model_gateway_target_protocols.py"
+      - "tools/scripts/verify_model_gateway_contract_freeze.py"
+      - "tools/scripts/verify_model_gateway_operations_conformance.py"
+      - "tools/scripts/verify_model_gateway_boundaries.py"
       - "tools/scripts/verify_docs_entrypoints.py"
       - ".agent/scripts/verify_agent_system.py"
       - ".agent/scripts/verify_doc_boundaries.py"
-      - "tests/repo/test_model_gateway*.py"
+      - "tests/repo/test_model_gateway_target_protocols.py"
+      - "tests/repo/test_model_gateway_contract_freeze.py"
+      - "tests/repo/test_model_gateway_operations_conformance.py"
       - "tests/repo/test_docs_entrypoints.py"
       - ".github/workflows/model-gateway-target-docs.yml"
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: model-gateway-target-docs-${{ github.event.pull_request.number || github.ref }}
@@ -29,45 +40,20 @@ concurrency:
 
 jobs:
   validate:
-    name: Reconcile and validate Model Gateway target contracts
+    name: Validate Model Gateway target contracts
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Checkout PR head
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Reconcile latest main
-        run: |
-          set -o pipefail
-          git fetch origin main
-          git merge --no-commit --no-ff origin/main || true
-          for path in docs/modules/README.md .agent/modules/README.md .agent/system.yaml; do
-            if git diff --name-only --diff-filter=U | grep -Fxq "$path"; then
-              git checkout --theirs -- "$path"
-            fi
-          done
-          python tools/scripts/reconcile_model_gateway_wave1.py
-          git add docs/modules/README.md .agent/modules/README.md .agent/system.yaml
-          unresolved="$(git diff --name-only --diff-filter=U)"
-          test -z "$unresolved" || { echo "Unresolved conflicts: $unresolved"; exit 1; }
-          if ! git diff --cached --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "docs: reconcile Model Gateway with Security baseline"
-            git push origin HEAD:agent/design-04-model-gateway
-          else
-            git merge --abort 2>/dev/null || true
-          fi
 
       - name: Install validation dependencies
         run: |
@@ -80,7 +66,8 @@ jobs:
       - name: Verify patch formatting
         run: |
           set -o pipefail
-          git diff --check origin/main...HEAD 2>&1 | tee validation-logs/diff-check.log
+          git diff --check origin/main...HEAD \
+            2>&1 | tee validation-logs/diff-check.log
 
       - name: Compile validation scripts
         run: |
@@ -102,23 +89,43 @@ jobs:
       - name: Verify Model Gateway target architecture
         run: |
           set -o pipefail
-          python tools/scripts/verify_model_gateway_target_protocols.py 2>&1 | tee validation-logs/model-gateway-target.log
-          python tools/scripts/verify_model_gateway_contract_freeze.py 2>&1 | tee validation-logs/model-gateway-contract-freeze.log
-          python tools/scripts/verify_model_gateway_operations_conformance.py 2>&1 | tee validation-logs/model-gateway-operations-conformance.log
-          python tools/scripts/verify_model_gateway_boundaries.py 2>&1 | tee validation-logs/model-gateway-boundary.log
+          python tools/scripts/verify_model_gateway_target_protocols.py \
+            2>&1 | tee validation-logs/model-gateway-target.log
+          python tools/scripts/verify_model_gateway_contract_freeze.py \
+            2>&1 | tee validation-logs/model-gateway-contract-freeze.log
+          python tools/scripts/verify_model_gateway_operations_conformance.py \
+            2>&1 | tee validation-logs/model-gateway-operations-conformance.log
 
-      - name: Verify governance and tests
+      - name: Verify current Model Gateway boundary guard
         run: |
           set -o pipefail
-          python .agent/scripts/verify_agent_system.py 2>&1 | tee validation-logs/agent-system.log
-          python .agent/scripts/verify_doc_boundaries.py 2>&1 | tee validation-logs/doc-boundaries.log
-          python tools/scripts/verify_docs_entrypoints.py 2>&1 | tee validation-logs/docs-entrypoints.log
+          python tools/scripts/verify_model_gateway_boundaries.py \
+            2>&1 | tee validation-logs/model-gateway-boundary.log
+
+      - name: Verify Agent System and document boundaries
+        run: |
+          set -o pipefail
+          python .agent/scripts/verify_agent_system.py \
+            2>&1 | tee validation-logs/agent-system.log
+          python .agent/scripts/verify_doc_boundaries.py \
+            2>&1 | tee validation-logs/doc-boundaries.log
+
+      - name: Verify documentation entrypoints
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_docs_entrypoints.py \
+            2>&1 | tee validation-logs/docs-entrypoints.log
+
+      - name: Run focused repository tests
+        run: |
+          set -o pipefail
           pytest -q \
             tests/repo/test_model_gateway_target_protocols.py \
             tests/repo/test_model_gateway_contract_freeze.py \
             tests/repo/test_model_gateway_operations_conformance.py \
             tests/repo/test_docs_entrypoints.py \
-            -p no:cacheprovider 2>&1 | tee validation-logs/tests.log
+            -p no:cacheprovider \
+            2>&1 | tee validation-logs/tests.log
 
       - name: Upload validation logs
         if: always()
