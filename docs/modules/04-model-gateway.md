@@ -1,10 +1,10 @@
 # 04 Model Gateway
 
-updated: 2026-07-13  
-status: normative-target-module-architecture  
-module_number: 04  
-formal_path: `docs/modules/04-model-gateway.md`  
-agent_mirror: `.agent/modules/04-model-gateway.md`  
+updated: 2026-07-13
+status: normative-target-module-architecture
+module_number: 04
+formal_path: `docs/modules/04-model-gateway.md`
+agent_mirror: `.agent/modules/04-model-gateway.md`
 dependency_baseline_sha: `729e439e29deadc101c5687fc47125104e62e2c1`
 
 > 本文是 Zuno 第 04 个逻辑模块——Model Gateway——的正式 Target 架构设计。
@@ -1512,7 +1512,7 @@ Agent Core 不依赖 Provider SDK 类型、HTTP Response、LangChain `BaseChatMo
 
 ## 37. Parallel Wave 1 Contract Proposals
 
-截至本文 baseline，未发现 09 Security、10 Observability & Eval、11 Infrastructure 的已合并 Wave 1 Target Contract 或可作为正式事实源的开放 PR。以下仅为 Model Gateway 对跨模块接口的依赖请求；对方模块 PR 合并前均标记 `Parallel Proposal`。
+截至本文 baseline，最新 `main` 仍是唯一正式事实源。提交前补读到以下并行材料：11 Infrastructure Draft PR #17、10 Observability & Eval 分支 `agent/refine-10-observability-eval`；09 Security 分支当时只有临时 bootstrap payload，尚无可审阅的正式模块文档或 Draft PR。所有未合并内容仍是 `Parallel Proposal`，只能用于发现接口冲突和提出依赖，不能写成 Current 或已确认共享 Contract。
 
 ### 37.1 对 09 Security 的依赖请求
 
@@ -1533,28 +1533,31 @@ SecurityRevocationEvent
 
 ### 37.2 对 11 Infrastructure 的依赖请求
 
-请确认或提供：
+并行 Infrastructure Proposal 已提出 `SecretRef` 生命周期、durable Usage Ledger 幂等键、streaming abort / timeout、rate-limit consistency / failover 等依赖，并选择 PostgreSQL 作为权威 rate-limit state baseline。Model Gateway 请求最终确认：
 
 ```text
 SecretRef / CredentialVersionRef
 ConfigVersion
 ProviderConnectionFactory
-Transactional Store / UoW
-Usage Ledger Storage Port
+DatabaseTransaction / Transactional Store / UoW
+Usage Ledger Storage Port + idempotency key
 Rate-limit / Quota Atomic State Port
-Streaming Transport
-Monotonic Clock / Database Clock
+CapacityReservation primitive boundary
+Streaming Transport + abort receipt
+ClockCapability: UTC + monotonic + authoritative clock
 Timeout / Cancellation Primitive
 Encrypted Object Store Ref
 ```
 
-Infrastructure 提供连接、Secret、Config、Clock 和持久化能力；不得成为 Routing、Attempt、Usage、Health 或 Circuit 领域事实 Owner。
+Infrastructure 提供连接、Secret、Config、Clock、原子条件写和持久化能力；不得成为 Routing、Attempt、Usage、Health 或 Circuit 领域事实 Owner。Gateway 不在数据库事务内等待 Provider 网络调用。
 
 ### 37.3 对 10 Observability & Eval 的依赖请求
 
-请确认或提供：
+并行 Observability Proposal 已定义 `TraceContext`、`RuntimeEvent`、`TelemetryEnvelope`、at-least-once ingest 与 Projection Ownership，并要求 Model Trace 关联 Attempt、Routing、Usage、role、provider/model、estimated/settled token-cost、timeout、retry、fallback、ProviderHealth 和 StructuredOutputFailure。Model Gateway 请求最终确认：
 
 ```text
+TraceContext
+RuntimeEvent / TelemetryEnvelope
 ModelCall Trace Schema
 Prompt / Response Redaction Contract
 Token / Cost Metric Schema
@@ -1562,10 +1565,10 @@ Routing / Fallback / Escalation Trace
 Structured Output Failure Event
 Provider Health / Circuit Metric
 Eval Model Configuration Snapshot
-Trace Delivery Status
+Trace Delivery Status / DeliveryReceipt
 ```
 
-Observability 保存 Projection 与 Eval，不覆盖 Gateway 原始调用事实。
+Gateway 通过 transactional outbox 或等价原子交付发布领域事件；Observability 保存 Projection 与 Eval，不覆盖 Gateway 原始调用事实。普通 telemetry 丢失可重放，mandatory audit 是否 fail-closed 由 Security Policy 决定。
 
 ---
 
@@ -1691,4 +1694,3 @@ Provider Adapter 实现必须在 Program 开始时重新核对最新官方资料
 - Anthropic Streaming Messages：`https://platform.claude.com/docs/en/build-with-claude/streaming`
 - Google Gemini Structured Output：`https://ai.google.dev/gemini-api/docs/structured-output`
 - LangChain Structured Output：`https://docs.langchain.com/oss/python/langchain/structured-output`
-
