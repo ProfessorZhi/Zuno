@@ -37,7 +37,7 @@ ADR_TERMS = [
     "EffectReconciliation",
     "FIELD_FROZEN_PENDING_MERGE",
     "src/backend/zuno/platform/",
-    "platform/data_services/",
+    "├── data_services/",
     "Queue ACK != Tool Effect Success",
     "Checkpoint Commit != Domain Commit",
 ]
