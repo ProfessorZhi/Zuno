@@ -11,6 +11,9 @@ FORMAL = REPO_ROOT / "docs/modules/11-infrastructure.md"
 MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure.md"
 DATA_FORMAL = REPO_ROOT / "docs/modules/11-infrastructure-data-services.md"
 DATA_MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure-data-services.md"
+LIFECYCLE_FORMAL = REPO_ROOT / "docs/modules/11-infrastructure-consistency-lifecycle.md"
+LIFECYCLE_MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure-consistency-lifecycle.md"
+CONTRACT_REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
 
 
 def _load_verifier():
@@ -30,6 +33,7 @@ def test_infrastructure_target_verifier_passes() -> None:
 def test_formal_documents_and_agent_mirrors_are_byte_identical() -> None:
     assert FORMAL.read_bytes() == MIRROR.read_bytes()
     assert DATA_FORMAL.read_bytes() == DATA_MIRROR.read_bytes()
+    assert LIFECYCLE_FORMAL.read_bytes() == LIFECYCLE_MIRROR.read_bytes()
 
 
 def test_current_target_future_and_not_selected_are_explicit() -> None:
@@ -192,3 +196,130 @@ def test_data_service_requirement_registry_is_complete() -> None:
         assert f"INFRA-DS-{number:03d}-UT" in content
         assert f"INFRA-DS-{number:03d}-IT" in content
         assert f"EV-INFRA-DS-{number:03d}" in content
+
+
+def test_lifecycle_contracts_cover_publish_delete_recovery_and_audit() -> None:
+    content = LIFECYCLE_FORMAL.read_text(encoding="utf-8")
+    for term in [
+        "IndexBuildRun",
+        "IndexWriteBatch",
+        "IndexWriteReceipt",
+        "IndexVerification",
+        "DerivedIndexReplica",
+        "IndexCutover",
+        "IndexRebuildRun",
+        "IndexRetirement",
+        "IndexReconciliationFinding",
+        "ServingWatermark",
+        "WriteVisibilityReceipt",
+        "DeletionRequest",
+        "DeletionTarget",
+        "DeletionVerification",
+        "RecoverySetManifest",
+        "RecoverySetValidation",
+        "AuditDurabilityRequirement",
+        "AuditBufferReservation",
+        "AuditPersistenceReceipt",
+    ]:
+        assert term in content
+
+
+def test_lifecycle_contracts_cover_isolation_upgrade_conformance_and_release() -> None:
+    content = LIFECYCLE_FORMAL.read_text(encoding="utf-8")
+    for term in [
+        "TenantIsolationProfile",
+        "ServiceCompatibilityEntry",
+        "AdapterConformanceProfile",
+        "ServiceCriticalityProfile",
+        "ReleaseManifest",
+        "ResourceUsageAttribution",
+        "Cross-store Deletion",
+        "Recovery Set",
+        "Mandatory Audit Backpressure",
+        "Upgrade Compatibility",
+        "PreparedAction 与 Tool Effect Ownership",
+        "Network Plane",
+        "SBOM",
+    ]:
+        assert term in content
+
+
+def test_lifecycle_failure_and_fault_catalog_is_complete() -> None:
+    content = LIFECYCLE_FORMAL.read_text(encoding="utf-8")
+    for term in [
+        "INFRA_INDEX_CUTOVER_GENERATION_CONFLICT",
+        "INFRA_DELETION_VISIBILITY_DEADLINE",
+        "INFRA_RECOVERY_SET_INCONSISTENT",
+        "INFRA_MANDATORY_AUDIT_BLOCK_EFFECT",
+        "INFRA_CROSS_TENANT_HIT",
+        "INFRA_ADAPTER_SEMANTIC_UNSUPPORTED",
+        "INFRA_RELEASE_PROVENANCE_INVALID",
+        "INFRA_RESOURCE_ATTRIBUTION_MISSING",
+        "Cutover Receipt Lost After Alias Switch",
+        "Legal Hold Arrives During Purge",
+        "PITR With Ahead / Behind Derived Index",
+        "Audit Committed Before Tool Effect Crash",
+        "Network Partition With Stale Worker",
+    ]:
+        assert term in content
+
+
+def test_lifecycle_requirement_registry_is_complete() -> None:
+    content = LIFECYCLE_FORMAL.read_text(encoding="utf-8")
+    for number in range(1, 25):
+        assert content.count(f"ARCH-INFRA-LC-{number:03d}") == 1
+        assert f"INFRA-LC-{number:03d}-UT" in content
+        assert f"INFRA-LC-{number:03d}-IT" in content
+        assert f"EV-INFRA-LC-{number:03d}" in content
+
+
+def test_wave1_contract_registry_has_shared_contract_ownership() -> None:
+    content = CONTRACT_REGISTRY.read_text(encoding="utf-8")
+    for term in [
+        "parallel-proposal-governance",
+        "CrossModuleEnvelope",
+        "SecurityConditionalWrite",
+        "CredentialVersionRef",
+        "SecurityAuditRequirement",
+        "AuditDurabilityRequirement",
+        "TelemetryEnvelope",
+        "ProviderConnectionFactory",
+        "UsageReceipt",
+        "QuotaReservation",
+        "CancellationReceipt",
+        "VectorIndexSpec",
+        "GraphIndexSpec",
+        "LexicalIndexSpec",
+        "IndexWriteBatch",
+        "IndexWriteReceipt",
+        "WriteVisibilityReceipt",
+        "IndexManifest",
+        "ServingWatermark",
+        "DeletionRequest",
+        "RecoverySetManifest",
+    ]:
+        assert term in content
+
+
+def test_wave1_registry_resolves_receipt_and_prepared_action_boundaries() -> None:
+    content = CONTRACT_REGISTRY.read_text(encoding="utf-8")
+    for term in [
+        "PreparedAction Ownership 决议建议",
+        "CONFLICT_REQUIRES_DECISION",
+        "Queue ACK != Tool Effect Success",
+        "Lease Release != Tool Effect Success",
+        "Checkpoint Commit != Domain Commit",
+        "Failure Ownership Matrix",
+        "Wave 1 合并前审计清单",
+        "ALIGNED_PENDING_FIELDS",
+    ]:
+        assert term in content
+
+
+def test_wave1_contract_requirement_registry_is_complete() -> None:
+    content = CONTRACT_REGISTRY.read_text(encoding="utf-8")
+    for number in range(1, 11):
+        assert content.count(f"ARCH-XMOD-{number:03d}") == 1
+        assert f"XMOD-{number:03d}-UT" in content
+        assert f"XMOD-{number:03d}-IT" in content
+        assert f"EV-XMOD-{number:03d}" in content
