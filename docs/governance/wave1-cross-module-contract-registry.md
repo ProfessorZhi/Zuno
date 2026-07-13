@@ -5,10 +5,11 @@ status: confirmed-target
 previous_status: parallel-proposal-governance
 baseline_main_sha: `729e439e29deadc101c5687fc47125104e62e2c1`
 coordinating_pr: `#17`
-reviewed_parallel_prs:
+reviewed_wave1_proposals:
   - `#18 Model Gateway @ 3bd9b3e4437314c376a5b1b767ef052e3c74db53`
   - `#19 Security @ f9fd19c16721cb9cec97c25d82b86274660622e6`
-  - `#20 Observability & Eval @ 4a91953799cd0bae7f3ca441cccabffbce1271f9`
+  - `#17 Infrastructure @ e9ff166f0621fb3986be2086eff6036ac5de4707`
+  - `#21 Observability & Eval integration @ a2252e64a99feda2aae36affe507d8984985e2c6`
 canonical_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 
 > 本文件已随 PR #17 合并到 `main`，字段、Owner、Failure Namespace 和恢复责任为 `CONFIRMED_TARGET`；仍不代表 Runtime 已实现、质量已证明或成为 Current。
@@ -21,7 +22,7 @@ canonical_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 PARALLEL_PROPOSAL
 ALIGNED_PENDING_FIELDS
 CONFLICT_REQUIRES_DECISION
-CONFIRMED_TARGET
+FIELD_FROZEN_PENDING_MERGE
 CONFIRMED_TARGET
 IMPLEMENTATION_AVAILABLE
 CURRENT
@@ -30,11 +31,11 @@ CURRENT
 生效条件：
 
 ```text
-CONFIRMED_TARGET
-    已完成字段级设计审计，但仍在未合并 PR。
+FIELD_FROZEN_PENDING_MERGE
+    历史状态：已完成字段级设计审计，但当时尚未合并。
 
 CONFIRMED_TARGET
-    ADR 0003 与本 Registry 已合并到 main。
+    ADR 0003 与本 Registry 已合并到 main，现为正式共享 Target。
 
 IMPLEMENTATION_AVAILABLE
     代码、Migration 和最低工程测试存在。
@@ -43,7 +44,7 @@ CURRENT
     代码、Migration、Integration/Fault/E2E、Trace 和运行证据均满足状态事实源要求。
 ```
 
-本轮决议不会把 Target 写成 Current，也不会把 PR #18、#19、#20 当成已合并事实源。
+本轮决议不会把 Target 写成 Current。PR #18、#19、#17 与替代旧 #20 的集成 PR #21 已合并；其文档仍只证明 Target 设计，不证明 Runtime 实现。
 
 ## 2. 合并和实现门禁
 
