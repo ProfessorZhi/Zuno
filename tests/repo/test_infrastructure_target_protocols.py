@@ -9,6 +9,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_infrastructure_target_protocols.py"
 FORMAL = REPO_ROOT / "docs/modules/11-infrastructure.md"
 MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure.md"
+DATA_FORMAL = REPO_ROOT / "docs/modules/11-infrastructure-data-services.md"
+DATA_MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure-data-services.md"
 
 
 def _load_verifier():
@@ -25,8 +27,9 @@ def test_infrastructure_target_verifier_passes() -> None:
     assert verifier.verify() == []
 
 
-def test_formal_document_and_agent_mirror_are_byte_identical() -> None:
+def test_formal_documents_and_agent_mirrors_are_byte_identical() -> None:
     assert FORMAL.read_bytes() == MIRROR.read_bytes()
+    assert DATA_FORMAL.read_bytes() == DATA_MIRROR.read_bytes()
 
 
 def test_current_target_future_and_not_selected_are_explicit() -> None:
@@ -122,3 +125,70 @@ def test_expensive_defaults_are_explicitly_not_selected() -> None:
         "Kubernetes 作为本模块完成标准",
     ]:
         assert term in content
+
+
+def test_data_service_component_coverage_and_ownership_are_explicit() -> None:
+    content = DATA_FORMAL.read_text(encoding="utf-8")
+    for term in [
+        "PostgreSQL",
+        "RabbitMQ",
+        "Object Store / MinIO",
+        "LangGraph Checkpointer",
+        "Redis",
+        "Milvus",
+        "Neo4j",
+        "BM25 / Search",
+        "Trace/Audit persistence",
+        "Secret/KMS",
+        "DataServiceCapability",
+        "VectorIndexRuntimePort",
+        "GraphIndexRuntimePort",
+        "LexicalIndexRuntimePort",
+        "CacheAccelerationPort",
+        "authoritative",
+        "rebuildable",
+        "Infrastructure 不能决定 AgentRun 是否成功",
+    ]:
+        assert term in content
+
+
+def test_derived_index_lifecycle_and_cross_store_protocol_are_explicit() -> None:
+    content = DATA_FORMAL.read_text(encoding="utf-8")
+    for term in [
+        "DerivedIndexReplica State Machine",
+        "Cross-store Publish Protocol",
+        "IndexWriteReceipt",
+        "IndexManifest",
+        "generation/CAS",
+        "不使用 2PC",
+        "FAILED/QUARANTINED",
+        "STALE/REBUILDING",
+    ]:
+        assert term in content
+
+
+def test_vector_graph_search_cache_failures_and_fault_tests_are_named() -> None:
+    content = DATA_FORMAL.read_text(encoding="utf-8")
+    for term in [
+        "INFRA_VECTOR_WRITE_PARTIAL",
+        "INFRA_VECTOR_SCHEMA_INCOMPATIBLE",
+        "INFRA_GRAPH_WRITE_PARTIAL",
+        "INFRA_GRAPH_SCHEMA_INCOMPATIBLE",
+        "INFRA_LEXICAL_INDEX_CORRUPT",
+        "INFRA_CACHE_STALE_GENERATION",
+        "INFRA_CROSS_STORE_VERSION_DIVERGENCE",
+        "Milvus Write-Then-Crash Before Manifest Commit",
+        "Neo4j Commit-Then-Crash Before Manifest Commit",
+        "Tenant Filter Omission / Cross-tenant Hit",
+        "PITR with Stale Derived Indexes",
+    ]:
+        assert term in content
+
+
+def test_data_service_requirement_registry_is_complete() -> None:
+    content = DATA_FORMAL.read_text(encoding="utf-8")
+    for number in range(1, 13):
+        assert content.count(f"ARCH-INFRA-DS-{number:03d}") == 1
+        assert f"INFRA-DS-{number:03d}-UT" in content
+        assert f"INFRA-DS-{number:03d}-IT" in content
+        assert f"EV-INFRA-DS-{number:03d}" in content
