@@ -23,7 +23,7 @@
 | 01 | Product Surface | `01-product-surface.md` | 待细化 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
+| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) | 已建立单一完整 Target 架构文档 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
@@ -45,13 +45,27 @@ ADR 0003 与 Registry 统一冻结 Security、Infrastructure、Model Gateway、O
 
 ## Model Gateway 文档边界
 
+唯一正式 Target 文档及 Agent 镜像：
+
 ```text
 docs/modules/04-model-gateway.md
-docs/modules/04-model-gateway-contract-freeze.md
-docs/modules/04-model-gateway-operations-conformance.md
+.agent/modules/04-model-gateway.md
 ```
 
-主文档定义 Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 和 Storage；两个附录分别冻结跨模块 Contract 与长期运行、Conformance、运维和生命周期协议。
+两者必须字节级一致。该文档统一包含：
+
+```text
+模块定位、目标与 Ownership
+十一个模块的模型使用地图
+Role、Operation、Provider、Model、Capability 与 Prompt
+完整调用流程、Routing、Admission、Retry、Fallback、Escalation 与 Reconciliation
+Generation、Embedding、Rerank、Vision/OCR、Transcription、Classification 与 Judge
+Call、Attempt、Stream、Usage、Quota、Health、Circuit、Config 与 Lifecycle 状态机
+Adapter Conformance、多租户公平、过载、Cache、运维命令、Retention、Deletion、SLO 与 Readiness
+目标代码、数据库、Migration、Requirement、测试与完成证据
+```
+
+Current 调用清单、旁路状态和 Production Readiness 必须读取代码、测试、Migration、Trace、Eval 与状态文档，不能从 Target 文档推断。
 
 ## Infrastructure 文档边界
 
@@ -110,9 +124,7 @@ python tools/scripts/verify_security_target_protocols.py
 pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
 
 python tools/scripts/verify_model_gateway_target_protocols.py
-python tools/scripts/verify_model_gateway_contract_freeze.py
-python tools/scripts/verify_model_gateway_operations_conformance.py
-pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
+pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider
 
 python tools/scripts/verify_infrastructure_target_protocols.py
 python tools/scripts/verify_wave1_contract_freeze.py
