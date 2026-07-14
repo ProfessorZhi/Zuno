@@ -1,104 +1,179 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PROGRAM = "zuno-real-unified-runtime-cutover-v1"
-ARCHIVE = REPO_ROOT / "docs/history/programs/zuno-real-unified-runtime-cutover-v1"
+PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
+PHASE_COUNT = 22
+ATOMIC_TASK_COUNT = 163
+PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
 
-CURRENT_PATH = REPO_ROOT / ".agent/programs/current.md"
-ROADMAP_PATH = REPO_ROOT / ".agent/programs/implementation-roadmap.md"
-CLOSURE_PATH = REPO_ROOT / ".agent/programs/closure-checklist.md"
-REFERENCE_PATH = REPO_ROOT / ".agent/references/current-program.md"
-QUEUED_SOURCE = REPO_ROOT / ".agent/programs/queued-programs/PROGRAM01_real-unified-runtime-cutover.md"
-
-ARCHIVED_PHASE_FILES = [
-    "PHASE01_real-runtime-baseline.md",
-    "PHASE02_langgraph-execution-cutover.md",
-    "PHASE03_runtime-dependency-factory.md",
-    "PHASE04_real-agent-execution.md",
-    "PHASE05_knowledge-tool-memory-integration.md",
-    "PHASE06_product-cutover.md",
-    "PHASE07_benchmark-and-closure.md",
+PHASE_FILES = [
+    "PHASE01_current-baseline-and-requirement-ledger.md",
+    "PHASE02_legacy-runtime-compatibility-and-cutover-map.md",
+    "PHASE03_executable-cross-module-contract-bundle.md",
+    "PHASE04_postgres-domain-and-transaction-foundation.md",
+    "PHASE05_security-control-plane.md",
+    "PHASE06_observability-minimum-black-box.md",
+    "PHASE07_model-gateway-runtime.md",
+    "PHASE08_deterministic-single-controller-runtime.md",
+    "PHASE09_product-surface-backend-runtime.md",
+    "PHASE10_web-desktop-product-adaptation.md",
+    "PHASE11_durable-ingestion-and-source-lineage.md",
+    "PHASE12_knowledge-version-and-standard-rag.md",
+    "PHASE13_memory-context-governance-runtime.md",
+    "PHASE14_capability-skill-control-plane.md",
+    "PHASE15_tool-runtime-definition-and-readonly-cutover.md",
+    "PHASE16_tool-side-effect-and-reconciliation.md",
+    "PHASE17_dynamic-plan-dag-parallel-control.md",
+    "PHASE18_agentic-graphrag-inner-loop.md",
+    "PHASE19_final-synthesis-publication-reflexion.md",
+    "PHASE20_observability-eval-benchmark-release-gate.md",
+    "PHASE21_fault-recovery-full-e2e-and-cutover.md",
+    "PHASE22_fixed-benchmark-production-readiness-and-closure.md",
 ]
 
-
-def load_manifest() -> dict:
-    return {
-        "program": PROGRAM,
-        "state": "no-active",
-        "implementation_status": "implementation_complete",
-        "measurement_status": "measurement_blocked",
-        "quality_gate_status": "quality_not_proven",
-        "blocked_reason": "enterprise_rag_sample8_external_db_unavailable_and_agentic_profile_incomplete",
-        "archive": "docs/history/programs/zuno-real-unified-runtime-cutover-v1/",
-    }
+REQUIRED_SHARED = [
+    PROGRAM_ROOT / "README.md",
+    PROGRAM_ROOT / "current.md",
+    PROGRAM_ROOT / "implementation-roadmap.md",
+    PROGRAM_ROOT / "task-execution-contract.md",
+    PROGRAM_ROOT / "codex-medium-runbook.md",
+    PROGRAM_ROOT / "legacy-to-target-migration-map.md",
+    PROGRAM_ROOT / "canonical-directory-contract.md",
+    PROGRAM_ROOT / "program-manifest.yaml",
+    PROGRAM_ROOT / "closure-checklist.md",
+    REPO_ROOT / ".agent" / "references" / "current-program.md",
+]
 
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def load_manifest() -> dict[str, object]:
+    return {
+        "program": PROGRAM,
+        "state": "active",
+        "current_phase": "PHASE01",
+        "phase_count": PHASE_COUNT,
+        "atomic_task_count": ATOMIC_TASK_COUNT,
+        "architecture_baseline_commit": "249f1c95855043627cedd289a5de1fd3719f6cd0",
+        "measurement_status": "measurement_blocked",
+        "quality_gate_status": "quality_not_proven",
+    }
+
+
 def verify_current_program() -> list[str]:
     errors: list[str] = []
-    for path in [CURRENT_PATH, ROADMAP_PATH, CLOSURE_PATH, REFERENCE_PATH, QUEUED_SOURCE, ARCHIVE]:
+    for path in REQUIRED_SHARED:
         if not path.exists():
-            errors.append(f"missing current program path: {path.relative_to(REPO_ROOT).as_posix()}")
-    for phase_name in ARCHIVED_PHASE_FILES:
-        if (REPO_ROOT / ".agent/programs" / phase_name).exists():
-            errors.append(f"completed phase file must be archived away from .agent/programs: {phase_name}")
-        if not (ARCHIVE / phase_name).exists():
-            errors.append(f"missing archived phase file: {phase_name}")
+            errors.append(f"missing active program file: {path.relative_to(REPO_ROOT).as_posix()}")
+    for name in PHASE_FILES:
+        if not (PROGRAM_ROOT / name).exists():
+            errors.append(f"missing phase file: .agent/programs/{name}")
     if errors:
         return errors
 
-    current = _read(CURRENT_PATH)
-    reference = _read(REFERENCE_PATH)
-    roadmap = _read(ROADMAP_PATH)
-    closure = _read(CLOSURE_PATH)
-    queued = _read(QUEUED_SOURCE)
-    archive_text = "\n".join(
-        _read(ARCHIVE / name)
-        for name in ["README.md", "closure-summary.md", *ARCHIVED_PHASE_FILES]
-        if (ARCHIVE / name).exists()
-    )
+    current = _read(PROGRAM_ROOT / "current.md")
+    roadmap = _read(PROGRAM_ROOT / "implementation-roadmap.md")
+    closure = _read(PROGRAM_ROOT / "closure-checklist.md")
+    manifest = _read(PROGRAM_ROOT / "program-manifest.yaml")
+    reference = _read(REPO_ROOT / ".agent" / "references" / "current-program.md")
+    runbook = _read(PROGRAM_ROOT / "codex-medium-runbook.md")
+    migration = _read(PROGRAM_ROOT / "legacy-to-target-migration-map.md")
+    directory_contract = _read(PROGRAM_ROOT / "canonical-directory-contract.md")
+    phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
 
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
-        f"latest_completed_program: {PROGRAM}",
-        "implementation_status: implementation_complete",
-        "measurement_status: measurement_blocked",
-        "quality_gate_status: quality_not_proven",
-        "enterprise_rag_sample8_external_db_unavailable_and_agentic_profile_incomplete",
+        "state: active",
+        f"active_program: {PROGRAM}",
+        "current_phase: PHASE01",
+        f"phase_count: {PHASE_COUNT}",
+        "measurement blocked",
+        "quality not yet proven",
     ]:
         if phrase not in current:
-            errors.append(f"current.md missing no-active closure phrase: {phrase}")
+            errors.append(f"current.md missing phrase: {phrase}")
+
+    for phrase in [PROGRAM, "phase_count: 22", "Web and Desktop", "Legacy", "Fixed Benchmark"]:
+        if phrase not in roadmap + reference + manifest:
+            errors.append(f"program surfaces missing phrase: {phrase}")
+
+    for phrase in ["GPT-5.5 medium", "一次只执行一个 Work Package", "不降低架构能力", "Minimal Read Set"]:
+        if phrase not in runbook:
+            errors.append(f"Codex medium runbook missing phrase: {phrase}")
+
+    for phrase in ["apps/web/src/product", "apps/desktop/src/product", "GeneralAgent", "EffectReconciliation", "Feature Flag"]:
+        if phrase not in migration:
+            errors.append(f"migration map missing required surface: {phrase}")
+
     for phrase in [
-        "state: no-active",
-        f"latest_completed_program: {PROGRAM}",
-        "blocked benchmark",
+        "生产源码零 legacy 目录",
+        "零 legacy alias registry",
+        "src/backend/zuno/platform/compatibility/legacy_aliases.py",
+        "apps/web/src/product",
+        "apps/desktop/src/product",
+        "api/product/v1",
     ]:
-        if phrase not in reference:
-            errors.append(f"current-program reference missing phrase: {phrase}")
+        if phrase not in directory_contract:
+            errors.append(f"canonical directory contract missing phrase: {phrase}")
+
     for phrase in [
-        "state: activated_from_queue",
-        f"active_program: {PROGRAM}",
-        "不再作为执行状态事实源",
+        "Legacy-free Canonical Directory Cleanup",
+        "生产源码树零 Legacy 文件夹",
+        "legacy_aliases.py",
+        "tests/legacy_guards",
+        "永久双路径",
     ]:
-        if phrase not in queued:
-            errors.append(f"queued source missing activation phrase: {phrase}")
-    if "created_from:" in queued or "C:\\Users\\" in queued:
-        errors.append("activated queued source must not contain local absolute created_from path")
-    for phrase in [
-        f"docs/history/programs/{PROGRAM}/",
-        "implementation_complete_measurement_blocked",
-        "fixed EnterpriseRAG paired benchmark measured pass",
-    ]:
-        if phrase not in roadmap + closure + archive_text:
-            errors.append(f"program closure surfaces missing phrase: {phrase}")
+        if phrase not in phase22:
+            errors.append(f"PHASE22 missing mandatory cleanup phrase: {phrase}")
+
+    all_task_ids: list[str] = []
+    required_sections = [
+        "## Phase 目标",
+        "## Minimal Read Set",
+        "## Current Anchors",
+        "## Allowed Paths",
+        "## Forbidden Paths",
+        "## Work Packages",
+        "## Phase 完成定义",
+    ]
+    for index, name in enumerate(PHASE_FILES, start=1):
+        text = _read(PROGRAM_ROOT / name)
+        phase_id = f"PHASE{index:02d}"
+        for phrase in [f"phase_id: {phase_id}", *required_sections]:
+            if phrase not in text:
+                errors.append(f"{name} missing phrase: {phrase}")
+        task_ids = re.findall(rf"P{index:02d}-T\d{{2}}", text)
+        unique_ids = sorted(set(task_ids))
+        if len(unique_ids) < 6:
+            errors.append(f"{name} must define at least 6 atomic work packages")
+        for task_id in unique_ids:
+            if task_id not in manifest:
+                errors.append(f"manifest missing task id: {task_id}")
+        all_task_ids.extend(unique_ids)
+
+    duplicates = sorted({task for task in all_task_ids if all_task_ids.count(task) > 1})
+    if duplicates:
+        errors.append(f"duplicate task ids across phases: {duplicates}")
+    if len(all_task_ids) != ATOMIC_TASK_COUNT:
+        errors.append(
+            f"program must expose exactly {ATOMIC_TASK_COUNT} atomic work packages, found {len(all_task_ids)}"
+        )
+
+    for index in range(1, PHASE_COUNT + 1):
+        if f"PHASE{index:02d}" not in closure:
+            errors.append(f"closure checklist missing PHASE{index:02d}")
+
+    combined = "\n".join(
+        [current, roadmap, closure, manifest, reference, runbook, migration, directory_contract]
+    )
+    if re.search(r"[A-Za-z]:\\\\Users\\\\", combined):
+        errors.append("active program contains a local absolute path")
+    if "Agentic GraphRAG 已稳定优于" in combined and "不得声明" not in combined:
+        errors.append("active program improperly promotes Agentic GraphRAG superiority")
     return errors
 
 
