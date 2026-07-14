@@ -20,7 +20,7 @@
 
 | 编号 | 模块 | 正式模块文档 | 状态 |
 | --- | --- | --- | --- |
-| 01 | Product Surface | `01-product-surface.md` | 待细化 |
+| 01 | Product Surface | [`01-product-surface.md`](./01-product-surface.md) | 已建立单一完整 Target 架构文档 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
 | 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
@@ -31,6 +31,17 @@
 | 09 | Security | [`09-security.md`](./09-security.md) | 已建立实施级 Target 规范 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 已建立实施级 Target 规范 |
+
+## Product Surface 文档边界
+
+```text
+docs/modules/01-product-surface.md
+.agent/modules/01-product-surface.md
+```
+
+它是 Product Surface 唯一正式 Target 架构文档，统一定义北向产品边界、用户场景、Conversation / Submission / Command / Projection / Delivery 领域模型、Command / Query / SSE / Download 协议、状态机、故障恢复、安全生命周期、目标代码、PostgreSQL 和 Requirement-to-Evidence 闭环。
+
+不得再新增 `01-product-surface-api.md`、`01-product-surface-projection.md`、`01-product-surface-streaming.md` 或其他拆分架构文档。实现、迁移和兼容入口 Cutover 进入 `.agent/programs/`。
 
 ## Wave 1 共享 Contract
 
@@ -103,6 +114,9 @@ docs/history/      已完成 Program 与历史证据
 ## 专用验证
 
 ```text
+python tools/scripts/verify_product_surface_target_protocols.py
+pytest -q tests/repo/test_product_surface_target_protocols.py -p no:cacheprovider
+
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
 
