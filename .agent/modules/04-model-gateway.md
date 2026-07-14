@@ -1,160 +1,409 @@
 # 04 Model Gateway
 
-updated: 2026-07-13
+updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 04
 formal_path: `docs/modules/04-model-gateway.md`
 agent_mirror: `.agent/modules/04-model-gateway.md`
-dependency_baseline_sha: `729e439e29deadc101c5687fc47125104e62e2c1`
+dependency_baseline_sha: `140128fa7352094cac5a7a58f247090d0b451753`
+confirmed_wave1_contract_sha: `849820d2c52d36abebee8c3d4a974bf035524e0a`
 
-> 本文是 Zuno 第 04 个逻辑模块——Model Gateway——的正式 Target 架构设计。
+> 本文是 Zuno 第 04 个逻辑模块——Model Gateway——唯一的正式 Target 架构主设计。
 >
-> 本文只定义目标边界、运行协议、领域 Contract、状态机、失败语义、存储与验证规格。Current、Gap、Measurement 和 Production Readiness 仍以 `docs/status/production-readiness.md`、当前代码、测试、Migration、Trace 与 Eval 为事实源。本文中出现的类名、表名、Provider、流程和测试编号均不代表已经实现。
+> 本文统一承载模块定位、跨模块模型使用地图、完整运行流程、领域 Contract、状态机、故障语义、运维与一致性协议、目标代码和数据库规格、Requirement、测试与完成证据。Current、Gap、Measurement 和 Production Readiness 仍以当前代码、测试、Migration、Trace、Eval 与 `docs/status/production-readiness.md` 为事实源。本文中出现的类名、表名、Provider、模型、流程和测试编号均不代表已经实现。
 
-## 0. 文档边界与规范优先级
+## 0. 文档边界与事实源
+
+本文是 Model Gateway 模块唯一的正式 Target 架构文档，统一承载：
+
+```text
+问题、目标与非目标
+十一个模块的模型使用地图
+概念架构与完整调用流程
+Role、Operation、Provider、Model、Capability 与 Prompt Contract
+Routing、Admission、Retry、Fallback、Escalation 与 Reconciliation
+Streaming、Structured Output、Embedding、Rerank、Vision、Transcription 与 Judge
+Budget、Quota、Usage、Cost、Health、Circuit 与多租户公平
+Adapter Conformance、配置激活、Provider/Model 生命周期与兼容升级
+Security、Credential、Residency、Redaction、Retention、Deletion 与 Legal Hold
+运维命令、SLO、Readiness、Experiment、Cache 与 ResultValidity
+目标代码、数据库、Migration、测试与完成证据
+```
+
+文档边界：
+
+```text
+docs/modules/04-model-gateway.md
+    唯一 Target 架构事实源。
+
+.agent/modules/04-model-gateway.md
+    字节级一致的 Agent 镜像。
+
+.agent/programs/
+    Current → Target 的实现、升级、迁移、切流与收口计划。
+
+docs/status/
+    Current、Gap、Measurement、Quality 与 Production Readiness 状态。
+
+docs/decisions/0003-wave1-cross-module-contract-freeze.md
+    已接受的 Wave 1 共享 Target Contract 与物理 Ownership 决议。
+
+docs/governance/wave1-cross-module-contract-registry.md
+    共享 Contract 的 Canonical Owner、字段、Failure 和 Consumer 约束。
+```
+
+规范优先级：
 
 ```text
 全局架构原则
-→ Agent Core 正式 Target Contract
-→ 本模块 Target Contract
-→ 已确认的跨模块 Contract / ADR
-→ Program
+→ 已合并的跨模块 ADR / Contract Registry
+→ 本模块唯一 Target 架构文档
+→ 已确认的 Program
 → 代码、Migration、测试与运行证据
 ```
 
-本文解决的是“所有模型调用如何以 Provider-neutral（供应商无关）的方式被安全、可恢复、可计量、可审计地执行”，不负责把模型结果直接变成最终业务事实。
+`docs/decisions/0003-wave1-cross-module-contract-freeze.md` 已合并到 `main`，状态是 `accepted-target`。因此本文使用其已确认的 `CrossModuleEnvelopeV1`、`EffectiveSecurityEpochRefV1`、`CredentialVersionRefV1`、`ProviderConnectionRequestV1`、`ModelQuotaReservationV1`、`ModelUsageReceiptV1` 和 `ModelCancellationReceiptV1` 语义。Accepted Target 仍不是 Current、实现证据、质量证明或 Production Readiness。
 
-Current / Target / Future 的解释方式：
+### 0.1 文档内部规范层级
 
-| 层级 | 本文中的处理方式 |
+Part I–III 是问题、模型使用地图、概念架构与运行流程的说明性视图；Part IV–VII 是 Contract、状态、故障、运维、持久化与恢复的规范性视图；Part VIII 定义 Requirement、测试和完成证据。说明性视图不得覆盖规范性 Contract。
+
+### 0.2 Current、Target、Future、History
+
+| 层级 | 解释 |
 | --- | --- |
-| Current | 只作为设计输入引用：仓库已有 Gateway surface、统一 runtime service、少量真实调用接入；生产状态仍明确存在“所有真实模型调用尚未统一进入 Gateway”的 P0 Gap。本文不维护可变 Current 清单。 |
-| Target | 本文的规范性主体：Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 与 Trace 的闭环。 |
-| Future | 多区域主动流量调度、跨云经济优化、自动模型采购、全局多租户容量市场等长期可选能力，不是当前 Program 的完成前提。 |
-
-正式实现前必须重新盘点真实调用链。当前仓库的 `tools/scripts/verify_model_gateway_boundaries.py` 仍保存大量 legacy allowlist，这只能证明旁路被识别，不能证明旁路已经消失。
+| Current | 只由最新 `main` 的代码、测试、Migration、Trace、Eval 与状态文档证明。现有轻量 Gateway、兼容 facade 或旁路 allowlist 不能证明 Target 已实现。 |
+| Target | 本文与已合并 ADR 定义的统一模型执行控制面、Contract、状态机、故障和实现规格。 |
+| Future | 多区域主动流量市场、跨云自动采购、自治成本竞价、产品级模型市场等长期可选能力。 |
+| History | 被替换的旧设计、旧路径和完成后的 Program，进入 `docs/history/`，不再作为规范入口。 |
 
 ---
 
-# Part I：问题、目标与 Ownership
+# Part I：定位、问题与跨模块模型使用地图
 
-## 1. 为什么需要 Model Gateway
+# 1. 为什么需要 Model Gateway
 
-如果 Agent Core、Knowledge、Memory、Eval 或业务服务直接构造 Provider SDK Client，会同时产生以下问题：
+Zuno 中大量模块都会使用模型。如果 Agent Core、Knowledge、Memory、Ingestion、Security、Eval 或 Skill 自行创建 Provider SDK Client，会产生：
 
 ```text
-模型角色和具体厂商耦合
-Provider 重试与 Runtime Retry 重叠，实际调用次数不可知
-Timeout、Cancellation 和 Stream 终态不一致
-Structured Output 成功仅凭 SDK 返回，不做本地 Schema 验证
-Token / Cost 只估算或只记录最终成功调用，失败 Attempt 丢失
-Rate Limit、Quota、Circuit Breaker 分散在各业务模块
-Security、Data Residency 和 Credential Scope 无法在路由前统一门禁
-模型成功但响应丢失时可能盲目重试，产生重复成本或副作用提案
-Prompt、Model、Provider、SDK 和 Policy 版本无法固定到一次 Run
-Trace 只能看到“调用了模型”，无法解释为什么选择、为什么 fallback
+模型用途与具体厂商、模型名和 SDK 耦合
+Prompt、Schema、Security、Budget 与 Provider 路由各自为政
+SDK 隐式 Retry 导致真实调用次数、成本和失败原因不可知
+Timeout、Cancellation、Streaming 和 Provider 终态不一致
+Embedding、Rerank、VLM、Judge 被错误伪装成普通 Chat 调用
+Structured Output 仅相信 Provider 返回，不做本地 Schema Validation
+Provider 成功但响应丢失后盲目重试，造成重复计费和不一致
+失败 Attempt、取消 Attempt、迟到 Usage 与 Cost Correction 丢失
+租户配额、公平排队、Circuit、Health 和负载保护散落在业务模块
+Security、Data Residency、Redaction 与 Credential Scope 无法在发出请求前统一门禁
+调用方无法解释为什么选择某模型、为什么 fallback、为什么升级强模型
+模型输出可能越权变成权限、计划、记忆、知识或外部副作用事实
 ```
 
 一句话定义：
 
-> Model Gateway 是模型执行控制面。它将 `Model Role + Capability Requirement + Security / Budget / Residency / Deadline Constraints` 解析为不可变 `ModelRoutingDecision`，通过 Provider Adapter 执行一个或多个可审计 `ModelCallAttempt`，产出 Provider-neutral 的 `ModelResponse`、`StructuredOutputResult`、`UsageReceipt` 和 `ModelFailure`。
+> Model Gateway 是 Zuno 所有模型能力的统一执行控制面。上游模块只描述“需要模型完成什么、需要什么能力和约束”；Gateway 负责安全校验、能力匹配、路由、调用、重试、降级、预算与配额核验、输出归一化、Usage 结算、审计和恢复，但不接管 Agent 计划控制或领域事实所有权。
 
-## 2. 目标
+# 2. 核心目标
 
 Model Gateway 必须达到：
 
-1. **Role 与 Provider / Model 分离**：Agent Core 只选择 Role 和约束，不依赖具体 SDK、Provider 名称或模型 ID。
-2. **能力可证明**：每个模型由版本化 `ModelCapabilityProfile` 描述；Planner 与 Agent Core 可以在计划激活前获得模型可行性事实。
-3. **调用可恢复**：每次路由、Attempt、Stream、Validation、Usage 和 Reconcile 都有明确状态和幂等语义。
-4. **失败可决策**：区分 Retry、Parameter Repair、Provider Fallback、Role Escalation 与 Agent Replan。
-5. **成本可结算**：估算、Reservation、Provider Receipt、延迟 Usage 和最终 Settlement 可关联，且不把最终业务 Budget 所有权移入 Gateway。
-6. **安全先于路由**：Provider Allowed List、Data Classification、Residency、Prompt Redaction、Credential Scope 和 Security Epoch 在发出请求前生效。
-7. **Provider-neutral**：跨模块 Contract 不暴露 OpenAI、Anthropic、Gemini 或 LangChain 的 SDK 对象。
-8. **可观测可评测**：路由理由、失败映射、fallback、stream、structured output、token、cost、latency 和 health 都可 Trace / Metric / Eval。
+1. **统一入口**：所有真实生成、Embedding、Rerank、Vision、Transcription、Classification 和 Judge 调用进入统一 Contract。
+2. **Role 与模型解耦**：业务模块依赖 Model Role 和 Operation，不依赖 Provider SDK、Secret 或固定模型名。
+3. **能力可证明**：模型能力来自版本化 Capability Profile 与 Adapter Conformance Evidence，而不是厂商宣传文本。
+4. **安全先于执行**：Authorization、Classification、Residency、Redaction、Credential Scope 和 Security Epoch 在 Dispatch 前生效。
+5. **调用可恢复**：Call、Routing、Attempt、Stream、Validation、Usage、Cancellation 和 Reconciliation 均有状态与幂等语义。
+6. **失败可决策**：明确区分 Retry、Parameter Repair、Provider Fallback、Role Escalation、Agent Replan 和 Abstain。
+7. **成本可结算**：估算、Reservation、Observed Usage、Settlement 与 Correction 可关联；失败调用也不能丢失成本。
+8. **多租户公平**：提供租户、Workspace、Run、Role、Operation、Provider 和 Credential 维度的 Admission、配额和防饥饿机制。
+9. **Provider-neutral**：跨模块 Contract 不暴露 OpenAI、Anthropic、Gemini、LangChain 或本地推理 SDK 对象。
+10. **可观测可评测**：路由理由、版本、失败映射、fallback、stream、schema、token、cost、latency、health、cache 和 experiment 均可审计。
+11. **配置可治理**：配置、Adapter、Provider 和 Model 支持验证、Canary、Activation、Drain、Rollback、Deprecation 和 Retirement。
+12. **模型输出非事实**：模型只产生 Proposal、Candidate、Score 或 Result，不能自行批准权限、执行副作用或提交最终领域状态。
 
-## 3. 非目标
+# 3. 非目标
 
 Model Gateway 不负责：
 
 ```text
-Task Planning 或 PlanVersion 激活
-Step 状态、Acceptance、Reflection、Final Gate 或 RunOutcome
-决定最终业务 Budget 是否允许整个 Run 继续
-Security Authorization、Approval 或 Credential 发放
-Tool 执行、外部副作用或副作用审批
-Knowledge Evidence、Citation、Memory Commit 或长期经验治理
-把模型输出直接写成最终领域事实
+Task Analysis、Plan 创建、PlanVersion 激活或 Replan 决策
+Step、Join、Final Gate、Publication 或 RunOutcome
+决定整个 AgentRun 是否继续或扩大 Run Budget
+Security Authorization、Approval、Credential 授权或 Revocation 决策
+Knowledge Evidence、Citation、Index Publication 或知识事实提交
+Memory Commit、隐私授权或长期经验批准
+Tool 执行、外部副作用、幂等 Effect Claim 或副作用审批
+把模型输出直接写成数据库最终事实
 保存模型隐藏思维链
-自动把所有 Provider 特性暴露为公共 Contract
-建设产品级自治 Multi-Agent Runtime
+把全部 Provider 私有功能暴露为公共 Contract
+为了“平台化”默认拆微服务、引入 Kafka 或建设自治 Multi-Agent Runtime
 ```
 
-模型输出永远是 `Proposal`、`Candidate` 或 `Model Result`。它可以被 Agent Core、Knowledge、Memory、Tool、Security 或 Eval 消费，但不得直接批准、激活、发布或提交长期事实。
+# 4. 十一个模块的模型使用地图
 
-## 4. Consumes / Produces / Owns / Does Not Own
+## 4.1 总览
 
-| 方向 | Contract / Fact | Owner | 说明 |
+| 模块 | 典型模型能力 | 主要 Role / Operation | Gateway 之外的事实 Owner |
 | --- | --- | --- | --- |
-| Consumes | `ModelRoleRequirement`、`StepModelRequirement`、`Deadline`、`CancellationRef` | Agent Core | Gateway 不重写 Step 或 Plan。 |
-| Consumes | `BudgetReservationRef`、`BudgetLimitSnapshot` | Agent Core / Budget Ledger | Gateway 只能核验与消费已授权额度。 |
-| Consumes | `ModelSecurityDecision`、Allowed Provider、Classification、Residency、Redaction、Credential Scope、Security Epoch | Security | Security 决定“允许什么”；Gateway 执行门禁。 |
-| Consumes | `SecretRef`、`ConfigVersion`、Provider Connection、Clock、Transport、Store Port | Infrastructure | Gateway 不持有明文 Secret。 |
-| Produces | `ModelCapabilityProfile`、`ModelAvailabilitySnapshot`、`ModelFeasibilityAssessment` | Model Gateway | Agent Core据此形成最终 `StepFeasibilityDecision`。 |
-| Produces | `ModelRoutingDecision`、`ModelCallAttempt`、`ModelResponse`、`StructuredOutputResult` | Model Gateway | 均为不可变或版本化事实。 |
-| Produces | `UsageReceipt`、`ModelFailure`、Provider Health / Circuit 事件 | Model Gateway | 供 Budget、Observability 与 Agent Core 消费。 |
-| Produces | Model Trace / Metric / Eval Projection Event | Model Gateway | Observability 保存 Projection，不反向成为调用事实 Owner。 |
-| Owns | Role Registry、Provider / Model Definition、Capability、Routing、Attempt、Quota、Health、Circuit、Prompt Binding | Model Gateway | 所有写入通过 Gateway Application Service。 |
-| Does Not Own | Plan、Step、Answer、RunOutcome、Security Authorization、Tool Effect、Memory、Evidence | 对应模块 | Gateway 不得越权更新。 |
+| 01 Product Surface | 意图分类、问题改写、语言转换、展示风格转换 | `TASK_ANALYZER`、`QUERY_REWRITER`、`CLASSIFICATION`、`TEXT_GENERATION` | Product Surface 拥有用户请求、渠道与展示状态 |
+| 02 Input / Document Ingestion | VLM OCR、版面理解、表格恢复、文档分类、Metadata 和字段抽取 | `EXTRACTOR`、`VISION_EXTRACTION`、`STRUCTURED_GENERATION`、`CLASSIFICATION` | Ingestion 拥有 Source Object、ParseRun、Chunk 和摄取状态 |
+| 03 Knowledge / Agentic GraphRAG | Chunk/Query Embedding、Rerank、Query Rewrite、实体关系抽取、证据质量判断 | `QUERY_REWRITER`、`EXTRACTOR`、`EMBEDDING`、`RERANK`、`JUDGE` | Knowledge 拥有 Evidence、RetrievalRound、IndexManifest 和 CitationLineage |
+| 04 Model Gateway | Adapter Probe、Conformance、调用修复和归一化 | 所有 Operation 的执行控制 | Gateway 拥有 ModelCall、Attempt、Routing、Usage、Health、Circuit |
+| 05 Memory & Context | 上下文压缩、对话摘要、Memory Candidate、实体记忆、Consolidation、Reflexion | `EXTRACTOR`、`SYNTHESIZER`、`STRUCTURED_GENERATION` | Memory 拥有 ContextPack、MemoryCandidate、Memory Commit 和删除语义 |
+| 06 Agent Core | Task Analysis、Planning、Plan Repair、Step ReAct、Critic、Reflection、Final Synthesis | 所有主要 Model Role | Agent Core 拥有 Run、Plan、Step、Decision、Final Gate 和 Outcome |
+| 07 Capability / Skill | 摘要、翻译、分类、结构化抽取、报告生成等模型型 Skill | Skill 声明的 Role + Operation | Capability/Skill 拥有 SkillDefinition 和输入输出 Contract |
+| 08 Tool Runtime | Tool 参数 Proposal、Observation 解释 | `TOOL_CALL`、`STRUCTURED_GENERATION` | Tool Runtime 拥有 Prepare、Attempt、EffectReceipt 与 Reconcile |
+| 09 Security | Prompt Injection、PII/Secret 候选识别、风险分类、策略文本辅助分析 | `CLASSIFICATION`、`EXTRACTOR`、`JUDGE` | Security 拥有 Authorization、Approval、Security Epoch 与 Revocation |
+| 10 Observability & Eval | Groundedness、正确性、相关性、完整性、安全性和回归 Judge | `CRITIC`、`FINAL_CRITIC`、`JUDGE` | Observability & Eval 拥有 EvalResult、Evidence 和 Release Gate |
+| 11 Infrastructure | 通常不直接做业务模型推理；提供连接、Secret Lease、事务、对象和恢复原语 | 无业务 Role | Infrastructure 拥有物理连接、存储、Clock、CAS 和恢复原语 |
 
-## 5. 架构不变量
+## 4.2 Input / Document Ingestion：OCR 与视觉理解
 
-1. Agent Core、Knowledge、Memory、Tool、Product 和 Eval 业务层不得导入具体 Provider SDK。
-2. `ModelRoleDefinition` 不包含固定 Provider Secret、SDK Client 或不可替换的模型实例。
-3. `ModelRoutingDecision` 提交后不可原地改写；重新路由创建新 Decision Version。
-4. 每个真实 Provider 请求必须对应唯一 `ModelCallAttempt`，包括失败、超时、取消和验证失败。
-5. SDK 内部 Retry 必须被禁用、显式配置或完整计入 Attempt；不得出现不可见的额外调用。
-6. Security Gate、Budget Reservation 和 Quota Reservation 必须在 Provider Dispatch 前通过。
-7. Stream Chunk 是 provisional（临时内容）；只有 terminal response 经过 Validation 后才形成可消费 `ModelResponse`。
-8. Structured Output 必须执行本地 Schema Validation；Provider-native structured output 不是免验证通道。
-9. Usage 未最终确认时必须表达 `ESTIMATED` 或 `SETTLEMENT_PENDING`，不得伪造精确成本。
-10. Provider 成功但本地响应丢失时 Attempt 进入 `UNKNOWN` / `RECONCILING`，不得默认盲目重发。
-11. Security Epoch、Prompt Binding、Model Definition、Provider Config 和 Pricing Version 必须固定到 Routing / Attempt。
-12. Gateway Failure 只返回 `FailureClass + Recoverability + Suggested Control Action`；Agent Core 决定是否 Replan、Abstain 或终止。
+必须区分：
+
+```text
+传统确定性 OCR Engine
+    可以作为 Parser / OCR Tool，不一定经过 Model Gateway。
+
+VLM / 多模态模型 OCR 与复杂版面理解
+    属于模型调用，必须经过 Model Gateway。
+```
+
+模型适合处理：
+
+```text
+扫描 PDF、图片和手写内容识别
+复杂版面、标题层级、脚注和阅读顺序恢复
+表格、票据、合同、报告和表单字段抽取
+图表标题、坐标轴、图例和视觉语义提取
+OCR 结果纠错、语义补全和低置信度区域复核
+文档类型、语言、敏感等级和无意义页面分类
+```
+
+模型只产生 `ExtractionCandidate` 或 `VisionExtractionResult`。Ingestion 必须负责 Source Lineage、页码和坐标绑定、Parser 版本、置信度、人工复核、Chunk 提交与 Index Handoff。
+
+## 4.3 Knowledge / Agentic GraphRAG
+
+### Embedding
+
+```text
+Document Chunk Embedding
+Query Embedding
+Entity / Relation / Path Embedding
+Image or multimodal embedding
+```
+
+Embedding Contract 必须固定：
+
+```text
+model_definition_ref
+model_revision
+embedding_dimension
+normalization
+input_truncation_policy
+batch_policy
+input_hash
+index_generation_ref
+usage_receipt_ref
+```
+
+不同模型 Revision、维度或归一化规则的向量不得无标记地混入同一 Index Generation。
+
+### Query Rewrite
+
+模型可完成指代消解、多轮问题补全、检索子问题拆分、关键词扩展、HyDE Candidate 和图查询意图识别。Rewrite 是检索 Proposal，不是 Evidence。
+
+### Rerank
+
+Rerank 是独立 `RERANK` Operation，必须支持批量输入、稳定 Item ID、部分失败、Score Calibration、截断和排序确定性说明。不得把 Reranker 暗中实现成普通 Chat 后只返回无来源的排序。
+
+### Graph Extraction
+
+实体、关系、事件、时间、属性和引用抽取均是 Candidate。写入 Graph 前必须经过 Schema Validation、Source Lineage、去重、实体消歧、Policy 和 Knowledge Owner 的 Acceptance。
+
+## 4.4 Memory & Context
+
+### Context Compression
+
+上下文压缩用于：
+
+```text
+长对话历史摘要
+任务执行历史压缩
+Tool Observation 压缩
+Evidence Pack 压缩
+按当前 Goal 选择性保留约束和未决问题
+冲突信息和否定事实保留
+模型 Context Window 与 Token Budget 适配
+```
+
+`ContextCompressionResult` 必须包含：
+
+```text
+source_message_range_refs
+source_artifact_refs
+compression_goal_ref
+retained_constraints
+retained_open_questions
+retained_conflicts
+omitted_sections
+lineage_map
+loss_risk
+prompt_binding_ref
+model_call_ref
+validity
+```
+
+压缩结果不能覆盖原始事实；它是派生 Context Artifact。Security 约束、用户禁止项、审批状态、未解决冲突和关键 Evidence 不得因摘要“更顺畅”而丢失。
+
+### Memory Extraction 与 Consolidation
+
+模型可以产生：
+
+```text
+User Preference Candidate
+Entity Memory Candidate
+Task Experience Candidate
+Failure Lesson Candidate
+Reflexion Candidate
+Conflict / Duplication Candidate
+Expiration Suggestion
+```
+
+模型不能直接写长期 Memory。Memory Owner 必须执行来源绑定、隐私与授权、去重、冲突、Retention、用户删除和 Commit Policy。
+
+## 4.5 Agent Core
+
+Agent Core 使用：
+
+```text
+TASK_ANALYZER       识别目标、复杂度、风险和能力需求
+PLANNER             生成 Dynamic DAG Plan Proposal
+PLAN_REPAIR         修复计划 Contract，不直接激活 PlanVersion
+EXECUTOR_FAST       普通 Step ReAct
+EXECUTOR_REASONING  复杂或升级后的 Step ReAct
+CRITIC              Action / Step / Join 判断 Proposal
+SYNTHESIZER         多分支和 Evidence 综合
+FINAL_CRITIC        Final Reflection 与质量建议
+```
+
+Gateway 执行模型调用；Agent Core 的 Deterministic Guard 决定 Plan 激活、Retry、Replan、Abstain、Final Gate 和 RunOutcome。
+
+## 4.6 Capability / Skill 与 Tool Runtime
+
+模型型 Skill 只声明 Role、Operation、输入输出 Schema、预算、安全和质量约束。Skill 不持有 Provider Secret 或 SDK Client。
+
+Tool 选择、参数生成和 Observation 解释可以调用模型，但模型只产生 `ActionProposal`。Gateway 不执行外部副作用；Tool Runtime 和 Security 负责 Prepare、Authorization、Approval、Idempotency Claim、Attempt、EffectReceipt 与 Reconcile。
+
+## 4.7 Security
+
+模型可辅助 Prompt Injection、PII、Secret、恶意意图、数据分类和输出风险识别，但只能产生风险 Proposal 或 Score。
+
+```text
+模型说“安全”
+≠ Security Authorization
+≠ Approval
+≠ Data Residency 许可
+≠ Credential 使用授权
+≠ Publication 许可
+```
+
+最终 Security Decision 必须由 Security 模块的确定性 Policy、权限事实和审批事实产生。
+
+## 4.8 Observability & Eval
+
+Judge 调用也必须经过 Gateway，并独立记录 Judge Role、Operation、Prompt、Model、Budget、Usage、Trace 和 Failure。产品调用成本、Eval/Judge 成本、Shadow 成本和 Cache Avoided Cost 必须分开。模型自评不能作为唯一质量证明。
+
+# 5. Ownership
+
+| 事实 / Contract | Owner | Gateway 允许 | Gateway 禁止 |
+| --- | --- | --- | --- |
+| Model Role、Operation、Provider、Model、Capability、Routing、Call、Attempt、Usage、Quota、Health、Circuit | Model Gateway | 受控创建、版本化和恢复 | 被业务模块直接改写 |
+| Run、Plan、Step、Retry/Replan、Final Gate、Publication、Outcome | Agent Core | 消费调用结果和建议动作 | Gateway 修改控制终态 |
+| Evidence、RetrievalRound、Citation、Index Generation | Knowledge | 发起模型请求、消费 Candidate | Gateway 写知识事实 |
+| ContextPack、MemoryCandidate、Memory Commit | Memory & Context | 发起压缩和提取 | Gateway 提交长期 Memory |
+| ParseRun、Source Object、Chunk、Index Handoff | Ingestion | 发起 Vision/Extraction | Gateway 提交摄取终态 |
+| Authorization、Approval、Security Epoch、Revocation | Security | 消费决定、执行门禁 | Gateway 自批权限 |
+| Tool Prepare、Attempt、EffectReceipt、Reconcile | Tool Runtime | 生成 Tool Proposal | Gateway 执行外部副作用 |
+| EvalResult、Release Gate、质量 Evidence | Observability & Eval | 发送 Trace 和调用 Judge | Gateway 声明质量已证明 |
+| Transaction、CAS、Clock、Transport、Secret Lease、Object Store | Infrastructure | 使用物理原语 | 将物理 Receipt 冒充业务成功 |
+
+# 6. 架构不变量
+
+1. 所有业务层不得导入具体 Provider SDK 或保存明文 Credential。
+2. `ModelRoleDefinition` 与 `ModelOperationKind` 分离；Role 表达用途，Operation 表达执行类型。
+3. 每个真实 Provider 请求必须对应唯一 `ModelCallAttempt`，包括失败、取消、验证失败和 Shadow 调用。
+4. SDK 内部 Retry 必须禁用、显式配置或完整计入 Attempt；不得有不可见额外调用。
+5. Security、Budget、Quota、Deadline、Capability、Config 和 Circuit Admission 必须在 Dispatch 前通过。
+6. `ModelRoutingDecision` 提交后不可原地改写；重路由创建新版本。
+7. Provider Success 不等于业务成功；只有归一化、验证和结果选择完成后才产生可消费 Response。
+8. Structured Output 必须本地 Schema Validation；Provider-native schema 不是免验证通道。
+9. Stream Chunk 是 provisional；Partial Stream 不得直接形成 FinalCandidate、Memory 或 Knowledge Fact。
+10. Usage 未确认时必须表达 Estimate、Observed 或 Settlement Pending，不得伪造精确成本。
+11. Provider 可能已执行但本地响应丢失时进入 UNKNOWN / RECONCILING，不得盲目重发。
+12. Prompt、Schema、Model Revision、Provider Config、Adapter Version、Pricing Version、Security Epoch 和 Config Snapshot 必须固定到 Call/Attempt。
+13. Cache Hit 不得伪装成 Provider Attempt，必须有独立 Reuse Receipt。
+14. ResultValidity 变化只能发布事件，由事实 Owner 决定 Step、Memory、Knowledge 或 Publication 后果。
+15. Gateway Failure 返回稳定 Provider-neutral Code、Recoverability 和 Suggested Action；Agent Core 决定 Replan、Abstain 或终止。
+16. 模型输出永远是 `Proposal`、`Candidate`、`Score` 或 `Model Result`，不得直接批准、激活、发布或提交长期事实。
 
 ---
 
-# Part II：概念架构与 Provider-neutral Contract
+# Part II：概念架构、Role、Operation 与配置模型
 
-## 6. 概念组件
+# 7. 四个逻辑平面
+
+```text
+Execution Plane
+    Request、Admission、Routing、Attempt、Adapter、Stream、Validation、Usage。
+
+Control Plane
+    Role、Operation、Provider、Model、Capability、Prompt、Config、Policy、Lifecycle。
+
+Operations Plane
+    Enable/Disable、Canary、Drain、Rollback、Circuit Override、Reconcile、Deletion。
+
+Evidence Plane
+    Domain Event、Trace、Metric、Audit、Conformance、Eval、Readiness 与 Release Evidence。
+```
+
+四个平面初期可以位于同一 backend process。模块边界由 Contract、Owner、状态机和测试证明，不由部署数量证明。
+
+# 8. 概念组件
 
 ```text
 Model Role Registry
-Model Catalog
+Model Operation Registry
 Provider Registry
+Model Catalog
 Capability Profile Registry
-Availability Service
-Feasibility Service
+Prompt Artifact Registry
+Prompt Execution Binding Registry
+Gateway Config Snapshot Registry
 Security Compatibility Gate
+Feasibility Service
+Admission and Fairness Controller
 Routing Policy Engine
-Quota / Rate-limit Controller
-Provider Health Service
-Circuit Breaker Service
-Prompt Binding Registry
+Provider Health and Circuit Service
+Quota and Rate-limit Controller
 Provider Adapter Registry
+Adapter Conformance Service
 Model Call Coordinator
 Streaming Session Manager
-Structured Output Validator / Repair Coordinator
-Usage & Cost Meter
-Attempt / Response / Failure Repository
+Structured Output Validator and Repair Coordinator
+Embedding / Rerank / Vision Batch Coordinator
+Usage and Cost Meter
+Cache Policy and Reuse Service
 Reconciliation Service
-Trace / Metric / Eval Publisher
+Lifecycle and Operational Command Service
+Retention and Deletion Coordinator
+Trace / Metric / Audit / Eval Publisher
+Readiness and SLO Evaluator
 ```
 
-这些组件初期可以位于同一 backend process，不要求先拆微服务。模块边界以 Contract、Owner、状态机和测试证明，而不是以部署数量证明。
+# 9. Model Role
 
-## 7. Model Role 与 Provider / Model 分离
-
-### 7.1 目标角色
+目标角色：
 
 ```text
 TASK_ANALYZER
@@ -170,15 +419,15 @@ FINAL_CRITIC
 TOOL_CALL
 ```
 
-`TOOL_CALL` 保留为受控兼容角色；它只代表模型需要生成 Tool Proposal，不代表模型可以执行或批准 Tool。
+`TOOL_CALL` 只代表模型产生 Tool Proposal，不代表模型执行或批准 Tool。
 
-### 7.2 ModelRoleDefinition
+`ModelRoleDefinition`：
 
 ```text
 role_id
 role_version
 purpose
-allowed_output_kinds
+allowed_operation_kinds
 required_capabilities
 preferred_capabilities
 risk_tier
@@ -187,39 +436,50 @@ latency_class
 structured_output_policy
 streaming_policy
 max_attempts
-same_model_retry_policy
-provider_fallback_policy
-role_escalation_targets
-prompt_binding_policy_ref
-active_from / active_to
+retry_policy_ref
+fallback_policy_ref
+escalation_targets
+prompt_policy_ref
+active_from
+active_to
 status
 ```
 
-Role 只表达任务意图和能力要求。它不得保存：
+Role 不保存 SDK Client、Secret、固定 Endpoint 或 Agent Core 状态转换逻辑。
+
+# 10. Model Operation
+
+`ModelOperationKind`：
 
 ```text
-api_key
-SDK client
-固定 endpoint
-无法替换的 provider/model object
-Agent Core 的状态转换逻辑
+TEXT_GENERATION
+STRUCTURED_GENERATION
+EMBEDDING
+RERANK
+VISION_EXTRACTION
+TRANSCRIPTION
+CLASSIFICATION
+JUDGE
 ```
 
-### 7.3 默认角色升级链
+Role 与 Operation 组合示例：
 
 ```text
-EXECUTOR_FAST
-→ 同一 Role 内 Parameter Repair + bounded Retry
-→ EXECUTOR_REASONING
-→ CRITIC 产生 Retry / Replan / Abstain Proposal
-→ Agent Core Decision Guard 提交控制决定
+QUERY_REWRITER + STRUCTURED_GENERATION
+EXTRACTOR + VISION_EXTRACTION
+EXTRACTOR + STRUCTURED_GENERATION
+EXECUTOR_FAST + TEXT_GENERATION
+FINAL_CRITIC + JUDGE
+Knowledge System Role + EMBEDDING
+Knowledge System Role + RERANK
+Security Risk Role + CLASSIFICATION
 ```
 
-Gateway 负责执行“同 Role Retry”“Provider Fallback”“Role Escalation 的候选解析和调用”；Agent Core 负责触发升级、接受 Critic Proposal、决定 Replan 或 Abstain。
+Operation 决定请求和结果 Schema、Batch 语义、Usage 单位、Capability、Error Mapping 和测试；不得让所有操作退化为通用 Chat Request。
 
-## 8. ProviderDefinition、ModelDefinition 与 Capability
+# 11. Provider、Model 与 Capability
 
-### 8.1 ProviderDefinition
+## 11.1 ProviderDefinition
 
 ```text
 provider_id
@@ -236,99 +496,102 @@ usage_receipt_modes
 rate_limit_semantics
 sdk_name
 sdk_version
+provider_api_version
 provider_config_version
 health_policy_ref
 circuit_policy_ref
-status
+lifecycle_status
 ```
 
-### 8.2 ModelDefinition
+## 11.2 ModelDefinition
 
 ```text
 model_definition_id
-provider_id
-provider_version
+provider_ref
 provider_model_id
 model_revision
 model_family
-lifecycle_status
+supported_operation_kinds
 capability_profile_ref
 pricing_version_ref
 prompt_compatibility_refs
 context_window_policy
 availability_policy_ref
-active_from / active_to
+lifecycle_status
+active_from
+active_to
 ```
 
-`provider_model_id` 只存在于 Gateway 内部定义与 Trace Projection；Agent Core Contract 只引用 `model_definition_ref` 或 Role。
+上游模块只引用 Role、Operation 和内部 `model_definition_ref`；不得依赖 Provider SDK 对象。
 
-### 8.3 ModelCapabilityProfile
+## 11.3 ModelCapabilityProfile
 
 ```text
 capability_profile_id
 profile_version
 model_definition_ref
+operation_kind
 input_modalities
 output_modalities
 max_context_tokens
 max_output_tokens
+max_batch_items
+embedding_dimension
+score_semantics
 supports_streaming
 supports_native_structured_output
 supported_schema_features
 supports_tool_proposal
-supports_parallel_tool_proposal
 supports_usage_in_stream
 supports_provider_request_id
 supports_idempotency_key
 supports_cancellation
 supports_seed_or_determinism
 supports_reasoning_controls
-supports_logprobs
 supported_languages
 latency_class
 quality_tier
 residency_zones
 supported_data_classifications
 known_limitations
+conformance_status
 verified_at
 verification_evidence_refs
 ```
 
-Capability 不能只来自 Provider marketing metadata。生产可用 Profile 至少需要 Adapter Contract Test 或受控 Probe Evidence；未经验证的字段标为 `DECLARED_UNVERIFIED`。
-
-### 8.4 ModelAvailabilitySnapshot
-
-路由时冻结可用性，而不是执行中读取一个不断变化的全局布尔值：
+Capability 状态：
 
 ```text
-availability_snapshot_id
-captured_at
-provider_ref
-model_definition_ref
-region
-health_state
-circuit_state
-rate_limit_state_ref
-quota_summary
-credential_version_ref
-config_version
-security_epoch
-available
-reason_codes
-expires_at
+DECLARED_UNVERIFIED
+VALIDATING
+VERIFIED
+DEGRADED
+STALE
+REVOKED
 ```
 
-Snapshot 失效、Security Epoch 变化或 Circuit 强制打开时，Dispatch 必须重新 Admission，不得沿用旧决定。
+Provider Marketing Metadata 只能形成 `DECLARED_UNVERIFIED`，不能直接进入生产路由。
 
-## 9. PromptBinding 与版本固定
+# 12. Prompt Artifact 与 Execution Binding
 
-`PromptBinding` 将模型角色、Prompt Template、Output Schema 和安全处理绑定为不可变版本：
+必须分离业务 Prompt 与执行绑定：
+
+```text
+PromptArtifact
+    业务语义、模板、变量、System Policy、Few-shot、输出目的。
+
+PromptExecutionBinding
+    Role、Operation、Provider/Model 兼容、Schema、Redaction、Token、Rendering 和版本固定。
+```
+
+`PromptExecutionBinding`：
 
 ```text
 prompt_binding_id
 binding_version
+prompt_artifact_ref
 role_ref
-prompt_template_ref
+operation_kind
 prompt_template_hash
 system_policy_ref
 few_shot_bundle_ref
@@ -337,33 +600,114 @@ output_schema_hash
 redaction_policy_ref
 provider_compatibility_rules
 model_compatibility_rules
+renderer_version
 created_at
 status
 ```
 
-每个 `ModelCallRequest` 必须记录：
+Trace 默认不保存完整 Prompt/Response，只保存 Hash、脱敏 Preview、结构化标签和受权限控制的 encrypted object ref。
+
+# 13. Gateway 配置快照
+
+`ModelGatewayConfigSnapshot`：
 
 ```text
-prompt_binding_ref
-rendered_prompt_hash
-input_payload_ref
-model_role_ref
-contract_bundle_version
-security_epoch
+config_snapshot_id
+config_version
+parent_version
+role_bundle_ref
+provider_bundle_ref
+model_bundle_ref
+capability_bundle_ref
+prompt_binding_bundle_ref
+routing_policy_bundle_ref
+quota_policy_bundle_ref
+cache_policy_bundle_ref
+retention_policy_bundle_ref
+slo_policy_bundle_ref
+security_compatibility_ref
+content_hash
+status
+created_by
+created_at
+validated_at
+activated_at
+retired_at
 ```
 
-默认不在 Trace 中保存完整 Prompt / Response；保存 hash、脱敏 preview、结构化标签和受权限控制的 encrypted object ref。
+状态：
 
-## 10. StepFeasibility 接口
+```text
+DRAFT
+VALIDATING
+READY
+CANARY
+ACTIVE
+DRAINING
+RETIRED
+ROLLED_BACK
+REJECTED
+```
 
-Agent Core 拥有最终 `StepFeasibilityDecision`。Gateway 只提供模型侧事实：
+每个 Call 固定一个 Config Snapshot。Activation 使用 CAS，禁止在执行中读取不断变化的“当前配置”后产生不可重放路由。
+
+# 14. Provider Adapter Contract
+
+`ProviderAdapterContract`：
+
+```text
+adapter_id
+adapter_version
+provider_ref
+sdk_name
+sdk_version
+provider_api_version
+supported_operation_kinds
+request_mapping_version
+response_mapping_version
+error_mapping_version
+stream_mapping_version
+usage_mapping_version
+retry_configuration
+timeout_configuration
+cancellation_semantics
+raw_payload_retention_policy_ref
+conformance_profile_ref
+```
+
+`ProviderAdapterResult` 必须返回：
+
+```text
+transport_outcome
+provider_request_id
+provider_response_ref
+normalized_result_candidate
+normalized_usage_candidate
+normalized_failure_candidate
+stream_terminal_record
+cancellation_evidence
+mapping_warnings
+raw_payload_ref
+```
+
+Unknown Provider Enum、Event、Finish Reason 或 Error Shape 不得默认为成功；必须 Fail-closed、Quarantine 或进入 Mapping Warning + Conformance Failure。
+
+---
+
+# Part III：完整运行流程与 Operation 协议
+
+# 15. Step Feasibility
+
+Agent Core 拥有最终 `StepFeasibilityDecision`。Gateway 提供模型侧事实：
 
 ```text
 assess_model_feasibility(
-    StepModelRequirement,
-    SecurityConstraintRef,
-    BudgetConstraintRef,
-    Deadline,
+    role_requirement,
+    operation_requirement,
+    capability_requirement,
+    security_constraint_ref,
+    budget_constraint_ref,
+    deadline_at,
 ) -> ModelFeasibilityAssessment
 ```
 
@@ -371,12 +715,14 @@ assess_model_feasibility(
 
 ```text
 assessment_id
-required_role
+role_ref
+operation_kind
 required_capabilities
 candidate_model_refs
 rejected_candidate_refs
 rejection_reason_codes
-estimated_token_range
+estimated_input_range
+estimated_output_range
 estimated_cost_range
 estimated_latency_range
 availability_snapshot_refs
@@ -387,237 +733,501 @@ escalation_available
 valid_until
 ```
 
-Agent Core 将它与 Tool、Knowledge、Resource、Side-effect、Budget 和 Security 事实组合，生成最终 `StepFeasibilityDecision`。Gateway 不得激活 PlanVersion。
+Gateway 不得激活 PlanVersion，也不得把“存在可调用模型”冒充 Step 整体可执行。
 
----
-
-# Part III：完整调用流程、Routing、Fallback 与 Escalation
-
-## 11. ModelCall 完整流程
+# 16. 通用 ModelCall 流程
 
 ```mermaid
 flowchart TD
-    A[ModelCallRequest] --> B[Contract / Role / Prompt Validation]
-    B --> C[Security Compatibility Gate]
-    C --> D[Capability + Availability Snapshot]
-    D --> E[Budget Quote / Reservation Check]
-    E --> F[Rate Limit + Quota Reservation]
+    A[Operation-specific Request] --> B[Envelope / Role / Operation / Prompt Validation]
+    B --> C[Security Decision and Epoch Check]
+    C --> D[Capability / Config / Lifecycle Snapshot]
+    D --> E[Budget Quote and Reservation Check]
+    E --> F[Fair Admission / Quota / Rate-limit]
     F --> G[Routing Decision Commit]
-    G --> H[Circuit / Health Admission]
-    H --> I[Attempt Commit]
-    I --> J[Provider Adapter Dispatch]
-    J --> K{Streaming?}
-    K -->|Yes| L[Streaming Session]
-    K -->|No| M[Response Receive]
-    L --> M
-    M --> N[Normalize Provider Response]
-    N --> O[Structured Output Validation]
+    G --> H[Attempt Commit]
+    H --> I[Provider Adapter Dispatch]
+    I --> J{Operation Kind}
+    J --> K[Generate / Structured / Judge]
+    J --> L[Embedding / Rerank Batch]
+    J --> M[Vision / Transcription / Classification]
+    K --> N[Normalize]
+    L --> N
+    M --> N
+    N --> O[Local Validation]
     O --> P{Valid?}
-    P -->|No| Q[Bounded Repair / Fallback]
-    P -->|Yes| R[ModelResponse Commit]
-    Q --> G
-    R --> S[Usage Receipt / Cost]
-    S --> T[Quota Release / Settlement Event]
-    T --> U[Trace + Metric + Eval Projection]
+    P -->|No| Q[Repair / Retry / Fallback / Escalation]
+    P -->|Yes| R[Response Selection Commit]
+    Q --> F
+    R --> S[Usage / Cost / Quota Settlement]
+    S --> T[Trace / Audit / Event / Eval Projection]
 ```
 
-关键事务顺序：
+事务顺序：
 
 ```text
-1. 校验 Request / Role / Contract
-2. 获取 Security Decision 与有效 Security Epoch
-3. 读取 Capability、Availability、Health、Circuit、Rate Limit
+1. 验证 Envelope、Role、Operation、Prompt、Schema 和输入引用
+2. 获取 Security Decision、有效 Epoch、Data Classification 与 Residency
+3. 固定 Config、Provider、Model、Capability、Adapter 和 Pricing Version
 4. 核验 Agent Core BudgetReservationRef
-5. 原子创建 QuotaReservation
-6. 提交 ModelRoutingDecision
+5. 执行多租户公平 Admission，原子创建 Quota Reservation
+6. 提交不可变 Routing Decision
 7. 提交 ModelCallAttempt=ADMITTED
-8. COMMIT 后调用 Provider
-9. 持久化响应、失败、Stream 终态、Validation 与 Usage
-10. 发送 Usage / Trace / Health Event
+8. COMMIT 后调用 Provider，不在长事务中等待网络
+9. 持久化 Response/Failure/Stream/Validation/Usage/Reconciliation
+10. 选择唯一可消费 Response，发布 Usage、Trace、Health、Audit 和 Domain Event
 ```
 
-不得在持有数据库长事务时等待 Provider 网络响应。
+# 17. CrossModuleEnvelopeV1
 
-## 12. ModelCallRequest
+跨模块请求和事件使用 ADR 0003 已确认的最小 Envelope：
+
+```text
+contract_name
+contract_version
+contract_bundle_version
+message_id
+producer_module
+consumer_module
+tenant_id
+workspace_id
+run_id
+step_run_id
+correlation_id
+causation_id
+idempotency_key
+aggregate_type
+aggregate_id
+aggregate_version
+expected_generation
+effective_security_epoch_ref
+effective_security_epoch_hash
+principal_context_ref
+security_context_ref
+authorization_decision_ref
+deadline_at
+trace_id
+data_classification
+redaction_decision_ref
+audit_requirement_ref
+occurred_at
+created_at
+payload
+payload_ref
+payload_hash
+payload_schema_hash
+```
+
+`security_epoch` scalar 只允许作为迁移别名；正式字段是 `effective_security_epoch_ref` 和 `effective_security_epoch_hash`。Receipt 只证明 Canonical Owner 的事实，不自动改变其他模块状态。
+
+# 18. ModelCallRequest 与 Operation-specific Request
+
+`ModelCallRequest` 是逻辑聚合请求：
 
 ```text
 request_id
 idempotency_key
-contract_version
-contract_bundle_version
-tenant_id
-workspace_id
-run_id
-task_id
-step_run_id
-action_run_id
-trace_id
-correlation_id
-causation_id
-model_role_ref
+envelope_ref
+role_ref
+operation_kind
 prompt_binding_ref
 input_payload_ref
 input_payload_hash
 required_capabilities
 preferred_capabilities
 output_contract_ref
-structured_output_policy
-tool_proposal_policy
 streaming_policy
 security_decision_ref
-security_epoch
+effective_security_epoch_ref
+effective_security_epoch_hash
 data_classification
 residency_constraints
 budget_reservation_ref
-max_input_tokens
-max_output_tokens
+max_input_units
+max_output_units
 deadline_at
 cancellation_ref
 routing_hints
+config_snapshot_ref
 metadata_refs
 ```
 
-`routing_hints` 只能表达偏好或已批准约束，不允许调用方绕过 Gateway 直接指定 Secret、SDK Client 或未经 Security 允许的 Provider。
-
-## 13. Routing Decision
-
-### 13.1 决策输入
+Operation-specific Request：
 
 ```text
-Model Role Definition
+TextGenerationRequest
+StructuredGenerationRequest
+EmbeddingRequest
+RerankRequest
+VisionExtractionRequest
+TranscriptionRequest
+ClassificationRequest
+JudgeRequest
+```
+
+调用方可给出偏好，但不得指定明文 Secret、SDK Client、未经批准的 Provider 或绕过 Security/Residency 的强制路由。
+
+# 19. Routing
+
+Routing 输入：
+
+```text
+Role + Operation
 Required / Preferred Capability
 Prompt / Schema Compatibility
-Security Decision
+Security Decision / Effective Epoch
 Data Classification / Residency
 Budget Reservation / Cost Quote
 Deadline / Latency Class
 Provider Health / Circuit
-Rate Limit / Quota
+Rate Limit / Quota / Fair Admission
 Credential Scope Availability
 Tenant / Workspace Policy
-Provider / Model Version Lifecycle
-Routing Stickiness / Experiment Assignment
+Provider / Model Lifecycle
+Adapter Conformance
+Config Snapshot
+Experiment Assignment / Stickiness
 ```
 
-### 13.2 ModelRoutingDecision
+`ModelRoutingDecision`：
 
 ```text
 routing_decision_id
 routing_version
 request_id
 role_ref
+operation_kind
 candidate_rankings
 selected_provider_ref
 selected_model_ref
 selected_capability_profile_ref
+selected_adapter_ref
 availability_snapshot_refs
 security_decision_ref
-security_epoch
+effective_security_epoch_ref
+effective_security_epoch_hash
 budget_reservation_ref
 quota_reservation_ref
 prompt_binding_ref
-provider_config_version
+config_snapshot_ref
 pricing_version_ref
+credential_version_ref
 rejected_candidates
 reason_codes
 fallback_chain
 escalation_chain
+experiment_assignment_ref
 created_at
 valid_until
 ```
 
-候选排序必须可解释，至少保存 rejection reason：
+拒绝原因至少包括：
 
 ```text
 CAPABILITY_MISMATCH
+OPERATION_UNSUPPORTED
+ADAPTER_NON_CONFORMANT
 SECURITY_DENIED
+SECURITY_EPOCH_STALE
 RESIDENCY_MISMATCH
 CLASSIFICATION_UNSUPPORTED
 CREDENTIAL_SCOPE_UNAVAILABLE
 MODEL_DISABLED
+MODEL_DRAINING
 PROVIDER_UNHEALTHY
 CIRCUIT_OPEN
 RATE_LIMITED
 QUOTA_UNAVAILABLE
+FAIR_ADMISSION_REJECTED
 BUDGET_INSUFFICIENT
 DEADLINE_UNACHIEVABLE
 PROMPT_INCOMPATIBLE
 SCHEMA_UNSUPPORTED
+CONFIG_NOT_ACTIVE
 ```
 
-### 13.3 Routing 与实验
+Routing Replay 必须能基于固定的 Config、Security、Capability、Availability、Quota、Experiment 和 Candidate Snapshot 重放并解释选择结果。
 
-A/B 或 Eval 路由必须先经过 Security / Budget / Capability Gate，再按可复现 assignment 选择。实验标签不能覆盖强制门禁。一次 Run 可选择 sticky routing，但 Security Revocation、Model Disabled 或 Circuit Open 必须打破 stickiness。
+# 20. Provider Connection、Credential 与 Secret
 
-## 14. Retry、Fallback、Escalation、Replan 边界
+Gateway 使用 ADR 0003 已确认的 `CredentialVersionRefV1`，Security 拥有授权、Scope、Revocation 与 Epoch。Infrastructure 通过 `SecretLeaseV1` 受控交付 Secret Material；明文 Secret 不进入数据库普通列、Queue、Checkpoint、Prompt、Trace 或 Audit。
 
-| 机制 | 计划是否仍正确 | 变化范围 | Owner | 示例 |
-| --- | --- | --- | --- | --- |
-| Same-attempt transport recovery | 是 | SDK / connection 内部受控恢复 | Provider Adapter | 可证明请求未发出前的连接失败 |
-| Retry | 是 | 新 `ModelCallAttempt`，同 Role / 可同 Model | Gateway 执行，Agent Core Policy 授权 | Timeout、可重试 5xx |
-| Parameter Repair | 是 | 调整 temperature、max tokens、prompt framing、schema mode | Agent Core / Gateway Contract | Structured output malformed |
-| Provider Fallback | 是 | 同 Role、同 Output Contract，更换 Provider / Model | Gateway | 429、Circuit Open |
-| Role Escalation | 是 | 弱角色升级为强角色 | Agent Core 触发，Gateway 解析 | EXECUTOR_FAST → EXECUTOR_REASONING |
-| Replan | 否或假设失效 | 创建新 PlanVersion，修改剩余 DAG | Agent Core | 执行器能力不足、目标依赖变化 |
-| Abstain | 无安全可靠路径 | 结构化终局建议 | Agent Core | fallback exhausted + evidence不足 |
-
-Gateway 不得因为 Fallback Exhausted 自行修改 Plan 或 AgentRun。它返回 `ModelFailure` 与建议动作：
+Gateway 向 Infrastructure Port 提交 `ProviderConnectionRequestV1`：
 
 ```text
-RETRY_SAME_ROLE
-REPAIR_PARAMETERS
-FALLBACK_PROVIDER
-ESCALATE_ROLE
-WAIT_QUOTA
-REQUEST_REPLAN
-ABSTAIN
-FAIL
-```
-
-最终动作由 Agent Core Decision Guard 提交。
-
-## 15. Fallback Policy
-
-Fallback 必须满足：
-
-```text
-同一 Output Contract
-能力不低于 required capability
-Security / Residency / Classification 重新校验
-独立 Quota Reservation
-独立 ModelCallAttempt
-成本和延迟仍在剩余 Budget / Deadline 内
-PromptBinding 兼容
-失败原因和链路可 Trace
-```
-
-不得把“换模型后输出看起来合理”当成兼容证明。Structured schema、tool proposal、stream semantics、usage semantics 和 context limit 均需重新验证。
-
----
-
-# Part IV：规范性状态机
-
-所有状态转换使用结构化 Transition Record：
-
-```text
-transition_id
-aggregate_type
-aggregate_id
-from_status
-to_status
-trigger_type
-trigger_ref
-guard_result_ref
-reason_code
-security_epoch
-config_version
-occurred_at
+provider_ref
+credential_version_ref
+purpose
+residency_ref
+tls_profile_ref
+proxy_profile_ref
+connect_timeout_ms
+request_timeout_ms
+cancellation_token_ref
 trace_id
 ```
 
-## 16. ModelCallAttempt 状态机
+Infrastructure 只返回 Transport、Pool、TLS、Timeout、Cancellation 的物理证据，不返回 Provider 业务成功结论。
+
+# 21. Retry、Repair、Fallback、Escalation 与 Replan
+
+| 机制 | Plan 是否仍正确 | 变化范围 | Owner |
+| --- | --- | --- | --- |
+| Transport Recovery | 是 | 可证明请求未发出时重连 | Adapter |
+| Retry | 是 | 新 Attempt，可同 Model | Gateway 在 Policy 许可下执行 |
+| Parameter Repair | 是 | Prompt framing、参数、Schema mode | Agent Core/Gateway Contract |
+| Provider Fallback | 是 | 同 Role、Operation 和 Output Contract，换 Provider/Model | Gateway |
+| Role Escalation | 是 | 弱 Role 升级强 Role | Agent Core 触发，Gateway 路由 |
+| Replan | 否或假设失效 | 新 PlanVersion，修改剩余 DAG | Agent Core |
+| Abstain | 无安全可靠路径 | 结构化终局 | Agent Core |
+
+默认弱模型升级链：
+
+```text
+EXECUTOR_FAST
+→ 参数调整后的 bounded Retry
+→ Provider Fallback
+→ EXECUTOR_REASONING
+→ CRITIC Proposal
+→ Agent Core 决定 Retry / Replan / Abstain
+```
+
+Gateway 不直接修改 AgentRun 终态，不自行 Replan，也不得自行扩大 Run Budget。
+
+# 22. Text 与 Structured Generation
+
+`TextGenerationResult`：
+
+```text
+response_id
+call_id
+selected_attempt_id
+content_ref
+content_hash
+finish_reason
+provider_metadata_projection
+usage_receipt_refs
+validity
+```
+
+`StructuredOutputResult`：
+
+```text
+structured_result_id
+call_id
+attempt_id
+schema_ref
+schema_hash
+raw_response_ref
+parsed_payload_ref
+validation_status
+validation_error_refs
+repair_attempt_refs
+selected_payload_ref
+validity
+```
+
+Provider-native Structured Output 必须再做本地 Schema Validation、Business Constraint Validation 和 Security Output Check。
+
+Repair 是新的 Attempt 或确定性转换，原 Invalid Payload、Validation Error、Repair Binding 和 Repaired Result 必须保留。
+
+# 23. Embedding
+
+`EmbeddingRequest`：
+
+```text
+request_id
+item_refs
+input_hashes
+model_role_ref
+required_dimension
+normalization_policy
+truncation_policy
+batch_policy
+index_generation_ref
+deadline_at
+```
+
+`EmbeddingResult`：
+
+```text
+result_id
+item_results[]
+model_definition_ref
+model_revision
+embedding_dimension
+normalization
+batch_attempt_refs
+partial_failure_refs
+usage_receipt_refs
+```
+
+Batch 允许部分失败，但每个 Item 必须有稳定 Item ID 和终态；不得因为一个 Item 失败丢弃已成功向量，也不得无记录地重算全部 Batch。
+
+# 24. Rerank
+
+`RerankRequest`：
+
+```text
+query_ref
+candidate_items[]
+item_id
+content_ref
+metadata_ref
+top_k
+score_policy
+calibration_profile_ref
+```
+
+`RerankResult`：
+
+```text
+ranked_items[]
+item_id
+rank
+raw_score
+normalized_score
+explanation_ref_optional
+model_revision
+partial_failure_refs
+usage_receipt_refs
+```
+
+排序必须保持 Item ID，支持重复检测、截断、Tie Policy、批量边界和部分失败。
+
+# 25. Vision、OCR 与 Transcription
+
+`VisionExtractionRequest` 支持页、图片、区域、坐标、目标 Schema、OCR Hint 和 Source Lineage Ref。
+
+`VisionExtractionResult` 必须保留：
+
+```text
+page_ref
+region_ref
+text_candidate
+structured_fields
+bounding_boxes
+confidence
+source_lineage
+model_revision
+validation_status
+human_review_required
+```
+
+`TranscriptionRequest` 和 `TranscriptionResult` 必须定义音频分片、时间戳、说话人、语言、重叠、敏感内容和 Partial Segment 语义。
+
+# 26. Classification 与 Judge
+
+`ClassificationResult`：
+
+```text
+label_set_ref
+predicted_labels
+scores
+threshold_profile_ref
+abstain_reason
+calibration_ref
+model_revision
+validity
+```
+
+`JudgeResult`：
+
+```text
+judge_result_id
+subject_ref
+rubric_ref
+criteria_scores
+verdict
+confidence
+reasoning_summary_ref
+citation_refs
+judge_model_ref
+prompt_binding_ref
+independence_policy_ref
+calibration_ref
+validity
+```
+
+Judge Failure 必须表达 BLOCKED、UNAVAILABLE 或 INCONCLUSIVE，不能当成 0 分。高风险 Release Gate 不能只依赖单一模型自评。
+
+# 27. Streaming 三层模型
+
+```text
+Provider Stream
+    Provider SDK / HTTP 事件，可能包含未知事件、错误、Usage 和 Finish Reason。
+
+Gateway Internal Stream
+    归一化、排序、去重、校验、持久化和取消状态。
+
+Product Delivery Stream
+    Product Surface 的展示、断线重连、用户可见状态和 Delivery Receipt。
+```
+
+`ModelStreamChunk`：
+
+```text
+stream_session_id
+attempt_id
+sequence_no
+provider_event_id
+event_kind
+content_delta_ref
+structured_delta_ref
+usage_delta_ref
+finish_reason
+received_at
+payload_hash
+```
+
+Provider Stream 成功不等于 Product 已交付；Product Delivery Failure 也不应反向伪造 Provider Failure。
+
+---
+
+# Part IV：聚合、状态机与生命周期
+
+# 28. ModelCall 聚合
+
+`ModelCall` 是逻辑调用聚合：
+
+```text
+call_id
+request_id
+role_ref
+operation_kind
+status
+active_routing_decision_ref
+attempt_refs
+selected_response_ref
+result_validity_ref
+usage_summary_ref
+config_snapshot_ref
+security_epoch_ref
+created_at
+completed_at
+```
 
 状态：
+
+```text
+CREATED
+VALIDATING
+ADMISSION_PENDING
+ROUTED
+EXECUTING
+RESPONSE_SELECTION_PENDING
+SUCCEEDED
+FAILED
+CANCELLED
+TIMED_OUT
+UNKNOWN
+RECONCILING
+ABANDONED
+```
+
+同一 Call 最多一个 Selected Response。晚到成功必须经过 CAS 和 Selection Policy，不能覆盖已发布的另一响应。
+
+# 29. ModelCallAttempt 状态机
 
 ```text
 CREATED
@@ -630,114 +1240,61 @@ VALIDATING
 SUCCEEDED
 FAILED
 TIMED_OUT
+CANCELLATION_REQUESTED
 CANCELLED
 UNKNOWN
 RECONCILING
 ABANDONED
 ```
 
-| From | Trigger | Guard | To | 同步事实 |
-| --- | --- | --- | --- | --- |
-| `CREATED` | `ADMISSION_PASSED` | Security、Budget、Quota、Circuit 均有效 | `ADMITTED` | Route + Reservation refs |
-| `ADMITTED` | `DISPATCH_STARTED` | Attempt 未被取消且 Epoch 有效 | `DISPATCHING` | dispatch timestamp |
-| `DISPATCHING` | `REQUEST_ACCEPTED` | Provider request id 或 transport receipt 可用 | `IN_FLIGHT` | provider_request_id |
-| `IN_FLIGHT` | `FIRST_CHUNK` | Stream policy 允许 | `STREAMING` | stream_session_ref |
-| `IN_FLIGHT` | `FULL_RESPONSE` | response envelope 可解析 | `RESPONSE_RECEIVED` | raw response ref |
-| `STREAMING` | `TERMINAL_RESPONSE` | terminal event 顺序合法 | `RESPONSE_RECEIVED` | stream terminal record |
-| `RESPONSE_RECEIVED` | `VALIDATION_STARTED` | payload hash 完整 | `VALIDATING` | validation attempt |
-| `VALIDATING` | `VALIDATION_PASS` | output contract 和 safety checks 通过 | `SUCCEEDED` | ModelResponse + UsageReceipt |
-| `VALIDATING` | `VALIDATION_FAIL` | repair / fallback 不可用或耗尽 | `FAILED` | StructuredOutputResult + Failure |
-| 非终态 | `DEADLINE_EXCEEDED` | monotonic elapsed / absolute deadline 命中 | `TIMED_OUT` | timeout failure + cancellation request |
-| 非终态 | `CANCEL_CONFIRMED` | cancellation policy 允许 | `CANCELLED` | cancellation receipt |
-| `IN_FLIGHT`/`STREAMING` | `LOCAL_RESPONSE_LOST` | Provider 可能已成功 | `UNKNOWN` | reconciliation required |
-| `UNKNOWN` | `RECONCILE_STARTED` | request id / receipt / provider query 可用 | `RECONCILING` | reconciliation record |
-| `RECONCILING` | `SUCCESS_CONFIRMED` | Provider response 或 authoritative receipt 找回 | `SUCCEEDED` | response + usage |
-| `RECONCILING` | `FAILURE_CONFIRMED` | Provider 明确失败 | `FAILED` | normalized failure |
-| `RECONCILING` | `PROOF_UNAVAILABLE` | policy / retention / provider能力不足 | `ABANDONED` | human / budget correction required |
-
-终态记录不可原地改写。对迟到 Usage、Health 或 Cost 更正，追加 Receipt / Adjustment / Reconciliation Record。
-
-## 17. ProviderHealth 状态机
-
-状态：
-
-```text
-UNKNOWN
-HEALTHY
-DEGRADED
-UNAVAILABLE
-RECOVERING
-DISABLED
-```
-
-| From | Trigger | To | 规则 |
-| --- | --- | --- | --- |
-| `UNKNOWN` | startup probe / sufficient passive samples | `HEALTHY` 或 `DEGRADED` | 无证据不得默认 HEALTHY |
-| `HEALTHY` | latency/error/rate-limit threshold breached | `DEGRADED` | 使用窗口与最小样本数 |
-| `DEGRADED` | hard failure threshold / Security disable | `UNAVAILABLE` 或 `DISABLED` | Security disable 优先 |
-| `UNAVAILABLE` | cooldown + probe success | `RECOVERING` | 只允许受限探测流量 |
-| `RECOVERING` | success window reached | `HEALTHY` | 恢复必须有证据 |
-| `RECOVERING` | probe failure | `UNAVAILABLE` | 重新冷却 |
-| 任意 | admin/security disable | `DISABLED` | 不接受自动恢复 |
-| `DISABLED` | explicit approved enable | `UNKNOWN` | 重新探测 |
-
-Provider Health 是带版本的时间窗口 Projection；Routing Decision 必须引用使用的 Snapshot。
-
-## 18. CircuitBreaker 状态机
-
-状态：
-
-```text
-CLOSED
-OPEN
-HALF_OPEN
-FORCED_OPEN
-DISABLED
-```
+关键转换：
 
 | From | Trigger | Guard | To |
 | --- | --- | --- | --- |
-| `CLOSED` | failure threshold reached | minimum samples + policy | `OPEN` |
-| `OPEN` | cooldown elapsed | probe quota available | `HALF_OPEN` |
-| `HALF_OPEN` | probe success threshold reached | consecutive / ratio policy | `CLOSED` |
-| `HALF_OPEN` | probe failure | any configured failure | `OPEN` |
-| 任意 | Security / operator force open | authorized command | `FORCED_OPEN` |
-| `FORCED_OPEN` | approved release | current Security Epoch valid | `OPEN` 或 `HALF_OPEN` |
-| 任意 | circuit feature disabled for deterministic test | test/admin policy | `DISABLED` |
+| CREATED | ADMISSION_PASSED | Security、Budget、Quota、Config、Circuit 有效 | ADMITTED |
+| ADMITTED | DISPATCH_STARTED | 未取消且 Epoch 有效 | DISPATCHING |
+| DISPATCHING | REQUEST_ACCEPTED | Provider request/transport evidence | IN_FLIGHT |
+| IN_FLIGHT | FIRST_CHUNK | Stream Policy 允许 | STREAMING |
+| IN_FLIGHT/STREAMING | TERMINAL_RESPONSE | Envelope 可解析 | RESPONSE_RECEIVED |
+| RESPONSE_RECEIVED | VALIDATION_STARTED | Payload 完整 | VALIDATING |
+| VALIDATING | VALIDATION_PASS | Contract 与安全检查通过 | SUCCEEDED |
+| VALIDATING | VALIDATION_FAIL | Repair/Fallback 耗尽 | FAILED |
+| 非终态 | DEADLINE_EXCEEDED | Deadline 命中 | TIMED_OUT 或 UNKNOWN |
+| 非终态 | CANCEL_REQUESTED | 取消已持久化 | CANCELLATION_REQUESTED |
+| CANCELLATION_REQUESTED | CANCEL_CONFIRMED | Provider/transport evidence | CANCELLED |
+| IN_FLIGHT/STREAMING | LOCAL_RESPONSE_LOST | Provider 可能已执行 | UNKNOWN |
+| UNKNOWN | RECONCILE_STARTED | 有 Request ID/Receipt/Query 能力 | RECONCILING |
+| RECONCILING | SUCCESS_CONFIRMED | 找回权威响应 | SUCCEEDED |
+| RECONCILING | FAILURE_CONFIRMED | Provider 明确失败 | FAILED |
+| RECONCILING | PROOF_UNAVAILABLE | 无法证明 | ABANDONED |
 
-Circuit Key 至少包含 `provider + model + endpoint_region + operation_kind`，避免一个 embedding endpoint 失败关闭全部 chat 流量。Circuit 只保护流量，不替代 Provider Health 或 Security Decision。
+终态不原地改写；迟到 Usage、Cost、Health 和 Validity 通过追加 Receipt/Correction/Record 表达。
 
-## 19. QuotaReservation 状态机
+# 30. Response Selection
 
-状态：
+`ModelResponseSelection`：
 
 ```text
-PROPOSED
-RESERVED
-CONSUMING
-SETTLEMENT_PENDING
-SETTLED
-REJECTED
-RELEASED
-EXPIRED
+selection_id
+call_id
+candidate_response_refs
+selected_response_ref
+selection_policy_ref
+expected_call_version
+selection_reason
+selected_at
 ```
 
-| From | Trigger | Guard | To |
-| --- | --- | --- | --- |
-| `PROPOSED` | atomic capacity claim | CAS / transactional guard | `RESERVED` 或 `REJECTED` |
-| `RESERVED` | provider dispatch | Attempt ref 唯一 | `CONSUMING` |
-| `RESERVED` | route invalidated / cancel | 未 dispatch | `RELEASED` |
-| `RESERVED` | lease timeout | 未消费 | `EXPIRED` |
-| `CONSUMING` | authoritative usage available | receipt complete | `SETTLED` |
-| `CONSUMING` | response complete but usage delayed | estimate exists | `SETTLEMENT_PENDING` |
-| `SETTLEMENT_PENDING` | receipt / reconciliation arrives | dedup by receipt key | `SETTLED` |
-| `SETTLEMENT_PENDING` | reconciliation deadline | policy | `SETTLED` with estimate + adjustment pending |
+规则：
 
-Quota 是 Provider 容量控制，不等于 Agent Core 业务 Budget。Quota Race 必须通过数据库条件更新、原子计数器或等价一致性 Port 解决，不能使用进程内字典作为唯一事实源。
+```text
+同一 Call 只能 CAS 选择一次
+Invalid/Revoked/Quarantined Response 不可选择
+晚到 Response 只能成为未选 Candidate 或触发 Re-evaluation Event
+已发布 Response 被撤销时发布 ResultValidityChanged，不直接改 Agent Outcome
+```
 
-## 20. Streaming Session 状态机
-
-状态：
+# 31. Streaming Session 状态机
 
 ```text
 CREATED
@@ -747,33 +1304,13 @@ TERMINATING
 COMPLETED
 FAILED
 DISCONNECTED
+CANCELLATION_REQUESTED
 CANCELLED
 ```
 
-| From | Trigger | To | 规则 |
-| --- | --- | --- | --- |
-| `CREATED` | dispatch | `OPENING` | Session 与 Attempt 一对一或显式多段 |
-| `OPENING` | first valid event | `OPEN` | sequence 从 0/1 单调递增 |
-| `OPEN` | terminal success event | `TERMINATING` | 等待 final usage / response normalize |
-| `TERMINATING` | response + validation committed | `COMPLETED` | 才可消费正式结果 |
-| `OPENING`/`OPEN` | transport disconnect | `DISCONNECTED` | partial content 仍 provisional |
-| 非终态 | provider error event | `FAILED` | 错误事件可出现在正常 HTTP 200 stream 内 |
-| 非终态 | cancellation confirmed | `CANCELLED` | 记录已产生 token / cost |
+Chunk Sequence 必须单调、唯一和可去重。未知 Event 进入 `UNKNOWN_PROVIDER_EVENT`。Provider 不支持 Continuation 时，断流后重新调用必须创建新 Attempt 并记录重复成本风险。
 
-规则：
-
-```text
-chunk sequence 唯一且单调
-重复 chunk 按 event_id / sequence 去重
-未知 Provider event type 保存为 UNKNOWN_PROVIDER_EVENT，并按兼容策略处理
-partial stream 不得直接形成 FinalCandidate
-stream reconnect 只有 Provider 能证明 continuation semantics 时才续接
-否则创建新 Attempt，并明确重复成本风险
-```
-
-## 21. Structured Output Repair 状态机
-
-状态：
+# 32. Structured Output 状态机
 
 ```text
 NOT_REQUIRED
@@ -787,31 +1324,232 @@ REPAIRING
 EXHAUSTED
 ```
 
-| From | Trigger | Guard | To |
-| --- | --- | --- | --- |
-| `PENDING` | provider-native schema success | capability profile 支持 | `PROVIDER_VALIDATED` |
-| `PENDING`/`PROVIDER_VALIDATED` | local validation start | schema hash 固定 | `LOCAL_VALIDATING` |
-| `LOCAL_VALIDATING` | schema pass | no policy violation | `VALID` |
-| `LOCAL_VALIDATING` | schema fail | errors structured | `INVALID` |
-| `INVALID` | repair allowed | repair_count < max + budget available | `REPAIR_PROPOSED` |
-| `REPAIR_PROPOSED` | new repair Attempt admitted | independent Usage / Trace | `REPAIRING` |
-| `REPAIRING` | validation pass | same output contract | `VALID` |
-| `REPAIRING` | fail and no remaining path | bound exhausted | `EXHAUSTED` |
+Provider Validation 只是输入证据，本地验证才决定 VALID。每次模型修复均是独立 Attempt、Usage 和 Trace。
 
-Repair 是新的模型 Attempt 或确定性转换，不得隐式修改原 Response。原 invalid payload、validation error、repair prompt binding 和 repaired result 必须可追踪。
+# 33. ModelQuotaReservationV1 状态机
+
+ADR 0003 确认 `ModelQuotaReservationV1` 由 Model Gateway 拥有，Infrastructure 只提供 CAS、权威 Clock、Lease/Fencing、事务和恢复。
+
+```text
+RESERVED
+CONSUMING
+RELEASED
+EXPIRED
+RECONCILING
+```
+
+Gateway 内部 Admission Proposal 和 Reject 可以作为独立记录，但不得改变 Canonical Receipt 的状态语义。Quota 是 Provider/Capacity 控制，不等于 Agent Core 业务 Budget。并发 Race 必须使用数据库条件更新、CAS 或等价原子 Port，不能依赖进程内字典。
+
+# 34. ModelUsageReceiptV1 生命周期
+
+ADR 0003 确认：
+
+```text
+ESTIMATED
+OBSERVED
+SETTLED
+CORRECTION
+```
+
+`ModelUsageReceiptV1`：
+
+```text
+usage_receipt_id
+receipt_version
+model_call_id
+attempt_id
+provider_request_ref
+usage_kind
+input_units
+output_units
+cost_amount
+currency
+pricing_version_ref
+supersedes_receipt_ref
+observed_at
+idempotency_key
+```
+
+Correction 追加新 Receipt，不覆盖旧 Receipt。Gateway 的内部 Projection 可以表达 PARTIAL、SETTLEMENT_PENDING 和 UNAVAILABLE，但不能篡改 Canonical Receipt。
+
+# 35. Provider Health 与 Circuit
+
+Provider Health：
+
+```text
+UNKNOWN
+HEALTHY
+DEGRADED
+UNAVAILABLE
+RECOVERING
+DISABLED
+```
+
+Circuit：
+
+```text
+CLOSED
+OPEN
+HALF_OPEN
+FORCED_OPEN
+DISABLED
+```
+
+Circuit Key 至少包含 Provider、Model、Region、Operation 和 Adapter Version，避免 Embedding Endpoint 故障关闭全部生成流量。
+
+Security Denied 不是 Provider Health Failure；Credential Auth Error 应先隔离 Credential Version；Malformed Response 可能是 Adapter/SDK 不兼容。
+
+# 36. Adapter Conformance 生命周期
+
+`AdapterConformanceProfile`：
+
+```text
+conformance_profile_id
+adapter_ref
+provider_ref
+sdk_version
+provider_api_version
+model_revision_scope
+operation_kind
+suite_version
+status
+limitations
+evidence_refs
+validated_at
+expires_at
+```
+
+状态：
+
+```text
+DECLARED
+VALIDATING
+CONFORMANT
+CONFORMANT_WITH_LIMITATIONS
+NON_CONFORMANT
+STALE
+REVOKED
+```
+
+Conformance Suite 至少覆盖 Text、Structured、Embedding、Rerank、Vision、Transcription、Classification、Judge、Streaming、Usage、Error、Timeout、Cancellation、Unknown Event 和 Redaction。
+
+SDK、API、Endpoint、Model Revision、Stream、Usage、Error Mapping、Transport 或 Redaction 行为变化后必须失效或重新验证。
+
+# 37. Config Activation 状态机
+
+```text
+DRAFT
+VALIDATING
+READY
+CANARY
+ACTIVE
+DRAINING
+RETIRED
+ROLLED_BACK
+REJECTED
+```
+
+流程：
+
+```text
+Schema / Reference Validation
+→ Adapter Conformance Check
+→ Offline Routing Replay
+→ Security Compatibility Check
+→ Capacity / Quota Check
+→ Canary
+→ CAS Activation
+→ Drain Previous Snapshot
+→ Retire or Rollback
+```
+
+# 38. Provider 与 Model 生命周期
+
+```text
+DISCOVERED
+DECLARED
+PROBING
+ENABLED
+DEPRECATED
+DRAINING
+DISABLED
+RETIRED
+```
+
+正常 Deprecation 允许 Drain；Security Emergency Disable 立即阻止新 Dispatch 并隔离迟到结果。Retirement 不删除历史 Attempt、Usage、Audit 和 Routing Evidence。
+
+# 39. Admission Queue 状态机
+
+```text
+CREATED
+QUEUED
+ADMITTED
+REJECTED
+EXPIRED
+CANCELLED
+DISPATCHED
+```
+
+Admission Queue Item 固定 Tenant、Workspace、Run、Role、Operation、Deadline、Priority、Estimated Units、Reservation、Security Epoch 和 Config。公平策略不得在排队中静默改变请求的 Security 或 Output Contract。
+
+# 40. Overload 状态机
+
+```text
+NORMAL
+ELEVATED
+SATURATED
+SHEDDING
+RECOVERING
+```
+
+过载下仍不得跳过 Security、Validation、Usage、Audit、Budget、Deadline 和 Idempotency。
+
+# 41. Result Cache 状态机
+
+```text
+DISABLED
+ELIGIBLE
+LOOKUP_PENDING
+HIT_VALIDATING
+HIT
+MISS
+INVALIDATED
+QUARANTINED
+EXPIRED
+```
+
+Result Cache 默认关闭。任何 Hit 必须重新验证 Tenant、Security Epoch、Prompt、Schema、Model Revision、Config、Policy、Data Classification、Retention 和 ResultValidity。
+
+# 42. Deletion 状态机
+
+```text
+REQUESTED
+AUTHORIZED
+LEGAL_HOLD_CHECKING
+TOMBSTONED
+QUERY_VISIBILITY_REVOKED
+OBJECT_DELETE_PENDING
+OBJECT_DELETING
+VERIFYING
+COMPLETED
+BLOCKED_BY_HOLD
+FAILED
+```
+
+先撤销查询可见性，再做物理清理。Object Delete Receipt 不证明 Cache、Projection、Backup 或派生索引已清理；完成必须有 Verification。
 
 ---
 
-# Part V：Timeout、Cancellation、Usage、Quota、Health 与 Security
+# Part V：故障、恢复、幂等、安全与事件
 
-## 22. Timeout 与 Cancellation
+# 43. Timeout 与 ModelCancellationReceiptV1
 
 Timeout 分层：
 
 ```text
 connect_timeout
-read_timeout
 write_timeout
+read_timeout
 stream_idle_timeout
 provider_request_timeout
 attempt_deadline
@@ -819,878 +1557,878 @@ step_deadline
 run_deadline
 ```
 
-原则：
-
-1. Gateway 使用绝对 `deadline_at` 和进程内 monotonic elapsed；Provider SDK 默认 timeout 不得成为唯一控制。
-2. SDK 自动 retry 和 timeout 必须显式配置并计入 Trace。以 OpenAI Python SDK 当前行为为例，部分连接错误、408、409、429 和 5xx 默认会自动重试，默认请求 timeout 也很长；Adapter 必须覆盖或暴露这些行为，避免 Gateway 统计少于真实调用次数。
-3. Cancellation 是 best-effort。Provider 不支持取消时，本地标记取消仍需继续接收或丢弃迟到结果，并记录 Usage。
-4. Security Revocation 高于普通 Cancellation：停止新 Dispatch，撤销未使用 Credential Scope，正在执行的 Attempt 按 Provider 能力取消或隔离其结果。
-5. Timeout 后若不能证明 Provider 未执行，状态为 `UNKNOWN`，不得直接归类为 `FAILED_NOT_SENT`。
-
-## 23. Rate Limit 与 Quota
-
-### 23.1 RateLimitState
+ADR 0003 确认 `ModelCancellationReceiptV1`：
 
 ```text
-rate_limit_state_id
-provider_ref
-model_ref
-region
-scope_type
-scope_ref
-window_start / window_end
-request_limit / request_remaining
-token_limit / token_remaining
-retry_after_at
-source
-confidence
-version
-observed_at
+REQUESTED
+CONFIRMED
+UNCONFIRMED
+TOO_LATE
+FAILED
 ```
 
-`source` 可以是 Provider Header、Provider Error、Local Projection 或 Admin Config。Provider Header 是 observation，不是本地绝对真相；并发请求下必须允许保守误差。
+Transport Receipt 只是输入；`REQUESTED` 不等于 `CONFIRMED`。Provider 不支持取消时，仍需处理迟到响应和 Usage。Timeout 后无法证明请求未执行时进入 UNKNOWN。
 
-### 23.2 Admission 顺序
+# 44. Provider Success but Response Lost
 
 ```text
-Security
-→ Circuit
-→ Provider Health
-→ Budget Reservation
-→ Local Quota Reservation
-→ Provider Rate-limit Prediction
-→ Dispatch
+Attempt 已 Dispatch
+→ Provider 可能成功并计费
+→ 本地连接断开或进程崩溃
+→ Attempt=UNKNOWN
+→ 禁止盲目 Retry
+→ Reconciliation 查询 Request ID、Provider Receipt、Usage 或回调
+→ SUCCESS_CONFIRMED / FAILURE_CONFIRMED / PROOF_UNAVAILABLE
 ```
 
-429 默认动作：
+若 Provider 无查询能力，Policy 必须在首次 Dispatch 前明确该 Operation 的未知执行风险和重试边界。
 
-```text
-尊重 Retry-After
-→ 若 Deadline 允许则 WAIT_QUOTA
-→ 若同 Role fallback 合法则 Provider Fallback
-→ 若均不可用返回 RATE_LIMITED / QUOTA_EXHAUSTED
-```
+# 45. Budget、Quota 与 Usage 崩溃矩阵
 
-不得在每个业务模块各自 sleep 重试。
-
-## 24. Provider Health 与 Circuit
-
-Health 信号包括：
-
-```text
-success / failure ratio
-connect / first-token / total latency
-stream disconnect rate
-structured output failure rate
-429 / quota rejection rate
-usage receipt delay
-provider status probe
-credential / auth failures
-region-specific errors
-```
-
-安全或凭证错误不得简单计入一般 Provider 质量：
-
-- `AUTH_INVALID` 可能是 Credential Rotation / Scope 错误；先隔离 credential version。
-- `SECURITY_DENIED` 不是 Provider Health failure。
-- `MALFORMED_RESPONSE` 可能是 Adapter / SDK 版本不兼容；按 Model + Adapter Version 开 Circuit。
-
-## 25. UsageReceipt、Token 与 Cost
-
-### 25.1 UsageReceipt
-
-```text
-usage_receipt_id
-receipt_version
-request_id
-attempt_id
-provider_ref
-model_ref
-provider_request_id
-provider_receipt_id
-usage_source
-usage_status
-input_tokens
-cached_input_tokens
-output_tokens
-reasoning_tokens
-tool_tokens
-image_units / audio_units
-request_count
-currency
-unit_prices
-pricing_version_ref
-estimated_cost
-provider_reported_cost
-billable_cost
-observed_at
-settled_at
-reconciliation_ref
-```
-
-`usage_status`：
-
-```text
-ESTIMATED
-PARTIAL
-PROVIDER_REPORTED
-SETTLEMENT_PENDING
-RECONCILED
-CORRECTED
-UNAVAILABLE
-```
-
-规则：
-
-1. 每个 Attempt 都产生 Usage 记录，即使失败、取消或 Structured Validation 失败。
-2. Tokenizer Estimate 与 Provider Receipt 分开保存，不能覆盖。
-3. Stream 中间 usage 可以累计，但最终 receipt 必须按 Provider semantics 归一化并去重。
-4. Usage Receipt Delayed 时 ModelResponse 可以完成，但 Budget Settlement 保持 pending；RunOutcome 必须能引用 pending settlement，而不是丢失成本。
-5. Pricing Version 必须固定；价格变化不回写历史 Receipt。
-6. Usage Correction 追加更正记录，不修改已审计原始 receipt。
-
-### 25.2 Budget Reservation / Consumption 对接
-
-```text
-Agent Core / Budget Ledger
-    owns BudgetReservation, BudgetConsumption, BudgetSettlement
-
-Model Gateway
-    consumes BudgetReservationRef
-    owns ModelCostQuote and UsageReceipt
-    emits UsageObserved / UsageCorrected
-```
-
-Gateway Admission 检查 reservation scope、remaining amount、expiry、security epoch 和 attempt allowance。Gateway 不得自行扩大 Run Budget，也不得因为某 Provider 更便宜就绕过 Agent Core 的质量或安全策略。
-
-## 26. Provider Success but Response Lost
-
-故障序列：
-
-```text
-Provider 完成请求
-→ 网络在响应到达本地前断开
-→ 本地只知道请求可能已执行
-```
-
-处理：
-
-1. 保存 Provider Request ID、Idempotency Key、dispatch receipt 和 request hash。
-2. Attempt 进入 `UNKNOWN`，释放/冻结 Quota 按 Policy 处理。
-3. Provider 支持 retrieve-by-request-id 时执行 Reconcile。
-4. 只有能证明请求未被 Provider 接受，才允许 same-request safe retry。
-5. 无法证明时，新 Attempt 必须带 duplicate-risk reason，并由上层 Policy 明确允许；默认不盲目重发高成本或会产生 Tool Proposal 的请求。
-6. 迟到响应与后续 Attempt 竞争时，不得静默覆盖已提交结果；创建 Reconciliation / Supersession Record。
-
-## 27. Security、Data Residency、Classification 与 Credential
-
-### 27.1 Model Security Decision
-
-Gateway 消费 Security 模块给出的：
-
-```text
-security_decision_id
-security_epoch
-allowed_provider_refs
-allowed_model_refs
-data_classification
-residency_constraints
-cross_border_allowed
-prompt_redaction_result_ref
-response_redaction_policy_ref
-credential_scope_ref
-purpose_limit
-retention_constraints
-expires_at
-```
-
-Gateway 不解释企业 ACL，也不自己批准 Provider。它必须 fail-closed：Decision 缺失、过期、Epoch 不匹配或 Provider 不在 allowlist 时不 Dispatch。
-
-### 27.2 Prompt Redaction
-
-```text
-raw input refs
-→ Security redaction / policy transform
-→ redacted payload ref + redaction manifest
-→ Prompt Renderer
-→ rendered prompt hash
-→ Provider Dispatch
-```
-
-Gateway Trace 只记录安全允许的 preview。Redaction Manifest 属于 Security 决策证据；Gateway 保存引用，不改变其结论。
-
-### 27.3 Secret 与 Credential Scope
-
-```text
-SecretRef only
-CredentialVersionRef
-Provider / Tenant / Workspace / Purpose Scope
-least privilege
-short-lived where supported
-rotation and revocation
-no secret in prompt / trace / error / event
-```
-
-Credential Rotation：
-
-- Routing 决策固定 `credential_version_ref`。
-- 新 Attempt 使用最新有效版本。
-- 已在途 Attempt 默认继续使用固定版本；若旧版本被 Security 撤销，则取消或隔离结果。
-- Rotation 失败返回 `CREDENTIAL_UNAVAILABLE`，不得回退到未批准的全局 key。
-
-### 27.4 Security Revocation
-
-Security Epoch 变化触发：
-
-```text
-停止新 Attempt
-使未 Dispatch Routing Decision 失效
-释放 Quota Reservation
-请求取消在途 Attempt
-标记迟到响应为 SECURITY_REVOKED / TAINTED
-通知 Agent Core 进行控制仲裁
-```
-
-Gateway 不直接修改 AgentRun 终态。
-
----
-
-# Part VI：Structured Output、Streaming、Failure 与 Observability
-
-## 28. Structured Output Contract
-
-### 28.1 StructuredOutputResult
-
-```text
-structured_output_result_id
-attempt_id
-output_contract_ref
-schema_hash
-requested_mode
-actual_mode
-provider_validation_status
-local_validation_status
-normalized_payload_ref
-validation_errors
-repair_attempt_refs
-repair_count
-status
-created_at
-```
-
-`actual_mode`：
-
-```text
-PROVIDER_NATIVE
-TOOL_STRATEGY
-PROMPTED_JSON
-DETERMINISTIC_TRANSFORM
-```
-
-Capability Profile 决定可选模式。Provider-native 模式可能只支持 JSON Schema 子集；Gateway 必须在路由前做 Schema Compatibility，响应后做本地完整验证。Schema 不兼容时可以选择 Tool Strategy 或 Prompted JSON，但必须记录降级。
-
-### 28.2 Repair
-
-Repair 输入只能包含：
-
-```text
-原 payload ref
-validation error list
-固定 output schema ref
-允许修改的字段范围
-repair prompt binding ref
-剩余 budget / deadline
-```
-
-不得把 Repair 变成无限自我修正循环。默认最大次数由 Role / Output Contract Policy 决定；耗尽后返回 `STRUCTURED_OUTPUT_EXHAUSTED`。
-
-## 29. Streaming Contract
-
-### 29.1 ModelStreamChunk
-
-```text
-stream_chunk_id
-stream_session_id
-attempt_id
-sequence_no
-provider_event_id
-chunk_type
-content_ref
-content_hash
-provisional
-usage_delta
-finish_reason
-provider_event_type
-received_at
-trace_span_id
-```
-
-`chunk_type` 至少支持：
-
-```text
-SESSION_STARTED
-CONTENT_DELTA
-REASONING_SUMMARY_DELTA
-TOOL_PROPOSAL_DELTA
-STRUCTURED_OUTPUT_DELTA
-USAGE_DELTA
-PROVIDER_WARNING
-PROVIDER_ERROR
-SESSION_COMPLETED
-UNKNOWN_PROVIDER_EVENT
-```
-
-禁止保存隐藏思维链。若 Provider 提供 reasoning 内容，只允许保存产品和政策明确允许的 reasoning summary 或受限 metadata。
-
-### 29.2 Provider 事件归一化
-
-不同 Provider 的 stream terminal 事件、usage 累计方式和错误事件不同。Adapter 负责映射到统一 Contract，但不得丢失原始 event type、provider request id 和未知事件。以当前官方行为为例：
-
-- OpenAI Responses Streaming 使用 SSE，并区分 created、in_progress、completed、failed、incomplete；完成事件可携带 usage，失败或 incomplete 可能没有完整 usage。
-- Anthropic Streaming 有 message / content block 生命周期，usage 可能在后续 delta 中累计，HTTP 200 stream 内仍可能出现 error event，也可能新增未知 event type。
-- Gemini / LangChain 的 structured streaming 需要结合实际 Capability Profile 与本地 Schema Validation，不应由调用方静态假定。
-
-这些 Provider 事实只指导 Adapter 实现，不进入跨模块公共枚举。
-
-## 30. ModelFailure
-
-```text
-model_failure_id
-attempt_id
-failure_class
-provider_error_code
-normalized_error_code
-http_status
-sdk_exception_type
-retryable
-safe_to_retry
-request_may_have_executed
-partial_response_available
-usage_status
-security_relevant
-suggested_control_action
-redacted_message
-raw_error_ref
-created_at
-```
-
-统一 Failure Class：
-
-```text
-CONTRACT_INVALID
-ROLE_UNRESOLVED
-CAPABILITY_UNAVAILABLE
-SECURITY_DENIED
-SECURITY_REVOKED
-RESIDENCY_MISMATCH
-CREDENTIAL_UNAVAILABLE
-AUTH_FAILED
-BUDGET_DENIED
-QUOTA_EXHAUSTED
-RATE_LIMITED
-CIRCUIT_OPEN
-PROVIDER_UNAVAILABLE
-CONNECT_TIMEOUT
-READ_TIMEOUT
-STREAM_IDLE_TIMEOUT
-CANCELLED
-STREAM_DISCONNECTED
-PROVIDER_ERROR
-SDK_ERROR
-MALFORMED_RESPONSE
-STRUCTURED_OUTPUT_INVALID
-STRUCTURED_OUTPUT_EXHAUSTED
-USAGE_UNAVAILABLE
-RESPONSE_LOST
-UNKNOWN_EXECUTION
-FALLBACK_EXHAUSTED
-```
-
-## 31. Failure Decision Matrix
-
-| Failure | Gateway 状态变化 | 默认恢复 | 对 Agent Core 输出 | 禁止行为 |
-| --- | --- | --- | --- | --- |
-| Provider Timeout | Attempt `TIMED_OUT` 或 `UNKNOWN` | safe retry / fallback，受 deadline 限制 | timeout class + may_have_executed | 无证据标记“未执行” |
-| Rate Limit | Attempt `FAILED`，RateLimit 更新 | Retry-After wait / fallback | `WAIT_QUOTA` 或 fallback exhausted | 业务模块自行无限 sleep |
-| Malformed Structured Output | `VALIDATING → FAILED` | bounded repair / compatible fallback | validation errors | 把 invalid JSON 当成功 |
-| Stream Disconnect | Stream `DISCONNECTED`，Attempt `UNKNOWN`/`FAILED` | provider-supported resume 或新 Attempt | partial ref + duplicate risk | 把 partial content 发布为 final |
-| Usage Receipt Delayed | Response 可成功，Quota `SETTLEMENT_PENDING` | async reconcile | pending usage ref | 写 0 token / 0 cost 冒充最终值 |
-| Provider Success but Response Lost | Attempt `UNKNOWN → RECONCILING` | request-id reconcile | unknown execution | 盲目重发 |
-| Circuit Breaker Transition | Circuit `CLOSED/OPEN/HALF_OPEN` | alternate candidate / probe | circuit reason | 在 OPEN 上继续常规流量 |
-| Fallback Exhausted | Call terminal failure | none in Gateway | failure + escalation/replan suggestion | Gateway 修改 Plan |
-| Security Revocation | route invalid + cancel/taint | fail-closed | security revoked | 使用旧 Epoch / credential |
-| Quota Race | Reservation `REJECTED` | alternate / wait | quota unavailable | 超卖进程内配额 |
-| Credential Rotation | old ref pinned/revoked | new version re-route | credential failure | 回退未批准 global key |
-| Provider SDK Error Mapping | Attempt failure normalized | policy by mapped class | stable FailureClass | 向 Agent Core 泄漏 SDK object |
-
-## 32. Trace、Metric 与 Eval
-
-### 32.1 Span Tree
-
-```text
-model_call
-  -> model_security_gate
-  -> model_feasibility
-  -> model_routing
-  -> quota_reservation
-  -> model_attempt[n]
-       -> provider_dispatch
-       -> model_stream
-       -> response_normalize
-       -> structured_output_validate
-       -> usage_observe
-  -> model_reconcile
-```
-
-每个 span 至少记录：
-
-```text
-run_id / task_id / step_run_id / trace_id / workspace_id
-role_ref
-provider_ref / model_ref / capability_profile_ref
-prompt_binding_ref / schema_hash
-routing_decision_ref / reason_codes
-security_decision_ref / security_epoch / classification / residency result
-budget_reservation_ref / quota_reservation_ref
-attempt_no / sdk_retry_count / provider_request_id
-connect / first-token / total latency
-token / usage_status / cost / pricing_version
-stream status / chunk count / disconnect
-structured output mode / validation / repair count
-failure class / retry / fallback / escalation
-health snapshot / circuit state
-```
-
-Prompt、Response、Secret 和错误必须按 Security Redaction Policy 处理。Audit / Security Event 不采样；普通高容量 chunk trace 可以采样或只保存聚合，但不得影响 Usage 与失败事实完整性。
-
-### 32.2 Metrics
-
-```text
-model_call_success_rate
-model_attempts_per_call
-model_retry_rate
-provider_fallback_rate
-role_escalation_rate
-first_token_latency
-model_total_latency
-stream_disconnect_rate
-structured_output_valid_rate
-structured_output_repair_rate
-usage_receipt_delay
-estimated_vs_reported_token_error
-cost_per_role / per_run / per_workspace
-rate_limit_rejection
-quota_rejection
-circuit_open_count
-provider_health_state_duration
-unknown_execution_count
-security_denial_count
-```
-
-### 32.3 Eval
-
-Eval 固定：
-
-```text
-role definition version
-prompt binding version
-model definition / revision
-provider config version
-capability profile version
-routing policy version
-security policy version
-output schema hash
-pricing version
-```
-
-比较不同模型时必须固定 case set、输入、Prompt、Output Contract、Security 条件和评判 Policy。Observed production success 不等于 quality proven。
-
----
-
-# Part VII：Typed Contract、Storage、代码目录与跨模块 Proposal
-
-## 33. Typed Contract 总表
-
-| Contract | 类型 | Owner | 关键规则 |
-| --- | --- | --- | --- |
-| `ModelRoleDefinition` | Versioned Definition | Gateway | 不绑定 SDK / Secret |
-| `ProviderDefinition` | Versioned Definition | Gateway | 描述 Adapter、区域与 Provider 语义 |
-| `ModelDefinition` | Versioned Definition | Gateway | Provider 内模型及 revision |
-| `ModelCapabilityProfile` | Versioned Profile | Gateway | declared 与 verified 状态分离 |
-| `ModelAvailabilitySnapshot` | Immutable Snapshot | Gateway | 路由时冻结 |
-| `ModelCallRequest` | Command | Caller → Gateway | Provider-neutral，含 Security / Budget refs |
-| `ModelRoutingDecision` | Immutable Decision | Gateway | 候选、拒绝、版本、fallback 全记录 |
-| `ModelCallAttempt` | Aggregate / Attempt | Gateway | 每次 Provider 请求一条 |
-| `ModelResponse` | Immutable Result | Gateway | Proposal / model result，不是业务终局 |
-| `ModelStreamChunk` | Ordered Event | Gateway | provisional、去重、单调 sequence |
-| `StructuredOutputResult` | Immutable Result | Gateway | Provider + local validation |
-| `UsageReceipt` | Append-only Receipt | Gateway | estimate / provider / correction 分离 |
-| `RateLimitState` | Versioned Projection | Gateway | 来源和置信度明确 |
-| `QuotaReservation` | Aggregate | Gateway | CAS / lease / settlement |
-| `ProviderHealth` | Versioned Projection | Gateway | window + evidence |
-| `CircuitBreakerState` | Aggregate / State | Gateway | key 按 provider/model/region/operation |
-| `PromptBinding` | Immutable Binding | Gateway | prompt/schema/security/model compatibility |
-| `ModelFailure` | Immutable Failure | Gateway | stable class + SDK mapping |
-| `ModelFeasibilityAssessment` | Immutable Assessment | Gateway | 供 Agent Core StepFeasibility 使用 |
-
-### 33.1 ModelResponse
-
-```text
-model_response_id
-request_id
-successful_attempt_id
-role_ref
-provider_ref
-model_ref
-output_kind
-content_ref
-content_hash
-structured_output_result_ref
-finish_reason
-provider_request_id
-usage_receipt_refs
-result_validity
-security_epoch
-created_at
-```
-
-`result_validity`：`VALID`、`PARTIAL`、`TAINTED`、`REVOKED`、`UNKNOWN`。Security Revocation、迟到 Provider Error 或 Reconciliation 可以追加 Validity Record；不得覆盖原始响应。
-
-### 33.2 Contract Envelope
-
-跨模块所有 Request / Result / Event 至少带：
-
-```text
-contract_name
-contract_version
-contract_bundle_version
-message_id
-correlation_id
-causation_id
-tenant_id
-workspace_id
-run_id
-step_run_id
-trace_id
-security_context_ref
-security_epoch
-data_classification
-created_at
-payload_schema_hash
-payload
-```
-
-## 34. PostgreSQL Storage Mapping
-
-逻辑 schema 可命名为 `model_gateway`；物理部署可以与其他模块共用 PostgreSQL，但 Owner 不变。
-
-| 对象 | 目标表 | 关键约束 / 索引 |
+| 崩溃点 | 权威事实 | 恢复动作 |
 | --- | --- | --- |
-| Role | `model_role_definitions` | `UNIQUE(role_id, role_version)`；active version 条件唯一 |
-| Provider | `model_provider_definitions` | `UNIQUE(provider_id, provider_version)`；状态索引 |
-| Model | `model_definitions` | `UNIQUE(provider_id, provider_model_id, model_revision)` |
-| Capability | `model_capability_profiles` | `UNIQUE(model_definition_id, profile_version)`；JSON Schema hash |
-| Availability | `model_availability_snapshots` | `(provider_id, model_definition_id, captured_at DESC)` |
-| Prompt Binding | `model_prompt_bindings` | `UNIQUE(prompt_binding_id, binding_version)`；template/schema hash |
-| Call | `model_calls` | `UNIQUE(workspace_id, idempotency_key)`；run / step / trace indexes |
-| Routing | `model_routing_decisions` | `UNIQUE(request_id, routing_version)`；immutable |
-| Attempt | `model_call_attempts` | `UNIQUE(model_call_id, attempt_no)`；partial unique provider request id |
-| Response | `model_responses` | `UNIQUE(model_call_id, response_version)`；large body 只存 object ref |
-| Stream Session | `model_stream_sessions` | `UNIQUE(attempt_id, session_no)` |
-| Stream Chunk | `model_stream_chunks` | `UNIQUE(stream_session_id, sequence_no)`；可按 retention 分区 |
-| Structured Output | `model_structured_output_results` | attempt / schema hash index |
-| Usage | `model_usage_receipts` | provider receipt id / attempt / status indexes；append-only |
-| Rate Limit | `model_rate_limit_states` | provider/model/region/scope/window composite index |
-| Quota | `model_quota_reservations` | `UNIQUE(reservation_key)`；status/expiry index；version CAS |
-| Health | `model_provider_health_snapshots` | provider/model/region/window index |
-| Circuit | `model_circuit_breaker_states` | `UNIQUE(circuit_key)`；version / next_probe_at index |
-| Failure | `model_failure_records` | attempt / class / created_at indexes |
-| Reconcile | `model_reconciliation_records` | `UNIQUE(attempt_id, reconciliation_no)` |
-| Validity | `model_result_validity_records` | response / security_epoch / status index |
+| Budget 已授权，Quota 未预留 | Budget Reservation | 重做 Admission，不计 Usage |
+| Quota 已预留，Attempt 未 Dispatch | Quota Reservation | 释放或过期 |
+| Attempt 已提交，网络请求未发出可证明 | Attempt + Transport Evidence | 可受控 Retry |
+| 请求可能已发出，无 Response | Attempt UNKNOWN | Reconcile，禁止盲重试 |
+| Response 已提交，Usage 未到 | Response + Settlement Pending | 异步 Settlement |
+| Usage 已提交，Budget Ledger 未消费 | Usage Receipt | 幂等重放 Usage Event |
+| Provider 账单晚到且不一致 | 原 Receipt + Provider Bill | 追加 Correction |
+| Call 成功但 Trace Publish 失败 | Domain Facts + Outbox | 重放 Projection，不回滚成功 |
 
-共同约束：
+Gateway 拥有 Model Cost Quote、Usage Receipt 和 Quota 语义；Agent Core/Budget Ledger 拥有 Run Budget Reservation、Consumption 和是否继续执行。
+
+# 46. Idempotency
+
+幂等键至少区分：
 
 ```text
-workspace scope 或明确 global definition
-UTC timestamp
-optimistic version / fencing where mutable
-状态 CHECK constraint
-所有 refs 使用稳定 opaque ID
-Secret 明文禁止入库
-大型 Prompt / Response 使用 encrypted object ref + content hash
-删除 / retention / legal hold policy 明确
-Usage / Attempt / Failure 采用 append-only 或 correction record
+Logical Call Idempotency
+Attempt Dispatch Idempotency
+Provider Request Idempotency when supported
+Stream Chunk Deduplication
+Usage Receipt Deduplication
+Response Selection CAS
+Operational Command Idempotency
+Deletion Step Idempotency
+Projection / Outbox Idempotency
 ```
 
-`model_stream_chunks` 不要求永久保存每个 token。默认可保存终端事件、checkpoint chunk、hash 和聚合；高审计场景才按 Policy 保存完整 chunk object。无论 retention 如何，sequence、terminal status、usage 与 failure 必须可证明。
+Provider 不支持 Idempotency Key 时，不能伪造 exactly-once；必须使用 Attempt UNKNOWN、Reconciliation 和业务级 Duplicate Risk 表达。
 
-## 35. 目标代码目录
+# 47. Security Gate
+
+`ModelSecurityDecision` 由 Security 拥有，至少表达：
 
 ```text
-src/backend/zuno/model_gateway/
-├── contracts/
-│   ├── role.py
-│   ├── provider.py
-│   ├── model.py
-│   ├── capability.py
-│   ├── request.py
+allowed
+allowed_provider_refs
+allowed_model_classes
+allowed_regions
+data_classification
+redaction_requirement
+credential_scope_requirement
+prompt_retention_policy
+response_retention_policy
+external_processing_allowed
+effective_security_epoch_ref
+effective_security_epoch_hash
+revocation_policy
+reason_codes
+```
+
+Gateway 只执行门禁，不生成权限事实。
+
+# 48. Data Residency 与 Redaction
+
+Routing 必须在候选排序前过滤 Residency 和 Classification 不兼容项。Redaction 产生不可变 Decision Ref、Policy Version、Input Hash 和必要的 Token Mapping。任何未授权 Raw Payload 不能因 Debug、Conformance 或 Eval 被复制到另一区域。
+
+# 49. ResultValidity
+
+```text
+VALID
+STALE
+TAINTED
+REVOKED
+QUARANTINED
+UNKNOWN
+```
+
+触发原因包括 Security Revocation、Prompt/Model 缺陷、Adapter Mapping Bug、数据删除、恶意输入、Schema 缺陷和人工撤销。
+
+Gateway 发布 `ModelResultValidityChanged`，但不得直接修改 Step、Plan、Memory、Knowledge、Publication 或 RunOutcome。对应 Owner 决定传播和补救。
+
+# 50. Provider-neutral Failure
+
+`ModelFailure`：
+
+```text
+failure_id
+call_id
+attempt_id
+failure_code
+failure_class
+operation_kind
+provider_ref_optional
+retryable
+repairable
+fallback_allowed
+reconcile_required
+security_sensitive
+suggested_control_action
+provider_error_ref
+normalized_details_ref
+occurred_at
+```
+
+Canonical Failure 前缀使用 `MODEL_*`。至少包括：
+
+```text
+MODEL_SECURITY_DENIED
+MODEL_SECURITY_EPOCH_STALE
+MODEL_CAPABILITY_UNAVAILABLE
+MODEL_ADAPTER_NON_CONFORMANT
+MODEL_ROUTING_UNAVAILABLE
+MODEL_BUDGET_UNAVAILABLE
+MODEL_QUOTA_UNAVAILABLE
+MODEL_RATE_LIMITED
+MODEL_PROVIDER_TIMEOUT
+MODEL_PROVIDER_UNAVAILABLE
+MODEL_ATTEMPT_UNKNOWN
+MODEL_STREAM_DISCONNECTED
+MODEL_STREAM_PROTOCOL_ERROR
+MODEL_OUTPUT_INVALID
+MODEL_SCHEMA_UNSUPPORTED
+MODEL_USAGE_SETTLEMENT_PENDING
+MODEL_USAGE_UNAVAILABLE
+MODEL_CANCELLATION_UNCONFIRMED
+MODEL_CONFIG_INVALID
+MODEL_RESULT_REVOKED
+MODEL_CACHE_ENTRY_INVALID
+MODEL_OVERLOAD_REJECTED
+MODEL_DEADLINE_EXCEEDED
+MODEL_FALLBACK_EXHAUSTED
+```
+
+Provider 原始 Error Code 保存在受控明细中，不能成为跨模块公共控制码。
+
+# 51. Suggested Control Action
+
+```text
+RETRY_SAME_ROLE
+REPAIR_PARAMETERS
+FALLBACK_PROVIDER
+ESCALATE_ROLE
+WAIT_QUOTA
+RECONCILE
+REQUEST_REPLAN
+ABSTAIN
+FAIL
+```
+
+它只是建议。Agent Core Decision Guard 提交最终控制决定。
+
+# 52. Domain Event Catalog
+
+事件至少包括：
+
+```text
+ModelCallCreated
+ModelAdmissionQueued
+ModelAdmissionRejected
+ModelRoutingDecided
+ModelAttemptAdmitted
+ModelAttemptDispatched
+ModelStreamOpened
+ModelStreamChunkRecorded
+ModelStreamTerminated
+ModelResponseReceived
+ModelOutputValidated
+ModelResponseSelected
+ModelAttemptFailed
+ModelAttemptUnknown
+ModelReconciliationStarted
+ModelReconciliationCompleted
+ModelUsageObserved
+ModelUsageSettled
+ModelUsageCorrected
+ModelQuotaReserved
+ModelQuotaReleased
+ModelHealthChanged
+ModelCircuitChanged
+ModelCapabilityChanged
+ModelAdapterConformanceChanged
+ModelConfigActivated
+ModelConfigRolledBack
+ModelLifecycleChanged
+ModelResultValidityChanged
+ModelCacheReuseRecorded
+ModelOperationalCommandCompleted
+ModelDeletionStateChanged
+```
+
+每个事件必须有 Version、Idempotency Key、Aggregate Version、Correlation/Causation、Security Epoch、Redaction、Ordering 和 Replay 规则。Event 是事实投影，不替代聚合状态。
+
+# 53. Operational Command
+
+`ModelGatewayOperationalCommand`：
+
+```text
+command_id
+command_type
+target_ref
+requested_by
+reason
+expected_generation
+authorization_decision_ref
+approval_ref
+audit_requirement_ref
+parameters
+idempotency_key
+status
+result_receipt_ref
+created_at
+completed_at
+```
+
+命令包括：
+
+```text
+ENABLE / DISABLE / DEPRECATE / DRAIN PROVIDER OR MODEL
+FORCE_OPEN / RELEASE CIRCUIT
+ACTIVATE / ROLLBACK CONFIG
+START RECONCILIATION
+CANCEL CALL OR ATTEMPT
+QUARANTINE RESULT OR ADAPTER
+INVALIDATE CACHE
+START DELETION
+```
+
+禁止绕过 Command 直接修改运维状态表。高风险命令需要 Authorization、Approval、Expected Generation 和 Mandatory Audit。
+
+---
+
+# Part VI：多租户、缓存、运维、SLO 与兼容
+
+# 54. Capacity Hierarchy
+
+```text
+Global
+→ Provider
+→ Endpoint / Region
+→ Credential Version
+→ Tenant
+→ Workspace
+→ Run
+→ Operation
+→ Role
+```
+
+所有层级均可定义并发、请求率、Token/Unit Rate、Queue、Burst、Reserved Capacity 和 Deadline Admission。
+
+# 55. TenantAdmissionPolicy
+
+```text
+policy_id
+tenant_tier
+weight
+reserved_capacity
+burst_capacity
+max_concurrency
+max_queue_depth
+max_wait_duration
+age_boost
+starvation_threshold
+operation_limits
+role_limits
+provider_limits
+```
+
+公平策略可以使用 Weighted Fair Queue、Deficit 或等价算法，但必须可测试、可解释和防饥饿。高权重租户不能无限阻塞普通租户；低优先级请求不能绕过 Deadline 和 Budget。
+
+# 56. Overload 与 Load Shedding
+
+确定性顺序：
+
+```text
+拒绝无效或过期请求
+→ 停止非必要 Shadow / Experiment
+→ 限制低优先级 Eval
+→ 收紧 Burst
+→ 排队并应用公平策略
+→ 对可降级 Role 选择已批准低成本模型
+→ 在 Deadline 不可满足时明确拒绝
+```
+
+不得通过跳过 Security、Schema Validation、Usage、Audit 或 Idempotency 来“保服务”。
+
+`LoadSheddingDecision` 必须记录状态、被影响 Scope、原因、规则版本和恢复条件。
+
+# 57. Cache 与 Reuse
+
+分三类：
+
+```text
+Provider-managed Prompt Cache
+    Provider 侧缓存，Gateway 记录 cached token 和 Provider 语义。
+
+Gateway Metadata Cache
+    Capability、Pricing、Config、Health 等可重建 Projection。
+
+Gateway Result Cache
+    可复用模型结果，默认关闭，受严格安全与版本约束。
+```
+
+`GatewayResultCachePolicy`：
+
+```text
+operation_kind
+role_ref
+eligible
+security_tier
+tenant_scope
+workspace_scope
+key_fields
+ttl
+max_staleness
+validity_requirements
+retention_binding_ref
+delete_propagation
+```
+
+Cache Key 至少包含 Tenant、Workspace、Security Epoch、Prompt Hash、Input Hash、Schema Hash、Model Revision、Config Version、Policy Version、Data Classification 和 Operation。
+
+`ModelCacheReuseReceipt` 独立于 Provider Attempt，记录 Cache Entry、原 Call、当前请求、验证结果、避免成本和 Usage 语义。
+
+# 58. Retention、Deletion 与 Legal Hold
+
+数据类型分别绑定策略：
+
+```text
+Rendered Prompt
+Raw Provider Request
+Raw Provider Response
+Normalized Response
+Stream Chunk
+Usage Receipt
+Failure Detail
+Routing Decision
+Audit / Trace Projection
+Conformance Payload
+Cache Entry
+```
+
+`ModelDataRetentionBinding` 固定 Classification、Retention、Encryption、Region、Legal Hold、Deletion 和 Access Policy。
+
+Legal Hold 优先于物理删除，但不能自动恢复业务可见性。删除必须传播到 Result Cache、Object Store、Projection 和受控调试副本。
+
+# 59. SLI 与 SLO
+
+`ModelGatewayServiceLevelProfile` 至少定义：
+
+```text
+Call Success Rate
+Attempt Success Rate
+Operation-specific Success Rate
+Queue Wait and Admission Reject Rate
+Time to First Token
+Total Latency
+Structured Output Validity Rate
+Stream Disconnect Rate
+Unknown Execution Rate
+Reconciliation Completion Time
+Usage Completeness and Settlement Lag
+Routing Replay Determinism
+Fallback and Escalation Rate
+Adapter Mapping Warning Rate
+Config Rollback Rate
+Cache Isolation Violation Rate
+Deletion Verification Time
+```
+
+必须按 Provider、Model、Operation、Role、Tenant Tier、Region、Adapter Version 和 Config Version 切分。
+
+# 60. Readiness
+
+`GatewayReadinessSnapshot`：
+
+```text
+status
+provider_readiness
+adapter_conformance
+security_integration
+persistence_readiness
+outbox_readiness
+usage_settlement_readiness
+reconciliation_readiness
+capacity_readiness
+retention_deletion_readiness
+slo_window_ref
+evidence_refs
+captured_at
+```
+
+状态：
+
+```text
+READY
+DEGRADED
+NOT_READY
+UNKNOWN
+```
+
+无证据不能默认为 READY。Mock-only、单次成功调用或文档完成不能证明生产 Readiness。
+
+# 61. Compatibility
+
+`ModelGatewayCompatibilityEntry`：
+
+```text
+provider_ref
+adapter_version
+sdk_version
+provider_api_version
+model_revision
+operation_kind
+compatibility_status
+limitations
+sunset_at
+canary_policy_ref
+rollback_target_ref
+evidence_refs
+```
+
+支持并行 Adapter Version、Canary、Drain 和 Rollback。未知版本、枚举和事件必须 Quarantine 或 Fail-closed。Provider API Sunset 前必须完成受控迁移和证据。
+
+# 62. Eval、Judge、Shadow 与 Experiment
+
+`ModelRoutingExperimentAssignment`：
+
+```text
+experiment_id
+assignment_id
+subject_scope
+bucket
+policy_version
+candidate_routes
+sticky_scope
+security_gate_ref
+budget_ref
+created_at
+```
+
+强制 Gate 先于 Experiment。Shadow Call 必须有独立 Security、Budget、Usage、Trace 和 Retention；Shadow Result 永远不能进入业务输出。
+
+Judge 应尽量与被评模型在 Prompt、Role、Model 或 Provider 上保持独立；高风险质量结论需要固定 Benchmark、人类校准、多 Judge 或确定性验证补强。
+
+# 63. Observability 与 Audit
+
+Gateway 拥有调用源事实，Observability & Eval 拥有 Telemetry Ingest、Projection、Eval 和 Release Gate。
+
+Trace 至少能回答：
+
+```text
+谁、在哪个 Tenant/Workspace/Run/Step 发起
+调用了哪个 Role 和 Operation
+为什么选中或拒绝某 Provider/Model
+固定了哪些 Prompt、Schema、Config、Security、Adapter 和 Pricing Version
+发生了多少 Attempt、Retry、Fallback、Escalation 和 Repair
+Provider 是否可能已执行但响应丢失
+使用多少 Token/Unit、估算和结算成本是多少
+哪一个 Response 被选择，后来是否被撤销
+是否命中 Cache、是否为 Judge/Shadow/Eval
+```
+
+Mandatory Audit 失败时，高风险 Credential 使用、Break-glass 或 Security 指定操作必须阻断 Dispatch。
+
+---
+
+# Part VII：目标实现规格
+
+# 64. 目标代码边界
+
+ADR 0003 已冻结 Infrastructure 是逻辑模块，物理代码统一归 `src/backend/zuno/platform/**`。Model Gateway 的目标物理落位是：
+
+```text
+src/backend/zuno/platform/model_gateway/
+├── application/
+│   ├── feasibility_service.py
+│   ├── admission_service.py
+│   ├── routing_service.py
+│   ├── call_service.py
+│   ├── reconciliation_service.py
+│   ├── lifecycle_service.py
+│   ├── operations_service.py
+│   └── deletion_service.py
+├── domain/
+│   ├── roles.py
+│   ├── operations.py
+│   ├── providers.py
+│   ├── models.py
+│   ├── capabilities.py
+│   ├── prompts.py
+│   ├── config.py
+│   ├── calls.py
+│   ├── attempts.py
 │   ├── routing.py
-│   ├── attempt.py
-│   ├── response.py
 │   ├── streaming.py
-│   ├── structured_output.py
 │   ├── usage.py
 │   ├── quota.py
 │   ├── health.py
-│   ├── failure.py
+│   ├── circuit.py
+│   ├── cache.py
+│   ├── retention.py
+│   ├── failures.py
 │   └── events.py
-├── domain/
-│   ├── role_registry.py
-│   ├── catalog.py
-│   ├── routing_policy.py
-│   ├── attempt.py
-│   ├── quota.py
-│   ├── circuit_breaker.py
-│   ├── provider_health.py
-│   └── prompt_binding.py
-├── application/
-│   ├── feasibility_service.py
-│   ├── routing_service.py
-│   ├── model_call_service.py
-│   ├── streaming_service.py
-│   ├── structured_output_service.py
-│   ├── usage_service.py
-│   └── reconciliation_service.py
 ├── adapters/
 │   ├── base.py
-│   ├── openai_adapter.py
-│   ├── anthropic_adapter.py
-│   ├── gemini_adapter.py
-│   └── local_adapter.py
-├── persistence/
-│   ├── repositories.py
-│   ├── uow.py
-│   └── models.py
+│   ├── registry.py
+│   ├── conformance.py
+│   └── providers/
 ├── ports/
+│   ├── repositories.py
 │   ├── security.py
 │   ├── budget.py
-│   ├── secrets.py
-│   ├── clock.py
+│   ├── credential.py
 │   ├── transport.py
-│   └── observability.py
-└── bootstrap.py
+│   ├── object_store.py
+│   ├── clock.py
+│   └── telemetry.py
+└── persistence/
+    ├── repositories/
+    ├── outbox/
+    └── projections/
 ```
 
-迁移期可以保留 `zuno.platform.model_gateway` facade，但 facade 只能转发到新模块，不得继续成为 Provider SDK 构造和领域规则混合点。旁路清理必须由独立 Codex Program 逐项完成。
+不得新增 `src/backend/zuno/model_gateway/` 顶层包。Gateway 使用 `platform/database`、`platform/storage`、`platform/jobs`、`platform/coordination`、`platform/network`、`platform/security` 和 `platform/observability` 提供的物理原语，但领域语义仍由 `platform/model_gateway/**` 拥有。
 
-## 36. 对 Agent Core 的正式接口
+# 65. Application API
 
 ```text
-resolve_capabilities(role_ref) -> ModelCapabilityProfile[]
-assess_model_feasibility(requirement, constraints) -> ModelFeasibilityAssessment
-invoke_model(ModelCallRequest) -> ModelCallResult
-stream_model(ModelCallRequest) -> AsyncIterator[ModelStreamChunk]
-get_usage(call_ref) -> UsageReceipt[]
-get_failure(call_ref) -> ModelFailure | None
-cancel_call(call_ref, cancellation_ref) -> CancellationReceipt
+assess_feasibility()
+invoke_text()
+invoke_structured()
+embed()
+rerank()
+extract_vision()
+transcribe()
+classify()
+judge()
+stream()
+cancel()
+reconcile()
+activate_config()
+execute_operational_command()
+request_deletion()
+get_readiness()
 ```
 
-`ModelCallResult`：
+不得保留返回具体 LangChain ChatModel 或 Provider Client 的公共 facade 作为 Target 主路径。兼容 facade 必须有迁移期限、旁路审计和禁止新增调用约束。
+
+# 66. PostgreSQL 目标表
 
 ```text
-status
-model_response_ref
-structured_output_result_ref
-usage_receipt_refs
-routing_decision_ref
-attempt_refs
-failure_ref
-suggested_control_action
+model_role_definitions
+model_operation_definitions
+model_provider_definitions
+model_definitions
+model_capability_profiles
+model_capability_verifications
+model_prompt_artifacts
+model_prompt_execution_bindings
+model_gateway_config_snapshots
+model_gateway_config_activations
+model_provider_model_lifecycle_records
+model_adapter_definitions
+model_adapter_conformance_profiles
+model_adapter_conformance_runs
+model_feasibility_assessments
+model_availability_snapshots
+model_calls
+model_call_requests
+model_routing_decisions
+model_call_attempts
+model_response_candidates
+model_response_selections
+model_responses
+model_structured_output_results
+model_embedding_batches
+model_embedding_items
+model_rerank_batches
+model_rerank_items
+model_vision_results
+model_transcription_results
+model_classification_results
+model_judge_results
+model_stream_sessions
+model_stream_chunks
+model_usage_receipts
+model_usage_corrections
+model_rate_limit_states
+model_quota_reservations
+model_admission_queue_items
+model_provider_health_snapshots
+model_circuit_breaker_states
+model_failure_records
+model_reconciliation_records
+model_result_validity_records
+model_cache_entries
+model_cache_reuse_receipts
+model_operational_commands
+model_data_retention_bindings
+model_data_deletion_records
+model_slo_profiles
+model_readiness_snapshots
+model_compatibility_entries
+model_routing_experiment_assignments
+model_domain_events
+model_outbox_events
 ```
 
-Agent Core 不依赖 Provider SDK 类型、HTTP Response、LangChain `BaseChatModel` 或具体 stream event。
-
-## 37. Parallel Wave 1 Contract Proposals
-
-截至本文 baseline，最新 `main` 仍是唯一正式事实源。提交前补读到以下并行材料：11 Infrastructure Draft PR #17、10 Observability & Eval 分支 `agent/refine-10-observability-eval`；09 Security 分支当时只有临时 bootstrap payload，尚无可审阅的正式模块文档或 Draft PR。所有未合并内容仍是 `Parallel Proposal`，只能用于发现接口冲突和提出依赖，不能写成 Current 或已确认共享 Contract。
-
-### 37.1 对 09 Security 的依赖请求
-
-请确认或提供：
+# 67. 数据约束
 
 ```text
-ModelSecurityDecision
-ProviderAllowedListRef
-DataClassification
-ResidencyConstraint
-PromptRedactionResult
-CredentialScopeRef
-SecurityEpoch
-SecurityRevocationEvent
+Unique(call_id, selected_response_marker) 或等价 CAS 约束
+Unique(attempt_id, provider_dispatch_generation)
+Unique(stream_session_id, sequence_no)
+Unique(usage_receipt_id, receipt_version)
+Unique(provider_ref, model_ref, region, operation_kind, circuit_generation)
+Unique(config_version)
+Unique(command_id, idempotency_key)
+Unique(deletion_id, state_generation)
+Foreign Key 与 Tenant/Workspace Scope 一致
+Append-only Receipt / Correction / Event
+Payload Hash 和 Schema Hash 可验证
 ```
 
-需要明确：Decision expiry、Epoch 变化、跨境策略、Prompt/Response redaction owner、credential rotation/revocation、迟到响应 taint 规则。
+# 68. Migration 原则
 
-### 37.2 对 11 Infrastructure 的依赖请求
+1. Migration 必须先建立新事实表、约束、索引和 Backfill Evidence，再迁移调用路径。
+2. 旧 Direct SDK Call 不得只通过重命名伪装为 Gateway。
+3. 兼容 facade 必须进入旁路清单并逐步减少，不允许新增。
+4. Provider/Model/Prompt/Config Version Backfill 必须明确 UNKNOWN，而不是伪造默认版本。
+5. Usage/Cost 无历史证据时标记 UNAVAILABLE，不做虚假精确回填。
+6. Schema、Enum、Failure Code 和 State 变更必须有向后兼容、双读/双写或受控 Cutover 方案。
+7. 本文不包含具体 Phase；实施计划进入 `.agent/programs/`。
 
-并行 Infrastructure Proposal 已提出 `SecretRef` 生命周期、durable Usage Ledger 幂等键、streaming abort / timeout、rate-limit consistency / failover 等依赖，并选择 PostgreSQL 作为权威 rate-limit state baseline。Model Gateway 请求最终确认：
+# 69. Contract Versioning
+
+向后兼容：新增可选字段、可忽略 Metadata、带安全默认值的新枚举。
+
+破坏性变更：删除/重命名字段、改变必填性或含义、改变状态机、Idempotency Scope、安全默认值、Usage 语义和 Response Selection 规则。
+
+未知安全枚举、未知终态、未知 Provider Event 必须 fail-closed 或 quarantine。
+
+# 70. Failure Decision Matrix
+
+| Fault | Gateway 状态 | Gateway 动作 | 上游动作 |
+| --- | --- | --- | --- |
+| Provider Timeout | TIMED_OUT 或 UNKNOWN | Cancel/Reconcile/受控 Retry | Agent Core 决定继续或 Replan |
+| Rate Limit | QUEUED/REJECTED | Retry-After、Wait、Fallback | Agent Core 消费建议 |
+| Malformed Structured Output | INVALID | Local Validation、Repair、Fallback | Step Acceptance 决定是否接受 |
+| Stream Disconnect | DISCONNECTED/UNKNOWN | Preserve partial、Cancel/Reconcile | Product 不把 partial 当正式结果 |
+| Usage Receipt Delayed | SETTLEMENT_PENDING | Async Settlement | Budget Ledger 保留 Pending |
+| Provider Success but Response Lost | UNKNOWN | Reconcile，禁止盲重试 | Agent Core 等待或选择替代路径 |
+| Circuit Breaker Transition | OPEN/HALF_OPEN | Reject/Probe | Routing 使用 Snapshot |
+| Fallback Exhausted | FAILED | 返回稳定 Failure | Agent Core Replan/Abstain |
+| Security Revocation | QUARANTINED/CANCEL | 阻止新 Dispatch、隔离迟到结果 | Security/Agent Core 决定后果 |
+| Quota Race | REJECTED/RETRY_ADMISSION | CAS 重试 Admission | 不产生重复 Dispatch |
+| Credential Rotation | Re-admission | 使用新 Lease/Version | 不回写历史 Attempt |
+| Provider SDK Error Mapping | NON_CONFORMANT | Quarantine Adapter/Mapping Warning | 不把未知错误当成功 |
+| Config Activation Failure | ROLLED_BACK | CAS Rollback | 旧 Snapshot Drain/Resume |
+| Cache Isolation Mismatch | MISS/QUARANTINED | 禁止复用、审计 | Security Incident 流程 |
+| Deletion Partial Failure | VERIFYING/FAILED | 保持不可见、继续清理 | 不恢复业务可见性 |
+| Judge Unavailable | BLOCKED/UNAVAILABLE | 返回 Eval Failure | Release Gate 不伪造分数 |
+| Overload | QUEUED/REJECTED | Fair Admission/Shedding | 调用方获得明确拒绝 |
+
+# 71. 必测故障场景
 
 ```text
-SecretRef / CredentialVersionRef
-ConfigVersion
-ProviderConnectionFactory
-DatabaseTransaction / Transactional Store / UoW
-Usage Ledger Storage Port + idempotency key
-Rate-limit / Quota Atomic State Port
-CapacityReservation primitive boundary
-Streaming Transport + abort receipt
-ClockCapability: UTC + monotonic + authoritative clock
-Timeout / Cancellation Primitive
-Encrypted Object Store Ref
+Provider Timeout before send / after possible send
+429 with and without Retry-After
+Provider 5xx and SDK hidden retry
+Malformed JSON and schema-valid but business-invalid payload
+Streaming duplicate, out-of-order, unknown event and disconnect
+Cancellation requested but unconfirmed
+Process crash after Attempt commit before network send
+Process crash after Provider success before Response commit
+Usage observed before Response and Response before Usage
+Usage late correction after RunOutcome
+Concurrent Response selection race
+Concurrent Quota reservation race
+Security Epoch changes after Routing before Dispatch
+Credential rotation during in-flight Attempt
+Adapter SDK/API version drift
+Config Canary failure and rollback
+Provider/model emergency disable with late response
+Tenant starvation and reserved-capacity exhaustion
+Overload shedding without bypassing Security/Audit
+Cross-tenant cache key collision attempt
+Cache hit after ResultValidity revocation
+Deletion with Legal Hold
+Deletion object success but projection failure
+Judge unavailable and self-evaluation circularity
+Shadow call budget exhaustion
+Embedding batch partial failure
+Rerank item identity loss
+Vision extraction source-lineage mismatch
+Routing replay under frozen snapshot
+Provider retirement with historical Usage query
 ```
-
-Infrastructure 提供连接、Secret、Config、Clock、原子条件写和持久化能力；不得成为 Routing、Attempt、Usage、Health 或 Circuit 领域事实 Owner。Gateway 不在数据库事务内等待 Provider 网络调用。
-
-### 37.3 对 10 Observability & Eval 的依赖请求
-
-并行 Observability Proposal 已定义 `TraceContext`、`RuntimeEvent`、`TelemetryEnvelope`、at-least-once ingest 与 Projection Ownership，并要求 Model Trace 关联 Attempt、Routing、Usage、role、provider/model、estimated/settled token-cost、timeout、retry、fallback、ProviderHealth 和 StructuredOutputFailure。Model Gateway 请求最终确认：
-
-```text
-TraceContext
-RuntimeEvent / TelemetryEnvelope
-ModelCall Trace Schema
-Prompt / Response Redaction Contract
-Token / Cost Metric Schema
-Routing / Fallback / Escalation Trace
-Structured Output Failure Event
-Provider Health / Circuit Metric
-Eval Model Configuration Snapshot
-Trace Delivery Status / DeliveryReceipt
-```
-
-Gateway 通过 transactional outbox 或等价原子交付发布领域事件；Observability 保存 Projection 与 Eval，不覆盖 Gateway 原始调用事实。普通 telemetry 丢失可重放，mandatory audit 是否 fail-closed 由 Security Policy 决定。
 
 ---
 
-# Part VIII：Requirement Registry、测试与完成证据
+# Part VIII：Requirement、测试与完成证据
 
-## 38. Requirement Registry
+# 72. Requirement Registry
 
-每个 Requirement 必须在实现 Program 中映射 Owner Path、Migration、Contract、正常测试、故障测试、E2E、Trace / Evidence 和 Rollback。下表中的测试 ID 是最小证据槽，不表示测试已经存在。
+| Requirement | 规范 | Runtime Control | Tests | Evidence |
+| --- | --- | --- | --- | --- |
+| `ARCH-MODEL-001` | 所有模型调用必须通过统一 Provider-neutral Gateway Contract | `RC-MODEL-001` | `MODEL-001-UT` `MODEL-001-IT` `MODEL-001-FT` `MODEL-001-E2E` | `EV-MODEL-001` |
+| `ARCH-MODEL-002` | 业务层不得导入 Provider SDK 或保存明文 Secret | `RC-MODEL-002` | `MODEL-002-UT` `MODEL-002-IT` `MODEL-002-FT` `MODEL-002-E2E` | `EV-MODEL-002` |
+| `ARCH-MODEL-003` | Role 与 Provider/Model 必须解耦 | `RC-MODEL-003` | `MODEL-003-UT` `MODEL-003-IT` `MODEL-003-FT` `MODEL-003-E2E` | `EV-MODEL-003` |
+| `ARCH-MODEL-004` | Role 与 Operation 必须分离 | `RC-MODEL-004` | `MODEL-004-UT` `MODEL-004-IT` `MODEL-004-FT` `MODEL-004-E2E` | `EV-MODEL-004` |
+| `ARCH-MODEL-005` | Capability 必须版本化并有验证证据 | `RC-MODEL-005` | `MODEL-005-UT` `MODEL-005-IT` `MODEL-005-FT` `MODEL-005-E2E` | `EV-MODEL-005` |
+| `ARCH-MODEL-006` | Prompt Artifact 与 Execution Binding 必须分离 | `RC-MODEL-006` | `MODEL-006-UT` `MODEL-006-IT` `MODEL-006-FT` `MODEL-006-E2E` | `EV-MODEL-006` |
+| `ARCH-MODEL-007` | 每个 Call 必须固定 Config、Prompt、Schema、Model、Adapter、Pricing 和 Security 版本 | `RC-MODEL-007` | `MODEL-007-UT` `MODEL-007-IT` `MODEL-007-FT` `MODEL-007-E2E` | `EV-MODEL-007` |
+| `ARCH-MODEL-008` | Agent Core 保留最终 StepFeasibilityDecision | `RC-MODEL-008` | `MODEL-008-UT` `MODEL-008-IT` `MODEL-008-FT` `MODEL-008-E2E` | `EV-MODEL-008` |
+| `ARCH-MODEL-009` | Security Gate 必须先于 Routing 与 Dispatch | `RC-MODEL-009` | `MODEL-009-UT` `MODEL-009-IT` `MODEL-009-FT` `MODEL-009-E2E` | `EV-MODEL-009` |
+| `ARCH-MODEL-010` | Budget 和 Quota 必须在 Dispatch 前核验和预留 | `RC-MODEL-010` | `MODEL-010-UT` `MODEL-010-IT` `MODEL-010-FT` `MODEL-010-E2E` | `EV-MODEL-010` |
+| `ARCH-MODEL-011` | Routing Decision 必须不可变、可解释和可重放 | `RC-MODEL-011` | `MODEL-011-UT` `MODEL-011-IT` `MODEL-011-FT` `MODEL-011-E2E` | `EV-MODEL-011` |
+| `ARCH-MODEL-012` | 每个真实 Provider 请求必须有唯一 Attempt | `RC-MODEL-012` | `MODEL-012-UT` `MODEL-012-IT` `MODEL-012-FT` `MODEL-012-E2E` | `EV-MODEL-012` |
+| `ARCH-MODEL-013` | SDK 隐式 Retry 必须禁用、限制或完整计入 | `RC-MODEL-013` | `MODEL-013-UT` `MODEL-013-IT` `MODEL-013-FT` `MODEL-013-E2E` | `EV-MODEL-013` |
+| `ARCH-MODEL-014` | Call 和 Attempt 必须使用独立状态机 | `RC-MODEL-014` | `MODEL-014-UT` `MODEL-014-IT` `MODEL-014-FT` `MODEL-014-E2E` | `EV-MODEL-014` |
+| `ARCH-MODEL-015` | 同一 Call 最多选择一个 Response | `RC-MODEL-015` | `MODEL-015-UT` `MODEL-015-IT` `MODEL-015-FT` `MODEL-015-E2E` | `EV-MODEL-015` |
+| `ARCH-MODEL-016` | Structured Output 必须本地 Schema Validation | `RC-MODEL-016` | `MODEL-016-UT` `MODEL-016-IT` `MODEL-016-FT` `MODEL-016-E2E` | `EV-MODEL-016` |
+| `ARCH-MODEL-017` | Repair 必须保留原结果并形成独立 Attempt 或确定性记录 | `RC-MODEL-017` | `MODEL-017-UT` `MODEL-017-IT` `MODEL-017-FT` `MODEL-017-E2E` | `EV-MODEL-017` |
+| `ARCH-MODEL-018` | Provider、Gateway 和 Product Streaming 必须分层 | `RC-MODEL-018` | `MODEL-018-UT` `MODEL-018-IT` `MODEL-018-FT` `MODEL-018-E2E` | `EV-MODEL-018` |
+| `ARCH-MODEL-019` | Stream Chunk 必须顺序、去重、校验且保持 provisional | `RC-MODEL-019` | `MODEL-019-UT` `MODEL-019-IT` `MODEL-019-FT` `MODEL-019-E2E` | `EV-MODEL-019` |
+| `ARCH-MODEL-020` | Timeout 与 Cancellation 必须分层并表达未确认状态 | `RC-MODEL-020` | `MODEL-020-UT` `MODEL-020-IT` `MODEL-020-FT` `MODEL-020-E2E` | `EV-MODEL-020` |
+| `ARCH-MODEL-021` | Provider 可能已执行时必须进入 UNKNOWN/Reconcile | `RC-MODEL-021` | `MODEL-021-UT` `MODEL-021-IT` `MODEL-021-FT` `MODEL-021-E2E` | `EV-MODEL-021` |
+| `ARCH-MODEL-022` | Retry、Repair、Fallback、Escalation 与 Replan 必须分开 | `RC-MODEL-022` | `MODEL-022-UT` `MODEL-022-IT` `MODEL-022-FT` `MODEL-022-E2E` | `EV-MODEL-022` |
+| `ARCH-MODEL-023` | Gateway 不得激活 PlanVersion 或修改 RunOutcome | `RC-MODEL-023` | `MODEL-023-UT` `MODEL-023-IT` `MODEL-023-FT` `MODEL-023-E2E` | `EV-MODEL-023` |
+| `ARCH-MODEL-024` | Embedding 必须固定 Revision、Dimension、Normalization 和 Index Generation | `RC-MODEL-024` | `MODEL-024-UT` `MODEL-024-IT` `MODEL-024-FT` `MODEL-024-E2E` | `EV-MODEL-024` |
+| `ARCH-MODEL-025` | Embedding Batch 必须支持 Item 级终态和部分失败 | `RC-MODEL-025` | `MODEL-025-UT` `MODEL-025-IT` `MODEL-025-FT` `MODEL-025-E2E` | `EV-MODEL-025` |
+| `ARCH-MODEL-026` | Rerank 必须保留 Item ID、Score 和批量语义 | `RC-MODEL-026` | `MODEL-026-UT` `MODEL-026-IT` `MODEL-026-FT` `MODEL-026-E2E` | `EV-MODEL-026` |
+| `ARCH-MODEL-027` | Vision/OCR 结果必须保留页、坐标与 Source Lineage | `RC-MODEL-027` | `MODEL-027-UT` `MODEL-027-IT` `MODEL-027-FT` `MODEL-027-E2E` | `EV-MODEL-027` |
+| `ARCH-MODEL-028` | Transcription 必须定义 Segment、Timestamp 和 Partial 语义 | `RC-MODEL-028` | `MODEL-028-UT` `MODEL-028-IT` `MODEL-028-FT` `MODEL-028-E2E` | `EV-MODEL-028` |
+| `ARCH-MODEL-029` | Classification 必须支持 Threshold、Calibration 和 Abstain | `RC-MODEL-029` | `MODEL-029-UT` `MODEL-029-IT` `MODEL-029-FT` `MODEL-029-E2E` | `EV-MODEL-029` |
+| `ARCH-MODEL-030` | Judge 调用必须独立经过 Gateway 和预算审计 | `RC-MODEL-030` | `MODEL-030-UT` `MODEL-030-IT` `MODEL-030-FT` `MODEL-030-E2E` | `EV-MODEL-030` |
+| `ARCH-MODEL-031` | 模型自评不得成为唯一质量证明 | `RC-MODEL-031` | `MODEL-031-UT` `MODEL-031-IT` `MODEL-031-FT` `MODEL-031-E2E` | `EV-MODEL-031` |
+| `ARCH-MODEL-032` | Context Compression 必须保留 Lineage、约束、冲突和失真风险 | `RC-MODEL-032` | `MODEL-032-UT` `MODEL-032-IT` `MODEL-032-FT` `MODEL-032-E2E` | `EV-MODEL-032` |
+| `ARCH-MODEL-033` | Memory 模型输出只能形成 Candidate | `RC-MODEL-033` | `MODEL-033-UT` `MODEL-033-IT` `MODEL-033-FT` `MODEL-033-E2E` | `EV-MODEL-033` |
+| `ARCH-MODEL-034` | Security 模型输出只能形成风险 Proposal | `RC-MODEL-034` | `MODEL-034-UT` `MODEL-034-IT` `MODEL-034-FT` `MODEL-034-E2E` | `EV-MODEL-034` |
+| `ARCH-MODEL-035` | Tool 模型输出只能形成 Action Proposal | `RC-MODEL-035` | `MODEL-035-UT` `MODEL-035-IT` `MODEL-035-FT` `MODEL-035-E2E` | `EV-MODEL-035` |
+| `ARCH-MODEL-036` | 每个 Attempt 包括失败和取消都必须产生 Usage 事实 | `RC-MODEL-036` | `MODEL-036-UT` `MODEL-036-IT` `MODEL-036-FT` `MODEL-036-E2E` | `EV-MODEL-036` |
+| `ARCH-MODEL-037` | Usage Estimate、Observed、Settled 和 Correction 必须分离 | `RC-MODEL-037` | `MODEL-037-UT` `MODEL-037-IT` `MODEL-037-FT` `MODEL-037-E2E` | `EV-MODEL-037` |
+| `ARCH-MODEL-038` | Pricing Version 必须固定且历史 Receipt 不回写 | `RC-MODEL-038` | `MODEL-038-UT` `MODEL-038-IT` `MODEL-038-FT` `MODEL-038-E2E` | `EV-MODEL-038` |
+| `ARCH-MODEL-039` | Quota 与业务 Budget 必须分离 | `RC-MODEL-039` | `MODEL-039-UT` `MODEL-039-IT` `MODEL-039-FT` `MODEL-039-E2E` | `EV-MODEL-039` |
+| `ARCH-MODEL-040` | Quota Race 必须由原子持久化或 CAS 解决 | `RC-MODEL-040` | `MODEL-040-UT` `MODEL-040-IT` `MODEL-040-FT` `MODEL-040-E2E` | `EV-MODEL-040` |
+| `ARCH-MODEL-041` | Provider Health 必须基于窗口证据且无证据不默认为健康 | `RC-MODEL-041` | `MODEL-041-UT` `MODEL-041-IT` `MODEL-041-FT` `MODEL-041-E2E` | `EV-MODEL-041` |
+| `ARCH-MODEL-042` | Circuit 必须按 Provider/Model/Region/Operation/Adapter 隔离 | `RC-MODEL-042` | `MODEL-042-UT` `MODEL-042-IT` `MODEL-042-FT` `MODEL-042-E2E` | `EV-MODEL-042` |
+| `ARCH-MODEL-043` | Capability 生命周期必须支持 Degrade、Stale 和 Revoke | `RC-MODEL-043` | `MODEL-043-UT` `MODEL-043-IT` `MODEL-043-FT` `MODEL-043-E2E` | `EV-MODEL-043` |
+| `ARCH-MODEL-044` | Adapter 必须有 Operation-specific Conformance Suite | `RC-MODEL-044` | `MODEL-044-UT` `MODEL-044-IT` `MODEL-044-FT` `MODEL-044-E2E` | `EV-MODEL-044` |
+| `ARCH-MODEL-045` | SDK/API/Model/Mapping 变化必须使 Conformance 失效或重验 | `RC-MODEL-045` | `MODEL-045-UT` `MODEL-045-IT` `MODEL-045-FT` `MODEL-045-E2E` | `EV-MODEL-045` |
+| `ARCH-MODEL-046` | 未知 Provider Enum/Event/Error 不得默认为成功 | `RC-MODEL-046` | `MODEL-046-UT` `MODEL-046-IT` `MODEL-046-FT` `MODEL-046-E2E` | `EV-MODEL-046` |
+| `ARCH-MODEL-047` | Gateway Config 必须不可变、版本化和内容寻址 | `RC-MODEL-047` | `MODEL-047-UT` `MODEL-047-IT` `MODEL-047-FT` `MODEL-047-E2E` | `EV-MODEL-047` |
+| `ARCH-MODEL-048` | Config Activation 必须经过 Validation、Replay、Canary、CAS 和 Rollback | `RC-MODEL-048` | `MODEL-048-UT` `MODEL-048-IT` `MODEL-048-FT` `MODEL-048-E2E` | `EV-MODEL-048` |
+| `ARCH-MODEL-049` | 每个 Call 必须固定 Config Snapshot | `RC-MODEL-049` | `MODEL-049-UT` `MODEL-049-IT` `MODEL-049-FT` `MODEL-049-E2E` | `EV-MODEL-049` |
+| `ARCH-MODEL-050` | Provider/Model 必须有 Probe、Enable、Deprecate、Drain、Disable、Retire 生命周期 | `RC-MODEL-050` | `MODEL-050-UT` `MODEL-050-IT` `MODEL-050-FT` `MODEL-050-E2E` | `EV-MODEL-050` |
+| `ARCH-MODEL-051` | Emergency Disable 必须阻止新 Dispatch 并隔离迟到结果 | `RC-MODEL-051` | `MODEL-051-UT` `MODEL-051-IT` `MODEL-051-FT` `MODEL-051-E2E` | `EV-MODEL-051` |
+| `ARCH-MODEL-052` | Retirement 不得删除历史 Attempt、Usage 和 Audit | `RC-MODEL-052` | `MODEL-052-UT` `MODEL-052-IT` `MODEL-052-FT` `MODEL-052-E2E` | `EV-MODEL-052` |
+| `ARCH-MODEL-053` | Admission 必须覆盖全局到 Role 的容量层级 | `RC-MODEL-053` | `MODEL-053-UT` `MODEL-053-IT` `MODEL-053-FT` `MODEL-053-E2E` | `EV-MODEL-053` |
+| `ARCH-MODEL-054` | Admission 必须实现租户公平、Reserved Capacity 和防饥饿 | `RC-MODEL-054` | `MODEL-054-UT` `MODEL-054-IT` `MODEL-054-FT` `MODEL-054-E2E` | `EV-MODEL-054` |
+| `ARCH-MODEL-055` | 排队请求必须保留 Deadline、Security、Budget 和 Config 绑定 | `RC-MODEL-055` | `MODEL-055-UT` `MODEL-055-IT` `MODEL-055-FT` `MODEL-055-E2E` | `EV-MODEL-055` |
+| `ARCH-MODEL-056` | Overload 必须有显式状态、Backpressure 和 Load Shedding | `RC-MODEL-056` | `MODEL-056-UT` `MODEL-056-IT` `MODEL-056-FT` `MODEL-056-E2E` | `EV-MODEL-056` |
+| `ARCH-MODEL-057` | 过载不得绕过 Security、Validation、Usage、Audit 和 Budget | `RC-MODEL-057` | `MODEL-057-UT` `MODEL-057-IT` `MODEL-057-FT` `MODEL-057-E2E` | `EV-MODEL-057` |
+| `ARCH-MODEL-058` | Provider Prompt Cache、Metadata Cache 和 Result Cache 必须分离 | `RC-MODEL-058` | `MODEL-058-UT` `MODEL-058-IT` `MODEL-058-FT` `MODEL-058-E2E` | `EV-MODEL-058` |
+| `ARCH-MODEL-059` | Result Cache 必须默认关闭并严格按租户与版本隔离 | `RC-MODEL-059` | `MODEL-059-UT` `MODEL-059-IT` `MODEL-059-FT` `MODEL-059-E2E` | `EV-MODEL-059` |
+| `ARCH-MODEL-060` | Cache Hit 必须产生 Reuse Receipt 而不是 Provider Attempt | `RC-MODEL-060` | `MODEL-060-UT` `MODEL-060-IT` `MODEL-060-FT` `MODEL-060-E2E` | `EV-MODEL-060` |
+| `ARCH-MODEL-061` | Revocation、Deletion、Model Retirement 和 Validity 变化必须失效 Cache | `RC-MODEL-061` | `MODEL-061-UT` `MODEL-061-IT` `MODEL-061-FT` `MODEL-061-E2E` | `EV-MODEL-061` |
+| `ARCH-MODEL-062` | 所有运维状态变化必须通过版本化 Operational Command | `RC-MODEL-062` | `MODEL-062-UT` `MODEL-062-IT` `MODEL-062-FT` `MODEL-062-E2E` | `EV-MODEL-062` |
+| `ARCH-MODEL-063` | 高风险 Command 必须有 Authorization、Approval、Expected Generation 和 Audit | `RC-MODEL-063` | `MODEL-063-UT` `MODEL-063-IT` `MODEL-063-FT` `MODEL-063-E2E` | `EV-MODEL-063` |
+| `ARCH-MODEL-064` | Prompt、Response、Stream、Usage、Failure 和 Decision 必须独立绑定 Retention | `RC-MODEL-064` | `MODEL-064-UT` `MODEL-064-IT` `MODEL-064-FT` `MODEL-064-E2E` | `EV-MODEL-064` |
+| `ARCH-MODEL-065` | 删除必须先 Tombstone 和 Visibility Revocation，再物理清理和验证 | `RC-MODEL-065` | `MODEL-065-UT` `MODEL-065-IT` `MODEL-065-FT` `MODEL-065-E2E` | `EV-MODEL-065` |
+| `ARCH-MODEL-066` | Legal Hold 必须优先于物理删除但不恢复业务可见性 | `RC-MODEL-066` | `MODEL-066-UT` `MODEL-066-IT` `MODEL-066-FT` `MODEL-066-E2E` | `EV-MODEL-066` |
+| `ARCH-MODEL-067` | SLI/SLO 必须区分 Call、Attempt、Operation、Role、Tenant、Provider 和 Config | `RC-MODEL-067` | `MODEL-067-UT` `MODEL-067-IT` `MODEL-067-FT` `MODEL-067-E2E` | `EV-MODEL-067` |
+| `ARCH-MODEL-068` | Readiness 必须覆盖 Adapter、Security、Persistence、Usage、Reconcile、Capacity 和删除证据 | `RC-MODEL-068` | `MODEL-068-UT` `MODEL-068-IT` `MODEL-068-FT` `MODEL-068-E2E` | `EV-MODEL-068` |
+| `ARCH-MODEL-069` | 无证据和 Mock-only 不得标记 READY | `RC-MODEL-069` | `MODEL-069-UT` `MODEL-069-IT` `MODEL-069-FT` `MODEL-069-E2E` | `EV-MODEL-069` |
+| `ARCH-MODEL-070` | Adapter/API/SDK 必须支持并行版本、Canary、Drain 和 Rollback | `RC-MODEL-070` | `MODEL-070-UT` `MODEL-070-IT` `MODEL-070-FT` `MODEL-070-E2E` | `EV-MODEL-070` |
+| `ARCH-MODEL-071` | Provider API Sunset 必须有迁移、回滚和兼容证据 | `RC-MODEL-071` | `MODEL-071-UT` `MODEL-071-IT` `MODEL-071-FT` `MODEL-071-E2E` | `EV-MODEL-071` |
+| `ARCH-MODEL-072` | Experiment 必须在 Security、Capability、Budget 和 Deadline Gate 之后 | `RC-MODEL-072` | `MODEL-072-UT` `MODEL-072-IT` `MODEL-072-FT` `MODEL-072-E2E` | `EV-MODEL-072` |
+| `ARCH-MODEL-073` | Experiment Assignment 必须可复现并支持 Sticky Scope | `RC-MODEL-073` | `MODEL-073-UT` `MODEL-073-IT` `MODEL-073-FT` `MODEL-073-E2E` | `EV-MODEL-073` |
+| `ARCH-MODEL-074` | Shadow Call 必须独立记录 Security、Budget、Usage、Trace 和 Retention | `RC-MODEL-074` | `MODEL-074-UT` `MODEL-074-IT` `MODEL-074-FT` `MODEL-074-E2E` | `EV-MODEL-074` |
+| `ARCH-MODEL-075` | Shadow Result 不得进入业务输出 | `RC-MODEL-075` | `MODEL-075-UT` `MODEL-075-IT` `MODEL-075-FT` `MODEL-075-E2E` | `EV-MODEL-075` |
+| `ARCH-MODEL-076` | ResultValidity 变化必须事件化并由事实 Owner 决定传播 | `RC-MODEL-076` | `MODEL-076-UT` `MODEL-076-IT` `MODEL-076-FT` `MODEL-076-E2E` | `EV-MODEL-076` |
+| `ARCH-MODEL-077` | Provider-neutral Failure Code 必须稳定且保留原始错误引用 | `RC-MODEL-077` | `MODEL-077-UT` `MODEL-077-IT` `MODEL-077-FT` `MODEL-077-E2E` | `EV-MODEL-077` |
+| `ARCH-MODEL-078` | Suggested Control Action 不能替代 Agent Core 决策 | `RC-MODEL-078` | `MODEL-078-UT` `MODEL-078-IT` `MODEL-078-FT` `MODEL-078-E2E` | `EV-MODEL-078` |
+| `ARCH-MODEL-079` | Domain Event 必须版本化、幂等、可排序、可重放和脱敏 | `RC-MODEL-079` | `MODEL-079-UT` `MODEL-079-IT` `MODEL-079-FT` `MODEL-079-E2E` | `EV-MODEL-079` |
+| `ARCH-MODEL-080` | Trace、Audit、Eval Projection 不得取代 Gateway 源事实 | `RC-MODEL-080` | `MODEL-080-UT` `MODEL-080-IT` `MODEL-080-FT` `MODEL-080-E2E` | `EV-MODEL-080` |
+| `ARCH-MODEL-081` | Model Gateway 必须遵守跨模块 Ownership Matrix | `RC-MODEL-081` | `MODEL-081-UT` `MODEL-081-IT` `MODEL-081-FT` `MODEL-081-E2E` | `EV-MODEL-081` |
+| `ARCH-MODEL-082` | 所有跨模块请求和事件必须使用版本化 Envelope | `RC-MODEL-082` | `MODEL-082-UT` `MODEL-082-IT` `MODEL-082-FT` `MODEL-082-E2E` | `EV-MODEL-082` |
+| `ARCH-MODEL-083` | PostgreSQL Domain Fact、Object Payload 和 Projection 必须分层 | `RC-MODEL-083` | `MODEL-083-UT` `MODEL-083-IT` `MODEL-083-FT` `MODEL-083-E2E` | `EV-MODEL-083` |
+| `ARCH-MODEL-084` | 兼容 facade 必须有旁路清单、禁止新增和迁移期限 | `RC-MODEL-084` | `MODEL-084-UT` `MODEL-084-IT` `MODEL-084-FT` `MODEL-084-E2E` | `EV-MODEL-084` |
+| `ARCH-MODEL-085` | Migration 不得伪造历史版本、Usage 或实现状态 | `RC-MODEL-085` | `MODEL-085-UT` `MODEL-085-IT` `MODEL-085-FT` `MODEL-085-E2E` | `EV-MODEL-085` |
+| `ARCH-MODEL-086` | 未知安全枚举、未知终态和未知事件必须 Fail-closed 或 Quarantine | `RC-MODEL-086` | `MODEL-086-UT` `MODEL-086-IT` `MODEL-086-FT` `MODEL-086-E2E` | `EV-MODEL-086` |
+| `ARCH-MODEL-087` | 每个高风险故障必须有 Fault Injection 和恢复证据 | `RC-MODEL-087` | `MODEL-087-UT` `MODEL-087-IT` `MODEL-087-FT` `MODEL-087-E2E` | `EV-MODEL-087` |
+| `ARCH-MODEL-088` | Target 变为 Current 必须有代码、Migration、测试、Trace、Eval 和运行证据 | `RC-MODEL-088` | `MODEL-088-UT` `MODEL-088-IT` `MODEL-088-FT` `MODEL-088-E2E` | `EV-MODEL-088` |
 
-| Requirement | 规范 | Runtime Control | Unit | Integration | Fault | E2E | Evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `ARCH-MODEL-001` | Role 与 Provider / Model 必须分离 | `RC-MODEL-001` | `MODEL-001-UT` | `MODEL-001-IT` | `MODEL-001-FT` | `MODEL-001-E2E` | `EV-MODEL-001` |
-| `ARCH-MODEL-002` | Role Registry 必须覆盖十一种正式角色 | `RC-MODEL-002` | `MODEL-002-UT` | `MODEL-002-IT` | `MODEL-002-FT` | `MODEL-002-E2E` | `EV-MODEL-002` |
-| `ARCH-MODEL-003` | Agent Core 只消费 Provider-neutral Contract | `RC-MODEL-003` | `MODEL-003-UT` | `MODEL-003-IT` | `MODEL-003-FT` | `MODEL-003-E2E` | `EV-MODEL-003` |
-| `ARCH-MODEL-004` | 每个模型必须有版本化 Capability Profile | `RC-MODEL-004` | `MODEL-004-UT` | `MODEL-004-IT` | `MODEL-004-FT` | `MODEL-004-E2E` | `EV-MODEL-004` |
-| `ARCH-MODEL-005` | Routing 必须固定 Availability Snapshot | `RC-MODEL-005` | `MODEL-005-UT` | `MODEL-005-IT` | `MODEL-005-FT` | `MODEL-005-E2E` | `EV-MODEL-005` |
-| `ARCH-MODEL-006` | Gateway 必须输出 StepFeasibility 所需模型事实 | `RC-MODEL-006` | `MODEL-006-UT` | `MODEL-006-IT` | `MODEL-006-FT` | `MODEL-006-E2E` | `EV-MODEL-006` |
-| `ARCH-MODEL-007` | Routing Decision 必须不可变、可解释、可版本化 | `RC-MODEL-007` | `MODEL-007-UT` | `MODEL-007-IT` | `MODEL-007-FT` | `MODEL-007-E2E` | `EV-MODEL-007` |
-| `ARCH-MODEL-008` | Security Gate 必须先于 Provider Dispatch | `RC-MODEL-008` | `MODEL-008-UT` | `MODEL-008-IT` | `MODEL-008-FT` | `MODEL-008-E2E` | `EV-MODEL-008` |
-| `ARCH-MODEL-009` | Data Classification 与 Residency 必须进入路由约束 | `RC-MODEL-009` | `MODEL-009-UT` | `MODEL-009-IT` | `MODEL-009-FT` | `MODEL-009-E2E` | `EV-MODEL-009` |
-| `ARCH-MODEL-010` | Credential 必须使用 SecretRef 与最小 Scope | `RC-MODEL-010` | `MODEL-010-UT` | `MODEL-010-IT` | `MODEL-010-FT` | `MODEL-010-E2E` | `EV-MODEL-010` |
-| `ARCH-MODEL-011` | Prompt、Model、Provider、SDK、Pricing 版本必须绑定 Attempt | `RC-MODEL-011` | `MODEL-011-UT` | `MODEL-011-IT` | `MODEL-011-FT` | `MODEL-011-E2E` | `EV-MODEL-011` |
-| `ARCH-MODEL-012` | 每个 Provider 请求必须有独立 ModelCallAttempt | `RC-MODEL-012` | `MODEL-012-UT` | `MODEL-012-IT` | `MODEL-012-FT` | `MODEL-012-E2E` | `EV-MODEL-012` |
-| `ARCH-MODEL-013` | Timeout 与 Cancellation 必须分层且可审计 | `RC-MODEL-013` | `MODEL-013-UT` | `MODEL-013-IT` | `MODEL-013-FT` | `MODEL-013-E2E` | `EV-MODEL-013` |
-| `ARCH-MODEL-014` | SDK 内部 Retry 必须禁用、配置或完整计数 | `RC-MODEL-014` | `MODEL-014-UT` | `MODEL-014-IT` | `MODEL-014-FT` | `MODEL-014-E2E` | `EV-MODEL-014` |
-| `ARCH-MODEL-015` | Provider Fallback 必须保持 Role 与 Output Contract | `RC-MODEL-015` | `MODEL-015-UT` | `MODEL-015-IT` | `MODEL-015-FT` | `MODEL-015-E2E` | `EV-MODEL-015` |
-| `ARCH-MODEL-016` | Role Escalation 必须与 Provider Fallback 分离 | `RC-MODEL-016` | `MODEL-016-UT` | `MODEL-016-IT` | `MODEL-016-FT` | `MODEL-016-E2E` | `EV-MODEL-016` |
-| `ARCH-MODEL-017` | Retry、Repair、Fallback、Escalation、Replan 必须分别审计 | `RC-MODEL-017` | `MODEL-017-UT` | `MODEL-017-IT` | `MODEL-017-FT` | `MODEL-017-E2E` | `EV-MODEL-017` |
-| `ARCH-MODEL-018` | Structured Output 必须本地 Schema Validation | `RC-MODEL-018` | `MODEL-018-UT` | `MODEL-018-IT` | `MODEL-018-FT` | `MODEL-018-E2E` | `EV-MODEL-018` |
-| `ARCH-MODEL-019` | Structured Output Repair 必须有界并产生独立 Attempt | `RC-MODEL-019` | `MODEL-019-UT` | `MODEL-019-IT` | `MODEL-019-FT` | `MODEL-019-E2E` | `EV-MODEL-019` |
-| `ARCH-MODEL-020` | Streaming Session 必须有显式终态和 provisional 语义 | `RC-MODEL-020` | `MODEL-020-UT` | `MODEL-020-IT` | `MODEL-020-FT` | `MODEL-020-E2E` | `EV-MODEL-020` |
-| `ARCH-MODEL-021` | Stream 未知事件与错误事件不得静默丢弃 | `RC-MODEL-021` | `MODEL-021-UT` | `MODEL-021-IT` | `MODEL-021-FT` | `MODEL-021-E2E` | `EV-MODEL-021` |
-| `ARCH-MODEL-022` | Usage Receipt 必须表达估算、延迟、权威与更正 | `RC-MODEL-022` | `MODEL-022-UT` | `MODEL-022-IT` | `MODEL-022-FT` | `MODEL-022-E2E` | `EV-MODEL-022` |
-| `ARCH-MODEL-023` | Token 与 Cost 必须固定 Pricing Version 并覆盖失败 Attempt | `RC-MODEL-023` | `MODEL-023-UT` | `MODEL-023-IT` | `MODEL-023-FT` | `MODEL-023-E2E` | `EV-MODEL-023` |
-| `ARCH-MODEL-024` | Gateway 只能消费业务 Budget Reservation，不拥有最终 Budget 决策 | `RC-MODEL-024` | `MODEL-024-UT` | `MODEL-024-IT` | `MODEL-024-FT` | `MODEL-024-E2E` | `EV-MODEL-024` |
-| `ARCH-MODEL-025` | Provider Rate Limit 必须归一化并遵守 Retry-After | `RC-MODEL-025` | `MODEL-025-UT` | `MODEL-025-IT` | `MODEL-025-FT` | `MODEL-025-E2E` | `EV-MODEL-025` |
-| `ARCH-MODEL-026` | Quota Reservation 必须原子、可释放、可过期、可结算 | `RC-MODEL-026` | `MODEL-026-UT` | `MODEL-026-IT` | `MODEL-026-FT` | `MODEL-026-E2E` | `EV-MODEL-026` |
-| `ARCH-MODEL-027` | Quota Race 必须由一致性机制阻止超卖 | `RC-MODEL-027` | `MODEL-027-UT` | `MODEL-027-IT` | `MODEL-027-FT` | `MODEL-027-E2E` | `EV-MODEL-027` |
-| `ARCH-MODEL-028` | Provider Health 必须按证据与时间窗口转换 | `RC-MODEL-028` | `MODEL-028-UT` | `MODEL-028-IT` | `MODEL-028-FT` | `MODEL-028-E2E` | `EV-MODEL-028` |
-| `ARCH-MODEL-029` | Circuit Breaker 必须支持 Closed/Open/Half-open 与强制打开 | `RC-MODEL-029` | `MODEL-029-UT` | `MODEL-029-IT` | `MODEL-029-FT` | `MODEL-029-E2E` | `EV-MODEL-029` |
-| `ARCH-MODEL-030` | Provider Success but Response Lost 必须进入 UNKNOWN / Reconcile | `RC-MODEL-030` | `MODEL-030-UT` | `MODEL-030-IT` | `MODEL-030-FT` | `MODEL-030-E2E` | `EV-MODEL-030` |
-| `ARCH-MODEL-031` | Request、Attempt、Receipt 与 Reconcile 必须幂等去重 | `RC-MODEL-031` | `MODEL-031-UT` | `MODEL-031-IT` | `MODEL-031-FT` | `MODEL-031-E2E` | `EV-MODEL-031` |
-| `ARCH-MODEL-032` | Prompt / Response / Error Trace 必须按 Security Policy 脱敏 | `RC-MODEL-032` | `MODEL-032-UT` | `MODEL-032-IT` | `MODEL-032-FT` | `MODEL-032-E2E` | `EV-MODEL-032` |
-| `ARCH-MODEL-033` | Routing、Attempt、Fallback、Usage、Health 必须完整 Trace | `RC-MODEL-033` | `MODEL-033-UT` | `MODEL-033-IT` | `MODEL-033-FT` | `MODEL-033-E2E` | `EV-MODEL-033` |
-| `ARCH-MODEL-034` | Provider / SDK Error 必须映射为稳定 ModelFailure | `RC-MODEL-034` | `MODEL-034-UT` | `MODEL-034-IT` | `MODEL-034-FT` | `MODEL-034-E2E` | `EV-MODEL-034` |
-| `ARCH-MODEL-035` | Gateway 领域事实必须有明确 PostgreSQL / Object Store 映射 | `RC-MODEL-035` | `MODEL-035-UT` | `MODEL-035-IT` | `MODEL-035-FT` | `MODEL-035-E2E` | `EV-MODEL-035` |
-| `ARCH-MODEL-036` | 所有跨模块 Contract 必须版本化并带 Security / Trace Context | `RC-MODEL-036` | `MODEL-036-UT` | `MODEL-036-IT` | `MODEL-036-FT` | `MODEL-036-E2E` | `EV-MODEL-036` |
-| `ARCH-MODEL-037` | Agent Core 与业务模块不得依赖具体 Provider SDK | `RC-MODEL-037` | `MODEL-037-UT` | `MODEL-037-IT` | `MODEL-037-FT` | `MODEL-037-E2E` | `EV-MODEL-037` |
-| `ARCH-MODEL-038` | Gateway 不得提交 Plan、RunOutcome、Approval、Tool Effect 或长期 Memory | `RC-MODEL-038` | `MODEL-038-UT` | `MODEL-038-IT` | `MODEL-038-FT` | `MODEL-038-E2E` | `EV-MODEL-038` |
-| `ARCH-MODEL-039` | 指定故障场景必须有 Fault Injection 与恢复证据 | `RC-MODEL-039` | `MODEL-039-UT` | `MODEL-039-IT` | `MODEL-039-FT` | `MODEL-039-E2E` | `EV-MODEL-039` |
-| `ARCH-MODEL-040` | Target 只有在调用链、Migration、测试、Trace、Eval 全部完成后才能提升为 Current | `RC-MODEL-040` | `MODEL-040-UT` | `MODEL-040-IT` | `MODEL-040-FT` | `MODEL-040-E2E` | `EV-MODEL-040` |
-
-## 39. 必须覆盖的 Fault Test
+# 73. 测试层级
 
 ```text
-Provider Timeout
-Rate Limit
-Malformed Structured Output
-Stream Disconnect
-Usage Receipt Delayed
-Provider Success but Response Lost
-Circuit Breaker Transition
-Fallback Exhausted
-Security Revocation
-Quota Race
-Credential Rotation
-Provider SDK Error Mapping
+Unit
+    Policy、State Transition、Schema、Error Mapping、Cache Key、Fairness 算法。
+
+Integration
+    PostgreSQL、Outbox、Adapter、Security、Budget、Credential、Object Store、Clock。
+
+Fault Injection
+    Crash、Timeout、Unknown Execution、Race、Disconnect、Revocation、Rollback、Deletion Partial Failure。
+
+E2E
+    从 Agent/Knowledge/Ingestion/Memory/Security/Eval 请求到 Provider、Usage、Trace 和恢复闭环。
+
+Conformance
+    每个 Provider/SDK/API/Model/Operation 的契约套件。
+
+Benchmark / Eval
+    质量、延迟、成本、Groundedness、Calibration 和回归。
 ```
 
-每个 Fault Test 必须验证：
+# 74. Target 变为 Current 的证据
+
+至少需要：
 
 ```text
-触发条件
-Attempt / Stream / Quota / Circuit 状态变化
-FailureClass 与 suggested action
-Retry / Fallback / Escalation / Replan 边界
-Usage 与 Cost 是否丢失
-Security Epoch 与 Credential 行为
-Trace / Metric / Audit 输出
-恢复后是否重复调用或重复结算
+统一 Application API 和边界 Guard
+真实 Provider Adapter 与 Operation-specific Contract
+PostgreSQL Schema 和 Alembic Migration
+Unit / Integration / Fault / E2E / Conformance 测试
+真实 Streaming、Cancellation、Usage Settlement 和 Reconciliation 证据
+Embedding、Rerank、Vision、Classification、Judge 的端到端证据
+Security、Credential、Residency、Redaction 和 Revocation 集成
+公平 Admission、Quota Race、Overload 和 Cache Isolation 证据
+Config Canary、Rollback、Provider/Model Lifecycle 证据
+Retention、Deletion、Legal Hold 和 Verification 证据
+固定 Benchmark、Trace、Audit、SLO Window 和 Eval Evidence
+所有 legacy direct model call 已迁移或有明确受控例外
 ```
 
-## 40. Target 转为 Current 的证据
-
-只有同时满足以下证据，状态文档才可把对应 Target 提升为 Current：
-
-1. `ModelRoleDefinition`、Provider / Model Catalog、Capability Profile 和 Routing 的业务代码完成。
-2. 所有真实 chat、embedding、rerank、VLM、extract、rewrite、judge 调用均通过 Gateway；legacy allowlist 被逐项删除，新增旁路由 repo guard 拒绝。
-3. PostgreSQL Migration、索引、约束、rollback 和 reconciliation query 可复现。
-4. Provider Adapter Contract Tests 覆盖至少一个真实 Provider 和一个 deterministic fake provider。
-5. Unit / Integration / Fault / E2E 覆盖正常路径、所有指定故障和恢复路径。
-6. Trace 能关联 Role、Route、Attempt、Provider Request、Usage、Cost、Fallback、Security 与 Step。
-7. Structured Output 与 Streaming 在真实 SDK 行为下验证，包含 malformed / disconnect / delayed usage。
-8. Quota Race、Circuit Transition、Credential Rotation 和 Security Revocation 有并发或故障注入证据。
-9. Usage 与 Budget Ledger 的估算、延迟结算和 correction 可对账。
-10. Fixed Eval 能固定 Prompt / Model / Provider / Capability / Security / Routing 版本并产生可复现结果。
-11. 文档、Agent 镜像、入口、Verifier、测试和 workflow 同步。
-12. 未运行完整 CI、真实 Provider 测试或 Fault Injection 时，必须明确写 `Not Run`，不得声称 production ready。
-
-本文完成并通过文档验证后，只能声明：
+本文通过语义验证后只能声明：
 
 ```text
 design available
-contract complete
-implementation specification available
-program ready
+internally consistent
+contract-complete
+implementation-spec-complete
+program-ready
 ```
 
 不得仅凭本文声明：
 
 ```text
 implementation available
+measurement complete
 quality proven
 production ready
 ```
-
-## 41. 官方实现参考
-
-Provider Adapter 实现必须在 Program 开始时重新核对最新官方资料。本文 baseline 使用以下官方入口作为行为参考，而不把其 SDK 类型写入公共 Contract：
-
-- OpenAI Responses Streaming API：`https://platform.openai.com/docs/api-reference/responses-streaming`
-- OpenAI Python SDK：`https://github.com/openai/openai-python`
-- Anthropic Streaming Messages：`https://platform.claude.com/docs/en/build-with-claude/streaming`
-- Google Gemini Structured Output：`https://ai.google.dev/gemini-api/docs/structured-output`
-- LangChain Structured Output：`https://docs.langchain.com/oss/python/langchain/structured-output`
