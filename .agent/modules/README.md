@@ -13,10 +13,10 @@
 | 05 | Memory & Context | [`05-memory-context.md`](../../docs/modules/05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构镜像 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
+| 08 | Tool Runtime | `08-tool-runtime.md` | 待正式收口 |
 | 09 | Security | [`09-security.md`](./09-security.md) | 实施级 Target 镜像 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) + [`10-observability-eval-rag-agent-evaluation.md`](./10-observability-eval-rag-agent-evaluation.md) | 实施级 Target 与受控附录镜像 |
-| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 实施级 Target 镜像 |
+| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | 单一完整实施级 Target 架构镜像 |
 
 ## Wave 1 共享 Contract
 
@@ -29,9 +29,19 @@ ADR 0003 与 Registry 是 Wave 1 跨模块 Owner、Envelope、Receipt、Failure 
 
 当前状态：`CONFIRMED_TARGET`。物理实现归 `src/backend/zuno/platform/**`；Agent Core 只持有 `ActionProposal / ActionExecutionBinding`，可执行副作用事实归 Tool Runtime `PreparedToolAction`。
 
-## Model Gateway Target 镜像
+## Agent Core 唯一 Target 镜像
 
-Model Gateway 只保留一份完整 Target 架构镜像：
+```text
+.agent/modules/06-agent-core-planning-control.md
+```
+
+对应正式事实源：
+
+```text
+docs/modules/06-agent-core-planning-control.md
+```
+
+## Model Gateway 唯一 Target 镜像
 
 ```text
 .agent/modules/04-model-gateway.md
@@ -47,21 +57,28 @@ docs/modules/04-model-gateway.md
 
 Model Gateway Current、旁路调用和 Production Readiness 不能从 Target 文档推断，必须读取最新 `main` 的代码、测试、Migration、Trace、Eval、状态文件和 boundary verifier。
 
-## Infrastructure Target 镜像
+## Infrastructure 唯一 Target 镜像
 
 ```text
 .agent/modules/11-infrastructure.md
-.agent/modules/11-infrastructure-data-services.md
-.agent/modules/11-infrastructure-consistency-lifecycle.md
 ```
 
-对应正式事实源：
+对应唯一正式事实源：
 
 ```text
 docs/modules/11-infrastructure.md
-docs/modules/11-infrastructure-data-services.md
-docs/modules/11-infrastructure-consistency-lifecycle.md
 ```
+
+该镜像统一包含 PostgreSQL、RabbitMQ、Object Store / MinIO、LangGraph Checkpointer、Milvus、Neo4j、BM25 / Search、Redis、Trace/Audit、Secret/KMS，以及事务、Queue、索引发布、删除、恢复、审计、升级、安全、SLO、实现规格和验证要求。
+
+Agent 读取规则：
+
+- 不得寻找或重新创建 Infrastructure 数据服务、Consistency 或 Lifecycle 规范性附录；
+- Infrastructure Target 的全部设计以唯一主文档为准；
+- 正式文档与镜像必须字节级一致；
+- 物理实现归 `src/backend/zuno/platform/**`，不得新增顶层 `zuno/infrastructure`；
+- Current 与 Gap 读取 `docs/status/production-readiness.md`；
+- 实现和迁移计划读取 `.agent/programs/`。
 
 ## Observability & Eval Target 镜像
 
@@ -70,26 +87,7 @@ docs/modules/11-infrastructure-consistency-lifecycle.md
 .agent/modules/10-observability-eval-rag-agent-evaluation.md
 ```
 
-对应正式事实源：
-
-```text
-docs/modules/10-observability-eval.md
-docs/modules/10-observability-eval-rag-agent-evaluation.md
-```
-
 主文档定义 Trace/Audit/Eval/Evidence 总边界；附录定义 RAG Core Five、Agentic GraphRAG Trace、Failure Bucket 和 Agent Efficiency。
-
-## Agent Core 唯一 Target 镜像
-
-```text
-.agent/modules/06-agent-core-planning-control.md
-```
-
-对应正式事实源：
-
-```text
-docs/modules/06-agent-core-planning-control.md
-```
 
 ## Security Target 镜像
 
@@ -97,13 +95,7 @@ docs/modules/06-agent-core-planning-control.md
 .agent/modules/09-security.md
 ```
 
-对应正式事实源：
-
-```text
-docs/modules/09-security.md
-```
-
-Security 文档定义服务器端安全控制面、账号与身份、组织树、管理员作用域、资源权限、委派授权、Policy、全链路 Gate、输入输出检测、脱敏、审批、撤销、Secret 和审计 Contract。
+Security 文档定义服务器端安全控制面、身份、权限、Policy、Gate、脱敏、审批、撤销、Secret 和审计 Contract。
 
 正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`。Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。
 
