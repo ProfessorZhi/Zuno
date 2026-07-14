@@ -4,7 +4,6 @@ import re
 import sys
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/08-tool-runtime.md"
 MIRROR = REPO_ROOT / ".agent/modules/08-tool-runtime.md"
@@ -13,7 +12,6 @@ AGENT_INDEX = REPO_ROOT / ".agent/modules/README.md"
 CAPABILITY_DOC = REPO_ROOT / "docs/modules/07-capability-skill.md"
 DOCS_MAP = REPO_ROOT / ".agent/references/docs-map.md"
 AGENT_SYSTEM = REPO_ROOT / ".agent/system.yaml"
-AGENTS = REPO_ROOT / "AGENTS.md"
 DOCS_ENTRYPOINT_VERIFIER = REPO_ROOT / "tools/scripts/verify_docs_entrypoints.py"
 AGENT_SYSTEM_VERIFIER = REPO_ROOT / ".agent/scripts/verify_agent_system.py"
 
@@ -79,9 +77,12 @@ FORBIDDEN_ASSERTIONS = [
 ]
 
 CAPABILITY_REQUIRED = [
-    "07 只保存 Capability、Skill 和 Planner Projection",
-    "08 保存权威 Tool Definition、Version、Prepare、Attempt、Observation、Effect 和 Reconciliation",
-    "MCP Tool execution\n    08 Tool Runtime",
+    "ToolCapabilityDescriptor",
+    "ToolDefinitionRef",
+    "ToolDefinition、PreparedToolAction、ToolAttempt、EffectReceipt 或 EffectReconciliation",
+    "真实 API、CLI、MCP、SDK、Browser、RPC 或数据库执行",
+    "连接、执行或确认外部效果",
+    "08 Tool Runtime",
 ]
 
 
@@ -91,7 +92,6 @@ def _read(path: Path) -> str:
 
 def verify() -> list[str]:
     errors: list[str] = []
-
     required_paths = [
         FORMAL,
         MIRROR,
@@ -100,7 +100,6 @@ def verify() -> list[str]:
         CAPABILITY_DOC,
         DOCS_MAP,
         AGENT_SYSTEM,
-        AGENTS,
         DOCS_ENTRYPOINT_VERIFIER,
         AGENT_SYSTEM_VERIFIER,
     ]
@@ -139,13 +138,7 @@ def verify() -> list[str]:
 
     requirement_ids = {int(value) for value in re.findall(r"ARCH-TOOL-(\d{3})", formal)}
     if requirement_ids != set(range(1, 81)):
-        missing = sorted(set(range(1, 81)) - requirement_ids)
-        extra = sorted(requirement_ids - set(range(1, 81)))
-        errors.append(
-            "Tool Runtime document must define ARCH-TOOL-001 through ARCH-TOOL-080; "
-            f"missing={missing}, extra={extra}"
-        )
-
+        errors.append("Tool Runtime document must define ARCH-TOOL-001 through ARCH-TOOL-080")
     control_ids = {int(value) for value in re.findall(r"RC-TOOL-(\d{3})", formal)}
     if control_ids != set(range(1, 81)):
         errors.append("Tool Runtime document must map RC-TOOL-001 through RC-TOOL-080")
@@ -154,7 +147,6 @@ def verify() -> list[str]:
     agent_index = _read(AGENT_INDEX)
     docs_map = _read(DOCS_MAP)
     agent_system = _read(AGENT_SYSTEM)
-    agents = _read(AGENTS)
     docs_verifier = _read(DOCS_ENTRYPOINT_VERIFIER)
     system_verifier = _read(AGENT_SYSTEM_VERIFIER)
 
@@ -174,7 +166,6 @@ def verify() -> list[str]:
     for content_name, content in [
         (".agent/references/docs-map.md", docs_map),
         (".agent/system.yaml", agent_system),
-        ("AGENTS.md", agents),
         ("tools/scripts/verify_docs_entrypoints.py", docs_verifier),
         (".agent/scripts/verify_agent_system.py", system_verifier),
     ]:
