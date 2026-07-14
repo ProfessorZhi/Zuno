@@ -30,6 +30,19 @@ Zuno 正式架构设计事实共十三份：
 
 `.agent/architecture/` 是字节级镜像，不是独立事实源。
 
+
+## 规范优先级
+
+```text
+全局不可变原则、已接受 ADR、共享 Contract Registry
+→ 十一份 Canonical Owner 模块文档
+→ architecture.md 跨模块集成
+→ architecture-views.md 说明性 Mermaid
+→ architecture.html 渲染
+```
+
+模块文档更新后，总架构和图必须向模块对齐；禁止根据旧 Mermaid 反向修改新模块 Contract。
+
 ## 状态、决策与治理入口
 
 ```text
@@ -51,6 +64,7 @@ docs/governance/
 
 ```text
 python tools/scripts/verify_architecture_document_set.py
+python tools/scripts/verify_architecture_semantic_alignment.py
 python tools/agent/render_architecture.py --write
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py

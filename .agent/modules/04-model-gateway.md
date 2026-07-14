@@ -146,7 +146,7 @@ Tool 执行、外部副作用、幂等 Effect Claim 或副作用审批
 | 模块 | 典型模型能力 | 主要 Role / Operation | Gateway 之外的事实 Owner |
 | --- | --- | --- | --- |
 | 01 Product Surface | 意图分类、问题改写、语言转换、展示风格转换 | `TASK_ANALYZER`、`QUERY_REWRITER`、`CLASSIFICATION`、`TEXT_GENERATION` | Product Surface 拥有用户请求、渠道与展示状态 |
-| 02 Input / Document Ingestion | VLM OCR、版面理解、表格恢复、文档分类、Metadata 和字段抽取 | `EXTRACTOR`、`VISION_EXTRACTION`、`STRUCTURED_GENERATION`、`CLASSIFICATION` | Ingestion 拥有 Source Object、ParseRun、Chunk 和摄取状态 |
+| 02 Input / Document Ingestion | VLM OCR、版面理解、表格恢复、文档分类、Metadata 和字段抽取 | `EXTRACTOR`、`VISION_EXTRACTION`、`STRUCTURED_GENERATION`、`CLASSIFICATION` | Ingestion 拥有 SourceObject、ParseSnapshot、CanonicalDocumentIR 和摄取状态 |
 | 03 Knowledge / Agentic GraphRAG | Chunk/Query Embedding、Rerank、Query Rewrite、实体关系抽取、证据质量判断 | `QUERY_REWRITER`、`EXTRACTOR`、`EMBEDDING`、`RERANK`、`JUDGE` | Knowledge 拥有 Evidence、RetrievalRound、IndexManifest 和 CitationLineage |
 | 04 Model Gateway | Adapter Probe、Conformance、调用修复和归一化 | 所有 Operation 的执行控制 | Gateway 拥有 ModelCall、Attempt、Routing、Usage、Health、Circuit |
 | 05 Memory & Context | 上下文压缩、对话摘要、Memory Candidate、实体记忆、Consolidation、Reflexion | `EXTRACTOR`、`SYNTHESIZER`、`STRUCTURED_GENERATION` | Memory 拥有 ContextPack、MemoryCandidate、Memory Commit 和删除语义 |

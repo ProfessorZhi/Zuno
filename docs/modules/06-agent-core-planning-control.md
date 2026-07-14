@@ -1,6 +1,6 @@
 # 06 Agent Core / Planning & Control
 
-updated: 2026-07-12
+updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 06
 formal_path: `docs/modules/06-agent-core-planning-control.md`
@@ -44,8 +44,9 @@ docs/status/
 规范优先级：
 
 ```text
-全局架构原则
+全局不可变原则与已接受 ADR / 共享 Contract Registry
 → 本模块 Target 架构文档
+→ 总架构的跨模块集成视图
 → 已确认的 Program
 → 代码与 Migration
 ```

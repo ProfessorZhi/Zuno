@@ -49,7 +49,7 @@
 <div class="layout">
   <aside>
     <h1>Zuno Architecture</h1>
-    <p>十一模块 + 总体集成架构的可视化入口。</p>
+    <p>十一模块优先、总体集成其次、Mermaid 说明性最低优先级的可视化入口。</p>
     <div class="links">
       <a href="./architecture.md">阅读文字总架构</a>
       <a href="../modules/README.md">阅读十一模块架构</a>
@@ -61,9 +61,9 @@
   <main>
     <section class="hero">
       <h1>Zuno Target Architecture</h1>
-      <p>本页展示跨模块集成视图。领域对象、字段、状态机、Failure、数据库和测试规格以十一份模块唯一正式 Target 文档为准；本页不构成额外模块事实源。</p>
+      <p>本页展示跨模块集成视图。模块 Owner 文档是领域规范源，architecture.md 负责跨模块组合，本页和 Mermaid 只作说明，不得覆盖模块 Contract。</p>
       <div class="facts">
-        <div><strong>正式设计：</strong>11 份模块文档 + architecture.md + architecture.html。</div>
+        <div><strong>规范优先：</strong>已接受 ADR / Registry → 11 份模块文档 → architecture.md → Mermaid / HTML。</div>
         <div><strong>渲染支撑：</strong>architecture-views.md 只提供 Mermaid 图源。</div>
         <div><strong>状态边界：</strong>Target 不等于 Current，也不等于 production ready。</div>
       </div>
