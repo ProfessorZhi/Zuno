@@ -192,7 +192,7 @@ Evidence and Release
 | Memory & Context | ContextPack、MemoryCandidate、MemoryCommit | context/memory refs | 直接写长期 Memory |
 | Agent Core | Run、Goal、Plan、Step、Action、Decision、Outcome、BudgetSettlement | 生命周期、控制决策和证据引用 | 修改 Agent Core 状态 |
 | Capability / Skill | CapabilityDefinition、SkillDefinition | capability/version refs | 修改 Skill 事实 |
-| Tool Runtime | PreparedToolAction、ExecutionAttempt、EffectReceipt、Reconcile | tool/approval/effect events | Retry 源副作用或伪造 EffectReceipt |
+| Tool Runtime | PreparedToolAction、ToolAttempt、EffectReceipt、EffectReconciliation | tool/approval/effect events | Retry 源副作用或伪造 EffectReceipt |
 | Security | Principal、Policy、Authorization、Redaction、Audit Requirement | SecurityAuditRequirementV1、Decision refs | 降低 Security Gate 或 Redaction |
 | Infrastructure | Store、Queue、Lease、Checkpoint、Receipt、Backup/Restore | physical receipt、capacity、health | 重定义 Eval 或 Audit 业务语义 |
 | Observability & Eval | Projection、accepted AuditEvent、Metric/Eval/Evidence/Benchmark/Gate | 上述版本化事实 | 冒充源事实 Owner |
@@ -304,32 +304,26 @@ RC-AG/EV-AG Evidence
 
 ```mermaid
 flowchart TD
-  A[User Input] --> B[Task Analysis]
-  B --> C[Query Normalize / Rewrite / Decompose]
-  C --> D[Route and Profile Decision]
-  D --> E[Retrieval Plan + Budget + Security Scope]
-  E --> F1[Vector / Dense]
-  E --> F2[Lexical / BM25]
-  E --> F3[Local Graph Search]
-  E --> F4[Global Community Search]
-  E --> F5[DRIFT / Follow-up Expansion]
-  F3 --> G[Entity / Relation / Path / Community Expansion]
-  F4 --> G
-  F5 --> G
-  F1 --> H[Candidate Normalization]
-  F2 --> H
-  G --> I[Graph-to-Text Source Grounding]
-  I --> H
-  H --> J[Fusion / Dedup]
-  J --> K[Rerank]
-  K --> L[Evidence Assembly / Compression]
-  L --> M[Answer Generation]
-  M --> N[Claim Extraction / Citation Binding]
-  N --> O[Action Evaluation / Step Acceptance]
-  O -->|insufficient conflict low confidence| P[Reflection / Replan Barrier]
-  P --> C
-  O -->|accepted| Q[Final Synthesis / Final Gate]
-  Q --> R[RunOutcome / BudgetSettlement / Eval]
+  A[User Input] --> B[Agent Core Task Analysis]
+  B --> C[RetrievalNeedDecision / EvidenceRequirement]
+  C --> D[KnowledgeQueryRequest + Budget + Authorized Scope]
+  D --> E[Fixed KnowledgeRetrievalGraph]
+  E --> F[RetrievalPlan / RetrievalRound]
+  F --> G[Parallel BM25 / Vector / Graph / Structured Retrievers]
+  G --> H[Normalize / Ground / Fusion / Rerank]
+  H --> I[EvidenceLedger / EvidenceFrontier]
+  I --> J[RetrievalQualityVerdict]
+  J -->|inner evidence repair| K[CorrectiveRetrievalDecision + new RetrievalRound]
+  K --> F
+  J -->|sufficient or partial| L[SelectedEvidenceBundle / KnowledgeRetrievalOutcome]
+  J -->|task-level change proposal| M[KnowledgeControlProposal]
+  L --> N[Agent Core Step Acceptance]
+  M --> O[Agent Core ControlDecision]
+  O -->|replan accepted| P[Replan Barrier + new PlanVersion]
+  O -->|ask user / external tool / abstain| Q[Interrupt or terminal control]
+  N -->|accepted| R[Final Synthesis / Claim and Citation Binding / Final Gate]
+  N -->|step retry or repair| C
+  R --> S[Publication / RunOutcome / BudgetSettlement / Eval]
 ```
 
 ```text

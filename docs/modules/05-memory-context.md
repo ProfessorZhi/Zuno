@@ -49,9 +49,9 @@ docs/history/
 规范优先级：
 
 ```text
-全局架构原则
+全局不可变原则与已接受 ADR / 共享 Contract Registry
 → 本模块 Target 架构文档
-→ 已冻结的跨模块共享 Contract
+→ 总架构的跨模块集成视图
 → 已确认 Program
 → 代码与 Migration
 ```

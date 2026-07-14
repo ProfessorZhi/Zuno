@@ -11,8 +11,10 @@ on:
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
       - "tools/scripts/verify_architecture_document_set.py"
+      - "tools/scripts/verify_architecture_semantic_alignment.py"
       - "tests/repo/test_*_target_protocols.py"
       - "tests/repo/test_architecture_document_set.py"
+      - "tests/repo/test_architecture_semantic_alignment.py"
       - "tests/repo/test_docs_entrypoints.py"
       - "AGENTS.md"
       - ".agent/system.yaml"
@@ -28,8 +30,10 @@ on:
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
       - "tools/scripts/verify_architecture_document_set.py"
+      - "tools/scripts/verify_architecture_semantic_alignment.py"
       - "tests/repo/test_*_target_protocols.py"
       - "tests/repo/test_architecture_document_set.py"
+      - "tests/repo/test_architecture_semantic_alignment.py"
       - "tests/repo/test_docs_entrypoints.py"
       - "AGENTS.md"
       - ".agent/system.yaml"
@@ -60,11 +64,15 @@ jobs:
           python -m py_compile \
             tools/agent/render_architecture.py \
             tools/scripts/verify_architecture_document_set.py \
+            tools/scripts/verify_architecture_semantic_alignment.py \
             tests/repo/test_architecture_document_set.py \
+            tests/repo/test_architecture_semantic_alignment.py \
             tests/repo/test_docs_entrypoints.py \
             2>&1 | tee architecture-validation-logs/compile.log
       - name: Verify canonical architecture document set
         run: set -o pipefail; python tools/scripts/verify_architecture_document_set.py 2>&1 | tee architecture-validation-logs/document-set.log
+      - name: Verify semantic alignment with canonical modules
+        run: set -o pipefail; python tools/scripts/verify_architecture_semantic_alignment.py 2>&1 | tee architecture-validation-logs/semantic-alignment.log
       - name: Verify architecture rendering and mirrors
         run: set -o pipefail; python tools/agent/render_architecture.py --check 2>&1 | tee architecture-validation-logs/render.log
       - name: Verify documentation and Agent entrypoints
@@ -80,6 +88,7 @@ jobs:
           set -o pipefail
           pytest -q \
             tests/repo/test_architecture_document_set.py \
+            tests/repo/test_architecture_semantic_alignment.py \
             tests/repo/test_docs_entrypoints.py \
             tests/repo/test_agent_core_target_protocols.py \
             tests/repo/test_product_surface_target_protocols.py \

@@ -32,10 +32,6 @@ KnowledgeVersion、KnowledgeSnapshot、配置、持久化与事务
 docs/modules/03-knowledge-agentic-graphrag.md
     Knowledge / Agentic GraphRAG 唯一 Target 架构事实源。
 
-docs/governance/03-agentic-graphrag-cross-module-coordination.md
-    临时跨模块协调建议；不覆盖 06、10 等模块正式文档。
-    协调内容吸收后必须删除。
-
 .agent/programs/
     Current → Target 的实现、迁移、切流、回滚和收口 Program。
 
@@ -49,9 +45,9 @@ docs/evidence/
 规范优先级：
 
 ```text
-全局架构原则
+全局不可变原则与已接受 ADR / 共享 Contract Registry
 → 本模块 Target 架构
-→ 已冻结的跨模块 Contract / ADR
+→ 总架构的跨模块集成视图
 → 已确认 Program
 → 代码、Migration 与部署配置
 ```
