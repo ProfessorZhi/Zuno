@@ -28,7 +28,7 @@
 | 08 | Tool Runtime | `docs/modules/08-tool-runtime.md` | [`.agent/modules/08-tool-runtime.md`](./08-tool-runtime.md) | 单一完整 Target 架构 |
 | 09 | Security | `docs/modules/09-security.md` | [`.agent/modules/09-security.md`](./09-security.md) | 单一完整 Target 架构 |
 | 10 | Observability & Eval | `docs/modules/10-observability-eval.md` | [`.agent/modules/10-observability-eval.md`](./10-observability-eval.md) | 单一完整 Target 架构 |
-| 11 | Infrastructure | `docs/modules/11-infrastructure.md` | [`.agent/modules/11-infrastructure.md`](./11-infrastructure.md) | 单一完整实施级 Target；唯一 Target 镜像 |
+| 11 | Infrastructure | `docs/modules/11-infrastructure.md` | [`11-infrastructure.md`](./11-infrastructure.md)；`.agent/modules/11-infrastructure.md` | 单一完整实施级 Target；唯一 Target 镜像 |
 
 ## 模块验证入口
 
