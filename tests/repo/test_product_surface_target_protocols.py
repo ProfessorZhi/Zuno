@@ -147,14 +147,15 @@ def test_outcome_and_side_effect_semantics_are_not_flattened() -> None:
 
 def test_storage_and_physical_layout_respect_repository_contract() -> None:
     content = _content()
-    for path in [
-        "src/backend/zuno/api/product/",
-        "src/backend/zuno/api/services/product/",
+    for fragment in [
+        "src/backend/zuno/api/",
+        "├── product/",
+        "├── services/product/",
         "src/backend/zuno/platform/database/product/",
         "apps/web/src/product/",
         "apps/desktop/src/product/",
     ]:
-        assert path in content
+        assert fragment in content
     assert "src/backend/zuno/product/" not in content
     for table in [
         "product_conversation_threads",
