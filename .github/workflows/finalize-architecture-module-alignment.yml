@@ -46,11 +46,12 @@ jobs:
         run: python tools/scripts/verify_architecture_semantic_alignment.py
       - name: Verify Mermaid rendering and mirrors
         run: python tools/agent/render_architecture.py --check
-      - name: Verify entrypoints and boundaries
-        run: |
-          python tools/scripts/verify_docs_entrypoints.py
-          python .agent/scripts/verify_agent_system.py
-          python .agent/scripts/verify_doc_boundaries.py
+      - name: Verify documentation entrypoints
+        run: python tools/scripts/verify_docs_entrypoints.py
+      - name: Verify Agent system routes
+        run: python .agent/scripts/verify_agent_system.py
+      - name: Verify document boundaries
+        run: python .agent/scripts/verify_doc_boundaries.py
       - name: Run focused architecture tests
         run: |
           pytest -q \
