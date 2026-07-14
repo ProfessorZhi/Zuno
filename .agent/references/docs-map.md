@@ -32,6 +32,7 @@ docs/history/ = archive
 - `docs/architecture/architecture-views.md`：十类 canonical views 的 Mermaid 规范图源。
 - `docs/architecture/architecture.html`：读取图源的 Architecture Atlas。
 - `docs/modules/README.md`：十一个逻辑模块入口。
+- `docs/modules/01-product-surface.md`：Product Surface 第一轮 Target 边界设计；完整实施级 Contract 在其他模块稳定后收口。
 - `docs/modules/06-agent-core-planning-control.md`：Agent Core V2 实施级设计。
 - `docs/status/production-readiness.md`：Current、Gap、Measurement Blocked、Completed、Future Optional。
 - `docs/decisions/README.md`：正式 ADR 入口。
@@ -50,6 +51,7 @@ Agent 工作流入口：
 - `.agent/architecture/architecture.md`：正式总架构文字镜像。
 - `.agent/architecture/architecture-views.md`：正式 Mermaid 图源镜像。
 - `.agent/architecture/architecture.html`：正式 HTML Atlas 镜像。
+- `.agent/modules/01-product-surface.md`：Product Surface 第一轮边界设计镜像。
 - `.agent/modules/06-agent-core-planning-control.md`：Agent Core 模块镜像。
 
 ## Must Preserve
@@ -63,6 +65,7 @@ Agent 工作流入口：
 - `architecture.md` 必须以设计文字为主，只保留少量关键图。
 - `architecture-views.md` 承担十类 Mermaid 图源，不承载完整设计解释。
 - HTML 是图谱展示，不承担完整目标架构事实源。
+- Product Surface 当前只冻结第一轮边界；不得提前把完整 DTO、状态机、数据库或 SSE 编码写成已冻结 Contract。
 
 ## Focused Tests
 
@@ -72,7 +75,8 @@ python .agent/scripts/verify_agent_system.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
-pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+python tools/scripts/verify_product_surface_boundary_design.py
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_product_surface_boundary_design.py -p no:cacheprovider
 ```
 
 ## Docs Sync
@@ -93,6 +97,14 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 - `docs/modules/README.md`
 - 对应 `docs/modules/<module>.md`
 - 存在镜像时同步 `.agent/modules/<module>.md`
+- 对应模块专用 Verifier 和 Tests
+
+修改 Product Surface 第一轮边界时额外检查：
+
+- `docs/modules/01-product-surface.md`
+- `.agent/modules/01-product-surface.md`
+- `tools/scripts/verify_product_surface_boundary_design.py`
+- `tests/repo/test_product_surface_boundary_design.py`
 
 修改 Current / readiness 时检查：
 
