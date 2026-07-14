@@ -6,7 +6,7 @@ on:
   push:
     branches: [docs/architecture-module-realignment]
     paths:
-      - "tools/scripts/finalize_architecture-module-alignment.py"
+      - "tools/scripts/finalize_architecture_module_alignment.py"
       - "tools/scripts/patch_observability_alignment_tests.py"
       - ".github/workflows/finalize-architecture-module-alignment.yml"
   workflow_dispatch:
@@ -78,9 +78,12 @@ jobs:
             tests/repo/test_infrastructure_target_protocols.py \
             tests/repo/test_wave1_contract_freeze.py \
             -p no:cacheprovider
-      - name: Commit finalized architecture alignment
+      - name: Commit validated non-workflow changes
         run: |
-          git checkout HEAD -- tools/scripts/finalize_architecture_module_alignment.py .github/workflows/finalize-architecture-module-alignment.yml
+          git checkout HEAD -- \
+            tools/scripts/finalize_architecture_module_alignment.py \
+            .github/workflows/finalize-architecture-module-alignment.yml \
+            .github/workflows/architecture-document-set.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
