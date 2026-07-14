@@ -13,8 +13,7 @@ CANONICAL_ARCHITECTURE_FILES = {
     "architecture.html",
 }
 
-MEMORY_CONTEXT_DOC = "05-memory-context.md"
-AGENT_CORE_DOC = "06-agent-core-planning-control.md"
+AGENT_CORE_DOCS = ["06-agent-core-planning-control.md"]
 
 REQUIRED_PATHS = [
     "AGENTS.md",
@@ -27,8 +26,8 @@ REQUIRED_PATHS = [
     "docs/modules/README.md",
     "docs/modules/02-input-document-ingestion.md",
     "docs/modules/03-knowledge-agentic-graphrag.md",
-    f"docs/modules/{MEMORY_CONTEXT_DOC}",
-    f"docs/modules/{AGENT_CORE_DOC}",
+    "docs/modules/05-memory-context.md",
+    *[f"docs/modules/{name}" for name in AGENT_CORE_DOCS],
     "docs/modules/07-capability-skill.md",
     "docs/modules/10-observability-eval.md",
     "docs/status/production-readiness.md",
@@ -42,8 +41,7 @@ REQUIRED_PATHS = [
     ".agent/architecture/architecture-views.md",
     ".agent/architecture/architecture.html",
     ".agent/modules/README.md",
-    f".agent/modules/{MEMORY_CONTEXT_DOC}",
-    f".agent/modules/{AGENT_CORE_DOC}",
+    *[f".agent/modules/{name}" for name in AGENT_CORE_DOCS],
     ".agent/references/README.md",
     ".agent/references/project-map.md",
     ".agent/references/task-routing.md",
@@ -82,10 +80,7 @@ REQUIRED_PATHS = [
     "tools/scripts/verify_docs_entrypoints.py",
     "tools/scripts/verify_repo_structure.py",
     "tools/scripts/verify_current_program.py",
-    "tools/scripts/verify_memory_context_target_protocols.py",
     "tools/scripts/verify_agent_core_target_protocols.py",
-    "tests/repo/test_memory_context_target_protocols.py",
-    ".github/workflows/memory-context-target-docs.yml",
 ]
 
 FORBIDDEN_ACTIVE_PATHS = [
@@ -149,18 +144,20 @@ def verify_architecture_directory_contract() -> list[str]:
 
 
 def verify_mirrors() -> list[str]:
+    errors: list[str] = []
     pairs = [
         ("docs/architecture/architecture.md", ".agent/architecture/architecture.md"),
         ("docs/architecture/architecture-views.md", ".agent/architecture/architecture-views.md"),
         ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
-        (f"docs/modules/{MEMORY_CONTEXT_DOC}", f".agent/modules/{MEMORY_CONTEXT_DOC}"),
-        (f"docs/modules/{AGENT_CORE_DOC}", f".agent/modules/{AGENT_CORE_DOC}"),
+        *[
+            (f"docs/modules/{name}", f".agent/modules/{name}")
+            for name in AGENT_CORE_DOCS
+        ],
     ]
-    return [
-        f"mirror mismatch: {mirror} must match {formal}"
-        for formal, mirror in pairs
-        if (REPO_ROOT / formal).read_bytes() != (REPO_ROOT / mirror).read_bytes()
-    ]
+    for formal, mirror in pairs:
+        if _read(formal) != _read(mirror):
+            errors.append(f"mirror mismatch: {mirror} must match {formal}")
+    return errors
 
 
 def verify_entrypoint_boundaries() -> list[str]:
@@ -184,19 +181,18 @@ def verify_entrypoint_boundaries() -> list[str]:
             "docs/governance/",
         ],
         "docs/modules/README.md": [
-            MEMORY_CONTEXT_DOC,
-            AGENT_CORE_DOC,
+            *AGENT_CORE_DOCS,
             "docs/status/production-readiness.md",
-            "verify_memory_context_target_protocols.py",
             "verify_agent_core_target_protocols.py",
         ],
         ".agent/modules/README.md": [
-            MEMORY_CONTEXT_DOC,
-            AGENT_CORE_DOC,
-            "verify_memory_context_target_protocols.py",
+            *AGENT_CORE_DOCS,
             "verify_agent_core_target_protocols.py",
         ],
-        ".agent/README.md": [".agent/architecture/", ".agent/modules/"],
+        ".agent/README.md": [
+            ".agent/architecture/",
+            ".agent/modules/",
+        ],
     }
     for relative_path, phrases in required_phrases.items():
         content = _read(relative_path)
@@ -207,6 +203,7 @@ def verify_entrypoint_boundaries() -> list[str]:
 
 
 def verify_module_contracts() -> list[str]:
+    errors: list[str] = []
     required = {
         "docs/modules/02-input-document-ingestion.md": [
             "SourceObject",
@@ -218,19 +215,11 @@ def verify_module_contracts() -> list[str]:
             "RetrievalQualityVerdict",
             "KnowledgeSnapshot",
         ],
-        f"docs/modules/{MEMORY_CONTEXT_DOC}": [
-            "Working Memory",
-            "Session Memory",
-            "Long-term Memory",
-            "Episodic Memory",
-            "Semantic Memory",
-            "Procedural Memory",
-            "C0 Deterministic Lossless",
-            "C3 Reasoning Consolidation",
-            "ContextPack read view, not another memory layer",
-            "ARCH-MEM-060",
+        "docs/modules/05-memory-context.md": [
+            "Sensory Memory",
+            "ContextPack read view",
         ],
-        f"docs/modules/{AGENT_CORE_DOC}": [
+        "docs/modules/06-agent-core-planning-control.md": [
             "Single Controller Agent Runtime",
             "Plan DAG",
             "TaskContract",
@@ -258,10 +247,11 @@ def verify_module_contracts() -> list[str]:
             "SkillMetadata",
             "ToolRequest",
         ],
-        "docs/modules/10-observability-eval.md": ["Measurement Semantics", "agent_run"],
+        "docs/modules/10-observability-eval.md": [
+            "Measurement Semantics",
+            "agent_run",
+        ],
     }
-
-    errors: list[str] = []
     for relative_path, phrases in required.items():
         content = _read(relative_path)
         for phrase in phrases:
@@ -270,25 +260,18 @@ def verify_module_contracts() -> list[str]:
     return errors
 
 
-def verify_module_routing() -> list[str]:
+def verify_agent_core_routing() -> list[str]:
     errors: list[str] = []
-    agents = _read("AGENTS.md")
-    system = _read(".agent/system.yaml")
-
-    if MEMORY_CONTEXT_DOC not in agents and "Memory 模块文档" not in agents:
-        errors.append("AGENTS.md does not route to the Memory & Context module document")
-    if MEMORY_CONTEXT_DOC not in system:
-        errors.append(f".agent/system.yaml does not route to module document: {MEMORY_CONTEXT_DOC}")
-
-    for relative_path, content in [("AGENTS.md", agents), (".agent/system.yaml", system)]:
-        if AGENT_CORE_DOC not in content:
-            errors.append(f"{relative_path} does not route to module document: {AGENT_CORE_DOC}")
+    for relative_path in ["AGENTS.md", ".agent/system.yaml"]:
+        content = _read(relative_path)
+        for name in AGENT_CORE_DOCS:
+            if name not in content:
+                errors.append(f"{relative_path} does not route to Agent Core document: {name}")
         if "verify_agent_core_target_protocols.py" not in content:
             errors.append(f"{relative_path} does not route to Agent Core verifier")
-
-    if "Single GeneralAgent" in system:
+    if "Single GeneralAgent" in _read(".agent/system.yaml"):
         errors.append(".agent/system.yaml uses obsolete Single GeneralAgent terminology")
-    if "Single Controller Agent Runtime" not in system:
+    if "Single Controller Agent Runtime" not in _read(".agent/system.yaml"):
         errors.append(".agent/system.yaml must declare Single Controller Agent Runtime")
     return errors
 
@@ -315,7 +298,7 @@ def main() -> int:
         verify_mirrors,
         verify_entrypoint_boundaries,
         verify_module_contracts,
-        verify_module_routing,
+        verify_agent_core_routing,
         verify_no_tracked_local_workspace,
     ]
     errors: list[str] = []

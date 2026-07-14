@@ -1,0 +1,117 @@
+name: Tool Runtime Target Docs
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docs/modules/08-tool-runtime.md"
+      - ".agent/modules/08-tool-runtime.md"
+      - "docs/modules/07-capability-skill.md"
+      - "docs/modules/README.md"
+      - ".agent/modules/README.md"
+      - "AGENTS.md"
+      - ".agent/system.yaml"
+      - ".agent/references/docs-map.md"
+      - ".agent/scripts/verify_agent_system.py"
+      - "tools/scripts/verify_docs_entrypoints.py"
+      - "tools/scripts/verify_tool_runtime_target_protocols.py"
+      - "tests/repo/test_tool_runtime_target_protocols.py"
+      - ".github/workflows/tool-runtime-target-docs.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/modules/08-tool-runtime.md"
+      - ".agent/modules/08-tool-runtime.md"
+      - "docs/modules/07-capability-skill.md"
+      - "docs/modules/README.md"
+      - ".agent/modules/README.md"
+      - "AGENTS.md"
+      - ".agent/system.yaml"
+      - ".agent/references/docs-map.md"
+      - ".agent/scripts/verify_agent_system.py"
+      - "tools/scripts/verify_docs_entrypoints.py"
+      - "tools/scripts/verify_tool_runtime_target_protocols.py"
+      - "tests/repo/test_tool_runtime_target_protocols.py"
+      - ".github/workflows/tool-runtime-target-docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tool-runtime-target-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Tool Runtime target contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest pyyaml
+
+      - name: Verify executable and workflow diff formatting
+        run: git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml'
+
+      - name: Compile verifier and tests
+        run: |
+          python -m py_compile \
+            tools/scripts/verify_tool_runtime_target_protocols.py \
+            tools/scripts/verify_docs_entrypoints.py \
+            .agent/scripts/verify_agent_system.py \
+            tests/repo/test_tool_runtime_target_protocols.py
+
+      - name: Parse Agent System YAML
+        run: python -c "import pathlib, yaml; yaml.safe_load(pathlib.Path('.agent/system.yaml').read_text(encoding='utf-8'))"
+
+      - name: Verify Tool Runtime target protocols
+        id: tool_runtime_verifier
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_tool_runtime_target_protocols.py 2>&1 | tee tool-runtime-verifier.log
+
+      - name: Upload Tool Runtime verifier diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tool-runtime-verifier-log
+          path: tool-runtime-verifier.log
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Fail when Tool Runtime verifier failed
+        if: steps.tool_runtime_verifier.outcome == 'failure'
+        run: exit 1
+
+      - name: Verify formal and Agent mirror bytes
+        run: cmp docs/modules/08-tool-runtime.md .agent/modules/08-tool-runtime.md
+
+      - name: Verify documentation entrypoints and boundaries
+        run: |
+          python tools/scripts/verify_docs_entrypoints.py
+          python .agent/scripts/verify_agent_system.py
+          python .agent/scripts/verify_doc_boundaries.py
+
+      - name: Run focused repository tests
+        run: |
+          pytest -q \
+            tests/repo/test_tool_runtime_target_protocols.py \
+            tests/repo/test_docs_entrypoints.py \
+            -p no:cacheprovider
