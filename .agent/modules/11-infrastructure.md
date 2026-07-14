@@ -1,343 +1,577 @@
 # 11 Infrastructure
 
-updated: 2026-07-13
+updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 11
 formal_path: `docs/modules/11-infrastructure.md`
 agent_mirror: `.agent/modules/11-infrastructure.md`
 current_state_source: `docs/status/production-readiness.md`
+shared_contract_source: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
+shared_contract_registry: `docs/governance/wave1-cross-module-contract-registry.md`
 
-> 本文是 Zuno 第 11 个逻辑模块 Infrastructure 的正式 Target 架构文档。
+> 本文是 Zuno 第 11 个逻辑模块 Infrastructure 的唯一正式 Target 架构文档。
 >
-> Infrastructure 提供可替换、可验证的持久化、消息、对象、租约、时间、迁移、备份、恢复与部署 primitive；它不拥有 Agent、Security、Model、Knowledge、Memory 或 Eval 的领域结论。Target 只有在代码、Migration、故障测试、Trace 与运行证据完成后才能提升为 Current。
+> 本文统一承载原主文档、数据服务附录和一致性生命周期附录中的全部有效设计。模块不再维护第二份规范性附录。Current、Gap、Measurement 与 production readiness 仍由 `docs/status/production-readiness.md` 维护；实现和迁移计划进入 `.agent/programs/`。
 
-## 0. 文档边界与事实源
+## 0. 文档边界与规范优先级
+
+本文统一承载：
+
+```text
+问题、目标、选择与非目标
+概念架构、部署拓扑与完整运行流程
+PostgreSQL、RabbitMQ、Object Store / MinIO、Checkpointer
+Milvus、Neo4j、BM25 / Search、Redis、Trace/Audit、Secret/KMS
+事务、Inbox/Outbox、Lease/Fencing、Clock、Capacity
+派生索引发布、删除、恢复、审计、升级与兼容
+状态机、失败语义、幂等、重试、对账与灾备
+安全、多租户、网络、发布、SLO 与成本归属
+目标代码、数据库、Port、Migration、测试和完成证据
+```
+
+文档边界：
 
 ```text
 docs/modules/11-infrastructure.md
-    Infrastructure Target 架构事实源。
+    唯一 Infrastructure Target 架构事实源。
+
 .agent/modules/11-infrastructure.md
     字节级一致的 Agent 镜像。
+
+docs/decisions/0003-wave1-cross-module-contract-freeze.md
+    Wave 1 共享 Contract、物理目录和副作用 Ownership 决议。
+
+docs/governance/wave1-cross-module-contract-registry.md
+    跨模块 Owner、Producer、Consumer、Failure 与 Recovery Registry。
+
 docs/status/production-readiness.md
-    Current、Gap、Measurement 与 production readiness 事实源。
+    Current、Gap、Measurement 和完成状态事实源。
+
 .agent/programs/
-    Current → Target 的迁移、切流、回滚与收口计划。
+    Current → Target 的实现、迁移、切流、回滚和收口计划。
 ```
 
 规范优先级：
 
 ```text
-最新 main 的全局架构原则
-→ Agent Core 已冻结 Target Contract
-→ 本模块 Target 架构
-→ 已确认 ADR / Program
+全局架构原则
+→ 已接受 ADR 与共享 Contract Registry
+→ 本模块唯一 Target 架构文档
+→ 已确认 Program
 → 代码、Migration 与部署配置
 ```
 
-未合并的 Wave 1 PR 只是 Parallel Proposal，可提出依赖，不能替代最新 `main`，也不能被写成 Current。
+本文描述 Target，不因出现类名、表名、Compose 服务或 Adapter 就把能力提升为 Current。
+
+### 0.1 文档内部规范层级
+
+Part I–II 描述问题、概念架构和完整流程；Part III–VI 冻结 Contract、状态、故障、安全与运维语义；Part VII–VIII 冻结实现表面、Requirement、测试与证据。说明性流程不得覆盖规范性 Contract。
 
 ---
 
-# Part I：问题、目标与选择
+# Part I：定位、目标与架构选择
 
-## 1. 问题
+# 1. 为什么需要 Infrastructure
 
-企业 Agent 的可靠性问题常发生在边界之间：
+企业知识库 Agent 的可靠性问题通常发生在组件边界，而不是单个函数内部：
 
 ```text
-数据库已经提交，但消息尚未发布
-对象已经上传，但 metadata 尚未提交
-Worker 已失去 Lease，却晚到写入结果
-Checkpoint 已保存，但领域事务没有完成
-Migration 执行一半，应用版本不再兼容
-Backup 文件存在，但从未验证可恢复
-Drain 已开始，旧 Worker 仍继续接收任务
-容量耗尽后系统仍无界接受请求
+PostgreSQL 已提交领域事实，但 RabbitMQ 消息尚未发布
+MinIO 对象已经上传，但数据库 metadata 尚未提交
+RabbitMQ 重投消息，Worker 再次执行外部副作用
+Worker Lease 已过期，旧进程仍晚到提交结果
+LangGraph Checkpoint 已保存，但领域事务并未完成
+Milvus 写入成功，但 Knowledge IndexManifest 未验证
+Neo4j 已提交图数据，但版本切流 Receipt 丢失
+删除已写 Tombstone，但向量、图或搜索仍可检索
+PITR 只恢复 PostgreSQL，派生索引却包含恢复点之后的数据
+Mandatory Audit 不可用，高风险 Tool Effect 仍被执行
+Migration 执行一半，新旧应用无法兼容
+Backup 文件存在，但从未证明可以恢复
+容量耗尽后系统仍无界接收任务
 ```
 
-如果各业务模块自行实现这些能力，会形成互不兼容的事务、重试、时钟、租约、备份和恢复语义。Infrastructure 的目的不是隐藏失败，而是把失败变成可分类、可拒绝、可恢复、可审计的 primitive。
+如果各领域模块各自处理这些问题，会形成互不兼容的事务、重试、时钟、幂等、租约、备份和恢复语义。
 
-## 2. 目标
+一句话定义：
+
+> Infrastructure 是 Zuno 的数据与运行可靠性底座。它把关系数据库、消息队列、对象存储、图控制状态、向量索引、图索引、关键词索引、缓存、审计持久化和 Secret Delivery 封装为可替换、可恢复、可验证的 typed capability；领域模块仍拥有数据含义和业务终局。
+
+# 2. 目标
 
 Infrastructure 提供：
 
 ```text
-Database Runtime
-Transaction Capability
-Object Store
-Checkpoint Store Adapter
+Database Runtime 与 Unit of Work
+Object Store 与 Commit Protocol
 Queue / Worker Runtime
-Inbox / Outbox Primitives
+Transactional Inbox / Outbox
 Lease / Heartbeat / Fencing
-Clock / Deadline Source
-Migration Runtime
-Backup / Restore / PITR
-Retention / Legal Hold
-Configuration
-Secret Delivery Adapter
-Deployment Topology
-Health / Readiness / Drain
-Capacity / Admission / Backpressure
-Disaster Recovery
-Storage Encryption Capability
-Observability Hook
+Authoritative Clock、Deadline 与 Timeout
+LangGraph Checkpointer Adapter
+Vector / Graph / Lexical Index Runtime
+Optional Cache Acceleration
+Migration、Upgrade 与 Compatibility
+Backup、Restore、PITR 与 Rebuild
+Retention、Deletion 与 Legal Hold Enforcement
+Configuration、Secret Delivery 与 Encryption
+Health、Readiness、Drain 与 Degradation
+Capacity、Admission 与 Backpressure
+Network Plane 与 Release Provenance
+Telemetry / Audit Persistence Primitive
+Resource Usage Attribution
 ```
 
 质量目标：
 
-- 事务边界明确，外部调用不嵌入数据库事务。
-- at-least-once delivery 下通过 Inbox、Outbox、Idempotency 与 Fencing 保持业务事实一致。
-- 进程、Worker、数据库连接、对象上传和部署重启后可以恢复。
-- 服务端统一后端是产品 Target；浏览器或桌面前端只通过 Product API 访问。SQLite、本地对象存储和本地队列仅作为开发、测试与 CI Adapter，共用同一 typed contract。
-- 所有恢复、备份、迁移和容量声明都有测试与证据，不靠配置文件存在来证明。
+- 外部调用不嵌入数据库事务。
+- at-least-once delivery 下不重复领域提交或不可逆副作用。
+- 进程、Worker、连接、上传、索引构建和部署重启后可恢复。
+- 所有权威事实、派生索引和缓存的边界明确。
+- Local 与 Enterprise Adapter 共用 Contract，但不伪造相同故障语义。
+- 多租户过滤在存储和查询入口强制执行。
+- 所有“备份、恢复、重建、删除、兼容、性能、安全”声明都能映射到测试和 Evidence。
 
-## 3. 非目标
+# 3. 负责与不负责
+
+Infrastructure 负责：
+
+```text
+物理连接、连接池和客户端生命周期
+事务、条件写、锁、Schema Compatibility
+对象上传、Hash、Version、Commit 与清理
+消息投递、确认、重投、DLQ、Drain 与容量
+Inbox、Outbox、Idempotency Claim
+Lease、Heartbeat、Fencing、Clock
+Checkpoint 物理保存、兼容和对账
+Milvus / Neo4j / Search / Redis 物理 Adapter
+Migration、Backup、Restore、PITR、Rebuild
+Tenant Isolation Profile 的物理执行
+Secret Lease、TLS、Encryption primitive
+Health、Readiness、Capacity 和 Telemetry Hook
+物理 Receipt、Watermark、Recovery 和 Reconciliation
+```
 
 Infrastructure 不负责：
 
 ```text
-AgentRun、PlanVersion、StepRun 的业务状态
-Security Authorization / Approval / Revocation 结论
-Model Routing Decision 与模型角色策略
-Tool 副作用是否允许的业务判断
-Eval Verdict、质量门或发布结论
-Knowledge / Memory 的领域语义
-ParseJob、IndexManifest、UsageRecord 等上层领域事实
+AgentRun、PlanVersion、StepRun 与 RunOutcome 的业务状态
+Security Authorization、Approval、Revocation 与 Policy 结论
+Model Routing、Provider 选择、Usage 业务语义
+ParseJob、Document、Chunk 与 OCR 业务流程
+Embedding、Vector Schema、Entity、Relation、Ontology 与检索质量
+KnowledgeVersion、MemoryVersion 和 IndexManifest 的领域 Acceptance
+Tool 是否允许执行以及 Effect 是否业务成功
+Eval Verdict、Release Gate 和质量证明
+哪些数据可以缓存、缓存命中是否满足业务正确性
 ```
 
-Infrastructure 可以拥有 `LeaseRecord`、`QueueDelivery`、`StorageObjectMetadata`、`BackupRun`、`MigrationRun` 与 `InfrastructureHealth`，但不能把 primitive 状态冒充上层领域状态。
+不变量：
 
-## 4. Current / Target / Future Optional / Not Selected
+```text
+Infrastructure owns the capability to run a service reliably.
+Domain modules own the meaning of facts stored through that capability.
+```
 
-### 4.1 Current Inventory
+# 4. Cross-module Ownership
 
-以 `docs/status/production-readiness.md` 和 `main` 代码为准：
+| Surface | Canonical Owner | Infrastructure 责任 |
+| --- | --- | --- |
+| Document / ParseJob / Chunk | Input / Ingestion | 事务、对象、Queue、Worker primitive |
+| IndexManifest / KnowledgeVersion | Knowledge | 物理索引写入、验证、切流和 Watermark |
+| MemoryVersion / MemoryCandidate | Memory | Store、Index Adapter、Retention primitive |
+| AgentRun / Plan / Step / Outcome | Agent Core | PostgreSQL、Checkpoint、Lease、ObjectRef |
+| ModelCall / Usage / Quota | Model Gateway | Provider Transport、Secret Lease、CAS、Clock |
+| PreparedToolAction / EffectReceipt | Tool Runtime | Idempotency、Queue、Lease、Audit、Transport Receipt |
+| Authorization / Approval / Epoch | Security | 条件写、Isolation、Secret、Audit Durability |
+| Trace / AuditEvent / Eval | Observability & Eval | Durable Append、Outbox、Artifact、Sink Delivery |
+| Physical Service Capability | Infrastructure | 完整 Owner |
+
+Infrastructure 是横向运行域，不要求每种能力拆成独立微服务。
+
+# 5. Current / Target / Future / Not Selected
+
+## 5.1 Current Inventory
+
+Current 只由最新代码、Migration、测试和运行证据决定。当前状态事实源仍将下列能力视为本地基线：
 
 | Surface | Current 事实 | 不代表 |
 | --- | --- | --- |
-| Database | SQLite / SQLModel、本地 durable store、database surface | PostgreSQL 事务、连接池、并发写、PITR 已完成 |
-| Object Store | local filesystem object store、SHA-256 校验、workspace 路径 | S3-compatible commit protocol、多副本、对象版本已完成 |
-| Runtime Store | SQLite runtime records、checkpoint/event/interrupt persistence bridge | 正式 LangGraph PostgreSQL Checkpointer 或 Domain/Checkpoint 对账已完成 |
-| Configuration | 本地 YAML / environment surface | Secret Manager、动态 rotation、企业配置治理已完成 |
-| Queue Skeleton | RabbitMQ adapter/config/Compose 声明存在 | Outbox、Inbox、Lease、DLQ、Recovery 已被运行证据证明 |
-| Deployment | Docker Compose 中声明多种服务 | 组件已接入主链路、已测量或 production ready |
+| Database | SQLite / SQLModel、本地 durable store | PostgreSQL 并发、锁、PITR 已完成 |
+| Object Store | Local filesystem、Hash 与 workspace path | MinIO/S3 Commit、Version 和 Lifecycle 已完成 |
+| Runtime Store | 本地 checkpoint/event/interrupt surface | PostgreSQL Checkpointer 对账已完成 |
+| Queue | 配置、Compose 或 Adapter skeleton | RabbitMQ Inbox/Outbox、DLQ、Recovery 已证明 |
+| Vector / Graph | 本地或声明性 surface | 外部 Milvus/Neo4j 集成与质量已证明 |
+| Cache | 本地或配置 surface | Redis 企业缓存、限流或 HA 已证明 |
 
-因此 PostgreSQL、Redis、MinIO、RabbitMQ、Kafka、Kubernetes、外部 Milvus/Neo4j 集群均不得描述为 Current。
+因此以下句子均不成立：
 
-### 4.2 Target Selection
+```text
+PostgreSQL 已是 Current
+RabbitMQ 已是 Current
+MinIO 已是 Current
+Milvus 已是 Current
+Neo4j 已是 Current
+Redis 已是 Current
+Kubernetes 已是 Current
+production ready 已完成
+```
 
-| Capability | Developer / CI Adapter | Canonical Server Product Target | 理由 |
+## 5.2 Target Selection
+
+| Capability | Developer / CI Adapter | Canonical Server Product Target | Authority |
 | --- | --- | --- | --- |
-| Relational DB | SQLite adapter，仅单机开发/测试 | PostgreSQL 16+ | Agent Core 已冻结 PostgreSQL 领域事实边界；支持事务、条件写、锁、PITR |
-| Object Store | Local immutable filesystem adapter | S3-compatible Object Store；managed S3 或 MinIO adapter | 大型不可变 payload、hash、版本和 lifecycle |
-| Checkpoint | Local adapter | LangGraph-compatible PostgreSQL Checkpointer adapter | 控制状态可恢复，并与领域事实对账 |
-| Async Queue | in-process/local durable adapter | RabbitMQ durable/quorum queue adapter | 工作队列、backpressure、redelivery、routing 明确 |
-| Rate-limit State | PostgreSQL baseline | PostgreSQL baseline | 避免 Redis 成为必选事实源 |
-| Deployment | 单 backend image 按 role 启动 | API / controller / worker roles，可容器化 | 保持模块边界，不提前微服务化 |
-| Secret Delivery | env/file reference adapter | external secret manager port | 业务只持有 secret reference |
+| Relational facts | SQLite | PostgreSQL 16+ | authoritative，领域语义归各模块 |
+| Async work queue | local durable/in-process queue | RabbitMQ durable/quorum queue | transport，不是领域事实源 |
+| Immutable payload | local immutable filesystem | S3-compatible Object Store / MinIO | committed object authority |
+| Graph control state | local checkpoint | LangGraph-compatible PostgreSQL Checkpointer | control-state authority within boundary |
+| Vector index | local test adapter | Milvus Adapter | rebuildable derived |
+| Graph index | local test adapter | Neo4j / replaceable graph Adapter | rebuildable derived |
+| Lexical index | local BM25 | pluggable BM25/Search Adapter | rebuildable derived |
+| Cache | bounded in-process cache | Redis Adapter | optional, non-authoritative |
+| Trace/Audit persistence | local append store | PostgreSQL/Object Store + external sink | physical durability |
+| Secret/KMS | env/file ref | Secret Manager/KMS Adapter | delivery primitive |
 
-Target 选择不等于 Current 提升；迁移必须进入独立 Program。
-
-产品部署边界固定为：
-
-```text
-Web / Desktop Frontend
-    只持有短期客户端会话和展示状态
-    → Server-hosted Product API
-        → Principal / Tenant / Workspace resolution
-        → Security Control Plane
-        → Agent / Knowledge / Memory / Model / Tool backends
-        → PostgreSQL / Object Store / Queue / Checkpoint
-```
-
-前端不得直连数据库、对象存储、Queue、Checkpointer、模型 Provider 或 Secret Store。每个用户请求必须在服务端解析可信 `PrincipalAccount`、Tenant、Workspace、Policy 与 Effective Security Epoch。本地 Adapter 只用于开发、单元测试、集成测试和离线演示，不是多用户产品部署模式。
-
-产品部署边界固定为：
+服务端统一后端是产品 Target：
 
 ```text
 Web / Desktop Frontend
-    只持有短期客户端会话和展示状态
-    → Server-hosted Product API
-        → Principal / Tenant / Workspace resolution
-        → Security Control Plane
-        → Agent / Knowledge / Memory / Model / Tool backends
-        → PostgreSQL / Object Store / Queue / Checkpoint
+→ Server-hosted Product API
+→ Principal / Tenant / Workspace resolution
+→ Security Control Plane
+→ Agent / Input / Knowledge / Memory / Model / Tool
+→ PostgreSQL / RabbitMQ / Object Store / Checkpoint / Index Services
 ```
 
-前端不得直连数据库、对象存储、Queue、Checkpointer、模型 Provider 或 Secret Store。每个用户请求必须在服务端解析可信 `PrincipalAccount`、Tenant、Workspace、Policy 与 Effective Security Epoch。本地 Adapter 只用于开发、单元测试、集成测试和离线演示，不是多用户产品部署模式。
+前端不得直连数据库、Queue、对象存储、模型 Provider 或 Secret Store。
 
-### 4.3 Future Optional
+## 5.3 Future Optional
 
-- Redis：缓存、短期 rate-limit acceleration、非权威协调优化；不得成为唯一事实源。
-- Kubernetes：仅当 Compose/VM 无法满足扩缩容、升级和证据要求时选择。
-- Managed PostgreSQL、managed queue、managed object store。
-- warm standby、跨区域 read replica、专用 backup appliance。
-- 外部 HSM/KMS 与高等级 confidential computing。
+- Redis 高级缓存、Rate Limit acceleration 和非权威协调优化。
+- Managed PostgreSQL、Managed Queue、Managed Object Store。
+- Kubernetes、Operator 与 Service Mesh。
+- Warm Standby、跨区域 Read Replica、专用 Backup Appliance。
+- HSM/KMS、高等级 Confidential Computing。
+- 多区域 Active-Passive 自动化。
 
-### 4.4 Explicitly Not Selected
+## 5.4 Explicitly Not Selected
 
 ```text
 Kafka 作为默认工作队列
 Event Sourcing 作为全系统事实模型
-XA / 2PC 或复杂分布式事务
+XA / 2PC 或跨存储分布式事务
 默认多区域 Active-Active
 大量微服务与 Service Mesh 作为先决条件
-Redis 作为 Authorization、Budget、Usage 或 AgentRun 唯一事实源
 Kubernetes 作为本模块完成标准
+Redis 作为 Authorization、Budget、Usage、AgentRun 或 IndexManifest 唯一事实源
+Milvus、Neo4j、RabbitMQ 或 Redis 作为事务事实源
+把所有在线 LangGraph Node 放入 RabbitMQ
+用一个 CRUD Adapter 抹平不同存储的故障和一致性语义
+仅凭 Docker Compose 启动成功宣称 production ready
 ```
-
-未来若选择这些能力，必须通过 ADR 说明必要性、替代方案、成本、迁移、故障模型与验证方式。
 
 ---
 
-# Part II：逻辑边界与运行拓扑
+# Part II：概念架构、拓扑与完整流程
 
-## 5. Ownership
-
-Infrastructure Owns：
-
-```text
-InfrastructureCapabilityProfile
-DatabaseTransaction metadata
-StorageObject physical metadata
-ObjectCommit
-CheckpointRecord physical/control metadata
-QueueMessage physical envelope
-QueueDelivery
-InboxRecord primitive
-OutboxRecord primitive
-WorkerLease
-FencingToken
-MigrationPlan / MigrationRun
-BackupPlan / BackupRun / RestoreRun
-Retention execution metadata
-LegalHold enforcement binding
-DrainMarker
-InfrastructureHealth
-CapacityReservation
-```
-
-Infrastructure Does Not Own：
-
-```text
-AgentRun / PlanVersion / StepRun / RunOutcome
-SecurityDecision / ApprovalDecision
-ModelRoutingDecision / ModelInvocation semantics
-EvalVerdict
-ParseJob / IndexManifest / MemoryCandidate
-ToolEffectDecision
-```
-
-上层模块拥有领域记录内容和状态；Infrastructure 提供 Repository/UoW、条件写、Outbox、Lease、对象引用、队列和恢复 primitive。
-
-## 6. 物理运行域
+# 6. 概念架构
 
 ```mermaid
 flowchart TB
-  Product[Product / API] --> DBPort[Database Port]
-  Agent[Agent Core] --> DBPort
-  Agent --> CheckpointPort[Checkpoint Port]
-  Input[Input] --> ObjectPort[Object Port]
-  Input --> QueuePort[Queue Port]
-  Model[Model Gateway] --> SecretPort[Secret Delivery Port]
-  Obs[Observability / Eval] --> EventPort[Append / Sink Port]
-  Security[Security] --> EpochPort[Security Epoch Conditional Write]
+  Product[Product Surface] --> Domain[Domain Modules]
+  Domain --> Ports[Infrastructure Typed Ports]
 
-  DBPort --> DB[(Relational Database)]
-  CheckpointPort --> CP[(Checkpoint Store)]
-  ObjectPort --> OBJ[(Object Store)]
-  QueuePort --> MQ[(Queue)]
-  SecretPort --> SM[Secret Provider]
-  EventPort --> DB
-  EpochPort --> DB
+  Ports --> PG[(PostgreSQL)]
+  Ports --> MQ[(RabbitMQ)]
+  Ports --> OBJ[(Object Store / MinIO)]
+  Ports --> CP[(LangGraph Checkpointer)]
+  Ports --> VEC[(Milvus)]
+  Ports --> GRAPH[(Neo4j)]
+  Ports --> LEX[(BM25 / Search)]
+  Ports --> CACHE[(Redis Optional)]
+  Ports --> AUDIT[(Trace / Audit Store)]
+  Ports --> SECRET[Secret Manager / KMS]
+
+  PG --> Reconciler[Reconciler]
+  MQ --> Workers[Worker Roles]
+  Workers --> OBJ
+  Workers --> VEC
+  Workers --> GRAPH
+  Workers --> LEX
+  Reconciler --> VEC
+  Reconciler --> GRAPH
+  Reconciler --> LEX
 ```
 
-Infrastructure 是横向运行域，不要求每种 primitive 拆成独立微服务。
+# 7. 部署拓扑
 
-## 7. Developer / CI Local Adapter Topology
+## 7.1 Developer / CI Local Adapter Topology
 
 ```mermaid
 flowchart LR
-  DevClient[Developer / Test Client] --> API[FastAPI + Controller]
+  Dev[Developer / Test] --> API[Backend API]
   API --> SQLite[(SQLite)]
-  API --> LocalObject[(Local Immutable Object Store)]
-  API --> LocalQueue[In-process / Local Durable Queue]
-  LocalQueue --> Worker[Local Worker Role]
-  API --> LocalCheckpoint[(Local Checkpoint Adapter)]
-  Worker --> SQLite
-  Worker --> LocalObject
+  API --> LocalObject[(Local Object Store)]
+  API --> LocalQueue[Local Durable Queue]
+  API --> LocalCheckpoint[(Local Checkpoint)]
+  LocalQueue --> LocalWorker[Local Worker]
 ```
 
 约束：
 
-- 单写者或受控低并发，不声称 PostgreSQL 隔离级别语义。
-- typed ports 不变，业务代码不得用 `if sqlite` 改变领域规则。
-- 必须覆盖进程重启、重复投递、对象中断与 SQLite lock contention。
-- Local backup/restore 可以轻量，但不得称为 server product deployment 或 production ready。
-- 不在该拓扑承载正式多用户账号、组织委派、生产 Secret 或生产权限事实。
+- 只用于开发、测试、CI 和离线演示。
+- 不能证明 PostgreSQL Isolation、RabbitMQ Confirm、Milvus Visibility、Neo4j Cluster 或 Redis Failover。
+- 不支持的语义必须 fail-fast，不能静默模拟。
+- 业务代码不得通过 `if sqlite`、`if local_queue` 改变领域规则。
 
-## 8. Canonical Server Product Topology
+## 7.2 Canonical Server Product Topology
 
 ```mermaid
 flowchart TB
-  Frontend[Web / Desktop Frontend] --> LB
-  IdP[Trusted Identity Provider] --> API
-  LB --> API[Product API Role]
+  Frontend[Web / Desktop] --> LB[Ingress / Load Balancer]
+  LB --> API[API Role]
   API --> PG[(PostgreSQL)]
-  API --> OBJ[(S3-compatible Object Store)]
-  API --> MQ[(RabbitMQ)]
+  API --> OBJ[(S3 / MinIO)]
+  API --> CP[(Checkpoint Tables)]
+
   Controller[Agent Controller Role] --> PG
-  Controller --> CP[(LangGraph Checkpoint Tables)]
+  Controller --> CP
   Controller --> OBJ
+
+  PG --> Outbox[Outbox Publisher]
+  Outbox --> MQ[(RabbitMQ)]
   MQ --> Ingest[Ingestion Worker]
+  MQ --> Vector[Vector Worker]
+  MQ --> Graph[Graph Worker]
+  MQ --> Lexical[Lexical Worker]
   MQ --> Eval[Eval Worker]
-  MQ --> Maint[Maintenance / Reconciler Worker]
-  Ingest --> PG
-  Ingest --> OBJ
-  Eval --> PG
-  Maint --> PG
-  Secrets[Secret Manager] --> API
-  Secrets --> Controller
-  Secrets --> Ingest
-  Telemetry[Metric / Trace Export] -.-> API & Controller & Ingest & Eval & Maint
+  MQ --> Maint[Maintenance / Reconciler]
+
+  Vector --> VEC[(Milvus)]
+  Graph --> NEO[(Neo4j)]
+  Lexical --> SEARCH[(BM25 / Search)]
+  API -. optional .-> REDIS[(Redis)]
+
+  Secret[Secret Manager / KMS] --> API
+  Secret --> Controller
+  Secret --> Ingest
+  Telemetry[Trace / Metric / Audit Export] -.-> API
+  Telemetry -.-> Controller
+  Telemetry -.-> Ingest
 ```
 
-推荐部署单位是 role，不是默认微服务。相同 backend image 可以按 role 启动；只有隔离、扩缩容或安全要求出现时才拆镜像。
+推荐以同一 Backend Image 按 Role 启动，不默认拆成大量微服务。
 
-该拓扑是 Zuno 产品 Target：后端部署在受控服务器或云运行环境，前端只是 API Client。所有账号、组织、权限、知识、Memory、AgentRun、Usage、Audit 与配置事实均由后端权威存储和校验；客户端缓存不能成为授权或业务事实源。
+# 8. 文档摄取与索引构建流程
 
-该拓扑是 Zuno 产品 Target：后端部署在受控服务器或云运行环境，前端只是 API Client。所有账号、组织、权限、知识、Memory、AgentRun、Usage、Audit 与配置事实均由后端权威存储和校验；客户端缓存不能成为授权或业务事实源。
+```text
+1. Product API 接收文件和可信 Principal/Tenant/Workspace Context
+2. Input 在 PostgreSQL 创建 Document、SourceObject、IngestionJob 草稿
+3. Infrastructure 创建 ObjectCommit 和上传 Session
+4. 文件上传 Object Store staging key
+5. 校验 size、hash、media type、encryption metadata
+6. PostgreSQL 同一事务提交领域事实、Committed ObjectRef 与 Outbox
+7. Outbox Publisher 发送 Parse/Extract/Index Command 到 RabbitMQ
+8. Worker 通过 Inbox Claim、Lease 和 Fencing 获得工作
+9. Input Worker 解析、OCR、Chunk；大型结果写 Object Store
+10. Knowledge 创建 IndexBuildRun 和 immutable target version
+11. Vector / Graph / Lexical Worker 分别写 Milvus、Neo4j、BM25/Search
+12. Infrastructure 返回 IndexWriteReceipt 与 WriteVisibilityReceipt
+13. Infrastructure 执行物理 IndexVerification
+14. Knowledge 提交 IndexManifest、Lineage 和质量 Acceptance
+15. Knowledge 使用 generation/CAS 激活 KnowledgeVersion
+16. Infrastructure 执行 alias/routing cutover并写 ServingWatermark
+17. 旧版本按 Snapshot、Retention、LegalHold 进入 RETIRING
+```
+
+边界：
+
+```text
+Input / Knowledge 决定“做什么、结果是否合格”。
+Infrastructure 决定“如何可靠保存、投递、写入、切流和恢复”。
+```
+
+# 9. 在线查询流程
+
+```text
+Product API
+→ Agent Core 固定 KnowledgeSnapshotRef / MemorySnapshotRef
+→ Knowledge Retrieval Orchestrator
+    → BM25 / Search lexical retrieval
+    → Milvus vector retrieval
+    → Neo4j graph retrieval
+→ Evidence Merge / Rerank / Citation
+→ Model Gateway
+→ Final Gate / Answer
+```
+
+规则：
+
+- 普通在线问答不默认经过 RabbitMQ。
+- Redis 只能缓存带 Source Generation、Security Scope 和 Version 的可失效结果。
+- ACL/Authorization Filter 必须在 Vector、Graph、Lexical 召回前或存储引擎内部执行。
+- Query 不得静默混用不同 KnowledgeVersion 或 Serving Generation。
+
+# 10. 异步工作流程
+
+适合 RabbitMQ 的任务：
+
+```text
+Parse / OCR / Chunk
+Embedding / Vector Index
+Entity / Relation / Graph Build
+BM25 / Search Build
+Eval Job
+Memory Consolidation
+Deletion / Retention / Rebuild
+Backup / Restore / Reconciliation
+```
+
+Canonical Consumer Flow：
+
+```text
+RabbitMQ Delivery
+→ Validate CrossModuleEnvelopeV1
+→ Claim Inbox
+→ Acquire CapacityReservation
+→ Acquire WorkerLease + FencingToken
+→ Execute Domain Handler
+→ Domain Facts + Inbox COMMITTED + Outbox in one PostgreSQL transaction
+→ ACK RabbitMQ
+```
+
+ACK 前崩溃会重投；已有 COMMITTED Inbox 时直接 ACK duplicate，不重复领域副作用。
+
+# 11. 跨存储发布流程
+
+Cross-store Publish Protocol：
+
+```text
+PostgreSQL Draft + Outbox
+→ RabbitMQ Build Command
+→ Idempotent physical writes
+→ IndexWriteReceipt
+→ WriteVisibilityReceipt
+→ IndexVerification
+→ Domain IndexManifest
+→ Domain Acceptance
+→ generation/CAS Cutover
+→ ServingWatermark
+```
+
+不使用 2PC。依靠：
+
+```text
+PostgreSQL Domain Facts
+Outbox / Inbox
+Idempotency Key
+Immutable Version
+Physical Receipt
+IndexManifest
+Generation / CAS
+Reconciler
+```
+
+# 12. Cross-store Deletion
+
+```text
+DeletionRequest
+→ Security / LegalHold Check
+→ Domain Tombstone
+→ Query Visibility Revocation
+→ RabbitMQ Cleanup Commands
+→ Object / Vector / Graph / Lexical / Cache / Checkpoint Cleanup
+→ DeletionVerification
+→ Retention-aware Physical Purge
+```
+
+删除不变量：
+
+- Domain Tombstone 是删除事实源。
+- Visibility Deadline 优先于物理清理完成时间。
+- 任一派生存储清理失败，不得恢复查询可见性。
+- LegalHold 可以阻止 Purge，但是否阻止前台隐藏由 Security/Policy 决定。
+- Backup 到期策略不能冒充实时删除。
+
+# 13. Recovery Set 与灾难恢复流程
+
+```text
+Backup / PITR Request
+→ Restore PostgreSQL to isolated target
+→ Restore Object Manifest
+→ Restore or reconstruct Checkpoint
+→ Align Outbox Sequence and Security Epoch
+→ Classify Milvus / Neo4j / Search versions
+→ Rebuild stale derived indexes
+→ Validate Tenant Isolation and Configuration
+→ RecoverySetValidation
+→ Explicit Cutover Approval
+→ Production Cutover or Rollback
+```
+
+规则：
+
+- 派生索引领先恢复点：`QUARANTINED`。
+- 派生索引落后恢复点：`STALE → REBUILDING`。
+- Redis 默认冷启动重建，不进入权威 Recovery Set。
+- `cutover_allowed=false` 时不得自动切生产。
 
 ---
 
-# Part III：核心 Contract 与状态机
+# Part III：核心 Contract 与事实边界
 
-## 9. InfrastructureCapabilityProfile
+# 14. InfrastructureCapabilityProfile
 
 ```python
 class InfrastructureCapabilityProfile(BaseModel):
     profile_id: str
     profile_version: str
-    deployment_class: Literal["DEV_LOCAL", "SERVER"]
-    database: DatabaseCapability
-    object_store: ObjectStoreCapability
-    checkpoint_store: CheckpointCapability
-    queue: QueueCapability
-    lease: LeaseCapability
-    clock: ClockCapability
-    migration: MigrationCapability
-    backup_restore: BackupRestoreCapability
-    retention: RetentionCapability
-    encryption: EncryptionCapability
-    secret_delivery: SecretDeliveryCapability
-    telemetry: TelemetryCapability
+    deployment_class: Literal["DEVELOPER_CI", "SERVER_PRODUCT"]
+    database: DataServiceCapability
+    object_store: DataServiceCapability
+    checkpoint_store: DataServiceCapability
+    queue: DataServiceCapability
+    vector_index: DataServiceCapability | None
+    graph_index: DataServiceCapability | None
+    lexical_index: DataServiceCapability | None
+    cache: DataServiceCapability | None
+    secret_delivery: DataServiceCapability
+    telemetry: DataServiceCapability
     limits: InfrastructureLimits
     content_hash: str
 ```
 
-Profile 必须可哈希、版本化，并在进程启动时固定。运行中切换通过新版本和 drain/cutover，不允许静默替换语义。
+Profile 必须 immutable、可哈希、可版本化，并在进程启动时固定。运行中切换通过新 Profile、Drain 和 Cutover，不允许静默改变语义。
 
-## 10. DatabaseTransaction
+# 15. DataServiceCapability
+
+```python
+class DataServiceCapability(BaseModel):
+    service_kind: Literal[
+        "RELATIONAL", "QUEUE", "OBJECT", "CHECKPOINT",
+        "VECTOR", "GRAPH", "LEXICAL", "CACHE",
+        "TRACE_AUDIT", "SECRET_KMS",
+    ]
+    adapter_name: str
+    adapter_version: str
+    deployment_profile: str
+    authoritative: bool
+    rebuildable: bool
+    consistency_model: str
+    tenant_isolation_mode: str
+    backup_restore_class: str
+    schema_or_contract_version: str
+    config_hash: str
+    supported_semantics: list[str]
+    unsupported_semantics: list[str]
+```
+
+- PostgreSQL 领域事实和 Committed Object Metadata 可以是 authoritative。
+- Milvus、Neo4j、BM25/Search、Redis 默认 `authoritative=false`。
+- `rebuildable=true` 必须声明权威输入、重建命令、版本 Pin、验证和 Receipt。
+- Adapter 替换不得静默改变 Transaction、Filter、Score、Visibility 或 Failure Semantics。
+
+# 16. DatabaseTransaction 与 Unit of Work
 
 ```python
 class DatabaseTransaction(BaseModel):
@@ -347,7 +581,9 @@ class DatabaseTransaction(BaseModel):
     isolation_level: str
     read_only: bool
     expected_schema_version: str
-    security_epoch: int | None
+    effective_security_epoch_ref: str | None
+    expected_generation: int | None
+    fencing_token: int | None
     deadline_at: datetime
     statement_timeout_ms: int
     lock_timeout_ms: int
@@ -356,13 +592,13 @@ class DatabaseTransaction(BaseModel):
 
 规则：
 
-- Application Service 通过 Unit of Work 开启/提交事务；Repository 不自行 commit。
-- 外部模型、队列、对象、HTTP 和 Tool 调用不得位于数据库事务内。
-- serialization/deadlock 只按确定性 policy 重试整个事务。
-- unique/FK/check violation 是业务冲突，不盲目重试。
-- `expected_generation`、`security_epoch`、`fencing_token` 不匹配时必须产生结构化 stale-write failure。
+- Application Service 开启和提交 Unit of Work；Repository 不自行 Commit。
+- 外部模型、Queue、Object Store、HTTP、Milvus、Neo4j 和 Tool 调用不进入数据库事务。
+- Serialization / Deadlock 只按 Policy 重试整个 UoW。
+- Unique/FK/Check Violation 是结构化冲突，不盲目重试。
+- Generation、Security Epoch、Fencing 不匹配产生 stale-write failure。
 
-## 11. StorageObject 与 ObjectCommit
+# 17. StorageObject 与 ObjectCommit
 
 ```python
 class StorageObject(BaseModel):
@@ -391,91 +627,19 @@ class ObjectCommit(BaseModel):
     trace_id: str
 ```
 
-### 11.1 ObjectCommit State Machine
+读路径只接受 `COMMITTED` 且 metadata、version、hash 匹配的对象。
 
-| From | Trigger | Guard | To | 同步事实 |
-| --- | --- | --- | --- | --- |
-| `PREPARED` | `START_UPLOAD` | idempotency claim 成功 | `UPLOADING` | ObjectCommit |
-| `UPLOADING` | `UPLOAD_COMPLETE` | hash/size 匹配 | `UPLOADED` | staged metadata |
-| `UPLOADED` | `COMMIT_METADATA` | DB transaction 可提交 | `COMMITTING` | pending commit |
-| `COMMITTING` | `DB_COMMIT_OK` | unique(commit_id) | `COMMITTED` | StorageObject + domain ref + Outbox |
-| `UPLOADING/UPLOADED` | `ABORT` | 未被领域引用 | `ABORTED` | reason |
-| `UPLOADED` | `STAGING_TTL_EXPIRED` | 无 committed metadata | `ORPHANED` | orphan marker |
-| `ORPHANED` | `RECONCILE_DELETE` | 无 LegalHold | `PURGED` | deletion receipt |
-| `UPLOADED` | `HASH_MISMATCH` | deterministic check | `QUARANTINED` | integrity finding |
-
-Commit protocol：
-
-```text
-1. DB reserve ObjectCommit + idempotency key
-2. 事务外上传到 staging key
-3. 校验 size/hash/encryption metadata
-4. DB transaction 提交 StorageObject metadata + domain ref + outbox
-5. 异步发布 event
-6. Reconciler 清理超时 staging/orphan object
-```
-
-对象存储不参与数据库 2PC。读路径只接受 `COMMITTED` 且 metadata/content hash 一致的对象。
-
-## 12. CheckpointRecord 与领域事实边界
-
-```python
-class CheckpointRecord(BaseModel):
-    checkpoint_id: str
-    thread_id: str
-    checkpoint_namespace: str
-    checkpoint_generation: int
-    parent_checkpoint_id: str | None
-    graph_bundle_id: str
-    graph_schema_version: str
-    state_schema_version: str
-    state_payload_ref: str
-    state_payload_hash: str
-    pending_interrupt_refs: list[str]
-    domain_generation_seen: int
-    security_epoch_seen: int
-    created_at: datetime
-```
-
-边界：
-
-```text
-PostgreSQL Domain Tables
-    AgentRun、PlanVersion、StepRun、PreparedAction、RunOutcome 等领域事实。
-LangGraph Checkpointer
-    Graph 控制状态、channel values、interrupt、pending sends、graph/state version。
-Object Store
-    大型 state payload、Observation、Artifact；Checkpoint/Domain 只保存 ref + hash。
-```
-
-Checkpoint 不能替代 Domain Commit；Domain table 也不能保存一份独立 Graph State 冒充恢复真相。
-
-### 12.1 Checkpoint / Domain Consistency
-
-```text
-Domain transaction commit
-→ DomainCommitMarker(run_id, domain_generation, event_sequence)
-→ Checkpoint records domain_generation_seen
-→ RecoveryWatermark 记录已对账 generation
-```
-
-- checkpoint generation < committed domain generation：从领域事实重建可派生 control state，或回到兼容 node；不得重放已提交副作用。
-- checkpoint generation > domain generation：`CHECKPOINT_AHEAD_OF_DOMAIN`，阻止副作用并运行 reconciler。
-- graph/state/hash 不兼容：`BLOCKED_INCOMPATIBLE_CHECKPOINT`。
-- Checkpoint retention 不得破坏 active/waiting Run 的恢复链。
-
-## 13. QueueMessage、InboxRecord 与 OutboxRecord
+# 18. QueueMessage、InboxRecord 与 OutboxRecord
 
 ```python
 class QueueMessage(BaseModel):
     message_id: str
-    queue_name: str
     contract_name: str
     contract_version: str
     tenant_id: str
     workspace_id: str | None
     correlation_id: str
-    causation_id: str
+    causation_id: str | None
     idempotency_key: str
     payload_ref: str
     payload_hash: str
@@ -506,24 +670,7 @@ class OutboxRecord(BaseModel):
     next_attempt_at: datetime | None
 ```
 
-### 13.1 QueueMessage / Delivery State Machine
-
-| From | Trigger | Guard | To |
-| --- | --- | --- | --- |
-| `PERSISTED` | `PUBLISH` | outbox committed | `AVAILABLE` |
-| `AVAILABLE` | `DELIVER` | consumer capacity | `DELIVERED` |
-| `DELIVERED` | `CLAIM_INBOX` | Inbox unique 成功 | `PROCESSING` |
-| `PROCESSING` | `DOMAIN_COMMIT_OK` | Inbox 与 domain 同事务 | `COMMIT_CONFIRMED` |
-| `COMMIT_CONFIRMED` | `ACK_OK` | broker receipt | `ACKED` |
-| `DELIVERED/PROCESSING` | `NACK_RETRYABLE` | retry budget | `RETRY_WAIT` |
-| `RETRY_WAIT` | `BACKOFF_ELAPSED` | deadline 未过 | `AVAILABLE` |
-| `DELIVERED` | `INBOX_DUPLICATE` | existing COMMITTED | `ACKED_DUPLICATE` |
-| `*` | `NON_RETRYABLE/EXHAUSTED` | policy | `DEAD_LETTERED` |
-| `AVAILABLE/RETRY_WAIT` | `DEADLINE_EXPIRED` | authoritative clock | `EXPIRED` |
-
-Broker redelivery 不得直接改 ParseJob、AgentRun 或 EvalJob 的领域状态。Consumer 必须先 claim Inbox，在同一数据库事务中提交领域结果与 Inbox COMMITTED，成功后才 ACK。
-
-## 14. WorkerLease 与 FencingToken
+# 19. WorkerLease、FencingToken、Clock 与 CapacityReservation
 
 ```python
 class WorkerLease(BaseModel):
@@ -544,180 +691,7 @@ class FencingToken(BaseModel):
     issued_at: datetime
     issued_to: str
     valid_until: datetime
-```
 
-### 14.1 WorkerLease State Machine
-
-| From | Trigger | Guard | To |
-| --- | --- | --- | --- |
-| `AVAILABLE` | `ACQUIRE` | capacity/security/admission pass | `CLAIMED` |
-| `CLAIMED` | `START` | token 最新 | `ACTIVE` |
-| `ACTIVE` | `HEARTBEAT` | owner + epoch 匹配 | `ACTIVE` |
-| `ACTIVE` | `NEAR_EXPIRY` | grace window | `EXPIRING` |
-| `ACTIVE/EXPIRING` | `RENEW` | token 最新且未 drain | `ACTIVE` |
-| `ACTIVE/EXPIRING` | `TIMEOUT` | authoritative clock | `EXPIRED` |
-| `ACTIVE` | `RELEASE` | owner 匹配 | `RELEASED` |
-| `*` | `REVOKE/DRAIN` | admin policy | `REVOKED` |
-
-同一 resource 每次重新获取 Lease 必须增加 `fencing_token`。数据库写、对象 metadata commit、Reducer commit 与 ACK confirmation 都验证 token；旧 Worker 晚到结果只能形成 `LateResultRecord`，不得改领域状态。
-
-## 15. Clock / Deadline / Timeout / Skew
-
-```python
-class ClockCapability(Protocol):
-    def utc_now(self) -> datetime: ...
-    def monotonic_now(self) -> float: ...
-    async def authoritative_now(self) -> datetime: ...
-    async def skew_status(self) -> ClockSkewStatus: ...
-```
-
-- 持久化时间统一 UTC。
-- 进程内 elapsed/timeout 使用 monotonic clock。
-- Lease、deadline、retention 和 LegalHold effective time 使用数据库或权威时间源。
-- `abs(process_clock - authoritative_clock) > max_skew` 时拒绝 Lease-sensitive write。
-- Deadline 是绝对时间；Timeout 是相对预算；二者均写入 Trace。
-- NTP/clock step 不允许让已过期 Lease 重新有效。
-
-## 16. MigrationPlan 与 MigrationRun
-
-```python
-class MigrationPlan(BaseModel):
-    migration_id: str
-    from_schema_version: str
-    to_schema_version: str
-    compatibility_window: list[str]
-    strategy: Literal["EXPAND_CONTRACT", "ONLINE_BACKFILL", "OFFLINE"]
-    prechecks: list[str]
-    verification_queries: list[str]
-    rollback_kind: Literal["REVERSIBLE", "FORWARD_FIX", "RESTORE_REQUIRED"]
-    required_drain_scope: str
-```
-
-### 16.1 MigrationRun State Machine
-
-```text
-PLANNED → PRECHECKING → READY → APPLYING_EXPAND → BACKFILLING
-→ VERIFYING → CONTRACTING → COMPLETED
-
-PRECHECKING → BLOCKED
-APPLYING_EXPAND/BACKFILLING/VERIFYING → FAILED
-FAILED → ROLLING_BACK → ROLLED_BACK
-FAILED → FORWARD_FIXING → VERIFYING
-```
-
-- 默认 Expand → dual read/write → backfill → verify → drain old version → Contract。
-- destructive contract 前必须证明旧应用已 drain。
-- Migration lock 有 TTL/owner/fencing，失败不可留下伪 COMPLETED。
-- 破坏性 rollback 不能靠“反向 SQL”假装安全，必须选择 forward-fix 或 restore。
-
-## 17. BackupPlan、BackupRun 与 RestoreRun
-
-```python
-class BackupPlan(BaseModel):
-    backup_plan_id: str
-    scope: str
-    rpo_seconds: int
-    schedule: str
-    include_database: bool
-    include_object_manifest: bool
-    include_checkpoint_store: bool
-    encryption_key_ref: str
-    retention_policy_ref: str
-    verification_policy_ref: str
-```
-
-### 17.1 BackupRun State Machine
-
-```text
-SCHEDULED → SNAPSHOTTING → UPLOADING → VERIFYING → COMPLETED
-SNAPSHOTTING/UPLOADING → RETRY_WAIT
-VERIFYING → CORRUPT
-* → FAILED
-COMPLETED → EXPIRED（仅在 retention 与 LegalHold 允许时）
-```
-
-`COMPLETED` 必须有 manifest、checksum、source LSN/WAL position、object version manifest 与 verification result。
-
-### 17.2 RestoreRun State Machine
-
-```text
-REQUESTED → VALIDATING_INPUT → PROVISIONING_ISOLATED_TARGET
-→ RESTORING_DATABASE → RESTORING_OBJECTS
-→ REBUILDING_DERIVED_INDEXES → VERIFYING
-→ READY_FOR_CUTOVER → CUTTING_OVER → COMPLETED
-
-* → FAILED
-FAILED → CLEANING_UP → ABORTED
-READY_FOR_CUTOVER → REJECTED
-CUTTING_OVER → ROLLBACK_CUTOVER
-```
-
-Restore 先在隔离目标验证 tenant counts、hash、schema、checkpoint/domain watermark 与关键查询，再由审批控制 cutover。未经过 restore rehearsal 的 backup 不构成可恢复证据。
-
-## 18. RetentionPolicy 与 LegalHold
-
-```python
-class RetentionPolicy(BaseModel):
-    retention_policy_id: str
-    tenant_id: str
-    data_class: str
-    object_type: str
-    retain_for_seconds: int | None
-    archive_after_seconds: int | None
-    purge_after_seconds: int | None
-    backup_retention_seconds: int
-    policy_version: str
-
-class LegalHold(BaseModel):
-    legal_hold_id: str
-    tenant_id: str
-    scope_type: str
-    scope_id: str
-    effective_from: datetime
-    effective_to: datetime | None
-    authority_ref: str
-    status: Literal["ACTIVE", "RELEASED"]
-```
-
-优先级：
-
-```text
-Active LegalHold
-> Security preservation requirement
-> Domain tombstone
-> Retention purge
-> Backup expiry
-```
-
-Pruning 只能删除 Infrastructure 明确拥有的物理副本，或已获得领域 Owner 授权的记录。Checkpoint pruning 不得破坏 active/waiting Run 的恢复链。
-
-## 19. DrainMarker 与 Drain State Machine
-
-```python
-class DrainMarker(BaseModel):
-    drain_id: str
-    scope_type: str
-    scope_id: str
-    reason: str
-    started_at: datetime
-    deadline_at: datetime
-    status: str
-```
-
-```text
-REQUESTED → QUIESCING_ADMISSION → WAITING_INFLIGHT
-→ TRANSFERRING_LEASES → VERIFYING → DRAINED
-
-WAITING_INFLIGHT → DEADLINE_EXCEEDED
-DEADLINE_EXCEEDED → FENCING_REMAINDER → DRAINED_WITH_UNRESOLVED
-* → CANCELLED（仅在 cutover 未开始时）
-```
-
-Drain 开始后停止新 admission；可完成的事务完成，不可完成工作 checkpoint/requeue；Lease 转移或过期；deadline 后对旧 token fencing，并输出 unresolved work evidence。
-
-## 20. CapacityReservation 与 State Machine
-
-```python
 class CapacityReservation(BaseModel):
     reservation_id: str
     tenant_id: str
@@ -725,157 +699,826 @@ class CapacityReservation(BaseModel):
     units: int
     priority: int
     deadline_at: datetime
-    status: str
     owner_ref: str
+    status: str
 ```
+
+Clock 规则：
+
+- 持久化时间使用 UTC。
+- 进程内 elapsed/timeout 使用 monotonic clock。
+- Lease、Deadline、Retention 使用数据库或权威时间源。
+- Clock Skew 超阈值时拒绝 Lease-sensitive write。
+
+# 20. CheckpointRecord 与 Domain Boundary
+
+```python
+class CheckpointRecord(BaseModel):
+    checkpoint_id: str
+    thread_id: str
+    checkpoint_namespace: str
+    checkpoint_generation: int
+    parent_checkpoint_id: str | None
+    graph_bundle_id: str
+    graph_schema_version: str
+    state_schema_version: str
+    state_payload_ref: str
+    state_payload_hash: str
+    pending_interrupt_refs: list[str]
+    domain_generation_seen: int
+    effective_security_epoch_ref: str
+    created_at: datetime
+
+class RecoveryWatermark(BaseModel):
+    scope_type: str
+    scope_id: str
+    domain_generation: int
+    checkpoint_generation: int
+    outbox_sequence: int
+    object_commit_sequence: int
+    reconciled_at: datetime
+    reconciler_version: str
+    status: str
+```
+
+事实边界：
+
+```text
+PostgreSQL 保存领域事实
+LangGraph Checkpointer 保存图控制状态
+Object Store 保存大型不可变 Payload
+Generation、Fencing、RecoveryWatermark 与 Outbox 负责对账
+Checkpoint 不能替代 Domain Commit
+```
+
+# 21. 派生索引 Contract
+
+```python
+class IndexBuildRun(BaseModel):
+    build_run_id: str
+    owner_module: Literal["KNOWLEDGE", "MEMORY"]
+    tenant_id: str
+    workspace_id: str
+    index_kind: Literal["VECTOR", "GRAPH", "LEXICAL"]
+    target_version: str
+    source_snapshot_ref: str
+    source_manifest_hash: str
+    schema_spec_ref: str
+    config_version: str
+    idempotency_key: str
+    deadline_at: datetime
+    status: str
+
+class IndexWriteBatch(BaseModel):
+    batch_id: str
+    build_run_id: str
+    target_version: str
+    item_identity_scheme: str
+    item_count: int
+    payload_ref: str
+    payload_hash: str
+    idempotency_key: str
+    expected_generation: int
+    tenant_scope_hash: str
+
+class IndexWriteReceipt(BaseModel):
+    receipt_id: str
+    batch_id: str
+    service_kind: str
+    physical_target_ref: str
+    attempt_no: int
+    accepted_count: int
+    rejected_count: int
+    observed_generation: int
+    service_commit_ref: str | None
+    checksum_or_digest: str | None
+    status: Literal["COMMITTED", "PARTIAL", "DUPLICATE", "FAILED", "UNKNOWN"]
+
+class WriteVisibilityReceipt(BaseModel):
+    receipt_id: str
+    write_receipt_ref: str
+    consistency_class: Literal["IMMEDIATE", "READ_YOUR_WRITE", "BOUNDED_EVENTUAL", "EVENTUAL"]
+    visible_at: datetime | None
+    visibility_deadline_at: datetime
+    serving_watermark_ref: str | None
+    status: Literal["PENDING", "VISIBLE", "DEADLINE_EXCEEDED", "FAILED"]
+
+class IndexVerification(BaseModel):
+    verification_id: str
+    build_run_id: str
+    target_version: str
+    schema_match: bool
+    count_match: bool
+    lineage_match: bool
+    tenant_filter_passed: bool
+    representative_query_passed: bool
+    status: Literal["PASSED", "FAILED", "QUARANTINED"]
+
+class DerivedIndexReplica(BaseModel):
+    replica_id: str
+    owner_module: str
+    index_kind: str
+    tenant_id: str
+    workspace_id: str
+    version: str
+    physical_ref: str
+    schema_version: str
+    source_snapshot_ref: str
+    source_manifest_hash: str
+    serving_generation: int
+    status: str
+
+class IndexCutover(BaseModel):
+    cutover_id: str
+    index_kind: str
+    from_version: str | None
+    to_version: str
+    expected_serving_generation: int
+    owner_approval_ref: str
+    effective_security_epoch_ref: str
+    deadline_at: datetime
+    status: str
+
+class ServingWatermark(BaseModel):
+    owner_module: str
+    tenant_id: str
+    workspace_id: str
+    index_kind: str
+    serving_version: str
+    serving_generation: int
+    source_generation: int
+    visible_through_batch_id: str
+    status: Literal["CURRENT", "LAGGING", "STALE", "BLOCKED"]
+```
+
+Infrastructure Verification 只证明物理条件；`IndexManifest`、KnowledgeVersion、MemoryVersion 和质量 Acceptance 归领域 Owner。
+
+# 22. 删除、恢复与审计 Contract
+
+```python
+class DeletionRequest(BaseModel):
+    deletion_id: str
+    owner_module: str
+    tenant_id: str
+    workspace_id: str
+    subject_type: str
+    subject_id: str
+    requested_by_ref: str
+    effective_security_epoch_ref: str
+    legal_hold_check_ref: str
+    visibility_deadline_at: datetime
+    physical_delete_not_before: datetime
+    status: str
+
+class DeletionTarget(BaseModel):
+    deletion_id: str
+    target_kind: Literal[
+        "POSTGRES_DOMAIN", "OBJECT", "VECTOR", "GRAPH",
+        "LEXICAL", "CACHE", "CHECKPOINT_REF", "BACKUP",
+    ]
+    target_ref: str
+    required_action: Literal["TOMBSTONE", "HIDE", "DELETE", "PURGE", "REBUILD"]
+    receipt_ref: str | None
+    status: str
+
+class DeletionVerification(BaseModel):
+    deletion_id: str
+    query_visibility_revoked: bool
+    active_snapshot_refs: list[str]
+    unresolved_target_refs: list[str]
+    legal_hold_refs: list[str]
+    status: Literal["PASSED", "PARTIAL", "BLOCKED"]
+
+class RecoverySetManifest(BaseModel):
+    recovery_set_id: str
+    recovery_point_at: datetime
+    postgres_lsn: str
+    object_manifest_version: str
+    checkpoint_generation: int
+    outbox_sequence: int
+    effective_security_epoch_ref: str
+    config_version: str
+    knowledge_versions: list[str]
+    memory_versions: list[str]
+    vector_watermarks: list[str]
+    graph_watermarks: list[str]
+    lexical_watermarks: list[str]
+    backup_manifest_refs: list[str]
+    status: str
+
+class RecoverySetValidation(BaseModel):
+    recovery_set_id: str
+    domain_consistent: bool
+    checkpoint_consistent: bool
+    object_consistent: bool
+    security_consistent: bool
+    derived_indexes_consistent: bool
+    stale_replica_refs: list[str]
+    rebuild_required_refs: list[str]
+    cutover_allowed: bool
+    evidence_ref: str
+
+class AuditDurabilityRequirement(BaseModel):
+    audit_class: Literal["BEST_EFFORT", "DURABLE", "MANDATORY_BEFORE_EFFECT"]
+    event_catalog_id: str
+    owner_module: str
+    local_persistence_required: bool
+    external_delivery_required: bool
+    max_buffer_age_seconds: int
+    fail_mode: Literal["DEGRADE", "REJECT", "BLOCK_EFFECT"]
+
+class AuditBufferReservation(BaseModel):
+    reservation_id: str
+    tenant_id: str
+    audit_class: str
+    units: int
+    deadline_at: datetime
+    status: str
+
+class AuditPersistenceReceipt(BaseModel):
+    audit_event_id: str
+    local_commit_ref: str
+    outbox_ref: str | None
+    integrity_chain_ref: str
+    status: Literal["COMMITTED", "DUPLICATE", "FAILED"]
+```
+
+# 23. Compatibility、Isolation、Release 与 Attribution
+
+```python
+class TenantIsolationProfile(BaseModel):
+    service_kind: str
+    isolation_class: Literal[
+        "SHARED_WITH_ENFORCED_SCOPE", "NAMESPACE_PER_TENANT",
+        "DATABASE_PER_TENANT", "DEDICATED_DEPLOYMENT",
+    ]
+    scope_injection_mode: str
+    physical_policy_ref: str
+    encryption_context_required: bool
+
+class ServiceCompatibilityEntry(BaseModel):
+    service_kind: str
+    application_version: str
+    adapter_version: str
+    server_version: str
+    schema_version: str
+    read_compatible_versions: list[str]
+    write_compatible_versions: list[str]
+    rollback_compatible_versions: list[str]
+
+class AdapterConformanceProfile(BaseModel):
+    adapter_name: str
+    service_kind: str
+    deployment_class: Literal["DEVELOPER_CI", "SERVER_PRODUCT"]
+    supported_semantics: list[str]
+    unsupported_semantics: list[str]
+    fail_fast_on_unsupported: bool
+    conformance_suite_version: str
+
+class ServiceCriticalityProfile(BaseModel):
+    role: str
+    service_kind: str
+    criticality: Literal["REQUIRED", "DEGRADED_ALLOWED", "OPTIONAL", "REBUILDABLE"]
+    readiness_behavior: str
+    degradation_policy_ref: str
+
+class ReleaseManifest(BaseModel):
+    release_id: str
+    source_commit: str
+    application_image_digest: str
+    sbom_ref: str
+    signature_ref: str
+    config_versions: list[str]
+    migration_versions: list[str]
+    adapter_versions: list[str]
+    data_service_compatibility_ref: str
+    rollback_release_ref: str | None
+
+class ResourceUsageAttribution(BaseModel):
+    attribution_id: str
+    tenant_id: str
+    workspace_id: str | None
+    run_id: str | None
+    service_kind: str
+    resource_class: str
+    units: float
+    source_receipt_ref: str
+```
+
+---
+
+# Part IV：数据服务组件设计
+
+# 24. PostgreSQL
+
+定位：结构化权威事实、事务协调、Inbox/Outbox、Lease、Migration、Backup/PITR 的核心能力。
+
+Infrastructure Owns：
+
+```text
+Engine / Driver / Pool
+Role-specific Pool Profile
+Unit of Work / Transaction
+Statement / Lock Timeout
+Schema Compatibility
+Migration Runtime
+Backup / WAL / PITR
+Conditional Write / CAS
+Physical Tenant Isolation
+Health / Capacity / Telemetry
+```
+
+Domain Owns：领域 Schema、状态机、业务约束和事实含义。
+
+规则：
+
+- API、Controller、Worker、Migration 使用独立 Pool Profile。
+- 长模型调用、对象上传、Queue Publish、Tool 调用不占用事务连接。
+- `FOR UPDATE SKIP LOCKED` 必须配公平性、Deadline 和饥饿监测。
+- Schema Version 不在兼容窗口时 Readiness fail-closed。
+- Failover 后验证 WAL/LSN、Outbox Sequence、Fencing 和 RecoveryWatermark。
+
+# 25. RabbitMQ
+
+定位：长时间异步工作和削峰数据平面，不是在线 Agent 控制状态或业务终局事实源。
+
+Infrastructure Owns：
+
+```text
+Connection / Channel Lifecycle
+Exchange / Queue / Routing Key
+Durable / Quorum Configuration
+Publisher Confirm
+ACK / NACK / Redelivery
+DLQ / Retry Queue / Expiry
+Prefetch / Capacity / Backpressure
+Consumer Drain / Reconnect
+Queue Envelope Validation
+```
+
+Domain Owns：Command/Event Contract、处理结果、业务 Retry/Replan 和终局。
+
+规则：
+
+- 采用 at-least-once，不宣称 Broker exactly-once。
+- Publisher Confirm 丢失允许重发，Consumer 必须幂等。
+- DLQ 只证明 Delivery 失败，不替领域模块决定业务失败。
+- Queue ACK != Tool Effect Success。
+
+# 26. Object Store / MinIO / S3
+
+定位：原始文档、解析快照、Observation、Artifact、Checkpoint 大 Payload 和 Backup Manifest 的不可变对象能力。
+
+Infrastructure Owns：
+
+```text
+Bucket / Key / Prefix
+Staging Upload / Multipart
+Hash / Size / Media Type Verification
+Version / Encryption Metadata
+ObjectCommit
+Retention / Lifecycle / LegalHold Binding
+Orphan Reconciliation
+Backup / Restore
+```
+
+规则：
+
+- 对象上传与 PostgreSQL 不使用 XA/2PC。
+- 先 Reserve，事务外上传，后提交 Metadata、Domain Ref 和 Outbox。
+- 读路径拒绝 STAGED、Hash Mismatch 和缺 Metadata 对象。
+- Object Commit != Publication Success。
+
+# 27. LangGraph Checkpointer
+
+定位：图控制状态、Interrupt、Pending Send 和 Graph/State Version，不替代领域事实。
+
+Infrastructure Owns：Saver Adapter、Physical Schema、Compatibility、Retention、Backup 和 Reconciliation。
+
+Agent Core Owns：控制状态含义、恢复决策和 Run 生命周期。
+
+规则：
+
+- Checkpoint Ahead of Domain：阻止副作用并 Reconcile。
+- Checkpoint Behind Domain：从领域事实重建可派生控制状态或回到兼容 Node。
+- Graph/State Schema 不兼容：`BLOCKED_INCOMPATIBLE_CHECKPOINT`。
+- Active/Waiting Run 的恢复链不得被 Retention 破坏。
+
+# 28. Milvus
+
+定位：向量检索派生索引，可重建，不是权威事实源。
+
+Infrastructure Owns：
+
+```text
+Client / Connection
+Collection / Partition / Index Physical Lifecycle
+Batch Upsert
+Visibility Probe
+Capacity / Compaction / Health
+Backup Snapshot / Rebuild Primitive
+Version / Alias Cutover
+Tenant Isolation Enforcement
+```
+
+Knowledge / Memory Owns：Embedding、Dimension、Metadata Schema、Filter、Top-K、Score、Rerank、IndexManifest 和质量。
+
+规则：
+
+- Stable Vector ID + Target Version + Idempotency Key。
+- Write-Then-Crash Before Manifest：重投 Verify/Upsert，不激活版本。
+- Partial Write、Count Mismatch、Schema Mismatch：`FAILED/QUARANTINED`。
+- Milvus unavailable 时只返回能力状态，Knowledge 决定降级或 fail-closed。
+
+# 29. Neo4j / Replaceable Graph Store
+
+定位：实体关系、社区和多跳 GraphRAG 的派生图索引。
+
+Infrastructure Owns：Driver、Database/Constraint Physical Lifecycle、Transaction Retry、Capacity、Backup/Rebuild 和 Version Cutover。
+
+Knowledge Owns：Entity、Relation、Ontology、Provenance、Community、Traversal 和 GraphRAG 语义。
+
+规则：
+
+- Node/Edge Identity 包含 Tenant、Workspace、KnowledgeVersion 和 Stable Domain Key。
+- Replay 使用 MERGE/Conditional Write 或等价幂等策略。
+- Commit-Then-Crash Before Manifest：通过 Receipt 和 Version Scope 对账。
+- 图路径无法回到 SourceSpan 是 Knowledge Evidence Failure，不是 Infrastructure 成功。
+
+# 30. BM25 / Search
+
+定位：关键词、精确匹配和 Hybrid Retrieval 的可替换派生索引。
+
+Infrastructure Owns：Service Client、Physical Index Lifecycle、Snapshot、Alias、Capacity、Health 和 Rebuild。
+
+Knowledge Owns：Analyzer、Tokenization、Synonym、Mapping、Query、Ranking Profile 和质量。
+
+规则：
+
+- Analyzer、Mapping、Synonym、Index Version immutable。
+- Active Index 不原地静默修改。
+- Restore/Rebuild 后验证 Count、Version Distribution、Tenant Filter 和 Representative Query。
+
+# 31. Redis
+
+定位：Future Optional Cache / Rate-limit Acceleration / Non-authoritative Coordination。
+
+Infrastructure Owns：Client/Pool、Namespace、TTL、Eviction、Failover、Generation、Health 和 Metrics。
+
+Domain Owns：哪些数据可缓存、Cache Key 业务组成、Invalidation 和 Fallback。
+
+禁止仅存 Redis：
+
+```text
+AgentRun / PlanVersion
+Authorization / Approval
+Usage Ledger
+IndexManifest / KnowledgeVersion
+长期 Memory
+任何无法从权威来源重建的事实
+```
+
+Redis unavailable 时必须回退权威 Store 或显式降级，不能触发领域状态变化。
+
+# 32. Trace/Audit Persistence 与 Secret/KMS
+
+Trace/Audit persistence：
+
+- Infrastructure 提供 Local Durable Append、Outbox、Integrity Chain、Object Artifact 和 Sink Delivery Primitive。
+- Observability 拥有 TelemetryEnvelope、AuditEvent、Projection 和 Eval Verdict。
+- External Sink 不可用不能导致 Mandatory Audit 本地事实丢失。
+
+Secret/KMS：
+
+- Security 拥有授权、Purpose、Scope、Classification、Revocation。
+- Infrastructure 提供 SecretLease、Version、TTL、Rotation、Connection Drain 和 Delivery Receipt。
+- Secret Material 不进入普通数据库字段、Queue、Checkpoint、Prompt、Trace 或 Audit。
+
+---
+
+# Part V：状态机与一致性生命周期
+
+# 33. ObjectCommit State Machine
+
+```text
+PREPARED → UPLOADING → UPLOADED → COMMITTING → COMMITTED
+UPLOADING/UPLOADED → ABORTED
+UPLOADED → ORPHANED → PURGED
+UPLOADED → QUARANTINED
+```
+
+Guard：Hash、Size、Version、Encryption Metadata、Domain Ref 和 Idempotency。
+
+# 34. QueueMessage / Delivery State Machine
+
+```text
+PERSISTED → AVAILABLE → DELIVERED → PROCESSING
+→ COMMIT_CONFIRMED → ACKED
+
+DELIVERED/PROCESSING → RETRY_WAIT → AVAILABLE
+DELIVERED → ACKED_DUPLICATE
+* → DEAD_LETTERED
+AVAILABLE/RETRY_WAIT → EXPIRED
+```
+
+# 35. WorkerLease State Machine
+
+```text
+AVAILABLE → CLAIMED → ACTIVE
+ACTIVE → EXPIRING → ACTIVE | EXPIRED
+ACTIVE → RELEASED
+* → REVOKED
+```
+
+每次重新获取同一资源的 Lease 必须增加 Fencing Token。旧 Worker 晚到只能形成 Late Result，不能写领域状态。
+
+# 36. MigrationRun State Machine
+
+```text
+PLANNED → PRECHECKING → READY → APPLYING_EXPAND
+→ BACKFILLING → VERIFYING → CONTRACTING → COMPLETED
+
+PRECHECKING → BLOCKED
+APPLYING_EXPAND/BACKFILLING/VERIFYING → FAILED
+FAILED → ROLLING_BACK → ROLLED_BACK
+FAILED → FORWARD_FIXING → VERIFYING
+```
+
+默认 Expand → Dual Support → Backfill → Verify → Drain Old Version → Contract。
+
+# 37. BackupRun 与 RestoreRun State Machine
+
+BackupRun：
+
+```text
+SCHEDULED → SNAPSHOTTING → UPLOADING → VERIFYING → COMPLETED
+SNAPSHOTTING/UPLOADING → RETRY_WAIT
+VERIFYING → CORRUPT
+* → FAILED
+COMPLETED → EXPIRED
+```
+
+RestoreRun：
+
+```text
+REQUESTED → VALIDATING_INPUT → PROVISIONING_ISOLATED_TARGET
+→ RESTORING_DATABASE → RESTORING_OBJECTS
+→ REBUILDING_DERIVED_INDEXES → VERIFYING
+→ READY_FOR_CUTOVER → CUTTING_OVER → COMPLETED
+
+* → FAILED → CLEANING_UP → ABORTED
+CUTTING_OVER → ROLLED_BACK
+```
+
+# 38. DerivedIndexReplica State Machine
+
+```text
+DECLARED → SOURCE_PINNED → PROVISIONING → BUILDING → VERIFYING
+→ READY_FOR_OWNER_ACCEPTANCE → ACCEPTED → CUTTING_OVER → SERVING
+
+BUILDING/VERIFYING → FAILED → RETRY_WAIT | REBUILDING | ABORTED
+READY_FOR_OWNER_ACCEPTANCE → REJECTED
+CUTTING_OVER → CONFLICT | ROLLED_BACK
+SERVING → STALE | RETIRING
+STALE → REBUILDING
+RETIRING → RETIRED
+* → QUARANTINED
+```
+
+- `READY_FOR_OWNER_ACCEPTANCE` 只证明物理完整性。
+- `SERVING` 只能由领域 Owner Acceptance + generation/CAS 触发。
+- Active Snapshot、Retention、LegalHold 会阻止错误 Retirement。
+
+# 39. Deletion State Machine
+
+```text
+REQUESTED → AUTHORIZED → LEGAL_HOLD_CHECKING → TOMBSTONED_IN_DOMAIN
+→ QUERY_VISIBILITY_REVOKING → QUERY_VISIBILITY_REVOKED
+→ PHYSICAL_DELETE_PENDING → PHYSICAL_DELETING → VERIFYING → COMPLETED
+
+LEGAL_HOLD_CHECKING → BLOCKED_LEGAL_HOLD
+QUERY_VISIBILITY_REVOKING → PARTIAL_VISIBILITY_REVOKED
+PHYSICAL_DELETING → PARTIAL_DELETE
+PARTIAL_* → RETRY_WAIT | RECONCILING
+VERIFYING → FAILED_VERIFICATION
+```
+
+# 40. Recovery Set State Machine
+
+```text
+REQUESTED → LOCATING_ARTIFACTS → RESTORING_ISOLATED_TARGET
+→ ALIGNING_DOMAIN_OBJECT_CHECKPOINT → CLASSIFYING_DERIVED_INDEXES
+→ REBUILDING_REQUIRED_INDEXES → VERIFYING_SECURITY_AND_CONFIG
+→ READY_FOR_CUTOVER → CUTTING_OVER → COMPLETED
+
+* → FAILED → CLEANING_UP → ABORTED
+CUTTING_OVER → ROLLED_BACK
+```
+
+# 41. Mandatory Audit Backpressure State Machine
+
+```text
+REQUIRED → CAPACITY_RESERVED → LOCAL_COMMITTING → LOCAL_COMMITTED
+→ OUTBOX_PENDING → EXTERNAL_DELIVERING → DELIVERED
+
+CAPACITY_RESERVED → REJECTED_CAPACITY
+LOCAL_COMMITTING → FAILED_LOCAL_COMMIT
+OUTBOX_PENDING/EXTERNAL_DELIVERING → RETRY_WAIT | DEAD_LETTERED
+```
+
+| Audit Class | Local Store unavailable | External Sink unavailable | Buffer exhausted |
+| --- | --- | --- | --- |
+| `BEST_EFFORT` | 可按策略丢弃非敏感调试事件并计数 | 降级 | 丢弃并告警 |
+| `DURABLE` | 降级或拒绝，不能伪造成功 | Local + Outbox 重试 | Backpressure / retryable reject |
+| `MANDATORY_BEFORE_EFFECT` | `BLOCK_EFFECT` | Local 已提交后可异步外送 | `BLOCK_EFFECT` |
+
+PreparedAction 与 Tool Effect Ownership 服从 ADR 0003：Agent Core 拥有 ActionProposal/Binding，Tool Runtime 拥有 PreparedToolAction/Attempt/Effect，Security 拥有 Approval/Epoch，Infrastructure 拥有 Idempotency、Lease、Transaction、Outbox 和 Audit Persistence。
+
+# 42. Upgrade Compatibility State Machine
+
+```text
+PLANNED → COMPATIBILITY_CHECKING → PROVISIONING_PARALLEL_TARGET
+→ DUAL_SUPPORT → BACKFILLING → VERIFYING → CUTTING_OVER
+→ OBSERVING → CONTRACTING_OLD_VERSION → COMPLETED
+
+COMPATIBILITY_CHECKING → BLOCKED
+BACKFILLING/VERIFYING → FAILED
+CUTTING_OVER/OBSERVING → ROLLING_BACK
+FAILED → FORWARD_FIXING | ABORTED
+```
+
+组件策略：
+
+- PostgreSQL：Expand/Contract、Dual Read/Write、Online Backfill。
+- RabbitMQ：Versioned Exchange/Route、兼容 Consumer 窗口。
+- Object Store：Versioned Metadata，不原地重写 immutable object。
+- Milvus/Neo4j/Search：并行版本、回填、验证、Alias Cutover。
+- Redis：Versioned Namespace 或 Cold Rebuild。
+- Checkpointer：保留旧 Run 的 Graph/State Compatibility。
+
+# 43. Drain 与 CapacityReservation State Machine
+
+Drain State Machine：
+
+```text
+REQUESTED → QUIESCING_ADMISSION → WAITING_INFLIGHT
+→ TRANSFERRING_LEASES → VERIFYING → DRAINED
+
+WAITING_INFLIGHT → DEADLINE_EXCEEDED
+DEADLINE_EXCEEDED → FENCING_REMAINDER → DRAINED_WITH_UNRESOLVED
+```
+
+CapacityReservation：
 
 ```text
 REQUESTED → CHECKING → RESERVED → CONSUMING → RELEASED
 CHECKING → QUEUED | REJECTED
 QUEUED → RESERVED | EXPIRED | CANCELLED
-RESERVED → EXPIRED（未消费）
+RESERVED → EXPIRED
 ```
-
-Admission 顺序：hard safety limit → tenant quota → class quota → priority/fairness → deadline → reserve。容量不足时选择 backpressure、queue 或 reject，不允许无界增长；终局、取消、Lease 过期与 reconciliation 必须释放 reservation。
 
 ---
 
-# Part IV：数据库、队列、配置与运维协议
+# Part VI：失败、安全、恢复与运维
 
-## 21. PostgreSQL 事务与连接管理
-
-- API、controller、worker、migration/maintenance 使用独立 pool profile。
-- pool 必须有 max size、acquire timeout、max lifetime、idle timeout、statement timeout 与 leak diagnostics。
-- 长模型调用、对象上传、Queue publish、Tool 调用不得占用事务连接。
-- 高风险写使用 optimistic generation/epoch/fencing；争用热点才使用行锁。
-- queue claim 使用 `FOR UPDATE SKIP LOCKED` 时必须有公平性、deadline 与饥饿监测。
-- tenant/workspace scope 必须进入主键、索引、RLS 或强制 query context；不能只靠 API filter。
-- schema version 不在兼容窗口时 readiness fail-closed。
-
-推荐基础表：
+# 44. 一致性与幂等原则
 
 ```text
-infra_capability_profiles
-infra_storage_objects
-infra_object_commits
-infra_queue_deliveries
-infra_inbox_records
-infra_outbox_records
-infra_worker_leases
-infra_fencing_tokens
-infra_migration_plans
-infra_migration_runs
-infra_backup_plans
-infra_backup_runs
-infra_restore_runs
-infra_retention_policies
-infra_legal_holds
-infra_drain_markers
-infra_capacity_reservations
-infra_health_snapshots
-infra_recovery_watermarks
+PostgreSQL Transaction
+    提供单数据库原子性。
+
+Cross-store Workflow
+    使用 Domain Fact + Outbox/Inbox + Version + Receipt + Reconciler。
+
+RabbitMQ
+    at-least-once；业务 exactly-once 通过幂等和领域约束实现。
+
+Object Store
+    Staging + Hash + Metadata Commit。
+
+Derived Index
+    Immutable Version + Visibility + Verification + Manifest + CAS Cutover。
+
+Redis
+    可丢失、可重建，不参与领域终局。
 ```
 
-LangGraph checkpoint 表由 adapter/migration 管理，表名前缀与 schema 明确隔离；它们不是 Agent Core 领域表。
+Retry 与 Recovery：
 
-关键约束：
+- Retry：计划和业务意图仍正确，只是物理执行暂时失败。
+- Reconcile：无法确认物理动作是否已经发生。
+- Rebuild：派生数据损坏或版本不兼容。
+- Replan：由 Agent Core 在目标、依赖或假设失效时执行，不归 Infrastructure。
+
+# 45. Multi-tenant Storage Isolation
+
+| Service | 默认 Target | 强隔离选项 |
+| --- | --- | --- |
+| PostgreSQL | Tenant/Workspace Scope；高安全可 RLS | Schema/Database per Tenant |
+| RabbitMQ | Scoped Envelope、Routing、Queue | VHost per Tenant |
+| Object Store | Prefix + Bucket Policy + Encryption Context | Bucket/Account per Tenant |
+| Milvus | Database/Collection/Partition + Mandatory Filter | Dedicated Database/Deployment |
+| Neo4j | Database 或 Tenant Property/Label Scope | Dedicated Database/Deployment |
+| BM25/Search | Index/Alias 或 Mandatory Filter | Dedicated Index/Deployment |
+| Redis | Tenant Namespace + ACL | Dedicated Instance |
+| Checkpointer | Thread/Namespace + Tenant Binding | Schema/Database per Tenant |
+
+应用末端过滤不能作为唯一隔离措施。Tenant Filter Omission / Cross-tenant Hit 必须 Quarantine、Fail-closed、产生 Mandatory Audit 和故障证据。
+
+# 46. Encryption、Secret 与 Network Plane
+
+Encryption：
+
+- PostgreSQL、Object Store、Backup 和本地敏感文件支持 at-rest encryption。
+- 服务间、数据库、RabbitMQ、Object Store 使用 TLS；证书校验不能默认关闭。
+- Key Material 由 Secret/KMS 管理，数据库只保存 Ref/Version。
+
+Network Plane：
 
 ```text
-UNIQUE(profile_id, profile_version)
-UNIQUE(tenant_id, object_id)
-UNIQUE(commit_id)
-UNIQUE(consumer_name, message_id)
-UNIQUE(aggregate_type, aggregate_id, event_sequence_no)
-UNIQUE(resource_type, resource_id, fencing_token)
-partial INDEX infra_outbox_records(next_attempt_at) WHERE status IN ('PENDING','RETRY_WAIT')
-partial INDEX infra_worker_leases(expires_at) WHERE status IN ('CLAIMED','ACTIVE','EXPIRING')
-partial INDEX infra_capacity_reservations(deadline_at) WHERE status IN ('QUEUED','RESERVED','CONSUMING')
+Ingress / Egress Policy Execution
+DNS / Service Discovery
+TLS / optional mTLS
+Certificate Lifecycle / Rotation
+Outbound Proxy
+Provider Allowlist Primitive
+Connection Pool / Drain
+Network Partition Detection
+Timeout / Retry Boundary
 ```
 
-## 22. Inbox / Outbox
+Security 决定允许访问什么；Infrastructure 执行网络能力和 fail-closed 门禁。
 
-Producer：领域写、DomainEvent 与 Outbox 同一 PostgreSQL 事务；publisher claim Outbox、事务外 publish、记录 broker receipt。数据库提交后 publisher 崩溃只会导致重发，不会丢失领域事实。
+# 47. Health、Readiness、Degradation 与 SLO
 
-Consumer：接收消息 → Inbox claim → 领域写 + Inbox COMMITTED 同一事务 → ACK。ACK 前崩溃会 redelivery；已有 COMMITTED Inbox 时直接 ACK duplicate。
+语义：
 
-禁止：先 publish 后写 domain、用 broker delivery tag 当业务幂等键、在 consumer callback 中跨多个未协调事务更新状态。
+- Liveness：进程和内部 Watchdog 可运行，不依赖所有外部服务。
+- Readiness：当前 Role 的 Required Service、Schema、Epoch、Clock、Drain、Capacity 满足要求。
+- Degraded：仍可服务但能力受限，必须返回 Capability 和 Reason。
+- Health Snapshot 不代表业务质量或 Eval 通过。
 
-## 23. Config 与 Secret Delivery
+Role-specific Criticality：
 
-配置层级：
+| Role | Required | Degraded Allowed / Rebuildable |
+| --- | --- | --- |
+| API / Controller | PostgreSQL、Checkpoint、Object、Security Epoch、Mandatory Audit local path | Redis、未启用 Retriever |
+| Ingestion Worker | PostgreSQL、RabbitMQ、Object Store | 非本任务 Index Service |
+| Vector Worker | PostgreSQL、RabbitMQ、Object Store、Milvus | Neo4j/Search、Redis |
+| Graph Worker | PostgreSQL、RabbitMQ、Object Store、Neo4j | Milvus/Search、Redis |
+| Online Knowledge | PostgreSQL、Object Store、RuntimePolicy 必需 Retriever | 其他 Policy 允许降级的 Retriever |
+| Reconciler | PostgreSQL、Object Store、Queue、目标服务 | External Sink、Redis |
+
+SLO 必须通过真实 Workload 冻结：
 
 ```text
-code defaults
-< versioned deployment config
-< environment-specific config
-< tenant/workspace binding（仅允许声明字段）
-< runtime emergency override（有 TTL、审批、审计）
+p95 / p99 latency
+error rate
+pool wait / lock wait
+queue age / depth / redelivery / unacked
+outbox lag
+index build / rebuild throughput
+serving watermark lag
+backup RPO / restore RTO
+maximum stale duration
+tenant fairness
+capacity saturation threshold
 ```
 
-`EffectiveInfrastructureConfig` 必须包含 schema/version/hash/source refs。未知字段、非法枚举、缺失安全必需项 fail-fast；secret value 不进入 config snapshot、日志、Trace、Queue 或 Checkpoint。
+# 48. Release、Supply Chain 与 Resource Attribution
 
-Secret Delivery Port：
-
-```python
-class SecretDeliveryPort(Protocol):
-    async def resolve(self, secret_ref: str, *, consumer: str, purpose: str) -> SecretLease: ...
-    async def current_version(self, secret_ref: str) -> str: ...
-    async def revoke(self, lease_id: str) -> None: ...
-```
-
-Rotation 使用双版本重叠：发布新版本 → 新连接使用新版本 → 观察成功 → drain 旧连接 → revoke 旧版本。失败回滚到旧版本并写审计；不得把 secret material 持久化到数据库。
-
-## 24. Health / Readiness / Liveness
-
-- Liveness：进程事件循环与内部 watchdog 可运行，不依赖所有外部组件。
-- Readiness：关键依赖、schema compatibility、security epoch source、clock skew、drain 与 capacity 满足当前 role 要求。
-- Degraded：可服务但能力受限，必须返回 capability profile 和 reason。
-- Health snapshot 是 Infrastructure 事实，不代表业务质量或 Eval 通过。
-
-## 25. Backpressure 与 Admission
-
-信号包括 pool saturation、queue age/depth、worker lease count、object upload backlog、disk watermark、Outbox lag、checkpoint latency、tenant quota。控制动作按严重度：降低并发 → 延迟 admission → queue → reject retryable → fail-closed。不得通过无限增大 pool、prefetch 或 queue 隐藏容量问题。
-
-## 26. Multi-tenant Storage Isolation
-
-- 所有记录和对象 key 带 tenant/workspace scope。
-- 唯一约束与幂等键包含 tenant scope，除非对象是全局 immutable CAS 且经过安全审查。
-- PostgreSQL 使用强制 query scope；高安全级别可加 RLS。
-- Object Store 使用 prefix/bucket policy + encryption context；禁止仅在应用返回前过滤。
-- Queue envelope 带 tenant scope，consumer 在处理前验证 security context ref。
-- Backup/restore、retention、LegalHold、metric label 同样 tenant-aware。
-
-Security 决定谁有权限；Infrastructure 只执行隔离约束与条件写。
-
-## 27. Encryption at Rest / in Transit
-
-- PostgreSQL、Object Store、Backup 与本地敏感文件支持 at-rest encryption capability。
-- 服务间、数据库、Queue、Object Store 使用 TLS；证书验证不可默认关闭。
-- key material 由 Secret/KMS provider 管理；数据库仅保存 key reference/version。
-- rotation、re-encryption、key revocation 有状态和审计。
-- encryption capability 缺失时，受保护 data class 的 readiness/admission fail-closed。
-
-## 28. Observability Hook
-
-每个 transaction、queue delivery、lease、object commit、migration、backup、restore、drain 与 capacity decision 发出结构化 hook：
+ReleaseManifest 必须绑定：
 
 ```text
-operation_id / trace_id / tenant_id / role
-capability_profile_version
-start/end/status/latency
-attempt/retry/reason code
-resource class / queue age / pool wait
-fencing token / domain generation（不含 secret）
-artifact/object/backup manifest ref
+Source Commit
+Image Digest
+SBOM
+Signature / Provenance
+Configuration Version
+Migration Version
+Adapter Version
+Data-service Compatibility Matrix
+Rollback Release
 ```
 
-Infrastructure 负责产生可靠原始事实与导出 primitive；Observability 拥有 Trace/Eval Projection 与 verdict。
+Infrastructure 产生物理用量 Receipt：
 
----
+```text
+PostgreSQL storage/query/connection units
+RabbitMQ message/byte/queue-age units
+Object Store bytes/operations/transfer
+Milvus vector/storage/query units
+Neo4j node-edge/storage/query units
+Search index/query units
+Redis memory/operation units
+Backup/Restore/Rebuild units
+```
 
-# Part V：故障、恢复与灾备
+业务预算、计费和产品展示归上层 Owner。
 
-## 29. Failure Taxonomy
+# 49. Failure Taxonomy
+
+基础失败：
 
 ```text
 INFRA_DB_UNAVAILABLE
@@ -904,134 +1547,91 @@ INFRA_TENANT_ISOLATION_VIOLATION
 INFRA_ENCRYPTION_CAPABILITY_MISSING
 ```
 
-Failure 必须包含 retryability、scope、owner、causation、attempt、deadline、recovery action 与 evidence ref。Infrastructure 不把领域失败改写为基础设施失败，也不反向替领域模块决定 Retry/Replan/Abstain。
+数据服务与生命周期失败：
 
-## 30. Crash Matrix
+```text
+INFRA_DATA_SERVICE_UNAVAILABLE
+INFRA_DATA_SERVICE_TIMEOUT
+INFRA_DATA_SERVICE_AUTH_FAILED
+INFRA_DATA_SERVICE_SCHEMA_INCOMPATIBLE
+INFRA_VECTOR_WRITE_PARTIAL
+INFRA_VECTOR_SCHEMA_INCOMPATIBLE
+INFRA_VECTOR_VERSION_NOT_READY
+INFRA_GRAPH_WRITE_PARTIAL
+INFRA_GRAPH_SCHEMA_INCOMPATIBLE
+INFRA_GRAPH_VERSION_NOT_READY
+INFRA_LEXICAL_INDEX_CORRUPT
+INFRA_CACHE_UNAVAILABLE
+INFRA_CACHE_STALE_GENERATION
+INFRA_CROSS_STORE_VERSION_DIVERGENCE
+INFRA_INDEX_CUTOVER_CONFLICT
+INFRA_DERIVED_INDEX_REBUILD_FAILED
+INFRA_INDEX_BUILD_SOURCE_CHANGED
+INFRA_INDEX_WRITE_VISIBILITY_DEADLINE
+INFRA_INDEX_OWNER_ACCEPTANCE_REJECTED
+INFRA_INDEX_CUTOVER_GENERATION_CONFLICT
+INFRA_INDEX_ACTIVE_SNAPSHOT_BLOCKS_RETIREMENT
+INFRA_DELETION_LEGAL_HOLD_BLOCKED
+INFRA_DELETION_VISIBILITY_DEADLINE
+INFRA_DELETION_PARTIAL
+INFRA_DELETION_VERIFICATION_FAILED
+INFRA_RECOVERY_SET_INCONSISTENT
+INFRA_RECOVERY_CUTOVER_BLOCKED
+INFRA_AUDIT_CAPACITY_EXHAUSTED
+INFRA_AUDIT_LOCAL_PERSISTENCE_FAILED
+INFRA_MANDATORY_AUDIT_BLOCK_EFFECT
+INFRA_TENANT_ISOLATION_PROFILE_MISSING
+INFRA_CROSS_TENANT_HIT
+INFRA_WRITE_VISIBILITY_DEADLINE
+INFRA_SERVICE_COMPATIBILITY_BLOCKED
+INFRA_ADAPTER_SEMANTIC_UNSUPPORTED
+INFRA_RELEASE_PROVENANCE_INVALID
+INFRA_NETWORK_POLICY_DENIED
+INFRA_RESOURCE_ATTRIBUTION_MISSING
+```
 
-| Crash Point | 已有事实 | 恢复动作 | 不允许 |
+Failure 必须携带：Service、Operation、Tenant/Workspace、Owner、Retryability、Attempt、Deadline、Expected/Observed Version、Idempotency Key、Generation、Security Epoch Ref、Recovery Action、Evidence Ref 和 Trace ID。
+
+# 50. Crash Matrix
+
+| Crash / Partition Point | 已有事实 | 恢复动作 | 禁止 |
 | --- | --- | --- | --- |
-| 数据库提交前崩溃 | 事务未提交 | rollback；按 idempotency 重试 | 推断业务已成功 |
-| 数据库提交后、Outbox 发布前崩溃 | domain + outbox committed | publisher 重扫并发布 | 重做 domain mutation |
-| 对象上传后、Metadata Commit 前崩溃 | staged object，无 committed ref | resume/verify 或 orphan cleanup | 让读路径发现 staged object |
-| Queue ACK 前崩溃 | domain + Inbox 可能已提交 | redelivery；Inbox 去重 | 再执行已提交副作用 |
-| Lease 过期后旧 Worker 晚到 | 新 token 已签发 | stale token 拒绝，记录 LateResult | 覆盖新 Worker 结果 |
-| Checkpoint 已写但 Domain Commit 未完成 | checkpoint ahead | block effect；回退到 watermark/reconcile | 把 checkpoint 当 domain commit |
-| Migration 半完成 | MigrationRun 非终局 | resume、rollback 或 forward-fix | 标记 completed |
-| Restore 失败 | 隔离目标不完整 | cleanup/abort，生产不切换 | 部分覆盖生产 |
-| Backup verification 失败 | artifact 存在但不可信 | mark CORRUPT、重备份、告警 | 标记 completed |
-| Clock skew 超阈值 | 本地时间不可信 | 拒绝 lease-sensitive write | 续租或复活旧 Lease |
-| Drain deadline 到期 | inflight 未清零 | fence remainder、输出 unresolved | 静默终止 |
-| Capacity 耗尽 | reservation 不足 | backpressure/queue/reject | 无界接收 |
-
-## 31. RecoveryWatermark
-
-```python
-class RecoveryWatermark(BaseModel):
-    scope_type: str
-    scope_id: str
-    domain_generation: int
-    checkpoint_generation: int
-    outbox_sequence: int
-    object_commit_sequence: int
-    reconciled_at: datetime
-    reconciler_version: str
-    status: str
-```
-
-Reconciler 必须使用 Lease + Fencing + Idempotency；只修复 Infrastructure primitive 或调用领域 Owner 的 typed repair command，不直接改领域语义。
-
-## 32. Failure Domains
-
-| Domain | 隔离目标 | 恢复 |
-| --- | --- | --- |
-| API process | 不丢 domain/outbox | restart + readiness |
-| Controller process | 不重复 effect | checkpoint/domain watermark + fencing |
-| Worker process | message 可重投 | Inbox + Lease expiry |
-| PostgreSQL connection | 事务原子回滚 | reconnect + bounded retry |
-| PostgreSQL primary | 满足 RPO/RTO | failover + WAL/PITR validation |
-| Object Store | metadata 不指向缺失对象 | version/checksum/retry/restore |
-| RabbitMQ node | durable queue 可继续 | quorum/managed HA + redelivery |
-| Secret provider | 不泄密且不使用过期 secret | cached lease within TTL / fail-closed |
-| Deployment zone | 企业可选 | standby/restore；不是默认 Active-Active |
-
-## 33. Disaster Recovery
-
-每个 deployment profile 明确 RPO、RTO、数据范围、依赖顺序、恢复顺序、cutover/rollback owner 与演练频率。建议恢复顺序：Secret/KMS → PostgreSQL → Object manifests/objects → Checkpoint → Queue/Outbox → derived index rebuild → application readiness → controlled traffic。
-
-派生索引可重建，不应阻塞事实源恢复；但 strict citation/knowledge readiness 在索引验证前必须 degraded 或 blocked。只有真实 restore rehearsal、故障注入与证据完成后才能声明 DR 可用。
-
----
-
-# Part VI：跨模块依赖协议
-
-## 34. 对 09 Security
-
-Infrastructure 提供：
-
-```text
-Security Epoch 条件写
-Secret Delivery Port
-Encryption Capability
-Tenant Isolation Constraint
-append-only Audit storage primitive
-Retention / Legal Hold enforcement
-credential/certificate rotation primitive
-```
-
-Security 提供并拥有：Authorization、Approval、Revocation、data classification、retention/legal hold policy、audit content semantics。Infrastructure 不决定谁有权限。
-
-依赖请求：Security 需冻结 `security_epoch` 单调性、条件写失败语义、SecretRef/SecretLease、LegalHold authority 与 Audit append contract。
-
-## 35. 对 04 Model Gateway
-
-Infrastructure 提供：Provider Config storage、Secret Reference、durable rate-limit state、Usage Ledger storage primitive、streaming transport capability、connection pool/timeout、provider health primitive。
-
-Model Gateway 拥有 ModelRoutingDecision、provider fallback、role/model capability、usage semantics 与 provider failure classification。
-
-依赖请求：Model Gateway 需冻结 ProviderConfig/SecretRef 生命周期、Usage Ledger 幂等键、stream abort/timeout 与 rate-limit consistency 需求。
-
-## 36. 对 10 Observability & Eval
-
-Infrastructure 提供：Trace/Audit store capability、append-only event ingest、artifact/object retention、metric export、external sink delivery、Eval Job Queue、sink retry/outbox。
-
-Observability & Eval 拥有 span schema projection、metric meaning、EvalVerdict、release gate 与 quality conclusion。
-
-依赖请求：Observability 需冻结 ingest envelope、redaction boundary、sink delivery receipt、retention class 与 Eval queue priority/deadline。
-
-## 37. 对 Agent Core
-
-必须服从冻结边界：
-
-```text
-PostgreSQL 保存领域事实
-LangGraph Checkpointer 保存图控制状态
-Object Store 保存大型不可变 Payload
-Generation、Fencing、RecoveryWatermark 与 Outbox 边界不可破坏
-```
-
-Agent Core 拥有 AgentRun/PlanVersion/StepRun/PreparedAction/RunOutcome；Infrastructure 只提供 UoW、conditional write、Checkpoint adapter、Lease、Outbox、ObjectRef 与 Recovery primitive。Infrastructure 不自行重放 Action、不激活 PlanVersion、不提交 RunOutcome。
-
-依赖请求：Agent Core 实现 Program 必须使用 `DomainCommitMarker`、`domain_generation_seen`、fencing token、outbox sequence 与 pinned graph/state versions；不得以 checkpoint 成功代替领域 commit。
-
-## 38. 对 Input / Knowledge / Memory
-
-- Input 拥有 SourceObject/DocumentVersion/ParseJob/SourceSpan；Infrastructure 提供 object commit、queue、lease、retention execution。
-- Knowledge 拥有 IndexManifest、RetrievalChunk、Evidence；Infrastructure 提供 index storage adapter/backup primitive，但派生索引可重建。
-- Memory 拥有 MemoryCandidate、MemoryRecord、privacy delete semantics；Infrastructure 执行 scoped purge/retention，不决定记忆内容。
+| DB Commit 前崩溃 | 事务未提交 | Rollback + Idempotent Retry | 推断业务成功 |
+| DB Commit 后、Outbox Publish 前 | Domain + Outbox committed | Publisher 重扫 | 重做 Domain Mutation |
+| Object Upload 后、Metadata 前 | Staged Object | Resume/Verify 或 Orphan Cleanup | 读路径暴露对象 |
+| ACK 前崩溃 | Inbox/Domain 可能已提交 | Redelivery + Inbox Dedup | 重复副作用 |
+| Lease Expiry 后旧 Worker 晚到 | 新 Fencing Token 已签发 | Reject + LateResult | 覆盖新结果 |
+| Checkpoint Ahead of Domain | Control State 超前 | Block Effect + Reconcile | 当作 Domain Commit |
+| Milvus Write-Then-Crash Before Manifest Commit | 可能部分写入 | Verify/Upsert + 不发布 | 激活版本 |
+| Neo4j Commit-Then-Crash Before Manifest Commit | 图物理已提交 | Receipt/Version Reconcile | 激活图版本 |
+| Manifest Commit 后 Cutover 前 | Domain 待切流 | generation/CAS Retry | 静默混读 |
+| Cutover Receipt Lost After Alias Switch | 物理已切流 | 对账 ServingWatermark | 再次无条件切流 |
+| Tombstone 后索引删除失败 | Domain 已删除 | 保持隐藏并重试 | 恢复可见性 |
+| Legal Hold Arrives During Purge | 部分目标已处理 | Stop Purge + Record Receipt | 继续删除受保护副本 |
+| PITR with Stale Derived Indexes | 索引落后 | STALE/REBUILDING | 直接服务 |
+| PITR With Ahead / Behind Derived Index | 索引领先或落后 | Quarantine 或 Rebuild | 混用版本 |
+| Audit Committed Before Tool Effect Crash | Audit 已持久化、Effect 未知 | Tool Runtime Reconcile | Infrastructure 标记成功 |
+| Mandatory Audit Local Failure | 无 Durable Audit | BLOCK_EFFECT | 放行高风险动作 |
+| Network Partition With Stale Worker | 旧 Worker 恢复 | Fencing Reject | 晚到覆盖 |
+| Migration Rollback / Partial | Schema 中间态 | Resume/Rollback/Forward-fix | 标记 Completed |
+| Backup Corruption | Artifact 不可信 | Mark CORRUPT + Rebackup | 标记 Completed |
+| Restore Failure | Isolated Target 不完整 | Cleanup/Abort | 覆盖生产 |
+| Clock Skew | 本地时间不可信 | Reject Lease-sensitive write | 续租旧 Lease |
+| Drain Deadline | Inflight 未清零 | Fence remainder + Evidence | 静默终止 |
+| Capacity Exhaustion | Reservation 不足 | Backpressure/Queue/Reject | 无界接收 |
+| Tenant Filter Omission / Cross-tenant Hit | 隔离失败 | Quarantine + Mandatory Audit | 返回敏感结果 |
 
 ---
 
 # Part VII：目标实现规格
 
-## 39. Typed Ports
+# 51. Target Ports
 
 ```python
-class DatabaseRuntimePort(Protocol): ...
-class UnitOfWorkPort(Protocol): ...
+class TransactionalStorePort(Protocol): ...
 class ObjectStorePort(Protocol): ...
-class ObjectCommitPort(Protocol): ...
 class CheckpointStorePort(Protocol): ...
-class QueueRuntimePort(Protocol): ...
+class QueuePort(Protocol): ...
 class InboxOutboxPort(Protocol): ...
 class LeaseFencingPort(Protocol): ...
 class ClockPort(Protocol): ...
@@ -1042,181 +1642,330 @@ class SecretDeliveryPort(Protocol): ...
 class HealthReadinessPort(Protocol): ...
 class CapacityAdmissionPort(Protocol): ...
 class InfrastructureTelemetryPort(Protocol): ...
+class VectorIndexRuntimePort(Protocol): ...
+class GraphIndexRuntimePort(Protocol): ...
+class LexicalIndexRuntimePort(Protocol): ...
+class CacheAccelerationPort(Protocol): ...
 ```
 
-Port 不暴露 SQLAlchemy Session、RabbitMQ channel、S3 client、LangGraph saver 内部对象或 Secret material。
+Port 不暴露 SQLAlchemy Session、RabbitMQ Channel、S3 Client、LangGraph Saver、Milvus Client、Neo4j Driver、Redis Client 或 Secret Material。
 
-## 40. 目标代码与部署目录
+# 52. Target Code Mapping
+
+Infrastructure 是逻辑模块，物理代码归 `src/backend/zuno/platform/**`，不新增 `zuno/infrastructure` 顶层：
 
 ```text
-src/backend/zuno/infrastructure/
-├── contracts/{capability,database,object,checkpoint,queue,lease,clock,migration,backup,retention,health,capacity}.py
-├── application/{transaction,object_commit,delivery,lease,migration,backup,restore,drain,capacity,reconciliation}_service.py
-├── ports/
-├── persistence/postgres/{engine,uow,repositories,outbox,inbox,locks}.py
-├── checkpoint/{local,postgres_langgraph,compatibility,reconciliation}.py
-├── object_store/{local,s3,commit,reconciler}.py
-├── queue/{local,rabbitmq,publisher,consumer,dlq}.py
-├── coordination/{lease,fencing,clock}.py
-├── operations/{migration,backup,restore,retention,drain,health,capacity}.py
-├── security/{secret_delivery,encryption,tenant_scope}.py
-└── telemetry/{hooks,metrics}.py
+src/backend/zuno/platform/
+├── database/
+│   ├── contracts.py
+│   ├── engine.py
+│   ├── uow.py
+│   ├── repositories.py
+│   ├── outbox.py
+│   ├── inbox.py
+│   ├── locks.py
+│   └── migrations.py
+├── storage/
+│   ├── contracts.py
+│   ├── local.py
+│   ├── s3.py
+│   ├── object_commit.py
+│   └── reconciler.py
+├── jobs/
+│   ├── contracts.py
+│   ├── local.py
+│   ├── rabbitmq.py
+│   ├── publisher.py
+│   ├── consumer.py
+│   └── dlq.py
+├── checkpoint/
+│   ├── contracts.py
+│   ├── local.py
+│   ├── postgres_langgraph.py
+│   ├── compatibility.py
+│   └── reconciliation.py
+├── coordination/
+│   ├── lease.py
+│   ├── fencing.py
+│   ├── clock.py
+│   └── capacity.py
+├── data_services/
+│   ├── contracts.py
+│   ├── capability_registry.py
+│   ├── vector/{local,milvus,health,rebuild}.py
+│   ├── graph/{local,neo4j,health,rebuild}.py
+│   ├── lexical/{local,search,health,rebuild}.py
+│   └── cache/{local,redis,health}.py
+├── operations/
+│   ├── migration.py
+│   ├── backup.py
+│   ├── restore.py
+│   ├── retention.py
+│   ├── deletion.py
+│   ├── recovery_set.py
+│   ├── drain.py
+│   └── reconciliation.py
+├── network/
+├── release/
+├── security/
+└── observability/
 
 infra/
 ├── compose/
 ├── postgres/
 ├── rabbitmq/
 ├── object-store/
+├── milvus/
+├── neo4j/
+├── search/
+├── redis/
 ├── backup-restore/
-├── migrations/
+├── conformance/
+├── benchmarks/
 └── runbooks/
 ```
 
-依赖方向：domain/application → ports；adapter → ports。Domain 不导入 SQLAlchemy/aio-pika/boto/langgraph saver；Application 不导入 FastAPI；Migration 不承载业务决策。
+依赖方向：Domain/Application → Port；Adapter → Port。Knowledge/Memory 不导入 Milvus、Neo4j、Redis 或 Search SDK。
 
-## 41. Storage Mapping
+# 53. Target Storage Mapping
 
-| Object | Owner | Target storage | 关键约束 |
+| Object | Canonical Owner | Target Storage | 关键约束 |
 | --- | --- | --- | --- |
-| InfrastructureCapabilityProfile | Infrastructure | PostgreSQL JSONB + hash | immutable version |
-| StorageObject/ObjectCommit | Infrastructure physical metadata | PostgreSQL + Object Store | committed ref only |
-| CheckpointRecord | Infrastructure adapter | LangGraph PostgreSQL tables + object refs | thread/namespace/generation/version |
-| QueueMessage | producer contract；Infrastructure envelope | RabbitMQ + Outbox | message_id/idempotency/deadline |
-| InboxRecord/OutboxRecord | Infrastructure primitive | PostgreSQL | unique dedup/order |
-| WorkerLease/FencingToken | Infrastructure | PostgreSQL | monotonic token |
-| MigrationRun | Infrastructure execution record | PostgreSQL | immutable attempt history |
-| BackupRun/RestoreRun | Infrastructure | PostgreSQL + Object Store manifest | verified before completed |
-| RetentionPolicy/LegalHold | policy owner + Infrastructure binding | PostgreSQL | hold overrides purge |
-| DrainMarker/CapacityReservation | Infrastructure | PostgreSQL | deadline/fencing/release |
-| AgentRun/PlanVersion/StepRun | Agent Core | Agent Core domain tables | Infrastructure 不拥有 |
-| SecurityDecision | Security | Security domain store | Infrastructure 只保存 ref/epoch |
-| Trace/Eval Projection | Observability | Observability store | Infrastructure 只提供 ingest/storage capability |
+| InfrastructureCapabilityProfile | Infrastructure | PostgreSQL JSONB + Hash | Immutable Version |
+| StorageObject / ObjectCommit | Infrastructure physical metadata | PostgreSQL + Object Store | Committed Ref Only |
+| CheckpointRecord | Infrastructure Adapter | Checkpoint Tables + ObjectRef | Thread/Namespace/Generation |
+| QueueMessage | Producer Contract / Infra Envelope | RabbitMQ + Outbox | Message/Idempotency/Deadline |
+| InboxRecord / OutboxRecord | Infrastructure primitive | PostgreSQL | Unique Dedup / Ordering |
+| WorkerLease / FencingToken | Infrastructure | PostgreSQL | Monotonic Token |
+| IndexWriteReceipt / Watermark | Infrastructure | PostgreSQL | Physical Evidence |
+| IndexManifest / KnowledgeVersion | Knowledge | Knowledge Domain Tables | Infra 不拥有 |
+| Migration / Backup / Restore | Infrastructure | PostgreSQL + Object Manifest | Verified before Terminal |
+| Retention / LegalHold Binding | Policy Owner + Infra | PostgreSQL | Hold overrides Purge |
+| AuditPersistenceReceipt | Infrastructure | Durable Append + PostgreSQL | Mandatory before Effect when required |
+| AgentRun / Plan / Step | Agent Core | Agent Domain Tables | Checkpoint 不替代 |
 
-## 42. 事务边界
+# 54. Transaction Boundaries
 
 ```text
 Domain Mutation
-    domain facts + DomainCommitMarker + Outbox 同一 PostgreSQL 事务。
-Dispatch
-    domain dispatch + capacity reservation + lease claim + outbox 同事务；之后 publish。
+    Domain Facts + DomainCommitMarker + Outbox 同一 PostgreSQL Transaction。
+
 Object Commit
-    reserve in DB；事务外 upload；DB 提交 metadata + domain ref + outbox。
+    DB Reserve；事务外 Upload；DB 提交 Metadata + Domain Ref + Outbox。
+
 Consumer
-    Inbox claim + domain result + Inbox COMMITTED 同事务；之后 ACK。
+    Inbox Claim + Domain Result + Inbox COMMITTED 同事务；之后 ACK。
+
+Derived Index Build
+    Domain Draft；事务外物理写；Receipt/Verification；Domain Manifest；CAS Cutover。
+
 Checkpoint
-    graph control write 与 domain commit 不伪装成单事务；用 generation/watermark 对账。
+    Graph Control Write 与 Domain Commit 不伪装成同一事务；Generation/Watermark 对账。
+
 External Sink
-    local append/outbox commit；事务外发送；receipt 后更新 delivery state。
-Backup/Restore
-    control metadata 入库；数据复制在事务外；验证后才进入 COMPLETED/READY。
+    Local Append + Outbox Commit；事务外发送；Receipt 更新 Delivery State。
+
+Backup / Restore
+    Control Metadata 入库；数据复制在事务外；验证后进入 COMPLETED/READY。
+```
+
+# 55. Migration、Runbook 与 Conformance
+
+每个 Server Product Adapter 必须提供：
+
+```text
+Configuration Schema
+Compatibility Matrix
+Migration / Upgrade / Rollback
+Health / Readiness Probe
+Backup / Restore or Rebuild
+Tenant Isolation Test
+Fault Injection Plan
+Capacity Benchmark
+Operational Runbook
+Evidence Output
+```
+
+Adapter Conformance Suite 必测：
+
+```text
+transaction / rollback / conflict
+idempotency / duplicate delivery
+deadline / cancellation
+lease / fencing
+tenant scope
+schema / version compatibility
+write visibility
+restart / reconnect
+backup / restore / rebuild
+health / readiness / degradation
+telemetry / failure normalization
+```
+
+# 56. Cross-module Contracts
+
+Infrastructure 必须消费并服从：
+
+```text
+CrossModuleEnvelopeV1
+EffectiveSecurityEpochRefV1
+CredentialVersionRefV1 / SecretLeaseV1
+SecurityAuditRequirementV1
+ModelQuotaReservationV1 / ModelUsageReceiptV1 / CancellationReceipt
+VectorIndexSpec / GraphIndexSpec / LexicalIndexSpec
+IndexManifest / KnowledgeVersion / MemoryVersion
+ActionProposal / PreparedToolAction / EffectReceipt
+TelemetryEnvelope / AuditEvent
+```
+
+关键不等价关系：
+
+```text
+Queue ACK != Tool Effect Success
+Lease Release != Tool Effect Success
+Audit Persistence != Tool Effect Success
+External Sink Delivery != Source Domain Success
+Object Commit != Publication Success
+Checkpoint Commit != Domain Commit
+IndexWriteReceipt != IndexManifest Accepted
 ```
 
 ---
 
 # Part VIII：Requirement、测试与完成证据
 
-## 43. Requirement Enforcement Matrix
+# 57. Requirement Enforcement Matrix
 
-每条 Requirement 必须映射 Control、测试与 Evidence；Program 可以增加测试，不能删除基础映射。
+每条 Requirement 映射 Control、最低测试和 Evidence。Program 可以增加，不得删除基础门禁。
 
-| Requirement | 目标 | Control / Failure | Required Tests | Evidence |
+| Requirement | Target | Control / Failure | Required Tests | Evidence |
 | --- | --- | --- | --- | --- |
-| `ARCH-INFRA-001` | Current/Target/Future/Not Selected 严格分层 | `RC-INFRA-001` / `INFRA001_FACT_LAYER_VIOLATION` | `INFRA-001-UT, INFRA-001-IT` | `EV-INFRA-001` |
-| `ARCH-INFRA-002` | Capability Profile 可哈希、版本化、启动固定 | `RC-INFRA-002` / `INFRA002_PROFILE_INVALID` | `INFRA-002-UT, INFRA-002-IT` | `EV-INFRA-002` |
-| `ARCH-INFRA-003` | Infrastructure 不拥有上层领域结论 | `RC-INFRA-003` / `INFRA003_OWNERSHIP_VIOLATION` | `INFRA-003-UT, INFRA-003-IT` | `EV-INFRA-003` |
-| `ARCH-INFRA-004` | Local/Enterprise 共用 typed ports | `RC-INFRA-004` / `INFRA004_PORT_DIVERGENCE` | `INFRA-004-UT, INFRA-004-IT` | `EV-INFRA-004` |
-| `ARCH-INFRA-005` | PostgreSQL 作为企业结构化事实能力 | `RC-INFRA-005` / `INFRA005_DB_CAPABILITY_MISSING` | `INFRA-005-UT, INFRA-005-IT, INFRA-005-E2E` | `EV-INFRA-005` |
-| `ARCH-INFRA-006` | Repository 不自行 commit，外部调用不进事务 | `RC-INFRA-006` / `INFRA006_TRANSACTION_BOUNDARY` | `INFRA-006-UT, INFRA-006-IT, INFRA-006-FT` | `EV-INFRA-006` |
-| `ARCH-INFRA-007` | 连接池有 role profile、timeout 与 leak 证据 | `RC-INFRA-007` / `INFRA007_POOL_EXHAUSTED` | `INFRA-007-UT, INFRA-007-IT, INFRA-007-FT` | `EV-INFRA-007` |
-| `ARCH-INFRA-008` | generation/security epoch/fencing 条件写 | `RC-INFRA-008` / `INFRA008_STALE_WRITE` | `INFRA-008-UT, INFRA-008-IT, INFRA-008-FT` | `EV-INFRA-008` |
-| `ARCH-INFRA-009` | ObjectCommit 使用 staging/hash/metadata commit | `RC-INFRA-009` / `INFRA009_OBJECT_COMMIT_INVALID` | `INFRA-009-UT, INFRA-009-IT, INFRA-009-FT` | `EV-INFRA-009` |
-| `ARCH-INFRA-010` | staged/orphan object 可对账清理 | `RC-INFRA-010` / `INFRA010_OBJECT_ORPHANED` | `INFRA-010-UT, INFRA-010-IT, INFRA-010-FT` | `EV-INFRA-010` |
-| `ARCH-INFRA-011` | 只读取 COMMITTED 且 hash 匹配对象 | `RC-INFRA-011` / `INFRA011_OBJECT_INTEGRITY` | `INFRA-011-UT, INFRA-011-IT` | `EV-INFRA-011` |
-| `ARCH-INFRA-012` | Checkpoint 与 Domain 事实分离 | `RC-INFRA-012` / `INFRA012_BOUNDARY_VIOLATION` | `INFRA-012-UT, INFRA-012-IT, INFRA-012-FT` | `EV-INFRA-012` |
-| `ARCH-INFRA-013` | DomainCommitMarker/RecoveryWatermark 对账 | `RC-INFRA-013` / `INFRA013_DIVERGENCE` | `INFRA-013-UT, INFRA-013-IT, INFRA-013-FT, INFRA-013-E2E` | `EV-INFRA-013` |
-| `ARCH-INFRA-014` | Checkpoint bundle/state version 不兼容 fail-closed | `RC-INFRA-014` / `INFRA014_CHECKPOINT_INCOMPATIBLE` | `INFRA-014-UT, INFRA-014-IT, INFRA-014-FT` | `EV-INFRA-014` |
-| `ARCH-INFRA-015` | Producer domain/outbox 同事务 | `RC-INFRA-015` / `INFRA015_OUTBOX_GAP` | `INFRA-015-UT, INFRA-015-IT, INFRA-015-FT` | `EV-INFRA-015` |
-| `ARCH-INFRA-016` | Consumer Inbox/domain 同事务，ACK 在后 | `RC-INFRA-016` / `INFRA016_INBOX_GAP` | `INFRA-016-UT, INFRA-016-IT, INFRA-016-FT` | `EV-INFRA-016` |
-| `ARCH-INFRA-017` | Queue redelivery 不重复业务副作用 | `RC-INFRA-017` / `INFRA017_DUPLICATE_EFFECT` | `INFRA-017-UT, INFRA-017-IT, INFRA-017-FT, INFRA-017-E2E` | `EV-INFRA-017` |
-| `ARCH-INFRA-018` | DLQ/expiry/retry 有明确状态与 owner | `RC-INFRA-018` / `INFRA018_DELIVERY_TERMINAL_INVALID` | `INFRA-018-UT, INFRA-018-IT` | `EV-INFRA-018` |
-| `ARCH-INFRA-019` | Lease 使用权威时钟、heartbeat 与 expiry | `RC-INFRA-019` / `INFRA019_LEASE_INVALID` | `INFRA-019-UT, INFRA-019-IT, INFRA-019-FT` | `EV-INFRA-019` |
-| `ARCH-INFRA-020` | Fencing token 单调并拒绝旧 Worker | `RC-INFRA-020` / `INFRA020_STALE_FENCING_TOKEN` | `INFRA-020-UT, INFRA-020-IT, INFRA-020-FT, INFRA-020-E2E` | `EV-INFRA-020` |
-| `ARCH-INFRA-021` | Clock/Deadline/Timeout/Skew 语义分离 | `RC-INFRA-021` / `INFRA021_CLOCK_SEMANTICS` | `INFRA-021-UT, INFRA-021-IT, INFRA-021-FT` | `EV-INFRA-021` |
-| `ARCH-INFRA-022` | Config 有 schema/version/hash/source | `RC-INFRA-022` / `INFRA022_CONFIG_INVALID` | `INFRA-022-UT, INFRA-022-IT` | `EV-INFRA-022` |
-| `ARCH-INFRA-023` | Secret value 不持久化，rotation 可回滚 | `RC-INFRA-023` / `INFRA023_SECRET_LIFECYCLE` | `INFRA-023-UT, INFRA-023-IT, INFRA-023-FT` | `EV-INFRA-023` |
-| `ARCH-INFRA-024` | Migration 默认 Expand/Contract | `RC-INFRA-024` / `INFRA024_DESTRUCTIVE_MIGRATION` | `INFRA-024-UT, INFRA-024-IT, INFRA-024-FT` | `EV-INFRA-024` |
-| `ARCH-INFRA-025` | MigrationRun 可 resume/rollback/forward-fix | `RC-INFRA-025` / `INFRA025_MIGRATION_PARTIAL` | `INFRA-025-UT, INFRA-025-IT, INFRA-025-FT, INFRA-025-E2E` | `EV-INFRA-025` |
-| `ARCH-INFRA-026` | BackupPlan 定义 scope/RPO/encryption/verify | `RC-INFRA-026` / `INFRA026_BACKUP_PLAN_INVALID` | `INFRA-026-UT, INFRA-026-IT` | `EV-INFRA-026` |
-| `ARCH-INFRA-027` | Backup 只有验证后才能 COMPLETED | `RC-INFRA-027` / `INFRA027_BACKUP_CORRUPT` | `INFRA-027-UT, INFRA-027-IT, INFRA-027-FT` | `EV-INFRA-027` |
-| `ARCH-INFRA-028` | Restore 在隔离目标验证后 cutover | `RC-INFRA-028` / `INFRA028_RESTORE_UNVERIFIED` | `INFRA-028-UT, INFRA-028-IT, INFRA-028-FT, INFRA-028-E2E` | `EV-INFRA-028` |
-| `ARCH-INFRA-029` | PITR 同时对齐 DB/Object/Checkpoint/Index watermark | `RC-INFRA-029` / `INFRA029_PITR_INCOMPLETE` | `INFRA-029-UT, INFRA-029-IT, INFRA-029-FT` | `EV-INFRA-029` |
-| `ARCH-INFRA-030` | Retention scope/version 可审计 | `RC-INFRA-030` / `INFRA030_RETENTION_INVALID` | `INFRA-030-UT, INFRA-030-IT` | `EV-INFRA-030` |
-| `ARCH-INFRA-031` | LegalHold 优先于 purge/backup expiry | `RC-INFRA-031` / `INFRA031_LEGAL_HOLD_VIOLATION` | `INFRA-031-UT, INFRA-031-IT, INFRA-031-FT` | `EV-INFRA-031` |
-| `ARCH-INFRA-032` | Readiness 检查关键依赖/schema/skew/drain | `RC-INFRA-032` / `INFRA032_READINESS_INVALID` | `INFRA-032-UT, INFRA-032-IT, INFRA-032-FT` | `EV-INFRA-032` |
-| `ARCH-INFRA-033` | Drain 停止 admission、转移 Lease、deadline fencing | `RC-INFRA-033` / `INFRA033_DRAIN_DEADLINE` | `INFRA-033-UT, INFRA-033-IT, INFRA-033-FT, INFRA-033-E2E` | `EV-INFRA-033` |
-| `ARCH-INFRA-034` | CapacityReservation 原子保留与终局释放 | `RC-INFRA-034` / `INFRA034_CAPACITY_RESERVATION` | `INFRA-034-UT, INFRA-034-IT, INFRA-034-FT` | `EV-INFRA-034` |
-| `ARCH-INFRA-035` | Capacity exhaustion 执行 backpressure/queue/reject | `RC-INFRA-035` / `INFRA035_CAPACITY_EXHAUSTED` | `INFRA-035-UT, INFRA-035-IT, INFRA-035-FT, INFRA-035-E2E` | `EV-INFRA-035` |
-| `ARCH-INFRA-036` | tenant/workspace scope 进入存储与队列约束 | `RC-INFRA-036` / `INFRA036_TENANT_ISOLATION` | `INFRA-036-UT, INFRA-036-IT, INFRA-036-FT, INFRA-036-E2E` | `EV-INFRA-036` |
-| `ARCH-INFRA-037` | at-rest/in-transit encryption 与 key ref | `RC-INFRA-037` / `INFRA037_ENCRYPTION_MISSING` | `INFRA-037-UT, INFRA-037-IT, INFRA-037-FT` | `EV-INFRA-037` |
-| `ARCH-INFRA-038` | Infrastructure hook 不伪造 Eval verdict | `RC-INFRA-038` / `INFRA038_TELEMETRY_MISSING` | `INFRA-038-UT, INFRA-038-IT` | `EV-INFRA-038` |
-| `ARCH-INFRA-039` | Failure taxonomy 含 retry/recovery/owner | `RC-INFRA-039` / `INFRA039_FAILURE_UNCLASSIFIED` | `INFRA-039-UT, INFRA-039-IT` | `EV-INFRA-039` |
-| `ARCH-INFRA-040` | Reconciler 使用 Lease/Fencing/Idempotency | `RC-INFRA-040` / `INFRA040_RECONCILER_UNFENCED` | `INFRA-040-UT, INFRA-040-IT, INFRA-040-FT` | `EV-INFRA-040` |
-| `ARCH-INFRA-041` | DR profile 明确 RPO/RTO/顺序/owner | `RC-INFRA-041` / `INFRA041_DR_UNPROVEN` | `INFRA-041-UT, INFRA-041-IT, INFRA-041-FT, INFRA-041-E2E` | `EV-INFRA-041` |
-| `ARCH-INFRA-042` | Security Epoch/Secret/Isolation/Hold contract 可消费 | `RC-INFRA-042` / `INFRA042_SECURITY_CONTRACT_GAP` | `INFRA-042-UT, INFRA-042-IT` | `EV-INFRA-042` |
-| `ARCH-INFRA-043` | Model Provider config/usage/rate-limit/stream capability | `RC-INFRA-043` / `INFRA043_MODEL_CONTRACT_GAP` | `INFRA-043-UT, INFRA-043-IT` | `EV-INFRA-043` |
-| `ARCH-INFRA-044` | Trace/Audit/Event/Sink/Eval queue capability | `RC-INFRA-044` / `INFRA044_OBSERVABILITY_CONTRACT_GAP` | `INFRA-044-UT, INFRA-044-IT` | `EV-INFRA-044` |
-| `ARCH-INFRA-045` | Agent Core generation/fencing/watermark/outbox 不变量 | `RC-INFRA-045` / `INFRA045_AGENT_BOUNDARY_VIOLATION` | `INFRA-045-UT, INFRA-045-IT, INFRA-045-FT, INFRA-045-E2E` | `EV-INFRA-045` |
-| `ARCH-INFRA-046` | Kafka/K8s/Event Sourcing/XA/Active-Active 不默认引入 | `RC-INFRA-046` / `INFRA046_NOT_SELECTED_VIOLATION` | `INFRA-046-UT, INFRA-046-IT` | `EV-INFRA-046` |
-| `ARCH-INFRA-047` | Target 只有工程证据完成后提升 Current | `RC-INFRA-047` / `INFRA047_CURRENT_WITHOUT_EVIDENCE` | `INFRA-047-UT, INFRA-047-IT` | `EV-INFRA-047` |
-| `ARCH-INFRA-048` | 正式文档、镜像、入口、验证器、测试同步 | `RC-INFRA-048` / `INFRA048_DOC_SYNC` | `INFRA-048-UT, INFRA-048-IT` | `EV-INFRA-048` |
+| `ARCH-INFRA-001` | Current/Target/Future/Not Selected 分层 | `RC-INFRA-001` | `INFRA-001-UT, INFRA-001-IT` | `EV-INFRA-001` |
+| `ARCH-INFRA-002` | 单一正式架构文档与镜像 | `RC-INFRA-002` | `INFRA-002-UT, INFRA-002-IT` | `EV-INFRA-002` |
+| `ARCH-INFRA-003` | Capability Profile immutable/versioned | `RC-INFRA-003` | `INFRA-003-UT, INFRA-003-IT` | `EV-INFRA-003` |
+| `ARCH-INFRA-004` | Infrastructure 不拥有领域终局 | `RC-INFRA-004` | `INFRA-004-UT, INFRA-004-IT` | `EV-INFRA-004` |
+| `ARCH-INFRA-005` | Local/Server Product 共用 Typed Port | `RC-INFRA-005` | `INFRA-005-UT, INFRA-005-IT` | `EV-INFRA-005` |
+| `ARCH-INFRA-006` | PostgreSQL 权威结构化事实能力 | `RC-INFRA-006` | `INFRA-006-UT, INFRA-006-IT` | `EV-INFRA-006` |
+| `ARCH-INFRA-007` | Repository 不自行 Commit | `RC-INFRA-007` | `INFRA-007-UT, INFRA-007-IT` | `EV-INFRA-007` |
+| `ARCH-INFRA-008` | 外部调用不进入 DB Transaction | `RC-INFRA-008` | `INFRA-008-UT, INFRA-008-IT` | `EV-INFRA-008` |
+| `ARCH-INFRA-009` | Generation/Epoch/Fencing 条件写 | `RC-INFRA-009` | `INFRA-009-UT, INFRA-009-IT` | `EV-INFRA-009` |
+| `ARCH-INFRA-010` | Role-specific Pool/Timeout/Leak Evidence | `RC-INFRA-010` | `INFRA-010-UT, INFRA-010-IT` | `EV-INFRA-010` |
+| `ARCH-INFRA-011` | ObjectCommit Staging/Hash/Metadata | `RC-INFRA-011` | `INFRA-011-UT, INFRA-011-IT` | `EV-INFRA-011` |
+| `ARCH-INFRA-012` | Orphan Object 可 Reconcile | `RC-INFRA-012` | `INFRA-012-UT, INFRA-012-IT` | `EV-INFRA-012` |
+| `ARCH-INFRA-013` | 只读 COMMITTED Object | `RC-INFRA-013` | `INFRA-013-UT, INFRA-013-IT` | `EV-INFRA-013` |
+| `ARCH-INFRA-014` | Producer Domain + Outbox 同事务 | `RC-INFRA-014` | `INFRA-014-UT, INFRA-014-IT` | `EV-INFRA-014` |
+| `ARCH-INFRA-015` | Consumer Inbox + Domain 同事务 | `RC-INFRA-015` | `INFRA-015-UT, INFRA-015-IT` | `EV-INFRA-015` |
+| `ARCH-INFRA-016` | RabbitMQ Redelivery 不重复 Effect | `RC-INFRA-016` | `INFRA-016-UT, INFRA-016-IT` | `EV-INFRA-016` |
+| `ARCH-INFRA-017` | DLQ/Expiry/Retry 有 Owner | `RC-INFRA-017` | `INFRA-017-UT, INFRA-017-IT` | `EV-INFRA-017` |
+| `ARCH-INFRA-018` | Lease 使用权威 Clock | `RC-INFRA-018` | `INFRA-018-UT, INFRA-018-IT` | `EV-INFRA-018` |
+| `ARCH-INFRA-019` | Fencing Token 单调拒绝旧 Worker | `RC-INFRA-019` | `INFRA-019-UT, INFRA-019-IT` | `EV-INFRA-019` |
+| `ARCH-INFRA-020` | Clock/Deadline/Timeout/Skew 分离 | `RC-INFRA-020` | `INFRA-020-UT, INFRA-020-IT` | `EV-INFRA-020` |
+| `ARCH-INFRA-021` | Checkpoint/Domain 事实分离 | `RC-INFRA-021` | `INFRA-021-UT, INFRA-021-IT` | `EV-INFRA-021` |
+| `ARCH-INFRA-022` | RecoveryWatermark 对账 | `RC-INFRA-022` | `INFRA-022-UT, INFRA-022-IT` | `EV-INFRA-022` |
+| `ARCH-INFRA-023` | Checkpoint Version 不兼容 Fail-closed | `RC-INFRA-023` | `INFRA-023-UT, INFRA-023-IT` | `EV-INFRA-023` |
+| `ARCH-INFRA-024` | Migration Expand/Contract | `RC-INFRA-024` | `INFRA-024-UT, INFRA-024-IT` | `EV-INFRA-024` |
+| `ARCH-INFRA-025` | Migration 可 Resume/Rollback/Forward-fix | `RC-INFRA-025` | `INFRA-025-UT, INFRA-025-IT` | `EV-INFRA-025` |
+| `ARCH-INFRA-026` | Backup 定义 Scope/RPO/Encryption/Verify | `RC-INFRA-026` | `INFRA-026-UT, INFRA-026-IT` | `EV-INFRA-026` |
+| `ARCH-INFRA-027` | Backup 验证后才 Completed | `RC-INFRA-027` | `INFRA-027-UT, INFRA-027-IT` | `EV-INFRA-027` |
+| `ARCH-INFRA-028` | Restore 隔离验证后 Cutover | `RC-INFRA-028` | `INFRA-028-UT, INFRA-028-IT` | `EV-INFRA-028` |
+| `ARCH-INFRA-029` | PITR 对齐 DB/Object/Checkpoint/Index | `RC-INFRA-029` | `INFRA-029-UT, INFRA-029-IT` | `EV-INFRA-029` |
+| `ARCH-INFRA-030` | Retention/LegalHold 优先级 | `RC-INFRA-030` | `INFRA-030-UT, INFRA-030-IT` | `EV-INFRA-030` |
+| `ARCH-INFRA-031` | Drain 停止 Admission 并 Fence | `RC-INFRA-031` | `INFRA-031-UT, INFRA-031-IT` | `EV-INFRA-031` |
+| `ARCH-INFRA-032` | CapacityReservation 原子保留释放 | `RC-INFRA-032` | `INFRA-032-UT, INFRA-032-IT` | `EV-INFRA-032` |
+| `ARCH-INFRA-033` | Capacity Exhaustion Backpressure | `RC-INFRA-033` | `INFRA-033-UT, INFRA-033-IT` | `EV-INFRA-033` |
+| `ARCH-INFRA-034` | Tenant Scope 进入物理约束 | `RC-INFRA-034` | `INFRA-034-UT, INFRA-034-IT` | `EV-INFRA-034` |
+| `ARCH-INFRA-035` | Encryption/Secret Rotation 可回滚 | `RC-INFRA-035` | `INFRA-035-UT, INFRA-035-IT` | `EV-INFRA-035` |
+| `ARCH-INFRA-036` | Health/Readiness/Degraded 分离 | `RC-INFRA-036` | `INFRA-036-UT, INFRA-036-IT` | `EV-INFRA-036` |
+| `ARCH-INFRA-037` | Telemetry Hook 不伪造 Eval | `RC-INFRA-037` | `INFRA-037-UT, INFRA-037-IT` | `EV-INFRA-037` |
+| `ARCH-INFRA-038` | Failure 含 Owner/Retry/Recovery/Evidence | `RC-INFRA-038` | `INFRA-038-UT, INFRA-038-IT` | `EV-INFRA-038` |
+| `ARCH-INFRA-039` | Reconciler 使用 Lease/Fencing/Idempotency | `RC-INFRA-039` | `INFRA-039-UT, INFRA-039-IT` | `EV-INFRA-039` |
+| `ARCH-INFRA-040` | DR Profile 明确 RPO/RTO/Owner | `RC-INFRA-040` | `INFRA-040-UT, INFRA-040-IT` | `EV-INFRA-040` |
+| `ARCH-INFRA-041` | PostgreSQL/RabbitMQ/Object/Checkpoint 边界 | `RC-INFRA-041` | `INFRA-041-UT, INFRA-041-IT` | `EV-INFRA-041` |
+| `ARCH-INFRA-042` | Milvus 可重建且非事实源 | `RC-INFRA-042` | `INFRA-042-UT, INFRA-042-IT` | `EV-INFRA-042` |
+| `ARCH-INFRA-043` | Neo4j 可重建且不拥有 Ontology | `RC-INFRA-043` | `INFRA-043-UT, INFRA-043-IT` | `EV-INFRA-043` |
+| `ARCH-INFRA-044` | BM25/Search Versioned/Rebuildable | `RC-INFRA-044` | `INFRA-044-UT, INFRA-044-IT` | `EV-INFRA-044` |
+| `ARCH-INFRA-045` | Redis Optional/Non-authoritative | `RC-INFRA-045` | `INFRA-045-UT, INFRA-045-IT` | `EV-INFRA-045` |
+| `ARCH-INFRA-046` | Index Write/Visibility/Verification 分层 | `RC-INFRA-046` | `INFRA-046-UT, INFRA-046-IT` | `EV-INFRA-046` |
+| `ARCH-INFRA-047` | IndexManifest/Acceptance 归领域 Owner | `RC-INFRA-047` | `INFRA-047-UT, INFRA-047-IT` | `EV-INFRA-047` |
+| `ARCH-INFRA-048` | Cutover 使用 Generation/CAS | `RC-INFRA-048` | `INFRA-048-UT, INFRA-048-IT` | `EV-INFRA-048` |
+| `ARCH-INFRA-049` | Active Snapshot 阻止错误 Retirement | `RC-INFRA-049` | `INFRA-049-UT, INFRA-049-IT` | `EV-INFRA-049` |
+| `ARCH-INFRA-050` | 删除先撤销可见性再 Purge | `RC-INFRA-050` | `INFRA-050-UT, INFRA-050-IT` | `EV-INFRA-050` |
+| `ARCH-INFRA-051` | 删除有跨服务 Verification | `RC-INFRA-051` | `INFRA-051-UT, INFRA-051-IT` | `EV-INFRA-051` |
+| `ARCH-INFRA-052` | RecoverySet 对齐权威和派生 Watermark | `RC-INFRA-052` | `INFRA-052-UT, INFRA-052-IT` | `EV-INFRA-052` |
+| `ARCH-INFRA-053` | Recovery Cutover 显式允许 | `RC-INFRA-053` | `INFRA-053-UT, INFRA-053-IT` | `EV-INFRA-053` |
+| `ARCH-INFRA-054` | Mandatory Audit Durable 后才 Effect | `RC-INFRA-054` | `INFRA-054-UT, INFRA-054-IT` | `EV-INFRA-054` |
+| `ARCH-INFRA-055` | Audit Capacity 有 Fail Mode | `RC-INFRA-055` | `INFRA-055-UT, INFRA-055-IT` | `EV-INFRA-055` |
+| `ARCH-INFRA-056` | PreparedToolAction Ownership 不重叠 | `RC-INFRA-056` | `INFRA-056-UT, INFRA-056-IT` | `EV-INFRA-056` |
+| `ARCH-INFRA-057` | 每种服务有 TenantIsolationProfile | `RC-INFRA-057` | `INFRA-057-UT, INFRA-057-IT` | `EV-INFRA-057` |
+| `ARCH-INFRA-058` | Cross-tenant Hit Quarantine/Fail-closed | `RC-INFRA-058` | `INFRA-058-UT, INFRA-058-IT` | `EV-INFRA-058` |
+| `ARCH-INFRA-059` | Visibility Consistency 不静默假设 | `RC-INFRA-059` | `INFRA-059-UT, INFRA-059-IT` | `EV-INFRA-059` |
+| `ARCH-INFRA-060` | Upgrade Compatibility 显式版本化 | `RC-INFRA-060` | `INFRA-060-UT, INFRA-060-IT` | `EV-INFRA-060` |
+| `ARCH-INFRA-061` | Local/Enterprise 共用 Conformance | `RC-INFRA-061` | `INFRA-061-UT, INFRA-061-IT` | `EV-INFRA-061` |
+| `ARCH-INFRA-062` | Unsupported Local Semantic Fail-fast | `RC-INFRA-062` | `INFRA-062-UT, INFRA-062-IT` | `EV-INFRA-062` |
+| `ARCH-INFRA-063` | Network/Release/Provenance 可验证 | `RC-INFRA-063` | `INFRA-063-UT, INFRA-063-IT` | `EV-INFRA-063` |
+| `ARCH-INFRA-064` | Target→Current 需要完整工程证据 | `RC-INFRA-064` | `INFRA-064-UT, INFRA-064-IT` | `EV-INFRA-064` |
 
-## 44. Mandatory Fault Tests
-
-| Fault Test | 注入点 | 必须证明 |
-| --- | --- | --- |
-| `Outbox Crash` | domain commit 后 kill publisher | 消息最终发布且 domain 不重复 |
-| `Inbox Duplicate` | 同 message 多次投递 | 只提交一次领域副作用 |
-| `Object Commit Crash` | upload 完成、metadata commit 前 kill | staged object 可清理或恢复，读路径不可见 |
-| `Lease Expiry` | 停止 heartbeat | 新 Worker 可接管 |
-| `Stale Fencing Token` | 旧 Worker 晚到 commit | 写入被拒绝并留证据 |
-| `Checkpoint / Domain Divergence` | 只写 checkpoint 或只写 domain marker | 恢复到最后合法 generation，副作用不重复 |
-| `Queue Redelivery` | domain commit 后 ACK 前 kill | redelivery 被 Inbox 吸收 |
-| `Migration Rollback` | backfill 中途失败 | 可续跑、rollback 或 forward-fix，schema compatibility 明确 |
-| `Backup Corruption` | 修改 backup block/manifest | verification 拒绝 completed |
-| `Restore Failure` | restore 中断/验证失败 | 生产目标不被切换 |
-| `Clock Skew` | 注入超阈值时钟偏移 | Lease-sensitive action fail-closed |
-| `Drain Deadline` | 长任务不退出 | fencing + unresolved work evidence |
-| `Capacity Exhaustion` | pool/queue/disk 达阈值 | backpressure/queue/reject，无界增长被阻止 |
-
-## 45. Validation Commands
+# 58. Mandatory Fault / E2E Tests
 
 ```text
-python tools/scripts/verify_infrastructure_target_protocols.py
-pytest -q tests/repo/test_infrastructure_target_protocols.py -p no:cacheprovider
-python .agent/scripts/verify_agent_system.py
-python .agent/scripts/verify_doc_boundaries.py
-python tools/scripts/verify_docs_entrypoints.py
-git diff --check
+Outbox Crash
+Inbox Duplicate
+Object Commit Crash
+Lease Expiry
+Stale Fencing Token
+Checkpoint / Domain Divergence
+Queue Redelivery
+Publisher Confirm Loss
+Migration Rollback
+Backup Corruption
+Restore Failure
+Clock Skew
+Drain Deadline
+Capacity Exhaustion
+Milvus Write-Then-Crash Before Manifest Commit
+Milvus Partial Batch / Schema Incompatibility
+Milvus Rebuild / Version Cutover
+Neo4j Commit-Then-Crash Before Manifest Commit
+Neo4j Duplicate Batch / Constraint Mismatch
+Neo4j Rebuild / Version Cutover
+BM25 Analyzer / Mapping Version Mismatch
+Cross-store Version Divergence
+Cutover Receipt Lost After Alias Switch
+Deletion Partial Across Vector / Graph / Lexical
+Deletion Visibility Deadline
+Legal Hold Arrives During Purge
+PITR with Stale Derived Indexes
+PITR With Ahead / Behind Derived Index
+Mandatory Audit Local Store Failure
+Mandatory Audit Capacity Exhaustion
+Audit Committed Before Tool Effect Crash
+Tenant Filter Omission / Cross-tenant Hit
+Local Adapter Unsupported Semantic
+Network Partition With Stale Worker
+Unsigned Release Rejected
+Resource Attribution Missing
 ```
 
-本 PR 的专用 workflow 只证明文档 Contract 和 verifier，不证明 PostgreSQL、RabbitMQ、Object Store、Backup 或 Restore 已实现。
+每项 Fault Test 必须证明：触发条件、状态变化、失败传播、事实 Owner、Retry/Recovery、幂等、安全门禁、Trace 和终局 Evidence。
 
-## 46. Target → Current Evidence
+# 59. Target → Current Evidence
 
-任一 Target 能力变为 Current 至少需要：
+任一 Target 能力提升为 Current，需要对应：
 
 ```text
-implementation available
-+ typed adapter
-+ database Migration
-+ unit test
-+ integration test
-+ mandatory fault test
-+ restart/recovery test
-+ trace/metric evidence
-+ backup/restore rehearsal（适用时）
-+ security/tenant isolation verification
-+ documentation/status sync
+Runtime implementation
+Schema / Alembic Migration / Index Version
+Unit Test
+Real Service Integration Test
+Fault Injection
+E2E
+Restart / Recovery / Idempotency Evidence
+Security Isolation Evidence
+Backup / Restore / Rebuild / Deletion Rehearsal
+SLO / Capacity / Performance Measurement
+Trace / Audit / Evidence Record
+Runbook / Rollback / Release Provenance
+Production Readiness Update
 ```
 
 推荐状态：
@@ -1229,13 +1978,4 @@ quality not yet proven
 production ready
 ```
 
-只有对应 `EV-INFRA-NNN` 可复现，并更新 `docs/status/production-readiness.md` 后，才可声明 Current。Compose service、environment key、SDK dependency、class 名或 happy-path mock test 均不是完成证据。
-
-## 47. 完成定义
-
-Infrastructure Target 设计完成意味着：
-
-- Ownership、typed contract、状态机、失败、恢复、幂等、时间、安全与测试规格已冻结。
-- Local/Enterprise topology 与技术选择明确。
-- 不代表 runtime 已实现、完整 CI 已通过、DR 已演练或 production ready。
-- 后续 Codex Program 不得自行引入 Kafka、Kubernetes、Event Sourcing、XA/2PC、Active-Active，或改变 Agent Core Domain/Checkpoint 边界。
+本文和其验证器只能证明 `design available` 与 Target Contract 完整，不能证明外部组件已经接入、质量已证明或 production ready。
