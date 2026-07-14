@@ -26,7 +26,7 @@
 | 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
-| 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
+| 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立单一完整 Target 架构文档 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
 | 09 | Security | [`09-security.md`](./09-security.md) | 已建立实施级 Target 规范 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
@@ -81,6 +81,15 @@ docs/modules/06-agent-core-planning-control.md
 
 它统一包含概念架构、运行流程、不变量、状态机、DAG 与并发、Interrupt / Signal、副作用、Finalization、一致性、事件、Artifact、恢复、时间、目标代码、数据库和测试规格。
 
+## Capability / Skill 文档边界
+
+```text
+docs/modules/07-capability-skill.md
+.agent/modules/07-capability-skill.md
+```
+
+它是 Module 07 唯一正式 Target 架构，统一定义 Capability、Skill、Provider Binding、Conformance、Availability、Selection、渐进加载、Connector Pack、版本、状态机、失败恢复、目标代码、数据库和验证规格。API、CLI、MCP 是 Provider / 执行协议；真实 ToolDefinition、Prepare、Execute、Receipt 和 Reconcile 归 Module 08。
+
 ## Security 文档边界
 
 ```text
@@ -105,6 +114,9 @@ docs/history/      已完成 Program 与历史证据
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+
+python tools/scripts/verify_capability_skill_target_protocols.py
+pytest -q tests/repo/test_capability_skill_target_protocols.py -p no:cacheprovider
 
 python tools/scripts/verify_security_target_protocols.py
 pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
