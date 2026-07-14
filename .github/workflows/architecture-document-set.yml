@@ -56,6 +56,7 @@ jobs:
         run: mkdir -p architecture-validation-logs
       - name: Compile architecture validators and tests
         run: |
+          set -o pipefail
           python -m py_compile \
             tools/agent/render_architecture.py \
             tools/scripts/verify_architecture_document_set.py \
@@ -63,11 +64,12 @@ jobs:
             tests/repo/test_docs_entrypoints.py \
             2>&1 | tee architecture-validation-logs/compile.log
       - name: Verify canonical architecture document set
-        run: python tools/scripts/verify_architecture_document_set.py 2>&1 | tee architecture-validation-logs/document-set.log
+        run: set -o pipefail; python tools/scripts/verify_architecture_document_set.py 2>&1 | tee architecture-validation-logs/document-set.log
       - name: Verify architecture rendering and mirrors
-        run: python tools/agent/render_architecture.py --check 2>&1 | tee architecture-validation-logs/render.log
+        run: set -o pipefail; python tools/agent/render_architecture.py --check 2>&1 | tee architecture-validation-logs/render.log
       - name: Verify documentation and Agent entrypoints
         run: |
+          set -o pipefail
           {
             python tools/scripts/verify_docs_entrypoints.py
             python .agent/scripts/verify_agent_system.py
@@ -75,6 +77,7 @@ jobs:
           } 2>&1 | tee architecture-validation-logs/entrypoints.log
       - name: Run architecture and module focused tests
         run: |
+          set -o pipefail
           pytest -q \
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_docs_entrypoints.py \
