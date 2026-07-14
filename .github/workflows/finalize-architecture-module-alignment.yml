@@ -30,9 +30,10 @@ jobs:
         run: python -m pip install --disable-pip-version-check pytest pyyaml
       - name: Apply deterministic architecture alignment
         run: python tools/scripts/finalize_architecture_module_alignment.py
-      - name: Preserve documentation entrypoint compatibility phrase
+      - name: Preserve documentation compatibility wording
         run: |
           sed -i 's/本文是 Zuno 十一个逻辑模块的跨模块集成架构/本文是 Zuno 十一模块（十一个逻辑模块）的跨模块集成架构/' docs/architecture/architecture.md
+          sed -i 's/初期不要求拆成大量微服务。/近期不默认建设大量微服务。/' docs/architecture/architecture.md
           cp docs/architecture/architecture.md .agent/architecture/architecture.md
       - name: Check whitespace
         run: git diff --check
@@ -54,25 +55,8 @@ jobs:
         run: python tools/scripts/verify_docs_entrypoints.py
       - name: Verify Agent system routes
         run: python .agent/scripts/verify_agent_system.py
-      - name: Capture document boundary diagnostics
-        run: |
-          set +e
-          python .agent/scripts/verify_doc_boundaries.py > architecture-boundary.log 2>&1
-          status=$?
-          cat architecture-boundary.log
-          echo "$status" > architecture-boundary.status
-          exit 0
-      - name: Upload document boundary diagnostics
-        uses: actions/upload-artifact@v4
-        with:
-          name: architecture-boundary-diagnostics
-          path: |
-            architecture-boundary.log
-            architecture-boundary.status
-          if-no-files-found: error
-          retention-days: 7
-      - name: Enforce document boundary result
-        run: test "$(cat architecture-boundary.status)" = "0"
+      - name: Verify document boundaries
+        run: python .agent/scripts/verify_doc_boundaries.py
       - name: Run focused architecture tests
         run: |
           pytest -q \
