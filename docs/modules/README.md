@@ -25,12 +25,12 @@
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
 | 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
-| 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
+| 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
+| 08 | Tool Runtime | `08-tool-runtime.md` | 待正式收口 |
 | 09 | Security | [`09-security.md`](./09-security.md) | 已建立实施级 Target 规范 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
-| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 已建立实施级 Target 规范 |
+| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | 单一完整实施级 Target 架构文档 |
 
 ## Wave 1 共享 Contract
 
@@ -43,6 +43,36 @@ ADR 0003 与 Registry 统一冻结 Security、Infrastructure、Model Gateway、O
 
 当前状态：`CONFIRMED_TARGET`。服务端物理实现归 `src/backend/zuno/platform/**`；Agent Core 使用 `ActionProposal / ActionExecutionBinding`，可执行副作用事实归 Tool Runtime `PreparedToolAction`。
 
+## Agent Core 文档边界
+
+```text
+docs/modules/06-agent-core-planning-control.md
+.agent/modules/06-agent-core-planning-control.md
+```
+
+它统一包含概念架构、运行流程、不变量、状态机、DAG、并发、Interrupt、Signal、副作用、Finalization、一致性、事件、Artifact、恢复、目标代码、数据库和测试规格。
+
+## Infrastructure 文档边界
+
+唯一正式 Target 文档和镜像：
+
+```text
+docs/modules/11-infrastructure.md
+.agent/modules/11-infrastructure.md
+```
+
+该单一文档统一包含：
+
+```text
+PostgreSQL、RabbitMQ、Object Store / MinIO、Checkpointer
+Milvus、Neo4j、BM25 / Search、Redis、Trace/Audit、Secret/KMS
+事务、Inbox/Outbox、Lease/Fencing、Clock、Capacity
+索引发布、删除、恢复、审计、隔离、升级、SLO、Network、Release
+完整状态机、Failure、Crash Matrix、目标代码、数据库和测试证据
+```
+
+不再维护 Infrastructure 数据服务或一致性生命周期规范性附录。任何 Infrastructure Target 变更必须同步唯一正式文档、字节级镜像、入口、验证器和测试。
+
 ## Model Gateway 文档边界
 
 ```text
@@ -53,16 +83,6 @@ docs/modules/04-model-gateway-operations-conformance.md
 
 主文档定义 Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 和 Storage；两个附录分别冻结跨模块 Contract 与长期运行、Conformance、运维和生命周期协议。
 
-## Infrastructure 文档边界
-
-```text
-docs/modules/11-infrastructure.md
-docs/modules/11-infrastructure-data-services.md
-docs/modules/11-infrastructure-consistency-lifecycle.md
-```
-
-主文档定义关系数据库、对象、Checkpoint、Queue、Lease、Migration、Backup、Restore、Retention、Drain 和部署 primitive；两个附录分别定义 Data Services 和一致性/生命周期协议。Developer/CI Local Adapter 不代表多用户产品部署 Target。
-
 ## Observability & Eval 文档边界
 
 ```text
@@ -70,16 +90,7 @@ docs/modules/10-observability-eval.md
 docs/modules/10-observability-eval-rag-agent-evaluation.md
 ```
 
-主文档定义 Trace、Audit、Metric、Eval、Evidence、Release Gate、事件交付、恢复和质量证明边界；受控附录冻结 RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket 和 Agent Efficiency。旧 Retrieval、Citation、Safety 与 Runtime 指标保留为诊断层，不得冒充 Core Five。
-
-## Agent Core 文档边界
-
-```text
-docs/modules/06-agent-core-planning-control.md
-.agent/modules/06-agent-core-planning-control.md
-```
-
-它统一包含概念架构、运行流程、不变量、状态机、DAG 与并发、Interrupt / Signal、副作用、Finalization、一致性、事件、Artifact、恢复、时间、目标代码、数据库和测试规格。
+主文档定义 Trace、Audit、Metric、Eval、Evidence、Release Gate、事件交付、恢复和质量证明边界；受控附录冻结 RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket 和 Agent Efficiency。
 
 ## Security 文档边界
 
@@ -98,7 +109,7 @@ docs/status/       Current、Gap、Measurement 和完成状态
 docs/history/      已完成 Program 与历史证据
 ```
 
-存在镜像的正式文件必须字节级一致。模块变更必须同步正式文档、受控附录、镜像、入口、专用验证器和测试。
+存在镜像的正式文件必须字节级一致。模块变更必须同步正式文档、镜像、入口、专用验证器和测试。
 
 ## 专用验证
 
