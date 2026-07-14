@@ -1,117 +1,94 @@
-# Zuno 逻辑模块设计文档镜像
+# Zuno 十一个逻辑模块镜像
 
-`.agent/modules/` 保存 Agent System 高频读取的模块镜像；`docs/modules/` 是正式事实源。
+`.agent/modules/` 保存十一份正式模块架构的字节级镜像；`docs/modules/` 是正式事实源。镜像不能独立修改或覆盖正式文档。
 
-## 十一个逻辑模块
+## 规范优先级
 
-| 编号 | 模块 | 正式模块文档 | 状态 |
+```text
+全局不可变原则与已接受 ADR
+→ 对应领域模块的唯一正式 Target 文档
+→ 总架构的跨模块集成视图
+→ 已确认 Program
+→ 代码、Migration、测试、Trace 与 Eval
+```
+
+总架构不能覆盖模块 Owner 的规范性 Contract。跨模块冲突必须修改总架构、协调模块文档，或通过 ADR 解决，不能保留两套事实。
+
+## 十一个模块
+
+| 编号 | 模块 | 唯一正式文档 | 状态 |
 | --- | --- | --- | --- |
-| 01 | Product Surface | `01-product-surface.md` | 待细化 |
-| 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](../../docs/modules/02-input-document-ingestion.md) | 已建立 Target 规范 |
-| 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](../../docs/modules/03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) | 单一完整 Target 架构镜像 |
-| 05 | Memory & Context | [`05-memory-context.md`](../../docs/modules/05-memory-context.md) | 已建立 Target 规范 |
-| 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构镜像 |
-| 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待正式收口 |
-| 09 | Security | [`09-security.md`](./09-security.md) | 实施级 Target 镜像 |
-| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) + [`10-observability-eval-rag-agent-evaluation.md`](./10-observability-eval-rag-agent-evaluation.md) | 实施级 Target 与受控附录镜像 |
-| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | 单一完整实施级 Target 架构镜像 |
+| 01 | Product Surface | [`01-product-surface.md`](./01-product-surface.md) | 单一完整实施级 Target 架构 |
+| 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 单一完整实施级 Target 架构 |
+| 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 单一完整实施级 Target 架构 |
+| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) | 单一完整实施级 Target 架构 |
+| 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 单一完整实施级 Target 架构 |
+| 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整实施级 Target 架构 |
+| 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 单一完整实施级 Target 架构 |
+| 08 | Tool Runtime | [`08-tool-runtime.md`](./08-tool-runtime.md) | 单一完整实施级 Target 架构 |
+| 09 | Security | [`09-security.md`](./09-security.md) | 单一完整实施级 Target 架构 |
+| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 单一完整实施级 Target 架构 |
+| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | 单一完整实施级 Target 架构 |
 
-## Wave 1 共享 Contract
+## 正式架构文档集
 
-```text
-docs/decisions/0003-wave1-cross-module-contract-freeze.md
-docs/governance/wave1-cross-module-contract-registry.md
-```
-
-ADR 0003 与 Registry 是 Wave 1 跨模块 Owner、Envelope、Receipt、Failure Namespace、Security Epoch 和 Recovery 边界的共享事实源。
-
-当前状态：`CONFIRMED_TARGET`。物理实现归 `src/backend/zuno/platform/**`；Agent Core 只持有 `ActionProposal / ActionExecutionBinding`，可执行副作用事实归 Tool Runtime `PreparedToolAction`。
-
-## Agent Core 唯一 Target 镜像
+正式设计事实共十三份：
 
 ```text
-.agent/modules/06-agent-core-planning-control.md
+11 × docs/modules/<NN>-<module>.md
+1  × docs/architecture/architecture.md
+1  × docs/architecture/architecture.html
 ```
 
-对应正式事实源：
+`docs/architecture/README.md` 是目录说明；`architecture-views.md` 是 HTML 的 Mermaid 渲染源。它们是维护支撑文件，不是额外的模块或第二份总架构。
+
+## 状态边界
+
+模块文档描述 Target，不自动证明 Current。Current、Gap、Measurement Blocked 与 Production Readiness 以：
 
 ```text
-docs/modules/06-agent-core-planning-control.md
+docs/status/production-readiness.md
+最新 main 的代码、Migration、测试、Trace、Eval 和运行证据
 ```
 
-## Model Gateway 唯一 Target 镜像
+为事实源。
+
+允许的设计完成声明：
 
 ```text
-.agent/modules/04-model-gateway.md
+design available
+internally consistent
+contract-complete
+implementation-spec-complete
+program-ready
 ```
 
-对应唯一正式事实源：
+不得仅凭文档声明：
 
 ```text
-docs/modules/04-model-gateway.md
+implementation available
+quality proven
+production ready
 ```
 
-正式文件与镜像必须字节级一致。该文档统一包含模块定位、十一个模块的模型使用地图、Role / Operation / Provider / Model / Capability、完整调用与恢复协议、Operation-specific Contract、状态机、Adapter Conformance、配置和生命周期、多租户公平、缓存、运维、Retention / Deletion、SLO / Readiness、目标代码、数据库和测试规格。
+## 镜像与验证
 
-Model Gateway Current、旁路调用和 Production Readiness 不能从 Target 文档推断，必须读取最新 `main` 的代码、测试、Migration、Trace、Eval、状态文件和 boundary verifier。
-
-## Infrastructure 唯一 Target 镜像
+十一份正式模块文档都必须有同名字节级镜像：
 
 ```text
-.agent/modules/11-infrastructure.md
+docs/modules/<file>
+.agent/modules/<file>
 ```
 
-对应唯一正式事实源：
+统一验证：
 
 ```text
-docs/modules/11-infrastructure.md
+python tools/scripts/verify_architecture_document_set.py
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 ```
 
-该镜像统一包含 PostgreSQL、RabbitMQ、Object Store / MinIO、LangGraph Checkpointer、Milvus、Neo4j、BM25 / Search、Redis、Trace/Audit、Secret/KMS，以及事务、Queue、索引发布、删除、恢复、审计、升级、安全、SLO、实现规格和验证要求。
-
-Agent 读取规则：
-
-- 不得寻找或重新创建 Infrastructure 数据服务、Consistency 或 Lifecycle 规范性附录；
-- Infrastructure Target 的全部设计以唯一主文档为准；
-- 正式文档与镜像必须字节级一致；
-- 物理实现归 `src/backend/zuno/platform/**`，不得新增顶层 `zuno/infrastructure`；
-- Current 与 Gap 读取 `docs/status/production-readiness.md`；
-- 实现和迁移计划读取 `.agent/programs/`。
-
-## Observability & Eval Target 镜像
-
-```text
-.agent/modules/10-observability-eval.md
-.agent/modules/10-observability-eval-rag-agent-evaluation.md
-```
-
-主文档定义 Trace/Audit/Eval/Evidence 总边界；附录定义 RAG Core Five、Agentic GraphRAG Trace、Failure Bucket 和 Agent Efficiency。
-
-## Security Target 镜像
-
-```text
-.agent/modules/09-security.md
-```
-
-Security 文档定义服务器端安全控制面、身份、权限、Policy、Gate、脱敏、审批、撤销、Secret 和审计 Contract。
-
-正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`。Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。
-
-## 专用验证
-
-```text
-python tools/scripts/verify_agent_core_target_protocols.py
-python tools/scripts/verify_security_target_protocols.py
-python tools/scripts/verify_model_gateway_target_protocols.py
-python tools/scripts/verify_infrastructure_target_protocols.py
-python tools/scripts/verify_wave1_contract_freeze.py
-python tools/scripts/verify_observability_eval_target_protocols.py
-
-pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
-pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
-pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider
-pytest -q tests/repo/test_infrastructure_target_protocols.py tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider
-pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider
-```
+各模块专用 verifier 和 focused tests 继续验证该模块的 Requirement、状态机、Ownership 与完成证据。
