@@ -30,6 +30,20 @@
 | 10 | Observability & Eval | `docs/modules/10-observability-eval.md` | [`.agent/modules/10-observability-eval.md`](./10-observability-eval.md) | 单一完整 Target 架构 |
 | 11 | Infrastructure | `docs/modules/11-infrastructure.md` | [`11-infrastructure.md`](./11-infrastructure.md)；`.agent/modules/11-infrastructure.md` | 单一完整实施级 Target；唯一 Target 镜像 |
 
+## 本地阅读路径
+
+不同读者不要从同一个入口硬读到底：
+
+| 读者 / 任务 | 推荐路径 | 结束时应知道什么 |
+| --- | --- | --- |
+| 新 clone 的开发者 | 本 README → `docs/architecture/architecture.md` → `.agent/programs/current.md` | 十一模块 Target、跨模块总图、当前 Program 处于哪个 Phase |
+| Runtime 实现者 | 对应模块文档 → `docs/governance/wave1-cross-module-contract-registry.md` → 当前 Phase | Owner、Contract、Failure、Recovery Owner 和允许修改范围 |
+| 前端 / 产品实现者 | `01-product-surface.md` → `06-agent-core-planning-control.md` → 当前 Phase 的 Product Surface 任务 | 前端只消费 Projection 和 AvailableAction，不拥有领域事实 |
+| RAG / GraphRAG 实现者 | `03-knowledge-agentic-graphrag.md` → `10-observability-eval.md` → Release Gate 相关 Phase | Evidence、Citation、Benchmark 和 blocked-not-measured 的边界 |
+| 安全 / 工具实现者 | `09-security.md` → `08-tool-runtime.md` → `07-capability-skill.md` | Proposal、Approval、Effect、Reconciliation 和 Audit 的分工 |
+
+模块文档用于定义 Target，不用于证明 Current。读完模块后必须回到 `.agent/programs/current.md`、`docs/status/production-readiness.md` 和最新测试 / Trace / Eval 证据判断当前实现状态。
+
 ## 模块验证入口
 
 ```text

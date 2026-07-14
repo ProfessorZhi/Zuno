@@ -30,6 +30,32 @@ Zuno 正式架构设计事实共十三份：
 
 `.agent/architecture/` 是字节级镜像，不是独立事实源。
 
+## 从云端同步到本地
+
+本仓库架构文档以 GitHub `main` 为共享基线。已有 checkout 时先快进同步：
+
+```powershell
+git status --short --branch
+git pull --ff-only origin main
+```
+
+全新机器先 clone：
+
+```powershell
+git clone https://github.com/ProfessorZhi/Zuno.git
+Set-Location -LiteralPath .\Zuno
+```
+
+同步后先读三处：
+
+```text
+docs/modules/README.md
+docs/architecture/architecture.md
+.agent/programs/current.md
+```
+
+`docs/modules/` 说明十一模块 Target；`architecture.md` 说明跨模块集成；`.agent/programs/current.md` 说明当前 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
+
 
 ## 规范优先级
 

@@ -783,3 +783,99 @@ program-ready
 ```
 
 只有代码、Migration、Unit/Contract/Integration/Fault/E2E、Trace、Eval 和运行证据齐备时，相关 Target 才能提升为 Current。`quality proven` 不等于 `production ready`。
+
+---
+
+# 16. 云端同步、本地阅读与实施交接
+
+本章回答一个最常见的工程问题：从 GitHub clone 或 pull 最新 `main` 后，怎样判断架构文档、Program、代码 Current 和验证结果各自代表什么。它不新增领域 Contract，只固定阅读顺序和交接边界，避免把云端文档更新误读成 Runtime 已完成。
+
+## 16.1 本地同步后的第一检查
+
+从 GitHub 获取最新仓库后，先确认当前分支、远端提交和工作区干净：
+
+```powershell
+git status --short --branch
+git log --oneline -5
+```
+
+如果本地是已有 checkout，优先使用：
+
+```powershell
+git pull --ff-only origin main
+```
+
+如果是全新机器，使用：
+
+```powershell
+git clone https://github.com/ProfessorZhi/Zuno.git
+Set-Location -LiteralPath .\Zuno
+```
+
+同步完成不代表架构 Current 已改变。同步只证明本地文件等于云端某个 commit；Current 仍必须由代码、Migration、测试、Trace、Eval 或运行证据证明。
+
+## 16.2 阅读顺序
+
+本地阅读应分三层：
+
+| 层级 | 先读什么 | 用来回答什么 |
+| --- | --- | --- |
+| 架构目标 | `docs/modules/README.md`、十一份 `docs/modules/<NN>-*.md`、`docs/architecture/architecture.md` | Target 应该长什么样，Owner、Contract、Failure 和状态边界由谁定义 |
+| 可视化理解 | `docs/architecture/architecture-views.md`、`docs/architecture/architecture.html` | 十类图如何帮助阅读，不作为独立事实源 |
+| 当前状态 | `.agent/programs/current.md`、`.agent/programs/program-manifest.yaml`、`docs/status/production-readiness.md` | 当前 active program、Current / Gap / Measurement Blocked 和完成证据是什么 |
+
+判断一句话能不能写成 Current 时，只看第三层和最新代码证据；判断一个模块未来应该怎样实现时，先看第一层。
+
+## 16.3 架构文档到实施 Program 的映射
+
+当前云端 `main` 激活的是 `zuno-canonical-architecture-runtime-realization-v1`。该 Program 的任务不是继续扩写架构，而是把十一模块 Target 转成可运行 Current。
+
+交接规则：
+
+```text
+模块文档
+→ Requirement / Contract / Failure / Owner
+→ .agent/programs/PHASE*.md Work Package
+→ 代码、Migration、测试、Trace、Eval
+→ docs/evidence/ 完成证据
+→ docs/status/production-readiness.md Current 更新
+```
+
+任何 Phase 关闭前，不能只引用模块文档证明完成；必须引用对应的实现和验证结果。反过来，如果实现发现 Target Contract 不可满足，不能在代码里暗改语义，必须回到模块文档、ADR 或共享 Contract Registry 修正。
+
+## 16.4 本地验证分层
+
+只改架构文档时，最小验证是：
+
+```powershell
+python tools/scripts/verify_architecture_document_set.py
+python tools/scripts/verify_architecture_semantic_alignment.py
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_architecture_semantic_alignment.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+```
+
+如果修改了模块 Contract，还必须运行对应模块 verifier，例如 Model Gateway、Memory、Agent Core、Security、Tool Runtime、Observability 或 Infrastructure 的目标协议测试。只运行 renderer 不足以证明架构一致。
+
+## 16.5 不允许的交接误读
+
+以下说法均不成立：
+
+```text
+云端 architecture.md 更新了，所以 Runtime 已完成。
+Mermaid 图画出来了，所以状态机可恢复。
+Program 激活了，所以 Phase 已完成。
+Target 写了 PostgreSQL，所以当前 SQLite / local adapter 已经退休。
+EvidenceLedger 写在文档里，所以 fixed benchmark 已 measured。
+HTML 可打开，所以模块 Contract 已同步。
+```
+
+允许的说法是：
+
+```text
+云端最新 main 已提供十一模块 Target、总架构、十类图和 22-phase 实施 Program。
+本地 clone / pull 后可以用 verifier 证明文档集同步、镜像同步和语义对齐。
+Current、quality proven 和 production ready 仍只由实现、测试、Trace、Eval 和证据提升。
+```

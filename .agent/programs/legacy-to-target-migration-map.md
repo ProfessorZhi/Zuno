@@ -51,6 +51,7 @@ src/backend/zuno/platform
 | `memory/**` 本地 Memory Engine/Store | 05 | 版本化 ContextPack、Candidate、Governance、Activation | Privacy Delete、Revocation、Reuse Trace 通过 | 旧四层命名仅兼容读取 |
 | `capability/**` Registry/Selector | 07 | Definition/Version/Availability/Feasibility/Progressive Loading | Planner Contract 和 Tool Projection 通过 | 07 不再拥有 Tool Effect 事实 |
 | Tool handler、MCP coroutine、CLI/OpenAPI 直接 execute | 08 | Invocation Gateway + Adapter SPI；Read-only→Side-effect→UNKNOWN | Boundary Allowlist 归零、Effect Fault Test 通过 | 所有直接执行入口删除或 Adapter 化 |
+| Tool UNKNOWN / lost response / ambiguous side effect | 08/11 | EffectReconciliation 作为正式迁移 surface；先确认外部事实再提交 Outcome | UNKNOWN、RECONCILING、CONFIRMED、COMPENSATED Fault Test 通过 | 禁止把不明副作用写成普通 Retry 成功 |
 | local trace/eval helper | 10 | Envelope→Append-only Ingest→Projection/Audit→Eval | Dedup/Gap/Rebuild/Core Five/Gate 通过 | 外部 Sink 不成为内部 Owner |
 | 旧 Web API/store/page 直接消费 Runtime 状态 | 01 | `apps/web/src/product/**` Contract/Store/Projection/SSE | Multi Interrupt、Resync、Revocation、UNKNOWN UI E2E | 删除字符串推断和旧 DTO 泄漏 |
 | Desktop 直接复用旧 API/Bridge | 01 | `apps/desktop/src/product/**` 版本化 Bridge/Authorization/Delivery | Desktop Smoke + Contract Test | 旧 Bridge 仅兼容旧客户端版本 |

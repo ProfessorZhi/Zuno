@@ -6,6 +6,8 @@ principle: 降低推理负担，不降低架构能力
 
 ## 1. 每次只做一个 Work Package
 
+执行原则：一次只执行一个 Work Package。
+
 不要一次读取 22 个 Phase，也不要尝试实现整个模块。Coordinator 给出 `Pxx-Tyy` 后，只读取：
 
 1. `AGENTS.md`。
