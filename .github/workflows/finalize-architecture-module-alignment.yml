@@ -1,7 +1,8 @@
 name: One-time architecture module alignment
 
-# Trigger revision: 2
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [docs/architecture-module-realignment]
     paths:
@@ -11,9 +12,11 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   finalize:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
