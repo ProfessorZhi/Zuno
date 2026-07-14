@@ -28,7 +28,7 @@
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
-| 09 | Security | [`09-security.md`](./09-security.md) | 已建立实施级 Target 规范 |
+| 09 | Security | [`09-security.md`](./09-security.md) | 已建立单一完整实施级 Target 架构 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 已建立实施级 Target 规范 |
 
@@ -88,7 +88,7 @@ docs/modules/09-security.md
 .agent/modules/09-security.md
 ```
 
-它定义服务器端安全控制面、账号与身份、组织树、管理员作用域、资源权限、委派授权、Policy、全链路 Gate、输入输出检测、脱敏、审批、撤销、Secret 和审计 Contract。
+它是 Security 唯一 Target 架构文档，统一定义服务器端安全控制面、身份和组织、动作级授权、Agent / Task 临时权限、Policy Plane、Instruction Trust、Information Flow、Prompt Injection 防御、MCP、Credential、Sandbox、供应链、审计和 Security Eval。
 
 执行和迁移计划不写入模块 Target 文档：
 

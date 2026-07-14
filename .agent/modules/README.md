@@ -14,7 +14,7 @@
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构镜像 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
-| 09 | Security | [`09-security.md`](./09-security.md) | 实施级 Target 镜像 |
+| 09 | Security | [`09-security.md`](./09-security.md) | 单一完整实施级 Target 镜像 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) + [`10-observability-eval-rag-agent-evaluation.md`](./10-observability-eval-rag-agent-evaluation.md) | 实施级 Target 与受控附录镜像 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 实施级 Target 镜像 |
 
@@ -89,7 +89,7 @@ docs/modules/10-observability-eval-rag-agent-evaluation.md
 docs/modules/06-agent-core-planning-control.md
 ```
 
-## Security Target 镜像
+## Security 唯一 Target 镜像
 
 ```text
 .agent/modules/09-security.md
@@ -101,7 +101,7 @@ docs/modules/06-agent-core-planning-control.md
 docs/modules/09-security.md
 ```
 
-Security 文档定义服务器端安全控制面、账号与身份、组织树、管理员作用域、资源权限、委派授权、Policy、全链路 Gate、输入输出检测、脱敏、审批、撤销、Secret 和审计 Contract。
+Security 主文档统一定义身份和组织、动作级授权、Agent / Task 临时权限、Policy Plane、Instruction Trust、Information Flow、Prompt Injection 防御、MCP、Credential、Sandbox、供应链、审计和 Security Eval；不新增独立 Security 架构附录。
 
 正式文件与镜像必须字节级一致，不得只修改 `.agent/modules/`。Current 与 Gap 读取 `docs/status/production-readiness.md`；实现与迁移计划读取 `.agent/programs/`。
 
