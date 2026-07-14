@@ -1,135 +1,94 @@
-# Zuno 逻辑模块设计文档
+# Zuno 十一个逻辑模块
 
-`docs/modules/` 是 Zuno 十一个逻辑模块的正式 Target 设计目录。
+`docs/modules/` 保存 Zuno 十一个逻辑模块的正式 Target 架构。每个逻辑模块只有一份正式模块架构文档；`.agent/modules/` 只保存字节级一致的 Agent 镜像。
 
-这里回答：
+## 规范优先级
 
 ```text
-模块解决什么问题
-负责与不负责什么
-完整运行流程
-状态、失败、恢复、幂等和安全
-跨模块 Contract 与 Ownership
-目标代码、数据库和测试规格
-什么证据才能把 Target 变为 Current
+全局不可变原则与已接受 ADR
+→ 对应领域模块的唯一正式 Target 文档
+→ 总架构的跨模块集成视图
+→ 已确认 Program
+→ 代码、Migration、测试、Trace 与 Eval
 ```
 
-总架构以 `docs/architecture/architecture.md` 为最高层入口；Current、Gap 和 Blocked 以 `docs/status/production-readiness.md` 为事实源。
+总架构不能覆盖模块 Owner 的规范性 Contract。跨模块冲突必须修改总架构、协调模块文档，或通过 ADR 解决，不能保留两套事实。
 
-## 十一个逻辑模块
+## 十一个模块
 
-| 编号 | 模块 | 正式模块文档 | 状态 |
+| 编号 | 模块 | 唯一正式文档 | 状态 |
 | --- | --- | --- | --- |
-| 01 | Product Surface | `01-product-surface.md` | 待细化 |
-| 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
-| 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
-| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
-| 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
-| 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
-| 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立单一完整 Target 架构文档 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
-| 09 | Security | [`09-security.md`](./09-security.md) | 已建立实施级 Target 规范 |
-| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
-| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 已建立实施级 Target 规范 |
+| 01 | Product Surface | [`01-product-surface.md`](./01-product-surface.md) | 单一完整实施级 Target 架构 |
+| 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 单一完整实施级 Target 架构 |
+| 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 单一完整实施级 Target 架构 |
+| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) | 单一完整实施级 Target 架构 |
+| 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 单一完整实施级 Target 架构 |
+| 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整实施级 Target 架构 |
+| 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 单一完整实施级 Target 架构 |
+| 08 | Tool Runtime | [`08-tool-runtime.md`](./08-tool-runtime.md) | 单一完整实施级 Target 架构 |
+| 09 | Security | [`09-security.md`](./09-security.md) | 单一完整实施级 Target 架构 |
+| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 单一完整实施级 Target 架构 |
+| 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | 单一完整实施级 Target 架构 |
 
-## Wave 1 共享 Contract
+## 正式架构文档集
 
-```text
-docs/decisions/0003-wave1-cross-module-contract-freeze.md
-docs/governance/wave1-cross-module-contract-registry.md
-```
-
-ADR 0003 与 Registry 统一冻结 Security、Infrastructure、Model Gateway、Observability & Eval 之间的 Owner、Envelope、Receipt、Failure Namespace、Security Epoch 和 Recovery 边界。模块文档中的重复说明不得覆盖共享 Contract。
-
-当前状态：`CONFIRMED_TARGET`。服务端物理实现归 `src/backend/zuno/platform/**`；Agent Core 使用 `ActionProposal / ActionExecutionBinding`，可执行副作用事实归 Tool Runtime `PreparedToolAction`。
-
-## Model Gateway 文档边界
+正式设计事实共十三份：
 
 ```text
-docs/modules/04-model-gateway.md
-docs/modules/04-model-gateway-contract-freeze.md
-docs/modules/04-model-gateway-operations-conformance.md
+11 × docs/modules/<NN>-<module>.md
+1  × docs/architecture/architecture.md
+1  × docs/architecture/architecture.html
 ```
 
-主文档定义 Role、Provider、Model、Capability、Routing、Attempt、Streaming、Structured Output、Usage、Quota、Health、Circuit、Security 和 Storage；两个附录分别冻结跨模块 Contract 与长期运行、Conformance、运维和生命周期协议。
+`docs/architecture/README.md` 是目录说明；`architecture-views.md` 是 HTML 的 Mermaid 渲染源。它们是维护支撑文件，不是额外的模块或第二份总架构。
 
-## Infrastructure 文档边界
+## 状态边界
+
+模块文档描述 Target，不自动证明 Current。Current、Gap、Measurement Blocked 与 Production Readiness 以：
 
 ```text
-docs/modules/11-infrastructure.md
-docs/modules/11-infrastructure-data-services.md
-docs/modules/11-infrastructure-consistency-lifecycle.md
+docs/status/production-readiness.md
+最新 main 的代码、Migration、测试、Trace、Eval 和运行证据
 ```
 
-主文档定义关系数据库、对象、Checkpoint、Queue、Lease、Migration、Backup、Restore、Retention、Drain 和部署 primitive；两个附录分别定义 Data Services 和一致性/生命周期协议。Developer/CI Local Adapter 不代表多用户产品部署 Target。
+为事实源。
 
-## Observability & Eval 文档边界
+允许的设计完成声明：
 
 ```text
-docs/modules/10-observability-eval.md
-docs/modules/10-observability-eval-rag-agent-evaluation.md
+design available
+internally consistent
+contract-complete
+implementation-spec-complete
+program-ready
 ```
 
-主文档定义 Trace、Audit、Metric、Eval、Evidence、Release Gate、事件交付、恢复和质量证明边界；受控附录冻结 RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket 和 Agent Efficiency。旧 Retrieval、Citation、Safety 与 Runtime 指标保留为诊断层，不得冒充 Core Five。
-
-## Agent Core 文档边界
+不得仅凭文档声明：
 
 ```text
-docs/modules/06-agent-core-planning-control.md
-.agent/modules/06-agent-core-planning-control.md
+implementation available
+quality proven
+production ready
 ```
 
-它统一包含概念架构、运行流程、不变量、状态机、DAG 与并发、Interrupt / Signal、副作用、Finalization、一致性、事件、Artifact、恢复、时间、目标代码、数据库和测试规格。
+## 镜像与验证
 
-## Capability / Skill 文档边界
+十一份正式模块文档都必须有同名字节级镜像：
 
 ```text
-docs/modules/07-capability-skill.md
-.agent/modules/07-capability-skill.md
+docs/modules/<file>
+.agent/modules/<file>
 ```
 
-它是 Module 07 唯一正式 Target 架构，统一定义 Capability、Skill、Provider Binding、Conformance、Availability、Selection、渐进加载、Connector Pack、版本、状态机、失败恢复、目标代码、数据库和验证规格。API、CLI、MCP 是 Provider / 执行协议；真实 ToolDefinition、Prepare、Execute、Receipt 和 Reconcile 归 Module 08。
-
-## Security 文档边界
+统一验证：
 
 ```text
-docs/modules/09-security.md
-.agent/modules/09-security.md
+python tools/scripts/verify_architecture_document_set.py
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 ```
 
-它定义服务器端安全控制面、账号与身份、组织树、管理员作用域、资源权限、委派授权、Policy、全链路 Gate、输入输出检测、脱敏、审批、撤销、Secret 和审计 Contract。
-
-执行和迁移计划不写入模块 Target 文档：
-
-```text
-.agent/programs/    Current → Target 的实现、迁移、切流和收口计划
-docs/status/       Current、Gap、Measurement 和完成状态
-docs/history/      已完成 Program 与历史证据
-```
-
-存在镜像的正式文件必须字节级一致。模块变更必须同步正式文档、受控附录、镜像、入口、专用验证器和测试。
-
-## 专用验证
-
-```text
-python tools/scripts/verify_agent_core_target_protocols.py
-pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
-
-python tools/scripts/verify_capability_skill_target_protocols.py
-pytest -q tests/repo/test_capability_skill_target_protocols.py -p no:cacheprovider
-
-python tools/scripts/verify_security_target_protocols.py
-pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
-
-python tools/scripts/verify_model_gateway_target_protocols.py
-python tools/scripts/verify_model_gateway_contract_freeze.py
-python tools/scripts/verify_model_gateway_operations_conformance.py
-pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
-
-python tools/scripts/verify_infrastructure_target_protocols.py
-python tools/scripts/verify_wave1_contract_freeze.py
-pytest -q tests/repo/test_infrastructure_target_protocols.py tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider
-
-python tools/scripts/verify_observability_eval_target_protocols.py
-pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider
-```
+各模块专用 verifier 和 focused tests 继续验证该模块的 Requirement、状态机、Ownership 与完成证据。
