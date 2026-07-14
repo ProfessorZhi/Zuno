@@ -13,9 +13,9 @@
 | 05 | Memory & Context | [`05-memory-context.md`](../../docs/modules/05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构镜像 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
+| 08 | Tool Runtime | [`08-tool-runtime.md`](../../docs/modules/08-tool-runtime.md) | 已建立 Target 架构文档 |
 | 09 | Security | [`09-security.md`](./09-security.md) | 实施级 Target 镜像 |
-| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) + [`10-observability-eval-rag-agent-evaluation.md`](./10-observability-eval-rag-agent-evaluation.md) | 实施级 Target 与受控附录镜像 |
+| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 单一完整 Target 架构镜像 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 实施级 Target 镜像 |
 
 ## Wave 1 共享 Contract
@@ -61,21 +61,19 @@ docs/modules/11-infrastructure-data-services.md
 docs/modules/11-infrastructure-consistency-lifecycle.md
 ```
 
-## Observability & Eval Target 镜像
+## Observability & Eval 唯一 Target 镜像
 
 ```text
 .agent/modules/10-observability-eval.md
-.agent/modules/10-observability-eval-rag-agent-evaluation.md
 ```
 
-对应正式事实源：
+对应唯一正式事实源：
 
 ```text
 docs/modules/10-observability-eval.md
-docs/modules/10-observability-eval-rag-agent-evaluation.md
 ```
 
-主文档定义 Trace/Audit/Eval/Evidence 总边界；附录定义 RAG Core Five、Agentic GraphRAG Trace、Failure Bucket 和 Agent Efficiency。
+该文档统一定义 Trace、Audit、Metric、Log、Eval、Evidence、RAG Core Five、Agentic GraphRAG Trace、Failure Bucket、Agent Efficiency、Release Gate、状态机、恢复和实现规格；模块 10 不再维护独立架构附录。
 
 ## Agent Core 唯一 Target 镜像
 

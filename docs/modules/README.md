@@ -27,9 +27,9 @@
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
+| 08 | Tool Runtime | [`08-tool-runtime.md`](./08-tool-runtime.md) | 已建立 Target 架构文档 |
 | 09 | Security | [`09-security.md`](./09-security.md) | 已建立实施级 Target 规范 |
-| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
+| 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 已建立单一完整 Target 架构文档 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 已建立实施级 Target 规范 |
 
 ## Wave 1 共享 Contract
@@ -63,16 +63,16 @@ docs/modules/11-infrastructure-consistency-lifecycle.md
 
 主文档定义关系数据库、对象、Checkpoint、Queue、Lease、Migration、Backup、Restore、Retention、Drain 和部署 primitive；两个附录分别定义 Data Services 和一致性/生命周期协议。Developer/CI Local Adapter 不代表多用户产品部署 Target。
 
-## Observability & Eval 文档边界
+## Observability & Eval 唯一正式 Target
 
 ```text
 docs/modules/10-observability-eval.md
-docs/modules/10-observability-eval-rag-agent-evaluation.md
+.agent/modules/10-observability-eval.md
 ```
 
-主文档定义 Trace、Audit、Metric、Eval、Evidence、Release Gate、事件交付、恢复和质量证明边界；受控附录冻结 RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket 和 Agent Efficiency。旧 Retrieval、Citation、Safety 与 Runtime 指标保留为诊断层，不得冒充 Core Five。
+该文档统一承载 Trace、Audit、Metric、Log、Eval、Evidence、RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket、Agent Efficiency、Release Gate、状态机、恢复、目标代码、数据库和测试规格。正式文档与 Agent 镜像必须字节级一致，不再维护模块 10 的独立架构附录。
 
-## Agent Core 文档边界
+## Agent Core 唯一正式 Target
 
 ```text
 docs/modules/06-agent-core-planning-control.md
@@ -98,7 +98,7 @@ docs/status/       Current、Gap、Measurement 和完成状态
 docs/history/      已完成 Program 与历史证据
 ```
 
-存在镜像的正式文件必须字节级一致。模块变更必须同步正式文档、受控附录、镜像、入口、专用验证器和测试。
+存在镜像的正式文件必须字节级一致。模块变更必须同步正式文档、镜像、入口、专用验证器和测试。
 
 ## 专用验证
 
