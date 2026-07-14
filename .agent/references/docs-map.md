@@ -32,7 +32,8 @@ docs/history/ = archive
 - `docs/architecture/architecture-views.md`：十类 canonical views 的 Mermaid 规范图源。
 - `docs/architecture/architecture.html`：读取图源的 Architecture Atlas。
 - `docs/modules/README.md`：十一个逻辑模块入口。
-- `docs/modules/06-agent-core-planning-control.md`：Agent Core V2 实施级设计。
+- `docs/modules/06-agent-core-planning-control.md`：Agent Core 唯一实施级 Target 文档。
+- `docs/modules/08-tool-runtime.md`：Tool Runtime 唯一实施级 Target 文档。
 - `docs/status/production-readiness.md`：Current、Gap、Measurement Blocked、Completed、Future Optional。
 - `docs/decisions/README.md`：正式 ADR 入口。
 - `docs/governance/repo-ownership-matrix.md`：代码目录 ownership 与迁移边界。
@@ -51,11 +52,26 @@ Agent 工作流入口：
 - `.agent/architecture/architecture-views.md`：正式 Mermaid 图源镜像。
 - `.agent/architecture/architecture.html`：正式 HTML Atlas 镜像。
 - `.agent/modules/06-agent-core-planning-control.md`：Agent Core 模块镜像。
+- `.agent/modules/08-tool-runtime.md`：Tool Runtime 唯一模块镜像。
+
+## Tool Runtime 路由
+
+Tool、CLI、OpenAPI、HTTP API、Provider SDK、MCP Tool、Browser、代码执行、异步 Job、Tool Attempt、Effect Receipt、Reconciliation、Compensation 和工具执行旁路任务必须先读取：
+
+```text
+docs/modules/08-tool-runtime.md
+.agent/modules/08-tool-runtime.md
+docs/decisions/0003-wave1-cross-module-contract-freeze.md
+docs/governance/wave1-cross-module-contract-registry.md
+```
+
+`docs/modules/08-tool-runtime.md` 是唯一正式 Target 事实源；不得创建第二份 `08-*` 设计文档。实现、Migration、切流和 `ALLOWED_LEGACY_TOOL_EXECUTION_PATHS` 收口进入 `.agent/programs/`。
 
 ## Must Preserve
 
 - `docs/architecture/` 和 `.agent/architecture/` 都只能包含 `README.md`、`architecture.md`、`architecture-views.md`、`architecture.html`。
 - 模块设计必须进入 `docs/modules/`，不能回到 architecture 目录。
+- Module 08 只能保留 `docs/modules/08-tool-runtime.md` 和对应单一镜像。
 - Current 只描述代码、测试、trace/eval 或 verifier 已证明事实。
 - Target 只描述近期目标，不等于完成声明。
 - Future Optional 不得成为短期 blocker。
@@ -72,7 +88,8 @@ python .agent/scripts/verify_agent_system.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
-pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+python tools/scripts/verify_tool_runtime_target_protocols.py
+pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider
 ```
 
 ## Docs Sync
@@ -93,6 +110,7 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 - `docs/modules/README.md`
 - 对应 `docs/modules/<module>.md`
 - 存在镜像时同步 `.agent/modules/<module>.md`
+- Module 08 额外运行专用 verifier 和 focused test
 
 修改 Current / readiness 时检查：
 
@@ -108,4 +126,4 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 
 ## Lessons Learned
 
-文档同步的本质不是“所有地方都写一遍”，而是每个 surface 只承载自己的事实层级，并且入口之间不互相矛盾。
+文档同步的本质不是“所有地方都写一遍”，而是每个 surface 只承载自己的事实层级，并且入口之间不互相矛盾。Tool Runtime 的单文档约束必须同时由模块入口、Agent 路由、专用 verifier 和仓库级验证器执行，不能依赖人工记忆。
