@@ -30,22 +30,29 @@ jobs:
         run: python -m pip install --disable-pip-version-check pytest pyyaml
       - name: Apply deterministic architecture alignment
         run: python tools/scripts/finalize_architecture_module_alignment.py
-      - name: Validate generated architecture set
+      - name: Check whitespace
+        run: git diff --check
+      - name: Compile validators and tests
         run: |
-          set -o pipefail
-          git diff --check
           python -m py_compile \
             tools/agent/render_architecture.py \
             tools/scripts/verify_architecture_document_set.py \
             tools/scripts/verify_architecture_semantic_alignment.py \
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py
-          python tools/scripts/verify_architecture_document_set.py
-          python tools/scripts/verify_architecture_semantic_alignment.py
-          python tools/agent/render_architecture.py --check
+      - name: Verify architecture document set
+        run: python tools/scripts/verify_architecture_document_set.py
+      - name: Verify semantic alignment
+        run: python tools/scripts/verify_architecture_semantic_alignment.py
+      - name: Verify Mermaid rendering and mirrors
+        run: python tools/agent/render_architecture.py --check
+      - name: Verify entrypoints and boundaries
+        run: |
           python tools/scripts/verify_docs_entrypoints.py
           python .agent/scripts/verify_agent_system.py
           python .agent/scripts/verify_doc_boundaries.py
+      - name: Run focused architecture tests
+        run: |
           pytest -q \
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
