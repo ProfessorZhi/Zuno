@@ -1,0 +1,43 @@
+program:
+  id: zuno-canonical-architecture-runtime-realization-v1
+  version: 1
+  state: active
+  current_phase: PHASE01
+  phase_count: 22
+  architecture_baseline_commit: 249f1c95855043627cedd289a5de1fd3719f6cd0
+  execution_contract: .agent/programs/task-execution-contract.md
+  codex_runbook: .agent/programs/codex-medium-runbook.md
+  migration_map: .agent/programs/legacy-to-target-migration-map.md
+  roadmap: .agent/programs/implementation-roadmap.md
+  closure_checklist: .agent/programs/closure-checklist.md
+
+status_policy:
+  phase_states: [planned, ready, in_progress, blocked, completed]
+  task_states: [planned, ready, claimed, in_progress, completion_candidate, blocked, completed]
+  current_requires: [code, tests, runtime_or_integration_evidence]
+  measured_requires: [fixed_dataset, complete_profiles, comparable_runs, metric_results]
+  quality_proven_requires: [measured, release_gate_passed, evidence_available]
+
+phases:
+  - {id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: ready, depends_on: [], tasks: [P01-T01,P01-T02,P01-T03,P01-T04,P01-T05,P01-T06]}
+  - {id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: planned, depends_on: [PHASE01], tasks: [P02-T01,P02-T02,P02-T03,P02-T04,P02-T05,P02-T06]}
+  - {id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: planned, depends_on: [PHASE02], tasks: [P03-T01,P03-T02,P03-T03,P03-T04,P03-T05,P03-T06,P03-T07]}
+  - {id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: planned, depends_on: [PHASE03], tasks: [P04-T01,P04-T02,P04-T03,P04-T04,P04-T05,P04-T06,P04-T07]}
+  - {id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: planned, depends_on: [PHASE03,PHASE04], tasks: [P05-T01,P05-T02,P05-T03,P05-T04,P05-T05,P05-T06,P05-T07]}
+  - {id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: planned, depends_on: [PHASE03,PHASE04], tasks: [P06-T01,P06-T02,P06-T03,P06-T04,P06-T05,P06-T06,P06-T07]}
+  - {id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: planned, depends_on: [PHASE05,PHASE06], tasks: [P07-T01,P07-T02,P07-T03,P07-T04,P07-T05,P07-T06,P07-T07]}
+  - {id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: planned, depends_on: [PHASE04,PHASE05,PHASE06,PHASE07], tasks: [P08-T01,P08-T02,P08-T03,P08-T04,P08-T05,P08-T06,P08-T07,P08-T08]}
+  - {id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: planned, depends_on: [PHASE08], tasks: [P09-T01,P09-T02,P09-T03,P09-T04,P09-T05,P09-T06,P09-T07]}
+  - {id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: planned, depends_on: [PHASE09], tasks: [P10-T01,P10-T02,P10-T03,P10-T04,P10-T05,P10-T06,P10-T07,P10-T08]}
+  - {id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: planned, depends_on: [PHASE04,PHASE05], tasks: [P11-T01,P11-T02,P11-T03,P11-T04,P11-T05,P11-T06,P11-T07,P11-T08]}
+  - {id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: planned, depends_on: [PHASE08,PHASE11], tasks: [P12-T01,P12-T02,P12-T03,P12-T04,P12-T05,P12-T06,P12-T07,P12-T08]}
+  - {id: PHASE13, file: .agent/programs/PHASE13_memory-context-governance-runtime.md, state: planned, depends_on: [PHASE08,PHASE12], tasks: [P13-T01,P13-T02,P13-T03,P13-T04,P13-T05,P13-T06,P13-T07]}
+  - {id: PHASE14, file: .agent/programs/PHASE14_capability-skill-control-plane.md, state: planned, depends_on: [PHASE05,PHASE08], tasks: [P14-T01,P14-T02,P14-T03,P14-T04,P14-T05,P14-T06,P14-T07]}
+  - {id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: planned, depends_on: [PHASE08,PHASE14], tasks: [P15-T01,P15-T02,P15-T03,P15-T04,P15-T05,P15-T06,P15-T07,P15-T08]}
+  - {id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: planned, depends_on: [PHASE05,PHASE06,PHASE15], tasks: [P16-T01,P16-T02,P16-T03,P16-T04,P16-T05,P16-T06,P16-T07,P16-T08]}
+  - {id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: planned, depends_on: [PHASE08,PHASE12,PHASE16], tasks: [P17-T01,P17-T02,P17-T03,P17-T04,P17-T05,P17-T06,P17-T07,P17-T08]}
+  - {id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: planned, depends_on: [PHASE12,PHASE17], tasks: [P18-T01,P18-T02,P18-T03,P18-T04,P18-T05,P18-T06,P18-T07,P18-T08]}
+  - {id: PHASE19, file: .agent/programs/PHASE19_final-synthesis-publication-reflexion.md, state: planned, depends_on: [PHASE10,PHASE13,PHASE16,PHASE18], tasks: [P19-T01,P19-T02,P19-T03,P19-T04,P19-T05,P19-T06,P19-T07,P19-T08]}
+  - {id: PHASE20, file: .agent/programs/PHASE20_observability-eval-benchmark-release-gate.md, state: planned, depends_on: [PHASE06,PHASE18,PHASE19], tasks: [P20-T01,P20-T02,P20-T03,P20-T04,P20-T05,P20-T06,P20-T07,P20-T08]}
+  - {id: PHASE21, file: .agent/programs/PHASE21_fault-recovery-full-e2e-and-cutover.md, state: planned, depends_on: [PHASE10,PHASE19,PHASE20], tasks: [P21-T01,P21-T02,P21-T03,P21-T04,P21-T05,P21-T06,P21-T07,P21-T08]}
+  - {id: PHASE22, file: .agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md, state: planned, depends_on: [PHASE21], tasks: [P22-T01,P22-T02,P22-T03,P22-T04,P22-T05,P22-T06,P22-T07]}

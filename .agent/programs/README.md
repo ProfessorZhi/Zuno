@@ -1,25 +1,41 @@
 # Agent 执行计划
 
-`.agent/programs/` 当前处于 no-active 状态。
+`.agent/programs/` 当前承载一个 active 总 Program：
+
+```text
+zuno-canonical-architecture-runtime-realization-v1
+```
+
+该 Program 负责把十一模块 Target 架构从现有本地实现和 Legacy 路径完整迁移为新架构 Runtime Current，包括后端、数据库、队列、对象存储、LangGraph、Security、Observability、Agentic GraphRAG、Tool Effect、Web 和 Desktop 适配、故障恢复、Benchmark、切流和旧路径删除。
 
 ## 当前状态
 
-- State: no-active
-- Active program: none
-- Current phase: none
-- Latest completed program: `zuno-real-unified-runtime-cutover-v1`
-- Latest completed archive: `docs/history/programs/zuno-real-unified-runtime-cutover-v1/`
+- State: active
+- Current phase: `PHASE01`
+- Phase count: 22
+- Execution mode: runtime-first / vertical-slice-first / evidence-gated
+- Implementer target: Codex GPT-5.5 medium，单次只执行一个 Work Package
 
-## 当前文件
+## 必读文件
 
-- `current.md`：no-active state、最近完成 program 和质量边界。
-- `implementation-roadmap.md`：no-active 状态和最近完成 program 摘要。
-- `closure-checklist.md`：最近完成 program 的 closure checklist 和未证明事项。
-- `queued-programs/README.md`：queued program 索引。
-- `queued-programs/PROGRAM01_real-unified-runtime-cutover.md`：已激活并归档的 queued source，不再作为执行状态事实源。
+```text
+current.md
+implementation-roadmap.md
+task-execution-contract.md
+codex-medium-runbook.md
+legacy-to-target-migration-map.md
+program-manifest.yaml
+当前 PHASENN_*.md
+closure-checklist.md
+```
 
 ## 使用规则
 
-- 新 program 必须从 PHASE01 开始，并先更新 `current.md`、roadmap、closure checklist、verifier 和 tests。
-- completed program 的 phase、closure summary 和执行证据必须留在 `docs/history/programs/`。
-- blocked、prepared、runtime observed 或缺失数据不能写成 measured。
+1. Coordinator 选择一个 `ready` Work Package。
+2. Codex 只读取 Runbook 指定的最小文件集，不重新推导整个架构。
+3. 每个任务必须使用独立 Worktree 和 `codex/<task-id>-<slug>` Branch。
+4. Implementer 只能提交 `completion_candidate`；Phase `completed` 由 Coordinator 审核后更新。
+5. 架构能力不得为了节省 Token、时间或测试而删减。
+6. 只新增接口、类型、Mock、README 或未来目录不能关闭 Runtime Task。
+7. blocked、unavailable、incomparable 和未运行验证必须如实报告。
+8. Program 完成后整体归档到 `docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/`，不得拆成多个竞争的 active Program。

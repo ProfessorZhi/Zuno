@@ -2,14 +2,14 @@
 
 state: active
 current_phase: PHASE01
-phase_count: 19
+phase_count: 22
 execution_mode: runtime-first / vertical-slice-first / evidence-gated
 
 ## 1. Program 定义
 
-本 Program 将十一份 Canonical Module Target 架构转化为 Runtime Current。它不重新设计十一模块，不以类、表、接口、Mock 或文档数量作为完成标准。
+本 Program 是从旧架构到十一模块新架构的唯一总迁移计划，覆盖后端、数据、异步基础设施、LangGraph、模型、检索、工具、安全、可观测性、Web、Desktop、E2E、Benchmark、切流和 Legacy 删除。
 
-核心目标是形成一条真实可执行脊柱：
+它不是新一轮架构设计，不以新增类、表、接口、Mock 或文档作为完成标准。最终必须形成：
 
 ```text
 Product RuntimeRequest
@@ -24,226 +24,155 @@ Product RuntimeRequest
 → Trace / Audit / Eval / Release Gate
 ```
 
-并证明该脊柱在 Crash、Duplicate、Out-of-order、Revocation、UNKNOWN Effect、Replan、Delete 和 Restore 下仍保持事实一致。
+并证明该链路在 Crash、Duplicate、Out-of-order、Revocation、UNKNOWN Effect、Replan、Delete 和 Restore 下保持事实一致。
 
-## 2. 权威输入
-
-```text
-docs/modules/01-product-surface.md
-docs/modules/02-input-document-ingestion.md
-docs/modules/03-knowledge-agentic-graphrag.md
-docs/modules/04-model-gateway.md
-docs/modules/05-memory-context.md
-docs/modules/06-agent-core-planning-control.md
-docs/modules/07-capability-skill.md
-docs/modules/08-tool-runtime.md
-docs/modules/09-security.md
-docs/modules/10-observability-eval.md
-docs/modules/11-infrastructure.md
-docs/decisions/0003-wave1-cross-module-contract-freeze.md
-docs/governance/wave1-cross-module-contract-registry.md
-```
-
-总架构用于跨模块组合；模块文档拥有领域对象、状态、Failure、持久化和测试语义。
-
-## 3. 依赖主图
+## 2. Phase 依赖图
 
 ```mermaid
 flowchart TB
-  P01[PHASE01 Current Ledger] --> P02[PHASE02 Executable Contracts]
-  P02 --> P03[PHASE03 PostgreSQL and Transactions]
-  P02 --> P04[PHASE04 Security Control Plane]
-  P02 --> P05[PHASE05 Observability Minimum Black Box]
-  P03 --> P04
-  P03 --> P05
-  P04 --> P06[PHASE06 Model Gateway]
-  P05 --> P06
-  P06 --> P07[PHASE07 Deterministic Agent Core]
-  P03 --> P07
-  P04 --> P07
-  P05 --> P07
-  P07 --> P08[PHASE08 Product Surface]
-  P03 --> P09[PHASE09 Durable Ingestion]
-  P04 --> P09
-  P09 --> P10[PHASE10 Knowledge Version and Standard RAG]
-  P07 --> P10
-  P10 --> P11[PHASE11 Memory and Context]
-  P07 --> P11
-  P04 --> P12[PHASE12 Capability and Skill]
-  P12 --> P13[PHASE13 Tool Runtime Effects]
-  P07 --> P13
-  P04 --> P13
-  P05 --> P13
-  P07 --> P14[PHASE14 Dynamic DAG Controller]
-  P10 --> P14
-  P13 --> P14
-  P14 --> P15[PHASE15 Agentic GraphRAG]
-  P10 --> P15
-  P15 --> P16[PHASE16 Final Gate and Reflexion]
-  P11 --> P16
-  P13 --> P16
-  P05 --> P17[PHASE17 Full Eval and Release Gate]
-  P15 --> P17
+  P01[01 Current Ledger] --> P02[02 Legacy Cutover Map]
+  P02 --> P03[03 Executable Contracts]
+  P03 --> P04[04 PostgreSQL Foundation]
+  P04 --> P05[05 Security]
+  P04 --> P06[06 Observability Minimum]
+  P05 --> P07[07 Model Gateway]
+  P06 --> P07
+  P07 --> P08[08 Deterministic Agent Core]
+  P04 --> P08
+  P05 --> P08
+  P06 --> P08
+  P08 --> P09[09 Product Backend]
+  P09 --> P10[10 Web/Desktop Adaptation]
+  P04 --> P11[11 Ingestion]
+  P05 --> P11
+  P11 --> P12[12 Standard RAG]
+  P08 --> P12
+  P12 --> P13[13 Memory]
+  P08 --> P13
+  P05 --> P14[14 Capability]
+  P14 --> P15[15 Tool Read-only]
+  P08 --> P15
+  P15 --> P16[16 Tool Side Effect]
+  P05 --> P16
+  P06 --> P16
+  P08 --> P17[17 Dynamic DAG]
+  P12 --> P17
   P16 --> P17
-  P08 --> P18[PHASE18 Fault Recovery and E2E]
-  P16 --> P18
-  P17 --> P18
-  P18 --> P19[PHASE19 Benchmark Cutover and Closure]
+  P17 --> P18[18 Agentic GraphRAG]
+  P12 --> P18
+  P18 --> P19[19 Final Gate / Reflexion]
+  P13 --> P19
+  P16 --> P19
+  P06 --> P20[20 Eval / Release Gate]
+  P18 --> P20
+  P19 --> P20
+  P10 --> P21[21 Fault / E2E / Cutover]
+  P19 --> P21
+  P20 --> P21
+  P21 --> P22[22 Benchmark / Closure]
 ```
 
-## 4. Phase Map
+## 3. Phase Map
 
-| Phase | 名称 | 主要模块 | 关闭结果 |
+| Phase | 名称 | 主要模块 | 完成结果 |
 | --- | --- | --- | --- |
-| PHASE01 | current-baseline-and-requirement-ledger | 全部 | 每个 ARCH Requirement 映射到 Current/Gap/Test/Evidence |
-| PHASE02 | executable-cross-module-contract-bundle | 全部 | 共享 Contract 成为版本化可执行 Schema 与兼容测试 |
-| PHASE03 | postgres-domain-and-transaction-foundation | 11 | PostgreSQL、Alembic、UoW、Outbox/Inbox、Idempotency/Fencing 可用 |
-| PHASE04 | security-control-plane | 09 | Principal、Scope、Epoch、Authorization、Approval、Secret、Redaction 可用 |
-| PHASE05 | observability-minimum-black-box | 10 | Append-only Ingest、Trace、Audit、Dedup/Gap 和查询基线可用 |
-| PHASE06 | model-gateway-runtime | 04 | 所有真实模型调用统一通过 Gateway，Usage/Cancel/Fallback 可追踪 |
-| PHASE07 | deterministic-single-controller-runtime | 06 | 单步 Plan 的真实 AgentRunGraph/StepExecutionGraph 可恢复运行 |
-| PHASE08 | product-surface-command-query-projection | 01 | Thin API、Command/Query、SSE Cursor、Approval Signal 和 Projection 可用 |
-| PHASE09 | durable-ingestion-and-source-lineage | 02 | SourceObject→DocumentVersion→ParseSnapshot→IR→SourceSpan 真实闭环 |
-| PHASE10 | knowledge-version-publication-standard-rag | 03 | KnowledgeVersion、Snapshot、Index Cutover、Evidence/Citation 和 Hybrid RAG 可用 |
-| PHASE11 | memory-context-governance-runtime | 05 | ContextPackVersion、Candidate/Governance/Activation、Privacy Delete 可用 |
-| PHASE12 | capability-skill-control-plane | 07 | Versioned Capability/Skill、Availability、Feasibility 和渐进加载可用 |
-| PHASE13 | tool-runtime-side-effect-plane | 08 | PreparedAction→Approval→Attempt→Effect/Reconciliation 全链路可用 |
-| PHASE14 | dynamic-plan-dag-parallel-control | 06 | ReadySet、Commit-before-Send、Reducer、Join、Replan Barrier 可用 |
-| PHASE15 | agentic-graphrag-inner-loop | 03 | RetrievalRound、Graph Route、EvidenceLedger、Corrective Retrieval 和 Proposal 可用 |
-| PHASE16 | final-synthesis-publication-reflexion | 06/05/03/01 | Claim/Citation、Final Gate、Publication、RunOutcome、Reflexion Candidate 可用 |
-| PHASE17 | observability-eval-benchmark-release-gate | 10 | Core Five、Failure Bucket、Efficiency、Comparison、Gate、Evidence 可用 |
-| PHASE18 | fault-recovery-security-e2e | 全部 | Crash/Resume/Unknown/Revocation/Delete/Restore 的 E2E 故障证据 |
-| PHASE19 | fixed-benchmark-cutover-and-closure | 全部 | 固定 Benchmark、切流、遗留收缩、状态更新和 Program 归档 |
+| 01 | Current Baseline and Requirement Ledger | 全部 | Requirement→Current/Gap/Test/Evidence 可查询 |
+| 02 | Legacy Runtime Compatibility and Cutover Map | 全部 | 旧入口、兼容、Flag、Rollback、删除门固定 |
+| 03 | Executable Cross-module Contract Bundle | 全部 | 共享 Contract 成为版本化 Schema、Hash、Fixture、兼容测试 |
+| 04 | PostgreSQL Domain and Transaction Foundation | 11 | PostgreSQL、Alembic、UoW、Outbox/Inbox、Idempotency、Lease/Fencing、Checkpointer 基础 |
+| 05 | Security Control Plane | 09 | Principal、Scope、Epoch、Authorization、Approval、SecretLease、Redaction、Audit Requirement |
+| 06 | Observability Minimum Black Box | 10 | Append-only Ingest、Trace、Audit、Dedup/Gap、Projection/Rebuild |
+| 07 | Model Gateway Runtime | 04 | 所有真实模型调用统一 Gateway，Usage/Cancel/Fallback 可追踪 |
+| 08 | Deterministic Single Controller Runtime | 06 | 单步 Plan 的真实 AgentRunGraph/StepExecutionGraph 可恢复运行 |
+| 09 | Product Surface Backend Runtime | 01 | Command/Query/Projection/SSE/Signal/Compatibility API |
+| 10 | Web and Desktop Product Adaptation | 01 | Web/Desktop 使用新 Contract、Projection、AvailableAction 和 SSE Resume |
+| 11 | Durable Ingestion and Source Lineage | 02 | SourceObject→DocumentVersion→ParseSnapshot→IR→SourceSpan |
+| 12 | Knowledge Version and Standard RAG | 03 | KnowledgeVersion、Index Cutover、Evidence/Citation、Hybrid RAG |
+| 13 | Memory and Context Governance Runtime | 05 | ContextPackVersion、Candidate/Governance/Activation、Privacy Delete |
+| 14 | Capability and Skill Control Plane | 07 | Versioned Capability/Skill、Availability、Feasibility、Progressive Loading |
+| 15 | Tool Definition and Read-only Cutover | 08 | 唯一 Invocation Gateway、PreparedAction、Read-only Adapter 收口 |
+| 16 | Tool Side Effect and Reconciliation | 08 | Approval/Audit/Claim/Attempt/Effect/UNKNOWN/Reconciliation/Compensation |
+| 17 | Dynamic Plan DAG and Parallel Control | 06 | ReadySet、Commit-before-Send、Reducer、Join、Replan Barrier |
+| 18 | Agentic GraphRAG Inner Loop | 03 | RetrievalRound、Graph Route、EvidenceLedger、Corrective Retrieval、Proposal |
+| 19 | Final Synthesis, Publication and Reflexion | 06/05/03/01 | Claim/Citation、Final Gate、Publication、RunOutcome、Reflexion Candidate |
+| 20 | Observability Eval, Benchmark and Release Gate | 10 | Core Five、Failure Bucket、Efficiency、Comparison、Gate、Evidence |
+| 21 | Fault Recovery, Full E2E and Cutover | 全部 | Crash/Resume/Unknown/Revocation/Delete/Restore、Web E2E、切流演练 |
+| 22 | Fixed Benchmark, Production Readiness and Closure | 全部 | 同集对照、Legacy 删除、状态更新、归档 |
 
-## 5. 黄金脊柱
+## 4. 黄金脊柱
 
-优先保证以下最短闭环始终可运行：
-
-```text
-PHASE02 Contract
-→ PHASE03 PostgreSQL
-→ PHASE04 Security
-→ PHASE05 Trace
-→ PHASE06 Model Gateway
-→ PHASE07 Deterministic Agent Core
-→ PHASE09 Ingestion
-→ PHASE10 Standard RAG Evidence
-→ PHASE16 Final Gate
-→ PHASE08 Product Delivery
-```
-
-任何后续 Phase 不得破坏该脊柱。PHASE14–PHASE15 是在已通过的单步、标准 RAG 和副作用语义上增加动态并行和 Agentic 能力，不得作为基础正确性的替代品。
-
-## 6. 并行策略
-
-只允许以下受控并行：
-
-- PHASE04 与 PHASE05：在 PHASE02/03 的共享 Contract 和持久化基础稳定后，可由不同 Worktree 处理 Security 与 Observability；共享 Envelope 由 Coordinator 合并。
-- PHASE08 与 PHASE09：PHASE07 稳定后，Product Surface 和 Ingestion 可并行，禁止共同修改 Agent Core Domain。
-- PHASE11 与 PHASE12：Knowledge/Agent Core 基线稳定后，Memory 和 Capability 可并行。
-
-PHASE03、PHASE07、PHASE13、PHASE14、PHASE16、PHASE18、PHASE19 必须串行收口。
-
-## 7. 每 Phase 固定产物
+任何 Phase 都不得破坏以下最短可运行链：
 
 ```text
-代码 / Migration
-focused unit tests
-integration tests
-fault tests when applicable
-E2E or trace when applicable
-completion evidence under docs/evidence/
-Current/Gap ledger update
-phase status update
+Contract
+→ PostgreSQL
+→ Security
+→ Trace
+→ Model Gateway
+→ Deterministic Agent Core
+→ Ingestion
+→ Standard RAG Evidence
+→ Final Gate
+→ Product Backend
+→ Web/Desktop
 ```
 
-每个 Phase 的原子 Work Package 见对应 `PHASENN_*.md`。工作包必须使用 `.agent/programs/task-execution-contract.md`。
+Dynamic DAG、Agentic GraphRAG、Tool Side Effect 和 Reflexion 必须在该脊柱通过后增量接入，不能替代基础正确性。
 
-## 8. Program 级验证层次
+## 5. 受控并行
 
-### L0 文档与治理
+允许：
 
-```bash
-git diff --check
-python tools/scripts/verify_current_program.py
-python .agent/scripts/verify_agent_system.py
-python tools/scripts/verify_architecture_document_set.py
-python tools/scripts/verify_architecture_semantic_alignment.py
-python tools/scripts/verify_wave1_contract_freeze.py
-```
+- PHASE05 与 PHASE06 在 PHASE03/04 稳定后并行；共享 Envelope 由 Coordinator 合并。
+- PHASE09 与 PHASE11 在 PHASE08 和 Security/DB 基线稳定后并行；禁止共同修改 Agent Core Domain。
+- PHASE13 与 PHASE14 在 PHASE12/08 稳定后并行。
 
-### L1 Contract / Domain
+必须串行收口：PHASE02、03、04、08、10、16、17、19、21、22。
 
-- Schema、Enum、Hash、状态机、非法转换。
-- Producer/Consumer Fixture。
-- Backward/Forward Compatibility。
-
-### L2 Persistence / Adapter
-
-- PostgreSQL、Alembic、Object Store、RabbitMQ、Checkpointer。
-- Crash、Duplicate、Out-of-order、Lease/Fencing、Retry Exhaustion。
-
-### L3 Module Integration
-
-- Security、Model、Knowledge、Memory、Capability、Tool、Observability 的真实 Port/Adapter。
-
-### L4 Vertical Slice
-
-- API→Run→Plan→Retrieval→Evidence→Final Gate→Publication→SSE。
-- Approval→Tool Effect→Response Lost→Reconciliation→Resume。
-
-### L5 Release Evidence
-
-- Fixed Dataset。
-- Standard/Local/Deep/Agentic 同集对照。
-- Core Five、Citation/Safety、Cost/Latency、Critical Slice。
-- Release Gate 和 EvidenceRecord。
-
-## 9. 不允许的捷径
-
-- 先实现所有表，再补领域状态机。
-- 让 FastAPI Route 直接跨模块写表。
-- 让 Agent Core 直接调用 Provider SDK。
-- 把 Memory、Knowledge、Checkpoint 或 Trace 混成同一个 Store。
-- 把 Queue Redelivery 当业务 Retry。
-- 把 Tool HTTP 2xx 当 EffectReceipt。
-- 把 Query Rewrite、Corrective Retrieval 和 Replan 混为一体。
-- 用 LLM Judge 分数替代确定性 Schema、Citation、Security 或 State Validation。
-- 因为 CI 通过就声明 Production Ready。
-
-## 10. Phase Closure 规则
-
-Phase 状态只允许：
+## 6. 每 Phase 固定产物
 
 ```text
-planned
-ready
-in_progress
-blocked
-completed
+代码与配置
+Alembic Migration（如涉及持久化）
+Unit / Contract / Integration / Fault Tests
+真实 Vertical Slice 或 Trace
+完成证据 docs/evidence/
+Requirement Ledger 更新
+Current / Gap 更新
+Phase completion candidate 报告
 ```
 
-`completed` 必须由 Coordinator 更新，Implementer Agent 只能提交 `completion_candidate` 报告。
+## 7. Program 级验证层次
 
-Phase 关闭后：
+- L0：文档、Program、架构、共享 Contract Verifier。
+- L1：Schema、Enum、Hash、状态机和 Producer/Consumer Contract Test。
+- L2：PostgreSQL、Queue、Object Store、Checkpointer、Crash/Fencing。
+- L3：Security、Model、Knowledge、Memory、Capability、Tool、Observability Integration。
+- L4：API→Run→Plan→Retrieval/Tool→Final Gate→Publication→SSE/Web。
+- L5：Fixed Dataset、Standard/Local/Deep/Agentic 对照、Core Five、Critical Slice、Cost/Latency、Release Gate。
 
-1. 更新 `current.md` 到下一个 Phase。
-2. 更新 `closure-checklist.md`。
-3. 更新 Requirement Ledger 与 Evidence。
-4. 合并前运行该 Phase 的集成验证。
-5. 禁止把未测量质量写成已证明。
+## 8. 禁止捷径
 
-## 11. Program 关闭条件
+- 先建所有表再补领域状态机。
+- Route 直接跨模块写表。
+- Agent Core 直接调用 Provider SDK。
+- Memory、Knowledge、Checkpoint、Trace 混成同一 Store。
+- Queue Redelivery 当业务 Retry。
+- HTTP 2xx 当 EffectReceipt。
+- Query Rewrite、Corrective Retrieval 和 Replan 混为一体。
+- LLM Judge 替代确定性 Schema、Citation、Security 或 State Validation。
+- 用旧 API 永久代理新架构而不设删除门。
+- 前端根据字符串猜 AvailableAction 或领域成功。
+- 因为 CI 绿灯就声明 Production Ready。
 
-Program 只有满足全部条件才能归档：
+## 9. Program 关闭条件
 
-- 19 个 Phase 全部完成或有正式 ADR 移出范围；
-- 十一模块 Mandatory Requirement 有实现和证据映射；
-- 真实 PostgreSQL/Queue/Object/Checkpointer 路径完成；
-- Single Controller、Dynamic DAG、Tool UNKNOWN、GraphRAG、Memory、Security、Trace/Eval 完成 E2E；
-- Fixed Benchmark 形成可比较结果；
-- Release Gate 给出真实 PASSED/FAILED/BLOCKED/INCOMPARABLE，不伪造；
-- Legacy 主路径完成切流或保留条件被明确记录；
-- `docs/status/production-readiness.md` 按证据更新；
-- Program 移入 `docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/`；
-- `.agent/programs/` 恢复 no-active。
+- 22 个 Phase 全部完成或有正式 ADR 移出范围。
+- 十一模块 Mandatory Requirement 有实现与证据映射。
+- 真实 PostgreSQL、RabbitMQ、Object Store 和 LangGraph Checkpointer 路径完成。
+- Single Controller、Dynamic DAG、Tool UNKNOWN、Agentic GraphRAG、Memory、Security、Trace/Eval 完成 E2E。
+- Web/Desktop 已切换到新 Product Contract，并验证断线、撤权、多 Interrupt 和 UNKNOWN UI。
+- Fixed Benchmark 形成可比较结果，Release Gate 如实给出状态。
+- Legacy 主路径删除或保留条件有明确 Owner、Deadline 和验证器。
+- 状态文档按证据更新。
+- Program 整体归档，`.agent/programs/` 恢复 no-active。
