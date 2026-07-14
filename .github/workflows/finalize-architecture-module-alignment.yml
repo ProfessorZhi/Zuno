@@ -78,14 +78,78 @@ jobs:
             tests/repo/test_infrastructure_target_protocols.py \
             tests/repo/test_wave1_contract_freeze.py \
             -p no:cacheprovider
-      - name: Commit validated non-workflow changes
+      - name: Package validated final files
         run: |
-          git checkout HEAD -- \
-            tools/scripts/finalize_architecture_module_alignment.py \
-            .github/workflows/finalize-architecture-module-alignment.yml \
+          tar -czf architecture-alignment-files.tar.gz \
+            docs/architecture/README.md \
+            docs/architecture/architecture.md \
+            docs/architecture/architecture-views.md \
+            docs/architecture/architecture.html \
+            .agent/architecture/README.md \
+            .agent/architecture/architecture.md \
+            .agent/architecture/architecture-views.md \
+            .agent/architecture/architecture.html \
+            docs/modules/03-knowledge-agentic-graphrag.md \
+            docs/modules/04-model-gateway.md \
+            docs/modules/05-memory-context.md \
+            docs/modules/06-agent-core-planning-control.md \
+            docs/modules/10-observability-eval.md \
+            .agent/modules/03-knowledge-agentic-graphrag.md \
+            .agent/modules/04-model-gateway.md \
+            .agent/modules/05-memory-context.md \
+            .agent/modules/06-agent-core-planning-control.md \
+            .agent/modules/10-observability-eval.md \
+            tools/agent/render_architecture.py \
+            tools/scripts/verify_architecture_semantic_alignment.py \
+            tools/scripts/verify_observability_eval_target_protocols.py \
+            tests/repo/test_architecture_semantic_alignment.py \
+            tests/repo/test_observability_eval_target_protocols.py \
             .github/workflows/architecture-document-set.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "docs: realign total architecture with canonical modules"
-          git push origin HEAD:docs/architecture-module-realignment
+      - name: Upload validated final files
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-architecture-alignment-files
+          path: architecture-alignment-files.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+      - name: Attempt validated non-workflow commit
+        run: |
+          set +e
+          {
+            set -x
+            git checkout HEAD -- \
+              tools/scripts/finalize_architecture_module_alignment.py \
+              .github/workflows/finalize-architecture-module-alignment.yml \
+              .github/workflows/architecture-document-set.yml
+            git status --short
+            git diff --name-status
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git status --short
+            git commit -m "docs: realign total architecture with canonical modules"
+            commit_status=$?
+            echo "commit_status=$commit_status"
+            if [ "$commit_status" = "0" ]; then
+              git push origin HEAD:docs/architecture-module-realignment
+              push_status=$?
+            else
+              push_status=99
+            fi
+            echo "push_status=$push_status"
+          } > architecture-commit.log 2>&1
+          cat architecture-commit.log
+          grep -q 'commit_status=0' architecture-commit.log && grep -q 'push_status=0' architecture-commit.log
+          echo $? > architecture-commit.status
+          exit 0
+      - name: Upload commit diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-commit-diagnostics
+          path: |
+            architecture-commit.log
+            architecture-commit.status
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce validated commit result
+        run: test "$(cat architecture-commit.status)" = "0"
