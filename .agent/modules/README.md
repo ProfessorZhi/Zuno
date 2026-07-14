@@ -12,8 +12,8 @@
 | 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 实施级 Target 镜像 |
 | 05 | Memory & Context | [`05-memory-context.md`](../../docs/modules/05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 单一完整 Target 架构镜像 |
-| 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
+| 07 | Capability / Skill | [`07-capability-skill.md`](../../docs/modules/07-capability-skill.md) | 已建立 Target 规范并与 Tool Runtime 对齐 |
+| 08 | Tool Runtime | [`08-tool-runtime.md`](./08-tool-runtime.md) | 单一完整 Target 架构镜像 |
 | 09 | Security | [`09-security.md`](./09-security.md) | 实施级 Target 镜像 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) + [`10-observability-eval-rag-agent-evaluation.md`](./10-observability-eval-rag-agent-evaluation.md) | 实施级 Target 与受控附录镜像 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 实施级 Target 镜像 |
@@ -89,6 +89,20 @@ docs/modules/10-observability-eval-rag-agent-evaluation.md
 docs/modules/06-agent-core-planning-control.md
 ```
 
+## Tool Runtime 唯一 Target 镜像
+
+```text
+.agent/modules/08-tool-runtime.md
+```
+
+对应唯一正式事实源：
+
+```text
+docs/modules/08-tool-runtime.md
+```
+
+它定义 Tool Provider / Definition / Version、PreparedToolAction、ToolAttempt、ToolObservation、ToolExecutionReceipt、EffectReceipt、EffectReconciliation、CLI / HTTP / OpenAPI / SDK / MCP / Browser / Async Adapter、Sandbox、输出治理、恢复、运维、数据库和测试规格。第 08 模块不得新增其他拆分设计文档。
+
 ## Security Target 镜像
 
 ```text
@@ -109,6 +123,7 @@ Security 文档定义服务器端安全控制面、账号与身份、组织树�
 
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
+python tools/scripts/verify_tool_runtime_target_protocols.py
 python tools/scripts/verify_security_target_protocols.py
 python tools/scripts/verify_model_gateway_target_protocols.py
 python tools/scripts/verify_model_gateway_contract_freeze.py
@@ -118,6 +133,7 @@ python tools/scripts/verify_wave1_contract_freeze.py
 python tools/scripts/verify_observability_eval_target_protocols.py
 
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+pytest -q tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider
 pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
 pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider
 pytest -q tests/repo/test_infrastructure_target_protocols.py tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider
