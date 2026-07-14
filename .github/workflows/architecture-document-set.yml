@@ -52,22 +52,27 @@ jobs:
           python-version: "3.12"
       - name: Install validation dependencies
         run: python -m pip install --disable-pip-version-check pytest pyyaml
+      - name: Prepare validation logs
+        run: mkdir -p architecture-validation-logs
       - name: Compile architecture validators and tests
         run: |
           python -m py_compile \
             tools/agent/render_architecture.py \
             tools/scripts/verify_architecture_document_set.py \
             tests/repo/test_architecture_document_set.py \
-            tests/repo/test_docs_entrypoints.py
+            tests/repo/test_docs_entrypoints.py \
+            2>&1 | tee architecture-validation-logs/compile.log
       - name: Verify canonical architecture document set
-        run: python tools/scripts/verify_architecture_document_set.py
+        run: python tools/scripts/verify_architecture_document_set.py 2>&1 | tee architecture-validation-logs/document-set.log
       - name: Verify architecture rendering and mirrors
-        run: python tools/agent/render_architecture.py --check
+        run: python tools/agent/render_architecture.py --check 2>&1 | tee architecture-validation-logs/render.log
       - name: Verify documentation and Agent entrypoints
         run: |
-          python tools/scripts/verify_docs_entrypoints.py
-          python .agent/scripts/verify_agent_system.py
-          python .agent/scripts/verify_doc_boundaries.py
+          {
+            python tools/scripts/verify_docs_entrypoints.py
+            python .agent/scripts/verify_agent_system.py
+            python .agent/scripts/verify_doc_boundaries.py
+          } 2>&1 | tee architecture-validation-logs/entrypoints.log
       - name: Run architecture and module focused tests
         run: |
           pytest -q \
@@ -83,4 +88,13 @@ jobs:
             tests/repo/test_observability_eval_target_protocols.py \
             tests/repo/test_infrastructure_target_protocols.py \
             tests/repo/test_wave1_contract_freeze.py \
-            -p no:cacheprovider
+            -p no:cacheprovider \
+            2>&1 | tee architecture-validation-logs/pytest.log
+      - name: Upload architecture validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-document-set-validation-logs
+          path: architecture-validation-logs
+          if-no-files-found: error
+          retention-days: 14
