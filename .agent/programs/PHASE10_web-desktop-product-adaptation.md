@@ -7,7 +7,7 @@ owner: Module 01 Product Surface
 
 ## Phase 目标
 
-让 Web 和 Desktop 完整消费新 Product Contract、Authorized Projection、AvailableAction、SSE Cursor 和版本化 Delivery。迁移期允许双 Client Shadow，但 Program 关闭前删除旧 Store、旧 DTO、字符串状态推断和 `legacy`/`compatibility` 前端目录。
+让 Web 和 Desktop 完整消费新 Product Contract、Agent Studio、Agent Catalog、Effective Permission Preview、Authorized Projection、AvailableAction、SSE Cursor 和版本化 Delivery。迁移期允许双 Client Shadow，但 Program 关闭前删除旧 Store、旧 DTO、字符串状态推断和 `legacy`/`compatibility` 前端目录。
 
 ## Minimal Read Set
 
@@ -48,7 +48,7 @@ docs/evidence/**
 ## Work Packages
 
 ### P10-T01 Generated/Typed Product Contracts
-- Goal：建立 Web/Desktop DTO、enum、problem、event、projection、available action 类型与 schema compatibility test。
+- Goal：建立 AgentDefinition/Draft/Version/Publication/Installation/Catalog、Web/Desktop DTO、enum、problem、event、projection、available action 类型与 schema compatibility test。
 - Tests：backend fixture round-trip、unknown enum/version、required security fields。
 - Acceptance：前端不导入后端 ORM/Internal Enum。
 
@@ -58,7 +58,7 @@ docs/evidence/**
 - Acceptance：只对安全的 transport failure retry，不重放副作用 command。
 
 ### P10-T03 Projection-first Pinia Store
-- Goal：实现 conversation/run/interrupt/ingestion/artifact/quality normalized store，按 projection version/watermark 更新。
+- Goal：实现 agent catalog/studio/effective-permission-preview/conversation/run/interrupt/ingestion/artifact/quality normalized store，按 projection version/watermark 更新。
 - Tests：out-of-order、duplicate、stale projection、revocation purge、resync replace。
 - Acceptance：不在 store 内重建 Agent 状态机。
 
@@ -68,7 +68,7 @@ docs/evidence/**
 - Acceptance：ConnectionStatus、ProjectionFreshness、DomainStatus 分离。
 
 ### P10-T05 Multi-interrupt and Controlled Actions UI
-- Goal：支持多个 Interrupt；Approve/Deny/Cancel/UserInput/Reconcile 只显示 AvailableAction。
+- Goal：支持 Agent 创建/编辑/发布/安装/撤销和多个 Interrupt；Approve/Deny/Cancel/UserInput/Reconcile 只显示 AvailableAction。
 - Tests：并行 interrupt、stale token、approval denied/expired、UNKNOWN no retry、cancel race。
 - Acceptance：删除单一 `pendingToolApproval` 假设。
 
@@ -90,6 +90,7 @@ docs/evidence/**
 ## Phase 完成定义
 
 - Web/Desktop 新产品流程可用。
+- Agent Studio、Agent Catalog、Agent Publication、Agent Installation 和 Effective Permission Preview 可用。
 - SSE 断线、Gap、撤权、多 Interrupt、UNKNOWN UI E2E 通过。
 - Lint/Build/Browser E2E/Desktop Smoke 通过。
 - 旧前端目录和临时 compatibility 代码有 PHASE21/22 删除证据。

@@ -98,6 +98,23 @@ Projection Cache 反向覆盖领域事实
 
 > Product Surface 是 Zuno 的统一北向产品边界。它通过 Web、Desktop 和 External API 接收用户意图，把版本化 Command 交给 Canonical Owner，并把各模块已提交、可访问、未撤销且经过授权的领域事实投影成可查询、可恢复、可解释和可审计的产品体验。
 
+产品定位：
+
+> Zuno 是面向企业内部资料和业务系统的可治理自定义 Agent 平台。Product Surface 必须支持企业管理员管理 Tenant、OrgUnit、Workspace、知识、模型、Skill、Tool、权限、预算和审批；也必须支持用户在授权范围内创建、发布、安装和使用多个 Agent 资产。
+
+Product Surface 的 Agent 产品资产包括：
+
+```text
+AgentDefinition      稳定产品身份和元数据
+AgentDraft           用户或团队正在编辑的草稿
+AgentVersion         不可变运行配置
+AgentPublication     某版本发布到 PRIVATE / WORKSPACE / TENANT 范围
+AgentInstallation    Workspace 或用户安装并可使用的 AgentVersion
+AgentCatalogEntry    Agent 目录中的授权可见条目
+```
+
+这些对象不等于 Agent Core 的 `AgentRun`，也不等于 Security 的 `AgentPrincipal`。Product Surface 拥有名称、描述、草稿、版本、发布、安装、目录和管理员视图；Security 拥有 Agent 安全身份、Grant、Policy、Epoch 和授权决定；Agent Core 拥有每次运行的 Task、Plan、Step、Publication 和 RunOutcome。
+
 ## 2. Product Surface 与后端核心
 
 ```text
@@ -123,6 +140,9 @@ Product Surface 负责：
 ```text
 Web、Desktop 和 External API 北向适配
 Authentication Adapter 与 PrincipalContext 解析入口
+Tenant / OrgUnit / Workspace 管理入口与授权后的管理员视图
+Agent Studio、Agent Catalog、Agent Draft / Version / Publication / Installation
+Effective Permission Preview：资料、Tool、Model、审批、预算和外部 Provider 暴露范围预览
 Conversation、UserSubmission、UserMessage 和产品交互事实
 RuntimeRequest 与 ProductCommand 的规范化
 Command 接受、拒绝、重复、冲突和可查询 Receipt
@@ -155,7 +175,7 @@ Product Surface 不负责：
 
 | 模块 | Canonical Fact | Product Surface 行为 |
 | --- | --- | --- |
-| Product Surface | ConversationThread、UserSubmission、UserMessage、ProductCommand、RuntimeRequest、CommandReceipt、ProductProjection、ChannelDelivery、ClientRenderReceipt、UserReadReceipt、FeedbackSubmission | 直接拥有 |
+| Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentCatalogEntry、ConversationThread、UserSubmission、UserMessage、ProductCommand、RuntimeRequest、CommandReceipt、ProductProjection、ChannelDelivery、ClientRenderReceipt、UserReadReceipt、FeedbackSubmission | 直接拥有 |
 | Input / Ingestion | SourceObject、WorkspaceFile、ParseJob、DocumentVersion、Ingestion Readiness | 消费 Projection，展示阶段，不推断 Searchable |
 | Knowledge | RetrievalRound、Evidence、CitationLineage、KnowledgeVersion、Evidence Sufficiency | 形成授权后的 Evidence/Citation View，不改写事实 |
 | Model Gateway | ModelRoutingDecision、ModelCallAttempt、UsageReceipt、Provider Failure | 只展示允许披露的执行与成本摘要 |
@@ -208,11 +228,18 @@ security epoch / policy version / data classification
 ```text
 PrincipalSession                 Security-owned
     │
+    ├── AgentCatalogEntry       Product-owned authorized view
+    ├── AgentDraft              Product-owned editable config
+    ├── AgentVersion            Product-owned immutable config
+    │     ├── AgentPublication  Product-owned publication scope
+    │     └── AgentInstallation Product-owned install/use scope
+    │
     └── ConversationThread      Product-owned
           ├── UserSubmission    Product-owned original intent
           │     ├── UserMessage Product-owned accepted message
           │     ├── ProductCommand
           │     └── RuntimeRequest
+          │            ├── PrimaryAgentVersionRef
           │            └── AgentRun              Agent Core-owned
           │                   ├── Interrupt[]
           │                   ├── Publication[]
@@ -230,6 +257,7 @@ Publication                     Agent Core-owned
 规则：
 
 - 一个 RuntimeRequest 最多创建一个 AgentRun；重复请求返回原 Receipt。
+- 一个 RuntimeRequest 必须绑定一个 Primary AgentVersionRef；多个 Agent 产品资产不表示一次 Run 有多个自治 Controller。
 - 已终结 Run 不复活；“再试一次”通常创建带 `parent_run_ref` 的新 RuntimeRequest。
 - 一个 ConversationThread 可以存在多个 Run；UI 可选择一个前台 Run，但不得隐藏其他有效 Interrupt 或终局。
 - 补充输入是 UserSubmission + ProductCommand；是否只解决 Interrupt、创建 GoalVersion 或创建新 Run，由 Agent Core 决定。

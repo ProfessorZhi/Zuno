@@ -88,9 +88,12 @@ blocked、prepared、runtime observed 和 measured 必须严格区分。缺 trac
 
 以下内容是可选未来扩展，不是短期 blocker：
 
-- Postgres、Redis、MinIO、RabbitMQ、Kafka、Kubernetes。
-- 外部 Milvus / Neo4j 集群和分布式 graph/vector index。
+- Redis 高级缓存、Kafka、Kubernetes、Service Mesh 和多区域部署。
+- Managed PostgreSQL / Managed Queue / Managed Object Store 是部署形态选择，不是当前本地实现完成证据。
+- 外部 Milvus / Neo4j 集群和分布式 graph/vector index 的企业级部署。
 - 复杂 SSO / DLP / Vault、Firecracker。
 - 大规模在线评测平台和企业运维门户。
 - 大量 parser/provider 并行接入、OCR/VLM enrichment 平台化。
-- 产品级多 Agent runtime。
+- Single Controller 下多 Agent Role 协作是未来可兼容方向；产品级自治 Multi-Agent runtime 仍是更长期 Future Optional。
+
+PostgreSQL、RabbitMQ 和 MinIO / S3-compatible Object Store 已是当前 Canonical Server Product Target；但它们还不是 Current。Current 仍以 SQLite、本地对象存储、本地队列和本地 adapter 为本地实现基线，直到 PHASE04 及后续集成证据完成。

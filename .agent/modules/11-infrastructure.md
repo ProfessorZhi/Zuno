@@ -189,6 +189,18 @@ Domain modules own the meaning of facts stored through that capability.
 
 Infrastructure 是横向运行域，不要求每种能力拆成独立微服务。
 
+当前 Target 部署形态是模块化单体加 Worker Role：
+
+```text
+Web / Desktop
+→ Server-hosted Product API
+→ Python modular monolith
+→ Ingestion / Index / Eval / Reconciler worker roles
+→ PostgreSQL / RabbitMQ / Object Store / Checkpointer / Index Services
+```
+
+十一模块是逻辑 Owner 和 Contract 边界，不是十一套默认微服务。一个后端镜像可以承担多个角色，只要 Port、Contract、事务、Security、Trace、Recovery 和 Deployment Role 边界保持清晰。
+
 # 5. Current / Target / Future / Not Selected
 
 ## 5.1 Current Inventory
@@ -253,6 +265,33 @@ Web / Desktop Frontend
 - Warm Standby、跨区域 Read Replica、专用 Backup Appliance。
 - HSM/KMS、高等级 Confidential Computing。
 - 多区域 Active-Passive 自动化。
+
+## 5.3.1 Polyglot 和选择性服务拆分边界
+
+未来可以引入 Java 或其他语言承载传统企业业务控制面，例如 Tenant / Organization、Workspace、Membership、Resource Catalog、Billing / Quota、Notification、企业审批流或既有业务领域服务。但语言边界不能替代领域 Ownership：
+
+```text
+Java Service 可以拥有组织成员、Workspace 或业务资源事实。
+Python Agent Runtime 继续拥有 Agent Core、Knowledge、Memory、Model Gateway、Capability、Tool Runtime 和 Eval 的 AI/Agent 领域事实。
+Security 仍拥有授权语义、Policy、Grant、Epoch 和 SecurityDecision。
+Product Surface 只消费授权后的 Projection 和 AvailableAction。
+```
+
+跨语言服务必须使用 OpenAPI / gRPC、AsyncAPI / CrossModuleEnvelope、Contract Bundle Version、Schema Registry、Idempotency Key、Correlation / Causation、Security Epoch、Deadline、Failure Namespace、Owner 和 Recovery Owner。禁止跨服务共享 ORM、直接访问其他服务数据库、重复定义同一状态枚举，或把 Java / Python 分工写成领域事实边界。
+
+选择性拆分服务必须由证据触发：
+
+```text
+独立扩缩容
+故障隔离
+发布节奏不同
+数据驻留或安全边界不同
+资源模型差异巨大
+独立团队 Ownership
+单体部署成为可测量瓶颈
+```
+
+优先可拆的是 Ingestion Worker、Model Gateway、Tool Execution Worker、Eval Worker、Indexing Worker 和 Delivery / Notification。Agent Core 的 Plan、Run 和 Outcome 一致性核心不得过早拆散。
 
 ## 5.4 Explicitly Not Selected
 

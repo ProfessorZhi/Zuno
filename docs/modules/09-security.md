@@ -419,6 +419,29 @@ agent_principal:
 
 Agent 可以持有有限的长期权限，但不自动继承 Owner 的全部权限。
 
+Agent 产品对象与 Security 对象的 Ownership 分离：
+
+| 对象 | Owner | Security 关系 |
+| --- | --- | --- |
+| AgentDefinition / AgentDraft / AgentVersion | Product Surface | 提供产品身份、草稿、不可变运行配置引用；不授予权限 |
+| AgentPublication / AgentInstallation / AgentCatalogEntry | Product Surface | 提供可见范围、安装范围和使用入口；必须经过 Security 授权过滤 |
+| AgentPrincipal | Security | 定义 Agent 最大权限、状态、Policy Version 和 Epoch |
+| TaskPrincipal | Security | 定义一次 Run 内 User ∩ Agent ∩ Workspace ∩ Resource ∩ Task Scope 的有效权限 |
+| AgentRun | Agent Core | 引用 Product 的 Primary AgentVersion 和 Security 的 Principal / Grant / Epoch |
+
+有效权限必须按交集计算：
+
+```text
+UserPrincipal effective grants
+∩ AgentPrincipal maximum grants
+∩ Workspace Policy
+∩ Resource Grant / ACL
+∩ TaskPrincipal scope
+∩ EffectiveSecurityEpoch
+```
+
+Agent Studio 中展示的 Effective Permission Preview 是 Product View，但其数据必须来自 Security Decision、Policy、Grant、Epoch、Capability 和 Tool availability，不得由前端或 Prompt 推断。
+
 ## 7.4 TaskPrincipal 与 SessionPrincipal
 
 ```yaml

@@ -76,7 +76,35 @@ Trace、Audit、Eval 与源领域事实分别由谁拥有
 质量提升是否来自可比较的 Benchmark 和 Release Gate
 ```
 
-## 1.2 目标
+## 1.2 产品定位
+
+Zuno 的正式产品定位是：
+
+> Zuno 是面向企业内部资料和业务系统的可治理自定义 Agent 平台。企业管理员统一管理 Tenant、OrgUnit、Workspace、知识、模型、Skill、Tool、权限、预算与审批；员工可以在授权范围内创建或使用多个个人、团队或企业 Agent，通过任务式工作台完成知识问答、跨文档分析、报告生成和受控业务操作。
+
+Zuno 不是单一 RAG 聊天机器人、Prompt 管理器、MCP 工具箱或 LangGraph Runtime。它的产品组合是：
+
+```text
+企业组织和权限
++ 企业资料库
++ Agent Studio / Agent Catalog
++ Single Controller Agent Runtime
++ 受控工具执行
++ Evidence / Citation / Audit / Eval
+```
+
+产品层允许多个 Agent 资产共存：
+
+```text
+一个用户可以创建多个个人 Agent
+一个 Workspace 可以发布多个团队 Agent
+一个 Tenant 可以维护企业 Agent 目录
+多个用户可以使用同一个已发布 AgentVersion
+```
+
+运行层的边界是：一次 `AgentRun` 绑定一个 Primary `AgentVersion`、一个 Single Controller 和一个 Active `PlanVersion`。Run 内可以有多个 Step、并行分支、Capability、Model Role 和 Tool Action，但当前不建设多个自治 Agent 各自拥有控制权的 Runtime。
+
+## 1.3 目标
 
 Zuno Target 必须实现：
 
@@ -90,7 +118,7 @@ Zuno Target 必须实现：
 8. **安全默认关闭**：未知权限、未知 Effect、陈旧 Epoch、缺失证据和不兼容版本 fail closed。
 9. **轻量部署、成熟语义**：初期允许一个后端镜像承担多个角色，不以微服务数量证明成熟度。
 
-## 1.3 非目标
+## 1.4 非目标
 
 近期不默认建设：
 
@@ -104,6 +132,10 @@ Kubernetes 作为完成条件
 保存模型隐藏思维链
 让模型、前端或 Projection 直接提交领域终态
 让 Redis、Milvus、Neo4j、RabbitMQ、LangSmith 或 Checkpoint 成为业务事实源
+公开 Agent 交易市场
+自研企业 IAM / HR 主系统
+十一模块不是当前微服务拆分计划；不得直接拆成十一微服务
+自治 Agent 网络或 Agent 社交运行时
 ```
 
 ---
@@ -223,7 +255,7 @@ flowchart TB
 
 | 编号 | 模块 | Canonical Ownership | 唯一详细设计 |
 | --- | --- | --- | --- |
-| 01 | Product Surface | Conversation、Submission、ProductCommand、RuntimeRequest、CommandReceipt、Projection、ChannelDelivery、ClientRender、UserRead | `docs/modules/01-product-surface.md` |
+| 01 | Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentCatalogEntry、Conversation、Submission、ProductCommand、RuntimeRequest、CommandReceipt、Projection、ChannelDelivery、ClientRender、UserRead | `docs/modules/01-product-surface.md` |
 | 02 | Input / Document Ingestion | SourceObject、DocumentVersion、ParsePlan/Job/Attempt/Snapshot、CanonicalDocumentIR、原始 SourceSpan、质量门和 Handoff | `docs/modules/02-input-document-ingestion.md` |
 | 03 | Knowledge / Agentic GraphRAG | KnowledgeVersion/Snapshot、IndexSpec/Manifest 接受语义、RetrievalPlan/Round、EvidenceLedger、CitationLineage | `docs/modules/03-knowledge-agentic-graphrag.md` |
 | 04 | Model Gateway | Model Role/Operation、Provider/Model、Routing、Call/Attempt、Response、Usage、Quota、Health、Circuit | `docs/modules/04-model-gateway.md` |

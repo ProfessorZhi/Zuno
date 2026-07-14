@@ -7,7 +7,7 @@ owner: Module 01 Product Surface
 
 ## Phase 目标
 
-建立 Thin FastAPI Product Surface：Conversation、Submission、Command、RuntimeRequest、Receipt、Projection、SSE Stream、Signal、Artifact/Citation/Quality Query 和 Delivery。Product 只拥有交互与读模型，不拥有 AgentRun、Approval、Effect、Evidence、Memory 或 Eval。
+建立 Thin FastAPI Product Surface：AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentCatalogEntry、Conversation、Submission、Command、RuntimeRequest、Receipt、Projection、SSE Stream、Signal、Artifact/Citation/Quality Query 和 Delivery。Product 只拥有 Agent 产品资产、交互与读模型，不拥有 AgentRun、Approval、Effect、Evidence、Memory 或 Eval。
 
 ## Minimal Read Set
 
@@ -50,7 +50,7 @@ docs/evidence/**
 ## Work Packages
 
 ### P09-T01 Product Domain and PostgreSQL Schema
-- Goal：实现 ConversationThread、UserSubmission、Message、ProductCommand、CommandReceipt、RuntimeRequest、Delivery、Feedback、Projection/Watermark/Cursor。
+- Goal：实现 AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentCatalogEntry、ConversationThread、UserSubmission、Message、ProductCommand、CommandReceipt、RuntimeRequest、Delivery、Feedback、Projection/Watermark/Cursor。
 - Tests：状态机、唯一约束、tenant scope、append-only receipt、Migration。
 - Acceptance：Product 表不复制其他模块权威表。
 
@@ -65,7 +65,7 @@ docs/evidence/**
 - Acceptance：Receipt 不冒充 owner domain success。
 
 ### P09-T04 Projection Reducers and Authorized Views
-- Goal：从 Agent/Knowledge/Tool/Security/Observability Event 构建 run/interrupt/ingestion/artifact/quality projection。
+- Goal：从 Agent/Knowledge/Tool/Security/Observability Event 构建 agent catalog、effective permission preview、run/interrupt/ingestion/artifact/quality projection。
 - Tests：out-of-order、duplicate、gap、rebuild、revocation、redaction。
 - Acceptance：Projection 可重建，查询返回 freshness/completeness。
 
@@ -75,7 +75,7 @@ docs/evidence/**
 - Acceptance：SSE close 不等于 Run success。
 
 ### P09-T06 Signals and AvailableAction
-- Goal：Approve/Deny/Cancel/UserInput/Reconcile/Download 等命令只由服务端 AvailableAction 提供并绑定 action token。
+- Goal：Approve/Deny/Cancel/UserInput/Reconcile/Download、Agent Publish、Install、Archive、Revoke 等命令只由服务端 AvailableAction 提供并绑定 action token。
 - Tests：stale action、replay、wrong epoch、unknown effect no normal retry、cancel race。
 - Acceptance：Frontend 不根据状态字符串自行生成动作。
 
@@ -87,6 +87,7 @@ docs/evidence/**
 ## Phase 完成定义
 
 - Product Backend 新 API/Command/Query/Projection/SSE 可运行。
+- Agent Studio / Catalog / Publication / Installation 后端 Contract 可运行，并且一次 RuntimeRequest 绑定一个 Primary AgentVersion。
 - 旧 API 有受控版本 Adapter 和删除任务。
 - Product 不拥有下游领域事实。
 - API Contract Test 和 SSE Fault Test 通过。
