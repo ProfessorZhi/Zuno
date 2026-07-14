@@ -57,8 +57,9 @@ jobs:
         run: python .agent/scripts/verify_agent_system.py
       - name: Verify document boundaries
         run: python .agent/scripts/verify_doc_boundaries.py
-      - name: Run focused architecture tests
+      - name: Capture focused architecture test diagnostics
         run: |
+          set +e
           pytest -q \
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
@@ -72,7 +73,22 @@ jobs:
             tests/repo/test_observability_eval_target_protocols.py \
             tests/repo/test_infrastructure_target_protocols.py \
             tests/repo/test_wave1_contract_freeze.py \
-            -p no:cacheprovider
+            -p no:cacheprovider > architecture-pytest.log 2>&1
+          status=$?
+          cat architecture-pytest.log
+          echo "$status" > architecture-pytest.status
+          exit 0
+      - name: Upload focused test diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-focused-test-diagnostics
+          path: |
+            architecture-pytest.log
+            architecture-pytest.status
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce focused architecture tests
+        run: test "$(cat architecture-pytest.status)" = "0"
       - name: Commit finalized architecture alignment
         run: |
           git config user.name "github-actions[bot]"
