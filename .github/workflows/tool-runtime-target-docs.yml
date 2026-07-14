@@ -81,7 +81,24 @@ jobs:
         run: python -c "import pathlib, yaml; yaml.safe_load(pathlib.Path('.agent/system.yaml').read_text(encoding='utf-8'))"
 
       - name: Verify Tool Runtime target protocols
-        run: python tools/scripts/verify_tool_runtime_target_protocols.py
+        id: tool_runtime_verifier
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python tools/scripts/verify_tool_runtime_target_protocols.py 2>&1 | tee tool-runtime-verifier.log
+
+      - name: Upload Tool Runtime verifier diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tool-runtime-verifier-log
+          path: tool-runtime-verifier.log
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Fail when Tool Runtime verifier failed
+        if: steps.tool_runtime_verifier.outcome == 'failure'
+        run: exit 1
 
       - name: Verify formal and Agent mirror bytes
         run: cmp docs/modules/08-tool-runtime.md .agent/modules/08-tool-runtime.md
