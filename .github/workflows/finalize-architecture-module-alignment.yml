@@ -1,5 +1,6 @@
 name: One-time architecture module alignment
 
+# Trigger revision: 2
 on:
   push:
     branches: [docs/architecture-module-realignment]
