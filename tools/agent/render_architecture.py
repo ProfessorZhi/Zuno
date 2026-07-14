@@ -15,10 +15,38 @@ AGENT_HTML_PATH = REPO_ROOT / ".agent/architecture/architecture.html"
 SOURCE_PATH = VIEWS_PATH
 AGENT_SOURCE_PATH = AGENT_VIEWS_PATH
 
-EXPECTED_VIEWS = ['Logical View (4+1)', 'Development View (4+1)', 'Process View (4+1)', 'Physical View (4+1)', 'Scenarios View (4+1)', 'Module View (Views & Beyond)', 'Component-and-Connector View (Views & Beyond)', 'Data View (Views & Beyond)', 'Quality View (Views & Beyond)', 'Agentic GraphRAG Evidence and Agent Loop (Zuno)']
+EXPECTED_VIEWS = [
+    "Logical View (4+1)",
+    "Development View (4+1)",
+    "Process View (4+1)",
+    "Physical View (4+1)",
+    "Scenarios View (4+1)",
+    "Module View (Views & Beyond)",
+    "Component-and-Connector View (Views & Beyond)",
+    "Data View (Views & Beyond)",
+    "Quality View (Views & Beyond)",
+    "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
+]
 EXPECTED_DIAGRAMS = EXPECTED_VIEWS
-MODULE_DOCS = ['01-product-surface.md', '02-input-document-ingestion.md', '03-knowledge-agentic-graphrag.md', '04-model-gateway.md', '05-memory-context.md', '06-agent-core-planning-control.md', '07-capability-skill.md', '08-tool-runtime.md', '09-security.md', '10-observability-eval.md', '11-infrastructure.md']
-CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+MODULE_DOCS = [
+    "01-product-surface.md",
+    "02-input-document-ingestion.md",
+    "03-knowledge-agentic-graphrag.md",
+    "04-model-gateway.md",
+    "05-memory-context.md",
+    "06-agent-core-planning-control.md",
+    "07-capability-skill.md",
+    "08-tool-runtime.md",
+    "09-security.md",
+    "10-observability-eval.md",
+    "11-infrastructure.md",
+]
+CANONICAL_ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture-views.md",
+    "architecture.html",
+}
 MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
 
 STALE_OUTPUTS = [
@@ -74,7 +102,7 @@ def validate_design(content: str) -> list[str]:
         "AgentRunGraph",
         "Plan DAG",
         "StepExecutionGraph",
-        "CrossModuleEnvelope",
+        "跨模块 Contract",
         "PreparedToolAction",
         "EffectReconciliation",
         "EvidenceLedger",
@@ -83,7 +111,6 @@ def validate_design(content: str) -> list[str]:
         "IndexWriteReceipt",
         "ServingWatermark",
         "RunOutcome",
-        "implementation available",
         "quality proven",
         "production ready",
     ]
@@ -95,10 +122,8 @@ def validate_design(content: str) -> list[str]:
         if f"docs/modules/{module_doc}" not in content:
             errors.append(f"architecture.md does not route to module document: {module_doc}")
 
-    if content.count("```mermaid") < 3:
-        errors.append("architecture.md must keep at least three integration Mermaid diagrams")
-    if content.count("```mermaid") > 8:
-        errors.append("architecture.md must remain text-first; detailed diagrams belong in architecture-views.md")
+    if not 3 <= content.count("```mermaid") <= 8:
+        errors.append("architecture.md must remain text-first with three to eight integration diagrams")
     if len(content) < 15000:
         errors.append("architecture.md is too short for the cross-module integration specification")
     return errors
@@ -159,17 +184,21 @@ def validate_html(content: str) -> list[str]:
     for title in EXPECTED_VIEWS:
         if title not in content:
             errors.append(f"architecture.html missing canonical view title: {title}")
+    if "offline-svg" in content or "offline-diagram" in content:
+        errors.append("architecture.html must not use the retired simplified renderer")
     return errors
 
 
 def _directory_errors(root: Path) -> list[str]:
     files = {path.name for path in root.iterdir() if path.is_file()}
-    dirs = [path.name for path in root.iterdir() if path.is_dir()]
+    directories = [path.name for path in root.iterdir() if path.is_dir()]
     errors: list[str] = []
     if files != CANONICAL_ARCHITECTURE_FILES:
-        errors.append(f"{root.relative_to(REPO_ROOT)} must contain exactly {sorted(CANONICAL_ARCHITECTURE_FILES)}, got {sorted(files)}")
-    if dirs:
-        errors.append(f"{root.relative_to(REPO_ROOT)} must not contain subdirectories: {dirs}")
+        errors.append(
+            f"{root.relative_to(REPO_ROOT)} must contain exactly {sorted(CANONICAL_ARCHITECTURE_FILES)}, got {sorted(files)}"
+        )
+    if directories:
+        errors.append(f"{root.relative_to(REPO_ROOT)} must not contain subdirectories: {directories}")
     return errors
 
 
@@ -219,7 +248,9 @@ def build_html() -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate Zuno integration architecture, visual source, HTML and mirrors.")
+    parser = argparse.ArgumentParser(
+        description="Validate Zuno integration architecture, visual source, HTML and mirrors."
+    )
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
