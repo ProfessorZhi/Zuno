@@ -26,8 +26,8 @@
 | 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
-| 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
-| 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
+| 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范并与 Tool Runtime 对齐 |
+| 08 | Tool Runtime | [`08-tool-runtime.md`](./08-tool-runtime.md) | 已建立单一完整 Target 架构 |
 | 09 | Security | [`09-security.md`](./09-security.md) | 已建立实施级 Target 规范 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 已建立实施级 Target 规范 |
@@ -81,6 +81,15 @@ docs/modules/06-agent-core-planning-control.md
 
 它统一包含概念架构、运行流程、不变量、状态机、DAG 与并发、Interrupt / Signal、副作用、Finalization、一致性、事件、Artifact、恢复、时间、目标代码、数据库和测试规格。
 
+## Tool Runtime 文档边界
+
+```text
+docs/modules/08-tool-runtime.md
+.agent/modules/08-tool-runtime.md
+```
+
+`08-tool-runtime.md` 是第 08 模块唯一正式 Target 架构文档；镜像必须字节级一致。它统一定义 Tool Provider / Definition / Version、PreparedToolAction、ToolAttempt、ToolObservation、ToolExecutionReceipt、EffectReceipt、EffectReconciliation、CLI / HTTP / OpenAPI / SDK / MCP / Browser / Async Adapter、Sandbox、输出治理、恢复、运维、数据库和测试规格。不得再新增 `08-*` 拆分设计文档。
+
 ## Security 文档边界
 
 ```text
@@ -105,6 +114,9 @@ docs/history/      已完成 Program 与历史证据
 ```text
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+
+python tools/scripts/verify_tool_runtime_target_protocols.py
+pytest -q tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider
 
 python tools/scripts/verify_security_target_protocols.py
 pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider
