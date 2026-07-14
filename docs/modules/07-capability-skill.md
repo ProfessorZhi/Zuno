@@ -90,6 +90,7 @@ Knowledge、Memory、Model Gateway 的专业领域执行
 - `CapabilityRouter`：从任务和 Policy 中选择候选能力。
 - `KnowledgeCapability`：检索、GraphRAG、Evidence 和 Citation 能力投影。
 - `ToolCapabilityDescriptor`：Tool Runtime 权威 Tool 的 Planner-facing 投影。
+- `ToolRequest`：兼容术语，只表示模型或旧 Capability Surface 中的工具调用意图；规范领域对象是 Agent Core `ActionProposal`，它不是 07 拥有的可执行请求，也不能绕过 08 Prepare。
 - `ArtifactCapability`：文档、报告、导出等产物生成能力投影。
 - `SkillCard`：任务方法、适用场景、依赖能力、验收和资源引用。
 - `SkillLoadTrace`：渐进式加载过程。
