@@ -154,7 +154,7 @@ def verify() -> list[str]:
         "AgentRunGraph",
         "Plan DAG",
         "StepExecutionGraph",
-        "CrossModuleEnvelope",
+        "跨模块 Contract",
         "PreparedToolAction",
         "EffectReconciliation",
         "EvidenceLedger",
