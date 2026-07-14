@@ -7,6 +7,7 @@ on:
     branches: [docs/architecture-module-realignment]
     paths:
       - "tools/scripts/finalize_architecture_module_alignment.py"
+      - "tools/scripts/patch_observability_alignment_tests.py"
       - ".github/workflows/finalize-architecture-module-alignment.yml"
   workflow_dispatch:
 
@@ -30,6 +31,8 @@ jobs:
         run: python -m pip install --disable-pip-version-check pytest pyyaml
       - name: Apply deterministic architecture alignment
         run: python tools/scripts/finalize_architecture_module_alignment.py
+      - name: Align Observability assertions with canonical control loops
+        run: python tools/scripts/patch_observability_alignment_tests.py
       - name: Preserve documentation compatibility wording
         run: |
           sed -i 's/本文是 Zuno 十一个逻辑模块的跨模块集成架构/本文是 Zuno 十一模块（十一个逻辑模块）的跨模块集成架构/' docs/architecture/architecture.md
@@ -43,8 +46,10 @@ jobs:
             tools/agent/render_architecture.py \
             tools/scripts/verify_architecture_document_set.py \
             tools/scripts/verify_architecture_semantic_alignment.py \
+            tools/scripts/verify_observability_eval_target_protocols.py \
             tests/repo/test_architecture_document_set.py \
-            tests/repo/test_architecture_semantic_alignment.py
+            tests/repo/test_architecture_semantic_alignment.py \
+            tests/repo/test_observability_eval_target_protocols.py
       - name: Verify architecture document set
         run: python tools/scripts/verify_architecture_document_set.py
       - name: Verify semantic alignment
@@ -57,9 +62,8 @@ jobs:
         run: python .agent/scripts/verify_agent_system.py
       - name: Verify document boundaries
         run: python .agent/scripts/verify_doc_boundaries.py
-      - name: Capture focused architecture test diagnostics
+      - name: Run focused architecture tests
         run: |
-          set +e
           pytest -q \
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
@@ -73,22 +77,7 @@ jobs:
             tests/repo/test_observability_eval_target_protocols.py \
             tests/repo/test_infrastructure_target_protocols.py \
             tests/repo/test_wave1_contract_freeze.py \
-            -p no:cacheprovider > architecture-pytest.log 2>&1
-          status=$?
-          cat architecture-pytest.log
-          echo "$status" > architecture-pytest.status
-          exit 0
-      - name: Upload focused test diagnostics
-        uses: actions/upload-artifact@v4
-        with:
-          name: architecture-focused-test-diagnostics
-          path: |
-            architecture-pytest.log
-            architecture-pytest.status
-          if-no-files-found: error
-          retention-days: 7
-      - name: Enforce focused architecture tests
-        run: test "$(cat architecture-pytest.status)" = "0"
+            -p no:cacheprovider
       - name: Commit finalized architecture alignment
         run: |
           git config user.name "github-actions[bot]"
