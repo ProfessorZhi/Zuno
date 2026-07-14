@@ -117,7 +117,7 @@ def test_mcp_is_cross_module_and_tool_execution_belongs_to_08() -> None:
     content = _content()
     for phrase in [
         "MCP 是跨模块协议，不是 08 单模块私有 Runtime",
-        "MCP Tool execution\n    08 Tool Runtime",
+        "08 owns\n    MCP Tool binding and execution",
         "MCP Sampling 必须进入 Model Gateway",
         "MCP Elicitation 不能冒充 Security Approval",
         "MCP annotations 默认不可信",
