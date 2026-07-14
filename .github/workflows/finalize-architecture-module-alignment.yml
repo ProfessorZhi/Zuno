@@ -46,8 +46,25 @@ jobs:
         run: python tools/scripts/verify_architecture_semantic_alignment.py
       - name: Verify Mermaid rendering and mirrors
         run: python tools/agent/render_architecture.py --check
-      - name: Verify documentation entrypoints
-        run: python tools/scripts/verify_docs_entrypoints.py
+      - name: Capture documentation entrypoint diagnostics
+        run: |
+          set +e
+          python tools/scripts/verify_docs_entrypoints.py > architecture-entrypoint.log 2>&1
+          status=$?
+          cat architecture-entrypoint.log
+          echo "$status" > architecture-entrypoint.status
+          exit 0
+      - name: Upload entrypoint diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-entrypoint-diagnostics
+          path: |
+            architecture-entrypoint.log
+            architecture-entrypoint.status
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce documentation entrypoint result
+        run: test "$(cat architecture-entrypoint.status)" = "0"
       - name: Verify Agent system routes
         run: python .agent/scripts/verify_agent_system.py
       - name: Verify document boundaries
