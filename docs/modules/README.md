@@ -20,7 +20,7 @@
 
 | 编号 | 模块 | 正式模块文档 | 状态 |
 | --- | --- | --- | --- |
-| 01 | Product Surface | `01-product-surface.md` | 待细化 |
+| 01 | Product Surface | [`01-product-surface.md`](./01-product-surface.md) | 已建立第一轮边界设计；实施级 Contract 待其他模块稳定后收口 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
 | 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
@@ -31,6 +31,15 @@
 | 09 | Security | [`09-security.md`](./09-security.md) | 已建立实施级 Target 规范 |
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md)；[`RAG Core Five / Agentic GraphRAG / Agent Efficiency 附录`](./10-observability-eval-rag-agent-evaluation.md) | 已建立实施级 Target 规范 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) + [`11-infrastructure-data-services.md`](./11-infrastructure-data-services.md) + [`11-infrastructure-consistency-lifecycle.md`](./11-infrastructure-consistency-lifecycle.md) | 已建立实施级 Target 规范 |
+
+## Product Surface 第一轮边界
+
+```text
+docs/modules/01-product-surface.md
+.agent/modules/01-product-surface.md
+```
+
+它冻结 Product Surface 作为北向产品边界的定位、用户场景、Ownership、Trust Boundary、Command / Query / Stream 语义、Projection 原则和架构不变量。完整 DTO、状态机、数据库、SSE Cursor、Retention 和兼容切流在相关领域 Contract 稳定后的第二轮设计中冻结。
 
 ## Wave 1 共享 Contract
 
@@ -103,6 +112,9 @@ docs/history/      已完成 Program 与历史证据
 ## 专用验证
 
 ```text
+python tools/scripts/verify_product_surface_boundary_design.py
+pytest -q tests/repo/test_product_surface_boundary_design.py -p no:cacheprovider
+
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
 
