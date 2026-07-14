@@ -32,8 +32,7 @@ docs/history/ = archive
 - `docs/architecture/architecture-views.md`：十类 canonical views 的 Mermaid 规范图源。
 - `docs/architecture/architecture.html`：读取图源的 Architecture Atlas。
 - `docs/modules/README.md`：十一个逻辑模块入口。
-- `docs/modules/01-product-surface.md`：Product Surface 唯一实施级 Target 架构文档。
-- `docs/modules/06-agent-core-planning-control.md`：Agent Core 唯一实施级 Target 架构文档。
+- `docs/modules/06-agent-core-planning-control.md`：Agent Core V2 实施级设计。
 - `docs/status/production-readiness.md`：Current、Gap、Measurement Blocked、Completed、Future Optional。
 - `docs/decisions/README.md`：正式 ADR 入口。
 - `docs/governance/repo-ownership-matrix.md`：代码目录 ownership 与迁移边界。
@@ -51,33 +50,12 @@ Agent 工作流入口：
 - `.agent/architecture/architecture.md`：正式总架构文字镜像。
 - `.agent/architecture/architecture-views.md`：正式 Mermaid 图源镜像。
 - `.agent/architecture/architecture.html`：正式 HTML Atlas 镜像。
-- `.agent/modules/01-product-surface.md`：Product Surface 模块镜像。
 - `.agent/modules/06-agent-core-planning-control.md`：Agent Core 模块镜像。
-
-## Product Surface Route
-
-涉及 Web、Desktop、External API、FastAPI Router、DTO、Conversation、Message、Command、Query、Product Projection、AuthorizedView、AvailableAction、SSE、Artifact Download、ChannelDelivery 或 Client Rendering 时，必须读取：
-
-```text
-docs/modules/01-product-surface.md
-.agent/modules/01-product-surface.md
-docs/status/production-readiness.md
-.agent/references/code-map.md
-apps/web/AGENTS.md（涉及 Web 时）
-```
-
-Product Surface 文档必须保持单一正式文件和单一镜像；专用验证：
-
-```text
-python tools/scripts/verify_product_surface_target_protocols.py
-pytest -q tests/repo/test_product_surface_target_protocols.py -p no:cacheprovider
-```
 
 ## Must Preserve
 
 - `docs/architecture/` 和 `.agent/architecture/` 都只能包含 `README.md`、`architecture.md`、`architecture-views.md`、`architecture.html`。
 - 模块设计必须进入 `docs/modules/`，不能回到 architecture 目录。
-- Product Surface 只有 `docs/modules/01-product-surface.md` 一份正式 Target 文档及字节级一致镜像。
 - Current 只描述代码、测试、trace/eval 或 verifier 已证明事实。
 - Target 只描述近期目标，不等于完成声明。
 - Future Optional 不得成为短期 blocker。
@@ -90,8 +68,6 @@ pytest -q tests/repo/test_product_surface_target_protocols.py -p no:cacheprovide
 
 ```powershell
 git diff --check
-python tools/scripts/verify_product_surface_target_protocols.py
-pytest -q tests/repo/test_product_surface_target_protocols.py -p no:cacheprovider
 python .agent/scripts/verify_agent_system.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
 python tools/agent/render_architecture.py --check
@@ -112,18 +88,7 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 - `.agent/architecture/architecture-views.md`
 - `.agent/architecture/architecture.html`
 
-修改 Product Surface 模块设计时检查：
-
-- `docs/modules/01-product-surface.md`
-- `.agent/modules/01-product-surface.md`
-- `docs/modules/README.md`
-- `.agent/modules/README.md`
-- `.agent/references/docs-map.md`
-- `apps/web/AGENTS.md`
-- `tools/scripts/verify_product_surface_target_protocols.py`
-- `tests/repo/test_product_surface_target_protocols.py`
-
-修改其他模块设计时检查：
+修改模块设计时检查：
 
 - `docs/modules/README.md`
 - 对应 `docs/modules/<module>.md`
@@ -143,4 +108,4 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 
 ## Lessons Learned
 
-文档同步的本质不是“所有地方都写一遍”，而是每个 surface 只承载自己的事实层级，并且入口之间不互相矛盾。Product Projection 只能派生和展示 Owner Fact，不能因为方便前端而成为第二事实源。
+文档同步的本质不是“所有地方都写一遍”，而是每个 surface 只承载自己的事实层级，并且入口之间不互相矛盾。

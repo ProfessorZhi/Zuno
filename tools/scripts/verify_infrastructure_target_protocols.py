@@ -9,149 +9,63 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/11-infrastructure.md"
 MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure.md"
-DATA_FORMAL = REPO_ROOT / "docs/modules/11-infrastructure-data-services.md"
-DATA_MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure-data-services.md"
-LIFECYCLE_FORMAL = REPO_ROOT / "docs/modules/11-infrastructure-consistency-lifecycle.md"
-LIFECYCLE_MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure-consistency-lifecycle.md"
-CONTRACT_REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
 FORMAL_INDEX = REPO_ROOT / "docs/modules/README.md"
 MIRROR_INDEX = REPO_ROOT / ".agent/modules/README.md"
+CONTRACT_REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
+
+RETIRED_APPENDICES = [
+    REPO_ROOT / "docs/modules/11-infrastructure-data-services.md",
+    REPO_ROOT / ".agent/modules/11-infrastructure-data-services.md",
+    REPO_ROOT / "docs/modules/11-infrastructure-consistency-lifecycle.md",
+    REPO_ROOT / ".agent/modules/11-infrastructure-consistency-lifecycle.md",
+]
 
 PARTS = [
-    "# Part I：问题、目标与选择",
-    "# Part II：逻辑边界与运行拓扑",
-    "# Part III：核心 Contract 与状态机",
-    "# Part IV：数据库、队列、配置与运维协议",
-    "# Part V：故障、恢复与灾备",
-    "# Part VI：跨模块依赖协议",
+    "# Part I：定位、目标与架构选择",
+    "# Part II：概念架构、拓扑与完整流程",
+    "# Part III：核心 Contract 与事实边界",
+    "# Part IV：数据服务组件设计",
+    "# Part V：状态机与一致性生命周期",
+    "# Part VI：失败、安全、恢复与运维",
     "# Part VII：目标实现规格",
     "# Part VIII：Requirement、测试与完成证据",
 ]
 
-REQUIRED_OBJECTS = [
+REQUIRED_COMPONENTS = [
+    "PostgreSQL",
+    "RabbitMQ",
+    "Object Store / MinIO",
+    "LangGraph Checkpointer",
+    "Milvus",
+    "Neo4j",
+    "BM25 / Search",
+    "Redis",
+    "Trace/Audit persistence",
+    "Secret/KMS",
+]
+
+REQUIRED_CONTRACTS = [
     "InfrastructureCapabilityProfile",
+    "DataServiceCapability",
     "DatabaseTransaction",
     "StorageObject",
     "ObjectCommit",
-    "CheckpointRecord",
     "QueueMessage",
     "InboxRecord",
     "OutboxRecord",
     "WorkerLease",
     "FencingToken",
-    "MigrationPlan",
-    "MigrationRun",
-    "BackupPlan",
-    "BackupRun",
-    "RestoreRun",
-    "RetentionPolicy",
-    "LegalHold",
-    "DrainMarker",
-    "InfrastructureHealth",
     "CapacityReservation",
+    "CheckpointRecord",
     "RecoveryWatermark",
-]
-
-REQUIRED_STATE_MACHINES = [
-    "ObjectCommit State Machine",
-    "QueueMessage / Delivery State Machine",
-    "WorkerLease State Machine",
-    "MigrationRun State Machine",
-    "BackupRun State Machine",
-    "RestoreRun State Machine",
-    "Drain State Machine",
-    "CapacityReservation",
-]
-
-REQUIRED_FAULTS = [
-    "Outbox Crash",
-    "Inbox Duplicate",
-    "Object Commit Crash",
-    "Lease Expiry",
-    "Stale Fencing Token",
-    "Checkpoint / Domain Divergence",
-    "Queue Redelivery",
-    "Migration Rollback",
-    "Backup Corruption",
-    "Restore Failure",
-    "Clock Skew",
-    "Drain Deadline",
-    "Capacity Exhaustion",
-]
-
-CROSS_MODULE_TERMS = [
-    "Security Epoch",
-    "Secret Delivery Port",
-    "Provider Config",
-    "Usage Ledger",
-    "Trace/Audit",
-    "Eval Job Queue",
-    "PostgreSQL 保存领域事实",
-    "LangGraph Checkpointer 保存图控制状态",
-    "Generation、Fencing、RecoveryWatermark 与 Outbox",
-]
-
-NOT_SELECTED = [
-    "Kafka 作为默认工作队列",
-    "Event Sourcing 作为全系统事实模型",
-    "XA / 2PC",
-    "默认多区域 Active-Active",
-    "大量微服务",
-    "Kubernetes 作为本模块完成标准",
-]
-
-DATA_SERVICE_TERMS = [
-    "PostgreSQL",
-    "RabbitMQ",
-    "Object Store / MinIO",
-    "LangGraph Checkpointer",
-    "Redis",
-    "Milvus",
-    "Neo4j",
-    "BM25 / Search",
-    "Trace/Audit persistence",
-    "Secret/KMS",
-    "DataServiceCapability",
-    "VectorIndexRuntimePort",
-    "GraphIndexRuntimePort",
-    "LexicalIndexRuntimePort",
-    "CacheAccelerationPort",
-    "DerivedIndexReplica State Machine",
-    "Cross-store Publish Protocol",
-    "IndexWriteReceipt",
-    "IndexManifest",
-    "generation/CAS",
-    "authoritative",
-    "rebuildable",
-]
-
-DATA_FAILURE_TERMS = [
-    "INFRA_VECTOR_WRITE_PARTIAL",
-    "INFRA_VECTOR_SCHEMA_INCOMPATIBLE",
-    "INFRA_GRAPH_WRITE_PARTIAL",
-    "INFRA_GRAPH_SCHEMA_INCOMPATIBLE",
-    "INFRA_LEXICAL_INDEX_CORRUPT",
-    "INFRA_CACHE_STALE_GENERATION",
-    "INFRA_CROSS_STORE_VERSION_DIVERGENCE",
-    "INFRA_INDEX_CUTOVER_CONFLICT",
-    "Milvus Write-Then-Crash Before Manifest Commit",
-    "Neo4j Commit-Then-Crash Before Manifest Commit",
-    "Tenant Filter Omission / Cross-tenant Hit",
-    "PITR with Stale Derived Indexes",
-]
-
-LIFECYCLE_TERMS = [
     "IndexBuildRun",
     "IndexWriteBatch",
     "IndexWriteReceipt",
+    "WriteVisibilityReceipt",
     "IndexVerification",
     "DerivedIndexReplica",
     "IndexCutover",
-    "IndexRebuildRun",
-    "IndexRetirement",
-    "IndexReconciliationFinding",
     "ServingWatermark",
-    "WriteVisibilityReceipt",
     "DeletionRequest",
     "DeletionTarget",
     "DeletionVerification",
@@ -166,17 +80,95 @@ LIFECYCLE_TERMS = [
     "ServiceCriticalityProfile",
     "ReleaseManifest",
     "ResourceUsageAttribution",
-    "Cross-store Deletion",
-    "Recovery Set",
-    "Mandatory Audit Backpressure",
-    "Upgrade Compatibility",
-    "PreparedAction 与 Tool Effect Ownership",
-    "Tenant Filter Omission / Cross-tenant Hit",
-    "PITR With Ahead / Behind Derived Index",
 ]
 
-LIFECYCLE_FAILURES = [
-    "INFRA_INDEX_CUTOVER_GENERATION_CONFLICT",
+REQUIRED_PORTS = [
+    "TransactionalStorePort",
+    "ObjectStorePort",
+    "CheckpointStorePort",
+    "QueuePort",
+    "InboxOutboxPort",
+    "LeaseFencingPort",
+    "ClockPort",
+    "MigrationRuntimePort",
+    "BackupRestorePort",
+    "RetentionLegalHoldPort",
+    "SecretDeliveryPort",
+    "HealthReadinessPort",
+    "CapacityAdmissionPort",
+    "InfrastructureTelemetryPort",
+    "VectorIndexRuntimePort",
+    "GraphIndexRuntimePort",
+    "LexicalIndexRuntimePort",
+    "CacheAccelerationPort",
+]
+
+REQUIRED_STATE_MACHINES = [
+    "ObjectCommit State Machine",
+    "QueueMessage / Delivery State Machine",
+    "WorkerLease State Machine",
+    "MigrationRun State Machine",
+    "BackupRun 与 RestoreRun State Machine",
+    "DerivedIndexReplica State Machine",
+    "Deletion State Machine",
+    "Recovery Set State Machine",
+    "Mandatory Audit Backpressure State Machine",
+    "Upgrade Compatibility State Machine",
+    "Drain 与 CapacityReservation State Machine",
+]
+
+REQUIRED_FLOWS = [
+    "文档摄取与索引构建流程",
+    "在线查询流程",
+    "异步工作流程",
+    "Cross-store Publish Protocol",
+    "Cross-store Deletion",
+    "Recovery Set 与灾难恢复流程",
+]
+
+REQUIRED_BOUNDARIES = [
+    "PostgreSQL 保存领域事实",
+    "LangGraph Checkpointer 保存图控制状态",
+    "Object Store 保存大型不可变 Payload",
+    "Generation、Fencing、RecoveryWatermark 与 Outbox",
+    "Checkpoint 不能替代 Domain Commit",
+    "Queue ACK != Tool Effect Success",
+    "IndexWriteReceipt != IndexManifest Accepted",
+    "Security 决定允许访问什么",
+]
+
+REQUIRED_FAULTS = [
+    "Outbox Crash",
+    "Inbox Duplicate",
+    "Object Commit Crash",
+    "Lease Expiry",
+    "Stale Fencing Token",
+    "Checkpoint / Domain Divergence",
+    "Queue Redelivery",
+    "Publisher Confirm Loss",
+    "Migration Rollback",
+    "Backup Corruption",
+    "Restore Failure",
+    "Clock Skew",
+    "Drain Deadline",
+    "Capacity Exhaustion",
+    "Milvus Write-Then-Crash Before Manifest Commit",
+    "Neo4j Commit-Then-Crash Before Manifest Commit",
+    "Tenant Filter Omission / Cross-tenant Hit",
+    "PITR with Stale Derived Indexes",
+    "Audit Committed Before Tool Effect Crash",
+    "Network Partition With Stale Worker",
+]
+
+REQUIRED_FAILURES = [
+    "INFRA_VECTOR_WRITE_PARTIAL",
+    "INFRA_VECTOR_SCHEMA_INCOMPATIBLE",
+    "INFRA_GRAPH_WRITE_PARTIAL",
+    "INFRA_GRAPH_SCHEMA_INCOMPATIBLE",
+    "INFRA_LEXICAL_INDEX_CORRUPT",
+    "INFRA_CACHE_STALE_GENERATION",
+    "INFRA_CROSS_STORE_VERSION_DIVERGENCE",
+    "INFRA_INDEX_CUTOVER_CONFLICT",
     "INFRA_DELETION_VISIBILITY_DEADLINE",
     "INFRA_RECOVERY_SET_INCONSISTENT",
     "INFRA_MANDATORY_AUDIT_BLOCK_EFFECT",
@@ -186,33 +178,13 @@ LIFECYCLE_FAILURES = [
     "INFRA_RESOURCE_ATTRIBUTION_MISSING",
 ]
 
-REGISTRY_TERMS = [
-    "status: confirmed-target",
-    "previous_status: field-frozen-pending-merge",
-    "CrossModuleEnvelope",
-    "SecurityConditionalWrite",
-    "CredentialVersionRef",
-    "SecurityAuditRequirement",
-    "AuditDurabilityRequirement",
-    "TelemetryEnvelope",
-    "ProviderConnectionFactory",
-    "UsageReceipt",
-    "QuotaReservation",
-    "CancellationReceipt",
-    "VectorIndexSpec",
-    "GraphIndexSpec",
-    "LexicalIndexSpec",
-    "IndexWriteBatch",
-    "IndexWriteReceipt",
-    "WriteVisibilityReceipt",
-    "IndexManifest",
-    "ServingWatermark",
-    "DeletionRequest",
-    "RecoverySetManifest",
-    "PreparedAction Ownership 决议建议",
-    "Queue ACK != Tool Effect Success",
-    "Failure Ownership Matrix",
-    "Wave 1 合并审计清单",
+NOT_SELECTED = [
+    "Kafka 作为默认工作队列",
+    "Event Sourcing 作为全系统事实模型",
+    "XA / 2PC",
+    "默认多区域 Active-Active",
+    "大量微服务与 Service Mesh",
+    "Kubernetes 作为本模块完成标准",
 ]
 
 
@@ -234,65 +206,51 @@ def _require(content: str, term: str, code: str, findings: list[Finding]) -> Non
         findings.append(Finding(code, f"missing required term: {term}"))
 
 
-def _verify_numbered_registry(
-    *,
-    content: str,
-    pattern: str,
-    expected: list[int],
-    prefix: str,
-    finding_prefix: str,
-    findings: list[Finding],
-) -> None:
-    numbers = [int(value) for value in re.findall(pattern, content)]
-    if sorted(numbers) != expected:
-        findings.append(
-            Finding(f"{finding_prefix}_REQUIREMENT_REGISTRY", f"{prefix} IDs must be exactly {expected[0]:03d}..{expected[-1]:03d}")
-        )
-    test_prefix = prefix.replace("ARCH-", "")
-    evidence_prefix = prefix.replace("ARCH-", "EV-")
-    for number in expected:
-        for suffix in ["UT", "IT"]:
-            test_id = f"{test_prefix}-{number:03d}-{suffix}"
-            if test_id not in content:
-                findings.append(Finding(f"{finding_prefix}_TEST_MAPPING", f"missing {test_id}"))
-        evidence_id = f"{evidence_prefix}-{number:03d}"
-        if evidence_id not in content:
-            findings.append(Finding(f"{finding_prefix}_EVIDENCE_MAPPING", f"missing {evidence_id}"))
-
-
 def verify() -> list[Finding]:
     findings: list[Finding] = []
 
     for path, code in [
         (FORMAL, "INFRA_DOC_MISSING"),
         (MIRROR, "INFRA_MIRROR_MISSING"),
-        (DATA_FORMAL, "INFRA_DATA_DOC_MISSING"),
-        (DATA_MIRROR, "INFRA_DATA_MIRROR_MISSING"),
-        (LIFECYCLE_FORMAL, "INFRA_LIFECYCLE_DOC_MISSING"),
-        (LIFECYCLE_MIRROR, "INFRA_LIFECYCLE_MIRROR_MISSING"),
-        (CONTRACT_REGISTRY, "INFRA_CONTRACT_REGISTRY_MISSING"),
         (FORMAL_INDEX, "INFRA_FORMAL_INDEX_MISSING"),
         (MIRROR_INDEX, "INFRA_MIRROR_INDEX_MISSING"),
+        (CONTRACT_REGISTRY, "INFRA_CONTRACT_REGISTRY_MISSING"),
     ]:
         if not path.exists():
             findings.append(Finding(code, str(path.relative_to(REPO_ROOT))))
+
+    for appendix in RETIRED_APPENDICES:
+        if appendix.exists():
+            findings.append(Finding("INFRA_RETIRED_APPENDIX_PRESENT", str(appendix.relative_to(REPO_ROOT))))
 
     if findings:
         return findings
 
     content = _read(FORMAL)
-    data_content = _read(DATA_FORMAL)
-    lifecycle_content = _read(LIFECYCLE_FORMAL)
+    formal_index = _read(FORMAL_INDEX)
+    mirror_index = _read(MIRROR_INDEX)
     registry_content = _read(CONTRACT_REGISTRY)
 
     if FORMAL.read_bytes() != MIRROR.read_bytes():
         findings.append(Finding("INFRA_MIRROR_DRIFT", "formal document and Agent mirror are not byte-identical"))
-    if DATA_FORMAL.read_bytes() != DATA_MIRROR.read_bytes():
-        findings.append(Finding("INFRA_DATA_MIRROR_DRIFT", "data-service appendix and Agent mirror are not byte-identical"))
-    if LIFECYCLE_FORMAL.read_bytes() != LIFECYCLE_MIRROR.read_bytes():
-        findings.append(
-            Finding("INFRA_LIFECYCLE_MIRROR_DRIFT", "lifecycle appendix and Agent mirror are not byte-identical")
-        )
+
+    for term in [
+        "唯一正式 Target 架构文档",
+        "原主文档、数据服务附录和一致性生命周期附录中的全部有效设计",
+        "Current Inventory",
+        "Target Selection",
+        "Future Optional",
+        "Explicitly Not Selected",
+        "Developer / CI Local Adapter Topology",
+        "Canonical Server Product Topology",
+        "服务端统一后端是产品 Target",
+        "Failure Taxonomy",
+        "Crash Matrix",
+        "Multi-tenant Storage Isolation",
+        "Target Code Mapping",
+        "Target → Current Evidence",
+    ]:
+        _require(content, term, "INFRA_COVERAGE_MISSING", findings)
 
     positions: list[int] = []
     for part in PARTS:
@@ -303,41 +261,33 @@ def verify() -> list[Finding]:
     if positions != sorted(positions):
         findings.append(Finding("INFRA_PART_ORDER", "normative parts are not ordered"))
 
-    for term in [
-        "Current Inventory",
-        "Target Selection",
-        "Future Optional",
-        "Explicitly Not Selected",
-        "Developer / CI Local Adapter Topology",
-        "Canonical Server Product Topology",
-        "服务端统一后端是产品 Target",
-        "Crash Matrix",
-        "Failure Taxonomy",
-        "Multi-tenant Storage Isolation",
-        "Encryption at Rest / in Transit",
-        "Observability Hook",
-        "Target → Current Evidence",
-    ]:
-        _require(content, term, "INFRA_COVERAGE_MISSING", findings)
-
-    for name in REQUIRED_OBJECTS:
-        _require(content, name, "INFRA_OBJECT_MISSING", findings)
-    for name in REQUIRED_STATE_MACHINES:
-        _require(content, name, "INFRA_STATE_MACHINE_MISSING", findings)
-    for name in REQUIRED_FAULTS:
-        _require(content, name, "INFRA_FAULT_TEST_MISSING", findings)
-    for term in CROSS_MODULE_TERMS:
-        _require(content, term, "INFRA_CROSS_MODULE_MISSING", findings)
+    for term in REQUIRED_COMPONENTS:
+        _require(content, term, "INFRA_COMPONENT_MISSING", findings)
+    for term in REQUIRED_CONTRACTS:
+        _require(content, term, "INFRA_CONTRACT_MISSING", findings)
+    for term in REQUIRED_PORTS:
+        _require(content, term, "INFRA_PORT_MISSING", findings)
+    for term in REQUIRED_STATE_MACHINES:
+        _require(content, term, "INFRA_STATE_MACHINE_MISSING", findings)
+    for term in REQUIRED_FLOWS:
+        _require(content, term, "INFRA_FLOW_MISSING", findings)
+    for term in REQUIRED_BOUNDARIES:
+        _require(content, term, "INFRA_BOUNDARY_MISSING", findings)
+    for term in REQUIRED_FAULTS:
+        _require(content, term, "INFRA_FAULT_TEST_MISSING", findings)
+    for term in REQUIRED_FAILURES:
+        _require(content, term, "INFRA_FAILURE_MISSING", findings)
     for term in NOT_SELECTED:
         _require(content, term, "INFRA_NOT_SELECTED_MISSING", findings)
 
-    requirements = [int(value) for value in re.findall(r"ARCH-INFRA-(\d{3})", content)]
-    controls = [int(value) for value in re.findall(r"RC-INFRA-(\d{3})", content)]
-    expected = list(range(1, 49))
-    if sorted(requirements) != expected:
-        findings.append(Finding("INFRA_REQUIREMENT_REGISTRY", "ARCH-INFRA IDs must be exactly 001..048"))
-    if sorted(controls) != expected:
-        findings.append(Finding("INFRA_CONTROL_REGISTRY", "RC-INFRA IDs must be exactly 001..048"))
+    requirement_ids = [int(value) for value in re.findall(r"ARCH-INFRA-(\d{3})", content)]
+    control_ids = [int(value) for value in re.findall(r"RC-INFRA-(\d{3})", content)]
+    expected = list(range(1, 65))
+    if sorted(requirement_ids) != expected:
+        findings.append(Finding("INFRA_REQUIREMENT_REGISTRY", "ARCH-INFRA IDs must be exactly 001..064"))
+    if sorted(control_ids) != expected:
+        findings.append(Finding("INFRA_CONTROL_REGISTRY", "RC-INFRA IDs must be exactly 001..064"))
+
     for number in expected:
         for suffix in ["UT", "IT"]:
             test_id = f"INFRA-{number:03d}-{suffix}"
@@ -347,76 +297,29 @@ def verify() -> list[Finding]:
         if evidence_id not in content:
             findings.append(Finding("INFRA_EVIDENCE_MAPPING", f"missing {evidence_id}"))
 
-    for appendix_content, code in [
-        (data_content, "INFRA_DATA_PARENT"),
-        (lifecycle_content, "INFRA_LIFECYCLE_PARENT"),
+    if "[`11-infrastructure.md`](./11-infrastructure.md)" not in formal_index:
+        findings.append(Finding("INFRA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route the single Infrastructure document"))
+    if "[`11-infrastructure.md`](./11-infrastructure.md)" not in mirror_index:
+        findings.append(Finding("INFRA_MIRROR_INDEX_ROUTE", ".agent/modules/README.md does not route the single Infrastructure mirror"))
+
+    for retired_name in [
+        "11-infrastructure-data-services.md",
+        "11-infrastructure-consistency-lifecycle.md",
     ]:
-        if "parent_document: `docs/modules/11-infrastructure.md`" not in appendix_content:
-            findings.append(Finding(code, "appendix does not declare the Infrastructure parent document"))
+        for index_content, label in [(formal_index, "formal index"), (mirror_index, "mirror index")]:
+            if retired_name in index_content:
+                findings.append(Finding("INFRA_RETIRED_ROUTE", f"{label} still routes {retired_name}"))
 
-    for term in DATA_SERVICE_TERMS:
-        _require(data_content, term, "INFRA_DATA_SERVICE_COVERAGE", findings)
-    for term in DATA_FAILURE_TERMS:
-        _require(data_content, term, "INFRA_DATA_FAILURE_COVERAGE", findings)
-    _verify_numbered_registry(
-        content=data_content,
-        pattern=r"ARCH-INFRA-DS-(\d{3})",
-        expected=list(range(1, 13)),
-        prefix="ARCH-INFRA-DS",
-        finding_prefix="INFRA_DATA",
-        findings=findings,
-    )
+    for term in ["单一完整实施级 Target", "唯一正式 Target", "不再维护"]:
+        if term not in formal_index:
+            findings.append(Finding("INFRA_FORMAL_SINGLE_DOC_GOVERNANCE", f"formal index missing {term}"))
 
-    for term in LIFECYCLE_TERMS:
-        _require(lifecycle_content, term, "INFRA_LIFECYCLE_COVERAGE", findings)
-    for term in LIFECYCLE_FAILURES:
-        _require(lifecycle_content, term, "INFRA_LIFECYCLE_FAILURE_COVERAGE", findings)
-    _verify_numbered_registry(
-        content=lifecycle_content,
-        pattern=r"ARCH-INFRA-LC-(\d{3})",
-        expected=list(range(1, 25)),
-        prefix="ARCH-INFRA-LC",
-        finding_prefix="INFRA_LIFECYCLE",
-        findings=findings,
-    )
+    for term in ["单一完整实施级 Target", "唯一 Target 镜像", "不得寻找或重新创建"]:
+        if term not in mirror_index:
+            findings.append(Finding("INFRA_MIRROR_SINGLE_DOC_GOVERNANCE", f"mirror index missing {term}"))
 
-    for term in REGISTRY_TERMS:
-        _require(registry_content, term, "INFRA_CONTRACT_REGISTRY_COVERAGE", findings)
-    _verify_numbered_registry(
-        content=registry_content,
-        pattern=r"ARCH-XMOD-(\d{3})",
-        expected=list(range(1, 11)),
-        prefix="ARCH-XMOD",
-        finding_prefix="INFRA_XMOD",
-        findings=findings,
-    )
-
-    for forbidden in [
-        "PostgreSQL 已是 Current",
-        "RabbitMQ 已是 Current",
-        "MinIO 已是 Current",
-        "Milvus 已是 Current",
-        "Neo4j 已是 Current",
-        "Redis 已是 Current",
-        "Kubernetes 已是 Current",
-        "production ready 已完成",
-    ]:
-        if any(forbidden in item for item in [content, data_content, lifecycle_content, registry_content]):
-            findings.append(Finding("INFRA_CURRENT_PROMOTION", f"forbidden unsupported statement: {forbidden}"))
-
-    formal_index = _read(FORMAL_INDEX)
-    mirror_index = _read(MIRROR_INDEX)
-    if "(./11-infrastructure.md)" not in formal_index:
-        findings.append(Finding("INFRA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route Infrastructure"))
-    for path in ["11-infrastructure-data-services.md", "11-infrastructure-consistency-lifecycle.md"]:
-        if path not in formal_index:
-            findings.append(Finding("INFRA_FORMAL_APPENDIX_ROUTE", f"docs/modules/README.md does not route {path}"))
-        if path not in mirror_index:
-            findings.append(Finding("INFRA_MIRROR_APPENDIX_ROUTE", f".agent/modules/README.md does not route {path}"))
-    if "wave1-cross-module-contract-registry.md" not in formal_index:
-        findings.append(Finding("INFRA_CONTRACT_REGISTRY_ROUTE", "docs/modules/README.md does not route Wave 1 registry"))
-    if "(./11-infrastructure.md)" not in mirror_index:
-        findings.append(Finding("INFRA_MIRROR_INDEX_ROUTE", ".agent/modules/README.md does not route Infrastructure mirror"))
+    if "status: confirmed-target" not in registry_content:
+        findings.append(Finding("INFRA_REGISTRY_STATUS", "Wave 1 registry is not confirmed-target"))
 
     return findings
 
